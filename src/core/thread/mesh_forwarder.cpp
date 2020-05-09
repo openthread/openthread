@@ -358,7 +358,7 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     }
     else
     {
-        IgnoreError(mDataPollSender.StartPolling());
+        mDataPollSender.StartPolling();
         Get<Utils::SupervisionListener>().Start();
     }
 }

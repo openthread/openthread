@@ -79,12 +79,8 @@ public:
     /**
      * This method instructs the data poll sender to start sending periodic data polls.
      *
-     * @retval OT_ERROR_NONE            Successfully started sending periodic data polls.
-     * @retval OT_ERROR_ALREADY         Periodic data poll transmission is already started/enabled.
-     * @retval OT_ERROR_INVALID_STATE   Device is not in rx-off-when-idle mode.
-     *
      */
-    otError StartPolling(void);
+    void StartPolling(void);
 
     /**
      * This method instructs the data poll sender to stop sending periodic data polls.
