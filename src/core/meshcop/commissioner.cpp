@@ -209,7 +209,7 @@ otError Commissioner::Stop(bool aResign)
 
     if (needResign && aResign)
     {
-        IgnoreError(SendKeepAlive());
+        SendKeepAlive();
     }
 
 exit:
@@ -451,7 +451,7 @@ void Commissioner::HandleTimer(void)
         break;
 
     case OT_COMMISSIONER_STATE_ACTIVE:
-        IgnoreError(SendKeepAlive());
+        SendKeepAlive();
         break;
     }
 }
@@ -747,7 +747,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     // this could happen if commissioner is stopped by API during petitioning
     if (mState == OT_COMMISSIONER_STATE_DISABLED)
     {
-        IgnoreError(SendKeepAlive(mSessionId));
+        SendKeepAlive(mSessionId);
         ExitNow();
     }
 
@@ -775,12 +775,12 @@ exit:
     }
 }
 
-otError Commissioner::SendKeepAlive(void)
+void Commissioner::SendKeepAlive(void)
 {
-    return SendKeepAlive(mSessionId);
+    SendKeepAlive(mSessionId);
 }
 
-otError Commissioner::SendKeepAlive(uint16_t aSessionId)
+void Commissioner::SendKeepAlive(uint16_t aSessionId)
 {
     otError          error   = OT_ERROR_NONE;
     Coap::Message *  message = NULL;
@@ -807,12 +807,15 @@ otError Commissioner::SendKeepAlive(uint16_t aSessionId)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogWarnMeshCoP("Failed to send keep alive: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 void Commissioner::HandleLeaderKeepAliveResponse(void *               aContext,
