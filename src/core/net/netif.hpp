@@ -281,11 +281,8 @@ public:
      *
      * @note This method MUST be called after `SubscribeAllNodesMulticast()` or its behavior is undefined.
      *
-     * @retval OT_ERROR_NONE     Successfully subscribed to the link-local and realm-local all routers addresses.
-     * @retval OT_ERROR_ALREADY  The multicast addresses are already subscribed.
-     *
      */
-    otError SubscribeAllRoutersMulticast(void);
+    void SubscribeAllRoutersMulticast(void);
 
     /**
      * This method unsubscribes the network interface to the link-local and realm-local all routers address.

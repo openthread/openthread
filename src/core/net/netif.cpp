@@ -200,7 +200,7 @@ exit:
     return;
 }
 
-otError Netif::SubscribeAllRoutersMulticast(void)
+void Netif::SubscribeAllRoutersMulticast(void)
 {
     otError                error                      = OT_ERROR_NONE;
     NetifMulticastAddress *prev                       = NULL;
@@ -217,6 +217,7 @@ otError Netif::SubscribeAllRoutersMulticast(void)
     // Ensure that the `LinkLocalAll` was found on the list.
 
     OT_ASSERT(error == OT_ERROR_NONE);
+    OT_UNUSED_VARIABLE(error);
 
     // The tail of multicast address linked list contains the
     // fixed addresses. We either have a chain of five addresses
@@ -232,7 +233,7 @@ otError Netif::SubscribeAllRoutersMulticast(void)
     // `RealmLocalAllRouters` then all five addresses are on
     // the list already.
 
-    VerifyOrExit(prev != &realmLocalAllRoutersAddress, error = OT_ERROR_ALREADY);
+    VerifyOrExit(prev != &realmLocalAllRoutersAddress, OT_NOOP);
 
     if (prev == NULL)
     {
@@ -254,7 +255,7 @@ otError Netif::SubscribeAllRoutersMulticast(void)
     }
 
 exit:
-    return error;
+    return;
 }
 
 otError Netif::UnsubscribeAllRoutersMulticast(void)
