@@ -224,7 +224,7 @@ void Local::SetState(BackboneRouterState aState)
     {
         // Subscribe All Network Backbone Routers Multicast Address for both Secondary and Primary state.
         mAllNetworkBackboneRouters.GetAddress().SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        IgnoreError(Get<ThreadNetif>().SubscribeMulticast(mAllNetworkBackboneRouters));
+        Get<ThreadNetif>().SubscribeMulticast(mAllNetworkBackboneRouters);
     }
     else if (aState == OT_BACKBONE_ROUTER_STATE_DISABLED)
     {
@@ -353,7 +353,7 @@ void Local::ApplyMeshLocalPrefix(void)
 
     IgnoreError(Get<ThreadNetif>().UnsubscribeMulticast(mAllNetworkBackboneRouters));
     mAllNetworkBackboneRouters.GetAddress().SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-    IgnoreError(Get<ThreadNetif>().SubscribeMulticast(mAllNetworkBackboneRouters));
+    Get<ThreadNetif>().SubscribeMulticast(mAllNetworkBackboneRouters);
 
     if (IsPrimary())
     {
@@ -382,7 +382,7 @@ void Local::UpdateAllDomainBackboneRouters(Leader::DomainPrefixState aState)
     if (aState == Leader::kDomainPrefixAdded || aState == Leader::kDomainPrefixRefreshed)
     {
         mAllDomainBackboneRouters.GetAddress().SetMulticastNetworkPrefix(*Get<Leader>().GetDomainPrefix());
-        IgnoreError(Get<ThreadNetif>().SubscribeMulticast(mAllDomainBackboneRouters));
+        Get<ThreadNetif>().SubscribeMulticast(mAllDomainBackboneRouters);
     }
 
 exit:
