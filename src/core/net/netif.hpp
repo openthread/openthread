@@ -309,11 +309,8 @@ public:
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval OT_ERROR_NONE     Successfully subscribed to @p aAddress.
-     * @retval OT_ERROR_ALREADY  The multicast address is already subscribed.
-     *
      */
-    otError SubscribeMulticast(NetifMulticastAddress &aAddress);
+    void SubscribeMulticast(NetifMulticastAddress &aAddress);
 
     /**
      * This method unsubscribes the network interface to a multicast address.

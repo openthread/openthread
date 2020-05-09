@@ -303,11 +303,9 @@ exit:
     return error;
 }
 
-otError Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
+void Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
 {
-    otError error;
-
-    SuccessOrExit(error = mMulticastAddresses.Add(aAddress));
+    SuccessOrExit(mMulticastAddresses.Add(aAddress));
 
     Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
 
@@ -315,7 +313,7 @@ otError Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
     mAddressCallback(&aAddress.mAddress, kMulticastPrefixLength, /* IsAdded */ true, mAddressCallbackContext);
 
 exit:
-    return error;
+    return;
 }
 
 otError Netif::UnsubscribeMulticast(const NetifMulticastAddress &aAddress)

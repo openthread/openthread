@@ -136,11 +136,11 @@ void TestNetifMulticastAddresses(void)
                  "UnsubscribeAllRoutersMulticast() did not fail when not subscribed");
 
     IgnoreError(netifAddress.GetAddress().FromString(kTestAddress1));
-    SuccessOrQuit(netif.SubscribeMulticast(netifAddress), "SubscribeMulticast() failed");
+    netif.SubscribeMulticast(netifAddress);
     VerifyMulticastAddressList(netif, &addresses[2], 4);
 
-    VerifyOrQuit(netif.SubscribeMulticast(netifAddress) == OT_ERROR_ALREADY,
-                 "SubscribeMulticast() did not fail when address was already subscribed");
+    netif.SubscribeMulticast(netifAddress);
+    VerifyMulticastAddressList(netif, &addresses[2], 4);
 
     SuccessOrQuit(netif.UnsubscribeAllNodesMulticast(), "UnsubscribeAllNodesMulticast() failed");
     VerifyMulticastAddressList(netif, &addresses[5], 1);
