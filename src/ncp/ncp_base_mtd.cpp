@@ -3397,7 +3397,7 @@ void NcpBase::HandleDatagramFromStack(otMessage *aMessage)
 {
     VerifyOrExit(aMessage != NULL, OT_NOOP);
 
-    SuccessOrExit(otMessageQueueEnqueue(&mMessageQueue, aMessage));
+    otMessageQueueEnqueue(&mMessageQueue, aMessage);
 
     // If there is no queued spinel command response, try to write/send
     // the datagram message immediately. If there is a queued response
@@ -3462,7 +3462,7 @@ otError NcpBase::SendQueuedDatagramMessages(void)
 
         if (error != OT_ERROR_NONE)
         {
-            IgnoreError(otMessageQueueEnqueueAtHead(&mMessageQueue, message));
+            otMessageQueueEnqueueAtHead(&mMessageQueue, message);
         }
 
         SuccessOrExit(error);

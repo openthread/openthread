@@ -403,7 +403,7 @@ otError Buffer::InFrameFeedMessage(otMessage *aMessage)
     SuccessOrExit(error = InFrameBeginSegment());
 
     // Enqueue the message in the current write frame queue.
-    SuccessOrExit(error = otMessageQueueEnqueue(&mWriteFrameMessageQueue, aMessage));
+    otMessageQueueEnqueue(&mWriteFrameMessageQueue, aMessage);
 
     // End/Close the current segment marking the flag that it contains an associated message.
     InFrameEndSegment(kSegmentHeaderMessageIndicatorFlag);
@@ -521,7 +521,7 @@ otError Buffer::InFrameEnd(void)
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
         IgnoreError(otMessageQueueDequeue(&mWriteFrameMessageQueue, message));
-        IgnoreError(otMessageQueueEnqueue(&mMessageQueue[mWriteDirection], message));
+        otMessageQueueEnqueue(&mMessageQueue[mWriteDirection], message);
     }
 #endif
 

@@ -448,7 +448,7 @@ exit:
 
 void Ip6::EnqueueDatagram(Message &aMessage)
 {
-    IgnoreError(mSendQueue.Enqueue(aMessage));
+    mSendQueue.Enqueue(aMessage);
     mSendQueueTask.Post();
 }
 
@@ -775,7 +775,7 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
             mTimer.Start(kStateUpdatePeriod);
         }
 
-        IgnoreError(mReassemblyList.Enqueue(*message));
+        mReassemblyList.Enqueue(*message);
 
         otLogDebgIp6("start reassembly.");
     }

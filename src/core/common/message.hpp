@@ -943,11 +943,8 @@ public:
      *
      * @param[in]  aMessage  The message to add.
      *
-     * @retval OT_ERROR_NONE     Successfully added the message to the list.
-     * @retval OT_ERROR_ALREADY  The message is already enqueued in a list.
-     *
      */
-    otError Enqueue(Message &aMessage) { return Enqueue(aMessage, kQueuePositionTail); }
+    void Enqueue(Message &aMessage) { Enqueue(aMessage, kQueuePositionTail); }
 
     /**
      * This method adds a message at a given position (head/tail) of the list.
@@ -955,11 +952,8 @@ public:
      * @param[in]  aMessage  The message to add.
      * @param[in]  aPosition The position (head or tail) where to add the message.
      *
-     * @retval OT_ERROR_NONE     Successfully added the message to the list.
-     * @retval OT_ERROR_ALREADY  The message is already enqueued in a list.
-     *
      */
-    otError Enqueue(Message &aMessage, QueuePosition aPosition);
+    void Enqueue(Message &aMessage, QueuePosition aPosition);
 
     /**
      * This method removes a message from the list.
@@ -1040,11 +1034,8 @@ public:
      *
      * @param[in]  aMessage  The message to add.
      *
-     * @retval OT_ERROR_NONE     Successfully added the message to the list.
-     * @retval OT_ERROR_ALREADY  The message is already enqueued in a list.
-     *
      */
-    otError Enqueue(Message &aMessage);
+    void Enqueue(Message &aMessage);
 
     /**
      * This method removes a message from the list.

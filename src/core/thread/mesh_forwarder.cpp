@@ -261,7 +261,7 @@ Message *MeshForwarder::GetDirectTransmission(void)
 
         case OT_ERROR_ADDRESS_QUERY:
             IgnoreError(mSendQueue.Dequeue(*curMessage));
-            IgnoreError(mResolvingQueue.Enqueue(*curMessage));
+            mResolvingQueue.Enqueue(*curMessage);
             continue;
 
 #endif
@@ -1117,7 +1117,7 @@ void MeshForwarder::HandleFragment(const uint8_t *         aFrame,
             ClearReassemblyList();
         }
 
-        IgnoreError(mReassemblyList.Enqueue(*message));
+        mReassemblyList.Enqueue(*message);
 
         if (!mUpdateTimer.IsRunning())
         {
