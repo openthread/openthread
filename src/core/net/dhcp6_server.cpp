@@ -114,7 +114,7 @@ otError Dhcp6Server::UpdateService(void)
 
         if (error == OT_ERROR_NONE)
         {
-            IgnoreError(AddPrefixAgent(config.mPrefix, lowpanContext));
+            AddPrefixAgent(config.mPrefix, lowpanContext);
         }
     }
 
@@ -144,7 +144,7 @@ void Dhcp6Server::Stop(void)
     IgnoreError(mSocket.Close());
 }
 
-otError Dhcp6Server::AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Context &aContext)
+void Dhcp6Server::AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Context &aContext)
 {
     otError      error    = OT_ERROR_NONE;
     PrefixAgent *newEntry = NULL;
@@ -169,7 +169,11 @@ otError Dhcp6Server::AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan:
     mPrefixAgentsCount++;
 
 exit:
-    return error;
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogNoteIp6("Failed to add DHCPv6 prefix agent: %s", otThreadErrorToString(error));
+    }
 }
 
 void Dhcp6Server::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
