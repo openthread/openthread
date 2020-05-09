@@ -426,7 +426,7 @@ private:
                              const Mac::Address &aMacDest,
                              uint8_t &           aPriority);
     otError GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader, uint16_t aSrcRloc16, uint8_t &aPriority);
-    otError GetForwardFramePriority(const uint8_t *     aFrame,
+    void    GetForwardFramePriority(const uint8_t *     aFrame,
                                     uint16_t            aFrameLength,
                                     const Mac::Address &aMeshSource,
                                     const Mac::Address &aMeshDest,
