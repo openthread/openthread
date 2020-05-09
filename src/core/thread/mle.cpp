@@ -301,8 +301,8 @@ void Mle::Stop(bool aClearNetworkDatasets)
 
     Get<KeyManager>().Stop();
     SetStateDetached();
-    IgnoreError(Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes));
-    IgnoreError(Get<ThreadNetif>().UnsubscribeMulticast(mLinkLocalAllThreadNodes));
+    Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes);
+    Get<ThreadNetif>().UnsubscribeMulticast(mLinkLocalAllThreadNodes);
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal64);
 
@@ -914,8 +914,8 @@ void Mle::SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix)
         // We must remove the old addresses before adding the new ones.
         Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal64);
         Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
-        IgnoreError(Get<ThreadNetif>().UnsubscribeMulticast(mLinkLocalAllThreadNodes));
-        IgnoreError(Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes));
+        Get<ThreadNetif>().UnsubscribeMulticast(mLinkLocalAllThreadNodes);
+        Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes);
     }
 
     mMeshLocal64.GetAddress().SetPrefix(aMeshLocalPrefix);

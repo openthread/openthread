@@ -317,11 +317,8 @@ public:
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval OT_ERROR_NONE       Successfully unsubscribed @p aAddress.
-     * @retval OT_ERROR_NOT_FOUND  The multicast address was not found.
-     *
      */
-    otError UnsubscribeMulticast(const NetifMulticastAddress &aAddress);
+    void UnsubscribeMulticast(const NetifMulticastAddress &aAddress);
 
     /**
      * This method provides the next external multicast address that the network interface subscribed.

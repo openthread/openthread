@@ -185,11 +185,11 @@ void TestNetifMulticastAddresses(void)
     netif.UnsubscribeAllExternalMulticastAddresses();
     VerifyMulticastAddressList(netif, &addresses[2], 4);
 
-    SuccessOrQuit(netif.UnsubscribeMulticast(netifAddress), "UnsubscribeMulticast() failed");
+    netif.UnsubscribeMulticast(netifAddress);
     VerifyMulticastAddressList(netif, &addresses[2], 3);
 
-    VerifyOrQuit(netif.UnsubscribeMulticast(netifAddress) == OT_ERROR_NOT_FOUND,
-                 "UnsubscribeMulticast() did not fail when address was not subscribed");
+    netif.UnsubscribeMulticast(netifAddress);
+    VerifyMulticastAddressList(netif, &addresses[2], 3);
 
     SuccessOrQuit(netif.UnsubscribeAllNodesMulticast(), "UnsubscribeAllNodesMulticast() failed");
     VerifyMulticastAddressList(netif, NULL, 0);

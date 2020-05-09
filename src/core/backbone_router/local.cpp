@@ -228,7 +228,7 @@ void Local::SetState(BackboneRouterState aState)
     }
     else if (aState == OT_BACKBONE_ROUTER_STATE_DISABLED)
     {
-        IgnoreError(Get<ThreadNetif>().UnsubscribeMulticast(mAllNetworkBackboneRouters));
+        Get<ThreadNetif>().UnsubscribeMulticast(mAllNetworkBackboneRouters);
     }
 
     if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
@@ -351,7 +351,7 @@ void Local::ApplyMeshLocalPrefix(void)
 {
     VerifyOrExit(IsEnabled(), OT_NOOP);
 
-    IgnoreError(Get<ThreadNetif>().UnsubscribeMulticast(mAllNetworkBackboneRouters));
+    Get<ThreadNetif>().UnsubscribeMulticast(mAllNetworkBackboneRouters);
     mAllNetworkBackboneRouters.GetAddress().SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
     Get<ThreadNetif>().SubscribeMulticast(mAllNetworkBackboneRouters);
 
@@ -370,13 +370,13 @@ void Local::UpdateAllDomainBackboneRouters(Leader::DomainPrefixState aState)
 {
     if (!IsEnabled())
     {
-        IgnoreError(Get<ThreadNetif>().UnsubscribeMulticast(mAllDomainBackboneRouters));
+        Get<ThreadNetif>().UnsubscribeMulticast(mAllDomainBackboneRouters);
         ExitNow();
     }
 
     if (aState == Leader::kDomainPrefixRemoved || aState == Leader::kDomainPrefixRefreshed)
     {
-        IgnoreError(Get<ThreadNetif>().UnsubscribeMulticast(mAllDomainBackboneRouters));
+        Get<ThreadNetif>().UnsubscribeMulticast(mAllDomainBackboneRouters);
     }
 
     if (aState == Leader::kDomainPrefixAdded || aState == Leader::kDomainPrefixRefreshed)
