@@ -238,7 +238,7 @@ bool Dhcp6Client::HandleTrickleTimer(void)
         // fall through
 
     case kIaStatusSoliciting:
-        IgnoreError(Solicit(mIdentityAssociationCurrent->mPrefixAgentRloc));
+        Solicit(mIdentityAssociationCurrent->mPrefixAgentRloc);
         break;
 
     case kIaStatusSolicitReplied:
@@ -261,7 +261,7 @@ exit:
     return rval;
 }
 
-otError Dhcp6Client::Solicit(uint16_t aRloc16)
+void Dhcp6Client::Solicit(uint16_t aRloc16)
 {
     otError          error = OT_ERROR_NONE;
     Message *        message;
@@ -290,12 +290,15 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
 
 exit:
 
-    if (message != NULL && error != OT_ERROR_NONE)
+    if (message != NULL)
     {
-        message->Free();
-    }
+        otLogWarnIp6("Failed to send DHCPv6 Solicit: %s", otThreadErrorToString(error));
 
-    return error;
+        if (error != OT_ERROR_NONE)
+        {
+            message->Free();
+        }
+    }
 }
 
 otError Dhcp6Client::AppendHeader(Message &aMessage)
