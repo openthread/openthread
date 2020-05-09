@@ -116,14 +116,13 @@ exit:
     return rval;
 }
 
-otError Netif::SubscribeAllNodesMulticast(void)
+void Netif::SubscribeAllNodesMulticast(void)
 {
-    otError                error = OT_ERROR_NONE;
     NetifMulticastAddress *tail;
     NetifMulticastAddress &linkLocalAllNodesAddress =
         static_cast<NetifMulticastAddress &>(const_cast<otNetifMulticastAddress &>(kLinkLocalAllNodesMulticastAddress));
 
-    VerifyOrExit(!mMulticastAddresses.Contains(linkLocalAllNodesAddress), error = OT_ERROR_ALREADY);
+    VerifyOrExit(!mMulticastAddresses.Contains(linkLocalAllNodesAddress), OT_NOOP);
 
     // Append the fixed chain of three multicast addresses to the
     // tail of the list:
@@ -151,7 +150,7 @@ otError Netif::SubscribeAllNodesMulticast(void)
     }
 
 exit:
-    return error;
+    return;
 }
 
 otError Netif::UnsubscribeAllNodesMulticast(void)

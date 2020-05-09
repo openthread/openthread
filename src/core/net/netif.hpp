@@ -386,11 +386,8 @@ protected:
      * This method subscribes the network interface to the realm-local all MPL forwarders, link-local, and realm-local
      * all nodes address.
      *
-     * @retval OT_ERROR_NONE     Successfully subscribed to all addresses.
-     * @retval OT_ERROR_ALREADY  The multicast addresses are already subscribed.
-     *
      */
-    otError SubscribeAllNodesMulticast(void);
+    void SubscribeAllNodesMulticast(void);
 
     /**
      * This method unsubscribes the network interface from the realm-local all MPL forwarders, link-local and
