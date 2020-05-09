@@ -187,7 +187,7 @@ private:
     void Start(void);
     void Stop(void);
 
-    otError AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Context &aContext);
+    void AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Context &aContext);
 
     otError AppendHeader(Message &aMessage, uint8_t *aTransactionId);
     otError AppendClientIdentifier(Message &aMessage, ClientIdentifier &aClientId);
