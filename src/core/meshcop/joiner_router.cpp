@@ -222,7 +222,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
     {
         otLogInfoMeshCoP("Received kek");
 
-        IgnoreError(DelaySendingJoinerEntrust(messageInfo, kek));
+        DelaySendingJoinerEntrust(messageInfo, kek);
     }
 
 exit:
@@ -232,7 +232,7 @@ exit:
     }
 }
 
-otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek)
+void JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek)
 {
     otError               error   = OT_ERROR_NONE;
     Message *             message = Get<MessagePool>().New(Message::kTypeOther, 0);
@@ -256,12 +256,15 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogNoteMeshCoP("Failed to schedule joiner entrust: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 void JoinerRouter::HandleTimer(Timer &aTimer)
