@@ -277,13 +277,11 @@ private:
     void        RemoveCacheEntry(CacheEntry &aEntry, CacheEntryList &aList, CacheEntry *aPrevEntry, Reason aReason);
 
     otError SendAddressQuery(const Ip6::Address &aEid);
-    otError SendAddressError(const Ip6::Address &aTarget,
-                             const uint8_t *     aMeshLocalIid,
-                             const Ip6::Address *aDestination);
-    void    SendAddressQueryResponse(const Ip6::Address &aTarget,
-                                     const uint8_t *     aMeshLocalIid,
-                                     const uint32_t *    aLastTransactionTimeTlv,
-                                     const Ip6::Address &aDestination);
+    void SendAddressError(const Ip6::Address &aTarget, const uint8_t *aMeshLocalIid, const Ip6::Address *aDestination);
+    void SendAddressQueryResponse(const Ip6::Address &aTarget,
+                                  const uint8_t *     aMeshLocalIid,
+                                  const uint32_t *    aLastTransactionTimeTlv,
+                                  const Ip6::Address &aDestination);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
