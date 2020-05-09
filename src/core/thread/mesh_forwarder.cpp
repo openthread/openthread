@@ -180,7 +180,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
         mSendMessage->SetTxSuccess(true);
     }
 
-    IgnoreError(Get<Mac::Mac>().RequestDirectFrameTransmission());
+    Get<Mac::Mac>().RequestDirectFrameTransmission();
 
 exit:
     return;
