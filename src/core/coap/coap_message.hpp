@@ -695,11 +695,8 @@ public:
      *
      * @param[in]  aMessage  The message to remove.
      *
-     * @retval OT_ERROR_NONE       Successfully removed the message from the queue.
-     * @retval OT_ERROR_NOT_FOUND  The message is not enqueued in a queue.
-     *
      */
-    otError Dequeue(Message &aMessage) { return ot::MessageQueue::Dequeue(aMessage); }
+    void Dequeue(Message &aMessage) { ot::MessageQueue::Dequeue(aMessage); }
 };
 
 /**

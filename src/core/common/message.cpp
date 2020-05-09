@@ -372,7 +372,7 @@ otError Message::SetPriority(uint8_t aPriority)
     if (mBuffer.mHead.mInfo.mInPriorityQ)
     {
         priorityQueue = mBuffer.mHead.mInfo.mQueue.mPriority;
-        IgnoreError(priorityQueue->Dequeue(*this));
+        priorityQueue->Dequeue(*this);
     }
 
     mBuffer.mHead.mInfo.mPriority = aPriority;
@@ -832,12 +832,9 @@ void MessageQueue::Enqueue(Message &aMessage, QueuePosition aPosition)
     }
 }
 
-otError MessageQueue::Dequeue(Message &aMessage)
+void MessageQueue::Dequeue(Message &aMessage)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aMessage.GetMessageQueue() == this, error = OT_ERROR_NOT_FOUND);
-
+    OT_ASSERT(aMessage.GetMessageQueue() == this);
     OT_ASSERT((aMessage.Next() != NULL) && (aMessage.Prev() != NULL));
 
     if (&aMessage == GetTail())
@@ -857,9 +854,6 @@ otError MessageQueue::Dequeue(Message &aMessage)
     aMessage.Next() = NULL;
 
     aMessage.SetMessageQueue(NULL);
-
-exit:
-    return error;
 }
 
 void MessageQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const
@@ -970,13 +964,12 @@ void PriorityQueue::Enqueue(Message &aMessage)
     mTails[priority] = &aMessage;
 }
 
-otError PriorityQueue::Dequeue(Message &aMessage)
+void PriorityQueue::Dequeue(Message &aMessage)
 {
-    otError  error = OT_ERROR_NONE;
     uint8_t  priority;
     Message *tail;
 
-    VerifyOrExit(aMessage.GetPriorityQueue() == this, error = OT_ERROR_NOT_FOUND);
+    OT_ASSERT(aMessage.GetPriorityQueue() == this);
 
     priority = aMessage.GetPriority();
 
@@ -1000,9 +993,6 @@ otError PriorityQueue::Dequeue(Message &aMessage)
     aMessage.Prev()         = NULL;
 
     aMessage.SetMessageQueue(NULL);
-
-exit:
-    return error;
 }
 
 void PriorityQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const

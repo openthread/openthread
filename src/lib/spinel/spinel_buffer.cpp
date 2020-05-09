@@ -93,7 +93,7 @@ void Buffer::Clear(void)
 
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
-        IgnoreError(otMessageQueueDequeue(&mWriteFrameMessageQueue, message));
+        otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
 
         // Note that messages associated with current (unfinished) input frame
         // are not yet owned by the `Buffer` and therefore should not
@@ -104,7 +104,7 @@ void Buffer::Clear(void)
     {
         while ((message = otMessageQueueGetHead(&mMessageQueue[priority])) != NULL)
         {
-            IgnoreError(otMessageQueueDequeue(&mMessageQueue[priority], message));
+            otMessageQueueDequeue(&mMessageQueue[priority], message);
             otMessageFree(message);
         }
     }
@@ -317,7 +317,7 @@ void Buffer::InFrameDiscard(void)
 #if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
-        IgnoreError(otMessageQueueDequeue(&mWriteFrameMessageQueue, message));
+        otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
 
         // Note that messages associated with current (unfinished) input frame
         // being discarded, are not yet owned by the `Buffer` and
@@ -520,7 +520,7 @@ otError Buffer::InFrameEnd(void)
     // Move all the messages from the frame queue to the main queue.
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
-        IgnoreError(otMessageQueueDequeue(&mWriteFrameMessageQueue, message));
+        otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
         otMessageQueueEnqueue(&mMessageQueue[mWriteDirection], message);
     }
 #endif
@@ -831,7 +831,7 @@ otError Buffer::OutFrameRemove(void)
 
             if ((message = otMessageQueueGetHead(&mMessageQueue[mReadDirection])) != NULL)
             {
-                IgnoreError(otMessageQueueDequeue(&mMessageQueue[mReadDirection], message));
+                otMessageQueueDequeue(&mMessageQueue[mReadDirection], message);
                 otMessageFree(message);
             }
         }

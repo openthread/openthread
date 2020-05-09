@@ -393,7 +393,7 @@ void Mpl::HandleRetransmissionTimer(void)
             }
             else
             {
-                IgnoreError(mBufferedMessageSet.Dequeue(*message));
+                mBufferedMessageSet.Dequeue(*message);
 
                 if (metadata.mTransmissionCount == GetTimerExpirations())
                 {

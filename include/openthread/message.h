@@ -339,11 +339,8 @@ void otMessageQueueEnqueueAtHead(otMessageQueue *aQueue, otMessage *aMessage);
  * @param[in]  aQueue    A pointer to the message queue.
  * @param[in]  aMessage  The message to remove.
  *
- * @retval OT_ERROR_NONE       Successfully removed the message from the queue.
- * @retval OT_ERROR_NOT_FOUND  The message is not enqueued in this queue.
- *
  */
-otError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage);
+void otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage);
 
 /**
  * This function returns a pointer to the message at the head of the queue.

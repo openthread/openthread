@@ -138,7 +138,7 @@ void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
                 Get<MeshForwarder>().mSendMessage = NULL;
             }
 
-            IgnoreError(Get<MeshForwarder>().mSendQueue.Dequeue(*message));
+            Get<MeshForwarder>().mSendQueue.Dequeue(*message);
             message->Free();
         }
     }
@@ -218,7 +218,7 @@ Message *IndirectSender::FindIndirectMessage(Child &aChild)
             {
                 message->ClearChildMask(childIndex);
                 mSourceMatchController.DecrementMessageCount(aChild);
-                IgnoreError(Get<MeshForwarder>().mSendQueue.Dequeue(*message));
+                Get<MeshForwarder>().mSendQueue.Dequeue(*message);
                 message->Free();
                 continue;
             }
@@ -540,7 +540,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
 
         if (!message->GetDirectTransmission() && !message->IsChildPending())
         {
-            IgnoreError(Get<MeshForwarder>().mSendQueue.Dequeue(*message));
+            Get<MeshForwarder>().mSendQueue.Dequeue(*message);
             message->Free();
         }
     }

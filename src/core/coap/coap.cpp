@@ -452,7 +452,7 @@ exit:
 
 void CoapBase::DequeueMessage(Message &aMessage)
 {
-    IgnoreError(mPendingRequests.Dequeue(aMessage));
+    mPendingRequests.Dequeue(aMessage);
 
     if (mRetransmissionTimer.IsRunning() && (mPendingRequests.GetHead() == NULL))
     {
@@ -889,7 +889,7 @@ void ResponsesQueue::UpdateQueue(void)
 
 void ResponsesQueue::DequeueResponse(Message &aMessage)
 {
-    IgnoreError(mQueue.Dequeue(aMessage));
+    mQueue.Dequeue(aMessage);
     aMessage.Free();
 }
 
