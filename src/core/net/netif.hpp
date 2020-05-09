@@ -395,11 +395,8 @@ protected:
      *
      * @note This method MUST be called after `UnsubscribeAllRoutersMulticast()` or its behavior is undefined
      *
-     * @retval OT_ERROR_NONE          Successfully unsubscribed from all addresses.
-     * @retval OT_ERROR_NOT_FOUND     The multicast addresses were not found.
-     *
      */
-    otError UnsubscribeAllNodesMulticast(void);
+    void UnsubscribeAllNodesMulticast(void);
 
 private:
     enum
