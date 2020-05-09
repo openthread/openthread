@@ -161,11 +161,11 @@ otError otCoapSecureSendRequest(otInstance *          aInstance,
     return instance.GetApplicationCoapSecure().SendMessage(*static_cast<Coap::Message *>(aMessage), aHandler, aContext);
 }
 
-otError otCoapSecureAddResource(otInstance *aInstance, otCoapResource *aResource)
+void otCoapSecureAddResource(otInstance *aInstance, otCoapResource *aResource)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().AddResource(*static_cast<Coap::Resource *>(aResource));
+    instance.GetApplicationCoapSecure().AddResource(*static_cast<Coap::Resource *>(aResource));
 }
 
 void otCoapSecureRemoveResource(otInstance *aInstance, otCoapResource *aResource)

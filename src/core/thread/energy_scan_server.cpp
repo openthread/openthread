@@ -59,7 +59,7 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
     , mNotifierCallback(aInstance, &EnergyScanServer::HandleStateChanged, this)
     , mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this)
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mEnergyScan));
+    Get<Coap::Coap>().AddResource(mEnergyScan);
 }
 
 void EnergyScanServer::HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)

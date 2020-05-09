@@ -307,11 +307,8 @@ public:
      *
      * @param[in]  aResource  A reference to the resource.
      *
-     * @retval OT_ERROR_NONE     Successfully added @p aResource.
-     * @retval OT_ERROR_ALREADY  The @p aResource was already added.
-     *
      */
-    otError AddResource(Resource &aResource);
+    void AddResource(Resource &aResource);
 
     /**
      * This method removes a resource from the CoAP server.

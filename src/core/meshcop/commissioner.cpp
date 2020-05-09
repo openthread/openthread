@@ -114,9 +114,9 @@ void Commissioner::SignalJoinerEvent(otCommissionerJoinerEvent aEvent, const Mac
 
 void Commissioner::AddCoapResources(void)
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mRelayReceive));
-    IgnoreError(Get<Coap::Coap>().AddResource(mDatasetChanged));
-    IgnoreError(Get<Coap::CoapSecure>().AddResource(mJoinerFinalize));
+    Get<Coap::Coap>().AddResource(mRelayReceive);
+    Get<Coap::Coap>().AddResource(mDatasetChanged);
+    Get<Coap::CoapSecure>().AddResource(mJoinerFinalize);
 }
 
 void Commissioner::RemoveCoapResources(void)
