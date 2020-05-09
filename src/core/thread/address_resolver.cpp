@@ -633,8 +633,7 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
             // by more than one device. Try to resolve the duplicate
             // address by sending an Address Error message.
 
-            VerifyOrExit(entry->HasMeshLocalIid(meshLocalIid),
-                         IgnoreError(SendAddressError(target, meshLocalIid, NULL)));
+            VerifyOrExit(entry->HasMeshLocalIid(meshLocalIid), SendAddressError(target, meshLocalIid, NULL));
 
             VerifyOrExit(lastTransactionTime < entry->GetLastTransactionTime(), OT_NOOP);
         }
@@ -660,9 +659,9 @@ exit:
     return;
 }
 
-otError AddressResolver::SendAddressError(const Ip6::Address &aTarget,
-                                          const uint8_t *     aMeshLocalIid,
-                                          const Ip6::Address *aDestination)
+void AddressResolver::SendAddressError(const Ip6::Address &aTarget,
+                                       const uint8_t *     aMeshLocalIid,
+                                       const Ip6::Address *aDestination)
 {
     otError          error;
     Coap::Message *  message;
@@ -696,12 +695,15 @@ otError AddressResolver::SendAddressError(const Ip6::Address &aTarget,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogInfoArp("Failed to send address error: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 void AddressResolver::HandleAddressError(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -766,7 +768,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
             {
                 SuccessOrExit(error = Get<Mle::Mle>().GetLocatorAddress(destination, child.GetRloc16()));
 
-                IgnoreError(SendAddressError(target, meshLocalIid, &destination));
+                SendAddressError(target, meshLocalIid, &destination);
                 ExitNow();
             }
         }
