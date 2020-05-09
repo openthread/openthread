@@ -51,8 +51,8 @@ public:
 
     // Provide `protected` methods in `Netif` as `public` from `TestNetif`
     // so that we can verify their behavior in this test
-    void    SubscribeAllNodesMulticast(void) { Ip6::Netif::SubscribeAllNodesMulticast(); }
-    otError UnsubscribeAllNodesMulticast(void) { return Ip6::Netif::UnsubscribeAllNodesMulticast(); }
+    void SubscribeAllNodesMulticast(void) { Ip6::Netif::SubscribeAllNodesMulticast(); }
+    void UnsubscribeAllNodesMulticast(void) { Ip6::Netif::UnsubscribeAllNodesMulticast(); }
 };
 
 // This function verifies the multicast addresses on Netif matches the list of given addresses.
@@ -141,11 +141,11 @@ void TestNetifMulticastAddresses(void)
     netif.SubscribeMulticast(netifAddress);
     VerifyMulticastAddressList(netif, &addresses[2], 4);
 
-    SuccessOrQuit(netif.UnsubscribeAllNodesMulticast(), "UnsubscribeAllNodesMulticast() failed");
+    netif.UnsubscribeAllNodesMulticast();
     VerifyMulticastAddressList(netif, &addresses[5], 1);
 
-    VerifyOrQuit(netif.UnsubscribeAllNodesMulticast() == OT_ERROR_NOT_FOUND,
-                 "UnsubscribeAllNodesMulticast() did not fail when not subscribed");
+    netif.UnsubscribeAllNodesMulticast();
+    VerifyMulticastAddressList(netif, &addresses[5], 1);
 
     IgnoreError(address.FromString(kTestAddress2));
     SuccessOrQuit(netif.SubscribeExternalMulticast(address), "SubscribeExternalMulticast() failed");
@@ -190,7 +190,7 @@ void TestNetifMulticastAddresses(void)
     netif.UnsubscribeMulticast(netifAddress);
     VerifyMulticastAddressList(netif, &addresses[2], 3);
 
-    SuccessOrQuit(netif.UnsubscribeAllNodesMulticast(), "UnsubscribeAllNodesMulticast() failed");
+    netif.UnsubscribeAllNodesMulticast();
     VerifyMulticastAddressList(netif, NULL, 0);
 
     // The first five elements in `addresses[]` are the default/fixed addresses:

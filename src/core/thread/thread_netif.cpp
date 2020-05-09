@@ -170,7 +170,7 @@ void ThreadNetif::Down(void)
     RemoveAllExternalUnicastAddresses();
     UnsubscribeAllExternalMulticastAddresses();
     IgnoreError(UnsubscribeAllRoutersMulticast());
-    IgnoreError(UnsubscribeAllNodesMulticast());
+    UnsubscribeAllNodesMulticast();
 
     mIsUp = false;
     Get<MeshForwarder>().Stop();

@@ -153,9 +153,8 @@ exit:
     return;
 }
 
-otError Netif::UnsubscribeAllNodesMulticast(void)
+void Netif::UnsubscribeAllNodesMulticast(void)
 {
-    otError                      error = OT_ERROR_NONE;
     NetifMulticastAddress *      prev;
     const NetifMulticastAddress &linkLocalAllNodesAddress =
         static_cast<NetifMulticastAddress &>(const_cast<otNetifMulticastAddress &>(kLinkLocalAllNodesMulticastAddress));
@@ -166,7 +165,7 @@ otError Netif::UnsubscribeAllNodesMulticast(void)
     //
     //    LinkLocalAll -> RealmLocalAll -> RealmLocalAllMpl.
 
-    SuccessOrExit(error = mMulticastAddresses.Find(linkLocalAllNodesAddress, prev));
+    SuccessOrExit(mMulticastAddresses.Find(linkLocalAllNodesAddress, prev));
 
     // This method MUST be called after `UnsubscribeAllRoutersMulticast().
     // Verify this by checking the chain at the end of the list only
@@ -198,7 +197,7 @@ otError Netif::UnsubscribeAllNodesMulticast(void)
     }
 
 exit:
-    return error;
+    return;
 }
 
 otError Netif::SubscribeAllRoutersMulticast(void)
