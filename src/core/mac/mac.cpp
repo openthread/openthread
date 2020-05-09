@@ -537,17 +537,15 @@ void Mac::SetExtendedPanId(const ExtendedPanId &aExtendedPanId)
     IgnoreError(Get<Notifier>().Update(mExtendedPanId, aExtendedPanId, OT_CHANGED_THREAD_EXT_PANID));
 }
 
-otError Mac::RequestDirectFrameTransmission(void)
+void Mac::RequestDirectFrameTransmission(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!mPendingTransmitDataDirect && (mOperation != kOperationTransmitDataDirect), error = OT_ERROR_ALREADY);
+    VerifyOrExit(IsEnabled(), OT_NOOP);
+    VerifyOrExit(!mPendingTransmitDataDirect && (mOperation != kOperationTransmitDataDirect), OT_NOOP);
 
     StartOperation(kOperationTransmitDataDirect);
 
 exit:
-    return error;
+    return;
 }
 
 #if OPENTHREAD_FTD
