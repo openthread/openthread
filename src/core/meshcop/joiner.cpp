@@ -65,7 +65,7 @@ Joiner::Joiner(Instance &aInstance)
     , mJoinerEntrust(OT_URI_PATH_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this)
 {
     memset(mJoinerRouters, 0, sizeof(mJoinerRouters));
-    IgnoreError(Get<Coap::Coap>().AddResource(mJoinerEntrust));
+    Get<Coap::Coap>().AddResource(mJoinerEntrust);
 }
 
 void Joiner::GetJoinerId(Mac::ExtAddress &aJoinerId) const

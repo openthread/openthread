@@ -676,18 +676,18 @@ otError BorderAgent::Start(void)
     SuccessOrExit(error = coaps.SetPsk(Get<KeyManager>().GetPskc().m8, OT_PSKC_MAX_SIZE));
     coaps.SetConnectedCallback(HandleConnected, this);
 
-    IgnoreError(coaps.AddResource(mActiveGet));
-    IgnoreError(coaps.AddResource(mActiveSet));
-    IgnoreError(coaps.AddResource(mPendingGet));
-    IgnoreError(coaps.AddResource(mPendingSet));
-    IgnoreError(coaps.AddResource(mCommissionerPetition));
-    IgnoreError(coaps.AddResource(mCommissionerKeepAlive));
-    IgnoreError(coaps.AddResource(mCommissionerSet));
-    IgnoreError(coaps.AddResource(mCommissionerGet));
-    IgnoreError(coaps.AddResource(mProxyTransmit));
-    IgnoreError(coaps.AddResource(mRelayTransmit));
+    coaps.AddResource(mActiveGet);
+    coaps.AddResource(mActiveSet);
+    coaps.AddResource(mPendingGet);
+    coaps.AddResource(mPendingSet);
+    coaps.AddResource(mCommissionerPetition);
+    coaps.AddResource(mCommissionerKeepAlive);
+    coaps.AddResource(mCommissionerSet);
+    coaps.AddResource(mCommissionerGet);
+    coaps.AddResource(mProxyTransmit);
+    coaps.AddResource(mRelayTransmit);
 
-    IgnoreError(Get<Coap::Coap>().AddResource(mRelayReceive));
+    Get<Coap::Coap>().AddResource(mRelayReceive);
 
     SetState(OT_BORDER_AGENT_STATE_STARTED);
 

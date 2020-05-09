@@ -193,7 +193,7 @@ otError Coap::ProcessResource(uint8_t aArgsLength, char *aArgs[])
         mResource.mHandler = &Coap::HandleRequest;
 
         strncpy(mUriPath, aArgs[1], sizeof(mUriPath) - 1);
-        SuccessOrExit(error = otCoapAddResource(mInterpreter.mInstance, &mResource));
+        otCoapAddResource(mInterpreter.mInstance, &mResource);
     }
     else
     {

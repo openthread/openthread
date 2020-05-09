@@ -63,7 +63,7 @@ JoinerRouter::JoinerRouter(Instance &aInstance)
     , mIsJoinerPortConfigured(false)
     , mExpectJoinEntRsp(false)
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mRelayTransmit));
+    Get<Coap::Coap>().AddResource(mRelayTransmit);
 }
 
 void JoinerRouter::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)

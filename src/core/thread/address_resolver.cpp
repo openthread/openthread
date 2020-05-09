@@ -71,9 +71,9 @@ AddressResolver::AddressResolver(Instance &aInstance)
         mUnusedList.Push(*entry);
     }
 
-    IgnoreError(Get<Coap::Coap>().AddResource(mAddressError));
-    IgnoreError(Get<Coap::Coap>().AddResource(mAddressQuery));
-    IgnoreError(Get<Coap::Coap>().AddResource(mAddressNotification));
+    Get<Coap::Coap>().AddResource(mAddressError);
+    Get<Coap::Coap>().AddResource(mAddressQuery);
+    Get<Coap::Coap>().AddResource(mAddressNotification);
 
     IgnoreError(Get<Ip6::Icmp>().RegisterHandler(mIcmpHandler));
 }

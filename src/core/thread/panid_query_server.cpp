@@ -53,7 +53,7 @@ PanIdQueryServer::PanIdQueryServer(Instance &aInstance)
     , mTimer(aInstance, &PanIdQueryServer::HandleTimer, this)
     , mPanIdQuery(OT_URI_PATH_PANID_QUERY, &PanIdQueryServer::HandleQuery, this)
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mPanIdQuery));
+    Get<Coap::Coap>().AddResource(mPanIdQuery);
 }
 
 void PanIdQueryServer::HandleQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)

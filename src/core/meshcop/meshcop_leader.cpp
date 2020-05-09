@@ -60,8 +60,8 @@ Leader::Leader(Instance &aInstance)
     , mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal)
     , mSessionId(Random::NonCrypto::GetUint16())
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mPetition));
-    IgnoreError(Get<Coap::Coap>().AddResource(mKeepAlive));
+    Get<Coap::Coap>().AddResource(mPetition);
+    Get<Coap::Coap>().AddResource(mKeepAlive);
 }
 
 void Leader::HandlePetition(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)

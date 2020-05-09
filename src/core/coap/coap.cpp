@@ -90,9 +90,9 @@ void CoapBase::ClearRequests(const Ip6::Address *aAddress)
     }
 }
 
-otError CoapBase::AddResource(Resource &aResource)
+void CoapBase::AddResource(Resource &aResource)
 {
-    return mResources.Add(aResource);
+    IgnoreError(mResources.Add(aResource));
 }
 
 void CoapBase::RemoveResource(Resource &aResource)

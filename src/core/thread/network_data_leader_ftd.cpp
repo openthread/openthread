@@ -76,9 +76,9 @@ void Leader::Reset(void)
 
 void Leader::Start(void)
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mServerData));
-    IgnoreError(Get<Coap::Coap>().AddResource(mCommissioningDataGet));
-    IgnoreError(Get<Coap::Coap>().AddResource(mCommissioningDataSet));
+    Get<Coap::Coap>().AddResource(mServerData);
+    Get<Coap::Coap>().AddResource(mCommissioningDataGet);
+    Get<Coap::Coap>().AddResource(mCommissioningDataSet);
 }
 
 void Leader::Stop(void)

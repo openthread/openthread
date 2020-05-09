@@ -51,7 +51,7 @@ AnnounceBeginServer::AnnounceBeginServer(Instance &aInstance)
     : AnnounceSenderBase(aInstance, &AnnounceBeginServer::HandleTimer)
     , mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this)
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mAnnounceBegin));
+    Get<Coap::Coap>().AddResource(mAnnounceBegin);
 }
 
 void AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod)
