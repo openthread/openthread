@@ -398,14 +398,13 @@ exit:
     return error;
 }
 
-otError AddressResolver::AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
+void AddressResolver::AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
 {
-    otError     error           = OT_ERROR_NONE;
     uint16_t    numNonEvictable = 0;
     CacheEntry *entry;
 
     entry = NewCacheEntry(/* aSnoopedEntry */ true);
-    VerifyOrExit(entry != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(entry != NULL, OT_NOOP);
 
     for (CacheEntry *snooped = mSnoopedList.GetHead(); snooped != NULL; snooped = snooped->GetNext())
     {
@@ -439,7 +438,7 @@ otError AddressResolver::AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::Sho
     LogCacheEntryChange(kEntryAdded, kReasonSnoop, *entry);
 
 exit:
-    return error;
+    return;
 }
 
 void AddressResolver::RestartAddressQueries(void)

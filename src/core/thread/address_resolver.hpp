@@ -146,11 +146,8 @@ public:
      * @param[in]  aEid               A reference to the EID.
      * @param[in]  aRloc16            The RLOC16 corresponding to @p aEid.
      *
-     * @retval OT_ERROR_NONE           Successfully adds the cache entry.
-     * @retval OT_ERROR_NO_BUFS        Insufficient buffer space available to add one cache entry.
-     *
      */
-    otError AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
+    void AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
 
     /**
      * This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not known.
