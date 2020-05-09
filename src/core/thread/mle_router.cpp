@@ -1284,7 +1284,10 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
         if (processRouteTlv)
         {
             SuccessOrExit(error = ProcessRouteTlv(route));
-            aNeighbor = NULL; // aNeighbor is no longer valid after `ProcessRouteTlv`
+            if (Get<RouterTable>().GetRouterIndex(static_cast<Router &>(*aNeighbor)) < kMaxRouters)
+            {
+                aNeighbor = NULL; // aNeighbor is no longer valid after `ProcessRouteTlv`
+            }
         }
     }
 

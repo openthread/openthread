@@ -273,7 +273,7 @@ public:
      * @returns The index corresponding to @p aRouter.
      *
      */
-    uint16_t GetRouterIndex(const Router &aRouter) const { return static_cast<uint16_t>(&aRouter - mRouters); }
+    size_t GetRouterIndex(const Router &aRouter) const { return static_cast<uint16_t>(&aRouter - mRouters); }
 
     /**
      * This method retains diagnostic information for a given router.
