@@ -254,7 +254,7 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
 
             IgnoreError(instance.Get<Mle::MleRouter>().GetCommissionerAloc(borderAgent.mCommissionerAloc.GetAddress(),
                                                                            sessionId));
-            IgnoreError(instance.Get<ThreadNetif>().AddUnicastAddress(borderAgent.mCommissionerAloc));
+            instance.Get<ThreadNetif>().AddUnicastAddress(borderAgent.mCommissionerAloc);
             IgnoreError(instance.Get<Ip6::Udp>().AddReceiver(borderAgent.mUdpReceiver));
         }
     }
@@ -754,7 +754,7 @@ void BorderAgent::ApplyMeshLocalPrefix(void)
     if (Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc) == OT_ERROR_NONE)
     {
         mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc));
+        Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
     }
 
 exit:

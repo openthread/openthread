@@ -165,7 +165,7 @@ void Dhcp6Server::AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Co
     VerifyOrExit(newEntry != NULL, error = OT_ERROR_NO_BUFS);
 
     newEntry->Set(aIp6Prefix, Get<Mle::MleRouter>().GetMeshLocalPrefix(), aContext.mContextId);
-    IgnoreError(Get<ThreadNetif>().AddUnicastAddress(newEntry->GetAloc()));
+    Get<ThreadNetif>().AddUnicastAddress(newEntry->GetAloc());
     mPrefixAgentsCount++;
 
 exit:
@@ -495,7 +495,7 @@ void Dhcp6Server::ApplyMeshLocalPrefix(void)
             PrefixAgent *entry = &mPrefixAgents[i];
             IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(entry->GetAloc()));
             entry->GetAloc().GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-            IgnoreError(Get<ThreadNetif>().AddUnicastAddress(entry->GetAloc()));
+            Get<ThreadNetif>().AddUnicastAddress(entry->GetAloc());
         }
     }
 }

@@ -439,11 +439,9 @@ void Netif::SetAddressCallback(otIp6AddressCallback aCallback, void *aCallbackCo
     mAddressCallbackContext = aCallbackContext;
 }
 
-otError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
+void Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
 {
-    otError error;
-
-    SuccessOrExit(error = mUnicastAddresses.Add(aAddress));
+    SuccessOrExit(mUnicastAddresses.Add(aAddress));
 
     Get<Notifier>().Signal(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_ADDED : OT_CHANGED_IP6_ADDRESS_ADDED);
 
@@ -451,7 +449,7 @@ otError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
     mAddressCallback(&aAddress.mAddress, aAddress.mPrefixLength, /* IsAdded */ true, mAddressCallbackContext);
 
 exit:
-    return error;
+    return;
 }
 
 otError Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)

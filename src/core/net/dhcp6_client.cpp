@@ -591,7 +591,7 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             mIdentityAssociations[i].mNetifAddress.mPreferred = option.GetPreferredLifetime() != 0;
             mIdentityAssociations[i].mNetifAddress.mValid     = option.GetValidLifetime() != 0;
             mIdentityAssociations[i].mStatus                  = kIaStatusSolicitReplied;
-            IgnoreError(Get<ThreadNetif>().AddUnicastAddress(ia.mNetifAddress));
+            Get<ThreadNetif>().AddUnicastAddress(ia.mNetifAddress);
             break;
         }
     }
