@@ -560,7 +560,7 @@ void Ip6::HandleSendQueue(void)
 
     while ((message = mSendQueue.GetHead()) != NULL)
     {
-        IgnoreError(mSendQueue.Dequeue(*message));
+        mSendQueue.Dequeue(*message);
         IgnoreError(HandleDatagram(*message, NULL, NULL, false));
     }
 }
@@ -818,7 +818,7 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
 
         otLogDebgIp6("Reassembly complete.");
 
-        IgnoreError(mReassemblyList.Dequeue(*message));
+        mReassemblyList.Dequeue(*message);
 
         error = HandleDatagram(*message, aNetif, aMessageInfo.mLinkInfo, aFromNcpHost);
     }
@@ -828,7 +828,7 @@ exit:
     {
         if (message != NULL)
         {
-            IgnoreError(mReassemblyList.Dequeue(*message));
+            mReassemblyList.Dequeue(*message);
             message->Free();
         }
         otLogWarnIp6("Reassembly failed: %s", otThreadErrorToString(error));
@@ -847,8 +847,8 @@ void Ip6::CleanupFragmentationBuffer(void)
     for (Message *message = mReassemblyList.GetHead(); message;)
     {
         Message *next = message->GetNext();
-        IgnoreError(mReassemblyList.Dequeue(*message));
 
+        mReassemblyList.Dequeue(*message);
         message->Free();
         message = next;
     }
@@ -886,7 +886,7 @@ void Ip6::UpdateReassemblyList(void)
             otLogNoteIp6("Reassembly timeout.");
             SendIcmpError(*message, IcmpHeader::kTypeTimeExceeded, IcmpHeader::kCodeFragmReasTimeEx);
 
-            IgnoreError(mReassemblyList.Dequeue(*message));
+            mReassemblyList.Dequeue(*message);
             message->Free();
         }
     }

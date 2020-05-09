@@ -160,7 +160,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
 
         if (ip6Dst == aEid)
         {
-            IgnoreError(mResolvingQueue.Dequeue(*cur));
+            mResolvingQueue.Dequeue(*cur);
 
             if (aError == OT_ERROR_NONE)
             {
@@ -307,7 +307,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
                 mSendMessage = NULL;
             }
 
-            IgnoreError(mSendQueue.Dequeue(*message));
+            mSendQueue.Dequeue(*message);
             message->Free();
         }
     }
@@ -339,7 +339,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
             mSendMessage = NULL;
         }
 
-        IgnoreError(mSendQueue.Dequeue(*message));
+        mSendQueue.Dequeue(*message);
         LogMessage(kMessageDrop, *message, NULL, OT_ERROR_NONE);
         message->Free();
     }

@@ -212,7 +212,7 @@ exit:
 
 void Client::DequeueMessage(Message &aMessage)
 {
-    IgnoreError(mPendingQueries.Dequeue(aMessage));
+    mPendingQueries.Dequeue(aMessage);
 
     if (mRetransmissionTimer.IsRunning() && (mPendingQueries.GetHead() == NULL))
     {

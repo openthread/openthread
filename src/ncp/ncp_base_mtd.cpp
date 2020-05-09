@@ -3456,7 +3456,7 @@ otError NcpBase::SendQueuedDatagramMessages(void)
         // If forming of the spinel frame fails, the message is enqueued
         // back at the front of `mMessageQueue`.
 
-        IgnoreError(otMessageQueueDequeue(&mMessageQueue, message));
+        otMessageQueueDequeue(&mMessageQueue, message);
 
         error = SendDatagramMessage(message);
 

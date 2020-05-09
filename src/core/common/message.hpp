@@ -960,11 +960,8 @@ public:
      *
      * @param[in]  aMessage  The message to remove.
      *
-     * @retval OT_ERROR_NONE       Successfully removed the message from the list.
-     * @retval OT_ERROR_NOT_FOUND  The message is not enqueued in a list.
-     *
      */
-    otError Dequeue(Message &aMessage);
+    void Dequeue(Message &aMessage);
 
     /**
      * This method returns the number of messages and buffers enqueued.
@@ -1042,11 +1039,8 @@ public:
      *
      * @param[in]  aMessage  The message to remove.
      *
-     * @retval OT_ERROR_NONE       Successfully removed the message from the list.
-     * @retval OT_ERROR_NOT_FOUND  The message is not enqueued in a list.
-     *
      */
-    otError Dequeue(Message &aMessage);
+    void Dequeue(Message &aMessage);
 
     /**
      * This method returns the number of messages and buffers enqueued.

@@ -299,7 +299,7 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     }
     else
     {
-        IgnoreError(mDelayedJoinEnts.Dequeue(*message));
+        mDelayedJoinEnts.Dequeue(*message);
         message->Free();
 
         Get<KeyManager>().SetKek(metadata.mKek);

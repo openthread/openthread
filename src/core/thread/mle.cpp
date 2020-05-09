@@ -1946,7 +1946,7 @@ void Mle::HandleDelayedResponseTimer(void)
         }
         else
         {
-            IgnoreError(mDelayedResponses.Dequeue(*message));
+            mDelayedResponses.Dequeue(*message);
             metadata.RemoveFrom(*message);
 
             if (SendMessage(*message, metadata.mDestination) == OT_ERROR_NONE)
@@ -1987,7 +1987,7 @@ void Mle::RemoveDelayedDataResponseMessage(void)
 
         if (message->GetSubType() == Message::kSubTypeMleDataResponse)
         {
-            IgnoreError(mDelayedResponses.Dequeue(*message));
+            mDelayedResponses.Dequeue(*message);
             message->Free();
             LogMleMessage("Remove Delayed Data Response", metadata.mDestination);
 

@@ -95,7 +95,7 @@ void CoapSecure::Stop(void)
 
     for (ot::Message *message = mTransmitQueue.GetHead(); message != NULL; message = message->GetNext())
     {
-        IgnoreError(mTransmitQueue.Dequeue(*message));
+        mTransmitQueue.Dequeue(*message);
         message->Free();
     }
 
@@ -229,7 +229,7 @@ void CoapSecure::HandleTransmit(void)
     ot::Message *message = mTransmitQueue.GetHead();
 
     VerifyOrExit(message != NULL, OT_NOOP);
-    IgnoreError(mTransmitQueue.Dequeue(*message));
+    mTransmitQueue.Dequeue(*message);
 
     if (mTransmitQueue.GetHead() != NULL)
     {

@@ -230,30 +230,22 @@ void TestPriorityQueue(void)
                                msgNor[0], msgLow[0]);
 
     // Remove messages in different order and check the content of queue in each step.
-    SuccessOrQuit(queue.Dequeue(*msgNet[0]), "PriorityQueue::Dequeue() failed.");
+    queue.Dequeue(*msgNet[0]);
     VerifyPriorityQueueContent(queue, 7, msgNet[1], msgHigh[0], msgHigh[1], msgHigh[2], msgHigh[3], msgNor[0],
                                msgLow[0]);
-    SuccessOrQuit(queue.Dequeue(*msgHigh[2]), "PriorityQueue::Dequeue() failed.");
+    queue.Dequeue(*msgHigh[2]);
     VerifyPriorityQueueContent(queue, 6, msgNet[1], msgHigh[0], msgHigh[1], msgHigh[3], msgNor[0], msgLow[0]);
-    SuccessOrQuit(queue.Dequeue(*msgNor[0]), "PriorityQueue::Dequeue() failed.");
+    queue.Dequeue(*msgNor[0]);
     VerifyPriorityQueueContent(queue, 5, msgNet[1], msgHigh[0], msgHigh[1], msgHigh[3], msgLow[0]);
-    SuccessOrQuit(queue.Dequeue(*msgHigh[1]), "PriorityQueue::Dequeue() failed.");
+    queue.Dequeue(*msgHigh[1]);
     VerifyPriorityQueueContent(queue, 4, msgNet[1], msgHigh[0], msgHigh[3], msgLow[0]);
-    SuccessOrQuit(queue.Dequeue(*msgLow[0]), "PriorityQueue::Dequeue() failed.");
+    queue.Dequeue(*msgLow[0]);
     VerifyPriorityQueueContent(queue, 3, msgNet[1], msgHigh[0], msgHigh[3]);
-    SuccessOrQuit(queue.Dequeue(*msgNet[1]), "PriorityQueue::Dequeue() failed.");
+    queue.Dequeue(*msgNet[1]);
     VerifyPriorityQueueContent(queue, 2, msgHigh[0], msgHigh[3]);
-    SuccessOrQuit(queue.Dequeue(*msgHigh[0]), "PriorityQueue::Dequeue() failed.");
+    queue.Dequeue(*msgHigh[0]);
     VerifyPriorityQueueContent(queue, 1, msgHigh[3]);
-    SuccessOrQuit(queue.Dequeue(*msgHigh[3]), "PriorityQueue::Dequeue() failed.");
-    VerifyPriorityQueueContent(queue, 0);
-
-    // Check the failure cases: Dequeuing a message not queued.
-    queue.Enqueue(*msgNet[0]);
-    VerifyPriorityQueueContent(queue, 1, msgNet[0]);
-    VerifyOrQuit(queue.Dequeue(*msgHigh[0]) == OT_ERROR_NOT_FOUND,
-                 "Dequeuing a message not queued, did not fail as expected.");
-    SuccessOrQuit(queue.Dequeue(*msgNet[0]), "PriorityQueue::Dequeue() failed.");
+    queue.Dequeue(*msgHigh[3]);
     VerifyPriorityQueueContent(queue, 0);
 
     // Change the priority of an already queued message and check the order change in the queue.
@@ -301,19 +293,19 @@ void TestPriorityQueue(void)
     VerifyMsgQueueContent(messageQueue, 3, msgNor[1], msgHigh[1], msgNet[1]);
 
     // Remove messages from the two queues
-    SuccessOrQuit(queue.Dequeue(*msgHigh[0]), "PriorityQueue::Dequeue() failed.");
+    queue.Dequeue(*msgHigh[0]);
     VerifyPriorityQueueContent(queue, 2, msgLow[0], msgNor[0]);
     VerifyMsgQueueContent(messageQueue, 3, msgNor[1], msgHigh[1], msgNet[1]);
 
-    SuccessOrQuit(messageQueue.Dequeue(*msgNet[1]), "MessageQueue::Dequeue() failed.");
+    messageQueue.Dequeue(*msgNet[1]);
     VerifyPriorityQueueContent(queue, 2, msgLow[0], msgNor[0]);
     VerifyMsgQueueContent(messageQueue, 2, msgNor[1], msgHigh[1]);
 
-    SuccessOrQuit(messageQueue.Dequeue(*msgHigh[1]), "MessageQueue::Dequeue() failed.");
+    messageQueue.Dequeue(*msgHigh[1]);
     VerifyPriorityQueueContent(queue, 2, msgLow[0], msgNor[0]);
     VerifyMsgQueueContent(messageQueue, 1, msgNor[1]);
 
-    SuccessOrQuit(queue.Dequeue(*msgLow[0]), "PriorityQueue::Dequeue() failed.");
+    queue.Dequeue(*msgLow[0]);
     VerifyPriorityQueueContent(queue, 1, msgNor[0]);
     VerifyMsgQueueContent(messageQueue, 1, msgNor[1]);
 
