@@ -716,7 +716,7 @@ void MeshForwarder::UpdateRoutes(const uint8_t *     aFrame,
                 (aMeshDest.GetShort() == Get<Mac::Mac>().GetShortAddress() ||
                  Get<Mle::MleRouter>().IsMinimalChild(aMeshDest.GetShort())))
             {
-                IgnoreError(Get<AddressResolver>().AddSnoopedCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort()));
+                Get<AddressResolver>().AddSnoopedCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
             }
         }
     }
