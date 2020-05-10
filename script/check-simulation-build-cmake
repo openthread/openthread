@@ -71,8 +71,6 @@ build_all_features()
 
     reset_source
 
-    git checkout -- .
-    git clean -xfd
     mkdir build && cd build
     cmake -GNinja "${options[@]}" ..
     ninja
@@ -92,6 +90,7 @@ main()
 {
     build_all_features
     build_toranj
+    reset_source
 }
 
 main "$@"

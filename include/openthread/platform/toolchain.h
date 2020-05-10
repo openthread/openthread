@@ -249,6 +249,14 @@ extern "C" {
 #endif
 #endif
 
+#ifdef __APPLE__
+#define OT_APPLE_IGNORE_GNU_FOLDING_CONSTANT(...)                                               \
+    _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wgnu-folding-constant\"") \
+        __VA_ARGS__ _Pragma("GCC diagnostic pop")
+#else
+#define OT_APPLE_IGNORE_GNU_FOLDING_CONSTANT(...) __VA_ARGS__
+#endif
+
 /**
  * @}
  *

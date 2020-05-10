@@ -955,12 +955,15 @@ exit:
 static void processNetifEvent(otInstance *aInstance)
 {
     const size_t kMaxNetifEvent = 8192;
-    ssize_t      length;
+    size_t       length;
     char         buffer[kMaxNetifEvent];
 
-    length = recv(sNetlinkFd, buffer, sizeof(buffer), 0);
+    {
+        ssize_t rval = recv(sNetlinkFd, buffer, sizeof(buffer), 0);
 
-    VerifyOrExit(length > 0, OT_NOOP);
+        VerifyOrExit(rval > 0, OT_NOOP);
+        length = static_cast<size_t>(rval);
+    }
 
 #if defined(__linux__)
     for (struct nlmsghdr *msg = reinterpret_cast<struct nlmsghdr *>(buffer); NLMSG_OK(msg, length);
@@ -1363,7 +1366,7 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
     otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
     otIp6SetReceiveCallback(aInstance, processReceive, aInstance);
     otIp6SetAddressCallback(aInstance, processAddressChange, aInstance);
-    otSetStateChangedCallback(aInstance, processStateChange, aInstance);
+    VerifyOrDie(otSetStateChangedCallback(aInstance, processStateChange, aInstance) == OT_ERROR_NONE, OT_EXIT_FAILURE);
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
     otIp6SetMulticastPromiscuousEnabled(aInstance, true);
 #endif

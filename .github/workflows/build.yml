@@ -56,8 +56,23 @@ jobs:
       run: |
         script/make-pretty check
 
-  package:
+  package-gcc:
     runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt update
+        sudo apt --no-install-recommends install -y ninja-build
+    - name: Package
+      run: |
+        script/test package
+
+  package-clang:
+    runs-on: ubuntu-18.04
+    env:
+      CC: clang
+      CXX: clang++
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
