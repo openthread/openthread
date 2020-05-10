@@ -335,10 +335,12 @@ EXAMPLES:
 do_package() {
     local builddir="${OT_BUILDDIR}/cmake/openthread-sim"
     local options=(
+        "-DCMAKE_BUILD_TYPE=Release"
         "-DOT_BORDER_AGENT=ON"
         "-DOT_BORDER_ROUTER=ON"
         "-DOT_CHILD_SUPERVISION=ON"
         "-DOT_COMMISSIONER=ON"
+        "-DOT_COMPILE_WARNING_AS_ERROR=ON"
         "-DOT_DIAGNOSTIC=ON"
         "-DOT_IP6_FRAGM=ON"
         "-DOT_JAM_DETECTION=ON"

@@ -477,7 +477,7 @@ otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
 {
     otError         error = OT_ERROR_NONE;
     CacheEntry *    entry;
-    CacheEntry *    prev;
+    CacheEntry *    prev = NULL;
     CacheEntryList *list;
 
     entry = FindCacheEntry(aEid, list, prev);
