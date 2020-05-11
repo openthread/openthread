@@ -1013,6 +1013,7 @@ exit:
 
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKey(uint8_t        aKeyIdMode,
+                                                                  uint8_t        aKeyId,
                                                                   uint8_t        aKeySize,
                                                                   const uint8_t *aPrevKey,
                                                                   const uint8_t *aCurrKey,
@@ -1020,23 +1021,10 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKey(uint8_t       
 {
     otError error;
 
-    SuccessOrExit(
-        error = Set(
-            SPINEL_PROP_RCP_MAC_KEY,
-            SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
-            aKeyIdMode, aPrevKey, aKeySize, aCurrKey, aKeySize, aNextKey, aKeySize));
-
-exit:
-    return error;
-}
-
-template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKeyId(uint8_t aKeyIdMode, uint8_t aKeyId)
-{
-    otError error;
-
-    SuccessOrExit(
-        error = Set(SPINEL_PROP_RCP_MAC_KEY_ID, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S, aKeyIdMode, aKeyId));
+    SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_KEY,
+                              SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S
+                                  SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
+                              aKeyIdMode, aKeyId, aPrevKey, aKeySize, aCurrKey, aKeySize, aNextKey, aKeySize));
 
 exit:
     return error;

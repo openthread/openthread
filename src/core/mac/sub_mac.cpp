@@ -644,7 +644,11 @@ void SubMac::SetState(State aState)
     }
 }
 
-void SubMac::SetMacKey(uint8_t aKeyIdMode, const uint8_t *aPrevKey, const uint8_t *aCurrKey, const uint8_t *aNextKey)
+void SubMac::SetMacKey(uint8_t        aKeyIdMode,
+                       uint8_t        aKeyId,
+                       const uint8_t *aPrevKey,
+                       const uint8_t *aCurrKey,
+                       const uint8_t *aNextKey)
 {
     switch (aKeyIdMode)
     {
@@ -654,6 +658,7 @@ void SubMac::SetMacKey(uint8_t aKeyIdMode, const uint8_t *aPrevKey, const uint8_
     case Frame::kKeyIdMode1:
         OT_ASSERT(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
 
+        mKeyId = aKeyId;
         memcpy(mPrevKey, aPrevKey, sizeof(mPrevKey));
         memcpy(mCurrKey, aCurrKey, sizeof(mCurrKey));
         memcpy(mNextKey, aNextKey, sizeof(mNextKey));
@@ -667,36 +672,12 @@ void SubMac::SetMacKey(uint8_t aKeyIdMode, const uint8_t *aPrevKey, const uint8_
 
     VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
 
-    Get<Radio>().SetMacKey(aKeyIdMode, kMacKeySize, aPrevKey, aCurrKey, aNextKey);
+    Get<Radio>().SetMacKey(aKeyIdMode, aKeyId, kMacKeySize, aPrevKey, aCurrKey, aNextKey);
 
 exit:
     return;
 }
 
-void SubMac::SetMacKeyId(uint8_t aKeyIdMode, uint8_t aKeyId)
-{
-    switch (aKeyIdMode)
-    {
-    case Frame::kKeyIdMode0:
-    case Frame::kKeyIdMode2:
-        break;
-
-    case Frame::kKeyIdMode1:
-        mKeyId = aKeyId;
-        break;
-
-    default:
-        OT_ASSERT(false);
-        break;
-    }
-
-    VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
-
-    Get<Radio>().SetMacKeyId(aKeyIdMode, aKeyId);
-
-exit:
-    return;
-}
 // LCOV_EXCL_START
 
 const char *SubMac::StateToString(State aState)

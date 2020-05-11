@@ -170,9 +170,8 @@ void KeyManager::UpdateKeyMaterial()
     ComputeKey(mKeySequence + 1, nextKey);
 
     memcpy(mMleKey, currKey, kMleKeySize);
-    Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, prevKey + kMacKeyOffset, currKey + kMacKeyOffset,
-                                 nextKey + kMacKeyOffset);
-    Get<Mac::SubMac>().SetMacKeyId(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1);
+    Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prevKey + kMacKeyOffset,
+                                 currKey + kMacKeyOffset, nextKey + kMacKeyOffset);
 }
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)

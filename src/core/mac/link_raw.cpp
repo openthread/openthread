@@ -206,6 +206,7 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
 }
 
 otError LinkRaw::SetMacKey(uint8_t        aKeyIdMode,
+                           uint8_t        aKeyId,
                            const uint8_t *aPrevKey,
                            const uint8_t *aCurrKey,
                            const uint8_t *aNextKey)
@@ -213,18 +214,7 @@ otError LinkRaw::SetMacKey(uint8_t        aKeyIdMode,
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
-    mSubMac.SetMacKey(aKeyIdMode, aPrevKey, aCurrKey, aNextKey);
-
-exit:
-    return error;
-}
-
-otError LinkRaw::SetMacKeyId(uint8_t aKeyIdMode, uint8_t aKeyId)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
-    mSubMac.SetMacKeyId(aKeyIdMode, aKeyId);
+    mSubMac.SetMacKey(aKeyIdMode, aKeyId, aPrevKey, aCurrKey, aNextKey);
 
 exit:
     return error;

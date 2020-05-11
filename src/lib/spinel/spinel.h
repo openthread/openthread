@@ -3939,9 +3939,10 @@ enum
     SPINEL_PROP_RCP__BEGIN = 0x800,
 
     /// MAC Key
-    /** Format: `Cddd`.
+    /** Format: `CCddd`.
      *
      *  `C`: MAC key ID mode
+     *  `C`: MAC key ID
      *  `d`: previous MAC key material data
      *  `d`: current MAC key material data
      *  `d`: next MAC key material data
@@ -3950,17 +3951,6 @@ enum
      *
      */
     SPINEL_PROP_RCP_MAC_KEY = SPINEL_PROP_RCP__BEGIN + 0,
-
-    /// MAC Key ID
-    /** Format: `CC`.
-     *
-     *  `C`: MAC key ID mode
-     *  `C`: MAC key ID
-     *
-     * The Spinel property is used to set/get MAC key ID to and from RCP.
-     *
-     */
-    SPINEL_PROP_RCP_MAC_KEY_ID = SPINEL_PROP_RCP__BEGIN + 1,
 
     SPINEL_PROP_RCP__END = 0x900,
 
