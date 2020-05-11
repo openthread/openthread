@@ -37,7 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#if !(OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE)
+#if !OPENTHREAD_RADIO || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 #include "crypto/aes_ccm.hpp"
 #endif
 

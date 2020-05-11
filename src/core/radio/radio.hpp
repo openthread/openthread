@@ -251,7 +251,7 @@ public:
      * This method sets previous, current and next MAC key.
      *
      * @param[in] aKeyIdMode  MAC key ID mode.
-     * @param[in] aKeySize    MAC key length.
+     * @param[in] aKeySize    MAC key size in bytes.
      * @param[in] aPrevKey    A pointer to the previous MAC key.
      * @param[in] aCurrKey    A pointer to the current MAC key.
      * @param[in] aNextKey    A pointer to the next MAC key.
