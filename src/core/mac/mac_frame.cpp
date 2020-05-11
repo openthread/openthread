@@ -37,7 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#if !(OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE)
+#if !(OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE)
 #include "crypto/aes_ccm.hpp"
 #endif
 
@@ -1014,7 +1014,7 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 
 void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 {
-#if OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE
+#if OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
     OT_UNUSED_VARIABLE(aExtAddress);
 #else
     uint32_t       frameCounter = 0;
@@ -1043,7 +1043,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 
 exit:
     return;
-#endif // OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE
+#endif // OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 }
 
 // LCOV_EXCL_START
