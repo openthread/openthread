@@ -46,7 +46,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
     aMessage.SetDatagramTag(0);
 
     SuccessOrExit(error = mSendQueue.Enqueue(aMessage));
-    IgnoreError(mScheduleTransmissionTask.Post());
+    mScheduleTransmissionTask.Post();
 
 exit:
     return error;

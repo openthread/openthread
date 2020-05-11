@@ -116,7 +116,7 @@ void NcpUart::HandleFrameAddedToNcpBuffer(void)
 {
     if (mUartBuffer.IsEmpty())
     {
-        IgnoreError(mUartSendTask.Post());
+        mUartSendTask.Post();
     }
 }
 
@@ -226,8 +226,7 @@ extern "C" void otPlatUartSendDone(void)
 void NcpUart::HandleUartSendDone(void)
 {
     mUartBuffer.Clear();
-
-    IgnoreError(mUartSendTask.Post());
+    mUartSendTask.Post();
 }
 
 extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)

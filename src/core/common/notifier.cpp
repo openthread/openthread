@@ -124,7 +124,7 @@ void Notifier::Signal(otChangedFlags aFlags)
 {
     mFlagsToSignal |= aFlags;
     mSignaledFlags |= aFlags;
-    IgnoreError(mTask.Post());
+    mTask.Post();
 }
 
 void Notifier::SignalIfFirst(otChangedFlags aFlags)

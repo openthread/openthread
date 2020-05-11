@@ -179,7 +179,7 @@ otError CoapSecure::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessage
     otError error;
 
     SuccessOrExit(error = mTransmitQueue.Enqueue(aMessage));
-    IgnoreError(mTransmitTask.Post());
+    mTransmitTask.Post();
 
 exit:
     return error;
@@ -236,7 +236,7 @@ void CoapSecure::HandleTransmit(void)
 
     if (mTransmitQueue.GetHead() != NULL)
     {
-        IgnoreError(mTransmitTask.Post());
+        mTransmitTask.Post();
     }
 
     SuccessOrExit(error = mDtls.Send(*message, message->GetLength()));

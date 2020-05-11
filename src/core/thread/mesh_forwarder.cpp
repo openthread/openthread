@@ -940,7 +940,7 @@ exit:
 
     if (mEnabled)
     {
-        IgnoreError(mScheduleTransmissionTask.Post());
+        mScheduleTransmissionTask.Post();
     }
 }
 
@@ -974,7 +974,7 @@ void MeshForwarder::HandleDiscoverTimer(void)
 
 exit:
     mSendBusy = false;
-    IgnoreError(mScheduleTransmissionTask.Post());
+    mScheduleTransmissionTask.Post();
 }
 
 void MeshForwarder::HandleDiscoverComplete(void)

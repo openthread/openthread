@@ -449,7 +449,7 @@ exit:
 void Ip6::EnqueueDatagram(Message &aMessage)
 {
     IgnoreError(mSendQueue.Enqueue(aMessage));
-    IgnoreError(mSendQueueTask.Post());
+    mSendQueueTask.Post();
 }
 
 otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto)
