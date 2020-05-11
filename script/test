@@ -94,7 +94,7 @@ build_simulation()
 
     if [[ "${version}" == "1.2" ]]; then
         options+=(
-        "-DOT_CSL_RECEIVER=ON"
+            "-DOT_CSL_RECEIVER=ON"
         )
     fi
 

@@ -975,20 +975,16 @@ exit:
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-otError Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
+void Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
 {
-    otError  error = OT_ERROR_NONE;
-    uint8_t *cur   = GetHeaderIe(Frame::kHeaderIeCsl);
+    uint8_t *cur = GetHeaderIe(Frame::kHeaderIeCsl);
     CslIe *  csl;
 
-    VerifyOrExit(cur != NULL, error = OT_ERROR_PARSE);
+    OT_ASSERT(cur != NULL);
 
     csl = reinterpret_cast<CslIe *>(cur + sizeof(HeaderIe));
     csl->SetPeriod(aCslPeriod);
     csl->SetPhase(aCslPhase);
-
-exit:
-    return error;
 }
 #endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 
@@ -1115,7 +1111,7 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
         fcf |= kFcfSecurityEnabled;
     }
 
-    if (aFrame.GetPanIdCompression())
+    if (aFrame.IsPanIdCompressed())
     {
         fcf |= kFcfPanidCompression;
     }
@@ -1155,7 +1151,7 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_PARSE);
     }
 
     if (IsDstPanIdPresent())
@@ -1183,6 +1179,7 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     // Set header IE
     if (aIeLength > 0)
     {
+        OT_ASSERT(aIeData != NULL);
         memcpy(GetPsdu() + FindHeaderIeIndex(), aIeData, aIeLength);
     }
 

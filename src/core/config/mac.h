@@ -258,7 +258,7 @@
 /**
  * @def OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
  *
- * This setting configures csl transmit feature in Thread 1.2.
+ * This setting configures the CSL transmitter feature in Thread 1.2.
  * This is compulsory for 1.2 FTD.
  *
  */
@@ -268,7 +268,7 @@
 /**
  * @def OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
  *
- * This setting configures csl receiver feature in Thread 1.2.
+ * This setting configures the CSL receiver feature in Thread 1.2.
  * This is compulsory for 1.2 MTD, optional for 1.2 FTD.
  *
  */

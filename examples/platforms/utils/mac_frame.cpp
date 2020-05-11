@@ -28,6 +28,7 @@
 
 #include "mac_frame.h"
 
+#include <assert.h>
 #include "mac/mac_frame.hpp"
 
 using namespace ot;
@@ -131,16 +132,11 @@ bool otMacFrameIsVersion2015(const otRadioFrame *aFrame)
     return static_cast<const Mac::Frame *>(aFrame)->IsVersion2015();
 }
 
-otError otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, otRadioFrame *aAckFrame)
+void otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, otRadioFrame *aAckFrame)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aFrame != NULL && aAckFrame != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aFrame != NULL && aAckFrame != NULL);
 
     static_cast<Mac::TxFrame *>(aAckFrame)->GenerateImmAck(*static_cast<const Mac::RxFrame *>(aFrame), aIsFramePending);
-
-exit:
-    return error;
 }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
@@ -150,21 +146,16 @@ otError otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
                                  uint8_t             aIeLength,
                                  otRadioFrame *      aAckFrame)
 {
-    otError error = OT_ERROR_NONE;
+    assert(aFrame != NULL && aAckFrame != NULL);
 
-    VerifyOrExit(aFrame != NULL && aAckFrame != NULL, error = OT_ERROR_INVALID_ARGS);
-
-    error = static_cast<Mac::TxFrame *>(aAckFrame)->GenerateEnhAck(*static_cast<const Mac::RxFrame *>(aFrame),
-                                                                   aIsFramePending, aIeData, aIeLength);
-
-exit:
-    return error;
+    return static_cast<Mac::TxFrame *>(aAckFrame)->GenerateEnhAck(*static_cast<const Mac::RxFrame *>(aFrame),
+                                                                  aIsFramePending, aIeData, aIeLength);
 }
 
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-otError otMacFrameSetCslIe(otRadioFrame *aFrame, uint16_t aCslPeriod, uint16_t aCslPhase)
+void otMacFrameSetCslIe(otRadioFrame *aFrame, uint16_t aCslPeriod, uint16_t aCslPhase)
 {
-    return static_cast<Mac::Frame *>(aFrame)->SetCslIe(aCslPeriod, aCslPhase);
+    static_cast<Mac::Frame *>(aFrame)->SetCslIe(aCslPeriod, aCslPhase);
 }
 #endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT

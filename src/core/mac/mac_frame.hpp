@@ -438,7 +438,7 @@ public:
      * @retval FALSE  If the PanId Compression bit is not set.
      *
      */
-    bool GetPanIdCompression(void) const { return (GetFrameControlField() & kFcfPanidCompression) != 0; }
+    bool IsPanIdCompressed(void) const { return (GetFrameControlField() & kFcfPanidCompression) != 0; }
 
     /**
      * This method indicates whether or not IEs present.
@@ -540,7 +540,7 @@ public:
      * @retval TRUE if the Source Address is present, FALSE otherwise.
      *
      */
-    bool IsSrcPanIdPresent() const { return IsSrcPanIdPresent(GetFrameControlField()); };
+    bool IsSrcPanIdPresent(void) const { return IsSrcPanIdPresent(GetFrameControlField()); };
 
     /**
      * This method gets the Source PAN Identifier.
@@ -930,15 +930,13 @@ public:
 
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
     /**
-     * This method finds CSL IE into the frame and modify its content.
+     * This method finds CSL IE in the frame and modify its content.
      *
      * @param[in] aCslPeriod  CSL Period in CSL IE.
      * @param[in] aCslPhase   CSL Phase in CSL IE.
      *
-     * @retval  OT_ERROR_NONE   Successfully modify CSL IE into the frame.
-     * @retval  OT_ERROR_PARSE  CSL IE is not found in the frame.
      */
-    otError SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase);
+    void SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase);
 #endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
@@ -1234,8 +1232,8 @@ public:
     /**
      * Generate Imm-Ack in this frame object.
      *
-     * @param[in]    aFrame             A reference to the incoming frame.
-     * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
+     * @param[in]    aFrame             A reference to the frame received.
+     * @param[in]    aIsFramePending    Value of the ACK's frame pending bit.
      *
      */
     void GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending);
@@ -1243,14 +1241,13 @@ public:
     /**
      * Generate Enh-Ack in this frame object.
      *
-     * @param[in]    aFrame             A reference to the incoming frame.
-     * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
-     * @param[in]    aIeData            A pointer to the IE data pattern of the ACK to be sent.
-     * @param[in]    aIeLength          The length of IE data pattern of the ACK to be sent.
+     * @param[in]    aFrame             A reference to the frame received.
+     * @param[in]    aIsFramePending    Value of the ACK's frame pending bit.
+     * @param[in]    aIeData            A pointer to the IE data portion of the ACK to be sent.
+     * @param[in]    aIeLength          The length of IE data portion of the ACK to be sent.
      *
-     * @retval  OT_ERROR_NONE           Successfully generate Enh Ack in aAckFrame.
-     * @retval  OT_ERROR_INVALID_ARGS   The arguments are incorrect.
-     * @retval  OT_ERROR_PARSE          `aFrame` has incorrect format.
+     * @retval  OT_ERROR_NONE           Successfully generated Enh Ack.
+     * @retval  OT_ERROR_PARSE          @p aFrame has incorrect format.
      *
      */
     otError GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
