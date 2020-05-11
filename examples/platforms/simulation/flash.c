@@ -39,6 +39,9 @@
 #include <openthread/config.h>
 #include <openthread/platform/flash.h>
 
+#include "core/common/logging.hpp"
+#include "lib/platform/exit_code.h"
+
 static int sFlashFd = -1;
 
 enum
@@ -77,7 +80,7 @@ void otPlatFlashInit(otInstance *aInstance)
     sFlashFd = open(fileName, O_RDWR | O_CREAT | O_CLOEXEC, 0600);
     lseek(sFlashFd, 0, SEEK_SET);
 
-    assert(sFlashFd >= 0);
+    VerifyOrDie(sFlashFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     if (create)
     {
@@ -109,7 +112,7 @@ void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
     memset(buffer, 0xff, sizeof(buffer));
 
     rval = pwrite(sFlashFd, buffer, sizeof(buffer), (off_t)address);
-    assert(rval == SWAP_SIZE);
+    VerifyOrDie(rval == SWAP_SIZE, OT_EXIT_ERROR_ERRNO);
 }
 
 void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
@@ -124,7 +127,7 @@ void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset
     address = aSwapIndex ? SWAP_SIZE : 0;
 
     rval = pread(sFlashFd, aData, aSize, (off_t)(address + aOffset));
-    assert((uint32_t)rval == aSize);
+    VerifyOrDie((uint32_t)rval == aSize, OT_EXIT_ERROR_ERRNO);
 }
 
 void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
@@ -143,12 +146,12 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
     for (uint32_t offset = 0; offset < aSize; offset++)
     {
         rval = pread(sFlashFd, &byte, sizeof(byte), (off_t)(address + offset));
-        assert(rval == sizeof(byte));
+        VerifyOrDie(rval == sizeof(byte), OT_EXIT_ERROR_ERRNO);
 
         // Use bitwise AND to emulate the behavior of flash memory
         byte &= ((uint8_t *)aData)[offset];
 
         rval = pwrite(sFlashFd, &byte, sizeof(byte), (off_t)(address + offset));
-        assert(rval == sizeof(byte));
+        VerifyOrDie(rval == sizeof(byte), OT_EXIT_ERROR_ERRNO);
     }
 }

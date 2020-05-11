@@ -97,7 +97,7 @@ NcpUart::NcpUart(Instance *aInstance)
 {
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
 
-    otPlatUartEnable();
+    IgnoreError(otPlatUartEnable());
 }
 
 void NcpUart::HandleFrameAddedToNcpBuffer(void *                   aContext,
@@ -116,7 +116,7 @@ void NcpUart::HandleFrameAddedToNcpBuffer(void)
 {
     if (mUartBuffer.IsEmpty())
     {
-        mUartSendTask.Post();
+        IgnoreError(mUartSendTask.Post());
     }
 }
 
@@ -153,7 +153,7 @@ void NcpUart::EncodeAndSendToUart(void)
             VerifyOrExit(!super_t::ShouldDeferHostSend(), OT_NOOP);
             SuccessOrExit(mFrameEncoder.BeginFrame());
 
-            txFrameBuffer.OutFrameBegin();
+            IgnoreError(txFrameBuffer.OutFrameBegin());
 
             mState = kEncodingFrame;
 
@@ -170,7 +170,7 @@ void NcpUart::EncodeAndSendToUart(void)
             // call to OutFrameRemove.
             prevHostPowerState = mHostPowerStateInProgress;
 
-            txFrameBuffer.OutFrameRemove();
+            IgnoreError(txFrameBuffer.OutFrameRemove());
 
             if (prevHostPowerState && !mHostPowerStateInProgress)
             {
@@ -227,7 +227,7 @@ void NcpUart::HandleUartSendDone(void)
 {
     mUartBuffer.Clear();
 
-    mUartSendTask.Post();
+    IgnoreError(mUartSendTask.Post());
 }
 
 extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
@@ -287,7 +287,7 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
     snprintf(hexbuf, sizeof(hexbuf), "Framing error %d: [", aError);
 
     // Write out the first part of our log message.
-    otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf), static_cast<int>(strlen(hexbuf)));
+    IgnoreError(otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf), static_cast<int>(strlen(hexbuf))));
 
     // The first '3' comes from the trailing "]\n\000" at the end o the string.
     // The second '3' comes from the length of two hex digits and a space.
@@ -305,7 +305,7 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
 
     // Write out the second part of our log message.
     // We skip the first byte since it has a space in it.
-    otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
+    IgnoreError(otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1)));
 }
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER

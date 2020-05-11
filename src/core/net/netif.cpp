@@ -428,7 +428,7 @@ void Netif::UnsubscribeAllExternalMulticastAddresses(void)
     {
         if (entry->IsInUse())
         {
-            UnsubscribeExternalMulticast(entry->GetAddress());
+            IgnoreError(UnsubscribeExternalMulticast(entry->GetAddress()));
         }
     }
 }
@@ -543,7 +543,7 @@ void Netif::RemoveAllExternalUnicastAddresses(void)
     {
         if (entry->IsInUse())
         {
-            RemoveExternalUnicastAddress(entry->GetAddress());
+            IgnoreError(RemoveExternalUnicastAddress(entry->GetAddress()));
         }
     }
 }

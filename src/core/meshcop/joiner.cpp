@@ -65,7 +65,7 @@ Joiner::Joiner(Instance &aInstance)
     , mJoinerEntrust(OT_URI_PATH_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this)
 {
     memset(mJoinerRouters, 0, sizeof(mJoinerRouters));
-    Get<Coap::Coap>().AddResource(mJoinerEntrust);
+    IgnoreError(Get<Coap::Coap>().AddResource(mJoinerEntrust));
 }
 
 void Joiner::GetJoinerId(Mac::ExtAddress &aJoinerId) const
@@ -158,7 +158,7 @@ void Joiner::Finish(otError aError)
     case OT_JOINER_STATE_ENTRUST:
     case OT_JOINER_STATE_JOINED:
         Get<Coap::CoapSecure>().Disconnect();
-        Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort);
+        IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
         mTimer.Stop();
 
         // Fall through
@@ -405,7 +405,7 @@ otError Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     mFinalizeMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     SuccessOrExit(error = mFinalizeMessage->AppendUriPathOptions(OT_URI_PATH_JOINER_FINALIZE));
     SuccessOrExit(error = mFinalizeMessage->SetPayloadMarker());
-    mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
+    IgnoreError(mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength()));
 
     SuccessOrExit(error = Tlv::AppendUint8Tlv(*mFinalizeMessage, Tlv::kState, StateTlv::kAccept));
 
@@ -515,7 +515,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message &         aMessage,
 
 exit:
     Get<Coap::CoapSecure>().Disconnect();
-    Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort);
+    IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
 }
 
 void Joiner::HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -547,7 +547,7 @@ void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo
     dataset.mPanId                      = Get<Mac::Mac>().GetPanId();
     dataset.mComponents.mIsPanIdPresent = true;
 
-    Get<MeshCoP::ActiveDataset>().Save(dataset);
+    IgnoreError(Get<MeshCoP::ActiveDataset>().Save(dataset));
 
     otLogInfoMeshCoP("Joiner successful!");
 

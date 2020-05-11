@@ -290,6 +290,8 @@ static uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
 
 static void UpdateUnicast(otInstance *aInstance, const otIp6Address &aAddress, uint8_t aPrefixLength, bool aIsAdded)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
 
     assert(sInstance == aInstance);
@@ -358,6 +360,8 @@ exit:
 
 static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress, bool aIsAdded)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     struct ipv6_mreq mreq;
     otError          error = OT_ERROR_NONE;
 
@@ -455,6 +459,8 @@ static void processStateChange(otChangedFlags aFlags, void *aContext)
 
 static void processReceive(otMessage *aMessage, void *aContext)
 {
+    OT_UNUSED_VARIABLE(aContext);
+
     char     packet[kMaxIp6Size + 4];
     otError  error     = OT_ERROR_NONE;
     uint16_t length    = otMessageGetLength(aMessage);

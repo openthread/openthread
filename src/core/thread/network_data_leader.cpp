@@ -455,7 +455,7 @@ otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLe
     otError               error = OT_ERROR_NONE;
     CommissioningDataTlv *commissioningDataTlv;
 
-    RemoveCommissioningData();
+    IgnoreError(RemoveCommissioningData());
 
     if (aValueLength > 0)
     {

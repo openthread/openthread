@@ -252,9 +252,10 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
 
             SuccessOrExit(error = Tlv::ReadUint16Tlv(*response, Tlv::kCommissionerSessionId, sessionId));
 
-            instance.Get<Mle::MleRouter>().GetCommissionerAloc(borderAgent.mCommissionerAloc.GetAddress(), sessionId);
-            instance.Get<ThreadNetif>().AddUnicastAddress(borderAgent.mCommissionerAloc);
-            instance.Get<Ip6::Udp>().AddReceiver(borderAgent.mUdpReceiver);
+            IgnoreError(instance.Get<Mle::MleRouter>().GetCommissionerAloc(borderAgent.mCommissionerAloc.GetAddress(),
+                                                                           sessionId));
+            IgnoreError(instance.Get<ThreadNetif>().AddUnicastAddress(borderAgent.mCommissionerAloc));
+            IgnoreError(instance.Get<Ip6::Udp>().AddReceiver(borderAgent.mUdpReceiver));
         }
     }
 
@@ -289,9 +290,9 @@ void BorderAgent::HandleRequest<&BorderAgent::mCommissionerPetition>(void *     
                                                                      otMessage *          aMessage,
                                                                      const otMessageInfo *aMessageInfo)
 {
-    static_cast<BorderAgent *>(aContext)->ForwardToLeader(*static_cast<Coap::Message *>(aMessage),
-                                                          *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                          OT_URI_PATH_LEADER_PETITION, true, true);
+    IgnoreError(static_cast<BorderAgent *>(aContext)->ForwardToLeader(
+        *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+        OT_URI_PATH_LEADER_PETITION, true, true));
 }
 
 template <>
@@ -375,11 +376,11 @@ void BorderAgent::HandleStateChanged(otChangedFlags aFlags)
 
     if (Get<Mle::MleRouter>().IsAttached())
     {
-        Start();
+        IgnoreError(Start());
     }
     else
     {
-        Stop();
+        IgnoreError(Stop());
     }
 
 exit:
@@ -659,7 +660,7 @@ void BorderAgent::HandleConnected(bool aConnected)
     else
     {
         otLogInfoMeshCoP("Commissioner disconnected");
-        Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
+        IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc));
         SetState(OT_BORDER_AGENT_STATE_STARTED);
     }
 }
@@ -675,18 +676,18 @@ otError BorderAgent::Start(void)
     SuccessOrExit(error = coaps.SetPsk(Get<KeyManager>().GetPskc().m8, OT_PSKC_MAX_SIZE));
     coaps.SetConnectedCallback(HandleConnected, this);
 
-    coaps.AddResource(mActiveGet);
-    coaps.AddResource(mActiveSet);
-    coaps.AddResource(mPendingGet);
-    coaps.AddResource(mPendingSet);
-    coaps.AddResource(mCommissionerPetition);
-    coaps.AddResource(mCommissionerKeepAlive);
-    coaps.AddResource(mCommissionerSet);
-    coaps.AddResource(mCommissionerGet);
-    coaps.AddResource(mProxyTransmit);
-    coaps.AddResource(mRelayTransmit);
+    IgnoreError(coaps.AddResource(mActiveGet));
+    IgnoreError(coaps.AddResource(mActiveSet));
+    IgnoreError(coaps.AddResource(mPendingGet));
+    IgnoreError(coaps.AddResource(mPendingSet));
+    IgnoreError(coaps.AddResource(mCommissionerPetition));
+    IgnoreError(coaps.AddResource(mCommissionerKeepAlive));
+    IgnoreError(coaps.AddResource(mCommissionerSet));
+    IgnoreError(coaps.AddResource(mCommissionerGet));
+    IgnoreError(coaps.AddResource(mProxyTransmit));
+    IgnoreError(coaps.AddResource(mRelayTransmit));
 
-    Get<Coap::Coap>().AddResource(mRelayReceive);
+    IgnoreError(Get<Coap::Coap>().AddResource(mRelayReceive));
 
     SetState(OT_BORDER_AGENT_STATE_STARTED);
 
@@ -753,7 +754,7 @@ void BorderAgent::ApplyMeshLocalPrefix(void)
     if (Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc) == OT_ERROR_NONE)
     {
         mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
+        IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc));
     }
 
 exit:

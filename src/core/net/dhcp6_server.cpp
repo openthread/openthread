@@ -114,7 +114,7 @@ otError Dhcp6Server::UpdateService(void)
 
         if (error == OT_ERROR_NONE)
         {
-            AddPrefixAgent(config.mPrefix, lowpanContext);
+            IgnoreError(AddPrefixAgent(config.mPrefix, lowpanContext));
         }
     }
 
@@ -135,13 +135,13 @@ void Dhcp6Server::Start(void)
     Ip6::SockAddr sockaddr;
 
     sockaddr.mPort = kDhcpServerPort;
-    mSocket.Open(&Dhcp6Server::HandleUdpReceive, this);
-    mSocket.Bind(sockaddr);
+    IgnoreError(mSocket.Open(&Dhcp6Server::HandleUdpReceive, this));
+    IgnoreError(mSocket.Bind(sockaddr));
 }
 
 void Dhcp6Server::Stop(void)
 {
-    mSocket.Close();
+    IgnoreError(mSocket.Close());
 }
 
 otError Dhcp6Server::AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Context &aContext)
@@ -165,7 +165,7 @@ otError Dhcp6Server::AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan:
     VerifyOrExit(newEntry != NULL, error = OT_ERROR_NO_BUFS);
 
     newEntry->Set(aIp6Prefix, Get<Mle::MleRouter>().GetMeshLocalPrefix(), aContext.mContextId);
-    Get<ThreadNetif>().AddUnicastAddress(newEntry->GetAloc());
+    IgnoreError(Get<ThreadNetif>().AddUnicastAddress(newEntry->GetAloc()));
     mPrefixAgentsCount++;
 
 exit:
@@ -184,7 +184,7 @@ void Dhcp6Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aM
     otIp6Address dst = aMessageInfo.mPeerAddr;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(header), &header) == sizeof(header), OT_NOOP);
-    aMessage.MoveOffset(sizeof(header));
+    IgnoreError(aMessage.MoveOffset(sizeof(header)));
 
     // discard if not solicit type
     VerifyOrExit((header.GetType() == kTypeSolicit), OT_NOOP);
@@ -489,9 +489,9 @@ void Dhcp6Server::ApplyMeshLocalPrefix(void)
         if (mPrefixAgents[i].IsValid())
         {
             PrefixAgent *entry = &mPrefixAgents[i];
-            Get<ThreadNetif>().RemoveUnicastAddress(entry->GetAloc());
+            IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(entry->GetAloc()));
             entry->GetAloc().GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-            Get<ThreadNetif>().AddUnicastAddress(entry->GetAloc());
+            IgnoreError(Get<ThreadNetif>().AddUnicastAddress(entry->GetAloc()));
         }
     }
 }

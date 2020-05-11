@@ -64,6 +64,24 @@ extern "C" {
 #endif
 
 /**
+ * @def OT_MUST_USE_RESULT
+ *
+ * Compiler-specific indication that a class or enum must be used when it is
+ * the return value of a function.
+ *
+ * @note This is currently only available with clang (C++17 implements it
+ *       as attribute [[nodiscard]]).
+ * @note To suppress the 'unused-result' warning/error, please use the
+ *       '-Wno-unused-result' compiler option.
+ *
+ */
+#if defined(__clang__) && (__clang_major__ >= 4 || (__clang_major__ >= 3 && __clang_minor__ >= 9))
+#define OT_MUST_USE_RESULT __attribute__((warn_unused_result))
+#else
+#define OT_MUST_USE_RESULT
+#endif
+
+/**
  * @def OT_TOOL_PACKED_BEGIN
  *
  * Compiler-specific indication that a class or struct must be byte packed.

@@ -71,11 +71,11 @@ AddressResolver::AddressResolver(Instance &aInstance)
         mUnusedList.Push(*entry);
     }
 
-    Get<Coap::Coap>().AddResource(mAddressError);
-    Get<Coap::Coap>().AddResource(mAddressQuery);
-    Get<Coap::Coap>().AddResource(mAddressNotification);
+    IgnoreError(Get<Coap::Coap>().AddResource(mAddressError));
+    IgnoreError(Get<Coap::Coap>().AddResource(mAddressQuery));
+    IgnoreError(Get<Coap::Coap>().AddResource(mAddressNotification));
 
-    Get<Ip6::Icmp>().RegisterHandler(mIcmpHandler);
+    IgnoreError(Get<Ip6::Icmp>().RegisterHandler(mIcmpHandler));
 }
 
 void AddressResolver::Clear(void)
@@ -465,7 +465,7 @@ void AddressResolver::RestartAddressQueries(void)
 
     for (CacheEntry *entry = mQueryList.GetHead(); entry != NULL; entry = entry->GetNext())
     {
-        SendAddressQuery(entry->GetTarget());
+        IgnoreError(SendAddressQuery(entry->GetTarget()));
 
         entry->SetTimeout(kAddressQueryTimeout);
         entry->SetRetryDelay(kAddressQueryInitialRetryDelay);
@@ -477,7 +477,7 @@ otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
 {
     otError         error = OT_ERROR_NONE;
     CacheEntry *    entry;
-    CacheEntry *    prev;
+    CacheEntry *    prev = NULL;
     CacheEntryList *list;
 
     entry = FindCacheEntry(aEid, list, prev);
@@ -634,7 +634,8 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
             // by more than one device. Try to resolve the duplicate
             // address by sending an Address Error message.
 
-            VerifyOrExit(entry->HasMeshLocalIid(meshLocalIid), SendAddressError(target, meshLocalIid, NULL));
+            VerifyOrExit(entry->HasMeshLocalIid(meshLocalIid),
+                         IgnoreError(SendAddressError(target, meshLocalIid, NULL)));
 
             VerifyOrExit(lastTransactionTime < entry->GetLastTransactionTime(), OT_NOOP);
         }
@@ -740,7 +741,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
             memcmp(Get<Mle::MleRouter>().GetMeshLocal64().GetIid(), meshLocalIid, sizeof(meshLocalIid)))
         {
             // Target EID matches address and Mesh Local EID differs
-            Get<ThreadNetif>().RemoveUnicastAddress(*address);
+            IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(*address));
             ExitNow();
         }
     }
@@ -766,7 +767,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
             {
                 SuccessOrExit(error = Get<Mle::Mle>().GetLocatorAddress(destination, child.GetRloc16()));
 
-                SendAddressError(target, meshLocalIid, &destination);
+                IgnoreError(SendAddressError(target, meshLocalIid, &destination));
                 ExitNow();
             }
         }

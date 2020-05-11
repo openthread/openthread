@@ -26,8 +26,13 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-cmake_minimum_required(VERSION 3.13.1)
-project(openthread)
+cmake_policy(SET CMP0048 NEW)
+cmake_minimum_required(VERSION 3.11.4)
+
+file(READ .default-version OT_DEFAULT_VERSION)
+string(STRIP ${OT_DEFAULT_VERSION} OT_DEFAULT_VERSION)
+
+project(openthread VERSION ${OT_DEFAULT_VERSION})
 
 option(OT_BUILD_EXECUTABLES "Build executables" ON)
 option(OT_COVERAGE "enable coverage" OFF)
@@ -61,7 +66,6 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     )
 endif()
 
-file(READ .default-version OT_DEFAULT_VERSION)
 execute_process(
     COMMAND bash "-c" "third_party/nlbuild-autotools/repo/scripts/mkversion -b ${OT_DEFAULT_VERSION}"
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
@@ -144,13 +148,15 @@ list(APPEND OT_PRIVATE_DEFINES ${OT_PLATFORM_DEFINES})
 if(OT_PLATFORM STREQUAL "posix")
     if(OT_BUILD_EXECUTABLES)
         add_subdirectory(src/posix)
+    else()
+        add_subdirectory(src/posix EXCLUDE_FROM_ALL)
     endif()
 elseif(NOT OT_PLATFORM MATCHES "none")
     add_subdirectory(examples)
 endif()
 
 add_subdirectory(src)
-add_subdirectory(third_party)
+add_subdirectory(third_party EXCLUDE_FROM_ALL)
 
 if(OT_PLATFORM STREQUAL "simulation")
     enable_testing()

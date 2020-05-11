@@ -176,8 +176,26 @@ jobs:
         export PATH=/tmp/bin:$PATH
         script/check-gn-build
 
-  macos:
+  macos-clang:
     runs-on: macos-10.15
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        brew install automake ninja llvm
+    - name: Build
+      run: |
+        script/check-posix-build
+        script/check-simulation-build
+
+  macos-gcc:
+    runs-on: macos-10.15
+    env:
+      CC: gcc
+      CXX: g++
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap

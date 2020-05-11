@@ -62,6 +62,10 @@ override CXXFLAGS  := $(filter-out -Wshadow,$(CXXFLAGS))
 override CFLAGS    := $(filter-out -Wundef,$(CFLAGS))
 override CXXFLAGS  := $(filter-out -Wundef,$(CXXFLAGS))
 
+# Do not enable -Wcast-align for Silicon Labs SDK sources
+override CFLAGS    := $(filter-out -Wcast-align,$(CFLAGS))
+override CXXFLAGS  := $(filter-out -Wcast-align,$(CXXFLAGS))
+
 EFR32_BOARD_DIR = $(shell echo $(BOARD) | tr A-Z a-z)
 
 SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7

@@ -42,11 +42,11 @@ otError MeshForwarder::SendMessage(Message &aMessage)
     otError error;
 
     aMessage.SetDirectTransmission();
-    aMessage.SetOffset(0);
+    IgnoreError(aMessage.SetOffset(0));
     aMessage.SetDatagramTag(0);
 
     SuccessOrExit(error = mSendQueue.Enqueue(aMessage));
-    mScheduleTransmissionTask.Post();
+    IgnoreError(mScheduleTransmissionTask.Post());
 
 exit:
     return error;

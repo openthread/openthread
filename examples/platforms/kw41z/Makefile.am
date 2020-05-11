@@ -34,6 +34,10 @@ lib_LIBRARIES = libopenthread-kw41z.a
 override CFLAGS                              := $(filter-out -Wundef,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -Wundef,$(CXXFLAGS))
 
+# Do not enable -Wcast-align for this platform
+override CFLAGS                              := $(filter-out -Wcast-align,$(CFLAGS))
+override CXXFLAGS                            := $(filter-out -Wcast-align,$(CXXFLAGS))
+
 libopenthread_kw41z_a_CPPFLAGS                                                                     = \
     -DCPU_MKW41Z512VHT4                                                                              \
     -I$(top_srcdir)/include                                                                          \

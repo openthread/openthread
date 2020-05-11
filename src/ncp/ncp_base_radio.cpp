@@ -167,7 +167,7 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
     // Make sure we are back listening on the original receive channel,
     // since the energy scan could have been on a different channel.
-    otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone);
+    IgnoreError(otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone));
 
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_MAC_ENERGY_SCAN_RESULT));
@@ -318,7 +318,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_ENABLED>(void)
         // If we have raw stream enabled stop receiving
         if (mIsRawStreamEnabled)
         {
-            otLinkRawSleep(mInstance);
+            IgnoreError(otLinkRawSleep(mInstance));
         }
 
         error = otLinkRawSetEnable(mInstance, false);

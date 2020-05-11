@@ -217,7 +217,7 @@ public:
         mWritePointer    = mBuffer + kHeaderSize;
         mRemainingLength = kSize - kHeaderSize;
 
-        SetSkipLength(0);
+        IgnoreError(SetSkipLength(0));
     }
 
     /**
@@ -322,7 +322,7 @@ public:
     {
         Encoding::LittleEndian::WriteUint16(GetSkipLength() + GetLength(), mWriteFrameStart + kHeaderTotalLengthOffset);
         mWriteFrameStart = mWritePointer;
-        SetSkipLength(0);
+        IgnoreError(SetSkipLength(0));
         mWritePointer    = GetFrame();
         mRemainingLength = static_cast<uint16_t>(mBuffer + kSize - mWritePointer);
     }
@@ -334,7 +334,7 @@ public:
      */
     void DiscardFrame(void)
     {
-        SetSkipLength(0);
+        IgnoreError(SetSkipLength(0));
 
         mWritePointer    = GetFrame();
         mRemainingLength = static_cast<uint16_t>(mBuffer + kSize - mWritePointer);

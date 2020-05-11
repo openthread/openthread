@@ -361,7 +361,7 @@ public:
      * @param[in]  aDataset  The Operational Dataset.
      *
      */
-    void Save(const Dataset &aDataset) { DatasetManager::Save(aDataset); }
+    void Save(const Dataset &aDataset) { IgnoreError(DatasetManager::Save(aDataset)); }
 
     /**
      * This method sets the Operational Dataset for the partition.

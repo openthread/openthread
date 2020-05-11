@@ -28,6 +28,10 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+# Do not enable -Wcast-align for this platform
+override CFLAGS    := $(filter-out -Wcast-align,$(CFLAGS))
+override CXXFLAGS  := $(filter-out -Wcast-align,$(CXXFLAGS))
+
 lib_LIBRARIES                               = libopenthread-qpg6095.a
 
 libopenthread_qpg6095_a_CPPFLAGS            = \

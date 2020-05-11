@@ -69,8 +69,8 @@ otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRoute
     if (error == OT_ERROR_NONE && aConfig->mDp)
     {
         // Restore local server data
-        instance.Get<NetworkData::Local>().RemoveOnMeshPrefix(aConfig->mPrefix.mPrefix.mFields.m8,
-                                                              aConfig->mPrefix.mLength);
+        IgnoreError(instance.Get<NetworkData::Local>().RemoveOnMeshPrefix(aConfig->mPrefix.mPrefix.mFields.m8,
+                                                                          aConfig->mPrefix.mLength));
 
         instance.Get<BackboneRouter::Local>().SetDomainPrefix(*aConfig);
     }

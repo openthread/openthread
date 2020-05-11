@@ -232,7 +232,7 @@ exit:
 
 void Udp::AddSocket(UdpSocket &aSocket)
 {
-    mSockets.Add(aSocket);
+    IgnoreError(mSockets.Add(aSocket));
 }
 
 void Udp::RemoveSocket(UdpSocket &aSocket)
@@ -288,7 +288,7 @@ otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t 
         udpHeader.SetChecksum(0);
 
         SuccessOrExit(error = aMessage.Prepend(&udpHeader, sizeof(udpHeader)));
-        aMessage.SetOffset(0);
+        IgnoreError(aMessage.SetOffset(0));
 
         error = Get<Ip6>().SendDatagram(aMessage, aMessageInfo, aIpProto);
     }
@@ -320,7 +320,7 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(udpHeader), &udpHeader) == sizeof(udpHeader),
                  error = OT_ERROR_PARSE);
-    aMessage.MoveOffset(sizeof(udpHeader));
+    IgnoreError(aMessage.MoveOffset(sizeof(udpHeader)));
     aMessageInfo.mPeerPort = udpHeader.GetSourcePort();
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 

@@ -81,7 +81,7 @@ otError LinkRaw::SetEnabled(bool aEnabled)
     }
     else
     {
-        mSubMac.Disable();
+        IgnoreError(mSubMac.Disable());
     }
 
     mEnabled = aEnabled;

@@ -31,6 +31,7 @@
 
 #include <stdint.h>
 
+#include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "mac/mac.hpp"
 #include "net/ip6_headers.hpp"
@@ -120,8 +121,8 @@ public:
         mIpHeader.SetPayloadLength(aPayloadLength);
         mIpHeader.SetNextHeader(aNextHeader);
         mIpHeader.SetHopLimit(aHopLimit);
-        mIpHeader.GetSource().FromString(aSource);
-        mIpHeader.GetDestination().FromString(aDestination);
+        IgnoreError(mIpHeader.GetSource().FromString(aSource));
+        IgnoreError(mIpHeader.GetDestination().FromString(aDestination));
     }
 
     /**
@@ -146,8 +147,8 @@ public:
         mIpTunneledHeader.SetPayloadLength(aPayloadLength);
         mIpTunneledHeader.SetNextHeader(aNextHeader);
         mIpTunneledHeader.SetHopLimit(aHopLimit);
-        mIpTunneledHeader.GetSource().FromString(aSource);
-        mIpTunneledHeader.GetDestination().FromString(aDestination);
+        IgnoreError(mIpTunneledHeader.GetSource().FromString(aSource));
+        IgnoreError(mIpTunneledHeader.GetDestination().FromString(aDestination));
     }
 
     /**

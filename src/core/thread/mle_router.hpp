@@ -887,7 +887,7 @@ public:
     uint8_t GetCost(uint16_t) { return 0; }
 
     otError RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
-    otError RemoveRouterLink(Router &) { return BecomeDetached(); }
+    void    RemoveRouterLink(Router &) { IgnoreError(BecomeDetached()); }
 
     Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::Address &aAddress) { return Mle::GetNeighbor(aAddress); }

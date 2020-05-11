@@ -51,7 +51,7 @@ AnnounceBeginServer::AnnounceBeginServer(Instance &aInstance)
     : AnnounceSenderBase(aInstance, &AnnounceBeginServer::HandleTimer)
     , mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this)
 {
-    Get<Coap::Coap>().AddResource(mAnnounceBegin);
+    IgnoreError(Get<Coap::Coap>().AddResource(mAnnounceBegin));
 }
 
 otError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask)
@@ -83,7 +83,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Message &aMessage, const Ip6::Mess
     SuccessOrExit(Tlv::ReadUint8Tlv(aMessage, MeshCoP::Tlv::kCount, count));
     SuccessOrExit(Tlv::ReadUint16Tlv(aMessage, MeshCoP::Tlv::kPeriod, period));
 
-    SendAnnounce(mask, count, period);
+    IgnoreError(SendAnnounce(mask, count, period));
 
     if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {

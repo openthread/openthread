@@ -476,9 +476,9 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_DATA>(
     uint8_t networkData[255];
     uint8_t networkDataLen = 255;
 
-    otBorderRouterGetNetData(mInstance,
-                             false, // Stable?
-                             networkData, &networkDataLen);
+    IgnoreError(otBorderRouterGetNetData(mInstance,
+                                         false, // Stable?
+                                         networkData, &networkDataLen));
 
     return mEncoder.WriteData(networkData, networkDataLen);
 }
@@ -488,9 +488,9 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_STABLE_NETWORK
     uint8_t networkData[255];
     uint8_t networkDataLen = 255;
 
-    otBorderRouterGetNetData(mInstance,
-                             true, // Stable?
-                             networkData, &networkDataLen);
+    IgnoreError(otBorderRouterGetNetData(mInstance,
+                                         true, // Stable?
+                                         networkData, &networkDataLen));
 
     return mEncoder.WriteData(networkData, networkDataLen);
 }
@@ -501,9 +501,9 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_LEADER_NETWORK
     uint8_t networkData[255];
     uint8_t networkDataLen = 255;
 
-    otNetDataGet(mInstance,
-                 false, // Stable?
-                 networkData, &networkDataLen);
+    IgnoreError(otNetDataGet(mInstance,
+                             false, // Stable?
+                             networkData, &networkDataLen));
 
     return mEncoder.WriteData(networkData, networkDataLen);
 }
@@ -513,9 +513,9 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_STABLE_LEADER_
     uint8_t networkData[255];
     uint8_t networkDataLen = 255;
 
-    otNetDataGet(mInstance,
-                 true, // Stable?
-                 networkData, &networkDataLen);
+    IgnoreError(otNetDataGet(mInstance,
+                             true, // Stable?
+                             networkData, &networkDataLen));
 
     return mEncoder.WriteData(networkData, networkDataLen);
 }
@@ -559,8 +559,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PARENT>(void)
             int8_t averageRssi;
             int8_t lastRssi;
 
-            otThreadGetParentAverageRssi(mInstance, &averageRssi);
-            otThreadGetParentLastRssi(mInstance, &lastRssi);
+            IgnoreError(otThreadGetParentAverageRssi(mInstance, &averageRssi));
+            IgnoreError(otThreadGetParentLastRssi(mInstance, &lastRssi));
 
             SuccessOrExit(error = mEncoder.WriteEui64(parentInfo.mExtAddress));
             SuccessOrExit(error = mEncoder.WriteUint16(parentInfo.mRloc16));
@@ -662,7 +662,8 @@ exit:
         // the state of these ports, so we need to report
         // those incomplete changes via an asynchronous
         // change event.
-        WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_THREAD_ASSISTING_PORTS);
+        IgnoreError(
+            WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_THREAD_ASSISTING_PORTS));
     }
 
     return error;
@@ -691,7 +692,7 @@ exit:
 
     if (shouldRegisterWithLeader)
     {
-        otBorderRouterRegister(mInstance);
+        IgnoreError(otBorderRouterRegister(mInstance));
     }
 
     return error;
@@ -831,7 +832,7 @@ exit:
 
     if (shouldRegisterWithLeader)
     {
-        otServerRegister(mInstance);
+        IgnoreError(otServerRegister(mInstance));
     }
 
     return error;
@@ -1091,7 +1092,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ACTIVE_DATASET
 {
     otOperationalDataset dataset;
 
-    IgnoreReturnValue(otDatasetGetActive(mInstance, &dataset));
+    IgnoreError(otDatasetGetActive(mInstance, &dataset));
     return EncodeOperationalDataset(dataset);
 }
 
@@ -1099,7 +1100,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PENDING_DATASE
 {
     otOperationalDataset dataset;
 
-    IgnoreReturnValue(otDatasetGetPending(mInstance, &dataset));
+    IgnoreError(otDatasetGetPending(mInstance, &dataset));
     return EncodeOperationalDataset(dataset);
 }
 
@@ -2003,11 +2004,11 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_JAM_DETECT_ENABLE>(vo
 
     if (enabled)
     {
-        otJamDetectionStart(mInstance, &NcpBase::HandleJamStateChange_Jump, this);
+        IgnoreError(otJamDetectionStart(mInstance, &NcpBase::HandleJamStateChange_Jump, this));
     }
     else
     {
-        otJamDetectionStop(mInstance);
+        IgnoreError(otJamDetectionStop(mInstance));
     }
 
 exit:
@@ -2063,7 +2064,7 @@ void NcpBase::HandleJamStateChange(bool aJamState)
     OT_UNUSED_VARIABLE(aJamState);
 
     mChangedPropsSet.AddProperty(SPINEL_PROP_JAM_DETECTED);
-    mUpdateChangedPropsTask.Post();
+    IgnoreError(mUpdateChangedPropsTask.Post());
 }
 
 #endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
@@ -2673,7 +2674,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_WHITELIST);
+        IgnoreError(WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_WHITELIST));
     }
 
     return error;
@@ -2731,7 +2732,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_BLACKLIST);
+        IgnoreError(WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_BLACKLIST));
     }
 
     return error;
@@ -2794,7 +2795,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_FIXED_RSS);
+        IgnoreError(WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_FIXED_RSS));
     }
 
     return error;
@@ -3151,7 +3152,7 @@ void NcpBase::HandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
 {
     memcpy(mLegacyUlaPrefix, aUlaPrefix, OT_NCP_LEGACY_ULA_PREFIX_LENGTH);
     mChangedPropsSet.AddProperty(SPINEL_PROP_NEST_LEGACY_ULA_PREFIX);
-    mUpdateChangedPropsTask.Post();
+    IgnoreError(mUpdateChangedPropsTask.Post());
 }
 
 void NcpBase::HandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
@@ -3159,7 +3160,7 @@ void NcpBase::HandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
     mLegacyNodeDidJoin    = true;
     mLegacyLastJoinedNode = *aExtAddr;
     mChangedPropsSet.AddProperty(SPINEL_PROP_NEST_LEGACY_LAST_NODE_JOINED);
-    mUpdateChangedPropsTask.Post();
+    IgnoreError(mUpdateChangedPropsTask.Post());
 }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NEST_LEGACY_ULA_PREFIX>(void)
@@ -3245,7 +3246,7 @@ void NcpBase::HandleTimeSyncUpdate(void *aContext)
 void NcpBase::HandleTimeSyncUpdate(void)
 {
     mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_NETWORK_TIME);
-    mUpdateChangedPropsTask.Post();
+    IgnoreError(mUpdateChangedPropsTask.Post());
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
@@ -3303,7 +3304,7 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *aResult)
         // We are finished with the scan, send an unsolicited
         // scan state update.
         mChangedPropsSet.AddProperty(SPINEL_PROP_MAC_SCAN_STATE);
-        mUpdateChangedPropsTask.Post();
+        IgnoreError(mUpdateChangedPropsTask.Post());
     }
 
 exit:
@@ -3314,7 +3315,7 @@ exit:
         // an async `LAST_STATUS(NOMEM)` when buffer space becomes
         // available.
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
-        mUpdateChangedPropsTask.Post();
+        IgnoreError(mUpdateChangedPropsTask.Post());
     }
 }
 
@@ -3340,7 +3341,7 @@ void NcpBase::HandleEnergyScanResult(otEnergyScanResult *aResult)
         // We are finished with the scan, send an unsolicited
         // scan state update.
         mChangedPropsSet.AddProperty(SPINEL_PROP_MAC_SCAN_STATE);
-        mUpdateChangedPropsTask.Post();
+        IgnoreError(mUpdateChangedPropsTask.Post());
     }
 
 exit:
@@ -3348,7 +3349,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
-        mUpdateChangedPropsTask.Post();
+        IgnoreError(mUpdateChangedPropsTask.Post());
     }
 }
 
@@ -3379,7 +3380,7 @@ void NcpBase::HandleJoinerCallback(otError aError)
         break;
     }
 
-    mUpdateChangedPropsTask.Post();
+    IgnoreError(mUpdateChangedPropsTask.Post());
 }
 #endif
 
@@ -3407,7 +3408,7 @@ void NcpBase::HandleDatagramFromStack(otMessage *aMessage)
 
     if (IsResponseQueueEmpty())
     {
-        IgnoreReturnValue(SendQueuedDatagramMessages());
+        IgnoreError(SendQueuedDatagramMessages());
     }
 
 exit:
@@ -3455,13 +3456,13 @@ otError NcpBase::SendQueuedDatagramMessages(void)
         // If forming of the spinel frame fails, the message is enqueued
         // back at the front of `mMessageQueue`.
 
-        otMessageQueueDequeue(&mMessageQueue, message);
+        IgnoreError(otMessageQueueDequeue(&mMessageQueue, message));
 
         error = SendDatagramMessage(message);
 
         if (error != OT_ERROR_NONE)
         {
-            otMessageQueueEnqueueAtHead(&mMessageQueue, message);
+            IgnoreError(otMessageQueueEnqueueAtHead(&mMessageQueue, message));
         }
 
         SuccessOrExit(error);
@@ -3629,7 +3630,7 @@ void NcpBase::HandleStateChanged(otChangedFlags aFlags, void *aContext)
     NcpBase *ncp = static_cast<NcpBase *>(aContext);
 
     ncp->mThreadChangedFlags |= aFlags;
-    ncp->mUpdateChangedPropsTask.Post();
+    IgnoreError(ncp->mUpdateChangedPropsTask.Post());
 }
 
 void NcpBase::ProcessThreadChangedFlags(void)
@@ -3690,7 +3691,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
             )
             {
                 mThreadChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_PARTITION_ID);
-                otThreadSetEnabled(mInstance, false);
+                IgnoreError(otThreadSetEnabled(mInstance, false));
 
                 mChangedPropsSet.AddProperty(SPINEL_PROP_NET_STACK_UP);
                 mChangedPropsSet.AddLastStatus(SPINEL_STATUS_JOIN_FAILURE);

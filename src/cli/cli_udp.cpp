@@ -264,7 +264,7 @@ otError UdpExample::Process(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength < 1)
     {
-        ProcessHelp(0, NULL);
+        IgnoreError(ProcessHelp(0, NULL));
         error = OT_ERROR_INVALID_ARGS;
     }
     else

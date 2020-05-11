@@ -289,7 +289,7 @@ otError Message::SetLength(uint16_t aLength)
     // Correct offset in case shorter length is set.
     if (GetOffset() > aLength)
     {
-        SetOffset(aLength);
+        IgnoreError(SetOffset(aLength));
     }
 
 exit:
@@ -372,14 +372,14 @@ otError Message::SetPriority(uint8_t aPriority)
     if (mBuffer.mHead.mInfo.mInPriorityQ)
     {
         priorityQueue = mBuffer.mHead.mInfo.mQueue.mPriority;
-        priorityQueue->Dequeue(*this);
+        IgnoreError(priorityQueue->Dequeue(*this));
     }
 
     mBuffer.mHead.mInfo.mPriority = aPriority;
 
     if (priorityQueue != NULL)
     {
-        priorityQueue->Enqueue(*this);
+        IgnoreError(priorityQueue->Enqueue(*this));
     }
 
 exit:
@@ -426,7 +426,7 @@ otError Message::Prepend(const void *aBuf, uint16_t aLength)
 
     SetReserved(GetReserved() - aLength);
     mBuffer.mHead.mInfo.mLength += aLength;
-    SetOffset(GetOffset() + aLength);
+    IgnoreError(SetOffset(GetOffset() + aLength));
 
     if (aBuf != NULL)
     {
@@ -641,7 +641,7 @@ Message *Message::Clone(uint16_t aLength) const
 
     // Copy selected message information.
     offset = GetOffset() < aLength ? GetOffset() : aLength;
-    messageCopy->SetOffset(offset);
+    IgnoreError(messageCopy->SetOffset(offset));
 
     messageCopy->SetSubType(GetSubType());
     messageCopy->SetLinkSecurityEnabled(IsLinkSecurityEnabled());

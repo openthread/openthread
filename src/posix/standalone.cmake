@@ -94,4 +94,6 @@ target_link_libraries(ot-ncp
 install(TARGETS ot-cli ot-ncp
     DESTINATION bin)
 
-set(CPACK_PACKAGE_NAME "openthread-standalone")
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    set(CPACK_PACKAGE_NAME "openthread-standalone")
+endif()
