@@ -557,6 +557,14 @@ otError Diags::ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, siz
 {
     otError error = OT_ERROR_NONE;
 
+#ifndef NDEBUG
+    if (aArgsLength > 0 && !strcmp(aArgs[0], "rcp"))
+    {
+        aArgs++;
+        aArgsLength--;
+    }
+#endif
+
     if (aArgsLength == 0)
     {
         snprintf(aOutput, aOutputMaxLen, "diagnostics mode is %s\r\n", otPlatDiagModeGet() ? "enabled" : "disabled");
