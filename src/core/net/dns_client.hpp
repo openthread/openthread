@@ -197,7 +197,7 @@ private:
     Message *CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata);
     void     DequeueMessage(Message &aMessage);
     otError  SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError  SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void     SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otError AppendCompressedHostname(Message &aMessage, const char *aHostname);
     otError CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset);

@@ -329,8 +329,8 @@ private:
 
     otError SendCommissionerSet(void);
     otError SendPetition(void);
-    otError SendKeepAlive(void);
-    otError SendKeepAlive(uint16_t aSessionId);
+    void    SendKeepAlive(void);
+    void    SendKeepAlive(uint16_t aSessionId);
 
     void SetState(otCommissionerState aState);
     void SignalJoinerEvent(otCommissionerJoinerEvent aEvent, const Mac::ExtAddress &aJoinerId);

@@ -54,7 +54,7 @@ PanIdQueryClient::PanIdQueryClient(Instance &aInstance)
     , mContext(NULL)
     , mPanIdQuery(OT_URI_PATH_PANID_CONFLICT, &PanIdQueryClient::HandleConflict, this)
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mPanIdQuery));
+    Get<Coap::Coap>().AddResource(mPanIdQuery);
 }
 
 otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,

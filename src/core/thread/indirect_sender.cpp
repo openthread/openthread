@@ -84,15 +84,14 @@ exit:
     mEnabled = false;
 }
 
-otError IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
+void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
 {
-    otError  error = OT_ERROR_NONE;
     uint16_t childIndex;
 
-    VerifyOrExit(!aChild.IsRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
+    OT_ASSERT(!aChild.IsRxOnWhenIdle());
 
     childIndex = Get<ChildTable>().GetChildIndex(aChild);
-    VerifyOrExit(!aMessage.GetChildMask(childIndex), error = OT_ERROR_ALREADY);
+    VerifyOrExit(!aMessage.GetChildMask(childIndex), OT_NOOP);
 
     aMessage.SetChildMask(childIndex);
     mSourceMatchController.IncrementMessageCount(aChild);
@@ -100,7 +99,7 @@ otError IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChil
     RequestMessageUpdate(aChild);
 
 exit:
-    return error;
+    return;
 }
 
 otError IndirectSender::RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild)
@@ -139,7 +138,7 @@ void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
                 Get<MeshForwarder>().mSendMessage = NULL;
             }
 
-            IgnoreError(Get<MeshForwarder>().mSendQueue.Dequeue(*message));
+            Get<MeshForwarder>().mSendQueue.Dequeue(*message);
             message->Free();
         }
     }
@@ -219,7 +218,7 @@ Message *IndirectSender::FindIndirectMessage(Child &aChild)
             {
                 message->ClearChildMask(childIndex);
                 mSourceMatchController.DecrementMessageCount(aChild);
-                IgnoreError(Get<MeshForwarder>().mSendQueue.Dequeue(*message));
+                Get<MeshForwarder>().mSendQueue.Dequeue(*message);
                 message->Free();
                 continue;
             }
@@ -541,7 +540,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
 
         if (!message->GetDirectTransmission() && !message->IsChildPending())
         {
-            IgnoreError(Get<MeshForwarder>().mSendQueue.Dequeue(*message));
+            Get<MeshForwarder>().mSendQueue.Dequeue(*message);
             message->Free();
         }
     }

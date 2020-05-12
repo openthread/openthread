@@ -186,7 +186,7 @@ void Slaac::Update(UpdateMode aMode)
             {
                 otLogInfoUtil("SLAAC: Removing address %s", slaacAddr->GetAddress().ToString().AsCString());
 
-                IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(*slaacAddr));
+                Get<ThreadNetif>().RemoveUnicastAddress(*slaacAddr);
                 slaacAddr->mValid = false;
             }
         }
@@ -242,7 +242,7 @@ void Slaac::Update(UpdateMode aMode)
 
                     otLogInfoUtil("SLAAC: Adding address %s", slaacAddr->GetAddress().ToString().AsCString());
 
-                    IgnoreError(Get<ThreadNetif>().AddUnicastAddress(*slaacAddr));
+                    Get<ThreadNetif>().AddUnicastAddress(*slaacAddr);
 
                     added = true;
                     break;

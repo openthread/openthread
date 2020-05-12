@@ -114,13 +114,13 @@ void MeshForwarder::Stop(void)
 
     while ((message = mSendQueue.GetHead()) != NULL)
     {
-        IgnoreError(mSendQueue.Dequeue(*message));
+        mSendQueue.Dequeue(*message);
         message->Free();
     }
 
     while ((message = mReassemblyList.GetHead()) != NULL)
     {
-        IgnoreError(mReassemblyList.Dequeue(*message));
+        mReassemblyList.Dequeue(*message);
         message->Free();
     }
 
@@ -158,7 +158,7 @@ void MeshForwarder::RemoveMessage(Message &aMessage)
         }
     }
 
-    IgnoreError(queue->Dequeue(aMessage));
+    queue->Dequeue(aMessage);
     LogMessage(kMessageEvict, aMessage, NULL, OT_ERROR_NO_BUFS);
     aMessage.Free();
 }
@@ -180,7 +180,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
         mSendMessage->SetTxSuccess(true);
     }
 
-    IgnoreError(Get<Mac::Mac>().RequestDirectFrameTransmission());
+    Get<Mac::Mac>().RequestDirectFrameTransmission();
 
 exit:
     return;
@@ -260,14 +260,14 @@ Message *MeshForwarder::GetDirectTransmission(void)
 #if OPENTHREAD_FTD
 
         case OT_ERROR_ADDRESS_QUERY:
-            IgnoreError(mSendQueue.Dequeue(*curMessage));
-            IgnoreError(mResolvingQueue.Enqueue(*curMessage));
+            mSendQueue.Dequeue(*curMessage);
+            mResolvingQueue.Enqueue(*curMessage);
             continue;
 
 #endif
 
         default:
-            IgnoreError(mSendQueue.Dequeue(*curMessage));
+            mSendQueue.Dequeue(*curMessage);
             LogMessage(kMessageDrop, *curMessage, NULL, error);
             curMessage->Free();
             continue;
@@ -358,7 +358,7 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     }
     else
     {
-        IgnoreError(mDataPollSender.StartPolling());
+        mDataPollSender.StartPolling();
         Get<Utils::SupervisionListener>().Start();
     }
 }
@@ -770,11 +770,11 @@ start:
         payload += fragmentHeaderLength;
         headerLength += fragmentHeaderLength;
 
-        fragmentLength = (aFrame.GetMaxPayloadLength() - headerLength) & ~0x7;
+        fragmentLength = aFrame.GetMaxPayloadLength() - headerLength;
 
         if (payloadLength > fragmentLength)
         {
-            payloadLength = fragmentLength;
+            payloadLength = (fragmentLength & ~0x7);
         }
 
         // Copy IPv6 Payload
@@ -930,7 +930,7 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, otError aError)
             Get<Mle::Mle>().RequestShorterChildIdRequest();
         }
 
-        IgnoreError(mSendQueue.Dequeue(*mSendMessage));
+        mSendQueue.Dequeue(*mSendMessage);
         mSendMessage->Free();
         mSendMessage       = NULL;
         mMessageNextOffset = 0;
@@ -940,7 +940,7 @@ exit:
 
     if (mEnabled)
     {
-        IgnoreError(mScheduleTransmissionTask.Post());
+        mScheduleTransmissionTask.Post();
     }
 }
 
@@ -962,7 +962,7 @@ void MeshForwarder::HandleDiscoverTimer(void)
 {
     if (mScanChannels.GetNextChannel(mScanChannel) != OT_ERROR_NONE)
     {
-        IgnoreError(mSendQueue.Dequeue(*mSendMessage));
+        mSendQueue.Dequeue(*mSendMessage);
         mSendMessage->Free();
         mSendMessage = NULL;
 
@@ -974,7 +974,7 @@ void MeshForwarder::HandleDiscoverTimer(void)
 
 exit:
     mSendBusy = false;
-    IgnoreError(mScheduleTransmissionTask.Post());
+    mScheduleTransmissionTask.Post();
 }
 
 void MeshForwarder::HandleDiscoverComplete(void)
@@ -1117,7 +1117,7 @@ void MeshForwarder::HandleFragment(const uint8_t *         aFrame,
             ClearReassemblyList();
         }
 
-        IgnoreError(mReassemblyList.Enqueue(*message));
+        mReassemblyList.Enqueue(*message);
 
         if (!mUpdateTimer.IsRunning())
         {
@@ -1164,7 +1164,7 @@ exit:
     {
         if (message->GetOffset() >= message->GetLength())
         {
-            IgnoreError(mReassemblyList.Dequeue(*message));
+            mReassemblyList.Dequeue(*message);
             IgnoreError(HandleDatagram(*message, aLinkInfo, aMacSource));
         }
     }
@@ -1187,7 +1187,7 @@ void MeshForwarder::ClearReassemblyList(void)
     for (message = mReassemblyList.GetHead(); message; message = next)
     {
         next = message->GetNext();
-        IgnoreError(mReassemblyList.Dequeue(*message));
+        mReassemblyList.Dequeue(*message);
 
         LogMessage(kMessageReassemblyDrop, *message, NULL, OT_ERROR_NO_FRAME_RECEIVED);
 
@@ -1233,7 +1233,7 @@ bool MeshForwarder::UpdateReassemblyList(void)
         }
         else
         {
-            IgnoreError(mReassemblyList.Dequeue(*message));
+            mReassemblyList.Dequeue(*message);
 
             LogMessage(kMessageReassemblyDrop, *message, NULL, OT_ERROR_REASSEMBLY_TIMEOUT);
             if (message->GetType() == Message::kTypeIp6)

@@ -123,7 +123,7 @@ private:
 
     static bool MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aAddress, const otIp6Prefix &aIp6Prefix);
 
-    otError Solicit(uint16_t aRloc16);
+    void Solicit(uint16_t aRloc16);
 
     void AddIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Prefix);
     void RemoveIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Prefix);

@@ -455,7 +455,7 @@ otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLe
     otError               error = OT_ERROR_NONE;
     CommissioningDataTlv *commissioningDataTlv;
 
-    IgnoreError(RemoveCommissioningData());
+    RemoveCommissioningData();
 
     if (aValueLength > 0)
     {
@@ -517,16 +517,15 @@ exit:
     return rval;
 }
 
-otError LeaderBase::RemoveCommissioningData(void)
+void LeaderBase::RemoveCommissioningData(void)
 {
-    otError               error = OT_ERROR_NONE;
-    CommissioningDataTlv *tlv   = GetCommissioningData();
+    CommissioningDataTlv *tlv = GetCommissioningData();
 
-    VerifyOrExit(tlv != NULL, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(tlv != NULL, OT_NOOP);
     RemoveTlv(tlv);
 
 exit:
-    return error;
+    return;
 }
 
 } // namespace NetworkData

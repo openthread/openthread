@@ -52,7 +52,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
     IgnoreError(aMessage.SetOffset(0));
     aMessage.SetDatagramTag(0);
-    SuccessOrExit(error = mSendQueue.Enqueue(aMessage));
+    mSendQueue.Enqueue(aMessage);
 
     switch (aMessage.GetType())
     {
@@ -87,7 +87,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
                         if (!child.IsRxOnWhenIdle())
                         {
-                            IgnoreError(mIndirectSender.AddMessageForSleepyChild(aMessage, child));
+                            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
                         }
                     }
                 }
@@ -101,7 +101,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
                         if (mle.IsSleepyChildSubscribed(ip6Header.GetDestination(), child))
                         {
-                            IgnoreError(mIndirectSender.AddMessageForSleepyChild(aMessage, child));
+                            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
                         }
                     }
                 }
@@ -112,7 +112,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
         {
             // destined for a sleepy child
             Child &child = *static_cast<Child *>(neighbor);
-            IgnoreError(mIndirectSender.AddMessageForSleepyChild(aMessage, child));
+            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
         }
         else
         {
@@ -127,7 +127,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
     {
         Child *child = Get<Utils::ChildSupervisor>().GetDestination(aMessage);
         OT_ASSERT((child != NULL) && !child->IsRxOnWhenIdle());
-        IgnoreError(mIndirectSender.AddMessageForSleepyChild(aMessage, *child));
+        mIndirectSender.AddMessageForSleepyChild(aMessage, *child);
         break;
     }
 
@@ -136,9 +136,8 @@ otError MeshForwarder::SendMessage(Message &aMessage)
         break;
     }
 
-    IgnoreError(mScheduleTransmissionTask.Post());
+    mScheduleTransmissionTask.Post();
 
-exit:
     return error;
 }
 
@@ -161,11 +160,11 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
 
         if (ip6Dst == aEid)
         {
-            IgnoreError(mResolvingQueue.Dequeue(*cur));
+            mResolvingQueue.Dequeue(*cur);
 
             if (aError == OT_ERROR_NONE)
             {
-                IgnoreError(mSendQueue.Enqueue(*cur));
+                mSendQueue.Enqueue(*cur);
                 enqueuedMessage = true;
             }
             else
@@ -178,7 +177,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
 
     if (enqueuedMessage)
     {
-        IgnoreError(mScheduleTransmissionTask.Post());
+        mScheduleTransmissionTask.Post();
     }
 }
 
@@ -308,7 +307,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
                 mSendMessage = NULL;
             }
 
-            IgnoreError(mSendQueue.Dequeue(*message));
+            mSendQueue.Dequeue(*message);
             message->Free();
         }
     }
@@ -340,7 +339,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
             mSendMessage = NULL;
         }
 
-        IgnoreError(mSendQueue.Dequeue(*message));
+        mSendQueue.Dequeue(*message);
         LogMessage(kMessageDrop, *message, NULL, OT_ERROR_NONE);
         message->Free();
     }
@@ -658,7 +657,7 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
 
         meshHeader.DecrementHopsLeft();
 
-        IgnoreError(GetForwardFramePriority(aFrame, aFrameLength, meshSource, meshDest, priority));
+        GetForwardFramePriority(aFrame, aFrameLength, meshSource, meshDest, priority);
         message = Get<MessagePool>().New(Message::kType6lowpan, priority);
         VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -716,7 +715,7 @@ void MeshForwarder::UpdateRoutes(const uint8_t *     aFrame,
                 (aMeshDest.GetShort() == Get<Mac::Mac>().GetShortAddress() ||
                  Get<Mle::MleRouter>().IsMinimalChild(aMeshDest.GetShort())))
             {
-                IgnoreError(Get<AddressResolver>().AddSnoopedCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort()));
+                Get<AddressResolver>().AddSnoopedCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
             }
         }
     }
@@ -842,11 +841,11 @@ exit:
     return error;
 }
 
-otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
-                                               uint16_t            aFrameLength,
-                                               const Mac::Address &aMeshSource,
-                                               const Mac::Address &aMeshDest,
-                                               uint8_t &           aPriority)
+void MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
+                                            uint16_t            aFrameLength,
+                                            const Mac::Address &aMeshSource,
+                                            const Mac::Address &aMeshDest,
+                                            uint8_t &           aPriority)
 {
     otError                error      = OT_ERROR_NONE;
     bool                   isFragment = false;
@@ -881,7 +880,7 @@ exit:
         UpdateFragmentPriority(fragmentHeader, aFrameLength, aMeshSource.GetShort(), aPriority);
     }
 
-    return error;
+    return;
 }
 
 otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest)

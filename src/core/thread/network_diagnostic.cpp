@@ -63,10 +63,10 @@ NetworkDiagnostic::NetworkDiagnostic(Instance &aInstance)
     , mReceiveDiagnosticGetCallback(NULL)
     , mReceiveDiagnosticGetCallbackContext(NULL)
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mDiagnosticGetRequest));
-    IgnoreError(Get<Coap::Coap>().AddResource(mDiagnosticGetQuery));
-    IgnoreError(Get<Coap::Coap>().AddResource(mDiagnosticGetAnswer));
-    IgnoreError(Get<Coap::Coap>().AddResource(mDiagnosticReset));
+    Get<Coap::Coap>().AddResource(mDiagnosticGetRequest);
+    Get<Coap::Coap>().AddResource(mDiagnosticGetQuery);
+    Get<Coap::Coap>().AddResource(mDiagnosticGetAnswer);
+    Get<Coap::Coap>().AddResource(mDiagnosticReset);
 }
 
 void NetworkDiagnostic::SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCallback aCallback,

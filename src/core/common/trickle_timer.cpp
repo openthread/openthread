@@ -64,12 +64,10 @@ TrickleTimer::TrickleTimer(Instance &aInstance,
     OT_ASSERT(aTransmitHandler != NULL);
 }
 
-otError TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode)
+void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aIntervalMax >= aIntervalMin, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aIntervalMin != 0 || aIntervalMax != 0, error = OT_ERROR_INVALID_ARGS);
+    OT_ASSERT(aIntervalMax >= aIntervalMin);
+    OT_ASSERT(aIntervalMin != 0 || aIntervalMax != 0);
 
     mIntervalMin = aIntervalMin;
     mIntervalMax = aIntervalMax;
@@ -80,9 +78,6 @@ otError TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode a
     mInterval = Random::NonCrypto::GetUint32InRange(mIntervalMin, mIntervalMax + 1);
 
     StartNewInterval();
-
-exit:
-    return error;
 }
 
 void TrickleTimer::Stop(void)

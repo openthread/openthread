@@ -60,8 +60,8 @@ Leader::Leader(Instance &aInstance)
     , mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal)
     , mSessionId(Random::NonCrypto::GetUint16())
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mPetition));
-    IgnoreError(Get<Coap::Coap>().AddResource(mKeepAlive));
+    Get<Coap::Coap>().AddResource(mPetition);
+    Get<Coap::Coap>().AddResource(mKeepAlive);
 }
 
 void Leader::HandlePetition(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -117,12 +117,12 @@ void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
     mTimer.Start(Time::SecToMsec(kTimeoutLeaderPetition));
 
 exit:
-    IgnoreError(SendPetitionResponse(aMessage, aMessageInfo, state));
+    SendPetitionResponse(aMessage, aMessageInfo, state);
 }
 
-otError Leader::SendPetitionResponse(const Coap::Message &   aRequest,
-                                     const Ip6::MessageInfo &aMessageInfo,
-                                     StateTlv::State         aState)
+void Leader::SendPetitionResponse(const Coap::Message &   aRequest,
+                                  const Ip6::MessageInfo &aMessageInfo,
+                                  StateTlv::State         aState)
 {
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
@@ -150,12 +150,15 @@ otError Leader::SendPetitionResponse(const Coap::Message &   aRequest,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogInfoMeshCoP("Failed to send petition response: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 void Leader::HandleKeepAlive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -203,15 +206,15 @@ void Leader::HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aM
         mTimer.Start(Time::SecToMsec(kTimeoutLeaderPetition));
     }
 
-    IgnoreError(SendKeepAliveResponse(aMessage, aMessageInfo, responseState));
+    SendKeepAliveResponse(aMessage, aMessageInfo, responseState);
 
 exit:
     return;
 }
 
-otError Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
-                                      const Ip6::MessageInfo &aMessageInfo,
-                                      StateTlv::State         aState)
+void Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
+                                   const Ip6::MessageInfo &aMessageInfo,
+                                   StateTlv::State         aState)
 {
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
@@ -229,15 +232,18 @@ otError Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogWarnMeshCoP("Failed to send keep alive response: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
-otError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
+void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 {
     otError          error = OT_ERROR_NONE;
     Ip6::MessageInfo messageInfo;
@@ -256,12 +262,15 @@ otError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogWarnMeshCoP("Failed to send dataset changed: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 otError Leader::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)

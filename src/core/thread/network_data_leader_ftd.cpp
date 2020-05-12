@@ -76,9 +76,9 @@ void Leader::Reset(void)
 
 void Leader::Start(void)
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mServerData));
-    IgnoreError(Get<Coap::Coap>().AddResource(mCommissioningDataGet));
-    IgnoreError(Get<Coap::Coap>().AddResource(mCommissioningDataSet));
+    Get<Coap::Coap>().AddResource(mServerData);
+    Get<Coap::Coap>().AddResource(mCommissioningDataGet);
+    Get<Coap::Coap>().AddResource(mCommissioningDataSet);
 }
 
 void Leader::Stop(void)
@@ -160,8 +160,7 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) == OT_ERROR_NONE)
     {
         VerifyOrExit(networkData.IsValid(), OT_NOOP);
-        IgnoreError(RegisterNetworkData(aMessageInfo.GetPeerAddr().GetLocator(), networkData.GetTlvs(),
-                                        networkData.GetLength()));
+        RegisterNetworkData(aMessageInfo.GetPeerAddr().GetLocator(), networkData.GetTlvs(), networkData.GetLength());
     }
 
     SuccessOrExit(Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo));
@@ -702,7 +701,7 @@ exit:
     return status;
 }
 
-otError Leader::RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength)
+void Leader::RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength)
 {
     otError               error = OT_ERROR_NONE;
     const NetworkDataTlv *end   = reinterpret_cast<const NetworkDataTlv *>(aTlvs + aTlvsLength);
@@ -741,7 +740,11 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint
     otDumpDebgNetData("add done", mTlvs, mLength);
 
 exit:
-    return error;
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogNoteNetData("Failed to register network data: %s", otThreadErrorToString(error));
+    }
 }
 
 otError Leader::AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags)

@@ -206,7 +206,7 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    otError RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength);
+    void RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength);
 
     otError AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags);
     otError AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags);

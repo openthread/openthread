@@ -256,7 +256,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
         SuccessOrExit(
             Get<Mle::MleRouter>().GetCommissionerAloc(destination, localSessionId->GetCommissionerSessionId()));
 
-        IgnoreError(Get<Leader>().SendDatasetChanged(destination));
+        Get<Leader>().SendDatasetChanged(destination);
     }
 
 exit:
@@ -461,7 +461,7 @@ exit:
 void ActiveDataset::StartLeader(void)
 {
     IgnoreError(GenerateLocal());
-    IgnoreError(Get<Coap::Coap>().AddResource(mResourceSet));
+    Get<Coap::Coap>().AddResource(mResourceSet);
 }
 
 void ActiveDataset::StopLeader(void)
@@ -487,7 +487,7 @@ exit:
 void PendingDataset::StartLeader(void)
 {
     StartDelayTimer();
-    IgnoreError(Get<Coap::Coap>().AddResource(mResourceSet));
+    Get<Coap::Coap>().AddResource(mResourceSet);
 }
 
 void PendingDataset::StopLeader(void)

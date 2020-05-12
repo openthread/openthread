@@ -59,7 +59,7 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
     , mNotifierCallback(aInstance, &EnergyScanServer::HandleStateChanged, this)
     , mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this)
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mEnergyScan));
+    Get<Coap::Coap>().AddResource(mEnergyScan);
 }
 
 void EnergyScanServer::HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -122,7 +122,7 @@ void EnergyScanServer::HandleTimer(void)
     }
     else
     {
-        IgnoreError(SendReport());
+        SendReport();
     }
 
 exit:
@@ -168,7 +168,7 @@ exit:
     return;
 }
 
-otError EnergyScanServer::SendReport(void)
+void EnergyScanServer::SendReport(void)
 {
     otError                 error = OT_ERROR_NONE;
     MeshCoP::ChannelMaskTlv channelMask;
@@ -199,14 +199,17 @@ otError EnergyScanServer::SendReport(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
+        otLogInfoMeshCoP("Failed to send scan results: %s", otThreadErrorToString(error));
+
+        if (message != NULL)
+        {
+            message->Free();
+        }
     }
 
     mActive = false;
-
-    return error;
 }
 
 void EnergyScanServer::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)

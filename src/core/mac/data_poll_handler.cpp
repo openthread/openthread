@@ -157,7 +157,7 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
     if (mIndirectTxChild == NULL)
     {
         mIndirectTxChild = child;
-        IgnoreError(Get<Mac::Mac>().RequestIndirectFrameTransmission());
+        Get<Mac::Mac>().RequestIndirectFrameTransmission();
     }
     else
     {
@@ -309,7 +309,7 @@ void DataPollHandler::ProcessPendingPolls(void)
     if (mIndirectTxChild != NULL)
     {
         mIndirectTxChild->SetDataPollPending(false);
-        IgnoreError(Get<Mac::Mac>().RequestIndirectFrameTransmission());
+        Get<Mac::Mac>().RequestIndirectFrameTransmission();
     }
 }
 

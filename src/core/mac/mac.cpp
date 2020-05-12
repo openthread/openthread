@@ -392,7 +392,7 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
         {
             mTimer.Stop();
             FinishOperation();
-            IgnoreError(mOperationTask.Post());
+            mOperationTask.Post();
         }
 
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -537,32 +537,27 @@ void Mac::SetExtendedPanId(const ExtendedPanId &aExtendedPanId)
     IgnoreError(Get<Notifier>().Update(mExtendedPanId, aExtendedPanId, OT_CHANGED_THREAD_EXT_PANID));
 }
 
-otError Mac::RequestDirectFrameTransmission(void)
+void Mac::RequestDirectFrameTransmission(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!mPendingTransmitDataDirect && (mOperation != kOperationTransmitDataDirect), error = OT_ERROR_ALREADY);
+    VerifyOrExit(IsEnabled(), OT_NOOP);
+    VerifyOrExit(!mPendingTransmitDataDirect && (mOperation != kOperationTransmitDataDirect), OT_NOOP);
 
     StartOperation(kOperationTransmitDataDirect);
 
 exit:
-    return error;
+    return;
 }
 
 #if OPENTHREAD_FTD
-otError Mac::RequestIndirectFrameTransmission(void)
+void Mac::RequestIndirectFrameTransmission(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!mPendingTransmitDataIndirect && (mOperation != kOperationTransmitDataIndirect),
-                 error = OT_ERROR_ALREADY);
+    VerifyOrExit(IsEnabled(), OT_NOOP);
+    VerifyOrExit(!mPendingTransmitDataIndirect && (mOperation != kOperationTransmitDataIndirect), OT_NOOP);
 
     StartOperation(kOperationTransmitDataIndirect);
 
 exit:
-    return error;
+    return;
 }
 #endif
 
@@ -697,7 +692,7 @@ void Mac::StartOperation(Operation aOperation)
 
     if (mOperation == kOperationIdle)
     {
-        IgnoreError(mOperationTask.Post());
+        mOperationTask.Post();
     }
 }
 

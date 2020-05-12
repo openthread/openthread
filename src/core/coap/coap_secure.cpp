@@ -95,7 +95,7 @@ void CoapSecure::Stop(void)
 
     for (ot::Message *message = mTransmitQueue.GetHead(); message != NULL; message = message->GetNext())
     {
-        IgnoreError(mTransmitQueue.Dequeue(*message));
+        mTransmitQueue.Dequeue(*message);
         message->Free();
     }
 
@@ -176,13 +176,10 @@ otError CoapSecure::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessage
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otError error;
+    mTransmitQueue.Enqueue(aMessage);
+    mTransmitTask.Post();
 
-    SuccessOrExit(error = mTransmitQueue.Enqueue(aMessage));
-    IgnoreError(mTransmitTask.Post());
-
-exit:
-    return error;
+    return OT_ERROR_NONE;
 }
 
 void CoapSecure::HandleDtlsConnected(void *aContext, bool aConnected)
@@ -232,11 +229,11 @@ void CoapSecure::HandleTransmit(void)
     ot::Message *message = mTransmitQueue.GetHead();
 
     VerifyOrExit(message != NULL, OT_NOOP);
-    IgnoreError(mTransmitQueue.Dequeue(*message));
+    mTransmitQueue.Dequeue(*message);
 
     if (mTransmitQueue.GetHead() != NULL)
     {
-        IgnoreError(mTransmitTask.Post());
+        mTransmitTask.Post();
     }
 
     SuccessOrExit(error = mDtls.Send(*message, message->GetLength()));

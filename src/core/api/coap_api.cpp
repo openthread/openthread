@@ -249,11 +249,11 @@ otError otCoapStop(otInstance *aInstance)
     return instance.GetApplicationCoap().Stop();
 }
 
-otError otCoapAddResource(otInstance *aInstance, otCoapResource *aResource)
+void otCoapAddResource(otInstance *aInstance, otCoapResource *aResource)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoap().AddResource(*static_cast<Coap::Resource *>(aResource));
+    instance.GetApplicationCoap().AddResource(*static_cast<Coap::Resource *>(aResource));
 }
 
 void otCoapRemoveResource(otInstance *aInstance, otCoapResource *aResource)

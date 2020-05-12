@@ -90,9 +90,9 @@ void CoapBase::ClearRequests(const Ip6::Address *aAddress)
     }
 }
 
-otError CoapBase::AddResource(Resource &aResource)
+void CoapBase::AddResource(Resource &aResource)
 {
-    return mResources.Add(aResource);
+    IgnoreError(mResources.Add(aResource));
 }
 
 void CoapBase::RemoveResource(Resource &aResource)
@@ -375,7 +375,7 @@ void CoapBase::HandleRetransmissionTimer(void)
                 messageInfo.SetPeerPort(metadata.mDestinationPort);
                 messageInfo.SetSockAddr(metadata.mSourceAddress);
 
-                IgnoreError(SendCopy(*message, messageInfo));
+                SendCopy(*message, messageInfo);
             }
         }
 
@@ -437,7 +437,7 @@ Message *CoapBase::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopy
 
     mRetransmissionTimer.FireAtIfEarlier(aMetadata.mNextTimerShot);
 
-    IgnoreError(mPendingRequests.Enqueue(*messageCopy));
+    mPendingRequests.Enqueue(*messageCopy);
 
 exit:
 
@@ -452,7 +452,7 @@ exit:
 
 void CoapBase::DequeueMessage(Message &aMessage)
 {
-    IgnoreError(mPendingRequests.Dequeue(aMessage));
+    mPendingRequests.Dequeue(aMessage);
 
     if (mRetransmissionTimer.IsRunning() && (mPendingRequests.GetHead() == NULL))
     {
@@ -465,7 +465,7 @@ void CoapBase::DequeueMessage(Message &aMessage)
     // the timer would just shoot earlier and then it'd be setup again.
 }
 
-otError CoapBase::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void CoapBase::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError  error;
     Message *messageCopy = NULL;
@@ -478,12 +478,15 @@ otError CoapBase::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMes
 
 exit:
 
-    if (error != OT_ERROR_NONE && messageCopy != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        messageCopy->Free();
-    }
+        otLogWarnCoap("Failed to send copy: %s", otThreadErrorToString(error));
 
-    return error;
+        if (messageCopy != NULL)
+        {
+            messageCopy->Free();
+        }
+    }
 }
 
 Message *CoapBase::FindRelatedRequest(const Message &         aResponse,
@@ -845,7 +848,7 @@ void ResponsesQueue::EnqueueResponse(Message &               aMessage,
 
     VerifyOrExit(metadata.AppendTo(*responseCopy) == OT_ERROR_NONE, responseCopy->Free());
 
-    IgnoreError(mQueue.Enqueue(*responseCopy));
+    mQueue.Enqueue(*responseCopy);
 
     mTimer.FireAtIfEarlier(metadata.mDequeueTime);
 
@@ -886,7 +889,7 @@ void ResponsesQueue::UpdateQueue(void)
 
 void ResponsesQueue::DequeueResponse(Message &aMessage)
 {
-    IgnoreError(mQueue.Dequeue(aMessage));
+    mQueue.Dequeue(aMessage);
     aMessage.Free();
 }
 

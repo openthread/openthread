@@ -326,7 +326,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     metadata.GenerateNextTransmissionTime(TimerMilli::GetNow(), interval);
 
     SuccessOrExit(error = metadata.AppendTo(*messageCopy));
-    IgnoreError(mBufferedMessageSet.Enqueue(*messageCopy));
+    mBufferedMessageSet.Enqueue(*messageCopy);
 
     mRetransmissionTimer.FireAtIfEarlier(metadata.mTransmissionTime);
 
@@ -393,7 +393,7 @@ void Mpl::HandleRetransmissionTimer(void)
             }
             else
             {
-                IgnoreError(mBufferedMessageSet.Dequeue(*message));
+                mBufferedMessageSet.Dequeue(*message);
 
                 if (metadata.mTransmissionCount == GetTimerExpirations())
                 {

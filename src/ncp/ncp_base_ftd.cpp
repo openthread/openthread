@@ -179,7 +179,7 @@ exit:
         }
 
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
-        IgnoreError(mUpdateChangedPropsTask.Post());
+        mUpdateChangedPropsTask.Post();
     }
 }
 
@@ -680,7 +680,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
-        IgnoreError(mUpdateChangedPropsTask.Post());
+        mUpdateChangedPropsTask.Post();
     }
 }
 
@@ -723,7 +723,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
-        IgnoreError(mUpdateChangedPropsTask.Post());
+        mUpdateChangedPropsTask.Post();
     }
 }
 

@@ -206,23 +206,15 @@ public:
     /**
      * This method requests a direct data frame transmission.
      *
-     * @retval OT_ERROR_NONE           Frame transmission request is scheduled successfully.
-     * @retval OT_ERROR_ALREADY        MAC is busy sending earlier transmission request.
-     * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
-     *
      */
-    otError RequestDirectFrameTransmission(void);
+    void RequestDirectFrameTransmission(void);
 
 #if OPENTHREAD_FTD
     /**
      * This method requests an indirect data frame transmission.
      *
-     * @retval OT_ERROR_NONE           Frame transmission request is scheduled successfully.
-     * @retval OT_ERROR_ALREADY        MAC is busy sending earlier transmission request.
-     * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
-     *
      */
-    otError RequestIndirectFrameTransmission(void);
+    void RequestIndirectFrameTransmission(void);
 #endif
 
     /**

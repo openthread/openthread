@@ -114,9 +114,9 @@ void Commissioner::SignalJoinerEvent(otCommissionerJoinerEvent aEvent, const Mac
 
 void Commissioner::AddCoapResources(void)
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mRelayReceive));
-    IgnoreError(Get<Coap::Coap>().AddResource(mDatasetChanged));
-    IgnoreError(Get<Coap::CoapSecure>().AddResource(mJoinerFinalize));
+    Get<Coap::Coap>().AddResource(mRelayReceive);
+    Get<Coap::Coap>().AddResource(mDatasetChanged);
+    Get<Coap::CoapSecure>().AddResource(mJoinerFinalize);
 }
 
 void Commissioner::RemoveCoapResources(void)
@@ -193,7 +193,7 @@ otError Commissioner::Stop(bool aResign)
 
     if (mState == OT_COMMISSIONER_STATE_ACTIVE)
     {
-        IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc));
+        Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
         RemoveCoapResources();
         ClearJoiners();
         needResign = true;
@@ -209,7 +209,7 @@ otError Commissioner::Stop(bool aResign)
 
     if (needResign && aResign)
     {
-        IgnoreError(SendKeepAlive());
+        SendKeepAlive();
     }
 
 exit:
@@ -451,7 +451,7 @@ void Commissioner::HandleTimer(void)
         break;
 
     case OT_COMMISSIONER_STATE_ACTIVE:
-        IgnoreError(SendKeepAlive());
+        SendKeepAlive();
         break;
     }
 }
@@ -747,12 +747,12 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     // this could happen if commissioner is stopped by API during petitioning
     if (mState == OT_COMMISSIONER_STATE_DISABLED)
     {
-        IgnoreError(SendKeepAlive(mSessionId));
+        SendKeepAlive(mSessionId);
         ExitNow();
     }
 
     IgnoreError(Get<Mle::MleRouter>().GetCommissionerAloc(mCommissionerAloc.GetAddress(), mSessionId));
-    IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc));
+    Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
 
     AddCoapResources();
     SetState(OT_COMMISSIONER_STATE_ACTIVE);
@@ -775,12 +775,12 @@ exit:
     }
 }
 
-otError Commissioner::SendKeepAlive(void)
+void Commissioner::SendKeepAlive(void)
 {
-    return SendKeepAlive(mSessionId);
+    SendKeepAlive(mSessionId);
 }
 
-otError Commissioner::SendKeepAlive(uint16_t aSessionId)
+void Commissioner::SendKeepAlive(uint16_t aSessionId)
 {
     otError          error   = OT_ERROR_NONE;
     Coap::Message *  message = NULL;
@@ -807,12 +807,15 @@ otError Commissioner::SendKeepAlive(uint16_t aSessionId)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogWarnMeshCoP("Failed to send keep alive: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 void Commissioner::HandleLeaderKeepAliveResponse(void *               aContext,
@@ -1107,9 +1110,9 @@ void Commissioner::ApplyMeshLocalPrefix(void)
 {
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, OT_NOOP);
 
-    IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc));
+    Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
     mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-    IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc));
+    Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
 
 exit:
     return;

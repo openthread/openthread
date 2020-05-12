@@ -49,15 +49,12 @@ Tasklet::Tasklet(Instance &aInstance, Handler aHandler, void *aOwner)
 {
 }
 
-otError Tasklet::Post(void)
+void Tasklet::Post(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(!IsPosted(), error = OT_ERROR_ALREADY);
-    Get<TaskletScheduler>().PostTasklet(*this);
-
-exit:
-    return error;
+    if (!IsPosted())
+    {
+        Get<TaskletScheduler>().PostTasklet(*this);
+    }
 }
 
 TaskletScheduler::TaskletScheduler(void)

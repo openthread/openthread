@@ -104,7 +104,7 @@ void Dhcp6Client::UpdateAddresses(void)
 
         if (!found)
         {
-            IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(ia.mNetifAddress));
+            Get<ThreadNetif>().RemoveUnicastAddress(ia.mNetifAddress);
             mIdentityAssociations[i].mStatus = kIaStatusInvalid;
         }
     }
@@ -206,8 +206,8 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
 
         mIdentityAssociationCurrent = &mIdentityAssociations[i];
 
-        IgnoreError(mTrickleTimer.Start(Time::SecToMsec(kTrickleTimerImin), Time::SecToMsec(kTrickleTimerImax),
-                                        TrickleTimer::kModeNormal));
+        mTrickleTimer.Start(Time::SecToMsec(kTrickleTimerImin), Time::SecToMsec(kTrickleTimerImax),
+                            TrickleTimer::kModeNormal);
 
         mTrickleTimer.IndicateInconsistent();
 
@@ -238,7 +238,7 @@ bool Dhcp6Client::HandleTrickleTimer(void)
         // fall through
 
     case kIaStatusSoliciting:
-        IgnoreError(Solicit(mIdentityAssociationCurrent->mPrefixAgentRloc));
+        Solicit(mIdentityAssociationCurrent->mPrefixAgentRloc);
         break;
 
     case kIaStatusSolicitReplied:
@@ -261,7 +261,7 @@ exit:
     return rval;
 }
 
-otError Dhcp6Client::Solicit(uint16_t aRloc16)
+void Dhcp6Client::Solicit(uint16_t aRloc16)
 {
     otError          error = OT_ERROR_NONE;
     Message *        message;
@@ -290,12 +290,15 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
 
 exit:
 
-    if (message != NULL && error != OT_ERROR_NONE)
+    if (message != NULL)
     {
-        message->Free();
-    }
+        otLogWarnIp6("Failed to send DHCPv6 Solicit: %s", otThreadErrorToString(error));
 
-    return error;
+        if (error != OT_ERROR_NONE)
+        {
+            message->Free();
+        }
+    }
 }
 
 otError Dhcp6Client::AppendHeader(Message &aMessage)
@@ -588,7 +591,7 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             mIdentityAssociations[i].mNetifAddress.mPreferred = option.GetPreferredLifetime() != 0;
             mIdentityAssociations[i].mNetifAddress.mValid     = option.GetValidLifetime() != 0;
             mIdentityAssociations[i].mStatus                  = kIaStatusSolicitReplied;
-            IgnoreError(Get<ThreadNetif>().AddUnicastAddress(ia.mNetifAddress));
+            Get<ThreadNetif>().AddUnicastAddress(ia.mNetifAddress);
             break;
         }
     }

@@ -53,7 +53,7 @@ PanIdQueryServer::PanIdQueryServer(Instance &aInstance)
     , mTimer(aInstance, &PanIdQueryServer::HandleTimer, this)
     , mPanIdQuery(OT_URI_PATH_PANID_QUERY, &PanIdQueryServer::HandleQuery, this)
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mPanIdQuery));
+    Get<Coap::Coap>().AddResource(mPanIdQuery);
 }
 
 void PanIdQueryServer::HandleQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -104,11 +104,11 @@ void PanIdQueryServer::HandleScanResult(Mac::ActiveScanResult *aScanResult)
     }
     else if (mChannelMask != 0)
     {
-        IgnoreError(SendConflict());
+        SendConflict();
     }
 }
 
-otError PanIdQueryServer::SendConflict(void)
+void PanIdQueryServer::SendConflict(void)
 {
     otError                 error = OT_ERROR_NONE;
     MeshCoP::ChannelMaskTlv channelMask;
@@ -135,12 +135,15 @@ otError PanIdQueryServer::SendConflict(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogWarnMeshCoP("Failed to send panid conflict: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 void PanIdQueryServer::HandleTimer(Timer &aTimer)
