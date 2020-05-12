@@ -158,7 +158,7 @@ otError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
         SuccessOrExit(error = HandleEchoRequest(aMessage, aMessageInfo));
     }
 
-    IgnoreError(aMessage.MoveOffset(sizeof(icmp6Header)));
+    aMessage.MoveOffset(sizeof(icmp6Header));
 
     for (IcmpHandler *handler = mHandlers.GetHead(); handler; handler = handler->GetNext())
     {

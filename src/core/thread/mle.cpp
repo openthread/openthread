@@ -2557,7 +2557,7 @@ otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
             length = aMessage.Read(aMessage.GetOffset(), sizeof(buf), buf);
             aesCcm.Payload(buf, buf, length, true);
             aMessage.Write(aMessage.GetOffset(), length, buf);
-            IgnoreError(aMessage.MoveOffset(length));
+            aMessage.MoveOffset(length);
         }
 
         tagLength = sizeof(tag);
@@ -2630,7 +2630,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     if (header.GetSecuritySuite() == Header::kNoSecurity)
     {
-        IgnoreError(aMessage.MoveOffset(header.GetLength()));
+        aMessage.MoveOffset(header.GetLength());
 
         switch (header.GetCommand())
         {
@@ -2667,7 +2667,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     VerifyOrExit(aMessage.GetOffset() + header.GetLength() + sizeof(messageTag) <= aMessage.GetLength(),
                  error = OT_ERROR_PARSE);
-    IgnoreError(aMessage.MoveOffset(header.GetLength() - 1));
+    aMessage.MoveOffset(header.GetLength() - 1);
 
     aMessage.Read(aMessage.GetLength() - sizeof(messageTag), sizeof(messageTag), messageTag);
     SuccessOrExit(error = aMessage.SetLength(aMessage.GetLength() - sizeof(messageTag)));
@@ -2695,7 +2695,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
         aMessage.Write(aMessage.GetOffset(), length, buf);
 #endif
-        IgnoreError(aMessage.MoveOffset(length));
+        aMessage.MoveOffset(length);
     }
 
     tagLength = sizeof(tag);
@@ -2712,7 +2712,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     aMessage.SetOffset(mleOffset);
 
     aMessage.Read(aMessage.GetOffset(), sizeof(command), &command);
-    IgnoreError(aMessage.MoveOffset(sizeof(command)));
+    aMessage.MoveOffset(sizeof(command));
 
     switch (mRole)
     {

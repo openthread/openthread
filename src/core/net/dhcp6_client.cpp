@@ -419,7 +419,7 @@ void Dhcp6Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aM
     Dhcp6Header header;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(header), &header) == sizeof(header), OT_NOOP);
-    IgnoreError(aMessage.MoveOffset(sizeof(header)));
+    aMessage.MoveOffset(sizeof(header));
 
     if ((header.GetType() == kTypeReply) && (!memcmp(header.GetTransactionId(), mTransactionId, kTransactionIdSize)))
     {
