@@ -35,7 +35,7 @@ set(COMMON_INCLUDES
 )
 
 set(OT_READLINE "readline" CACHE STRING "set readline library name")
-set_property(CACHE OT_READLINE PROPERTY STRINGS "readline" "edit" "no")
+set_property(CACHE OT_READLINE PROPERTY STRINGS "readline" "edit")
 
 if(OT_READLINE)
     find_library(READLINE ${OT_READLINE})
