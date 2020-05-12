@@ -63,10 +63,10 @@ uint16_t otMessageGetOffset(const otMessage *aMessage)
     return message.GetOffset();
 }
 
-otError otMessageSetOffset(otMessage *aMessage, uint16_t aOffset)
+void otMessageSetOffset(otMessage *aMessage, uint16_t aOffset)
 {
     Message &message = *static_cast<Message *>(aMessage);
-    return message.SetOffset(aOffset);
+    message.SetOffset(aOffset);
 }
 
 bool otMessageIsLinkSecurityEnabled(const otMessage *aMessage)

@@ -719,7 +719,7 @@ start:
             if ((!aMessage.IsLinkSecurityEnabled()) && aMessage.IsSubTypeMle())
             {
                 // Enable security and try again.
-                IgnoreError(aMessage.SetOffset(0));
+                aMessage.SetOffset(0);
                 aMessage.SetLinkSecurityEnabled(true);
                 goto start;
             }
@@ -753,7 +753,7 @@ start:
         aFrame.SetPayloadLength(headerLength + payloadLength);
 
         nextOffset = aMessage.GetOffset() + payloadLength;
-        IgnoreError(aMessage.SetOffset(0));
+        aMessage.SetOffset(0);
     }
     else
     {
@@ -865,14 +865,14 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, otError aError)
 
     if (mMessageNextOffset < mSendMessage->GetLength())
     {
-        IgnoreError(mSendMessage->SetOffset(mMessageNextOffset));
+        mSendMessage->SetOffset(mMessageNextOffset);
     }
     else
     {
         otError txError = aError;
 
         mSendMessage->ClearDirectTransmission();
-        IgnoreError(mSendMessage->SetOffset(0));
+        mSendMessage->SetOffset(0);
 
         if (neighbor != NULL)
         {

@@ -376,11 +376,11 @@ uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, M
     // Prepare the data frame from previous child's indirect offset.
 
     directTxOffset = aMessage.GetOffset();
-    IgnoreError(aMessage.SetOffset(aChild.GetIndirectFragmentOffset()));
+    aMessage.SetOffset(aChild.GetIndirectFragmentOffset());
 
     nextOffset = Get<MeshForwarder>().PrepareDataFrame(aFrame, aMessage, macSource, macDest);
 
-    IgnoreError(aMessage.SetOffset(directTxOffset));
+    aMessage.SetOffset(directTxOffset);
 
     // Set `FramePending` if there are more queued messages (excluding
     // the current one being sent out) for the child (note `> 1` check).

@@ -460,7 +460,7 @@ exit:
     }
     else
     {
-        IgnoreError(aMessage.SetOffset(startOffset));
+        aMessage.SetOffset(startOffset);
     }
 
     return error;
@@ -554,7 +554,7 @@ exit:
     }
     else
     {
-        IgnoreError(aMessage.SetOffset(startOffset));
+        aMessage.SetOffset(startOffset);
     }
 
     return error;
@@ -611,7 +611,7 @@ exit:
     }
     else
     {
-        IgnoreError(aMessage.SetOffset(startOffset));
+        aMessage.SetOffset(startOffset);
     }
 
     return error;

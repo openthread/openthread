@@ -47,7 +47,7 @@ void Message::Init(void)
 {
     GetHelpData().Clear();
     SetVersion(kVersion1);
-    IgnoreError(SetOffset(0));
+    SetOffset(0);
     GetHelpData().mHeaderLength = kMinHeaderLength;
 
     IgnoreError(SetLength(GetHelpData().mHeaderLength));
@@ -235,7 +235,7 @@ otError Message::SetPayloadMarker(void)
     GetHelpData().mHeaderLength = GetLength();
 
     // Set offset to the start of payload.
-    IgnoreError(SetOffset(GetHelpData().mHeaderLength));
+    SetOffset(GetHelpData().mHeaderLength);
 
 exit:
     return error;

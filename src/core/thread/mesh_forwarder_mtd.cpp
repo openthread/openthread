@@ -40,7 +40,7 @@ namespace ot {
 otError MeshForwarder::SendMessage(Message &aMessage)
 {
     aMessage.SetDirectTransmission();
-    IgnoreError(aMessage.SetOffset(0));
+    aMessage.SetOffset(0);
     aMessage.SetDatagramTag(0);
 
     mSendQueue.Enqueue(aMessage);
