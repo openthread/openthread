@@ -67,8 +67,8 @@ static void     K32WResetRxRingBuffer(rxRingBuffer *aRxRing);
 static uint8_t *K32WPopRxRingBuffer(rxRingBuffer *aRxRing);
 static bool     K32WIsEmptyRxRingBuffer(rxRingBuffer *aRxRing);
 static void     K32WPushRxRingBuffer(rxRingBuffer *aRxRing, uint8_t aCharacter);
-static void     K32WProcessReceive();
-static void     K32WProcessTransmit();
+static void     K32WProcessReceive(void);
+static void     K32WProcessTransmit(void);
 static void     USART0_IRQHandler(USART_Type *base, usart_handle_t *handle);
 
 /* Private variables declaration */

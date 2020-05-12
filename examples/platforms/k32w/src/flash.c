@@ -163,7 +163,9 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
     }
 
 exit:
-    /* workaround for flash write issue */
+    /* There are times when the result != 0.
+     * Use this workaround until we replace the flash code with the Packet Data Manager.
+     */
     if (result)
     {
         result = 0;

@@ -1,6 +1,5 @@
 #
 #  Copyright (c) 2019, The OpenThread Authors.
-#  Copyright (c) 2019, NXP.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -81,7 +80,7 @@ libopenthread_jn5189_sdk_a_CPPFLAGS                                             
 
 libopenthread_jn5189_plat_a_CPPFLAGS                                                                               = \
     $(LIB_FLAGS)                                                                                                     \
-	$(NULL)
+    $(NULL)
 
 PLATFORM_SOURCES                                                                                                   = \
     src/alarm.c                                                                                                      \

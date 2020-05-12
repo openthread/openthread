@@ -38,6 +38,3 @@ endif
 if OPENTHREAD_EXAMPLES_K32W061
 include k32w061/Makefile.am
 endif
-
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am

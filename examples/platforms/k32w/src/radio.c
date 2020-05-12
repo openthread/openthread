@@ -170,7 +170,7 @@ static tsRxFrameFormat *K32WPopRxRingBuffer(rxRingBuffer *aRxRing);
 static bool             K32WIsEmptyRxRingBuffer(rxRingBuffer *aRxRing);
 static tsRxFrameFormat *K32WGetFrame(tsRxFrameFormat *aRxFrame, uint8_t *aRxFrameIndex);
 static void             K32WEnableReceive(bool_t isNewFrameNeeded);
-static void             K32WRestartRx();
+static void             K32WRestartRx(void);
 
 /* Private variables declaration */
 static otRadioState sState = OT_RADIO_STATE_DISABLED;
@@ -1283,7 +1283,7 @@ static void K32WEnableReceive(bool_t isNewFrameNeeded)
  * Function used for MMAC-RX Restart
  *
  */
-static void K32WRestartRx()
+static void K32WRestartRx(void)
 {
     vMMAC_SetRxProm(((uint32)sRxOpt >> 8) & ALL_FFs_BYTE);
     vMMAC_RxCtlUpdate(((uint32)sRxOpt) & ALL_FFs_BYTE);
