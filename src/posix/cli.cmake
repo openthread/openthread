@@ -55,8 +55,10 @@ target_link_libraries(ot-cli
     ${OT_PLATFORM_LIB}
     openthread-ftd
     ${OT_PLATFORM_LIB}
+    openthread-cli-ftd
+    openthread-hdlc
+    openthread-spinel-rcp
     mbedcrypto
-    openthread-ncp-ftd
     ${READLINE_LINK_LIBRARIES}
 )
 
