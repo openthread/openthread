@@ -1153,7 +1153,7 @@ void MeshForwarder::HandleFragment(const uint8_t *         aFrame,
         VerifyOrExit(message != NULL, error = OT_ERROR_DROP);
 
         message->Write(message->GetOffset(), aFrameLength, aFrame);
-        IgnoreError(message->MoveOffset(aFrameLength));
+        message->MoveOffset(aFrameLength);
         message->AddRss(aLinkInfo.mRss);
         message->SetTimeout(kReassemblyTimeout);
     }
@@ -1274,7 +1274,7 @@ otError MeshForwarder::FrameToMessage(const uint8_t *     aFrame,
 
     SuccessOrExit(error = aMessage->SetLength(aMessage->GetLength() + aFrameLength));
     aMessage->Write(aMessage->GetOffset(), aFrameLength, aFrame);
-    IgnoreError(aMessage->MoveOffset(aFrameLength));
+    aMessage->MoveOffset(aFrameLength);
 
 exit:
     return error;

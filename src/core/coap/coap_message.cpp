@@ -264,7 +264,7 @@ otError Message::ParseHeader(void)
 
     VerifyOrExit(iterator.mNextOptionOffset > 0, error = OT_ERROR_PARSE);
     GetHelpData().mHeaderLength = iterator.mNextOptionOffset - GetHelpData().mHeaderOffset;
-    IgnoreError(MoveOffset(GetHelpData().mHeaderLength));
+    MoveOffset(GetHelpData().mHeaderLength);
 
 exit:
     return error;

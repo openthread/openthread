@@ -636,7 +636,7 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
     }
 
     rval = mReceiveMessage->Read(mReceiveMessage->GetOffset(), static_cast<uint16_t>(aLength), aBuf);
-    IgnoreError(mReceiveMessage->MoveOffset(rval));
+    mReceiveMessage->MoveOffset(rval);
 
 exit:
     return rval;

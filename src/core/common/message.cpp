@@ -308,18 +308,11 @@ uint8_t Message::GetBufferCount(void) const
     return rval;
 }
 
-otError Message::MoveOffset(int aDelta)
+void Message::MoveOffset(int aDelta)
 {
-    otError error = OT_ERROR_NONE;
-
     OT_ASSERT(GetOffset() + aDelta <= GetLength());
-    VerifyOrExit(GetOffset() + aDelta <= GetLength(), error = OT_ERROR_INVALID_ARGS);
-
     mBuffer.mHead.mInfo.mOffset += static_cast<int16_t>(aDelta);
     OT_ASSERT(mBuffer.mHead.mInfo.mOffset <= GetLength());
-
-exit:
-    return error;
 }
 
 void Message::SetOffset(uint16_t aOffset)

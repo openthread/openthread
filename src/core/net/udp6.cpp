@@ -320,7 +320,7 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(udpHeader), &udpHeader) == sizeof(udpHeader),
                  error = OT_ERROR_PARSE);
-    IgnoreError(aMessage.MoveOffset(sizeof(udpHeader)));
+    aMessage.MoveOffset(sizeof(udpHeader));
     aMessageInfo.mPeerPort = udpHeader.GetSourcePort();
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 
