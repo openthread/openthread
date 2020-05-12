@@ -188,9 +188,6 @@ uint16_t otMessageGetOffset(const otMessage *aMessage);
  * @param[in]  aMessage  A pointer to a message buffer.
  * @param[in]  aOffset   An offset in bytes.
  *
- * @retval OT_ERROR_NONE          Successfully set the message offset.
- * @retval OT_ERROR_INVALID_ARGS  The offset is beyond the message length.
- *
  * @sa otMessageFree
  * @sa otMessageAppend
  * @sa otMessageGetLength
@@ -200,7 +197,7 @@ uint16_t otMessageGetOffset(const otMessage *aMessage);
  * @sa otMessageWrite
  *
  */
-otError otMessageSetOffset(otMessage *aMessage, uint16_t aOffset);
+void otMessageSetOffset(otMessage *aMessage, uint16_t aOffset);
 
 /**
  * This function indicates whether or not link security is enabled for the message.

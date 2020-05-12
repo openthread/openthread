@@ -288,7 +288,7 @@ otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t 
         udpHeader.SetChecksum(0);
 
         SuccessOrExit(error = aMessage.Prepend(&udpHeader, sizeof(udpHeader)));
-        IgnoreError(aMessage.SetOffset(0));
+        aMessage.SetOffset(0);
 
         error = Get<Ip6>().SendDatagram(aMessage, aMessageInfo, aIpProto);
     }

@@ -289,7 +289,7 @@ otError Message::SetLength(uint16_t aLength)
     // Correct offset in case shorter length is set.
     if (GetOffset() > aLength)
     {
-        IgnoreError(SetOffset(aLength));
+        SetOffset(aLength);
     }
 
 exit:
@@ -322,17 +322,10 @@ exit:
     return error;
 }
 
-otError Message::SetOffset(uint16_t aOffset)
+void Message::SetOffset(uint16_t aOffset)
 {
-    otError error = OT_ERROR_NONE;
-
     OT_ASSERT(aOffset <= GetLength());
-    VerifyOrExit(aOffset <= GetLength(), error = OT_ERROR_INVALID_ARGS);
-
     mBuffer.mHead.mInfo.mOffset = aOffset;
-
-exit:
-    return error;
 }
 
 bool Message::IsSubTypeMle(void) const
@@ -426,7 +419,7 @@ otError Message::Prepend(const void *aBuf, uint16_t aLength)
 
     SetReserved(GetReserved() - aLength);
     mBuffer.mHead.mInfo.mLength += aLength;
-    IgnoreError(SetOffset(GetOffset() + aLength));
+    SetOffset(GetOffset() + aLength);
 
     if (aBuf != NULL)
     {
@@ -641,7 +634,7 @@ Message *Message::Clone(uint16_t aLength) const
 
     // Copy selected message information.
     offset = GetOffset() < aLength ? GetOffset() : aLength;
-    IgnoreError(messageCopy->SetOffset(offset));
+    messageCopy->SetOffset(offset);
 
     messageCopy->SetSubType(GetSubType());
     messageCopy->SetLinkSecurityEnabled(IsLinkSecurityEnabled());

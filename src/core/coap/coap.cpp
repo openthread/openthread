@@ -118,7 +118,7 @@ Message *CoapBase::NewMessage(const otMessageSettings *aSettings)
     Message *message = NULL;
 
     VerifyOrExit((message = static_cast<Message *>(Get<Ip6::Udp>().NewMessage(0, aSettings))) != NULL, OT_NOOP);
-    IgnoreError(message->SetOffset(0));
+    message->SetOffset(0);
 
 exit:
     return message;

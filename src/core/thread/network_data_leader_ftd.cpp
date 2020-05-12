@@ -288,7 +288,7 @@ void Leader::HandleCommissioningGet(Coap::Message &aMessage, const Ip6::MessageI
     uint16_t offset;
 
     SuccessOrExit(Tlv::GetValueOffset(aMessage, MeshCoP::Tlv::kGet, offset, length));
-    IgnoreError(aMessage.SetOffset(offset));
+    aMessage.SetOffset(offset);
 
 exit:
     SendCommissioningGetResponse(aMessage, length, aMessageInfo);

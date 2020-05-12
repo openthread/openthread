@@ -2550,7 +2550,7 @@ otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
         aesCcm.Header(&aDestination, sizeof(aDestination));
         aesCcm.Header(header.GetBytes() + 1, header.GetHeaderLength());
 
-        IgnoreError(aMessage.SetOffset(header.GetLength() - 1));
+        aMessage.SetOffset(header.GetLength() - 1);
 
         while (aMessage.GetOffset() < aMessage.GetLength())
         {
@@ -2709,7 +2709,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         Get<KeyManager>().SetCurrentKeySequence(keySequence);
     }
 
-    IgnoreError(aMessage.SetOffset(mleOffset));
+    aMessage.SetOffset(mleOffset);
 
     aMessage.Read(aMessage.GetOffset(), sizeof(command), &command);
     IgnoreError(aMessage.MoveOffset(sizeof(command)));
