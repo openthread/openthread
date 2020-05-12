@@ -152,8 +152,16 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
 #else
     msg.msg_controllen = controlLength;
 #endif
-
-    rval = sendmsg(aFd, &msg, 0);
+    for (size_t i = 0; i < OPENTHREAD_CONFIG_UDP_SEND_RETRY; i++)
+    {
+        rval = sendmsg(aFd, &msg, 0);
+        if (rval > 0 || errno != EINVAL)
+        {
+            break;
+        }
+        otLogWarnPlat("sendmsg(), retry: %s", strerror(errno));
+        sleep(0);
+    }
     VerifyOrExit(rval > 0, perror("sendmsg"));
 
 exit:

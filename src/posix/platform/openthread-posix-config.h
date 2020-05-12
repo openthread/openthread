@@ -101,4 +101,14 @@
 #define OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_UDP_SEND_RETRY
+ *
+ * Number of times the stack will retry to send udp packets via kernel.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_UDP_SEND_RETRY
+#define OPENTHREAD_CONFIG_UDP_SEND_RETRY 5
+#endif
+
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_
