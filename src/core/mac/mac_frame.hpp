@@ -1051,17 +1051,6 @@ public:
     bool IsAckedWithFramePending(void) const { return mInfo.mRxInfo.mAckedWithFramePending; }
 
     /**
-     * This method indicates whether or not the received frame is an out-of-band frame.
-     * This is used for counting out-of-band frames purpose when
-     * mInfo.mRxInfo.mIsOobFrame is set to be True by radio driver.
-     *
-     * @retval TRUE   This is an out-of-band frame.
-     * @retval FALSE  This is not an out-of-band frame.
-     *
-     */
-    bool IsOobFrame(void) const { return mInfo.mRxInfo.mIsOobFrame; }
-
-    /**
      * This method returns the timestamp when the frame was received.
      *
      * @returns The timestamp when the frame was received, in microseconds.
