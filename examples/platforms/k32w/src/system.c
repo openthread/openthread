@@ -82,7 +82,7 @@ void otSysProcessDrivers(otInstance *aInstance)
     K32WAlarmProcess(aInstance);
 }
 
-void otSysEventSignalPending(void)
+WEAK void otSysEventSignalPending(void)
 {
-    /* TODO */
+    /* Intentionally left empty */
 }
