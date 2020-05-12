@@ -107,6 +107,11 @@ void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
     }
 }
 
+void SubMac::Callbacks::MacFrameCounterStore(void)
+{
+    Get<Mac>().MacFrameCounterStore();
+}
+
 #elif OPENTHREAD_RADIO
 
 void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, otError aError)
@@ -135,6 +140,11 @@ void SubMac::Callbacks::TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otErro
 void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
 {
     Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi);
+}
+
+void SubMac::Callbacks::MacFrameCounterStore(void)
+{
+    Get<LinkRaw>().InvokeMacFrameCounterStore();
 }
 
 #endif // OPENTHREAD_RADIO

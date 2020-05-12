@@ -526,6 +526,17 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
 void otPlatRadioSetStoredMacFrameCounter(otInstance *aInstance, uint32_t aStoredMacFrameCounter);
 
 /**
+ * The radio driver calls this method to notify OpenThread that it needs to store the MAC frame counter.
+ *
+ * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
+ *
+ * @param[in]  aInstance           The OpenThread instance structure.
+ * @param[in]  aMacFrameCounter    The MAC Frame Counter value.
+ *
+ */
+extern void otPlatRadioMacFrameCounterStore(otInstance *aInstance, uint32_t aMacFrameCounter);
+
+/**
  * @}
  *
  */

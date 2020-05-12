@@ -148,6 +148,18 @@ public:
          */
         void HandleEnergyScanDone(int8_t aMaxRssi);
 
+        /**
+         * This callback method handles "store MAC frame counter" event from radio platform.
+         *
+         * This method is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability. It is called from
+         * `otPlatRadioMacFrameCounterStore()`.
+         *
+         * @param[in]  aInstance           The OpenThread instance structure.
+         * @param[in]  aMacFrameCounter    The current MAC frame counter value.
+         *
+         */
+        void HandleMacFrameCounterStore(uint32_t aMacFrameCounter);
+
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         /**
          * This callback method handles a "Receive Done" event from radio platform when diagnostics mode is enabled.

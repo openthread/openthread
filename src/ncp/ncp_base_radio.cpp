@@ -188,6 +188,23 @@ exit:
     return;
 }
 
+void NcpBase::LinkRawMacFrameCounterStore(otInstance *)
+{
+    sNcpInstance->LinkRawMacFrameCounterStore();
+}
+
+void NcpBase::LinkRawMacFrameCounterStore(void)
+{
+    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
+                                      SPINEL_PROP_RCP_MAC_FRAME_COUNTER));
+
+    SuccessOrExit(mEncoder.WriteUintPacked(otLinkRawGetMacFrameCounter(mInstance)));
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_CAPS>(void)
 {
     return mEncoder.WriteUintPacked(otLinkRawGetCaps(mInstance));
@@ -463,12 +480,12 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER>(void)
 {
-    return mEncoder.WriteUintPacked(otLinkRawGetMacFrameCounter(mInstance));
+    return mEncoder.WriteUint32(otLinkRawGetMacFrameCounter(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_STORED_MAC_FRAME_COUNTER>(void)
 {
-    return mEncoder.WriteUintPacked(otLinkRawGetStoredMacFrameCounter(mInstance));
+    return mEncoder.WriteUint32(otLinkRawGetStoredMacFrameCounter(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER>(void)
@@ -478,7 +495,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER
 
     SuccessOrExit(error = mDecoder.ReadUint32(frameCounter));
 
-    error = otLinkRawSetMacFrameCounter(mInstance, frameCounter);
+    error = otLinkRawSetMacFrameCounter(mInstance, frameCounter, &NcpBase::LinkRawMacFrameCounterStore);
 
 exit:
     return error;

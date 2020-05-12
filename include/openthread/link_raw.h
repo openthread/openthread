@@ -352,6 +352,14 @@ otError otLinkRawSetMacKey(otInstance *    aInstance,
                            const otMacKey *aNextKey);
 
 /**
+ * This function pointer on indication to store MAC frame counter to NVM.
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ *
+ */
+typedef void (*otLinkRawMacFcStore)(otInstance *aInstance);
+
+/**
  * Gets the current MAC frame counter value.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -376,12 +384,13 @@ uint32_t otLinkRawGetStoredMacFrameCounter(otInstance *aInstance);
  *
  * @param[in]   aInstance         A pointer to an OpenThread instance.
  * @param[in]   aMacFrameCounter  The MAC Frame Counter value.
+ * @param[in]   aCallback         A pointer to a function called when needs to store current MAC frame counter.
  *
  * @retval OT_ERROR_NONE             If successful.
  * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
  *
  */
-otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
+otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter, otLinkRawMacFcStore aCallback);
 
 /**
  * Sets the MAC Frame Counter value which is stored in non-volatile memory.

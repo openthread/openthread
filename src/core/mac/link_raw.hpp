@@ -283,12 +283,13 @@ public:
      * This method sets the current MAC Frame Counter value.
      *
      * @param[in] aMacFrameCounter  The MAC Frame Counter value.
+     * @param[in]   aCallback       A pointer to a function called when needs to store current MAC frame counter.
      *
      * @retval OT_ERROR_NONE             If successful.
      * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
      *
      */
-    otError SetMacFrameCounter(uint32_t aMacFrameCounter);
+    otError SetMacFrameCounter(uint32_t aMacFrameCounter, otLinkRawMacFcStore aCallback);
 
     /**
      * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
@@ -300,6 +301,12 @@ public:
      *
      */
     otError SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter);
+
+    /**
+     * This method invokes the mMacFcStoreCallback, if set.
+     *
+     */
+    void InvokeMacFrameCounterStore(void);
 
     /**
      * This method records the status of a frame transmission attempt and is mainly used for logging failures.
@@ -335,6 +342,7 @@ private:
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
+    otLinkRawMacFcStore     mMacFcStoreCallback;
 
 #if OPENTHREAD_RADIO
     SubMac mSubMac;

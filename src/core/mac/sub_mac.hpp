@@ -167,6 +167,13 @@ public:
          *
          */
         void EnergyScanDone(int8_t aMaxRssi);
+
+        /**
+         * This method notifies user of `SubMac` that current MAC frame counter is greater equal than stored MAC frame
+         * counter.
+         *
+         */
+        void MacFrameCounterStore(void);
     };
 
     /**
@@ -467,6 +474,7 @@ private:
     void HandleTransmitStarted(TxFrame &aFrame);
     void HandleTransmitDone(TxFrame &aTxFrame, RxFrame *aAckFrame, otError aError);
     void HandleEnergyScanDone(int8_t aMaxRssi);
+    void HandleMacFrameCounterStore(uint32_t aMacFrameCounter);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);

@@ -81,6 +81,16 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyS
     }
 }
 
+extern "C" void otPlatRadioMacFrameCounterStore(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    Instance *instance = static_cast<Instance *>(aInstance);
+
+    if (instance->IsInitialized())
+    {
+        instance->Get<Radio::Callbacks>().HandleMacFrameCounterStore(aMacFrameCounter);
+    }
+}
+
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {

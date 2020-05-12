@@ -663,8 +663,15 @@ void SubMac::IncrementMacFrameCounter(void)
 
     if (mMacFrameCounter >= mStoredMacFrameCounter)
     {
-        // Todo: indicate upper layer to save the current MAC frame counter
-        // Get<ot::Mle::MleRouter>().Store();
+        mCallbacks.MacFrameCounterStore();
+    }
+}
+
+void SubMac::HandleMacFrameCounterStore(uint32_t aMacFrameCounter)
+{
+    if (aMacFrameCounter >= mStoredMacFrameCounter)
+    {
+        mCallbacks.MacFrameCounterStore();
     }
 }
 

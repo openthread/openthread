@@ -831,6 +831,16 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleValueIs(spinel_prop_k
             break;
         }
     }
+    else if (aKey == SPINEL_PROP_RCP_MAC_FRAME_COUNTER)
+    {
+        uint32_t       macFrameCounter;
+        spinel_ssize_t unpacked;
+
+        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT32_S, &macFrameCounter);
+
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        otPlatRadioMacFrameCounterStore(mInstance, macFrameCounter);
+    }
 
 exit:
     LogIfFail("Failed to handle ValueIs", error);

@@ -280,6 +280,9 @@ protected:
     static void LinkRawEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
     void        LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi);
 
+    static void LinkRawMacFrameCounterStore(otInstance *aInstance);
+    void        LinkRawMacFrameCounterStore(void);
+
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD

@@ -1868,6 +1868,11 @@ bool Mac::HandleMacCommand(RxFrame &aFrame)
     return didHandle;
 }
 
+void Mac::MacFrameCounterStore(void)
+{
+    IgnoreError(Get<Mle::MleRouter>().Store());
+}
+
 void Mac::SetPromiscuous(bool aPromiscuous)
 {
     mPromiscuous = aPromiscuous;

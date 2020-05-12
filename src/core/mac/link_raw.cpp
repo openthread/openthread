@@ -57,6 +57,7 @@ LinkRaw::LinkRaw(Instance &aInstance)
     , mReceiveDoneCallback(NULL)
     , mTransmitDoneCallback(NULL)
     , mEnergyScanDoneCallback(NULL)
+    , mMacFcStoreCallback(NULL)
 #if OPENTHREAD_RADIO
     , mSubMac(aInstance)
 #elif OPENTHREAD_CONFIG_LINK_RAW_ENABLE
@@ -230,12 +231,14 @@ uint32_t LinkRaw::GetStoredMacFrameCounter(void)
     return mSubMac.GetStoredMacFrameCounter();
 }
 
-otError LinkRaw::SetMacFrameCounter(uint32_t aMacFrameCounter)
+otError LinkRaw::SetMacFrameCounter(uint32_t aMacFrameCounter, otLinkRawMacFcStore aCallback)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
     mSubMac.SetMacFrameCounter(aMacFrameCounter);
+
+    mMacFcStoreCallback = aCallback;
 
 exit:
     return error;
@@ -250,6 +253,14 @@ otError LinkRaw::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
 
 exit:
     return error;
+}
+
+void LinkRaw::InvokeMacFrameCounterStore(void)
+{
+    if (IsEnabled() && mMacFcStoreCallback != NULL)
+    {
+        mMacFcStoreCallback(&GetInstance());
+    }
 }
 
 // LCOV_EXCL_START
