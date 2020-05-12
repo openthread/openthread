@@ -349,7 +349,7 @@ otError otPlatDiagProcess(otInstance *aInstance,
     char *cur                                              = cmd;
     char *end                                              = cmd + sizeof(cmd);
 
-    for (int index = 0; index < aArgsLength; index++)
+    for (uint8_t index = 0; index < aArgsLength; index++)
     {
         cur += snprintf(cur, static_cast<size_t>(end - cur), "%s ", aArgs[index]);
     }
