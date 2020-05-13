@@ -340,6 +340,18 @@ public:
     Message *NewMessage(const otMessageSettings *aSettings = NULL);
 
     /**
+     * This method creates a new message with a CoAP header that has Network Control priority level.
+     *
+     * @returns A pointer to the message or NULL if failed to allocate message.
+     *
+     */
+    Message *NewPriorityMessage(void)
+    {
+        otMessageSettings settings = {true, static_cast<otMessagePriority>(Message::kPriorityNet)};
+        return NewMessage(&settings);
+    }
+
+    /**
      * This method sends a CoAP message with custom transmission parameters.
      *
      * If a response for a request is expected, respective function and context information should be provided.
