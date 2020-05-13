@@ -161,6 +161,56 @@ uint8_t otMacFrameGetSequence(const otRadioFrame *aFrame);
  */
 void otMacFrameProcessTransmitAesCcm(otRadioFrame *aFrame, const otExtAddress *aExtAddress);
 
+/**
+ * Tell if the version of @p aFrame is 2015.
+ *
+ * @param[in]   aFrame          A pointer to the frame.
+ *
+ * @retval  true    It is a version 2015 frame.
+ * @retval  false   It is not a version 2015 frame.
+ *
+ */
+bool otMacFrameIsVersion2015(const otRadioFrame *aFrame);
+
+/**
+ * Generate Imm-Ack for @p aFrame.
+ *
+ * @param[in]    aFrame             A pointer to the frame.
+ * @param[in]    aIsFramePending    Value of the ACK's frame pending bit.
+ * @param[out]   aAckFrame          A pointer to the ack frame to be generated.
+ *
+ */
+void otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, otRadioFrame *aAckFrame);
+
+/**
+ * Generate Enh-Ack for @p aFrame.
+ *
+ * @param[in]    aFrame             A pointer to the frame.
+ * @param[in]    aIsFramePending    Value of the ACK's frame pending bit.
+ * @param[in]    aIeData            A pointer to the IE data portion of the ACK to be sent.
+ * @param[in]    aIeLength          The length of IE data portion of the ACK to be sent.
+ * @param[out]   aAckFrame          A pointer to the ack frame to be generated.
+ *
+ * @retval  OT_ERROR_NONE           Successfully generated Enh Ack in @p aAckFrame.
+ * @retval  OT_ERROR_PARSE          @p aFrame has incorrect format.
+ *
+ */
+otError otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
+                                 bool                aIsFramePending,
+                                 const uint8_t *     aIeData,
+                                 uint8_t             aIeLength,
+                                 otRadioFrame *      aAckFrame);
+
+/**
+ * Set CSL IE content into the frame.
+ *
+ * @param[inout]    aFrame         A pointer to the frame to be modified.
+ * @param[in]       aCslPeriod     CSL Period in CSL IE.
+ * @param[in]       aCslPhase      CSL Phase in CSL IE.
+ *
+ */
+void otMacFrameSetCslIe(otRadioFrame *aFrame, uint16_t aCslPeriod, uint16_t aCslPhase);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
