@@ -31,6 +31,7 @@
  *   This file implements the nrf5 platform transport initialization functions.
  *
  */
+
 #include <openthread/platform/toolchain.h>
 
 #include "platform-nrf5-transport.h"
