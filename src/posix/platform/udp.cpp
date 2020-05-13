@@ -155,17 +155,17 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
     for (size_t i = 0; i < OPENTHREAD_CONFIG_UDP_SEND_RETRY; i++)
     {
         rval = sendmsg(aFd, &msg, 0);
-        if (rval > 0 || errno != EINVAL)
+        if (rval != -1 || errno != EINVAL)
         {
             break;
         }
-        otLogWarnPlat("sendmsg(), retry: %s", strerror(errno));
+        otLogWarnPlat("sendmsg(): %s", strerror(errno));
         sleep(0);
     }
-    VerifyOrExit(rval > 0, perror("sendmsg"));
+    VerifyOrExit(rval != -1, perror("sendmsg"));
 
 exit:
-    return rval > 0 ? OT_ERROR_NONE : OT_ERROR_FAILED;
+    return rval != -1 ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
 static otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMessageInfo &aMessageInfo)
