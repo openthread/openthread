@@ -928,7 +928,7 @@ public:
      */
     const uint8_t *GetHeaderIe(uint8_t aIeId) const;
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * This method finds CSL IE in the frame and modify its content.
      *
@@ -937,7 +937,7 @@ public:
      *
      */
     void SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase);
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 

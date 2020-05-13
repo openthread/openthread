@@ -972,7 +972,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 void Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
 {
     uint8_t *cur = GetHeaderIe(Frame::kHeaderIeCsl);
@@ -984,7 +984,7 @@ void Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
     csl->SetPeriod(aCslPeriod);
     csl->SetPhase(aCslPhase);
 }
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 const TimeIe *Frame::GetTimeIe(void) const
