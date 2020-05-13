@@ -92,6 +92,12 @@ build_simulation()
 
     fi
 
+    if [[ "${version}" == "1.2" ]]; then
+        options+=(
+            "-DOT_CSL_RECEIVER=ON"
+        )
+    fi
+
     local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${version}"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \

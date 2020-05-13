@@ -314,9 +314,12 @@ public:
         kMacCmdGtsRequest                 = 9,
 
         kHeaderIeVendor       = 0x00,
+        kHeaderIeCsl          = 0x1a,
         kHeaderIeTermination2 = 0x7f,
 
         kInfoStringSize = 110, ///< Max chars needed for the info string representation (@sa ToInfoString()).
+
+        kImmAckLength = kFcfSize + kDsnSize + kFcsSize,
     };
 
     /**
@@ -429,6 +432,15 @@ public:
     void SetAckRequest(bool aAckRequest);
 
     /**
+     * This method indicates whether or not the PanId Compression bit is set.
+     *
+     * @retval TRUE   If the PanId Compression bit is set.
+     * @retval FALSE  If the PanId Compression bit is not set.
+     *
+     */
+    bool IsPanIdCompressed(void) const { return (GetFrameControlField() & kFcfPanidCompression) != 0; }
+
+    /**
      * This method indicates whether or not IEs present.
      *
      * @retval TRUE   If IEs present.
@@ -521,6 +533,14 @@ public:
      *
      */
     void SetDstAddr(const Address &aAddress);
+
+    /**
+     * This method indicates whether or not the Source Address is present for this object.
+     *
+     * @retval TRUE if the Source Address is present, FALSE otherwise.
+     *
+     */
+    bool IsSrcPanIdPresent(void) const { return IsSrcPanIdPresent(GetFrameControlField()); };
 
     /**
      * This method gets the Source PAN Identifier.
@@ -907,6 +927,18 @@ public:
      *
      */
     const uint8_t *GetHeaderIe(uint8_t aIeId) const;
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    /**
+     * This method finds CSL IE in the frame and modify its content.
+     *
+     * @param[in] aCslPeriod  CSL Period in CSL IE.
+     * @param[in] aCslPhase   CSL Phase in CSL IE.
+     *
+     */
+    void SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase);
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
     /**
@@ -933,11 +965,12 @@ public:
      */
     InfoString ToInfoString(void) const;
 
-private:
+protected:
     enum
     {
         kInvalidIndex  = 0xff,
         kInvalidSize   = kInvalidIndex,
+        kMaxPsduSize   = kInvalidSize - 1,
         kSequenceIndex = kFcfSize,
     };
 
@@ -974,6 +1007,8 @@ private:
 class RxFrame : public Frame
 {
 public:
+    friend class TxFrame;
+
     /**
      * This method returns the RSSI in dBm used for reception.
      *
@@ -1193,6 +1228,29 @@ public:
      */
     void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+    /**
+     * Generate Imm-Ack in this frame object.
+     *
+     * @param[in]    aFrame             A reference to the frame received.
+     * @param[in]    aIsFramePending    Value of the ACK's frame pending bit.
+     *
+     */
+    void GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending);
+
+    /**
+     * Generate Enh-Ack in this frame object.
+     *
+     * @param[in]    aFrame             A reference to the frame received.
+     * @param[in]    aIsFramePending    Value of the ACK's frame pending bit.
+     * @param[in]    aIeData            A pointer to the IE data portion of the ACK to be sent.
+     * @param[in]    aIeLength          The length of IE data portion of the ACK to be sent.
+     *
+     * @retval  OT_ERROR_NONE           Successfully generated Enh Ack.
+     * @retval  OT_ERROR_PARSE          @p aFrame has incorrect format.
+     *
+     */
+    otError GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -1409,6 +1467,51 @@ private:
     uint8_t       mFlags;
     char          mNetworkName[NetworkName::kMaxSize];
     ExtendedPanId mExtendedPanId;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements CSL IE data structure.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CslIe
+{
+public:
+    /**
+     * This method returns the CSL Period.
+     *
+     * @returns the CSL Period.
+     *
+     */
+    uint16_t GetPeriod(void) const { return Encoding::LittleEndian::HostSwap16(mPeriod); }
+
+    /**
+     * This method sets the CSL Period.
+     *
+     * @param[in]  aPeriod  The CSL Period.
+     *
+     */
+    void SetPeriod(uint16_t aPeriod) { mPeriod = Encoding::LittleEndian::HostSwap16(aPeriod); }
+
+    /**
+     * This method returns the CSL Phase.
+     *
+     * @returns the CSL Phase.
+     *
+     */
+    uint16_t GetPhase(void) const { return Encoding::LittleEndian::HostSwap16(mPhase); }
+
+    /**
+     * This method sets the CSL Phase.
+     *
+     * @param[in]  aPhase  The CSL Phase.
+     *
+     */
+    void SetPhase(uint16_t aPhase) { mPhase = Encoding::LittleEndian::HostSwap16(aPhase); }
+
+private:
+    uint16_t mPhase;
+    uint16_t mPeriod;
 } OT_TOOL_PACKED_END;
 
 /**
