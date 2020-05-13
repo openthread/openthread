@@ -358,7 +358,7 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     uint16_t       payloadLen;
     bool           csmaEnable;
     bool           isARetx;
-    bool           skipAes;
+    bool           isSecurityProcessed;
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(payloadPtr, payloadLen));
     VerifyOrExit(payloadLen <= OT_RADIO_FRAME_MAX_SIZE, error = OT_ERROR_PARSE);
@@ -372,11 +372,11 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(error = mDecoder.ReadUint8(aFrame.mChannel));
 
     // Set the default value for all optional parameters.
-    aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
-    aFrame.mInfo.mTxInfo.mMaxFrameRetries = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
-    aFrame.mInfo.mTxInfo.mCsmaCaEnabled   = true;
-    aFrame.mInfo.mTxInfo.mIsARetx         = false;
-    aFrame.mInfo.mTxInfo.mSkipAes         = false;
+    aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs     = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
+    aFrame.mInfo.mTxInfo.mMaxFrameRetries     = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
+    aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = true;
+    aFrame.mInfo.mTxInfo.mIsARetx             = false;
+    aFrame.mInfo.mTxInfo.mIsSecurityProcessed = false;
 
     // All the next parameters are optional. Note that even if the
     // decoder fails to parse any of optional parameters we still want to
@@ -387,10 +387,10 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxFrameRetries));
     SuccessOrExit(mDecoder.ReadBool(csmaEnable));
     SuccessOrExit(mDecoder.ReadBool(isARetx));
-    SuccessOrExit(mDecoder.ReadBool(skipAes));
-    aFrame.mInfo.mTxInfo.mCsmaCaEnabled = csmaEnable;
-    aFrame.mInfo.mTxInfo.mIsARetx       = isARetx;
-    aFrame.mInfo.mTxInfo.mSkipAes       = skipAes;
+    SuccessOrExit(mDecoder.ReadBool(isSecurityProcessed));
+    aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = csmaEnable;
+    aFrame.mInfo.mTxInfo.mIsARetx             = isARetx;
+    aFrame.mInfo.mTxInfo.mIsSecurityProcessed = isSecurityProcessed;
 
 exit:
     return error;

@@ -239,7 +239,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
     VerifyOrExit(ShouldHandleTransmitSecurity(), OT_NOOP);
     VerifyOrExit(mTransmitFrame.GetSecurityEnabled(), OT_NOOP);
-    VerifyOrExit(!mTransmitFrame.ShouldSkipAes(), OT_NOOP);
+    VerifyOrExit(!mTransmitFrame.IsSecurityProcessed(), OT_NOOP);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (mTransmitFrame.GetTimeIeOffset() != 0)
@@ -249,30 +249,16 @@ void SubMac::ProcessTransmitSecurity(void)
     }
 #endif
 
-    IgnoreError(mTransmitFrame.GetKeyIdMode(keyIdMode));
+    SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
+    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1, OT_NOOP);
 
-    switch (keyIdMode)
+    mTransmitFrame.SetAesKey(GetCurrentMacKey());
+    if (!mTransmitFrame.IsARetransmission())
     {
-    case Frame::kKeyIdMode0:
-    case Frame::kKeyIdMode2:
-        // For key Id mode 0 and 2, the security is handled by Mac
-        processTransmitAesCcm = false;
-        break;
-
-    case Frame::kKeyIdMode1:
-        mTransmitFrame.SetAesKey(GetCurrentMacKey());
-        if (!mTransmitFrame.IsARetransmission())
-        {
-            mTransmitFrame.SetKeyId(mKeyId);
-        }
-
-        extAddress = &GetExtAddress();
-        break;
-
-    default:
-        OT_ASSERT(false);
-        break;
+        mTransmitFrame.SetKeyId(mKeyId);
     }
+
+    extAddress = &GetExtAddress();
 
     if (processTransmitAesCcm)
     {

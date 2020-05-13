@@ -1202,21 +1202,24 @@ public:
     void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
 
     /**
-     * This method indicates whether or not SubMac needs to skip AES processing of the frame.
+     * This method indicates whether or not the frame has security processed.
      *
-     * @retval TRUE  SubMac needs to skip AES processing of the frame.
-     * @retval FALSE SubMac needs to do AES processing of the frame.
+     * @retval TRUE   The frame already has security processed.
+     * @retval FALSE  The frame does not have security processed.
      *
      */
-    bool ShouldSkipAes(void) const { return mInfo.mTxInfo.mSkipAes; }
+    bool IsSecurityProcessed(void) const { return mInfo.mTxInfo.mIsSecurityProcessed; }
 
     /**
-     * This method sets the skip AES flag attribute.
+     * This method sets the security processed flag attribute.
      *
-     * @param[in]  aSkipAes  TRUE if SubMac needs to skip AES processing of the frame, FALSE otherwise.
+     * @param[in]  aIsSecurityProcessed  TRUE if the frame already has security processed.
      *
      */
-    void SetSkipAes(bool aSkipAes) { mInfo.mTxInfo.mSkipAes = aSkipAes; }
+    void SetIsSecurityProcessed(bool aIsSecurityProcessed)
+    {
+        mInfo.mTxInfo.mIsSecurityProcessed = aIsSecurityProcessed;
+    }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
