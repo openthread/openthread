@@ -87,10 +87,10 @@ exit:
     return;
 }
 
-otError Joiner::ValidatePskd(const char *aPskd)
+bool Joiner::IsPskdValid(const char *aPskd)
 {
-    otError error      = OT_ERROR_INVALID_ARGS;
-    size_t  pskdLength = StringLength(aPskd, kPskdMaxLength + 1);
+    bool   valid      = false;
+    size_t pskdLength = StringLength(aPskd, kPskdMaxLength + 1);
 
     OT_STATIC_ASSERT(static_cast<uint8_t>(kPskdMaxLength) <= static_cast<uint8_t>(Dtls::kPskMaxLength),
                      "The maximum length of DTLS PSK is smaller than joiner PSKd");
@@ -105,10 +105,10 @@ otError Joiner::ValidatePskd(const char *aPskd)
         VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z', OT_NOOP);
     }
 
-    error = OT_ERROR_NONE;
+    valid = true;
 
 exit:
-    return error;
+    return valid;
 }
 
 otError Joiner::Start(const char *     aPskd,
@@ -127,7 +127,7 @@ otError Joiner::Start(const char *     aPskd,
 
     VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
 
-    SuccessOrExit(error = ValidatePskd(aPskd));
+    VerifyOrExit(IsPskdValid(aPskd), error = OT_ERROR_INVALID_ARGS);
 
     // Use random-generated extended address.
     randomAddress.GenerateRandom();

@@ -286,7 +286,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error = MeshCoP::Joiner::ValidatePskd(aPskd));
+    VerifyOrExit(MeshCoP::Joiner::IsPskdValid(aPskd), error = OT_ERROR_INVALID_ARGS);
 
     IgnoreError(RemoveJoiner(aEui64, 0, kJoinerOpFlagNotNotifyLeader)); // remove immediately
 

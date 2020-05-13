@@ -119,11 +119,10 @@ public:
      *
      * param[in]  aPskd  The PSKd to validate.
      *
-     * @retval OT_ERROR_NONE          The PSKd is valid.
-     * @retval OT_ERROR_INVALID_ARGS  The PSKd is invalid.
+     * @retval A boolean indicates whether the given @p aPskd is valid.
      *
      */
-    static otError ValidatePskd(const char *aPskd);
+    static bool IsPskdValid(const char *aPskd);
 
 private:
     enum
