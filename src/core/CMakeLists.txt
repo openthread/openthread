@@ -231,6 +231,8 @@ target_sources(openthread-radio PRIVATE
     common/string.cpp
     common/tasklet.cpp
     common/timer.cpp
+    crypto/aes_ccm.cpp
+    crypto/aes_ecb.cpp
     diags/factory_diags.cpp
     mac/link_raw.cpp
     mac/mac_frame.cpp
@@ -250,6 +252,11 @@ target_link_libraries(openthread-ftd
 )
 
 target_link_libraries(openthread-mtd
+    PRIVATE
+        ${OT_MBEDTLS}
+)
+
+target_link_libraries(openthread-radio
     PRIVATE
         ${OT_MBEDTLS}
 )

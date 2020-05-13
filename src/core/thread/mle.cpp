@@ -2519,7 +2519,7 @@ otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
     otError          error = OT_ERROR_NONE;
     Header           header;
     uint32_t         keySequence;
-    uint8_t          nonce[KeyManager::kNonceSize];
+    uint8_t          nonce[Crypto::AesCcm::kNonceSize];
     uint8_t          tag[4];
     uint8_t          tagLength;
     Crypto::AesCcm   aesCcm;
@@ -2538,8 +2538,8 @@ otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 
         aMessage.Write(0, header.GetLength(), &header);
 
-        KeyManager::GenerateNonce(Get<Mac::Mac>().GetExtAddress(), Get<KeyManager>().GetMleFrameCounter(),
-                                  Mac::Frame::kSecEncMic32, nonce);
+        Crypto::AesCcm::GenerateNonce(Get<Mac::Mac>().GetExtAddress(), Get<KeyManager>().GetMleFrameCounter(),
+                                      Mac::Frame::kSecEncMic32, nonce);
 
         aesCcm.SetKey(Get<KeyManager>().GetCurrentMleKey(), 16);
         error = aesCcm.Init(16 + 16 + header.GetHeaderLength(), aMessage.GetLength() - (header.GetLength() - 1),
@@ -2609,7 +2609,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     const uint8_t * mleKey;
     uint32_t        frameCounter;
     uint8_t         messageTag[4];
-    uint8_t         nonce[KeyManager::kNonceSize];
+    uint8_t         nonce[Crypto::AesCcm::kNonceSize];
     Mac::ExtAddress macAddr;
     Crypto::AesCcm  aesCcm;
     uint16_t        mleOffset;
@@ -2674,7 +2674,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
     frameCounter = header.GetFrameCounter();
-    KeyManager::GenerateNonce(macAddr, frameCounter, Mac::Frame::kSecEncMic32, nonce);
+    Crypto::AesCcm::GenerateNonce(macAddr, frameCounter, Mac::Frame::kSecEncMic32, nonce);
 
     aesCcm.SetKey(mleKey, 16);
     SuccessOrExit(error = aesCcm.Init(sizeof(aMessageInfo.GetPeerAddr()) + sizeof(aMessageInfo.GetSockAddr()) +

@@ -193,11 +193,6 @@ private:
 class KeyManager : public InstanceLocator
 {
 public:
-    enum
-    {
-        kNonceSize = 13, ///< Size of IEEE 802.15.4 Nonce (bytes).
-    };
-
     /**
      * This constructor initializes the object.
      *
@@ -283,30 +278,12 @@ public:
     void SetCurrentKeySequence(uint32_t aKeySequence);
 
     /**
-     * This method returns a pointer to the current MAC key.
-     *
-     * @returns A pointer to the current MAC key.
-     *
-     */
-    const uint8_t *GetCurrentMacKey(void) const { return mKey + kMacKeyOffset; }
-
-    /**
      * This method returns a pointer to the current MLE key.
      *
      * @returns A pointer to the current MLE key.
      *
      */
-    const uint8_t *GetCurrentMleKey(void) const { return mKey; }
-
-    /**
-     * This method returns a pointer to a temporary MAC key computed from the given key sequence.
-     *
-     * @param[in]  aKeySequence  The key sequence value.
-     *
-     * @returns A pointer to the temporary MAC key.
-     *
-     */
-    const uint8_t *GetTemporaryMacKey(uint32_t aKeySequence);
+    const uint8_t *GetCurrentMleKey(void) const { return mMleKey; }
 
     /**
      * This method returns a pointer to a temporary MLE key computed from the given key sequence.
@@ -538,18 +515,10 @@ public:
     bool IsThreadBeaconEnabled(void) const { return (mSecurityPolicyFlags & OT_SECURITY_POLICY_BEACONS) != 0; }
 
     /**
-     * This static method generates IEEE 802.15.4 nonce byte sequence.
-     *
-     * @param[in]  aAddress        An extended address.
-     * @param[in]  aFrameCounter   A frame counter.
-     * @param[in]  aSecurityLevel  A security level.
-     * @param[out] aNonce          A buffer (with `kNonceSize` bytes) to place the generated nonce.
+     * This method updates the MAC keys and MLE key.
      *
      */
-    static void GenerateNonce(const Mac::ExtAddress &aAddress,
-                              uint32_t               aFrameCounter,
-                              uint8_t                aSecurityLevel,
-                              uint8_t *              aNonce);
+    void UpdateKeyMaterial(void);
 
 private:
     enum
@@ -558,6 +527,7 @@ private:
         kDefaultKeyRotationTime    = 672,
         kDefaultKeySwitchGuardTime = 624,
         kMacKeyOffset              = 16,
+        kMleKeySize                = 16,
         kOneHourIntervalInMsec     = 3600u * 1000u,
     };
 
@@ -573,9 +543,8 @@ private:
     MasterKey mMasterKey;
 
     uint32_t mKeySequence;
-    uint8_t  mKey[Crypto::HmacSha256::kHashSize];
-
-    uint8_t mTemporaryKey[Crypto::HmacSha256::kHashSize];
+    uint8_t  mMleKey[kMleKeySize];
+    uint8_t  mTemporaryKey[Crypto::HmacSha256::kHashSize];
 
     uint32_t mMacFrameCounter;
     uint32_t mMleFrameCounter;

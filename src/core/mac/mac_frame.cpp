@@ -37,10 +37,8 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if !OPENTHREAD_RADIO || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 #include "crypto/aes_ccm.hpp"
-#include "thread/key_manager.hpp"
 #endif
 
 namespace ot {
@@ -1034,12 +1032,12 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 
 void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 {
-#if OPENTHREAD_RADIO
+#if OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
     OT_UNUSED_VARIABLE(aExtAddress);
 #else
     uint32_t       frameCounter = 0;
     uint8_t        securityLevel;
-    uint8_t        nonce[KeyManager::kNonceSize];
+    uint8_t        nonce[Crypto::AesCcm::kNonceSize];
     uint8_t        tagLength;
     Crypto::AesCcm aesCcm;
     otError        error;
@@ -1049,7 +1047,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     SuccessOrExit(error = GetSecurityLevel(securityLevel));
     SuccessOrExit(error = GetFrameCounter(frameCounter));
 
-    KeyManager::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
+    Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
 
     aesCcm.SetKey(GetAesKey(), 16);
     tagLength = GetFooterLength() - Frame::kFcsSize;
@@ -1061,9 +1059,11 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), true);
     aesCcm.Finalize(GetFooter(), &tagLength);
 
+    SetIsSecurityProcessed(true);
+
 exit:
     return;
-#endif // OPENTHREAD_RADIO
+#endif // OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 }
 
 void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)

@@ -244,6 +244,25 @@ public:
     otError SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
+     * This method updates MAC keys and key index.
+     *
+     * @param[in]   aKeyIdMode        The key ID mode.
+     * @param[in]   aKeyId            The key index.
+     * @param[in]   aPrevKey          The previous MAC key.
+     * @param[in]   aCurrKey          The current MAC key.
+     * @param[in]   aNextKey          The next MAC key.
+     *
+     * @retval OT_ERROR_NONE             If successful.
+     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     *
+     */
+    otError SetMacKey(uint8_t        aKeyIdMode,
+                      uint8_t        aKeyId,
+                      const uint8_t *aPrevKey,
+                      const uint8_t *aCurrKey,
+                      const uint8_t *aNextKey);
+
+    /**
      * This method records the status of a frame transmission attempt and is mainly used for logging failures.
      *
      * Unlike `HandleTransmitDone` which is called after all transmission attempts of frame to indicate final status
