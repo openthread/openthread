@@ -1005,7 +1005,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Transmit security will be processed after time IE content is updated.
-    VerifyOrExit(aFrame.GetTimeIeOffset() != 0);
+    VerifyOrExit(aFrame.GetTimeIeOffset() != 0, OT_NOOP);
 #endif
 
     aFrame.ProcessTransmitAesCcm(*extAddress);
