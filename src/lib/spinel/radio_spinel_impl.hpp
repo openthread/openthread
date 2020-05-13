@@ -1489,10 +1489,19 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
     otError         error  = OT_ERROR_NONE;
     spinel_status_t status = SPINEL_STATUS_OK;
     spinel_ssize_t  unpacked;
+    spinel_ssize_t  header_size = mTransmitFrame->mLength;
 
     VerifyOrExit(aCommand == SPINEL_CMD_PROP_VALUE_IS && aKey == SPINEL_PROP_LAST_STATUS, error = OT_ERROR_FAILED);
 
     unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT_PACKED_S, &status);
+    VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+    aBuffer += unpacked;
+    aLength -= static_cast<uint16_t>(unpacked);
+
+    // Replace transmit frame MAC header with the one from RCP which contains fields filled at RCP side
+    unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_DATA_WLEN_S, mTransmitFrame->mPsdu,
+                                               &header_size);
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
     aBuffer += unpacked;
