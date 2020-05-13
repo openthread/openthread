@@ -572,7 +572,7 @@ private:
 #endif // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
 /**
- * This class implements Source Address TLV generation and parsing.
+ * This class implements Leader Data TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -671,7 +671,7 @@ public:
 };
 
 /**
- * This class implements Source Address TLV generation and parsing.
+ * This class implements Connectivity TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
