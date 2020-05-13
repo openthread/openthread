@@ -3919,7 +3919,7 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 
     VerifyOrExit(!mAddressSolicitPending, OT_NOOP);
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Coap::Coap>().NewPriorityMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_ADDRESS_SOLICIT));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -4204,7 +4204,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
     ThreadRouterMaskTlv routerMaskTlv;
     Coap::Message *     message;
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Coap::Coap>().NewPriorityMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
