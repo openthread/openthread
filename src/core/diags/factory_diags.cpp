@@ -557,7 +557,7 @@ otError Diags::ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, siz
 {
     otError error = OT_ERROR_NONE;
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) && defined(OPENTHREAD_RADIO)
     if (aArgsLength > 0 && !strcmp(aArgs[0], "rcp"))
     {
         aArgs++;
@@ -569,6 +569,10 @@ otError Diags::ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, siz
     {
         snprintf(aOutput, aOutputMaxLen, "diagnostics mode is %s\r\n", otPlatDiagModeGet() ? "enabled" : "disabled");
         ExitNow();
+    }
+    else
+    {
+        aOutput[0] = '\0';
     }
 
     for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
