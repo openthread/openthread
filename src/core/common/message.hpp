@@ -286,22 +286,16 @@ public:
      *
      * @param[in]  aDelta  The number of bytes to move the current offset, which may be positive or negative.
      *
-     * @retval OT_ERROR_NONE          Successfully moved the byte offset.
-     * @retval OT_ERROR_INVALID_ARGS  The resulting byte offset is not within the existing message.
-     *
      */
-    otError MoveOffset(int aDelta);
+    void MoveOffset(int aDelta);
 
     /**
      * This method sets the byte offset within the message.
      *
-     * @param[in]  aOffset  The number of bytes to move the current offset, which may be positive or negative.
-     *
-     * @retval OT_ERROR_NONE          Successfully moved the byte offset.
-     * @retval OT_ERROR_INVALID_ARGS  The requested byte offset is not within the existing message.
+     * @param[in]  aOffset  The byte offset within the message.
      *
      */
-    otError SetOffset(uint16_t aOffset);
+    void SetOffset(uint16_t aOffset);
 
     /**
      * This method returns the type of the message.

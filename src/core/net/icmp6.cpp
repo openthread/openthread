@@ -78,7 +78,7 @@ otError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo
     icmpHeader.SetSequence(mEchoSequence++);
 
     SuccessOrExit(error = aMessage.Prepend(&icmpHeader, sizeof(icmpHeader)));
-    IgnoreError(aMessage.SetOffset(0));
+    aMessage.SetOffset(0);
     SuccessOrExit(error = Get<Ip6>().SendDatagram(aMessage, messageInfoLocal, kProtoIcmp6));
 
     otLogInfoIcmp("Sent echo request: (seq = %d)", icmpHeader.GetSequence());
@@ -158,7 +158,7 @@ otError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
         SuccessOrExit(error = HandleEchoRequest(aMessage, aMessageInfo));
     }
 
-    IgnoreError(aMessage.MoveOffset(sizeof(icmp6Header)));
+    aMessage.MoveOffset(sizeof(icmp6Header));
 
     for (IcmpHandler *handler = mHandlers.GetHead(); handler; handler = handler->GetNext())
     {

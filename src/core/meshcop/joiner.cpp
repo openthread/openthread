@@ -405,7 +405,7 @@ otError Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     mFinalizeMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     SuccessOrExit(error = mFinalizeMessage->AppendUriPathOptions(OT_URI_PATH_JOINER_FINALIZE));
     SuccessOrExit(error = mFinalizeMessage->SetPayloadMarker());
-    IgnoreError(mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength()));
+    mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
 
     SuccessOrExit(error = Tlv::AppendUint8Tlv(*mFinalizeMessage, Tlv::kState, StateTlv::kAccept));
 

@@ -174,7 +174,7 @@ Message *Client::NewMessage(const Header &aHeader)
 
     VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL, OT_NOOP);
     IgnoreError(message->Prepend(&aHeader, sizeof(aHeader)));
-    IgnoreError(message->SetOffset(0));
+    message->SetOffset(0);
 
 exit:
     return message;
@@ -479,7 +479,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
                      !responseHeader.IsTruncationFlagSet(),
                  OT_NOOP);
 
-    IgnoreError(aMessage.MoveOffset(sizeof(responseHeader)));
+    aMessage.MoveOffset(sizeof(responseHeader));
     offset = aMessage.GetOffset();
 
     VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != NULL, OT_NOOP);

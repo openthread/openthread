@@ -21,7 +21,10 @@ EXTRA_DIST                                    = \
     repo/include                                \
     $(NULL)
 
-lib_LIBRARIES                                 = libmbedcrypto.a
+lib_LIBRARIES                                 = \
+    libmbedcrypto.a                             \
+    libmbedcrypto_radio.a                       \
+    $(NULL)
 
 # Do not enable -Wconversion for mbedtls
 override CFLAGS                              := $(filter-out -Wconversion,$(CFLAGS))
@@ -84,6 +87,18 @@ libmbedcrypto_a_SOURCES                       = \
     repo/library/threading.c                    \
     repo/library/x509.c                         \
     repo/library/x509_crt.c                     \
+    $(NULL)
+
+libmbedcrypto_radio_a_CPPFLAGS                = \
+    -I$(top_srcdir)/include                     \
+    -I$(top_srcdir)/src/core                    \
+    -I$(MBEDTLS_SRCDIR)/include                 \
+    $(MBEDTLS_CPPFLAGS)                         \
+    $(NULL)
+
+libmbedcrypto_radio_a_SOURCES                 = \
+    repo/library/aes.c                          \
+    repo/library/platform_util.c                \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

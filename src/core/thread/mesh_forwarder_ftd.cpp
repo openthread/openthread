@@ -50,7 +50,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
     otError         error = OT_ERROR_NONE;
     Neighbor *      neighbor;
 
-    IgnoreError(aMessage.SetOffset(0));
+    aMessage.SetOffset(0);
     aMessage.SetDatagramTag(0);
     mSendQueue.Enqueue(aMessage);
 

@@ -1200,6 +1200,27 @@ public:
      *
      */
     void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
+
+    /**
+     * This method indicates whether or not the frame has security processed.
+     *
+     * @retval TRUE   The frame already has security processed.
+     * @retval FALSE  The frame does not have security processed.
+     *
+     */
+    bool IsSecurityProcessed(void) const { return mInfo.mTxInfo.mIsSecurityProcessed; }
+
+    /**
+     * This method sets the security processed flag attribute.
+     *
+     * @param[in]  aIsSecurityProcessed  TRUE if the frame already has security processed.
+     *
+     */
+    void SetIsSecurityProcessed(bool aIsSecurityProcessed)
+    {
+        mInfo.mTxInfo.mIsSecurityProcessed = aIsSecurityProcessed;
+    }
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method sets the Time IE offset.
@@ -1208,6 +1229,14 @@ public:
      *
      */
     void SetTimeIeOffset(uint8_t aOffset) { mInfo.mTxInfo.mIeInfo->mTimeIeOffset = aOffset; }
+
+    /**
+     * This method gets the Time IE offset.
+     *
+     * @returns The Time IE offset, 0 means no Time IE.
+     *
+     */
+    uint8_t GetTimeIeOffset(void) const { return mInfo.mTxInfo.mIeInfo->mTimeIeOffset; }
 
     /**
      * This method sets the offset to network time.

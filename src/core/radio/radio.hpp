@@ -248,6 +248,27 @@ public:
     void SetShortAddress(Mac::ShortAddress aShortAddress);
 
     /**
+     * This method sets MAC key and key ID.
+     *
+     * @param[in] aKeyIdMode  MAC key ID mode.
+     * @param[in] aKeyId      Current MAC key index.
+     * @param[in] aKeySize    MAC key size in bytes.
+     * @param[in] aPrevKey    A pointer to the previous MAC key.
+     * @param[in] aCurrKey    A pointer to the current MAC key.
+     * @param[in] aNextKey    A pointer to the next MAC key.
+     *
+     */
+    void SetMacKey(uint8_t        aKeyIdMode,
+                   uint8_t        aKeyId,
+                   uint8_t        aKeySize,
+                   const uint8_t *aPrevKey,
+                   const uint8_t *aCurrKey,
+                   const uint8_t *aNextKey)
+    {
+        otPlatRadioSetMacKey(GetInstance(), aKeyIdMode, aKeyId, aKeySize, aPrevKey, aCurrKey, aNextKey);
+    }
+
+    /**
      * This method gets the radio's transmit power in dBm.
      *
      * @param[out] aPower    A reference to output the transmit power in dBm.

@@ -82,6 +82,7 @@ public:
     enum
     {
         kInvalidRssiValue = 127, ///< Invalid Received Signal Strength Indicator (RSSI) value.
+        kMacKeySize       = 16,  ///< MAC Key size (bytes)
     };
 
     /**
@@ -347,6 +348,46 @@ public:
      */
     int8_t GetNoiseFloor(void);
 
+    /**
+     * This method sets MAC keys and key index.
+     *
+     * @param[in] aKeyIdMode  MAC key ID mode.
+     * @param[in] aKeyId      The key ID.
+     * @param[in] aPrevKey    A pointer to the previous MAC key.
+     * @param[in] aCurrKey    A pointer to the current MAC key.
+     * @param[in] aNextKey    A pointer to the next MAC key.
+     *
+     */
+    void SetMacKey(uint8_t        aKeyIdMode,
+                   uint8_t        aKeyId,
+                   const uint8_t *aPrevKey,
+                   const uint8_t *aCurrKey,
+                   const uint8_t *aNextKey);
+
+    /**
+     * This method returns a pointer to the current MAC key.
+     *
+     * @returns A pointer to the current MAC key.
+     *
+     */
+    const uint8_t *GetCurrentMacKey(void) const { return mCurrKey; }
+
+    /**
+     * This method returns a pointer to the previous MAC key.
+     *
+     * @returns A pointer to the previous MAC key.
+     *
+     */
+    const uint8_t *GetPreviousMacKey(void) const { return mPrevKey; }
+
+    /**
+     * This method returns a pointer to the next MAC key.
+     *
+     * @returns A pointer to the next MAC key.
+     *
+     */
+    const uint8_t *GetNextMacKey(void) const { return mNextKey; }
+
 private:
     enum
     {
@@ -378,15 +419,18 @@ private:
         return ((mRadioCaps & (OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES)) != 0);
     }
 
+    bool RadioSupportsTransmitSecurity(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) != 0); }
     bool RadioSupportsRetries(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) != 0); }
     bool RadioSupportsAckTimeout(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) != 0); }
     bool RadioSupportsEnergyScan(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) != 0); }
 
+    bool ShouldHandleTransmitSecurity(void) const;
     bool ShouldHandleCsmaBackOff(void) const;
     bool ShouldHandleAckTimeout(void) const;
     bool ShouldHandleRetries(void) const;
     bool ShouldHandleEnergyScan(void) const;
 
+    void ProcessTransmitSecurity(void);
     void StartCsmaBackoff(void);
     void BeginTransmit(void);
     void SampleRssi(void);
@@ -415,6 +459,10 @@ private:
     Callbacks          mCallbacks;
     otLinkPcapCallback mPcapCallback;
     void *             mPcapCallbackContext;
+    uint8_t            mPrevKey[kMacKeySize];
+    uint8_t            mCurrKey[kMacKeySize];
+    uint8_t            mNextKey[kMacKeySize];
+    uint8_t            mKeyId;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicro mTimer;
 #else

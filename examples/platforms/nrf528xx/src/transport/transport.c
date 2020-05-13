@@ -32,6 +32,8 @@
  *
  */
 
+#include <openthread/platform/toolchain.h>
+
 #include "platform-nrf5-transport.h"
 
 #include "transport-drivers.h"
@@ -50,6 +52,7 @@ void nrf5TransportInit(bool aPseudoReset)
 #endif
 
 #if (SPIS_AS_SERIAL_TRANSPORT == 1)
+    OT_UNUSED_VARIABLE(aPseudoReset);
     nrf5SpiSlaveInit();
 #endif
 }
@@ -64,6 +67,7 @@ void nrf5TransportDeinit(bool aPseudoReset)
 #endif
 
 #if (SPIS_AS_SERIAL_TRANSPORT == 1)
+    OT_UNUSED_VARIABLE(aPseudoReset);
     nrf5SpiSlaveDeinit();
 #endif
 }

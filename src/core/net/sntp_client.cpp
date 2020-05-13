@@ -179,7 +179,7 @@ Message *Client::NewMessage(const Header &aHeader)
 
     VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL, OT_NOOP);
     IgnoreError(message->Prepend(&aHeader, sizeof(aHeader)));
-    IgnoreError(message->SetOffset(0));
+    message->SetOffset(0);
 
 exit:
     return message;

@@ -188,7 +188,7 @@ void Dhcp6Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aM
     otIp6Address dst = aMessageInfo.mPeerAddr;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(header), &header) == sizeof(header), OT_NOOP);
-    IgnoreError(aMessage.MoveOffset(sizeof(header)));
+    aMessage.MoveOffset(sizeof(header));
 
     // discard if not solicit type
     VerifyOrExit((header.GetType() == kTypeSolicit), OT_NOOP);

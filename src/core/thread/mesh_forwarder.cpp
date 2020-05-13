@@ -719,7 +719,7 @@ start:
             if ((!aMessage.IsLinkSecurityEnabled()) && aMessage.IsSubTypeMle())
             {
                 // Enable security and try again.
-                IgnoreError(aMessage.SetOffset(0));
+                aMessage.SetOffset(0);
                 aMessage.SetLinkSecurityEnabled(true);
                 goto start;
             }
@@ -753,7 +753,7 @@ start:
         aFrame.SetPayloadLength(headerLength + payloadLength);
 
         nextOffset = aMessage.GetOffset() + payloadLength;
-        IgnoreError(aMessage.SetOffset(0));
+        aMessage.SetOffset(0);
     }
     else
     {
@@ -865,14 +865,14 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, otError aError)
 
     if (mMessageNextOffset < mSendMessage->GetLength())
     {
-        IgnoreError(mSendMessage->SetOffset(mMessageNextOffset));
+        mSendMessage->SetOffset(mMessageNextOffset);
     }
     else
     {
         otError txError = aError;
 
         mSendMessage->ClearDirectTransmission();
-        IgnoreError(mSendMessage->SetOffset(0));
+        mSendMessage->SetOffset(0);
 
         if (neighbor != NULL)
         {
@@ -1153,7 +1153,7 @@ void MeshForwarder::HandleFragment(const uint8_t *         aFrame,
         VerifyOrExit(message != NULL, error = OT_ERROR_DROP);
 
         message->Write(message->GetOffset(), aFrameLength, aFrame);
-        IgnoreError(message->MoveOffset(aFrameLength));
+        message->MoveOffset(aFrameLength);
         message->AddRss(aLinkInfo.mRss);
         message->SetTimeout(kReassemblyTimeout);
     }
@@ -1274,7 +1274,7 @@ otError MeshForwarder::FrameToMessage(const uint8_t *     aFrame,
 
     SuccessOrExit(error = aMessage->SetLength(aMessage->GetLength() + aFrameLength));
     aMessage->Write(aMessage->GetOffset(), aFrameLength, aFrame);
-    IgnoreError(aMessage->MoveOffset(aFrameLength));
+    aMessage->MoveOffset(aFrameLength);
 
 exit:
     return error;

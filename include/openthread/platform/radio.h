@@ -124,6 +124,7 @@ enum
     OT_RADIO_CAPS_TRANSMIT_RETRIES = 1 << 2, ///< Radio supports tx retry logic with collision avoidance (CSMA).
     OT_RADIO_CAPS_CSMA_BACKOFF     = 1 << 3, ///< Radio supports CSMA backoff for frame transmission (but no retry).
     OT_RADIO_CAPS_SLEEP_TO_TX      = 1 << 4, ///< Radio supports direct transition from sleep to TX with CSMA.
+    OT_RADIO_CAPS_TRANSMIT_SEC     = 1 << 5, ///< Radio supports tx security.
 };
 
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
@@ -196,6 +197,7 @@ typedef struct otRadioFrame
             uint8_t        mMaxFrameRetries;   ///< Maximum number of retries allowed after a transmission failure.
             bool           mIsARetx : 1;       ///< True if this frame is a retransmission (ignored by radio driver).
             bool           mCsmaCaEnabled : 1; ///< Set to true to enable CSMA-CA for this packet, false otherwise.
+            bool           mIsSecurityProcessed : 1; ///< True if SubMac should skip the AES processing of this frame.
         } mTxInfo;
 
         /**
@@ -432,6 +434,28 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance);
  *
  */
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
+
+/**
+ * Update MAC keys and key index
+ *
+ * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[in]   aKeyIdMode   The key ID mode.
+ * @param[in]   aKeyId       Current MAC key index.
+ * @param[in]   aKeySize     The key size.
+ * @param[in]   aPrevKey     A pointer to the previous MAC key.
+ * @param[in]   aCurrKey     A pointer to the current MAC key.
+ * @param[in]   aNextKey     A pointer to the next MAC key.
+ *
+ */
+void otPlatRadioSetMacKey(otInstance *   aInstance,
+                          uint8_t        aKeyIdMode,
+                          uint8_t        aKeyId,
+                          uint8_t        aKeySize,
+                          const uint8_t *aPrevKey,
+                          const uint8_t *aCurrKey,
+                          const uint8_t *aNextKey);
 
 /**
  * @}
