@@ -205,22 +205,24 @@ public:
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval OT_ERROR_NONE      Successfully added the unicast address.
-     * @retval OT_ERROR_ALREADY  The unicast address was already added.
-     *
      */
-    otError AddUnicastAddress(NetifUnicastAddress &aAddress);
+    void AddUnicastAddress(NetifUnicastAddress &aAddress);
 
     /**
      * This method removes a unicast address from the network interface.
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval OT_ERROR_NONE       Successfully removed the unicast address.
-     * @retval OT_ERROR_NOT_FOUND  The unicast address wasn't found to be removed.
+     */
+    void RemoveUnicastAddress(const NetifUnicastAddress &aAddress);
+
+    /**
+     * This method indicates whether a unicast address is added to the network interface.
+     *
+     * @param[in]  aAddress  A reference to the unicast address.
      *
      */
-    otError RemoveUnicastAddress(const NetifUnicastAddress &aAddress);
+    bool HasUnicastAddress(const NetifUnicastAddress &aAddress) const { return mUnicastAddresses.Contains(aAddress); }
 
     /**
      * This method adds an external (to OpenThread) unicast address to the network interface.
@@ -279,20 +281,14 @@ public:
      *
      * @note This method MUST be called after `SubscribeAllNodesMulticast()` or its behavior is undefined.
      *
-     * @retval OT_ERROR_NONE     Successfully subscribed to the link-local and realm-local all routers addresses.
-     * @retval OT_ERROR_ALREADY  The multicast addresses are already subscribed.
-     *
      */
-    otError SubscribeAllRoutersMulticast(void);
+    void SubscribeAllRoutersMulticast(void);
 
     /**
      * This method unsubscribes the network interface to the link-local and realm-local all routers address.
      *
-     * @retval OT_ERROR_NONE       Successfully unsubscribed from the link-local and realm-local all routers address
-     * @retval OT_ERROR_NOT_FOUND  The multicast addresses were not found.
-     *
      */
-    otError UnsubscribeAllRoutersMulticast(void);
+    void UnsubscribeAllRoutersMulticast(void);
 
     /**
      * This method returns a pointer to the list of multicast addresses.
@@ -307,22 +303,16 @@ public:
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval OT_ERROR_NONE     Successfully subscribed to @p aAddress.
-     * @retval OT_ERROR_ALREADY  The multicast address is already subscribed.
-     *
      */
-    otError SubscribeMulticast(NetifMulticastAddress &aAddress);
+    void SubscribeMulticast(NetifMulticastAddress &aAddress);
 
     /**
      * This method unsubscribes the network interface to a multicast address.
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval OT_ERROR_NONE       Successfully unsubscribed @p aAddress.
-     * @retval OT_ERROR_NOT_FOUND  The multicast address was not found.
-     *
      */
-    otError UnsubscribeMulticast(const NetifMulticastAddress &aAddress);
+    void UnsubscribeMulticast(const NetifMulticastAddress &aAddress);
 
     /**
      * This method provides the next external multicast address that the network interface subscribed.
@@ -390,11 +380,8 @@ protected:
      * This method subscribes the network interface to the realm-local all MPL forwarders, link-local, and realm-local
      * all nodes address.
      *
-     * @retval OT_ERROR_NONE     Successfully subscribed to all addresses.
-     * @retval OT_ERROR_ALREADY  The multicast addresses are already subscribed.
-     *
      */
-    otError SubscribeAllNodesMulticast(void);
+    void SubscribeAllNodesMulticast(void);
 
     /**
      * This method unsubscribes the network interface from the realm-local all MPL forwarders, link-local and
@@ -402,11 +389,8 @@ protected:
      *
      * @note This method MUST be called after `UnsubscribeAllRoutersMulticast()` or its behavior is undefined
      *
-     * @retval OT_ERROR_NONE          Successfully unsubscribed from all addresses.
-     * @retval OT_ERROR_NOT_FOUND     The multicast addresses were not found.
-     *
      */
-    otError UnsubscribeAllNodesMulticast(void);
+    void UnsubscribeAllNodesMulticast(void);
 
 private:
     enum

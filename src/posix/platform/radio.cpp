@@ -380,7 +380,11 @@ exit:
 #endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-otError otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+otError otPlatDiagProcess(otInstance *aInstance,
+                          uint8_t     aArgsLength,
+                          char *      aArgs[],
+                          char *      aOutput,
+                          size_t      aOutputMaxLen)
 {
     // deliver the platform specific diags commands to radio only ncp.
     OT_UNUSED_VARIABLE(aInstance);
@@ -388,9 +392,9 @@ otError otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *a
     char *cur                                              = cmd;
     char *end                                              = cmd + sizeof(cmd);
 
-    for (int index = 0; index < argc; index++)
+    for (uint8_t index = 0; index < aArgsLength; index++)
     {
-        cur += snprintf(cur, static_cast<size_t>(end - cur), "%s ", argv[index]);
+        cur += snprintf(cur, static_cast<size_t>(end - cur), "%s ", aArgs[index]);
     }
 
     return sRadioSpinel.PlatDiagProcess(cmd, aOutput, aOutputMaxLen);

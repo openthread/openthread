@@ -296,7 +296,7 @@ protected:
 private:
     const PrefixTlv *FindNextMatchingPrefix(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const;
 
-    otError RemoveCommissioningData(void);
+    void RemoveCommissioningData(void);
 
     otError ExternalRouteLookup(uint8_t             aDomainId,
                                 const Ip6::Address &aDestination,

@@ -448,8 +448,8 @@ exit:
 
 void Ip6::EnqueueDatagram(Message &aMessage)
 {
-    IgnoreError(mSendQueue.Enqueue(aMessage));
-    IgnoreError(mSendQueueTask.Post());
+    mSendQueue.Enqueue(aMessage);
+    mSendQueueTask.Post();
 }
 
 otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto)
@@ -560,7 +560,7 @@ void Ip6::HandleSendQueue(void)
 
     while ((message = mSendQueue.GetHead()) != NULL)
     {
-        IgnoreError(mSendQueue.Dequeue(*message));
+        mSendQueue.Dequeue(*message);
         IgnoreError(HandleDatagram(*message, NULL, NULL, false));
     }
 }
@@ -646,8 +646,6 @@ otError Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
         FragmentHeader::MakeDivisibleByEight(kMinimalMtu - aMessage.GetOffset() - sizeof(fragmentHeader));
     uint16_t payloadLeft = aMessage.GetLength() - aMessage.GetOffset();
 
-    VerifyOrExit(aMessage.GetLength() <= kMaxAssembledDatagramLength, error = OT_ERROR_NO_BUFS);
-
     VerifyOrExit(aMessage.Read(0, sizeof(header), &header) == sizeof(header), error = OT_ERROR_PARSE);
     header.SetNextHeader(kProtoFragment);
 
@@ -699,6 +697,7 @@ otError Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
 
         otLogInfoIp6("Fragment %d with %d bytes sent", fragmentCnt, payloadFragment);
     }
+
     aMessage.Free();
 
 exit:
@@ -757,6 +756,15 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
     offset          = FragmentHeader::FragmentOffsetToBytes(fragmentHeader.GetOffset());
     payloadFragment = aMessage.GetLength() - aMessage.GetOffset() - sizeof(fragmentHeader);
 
+    otLogInfoIp6("Fragment with id %d received > %d bytes, offset %d", fragmentHeader.GetIdentification(),
+                 payloadFragment, offset);
+
+    if (offset + payloadFragment + aMessage.GetOffset() > kMaxAssembledDatagramLength)
+    {
+        otLogWarnIp6("Packet too large for fragment buffer");
+        ExitNow(error = OT_ERROR_NO_BUFS);
+    }
+
     if (message == NULL)
     {
         VerifyOrExit((message = NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
@@ -775,18 +783,9 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
             mTimer.Start(kStateUpdatePeriod);
         }
 
-        IgnoreError(mReassemblyList.Enqueue(*message));
+        mReassemblyList.Enqueue(*message);
 
         otLogDebgIp6("start reassembly.");
-    }
-
-    otLogInfoIp6("Fragment with id %d received > %d bytes, offset %d", message->GetDatagramTag(), payloadFragment,
-                 offset);
-
-    if (offset + payloadFragment + aMessage.GetOffset() > kMaxAssembledDatagramLength)
-    {
-        otLogWarnIp6("Package too large for fragment buffer");
-        ExitNow(error = OT_ERROR_NO_BUFS);
     }
 
     // increase message buffer if necessary
@@ -818,9 +817,9 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
 
         otLogDebgIp6("Reassembly complete.");
 
-        IgnoreError(mReassemblyList.Dequeue(*message));
+        mReassemblyList.Dequeue(*message);
 
-        error = HandleDatagram(*message, aNetif, aMessageInfo.mLinkInfo, aFromNcpHost);
+        IgnoreError(HandleDatagram(*message, aNetif, aMessageInfo.mLinkInfo, aFromNcpHost));
     }
 
 exit:
@@ -828,11 +827,12 @@ exit:
     {
         if (message != NULL)
         {
-            IgnoreError(mReassemblyList.Dequeue(*message));
+            mReassemblyList.Dequeue(*message);
             message->Free();
         }
         otLogWarnIp6("Reassembly failed: %s", otThreadErrorToString(error));
     }
+
     if (isFragmented)
     {
         // drop all fragments, the payload is stored in the fragment buffer
@@ -847,8 +847,8 @@ void Ip6::CleanupFragmentationBuffer(void)
     for (Message *message = mReassemblyList.GetHead(); message;)
     {
         Message *next = message->GetNext();
-        IgnoreError(mReassemblyList.Dequeue(*message));
 
+        mReassemblyList.Dequeue(*message);
         message->Free();
         message = next;
     }
@@ -884,15 +884,15 @@ void Ip6::UpdateReassemblyList(void)
         else
         {
             otLogNoteIp6("Reassembly timeout.");
-            IgnoreError(SendIcmpError(*message, IcmpHeader::kTypeTimeExceeded, IcmpHeader::kCodeFragmReasTimeEx));
+            SendIcmpError(*message, IcmpHeader::kTypeTimeExceeded, IcmpHeader::kCodeFragmReasTimeEx);
 
-            IgnoreError(mReassemblyList.Dequeue(*message));
+            mReassemblyList.Dequeue(*message);
             message->Free();
         }
     }
 }
 
-otError Ip6::SendIcmpError(Message &aMessage, IcmpHeader::Type aIcmpType, IcmpHeader::Code aIcmpCode)
+void Ip6::SendIcmpError(Message &aMessage, IcmpHeader::Type aIcmpType, IcmpHeader::Code aIcmpCode)
 {
     otError     error = OT_ERROR_NONE;
     Header      header;
@@ -905,10 +905,14 @@ otError Ip6::SendIcmpError(Message &aMessage, IcmpHeader::Type aIcmpType, IcmpHe
     messageInfo.SetHopLimit(header.GetHopLimit());
     messageInfo.SetLinkInfo(NULL);
 
-    SuccessOrExit(error = mIcmp.SendError(aIcmpType, aIcmpCode, messageInfo, aMessage));
+    error = mIcmp.SendError(aIcmpType, aIcmpCode, messageInfo, aMessage);
 
 exit:
-    return error;
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnIp6("Failed to send ICMP error: %s", otThreadErrorToString(error));
+    }
 }
 
 #else
@@ -966,6 +970,9 @@ otError Ip6::HandleExtensionHeaders(Message &    aMessage,
             break;
 
         case kProtoFragment:
+            // Always forward IPv6 fragments to the Host.
+            IgnoreError(ProcessReceiveCallback(aMessage, aMessageInfo, aNextHeader, aFromNcpHost));
+
             SuccessOrExit(error = HandleFragment(aMessage, aNetif, aMessageInfo, aFromNcpHost));
             break;
 

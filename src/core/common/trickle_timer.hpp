@@ -113,11 +113,8 @@ public:
      * @param[in]  aIntervalMax  The maximum interval for the timer in milliseconds.
      * @param[in]  aMode         The operating mode for the timer.
      *
-     * @retval OT_ERROR_NONE           The timer started successfully.
-     * @retval OT_ERROR_INVALID_ARGS   The given parameters are invalid (i.e., max interval is smaller than min).
-     *
      */
-    otError Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode);
+    void Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode);
 
     /**
      * This method stops the trickle timer.

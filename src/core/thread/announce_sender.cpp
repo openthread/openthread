@@ -57,18 +57,13 @@ AnnounceSenderBase::AnnounceSenderBase(Instance &aInstance, Timer::Handler aHand
 {
 }
 
-otError AnnounceSenderBase::SendAnnounce(Mac::ChannelMask aChannelMask,
-                                         uint8_t          aCount,
-                                         uint32_t         aPeriod,
-                                         uint16_t         aJitter)
+void AnnounceSenderBase::SendAnnounce(Mac::ChannelMask aChannelMask, uint8_t aCount, uint32_t aPeriod, uint16_t aJitter)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aPeriod != 0, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aJitter < aPeriod, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPeriod != 0, OT_NOOP);
+    VerifyOrExit(aJitter < aPeriod, OT_NOOP);
 
     aChannelMask.Intersect(Get<Mac::Mac>().GetSupportedChannelMask());
-    VerifyOrExit(!aChannelMask.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(!aChannelMask.IsEmpty(), OT_NOOP);
 
     mChannelMask = aChannelMask;
     mCount       = aCount;
@@ -78,8 +73,11 @@ otError AnnounceSenderBase::SendAnnounce(Mac::ChannelMask aChannelMask,
 
     mTimer.Start(Random::NonCrypto::AddJitter(mPeriod, mJitter));
 
+    otLogInfoMle("Starting periodic MLE Announcements tx, mask %s, count %u, period %u, jitter %u",
+                 aChannelMask.ToString().AsCString(), aCount, aPeriod, aJitter);
+
 exit:
-    return error;
+    return;
 }
 
 void AnnounceSenderBase::HandleTimer(void)
@@ -102,7 +100,7 @@ void AnnounceSenderBase::HandleTimer(void)
 
     OT_ASSERT(error == OT_ERROR_NONE);
 
-    IgnoreError(Get<Mle::MleRouter>().SendAnnounce(mChannel, false));
+    Get<Mle::MleRouter>().SendAnnounce(mChannel, false);
 
     mTimer.Start(Random::NonCrypto::AddJitter(mPeriod, mJitter));
 
@@ -165,10 +163,7 @@ void AnnounceSender::CheckState(void)
 
     VerifyOrExit(!IsRunning() || (period != GetPeriod()) || (GetChannelMask() != channelMask), OT_NOOP);
 
-    IgnoreError(SendAnnounce(channelMask, 0, period, kMaxJitter));
-
-    otLogInfoMle("Starting periodic MLE Announcements tx, period %u, mask %s", period,
-                 channelMask.ToString().AsCString());
+    SendAnnounce(channelMask, 0, period, kMaxJitter);
 
 exit:
     return;

@@ -112,7 +112,7 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    otError        DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek);
+    void           DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek);
     void           SendDelayedJoinerEntrust(void);
     otError        SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);
     Coap::Message *PrepareJoinerEntrustMessage(void);

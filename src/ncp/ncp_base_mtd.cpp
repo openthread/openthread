@@ -2064,7 +2064,7 @@ void NcpBase::HandleJamStateChange(bool aJamState)
     OT_UNUSED_VARIABLE(aJamState);
 
     mChangedPropsSet.AddProperty(SPINEL_PROP_JAM_DETECTED);
-    IgnoreError(mUpdateChangedPropsTask.Post());
+    mUpdateChangedPropsTask.Post();
 }
 
 #endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
@@ -3152,7 +3152,7 @@ void NcpBase::HandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
 {
     memcpy(mLegacyUlaPrefix, aUlaPrefix, OT_NCP_LEGACY_ULA_PREFIX_LENGTH);
     mChangedPropsSet.AddProperty(SPINEL_PROP_NEST_LEGACY_ULA_PREFIX);
-    IgnoreError(mUpdateChangedPropsTask.Post());
+    mUpdateChangedPropsTask.Post();
 }
 
 void NcpBase::HandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
@@ -3160,7 +3160,7 @@ void NcpBase::HandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
     mLegacyNodeDidJoin    = true;
     mLegacyLastJoinedNode = *aExtAddr;
     mChangedPropsSet.AddProperty(SPINEL_PROP_NEST_LEGACY_LAST_NODE_JOINED);
-    IgnoreError(mUpdateChangedPropsTask.Post());
+    mUpdateChangedPropsTask.Post();
 }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NEST_LEGACY_ULA_PREFIX>(void)
@@ -3246,7 +3246,7 @@ void NcpBase::HandleTimeSyncUpdate(void *aContext)
 void NcpBase::HandleTimeSyncUpdate(void)
 {
     mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_NETWORK_TIME);
-    IgnoreError(mUpdateChangedPropsTask.Post());
+    mUpdateChangedPropsTask.Post();
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
@@ -3304,7 +3304,7 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *aResult)
         // We are finished with the scan, send an unsolicited
         // scan state update.
         mChangedPropsSet.AddProperty(SPINEL_PROP_MAC_SCAN_STATE);
-        IgnoreError(mUpdateChangedPropsTask.Post());
+        mUpdateChangedPropsTask.Post();
     }
 
 exit:
@@ -3315,7 +3315,7 @@ exit:
         // an async `LAST_STATUS(NOMEM)` when buffer space becomes
         // available.
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
-        IgnoreError(mUpdateChangedPropsTask.Post());
+        mUpdateChangedPropsTask.Post();
     }
 }
 
@@ -3341,7 +3341,7 @@ void NcpBase::HandleEnergyScanResult(otEnergyScanResult *aResult)
         // We are finished with the scan, send an unsolicited
         // scan state update.
         mChangedPropsSet.AddProperty(SPINEL_PROP_MAC_SCAN_STATE);
-        IgnoreError(mUpdateChangedPropsTask.Post());
+        mUpdateChangedPropsTask.Post();
     }
 
 exit:
@@ -3349,7 +3349,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
-        IgnoreError(mUpdateChangedPropsTask.Post());
+        mUpdateChangedPropsTask.Post();
     }
 }
 
@@ -3380,7 +3380,7 @@ void NcpBase::HandleJoinerCallback(otError aError)
         break;
     }
 
-    IgnoreError(mUpdateChangedPropsTask.Post());
+    mUpdateChangedPropsTask.Post();
 }
 #endif
 
@@ -3397,7 +3397,10 @@ void NcpBase::HandleDatagramFromStack(otMessage *aMessage)
 {
     VerifyOrExit(aMessage != NULL, OT_NOOP);
 
-    SuccessOrExit(otMessageQueueEnqueue(&mMessageQueue, aMessage));
+    // Do not forward frames larger than SPINEL payload size.
+    VerifyOrExit(otMessageGetLength(aMessage) <= SPINEL_FRAME_MAX_COMMAND_PAYLOAD_SIZE, otMessageFree(aMessage));
+
+    otMessageQueueEnqueue(&mMessageQueue, aMessage);
 
     // If there is no queued spinel command response, try to write/send
     // the datagram message immediately. If there is a queued response
@@ -3456,13 +3459,13 @@ otError NcpBase::SendQueuedDatagramMessages(void)
         // If forming of the spinel frame fails, the message is enqueued
         // back at the front of `mMessageQueue`.
 
-        IgnoreError(otMessageQueueDequeue(&mMessageQueue, message));
+        otMessageQueueDequeue(&mMessageQueue, message);
 
         error = SendDatagramMessage(message);
 
         if (error != OT_ERROR_NONE)
         {
-            IgnoreError(otMessageQueueEnqueueAtHead(&mMessageQueue, message));
+            otMessageQueueEnqueueAtHead(&mMessageQueue, message);
         }
 
         SuccessOrExit(error);
@@ -3630,7 +3633,7 @@ void NcpBase::HandleStateChanged(otChangedFlags aFlags, void *aContext)
     NcpBase *ncp = static_cast<NcpBase *>(aContext);
 
     ncp->mThreadChangedFlags |= aFlags;
-    IgnoreError(ncp->mUpdateChangedPropsTask.Post());
+    ncp->mUpdateChangedPropsTask.Post();
 }
 
 void NcpBase::ProcessThreadChangedFlags(void)

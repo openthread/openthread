@@ -683,7 +683,7 @@ ActiveDataset::ActiveDataset(Instance &aInstance)
     , mResourceSet(OT_URI_PATH_ACTIVE_SET, &ActiveDataset::HandleSet, this)
 #endif
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mResourceGet));
+    Get<Coap::Coap>().AddResource(mResourceGet);
 }
 
 bool ActiveDataset::IsPartiallyComplete(void) const
@@ -732,7 +732,7 @@ PendingDataset::PendingDataset(Instance &aInstance)
     , mResourceSet(OT_URI_PATH_PENDING_SET, &PendingDataset::HandleSet, this)
 #endif
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mResourceGet));
+    Get<Coap::Coap>().AddResource(mResourceGet);
 }
 
 void PendingDataset::Clear(void)

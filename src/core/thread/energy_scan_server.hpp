@@ -78,7 +78,7 @@ private:
     static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
     void        HandleStateChanged(otChangedFlags aFlags);
 
-    otError SendReport(void);
+    void SendReport(void);
 
     Ip6::Address mCommissioner;
     uint32_t     mChannelMask;

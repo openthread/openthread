@@ -63,7 +63,7 @@ JoinerRouter::JoinerRouter(Instance &aInstance)
     , mIsJoinerPortConfigured(false)
     , mExpectJoinEntRsp(false)
 {
-    IgnoreError(Get<Coap::Coap>().AddResource(mRelayTransmit));
+    Get<Coap::Coap>().AddResource(mRelayTransmit);
 }
 
 void JoinerRouter::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
@@ -222,7 +222,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
     {
         otLogInfoMeshCoP("Received kek");
 
-        IgnoreError(DelaySendingJoinerEntrust(messageInfo, kek));
+        DelaySendingJoinerEntrust(messageInfo, kek);
     }
 
 exit:
@@ -232,7 +232,7 @@ exit:
     }
 }
 
-otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek)
+void JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek)
 {
     otError               error   = OT_ERROR_NONE;
     Message *             message = Get<MessagePool>().New(Message::kTypeOther, 0);
@@ -247,7 +247,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
 
     SuccessOrExit(error = metadata.AppendTo(*message));
 
-    IgnoreError(mDelayedJoinEnts.Enqueue(*message));
+    mDelayedJoinEnts.Enqueue(*message);
 
     if (!mTimer.IsRunning())
     {
@@ -256,12 +256,15 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogNoteMeshCoP("Failed to schedule joiner entrust: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 void JoinerRouter::HandleTimer(Timer &aTimer)
@@ -296,7 +299,7 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     }
     else
     {
-        IgnoreError(mDelayedJoinEnts.Dequeue(*message));
+        mDelayedJoinEnts.Dequeue(*message);
         message->Free();
 
         Get<KeyManager>().SetKek(metadata.mKek);

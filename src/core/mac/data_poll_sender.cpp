@@ -69,18 +69,17 @@ const Neighbor &DataPollSender::GetParent(void) const
     return parentCandidate.IsStateValid() ? parentCandidate : Get<Mle::MleRouter>().GetParent();
 }
 
-otError DataPollSender::StartPolling(void)
+void DataPollSender::StartPolling(void)
 {
-    otError error = OT_ERROR_NONE;
+    VerifyOrExit(!mEnabled, OT_NOOP);
 
-    VerifyOrExit(!mEnabled, error = OT_ERROR_ALREADY);
-    VerifyOrExit(!Get<Mle::MleRouter>().IsRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
+    OT_ASSERT(!Get<Mle::MleRouter>().IsRxOnWhenIdle());
 
     mEnabled = true;
     ScheduleNextPoll(kRecalculatePollPeriod);
 
 exit:
-    return error;
+    return;
 }
 
 void DataPollSender::StopPolling(void)
@@ -379,10 +378,8 @@ void DataPollSender::SendFastPolls(uint8_t aNumFastPolls)
     }
 }
 
-otError DataPollSender::StopFastPolls(void)
+void DataPollSender::StopFastPolls(void)
 {
-    otError error = OT_ERROR_NONE;
-
     VerifyOrExit(mFastPollsUsers != 0, OT_NOOP);
 
     // If `mFastPollsUsers` hits the max, let it be cleared
@@ -391,13 +388,13 @@ otError DataPollSender::StopFastPolls(void)
 
     mFastPollsUsers--;
 
-    VerifyOrExit(mFastPollsUsers == 0, error = OT_ERROR_BUSY);
+    VerifyOrExit(mFastPollsUsers == 0, OT_NOOP);
 
     mRemainingFastPolls = 0;
     ScheduleNextPoll(kRecalculatePollPeriod);
 
 exit:
-    return error;
+    return;
 }
 
 void DataPollSender::ResetKeepAliveTimer(void)

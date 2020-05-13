@@ -235,7 +235,7 @@ public:
      * @retval FALSE  The linked list does not contain @p aEntry.
      *
      */
-    bool Contains(Type &aEntry) const
+    bool Contains(const Type &aEntry) const
     {
         bool contains = false;
 

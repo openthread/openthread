@@ -254,7 +254,7 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
 
             IgnoreError(instance.Get<Mle::MleRouter>().GetCommissionerAloc(borderAgent.mCommissionerAloc.GetAddress(),
                                                                            sessionId));
-            IgnoreError(instance.Get<ThreadNetif>().AddUnicastAddress(borderAgent.mCommissionerAloc));
+            instance.Get<ThreadNetif>().AddUnicastAddress(borderAgent.mCommissionerAloc);
             IgnoreError(instance.Get<Ip6::Udp>().AddReceiver(borderAgent.mUdpReceiver));
         }
     }
@@ -660,7 +660,7 @@ void BorderAgent::HandleConnected(bool aConnected)
     else
     {
         otLogInfoMeshCoP("Commissioner disconnected");
-        IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc));
+        Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
         SetState(OT_BORDER_AGENT_STATE_STARTED);
     }
 }
@@ -676,18 +676,18 @@ otError BorderAgent::Start(void)
     SuccessOrExit(error = coaps.SetPsk(Get<KeyManager>().GetPskc().m8, OT_PSKC_MAX_SIZE));
     coaps.SetConnectedCallback(HandleConnected, this);
 
-    IgnoreError(coaps.AddResource(mActiveGet));
-    IgnoreError(coaps.AddResource(mActiveSet));
-    IgnoreError(coaps.AddResource(mPendingGet));
-    IgnoreError(coaps.AddResource(mPendingSet));
-    IgnoreError(coaps.AddResource(mCommissionerPetition));
-    IgnoreError(coaps.AddResource(mCommissionerKeepAlive));
-    IgnoreError(coaps.AddResource(mCommissionerSet));
-    IgnoreError(coaps.AddResource(mCommissionerGet));
-    IgnoreError(coaps.AddResource(mProxyTransmit));
-    IgnoreError(coaps.AddResource(mRelayTransmit));
+    coaps.AddResource(mActiveGet);
+    coaps.AddResource(mActiveSet);
+    coaps.AddResource(mPendingGet);
+    coaps.AddResource(mPendingSet);
+    coaps.AddResource(mCommissionerPetition);
+    coaps.AddResource(mCommissionerKeepAlive);
+    coaps.AddResource(mCommissionerSet);
+    coaps.AddResource(mCommissionerGet);
+    coaps.AddResource(mProxyTransmit);
+    coaps.AddResource(mRelayTransmit);
 
-    IgnoreError(Get<Coap::Coap>().AddResource(mRelayReceive));
+    Get<Coap::Coap>().AddResource(mRelayReceive);
 
     SetState(OT_BORDER_AGENT_STATE_STARTED);
 
@@ -751,10 +751,11 @@ void BorderAgent::ApplyMeshLocalPrefix(void)
 {
     VerifyOrExit(mState == OT_BORDER_AGENT_STATE_ACTIVE, OT_NOOP);
 
-    if (Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc) == OT_ERROR_NONE)
+    if (Get<ThreadNetif>().HasUnicastAddress(mCommissionerAloc))
     {
+        Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
         mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc));
+        Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
     }
 
 exit:

@@ -51,11 +51,11 @@ namespace ot {
 
 EnergyScanClient::EnergyScanClient(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mCallback(NULL)
+    , mContext(NULL)
     , mEnergyScan(OT_URI_PATH_ENERGY_REPORT, &EnergyScanClient::HandleReport, this)
 {
-    mContext  = NULL;
-    mCallback = NULL;
-    IgnoreError(Get<Coap::Coap>().AddResource(mEnergyScan));
+    Get<Coap::Coap>().AddResource(mEnergyScan);
 }
 
 otError EnergyScanClient::SendQuery(uint32_t                           aChannelMask,

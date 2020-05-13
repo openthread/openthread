@@ -152,12 +152,8 @@ public:
      * @param[in] aMessage  The message to add.
      * @param[in] aChild    The (sleepy) child for indirect transmission.
      *
-     * @retval OT_ERROR_NONE           Successfully added the message for indirect transmission.
-     * @retval OT_ERROR_ALREADY        The message was already added for indirect transmission to same child.
-     * @retval OT_ERROR_INVALID_STATE  The child is not sleepy.
-     *
      */
-    otError AddMessageForSleepyChild(Message &aMessage, Child &aChild);
+    void AddMessageForSleepyChild(Message &aMessage, Child &aChild);
 
     /**
      * This method removes a message for indirect transmission to a sleepy child.

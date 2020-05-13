@@ -195,7 +195,7 @@ Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetad
 
     // Append the copy with retransmission data and add it to the queue.
     SuccessOrExit(error = aQueryMetadata.AppendTo(*messageCopy));
-    IgnoreError(mPendingQueries.Enqueue(*messageCopy));
+    mPendingQueries.Enqueue(*messageCopy);
 
     mRetransmissionTimer.FireAtIfEarlier(aQueryMetadata.mTransmissionTime);
 
@@ -212,7 +212,7 @@ exit:
 
 void Client::DequeueMessage(Message &aMessage)
 {
-    IgnoreError(mPendingQueries.Dequeue(aMessage));
+    mPendingQueries.Dequeue(aMessage);
 
     if (mRetransmissionTimer.IsRunning() && (mPendingQueries.GetHead() == NULL))
     {
@@ -229,7 +229,7 @@ otError Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageI
     return mSocket.SendTo(aMessage, aMessageInfo);
 }
 
-otError Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError  error;
     Message *messageCopy = NULL;
@@ -243,12 +243,15 @@ otError Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessa
 
 exit:
 
-    if (error != OT_ERROR_NONE && messageCopy != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        messageCopy->Free();
-    }
+        otLogWarnIp6("Failed to send SNTP request: %s", otThreadErrorToString(error));
 
-    return error;
+        if (messageCopy != NULL)
+        {
+            messageCopy->Free();
+        }
+    }
 }
 
 Message *Client::FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata)
@@ -325,7 +328,7 @@ void Client::HandleRetransmissionTimer(void)
             messageInfo.SetPeerPort(queryMetadata.mDestinationPort);
             messageInfo.SetSockAddr(queryMetadata.mSourceAddress);
 
-            IgnoreError(SendCopy(*message, messageInfo));
+            SendCopy(*message, messageInfo);
         }
 
         if (nextTime > queryMetadata.mTransmissionTime)
