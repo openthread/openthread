@@ -233,21 +233,12 @@ exit:
 
 void SubMac::ProcessTransmitSecurity(void)
 {
-    const ExtAddress *extAddress            = NULL;
-    bool              processTransmitAesCcm = true;
+    const ExtAddress *extAddress = NULL;
     uint8_t           keyIdMode;
 
     VerifyOrExit(ShouldHandleTransmitSecurity(), OT_NOOP);
     VerifyOrExit(mTransmitFrame.GetSecurityEnabled(), OT_NOOP);
     VerifyOrExit(!mTransmitFrame.IsSecurityProcessed(), OT_NOOP);
-
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (mTransmitFrame.GetTimeIeOffset() != 0)
-    {
-        // Transmit security will be processed after time IE content is updated.
-        processTransmitAesCcm = false;
-    }
-#endif
 
     SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
     VerifyOrExit(keyIdMode == Frame::kKeyIdMode1, OT_NOOP);
@@ -260,10 +251,12 @@ void SubMac::ProcessTransmitSecurity(void)
 
     extAddress = &GetExtAddress();
 
-    if (processTransmitAesCcm)
-    {
-        mTransmitFrame.ProcessTransmitAesCcm(*extAddress);
-    }
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    // Transmit security will be processed after time IE content is updated.
+    VerifyOrExit(mTransmitFrame.GetTimeIeOffset() != 0);
+#endif
+
+    mTransmitFrame.ProcessTransmitAesCcm(*extAddress);
 
 exit:
     return;

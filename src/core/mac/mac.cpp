@@ -949,18 +949,9 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 {
     KeyManager &      keyManager = Get<KeyManager>();
     uint8_t           keyIdMode;
-    const ExtAddress *extAddress            = NULL;
-    bool              processTransmitAesCcm = true;
+    const ExtAddress *extAddress = NULL;
 
     VerifyOrExit(aFrame.GetSecurityEnabled(), OT_NOOP);
-
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aFrame.GetTimeIeOffset() != 0)
-    {
-        // Transmit security will be processed after time IE content is updated.
-        processTransmitAesCcm = false;
-    }
-#endif
 
     IgnoreError(aFrame.GetKeyIdMode(keyIdMode));
 
@@ -992,7 +983,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         }
 
         // For MAC key ID mode 1, the AES CCM* is done at SubMac or Radio if supported
-        processTransmitAesCcm = false;
+        ExitNow();
         break;
 
     case Frame::kKeyIdMode2:
@@ -1012,10 +1003,12 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         OT_UNREACHABLE_CODE(break);
     }
 
-    if (processTransmitAesCcm)
-    {
-        aFrame.ProcessTransmitAesCcm(*extAddress);
-    }
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    // Transmit security will be processed after time IE content is updated.
+    VerifyOrExit(aFrame.GetTimeIeOffset() != 0);
+#endif
+
+    aFrame.ProcessTransmitAesCcm(*extAddress);
 
 exit:
     return;
