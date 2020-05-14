@@ -33,8 +33,22 @@ readonly OT_SRCDIR="$(pwd)"
 readonly OT_BUILDDIR="$OT_SRCDIR/build"
 
 readonly OT_COMMON_OPTIONS=(
-    "-DOT_COMPILE_WARNING_AS_ERROR=ON"
+    "-DOT_COMPILE_WARNING_AS_ERROR=on"
 )
+
+readonly OT_BASIC_CHECK_OPTIONS=(
+    "-DOT_COMMISSIONER=on"
+    "-DOT_DHCP6_CLIENT=on"
+    "-DOT_DHCP6_SERVER=on"
+    "-DOT_DNS_CLIENT=on"
+    "-DOT_JOINER=on"
+    "-DOT_SLAAC=on"
+)
+
+die() {
+    echo " *** ERROR:  $*"
+    exit 1
+}
 
 reset_source()
 {
@@ -43,160 +57,68 @@ reset_source()
 
 build_cc1352()
 {
-    local options=("${OT_COMMON_OPTIONS[@]}")
-
-    options+=(
-        "-DOT_PLATFORM=cc1352"
-        "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc1352/arm-none-eabi.cmake"
-        "-DOT_COMMISSIONER=on"
-        "-DOT_DHCP6_CLIENT=on"
-        "-DOT_DHCP6_SERVER=on"
-        "-DOT_DNS_CLIENT=on"
-        "-DOT_JOINER=on"
-        "-DOT_SLAAC=on"
-        "-DCMAKE_BUILD_TYPE=Release"
-    )
+    local options=("${OT_COMMON_OPTIONS[@]}"
+                   "${OT_BASIC_CHECK_OPTIONS[@]}")
 
     reset_source
-    mkdir -p "$OT_BUILDDIR"
-    cd "$OT_BUILDDIR"
-    cmake -GNinja "${options[@]}" ..
-    ninja
-    cd "$OT_SRCDIR"
+    "$(dirname "$0")"/cmake-build cc1352 "${options[@]}"
 }
 
 build_cc2538()
 {
-    local options=("${OT_COMMON_OPTIONS[@]}")
-
-    options+=(
-        "-DOT_PLATFORM=cc2538"
-        "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc2538/arm-none-eabi.cmake"
-    )
+    local options=("${OT_COMMON_OPTIONS[@]}"
+                   "${OT_BASIC_CHECK_OPTIONS[@]}")
 
     reset_source
-    mkdir -p "$OT_BUILDDIR"
-    cd "$OT_BUILDDIR"
-    cmake -GNinja "${options[@]}" ..
-    ninja
-    cd "$OT_SRCDIR"
+    "$(dirname "$0")"/cmake-build cc2538 "${options[@]}"
 }
 
 build_cc2650()
 {
-    local options=("${OT_COMMON_OPTIONS[@]}")
-
-    options+=(
-        "-DOT_PLATFORM=cc2650"
-        "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc2650/arm-none-eabi.cmake"
-        "-DCMAKE_BUILD_TYPE=Release"
-    )
-
     reset_source
-    mkdir -p "$OT_BUILDDIR"
-    cd "$OT_BUILDDIR"
-    cmake -GNinja "${options[@]}" ..
-    ninja ot-cli-mtd ot-ncp-mtd
-    cd "$OT_SRCDIR"
+    "$(dirname "$0")"/cmake-build cc2650 "${OT_COMMON_OPTIONS[@]}"
 }
 
 build_cc2652()
 {
-    local options=("${OT_COMMON_OPTIONS[@]}")
-
-    options+=(
-        "-DOT_PLATFORM=cc2652"
-        "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc2652/arm-none-eabi.cmake"
-        "-DOT_COMMISSIONER=on"
-        "-DOT_DHCP6_CLIENT=on"
-        "-DOT_DHCP6_SERVER=on"
-        "-DOT_DNS_CLIENT=on"
-        "-DOT_JOINER=on"
-        "-DOT_SLAAC=on"
-        "-DCMAKE_BUILD_TYPE=Release"
-    )
+    local options=("${OT_COMMON_OPTIONS[@]}"
+                   "${OT_BASIC_CHECK_OPTIONS[@]}")
 
     reset_source
-    mkdir -p "$OT_BUILDDIR"
-    cd "$OT_BUILDDIR"
-    cmake -GNinja "${options[@]}" ..
-    ninja
-    cd "$OT_SRCDIR"
+    "$(dirname "$0")"/cmake-build cc2652 "${options[@]}"
 }
 
 build_kw41z()
 {
-    local options=("${OT_COMMON_OPTIONS[@]}")
-
-    options+=(
-        "-DOT_PLATFORM=kw41z"
-        "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/kw41z/arm-none-eabi.cmake"
-        "-DOT_COMMISSIONER=on"
-        "-DOT_DHCP6_CLIENT=on"
-        "-DOT_DHCP6_SERVER=on"
-        "-DOT_DNS_CLIENT=on"
-        "-DOT_JOINER=on"
-        "-DOT_SLAAC=on"
-        "-DCMAKE_BUILD_TYPE=Release"
-    )
+    local options=("${OT_COMMON_OPTIONS[@]}"
+                   "${OT_BASIC_CHECK_OPTIONS[@]}")
 
     reset_source
-    mkdir -p "$OT_BUILDDIR"
-    cd "$OT_BUILDDIR"
-    cmake -GNinja "${options[@]}" ..
-    ninja
-    cd "$OT_SRCDIR"
+    "$(dirname "$0")"/cmake-build kw41z "${options[@]}"
 }
 
 build_qpg6095()
 {
-    local options=("${OT_COMMON_OPTIONS[@]}")
-
-    options+=(
-        "-DOT_PLATFORM=qpg6095"
-        "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/qpg6095/arm-none-eabi.cmake"
-        "-DOT_COMMISSIONER=on"
-        "-DOT_DHCP6_CLIENT=on"
-        "-DOT_DHCP6_SERVER=on"
-        "-DOT_DNS_CLIENT=on"
-        "-DOT_JOINER=on"
-        "-DOT_SLAAC=on"
-        "-DCMAKE_BUILD_TYPE=Release"
-    )
+    local options=("${OT_COMMON_OPTIONS[@]}"
+                   "${OT_BASIC_CHECK_OPTIONS[@]}")
 
     reset_source
-    mkdir -p "$OT_BUILDDIR"
-    cd "$OT_BUILDDIR"
-    cmake -GNinja "${options[@]}" ..
-    ninja
-    cd "$OT_SRCDIR"
+    "$(dirname "$0")"/cmake-build qpg6095 "${options[@]}"
 }
 
 build_samr21()
 {
-    local options=("${OT_COMMON_OPTIONS[@]}")
-
-    options+=(
-        "-DOT_PLATFORM=samr21"
-        "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/samr21/arm-none-eabi.cmake"
-        "-DOT_COMMISSIONER=on"
-        "-DOT_DHCP6_CLIENT=on"
-        "-DOT_DHCP6_SERVER=on"
-        "-DOT_DNS_CLIENT=on"
-        "-DOT_JOINER=on"
-        "-DOT_SLAAC=on"
-        "-DCMAKE_BUILD_TYPE=Release"
-    )
+    local options=("${OT_COMMON_OPTIONS[@]}"
+                   "${OT_BASIC_CHECK_OPTIONS[@]}")
 
     reset_source
-    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.45.0.85.zip || die
-    unzip -qq asf-standalone-archive-3.45.0.85.zip || die
-    mv xdk-asf-3.45.0 third_party/microchip/asf || die
-    mkdir -p "$OT_BUILDDIR"
-    cd "$OT_BUILDDIR"
-    cmake -GNinja "${options[@]}" ..
-    ninja
-    cd "$OT_SRCDIR"
+
+    asfzip=asf-standalone-archive-3.45.0.85.zip
+    wget http://ww1.microchip.com/downloads/en/DeviceDoc/${asfzip} || die "Download ${asfzip} failed"
+    unzip -qq ${asfzip} || die "Unzip ${asfzip} failed."
+    mv xdk-asf-3.45.0 third_party/microchip/asf || die "Move xdk-asf-3.45.0 failed."
+
+    "$(dirname "$0")"/cmake-build samr21 "${options[@]}"
 }
 
 main()

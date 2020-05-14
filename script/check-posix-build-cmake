@@ -29,7 +29,6 @@
 
 set -euxo pipefail
 
-readonly OT_SRCDIR="$(pwd)"
 readonly OT_BUILDDIR="$OT_SRCDIR/build"
 
 reset_source()
@@ -43,7 +42,6 @@ build()
 
     options+=(
         "-DOT_COMPILE_WARNING_AS_ERROR=on"
-        "-DOT_PLATFORM=posix"
         "-DOT_BORDER_AGENT=on"
         "-DOT_BORDER_ROUTER=on"
         "-DOT_CHANNEL_MANAGER=on"
@@ -76,12 +74,7 @@ build()
         "-DOT_FULL_LOGS=on"
     )
 
-    mkdir -p "$OT_BUILDDIR"
-    cd "$OT_BUILDDIR"
-    cmake -GNinja "${options[@]}" "$OT_SRCDIR"
-    ninja
-
-    cd "$OT_SRCDIR"
+    "$(dirname "$0")"/cmake-build posix "${options[@]}"
 }
 
 main()

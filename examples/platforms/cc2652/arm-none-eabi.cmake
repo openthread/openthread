@@ -28,6 +28,7 @@
 
 set(CMAKE_SYSTEM_NAME              Generic)
 set(CMAKE_SYSTEM_PROCESSOR         ARM)
+set(CMAKE_BUILD_TYPE               Release CACHE STRING "Set build type to release to save memory")
 
 set(CMAKE_C_COMPILER               arm-none-eabi-gcc)
 set(CMAKE_CXX_COMPILER             arm-none-eabi-g++)

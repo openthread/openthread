@@ -29,14 +29,6 @@
 
 set -euxo pipefail
 
-readonly OT_SRCDIR="$(pwd)"
-readonly OT_BUILDDIR="$OT_SRCDIR/build"
-
-readonly OT_COMMON_OPTIONS=(
-    "-DOT_COMPILE_WARNING_AS_ERROR=on"
-    "-DOT_PLATFORM=simulation"
-)
-
 reset_source()
 {
     rm -rf "$OT_BUILDDIR"
@@ -44,9 +36,8 @@ reset_source()
 
 build_all_features()
 {
-    local options=("${OT_COMMON_OPTIONS[@]}")
-
-    options+=(
+    local options=(
+        "-DOT_COMPILE_WARNING_AS_ERROR=on"
         "-DOT_BORDER_AGENT=on"
         "-DOT_BORDER_ROUTER=on"
         "-DOT_COAP=on"
@@ -72,18 +63,9 @@ build_all_features()
     )
 
     reset_source
-
-    mkdir -p "$OT_BUILDDIR"
-    cd "$OT_BUILDDIR"
-    cmake -GNinja "${options[@]}" ..
-    ninja
-    cd "$OT_SRCDIR"
-
+    "$(dirname "$0")"/cmake-build simulation "${options[@]}"
     reset_source
-    mkdir build && cd build
-    cmake -GNinja "${options[@]}" -DOT_OTNS=on -DOT_SIMULATION_VIRTUAL_TIME=on ..
-    ninja
-    cd ..
+    "$(dirname "$0")"/cmake-build simulation "${options[@]}" "-DOT_OTNS=on -DOT_SIMULATION_VIRTUAL_TIME=on"
 }
 
 build_toranj()
