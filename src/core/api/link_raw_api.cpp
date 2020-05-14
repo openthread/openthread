@@ -221,15 +221,16 @@ exit:
     return error;
 }
 
-otError otLinkRawSetMacKey(otInstance *   aInstance,
-                           uint8_t        aKeyIdMode,
-                           uint8_t        aKeyId,
-                           const uint8_t *aPrevKey,
-                           const uint8_t *aCurrKey,
-                           const uint8_t *aNextKey)
+otError otLinkRawSetMacKey(otInstance *    aInstance,
+                           uint8_t         aKeyIdMode,
+                           uint8_t         aKeyId,
+                           const otMacKey *aPrevKey,
+                           const otMacKey *aCurrKey,
+                           const otMacKey *aNextKey)
 {
-    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetMacKey(aKeyIdMode, aKeyId, aPrevKey, aCurrKey,
-                                                                             aNextKey);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetMacKey(
+        aKeyIdMode, aKeyId, *static_cast<const Mac::Key *>(aPrevKey), *static_cast<const Mac::Key *>(aCurrKey),
+        *static_cast<const Mac::Key *>(aNextKey));
 }
 
 #if OPENTHREAD_RADIO

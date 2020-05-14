@@ -344,12 +344,12 @@ otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
  *
  */
-otError otLinkRawSetMacKey(otInstance *   aInstance,
-                           uint8_t        aKeyIdMode,
-                           uint8_t        aKeyId,
-                           const uint8_t *aPrevKey,
-                           const uint8_t *aCurrKey,
-                           const uint8_t *aNextKey);
+otError otLinkRawSetMacKey(otInstance *    aInstance,
+                           uint8_t         aKeyIdMode,
+                           uint8_t         aKeyId,
+                           const otMacKey *aPrevKey,
+                           const otMacKey *aCurrKey,
+                           const otMacKey *aNextKey);
 
 /**
  * @}

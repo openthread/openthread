@@ -648,6 +648,12 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
+ * This class represents a MLE key.
+ *
+ */
+typedef Mac::Key Key;
+
+/**
  * @}
  *
  */

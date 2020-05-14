@@ -1049,7 +1049,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 
     Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
 
-    aesCcm.SetKey(GetAesKey(), 16);
+    aesCcm.SetKey(GetAesKey());
     tagLength = GetFooterLength() - Frame::kFcsSize;
 
     error = aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));

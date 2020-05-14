@@ -2541,7 +2541,7 @@ otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
         Crypto::AesCcm::GenerateNonce(Get<Mac::Mac>().GetExtAddress(), Get<KeyManager>().GetMleFrameCounter(),
                                       Mac::Frame::kSecEncMic32, nonce);
 
-        aesCcm.SetKey(Get<KeyManager>().GetCurrentMleKey(), 16);
+        aesCcm.SetKey(Get<KeyManager>().GetCurrentMleKey());
         error = aesCcm.Init(16 + 16 + header.GetHeaderLength(), aMessage.GetLength() - (header.GetLength() - 1),
                             sizeof(tag), nonce, sizeof(nonce));
         OT_ASSERT(error == OT_ERROR_NONE);
@@ -2606,7 +2606,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     otError         error = OT_ERROR_NONE;
     Header          header;
     uint32_t        keySequence;
-    const uint8_t * mleKey;
+    const Key *     mleKey;
     uint32_t        frameCounter;
     uint8_t         messageTag[4];
     uint8_t         nonce[Crypto::AesCcm::kNonceSize];
@@ -2658,11 +2658,11 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     if (keySequence == Get<KeyManager>().GetCurrentKeySequence())
     {
-        mleKey = Get<KeyManager>().GetCurrentMleKey();
+        mleKey = &Get<KeyManager>().GetCurrentMleKey();
     }
     else
     {
-        mleKey = Get<KeyManager>().GetTemporaryMleKey(keySequence);
+        mleKey = &Get<KeyManager>().GetTemporaryMleKey(keySequence);
     }
 
     VerifyOrExit(aMessage.GetOffset() + header.GetLength() + sizeof(messageTag) <= aMessage.GetLength(),
@@ -2676,7 +2676,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     frameCounter = header.GetFrameCounter();
     Crypto::AesCcm::GenerateNonce(macAddr, frameCounter, Mac::Frame::kSecEncMic32, nonce);
 
-    aesCcm.SetKey(mleKey, 16);
+    aesCcm.SetKey(*mleKey);
     SuccessOrExit(error = aesCcm.Init(sizeof(aMessageInfo.GetPeerAddr()) + sizeof(aMessageInfo.GetSockAddr()) +
                                           header.GetHeaderLength(),
                                       aMessage.GetLength() - aMessage.GetOffset(), sizeof(messageTag), nonce,

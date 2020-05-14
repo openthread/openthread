@@ -45,6 +45,11 @@ void AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
     mEcb.SetKey(aKey, 8 * aKeyLength);
 }
 
+void AesCcm::SetKey(const Mac::Key &aMacKey)
+{
+    SetKey(aMacKey.GetKey(), Mac::Key::kSize);
+}
+
 otError AesCcm::Init(uint32_t    aHeaderLength,
                      uint32_t    aPlainTextLength,
                      uint8_t     aTagLength,
