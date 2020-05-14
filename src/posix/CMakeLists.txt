@@ -54,8 +54,22 @@ endif()
 
 if(OT_DAEMON)
     include(daemon.cmake)
+
+    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+        set(CPACK_PACKAGE_NAME "openthread-daemon")
+    endif()
 else()
-    include(standalone.cmake)
+    if(OT_APP_CLI)
+        include(cli.cmake)
+    endif()
+
+    if(OT_APP_NCP)
+        include(ncp.cmake)
+    endif()
+
+    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+        set(CPACK_PACKAGE_NAME "openthread-standalone")
+    endif()
 endif()
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)

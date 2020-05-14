@@ -26,6 +26,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+option(OT_APP_CLI "enable CLI app" ON)
+option(OT_APP_NCP "enable NCP app" ON)
+option(OT_APP_RCP "enable RCP app" ON)
+
 option(OT_BACKBONE_ROUTER "enable backbone router functionality")
 if(OT_BACKBONE_ROUTER)
     list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=1")
