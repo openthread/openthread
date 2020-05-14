@@ -30,7 +30,8 @@
 set -e
 set -x
 
-at_exit() {
+at_exit()
+{
     EXIT_CODE=$?
 
     killall expect || true
@@ -41,12 +42,14 @@ at_exit() {
     exit $EXIT_CODE
 }
 
-build() {
+build()
+{
     make -f examples/Makefile-simulation
     make -f src/posix/Makefile-posix
 }
 
-check() {
+check()
+{
     trap at_exit INT TERM EXIT
 
     rm -rf tmp/
@@ -127,7 +130,8 @@ EOF
     test -n "{RADIO_VERSION}"
 }
 
-main() {
+main()
+{
     case "$1" in
         build)
             build

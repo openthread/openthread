@@ -81,7 +81,7 @@ do_scan_build()
         "-DMBEDTLS_DEBUG_C"
         "-I$(pwd)/third_party/mbedtls"
         "-I$(pwd)/third_party/mbedtls/repo/include"
-        "-DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
+        '-DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"'
     )
 
     configure_options=(

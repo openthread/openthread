@@ -30,12 +30,14 @@
 set -e
 set -x
 
-die() {
-	echo " *** ERROR: " $*
-	exit 1
+die()
+{
+    echo " *** ERROR: " $*
+    exit 1
 }
 
-at_exit() {
+at_exit()
+{
     EXIT_CODE=$?
 
     sudo killall expect || true
@@ -46,17 +48,19 @@ at_exit() {
     exit $EXIT_CODE
 }
 
-build() {
+build()
+{
     make -f examples/Makefile-simulation
     make -f src/posix/Makefile-posix PLATFORM_NETIF=1 PLATFORM_UDP=1 UDP_FORWARD=0 MAX_POWER_TABLE=1
 }
 
-check() {
+check()
+{
     trap at_exit INT TERM EXIT
 
     SOCAT_OUTPUT=/tmp/ot-socat
     OT_OUTPUT=/tmp/ot-output
-    socat -d -d pty,raw,echo=0 pty,raw,echo=0 > /dev/null 2> $SOCAT_OUTPUT &
+    socat -d -d pty,raw,echo=0 pty,raw,echo=0 >/dev/null 2>$SOCAT_OUTPUT &
     while true; do
         if test $(head -n2 $SOCAT_OUTPUT | wc -l) = 2; then
             RADIO_PTY=$(head -n1 $SOCAT_OUTPUT | grep -o '/dev/.\+')
@@ -70,7 +74,7 @@ check() {
     echo 'CORE_PTY' $CORE_PTY
 
     RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-rcp)"
-    $RADIO_NCP_PATH 1 > $RADIO_PTY < $RADIO_PTY &
+    $RADIO_NCP_PATH 1 >$RADIO_PTY <$RADIO_PTY &
 
     # Cover setting a valid network interface name.
     readonly VALID_NETIF_NAME="wan$(date +%H%M%S)"
@@ -79,7 +83,7 @@ check() {
         '--max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26'
     )
 
-    if [[ "${DAEMON}" = 1 ]]; then
+    if [[ ${DAEMON} == 1 ]]; then
         sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" "${options[@]}" -I "${VALID_NETIF_NAME}" ${CORE_PTY} &
         sleep 1
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl)"
@@ -94,11 +98,11 @@ check() {
     readonly INVALID_NETIF_NAME="wan0123456789123"
     sudo ${OT_CLI_CMD} -I "${INVALID_NETIF_NAME}" -n || test $? = 2
 
-    if [[ "${DAEMON}" = 1 ]]; then
+    if [[ ${DAEMON} == 1 ]]; then
         sudo ${OT_CLI_CMD} panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
     fi
 
-    sudo expect <<EOF > "${OT_OUTPUT}" &
+    sudo expect <<EOF >"${OT_OUTPUT}" &
 spawn ${OT_CLI_CMD}
 send "panid 0xface\r\n"
 expect "Done"
@@ -134,13 +138,13 @@ EOF
     extaddr=$(awk '/extaddr/{getline; print}' $OT_OUTPUT | tr -d '\r\n')
     echo "Extended address is: ${extaddr}"
 
-    if [[ "${DAEMON}" = 1 ]]; then
+    if [[ ${DAEMON} == 1 ]]; then
         sudo killall -9 expect || true
         sudo killall -9 ot-ctl || true
         NETIF_INDEX=$(ip link show "${VALID_NETIF_NAME}" | cut -f 1 -d ":" | head -n 1)
         sudo PATH="$(dirname ${OT_CLI_CMD}):${PATH}" \
-             python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" \
-             || die 'multicast group join failed'
+            python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" \
+            || die 'multicast group join failed'
     fi
 
     LEADER_ALOC=fdde:ad00:beef::ff:fe00:fc00
@@ -149,10 +153,11 @@ EOF
     echo "CoAP response is: ${coap_response}"
 
     # Verify CoAP response contains the extended address
-    [[ "${coap_response}" = *${extaddr}* ]] && echo 'Success' || die 'failed to get extended address'
+    [[ ${coap_response} == *${extaddr}* ]] && echo 'Success' || die 'failed to get extended address'
 }
 
-main() {
+main()
+{
     case $1 in
         build)
             build

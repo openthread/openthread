@@ -27,29 +27,32 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-die() {
+die()
+{
     echo " *** ERROR: " $*
     exit 1
 }
 
-cleanup() {
+cleanup()
+{
     # Clear logs and flash files
-    sudo rm tmp/*.flash tmp/*.data tmp/*.swap > /dev/null 2>&1
-    sudo rm *.log > /dev/null 2>&1
+    sudo rm tmp/*.flash tmp/*.data tmp/*.swap >/dev/null 2>&1
+    sudo rm *.log >/dev/null 2>&1
 
     # Clear any wpantund instances
-    sudo killall wpantund > /dev/null 2>&1
+    sudo killall wpantund >/dev/null 2>&1
 
     wpan_interfaces=$(ifconfig 2>/dev/null | grep -o wpan[0-9]*)
 
     for interface in $wpan_interfaces; do
-        sudo ip link delete $interface > /dev/null 2>&1
+        sudo ip link delete $interface >/dev/null 2>&1
     done
 
     sleep 0.3
 }
 
-run() {
+run()
+{
     counter=0
     while true; do
 
@@ -60,7 +63,7 @@ run() {
 
         # We allow a failed test to be retried up to 3 attempts.
         if [ "$counter" -lt 2 ]; then
-            counter=$((counter+1))
+            counter=$((counter + 1))
             echo Attempt $counter running "$1" failed. Trying again.
             cleanup
             sleep 10
@@ -82,7 +85,7 @@ else
 fi
 
 case $TORANJ_POSIX_RCP_MODEL in
-    1|yes)
+    1 | yes)
         use_posix_with_rcp=yes
         ;;
     *)
