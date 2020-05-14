@@ -557,6 +557,8 @@ otError Diags::ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, siz
 {
     otError error = OT_ERROR_NONE;
 
+    // This `rcp` command is for debugging and testing only, building only when NDEBUG is not defined
+    // so that it will be excluded from release build.
 #if !defined(NDEBUG) && defined(OPENTHREAD_RADIO)
     if (aArgsLength > 0 && !strcmp(aArgs[0], "rcp"))
     {
