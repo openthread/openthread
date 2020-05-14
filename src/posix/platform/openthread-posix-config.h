@@ -68,6 +68,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+ *
+ * Define as 1 to enable pseudo-reset.
+ *
+ */
+#ifndef OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+#define OPENTHREAD_PLATFORM_USE_PSEUDO_RESET 0
+#endif
+
+/**
  * RCP bus UART.
  *
  * @note This value is also for simulated UART bus.

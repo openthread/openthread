@@ -42,11 +42,17 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 
-uint64_t gNodeId = 0;
+uint64_t    gNodeId = 0;
+extern bool gPlatformPseudoResetWasRequested;
 
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 {
     otInstance *instance = NULL;
+
+    if (gPlatformPseudoResetWasRequested)
+    {
+        gPlatformPseudoResetWasRequested = false;
+    }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeInit(static_cast<uint16_t>(atoi(aPlatformConfig->mRadioConfig)));
@@ -65,6 +71,11 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #endif
 
     return instance;
+}
+
+bool otSysPseudoResetWasRequested(void)
+{
+    return gPlatformPseudoResetWasRequested;
 }
 
 void otSysDeinit(void)
