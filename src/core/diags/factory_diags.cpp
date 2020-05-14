@@ -160,9 +160,6 @@ Diags::Diags(Instance &aInstance)
     , mRepeatActive(false)
 {
     mStats.Clear();
-
-    otPlatDiagChannelSet(mChannel);
-    otPlatDiagTxPowerSet(mTxPower);
 }
 
 otError Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
@@ -183,7 +180,7 @@ otError Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[], char *aOutput,
         VerifyOrExit(value >= Radio::kChannelMin && value <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
 
         mChannel = static_cast<uint8_t>(value);
-        Get<Radio>().Receive(mChannel);
+        IgnoreError(Get<Radio>().Receive(mChannel));
         otPlatDiagChannelSet(mChannel);
 
         snprintf(aOutput, aOutputMaxLen, "set channel to %d\r\nstatus 0x%02x\r\n", mChannel, error);
@@ -291,7 +288,10 @@ otError Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[], char *aOutput, s
 
     otError error = OT_ERROR_NONE;
 
-    Get<Radio>().Enable();
+    otPlatDiagChannelSet(mChannel);
+    otPlatDiagTxPowerSet(mTxPower);
+
+    IgnoreError(Get<Radio>().Enable());
     Get<Radio>().SetPromiscuous(true);
     otPlatAlarmMilliStop(&GetInstance());
     SuccessOrExit(error = Get<Radio>().Receive(mChannel));
@@ -370,7 +370,7 @@ void Diags::TransmitPacket(void)
         mTxPacket->mPsdu[i] = i;
     }
 
-    Get<Radio>().Transmit(*static_cast<Mac::TxFrame *>(mTxPacket));
+    IgnoreError(Get<Radio>().Transmit(*static_cast<Mac::TxFrame *>(mTxPacket)));
 }
 
 otError Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
@@ -536,7 +536,7 @@ exit:
     {
     case OT_ERROR_NONE:
 
-        ProcessCmd(argCount, &aArgsector[0], aOutput, aOutputMaxLen);
+        IgnoreError(ProcessCmd(argCount, &aArgsector[0], aOutput, aOutputMaxLen));
         break;
 
     case OT_ERROR_NO_BUFS:
@@ -557,10 +557,24 @@ otError Diags::ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, siz
 {
     otError error = OT_ERROR_NONE;
 
+    // This `rcp` command is for debugging and testing only, building only when NDEBUG is not defined
+    // so that it will be excluded from release build.
+#if !defined(NDEBUG) && defined(OPENTHREAD_RADIO)
+    if (aArgsLength > 0 && !strcmp(aArgs[0], "rcp"))
+    {
+        aArgs++;
+        aArgsLength--;
+    }
+#endif
+
     if (aArgsLength == 0)
     {
         snprintf(aOutput, aOutputMaxLen, "diagnostics mode is %s\r\n", otPlatDiagModeGet() ? "enabled" : "disabled");
         ExitNow();
+    }
+    else
+    {
+        aOutput[0] = '\0';
     }
 
     for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)

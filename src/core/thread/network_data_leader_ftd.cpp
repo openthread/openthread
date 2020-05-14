@@ -264,7 +264,7 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
         }
     }
 
-    SetCommissioningData(tlvs, static_cast<uint8_t>(length));
+    IgnoreError(SetCommissioningData(tlvs, static_cast<uint8_t>(length)));
 
     state = MeshCoP::StateTlv::kAccept;
 
@@ -346,7 +346,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
     if (message->GetLength() == message->GetOffset())
     {
         // no payload, remove coap payload marker
-        message->SetLength(message->GetLength() - 1);
+        IgnoreError(message->SetLength(message->GetLength() - 1));
     }
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
@@ -701,7 +701,7 @@ exit:
     return status;
 }
 
-otError Leader::RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength)
+void Leader::RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength)
 {
     otError               error = OT_ERROR_NONE;
     const NetworkDataTlv *end   = reinterpret_cast<const NetworkDataTlv *>(aTlvs + aTlvsLength);
@@ -740,7 +740,11 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint
     otDumpDebgNetData("add done", mTlvs, mLength);
 
 exit:
-    return error;
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogNoteNetData("Failed to register network data: %s", otThreadErrorToString(error));
+    }
 }
 
 otError Leader::AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags)

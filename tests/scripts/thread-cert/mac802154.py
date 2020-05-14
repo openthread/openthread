@@ -42,6 +42,15 @@ from net_crypto import (
 )
 
 
+class KeyIdMode0Exception(Exception):
+    """
+    Raised when key id mode of packet is 0.
+    Such packet wouldn't be handled in test scripts,
+    but it's not abnormal behavior.
+    """
+    pass
+
+
 class DeviceDescriptors:
     """Class representing 802.15.4 Device Descriptors."""
 
@@ -377,11 +386,13 @@ class MacFrame:
         key_id_mode = (security_control & 0x18) >> 3
 
         if key_id_mode == 0:
-            key_id = data.read(9)
+            raise KeyIdMode0Exception
         elif key_id_mode == 1:
             key_id = data.read(1)
         elif key_id_mode == 2:
             key_id = data.read(5)
+        elif key_id_mode == 3:
+            key_id = data.read(9)
         else:
             pass
 

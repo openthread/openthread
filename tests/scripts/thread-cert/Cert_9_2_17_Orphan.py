@@ -30,7 +30,7 @@
 import unittest
 
 import config
-import node
+import thread_cert
 
 CHANNEL1 = 11
 CHANNEL2 = 18
@@ -42,44 +42,38 @@ LEADER2 = 2
 ED1 = 3
 
 
-class Cert_9_2_17_Orphan(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 4):
-            self.nodes[i] = node.Node(i, (i == ED1), simulator=self.simulator)
-
-        self.nodes[LEADER1].set_active_dataset(10,
-                                               channel=CHANNEL1,
-                                               panid=PANID_INIT,
-                                               channel_mask=CHANNEL_MASK)
-        self.nodes[LEADER1].set_mode('rsdn')
-        self.nodes[LEADER1].add_whitelist(self.nodes[ED1].get_addr64())
-        self.nodes[LEADER1].enable_whitelist()
-        self.nodes[LEADER1].set_router_selection_jitter(1)
-
-        self.nodes[LEADER2].set_active_dataset(20,
-                                               channel=CHANNEL2,
-                                               panid=PANID_INIT,
-                                               channel_mask=CHANNEL_MASK)
-        self.nodes[LEADER2].set_mode('rsdn')
-        self.nodes[LEADER2].enable_whitelist()
-        self.nodes[LEADER2].set_router_selection_jitter(1)
-
-        self.nodes[ED1].set_channel(CHANNEL1)
-        self.nodes[ED1].set_mode('rsn')
-        self.nodes[ED1].set_panid(PANID_INIT)
-        self.nodes[ED1].add_whitelist(self.nodes[LEADER1].get_addr64())
-        self.nodes[ED1].enable_whitelist()
-        self.nodes[ED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_9_2_17_Orphan(thread_cert.TestCase):
+    topology = {
+        LEADER1: {
+            'active_dataset': {
+                'timestamp': 10,
+                'panid': PANID_INIT,
+                'channel': CHANNEL1,
+                'channel_mask': CHANNEL_MASK
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1,
+            'whitelist': [ED1]
+        },
+        LEADER2: {
+            'active_dataset': {
+                'timestamp': 20,
+                'panid': PANID_INIT,
+                'channel': CHANNEL2,
+                'channel_mask': CHANNEL_MASK
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1
+        },
+        ED1: {
+            'channel': CHANNEL1,
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': PANID_INIT,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [LEADER1]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER1].start()

@@ -4,19 +4,17 @@ The OpenThread diagnostics module is a tool for debugging platform hardware manu
 
 The diagnostics module supports common diagnostics features that are listed below, and it also provides a mechanism for expanding platform specific diagnostics features.
 
-
 ## Common Diagnostics Command List
 
-* [diag](#diag)
-* [diag start](#diag-start)
-* [diag channel](#diag-channel)
-* [diag power](#diag-power)
-* [diag send](#diag-send-packets-length)
-* [diag repeat](#diag-repeat-delay-length)
-* [diag radio](#diag-radio)
-* [diag stats](#diag-stats)
-* [diag stop](#diag-stop)
-
+- [diag](#diag)
+- [diag start](#diag-start)
+- [diag channel](#diag-channel)
+- [diag power](#diag-power)
+- [diag send](#diag-send-packets-length)
+- [diag repeat](#diag-repeat-delay-length)
+- [diag radio](#diag-radio)
+- [diag stats](#diag-stats)
+- [diag stop](#diag-stop)
 
 ### diag
 
@@ -154,6 +152,7 @@ Clear statistics during diagnostics mode.
 > diag stats clear
 stats cleared
 ```
+
 ### diag stop
 
 Stop diagnostics mode and print statistics.
@@ -168,4 +167,3 @@ last received packet: rssi=-61, lqi=98
 stop diagnostics mode
 status 0x00
 ```
-

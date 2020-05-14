@@ -166,7 +166,7 @@ private:
 #endif
 
     BackboneRouterConfig mConfig;       ///< Primary Backbone Router information.
-    otIp6Prefix          mDomainPrefix; ///< Domain Prefix on the Thread Network.
+    otIp6Prefix          mDomainPrefix; ///< Domain Prefix in the Thread network.
 };
 
 } // namespace BackboneRouter

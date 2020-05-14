@@ -29,40 +29,29 @@
 
 import unittest
 
-import config
-import node
+import thread_cert
 
 LEADER = 1
 ED = 2
 
 
-class Cert_6_6_2_KeyIncrement1(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 3):
-            self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[LEADER].set_key_switch_guardtime(0)
-        self.nodes[LEADER].set_key_sequence_counter(127)
-
-        self.nodes[ED].set_panid(0xface)
-        self.nodes[ED].set_mode('rsn')
-        self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED].enable_whitelist()
-        self.nodes[ED].set_key_switch_guardtime(0)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_6_6_2_KeyIncrement1(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'key_sequence_counter': 127,
+            'key_switch_guardtime': 0,
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ED]
+        },
+        ED: {
+            'is_mtd': True,
+            'key_switch_guardtime': 0,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()

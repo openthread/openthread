@@ -62,6 +62,10 @@ override CXXFLAGS  := $(filter-out -Wshadow,$(CXXFLAGS))
 override CFLAGS    := $(filter-out -Wundef,$(CFLAGS))
 override CXXFLAGS  := $(filter-out -Wundef,$(CXXFLAGS))
 
+# Do not enable -Wcast-align for Silicon Labs SDK sources
+override CFLAGS    := $(filter-out -Wcast-align,$(CFLAGS))
+override CXXFLAGS  := $(filter-out -Wcast-align,$(CXXFLAGS))
+
 EFR32_BOARD_DIR = $(shell echo $(BOARD) | tr A-Z a-z)
 
 SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7
@@ -136,6 +140,7 @@ SILABS_COMMON_SOURCES                                                           
     gecko_sdk_suite/v2.7/hardware/kit/common/bsp/bsp_stk_leds.c                           \
     gecko_sdk_suite/v2.7/platform/emdrv/dmadrv/src/dmadrv.c                               \
     gecko_sdk_suite/v2.7/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c                 \
+    gecko_sdk_suite/v2.7/platform/emdrv/nvm3/src/nvm3_default.c                           \
     gecko_sdk_suite/v2.7/platform/emdrv/nvm3/src/nvm3_hal_flash.c                         \
     gecko_sdk_suite/v2.7/platform/emdrv/nvm3/src/nvm3_lock.c                              \
     gecko_sdk_suite/v2.7/platform/emdrv/uartdrv/src/uartdrv.c                             \

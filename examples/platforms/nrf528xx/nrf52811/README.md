@@ -1,19 +1,16 @@
 # OpenThread on nRF52811 Example
 
-This directory contains example platform drivers for [Nordic Semiconductor nRF52811 SoC][nRF52811].
+This directory contains example platform drivers for [Nordic Semiconductor nRF52811 SoC][nrf52811].
 
-[nRF52811]: https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF52811
+[nrf52811]: https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF52811
 
-This SoC is meant to be used in the configuration that involves the Host Processor and the IEEE 802.15.4 radio.
-In this configuration, the full OpenThread stack is running on the Host Processor and the nRF52811 SoC acts as an IEEE 802.15.4 radio.
-The radio is running a minimal OpenThread implementation that allows for communication between the Host Processor and the nRF52811.
-In this architecture the nRF52811 SoC device is called RCP (Radio Co-Processor).
+This SoC is meant to be used in the configuration that involves the Host Processor and the IEEE 802.15.4 radio. In this configuration, the full OpenThread stack is running on the Host Processor and the nRF52811 SoC acts as an IEEE 802.15.4 radio. The radio is running a minimal OpenThread implementation that allows for communication between the Host Processor and the nRF52811. In this architecture the nRF52811 SoC device is called RCP (Radio Co-Processor).
 
 The nRF52811 platform is currently under development.
 
-For the SoC capable to a run full OpenThread stack, see the [nRF52840 platform][nRF52840-page].
+For the SoC capable to a run full OpenThread stack, see the [nRF52840 platform][nrf52840-page].
 
-[nRF52840-page]: ./../nrf52840/README.md
+[nrf52840-page]: ./../nrf52840/README.md
 
 ## Emulation on nRF52840
 
@@ -38,28 +35,28 @@ $ ./script/bootstrap
 
 ### Flashing and debugging tools
 
-[nRF-Command-Line-Tools]: https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF-Command-Line-Tools
+[nrf-command-line-tools]: https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF-Command-Line-Tools
 
-Install the [nRF Command Line Tools][nRF-Command-Line-Tools] to flash, debug, and make use of logging features on the nRF52811 DK with SEGGER J-Link.
+Install the [nRF Command Line Tools][nrf-command-line-tools] to flash, debug, and make use of logging features on the nRF52811 DK with SEGGER J-Link.
 
 ## Building the examples
 
 With this platform, you can build:
- - Limited version of CLI example (e.g. without Thread commissioning functionality)
- - RCP example that consists of two parts:
-    - firmware that is flashed to the nRF52811 SoC
-    - host executables to be executed on a POSIX platform in case of the RCP usage
+
+- Limited version of CLI example (e.g. without Thread commissioning functionality)
+- RCP example that consists of two parts:
+  - firmware that is flashed to the nRF52811 SoC
+  - host executables to be executed on a POSIX platform in case of the RCP usage
 
 ### Building host executables
+
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
 $ make -f src/posix/Makefile-posix
 ```
 
-After a successful build, executables can be found in
-`<path-to-openthread>/openthread/output/posix/<system-architecture>/bin`.
-It is recommended to copy them to `/usr/bin` for easier access.
+After a successful build, executables can be found in `<path-to-openthread>/openthread/output/posix/<system-architecture>/bin`. It is recommended to copy them to `/usr/bin` for easier access.
 
 ### Building the firmware with UART support
 
@@ -71,9 +68,8 @@ $ ./bootstrap
 $ make -f examples/Makefile-nrf52811
 ```
 
-After a successful build, the `elf` files can be found in
-`<path-to-openthread>/output/nrf52811/bin`.
-You can convert them to hex using `arm-none-eabi-objcopy`:
+After a successful build, the `elf` files can be found in `<path-to-openthread>/output/nrf52811/bin`. You can convert them to hex using `arm-none-eabi-objcopy`:
+
 ```bash
 $ arm-none-eabi-objcopy -O ihex ot-cli-mtd ot-cli-mtd.hex
 $ arm-none-eabi-objcopy -O ihex ot-rcp ot-rcp.hex
@@ -81,14 +77,13 @@ $ arm-none-eabi-objcopy -O ihex ot-rcp ot-rcp.hex
 
 ### Building the firmware with native SPI support
 
-You can build the libraries with support for the native SPI Slave.
-To do so, build the libraries with the following parameter:
+You can build the libraries with support for the native SPI Slave. To do so, build the libraries with the following parameter:
+
 ```
 $ make -f examples/Makefile-nrf52811 NCP_SPI=1
 ```
 
 With this option enabled, the RCP example can communicate through SPI with wpantund (provided that the wpantund host supports SPI Master). To achieve this communication, choose the right SPI device in the wpantund configuration file, `/etc/wpantund.conf`. See the following example.
-
 
 ```
 Config:NCP:SocketPath "system:/usr/bin/ot-ncp /usr/bin/spi-hdlc-adapter -- '--stdio -i /sys/class/gpio/gpio25 /dev/spidev0.1'"
@@ -105,8 +100,9 @@ The default SPI Slave pin configuration for nRF52811 is defined in `examples/pla
 When the Thread device is configured to obtain the Thread Network security credentials with either Thread Commissioning or an out-of-band method, the extended MAC address should be constructed out of the globally unique IEEE EUI-64.
 
 The IEEE EUI-64 address consists of two parts:
- - 24 bits of MA-L (MAC Address Block Large), formerly called OUI (Organizationally Unique Identifier)
- - 40-bit device unique identifier
+
+- 24 bits of MA-L (MAC Address Block Large), formerly called OUI (Organizationally Unique Identifier)
+- 40-bit device unique identifier
 
 By default, the device uses Nordic Semiconductor's MA-L (f4-ce-36). You can modify it by overwriting the `OPENTHREAD_CONFIG_STACK_VENDOR_OUI` define, located in the `openthread-core-nrf52811-config.h` file. This value must be publicly registered by the IEEE Registration Authority.
 
@@ -116,8 +112,7 @@ After the Thread Network security credentials have been successfully obtained, t
 
 ## Flashing binaries
 
-Once the examples and libraries are built, flash the compiled binaries onto nRF52811
-using `nrfjprog` that is part of the [nRF Command Line Tools][nRF-Command-Line-Tools].
+Once the examples and libraries are built, flash the compiled binaries onto nRF52811 using `nrfjprog` that is part of the [nRF Command Line Tools][nrf-command-line-tools].
 
 Run the following command:
 
@@ -137,9 +132,7 @@ To test the example:
 
 4. Connect the RCP to the PC.
 
-5. Start the ot-cli host application and connect with the RCP.
-   It is assumed that the default UART version of RCP is being used (make executed without the NCP-SPI=1 flag).
-   On Linux system, call a port name, for example `/dev/ttyACM0` for the first connected development kit, and `/dev/ttyACM1` for the second one.
+5. Start the ot-cli host application and connect with the RCP. It is assumed that the default UART version of RCP is being used (make executed without the NCP-SPI=1 flag). On Linux system, call a port name, for example `/dev/ttyACM0` for the first connected development kit, and `/dev/ttyACM1` for the second one.
 
    ```bash
    $ /usr/bin/ot-cli /dev/ttyACM0 115200
@@ -185,20 +178,19 @@ To test the example:
 
    b. Connect to the used COM port with the following direct UART settings:
 
-   * Baud rate: 115200
-   * 8 data bits
-   * 1 stop bit
-   * No parity
-   * HW flow control: RTS/CTS
-     This allows you to view the raw UART output.
+   - Baud rate: 115200
+   - 8 data bits
+   - 1 stop bit
+   - No parity
+   - HW flow control: RTS/CTS This allows you to view the raw UART output.
 
    c. Run the following command to connect to the second board.
 
-      ```shell
-      screen /dev/ttyACM1 115200
-      ```
+   ```shell
+   screen /dev/ttyACM1 115200
+   ```
 
-      You are now connected with the CLI on the second board
+   You are now connected with the CLI on the second board
 
 8. Use the following commands to attach to the network on the second board:
 
@@ -238,9 +230,9 @@ To test the example:
     16 bytes from fd3d:b50b:f96d:722d:558:f56b:d688:799: icmp_seq=1 hlim=64 time=24ms
     ```
 
-For a list of all available commands, visit [OpenThread CLI Reference README.md][CLI].
+For a list of all available commands, visit [OpenThread CLI Reference README.md][cli].
 
-[CLI]: ./../../../src/cli/README.md
+[cli]: ./../../../src/cli/README.md
 
 ## SEGGER J-Link tools
 
@@ -248,12 +240,12 @@ SEGGER J-Link tools allow to debug and flash generated firmware using on-board d
 
 ### Working with RTT logging
 
-By default, the OpenThread's logging module provides functions to output logging
-information over SEGGER's Real Time Transfer (RTT).
+By default, the OpenThread's logging module provides functions to output logging information over SEGGER's Real Time Transfer (RTT).
 
 You can set the desired log level by using the `OPENTHREAD_CONFIG_LOG_LEVEL` define.
 
 To enable the highest verbosity level, append `FULL_LOGS` flag to the `make` command:
+
 ```
 $ make -f examples/Makefile-nrf52811 FULL_LOGS=1
 ```
@@ -269,10 +261,13 @@ $ make -f examples/Makefile-nrf52811 FULL_LOGS=1
 
 1. Connect the DK to your machine with a USB cable.
 2. Run `JLinkExe` to connect to the target. For example:
+
 ```
 JLinkExe -device NRF52810_XXAA -if SWD -speed 4000 -autoconnect 1 -SelectEmuBySN <SEGGER_ID> -RTTTelnetPort 19021
 ```
+
 3. Run `JLinkRTTTelnet` to obtain the RTT logs from the connected device in a separate console. For example:
+
 ```
 JLinkRTTClient -RTTTelnetPort 19021
 ```
@@ -288,22 +283,28 @@ Depending on your version, due to a known issue in SEGGER's J-Link firmware, you
 3. From the Specify Target Device dropdown menu, select `NRF52810_XXAA`.
 4. From the Target Interface & Speed dropdown menu, select `SWD`.
 5. Run the following command:
+
 ```
 MSDDisable
 ```
+
 6. Power cycle the DK.
 
 #### Disabling the Mass Storage Device on Linux
 
 1. Connect the DK to your machine with a USB cable.
 2. Run `JLinkExe` to connect to the target. For example:
+
 ```
 JLinkExe -device NRF52810_XXAA -if SWD -speed 4000 -autoconnect 1 -SelectEmuBySN <SEGGER_ID>
 ```
+
 3. Run the following command:
+
 ```
 MSDDisable
 ```
+
 4. Power cycle the DK.
 
 ### Hardware Flow Control detection
@@ -321,39 +322,45 @@ To avoid potential race conditions, you can force HWFC and bypass the runtime au
 3. From the Specify Target Device dropdown menu, select `NRF52810_XXAA`.
 4. From the Target Interface & Speed dropdown menu, select `SWD`.
 5. Run the following command:
+
 ```
 SetHWFC Force
 ```
+
 6. Power cycle the DK.
 
 #### Disabling the HWFC detection on Linux
 
 1. Connect the DK to your machine with a USB cable.
 2. Run `JLinkExe` to connect to the target. For example:
+
 ```
 JLinkExe -device NRF52810_XXAA -if SWD -speed 4000 -autoconnect 1 -SelectEmuBySN <SEGGER_ID>
 ```
+
 3. Run the following command:
+
 ```
 SetHWFC Force
 ```
+
 4. Power cycle the DK.
 
-You can find more details [here][J-Link-OB].
+You can find more details [here][j-link-ob].
 
-[J-Link-OB]: https://wiki.segger.com/J-Link_OB_SAM3U_NordicSemi#Hardware_flow_control_support
+[j-link-ob]: https://wiki.segger.com/J-Link_OB_SAM3U_NordicSemi#Hardware_flow_control_support
 
 ## Diagnostic module
 
-nRF52811 supports [OpenThread Diagnostics Module][DIAG], with some additional features.
+nRF52811 supports [OpenThread Diagnostics Module][diag], with some additional features.
 
-For more information, see [nRF Diag command reference][nRFDIAG].
+For more information, see [nRF Diag command reference][nrfdiag].
 
-[DIAG]: ./../../../src/core/diags/README.md
-[nRFDIAG]: ./../DIAG.md
+[diag]: ./../../../src/core/diags/README.md
+[nrfdiag]: ./../DIAG.md
 
 ## Radio driver documentation
 
-The radio driver documentation includes *.uml state machines sequence diagrams that can be opened with [PlantUML][PlantUML-url].
+The radio driver documentation includes \*.uml state machines sequence diagrams that can be opened with [PlantUML][plantuml-url].
 
-[PlantUML-url]: http://plantuml.com/
+[plantuml-url]: http://plantuml.com/

@@ -56,10 +56,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     instance = otInstanceInitSingle();
     otCliUartInit(instance);
-    otLinkSetPanId(instance, panId);
-    otIp6SetEnabled(instance, true);
-    otThreadSetEnabled(instance, true);
-    otThreadBecomeLeader(instance);
+    IgnoreError(otLinkSetPanId(instance, panId));
+    IgnoreError(otIp6SetEnabled(instance, true));
+    IgnoreError(otThreadSetEnabled(instance, true));
+    IgnoreError(otThreadBecomeLeader(instance));
 
     buf = static_cast<uint8_t *>(malloc(size));
 

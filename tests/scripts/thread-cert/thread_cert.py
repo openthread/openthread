@@ -27,11 +27,14 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import os
 import unittest
 
 import config
 import debug
 from node import Node
+
+PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
 DEFAULT_PARAMS = {
     'is_mtd': False,
@@ -39,7 +42,7 @@ DEFAULT_PARAMS = {
     'mode': 'rsdn',
     'panid': 0xface,
     'whitelist': None,
-    'version': '1.2',
+    'version': '1.1',
 }
 """Default configurations when creating nodes."""
 
@@ -53,14 +56,14 @@ class TestCase(unittest.TestCase):
     The `topology` member of sub-class is used to create test topology.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.simulator = config.create_default_simulator()
-        self.nodes = {}
-
     def setUp(self):
         """Create simulator, nodes and apply configurations.
         """
+        self._clean_up_tmp()
+
+        self.simulator = config.create_default_simulator()
+        self.nodes = {}
+
         initial_topology = {}
         for i, params in self.topology.items():
             if params:
@@ -78,7 +81,61 @@ class TestCase(unittest.TestCase):
             )
             self.nodes[i].set_panid(params['panid'])
             self.nodes[i].set_mode(params['mode'])
-            self.nodes[i].set_addr64(format(EXTENDED_ADDRESS_BASE + i, '016x'))
+
+            if 'partition_id' in params:
+                self.nodes[i].set_partition_id(params['partition_id'])
+            if 'channel' in params:
+                self.nodes[i].set_channel(params['channel'])
+            if 'masterkey' in params:
+                self.nodes[i].set_masterkey(params['masterkey'])
+            if 'network_name' in params:
+                self.nodes[i].set_network_name(params['network_name'])
+
+            if 'router_selection_jitter' in params:
+                self.nodes[i].set_router_selection_jitter(
+                    params['router_selection_jitter'])
+            if 'router_upgrade_threshold' in params:
+                self.nodes[i].set_router_upgrade_threshold(
+                    params['router_upgrade_threshold'])
+            if 'router_downgrade_threshold' in params:
+                self.nodes[i].set_router_downgrade_threshold(
+                    params['router_downgrade_threshold'])
+
+            if 'timeout' in params:
+                self.nodes[i].set_timeout(params['timeout'])
+
+            if 'active_dataset' in params:
+                self.nodes[i].set_active_dataset(
+                    params['active_dataset']['timestamp'],
+                    panid=params['active_dataset'].get('panid'),
+                    channel=params['active_dataset'].get('channel'),
+                    channel_mask=params['active_dataset'].get('channel_mask'),
+                    master_key=params['active_dataset'].get('master_key'))
+
+            if 'pending_dataset' in params:
+                self.nodes[i].set_pending_dataset(
+                    params['pending_dataset']['pendingtimestamp'],
+                    params['pending_dataset']['activetimestamp'],
+                    panid=params['pending_dataset'].get('panid'),
+                    channel=params['pending_dataset'].get('channel'))
+
+            if 'key_switch_guardtime' in params:
+                self.nodes[i].set_key_switch_guardtime(
+                    params['key_switch_guardtime'])
+            if 'key_sequence_counter' in params:
+                self.nodes[i].set_key_sequence_counter(
+                    params['key_sequence_counter'])
+
+            if 'network_id_timeout' in params:
+                self.nodes[i].set_network_id_timeout(
+                    params['network_id_timeout'])
+
+            if 'context_reuse_delay' in params:
+                self.nodes[i].set_context_reuse_delay(
+                    params['context_reuse_delay'])
+
+            if 'max_children' in params:
+                self.nodes[i].set_max_children(params['max_children'])
 
         # we have to add whitelist after nodes are all created
         for i, params in initial_topology.items():
@@ -87,7 +144,11 @@ class TestCase(unittest.TestCase):
                 continue
 
             for j in whitelist:
-                self.nodes[i].add_whitelist(self.nodes[j].get_addr64())
+                rssi = None
+                if isinstance(j, tuple):
+                    j, rssi = j
+                self.nodes[i].add_whitelist(self.nodes[j].get_addr64(),
+                                            rssi=rssi)
             self.nodes[i].enable_whitelist()
 
         self._inspector = debug.Inspector(self)
@@ -101,7 +162,10 @@ class TestCase(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
             node.destroy()
+
         self.simulator.stop()
+        del self.nodes
+        del self.simulator
 
     def flush_all(self):
         """Flush away all captured messages of all nodes.
@@ -119,3 +183,11 @@ class TestCase(unittest.TestCase):
         for i in nodes:
             if i in list(self.nodes.keys()):
                 self.simulator.get_messages_sent_by(i)
+
+    def _clean_up_tmp(self):
+        """
+        Clean up node files in tmp directory
+        """
+        os.system(
+            f"rm -f tmp/{PORT_OFFSET}_*.flash tmp/{PORT_OFFSET}_*.data tmp/{PORT_OFFSET}_*.swap"
+        )

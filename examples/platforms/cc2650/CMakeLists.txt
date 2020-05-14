@@ -71,12 +71,13 @@ target_link_libraries(openthread-cc2650
     PUBLIC
         cc26x0-driver
     PRIVATE
-        mbedtls
+        ${OT_MBEDTLS}
         openthread-platform-utils
 )
 
 target_link_options(openthread-cc2650
     PUBLIC
+        -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 

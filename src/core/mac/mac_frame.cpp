@@ -37,10 +37,8 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if !OPENTHREAD_RADIO || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 #include "crypto/aes_ccm.hpp"
-#include "thread/key_manager.hpp"
 #endif
 
 namespace ot {
@@ -48,92 +46,22 @@ namespace Mac {
 
 void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
 {
-    uint8_t *bytes  = GetPsdu();
-    uint8_t  length = 0;
+    uint8_t *bytes = GetPsdu();
+    uint8_t  length;
 
     // Frame Control Field
     Encoding::LittleEndian::WriteUint16(aFcf, bytes);
-    length += kFcfSize;
 
-    // Sequence Number
-    length += kDsnSize;
-
-    // Destination PAN
-    if (IsDstPanIdPresent(aFcf))
-    {
-        length += sizeof(PanId);
-    }
-
-    // Destination Address
-    switch (aFcf & kFcfDstAddrMask)
-    {
-    case kFcfDstAddrNone:
-        break;
-
-    case kFcfDstAddrShort:
-        length += sizeof(ShortAddress);
-        break;
-
-    case kFcfDstAddrExt:
-        length += sizeof(ExtAddress);
-        break;
-
-    default:
-        OT_ASSERT(false);
-    }
-
-    // Source PAN
-    if (IsSrcPanIdPresent(aFcf))
-    {
-        length += sizeof(PanId);
-    }
-
-    // Source Address
-    switch (aFcf & kFcfSrcAddrMask)
-    {
-    case kFcfSrcAddrNone:
-        break;
-
-    case kFcfSrcAddrShort:
-        length += sizeof(ShortAddress);
-        break;
-
-    case kFcfSrcAddrExt:
-        length += sizeof(ExtAddress);
-        break;
-
-    default:
-        OT_ASSERT(false);
-    }
+    length = CalculateAddrFieldSize(aFcf);
+    OT_ASSERT(length != kInvalidSize);
 
     // Security Header
     if (aFcf & kFcfSecurityEnabled)
     {
         bytes[length] = aSecurityControl;
 
-        if (aSecurityControl & kSecLevelMask)
-        {
-            length += kSecurityControlSize + kFrameCounterSize;
-        }
-
-        switch (aSecurityControl & kKeyIdModeMask)
-        {
-        case kKeyIdMode0:
-            length += kKeySourceSizeMode0;
-            break;
-
-        case kKeyIdMode1:
-            length += kKeySourceSizeMode1 + kKeyIndexSize;
-            break;
-
-        case kKeyIdMode2:
-            length += kKeySourceSizeMode2 + kKeyIndexSize;
-            break;
-
-        case kKeyIdMode3:
-            length += kKeySourceSizeMode3 + kKeyIndexSize;
-            break;
-        }
+        length += CalculateSecurityHeaderSize(aSecurityControl);
+        length += CalculateMicSize(aSecurityControl);
     }
 
     // Command ID
@@ -142,7 +70,10 @@ void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
         length += kCommandIdSize;
     }
 
-    SetPsduLength(length + GetFooterLength());
+    // FCS
+    length += GetFcsSize();
+
+    SetPsduLength(length);
 }
 
 uint16_t Frame::GetFrameControlField(void) const
@@ -189,7 +120,6 @@ void Frame::SetFramePending(bool aFramePending)
 uint8_t Frame::FindDstPanIdIndex(void) const
 {
     uint8_t index = 0;
-
     VerifyOrExit((GetFrameControlField() & kFcfDstAddrMask) != kFcfDstAddrNone, index = kInvalidIndex);
 
     //  Frame Control Field and Sequence Number
@@ -235,7 +165,6 @@ otError Frame::GetDstPanId(PanId &aPanId) const
 {
     otError error = OT_ERROR_NONE;
     uint8_t index = FindDstPanIdIndex();
-
     VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
     aPanId = Encoding::LittleEndian::ReadUint16(GetPsdu() + index);
 
@@ -253,7 +182,11 @@ void Frame::SetDstPanId(PanId aPanId)
 
 uint8_t Frame::FindDstAddrIndex(void) const
 {
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    return kFcfSize + kDsnSize + (IsDstPanIdPresent() ? sizeof(PanId) : 0);
+#else
     return kFcfSize + kDsnSize + sizeof(PanId);
+#endif
 }
 
 otError Frame::GetDstAddr(Address &aAddress) const
@@ -312,7 +245,7 @@ void Frame::SetDstAddr(const Address &aAddress)
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 }
 
@@ -490,7 +423,7 @@ void Frame::SetSrcAddr(const Address &aAddress)
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 }
 
@@ -716,39 +649,44 @@ uint8_t Frame::GetHeaderLength(void) const
 
 uint8_t Frame::GetFooterLength(void) const
 {
-    uint8_t footerLength = 0;
+    uint8_t footerLength = static_cast<uint8_t>(GetFcsSize());
     uint8_t index        = FindSecurityHeaderIndex();
 
     VerifyOrExit(index != kInvalidIndex, OT_NOOP);
+    footerLength += CalculateMicSize((GetPsdu() + index)[0]);
 
-    switch ((GetPsdu() + index)[0] & kSecLevelMask)
+exit:
+    return footerLength;
+}
+
+uint8_t Frame::CalculateMicSize(uint8_t aSecurityControl)
+{
+    uint8_t micSize = 0;
+
+    switch (aSecurityControl & kSecLevelMask)
     {
     case kSecNone:
     case kSecEnc:
-        footerLength += kMic0Size;
+        micSize = kMic0Size;
         break;
 
     case kSecMic32:
     case kSecEncMic32:
-        footerLength += kMic32Size;
+        micSize = kMic32Size;
         break;
 
     case kSecMic64:
     case kSecEncMic64:
-        footerLength += kMic64Size;
+        micSize = kMic64Size;
         break;
 
     case kSecMic128:
     case kSecEncMic128:
-        footerLength += kMic128Size;
+        micSize = kMic128Size;
         break;
     }
 
-exit:
-    // Frame Check Sequence
-    footerLength += GetFcsSize();
-
-    return footerLength;
+    return micSize;
 }
 
 uint16_t Frame::GetMaxPayloadLength(void) const
@@ -766,113 +704,132 @@ void Frame::SetPayloadLength(uint16_t aLength)
     SetPsduLength(GetHeaderLength() + GetFooterLength() + aLength);
 }
 
-uint8_t Frame::GetSecurityHeaderLength(uint8_t aSecurityControl)
-{
-    uint8_t length = kSecurityControlSize + kFrameCounterSize;
-
-    switch (aSecurityControl & kKeyIdModeMask)
-    {
-    case kKeyIdMode0:
-        length += kKeySourceSizeMode0;
-        break;
-
-    case kKeyIdMode1:
-        length += kKeySourceSizeMode1 + kKeyIndexSize;
-        break;
-
-    case kKeyIdMode2:
-        length += kKeySourceSizeMode2 + kKeyIndexSize;
-        break;
-
-    case kKeyIdMode3:
-        length += kKeySourceSizeMode3 + kKeyIndexSize;
-        break;
-    }
-
-    return length;
-}
-
 uint8_t Frame::SkipSecurityHeaderIndex(void) const
 {
-    uint8_t  index = SkipAddrFieldIndex();
-    uint16_t fcf;
+    uint8_t index = SkipAddrFieldIndex();
 
     VerifyOrExit(index != kInvalidIndex, OT_NOOP);
-    fcf = GetFrameControlField();
 
-    // Security Control + Frame Counter + Key Identifier
-    if ((fcf & kFcfSecurityEnabled) != 0)
+    if (GetSecurityEnabled())
     {
-        VerifyOrExit(index < GetPsduLength(), index = kInvalidIndex);
-        uint8_t securityControl = *(GetPsdu() + index);
+        uint8_t securityControl;
+        uint8_t headerSize;
 
-        index += GetSecurityHeaderLength(securityControl);
+        VerifyOrExit(index < GetPsduLength(), index = kInvalidIndex);
+        securityControl = *(GetPsdu() + index);
+
+        headerSize = CalculateSecurityHeaderSize(securityControl);
+        VerifyOrExit(headerSize != kInvalidSize, index = kInvalidIndex);
+
+        index += headerSize;
+
+        VerifyOrExit(index <= GetPsduLength(), index = kInvalidIndex);
     }
 
 exit:
     return index;
 }
 
-uint8_t Frame::SkipAddrFieldIndex(void) const
+uint8_t Frame::CalculateSecurityHeaderSize(uint8_t aSecurityControl)
 {
-    uint8_t  index = kFcfSize + kDsnSize; // Frame Control field and Sequence Number field
-    uint16_t fcf;
+    uint8_t size = kSecurityControlSize + kFrameCounterSize;
 
-    VerifyOrExit((index + GetFcsSize()) <= GetPsduLength(), index = kInvalidIndex);
-    fcf = GetFrameControlField();
+    VerifyOrExit((aSecurityControl & kSecLevelMask) != kSecNone, size = kInvalidSize);
 
-    // Destination PAN
-    if (IsDstPanIdPresent(fcf))
+    switch (aSecurityControl & kKeyIdModeMask)
     {
-        index += sizeof(PanId);
+    case kKeyIdMode0:
+        size += kKeySourceSizeMode0;
+        break;
+
+    case kKeyIdMode1:
+        size += kKeySourceSizeMode1 + kKeyIndexSize;
+        break;
+
+    case kKeyIdMode2:
+        size += kKeySourceSizeMode2 + kKeyIndexSize;
+        break;
+
+    case kKeyIdMode3:
+        size += kKeySourceSizeMode3 + kKeyIndexSize;
+        break;
     }
 
-    // Destination Address
-    switch (fcf & kFcfDstAddrMask)
+exit:
+    return size;
+}
+
+uint8_t Frame::SkipAddrFieldIndex(void) const
+{
+    uint8_t index;
+
+    VerifyOrExit(kFcfSize + kDsnSize + GetFcsSize() <= GetPsduLength(), index = kInvalidIndex);
+
+    index = CalculateAddrFieldSize(GetFrameControlField());
+
+exit:
+    return index;
+}
+
+uint8_t Frame::CalculateAddrFieldSize(uint16_t aFcf)
+{
+    uint8_t size = kFcfSize + kDsnSize;
+
+    // This static method calculates the size (number of bytes) of
+    // Address header field for a given Frame Control `aFcf` value.
+    // The size includes the Frame Control and Sequence Number fields
+    // along with Destination and Source PAN ID and Short/Extended
+    // Addresses. If the `aFcf` is not valid, this method returns
+    // `kInvalidSize`.
+
+    if (IsDstPanIdPresent(aFcf))
+    {
+        size += sizeof(PanId);
+    }
+
+    switch (aFcf & kFcfDstAddrMask)
     {
     case kFcfDstAddrNone:
         break;
 
     case kFcfDstAddrShort:
-        index += sizeof(ShortAddress);
+        size += sizeof(ShortAddress);
         break;
 
     case kFcfDstAddrExt:
-        index += sizeof(ExtAddress);
+        size += sizeof(ExtAddress);
         break;
 
     default:
-        ExitNow(index = kInvalidIndex);
-        break;
+        ExitNow(size = kInvalidSize);
+        OT_UNREACHABLE_CODE(break);
     }
 
-    // Source PAN
-    if (IsSrcPanIdPresent(fcf))
+    if (IsSrcPanIdPresent(aFcf))
     {
-        index += sizeof(PanId);
+        size += sizeof(PanId);
     }
 
-    // Source Address
-    switch (fcf & kFcfSrcAddrMask)
+    switch (aFcf & kFcfSrcAddrMask)
     {
     case kFcfSrcAddrNone:
         break;
 
     case kFcfSrcAddrShort:
-        index += sizeof(ShortAddress);
+        size += sizeof(ShortAddress);
         break;
 
     case kFcfSrcAddrExt:
-        index += sizeof(ExtAddress);
+        size += sizeof(ExtAddress);
         break;
 
     default:
-        ExitNow(index = kInvalidIndex);
-        break;
+        ExitNow(size = kInvalidSize);
+        OT_UNREACHABLE_CODE(break);
     }
 
 exit:
-    return index;
+    return size;
 }
 
 uint8_t Frame::FindPayloadIndex(void) const
@@ -937,171 +894,6 @@ exit:
 const uint8_t *Frame::GetFooter(void) const
 {
     return GetPsdu() + GetPsduLength() - GetFooterLength();
-}
-
-void Frame::GenerateImmAck(const Frame *aFrame, bool aIsFramePending)
-{
-    memset(this->mPsdu, 0, this->mLength);
-
-    this->mPsdu[0] |= kFcfFrameAck;
-    if (aIsFramePending)
-    {
-        this->mPsdu[0] |= kFcfFramePending;
-    }
-    reinterpret_cast<uint16_t *>(this->mPsdu)[0] |= aFrame->GetVersion();
-
-    this->mPsdu[2] = aFrame->GetSequence();
-
-    this->mLength = kImmAckLength;
-}
-
-void Frame::GenerateEnhAck(const Frame *aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)
-{
-    OT_UNUSED_VARIABLE(aIeData);
-
-    SetFrameControlFieldForAck(aFrame, aIsFramePending, aIeLength, this);
-
-    this->mPsdu[2] = aFrame->GetSequence();
-
-    SetDstPanIdAndAddrForAck(aFrame, this);
-
-    SetSecurityHeaderForAck(aFrame, this);
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    if (aIeLength > 0)
-    {
-        this->SetPsduLength(kInvalidIndex); // At this time the lenght of ACK hasn't been determined, set it to
-                                            // `kInvalidIndex` to find call FindHeaderIeIndex method
-        memcpy(this->GetPsdu() + this->FindHeaderIeIndex(), aIeData, aIeLength);
-    }
-#endif
-
-    this->mLength = this->CalculateFrameLength() + aIeLength;
-}
-
-void Frame::SetFrameControlFieldForAck(const Frame *aFrame,
-                                       bool         aIsFramePending,
-                                       uint8_t      aIeLength,
-                                       Frame *      aAckFrame) const
-{
-    memset(aAckFrame->mPsdu, 0, kFcfSize);
-    aAckFrame->mPsdu[0] |= kFcfFrameAck;
-    reinterpret_cast<uint16_t *>(aAckFrame->mPsdu)[0] |= kFcfFrameVersion2015;
-
-    if (aIsFramePending)
-    {
-        aAckFrame->mPsdu[0] |= kFcfFramePending;
-    }
-
-    if (aFrame->GetSecurityEnabled())
-    {
-        aAckFrame->mPsdu[0] |= kFcfSecurityEnabled;
-    }
-
-    // Dst addr mode
-    if ((aFrame->GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrExt)
-    {
-        reinterpret_cast<uint16_t *>(aAckFrame->mPsdu)[0] |= kFcfDstAddrExt;
-    }
-    else if ((aFrame->GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrShort)
-    {
-        reinterpret_cast<uint16_t *>(aAckFrame->mPsdu)[0] |= kFcfDstAddrShort;
-    }
-    else
-    {
-        reinterpret_cast<uint16_t *>(aAckFrame->mPsdu)[0] |= kFcfDstAddrNone;
-    }
-
-    reinterpret_cast<uint16_t *>(aAckFrame->mPsdu)[0] |= kFcfSrcAddrNone;
-
-    if (aIeLength > 0)
-    {
-        reinterpret_cast<uint16_t *>(aAckFrame->mPsdu)[0] |= kFcfIePresent;
-    }
-}
-
-otError Frame::SetDstPanIdAndAddrForAck(const Frame *aFrame, Frame *aAckFrame) const
-{
-    otError  error = OT_ERROR_NONE;
-    uint16_t fcf   = aFrame->GetFrameControlField();
-    PanId    panId;
-    Address  address;
-
-    if (IsSrcPanIdPresent(fcf))
-    {
-        SuccessOrExit(error = aFrame->GetSrcPanId(panId));
-    }
-    else if (IsDstPanIdPresent(fcf))
-    {
-        SuccessOrExit(error = aFrame->GetDstPanId(panId));
-    }
-    else
-    {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
-    }
-
-    aAckFrame->SetDstPanId(panId);
-
-    if (aFrame->IsSrcAddrPresent(fcf))
-    {
-        SuccessOrExit(error = aFrame->GetSrcAddr(address));
-        aAckFrame->SetDstAddr(address);
-    }
-
-exit:
-    return error;
-}
-
-otError Frame::SetSecurityHeaderForAck(const Frame *aFrame, Frame *aAckFrame) const
-{
-    otError  error                = OT_ERROR_NONE;
-    uint8_t  securityControlField = 0;
-    uint32_t frameCounter         = 0;
-    uint8_t  keyId                = 0;
-
-    SuccessOrExit(error = aFrame->GetSecurityControlField(securityControlField));
-    SuccessOrExit(error = aFrame->GetFrameCounter(frameCounter));
-    SuccessOrExit(error = aFrame->GetKeyId(keyId));
-
-    aAckFrame->SetSecurityControlField(securityControlField);
-    aAckFrame->SetFrameCounter(frameCounter);
-    aAckFrame->SetKeyId(keyId);
-
-exit:
-    return error;
-}
-
-uint8_t Frame::CalculateFrameLength() const
-{
-    uint8_t index;
-    uint8_t securityControl;
-
-    index = SkipAddrFieldIndex();
-    OT_ASSERT(index != kInvalidIndex);
-
-    if (GetSecurityEnabled())
-    {
-        securityControl = GetPsdu()[index];
-        index += GetSecurityHeaderLength(securityControl);
-
-        switch (securityControl & kSecLevelMask)
-        {
-        case kSecMic32:
-        case kSecEncMic32:
-            index += kMic32Size;
-            break;
-        case kSecMic64:
-        case kSecEncMic64:
-            index += kMic64Size;
-            break;
-        case kSecMic128:
-        case kSecEncMic128:
-            index += kMic128Size;
-            break;
-        }
-    }
-
-    return index + kCrcSize;
 }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
@@ -1178,23 +970,19 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-otError Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+void Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
 {
-    otError  error = OT_ERROR_NONE;
-    uint8_t *cur   = GetHeaderIe(Frame::kHeaderIeCsl);
+    uint8_t *cur = GetHeaderIe(Frame::kHeaderIeCsl);
     CslIe *  csl;
 
-    VerifyOrExit(cur != NULL, error = OT_ERROR_PARSE);
+    OT_ASSERT(cur != NULL);
 
     csl = reinterpret_cast<CslIe *>(cur + sizeof(HeaderIe));
     csl->SetPeriod(aCslPeriod);
     csl->SetPhase(aCslPhase);
-
-exit:
-    return error;
 }
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 const TimeIe *Frame::GetTimeIe(void) const
@@ -1242,12 +1030,12 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 
 void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 {
-#if OPENTHREAD_RADIO
+#if OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
     OT_UNUSED_VARIABLE(aExtAddress);
 #else
     uint32_t       frameCounter = 0;
     uint8_t        securityLevel;
-    uint8_t        nonce[KeyManager::kNonceSize];
+    uint8_t        nonce[Crypto::AesCcm::kNonceSize];
     uint8_t        tagLength;
     Crypto::AesCcm aesCcm;
     otError        error;
@@ -1257,7 +1045,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     SuccessOrExit(error = GetSecurityLevel(securityLevel));
     SuccessOrExit(error = GetFrameCounter(frameCounter));
 
-    KeyManager::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
+    Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
 
     aesCcm.SetKey(GetAesKey(), 16);
     tagLength = GetFooterLength() - Frame::kFcsSize;
@@ -1269,10 +1057,143 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), true);
     aesCcm.Finalize(GetFooter(), &tagLength);
 
+    SetIsSecurityProcessed(true);
+
 exit:
     return;
-#endif // OPENTHREAD_RADIO
+#endif // OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 }
+
+void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
+{
+    uint16_t fcf = kFcfFrameAck | aFrame.GetVersion();
+
+    mChannel = aFrame.mChannel;
+    memset(&mInfo.mTxInfo, 0, sizeof(mInfo.mTxInfo));
+
+    if (aIsFramePending)
+    {
+        fcf |= kFcfFramePending;
+    }
+    Encoding::LittleEndian::WriteUint16(fcf, mPsdu);
+
+    mPsdu[kSequenceIndex] = aFrame.GetSequence();
+
+    mLength = kImmAckLength;
+}
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)
+{
+    otError error = OT_ERROR_NONE;
+
+    uint16_t fcf = kFcfFrameAck | kFcfFrameVersion2015 | kFcfSrcAddrNone;
+    Address  address;
+    PanId    panId;
+    uint8_t  footerLength;
+    uint8_t  securityControlField;
+    uint32_t frameCounter;
+    uint8_t  keyId;
+
+    mChannel = aFrame.mChannel;
+    memset(&mInfo.mTxInfo, 0, sizeof(mInfo.mTxInfo));
+
+    // Set frame control field
+    if (aIsFramePending)
+    {
+        fcf |= kFcfFramePending;
+    }
+
+    if (aFrame.GetSecurityEnabled())
+    {
+        fcf |= kFcfSecurityEnabled;
+    }
+
+    if (aFrame.IsPanIdCompressed())
+    {
+        fcf |= kFcfPanidCompression;
+    }
+
+    // Destination address mode
+    if ((aFrame.GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrExt)
+    {
+        fcf |= kFcfDstAddrExt;
+    }
+    else if ((aFrame.GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrShort)
+    {
+        fcf |= kFcfDstAddrShort;
+    }
+    else
+    {
+        fcf |= kFcfDstAddrNone;
+    }
+
+    if (aIeLength > 0)
+    {
+        fcf |= kFcfIePresent;
+    }
+
+    Encoding::LittleEndian::WriteUint16(fcf, mPsdu);
+
+    // Set sequence number
+    mPsdu[kSequenceIndex] = aFrame.GetSequence();
+
+    // Set address field
+    if (aFrame.IsSrcPanIdPresent())
+    {
+        SuccessOrExit(error = aFrame.GetSrcPanId(panId));
+    }
+    else if (aFrame.IsDstPanIdPresent())
+    {
+        SuccessOrExit(error = aFrame.GetDstPanId(panId));
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_PARSE);
+    }
+
+    if (IsDstPanIdPresent())
+    {
+        SetDstPanId(panId);
+    }
+
+    if (aFrame.IsSrcAddrPresent())
+    {
+        SuccessOrExit(error = aFrame.GetSrcAddr(address));
+        SetDstAddr(address);
+    }
+
+    SetPsduLength(kMaxPsduSize); // At this time the length of ACK hasn't been determined, set it to
+                                 // `kMaxPsduSize` to call methods that check frame length.
+
+    // Set security header
+    if (aFrame.GetSecurityEnabled())
+    {
+        SuccessOrExit(error = aFrame.GetSecurityControlField(securityControlField));
+        SuccessOrExit(error = aFrame.GetFrameCounter(frameCounter));
+        SuccessOrExit(error = aFrame.GetKeyId(keyId));
+
+        SetSecurityControlField(securityControlField);
+        SetFrameCounter(frameCounter);
+        SetKeyId(keyId);
+    }
+
+    // Set header IE
+    if (aIeLength > 0)
+    {
+        OT_ASSERT(aIeData != NULL);
+        memcpy(GetPsdu() + FindHeaderIeIndex(), aIeData, aIeLength);
+    }
+
+    // Set frame length
+    footerLength = GetFooterLength();
+    OT_ASSERT(footerLength != kInvalidIndex);
+    mLength = SkipSecurityHeaderIndex() + aIeLength + GetFooterLength();
+
+exit:
+    return error;
+}
+#endif
 
 // LCOV_EXCL_START
 
@@ -1284,22 +1205,22 @@ Frame::InfoString Frame::ToInfoString(void) const
     uint8_t    commandId, type;
     Address    src, dst;
 
-    string.Append("len:%d, seqnum:%d, type:", GetLength(), GetSequence());
+    IgnoreError(string.Append("len:%d, seqnum:%d, type:", GetLength(), GetSequence()));
 
     type = GetType();
 
     switch (type)
     {
     case kFcfFrameBeacon:
-        string.Append("Beacon");
+        IgnoreError(string.Append("Beacon"));
         break;
 
     case kFcfFrameData:
-        string.Append("Data");
+        IgnoreError(string.Append("Data"));
         break;
 
     case kFcfFrameAck:
-        string.Append("Ack");
+        IgnoreError(string.Append("Ack"));
         break;
 
     case kFcfFrameMacCmd:
@@ -1311,30 +1232,31 @@ Frame::InfoString Frame::ToInfoString(void) const
         switch (commandId)
         {
         case kMacCmdDataRequest:
-            string.Append("Cmd(DataReq)");
+            IgnoreError(string.Append("Cmd(DataReq)"));
             break;
 
         case kMacCmdBeaconRequest:
-            string.Append("Cmd(BeaconReq)");
+            IgnoreError(string.Append("Cmd(BeaconReq)"));
             break;
 
         default:
-            string.Append("Cmd(%d)", commandId);
+            IgnoreError(string.Append("Cmd(%d)", commandId));
             break;
         }
 
         break;
 
     default:
-        string.Append("%d", type);
+        IgnoreError(string.Append("%d", type));
         break;
     }
 
-    GetSrcAddr(src);
-    GetDstAddr(dst);
+    IgnoreError(GetSrcAddr(src));
+    IgnoreError(GetDstAddr(dst));
 
-    string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(), dst.ToString().AsCString(),
-                  GetSecurityEnabled() ? "yes" : "no", GetAckRequest() ? "yes" : "no");
+    IgnoreError(string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(),
+                              dst.ToString().AsCString(), GetSecurityEnabled() ? "yes" : "no",
+                              GetAckRequest() ? "yes" : "no"));
 
     return string;
 }
@@ -1343,7 +1265,7 @@ BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
 {
     NetworkName name;
 
-    name.Set(GetNetworkName());
+    IgnoreError(name.Set(GetNetworkName()));
 
     return InfoString("name:%s, xpanid:%s, id:%d, ver:%d, joinable:%s, native:%s", name.GetAsCString(),
                       mExtendedPanId.ToString().AsCString(), GetProtocolId(), GetProtocolVersion(),

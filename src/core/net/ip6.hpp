@@ -363,7 +363,7 @@ private:
     void        CleanupFragmentationBuffer(void);
     void        HandleUpdateTimer(void);
     void        UpdateReassemblyList(void);
-    otError     SendIcmpError(Message &aMessage, IcmpHeader::Type aIcmpType, IcmpHeader::Code aIcmpCode);
+    void        SendIcmpError(Message &aMessage, IcmpHeader::Type aIcmpType, IcmpHeader::Code aIcmpCode);
     static void HandleTimer(Timer &aTimer);
 #endif
     otError AddMplOption(Message &aMessage, Header &aHeader);

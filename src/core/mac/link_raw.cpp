@@ -81,7 +81,7 @@ otError LinkRaw::SetEnabled(bool aEnabled)
     }
     else
     {
-        mSubMac.Disable();
+        IgnoreError(mSubMac.Disable());
     }
 
     mEnabled = aEnabled;
@@ -203,6 +203,21 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
         mEnergyScanDoneCallback(&GetInstance(), aEnergyScanMaxRssi);
         mEnergyScanDoneCallback = NULL;
     }
+}
+
+otError LinkRaw::SetMacKey(uint8_t        aKeyIdMode,
+                           uint8_t        aKeyId,
+                           const uint8_t *aPrevKey,
+                           const uint8_t *aCurrKey,
+                           const uint8_t *aNextKey)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    mSubMac.SetMacKey(aKeyIdMode, aKeyId, aPrevKey, aCurrKey, aNextKey);
+
+exit:
+    return error;
 }
 
 // LCOV_EXCL_START

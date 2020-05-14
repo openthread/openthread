@@ -178,7 +178,7 @@ bool otMacFrameIsVersion2015(const otRadioFrame *aFrame);
  * Generate Imm-Ack for @p aFrame.
  *
  * @param[in]    aFrame             A pointer to the frame.
- * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
+ * @param[in]    aIsFramePending    Value of the ACK's frame pending bit.
  * @param[out]   aAckFrame          A pointer to the ack frame to be generated.
  *
  */
@@ -188,31 +188,30 @@ void otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, 
  * Generate Enh-Ack for @p aFrame.
  *
  * @param[in]    aFrame             A pointer to the frame.
- * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
- * @param[in]    aIeData            A pointer to the IE data pattern of the ACK to be sent.
- * @param[in]    aIeLength          The length of IE data pattern of the ACK to be sent.
+ * @param[in]    aIsFramePending    Value of the ACK's frame pending bit.
+ * @param[in]    aIeData            A pointer to the IE data portion of the ACK to be sent.
+ * @param[in]    aIeLength          The length of IE data portion of the ACK to be sent.
  * @param[out]   aAckFrame          A pointer to the ack frame to be generated.
  *
+ * @retval  OT_ERROR_NONE           Successfully generated Enh Ack in @p aAckFrame.
+ * @retval  OT_ERROR_PARSE          @p aFrame has incorrect format.
+ *
  */
-void otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
-                              bool                aIsFramePending,
-                              const uint8_t *     aIeData,
-                              uint8_t             aIeLength,
-                              otRadioFrame *      aAckFrame);
+otError otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
+                                 bool                aIsFramePending,
+                                 const uint8_t *     aIeData,
+                                 uint8_t             aIeLength,
+                                 otRadioFrame *      aAckFrame);
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 /**
  * Set CSL IE content into the frame.
  *
- * @param[in]    aFrame         A pointer to the frame to be modified.
- * @param[in]    aCslPeriod     CSL Period in CSL IE.
- * @param[in]    aCslPhase      CSL Phase in CSL IE.
+ * @param[inout]    aFrame         A pointer to the frame to be modified.
+ * @param[in]       aCslPeriod     CSL Period in CSL IE.
+ * @param[in]       aCslPhase      CSL Phase in CSL IE.
  *
- * @retval  OT_ERROR_NONE   Successfully modify CSL IE in the frame.
- * @retval  OT_ERROR_PARSE  CSL IE is not found into the frame.
  */
-otError otMacFrameSetCslIe(otRadioFrame *aFrame, uint16_t aCslPeriod, uint16_t aCslPhase);
-#endif
+void otMacFrameSetCslIe(otRadioFrame *aFrame, uint16_t aCslPeriod, uint16_t aCslPhase);
 
 #ifdef __cplusplus
 } // extern "C"

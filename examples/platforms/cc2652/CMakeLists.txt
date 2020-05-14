@@ -42,7 +42,7 @@ list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"cc2652-mbedtls-config
 set(OT_PRIVATE_DEFINES ${OT_PRIVATE_DEFINES} PARENT_SCOPE)
 
 list(APPEND OT_PUBLIC_INCLUDES
-    "${PROJECT_SOURCE_DIR}/examples/platforms/cc2652/crypto"
+    "${CMAKE_CURRENT_SOURCE_DIR}/crypto"
     "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2"
 )
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
@@ -68,14 +68,15 @@ add_library(openthread-cc2652
 set_property(TARGET openthread-cc2652 PROPERTY C_STANDARD 99)
 
 target_link_libraries(openthread-cc2652
+    PUBLIC
+        cc13x2-cc26x2-driver
     PRIVATE
-        "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/driverlib/bin/gcc/driverlib.a"
-        mbedtls
+        ${OT_MBEDTLS}
 )
+
 target_link_options(openthread-cc2652
     PUBLIC
-        -T${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/linker_files/cc26x2r1f.lds
-        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
+        -Wl,--gc-sections
 )
 
 target_compile_definitions(openthread-cc2652
@@ -96,6 +97,4 @@ target_include_directories(openthread-cc2652
         ${OT_PRIVATE_INCLUDES}
         ${PROJECT_SOURCE_DIR}/src/core
         ${PROJECT_SOURCE_DIR}/examples/platforms
-        ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
-        ${PROJECT_SOURCE_DIR}/third_party/mbedtls
 )

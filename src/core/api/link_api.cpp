@@ -464,7 +464,7 @@ uint16_t otLinkGetCcaFailureRate(otInstance *aInstance)
     return instance.Get<Mac::Mac>().GetCcaFailureRate();
 }
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 uint8_t otLinkCslGetChannel(otInstance *aInstance)
 {
     return static_cast<Instance *>(aInstance)->Get<Mac::Mac>().GetCslChannel();
@@ -525,4 +525,4 @@ otError otLinkCslIeSuppress(otInstance *aInstance, bool aSuppress)
 }
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE

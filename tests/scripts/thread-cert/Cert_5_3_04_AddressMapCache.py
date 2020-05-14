@@ -29,9 +29,9 @@
 
 import unittest
 
-import node
-import config
 import command
+import config
+import thread_cert
 
 LEADER = 1
 DUT_ROUTER1 = 2
@@ -44,51 +44,51 @@ ED4 = 7
 MTDS = [SED1, ED1, ED2, ED3, ED4]
 
 
-class Cert_5_3_4_AddressMapCache(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 8):
-            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED2].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED3].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED4].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[DUT_ROUTER1].set_panid(0xface)
-        self.nodes[DUT_ROUTER1].set_mode('rsdn')
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[DUT_ROUTER1].enable_whitelist()
-        self.nodes[DUT_ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[SED1].set_panid(0xface)
-        self.nodes[SED1].set_mode('s')
-        self.nodes[SED1].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64())
-
-        # Set the SED1's timeout in order to receive the icmp reply when keep
-        # alive with DUT_ROUTER.
-        self.nodes[SED1].set_timeout(5)
-        self.nodes[SED1].enable_whitelist()
-
-        for ED in [ED1, ED2, ED3, ED4]:
-            self.nodes[ED].set_panid(0xface)
-            self.nodes[ED].set_mode('rsn')
-            self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
-            self.nodes[ED].enable_whitelist()
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [DUT_ROUTER1, ED1, ED2, ED3, ED4]
+        },
+        DUT_ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, SED1]
+        },
+        SED1: {
+            'is_mtd': True,
+            'mode': 's',
+            'panid': 0xface,
+            'timeout': 5,
+            'whitelist': [DUT_ROUTER1]
+        },
+        ED1: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+        ED2: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+        ED3: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+        ED4: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+    }
 
     def test(self):
         # 1

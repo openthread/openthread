@@ -75,14 +75,14 @@ AddressResolver::AddressResolver(Instance &aInstance)
     Get<Coap::Coap>().AddResource(mAddressQuery);
     Get<Coap::Coap>().AddResource(mAddressNotification);
 
-    Get<Ip6::Icmp>().RegisterHandler(mIcmpHandler);
+    IgnoreError(Get<Ip6::Icmp>().RegisterHandler(mIcmpHandler));
 }
 
 void AddressResolver::Clear(void)
 {
     CacheEntryList *lists[] = {&mCachedList, &mSnoopedList, &mQueryList, &mQueryRetryList};
 
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
+    for (size_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
     {
         CacheEntryList *list = lists[index];
         CacheEntry *    entry;
@@ -198,7 +198,7 @@ void AddressResolver::Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId)
 {
     CacheEntryList *lists[] = {&mCachedList, &mSnoopedList};
 
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
+    for (size_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
     {
         CacheEntryList *list = lists[index];
         CacheEntry *    prev = NULL;
@@ -248,7 +248,7 @@ AddressResolver::CacheEntry *AddressResolver::FindCacheEntry(const Ip6::Address 
     CacheEntry *    entry   = NULL;
     CacheEntryList *lists[] = {&mCachedList, &mSnoopedList, &mQueryList, &mQueryRetryList};
 
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
+    for (size_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
     {
         aList = lists[index];
         entry = FindCacheEntryInList(*aList, aEid, aPrevEntry);
@@ -300,7 +300,7 @@ AddressResolver::CacheEntry *AddressResolver::NewCacheEntry(bool aSnoopedEntry)
     newEntry = mUnusedList.Pop();
     VerifyOrExit(newEntry == NULL, OT_NOOP);
 
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
+    for (size_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
     {
         CacheEntryList *list = lists[index];
         CacheEntry *    prev;
@@ -398,14 +398,13 @@ exit:
     return error;
 }
 
-otError AddressResolver::AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
+void AddressResolver::AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
 {
-    otError     error           = OT_ERROR_NONE;
     uint16_t    numNonEvictable = 0;
     CacheEntry *entry;
 
     entry = NewCacheEntry(/* aSnoopedEntry */ true);
-    VerifyOrExit(entry != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(entry != NULL, OT_NOOP);
 
     for (CacheEntry *snooped = mSnoopedList.GetHead(); snooped != NULL; snooped = snooped->GetNext())
     {
@@ -439,7 +438,7 @@ otError AddressResolver::AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::Sho
     LogCacheEntryChange(kEntryAdded, kReasonSnoop, *entry);
 
 exit:
-    return error;
+    return;
 }
 
 void AddressResolver::RestartAddressQueries(void)
@@ -465,7 +464,7 @@ void AddressResolver::RestartAddressQueries(void)
 
     for (CacheEntry *entry = mQueryList.GetHead(); entry != NULL; entry = entry->GetNext())
     {
-        SendAddressQuery(entry->GetTarget());
+        IgnoreError(SendAddressQuery(entry->GetTarget()));
 
         entry->SetTimeout(kAddressQueryTimeout);
         entry->SetRetryDelay(kAddressQueryInitialRetryDelay);
@@ -477,7 +476,7 @@ otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
 {
     otError         error = OT_ERROR_NONE;
     CacheEntry *    entry;
-    CacheEntry *    prev;
+    CacheEntry *    prev = NULL;
     CacheEntryList *list;
 
     entry = FindCacheEntry(aEid, list, prev);
@@ -660,9 +659,9 @@ exit:
     return;
 }
 
-otError AddressResolver::SendAddressError(const Ip6::Address &aTarget,
-                                          const uint8_t *     aMeshLocalIid,
-                                          const Ip6::Address *aDestination)
+void AddressResolver::SendAddressError(const Ip6::Address &aTarget,
+                                       const uint8_t *     aMeshLocalIid,
+                                       const Ip6::Address *aDestination)
 {
     otError          error;
     Coap::Message *  message;
@@ -696,12 +695,15 @@ otError AddressResolver::SendAddressError(const Ip6::Address &aTarget,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogInfoArp("Failed to send address error: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 void AddressResolver::HandleAddressError(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -816,13 +818,8 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
 
         if (child.HasIp6Address(target))
         {
-            Mac::ExtAddress addr;
-
-            // Convert extended address to IID.
-            addr = child.GetExtAddress();
-            addr.ToggleLocal();
             lastTransactionTime = TimerMilli::GetNow() - child.GetLastHeard();
-            SendAddressQueryResponse(target, addr.m8, &lastTransactionTime, aMessageInfo.GetPeerAddr());
+            SendAddressQueryResponse(target, child.GetMeshLocalIid(), &lastTransactionTime, aMessageInfo.GetPeerAddr());
             ExitNow();
         }
     }

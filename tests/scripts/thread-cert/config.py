@@ -39,26 +39,29 @@ import message
 import mle
 import net_crypto
 import network_data
+import network_diag
 import network_layer
 import simulator
 import sniffer
 
-MESH_LOCAL_PREFIX = 'fdde:ad00:beef::/64'
-MESH_LOCAL_PREFIX_REGEX_PATTERN = '^fdde:ad00:beef:(0){0,4}:'
+# This extended address will generate the MESH_LOCAL_PREFIX
+EXTENDED_PANID = '000db80000000000'
+MESH_LOCAL_PREFIX = 'fd00:db8::/64'
+MESH_LOCAL_PREFIX_REGEX_PATTERN = '^fd00:0?db8:0{0,4}:0{0,4}'
 ROUTING_LOCATOR = '64/:0:ff:fe00:/16'
 ROUTING_LOCATOR_REGEX_PATTERN = r'.*:(0)?:0{0,2}ff:fe00:\w{1,4}$'
 LINK_LOCAL = 'fe80:/112'
 LINK_LOCAL_REGEX_PATTERN = '^fe80:.*'
 ALOC_FLAG_REGEX_PATTERN = '.*:fc..$'
-LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = 'ff32:40:fdde:ad00:beef:0:0:1'
-REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = 'ff33:40:fdde:ad00:beef:0:0:1'
+LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = 'ff32:40:fd00:db8:0:0:0:1'
+REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = 'ff33:40:fd00:db8:0:0:0:1'
 REALM_LOCAL_ALL_ROUTERS_ADDRESS = 'ff03::2'
 LINK_LOCAL_ALL_NODES_ADDRESS = 'ff02::1'
 LINK_LOCAL_ALL_ROUTERS_ADDRESS = 'ff02::2'
 
 DOMAIN_PREFIX = 'fd00:7d03:7d03:7d03::/64'
 ALL_DOMAIN_BBRS_ADDRESS = 'ff32:40:fd00:7d03:7d03:7d03:0:3'
-ALL_NETWORK_BBRS_ADDRESS = 'ff32:40:fdde:ad00:beef:0:0:3'
+ALL_NETWORK_BBRS_ADDRESS = 'ff32:40:fd00:db8:0:0:0:3'
 
 DEFAULT_MASTER_KEY = bytearray([
     0x00,
@@ -421,18 +424,66 @@ def create_default_mesh_cop_tlvs_factory():
         sub_tlvs_factories=create_default_mesh_cop_tlvs_factories())
 
 
+def create_default_network_diag_tlv_factories():
+    return {
+        network_diag.TlvType.EXT_ADDRESS:
+            network_layer.MacExtendedAddressFactory(),
+        network_diag.TlvType.ADDRESS16:
+            mle.Address16Factory(),
+        network_diag.TlvType.MODE:
+            mle.ModeFactory(),
+        network_diag.TlvType.POLLING_PERIOD:
+            mle.TimeoutFactory(),
+        network_diag.TlvType.CONNECTIVITY:
+            mle.ConnectivityFactory(),
+        network_diag.TlvType.ROUTE64:
+            create_default_mle_tlv_route64_factory(),
+        network_diag.TlvType.LEADER_DATA:
+            mle.LeaderDataFactory(),
+        network_diag.TlvType.NETWORK_DATA:
+            create_default_mle_tlv_network_data_factory(),
+        network_diag.TlvType.IPV6_ADDRESS_LIST:
+            network_diag.Ipv6AddressListFactory(),
+        network_diag.TlvType.MAC_COUNTERS:
+            network_diag.MacCountersFactory(),
+        network_diag.TlvType.BATTERY_LEVEL:
+            network_diag.BatteryLevelFactory(),
+        network_diag.TlvType.SUPPLY_VOLTAGE:
+            network_diag.SupplyVoltageFactory(),
+        network_diag.TlvType.CHILD_TABLE:
+            network_diag.ChildTableFactory(),
+        network_diag.TlvType.CHANNEL_PAGES:
+            network_diag.ChannelPagesFactory(),
+        network_diag.TlvType.TYPE_LIST:
+            network_diag.TypeListFactory(),
+        network_diag.TlvType.MAX_CHILD_TIMEOUT:
+            network_diag.MaxChildTimeoutFactory()
+    }
+
+
+def create_default_network_diag_tlvs_factory():
+    return SubTlvsFactory(
+        sub_tlvs_factories=create_default_network_diag_tlv_factories())
+
+
 def create_default_uri_path_based_payload_factories():
     network_layer_tlvs_factory = create_default_network_tlvs_factory()
     mesh_cop_tlvs_factory = create_default_mesh_cop_tlvs_factory()
+    network_diag_tlvs_factory = create_default_network_diag_tlvs_factory()
+
     return {
-        "/a/as": network_layer_tlvs_factory,
-        "/a/aq": network_layer_tlvs_factory,
-        "/a/ar": network_layer_tlvs_factory,
-        "/a/ae": network_layer_tlvs_factory,
-        "/a/an": network_layer_tlvs_factory,
-        "/a/sd": network_layer_tlvs_factory,
-        "/c/lp": mesh_cop_tlvs_factory,
-        "/c/cs": mesh_cop_tlvs_factory,
+        '/a/as': network_layer_tlvs_factory,
+        '/a/aq': network_layer_tlvs_factory,
+        '/a/ar': network_layer_tlvs_factory,
+        '/a/ae': network_layer_tlvs_factory,
+        '/a/an': network_layer_tlvs_factory,
+        '/a/sd': network_layer_tlvs_factory,
+        '/c/lp': mesh_cop_tlvs_factory,
+        '/c/cs': mesh_cop_tlvs_factory,
+        '/d/da': network_diag_tlvs_factory,
+        '/d/dg': network_diag_tlvs_factory,
+        '/d/dq': network_diag_tlvs_factory,
+        '/d/dr': network_diag_tlvs_factory,
     }
 
 
@@ -481,7 +532,7 @@ def create_default_ipv6_icmp_body_factories():
             ipv6.ICMPv6EchoBodyFactory(),
         ipv6.ICMP_ECHO_RESPONSE:
             ipv6.ICMPv6EchoBodyFactory(),
-        "default":
+        'default':
             ipv6.BytesPayloadFactory(),
     }
 

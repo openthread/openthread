@@ -29,61 +29,134 @@
 
 import unittest
 
-import node
 import mle
 import network_layer
-import config
+import thread_cert
 
 LEADER = 1
 ROUTER = 16
 DUT_REED = 17
 ED = 18
-MESH_LOCAL_PREFIX = 'fdde:ad00:beef:0:'
+MESH_LOCAL_PREFIX = 'fd00:db8:'
 ROUTING_LOCATOR = ':0:ff:fe00'
 REED_ADVERTISEMENT_INTERVAL = 570
 REED_ADVERTISEMENT_MAX_JITTER = 60
 ROUTER_SELECTION_JITTER = 1
 
 
-class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 19):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].enable_whitelist()
-
-        for i in range(2, 17):
-            self.nodes[i].set_panid(0xface)
-            self.nodes[i].set_mode('rsdn')
-            self.nodes[i].add_whitelist(self.nodes[LEADER].get_addr64())
-            self.nodes[LEADER].add_whitelist(self.nodes[i].get_addr64())
-            self.nodes[i].enable_whitelist()
-            self.nodes[i].set_router_selection_jitter(1)
-
-        self.nodes[DUT_REED].set_panid(0xface)
-        self.nodes[DUT_REED].set_mode('rsdn')
-        self.nodes[DUT_REED].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[ROUTER].add_whitelist(self.nodes[DUT_REED].get_addr64())
-        self.nodes[DUT_REED].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[DUT_REED].enable_whitelist()
-        self.nodes[DUT_REED].set_router_selection_jitter(1)
-
-        self.nodes[ED].set_panid(0xface)
-        self.nodes[ED].set_mode('rsdn')
-        self.nodes[ED].add_whitelist(self.nodes[DUT_REED].get_addr64())
-        self.nodes[ED].enable_whitelist()
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode':
+                'rsdn',
+            'panid':
+                0xface,
+            'whitelist': [
+                2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ROUTER
+            ]
+        },
+        2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        3: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        4: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        5: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        6: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        7: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        8: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        9: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        10: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        11: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        12: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        13: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        14: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        15: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        ROUTER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, DUT_REED]
+        },
+        DUT_REED: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [ROUTER, ED]
+        },
+        ED: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [DUT_REED]
+        },
+    }
 
     def test(self):
         # 1 Ensure topology is formed correctly without the DUT_REED.
@@ -166,7 +239,7 @@ class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
         # Leader.
         mleid = None
         for addr in self.nodes[LEADER].get_addrs():
-            if (addr.find(MESH_LOCAL_PREFIX) != -1 and
+            if (addr.startswith(MESH_LOCAL_PREFIX) and
                     addr.find(ROUTING_LOCATOR) == -1):
                 mleid = addr
                 break

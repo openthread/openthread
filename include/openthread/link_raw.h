@@ -331,6 +331,27 @@ otError otLinkRawSrcMatchClearShortEntries(otInstance *aInstance);
 otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
 
 /**
+ * Update MAC keys and key index.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[in]   aKeyIdMode   The key ID mode.
+ * @param[in]   aKeyId       The key index.
+ * @param[in]   aPrevKey     The previous MAC key.
+ * @param[in]   aCurrKey     The current MAC key.
+ * @param[in]   aNextKey     The next MAC key.
+ *
+ * @retval OT_ERROR_NONE             If successful.
+ * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+ *
+ */
+otError otLinkRawSetMacKey(otInstance *   aInstance,
+                           uint8_t        aKeyIdMode,
+                           uint8_t        aKeyId,
+                           const uint8_t *aPrevKey,
+                           const uint8_t *aCurrKey,
+                           const uint8_t *aNextKey);
+
+/**
  * @}
  *
  */

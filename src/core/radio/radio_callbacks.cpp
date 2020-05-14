@@ -64,7 +64,7 @@ void Radio::Callbacks::HandleTransmitAckStarted(uint8_t *aFrame, uint16_t aLengt
     frame.mPsdu   = aFrame;
     frame.mLength = aLength;
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (Get<Mac::SubMac>().IsCslStarted())
     {
         Get<Mac::SubMac>().FillCsl(frame);
@@ -72,7 +72,7 @@ void Radio::Callbacks::HandleTransmitAckStarted(uint8_t *aFrame, uint16_t aLengt
 #endif
 
 #if !OPENTHREAD_RADIO
-    Get<Mac::Mac>().ProcessTransmitSecurity(frame, true);
+    Get<Mac::Mac>().ProcessTransmitSecurity(frame);
 #endif
 }
 

@@ -41,8 +41,10 @@ build()
     reset_source
     make -f src/posix/Makefile-posix
 
-    reset_source
-    make -f src/posix/Makefile-posix RCP_SP=1
+    if [[ $OSTYPE != "darwin"* ]] ; then
+        reset_source
+        make -f src/posix/Makefile-posix RCP_BUS=spi
+    fi
 }
 
 main()

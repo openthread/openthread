@@ -84,18 +84,18 @@ void JoinerRouter::HandleStateChanged(otChangedFlags aFlags)
 
         sockaddr.mPort = GetJoinerUdpPort();
 
-        mSocket.Open(&JoinerRouter::HandleUdpReceive, this);
-        mSocket.Bind(sockaddr);
-        Get<Ip6::Filter>().AddUnsecurePort(sockaddr.mPort);
+        IgnoreError(mSocket.Open(&JoinerRouter::HandleUdpReceive, this));
+        IgnoreError(mSocket.Bind(sockaddr));
+        IgnoreError(Get<Ip6::Filter>().AddUnsecurePort(sockaddr.mPort));
         otLogInfoMeshCoP("Joiner Router: start");
     }
     else
     {
         VerifyOrExit(mSocket.IsBound(), OT_NOOP);
 
-        Get<Ip6::Filter>().RemoveUnsecurePort(mSocket.GetSockName().mPort);
+        IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(mSocket.GetSockName().mPort));
 
-        mSocket.Close();
+        IgnoreError(mSocket.Close());
     }
 
 exit:
@@ -232,7 +232,7 @@ exit:
     }
 }
 
-otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek)
+void JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek)
 {
     otError               error   = OT_ERROR_NONE;
     Message *             message = Get<MessagePool>().New(Message::kTypeOther, 0);
@@ -256,12 +256,15 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogNoteMeshCoP("Failed to schedule joiner entrust: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 void JoinerRouter::HandleTimer(Timer &aTimer)
@@ -319,7 +322,7 @@ otError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo)
     message = PrepareJoinerEntrustMessage();
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
-    Get<Coap::Coap>().AbortTransaction(&JoinerRouter::HandleJoinerEntrustResponse, this);
+    IgnoreError(Get<Coap::Coap>().AbortTransaction(&JoinerRouter::HandleJoinerEntrustResponse, this));
 
     otLogInfoMeshCoP("Sending JOIN_ENT.ntf");
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo,
@@ -368,7 +371,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     networkName.SetNetworkName(Get<Mac::Mac>().GetNetworkName().GetAsData());
     SuccessOrExit(error = networkName.AppendTo(*message));
 
-    Get<ActiveDataset>().Read(dataset);
+    IgnoreError(Get<ActiveDataset>().Read(dataset));
 
     if ((tlv = dataset.GetTlv<ActiveTimestampTlv>()) != NULL)
     {

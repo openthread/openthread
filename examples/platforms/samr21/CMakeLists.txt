@@ -70,11 +70,12 @@ target_link_libraries(openthread-samr21
     PUBLIC
         samr21-driver
     PRIVATE
-        mbedtls
+        ${OT_MBEDTLS}
 )
 
 target_link_options(openthread-samr21
     PUBLIC
+        -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 
@@ -87,6 +88,8 @@ target_compile_definitions(openthread-samr21
 
 target_compile_options(openthread-samr21
     PRIVATE
+        -Wno-implicit-function-declaration
+        -Wno-expansion-to-defined
         ${OT_CFLAGS}
 )
 

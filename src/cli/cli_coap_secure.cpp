@@ -124,7 +124,7 @@ otError CoapSecure::ProcessResource(uint8_t aArgsLength, char *aArgs[])
         mResource.mHandler = &CoapSecure::HandleRequest;
 
         strncpy(mUriPath, aArgs[1], sizeof(mUriPath) - 1);
-        SuccessOrExit(error = otCoapSecureAddResource(mInterpreter.mInstance, &mResource));
+        otCoapSecureAddResource(mInterpreter.mInstance, &mResource);
     }
     else
     {
@@ -132,7 +132,7 @@ otError CoapSecure::ProcessResource(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    return OT_ERROR_NONE;
+    return error;
 }
 
 otError CoapSecure::ProcessStart(uint8_t aArgsLength, char *aArgs[])
@@ -393,7 +393,7 @@ otError CoapSecure::Process(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength < 1)
     {
-        ProcessHelp(0, NULL);
+        IgnoreError(ProcessHelp(0, NULL));
         error = OT_ERROR_INVALID_ARGS;
     }
     else

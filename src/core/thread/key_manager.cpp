@@ -85,7 +85,6 @@ KeyManager::KeyManager(Instance &aInstance)
 {
     mMasterKey = static_cast<const MasterKey &>(kDefaultMasterKey);
     mPskc.Clear();
-    ComputeKey(mKeySequence, mKey);
 }
 
 void KeyManager::Start(void)
@@ -102,7 +101,7 @@ void KeyManager::Stop(void)
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 void KeyManager::SetPskc(const Pskc &aPskc)
 {
-    Get<Notifier>().Update(mPskc, aPskc, OT_CHANGED_PSKC);
+    IgnoreError(Get<Notifier>().Update(mPskc, aPskc, OT_CHANGED_PSKC));
     mIsPskcSet = true;
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -116,7 +115,7 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
         Get<Notifier>().Update(mMasterKey, aKey, OT_CHANGED_MASTER_KEY | OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
 
     mKeySequence = 0;
-    ComputeKey(mKeySequence, mKey);
+    UpdateKeyMaterial();
 
     // reset parent frame counters
     parent = &Get<Mle::MleRouter>().GetParent();
@@ -160,6 +159,21 @@ void KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
     hmac.Finish(aKey);
 }
 
+void KeyManager::UpdateKeyMaterial()
+{
+    uint8_t prevKey[Crypto::HmacSha256::kHashSize];
+    uint8_t currKey[Crypto::HmacSha256::kHashSize];
+    uint8_t nextKey[Crypto::HmacSha256::kHashSize];
+
+    ComputeKey(mKeySequence - 1, prevKey);
+    ComputeKey(mKeySequence, currKey);
+    ComputeKey(mKeySequence + 1, nextKey);
+
+    memcpy(mMleKey, currKey, kMleKeySize);
+    Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prevKey + kMacKeyOffset,
+                                 currKey + kMacKeyOffset, nextKey + kMacKeyOffset);
+}
+
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
     VerifyOrExit(aKeySequence != mKeySequence, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
@@ -177,7 +191,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
     }
 
     mKeySequence = aKeySequence;
-    ComputeKey(mKeySequence, mKey);
+    UpdateKeyMaterial();
 
     mMacFrameCounter = 0;
     mMleFrameCounter = 0;
@@ -186,12 +200,6 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 
 exit:
     return;
-}
-
-const uint8_t *KeyManager::GetTemporaryMacKey(uint32_t aKeySequence)
-{
-    ComputeKey(aKeySequence, mTemporaryKey);
-    return mTemporaryKey + kMacKeyOffset;
 }
 
 const uint8_t *KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
@@ -206,7 +214,7 @@ void KeyManager::IncrementMacFrameCounter(void)
 
     if (mMacFrameCounter >= mStoredMacFrameCounter)
     {
-        Get<Mle::MleRouter>().Store();
+        IgnoreError(Get<Mle::MleRouter>().Store());
     }
 }
 
@@ -216,7 +224,7 @@ void KeyManager::IncrementMleFrameCounter(void)
 
     if (mMleFrameCounter >= mStoredMleFrameCounter)
     {
-        Get<Mle::MleRouter>().Store();
+        IgnoreError(Get<Mle::MleRouter>().Store());
     }
 }
 
@@ -246,7 +254,7 @@ exit:
 
 void KeyManager::SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags)
 {
-    Get<Notifier>().Update(mSecurityPolicyFlags, aSecurityPolicyFlags, OT_CHANGED_SECURITY_POLICY);
+    IgnoreError(Get<Notifier>().Update(mSecurityPolicyFlags, aSecurityPolicyFlags, OT_CHANGED_SECURITY_POLICY));
 }
 
 void KeyManager::StartKeyRotationTimer(void)
@@ -277,20 +285,6 @@ void KeyManager::HandleKeyRotationTimer(void)
     {
         SetCurrentKeySequence(mKeySequence + 1);
     }
-}
-
-void KeyManager::GenerateNonce(const Mac::ExtAddress &aAddress,
-                               uint32_t               aFrameCounter,
-                               uint8_t                aSecurityLevel,
-                               uint8_t *              aNonce)
-{
-    memcpy(aNonce, aAddress.m8, sizeof(Mac::ExtAddress));
-    aNonce += sizeof(Mac::ExtAddress);
-
-    Encoding::BigEndian::WriteUint32(aFrameCounter, aNonce);
-    aNonce += sizeof(uint32_t);
-
-    aNonce[0] = aSecurityLevel;
 }
 
 } // namespace ot

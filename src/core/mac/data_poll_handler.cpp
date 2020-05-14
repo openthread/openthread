@@ -74,7 +74,7 @@ DataPollHandler::DataPollHandler(Instance &aInstance)
     , mIndirectTxChild(NULL)
     , mFrameContext()
     , mCallbacks(aInstance)
-#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     , mCslTxChild(NULL)
     , mCslTimer(aInstance, &DataPollHandler::HandleCslTimer, this)
 #endif
@@ -215,7 +215,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
 
 exit:
     ProcessPendingPolls();
-#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     UpdateCslTimer();
 #endif
 }
@@ -270,10 +270,10 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
                 uint32_t frameCounter;
                 uint8_t  keyId;
 
-                aFrame.GetFrameCounter(frameCounter);
+                IgnoreError(aFrame.GetFrameCounter(frameCounter));
                 aChild.SetIndirectFrameCounter(frameCounter);
 
-                aFrame.GetKeyId(keyId);
+                IgnoreError(aFrame.GetKeyId(keyId));
                 aChild.SetIndirectKeyId(keyId);
             }
 
@@ -285,7 +285,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     mCallbacks.HandleSentFrameToChild(aFrame, mFrameContext, aError, aChild);
@@ -320,7 +320,7 @@ void DataPollHandler::ProcessPendingPolls(void)
     }
 }
 
-#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 otError DataPollHandler::HandleCslFrameRequest(Mac::TxFrame &aFrame)
 {
     otError error = OT_ERROR_NONE;
@@ -436,13 +436,10 @@ exit:
 
 void DataPollHandler::HandleCslTimer(void)
 {
-    otError error;
-
     OT_ASSERT(mCslTxChild != NULL);
-    error = Get<Mac::Mac>().RequestCslFrameTransmission();
-    OT_ASSERT(error != OT_ERROR_INVALID_STATE);
+    Get<Mac::Mac>().RequestCslFrameTransmission();
 }
-#endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 } // namespace ot
 
 #endif // #if OPENTHREAD_FTD

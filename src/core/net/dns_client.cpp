@@ -32,6 +32,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
+#include "common/logging.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -172,7 +173,7 @@ Message *Client::NewMessage(const Header &aHeader)
     Message *message = NULL;
 
     VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL, OT_NOOP);
-    message->Prepend(&aHeader, sizeof(aHeader));
+    IgnoreError(message->Prepend(&aHeader, sizeof(aHeader)));
     message->SetOffset(0);
 
 exit:
@@ -223,7 +224,7 @@ otError Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageI
     return mSocket.SendTo(aMessage, aMessageInfo);
 }
 
-otError Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError  error;
     Message *messageCopy = NULL;
@@ -237,12 +238,15 @@ otError Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessa
 
 exit:
 
-    if (error != OT_ERROR_NONE && messageCopy != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        messageCopy->Free();
-    }
+        otLogWarnIp6("Failed to send DNS request: %s", otThreadErrorToString(error));
 
-    return error;
+        if (messageCopy != NULL)
+        {
+            messageCopy->Free();
+        }
+    }
 }
 
 otError Client::AppendCompressedHostname(Message &aMessage, const char *aHostname)

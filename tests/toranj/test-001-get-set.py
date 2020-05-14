@@ -176,12 +176,12 @@ all_gettable_props = [
 
 all_posix_gettable_props = [wpan.WPAN_RCP_VERSION]
 
-# note: partitionid only takes effect after forming one Thread network.
+# note: Partition Id only takes effect after forming one Thread network.
 node.set(wpan.WPAN_PARTITION_ID, '12345678')
 
 node.form('get-set')
 
-# verify that partitionid property is indeed changed.
+# verify that Partition Id property is indeed changed.
 verify(int(node.get(wpan.WPAN_PARTITION_ID), 0) == 12345678)
 
 for prop in all_gettable_props:

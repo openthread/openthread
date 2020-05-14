@@ -50,9 +50,6 @@
 #define OPENTHREAD_CONFIG_THREAD_VERSION OT_THREAD_VERSION_1_1
 #endif
 
-// Need to include this file for definitions used in header files
-#include "openthread-thread_v1_2-core-default-config.h"
-
 #include "config/openthread-core-default-config.h"
 
 #include "config/announce_sender.h"
@@ -79,6 +76,8 @@
 #include "config/sntp_client.h"
 #include "config/time_sync.h"
 #include "config/tmf.h"
+
+#include "openthread-thread_v1_2-core-default-config.h"
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
     OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE

@@ -163,6 +163,35 @@ public:
 
 protected:
     /**
+     * This class defines a generic Dataset TLV to read from a message.
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    class DatasetTlv : public Tlv
+    {
+    public:
+        /**
+         * This method reads the Dataset TLV from a given message at a given offset.
+         *
+         * @param[in]  aMessage  A message to read the TLV from.
+         * @param[in]  aOffset   An offset into the message to read from.
+         *
+         * @retval OT_ERROR_NONE    The TLV was read successfully.
+         * @retval OT_ERROR_PARSE   The TLV was not well-formed and could not be parsed.
+         *
+         */
+        otError ReadFromMessage(const Message &aMessage, uint16_t aOffset);
+
+    private:
+        enum
+        {
+            kMaxValueSize = 16, // Maximum size of a Dataset TLV value (bytes).
+        };
+
+        uint8_t mValue[Dataset::kMaxValueSize];
+    } OT_TOOL_PACKED_END;
+
+    /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance      A reference to the OpenThread instance.
@@ -332,7 +361,7 @@ public:
      * @param[in]  aDataset  The Operational Dataset.
      *
      */
-    void Save(const Dataset &aDataset) { DatasetManager::Save(aDataset); }
+    void Save(const Dataset &aDataset) { IgnoreError(DatasetManager::Save(aDataset)); }
 
     /**
      * This method sets the Operational Dataset for the partition.

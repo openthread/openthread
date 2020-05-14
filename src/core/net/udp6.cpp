@@ -232,7 +232,7 @@ exit:
 
 void Udp::AddSocket(UdpSocket &aSocket)
 {
-    mSockets.Add(aSocket);
+    IgnoreError(mSockets.Add(aSocket));
 }
 
 void Udp::RemoveSocket(UdpSocket &aSocket)

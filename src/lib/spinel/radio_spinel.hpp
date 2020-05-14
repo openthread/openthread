@@ -286,6 +286,14 @@ public:
      */
     otRadioState GetState(void) const;
 
+    /**
+     * This method gets the current receiving channel.
+     *
+     * @returns Current receiving channel.
+     *
+     */
+    uint8_t GetChannel(void) const { return mChannel; }
+
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
     /**
      * Enable the radio coex.
@@ -354,7 +362,7 @@ public:
      * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
      * @retval  OT_ERROR_NO_BUFS            No available entry in the source match table.
      */
-    otError AddSrcMatchShortEntry(const uint16_t aShortAddress);
+    otError AddSrcMatchShortEntry(uint16_t aShortAddress);
 
     /**
      * This method removes a short address from the source address match table.
@@ -367,7 +375,7 @@ public:
      * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
      * @retval  OT_ERROR_NO_ADDRESS         The short address is not in source address match table.
      */
-    otError ClearSrcMatchShortEntry(const uint16_t aShortAddress);
+    otError ClearSrcMatchShortEntry(uint16_t aShortAddress);
 
     /**
      * Clear all short addresses from the source address match table.
@@ -588,6 +596,28 @@ public:
      *
      */
     void HandleReceivedFrame(void);
+
+    /**
+     * This method sets MAC key and key index to RCP.
+     *
+     * @param[in] aKeyIdMode  The key ID mode.
+     * @param[in] aKeyId      The key index.
+     * @param[in] aKeySize    The key length.
+     * @param[in] aPrevKey    The pointer to the previous MAC key.
+     * @param[in] aCurrKey    The pointer to the current MAC key.
+     * @param[in] aNextKey    The pointer to the next MAC key.
+     *
+     * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     *
+     */
+    otError SetMacKey(uint8_t        aKeyIdMode,
+                      uint8_t        aKeyId,
+                      uint8_t        aKeySize,
+                      const uint8_t *aPrevKey,
+                      const uint8_t *aCurrKey,
+                      const uint8_t *aNextKey);
 
     /**
      * This method checks whether the spinel interface is radio-only

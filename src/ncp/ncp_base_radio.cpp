@@ -167,7 +167,7 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
     // Make sure we are back listening on the original receive channel,
     // since the energy scan could have been on a different channel.
-    otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone);
+    IgnoreError(otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone));
 
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_MAC_ENERGY_SCAN_RESULT));
@@ -318,7 +318,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_ENABLED>(void)
         // If we have raw stream enabled stop receiving
         if (mIsRawStreamEnabled)
         {
-            otLinkRawSleep(mInstance);
+            IgnoreError(otLinkRawSleep(mInstance));
         }
 
         error = otLinkRawSetEnable(mInstance, false);
@@ -357,6 +357,8 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     const uint8_t *payloadPtr;
     uint16_t       payloadLen;
     bool           csmaEnable;
+    bool           isARetx;
+    bool           isSecurityProcessed;
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(payloadPtr, payloadLen));
     VerifyOrExit(payloadLen <= OT_RADIO_FRAME_MAX_SIZE, error = OT_ERROR_PARSE);
@@ -370,9 +372,11 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(error = mDecoder.ReadUint8(aFrame.mChannel));
 
     // Set the default value for all optional parameters.
-    aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
-    aFrame.mInfo.mTxInfo.mMaxFrameRetries = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
-    aFrame.mInfo.mTxInfo.mCsmaCaEnabled   = true;
+    aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs     = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
+    aFrame.mInfo.mTxInfo.mMaxFrameRetries     = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
+    aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = true;
+    aFrame.mInfo.mTxInfo.mIsARetx             = false;
+    aFrame.mInfo.mTxInfo.mIsSecurityProcessed = false;
 
     // All the next parameters are optional. Note that even if the
     // decoder fails to parse any of optional parameters we still want to
@@ -382,7 +386,11 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs));
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxFrameRetries));
     SuccessOrExit(mDecoder.ReadBool(csmaEnable));
-    aFrame.mInfo.mTxInfo.mCsmaCaEnabled = csmaEnable;
+    SuccessOrExit(mDecoder.ReadBool(isARetx));
+    SuccessOrExit(mDecoder.ReadBool(isSecurityProcessed));
+    aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = csmaEnable;
+    aFrame.mInfo.mTxInfo.mIsARetx             = isARetx;
+    aFrame.mInfo.mTxInfo.mIsSecurityProcessed = isSecurityProcessed;
 
 exit:
     return error;
@@ -418,6 +426,36 @@ exit:
         error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error));
     }
 
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>(void)
+{
+    otError        error = OT_ERROR_NONE;
+    uint8_t        keyIdMode;
+    uint8_t        keyId;
+    uint16_t       keySize;
+    const uint8_t *prevKey;
+    const uint8_t *currKey;
+    const uint8_t *nextKey;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(keyIdMode));
+    VerifyOrExit(keyIdMode == Mac::Frame::kKeyIdMode1, error = OT_ERROR_INVALID_ARGS);
+
+    SuccessOrExit(error = mDecoder.ReadUint8(keyId));
+
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(prevKey, keySize));
+    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_INVALID_ARGS);
+
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(currKey, keySize));
+    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_INVALID_ARGS);
+
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(nextKey, keySize));
+    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_INVALID_ARGS);
+
+    error = otLinkRawSetMacKey(mInstance, keyIdMode, keyId, prevKey, currKey, nextKey);
+
+exit:
     return error;
 }
 

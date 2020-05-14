@@ -130,7 +130,7 @@ const struct Command Interpreter::sCommands[] = {
     {"contextreusedelay", &Interpreter::ProcessContextIdReuseDelay},
 #endif
     {"counters", &Interpreter::ProcessCounters},
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     {"csl", &Interpreter::ProcessCsl},
 #endif
     {"dataset", &Interpreter::ProcessDataset},
@@ -279,7 +279,7 @@ Interpreter::Interpreter(Instance *aInstance)
 
     mIcmpHandler.mReceiveCallback = Interpreter::HandleIcmpReceive;
     mIcmpHandler.mContext         = this;
-    otIcmp6RegisterHandler(mInstance, &mIcmpHandler);
+    IgnoreError(otIcmp6RegisterHandler(mInstance, &mIcmpHandler));
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     memset(mResolvingHostname, 0, sizeof(mResolvingHostname));
@@ -1177,7 +1177,7 @@ exit:
     AppendResult(error);
 }
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 void Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
 {
     otError error = OT_ERROR_NONE;
@@ -1237,7 +1237,7 @@ void Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
 exit:
     AppendResult(error);
 }
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessDelayTimerMin(uint8_t aArgsLength, char *aArgs[])
@@ -3967,7 +3967,8 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 {
     char *  aArgs[kMaxArgs] = {NULL};
     char *  cmd;
-    uint8_t aArgsLength = 0, i = 0;
+    uint8_t aArgsLength = 0;
+    size_t  i           = 0;
 
     mServer = &aServer;
 
@@ -4042,12 +4043,12 @@ void Interpreter::ProcessNetworkDiagnostic(uint8_t aArgsLength, char *aArgs[])
 
     if (strcmp(aArgs[0], "get") == 0)
     {
-        otThreadSendDiagnosticGet(mInstance, &address, tlvTypes, count);
+        IgnoreError(otThreadSendDiagnosticGet(mInstance, &address, tlvTypes, count));
         ExitNow();
     }
     else if (strcmp(aArgs[0], "reset") == 0)
     {
-        otThreadSendDiagnosticReset(mInstance, &address, tlvTypes, count);
+        IgnoreError(otThreadSendDiagnosticReset(mInstance, &address, tlvTypes, count));
         AppendResult(OT_ERROR_NONE);
     }
     else

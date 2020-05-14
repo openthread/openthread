@@ -257,7 +257,7 @@ public:
      */
     void RequestFrameChange(FrameChange aChange, Child &aChild);
 
-#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     void    UpdateCslChild(Child &aChild);
     otError HandleCslFrameRequest(Mac::TxFrame &aFrame);
 #endif
@@ -281,7 +281,7 @@ private:
     Callbacks::FrameContext mFrameContext;
     Callbacks               mCallbacks;
 
-#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     static const uint16_t kCslMaxFrameRequestAhead = 50; ///< 8ms, in units of 10 symbols.
 
     /**
@@ -302,7 +302,7 @@ private:
     Child *    mCslTxChild;
     TimerMicro mCslTimer; ///< The max CSL period is about 10s, the current micro timer supports that delay.
 
-#endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE && OPENTHREAD_FTD
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE && OPENTHREAD_FTD
 };
 
 /**

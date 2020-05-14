@@ -79,12 +79,8 @@ public:
     /**
      * This method instructs the data poll sender to start sending periodic data polls.
      *
-     * @retval OT_ERROR_NONE            Successfully started sending periodic data polls.
-     * @retval OT_ERROR_ALREADY         Periodic data poll transmission is already started/enabled.
-     * @retval OT_ERROR_INVALID_STATE   Device is not in rx-off-when-idle mode.
-     *
      */
-    otError StartPolling(void);
+    void StartPolling(void);
 
     /**
      * This method instructs the data poll sender to stop sending periodic data polls.
@@ -219,11 +215,8 @@ public:
     /**
      * This method asks data poll sender to stop fast polls when the expecting response is received.
      *
-     * @retval OT_ERROR_NONE            Successfully stopped fast polls when no other responses are expected.
-     * @retval OT_ERROR_BUSY            There are other callers who are waiting for responses.
-     *
      */
-    otError StopFastPolls(void);
+    void StopFastPolls(void);
 
     /**
      * This method gets the maximum data polling period in use.

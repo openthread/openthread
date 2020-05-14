@@ -26,38 +26,38 @@ Form a network with the device that has Commissioner support.
 
 1. Generate and view new network configuration.
 
-    ```bash
-    > dataset init new
-    Done
-    > dataset
-    Active Timestamp: 1
-    Channel: 13
-    Channel Mask: 07fff800
-    Ext PAN ID: d63e8e3e495ebbc3
-    Mesh Local Prefix: fd3d:b50b:f96d:722d/64
-    Master Key: dfd34f0f05cad978ec4e32b0413038ff
-    Network Name: OpenThread-8f28
-    PAN ID: 0x8f28
-    PSKc: c23a76e98f1a6483639b1ac1271e2e27
-    Security Policy: 0, onrcb
-    Done
-    ```
+   ```bash
+   > dataset init new
+   Done
+   > dataset
+   Active Timestamp: 1
+   Channel: 13
+   Channel Mask: 07fff800
+   Ext PAN ID: d63e8e3e495ebbc3
+   Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+   Master Key: dfd34f0f05cad978ec4e32b0413038ff
+   Network Name: OpenThread-8f28
+   PAN ID: 0x8f28
+   PSKc: c23a76e98f1a6483639b1ac1271e2e27
+   Security Policy: 0, onrcb
+   Done
+   ```
 
 2. Commit new dataset to the Active Operational Dataset in non-volatile storage.
 
-    ```bash
-    dataset commit active
-    Done
-    ```
+   ```bash
+   dataset commit active
+   Done
+   ```
 
 3. Enable Thread interface
 
-    ```bash
-    > ifconfig up
-    Done
-    > thread start
-    Done
-    ```
+   ```bash
+   > ifconfig up
+   Done
+   > thread start
+   Done
+   ```
 
 ### Obtain Joiner IEEE EUI-64
 

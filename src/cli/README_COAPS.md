@@ -6,7 +6,7 @@ The OpenThread CoAPS APIs may be invoked via the OpenThread CLI.
 
 ### Build with CoAPS API support
 
-Use the   `COAPS=1` build       switch to enable CoAPS API support.
+Use the `COAPS=1` build switch to enable CoAPS API support.
 
 ```bash
 > ./bootstrap
@@ -23,22 +23,23 @@ CoAPS uses DTLS to establish a secure, end-to-end connection.
 
 This example supports two ciphersuites:
 
-* TLS_PSK_WITH_AES_128_CCM_8
+- TLS_PSK_WITH_AES_128_CCM_8
+
   ```bash
   > coaps psk <your-psk> <your-psk-id>
   Done
   ```
 
-* TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8
+- TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8
   ```bash
   > coaps x509
   Done
   ```
-The X.509 certificate stored in `core/cli/x509_cert_key.hpp`.
+  The X.509 certificate stored in `core/cli/x509_cert_key.hpp`.
 
 ### Node 1
 
-On node  1, setup CoAPS server with resource `test-resource`.
+On node 1, setup CoAPS server with resource `test-resource`.
 
 ```bash
 > coaps start
@@ -90,18 +91,18 @@ coaps response sent
 
 ## Command List
 
-* [help](#help)
-* [connect](#connect-address)
-* [delete](#delete-uri-path-type-payload)
-* [disconnect](#disconnect)
-* [get](#get-uri-path-type)
-* [post](#post-uri-path-type-payload)
-* [psk](#psk-psk-pskid)
-* [put](#put-uri-path-type-payload)
-* [resource](#resource-uri-path)
-* [start](#start)
-* [stop](#stop)
-* [x509](#x509)
+- [help](#help)
+- [connect](#connect-address)
+- [delete](#delete-uri-path-type-payload)
+- [disconnect](#disconnect)
+- [get](#get-uri-path-type)
+- [post](#post-uri-path-type-payload)
+- [psk](#psk-psk-pskid)
+- [put](#put-uri-path-type-payload)
+- [resource](#resource-uri-path)
+- [start](#start)
+- [stop](#stop)
+- [x509](#x509)
 
 ## Command Details
 
@@ -130,7 +131,7 @@ List the CoAPS CLI commands.
 
 Establish DTLS session.
 
-* address: IPv6 address of the peer.
+- address: IPv6 address of the peer.
 
 ```bash
 > coaps connect fdde:ad00:beef:0:9903:14b:27e0:5744
@@ -140,9 +141,9 @@ coaps connected
 
 ### delete \<uri-path\> \[type\] \[payload\]
 
-* uri-path: URI path of the resource.
-* type: "con" for Confirmable or "non-con" for Non-confirmable (default).
-* payload: CoAPS request payload.
+- uri-path: URI path of the resource.
+- type: "con" for Confirmable or "non-con" for Non-confirmable (default).
+- payload: CoAPS request payload.
 
 ```bash
 > coaps delete test-resource con payload
@@ -159,8 +160,8 @@ Done
 
 ### get \<uri-path\> \[type\]
 
-* uri-path: URI path of the resource.
-* type: "con" for Confirmable or "non-con" for Non-confirmable (default).
+- uri-path: URI path of the resource.
+- type: "con" for Confirmable or "non-con" for Non-confirmable (default).
 
 ```bash
 > coaps get test-resource
@@ -169,9 +170,9 @@ Done
 
 ### post \<uri-path\> \[type\] \[payload\]
 
-* uri-path: URI path of the resource.
-* type: "con" for Confirmable or "non-con" for Non-confirmable (default).
-* payload: CoAPS request payload.
+- uri-path: URI path of the resource.
+- type: "con" for Confirmable or "non-con" for Non-confirmable (default).
+- payload: CoAPS request payload.
 
 ```bash
 > coaps post test-resource con payload
@@ -182,8 +183,8 @@ Done
 
 Set DTLS ciphersuite to `TLS_PSK_WITH_AES_128_CCM_8`.
 
-* psk: pre-shared key
-* pskid: pre-shared key identifier
+- psk: pre-shared key
+- pskid: pre-shared key identifier
 
 ```bash
 > coaps psk 123 pskid
@@ -192,9 +193,9 @@ Done
 
 ### put \<uri-path\> \[type\] \[payload\]
 
-* uri-path: URI path of the resource.
-* type: "con" for Confirmable or "non-con" for Non-confirmable (default).
-* payload: CoAPS request payload.
+- uri-path: URI path of the resource.
+- type: "con" for Confirmable or "non-con" for Non-confirmable (default).
+- payload: CoAPS request payload.
 
 ```bash
 > coaps put test-resource con payload
@@ -217,7 +218,7 @@ Done
 
 Starts the application coaps service.
 
-* checkPeerCert: Peer Certificate Check can be disabled by typing false.
+- checkPeerCert: Peer Certificate Check can be disabled by typing false.
 
 ```bash
 > coaps start

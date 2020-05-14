@@ -401,7 +401,7 @@ otError SpiInterface::PushPullSpi(void)
     SuccessOrExit(error = mRxFrameBuffer.SetSkipLength(kSpiFrameHeaderSize));
 
     // Check whether the remaining frame buffer has enough space to store the data to be received.
-    VerifyOrExit(mRxFrameBuffer.GetFrameMaxLength() >= spiTransferBytes + mSpiAlignAllowance);
+    VerifyOrExit(mRxFrameBuffer.GetFrameMaxLength() >= spiTransferBytes + mSpiAlignAllowance, OT_NOOP);
 
     // Point to the start of the reserved buffer.
     spiRxFrameBuffer = mRxFrameBuffer.GetFrame() - kSpiFrameHeaderSize;
@@ -679,7 +679,7 @@ void SpiInterface::Process(const RadioProcessContext &aContext)
     if (mSpiTxIsReady || CheckInterrupt())
     {
         // We guard this with the above check because we don't want to overwrite any previously received frames.
-        PushPullSpi();
+        IgnoreError(PushPullSpi());
     }
 }
 
@@ -692,8 +692,8 @@ otError SpiInterface::WaitForFrame(uint64_t aTimeoutUs)
     int            ret;
     bool           isDataReady = false;
 
-    timeout.tv_sec  = aTimeoutUs / US_PER_S;
-    timeout.tv_usec = aTimeoutUs % US_PER_S;
+    timeout.tv_sec  = static_cast<time_t>(aTimeoutUs / US_PER_S);
+    timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % US_PER_S);
 
     FD_ZERO(&readFdSet);
 
@@ -737,7 +737,7 @@ otError SpiInterface::WaitForFrame(uint64_t aTimeoutUs)
 
     if (isDataReady)
     {
-        PushPullSpi();
+        IgnoreError(PushPullSpi());
     }
     else if (ret == 0)
     {
@@ -764,7 +764,7 @@ otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     mSpiTxIsReady     = true;
     mSpiTxPayloadSize = aLength;
 
-    PushPullSpi();
+    IgnoreError(PushPullSpi());
 
 exit:
     return error;

@@ -28,9 +28,10 @@
 #
 
 import config
-import node
 import re
 import unittest
+
+import thread_cert
 
 LEADER = 1
 REED = 2
@@ -45,27 +46,18 @@ SRV_0_SERVER_DATA = 'bar'
 #
 
 
-class TestREEDAddressSolicitRejected(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in [LEADER, REED]:
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-
-        self.nodes[REED].set_panid(0xface)
-        self.nodes[REED].set_mode('rsdn')
-        self.nodes[REED].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class TestREEDAddressSolicitRejected(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface
+        },
+        REED: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+    }
 
     def testAddressSolicitRejectedBeforeSvrData(self):
         self.nodes[LEADER].start()

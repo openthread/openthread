@@ -107,7 +107,8 @@ bool Neighbor::MatchesFilter(StateFilter aFilter) const
 
 void Neighbor::GenerateChallenge(void)
 {
-    Random::Crypto::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge));
+    IgnoreError(
+        Random::Crypto::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge)));
 }
 
 void Child::Clear(void)
@@ -284,7 +285,7 @@ exit:
 
 void Child::GenerateChallenge(void)
 {
-    Random::Crypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge));
+    IgnoreError(Random::Crypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge)));
 }
 
 void Router::Clear(void)

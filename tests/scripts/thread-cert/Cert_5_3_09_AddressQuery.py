@@ -33,7 +33,7 @@ import unittest
 import command
 import config
 import ipv6
-import node
+import thread_cert
 
 LEADER = 1
 ROUTER1 = 2
@@ -42,52 +42,39 @@ ROUTER3 = 4
 SED1 = 5
 
 
-class Cert_5_3_09_AddressQuery(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 6):
-            self.nodes[i] = node.Node(i, (i == SED1), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER2].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[DUT_ROUTER2].set_panid(0xface)
-        self.nodes[DUT_ROUTER2].set_mode('rsdn')
-        self.nodes[DUT_ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[DUT_ROUTER2].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[DUT_ROUTER2].enable_whitelist()
-        self.nodes[DUT_ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER3].set_panid(0xface)
-        self.nodes[ROUTER3].set_mode('rsdn')
-        self.nodes[ROUTER3].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER3].enable_whitelist()
-        self.nodes[ROUTER3].set_router_selection_jitter(1)
-
-        self.nodes[SED1].set_panid(0xface)
-        self.nodes[SED1].set_mode('s')
-        self.nodes[SED1].add_whitelist(self.nodes[DUT_ROUTER2].get_addr64())
-        self.nodes[SED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
-        self.nodes[SED1].enable_whitelist()
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_3_09_AddressQuery(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1, DUT_ROUTER2, ROUTER3]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        DUT_ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, SED1]
+        },
+        ROUTER3: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        SED1: {
+            'is_mtd': True,
+            'mode': 's',
+            'panid': 0xface,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [DUT_ROUTER2]
+        },
+    }
 
     def test(self):
         # 1 & 2 ALL: Build and verify the topology

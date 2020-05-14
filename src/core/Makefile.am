@@ -214,6 +214,7 @@ SOURCES_COMMON                             = \
     thread/announce_begin_server.cpp         \
     thread/announce_sender.cpp               \
     thread/child_table.cpp                   \
+    thread/dua_manager.cpp                   \
     thread/energy_scan_server.cpp            \
     thread/indirect_sender.cpp               \
     thread/key_manager.cpp                   \
@@ -266,6 +267,8 @@ libopenthread_radio_a_SOURCES              = \
     common/string.cpp                        \
     common/tasklet.cpp                       \
     common/timer.cpp                         \
+    crypto/aes_ccm.cpp                       \
+    crypto/aes_ecb.cpp                       \
     diags/factory_diags.cpp                  \
     mac/link_raw.cpp                         \
     mac/mac_frame.cpp                        \
@@ -418,6 +421,7 @@ HEADERS_COMMON                             = \
     thread/announce_begin_server.hpp         \
     thread/announce_sender.hpp               \
     thread/child_table.hpp                   \
+    thread/dua_manager.hpp                   \
     thread/energy_scan_server.hpp            \
     thread/indirect_sender.hpp               \
     thread/indirect_sender_frame_context.hpp \

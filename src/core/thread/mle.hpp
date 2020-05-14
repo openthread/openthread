@@ -45,9 +45,6 @@
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/topology.hpp"
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-#include "backbone_router/leader.hpp"
-#endif
 
 namespace ot {
 
@@ -424,11 +421,8 @@ public:
      * @param[in]  aChannel        The channel to use when transmitting.
      * @param[in]  aOrphanAnnounce To indicate if MLE Announce is sent from an orphan end device.
      *
-     * @retval OT_ERROR_NONE     Successfully generated an MLE Announce message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate the MLE Announce message.
-     *
      */
-    otError SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce);
+    void SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce);
 
     /**
      * This method causes the Thread interface to detach from the Thread network.
@@ -616,8 +610,6 @@ public:
     /**
      * This method applies the Mesh Local Prefix.
      *
-     * @param[in]  aPrefix  A reference to the Mesh Local Prefix.
-     *
      */
     void ApplyMeshLocalPrefix(void);
 
@@ -657,39 +649,6 @@ public:
     {
         return mRealmLocalAllThreadNodes.GetAddress();
     }
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    /**
-     * This method returns a reference to the All Network Backbone Routers Multicast Address.
-     *
-     * @returns A reference to the All Network Backbone Routers Multicast Address.
-     *
-     */
-    const Ip6::Address &GetAllNetworkBackboneRoutersAddress(void) const
-    {
-        return mAllNetworkBackboneRouters.GetAddress();
-    }
-
-    /**
-     * This method returns a reference to the All Domain Backbone Routers Multicast Address.
-     *
-     * @returns A reference to the All Domain Backbone Routers Multicast Address.
-     *
-     */
-    const Ip6::Address &GetAllDomainBackboneRoutersAddress(void) const
-    {
-        return mAllDomainBackboneRouters.GetAddress();
-    }
-
-    /**
-     * This method updates the subscription of All Domain Backbone Routers Multicast Address.
-     *
-     * @param[in]  aState  The Domain Prefix state or state change.
-     *
-     */
-    void UpdateAllDomainBackboneRouters(BackboneRouter::Leader::DomainPrefixState aState);
-
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
     /**
      * This method gets the parent when operating in End Device mode.
@@ -830,16 +789,6 @@ public:
      *
      */
     otError GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const;
-
-    /**
-     * This method adds Leader's ALOC to its Thread interface.
-     *
-     * @retval OT_ERROR_NONE            Successfully added the Leader's ALOC.
-     * @retval OT_ERROR_BUSY            The Leader's ALOC address was already added.
-     * @retval OT_ERROR_INVALID_STATE   The device's role is not Leader.
-     *
-     */
-    otError AddLeaderAloc(void);
 
     /**
      * This method returns the most recently received Leader Data.
@@ -1436,7 +1385,7 @@ protected:
     otError AppendXtalAccuracy(Message &aMessage);
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * This method appends a CSL Channel TLV to a message.
      *
@@ -1469,7 +1418,7 @@ protected:
      *
      */
     otError AppendCslTimeout(Message &aMessage);
-#endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
      * This method appends a Active Timestamp TLV to a message.
@@ -1722,6 +1671,8 @@ protected:
     static const char *ReattachStateToString(ReattachState aState);
 #endif
 
+    Ip6::NetifUnicastAddress mLeaderAloc; ///< Leader anycast locator
+
     LeaderData    mLeaderData;               ///< Last received Leader Data TLV.
     bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
     DeviceRole    mRole;                     ///< Current Thread role.
@@ -1797,22 +1748,18 @@ private:
     void        ScheduleMessageTransmissionTimer(void);
     otError     ReadChallengeOrResponse(const Message &aMessage, uint8_t aTlvType, Challenge &aBuffer);
 
-    otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
-    otError HandleChildIdResponse(const Message &         aMessage,
-                                  const Ip6::MessageInfo &aMessageInfo,
-                                  const Neighbor *        aNeighbor);
-    otError HandleChildUpdateRequest(const Message &         aMessage,
-                                     const Ip6::MessageInfo &aMessageInfo,
-                                     Neighbor *              aNeighbor);
-    otError HandleChildUpdateResponse(const Message &         aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo,
-                                      const Neighbor *        aNeighbor);
-    otError HandleDataResponse(const Message &         aMessage,
+    void HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
+    void HandleChildIdResponse(const Message &         aMessage,
                                const Ip6::MessageInfo &aMessageInfo,
                                const Neighbor *        aNeighbor);
-    otError HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
-    otError HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
+    void HandleChildUpdateResponse(const Message &         aMessage,
+                                   const Ip6::MessageInfo &aMessageInfo,
+                                   const Neighbor *        aNeighbor);
+    void HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
+    void HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
+    void HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void    ProcessAnnounce(void);
     bool    HasUnregisteredAddress(void);
@@ -1822,7 +1769,7 @@ private:
     otError  SendChildIdRequest(void);
     otError  SendOrphanAnnounce(void);
     bool     PrepareAnnounceState(void);
-    otError  SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
+    void     SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
     uint32_t Reattach(void);
 
     bool IsBetterParent(uint16_t               aRloc16,
@@ -1841,7 +1788,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
-    otError InformPreviousParent(void);
+    void InformPreviousParent(void);
 #endif
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
@@ -1905,16 +1852,8 @@ private:
     uint16_t mAlternatePanId;
     uint64_t mAlternateTimestamp;
 
-    Ip6::NetifUnicastAddress mLeaderAloc;
-
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     Ip6::NetifUnicastAddress mServiceAlocs[kMaxServiceAlocs];
-#endif
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Ip6::NetifUnicastAddress   mBackboneRouterPrimaryAloc;
-    Ip6::NetifMulticastAddress mAllNetworkBackboneRouters;
-    Ip6::NetifMulticastAddress mAllDomainBackboneRouters;
 #endif
 
     otMleCounters mCounters;

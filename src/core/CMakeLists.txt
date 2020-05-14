@@ -176,6 +176,7 @@ set(COMMON_SOURCES
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
     thread/child_table.cpp
+    thread/dua_manager.cpp
     thread/energy_scan_server.cpp
     thread/indirect_sender.cpp
     thread/key_manager.cpp
@@ -230,6 +231,8 @@ target_sources(openthread-radio PRIVATE
     common/string.cpp
     common/tasklet.cpp
     common/timer.cpp
+    crypto/aes_ccm.cpp
+    crypto/aes_ecb.cpp
     diags/factory_diags.cpp
     mac/link_raw.cpp
     mac/mac_frame.cpp
@@ -245,10 +248,15 @@ target_sources(openthread-radio PRIVATE
 
 target_link_libraries(openthread-ftd
     PRIVATE
-        mbedtls
+        ${OT_MBEDTLS}
 )
 
 target_link_libraries(openthread-mtd
     PRIVATE
-        mbedtls
+        ${OT_MBEDTLS}
+)
+
+target_link_libraries(openthread-radio
+    PRIVATE
+        ${OT_MBEDTLS}
 )

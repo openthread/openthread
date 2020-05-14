@@ -87,7 +87,7 @@ public:
          */
         uint16_t GetIndirectMessageCount(void) const { return mQueuedMessageCount; }
 
-#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         /**
          * This method indicates whether or not the child enables CSL.
          *
@@ -208,7 +208,7 @@ public:
          */
         void SetCslLastHeard(TimeMilli aCslLastHeard) { mCslLastHeard = aCslLastHeard; }
 
-#endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     private:
         Message *GetIndirectMessage(void) { return mIndirectMessage; }
         void     SetIndirectMessage(Message *aMessage) { mIndirectMessage = aMessage; }
@@ -241,7 +241,7 @@ public:
         uint16_t mQueuedMessageCount : 14;     // Number of queued indirect messages for the child.
         bool     mUseShortAddress : 1;         // Indicates whether to use short or extended address.
         bool     mSourceMatchPending : 1;      // Indicates whether or not pending to add to src match table.
-#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         bool mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
 
         uint8_t  mCslChannel;     ///< The channel the device will listen on.
@@ -252,7 +252,7 @@ public:
         uint16_t  mCslPhase;        ///< The time when the next CSL sample will start.
         TimeMilli mCslLastHeard;    ///< Time when last frame containing CSL IE heard.
 
-#endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         OT_STATIC_ASSERT(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < (1UL << 14),
                          "mQueuedMessageCount cannot fit max required!");
     };
@@ -285,12 +285,8 @@ public:
      * @param[in] aMessage  The message to add.
      * @param[in] aChild    The (sleepy) child for indirect transmission.
      *
-     * @retval OT_ERROR_NONE           Successfully added the message for indirect transmission.
-     * @retval OT_ERROR_ALREADY        The message was already added for indirect transmission to same child.
-     * @retval OT_ERROR_INVALID_STATE  The child is not sleepy.
-     *
      */
-    otError AddMessageForSleepyChild(Message &aMessage, Child &aChild);
+    void AddMessageForSleepyChild(Message &aMessage, Child &aChild);
 
     /**
      * This method removes a message for indirect transmission to a sleepy child.

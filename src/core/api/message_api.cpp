@@ -63,10 +63,10 @@ uint16_t otMessageGetOffset(const otMessage *aMessage)
     return message.GetOffset();
 }
 
-otError otMessageSetOffset(otMessage *aMessage, uint16_t aOffset)
+void otMessageSetOffset(otMessage *aMessage, uint16_t aOffset)
 {
     Message &message = *static_cast<Message *>(aMessage);
-    return message.SetOffset(aOffset);
+    message.SetOffset(aOffset);
 }
 
 bool otMessageIsLinkSecurityEnabled(const otMessage *aMessage)
@@ -118,25 +118,28 @@ void otMessageQueueInit(otMessageQueue *aQueue)
     aQueue->mData = NULL;
 }
 
-otError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage)
+void otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage)
 {
     Message &     message = *static_cast<Message *>(aMessage);
     MessageQueue &queue   = *static_cast<MessageQueue *>(aQueue);
-    return queue.Enqueue(message);
+
+    queue.Enqueue(message);
 }
 
-otError otMessageQueueEnqueueAtHead(otMessageQueue *aQueue, otMessage *aMessage)
+void otMessageQueueEnqueueAtHead(otMessageQueue *aQueue, otMessage *aMessage)
 {
     Message &     message = *static_cast<Message *>(aMessage);
     MessageQueue &queue   = *static_cast<MessageQueue *>(aQueue);
-    return queue.Enqueue(message, MessageQueue::kQueuePositionHead);
+
+    queue.Enqueue(message, MessageQueue::kQueuePositionHead);
 }
 
-otError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage)
+void otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage)
 {
     Message &     message = *static_cast<Message *>(aMessage);
     MessageQueue &queue   = *static_cast<MessageQueue *>(aQueue);
-    return queue.Dequeue(message);
+
+    queue.Dequeue(message);
 }
 
 otMessage *otMessageQueueGetHead(otMessageQueue *aQueue)

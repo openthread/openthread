@@ -50,7 +50,7 @@ void Message::Init(void)
     SetOffset(0);
     GetHelpData().mHeaderLength = kMinHeaderLength;
 
-    SetLength(GetHelpData().mHeaderLength);
+    IgnoreError(SetLength(GetHelpData().mHeaderLength));
 }
 
 void Message::Init(Type aType, Code aCode)
@@ -286,7 +286,7 @@ otError Message::SetToken(uint8_t aTokenLength)
 
     OT_ASSERT(aTokenLength <= sizeof(token));
 
-    Random::Crypto::FillBuffer(token, aTokenLength);
+    IgnoreError(Random::Crypto::FillBuffer(token, aTokenLength));
 
     return SetToken(token, aTokenLength);
 }

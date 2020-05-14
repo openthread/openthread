@@ -52,7 +52,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
     aMessage.SetOffset(0);
     aMessage.SetDatagramTag(0);
-    SuccessOrExit(error = mSendQueue.Enqueue(aMessage));
+    mSendQueue.Enqueue(aMessage);
 
     switch (aMessage.GetType())
     {
@@ -138,7 +138,6 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
     mScheduleTransmissionTask.Post();
 
-exit:
     return error;
 }
 
@@ -286,7 +285,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
             {
                 Lowpan::MeshHeader meshHeader;
 
-                IgnoreReturnValue(meshHeader.ParseFrom(*message));
+                IgnoreError(meshHeader.ParseFrom(*message));
 
                 if (&aChild == static_cast<Child *>(mle.GetNeighbor(meshHeader.GetDestination())))
                 {
@@ -331,7 +330,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
         {
             for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
             {
-                IgnoreReturnValue(mIndirectSender.RemoveMessageFromSleepyChild(*message, *iter.GetChild()));
+                IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(*message, *iter.GetChild()));
             }
         }
 
@@ -360,7 +359,7 @@ void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
     aFrame.SetDstAddr(mMacDest.GetShort());
     aFrame.SetSrcAddr(mMacSource.GetShort());
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (Get<Mac::Mac>().ShouldIncludeCslIe())
     {
         Mac::HeaderIe ieList[2]; // CSL + Termination
@@ -390,7 +389,7 @@ otError MeshForwarder::UpdateMeshRoute(Message &aMessage)
     Neighbor *         neighbor;
     uint16_t           nextHop;
 
-    IgnoreReturnValue(meshHeader.ParseFrom(aMessage));
+    IgnoreError(meshHeader.ParseFrom(aMessage));
 
     nextHop = Get<Mle::MleRouter>().GetNextHop(meshHeader.GetDestination());
 
@@ -419,13 +418,17 @@ exit:
     return error;
 }
 
-otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, const Message &aMessage)
+otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage)
 {
     Mle::MleRouter &mle   = Get<Mle::MleRouter>();
     otError         error = OT_ERROR_NONE;
     Neighbor *      neighbor;
 
-    if (mle.IsRoutingLocator(ip6Header.GetDestination()))
+    if (aMessage.GetOffset() > 0)
+    {
+        mMeshDest = aMessage.GetMeshDest();
+    }
+    else if (mle.IsRoutingLocator(ip6Header.GetDestination()))
     {
         uint16_t rloc16 = ip6Header.GetDestination().GetLocator();
         VerifyOrExit(mle.IsRouterIdValid(Mle::Mle::RouterIdFromRloc16(rloc16)), error = OT_ERROR_DROP);
@@ -492,7 +495,8 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, const Message &
     }
     else
     {
-        Get<NetworkData::Leader>().RouteLookup(ip6Header.GetSource(), ip6Header.GetDestination(), NULL, &mMeshDest);
+        IgnoreError(Get<NetworkData::Leader>().RouteLookup(ip6Header.GetSource(), ip6Header.GetDestination(), NULL,
+                                                           &mMeshDest));
     }
 
     VerifyOrExit(mMeshDest != Mac::kShortAddrInvalid, error = OT_ERROR_DROP);
@@ -500,6 +504,7 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, const Message &
     mMeshSource = Get<Mac::Mac>().GetShortAddress();
 
     SuccessOrExit(error = mle.CheckReachability(mMeshDest, ip6Header));
+    aMessage.SetMeshDest(mMeshDest);
     mMacDest.SetShort(mle.GetNextHop(mMeshDest));
 
     if (mMacDest.GetShort() != mMeshDest)
@@ -510,11 +515,6 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, const Message &
     }
 
 exit:
-    if (error == OT_ERROR_NO_ROUTE)
-    {
-        SendDestinationUnreachable(mMeshSource, aMessage);
-    }
-
     return error;
 }
 
@@ -529,6 +529,35 @@ otError MeshForwarder::GetIp6Header(const uint8_t *     aFrame,
 
     return DecompressIp6Header(aFrame, aFrameLength, aMacSource, aMacDest, aIp6Header, headerLength,
                                nextHeaderCompressed);
+}
+
+void MeshForwarder::SendIcmpErrorIfDstUnreach(const Message &     aMessage,
+                                              const Mac::Address &aMacSource,
+                                              const Mac::Address &aMacDest)
+{
+    otError     error;
+    Ip6::Header ip6header;
+    Child *     child;
+
+    VerifyOrExit(aMacSource.IsShort() && aMacDest.IsShort(), OT_NOOP);
+
+    child = Get<ChildTable>().FindChild(aMacSource.GetShort(), Child::kInStateAnyExceptInvalid);
+    VerifyOrExit((child == NULL) || child->IsFullThreadDevice(), OT_NOOP);
+
+    aMessage.Read(0, sizeof(ip6header), &ip6header);
+    VerifyOrExit(!ip6header.GetDestination().IsMulticast() &&
+                     Get<NetworkData::Leader>().IsOnMesh(ip6header.GetDestination()),
+                 OT_NOOP);
+
+    error = Get<Mle::MleRouter>().CheckReachability(aMacDest.GetShort(), ip6header);
+
+    if (error == OT_ERROR_NO_ROUTE)
+    {
+        SendDestinationUnreachable(aMacSource.GetShort(), aMessage);
+    }
+
+exit:
+    return;
 }
 
 otError MeshForwarder::CheckReachability(const uint8_t *     aFrame,
@@ -587,8 +616,8 @@ void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Messa
     messageInfo.GetPeerAddr() = Get<Mle::MleRouter>().GetMeshLocal16();
     messageInfo.GetPeerAddr().SetLocator(aMeshSource);
 
-    Get<Ip6::Icmp>().SendError(Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute, messageInfo,
-                               aMessage);
+    IgnoreError(Get<Ip6::Icmp>().SendError(Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
+                                           messageInfo, aMessage));
 }
 
 void MeshForwarder::HandleMesh(uint8_t *               aFrame,
@@ -656,7 +685,7 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
 
         LogMessage(kMessageReceive, *message, &aMacSource, OT_ERROR_NONE);
 
-        SendMessage(*message);
+        IgnoreError(SendMessage(*message));
     }
 
 exit:
@@ -827,11 +856,11 @@ exit:
     return error;
 }
 
-otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
-                                               uint16_t            aFrameLength,
-                                               const Mac::Address &aMeshSource,
-                                               const Mac::Address &aMeshDest,
-                                               uint8_t &           aPriority)
+void MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
+                                            uint16_t            aFrameLength,
+                                            const Mac::Address &aMeshSource,
+                                            const Mac::Address &aMeshDest,
+                                            uint8_t &           aPriority)
 {
     otError                error      = OT_ERROR_NONE;
     bool                   isFragment = false;
@@ -866,7 +895,7 @@ exit:
         UpdateFragmentPriority(fragmentHeader, aFrameLength, aMeshSource.GetShort(), aPriority);
     }
 
-    return error;
+    return;
 }
 
 otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest)

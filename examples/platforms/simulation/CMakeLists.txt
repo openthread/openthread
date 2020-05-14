@@ -79,6 +79,7 @@ if(LIBRT)
 endif()
 
 target_link_libraries(openthread-simulation PRIVATE openthread-platform-utils)
+target_link_libraries(openthread-simulation PRIVATE openthread-platform)
 
 target_compile_definitions(openthread-simulation
     PUBLIC
@@ -95,11 +96,14 @@ target_include_directories(openthread-simulation PRIVATE
     ${OT_PUBLIC_INCLUDES}
     ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/examples/platforms
+    ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
 )
 
-set(CPACK_PACKAGE_NAME "openthread-simulation")
-set(CPACK_GENERATOR "DEB")
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenThread Authors <openthread-users@googlegroups.com")
-set(CPACK_PACKAGE_CONTACT "OpenThread Authors <openthread-users@googlegroups.com")
-include(CPack)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    set(CPACK_PACKAGE_NAME "openthread-simulation")
+    set(CPACK_GENERATOR "DEB")
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenThread Authors <openthread-users@googlegroups.com")
+    set(CPACK_PACKAGE_CONTACT "OpenThread Authors <openthread-users@googlegroups.com")
+    include(CPack)
+endif()

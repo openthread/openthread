@@ -29,11 +29,11 @@
 
 import unittest
 
-import config
 import command
+import config
 import ipv6
 import mle
-import node
+import thread_cert
 
 DUT_LEADER = 1
 BR = 2
@@ -43,39 +43,32 @@ MED2 = 4
 MTDS = [MED1, MED2]
 
 
-class Cert_5_3_8_ChildAddressSet(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 5):
-            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
-
-        self.nodes[DUT_LEADER].set_panid(0xface)
-        self.nodes[DUT_LEADER].set_mode('rsdn')
-        self.nodes[DUT_LEADER].add_whitelist(self.nodes[BR].get_addr64())
-        self.nodes[DUT_LEADER].add_whitelist(self.nodes[MED1].get_addr64())
-        self.nodes[DUT_LEADER].add_whitelist(self.nodes[MED2].get_addr64())
-        self.nodes[DUT_LEADER].enable_whitelist()
-
-        self.nodes[BR].set_panid(0xface)
-        self.nodes[BR].set_mode('rsdn')
-        self.nodes[BR].add_whitelist(self.nodes[DUT_LEADER].get_addr64())
-        self.nodes[BR].enable_whitelist()
-        self.nodes[BR].set_router_selection_jitter(1)
-
-        for i in MTDS:
-            self.nodes[i].set_panid(0xface)
-            self.nodes[i].set_mode('rsn')
-            self.nodes[i].add_whitelist(self.nodes[DUT_LEADER].get_addr64())
-            self.nodes[i].enable_whitelist()
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
+    topology = {
+        DUT_LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [BR, MED1, MED2]
+        },
+        BR: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [DUT_LEADER]
+        },
+        MED1: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [DUT_LEADER]
+        },
+        MED2: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [DUT_LEADER]
+        },
+    }
 
     def test(self):
         self.nodes[DUT_LEADER].start()

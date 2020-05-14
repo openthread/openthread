@@ -148,7 +148,7 @@ void MeshForwarder::RemoveMessage(Message &aMessage)
 #if OPENTHREAD_FTD
         for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
         {
-            IgnoreReturnValue(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, *iter.GetChild()));
+            IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, *iter.GetChild()));
         }
 #endif
 
@@ -449,7 +449,7 @@ otError MeshForwarder::HandleFrameRequest(Mac::TxFrame &aFrame)
                 Get<Mac::Mac>().SetPanId(Mac::GenerateRandomPanId());
             }
         }
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (Get<Mac::Mac>().ShouldIncludeCslIe() && mSendMessage->IsSubTypeMle())
         {
             mSendMessage->SetLinkSecurityEnabled(true);
@@ -604,15 +604,15 @@ start:
 
     aFrame.InitMacHeader(fcf, secCtl);
     aFrame.SetDstPanId(dstpan);
-    aFrame.SetSrcPanId(Get<Mac::Mac>().GetPanId());
+    IgnoreError(aFrame.SetSrcPanId(Get<Mac::Mac>().GetPanId()));
     aFrame.SetDstAddr(aMacDest);
     aFrame.SetSrcAddr(aMacSource);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    Get<Mac::Mac>().AppendHeaderIe(aFrame, aMessage.IsTimeSync());
+    IgnoreError(Get<Mac::Mac>().AppendHeaderIe(aFrame, aMessage.IsTimeSync()));
 #else
-    Get<Mac::Mac>().AppendHeaderIe(aFrame, false);
+    IgnoreError(Get<Mac::Mac>().AppendHeaderIe(aFrame, false));
 #endif
 #endif
 
@@ -754,11 +754,11 @@ start:
         payload += fragmentHeaderLength;
         headerLength += fragmentHeaderLength;
 
-        fragmentLength = (aFrame.GetMaxPayloadLength() - headerLength) & ~0x7;
+        fragmentLength = aFrame.GetMaxPayloadLength() - headerLength;
 
         if (payloadLength > fragmentLength)
         {
-            payloadLength = fragmentLength;
+            payloadLength = (fragmentLength & ~0x7);
         }
 
         // Copy IPv6 Payload
@@ -823,7 +823,7 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, otError aError)
 
     if (!aFrame.IsEmpty())
     {
-        aFrame.GetDstAddr(macDest);
+        IgnoreError(aFrame.GetDstAddr(macDest));
         neighbor = UpdateNeighborOnSentFrame(aFrame, aError, macDest);
     }
 
@@ -989,7 +989,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
     SuccessOrExit(error = aFrame.GetSrcAddr(macSource));
     SuccessOrExit(error = aFrame.GetDstAddr(macDest));
 
-    aFrame.GetSrcPanId(linkInfo.mPanId);
+    IgnoreError(aFrame.GetSrcPanId(linkInfo.mPanId));
     linkInfo.mChannel      = aFrame.GetChannel();
     linkInfo.mRss          = aFrame.GetRssi();
     linkInfo.mLqi          = aFrame.GetLqi();
@@ -1086,8 +1086,11 @@ void MeshForwarder::HandleFragment(const uint8_t *         aFrame,
         message->SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);
 #endif
 
-        // Security Check
         VerifyOrExit(Get<Ip6::Filter>().Accept(*message), error = OT_ERROR_DROP);
+
+#if OPENTHREAD_FTD
+        SendIcmpErrorIfDstUnreach(*message, aMacSource, aMacDest);
+#endif
 
         // Allow re-assembly of only one message at a time on a SED by clearing
         // any remaining fragments in reassembly list upon receiving of a new
@@ -1146,7 +1149,7 @@ exit:
         if (message->GetOffset() >= message->GetLength())
         {
             mReassemblyList.Dequeue(*message);
-            HandleDatagram(*message, aLinkInfo, aMacSource);
+            IgnoreError(HandleDatagram(*message, aLinkInfo, aMacSource));
         }
     }
     else
@@ -1285,14 +1288,17 @@ void MeshForwarder::HandleLowpanHC(const uint8_t *         aFrame,
     message->SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);
 #endif
 
-    // Security Check
     VerifyOrExit(Get<Ip6::Filter>().Accept(*message), error = OT_ERROR_DROP);
+
+#if OPENTHREAD_FTD
+    SendIcmpErrorIfDstUnreach(*message, aMacSource, aMacDest);
+#endif
 
 exit:
 
     if (error == OT_ERROR_NONE)
     {
-        HandleDatagram(*message, aLinkInfo, aMacSource);
+        IgnoreError(HandleDatagram(*message, aLinkInfo, aMacSource));
     }
     else
     {

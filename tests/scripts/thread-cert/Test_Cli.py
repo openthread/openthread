@@ -29,21 +29,15 @@
 
 import unittest
 
-import node
+import thread_cert
 
 LEADER = 1
 
 
-class Cert_Cli(unittest.TestCase):
-
-    def setUp(self):
-        self.nodes = {}
-        self.nodes[LEADER] = node.Node(LEADER)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
+class Cert_Cli(thread_cert.TestCase):
+    topology = {
+        LEADER: {},
+    }
 
     def test(self):
         commands = self.nodes[LEADER].get_commands()

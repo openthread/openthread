@@ -76,7 +76,7 @@ void Dhcp6Client::UpdateAddresses(void)
     NetworkData::OnMeshPrefixConfig config;
 
     // remove addresses directly if prefix not valid in network data
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); i++)
     {
         IdentityAssociation &ia = mIdentityAssociations[i];
 
@@ -123,7 +123,7 @@ void Dhcp6Client::UpdateAddresses(void)
 
         found = false;
 
-        for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); i++)
+        for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); i++)
         {
             if (mIdentityAssociations[i].mStatus == kIaStatusInvalid)
             {
@@ -173,15 +173,15 @@ void Dhcp6Client::Start(void)
     Ip6::SockAddr sockaddr;
 
     sockaddr.mPort = kDhcpClientPort;
-    mSocket.Open(&Dhcp6Client::HandleUdpReceive, this);
-    mSocket.Bind(sockaddr);
+    IgnoreError(mSocket.Open(&Dhcp6Client::HandleUdpReceive, this));
+    IgnoreError(mSocket.Bind(sockaddr));
 
     ProcessNextIdentityAssociation();
 }
 
 void Dhcp6Client::Stop(void)
 {
-    mSocket.Close();
+    IgnoreError(mSocket.Close());
 }
 
 bool Dhcp6Client::ProcessNextIdentityAssociation()
@@ -194,7 +194,7 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
 
     mTrickleTimer.Stop();
 
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
     {
         if (mIdentityAssociations[i].mStatus != kIaStatusSolicit)
         {
@@ -202,7 +202,7 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
         }
 
         // new transaction id
-        Random::Crypto::FillBuffer(mTransactionId, kTransactionIdSize);
+        IgnoreError(Random::Crypto::FillBuffer(mTransactionId, kTransactionIdSize));
 
         mIdentityAssociationCurrent = &mIdentityAssociations[i];
 
@@ -261,7 +261,7 @@ exit:
     return rval;
 }
 
-otError Dhcp6Client::Solicit(uint16_t aRloc16)
+void Dhcp6Client::Solicit(uint16_t aRloc16)
 {
     otError          error = OT_ERROR_NONE;
     Message *        message;
@@ -290,12 +290,15 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
 
 exit:
 
-    if (message != NULL && error != OT_ERROR_NONE)
+    if (message != NULL)
     {
-        message->Free();
-    }
+        otLogWarnIp6("Failed to send DHCPv6 Solicit: %s", otThreadErrorToString(error));
 
-    return error;
+        if (error != OT_ERROR_NONE)
+        {
+            message->Free();
+        }
+    }
 }
 
 otError Dhcp6Client::AppendHeader(Message &aMessage)
@@ -341,7 +344,7 @@ otError Dhcp6Client::AppendIaNa(Message &aMessage, uint16_t aRloc16)
 
     VerifyOrExit(mIdentityAssociationCurrent != NULL, error = OT_ERROR_DROP);
 
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
     {
         if (mIdentityAssociations[i].mStatus == kIaStatusInvalid ||
             mIdentityAssociations[i].mStatus == kIaStatusSolicitReplied)
@@ -378,7 +381,7 @@ otError Dhcp6Client::AppendIaAddress(Message &aMessage, uint16_t aRloc16)
 
     option.Init();
 
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
     {
         if ((mIdentityAssociations[i].mStatus == kIaStatusSolicit ||
              mIdentityAssociations[i].mStatus == kIaStatusSoliciting) &&
@@ -571,7 +574,7 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
                   (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option)))),
                  error = OT_ERROR_PARSE);
 
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
     {
         IdentityAssociation &ia = mIdentityAssociations[i];
 

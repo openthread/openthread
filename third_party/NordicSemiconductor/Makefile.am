@@ -80,6 +80,10 @@ override CXXFLAGS := $(filter-out -pedantic-errors,$(CXXFLAGS))
 override CFLAGS   := $(filter-out -Wundef,$(CFLAGS))
 override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
 
+# Do not enable -Wcast-align for Nordic Semiconductor driver library
+override CFLAGS   := $(filter-out -Wcast-align,$(CFLAGS))
+override CXXFLAGS := $(filter-out -Wcast-align,$(CXXFLAGS))
+
 COMMONCPPFLAGS                                                                                                          = \
     -DCONFIG_GPIO_AS_PINRESET                                                                                             \
     -DENABLE_FEM=1                                                                                                        \

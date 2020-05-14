@@ -29,8 +29,7 @@
 
 import unittest
 
-import config
-import node
+import thread_cert
 
 COMMISSIONER = 1
 LEADER1 = 2
@@ -38,44 +37,31 @@ ROUTER1 = 3
 LEADER2 = 4
 
 
-class Cert_9_2_14_PanIdQuery(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 5):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[COMMISSIONER].set_panid(0xface)
-        self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER1].get_addr64())
-        self.nodes[COMMISSIONER].enable_whitelist()
-        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
-
-        self.nodes[LEADER1].set_panid(0xface)
-        self.nodes[LEADER1].set_mode('rsdn')
-        self.nodes[LEADER1].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
-        self.nodes[LEADER1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER1].enable_whitelist()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER1].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER2].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[LEADER2].set_panid(0xdead)
-        self.nodes[LEADER2].set_mode('rsdn')
-        self.nodes[LEADER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER2].enable_whitelist()
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_9_2_14_PanIdQuery(thread_cert.TestCase):
+    topology = {
+        COMMISSIONER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER1]
+        },
+        LEADER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [COMMISSIONER, ROUTER1]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER1, LEADER2]
+        },
+        LEADER2: {
+            'mode': 'rsdn',
+            'panid': 0xdead,
+            'whitelist': [ROUTER1]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER1].start()
@@ -104,7 +90,7 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
         self.nodes[COMMISSIONER].panid_query(0xdead, 0xffffffff, ipaddr)
 
         self.nodes[COMMISSIONER].panid_query(0xdead, 0xffffffff,
-                                             'ff33:0040:fdde:ad00:beef:0:0:1')
+                                             'ff33:0040:fd00:db8:0:0:0:1')
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
 

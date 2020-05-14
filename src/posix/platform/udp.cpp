@@ -82,12 +82,13 @@ static bool IsMulticast(const struct in6_addr &aAddress)
 static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMessageInfo &aMessageInfo)
 {
     struct sockaddr_in6 peerAddr;
-    uint8_t             control[CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int))];
-    size_t              controlLength = 0;
-    struct iovec        iov;
-    struct msghdr       msg;
-    struct cmsghdr *    cmsg;
-    ssize_t             rval;
+    uint8_t
+                    control[OT_APPLE_IGNORE_GNU_FOLDING_CONSTANT(CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int)))];
+    size_t          controlLength = 0;
+    struct iovec    iov;
+    struct msghdr   msg;
+    struct cmsghdr *cmsg;
+    ssize_t         rval;
 
     memset(&peerAddr, 0, sizeof(peerAddr));
     peerAddr.sin6_port   = htons(aMessageInfo.mPeerPort);

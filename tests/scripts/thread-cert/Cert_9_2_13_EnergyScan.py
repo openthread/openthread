@@ -29,8 +29,7 @@
 
 import unittest
 
-import config
-import node
+import thread_cert
 
 COMMISSIONER = 1
 LEADER = 2
@@ -38,44 +37,32 @@ ROUTER1 = 3
 ED1 = 4
 
 
-class Cert_9_2_13_EnergyScan(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 5):
-            self.nodes[i] = node.Node(i, (i == ED1), simulator=self.simulator)
-
-        self.nodes[COMMISSIONER].set_panid(0xface)
-        self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[COMMISSIONER].enable_whitelist()
-        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ED1].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ED1].set_panid(0xface)
-        self.nodes[ED1].set_mode('rs')
-        self.nodes[ED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ED1].enable_whitelist()
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_9_2_13_EnergyScan(thread_cert.TestCase):
+    topology = {
+        COMMISSIONER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [COMMISSIONER, ROUTER1]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, ED1]
+        },
+        ED1: {
+            'is_mtd': True,
+            'mode': 'rs',
+            'panid': 0xface,
+            'whitelist': [ROUTER1]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
@@ -113,7 +100,7 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
         self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3E8, ipaddr)
 
         self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3E8,
-                                             'ff33:0040:fdde:ad00:beef:0:0:1')
+                                             'ff33:0040:fd00:db8:0:0:0:1')
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
 

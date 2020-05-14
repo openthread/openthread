@@ -43,6 +43,7 @@ target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
 target_compile_definitions(ot-cli PRIVATE
     $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
     OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI
+    ${OT_PLATFORM_DEFINES}
 )
 
 target_compile_options(ot-cli PRIVATE
@@ -74,6 +75,7 @@ target_include_directories(ot-ncp PRIVATE ${COMMON_INCLUDES})
 
 target_compile_definitions(ot-ncp PRIVATE
     OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_NCP
+    ${OT_PLATFORM_DEFINES}
 )
 
 target_compile_options(ot-ncp PRIVATE
@@ -92,4 +94,6 @@ target_link_libraries(ot-ncp
 install(TARGETS ot-cli ot-ncp
     DESTINATION bin)
 
-set(CPACK_PACKAGE_NAME "openthread-standalone")
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    set(CPACK_PACKAGE_NAME "openthread-standalone")
+endif()

@@ -60,7 +60,7 @@ otError UdpExample::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         mInterpreter.mServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
@@ -264,7 +264,7 @@ otError UdpExample::Process(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength < 1)
     {
-        ProcessHelp(0, NULL);
+        IgnoreError(ProcessHelp(0, NULL));
         error = OT_ERROR_INVALID_ARGS;
     }
     else

@@ -54,12 +54,19 @@ SOURCES_COMMON                                                        += \
 LDADD_MBEDTLS                                                          = \
     $(NULL)
 
+LDADD_MBEDTLS_RADIO                                                    = \
+    $(NULL)
+
 LDADD_DIAG                                                             = \
     $(NULL)
 
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 LDADD_MBEDTLS                                                         += \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
+    $(NULL)
+
+LDADD_MBEDTLS_RADIO                                                   += \
+    $(top_builddir)/third_party/mbedtls/libmbedcrypto_radio.a            \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
@@ -151,8 +158,10 @@ ot_rcp_LDADD                                                           = \
     $(top_builddir)/src/ncp/libopenthread-rcp.a                          \
     $(top_builddir)/src/core/libopenthread-radio.a                       \
     $(LDADD_COMMON)                                                      \
+    $(LDADD_MBEDTLS_RADIO)                                               \
     $(top_builddir)/src/core/libopenthread-radio.a                       \
     $(LDADD_COMMON)                                                      \
+    $(LDADD_MBEDTLS_RADIO)                                               \
     $(NULL)
 
 ot_rcp_LDFLAGS                                                         = \

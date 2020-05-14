@@ -122,6 +122,7 @@ Types of supported PDU controllers:
     - 'APC_PDU_CONTROLLER' - when APC PDU controller connected
     - 'NORDIC_BOARD_PDU_CONTOLLER' - when Nordic boards PDU controller connected
     - 'IP_POWER_SOCKET_PDU_CONTROLLER' - when IP Power Socket 5G10A connected
+    - 'EATON_PDU_CONTROLLER' - when EATON PDU controller connected
 """
 
 PDU_CONTROLLER_OPEN_PARAMS = {'port': 23, 'ip': '127.0.0.1'}
@@ -148,6 +149,8 @@ Example parameters for the 'NORDIC_BOARD_PDU_CONTOLLER':
 
 Example parameters for the 'IP_POWER_SOCKET_PDU_CONTROLLER':
     {'sockets': [0, 1]}
+Example parameters for the 'EATON_PDU_CONTROLLER':
+    {'ip': '127.0.0.1'}
 """
 
 SHIELD_CONTROLLER_TYPE = None

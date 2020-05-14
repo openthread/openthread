@@ -42,6 +42,13 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+try:
+    from pysnmp.hlapi import SnmpEngine, CommunityData, UdpTransportTarget, ContextData, getCmd, setCmd, ObjectType, ObjectIdentity, Integer32
+except ImportError:
+    logger.warning(
+        'PySNMP module is not installed. Install if EATON_PDU_CONTROLLER is used'
+    )
+
 
 class PduController(object):
 
@@ -91,10 +98,10 @@ class ApcPduController(PduController):
 
     def open(self, **params):
         """Open telnet connection
-
+        
         Args:
             params (dict), must contain two parameters "ip" - ip address or hostname and "port" - port number
-
+            
         Example:
             params = {'port': 23, 'ip': 'localhost'}
         """
@@ -124,10 +131,10 @@ class ApcPduController(PduController):
 
     def reboot(self, **params):
         """Reboot outlet
-
+        
         Args:
             params (dict), must contain parameter "outlet" - outlet number
-
+            
         Example:
             params = {'outlet': 1}
         """
@@ -187,6 +194,218 @@ class NordicBoardPduController(PduController):
 
     def close(self):
         pass
+
+
+class EatonPduController(PduController):
+
+    outlet_oid_cmd_get_state_base = '1.3.6.1.4.1.534.6.6.7.6.6.1.2.0.'
+    outlet_oid_cmd_set_on_base = '1.3.6.1.4.1.534.6.6.7.6.6.1.4.0.'
+    outlet_oid_cmd_set_off_base = '1.3.6.1.4.1.534.6.6.7.6.6.1.3.0.'
+    outlet_oid_cmd_reboot_base = '1.3.6.1.4.1.534.6.6.7.6.6.1.5.0.'
+    outlet_oid_cmd_set_reboot_delay_seconds_base = '1.3.6.1.4.1.534.6.6.7.6.6.1.8.0.'
+
+    PDU_COMMAND_TIMEOUT = 5
+
+    def open(self, **params):
+        missing_fields = ['ip', 'port']
+        missing_fields = [
+            field for field in missing_fields if field not in params.keys()
+        ]
+        if missing_fields:
+            raise KeyError(
+                'Missing keys in PDU params: {}'.format(missing_fields))
+        self.params = params
+        self.type = 'pdu'
+        self.ip = self.params['ip']
+        self.snmp_agent_port = int(self.params['port'])
+        self._community = 'public'
+        self._snmp_engine = SnmpEngine()
+        self._community_data = CommunityData(self._community, mpModel=0)
+        self._udp_transport_target = UdpTransportTarget(
+            (self.ip, self.snmp_agent_port))
+        self._context = ContextData()
+
+    def _outlet_oid_get(self, param, socket):
+        """
+        Translates command to the OID number representing a command for the specific power socket.
+
+        Args:
+            param (str), command string
+            socket (int), socket index
+
+        Return:
+            full OID identifying the SNMP object (str)
+        """
+        parameters = {
+            'get_state':
+                self.outlet_oid_cmd_get_state_base,
+            'set_on':
+                self.outlet_oid_cmd_set_on_base,
+            'set_off':
+                self.outlet_oid_cmd_set_off_base,
+            'set_reboot_delay':
+                self.outlet_oid_cmd_set_reboot_delay_seconds_base,
+            'reboot':
+                self.outlet_oid_cmd_reboot_base
+        }
+
+        return parameters[param.lower()] + str(socket)
+
+    # Performs set command to specific OID with a given value by sending a SNMP Set message.
+    def _oid_set(self, oid, value):
+        """
+        Performs set command to specific OID with a given value by sending a SNMP Set message.
+
+        Args:
+            oid (str): Full OID identifying the object to be read.
+            value (int): Value to be written to the OID as Integer32.
+        """
+        errorIndication, errorStatus, errorIndex, varBinds = next(
+            setCmd(self._snmp_engine, self._community_data,
+                   self._udp_transport_target, self._context,
+                   ObjectType(ObjectIdentity(oid), Integer32(value))))
+
+        if errorIndication:
+            msg = 'Found PDU errorIndication: {}'.format(errorIndication)
+            logger.exception(msg)
+            raise RuntimeError(msg)
+        elif errorStatus:
+            msg = 'Found PDU errorStatus: {}'.format(errorStatus)
+            logger.exception(msg)
+            raise RuntimeError(msg)
+
+    def _oid_get(self, oid):
+        """
+        Performs SNMP get command and returns OID value by sending a SNMP Get message.
+
+        Args:
+            oid (str): Full OID identifying the object to be read.
+
+        Return:
+            OID value (int)
+        """
+        errorIndication, errorStatus, errorIndex, varBinds = next(
+            getCmd(self._snmp_engine, self._community_data,
+                   self._udp_transport_target, self._context,
+                   ObjectType(ObjectIdentity(oid))))
+
+        if errorIndication:
+            msg = 'Found PDU errorIndication: {}'.format(errorIndication)
+            logger.exception(msg)
+            raise RuntimeError(msg)
+        elif errorStatus:
+            msg = 'Found PDU errorStatus: {}'.format(errorStatus)
+            logger.exception(msg)
+            raise RuntimeError(msg)
+
+        return int(str(varBinds[-1]).partition('= ')[-1])
+
+    def _outlet_value_set(self, cmd, socket, value=1):
+        """
+        Sets outlet parameter value.
+
+        Args:
+            cmd (str): OID base
+            socket (int): socket index (last OID number)
+            value (int): value to be set
+        """
+        oid = self._outlet_oid_get(cmd, socket)
+
+        # Values other than 1 does not make sense with commands other than "set_reboot_delay".
+        if cmd != 'set_reboot_delay':
+            value = 1
+
+        self._oid_set(oid, value)
+
+    def _outlet_value_get(self, cmd, socket):
+        """
+        Read outlet parameter value.
+
+        Args:
+            cmd (str): OID base
+            socket (int): socket index (last OID number)
+
+        Return:
+            parameter value (int)
+        """
+        oid = self._outlet_oid_get(cmd, socket)
+
+        return self._oid_get(oid)
+
+    def validate_state(self, socket, state):
+        return (self._outlet_value_get('get_state', socket) == state)
+
+    def turn_off(self, sockets):
+        """
+        Turns the specified socket off.
+
+        Args:
+            sockets (list(int)): sockets to be turned off
+        """
+        logger.info('Executing turn OFF for: {}'.format(sockets))
+
+        for socket in sockets:
+            self._outlet_value_set('set_off', socket)
+            time.sleep(2)
+
+            timeout = time.time() + self.PDU_COMMAND_TIMEOUT
+            while ((time.time() < timeout) and
+                   not self.validate_state(socket, 0)):
+                time.sleep(0.1)
+
+            if self.validate_state(socket, 0):
+                logger.debug('Turned OFF socket {} at {}'.format(
+                    socket, self.ip))
+            else:
+                logger.error('Failed to turn OFF socket {} at {}'.format(
+                    socket, self.ip))
+
+    def turn_on(self, sockets):
+        """
+        Turns the specified socket on.
+
+        Args:
+            sockets (list(int)): sockets to be turned on
+        """
+
+        logger.info('Executing turn ON for: {}'.format(sockets))
+
+        for socket in sockets:
+            self._outlet_value_set('set_on', socket)
+            time.sleep(2)
+
+            timeout = time.time() + self.PDU_COMMAND_TIMEOUT
+            while ((time.time() < timeout) and
+                   not self.validate_state(socket, 1)):
+                time.sleep(0.1)
+
+            if self.validate_state(socket, 1):
+                logger.debug('Turned ON socket {} at {}'.format(
+                    socket, self.ip))
+            else:
+                logger.error('Failed to turn ON socket {} at {}'.format(
+                    socket, self.ip))
+
+    def close(self):
+        self._community = None
+        self._snmp_engine = None
+        self._community_data = None
+        self._udp_transport_target = None
+        self._context = None
+
+    def reboot(self, **params):
+        """
+        Reboots the sockets specified in the constructor with off and on delays.
+
+        Args:
+            sockets (list(int)): sockets to reboot
+        """
+
+        logger.info('Executing power cycle for: {}'.format(params['sockets']))
+        self.turn_off(params['sockets'])
+        time.sleep(10)
+        self.turn_on(params['sockets'])
+        time.sleep(5)
 
 
 class IpPowerSocketPduController(PduController):

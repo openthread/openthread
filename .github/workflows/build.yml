@@ -51,15 +51,32 @@ jobs:
         sudo apt autoremove
         sudo apt --no-install-recommends install -y clang-tools clang-format-6.0
         clang-format-6.0 --version
-        python3 -m pip install yapf
+        python3 -m pip install yapf==0.29.0
     - name: Check
       run: |
         script/make-pretty check
 
   package:
+    name: package-${{ matrix.compiler }}
     runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        include:
+          - compiler: gcc
+            compiler_c: gcc
+            compiler_cpp: g++
+          - compiler: clang
+            compiler_c: clang
+            compiler_cpp: clang++
+    env:
+      CC: ${{ matrix.compiler_c }}
+      CXX: ${{ matrix.compiler_cpp }}
     steps:
     - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt update
+        sudo apt --no-install-recommends install -y ninja-build
     - name: Package
       run: |
         script/test package
@@ -133,6 +150,28 @@ jobs:
         script/check-simulation-build
         script/check-posix-build
 
+  clang-m32:
+    name: clang-m32-${{ matrix.clang_ver }}
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        clang_ver: [9]
+    env:
+      CC: clang-${{ matrix.clang_ver }}
+      CXX: clang++-${{ matrix.clang_ver }}
+      CFLAGS: -m32 -Wconversion
+      CXXFLAGS: -m32 -Wconversion
+      LDFLAGS: -m32
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bootstrap
+        run: |
+          sudo apt update
+          sudo apt --no-install-recommends install -y clang-${{ matrix.clang_ver }} clang++-${{ matrix.clang_ver }} g++-multilib ninja-build
+      - name: Build
+        run: |
+          script/check-posix-build
+
   gn:
     runs-on: ubuntu-18.04
     steps:
@@ -150,8 +189,26 @@ jobs:
         export PATH=/tmp/bin:$PATH
         script/check-gn-build
 
-  macos:
+  macos-clang:
     runs-on: macos-10.15
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        brew install automake ninja llvm
+    - name: Build
+      run: |
+        script/check-posix-build
+        script/check-simulation-build
+
+  macos-gcc:
+    runs-on: macos-10.15
+    env:
+      CC: gcc
+      CXX: g++
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
@@ -159,6 +216,7 @@ jobs:
         brew install automake ninja
     - name: Build
       run: |
+        script/check-posix-build
         script/check-simulation-build
 
   android:

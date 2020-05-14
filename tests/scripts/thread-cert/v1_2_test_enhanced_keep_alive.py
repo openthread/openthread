@@ -46,9 +46,12 @@ USER_POLL_PERIOD = CHILD_TIMEOUT // 3
 
 class SED_EnhancedKeepAlive(thread_cert.TestCase):
     topology = {
-        LEADER: None,
+        LEADER: {
+            'version': '1.2'
+        },
         SED_1: {
             'mode': 's',
+            'version': '1.2',
         },
     }
     """All nodes are created with default configurations"""

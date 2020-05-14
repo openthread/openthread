@@ -74,6 +74,7 @@ typedef struct otPlatformConfig
     const char *mInterfaceName;         ///< Thread network interface name.
     const char *mRadioFile;             ///< Radio file path.
     const char *mRadioConfig;           ///< Radio configurations.
+    const char *mMaxPowerTable;         ///< Radio max transmit power table.
     bool        mResetRadio;            ///< Whether to reset RCP when initializing.
     bool        mRestoreDatasetFromNcp; ///< Whether to retrieve dataset from NCP and save to file.
 

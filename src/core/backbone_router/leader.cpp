@@ -184,7 +184,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
     BackboneRouterConfig config;
     State                state;
 
-    Get<NetworkData::Leader>().GetBackboneRouterPrimary(config);
+    IgnoreError(Get<NetworkData::Leader>().GetBackboneRouterPrimary(config));
 
     if (config.mServer16 != mConfig.mServer16)
     {
@@ -280,7 +280,11 @@ void Leader::UpdateDomainPrefixConfig(void)
     LogDomainPrefix(state, mDomainPrefix);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Get<Mle::Mle>().UpdateAllDomainBackboneRouters(state);
+    Get<Local>().UpdateAllDomainBackboneRouters(state);
+#endif
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+    Get<DuaManager>().UpdateDomainUnicastAddress(state);
 #endif
 }
 

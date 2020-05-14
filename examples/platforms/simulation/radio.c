@@ -114,12 +114,12 @@ static int8_t         sCcaEdThresh = -74;
 
 static bool sSrcMatchEnabled = false;
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 static uint8_t sAckIeData[ACK_IE_MAX_SIZE];
 static uint8_t sAckIeDataLength = 0;
 #endif
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 static uint8_t  sCslIeHeader[IE_HEADER_SIZE] = {0x04, 0x0d};
 static uint32_t sCslSampleTime;
 static uint32_t sCslPeriod;
@@ -210,6 +210,8 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 
 void otPlatRadioSetPanId(otInstance *aInstance, otPanId aPanid)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     sPanid = aPanid;
@@ -218,6 +220,8 @@ void otPlatRadioSetPanId(otInstance *aInstance, otPanId aPanid)
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     ReverseExtAddress(&sExtAddress, aExtAddress);
@@ -225,6 +229,8 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     sShortAddress = aAddress;
@@ -232,6 +238,8 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aAddress)
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     sPromiscuous = aEnable;
@@ -339,7 +347,7 @@ void platformRadioInit(void)
 #endif
 }
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 uint16_t getCslPhase()
 {
     uint32_t curTime       = otPlatAlarmMicroGetNow();
@@ -348,7 +356,7 @@ uint16_t getCslPhase()
 
     return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
 }
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
@@ -382,6 +390,8 @@ exit:
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     otError error = OT_ERROR_INVALID_STATE;
@@ -397,6 +407,8 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     otError error = OT_ERROR_INVALID_STATE;
@@ -414,6 +426,9 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aRadio)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aRadio);
+
     assert(aInstance != NULL);
     assert(aRadio != NULL);
 
@@ -430,6 +445,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aRadio)
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     return &sTransmitFrame;
@@ -437,6 +454,8 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     int8_t   rssi    = SIM_LOW_RSSI_SAMPLE;
@@ -462,6 +481,8 @@ exit:
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     return OT_RADIO_CAPS_NONE;
@@ -469,6 +490,8 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     return sPromiscuous;
@@ -565,12 +588,12 @@ void radioSendMessage(otInstance *aInstance)
     }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (sCslPeriod > 0)
     {
         otMacFrameSetCslIe(&sTransmitFrame, (uint16_t)sCslPeriod, getCslPhase());
     }
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     if (processTransmitAesCcm)
     {
@@ -818,6 +841,8 @@ exit:
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     sSrcMatchEnabled = aEnable;
@@ -825,6 +850,10 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aScanChannel);
+    OT_UNUSED_VARIABLE(aScanDuration);
+
     assert(aInstance != NULL);
     assert(aScanChannel >= SIM_RADIO_CHANNEL_MIN && aScanChannel <= SIM_RADIO_CHANNEL_MAX);
     assert(aScanDuration > 0);
@@ -834,6 +863,8 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     *aPower = sTxPower;
@@ -843,6 +874,8 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     sTxPower = aPower;
@@ -852,6 +885,8 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     *aThreshold = sCcaEdThresh;
@@ -861,6 +896,8 @@ otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aT
 
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     sCcaEdThresh = aThreshold;
@@ -870,6 +907,8 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     return SIM_RECEIVE_SENSITIVITY;
@@ -885,6 +924,8 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 otError otPlatRadioSetCoexEnabled(otInstance *aInstance, bool aEnabled)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     sRadioCoexEnabled = aEnabled;
@@ -893,6 +934,8 @@ otError otPlatRadioSetCoexEnabled(otInstance *aInstance, bool aEnabled)
 
 bool otPlatRadioIsCoexEnabled(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     assert(aInstance != NULL);
 
     return sRadioCoexEnabled;
@@ -900,6 +943,8 @@ bool otPlatRadioIsCoexEnabled(otInstance *aInstance)
 
 otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
 
     assert(aInstance != NULL);
@@ -937,14 +982,14 @@ uint64_t otPlatRadioGetNow(void)
     return otPlatTimeGet();
 }
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 static void updateIeData(otInstance *aInstance)
 
 {
     OT_UNUSED_VARIABLE(aInstance);
     uint8_t offset = 0;
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (sCslPeriod > 0)
     {
         memcpy(sAckIeData, sCslIeHeader, IE_HEADER_SIZE);
@@ -953,9 +998,9 @@ static void updateIeData(otInstance *aInstance)
 #endif
     sAckIeDataLength = offset;
 }
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -974,4 +1019,4 @@ void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime)
 {
     sCslSampleTime = aCslSampleTime;
 }
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE

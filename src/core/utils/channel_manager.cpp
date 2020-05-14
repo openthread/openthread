@@ -236,7 +236,7 @@ void ChannelManager::HandleTimer(void)
     {
     case kStateIdle:
         otLogInfoUtil("ChannelManager: Auto-triggered channel select");
-        IgnoreReturnValue(RequestChannelSelect(false));
+        IgnoreError(RequestChannelSelect(false));
         StartAutoSelectTimer();
         break;
 
@@ -409,7 +409,7 @@ void ChannelManager::SetAutoChannelSelectionEnabled(bool aEnabled)
     if (aEnabled != mAutoSelectEnabled)
     {
         mAutoSelectEnabled = aEnabled;
-        IgnoreReturnValue(RequestChannelSelect(false));
+        IgnoreError(RequestChannelSelect(false));
         StartAutoSelectTimer();
     }
 }

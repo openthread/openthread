@@ -39,17 +39,14 @@ namespace ot {
 
 otError MeshForwarder::SendMessage(Message &aMessage)
 {
-    otError error;
-
     aMessage.SetDirectTransmission();
     aMessage.SetOffset(0);
     aMessage.SetDatagramTag(0);
 
-    SuccessOrExit(error = mSendQueue.Enqueue(aMessage));
+    mSendQueue.Enqueue(aMessage);
     mScheduleTransmissionTask.Post();
 
-exit:
-    return error;
+    return OT_ERROR_NONE;
 }
 
 otError MeshForwarder::EvictMessage(uint8_t aPriority)

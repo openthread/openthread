@@ -74,6 +74,7 @@
 #else
 #error "Unknown posix app type!"
 #endif
+#include <common/code_utils.hpp>
 #include <lib/platform/exit_code.h>
 #include <openthread/openthread-system.h>
 
@@ -113,6 +114,8 @@ enum
     ARG_SPI_RESET_DELAY     = 1018,
     ARG_SPI_ALIGN_ALLOWANCE = 1019,
     ARG_SPI_SMALL_PACKET    = 1020,
+    ARG_MAX_POWER_TABLE     = 1021,
+
 };
 
 static const struct option kOptions[] = {{"debug-level", required_argument, NULL, 'd'},
@@ -124,6 +127,9 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"ncp-dataset", no_argument, NULL, ARG_RESTORE_NCP_DATASET},
                                          {"time-speed", required_argument, NULL, 's'},
                                          {"verbose", no_argument, NULL, 'v'},
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+                                         {"max-power-table", required_argument, NULL, ARG_MAX_POWER_TABLE},
+#endif
 #if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
                                          {"gpio-int-dev", required_argument, NULL, ARG_SPI_GPIO_INT_DEV},
                                          {"gpio-int-line", required_argument, NULL, ARG_SPI_GPIO_INT_LINE},
@@ -177,6 +183,13 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "                                  MISO frame. Max value is 16.\n"
             "        --spi-small-packet=[n]    Specify the smallest packet we can receive in a single transaction.\n"
             "                                  (larger packets will require two transactions). Default value is 32.\n");
+#endif
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+    fprintf(aStream,
+            "        --max-power-table         Max power for channels in ascending order separated by commas,\n"
+            "                                  If the number of values is less than that of supported channels,\n"
+            "                                  the last value will be applied to all remaining channels.\n"
+            "                                  Special value 0x7f disables a channel.\n");
 #endif
     exit(aExitCode);
 }
@@ -276,6 +289,11 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case ARG_SPI_SMALL_PACKET:
             aConfig->mPlatformConfig.mSpiSmallPacketSize = (uint8_t)atoi(optarg);
             break;
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+        case ARG_MAX_POWER_TABLE:
+            aConfig->mPlatformConfig.mMaxPowerTable = optarg;
+            break;
+#endif
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
             break;
@@ -309,7 +327,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
     syslog(LOG_INFO, "Running %s", otGetVersionString());
     syslog(LOG_INFO, "Thread version: %hu", otThreadGetVersion());
-    otLoggingSetLevel(config.mLogLevel);
+    IgnoreError(otLoggingSetLevel(config.mLogLevel));
 
     instance = otSysInit(&config.mPlatformConfig);
 

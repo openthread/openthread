@@ -149,7 +149,8 @@ case ${build_config} in
         echo "===================================================================================================="
         echo "Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with simulation platform using cmake"
         echo "===================================================================================================="
-        cmake -GNinja -DOT_PLATFORM=simulation -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h . || die
+        cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=on               \
+              -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h . || die
         ninja || die
         ;;
 
@@ -157,7 +158,8 @@ case ${build_config} in
         echo "===================================================================================================="
         echo "Building OpenThread POSIX host platform using cmake"
         echo "===================================================================================================="
-        cmake -GNinja -DOT_PLATFORM=posix -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-posix.h . || die
+        cmake -GNinja -DOT_PLATFORM=posix -DOT_COMPILE_WARNING_AS_ERROR=on                    \
+              -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-posix.h . || die
         ninja || die
         ;;
 

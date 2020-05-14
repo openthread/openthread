@@ -1,19 +1,12 @@
 # OpenThread CLI Reference
 
-The OpenThread CLI exposes configuration and management APIs via a
-command line interface. Use the CLI to play with OpenThread, which
-can also be used with additional application code. The
-OpenThread test scripts use the CLI to execute test cases.
+The OpenThread CLI exposes configuration and management APIs via a command line interface. Use the CLI to play with OpenThread, which can also be used with additional application code. The OpenThread test scripts use the CLI to execute test cases.
 
 ## Separator and escaping characters
 
-The whitespace character (`' '`) is used to delimit the command name
-and the different arguments, together with tab (`'\t'`) and new line
-characters (`'\r'`, `'\n'`).
+The whitespace character (`' '`) is used to delimit the command name and the different arguments, together with tab (`'\t'`) and new line characters (`'\r'`, `'\n'`).
 
-Some arguments might require to accept whitespaces on them. For those
-cases the backslash character (`'\'`) can be used to escape separators
-or the backslash itself.
+Some arguments might require to accept whitespaces on them. For those cases the backslash character (`'\'`) can be used to escape separators or the backslash itself.
 
 Example:
 
@@ -28,77 +21,77 @@ Done
 
 ## OpenThread Command List
 
-* [bbr](#bbr)
-* [bufferinfo](#bufferinfo)
-* [channel](#channel)
-* [child](#child-list)
-* [childip](#childip)
-* [childmax](#childmax)
-* [childtimeout](#childtimeout)
-* [coap](README_COAP.md)
-* [coaps](README_COAPS.md)
-* [commissioner](README_COMMISSIONER.md)
-* [contextreusedelay](#contextreusedelay)
-* [counters](#counters)
-* [dataset](README_DATASET.md)
-* [delaytimermin](#delaytimermin)
-* [diag](#diag)
-* [discover](#discover-channel)
-* [dns](#dns-resolve-hostname-dns-server-ip-dns-server-port)
-* [domainname](#domainname)
-* [eidcache](#eidcache)
-* [eui64](#eui64)
-* [extaddr](#extaddr)
-* [extpanid](#extpanid)
-* [factoryreset](#factoryreset)
-* [ifconfig](#ifconfig)
-* [ipaddr](#ipaddr)
-* [ipmaddr](#ipmaddr)
-* [joiner](README_JOINER.md)
-* [joinerport](#joinerport-port)
-* [keysequence](#keysequence-counter)
-* [leaderdata](#leaderdata)
-* [leaderpartitionid](#leaderpartitionid)
-* [leaderweight](#leaderweight)
-* [linkquality](#linkquality-extaddr)
-* [log](#log-filename-filename)
-* [mac](#mac-retries-direct)
-* [macfilter](#macfilter)
-* [masterkey](#masterkey)
-* [mode](#mode)
-* [neighbor](#neighbor-list)
-* [netdataregister](#netdataregister)
-* [netdatashow](#netdatashow)
-* [networkdiagnostic](#networkdiagnostic-get-addr-type-)
-* [networkidtimeout](#networkidtimeout)
-* [networkname](#networkname)
-* [networktime](#networktime)
-* [panid](#panid)
-* [parent](#parent)
-* [parentpriority](#parentpriority)
-* [ping](#ping-ipaddr-size-count-interval-hoplimit)
-* [pollperiod](#pollperiod-pollperiod)
-* [preferrouterid](#preferrouterid-routerid)
-* [prefix](#prefix-add-prefix-padcrosnD-prf)
-* [promiscuous](#promiscuous)
-* [pskc](#pskc--p-keypassphrase)
-* [releaserouterid](#releaserouterid-routerid)
-* [reset](#reset)
-* [rloc16](#rloc16)
-* [route](#route-add-prefix-s-prf)
-* [router](#router-list)
-* [routerdowngradethreshold](#routerdowngradethreshold)
-* [routereligible](#routereligible)
-* [routerselectionjitter](#routerselectionjitter)
-* [routerupgradethreshold](#routerupgradethreshold)
-* [scan](#scan-channel)
-* [service](#service)
-* [singleton](#singleton)
-* [sntp](#sntp-query-sntp-server-ip-sntp-server-port)
-* [state](#state)
-* [thread](#thread-start)
-* [txpower](#txpower)
-* [version](#version)
+- [bbr](#bbr)
+- [bufferinfo](#bufferinfo)
+- [channel](#channel)
+- [child](#child-list)
+- [childip](#childip)
+- [childmax](#childmax)
+- [childtimeout](#childtimeout)
+- [coap](README_COAP.md)
+- [coaps](README_COAPS.md)
+- [commissioner](README_COMMISSIONER.md)
+- [contextreusedelay](#contextreusedelay)
+- [counters](#counters)
+- [dataset](README_DATASET.md)
+- [delaytimermin](#delaytimermin)
+- [diag](#diag)
+- [discover](#discover-channel)
+- [dns](#dns-resolve-hostname-dns-server-ip-dns-server-port)
+- [domainname](#domainname)
+- [eidcache](#eidcache)
+- [eui64](#eui64)
+- [extaddr](#extaddr)
+- [extpanid](#extpanid)
+- [factoryreset](#factoryreset)
+- [ifconfig](#ifconfig)
+- [ipaddr](#ipaddr)
+- [ipmaddr](#ipmaddr)
+- [joiner](README_JOINER.md)
+- [joinerport](#joinerport-port)
+- [keysequence](#keysequence-counter)
+- [leaderdata](#leaderdata)
+- [leaderpartitionid](#leaderpartitionid)
+- [leaderweight](#leaderweight)
+- [linkquality](#linkquality-extaddr)
+- [log](#log-filename-filename)
+- [mac](#mac-retries-direct)
+- [macfilter](#macfilter)
+- [masterkey](#masterkey)
+- [mode](#mode)
+- [neighbor](#neighbor-list)
+- [netdataregister](#netdataregister)
+- [netdatashow](#netdatashow)
+- [networkdiagnostic](#networkdiagnostic-get-addr-type-)
+- [networkidtimeout](#networkidtimeout)
+- [networkname](#networkname)
+- [networktime](#networktime)
+- [panid](#panid)
+- [parent](#parent)
+- [parentpriority](#parentpriority)
+- [ping](#ping-ipaddr-size-count-interval-hoplimit)
+- [pollperiod](#pollperiod-pollperiod)
+- [preferrouterid](#preferrouterid-routerid)
+- [prefix](#prefix-add-prefix-padcrosnD-prf)
+- [promiscuous](#promiscuous)
+- [pskc](#pskc--p-keypassphrase)
+- [releaserouterid](#releaserouterid-routerid)
+- [reset](#reset)
+- [rloc16](#rloc16)
+- [route](#route-add-prefix-s-prf)
+- [router](#router-list)
+- [routerdowngradethreshold](#routerdowngradethreshold)
+- [routereligible](#routereligible)
+- [routerselectionjitter](#routerselectionjitter)
+- [routerupgradethreshold](#routerupgradethreshold)
+- [scan](#scan-channel)
+- [service](#service)
+- [singleton](#singleton)
+- [sntp](#sntp-query-sntp-server-ip-sntp-server-port)
+- [state](#state)
+- [thread](#thread-start)
+- [txpower](#txpower)
+- [version](#version)
 
 ## OpenThread Command Details
 
@@ -123,10 +116,10 @@ Done
 ```
 
 ### bbr state
+
 Show local Backbone state ([`Disabled`,`Primary`, `Secondary`]) for Thread 1.2 FTD.
 
 `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
-
 
 ```bash
 > bbr state
@@ -143,9 +136,8 @@ Done
 ```
 
 ### bbr enable
-Enable Backbone Router Service for Thread 1.2 FTD.
-`SRV_DATA.ntf` would be triggerred for attached device if there is no
-Backbone Router Service in Thread Network Data.
+
+Enable Backbone Router Service for Thread 1.2 FTD. `SRV_DATA.ntf` would be triggerred for attached device if there is no Backbone Router Service in Thread Network Data.
 
 `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
 
@@ -155,10 +147,8 @@ Done
 ```
 
 ### bbr disable
-Disable Backbone Router Service for Thread 1.2 FTD.
-`SRV_DATA.ntf` would be triggerred if Backbone Router is Primary state.
-o
-`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+Disable Backbone Router Service for Thread 1.2 FTD. `SRV_DATA.ntf` would be triggerred if Backbone Router is Primary state. o `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
 
 ```bash
 > bbr disable
@@ -166,8 +156,8 @@ Done
 ```
 
 ### bbr register
-Register Backbone Router Service for Thread 1.2 FTD.
-`SRV_DATA.ntf` would be triggerred for attached device.
+
+Register Backbone Router Service for Thread 1.2 FTD. `SRV_DATA.ntf` would be triggerred for attached device.
 
 `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
 
@@ -192,10 +182,7 @@ Done
 
 ### bbr config \[seqno \<seqno\>\] \[delay \<delay\>\] \[timeout \<timeout\>\]
 
-Configure local Backbone Router configuration for Thread 1.2 FTD.
-`bbr register` should be issued explicitly to register Backbone Router service to Leader for
-Secondary Backbone Router. `SRV_DATA.ntf` would be initiated automatically if BBR Dataset
-changes for Primary Backbone Router.
+Configure local Backbone Router configuration for Thread 1.2 FTD. `bbr register` should be issued explicitly to register Backbone Router service to Leader for Secondary Backbone Router. `SRV_DATA.ntf` would be initiated automatically if BBR Dataset changes for Primary Backbone Router.
 
 `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
 
@@ -309,7 +296,7 @@ Done
 
 ### child \<id\>
 
-Print diagnostic information for an attached Thread Child.  The `id` may be a Child ID or an RLOC16.
+Print diagnostic information for an attached Thread Child. The `id` may be a Child ID or an RLOC16.
 
 ```bash
 > child 1
@@ -347,8 +334,7 @@ Done
 
 ### childip max \<count\>
 
-Set the maximum number of IP addresses that each MTD child may register with this device as parent.
-0 to clear the setting and restore the default.
+Set the maximum number of IP addresses that each MTD child may register with this device as parent. 0 to clear the setting and restore the default.
 
 `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
 
@@ -500,6 +486,7 @@ Done
 ```
 
 ### csl channel \<channel\>
+
 Set CSL channel.
 
 ```bash
@@ -517,6 +504,7 @@ Done
 ```
 
 ### csl timeout \<timeout\>
+
 Set the CSL timeout in seconds.
 
 ```bash
@@ -528,7 +516,7 @@ Done
 
 Disable or enable the SSED device to include CSL IE in header.
 
-`OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE` and `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` are required. This feature is only for certification test purpose and used to suppress/exclude the CSL IE for the frame transmitted, without impacting the periodic sample.
+`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` and `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` are required. This feature is only for certification test purpose and used to suppress/exclude the CSL IE for the frame transmitted, without impacting the periodic sample.
 
 ```bash
 > csl headerie enable
@@ -551,8 +539,8 @@ Done
 
 Set time sync parameters
 
-* timesyncperiod: The time synchronization period, in seconds.
-* xtalthreshold: The XTAL accuracy threshold for a device to become Router-Capable device, in PPM.
+- timesyncperiod: The time synchronization period, in seconds.
+- xtalthreshold: The XTAL accuracy threshold for a device to become Router-Capable device, in PPM.
 
 ```bash
 > networktime 100 300
@@ -582,7 +570,7 @@ Done
 
 Perform an MLE Discovery operation.
 
-* channel: The channel to discover on.  If no channel is provided, the discovery will cover all valid channels.
+- channel: The channel to discover on. If no channel is provided, the discovery will cover all valid channels.
 
 ```bash
 > discover
@@ -594,10 +582,10 @@ Done
 
 ### dns resolve \<hostname\> \[DNS server IP\] \[DNS server port\]
 
-Send DNS Query to obtain IPv6 address for given hostname.
-The latter two parameters have following default values:
- * DNS server IP: 2001:4860:4860::8888 (Google DNS Server)
- * DNS server port: 53
+Send DNS Query to obtain IPv6 address for given hostname. The latter two parameters have following default values:
+
+- DNS server IP: 2001:4860:4860::8888 (Google DNS Server)
+- DNS server port: 53
 
 ```bash
 > dns resolve ipv6.google.com
@@ -686,6 +674,7 @@ Done
 ```
 
 ### factoryreset
+
 Delete all stored settings, and signal a platform reset.
 
 ```bash
@@ -878,8 +867,7 @@ Done
 
 ### keysequence guardtime \<guardtime\>
 
-Set Thread Key Switch Guard Time (in hours)
-0 means Thread Key Switch imediately if key index match
+Set Thread Key Switch Guard Time (in hours) 0 means Thread Key Switch imediately if key index match
 
 ```bash
 > keysequence guardtime 0
@@ -962,9 +950,7 @@ Done
 - Note: Simulation Only, ie: `OPENTHREAD_EXAMPLES_SIMULATION`
 - Requires `OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART`
 
-Specifies filename to capture otPlatLog() messages, useful when
-debugging automated test scripts on Linux when logging disrupts
-the automated test scripts.
+Specifies filename to capture otPlatLog() messages, useful when debugging automated test scripts on Linux when logging disrupts the automated test scripts.
 
 ### log level
 
@@ -1008,10 +994,10 @@ Done
 
 Get the Thread Device Mode value.
 
-* r: rx-on-when-idle
-* s: Secure IEEE 802.15.4 data requests
-* d: Full Thread Device
-* n: Full Network Data
+- r: rx-on-when-idle
+- s: Secure IEEE 802.15.4 data requests
+- d: Full Thread Device
+- n: Full Network Data
 
 ```bash
 > mode
@@ -1023,10 +1009,10 @@ Done
 
 Set the Thread Device Mode value.
 
-* r: rx-on-when-idle
-* s: Secure IEEE 802.15.4 data requests
-* d: Full Thread Device
-* n: Full Network Data
+- r: rx-on-when-idle
+- s: Secure IEEE 802.15.4 data requests
+- d: Full Thread Device
+- n: Full Network Data
 
 ```bash
 > mode rsdn
@@ -1080,8 +1066,7 @@ Done
 
 Send network diagnostic request to retrieve tlv of \<type\>s.
 
-If \<addr\> is unicast address, `Diagnostic Get` will be sent.
-if \<addr\> is multicast address, `Diagnostic Query` will be sent.
+If \<addr\> is unicast address, `Diagnostic Get` will be sent. if \<addr\> is multicast address, `Diagnostic Query` will be sent.
 
 ```bash
 > networkdiagnostic get fdde:ad00:beef:0:0:ff:fe00:fc00 0 1 6
@@ -1179,11 +1164,7 @@ Done
 
 Get the diagnostic information for a Thread Router as parent.
 
-Note: When operating as a Thread Router, this command will return the cached
-      information from when the device was previously attached as a Thread
-      Child. Returning cached information is necessary to support the Thread
-      Test Harness - Test Scenario 8.2.x requests the former parent (i.e. Joiner
-      Router's) MAC address even if the device has already promoted to a router.
+Note: When operating as a Thread Router, this command will return the cached information from when the device was previously attached as a Thread Child. Returning cached information is necessary to support the Thread Test Harness - Test Scenario 8.2.x requests the former parent (i.e. Joiner Router's) MAC address even if the device has already promoted to a router.
 
 ```bash
 > parent
@@ -1214,14 +1195,14 @@ Set the assigned parent priority value: 1, 0, -1 or -2.
 Done
 ```
 
-### ping \<ipaddr\> [size] [count] [interval] [hoplimit]
+### ping \<ipaddr\> [size][count] [interval][hoplimit]
 
 Send an ICMPv6 Echo Request.
 
-* size: The number of data bytes to be sent.
-* count: The number of ICMPv6 Echo Requests to be sent.
-* interval: The interval between two consecutive ICMPv6 Echo Requests in seconds. The value may have fractional form, for example `0.5`.
-* hoplimit: The hoplimit of ICMPv6 Echo Request to be sent.
+- size: The number of data bytes to be sent.
+- count: The number of ICMPv6 Echo Requests to be sent.
+- interval: The interval between two consecutive ICMPv6 Echo Requests in seconds. The value may have fractional form, for example `0.5`.
+- hoplimit: The hoplimit of ICMPv6 Echo Request to be sent.
 
 ```bash
 > ping fdde:ad00:beef:0:558:f56b:d688:799
@@ -1270,6 +1251,7 @@ Done
 ```
 
 ### preferrouterid \<routerid\>
+
 Prefer a Router ID when solicit router id from Leader.
 
 ```bash
@@ -1279,10 +1261,7 @@ Done
 
 ### prefix
 
-Get the prefix list in the local Network Data.
-Note: For the Thread 1.2 border router with backbone capability, the local Domain
-      Prefix would be listed as well (with flag `D`), with preceeding `- ` if backbone
-      functionality is disabled.
+Get the prefix list in the local Network Data. Note: For the Thread 1.2 border router with backbone capability, the local Domain Prefix would be listed as well (with flag `D`), with preceeding `-` if backbone functionality is disabled.
 
 ```bash
 > prefix
@@ -1291,22 +1270,22 @@ Note: For the Thread 1.2 border router with backbone capability, the local Domai
 Done
 ```
 
-### prefix add \<prefix\> [padcrosnD] [prf]
+### prefix add \<prefix\> [padcrosnD][prf]
 
 Add a valid prefix to the Network Data.
 
 Note: The Domain Prefix flag (`D`) is only available for Thread 1.2.
 
-* p: Preferred flag
-* a: Stateless IPv6 Address Autoconfiguration flag
-* d: DHCPv6 IPv6 Address Configuration flag
-* c: DHCPv6 Other Configuration flag
-* r: Default Route flag
-* o: On Mesh flag
-* s: Stable flag
-* n: Nd Dns flag
-* D: Domain Prefix flag
-* prf: Default router preference, which may be 'high', 'med', or 'low'.
+- p: Preferred flag
+- a: Stateless IPv6 Address Autoconfiguration flag
+- d: DHCPv6 IPv6 Address Configuration flag
+- c: DHCPv6 Other Configuration flag
+- r: Default Route flag
+- o: On Mesh flag
+- s: Stable flag
+- n: Nd Dns flag
+- D: Domain Prefix flag
+- prf: Default router preference, which may be 'high', 'med', or 'low'.
 
 ```bash
 > prefix add 2001:dead:beef:cafe::/64 paros med
@@ -1354,6 +1333,7 @@ Done
 ```
 
 ### releaserouterid \<routerid\>
+
 Release a Router ID that has been allocated by the device in the Leader role.
 
 ```bash
@@ -1362,6 +1342,7 @@ Done
 ```
 
 ### reset
+
 Signal a platform reset.
 
 ```bash
@@ -1388,12 +1369,12 @@ Get the external route list in the local Network Data.
 Done
 ```
 
-### route add \<prefix\> [s] [prf]
+### route add \<prefix\> [s][prf]
 
 Add a valid external route to the Network Data.
 
-* s: Stable flag
-* prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
+- s: Stable flag
+- prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
 > route add 2001:dead:beef:cafe::/64 s med
@@ -1434,7 +1415,7 @@ Done
 
 ### router \<id\>
 
-Print diagnostic information for a Thread Router.  The `id` may be a Router ID or an RLOC16.
+Print diagnostic information for a Thread Router. The `id` may be a Router ID or an RLOC16.
 
 ```bash
 > router 50
@@ -1555,7 +1536,7 @@ Done
 
 Perform an IEEE 802.15.4 Active Scan.
 
-* channel: The channel to scan on.  If no channel is provided, the active scan will cover all valid channels.
+- channel: The channel to scan on. If no channel is provided, the active scan will cover all valid channels.
 
 ```bash
 > scan
@@ -1569,7 +1550,7 @@ Done
 
 Perform an IEEE 802.15.4 Energy Scan.
 
-* duration: The time in milliseconds to spend scanning each channel.
+- duration: The time in milliseconds to spend scanning each channel.
 
 ```bash
 > scan energy 10
@@ -1595,6 +1576,7 @@ Done
 ```
 
 ### singleton
+
 Return true when there are no other nodes in the network, otherwise return false.
 
 ```bash
@@ -1605,10 +1587,10 @@ Done
 
 ### sntp query \[SNTP server IP\] \[SNTP server port\]
 
-Send SNTP Query to obtain current unix epoch time (from 1st January 1970).
-The latter two parameters have following default values:
- * NTP server IP: 2001:4860:4806:8:: (Google IPv6 NTP Server)
- * NTP server port: 123
+Send SNTP Query to obtain current unix epoch time (from 1st January 1970). The latter two parameters have following default values:
+
+- NTP server IP: 2001:4860:4806:8:: (Google IPv6 NTP Server)
+- NTP server port: 123
 
 ```bash
 > sntp query
@@ -1616,12 +1598,14 @@ The latter two parameters have following default values:
 ```
 
 You can use NAT64 of OpenThread Border Router to reach e.g. Google IPv4 NTP Server:
+
 ```bash
 > sntp query 64:ff9b::d8ef:2308
 > SNTP response - Unix time: 1540898611 (era: 0)
 ```
 
 ### state
+
 Return state of current state.
 
 ```bash
@@ -1631,6 +1615,7 @@ Done
 ```
 
 ### state <state>
+
 Try to switch to state `detached`, `child`, `router` or `leader`.
 
 ```bash
@@ -1789,8 +1774,7 @@ Done
 
 ### macfilter addr add \<extaddr\> \[rss\]
 
-Add an IEEE 802.15.4 Extended Address to the address filter, and fixed the received singal strength for
-the messages from the address if rss is specified.
+Add an IEEE 802.15.4 Extended Address to the address filter, and fixed the received singal strength for the messages from the address if rss is specified.
 
 ```bash
 > macfilter addr add 0f6127e33af6b403 -95
@@ -1833,9 +1817,7 @@ Done
 
 ### macfilter rss add \<extaddr\> \<rss\>
 
-Set the received signal strength for the messages from the IEEE802.15.4 Extended Address.
-If extaddr is \*, default received signal strength for all received messages would be set.
-
+Set the received signal strength for the messages from the IEEE802.15.4 Extended Address. If extaddr is \*, default received signal strength for all received messages would be set.
 
 ```bash
 > macfilter rss add * -50
@@ -1849,10 +1831,7 @@ Done
 
 ### macfilter rss add-lqi \<extaddr\> \<lqi\>
 
-Set the received link quality for the messages from the IEEE802.15.4 Extended Address. Valid lqi range [0,3]
-If extaddr is \*, default received link quality for all received messages would be set.
-Equivalent with 'filter rss add' with similar usage
-
+Set the received link quality for the messages from the IEEE802.15.4 Extended Address. Valid lqi range [0,3] If extaddr is \*, default received link quality for all received messages would be set. Equivalent with 'filter rss add' with similar usage
 
 ```bash
 > macfilter rss add-lqi * 3
@@ -1866,8 +1845,7 @@ Done
 
 ### macfilter rss remove \<extaddr\>
 
-Removes the received signal strength or received link quality setting on the Extended Address.
-If extaddr is \*, default received signal strength or link quality for all received messages would be unset.
+Removes the received signal strength or received link quality setting on the Extended Address. If extaddr is \*, default received signal strength or link quality for all received messages would be unset.
 
 ```bash
 > macfilter rss remove *
@@ -1890,14 +1868,11 @@ Done
 
 ### diag
 
-Factory Diagnostics module is enabled only when building OpenThread with `OPENTHREAD_CONFIG_DIAG_ENABLE=1` option.
-Go [diagnostics module][DIAG] for more information.
+Factory Diagnostics module is enabled only when building OpenThread with `OPENTHREAD_CONFIG_DIAG_ENABLE=1` option. Go [diagnostics module][diag] for more information.
 
 ### service
 
-Module for controlling service registration in Network Data.
-Each change in service registration must be sent to leader by `netdataregister` command
-before taking effect.
+Module for controlling service registration in Network Data. Each change in service registration must be sent to leader by `netdataregister` command before taking effect.
 
 ### service add \<enterpriseNumber\> \<serviceData\> \<serverData\>
 
@@ -1934,4 +1909,4 @@ fdde:ad00:beef:0:8ca4:19ed:217a:eff9
 Done
 ```
 
-[DIAG]:../../src/core/diags/README.md
+[diag]: ../../src/core/diags/README.md

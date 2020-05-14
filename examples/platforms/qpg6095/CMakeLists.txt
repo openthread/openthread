@@ -72,12 +72,13 @@ set_property(TARGET openthread-qpg6095 PROPERTY C_STANDARD 99)
 target_link_libraries(openthread-qpg6095
     PRIVATE
         qpg6095-driver
-        mbedtls
+        ${OT_MBEDTLS}
 )
 
 target_link_options(openthread-qpg6095
     PUBLIC
         -T${CMAKE_CURRENT_SOURCE_DIR}/qpg6095.ld
+        -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 

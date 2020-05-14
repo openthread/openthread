@@ -31,44 +31,33 @@ import unittest
 
 import command
 import config
-import node
+import thread_cert
 
 LEADER = 1
 DUT_ROUTER1 = 2
 MED1 = 3
 
 
-class Cert_5_3_11_AddressQueryTimeoutIntervals(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 4):
-            self.nodes[i] = node.Node(i, (i == MED1), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[DUT_ROUTER1].set_panid(0xface)
-        self.nodes[DUT_ROUTER1].set_mode('rsdn')
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[MED1].get_addr64())
-        self.nodes[DUT_ROUTER1].enable_whitelist()
-        self.nodes[DUT_ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[MED1].set_panid(0xface)
-        self.nodes[MED1].set_mode('rsn')
-        self.nodes[MED1].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64())
-        self.nodes[MED1].enable_whitelist()
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_3_11_AddressQueryTimeoutIntervals(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [DUT_ROUTER1]
+        },
+        DUT_ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, MED1]
+        },
+        MED1: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [DUT_ROUTER1]
+        },
+    }
 
     def test(self):
         # 1 ALL: Build and verify the topology
@@ -86,7 +75,7 @@ class Cert_5_3_11_AddressQueryTimeoutIntervals(unittest.TestCase):
 
         # 2 MED1: MED1 sends an ICMPv6 Echo Request to a non-existent
         # mesh-local address X
-        X = "fdde:ad00:beef:0000:aa55:aa55:aa55:aa55"
+        X = "fd00:db8:0000:0000:aa55:aa55:aa55:aa55"
         self.assertFalse(self.nodes[MED1].ping(X))
 
         self.simulator.go(config.AQ_TIMEOUT)

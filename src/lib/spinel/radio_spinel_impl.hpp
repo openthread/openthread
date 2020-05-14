@@ -1012,6 +1012,25 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKey(uint8_t        aKeyIdMode,
+                                                                  uint8_t        aKeyId,
+                                                                  uint8_t        aKeySize,
+                                                                  const uint8_t *aPrevKey,
+                                                                  const uint8_t *aCurrKey,
+                                                                  const uint8_t *aNextKey)
+{
+    otError error;
+
+    SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_KEY,
+                              SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S
+                                  SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
+                              aKeyIdMode, aKeyId, aPrevKey, aKeySize, aCurrKey, aKeySize, aNextKey, aKeySize));
+
+exit:
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::GetIeeeEui64(uint8_t *aIeeeEui64)
 {
     memcpy(aIeeeEui64, mIeeeEui64.m8, sizeof(mIeeeEui64.m8));
@@ -1051,7 +1070,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::EnableSrcMatch(bool aEna
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::AddSrcMatchShortEntry(const uint16_t aShortAddress)
+otError RadioSpinel<InterfaceType, ProcessContextType>::AddSrcMatchShortEntry(uint16_t aShortAddress)
 {
     return Insert(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, SPINEL_DATATYPE_UINT16_S, aShortAddress);
 }
@@ -1063,7 +1082,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::AddSrcMatchExtEntry(cons
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::ClearSrcMatchShortEntry(const uint16_t aShortAddress)
+otError RadioSpinel<InterfaceType, ProcessContextType>::ClearSrcMatchShortEntry(uint16_t aShortAddress)
 {
     return Remove(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, SPINEL_DATATYPE_UINT16_S, aShortAddress);
 }
@@ -1469,14 +1488,17 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
     otPlatRadioTxStarted(mInstance, mTransmitFrame);
 
     error = Request(true, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
-                    SPINEL_DATATYPE_DATA_WLEN_S             // Frame data
-                                    SPINEL_DATATYPE_UINT8_S // Channel
-                                    SPINEL_DATATYPE_UINT8_S // MaxCsmaBackoffs
-                                    SPINEL_DATATYPE_UINT8_S // MaxFrameRetries
-                                    SPINEL_DATATYPE_BOOL_S, // CsmaCaEnabled
+                    SPINEL_DATATYPE_DATA_WLEN_S                     // Frame data
+                                            SPINEL_DATATYPE_UINT8_S // Channel
+                                            SPINEL_DATATYPE_UINT8_S // MaxCsmaBackoffs
+                                            SPINEL_DATATYPE_UINT8_S // MaxFrameRetries
+                                            SPINEL_DATATYPE_BOOL_S  // CsmaCaEnabled
+                                            SPINEL_DATATYPE_BOOL_S  // IsARetx
+                                            SPINEL_DATATYPE_BOOL_S, // SkipAes
                     mTransmitFrame->mPsdu, mTransmitFrame->mLength, mTransmitFrame->mChannel,
                     mTransmitFrame->mInfo.mTxInfo.mMaxCsmaBackoffs, mTransmitFrame->mInfo.mTxInfo.mMaxFrameRetries,
-                    mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled);
+                    mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled, mTransmitFrame->mInfo.mTxInfo.mIsARetx,
+                    mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed);
 
     if (error == OT_ERROR_NONE)
     {

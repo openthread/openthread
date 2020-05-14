@@ -60,9 +60,12 @@ DEFAULT_POLL_PERIOD = CHILD_TIMEOUT - 4
 
 class SED_EnhancedFramePending(thread_cert.TestCase):
     topology = {
-        LEADER: None,
+        LEADER: {
+            'version': '1.2'
+        },
         SED_1: {
             'mode': 's',
+            'version': '1.2',
         },
     }
 

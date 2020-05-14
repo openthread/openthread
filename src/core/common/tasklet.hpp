@@ -86,8 +86,10 @@ public:
     /**
      * This method puts the tasklet on the tasklet scheduler run queue.
      *
+     * If the tasklet is already posted, no change is made and run queue stays as before.
+     *
      */
-    otError Post(void);
+    void Post(void);
 
     /**
      * This method indicates whether the tasklet is posted or not.

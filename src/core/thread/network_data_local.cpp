@@ -147,7 +147,7 @@ otError Local::AddPrefix(const uint8_t *      aPrefix,
                      Mle::MeshLocalPrefix::kLength,
                  error = OT_ERROR_INVALID_ARGS);
 
-    RemovePrefix(aPrefix, aPrefixLength, aSubTlvType);
+    IgnoreError(RemovePrefix(aPrefix, aPrefixLength, aSubTlvType));
 
     subTlvLength = (aSubTlvType == NetworkDataTlv::kTypeBorderRouter)
                        ? sizeof(BorderRouterTlv) + sizeof(BorderRouterEntry)
@@ -221,7 +221,7 @@ void Local::UpdateRloc(PrefixTlv &aPrefix)
 
         default:
             OT_ASSERT(false);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
     }
 }
@@ -254,7 +254,7 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
     uint16_t    serviceTlvSize =
         ServiceTlv::CalculateSize(aEnterpriseNumber, aServiceDataLength) + sizeof(ServerTlv) + aServerDataLength;
 
-    RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength);
+    IgnoreError(RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength));
 
     VerifyOrExit(serviceTlvSize <= kMaxSize, error = OT_ERROR_NO_BUFS);
 
@@ -311,7 +311,7 @@ void Local::UpdateRloc(ServiceTlv &aService)
 
         default:
             OT_ASSERT(false);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
     }
 }
@@ -345,7 +345,7 @@ void Local::UpdateRloc(void)
 
         default:
             OT_ASSERT(false);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
     }
 }

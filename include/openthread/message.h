@@ -188,9 +188,6 @@ uint16_t otMessageGetOffset(const otMessage *aMessage);
  * @param[in]  aMessage  A pointer to a message buffer.
  * @param[in]  aOffset   An offset in bytes.
  *
- * @retval OT_ERROR_NONE          Successfully set the message offset.
- * @retval OT_ERROR_INVALID_ARGS  The offset is beyond the message length.
- *
  * @sa otMessageFree
  * @sa otMessageAppend
  * @sa otMessageGetLength
@@ -200,7 +197,7 @@ uint16_t otMessageGetOffset(const otMessage *aMessage);
  * @sa otMessageWrite
  *
  */
-otError otMessageSetOffset(otMessage *aMessage, uint16_t aOffset);
+void otMessageSetOffset(otMessage *aMessage, uint16_t aOffset);
 
 /**
  * This function indicates whether or not link security is enabled for the message.
@@ -321,11 +318,8 @@ void otMessageQueueInit(otMessageQueue *aQueue);
  * @param[in]  aQueue    A pointer to the message queue.
  * @param[in]  aMessage  The message to add.
  *
- * @retval OT_ERROR_NONE     Successfully added the message to the queue.
- * @retval OT_ERROR_ALREADY  The message is already enqueued in a queue.
- *
  */
-otError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage);
+void otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage);
 
 /**
  * This function adds a message at the head/front of the given message queue.
@@ -333,11 +327,8 @@ otError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage);
  * @param[in]  aQueue    A pointer to the message queue.
  * @param[in]  aMessage  The message to add.
  *
- * @retval OT_ERROR_NONE     Successfully added the message to the queue.
- * @retval OT_ERROR_ALREADY  The message is already enqueued in a queue.
- *
  */
-otError otMessageQueueEnqueueAtHead(otMessageQueue *aQueue, otMessage *aMessage);
+void otMessageQueueEnqueueAtHead(otMessageQueue *aQueue, otMessage *aMessage);
 
 /**
  * This function removes a message from the given message queue.
@@ -345,11 +336,8 @@ otError otMessageQueueEnqueueAtHead(otMessageQueue *aQueue, otMessage *aMessage)
  * @param[in]  aQueue    A pointer to the message queue.
  * @param[in]  aMessage  The message to remove.
  *
- * @retval OT_ERROR_NONE       Successfully removed the message from the queue.
- * @retval OT_ERROR_NOT_FOUND  The message is not enqueued in this queue.
- *
  */
-otError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage);
+void otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage);
 
 /**
  * This function returns a pointer to the message at the head of the queue.

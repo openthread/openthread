@@ -85,7 +85,7 @@ Usage: `commissioner joiner add <eui64> <pskd>`
 
 Add a Joiner entry.
 
-- eui64: The IEEE EUI-64 of the Joiner or '*' to match any Joiner.
+- eui64: The IEEE EUI-64 of the Joiner or '\*' to match any Joiner.
 - pskd: Pre-Shared Key for the Joiner.
 
 ```bash
@@ -99,7 +99,7 @@ Usage: `commissioner joiner remove <eui64>`
 
 Remove a Joiner entry.
 
-- eui64: The IEEE EUI-64 of the Joiner or '*' to match any Joiner.
+- eui64: The IEEE EUI-64 of the Joiner or '\*' to match any Joiner.
 
 ```bash
 > commissioner joiner remove d45e64fa83f81cf7

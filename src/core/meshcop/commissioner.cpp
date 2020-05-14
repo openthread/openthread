@@ -173,7 +173,10 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         otLogWarnMeshCoP("Failed to start commissioner: %s", otThreadErrorToString(error));
-        Get<Coap::CoapSecure>().Stop();
+        if (error != OT_ERROR_ALREADY)
+        {
+            Get<Coap::CoapSecure>().Stop();
+        }
     }
 
     return error;
@@ -273,7 +276,7 @@ void Commissioner::ClearJoiners(void)
         joiner->mValid = false;
     }
 
-    SendCommissionerSet();
+    IgnoreError(SendCommissionerSet());
 }
 
 otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd, uint32_t aTimeout)
@@ -284,7 +287,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd
 
     VerifyOrExit(StringLength(aPskd, Dtls::kPskMaxLength + 1) <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
 
-    RemoveJoiner(aEui64, 0); // remove immediately
+    IgnoreError(RemoveJoiner(aEui64, 0, kJoinerOpFlagNotNotifyLeader)); // remove immediately
 
     for (Joiner *joiner = &mJoiners[0]; joiner < OT_ARRAY_END(mJoiners); joiner++)
     {
@@ -309,7 +312,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd
 
         UpdateJoinerExpirationTimer();
 
-        SendCommissionerSet();
+        IgnoreError(SendCommissionerSet());
 
         otLogInfoMeshCoP("Added Joiner (%s, %s)", (aEui64 != NULL) ? aEui64->ToString().AsCString() : "*", aPskd);
 
@@ -348,9 +351,11 @@ exit:
     return error;
 }
 
-otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay)
+otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay, JoinerOpFlag aFlags)
 {
     otError error = OT_ERROR_NOT_FOUND;
+
+    OT_ASSERT(!(aFlags & kJoinerOpFlagNotNotifyLeader) || aDelay == 0);
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
@@ -389,7 +394,10 @@ otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDela
 
             joiner->mValid = false;
             UpdateJoinerExpirationTimer();
-            SendCommissionerSet();
+            if ((aFlags & kJoinerOpFlagNotNotifyLeader) == 0)
+            {
+                IgnoreError(SendCommissionerSet());
+            }
 
             otLogInfoMeshCoP("Removed Joiner (%s)", (aEui64 != NULL) ? aEui64->ToString().AsCString() : "*");
 
@@ -439,7 +447,7 @@ void Commissioner::HandleTimer(void)
         break;
 
     case OT_COMMISSIONER_STATE_PETITION:
-        SendPetition();
+        IgnoreError(SendPetition());
         break;
 
     case OT_COMMISSIONER_STATE_ACTIVE:
@@ -468,7 +476,7 @@ void Commissioner::HandleJoinerExpirationTimer(void)
         if (now >= joiner->mExpirationTime)
         {
             otLogDebgMeshCoP("removing joiner due to timeout or successfully joined");
-            RemoveJoiner(&joiner->mEui64, 0); // remove immediately
+            IgnoreError(RemoveJoiner(&joiner->mEui64, 0)); // remove immediately
         }
     }
 
@@ -626,7 +634,7 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
     if (message->GetLength() == message->GetOffset())
     {
         // no payload, remove coap payload marker
-        message->SetLength(message->GetLength() - 1);
+        IgnoreError(message->SetLength(message->GetLength() - 1));
     }
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
@@ -731,7 +739,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     otLogInfoMeshCoP("received Leader Petition response");
 
     SuccessOrExit(Tlv::ReadUint8Tlv(*aMessage, Tlv::kState, state));
-    VerifyOrExit(state == StateTlv::kAccept, Stop(/* aResign */ false));
+    VerifyOrExit(state == StateTlv::kAccept, IgnoreError(Stop(/* aResign */ false)));
 
     SuccessOrExit(Tlv::ReadUint16Tlv(*aMessage, Tlv::kCommissionerSessionId, mSessionId));
 
@@ -743,7 +751,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
         ExitNow();
     }
 
-    Get<Mle::MleRouter>().GetCommissionerAloc(mCommissionerAloc.GetAddress(), mSessionId);
+    IgnoreError(Get<Mle::MleRouter>().GetCommissionerAloc(mCommissionerAloc.GetAddress(), mSessionId));
     Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
 
     AddCoapResources();
@@ -758,7 +766,7 @@ exit:
     {
         if (mTransmitAttempts >= kPetitionRetryCount)
         {
-            Stop(/* aResign */ false);
+            IgnoreError(Stop(/* aResign */ false));
         }
         else
         {
@@ -767,12 +775,12 @@ exit:
     }
 }
 
-otError Commissioner::SendKeepAlive(void)
+void Commissioner::SendKeepAlive(void)
 {
-    return SendKeepAlive(mSessionId);
+    SendKeepAlive(mSessionId);
 }
 
-otError Commissioner::SendKeepAlive(uint16_t aSessionId)
+void Commissioner::SendKeepAlive(uint16_t aSessionId)
 {
     otError          error   = OT_ERROR_NONE;
     Coap::Message *  message = NULL;
@@ -799,12 +807,15 @@ otError Commissioner::SendKeepAlive(uint16_t aSessionId)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogWarnMeshCoP("Failed to send keep alive: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 void Commissioner::HandleLeaderKeepAliveResponse(void *               aContext,
@@ -825,12 +836,13 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessag
     uint8_t state;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, OT_NOOP);
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED, Stop(/* aResign */ false));
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED,
+                 IgnoreError(Stop(/* aResign */ false)));
 
     otLogInfoMeshCoP("received Leader keep-alive response");
 
     SuccessOrExit(Tlv::ReadUint8Tlv(*aMessage, Tlv::kState, state));
-    VerifyOrExit(state == StateTlv::kAccept, Stop(/* aResign */ false));
+    VerifyOrExit(state == StateTlv::kAccept, IgnoreError(Stop(/* aResign */ false)));
 
     mTimer.Start(Time::SecToMsec(kKeepAliveTimeout) / 2);
 
@@ -1025,7 +1037,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     if (!mJoiners[mJoinerIndex].mAny)
     {
         // remove after kRemoveJoinerDelay (seconds)
-        RemoveJoiner(&mJoiners[mJoinerIndex].mEui64, kRemoveJoinerDelay);
+        IgnoreError(RemoveJoiner(&mJoiners[mJoinerIndex].mEui64, kRemoveJoinerDelay));
     }
 
     otLogInfoMeshCoP("sent joiner finalize response");
@@ -1092,6 +1104,18 @@ exit:
     }
 
     return error;
+}
+
+void Commissioner::ApplyMeshLocalPrefix(void)
+{
+    VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, OT_NOOP);
+
+    Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
+    mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+    Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
+
+exit:
+    return;
 }
 
 // LCOV_EXCL_START

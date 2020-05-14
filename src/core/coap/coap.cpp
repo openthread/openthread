@@ -90,14 +90,14 @@ void CoapBase::ClearRequests(const Ip6::Address *aAddress)
     }
 }
 
-otError CoapBase::AddResource(Resource &aResource)
+void CoapBase::AddResource(Resource &aResource)
 {
-    return mResources.Add(aResource);
+    IgnoreError(mResources.Add(aResource));
 }
 
 void CoapBase::RemoveResource(Resource &aResource)
 {
-    mResources.Remove(aResource);
+    IgnoreError(mResources.Remove(aResource));
     aResource.SetNext(NULL);
 }
 
@@ -309,7 +309,7 @@ otError CoapBase::SendHeaderResponse(Message::Code aCode, const Message &aReques
 
     default:
         ExitNow(error = OT_ERROR_INVALID_ARGS);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     SuccessOrExit(error = message->SetToken(aRequest.GetToken(), aRequest.GetTokenLength()));
@@ -465,7 +465,7 @@ void CoapBase::DequeueMessage(Message &aMessage)
     // the timer would just shoot earlier and then it'd be setup again.
 }
 
-otError CoapBase::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void CoapBase::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError  error;
     Message *messageCopy = NULL;
@@ -478,12 +478,15 @@ otError CoapBase::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMes
 
 exit:
 
-    if (error != OT_ERROR_NONE && messageCopy != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        messageCopy->Free();
-    }
+        otLogWarnCoap("Failed to send copy: %s", otThreadErrorToString(error));
 
-    return error;
+        if (messageCopy != NULL)
+        {
+            messageCopy->Free();
+        }
+    }
 }
 
 Message *CoapBase::FindRelatedRequest(const Message &         aResponse,
@@ -537,7 +540,7 @@ void CoapBase::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
         if (!aMessageInfo.GetSockAddr().IsMulticast() && message.IsConfirmable())
         {
-            SendReset(message, aMessageInfo);
+            IgnoreError(SendReset(message, aMessageInfo));
         }
     }
     else if (message.IsRequest())
@@ -644,7 +647,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
 
     case OT_COAP_TYPE_CONFIRMABLE:
         // Send empty ACK if it is a CON message.
-        SendAck(aMessage, aMessageInfo);
+        IgnoreError(SendAck(aMessage, aMessageInfo));
         // Fall through
         // Handling of RFC7641 and multicast is below.
     case OT_COAP_TYPE_NON_CONFIRMABLE:
@@ -676,7 +679,7 @@ exit:
         {
             // Successfully parsed a header but no matching request was
             // found - reject the message by sending reset.
-            SendReset(aMessage, aMessageInfo);
+            IgnoreError(SendReset(aMessage, aMessageInfo));
         }
     }
 }
@@ -723,7 +726,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
 
             VerifyOrExit(option->mLength < sizeof(uriPath) - static_cast<size_t>(curUriPath + 1 - uriPath), OT_NOOP);
 
-            iterator.GetOptionValue(curUriPath);
+            IgnoreError(iterator.GetOptionValue(curUriPath));
             curUriPath += option->mLength;
             break;
 
@@ -758,7 +761,7 @@ exit:
 
         if (error == OT_ERROR_NOT_FOUND && !aMessageInfo.GetSockAddr().IsMulticast())
         {
-            SendNotFound(aMessage, aMessageInfo);
+            IgnoreError(SendNotFound(aMessage, aMessageInfo));
         }
 
         if (cachedResponse != NULL)
@@ -1021,7 +1024,7 @@ otError Coap::Start(uint16_t aPort)
 
     sockaddr.mPort = aPort;
     SuccessOrExit(error = mSocket.Open(&Coap::HandleUdpReceive, this));
-    VerifyOrExit((error = mSocket.Bind(sockaddr)) == OT_ERROR_NONE, mSocket.Close());
+    VerifyOrExit((error = mSocket.Bind(sockaddr)) == OT_ERROR_NONE, IgnoreError(mSocket.Close()));
 
 exit:
     return error;

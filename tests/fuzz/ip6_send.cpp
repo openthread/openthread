@@ -55,10 +55,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     FuzzerPlatformInit();
 
     instance = otInstanceInitSingle();
-    otLinkSetPanId(instance, panId);
-    otIp6SetEnabled(instance, true);
-    otThreadSetEnabled(instance, true);
-    otThreadBecomeLeader(instance);
+    IgnoreError(otLinkSetPanId(instance, panId));
+    IgnoreError(otIp6SetEnabled(instance, true));
+    IgnoreError(otThreadSetEnabled(instance, true));
+    IgnoreError(otThreadBecomeLeader(instance));
 
     settings.mLinkSecurityEnabled = (data[0] & 0x1) != 0;
     settings.mPriority            = OT_MESSAGE_PRIORITY_NORMAL;

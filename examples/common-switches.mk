@@ -47,6 +47,7 @@ DIAGNOSTIC          ?= 0
 DISABLE_DOC         ?= 0
 DISABLE_TOOLS       ?= 0
 DNS_CLIENT          ?= 0
+DUA                 ?= 0
 DYNAMIC_LOG_LEVEL   ?= 0
 ECDSA               ?= 0
 EXTERNAL_HEAP       ?= 0
@@ -60,6 +61,7 @@ endif
 LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
 MTD_NETDIAG         ?= 0
+MULTIPLE_INSTANCE   ?= 0
 OTNS                ?= 0
 PLATFORM_UDP        ?= 0
 REFERENCE_DEVICE    ?= 0
@@ -121,6 +123,10 @@ ifeq ($(CHILD_SUPERVISION),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1
 endif
 
+ifeq ($(CSL_RECEIVER),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=1
+endif
+
 ifeq ($(DEBUG),1)
 configure_OPTIONS              += --enable-debug --disable-optimization
 endif
@@ -147,6 +153,10 @@ endif
 
 ifeq ($(DNS_CLIENT),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1
+endif
+
+ifeq ($(DUA),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DUA_ENABLE=1
 endif
 
 ifeq ($(DYNAMIC_LOG_LEVEL),1)
@@ -191,6 +201,10 @@ endif
 
 ifeq ($(MTD_NETDIAG),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1
+endif
+
+ifeq ($(MULTIPLE_INSTANCE),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE=1
 endif
 
 ifeq ($(PLATFORM_UDP),1)

@@ -102,7 +102,7 @@ otError Lowpan::CompressSourceIid(const Mac::Address &aMacAddr,
     Ip6::Address ipaddr;
     Mac::Address tmp;
 
-    ComputeIid(aMacAddr, aContext, ipaddr);
+    IgnoreError(ComputeIid(aMacAddr, aContext, ipaddr));
 
     if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
     {
@@ -111,7 +111,7 @@ otError Lowpan::CompressSourceIid(const Mac::Address &aMacAddr,
     else
     {
         tmp.SetShort(aIpAddr.GetLocator());
-        ComputeIid(tmp, aContext, ipaddr);
+        IgnoreError(ComputeIid(tmp, aContext, ipaddr));
 
         if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
         {
@@ -145,7 +145,7 @@ otError Lowpan::CompressDestinationIid(const Mac::Address &aMacAddr,
     Ip6::Address ipaddr;
     Mac::Address tmp;
 
-    ComputeIid(aMacAddr, aContext, ipaddr);
+    IgnoreError(ComputeIid(aMacAddr, aContext, ipaddr));
 
     if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
     {
@@ -154,7 +154,7 @@ otError Lowpan::CompressDestinationIid(const Mac::Address &aMacAddr,
     else
     {
         tmp.SetShort(aIpAddr.GetLocator());
-        ComputeIid(tmp, aContext, ipaddr);
+        IgnoreError(ComputeIid(tmp, aContext, ipaddr));
 
         if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
         {
@@ -284,7 +284,7 @@ otError Lowpan::Compress(Message &           aMessage,
 
     if (!srcContextValid)
     {
-        networkData.GetContext(0, srcContext);
+        IgnoreError(networkData.GetContext(0, srcContext));
     }
 
     dstContextValid =
@@ -292,7 +292,7 @@ otError Lowpan::Compress(Message &           aMessage,
 
     if (!dstContextValid)
     {
-        networkData.GetContext(0, dstContext);
+        IgnoreError(networkData.GetContext(0, dstContext));
     }
 
     // Lowpan HC Control Bits
@@ -454,8 +454,8 @@ exit:
 
     if (error == OT_ERROR_NONE)
     {
-        IgnoreReturnValue(aBuf.Write(hcCtl >> 8));
-        IgnoreReturnValue(aBuf.Write(hcCtl & 0xff));
+        IgnoreError(aBuf.Write(hcCtl >> 8));
+        IgnoreError(aBuf.Write(hcCtl & 0xff));
         aBuf = buf;
     }
     else
@@ -704,8 +704,8 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
     }
     else
     {
-        networkData.GetContext(0, srcContext);
-        networkData.GetContext(0, dstContext);
+        IgnoreError(networkData.GetContext(0, srcContext));
+        IgnoreError(networkData.GetContext(0, dstContext));
     }
 
     memset(&aIp6Header, 0, sizeof(aIp6Header));
@@ -799,7 +799,7 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
         break;
 
     case kHcSrcAddrMode3:
-        ComputeIid(aMacSource, srcContext, aIp6Header.GetSource());
+        IgnoreError(ComputeIid(aMacSource, srcContext, aIp6Header.GetSource()));
         break;
     }
 
@@ -1125,7 +1125,7 @@ int Lowpan::Decompress(Message &           aMessage,
     remaining -= rval;
 
     SuccessOrExit(aMessage.Append(&ip6Header, sizeof(ip6Header)));
-    SuccessOrExit(aMessage.MoveOffset(sizeof(ip6Header)));
+    aMessage.MoveOffset(sizeof(ip6Header));
 
     while (compressed)
     {

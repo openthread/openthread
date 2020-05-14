@@ -252,9 +252,10 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
 
             SuccessOrExit(error = Tlv::ReadUint16Tlv(*response, Tlv::kCommissionerSessionId, sessionId));
 
-            instance.Get<Mle::MleRouter>().GetCommissionerAloc(borderAgent.mCommissionerAloc.GetAddress(), sessionId);
+            IgnoreError(instance.Get<Mle::MleRouter>().GetCommissionerAloc(borderAgent.mCommissionerAloc.GetAddress(),
+                                                                           sessionId));
             instance.Get<ThreadNetif>().AddUnicastAddress(borderAgent.mCommissionerAloc);
-            instance.Get<Ip6::Udp>().AddReceiver(borderAgent.mUdpReceiver);
+            IgnoreError(instance.Get<Ip6::Udp>().AddReceiver(borderAgent.mUdpReceiver));
         }
     }
 
@@ -289,9 +290,9 @@ void BorderAgent::HandleRequest<&BorderAgent::mCommissionerPetition>(void *     
                                                                      otMessage *          aMessage,
                                                                      const otMessageInfo *aMessageInfo)
 {
-    static_cast<BorderAgent *>(aContext)->ForwardToLeader(*static_cast<Coap::Message *>(aMessage),
-                                                          *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                          OT_URI_PATH_LEADER_PETITION, true, true);
+    IgnoreError(static_cast<BorderAgent *>(aContext)->ForwardToLeader(
+        *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+        OT_URI_PATH_LEADER_PETITION, true, true));
 }
 
 template <>
@@ -375,11 +376,11 @@ void BorderAgent::HandleStateChanged(otChangedFlags aFlags)
 
     if (Get<Mle::MleRouter>().IsAttached())
     {
-        Start();
+        IgnoreError(Start());
     }
     else
     {
-        Stop();
+        IgnoreError(Stop());
     }
 
 exit:
@@ -744,6 +745,21 @@ void BorderAgent::SetState(otBorderAgentState aState)
     {
         mState = aState;
     }
+}
+
+void BorderAgent::ApplyMeshLocalPrefix(void)
+{
+    VerifyOrExit(mState == OT_BORDER_AGENT_STATE_ACTIVE, OT_NOOP);
+
+    if (Get<ThreadNetif>().HasUnicastAddress(mCommissionerAloc))
+    {
+        Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
+        mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+        Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
+    }
+
+exit:
+    return;
 }
 
 } // namespace MeshCoP

@@ -138,8 +138,8 @@ otError Encoder::Encode(uint8_t aByte)
     {
         VerifyOrExit(mWritePointer.CanWrite(2), error = OT_ERROR_NO_BUFS);
 
-        mWritePointer.WriteByte(kEscapeSequence);
-        mWritePointer.WriteByte(aByte ^ 0x20);
+        IgnoreError(mWritePointer.WriteByte(kEscapeSequence));
+        IgnoreError(mWritePointer.WriteByte(aByte ^ 0x20));
     }
     else
     {
@@ -262,7 +262,7 @@ void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
                 if (mWritePointer.CanWrite(sizeof(uint8_t)))
                 {
                     mFcs = UpdateFcs(mFcs, byte);
-                    mWritePointer.WriteByte(byte);
+                    IgnoreError(mWritePointer.WriteByte(byte));
                     mDecodedLength++;
                 }
                 else
@@ -281,7 +281,7 @@ void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
             {
                 byte ^= 0x20;
                 mFcs = UpdateFcs(mFcs, byte);
-                mWritePointer.WriteByte(byte);
+                IgnoreError(mWritePointer.WriteByte(byte));
                 mDecodedLength++;
                 mState = kStateSync;
             }

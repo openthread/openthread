@@ -93,8 +93,9 @@ struct MessageInfo
     uint16_t    mOffset;      ///< A byte offset within the message.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
 
-    uint8_t mChildMask[kChildMaskBytes]; ///< A bit-vector to indicate which sleepy children need to receive this.
-    uint8_t mTimeout;                    ///< Seconds remaining before dropping the message.
+    uint8_t  mChildMask[kChildMaskBytes]; ///< A bit-vector to indicate which sleepy children need to receive this.
+    uint16_t mMeshDest;                   ///< Used for unicast non-link-local messages.
+    uint8_t  mTimeout;                    ///< Seconds remaining before dropping the message.
     union
     {
         uint16_t mPanId;   ///< Used for MLE Discover Request and Response messages.
@@ -285,22 +286,16 @@ public:
      *
      * @param[in]  aDelta  The number of bytes to move the current offset, which may be positive or negative.
      *
-     * @retval OT_ERROR_NONE          Successfully moved the byte offset.
-     * @retval OT_ERROR_INVALID_ARGS  The resulting byte offset is not within the existing message.
-     *
      */
-    otError MoveOffset(int aDelta);
+    void MoveOffset(int aDelta);
 
     /**
      * This method sets the byte offset within the message.
      *
-     * @param[in]  aOffset  The number of bytes to move the current offset, which may be positive or negative.
-     *
-     * @retval OT_ERROR_NONE          Successfully moved the byte offset.
-     * @retval OT_ERROR_INVALID_ARGS  The requested byte offset is not within the existing message.
+     * @param[in]  aOffset  The byte offset within the message.
      *
      */
-    otError SetOffset(uint16_t aOffset);
+    void SetOffset(uint16_t aOffset);
 
     /**
      * This method returns the type of the message.
@@ -517,6 +512,26 @@ public:
     bool IsChildPending(void) const;
 
     /**
+     * This method returns the RLOC16 of the mesh destination.
+     *
+     * @note Only use this for non-link-local unicast messages.
+     *
+     * @returns The IEEE 802.15.4 Destination PAN ID.
+     *
+     */
+    uint16_t GetMeshDest(void) const { return mBuffer.mHead.mInfo.mMeshDest; }
+
+    /**
+     * This method sets the RLOC16 of the mesh destination.
+     *
+     * @note Only use this when sending non-link-local unicast messages.
+     *
+     * @param[in]  aMeshDest  The IEEE 802.15.4 Destination PAN ID.
+     *
+     */
+    void SetMeshDest(uint16_t aMeshDest) { mBuffer.mHead.mInfo.mMeshDest = aMeshDest; }
+
+    /**
      * This method returns the IEEE 802.15.4 Destination PAN ID.
      *
      * @note Only use this when sending MLE Discover Request or Response messages.
@@ -659,7 +674,7 @@ public:
      * @param[in] aRss A new RSS value (in dBm) to be added to average.
      *
      */
-    void AddRss(int8_t aRss) { mBuffer.mHead.mInfo.mRssAverager.Add(aRss); }
+    void AddRss(int8_t aRss) { IgnoreError(mBuffer.mHead.mInfo.mRssAverager.Add(aRss)); }
 
     /**
      * This method returns the average RSS (Received Signal Strength) associated with the message.
@@ -922,11 +937,8 @@ public:
      *
      * @param[in]  aMessage  The message to add.
      *
-     * @retval OT_ERROR_NONE     Successfully added the message to the list.
-     * @retval OT_ERROR_ALREADY  The message is already enqueued in a list.
-     *
      */
-    otError Enqueue(Message &aMessage) { return Enqueue(aMessage, kQueuePositionTail); }
+    void Enqueue(Message &aMessage) { Enqueue(aMessage, kQueuePositionTail); }
 
     /**
      * This method adds a message at a given position (head/tail) of the list.
@@ -934,22 +946,16 @@ public:
      * @param[in]  aMessage  The message to add.
      * @param[in]  aPosition The position (head or tail) where to add the message.
      *
-     * @retval OT_ERROR_NONE     Successfully added the message to the list.
-     * @retval OT_ERROR_ALREADY  The message is already enqueued in a list.
-     *
      */
-    otError Enqueue(Message &aMessage, QueuePosition aPosition);
+    void Enqueue(Message &aMessage, QueuePosition aPosition);
 
     /**
      * This method removes a message from the list.
      *
      * @param[in]  aMessage  The message to remove.
      *
-     * @retval OT_ERROR_NONE       Successfully removed the message from the list.
-     * @retval OT_ERROR_NOT_FOUND  The message is not enqueued in a list.
-     *
      */
-    otError Dequeue(Message &aMessage);
+    void Dequeue(Message &aMessage);
 
     /**
      * This method returns the number of messages and buffers enqueued.
@@ -1019,22 +1025,16 @@ public:
      *
      * @param[in]  aMessage  The message to add.
      *
-     * @retval OT_ERROR_NONE     Successfully added the message to the list.
-     * @retval OT_ERROR_ALREADY  The message is already enqueued in a list.
-     *
      */
-    otError Enqueue(Message &aMessage);
+    void Enqueue(Message &aMessage);
 
     /**
      * This method removes a message from the list.
      *
      * @param[in]  aMessage  The message to remove.
      *
-     * @retval OT_ERROR_NONE       Successfully removed the message from the list.
-     * @retval OT_ERROR_NOT_FOUND  The message is not enqueued in a list.
-     *
      */
-    otError Dequeue(Message &aMessage);
+    void Dequeue(Message &aMessage);
 
     /**
      * This method returns the number of messages and buffers enqueued.

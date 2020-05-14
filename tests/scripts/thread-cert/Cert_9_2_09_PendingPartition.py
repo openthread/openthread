@@ -29,8 +29,7 @@
 
 import unittest
 
-import config
-import node
+import thread_cert
 
 CHANNEL_INIT = 19
 PANID_INIT = 0xface
@@ -44,56 +43,51 @@ ROUTER1 = 3
 ROUTER2 = 4
 
 
-class Cert_9_2_09_PendingPartition(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 5):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[COMMISSIONER].set_active_dataset(10,
-                                                    channel=CHANNEL_INIT,
-                                                    panid=PANID_INIT)
-        self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[COMMISSIONER].enable_whitelist()
-        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
-
-        self.nodes[LEADER].set_active_dataset(10,
-                                              channel=CHANNEL_INIT,
-                                              panid=PANID_INIT)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].set_partition_id(0xffffffff)
-        self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[LEADER].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER1].set_active_dataset(10,
-                                               channel=CHANNEL_INIT,
-                                               panid=PANID_INIT)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER2].set_active_dataset(10,
-                                               channel=CHANNEL_INIT,
-                                               panid=PANID_INIT)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
-        self.nodes[ROUTER2].set_network_id_timeout(100)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
+    topology = {
+        COMMISSIONER: {
+            'active_dataset': {
+                'timestamp': 10,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        LEADER: {
+            'active_dataset': {
+                'timestamp': 10,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT
+            },
+            'mode': 'rsdn',
+            'partition_id': 0xffffffff,
+            'router_selection_jitter': 1,
+            'whitelist': [COMMISSIONER, ROUTER1]
+        },
+        ROUTER1: {
+            'active_dataset': {
+                'timestamp': 10,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, ROUTER2]
+        },
+        ROUTER2: {
+            'active_dataset': {
+                'timestamp': 10,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT
+            },
+            'mode': 'rsdn',
+            'network_id_timeout': 100,
+            'router_selection_jitter': 1,
+            'whitelist': [ROUTER1]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()

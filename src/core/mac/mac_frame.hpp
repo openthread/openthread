@@ -289,7 +289,6 @@ public:
         kMic64Size  = 64 / CHAR_BIT,
         kMic128Size = 128 / CHAR_BIT,
         kMaxMicSize = kMic128Size,
-        kCrcSize    = 2,
 
         kKeyIdMode0    = 0 << 3,
         kKeyIdMode1    = 1 << 3,
@@ -320,7 +319,7 @@ public:
 
         kInfoStringSize = 110, ///< Max chars needed for the info string representation (@sa ToInfoString()).
 
-        kImmAckLength = 5,
+        kImmAckLength = kFcfSize + kDsnSize + kFcsSize,
     };
 
     /**
@@ -433,6 +432,15 @@ public:
     void SetAckRequest(bool aAckRequest);
 
     /**
+     * This method indicates whether or not the PanId Compression bit is set.
+     *
+     * @retval TRUE   If the PanId Compression bit is set.
+     * @retval FALSE  If the PanId Compression bit is not set.
+     *
+     */
+    bool IsPanIdCompressed(void) const { return (GetFrameControlField() & kFcfPanidCompression) != 0; }
+
+    /**
      * This method indicates whether or not IEs present.
      *
      * @retval TRUE   If IEs present.
@@ -527,12 +535,12 @@ public:
     void SetDstAddr(const Address &aAddress);
 
     /**
-     * This method indicates whether or not the Src PanId is present.
+     * This method indicates whether or not the Source Address is present for this object.
      *
-     * @returns TRUE if the Src PanId is present, FALSE otherwise.
+     * @retval TRUE if the Source Address is present, FALSE otherwise.
      *
      */
-    static bool IsSrcPanIdPresent(uint16_t aFcf);
+    bool IsSrcPanIdPresent(void) const { return IsSrcPanIdPresent(GetFrameControlField()); };
 
     /**
      * This method gets the Source PAN Identifier.
@@ -920,18 +928,16 @@ public:
      */
     const uint8_t *GetHeaderIe(uint8_t aIeId) const;
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
-     * This method finds CSL IE into the frame and modify its content.
+     * This method finds CSL IE in the frame and modify its content.
      *
      * @param[in] aCslPeriod  CSL Period in CSL IE.
      * @param[in] aCslPhase   CSL Phase in CSL IE.
      *
-     * @retval  OT_ERROR_NONE   Successfully modify CSL IE into the frame.
-     * @retval  OT_ERROR_PARSE  CSL IE is not found into the frame.
      */
-    otError SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase);
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    void SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase);
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
@@ -959,30 +965,12 @@ public:
      */
     InfoString ToInfoString(void) const;
 
-    /**
-     * Generate Imm-Ack in this frame object.
-     *
-     * @param[in]    aFrame             A pointer to the incoming frame.
-     * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
-     *
-     */
-    void GenerateImmAck(const Frame *aFrame, bool aIsFramePending);
-
-    /**
-     * Generate Enh-Ack in this frame object.
-     *
-     * @param[in]    aFrame             A pointer to the frame.
-     * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
-     * @param[in]    aIeData            A pointer to the IE data pattern of the ACK to be sent.
-     * @param[in]    aIeLength          The length of IE data pattern of the ACK to be sent.
-     *
-     */
-    void GenerateEnhAck(const Frame *aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
-
-private:
+protected:
     enum
     {
         kInvalidIndex  = 0xff,
+        kInvalidSize   = kInvalidIndex,
+        kMaxPsduSize   = kInvalidSize - 1,
         kSequenceIndex = kFcfSize,
     };
 
@@ -995,26 +983,21 @@ private:
     uint8_t  FindSecurityHeaderIndex(void) const;
     uint8_t  SkipSecurityHeaderIndex(void) const;
     uint8_t  FindPayloadIndex(void) const;
-
-    void    SetFrameControlFieldForAck(const Frame *aFrame,
-                                       bool         aIsFramePending,
-                                       uint8_t      aIeLength,
-                                       Frame *      aAckFrame) const;
-    otError SetDstPanIdAndAddrForAck(const Frame *aFrame, Frame *aAckFrame) const;
-    otError SetSecurityHeaderForAck(const Frame *aFrame, Frame *aAckFrame) const;
-    uint8_t CalculateFrameLength() const;
-
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     uint8_t FindHeaderIeIndex(void) const;
 #endif
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
 
-    static bool    IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
-    static bool    IsDstPanIdPresent(uint16_t aFcf);
-    static bool    IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
-    static bool    IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kFcfFrameVersion2015; }
-    static uint8_t GetSecurityHeaderLength(uint8_t aSecurityControl);
+    static bool IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
+    static bool IsDstPanIdPresent(uint16_t aFcf);
+    static bool IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
+    static bool IsSrcPanIdPresent(uint16_t aFcf);
+    static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kFcfFrameVersion2015; }
+
+    static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
+    static uint8_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
+    static uint8_t CalculateMicSize(uint8_t aSecurityControl);
 };
 
 /**
@@ -1024,6 +1007,8 @@ private:
 class RxFrame : public Frame
 {
 public:
+    friend class TxFrame;
+
     /**
      * This method returns the RSSI in dBm used for reception.
      *
@@ -1215,6 +1200,27 @@ public:
      *
      */
     void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
+
+    /**
+     * This method indicates whether or not the frame has security processed.
+     *
+     * @retval TRUE   The frame already has security processed.
+     * @retval FALSE  The frame does not have security processed.
+     *
+     */
+    bool IsSecurityProcessed(void) const { return mInfo.mTxInfo.mIsSecurityProcessed; }
+
+    /**
+     * This method sets the security processed flag attribute.
+     *
+     * @param[in]  aIsSecurityProcessed  TRUE if the frame already has security processed.
+     *
+     */
+    void SetIsSecurityProcessed(bool aIsSecurityProcessed)
+    {
+        mInfo.mTxInfo.mIsSecurityProcessed = aIsSecurityProcessed;
+    }
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method sets the Time IE offset.
@@ -1223,6 +1229,14 @@ public:
      *
      */
     void SetTimeIeOffset(uint8_t aOffset) { mInfo.mTxInfo.mIeInfo->mTimeIeOffset = aOffset; }
+
+    /**
+     * This method gets the Time IE offset.
+     *
+     * @returns The Time IE offset, 0 means no Time IE.
+     *
+     */
+    uint8_t GetTimeIeOffset(void) const { return mInfo.mTxInfo.mIeInfo->mTimeIeOffset; }
 
     /**
      * This method sets the offset to network time.
@@ -1244,7 +1258,30 @@ public:
     void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    /**
+     * Generate Imm-Ack in this frame object.
+     *
+     * @param[in]    aFrame             A reference to the frame received.
+     * @param[in]    aIsFramePending    Value of the ACK's frame pending bit.
+     *
+     */
+    void GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending);
+
+    /**
+     * Generate Enh-Ack in this frame object.
+     *
+     * @param[in]    aFrame             A reference to the frame received.
+     * @param[in]    aIsFramePending    Value of the ACK's frame pending bit.
+     * @param[in]    aIeData            A pointer to the IE data portion of the ACK to be sent.
+     * @param[in]    aIeLength          The length of IE data portion of the ACK to be sent.
+     *
+     * @retval  OT_ERROR_NONE           Successfully generated Enh Ack.
+     * @retval  OT_ERROR_PARSE          @p aFrame has incorrect format.
+     *
+     */
+    otError GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     void SetTxPhase(uint16_t aPhase) { mInfo.mTxInfo.mPhase = aPhase; }
     void SetTxPeriod(uint16_t aPeriod) { mInfo.mTxInfo.mPeriod = aPeriod; }
 #endif
@@ -1467,7 +1504,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements CSL IE generation and parsing.
+ * This class implements CSL IE data structure.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1480,7 +1517,7 @@ public:
      * @returns the CSL Period.
      *
      */
-    uint16_t GetPeriod(void) const { return mPeriod; }
+    uint16_t GetPeriod(void) const { return Encoding::LittleEndian::HostSwap16(mPeriod); }
 
     /**
      * This method sets the CSL Period.
@@ -1488,7 +1525,7 @@ public:
      * @param[in]  aPeriod  The CSL Period.
      *
      */
-    void SetPeriod(uint16_t aPeriod) { mPeriod = aPeriod; }
+    void SetPeriod(uint16_t aPeriod) { mPeriod = Encoding::LittleEndian::HostSwap16(aPeriod); }
 
     /**
      * This method returns the CSL Phase.
@@ -1496,7 +1533,7 @@ public:
      * @returns the CSL Phase.
      *
      */
-    uint16_t GetPhase(void) const { return mPhase; }
+    uint16_t GetPhase(void) const { return Encoding::LittleEndian::HostSwap16(mPhase); }
 
     /**
      * This method sets the CSL Phase.
@@ -1504,7 +1541,7 @@ public:
      * @param[in]  aPhase  The CSL Phase.
      *
      */
-    void SetPhase(uint16_t aPhase) { mPhase = aPhase; }
+    void SetPhase(uint16_t aPhase) { mPhase = Encoding::LittleEndian::HostSwap16(aPhase); }
 
 private:
     uint16_t mPhase;

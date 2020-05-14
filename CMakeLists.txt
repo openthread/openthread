@@ -26,12 +26,23 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-cmake_minimum_required(VERSION 3.13.1)
-project(openthread)
+cmake_policy(SET CMP0048 NEW)
+cmake_minimum_required(VERSION 3.11.4)
+
+file(READ .default-version OT_DEFAULT_VERSION)
+string(STRIP ${OT_DEFAULT_VERSION} OT_DEFAULT_VERSION)
+
+project(openthread VERSION ${OT_DEFAULT_VERSION})
 
 option(OT_BUILD_EXECUTABLES "Build executables" ON)
-option(OT_BUILTIN_MBEDTLS "Enable builtin mbedTLS" ON)
 option(OT_COVERAGE "enable coverage" OFF)
+set(OT_EXTERNAL_MBEDTLS "" CACHE STRING "Specify external mbedtls library")
+
+include(TestBigEndian)
+TEST_BIG_ENDIAN(OT_BIG_ENDIAN)
+if(OT_BIG_ENDIAN)
+    list(APPEND OT_PRIVATE_DEFINES "BYTE_ORDER_BIG_ENDIAN=1")
+endif()
 
 include("${PROJECT_SOURCE_DIR}/etc/cmake/checks.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
@@ -55,7 +66,6 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     )
 endif()
 
-file(READ .default-version OT_DEFAULT_VERSION)
 execute_process(
     COMMAND bash "-c" "third_party/nlbuild-autotools/repo/scripts/mkversion -b ${OT_DEFAULT_VERSION}"
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
@@ -87,6 +97,27 @@ if(NOT OT_PLATFORM IN_LIST OT_EXAMPLE_PLATFORMS)
     endif()
 endif()
 
+set(OT_LOG_OUTPUT_VALUES
+    "APP"
+    "DEBUG_UART"
+    "NCP_SPINEL"
+    "NONE"
+    "PLATFORM_DEFINED"
+)
+if(OT_REFERENCE_DEVICE AND NOT OT_PLATFORM STREQUAL "posix")
+    set(OT_LOG_OUTPUT "APP" CACHE STRING "Set log output to application for reference device")
+else()
+    set(OT_LOG_OUTPUT "" CACHE STRING "Where log output goes to")
+endif()
+set_property(CACHE OT_LOG_OUTPUT PROPERTY STRINGS ${OT_LOG_OUTPUT_VALUES})
+if(OT_LOG_OUTPUT)
+    if(NOT OT_LOG_OUTPUT IN_LIST OT_LOG_OUTPUT_VALUES)
+        message(FATAL_ERROR "Log output unknown: ${OT_LOG_OUTPUT}")
+    endif()
+    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_${OT_LOG_OUTPUT}")
+    message(STATUS "Log output: ${OT_LOG_OUTPUT}")
+endif()
+
 # OT_CONFIG allows users to specify the path to OpenThread project core
 # config header file. The default value of this parameter is empty string.
 # When not specified by user (value is ""), a platform cmake file may
@@ -115,15 +146,21 @@ endif()
 list(APPEND OT_PRIVATE_DEFINES ${OT_PLATFORM_DEFINES})
 
 if(OT_PLATFORM STREQUAL "posix")
-    add_subdirectory(src/posix)
+    if(OT_BUILD_EXECUTABLES)
+        add_subdirectory(src/posix)
+    else()
+        add_subdirectory(src/posix EXCLUDE_FROM_ALL)
+    endif()
 elseif(NOT OT_PLATFORM MATCHES "none")
     add_subdirectory(examples)
 endif()
 
 add_subdirectory(src)
-add_subdirectory(third_party)
+add_subdirectory(third_party EXCLUDE_FROM_ALL)
 
 if(OT_PLATFORM STREQUAL "simulation")
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+message(STATUS "Definitions: ${OT_PRIVATE_DEFINES}")
