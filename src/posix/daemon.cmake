@@ -79,7 +79,7 @@ target_compile_options(ot-ctl PRIVATE
 
 target_link_libraries(ot-ctl
     openthread-platform
-    $<$<BOOL:${READLINE}>:${OT_READLINE}>
+    ${READLINE_LINK_LIBRARIES}
 )
 
 target_include_directories(ot-ctl PRIVATE ${COMMON_INCLUDES})

@@ -39,6 +39,17 @@ set_property(CACHE OT_READLINE PROPERTY STRINGS "readline" "edit" "no")
 
 if(OT_READLINE)
     find_library(READLINE ${OT_READLINE})
+
+    find_library(NCURSES ncurses)
+    if (NOT NCURSES)
+        message(FATAL_ERROR "Failed to find ncurses")
+    endif()
+
+    if (NOT READLINE)
+        message(FATAL_ERROR "Failed to find ${OT_READLINE}")
+    endif()
+
+    list(APPEND READLINE_LINK_LIBRARIES "${READLINE}" "${NCURSES}")
 endif()
 
 if(OT_DAEMON)
