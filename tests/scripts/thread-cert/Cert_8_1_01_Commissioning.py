@@ -62,10 +62,10 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(3)
         self.nodes[COMMISSIONER].commissioner_add_joiner(
-            self.nodes[JOINER].get_eui64(), 'OPENTHREAD')
+            self.nodes[JOINER].get_eui64(), 'PSKD01')
 
         self.nodes[JOINER].interface_up()
-        self.nodes[JOINER].joiner_start('OPENTHREAD')
+        self.nodes[JOINER].joiner_start('PSKD01')
         self.simulator.go(10)
         self.simulator.read_cert_messages_in_commissioning_log(
             [COMMISSIONER, JOINER])

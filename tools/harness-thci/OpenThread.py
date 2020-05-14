@@ -2035,7 +2035,7 @@ class OpenThread(IThci):
     def diagnosticQuery(self, strDestinationAddr, listTLV_ids=[]):
         self.diagnosticGet(strDestinationAddr, listTLV_ids)
 
-    def startNativeCommissioner(self, strPSKc='GRLpassWord'):
+    def startNativeCommissioner(self, strPSKc='GRLPASSPHRASE'):
         # TODO: Support the whole Native Commissioner functionality
         # Currently it only aims to trigger a Discovery Request message to pass
         # Certification test 5.8.4
@@ -2069,7 +2069,7 @@ class OpenThread(IThci):
     def setJoinKey(self, strPSKc):
         pass
 
-    def scanJoiner(self, xEUI='*', strPSKd='threadjpaketest'):
+    def scanJoiner(self, xEUI='*', strPSKd='THREADJPAKETEST'):
         """scan Joiner
 
         Args:
@@ -2143,7 +2143,7 @@ class OpenThread(IThci):
             ModuleHelper.writeintodebuglogger('allowcommission() error: ' +
                                               str(e))
 
-    def joinCommissioned(self, strPSKd='threadjpaketest', waitTime=20):
+    def joinCommissioned(self, strPSKd='THREADJPAKETEST', waitTime=20):
         """start joiner
 
         Args:
