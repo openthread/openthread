@@ -280,10 +280,10 @@ public:
     uint32_t GetStoredMacFrameCounter(void);
 
     /**
-     * This method sets the current MAC Frame Counter value.
+     * This method sets the current MAC frame counter value.
      *
-     * @param[in] aMacFrameCounter  The MAC Frame Counter value.
-     * @param[in]   aCallback       A pointer to a function called when needs to store current MAC frame counter.
+     * @param[in] aMacFrameCounter  The MAC frame counter value.
+     * @param[in] aCallback         A pointer to a function called when needs to store current MAC frame counter.
      *
      * @retval OT_ERROR_NONE             If successful.
      * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
@@ -292,15 +292,16 @@ public:
     otError SetMacFrameCounter(uint32_t aMacFrameCounter, otLinkRawMacFcStore aCallback);
 
     /**
-     * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
+     * This method sets the stored MAC frame Counter value which is stored in non-volatile memory.
      *
-     * @param[in] aStoredMacFrameCounter  The stored MAC Frame Counter value.
+     * @param[in] aStoredMacFrameCounter  The stored MAC frame counter value.
+     * @param[in] aCallback               A pointer to a function called when needs to store current MAC frame counter.
      *
      * @retval OT_ERROR_NONE             If successful.
      * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
      *
      */
-    otError SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter);
+    otError SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter, otLinkRawMacFcStore aCallback);
 
     /**
      * This method invokes the mMacFcStoreCallback, if set.

@@ -504,23 +504,23 @@ otError otPlatRadioGetMacFrameCounter(otInstance *aInstance, uint32_t *aMacFrame
 otError otPlatRadioGetStoredMacFrameCounter(otInstance *aInstance, uint32_t *aMacFrameCounter);
 
 /**
- * This method sets the current MAC Frame Counter value.
+ * This method sets the current MAC frame counter value.
  *
  * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
  *
  * @param[in]   aInstance         A pointer to an OpenThread instance.
- * @param[in]   aMacFrameCounter  The MAC Frame Counter value.
+ * @param[in]   aMacFrameCounter  The MAC frame counter value.
  *
  */
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
 
 /**
- * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
+ * This method sets the stored MAC frame counter value which is stored in non-volatile memory.
  *
  * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
  *
  * @param[in]   aInstance               A pointer to an OpenThread instance.
- * @param[in]   aStoredMacFrameCounter  The stored MAC Frame Counter value.
+ * @param[in]   aStoredMacFrameCounter  The stored MAC frame counter value.
  *
  */
 void otPlatRadioSetStoredMacFrameCounter(otInstance *aInstance, uint32_t aStoredMacFrameCounter);
@@ -531,7 +531,7 @@ void otPlatRadioSetStoredMacFrameCounter(otInstance *aInstance, uint32_t aStored
  * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
  *
  * @param[in]  aInstance           The OpenThread instance structure.
- * @param[in]  aMacFrameCounter    The MAC Frame Counter value.
+ * @param[in]  aMacFrameCounter    The MAC frame counter value.
  *
  */
 extern void otPlatRadioMacFrameCounterStore(otInstance *aInstance, uint32_t aMacFrameCounter);

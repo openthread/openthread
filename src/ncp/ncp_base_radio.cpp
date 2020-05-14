@@ -202,7 +202,7 @@ void NcpBase::LinkRawMacFrameCounterStore(void)
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_RCP_MAC_FRAME_COUNTER));
 
-    SuccessOrExit(mEncoder.WriteUintPacked(otLinkRawGetMacFrameCounter(mInstance)));
+    SuccessOrExit(mEncoder.WriteUint32(otLinkRawGetMacFrameCounter(mInstance)));
     SuccessOrExit(mEncoder.EndFrame());
 
 exit:
@@ -512,7 +512,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_STORED_MAC_FRAME_
 
     SuccessOrExit(error = mDecoder.ReadUint32(frameCounter));
 
-    error = otLinkRawSetStoredMacFrameCounter(mInstance, frameCounter);
+    error = otLinkRawSetStoredMacFrameCounter(mInstance, frameCounter, &NcpBase::LinkRawMacFrameCounterStore);
 
 exit:
     return error;

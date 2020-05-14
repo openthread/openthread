@@ -248,9 +248,12 @@ otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCou
     return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetMacFrameCounter(aMacFrameCounter, aCallback);
 }
 
-otError otLinkRawSetStoredMacFrameCounter(otInstance *aInstance, uint32_t aStoredMacFrameCounter)
+otError otLinkRawSetStoredMacFrameCounter(otInstance *        aInstance,
+                                          uint32_t            aStoredMacFrameCounter,
+                                          otLinkRawMacFcStore aCallback)
 {
-    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetStoredMacFrameCounter(aStoredMacFrameCounter);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetStoredMacFrameCounter(aStoredMacFrameCounter,
+                                                                                            aCallback);
 }
 
 #if OPENTHREAD_RADIO

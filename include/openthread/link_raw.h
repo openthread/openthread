@@ -352,7 +352,7 @@ otError otLinkRawSetMacKey(otInstance *    aInstance,
                            const otMacKey *aNextKey);
 
 /**
- * This function pointer on indication to store MAC frame counter to NVM.
+ * This function pointer indication callback to store MAC frame counter to NVM.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
@@ -380,10 +380,10 @@ uint32_t otLinkRawGetMacFrameCounter(otInstance *aInstance);
 uint32_t otLinkRawGetStoredMacFrameCounter(otInstance *aInstance);
 
 /**
- * Sets the current MAC Frame Counter value.
+ * Sets the current MAC frame counter value.
  *
  * @param[in]   aInstance         A pointer to an OpenThread instance.
- * @param[in]   aMacFrameCounter  The MAC Frame Counter value.
+ * @param[in]   aMacFrameCounter  The MAC frame counter value.
  * @param[in]   aCallback         A pointer to a function called when needs to store current MAC frame counter.
  *
  * @retval OT_ERROR_NONE             If successful.
@@ -393,16 +393,19 @@ uint32_t otLinkRawGetStoredMacFrameCounter(otInstance *aInstance);
 otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter, otLinkRawMacFcStore aCallback);
 
 /**
- * Sets the MAC Frame Counter value which is stored in non-volatile memory.
+ * Sets the stored MAC frame counter value which is stored in non-volatile memory.
  *
  * @param[in]   aInstance               A pointer to an OpenThread instance.
- * @param[in]   aStoredMacFrameCounter  The stored MAC Frame Counter value.
+ * @param[in]   aStoredMacFrameCounter  The stored MAC frame counter value.
+ * @param[in]   aCallback               A pointer to a function called when needs to store current MAC frame counter.
  *
  * @retval OT_ERROR_NONE             If successful.
  * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
  *
  */
-otError otLinkRawSetStoredMacFrameCounter(otInstance *aInstance, uint32_t aStoredMacFrameCounter);
+otError otLinkRawSetStoredMacFrameCounter(otInstance *        aInstance,
+                                          uint32_t            aStoredMacFrameCounter,
+                                          otLinkRawMacFcStore aCallback);
 
 /**
  * @}

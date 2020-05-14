@@ -250,6 +250,8 @@ void SubMac::ProcessTransmitSecurity(void)
     if (!mTransmitFrame.IsARetransmission())
     {
         mTransmitFrame.SetKeyId(mKeyId);
+        mTransmitFrame.SetFrameCounter(GetMacFrameCounter());
+        IncrementMacFrameCounter();
     }
 
     extAddress = &GetExtAddress();

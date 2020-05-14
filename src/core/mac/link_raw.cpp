@@ -244,12 +244,14 @@ exit:
     return error;
 }
 
-otError LinkRaw::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
+otError LinkRaw::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter, otLinkRawMacFcStore aCallback)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
     mSubMac.SetStoredMacFrameCounter(aStoredMacFrameCounter);
+
+    mMacFcStoreCallback = aCallback;
 
 exit:
     return error;
