@@ -32,7 +32,7 @@ set -x
 
 die()
 {
-    echo " *** ERROR: " $*
+    echo " *** ERROR: " "$*"
     exit 1
 }
 
@@ -62,7 +62,7 @@ check()
     OT_OUTPUT=/tmp/ot-output
     socat -d -d pty,raw,echo=0 pty,raw,echo=0 >/dev/null 2>$SOCAT_OUTPUT &
     while true; do
-        if test $(head -n2 $SOCAT_OUTPUT | wc -l) = 2; then
+        if test "$(head -n2 $SOCAT_OUTPUT | wc -l)" = 2; then
             RADIO_PTY=$(head -n1 $SOCAT_OUTPUT | grep -o '/dev/.\+')
             CORE_PTY=$(head -n2 $SOCAT_OUTPUT | tail -n1 | grep -o '/dev/.\+')
             break
@@ -70,11 +70,13 @@ check()
         echo 'Waiting for socat ready...'
         sleep 1
     done
-    echo 'RADIO_PTY' $DEVICE_PTY
-    echo 'CORE_PTY' $CORE_PTY
+    echo 'RADIO_PTY' "$DEVICE_PTY"
+    echo 'CORE_PTY' "$CORE_PTY"
 
     RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-rcp)"
-    $RADIO_NCP_PATH 1 >$RADIO_PTY <$RADIO_PTY &
+
+    # shellcheck disable=SC2094
+    $RADIO_NCP_PATH 1 >"$RADIO_PTY" <"$RADIO_PTY" &
 
     # Cover setting a valid network interface name.
     readonly VALID_NETIF_NAME="wan$(date +%H%M%S)"
@@ -84,26 +86,28 @@ check()
     )
 
     if [[ ${DAEMON} == 1 ]]; then
-        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" "${options[@]}" -I "${VALID_NETIF_NAME}" ${CORE_PTY} &
+        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" "${options[@]}" -I "${VALID_NETIF_NAME}" "${CORE_PTY}" &
         sleep 1
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl)"
+        OT_CLI_ARG=
     else
-        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) "${options[@]}" ${CORE_PTY}"
+        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli)"
+        OT_CLI_ARG="${CORE_PTY}"
     fi
 
-    sudo ${OT_CLI_CMD} -I "${VALID_NETIF_NAME}" -n
+    sudo "${OT_CLI_CMD}" "${OT_CLI_ARG}" -I "${VALID_NETIF_NAME}" -n
 
     # Cover setting a too long(max is 15 characters) network interface name.
     # Expect exit code to be 2(OT_EXIT_INVALID_ARGUMENTS).
     readonly INVALID_NETIF_NAME="wan0123456789123"
-    sudo ${OT_CLI_CMD} -I "${INVALID_NETIF_NAME}" -n || test $? = 2
+    sudo "${OT_CLI_CMD}" "${OT_CLI_ARG}" -I "${INVALID_NETIF_NAME}" -n || test $? = 2
 
     if [[ ${DAEMON} == 1 ]]; then
-        sudo ${OT_CLI_CMD} panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
+        sudo "${OT_CLI_CMD}" "${OT_CLI_ARG}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
     fi
 
-    sudo expect <<EOF >"${OT_OUTPUT}" &
-spawn ${OT_CLI_CMD}
+    sudo expect <<EOF | tee "${OT_OUTPUT}" &
+spawn ${OT_CLI_CMD} ${OT_CLI_ARG}
 send "panid 0xface\r\n"
 expect "Done"
 send "ifconfig up\r\n"
@@ -142,7 +146,7 @@ EOF
         sudo killall -9 expect || true
         sudo killall -9 ot-ctl || true
         NETIF_INDEX=$(ip link show "${VALID_NETIF_NAME}" | cut -f 1 -d ":" | head -n 1)
-        sudo PATH="$(dirname ${OT_CLI_CMD}):${PATH}" \
+        sudo PATH="$(dirname "${OT_CLI_CMD}"):${PATH}" \
             python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" \
             || die 'multicast group join failed'
     fi
@@ -153,7 +157,11 @@ EOF
     echo "CoAP response is: ${coap_response}"
 
     # Verify CoAP response contains the extended address
-    [[ ${coap_response} == *${extaddr}* ]] && echo 'Success' || die 'failed to get extended address'
+    if [[ ${coap_response} == *${extaddr}* ]]; then
+        echo 'Success'
+    else
+        die 'failed to get extended address'
+    fi
 }
 
 main()

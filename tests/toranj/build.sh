@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
@@ -27,15 +27,12 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-cd $(dirname $0)
-cd ../..
-
 display_usage()
 {
     echo ""
     echo "Toranj Build script "
     echo ""
-    echo "Usage: $(basename $0) [options] <config>"
+    echo "Usage: $(basename "$0") [options] <config>"
     echo "    <config> can be:"
     echo "        ncp        : Build OpenThread NCP FTD mode with simulation platform"
     echo "        rcp        : Build OpenThread RCP (NCP in radio mode) with simulation platform"
@@ -51,9 +48,12 @@ display_usage()
 
 die()
 {
-    echo " *** ERROR: " $*
+    echo " *** ERROR: " "$*"
     exit 1
 }
+
+cd "$(dirname "$0")" || die "cd failed"
+cd ../.. || die "cd failed"
 
 coverage=no
 tests=no
@@ -83,13 +83,13 @@ fi
 
 build_config=$1
 
-configure_options="                \
-    --disable-docs                 \
-    --enable-tests=$tests          \
-    --enable-coverage=$coverage    \
-    --enable-ftd                   \
-    --enable-ncp                   \
-    "
+configure_options=(
+    "--disable-docs"
+    "--enable-tests=$tests"
+    "--enable-coverage=$coverage"
+    "--enable-ftd"
+    "--enable-ncp"
+)
 
 if [ -n "${top_builddir}" ]; then
     top_srcdir=$(pwd)
@@ -104,13 +104,13 @@ case ${build_config} in
         echo "==================================================================================================="
         echo "Building OpenThread NCP FTD mode with POSIX platform"
         echo "==================================================================================================="
-        ./bootstrap || die
-        cd "${top_builddir}"
+        ./bootstrap || die "bootstrap failed"
+        cd "${top_builddir}" || die "cd failed"
         cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-examples=simulation \
-            $configure_options || die
+            "${configure_options[@]}" || die
         make -j 8 || die
         ;;
 
@@ -118,8 +118,8 @@ case ${build_config} in
         echo "===================================================================================================="
         echo "Building OpenThread RCP (NCP in radio mode) with POSIX platform"
         echo "===================================================================================================="
-        ./bootstrap || die
-        cd "${top_builddir}"
+        ./bootstrap || die "bootstrap failed"
+        cd "${top_builddir}" || die "cd failed"
         cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config " \
@@ -136,13 +136,13 @@ case ${build_config} in
         echo "===================================================================================================="
         echo "Building OpenThread POSIX App NCP"
         echo "===================================================================================================="
-        ./bootstrap || die
-        cd "${top_builddir}"
+        ./bootstrap || die "bootstrap failed"
+        cd "${top_builddir}" || die "cd failed"
         cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-posix.h\"'
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-platform=posix \
-            $configure_options || die
+            "${configure_options[@]}" || die
         make -j 8 || die
         ;;
 
