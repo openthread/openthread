@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,19 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_APP_CLI)
-    add_subdirectory(cli)
-endif()
+add_executable(ot-rcp
+    main.c
+)
 
-add_subdirectory(ncp)
+target_include_directories(ot-rcp PRIVATE ${COMMON_INCLUDES})
+
+target_compile_definitions(ot-rcp PRIVATE ${OT_PRIVATE_DEFINES})
+
+target_link_libraries(ot-rcp
+    openthread-rcp
+    ${OT_PLATFORM_LIB}
+    openthread-radio
+    ${OT_PLATFORM_LIB}
+)
+
+install(TARGETS ot-rcp DESTINATION bin)
