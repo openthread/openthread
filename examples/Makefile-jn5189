@@ -43,7 +43,6 @@ BuildJobs                      ?= 10
 
 configure_OPTIONS               = \
     --enable-cli                  \
-    --enable-diag                 \
     --enable-ftd                  \
     --enable-mtd                  \
     --enable-ncp                  \
@@ -61,14 +60,16 @@ JN5189_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
 JN5189_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"jn5189-mbedtls-config.h\"'
 JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/include/
 JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189/crypto
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189/drivers/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189/drivers/aes/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189/drivers/sha/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189/rom_apis/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189/dk6_jn5180/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/CMSIS/Include/
+JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/
+JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/devices/JN5189
+JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/middleware/mbedtls/port/ksdk/
+JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/devices/JN5189/drivers/
+JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/devices/JN5189/utilities/
+JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/devices/JN5189/utilities/debug-console/
+JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/devices/JN5189/utilities/str/
+JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/drivers/components/serial_manager/
+JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/drivers/components/uart/
+JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/CMSIS/Include/
 JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/
 JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/
 JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/mbedtls/
@@ -77,8 +78,8 @@ TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
 CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-jn5189-config.h\"'
-CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/jn5189/
-SIGN_IMAGE_PATH = $(AbsTopSourceDir)/third_party/nxp/JN5189/ImageSigning/
+CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/k32w/jn5189/
+SIGN_IMAGE_PATH = $(AbsTopSourceDir)/third_party/nxp/JN5189DK6/tools/imagetool/
 
 COMMONCFLAGS                          := \
     -fdata-sections                      \
@@ -91,6 +92,7 @@ COMMONCFLAGS                          := \
     -DJENNIC_CHIP_FAMILY_NAME=_JN518x    \
     -DSDK_DEBUGCONSOLE=0                 \
     -D$(CONFIG_FILE)                     \
+    -DUSE_RTOS=0                         \
     -I$(CONFIG_FILE_PATH)                \
     $(NULL)
 
