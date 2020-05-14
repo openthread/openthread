@@ -35,7 +35,8 @@
 
 set -euo pipefail
 
-die() {
+die()
+{
     echo " *** ERROR:  $*"
     exit 1
 }

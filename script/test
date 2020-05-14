@@ -77,22 +77,22 @@ build_simulation()
         "-DOT_THREAD_VERSION=${version}"
     )
 
-    if [[ "${version}" == "1.2" ]]; then
+    if [[ ${version} == "1.2" ]]; then
         options+=(
             "-DOT_DUA=ON"
         )
     fi
 
-    if [[ "${VIRTUAL_TIME}" == 1 ]]; then
+    if [[ ${VIRTUAL_TIME} == 1 ]]; then
         options+=("-DOT_SIMULATION_VIRTUAL_TIME=ON")
 
-        if [[ "${NODE_MODE}" == "rcp" ]]; then
+        if [[ ${NODE_MODE} == "rcp" ]]; then
             options+=("-DOT_SIMULATION_VIRTUAL_TIME_UART=ON")
         fi
 
     fi
 
-    if [[ "${version}" == "1.2" ]]; then
+    if [[ ${version} == "1.2" ]]; then
         options+=(
             "-DOT_CSL_RECEIVER=ON"
         )
@@ -104,12 +104,12 @@ build_simulation()
         && cmake -GNinja "${options[@]}" "${ot_extra_options[@]}" "${OT_SRCDIR}" \
         && ninja)
 
-    if [[ "${version}" == "1.2" ]]; then
+    if [[ ${version} == "1.2" ]]; then
 
         options+=(
-        "-DOT_BACKBONE_ROUTER=ON"
-        "-DOT_BORDER_ROUTER=ON"
-        "-DOT_SERVICE=ON"
+            "-DOT_BACKBONE_ROUTER=ON"
+            "-DOT_BORDER_ROUTER=ON"
+            "-DOT_SERVICE=ON"
         )
 
         local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${version}-bbr"
@@ -133,13 +133,13 @@ build_posix()
         "-DOT_THREAD_VERSION=${version}"
     )
 
-    if [[ "${version}" == "1.2" ]]; then
+    if [[ ${version} == "1.2" ]]; then
         options+=(
             "-DOT_DUA=ON"
         )
     fi
 
-    if [[ "${VIRTUAL_TIME}" == 1 ]]; then
+    if [[ ${VIRTUAL_TIME} == 1 ]]; then
         options+=("-DOT_POSIX_VIRTUAL_TIME=ON")
     fi
 
@@ -149,12 +149,12 @@ build_posix()
         && cmake -GNinja "${options[@]}" "${ot_extra_options[@]}" "${OT_SRCDIR}" \
         && ninja)
 
-    if [[ "${version}" == "1.2" ]]; then
+    if [[ ${version} == "1.2" ]]; then
 
         options+=(
-        "-DOT_BACKBONE_ROUTER=ON"
-        "-DOT_BORDER_ROUTER=ON"
-        "-DOT_SERVICE=ON"
+            "-DOT_BACKBONE_ROUTER=ON"
+            "-DOT_BORDER_ROUTER=ON"
+            "-DOT_SERVICE=ON"
         )
 
         local builddir="${OT_BUILDDIR}/cmake/openthread-posix-${version}-bbr"
@@ -165,30 +165,33 @@ build_posix()
     fi
 }
 
-do_build() {
+do_build()
+{
     build_simulation "${THREAD_VERSION}"
 
-    if [[ "${NODE_MODE}" == "rcp" ]]; then
+    if [[ ${NODE_MODE} == "rcp" ]]; then
         build_posix "${THREAD_VERSION}"
     fi
 
     # Extra 1.1 build for 1.2 tests
-    if [[ "${THREAD_VERSION}" == "1.2" ]]; then
+    if [[ ${THREAD_VERSION} == "1.2" ]]; then
         build_simulation 1.1
 
-        if [[ "${NODE_MODE}" == "rcp" ]]; then
+        if [[ ${NODE_MODE} == "rcp" ]]; then
             build_posix 1.1
         fi
     fi
 }
 
-do_clean() {
+do_clean()
+{
     rm -rfv "${OT_BUILDDIR}"
 }
 
-do_unit() {
+do_unit()
+{
     local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
-    if [[ ! -d "${builddir}" ]]; then
+    if [[ ! -d ${builddir} ]]; then
         echo "Cannot find build directory!"
         exit -1
     fi
@@ -197,10 +200,11 @@ do_unit() {
     ninja test
 }
 
-do_cert() {
+do_cert()
+{
     export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
 
-    if [[ "${THREAD_VERSION}" == "1.2" ]]; then
+    if [[ ${THREAD_VERSION} == "1.2" ]]; then
         export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
         export top_builddir_1_2_bbr="${OT_BUILDDIR}/cmake/openthread-simulation-1.2-bbr"
     fi
@@ -209,10 +213,11 @@ do_cert() {
     PYTHONUNBUFFERED=1 "$1"
 }
 
-do_cert_suite() {
+do_cert_suite()
+{
     export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
 
-    if [[ "${THREAD_VERSION}" == "1.2" ]]; then
+    if [[ ${THREAD_VERSION} == "1.2" ]]; then
         export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
         export top_builddir_1_2_bbr="${OT_BUILDDIR}/cmake/openthread-simulation-1.2-bbr"
     fi
@@ -224,18 +229,18 @@ do_cert_suite() {
 
     for test_case in "$@"; do
         rm -rf tmp
-        if "${test_case}" &> test.log; then
+        if "${test_case}" &>test.log; then
             echo -e "${COLOR_PASS}PASS${COLOR_NONE} ${test_case}"
-            pass_count=$(( pass_count + 1 ))
+            pass_count=$((pass_count + 1))
         else
             echo -e "${COLOR_FAIL}FAIL${COLOR_NONE} ${test_case}"
-            fail_count=$(( fail_count + 1 ))
+            fail_count=$((fail_count + 1))
             {
                 echo "=============================="
                 echo "!!! FAIL:${test_case}"
                 echo "=============================="
                 cat test.log
-            } >> fail.log
+            } >>fail.log
         fi
     done
 
@@ -246,8 +251,8 @@ do_cert_suite() {
     echo "# PASS: ${pass_count}"
     echo "# FAIL: ${fail_count}"
 
-    if [[ "${fail_count}" -gt 0 ]]; then
-        tr -dc '[:print:]\r\n\t' < fail.log
+    if [[ ${fail_count} -gt 0 ]]; then
+        tr -dc '[:print:]\r\n\t' <fail.log
         exit 1
     else
         exit 0
@@ -260,7 +265,7 @@ do_expect()
     local rcp_command=
     local test_pattern
 
-    if [[ "${NODE_MODE}" == rcp ]]; then
+    if [[ ${NODE_MODE} == rcp ]]; then
         ot_command="${OT_CLI_PATH}"
         rcp_command="${RADIO_DEVICE}"
         test_pattern='posix-*.exp'
@@ -288,7 +293,8 @@ do_expect()
     exit 0
 }
 
-print_usage() {
+print_usage()
+{
     echo "USAGE: [ENVIRONMENTS] $0 COMMANDS
 
 ENVIRONMENTS:
@@ -338,7 +344,8 @@ EXAMPLES:
     exit "$1"
 }
 
-do_package() {
+do_package()
+{
     local builddir="${OT_BUILDDIR}/cmake/openthread-sim"
     local options=(
         "-DCMAKE_BUILD_TYPE=Release"
@@ -373,19 +380,19 @@ do_package() {
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
         && cmake -GNinja -DOT_PLATFORM="posix" \
-        -DOT_DAEMON=1 -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 "${options[@]}" "${ot_extra_options[@]}" "${OT_SRCDIR}" \
+            -DOT_DAEMON=1 -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 "${options[@]}" "${ot_extra_options[@]}" "${OT_SRCDIR}" \
         && ninja package \
         && ls "${builddir}"/openthread-daemon-*.deb)
 }
 
 envsetup()
 {
-    if [[ "${NODE_MODE}" == 'rcp' ]] ; then
+    if [[ ${NODE_MODE} == 'rcp' ]]; then
         export RADIO_DEVICE="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
         export OT_CLI_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-cli"
         export OT_NCP_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-ncp"
 
-        if [[ "${THREAD_VERSION}" == "1.2" ]]; then
+        if [[ ${THREAD_VERSION} == "1.2" ]]; then
             export RADIO_DEVICE_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1/examples/apps/ncp/ot-rcp"
             export OT_CLI_PATH_1_1="${OT_BUILDDIR}/cmake/openthread-posix-1.1/src/posix/ot-cli"
             export OT_NCP_PATH_1_1="${OT_BUILDDIR}/cmake/openthread-posix-1.1/src/posix/ot-ncp"
@@ -397,13 +404,13 @@ envsetup()
     export NODE_TYPE VIRTUAL_TIME
 
     # CMake always works in verbose mode if VERBOSE exists in environments.
-    if [[ "${VERBOSE}" == 1 ]]; then
+    if [[ ${VERBOSE} == 1 ]]; then
         export VERBOSE
     else
         export -n VERBOSE
     fi
 
-    read -r -a ot_extra_options <<< "${OT_OPTIONS-}"
+    read -r -a ot_extra_options <<<"${OT_OPTIONS-}"
     ot_extra_options=${ot_extra_options:-()}
 }
 
@@ -411,14 +418,14 @@ main()
 {
     envsetup
 
-    if [[ -z "$1" ]]; then
+    if [[ -z $1 ]]; then
         print_usage 1
     fi
 
-    [[ "${NODE_MODE}" == "rcp" ]] && echo "Using rcp mode" || echo "Using standalone mode"
-    [[ "${NODE_TYPE}" == "ncp-sim" ]] && echo "Using NCP node" || echo "Using CLI node"
-    [[ "${VIRTUAL_TIME}" == 1 ]] && echo "Using virtual time" || echo "Using real time"
-    [[ "${THREAD_VERSION}" == "1.2" ]] && echo "Using Thread 1.2 stack" || echo "Using Thread 1.1 stack"
+    [[ ${NODE_MODE} == "rcp" ]] && echo "Using rcp mode" || echo "Using standalone mode"
+    [[ ${NODE_TYPE} == "ncp-sim" ]] && echo "Using NCP node" || echo "Using CLI node"
+    [[ ${VIRTUAL_TIME} == 1 ]] && echo "Using virtual time" || echo "Using real time"
+    [[ ${THREAD_VERSION} == "1.2" ]] && echo "Using Thread 1.2 stack" || echo "Using Thread 1.1 stack"
 
     while [[ $# != 0 ]]; do
         case "$1" in

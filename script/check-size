@@ -64,14 +64,14 @@ markdown_size()
     local name
     name=$(basename "$1")
 
-    read -r -a size_old <<< "$(size "$1" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
-    read -r -a size_new <<< "$(size "$2" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
+    read -r -a size_old <<<"$(size "$1" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
+    read -r -a size_new <<<"$(size "$2" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
 
     local -a size_diff
 
     for i in 0 1 2 3; do
         size_diff[$i]="$((size_new["$i"] - size_old["$i"]))"
-        if [[ "${size_diff["$i"]}" != 0 ]]; then
+        if [[ ${size_diff["$i"]} != 0 ]]; then
             size_diff["$i"]=$(printf '%+d' "${size_diff["$i"]}")
         fi
     done
@@ -86,11 +86,11 @@ markdown()
     case "$1" in
         init)
             shift
-            markdown_init "$@" > "${OT_REPORT_FILE}"
+            markdown_init "$@" >"${OT_REPORT_FILE}"
             ;;
         size)
             shift
-            markdown_size "$@" >> "${OT_REPORT_FILE}"
+            markdown_size "$@" >>"${OT_REPORT_FILE}"
             ;;
         post)
             mdv "${OT_REPORT_FILE}"
@@ -152,11 +152,11 @@ size_nrf52840()
     local reporter
 
     # not on GitHub Actions or not a pull request event
-    if [[ ! "${GITHUB_ACTIONS+x}" || ! "${GITHUB_REF-}" =~ ^refs/pull/[0-9]+/merge ]]; then
+    if [[ ! ${GITHUB_ACTIONS+x} || ! ${GITHUB_REF-} =~ ^refs/pull/[0-9]+/merge ]]; then
         reporter=markdown
     else
         reporter=./size-report
-        curl -s "${SIZE_REPORT_URL}/bash" > size-report
+        curl -s "${SIZE_REPORT_URL}/bash" >size-report
         chmod a+x size-report
         export OT_SHA_NEW OT_SHA_OLD
     fi
@@ -167,16 +167,16 @@ size_nrf52840()
     "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-cli-mtd "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-cli-mtd
     "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-ncp-ftd "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-ncp-ftd
     "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-ncp-mtd "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-ncp-mtd
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-rcp     "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-rcp
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-rcp "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-rcp
 
     "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-cli-ftd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-cli-ftd.a
     "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-cli-mtd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-cli-mtd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ftd.a     "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ftd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-mtd.a     "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-mtd.a
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ftd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ftd.a
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-mtd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-mtd.a
     "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ncp-ftd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ncp-ftd.a
     "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ncp-mtd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ncp-mtd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-rcp.a     "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-rcp.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-radio.a   "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-radio.a
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-rcp.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-rcp.a
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-radio.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-radio.a
 
     "${reporter}" post
 }
@@ -186,9 +186,9 @@ main()
     if [[ $# == 0 ]]; then
         setup
         size_nrf52840
-    elif [[ "$1" == setup ]]; then
+    elif [[ $1 == setup ]]; then
         setup
-    elif [[ "$1" == nrf52840 ]]; then
+    elif [[ $1 == nrf52840 ]]; then
         size_nrf52840
     else
         echo "USAGE: $0 [setup|nrf52840]"

@@ -67,82 +67,91 @@ readonly OT_CLANG_SOURCES=('*.c' '*.cc' '*.cpp' '*.h' '*.hpp')
 readonly OT_MARKDOWN_SOURCES=('*.md')
 readonly OT_PYTHON_SOURCES=('*.py')
 
-do_clang_format() {
+do_clang_format()
+{
     echo -e '====================='
     echo -e '     format c/c++'
     echo -e '====================='
 
-    git ls-files "${OT_CLANG_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" |
-        xargs -n3 -P"$OT_BUILD_JOBS" script/clang-format -style=file -i -verbose
+    git ls-files "${OT_CLANG_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n3 -P"$OT_BUILD_JOBS" script/clang-format -style=file -i -verbose
 }
 
-do_clang_check() {
+do_clang_check()
+{
     echo -e '====================='
     echo -e '     check c/c++'
     echo -e '====================='
 
-    git ls-files "${OT_CLANG_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" |
-        xargs -n3 -P"$OT_BUILD_JOBS" script/clang-format-check
+    git ls-files "${OT_CLANG_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n3 -P"$OT_BUILD_JOBS" script/clang-format-check
 }
 
-do_markdown_format() {
+do_markdown_format()
+{
     echo -e '======================'
     echo -e '     format markdown'
     echo -e '======================'
 
-    git ls-files "${OT_MARKDOWN_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" |
-        xargs -n10 -P"$OT_BUILD_JOBS" npx prettier@2.0.4 --write
+    git ls-files "${OT_MARKDOWN_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n10 -P"$OT_BUILD_JOBS" npx prettier@2.0.4 --write
 }
 
-do_markdown_check() {
+do_markdown_check()
+{
     echo -e '======================'
     echo -e '     check markdown'
     echo -e '======================'
 
-    git ls-files "${OT_MARKDOWN_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" |
-        xargs -n10 -P"$OT_BUILD_JOBS" npx prettier@2.0.4 --check
+    git ls-files "${OT_MARKDOWN_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n10 -P"$OT_BUILD_JOBS" npx prettier@2.0.4 --check
 }
 
-do_python_format() {
+do_python_format()
+{
     echo -e '======================'
     echo -e '     format python'
     echo -e '======================'
 
-    git ls-files "${OT_PYTHON_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" |
-        xargs -n10 -P"$OT_BUILD_JOBS" python3 -m yapf --verbose --style google -ipr
+    git ls-files "${OT_PYTHON_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n10 -P"$OT_BUILD_JOBS" python3 -m yapf --verbose --style google -ipr
 }
 
-do_python_check() {
+do_python_check()
+{
     echo -e '====================='
     echo -e '     check python'
     echo -e '====================='
 
-    git ls-files "${OT_PYTHON_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" |
-        xargs -n10 -P"$OT_BUILD_JOBS" python3 -m yapf --verbose --style google -dpr
+    git ls-files "${OT_PYTHON_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n10 -P"$OT_BUILD_JOBS" python3 -m yapf --verbose --style google -dpr
 }
 
-do_shell_format() {
+do_shell_format()
+{
     echo -e '====================='
     echo -e '     format shell'
     echo -e '====================='
 
-    shfmt -f . | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" |
-        xargs -n10 -P"$OT_BUILD_JOBS" shfmt -i 4 -bn -ci -fn -s -w
+    shfmt -f . | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n10 -P"$OT_BUILD_JOBS" shfmt -i 4 -bn -ci -fn -s -w
 }
 
-do_shell_check() {
+do_shell_check()
+{
     echo -e '====================='
     echo -e '     check shell'
     echo -e '====================='
 
-    shfmt -f . | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" |
-        xargs -n10 -P"$OT_BUILD_JOBS" shfmt -i 4 -bn -ci -fn -s -d
+    shfmt -f . | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n10 -P"$OT_BUILD_JOBS" shfmt -i 4 -bn -ci -fn -s -d
 
-    shfmt -f . | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" |
-        xargs -n10 -P"$OT_BUILD_JOBS" shellcheck
+    shfmt -f . | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n10 -P"$OT_BUILD_JOBS" shellcheck
 }
 
-do_check() {
+do_check()
+{
     if [ $# == 0 ]; then
         do_clang_check
         do_markdown_check
@@ -163,7 +172,8 @@ do_check() {
     fi
 }
 
-main() {
+main()
+{
     if [ $# == 0 ]; then
         do_clang_format
         do_markdown_format
