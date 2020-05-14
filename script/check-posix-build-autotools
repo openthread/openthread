@@ -29,8 +29,6 @@
 
 set -euxo pipefail
 
-readonly OT_BUILD_JOBS=$(getconf _NPROCESSORS_ONLN)
-
 reset_source()
 {
     rm -rf build output tmp

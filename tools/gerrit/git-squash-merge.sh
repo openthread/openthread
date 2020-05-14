@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
@@ -29,7 +29,7 @@
 
 die()
 {
-    echo " *** ERROR: " $*
+    echo " *** ERROR: " "$*"
     exit 1
 }
 
@@ -41,7 +41,7 @@ display_usage()
     echo "By default, the changes are committed with a commit message which includes the list of all squashed commits"
     echo "(use --no-commit and --no-list options to change default behavior)."
     echo ""
-    echo "Usage: $(basename $0) [--no-list] [--no-commit] <branch> [<commit msg>]"
+    echo "Usage: $(basename "$0") [--no-list] [--no-commit] <branch> [<commit msg>]"
     echo ""
     echo "     <branch>       Specifies the name of branch to merge into current branch"
     echo "     <commit msg>   An optional parameter specifying text to add to the commit message"
@@ -69,10 +69,6 @@ while test $# != 0; do
             ;;
         --debug) set -x ;;
         --*) die "Unknown argument $1" ;;
-        --)
-            shift
-            break
-            ;;
         -*) die "Unknown argument $1" ;;
         *)
             break
@@ -100,7 +96,7 @@ cur_branch=$(git rev-parse --abbrev-ref HEAD)
 # Note that the list starts with older commits
 
 if ${SHOULD_ADD_LIST}; then
-    commit_list=$(git log HEAD..$branch --oneline --decorate=no --reverse)
+    commit_list=$(git log HEAD.."$branch" --oneline --decorate=no --reverse)
 else
     commit_list=""
 fi
@@ -113,18 +109,17 @@ else
     commit_msg="${commit_msg_header}${NEWLINE}${NEWLINE}$2${NEWLINE}${NEWLINE}${commit_list}"
 fi
 
-git merge --squash $branch 1>/dev/null 2>/dev/null || die "Failed to perform 'git merge -squash $branch'"
+git merge --squash "$branch" 1>/dev/null 2>/dev/null || die "Failed to perform 'git merge -squash $branch'"
 
 # Check if there is anything staged
-git diff --cached --quiet
-if [ $? -eq 0 ]; then
+if ! git diff --cached --quiet; then
     echo "No changes to commit when squash merging branch '$branch' into '$cur_branch'"
     exit 0
 fi
 
 if ${SHOULD_COMMIT}; then
     # Commit the staged changes
-    git commit -m "$commit_msg" 1>/dev/null 2>/dev/null || die "git commit failed${NEWLINE}${NEWLINE}$(cat $TMP)"
+    git commit -m "$commit_msg" 1>/dev/null 2>/dev/null || die "git commit failed${NEWLINE}${NEWLINE}$(cat "$TMP")"
 
     git log -1
 

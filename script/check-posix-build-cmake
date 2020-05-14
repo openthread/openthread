@@ -77,12 +77,12 @@ build()
         "-DOT_FULL_LOGS=on"
     )
 
-    mkdir -p $OT_BUILDDIR
-    cd $OT_BUILDDIR
-    cmake -GNinja "${options[@]}" $OT_SRCDIR
+    mkdir -p "$OT_BUILDDIR"
+    cd "$OT_BUILDDIR"
+    cmake -GNinja "${options[@]}" "$OT_SRCDIR"
     ninja
 
-    cd $OT_SRCDIR
+    cd "$OT_SRCDIR"
 }
 
 main()

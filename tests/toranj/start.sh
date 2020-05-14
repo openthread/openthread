@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
@@ -29,7 +29,7 @@
 
 die()
 {
-    echo " *** ERROR: " $*
+    echo " *** ERROR: " "$*"
     exit 1
 }
 
@@ -37,16 +37,14 @@ cleanup()
 {
     # Clear logs and flash files
     sudo rm tmp/*.flash tmp/*.data tmp/*.swap >/dev/null 2>&1
-    sudo rm *.log >/dev/null 2>&1
+    sudo rm ./*.log >/dev/null 2>&1
 
     # Clear any wpantund instances
     sudo killall wpantund >/dev/null 2>&1
 
-    wpan_interfaces=$(ifconfig 2>/dev/null | grep -o wpan[0-9]*)
-
-    for interface in $wpan_interfaces; do
-        sudo ip link delete $interface >/dev/null 2>&1
-    done
+    while read -r interface; do
+        sudo ip link delete "$interface" >/dev/null 2>&1
+    done < <(ifconfig 2>/dev/null | grep -o "wpan[0-9]*")
 
     sleep 0.3
 }
@@ -56,7 +54,7 @@ run()
     counter=0
     while true; do
 
-        if sudo -E python $1; then
+        if sudo -E python "$1"; then
             cleanup
             return
         fi
@@ -76,7 +74,7 @@ run()
     done
 }
 
-cd $(dirname $0)
+cd "$(dirname "$0")" || die "cd failed"
 
 if [ "$COVERAGE" = 1 ]; then
     coverage_option="--enable-coverage"
@@ -94,11 +92,11 @@ case $TORANJ_POSIX_RCP_MODEL in
 esac
 
 if [ "$use_posix_with_rcp" = "no" ]; then
-    ./build.sh ${coverage_option} ncp || die
+    ./build.sh ${coverage_option} ncp || die "ncp build failed"
 
 else
-    ./build.sh ${coverage_option} rcp || die
-    ./build.sh ${coverage_option} posix || die
+    ./build.sh ${coverage_option} rcp || die "rcp build failed"
+    ./build.sh ${coverage_option} posix || die "posix build failed"
 fi
 
 cleanup

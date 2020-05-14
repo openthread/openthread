@@ -193,7 +193,7 @@ do_unit()
     local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
     if [[ ! -d ${builddir} ]]; then
         echo "Cannot find build directory!"
-        exit -1
+        exit 1
     fi
 
     cd "${builddir}"
@@ -410,8 +410,8 @@ envsetup()
         export -n VERBOSE
     fi
 
-    read -r -a ot_extra_options <<<"${OT_OPTIONS-}"
-    ot_extra_options=${ot_extra_options:-()}
+    read -r -a ot_extra_options_in <<<"${OT_OPTIONS-}"
+    ot_extra_options=${ot_extra_options_in:-()}
 }
 
 main()
