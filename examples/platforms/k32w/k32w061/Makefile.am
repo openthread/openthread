@@ -74,6 +74,7 @@ LIB_FLAGS                                                                       
     -Wno-unused-function                                                                                               \
     -Wno-unused-parameter                                                                                              \
     -Wno-empty-body                                                                                                    \
+    -fno-strict-aliasing                                                                                               \
     $(NULL)
 
 libopenthread_k32w061_sdk_a_CPPFLAGS                                                                                 = \
