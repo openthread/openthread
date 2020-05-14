@@ -439,7 +439,7 @@ def check_child_update_request_from_child(
     address_registration=CheckType.OPTIONAL,
     tlv_request_tlv=CheckType.OPTIONAL,
     active_timestamp=CheckType.OPTIONAL,
-    CIDs=[],
+    CIDs=(),
 ):
 
     command_msg.assertMleMessageContainsTlv(mle.Mode)
@@ -545,7 +545,7 @@ def check_child_update_response(
     response=CheckType.OPTIONAL,
     link_layer_frame_counter=CheckType.OPTIONAL,
     mle_frame_counter=CheckType.OPTIONAL,
-    CIDs=[],
+    CIDs=(),
 ):
     """Verify a properly formatted Child Update Response from parent
     """
@@ -568,7 +568,7 @@ def check_child_update_response(
         _check_address_registration(command_msg, CIDs)
 
 
-def _check_address_registration(command_msg, CIDs=[]):
+def _check_address_registration(command_msg, CIDs=()):
     addresses = command_msg.assertMleMessageContainsTlv(
         mle.AddressRegistration).addresses
     for cid in CIDs:
@@ -740,7 +740,7 @@ class SinglePrefixCheck:
 
 class PrefixesCheck:
 
-    def __init__(self, prefix_cnt=0, prefix_check_list=[]):
+    def __init__(self, prefix_cnt=0, prefix_check_list=()):
         self._prefix_cnt = prefix_cnt
         self._prefix_check_list = prefix_check_list
 
@@ -761,7 +761,7 @@ class PrefixesCheck:
 
 class CommissioningDataCheck:
 
-    def __init__(self, stable=None, sub_tlv_type_list=[]):
+    def __init__(self, stable=None, sub_tlv_type_list=()):
         self._stable = stable
         self._sub_tlv_type_list = sub_tlv_type_list
 

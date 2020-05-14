@@ -292,7 +292,7 @@ class VariableVector(ConvertibleToBytes):
         ret = bytearray([])
         while length_in_byte > 0:
             ret += bytes(length_in_byte & 0xff)
-            length_in_byte == length_in_byte >> 8
+            length_in_byte = length_in_byte >> 8
         return ret
 
     @classmethod
