@@ -266,14 +266,18 @@ public:
     Router *GetRouter(const Mac::ExtAddress &aExtAddress);
 
     /**
-     * This method returns the router table index for a given `Router` instance.
+     * This method returns if the router table contains a given `Neighbor` instance.
      *
-     * @param[in]  aRouter  A reference to a `Router`
+     * @param[in]  aNeighbor  A reference to a `Neighbor`.
      *
-     * @returns The index corresponding to @p aRouter.
+     * @returns Whether the router table contains @p aNeighbor.
      *
      */
-    size_t GetRouterIndex(const Router &aRouter) const { return static_cast<uint16_t>(&aRouter - mRouters); }
+    bool Contains(const Neighbor &aNeighbor) const
+    {
+        return mRouters <= &static_cast<const Router &>(aNeighbor) &&
+               &static_cast<const Router &>(aNeighbor) < mRouters + Mle::kMaxRouters;
+    }
 
     /**
      * This method retains diagnostic information for a given router.

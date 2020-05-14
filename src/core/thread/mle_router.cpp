@@ -1284,7 +1284,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
         if (processRouteTlv)
         {
             SuccessOrExit(error = ProcessRouteTlv(route));
-            if (Get<RouterTable>().GetRouterIndex(static_cast<Router &>(*aNeighbor)) < kMaxRouters)
+            if (Get<RouterTable>().Contains(*aNeighbor))
             {
                 aNeighbor = NULL; // aNeighbor is no longer valid after `ProcessRouteTlv`
             }
@@ -3339,7 +3339,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     }
     else if (aNeighbor.IsStateValid())
     {
-        OT_ASSERT(mRouterTable.GetRouterIndex(static_cast<Router &>(aNeighbor)) < kMaxRouters);
+        OT_ASSERT(mRouterTable.Contains(aNeighbor));
 
         Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, aNeighbor);
         mRouterTable.RemoveRouterLink(static_cast<Router &>(aNeighbor));
