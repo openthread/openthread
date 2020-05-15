@@ -45,6 +45,7 @@
 #include "common/debug.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/tasklet.hpp"
 #include "common/time.hpp"
 
@@ -251,7 +252,7 @@ private:
  * This class implements the base timer scheduler.
  *
  */
-class TimerScheduler : public InstanceLocator
+class TimerScheduler : public InstanceLocator, private NonCopyable
 {
     friend class Timer;
 

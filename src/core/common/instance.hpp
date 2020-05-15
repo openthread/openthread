@@ -46,6 +46,7 @@
 #include <openthread/platform/memory.h>
 #endif
 
+#include "common/non_copyable.hpp"
 #include "common/random_manager.hpp"
 #include "common/tasklet.hpp"
 #include "common/timer.hpp"
@@ -119,7 +120,7 @@ namespace ot {
  * This class contains all the components used by OpenThread.
  *
  */
-class Instance : public otInstance
+class Instance : public otInstance, private NonCopyable
 {
 public:
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE

@@ -38,6 +38,7 @@
 
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
 #include "utils/flash.hpp"
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
@@ -50,7 +51,7 @@ namespace MeshCoP {
 class Dataset;
 }
 
-class SettingsDriver : public InstanceLocator
+class SettingsDriver : public InstanceLocator, private NonCopyable
 {
 public:
     /**
@@ -151,7 +152,7 @@ private:
  * This class provides structure definitions for different settings keys.
  *
  */
-class SettingsBase : public InstanceLocator
+class SettingsBase : public InstanceLocator, private NonCopyable
 {
 public:
     /**

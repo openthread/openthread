@@ -44,6 +44,7 @@
 
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/tasklet.hpp"
 
 namespace ot {
@@ -73,7 +74,7 @@ namespace ot {
  *   registered at the same time is specified by `OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS` configuration parameter.
  *
  */
-class Notifier : public InstanceLocator
+class Notifier : public InstanceLocator, private NonCopyable
 {
 public:
     /**

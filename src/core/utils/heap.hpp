@@ -40,6 +40,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "common/non_copyable.hpp"
 #include "utils/static_assert.hpp"
 
 namespace ot {
@@ -175,7 +176,7 @@ private:
  *     +--------------------------------------------------------------------------+
  *
  */
-class Heap
+class Heap : private NonCopyable
 {
 public:
     /**

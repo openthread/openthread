@@ -44,6 +44,8 @@
 #include <mbedtls/entropy.h>
 #endif
 
+#include "common/non_copyable.hpp"
+
 #if (!defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
      (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) || defined(MBEDTLS_HAVEGE_C) || defined(MBEDTLS_ENTROPY_HARDWARE_ALT)))
 #define OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
@@ -55,7 +57,7 @@ namespace ot {
  * This class manages random number generator initialization/deinitialization.
  *
  */
-class RandomManager
+class RandomManager : private NonCopyable
 {
 public:
     /**

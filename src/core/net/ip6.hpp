@@ -44,6 +44,7 @@
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
@@ -98,7 +99,7 @@ using ot::Encoding::BigEndian::HostSwap32;
  * This class implements the core IPv6 message processing.
  *
  */
-class Ip6 : public InstanceLocator
+class Ip6 : public InstanceLocator, private NonCopyable
 {
     friend class ot::Instance;
 

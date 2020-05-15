@@ -41,13 +41,14 @@
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 
 namespace ot {
 namespace FactoryDiags {
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
-class Diags : public InstanceLocator
+class Diags : public InstanceLocator, private NonCopyable
 {
 public:
     /**

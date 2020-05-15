@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
 
@@ -65,7 +66,7 @@ namespace Extension {
  * Support for vendor extension can be enabled using `OPENTHREAD_ENABLE_VENDOR_EXTENSION` configuration option.
  *
  */
-class ExtensionBase : public InstanceLocator
+class ExtensionBase : public InstanceLocator, private NonCopyable
 {
 public:
     /**

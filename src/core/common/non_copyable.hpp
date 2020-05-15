@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,53 +28,29 @@
 
 /**
  * @file
- *   This file includes definitions for using mbedTLS.
+ *   This file includes a common base class for disabling copying.
  */
 
-#ifndef OT_MBEDTLS_HPP_
-#define OT_MBEDTLS_HPP_
-
-#include "openthread-core-config.h"
-
-#include <openthread/instance.h>
-
-#include "common/non_copyable.hpp"
+#ifndef NON_COPYABLE_HPP_
+#define NON_COPYABLE_HPP_
 
 namespace ot {
-namespace Crypto {
 
 /**
- * @addtogroup core-security
- *
- * @{
- *
+ * This class makes any class that derives from it non-copyable. It is
+ * intended to be used as a private base class.
  */
-
-/**
- * This class implements mbedTLS memory.
- *
- */
-class MbedTls : private NonCopyable
+class NonCopyable
 {
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    MbedTls(void);
+protected:
+    NonCopyable(void) {}
+    ~NonCopyable(void) {}
 
-    /**
-     * This method converts from MbedTls error to OpenThread error.
-     */
-    static otError MapError(int rval);
+private:
+    NonCopyable(const NonCopyable &);
+    NonCopyable &operator=(const NonCopyable &);
 };
 
-/**
- * @}
- *
- */
-
-} // namespace Crypto
 } // namespace ot
 
-#endif // OT_MBEDTLS_HPP_
+#endif // NON_COPYABLE_HPP_

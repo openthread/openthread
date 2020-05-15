@@ -41,6 +41,7 @@
 #include <openthread/tasklet.h>
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 
 namespace ot {
 
@@ -149,7 +150,7 @@ private:
  * This class implements the tasklet scheduler.
  *
  */
-class TaskletScheduler
+class TaskletScheduler : private NonCopyable
 {
     friend class Tasklet;
 

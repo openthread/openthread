@@ -38,6 +38,7 @@
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
@@ -268,7 +269,7 @@ private:
  * This class implements the CoAP client and server.
  *
  */
-class CoapBase : public InstanceLocator
+class CoapBase : public InstanceLocator, private NonCopyable
 {
     friend class ResponsesQueue;
 
