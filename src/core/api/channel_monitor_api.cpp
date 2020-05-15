@@ -43,7 +43,7 @@ using namespace ot;
 
 otError otChannelMonitorSetEnabled(otInstance *aInstance, bool aEnabled)
 {
-    Utils::ChannelMonitor monitor = static_cast<Instance *>(aInstance)->Get<Utils::ChannelMonitor>();
+    Utils::ChannelMonitor &monitor = static_cast<Instance *>(aInstance)->Get<Utils::ChannelMonitor>();
 
     return aEnabled ? monitor.Start() : monitor.Stop();
 }
