@@ -166,8 +166,10 @@ jobs:
       - uses: actions/checkout@v2
       - name: Bootstrap
         run: |
+          sudo dpkg --add-architecture i386
           sudo apt update
-          sudo apt --no-install-recommends install -y clang-${{ matrix.clang_ver }} clang++-${{ matrix.clang_ver }} g++-multilib ninja-build libreadline-dev libncurses-dev
+          sudo apt --no-install-recommends install -y clang-${{ matrix.clang_ver }} clang++-${{ matrix.clang_ver }} g++-multilib ninja-build
+          sudo apt --no-install-recommends install -y libreadline-dev:i386 libncurses-dev:i386
       - name: Build
         run: |
           script/check-posix-build
