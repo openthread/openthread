@@ -46,7 +46,7 @@ build()
     mkdir -p build/${platform}
     cd build/${platform}
     cmake -GNinja ${options[*]} ../..
-    ninja ${targets[*]}
+    ninja ${targets[*]-}
     cd ../..
 }
 
@@ -77,7 +77,7 @@ main()
         targets+=("ot-cli-mtd" "ot-ncp-mtd")
     fi
 
-    build "${platform}" "${options[*]}" "${targets[*]}"
+    build "${platform}" "${options[*]}" "${targets[*]-}"
 }
 
 main "$@"
