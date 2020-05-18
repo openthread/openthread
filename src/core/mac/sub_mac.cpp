@@ -802,7 +802,7 @@ void SubMac::HandleCslTimer(void)
         IgnoreError(Sleep());
         // OT_US_PER_TEN_SYMBOLS: computing CSL Phase using floor division.
         mCslTimer.StartAt(mCslSampleTime, mCslPeriod * OT_US_PER_TEN_SYMBOLS - OT_US_PER_TEN_SYMBOLS);
-        otLogDebgMac("CSL sleep %u", mCslTimer.GetNow());
+        otLogDebgMac("CSL sleep %u", mCslTimer.GetNow().GetValue());
         break;
     }
 
@@ -820,7 +820,7 @@ void SubMac::HandleCslTimer(void)
         }
 
         mCslTimer.StartAt(mCslSampleTime, kCslSampleWindow * OT_US_PER_TEN_SYMBOLS);
-        otLogDebgMac("CSL Sample %u", mCslTimer.GetNow());
+        otLogDebgMac("CSL Sample %u", mCslTimer.GetNow().GetValue());
         break;
     }
 

@@ -370,7 +370,7 @@ void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
         ieList[1].Init();
         ieList[1].SetId(Mac::Frame::kHeaderIeTermination2);
         ieList[1].SetLength(0);
-        aFrame.AppendHeaderIe(ieList, 2);
+        IgnoreError(aFrame.AppendHeaderIe(ieList, 2));
     }
 #endif
 

@@ -904,8 +904,6 @@ otError Mac::PrepareDataRequest(TxFrame &aFrame)
           Frame::kFcfSecurityEnabled;
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     UpdateFcfForHeaderIe(parent, NULL, fcf);
-#else
-    fcf |= Frame::kFcfFrameVersion2006;
 #endif
 
     if (dst.IsExtended())
@@ -2370,6 +2368,7 @@ void Mac::UpdateFcfForHeaderIe(Neighbor *aNeighbor, Message *aMessage, uint16_t 
     OT_UNUSED_VARIABLE(aNeighbor);
     OT_UNUSED_VARIABLE(aMessage);
 
+    aFcf &= ~Frame::kFcfFrameVersionMask;
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (aMessage != NULL && aMessage->IsTimeSync())
     {

@@ -1333,19 +1333,35 @@ otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
                                         const Mac::Address &aMacDest,
                                         uint8_t &           aPriority)
 {
-    otError        error = OT_ERROR_NONE;
-    Ip6::Header    ip6Header;
-    Ip6::UdpHeader udpHeader;
-    uint8_t        headerLength;
-    bool           nextHeaderCompressed;
+    otError         error = OT_ERROR_NONE;
+    Ip6::Header     ip6Header;
+    Ip6::UdpHeader  udpHeader;
+    Ip6::IcmpHeader icmpHeader;
+    uint8_t         headerLength;
+    bool            nextHeaderCompressed;
 
     SuccessOrExit(error = DecompressIp6Header(aFrame, aFrameLength, aMacSource, aMacDest, ip6Header, headerLength,
                                               nextHeaderCompressed));
     aPriority = Ip6::Ip6::DscpToPriority(ip6Header.GetDscp());
-    VerifyOrExit(ip6Header.GetNextHeader() == Ip6::kProtoUdp, OT_NOOP);
 
     aFrame += headerLength;
     aFrameLength -= headerLength;
+
+    if (ip6Header.GetNextHeader() == Ip6::kProtoIcmp6 && aFrameLength)
+    {
+        // Just check the first byte which is an ICMPv6 type.
+        memcpy(&icmpHeader, aFrame, sizeof(icmpHeader.mType));
+
+        // Only ICMPv6 error messages are prioritized.
+        if (icmpHeader.IsError())
+        {
+            aPriority = Message::kPriorityNet;
+        }
+
+        ExitNow();
+    }
+
+    VerifyOrExit(ip6Header.GetNextHeader() == Ip6::kProtoUdp, OT_NOOP);
 
     if (nextHeaderCompressed)
     {

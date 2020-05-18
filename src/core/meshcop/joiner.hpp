@@ -109,12 +109,29 @@ public:
      */
     void GetJoinerId(Mac::ExtAddress &aJoinerId) const;
 
+    /**
+     * This method validates the PSKd.
+     *
+     * Per Thread specification, a Joining Device Credential is encoded as
+     * uppercase alphanumeric characters (base32-thread: 0-9, A-Z excluding
+     * I, O, Q, and Z for readability) with a minimum length of 6 such
+     * characters and a maximum length of 32 such characters.
+     *
+     * param[in]  aPskd  The PSKd to validate.
+     *
+     * @retval A boolean indicates whether the given @p aPskd is valid.
+     *
+     */
+    static bool IsPskdValid(const char *aPskd);
+
 private:
     enum
     {
         kJoinerUdpPort         = OPENTHREAD_CONFIG_JOINER_UDP_PORT,
         kConfigExtAddressDelay = 100,  ///< [milliseconds]
         kReponseTimeout        = 4000, ///< Maximum wait time to receive response [milliseconds].
+        kPskdMinLength         = 6,    ///< Minimum PSKd length.
+        kPskdMaxLength         = 32,   ///< Maximum PSKd Length.
     };
 
     struct JoinerRouter

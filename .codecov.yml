@@ -9,3 +9,4 @@ ignore:
 
 comment:
   layout: "diff, flags, files"
+  after_n_builds: 15

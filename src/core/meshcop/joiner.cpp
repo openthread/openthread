@@ -41,6 +41,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "common/string.hpp"
 #include "meshcop/meshcop.hpp"
 #include "radio/radio.hpp"
 #include "thread/thread_netif.hpp"
@@ -86,6 +87,30 @@ exit:
     return;
 }
 
+bool Joiner::IsPskdValid(const char *aPskd)
+{
+    bool   valid      = false;
+    size_t pskdLength = StringLength(aPskd, kPskdMaxLength + 1);
+
+    OT_STATIC_ASSERT(static_cast<uint8_t>(kPskdMaxLength) <= static_cast<uint8_t>(Dtls::kPskMaxLength),
+                     "The maximum length of DTLS PSK is smaller than joiner PSKd");
+
+    VerifyOrExit(pskdLength >= kPskdMinLength && pskdLength <= kPskdMaxLength, OT_NOOP);
+
+    for (size_t i = 0; i < pskdLength; i++)
+    {
+        char c = aPskd[i];
+
+        VerifyOrExit(isdigit(c) || isupper(c), OT_NOOP);
+        VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z', OT_NOOP);
+    }
+
+    valid = true;
+
+exit:
+    return valid;
+}
+
 otError Joiner::Start(const char *     aPskd,
                       const char *     aProvisioningUrl,
                       const char *     aVendorName,
@@ -101,6 +126,8 @@ otError Joiner::Start(const char *     aPskd,
     otLogInfoMeshCoP("Joiner starting");
 
     VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
+
+    VerifyOrExit(IsPskdValid(aPskd), error = OT_ERROR_INVALID_ARGS);
 
     // Use random-generated extended address.
     randomAddress.GenerateRandom();

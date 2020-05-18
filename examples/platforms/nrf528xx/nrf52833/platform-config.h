@@ -124,7 +124,7 @@
  *
  */
 #ifndef PLATFORM_FLASH_PAGE_NUM
-#define PLATFORM_FLASH_PAGE_NUM 4
+#define PLATFORM_FLASH_PAGE_NUM 2
 #endif
 
 /*******************************************************************************

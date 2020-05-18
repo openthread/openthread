@@ -38,8 +38,6 @@
 
 #include <openthread/platform/radio.h>
 
-#include "openthread-core-config.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -782,8 +782,8 @@ void radioGenerateAck(void)
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     if (otMacFrameIsVersion2015(&sReceiveFrame))
     {
-        otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, sAckIeData,
-                                 sAckIeDataLength, &sAckFrame);
+        OT_UNUSED_VARIABLE(otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending,
+                                                    sAckIeData, sAckIeDataLength, &sAckFrame));
     }
     else
 #endif
