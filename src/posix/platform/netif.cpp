@@ -95,19 +95,27 @@
 #endif // defined(__APPLE__) || defined(__FreeBSD__)
 #include <net/route.h>
 #include <netinet6/in6_var.h>
+#if defined(__APPLE__) || defined(__FreeBSD__)
+// the prf_ra structure is defined inside another structure (in6_prflags), and C++
+//   treats that as out of scope if another structure tries to use it -- this (slightly gross)
+//   workaround makes us dependent on our definition remaining in sync (at least the size of it),
+//   so we add a compile-time check that will fail if the SDK ever changes
 //
-// 	we need the definition of ND6_INFINITE_LIFETIME, but on
-// 	on mac OS, you can't include nd6.h, at least not from C++, because
-//	prf_ra isn't defined.  But it actually IS defined -- just inside
-//	another struct in <netinet6/in6_var.h>, which was just included.
-//
-#if !(defined(__APPLE__) || defined(__FreeBSD__))
+// our definition of the struct:
+struct prf_ra
+{
+    u_char onlink : 1;
+    u_char autonomous : 1;
+    u_char reserved : 6;
+} prf_ra;
+// object that contains the SDK's version of the structure:
+struct in6_prflags compile_time_check_prflags;
+// compile time check to make sure they're the same size:
+extern int
+    compile_time_check_struct_prf_ra[(sizeof(struct prf_ra) == sizeof(compile_time_check_prflags.prf_ra)) ? 1 : -1];
+#endif
+#include <net/if_dl.h>    // struct sockaddr_dl
 #include <netinet6/nd6.h> // ND6_INFINITE_LIFETIME
-#else
-#define ND6_INFINITE_LIFETIME 0xffffffff
-#endif // !(defined(__APPLE__) || defined(__FreeBSD__))
-
-#include <net/if_dl.h> // struct sockaddr_dl
 
 #ifdef __APPLE__
 #if USE_APPLE_UTUN
@@ -334,8 +342,6 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6Address &aAddress, u
 #if defined(__APPLE__)
         ifr6.ifra_lifetime.ia6t_expire    = ND6_INFINITE_LIFETIME;
         ifr6.ifra_lifetime.ia6t_preferred = ND6_INFINITE_LIFETIME;
-
-        ifr6.ifra_flags |= IN6_IFF_NODAD;
 #endif
 
         err = ioctl(sIpFd, aIsAdded ? SIOCAIFADDR_IN6 : SIOCDIFADDR_IN6, &ifr6);
@@ -853,8 +859,6 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 #if defined(__APPLE__)
                         ifr6.ifra_lifetime.ia6t_expire    = ND6_INFINITE_LIFETIME;
                         ifr6.ifra_lifetime.ia6t_preferred = ND6_INFINITE_LIFETIME;
-
-                        ifr6.ifra_flags |= IN6_IFF_NODAD;
 #endif
 
                         err = ioctl(sIpFd, SIOCDIFADDR_IN6, &ifr6);
