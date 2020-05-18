@@ -33,12 +33,12 @@ jobs:
    runs-on: ubuntu-latest
    steps:
    - name: Build Fuzzers
-     uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+     uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@51255141a1f9d02628dd7591d4192c5a8af15cae
      with:
        oss-fuzz-project-name: 'openthread'
        dry-run: false
    - name: Run Fuzzers
-     uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+     uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@51255141a1f9d02628dd7591d4192c5a8af15cae
      with:
        oss-fuzz-project-name: 'openthread'
        fuzz-seconds: 1800
