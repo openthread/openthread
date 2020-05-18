@@ -278,21 +278,30 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otError Register(void);
-    void    SendGetResponse(const Coap::Message &   aRequest,
-                            const Ip6::MessageInfo &aMessageInfo,
-                            uint8_t *               aTlvs,
-                            uint8_t                 aLength) const;
+    static void HandleCoapResponse(void *               aContext,
+                                   otMessage *          aMessage,
+                                   const otMessageInfo *aMessageInfo,
+                                   otError              aError);
+    void        HandleCoapResponse(void);
+
+    void SendSet(void);
+    void SendGetResponse(const Coap::Message &   aRequest,
+                         const Ip6::MessageInfo &aMessageInfo,
+                         uint8_t *               aTlvs,
+                         uint8_t                 aLength) const;
 
     enum
     {
-        kMaxDatasetTlvs = 16, // Maximum number of TLVs in an `otOperationalDataset`.
+        kMaxDatasetTlvs = 16,   // Maximum number of TLVs in an `otOperationalDataset`.
+        kDelayNoBufs    = 1000, // Milliseconds
     };
 
     TimerMilli mTimer;
 
     const char *mUriGet;
     const char *mUriSet;
+
+    bool mCoapPending : 1;
 
 #if OPENTHREAD_FTD
 public:
