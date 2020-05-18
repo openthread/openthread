@@ -367,7 +367,7 @@ public:
      * @param[in]  aMessageSubType  The default message sub-type.
      *
      */
-    void SetDefaultMessageSubType(uint8_t aMessageSubType) { mMessageDefaultSubType = aMessageSubType; }
+    void SetDefaultMessageSubType(Message::SubType aMessageSubType) { mMessageDefaultSubType = aMessageSubType; }
 
     /**
      * This method returns the DTLS session's peer address.
@@ -425,7 +425,7 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     void    HandleDtlsReceive(const uint8_t *aBuf, uint16_t aLength);
-    otError HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
+    otError HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::SubType aMessageSubType);
 
     static void HandleUdpTransmit(Tasklet &aTasklet);
     void        HandleUdpTransmit(void);
@@ -489,8 +489,8 @@ private:
     TransportCallback mTransportCallback;
     void *            mTransportContext;
 
-    uint8_t mMessageSubType;
-    uint8_t mMessageDefaultSubType;
+    Message::SubType mMessageSubType;
+    Message::SubType mMessageDefaultSubType;
 };
 
 } // namespace MeshCoP

@@ -242,7 +242,11 @@ public:
         kTypeOther       = 3, ///< Other (data) message.
     };
 
-    enum
+    /**
+     * This enumeration represents the message sub-type.
+     *
+     */
+    enum SubType
     {
         kSubTypeNone                   = 0,  ///< None
         kSubTypeMleAnnounce            = 1,  ///< MLE Announce
@@ -351,7 +355,7 @@ public:
      * @returns The sub type of the message.
      *
      */
-    uint8_t GetSubType(void) const { return GetMetadata().mSubType; }
+    SubType GetSubType(void) const { return static_cast<SubType>(GetMetadata().mSubType); }
 
     /**
      * This method sets the message sub type.
@@ -359,7 +363,7 @@ public:
      * @param[in]  aSubType  The message sub type.
      *
      */
-    void SetSubType(uint8_t aSubType) { GetMetadata().mSubType = aSubType; }
+    void SetSubType(SubType aSubType) { GetMetadata().mSubType = aSubType; }
 
     /**
      * This method returns whether or not the message is of MLE subtype.

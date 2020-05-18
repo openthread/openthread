@@ -254,7 +254,7 @@ public:
      *                       Use Message::kSubTypeNone remove all messages for @p aChild.
      *
      */
-    void RemoveMessages(Child &aChild, uint8_t aSubType);
+    void RemoveMessages(Child &aChild, Message::SubType aSubType);
 
     /**
      * This method frees unicast/multicast MLE Data Responses from Send Message Queue if any.

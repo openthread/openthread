@@ -249,7 +249,7 @@ exit:
     return error;
 }
 
-void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
+void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
 {
     Mle::MleRouter &mle = Get<Mle::MleRouter>();
     Message *       nextMessage;
