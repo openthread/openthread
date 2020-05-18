@@ -44,22 +44,20 @@ namespace ot {
 
 MessagePool::MessagePool(Instance &aInstance)
     : InstanceLocator(aInstance)
+#if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    , mNumFreeBuffers(kNumBuffers)
+    , mFreeBuffers()
+#endif
 {
-#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-    // Initialize Platform buffer pool management.
-    otPlatMessagePoolInit(&GetInstance(), kNumBuffers, sizeof(Buffer));
-#else
+#if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     memset(mBuffers, 0, sizeof(mBuffers));
 
-    mFreeBuffers = mBuffers;
-
-    for (uint16_t i = 0; i < kNumBuffers - 1; i++)
+    for (Buffer *cur = &mBuffers[0]; cur < OT_ARRAY_END(mBuffers); cur++)
     {
-        mBuffers[i].SetNextBuffer(&mBuffers[i + 1]);
+        mFreeBuffers.Push(*cur);
     }
-
-    mBuffers[kNumBuffers - 1].SetNextBuffer(NULL);
-    mNumFreeBuffers = kNumBuffers;
+#else
+    otPlatMessagePoolInit(&GetInstance(), kNumBuffers, sizeof(Buffer));
 #endif
 }
 
@@ -134,10 +132,10 @@ Buffer *MessagePool::NewBuffer(uint8_t aPriority)
 
 #else
 
-    if (mFreeBuffers != NULL)
+    buffer = mFreeBuffers.Pop();
+
+    if (buffer != NULL)
     {
-        buffer       = mFreeBuffers;
-        mFreeBuffers = mFreeBuffers->GetNextBuffer();
         buffer->SetNextBuffer(NULL);
         mNumFreeBuffers--;
     }
@@ -157,15 +155,14 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
 {
     while (aBuffer != NULL)
     {
-        Buffer *tmpBuffer = aBuffer->GetNextBuffer();
+        Buffer *next = aBuffer->GetNextBuffer();
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
         otPlatMessagePoolFree(&GetInstance(), aBuffer);
-#else  // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-        aBuffer->SetNextBuffer(mFreeBuffers);
-        mFreeBuffers = aBuffer;
+#else
+        mFreeBuffers.Push(*aBuffer);
         mNumFreeBuffers++;
-#endif // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-        aBuffer = tmpBuffer;
+#endif
+        aBuffer = next;
     }
 }
 
@@ -178,9 +175,9 @@ otError MessagePool::ReclaimBuffers(int aNumBuffers, uint8_t aPriority)
     }
 
 exit:
-#else  // OPENTHREAD_MTD || OPENTHREAD_FTD
+#else
     OT_UNUSED_VARIABLE(aPriority);
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#endif
 
     // First comparison is to get around issues with comparing
     // signed and unsigned numbers, if aNumBuffers is negative then
@@ -442,9 +439,9 @@ void Message::RemoveHeader(uint16_t aLength)
 
 uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
 {
-    Buffer * curBuffer;
-    uint16_t bytesCopied = 0;
-    uint16_t bytesToCopy;
+    const Buffer *curBuffer;
+    uint16_t      bytesCopied = 0;
+    uint16_t      bytesToCopy;
 
     if (aOffset >= GetLength())
     {
@@ -700,9 +697,9 @@ uint16_t Message::UpdateChecksum(uint16_t aChecksum, const void *aBuf, uint16_t 
 
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const
 {
-    Buffer * curBuffer;
-    uint16_t bytesCovered = 0;
-    uint16_t bytesToCover;
+    const Buffer *curBuffer;
+    uint16_t      bytesCovered = 0;
+    uint16_t      bytesToCover;
 
     OT_ASSERT(aOffset + aLength <= GetLength());
 
