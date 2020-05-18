@@ -640,7 +640,7 @@ private:
 
     const HelpData &GetHelpData(void) const
     {
-        OT_STATIC_ASSERT(sizeof(mBuffer.mHead.mInfo) + sizeof(HelpData) + kHelpDataAlignment <= sizeof(mBuffer),
+        OT_STATIC_ASSERT(sizeof(mBuffer.mHead.mMetadata) + sizeof(HelpData) + kHelpDataAlignment <= sizeof(mBuffer),
                          "Insufficient buffer size for CoAP processing!");
 
         return *static_cast<const HelpData *>(OT_ALIGN(mBuffer.mHead.mData, kHelpDataAlignment));
