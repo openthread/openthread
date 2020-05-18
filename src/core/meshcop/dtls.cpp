@@ -902,7 +902,7 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const cha
     }
 }
 
-otError Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
+otError Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::SubType aMessageSubType)
 {
     otError      error   = OT_ERROR_NONE;
     ot::Message *message = NULL;
