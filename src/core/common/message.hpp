@@ -229,7 +229,11 @@ class Message : public Buffer
     friend class PriorityQueue;
 
 public:
-    enum
+    /**
+     * This enumeration represents the message type.
+     *
+     */
+    enum Type
     {
         kTypeIp6         = 0, ///< A full uncompressed IPv6 packet
         kType6lowpan     = 1, ///< A 6lowpan frame
@@ -330,7 +334,7 @@ public:
      * @returns The type of the message.
      *
      */
-    uint8_t GetType(void) const { return GetMetadata().mType; }
+    Type GetType(void) const { return static_cast<Type>(GetMetadata().mType); }
 
     /**
      * This method sets the message type.
@@ -338,7 +342,7 @@ public:
      * @param[in]  aType  The message type.
      *
      */
-    void SetType(uint8_t aType) { GetMetadata().mType = aType; }
+    void SetType(Type aType) { GetMetadata().mType = aType; }
 
     /**
      * This method returns the sub type of the message.
@@ -1134,7 +1138,7 @@ public:
      * @returns A pointer to the message or NULL if no message buffers are available.
      *
      */
-    Message *New(uint8_t aType, uint16_t aReserveHeader, uint8_t aPriority = kDefaultMessagePriority);
+    Message *New(Message::Type aType, uint16_t aReserveHeader, uint8_t aPriority = kDefaultMessagePriority);
 
     /**
      * This method is used to obtain a new message with specified settings.
@@ -1149,7 +1153,7 @@ public:
      * @returns A pointer to the message or NULL if no message buffers are available.
      *
      */
-    Message *New(uint8_t aType, uint16_t aReserveHeader, const otMessageSettings *aSettings);
+    Message *New(Message::Type aType, uint16_t aReserveHeader, const otMessageSettings *aSettings);
 
     /**
      * This method is used to free a message and return all message buffers to the buffer pool.

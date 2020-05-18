@@ -476,11 +476,14 @@ otError MeshForwarder::HandleFrameRequest(Mac::TxFrame &aFrame)
         // there is a pending indirect supervision message in the send
         // queue for it. The message would be then converted to a
         // direct tx.
+
+        // Fall through
+#endif
+
+    default:
         mMessageNextOffset = mSendMessage->GetLength();
         error              = OT_ERROR_ABORT;
         ExitNow();
-
-#endif
     }
 
     aFrame.SetIsARetransmission(false);

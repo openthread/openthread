@@ -61,7 +61,7 @@ MessagePool::MessagePool(Instance &aInstance)
 #endif
 }
 
-Message *MessagePool::New(uint8_t aType, uint16_t aReserveHeader, uint8_t aPriority)
+Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, uint8_t aPriority)
 {
     otError  error = OT_ERROR_NONE;
     Message *message;
@@ -87,7 +87,7 @@ exit:
     return message;
 }
 
-Message *MessagePool::New(uint8_t aType, uint16_t aReserveHeader, const otMessageSettings *aSettings)
+Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, const otMessageSettings *aSettings)
 {
     Message *message;
     bool     linkSecurityEnabled;
