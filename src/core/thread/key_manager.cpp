@@ -38,7 +38,6 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/timer.hpp"
-#include "crypto/hmac_sha256.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -145,7 +144,7 @@ exit:
     return error;
 }
 
-void KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
+void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
 {
     Crypto::HmacSha256 hmac;
     uint8_t            keySequenceBytes[sizeof(uint32_t)];
@@ -156,22 +155,23 @@ void KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
     hmac.Update(keySequenceBytes, sizeof(keySequenceBytes));
     hmac.Update(kThreadString, sizeof(kThreadString));
 
-    hmac.Finish(aKey);
+    hmac.Finish(aHashKeys.mHash);
 }
 
-void KeyManager::UpdateKeyMaterial()
+void KeyManager::UpdateKeyMaterial(void)
 {
-    uint8_t prevKey[Crypto::HmacSha256::kHashSize];
-    uint8_t currKey[Crypto::HmacSha256::kHashSize];
-    uint8_t nextKey[Crypto::HmacSha256::kHashSize];
+    HashKeys prev;
+    HashKeys cur;
+    HashKeys next;
 
-    ComputeKey(mKeySequence - 1, prevKey);
-    ComputeKey(mKeySequence, currKey);
-    ComputeKey(mKeySequence + 1, nextKey);
+    ComputeKeys(mKeySequence - 1, prev);
+    ComputeKeys(mKeySequence, cur);
+    ComputeKeys(mKeySequence + 1, next);
 
-    memcpy(mMleKey, currKey, kMleKeySize);
-    Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prevKey + kMacKeyOffset,
-                                 currKey + kMacKeyOffset, nextKey + kMacKeyOffset);
+    mMleKey = cur.mKeys.mMleKey;
+
+    Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prev.mKeys.mMacKey,
+                                 cur.mKeys.mMacKey, next.mKeys.mMacKey);
 }
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
@@ -202,10 +202,14 @@ exit:
     return;
 }
 
-const uint8_t *KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
+const Mle::Key &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
 {
-    ComputeKey(aKeySequence, mTemporaryKey);
-    return mTemporaryKey;
+    HashKeys hashKeys;
+
+    ComputeKeys(aKeySequence, hashKeys);
+    mTemporaryMleKey = hashKeys.mKeys.mMleKey;
+
+    return mTemporaryMleKey;
 }
 
 void KeyManager::IncrementMacFrameCounter(void)

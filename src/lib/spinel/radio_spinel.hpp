@@ -602,22 +602,20 @@ public:
      *
      * @param[in] aKeyIdMode  The key ID mode.
      * @param[in] aKeyId      The key index.
-     * @param[in] aKeySize    The key length.
-     * @param[in] aPrevKey    The pointer to the previous MAC key.
-     * @param[in] aCurrKey    The pointer to the current MAC key.
-     * @param[in] aNextKey    The pointer to the next MAC key.
+     * @param[in] aPrevKey    The previous MAC key.
+     * @param[in] aCurrKey    The current MAC key.
+     * @param[in] aNextKey    The next MAC key.
      *
      * @retval  OT_ERROR_NONE               Succeeded.
      * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
      * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
      *
      */
-    otError SetMacKey(uint8_t        aKeyIdMode,
-                      uint8_t        aKeyId,
-                      uint8_t        aKeySize,
-                      const uint8_t *aPrevKey,
-                      const uint8_t *aCurrKey,
-                      const uint8_t *aNextKey);
+    otError SetMacKey(uint8_t         aKeyIdMode,
+                      uint8_t         aKeyId,
+                      const otMacKey &aPrevKey,
+                      const otMacKey &aCurrKey,
+                      const otMacKey &aNextKey);
 
     /**
      * This method checks whether the spinel interface is radio-only

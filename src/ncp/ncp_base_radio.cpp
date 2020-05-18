@@ -445,15 +445,17 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>(void)
     SuccessOrExit(error = mDecoder.ReadUint8(keyId));
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(prevKey, keySize));
-    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(keySize == sizeof(otMacKey), error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(currKey, keySize));
-    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(keySize == sizeof(otMacKey), error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(nextKey, keySize));
-    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(keySize == sizeof(otMacKey), error = OT_ERROR_INVALID_ARGS);
 
-    error = otLinkRawSetMacKey(mInstance, keyIdMode, keyId, prevKey, currKey, nextKey);
+    error =
+        otLinkRawSetMacKey(mInstance, keyIdMode, keyId, reinterpret_cast<const otMacKey *>(prevKey),
+                           reinterpret_cast<const otMacKey *>(currKey), reinterpret_cast<const otMacKey *>(nextKey));
 
 exit:
     return error;

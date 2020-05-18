@@ -256,11 +256,11 @@ public:
      * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
      *
      */
-    otError SetMacKey(uint8_t        aKeyIdMode,
-                      uint8_t        aKeyId,
-                      const uint8_t *aPrevKey,
-                      const uint8_t *aCurrKey,
-                      const uint8_t *aNextKey);
+    otError SetMacKey(uint8_t    aKeyIdMode,
+                      uint8_t    aKeyId,
+                      const Key &aPrevKey,
+                      const Key &aCurrKey,
+                      const Key &aNextKey);
 
     /**
      * This method records the status of a frame transmission attempt and is mainly used for logging failures.

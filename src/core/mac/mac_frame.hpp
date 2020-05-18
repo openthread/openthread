@@ -1171,7 +1171,7 @@ public:
      * @returns The pointer to the key.
      *
      */
-    const uint8_t *GetAesKey(void) const { return mInfo.mTxInfo.mAesKey; }
+    const Mac::Key &GetAesKey(void) const { return *static_cast<const Mac::Key *>(mInfo.mTxInfo.mAesKey); }
 
     /**
      * This method sets the key used for frame encryption and authentication (AES CCM).
@@ -1179,7 +1179,7 @@ public:
      * @param[in]  aAesKey  The pointer to the key.
      *
      */
-    void SetAesKey(const uint8_t *aAesKey) { mInfo.mTxInfo.mAesKey = aAesKey; }
+    void SetAesKey(const Mac::Key &aAesKey) { mInfo.mTxInfo.mAesKey = &aAesKey; }
 
     /**
      * This method copies the PSDU and all attributes from another frame.

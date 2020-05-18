@@ -75,6 +75,14 @@ public:
     void SetKey(const uint8_t *aKey, uint16_t aKeyLength);
 
     /**
+     * This method sets the key.
+     *
+     * @param[in]  aMacKey        A MAC key.
+     *
+     */
+    void SetKey(const Mac::Key &aMacKey);
+
+    /**
      * This method initializes the AES CCM computation.
      *
      * @param[in]  aHeaderLength     Length of header in bytes.

@@ -63,9 +63,9 @@ SubMac::SubMac(Instance &aInstance)
     , mTimer(aInstance, &SubMac::HandleTimer, this)
 {
     mExtAddress.Clear();
-    memset(mPrevKey, 0, sizeof(mPrevKey));
-    memset(mCurrKey, 0, sizeof(mCurrKey));
-    memset(mNextKey, 0, sizeof(mNextKey));
+    mPrevKey.Clear();
+    mCurrKey.Clear();
+    mNextKey.Clear();
 }
 
 otRadioCaps SubMac::GetCaps(void) const
@@ -244,6 +244,7 @@ void SubMac::ProcessTransmitSecurity(void)
     VerifyOrExit(keyIdMode == Frame::kKeyIdMode1, OT_NOOP);
 
     mTransmitFrame.SetAesKey(GetCurrentMacKey());
+
     if (!mTransmitFrame.IsARetransmission())
     {
         mTransmitFrame.SetKeyId(mKeyId);
@@ -623,11 +624,11 @@ void SubMac::SetState(State aState)
     }
 }
 
-void SubMac::SetMacKey(uint8_t        aKeyIdMode,
-                       uint8_t        aKeyId,
-                       const uint8_t *aPrevKey,
-                       const uint8_t *aCurrKey,
-                       const uint8_t *aNextKey)
+void SubMac::SetMacKey(uint8_t    aKeyIdMode,
+                       uint8_t    aKeyId,
+                       const Key &aPrevKey,
+                       const Key &aCurrKey,
+                       const Key &aNextKey)
 {
     switch (aKeyIdMode)
     {
@@ -635,13 +636,10 @@ void SubMac::SetMacKey(uint8_t        aKeyIdMode,
     case Frame::kKeyIdMode2:
         break;
     case Frame::kKeyIdMode1:
-        OT_ASSERT(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
-
-        mKeyId = aKeyId;
-        memcpy(mPrevKey, aPrevKey, sizeof(mPrevKey));
-        memcpy(mCurrKey, aCurrKey, sizeof(mCurrKey));
-        memcpy(mNextKey, aNextKey, sizeof(mNextKey));
-
+        mKeyId   = aKeyId;
+        mPrevKey = aPrevKey;
+        mCurrKey = aCurrKey;
+        mNextKey = aNextKey;
         break;
 
     default:
@@ -651,7 +649,7 @@ void SubMac::SetMacKey(uint8_t        aKeyIdMode,
 
     VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
 
-    Get<Radio>().SetMacKey(aKeyIdMode, aKeyId, kMacKeySize, aPrevKey, aCurrKey, aNextKey);
+    Get<Radio>().SetMacKey(aKeyIdMode, aKeyId, aPrevKey, aCurrKey, aNextKey);
 
 exit:
     return;

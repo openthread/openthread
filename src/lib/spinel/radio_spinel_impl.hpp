@@ -1012,19 +1012,19 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKey(uint8_t        aKeyIdMode,
-                                                                  uint8_t        aKeyId,
-                                                                  uint8_t        aKeySize,
-                                                                  const uint8_t *aPrevKey,
-                                                                  const uint8_t *aCurrKey,
-                                                                  const uint8_t *aNextKey)
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKey(uint8_t         aKeyIdMode,
+                                                                  uint8_t         aKeyId,
+                                                                  const otMacKey &aPrevKey,
+                                                                  const otMacKey &aCurrKey,
+                                                                  const otMacKey &aNextKey)
 {
     otError error;
 
     SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_KEY,
                               SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S
                                   SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
-                              aKeyIdMode, aKeyId, aPrevKey, aKeySize, aCurrKey, aKeySize, aNextKey, aKeySize));
+                              aKeyIdMode, aKeyId, aPrevKey.m8, sizeof(otMacKey), aCurrKey.m8, sizeof(otMacKey),
+                              aNextKey.m8, sizeof(otMacKey)));
 
 exit:
     return error;

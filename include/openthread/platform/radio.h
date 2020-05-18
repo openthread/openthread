@@ -161,6 +161,26 @@ struct otExtAddress
  */
 typedef struct otExtAddress otExtAddress;
 
+#define OT_MAC_KEY_SIZE 16 ///< Size of the MAC Key in bytes.
+
+/**
+ * @struct otMacKey
+ *
+ * This structure represents a MAC Key.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otMacKey
+{
+    uint8_t m8[OT_MAC_KEY_SIZE]; ///< MAC Key bytes.
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents a MAC Key.
+ *
+ */
+typedef struct otMacKey otMacKey;
+
 /**
  * This structure represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
  */
@@ -191,13 +211,13 @@ typedef struct otRadioFrame
          */
         struct
         {
-            const uint8_t *mAesKey;            ///< The key used for AES-CCM frame security.
-            otRadioIeInfo *mIeInfo;            ///< The pointer to the Header IE(s) related information.
-            uint8_t        mMaxCsmaBackoffs;   ///< Maximum number of backoffs attempts before declaring CCA failure.
-            uint8_t        mMaxFrameRetries;   ///< Maximum number of retries allowed after a transmission failure.
-            bool           mIsARetx : 1;       ///< True if this frame is a retransmission (ignored by radio driver).
-            bool           mCsmaCaEnabled : 1; ///< Set to true to enable CSMA-CA for this packet, false otherwise.
-            bool           mIsSecurityProcessed : 1; ///< True if SubMac should skip the AES processing of this frame.
+            const otMacKey *mAesKey;            ///< The key used for AES-CCM frame security.
+            otRadioIeInfo * mIeInfo;            ///< The pointer to the Header IE(s) related information.
+            uint8_t         mMaxCsmaBackoffs;   ///< Maximum number of backoffs attempts before declaring CCA failure.
+            uint8_t         mMaxFrameRetries;   ///< Maximum number of retries allowed after a transmission failure.
+            bool            mIsARetx : 1;       ///< True if this frame is a retransmission (ignored by radio driver).
+            bool            mCsmaCaEnabled : 1; ///< Set to true to enable CSMA-CA for this packet, false otherwise.
+            bool            mIsSecurityProcessed : 1; ///< True if SubMac should skip the AES processing of this frame.
         } mTxInfo;
 
         /**
@@ -443,19 +463,17 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aKeyIdMode   The key ID mode.
  * @param[in]   aKeyId       Current MAC key index.
- * @param[in]   aKeySize     The key size.
  * @param[in]   aPrevKey     A pointer to the previous MAC key.
  * @param[in]   aCurrKey     A pointer to the current MAC key.
  * @param[in]   aNextKey     A pointer to the next MAC key.
  *
  */
-void otPlatRadioSetMacKey(otInstance *   aInstance,
-                          uint8_t        aKeyIdMode,
-                          uint8_t        aKeyId,
-                          uint8_t        aKeySize,
-                          const uint8_t *aPrevKey,
-                          const uint8_t *aCurrKey,
-                          const uint8_t *aNextKey);
+void otPlatRadioSetMacKey(otInstance *    aInstance,
+                          uint8_t         aKeyIdMode,
+                          uint8_t         aKeyId,
+                          const otMacKey *aPrevKey,
+                          const otMacKey *aCurrKey,
+                          const otMacKey *aNextKey);
 
 /**
  * @}
