@@ -157,10 +157,11 @@ EXTRA_DIST                                                         = \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
     test_mle.py                                                      \
-    test_service.py                                                  \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     test_reed_address_solicit_rejected.py                            \
+    test_reset.py                                                    \
+    test_service.py                                                  \
     thread_cert.py                                                   \
     tlvs_parsing.py                                                  \
     $(NULL)
@@ -181,10 +182,11 @@ check_SCRIPTS                                                      = \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
     test_mle.py                                                      \
-    test_service.py                                                  \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     test_reed_address_solicit_rejected.py                            \
+    test_reset.py                                                    \
+    test_service.py                                                  \
     Cert_5_1_01_RouterAttach.py                                      \
     Cert_5_1_02_ChildAddressTimeout.py                               \
     Cert_5_1_03_RouterAddressReallocation.py                         \
