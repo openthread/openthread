@@ -57,7 +57,7 @@ target_link_libraries(ot-cli
     ${OT_PLATFORM_LIB}
     mbedcrypto
     openthread-ncp-ftd
-    $<$<BOOL:${READLINE}>:${OT_READLINE}>
+    ${READLINE_LINK_LIBRARIES}
 )
 
 add_executable(ot-ncp
