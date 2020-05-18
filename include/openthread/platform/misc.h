@@ -198,7 +198,7 @@ otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance);
  *
  */
 
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+#if defined(OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE) && OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 /**
  * This function gets the name and index of the platform's network interface (if it exists).
  *
