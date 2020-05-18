@@ -125,6 +125,9 @@ jobs:
         sudo apt --no-install-recommends install -y lib32z1 ninja-build
         wget ${{ matrix.gcc_download_url }} -O gcc-arm.tar.bz2
         tar xjf gcc-arm.tar.bz2
+
+        # required for jn5189 and k32w061
+        pip install pycryptodome
     - name: Build
       run: |
         export PATH=/tmp/${{ matrix.gcc_extract_dir }}/bin:$PATH

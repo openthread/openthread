@@ -85,6 +85,36 @@ build_cc2652()
     make -f examples/Makefile-cc2652 "${options[@]}"
 }
 
+build_jn5189()
+{
+    local options=(
+        "COMMISSIONER=1"
+        "DHCP6_CLIENT=1"
+        "DHCP6_SERVER=1"
+        "DNS_CLIENT=1"
+        "JOINER=1"
+        "SLAAC=1"
+    )
+
+    reset_source
+    make -f examples/Makefile-jn5189 "${options[@]}"
+}
+
+build_k32w061()
+{
+    local options=(
+        "COMMISSIONER=1"
+        "DHCP6_CLIENT=1"
+        "DHCP6_SERVER=1"
+        "DNS_CLIENT=1"
+        "JOINER=1"
+        "SLAAC=1"
+    )
+
+    reset_source
+    make -f examples/Makefile-k32w061 "${options[@]}"
+}
+
 build_kw41z()
 {
     local options=(
@@ -258,6 +288,8 @@ main()
     build_cc2538
     build_cc2650
     build_cc2652
+    build_jn5189
+    build_k32w061
     build_kw41z
     build_nrf52811
     build_nrf52833
