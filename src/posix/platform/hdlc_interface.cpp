@@ -41,6 +41,8 @@
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
 #if defined(__APPLE__) || defined(__NetBSD__)
 #include <util.h>
+#elif defined(__FreeBSD__)
+#include <libutil.h>
 #else
 #include <pty.h>
 #endif
