@@ -73,7 +73,7 @@ class MessageQueue;
 class PriorityQueue;
 
 /**
- * This structure contains metdata about a Message.
+ * This structure contains metadata about a Message.
  *
  */
 struct MessageInfo
@@ -122,7 +122,7 @@ struct MessageInfo
  * This class represents a Message buffer.
  *
  */
-class Buffer : public ::otMessage
+class Buffer : public otMessage
 {
     friend class Message;
 
@@ -133,13 +133,15 @@ public:
      * @returns A pointer to the next message buffer.
      *
      */
-    class Buffer *GetNextBuffer(void) const { return static_cast<Buffer *>(mNext); }
+    Buffer *GetNextBuffer(void) const { return static_cast<Buffer *>(mNext); }
 
     /**
      * This method sets the pointer to the next message buffer.
      *
+     * @param[in] aNext  A pointer to the next buffer.
+     *
      */
-    void SetNextBuffer(class Buffer *buf) { mNext = static_cast<otMessage *>(buf); }
+    void SetNextBuffer(Buffer *aNext) { mNext = aNext; }
 
 private:
     /**
@@ -176,8 +178,8 @@ private:
 
     enum
     {
-        kBufferDataSize     = kBufferSize - sizeof(struct otMessage),
-        kHeadBufferDataSize = kBufferDataSize - sizeof(struct MessageInfo),
+        kBufferDataSize     = kBufferSize - sizeof(otMessage),
+        kHeadBufferDataSize = kBufferDataSize - sizeof(MessageInfo),
     };
 
 protected:
