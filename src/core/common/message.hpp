@@ -43,6 +43,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
@@ -122,7 +123,7 @@ struct MessageInfo
  * This class represents a Message buffer.
  *
  */
-class Buffer : public otMessage
+class Buffer : public otMessage, public LinkedListEntry<Buffer>
 {
     friend class Message;
 
@@ -133,7 +134,15 @@ public:
      * @returns A pointer to the next message buffer.
      *
      */
-    Buffer *GetNextBuffer(void) const { return static_cast<Buffer *>(mNext); }
+    Buffer *GetNextBuffer(void) { return GetNext(); }
+
+    /**
+     * This method returns a pointer to the next message buffer.
+     *
+     * @returns A pointer to the next message buffer.
+     *
+     */
+    const Buffer *GetNextBuffer(void) const { return GetNext(); }
 
     /**
      * This method sets the pointer to the next message buffer.
@@ -141,7 +150,7 @@ public:
      * @param[in] aNext  A pointer to the next buffer.
      *
      */
-    void SetNextBuffer(Buffer *aNext) { mNext = aNext; }
+    void SetNextBuffer(Buffer *aNext) { SetNext(aNext); }
 
 private:
     /**
@@ -1157,9 +1166,9 @@ private:
     otError ReclaimBuffers(int aNumBuffers, uint8_t aPriority);
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT == 0
-    uint16_t mNumFreeBuffers;
-    Buffer   mBuffers[kNumBuffers];
-    Buffer * mFreeBuffers;
+    uint16_t           mNumFreeBuffers;
+    Buffer             mBuffers[kNumBuffers];
+    LinkedList<Buffer> mFreeBuffers;
 #endif
 };
 
