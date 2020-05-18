@@ -240,7 +240,7 @@ Message *Message::GetNext(void) const
     Message *next;
     Message *tail;
 
-    if (mBuffer.mHead.mInfo.mInPriorityQ)
+    if (GetMetadata().mInPriorityQ)
     {
         PriorityQueue *priorityQueue = GetPriorityQueue();
         VerifyOrExit(priorityQueue != NULL, next = NULL);
@@ -281,7 +281,7 @@ otError Message::SetLength(uint16_t aLength)
     SuccessOrExit(error = GetMessagePool()->ReclaimBuffers(bufs, GetPriority()));
 
     SuccessOrExit(error = ResizeMessage(totalLengthRequest));
-    mBuffer.mHead.mInfo.mLength = aLength;
+    GetMetadata().mLength = aLength;
 
     // Correct offset in case shorter length is set.
     if (GetOffset() > aLength)
@@ -308,21 +308,21 @@ uint8_t Message::GetBufferCount(void) const
 void Message::MoveOffset(int aDelta)
 {
     OT_ASSERT(GetOffset() + aDelta <= GetLength());
-    mBuffer.mHead.mInfo.mOffset += static_cast<int16_t>(aDelta);
-    OT_ASSERT(mBuffer.mHead.mInfo.mOffset <= GetLength());
+    GetMetadata().mOffset += static_cast<int16_t>(aDelta);
+    OT_ASSERT(GetMetadata().mOffset <= GetLength());
 }
 
 void Message::SetOffset(uint16_t aOffset)
 {
     OT_ASSERT(aOffset <= GetLength());
-    mBuffer.mHead.mInfo.mOffset = aOffset;
+    GetMetadata().mOffset = aOffset;
 }
 
 bool Message::IsSubTypeMle(void) const
 {
     bool rval;
 
-    switch (mBuffer.mHead.mInfo.mSubType)
+    switch (GetMetadata().mSubType)
     {
     case kSubTypeMleGeneral:
     case kSubTypeMleAnnounce:
@@ -349,16 +349,16 @@ otError Message::SetPriority(uint8_t aPriority)
 
     VerifyOrExit(aPriority < kNumPriorities, error = OT_ERROR_INVALID_ARGS);
 
-    VerifyOrExit(IsInAQueue(), mBuffer.mHead.mInfo.mPriority = aPriority);
-    VerifyOrExit(mBuffer.mHead.mInfo.mPriority != aPriority, OT_NOOP);
+    VerifyOrExit(IsInAQueue(), GetMetadata().mPriority = aPriority);
+    VerifyOrExit(GetMetadata().mPriority != aPriority, OT_NOOP);
 
-    if (mBuffer.mHead.mInfo.mInPriorityQ)
+    if (GetMetadata().mInPriorityQ)
     {
-        priorityQueue = mBuffer.mHead.mInfo.mQueue.mPriority;
+        priorityQueue = GetMetadata().mQueue.mPriority;
         priorityQueue->Dequeue(*this);
     }
 
-    mBuffer.mHead.mInfo.mPriority = aPriority;
+    GetMetadata().mPriority = aPriority;
 
     if (priorityQueue != NULL)
     {
@@ -408,7 +408,7 @@ otError Message::Prepend(const void *aBuf, uint16_t aLength)
     }
 
     SetReserved(GetReserved() - aLength);
-    mBuffer.mHead.mInfo.mLength += aLength;
+    GetMetadata().mLength += aLength;
     SetOffset(GetOffset() + aLength);
 
     if (aBuf != NULL)
@@ -422,18 +422,18 @@ exit:
 
 void Message::RemoveHeader(uint16_t aLength)
 {
-    OT_ASSERT(aLength <= mBuffer.mHead.mInfo.mLength);
+    OT_ASSERT(aLength <= GetMetadata().mLength);
 
-    mBuffer.mHead.mInfo.mReserved += aLength;
-    mBuffer.mHead.mInfo.mLength -= aLength;
+    GetMetadata().mReserved += aLength;
+    GetMetadata().mLength -= aLength;
 
-    if (mBuffer.mHead.mInfo.mOffset > aLength)
+    if (GetMetadata().mOffset > aLength)
     {
-        mBuffer.mHead.mInfo.mOffset -= aLength;
+        GetMetadata().mOffset -= aLength;
     }
     else
     {
-        mBuffer.mHead.mInfo.mOffset = 0;
+        GetMetadata().mOffset = 0;
     }
 }
 
@@ -645,29 +645,29 @@ exit:
 
 bool Message::GetChildMask(uint16_t aChildIndex) const
 {
-    OT_ASSERT(aChildIndex < sizeof(mBuffer.mHead.mInfo.mChildMask) * 8);
-    return (mBuffer.mHead.mInfo.mChildMask[aChildIndex / 8] & (0x80 >> (aChildIndex % 8))) != 0;
+    OT_ASSERT(aChildIndex < sizeof(GetMetadata().mChildMask) * 8);
+    return (GetMetadata().mChildMask[aChildIndex / 8] & (0x80 >> (aChildIndex % 8))) != 0;
 }
 
 void Message::ClearChildMask(uint16_t aChildIndex)
 {
-    OT_ASSERT(aChildIndex < sizeof(mBuffer.mHead.mInfo.mChildMask) * 8);
-    mBuffer.mHead.mInfo.mChildMask[aChildIndex / 8] &= ~(0x80 >> (aChildIndex % 8));
+    OT_ASSERT(aChildIndex < sizeof(GetMetadata().mChildMask) * 8);
+    GetMetadata().mChildMask[aChildIndex / 8] &= ~(0x80 >> (aChildIndex % 8));
 }
 
 void Message::SetChildMask(uint16_t aChildIndex)
 {
-    OT_ASSERT(aChildIndex < sizeof(mBuffer.mHead.mInfo.mChildMask) * 8);
-    mBuffer.mHead.mInfo.mChildMask[aChildIndex / 8] |= 0x80 >> (aChildIndex % 8);
+    OT_ASSERT(aChildIndex < sizeof(GetMetadata().mChildMask) * 8);
+    GetMetadata().mChildMask[aChildIndex / 8] |= 0x80 >> (aChildIndex % 8);
 }
 
 bool Message::IsChildPending(void) const
 {
     bool rval = false;
 
-    for (size_t i = 0; i < sizeof(mBuffer.mHead.mInfo.mChildMask); i++)
+    for (size_t i = 0; i < sizeof(GetMetadata().mChildMask); i++)
     {
-        if (mBuffer.mHead.mInfo.mChildMask[i] != 0)
+        if (GetMetadata().mChildMask[i] != 0)
         {
             ExitNow(rval = true);
         }
@@ -764,14 +764,14 @@ uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t 
 
 void Message::SetMessageQueue(MessageQueue *aMessageQueue)
 {
-    mBuffer.mHead.mInfo.mQueue.mMessage = aMessageQueue;
-    mBuffer.mHead.mInfo.mInPriorityQ    = false;
+    GetMetadata().mQueue.mMessage = aMessageQueue;
+    GetMetadata().mInPriorityQ    = false;
 }
 
 void Message::SetPriorityQueue(PriorityQueue *aPriorityQueue)
 {
-    mBuffer.mHead.mInfo.mQueue.mPriority = aPriorityQueue;
-    mBuffer.mHead.mInfo.mInPriorityQ     = true;
+    GetMetadata().mQueue.mPriority = aPriorityQueue;
+    GetMetadata().mInPriorityQ     = true;
 }
 
 MessageQueue::MessageQueue(void)

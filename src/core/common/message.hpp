@@ -77,7 +77,7 @@ class PriorityQueue;
  * This structure contains metadata about a Message.
  *
  */
-struct MessageInfo
+struct MessageMetadata
 {
     Message *    mNext;        ///< A pointer to the next Message in a doubly linked list.
     Message *    mPrev;        ///< A pointer to the previous Message in a doubly linked list.
@@ -154,6 +154,22 @@ public:
 
 private:
     /**
+     * This method returns the message metadata in the first message buffer.
+     *
+     * @returns The message metadata structure.
+     *
+     */
+    MessageMetadata &GetMetadata(void) { return mBuffer.mHead.mMetadata; }
+
+    /**
+     * This method returns the message metadata in the first message buffer.
+     *
+     * @returns The message metadata structure.
+     *
+     */
+    const MessageMetadata &GetMetadata(void) const { return mBuffer.mHead.mMetadata; }
+
+    /**
      * This method returns a pointer to the first byte of data in the first message buffer.
      *
      * @returns A pointer to the first data byte.
@@ -188,7 +204,7 @@ private:
     enum
     {
         kBufferDataSize     = kBufferSize - sizeof(otMessage),
-        kHeadBufferDataSize = kBufferDataSize - sizeof(MessageInfo),
+        kHeadBufferDataSize = kBufferDataSize - sizeof(MessageMetadata),
     };
 
 protected:
@@ -196,8 +212,8 @@ protected:
     {
         struct
         {
-            MessageInfo mInfo;
-            uint8_t     mData[kHeadBufferDataSize];
+            MessageMetadata mMetadata;
+            uint8_t         mData[kHeadBufferDataSize];
         } mHead;
         uint8_t mData[kBufferDataSize];
     } mBuffer;
@@ -266,7 +282,7 @@ public:
      *
      * @returns The number of bytes in the message.
      */
-    uint16_t GetLength(void) const { return mBuffer.mHead.mInfo.mLength; }
+    uint16_t GetLength(void) const { return GetMetadata().mLength; }
 
     /**
      * This method sets the number of bytes in the message.
@@ -291,7 +307,7 @@ public:
      * @returns A byte offset within the message.
      *
      */
-    uint16_t GetOffset(void) const { return mBuffer.mHead.mInfo.mOffset; }
+    uint16_t GetOffset(void) const { return GetMetadata().mOffset; }
 
     /**
      * This method moves the byte offset within the message.
@@ -315,7 +331,7 @@ public:
      * @returns The type of the message.
      *
      */
-    uint8_t GetType(void) const { return mBuffer.mHead.mInfo.mType; }
+    uint8_t GetType(void) const { return GetMetadata().mType; }
 
     /**
      * This method sets the message type.
@@ -323,7 +339,7 @@ public:
      * @param[in]  aType  The message type.
      *
      */
-    void SetType(uint8_t aType) { mBuffer.mHead.mInfo.mType = aType; }
+    void SetType(uint8_t aType) { GetMetadata().mType = aType; }
 
     /**
      * This method returns the sub type of the message.
@@ -331,7 +347,7 @@ public:
      * @returns The sub type of the message.
      *
      */
-    uint8_t GetSubType(void) const { return mBuffer.mHead.mInfo.mSubType; }
+    uint8_t GetSubType(void) const { return GetMetadata().mSubType; }
 
     /**
      * This method sets the message sub type.
@@ -339,7 +355,7 @@ public:
      * @param[in]  aSubType  The message sub type.
      *
      */
-    void SetSubType(uint8_t aSubType) { mBuffer.mHead.mInfo.mSubType = aSubType; }
+    void SetSubType(uint8_t aSubType) { GetMetadata().mSubType = aSubType; }
 
     /**
      * This method returns whether or not the message is of MLE subtype.
@@ -356,7 +372,7 @@ public:
      * @returns The priority level associated with this message.
      *
      */
-    uint8_t GetPriority(void) const { return mBuffer.mHead.mInfo.mPriority; }
+    uint8_t GetPriority(void) const { return GetMetadata().mPriority; }
 
     /**
      * This method sets the messages priority.
@@ -477,7 +493,7 @@ public:
      * @returns The 6LoWPAN datagram tag or the IPv6 fragment identification.
      *
      */
-    uint32_t GetDatagramTag(void) const { return mBuffer.mHead.mInfo.mDatagramTag; }
+    uint32_t GetDatagramTag(void) const { return GetMetadata().mDatagramTag; }
 
     /**
      * This method sets the datagram tag used for 6LoWPAN fragmentation.
@@ -485,7 +501,7 @@ public:
      * @param[in]  aTag  The 6LoWPAN datagram tag.
      *
      */
-    void SetDatagramTag(uint32_t aTag) { mBuffer.mHead.mInfo.mDatagramTag = aTag; }
+    void SetDatagramTag(uint32_t aTag) { GetMetadata().mDatagramTag = aTag; }
 
     /**
      * This method returns whether or not the message forwarding is scheduled for the child.
@@ -531,7 +547,7 @@ public:
      * @returns The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    uint16_t GetMeshDest(void) const { return mBuffer.mHead.mInfo.mMeshDest; }
+    uint16_t GetMeshDest(void) const { return GetMetadata().mMeshDest; }
 
     /**
      * This method sets the RLOC16 of the mesh destination.
@@ -541,7 +557,7 @@ public:
      * @param[in]  aMeshDest  The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    void SetMeshDest(uint16_t aMeshDest) { mBuffer.mHead.mInfo.mMeshDest = aMeshDest; }
+    void SetMeshDest(uint16_t aMeshDest) { GetMetadata().mMeshDest = aMeshDest; }
 
     /**
      * This method returns the IEEE 802.15.4 Destination PAN ID.
@@ -551,7 +567,7 @@ public:
      * @returns The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    uint16_t GetPanId(void) const { return mBuffer.mHead.mInfo.mPanIdChannel.mPanId; }
+    uint16_t GetPanId(void) const { return GetMetadata().mPanIdChannel.mPanId; }
 
     /**
      * This method sets the IEEE 802.15.4 Destination PAN ID.
@@ -561,7 +577,7 @@ public:
      * @param[in]  aPanId  The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    void SetPanId(uint16_t aPanId) { mBuffer.mHead.mInfo.mPanIdChannel.mPanId = aPanId; }
+    void SetPanId(uint16_t aPanId) { GetMetadata().mPanIdChannel.mPanId = aPanId; }
 
     /**
      * This method returns the IEEE 802.15.4 Channel to use for transmission.
@@ -571,7 +587,7 @@ public:
      * @returns The IEEE 802.15.4 Channel to use for transmission.
      *
      */
-    uint8_t GetChannel(void) const { return mBuffer.mHead.mInfo.mPanIdChannel.mChannel; }
+    uint8_t GetChannel(void) const { return GetMetadata().mPanIdChannel.mChannel; }
 
     /**
      * This method sets the IEEE 802.15.4 Channel to use for transmission.
@@ -581,7 +597,7 @@ public:
      * @param[in]  aChannel  The IEEE 802.15.4 Channel to use for transmission.
      *
      */
-    void SetChannel(uint8_t aChannel) { mBuffer.mHead.mInfo.mPanIdChannel.mChannel = aChannel; }
+    void SetChannel(uint8_t aChannel) { GetMetadata().mPanIdChannel.mChannel = aChannel; }
 
     /**
      * This method returns the timeout used for 6LoWPAN reassembly.
@@ -589,7 +605,7 @@ public:
      * @returns The time remaining in seconds.
      *
      */
-    uint8_t GetTimeout(void) const { return mBuffer.mHead.mInfo.mTimeout; }
+    uint8_t GetTimeout(void) const { return GetMetadata().mTimeout; }
 
     /**
      * This method sets the timeout used for 6LoWPAN reassembly.
@@ -597,13 +613,13 @@ public:
      * @param[in]  aTimeout  The timeout value.
      *
      */
-    void SetTimeout(uint8_t aTimeout) { mBuffer.mHead.mInfo.mTimeout = aTimeout; }
+    void SetTimeout(uint8_t aTimeout) { GetMetadata().mTimeout = aTimeout; }
 
     /**
      * This method decrements the timeout.
      *
      */
-    void DecrementTimeout(void) { mBuffer.mHead.mInfo.mTimeout--; }
+    void DecrementTimeout(void) { GetMetadata().mTimeout--; }
 
     /**
      * This method returns whether or not message forwarding is scheduled for direct transmission.
@@ -612,19 +628,19 @@ public:
      * @retval FALSE  If message forwarding is not scheduled for direct transmission.
      *
      */
-    bool GetDirectTransmission(void) const { return mBuffer.mHead.mInfo.mDirectTx; }
+    bool GetDirectTransmission(void) const { return GetMetadata().mDirectTx; }
 
     /**
      * This method unschedules forwarding using direct transmission.
      *
      */
-    void ClearDirectTransmission(void) { mBuffer.mHead.mInfo.mDirectTx = false; }
+    void ClearDirectTransmission(void) { GetMetadata().mDirectTx = false; }
 
     /**
      * This method schedules forwarding using direct transmission.
      *
      */
-    void SetDirectTransmission(void) { mBuffer.mHead.mInfo.mDirectTx = true; }
+    void SetDirectTransmission(void) { GetMetadata().mDirectTx = true; }
 
     /**
      * This method indicates whether the direct transmission of message was successful.
@@ -633,7 +649,7 @@ public:
      * @retval FALSE  If direct transmission of message failed (at least one fragment failed).
      *
      */
-    bool GetTxSuccess(void) const { return mBuffer.mHead.mInfo.mTxSuccess; }
+    bool GetTxSuccess(void) const { return GetMetadata().mTxSuccess; }
 
     /**
      * This method sets whether the direct transmission of message was successful.
@@ -642,7 +658,7 @@ public:
      *                         fragment transmission failed).
      *
      */
-    void SetTxSuccess(bool aTxSuccess) { mBuffer.mHead.mInfo.mTxSuccess = aTxSuccess; }
+    void SetTxSuccess(bool aTxSuccess) { GetMetadata().mTxSuccess = aTxSuccess; }
 
     /**
      * This method indicates whether the message may be evicted.
@@ -651,7 +667,7 @@ public:
      * @retval FALSE  If the message may be evicted.
      *
      */
-    bool GetDoNotEvict(void) const { return mBuffer.mHead.mInfo.mDoNotEvict; }
+    bool GetDoNotEvict(void) const { return GetMetadata().mDoNotEvict; }
 
     /**
      * This method sets whether the message may be evicted.
@@ -659,7 +675,7 @@ public:
      * @param[in]  aDoNotEvict  TRUE if the message may not be evicted, FALSE otherwise.
      *
      */
-    void SetDoNotEvict(bool aDoNotEvict) { mBuffer.mHead.mInfo.mDoNotEvict = aDoNotEvict; }
+    void SetDoNotEvict(bool aDoNotEvict) { GetMetadata().mDoNotEvict = aDoNotEvict; }
 
     /**
      * This method indicates whether or not link security is enabled for the message.
@@ -668,7 +684,7 @@ public:
      * @retval FALSE  If link security is not enabled.
      *
      */
-    bool IsLinkSecurityEnabled(void) const { return mBuffer.mHead.mInfo.mLinkSecurity; }
+    bool IsLinkSecurityEnabled(void) const { return GetMetadata().mLinkSecurity; }
 
     /**
      * This method sets whether or not link security is enabled for the message.
@@ -676,7 +692,7 @@ public:
      * @param[in]  aEnabled  TRUE if link security is enabled, FALSE otherwise.
      *
      */
-    void SetLinkSecurityEnabled(bool aEnabled) { mBuffer.mHead.mInfo.mLinkSecurity = aEnabled; }
+    void SetLinkSecurityEnabled(bool aEnabled) { GetMetadata().mLinkSecurity = aEnabled; }
 
     /**
      * This method updates the average RSS (Received Signal Strength) associated with the message by adding the given
@@ -686,7 +702,7 @@ public:
      * @param[in] aRss A new RSS value (in dBm) to be added to average.
      *
      */
-    void AddRss(int8_t aRss) { IgnoreError(mBuffer.mHead.mInfo.mRssAverager.Add(aRss)); }
+    void AddRss(int8_t aRss) { IgnoreError(GetMetadata().mRssAverager.Add(aRss)); }
 
     /**
      * This method returns the average RSS (Received Signal Strength) associated with the message.
@@ -694,7 +710,7 @@ public:
      * @returns The current average RSS value (in dBm) or OT_RADIO_RSSI_INVALID if no average is available.
      *
      */
-    int8_t GetAverageRss(void) const { return mBuffer.mHead.mInfo.mRssAverager.GetAverage(); }
+    int8_t GetAverageRss(void) const { return GetMetadata().mRssAverager.GetAverage(); }
 
     /**
      * This method returns a const reference to RssAverager of the message.
@@ -702,7 +718,7 @@ public:
      * @returns A const reference to the RssAverager of the message.
      *
      */
-    const RssAverager &GetRssAverager(void) const { return mBuffer.mHead.mInfo.mRssAverager; }
+    const RssAverager &GetRssAverager(void) const { return GetMetadata().mRssAverager; }
 
     /**
      * This static method updates a checksum.
@@ -747,7 +763,7 @@ public:
      */
     MessageQueue *GetMessageQueue(void) const
     {
-        return (!mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mMessage : NULL;
+        return (!GetMetadata().mInPriorityQ) ? GetMetadata().mQueue.mMessage : NULL;
     }
 
     /**
@@ -758,7 +774,7 @@ public:
      */
     PriorityQueue *GetPriorityQueue(void) const
     {
-        return (mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mPriority : NULL;
+        return (GetMetadata().mInPriorityQ) ? GetMetadata().mQueue.mPriority : NULL;
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -769,7 +785,7 @@ public:
      * @retval FALSE  If the message is not used for time sync purpose.
      *
      */
-    bool IsTimeSync(void) const { return mBuffer.mHead.mInfo.mTimeSync; }
+    bool IsTimeSync(void) const { return GetMetadata().mTimeSync; }
 
     /**
      * This method sets whether or not the message is also used for time sync purpose.
@@ -777,7 +793,7 @@ public:
      * @param[in]  aEnabled  TRUE if the message is also used for time sync purpose, FALSE otherwise.
      *
      */
-    void SetTimeSync(bool aEnabled) { mBuffer.mHead.mInfo.mTimeSync = aEnabled; }
+    void SetTimeSync(bool aEnabled) { GetMetadata().mTimeSync = aEnabled; }
 
     /**
      * This method sets the offset to network time.
@@ -785,10 +801,7 @@ public:
      * @param[in]  aNetworkTimeOffset  The offset to network time.
      *
      */
-    void SetNetworkTimeOffset(int64_t aNetworkTimeOffset)
-    {
-        mBuffer.mHead.mInfo.mNetworkTimeOffset = aNetworkTimeOffset;
-    }
+    void SetNetworkTimeOffset(int64_t aNetworkTimeOffset) { GetMetadata().mNetworkTimeOffset = aNetworkTimeOffset; }
 
     /**
      * This method gets the offset to network time.
@@ -796,7 +809,7 @@ public:
      * @returns  The offset to network time.
      *
      */
-    int64_t GetNetworkTimeOffset(void) const { return mBuffer.mHead.mInfo.mNetworkTimeOffset; }
+    int64_t GetNetworkTimeOffset(void) const { return GetMetadata().mNetworkTimeOffset; }
 
     /**
      * This method sets the time sync sequence.
@@ -804,7 +817,7 @@ public:
      * @param[in]  aTimeSyncSeq  The time sync sequence.
      *
      */
-    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mBuffer.mHead.mInfo.mTimeSyncSeq = aTimeSyncSeq; }
+    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { GetMetadata().mTimeSyncSeq = aTimeSyncSeq; }
 
     /**
      * This method gets the time sync sequence.
@@ -812,7 +825,7 @@ public:
      * @returns  The time sync sequence.
      *
      */
-    uint8_t GetTimeSyncSeq(void) const { return mBuffer.mHead.mInfo.mTimeSyncSeq; }
+    uint8_t GetTimeSyncSeq(void) const { return GetMetadata().mTimeSyncSeq; }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 private:
@@ -822,7 +835,7 @@ private:
      * @returns A pointer to the message pool.
      *
      */
-    MessagePool *GetMessagePool(void) const { return mBuffer.mHead.mInfo.mMessagePool; }
+    MessagePool *GetMessagePool(void) const { return GetMetadata().mMessagePool; }
 
     /**
      * This method sets the message pool this message to which this message belongs.
@@ -830,7 +843,7 @@ private:
      * @param[in] aMessagePool  A pointer to the message pool
      *
      */
-    void SetMessagePool(MessagePool *aMessagePool) { mBuffer.mHead.mInfo.mMessagePool = aMessagePool; }
+    void SetMessagePool(MessagePool *aMessagePool) { GetMetadata().mMessagePool = aMessagePool; }
 
     /**
      * This method returns `true` if the message is enqueued in any queue (`MessageQueue` or `PriorityQueue`).
@@ -838,7 +851,7 @@ private:
      * @returns `true` if the message is in any queue, `false` otherwise.
      *
      */
-    bool IsInAQueue(void) const { return (mBuffer.mHead.mInfo.mQueue.mMessage != NULL); }
+    bool IsInAQueue(void) const { return (GetMetadata().mQueue.mMessage != NULL); }
 
     /**
      * This method sets the message queue information for the message.
@@ -862,7 +875,7 @@ private:
      * @returns A reference to the mNext pointer.
      *
      */
-    Message *&Next(void) { return mBuffer.mHead.mInfo.mNext; }
+    Message *&Next(void) { return GetMetadata().mNext; }
 
     /**
      * This method returns a reference to the `mNext` pointer (const pointer).
@@ -871,7 +884,7 @@ private:
      * @returns A reference to the mNext pointer.
      *
      */
-    Message *const &Next(void) const { return mBuffer.mHead.mInfo.mNext; }
+    Message *const &Next(void) const { return GetMetadata().mNext; }
 
     /**
      * This method returns a reference to the `mPrev` pointer.
@@ -879,7 +892,7 @@ private:
      * @returns A reference to the mPrev pointer.
      *
      */
-    Message *&Prev(void) { return mBuffer.mHead.mInfo.mPrev; }
+    Message *&Prev(void) { return GetMetadata().mPrev; }
 
     /**
      * This method returns the number of reserved header bytes.
@@ -887,7 +900,7 @@ private:
      * @returns The number of reserved header bytes.
      *
      */
-    uint16_t GetReserved(void) const { return mBuffer.mHead.mInfo.mReserved; }
+    uint16_t GetReserved(void) const { return GetMetadata().mReserved; }
 
     /**
      * This method sets the number of reserved header bytes.
@@ -895,7 +908,7 @@ private:
      * @param[in] aReservedHeader  The number of header bytes to reserve.
      *
      */
-    void SetReserved(uint16_t aReservedHeader) { mBuffer.mHead.mInfo.mReserved = aReservedHeader; }
+    void SetReserved(uint16_t aReservedHeader) { GetMetadata().mReserved = aReservedHeader; }
 
     /**
      * This method adds or frees message buffers to meet the requested length.
