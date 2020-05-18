@@ -134,6 +134,7 @@
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/message.h>
+#include <openthread/platform/misc.h>
 
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
