@@ -26,7 +26,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
-
 """
 parse_topofile.py
 -----------------
@@ -43,11 +42,10 @@ MAX_VENDOR_DEVICE = 32
 
 
 def device_calculate(topo_file, case_list):
-    try:
-        case_count = 0
-        testbed_vendor_dict = {}
-        for case in case_list:
-            f = open(topo_file, 'r')
+    case_count = 0
+    testbed_vendor_dict = {}
+    for case in case_list:
+        with open(topo_file, 'r') as f:
             while 1:
 
                 case_vendor_dict = {}
@@ -56,65 +54,75 @@ def device_calculate(topo_file, case_list):
                 line = line.strip()
                 if not line:
                     break
-                if re.match(r'#.*', line):
-                    continue
+                try:
+                    if re.match(r'#.*', line):
+                        continue
 
-                matched_case = re.match(r'(.*)-(.*)', line, re.M | re.I)
+                    matched_case = re.match(r'(.*)-(.*)', line, re.M | re.I)
 
-                if case != 'all' and case != matched_case.group(1):
-                    continue
+                    if case != 'all' and case != matched_case.group(1):
+                        continue
 
-                logging.info('case %s:' % matched_case.group(1))
-                case_count += 1
-                role_vendor_str = matched_case.group(2)
-                role_vendor_raw_list = re.split(',', role_vendor_str)
-                role_vendor_list = []
+                    logging.info('case %s:' % matched_case.group(1))
+                    case_count += 1
+                    role_vendor_str = matched_case.group(2)
+                    role_vendor_raw_list = re.split(',', role_vendor_str)
+                    role_vendor_list = []
 
-                for i in range(len(role_vendor_raw_list)):
-                    device_pair = re.split(':', role_vendor_raw_list[i])
-                    role_vendor_list.append(tuple(device_pair))
-                logging.info('\trole-vendor pair: %s' % role_vendor_list)
+                    for i in range(len(role_vendor_raw_list)):
+                        device_pair = re.split(':', role_vendor_raw_list[i])
+                        role_vendor_list.append(tuple(device_pair))
+                    logging.info('\trole-vendor pair: %s' % role_vendor_list)
 
-                for i in range(len(role_vendor_list)):
-                    if role_vendor_list[i][1] in case_vendor_dict:
-                        case_vendor_dict[role_vendor_list[i][1]] += 1
-                    else:
-                        case_vendor_dict[role_vendor_list[i][1]] = 1
+                    for i in range(len(role_vendor_list)):
+                        if role_vendor_list[i][1] in case_vendor_dict:
+                            case_vendor_dict[role_vendor_list[i][1]] += 1
+                        else:
+                            case_vendor_dict[role_vendor_list[i][1]] = 1
 
-                    if role_vendor_list[i][1] in testbed_vendor_dict:
-                        if testbed_vendor_dict[role_vendor_list[i][1]] < case_vendor_dict[role_vendor_list[i][1]]:
-                            testbed_vendor_dict[role_vendor_list[i][1]] = case_vendor_dict[role_vendor_list[i][1]]
-                    else:
-                        testbed_vendor_dict[role_vendor_list[i][1]] = 1
+                        if role_vendor_list[i][1] in testbed_vendor_dict:
+                            if testbed_vendor_dict[role_vendor_list[i]
+                                                   [1]] < case_vendor_dict[
+                                                       role_vendor_list[i][1]]:
+                                testbed_vendor_dict[role_vendor_list[i]
+                                                    [1]] = case_vendor_dict[
+                                                        role_vendor_list[i][1]]
+                        else:
+                            testbed_vendor_dict[role_vendor_list[i][1]] = 1
 
-                logging.info('\tneeded vendor devices:%s' % case_vendor_dict)
-            f.close
+                    logging.info('\tneeded vendor devices:%s' %
+                                 case_vendor_dict)
+                except Exception as e:
+                    logging.info('Unrecognized format: %s\n%s' %
+                                 (line, format(e)))
+                    raise
 
-        count_any = MAX_VENDOR_DEVICE
-        for key in testbed_vendor_dict:
-            if key != 'Any':
-                count_any -= testbed_vendor_dict[key]
+    count_any = MAX_VENDOR_DEVICE
+    for key in testbed_vendor_dict:
+        if key != 'Any':
+            count_any -= testbed_vendor_dict[key]
         if 'Any' in testbed_vendor_dict:
             testbed_vendor_dict['Any'] = count_any
 
-        logging.info('\nTestbed needed vendor devices:%s' % testbed_vendor_dict)
-    except Exception as e:
-        f.close
-        logging.info('Unknown topology config file format: {0}'.format(e))
+    logging.info('\nTestbed needed vendor devices:%s' % testbed_vendor_dict)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='parse TopologyConfig file and list all devices by case')
+    parser = argparse.ArgumentParser(
+        description='parse TopologyConfig file and list all devices by case')
     parser.add_argument(
         '-f',
         dest='topo_file',
         default='C:/GRL/Thread1.1/Thread_Harness/TestScripts/TopologyConfig.txt',
-        help='Topology config file (default: C:/GRL/Thread1.1/Thread_Harness/TestScripts/TopologyConfig.txt)',
+        help=
+        'Topology config file (default: C:/GRL/Thread1.1/Thread_Harness/TestScripts/TopologyConfig.txt)',
     )
 
-    parser.add_argument(
-        '-c', dest='case_list', nargs='+', default=['all'], help='Test case list (e.g. 5.1.1 9.2.1, default: all) '
-    )
+    parser.add_argument('-c',
+                        dest='case_list',
+                        nargs='+',
+                        default=['all'],
+                        help='Test case list (e.g. 5.1.1 9.2.1, default: all) ')
     args = parser.parse_args()
     device_calculate(args.topo_file, args.case_list)
 
