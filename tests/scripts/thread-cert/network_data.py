@@ -392,7 +392,7 @@ class CommissioningData(NetworkData):
         return self.sub_tlvs == other.sub_tlvs
 
     def __repr__(self):
-        sub_tlvs_str = ", ".format(["{}".format(tlv) for tlv in self._sub_tlvs])
+        sub_tlvs_str = ", ".join(["{}".format(tlv) for tlv in self._sub_tlvs])
         return "CommissioningData(stable={}, sub_tlvs=[{}])".format(
             self._stable, sub_tlvs_str)
 
@@ -470,18 +470,18 @@ class Service(NetworkData):
                 self.sub_tlvs == other.sub_tlvs)
 
     def __repr__(self):
-        sub_tlvs_str = ", ".format(["{}".format(tlv) for tlv in self.sub_tlvs])
+        sub_tlvs_str = ", ".join(["{}".format(tlv) for tlv in self.sub_tlvs])
         return (
-            "LowpanId(stable={}, t={}, id={}, enterprise_number={}, service_data_length={}, service_data={},",
-            "sub_tlvs=[{}])").format(
-                self.stable,
-                self.t,
-                self.id,
-                self.enterprise_number,
-                self.service_data_length,
-                self.service_data,
-                sub_tlvs_str,
-            )
+            "LowpanId(stable={}, t={}, id={}, enterprise_number={}, service_data_length={}, service_data={}, sub_tlvs=[{}])"
+        ).format(
+            self.stable,
+            self.t,
+            self.id,
+            self.enterprise_number,
+            self.service_data_length,
+            self.service_data,
+            sub_tlvs_str,
+        )
 
 
 class ServiceSubTlvsFactory(NetworkDataSubTlvsFactory):
