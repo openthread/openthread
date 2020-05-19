@@ -113,7 +113,7 @@ void CoapBase::SetInterceptor(Interceptor aInterceptor, void *aContext)
     mContext     = aContext;
 }
 
-Message *CoapBase::NewMessage(const otMessageSettings *aSettings)
+Message *CoapBase::NewMessage(const Message::Settings &aSettings)
 {
     Message *message = NULL;
 

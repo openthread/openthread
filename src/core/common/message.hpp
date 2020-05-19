@@ -274,6 +274,72 @@ public:
     };
 
     /**
+     * This enumeration represents the link security mode (used by `Settings` constructor).
+     *
+     */
+    enum LinkSecurityMode
+    {
+        kNoLinkSecurity,   ///< Link security disabled (no link security).
+        kWithLinkSecurity, ///< Link security enabled.
+    };
+
+    /**
+     * This class represents settings used for creating a new message.
+     *
+     */
+    class Settings
+    {
+    public:
+        /**
+         * This constructor initializes the Settings object.
+         *
+         * @param[in]  aSecurityMode  A link security mode.
+         * @param[in]  aPriority      A message priority.
+         *
+         */
+        Settings(LinkSecurityMode aSecurityMode, Priority aPriority);
+
+        /**
+         * This constructor initializes the `Settings` object from a given `otMessageSettings`.
+         *
+         * @param[in] aSettings  A pointer to `otMessageSettings` to covert from. If NULL default settings (link
+         *                       security enabled with `kPriorityNormal` priority) would be used.
+         *
+         */
+        Settings(const otMessageSettings *aSettings);
+
+        /**
+         * This method gets the message priority.
+         *
+         * @returns The message priority.
+         *
+         */
+        Priority GetPriority(void) const { return mPriority; }
+
+        /**
+         * This method indicates whether the link security should be enabled.
+         *
+         * @returns TRUE if link security should be enabled, FALSE otherwise.
+         *
+         */
+        bool IsLinkSecurityEnabled(void) const { return mLinkSecurityEnabled; }
+
+        /**
+         * This static method returns the default settings with link security enabled and `kPriorityNormal` priority.
+         *
+         * @returns A reference to the default settings (link security enable and `kPriorityNormal` priority).
+         *
+         */
+        static const Settings &GetDefault(void) { return kDefault; }
+
+    private:
+        static const Settings kDefault;
+
+        bool     mLinkSecurityEnabled;
+        Priority mPriority;
+    };
+
+    /**
      * This method frees this message buffer.
      *
      */
@@ -1137,29 +1203,31 @@ public:
     /**
      * This method is used to obtain a new message.
      *
+     * The link security is enabled by default on the newly obtained message.
+     *
      * @param[in]  aType           The message type.
      * @param[in]  aReserveHeader  The number of header bytes to reserve.
-     * @param[in]  aPriority       The priority level of the message (default value is `Message::kPriorityNormal`).
+     * @param[in]  aPriority       The priority level of the message.
      *
      * @returns A pointer to the message or NULL if no message buffers are available.
      *
      */
-    Message *New(Message::Type aType, uint16_t aReserveHeader, Message::Priority aPriority = Message::kPriorityNormal);
+    Message *New(Message::Type aType, uint16_t aReserveHeader, Message::Priority aPriority);
 
+public:
     /**
      * This method is used to obtain a new message with specified settings.
      *
-     * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
-     * OT_MESSAGE_PRIORITY_NORMAL by default.
-     *
      * @param[in]  aType           The message type.
      * @param[in]  aReserveHeader  The number of header bytes to reserve.
-     * @param[in]  aSettings       A pointer to the message settings or NULL to set default settings.
+     * @param[in]  aSettings       The message settings.
      *
      * @returns A pointer to the message or NULL if no message buffers are available.
      *
      */
-    Message *New(Message::Type aType, uint16_t aReserveHeader, const otMessageSettings *aSettings);
+    Message *New(Message::Type            aType,
+                 uint16_t                 aReserveHeader,
+                 const Message::Settings &aSettings = Message::Settings::GetDefault());
 
     /**
      * This method is used to free a message and return all message buffers to the buffer pool.

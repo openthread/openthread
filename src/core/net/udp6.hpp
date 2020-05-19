@@ -107,16 +107,13 @@ public:
     /**
      * This method returns a new UDP message with sufficient header space reserved.
      *
-     * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
-     * OT_MESSAGE_PRIORITY_NORMAL by default.
-     *
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-     * @param[in]  aSettings  A pointer to the message settings or NULL to set default settings.
+     * @param[in]  aSettings  The message settings (default is used if not provided).
      *
      * @returns A pointer to the message or NULL if no buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved, const otMessageSettings *aSettings = NULL);
+    Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());
 
     /**
      * This method opens the UDP socket.
@@ -273,12 +270,12 @@ public:
      * This method returns a new UDP message with sufficient header space reserved.
      *
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-     * @param[in]  aPriority  The priority of the message.
+     * @param[in]  aSettings  The message settings.
      *
      * @returns A pointer to the message or NULL if no buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved, const otMessageSettings *aSettings = NULL);
+    Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());
 
     /**
      * This method sends an IPv6 datagram.

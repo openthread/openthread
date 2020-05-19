@@ -195,8 +195,8 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
     Kek               kek;
     uint16_t          offset;
     uint16_t          length;
-    Message *         message  = NULL;
-    otMessageSettings settings = {false, static_cast<otMessagePriority>(kMeshCoPMessagePriority)};
+    Message *         message = NULL;
+    Message::Settings settings(Message::kNoLinkSecurity, Message::kPriorityNet);
     Ip6::MessageInfo  messageInfo;
 
     VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
@@ -208,7 +208,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
 
     SuccessOrExit(error = Tlv::GetValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
 
-    VerifyOrExit((message = mSocket.NewMessage(0, &settings)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = mSocket.NewMessage(0, settings)) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetLength(length));
     aMessage.CopyTo(offset, 0, length, *message);

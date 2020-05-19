@@ -66,7 +66,7 @@ UdpSocket::UdpSocket(Udp &aUdp)
     mHandle = NULL;
 }
 
-Message *UdpSocket::NewMessage(uint16_t aReserved, const otMessageSettings *aSettings)
+Message *UdpSocket::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
 {
     return Get<Udp>().NewMessage(aReserved, aSettings);
 }
@@ -260,7 +260,7 @@ uint16_t Udp::GetEphemeralPort(void)
     return rval;
 }
 
-Message *Udp::NewMessage(uint16_t aReserved, const otMessageSettings *aSettings)
+Message *Udp::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
 {
     return Get<Ip6>().NewMessage(sizeof(UdpHeader) + aReserved, aSettings);
 }

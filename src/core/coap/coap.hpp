@@ -329,15 +329,12 @@ public:
     /**
      * This method creates a new message with a CoAP header.
      *
-     * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
-     * OT_MESSAGE_PRIORITY_NORMAL by default.
-     *
-     * @param[in]  aSettings  A pointer to the message settings or NULL to set default settings.
+     * @param[in]  aSettings  The message settings.
      *
      * @returns A pointer to the message or NULL if failed to allocate message.
      *
      */
-    Message *NewMessage(const otMessageSettings *aSettings = NULL);
+    Message *NewMessage(const Message::Settings &aSettings = Message::Settings::GetDefault());
 
     /**
      * This method creates a new message with a CoAP header that has Network Control priority level.
@@ -347,8 +344,7 @@ public:
      */
     Message *NewPriorityMessage(void)
     {
-        otMessageSettings settings = {true, static_cast<otMessagePriority>(Message::kPriorityNet)};
-        return NewMessage(&settings);
+        return NewMessage(Message::Settings(Message::kWithLinkSecurity, Message::kPriorityNet));
     }
 
     /**
