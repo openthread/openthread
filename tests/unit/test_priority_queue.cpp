@@ -83,12 +83,13 @@ void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpected
                 {
                     // Check the `GetHeadForPriority` is NULL if there are no expected message for this priority level.
                     VerifyOrQuit(
-                        aPriorityQueue.GetHeadForPriority(static_cast<uint8_t>(curPriority)) == NULL,
+                        aPriorityQueue.GetHeadForPriority(static_cast<ot::Message::Priority>(curPriority)) == NULL,
                         "PriorityQueue::GetHeadForPriority is non-NULL when no expected msg for this priority.");
                 }
 
                 // Check the `GetHeadForPriority`.
-                VerifyOrQuit(aPriorityQueue.GetHeadForPriority(static_cast<uint8_t>(curPriority)) == msgArg,
+                VerifyOrQuit(aPriorityQueue.GetHeadForPriority(static_cast<ot::Message::Priority>(curPriority)) ==
+                                 msgArg,
                              "PriorityQueue::GetHeadForPriority failed.");
             }
 
@@ -103,7 +104,7 @@ void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpected
         // Check the `GetHeadForPriority` is NULL if there are no expected message for any remaining priority level.
         for (curPriority--; curPriority >= 0; curPriority--)
         {
-            VerifyOrQuit(aPriorityQueue.GetHeadForPriority(static_cast<uint8_t>(curPriority)) == NULL,
+            VerifyOrQuit(aPriorityQueue.GetHeadForPriority(static_cast<ot::Message::Priority>(curPriority)) == NULL,
                          "PriorityQueue::GetHeadForPriority is non-NULL when no expected msg for this priority.");
         }
     }
@@ -172,10 +173,6 @@ void TestPriorityQueue(void)
         VerifyOrQuit(msgLow[i] != NULL, "Message::New failed");
     }
 
-    // Check the failure case for `New()` for invalid argument.
-    VerifyOrQuit(messagePool->New(ot::Message::kTypeIp6, 0, ot::Message::kNumPriorities) == NULL,
-                 "Message::New() with out of range value did not fail as expected.");
-
     // Use the function "SetPriority()" to allocate messages with different priorities
     for (int i = kNumNewPriorityTestMessages; i < kNumTestMessages; i++)
     {
@@ -192,10 +189,6 @@ void TestPriorityQueue(void)
         VerifyOrQuit(msgLow[i] != NULL, "Message::New failed");
         SuccessOrQuit(msgLow[i]->SetPriority(ot::Message::kPriorityLow), "Message:SetPriority failed");
     }
-
-    // Check the failure case for `SetPriority()` for invalid argument.
-    VerifyOrQuit(msgNet[2]->SetPriority(ot::Message::kNumPriorities) == OT_ERROR_INVALID_ARGS,
-                 "Message::SetPriority() with out of range value did not fail as expected.");
 
     // Check the `GetPriority()`
     for (int i = 0; i < kNumTestMessages; i++)
