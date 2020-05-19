@@ -77,7 +77,7 @@ Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const otMes
 {
     otMessageSettings settings = {true, OT_MESSAGE_PRIORITY_NORMAL};
     Message *         message  = NULL;
-    uint8_t           priority;
+    Message::Priority priority;
 
     if (aSettings != NULL)
     {
@@ -98,10 +98,10 @@ exit:
     return message;
 }
 
-uint8_t Ip6::DscpToPriority(uint8_t aDscp)
+Message::Priority Ip6::DscpToPriority(uint8_t aDscp)
 {
-    uint8_t priority;
-    uint8_t cs = aDscp & kDscpCsMask;
+    Message::Priority priority;
+    uint8_t           cs = aDscp & kDscpCsMask;
 
     switch (cs)
     {
@@ -130,7 +130,7 @@ uint8_t Ip6::DscpToPriority(uint8_t aDscp)
     return priority;
 }
 
-uint8_t Ip6::PriorityToDscp(uint8_t aPriority)
+uint8_t Ip6::PriorityToDscp(Message::Priority aPriority)
 {
     uint8_t dscp = kDscpCs0;
 
@@ -141,6 +141,7 @@ uint8_t Ip6::PriorityToDscp(uint8_t aPriority)
         break;
 
     case Message::kPriorityNormal:
+    case Message::kPriorityNet:
         dscp = kDscpCs0;
         break;
 
@@ -152,7 +153,7 @@ uint8_t Ip6::PriorityToDscp(uint8_t aPriority)
     return dscp;
 }
 
-otError Ip6::GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, uint8_t &aPriority)
+otError Ip6::GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message::Priority &aPriority)
 {
     otError       error = OT_ERROR_NONE;
     const Header *header;

@@ -261,13 +261,16 @@ public:
         kSubTypeMleChildIdRequest      = 10, ///< MLE Child ID Request
     };
 
-    enum
+    enum Priority
     {
         kPriorityLow    = OT_MESSAGE_PRIORITY_LOW,      ///< Low priority level.
         kPriorityNormal = OT_MESSAGE_PRIORITY_NORMAL,   ///< Normal priority level.
         kPriorityHigh   = OT_MESSAGE_PRIORITY_HIGH,     ///< High priority level.
         kPriorityNet    = OT_MESSAGE_PRIORITY_HIGH + 1, ///< Network Control priority level.
+    };
 
+    enum
+    {
         kNumPriorities = 4, ///< Number of priority levels.
     };
 
@@ -380,7 +383,7 @@ public:
      * @returns The priority level associated with this message.
      *
      */
-    uint8_t GetPriority(void) const { return GetMetadata().mPriority; }
+    Priority GetPriority(void) const { return static_cast<Priority>(GetMetadata().mPriority); }
 
     /**
      * This method sets the messages priority.
@@ -393,7 +396,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS   Priority level is not invalid.
      *
      */
-    otError SetPriority(uint8_t aPriority);
+    otError SetPriority(Priority aPriority);
 
     /**
      * This method prepends bytes to the front of the message.
@@ -1051,7 +1054,7 @@ public:
      *          this priority level.
      *
      */
-    Message *GetHeadForPriority(uint8_t aPriority) const;
+    Message *GetHeadForPriority(Message::Priority aPriority) const;
 
     /**
      * This method adds a message to the queue.
@@ -1109,7 +1112,7 @@ private:
      * @returns The first non-NULL tail pointer, or NULL if all the
      *
      */
-    Message *FindFirstNonNullTail(uint8_t aStartPriorityLevel) const;
+    Message *FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const;
 
 private:
     Message *mTails[Message::kNumPriorities]; ///< Tail pointers associated with different priority levels.
@@ -1133,17 +1136,16 @@ public:
     explicit MessagePool(Instance &aInstance);
 
     /**
-     * This method is used to obtain a new message. The default priority `kDefaultMessagePriority`
-     * is assigned to the message.
+     * This method is used to obtain a new message.
      *
      * @param[in]  aType           The message type.
      * @param[in]  aReserveHeader  The number of header bytes to reserve.
-     * @param[in]  aPriority       The priority level of the message.
+     * @param[in]  aPriority       The priority level of the message (default value is `Message::kPriorityNormal`).
      *
      * @returns A pointer to the message or NULL if no message buffers are available.
      *
      */
-    Message *New(Message::Type aType, uint16_t aReserveHeader, uint8_t aPriority = kDefaultMessagePriority);
+    Message *New(Message::Type aType, uint16_t aReserveHeader, Message::Priority aPriority = Message::kPriorityNormal);
 
     /**
      * This method is used to obtain a new message with specified settings.
@@ -1177,14 +1179,9 @@ public:
     uint16_t GetFreeBufferCount(void) const;
 
 private:
-    enum
-    {
-        kDefaultMessagePriority = Message::kPriorityNormal,
-    };
-
-    Buffer *NewBuffer(uint8_t aPriority);
+    Buffer *NewBuffer(Message::Priority aPriority);
     void    FreeBuffers(Buffer *aBuffer);
-    otError ReclaimBuffers(int aNumBuffers, uint8_t aPriority);
+    otError ReclaimBuffers(int aNumBuffers, Message::Priority aPriority);
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT == 0
     uint16_t           mNumFreeBuffers;

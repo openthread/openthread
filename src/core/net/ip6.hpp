@@ -152,7 +152,7 @@ public:
      * @returns The IPv6 DSCP value.
      *
      */
-    static uint8_t PriorityToDscp(uint8_t aPriority);
+    static uint8_t PriorityToDscp(Message::Priority aPriority);
 
     /**
      * This method converts the IPv6 DSCP value to message priority level.
@@ -162,7 +162,7 @@ public:
      * @returns The message priority level.
      *
      */
-    static uint8_t DscpToPriority(uint8_t aDscp);
+    static Message::Priority DscpToPriority(uint8_t aDscp);
 
     /**
      * This constructor initializes the object.
@@ -344,7 +344,7 @@ private:
     static void HandleSendQueue(Tasklet &aTasklet);
     void        HandleSendQueue(void);
 
-    static otError GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, uint8_t &aPriority);
+    static otError GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message::Priority &aPriority);
 
     otError ProcessReceiveCallback(const Message &    aMessage,
                                    const MessageInfo &aMessageInfo,

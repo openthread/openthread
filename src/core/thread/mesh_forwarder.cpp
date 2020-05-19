@@ -1258,9 +1258,9 @@ otError MeshForwarder::FrameToMessage(const uint8_t *     aFrame,
                                       const Mac::Address &aMacDest,
                                       Message *&          aMessage)
 {
-    otError error = OT_ERROR_NONE;
-    int     headerLength;
-    uint8_t priority;
+    otError           error = OT_ERROR_NONE;
+    int               headerLength;
+    Message::Priority priority;
 
     error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, priority);
     SuccessOrExit(error);
@@ -1350,7 +1350,7 @@ otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
                                         uint16_t            aFrameLength,
                                         const Mac::Address &aMacSource,
                                         const Mac::Address &aMacDest,
-                                        uint8_t &           aPriority)
+                                        Message::Priority & aPriority)
 {
     otError         error = OT_ERROR_NONE;
     Ip6::Header     ip6Header;

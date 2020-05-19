@@ -61,7 +61,7 @@ MessagePool::MessagePool(Instance &aInstance)
 #endif
 }
 
-Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, uint8_t aPriority)
+Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, Message::Priority aPriority)
 {
     otError  error = OT_ERROR_NONE;
     Message *message;
@@ -89,19 +89,19 @@ exit:
 
 Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, const otMessageSettings *aSettings)
 {
-    Message *message;
-    bool     linkSecurityEnabled;
-    uint8_t  priority;
+    Message *         message;
+    bool              linkSecurityEnabled;
+    Message::Priority priority;
 
     if (aSettings == NULL)
     {
         linkSecurityEnabled = true;
-        priority            = OT_MESSAGE_PRIORITY_NORMAL;
+        priority            = Message::kPriorityNormal;
     }
     else
     {
         linkSecurityEnabled = aSettings->mLinkSecurityEnabled;
-        priority            = aSettings->mPriority;
+        priority            = static_cast<Message::Priority>(aSettings->mPriority);
     }
 
     message = New(aType, aReserveHeader, priority);
@@ -120,7 +120,7 @@ void MessagePool::Free(Message *aMessage)
     FreeBuffers(static_cast<Buffer *>(aMessage));
 }
 
-Buffer *MessagePool::NewBuffer(uint8_t aPriority)
+Buffer *MessagePool::NewBuffer(Message::Priority aPriority)
 {
     Buffer *buffer = NULL;
 
@@ -166,7 +166,7 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
     }
 }
 
-otError MessagePool::ReclaimBuffers(int aNumBuffers, uint8_t aPriority)
+otError MessagePool::ReclaimBuffers(int aNumBuffers, Message::Priority aPriority)
 {
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     while (aNumBuffers > GetFreeBufferCount())
@@ -342,15 +342,16 @@ bool Message::IsSubTypeMle(void) const
     return rval;
 }
 
-otError Message::SetPriority(uint8_t aPriority)
+otError Message::SetPriority(Priority aPriority)
 {
     otError        error         = OT_ERROR_NONE;
+    uint8_t        priority      = static_cast<uint8_t>(aPriority);
     PriorityQueue *priorityQueue = NULL;
 
-    VerifyOrExit(aPriority < kNumPriorities, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(priority < kNumPriorities, error = OT_ERROR_INVALID_ARGS);
 
-    VerifyOrExit(IsInAQueue(), GetMetadata().mPriority = aPriority);
-    VerifyOrExit(GetMetadata().mPriority != aPriority, OT_NOOP);
+    VerifyOrExit(IsInAQueue(), GetMetadata().mPriority = priority);
+    VerifyOrExit(GetMetadata().mPriority != priority, OT_NOOP);
 
     if (GetMetadata().mInPriorityQ)
     {
@@ -358,7 +359,7 @@ otError Message::SetPriority(uint8_t aPriority)
         priorityQueue->Dequeue(*this);
     }
 
-    GetMetadata().mPriority = aPriority;
+    GetMetadata().mPriority = priority;
 
     if (priorityQueue != NULL)
     {
@@ -859,12 +860,12 @@ PriorityQueue::PriorityQueue(void)
     }
 }
 
-Message *PriorityQueue::FindFirstNonNullTail(uint8_t aStartPriorityLevel) const
+Message *PriorityQueue::FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const
 {
     Message *tail = NULL;
     uint8_t  priority;
 
-    priority = aStartPriorityLevel;
+    priority = static_cast<uint8_t>(aStartPriorityLevel);
 
     do
     {
@@ -884,19 +885,19 @@ Message *PriorityQueue::GetHead(void) const
 {
     Message *tail;
 
-    tail = FindFirstNonNullTail(0);
+    tail = FindFirstNonNullTail(Message::kPriorityLow);
 
     return (tail == NULL) ? NULL : tail->Next();
 }
 
-Message *PriorityQueue::GetHeadForPriority(uint8_t aPriority) const
+Message *PriorityQueue::GetHeadForPriority(Message::Priority aPriority) const
 {
     Message *head;
     Message *previousTail;
 
     if (mTails[aPriority] != NULL)
     {
-        previousTail = FindFirstNonNullTail(PrevPriority(aPriority));
+        previousTail = FindFirstNonNullTail(static_cast<Message::Priority>(PrevPriority(aPriority)));
 
         OT_ASSERT(previousTail != NULL);
 
@@ -912,14 +913,14 @@ Message *PriorityQueue::GetHeadForPriority(uint8_t aPriority) const
 
 Message *PriorityQueue::GetTail(void) const
 {
-    return FindFirstNonNullTail(0);
+    return FindFirstNonNullTail(Message::kPriorityLow);
 }
 
 void PriorityQueue::Enqueue(Message &aMessage)
 {
-    uint8_t  priority;
-    Message *tail;
-    Message *next;
+    Message::Priority priority;
+    Message *         tail;
+    Message *         next;
 
     OT_ASSERT(!aMessage.IsInAQueue());
 
@@ -949,8 +950,8 @@ void PriorityQueue::Enqueue(Message &aMessage)
 
 void PriorityQueue::Dequeue(Message &aMessage)
 {
-    uint8_t  priority;
-    Message *tail;
+    Message::Priority priority;
+    Message *         tail;
 
     OT_ASSERT(aMessage.GetPriorityQueue() == this);
 
