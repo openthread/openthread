@@ -87,27 +87,13 @@ exit:
     return message;
 }
 
-Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, const otMessageSettings *aSettings)
+Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, const Message::Settings &aSettings)
 {
-    Message *         message;
-    bool              linkSecurityEnabled;
-    Message::Priority priority;
+    Message *message = New(aType, aReserveHeader, aSettings.GetPriority());
 
-    if (aSettings == NULL)
-    {
-        linkSecurityEnabled = true;
-        priority            = Message::kPriorityNormal;
-    }
-    else
-    {
-        linkSecurityEnabled = aSettings->mLinkSecurityEnabled;
-        priority            = static_cast<Message::Priority>(aSettings->mPriority);
-    }
-
-    message = New(aType, aReserveHeader, priority);
     if (message)
     {
-        message->SetLinkSecurityEnabled(linkSecurityEnabled);
+        message->SetLinkSecurityEnabled(aSettings.IsLinkSecurityEnabled());
     }
 
     return message;
@@ -196,6 +182,20 @@ uint16_t MessagePool::GetFreeBufferCount(void) const
 #endif
 
     return rval;
+}
+
+const Message::Settings Message::Settings::kDefault(Message::kWithLinkSecurity, Message::kPriorityNormal);
+
+Message::Settings::Settings(LinkSecurityMode aSecurityMode, Priority aPriority)
+    : mLinkSecurityEnabled(aSecurityMode == kWithLinkSecurity)
+    , mPriority(aPriority)
+{
+}
+
+Message::Settings::Settings(const otMessageSettings *aSettings)
+    : mLinkSecurityEnabled((aSettings != NULL) ? aSettings->mLinkSecurityEnabled : true)
+    , mPriority((aSettings != NULL) ? static_cast<Priority>(aSettings->mPriority) : kPriorityNormal)
+{
 }
 
 otError Message::ResizeMessage(uint16_t aLength)

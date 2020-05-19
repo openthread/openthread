@@ -67,32 +67,35 @@ Ip6::Ip6(Instance &aInstance)
 {
 }
 
-Message *Ip6::NewMessage(uint16_t aReserved, const otMessageSettings *aSettings)
+Message *Ip6::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
 {
     return Get<MessagePool>().New(Message::kTypeIp6,
                                   sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
 }
 
-Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const otMessageSettings *aSettings)
+Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const Message::Settings &aSettings)
 {
-    otMessageSettings settings = {true, OT_MESSAGE_PRIORITY_NORMAL};
-    Message *         message  = NULL;
-    Message::Priority priority;
+    Message *message = Get<MessagePool>().New(Message::kTypeIp6, 0, aSettings);
 
-    if (aSettings != NULL)
-    {
-        settings = *aSettings;
-    }
-
-    SuccessOrExit(GetDatagramPriority(aData, aDataLength, priority));
-    settings.mPriority = static_cast<otMessagePriority>(priority);
-    VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, 0, &settings)) != NULL, OT_NOOP);
+    VerifyOrExit(message != NULL, OT_NOOP);
 
     if (message->Append(aData, aDataLength) != OT_ERROR_NONE)
     {
         message->Free();
         message = NULL;
     }
+
+exit:
+    return message;
+}
+
+Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength)
+{
+    Message *         message = NULL;
+    Message::Priority priority;
+
+    SuccessOrExit(GetDatagramPriority(aData, aDataLength, priority));
+    message = NewMessage(aData, aDataLength, Message::Settings(Message::kWithLinkSecurity, priority));
 
 exit:
     return message;

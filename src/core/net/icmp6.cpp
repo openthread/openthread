@@ -97,7 +97,7 @@ otError Icmp::SendError(IcmpHeader::Type   aType,
     Message *         message = NULL;
     IcmpHeader        icmp6Header;
     Header            ip6Header;
-    otMessageSettings settings = {true, static_cast<otMessagePriority>(Message::kPriorityNet)};
+    Message::Settings settings(Message::kWithLinkSecurity, Message::kPriorityNet);
 
     VerifyOrExit(aMessage.GetLength() >= sizeof(ip6Header), error = OT_ERROR_INVALID_ARGS);
 
@@ -113,7 +113,7 @@ otError Icmp::SendError(IcmpHeader::Type   aType,
 
     messageInfoLocal = aMessageInfo;
 
-    VerifyOrExit((message = Get<Ip6>().NewMessage(0, &settings)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Ip6>().NewMessage(0, settings)) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = message->SetLength(sizeof(icmp6Header) + sizeof(ip6Header)));
 
     message->Write(sizeof(icmp6Header), sizeof(ip6Header), &ip6Header);
