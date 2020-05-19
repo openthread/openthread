@@ -60,7 +60,7 @@
 
 #if !(defined(OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION) &&                         \
       ((OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN) || \
-       (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)))
+       (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN)))
 #error "Unexpected tunnel driver selection"
 #endif
 
@@ -113,7 +113,7 @@
 #include <net/if_utun.h>
 #endif
 
-#if OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN
+#if OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN
 #include <sys/ioccom.h>
 // FIX ME: include the tun_ioctl.h file (challenging, as it's location depends on where the developer puts it)
 #define TUNSIFHEAD _IOW('t', 96, int)
@@ -149,7 +149,7 @@
 #elif defined(__APPLE__)
 #if OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN
 #define OPENTHREAD_POSIX_TUN_DEVICE // not used - calculated dynamically
-#elif OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN
+#elif OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN
 #define OPENTHREAD_POSIX_TUN_DEVICE "/dev/tun0"
 #endif
 #else
@@ -1257,8 +1257,8 @@ exit:
 }
 #endif
 
-#if defined(__NetBSD__) ||                                                                              \
-    (defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)) || \
+#if defined(__NetBSD__) ||                                                                             \
+    (defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN)) || \
     defined(__FreeBSD__)
 static void platformConfigureTunDevice(otInstance *aInstance,
                                        const char *aInterfaceName,
