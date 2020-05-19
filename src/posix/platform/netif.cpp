@@ -58,9 +58,9 @@
 //	If you want mDNS support, then you can't use Apple utun.  I use the non-Apple driver
 //	pretty much exclusively, because mDNS is a requirement.
 
-#if !(defined(OPENTHREAD_POSIX_MACOS_TUN_OPTION) &&                                 \
-      ((OPENTHREAD_POSIX_MACOS_TUN_OPTION == OPENTHREAD_POSIX_CONFIG_MACOS_UTUN) || \
-       (OPENTHREAD_POSIX_MACOS_TUN_OPTION == OPENTHREAD_POSIX_CONFIG_MACOS_TUN)))
+#if !(defined(OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION) &&                         \
+      ((OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN) || \
+       (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)))
 #error "Unexpected tunnel driver selection"
 #endif
 
@@ -109,11 +109,11 @@
 #include <net/if_dl.h> // struct sockaddr_dl
 
 #ifdef __APPLE__
-#if OPENTHREAD_POSIX_MACOS_TUN_OPTION == OPENTHREAD_POSIX_CONFIG_MACOS_UTUN
+#if OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN
 #include <net/if_utun.h>
 #endif
 
-#if OPENTHREAD_POSIX_MACOS_TUN_OPTION == OPENTHREAD_POSIX_CONFIG_MACOS_TUN
+#if OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN
 #include <sys/ioccom.h>
 // FIX ME: include the tun_ioctl.h file (challenging, as it's location depends on where the developer puts it)
 #define TUNSIFHEAD _IOW('t', 96, int)
@@ -147,9 +147,9 @@
 #elif defined(__NetBSD__) || defined(__FreeBSD__)
 #define OPENTHREAD_POSIX_TUN_DEVICE "/dev/tun0"
 #elif defined(__APPLE__)
-#if OPENTHREAD_POSIX_MACOS_TUN_OPTION == OPENTHREAD_POSIX_CONFIG_MACOS_UTUN
+#if OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN
 #define OPENTHREAD_POSIX_TUN_DEVICE // not used - calculated dynamically
-#elif OPENTHREAD_POSIX_MACOS_TUN_OPTION == OPENTHREAD_POSIX_CONFIG_MACOS_TUN
+#elif OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN
 #define OPENTHREAD_POSIX_TUN_DEVICE "/dev/tun0"
 #endif
 #else
@@ -1202,7 +1202,7 @@ static void platformConfigureTunDevice(otInstance *aInstance,
 }
 #endif
 
-#if defined(__APPLE__) && (OPENTHREAD_POSIX_MACOS_TUN_OPTION == OPENTHREAD_POSIX_CONFIG_MACOS_UTUN)
+#if defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
 static void platformConfigureTunDevice(otInstance *aInstance,
                                        const char *aInterfaceName,
                                        char *      deviceName,
@@ -1258,7 +1258,7 @@ exit:
 #endif
 
 #if defined(__NetBSD__) ||                                                                              \
-    (defined(__APPLE__) && (OPENTHREAD_POSIX_MACOS_TUN_OPTION == OPENTHREAD_POSIX_CONFIG_MACOS_TUN)) || \
+    (defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)) || \
     defined(__FreeBSD__)
 static void platformConfigureTunDevice(otInstance *aInstance,
                                        const char *aInterfaceName,
