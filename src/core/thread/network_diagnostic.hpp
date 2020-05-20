@@ -63,6 +63,17 @@ namespace NetworkDiagnostic {
 class NetworkDiagnostic : public InstanceLocator
 {
 public:
+    enum
+    {
+        kIteratorInit = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT, ///< Initializer value for Iterator.
+    };
+
+    /**
+     * This type represents an iterator used to iterate through Network Diagnostic TLVs from `GetNextDiagTlv()`.
+     *
+     */
+    typedef otNetworkDiagIterator Iterator;
+
     /**
      * This constructor initializes the object.
      *
@@ -104,8 +115,7 @@ public:
      * This static method gets the next Network Diagnostic TLV in a given message.
      *
      * @param[in]     aMessage         A message.
-     * @param[inout]  aIterator        The Network Diagnostic iterator. To get the first TLV it should be set to
-     *                                 OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT.
+     * @param[inout]  aIterator        The Network Diagnostic iterator. To get the first TLV set it to `kIteratorInit`.
      * @param[out]    aNetworkDiagTlv  A reference to a Network Diagnostic TLV to output the next TLV.
      *
      * @retval OT_ERROR_NONE       Successfully found the next Network Diagnostic TLV.
@@ -113,9 +123,9 @@ public:
      * @retval OT_ERROR_PARSE      Parsing the next Network Diagnostic failed.
      *
      */
-    static otError GetNextDiagTlv(const Coap::Message &  aMessage,
-                                  otNetworkDiagIterator &aIterator,
-                                  otNetworkDiagTlv &     aNetworkDiagTlv);
+    static otError GetNextDiagTlv(const Coap::Message &aMessage,
+                                  Iterator &           aIterator,
+                                  otNetworkDiagTlv &   aNetworkDiagTlv);
 
 private:
     otError AppendIp6AddressList(Message &aMessage);
