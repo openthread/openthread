@@ -1165,16 +1165,20 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
         SetDstAddr(address);
     }
 
-    // Set security header
-    SuccessOrExit(error = aFrame.GetSecurityControlField(securityControlField));
-    SuccessOrExit(error = aFrame.GetFrameCounter(frameCounter));
-    SuccessOrExit(error = aFrame.GetKeyId(keyId));
-
     SetPsduLength(kMaxPsduSize); // At this time the length of ACK hasn't been determined, set it to
                                  // `kMaxPsduSize` to call methods that check frame length.
-    SetSecurityControlField(securityControlField);
-    SetFrameCounter(frameCounter);
-    SetKeyId(keyId);
+
+    // Set security header
+    if (aFrame.GetSecurityEnabled())
+    {
+        SuccessOrExit(error = aFrame.GetSecurityControlField(securityControlField));
+        SuccessOrExit(error = aFrame.GetFrameCounter(frameCounter));
+        SuccessOrExit(error = aFrame.GetKeyId(keyId));
+
+        SetSecurityControlField(securityControlField);
+        SetFrameCounter(frameCounter);
+        SetKeyId(keyId);
+    }
 
     // Set header IE
     if (aIeLength > 0)
@@ -1186,7 +1190,7 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     // Set frame length
     footerLength = GetFooterLength();
     OT_ASSERT(footerLength != kInvalidIndex);
-    mLength = FindHeaderIeIndex() + aIeLength + GetFooterLength();
+    mLength = SkipSecurityHeaderIndex() + aIeLength + GetFooterLength();
 
 exit:
     return error;
