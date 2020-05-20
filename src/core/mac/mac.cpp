@@ -1576,19 +1576,6 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     IgnoreError(aFrame->GetSrcAddr(srcaddr));
     IgnoreError(aFrame->GetDstAddr(dstaddr));
-    // count out-of-band frames
-    if (aFrame->IsOobFrame())
-    {
-        mCounters.mRxOther++;
-        ExitNow();
-    }
-
-    // Ensure we have a valid frame before attempting to read any contents of
-    // the buffer received from the radio.
-    SuccessOrExit(error = aFrame->ValidatePsdu());
-
-    aFrame->GetSrcAddr(srcaddr);
-    aFrame->GetDstAddr(dstaddr);
     neighbor = Get<Mle::MleRouter>().GetNeighbor(srcaddr);
 
     // Destination Address Filtering
