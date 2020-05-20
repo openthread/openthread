@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,35 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_APP_CLI)
-    add_subdirectory(cli)
-endif()
+add_executable(ot-ncp
+    main.c
+)
 
-add_subdirectory(ncp)
+set_target_properties(
+    ot-ncp
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)
+
+target_include_directories(ot-ncp PRIVATE ${COMMON_INCLUDES})
+
+target_compile_definitions(ot-ncp PRIVATE
+    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_NCP
+    ${OT_PLATFORM_DEFINES}
+)
+
+target_compile_options(ot-ncp PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_link_libraries(ot-ncp
+    openthread-ncp-ftd
+    ${OT_PLATFORM_LIB}
+    openthread-ftd
+    ${OT_PLATFORM_LIB}
+    mbedcrypto
+    openthread-ncp-ftd
+)
+
+install(TARGETS ot-ncp DESTINATION bin)

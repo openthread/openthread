@@ -26,18 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-ncp-ftd
-    main.c
-)
-
-add_executable(ot-ncp-mtd
-    main.c
-)
-
-add_executable(ot-rcp
-    main.c
-)
-
 set(COMMON_INCLUDES
     ${OT_PUBLIC_INCLUDES}
     ${OT_PRIVATE_INCLUDES}
@@ -45,36 +33,10 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src/core
 )
 
-target_include_directories(ot-ncp-ftd PRIVATE ${COMMON_INCLUDES})
-target_include_directories(ot-ncp-mtd PRIVATE ${COMMON_INCLUDES})
-target_include_directories(ot-rcp PRIVATE ${COMMON_INCLUDES})
+if(OT_APP_NCP)
+    include(ncp.cmake)
+endif()
 
-target_compile_definitions(ot-ncp-ftd PRIVATE ${OT_PRIVATE_DEFINES})
-target_compile_definitions(ot-ncp-mtd PRIVATE ${OT_PRIVATE_DEFINES})
-target_compile_definitions(ot-rcp PRIVATE ${OT_PRIVATE_DEFINES})
-
-target_link_libraries(ot-ncp-ftd
-    openthread-ncp-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    mbedcrypto
-)
-
-target_link_libraries(ot-ncp-mtd
-    openthread-ncp-mtd
-    ${OT_PLATFORM_LIB}
-    openthread-mtd
-    ${OT_PLATFORM_LIB}
-    mbedcrypto
-)
-
-target_link_libraries(ot-rcp
-    openthread-rcp
-    ${OT_PLATFORM_LIB}
-    openthread-radio
-    ${OT_PLATFORM_LIB}
-)
-
-install(TARGETS ot-rcp ot-ncp-ftd ot-ncp-mtd
-    DESTINATION bin)
+if(OT_APP_RCP)
+    include(rcp.cmake)
+endif()

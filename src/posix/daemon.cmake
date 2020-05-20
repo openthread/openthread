@@ -88,7 +88,3 @@ install(TARGETS ot-daemon
     DESTINATION sbin)
 install(TARGETS ot-ctl
     DESTINATION bin)
-
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    set(CPACK_PACKAGE_NAME "openthread-daemon")
-endif()
