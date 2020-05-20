@@ -45,7 +45,8 @@ readonly OT_BASIC_CHECK_OPTIONS=(
     "-DOT_SLAAC=on"
 )
 
-die() {
+die()
+{
     echo " *** ERROR:  $*"
     exit 1
 }
@@ -58,7 +59,7 @@ reset_source()
 build_cc1352()
 {
     local options=("${OT_COMMON_OPTIONS[@]}"
-                   "${OT_BASIC_CHECK_OPTIONS[@]}")
+        "${OT_BASIC_CHECK_OPTIONS[@]}")
 
     reset_source
     "$(dirname "$0")"/cmake-build cc1352 "${options[@]}"
@@ -67,7 +68,7 @@ build_cc1352()
 build_cc2538()
 {
     local options=("${OT_COMMON_OPTIONS[@]}"
-                   "${OT_BASIC_CHECK_OPTIONS[@]}")
+        "${OT_BASIC_CHECK_OPTIONS[@]}")
 
     reset_source
     "$(dirname "$0")"/cmake-build cc2538 "${options[@]}"
@@ -82,7 +83,7 @@ build_cc2650()
 build_cc2652()
 {
     local options=("${OT_COMMON_OPTIONS[@]}"
-                   "${OT_BASIC_CHECK_OPTIONS[@]}")
+        "${OT_BASIC_CHECK_OPTIONS[@]}")
 
     reset_source
     "$(dirname "$0")"/cmake-build cc2652 "${options[@]}"
@@ -91,7 +92,7 @@ build_cc2652()
 build_kw41z()
 {
     local options=("${OT_COMMON_OPTIONS[@]}"
-                   "${OT_BASIC_CHECK_OPTIONS[@]}")
+        "${OT_BASIC_CHECK_OPTIONS[@]}")
 
     reset_source
     "$(dirname "$0")"/cmake-build kw41z "${options[@]}"
@@ -100,7 +101,7 @@ build_kw41z()
 build_qpg6095()
 {
     local options=("${OT_COMMON_OPTIONS[@]}"
-                   "${OT_BASIC_CHECK_OPTIONS[@]}")
+        "${OT_BASIC_CHECK_OPTIONS[@]}")
 
     reset_source
     "$(dirname "$0")"/cmake-build qpg6095 "${options[@]}"
@@ -109,7 +110,7 @@ build_qpg6095()
 build_samr21()
 {
     local options=("${OT_COMMON_OPTIONS[@]}"
-                   "${OT_BASIC_CHECK_OPTIONS[@]}")
+        "${OT_BASIC_CHECK_OPTIONS[@]}")
 
     reset_source
 
