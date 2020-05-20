@@ -270,7 +270,9 @@ public:
      *
      * @param[in]  aNeighbor  A reference to a `Neighbor`.
      *
-     * @returns Whether the router table contains @p aNeighbor.
+     * @retval TRUE  if @p aNeighbor is a `Router` in the router table.
+     * @retval FALSE if @p aNeighbor is not a `Router` in the router table
+     *               (e.x. mParent, mParentCandidate, a `Child` of the child table).
      *
      */
     bool Contains(const Neighbor &aNeighbor) const
