@@ -792,9 +792,9 @@ static inline void ParseChildEntry(const ChildTableEntry &aChildTableTlvEntry, o
     ParseMode(aChildTableTlvEntry.GetMode(), aChildEntry.mMode);
 }
 
-otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &  aMessage,
-                                          otNetworkDiagIterator &aIterator,
-                                          otNetworkDiagTlv &     aNetworkDiagTlv)
+otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
+                                          Iterator &           aIterator,
+                                          otNetworkDiagTlv &   aNetworkDiagTlv)
 {
     otError              error  = OT_ERROR_PARSE;
     uint16_t             offset = aMessage.GetOffset();
