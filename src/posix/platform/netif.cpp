@@ -58,12 +58,11 @@
 //	If you want mDNS support, then you can't use Apple utun.  I use the non-Apple driver
 //	pretty much exclusively, because mDNS is a requirement.
 
-#define USE_APPLE_UTUN 0
-#define USE_TUN 1
-
-#if USE_TUN && USE_APPLE_UTUN
-#error "You may not use both tun and utun."
-#endif // USE_TUN && USE_APPLE_UTUN
+#if !(defined(OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION) &&                         \
+      ((OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN) || \
+       (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN)))
+#error "Unexpected tunnel driver selection"
+#endif
 
 #endif // defined(__APPLE__)
 
@@ -118,16 +117,16 @@ extern int
 #include <netinet6/nd6.h> // ND6_INFINITE_LIFETIME
 
 #ifdef __APPLE__
-#if USE_APPLE_UTUN
+#if OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN
 #include <net/if_utun.h>
-#endif // USE_APPLE_UTUN
+#endif
 
-#if USE_TUN
+#if OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN
 #include <sys/ioccom.h>
 // FIX ME: include the tun_ioctl.h file (challenging, as it's location depends on where the developer puts it)
 #define TUNSIFHEAD _IOW('t', 96, int)
 #define TUNGIFHEAD _IOR('t', 97, int)
-#endif // USE_TUN
+#endif
 
 #include <sys/kern_control.h>
 #endif // defined(__APPLE__)
@@ -156,9 +155,9 @@ extern int
 #elif defined(__NetBSD__) || defined(__FreeBSD__)
 #define OPENTHREAD_POSIX_TUN_DEVICE "/dev/tun0"
 #elif defined(__APPLE__)
-#if USE_APPLE_UTUN
+#if OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN
 #define OPENTHREAD_POSIX_TUN_DEVICE // not used - calculated dynamically
-#elif USE_TUN
+#elif OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN
 #define OPENTHREAD_POSIX_TUN_DEVICE "/dev/tun0"
 #endif
 #else
@@ -1207,7 +1206,7 @@ static void platformConfigureTunDevice(otInstance *aInstance,
 }
 #endif
 
-#if defined(__APPLE__) && USE_APPLE_UTUN
+#if defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
 static void platformConfigureTunDevice(otInstance *aInstance,
                                        const char *aInterfaceName,
                                        char *      deviceName,
@@ -1262,7 +1261,9 @@ exit:
 }
 #endif
 
-#if defined(__NetBSD__) || (defined(__APPLE__) && USE_TUN) || defined(__FreeBSD__)
+#if defined(__NetBSD__) ||                                                                             \
+    (defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN)) || \
+    defined(__FreeBSD__)
 static void platformConfigureTunDevice(otInstance *aInstance,
                                        const char *aInterfaceName,
                                        char *      deviceName,
