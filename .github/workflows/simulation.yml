@@ -86,7 +86,7 @@ jobs:
         git clone https://github.com/openthread/ot-ns.git --depth 1 --branch master ~/otns
         export OTDIR=$PWD
         cd ~/otns
-        ./script/test py-unittests py-unittests
+        ./script/test py-unittests py-examples
     - name: Codecov
       uses: codecov/codecov-action@v1
 
