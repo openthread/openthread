@@ -645,23 +645,21 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Message &aMessage, const Ip6
 {
     uint16_t             offset = 0;
     uint8_t              type;
-    NetworkDiagnosticTlv networkDiagnosticTlv;
+    NetworkDiagnosticTlv tlv;
 
     otLogInfoNetDiag("Received diagnostic reset request");
 
     VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
 
-    VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv), &networkDiagnosticTlv) ==
-                  sizeof(NetworkDiagnosticTlv)),
-                 OT_NOOP);
+    VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(tlv), &tlv) == sizeof(tlv)), OT_NOOP);
 
-    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, OT_NOOP);
+    VerifyOrExit(tlv.GetType() == NetworkDiagnosticTlv::kTypeList, OT_NOOP);
 
     offset = aMessage.GetOffset() + sizeof(NetworkDiagnosticTlv);
 
-    for (uint8_t i = 0; i < networkDiagnosticTlv.GetLength(); i++)
+    for (uint8_t i = 0; i < tlv.GetLength(); i++)
     {
-        VerifyOrExit(aMessage.Read(offset, sizeof(type), &type) == sizeof(type), OT_NOOP);
+        VerifyOrExit(aMessage.Read(offset + i, sizeof(type), &type) == sizeof(type), OT_NOOP);
 
         switch (type)
         {
