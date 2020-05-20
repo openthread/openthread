@@ -796,11 +796,9 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
                                           Iterator &           aIterator,
                                           otNetworkDiagTlv &   aNetworkDiagTlv)
 {
-    otError              error  = OT_ERROR_PARSE;
-    uint16_t             offset = aMessage.GetOffset();
+    otError              error  = OT_ERROR_NONE;
+    uint16_t             offset = aMessage.GetOffset() + aIterator;
     NetworkDiagnosticTlv tlv;
-
-    offset += aIterator;
 
     while (true)
     {
@@ -815,12 +813,11 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             ExtMacAddressTlv extMacAddr;
 
             tlvTotalLength = sizeof(extMacAddr);
-            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &extMacAddr) == tlvTotalLength, OT_NOOP);
-            VerifyOrExit(extMacAddr.IsValid(), OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &extMacAddr) == tlvTotalLength, error = OT_ERROR_PARSE);
+            VerifyOrExit(extMacAddr.IsValid(), error = OT_ERROR_PARSE);
 
             aNetworkDiagTlv.mData.mExtAddress = *extMacAddr.GetMacAddr();
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kAddress16:
@@ -828,12 +825,11 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             Address16Tlv addr16;
 
             tlvTotalLength = sizeof(addr16);
-            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &addr16) == tlvTotalLength, OT_NOOP);
-            VerifyOrExit(addr16.IsValid(), OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &addr16) == tlvTotalLength, error = OT_ERROR_PARSE);
+            VerifyOrExit(addr16.IsValid(), error = OT_ERROR_PARSE);
 
             aNetworkDiagTlv.mData.mAddr16 = addr16.GetRloc16();
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kMode:
@@ -841,12 +837,11 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             ModeTlv linkMode;
 
             tlvTotalLength = sizeof(linkMode);
-            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &linkMode) == tlvTotalLength, OT_NOOP);
-            VerifyOrExit(linkMode.IsValid(), OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &linkMode) == tlvTotalLength, error = OT_ERROR_PARSE);
+            VerifyOrExit(linkMode.IsValid(), error = OT_ERROR_PARSE);
 
             ParseMode(linkMode.GetMode(), aNetworkDiagTlv.mData.mMode);
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kTimeout:
@@ -854,12 +849,11 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             TimeoutTlv timeout;
 
             tlvTotalLength = sizeof(timeout);
-            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &timeout) == tlvTotalLength, OT_NOOP);
-            VerifyOrExit(timeout.IsValid(), OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &timeout) == tlvTotalLength, error = OT_ERROR_PARSE);
+            VerifyOrExit(timeout.IsValid(), error = OT_ERROR_PARSE);
 
             aNetworkDiagTlv.mData.mTimeout = timeout.GetTimeout();
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kConnectivity:
@@ -867,12 +861,12 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             ConnectivityTlv connectivity;
 
             tlvTotalLength = sizeof(connectivity);
-            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &connectivity) == tlvTotalLength, OT_NOOP);
-            VerifyOrExit(connectivity.IsValid(), OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &connectivity) == tlvTotalLength,
+                         error = OT_ERROR_PARSE);
+            VerifyOrExit(connectivity.IsValid(), error = OT_ERROR_PARSE);
 
             ParseConnectivity(connectivity, aNetworkDiagTlv.mData.mConnectivity);
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kRoute:
@@ -880,13 +874,12 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             RouteTlv route;
 
             tlvTotalLength = sizeof(tlv) + tlv.GetLength();
-            VerifyOrExit(tlvTotalLength <= sizeof(route), OT_NOOP);
-            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &route) == tlvTotalLength, OT_NOOP);
-            VerifyOrExit(route.IsValid(), OT_NOOP);
+            VerifyOrExit(tlvTotalLength <= sizeof(route), error = OT_ERROR_PARSE);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &route) == tlvTotalLength, error = OT_ERROR_PARSE);
+            VerifyOrExit(route.IsValid(), error = OT_ERROR_PARSE);
 
             ParseRoute(route, aNetworkDiagTlv.mData.mRoute);
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kLeaderData:
@@ -894,12 +887,11 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             LeaderDataTlv leaderData;
 
             tlvTotalLength = sizeof(leaderData);
-            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &leaderData) == tlvTotalLength, OT_NOOP);
-            VerifyOrExit(leaderData.IsValid(), OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &leaderData) == tlvTotalLength, error = OT_ERROR_PARSE);
+            VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
 
             ParseLeaderData(leaderData, aNetworkDiagTlv.mData.mLeaderData);
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kNetworkData:
@@ -907,30 +899,30 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             NetworkDataTlv networkData;
 
             tlvTotalLength = sizeof(tlv) + tlv.GetLength();
-            VerifyOrExit(tlvTotalLength <= sizeof(networkData), OT_NOOP);
-            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &networkData) == tlvTotalLength, OT_NOOP);
-            VerifyOrExit(networkData.IsValid(), OT_NOOP);
-            VerifyOrExit(sizeof(aNetworkDiagTlv.mData.mNetworkData.m8) >= networkData.GetLength(), OT_NOOP);
+            VerifyOrExit(tlvTotalLength <= sizeof(networkData), error = OT_ERROR_PARSE);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &networkData) == tlvTotalLength, error = OT_ERROR_PARSE);
+            VerifyOrExit(networkData.IsValid(), error = OT_ERROR_PARSE);
+            VerifyOrExit(sizeof(aNetworkDiagTlv.mData.mNetworkData.m8) >= networkData.GetLength(),
+                         error = OT_ERROR_PARSE);
 
             memcpy(aNetworkDiagTlv.mData.mNetworkData.m8, networkData.GetNetworkData(), networkData.GetLength());
             aNetworkDiagTlv.mData.mNetworkData.mCount = networkData.GetLength();
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kIp6AddressList:
         {
             Ip6AddressListTlv &ip6AddrList = static_cast<Ip6AddressListTlv &>(tlv);
 
-            VerifyOrExit(ip6AddrList.IsValid(), OT_NOOP);
-            VerifyOrExit(sizeof(aNetworkDiagTlv.mData.mIp6AddrList.mList) >= ip6AddrList.GetLength(), OT_NOOP);
+            VerifyOrExit(ip6AddrList.IsValid(), error = OT_ERROR_PARSE);
+            VerifyOrExit(sizeof(aNetworkDiagTlv.mData.mIp6AddrList.mList) >= ip6AddrList.GetLength(),
+                         error = OT_ERROR_PARSE);
             VerifyOrExit(aMessage.Read(offset + sizeof(ip6AddrList), ip6AddrList.GetLength(),
                                        aNetworkDiagTlv.mData.mIp6AddrList.mList) == ip6AddrList.GetLength(),
-                         OT_NOOP);
+                         error = OT_ERROR_PARSE);
 
             aNetworkDiagTlv.mData.mIp6AddrList.mCount = ip6AddrList.GetLength() / OT_IP6_ADDRESS_SIZE;
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kMacCounters:
@@ -938,12 +930,11 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             MacCountersTlv macCounters;
 
             tlvTotalLength = sizeof(MacCountersTlv);
-            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &macCounters) == tlvTotalLength, OT_NOOP);
-            VerifyOrExit(macCounters.IsValid(), OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &macCounters) == tlvTotalLength, error = OT_ERROR_PARSE);
+            VerifyOrExit(macCounters.IsValid(), error = OT_ERROR_PARSE);
 
             ParseMacCounters(macCounters, aNetworkDiagTlv.mData.mMacCounters);
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kBatteryLevel:
@@ -951,12 +942,12 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             BatteryLevelTlv batteryLevel;
 
             tlvTotalLength = sizeof(BatteryLevelTlv);
-            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &batteryLevel) == tlvTotalLength, OT_NOOP);
-            VerifyOrExit(batteryLevel.IsValid(), OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &batteryLevel) == tlvTotalLength,
+                         error = OT_ERROR_PARSE);
+            VerifyOrExit(batteryLevel.IsValid(), error = OT_ERROR_PARSE);
 
             aNetworkDiagTlv.mData.mBatteryLevel = batteryLevel.GetBatteryLevel();
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kSupplyVoltage:
@@ -964,43 +955,42 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             SupplyVoltageTlv supplyVoltage;
 
             tlvTotalLength = sizeof(SupplyVoltageTlv);
-            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &supplyVoltage) == tlvTotalLength, OT_NOOP);
-            VerifyOrExit(supplyVoltage.IsValid(), OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &supplyVoltage) == tlvTotalLength,
+                         error = OT_ERROR_PARSE);
+            VerifyOrExit(supplyVoltage.IsValid(), error = OT_ERROR_PARSE);
 
             aNetworkDiagTlv.mData.mSupplyVoltage = supplyVoltage.GetSupplyVoltage();
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kChildTable:
         {
             ChildTableTlv &childTable = static_cast<ChildTableTlv &>(tlv);
 
-            VerifyOrExit(childTable.IsValid(), OT_NOOP);
+            VerifyOrExit(childTable.IsValid(), error = OT_ERROR_PARSE);
             VerifyOrExit(childTable.GetNumEntries() <= OT_ARRAY_LENGTH(aNetworkDiagTlv.mData.mChildTable.mTable),
-                         OT_NOOP);
+                         error = OT_ERROR_PARSE);
 
             for (uint8_t i = 0; i < childTable.GetNumEntries(); ++i)
             {
                 ChildTableEntry childEntry;
-                VerifyOrExit(childTable.ReadEntry(childEntry, aMessage, offset, i) == OT_ERROR_NONE, OT_NOOP);
+                VerifyOrExit(childTable.ReadEntry(childEntry, aMessage, offset, i) == OT_ERROR_NONE,
+                             error = OT_ERROR_PARSE);
                 ParseChildEntry(childEntry, aNetworkDiagTlv.mData.mChildTable.mTable[i]);
             }
             aNetworkDiagTlv.mData.mChildTable.mCount = childTable.GetNumEntries();
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kChannelPages:
         {
-            VerifyOrExit(sizeof(aNetworkDiagTlv.mData.mChannelPages.m8) >= tlv.GetLength(), OT_NOOP);
+            VerifyOrExit(sizeof(aNetworkDiagTlv.mData.mChannelPages.m8) >= tlv.GetLength(), error = OT_ERROR_PARSE);
             VerifyOrExit(aMessage.Read(offset + sizeof(tlv), tlv.GetLength(), aNetworkDiagTlv.mData.mChannelPages.m8) ==
                              tlv.GetLength(),
-                         OT_NOOP);
+                         error = OT_ERROR_PARSE);
 
             aNetworkDiagTlv.mData.mChannelPages.mCount = tlv.GetLength();
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
+            break;
         }
 
         case NetworkDiagnosticTlv::kMaxChildTimeout:
@@ -1008,29 +998,28 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             MaxChildTimeoutTlv maxChildTimeout;
 
             tlvTotalLength = sizeof(maxChildTimeout);
-            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &maxChildTimeout) == tlvTotalLength, OT_NOOP);
-            VerifyOrExit(maxChildTimeout.IsValid(), OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &maxChildTimeout) == tlvTotalLength,
+                         error = OT_ERROR_PARSE);
+            VerifyOrExit(maxChildTimeout.IsValid(), error = OT_ERROR_PARSE);
 
             aNetworkDiagTlv.mData.mMaxChildTimeout = maxChildTimeout.GetTimeout();
-            ExitNow(error = OT_ERROR_NONE);
-            OT_UNREACHABLE_CODE(break);
-        }
-
-        default:
-            // Ignore unrecognized Network Diagnostic TLV silently.
             break;
         }
 
-        // The actual TLV size may exceeds tlvTotalLength.
-        offset += tlv.GetSize();
+        default:
+            // Ignore unrecognized Network Diagnostic TLV silently and
+            // continue to top of the `while(true)` loop.
+            offset += tlv.GetSize();
+            continue;
+        }
+
+        // Exit if a TLV is recognized and parsed successfully.
+        aNetworkDiagTlv.mType = tlv.GetType();
+        aIterator             = static_cast<uint16_t>(offset - aMessage.GetOffset() + tlv.GetSize());
+        ExitNow();
     }
 
 exit:
-    if (error == OT_ERROR_NONE)
-    {
-        aNetworkDiagTlv.mType = tlv.GetType();
-        aIterator             = static_cast<uint16_t>(offset - aMessage.GetOffset() + tlv.GetSize());
-    }
     return error;
 }
 
