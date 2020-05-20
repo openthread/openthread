@@ -418,11 +418,14 @@ class OpenThread_WpanCtl(IThci):
         print('call setAddressFilterMode() %s' % mode)
         try:
             if mode in ('whitelist', 'blacklist'):
-                cmd = self.wpan_cmd_prefix + 'setprop MAC:' + mode.capitalize() + ':Enabled 1'
+                cmd = self.wpan_cmd_prefix + 'setprop MAC:' + mode.capitalize(
+                ) + ':Enabled 1'
             elif mode == 'disable':
                 if self._addressfilterMode != 'disable':
-                    assert self._addressfilterMode in ('whitelist', 'blacklist'), self._addressfilterMode
-                    cmd = self.wpan_cmd_prefix + 'setprop MAC:' + self._addressfilterMode.capitalize() + ':Enabled 0'
+                    assert self._addressfilterMode in (
+                        'whitelist', 'blacklist'), self._addressfilterMode
+                    cmd = self.wpan_cmd_prefix + 'setprop MAC:' + self._addressfilterMode.capitalize(
+                    ) + ':Enabled 0'
                 else:
                     return True
             else:
