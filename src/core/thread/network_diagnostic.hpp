@@ -100,6 +100,19 @@ public:
      */
     otError SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
+    /**
+     * This static method gets the next Network Diagnostic TLV in a given message.
+     *
+     * @param[in]     aMessage         A message.
+     * @param[inout]  aIterator        The Network Diagnostic iterator. To get the first TLV it should be set to
+     *                                 OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT.
+     * @param[out]    aNetworkDiagTlv  A reference to a Network Diagnostic TLV to output the next TLV.
+     *
+     * @retval OT_ERROR_NONE       Successfully found the next Network Diagnostic TLV.
+     * @retval OT_ERROR_NOT_FOUND  No subsequent Network Diagnostic TLV exists in the message.
+     * @retval OT_ERROR_PARSE      Parsing the next Network Diagnostic failed.
+     *
+     */
     static otError GetNextDiagTlv(const Coap::Message &  aMessage,
                                   otNetworkDiagIterator &aIterator,
                                   otNetworkDiagTlv &     aNetworkDiagTlv);
