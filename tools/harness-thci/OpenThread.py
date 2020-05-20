@@ -1329,6 +1329,7 @@ class OpenThread(IThci):
             self.setMLPrefix(self.meshLocalPrefix)
             self.setPSKc(self.pskc)
             self.setActiveTimestamp(self.activetimestamp)
+            self.clearAllowList()
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setDefaultValue() Error: ' +
                                               str(e))
