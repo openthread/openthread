@@ -452,7 +452,8 @@ otError NetworkDiagnostic::FillRequestedTlvs(const Message &       aRequest,
 #endif
 
         default:
-            ExitNow(error = OT_ERROR_PARSE);
+            // Skip unrecognized TLV type.
+            break;
         }
 
         offset += sizeof(type);
