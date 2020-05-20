@@ -58,7 +58,7 @@ expect "Probe configured successfully."
 exit
 EOF
 
-./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyACM0 115200
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyACM0 115200N1H
 ```
 
 - USB=1
@@ -69,7 +69,7 @@ make -f examples/Makefile-nrf52840 USB=1
 arm-none-eabi-objcopy -O ihex output/nrf52840/bin/ot-rcp ot-rcp.hex
 nrfjprog -f nrf52 --chiperase --reset --program ot-rcp.hex
 # plug the CDC serial USB port
-./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyACM0 115200
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyACM0 115200N1H
 ```
 
 #### CC2538
@@ -96,7 +96,7 @@ sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp ./ou
 
 ```sh
 # nRF52840
-sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp /dev/ttyACM0 115200'
+sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp /dev/ttyACM0 115200N1H'
 # CC2538
 sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp /dev/ttyUSB0 115200'
 ```
