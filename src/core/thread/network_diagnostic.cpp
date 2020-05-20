@@ -792,13 +792,12 @@ static inline void ParseChildEntry(const ChildTableEntry &aChildTableTlvEntry, o
     ParseMode(aChildTableTlvEntry.GetMode(), aChildEntry.mMode);
 }
 
-otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
+otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &  aMessage,
                                           otNetworkDiagIterator &aIterator,
                                           otNetworkDiagTlv &     aNetworkDiagTlv)
 {
-    otError              error   = OT_ERROR_PARSE;
-    const Coap::Message &message = static_cast<const Coap::Message &>(aMessage);
-    uint16_t             offset  = message.GetOffset();
+    otError              error  = OT_ERROR_PARSE;
+    uint16_t             offset = aMessage.GetOffset();
     NetworkDiagnosticTlv tlv;
 
     offset += aIterator;
@@ -807,7 +806,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
     {
         uint16_t tlvTotalLength;
 
-        VerifyOrExit(message.Read(offset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_NOT_FOUND);
+        VerifyOrExit(aMessage.Read(offset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_NOT_FOUND);
 
         switch (tlv.GetType())
         {
@@ -816,7 +815,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             ExtMacAddressTlv extMacAddr;
 
             tlvTotalLength = sizeof(extMacAddr);
-            VerifyOrExit(message.Read(offset, tlvTotalLength, &extMacAddr) == tlvTotalLength, OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &extMacAddr) == tlvTotalLength, OT_NOOP);
             VerifyOrExit(extMacAddr.IsValid(), OT_NOOP);
 
             aNetworkDiagTlv.mData.mExtAddress = *extMacAddr.GetMacAddr();
@@ -829,7 +828,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             Address16Tlv addr16;
 
             tlvTotalLength = sizeof(addr16);
-            VerifyOrExit(message.Read(offset, tlvTotalLength, &addr16) == tlvTotalLength, OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &addr16) == tlvTotalLength, OT_NOOP);
             VerifyOrExit(addr16.IsValid(), OT_NOOP);
 
             aNetworkDiagTlv.mData.mAddr16 = addr16.GetRloc16();
@@ -842,7 +841,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             ModeTlv linkMode;
 
             tlvTotalLength = sizeof(linkMode);
-            VerifyOrExit(message.Read(offset, tlvTotalLength, &linkMode) == tlvTotalLength, OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &linkMode) == tlvTotalLength, OT_NOOP);
             VerifyOrExit(linkMode.IsValid(), OT_NOOP);
 
             ParseMode(linkMode.GetMode(), aNetworkDiagTlv.mData.mMode);
@@ -855,7 +854,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             TimeoutTlv timeout;
 
             tlvTotalLength = sizeof(timeout);
-            VerifyOrExit(message.Read(offset, tlvTotalLength, &timeout) == tlvTotalLength, OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &timeout) == tlvTotalLength, OT_NOOP);
             VerifyOrExit(timeout.IsValid(), OT_NOOP);
 
             aNetworkDiagTlv.mData.mTimeout = timeout.GetTimeout();
@@ -868,7 +867,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             ConnectivityTlv connectivity;
 
             tlvTotalLength = sizeof(connectivity);
-            VerifyOrExit(message.Read(offset, tlvTotalLength, &connectivity) == tlvTotalLength, OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &connectivity) == tlvTotalLength, OT_NOOP);
             VerifyOrExit(connectivity.IsValid(), OT_NOOP);
 
             ParseConnectivity(connectivity, aNetworkDiagTlv.mData.mConnectivity);
@@ -882,7 +881,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             tlvTotalLength = sizeof(tlv) + tlv.GetLength();
             VerifyOrExit(tlvTotalLength <= sizeof(route), OT_NOOP);
-            VerifyOrExit(message.Read(offset, tlvTotalLength, &route) == tlvTotalLength, OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &route) == tlvTotalLength, OT_NOOP);
             VerifyOrExit(route.IsValid(), OT_NOOP);
 
             ParseRoute(route, aNetworkDiagTlv.mData.mRoute);
@@ -895,7 +894,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             LeaderDataTlv leaderData;
 
             tlvTotalLength = sizeof(leaderData);
-            VerifyOrExit(message.Read(offset, tlvTotalLength, &leaderData) == tlvTotalLength, OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &leaderData) == tlvTotalLength, OT_NOOP);
             VerifyOrExit(leaderData.IsValid(), OT_NOOP);
 
             ParseLeaderData(leaderData, aNetworkDiagTlv.mData.mLeaderData);
@@ -909,7 +908,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             tlvTotalLength = sizeof(tlv) + tlv.GetLength();
             VerifyOrExit(tlvTotalLength <= sizeof(networkData), OT_NOOP);
-            VerifyOrExit(message.Read(offset, tlvTotalLength, &networkData) == tlvTotalLength, OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &networkData) == tlvTotalLength, OT_NOOP);
             VerifyOrExit(networkData.IsValid(), OT_NOOP);
             VerifyOrExit(sizeof(aNetworkDiagTlv.mData.mNetworkData.m8) >= networkData.GetLength(), OT_NOOP);
 
@@ -925,8 +924,8 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             VerifyOrExit(ip6AddrList.IsValid(), OT_NOOP);
             VerifyOrExit(sizeof(aNetworkDiagTlv.mData.mIp6AddrList.mList) >= ip6AddrList.GetLength(), OT_NOOP);
-            VerifyOrExit(message.Read(offset + sizeof(ip6AddrList), ip6AddrList.GetLength(),
-                                      aNetworkDiagTlv.mData.mIp6AddrList.mList) == ip6AddrList.GetLength(),
+            VerifyOrExit(aMessage.Read(offset + sizeof(ip6AddrList), ip6AddrList.GetLength(),
+                                       aNetworkDiagTlv.mData.mIp6AddrList.mList) == ip6AddrList.GetLength(),
                          OT_NOOP);
 
             aNetworkDiagTlv.mData.mIp6AddrList.mCount = ip6AddrList.GetLength() / OT_IP6_ADDRESS_SIZE;
@@ -939,7 +938,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             MacCountersTlv macCounters;
 
             tlvTotalLength = sizeof(MacCountersTlv);
-            VerifyOrExit(message.Read(offset, tlvTotalLength, &macCounters) == tlvTotalLength, OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &macCounters) == tlvTotalLength, OT_NOOP);
             VerifyOrExit(macCounters.IsValid(), OT_NOOP);
 
             ParseMacCounters(macCounters, aNetworkDiagTlv.mData.mMacCounters);
@@ -952,7 +951,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             BatteryLevelTlv batteryLevel;
 
             tlvTotalLength = sizeof(BatteryLevelTlv);
-            VerifyOrExit(message.Read(offset, tlvTotalLength, &batteryLevel) == tlvTotalLength, OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &batteryLevel) == tlvTotalLength, OT_NOOP);
             VerifyOrExit(batteryLevel.IsValid(), OT_NOOP);
 
             aNetworkDiagTlv.mData.mBatteryLevel = batteryLevel.GetBatteryLevel();
@@ -965,7 +964,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             SupplyVoltageTlv supplyVoltage;
 
             tlvTotalLength = sizeof(SupplyVoltageTlv);
-            VerifyOrExit(message.Read(offset, tlvTotalLength, &supplyVoltage) == tlvTotalLength, OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &supplyVoltage) == tlvTotalLength, OT_NOOP);
             VerifyOrExit(supplyVoltage.IsValid(), OT_NOOP);
 
             aNetworkDiagTlv.mData.mSupplyVoltage = supplyVoltage.GetSupplyVoltage();
@@ -984,7 +983,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             for (uint8_t i = 0; i < childTable.GetNumEntries(); ++i)
             {
                 ChildTableEntry childEntry;
-                VerifyOrExit(childTable.ReadEntry(childEntry, message, offset, i) == OT_ERROR_NONE, OT_NOOP);
+                VerifyOrExit(childTable.ReadEntry(childEntry, aMessage, offset, i) == OT_ERROR_NONE, OT_NOOP);
                 ParseChildEntry(childEntry, aNetworkDiagTlv.mData.mChildTable.mTable[i]);
             }
             aNetworkDiagTlv.mData.mChildTable.mCount = childTable.GetNumEntries();
@@ -995,7 +994,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
         case NetworkDiagnosticTlv::kChannelPages:
         {
             VerifyOrExit(sizeof(aNetworkDiagTlv.mData.mChannelPages.m8) >= tlv.GetLength(), OT_NOOP);
-            VerifyOrExit(message.Read(offset + sizeof(tlv), tlv.GetLength(), aNetworkDiagTlv.mData.mChannelPages.m8) ==
+            VerifyOrExit(aMessage.Read(offset + sizeof(tlv), tlv.GetLength(), aNetworkDiagTlv.mData.mChannelPages.m8) ==
                              tlv.GetLength(),
                          OT_NOOP);
 
@@ -1009,7 +1008,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             MaxChildTimeoutTlv maxChildTimeout;
 
             tlvTotalLength = sizeof(maxChildTimeout);
-            VerifyOrExit(message.Read(offset, tlvTotalLength, &maxChildTimeout) == tlvTotalLength, OT_NOOP);
+            VerifyOrExit(aMessage.Read(offset, tlvTotalLength, &maxChildTimeout) == tlvTotalLength, OT_NOOP);
             VerifyOrExit(maxChildTimeout.IsValid(), OT_NOOP);
 
             aNetworkDiagTlv.mData.mMaxChildTimeout = maxChildTimeout.GetTimeout();
@@ -1030,7 +1029,7 @@ exit:
     if (error == OT_ERROR_NONE)
     {
         aNetworkDiagTlv.mType = tlv.GetType();
-        aIterator             = static_cast<uint16_t>(offset - message.GetOffset() + tlv.GetSize());
+        aIterator             = static_cast<uint16_t>(offset - aMessage.GetOffset() + tlv.GetSize());
     }
     return error;
 }
