@@ -71,7 +71,7 @@ void PanIdQueryServer::HandleQuery(Coap::Message &aMessage, const Ip6::MessageIn
     VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
     VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0, OT_NOOP);
 
-    SuccessOrExit(Tlv::ReadUint16Tlv(aMessage, MeshCoP::Tlv::kPanId, panId));
+    SuccessOrExit(Tlv::FindUint16Tlv(aMessage, MeshCoP::Tlv::kPanId, panId));
 
     mChannelMask  = mask;
     mCommissioner = aMessageInfo.GetPeerAddr();

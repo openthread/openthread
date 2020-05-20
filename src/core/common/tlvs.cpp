@@ -64,7 +64,7 @@ otError Tlv::AppendTo(Message &aMessage) const
     return aMessage.Append(this, static_cast<uint16_t>(size));
 }
 
-otError Tlv::Get(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv)
+otError Tlv::FindTlv(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv)
 {
     otError  error;
     uint16_t offset;
@@ -83,12 +83,12 @@ exit:
     return error;
 }
 
-otError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset)
+otError Tlv::FindTlvOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset)
 {
     return Find(aMessage, aType, &aOffset, NULL, NULL);
 }
 
-otError Tlv::GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aValueOffset, uint16_t &aLength)
+otError Tlv::FindTlvValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aValueOffset, uint16_t &aLength)
 {
     otError  error;
     uint16_t offset;
@@ -174,12 +174,12 @@ exit:
     return error;
 }
 
-otError Tlv::ReadUint8Tlv(const Message &aMessage, uint8_t aType, uint8_t &aValue)
+otError Tlv::FindUint8Tlv(const Message &aMessage, uint8_t aType, uint8_t &aValue)
 {
     otError  error = OT_ERROR_NONE;
     TlvUint8 tlv8;
 
-    SuccessOrExit(error = Get(aMessage, aType, sizeof(tlv8), tlv8));
+    SuccessOrExit(error = FindTlv(aMessage, aType, sizeof(tlv8), tlv8));
     VerifyOrExit(tlv8.IsValid(), error = OT_ERROR_PARSE);
     aValue = tlv8.GetUint8Value();
 
@@ -187,12 +187,12 @@ exit:
     return error;
 }
 
-otError Tlv::ReadUint16Tlv(const Message &aMessage, uint8_t aType, uint16_t &aValue)
+otError Tlv::FindUint16Tlv(const Message &aMessage, uint8_t aType, uint16_t &aValue)
 {
     otError   error = OT_ERROR_NONE;
     TlvUint16 tlv16;
 
-    SuccessOrExit(error = Get(aMessage, aType, sizeof(tlv16), tlv16));
+    SuccessOrExit(error = FindTlv(aMessage, aType, sizeof(tlv16), tlv16));
     VerifyOrExit(tlv16.IsValid(), error = OT_ERROR_PARSE);
     aValue = tlv16.GetUint16Value();
 
@@ -200,12 +200,12 @@ exit:
     return error;
 }
 
-otError Tlv::ReadUint32Tlv(const Message &aMessage, uint8_t aType, uint32_t &aValue)
+otError Tlv::FindUint32Tlv(const Message &aMessage, uint8_t aType, uint32_t &aValue)
 {
     otError   error = OT_ERROR_NONE;
     TlvUint32 tlv32;
 
-    SuccessOrExit(error = Get(aMessage, aType, sizeof(tlv32), tlv32));
+    SuccessOrExit(error = FindTlv(aMessage, aType, sizeof(tlv32), tlv32));
     VerifyOrExit(tlv32.IsValid(), error = OT_ERROR_PARSE);
     aValue = tlv32.GetUint32Value();
 
@@ -213,13 +213,13 @@ exit:
     return error;
 }
 
-otError Tlv::ReadTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t aLength)
+otError Tlv::FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t aLength)
 {
     otError  error;
     uint16_t offset;
     uint16_t length;
 
-    SuccessOrExit(error = GetValueOffset(aMessage, aType, offset, length));
+    SuccessOrExit(error = FindTlvValueOffset(aMessage, aType, offset, length));
     VerifyOrExit(length >= aLength, error = OT_ERROR_PARSE);
     aMessage.Read(offset, aLength, static_cast<uint8_t *>(aValue));
 
