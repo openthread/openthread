@@ -285,7 +285,7 @@ uint32_t ChannelMaskTlv::GetChannelMask(const Message &aMessage)
     uint16_t offset;
     uint16_t end;
 
-    SuccessOrExit(GetValueOffset(aMessage, kChannelMask, offset, end));
+    SuccessOrExit(FindTlvValueOffset(aMessage, kChannelMask, offset, end));
     end += offset;
 
     while (offset + sizeof(ChannelMaskEntryBase) <= end)

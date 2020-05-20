@@ -146,7 +146,7 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
 
     VerifyOrExit(aMessageInfo.GetPeerAddr().IsIidRoutingLocator(), OT_NOOP);
 
-    switch (Tlv::ReadUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16))
+    switch (Tlv::FindUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16))
     {
     case OT_ERROR_NONE:
         RemoveBorderRouter(rloc16, kMatchModeRloc16);
@@ -157,7 +157,7 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
         ExitNow();
     }
 
-    if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) == OT_ERROR_NONE)
+    if (ThreadTlv::FindTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) == OT_ERROR_NONE)
     {
         VerifyOrExit(networkData.IsValid(), OT_NOOP);
         RegisterNetworkData(aMessageInfo.GetPeerAddr().GetLocator(), networkData.GetTlvs(), networkData.GetLength());
@@ -287,7 +287,7 @@ void Leader::HandleCommissioningGet(Coap::Message &aMessage, const Ip6::MessageI
     uint16_t length = 0;
     uint16_t offset;
 
-    SuccessOrExit(Tlv::GetValueOffset(aMessage, MeshCoP::Tlv::kGet, offset, length));
+    SuccessOrExit(Tlv::FindTlvValueOffset(aMessage, MeshCoP::Tlv::kGet, offset, length));
     aMessage.SetOffset(offset);
 
 exit:

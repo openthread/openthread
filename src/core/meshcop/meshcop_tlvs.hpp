@@ -158,26 +158,34 @@ public:
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static otError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv)
+    static otError FindTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv)
     {
-        return ot::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
+        return ot::Tlv::FindTlv(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
     }
 
     /**
-     * This static method finds the offset and length of a given TLV type.
+     * This static method searches for a TLV with a given type in a message, ensures its length is same or larger than
+     * an expected minimum value, and then reads its value into a given buffer.
      *
-     * @param[in]   aMessage    A reference to the message.
-     * @param[in]   aType       The Type value to search for.
-     * @param[out]  aOffset     The offset where the value starts.
-     * @param[out]  aLength     The length of the value.
+     * If the TLV length is smaller than the minimum length @p aLength, the TLV is considered invalid. In this case,
+     * this method returns `OT_ERROR_PARSE` and the @p aValue buffer is not updated.
      *
-     * @retval OT_ERROR_NONE       Successfully found the TLV.
+     * If the TLV length is larger than @p aLength, the TLV is considered valid, but only the first @p aLength bytes
+     * of the value are read and copied into the @p aValue buffer.
+     *
+     * @param[in]    aMessage    A reference to the message.
+     * @param[in]    aType       The TLV type to search for.
+     * @param[out]   aValue      A buffer to output the value (must contain at least @p aLength bytes).
+     * @param[in]    aLength     The expected (minimum) length of the TLV value.
+     *
+     * @retval OT_ERROR_NONE       The TLV was found and read successfully. @p aValue is updated.
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
+     * @retval OT_ERROR_PARSE      TLV was found but it was not well-formed and could not be parsed.
      *
      */
-    static otError GetValueOffset(const Message &aMessage, Type aType, uint16_t &aOffset, uint16_t &aLength)
+    static otError FindTlv(const Message &aMessage, Type aType, void *aValue, uint8_t aLength)
     {
-        return ot::Tlv::GetValueOffset(aMessage, static_cast<uint8_t>(aType), aOffset, aLength);
+        return ot::Tlv::FindTlv(aMessage, aType, aValue, aLength);
     }
 
     /**

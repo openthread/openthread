@@ -1259,7 +1259,7 @@ protected:
      * @retval OT_ERROR_PARSE      TLV was found but could not be parsed.
      *
      */
-    otError ReadTlvRequest(const Message &aMessage, RequestedTlvs &aRequestedTlvs);
+    otError FindTlvRequest(const Message &aMessage, RequestedTlvs &aRequestedTlvs);
 
     /**
      * This method appends a Leader Data TLV to a message.

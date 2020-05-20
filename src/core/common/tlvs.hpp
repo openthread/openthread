@@ -191,7 +191,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static otError Get(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv);
+    static otError FindTlv(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv);
 
     /**
      * This static method obtains the offset of a TLV within @p aMessage.
@@ -206,7 +206,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static otError GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset);
+    static otError FindTlvOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset);
 
     /**
      * This static method finds the offset and length of a given TLV type.
@@ -222,7 +222,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static otError GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength);
+    static otError FindTlvValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength);
 
     /**
      * This static method searches for a TLV with a given type in a message and reads its value as an `uint8_t`.
@@ -236,7 +236,7 @@ public:
      * @retval OT_ERROR_PARSE       TLV was found but it was not well-formed and could not be parsed.
      *
      */
-    static otError ReadUint8Tlv(const Message &aMessage, uint8_t aType, uint8_t &aValue);
+    static otError FindUint8Tlv(const Message &aMessage, uint8_t aType, uint8_t &aValue);
 
     /**
      * This static method searches for a TLV with a given type in a message and reads its value as an `uint16_t`.
@@ -250,7 +250,7 @@ public:
      * @retval OT_ERROR_PARSE       TLV was found but it was not well-formed and could not be parsed.
      *
      */
-    static otError ReadUint16Tlv(const Message &aMessage, uint8_t aType, uint16_t &aValue);
+    static otError FindUint16Tlv(const Message &aMessage, uint8_t aType, uint16_t &aValue);
 
     /**
      * This static method searches for a TLV with a given type in a message and reads its value as an `uint32_t`.
@@ -264,7 +264,7 @@ public:
      * @retval OT_ERROR_PARSE       TLV was found but it was not well-formed and could not be parsed.
      *
      */
-    static otError ReadUint32Tlv(const Message &aMessage, uint8_t aType, uint32_t &aValue);
+    static otError FindUint32Tlv(const Message &aMessage, uint8_t aType, uint32_t &aValue);
 
     /**
      * This static method searches for a TLV with a given type in a message, ensures its length is same or larger than
@@ -273,7 +273,7 @@ public:
      * If the TLV length is smaller than the minimum length @p aLength, the TLV is considered invalid. In this case,
      * this method returns `OT_ERROR_PARSE` and the @p aValue buffer is not updated.
      *
-     * If the TLV is length is larger than @p aLength, the TLV is considered valid, but only the @aLength first bytes
+     * If the TLV length is larger than @p aLength, the TLV is considered valid, but only the first @p aLength bytes
      * of the value are read and copied into the @p aValue buffer.
      *
      * @param[in]    aMessage    A reference to the message.
@@ -281,12 +281,12 @@ public:
      * @param[out]   aValue      A buffer to output the value (must contain at least @p aLength bytes).
      * @param[in]    aLength     The expected (minimum) length of the TLV value.
      *
-     * @retval OT_ERROR_NONE       The TLV was found and read successfully. @p @aValue is updated.
+     * @retval OT_ERROR_NONE       The TLV was found and read successfully. @p aValue is updated.
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      * @retval OT_ERROR_PARSE      TLV was found but it was not well-formed and could not be parsed.
      *
      */
-    static otError ReadTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t aLength);
+    static otError FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t aLength);
 
     /**
      * This static method appends a simple TLV with a given type and an `uint8_t` value to a message.
