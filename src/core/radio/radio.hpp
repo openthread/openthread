@@ -39,6 +39,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "mac/mac_frame.hpp"
 #include "utils/static_assert.hpp"
 
@@ -58,7 +59,7 @@ namespace ot {
  * This class represents an OpenThread radio abstraction.
  *
  */
-class Radio : public InstanceLocator
+class Radio : public InstanceLocator, private NonCopyable
 {
     friend class Instance;
 

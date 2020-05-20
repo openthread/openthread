@@ -39,6 +39,7 @@
 #include <openthread/link_raw.h>
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/sub_mac.hpp"
 
@@ -51,7 +52,7 @@ namespace Mac {
  * This class defines the raw link-layer object.
  *
  */
-class LinkRaw : public InstanceLocator
+class LinkRaw : public InstanceLocator, private NonCopyable
 {
     friend class ot::Instance;
 

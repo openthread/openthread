@@ -43,6 +43,7 @@
 #include <openthread/platform/otns.h>
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
@@ -55,7 +56,7 @@ namespace Utils {
  * This class implements the OTNS Stub that interacts with OTNS.
  *
  */
-class Otns : public InstanceLocator
+class Otns : public InstanceLocator, private NonCopyable
 {
 public:
     /**

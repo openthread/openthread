@@ -39,6 +39,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "radio/radio.hpp"
@@ -70,7 +71,7 @@ namespace Utils {
  * window (referred to as "channel occupancy").
  *
  */
-class ChannelMonitor : public InstanceLocator
+class ChannelMonitor : public InstanceLocator, private NonCopyable
 {
 public:
     enum

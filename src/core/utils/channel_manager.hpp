@@ -39,6 +39,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
@@ -63,7 +64,7 @@ namespace Utils {
  * This class implements the Channel Manager.
  *
  */
-class ChannelManager : public InstanceLocator
+class ChannelManager : public InstanceLocator, private NonCopyable
 {
 public:
     enum
@@ -295,7 +296,7 @@ private:
 
 #else // OPENTHREAD_FTD
 
-class ChannelManager
+class ChannelManager : private NonCopyable
 {
 public:
     explicit ChannelManager(Instance &) {}
