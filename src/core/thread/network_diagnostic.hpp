@@ -131,7 +131,7 @@ private:
     otError AppendIp6AddressList(Message &aMessage);
     otError AppendChildTable(Message &aMessage);
     void    FillMacCountersTlv(MacCountersTlv &aMacCountersTlv);
-    otError FillRequestedTlvs(Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
+    otError FillRequestedTlvs(const Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
 
     static void HandleDiagnosticGetRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleDiagnosticGetRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
