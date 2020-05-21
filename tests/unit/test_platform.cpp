@@ -649,4 +649,11 @@ void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime)
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+void otPlatOtnsStatus(const char *aStatus)
+{
+    OT_UNUSED_VARIABLE(aStatus);
+}
+#endif // OPENTHREAD_CONFIG_OTNS_ENABLE
+
 } // extern "C"

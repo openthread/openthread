@@ -371,7 +371,7 @@ class Message(object):
 
 class MessagesSet(object):
 
-    def __init__(self, messages, commissioning_messages=[]):
+    def __init__(self, messages, commissioning_messages=()):
         self._messages = messages
         self._commissioning_messages = commissioning_messages
 

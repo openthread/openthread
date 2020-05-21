@@ -1677,6 +1677,7 @@ protected:
     bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
     DeviceRole    mRole;                     ///< Current Thread role.
     Router        mParent;                   ///< Parent information.
+    Router        mParentCandidate;          ///< Parent candidate information.
     DeviceMode    mDeviceMode;               ///< Device mode setting.
     AttachState   mAttachState;              ///< The parent request state.
     ReattachState mReattachState;            ///< Reattach state
@@ -1822,7 +1823,6 @@ private:
     bool       mReceivedResponseFromParent;
     LeaderData mParentLeaderData;
 
-    Router    mParentCandidate;
     Challenge mParentCandidateChallenge;
 
     Ip6::UdpSocket mSocket;

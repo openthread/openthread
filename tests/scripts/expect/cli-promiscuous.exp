@@ -1,5 +1,6 @@
+#!/usr/bin/expect -f
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,8 +27,20 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_APP_CLI)
-    add_subdirectory(cli)
-endif()
-
-add_subdirectory(ncp)
+spawn $env(OT_COMMAND) 1
+set timeout 1
+expect_after {
+    timeout { exit 1 }
+}
+send "promiscuous\n"
+expect "Disabled\r\nDone\r\n"
+send "promiscuous enable\n"
+expect "Done\r\n"
+send "promiscuous\n"
+expect "Enabled\r\nDone\r\n"
+send "promiscuous disable\n"
+expect "Done\r\n"
+send "promiscuous a\n"
+expect "Error 7: InvalidArgs\r\n"
+send "\x04"
+expect eof

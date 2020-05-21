@@ -45,6 +45,7 @@
 #include "common/timer.hpp"
 #include "crypto/hmac_sha256.hpp"
 #include "mac/mac_types.hpp"
+#include "thread/mle_types.hpp"
 
 namespace ot {
 
@@ -142,49 +143,7 @@ public:
  * This class represents a Key Encryption Key (KEK).
  *
  */
-class Kek
-{
-    friend class KeyManager;
-
-public:
-    enum
-    {
-        kSize = 16, // KEK size in bytes.
-    };
-
-    /**
-     * This method returns the KEK.
-     *
-     * @returns A pointer to buffer containing the KEK.
-     *
-     */
-    const uint8_t *GetKey(void) const { return m8; }
-
-    /**
-     * This method evaluates whether or not two KEKs match.
-     *
-     * @param[in]  aOther  The KEK to compare.
-     *
-     * @retval TRUE   If the KEKs match.
-     * @retval FALSE  If the KEKs do not match.
-     *
-     */
-    bool operator==(const Kek &aOther) const { return memcmp(m8, aOther.m8, sizeof(Kek)) == 0; }
-
-    /**
-     * This method evaluates whether or not the KEK match.
-     *
-     * @param[in]  aOther  The KEK to compare.
-     *
-     * @retval TRUE   If the KEK do not match.
-     * @retval FALSE  If the KEK match.
-     *
-     */
-    bool operator!=(const Kek &aOther) const { return !(*this == aOther); }
-
-private:
-    uint8_t m8[kSize]; ///< Buffer containing the KEK.
-};
+typedef Mac::Key Kek;
 
 /**
  * This class defines Thread Key Manager.
@@ -283,7 +242,7 @@ public:
      * @returns A pointer to the current MLE key.
      *
      */
-    const uint8_t *GetCurrentMleKey(void) const { return mMleKey; }
+    const Mle::Key &GetCurrentMleKey(void) const { return mMleKey; }
 
     /**
      * This method returns a pointer to a temporary MLE key computed from the given key sequence.
@@ -293,7 +252,7 @@ public:
      * @returns A pointer to the temporary MLE key.
      *
      */
-    const uint8_t *GetTemporaryMleKey(uint32_t aKeySequence);
+    const Mle::Key &GetTemporaryMleKey(uint32_t aKeySequence);
 
     /**
      * This method returns the current MAC Frame Counter value.
@@ -526,12 +485,23 @@ private:
         kMinKeyRotationTime        = 1,
         kDefaultKeyRotationTime    = 672,
         kDefaultKeySwitchGuardTime = 624,
-        kMacKeyOffset              = 16,
-        kMleKeySize                = 16,
         kOneHourIntervalInMsec     = 3600u * 1000u,
     };
 
-    void ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
+    OT_TOOL_PACKED_BEGIN
+    struct Keys
+    {
+        Mle::Key mMleKey;
+        Mac::Key mMacKey;
+    } OT_TOOL_PACKED_END;
+
+    union HashKeys
+    {
+        uint8_t mHash[Crypto::HmacSha256::kHashSize];
+        Keys    mKeys;
+    };
+
+    void ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys);
 
     void        StartKeyRotationTimer(void);
     static void HandleKeyRotationTimer(Timer &aTimer);
@@ -543,8 +513,8 @@ private:
     MasterKey mMasterKey;
 
     uint32_t mKeySequence;
-    uint8_t  mMleKey[kMleKeySize];
-    uint8_t  mTemporaryKey[Crypto::HmacSha256::kHashSize];
+    Mle::Key mMleKey;
+    Mle::Key mTemporaryMleKey;
 
     uint32_t mMacFrameCounter;
     uint32_t mMleFrameCounter;

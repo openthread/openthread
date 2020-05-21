@@ -1,5 +1,6 @@
+#!/usr/bin/expect -f
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,8 +27,24 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_APP_CLI)
-    add_subdirectory(cli)
-endif()
-
-add_subdirectory(ncp)
+spawn $env(OT_COMMAND) 1
+set timeout 1
+expect_after {
+    timeout { exit 1 }
+}
+send "extaddr 99aabbccddeeff00\n"
+expect "Done\r\n"
+send "extaddr 99AABBCCDDEEFF00\n"
+expect "Done\r\n"
+send "extaddr\n"
+expect "99aabbccddeeff00\r\n"
+send "extaddr 1\n"
+expect "Error 7: InvalidArgs\r\n"
+send "extaddr 0123456789abcdef0\n"
+expect "Error 7: InvalidArgs\r\n"
+send "extaddr invalid\n"
+expect "Error 7: InvalidArgs\r\n"
+send "extaddr\n"
+expect "99aabbccddeeff00\r\n"
+send "\x04"
+expect eof

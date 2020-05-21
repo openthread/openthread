@@ -49,9 +49,9 @@ jobs:
         sudo apt update
         sudo apt remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
         sudo apt autoremove
-        sudo apt --no-install-recommends install -y clang-tools clang-format-6.0
-        clang-format-6.0 --version
+        sudo apt --no-install-recommends install -y clang-tools clang-format-6.0 shellcheck
         python3 -m pip install yapf==0.29.0
+        sudo snap install shfmt
     - name: Check
       run: |
         script/make-pretty check
@@ -76,7 +76,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo apt update
-        sudo apt --no-install-recommends install -y ninja-build
+        sudo apt --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
     - name: Package
       run: |
         script/test package
@@ -125,6 +125,9 @@ jobs:
         sudo apt --no-install-recommends install -y lib32z1 ninja-build
         wget ${{ matrix.gcc_download_url }} -O gcc-arm.tar.bz2
         tar xjf gcc-arm.tar.bz2
+
+        # required for jn5189 and k32w061
+        pip install pycryptodome
     - name: Build
       run: |
         export PATH=/tmp/${{ matrix.gcc_extract_dir }}/bin:$PATH
@@ -144,7 +147,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo apt update
-        sudo apt --no-install-recommends install -y gcc-${{ matrix.gcc_ver }} g++-${{ matrix.gcc_ver }} ninja-build
+        sudo apt --no-install-recommends install -y gcc-${{ matrix.gcc_ver }} g++-${{ matrix.gcc_ver }} ninja-build libreadline-dev libncurses-dev
     - name: Build
       run: |
         script/check-simulation-build
@@ -166,8 +169,10 @@ jobs:
       - uses: actions/checkout@v2
       - name: Bootstrap
         run: |
+          sudo dpkg --add-architecture i386
           sudo apt update
           sudo apt --no-install-recommends install -y clang-${{ matrix.clang_ver }} clang++-${{ matrix.clang_ver }} g++-multilib ninja-build
+          sudo apt --no-install-recommends install -y libreadline-dev:i386 libncurses-dev:i386
       - name: Build
         run: |
           script/check-posix-build

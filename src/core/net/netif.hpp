@@ -39,6 +39,7 @@
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/tasklet.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
@@ -169,7 +170,7 @@ private:
  * This class implements an IPv6 network interface.
  *
  */
-class Netif : public InstanceLocator, public LinkedListEntry<Netif>
+class Netif : public InstanceLocator, public LinkedListEntry<Netif>, private NonCopyable
 {
     friend class Ip6;
     friend class Address;

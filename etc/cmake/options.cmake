@@ -26,6 +26,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+option(OT_APP_CLI "enable CLI app" ON)
+option(OT_APP_NCP "enable NCP app" ON)
+option(OT_APP_RCP "enable RCP app" ON)
+
 option(OT_BACKBONE_ROUTER "enable backbone router functionality")
 if(OT_BACKBONE_ROUTER)
     list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=1")
@@ -159,6 +163,11 @@ endif()
 option(OT_MAC_FILTER "enable mac filter support")
 if(OT_MAC_FILTER)
     list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1")
+endif()
+
+option(OT_MLE_LONG_ROUTES "enable MLE long routes extension (experimental, breaks Thread conformance)")
+if(OT_MLE_LONG_ROUTES)
+    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE=1")
 endif()
 
 option(OT_MTD_NETDIAG "enable TMF network diagnostics on MTDs")

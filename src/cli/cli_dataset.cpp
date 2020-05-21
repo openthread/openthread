@@ -370,7 +370,8 @@ otError Dataset::ProcessExtPanId(uint8_t aArgsLength, char *aArgs[])
     uint8_t extPanId[OT_EXT_PAN_ID_SIZE];
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(Interpreter::Hex2Bin(aArgs[0], extPanId, sizeof(extPanId)) >= 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(Interpreter::Hex2Bin(aArgs[0], extPanId, sizeof(extPanId)) == sizeof(extPanId),
+                 error = OT_ERROR_INVALID_ARGS);
 
     memcpy(sDataset.mExtendedPanId.m8, extPanId, sizeof(sDataset.mExtendedPanId));
     sDataset.mComponents.mIsExtendedPanIdPresent = true;
@@ -506,9 +507,9 @@ otError Dataset::ProcessMgmtSetCommand(uint8_t aArgsLength, char *aArgs[])
         {
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             dataset.mComponents.mIsExtendedPanIdPresent = true;
-            VerifyOrExit(
-                Interpreter::Hex2Bin(aArgs[index], dataset.mExtendedPanId.m8, sizeof(dataset.mExtendedPanId.m8)) >= 0,
-                error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(Interpreter::Hex2Bin(aArgs[index], dataset.mExtendedPanId.m8,
+                                              sizeof(dataset.mExtendedPanId.m8)) == sizeof(dataset.mExtendedPanId.m8),
+                         error = OT_ERROR_INVALID_ARGS);
         }
         else if (strcmp(aArgs[index], "localprefix") == 0)
         {
@@ -550,7 +551,7 @@ otError Dataset::ProcessMgmtSetCommand(uint8_t aArgsLength, char *aArgs[])
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             length = static_cast<int>((strlen(aArgs[index]) + 1) / 2);
             VerifyOrExit(static_cast<size_t>(length) <= sizeof(tlvs), error = OT_ERROR_NO_BUFS);
-            VerifyOrExit(Interpreter::Hex2Bin(aArgs[index], tlvs, static_cast<uint16_t>(length)) >= 0,
+            VerifyOrExit(Interpreter::Hex2Bin(aArgs[index], tlvs, static_cast<uint16_t>(length)) == length,
                          error = OT_ERROR_INVALID_ARGS);
         }
         else
@@ -638,7 +639,7 @@ otError Dataset::ProcessMgmtGetCommand(uint8_t aArgsLength, char *aArgs[])
             value = static_cast<long>(strlen(aArgs[index]) + 1) / 2;
             VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)),
                          error = OT_ERROR_NO_BUFS);
-            VerifyOrExit(Interpreter::Hex2Bin(aArgs[index], tlvs + length, static_cast<uint16_t>(value)) >= 0,
+            VerifyOrExit(Interpreter::Hex2Bin(aArgs[index], tlvs + length, static_cast<uint16_t>(value)) == value,
                          error = OT_ERROR_INVALID_ARGS);
             length += value;
         }

@@ -44,6 +44,7 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/link_quality.hpp"
 
@@ -1086,7 +1087,7 @@ private:
  * This class represents a message pool
  *
  */
-class MessagePool : public InstanceLocator
+class MessagePool : public InstanceLocator, private NonCopyable
 {
     friend class Message;
     friend class MessageQueue;

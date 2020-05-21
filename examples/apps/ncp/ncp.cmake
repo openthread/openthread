@@ -26,74 +26,34 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-cli
-    main.c
-    $<$<BOOL:${READLINE}>:console_cli.cpp>
-)
-
-set_target_properties(
-    ot-cli
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
-target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
-
-target_compile_definitions(ot-cli PRIVATE
-    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
-    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI
-    ${OT_PLATFORM_DEFINES}
-)
-
-target_compile_options(ot-cli PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_link_libraries(ot-cli
-    openthread-cli-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    mbedcrypto
-    openthread-ncp-ftd
-    $<$<BOOL:${READLINE}>:${OT_READLINE}>
-)
-
-add_executable(ot-ncp
+add_executable(ot-ncp-ftd
     main.c
 )
 
-set_target_properties(
-    ot-ncp
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
+add_executable(ot-ncp-mtd
+    main.c
 )
 
-target_include_directories(ot-ncp PRIVATE ${COMMON_INCLUDES})
+target_include_directories(ot-ncp-ftd PRIVATE ${COMMON_INCLUDES})
+target_include_directories(ot-ncp-mtd PRIVATE ${COMMON_INCLUDES})
 
-target_compile_definitions(ot-ncp PRIVATE
-    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_NCP
-    ${OT_PLATFORM_DEFINES}
-)
+target_compile_definitions(ot-ncp-ftd PRIVATE ${OT_PRIVATE_DEFINES})
+target_compile_definitions(ot-ncp-mtd PRIVATE ${OT_PRIVATE_DEFINES})
 
-target_compile_options(ot-ncp PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_link_libraries(ot-ncp
+target_link_libraries(ot-ncp-ftd
     openthread-ncp-ftd
     ${OT_PLATFORM_LIB}
     openthread-ftd
     ${OT_PLATFORM_LIB}
     mbedcrypto
-    openthread-ncp-ftd
 )
 
-install(TARGETS ot-cli ot-ncp
-    DESTINATION bin)
+target_link_libraries(ot-ncp-mtd
+    openthread-ncp-mtd
+    ${OT_PLATFORM_LIB}
+    openthread-mtd
+    ${OT_PLATFORM_LIB}
+    mbedcrypto
+)
 
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    set(CPACK_PACKAGE_NAME "openthread-standalone")
-endif()
+install(TARGETS ot-ncp-ftd ot-ncp-mtd DESTINATION bin)

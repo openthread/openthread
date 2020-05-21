@@ -120,6 +120,7 @@ void Frame::SetFramePending(bool aFramePending)
 uint8_t Frame::FindDstPanIdIndex(void) const
 {
     uint8_t index = 0;
+
     VerifyOrExit((GetFrameControlField() & kFcfDstAddrMask) != kFcfDstAddrNone, index = kInvalidIndex);
 
     //  Frame Control Field and Sequence Number
@@ -165,6 +166,7 @@ otError Frame::GetDstPanId(PanId &aPanId) const
 {
     otError error = OT_ERROR_NONE;
     uint8_t index = FindDstPanIdIndex();
+
     VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
     aPanId = Encoding::LittleEndian::ReadUint16(GetPsdu() + index);
 
@@ -1047,7 +1049,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 
     Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
 
-    aesCcm.SetKey(GetAesKey(), 16);
+    aesCcm.SetKey(GetAesKey());
     tagLength = GetFooterLength() - Frame::kFcsSize;
 
     error = aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));

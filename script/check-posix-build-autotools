@@ -29,8 +29,6 @@
 
 set -euxo pipefail
 
-readonly OT_BUILD_JOBS=$(getconf _NPROCESSORS_ONLN)
-
 reset_source()
 {
     rm -rf build output tmp
@@ -41,7 +39,7 @@ build()
     reset_source
     make -f src/posix/Makefile-posix
 
-    if [[ $OSTYPE != "darwin"* ]] ; then
+    if [[ $OSTYPE != "darwin"* ]]; then
         reset_source
         make -f src/posix/Makefile-posix RCP_BUS=spi
     fi

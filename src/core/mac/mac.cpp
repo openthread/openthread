@@ -55,8 +55,8 @@
 namespace ot {
 namespace Mac {
 
-const uint8_t Mac::sMode2Key[] = {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f,
-                                  0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66};
+const otMacKey Mac::sMode2Key = {
+    {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f, 0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66}};
 
 const otExtAddress Mac::sMode2ExtAddress = {
     {0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12},
@@ -1033,7 +1033,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        aFrame.SetAesKey(keyManager.GetKek().GetKey());
+        aFrame.SetAesKey(keyManager.GetKek());
         extAddress = &GetExtAddress();
 
         if (!aFrame.IsARetransmission())
@@ -1064,7 +1064,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
     case Frame::kKeyIdMode2:
     {
         const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
-        aFrame.SetAesKey(sMode2Key);
+        aFrame.SetAesKey(static_cast<const Key &>(sMode2Key));
         mKeyIdMode2FrameCounter++;
         aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
         aFrame.SetKeySource(keySource);
@@ -1476,6 +1476,8 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
 #endif
 
     case kOperationTransmitOutOfBandFrame:
+        // count Oob frames
+        mCounters.mTxOther++;
         FinishOperation();
         PerformNextOperation();
         break;
@@ -1539,7 +1541,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     uint8_t           tagLength;
     uint8_t           keyid;
     uint32_t          keySequence = 0;
-    const uint8_t *   macKey;
+    const Key *       macKey;
     const ExtAddress *extAddress;
     Crypto::AesCcm    aesCcm;
 
@@ -1556,8 +1558,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        macKey = keyManager.GetKek().GetKey();
-        VerifyOrExit(macKey != NULL, OT_NOOP);
+        macKey     = &keyManager.GetKek();
         extAddress = &aSrcAddr.GetExtended();
         break;
 
@@ -1570,17 +1571,17 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         if (keyid == (keyManager.GetCurrentKeySequence() & 0x7f))
         {
             keySequence = keyManager.GetCurrentKeySequence();
-            macKey      = mSubMac.GetCurrentMacKey();
+            macKey      = &mSubMac.GetCurrentMacKey();
         }
         else if (keyid == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
         {
             keySequence = keyManager.GetCurrentKeySequence() - 1;
-            macKey      = mSubMac.GetPreviousMacKey();
+            macKey      = &mSubMac.GetPreviousMacKey();
         }
         else if (keyid == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
         {
             keySequence = keyManager.GetCurrentKeySequence() + 1;
-            macKey      = mSubMac.GetNextMacKey();
+            macKey      = &mSubMac.GetNextMacKey();
         }
         else
         {
@@ -1610,7 +1611,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         break;
 
     case Frame::kKeyIdMode2:
-        macKey     = sMode2Key;
+        macKey     = static_cast<const Key *>(&sMode2Key);
         extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
         break;
 
@@ -1622,7 +1623,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     Crypto::AesCcm::GenerateNonce(*extAddress, frameCounter, securityLevel, nonce);
     tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
 
-    aesCcm.SetKey(macKey, 16);
+    aesCcm.SetKey(*macKey);
 
     SuccessOrExit(aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce)));
 

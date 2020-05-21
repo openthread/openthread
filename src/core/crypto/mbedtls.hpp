@@ -38,6 +38,8 @@
 
 #include <openthread/instance.h>
 
+#include "common/non_copyable.hpp"
+
 namespace ot {
 namespace Crypto {
 
@@ -52,7 +54,7 @@ namespace Crypto {
  * This class implements mbedTLS memory.
  *
  */
-class MbedTls
+class MbedTls : private NonCopyable
 {
 public:
     /**

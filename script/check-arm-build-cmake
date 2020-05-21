@@ -29,14 +29,16 @@
 
 set -euxo pipefail
 
+readonly OT_SRCDIR="$(pwd)"
+readonly OT_BUILDDIR="$OT_SRCDIR/build"
+
 readonly OT_COMMON_OPTIONS=(
     "-DOT_COMPILE_WARNING_AS_ERROR=ON"
 )
 
 reset_source()
 {
-    git checkout -- .
-    git clean -xfd
+    rm -rf "$OT_BUILDDIR"
 }
 
 build_cc1352()
@@ -56,11 +58,11 @@ build_cc1352()
     )
 
     reset_source
-    mkdir build
-    cd build
+    mkdir -p "$OT_BUILDDIR"
+    cd "$OT_BUILDDIR"
     cmake -GNinja "${options[@]}" ..
     ninja
-    cd ..
+    cd "$OT_SRCDIR"
 }
 
 build_cc2538()
@@ -73,11 +75,11 @@ build_cc2538()
     )
 
     reset_source
-    mkdir build
-    cd build
+    mkdir -p "$OT_BUILDDIR"
+    cd "$OT_BUILDDIR"
     cmake -GNinja "${options[@]}" ..
     ninja
-    cd ..
+    cd "$OT_SRCDIR"
 }
 
 build_cc2650()
@@ -91,11 +93,11 @@ build_cc2650()
     )
 
     reset_source
-    mkdir build
-    cd build
+    mkdir -p "$OT_BUILDDIR"
+    cd "$OT_BUILDDIR"
     cmake -GNinja "${options[@]}" ..
     ninja ot-cli-mtd ot-ncp-mtd
-    cd ..
+    cd "$OT_SRCDIR"
 }
 
 build_cc2652()
@@ -115,11 +117,11 @@ build_cc2652()
     )
 
     reset_source
-    mkdir build
-    cd build
+    mkdir -p "$OT_BUILDDIR"
+    cd "$OT_BUILDDIR"
     cmake -GNinja "${options[@]}" ..
     ninja
-    cd ..
+    cd "$OT_SRCDIR"
 }
 
 build_kw41z()
@@ -139,11 +141,11 @@ build_kw41z()
     )
 
     reset_source
-    mkdir build
-    cd build
+    mkdir -p "$OT_BUILDDIR"
+    cd "$OT_BUILDDIR"
     cmake -GNinja "${options[@]}" ..
     ninja
-    cd ..
+    cd "$OT_SRCDIR"
 }
 
 build_qpg6095()
@@ -163,11 +165,11 @@ build_qpg6095()
     )
 
     reset_source
-    mkdir build
-    cd build
+    mkdir -p "$OT_BUILDDIR"
+    cd "$OT_BUILDDIR"
     cmake -GNinja "${options[@]}" ..
     ninja
-    cd ..
+    cd "$OT_SRCDIR"
 }
 
 build_samr21()
@@ -190,11 +192,11 @@ build_samr21()
     wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.45.0.85.zip || die
     unzip -qq asf-standalone-archive-3.45.0.85.zip || die
     mv xdk-asf-3.45.0 third_party/microchip/asf || die
-    mkdir build
-    cd build
+    mkdir -p "$OT_BUILDDIR"
+    cd "$OT_BUILDDIR"
     cmake -GNinja "${options[@]}" ..
     ninja
-    cd ..
+    cd "$OT_SRCDIR"
 }
 
 main()

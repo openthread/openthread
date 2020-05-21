@@ -35,16 +35,41 @@ set(COMMON_INCLUDES
 )
 
 set(OT_READLINE "readline" CACHE STRING "set readline library name")
-set_property(CACHE OT_READLINE PROPERTY STRINGS "readline" "edit" "no")
+set_property(CACHE OT_READLINE PROPERTY STRINGS "readline" "edit")
 
 if(OT_READLINE)
     find_library(READLINE ${OT_READLINE})
+
+    if (NOT READLINE)
+        message(FATAL_ERROR "Failed to find ${OT_READLINE}")
+    endif()
+
+    find_library(NCURSES ncurses)
+    if (NOT NCURSES)
+        message(FATAL_ERROR "Failed to find ncurses")
+    endif()
+
+    list(APPEND READLINE_LINK_LIBRARIES "${READLINE}" "${NCURSES}")
 endif()
 
 if(OT_DAEMON)
     include(daemon.cmake)
+
+    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+        set(CPACK_PACKAGE_NAME "openthread-daemon")
+    endif()
 else()
-    include(standalone.cmake)
+    if(OT_APP_CLI)
+        include(cli.cmake)
+    endif()
+
+    if(OT_APP_NCP)
+        include(ncp.cmake)
+    endif()
+
+    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+        set(CPACK_PACKAGE_NAME "openthread-standalone")
+    endif()
 endif()
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)

@@ -101,4 +101,28 @@
 #define OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE 0
 #endif
 
+#ifdef __APPLE__
+
+/**
+ * Use built-in utun driver on mac OS
+ */
+#define OT_POSIX_CONFIG_MACOS_UTUN 1
+
+/**
+ * Use open-source tun driver on mac OS
+ */
+#define OT_POSIX_CONFIG_MACOS_TUN 2
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION
+ *
+ * This setting configures which tunnel driver to use.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION
+#define OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION OT_POSIX_CONFIG_MACOS_UTUN
+#endif
+
+#endif // __APPLE__
+
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_

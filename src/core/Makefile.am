@@ -332,6 +332,7 @@ HEADERS_COMMON                             = \
     common/logging.hpp                       \
     common/message.hpp                       \
     common/new.hpp                           \
+    common/non_copyable.hpp                  \
     common/notifier.hpp                      \
     common/random.hpp                        \
     common/random_manager.hpp                \

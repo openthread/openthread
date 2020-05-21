@@ -82,7 +82,6 @@ public:
     enum
     {
         kInvalidRssiValue = 127, ///< Invalid Received Signal Strength Indicator (RSSI) value.
-        kMacKeySize       = 16,  ///< MAC Key size (bytes)
     };
 
     /**
@@ -459,40 +458,36 @@ public:
      *
      * @param[in] aKeyIdMode  MAC key ID mode.
      * @param[in] aKeyId      The key ID.
-     * @param[in] aPrevKey    A pointer to the previous MAC key.
-     * @param[in] aCurrKey    A pointer to the current MAC key.
-     * @param[in] aNextKey    A pointer to the next MAC key.
+     * @param[in] aPrevKey    The previous MAC key.
+     * @param[in] aCurrKey    The current MAC key.
+     * @param[in] aNextKey    The next MAC key.
      *
      */
-    void SetMacKey(uint8_t        aKeyIdMode,
-                   uint8_t        aKeyId,
-                   const uint8_t *aPrevKey,
-                   const uint8_t *aCurrKey,
-                   const uint8_t *aNextKey);
+    void SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, const Key &aPrevKey, const Key &aCurrKey, const Key &aNextKey);
 
     /**
-     * This method returns a pointer to the current MAC key.
+     * This method returns a reference to the current MAC key.
      *
-     * @returns A pointer to the current MAC key.
+     * @returns A reference to the current MAC key.
      *
      */
-    const uint8_t *GetCurrentMacKey(void) const { return mCurrKey; }
+    const Key &GetCurrentMacKey(void) const { return mCurrKey; }
 
     /**
-     * This method returns a pointer to the previous MAC key.
+     * This method returns a reference to the previous MAC key.
      *
-     * @returns A pointer to the previous MAC key.
+     * @returns A reference to the previous MAC key.
      *
      */
-    const uint8_t *GetPreviousMacKey(void) const { return mPrevKey; }
+    const Key &GetPreviousMacKey(void) const { return mPrevKey; }
 
     /**
-     * This method returns a pointer to the next MAC key.
+     * This method returns a reference to the next MAC key.
      *
-     * @returns A pointer to the next MAC key.
+     * @returns A reference to the next MAC key.
      *
      */
-    const uint8_t *GetNextMacKey(void) const { return mNextKey; }
+    const Key &GetNextMacKey(void) const { return mNextKey; }
 
 private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -574,9 +569,9 @@ private:
     Callbacks          mCallbacks;
     otLinkPcapCallback mPcapCallback;
     void *             mPcapCallbackContext;
-    uint8_t            mPrevKey[kMacKeySize];
-    uint8_t            mCurrKey[kMacKeySize];
-    uint8_t            mNextKey[kMacKeySize];
+    Key                mPrevKey;
+    Key                mCurrKey;
+    Key                mNextKey;
     uint8_t            mKeyId;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicro mTimer;

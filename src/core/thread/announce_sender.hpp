@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
@@ -49,7 +50,7 @@ namespace ot {
  * This class provides APIs to schedule periodic transmission of MLE Announcement messages for a given number
  * transmissions per channel.
  */
-class AnnounceSenderBase : public InstanceLocator
+class AnnounceSenderBase : public InstanceLocator, private NonCopyable
 {
 protected:
     /**

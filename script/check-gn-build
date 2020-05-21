@@ -34,7 +34,8 @@
 set -e
 set -x
 
-main() {
+main()
+{
     gn gen gn-out
     ninja -C gn-out
     test -f gn-out/obj/lib-ot-core.a

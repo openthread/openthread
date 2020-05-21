@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,68 +28,29 @@
 
 /**
  * @file
- *   This file includes the platform-specific configuration.
- *
+ *   This file includes a common base class for disabling copying.
  */
+
+#ifndef NON_COPYABLE_HPP_
+#define NON_COPYABLE_HPP_
+
+namespace ot {
 
 /**
- * @def OPENTHREAD_SIMULATION_UART_BAUDRATE
- *
- * This setting configures the baud rate of the UART.
- *
+ * This class makes any class that derives from it non-copyable. It is
+ * intended to be used as a private base class.
  */
-#ifndef OPENTHREAD_SIMULATION_UART_BAUDRATE
-#define OPENTHREAD_SIMULATION_UART_BAUDRATE B115200
-#endif
+class NonCopyable
+{
+protected:
+    NonCopyable(void) {}
+    ~NonCopyable(void) {}
 
-/**
- * @def OPENTHREAD_SIMULATION_VIRTUAL_TIME
- *
- * This setting configures whether to use virtual time (used for simulation) in simulation platform.
- *
- */
-#ifndef OPENTHREAD_SIMULATION_VIRTUAL_TIME
-#define OPENTHREAD_SIMULATION_VIRTUAL_TIME 0
-#endif
+private:
+    NonCopyable(const NonCopyable &);
+    NonCopyable &operator=(const NonCopyable &);
+};
 
-/**
- * @def OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART
- *
- * This setting configures whether to use virtual time for UART.
- *
- */
-#ifndef OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART
-#define OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART 0
-#endif
+} // namespace ot
 
-/**
- * @def OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
- *
- * Define as 1 to enable pseudo-reset.
- *
- */
-#ifndef OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-#define OPENTHREAD_PLATFORM_USE_PSEUDO_RESET 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_NCP_SPI_ENABLE
- *
- * Define as 1 to enable SPI NCP interface.
- *
- */
-#ifndef OPENTHREAD_CONFIG_NCP_SPI_ENABLE
-#define OPENTHREAD_CONFIG_NCP_SPI_ENABLE 0
-#endif
-
-/**
- * Check OTNS configurations
- *
- */
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-
-#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
-#error "OTNS requires virtual time simulations"
-#endif
-
-#endif // OPENTHREAD_CONFIG_OTNS_ENABLE
+#endif // NON_COPYABLE_HPP_

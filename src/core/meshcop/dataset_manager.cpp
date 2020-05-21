@@ -60,6 +60,7 @@ DatasetManager::DatasetManager(Instance &     aInstance,
     , mTimer(aInstance, aTimerHandler, this)
     , mUriGet(aUriGet)
     , mUriSet(aUriSet)
+    , mCoapPending(false)
 {
     mTimestamp.Init();
 }
@@ -168,7 +169,7 @@ otError DatasetManager::Save(const Dataset &aDataset)
     }
     else if (compare < 0)
     {
-        mTimer.Start(1000);
+        SendSet();
     }
 
 exit:
@@ -188,11 +189,11 @@ otError DatasetManager::Save(const otOperationalDataset &aDataset)
         break;
 
     case Mle::kRoleChild:
-        mTimer.Start(1000);
+        SendSet();
         break;
 #if OPENTHREAD_FTD
     case Mle::kRoleRouter:
-        mTimer.Start(1000);
+        SendSet();
         break;
 
     case Mle::kRoleLeader:
@@ -232,38 +233,34 @@ exit:
 
 void DatasetManager::HandleTimer(void)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), OT_NOOP);
+    SendSet();
+}
 
-    VerifyOrExit(mLocal.Compare(GetTimestamp()) < 0, OT_NOOP);
+void DatasetManager::SendSet(void)
+{
+    otError          error;
+    Coap::Message *  message = NULL;
+    Ip6::MessageInfo messageInfo;
+    Dataset          dataset(mLocal.GetType());
+
+    VerifyOrExit(!mCoapPending, error = OT_ERROR_BUSY);
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mLocal.Compare(GetTimestamp()) < 0, error = OT_ERROR_INVALID_STATE);
 
     if (mLocal.GetType() == Dataset::kActive)
     {
-        Dataset dataset(Dataset::kPending);
-        IgnoreError(Get<PendingDataset>().Read(dataset));
+        Dataset pendingDataset(Dataset::kPending);
+        IgnoreError(Get<PendingDataset>().Read(pendingDataset));
 
-        const ActiveTimestampTlv *tlv                    = dataset.GetTlv<ActiveTimestampTlv>();
+        const ActiveTimestampTlv *tlv                    = pendingDataset.GetTlv<ActiveTimestampTlv>();
         const Timestamp *         pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
 
         if (pendingActiveTimestamp != NULL && mLocal.Compare(pendingActiveTimestamp) == 0)
         {
             // stop registration attempts during dataset transition
-            ExitNow();
+            ExitNow(error = OT_ERROR_INVALID_STATE);
         }
     }
-
-    IgnoreError(Register());
-    mTimer.Start(1000);
-
-exit:
-    return;
-}
-
-otError DatasetManager::Register(void)
-{
-    otError          error = OT_ERROR_NONE;
-    Coap::Message *  message;
-    Ip6::MessageInfo messageInfo;
-    Dataset          dataset(mLocal.GetType());
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -276,18 +273,51 @@ otError DatasetManager::Register(void)
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error =
+                      Get<Coap::Coap>().SendMessage(*message, messageInfo, &DatasetManager::HandleCoapResponse, this));
 
-    otLogInfoMeshCoP("sent dataset to leader");
+    otLogInfoMeshCoP("Sent %s to leader", mUriSet);
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    switch (error)
     {
-        message->Free();
-    }
+    case OT_ERROR_NONE:
+        mCoapPending = true;
+        break;
 
-    return error;
+    case OT_ERROR_NO_BUFS:
+        mTimer.Start(kDelayNoBufs);
+        // fall through
+
+    default:
+        otLogWarnMeshCoP("Failed to send %s to leader: %s", mUriSet, otThreadErrorToString(error));
+
+        if (message != NULL)
+        {
+            message->Free();
+        }
+
+        break;
+    }
+}
+
+void DatasetManager::HandleCoapResponse(void *               aContext,
+                                        otMessage *          aMessage,
+                                        const otMessageInfo *aMessageInfo,
+                                        otError              aError)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+    OT_UNUSED_VARIABLE(aError);
+
+    static_cast<DatasetManager *>(aContext)->HandleCoapResponse();
+}
+
+void DatasetManager::HandleCoapResponse(void)
+{
+    mCoapPending = false;
+    SendSet();
 }
 
 void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const

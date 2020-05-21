@@ -39,6 +39,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "mac/mac_frame.hpp"
 #include "utils/static_assert.hpp"
 
@@ -58,7 +59,7 @@ namespace ot {
  * This class represents an OpenThread radio abstraction.
  *
  */
-class Radio : public InstanceLocator
+class Radio : public InstanceLocator, private NonCopyable
 {
     friend class Instance;
 
@@ -261,20 +262,18 @@ public:
      *
      * @param[in] aKeyIdMode  MAC key ID mode.
      * @param[in] aKeyId      Current MAC key index.
-     * @param[in] aKeySize    MAC key size in bytes.
-     * @param[in] aPrevKey    A pointer to the previous MAC key.
-     * @param[in] aCurrKey    A pointer to the current MAC key.
-     * @param[in] aNextKey    A pointer to the next MAC key.
+     * @param[in] aPrevKey    The previous MAC key.
+     * @param[in] aCurrKey    The current MAC key.
+     * @param[in] aNextKey    The next MAC key.
      *
      */
-    void SetMacKey(uint8_t        aKeyIdMode,
-                   uint8_t        aKeyId,
-                   uint8_t        aKeySize,
-                   const uint8_t *aPrevKey,
-                   const uint8_t *aCurrKey,
-                   const uint8_t *aNextKey)
+    void SetMacKey(uint8_t         aKeyIdMode,
+                   uint8_t         aKeyId,
+                   const Mac::Key &aPrevKey,
+                   const Mac::Key &aCurrKey,
+                   const Mac::Key &aNextKey)
     {
-        otPlatRadioSetMacKey(GetInstance(), aKeyIdMode, aKeyId, aKeySize, aPrevKey, aCurrKey, aNextKey);
+        otPlatRadioSetMacKey(GetInstance(), aKeyIdMode, aKeyId, &aPrevKey, &aCurrKey, &aNextKey);
     }
 
     /**
