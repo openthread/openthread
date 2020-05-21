@@ -574,7 +574,7 @@ void TestMacFrameAckGeneration(void)
     uint8_t     ie_data[6] = {0x04, 0x0d, 0x21, 0x0c, 0x35, 0x0c};
     Mac::CslIe *csl;
 
-    ackFrame.GenerateEnhAck(receivedFrame, false, ie_data, sizeof(ie_data));
+    IgnoreError(ackFrame.GenerateEnhAck(receivedFrame, false, ie_data, sizeof(ie_data)));
     csl = reinterpret_cast<Mac::CslIe *>(ackFrame.GetHeaderIe(Mac::Frame::kHeaderIeCsl) + sizeof(Mac::HeaderIe));
     VerifyOrQuit(ackFrame.mLength == 23,
                  "Mac::Frame::GenerateEnhAck() failed, length incorrect\n"); // 23 is the length of the correct ack
@@ -595,9 +595,11 @@ void TestMacFrameAckGeneration(void)
     VerifyOrQuit(csl->GetPeriod() == 3125 && csl->GetPhase() == 3105,
                  "Mac::Frame::GenerateEnhAck failed, CslIe incorrect\n");
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     ackFrame.SetCslIe(123, 456);
     csl = reinterpret_cast<Mac::CslIe *>(ackFrame.GetHeaderIe(Mac::Frame::kHeaderIeCsl) + sizeof(Mac::HeaderIe));
     VerifyOrQuit(csl->GetPeriod() == 123 && csl->GetPhase() == 456, "Mac::Frame::SetCslIe failed, CslIe incorrect\n");
+#endif
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 }
 
