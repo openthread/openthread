@@ -59,7 +59,7 @@ install_packages_apt()
     # add mdv for local size report
     python3 -m pip install mdv || echo 'Failed to install markdown render. Install it manually if you need.'
 
-    # add shfmt for shell pretty
+    # add shfmt for shell pretty, try brew because snap does not support home directory not being /home
     command -v shfmt || brew install shfmt || (sudo apt-get install --no-install-recommends -y snapd && sudo snap install shfmt)
 }
 
