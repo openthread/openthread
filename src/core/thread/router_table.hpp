@@ -266,6 +266,22 @@ public:
     Router *GetRouter(const Mac::ExtAddress &aExtAddress);
 
     /**
+     * This method returns if the router table contains a given `Neighbor` instance.
+     *
+     * @param[in]  aNeighbor  A reference to a `Neighbor`.
+     *
+     * @retval TRUE  if @p aNeighbor is a `Router` in the router table.
+     * @retval FALSE if @p aNeighbor is not a `Router` in the router table
+     *               (i.e. mParent, mParentCandidate, a `Child` of the child table).
+     *
+     */
+    bool Contains(const Neighbor &aNeighbor) const
+    {
+        return mRouters <= &static_cast<const Router &>(aNeighbor) &&
+               &static_cast<const Router &>(aNeighbor) < mRouters + Mle::kMaxRouters;
+    }
+
+    /**
      * This method retains diagnostic information for a given router.
      *
      * @param[in]   aRouterId    The router ID or RLOC16 for a given router.

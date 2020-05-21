@@ -3002,6 +3002,12 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
     {
         if (IsChild())
         {
+#if OPENTHREAD_FTD
+            // An FTD skips handling LeaderData of a different partition.
+            VerifyOrExit(!IsFullThreadDevice() || (leaderData.GetPartitionId() == mLeaderData.GetPartitionId() &&
+                                                   leaderData.GetLeaderRouterId() == GetLeaderId()),
+                         error = OT_ERROR_DROP);
+#endif
             SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
             mRetrieveNewNetworkData = true;
         }

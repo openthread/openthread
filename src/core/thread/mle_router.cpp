@@ -1166,7 +1166,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     uint8_t linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
     Mac::ExtAddress macAddr;
-    uint16_t        sourceAddress;
+    uint16_t        sourceAddress = Mac::kShortAddrInvalid;
     LeaderData      leaderData;
     RouteTlv        route;
     uint32_t        partitionId;
@@ -1284,6 +1284,10 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
         if (processRouteTlv)
         {
             SuccessOrExit(error = ProcessRouteTlv(route));
+            if (Get<RouterTable>().Contains(*aNeighbor))
+            {
+                aNeighbor = NULL; // aNeighbor is no longer valid after `ProcessRouteTlv`
+            }
         }
     }
 
@@ -2237,6 +2241,7 @@ void MleRouter::HandleChildIdRequest(const Message &         aMessage,
     router = mRouterTable.GetRouter(macAddr);
     if (router != NULL)
     {
+        // The `router` here can be invalid
         RemoveNeighbor(*router);
     }
 
@@ -3300,6 +3305,8 @@ void MleRouter::RemoveRouterLink(Router &aRouter)
 
 void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 {
+    VerifyOrExit(!aNeighbor.IsStateInvalid(), OT_NOOP);
+
     if (&aNeighbor == &mParent)
     {
         if (IsChild())
@@ -3307,8 +3314,14 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
             IgnoreError(BecomeDetached());
         }
     }
+    else if (&aNeighbor == &mParentCandidate)
+    {
+        mParentCandidate.Clear();
+    }
     else if (!IsActiveRouter(aNeighbor.GetRloc16()))
     {
+        OT_ASSERT(mChildTable.GetChildIndex(static_cast<Child &>(aNeighbor)) < kMaxChildren);
+
         if (aNeighbor.IsStateValidOrRestoring())
         {
             Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED, aNeighbor);
@@ -3326,12 +3339,17 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     }
     else if (aNeighbor.IsStateValid())
     {
+        OT_ASSERT(mRouterTable.Contains(aNeighbor));
+
         Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, aNeighbor);
         mRouterTable.RemoveRouterLink(static_cast<Router &>(aNeighbor));
     }
 
     aNeighbor.GetLinkInfo().Clear();
     aNeighbor.SetState(Neighbor::kStateInvalid);
+
+exit:
+    return;
 }
 
 Neighbor *MleRouter::GetNeighbor(uint16_t aAddress)
