@@ -165,7 +165,7 @@ if(OT_MAC_FILTER)
     list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1")
 endif()
 
-option(OT_MLE_LONG_ROUTES "enable MLE long routes extension")
+option(OT_MLE_LONG_ROUTES "enable MLE long routes extension (experimental, breaks Thread conformance)")
 if(OT_MLE_LONG_ROUTES)
     list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE=1")
 endif()

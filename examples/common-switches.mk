@@ -200,6 +200,7 @@ ifeq ($(MAC_FILTER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1
 endif
 
+# Enable MLE long routes extension (experimental, breaks Thread conformance)
 ifeq ($(MLE_LONG_ROUTES),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE=1
 endif
