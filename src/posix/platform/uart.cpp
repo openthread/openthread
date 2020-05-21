@@ -297,7 +297,12 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
 
     if ((sWriteLength > 0) && (FD_ISSET(fd, aWriteFdSet)))
     {
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+        // Don't die on SIGPIPE
+        rval = send(fd, sWriteBuffer, sWriteLength, MSG_NOSIGNAL);
+#else
         rval = write(fd, sWriteBuffer, sWriteLength);
+#endif
 
         if (rval < 0)
         {
