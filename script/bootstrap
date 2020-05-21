@@ -60,7 +60,8 @@ install_packages_apt()
     python3 -m pip install mdv || echo 'Failed to install markdown render. Install it manually if you need.'
 
     # add shfmt for shell pretty, try brew because snap does not support home directory not being /home
-    command -v shfmt || brew install shfmt || (sudo apt-get install --no-install-recommends -y snapd && sudo snap install shfmt)
+    command -v shfmt || brew install shfmt || (sudo apt-get install --no-install-recommends -y snapd \
+        && (sudo systemctl daemon-reload || true) && sudo service snapd start && sudo snap install shfmt)
 }
 
 install_packages_opkg()
