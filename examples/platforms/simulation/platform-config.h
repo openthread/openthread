@@ -92,8 +92,4 @@
 #error "OTNS requires virtual time simulations"
 #endif
 
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART
-#error "OTNS does not support virtual time UART"
-#endif
-
 #endif // OPENTHREAD_CONFIG_OTNS_ENABLE
