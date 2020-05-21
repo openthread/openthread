@@ -1369,6 +1369,8 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
 #endif
 
     case kOperationTransmitOutOfBandFrame:
+        // count Oob frames
+        mCounters.mTxOther++;
         FinishOperation();
         PerformNextOperation();
         break;
