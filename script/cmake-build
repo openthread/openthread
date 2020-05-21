@@ -29,6 +29,8 @@
 
 set -euo pipefail
 
+OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
+
 readonly OT_SRCDIR="$(pwd)"
 readonly OT_PLATFORMS=(cc1352 cc2538 cc2650 cc2652 kw41z qpg6095 samr21 simulation posix)
 readonly OT_POSIX_SIM_COMMON_OPTIONS=(
@@ -55,10 +57,9 @@ readonly OT_POSIX_SIM_COMMON_OPTIONS=(
     "-DOT_REFERENCE_DEVICE=on"
     "-DOT_SERVICE=on"
     "-DOT_SNTP_CLIENT=on"
-    "-DOT_SLAAC=ON"
-    "-DOT_COVERAGE=ON"
-    "-DOT_LOG_LEVEL_DYNAMIC=ON"
-    "-DOT_COMPILE_WARNING_AS_ERROR=ON"
+    "-DOT_COVERAGE=on"
+    "-DOT_LOG_LEVEL_DYNAMIC=on"
+    "-DOT_COMPILE_WARNING_AS_ERROR=on"
 )
 
 die()
@@ -90,58 +91,64 @@ EXAMPLES:
 
 build()
 {
-    platform=$1
-    options=("$2")
-    targets=("${OT_CMAKE_NINJA_TARGET:-$3}")
-    builddir="${OT_CMAKE_BUILD_DIR:-build/${platform}}"
+    local platform=$1
+    local builddir="${OT_CMAKE_BUILD_DIR:-build/${platform}}"
+    shift
 
     mkdir -p "${builddir}"
     cd "${builddir}"
-    cmake -GNinja "${options[@]}" "${OT_SRCDIR}"
-    ninja "${targets[@]-}"
+
+    cmake -GNinja "$@" "${OT_SRCDIR}"
+
+    if [[ -n ${OT_CMAKE_NINJA_TARGET[*]} ]]; then
+        ninja "${OT_CMAKE_NINJA_TARGET[@]}"
+    else
+        ninja
+    fi
+
     cd "${OT_SRCDIR}"
 }
 
 main()
 {
     if [[ $# == 0 ]]; then
-        echo >&2 "Please select a platform: ${OT_PLATFORMS[*]}"
-        # 128 for Invalid arguments
-        exit 128
-    elif [[ $# == 1 ]] && [[ $1 == "help" ]]; then
         print_usage
     fi
 
-    local targets=()
     local platform="$1"
     shift
+    local local_options=()
     local options=(
         "-DOT_PLATFORM=${platform}"
+        "-DOT_SLAAC=on"
         "$@"
     )
 
     # Check if the platform supports cmake.
     echo "${OT_PLATFORMS[@]}" | grep -wq "${platform}" || die "${platform}"
 
-    if [[ ${platform} == "posix" ]]; then
-        local posix_options=(
-            "-DOT_LOG_OUTPUT=PLATFORM_DEFINED"
-            "-DOT_POSIX_MAX_POWER_TABLE=on"
-        )
+    case "${platform}" in
+        posix)
+            local_options+=(
+                "-DOT_LOG_OUTPUT=PLATFORM_DEFINED"
+                "-DOT_POSIX_MAX_POWER_TABLE=on"
+            )
+            options+=("${OT_POSIX_SIM_COMMON_OPTIONS[@]}" "${local_options[@]}")
+            ;;
+        simulation)
+            local_options=("-DOT_LINK_RAW=on")
+            options+=("${OT_POSIX_SIM_COMMON_OPTIONS[@]}" "${local_options[@]}")
+            ;;
+        cc2650)
+            OT_CMAKE_NINJA_TARGET=("ot-cli-mtd" "ot-ncp-mtd")
+            options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake")
+            ;;
+        *)
+            options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake")
+            ;;
+    esac
 
-        options+=("${OT_POSIX_SIM_COMMON_OPTIONS[@]}" "${posix_options[@]}")
-    elif [[ ${platform} == "simulation" ]]; then
-        local simulation_options=("-DOT_LINK_RAW=on")
-        options+=("${OT_POSIX_SIM_COMMON_OPTIONS[@]}" "${simulation_options[@]}")
-    else
-        options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake")
-    fi
-
-    if [[ ${platform} == "cc2650" ]]; then
-        targets+=("ot-cli-mtd" "ot-ncp-mtd")
-    fi
-
-    build "${platform}" "${options[*]}" "${targets[*]:-}"
+    build "${platform}" "${options[@]}"
 }
 
 main "$@"
