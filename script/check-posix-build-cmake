@@ -29,13 +29,12 @@
 
 set -euxo pipefail
 
-readonly OT_BUILDDIR="$(pwd)/build"
 readonly OT_SRCDIR="$(pwd)"
+readonly OT_BUILDDIR="$OT_SRCDIR/build"
 
 reset_source()
 {
-    git checkout -- .
-    git clean -xfd
+    rm -rf "$OT_BUILDDIR"
 }
 
 build()
