@@ -627,4 +627,11 @@ uint16_t otPlatTimeGetXtalAccuracy(void)
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+void otPlatOtnsStatus(const char *aStatus)
+{
+    OT_UNUSED_VARIABLE(aStatus);
+}
+#endif // OPENTHREAD_CONFIG_OTNS_ENABLE
+
 } // extern "C"
