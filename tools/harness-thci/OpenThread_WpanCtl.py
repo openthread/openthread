@@ -1197,7 +1197,7 @@ class OpenThread_WpanCtl(IThci):
             if self.__setAddressfilterMode('disable'):
                 # clear ops
                 for addr in self._addressfilterSet:
-                    cmd = self.wpan_cmd_prefix + 'remove MAC:Blocklist:Entries ' + addr
+                    cmd = self.wpan_cmd_prefix + 'remove MAC:Blacklist:Entries ' + addr
                     self.__sendCommand(cmd)
 
                 self._addressfilterSet.clear()
