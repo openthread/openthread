@@ -32,9 +32,9 @@
 
 LIBRAIL = $(shell                                                                \
 if [ "$(DMP)" = "1" ]; then                                                      \
-    echo "librail_multiprotocol_efr32xg12_gcc_release.a";                        \
+    echo "librail_multiprotocol_efr32xg1_gcc_release.a";                        \
 else                                                                             \
-    echo "librail_efr32xg12_gcc_release.a";                                      \
+    echo "librail_efr32xg1_gcc_release.a";                                      \
 fi )
 
 LDADD_COMMON                                                                  += \
