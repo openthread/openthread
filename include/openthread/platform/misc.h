@@ -198,6 +198,21 @@ otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance);
  *
  */
 
+#if defined(OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE) && OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+/**
+ * This function gets the name and index of the platform's network interface (if it exists).
+ *
+ * @param[in]  aInstance      A pointer to OpenThread instance.
+ * @param[out] outNetIfName   A pointer for the returned network interface name.
+ * @param[out] outNetIfIndex  A pointer for the returned network interface index (i.e., if_nametoindex).
+ *
+ * @retval OT_ERROR_NONE     Successfully returned the network interface and index.
+ * @retval OT_ERROR_FAILED   The network interface is not enabled or is unknown.
+ *
+ */
+otError otPlatGetNetif(otInstance *aInstance, const char **outNetIfName, unsigned int *outNetIfIndex);
+#endif
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

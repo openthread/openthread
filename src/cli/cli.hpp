@@ -285,6 +285,9 @@ private:
     void ProcessNetworkDataRegister(uint8_t aArgsLength, char *aArgs[]);
 #endif
     void ProcessNetworkDataShow(uint8_t aArgsLength, char *aArgs[]);
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    void ProcessNetif(uint8_t aArgsLength, char *aArgs[]);
+#endif
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessService(uint8_t aArgsLength, char *aArgs[]);
 #endif
