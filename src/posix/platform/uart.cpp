@@ -299,10 +299,27 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
     {
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
         // Don't die on SIGPIPE
+#if !defined(MSG_NOSIGNAL)
+        // some platforms (mac OS, Solaris) don't have MSG_NOSIGNAL
+        // SOME of those (mac OS, but NOT Solaris) support SO_NOSIGPIPE
+        // if we have SO_NOSIGPIPE, then set it.  otherwise, we're going
+        // to simply ignore it.
+#if defined(SO_NOSIGPIPE)
+        int err;
+        int flag;
+
+        flag = 1;
+        err  = setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &flag, sizeof(flag));
+        VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
+#else
+#warning "no support for MSG_NOSIGNAL or SO_NOSIGPIPE"
+#endif
+#define MSG_NOSIGNAL 0
+#endif // !defined(MSG_NOSIGNAL)
         rval = send(fd, sWriteBuffer, sWriteLength, MSG_NOSIGNAL);
 #else
         rval = write(fd, sWriteBuffer, sWriteLength);
-#endif
+#endif // OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 
         if (rval < 0)
         {
