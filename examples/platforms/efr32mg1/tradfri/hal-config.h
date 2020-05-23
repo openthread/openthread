@@ -251,13 +251,13 @@
 #define BSP_SERIAL_APP_CTS_PORT (gpioPortA)
 #define BSP_SERIAL_APP_CTS_LOC (30)
 
-#define BSP_SERIAL_APP_RX_PIN (1)
-#define BSP_SERIAL_APP_RX_PORT (gpioPortA)
-#define BSP_SERIAL_APP_RX_LOC (0)
+#define BSP_SERIAL_APP_RX_PIN (14)
+#define BSP_SERIAL_APP_RX_PORT (gpioPortB)
+#define BSP_SERIAL_APP_RX_LOC (8)
 
-#define BSP_SERIAL_APP_TX_PIN (0)
-#define BSP_SERIAL_APP_TX_PORT (gpioPortA)
-#define BSP_SERIAL_APP_TX_LOC (0)
+#define BSP_SERIAL_APP_TX_PIN (15)
+#define BSP_SERIAL_APP_TX_PORT (gpioPortB)
+#define BSP_SERIAL_APP_TX_LOC (10)
 
 #define BSP_SERIAL_APP_RTS_PIN (3)
 #define BSP_SERIAL_APP_RTS_PORT (gpioPortA)
@@ -295,13 +295,13 @@
 #define PORTIO_USART0_RTS_PORT (gpioPortA)
 #define PORTIO_USART0_RTS_LOC (30)
 
-#define PORTIO_USART0_RX_PIN (1)
-#define PORTIO_USART0_RX_PORT (gpioPortA)
-#define PORTIO_USART0_RX_LOC (0)
+#define PORTIO_USART0_RX_PIN (14)
+#define PORTIO_USART0_RX_PORT (gpioPortB)
+#define PORTIO_USART0_RX_LOC (8)
 
-#define PORTIO_USART0_TX_PIN (0)
-#define PORTIO_USART0_TX_PORT (gpioPortA)
-#define PORTIO_USART0_TX_LOC (0)
+#define PORTIO_USART0_TX_PIN (15)
+#define PORTIO_USART0_TX_PORT (gpioPortB)
+#define PORTIO_USART0_TX_LOC (10)
 
 #define HAL_USART0_ENABLE (1)
 
