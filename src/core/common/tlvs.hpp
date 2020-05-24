@@ -45,7 +45,6 @@
 namespace ot {
 
 using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
 
 class Message;
 
@@ -176,6 +175,59 @@ public:
      *
      */
     otError AppendTo(Message &aMessage) const;
+
+    /**
+     * This static method reads a TLV from a message at a given offset with TLV's value as an `uint8_t`.
+     *
+     * @param[in]   aMessage  The message to read from.
+     * @param[in]   aOffset   The offset into the message pointing to the start of the TLV.
+     * @param[out]  aValue    A reference to a `uint8_t` to output the TLV's value.
+     *
+     * @retval OT_ERROR_NONE        Successfully read the TLV and updated @p aValue.
+     * @retval OT_ERROR_PARSE       The TLV was not well-formed and could not be parsed.
+     *
+     */
+    static otError ReadUint8Tlv(const Message &aMessage, uint16_t aOffset, uint8_t &aValue);
+
+    /**
+     * This static method reads a TLV from a message at a given offset with TLV's value as an `uint16_t`.
+     *
+     * @param[in]   aMessage  The message to read from.
+     * @param[in]   aOffset   The offset into the message pointing to the start of the TLV.
+     * @param[out]  aValue    A reference to a `uint16_t` to output the TLV's value.
+     *
+     * @retval OT_ERROR_NONE        Successfully read the TLV and updated @p aValue.
+     * @retval OT_ERROR_PARSE       The TLV was not well-formed and could not be parsed.
+     *
+     */
+    static otError ReadUint16Tlv(const Message &aMessage, uint16_t aOffset, uint16_t &aValue);
+
+    /**
+     * This static method reads a TLV from a message at a given offset with TLV's value as an `uint32_t`.
+     *
+     * @param[in]   aMessage  The message to read from.
+     * @param[in]   aOffset   The offset into the message pointing to the start of the TLV.
+     * @param[out]  aValue    A reference to a `uint32_t` to output the TLV's value.
+     *
+     * @retval OT_ERROR_NONE        Successfully read the TLV and updated @p aValue.
+     * @retval OT_ERROR_PARSE       The TLV was not well-formed and could not be parsed.
+     *
+     */
+    static otError ReadUint32Tlv(const Message &aMessage, uint16_t aOffset, uint32_t &aValue);
+
+    /**
+     * This static method reads a TLV in a message at a given offset expecting a minimum length for the value.
+     *
+     * @param[in]   aMessage    The message to read from.
+     * @param[in]   aOffset     The offset into the message pointing to the start of the TLV.
+     * @param[out]  aValue      A buffer to output the TLV's value, must contain (at least) @p aMinLength bytes.
+     * @param[in]   aMinLength  The minimum expected length of TLV and number of bytes to copy into @p aValue buffer.
+     *
+     * @retval OT_ERROR_NONE        Successfully read the TLV and copied @p aMinLength into @p aValue.
+     * @retval OT_ERROR_PARSE       The TLV was not well-formed and could not be parsed.
+     *
+     */
+    static otError ReadTlv(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength);
 
     /**
      * This static method reads the requested TLV out of @p aMessage.
@@ -407,153 +459,6 @@ public:
 
 private:
     uint16_t mLength;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements a simple TLV with a `uint8_t` value.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class TlvUint8 : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     * @param[in]  aType  The Type value.
-     *
-     */
-    void Init(uint8_t aType)
-    {
-        SetType(aType);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the `uint8_t` value.
-     *
-     * @returns The `uint8_t` value.
-     *
-     */
-    uint8_t GetUint8Value(void) const { return mValue; }
-
-    /**
-     * This method sets the `uint8_t` value.
-     *
-     * @param[in] aValue   The `uint8_t` value.
-     *
-     */
-    void SetUint8Value(uint8_t aValue) { mValue = aValue; }
-
-private:
-    uint8_t mValue;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements a simple TLV with a `uint16_t` value.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class TlvUint16 : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     * @param[in]  aType  The Type value.
-     *
-     */
-    void Init(uint8_t aType)
-    {
-        SetType(aType);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the `uint16_t` value.
-     *
-     * @returns The `uint16_t` value.
-     *
-     */
-    uint16_t GetUint16Value(void) const { return HostSwap16(mValue); }
-
-    /**
-     * This method sets the `uint16_t` value.
-     *
-     * @param[in] aValue   The `uint16_t` value.
-     *
-     */
-    void SetUint16Value(uint16_t aValue) { mValue = HostSwap16(aValue); }
-
-private:
-    uint16_t mValue;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements a simple TLV with a `uint32_t` value.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class TlvUint32 : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     * @param[in]  aType  The Type value.
-     *
-     */
-    void Init(uint8_t aType)
-    {
-        SetType(aType);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the `uint32_t` value.
-     *
-     * @returns The `uint32_t` value.
-     *
-     */
-    uint32_t GetUint32Value(void) const { return HostSwap32(mValue); }
-
-    /**
-     * This method sets the `uint32_t` value.
-     *
-     * @param[in] aValue   The `uint32_t` value.
-     *
-     */
-    void SetUint32Value(uint32_t aValue) { mValue = HostSwap32(aValue); }
-
-private:
-    uint32_t mValue;
 } OT_TOOL_PACKED_END;
 
 } // namespace ot

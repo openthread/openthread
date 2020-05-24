@@ -3857,10 +3857,8 @@ void Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInf
     Tlv                           tlv;
     MeshCoP::Tlv                  meshcopTlv;
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
-    MeshCoP::ExtendedPanIdTlv     extPanId;
     MeshCoP::NetworkNameTlv       networkName;
     MeshCoP::SteeringDataTlv      steeringData;
-    MeshCoP::JoinerUdpPortTlv     JoinerUdpPort;
     otActiveScanResult            result;
     uint16_t                      offset;
     uint16_t                      end;
@@ -3899,9 +3897,7 @@ void Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInf
             break;
 
         case MeshCoP::Tlv::kExtendedPanId:
-            aMessage.Read(offset, sizeof(extPanId), &extPanId);
-            VerifyOrExit(extPanId.IsValid(), error = OT_ERROR_PARSE);
-            result.mExtendedPanId = extPanId.GetExtendedPanId();
+            SuccessOrExit(error = Tlv::ReadTlv(aMessage, offset, &result.mExtendedPanId, sizeof(Mac::ExtendedPanId)));
             break;
 
         case MeshCoP::Tlv::kNetworkName:
@@ -3927,9 +3923,7 @@ void Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInf
             break;
 
         case MeshCoP::Tlv::kJoinerUdpPort:
-            aMessage.Read(offset, sizeof(JoinerUdpPort), &JoinerUdpPort);
-            VerifyOrExit(JoinerUdpPort.IsValid(), error = OT_ERROR_PARSE);
-            result.mJoinerUdpPort = JoinerUdpPort.GetUdpPort();
+            SuccessOrExit(error = Tlv::ReadUint16Tlv(aMessage, offset, result.mJoinerUdpPort));
             break;
 
         default:
