@@ -39,7 +39,7 @@ target_compile_definitions(mbedtls
     PUBLIC
         "MBEDTLS_CONFIG_FILE=$<IF:$<BOOL:${OT_MBEDTLS_CONFIG_FILE}>,${OT_MBEDTLS_CONFIG_FILE},${OT_MBEDTLS_DEFAULT_CONFIG_FILE}>"
     PRIVATE
-        ${OT_PRIVATE_DEFINES}
+        $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
 )
 target_include_directories(mbedtls
     PUBLIC
@@ -54,7 +54,7 @@ target_compile_definitions(mbedx509
     PUBLIC
         "MBEDTLS_CONFIG_FILE=$<IF:$<BOOL:${OT_MBEDTLS_CONFIG_FILE}>,${OT_MBEDTLS_CONFIG_FILE},${OT_MBEDTLS_DEFAULT_CONFIG_FILE}>"
     PRIVATE
-        ${OT_PRIVATE_DEFINES}
+        $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
 )
 target_include_directories(mbedx509
     PUBLIC
@@ -69,7 +69,7 @@ target_compile_definitions(mbedcrypto
     PUBLIC
         "MBEDTLS_CONFIG_FILE=$<IF:$<BOOL:${OT_MBEDTLS_CONFIG_FILE}>,${OT_MBEDTLS_CONFIG_FILE},${OT_MBEDTLS_DEFAULT_CONFIG_FILE}>"
     PRIVATE
-        ${OT_PRIVATE_DEFINES}
+        $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
 )
 target_include_directories(mbedcrypto
     PUBLIC

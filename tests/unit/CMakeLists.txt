@@ -34,6 +34,7 @@ set(COMMON_SOURCES
 set(COMMON_LIBS
     openthread-ftd
     openthread-ncp-ftd
+    ot-config
     ${OT_MBEDTLS}
     util
 )
@@ -60,11 +61,6 @@ target_include_directories(test-aes
         ${COMMON_INCLUDES}
 )
 
-target_compile_definitions(test-aes
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
-)
-
 target_compile_options(test-aes
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
@@ -85,11 +81,6 @@ add_executable(test-child
 target_include_directories(test-child
     PRIVATE
         ${COMMON_INCLUDES}
-)
-
-target_compile_definitions(test-child
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(test-child
@@ -114,11 +105,6 @@ target_include_directories(test-child-table
         ${COMMON_INCLUDES}
 )
 
-target_compile_definitions(test-child-table
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
-)
-
 target_compile_options(test-child-table
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
@@ -139,11 +125,6 @@ add_executable(test-flash
 target_include_directories(test-flash
     PRIVATE
         ${COMMON_INCLUDES}
-)
-
-target_compile_definitions(test-flash
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(test-flash
@@ -168,11 +149,6 @@ target_include_directories(test-heap
         ${COMMON_INCLUDES}
 )
 
-target_compile_definitions(test-heap
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
-)
-
 target_compile_options(test-heap
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
@@ -193,11 +169,6 @@ add_executable(test-hmac-sha256
 target_include_directories(test-hmac-sha256
     PRIVATE
         ${COMMON_INCLUDES}
-)
-
-target_compile_definitions(test-hmac-sha256
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(test-hmac-sha256
@@ -222,11 +193,6 @@ target_include_directories(test-ip6-address
         ${COMMON_INCLUDES}
 )
 
-target_compile_definitions(test-ip6-address
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
-)
-
 target_compile_options(test-ip6-address
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
@@ -247,11 +213,6 @@ add_executable(test-link-quality
 target_include_directories(test-link-quality
     PRIVATE
         ${COMMON_INCLUDES}
-)
-
-target_compile_definitions(test-link-quality
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(test-link-quality
@@ -276,11 +237,6 @@ target_include_directories(test-linked-list
         ${COMMON_INCLUDES}
 )
 
-target_compile_definitions(test-linked-list
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
-)
-
 target_compile_options(test-linked-list
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
@@ -301,11 +257,6 @@ add_executable(test-lowpan
 target_include_directories(test-lowpan
     PRIVATE
         ${COMMON_INCLUDES}
-)
-
-target_compile_definitions(test-lowpan
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(test-lowpan
@@ -330,11 +281,6 @@ target_include_directories(test-mac-frame
         ${COMMON_INCLUDES}
 )
 
-target_compile_definitions(test-mac-frame
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
-)
-
 target_compile_options(test-mac-frame
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
@@ -355,11 +301,6 @@ add_executable(test-message
 target_include_directories(test-message
     PRIVATE
         ${COMMON_INCLUDES}
-)
-
-target_compile_definitions(test-message
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(test-message
@@ -384,11 +325,6 @@ target_include_directories(test-message-queue
         ${COMMON_INCLUDES}
 )
 
-target_compile_definitions(test-message-queue
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
-)
-
 target_compile_options(test-message-queue
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
@@ -409,11 +345,6 @@ add_executable(test-netif
 target_include_directories(test-netif
     PRIVATE
         ${COMMON_INCLUDES}
-)
-
-target_compile_definitions(test-netif
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(test-netif
@@ -438,11 +369,6 @@ target_include_directories(test-network-data
         ${COMMON_INCLUDES}
 )
 
-target_compile_definitions(test-network-data
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
-)
-
 target_compile_options(test-network-data
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
@@ -463,11 +389,6 @@ add_executable(test-priority-queue
 target_include_directories(test-priority-queue
     PRIVATE
         ${COMMON_INCLUDES}
-)
-
-target_compile_definitions(test-priority-queue
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(test-priority-queue
@@ -492,11 +413,6 @@ target_include_directories(test-pskc
         ${COMMON_INCLUDES}
 )
 
-target_compile_definitions(test-pskc
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
-)
-
 target_compile_options(test-pskc
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
@@ -519,11 +435,6 @@ target_include_directories(test-string
         ${COMMON_INCLUDES}
 )
 
-target_compile_definitions(test-string
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
-)
-
 target_compile_options(test-string
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
@@ -544,11 +455,6 @@ add_executable(test-timer
 target_include_directories(test-timer
     PRIVATE
         ${COMMON_INCLUDES}
-)
-
-target_compile_definitions(test-timer
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(test-timer

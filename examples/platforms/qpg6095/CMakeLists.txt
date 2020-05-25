@@ -38,7 +38,7 @@ list(APPEND OT_PLATFORM_DEFINES
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
-list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"qpg6095-mbedtls-config.h\"")
+target_compile_definitions(ot-config INTERFACE "MBEDTLS_USER_CONFIG_FILE=\"qpg6095-mbedtls-config.h\"")
 
 list(APPEND OT_PUBLIC_INCLUDES
     "${CMAKE_CURRENT_SOURCE_DIR}/crypto"
@@ -73,6 +73,7 @@ target_link_libraries(openthread-qpg6095
     PRIVATE
         qpg6095-driver
         ${OT_MBEDTLS}
+        ot-config
 )
 
 target_link_options(openthread-qpg6095
@@ -85,8 +86,6 @@ target_link_options(openthread-qpg6095
 target_compile_definitions(openthread-qpg6095
     PUBLIC
         ${OT_PLATFORM_DEFINES}
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(openthread-qpg6095
