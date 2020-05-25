@@ -36,19 +36,20 @@ when preparing for the Thread Certification testbed
 import argparse
 import logging
 import re
+from collections import Counter
 
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 MAX_VENDOR_DEVICE = 32
 
 
 def device_calculate(topo_file, case_list):
-    case_count = 0
-    testbed_vendor_dict = {}
+    testbed_vendor_dict = Counter()
     for case in case_list:
+        case_found = False
         with open(topo_file, 'r') as f:
             while 1:
 
-                case_vendor_dict = {}
+                case_vendor_dict = Counter()
 
                 line = f.readline()
                 line = line.strip()
@@ -64,7 +65,7 @@ def device_calculate(topo_file, case_list):
                         continue
 
                     logging.info('case %s:' % matched_case.group(1))
-                    case_count += 1
+                    case_found = True
                     role_vendor_str = matched_case.group(2)
                     role_vendor_raw_list = re.split(',', role_vendor_str)
                     role_vendor_list = []
@@ -74,28 +75,21 @@ def device_calculate(topo_file, case_list):
                         role_vendor_list.append(tuple(device_pair))
                     logging.info('\trole-vendor pair: %s' % role_vendor_list)
 
-                    for i in range(len(role_vendor_list)):
-                        if role_vendor_list[i][1] in case_vendor_dict:
-                            case_vendor_dict[role_vendor_list[i][1]] += 1
-                        else:
-                            case_vendor_dict[role_vendor_list[i][1]] = 1
-
-                        if role_vendor_list[i][1] in testbed_vendor_dict:
-                            if testbed_vendor_dict[role_vendor_list[i]
-                                                   [1]] < case_vendor_dict[
-                                                       role_vendor_list[i][1]]:
-                                testbed_vendor_dict[role_vendor_list[i]
-                                                    [1]] = case_vendor_dict[
-                                                        role_vendor_list[i][1]]
-                        else:
-                            testbed_vendor_dict[role_vendor_list[i][1]] = 1
+                    for _, vendor in role_vendor_list:
+                        case_vendor_dict[vendor] += 1
+                        testbed_vendor_dict[vendor] = max(
+                            testbed_vendor_dict[vendor],
+                            case_vendor_dict[vendor])
 
                     logging.info('\tneeded vendor devices:%s' %
-                                 case_vendor_dict)
+                                 dict(case_vendor_dict))
                 except Exception as e:
                     logging.info('Unrecognized format: %s\n%s' %
                                  (line, format(e)))
                     raise
+        if not case_found:
+            logging.info('Case %s not found' % case)
+            continue
 
     count_any = MAX_VENDOR_DEVICE
     for key in testbed_vendor_dict:
@@ -104,7 +98,8 @@ def device_calculate(topo_file, case_list):
         if 'Any' in testbed_vendor_dict:
             testbed_vendor_dict['Any'] = count_any
 
-    logging.info('\nTestbed needed vendor devices:%s' % testbed_vendor_dict)
+    logging.info('\nTestbed needed vendor devices:%s' %
+                 dict(testbed_vendor_dict))
 
 
 def main():
