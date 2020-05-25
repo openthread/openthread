@@ -123,13 +123,15 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
 
         SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_LAST_STATUS));
         SuccessOrExit(mEncoder.WriteUintPacked(ThreadErrorToSpinelStatus(aError)));
-
-        // Transmit frame header
-        SuccessOrExit(mEncoder.WriteDataWithLen(aFrame->mPsdu, static_cast<Mac::TxFrame *>(aFrame)->GetHeaderLength()));
-
         SuccessOrExit(mEncoder.WriteBool(framePending));
 
-        if (aAckFrame && aError == OT_ERROR_NONE)
+        if (aError != OT_ERROR_NONE)
+        {
+            // Transmit frame header
+            SuccessOrExit(
+                mEncoder.WriteDataWithLen(aFrame->mPsdu, static_cast<Mac::TxFrame *>(aFrame)->GetHeaderLength()));
+        }
+        else if (aAckFrame)
         {
             SuccessOrExit(mEncoder.WriteUint16(aAckFrame->mLength));
             SuccessOrExit(mEncoder.WriteData(aAckFrame->mPsdu, aAckFrame->mLength));

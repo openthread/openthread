@@ -851,30 +851,29 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ParseRadioFrame(otRadioF
                                                                         const uint8_t *aBuffer,
                                                                         uint16_t       aLength)
 {
-    otError        error        = OT_ERROR_NONE;
-    uint16_t       flags        = 0;
-    int8_t         noiseFloor   = -128;
-    spinel_size_t  size         = OT_RADIO_FRAME_MAX_SIZE;
-    unsigned int   receiveError = 0;
-    spinel_ssize_t unpacked;
+    otError       error        = OT_ERROR_NONE;
+    uint16_t      flags        = 0;
+    int8_t        noiseFloor   = -128;
+    spinel_size_t size         = OT_RADIO_FRAME_MAX_SIZE;
+    unsigned int  receiveError = 0;
 
-    unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength,
-                                               SPINEL_DATATYPE_DATA_WLEN_S                          // Frame
-                                                               SPINEL_DATATYPE_INT8_S               // RSSI
-                                                               SPINEL_DATATYPE_INT8_S               // Noise Floor
-                                                               SPINEL_DATATYPE_UINT16_S             // Flags
-                                                               SPINEL_DATATYPE_STRUCT_S(            // PHY-data
-                                                                   SPINEL_DATATYPE_UINT8_S          // 802.15.4 channel
-                                                                           SPINEL_DATATYPE_UINT8_S  // 802.15.4 LQI
-                                                                           SPINEL_DATATYPE_UINT64_S // Timestamp (us).
-                                                                   ) SPINEL_DATATYPE_STRUCT_S(      // Vendor-data
-                                                                   SPINEL_DATATYPE_UINT_PACKED_S    // Receive error
-                                                                   ),
-                                               aFrame.mPsdu, &size, &aFrame.mInfo.mRxInfo.mRssi, &noiseFloor, &flags,
-                                               &aFrame.mChannel, &aFrame.mInfo.mRxInfo.mLqi,
-                                               &aFrame.mInfo.mRxInfo.mTimestamp, &receiveError);
+    aUnpacked = spinel_datatype_unpack_in_place(aBuffer, aLength,
+                                                SPINEL_DATATYPE_DATA_WLEN_S                          // Frame
+                                                                SPINEL_DATATYPE_INT8_S               // RSSI
+                                                                SPINEL_DATATYPE_INT8_S               // Noise Floor
+                                                                SPINEL_DATATYPE_UINT16_S             // Flags
+                                                                SPINEL_DATATYPE_STRUCT_S(            // PHY-data
+                                                                    SPINEL_DATATYPE_UINT8_S          // 802.15.4 channel
+                                                                            SPINEL_DATATYPE_UINT8_S  // 802.15.4 LQI
+                                                                            SPINEL_DATATYPE_UINT64_S // Timestamp (us).
+                                                                    ) SPINEL_DATATYPE_STRUCT_S(      // Vendor-data
+                                                                    SPINEL_DATATYPE_UINT_PACKED_S    // Receive error
+                                                                    ),
+                                                aFrame.mPsdu, &size, &aFrame.mInfo.mRxInfo.mRssi, &noiseFloor, &flags,
+                                                &aFrame.mChannel, &aFrame.mInfo.mRxInfo.mLqi,
+                                                &aFrame.mInfo.mRxInfo.mTimestamp, &receiveError);
 
-    VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(aUnpacked > 0, error = OT_ERROR_PARSE);
 
     if (receiveError == OT_ERROR_NONE)
     {
@@ -1476,10 +1475,11 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
                                                                         const uint8_t *   aBuffer,
                                                                         uint16_t          aLength)
 {
-    otError         error  = OT_ERROR_NONE;
-    spinel_status_t status = SPINEL_STATUS_OK;
+    otError         error        = OT_ERROR_NONE;
+    spinel_status_t status       = SPINEL_STATUS_OK;
+    bool            framePending = false;
+    spinel_ssize_t  header_size  = mTransmitFrame->mLength;
     spinel_ssize_t  unpacked;
-    spinel_ssize_t  header_size = mTransmitFrame->mLength;
 
     VerifyOrExit(aCommand == SPINEL_CMD_PROP_VALUE_IS && aKey == SPINEL_PROP_LAST_STATUS, error = OT_ERROR_FAILED);
 
@@ -1489,9 +1489,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
     aBuffer += unpacked;
     aLength -= static_cast<uint16_t>(unpacked);
 
-    // Replace transmit frame MAC header with the one from RCP which contains fields filled at RCP side
-    unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_DATA_WLEN_S, mTransmitFrame->mPsdu,
-                                               &header_size);
+    unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_BOOL_S, &framePending);
+    OT_UNUSED_VARIABLE(framePending);
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
     aBuffer += unpacked;
@@ -1499,14 +1498,6 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
 
     if (status == SPINEL_STATUS_OK)
     {
-        bool framePending = false;
-        unpacked          = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_BOOL_S, &framePending);
-        OT_UNUSED_VARIABLE(framePending);
-        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-
-        aBuffer += unpacked;
-        aLength -= static_cast<spinel_size_t>(unpacked);
-
         if (aLength > 0)
         {
             SuccessOrExit(error = ParseRadioFrame(mAckRadioFrame, aBuffer, aLength));
@@ -1518,6 +1509,11 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
     }
     else
     {
+        // Replace transmit frame MAC header with the one from RCP which contains fields filled at RCP side
+        unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_DATA_WLEN_S, mTransmitFrame->mPsdu,
+                                                   &header_size);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
         error = SpinelStatusToOtError(status);
     }
 
