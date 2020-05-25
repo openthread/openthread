@@ -85,6 +85,12 @@ set(COMMON_SOURCES
     ncp_uart.cpp
 )
 
+if(DEFINED OT_NCP_VENDOR_HOOK_SOURCE)
+    if(NOT OT_NCP_VENDOR_HOOK_SOURCE STREQUAL "OFF")
+        list(APPEND COMMON_SOURCES ${OT_NCP_VENDOR_HOOK_SOURCE})
+    endif()
+endif()
+
 target_include_directories(openthread-ncp-ftd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 target_include_directories(openthread-ncp-mtd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 target_include_directories(openthread-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
