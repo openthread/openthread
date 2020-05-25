@@ -41,7 +41,7 @@ build_all_features()
     reset_source
     "$(dirname "$0")"/cmake-build simulation
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=on -DOT_SIMULATION_VIRTUAL_TIME=on
+    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON
 }
 
 build_toranj()

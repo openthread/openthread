@@ -34,37 +34,37 @@ OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
 readonly OT_SRCDIR="$(pwd)"
 readonly OT_PLATFORMS=(cc1352 cc2538 cc2650 cc2652 kw41z qpg6095 samr21 simulation posix)
 readonly OT_POSIX_SIM_COMMON_OPTIONS=(
-    "-DOT_BORDER_AGENT=on"
-    "-DOT_BORDER_ROUTER=on"
-    "-DOT_COAP=on"
-    "-DOT_COAP_OBSERVE=on"
-    "-DOT_COAPS=on"
-    "-DOT_COMMISSIONER=on"
-    "-DOT_CHANNEL_MANAGER=on"
-    "-DOT_CHANNEL_MONITOR=on"
-    "-DOT_CHILD_SUPERVISION=on"
-    "-DOT_DHCP6_CLIENT=on"
-    "-DOT_DHCP6_SERVER=on"
-    "-DOT_DIAGNOSTIC=on"
-    "-DOT_DNS_CLIENT=on"
-    "-DOT_ECDSA=on"
-    "-DOT_IP6_FRAGM=on"
-    "-DOT_JAM_DETECTION=on"
-    "-DOT_JOINER=on"
-    "-DOT_LEGACY=on"
-    "-DOT_MAC_FILTER=on"
-    "-DOT_MTD_NETDIAG=on"
-    "-DOT_REFERENCE_DEVICE=on"
-    "-DOT_SERVICE=on"
-    "-DOT_SNTP_CLIENT=on"
-    "-DOT_COVERAGE=on"
-    "-DOT_LOG_LEVEL_DYNAMIC=on"
-    "-DOT_COMPILE_WARNING_AS_ERROR=on"
+    "-DOT_BORDER_AGENT=ON"
+    "-DOT_BORDER_ROUTER=ON"
+    "-DOT_COAP=ON"
+    "-DOT_COAP_OBSERVE=ON"
+    "-DOT_COAPS=ON"
+    "-DOT_COMMISSIONER=ON"
+    "-DOT_CHANNEL_MANAGER=ON"
+    "-DOT_CHANNEL_MONITOR=ON"
+    "-DOT_CHILD_SUPERVISION=ON"
+    "-DOT_DHCP6_CLIENT=ON"
+    "-DOT_DHCP6_SERVER=ON"
+    "-DOT_DIAGNOSTIC=ON"
+    "-DOT_DNS_CLIENT=ON"
+    "-DOT_ECDSA=ON"
+    "-DOT_IP6_FRAGM=ON"
+    "-DOT_JAM_DETECTION=ON"
+    "-DOT_JOINER=ON"
+    "-DOT_LEGACY=ON"
+    "-DOT_MAC_FILTER=ON"
+    "-DOT_MTD_NETDIAG=ON"
+    "-DOT_REFERENCE_DEVICE=ON"
+    "-DOT_SERVICE=ON"
+    "-DOT_SNTP_CLIENT=ON"
+    "-DOT_COVERAGE=ON"
+    "-DOT_LOG_LEVEL_DYNAMIC=ON"
+    "-DOT_COMPILE_WARNING_AS_ERROR=ON"
 )
 
 die()
 {
-    echo " ** ERROR: Openthread cmake doesn't support platform \"$1\""
+    echo " ** ERROR: Openthread CMake doesn't support platform \"$1\""
     exit 1
 }
 
@@ -83,7 +83,7 @@ EXAMPLES:
     $0 simulation
 
     # Build specified platform with addtional options:
-    $0 posix -DOT_DAEMON=on -DOT_PLATFORM_NETIF=on
+    $0 posix -DOT_DAEMON=ON -DOT_PLATFORM_NETIF=ON
     "
 
     exit 1
@@ -120,7 +120,7 @@ main()
     local local_options=()
     local options=(
         "-DOT_PLATFORM=${platform}"
-        "-DOT_SLAAC=on"
+        "-DOT_SLAAC=ON"
         "$@"
     )
 
@@ -131,17 +131,20 @@ main()
         posix)
             local_options+=(
                 "-DOT_LOG_OUTPUT=PLATFORM_DEFINED"
-                "-DOT_POSIX_MAX_POWER_TABLE=on"
+                "-DOT_POSIX_MAX_POWER_TABLE=ON"
             )
             options+=("${OT_POSIX_SIM_COMMON_OPTIONS[@]}" "${local_options[@]}")
             ;;
         simulation)
-            local_options=("-DOT_LINK_RAW=on")
+            local_options=("-DOT_LINK_RAW=ON")
             options+=("${OT_POSIX_SIM_COMMON_OPTIONS[@]}" "${local_options[@]}")
             ;;
         cc2650)
             OT_CMAKE_NINJA_TARGET=("ot-cli-mtd" "ot-ncp-mtd")
-            options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake")
+            options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
+            ;;
+        cc1352 | cc2652 | samr21 | qpg6095)
+            options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
             ;;
         *)
             options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake")

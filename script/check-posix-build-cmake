@@ -41,7 +41,7 @@ build()
     local options=("$@")
 
     options+=(
-        "-DOT_FULL_LOGS=on"
+        "-DOT_FULL_LOGS=ON"
     )
 
     "$(dirname "$0")"/cmake-build posix "${options[@]}"
