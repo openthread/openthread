@@ -154,7 +154,6 @@ public:
          * This method is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability. It is called from
          * `otPlatRadioMacFrameCounterStore()`.
          *
-         * @param[in]  aInstance           The OpenThread instance structure.
          * @param[in]  aMacFrameCounter    The current MAC frame counter value.
          *
          */

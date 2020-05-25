@@ -342,11 +342,11 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_ENABLED>(void)
             IgnoreError(otLinkRawSleep(mInstance));
         }
 
-        error = otLinkRawSetEnable(mInstance, false);
+        error = otLinkRawSetEnable(mInstance, false, NULL);
     }
     else
     {
-        error = otLinkRawSetEnable(mInstance, true);
+        error = otLinkRawSetEnable(mInstance, true, &NcpBase::LinkRawMacFrameCounterStore);
 
         // If we have raw stream enabled already, start receiving
         if (error == OT_ERROR_NONE && mIsRawStreamEnabled)
@@ -494,7 +494,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER
 
     SuccessOrExit(error = mDecoder.ReadUint32(frameCounter));
 
-    error = otLinkRawSetMacFrameCounter(mInstance, frameCounter, &NcpBase::LinkRawMacFrameCounterStore);
+    error = otLinkRawSetMacFrameCounter(mInstance, frameCounter);
 
 exit:
     return error;
@@ -507,7 +507,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_STORED_MAC_FRAME_
 
     SuccessOrExit(error = mDecoder.ReadUint32(frameCounter));
 
-    error = otLinkRawSetStoredMacFrameCounter(mInstance, frameCounter, &NcpBase::LinkRawMacFrameCounterStore);
+    error = otLinkRawSetStoredMacFrameCounter(mInstance, frameCounter);
 
 exit:
     return error;

@@ -66,7 +66,7 @@ LinkRaw::LinkRaw(Instance &aInstance)
 {
 }
 
-otError LinkRaw::SetEnabled(bool aEnabled)
+otError LinkRaw::SetEnabled(bool aEnabled, otLinkRawMacFcStore aCallback)
 {
     otError error = OT_ERROR_NONE;
 
@@ -85,7 +85,8 @@ otError LinkRaw::SetEnabled(bool aEnabled)
         IgnoreError(mSubMac.Disable());
     }
 
-    mEnabled = aEnabled;
+    mEnabled            = aEnabled;
+    mMacFcStoreCallback = aCallback;
 
 exit:
     return error;
@@ -226,27 +227,23 @@ uint32_t LinkRaw::GetMacFrameCounter(void)
     return mSubMac.GetMacFrameCounter();
 }
 
-otError LinkRaw::SetMacFrameCounter(uint32_t aMacFrameCounter, otLinkRawMacFcStore aCallback)
+otError LinkRaw::SetMacFrameCounter(uint32_t aMacFrameCounter)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
     mSubMac.SetMacFrameCounter(aMacFrameCounter);
 
-    mMacFcStoreCallback = aCallback;
-
 exit:
     return error;
 }
 
-otError LinkRaw::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter, otLinkRawMacFcStore aCallback)
+otError LinkRaw::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
     mSubMac.SetStoredMacFrameCounter(aStoredMacFrameCounter);
-
-    mMacFcStoreCallback = aCallback;
 
 exit:
     return error;

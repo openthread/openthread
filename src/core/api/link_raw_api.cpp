@@ -49,9 +49,9 @@
 
 using namespace ot;
 
-otError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled)
+otError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled, otLinkRawMacFcStore aCallback)
 {
-    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetEnabled(aEnabled);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetEnabled(aEnabled, aCallback);
 }
 
 bool otLinkRawIsEnabled(otInstance *aInstance)
@@ -238,17 +238,14 @@ uint32_t otLinkRawGetMacFrameCounter(otInstance *aInstance)
     return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().GetMacFrameCounter();
 }
 
-otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter, otLinkRawMacFcStore aCallback)
+otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
 {
-    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetMacFrameCounter(aMacFrameCounter, aCallback);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetMacFrameCounter(aMacFrameCounter);
 }
 
-otError otLinkRawSetStoredMacFrameCounter(otInstance *        aInstance,
-                                          uint32_t            aStoredMacFrameCounter,
-                                          otLinkRawMacFcStore aCallback)
+otError otLinkRawSetStoredMacFrameCounter(otInstance *aInstance, uint32_t aStoredMacFrameCounter)
 {
-    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetStoredMacFrameCounter(aStoredMacFrameCounter,
-                                                                                            aCallback);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetStoredMacFrameCounter(aStoredMacFrameCounter);
 }
 
 #if OPENTHREAD_RADIO

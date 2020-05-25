@@ -77,13 +77,14 @@ public:
      * This method enables/disables the raw link-layer.
      *
      * @param[in]   aEnabled    Whether enable raw link-layer.
+     * @param[in]   aCallback   A pointer to a function called when needs to store current MAC frame counter.
      *
      * @retval OT_ERROR_INVALID_STATE   Thread stack is enabled.
      * @retval OT_ERROR_FAILED          The radio could not be enabled.
      * @retval OT_ERROR_NONE            Successfully enabled/disabled raw link.
      *
      */
-    otError SetEnabled(bool aEnabled);
+    otError SetEnabled(bool aEnabled, otLinkRawMacFcStore aCallback);
 
     /**
      * This method returns the capabilities of the raw link-layer.
@@ -275,25 +276,23 @@ public:
      * This method sets the current MAC frame counter value.
      *
      * @param[in] aMacFrameCounter  The MAC frame counter value.
-     * @param[in] aCallback         A pointer to a function called when needs to store current MAC frame counter.
      *
      * @retval OT_ERROR_NONE             If successful.
      * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
      *
      */
-    otError SetMacFrameCounter(uint32_t aMacFrameCounter, otLinkRawMacFcStore aCallback);
+    otError SetMacFrameCounter(uint32_t aMacFrameCounter);
 
     /**
      * This method sets the stored MAC frame Counter value which is stored in non-volatile memory.
      *
      * @param[in] aStoredMacFrameCounter  The stored MAC frame counter value.
-     * @param[in] aCallback               A pointer to a function called when needs to store current MAC frame counter.
      *
      * @retval OT_ERROR_NONE             If successful.
      * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
      *
      */
-    otError SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter, otLinkRawMacFcStore aCallback);
+    otError SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter);
 
     /**
      * This method invokes the mMacFcStoreCallback, if set.

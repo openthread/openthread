@@ -481,7 +481,7 @@ void otPlatRadioSetMacKey(otInstance *    aInstance,
  * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[out] aMacFrameCounter  The MAC frame counter.
+ * @param[out] aMacFrameCounter  A pointer to the MAC frame counter.
  *
  * @retval OT_ERROR_NONE             Successfully get the MAC frame counter value.
  * @retval OT_ERROR_NOT_IMPLEMENTED  MAC frame counter is not implemented in radio.
