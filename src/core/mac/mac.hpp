@@ -40,6 +40,7 @@
 #include <openthread/platform/time.h>
 
 #include "common/locator.hpp"
+#include "common/message.hpp"
 #include "common/tasklet.hpp"
 #include "common/timer.hpp"
 #include "mac/channel_mask.hpp"
@@ -662,6 +663,33 @@ public:
      *
      */
     bool IsEnabled(void) const { return mEnabled; }
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    /**
+     * This method appends header IEs to a TX-frame according to its
+     * frame control field and if time sync is enabled.
+     *
+     * @param[in]      aMessage   A pointer to the message to send, could be `NULL`.
+     * @param[in,out]  aFrame     A reference to the TX-frame to which the IEs will be appended.
+     *
+     * @retval OT_ERROR_NONE    If append header IEs successfully.
+     * @retval OT_ERROR_FAILED  If cannot find header IE position in the frame.
+     *
+     */
+    otError AppendHeaderIe(Message *aMessage, TxFrame &aFrame) const;
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+
+    /**
+     * This method updates frame version. If the frame would contain header IEs,
+     * IE present field would be set. If this is a csl transmission frame or
+     * header IE is present in this frame, the version should be set to 2015.
+     * Otherwise, the version would be set to 2006.
+     *
+     * @param[in]   aMessage   A pointer to the message to send, could be `NULL`.
+     * @param[out]  aFcf       A reference to the frame control field to set.
+     *
+     */
+    void UpdateFrameControlField(Message *aMessage, uint16_t &aFcf) const;
 
 private:
     enum
