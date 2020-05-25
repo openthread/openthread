@@ -109,7 +109,6 @@ class Node:
 
             if 'RADIO_DEVICE' in os.environ:
                 cmd += ' -v %s' % os.environ['RADIO_DEVICE']
-                os.environ['NODE_ID'] = str(nodeid)
 
         # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability
         elif self.version == '1.1':
@@ -122,7 +121,6 @@ class Node:
 
             if 'RADIO_DEVICE_1_1' in os.environ:
                 cmd += ' -v %s' % os.environ['RADIO_DEVICE_1_1']
-                os.environ['NODE_ID'] = str(nodeid)
 
         cmd += ' %d' % nodeid
         print("%s" % cmd)
@@ -149,7 +147,6 @@ class Node:
         if self.version == self.env_version:
             if 'RADIO_DEVICE' in os.environ:
                 args = ' %s' % os.environ['RADIO_DEVICE']
-                os.environ['NODE_ID'] = str(nodeid)
             else:
                 args = ''
 
@@ -188,7 +185,6 @@ class Node:
         elif self.version == '1.1':
             if 'RADIO_DEVICE_1_1' in os.environ:
                 args = ' %s' % os.environ['RADIO_DEVICE_1_1']
-                os.environ['NODE_ID'] = str(nodeid)
             else:
                 args = ''
 
