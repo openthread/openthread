@@ -352,7 +352,7 @@ otError otLinkRawSetMacKey(otInstance *    aInstance,
                            const otMacKey *aNextKey);
 
 /**
- * This function pointer indication callback to store MAC frame counter to NVM.
+ * This function pointer is called to store MAC frame counter to NVM.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
@@ -368,16 +368,6 @@ typedef void (*otLinkRawMacFcStore)(otInstance *aInstance);
  *
  */
 uint32_t otLinkRawGetMacFrameCounter(otInstance *aInstance);
-
-/**
- * Gets the current stored MAC frame counter value.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
- * @returns The stored MAC frame counter.
- *
- */
-uint32_t otLinkRawGetStoredMacFrameCounter(otInstance *aInstance);
 
 /**
  * Sets the current MAC frame counter value.

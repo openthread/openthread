@@ -487,11 +487,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER
     return mEncoder.WriteUint32(otLinkRawGetMacFrameCounter(mInstance));
 }
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_STORED_MAC_FRAME_COUNTER>(void)
-{
-    return mEncoder.WriteUint32(otLinkRawGetStoredMacFrameCounter(mInstance));
-}
-
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER>(void)
 {
     otError  error = OT_ERROR_NONE;

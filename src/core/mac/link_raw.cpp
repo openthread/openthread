@@ -226,11 +226,6 @@ uint32_t LinkRaw::GetMacFrameCounter(void)
     return mSubMac.GetMacFrameCounter();
 }
 
-uint32_t LinkRaw::GetStoredMacFrameCounter(void)
-{
-    return mSubMac.GetStoredMacFrameCounter();
-}
-
 otError LinkRaw::SetMacFrameCounter(uint32_t aMacFrameCounter, otLinkRawMacFcStore aCallback)
 {
     otError error = OT_ERROR_NONE;

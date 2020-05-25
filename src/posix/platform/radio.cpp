@@ -493,13 +493,6 @@ otError otPlatRadioGetMacFrameCounter(otInstance *aInstance, uint32_t *aMacFrame
     return sRadioSpinel.GetMacFrameCounter(*aMacFrameCounter);
 }
 
-otError otPlatRadioGetStoredMacFrameCounter(otInstance *aInstance, uint32_t *aStoredMacFrameCounter)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    assert(aStoredMacFrameCounter != NULL);
-    return sRadioSpinel.GetStoredMacFrameCounter(*aStoredMacFrameCounter);
-}
-
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
 {
     SuccessOrDie(sRadioSpinel.SetMacFrameCounter(aMacFrameCounter));

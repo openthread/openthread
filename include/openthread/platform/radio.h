@@ -490,20 +490,6 @@ void otPlatRadioSetMacKey(otInstance *    aInstance,
 otError otPlatRadioGetMacFrameCounter(otInstance *aInstance, uint32_t *aMacFrameCounter);
 
 /**
- * This method gets the current stored MAC frame counter value.
- *
- * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
- *
- * @param[in]  aInstance               A pointer to an OpenThread instance.
- * @param[out] aStoredMacFrameCounter  The stored MAC frame counter.
- *
- * @retval OT_ERROR_NONE             Successfully get the stored MAC frame counter value.
- * @retval OT_ERROR_NOT_IMPLEMENTED  Stored MAC frame counter is not implemented in radio.
- *
- */
-otError otPlatRadioGetStoredMacFrameCounter(otInstance *aInstance, uint32_t *aMacFrameCounter);
-
-/**
  * This method sets the current MAC frame counter value.
  *
  * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.

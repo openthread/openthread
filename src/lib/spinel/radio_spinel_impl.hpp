@@ -1051,16 +1051,6 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::GetMacFrameCounter(uint3
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::GetStoredMacFrameCounter(uint32_t &aStoredMacFrameCounter)
-{
-    otError error = Get(SPINEL_PROP_RCP_STORED_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, &aStoredMacFrameCounter);
-
-    LogIfFail("Get stored MAC frame counter failed", error);
-
-    return error;
-}
-
-template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacFrameCounter(uint32_t aMacFrameCounter)
 {
     otError error;

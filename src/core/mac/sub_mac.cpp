@@ -690,19 +690,6 @@ exit:
     return macFrameCounter;
 }
 
-uint32_t SubMac::GetStoredMacFrameCounter(void) const
-{
-    uint32_t storedMacFrameCounter;
-
-    // Stored MAC frame counter is maintained by SubMac if radio does not supports Tx AES
-    VerifyOrExit(!ShouldHandleTransmitSecurity(), storedMacFrameCounter = mStoredMacFrameCounter);
-
-    IgnoreError(Get<Radio>().GetStoredMacFrameCounter(storedMacFrameCounter));
-
-exit:
-    return storedMacFrameCounter;
-}
-
 void SubMac::SetMacFrameCounter(uint32_t aMacFrameCounter)
 {
     mMacFrameCounter = aMacFrameCounter;

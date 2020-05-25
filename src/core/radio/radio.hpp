@@ -294,20 +294,6 @@ public:
     }
 
     /**
-     * This method gets the current stored MAC frame counter value.
-     *
-     * @param[out] aStoredMacFrameCounter  A reference to output the stored MAC frame counter.
-     *
-     * @retval OT_ERROR_NONE             Successfully get the stored MAC frame counter value.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  Stored MAC frame counter is not implemented in radio.
-     *
-     */
-    otError GetStoredMacFrameCounter(uint32_t &aStoredMacFrameCounter)
-    {
-        return otPlatRadioGetStoredMacFrameCounter(GetInstance(), &aStoredMacFrameCounter);
-    }
-
-    /**
      * This method sets the current MAC Frame Counter value.
      *
      * @param[in] aMacFrameCounter  The MAC Frame Counter value.

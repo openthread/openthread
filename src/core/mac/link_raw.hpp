@@ -272,14 +272,6 @@ public:
     uint32_t GetMacFrameCounter(void);
 
     /**
-     * This method gets the current stored MAC frame counter value.
-     *
-     * @returns The stored MAC frame counter.
-     *
-     */
-    uint32_t GetStoredMacFrameCounter(void);
-
-    /**
      * This method sets the current MAC frame counter value.
      *
      * @param[in] aMacFrameCounter  The MAC frame counter value.
