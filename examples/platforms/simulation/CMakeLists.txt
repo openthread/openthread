@@ -30,12 +30,12 @@ set(OT_PLATFORM_LIB "openthread-simulation" PARENT_SCOPE)
 
 option(OT_SIMULATION_VIRTUAL_TIME "enable virtual time")
 if(OT_SIMULATION_VIRTUAL_TIME)
-    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_SIMULATION_VIRTUAL_TIME=1")
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_SIMULATION_VIRTUAL_TIME=1")
 endif()
 
 option(OT_SIMULATION_VIRTUAL_TIME_UART "enable virtual time for UART")
 if(OT_SIMULATION_VIRTUAL_TIME_UART)
-    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART=1")
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART=1")
 endif()
 
 if(NOT OT_CONFIG)
@@ -78,14 +78,14 @@ if(LIBRT)
     target_link_libraries(openthread-simulation PRIVATE ${LIBRT})
 endif()
 
-target_link_libraries(openthread-simulation PRIVATE openthread-platform-utils)
-target_link_libraries(openthread-simulation PRIVATE openthread-platform)
+target_link_libraries(openthread-simulation PRIVATE
+    openthread-platform-utils
+    openthread-platform
+    ot-config)
 
 target_compile_definitions(openthread-simulation
     PUBLIC
         ${OT_PLATFORM_DEFINES}
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(openthread-simulation PRIVATE

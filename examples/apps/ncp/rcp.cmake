@@ -32,13 +32,12 @@ add_executable(ot-rcp
 
 target_include_directories(ot-rcp PRIVATE ${COMMON_INCLUDES})
 
-target_compile_definitions(ot-rcp PRIVATE ${OT_PRIVATE_DEFINES})
-
 target_link_libraries(ot-rcp
     openthread-rcp
     ${OT_PLATFORM_LIB}
     openthread-radio
     ${OT_PLATFORM_LIB}
+    ot-config
 )
 
 install(TARGETS ot-rcp DESTINATION bin)
