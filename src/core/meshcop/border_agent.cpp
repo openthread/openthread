@@ -459,8 +459,8 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
         aMessage.CopyTo(aMessage.GetOffset(), offset, udpLength, *message);
     }
 
-    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kIPv6Address, aMessageInfo.GetPeerAddr().mFields.m8,
-                                         sizeof(Ip6::Address)));
+    SuccessOrExit(error =
+                      Tlv::AppendTlv(*message, Tlv::kIPv6Address, &aMessageInfo.GetPeerAddr(), sizeof(Ip6::Address)));
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().SendMessage(*message, Get<Coap::CoapSecure>().GetPeerAddress()));
 
