@@ -45,18 +45,9 @@ using namespace ot;
 
 otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
-    Message * message;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    if (aSettings != NULL)
-    {
-        VerifyOrExit(aSettings->mPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
-    }
-
-    message = instance.GetApplicationCoap().NewMessage(aSettings);
-
-exit:
-    return message;
+    return instance.GetApplicationCoap().NewMessage(Message::Settings(aSettings));
 }
 
 void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode)

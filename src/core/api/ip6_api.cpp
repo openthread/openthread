@@ -170,17 +170,8 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Message * message;
 
-    if (aSettings != NULL)
-    {
-        VerifyOrExit(aSettings->mPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
-    }
-
-    message = instance.Get<Ip6::Ip6>().NewMessage(0, aSettings);
-
-exit:
-    return message;
+    return instance.Get<Ip6::Ip6>().NewMessage(0, Message::Settings(aSettings));
 }
 
 otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
@@ -191,9 +182,15 @@ otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
     Instance &instance = *static_cast<Instance *>(aInstance);
     Message * message;
 
-    VerifyOrExit((message = instance.Get<Ip6::Ip6>().NewMessage(aData, aDataLength, aSettings)) != NULL, OT_NOOP);
+    if (aSettings != NULL)
+    {
+        message = instance.Get<Ip6::Ip6>().NewMessage(aData, aDataLength, Message::Settings(aSettings));
+    }
+    else
+    {
+        message = instance.Get<Ip6::Ip6>().NewMessage(aData, aDataLength);
+    }
 
-exit:
     return message;
 }
 

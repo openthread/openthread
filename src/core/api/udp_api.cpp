@@ -45,17 +45,8 @@ using namespace ot;
 otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Message * message;
 
-    if (aSettings != NULL)
-    {
-        VerifyOrExit(aSettings->mPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
-    }
-
-    message = instance.Get<Ip6::Udp>().NewMessage(0, aSettings);
-
-exit:
-    return message;
+    return instance.Get<Ip6::Udp>().NewMessage(0, Message::Settings(aSettings));
 }
 
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext)

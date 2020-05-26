@@ -141,6 +141,7 @@ extern int
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/message.h>
+#include <openthread/platform/misc.h>
 
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
@@ -1461,4 +1462,20 @@ exit:
     return;
 }
 
+otError otPlatGetNetif(otInstance *aInstance, const char **outNetIfName, unsigned int *outNetIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError error;
+
+    VerifyOrExit(sTunIndex != 0, error = OT_ERROR_FAILED);
+
+    *outNetIfName  = sTunName;
+    *outNetIfIndex = sTunIndex;
+    error          = OT_ERROR_NONE;
+
+exit:
+
+    return error;
+}
 #endif // OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE

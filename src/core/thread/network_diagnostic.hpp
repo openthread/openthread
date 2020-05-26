@@ -63,6 +63,17 @@ namespace NetworkDiagnostic {
 class NetworkDiagnostic : public InstanceLocator
 {
 public:
+    enum
+    {
+        kIteratorInit = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT, ///< Initializer value for Iterator.
+    };
+
+    /**
+     * This type represents an iterator used to iterate through Network Diagnostic TLVs from `GetNextDiagTlv()`.
+     *
+     */
+    typedef otNetworkDiagIterator Iterator;
+
     /**
      * This constructor initializes the object.
      *
@@ -100,15 +111,27 @@ public:
      */
     otError SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
-    static otError GetNextDiagTlv(const otMessage &      aMessage,
-                                  otNetworkDiagIterator &aIterator,
-                                  otNetworkDiagTlv &     aNetworkDiagTlv);
+    /**
+     * This static method gets the next Network Diagnostic TLV in a given message.
+     *
+     * @param[in]     aMessage         A message.
+     * @param[inout]  aIterator        The Network Diagnostic iterator. To get the first TLV set it to `kIteratorInit`.
+     * @param[out]    aNetworkDiagTlv  A reference to a Network Diagnostic TLV to output the next TLV.
+     *
+     * @retval OT_ERROR_NONE       Successfully found the next Network Diagnostic TLV.
+     * @retval OT_ERROR_NOT_FOUND  No subsequent Network Diagnostic TLV exists in the message.
+     * @retval OT_ERROR_PARSE      Parsing the next Network Diagnostic failed.
+     *
+     */
+    static otError GetNextDiagTlv(const Coap::Message &aMessage,
+                                  Iterator &           aIterator,
+                                  otNetworkDiagTlv &   aNetworkDiagTlv);
 
 private:
     otError AppendIp6AddressList(Message &aMessage);
     otError AppendChildTable(Message &aMessage);
     void    FillMacCountersTlv(MacCountersTlv &aMacCountersTlv);
-    otError FillRequestedTlvs(Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
+    otError FillRequestedTlvs(const Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
 
     static void HandleDiagnosticGetRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleDiagnosticGetRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

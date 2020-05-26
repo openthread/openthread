@@ -63,6 +63,9 @@
 #include <openthread/icmp6.h>
 #include <openthread/logging.h>
 #include <openthread/platform/uart.h>
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+#include <openthread/platform/misc.h>
+#endif
 
 #include "common/new.hpp"
 #include "net/ip6.hpp"
@@ -187,6 +190,9 @@ const struct Command Interpreter::sCommands[] = {
     {"netdataregister", &Interpreter::ProcessNetworkDataRegister},
 #endif
     {"netdatashow", &Interpreter::ProcessNetworkDataShow},
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    {"netif", &Interpreter::ProcessNetif},
+#endif
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     {"networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic},
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
@@ -2049,6 +2055,25 @@ void Interpreter::ProcessNetworkDataShow(uint8_t aArgsLength, char *aArgs[])
 exit:
     AppendResult(error);
 }
+
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+void Interpreter::ProcessNetif(uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    otError      error    = OT_ERROR_NONE;
+    const char * netif    = NULL;
+    unsigned int netifidx = 0;
+
+    SuccessOrExit(error = otPlatGetNetif(mInstance, &netif, &netifidx));
+
+    mServer->OutputFormat("%s:%u\r\n", netif ? netif : "<NULL>", netifidx);
+
+exit:
+    AppendResult(error);
+}
+#endif
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 void Interpreter::ProcessService(uint8_t aArgsLength, char *aArgs[])

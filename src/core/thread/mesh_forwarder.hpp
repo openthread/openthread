@@ -109,7 +109,7 @@ public:
      * @returns The fragment priority value.
      *
      */
-    uint8_t GetPriority(void) const { return mPriority; }
+    Message::Priority GetPriority(void) const { return static_cast<Message::Priority>(mPriority); }
 
     /**
      * This method sets the fragment priority value.
@@ -117,7 +117,7 @@ public:
      * @param[in]  aPriority  The fragment priority value.
      *
      */
-    void SetPriority(uint8_t aPriority) { mPriority = aPriority; }
+    void SetPriority(Message::Priority aPriority) { mPriority = aPriority; }
 
     /**
      * This method returns the fragment priority entry's remaining lifetime.
@@ -254,7 +254,7 @@ public:
      *                       Use Message::kSubTypeNone remove all messages for @p aChild.
      *
      */
-    void RemoveMessages(Child &aChild, uint8_t aSubType);
+    void RemoveMessages(Child &aChild, Message::SubType aSubType);
 
     /**
      * This method frees unicast/multicast MLE Data Responses from Send Message Queue if any.
@@ -271,7 +271,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  No low priority messages available to evict.
      *
      */
-    otError EvictMessage(uint8_t aPriority);
+    otError EvictMessage(Message::Priority aPriority);
 
     /**
      * This method returns a reference to the send queue.
@@ -316,8 +316,7 @@ public:
 private:
     enum
     {
-        kStateUpdatePeriod  = 1000,                     ///< State update period in milliseconds.
-        kDefaultMsgPriority = Message::kPriorityNormal, ///< Default message priority.
+        kStateUpdatePeriod = 1000, ///< State update period in milliseconds.
 
         /**
          * The number of fragment priority entries.
@@ -402,7 +401,7 @@ private:
     void    UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                                    uint16_t                aFragmentLength,
                                    uint16_t                aSrcRloc16,
-                                   uint8_t                 aPriority);
+                                   Message::Priority       aPriority);
     otError HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource);
     void    ClearReassemblyList(void);
     void    RemoveMessage(Message &aMessage);
@@ -424,13 +423,15 @@ private:
                              uint16_t            aFrameLength,
                              const Mac::Address &aMacSource,
                              const Mac::Address &aMacDest,
-                             uint8_t &           aPriority);
-    otError GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader, uint16_t aSrcRloc16, uint8_t &aPriority);
+                             Message::Priority & aPriority);
+    otError GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
+                                uint16_t                aSrcRloc16,
+                                Message::Priority &     aPriority);
     void    GetForwardFramePriority(const uint8_t *     aFrame,
                                     uint16_t            aFrameLength,
                                     const Mac::Address &aMeshSource,
                                     const Mac::Address &aMeshDest,
-                                    uint8_t &           aPriority);
+                                    Message::Priority & aPriority);
 
     FragmentPriorityEntry *FindFragmentPriorityEntry(uint16_t aTag, uint16_t aSrcRloc16);
     FragmentPriorityEntry *GetUnusedFragmentPriorityEntry(void);
