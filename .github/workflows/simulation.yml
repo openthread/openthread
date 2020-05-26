@@ -430,14 +430,21 @@ jobs:
       uses: codecov/codecov-action@v1
 
   thread-1-2:
+    name: thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}
     runs-on: ubuntu-18.04
     env:
-      CFLAGS: -m32
-      CXXFLAGS: -m32
-      LDFLAGS: -m32
+      CFLAGS: -${{ matrix.arch }}
+      CXXFLAGS: -${{ matrix.arch }}
+      LDFLAGS: -${{ matrix.arch }}
       COVERAGE: 1
       THREAD_VERSION: 1.2
       VIRTUAL_TIME: 1
+      CC: ${{ matrix.compiler.c }}
+      CXX: ${{ matrix.compiler.cxx }}
+    strategy:
+      matrix:
+        compiler: [{c: "gcc", cxx: "g++"}, { c: "clang", cxx: "clang++"}]
+        arch: ["m32", "m64"]
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
