@@ -23,7 +23,7 @@ EXTRA_DIST                                    = \
 
 lib_LIBRARIES                                 = \
     libmbedcrypto.a                             \
-    libmbedcrypto_radio.a                       \
+    libmbedcrypto-radio.a                       \
     $(NULL)
 
 # Do not enable -Wconversion for mbedtls
