@@ -347,7 +347,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    static otError AppendTlv(Message &aMessage, uint8_t aType, const uint8_t *aValue, uint8_t aLength);
+    static otError AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength);
 
 protected:
     enum

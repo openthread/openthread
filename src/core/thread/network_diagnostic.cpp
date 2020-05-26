@@ -307,7 +307,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(const Message &       aRequest,
         {
         case NetworkDiagnosticTlv::kExtMacAddress:
             SuccessOrExit(
-                error = Tlv::AppendTlv(aResponse, type, Get<Mac::Mac>().GetExtAddress().m8, sizeof(Mac::ExtAddress)));
+                error = Tlv::AppendTlv(aResponse, type, &Get<Mac::Mac>().GetExtAddress(), sizeof(Mac::ExtAddress)));
             break;
 
         case NetworkDiagnosticTlv::kAddress16:

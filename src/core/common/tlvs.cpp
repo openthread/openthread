@@ -257,7 +257,7 @@ otError Tlv::AppendUint32Tlv(Message &aMessage, uint8_t aType, uint32_t aValue)
     return tlv32.AppendTo(aMessage);
 }
 
-otError Tlv::AppendTlv(Message &aMessage, uint8_t aType, const uint8_t *aValue, uint8_t aLength)
+otError Tlv::AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength)
 {
     otError error = OT_ERROR_NONE;
     Tlv     tlv;
