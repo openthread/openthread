@@ -145,3 +145,10 @@ OT_TOOL_WEAK void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t 
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aMacFrameCounter);
 }
+
+OT_TOOL_WEAK uint64_t otPlatRadioGetNow(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return 0;
+}

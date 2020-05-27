@@ -490,6 +490,16 @@ void otPlatRadioSetMacKey(otInstance *    aInstance,
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
 
 /**
+ * Get the current estimated time (64bits width) of the radio chip.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns The current time in microseconds.
+ *
+ */
+uint64_t otPlatRadioGetNow(otInstance *aInstance);
+
+/**
  * @}
  *
  */

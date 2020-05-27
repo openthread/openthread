@@ -688,7 +688,8 @@ void RTC_IRQ_HANDLER(void)
     }
 }
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || \
+    OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 uint64_t otPlatTimeGet(void)
 {
     return nrf5AlarmGetCurrentTime();
@@ -698,4 +699,4 @@ uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return XTAL_ACCURACY;
 }
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#endif
