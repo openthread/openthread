@@ -60,8 +60,8 @@ SubMac::SubMac(Instance &aInstance)
     , mPcapCallback(NULL)
     , mPcapCallbackContext(NULL)
     , mKeyId(0)
-    , mMacFrameCounter(0)
-    , mStoredMacFrameCounter(0)
+    , mFrameCounter(0)
+    , mStoredFrameCounter(0)
     , mTimer(aInstance, &SubMac::HandleTimer, this)
 {
     mExtAddress.Clear();
@@ -661,9 +661,9 @@ exit:
 
 void SubMac::IncrementMacFrameCounter(void)
 {
-    mMacFrameCounter++;
+    mFrameCounter++;
 
-    if (mMacFrameCounter >= mStoredMacFrameCounter)
+    if (mFrameCounter >= mStoredFrameCounter)
     {
         mCallbacks.MacFrameCounterStore();
     }
@@ -671,7 +671,7 @@ void SubMac::IncrementMacFrameCounter(void)
 
 void SubMac::HandleMacFrameCounterStore(uint32_t aMacFrameCounter)
 {
-    if (aMacFrameCounter >= mStoredMacFrameCounter)
+    if (aMacFrameCounter >= mStoredFrameCounter)
     {
         mCallbacks.MacFrameCounterStore();
     }
@@ -682,7 +682,7 @@ uint32_t SubMac::GetMacFrameCounter(void) const
     uint32_t macFrameCounter;
 
     // MAC frame counter is maintained by SubMac if radio does not supports Tx AES
-    VerifyOrExit(!ShouldHandleTransmitSecurity(), macFrameCounter = mMacFrameCounter);
+    VerifyOrExit(!ShouldHandleTransmitSecurity(), macFrameCounter = mFrameCounter);
 
     IgnoreError(Get<Radio>().GetMacFrameCounter(macFrameCounter));
 
@@ -692,7 +692,7 @@ exit:
 
 void SubMac::SetMacFrameCounter(uint32_t aMacFrameCounter)
 {
-    mMacFrameCounter = aMacFrameCounter;
+    mFrameCounter = aMacFrameCounter;
 
     VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
 
@@ -704,7 +704,7 @@ exit:
 
 void SubMac::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
 {
-    mStoredMacFrameCounter = aStoredMacFrameCounter;
+    mStoredFrameCounter = aStoredMacFrameCounter;
 
     VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
 

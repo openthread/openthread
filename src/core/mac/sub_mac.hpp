@@ -491,8 +491,8 @@ private:
     Key                mCurrKey;
     Key                mNextKey;
     uint8_t            mKeyId;
-    uint32_t           mMacFrameCounter;
-    uint32_t           mStoredMacFrameCounter;
+    uint32_t           mFrameCounter;
+    uint32_t           mStoredFrameCounter;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicro mTimer;
 #else
