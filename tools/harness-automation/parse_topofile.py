@@ -31,6 +31,40 @@ parse_topofile.py
 -----------------
 This script is used to parse TopologyConfig.txt file to list vendor device info
 when preparing for the Thread Certification testbed
+
+usage: parse_topofile.py [-h] [-f TOPO_FILE] [-c CASE_LIST [CASE_LIST ...]]
+
+    parse TopologyConfig file and list all devices by case
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -f TOPO_FILE          Topology config file (default: C:/GRL/Thread1.1/Thread
+                            _Harness/TestScripts/TopologyConfig.txt)
+      -c CASE_LIST [CASE_LIST ...]
+                            Test case list (e.g. 5.1.1 9.2.1, default: all)
+
+Examples:
+    1. Get case 5.1.1 vendor info
+       cmd:   python parse_topofile.py -f TopologyConfig.txt -c 5.1.1
+       output:
+       case 5.1.1:
+            role-vendor pair: [('Leader', 'ARM'), ('Router_1', 'ARM')]
+            needed vendor devices:{'ARM': 2}
+
+       Testbed needed vendor devices:{'ARM': 2}
+
+    2. Get case 5.1.1 and 5.2.1 vendor info
+       cmd:    python parse_topofile.py -f TopologyConfig.txt -c 5.1.1 5.2.1
+       output:
+       case 5.1.1:
+           role-vendor pair: [('Leader', 'ARM'), ('Router_2', 'ARM')]
+           needed vendor devices:{'ARM': 2}
+       case 5.2.1:
+           role-vendor pair: [('Leader', 'OpenThread'), ('REED_1', 'Kirale'), ('MED_1', 'SiLabs')]
+           needed vendor devices:{'OpenThread': 1, 'Kirale': 1, 'SiLabs': 1}
+
+       Testbed needed vendor devices:{'ARM': 2, 'OpenThread': 1, 'Kirale': 1, 'SiLabs': 1}
+
 """
 
 import argparse
@@ -47,16 +81,16 @@ def device_calculate(topo_file, case_list):
     for case in case_list:
         case_found = False
         with open(topo_file, 'r') as f:
-            while 1:
+            for line in f:
 
                 case_vendor_dict = Counter()
 
-                line = f.readline()
-                line = line.strip()
                 if not line:
                     break
+                line = line.strip()
+
                 try:
-                    if re.match(r'#.*', line):
+                    if re.match(r'\s*#.*', line):
                         continue
 
                     matched_case = re.match(r'(.*)-(.*)', line, re.M | re.I)
@@ -70,8 +104,8 @@ def device_calculate(topo_file, case_list):
                     role_vendor_raw_list = re.split(',', role_vendor_str)
                     role_vendor_list = []
 
-                    for i in range(len(role_vendor_raw_list)):
-                        device_pair = re.split(':', role_vendor_raw_list[i])
+                    for device_pair in role_vendor_raw_list:
+                        device_pair = re.split(':', device_pair)
                         role_vendor_list.append(tuple(device_pair))
                     logging.info('\trole-vendor pair: %s' % role_vendor_list)
 
