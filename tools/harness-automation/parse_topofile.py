@@ -78,52 +78,49 @@ MAX_VENDOR_DEVICE = 32
 
 def device_calculate(topo_file, case_list):
     testbed_vendor_dict = Counter()
-    for case in case_list:
-        case_found = False
-        with open(topo_file, 'r') as f:
-            for line in f:
+    with open(topo_file, 'r') as f:
+        for line in f:
 
-                case_vendor_dict = Counter()
+            case_vendor_dict = Counter()
 
-                if not line:
-                    break
-                line = line.strip()
+            if not line:
+                break
+            line = line.strip()
 
-                try:
-                    if re.match(r'\s*#.*', line):
-                        continue
+            try:
+                if re.match(r'\s*#.*', line):
+                    continue
 
-                    matched_case = re.match(r'(.*)-(.*)', line, re.M | re.I)
+                matched_case = re.match(r'(.*)-(.*)', line, re.M | re.I)
 
-                    if case != 'all' and case != matched_case.group(1):
-                        continue
+                if 'all' not in case_list and matched_case.group(
+                        1) not in case_list:
+                    continue
 
-                    logging.info('case %s:' % matched_case.group(1))
-                    case_found = True
-                    role_vendor_str = matched_case.group(2)
-                    role_vendor_raw_list = re.split(',', role_vendor_str)
-                    role_vendor_list = []
+                logging.info('case %s:' % matched_case.group(1))
+                if 'all' not in case_list:
+                    case_list.remove(matched_case.group(1))
+                role_vendor_str = matched_case.group(2)
+                role_vendor_raw_list = re.split(',', role_vendor_str)
+                role_vendor_list = []
 
-                    for device_pair in role_vendor_raw_list:
-                        device_pair = re.split(':', device_pair)
-                        role_vendor_list.append(tuple(device_pair))
-                    logging.info('\trole-vendor pair: %s' % role_vendor_list)
+                for device_pair in role_vendor_raw_list:
+                    device_pair = re.split(':', device_pair)
+                    role_vendor_list.append(tuple(device_pair))
+                logging.info('\trole-vendor pair: %s' % role_vendor_list)
+            except Exception as e:
+                logging.info('Unrecognized format: %s\n%s' % (line, format(e)))
+                raise
 
-                    for _, vendor in role_vendor_list:
-                        case_vendor_dict[vendor] += 1
-                        testbed_vendor_dict[vendor] = max(
-                            testbed_vendor_dict[vendor],
-                            case_vendor_dict[vendor])
+            for _, vendor in role_vendor_list:
+                case_vendor_dict[vendor] += 1
+                testbed_vendor_dict[vendor] = max(testbed_vendor_dict[vendor],
+                                                  case_vendor_dict[vendor])
 
-                    logging.info('\tneeded vendor devices:%s' %
-                                 dict(case_vendor_dict))
-                except Exception as e:
-                    logging.info('Unrecognized format: %s\n%s' %
-                                 (line, format(e)))
-                    raise
-        if not case_found:
-            logging.info('Case %s not found' % case)
-            continue
+            logging.info('\tneeded vendor devices:%s' % dict(case_vendor_dict))
+
+    if case_list is not None and 'all' not in case_list:
+        logging.info('Case %s not found' % str(case_list)[1:-1])
 
     count_any = MAX_VENDOR_DEVICE
     for key in testbed_vendor_dict:
