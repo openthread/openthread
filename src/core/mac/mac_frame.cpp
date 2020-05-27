@@ -1052,12 +1052,10 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     aesCcm.SetKey(GetAesKey());
     tagLength = GetFooterLength() - Frame::kFcsSize;
 
-    error = aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
-    OT_ASSERT(error == OT_ERROR_NONE);
-
+    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
     aesCcm.Header(GetHeader(), GetHeaderLength());
-    aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), true);
-    aesCcm.Finalize(GetFooter(), &tagLength);
+    aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kEncrypt);
+    aesCcm.Finalize(GetFooter());
 
     SetIsSecurityProcessed(true);
 
