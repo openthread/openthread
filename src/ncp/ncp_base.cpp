@@ -2409,6 +2409,8 @@ extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
             charsWritten = static_cast<int>(sizeof(logString) - 1);
         }
 
+        logString[charsWritten++] = '\n';
+
         IgnoreError(otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(logString), charsWritten));
     }
 }
