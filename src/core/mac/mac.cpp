@@ -2107,7 +2107,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-void Mac::UpdateFrameControlField(Message *aMessage, uint16_t &aFcf) const
+void Mac::UpdateFrameControlField(Message *aMessage, uint16_t &aFcf)
 {
     OT_UNUSED_VARIABLE(aMessage);
 

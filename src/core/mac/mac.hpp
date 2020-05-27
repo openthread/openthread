@@ -689,7 +689,7 @@ public:
      * @param[out]  aFcf       A reference to the frame control field to set.
      *
      */
-    void UpdateFrameControlField(Message *aMessage, uint16_t &aFcf) const;
+    static void UpdateFrameControlField(Message *aMessage, uint16_t &aFcf);
 
 private:
     enum
