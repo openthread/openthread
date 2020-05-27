@@ -60,6 +60,8 @@ target_link_options(samr21-driver
         -T${PROJECT_SOURCE_DIR}/third_party/microchip/include/samr21x18a.ld
 )
 
+target_link_libraries(samr21-driver PRIVATE ot-config)
+
 target_compile_definitions(samr21-driver
     PUBLIC
         ${OT_PLATFORM_DEFINES}
@@ -72,8 +74,6 @@ target_compile_definitions(samr21-driver
         -DEXTINT_CALLBACK_MODE=true
         -DSPI_CALLBACK_MODE=false
         -DCYCLE_MODE
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(samr21-driver

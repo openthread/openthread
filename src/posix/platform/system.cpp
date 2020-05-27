@@ -49,7 +49,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     otInstance *instance = NULL;
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    virtualTimeInit();
+    virtualTimeInit(static_cast<uint16_t>(atoi(aPlatformConfig->mRadioConfig)));
 #endif
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor);
     platformRadioInit(aPlatformConfig);

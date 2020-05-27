@@ -38,8 +38,7 @@ list(APPEND OT_PLATFORM_DEFINES
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
-list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"cc2650-mbedtls-config.h\"")
-set(OT_PRIVATE_DEFINES ${OT_PRIVATE_DEFINES} PARENT_SCOPE)
+target_compile_definitions(ot-config INTERFACE "MBEDTLS_USER_CONFIG_FILE=\"cc2650-mbedtls-config.h\"")
 list(APPEND OT_PUBLIC_INCLUDES
     "${CMAKE_CURRENT_SOURCE_DIR}/crypto"
     "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc26x0"
@@ -73,6 +72,7 @@ target_link_libraries(openthread-cc2650
     PRIVATE
         ${OT_MBEDTLS}
         openthread-platform-utils
+        ot-config
 )
 
 target_link_options(openthread-cc2650
@@ -84,8 +84,6 @@ target_link_options(openthread-cc2650
 target_compile_definitions(openthread-cc2650
     PUBLIC
         ${OT_PLATFORM_DEFINES}
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(openthread-cc2650 PRIVATE ${OT_CFLAGS})

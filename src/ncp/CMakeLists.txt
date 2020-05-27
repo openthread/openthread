@@ -39,19 +39,16 @@ set_target_properties(
 )
 
 target_compile_definitions(openthread-ncp-ftd PRIVATE
-    ${OT_PRIVATE_DEFINES}
     OPENTHREAD_FTD=1
     OPENTHREAD_CONFIG_NCP_UART_ENABLE=1
 )
 
 target_compile_definitions(openthread-ncp-mtd PRIVATE
-    ${OT_PRIVATE_DEFINES}
     OPENTHREAD_MTD=1
     OPENTHREAD_CONFIG_NCP_UART_ENABLE=1
 )
 
 target_compile_definitions(openthread-rcp PRIVATE
-    ${OT_PRIVATE_DEFINES}
     OPENTHREAD_RADIO=1
     OPENTHREAD_CONFIG_NCP_UART_ENABLE=1
 )
@@ -85,6 +82,12 @@ set(COMMON_SOURCES
     ncp_uart.cpp
 )
 
+set(OT_NCP_VENDOR_HOOK_SOURCE "" CACHE STRING "set vendor hook source file for NCP")
+if(OT_NCP_VENDOR_HOOK_SOURCE)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=1")
+    list(APPEND COMMON_SOURCES ${OT_NCP_VENDOR_HOOK_SOURCE})
+endif()
+
 target_include_directories(openthread-ncp-ftd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 target_include_directories(openthread-ncp-mtd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 target_include_directories(openthread-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
@@ -109,6 +112,7 @@ target_link_libraries(openthread-ncp-ftd
         ${OT_MBEDTLS}
         openthread-hdlc
         openthread-spinel-ncp
+        ot-config
 )
 
 target_link_libraries(openthread-ncp-mtd
@@ -118,6 +122,7 @@ target_link_libraries(openthread-ncp-mtd
         ${OT_MBEDTLS}
         openthread-hdlc
         openthread-spinel-ncp
+        ot-config
 )
 
 target_link_libraries(openthread-rcp
@@ -126,4 +131,5 @@ target_link_libraries(openthread-rcp
     PRIVATE
         openthread-hdlc
         openthread-spinel-rcp
+        ot-config
 )

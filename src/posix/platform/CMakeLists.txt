@@ -84,6 +84,7 @@ set_target_properties(
 
 target_link_libraries(openthread-posix PUBLIC
     openthread-platform
+    ot-config
     util
 )
 
@@ -92,7 +93,6 @@ target_compile_definitions(openthread-posix
         ${OT_PUBLIC_DEFINES}
     PRIVATE
         ${OT_PLATFORM_DEFINES}
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(openthread-posix PRIVATE

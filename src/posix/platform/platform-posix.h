@@ -274,8 +274,10 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
 /**
  * This function initialize virtual time simulation.
  *
+ * @params[in]  aNodeId     Node id of this simulated device.
+ *
  */
-void virtualTimeInit(void);
+void virtualTimeInit(uint16_t aNodeId);
 
 /**
  * This function deinitialize virtual time simulation.
