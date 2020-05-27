@@ -43,7 +43,7 @@ install_packages_apt()
 
     if [ "$PLATFORM" = "Raspbian" ]; then
         sudo apt-get --no-install-recommends install -y binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
-    else
+    elif ! command -v arm-none-eabi-g++; then
         # add gcc-arm-embedded ppa
         sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa -y
         sudo apt-get update
@@ -58,6 +58,9 @@ install_packages_apt()
 
     # add mdv for local size report
     python3 -m pip install mdv || echo 'Failed to install markdown render. Install it manually if you need.'
+
+    # add shfmt for shell pretty, try brew only because snap does not support home directory not being /home and doesn't work in docker.
+    command -v shfmt || brew install shfmt || echo 'Failed to install shfmt. Install it manually if you need.'
 }
 
 install_packages_opkg()
@@ -73,7 +76,7 @@ install_packages_rpm()
 install_packages_brew()
 {
     # add build tools
-    brew install automake libtool cmake ninja
+    brew install automake libtool cmake ninja shfmt
 
     # add ARM toolchain
     brew tap ArmMbed/homebrew-formulae
