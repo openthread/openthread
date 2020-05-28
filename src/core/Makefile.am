@@ -323,6 +323,7 @@ HEADERS_COMMON                             = \
     common/crc16.hpp                         \
     common/debug.hpp                         \
     common/encoding.hpp                      \
+    common/equatable.hpp                     \
     common/extension.hpp                     \
     common/instance.hpp                      \
     common/linked_list.hpp                   \

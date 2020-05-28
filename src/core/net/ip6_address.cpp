@@ -320,11 +320,6 @@ uint8_t Address::PrefixMatch(const otIp6Address &aOther) const
     return PrefixMatch(mFields.m8, aOther.mFields.m8, sizeof(Address));
 }
 
-bool Address::operator==(const Address &aOther) const
-{
-    return memcmp(mFields.m8, aOther.mFields.m8, sizeof(mFields.m8)) == 0;
-}
-
 otError Address::FromString(const char *aBuf)
 {
     otError     error  = OT_ERROR_NONE;
