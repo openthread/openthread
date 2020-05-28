@@ -75,7 +75,7 @@ public:
      *
      */
     static otError Sign(uint8_t *      aOutput,
-                        uint16_t *     aOutputLength,
+                        uint16_t &     aOutputLength,
                         const uint8_t *aInputHash,
                         uint16_t       aInputHashLength,
                         const uint8_t *aPrivateKey,
