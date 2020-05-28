@@ -2520,7 +2520,7 @@ otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
     Header           header;
     uint32_t         keySequence;
     uint8_t          nonce[Crypto::AesCcm::kNonceSize];
-    uint8_t          tag[4];
+    uint8_t          tag[kMleSecurityTagSize];
     Crypto::AesCcm   aesCcm;
     uint8_t          buf[64];
     uint16_t         length;
@@ -2605,14 +2605,14 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     uint32_t        keySequence;
     const Key *     mleKey;
     uint32_t        frameCounter;
-    uint8_t         messageTag[4];
+    uint8_t         messageTag[kMleSecurityTagSize];
     uint8_t         nonce[Crypto::AesCcm::kNonceSize];
     Mac::ExtAddress macAddr;
     Crypto::AesCcm  aesCcm;
     uint16_t        mleOffset;
     uint8_t         buf[64];
     uint16_t        length;
-    uint8_t         tag[4];
+    uint8_t         tag[kMleSecurityTagSize];
     uint8_t         command;
     Neighbor *      neighbor;
 
