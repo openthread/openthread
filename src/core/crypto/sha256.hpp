@@ -66,13 +66,13 @@ public:
      * Constructor for initializing mbedtls_sha256_context.
      *
      */
-    Sha256();
+    Sha256(void);
 
     /**
      * Destructor for freeing mbedtls_sha256_context.
      *
      */
-    ~Sha256();
+    ~Sha256(void);
 
     /**
      * This method starts the SHA-256 computation.
