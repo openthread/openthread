@@ -122,6 +122,7 @@ COMMONCPPFLAGS                                                                = 
 
 SILABS_EFR32MG1_CPPFLAGS                                                     = \
     -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG1_$(BOARD)/config                     \
+    -I$(top_srcdir)/examples/platforms/efr32mg1/EFR32MG1_$(BOARD)/config      \
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG1P/Include             \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
     $(NULL)
