@@ -37,7 +37,7 @@ add_executable(ot-ncp-mtd
 target_include_directories(ot-ncp-ftd PRIVATE ${COMMON_INCLUDES})
 target_include_directories(ot-ncp-mtd PRIVATE ${COMMON_INCLUDES})
 
-target_link_libraries(ot-ncp-ftd
+target_link_libraries(ot-ncp-ftd PRIVATE
     openthread-ncp-ftd
     ${OT_PLATFORM_LIB}
     openthread-ftd
@@ -46,7 +46,7 @@ target_link_libraries(ot-ncp-ftd
     ot-config
 )
 
-target_link_libraries(ot-ncp-mtd
+target_link_libraries(ot-ncp-mtd PRIVATE
     openthread-ncp-mtd
     ${OT_PLATFORM_LIB}
     openthread-mtd
