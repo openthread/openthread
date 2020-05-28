@@ -32,7 +32,7 @@ add_executable(ot-rcp
 
 target_include_directories(ot-rcp PRIVATE ${COMMON_INCLUDES})
 
-target_link_libraries(ot-rcp
+target_link_libraries(ot-rcp PRIVATE
     openthread-rcp
     ${OT_PLATFORM_LIB}
     openthread-radio

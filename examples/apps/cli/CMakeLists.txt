@@ -44,7 +44,7 @@ set(COMMON_INCLUDES
 target_include_directories(ot-cli-ftd PRIVATE ${COMMON_INCLUDES})
 target_include_directories(ot-cli-mtd PRIVATE ${COMMON_INCLUDES})
 
-target_link_libraries(ot-cli-ftd
+target_link_libraries(ot-cli-ftd PRIVATE
     openthread-cli-ftd
     ${OT_PLATFORM_LIB}
     openthread-ftd
@@ -53,7 +53,7 @@ target_link_libraries(ot-cli-ftd
     ot-config
 )
 
-target_link_libraries(ot-cli-mtd
+target_link_libraries(ot-cli-mtd PRIVATE
     openthread-cli-mtd
     ${OT_PLATFORM_LIB}
     openthread-mtd
