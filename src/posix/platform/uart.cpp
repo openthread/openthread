@@ -216,6 +216,39 @@ exit:
     return;
 }
 
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+static void InitializeSessionSocket(void)
+{
+    int rval;
+
+    VerifyOrExit((rval = accept(sUartSocket, NULL, NULL)) != -1, OT_NOOP);
+
+    if (sSessionSocket != -1)
+    {
+        close(sSessionSocket);
+    }
+
+    sSessionSocket = rval;
+
+    VerifyOrExit((rval = fcntl(sSessionSocket, F_GETFD, 0)) != -1, OT_NOOP);
+
+    rval |= FD_CLOEXEC;
+
+    VerifyOrExit((rval = fcntl(sSessionSocket, F_SETFD, rval)) != -1, OT_NOOP);
+
+exit:
+    if (rval == -1)
+    {
+        otLogWarnPlat("Failed to initialize session socket: %s", strerror(errno));
+        sSessionSocket = -1;
+    }
+    else
+    {
+        otLogInfoPlat("Session socket is ready", strerror(errno));
+    }
+}
+#endif
+
 void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet)
 {
     ssize_t rval;
@@ -229,7 +262,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
     }
     else if (FD_ISSET(sUartSocket, aReadFdSet))
     {
-        sSessionSocket = accept(sUartSocket, NULL, NULL);
+        InitializeSessionSocket();
     }
 
     if (sSessionSocket == -1 && sWriteBuffer != NULL)
