@@ -349,16 +349,11 @@ void MeshForwarder::RemoveDataResponseMessages(void)
 void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
 {
     uint16_t fcf;
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    bool timeSync = aMessage.IsTimeSync();
-#else
-    bool timeSync = false;
-#endif
 
     // initialize MAC header
     fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfPanidCompression | Mac::Frame::kFcfDstAddrShort |
           Mac::Frame::kFcfSrcAddrShort | Mac::Frame::kFcfAckRequest | Mac::Frame::kFcfSecurityEnabled;
-    Get<Mac::Mac>().UpdateFrameControlField(timeSync, fcf);
+    Get<Mac::Mac>().UpdateFrameControlField(aMessage.IsTimeSync(), fcf);
 
     aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
     aFrame.SetDstPanId(Get<Mac::Mac>().GetPanId());

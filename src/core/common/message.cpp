@@ -763,6 +763,15 @@ uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t 
     return aChecksum;
 }
 
+bool Message::IsTimeSync(void) const
+{
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    return GetMetadata().mTimeSync;
+#else
+    return false;
+#endif
+}
+
 void Message::SetMessageQueue(MessageQueue *aMessageQueue)
 {
     GetMetadata().mQueue.mMessage = aMessageQueue;
