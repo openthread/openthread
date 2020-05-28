@@ -98,7 +98,7 @@ otError otCryptoEcdsaSign(uint8_t *      aOutput,
                           const uint8_t *aPrivateKey,
                           uint16_t       aPrivateKeyLength)
 {
-    return Ecdsa::Sign(aOutput, aOutputLength, aInputHash, aInputHashLength, aPrivateKey, aPrivateKeyLength);
+    return Ecdsa::Sign(aOutput, *aOutputLength, aInputHash, aInputHashLength, aPrivateKey, aPrivateKeyLength);
 }
 
 #endif // OPENTHREAD_CONFIG_ECDSA_ENABLE
