@@ -59,6 +59,7 @@ CPPFLAGS_COMMON                                                              += 
     -I$(SDK_SRC_DIR)/hardware/kit/common/bsp                                    \
     -I$(SDK_SRC_DIR)/hardware/kit/common/drivers                                \
     -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG1_$(BOARD)/config                     \
+    -I$(top_srcdir)/examples/platforms/efr32mg1/EFR32MG1_TRADFRI/config      \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32                     \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32/config              \
     -I$(SDK_SRC_DIR)/platform/common/inc                                        \
