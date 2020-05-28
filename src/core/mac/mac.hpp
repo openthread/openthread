@@ -669,14 +669,14 @@ public:
      * This method appends header IEs to a TX-frame according to its
      * frame control field and if time sync is enabled.
      *
-     * @param[in]      aMessage   A pointer to the message to send, could be `NULL`.
-     * @param[in,out]  aFrame     A reference to the TX-frame to which the IEs will be appended.
+     * @param[in]      aIsTimeSync  A boolean indicates if time sync is being used.
+     * @param[in,out]  aFrame       A reference to the TX-frame to which the IEs will be appended.
      *
      * @retval OT_ERROR_NONE    If append header IEs successfully.
      * @retval OT_ERROR_FAILED  If cannot find header IE position in the frame.
      *
      */
-    otError AppendHeaderIe(Message *aMessage, TxFrame &aFrame) const;
+    otError AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame) const;
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
     /**
@@ -685,11 +685,11 @@ public:
      * header IE is present in this frame, the version should be set to 2015.
      * Otherwise, the version would be set to 2006.
      *
-     * @param[in]   aMessage   A pointer to the message to send, could be `NULL`.
-     * @param[out]  aFcf       A reference to the frame control field to set.
+     * @param[in]   aIsTimeSync  A boolean indicates if time sync is being used.
+     * @param[out]  aFcf         A reference to the frame control field to set.
      *
      */
-    static void UpdateFrameControlField(Message *aMessage, uint16_t &aFcf);
+    static void UpdateFrameControlField(bool aIsTimeSync, uint16_t &aFcf);
 
 private:
     enum

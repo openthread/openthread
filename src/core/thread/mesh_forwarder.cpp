@@ -517,13 +517,18 @@ uint16_t MeshForwarder::PrepareDataFrame(Mac::TxFrame &      aFrame,
     uint16_t dstpan;
     uint8_t  secCtl;
     uint16_t nextOffset;
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    bool timeSync = aMessage.IsTimeSync();
+#else
+    bool timeSync = false;
+#endif
 
 start:
 
     // Initialize MAC header
     fcf = Mac::Frame::kFcfFrameData;
 
-    Get<Mac::Mac>().UpdateFrameControlField(&aMessage, fcf);
+    Get<Mac::Mac>().UpdateFrameControlField(timeSync, fcf);
 
     fcf |= (aMacDest.IsShort()) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
     fcf |= (aMacSource.IsShort()) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
@@ -605,7 +610,7 @@ start:
     aFrame.SetSrcAddr(aMacSource);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    IgnoreError(Get<Mac::Mac>().AppendHeaderIe(&aMessage, aFrame));
+    IgnoreError(Get<Mac::Mac>().AppendHeaderIe(timeSync, aFrame));
 #endif
 
     payload = aFrame.GetPayload();

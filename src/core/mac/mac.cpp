@@ -833,7 +833,7 @@ otError Mac::PrepareDataRequest(TxFrame &aFrame)
     VerifyOrExit(!dst.IsNone(), error = OT_ERROR_ABORT);
 
     fcf = Frame::kFcfFrameMacCmd | Frame::kFcfPanidCompression | Frame::kFcfAckRequest | Frame::kFcfSecurityEnabled;
-    UpdateFrameControlField(NULL, fcf);
+    UpdateFrameControlField(false, fcf);
 
     if (dst.IsExtended())
     {
@@ -2062,9 +2062,9 @@ exit:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-otError Mac::AppendHeaderIe(Message *aMessage, TxFrame &aFrame) const
+otError Mac::AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame) const
 {
-    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aIsTimeSync);
 
     const size_t kMaxNumHeaderIe = 3; // TimeSync + Csl + Termination2
     HeaderIe     ieList[kMaxNumHeaderIe];
@@ -2074,7 +2074,7 @@ otError Mac::AppendHeaderIe(Message *aMessage, TxFrame &aFrame) const
     VerifyOrExit(aFrame.IsVersion2015() && aFrame.IsIePresent(), OT_NOOP);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aMessage != NULL && aMessage->IsTimeSync())
+    if (aIsTimeSync)
     {
         ieList[ieCount].Init();
         ieList[ieCount].SetId(Frame::kHeaderIeVendor);
@@ -2093,7 +2093,7 @@ otError Mac::AppendHeaderIe(Message *aMessage, TxFrame &aFrame) const
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aMessage != NULL && aMessage->IsTimeSync())
+    if (aIsTimeSync)
     {
         uint8_t *cur = aFrame.GetHeaderIe(Frame::kHeaderIeVendor);
         TimeIe * ie  = reinterpret_cast<TimeIe *>(cur + sizeof(HeaderIe));
@@ -2107,13 +2107,13 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-void Mac::UpdateFrameControlField(Message *aMessage, uint16_t &aFcf)
+void Mac::UpdateFrameControlField(bool aIsTimeSync, uint16_t &aFcf)
 {
-    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aIsTimeSync);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aMessage != NULL && aMessage->IsTimeSync())
+    if (aIsTimeSync)
     {
         aFcf |= Frame::kFcfFrameVersion2015 | Frame::kFcfIePresent;
     }
