@@ -49,11 +49,6 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 {
     otInstance *instance = NULL;
 
-    if (gPlatformPseudoResetWasRequested)
-    {
-        gPlatformPseudoResetWasRequested = false;
-    }
-
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeInit(static_cast<uint16_t>(atoi(aPlatformConfig->mRadioConfig)));
 #endif
@@ -71,11 +66,6 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #endif
 
     return instance;
-}
-
-bool otSysPseudoResetWasRequested(void)
-{
-    return gPlatformPseudoResetWasRequested;
 }
 
 void otSysDeinit(void)
@@ -152,6 +142,13 @@ int otSysMainloopPoll(otSysMainloopContext *aMainloop)
 {
     int rval;
 
+#if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+    gPlatformPseudoResetWasRequested = true;
+    return -2;
+#else // if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+    gPlatformPseudoResetWasRequested = false;
+#endif
+
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     if (timerisset(&aMainloop->mTimeout))
     {
@@ -193,6 +190,7 @@ int otSysMainloopPoll(otSysMainloopContext *aMainloop)
 
 void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMainloop)
 {
+    otTaskletsProcess(aInstance);
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
 #else

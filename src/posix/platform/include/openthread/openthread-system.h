@@ -113,14 +113,6 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig);
 void otSysDeinit(void);
 
 /**
- * This function returns true if a pseudo-reset was requested.
- *
- * In such a case, the main loop should shut down and re-initialize the OpenThread instance.
- *
- */
-bool otSysPseudoResetWasRequested(void);
-
-/**
  * This structure represents a context for a select() based mainloop.
  *
  */

@@ -386,11 +386,9 @@ pseudo_reset:
 #endif
 #endif
 
-    while (!otSysPseudoResetWasRequested())
+    while (true)
     {
         otSysMainloopContext mainloop;
-
-        otTaskletsProcess(instance);
 
         FD_ZERO(&mainloop.mReadFdSet);
         FD_ZERO(&mainloop.mWriteFdSet);
@@ -412,6 +410,10 @@ pseudo_reset:
 #if OPENTHREAD_USE_CONSOLE
             otxConsoleProcess(&mainloop);
 #endif
+        }
+        else if (otSysMainloopPoll(&mainloop) == -2)
+        {
+            break;
         }
         else if (errno != EINTR)
         {

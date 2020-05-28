@@ -50,16 +50,18 @@ void otPlatReset(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-#if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-    gPlatformPseudoResetWasRequested = true;
-    sPlatResetReason                 = OT_PLAT_RESET_REASON_SOFTWARE;
-#else  // OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-    otInstanceFinalize(aInstance);
-    otSysDeinit();
+    if (gPlatformPseudoResetWasRequested)
+    {
+        sPlatResetReason = OT_PLAT_RESET_REASON_SOFTWARE;
+    }
+    else
+    {
+        otInstanceFinalize(aInstance);
+        otSysDeinit();
 
-    longjmp(gResetJump, 1);
-    assert(false);
-#endif // OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+        longjmp(gResetJump, 1);
+        assert(false);
+    }
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
