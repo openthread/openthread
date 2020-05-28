@@ -40,9 +40,15 @@ install_packages_apt()
     sudo apt-get --no-install-recommends install -y automake g++ libtool lsb-release make cmake ninja-build
 
     PLATFORM=$(lsb_release -is)
+    RELEASE=$(lsb_release -rs)
+    UBUNTU2004=20.04
 
     if [ "$PLATFORM" = "Raspbian" ]; then
         sudo apt-get --no-install-recommends install -y binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+    elif [ "$PLATFORM" = "Ubuntu" ] && [ "$(echo "$RELEASE >= $UBUNTU2004" | bc)" -eq 1 ]; then
+        echo "Ubuntu Release >= $UBUNTU2004"
+        # no need to use ppa
+        sudo apt-get --no-install-recommends install -y gcc-arm-none-eabi gdb-multiarch
     elif ! command -v arm-none-eabi-g++; then
         # add gcc-arm-embedded ppa
         sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa -y
