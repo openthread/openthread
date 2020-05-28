@@ -48,7 +48,7 @@ extern "C" {
 /**
  * The OpenThread API monotonic version number.
  *
- * The number SHALL be increased by one everytime the content of OpenThread API files changed.
+ * This number MUST increase by one each time the contents of public OpenThread API include headers change.
  *
  */
 #define OPENTHREAD_API_VERSION (1)
