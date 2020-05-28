@@ -471,9 +471,10 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
             VerifyOrExit((entry >= &mExtUnicastAddresses[0]) && (entry < OT_ARRAY_END(mExtUnicastAddresses)),
                          error = OT_ERROR_ALREADY);
 
-            entry->mPrefixLength = aAddress.mPrefixLength;
-            entry->mPreferred    = aAddress.mPreferred;
-            entry->mValid        = aAddress.mValid;
+            entry->mPrefixLength  = aAddress.mPrefixLength;
+            entry->mAddressOrigin = aAddress.mAddressOrigin;
+            entry->mPreferred     = aAddress.mPreferred;
+            entry->mValid         = aAddress.mValid;
             ExitNow();
         }
     }

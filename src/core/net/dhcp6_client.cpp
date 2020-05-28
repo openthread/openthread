@@ -585,12 +585,13 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
 
         if (ia.mNetifAddress.GetAddress().PrefixMatch(option.GetAddress()) >= ia.mNetifAddress.mPrefixLength)
         {
-            mIdentityAssociations[i].mNetifAddress.mAddress   = option.GetAddress();
-            mIdentityAssociations[i].mPreferredLifetime       = option.GetPreferredLifetime();
-            mIdentityAssociations[i].mValidLifetime           = option.GetValidLifetime();
-            mIdentityAssociations[i].mNetifAddress.mPreferred = option.GetPreferredLifetime() != 0;
-            mIdentityAssociations[i].mNetifAddress.mValid     = option.GetValidLifetime() != 0;
-            mIdentityAssociations[i].mStatus                  = kIaStatusSolicitReplied;
+            mIdentityAssociations[i].mNetifAddress.mAddress       = option.GetAddress();
+            mIdentityAssociations[i].mPreferredLifetime           = option.GetPreferredLifetime();
+            mIdentityAssociations[i].mValidLifetime               = option.GetValidLifetime();
+            mIdentityAssociations[i].mNetifAddress.mAddressOrigin = OT_ADDRESS_ORIGIN_DHCPV6;
+            mIdentityAssociations[i].mNetifAddress.mPreferred     = option.GetPreferredLifetime() != 0;
+            mIdentityAssociations[i].mNetifAddress.mValid         = option.GetValidLifetime() != 0;
+            mIdentityAssociations[i].mStatus                      = kIaStatusSolicitReplied;
             Get<ThreadNetif>().AddUnicastAddress(ia.mNetifAddress);
             break;
         }

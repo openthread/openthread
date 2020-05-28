@@ -355,6 +355,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
 {
     mCommissionerAloc.Clear();
     mCommissionerAloc.mPrefixLength       = 64;
+    mCommissionerAloc.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
     mCommissionerAloc.mPreferred          = true;
     mCommissionerAloc.mValid              = true;
     mCommissionerAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
