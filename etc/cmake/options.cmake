@@ -85,6 +85,11 @@ if(OT_COAPS)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1")
 endif()
 
+option(OT_COAP_OBSERVE "enable coap observe (RFC7641) api support")
+if(OT_COAP_OBSERVE)
+    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE=1")
+endif()
+
 option(OT_COMMISSIONER "enable commissioner support")
 if(OT_COMMISSIONER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1")
