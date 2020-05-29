@@ -50,6 +50,8 @@ extern "C" {
  *
  * This number MUST increase by one each time the contents of public OpenThread API include headers change.
  *
+ * @note This number versions both OpenThread platform and user APIs.
+ *
  */
 #define OPENTHREAD_API_VERSION (1)
 
