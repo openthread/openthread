@@ -160,11 +160,11 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
             uint32_t frameCounter;
 
             // Transmit frame auxiliary key index and frame counter
-            static_cast<Mac::TxFrame *>(aFrame)->GetKeyId(keyId);
-            static_cast<Mac::TxFrame *>(aFrame)->GetFrameCounter(frameCounter);
+            SuccessOrExit(static_cast<Mac::TxFrame *>(aFrame)->GetKeyId(keyId));
+            SuccessOrExit(static_cast<Mac::TxFrame *>(aFrame)->GetFrameCounter(frameCounter));
 
             SuccessOrExit(mEncoder.WriteUint8(keyId));
-            SuccessOrExit(mEncoder.WriteUint8(frameCounter));
+            SuccessOrExit(mEncoder.WriteUint32(frameCounter));
         }
 
         SuccessOrExit(mEncoder.EndFrame());

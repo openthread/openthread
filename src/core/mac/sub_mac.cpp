@@ -392,7 +392,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
     {
         uint32_t frameCounter;
 
-        SuccessOrDie(aFrame.GetFrameCounter(frameCounter));
+        OT_ASSERT(aFrame.GetFrameCounter(frameCounter) == OT_ERROR_NONE);
         FrameCounterUpdate(frameCounter);
     }
 
