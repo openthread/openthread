@@ -676,10 +676,10 @@ public:
      *
      */
     otError AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame) const;
-#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+#endif
 
     /**
-     * This method updates frame version. If the frame would contain header IEs,
+     * This method updates frame control field. If the frame would contain header IEs,
      * IE present field would be set. If this is a csl transmission frame or
      * header IE is present in this frame, the version should be set to 2015.
      * Otherwise, the version would be set to 2006.

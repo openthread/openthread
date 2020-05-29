@@ -833,7 +833,7 @@ otError Mac::PrepareDataRequest(TxFrame &aFrame)
     VerifyOrExit(!dst.IsNone(), error = OT_ERROR_ABORT);
 
     fcf = Frame::kFcfFrameMacCmd | Frame::kFcfPanidCompression | Frame::kFcfAckRequest | Frame::kFcfSecurityEnabled;
-    UpdateFrameControlField(false, fcf);
+    UpdateFrameControlField(/* aIsTimeSync */ false, fcf);
 
     if (dst.IsExtended())
     {
