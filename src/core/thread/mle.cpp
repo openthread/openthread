@@ -372,7 +372,7 @@ otError Mle::Restore(void)
 
     Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence());
     Get<KeyManager>().SetMleFrameCounter(networkInfo.GetMleFrameCounter());
-    Get<Mac::SubMac>().SetMacFrameCounter(networkInfo.GetMacFrameCounter());
+    Get<Mac::SubMac>().SetFrameCounter(networkInfo.GetMacFrameCounter());
     mDeviceMode.Set(networkInfo.GetDeviceMode());
 
     // force re-attach when version mismatch.
@@ -489,14 +489,13 @@ otError Mle::Store(void)
     networkInfo.SetKeySequence(Get<KeyManager>().GetCurrentKeySequence());
     networkInfo.SetMleFrameCounter(Get<KeyManager>().GetMleFrameCounter() +
                                    OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD);
-    networkInfo.SetMacFrameCounter(Get<Mac::SubMac>().GetMacFrameCounter() +
-                                   OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD);
+    networkInfo.SetMacFrameCounter(Get<Mac::SubMac>().GetFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD);
     networkInfo.SetDeviceMode(mDeviceMode.Get());
 
     SuccessOrExit(error = Get<Settings>().SaveNetworkInfo(networkInfo));
 
     Get<KeyManager>().SetStoredMleFrameCounter(networkInfo.GetMleFrameCounter());
-    Get<Mac::SubMac>().SetStoredMacFrameCounter(networkInfo.GetMacFrameCounter());
+    Get<KeyManager>().SetStoredMacFrameCounter(networkInfo.GetMacFrameCounter());
 
     otLogDebgMle("Store Network Information");
 
@@ -1195,7 +1194,7 @@ otError Mle::ReadResponse(const Message &aMessage, Challenge &aResponse)
 
 otError Mle::AppendLinkFrameCounter(Message &aMessage)
 {
-    return Tlv::AppendUint32Tlv(aMessage, Tlv::kLinkFrameCounter, Get<Mac::SubMac>().GetMacFrameCounter());
+    return Tlv::AppendUint32Tlv(aMessage, Tlv::kLinkFrameCounter, Get<Mac::SubMac>().GetFrameCounter());
 }
 
 otError Mle::AppendMleFrameCounter(Message &aMessage)

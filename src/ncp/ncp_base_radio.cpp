@@ -51,20 +51,12 @@ namespace Ncp {
 // MARK: Raw Link-Layer Datapath Glue
 // ----------------------------------------------------------------------------
 
-void NcpBase::LinkRawReceiveDone(otInstance *, otRadioFrame *aFrame, otError aError)
+otError NcpBase::LinkRawPackRadioFrame(otRadioFrame *aFrame, otError aError)
 {
-    sNcpInstance->LinkRawReceiveDone(aFrame, aError);
-}
+    otError  error = OT_ERROR_FAILED;
+    uint16_t flags = 0;
 
-void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
-{
-    uint16_t flags  = 0;
-    uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
-
-    // Append frame header
-    SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_STREAM_RAW));
-
-    if (aError == OT_ERROR_NONE)
+    if (aFrame != NULL && aError == OT_ERROR_NONE)
     {
         // Append the frame contents
         SuccessOrExit(mEncoder.WriteDataWithLen(aFrame->mPsdu, aFrame->mLength));
@@ -76,21 +68,30 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
     }
 
     // Append metadata (rssi, etc)
-    SuccessOrExit(mEncoder.WriteInt8(aFrame->mInfo.mRxInfo.mRssi)); // RSSI
-    SuccessOrExit(mEncoder.WriteInt8(-128));                        // Noise Floor (Currently unused)
+    SuccessOrExit(mEncoder.WriteInt8(aFrame ? aFrame->mInfo.mRxInfo.mRssi : 0)); // RSSI
+    SuccessOrExit(mEncoder.WriteInt8(-128));                                     // Noise Floor (Currently unused)
 
-    if (aFrame->mInfo.mRxInfo.mAckedWithFramePending)
+    if (aFrame != NULL)
     {
-        flags |= SPINEL_MD_FLAG_ACKED_FP;
+        if (aFrame->mInfo.mRxInfo.mAckedWithFramePending)
+        {
+            flags |= SPINEL_MD_FLAG_ACKED_FP;
+        }
+
+        if (aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
+        {
+            flags |= SPINEL_MD_FLAG_ACKED_SEC;
+        }
     }
 
     SuccessOrExit(mEncoder.WriteUint16(flags)); // Flags
 
-    SuccessOrExit(mEncoder.OpenStruct());                           // PHY-data
-    SuccessOrExit(mEncoder.WriteUint8(aFrame->mChannel));           // 802.15.4 channel (Receive channel)
-    SuccessOrExit(mEncoder.WriteUint8(aFrame->mInfo.mRxInfo.mLqi)); // 802.15.4 LQI
+    SuccessOrExit(mEncoder.OpenStruct());                              // PHY-data
+    SuccessOrExit(mEncoder.WriteUint8(aFrame ? aFrame->mChannel : 0)); // 802.15.4 channel (Receive channel)
+    SuccessOrExit(mEncoder.WriteUint8(aFrame ? aFrame->mInfo.mRxInfo.mLqi
+                                             : static_cast<uint8_t>(OT_RADIO_LQI_NONE))); // 802.15.4 LQI
 
-    SuccessOrExit(mEncoder.WriteUint64(aFrame->mInfo.mRxInfo.mTimestamp)); // The timestamp in microseconds
+    SuccessOrExit(mEncoder.WriteUint64(aFrame ? aFrame->mInfo.mRxInfo.mTimestamp : 0)); // The timestamp in microseconds
 
     SuccessOrExit(mEncoder.CloseStruct());
 
@@ -98,6 +99,29 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
     SuccessOrExit(mEncoder.WriteUintPacked(aError)); // Receive error
     SuccessOrExit(mEncoder.CloseStruct());
 
+    SuccessOrExit(mEncoder.WriteUint8(aFrame ? aFrame->mInfo.mRxInfo.mAckKeyId : 0)); // The ACK auxiliary key ID
+    SuccessOrExit(
+        mEncoder.WriteUint32(aFrame ? aFrame->mInfo.mRxInfo.mAckFrameCounter : 0)); // The ACK auxiliary frame counter
+
+    error = OT_ERROR_NONE;
+
+exit:
+    return error;
+}
+
+void NcpBase::LinkRawReceiveDone(otInstance *, otRadioFrame *aFrame, otError aError)
+{
+    sNcpInstance->LinkRawReceiveDone(aFrame, aError);
+}
+
+void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
+{
+    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+
+    // Append frame header
+    SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_STREAM_RAW));
+
+    SuccessOrExit(LinkRawPackRadioFrame(aFrame, aError));
     SuccessOrExit(mEncoder.EndFrame());
 
 exit:
@@ -125,31 +149,22 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
         SuccessOrExit(mEncoder.WriteUintPacked(ThreadErrorToSpinelStatus(aError)));
         SuccessOrExit(mEncoder.WriteBool(framePending));
 
-        if (aError != OT_ERROR_NONE)
+        if (aError == OT_ERROR_NONE)
         {
-            // Transmit frame header
-            SuccessOrExit(
-                mEncoder.WriteDataWithLen(aFrame->mPsdu, static_cast<Mac::TxFrame *>(aFrame)->GetHeaderLength()));
+            SuccessOrExit(LinkRawPackRadioFrame(aAckFrame, aError));
         }
-        else if (aAckFrame)
+
+        if (static_cast<Mac::TxFrame *>(aFrame)->GetSecurityEnabled())
         {
-            SuccessOrExit(mEncoder.WriteUint16(aAckFrame->mLength));
-            SuccessOrExit(mEncoder.WriteData(aAckFrame->mPsdu, aAckFrame->mLength));
+            uint8_t  keyId;
+            uint32_t frameCounter;
 
-            SuccessOrExit(mEncoder.WriteInt8(aAckFrame->mInfo.mRxInfo.mRssi)); // RSSI
-            SuccessOrExit(mEncoder.WriteInt8(-128));                           // Noise Floor (Currently unused)
-            SuccessOrExit(mEncoder.WriteUint16(0));                            // Flags
+            // Transmit frame auxiliary key index and frame counter
+            static_cast<Mac::TxFrame *>(aFrame)->GetKeyId(keyId);
+            static_cast<Mac::TxFrame *>(aFrame)->GetFrameCounter(frameCounter);
 
-            SuccessOrExit(mEncoder.OpenStruct());                                     // PHY-data
-            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mChannel));                  // Receive channel
-            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mInfo.mRxInfo.mLqi));        // Link Quality Indicator
-            SuccessOrExit(mEncoder.WriteUint64(aAckFrame->mInfo.mRxInfo.mTimestamp)); // The timestamp in microseconds
-
-            SuccessOrExit(mEncoder.CloseStruct());
-
-            SuccessOrExit(mEncoder.OpenStruct());            // Vendor-data
-            SuccessOrExit(mEncoder.WriteUintPacked(aError)); // Receive error
-            SuccessOrExit(mEncoder.CloseStruct());
+            SuccessOrExit(mEncoder.WriteUint8(keyId));
+            SuccessOrExit(mEncoder.WriteUint8(frameCounter));
         }
 
         SuccessOrExit(mEncoder.EndFrame());
@@ -188,23 +203,6 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
                                       SPINEL_PROP_MAC_SCAN_STATE));
 
     SuccessOrExit(mEncoder.WriteUint8(SPINEL_SCAN_STATE_IDLE));
-    SuccessOrExit(mEncoder.EndFrame());
-
-exit:
-    return;
-}
-
-void NcpBase::LinkRawMacFrameCounterStore(otInstance *)
-{
-    sNcpInstance->LinkRawMacFrameCounterStore();
-}
-
-void NcpBase::LinkRawMacFrameCounterStore(void)
-{
-    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
-                                      SPINEL_PROP_RCP_MAC_FRAME_COUNTER));
-
-    SuccessOrExit(mEncoder.WriteUint32(otLinkRawGetMacFrameCounter(mInstance)));
     SuccessOrExit(mEncoder.EndFrame());
 
 exit:
@@ -344,11 +342,11 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_ENABLED>(void)
             IgnoreError(otLinkRawSleep(mInstance));
         }
 
-        error = otLinkRawSetEnable(mInstance, false, NULL);
+        error = otLinkRawSetEnable(mInstance, false);
     }
     else
     {
-        error = otLinkRawSetEnable(mInstance, true, &NcpBase::LinkRawMacFrameCounterStore);
+        error = otLinkRawSetEnable(mInstance, true);
 
         // If we have raw stream enabled already, start receiving
         if (error == OT_ERROR_NONE && mIsRawStreamEnabled)
@@ -484,11 +482,6 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER>(void)
-{
-    return mEncoder.WriteUint32(otLinkRawGetMacFrameCounter(mInstance));
-}
-
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER>(void)
 {
     otError  error = OT_ERROR_NONE;
@@ -497,19 +490,6 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER
     SuccessOrExit(error = mDecoder.ReadUint32(frameCounter));
 
     error = otLinkRawSetMacFrameCounter(mInstance, frameCounter);
-
-exit:
-    return error;
-}
-
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_STORED_MAC_FRAME_COUNTER>(void)
-{
-    otError  error = OT_ERROR_NONE;
-    uint32_t frameCounter;
-
-    SuccessOrExit(error = mDecoder.ReadUint32(frameCounter));
-
-    error = otLinkRawSetStoredMacFrameCounter(mInstance, frameCounter);
 
 exit:
     return error;

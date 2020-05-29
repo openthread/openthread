@@ -148,17 +148,6 @@ public:
          */
         void HandleEnergyScanDone(int8_t aMaxRssi);
 
-        /**
-         * This callback method handles "store MAC frame counter" event from radio platform.
-         *
-         * This method is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability. It is called from
-         * `otPlatRadioMacFrameCounterStore()`.
-         *
-         * @param[in]  aMacFrameCounter    The current MAC frame counter value.
-         *
-         */
-        void HandleMacFrameCounterStore(uint32_t aMacFrameCounter);
-
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         /**
          * This callback method handles a "Receive Done" event from radio platform when diagnostics mode is enabled.
@@ -279,20 +268,6 @@ public:
     }
 
     /**
-     * This method gets the current MAC frame counter value.
-     *
-     * @param[out] aMacFrameCounter  A reference to output the MAC frame counter.
-     *
-     * @retval OT_ERROR_NONE             Successfully get the MAC frame counter value.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  MAC frame counter is not implemented in radio.
-     *
-     */
-    otError GetMacFrameCounter(uint32_t &aMacFrameCounter)
-    {
-        return otPlatRadioGetMacFrameCounter(GetInstance(), &aMacFrameCounter);
-    }
-
-    /**
      * This method sets the current MAC Frame Counter value.
      *
      * @param[in] aMacFrameCounter  The MAC Frame Counter value.
@@ -301,17 +276,6 @@ public:
     void SetMacFrameCounter(uint32_t aMacFrameCounter)
     {
         otPlatRadioSetMacFrameCounter(GetInstance(), aMacFrameCounter);
-    }
-
-    /**
-     * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
-     *
-     * @param[in] aStoredMacFrameCounter  The stored MAC Frame Counter value.
-     *
-     */
-    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
-    {
-        otPlatRadioSetStoredMacFrameCounter(GetInstance(), aStoredMacFrameCounter);
     }
 
     /**

@@ -61,7 +61,6 @@ SubMac::SubMac(Instance &aInstance)
     , mPcapCallbackContext(NULL)
     , mKeyId(0)
     , mFrameCounter(0)
-    , mStoredFrameCounter(0)
     , mTimer(aInstance, &SubMac::HandleTimer, this)
 {
     mExtAddress.Clear();
@@ -203,6 +202,11 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
         mPcapCallback(aFrame, false, mPcapCallbackContext);
     }
 
+    if (!ShouldHandleTransmitSecurity() && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
+    {
+        FrameCounterUpdate(aFrame->mInfo.mRxInfo.mAckFrameCounter);
+    }
+
     mCallbacks.ReceiveDone(aFrame, aError);
 }
 
@@ -249,9 +253,11 @@ void SubMac::ProcessTransmitSecurity(void)
 
     if (!mTransmitFrame.IsARetransmission())
     {
+        uint32_t frameCounter = GetFrameCounter();
+
         mTransmitFrame.SetKeyId(mKeyId);
-        mTransmitFrame.SetFrameCounter(GetMacFrameCounter());
-        IncrementMacFrameCounter();
+        mTransmitFrame.SetFrameCounter(frameCounter);
+        FrameCounterUpdate(frameCounter + 1);
     }
 
     extAddress = &GetExtAddress();
@@ -380,6 +386,14 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
     default:
         OT_ASSERT(false);
         OT_UNREACHABLE_CODE(ExitNow());
+    }
+
+    if (!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled())
+    {
+        uint32_t frameCounter;
+
+        aFrame.GetFrameCounter(frameCounter);
+        FrameCounterUpdate(frameCounter);
     }
 
     // Determine whether a CSMA retry is required.
@@ -659,56 +673,20 @@ exit:
     return;
 }
 
-void SubMac::IncrementMacFrameCounter(void)
+void SubMac::FrameCounterUpdate(uint32_t aFrameCounter)
 {
-    mFrameCounter++;
+    mFrameCounter = aFrameCounter;
 
-    if (mFrameCounter >= mStoredFrameCounter)
-    {
-        mCallbacks.MacFrameCounterStore();
-    }
+    mCallbacks.InvokeFrameCounterUpdate(aFrameCounter);
 }
 
-void SubMac::HandleMacFrameCounterStore(uint32_t aMacFrameCounter)
-{
-    if (aMacFrameCounter >= mStoredFrameCounter)
-    {
-        mCallbacks.MacFrameCounterStore();
-    }
-}
-
-uint32_t SubMac::GetMacFrameCounter(void) const
-{
-    uint32_t macFrameCounter;
-
-    // MAC frame counter is maintained by SubMac if radio does not supports Tx AES
-    VerifyOrExit(!ShouldHandleTransmitSecurity(), macFrameCounter = mFrameCounter);
-
-    IgnoreError(Get<Radio>().GetMacFrameCounter(macFrameCounter));
-
-exit:
-    return macFrameCounter;
-}
-
-void SubMac::SetMacFrameCounter(uint32_t aMacFrameCounter)
+void SubMac::SetFrameCounter(uint32_t aMacFrameCounter)
 {
     mFrameCounter = aMacFrameCounter;
 
     VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
 
     Get<Radio>().SetMacFrameCounter(aMacFrameCounter);
-
-exit:
-    return;
-}
-
-void SubMac::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
-{
-    mStoredFrameCounter = aStoredMacFrameCounter;
-
-    VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
-
-    Get<Radio>().SetStoredMacFrameCounter(aStoredMacFrameCounter);
 
 exit:
     return;

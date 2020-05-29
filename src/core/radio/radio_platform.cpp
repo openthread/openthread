@@ -81,16 +81,6 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyS
     }
 }
 
-extern "C" void otPlatRadioMacFrameCounterStore(otInstance *aInstance, uint32_t aMacFrameCounter)
-{
-    Instance *instance = static_cast<Instance *>(aInstance);
-
-    if (instance->IsInitialized())
-    {
-        instance->Get<Radio::Callbacks>().HandleMacFrameCounterStore(aMacFrameCounter);
-    }
-}
-
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
@@ -150,22 +140,8 @@ OT_TOOL_WEAK void otPlatRadioSetMacKey(otInstance *    aInstance,
     OT_UNUSED_VARIABLE(aNextKey);
 }
 
-OT_TOOL_WEAK otError otPlatRadioGetMacFrameCounter(otInstance *aInstance, uint32_t *aMacFrameCounter)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aMacFrameCounter);
-
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-
 OT_TOOL_WEAK void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aMacFrameCounter);
-}
-
-OT_TOOL_WEAK void otPlatRadioSetStoredMacFrameCounter(otInstance *aInstance, uint32_t aStoredMacFrameCounter)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aStoredMacFrameCounter);
 }

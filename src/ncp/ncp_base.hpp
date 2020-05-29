@@ -267,6 +267,7 @@ protected:
     otError DecodeChannelMask(uint32_t &aChannelMask);
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    otError LinkRawPackRadioFrame(otRadioFrame *aFrame, otError aError);
 
     static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
     void        LinkRawReceiveDone(otRadioFrame *aFrame, otError aError);
@@ -279,9 +280,6 @@ protected:
 
     static void LinkRawEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
     void        LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi);
-
-    static void LinkRawMacFrameCounterStore(otInstance *aInstance);
-    void        LinkRawMacFrameCounterStore(void);
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 

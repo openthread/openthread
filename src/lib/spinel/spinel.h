@@ -692,11 +692,12 @@ typedef uint8_t      spinel_tid_t;
 
 enum
 {
-    SPINEL_MD_FLAG_TX       = 0x0001, //!< Packet was transmitted, not received.
-    SPINEL_MD_FLAG_BAD_FCS  = 0x0004, //!< Packet was received with bad FCS
-    SPINEL_MD_FLAG_DUPE     = 0x0008, //!< Packet seems to be a duplicate
-    SPINEL_MD_FLAG_ACKED_FP = 0x0010, //!< Packet was acknowledged with frame pending set
-    SPINEL_MD_FLAG_RESERVED = 0xFFE2, //!< Flags reserved for future use.
+    SPINEL_MD_FLAG_TX        = 0x0001, //!< Packet was transmitted, not received.
+    SPINEL_MD_FLAG_BAD_FCS   = 0x0004, //!< Packet was received with bad FCS
+    SPINEL_MD_FLAG_DUPE      = 0x0008, //!< Packet seems to be a duplicate
+    SPINEL_MD_FLAG_ACKED_FP  = 0x0010, //!< Packet was acknowledged with frame pending set
+    SPINEL_MD_FLAG_ACKED_SEC = 0x0020, //!< Packet was acknowledged with secure enhance ACK
+    SPINEL_MD_FLAG_RESERVED  = 0xFFC2, //!< Flags reserved for future use.
 };
 
 enum
@@ -3961,16 +3962,6 @@ enum
      *
      */
     SPINEL_PROP_RCP_MAC_FRAME_COUNTER = SPINEL_PROP_RCP__BEGIN + 1,
-
-    /// Stored MAC Frame Counter
-    /** Format: `L`.
-     *
-     *  `L`: Stored MAC frame counter
-     *
-     * The Spinel property is used to set/get stored MAC frame counter to and from RCP.
-     *
-     */
-    SPINEL_PROP_RCP_STORED_MAC_FRAME_COUNTER = SPINEL_PROP_RCP__BEGIN + 2,
 
     SPINEL_PROP_RCP__END = 0x900,
 

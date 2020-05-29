@@ -255,6 +255,14 @@ public:
     const Mle::Key &GetTemporaryMleKey(uint32_t aKeySequence);
 
     /**
+     * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
+     *
+     * @param[in]  aStoredMacFrameCounter  The stored MAC Frame Counter value.
+     *
+     */
+    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter) { mStoredMacFrameCounter = aStoredMacFrameCounter; }
+
+    /**
      * This method returns the current MLE Frame Counter value.
      *
      * @returns The current MLE Frame Counter value.
@@ -449,6 +457,14 @@ public:
      */
     void UpdateKeyMaterial(void);
 
+    /**
+     * This method handles MAC frame counter change.
+     *
+     * @param[in]  aFrameCounter  The MAC frame counter value.
+     *
+     */
+    void FrameCounterUpdate(uint32_t aFrameCounter);
+
 private:
     enum
     {
@@ -487,6 +503,7 @@ private:
     Mle::Key mTemporaryMleKey;
 
     uint32_t mMleFrameCounter;
+    uint32_t mStoredMacFrameCounter;
     uint32_t mStoredMleFrameCounter;
 
     uint32_t   mHoursSinceKeyRotation;

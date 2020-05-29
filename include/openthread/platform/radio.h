@@ -234,11 +234,14 @@ typedef struct otRadioFrame
              */
             uint64_t mTimestamp;
 
-            int8_t  mRssi; ///< Received signal strength indicator in dBm for received frames.
-            uint8_t mLqi;  ///< Link Quality Indicator for received frames.
+            int8_t   mRssi;            ///< Received signal strength indicator in dBm for received frames.
+            uint8_t  mLqi;             ///< Link Quality Indicator for received frames.
+            uint8_t  mAckKeyId;        ///< ACK auxiliary key ID.
+            uint32_t mAckFrameCounter; ///< ACK auxiliary frame counter.
 
             // Flags
-            bool mAckedWithFramePending : 1; /// This indicates if this frame was acknowledged with frame pending set.
+            bool mAckedWithFramePending : 1; ///< This indicates if this frame was acknowledged with frame pending set.
+            bool mAckedWithSecEnhAck : 1; ///< This indicates if this frame was acknowledged with secured enhance ACK.
         } mRxInfo;
     } mInfo;
 } otRadioFrame;
@@ -476,20 +479,6 @@ void otPlatRadioSetMacKey(otInstance *    aInstance,
                           const otMacKey *aNextKey);
 
 /**
- * This method gets the current MAC frame counter value.
- *
- * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
- *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[out] aMacFrameCounter  A pointer to the MAC frame counter.
- *
- * @retval OT_ERROR_NONE             Successfully get the MAC frame counter value.
- * @retval OT_ERROR_NOT_IMPLEMENTED  MAC frame counter is not implemented in radio.
- *
- */
-otError otPlatRadioGetMacFrameCounter(otInstance *aInstance, uint32_t *aMacFrameCounter);
-
-/**
  * This method sets the current MAC frame counter value.
  *
  * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
@@ -499,28 +488,6 @@ otError otPlatRadioGetMacFrameCounter(otInstance *aInstance, uint32_t *aMacFrame
  *
  */
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
-
-/**
- * This method sets the stored MAC frame counter value which is stored in non-volatile memory.
- *
- * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
- *
- * @param[in]   aInstance               A pointer to an OpenThread instance.
- * @param[in]   aStoredMacFrameCounter  The stored MAC frame counter value.
- *
- */
-void otPlatRadioSetStoredMacFrameCounter(otInstance *aInstance, uint32_t aStoredMacFrameCounter);
-
-/**
- * The radio driver calls this method to notify OpenThread that it needs to store the MAC frame counter.
- *
- * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
- *
- * @param[in]  aInstance           The OpenThread instance structure.
- * @param[in]  aMacFrameCounter    The MAC frame counter value.
- *
- */
-extern void otPlatRadioMacFrameCounterStore(otInstance *aInstance, uint32_t aMacFrameCounter);
 
 /**
  * @}
@@ -681,6 +648,9 @@ extern void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame);
 /**
  * The radio driver calls this function to notify OpenThread that the transmit operation has completed,
  * providing both the transmitted frame and, if applicable, the received ack frame.
+ *
+ * When radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability, aFrame should be modified with the actual
+ * auxiliary frame counter and key index used in transmission when this function is called.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aFrame     A pointer to the frame that was transmitted.

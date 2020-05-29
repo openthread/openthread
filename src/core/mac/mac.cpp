@@ -1868,9 +1868,9 @@ bool Mac::HandleMacCommand(RxFrame &aFrame)
     return didHandle;
 }
 
-void Mac::MacFrameCounterStore(void)
+void Mac::FrameCounterUpdate(uint32_t aFrameCounter)
 {
-    IgnoreError(Get<Mle::MleRouter>().Store());
+    Get<KeyManager>().FrameCounterUpdate(aFrameCounter);
 }
 
 void Mac::SetPromiscuous(bool aPromiscuous)

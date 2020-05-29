@@ -831,16 +831,6 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleValueIs(spinel_prop_k
             break;
         }
     }
-    else if (aKey == SPINEL_PROP_RCP_MAC_FRAME_COUNTER)
-    {
-        uint32_t       macFrameCounter;
-        spinel_ssize_t unpacked;
-
-        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT32_S, &macFrameCounter);
-
-        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        otPlatRadioMacFrameCounterStore(mInstance, macFrameCounter);
-    }
 
 exit:
     LogIfFail("Failed to handle ValueIs", error);
@@ -875,12 +865,27 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ParseRadioFrame(otRadioF
                                                &aFrame.mInfo.mRxInfo.mTimestamp, &receiveError);
 
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+    aBuffer += unpacked;
+    aLength -= unpacked;
 
     if (receiveError == OT_ERROR_NONE)
     {
         aFrame.mLength = static_cast<uint8_t>(size);
 
         aFrame.mInfo.mRxInfo.mAckedWithFramePending = ((flags & SPINEL_MD_FLAG_ACKED_FP) != 0);
+
+        if (mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC)
+        {
+            aFrame.mInfo.mRxInfo.mAckedWithSecEnhAck = ((flags & SPINEL_MD_FLAG_ACKED_SEC) != 0);
+
+            unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT32_S,
+                                              &aFrame.mInfo.mRxInfo.mAckKeyId, &aFrame.mInfo.mRxInfo.mAckFrameCounter);
+            VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        }
+        else
+        {
+            aFrame.mInfo.mRxInfo.mAckedWithSecEnhAck = false;
+        }
     }
     else if (receiveError < OT_NUM_ERRORS)
     {
@@ -1041,33 +1046,11 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::GetMacFrameCounter(uint32_t &aMacFrameCounter)
-{
-    otError error = Get(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, &aMacFrameCounter);
-
-    LogIfFail("Get MAC frame counter failed", error);
-
-    return error;
-}
-
-template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacFrameCounter(uint32_t aMacFrameCounter)
 {
     otError error;
 
     SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, aMacFrameCounter));
-
-exit:
-    return error;
-}
-
-template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
-{
-    otError error;
-
-    SuccessOrExit(error =
-                      Set(SPINEL_PROP_RCP_STORED_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, aStoredMacFrameCounter));
 
 exit:
     return error;
@@ -1479,7 +1462,6 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
     otError         error        = OT_ERROR_NONE;
     spinel_status_t status       = SPINEL_STATUS_OK;
     bool            framePending = false;
-    spinel_ssize_t  header_size  = mTransmitFrame->mLength;
     spinel_ssize_t  unpacked;
 
     VerifyOrExit(aCommand == SPINEL_CMD_PROP_VALUE_IS && aKey == SPINEL_PROP_LAST_STATUS, error = OT_ERROR_FAILED);
@@ -1499,23 +1481,24 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
 
     if (status == SPINEL_STATUS_OK)
     {
-        if (aLength > 0)
-        {
-            SuccessOrExit(error = ParseRadioFrame(mAckRadioFrame, aBuffer, aLength));
-        }
-        else
-        {
-            mAckRadioFrame.mLength = 0;
-        }
+        SuccessOrExit(error = ParseRadioFrame(mAckRadioFrame, aBuffer, aLength));
     }
     else
     {
-        // Replace transmit frame MAC header with the one from RCP which contains fields filled at RCP side
-        unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_DATA_WLEN_S, mTransmitFrame->mPsdu,
-                                                   &header_size);
-        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-
         error = SpinelStatusToOtError(status);
+    }
+
+    if (mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC && static_cast<Mac::TxFrame *>(mTransmitFrame)->GetSecurityEnabled())
+    {
+        uint8_t  keyId;
+        uint32_t frameCounter;
+
+        // Replace transmit frame auxiliary key index and frame counter with the one filled by RCP
+        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT32_S, &keyId,
+                                          &frameCounter);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        static_cast<Mac::TxFrame *>(mTransmitFrame)->SetKeyId(keyId);
+        static_cast<Mac::TxFrame *>(mTransmitFrame)->SetFrameCounter(frameCounter);
     }
 
 exit:

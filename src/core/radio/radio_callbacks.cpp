@@ -58,11 +58,6 @@ void Radio::Callbacks::HandleEnergyScanDone(int8_t aMaxRssi)
     Get<Mac::SubMac>().HandleEnergyScanDone(aMaxRssi);
 }
 
-void Radio::Callbacks::HandleMacFrameCounterStore(uint32_t aMacFrameCounter)
-{
-    Get<Mac::SubMac>().HandleMacFrameCounterStore(aMacFrameCounter);
-}
-
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 void Radio::Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, otError aError)
 {

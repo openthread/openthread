@@ -169,11 +169,12 @@ public:
         void EnergyScanDone(int8_t aMaxRssi);
 
         /**
-         * This method notifies user of `SubMac` that current MAC frame counter is greater equal than stored MAC frame
-         * counter.
+         * This method notifies user of `SubMac` that MAC frame counter is updated.
+         *
+         * @param[in]  aFrameCounter  The MAC frame counter value.
          *
          */
-        void MacFrameCounterStore(void);
+        void InvokeFrameCounterUpdate(uint32_t);
     };
 
     /**
@@ -396,7 +397,7 @@ public:
      * @returns The current MAC frame counter value.
      *
      */
-    uint32_t GetMacFrameCounter(void) const;
+    uint32_t GetFrameCounter(void) const { return mFrameCounter; };
 
     /**
      * This method sets the current MAC Frame Counter value.
@@ -404,15 +405,7 @@ public:
      * @param[in] aMacFrameCounter  The MAC Frame Counter value.
      *
      */
-    void SetMacFrameCounter(uint32_t aMacFrameCounter);
-
-    /**
-     * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
-     *
-     * @param[in] aStoredMacFrameCounter  The stored MAC Frame Counter value.
-     *
-     */
-    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter);
+    void SetFrameCounter(uint32_t aMacFrameCounter);
 
 private:
     enum
@@ -457,7 +450,7 @@ private:
     bool ShouldHandleEnergyScan(void) const;
 
     void ProcessTransmitSecurity(void);
-    void IncrementMacFrameCounter(void);
+    void FrameCounterUpdate(uint32_t aFrameCounter);
     void StartCsmaBackoff(void);
     void BeginTransmit(void);
     void SampleRssi(void);
@@ -466,7 +459,6 @@ private:
     void HandleTransmitStarted(TxFrame &aFrame);
     void HandleTransmitDone(TxFrame &aTxFrame, RxFrame *aAckFrame, otError aError);
     void HandleEnergyScanDone(int8_t aMaxRssi);
-    void HandleMacFrameCounterStore(uint32_t aMacFrameCounter);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
@@ -492,7 +484,6 @@ private:
     Key                mNextKey;
     uint8_t            mKeyId;
     uint32_t           mFrameCounter;
-    uint32_t           mStoredFrameCounter;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicro mTimer;
 #else

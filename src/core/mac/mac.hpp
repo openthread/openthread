@@ -664,11 +664,12 @@ public:
     bool IsEnabled(void) const { return mEnabled; }
 
     /**
-     * This method notifies that current MAC frame counter is greater equal than stored MAC frame counter.
-     * Need to save it to NVM.
+     * This method handles MAC frame counter change.
+     *
+     * @param[in]  aFrameCounter  The MAC frame counter value.
      *
      */
-    void MacFrameCounterStore(void);
+    void FrameCounterUpdate(uint32_t aFrameCounter);
 
 private:
     enum
