@@ -28,38 +28,38 @@
 #
 
 #
-#  This script calls cmake&ninja to compile OpenThread for the given platform.
+#  This script calls cmake and ninja to compile OpenThread for the given platform.
 #
 #  Compile with default build options:
 #
-#  script/cmake-build ${platform}
+#      script/cmake-build ${platform}
 #
 #  Compile with the specified build option enabled:
 #
-#  script/cmake-build ${platform} -D${option}=ON
+#      script/cmake-build ${platform} -D${option}=ON
 #
 #  Compile with the specified build option disabled that already enabled by default:
 #
-#  script/cmake-build ${platform} -D${option}=OFF
+#      script/cmake-build ${platform} -D${option}=OFF
 #
 #  Compile with the specified ninja build target:
 #
-#  OT_CMAKE_NINJA_TARGET="ot-cli-ftd" script/cmake-build ${platform}
+#      OT_CMAKE_NINJA_TARGET="ot-cli-ftd" script/cmake-build ${platform}
 #
 #  Compile with the specified build directory:
 #
-#  OT_CMAKE_BUILD_DIR="./build/temp"  script/cmake-build ${platform}
+#      OT_CMAKE_BUILD_DIR="./build/temp"  script/cmake-build ${platform}
 #
 #  Examples:
 #
-#  script/cmake-build simulation
+#      script/cmake-build simulation
 #
-#  script/cmake-build simulation -DOT_FULL_LOGS=ON -DOT_CHANNEL_MANAGER=OFF
+#      script/cmake-build simulation -DOT_FULL_LOGS=ON -DOT_CHANNEL_MANAGER=OFF
 #
-#  OT_CMAKE_NINJA_TARGET="ot-cli-mtd" OT_CMAKE_BUILD_DIR="./build/temp" script/cmake-build simulation -DOT_FULL_LOGS=ON -DOT_CHANNEL_MANAGER=OFF
+#      OT_CMAKE_NINJA_TARGET="ot-cli-mtd" OT_CMAKE_BUILD_DIR="./build/temp" script/cmake-build simulation -DOT_FULL_LOGS=ON -DOT_CHANNEL_MANAGER=OFF
 #
 
-set -euo pipefail
+set -euxo pipefail
 
 OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
 
