@@ -228,13 +228,13 @@
 
 // $[SERIAL]
 #define BSP_SERIAL_APP_PORT                           (HAL_SERIAL_PORT_USART0)
-#define BSP_SERIAL_APP_TX_PIN                         (0U)
-#define BSP_SERIAL_APP_TX_PORT                        (gpioPortA)
-#define BSP_SERIAL_APP_TX_LOC                         (0U)
+#define BSP_SERIAL_APP_TX_PIN                         (15U)
+#define BSP_SERIAL_APP_TX_PORT                        (gpioPortB)
+#define BSP_SERIAL_APP_TX_LOC                         (10U)
 
-#define BSP_SERIAL_APP_RX_PIN                         (1U)
-#define BSP_SERIAL_APP_RX_PORT                        (gpioPortA)
-#define BSP_SERIAL_APP_RX_LOC                         (0U)
+#define BSP_SERIAL_APP_RX_PIN                         (14U)
+#define BSP_SERIAL_APP_RX_PORT                        (gpioPortB)
+#define BSP_SERIAL_APP_RX_LOC                         (8U)
 
 #define BSP_SERIAL_APP_CTS_PIN                        (2U)
 #define BSP_SERIAL_APP_CTS_PORT                       (gpioPortA)
