@@ -49,7 +49,7 @@ Examples:
        output:
        case 5.1.1:
             role-vendor pair: [('Leader', 'ARM'), ('Router_1', 'ARM')]
-            needed vendor devices:{'ARM': 2}
+            vendor devices  : {'ARM': 2}
 
        Testbed needed vendor devices:{'ARM': 2}
 
@@ -57,13 +57,20 @@ Examples:
        cmd:    python parse_topofile.py -f TopologyConfig.txt -c 5.1.1 5.2.1
        output:
        case 5.1.1:
-           role-vendor pair: [('Leader', 'ARM'), ('Router_2', 'ARM')]
-           needed vendor devices:{'ARM': 2}
+           role-vendor pair: [('Leader', 'ARM'), ('Router_1', 'ARM')]
+           vendor devices  : {'ARM': 2}
        case 5.2.1:
            role-vendor pair: [('Leader', 'OpenThread'), ('REED_1', 'Kirale'), ('MED_1', 'SiLabs')]
-           needed vendor devices:{'OpenThread': 1, 'Kirale': 1, 'SiLabs': 1}
+           vendor devices  : {'OpenThread': 1, 'Kirale': 1, 'SiLabs': 1}
 
        Testbed needed vendor devices:{'ARM': 2, 'OpenThread': 1, 'Kirale': 1, 'SiLabs': 1}
+
+    3. Get all cases vendor info
+       cmd:    python parse_topofile.py -f TopologyConfig.txt
+       output:
+           ... ... ...
+
+       Testbed needed vendor devices:{'ARM': 4, 'NXP': 5, 'OpenThread': 5, 'Kirale': 6, 'SiLabs': 5, 'Any': 7}
 
 """
 
@@ -117,11 +124,13 @@ def device_calculate(topo_file, case_list):
                 testbed_vendor_dict[vendor] = max(testbed_vendor_dict[vendor],
                                                   case_vendor_dict[vendor])
 
-            logging.info('\tneeded vendor devices:%s' % dict(case_vendor_dict))
+            logging.info('\tvendor devices  : %s' % dict(case_vendor_dict))
 
-    if case_list is not None and 'all' not in case_list:
+    if case_list and 'all' not in case_list:
         logging.info('Case %s not found' % str(case_list)[1:-1])
 
+    # vendor 'Any' stands for any other vendors
+    # override 'Any' counter when overlapping with other vendors
     count_any = MAX_VENDOR_DEVICE
     for key in testbed_vendor_dict:
         if key != 'Any':
