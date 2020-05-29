@@ -1,3 +1,4 @@
+#!/usr/bin/expect -f
 #
 #  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
@@ -26,18 +27,28 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-rcp
-    main.c
-)
+spawn $env(OT_COMMAND) 1
+set timeout 1
+expect_after {
+    timeout { exit 1 }
+}
 
-target_include_directories(ot-rcp PRIVATE ${COMMON_INCLUDES})
-
-target_link_libraries(ot-rcp PRIVATE
-    openthread-rcp
-    ${OT_PLATFORM_LIB}
-    openthread-radio
-    ${OT_PLATFORM_LIB}
-    ot-config
-)
-
-install(TARGETS ot-rcp DESTINATION bin)
+send "routereligible disable\n"
+expect "Done"
+send "routereligible\n"
+expect "Disabled"
+expect "Done"
+send "routereligible enable\n"
+expect "Done"
+send "routereligible\n"
+expect "Enabled"
+expect "Done"
+send "routereligible something_invalid\n"
+expect "Error 7: InvalidArgs"
+send "mode rs\n"
+expect "Done"
+send "routereligible\n"
+expect "Disabled"
+expect "Done"
+send "routereligible enable\n"
+expect "Error 27: NotCapable"

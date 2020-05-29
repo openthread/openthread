@@ -41,6 +41,9 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/uart.h>
+
+#include "common/code_utils.hpp"
 
 uint64_t gNodeId = 0;
 
@@ -76,6 +79,7 @@ void otSysDeinit(void)
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifDeinit();
 #endif
+    IgnoreError(otPlatUartDisable());
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME

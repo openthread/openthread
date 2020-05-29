@@ -62,7 +62,19 @@ class AesCcm
 public:
     enum
     {
-        kNonceSize = 13, ///< Size of IEEE 802.15.4 Nonce (bytes).
+        kMinTagLength = 4,                  ///< Minimum tag length (in bytes).
+        kMaxTagLength = AesEcb::kBlockSize, ///< Maximum tag length (in bytes).
+        kNonceSize    = 13,                 ///< Size of IEEE 802.15.4 Nonce (in bytes).
+    };
+
+    /**
+     * This enumeration type represent the encryption vs decryption mode.
+     *
+     */
+    enum Mode
+    {
+        kEncrypt, // Encryption mode.
+        kDecrypt, // Decryption mode.
     };
 
     /**
@@ -87,19 +99,16 @@ public:
      *
      * @param[in]  aHeaderLength     Length of header in bytes.
      * @param[in]  aPlainTextLength  Length of plaintext in bytes.
-     * @param[in]  aTagLength        Length of tag in bytes.
+     * @param[in]  aTagLength        Length of tag in bytes (must be even and in `[kMinTagLength, kMaxTagLength]`).
      * @param[in]  aNonce            A pointer to the nonce.
      * @param[in]  aNonceLength      Length of nonce in bytes.
      *
-     * @retval OT_ERROR_NONE          Initialization was successful.
-     * @retval OT_ERROR_INVALID_ARGS  Initialization failed.
-     *
      */
-    otError Init(uint32_t    aHeaderLength,
-                 uint32_t    aPlainTextLength,
-                 uint8_t     aTagLength,
-                 const void *aNonce,
-                 uint8_t     aNonceLength);
+    void Init(uint32_t    aHeaderLength,
+              uint32_t    aPlainTextLength,
+              uint8_t     aTagLength,
+              const void *aNonce,
+              uint8_t     aNonceLength);
 
     /**
      * This method processes the header.
@@ -116,19 +125,26 @@ public:
      * @param[inout]  aPlainText   A pointer to the plaintext.
      * @param[inout]  aCipherText  A pointer to the ciphertext.
      * @param[in]     aLength      Payload length in bytes.
-     * @param[in]     aEncrypt     TRUE on encrypt and FALSE on decrypt.
+     * @param[in]     aMode        Mode to indicate whether to encrypt (`kEncrypt`) or decrypt (`kDecrypt`).
      *
      */
-    void Payload(void *aPlainText, void *aCipherText, uint32_t aLength, bool aEncrypt);
+    void Payload(void *aPlainText, void *aCipherText, uint32_t aLength, Mode aMode);
+
+    /**
+     * This method returns the tag length in bytes.
+     *
+     * @returns The tag length in bytes.
+     *
+     */
+    uint8_t GetTagLength(void) const { return mTagLength; }
 
     /**
      * This method generates the tag.
      *
-     * @param[out]  aTag        A pointer to the tag.
-     * @param[out]  aTagLength  Length of the tag in bytes.
+     * @param[out]  aTag        A pointer to the tag (must have `GetTagLength()` bytes).
      *
      */
-    void Finalize(void *aTag, uint8_t *aTagLength);
+    void Finalize(void *aTag);
 
     /**
      * This static method generates IEEE 802.15.4 nonce byte sequence.
@@ -145,22 +161,17 @@ public:
                               uint8_t *              aNonce);
 
 private:
-    enum
-    {
-        kTagLengthMin = 4,
-    };
-
     AesEcb   mEcb;
     uint8_t  mBlock[AesEcb::kBlockSize];
     uint8_t  mCtr[AesEcb::kBlockSize];
     uint8_t  mCtrPad[AesEcb::kBlockSize];
-    uint8_t  mNonceLength;
     uint32_t mHeaderLength;
     uint32_t mHeaderCur;
     uint32_t mPlainTextLength;
     uint32_t mPlainTextCur;
     uint16_t mBlockLength;
     uint16_t mCtrLength;
+    uint8_t  mNonceLength;
     uint8_t  mTagLength;
 };
 

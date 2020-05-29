@@ -36,12 +36,12 @@
 namespace ot {
 namespace Crypto {
 
-Sha256::Sha256()
+Sha256::Sha256(void)
 {
     mbedtls_sha256_init(&mContext);
 }
 
-Sha256::~Sha256()
+Sha256::~Sha256(void)
 {
     mbedtls_sha256_free(&mContext);
 }

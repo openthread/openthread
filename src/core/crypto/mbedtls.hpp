@@ -64,9 +64,14 @@ public:
     MbedTls(void);
 
     /**
-     * This method converts from MbedTls error to OpenThread error.
+     * This method converts an mbed TLS error to OpenThread error.
+     *
+     * @param[in] aMbedTlsError  The mbed TLS error.
+     *
+     * @returns The mapped otError.
+     *
      */
-    static otError MapError(int rval);
+    static otError MapError(int aMbedTlsError);
 };
 
 /**
