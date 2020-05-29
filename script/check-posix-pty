@@ -70,7 +70,7 @@ check()
         echo 'Waiting for socat ready...'
         sleep 1
     done
-    echo 'RADIO_PTY' "$DEVICE_PTY"
+    echo 'RADIO_PTY' "$RADIO_PTY"
     echo 'CORE_PTY' "$CORE_PTY"
 
     RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-rcp)"
