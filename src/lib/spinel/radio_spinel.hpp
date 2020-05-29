@@ -759,7 +759,7 @@ private:
                         spinel_tid_t      tid,
                         const char *      pack_format,
                         va_list           args);
-    otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength);
+    otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength, spinel_ssize_t &aUnpacked);
     otError ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength);
 
     /**

@@ -92,16 +92,17 @@ otError NcpBase::LinkRawPackRadioFrame(otRadioFrame *aFrame, otError aError)
                                              : static_cast<uint8_t>(OT_RADIO_LQI_NONE))); // 802.15.4 LQI
 
     SuccessOrExit(mEncoder.WriteUint64(aFrame ? aFrame->mInfo.mRxInfo.mTimestamp : 0)); // The timestamp in microseconds
-
     SuccessOrExit(mEncoder.CloseStruct());
 
     SuccessOrExit(mEncoder.OpenStruct());            // Vendor-data
     SuccessOrExit(mEncoder.WriteUintPacked(aError)); // Receive error
     SuccessOrExit(mEncoder.CloseStruct());
 
+    SuccessOrExit(mEncoder.OpenStruct());                                             // MAC-data
     SuccessOrExit(mEncoder.WriteUint8(aFrame ? aFrame->mInfo.mRxInfo.mAckKeyId : 0)); // The ACK auxiliary key ID
     SuccessOrExit(
         mEncoder.WriteUint32(aFrame ? aFrame->mInfo.mRxInfo.mAckFrameCounter : 0)); // The ACK auxiliary frame counter
+    SuccessOrExit(mEncoder.CloseStruct());
 
     error = OT_ERROR_NONE;
 

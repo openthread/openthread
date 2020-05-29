@@ -202,7 +202,7 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
         mPcapCallback(aFrame, false, mPcapCallbackContext);
     }
 
-    if (!ShouldHandleTransmitSecurity() && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
+    if (!ShouldHandleTransmitSecurity() && aFrame != NULL && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
     {
         FrameCounterUpdate(aFrame->mInfo.mRxInfo.mAckFrameCounter);
     }
@@ -390,7 +390,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
 
     if (!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled())
     {
-        uint32_t frameCounter;
+        uint32_t frameCounter = 0;
 
         OT_ASSERT(aFrame.GetFrameCounter(frameCounter) == OT_ERROR_NONE);
         FrameCounterUpdate(frameCounter);
