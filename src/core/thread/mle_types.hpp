@@ -42,6 +42,7 @@
 
 #include <openthread/thread.h>
 
+#include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "common/string.hpp"
@@ -448,15 +449,9 @@ public:
  * This class represents the Thread Leader Data.
  *
  */
-class LeaderData : public otLeaderData
+class LeaderData : public otLeaderData, public Clearable<LeaderData>
 {
 public:
-    /**
-     * This method clears the Leader Data (setting all the fields to zero).
-     *
-     */
-    void Clear(void) { memset(this, 0, sizeof(*this)); }
-
     /**
      * This method returns the Partition ID value.
      *

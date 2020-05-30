@@ -38,6 +38,7 @@
 
 #include <stdint.h>
 
+#include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "common/string.hpp"
@@ -61,7 +62,7 @@ namespace Ip6 {
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Address : public otIp6Address, public Equatable<Address>
+class Address : public otIp6Address, public Equatable<Address>, public Clearable<Address>
 {
 public:
     /**
@@ -104,12 +105,6 @@ public:
      *
      */
     typedef String<kIp6AddressStringSize> InfoString;
-
-    /**
-     * This method clears the IPv6 address by setting it to the Unspecified Address "::".
-     *
-     */
-    void Clear(void);
 
     /**
      * This method indicates whether or not the IPv6 address is the Unspecified Address.
