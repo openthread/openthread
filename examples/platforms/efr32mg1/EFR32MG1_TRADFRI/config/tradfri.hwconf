@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="ASCII"?>
+<device:XMLDevice xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:device="http://www.silabs.com/ss/hwconfig/document/device.ecore" name="EFR32MG1P132F256IM32" partId="mcu.arm.efr32.mg1.efr32mg1p132f256im32" contextId="%DEFAULT%">
+  <mode name="DefaultMode">
+    <property object="ADC0" propertyId="ABPeripheral.included" value="true"/>
+    <property object="ADC0" propertyId="singlesamplemode.singlesamplemodesettings.input" value="APORT3XCH28 (PB12)"/>
+    <property object="ADC0" propertyId="singlesamplemode.singlesamplemodesettings.positiveinputconfiguration" value="(PB12) from ADC0_P"/>
+    <property object="CMU" propertyId="ABPeripheral.included" value="true"/>
+    <property object="CMU" propertyId="clocksettings.hfclocksettings.hfclocksource" value="HFXO"/>
+    <property object="CMU" propertyId="clocksettings.lfclocksettings.lfaclocksource" value="LFRCO"/>
+    <property object="CMU" propertyId="clocksettings.lfclocksettings.lfeclocksource" value="LFRCO"/>
+    <property object="CMU" propertyId="clocksettings.lfclocksettings.lfrcorequired" value="Yes"/>
+    <property object="CMU" propertyId="clocksettings.lfclocksettings.ulfrcorequired" value="Yes"/>
+    <property object="CRYOTIMER" propertyId="ABPeripheral.included" value="true"/>
+    <property object="CRYOTIMER" propertyId="cryotimer.clocking.eventafterevery" value="32k cycles"/>
+    <property object="CRYOTIMER" propertyId="cryotimer.settings.em4wakeupthroughcryotimer" value="CRYOTIMER can wake up the chip from EM4"/>
+    <property object="CRYPTO" propertyId="ABPeripheral.included" value="true"/>
+    <property object="DefaultMode" propertyId="mode.diagramLocation" value="100, 100"/>
+    <property object="EMU" propertyId="ABPeripheral.included" value="true"/>
+    <property object="GPCRC" propertyId="ABPeripheral.included" value="true"/>
+    <property object="GPIO" propertyId="ABPeripheral.included" value="true"/>
+    <property object="LETIMER0" propertyId="ABPeripheral.included" value="true"/>
+    <property object="LETIMER0" propertyId="letimer.initialization.loadcomp0intocntonunderflow" value="true"/>
+    <property object="LETIMER0" propertyId="letimer.initialization.output0underflowaction" value="PWM: Idle on underflow; active on COMP1 match"/>
+    <property object="PB11" propertyId="ports.settings.pinmode" value="Push-pull"/>
+    <property object="PB14" propertyId="ports.settings.pinmode" value="Input"/>
+    <property object="PB15" propertyId="ports.settings.pinmode" value="Push-pull"/>
+    <property object="PC10" propertyId="ports.settings.dout" value="1"/>
+    <property object="PC10" propertyId="ports.settings.filter" value="Enabled"/>
+    <property object="PC10" propertyId="ports.settings.pinmode" value="Input pull"/>
+    <property object="PC10" propertyId="ports.settings.pulldirection" value="Pullup"/>
+    <property object="PC10" propertyId="ports.settings.pullup" value="Enabled"/>
+    <property object="PD13" propertyId="ports.settings.pinmode" value="Push-pull"/>
+    <property object="PD14" propertyId="ports.settings.pinmode" value="Input"/>
+    <property object="PD15" propertyId="ports.settings.pinmode" value="Push-pull"/>
+    <property object="PORTIO" propertyId="portio.aport.enable.cp_15" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.dbg.enable.swclktck" value="Disabled"/>
+    <property object="PORTIO" propertyId="portio.dbg.enable.swdiotms" value="Disabled"/>
+    <property object="PORTIO" propertyId="portio.usart0.enable.rx" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.usart0.enable.tx" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.usart0.location.usart0_rxloc" value="8"/>
+    <property object="PORTIO" propertyId="portio.usart0.location.usart0_txloc" value="10"/>
+    <property object="PORTIO" propertyId="portio.usart1.enable.clk" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.usart1.enable.cs" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.usart1.enable.rx" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.usart1.enable.tx" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.usart1.location.usart1_clkloc" value="19"/>
+    <property object="PORTIO" propertyId="portio.usart1.location.usart1_rxloc" value="21"/>
+    <property object="PORTIO" propertyId="portio.usart1.location.usart1_txloc" value="23"/>
+    <property object="RTCC" propertyId="ABPeripheral.included" value="true"/>
+    <property object="RTCC" propertyId="rtcc.rtccsettings.countermode" value="Calendar"/>
+    <property object="RTCC" propertyId="rtcc.rtccsettings.prescalermode" value="Counter ticks with precounter CCV0 match"/>
+    <property object="RTCC" propertyId="rtcc.rtccsettings.prescalervalue" value="Divide clock by 32768"/>
+    <property object="RTCC" propertyId="rtcc.rtccsettings.wrapcounteronccv1" value="true"/>
+    <property object="TIMER0" propertyId="ABPeripheral.included" value="true"/>
+    <property object="TIMER1" propertyId="ABPeripheral.included" value="true"/>
+    <property object="USART0" propertyId="ABPeripheral.included" value="true"/>
+    <property object="USART1" propertyId="ABPeripheral.included" value="true"/>
+    <property object="USART1" propertyId="usart.mode.usartmode" value="Synchronous Mode (SPI / I2S)"/>
+    <property object="USART1" propertyId="usart.synchronoussettings.baudrate" value="1000000"/>
+    <property object="WDOG0" propertyId="ABPeripheral.included" value="true"/>
+    <property object="WDOG0" propertyId="wdog.initialization.illegalwindowinterrupt" value="75% of the timeout"/>
+    <property object="WDOG0" propertyId="wdog.initialization.timeoutperiod" value="4k clock cycles"/>
+    <property object="WDOG0" propertyId="wdog.initialization.warninginterrupt" value="75% of the timeout"/>
+  </mode>
+  <modeTransition>
+    <property object="RESET &#x2192; DefaultMode" propertyId="modeTransition.source" value="RESET"/>
+    <property object="RESET &#x2192; DefaultMode" propertyId="modeTransition.target" value="DefaultMode"/>
+  </modeTransition>
+</device:XMLDevice>
