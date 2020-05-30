@@ -55,26 +55,6 @@ enum
 
 uint8_t g_flash[FLASH_SWAP_SIZE * FLASH_SWAP_NUM];
 
-void testPlatResetToDefaults(void)
-{
-    g_testPlatAlarmSet     = false;
-    g_testPlatAlarmNext    = 0;
-    g_testPlatAlarmStop    = NULL;
-    g_testPlatAlarmStartAt = NULL;
-    g_testPlatAlarmGetNow  = NULL;
-
-    g_testPlatRadioCaps               = OT_RADIO_CAPS_NONE;
-    g_testPlatRadioSetPanId           = NULL;
-    g_testPlatRadioSetExtendedAddress = NULL;
-    g_testPlatRadioSetShortAddress    = NULL;
-    g_testPlatRadioIsEnabled          = NULL;
-    g_testPlatRadioEnable             = NULL;
-    g_testPlatRadioDisable            = NULL;
-    g_testPlatRadioReceive            = NULL;
-    g_testPlatRadioTransmit           = NULL;
-    g_testPlatRadioGetTransmitBuffer  = NULL;
-}
-
 ot::Instance *testInitInstance(void)
 {
     otInstance *instance = NULL;
