@@ -79,14 +79,14 @@ public:
      *
      * @note This method should be called before reading and sending spinel frames to the interface.
      *
-     * @param[in]  aPlatformConfig  Platform configuration structure.
+     * @param[in]  aArguments         Arguments parsed from radio url.
      *
      * @retval OT_ERROR_NONE          The interface is initialized successfully.
      * @retval OT_ERROR_ALREADY       The interface is already initialized.
      * @retval OT_ERROR_INVALID_ARGS  The UART device or executable cannot be found or failed to open/run.
      *
      */
-    otError Init(const otPlatformConfig &aPlatformConfig);
+    otError Init(Arguments &aArguments);
 
     /**
      * This method deinitializes the interface to the RCP.
