@@ -76,6 +76,27 @@ static void InputCallback(char *aLine)
 }
 #endif // OPENTHREAD_USE_READLINE
 
+static bool FindPrompt(int &aState, char aChar)
+{
+    switch (aChar)
+    {
+    case '>':
+        aState = aState == 0 ? 1 : -1;
+        break;
+    case ' ':
+        aState = aState == 1 ? 2 : -1;
+        break;
+    case '\r':
+    case '\n':
+        aState = 0;
+        break;
+    default:
+        aState = -1;
+    }
+
+    return aState == 2;
+}
+
 static bool FindDone(int &aDoneState, char aNowCharacter)
 {
     switch (aNowCharacter)
@@ -172,8 +193,10 @@ int main(int argc, char *argv[])
 {
     int  ret;
     bool isInteractive = true;
+    bool isFinished    = false;
     int  doneState     = 0;
     int  errorState    = 0;
+    int  promptState   = 0;
 
     sSessionFd = socket(AF_UNIX, SOCK_STREAM, 0);
     VerifyOrExit(sSessionFd != -1, perror("socket"); ret = OT_EXIT_FAILURE);
@@ -216,7 +239,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    while (1)
+    while (!isFinished)
     {
         fd_set readFdSet;
         char   buffer[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
@@ -265,18 +288,36 @@ int main(int argc, char *argv[])
                 // daemon closed sSessionFd
                 ExitNow(ret = isInteractive ? OT_EXIT_FAILURE : OT_EXIT_SUCCESS);
             }
-            else
+
+            if (isInteractive)
             {
                 VerifyOrExit(DoWrite(STDOUT_FILENO, buffer, static_cast<size_t>(rval)), ret = OT_EXIT_FAILURE);
             }
-
-            if (!isInteractive)
+            else
             {
+                size_t lineStart = 0;
+
                 for (ssize_t i = 0; i < rval; i++)
                 {
+                    if (FindPrompt(promptState, buffer[i]))
+                    {
+                        doneState  = 0;
+                        errorState = 0;
+                        lineStart  = i + 1;
+                        continue;
+                    }
+
+                    if (buffer[i] == '\r' || buffer[i] == '\n')
+                    {
+                        VerifyOrExit(DoWrite(STDOUT_FILENO, buffer + lineStart, i - lineStart + 1),
+                                     ret = OT_EXIT_FAILURE);
+                        lineStart = i + 1;
+                    }
+
                     if (FindDone(doneState, buffer[i]) || FindError(errorState, buffer[i]))
                     {
-                        ExitNow(ret = OT_EXIT_SUCCESS);
+                        isFinished = true;
+                        ret        = OT_EXIT_SUCCESS;
                     }
                 }
             }

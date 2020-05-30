@@ -91,6 +91,8 @@ check()
 
         # verify this reset and factoryreset end immediately
         sudo "${OT_CLI_CMD}" reset
+        # sleep a while for daemon ready
+        sleep 2
         sudo "${OT_CLI_CMD}" factoryreset
     else
         OT_CLI="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli)"
