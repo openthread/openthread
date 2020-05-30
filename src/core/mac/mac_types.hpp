@@ -42,6 +42,7 @@
 #include <openthread/link.h>
 #include <openthread/thread.h>
 
+#include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/string.hpp"
 
@@ -87,7 +88,7 @@ PanId GenerateRandomPanId(void);
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ExtAddress : public otExtAddress, public Equatable<ExtAddress>
+class ExtAddress : public otExtAddress, public Equatable<ExtAddress>, public Clearable<ExtAddress>
 {
 public:
     enum
@@ -110,12 +111,6 @@ public:
         kNormalByteOrder,  // Copy address bytes in normal order (as provided in array buffer).
         kReverseByteOrder, // Copy address bytes in reverse byte order.
     };
-
-    /**
-     * This method clears the Extended Address (sets all bytes to zero).
-     *
-     */
-    void Clear(void) { Fill(0); }
 
     /**
      * This method fills all bytes of address with a given byte value.
@@ -426,19 +421,13 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Key : public otMacKey, public Equatable<Key>
+class Key : public otMacKey, public Equatable<Key>, public Clearable<Key>
 {
 public:
     enum
     {
         kSize = OT_MAC_KEY_SIZE, // Key size in bytes.
     };
-
-    /**
-     * This method clears the key (set all bytes to zero).
-     *
-     */
-    void Clear(void) { memset(m8, 0, kSize); }
 
     /**
      * This method gets a pointer to the buffer containing the key.
@@ -455,7 +444,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ExtendedPanId : public otExtendedPanId, public Equatable<ExtendedPanId>
+class ExtendedPanId : public otExtendedPanId, public Equatable<ExtendedPanId>, public Clearable<ExtendedPanId>
 {
 public:
     enum
@@ -468,12 +457,6 @@ public:
      *
      */
     typedef String<kInfoStringSize> InfoString;
-
-    /**
-     * This method clears the Extended PAN Identifier (sets all bytes to zero).
-     *
-     */
-    void Clear(void) { memset(this, 0, sizeof(*this)); }
 
     /**
      * This method converts an address to a string.

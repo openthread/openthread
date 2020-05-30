@@ -40,6 +40,7 @@
 
 #include <openthread/dataset.h>
 
+#include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/locator.hpp"
 #include "common/random.hpp"
@@ -73,15 +74,9 @@ class MasterKey : public otMasterKey, public Equatable<MasterKey>
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Pskc : public otPskc, public Equatable<Pskc>
+class Pskc : public otPskc, public Equatable<Pskc>, public Clearable<Pskc>
 {
 public:
-    /**
-     * This method clears the PSKc (sets all bytes to zero).
-     *
-     */
-    void Clear(void) { memset(this, 0, sizeof(*this)); }
-
 #if !OPENTHREAD_RADIO
     /**
      * This method generates a cryptographically secure random sequence to populate the Thread PSKc.
