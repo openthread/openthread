@@ -50,6 +50,27 @@ static uint32_t sUsAlarm     = 0;
 
 static uint32_t sSpeedUpFactor = 1;
 
+// linux microsecond timer
+#if __linux__
+
+#include <signal.h>
+#include <time.h>
+
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE && !OPENTHREAD_POSIX_VIRTUAL_TIME
+static timer_t sMicroTimer;
+static int     sRealTimeSignal = 0;
+
+static void microTimerHandler(int aSignal, siginfo_t *aSignalInfo, void *aUserContext)
+{
+    assert(aSignal == sRealTimeSignal);
+    assert(aSignalInfo->si_value.sival_ptr == &sMicroTimer);
+    OT_UNUSED_VARIABLE(aSignal);
+    OT_UNUSED_VARIABLE(aSignalInfo);
+    OT_UNUSED_VARIABLE(aUserContext);
+}
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE && !OPENTHREAD_POSIX_VIRTUAL_TIME
+#endif // __linux__
+
 #if !OPENTHREAD_POSIX_VIRTUAL_TIME
 uint64_t otPlatTimeGet(void)
 {
@@ -70,9 +91,43 @@ static uint64_t platformAlarmGetNow(void)
     return otPlatTimeGet() * sSpeedUpFactor;
 }
 
-void platformAlarmInit(uint32_t aSpeedUpFactor)
+void platformAlarmInit(uint32_t aSpeedUpFactor, int aRealTimeSignal)
 {
     sSpeedUpFactor = aSpeedUpFactor;
+
+    if (aRealTimeSignal == 0)
+    {
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+        otLogWarnPlat("Real time signal not enabled, microsecond timers may be inaccurate!");
+#endif
+    }
+#if __linux__
+    else if (aRealTimeSignal >= SIGRTMIN && aRealTimeSignal <= SIGRTMAX)
+    {
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE && !OPENTHREAD_POSIX_VIRTUAL_TIME
+        struct sigaction sa;
+        struct sigevent  sev;
+
+        sa.sa_flags     = SA_SIGINFO;
+        sa.sa_sigaction = microTimerHandler;
+        sigemptyset(&sa.sa_mask);
+
+        VerifyOrDie(sigaction(aRealTimeSignal, &sa, NULL) != -1, OT_EXIT_ERROR_ERRNO);
+
+        sev.sigev_notify          = SIGEV_SIGNAL;
+        sev.sigev_signo           = aRealTimeSignal;
+        sev.sigev_value.sival_ptr = &sMicroTimer;
+
+        VerifyOrDie(timer_create(CLOCK_REALTIME, &sev, &sMicroTimer) != -1, OT_EXIT_ERROR_ERRNO);
+
+        sRealTimeSignal = aRealTimeSignal;
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE && !OPENTHREAD_POSIX_VIRTUAL_TIME
+    }
+#endif // __linux__
+    else
+    {
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
 }
 
 uint32_t otPlatAlarmMilliGetNow(void)

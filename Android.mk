@@ -396,6 +396,7 @@ LOCAL_CPPFLAGS                                                              := \
     $(NULL)
 
 LOCAL_LDLIBS                               := \
+    -lrt                                      \
     -lutil
 
 LOCAL_SRC_FILES                            := \
@@ -481,6 +482,7 @@ LOCAL_SRC_FILES                            := \
     $(NULL)
 
 LOCAL_LDLIBS                               := \
+    -lrt                                      \
     -lutil
 
 LOCAL_STATIC_LIBRARIES = libopenthread-ncp ot-core
