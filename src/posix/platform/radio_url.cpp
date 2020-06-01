@@ -39,45 +39,57 @@
 const char *otSysGetRadioUrlHelpString(void)
 {
 #if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
-#define RADIO_URL_HELP_BUS                                                                              \
-    "Radio URL:\n"                                                                                      \
-    "spinel+spi://${PATH_TO_SPI_DEVICE}?${arguments}\n"                                                 \
-    "arguments:\n"                                                                                      \
-    " gpio-int-device[=gpio-device-path]\n"                                                             \
-    "                           Specify a path to the Linux sysfs-exported GPIO device for the\n"       \
-    "                           `I̅N̅T̅` pin. If not specified, `SPI` interface will fall back to\n" \
-    "                           polling, which is inefficient.\n"                                       \
-    " gpio-int-line[=line-offset]\n"                                                                    \
-    "                           The offset index of `I̅N̅T̅` pin for the associated GPIO device.\n"  \
-    "                           If not specified, `SPI` interface will fall back to polling,\n"         \
-    "                           which is inefficient.\n"                                                \
-    " gpio-reset-dev[=gpio-device-path]\n"                                                              \
-    "                           Specify a path to the Linux sysfs-exported GPIO device for the\n"       \
-    "                           `R̅E̅S̅` pin.\n"                                                     \
-    " gpio-reset-line[=line-offset]"                                                                    \
-    "                           The offset index of `R̅E̅S̅` pin for the associated GPIO device.\n"  \
-    " spi-mode[=mode]           Specify the SPI mode to use (0-3).\n"                                   \
-    " spi-speed[=hertz]         Specify the SPI speed in hertz.\n"                                      \
-    " spi-cs-delay[=usec]       Specify the delay after C̅S̅ assertion, in µsec.\n"                  \
-    " spi-reset-delay[=ms]      Specify the delay after R̅E̅S̅E̅T̅ assertion, in milliseconds.\n"  \
-    " spi-align-allowance[=n]   Specify the maximum number of 0xFF bytes to clip from start of\n"       \
-    "                           MISO frame. Max value is 16.\n"                                         \
-    " spi-small-packet=[n]      Specify the smallest packet we can receive in a single transaction.\n"  \
-    "                           (larger packets will require two transactions). Default value is 32.\n"
+#define OT_RADIO_URL_HELP_BUS                                                                                  \
+    "    spinel+spi://${PATH_TO_SPI_DEVICE}?${Parameters}\n"                                                   \
+    "Parameters:\n"                                                                                            \
+    "    gpio-int-device[=gpio-device-path]\n"                                                                 \
+    "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"       \
+    "                                  `I̅N̅T̅` pin. If not specified, `SPI` interface will fall back to\n" \
+    "                                  polling, which is inefficient.\n"                                       \
+    "    gpio-int-line[=line-offset]\n"                                                                        \
+    "                                  The offset index of `I̅N̅T̅` pin for the associated GPIO device.\n"  \
+    "                                  If not specified, `SPI` interface will fall back to polling,\n"         \
+    "                                  which is inefficient.\n"                                                \
+    "    gpio-reset-dev[=gpio-device-path]\n"                                                                  \
+    "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"       \
+    "                                  `R̅E̅S̅` pin.\n"                                                     \
+    "    gpio-reset-line[=line-offset]"                                                                        \
+    "                                  The offset index of `R̅E̅S̅` pin for the associated GPIO device.\n"  \
+    "    spi-mode[=mode]               Specify the SPI mode to use (0-3).\n"                                   \
+    "    spi-speed[=hertz]             Specify the SPI speed in hertz.\n"                                      \
+    "    spi-cs-delay[=usec]           Specify the delay after C̅S̅ assertion, in µsec.\n"                  \
+    "    spi-reset-delay[=ms]          Specify the delay after R̅E̅S̅E̅T̅ assertion, in milliseconds.\n"  \
+    "    spi-align-allowance[=n]       Specify the maximum number of 0xFF bytes to clip from start of\n"       \
+    "                                  MISO frame. Max value is 16.\n"                                         \
+    "    spi-small-packet=[n]          Specify the smallest packet we can receive in a single transaction.\n"  \
+    "                                  (larger packets will require two transactions). Default value is 32.\n"
+
 #else
-#define RADIO_URL_HELP_BUS                                                                      \
-    "Radio URL:\n"                                                                              \
-    "spinel+hdlc+uart://${PATH_TO_UART_DEVICE}?${arguments} for real uart device\n"             \
-    "spinel+hdlc+fortpty://${PATH_TO_UART_DEVICE}?${arguments} for forking a pty subprocess.\n" \
-    "arguments:\n"                                                                              \
-    " uart-parity[=even|odd]     Uart parity config, optional.\n"                               \
-    " uart-stop[=number-of-bits] Uart stop bit, default is 1.\n"                                \
-    " baudrate[=baudrate]        Uart baud rate, default is 115200.\n"                          \
-    " arg[=argument string]      Command line arguments for subprocess, can be repeated.\n"
+
+#define OT_RADIO_URL_HELP_BUS                                                                        \
+    "    spinel+hdlc+uart://${PATH_TO_UART_DEVICE}?${Parameters} for real uart device\n"             \
+    "    spinel+hdlc+fortpty://${PATH_TO_UART_DEVICE}?${Parameters} for forking a pty subprocess.\n" \
+    "Parameters:\n"                                                                                  \
+    "    uart-parity[=even|odd]         Uart parity config, optional.\n"                             \
+    "    uart-stop[=number-of-bits]     Uart stop bit, default is 1.\n"                              \
+    "    uart-baudrate[=baudrate]       Uart baud rate, default is 115200.\n"                        \
+    "    forkpty-arg[=argument string]  Command line arguments for subprocess, can be repeated.\n"
+
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
+
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+#define OT_RADIO_URL_HELP_MAX_POWER_TABLE                                                                  \
+    "    max-power-table               Max power for channels in ascending order separated by commas,\n"   \
+    "                                  If the number of values is less than that of supported channels,\n" \
+    "                                  the last value will be applied to all remaining channels.\n"        \
+    "                                  Special value 0x7f disables a channel.\n"
+#else
+#define OT_RADIO_URL_HELP_MAX_POWER_TABLE
 #endif
-    return RADIO_URL_HELP_BUS " no-reset                   Skip resetting the radio device.\n"
-                              " ncp-dataset                Retrieve dataset from ncp.\n"
-                              " max-power-table            Max power table for each channel, splitted by comma.\n";
+
+    return "RadioURL:\n" OT_RADIO_URL_HELP_BUS OT_RADIO_URL_HELP_MAX_POWER_TABLE
+           "    no-reset                      Do not send Spinel reset command to RCP on initialization.\n"
+           "    ncp-dataset                   Retrieve dataset from ncp.\n";
 }
 
 namespace ot {

@@ -53,7 +53,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     ot::Posix::Arguments args(aPlatformConfig->mRadioUrl);
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    virtualTimeInit(static_cast<uint16_t>(atoi(args.GetValue("arg"))));
+    virtualTimeInit(static_cast<uint16_t>(atoi(args.GetValue("forkpty-arg"))));
 #endif
 
     VerifyOrDie(args.GetPath() != NULL, OT_EXIT_INVALID_ARGUMENTS);
