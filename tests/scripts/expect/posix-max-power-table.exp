@@ -28,7 +28,7 @@
 #
 
 # allows 11-25 and forbidden 26
-spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,-1,0x7f&arg=1"
+spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,-1,0x7f&forkpty-arg=1"
 set timeout 1
 expect_after {
     timeout { exit 1 }
@@ -42,7 +42,7 @@ expect "Done"
 send "\x04"
 expect eof
 # allows all channels by default
-spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?arg=1"
+spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?forkpty-arg=1"
 set timeout 1
 expect_after {
     timeout { exit 1 }

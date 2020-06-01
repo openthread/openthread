@@ -27,7 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?arg=1"
+spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?forkpty-arg=1"
 set timeout 1
 expect_after {
     timeout { exit 1 }

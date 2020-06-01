@@ -37,6 +37,7 @@
 #include <setjmp.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
 #include <unistd.h>
@@ -102,16 +103,25 @@ void __gcov_flush();
  */
 enum
 {
-    ARG_PRINT_RADIO_VERSION = 1001,
+    OT_POSIX_OPT_DEBUG_LEVEL    = 'd',
+    OT_POSIX_OPT_DRY_RUN        = 'n',
+    OT_POSIX_OPT_HELP           = 'h',
+    OT_POSIX_OPT_INTERFACE_NAME = 'I',
+    OT_POSIX_OPT_TIME_SPEED     = 's',
+    OT_POSIX_OPT_VERBOSE        = 'v',
+
+    OT_POSIX_OPT_SHORT_MAX = 128,
+
+    OT_POSIX_OPT_RADIO_VERSION,
 };
 
-static const struct option kOptions[] = {{"debug-level", required_argument, NULL, 'd'},
-                                         {"dry-run", no_argument, NULL, 'n'},
-                                         {"help", no_argument, NULL, 'h'},
-                                         {"interface-name", required_argument, NULL, 'I'},
-                                         {"radio-version", no_argument, NULL, ARG_PRINT_RADIO_VERSION},
-                                         {"time-speed", required_argument, NULL, 's'},
-                                         {"verbose", no_argument, NULL, 'v'},
+static const struct option kOptions[] = {{"debug-level", required_argument, NULL, OT_POSIX_OPT_DEBUG_LEVEL},
+                                         {"dry-run", no_argument, NULL, OT_POSIX_OPT_DRY_RUN},
+                                         {"help", no_argument, NULL, OT_POSIX_OPT_HELP},
+                                         {"interface-name", required_argument, NULL, OT_POSIX_OPT_INTERFACE_NAME},
+                                         {"radio-version", no_argument, NULL, OT_POSIX_OPT_RADIO_VERSION},
+                                         {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
+                                         {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
                                          {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -128,13 +138,6 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -s  --time-speed factor       Time speed up factor.\n"
             "    -v  --verbose                 Also log to stderr.\n",
             aProgramName);
-#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
-    fprintf(aStream,
-            "        --max-power-table         Max power for channels in ascending order separated by commas,\n"
-            "                                  If the number of values is less than that of supported channels,\n"
-            "                                  the last value will be applied to all remaining channels.\n"
-            "                                  Special value 0x7f disables a channel.\n");
-#endif
     fprintf(aStream, "%s", otSysGetRadioUrlHelpString());
     exit(aExitCode);
 }
@@ -160,19 +163,19 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 
         switch (option)
         {
-        case 'd':
+        case OT_POSIX_OPT_DEBUG_LEVEL:
             aConfig->mLogLevel = (otLogLevel)atoi(optarg);
             break;
-        case 'h':
+        case OT_POSIX_OPT_HELP:
             PrintUsage(aArgVector[0], stdout, OT_EXIT_SUCCESS);
             break;
-        case 'I':
+        case OT_POSIX_OPT_INTERFACE_NAME:
             aConfig->mPlatformConfig.mInterfaceName = optarg;
             break;
-        case 'n':
+        case OT_POSIX_OPT_DRY_RUN:
             aConfig->mIsDryRun = true;
             break;
-        case 's':
+        case OT_POSIX_OPT_TIME_SPEED:
         {
             char *endptr = NULL;
 
@@ -185,10 +188,10 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             }
             break;
         }
-        case 'v':
+        case OT_POSIX_OPT_VERBOSE:
             aConfig->mIsVerbose = true;
             break;
-        case ARG_PRINT_RADIO_VERSION:
+        case OT_POSIX_OPT_RADIO_VERSION:
             aConfig->mPrintRadioVersion = true;
             break;
         case '?':

@@ -93,12 +93,12 @@ EOF
 
     echo "Step 2. Start retrieving dataset from Radio..."
     RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-ncp-ftd)"
-    "$(pwd)/$(ls output/posix/*linux*/bin/ot-ncp)" -n --radio-version "spinel+hdlc+forkpty://${RADIO_NCP_PATH}?arg=1&ncp-dataset=1"
+    "$(pwd)/$(ls output/posix/*linux*/bin/ot-ncp)" -n --radio-version "spinel+hdlc+forkpty://${RADIO_NCP_PATH}?forkpty-arg=1&ncp-dataset=1"
 
     echo "Step 3. Start posix app and check whether PAN dataset is the same..."
     RADIO_RCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-rcp)"
 
-    OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) spinel+hdlc+forkpty://${RADIO_RCP_PATH}?arg=1"
+    OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) spinel+hdlc+forkpty://${RADIO_RCP_PATH}?forkpty-arg=1"
 
     expect <<EOF
 spawn ${OT_CLI_CMD}
@@ -126,7 +126,7 @@ expect eof
 EOF
 
     echo "Step 4. Start posix app and check whether it can get radio firmware version..."
-    RADIO_VERSION="$("$(pwd)/$(ls output/posix/*linux*/bin/ot-cli)" -n --radio-version "spinel+hdlc+forkpty://${RADIO_RCP_PATH}?arg=1&ncp-dataset=1")" || true
+    RADIO_VERSION="$("$(pwd)/$(ls output/posix/*linux*/bin/ot-cli)" -n --radio-version "spinel+hdlc+forkpty://${RADIO_RCP_PATH}?forkpty-arg=1&ncp-dataset=1")" || true
     echo "${RADIO_VERSION}"
     test -n "{RADIO_VERSION}"
 }
