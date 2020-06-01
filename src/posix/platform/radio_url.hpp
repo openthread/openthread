@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,80 +26,60 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes definitions for performing AES-ECB computations.
- */
+#ifndef POSIX_PLATFORM_RADIO_URL_HPP_
+#define POSIX_PLATFORM_RADIO_URL_HPP_
 
-#ifndef AES_ECB_HPP_
-#define AES_ECB_HPP_
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "openthread-core-config.h"
+#include <openthread/openthread-system.h>
 
-#include <mbedtls/aes.h>
+extern "C" {
+typedef struct otPosixRadioArguments
+{
+    const char *mPath; ///< The path to the executable or device
+} otPosixRadioArguments;
+}
 
 namespace ot {
-namespace Crypto {
+namespace Posix {
 
-/**
- * @addtogroup core-security
- *
- * @{
- *
- */
-
-/**
- * This class implements AES ECB computation.
- *
- */
-class AesEcb
+class Arguments : public otPosixRadioArguments
 {
 public:
-    enum
-    {
-        kBlockSize = 16, ///< AES-128 block size (bytes).
-    };
+    Arguments(const char *aUrl);
 
     /**
-     * Constructor to initialize the mbedtls_aes_context.
+     * This method gets the path in url
+     *
+     * @returns The path in url.
      *
      */
-    AesEcb(void);
+    const char *GetPath(void) const { return mPath; }
 
     /**
-     * Destructor to free the mbedtls_aes_context.
+     * This method returns the url agument value.
+     *
+     * @param[in] aName       Argument name.
+     * @param[in] aLastValue  The last iterated argument value, NULL for first value.
+     *
+     * @returns The argument value.
      *
      */
-    ~AesEcb(void);
-
-    /**
-     * This method sets the key.
-     *
-     * @param[in]  aKey        A pointer to the key.
-     * @param[in]  aKeyLength  The key length in bits.
-     *
-     */
-    void SetKey(const uint8_t *aKey, uint16_t aKeyLength);
-
-    /**
-     * This method encrypts data.
-     *
-     * @param[in]   aInput   A pointer to the input buffer.
-     * @param[out]  aOutput  A pointer to the output buffer.
-     *
-     */
-    void Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize]);
+    const char *GetValue(const char *aName, const char *aLastValue = NULL);
 
 private:
-    mbedtls_aes_context mContext;
+    enum
+    {
+        kRadioUrlMaxSize = 512,
+    };
+    char mUrl[kRadioUrlMaxSize];
+
+    char *mStart;
+    char *mEnd;
 };
 
-/**
- * @}
- *
- */
-
-} // namespace Crypto
+} // namespace Posix
 } // namespace ot
 
-#endif // AES_ECB_HPP_
+#endif // POSIX_PLATFORM_RADIO_URL_HPP_

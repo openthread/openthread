@@ -50,6 +50,7 @@
 
 #include "common/logging.hpp"
 
+#include "radio_url.hpp"
 #include "lib/platform/exit_code.h"
 
 /**
@@ -162,7 +163,7 @@ void platformAlarmAdvanceNow(uint64_t aDelta);
  * @param[in]  aPlatformConfig  Platform configuration structure.
  *
  */
-void platformRadioInit(const otPlatformConfig *aPlatformConfig);
+void platformRadioInit(otPosixRadioArguments *aArguments);
 
 /**
  * This function shuts down the radio service used by OpenThread.
@@ -274,8 +275,10 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
 /**
  * This function initialize virtual time simulation.
  *
+ * @params[in]  aNodeId     Node id of this simulated device.
+ *
  */
-void virtualTimeInit(void);
+void virtualTimeInit(uint16_t aNodeId);
 
 /**
  * This function deinitialize virtual time simulation.

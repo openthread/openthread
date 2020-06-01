@@ -53,15 +53,13 @@ add_library(openthread-kw41z
 )
 
 set_property(TARGET openthread-kw41z PROPERTY C_STANDARD 99)
-target_link_libraries(openthread-kw41z PRIVATE nxp-kw41z-driver)
+target_link_libraries(openthread-kw41z PRIVATE nxp-kw41z-driver ot-config)
 target_link_options(openthread-kw41z PRIVATE -T${PROJECT_SOURCE_DIR}/examples/platforms/kw41z/MKW41Z512xxx4.ld)
 target_link_options(openthread-kw41z PRIVATE -Wl,--gc-sections -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
 
 target_compile_definitions(openthread-kw41z
     PUBLIC
         ${OT_PLATFORM_DEFINES}
-    PRIVATE
-        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(openthread-kw41z

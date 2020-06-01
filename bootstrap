@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -38,4 +38,8 @@ nlbuild_autotools_stem="third_party/nlbuild-autotools/repo"
 
 abs_srcdir=$(cd "$(dirname "${0}")" && pwd)
 
-(cd "$abs_srcdir" && exec "$abs_srcdir/$nlbuild_autotools_stem/scripts/bootstrap" -I "$abs_srcdir/$nlbuild_autotools_stem" "${@}")
+# filter out knowning information from stderr which is causing GitHub annotation check warnings.
+(cd "$abs_srcdir" && exec "$abs_srcdir/$nlbuild_autotools_stem/scripts/bootstrap" -I "$abs_srcdir/$nlbuild_autotools_stem" "${@}") 2> \
+    >(grep -v "installing 'third_party/nlbuild-autotools/repo/third_party/autoconf/missing'" \
+        | grep -v "installing 'third_party/nlbuild-autotools/repo/third_party/autoconf/compile'" \
+        | grep -v "installing 'third_party/nlbuild-autotools/repo/third_party/autoconf/depcomp'" 1>&2)

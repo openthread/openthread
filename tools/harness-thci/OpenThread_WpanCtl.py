@@ -417,14 +417,22 @@ class OpenThread_WpanCtl(IThci):
         """
         print('call setAddressFilterMode() %s' % mode)
         try:
-            if re.match('list', mode, re.M | re.I):
-                cmd = self.wpan_cmd_prefix + 'setprop MAC:' + mode + ':Enabled 1'
-            elif mode == 'disabled':
-                cmd = self.wpan_cmd_prefix + 'setprop MAC:' + mode + ':Enabled 0'
+            if mode in ('whitelist', 'blacklist'):
+                cmd = self.wpan_cmd_prefix + 'setprop MAC:' + mode.capitalize(
+                ) + ':Enabled 1'
+            elif mode == 'disable':
+                if self._addressfilterMode != 'disable':
+                    assert self._addressfilterMode in (
+                        'whitelist', 'blacklist'), self._addressfilterMode
+                    cmd = self.wpan_cmd_prefix + 'setprop MAC:' + self._addressfilterMode.capitalize(
+                    ) + ':Enabled 0'
+                else:
+                    return True
             else:
-                print('no such option')
-                return False
+                assert False, 'unknown address filter mode: %s' % mode
+
             if self.__sendCommand(cmd)[0] != 'Fail':
+                self._addressfilterMode = mode
                 return True
             return False
         except Exception as e:
@@ -1122,8 +1130,7 @@ class OpenThread_WpanCtl(IThci):
                 return True
 
             if self._addressfilterMode != 'blacklist':
-                if self.__setAddressfilterMode('Blacklist'):
-                    self._addressfilterMode = 'blacklist'
+                self.__setAddressfilterMode('blacklist')
 
             cmd = self.wpan_cmd_prefix + 'insert MAC:Blacklist:Entries %s' % macAddr
             ret = self.__sendCommand(cmd)[0] != 'Fail'
@@ -1157,8 +1164,7 @@ class OpenThread_WpanCtl(IThci):
 
         try:
             if self._addressfilterMode != 'whitelist':
-                if self.__setAddressfilterMode('Whitelist'):
-                    self._addressfilterMode = 'whitelist'
+                self.__setAddressfilterMode('whitelist')
 
             cmd = self.wpan_cmd_prefix + 'insert MAC:Whitelist:Entries %s' % macAddr
             ret = self.__sendCommand(cmd)[0] != 'Fail'
@@ -1189,12 +1195,14 @@ class OpenThread_WpanCtl(IThci):
 
             # disable blacklist
             if self.__setAddressfilterMode('disable'):
-                self._addressfilterMode = 'disable'
                 # clear ops
-                cmd = self.wpan_cmd_prefix + 'remove MAC:Blocklist:Entries'
-                if self.__sendCommand(cmd)[0] != 'Fail':
-                    self._addressfilterSet.clear()
-                    return True
+                for addr in self._addressfilterSet:
+                    cmd = self.wpan_cmd_prefix + 'remove MAC:Blacklist:Entries ' + addr
+                    self.__sendCommand(cmd)
+
+                self._addressfilterSet.clear()
+                return True
+
             return False
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('clearBlockList() Error: ' +
@@ -1217,12 +1225,14 @@ class OpenThread_WpanCtl(IThci):
 
             # disable whitelist
             if self.__setAddressfilterMode('disable'):
-                self._addressfilterMode = 'disable'
                 # clear ops
-                cmd = self.wpan_cmd_prefix + 'insert MAC:Whitelist:Entries'
-                if self.__sendCommand(cmd)[0] != 'Fail':
-                    self._addressfilterSet.clear()
-                    return True
+                for addr in self._addressfilterSet:
+                    cmd = self.wpan_cmd_prefix + 'remove MAC:Whitelist:Entries ' + addr
+                    self.__sendCommand(cmd)
+
+                self._addressfilterSet.clear()
+                return True
+
             return False
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('clearAllowList() Error: ' +

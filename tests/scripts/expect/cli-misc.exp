@@ -1,3 +1,4 @@
+#!/usr/bin/expect -f
 #
 #  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
@@ -26,18 +27,80 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-rcp
-    main.c
-)
+spawn $env(OT_COMMAND) 1
+set timeout 1
+expect_after {
+    timeout { exit 1 }
+}
 
-target_include_directories(ot-rcp PRIVATE ${COMMON_INCLUDES})
+send "help\n"
+expect "Done"
 
-target_link_libraries(ot-rcp PRIVATE
-    openthread-rcp
-    ${OT_PLATFORM_LIB}
-    openthread-radio
-    ${OT_PLATFORM_LIB}
-    ot-config
-)
+send "bufferinfo\n"
+expect "Done"
 
-install(TARGETS ot-rcp DESTINATION bin)
+send "netdatashow\n"
+expect "Done"
+
+send "parent\n"
+expect "Done"
+
+send "delaytimermin 1\n"
+expect "Done"
+send "delaytimermin\n"
+expect "1"
+expect "Done"
+send "delaytimermin 1 2\n"
+send "counters mac 1\n"
+expect "Error 7: InvalidArgs"
+
+send "ifconfig\n"
+expect "down"
+expect "Done"
+send "ifconfig up\n"
+expect "Done"
+send "ifconfig\n"
+expect "up"
+expect "Done"
+
+send "ipaddr add ::\n"
+expect "Done"
+send "ipaddr del ::\n"
+expect "Done"
+
+send "leaderweight 1\n"
+expect "Done"
+send "leaderweight\n"
+expect "1"
+expect "Done"
+
+send "mode rsdn\n"
+expect "Done"
+send "mode\n"
+expect -re "(?=.*r)(?=.*s)(?=.*d)(?=.*n)"
+
+send "parent\n"
+expect "Done"
+
+send "singleton\n"
+expect -re "true|false"
+expect "Done"
+
+send "state\n"
+expect "disabled"
+expect "Done"
+
+send "txpower -10\n"
+expect "Done"
+send "txpower\n"
+expect -- "-10 dBm"
+expect "Done"
+
+send "thread version\n"
+expect "Done"
+
+send "joinerport 10001\n"
+expect "Done"
+send "joinerport\n"
+expect "10001"
+expect "Done"

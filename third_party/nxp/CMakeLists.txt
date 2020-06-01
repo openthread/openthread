@@ -61,8 +61,6 @@ if(OT_PLATFORM STREQUAL "kw41z")
         PUBLIC
             ${OT_PLATFORM_DEFINES}
             -DCPU_MKW41Z512VHT4
-        PRIVATE
-            ${OT_PRIVATE_DEFINES}
     )
 
     target_compile_options(nxp-kw41z-driver
@@ -83,4 +81,6 @@ if(OT_PLATFORM STREQUAL "kw41z")
             MKW41Z4/XCVR
             MKW41Z4/XCVR/cfgs_kw4x_3x_2x
     )
+
+    target_link_libraries(nxp-kw41z-driver PRIVATE ot-config)
 endif()

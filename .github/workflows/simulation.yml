@@ -372,72 +372,22 @@ jobs:
     - name: Codecov
       uses: codecov/codecov-action@v1
 
-  toranj-ncp:
-    runs-on: ubuntu-18.04
-    env:
-      COVERAGE: 1
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y dbus libdbus-1-dev
-        sudo apt --no-install-recommends install -y autoconf-archive
-        sudo apt --no-install-recommends install -y bsdtar
-        sudo apt --no-install-recommends install -y libtool
-        sudo apt --no-install-recommends install -y libglib2.0-dev
-        sudo apt --no-install-recommends install -y libboost-dev libboost-signals-dev
-
-        git clone --depth=1 --branch=master https://github.com/openthread/wpantund.git
-        cd wpantund
-        ./bootstrap.sh
-        ./configure
-        sudo make -j2
-        sudo make install
-    - name: Build & Run
-      run: |
-        top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
-    - name: Codecov
-      uses: codecov/codecov-action@v1
-
-  toranj-rcp:
-    runs-on: ubuntu-18.04
-    env:
-      COVERAGE: 1
-      TORANJ_POSIX_RCP_MODEL: 1
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y dbus libdbus-1-dev
-        sudo apt --no-install-recommends install -y autoconf-archive
-        sudo apt --no-install-recommends install -y bsdtar
-        sudo apt --no-install-recommends install -y libtool
-        sudo apt --no-install-recommends install -y libglib2.0-dev
-        sudo apt --no-install-recommends install -y libboost-dev libboost-signals-dev
-
-        git clone --depth=1 --branch=master https://github.com/openthread/wpantund.git
-        cd wpantund
-        ./bootstrap.sh
-        ./configure
-        sudo make -j2
-        sudo make install
-    - name: Build & Run
-      run: |
-        top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
-    - name: Codecov
-      uses: codecov/codecov-action@v1
-
   thread-1-2:
+    name: thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}
     runs-on: ubuntu-18.04
     env:
-      CFLAGS: -m32
-      CXXFLAGS: -m32
-      LDFLAGS: -m32
+      CFLAGS: -${{ matrix.arch }}
+      CXXFLAGS: -${{ matrix.arch }}
+      LDFLAGS: -${{ matrix.arch }}
       COVERAGE: 1
       THREAD_VERSION: 1.2
       VIRTUAL_TIME: 1
+      CC: ${{ matrix.compiler.c }}
+      CXX: ${{ matrix.compiler.cxx }}
+    strategy:
+      matrix:
+        compiler: [{c: "gcc", cxx: "g++"}, { c: "clang", cxx: "clang++"}]
+        arch: ["m32", "m64"]
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap

@@ -1136,7 +1136,7 @@ void Interpreter::ProcessCounters(uint8_t aArgsLength, char *aArgs[])
             mServer->OutputFormat("    RxErrFcs: %d\r\n", macCounters->mRxErrFcs);
             mServer->OutputFormat("    RxErrOther: %d\r\n", macCounters->mRxErrOther);
         }
-        else if ((aArgsLength == 2) && (strcmp(aArgs[0], "reset") == 0))
+        else if ((aArgsLength == 2) && (strcmp(aArgs[1], "reset") == 0))
         {
             otLinkResetCounters(mInstance);
         }
@@ -1162,7 +1162,7 @@ void Interpreter::ProcessCounters(uint8_t aArgsLength, char *aArgs[])
                                   mleCounters->mBetterPartitionAttachAttempts);
             mServer->OutputFormat("Parent Changes: %d\r\n", mleCounters->mParentChanges);
         }
-        else if ((aArgsLength == 2) && (strcmp(aArgs[0], "reset") == 0))
+        else if ((aArgsLength == 2) && (strcmp(aArgs[1], "reset") == 0))
         {
             otThreadResetMleCounters(mInstance);
         }

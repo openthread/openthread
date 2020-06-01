@@ -138,30 +138,30 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
 {
 }
 
-otError HdlcInterface::Init(const otPlatformConfig &aPlatformConfig)
+otError HdlcInterface::Init(Arguments &aArguments)
 {
     otError     error = OT_ERROR_NONE;
     struct stat st;
 
     VerifyOrExit(mSockFd == -1, error = OT_ERROR_ALREADY);
 
-    VerifyOrDie(stat(aPlatformConfig.mRadioFile, &st) == 0, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(stat(aArguments.GetPath(), &st) == 0, OT_EXIT_INVALID_ARGUMENTS);
 
     if (S_ISCHR(st.st_mode))
     {
-        mSockFd = OpenFile(aPlatformConfig.mRadioFile, aPlatformConfig.mRadioConfig);
+        mSockFd = OpenFile(aArguments.GetPath(), aArguments);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else if (S_ISREG(st.st_mode))
     {
-        mSockFd = ForkPty(aPlatformConfig.mRadioFile, aPlatformConfig.mRadioConfig);
+        mSockFd = ForkPty(aArguments.GetPath(), aArguments.GetValue("arg"));
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else
     {
-        otLogCritPlat("Radio file '%s' not supported", aPlatformConfig.mRadioFile);
+        otLogCritPlat("Radio file '%s' not supported", aArguments.GetPath());
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
@@ -407,10 +407,12 @@ exit:
     return error;
 }
 
-int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
+int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
 {
-    int fd   = -1;
-    int rval = 0;
+    int         fd       = -1;
+    int         rval     = 0;
+    const char *parity   = aArguments.GetValue("uart-parity");
+    uint32_t    baudrate = 115200;
 
     fd = open(aFile, O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC);
     if (fd == -1)
@@ -423,10 +425,8 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
     {
         struct termios tios;
 
-        unsigned int speed  = 115200;
-        int          cstopb = 1;
-        char         parity = 'N';
-        char         flow   = 'N';
+        unsigned int speed   = 115200;
+        int          stopBit = 1;
 
         VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0, OT_NOOP);
 
@@ -434,29 +434,29 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
 
         tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
 
-        // example: 115200N1H
-        if (aConfig != NULL)
+        if (parity)
         {
-            sscanf(aConfig, "%u%c%d%c", &speed, &parity, &cstopb, &flow);
+            if (strncmp(parity, "odd", 3) == 0)
+            {
+                tios.c_cflag |= PARENB;
+                tios.c_cflag |= PARODD;
+            }
+            else if (strncmp(parity, "even", 4) == 0)
+            {
+                tios.c_cflag |= PARENB;
+            }
+            else
+            {
+                DieNow(OT_EXIT_INVALID_ARGUMENTS);
+            }
         }
 
-        switch (parity)
+        if (aArguments.GetValue("uart-stop"))
         {
-        case 'N':
-            break;
-        case 'E':
-            tios.c_cflag |= PARENB;
-            break;
-        case 'O':
-            tios.c_cflag |= (PARENB | PARODD);
-            break;
-        default:
-            // not supported
-            DieNow(OT_EXIT_INVALID_ARGUMENTS);
-            break;
+            stopBit = atoi(aArguments.GetValue("uart-stop"));
         }
 
-        switch (cstopb)
+        switch (stopBit)
         {
         case 1:
             tios.c_cflag &= static_cast<unsigned long>(~CSTOPB);
@@ -469,7 +469,11 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
         }
 
-        switch (speed)
+        if (aArguments.GetValue("baudrate"))
+        {
+            baudrate = static_cast<uint32_t>(atoi(aArguments.GetValue("baudrate")));
+        }
+        switch (baudrate)
         {
         case 9600:
             speed = B9600;
@@ -556,17 +560,9 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
         }
 
-        switch (flow)
+        if (aArguments.GetValue("uart-flow-control") != NULL)
         {
-        case 'N':
-            break;
-        case 'H':
             tios.c_cflag |= CRTSCTS;
-            break;
-        default:
-            // not supported
-            DieNow(OT_EXIT_INVALID_ARGUMENTS);
-            break;
         }
 
         VerifyOrExit((rval = cfsetspeed(&tios, static_cast<speed_t>(speed))) == 0, perror("cfsetspeed"));

@@ -41,18 +41,24 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/uart.h>
+
+#include "common/code_utils.hpp"
 
 uint64_t gNodeId = 0;
 
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 {
-    otInstance *instance = NULL;
+    otInstance *         instance = NULL;
+    ot::Posix::Arguments args(aPlatformConfig->mRadioUrl);
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    virtualTimeInit();
+    virtualTimeInit(static_cast<uint16_t>(atoi(args.GetValue("arg"))));
 #endif
+
+    VerifyOrDie(args.GetPath() != NULL, OT_EXIT_INVALID_ARGUMENTS);
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor);
-    platformRadioInit(aPlatformConfig);
+    platformRadioInit(&args);
     platformRandomInit();
 
     instance = otInstanceInitSingle();
@@ -76,6 +82,7 @@ void otSysDeinit(void)
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifDeinit();
 #endif
+    IgnoreError(otPlatUartDisable());
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME

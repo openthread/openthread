@@ -66,7 +66,7 @@ LDADD_MBEDTLS                                                         += \
     $(NULL)
 
 LDADD_MBEDTLS_RADIO                                                   += \
-    $(top_builddir)/third_party/mbedtls/libmbedcrypto_radio.a            \
+    $(top_builddir)/third_party/mbedtls/libmbedcrypto-radio.a            \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
