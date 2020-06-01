@@ -51,7 +51,7 @@ namespace Ncp {
 // MARK: Raw Link-Layer Datapath Glue
 // ----------------------------------------------------------------------------
 
-otError NcpBase::LinkRawPackRadioFrame(otRadioFrame *aFrame, otError aError)
+otError NcpBase::PackRadioFrame(otRadioFrame *aFrame, otError aError)
 {
     otError  error = OT_ERROR_FAILED;
     uint16_t flags = 0;
@@ -122,7 +122,7 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
     // Append frame header
     SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_STREAM_RAW));
 
-    SuccessOrExit(LinkRawPackRadioFrame(aFrame, aError));
+    SuccessOrExit(PackRadioFrame(aFrame, aError));
     SuccessOrExit(mEncoder.EndFrame());
 
 exit:
@@ -152,7 +152,7 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
 
         if (aError == OT_ERROR_NONE)
         {
-            SuccessOrExit(LinkRawPackRadioFrame(aAckFrame, aError));
+            SuccessOrExit(PackRadioFrame(aAckFrame, aError));
         }
 
         if (static_cast<Mac::TxFrame *>(aFrame)->GetSecurityEnabled())

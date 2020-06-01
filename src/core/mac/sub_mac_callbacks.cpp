@@ -107,9 +107,9 @@ void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
     }
 }
 
-void SubMac::Callbacks::InvokeFrameCounterUpdate(uint32_t aFrameCounter)
+void SubMac::Callbacks::FrameCounterUpdated(uint32_t aFrameCounter)
 {
-    Get<Mac>().FrameCounterUpdate(aFrameCounter);
+    Get<KeyManager>().MacFrameCounterUpdated(aFrameCounter);
 }
 
 #elif OPENTHREAD_RADIO
@@ -142,8 +142,9 @@ void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
     Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi);
 }
 
-void SubMac::Callbacks::InvokeFrameCounterUpdate(uint32_t)
+void SubMac::Callbacks::FrameCounterUpdated(uint32_t aFrameCounter)
 {
+    OT_UNUSED_VARIABLE(aFrameCounter);
 }
 
 #endif // OPENTHREAD_RADIO

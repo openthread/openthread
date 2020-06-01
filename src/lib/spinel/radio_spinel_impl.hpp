@@ -1486,7 +1486,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
         uint8_t  keyId;
         uint32_t frameCounter;
 
-        // Replace transmit frame auxiliary key index and frame counter with the one filled by RCP
+        // Replace transmit frame security key index and frame counter with the one filled by RCP
         unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT32_S, &keyId,
                                           &frameCounter);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);

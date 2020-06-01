@@ -663,14 +663,6 @@ public:
      */
     bool IsEnabled(void) const { return mEnabled; }
 
-    /**
-     * This method handles MAC frame counter change.
-     *
-     * @param[in]  aFrameCounter  The MAC frame counter value.
-     *
-     */
-    void FrameCounterUpdate(uint32_t aFrameCounter);
-
 private:
     enum
     {

@@ -192,7 +192,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
     mKeySequence = aKeySequence;
     UpdateKeyMaterial();
 
-    Get<Mac::SubMac>().SetFrameCounter(0);
+    SetMacFrameCounter(0);
     mMleFrameCounter = 0;
 
     Get<Notifier>().Signal(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
@@ -211,9 +211,19 @@ const Mle::Key &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
     return mTemporaryMleKey;
 }
 
-void KeyManager::FrameCounterUpdate(uint32_t aFrameCounter)
+uint32_t KeyManager::GetMacFrameCounter(void)
 {
-    if (aFrameCounter >= mStoredMacFrameCounter)
+    return Get<Mac::SubMac>().GetFrameCounter();
+}
+
+void KeyManager::SetMacFrameCounter(uint32_t aMacFrameCounter)
+{
+    Get<Mac::SubMac>().SetFrameCounter(aMacFrameCounter);
+}
+
+void KeyManager::MacFrameCounterUpdated(uint32_t aMacFrameCounter)
+{
+    if (aMacFrameCounter >= mStoredMacFrameCounter)
     {
         IgnoreError(Get<Mle::MleRouter>().Store());
     }

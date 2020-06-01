@@ -174,7 +174,7 @@ public:
          * @param[in]  aFrameCounter  The MAC frame counter value.
          *
          */
-        void InvokeFrameCounterUpdate(uint32_t);
+        void FrameCounterUpdated(uint32_t);
     };
 
     /**
@@ -450,7 +450,7 @@ private:
     bool ShouldHandleEnergyScan(void) const;
 
     void ProcessTransmitSecurity(void);
-    void FrameCounterUpdate(uint32_t aFrameCounter);
+    void UpdateFrameCounter(uint32_t aFrameCounter);
     void StartCsmaBackoff(void);
     void BeginTransmit(void);
     void SampleRssi(void);
@@ -482,8 +482,8 @@ private:
     Key                mPrevKey;
     Key                mCurrKey;
     Key                mNextKey;
-    uint8_t            mKeyId;
     uint32_t           mFrameCounter;
+    uint8_t            mKeyId;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicro mTimer;
 #else

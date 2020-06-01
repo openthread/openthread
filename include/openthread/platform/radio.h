@@ -236,8 +236,8 @@ typedef struct otRadioFrame
 
             int8_t   mRssi;            ///< Received signal strength indicator in dBm for received frames.
             uint8_t  mLqi;             ///< Link Quality Indicator for received frames.
-            uint8_t  mAckKeyId;        ///< ACK auxiliary key ID.
-            uint32_t mAckFrameCounter; ///< ACK auxiliary frame counter.
+            uint8_t  mAckKeyId;        ///< ACK security key index (applicable when `mAckedWithSecEnhAck` is set).
+            uint32_t mAckFrameCounter; ///< ACK security frame counter (applicable when `mAckedWithSecEnhAck` is set).
 
             // Flags
             bool mAckedWithFramePending : 1; ///< This indicates if this frame was acknowledged with frame pending set.
@@ -649,8 +649,8 @@ extern void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame);
  * The radio driver calls this function to notify OpenThread that the transmit operation has completed,
  * providing both the transmitted frame and, if applicable, the received ack frame.
  *
- * When radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability, aFrame should be modified with the actual
- * auxiliary frame counter and key index used in transmission when this function is called.
+ * When radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability, radio platform layer updates `aFrame`
+ * with the security frame counter and key index values used in the transmission of the frame.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aFrame     A pointer to the frame that was transmitted.

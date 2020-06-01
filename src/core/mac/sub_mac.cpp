@@ -59,8 +59,8 @@ SubMac::SubMac(Instance &aInstance)
     , mCallbacks(aInstance)
     , mPcapCallback(NULL)
     , mPcapCallbackContext(NULL)
-    , mKeyId(0)
     , mFrameCounter(0)
+    , mKeyId(0)
     , mTimer(aInstance, &SubMac::HandleTimer, this)
 {
     mExtAddress.Clear();
@@ -204,7 +204,7 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
 
     if (!ShouldHandleTransmitSecurity() && aFrame != NULL && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
     {
-        FrameCounterUpdate(aFrame->mInfo.mRxInfo.mAckFrameCounter);
+        UpdateFrameCounter(aFrame->mInfo.mRxInfo.mAckFrameCounter);
     }
 
     mCallbacks.ReceiveDone(aFrame, aError);
@@ -257,7 +257,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
         mTransmitFrame.SetKeyId(mKeyId);
         mTransmitFrame.SetFrameCounter(frameCounter);
-        FrameCounterUpdate(frameCounter + 1);
+        UpdateFrameCounter(frameCounter + 1);
     }
 
     extAddress = &GetExtAddress();
@@ -393,7 +393,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
         uint32_t frameCounter = 0;
 
         OT_ASSERT(aFrame.GetFrameCounter(frameCounter) == OT_ERROR_NONE);
-        FrameCounterUpdate(frameCounter);
+        UpdateFrameCounter(frameCounter);
     }
 
     // Determine whether a CSMA retry is required.
@@ -673,11 +673,11 @@ exit:
     return;
 }
 
-void SubMac::FrameCounterUpdate(uint32_t aFrameCounter)
+void SubMac::UpdateFrameCounter(uint32_t aFrameCounter)
 {
     mFrameCounter = aFrameCounter;
 
-    mCallbacks.InvokeFrameCounterUpdate(aFrameCounter);
+    mCallbacks.FrameCounterUpdated(aFrameCounter);
 }
 
 void SubMac::SetFrameCounter(uint32_t aMacFrameCounter)

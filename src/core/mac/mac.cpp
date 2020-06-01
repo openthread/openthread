@@ -970,7 +970,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         break;
 
     case Frame::kKeyIdMode1:
-        // For MAC key ID mode 1, the AES CCM* is done at SubMac or Radio if supported
+        // For MAC key ID mode 1, the security framec counter update and CCM* is done at SubMac or Radio if supported
         ExitNow();
         break;
 
@@ -1866,11 +1866,6 @@ bool Mac::HandleMacCommand(RxFrame &aFrame)
     }
 
     return didHandle;
-}
-
-void Mac::FrameCounterUpdate(uint32_t aFrameCounter)
-{
-    Get<KeyManager>().FrameCounterUpdate(aFrameCounter);
 }
 
 void Mac::SetPromiscuous(bool aPromiscuous)
