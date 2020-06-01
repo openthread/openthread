@@ -867,8 +867,6 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ParseRadioFrame(otRadioF
         &aFrame.mInfo.mRxInfo.mAckFrameCounter);
 
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-    aBuffer += unpacked;
-    aLength -= unpacked;
     aUnpacked = unpacked;
 
     if (receiveError == OT_ERROR_NONE)
@@ -1481,7 +1479,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
         error = SpinelStatusToOtError(status);
     }
 
-    if (mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC && static_cast<Mac::TxFrame *>(mTransmitFrame)->GetSecurityEnabled())
+    if ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) && static_cast<Mac::TxFrame *>(mTransmitFrame)->GetSecurityEnabled())
     {
         uint8_t  keyId;
         uint32_t frameCounter;

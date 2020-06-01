@@ -174,7 +174,7 @@ public:
          * @param[in]  aFrameCounter  The MAC frame counter value.
          *
          */
-        void FrameCounterUpdated(uint32_t);
+        void FrameCounterUpdated(uint32_t aFrameCounter);
     };
 
     /**
