@@ -671,18 +671,19 @@ public:
      * @param[in]      aIsTimeSync  A boolean indicates if time sync is being used.
      * @param[in,out]  aFrame       A reference to the TX-frame to which the IEs will be appended.
      *
-     * @retval OT_ERROR_NONE    If append header IEs successfully.
-     * @retval OT_ERROR_FAILED  If cannot find header IE position in the frame.
+     * @retval OT_ERROR_NONE       If append header IEs successfully.
+     * @retval OT_ERROR_NOT_FOUND  If cannot find header IE position in the frame.
      *
      */
-    otError AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame) const;
+    static otError AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame);
 #endif
 
     /**
-     * This method updates frame control field. If the frame would contain header IEs,
-     * IE present field would be set. If this is a csl transmission frame or
-     * header IE is present in this frame, the version should be set to 2015.
-     * Otherwise, the version would be set to 2006.
+     * This method updates frame control field.
+     *
+     * If the frame would contain header IEs, IE present field would be set.
+     * If this is a csl transmission frame or header IE is present in this frame,
+     * the version should be set to 2015. Otherwise, the version would be set to 2006.
      *
      * @param[in]   aIsTimeSync  A boolean indicates if time sync is being used.
      * @param[out]  aFcf         A reference to the frame control field to set.

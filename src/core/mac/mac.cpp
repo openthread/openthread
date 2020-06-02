@@ -2062,7 +2062,7 @@ exit:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-otError Mac::AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame) const
+otError Mac::AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame)
 {
     OT_UNUSED_VARIABLE(aIsTimeSync);
 

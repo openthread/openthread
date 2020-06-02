@@ -856,6 +856,7 @@ public:
 
     /**
      * This method indicates whether or not the message is also used for time sync purpose.
+     *
      * When OPENTHREAD_CONFIG_TIME_SYNC_ENABLE is 0, this method always return false.
      *
      * @retval TRUE   If the message is also used for time sync purpose.
