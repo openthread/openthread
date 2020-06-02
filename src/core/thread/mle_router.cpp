@@ -92,6 +92,10 @@ MleRouter::MleRouter(Instance &aInstance)
     mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
 
     SetRouterId(kInvalidRouterId);
+
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
+    mSteeringData.Clear();
+#endif
 }
 
 void MleRouter::HandlePartitionChange(void)
@@ -2756,27 +2760,21 @@ void MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
     nullExtAddr.Clear();
     allowAnyExtAddr.Fill(0xff);
 
-    mSteeringData.Init();
-
     if ((aExtAddress == NULL) || (*aExtAddress == nullExtAddr))
     {
-        // Clear steering data
         mSteeringData.Clear();
     }
     else if (*aExtAddress == allowAnyExtAddr)
     {
-        // Set steering data to 0xFF
-        mSteeringData.SetLength(1);
-        mSteeringData.Set();
+        mSteeringData.SetToPermitAllJoiners();
     }
     else
     {
         Mac::ExtAddress joinerId;
 
-        // compute Joiner ID
+        mSteeringData.Init();
         MeshCoP::ComputeJoinerId(*aExtAddress, joinerId);
-        // compute Bloom Filter
-        mSteeringData.ComputeBloomFilter(joinerId);
+        mSteeringData.UpdateBloomFilter(joinerId);
     }
 }
 #endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
@@ -2816,13 +2814,12 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
             if (discoveryRequest.IsJoiner())
             {
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
-
-                if (!mSteeringData.IsCleared())
+                if (!mSteeringData.IsEmpty())
                 {
                     break;
                 }
                 else // if steering data is not set out of band, fall back to network data
-#endif               // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
+#endif
                 {
                     VerifyOrExit(Get<NetworkData::Leader>().IsJoiningEnabled(), error = OT_ERROR_SECURITY);
                 }
@@ -2861,7 +2858,6 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
     Tlv                           tlv;
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
     MeshCoP::NetworkNameTlv       networkName;
-    const MeshCoP::Tlv *          steeringData;
     uint16_t                      delay;
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
@@ -2903,17 +2899,18 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
     SuccessOrExit(error = networkName.AppendTo(*message));
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
-
     // If steering data is set out of band, use that value.
     // Otherwise use the one from commissioning data.
-    if (!mSteeringData.IsCleared())
+    if (!mSteeringData.IsEmpty())
     {
-        SuccessOrExit(error = mSteeringData.AppendTo(*message));
+        SuccessOrExit(error = Tlv::AppendTlv(*message, MeshCoP::Tlv::kSteeringData, mSteeringData.GetData(),
+                                             mSteeringData.GetLength()));
     }
     else
-#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
+#endif
     {
-        // Steering Data TLV
+        const MeshCoP::Tlv *steeringData;
+
         steeringData = Get<NetworkData::Leader>().GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
 
         if (steeringData != NULL)

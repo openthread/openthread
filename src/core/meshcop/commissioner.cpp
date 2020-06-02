@@ -226,20 +226,18 @@ otError Commissioner::SendCommissionerSet(void)
 {
     otError                error;
     otCommissioningDataset dataset;
-    SteeringDataTlv        steeringData;
+    SteeringData &         steeringData = static_cast<SteeringData &>(dataset.mSteeringData);
     Mac::ExtAddress        joinerId;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
     memset(&dataset, 0, sizeof(dataset));
 
-    // session id
     dataset.mSessionId      = mSessionId;
     dataset.mIsSessionIdSet = true;
 
-    // compute bloom filter
+    // Compute bloom filter
     steeringData.Init();
-    steeringData.Clear();
 
     for (Joiner *joiner = &mJoiners[0]; joiner < OT_ARRAY_END(mJoiners); joiner++)
     {
@@ -250,18 +248,14 @@ otError Commissioner::SendCommissionerSet(void)
 
         if (joiner->mAny)
         {
-            steeringData.SetLength(1);
-            steeringData.Set();
+            steeringData.SetToPermitAllJoiners();
             break;
         }
 
         ComputeJoinerId(joiner->mEui64, joinerId);
-        steeringData.ComputeBloomFilter(joinerId);
+        steeringData.UpdateBloomFilter(joinerId);
     }
 
-    // set bloom filter
-    dataset.mSteeringData.mLength = steeringData.GetSteeringDataLength();
-    memcpy(dataset.mSteeringData.m8, steeringData.GetValue(), dataset.mSteeringData.mLength);
     dataset.mIsSteeringDataSet = true;
 
     SuccessOrExit(error = SendMgmtCommissionerSetRequest(dataset, NULL, 0));
@@ -615,11 +609,8 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
 
     if (aDataset.mIsSteeringDataSet)
     {
-        MeshCoP::SteeringDataTlv steeringData;
-        steeringData.Init();
-        steeringData.SetLength(aDataset.mSteeringData.mLength);
-        SuccessOrExit(error = message->Append(&steeringData, sizeof(MeshCoP::Tlv)));
-        SuccessOrExit(error = message->Append(&aDataset.mSteeringData.m8, aDataset.mSteeringData.mLength));
+        SuccessOrExit(error = Tlv::AppendTlv(*message, MeshCoP::Tlv::kSteeringData, aDataset.mSteeringData.m8,
+                                             aDataset.mSteeringData.mLength));
     }
 
     if (aDataset.mIsJoinerUdpPortSet)

@@ -425,6 +425,28 @@ target_link_libraries(test-pskc
 
 add_test(NAME test-pskc COMMAND test-pskc)
 
+add_executable(test-steering-data
+    ${COMMON_SOURCES}
+    test_steering_data.cpp
+)
+
+target_include_directories(test-steering-data
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-steering-data
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-steering-data
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-steering-data COMMAND test-steering-data)
+
 add_executable(test-string
     ${COMMON_SOURCES}
     test_string.cpp
