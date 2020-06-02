@@ -51,8 +51,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y llvm-runtime
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y llvm-runtime
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Run
       run: |
@@ -78,8 +78,8 @@ jobs:
         go-version: '1.13'
     - name: Bootstrap
       run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y g++-multilib
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib
         ./bootstrap
     - name: Run OTNS Tests
       run: |
@@ -103,8 +103,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y g++-multilib
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -130,8 +130,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y g++-multilib
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -157,8 +157,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y g++-multilib
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -176,7 +176,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        OT_OPTIONS=-DOT_READLINE=OFF sudo apt --no-install-recommends install -y expect ninja-build
+        OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build
     - name: Run
       run: |
         VIRTUAL_TIME=0 ./script/test build expect
@@ -225,8 +225,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y g++-multilib python3-setuptools
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         sudo python3 -m pip install git+https://github.com/openthread/pyspinel
     - name: Build
@@ -252,8 +252,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y libreadline6-dev
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y libreadline6-dev
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -280,8 +280,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y libreadline6-dev python3-setuptools
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y libreadline6-dev python3-setuptools
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         sudo python3 -m pip install git+https://github.com/openthread/pyspinel
     - name: Build
@@ -303,8 +303,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y expect
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y expect
     - name: Build
       run: |
         ./bootstrap
@@ -323,16 +323,16 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt update
-         sudo apt --no-install-recommends install -y socat expect
-         cd /tmp
-         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
-         tar xvf bsd-licensed.tar.gz
-         cd libcoap-bsd-licensed
-         ./autogen.sh
-         ./configure --prefix= --exec-prefix=/usr --with-boost=internal --disable-tests --disable-documentation
-         make -j2
-         sudo make install
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y socat expect
+        cd /tmp
+        wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
+        tar xvf bsd-licensed.tar.gz
+        cd libcoap-bsd-licensed
+        ./autogen.sh
+        ./configure --prefix= --exec-prefix=/usr --with-boost=internal --disable-tests --disable-documentation
+        make -j2
+        sudo make install
     - name: Build
       run: |
         ./bootstrap
@@ -352,16 +352,16 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt update
-         sudo apt --no-install-recommends install -y socat expect
-         cd /tmp
-         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
-         tar xvf bsd-licensed.tar.gz
-         cd libcoap-bsd-licensed
-         ./autogen.sh
-         ./configure --prefix= --exec-prefix=/usr --with-boost=internal --disable-tests --disable-documentation
-         make -j2
-         sudo make install
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y socat expect
+        cd /tmp
+        wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
+        tar xvf bsd-licensed.tar.gz
+        cd libcoap-bsd-licensed
+        ./autogen.sh
+        ./configure --prefix= --exec-prefix=/usr --with-boost=internal --disable-tests --disable-documentation
+        make -j2
+        sudo make install
     - name: Build
       run: |
         ./bootstrap
@@ -392,8 +392,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y g++-multilib ninja-build
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
