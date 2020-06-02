@@ -390,10 +390,15 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
 
     if (!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled())
     {
+        uint8_t  keyIdMode;
         uint32_t frameCounter = 0;
 
-        OT_ASSERT(aFrame.GetFrameCounter(frameCounter) == OT_ERROR_NONE);
-        UpdateFrameCounter(frameCounter);
+        IgnoreError(aFrame.GetKeyIdMode(keyIdMode));
+        if (keyIdMode == Frame::kKeyIdMode1)
+        {
+            OT_ASSERT(aFrame.GetFrameCounter(frameCounter) == OT_ERROR_NONE);
+            UpdateFrameCounter(frameCounter);
+        }
     }
 
     // Determine whether a CSMA retry is required.
