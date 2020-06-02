@@ -34,10 +34,12 @@ import thread_cert
 
 
 class TestDiag(thread_cert.TestCase):
+    support_ncp = False
+
     topology = {1: None}
 
     def test(self):
-        self.node = self.nodes[1]
+        node = self.nodes[1]
 
         cases = [
             ('diag\n', 'diagnostics mode is disabled\r\n'),
@@ -88,11 +90,11 @@ class TestDiag(thread_cert.TestCase):
         ]
 
         for case in cases:
-            self.node.send_command(case[0])
+            node.send_command(case[0])
             self.simulator.go(1)
             if type(self.simulator).__name__ == 'VirtualTime':
                 time.sleep(0.1)
-            self.node._expect(case[1])
+            node._expect(case[1])
 
 
 if __name__ == '__main__':

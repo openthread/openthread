@@ -37,6 +37,8 @@ JOINER = 3
 
 
 class Cert_8_2_01_JoinerRouter(thread_cert.TestCase):
+    support_ncp = False
+
     topology = {
         COMMISSIONER: {
             'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
