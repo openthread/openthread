@@ -132,11 +132,6 @@ bool otMacFrameIsVersion2015(const otRadioFrame *aFrame)
     return static_cast<const Mac::Frame *>(aFrame)->IsVersion2015();
 }
 
-bool otMacFrameIsSecurityEnabled(const otRadioFrame *aFrame)
-{
-    return static_cast<const Mac::Frame *>(aFrame)->GetSecurityEnabled();
-}
-
 void otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, otRadioFrame *aAckFrame)
 {
     assert(aFrame != NULL && aAckFrame != NULL);

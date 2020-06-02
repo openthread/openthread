@@ -747,8 +747,8 @@ void radioSendAck(void)
     }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    // Use enh-ack for 802154-2015 secured frame
-    if (otMacFrameIsVersion2015(&sReceiveFrame) && otMacFrameIsSecurityEnabled(&sReceiveFrame))
+    // Use enh-ack for 802.15.4-2015 frames
+    if (otMacFrameIsVersion2015(&sReceiveFrame))
     {
         otEXPECT(otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, NULL, 0,
                                           &sAckFrame) == OT_ERROR_NONE);
