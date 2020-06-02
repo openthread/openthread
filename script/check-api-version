@@ -38,27 +38,36 @@ die()
     exit 1
 }
 
-mkdir -p tmp
+main()
+{
+    mkdir -p tmp
 
-if git diff --quiet "${OT_SHA_OLD}" -- include; then
-    echo 'No OpenThread public APIs updates.'
-    exit 0
-fi
+    echo "The master branch must be ${OT_SHA_OLD}"
 
-git diff "${OT_SHA_OLD}" -- include | tee >(cat >&2) | grep -aP '[-+]#define OPENTHREAD_API_VERSION (.+)' >"${OT_VERSIONS_FILE}" || die 'Version number is not updated!'
+    git fetch --depth 1 origin "${OT_SHA_OLD}"
 
-[[ $(wc -l <"${OT_VERSIONS_FILE}") == 2 ]] || die 'Multiple OPENTHREAD_API_VERSION definitions found!'
+    if git diff --quiet "${OT_SHA_OLD}" -- include; then
+        echo 'No OpenThread public APIs updates.'
+        exit 0
+    fi
 
-old_version=$(grep -aoP '(?<=-#define OPENTHREAD_API_VERSION ).+' "${OT_VERSIONS_FILE}") || die 'Failed to find old version!'
-new_version=$(grep -aoP '(?<=\+#define OPENTHREAD_API_VERSION ).+' "${OT_VERSIONS_FILE}") || die 'Failed to find new version!'
+    git diff "${OT_SHA_OLD}" -- include | tee >(cat >&2) | grep -aP '[-+]#define OPENTHREAD_API_VERSION (.+)' >"${OT_VERSIONS_FILE}" || die 'Version number is not updated!'
 
-echo -e '\n--------------------------\n'
+    [[ $(wc -l <"${OT_VERSIONS_FILE}") == 2 ]] || die 'Multiple OPENTHREAD_API_VERSION definitions found!'
 
-echo "Old version: ${old_version}"
-echo "New version: ${new_version}"
+    old_version=$(grep -aoP '(?<=-#define OPENTHREAD_API_VERSION ).+' "${OT_VERSIONS_FILE}") || die 'Failed to find old version!'
+    new_version=$(grep -aoP '(?<=\+#define OPENTHREAD_API_VERSION ).+' "${OT_VERSIONS_FILE}") || die 'Failed to find new version!'
 
-[[ $((new_version - old_version)) -gt 0 ]] || die 'Version is not increased!'
+    echo -e '\n--------------------------\n'
 
-echo -e '\n--------------------------\n'
+    echo "Old version: ${old_version}"
+    echo "New version: ${new_version}"
 
-echo 'PASS: version check.'
+    [[ $((new_version - old_version)) -gt 0 ]] || die 'Version is not increased!'
+
+    echo -e '\n--------------------------\n'
+
+    echo 'PASS: version check.'
+}
+
+main "$@"
