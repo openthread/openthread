@@ -35,7 +35,7 @@ set -e
 
 install_packages_apt()
 {
-    # apt update and install dependencies
+    # apt-get update and install dependencies
     sudo apt-get update
     sudo apt-get --no-install-recommends install -y automake g++ libtool lsb-release make cmake ninja-build
 

@@ -33,7 +33,7 @@ make -f examples/Makefile-xxxx
 
 ```sh
 make -f examples/Makefile-simulation
-./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli ./output/x86_64-unknown-linux-gnu/bin/ot-rcp 1
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli 'spinel+hdlc+forkpty://output/x86_64-unknown-linux-gnu/bin/ot-rcp?forkpty-arg=1'
 ```
 
 ### With Real Device
@@ -58,7 +58,7 @@ expect "Probe configured successfully."
 exit
 EOF
 
-./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyACM0 115200
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
 ```
 
 - USB=1
@@ -69,7 +69,7 @@ make -f examples/Makefile-nrf52840 USB=1
 arm-none-eabi-objcopy -O ihex output/nrf52840/bin/ot-rcp ot-rcp.hex
 nrfjprog -f nrf52 --chiperase --reset --program ot-rcp.hex
 # plug the CDC serial USB port
-./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyACM0 115200
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
 ```
 
 #### CC2538
@@ -79,7 +79,7 @@ make -f examples/Makefile-cc2538
 arm-none-eabi-objcopy -O binary output/cc2538/bin/ot-rcp ot-rcp.bin
 # see https://github.com/JelmerT/cc2538-bsl
 python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-rcp.bin
-./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyUSB0 115200
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli 'spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=115200'
 ```
 
 ## Wpantund Support
@@ -89,16 +89,16 @@ python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-rcp.bin
 ### With Simulation
 
 ```sh
-sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp ./output/x86_64-unknown-linux-gnu/bin/ot-rcp 1'
+sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp spinel+hdlc+forkpty://output/x86_64-unknown-linux-gnu/bin/ot-rcp?forkpty-arg=1'
 ```
 
 ### With Real Device
 
 ```sh
 # nRF52840
-sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp /dev/ttyACM0 115200'
+sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
 # CC2538
-sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp /dev/ttyUSB0 115200'
+sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=115200'
 ```
 
 ## Daemon Mode Support
@@ -109,9 +109,9 @@ OpenThread Posix Daemon mode uses a unix socket as input and output, so that Ope
 # build daemon mode core stack for POSIX
 make -f src/posix/Makefile-posix DAEMON=1
 # Daemon with simulation
-./output/posix/x86_64-unknown-linux-gnu/bin/ot-daemon ./output/x86_64-unknown-linux-gnu/bin/ot-rcp 1
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-daemon 'spinel+hdlc+forkpty://output/x86_64-unknown-linux-gnu/bin/ot-rcp?forkpty-arg=1'
 # Daemon with real device
-./output/posix/x86_64-unknown-linux-gnu/bin/ot-daemon /dev/ttyACM0 115200
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-daemon 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
 # Built-in controller
 ./output/posix/x86_64-unknown-linux-gnu/bin/ot-ctl
 ```

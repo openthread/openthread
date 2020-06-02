@@ -34,12 +34,10 @@
 
 #include <openthread/openthread-system.h>
 
-extern "C" {
-typedef struct otPosixRadioArguments
+struct otPosixRadioArguments
 {
     const char *mPath; ///< The path to the executable or device
-} otPosixRadioArguments;
-}
+};
 
 namespace ot {
 namespace Posix {

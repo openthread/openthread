@@ -918,7 +918,7 @@ otError Frame::AppendHeaderIe(HeaderIe *aIeList, uint8_t aIeCount)
     uint8_t *cur;
     uint8_t *base;
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_FAILED);
+    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_NOT_FOUND);
     cur  = GetPsdu() + index;
     base = cur;
 
