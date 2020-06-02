@@ -162,6 +162,17 @@ uint8_t otMacFrameGetSequence(const otRadioFrame *aFrame);
 void otMacFrameProcessTransmitAesCcm(otRadioFrame *aFrame, const otExtAddress *aExtAddress);
 
 /**
+ * Tell if the security of @p aFrame is enabled.
+ *
+ * @param[in]   aFrame          A pointer to the frame.
+ *
+ * @retval  true    It is enabled.
+ * @retval  false   It is not enabled.
+ *
+ */
+bool otMacFrameIsSecurityEnabled(const otRadioFrame *aFrame);
+
+/**
  * Tell if the version of @p aFrame is 2015.
  *
  * @param[in]   aFrame          A pointer to the frame.

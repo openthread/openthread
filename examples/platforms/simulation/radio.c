@@ -746,7 +746,18 @@ void radioGenerateAck(void)
         sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
     }
 
-    otMacFrameGenerateImmAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, &sAckFrame);
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    // Use enh-ack for 802154-2015 secured frame
+    if (otMacFrameIsVersion2015(&sReceiveFrame) && otMacFrameIsSecurityEnabled(&sReceiveFrame))
+    {
+        otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, NULL, 0,
+                                 &sAckFrame);
+    }
+    else
+#endif
+    {
+        otMacFrameGenerateImmAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, &sAckFrame);
+    }
 }
 
 void radioSendAck(void)
