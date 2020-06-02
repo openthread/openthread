@@ -39,11 +39,10 @@ jobs:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       if: "github.ref != 'refs/heads/master'"
 
-  version:
+  api-version:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
     - name: Check
       run: |
         script/check-api-version
-
