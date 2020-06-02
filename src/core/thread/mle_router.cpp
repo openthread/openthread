@@ -337,6 +337,8 @@ void MleRouter::SetStateRouter(uint16_t aRloc16)
 
 void MleRouter::SetStateLeader(uint16_t aRloc16)
 {
+    IgnoreError(Get<MeshCoP::ActiveDataset>().Restore());
+    IgnoreError(Get<MeshCoP::PendingDataset>().Restore());
     SetRloc16(aRloc16);
 
     SetRole(kRoleLeader);
