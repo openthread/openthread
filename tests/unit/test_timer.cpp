@@ -83,11 +83,11 @@ void InitCounters(void)
  * `TestTimer` sub-classes `ot::TimerMilli` and provides a handler and a counter to keep track of number of times timer
  * gets fired.
  */
-class TestTimer : public ot::TimerMilli
+template <typename TimerType> class TestTimer : public TimerType
 {
 public:
     TestTimer(ot::Instance &aInstance)
-        : ot::TimerMilli(aInstance, TestTimer::HandleTimerFired, NULL)
+        : TimerType(aInstance, TestTimer::HandleTimerFired, NULL)
         , mFiredCounter(0)
     {
     }
@@ -108,15 +108,29 @@ private:
     uint32_t mFiredCounter; //< Number of times timer has been fired so far
 };
 
+template <typename TimerType> void AlarmFired(otInstance *aInstance);
+
+template <> void AlarmFired<ot::TimerMilli>(otInstance *aInstance)
+{
+    otPlatAlarmMilliFired(aInstance);
+}
+
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+template <> void AlarmFired<ot::TimerMicro>(otInstance *aInstance)
+{
+    otPlatAlarmMicroFired(aInstance);
+}
+#endif
+
 /**
  * Test the TimerScheduler's behavior of one timer started and fired.
  */
-int TestOneTimer(void)
+template <typename TimerType> int TestOneTimer(void)
 {
-    const uint32_t kTimeT0        = 1000;
-    const uint32_t kTimerInterval = 10;
-    ot::Instance * instance       = testInitInstance();
-    TestTimer      timer(*instance);
+    const uint32_t       kTimeT0        = 1000;
+    const uint32_t       kTimerInterval = 10;
+    ot::Instance *       instance       = testInitInstance();
+    TestTimer<TimerType> timer(*instance);
 
     // Test one Timer basic operation.
 
@@ -137,7 +151,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval;
 
-    otPlatAlarmMilliFired(instance);
+    AlarmFired<TimerType>(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 1, "TestOneTimer: Start CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 1, "TestOneTimer: Stop CallCount Failed.");
@@ -161,7 +175,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval;
 
-    otPlatAlarmMilliFired(instance);
+    AlarmFired<TimerType>(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 1, "TestOneTimer: Start CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 1, "TestOneTimer: Stop CallCount Failed.");
@@ -185,7 +199,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval + 5;
 
-    otPlatAlarmMilliFired(instance);
+    AlarmFired<TimerType>(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 1, "TestOneTimer: Start CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 1, "TestOneTimer: Stop CallCount Failed.");
@@ -209,7 +223,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval - 2;
 
-    otPlatAlarmMilliFired(instance);
+    AlarmFired<TimerType>(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 2, "TestOneTimer: Start CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 0, "TestOneTimer: Stop CallCount Failed.");
@@ -219,7 +233,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval;
 
-    otPlatAlarmMilliFired(instance);
+    AlarmFired<TimerType>(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 2, "TestOneTimer: Start CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 1, "TestOneTimer: Stop CallCount Failed.");
@@ -237,13 +251,13 @@ int TestOneTimer(void)
 /**
  * Test the TimerScheduler's behavior of two timers started and fired.
  */
-int TestTwoTimers(void)
+template <typename TimerType> int TestTwoTimers(void)
 {
-    const uint32_t kTimeT0        = 1000;
-    const uint32_t kTimerInterval = 10;
-    ot::Instance * instance       = testInitInstance();
-    TestTimer      timer1(*instance);
-    TestTimer      timer2(*instance);
+    const uint32_t       kTimeT0        = 1000;
+    const uint32_t       kTimerInterval = 10;
+    ot::Instance *       instance       = testInitInstance();
+    TestTimer<TimerType> timer1(*instance);
+    TestTimer<TimerType> timer2(*instance);
 
     InitTestTimer();
     printf("TestTwoTimers() ");
@@ -275,7 +289,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(timer2.IsRunning() == true, "TestTwoTimers: Timer running Failed.");
     VerifyOrQuit(sTimerOn, "TestTwoTimers: Platform Timer State Failed.");
 
-    otPlatAlarmMilliFired(instance);
+    AlarmFired<TimerType>(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 2, "TestTwoTimers: Start CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 0, "TestTwoTimers: Stop CallCount Failed.");
@@ -287,7 +301,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(sTimerOn == true, "TestTwoTimers: Platform Timer State Failed.");
 
     sNow += kTimerInterval;
-    otPlatAlarmMilliFired(instance);
+    AlarmFired<TimerType>(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 2, "TestTwoTimers: Start CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 1, "TestTwoTimers: Stop CallCount Failed.");
@@ -297,7 +311,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(timer2.IsRunning() == false, "TestTwoTimers: Timer running Failed.");
     VerifyOrQuit(sTimerOn == false, "TestTwoTimers: Platform Timer State Failed.");
 
-    // Test when second timer starts at the fire time of first timer (before otPlatAlarmMilliFired()) and its fire time
+    // Test when second timer starts at the fire time of first timer (before AlarmFired<TimerType>()) and its fire time
     // is before the first timer. Ensure that the second timer handler is invoked before the first one.
 
     InitCounters();
@@ -324,7 +338,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(timer2.IsRunning() == true, "TestTwoTimers: Timer running Failed.");
     VerifyOrQuit(sTimerOn, "TestTwoTimers: Platform Timer State Failed.");
 
-    otPlatAlarmMilliFired(instance);
+    AlarmFired<TimerType>(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 0, "TestTwoTimers: Stop CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == 1, "TestTwoTimers: Handler CallCount Failed.");
@@ -334,7 +348,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(timer2.IsRunning() == false, "TestTwoTimers: Timer running Failed.");
     VerifyOrQuit(sTimerOn == true, "TestTwoTimers: Platform Timer State Failed.");
 
-    otPlatAlarmMilliFired(instance);
+    AlarmFired<TimerType>(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 1, "TestTwoTimers: Stop CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == 2, "TestTwoTimers: Handler CallCount Failed.");
@@ -344,7 +358,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(sTimerOn == false, "TestTwoTimers: Platform Timer State Failed.");
 
     // Timer 1 fire callback is late by some ticks/ms, and second timer is scheduled (before call to
-    // otPlatAlarmMilliFired) with a maximum interval. This is to test (corner-case) scenario where the fire time of two
+    // AlarmFired) with a maximum interval. This is to test (corner-case) scenario where the fire time of two
     // timers spanning over the maximum interval.
 
     InitCounters();
@@ -373,7 +387,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(timer2.IsRunning() == true, "TestTwoTimers: Timer running Failed.");
     VerifyOrQuit(sTimerOn, "TestTwoTimers: Platform Timer State Failed.");
 
-    otPlatAlarmMilliFired(instance);
+    AlarmFired<TimerType>(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 2, "TestTwoTimers: Start CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 0, "TestTwoTimers: Stop CallCount Failed.");
@@ -386,7 +400,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(sTimerOn == true, "TestTwoTimers: Platform Timer State Failed.");
 
     sNow += ot::Timer::kMaxDelay;
-    otPlatAlarmMilliFired(instance);
+    AlarmFired<TimerType>(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 2, "TestTwoTimers: Start CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 1, "TestTwoTimers: Stop CallCount Failed.");
@@ -409,7 +423,7 @@ int TestTwoTimers(void)
  * `aTimeShift` is added to the t0 and trigger times for all timers. It can be used to check the ten timer behavior
  * at different start time (e.g., around a 32-bit wrap).
  */
-static void TenTimers(uint32_t aTimeShift)
+template <typename TimerType> static void TenTimers(uint32_t aTimeShift)
 {
     const uint32_t kNumTimers                 = 10;
     const uint32_t kNumTriggers               = 7;
@@ -459,19 +473,19 @@ static void TenTimers(uint32_t aTimeShift)
 
     ot::Instance *instance = testInitInstance();
 
-    TestTimer  timer0(*instance);
-    TestTimer  timer1(*instance);
-    TestTimer  timer2(*instance);
-    TestTimer  timer3(*instance);
-    TestTimer  timer4(*instance);
-    TestTimer  timer5(*instance);
-    TestTimer  timer6(*instance);
-    TestTimer  timer7(*instance);
-    TestTimer  timer8(*instance);
-    TestTimer  timer9(*instance);
-    TestTimer *timers[kNumTimers] = {&timer0, &timer1, &timer2, &timer3, &timer4,
-                                     &timer5, &timer6, &timer7, &timer8, &timer9};
-    size_t     i;
+    TestTimer<TimerType>  timer0(*instance);
+    TestTimer<TimerType>  timer1(*instance);
+    TestTimer<TimerType>  timer2(*instance);
+    TestTimer<TimerType>  timer3(*instance);
+    TestTimer<TimerType>  timer4(*instance);
+    TestTimer<TimerType>  timer5(*instance);
+    TestTimer<TimerType>  timer6(*instance);
+    TestTimer<TimerType>  timer7(*instance);
+    TestTimer<TimerType>  timer8(*instance);
+    TestTimer<TimerType>  timer9(*instance);
+    TestTimer<TimerType> *timers[kNumTimers] = {&timer0, &timer1, &timer2, &timer3, &timer4,
+                                                &timer5, &timer6, &timer7, &timer8, &timer9};
+    size_t                i;
 
     printf("TestTenTimer() with aTimeShift=%-10u ", aTimeShift);
 
@@ -508,13 +522,13 @@ static void TenTimers(uint32_t aTimeShift)
 
         do
         {
-            // By design, each call to otPlatAlarmMilliFired() can result in 0 or 1 calls to a timer handler.
-            // For some combinations of sNow and Timers queued, it is necessary to call otPlatAlarmMilliFired()
+            // By design, each call to AlarmFired<TimerType>() can result in 0 or 1 calls to a timer handler.
+            // For some combinations of sNow and Timers queued, it is necessary to call AlarmFired<TimerType>()
             // multiple times in order to handle all the expired timers.  It can be determined that another
             // timer is ready to be triggered by examining the aDt arg passed into otPlatAlarmMilliStartAt().  If
-            // that value is 0, then otPlatAlarmMilliFired should be fired immediately. This loop calls
-            // otPlatAlarmMilliFired() the requisite number of times based on the aDt argument.
-            otPlatAlarmMilliFired(instance);
+            // that value is 0, then AlarmFired should be fired immediately. This loop calls
+            // AlarmFired<TimerType>() the requisite number of times based on the aDt argument.
+            AlarmFired<TimerType>(instance);
         } while (sPlatDt == 0);
 
         VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == kTimerStartCountAfterTrigger[trigger],
@@ -542,7 +556,7 @@ static void TenTimers(uint32_t aTimeShift)
     testFreeInstance(instance);
 }
 
-int TestTenTimers(void)
+template <typename TimerType> int TestTenTimers(void)
 {
     // Time shift to change the start/fire time of ten timers.
     const uint32_t kTimeShift[] = {
@@ -553,7 +567,7 @@ int TestTenTimers(void)
 
     for (i = 0; i < OT_ARRAY_LENGTH(kTimeShift); i++)
     {
-        TenTimers(kTimeShift[i]);
+        TenTimers<TimerType>(kTimeShift[i]);
     }
 
     return 0;
@@ -650,16 +664,19 @@ int TestTimerTime(void)
     return 0;
 }
 
-void RunTimerTests(void)
+template <typename TimerType> void RunTimerTests(void)
 {
-    TestOneTimer();
-    TestTwoTimers();
-    TestTenTimers();
+    TestOneTimer<TimerType>();
+    TestTwoTimers<TimerType>();
+    TestTenTimers<TimerType>();
 }
 
 int main(void)
 {
-    RunTimerTests();
+    RunTimerTests<ot::TimerMilli>();
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+    RunTimerTests<ot::TimerMicro>();
+#endif
     TestTimerTime();
     printf("All tests passed\n");
     return 0;
