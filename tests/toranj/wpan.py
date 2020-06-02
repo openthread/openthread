@@ -330,7 +330,7 @@ class Node(object):
             self._use_posix_with_rcp = False
 
         if self._use_posix_with_rcp:
-            ncp_socket_path = 'system:{} -s {} spinel+hdlc+uart://{}?arg={}'.format(
+            ncp_socket_path = 'system:{} -s {} spinel+hdlc+uart://{}?forkpty-arg={}'.format(
                 self._OT_NCP_FTD_POSIX, self._SPEED_UP_FACTOR, self._OT_RCP,
                 index)
         else:

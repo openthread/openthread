@@ -5,7 +5,6 @@ LABEL maintainer="Marcin K Szczodrak"
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
-RUN apt-get --no-install-recommends install -y apt-utils
 RUN apt-get --no-install-recommends install -y build-essential git make autoconf autoconf-archive \
     automake dbus libtool gcc g++ libreadline-dev libdbus-1-dev libboost-dev
 

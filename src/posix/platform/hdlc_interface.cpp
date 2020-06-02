@@ -155,7 +155,7 @@ otError HdlcInterface::Init(Arguments &aArguments)
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else if (S_ISREG(st.st_mode))
     {
-        mSockFd = ForkPty(aArguments.GetPath(), aArguments.GetValue("arg"));
+        mSockFd = ForkPty(aArguments.GetPath(), aArguments.GetValue("forkpty-arg"));
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
@@ -469,7 +469,7 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
             break;
         }
 
-        if (aArguments.GetValue("baudrate"))
+        if (aArguments.GetValue("uart-baudrate"))
         {
             baudrate = static_cast<uint32_t>(atoi(aArguments.GetValue("baudrate")));
         }

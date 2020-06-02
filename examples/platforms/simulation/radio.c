@@ -732,25 +732,26 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 }
 
-void radioSendAck(void)
+void radioGenerateAck(void)
 {
-    sAckFrame.mLength    = IEEE802154_ACK_LENGTH;
-    sAckMessage.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
-
     if (
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        // Determine if frame pending should be set
         (otMacFrameIsData(&sReceiveFrame) || otMacFrameIsDataRequest(&sReceiveFrame))
 #else
         otMacFrameIsDataRequest(&sReceiveFrame)
 #endif
         && HasFramePending(&sReceiveFrame))
     {
-        sAckMessage.mPsdu[0] |= IEEE802154_FRAME_PENDING;
         sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
     }
 
-    sAckMessage.mPsdu[1] = 0;
-    sAckMessage.mPsdu[2] = otMacFrameGetSequence(&sReceiveFrame);
+    otMacFrameGenerateImmAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, &sAckFrame);
+}
+
+void radioSendAck(void)
+{
+    radioGenerateAck();
 
     sAckMessage.mChannel = sReceiveFrame.mChannel;
 

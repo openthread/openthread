@@ -1470,6 +1470,11 @@ bool Ip6::IsOnLink(const Address &aAddress) const
 {
     bool rval = false;
 
+    if (Get<ThreadNetif>().IsOnMesh(aAddress))
+    {
+        ExitNow(rval = true);
+    }
+
     for (const NetifUnicastAddress *cur = Get<ThreadNetif>().GetUnicastAddresses(); cur; cur = cur->GetNext())
     {
         if (cur->GetAddress().PrefixMatch(aAddress) >= cur->mPrefixLength)

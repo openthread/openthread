@@ -164,6 +164,17 @@ public:
     otError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
 
     /**
+     * This method indicates whether @p aAddress matches an on-mesh prefix.
+     *
+     * @param[in]  aAddress  The IPv6 address.
+     *
+     * @retval TRUE   If @p aAddress matches an on-mesh prefix.
+     * @retval FALSE  If @p aAddress does not match an on-mesh prefix.
+     *
+     */
+    bool IsOnMesh(const Ip6::Address &aAddress) const;
+
+    /**
      * This method returns whether Thread Management Framework Addressing Rules are met.
      *
      * @retval TRUE   if Thread Management Framework Addressing Rules are met.
