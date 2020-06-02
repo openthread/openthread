@@ -343,7 +343,7 @@
 // ----------------------------------------------------------------------------
 
 #define SPINEL_PROTOCOL_VERSION_THREAD_MAJOR 4
-#define SPINEL_PROTOCOL_VERSION_THREAD_MINOR 4
+#define SPINEL_PROTOCOL_VERSION_THREAD_MINOR 3
 
 /**
  * @def SPINEL_FRAME_MAX_SIZE
