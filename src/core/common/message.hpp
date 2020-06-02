@@ -854,16 +854,18 @@ public:
         return (GetMetadata().mInPriorityQ) ? GetMetadata().mQueue.mPriority : NULL;
     }
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method indicates whether or not the message is also used for time sync purpose.
+     *
+     * When OPENTHREAD_CONFIG_TIME_SYNC_ENABLE is 0, this method always return false.
      *
      * @retval TRUE   If the message is also used for time sync purpose.
      * @retval FALSE  If the message is not used for time sync purpose.
      *
      */
-    bool IsTimeSync(void) const { return GetMetadata().mTimeSync; }
+    bool IsTimeSync(void) const;
 
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method sets whether or not the message is also used for time sync purpose.
      *
