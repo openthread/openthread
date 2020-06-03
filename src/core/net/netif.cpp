@@ -140,7 +140,7 @@ void Netif::SubscribeAllNodesMulticast(void)
         tail->SetNext(&linkLocalAllNodesAddress);
     }
 
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
+    Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
     VerifyOrExit(mAddressCallback != NULL, OT_NOOP);
 
@@ -187,7 +187,7 @@ void Netif::UnsubscribeAllNodesMulticast(void)
         prev->SetNext(NULL);
     }
 
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED);
+    Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
     VerifyOrExit(mAddressCallback != NULL, OT_NOOP);
 
@@ -244,7 +244,7 @@ void Netif::SubscribeAllRoutersMulticast(void)
         prev->SetNext(&linkLocalAllRoutersAddress);
     }
 
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
+    Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
     VerifyOrExit(mAddressCallback != NULL, OT_NOOP);
 
@@ -287,7 +287,7 @@ void Netif::UnsubscribeAllRoutersMulticast(void)
         prev->SetNext(&linkLocalAllNodesAddress);
     }
 
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED);
+    Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
     VerifyOrExit(mAddressCallback != NULL, OT_NOOP);
 
@@ -305,7 +305,7 @@ void Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
 {
     SuccessOrExit(mMulticastAddresses.Add(aAddress));
 
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
+    Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
     VerifyOrExit(mAddressCallback != NULL, OT_NOOP);
     mAddressCallback(&aAddress.mAddress, kMulticastPrefixLength, /* IsAdded */ true, mAddressCallbackContext);
@@ -318,7 +318,7 @@ void Netif::UnsubscribeMulticast(const NetifMulticastAddress &aAddress)
 {
     SuccessOrExit(mMulticastAddresses.Remove(aAddress));
 
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED);
+    Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
     VerifyOrExit(mAddressCallback != NULL, OT_NOOP);
     mAddressCallback(&aAddress.mAddress, kMulticastPrefixLength, /* IsAdded */ false, mAddressCallbackContext);
@@ -374,7 +374,7 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
         {
             entry->mAddress = aAddress;
             mMulticastAddresses.Push(*entry);
-            Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
+            Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
             ExitNow();
         }
     }
@@ -409,7 +409,7 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
 
     entry->MarkAsNotInUse();
 
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED);
+    Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
 exit:
     return error;
@@ -437,7 +437,7 @@ void Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
 {
     SuccessOrExit(mUnicastAddresses.Add(aAddress));
 
-    Get<Notifier>().Signal(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_ADDED : OT_CHANGED_IP6_ADDRESS_ADDED);
+    Get<Notifier>().Signal(aAddress.mRloc ? kEventThreadRlocAdded : kEventIp6AddressAdded);
 
     VerifyOrExit(mAddressCallback != NULL, OT_NOOP);
     mAddressCallback(&aAddress.mAddress, aAddress.mPrefixLength, /* IsAdded */ true, mAddressCallbackContext);
@@ -450,7 +450,7 @@ void Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
 {
     SuccessOrExit(mUnicastAddresses.Remove(aAddress));
 
-    Get<Notifier>().Signal(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_REMOVED : OT_CHANGED_IP6_ADDRESS_REMOVED);
+    Get<Notifier>().Signal(aAddress.mRloc ? kEventThreadRlocRemoved : kEventIp6AddressRemoved);
 
     VerifyOrExit(mAddressCallback != NULL, OT_NOOP);
     mAddressCallback(&aAddress.mAddress, aAddress.mPrefixLength, /* IsAdded */ false, mAddressCallbackContext);
@@ -486,7 +486,7 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
         {
             *entry = aAddress;
             mUnicastAddresses.Push(*entry);
-            Get<Notifier>().Signal(OT_CHANGED_IP6_ADDRESS_ADDED);
+            Get<Notifier>().Signal(kEventIp6AddressAdded);
             ExitNow();
         }
     }
@@ -521,7 +521,7 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
 
     entry->MarkAsNotInUse();
 
-    Get<Notifier>().Signal(OT_CHANGED_IP6_ADDRESS_REMOVED);
+    Get<Notifier>().Signal(kEventIp6AddressRemoved);
 
 exit:
     return error;

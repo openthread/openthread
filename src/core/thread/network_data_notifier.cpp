@@ -46,7 +46,7 @@ namespace NetworkData {
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mNotifierCallback(aInstance, &Notifier::HandleStateChanged, this)
+    , mNotifierCallback(aInstance, &Notifier::HandleNotifierEvents, this)
     , mTimer(aInstance, Notifier::HandleTimer, this)
     , mNextDelay(0)
     , mWaitingForResponse(false)
@@ -101,19 +101,19 @@ exit:
     }
 }
 
-void Notifier::HandleStateChanged(ot::Notifier::Callback &aCallback, otChangedFlags aFlags)
+void Notifier::HandleNotifierEvents(ot::Notifier::Callback &aCallback, Events aEvents)
 {
-    aCallback.GetOwner<Notifier>().HandleStateChanged(aFlags);
+    aCallback.GetOwner<Notifier>().HandleNotifierEvents(aEvents);
 }
 
-void Notifier::HandleStateChanged(otChangedFlags aFlags)
+void Notifier::HandleNotifierEvents(Events aEvents)
 {
-    if (aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_CHILD_REMOVED))
+    if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadChildRemoved))
     {
         mNextDelay = 0;
     }
 
-    if (aFlags & (OT_CHANGED_THREAD_NETDATA | OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_CHILD_REMOVED))
+    if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged | kEventThreadChildRemoved))
     {
         SynchronizeServerData();
     }

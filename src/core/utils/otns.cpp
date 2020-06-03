@@ -86,24 +86,24 @@ void Otns::EmitStatus(const char *aFmt, ...)
     otPlatOtnsStatus(statusStr);
 }
 
-void Otns::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void Otns::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
 {
-    aCallback.GetOwner<Otns>().HandleStateChanged(aFlags);
+    aCallback.GetOwner<Otns>().HandleNotifierEvents(aEvents);
 }
 
-void Otns::HandleStateChanged(otChangedFlags aFlags)
+void Otns::HandleNotifierEvents(Events aEvents)
 {
-    if ((aFlags & OT_CHANGED_THREAD_ROLE) != 0)
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
         EmitStatus("role=%d", Get<Mle::Mle>().GetRole());
     }
 
-    if ((aFlags & OT_CHANGED_THREAD_PARTITION_ID) != 0)
+    if (aEvents.Contains(kEventThreadPartitionIdChanged))
     {
         EmitStatus("parid=%x", Get<Mle::Mle>().GetLeaderData().GetPartitionId());
     }
 
-    if ((aFlags & OT_CHANGED_JOINER_STATE) != 0)
+    if (aEvents.Contains(kEventJoinerStateChanged))
     {
         EmitStatus("joiner_state=%d", Get<MeshCoP::Joiner>().GetState());
     }

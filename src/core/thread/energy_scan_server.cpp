@@ -56,7 +56,7 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
     , mActive(false)
     , mScanResultsLength(0)
     , mTimer(aInstance, EnergyScanServer::HandleTimer, this)
-    , mNotifierCallback(aInstance, &EnergyScanServer::HandleStateChanged, this)
+    , mNotifierCallback(aInstance, &EnergyScanServer::HandleNotifierEvents, this)
     , mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this)
 {
     Get<Coap::Coap>().AddResource(mEnergyScan);
@@ -212,14 +212,14 @@ exit:
     mActive = false;
 }
 
-void EnergyScanServer::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void EnergyScanServer::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
 {
-    aCallback.GetOwner<EnergyScanServer>().HandleStateChanged(aFlags);
+    aCallback.GetOwner<EnergyScanServer>().HandleNotifierEvents(aEvents);
 }
 
-void EnergyScanServer::HandleStateChanged(otChangedFlags aFlags)
+void EnergyScanServer::HandleNotifierEvents(Events aEvents)
 {
-    if ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0 && !mActive &&
+    if (aEvents.Contains(kEventThreadNetdataChanged) && !mActive &&
         Get<NetworkData::Leader>().GetCommissioningData() == NULL)
     {
         mActive = false;

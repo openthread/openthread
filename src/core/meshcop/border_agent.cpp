@@ -351,7 +351,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mUdpReceiver(BorderAgent::HandleUdpReceive, this)
     , mTimer(aInstance, HandleTimeout, this)
     , mState(OT_BORDER_AGENT_STATE_STOPPED)
-    , mNotifierCallback(aInstance, &BorderAgent::HandleStateChanged, this)
+    , mNotifierCallback(aInstance, &BorderAgent::HandleNotifierEvents, this)
 {
     mCommissionerAloc.Clear();
     mCommissionerAloc.mPrefixLength       = 64;
@@ -361,14 +361,14 @@ BorderAgent::BorderAgent(Instance &aInstance)
     mCommissionerAloc.mScopeOverrideValid = true;
 }
 
-void BorderAgent::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void BorderAgent::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
 {
-    aCallback.GetOwner<BorderAgent>().HandleStateChanged(aFlags);
+    aCallback.GetOwner<BorderAgent>().HandleNotifierEvents(aEvents);
 }
 
-void BorderAgent::HandleStateChanged(otChangedFlags aFlags)
+void BorderAgent::HandleNotifierEvents(Events aEvents)
 {
-    VerifyOrExit((aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_COMMISSIONER_STATE)) != 0, OT_NOOP);
+    VerifyOrExit(aEvents.ContainsAny(kEventThreadRoleChanged | kEventCommissionerStateChanged), OT_NOOP);
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsDisabled(), OT_NOOP);

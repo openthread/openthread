@@ -92,7 +92,7 @@ public:
      *
      * A subsequent call to this method will cancel an ongoing previously requested channel change.
      *
-     * If the requested channel changes, it will trigger a `Notifier` event `OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL`.
+     * If the requested channel changes, it will trigger a `Notifier` event `kEventChannelManagerNewChannelChanged`.
      *
      * @param[in] aChannel             The new channel for the Thread network.
      *
@@ -272,8 +272,8 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aChangedFlags);
-    void        HandleStateChanged(otChangedFlags aChangedFlags);
+    static void HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
     void        PreparePendingDataset(void);
     void        StartAutoSelectTimer(void);
 

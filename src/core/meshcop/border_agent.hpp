@@ -93,8 +93,8 @@ public:
     void ApplyMeshLocalPrefix(void);
 
 private:
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
-    void        HandleStateChanged(otChangedFlags aFlags);
+    static void HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
 
     static void HandleConnected(bool aConnected, void *aContext)
     {
