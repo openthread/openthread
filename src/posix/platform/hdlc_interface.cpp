@@ -409,10 +409,8 @@ exit:
 
 int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
 {
-    int         fd       = -1;
-    int         rval     = 0;
-    const char *parity   = aArguments.GetValue("uart-parity");
-    uint32_t    baudrate = 115200;
+    int fd   = -1;
+    int rval = 0;
 
     fd = open(aFile, O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC);
     if (fd == -1)
@@ -424,9 +422,11 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
     if (isatty(fd))
     {
         struct termios tios;
+        const char *   value;
+        speed_t        speed;
 
-        unsigned int speed   = 115200;
-        int          stopBit = 1;
+        int      stopBit  = 1;
+        uint32_t baudrate = 115200;
 
         VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0, OT_NOOP);
 
@@ -434,14 +434,14 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
 
         tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
 
-        if (parity)
+        if ((value = aArguments.GetValue("uart-parity")) != NULL)
         {
-            if (strncmp(parity, "odd", 3) == 0)
+            if (strncmp(value, "odd", 3) == 0)
             {
                 tios.c_cflag |= PARENB;
                 tios.c_cflag |= PARODD;
             }
-            else if (strncmp(parity, "even", 4) == 0)
+            else if (strncmp(value, "even", 4) == 0)
             {
                 tios.c_cflag |= PARENB;
             }
@@ -451,9 +451,9 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
             }
         }
 
-        if (aArguments.GetValue("uart-stop"))
+        if ((value = aArguments.GetValue("uart-stop")) != NULL)
         {
-            stopBit = atoi(aArguments.GetValue("uart-stop"));
+            stopBit = atoi(value);
         }
 
         switch (stopBit)
@@ -469,10 +469,11 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
             break;
         }
 
-        if (aArguments.GetValue("uart-baudrate"))
+        if ((value = aArguments.GetValue("uart-baudrate")))
         {
-            baudrate = static_cast<uint32_t>(atoi(aArguments.GetValue("uart-baudrate")));
+            baudrate = static_cast<uint32_t>(atoi(value));
         }
+
         switch (baudrate)
         {
         case 9600:
@@ -601,7 +602,14 @@ int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
         const int kMaxCommand = 255;
         char      cmd[kMaxCommand];
 
-        rval = snprintf(cmd, sizeof(cmd), "exec %s %s", aCommand, aArguments);
+        if (aArguments == NULL)
+        {
+            rval = snprintf(cmd, sizeof(cmd), "exec %s", aCommand);
+        }
+        else
+        {
+            rval = snprintf(cmd, sizeof(cmd), "exec %s %s", aCommand, aArguments);
+        }
         VerifyOrExit(rval > 0 && static_cast<size_t>(rval) < sizeof(cmd),
                      fprintf(stderr, "NCP file and configuration is too long!");
                      rval = -1);
