@@ -321,7 +321,13 @@ public:
     void UpdateChecksum(Message &aMessage, uint16_t aChecksum);
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    otUdpSocket *GetUdpSockets(void) { return mSockets.GetHead(); }
+    /**
+     * This method returns the head of UDP Sockets list.
+     *
+     * @returns A pointer to the head of UDP Socket linked list.
+     *
+     */
+    UdpSocket *GetUdpSockets(void) { return mSockets.GetHead(); }
 #endif
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
@@ -337,7 +343,7 @@ public:
         mUdpForwarder        = aForwarder;
         mUdpForwarderContext = aContext;
     }
-#endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+#endif
 
 private:
     enum
