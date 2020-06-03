@@ -81,7 +81,7 @@ void SettingsBase::LogChildInfo(const char *aAction, const ChildInfo &aChildInfo
 #if OPENTHREAD_CONFIG_DUA_ENABLE
 void SettingsBase::LogDadInfo(const char *aAction, const DadInfo &aDadInfo) const
 {
-    otLogInfoCore("Non-volatile: %s DadInfo {DadCounter:0x%2d}", aAction, aDadInfo.mDadCounter);
+    otLogInfoCore("Non-volatile: %s DadInfo {DadCounter:%2d}", aAction, aDadInfo.mDadCounter);
 }
 #endif
 
