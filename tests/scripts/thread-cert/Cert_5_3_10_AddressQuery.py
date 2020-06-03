@@ -43,6 +43,8 @@ MED1 = 5
 
 
 class Cert_5_3_10_AddressQuery(thread_cert.TestCase):
+    support_ncp = False
+
     topology = {
         LEADER: {
             'mode': 'rsdn',
