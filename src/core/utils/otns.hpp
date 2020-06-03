@@ -67,7 +67,7 @@ public:
      */
     explicit Otns(Instance &aInstance)
         : InstanceLocator(aInstance)
-        , mNotifierCallback(aInstance, &Otns::HandleStateChanged, this)
+        , mNotifierCallback(aInstance, &Otns::HandleNotifierEvents, this)
     {
     }
 
@@ -127,8 +127,8 @@ public:
 private:
     static void EmitStatus(const char *aFmt, ...);
 
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
-    void        HandleStateChanged(otChangedFlags aFlags);
+    static void HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
 
     Notifier::Callback mNotifierCallback;
 };

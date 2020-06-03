@@ -4759,11 +4759,11 @@ void MleRouter::Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
     switch (aEvent)
     {
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
-        Get<Notifier>().Signal(OT_CHANGED_THREAD_CHILD_ADDED);
+        Get<Notifier>().Signal(kEventThreadChildAdded);
         break;
 
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
-        Get<Notifier>().Signal(OT_CHANGED_THREAD_CHILD_REMOVED);
+        Get<Notifier>().Signal(kEventThreadChildRemoved);
         break;
 
     default:

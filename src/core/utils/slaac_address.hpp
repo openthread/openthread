@@ -161,8 +161,8 @@ private:
     bool        ShouldFilter(const otIp6Prefix &aPrefix) const;
     void        Update(UpdateMode aMode);
     void        GetIidSecretKey(IidSecretKey &aKey) const;
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
-    void        HandleStateChanged(otChangedFlags aFlags);
+    static void HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
 
     bool                     mEnabled;
     otIp6SlaacPrefixFilter   mFilter;

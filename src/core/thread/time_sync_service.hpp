@@ -157,7 +157,7 @@ public:
      * @param[in] aFlags Flags that denote the state change events.
      *
      */
-    void HandleStateChanged(otChangedFlags aFlags);
+    void HandleNotifierEvents(Events aEvents);
 
     /**
      * Callback to be called when timer expires.
@@ -173,7 +173,7 @@ private:
      * @param[in] aFlags Flags that denote the state change events.
      *
      */
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
+    static void HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents);
 
     /**
      * Callback to be called when timer expires.

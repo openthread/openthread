@@ -1696,8 +1696,8 @@ private:
         TimeMilli    mSendTime;    // Time when the message shall be sent.
     };
 
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
-    void        HandleStateChanged(otChangedFlags aFlags);
+    static void HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
     static void HandleAttachTimer(Timer &aTimer);
     void        HandleAttachTimer(void);
     static void HandleDelayedResponseTimer(Timer &aTimer);

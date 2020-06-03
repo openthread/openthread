@@ -58,7 +58,7 @@ JoinerRouter::JoinerRouter(Instance &aInstance)
     , mSocket(aInstance.Get<Ip6::Udp>())
     , mRelayTransmit(OT_URI_PATH_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this)
     , mTimer(aInstance, JoinerRouter::HandleTimer, this)
-    , mNotifierCallback(aInstance, &JoinerRouter::HandleStateChanged, this)
+    , mNotifierCallback(aInstance, &JoinerRouter::HandleNotifierEvents, this)
     , mJoinerUdpPort(0)
     , mIsJoinerPortConfigured(false)
     , mExpectJoinEntRsp(false)
@@ -66,15 +66,22 @@ JoinerRouter::JoinerRouter(Instance &aInstance)
     Get<Coap::Coap>().AddResource(mRelayTransmit);
 }
 
-void JoinerRouter::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void JoinerRouter::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
 {
-    aCallback.GetOwner<JoinerRouter>().HandleStateChanged(aFlags);
+    aCallback.GetOwner<JoinerRouter>().HandleNotifierEvents(aEvents);
 }
 
-void JoinerRouter::HandleStateChanged(otChangedFlags aFlags)
+void JoinerRouter::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.Contains(kEventThreadNetdataChanged))
+    {
+        Start();
+    }
+}
+
+void JoinerRouter::Start(void)
 {
     VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice(), OT_NOOP);
-    VerifyOrExit(aFlags & OT_CHANGED_THREAD_NETDATA, OT_NOOP);
 
     if (Get<NetworkData::Leader>().IsJoiningEnabled())
     {
@@ -123,7 +130,7 @@ void JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
 {
     mJoinerUdpPort          = aJoinerUdpPort;
     mIsJoinerPortConfigured = true;
-    HandleStateChanged(OT_CHANGED_THREAD_NETDATA);
+    Start();
 }
 
 void JoinerRouter::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)

@@ -75,8 +75,8 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
-    void        HandleStateChanged(otChangedFlags aFlags);
+    static void HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
 
     void SendReport(void);
 

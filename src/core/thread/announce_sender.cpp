@@ -112,7 +112,7 @@ exit:
 
 AnnounceSender::AnnounceSender(Instance &aInstance)
     : AnnounceSenderBase(aInstance, AnnounceSender::HandleTimer)
-    , mNotifierCallback(aInstance, HandleStateChanged, this)
+    , mNotifierCallback(aInstance, HandleNotifierEvents, this)
 {
 }
 
@@ -175,14 +175,14 @@ void AnnounceSender::Stop(void)
     otLogInfoMle("Stopping periodic MLE Announcements tx");
 }
 
-void AnnounceSender::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void AnnounceSender::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
 {
-    aCallback.GetOwner<AnnounceSender>().HandleStateChanged(aFlags);
+    aCallback.GetOwner<AnnounceSender>().HandleNotifierEvents(aEvents);
 }
 
-void AnnounceSender::HandleStateChanged(otChangedFlags aFlags)
+void AnnounceSender::HandleNotifierEvents(Events aEvents)
 {
-    if ((aFlags & OT_CHANGED_THREAD_ROLE) != 0)
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
         CheckState();
     }

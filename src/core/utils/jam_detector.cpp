@@ -49,7 +49,7 @@ JamDetector::JamDetector(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mHandler(NULL)
     , mContext(NULL)
-    , mNotifierCallback(aInstance, HandleStateChanged, this)
+    , mNotifierCallback(aInstance, HandleNotifierEvents, this)
     , mTimer(aInstance, JamDetector::HandleTimer, this)
     , mHistoryBitmap(0)
     , mCurSecondStartTime(0)
@@ -271,14 +271,14 @@ void JamDetector::SetJamState(bool aNewState)
     }
 }
 
-void JamDetector::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void JamDetector::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
 {
-    aCallback.GetOwner<JamDetector>().HandleStateChanged(aFlags);
+    aCallback.GetOwner<JamDetector>().HandleNotifierEvents(aEvents);
 }
 
-void JamDetector::HandleStateChanged(otChangedFlags aFlags)
+void JamDetector::HandleNotifierEvents(Events aEvents)
 {
-    if (aFlags & OT_CHANGED_THREAD_ROLE)
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
         CheckState();
     }

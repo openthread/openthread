@@ -157,8 +157,8 @@ private:
     void        CheckState(void);
     void        Stop(void);
     static void HandleTimer(Timer &aTimer);
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
-    void        HandleStateChanged(otChangedFlags aFlags);
+    static void HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
 
     Notifier::Callback mNotifierCallback;
 };

@@ -74,8 +74,8 @@ private:
         kDelaySynchronizeServerData = 300000, ///< milliseconds
     };
 
-    static void HandleStateChanged(ot::Notifier::Callback &aCallback, otChangedFlags aFlags);
-    void        HandleStateChanged(otChangedFlags aFlags);
+    static void HandleNotifierEvents(ot::Notifier::Callback &aCallback, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);

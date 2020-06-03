@@ -51,7 +51,7 @@ ChildSupervisor::ChildSupervisor(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSupervisionInterval(kDefaultSupervisionInterval)
     , mTimer(aInstance, ChildSupervisor::HandleTimer, this)
-    , mNotifierCallback(aInstance, &ChildSupervisor::HandleStateChanged, this)
+    , mNotifierCallback(aInstance, &ChildSupervisor::HandleNotifierEvents, this)
 {
 }
 
@@ -162,14 +162,14 @@ void ChildSupervisor::CheckState(void)
     }
 }
 
-void ChildSupervisor::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void ChildSupervisor::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
 {
-    aCallback.GetOwner<ChildSupervisor>().HandleStateChanged(aFlags);
+    aCallback.GetOwner<ChildSupervisor>().HandleNotifierEvents(aEvents);
 }
 
-void ChildSupervisor::HandleStateChanged(otChangedFlags aFlags)
+void ChildSupervisor::HandleNotifierEvents(Events aEvents)
 {
-    if ((aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_CHILD_ADDED | OT_CHANGED_THREAD_CHILD_REMOVED)) != 0)
+    if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadChildAdded | kEventThreadChildRemoved))
     {
         CheckState();
     }

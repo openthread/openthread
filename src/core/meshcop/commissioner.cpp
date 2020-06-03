@@ -92,7 +92,7 @@ void Commissioner::SetState(otCommissionerState aState)
     otCommissionerState oldState = mState;
     OT_UNUSED_VARIABLE(oldState);
 
-    SuccessOrExit(Get<Notifier>().Update(mState, aState, OT_CHANGED_COMMISSIONER_STATE));
+    SuccessOrExit(Get<Notifier>().Update(mState, aState, kEventCommissionerStateChanged));
 
     otLogInfoMeshCoP("CommissionerState: %s -> %s", StateToString(oldState), StateToString(aState));
 
