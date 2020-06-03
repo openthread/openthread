@@ -685,13 +685,13 @@ void SubMac::UpdateFrameCounter(uint32_t aFrameCounter)
     mCallbacks.FrameCounterUpdated(aFrameCounter);
 }
 
-void SubMac::SetFrameCounter(uint32_t aMacFrameCounter)
+void SubMac::SetFrameCounter(uint32_t aFrameCounter)
 {
-    mFrameCounter = aMacFrameCounter;
+    mFrameCounter = aFrameCounter;
 
     VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
 
-    Get<Radio>().SetMacFrameCounter(aMacFrameCounter);
+    Get<Radio>().SetMacFrameCounter(aFrameCounter);
 
 exit:
     return;

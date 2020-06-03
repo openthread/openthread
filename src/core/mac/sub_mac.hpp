@@ -402,10 +402,10 @@ public:
     /**
      * This method sets the current MAC Frame Counter value.
      *
-     * @param[in] aMacFrameCounter  The MAC Frame Counter value.
+     * @param[in] aFrameCounter  The MAC Frame Counter value.
      *
      */
-    void SetFrameCounter(uint32_t aMacFrameCounter);
+    void SetFrameCounter(uint32_t aFrameCounter);
 
 private:
     enum
