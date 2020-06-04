@@ -53,11 +53,10 @@ proc wait_for {command expected} {
 set timeout 1
 spawn $env(OT_COMMAND) 1
 set spawn_1 $spawn_id
-expect_after {
-    timeout { exit 1 }
-}
 spawn $env(OT_COMMAND) 2
 set spawn_2 $spawn_id
+spawn $env(OT_COMMAND) 3
+set spawn_3 $spawn_id
 expect_after {
     timeout { exit 1 }
 }
@@ -84,6 +83,10 @@ expect "Done"
 expect "Commissioner: active"
 send "commissioner joiner add $eui64 $psk\n"
 expect "Done"
+send "channel\n"
+expect -re {(\d+)}
+set channel $expect_out(1,string)
+expect "Done"
 
 set spawn_id $spawn_2
 send "mode rs\n"
@@ -97,6 +100,12 @@ send "thread start\n"
 expect "Done"
 wait_for "state" "child"
 
+set spawn_id $spawn_3
+send "channel $channel\n"
+expect "Done"
+send "promiscuous enable\n"
+expect "Done"
+
 
 # ping
 set spawn_id $spawn_2
@@ -107,10 +116,17 @@ set addr $expect_out(1,string)
 set spawn_id $spawn_1
 send "ping $addr\n"
 expect "16 bytes from $addr: icmp_seq=1"
-send "ping $addr 20 10 0.123456 255\n"
+send "ping $addr 20 10 0.00123456 255\n"
 for {set i 2} {$i <= 11} {incr i} {
     expect "28 bytes from $addr: icmp_seq=$i"
 }
+
+
+# pcap receive
+set spawn_id $spawn_3
+expect -re {={44}\[len =\s+\d+]={28}}
+expect -re {\|( ([0-9A-Z]{2}|\.\.)){16}\|( .){16}\|}
+expect -re {-{83}}
 
 
 # child
