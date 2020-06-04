@@ -94,6 +94,8 @@ def device_calculate(topo_file, case_list):
                 break
             line = line.strip()
 
+            # line example :
+            # 5.5.1-Leader:Kirale,Router_1:OpenThread
             try:
                 if re.match(r'\s*#.*', line):
                     continue
