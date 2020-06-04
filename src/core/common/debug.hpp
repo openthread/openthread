@@ -41,7 +41,7 @@
 
 #if OPENTHREAD_CONFIG_ASSERT_ENABLE
 
-#if defined(OPENTHREAD_TARGET_DARWIN) || defined(OPENTHREAD_TARGET_LINUX)
+#if defined(__APPLE__) || defined(__linux__)
 
 #include <assert.h>
 
