@@ -56,7 +56,7 @@ namespace Utils {
  * This class implements the OTNS Stub that interacts with OTNS.
  *
  */
-class Otns : public InstanceLocator, private NonCopyable
+class Otns : public InstanceLocator, public Notifier::Receiver, private NonCopyable
 {
 public:
     /**
@@ -67,7 +67,7 @@ public:
      */
     explicit Otns(Instance &aInstance)
         : InstanceLocator(aInstance)
-        , mNotifierCallback(aInstance, &Otns::HandleNotifierEvents, this)
+        , Notifier::Receiver(aInstance, Otns::HandleNotifierEvents)
     {
     }
 
@@ -127,10 +127,8 @@ public:
 private:
     static void EmitStatus(const char *aFmt, ...);
 
-    static void HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents);
+    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
     void        HandleNotifierEvents(Events aEvents);
-
-    Notifier::Callback mNotifierCallback;
 };
 
 } // namespace Utils

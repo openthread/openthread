@@ -47,9 +47,9 @@ namespace Utils {
 
 JamDetector::JamDetector(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , Notifier::Receiver(aInstance, JamDetector::HandleNotifierEvents)
     , mHandler(NULL)
     , mContext(NULL)
-    , mNotifierCallback(aInstance, HandleNotifierEvents, this)
     , mTimer(aInstance, JamDetector::HandleTimer, this)
     , mHistoryBitmap(0)
     , mCurSecondStartTime(0)
@@ -271,9 +271,9 @@ void JamDetector::SetJamState(bool aNewState)
     }
 }
 
-void JamDetector::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
+void JamDetector::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<JamDetector>().HandleNotifierEvents(aEvents);
+    static_cast<JamDetector &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void JamDetector::HandleNotifierEvents(Events aEvents)

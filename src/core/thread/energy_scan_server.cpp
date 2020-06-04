@@ -48,6 +48,7 @@ namespace ot {
 
 EnergyScanServer::EnergyScanServer(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , Notifier::Receiver(aInstance, EnergyScanServer::HandleNotifierEvents)
     , mChannelMask(0)
     , mChannelMaskCurrent(0)
     , mPeriod(0)
@@ -56,7 +57,6 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
     , mActive(false)
     , mScanResultsLength(0)
     , mTimer(aInstance, EnergyScanServer::HandleTimer, this)
-    , mNotifierCallback(aInstance, &EnergyScanServer::HandleNotifierEvents, this)
     , mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this)
 {
     Get<Coap::Coap>().AddResource(mEnergyScan);
@@ -212,9 +212,9 @@ exit:
     mActive = false;
 }
 
-void EnergyScanServer::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
+void EnergyScanServer::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<EnergyScanServer>().HandleNotifierEvents(aEvents);
+    static_cast<EnergyScanServer &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void EnergyScanServer::HandleNotifierEvents(Events aEvents)

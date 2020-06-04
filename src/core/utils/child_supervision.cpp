@@ -49,9 +49,9 @@ namespace Utils {
 
 ChildSupervisor::ChildSupervisor(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , Notifier::Receiver(aInstance, ChildSupervisor::HandleNotifierEvents)
     , mSupervisionInterval(kDefaultSupervisionInterval)
     , mTimer(aInstance, ChildSupervisor::HandleTimer, this)
-    , mNotifierCallback(aInstance, &ChildSupervisor::HandleNotifierEvents, this)
 {
 }
 
@@ -162,9 +162,9 @@ void ChildSupervisor::CheckState(void)
     }
 }
 
-void ChildSupervisor::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
+void ChildSupervisor::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<ChildSupervisor>().HandleNotifierEvents(aEvents);
+    static_cast<ChildSupervisor &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void ChildSupervisor::HandleNotifierEvents(Events aEvents)

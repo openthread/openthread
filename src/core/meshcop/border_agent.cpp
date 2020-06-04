@@ -333,6 +333,7 @@ void BorderAgent::HandleRequest<&BorderAgent::mProxyTransmit>(void *            
 
 BorderAgent::BorderAgent(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , Notifier::Receiver(aInstance, BorderAgent::HandleNotifierEvents)
     , mCommissionerPetition(OT_URI_PATH_COMMISSIONER_PETITION,
                             BorderAgent::HandleRequest<&BorderAgent::mCommissionerPetition>,
                             this)
@@ -351,7 +352,6 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mUdpReceiver(BorderAgent::HandleUdpReceive, this)
     , mTimer(aInstance, HandleTimeout, this)
     , mState(OT_BORDER_AGENT_STATE_STOPPED)
-    , mNotifierCallback(aInstance, &BorderAgent::HandleNotifierEvents, this)
 {
     mCommissionerAloc.Clear();
     mCommissionerAloc.mPrefixLength       = 64;
@@ -361,9 +361,9 @@ BorderAgent::BorderAgent(Instance &aInstance)
     mCommissionerAloc.mScopeOverrideValid = true;
 }
 
-void BorderAgent::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
+void BorderAgent::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<BorderAgent>().HandleNotifierEvents(aEvents);
+    static_cast<BorderAgent &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void BorderAgent::HandleNotifierEvents(Events aEvents)

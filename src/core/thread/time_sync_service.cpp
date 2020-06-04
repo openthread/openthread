@@ -51,6 +51,7 @@ namespace ot {
 
 TimeSync::TimeSync(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , Notifier::Receiver(aInstance, TimeSync::HandleNotifierEvents)
     , mTimeSyncRequired(false)
     , mTimeSyncSeq(OT_TIME_SYNC_INVALID_SEQ)
     , mTimeSyncPeriod(OPENTHREAD_CONFIG_TIME_SYNC_PERIOD)
@@ -62,7 +63,6 @@ TimeSync::TimeSync(Instance &aInstance)
     , mNetworkTimeOffset(0)
     , mTimeSyncCallback(NULL)
     , mTimeSyncCallbackContext(NULL)
-    , mNotifierCallback(aInstance, &TimeSync::HandleNotifierEvents, this)
     , mTimer(aInstance, HandleTimeout, this)
     , mCurrentStatus(OT_NETWORK_TIME_UNSYNCHRONIZED)
 {
@@ -209,9 +209,9 @@ void TimeSync::HandleTimeout(void)
     CheckAndHandleChanges(false);
 }
 
-void TimeSync::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
+void TimeSync::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<TimeSync>().HandleNotifierEvents(aEvents);
+    static_cast<TimeSync &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void TimeSync::HandleTimeout(Timer &aTimer)

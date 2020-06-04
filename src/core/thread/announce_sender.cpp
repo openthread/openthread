@@ -112,7 +112,7 @@ exit:
 
 AnnounceSender::AnnounceSender(Instance &aInstance)
     : AnnounceSenderBase(aInstance, AnnounceSender::HandleTimer)
-    , mNotifierCallback(aInstance, HandleNotifierEvents, this)
+    , Notifier::Receiver(aInstance, AnnounceSender::HandleNotifierEvents)
 {
 }
 
@@ -175,9 +175,9 @@ void AnnounceSender::Stop(void)
     otLogInfoMle("Stopping periodic MLE Announcements tx");
 }
 
-void AnnounceSender::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
+void AnnounceSender::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<AnnounceSender>().HandleNotifierEvents(aEvents);
+    static_cast<AnnounceSender &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void AnnounceSender::HandleNotifierEvents(Events aEvents)
