@@ -778,6 +778,7 @@ void radioProcessFrame(otInstance *aInstance)
     sReceiveFrame.mInfo.mRxInfo.mLqi  = OT_RADIO_LQI_NONE;
 
     sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = false;
+    sReceiveFrame.mInfo.mRxInfo.mAckedWithSecEnhAck    = false;
 
     otEXPECT(sPromiscuous == false);
 

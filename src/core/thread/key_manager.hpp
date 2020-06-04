@@ -211,7 +211,7 @@ public:
      * @returns The current MAC Frame Counter value.
      *
      */
-    uint32_t GetMacFrameCounter(void) const { return mMacFrameCounter; }
+    uint32_t GetMacFrameCounter(void) const;
 
     /**
      * This method sets the current MAC Frame Counter value.
@@ -219,7 +219,7 @@ public:
      * @param[in]  aMacFrameCounter  The MAC Frame Counter value.
      *
      */
-    void SetMacFrameCounter(uint32_t aMacFrameCounter) { mMacFrameCounter = aMacFrameCounter; }
+    void SetMacFrameCounter(uint32_t aMacFrameCounter);
 
     /**
      * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
@@ -228,12 +228,6 @@ public:
      *
      */
     void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter) { mStoredMacFrameCounter = aStoredMacFrameCounter; }
-
-    /**
-     * This method increments the current MAC Frame Counter value.
-     *
-     */
-    void IncrementMacFrameCounter(void);
 
     /**
      * This method returns the current MLE Frame Counter value.
@@ -430,6 +424,14 @@ public:
      */
     void UpdateKeyMaterial(void);
 
+    /**
+     * This method handles MAC frame counter change.
+     *
+     * @param[in]  aMacFrameCounter  The MAC frame counter value.
+     *
+     */
+    void MacFrameCounterUpdated(uint32_t aMacFrameCounter);
+
 private:
     enum
     {
@@ -467,7 +469,6 @@ private:
     Mle::Key mMleKey;
     Mle::Key mTemporaryMleKey;
 
-    uint32_t mMacFrameCounter;
     uint32_t mMleFrameCounter;
     uint32_t mStoredMacFrameCounter;
     uint32_t mStoredMleFrameCounter;

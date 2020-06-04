@@ -59,6 +59,7 @@ SubMac::SubMac(Instance &aInstance)
     , mCallbacks(aInstance)
     , mPcapCallback(NULL)
     , mPcapCallbackContext(NULL)
+    , mFrameCounter(0)
     , mKeyId(0)
     , mTimer(aInstance, &SubMac::HandleTimer, this)
 {
@@ -201,6 +202,11 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
         mPcapCallback(aFrame, false, mPcapCallbackContext);
     }
 
+    if (!ShouldHandleTransmitSecurity() && aFrame != NULL && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
+    {
+        UpdateFrameCounter(aFrame->mInfo.mRxInfo.mAckFrameCounter);
+    }
+
     mCallbacks.ReceiveDone(aFrame, aError);
 }
 
@@ -247,7 +253,11 @@ void SubMac::ProcessTransmitSecurity(void)
 
     if (!mTransmitFrame.IsARetransmission())
     {
+        uint32_t frameCounter = GetFrameCounter();
+
         mTransmitFrame.SetKeyId(mKeyId);
+        mTransmitFrame.SetFrameCounter(frameCounter);
+        UpdateFrameCounter(frameCounter + 1);
     }
 
     extAddress = &GetExtAddress();
@@ -376,6 +386,19 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
     default:
         OT_ASSERT(false);
         OT_UNREACHABLE_CODE(ExitNow());
+    }
+
+    if (!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled())
+    {
+        uint8_t  keyIdMode;
+        uint32_t frameCounter = 0;
+
+        IgnoreError(aFrame.GetKeyIdMode(keyIdMode));
+        if (keyIdMode == Frame::kKeyIdMode1)
+        {
+            OT_ASSERT(aFrame.GetFrameCounter(frameCounter) == OT_ERROR_NONE);
+            UpdateFrameCounter(frameCounter);
+        }
     }
 
     // Determine whether a CSMA retry is required.
@@ -650,6 +673,25 @@ void SubMac::SetMacKey(uint8_t    aKeyIdMode,
     VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
 
     Get<Radio>().SetMacKey(aKeyIdMode, aKeyId, aPrevKey, aCurrKey, aNextKey);
+
+exit:
+    return;
+}
+
+void SubMac::UpdateFrameCounter(uint32_t aFrameCounter)
+{
+    mFrameCounter = aFrameCounter;
+
+    mCallbacks.FrameCounterUpdated(aFrameCounter);
+}
+
+void SubMac::SetFrameCounter(uint32_t aFrameCounter)
+{
+    mFrameCounter = aFrameCounter;
+
+    VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
+
+    Get<Radio>().SetMacFrameCounter(aFrameCounter);
 
 exit:
     return;
