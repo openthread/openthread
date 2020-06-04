@@ -39,7 +39,7 @@
 #include "hdlc_interface.hpp"
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-static ot::Spinel::RadioSpinel<ot::Posix::HdlcInterface, Event> sRadioSpinel;
+static ot::Spinel::RadioSpinel<ot::Posix::HdlcInterface, VirtualTimeEvent> sRadioSpinel;
 #else
 static ot::Spinel::RadioSpinel<ot::Posix::HdlcInterface, RadioProcessContext> sRadioSpinel;
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
@@ -246,7 +246,7 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
+void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent)
 {
     OT_UNUSED_VARIABLE(aInstance);
     sRadioSpinel.Process(*aEvent);
