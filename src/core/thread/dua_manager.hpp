@@ -127,11 +127,8 @@ public:
     /*
      * This method restores duplicate address detection information from non-volatile memory.
      *
-     * @retval OT_ERROR_NONE       Successfully restored the duplicatee address detection information.
-     * @retval OT_ERROR_NOT_FOUND  There is no valid Dad Counter stored in non-volatile memory.
-     *
      */
-    otError Restore(void);
+    void Restore(void);
 
 private:
     otError GenerateDomainUnicastAddressIid(void);

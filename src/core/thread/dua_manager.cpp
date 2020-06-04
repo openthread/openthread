@@ -164,16 +164,15 @@ exit:
     return;
 }
 
-otError DuaManager::Restore(void)
+void DuaManager::Restore(void)
 {
-    otError           error;
     Settings::DadInfo dadInfo;
 
-    SuccessOrExit(error = Get<Settings>().ReadDadInfo(dadInfo));
+    SuccessOrExit(Get<Settings>().ReadDadInfo(dadInfo));
     mDadCounter = dadInfo.GetDadCounter();
 
 exit:
-    return error;
+    return;
 }
 
 otError DuaManager::Store(void)

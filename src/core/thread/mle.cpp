@@ -367,7 +367,7 @@ otError Mle::Restore(void)
     IgnoreError(Get<MeshCoP::PendingDataset>().Restore());
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-    IgnoreError(Get<DuaManager>().Restore());
+    Get<DuaManager>().Restore();
 #endif
 
     SuccessOrExit(error = Get<Settings>().ReadNetworkInfo(networkInfo));

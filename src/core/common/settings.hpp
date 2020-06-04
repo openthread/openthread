@@ -600,14 +600,14 @@ protected:
     void LogChildInfo(const char *aAction, const ChildInfo &aChildInfo) const;
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     void LogDadInfo(const char *aAction, const DadInfo &aDadInfo) const;
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
+#endif
 #else  // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
     void LogNetworkInfo(const char *, const NetworkInfo &) const {}
     void LogParentInfo(const char *, const ParentInfo &) const {}
     void LogChildInfo(const char *, const ChildInfo &) const {}
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     void LogDadInfo(const char *, const DadInfo &) const {}
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
+#endif
 #endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
