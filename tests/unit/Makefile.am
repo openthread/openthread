@@ -123,6 +123,7 @@ check_PROGRAMS                                                     += \
     test-network-data                                                 \
     test-priority-queue                                               \
     test-pskc                                                         \
+    test-steering-data                                                \
     test-string                                                       \
     test-timer                                                        \
     $(NULL)
@@ -221,6 +222,9 @@ test_priority_queue_SOURCES  = $(COMMON_SOURCES) test_priority_queue.cpp
 
 test_pskc_LDADD              = $(COMMON_LDADD)
 test_pskc_SOURCES            = $(COMMON_SOURCES) test_pskc.cpp
+
+test_steering_data_LDADD     = $(COMMON_LDADD)
+test_steering_data_SOURCES   = $(COMMON_SOURCES) test_steering_data.cpp
 
 test_string_LDADD            = $(COMMON_LDADD)
 test_string_SOURCES          = $(COMMON_SOURCES) test_string.cpp

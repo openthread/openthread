@@ -34,6 +34,7 @@
 #include "meshcop_tlvs.hpp"
 
 #include "common/debug.hpp"
+#include "meshcop/meshcop.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -128,36 +129,10 @@ void NetworkNameTlv::SetNetworkName(const Mac::NameData &aNameData)
     SetLength(len);
 }
 
-bool SteeringDataTlv::IsCleared(void) const
+void SteeringDataTlv::CopyTo(SteeringData &aSteeringData)
 {
-    bool rval = true;
-
-    for (uint8_t i = 0; i < GetLength(); i++)
-    {
-        if (mSteeringData[i] != 0)
-        {
-            rval = false;
-            break;
-        }
-    }
-
-    return rval;
-}
-
-void SteeringDataTlv::ComputeBloomFilter(const otExtAddress &aJoinerId)
-{
-    Crc16 ccitt(Crc16::kCcitt);
-    Crc16 ansi(Crc16::kAnsi);
-
-    for (size_t j = 0; j < sizeof(otExtAddress); j++)
-    {
-        uint8_t byte = aJoinerId.m8[j];
-        ccitt.Update(byte);
-        ansi.Update(byte);
-    }
-
-    SetBit(ccitt.Get() % GetNumBits());
-    SetBit(ansi.Get() % GetNumBits());
+    aSteeringData.Init(GetSteeringDataLength());
+    memcpy(aSteeringData.GetData(), mSteeringData, GetSteeringDataLength());
 }
 
 bool ChannelTlv::IsValid(void) const

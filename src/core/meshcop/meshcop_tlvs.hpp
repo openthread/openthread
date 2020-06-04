@@ -41,7 +41,6 @@
 #include <openthread/dataset.h>
 #include <openthread/platform/radio.h>
 
-#include "common/crc16.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/string.hpp"
@@ -724,6 +723,8 @@ private:
     Mle::MeshLocalPrefix mMeshLocalPrefix;
 } OT_TOOL_PACKED_END;
 
+class SteeringData;
+
 /**
  * This class implements Steering Data TLV generation and parsing.
  *
@@ -775,88 +776,12 @@ public:
     void Clear(void) { memset(mSteeringData, 0, GetSteeringDataLength()); }
 
     /**
-     * Ths method sets all bits in the Bloom Filter to one.
+     * This method copies the Steering Data from the TLV into a given `SteeringData` variable.
+     *
+     * @param[out]  aSteeringData   A reference to a `SteeringData` to copy into.
      *
      */
-    void Set(void) { memset(mSteeringData, 0xff, GetSteeringDataLength()); }
-
-    /**
-     * Ths method indicates whether or not the SteeringData allows all Joiners.
-     *
-     * @retval TRUE   If the SteeringData allows all Joiners.
-     * @retval FALSE  If the SteeringData doesn't allow any Joiner.
-     *
-     */
-    bool DoesAllowAny(void)
-    {
-        bool rval = true;
-
-        for (uint8_t i = 0; i < GetSteeringDataLength(); i++)
-        {
-            if (mSteeringData[i] != 0xff)
-            {
-                rval = false;
-                break;
-            }
-        }
-
-        return rval;
-    }
-
-    /**
-     * This method returns the number of bits in the Bloom Filter.
-     *
-     * @returns The number of bits in the Bloom Filter.
-     *
-     */
-    uint8_t GetNumBits(void) const { return GetSteeringDataLength() * 8; }
-
-    /**
-     * This method indicates whether or not bit @p aBit is set.
-     *
-     * @param[in]  aBit  The bit offset.
-     *
-     * @retval TRUE   If bit @p aBit is set.
-     * @retval FALSE  If bit @p aBit is not set.
-     *
-     */
-    bool GetBit(uint8_t aBit) const
-    {
-        return (mSteeringData[GetSteeringDataLength() - 1 - (aBit / 8)] & (1 << (aBit % 8))) != 0;
-    }
-
-    /**
-     * This method clears bit @p aBit.
-     *
-     * @param[in]  aBit  The bit offset.
-     *
-     */
-    void ClearBit(uint8_t aBit) { mSteeringData[GetSteeringDataLength() - 1 - (aBit / 8)] &= ~(1 << (aBit % 8)); }
-
-    /**
-     * This method sets bit @p aBit.
-     *
-     * @param[in]  aBit  The bit offset.
-     *
-     */
-    void SetBit(uint8_t aBit) { mSteeringData[GetSteeringDataLength() - 1 - (aBit / 8)] |= 1 << (aBit % 8); }
-
-    /**
-     * Ths method indicates whether or not the SteeringData is all zeros.
-     *
-     * @retval TRUE   If the SteeringData is all zeros.
-     * @retval FALSE  If the SteeringData isn't all zeros.
-     *
-     */
-    bool IsCleared(void) const;
-
-    /**
-     * This method computes the Bloom Filter.
-     *
-     * @param[in]  aJoinerId  The Joiner ID.
-     *
-     */
-    void ComputeBloomFilter(const otExtAddress &aJoinerId);
+    void CopyTo(SteeringData &aSteeringData);
 
 private:
     uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];
