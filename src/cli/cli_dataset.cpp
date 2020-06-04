@@ -66,6 +66,7 @@ const Dataset::Command Dataset::sCommands[] = {
     {"pendingtimestamp", &Dataset::ProcessPendingTimestamp},
     {"pskc", &Dataset::ProcessPskc},
     {"securitypolicy", &Dataset::ProcessSecurityPolicy},
+    {"set", &Dataset::ProcessSet},
 };
 
 otOperationalDataset Dataset::sDataset;
@@ -785,6 +786,32 @@ otError Dataset::ProcessSecurityPolicy(uint8_t aArgsLength, char *aArgs[])
     }
 
     sDataset.mComponents.mIsSecurityPolicyPresent = true;
+
+exit:
+    return error;
+}
+
+otError Dataset::ProcessSet(uint8_t aArgsLength, char *aArgs[])
+{
+    otError                  error = OT_ERROR_NONE;
+    otOperationalDatasetTlvs dataset;
+
+    VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(aArgs[0], "active") == 0)
+    {
+        dataset.mLength = static_cast<uint8_t>(Interpreter::Hex2Bin(aArgs[1], dataset.mTlvs, sizeof(dataset.mTlvs)));
+        SuccessOrExit(error = otDatasetSetActiveTlvs(mInterpreter.mInstance, &dataset));
+    }
+    else if (strcmp(aArgs[0], "pending") == 0)
+    {
+        dataset.mLength = static_cast<uint8_t>(Interpreter::Hex2Bin(aArgs[1], dataset.mTlvs, sizeof(dataset.mTlvs)));
+        SuccessOrExit(error = otDatasetSetPendingTlvs(mInterpreter.mInstance, &dataset));
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
 
 exit:
     return error;

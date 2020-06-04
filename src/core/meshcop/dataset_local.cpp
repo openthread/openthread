@@ -156,17 +156,23 @@ exit:
 
 otError DatasetLocal::Save(const otOperationalDataset &aDataset)
 {
-    otError error = OT_ERROR_NONE;
+    otError error;
     Dataset dataset(mType);
 
-    error = dataset.SetFrom(aDataset);
-    SuccessOrExit(error);
-
-    error = Save(dataset);
-    SuccessOrExit(error);
+    SuccessOrExit(error = dataset.SetFrom(aDataset));
+    SuccessOrExit(error = Save(dataset));
 
 exit:
     return error;
+}
+
+otError DatasetLocal::Save(const otOperationalDatasetTlvs &aDataset)
+{
+    Dataset dataset(mType);
+
+    dataset.SetFrom(aDataset);
+
+    return Save(dataset);
 }
 
 otError DatasetLocal::Save(const Dataset &aDataset)

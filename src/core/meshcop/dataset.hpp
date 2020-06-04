@@ -293,6 +293,14 @@ public:
     otError SetFrom(const otOperationalDataset &aDataset);
 
     /**
+     * This method sets the Dataset using @p aDataset.
+     *
+     * @param[in]  aDataset  The input Dataset as otOperationalDatasetTlvs.
+     *
+     */
+    void SetFrom(const otOperationalDatasetTlvs &aDataset);
+
+    /**
      * This method removes a TLV from the Dataset.
      *
      * @param[in] aType The type of a specific TLV.

@@ -421,3 +421,21 @@ Set security policy.
 > dataset securitypolicy 672 onrcb
 Done
 ```
+
+### set
+
+Usage: `dataset set <active|pending> <dataset>`
+
+Set the Active Operational Dataset using hex-encoded TLVs.
+
+```bash
+dataset set active 0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
+Done
+```
+
+Set the Pending Operational Dataset using hex-encoded TLVs.
+
+```bash
+dataset set pending 0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
+Done
+```

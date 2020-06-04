@@ -190,6 +190,12 @@ void Dataset::Set(const Dataset &aDataset)
     mUpdateTime = aDataset.GetUpdateTime();
 }
 
+void Dataset::SetFrom(const otOperationalDatasetTlvs &aDataset)
+{
+    mLength = aDataset.mLength;
+    memcpy(mTlvs, aDataset.mTlvs, mLength);
+}
+
 otError Dataset::SetFrom(const otOperationalDataset &aDataset)
 {
     otError error = OT_ERROR_NONE;

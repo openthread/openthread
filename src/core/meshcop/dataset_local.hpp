@@ -146,7 +146,8 @@ public:
     /**
      * This method stores the dataset into non-volatile memory.
      *
-     * @retval OT_ERROR_NONE  Successfully stored the dataset.
+     * @retval OT_ERROR_NONE              Successfully saved the dataset.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
      *
      */
     otError Save(const otOperationalDataset &aDataset);
@@ -154,7 +155,17 @@ public:
     /**
      * This method stores the dataset into non-volatile memory.
      *
-     * @retval OT_ERROR_NONE  Successfully stored the dataset.
+     * @retval OT_ERROR_NONE              Successfully saved the dataset.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     *
+     */
+    otError Save(const otOperationalDatasetTlvs &aDataset);
+
+    /**
+     * This method stores the dataset into non-volatile memory.
+     *
+     * @retval OT_ERROR_NONE              Successfully saved the dataset.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
      *
      */
     otError Save(const Dataset &aDataset);

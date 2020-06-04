@@ -240,8 +240,22 @@ protected:
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
+     * @retval OT_ERROR_NONE             Successfully saved the dataset.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     *
      */
     otError Save(const otOperationalDataset &aDataset);
+
+    /**
+     * This method saves the Operational Dataset in non-volatile memory.
+     *
+     * @param[in]  aDataset  The Operational Dataset.
+     *
+     * @retval OT_ERROR_NONE             Successfully saved the dataset.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     *
+     */
+    otError Save(const otOperationalDatasetTlvs &aDataset);
 
     /**
      * This method sets the Operational Dataset for the partition.
@@ -295,6 +309,7 @@ private:
                                    otError              aError);
     void        HandleCoapResponse(void);
 
+    void HandleDatasetUpdated(void);
     void SendSet(void);
     void SendGetResponse(const Coap::Message &   aRequest,
                          const Ip6::MessageInfo &aMessageInfo,
@@ -402,8 +417,22 @@ public:
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
+     * @retval OT_ERROR_NONE             Successfully saved the dataset.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     *
      */
     otError Save(const otOperationalDataset &aDataset) { return DatasetManager::Save(aDataset); }
+
+    /**
+     * This method sets the Operational Dataset in non-volatile memory.
+     *
+     * @param[in]  aDataset  The Operational Dataset.
+     *
+     * @retval OT_ERROR_NONE             Successfully saved the dataset.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     *
+     */
+    otError Save(const otOperationalDatasetTlvs &aDataset) { return DatasetManager::Save(aDataset); }
 
 #if OPENTHREAD_FTD
 
@@ -494,8 +523,24 @@ public:
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
+     * @retval OT_ERROR_NONE             Successfully saved the dataset.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     *
      */
     otError Save(const otOperationalDataset &aDataset);
+
+    /**
+     * This method saves the Operational Dataset in non-volatile memory.
+     *
+     * This method also starts the Delay Timer.
+     *
+     * @param[in]  aDataset  The Operational Dataset.
+     *
+     * @retval OT_ERROR_NONE             Successfully saved the dataset.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     *
+     */
+    otError Save(const otOperationalDatasetTlvs &aDataset);
 
     /**
      * This method sets the Operational Dataset for the partition.
