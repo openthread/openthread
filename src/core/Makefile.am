@@ -320,10 +320,12 @@ HEADERS_COMMON                             = \
     coap/coap.hpp                            \
     coap/coap_message.hpp                    \
     coap/coap_secure.hpp                     \
+    common/clearable.hpp                     \
     common/code_utils.hpp                    \
     common/crc16.hpp                         \
     common/debug.hpp                         \
     common/encoding.hpp                      \
+    common/equatable.hpp                     \
     common/extension.hpp                     \
     common/instance.hpp                      \
     common/linked_list.hpp                   \

@@ -40,6 +40,8 @@
 
 #include <openthread/dataset.h>
 
+#include "common/clearable.hpp"
+#include "common/equatable.hpp"
 #include "common/locator.hpp"
 #include "common/random.hpp"
 #include "common/timer.hpp"
@@ -63,31 +65,8 @@ namespace ot {
  *
  */
 OT_TOOL_PACKED_BEGIN
-class MasterKey : public otMasterKey
+class MasterKey : public otMasterKey, public Equatable<MasterKey>
 {
-public:
-    /**
-     * This method evaluates whether or not the Thread Master Keys match.
-     *
-     * @param[in]  aOther  The Thread Master Key to compare.
-     *
-     * @retval TRUE   If the Thread Master Keys match.
-     * @retval FALSE  If the Thread Master Keys do not match.
-     *
-     */
-    bool operator==(const MasterKey &aOther) const { return memcmp(m8, aOther.m8, sizeof(MasterKey)) == 0; }
-
-    /**
-     * This method evaluates whether or not the Thread Master Keys match.
-     *
-     * @param[in]  aOther  The Thread Master Key to compare.
-     *
-     * @retval TRUE   If the Thread Master Keys do not match.
-     * @retval FALSE  If the Thread Master Keys match.
-     *
-     */
-    bool operator!=(const MasterKey &aOther) const { return !(*this == aOther); }
-
 } OT_TOOL_PACKED_END;
 
 /**
@@ -95,37 +74,9 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Pskc : public otPskc
+class Pskc : public otPskc, public Equatable<Pskc>, public Clearable<Pskc>
 {
 public:
-    /**
-     * This method clears the PSKc (sets all bytes to zero).
-     *
-     */
-    void Clear(void) { memset(this, 0, sizeof(*this)); }
-
-    /**
-     * This method evaluates whether or not the Thread PSKc values match.
-     *
-     * @param[in]  aOther  The Thread PSKc to compare.
-     *
-     * @retval TRUE   If the Thread PSKc values match.
-     * @retval FALSE  If the Thread PSKc values do not match.
-     *
-     */
-    bool operator==(const Pskc &aOther) const { return memcmp(m8, aOther.m8, sizeof(Pskc)) == 0; }
-
-    /**
-     * This method evaluates whether or not the Thread PSKc values match.
-     *
-     * @param[in]  aOther  The Thread PSKc to compare.
-     *
-     * @retval TRUE   If the Thread PSKc values do not match.
-     * @retval FALSE  If the Thread PSKc values match.
-     *
-     */
-    bool operator!=(const Pskc &aOther) const { return !(*this == aOther); }
-
 #if !OPENTHREAD_RADIO
     /**
      * This method generates a cryptographically secure random sequence to populate the Thread PSKc.

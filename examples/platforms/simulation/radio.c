@@ -762,11 +762,8 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 }
 
-void radioGenerateAck(void)
+void radioSendAck(otInstance *aInstance)
 {
-    sAckFrame.mLength    = IEEE802154_ACK_LENGTH;
-    sAckMessage.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
-
     if (
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         // Determine if frame pending should be set
@@ -780,26 +777,28 @@ void radioGenerateAck(void)
     }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    // Use enh-ack for 802.15.4-2015 frames
     if (otMacFrameIsVersion2015(&sReceiveFrame))
     {
-        OT_UNUSED_VARIABLE(otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending,
-                                                    sAckIeData, sAckIeDataLength, &sAckFrame));
+        otEXPECT(otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, NULL, 0,
+                                          &sAckFrame) == OT_ERROR_NONE);
     }
     else
 #endif
     {
         otMacFrameGenerateImmAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, &sAckFrame);
     }
-}
 
-void radioSendAck(otInstance *aInstance)
-{
-    radioGenerateAck();
     otPlatRadioTxAckStarted(aInstance, sAckFrame.mPsdu, sAckFrame.mLength);
     sAckMessage.mChannel = sReceiveFrame.mChannel;
 
     radioComputeCrc(&sAckMessage, sAckFrame.mLength);
     radioTransmit(&sAckMessage, &sAckFrame);
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+exit:
+#endif
+    return;
 }
 
 void radioProcessFrame(otInstance *aInstance)

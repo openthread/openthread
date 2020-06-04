@@ -74,11 +74,11 @@ MbedTls::MbedTls(void)
 #endif // !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
 }
 
-otError MbedTls::MapError(int rval)
+otError MbedTls::MapError(int aMbedTlsError)
 {
     otError error = OT_ERROR_NONE;
 
-    switch (rval)
+    switch (aMbedTlsError)
     {
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     case MBEDTLS_ERR_PK_TYPE_MISMATCH:
@@ -154,7 +154,7 @@ otError MbedTls::MapError(int rval)
         break;
 
     default:
-        OT_ASSERT(rval >= 0);
+        OT_ASSERT(aMbedTlsError >= 0);
         break;
     }
 

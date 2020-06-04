@@ -895,16 +895,15 @@ otError Mac::PrepareDataRequest(TxFrame &aFrame)
     uint16_t fcf;
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     Neighbor *parent = &Get<Mle::MleRouter>().GetParentCandidate();
+#else
+    Neighbor *parent = NULL;
 #endif
 
     SuccessOrExit(error = Get<DataPollSender>().GetPollDestinationAddress(dst));
     VerifyOrExit(!dst.IsNone(), error = OT_ERROR_ABORT);
 
-    fcf = Frame::kFcfFrameMacCmd | Frame::kFcfPanidCompression | Frame::kFcfFrameVersion2006 | Frame::kFcfAckRequest |
-          Frame::kFcfSecurityEnabled;
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    UpdateFcfForHeaderIe(parent, NULL, fcf);
-#endif
+    fcf = Frame::kFcfFrameMacCmd | Frame::kFcfPanidCompression | Frame::kFcfAckRequest | Frame::kFcfSecurityEnabled;
+    UpdateFrameControlField(parent, /* aIsTimeSync */ false, fcf);
 
     if (dst.IsExtended())
     {
@@ -924,7 +923,7 @@ otError Mac::PrepareDataRequest(TxFrame &aFrame)
     IgnoreError(aFrame.SetCommandId(Frame::kMacCmdDataRequest));
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    IgnoreError(AppendHeaderIe(aFrame, false));
+    IgnoreError(AppendHeaderIe(false, aFrame));
 #endif
 
 exit:
@@ -1625,17 +1624,17 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 
     aesCcm.SetKey(*macKey);
 
-    SuccessOrExit(aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce)));
-
+    aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
     aesCcm.Header(aFrame.GetHeader(), aFrame.GetHeaderLength());
+
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), false);
+    aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), Crypto::AesCcm::kDecrypt);
 #else
     // For fuzz tests, execute AES but do not alter the payload
     uint8_t fuzz[OT_RADIO_FRAME_MAX_SIZE];
-    aesCcm.Payload(fuzz, aFrame.GetPayload(), aFrame.GetPayloadLength(), false);
+    aesCcm.Payload(fuzz, aFrame.GetPayload(), aFrame.GetPayloadLength(), Crypto::AesCcm::kDecrypt);
 #endif
-    aesCcm.Finalize(tag, &tagLength);
+    aesCcm.Finalize(tag);
 
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, OT_NOOP);
@@ -2300,9 +2299,8 @@ exit:
 #endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-otError Mac::AppendHeaderIe(TxFrame &aFrame, bool aIsTimeSync) const
+otError Mac::AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame) const
 {
-    OT_UNUSED_VARIABLE(aFrame);
     OT_UNUSED_VARIABLE(aIsTimeSync);
 
     const size_t kMaxNumHeaderIe = 3; // TimeSync + Csl + Termination2
@@ -2358,20 +2356,19 @@ otError Mac::AppendHeaderIe(TxFrame &aFrame, bool aIsTimeSync) const
     }
 #endif
 
-    ExitNow();
-
 exit:
     return error;
 }
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-void Mac::UpdateFcfForHeaderIe(Neighbor *aNeighbor, Message *aMessage, uint16_t &aFcf) const
+void Mac::UpdateFrameControlField(Neighbor *aNeighbor, bool aIsTimeSync, uint16_t &aFcf) const
 {
+    OT_UNUSED_VARIABLE(aIsTimeSync);
     OT_UNUSED_VARIABLE(aNeighbor);
-    OT_UNUSED_VARIABLE(aMessage);
 
-    aFcf &= ~Frame::kFcfFrameVersionMask;
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aMessage != NULL && aMessage->IsTimeSync())
+    if (aIsTimeSync)
     {
         aFcf |= Frame::kFcfFrameVersion2015 | Frame::kFcfIePresent;
     }
@@ -2392,11 +2389,11 @@ void Mac::UpdateFcfForHeaderIe(Neighbor *aNeighbor, Message *aMessage, uint16_t 
     }
     else
 #endif
+#endif
     {
         aFcf |= Frame::kFcfFrameVersion2006;
     }
 }
-#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
 } // namespace Mac
 } // namespace ot

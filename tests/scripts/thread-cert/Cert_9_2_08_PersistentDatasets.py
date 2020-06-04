@@ -49,6 +49,8 @@ MTDS = [ED, SED]
 
 
 class Cert_9_2_8_PersistentDatasets(thread_cert.TestCase):
+    support_ncp = False
+
     topology = {
         COMMISSIONER: {
             'active_dataset': {

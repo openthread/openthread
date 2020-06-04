@@ -64,19 +64,19 @@ public:
      * Constructor to initialize the mbedtls_aes_context.
      *
      */
-    AesEcb();
+    AesEcb(void);
 
     /**
      * Destructor to free the mbedtls_aes_context.
      *
      */
-    ~AesEcb();
+    ~AesEcb(void);
 
     /**
      * This method sets the key.
      *
      * @param[in]  aKey        A pointer to the key.
-     * @param[in]  aKeyLength  The key length in bytes.
+     * @param[in]  aKeyLength  The key length in bits.
      *
      */
     void SetKey(const uint8_t *aKey, uint16_t aKeyLength);

@@ -38,6 +38,8 @@ ROUTER = 2
 
 
 class TestIPv6Fragmentation(thread_cert.TestCase):
+    support_ncp = False
+
     topology = {
         LEADER: {
             'mode': 'rsdn',

@@ -1265,7 +1265,7 @@ protected:
      * @retval OT_ERROR_PARSE      TLV was found but could not be parsed.
      *
      */
-    otError ReadTlvRequest(const Message &aMessage, RequestedTlvs &aRequestedTlvs);
+    otError FindTlvRequest(const Message &aMessage, RequestedTlvs &aRequestedTlvs);
 
     /**
      * This method appends a Leader Data TLV to a message.
@@ -1691,7 +1691,8 @@ protected:
 private:
     enum
     {
-        kMleHopLimit = 255,
+        kMleHopLimit        = 255,
+        kMleSecurityTagSize = 4, // Security tag size in bytes.
 
         // Parameters related to "periodic parent search" feature (CONFIG_ENABLE_PERIODIC_PARENT_SEARCH).
         // All timer intervals are converted to milliseconds.

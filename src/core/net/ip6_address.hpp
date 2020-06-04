@@ -38,7 +38,9 @@
 
 #include <stdint.h>
 
+#include "common/clearable.hpp"
 #include "common/encoding.hpp"
+#include "common/equatable.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/mle_types.hpp"
@@ -60,7 +62,7 @@ namespace Ip6 {
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Address : public otIp6Address
+class Address : public otIp6Address, public Equatable<Address>, public Clearable<Address>
 {
 public:
     /**
@@ -103,12 +105,6 @@ public:
      *
      */
     typedef String<kIp6AddressStringSize> InfoString;
-
-    /**
-     * This method clears the IPv6 address by setting it to the Unspecified Address "::".
-     *
-     */
-    void Clear(void);
 
     /**
      * This method indicates whether or not the IPv6 address is the Unspecified Address.
@@ -513,28 +509,6 @@ public:
      *
      */
     uint8_t PrefixMatch(const otIp6Address &aOther) const;
-
-    /**
-     * This method evaluates whether or not the IPv6 addresses match.
-     *
-     * @param[in]  aOther  The IPv6 address to compare.
-     *
-     * @retval TRUE   If the IPv6 addresses match.
-     * @retval FALSE  If the IPv6 addresses do not match.
-     *
-     */
-    bool operator==(const Address &aOther) const;
-
-    /**
-     * This method evaluates whether or not the IPv6 addresses differ.
-     *
-     * @param[in]  aOther  The IPv6 address to compare.
-     *
-     * @retval TRUE   If the IPv6 addresses differ.
-     * @retval FALSE  If the IPv6 addresses do not differ.
-     *
-     */
-    bool operator!=(const Address &aOther) const { return !(*this == aOther); }
 
     /**
      * This method converts an IPv6 address string to binary.

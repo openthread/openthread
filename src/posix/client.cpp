@@ -76,74 +76,95 @@ static void InputCallback(char *aLine)
 }
 #endif // OPENTHREAD_USE_READLINE
 
-static bool FindDone(int *aDoneState, char aNowCharacter)
+static bool FindPrompt(int &aState, char aChar)
+{
+    switch (aChar)
+    {
+    case '>':
+        aState = aState == 0 ? 1 : -1;
+        break;
+    case ' ':
+        aState = aState == 1 ? 2 : -1;
+        break;
+    case '\r':
+    case '\n':
+        aState = 0;
+        break;
+    default:
+        aState = -1;
+    }
+
+    return aState == 2;
+}
+
+static bool FindDone(int &aDoneState, char aNowCharacter)
 {
     switch (aNowCharacter)
     {
     case 'D':
-        *aDoneState = *aDoneState == 0 ? 1 : -1;
+        aDoneState = aDoneState == 0 ? 1 : -1;
         break;
     case 'o':
-        *aDoneState = *aDoneState == 1 ? 2 : -1;
+        aDoneState = aDoneState == 1 ? 2 : -1;
         break;
     case 'n':
-        *aDoneState = *aDoneState == 2 ? 3 : -1;
+        aDoneState = aDoneState == 2 ? 3 : -1;
         break;
     case 'e':
-        *aDoneState = *aDoneState == 3 ? 4 : -1;
+        aDoneState = aDoneState == 3 ? 4 : -1;
         break;
     case '\r':
     case '\n':
-        if (*aDoneState == 4)
+        if (aDoneState == 4)
         {
-            *aDoneState = 5;
+            aDoneState = 5;
         }
         else
         {
-            *aDoneState = 0;
+            aDoneState = 0;
         }
         break;
     default:
-        *aDoneState = -1;
+        aDoneState = -1;
         break;
     }
 
-    return *aDoneState == 5;
+    return aDoneState == 5;
 }
 
-static bool FindError(int *aErrorState, char aNowCharacter)
+static bool FindError(int &aErrorState, char aNowCharacter)
 {
     switch (aNowCharacter)
     {
     case 'E':
-        *aErrorState = *aErrorState == 0 ? 1 : -1;
+        aErrorState = aErrorState == 0 ? 1 : -1;
         break;
     case 'r':
-        if (*aErrorState == 1 || *aErrorState == 2 || *aErrorState == 4)
+        if (aErrorState == 1 || aErrorState == 2 || aErrorState == 4)
         {
-            (*aErrorState)++;
+            (aErrorState)++;
         }
         else
         {
-            *aErrorState = -1;
+            aErrorState = -1;
         }
         break;
     case 'o':
-        *aErrorState = *aErrorState == 3 ? 4 : -1;
+        aErrorState = aErrorState == 3 ? 4 : -1;
         break;
     case ' ':
-        *aErrorState = *aErrorState == 5 ? 6 : -1;
+        aErrorState = aErrorState == 5 ? 6 : -1;
         break;
     case '\r':
     case '\n':
-        *aErrorState = 0;
+        aErrorState = 0;
         break;
     default:
-        *aErrorState = -1;
+        aErrorState = -1;
         break;
     }
 
-    return *aErrorState == 6;
+    return aErrorState == 6;
 }
 
 static bool DoWrite(int aFile, const void *aBuffer, size_t aSize)
@@ -168,43 +189,14 @@ exit:
     return ret;
 }
 
-static void SendBlockingCommand(int aArgc, char *aArgv[])
-{
-    char buffer[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
-    int  doneState  = 0;
-    int  errorState = 0;
-
-    for (int i = 0; i < aArgc; i++)
-    {
-        VerifyOrExit(DoWrite(sSessionFd, aArgv[i], strlen(aArgv[i])), OT_NOOP);
-        VerifyOrExit(DoWrite(sSessionFd, " ", 1), OT_NOOP);
-    }
-    VerifyOrExit(DoWrite(sSessionFd, "\n", 1), OT_NOOP);
-
-    while (true)
-    {
-        ssize_t rval = read(sSessionFd, buffer, sizeof(buffer));
-
-        VerifyOrExit(rval >= 0, OT_NOOP);
-        VerifyOrExit(DoWrite(STDOUT_FILENO, buffer, static_cast<size_t>(rval)), OT_NOOP);
-        for (ssize_t i = 0; i < rval; i++)
-        {
-            if (FindDone(&doneState, buffer[i]) || FindError(&errorState, buffer[i]))
-            {
-                ExitNow();
-            }
-        }
-    }
-exit:
-    return;
-}
-
 int main(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
-
-    int ret;
+    int  ret;
+    bool isInteractive = true;
+    bool isFinished    = false;
+    int  doneState     = 0;
+    int  errorState    = 0;
+    int  promptState   = 0;
 
     sSessionFd = socket(AF_UNIX, SOCK_STREAM, 0);
     VerifyOrExit(sSessionFd != -1, perror("socket"); ret = OT_EXIT_FAILURE);
@@ -216,39 +208,55 @@ int main(int argc, char *argv[])
         sockname.sun_family = AF_UNIX;
         strncpy(sockname.sun_path, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
 
-        ret = connect(sSessionFd, (const struct sockaddr *)&sockname, sizeof(struct sockaddr_un));
+        ret = connect(sSessionFd, reinterpret_cast<const struct sockaddr *>(&sockname), sizeof(struct sockaddr_un));
 
         if (ret == -1)
         {
             fprintf(stderr, "OpenThread daemon is not running.\n");
             ExitNow(ret = OT_EXIT_FAILURE);
         }
+    }
 
+    if (argc > 1)
+    {
+        for (int i = 1; i < argc; i++)
+        {
+            VerifyOrExit(DoWrite(sSessionFd, argv[i], strlen(argv[i])), ret = OT_EXIT_FAILURE);
+            VerifyOrExit(DoWrite(sSessionFd, " ", 1), ret = OT_EXIT_FAILURE);
+        }
+        VerifyOrExit(DoWrite(sSessionFd, "\n", 1), ret = OT_EXIT_FAILURE);
+
+        isInteractive = false;
+    }
 #if OPENTHREAD_USE_READLINE
+    else
+    {
         rl_instream           = stdin;
         rl_outstream          = stdout;
         rl_inhibit_completion = true;
         rl_callback_handler_install("> ", InputCallback);
         rl_already_prompted = 1;
+    }
 #endif
-    }
 
-    if (argc > 1)
-    {
-        SendBlockingCommand(argc - 1, &argv[1]);
-        ExitNow(ret = 0);
-    }
-
-    while (1)
+    while (!isFinished)
     {
         fd_set readFdSet;
         char   buffer[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
-        int    maxFd = sSessionFd > STDIN_FILENO ? sSessionFd : STDIN_FILENO;
+        int    maxFd = sSessionFd;
 
         FD_ZERO(&readFdSet);
 
-        FD_SET(STDIN_FILENO, &readFdSet);
         FD_SET(sSessionFd, &readFdSet);
+
+        if (isInteractive)
+        {
+            FD_SET(STDIN_FILENO, &readFdSet);
+            if (STDIN_FILENO > maxFd)
+            {
+                maxFd = STDIN_FILENO;
+            }
+        }
 
         ret = select(maxFd + 1, &readFdSet, NULL, NULL, NULL);
 
@@ -259,7 +267,7 @@ int main(int argc, char *argv[])
             ExitNow(ret = OT_EXIT_SUCCESS);
         }
 
-        if (FD_ISSET(STDIN_FILENO, &readFdSet))
+        if (isInteractive && FD_ISSET(STDIN_FILENO, &readFdSet))
         {
 #if OPENTHREAD_USE_READLINE
             rl_callback_read_char();
@@ -278,11 +286,40 @@ int main(int argc, char *argv[])
             if (rval == 0)
             {
                 // daemon closed sSessionFd
-                ExitNow(ret = OT_EXIT_FAILURE);
+                ExitNow(ret = isInteractive ? OT_EXIT_FAILURE : OT_EXIT_SUCCESS);
+            }
+
+            if (isInteractive)
+            {
+                VerifyOrExit(DoWrite(STDOUT_FILENO, buffer, static_cast<size_t>(rval)), ret = OT_EXIT_FAILURE);
             }
             else
             {
-                VerifyOrExit(DoWrite(STDOUT_FILENO, buffer, static_cast<size_t>(rval)), ret = OT_EXIT_FAILURE);
+                size_t lineStart = 0;
+
+                for (ssize_t i = 0; i < rval; i++)
+                {
+                    if (FindPrompt(promptState, buffer[i]))
+                    {
+                        doneState  = 0;
+                        errorState = 0;
+                        lineStart  = i + 1;
+                        continue;
+                    }
+
+                    if (buffer[i] == '\r' || buffer[i] == '\n')
+                    {
+                        VerifyOrExit(DoWrite(STDOUT_FILENO, buffer + lineStart, i - lineStart + 1),
+                                     ret = OT_EXIT_FAILURE);
+                        lineStart = i + 1;
+                    }
+
+                    if (FindDone(doneState, buffer[i]) || FindError(errorState, buffer[i]))
+                    {
+                        isFinished = true;
+                        ret        = OT_EXIT_SUCCESS;
+                    }
+                }
             }
         }
     }
@@ -291,7 +328,10 @@ exit:
     if (sSessionFd != -1)
     {
 #if OPENTHREAD_USE_READLINE
-        rl_callback_handler_remove();
+        if (isInteractive)
+        {
+            rl_callback_handler_remove();
+        }
 #endif
         close(sSessionFd);
     }

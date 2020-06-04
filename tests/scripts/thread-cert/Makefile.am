@@ -291,36 +291,4 @@ TESTS                                                              = \
     $(check_SCRIPTS)                                                 \
     $(NULL)
 
-XFAIL_NCP_TESTS                                                    = \
-    test_coaps.py                                                    \
-    test_coap_observe.py                                             \
-    test_diag.py                                                     \
-    test_ipv6_fragmentation.py                                       \
-    test_ipv6_source_selection.py                                    \
-    test_reed_address_solicit_rejected.py                            \
-    test_service.py                                                  \
-    Cert_5_3_10_AddressQuery.py                                      \
-    Cert_5_7_01_CoapDiagCommands_A.py                                \
-    Cert_8_1_01_Commissioning.py                                     \
-    Cert_8_1_02_Commissioning.py                                     \
-    Cert_8_2_01_JoinerRouter.py                                      \
-    Cert_8_2_02_JoinerRouter.py                                      \
-    Cert_9_2_02_MGMTCommissionerSet.py                               \
-    Cert_9_2_04_ActiveDataset.py                                     \
-    Cert_9_2_07_DelayTimer.py                                        \
-    Cert_9_2_08_PersistentDatasets.py                                \
-    Cert_9_2_09_PendingPartition.py                                  \
-    Cert_9_2_10_PendingPartition.py                                  \
-    Cert_9_2_11_MasterKey.py                                         \
-    Cert_9_2_12_Announce.py                                          \
-    Cert_9_2_13_EnergyScan.py                                        \
-    Cert_9_2_14_PanIdQuery.py                                        \
-    Cert_9_2_15_PendingPartition.py                                  \
-    Cert_9_2_16_ActivePendingPartition.py                            \
-    Cert_9_2_17_Orphan.py                                            \
-    Cert_9_2_18_RollBackActiveTimestamp.py                           \
-    $(NULL)
-
-XFAIL_TESTS = $(if $(filter $(NODE_TYPE),ncp-sim),$(XFAIL_NCP_TESTS))
-
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

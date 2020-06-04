@@ -42,6 +42,8 @@
 #include <openthread/link.h>
 #include <openthread/thread.h>
 
+#include "common/clearable.hpp"
+#include "common/equatable.hpp"
 #include "common/string.hpp"
 
 namespace ot {
@@ -86,7 +88,7 @@ PanId GenerateRandomPanId(void);
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ExtAddress : public otExtAddress
+class ExtAddress : public otExtAddress, public Equatable<ExtAddress>, public Clearable<ExtAddress>
 {
 public:
     enum
@@ -109,12 +111,6 @@ public:
         kNormalByteOrder,  // Copy address bytes in normal order (as provided in array buffer).
         kReverseByteOrder, // Copy address bytes in reverse byte order.
     };
-
-    /**
-     * This method clears the Extended Address (sets all bytes to zero).
-     *
-     */
-    void Clear(void) { Fill(0); }
 
     /**
      * This method fills all bytes of address with a given byte value.
@@ -220,28 +216,6 @@ public:
     {
         CopyAddress(aBuffer, m8, aByteOrder);
     }
-
-    /**
-     * This method evaluates whether or not the Extended Addresses match.
-     *
-     * @param[in]  aOther  The Extended Address to compare.
-     *
-     * @retval TRUE   If the Extended Addresses match.
-     * @retval FALSE  If the Extended Addresses do not match.
-     *
-     */
-    bool operator==(const ExtAddress &aOther) const;
-
-    /**
-     * This method evaluates whether or not the Extended Addresses match.
-     *
-     * @param[in]  aOther  The Extended Address to compare.
-     *
-     * @retval TRUE   If the Extended Addresses do not match.
-     * @retval FALSE  If the Extended Addresses match.
-     *
-     */
-    bool operator!=(const ExtAddress &aOther) const { return !(*this == aOther); }
 
     /**
      * This method converts an address to a string.
@@ -447,19 +421,13 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Key : public otMacKey
+class Key : public otMacKey, public Equatable<Key>, public Clearable<Key>
 {
 public:
     enum
     {
         kSize = OT_MAC_KEY_SIZE, // Key size in bytes.
     };
-
-    /**
-     * This method clears the key (set all bytes to zero).
-     *
-     */
-    void Clear(void) { memset(m8, 0, kSize); }
 
     /**
      * This method gets a pointer to the buffer containing the key.
@@ -469,27 +437,6 @@ public:
      */
     const uint8_t *GetKey(void) const { return m8; }
 
-    /**
-     * This method evaluates whether or not two keys match.
-     *
-     * @param[in]  aOtherKey  The key to compare with.
-     *
-     * @retval TRUE   If the key matches the @p aOtherKey.
-     * @retval FALSE  If the key does not match the @p aOtherKey.
-     *
-     */
-    bool operator==(const Key &aOtherKey) const { return memcmp(m8, aOtherKey.m8, kSize) == 0; }
-
-    /**
-     * This method evaluates whether or not two keys match.
-     *
-     * @param[in]  aOtherKey  The key to compare with.
-     *
-     * @retval TRUE   If the key does not match @p aOtherKey.
-     * @retval FALSE  If the key does match @p aOtherKey.
-     *
-     */
-    bool operator!=(const Key &aOtherKey) const { return !(*this == aOtherKey); }
 } OT_TOOL_PACKED_END;
 
 /**
@@ -497,7 +444,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ExtendedPanId : public otExtendedPanId
+class ExtendedPanId : public otExtendedPanId, public Equatable<ExtendedPanId>, public Clearable<ExtendedPanId>
 {
 public:
     enum
@@ -510,34 +457,6 @@ public:
      *
      */
     typedef String<kInfoStringSize> InfoString;
-
-    /**
-     * This method clears the Extended PAN Identifier (sets all bytes to zero).
-     *
-     */
-    void Clear(void) { memset(this, 0, sizeof(*this)); }
-
-    /**
-     * This method evaluates whether or not the Extended PAN Identifiers match.
-     *
-     * @param[in]  aOther  The Extended PAN Id to compare.
-     *
-     * @retval TRUE   If the Extended PAN Identifiers match.
-     * @retval FALSE  If the Extended PAN Identifiers do not match.
-     *
-     */
-    bool operator==(const ExtendedPanId &aOther) const;
-
-    /**
-     * This method evaluates whether or not the Extended PAN Identifiers match.
-     *
-     * @param[in]  aOther  The Extended PAN Id to compare.
-     *
-     * @retval TRUE   If the Extended Addresses do not match.
-     * @retval FALSE  If the Extended Addresses match.
-     *
-     */
-    bool operator!=(const ExtendedPanId &aOther) const { return !(*this == aOther); }
 
     /**
      * This method converts an address to a string.

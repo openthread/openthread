@@ -45,11 +45,6 @@ using ot::Encoding::BigEndian::HostSwap32;
 namespace ot {
 namespace Ip6 {
 
-void Address::Clear(void)
-{
-    memset(mFields.m8, 0, sizeof(mFields));
-}
-
 bool Address::IsUnspecified(void) const
 {
     return (mFields.m32[0] == 0 && mFields.m32[1] == 0 && mFields.m32[2] == 0 && mFields.m32[3] == 0);
@@ -318,11 +313,6 @@ uint8_t Address::PrefixMatch(const uint8_t *aPrefixA, const uint8_t *aPrefixB, u
 uint8_t Address::PrefixMatch(const otIp6Address &aOther) const
 {
     return PrefixMatch(mFields.m8, aOther.mFields.m8, sizeof(Address));
-}
-
-bool Address::operator==(const Address &aOther) const
-{
-    return memcmp(mFields.m8, aOther.mFields.m8, sizeof(mFields.m8)) == 0;
 }
 
 otError Address::FromString(const char *aBuf)

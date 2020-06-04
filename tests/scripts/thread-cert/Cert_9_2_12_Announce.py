@@ -47,6 +47,8 @@ DATASET2_PANID = 0xafce
 
 
 class Cert_9_2_12_Announce(thread_cert.TestCase):
+    support_ncp = False
+
     topology = {
         LEADER1: {
             'active_dataset': {

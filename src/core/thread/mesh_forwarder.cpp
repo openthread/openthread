@@ -528,9 +528,7 @@ start:
     // Initialize MAC header
     fcf = Mac::Frame::kFcfFrameData;
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    Get<Mac::Mac>().UpdateFcfForHeaderIe(Get<Mle::MleRouter>().GetNeighbor(aMacDest), &aMessage, fcf);
-#endif
+    Get<Mac::Mac>().UpdateFrameControlField(Get<Mle::MleRouter>().GetNeighbor(aMacDest), aMessage.IsTimeSync(), fcf);
 
     fcf |= (aMacDest.IsShort()) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
     fcf |= (aMacSource.IsShort()) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
@@ -612,11 +610,7 @@ start:
     aFrame.SetSrcAddr(aMacSource);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    IgnoreError(Get<Mac::Mac>().AppendHeaderIe(aFrame, aMessage.IsTimeSync()));
-#else
-    IgnoreError(Get<Mac::Mac>().AppendHeaderIe(aFrame, false));
-#endif
+    IgnoreError(Get<Mac::Mac>().AppendHeaderIe(aMessage.IsTimeSync(), aFrame));
 #endif
 
     payload = aFrame.GetPayload();

@@ -45,7 +45,6 @@
 namespace ot {
 
 using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
 
 class Message;
 
@@ -178,6 +177,59 @@ public:
     otError AppendTo(Message &aMessage) const;
 
     /**
+     * This static method reads a TLV from a message at a given offset with TLV's value as an `uint8_t`.
+     *
+     * @param[in]   aMessage  The message to read from.
+     * @param[in]   aOffset   The offset into the message pointing to the start of the TLV.
+     * @param[out]  aValue    A reference to a `uint8_t` to output the TLV's value.
+     *
+     * @retval OT_ERROR_NONE        Successfully read the TLV and updated @p aValue.
+     * @retval OT_ERROR_PARSE       The TLV was not well-formed and could not be parsed.
+     *
+     */
+    static otError ReadUint8Tlv(const Message &aMessage, uint16_t aOffset, uint8_t &aValue);
+
+    /**
+     * This static method reads a TLV from a message at a given offset with TLV's value as an `uint16_t`.
+     *
+     * @param[in]   aMessage  The message to read from.
+     * @param[in]   aOffset   The offset into the message pointing to the start of the TLV.
+     * @param[out]  aValue    A reference to a `uint16_t` to output the TLV's value.
+     *
+     * @retval OT_ERROR_NONE        Successfully read the TLV and updated @p aValue.
+     * @retval OT_ERROR_PARSE       The TLV was not well-formed and could not be parsed.
+     *
+     */
+    static otError ReadUint16Tlv(const Message &aMessage, uint16_t aOffset, uint16_t &aValue);
+
+    /**
+     * This static method reads a TLV from a message at a given offset with TLV's value as an `uint32_t`.
+     *
+     * @param[in]   aMessage  The message to read from.
+     * @param[in]   aOffset   The offset into the message pointing to the start of the TLV.
+     * @param[out]  aValue    A reference to a `uint32_t` to output the TLV's value.
+     *
+     * @retval OT_ERROR_NONE        Successfully read the TLV and updated @p aValue.
+     * @retval OT_ERROR_PARSE       The TLV was not well-formed and could not be parsed.
+     *
+     */
+    static otError ReadUint32Tlv(const Message &aMessage, uint16_t aOffset, uint32_t &aValue);
+
+    /**
+     * This static method reads a TLV in a message at a given offset expecting a minimum length for the value.
+     *
+     * @param[in]   aMessage    The message to read from.
+     * @param[in]   aOffset     The offset into the message pointing to the start of the TLV.
+     * @param[out]  aValue      A buffer to output the TLV's value, must contain (at least) @p aMinLength bytes.
+     * @param[in]   aMinLength  The minimum expected length of TLV and number of bytes to copy into @p aValue buffer.
+     *
+     * @retval OT_ERROR_NONE        Successfully read the TLV and copied @p aMinLength into @p aValue.
+     * @retval OT_ERROR_PARSE       The TLV was not well-formed and could not be parsed.
+     *
+     */
+    static otError ReadTlv(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength);
+
+    /**
      * This static method reads the requested TLV out of @p aMessage.
      *
      * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
@@ -191,7 +243,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static otError Get(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv);
+    static otError FindTlv(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv);
 
     /**
      * This static method obtains the offset of a TLV within @p aMessage.
@@ -206,7 +258,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static otError GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset);
+    static otError FindTlvOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset);
 
     /**
      * This static method finds the offset and length of a given TLV type.
@@ -222,7 +274,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static otError GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength);
+    static otError FindTlvValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength);
 
     /**
      * This static method searches for a TLV with a given type in a message and reads its value as an `uint8_t`.
@@ -236,7 +288,7 @@ public:
      * @retval OT_ERROR_PARSE       TLV was found but it was not well-formed and could not be parsed.
      *
      */
-    static otError ReadUint8Tlv(const Message &aMessage, uint8_t aType, uint8_t &aValue);
+    static otError FindUint8Tlv(const Message &aMessage, uint8_t aType, uint8_t &aValue);
 
     /**
      * This static method searches for a TLV with a given type in a message and reads its value as an `uint16_t`.
@@ -250,7 +302,7 @@ public:
      * @retval OT_ERROR_PARSE       TLV was found but it was not well-formed and could not be parsed.
      *
      */
-    static otError ReadUint16Tlv(const Message &aMessage, uint8_t aType, uint16_t &aValue);
+    static otError FindUint16Tlv(const Message &aMessage, uint8_t aType, uint16_t &aValue);
 
     /**
      * This static method searches for a TLV with a given type in a message and reads its value as an `uint32_t`.
@@ -264,7 +316,7 @@ public:
      * @retval OT_ERROR_PARSE       TLV was found but it was not well-formed and could not be parsed.
      *
      */
-    static otError ReadUint32Tlv(const Message &aMessage, uint8_t aType, uint32_t &aValue);
+    static otError FindUint32Tlv(const Message &aMessage, uint8_t aType, uint32_t &aValue);
 
     /**
      * This static method searches for a TLV with a given type in a message, ensures its length is same or larger than
@@ -273,7 +325,7 @@ public:
      * If the TLV length is smaller than the minimum length @p aLength, the TLV is considered invalid. In this case,
      * this method returns `OT_ERROR_PARSE` and the @p aValue buffer is not updated.
      *
-     * If the TLV is length is larger than @p aLength, the TLV is considered valid, but only the @aLength first bytes
+     * If the TLV length is larger than @p aLength, the TLV is considered valid, but only the first @p aLength bytes
      * of the value are read and copied into the @p aValue buffer.
      *
      * @param[in]    aMessage    A reference to the message.
@@ -281,12 +333,12 @@ public:
      * @param[out]   aValue      A buffer to output the value (must contain at least @p aLength bytes).
      * @param[in]    aLength     The expected (minimum) length of the TLV value.
      *
-     * @retval OT_ERROR_NONE       The TLV was found and read successfully. @p @aValue is updated.
+     * @retval OT_ERROR_NONE       The TLV was found and read successfully. @p aValue is updated.
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      * @retval OT_ERROR_PARSE      TLV was found but it was not well-formed and could not be parsed.
      *
      */
-    static otError ReadTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t aLength);
+    static otError FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t aLength);
 
     /**
      * This static method appends a simple TLV with a given type and an `uint8_t` value to a message.
@@ -347,7 +399,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    static otError AppendTlv(Message &aMessage, uint8_t aType, const uint8_t *aValue, uint8_t aLength);
+    static otError AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength);
 
 protected:
     enum
@@ -407,153 +459,6 @@ public:
 
 private:
     uint16_t mLength;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements a simple TLV with a `uint8_t` value.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class TlvUint8 : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     * @param[in]  aType  The Type value.
-     *
-     */
-    void Init(uint8_t aType)
-    {
-        SetType(aType);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the `uint8_t` value.
-     *
-     * @returns The `uint8_t` value.
-     *
-     */
-    uint8_t GetUint8Value(void) const { return mValue; }
-
-    /**
-     * This method sets the `uint8_t` value.
-     *
-     * @param[in] aValue   The `uint8_t` value.
-     *
-     */
-    void SetUint8Value(uint8_t aValue) { mValue = aValue; }
-
-private:
-    uint8_t mValue;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements a simple TLV with a `uint16_t` value.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class TlvUint16 : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     * @param[in]  aType  The Type value.
-     *
-     */
-    void Init(uint8_t aType)
-    {
-        SetType(aType);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the `uint16_t` value.
-     *
-     * @returns The `uint16_t` value.
-     *
-     */
-    uint16_t GetUint16Value(void) const { return HostSwap16(mValue); }
-
-    /**
-     * This method sets the `uint16_t` value.
-     *
-     * @param[in] aValue   The `uint16_t` value.
-     *
-     */
-    void SetUint16Value(uint16_t aValue) { mValue = HostSwap16(aValue); }
-
-private:
-    uint16_t mValue;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements a simple TLV with a `uint32_t` value.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class TlvUint32 : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     * @param[in]  aType  The Type value.
-     *
-     */
-    void Init(uint8_t aType)
-    {
-        SetType(aType);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the `uint32_t` value.
-     *
-     * @returns The `uint32_t` value.
-     *
-     */
-    uint32_t GetUint32Value(void) const { return HostSwap32(mValue); }
-
-    /**
-     * This method sets the `uint32_t` value.
-     *
-     * @param[in] aValue   The `uint32_t` value.
-     *
-     */
-    void SetUint32Value(uint32_t aValue) { mValue = HostSwap32(aValue); }
-
-private:
-    uint32_t mValue;
 } OT_TOOL_PACKED_END;
 
 } // namespace ot

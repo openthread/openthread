@@ -351,9 +351,9 @@ void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
     uint16_t fcf;
 
     // initialize MAC header
-    fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfPanidCompression | Mac::Frame::kFcfFrameVersion2006 |
-          Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrShort | Mac::Frame::kFcfAckRequest |
-          Mac::Frame::kFcfSecurityEnabled;
+    fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfPanidCompression | Mac::Frame::kFcfDstAddrShort |
+          Mac::Frame::kFcfSrcAddrShort | Mac::Frame::kFcfAckRequest | Mac::Frame::kFcfSecurityEnabled;
+    Get<Mac::Mac>().UpdateFrameControlField(NULL, aMessage.IsTimeSync(), fcf);
 
     aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
     aFrame.SetDstPanId(Get<Mac::Mac>().GetPanId());

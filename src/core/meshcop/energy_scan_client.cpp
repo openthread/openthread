@@ -133,7 +133,7 @@ void EnergyScanClient::HandleReport(Coap::Message &aMessage, const Ip6::MessageI
 
     VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0, OT_NOOP);
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kEnergyList, sizeof(energyList), energyList.tlv));
+    SuccessOrExit(MeshCoP::Tlv::FindTlv(aMessage, MeshCoP::Tlv::kEnergyList, sizeof(energyList), energyList.tlv));
     VerifyOrExit(energyList.tlv.IsValid(), OT_NOOP);
 
     if (mCallback != NULL)

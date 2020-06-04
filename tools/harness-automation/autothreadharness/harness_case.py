@@ -316,8 +316,8 @@ class HarnessCase(unittest.TestCase):
             browser = webdriver.Chrome(chrome_options=chrome_options)
             browser.set_page_load_timeout(20)
             browser.implicitly_wait(1)
-            browser.maximize_window()
             browser.get(settings.HARNESS_URL)
+            browser.maximize_window()
             self._browser = browser
             if not wait_until(lambda: 'Thread' in browser.title, 30):
                 self.assertIn('Thread', browser.title)

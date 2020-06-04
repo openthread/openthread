@@ -86,7 +86,4 @@ extern testPlatRadioGetTransmitBuffer  g_testPlatRadioGetTransmitBuffer;
 ot::Instance *testInitInstance(void);
 void          testFreeInstance(otInstance *aInstance);
 
-// Resets platform functions to defaults
-void testPlatResetToDefaults(void);
-
 #endif // TEST_PLATFORM_H

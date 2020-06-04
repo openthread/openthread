@@ -72,13 +72,12 @@ void otCryptoAesCcm(const uint8_t *aKey,
                     bool           aEncrypt,
                     void *         aTag)
 {
-    AesCcm  aesCcm;
-    uint8_t tagLength;
+    AesCcm aesCcm;
 
     OT_ASSERT((aKey != NULL) && (aNonce != NULL) && (aPlainText != NULL) && (aCipherText != NULL) && (aTag != NULL));
 
     aesCcm.SetKey(aKey, aKeyLength);
-    SuccessOrExit(aesCcm.Init(aHeaderLength, aLength, aTagLength, aNonce, aNonceLength));
+    aesCcm.Init(aHeaderLength, aLength, aTagLength, aNonce, aNonceLength);
 
     if (aHeaderLength != 0)
     {
@@ -86,13 +85,8 @@ void otCryptoAesCcm(const uint8_t *aKey,
         aesCcm.Header(aHeader, aHeaderLength);
     }
 
-    aesCcm.Payload(aPlainText, aCipherText, aLength, aEncrypt);
-    aesCcm.Finalize(aTag, &tagLength);
-
-    OT_ASSERT(aTagLength == tagLength);
-
-exit:
-    return;
+    aesCcm.Payload(aPlainText, aCipherText, aLength, aEncrypt ? AesCcm::kEncrypt : AesCcm::kDecrypt);
+    aesCcm.Finalize(aTag);
 }
 
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
@@ -104,7 +98,7 @@ otError otCryptoEcdsaSign(uint8_t *      aOutput,
                           const uint8_t *aPrivateKey,
                           uint16_t       aPrivateKeyLength)
 {
-    return Ecdsa::Sign(aOutput, aOutputLength, aInputHash, aInputHashLength, aPrivateKey, aPrivateKeyLength);
+    return Ecdsa::Sign(aOutput, *aOutputLength, aInputHash, aInputHashLength, aPrivateKey, aPrivateKeyLength);
 }
 
 #endif // OPENTHREAD_CONFIG_ECDSA_ENABLE

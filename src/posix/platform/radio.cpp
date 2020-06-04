@@ -94,18 +94,22 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     SuccessOrDie(sRadioSpinel.SetPromiscuous(aEnable));
 }
 
-void platformRadioInit(const otPlatformConfig *aPlatformConfig)
+void platformRadioInit(otPosixRadioArguments *aArguments)
 {
+    ot::Posix::Arguments *args           = reinterpret_cast<ot::Posix::Arguments *>(aArguments);
+    bool                  resetRadio     = (args->GetValue("no-reset") == NULL);
+    bool                  restoreDataset = (args->GetValue("ncp-dataset") != NULL);
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
-    uint8_t channel = ot::Radio::kChannelMin;
-    int8_t  power   = ot::Posix::MaxPowerTable::kPowerDefault;
+    uint8_t     channel       = ot::Radio::kChannelMin;
+    int8_t      power         = ot::Posix::MaxPowerTable::kPowerDefault;
+    const char *maxPowerTable = args->GetValue("max-power-table");
 
-    if (aPlatformConfig->mMaxPowerTable != NULL)
+    if (maxPowerTable != NULL)
     {
         const char *str = NULL;
 
-        for (str = strtok(const_cast<char *>(aPlatformConfig->mMaxPowerTable), ",");
-             str != NULL && channel <= ot::Radio::kChannelMax; str = strtok(NULL, ","))
+        for (str = strtok(const_cast<char *>(maxPowerTable), ","); str != NULL && channel <= ot::Radio::kChannelMax;
+             str = strtok(NULL, ","))
         {
             power = static_cast<int8_t>(strtol(str, NULL, 0));
             sMaxPowerTable.SetTransmitPower(channel++, power);
@@ -122,8 +126,8 @@ void platformRadioInit(const otPlatformConfig *aPlatformConfig)
     }
 #endif
 
-    SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(*aPlatformConfig));
-    sRadioSpinel.Init(aPlatformConfig->mResetRadio, aPlatformConfig->mRestoreDatasetFromNcp);
+    SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(*args));
+    sRadioSpinel.Init(resetRadio, restoreDataset);
 }
 
 void platformRadioDeinit(void)

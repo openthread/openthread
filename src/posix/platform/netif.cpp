@@ -457,7 +457,7 @@ static void processAddressChange(const otIp6Address *aAddress, uint8_t aPrefixLe
 
 static void processStateChange(otChangedFlags aFlags, void *aContext)
 {
-    if (OT_CHANGED_THREAD_NETIF_STATE | aFlags)
+    if (OT_CHANGED_THREAD_NETIF_STATE & aFlags)
     {
         UpdateLink(static_cast<otInstance *>(aContext));
     }

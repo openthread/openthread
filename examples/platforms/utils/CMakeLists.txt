@@ -34,10 +34,6 @@ add_library(openthread-platform-utils OBJECT
     soft_source_match_table.c
 )
 
-target_compile_definitions(openthread-platform-utils PRIVATE
-    ${OT_PRIVATE_DEFINES}
-)
-
 target_include_directories(openthread-platform-utils PRIVATE
     ${OT_PUBLIC_INCLUDES}
     ${OT_PRIVATE_INCLUDES}
@@ -50,3 +46,4 @@ target_include_directories(openthread-platform-utils PRIVATE
 # Provide a static library implementation of platform-utils for non-cmake platforms
 add_library(openthread-platform-utils-static $<TARGET_OBJECTS:openthread-platform-utils>)
 target_link_libraries(openthread-platform-utils-static PUBLIC openthread-platform-utils)
+target_link_libraries(openthread-platform-utils PRIVATE ot-config)

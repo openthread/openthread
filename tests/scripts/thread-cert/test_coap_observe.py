@@ -41,6 +41,9 @@ class TestCoapObserve(thread_cert.TestCase):
     """
     Test suite for CoAP Observations (RFC7641).
     """
+
+    support_ncp = False
+
     topology = {
         LEADER: {
             'mode': 'rsdn',
