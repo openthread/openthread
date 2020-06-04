@@ -211,7 +211,7 @@ const Mle::Key &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
     return mTemporaryMleKey;
 }
 
-uint32_t KeyManager::GetMacFrameCounter(void)
+uint32_t KeyManager::GetMacFrameCounter(void) const
 {
     return Get<Mac::SubMac>().GetFrameCounter();
 }

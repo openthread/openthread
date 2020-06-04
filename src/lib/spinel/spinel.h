@@ -3958,7 +3958,7 @@ enum
      *
      *  `L`: MAC frame counter
      *
-     * The Spinel property is used to set/get MAC frame counter to and from RCP.
+     * The Spinel property is used to set MAC frame counter to RCP.
      *
      */
     SPINEL_PROP_RCP_MAC_FRAME_COUNTER = SPINEL_PROP_RCP__BEGIN + 1,

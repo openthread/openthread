@@ -234,10 +234,10 @@ typedef struct otRadioFrame
              */
             uint64_t mTimestamp;
 
+            uint32_t mAckFrameCounter; ///< ACK security frame counter (applicable when `mAckedWithSecEnhAck` is set).
+            uint8_t  mAckKeyId;        ///< ACK security key index (applicable when `mAckedWithSecEnhAck` is set).
             int8_t   mRssi;            ///< Received signal strength indicator in dBm for received frames.
             uint8_t  mLqi;             ///< Link Quality Indicator for received frames.
-            uint8_t  mAckKeyId;        ///< ACK security key index (applicable when `mAckedWithSecEnhAck` is set).
-            uint32_t mAckFrameCounter; ///< ACK security frame counter (applicable when `mAckedWithSecEnhAck` is set).
 
             // Flags
             bool mAckedWithFramePending : 1; ///< This indicates if this frame was acknowledged with frame pending set.
@@ -481,7 +481,7 @@ void otPlatRadioSetMacKey(otInstance *    aInstance,
 /**
  * This method sets the current MAC frame counter value.
  *
- * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
+ * This function is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
  *
  * @param[in]   aInstance         A pointer to an OpenThread instance.
  * @param[in]   aMacFrameCounter  The MAC frame counter value.
@@ -649,8 +649,8 @@ extern void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame);
  * The radio driver calls this function to notify OpenThread that the transmit operation has completed,
  * providing both the transmitted frame and, if applicable, the received ack frame.
  *
- * When radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability, radio platform layer updates `aFrame`
- * with the security frame counter and key index values used in the transmission of the frame.
+ * When radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability, radio platform layer updates @p aFrame
+ * with the security frame counter and key index values maintained by the radio.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aFrame     A pointer to the frame that was transmitted.

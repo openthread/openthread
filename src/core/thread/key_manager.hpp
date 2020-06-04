@@ -260,7 +260,7 @@ public:
      * @returns The current MAC Frame Counter value.
      *
      */
-    uint32_t GetMacFrameCounter(void);
+    uint32_t GetMacFrameCounter(void) const;
 
     /**
      * This method sets the current MAC Frame Counter value.

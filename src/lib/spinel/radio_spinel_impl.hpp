@@ -1462,7 +1462,6 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
     aLength -= static_cast<uint16_t>(unpacked);
 
     unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_BOOL_S, &framePending);
-    OT_UNUSED_VARIABLE(framePending);
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
     aBuffer += unpacked;

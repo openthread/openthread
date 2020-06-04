@@ -970,7 +970,8 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         break;
 
     case Frame::kKeyIdMode1:
-        // For MAC key ID mode 1, the security framec counter update and CCM* is done at SubMac or Radio if supported
+        // For MAC Key ID Mode 1, the security frame counter update and CCM* is done at SubMac or Radio depending on
+        // `OT_RADIO_CAPS_TRANSMIT_SEC`.
         ExitNow();
         break;
 
