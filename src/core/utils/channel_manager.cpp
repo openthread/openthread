@@ -48,10 +48,10 @@ namespace Utils {
 
 ChannelManager::ChannelManager(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , Notifier::Receiver(aInstance, ChannelManager::HandleNotifierEvents)
     , mSupportedChannelMask(0)
     , mFavoredChannelMask(0)
     , mActiveTimestamp(0)
-    , mNotifierCallback(aInstance, &ChannelManager::HandleNotifierEvents, this)
     , mDelay(kMinimumDelay)
     , mChannel(0)
     , mState(kStateIdle)
@@ -252,9 +252,9 @@ void ChannelManager::HandleTimer(void)
     }
 }
 
-void ChannelManager::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
+void ChannelManager::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<ChannelManager>().HandleNotifierEvents(aEvents);
+    static_cast<ChannelManager &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void ChannelManager::HandleNotifierEvents(Events aEvents)

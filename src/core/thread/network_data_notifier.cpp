@@ -46,7 +46,7 @@ namespace NetworkData {
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mNotifierCallback(aInstance, &Notifier::HandleNotifierEvents, this)
+    , ot::Notifier::Receiver(aInstance, Notifier::HandleNotifierEvents)
     , mTimer(aInstance, Notifier::HandleTimer, this)
     , mNextDelay(0)
     , mWaitingForResponse(false)
@@ -101,9 +101,9 @@ exit:
     }
 }
 
-void Notifier::HandleNotifierEvents(ot::Notifier::Callback &aCallback, Events aEvents)
+void Notifier::HandleNotifierEvents(ot::Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<Notifier>().HandleNotifierEvents(aEvents);
+    static_cast<Notifier &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void Notifier::HandleNotifierEvents(Events aEvents)

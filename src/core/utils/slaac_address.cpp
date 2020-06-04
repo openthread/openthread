@@ -49,9 +49,9 @@ namespace Utils {
 
 Slaac::Slaac(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , Notifier::Receiver(aInstance, Slaac::HandleNotifierEvents)
     , mEnabled(true)
     , mFilter(NULL)
-    , mNotifierCallback(aInstance, &Slaac::HandleNotifierEvents, this)
 {
     memset(mAddresses, 0, sizeof(mAddresses));
 }
@@ -99,9 +99,9 @@ bool Slaac::ShouldFilter(const otIp6Prefix &aPrefix) const
     return (mFilter != NULL) && mFilter(&GetInstance(), &aPrefix);
 }
 
-void Slaac::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
+void Slaac::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<Slaac>().HandleNotifierEvents(aEvents);
+    static_cast<Slaac &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void Slaac::HandleNotifierEvents(Events aEvents)

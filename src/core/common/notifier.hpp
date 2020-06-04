@@ -188,8 +188,8 @@ private:
  *
  * Two callback models are provided:
  *
- * - A `Notifier::Callback` object that upon initialization (from its constructor) auto-registers itself with
- *   the `Notifier`. This model is mainly used by OpenThread core modules.
+ * - A `Notifier::Receiver` class which should be inherited by OpenThread core types to register themselves as a
+ *    receiver of `Notifier` events.
  *
  * - A `otStateChangedCallback` callback handler which needs to be explicitly registered with the `Notifier`. This is
  *   commonly used by external users (provided as an OpenThread public API). Max number of such callbacks that can be
@@ -200,39 +200,38 @@ class Notifier : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This class defines a `Notifier` callback instance.
+     * This class defines a `Notifier::Receiver` instance.
      *
      */
-    class Callback : public OwnerLocator, public LinkedListEntry<Callback>
+    class Receiver : public LinkedListEntry<Receiver>
     {
         friend class Notifier;
-        friend class LinkedListEntry<Callback>;
+        friend class LinkedListEntry<Receiver>;
 
     public:
         /**
-         * This type defines the function pointer which is called to notify of events (state/configuration changes)..
+         * This type defines the function reference which is invoked to notify of events (state/configuration changes)..
          *
-         * @param[in] aCallback    A reference to callback instance.
+         * @param[in] aReceiver    A reference to `Receiver` instance.
          * @param[in] aEvents      The list of events.
          *
          */
-        typedef void (*Handler)(Callback &aCallback, Events aEvents);
+        typedef void (&Handler)(Receiver &aReceiver, Events aEvents);
 
         /**
-         * This constructor initializes a `Callback` instance and registers it with `Notifier`.
+         * This constructor initializes a `Receiver` instance and registers it with `Notifier`.
          *
          * @param[in] aInstance   A reference to OpenThread instance.
-         * @param[in] aHandler    A function pointer to the callback handler.
-         * @param[in] aOwner      A pointer to the owner of the `Callback` instance.
+         * @param[in] aHandler    The handler function reference.
          *
          */
-        Callback(Instance &aInstance, Handler aHandler, void *aOwner);
+        Receiver(Instance &aInstance, Handler aHandler);
 
     private:
-        void Invoke(const Events aEvents) { mHandler(*this, aEvents); }
+        void Emit(Events aEvents) { mHandler(*this, aEvents); }
 
         Handler   mHandler;
-        Callback *mNext;
+        Receiver *mNext;
     };
 
     /**
@@ -349,7 +348,7 @@ private:
         void *                 mContext;
     };
 
-    void        RegisterCallback(Callback &aCallback);
+    void        RegisterReceiver(Receiver &aReceiver);
     static void EmitEvents(Tasklet &aTasklet);
     void        EmitEvents(void);
 
@@ -359,7 +358,7 @@ private:
     Events               mEventsToSignal;
     Events               mSignaledEvents;
     Tasklet              mTask;
-    LinkedList<Callback> mCallbacks;
+    LinkedList<Receiver> mReceivers;
     ExternalCallback     mExternalCallbacks[kMaxExternalHandlers];
 };
 

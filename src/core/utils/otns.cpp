@@ -86,9 +86,9 @@ void Otns::EmitStatus(const char *aFmt, ...)
     otPlatOtnsStatus(statusStr);
 }
 
-void Otns::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
+void Otns::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<Otns>().HandleNotifierEvents(aEvents);
+    static_cast<Otns &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void Otns::HandleNotifierEvents(Events aEvents)

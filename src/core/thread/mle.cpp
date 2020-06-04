@@ -62,6 +62,7 @@ namespace Mle {
 
 Mle::Mle(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , Notifier::Receiver(aInstance, Mle::HandleNotifierEvents)
     , mRetrieveNewNetworkData(false)
     , mRole(kRoleDisabled)
     , mDeviceMode(DeviceMode::kModeRxOnWhenIdle | DeviceMode::kModeSecureDataRequest)
@@ -108,7 +109,6 @@ Mle::Mle(Instance &aInstance)
     , mAlternateChannel(0)
     , mAlternatePanId(Mac::kPanIdBroadcast)
     , mAlternateTimestamp(0)
-    , mNotifierCallback(aInstance, &Mle::HandleNotifierEvents, this)
     , mParentResponseCb(NULL)
     , mParentResponseCbContext(NULL)
 {
@@ -1486,9 +1486,9 @@ exit:
     return error;
 }
 
-void Mle::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
+void Mle::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<Mle>().HandleNotifierEvents(aEvents);
+    static_cast<Mle &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void Mle::HandleNotifierEvents(Events aEvents)

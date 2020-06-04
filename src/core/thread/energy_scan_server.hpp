@@ -50,7 +50,7 @@ namespace ot {
  * This class implements handling Energy Scan Requests.
  *
  */
-class EnergyScanServer : public InstanceLocator
+class EnergyScanServer : public InstanceLocator, public Notifier::Receiver
 {
 public:
     /**
@@ -75,7 +75,7 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    static void HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents);
+    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
     void        HandleNotifierEvents(Events aEvents);
 
     void SendReport(void);
@@ -92,8 +92,6 @@ private:
     uint8_t mScanResultsLength;
 
     TimerMilli mTimer;
-
-    Notifier::Callback mNotifierCallback;
 
     Coap::Resource mEnergyScan;
 };

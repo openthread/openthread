@@ -55,10 +55,10 @@ namespace MeshCoP {
 
 JoinerRouter::JoinerRouter(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , Notifier::Receiver(aInstance, JoinerRouter::HandleNotifierEvents)
     , mSocket(aInstance.Get<Ip6::Udp>())
     , mRelayTransmit(OT_URI_PATH_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this)
     , mTimer(aInstance, JoinerRouter::HandleTimer, this)
-    , mNotifierCallback(aInstance, &JoinerRouter::HandleNotifierEvents, this)
     , mJoinerUdpPort(0)
     , mIsJoinerPortConfigured(false)
     , mExpectJoinEntRsp(false)
@@ -66,9 +66,9 @@ JoinerRouter::JoinerRouter(Instance &aInstance)
     Get<Coap::Coap>().AddResource(mRelayTransmit);
 }
 
-void JoinerRouter::HandleNotifierEvents(Notifier::Callback &aCallback, Events aEvents)
+void JoinerRouter::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<JoinerRouter>().HandleNotifierEvents(aEvents);
+    static_cast<JoinerRouter &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void JoinerRouter::HandleNotifierEvents(Events aEvents)

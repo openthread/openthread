@@ -40,13 +40,11 @@
 
 namespace ot {
 
-Notifier::Callback::Callback(Instance &aInstance, Handler aHandler, void *aOwner)
-    : OwnerLocator(aOwner)
-    , mHandler(aHandler)
+Notifier::Receiver::Receiver(Instance &aInstance, Handler aHandler)
+    : mHandler(aHandler)
     , mNext(NULL)
 {
-    OT_ASSERT(aHandler != NULL);
-    aInstance.Get<Notifier>().RegisterCallback(*this);
+    aInstance.Get<Notifier>().RegisterReceiver(*this);
 }
 
 Notifier::Notifier(Instance &aInstance)
@@ -54,7 +52,7 @@ Notifier::Notifier(Instance &aInstance)
     , mEventsToSignal()
     , mSignaledEvents()
     , mTask(aInstance, &Notifier::EmitEvents, this)
-    , mCallbacks()
+    , mReceivers()
 {
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
     {
@@ -63,9 +61,9 @@ Notifier::Notifier(Instance &aInstance)
     }
 }
 
-void Notifier::RegisterCallback(Callback &aCallback)
+void Notifier::RegisterReceiver(Receiver &aReceiver)
 {
-    mCallbacks.Push(aCallback);
+    mReceivers.Push(aReceiver);
 }
 
 otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
@@ -154,9 +152,9 @@ void Notifier::EmitEvents(void)
 
     LogEvents(events);
 
-    for (Callback *callback = mCallbacks.GetHead(); callback != NULL; callback = callback->GetNext())
+    for (Receiver *receiver = mReceivers.GetHead(); receiver != NULL; receiver = receiver->GetNext())
     {
-        callback->Invoke(events);
+        receiver->Emit(events);
     }
 
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
