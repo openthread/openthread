@@ -47,6 +47,8 @@ COMMISSIONER_PENDING_PANID = 0xafce
 
 
 class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
+    support_ncp = False
+
     topology = {
         COMMISSIONER: {
             'active_dataset': {

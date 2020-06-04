@@ -206,6 +206,11 @@ otError ThreadNetif::TmfFilter(const Coap::Message &aMessage, const Ip6::Message
     return static_cast<ThreadNetif *>(aContext)->IsTmfMessage(aMessageInfo) ? OT_ERROR_NONE : OT_ERROR_NOT_TMF;
 }
 
+bool ThreadNetif::IsOnMesh(const Ip6::Address &aAddress) const
+{
+    return Get<NetworkData::Leader>().IsOnMesh(aAddress);
+}
+
 bool ThreadNetif::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo)
 {
     bool rval = true;

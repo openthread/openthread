@@ -1,4 +1,4 @@
-#!/usr/bin/expect -f
+#!/bin/bash
 #
 #  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
@@ -27,32 +27,47 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?forkpty-arg=1"
-set timeout 1
-expect_after {
-    timeout { exit 1 }
+set -euo pipefail
+
+readonly OT_SHA_OLD="$(git cat-file -p HEAD | grep 'parent ' | head -n1 | cut -d' ' -f2)"
+readonly OT_VERSIONS_FILE=tmp/api_versions
+
+die()
+{
+    echo >&2 "ERROR: $*"
+    exit 1
 }
-send "diag rcp\n"
-expect "diagnostics mode is disabled"
-expect "Done"
-send "diag start\n"
-expect "start diagnostics mode"
-expect "status 0x00"
-expect "Done"
-send "diag rcp\n"
-expect "diagnostics mode is enabled"
-expect "Done"
-send "diag rcp channel\n"
-expect "failed"
-expect "status 0x7"
-expect "Done"
-send "diag rcp channel 11\n"
-expect "Done"
-send "diag rcp power\n"
-expect "failed"
-expect "status 0x7"
-expect "Done"
-send "diag rcp power 10\n"
-expect "Done"
-send "\x04"
-expect eof
+
+main()
+{
+    mkdir -p tmp
+
+    echo "The master branch must be ${OT_SHA_OLD}"
+
+    git fetch --depth 1 origin "${OT_SHA_OLD}"
+
+    if git diff --quiet "${OT_SHA_OLD}" -- include; then
+        echo 'No OpenThread public APIs updates.'
+        exit 0
+    fi
+
+    git diff "${OT_SHA_OLD}" -- include | tee >(cat >&2) | grep -aP '[-+]#define OPENTHREAD_API_VERSION (.+)' >"${OT_VERSIONS_FILE}" || die 'Version number is not updated!'
+
+    [[ $(wc -l <"${OT_VERSIONS_FILE}") == 2 ]] || die 'Multiple OPENTHREAD_API_VERSION definitions found!'
+
+    old_version=$(grep -aoP '(?<=-#define OPENTHREAD_API_VERSION ).+' "${OT_VERSIONS_FILE}") || die 'Failed to find old version!'
+    new_version=$(grep -aoP '(?<=\+#define OPENTHREAD_API_VERSION ).+' "${OT_VERSIONS_FILE}") || die 'Failed to find new version!'
+
+    echo -e '\n--------------------------\n'
+
+    echo "Old version: ${old_version}"
+    echo "New version: ${new_version}"
+
+    [[ $((new_version - old_version)) -gt 0 ]] || die 'Version is not increased!'
+
+    echo -e '\n--------------------------\n'
+
+    echo 'PASS: version check.'
+}
+
+main "$@"

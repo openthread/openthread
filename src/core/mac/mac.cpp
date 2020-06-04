@@ -832,8 +832,8 @@ otError Mac::PrepareDataRequest(TxFrame &aFrame)
     SuccessOrExit(error = Get<DataPollSender>().GetPollDestinationAddress(dst));
     VerifyOrExit(!dst.IsNone(), error = OT_ERROR_ABORT);
 
-    fcf = Frame::kFcfFrameMacCmd | Frame::kFcfPanidCompression | Frame::kFcfFrameVersion2006 | Frame::kFcfAckRequest |
-          Frame::kFcfSecurityEnabled;
+    fcf = Frame::kFcfFrameMacCmd | Frame::kFcfPanidCompression | Frame::kFcfAckRequest | Frame::kFcfSecurityEnabled;
+    UpdateFrameControlField(/* aIsTimeSync */ false, fcf);
 
     if (dst.IsExtended())
     {
@@ -2060,6 +2060,70 @@ exit:
     return offset;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+otError Mac::AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame)
+{
+    OT_UNUSED_VARIABLE(aIsTimeSync);
+
+    const size_t kMaxNumHeaderIe = 3; // TimeSync + Csl + Termination2
+    HeaderIe     ieList[kMaxNumHeaderIe];
+    otError      error   = OT_ERROR_NONE;
+    uint8_t      ieCount = 0;
+
+    VerifyOrExit(aFrame.IsVersion2015() && aFrame.IsIePresent(), OT_NOOP);
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (aIsTimeSync)
+    {
+        ieList[ieCount].Init();
+        ieList[ieCount].SetId(Frame::kHeaderIeVendor);
+        ieList[ieCount].SetLength(sizeof(TimeIe));
+        ieCount++;
+    }
+#endif
+
+    if (ieCount > 0)
+    {
+        ieList[ieCount].Init();
+        ieList[ieCount].SetId(Frame::kHeaderIeTermination2);
+        ieList[ieCount].SetLength(0);
+
+        SuccessOrExit(error = aFrame.AppendHeaderIe(ieList, ++ieCount));
+    }
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (aIsTimeSync)
+    {
+        uint8_t *cur = aFrame.GetHeaderIe(Frame::kHeaderIeVendor);
+        TimeIe * ie  = reinterpret_cast<TimeIe *>(cur + sizeof(HeaderIe));
+
+        ie->Init();
+    }
+#endif
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+
+void Mac::UpdateFrameControlField(bool aIsTimeSync, uint16_t &aFcf)
+{
+    OT_UNUSED_VARIABLE(aIsTimeSync);
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (aIsTimeSync)
+    {
+        aFcf |= Frame::kFcfFrameVersion2015 | Frame::kFcfIePresent;
+    }
+    else
+#endif
+#endif
+    {
+        aFcf |= Frame::kFcfFrameVersion2006;
+    }
+}
 
 } // namespace Mac
 } // namespace ot

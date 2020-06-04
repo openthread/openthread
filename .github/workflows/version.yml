@@ -1,4 +1,3 @@
-#!/usr/bin/expect -f
 #
 #  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
@@ -27,32 +26,23 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?forkpty-arg=1"
-set timeout 1
-expect_after {
-    timeout { exit 1 }
-}
-send "diag rcp\n"
-expect "diagnostics mode is disabled"
-expect "Done"
-send "diag start\n"
-expect "start diagnostics mode"
-expect "status 0x00"
-expect "Done"
-send "diag rcp\n"
-expect "diagnostics mode is enabled"
-expect "Done"
-send "diag rcp channel\n"
-expect "failed"
-expect "status 0x7"
-expect "Done"
-send "diag rcp channel 11\n"
-expect "Done"
-send "diag rcp power\n"
-expect "failed"
-expect "status 0x7"
-expect "Done"
-send "diag rcp power 10\n"
-expect "Done"
-send "\x04"
-expect eof
+name: Build
+
+on: [pull_request]
+
+jobs:
+  cancel-previous-runs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: rokroskar/workflow-run-cleanup-action@master
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      if: "github.ref != 'refs/heads/master'"
+
+  api-version:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check
+      run: |
+        script/check-api-version

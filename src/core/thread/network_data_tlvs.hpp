@@ -40,6 +40,7 @@
 
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/equatable.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -223,7 +224,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class HasRouteEntry
+class HasRouteEntry : public Equatable<HasRouteEntry>
 {
 public:
     /**
@@ -287,20 +288,6 @@ public:
      *
      */
     const HasRouteEntry *GetNext(void) const { return (this + 1); }
-
-    /**
-     * This method indicates whether two entries fully match.
-     *
-     * @param[in]  aOtherEntry  Another entry to compare with it.
-     *
-     * @retval TRUE  The two entries are equal.
-     * @retval FALSE The two entries are not equal.
-     *
-     */
-    bool operator==(const HasRouteEntry &aOtherEntry) const
-    {
-        return (memcmp(this, &aOtherEntry, sizeof(HasRouteEntry)) == 0);
-    }
 
 private:
     enum
@@ -559,7 +546,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class BorderRouterEntry
+class BorderRouterEntry : public Equatable<BorderRouterEntry>
 {
 public:
     enum
@@ -729,20 +716,6 @@ public:
      *
      */
     const BorderRouterEntry *GetNext(void) const { return (this + 1); }
-
-    /**
-     * This method indicates whether two entries fully match.
-     *
-     * @param[in]  aOtherEntry  Another entry to compare with it.
-     *
-     * @retval TRUE  The two entries are equal.
-     * @retval FALSE The two entries are not equal.
-     *
-     */
-    bool operator==(const BorderRouterEntry &aOtherEntry) const
-    {
-        return (memcmp(this, &aOtherEntry, sizeof(BorderRouterEntry)) == 0);
-    }
 
 private:
     uint16_t mRloc;

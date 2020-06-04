@@ -49,13 +49,16 @@ uint64_t gNodeId = 0;
 
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 {
-    otInstance *instance = NULL;
+    otInstance *         instance = NULL;
+    ot::Posix::Arguments args(aPlatformConfig->mRadioUrl);
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    virtualTimeInit(static_cast<uint16_t>(atoi(aPlatformConfig->mRadioConfig)));
+    virtualTimeInit(static_cast<uint16_t>(atoi(args.GetValue("forkpty-arg"))));
 #endif
+
+    VerifyOrDie(args.GetPath() != NULL, OT_EXIT_INVALID_ARGUMENTS);
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor);
-    platformRadioInit(aPlatformConfig);
+    platformRadioInit(&args);
     platformRandomInit();
 
     instance = otInstanceInitSingle();

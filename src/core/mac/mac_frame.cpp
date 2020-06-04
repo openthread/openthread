@@ -918,7 +918,7 @@ otError Frame::AppendHeaderIe(HeaderIe *aIeList, uint8_t aIeCount)
     uint8_t *cur;
     uint8_t *base;
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_FAILED);
+    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_NOT_FOUND);
     cur  = GetPsdu() + index;
     base = cur;
 
@@ -1082,7 +1082,7 @@ void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
     mLength = kImmAckLength;
 }
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)
 {
     otError error = OT_ERROR_NONE;
@@ -1193,7 +1193,7 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
 exit:
     return error;
 }
-#endif
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 // LCOV_EXCL_START
 

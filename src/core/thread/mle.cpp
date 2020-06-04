@@ -3024,7 +3024,7 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
 
         // if received timestamp does not match the local value and message does not contain the dataset,
         // send MLE Data Request
-        if ((timestamp == NULL || timestamp->Compare(activeTimestamp) != 0) &&
+        if (!IsLeader() && ((timestamp == NULL) || (timestamp->Compare(activeTimestamp) != 0)) &&
             (Tlv::FindTlvOffset(aMessage, Tlv::kActiveDataset, activeDatasetOffset) != OT_ERROR_NONE))
         {
             ExitNow(dataRequest = true);
@@ -3045,7 +3045,7 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
 
         // if received timestamp does not match the local value and message does not contain the dataset,
         // send MLE Data Request
-        if ((timestamp == NULL || timestamp->Compare(pendingTimestamp) != 0) &&
+        if (!IsLeader() && ((timestamp == NULL) || (timestamp->Compare(pendingTimestamp) != 0)) &&
             (Tlv::FindTlvOffset(aMessage, Tlv::kPendingDataset, pendingDatasetOffset) != OT_ERROR_NONE))
         {
             ExitNow(dataRequest = true);
@@ -3068,25 +3068,34 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
         ExitNow(dataRequest = true);
     }
 
-    // Active Dataset
-    if (activeTimestamp.GetLength() > 0)
+#if OPENTHREAD_FTD
+    if (IsLeader())
     {
-        if (activeDatasetOffset > 0)
-        {
-            aMessage.Read(activeDatasetOffset, sizeof(tlv), &tlv);
-            IgnoreError(Get<MeshCoP::ActiveDataset>().Save(activeTimestamp, aMessage, activeDatasetOffset + sizeof(tlv),
-                                                           tlv.GetLength()));
-        }
+        Get<NetworkData::Leader>().IncrementVersionAndStableVersion();
     }
-
-    // Pending Dataset
-    if (pendingTimestamp.GetLength() > 0)
+    else
+#endif
     {
-        if (pendingDatasetOffset > 0)
+        // Active Dataset
+        if (activeTimestamp.GetLength() > 0)
         {
-            aMessage.Read(pendingDatasetOffset, sizeof(tlv), &tlv);
-            IgnoreError(Get<MeshCoP::PendingDataset>().Save(pendingTimestamp, aMessage,
-                                                            pendingDatasetOffset + sizeof(tlv), tlv.GetLength()));
+            if (activeDatasetOffset > 0)
+            {
+                aMessage.Read(activeDatasetOffset, sizeof(tlv), &tlv);
+                IgnoreError(Get<MeshCoP::ActiveDataset>().Save(activeTimestamp, aMessage,
+                                                               activeDatasetOffset + sizeof(tlv), tlv.GetLength()));
+            }
+        }
+
+        // Pending Dataset
+        if (pendingTimestamp.GetLength() > 0)
+        {
+            if (pendingDatasetOffset > 0)
+            {
+                aMessage.Read(pendingDatasetOffset, sizeof(tlv), &tlv);
+                IgnoreError(Get<MeshCoP::PendingDataset>().Save(pendingTimestamp, aMessage,
+                                                                pendingDatasetOffset + sizeof(tlv), tlv.GetLength()));
+            }
         }
     }
 

@@ -38,6 +38,7 @@
 #include <setjmp.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <sys/select.h>
 
 #include <openthread/error.h>
@@ -64,30 +65,20 @@ enum
 };
 
 /**
+ * This structure represents the radio URL.
+ *
+ */
+typedef struct otPosixRadioArguments otPosixRadioArguments;
+
+/**
  * This structure represents platform specific configurations.
  *
  */
 typedef struct otPlatformConfig
 {
-    uint64_t    mNodeId;                ///< Unique node ID.
-    uint32_t    mSpeedUpFactor;         ///< Speed up factor.
-    const char *mInterfaceName;         ///< Thread network interface name.
-    const char *mRadioFile;             ///< Radio file path.
-    const char *mRadioConfig;           ///< Radio configurations.
-    const char *mMaxPowerTable;         ///< Radio max transmit power table.
-    bool        mResetRadio;            ///< Whether to reset RCP when initializing.
-    bool        mRestoreDatasetFromNcp; ///< Whether to retrieve dataset from NCP and save to file.
-
-    char *   mSpiGpioIntDevice;   ///< Path to the Linux GPIO character device for the `I̅N̅T̅` pin.
-    char *   mSpiGpioResetDevice; ///< Path to the Linux GPIO character device for the `R̅E̅S̅E̅T̅` pin.
-    uint8_t  mSpiGpioIntLine;     ///< Line index of the `I̅N̅T̅` pin for the associated GPIO character device.
-    uint8_t  mSpiGpioResetLine;   ///< Line index of the `R̅E̅S̅E̅T̅` pin for the associated GPIO character device.
-    uint8_t  mSpiMode;            ///< SPI mode to use (0-3).
-    uint32_t mSpiSpeed;           ///< SPI speed in hertz.
-    uint32_t mSpiResetDelay;      ///< The delay after R̅E̅S̅E̅T̅ assertion, in miliseconds.
-    uint16_t mSpiCsDelay;         ///< The delay after SPI C̅S̅ assertion, in µsec.
-    uint8_t  mSpiAlignAllowance;  ///< Maximum number of 0xFF bytes to clip from start of MISO frame.
-    uint8_t  mSpiSmallPacketSize; ///< Smallest SPI packet size we can receive in a single transaction.
+    uint32_t    mSpeedUpFactor; ///< Speed up factor.
+    const char *mInterfaceName; ///< Thread network interface name.
+    const char *mRadioUrl;      ///< Radio url.
 } otPlatformConfig;
 
 /**
@@ -155,6 +146,14 @@ int otSysMainloopPoll(otSysMainloopContext *aMainloop);
  *
  */
 void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMainloop);
+
+/**
+ * This method returns the radio url help string.
+ *
+ * @returns the radio url help string.
+ *
+ */
+const char *otSysGetRadioUrlHelpString(void);
 
 #ifdef __cplusplus
 } // end of extern "C"
