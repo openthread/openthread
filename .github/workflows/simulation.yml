@@ -187,6 +187,11 @@ jobs:
         OT_OPTIONS=-DOT_READLINE=OFF VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
     - name: Codecov
       uses: codecov/codecov-action@v1
+    - name: Run TUN Mode
+      run: |
+        OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
+    - name: Codecov
+      uses: codecov/codecov-action@v1
 
   multiple-instance:
     runs-on: ubuntu-18.04

@@ -41,6 +41,7 @@ readonly COLOR_NONE='\033[0m'
 
 readonly NODE_MODE="${NODE_MODE:-standalone}"
 readonly NODE_TYPE="${NODE_TYPE:-sim}"
+readonly OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
 readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
 readonly VERBOSE="${VERBOSE:-0}"
 readonly VIRTUAL_TIME="${VIRTUAL_TIME:-1}"
@@ -91,6 +92,10 @@ build_posix()
         options+=("-DOT_POSIX_VIRTUAL_TIME=ON")
     fi
 
+    if [[ ${OT_NATIVE_IP} == 1 ]]; then
+        options+=("-DOT_PLATFORM_UDP=ON" "-DOT_PLATFORM_NETIF=ON")
+    fi
+
     OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-posix-${version}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}" "${ot_extra_options[@]}"
 
     if [[ ${version} == "1.2" ]]; then
@@ -121,7 +126,7 @@ do_build()
 
 do_clean()
 {
-    rm -rfv "${OT_BUILDDIR}"
+    rm -rfv "${OT_BUILDDIR}" || sudo rm -rfv "${OT_BUILDDIR}"
 }
 
 do_unit()
@@ -164,7 +169,7 @@ do_cert_suite()
     [[ ! -f fail.log ]] || rm fail.log
 
     for test_case in "$@"; do
-        rm -rf tmp
+        rm -rf tmp || sudo rm -rf tmp
         if "${test_case}" &>test.log; then
             echo -e "${COLOR_PASS}PASS${COLOR_NONE} ${test_case}"
             pass_count=$((pass_count + 1))
@@ -204,15 +209,25 @@ do_expect()
     if [[ ${NODE_MODE} == rcp ]]; then
         ot_command="${OT_CLI_PATH}"
         rcp_command="${RADIO_DEVICE}"
-        test_pattern='posix-*.exp'
+        if [[ ${OT_NATIVE_IP} == 1 ]]; then
+            test_pattern='tun-*.exp'
+        else
+            test_pattern='posix-*.exp'
+        fi
     else
         ot_command="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/cli/ot-cli-ftd"
         test_pattern='cli-*.exp'
     fi
 
     while read -r script; do
-        rm -rf tmp
-        OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" "${script}" || {
+        sudo rm -rf tmp
+        {
+            if [[ ${OT_NATIVE_IP} == 1 ]]; then
+                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" sudo -E "${script}"
+            else
+                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" "${script}"
+            fi
+        } || {
             local exit_code=$?
             echo -e "${COLOR_FAIL}FAIL${COLOR_NONE} ${script}"
             exit "${exit_code}"
