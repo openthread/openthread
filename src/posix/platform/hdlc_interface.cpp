@@ -471,7 +471,7 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
 
         if (aArguments.GetValue("uart-baudrate"))
         {
-            baudrate = static_cast<uint32_t>(atoi(aArguments.GetValue("baudrate")));
+            baudrate = static_cast<uint32_t>(atoi(aArguments.GetValue("uart-baudrate")));
         }
         switch (baudrate)
         {
