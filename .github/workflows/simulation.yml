@@ -187,6 +187,18 @@ jobs:
         OT_OPTIONS=-DOT_READLINE=OFF VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
     - name: Codecov
       uses: codecov/codecov-action@v1
+    - name: Run TUN Mode
+      run: |
+        sudo apt-get install --no-install-recommends -y dnsmasq bind9-host
+        sudo systemctl start dnsmasq
+        host ipv6.google.com 127.0.0.1
+        echo 'listen-address=::1' | sudo tee /etc/dnsmasq.conf
+        echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
+        sudo systemctl restart dnsmasq
+        host ipv6.google.com ::1
+        OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
+    - name: Codecov
+      uses: codecov/codecov-action@v1
 
   multiple-instance:
     runs-on: ubuntu-18.04
