@@ -75,6 +75,7 @@ Done
 - [prefix](#prefix-add-prefix-padcrosnD-prf)
 - [promiscuous](#promiscuous)
 - [pskc](#pskc--p-keypassphrase)
+- [rcp](#rcp)
 - [releaserouterid](#releaserouterid-routerid)
 - [reset](#reset)
 - [rloc16](#rloc16)
@@ -1279,6 +1280,20 @@ Disable radio promiscuous operation.
 
 ```bash
 > promiscuous disable
+Done
+```
+
+### rcp
+
+RCP-related commands.
+
+### rcp version
+
+Print RCP version string.
+
+```bash
+> rcp version
+OPENTHREAD/20191113-00825-g82053cc9d-dirty; SIMULATION; Jun  4 2020 17:53:16
 Done
 ```
 
