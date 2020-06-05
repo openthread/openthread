@@ -133,9 +133,21 @@ otError DatasetLocal::Read(otOperationalDataset &aDataset) const
 
     memset(&aDataset, 0, sizeof(aDataset));
 
-    error = Read(dataset);
-    SuccessOrExit(error);
+    SuccessOrExit(error = Read(dataset));
+    dataset.ConvertTo(aDataset);
 
+exit:
+    return error;
+}
+
+otError DatasetLocal::Read(otOperationalDatasetTlvs &aDataset) const
+{
+    Dataset dataset(mType);
+    otError error;
+
+    memset(&aDataset, 0, sizeof(aDataset));
+
+    SuccessOrExit(error = Read(dataset));
     dataset.ConvertTo(aDataset);
 
 exit:

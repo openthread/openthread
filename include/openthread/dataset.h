@@ -235,6 +235,24 @@ typedef struct otOperationalDataset
 } otOperationalDataset;
 
 /**
+ * Maximum length of Operational Dataset in bytes.
+ *
+ */
+#define OT_OPERATIONAL_DATASET_MAX_LENGTH 254
+
+/**
+ * This structure represents an Active or Pending Operational Dataset.
+ *
+ * The Operational Dataset is TLV encoded as specified by Thread.
+ *
+ */
+typedef struct otOperationalDatasetTlvs
+{
+    uint8_t mTlvs[OT_OPERATIONAL_DATASET_MAX_LENGTH]; ///< Operational Dataset TLVs.
+    uint8_t mLength;                                  ///< Size of Operational Dataset in bytes.
+} otOperationalDatasetTlvs;
+
+/**
  * This enumeration represents meshcop TLV types.
  *
  */
@@ -298,10 +316,22 @@ bool otDatasetIsCommissioned(otInstance *aInstance);
  * @param[out]  aDataset  A pointer to where the Active Operational Dataset will be placed.
  *
  * @retval OT_ERROR_NONE          Successfully retrieved the Active Operational Dataset.
- * @retval OT_ERROR_INVALID_ARGS  @p aDataset was NULL.
+ * @retval OT_ERROR_NOT_FOUND     No corresponding value in the setting store.
  *
  */
 otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset);
+
+/**
+ * This function gets the Active Operational Dataset.
+ *
+ * @param[in]   aInstance A pointer to an OpenThread instance.
+ * @param[out]  aDataset  A pointer to where the Active Operational Dataset will be placed.
+ *
+ * @retval OT_ERROR_NONE          Successfully retrieved the Active Operational Dataset.
+ * @retval OT_ERROR_NOT_FOUND     No corresponding value in the setting store.
+ *
+ */
+otError otDatasetGetActiveTlvs(otInstance *aInstance, otOperationalDatasetTlvs *aDataset);
 
 /**
  * This function sets the Active Operational Dataset.
@@ -336,10 +366,22 @@ otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aD
  * @param[out]  aDataset  A pointer to where the Pending Operational Dataset will be placed.
  *
  * @retval OT_ERROR_NONE          Successfully retrieved the Pending Operational Dataset.
- * @retval OT_ERROR_INVALID_ARGS  @p aDataset was NULL.
+ * @retval OT_ERROR_NOT_FOUND     No corresponding value in the setting store.
  *
  */
 otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset);
+
+/**
+ * This function gets the Pending Operational Dataset.
+ *
+ * @param[in]   aInstance A pointer to an OpenThread instance.
+ * @param[out]  aDataset  A pointer to where the Pending Operational Dataset will be placed.
+ *
+ * @retval OT_ERROR_NONE          Successfully retrieved the Pending Operational Dataset.
+ * @retval OT_ERROR_NOT_FOUND     No corresponding value in the setting store.
+ *
+ */
+otError otDatasetGetPendingTlvs(otInstance *aInstance, otOperationalDatasetTlvs *aDataset);
 
 /**
  * This function sets the Pending Operational Dataset.

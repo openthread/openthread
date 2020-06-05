@@ -248,14 +248,29 @@ exit:
 
 otError Dataset::ProcessActive(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
+    otError error;
 
-    otOperationalDataset dataset;
-    otError              error;
+    if (aArgsLength == 0)
+    {
+        otOperationalDataset dataset;
 
-    SuccessOrExit(error = otDatasetGetActive(mInterpreter.mInstance, &dataset));
-    error = Print(dataset);
+        SuccessOrExit(error = otDatasetGetActive(mInterpreter.mInstance, &dataset));
+        error = Print(dataset);
+    }
+    else if ((aArgsLength == 1) && (strcmp(aArgs[0], "binary") == 0))
+    {
+        otOperationalDatasetTlvs dataset;
+
+        VerifyOrExit(strlen(aArgs[0]) <= OT_OPERATIONAL_DATASET_MAX_LENGTH * 2, error = OT_ERROR_NO_BUFS);
+
+        SuccessOrExit(error = otDatasetGetActiveTlvs(mInterpreter.mInstance, &dataset));
+        mInterpreter.OutputBytes(dataset.mTlvs, dataset.mLength);
+        mInterpreter.mServer->OutputFormat("\r\n");
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
 
 exit:
     return error;
@@ -263,14 +278,29 @@ exit:
 
 otError Dataset::ProcessPending(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
+    otError error;
 
-    otOperationalDataset dataset;
-    otError              error;
+    if (aArgsLength == 0)
+    {
+        otOperationalDataset dataset;
 
-    SuccessOrExit(error = otDatasetGetPending(mInterpreter.mInstance, &dataset));
-    error = Print(dataset);
+        SuccessOrExit(error = otDatasetGetPending(mInterpreter.mInstance, &dataset));
+        error = Print(dataset);
+    }
+    else if ((aArgsLength == 1) && (strcmp(aArgs[0], "binary") == 0))
+    {
+        otOperationalDatasetTlvs dataset;
+
+        VerifyOrExit(strlen(aArgs[0]) <= OT_OPERATIONAL_DATASET_MAX_LENGTH * 2, error = OT_ERROR_NO_BUFS);
+
+        SuccessOrExit(error = otDatasetGetPendingTlvs(mInterpreter.mInstance, &dataset));
+        mInterpreter.OutputBytes(dataset.mTlvs, dataset.mLength);
+        mInterpreter.mServer->OutputFormat("\r\n");
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
 
 exit:
     return error;

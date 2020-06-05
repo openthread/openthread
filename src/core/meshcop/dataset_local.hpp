@@ -125,6 +125,17 @@ public:
     otError Read(otOperationalDataset &aDataset) const;
 
     /**
+     * This method retrieves the dataset from non-volatile memory.
+     *
+     * @param[out]  aDataset  Where to place the dataset.
+     *
+     * @retval OT_ERROR_NONE       Successfully retrieved the dataset.
+     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
+     *
+     */
+    otError Read(otOperationalDatasetTlvs &aDataset) const;
+
+    /**
      * This method returns the local time this dataset was last updated or restored.
      *
      * @returns The local time this dataset was last updated or restored.
