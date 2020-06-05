@@ -59,7 +59,6 @@
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
-#include <openthread/link.h>
 #include <openthread/random_noncrypto.h>
 
 // clang-format off
@@ -107,13 +106,6 @@ static int8_t sDefaultTxPower;
 static uint32_t sEnergyDetectionTime;
 static uint8_t  sEnergyDetectionChannel;
 static int8_t   sEnergyDetected;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static uint32_t      sCslPeriod;
-static uint32_t      sCslSampleTime;
-static const uint8_t sCslIeHeader[IE_HEADER_SIZE] = {0x04, 0x0d};
-static uint8_t       sParentShortAddress[SHORT_ADDRESS_SIZE];
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 typedef enum
 {
@@ -247,9 +239,6 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 
     uint8_t address[SHORT_ADDRESS_SIZE];
     convertShortAddress(address, aShortAddress);
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    convertShortAddress(sParentShortAddress, aShortAddress & 0xfc00);
-#endif
 
     nrf_802154_short_address_set(address);
 }
@@ -876,10 +865,6 @@ void nrf_802154_tx_ack_started(const uint8_t *p_data)
 {
     // Check if the frame pending bit is set in ACK frame.
     sAckedWithFramePending = p_data[FRAME_PENDING_OFFSET] & FRAME_PENDING_BIT;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    otPlatRadioTxAckStarted(sInstance, (uint8_t *)(p_data + 1), p_data[0]);
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 }
 
 void nrf_802154_transmitted_raw(const uint8_t *aFrame, uint8_t *aAckPsdu, int8_t aPower, uint8_t aLqi)
@@ -943,7 +928,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 void nrf_802154_tx_started(const uint8_t *aFrame)
 {
-    bool processTransmitAesCcm = sTransmitFrame.mInfo.mTxInfo.mCslPresent;
+    bool notifyFrameUpdated = false;
     assert(aFrame == sTransmitPsdu);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -961,11 +946,11 @@ void nrf_802154_tx_started(const uint8_t *aFrame)
             *(++timeIe) = (uint8_t)(time & 0xff);
         }
 
-        processTransmitAesCcm = true;
+        notifyFrameUpdated = true;
     }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-    if (processTransmitAesCcm)
+    if (notifyFrameUpdated)
     {
         otMacFrameProcessTransmitAesCcm(&sTransmitFrame, &sExtAddress);
     }
@@ -986,59 +971,3 @@ uint32_t nrf_802154_random_get(void)
 {
     return otRandomNonCryptoGetUint32();
 }
-
-uint64_t otPlatRadioGetNow(void)
-{
-    return otPlatTimeGet();
-}
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static void updateIeData(otInstance *aInstance, const uint8_t *aShortAddr, const uint8_t *aExtAddr)
-{
-    int8_t  offset = 0;
-    uint8_t ackIeData[ACK_IE_MAX_SIZE];
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (sCslPeriod > 0)
-    {
-        memcpy(ackIeData, sCslIeHeader, IE_HEADER_SIZE);
-        offset += IE_HEADER_SIZE + CSL_IE_SIZE; // reserve space for CSL IE
-    }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-
-    if (offset > 0)
-    {
-        nrf_802154_ack_data_set(aShortAddr, false, ackIeData, offset, NRF_802154_ACK_DATA_IE);
-        nrf_802154_ack_data_set(aExtAddr, true, ackIeData, offset, NRF_802154_ACK_DATA_IE);
-    }
-    else
-    {
-        nrf_802154_ack_data_clear(aShortAddr, false, NRF_802154_ACK_DATA_IE);
-        nrf_802154_ack_data_clear(aExtAddr, true, NRF_802154_ACK_DATA_IE);
-    }
-}
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
-{
-    otError error = OT_ERROR_NONE;
-    uint8_t parentExtAddr[OT_EXT_ADDRESS_SIZE];
-
-    sCslPeriod = aCslPeriod;
-
-    for (uint32_t i = 0; i < sizeof(parentExtAddr); i++)
-    {
-        parentExtAddr[i] = aExtAddr->m8[sizeof(parentExtAddr) - i - 1];
-    }
-
-    updateIeData(aInstance, sParentShortAddress, parentExtAddr);
-
-    return error;
-}
-
-void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime)
-{
-    sCslSampleTime = aCslSampleTime;
-}
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
