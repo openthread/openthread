@@ -38,6 +38,8 @@
 
 #include <string.h>
 
+#include <openthread/platform/toolchain.h>
+
 namespace ot {
 
 /**
@@ -73,7 +75,11 @@ public:
      *
      */
     bool operator!=(const Type &aOther) const { return !(*this == aOther); }
-};
+}
+#if defined(__CC_ARM)
+OT_TOOL_PACKED_END
+#endif
+    ;
 
 } // namespace ot
 
