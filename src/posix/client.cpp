@@ -105,39 +105,50 @@ static bool FindPrompt(PromptState &aState, char aChar)
     return aState == kPromptStatePrompted;
 }
 
-static bool FindDone(int &aDoneState, char aNowCharacter)
+enum DoneState
+{
+    kDoneStateNewline,
+    kDoneStateD,
+    kDoneStateDo,
+    kDoneStateDon,
+    kDoneStateDone,
+    kDoneStateDoneFound,
+    kDoneStateWaitNewline,
+};
+
+static bool FindDone(DoneState &aDoneState, char aNowCharacter)
 {
     switch (aNowCharacter)
     {
     case 'D':
-        aDoneState = aDoneState == 0 ? 1 : -1;
+        aDoneState = aDoneState == kDoneStateNewline ? kDoneStateD : kDoneStateWaitNewline;
         break;
     case 'o':
-        aDoneState = aDoneState == 1 ? 2 : -1;
+        aDoneState = aDoneState == kDoneStateD ? kDoneStateDo : kDoneStateWaitNewline;
         break;
     case 'n':
-        aDoneState = aDoneState == 2 ? 3 : -1;
+        aDoneState = aDoneState == kDoneStateDo ? kDoneStateDon : kDoneStateWaitNewline;
         break;
     case 'e':
-        aDoneState = aDoneState == 3 ? 4 : -1;
+        aDoneState = aDoneState == kDoneStateDon ? kDoneStateDone : kDoneStateWaitNewline;
         break;
     case '\r':
     case '\n':
-        if (aDoneState == 4)
+        if (aDoneState == kDoneStateDone)
         {
-            aDoneState = 5;
+            aDoneState = kDoneStateDoneFound;
         }
         else
         {
-            aDoneState = 0;
+            aDoneState = kDoneStateNewline;
         }
         break;
     default:
-        aDoneState = -1;
+        aDoneState = kDoneStateWaitNewline;
         break;
     }
 
-    return aDoneState == 5;
+    return aDoneState == kDoneStateDoneFound;
 }
 
 static bool FindError(int &aErrorState, char aNowCharacter)
@@ -202,9 +213,9 @@ int main(int argc, char *argv[])
     int         ret;
     bool        isInteractive = true;
     bool        isFinished    = false;
-    int         doneState     = 0;
+    DoneState   doneState     = kDoneStateNewline;
     int         errorState    = 0;
-    PromptState promptState   = kPromptStateNewlineBegin;
+    PromptState promptState   = kPromptStateNewline;
 
     sSessionFd = socket(AF_UNIX, SOCK_STREAM, 0);
     VerifyOrExit(sSessionFd != -1, perror("socket"); ret = OT_EXIT_FAILURE);
@@ -309,7 +320,7 @@ int main(int argc, char *argv[])
                 {
                     if (FindPrompt(promptState, buffer[i]))
                     {
-                        doneState  = 0;
+                        doneState  = kDoneStateNewline;
                         errorState = 0;
                         lineStart  = i + 1;
                         continue;
