@@ -776,24 +776,6 @@ public:
      */
     bool IsCslStarted(void) const { return mSubMac.IsCslStarted(); }
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    /**
-     * This method indicates whether CSL IE supperssion is enabled.
-     *
-     * @retval TRUE  if CSL IE suppression is enabled.
-     * @retval FALSE if CSL IE suppression is disabled.
-     *
-     */
-    bool IsCslIeSuppressed(void) const { return mCslIeSuppressed; }
-
-    /**
-     * This method suppresses or un-suppresses CSL IE for SSED.
-     *
-     * @param[in]  aSuppress  `true` to enable suppression, `false` to disable suppression.
-     *
-     */
-    void SuppressCslIe(bool aSuppress) { mCslIeSuppressed = aSuppress; }
-#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
@@ -912,10 +894,6 @@ private:
     void LogFrameRxFailure(const RxFrame *aFrame, otError aError) const;
     void LogFrameTxFailure(const TxFrame &aFrame, otError aError, uint8_t aRetryCount, bool aWillRetx) const;
     void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    bool mCslIeSuppressed;
-#endif
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     uint8_t GetTimeIeOffset(const Frame &aFrame);

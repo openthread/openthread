@@ -1156,21 +1156,6 @@ uint32_t otLinkCslGetTimeout(otInstance *aInstance);
 otError otLinkCslSetTimeout(otInstance *aInstance, uint32_t aTimeout);
 
 /**
- * This function enables or disables CSL IE suppression for SSED devices to include CSL IE into frame.
- *
- * This function is available only if feature `OPENTHREAD_ENABLE_CSL_RECEIVER` and
- * `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` are enabled. This feature is only for certification test purpose and used
- * to suppress/exclude the CSL IE for the frame transmitted, without impacting the periodic sample.
- *
- * @param[in]  aInstance      A pointer to an OpenThread instance.
- * @param[in]  aSuppress      True to suppress CSL IE transmission, false otherwise.
- *
- * @retval OT_ERROR_NONE      Successfully enabled or disabled CSL IE suppression for SSED devices.
- *
- */
-otError otLinkCslIeSuppress(otInstance *aInstance, bool aSuppress);
-
-/**
  * This function returns the current CCA (Clear Channel Assessment) failure rate.
  *
  * The rate is maintained over a window of (roughly) last `OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW`

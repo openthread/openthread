@@ -513,16 +513,4 @@ otError otLinkCslSetTimeout(otInstance *aInstance, uint32_t aTimeout)
     return error;
 }
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-otError otLinkCslIeSuppress(otInstance *aInstance, bool aSuppress)
-{
-    otError   error    = OT_ERROR_NONE;
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Mac::Mac>().SuppressCslIe(aSuppress);
-
-    return error;
-}
-#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE

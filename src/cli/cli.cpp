@@ -1197,24 +1197,6 @@ void Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
     else if (aArgsLength == 2)
     {
         long value;
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        if (strcmp(argv[0], "headerie") == 0)
-        {
-            if (strcmp(argv[1], "disable") == 0)
-            {
-                SuccessOrExit(error = otLinkCslIeSuppress(mInstance, true));
-            }
-            else if (strcmp(argv[1], "enable") == 0)
-            {
-                SuccessOrExit(error = otLinkCslIeSuppress(mInstance, false));
-            }
-            else
-            {
-                ExitNow(error = OT_ERROR_INVALID_ARGS);
-            }
-            ExitNow(error = OT_ERROR_NONE);
-        }
-#endif
 
         SuccessOrExit(error = ParseLong(argv[1], value));
 

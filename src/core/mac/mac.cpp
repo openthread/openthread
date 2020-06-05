@@ -74,9 +74,6 @@ const char Mac::sDomainNameInit[] = "Thread";
 
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    , mCslIeSuppressed(false)
-#endif
     , mEnabled(false)
     , mPendingActiveScan(false)
     , mPendingEnergyScan(false)
@@ -2234,9 +2231,6 @@ exit:
 bool Mac::ShouldIncludeCslIe(void) const
 {
     return mSubMac.IsCslStarted()
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-           && !IsCslIeSuppressed()
-#endif
            && !Get<Mle::Mle>().IsRxOnWhenIdle();
 }
 
