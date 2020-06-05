@@ -151,39 +151,57 @@ static bool FindDone(DoneState &aDoneState, char aNowCharacter)
     return aDoneState == kDoneStateDoneFound;
 }
 
-static bool FindError(int &aErrorState, char aNowCharacter)
+enum ErrorState
+{
+    kErrorStateNewline,
+    kErrorStateE,
+    kErrorStateEr,
+    kErrorStateErr,
+    kErrorStateErro,
+    kErrorStateError,
+    kErrorStateErrorFound,
+    kErrorStateWaitNewline,
+};
+
+static bool FindError(ErrorState &aErrorState, char aNowCharacter)
 {
     switch (aNowCharacter)
     {
     case 'E':
-        aErrorState = aErrorState == 0 ? 1 : -1;
+        aErrorState = aErrorState == kErrorStateNewline ? kErrorStateE : kErrorStateWaitNewline;
         break;
     case 'r':
-        if (aErrorState == 1 || aErrorState == 2 || aErrorState == 4)
+        switch (aErrorState)
         {
-            (aErrorState)++;
-        }
-        else
-        {
-            aErrorState = -1;
+        case kErrorStateE:
+            aErrorState = kErrorStateEr;
+            break;
+        case kErrorStateEr:
+            aErrorState = kErrorStateErr;
+            break;
+        case kErrorStateErro:
+            aErrorState = kErrorStateError;
+            break;
+        default:
+            aErrorState = kErrorStateWaitNewline;
         }
         break;
     case 'o':
-        aErrorState = aErrorState == 3 ? 4 : -1;
+        aErrorState = aErrorState == kErrorStateErr ? kErrorStateErro : kErrorStateWaitNewline;
         break;
     case ' ':
-        aErrorState = aErrorState == 5 ? 6 : -1;
+        aErrorState = aErrorState == kErrorStateError ? kErrorStateErrorFound : kErrorStateWaitNewline;
         break;
     case '\r':
     case '\n':
-        aErrorState = 0;
+        aErrorState = kErrorStateNewline;
         break;
     default:
-        aErrorState = -1;
+        aErrorState = kErrorStateWaitNewline;
         break;
     }
 
-    return aErrorState == 6;
+    return aErrorState == kErrorStateErrorFound;
 }
 
 static bool DoWrite(int aFile, const void *aBuffer, size_t aSize)
@@ -214,7 +232,7 @@ int main(int argc, char *argv[])
     bool        isInteractive = true;
     bool        isFinished    = false;
     DoneState   doneState     = kDoneStateNewline;
-    int         errorState    = 0;
+    ErrorState  errorState    = kErrorStateNewline;
     PromptState promptState   = kPromptStateNewline;
 
     sSessionFd = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -321,7 +339,7 @@ int main(int argc, char *argv[])
                     if (FindPrompt(promptState, buffer[i]))
                     {
                         doneState  = kDoneStateNewline;
-                        errorState = 0;
+                        errorState = kErrorStateNewline;
                         lineStart  = i + 1;
                         continue;
                     }
