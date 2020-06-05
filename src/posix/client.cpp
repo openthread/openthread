@@ -76,25 +76,33 @@ static void InputCallback(char *aLine)
 }
 #endif // OPENTHREAD_USE_READLINE
 
-static bool FindPrompt(int &aState, char aChar)
+enum PromptState
+{
+    kPromptStateNewline,
+    kPromptStateChar1Received,
+    kPromptStatePrompted,
+    kPromptStateWaitNewline,
+};
+
+static bool FindPrompt(PromptState &aState, char aChar)
 {
     switch (aChar)
     {
     case '>':
-        aState = aState == 0 ? 1 : -1;
+        aState = aState == kPromptStateNewline ? kPromptStateChar1Received : kPromptStateWaitNewline;
         break;
     case ' ':
-        aState = aState == 1 ? 2 : -1;
+        aState = aState == kPromptStateChar1Received ? kPromptStatePrompted : kPromptStateWaitNewline;
         break;
     case '\r':
     case '\n':
-        aState = 0;
+        aState = kPromptStateNewline;
         break;
     default:
-        aState = -1;
+        aState = kPromptStateWaitNewline;
     }
 
-    return aState == 2;
+    return aState == kPromptStatePrompted;
 }
 
 static bool FindDone(int &aDoneState, char aNowCharacter)
@@ -191,12 +199,12 @@ exit:
 
 int main(int argc, char *argv[])
 {
-    int  ret;
-    bool isInteractive = true;
-    bool isFinished    = false;
-    int  doneState     = 0;
-    int  errorState    = 0;
-    int  promptState   = 0;
+    int         ret;
+    bool        isInteractive = true;
+    bool        isFinished    = false;
+    int         doneState     = 0;
+    int         errorState    = 0;
+    PromptState promptState   = kPromptStateNewlineBegin;
 
     sSessionFd = socket(AF_UNIX, SOCK_STREAM, 0);
     VerifyOrExit(sSessionFd != -1, perror("socket"); ret = OT_EXIT_FAILURE);
