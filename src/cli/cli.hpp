@@ -328,6 +328,9 @@ private:
 #if OPENTHREAD_FTD
     void ProcessPreferRouterId(uint8_t aArgsLength, char *aArgs[]);
     void ProcessPskc(uint8_t aArgsLength, char *aArgs[]);
+#endif
+    void ProcessRcp(uint8_t aArgsLength, char *aArgs[]);
+#if OPENTHREAD_FTD
     void ProcessReleaseRouterId(uint8_t aArgsLength, char *aArgs[]);
 #endif
     void ProcessReset(uint8_t aArgsLength, char *aArgs[]);

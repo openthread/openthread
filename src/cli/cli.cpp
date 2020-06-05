@@ -214,6 +214,9 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_FTD
     {"preferrouterid", &Interpreter::ProcessPreferRouterId},
     {"pskc", &Interpreter::ProcessPskc},
+#endif
+    {"rcp", &Interpreter::ProcessRcp},
+#if OPENTHREAD_FTD
     {"releaserouterid", &Interpreter::ProcessReleaseRouterId},
 #endif
     {"reset", &Interpreter::ProcessReset},
@@ -2792,7 +2795,30 @@ void Interpreter::ProcessPreferRouterId(uint8_t aArgsLength, char *aArgs[])
 exit:
     AppendResult(error);
 }
+#endif
 
+void Interpreter::ProcessRcp(uint8_t aArgsLength, char *aArgs[])
+{
+    otError     error   = OT_ERROR_NONE;
+    const char *version = otPlatRadioGetVersionString(mInstance);
+
+    VerifyOrExit(version != otGetVersionString(), error = OT_ERROR_NOT_IMPLEMENTED);
+    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(aArgs[0], "version") == 0)
+    {
+        mServer->OutputFormat("%s\r\n", version);
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    AppendResult(error);
+}
+
+#if OPENTHREAD_FTD
 void Interpreter::ProcessReleaseRouterId(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -2806,7 +2832,7 @@ void Interpreter::ProcessReleaseRouterId(uint8_t aArgsLength, char *aArgs[])
 exit:
     AppendResult(error);
 }
-#endif // OPENTHREAD_FTD
+#endif
 
 void Interpreter::ProcessReset(uint8_t aArgsLength, char *aArgs[])
 {
