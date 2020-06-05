@@ -47,7 +47,7 @@ namespace NetworkData {
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mNotifierCallback(aInstance, &Notifier::HandleStateChanged, this)
-    , mTimer(aInstance, &Notifier::HandleTimer, this)
+    , mTimer(aInstance, Notifier::HandleTimer, this)
     , mNextDelay(0)
     , mWaitingForResponse(false)
 {

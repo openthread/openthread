@@ -55,7 +55,7 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
     , mCount(0)
     , mActive(false)
     , mScanResultsLength(0)
-    , mTimer(aInstance, &EnergyScanServer::HandleTimer, this)
+    , mTimer(aInstance, EnergyScanServer::HandleTimer, this)
     , mNotifierCallback(aInstance, &EnergyScanServer::HandleStateChanged, this)
     , mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this)
 {

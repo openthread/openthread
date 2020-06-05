@@ -80,12 +80,12 @@ public:
     static const uint32_t kMaxDelay = (Time::kMaxDuration >> 1);
 
     /**
-     * This function pointer is called when the timer expires.
+     * This type defines a function reference which is invoked when the timer expires.
      *
      * @param[in]  aTimer    A reference to the expired timer instance.
      *
      */
-    typedef void (*Handler)(Timer &aTimer);
+    typedef void (&Handler)(Timer &aTimer);
 
     /**
      * This constructor creates a timer instance.

@@ -57,7 +57,7 @@ namespace NetworkData {
 
 Leader::Leader(Instance &aInstance)
     : LeaderBase(aInstance)
-    , mTimer(aInstance, &Leader::HandleTimer, this)
+    , mTimer(aInstance, Leader::HandleTimer, this)
     , mServerData(OT_URI_PATH_SERVER_DATA, &Leader::HandleServerData, this)
     , mCommissioningDataGet(OT_URI_PATH_COMMISSIONER_GET, &Leader::HandleCommissioningGet, this)
     , mCommissioningDataSet(OT_URI_PATH_COMMISSIONER_SET, &Leader::HandleCommissioningSet, this)

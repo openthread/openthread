@@ -111,7 +111,7 @@ exit:
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 AnnounceSender::AnnounceSender(Instance &aInstance)
-    : AnnounceSenderBase(aInstance, &AnnounceSender::HandleTimer)
+    : AnnounceSenderBase(aInstance, AnnounceSender::HandleTimer)
     , mNotifierCallback(aInstance, HandleStateChanged, this)
 {
 }

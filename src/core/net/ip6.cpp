@@ -62,7 +62,7 @@ Ip6::Ip6(Instance &aInstance)
     , mUdp(aInstance)
     , mMpl(aInstance)
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
-    , mTimer(aInstance, &Ip6::HandleTimer, this)
+    , mTimer(aInstance, Ip6::HandleTimer, this)
 #endif
 {
 }

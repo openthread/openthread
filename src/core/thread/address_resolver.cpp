@@ -63,7 +63,7 @@ AddressResolver::AddressResolver(Instance &aInstance)
     , mQueryRetryList()
     , mUnusedList()
     , mIcmpHandler(&AddressResolver::HandleIcmpReceive, this)
-    , mTimer(aInstance, &AddressResolver::HandleTimer, this)
+    , mTimer(aInstance, AddressResolver::HandleTimer, this)
 {
     for (CacheEntry *entry = &mCacheEntries[0]; entry < OT_ARRAY_END(mCacheEntries); entry++)
     {

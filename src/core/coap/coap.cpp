@@ -50,7 +50,7 @@ CoapBase::CoapBase(Instance &aInstance, Sender aSender)
     : InstanceLocator(aInstance)
     , mPendingRequests()
     , mMessageId(Random::NonCrypto::GetUint16())
-    , mRetransmissionTimer(aInstance, &Coap::HandleRetransmissionTimer, this)
+    , mRetransmissionTimer(aInstance, Coap::HandleRetransmissionTimer, this)
     , mResources()
     , mContext(NULL)
     , mInterceptor(NULL)
@@ -786,7 +786,7 @@ int CoapBase::Metadata::UpdateIn(Message &aMessage) const
 
 ResponsesQueue::ResponsesQueue(Instance &aInstance)
     : mQueue()
-    , mTimer(aInstance, &ResponsesQueue::HandleTimer, this)
+    , mTimer(aInstance, ResponsesQueue::HandleTimer, this)
 {
 }
 
