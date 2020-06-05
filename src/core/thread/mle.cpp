@@ -512,9 +512,7 @@ otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
     otError                      error   = OT_ERROR_NONE;
     Message *                    message = NULL;
     Ip6::Address                 destination;
-    Tlv                          tlv;
     MeshCoP::DiscoveryRequestTlv discoveryRequest;
-    uint16_t                     startOffset;
 
     VerifyOrExit(!mDiscoverInProgress, error = OT_ERROR_BUSY);
 
@@ -539,20 +537,12 @@ otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
     message->SetPanId(aPanId);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDiscoveryRequest));
 
-    // Discovery TLV
-    tlv.SetType(Tlv::kDiscovery);
-    SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-
-    startOffset = message->GetLength();
-
-    // Discovery Request TLV
+    // Append MLE Discovery TLV with a single sub-TLV (MeshCoP Discovery Request).
     discoveryRequest.Init();
     discoveryRequest.SetVersion(kThreadVersion);
     discoveryRequest.SetJoiner(aJoiner);
-    SuccessOrExit(error = discoveryRequest.AppendTo(*message));
 
-    tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
-    message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
+    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kDiscovery, &discoveryRequest, sizeof(discoveryRequest)));
 
     destination.SetToLinkLocalAllRoutersMulticast();
 
