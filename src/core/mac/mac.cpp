@@ -2219,8 +2219,7 @@ exit:
 
 bool Mac::ShouldIncludeCslIe(void) const
 {
-    return mSubMac.IsCslStarted()
-           && !Get<Mle::Mle>().IsRxOnWhenIdle();
+    return mSubMac.IsCslStarted() && !Get<Mle::Mle>().IsRxOnWhenIdle();
 }
 
 otError Mac::StartCsl(void)
