@@ -237,26 +237,26 @@ exit:
     return error;
 }
 
-void SubMac::ProcessTransmitSecurity(void)
+void SubMac::ProcessTransmitSecurity(TxFrame &aFrame)
 {
     const ExtAddress *extAddress = NULL;
     uint8_t           keyIdMode;
 
     VerifyOrExit(ShouldHandleTransmitSecurity(), OT_NOOP);
-    VerifyOrExit(mTransmitFrame.GetSecurityEnabled(), OT_NOOP);
-    VerifyOrExit(!mTransmitFrame.IsSecurityProcessed(), OT_NOOP);
+    VerifyOrExit(aFrame.GetSecurityEnabled(), OT_NOOP);
+    VerifyOrExit(!aFrame.IsSecurityProcessed(), OT_NOOP);
 
-    SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
+    SuccessOrExit(aFrame.GetKeyIdMode(keyIdMode));
     VerifyOrExit(keyIdMode == Frame::kKeyIdMode1, OT_NOOP);
 
-    mTransmitFrame.SetAesKey(GetCurrentMacKey());
+    aFrame.SetAesKey(GetCurrentMacKey());
 
-    if (!mTransmitFrame.IsARetransmission())
+    if (!aFrame.IsARetransmission())
     {
         uint32_t frameCounter = GetFrameCounter();
 
-        mTransmitFrame.SetKeyId(mKeyId);
-        mTransmitFrame.SetFrameCounter(frameCounter);
+        aFrame.SetKeyId(mKeyId);
+        aFrame.SetFrameCounter(frameCounter);
         UpdateFrameCounter(frameCounter + 1);
     }
 
@@ -264,10 +264,10 @@ void SubMac::ProcessTransmitSecurity(void)
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Transmit security will be processed after time IE content is updated.
-    VerifyOrExit(mTransmitFrame.GetTimeIeOffset() == 0, OT_NOOP);
+    VerifyOrExit(aFrame.GetTimeIeOffset() == 0, OT_NOOP);
 #endif
 
-    mTransmitFrame.ProcessTransmitAesCcm(*extAddress);
+    aFrame.ProcessTransmitAesCcm(*extAddress);
 
 exit:
     return;

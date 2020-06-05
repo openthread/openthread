@@ -81,6 +81,16 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyS
     }
 }
 
+extern "C" void otPlatRadioTxAckStarted(otInstance *aInstance, uint8_t *aFrame, uint16_t aLength)
+{
+    Instance *instance = static_cast<Instance *>(aInstance);
+
+    if (instance->IsInitialized())
+    {
+        instance->Get<Radio::Callbacks>().HandleTransmitAckStarted(aFrame, aLength);
+    }
+}
+
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {

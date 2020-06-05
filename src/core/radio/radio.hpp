@@ -148,6 +148,15 @@ public:
          */
         void HandleEnergyScanDone(int8_t aMaxRssi);
 
+        /**
+         * This callback method handles a "Transmit ACK Started" event from radio platform.
+         *
+         * @param[in]  aFrame     The frame(psdu) that is being transmitted.
+         * @param[in]  aLength    The length of the frame.
+         *
+         */
+        void HandleTransmitAckStarted(uint8_t *aFrame, uint16_t aLength);
+
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         /**
          * This callback method handles a "Receive Done" event from radio platform when diagnostics mode is enabled.

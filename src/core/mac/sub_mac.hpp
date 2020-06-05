@@ -407,6 +407,14 @@ public:
      */
     void SetFrameCounter(uint32_t aFrameCounter);
 
+    /**
+     * This method process security for the transmit frame.
+     *
+     * @param[in/out] aFrame  A reference to the transmit frame.
+     *
+     */
+    void ProcessTransmitSecurity(TxFrame &aFrame);
+
 private:
     enum
     {
@@ -449,7 +457,7 @@ private:
     bool ShouldHandleRetries(void) const;
     bool ShouldHandleEnergyScan(void) const;
 
-    void ProcessTransmitSecurity(void);
+    void ProcessTransmitSecurity(void) { ProcessTransmitSecurity(mTransmitFrame); }
     void UpdateFrameCounter(uint32_t aFrameCounter);
     void StartCsmaBackoff(void);
     void BeginTransmit(void);

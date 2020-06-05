@@ -1092,7 +1092,6 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     PanId    panId;
     uint8_t  footerLength;
     uint8_t  securityControlField;
-    uint32_t frameCounter;
     uint8_t  keyId;
 
     mChannel = aFrame.mChannel;
@@ -1170,11 +1169,9 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     if (aFrame.GetSecurityEnabled())
     {
         SuccessOrExit(error = aFrame.GetSecurityControlField(securityControlField));
-        SuccessOrExit(error = aFrame.GetFrameCounter(frameCounter));
         SuccessOrExit(error = aFrame.GetKeyId(keyId));
 
         SetSecurityControlField(securityControlField);
-        SetFrameCounter(frameCounter);
         SetKeyId(keyId);
     }
 
