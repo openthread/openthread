@@ -618,6 +618,14 @@ public:
                       const otMacKey &aNextKey);
 
     /**
+     * This method sets the current MAC Frame Counter value.
+     *
+     * @param[in]   aMacFrameCounter  The MAC Frame Counter value.
+     *
+     */
+    otError SetMacFrameCounter(uint32_t aMacFrameCounter);
+
+    /**
      * This method checks whether the spinel interface is radio-only
      *
      * @retval  TRUE    The radio chip is in radio-only mode.
@@ -751,7 +759,7 @@ private:
                         spinel_tid_t      tid,
                         const char *      pack_format,
                         va_list           args);
-    otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength);
+    otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength, spinel_ssize_t &aUnpacked);
     otError ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength);
 
     /**

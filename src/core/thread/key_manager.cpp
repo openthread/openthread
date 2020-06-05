@@ -69,7 +69,6 @@ const otMasterKey KeyManager::kDefaultMasterKey = {{
 KeyManager::KeyManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mKeySequence(0)
-    , mMacFrameCounter(0)
     , mMleFrameCounter(0)
     , mStoredMacFrameCounter(0)
     , mStoredMleFrameCounter(0)
@@ -193,7 +192,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
     mKeySequence = aKeySequence;
     UpdateKeyMaterial();
 
-    mMacFrameCounter = 0;
+    SetMacFrameCounter(0);
     mMleFrameCounter = 0;
 
     Get<Notifier>().Signal(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
@@ -212,11 +211,19 @@ const Mle::Key &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
     return mTemporaryMleKey;
 }
 
-void KeyManager::IncrementMacFrameCounter(void)
+uint32_t KeyManager::GetMacFrameCounter(void) const
 {
-    mMacFrameCounter++;
+    return Get<Mac::SubMac>().GetFrameCounter();
+}
 
-    if (mMacFrameCounter >= mStoredMacFrameCounter)
+void KeyManager::SetMacFrameCounter(uint32_t aMacFrameCounter)
+{
+    Get<Mac::SubMac>().SetFrameCounter(aMacFrameCounter);
+}
+
+void KeyManager::MacFrameCounterUpdated(uint32_t aMacFrameCounter)
+{
+    if (aMacFrameCounter >= mStoredMacFrameCounter)
     {
         IgnoreError(Get<Mle::MleRouter>().Store());
     }

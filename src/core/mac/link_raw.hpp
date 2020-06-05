@@ -264,6 +264,17 @@ public:
                       const Key &aNextKey);
 
     /**
+     * This method sets the current MAC frame counter value.
+     *
+     * @param[in] aMacFrameCounter  The MAC frame counter value.
+     *
+     * @retval OT_ERROR_NONE             If successful.
+     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     *
+     */
+    otError SetMacFrameCounter(uint32_t aMacFrameCounter);
+
+    /**
      * This method records the status of a frame transmission attempt and is mainly used for logging failures.
      *
      * Unlike `HandleTransmitDone` which is called after all transmission attempts of frame to indicate final status

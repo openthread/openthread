@@ -739,17 +739,17 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleValueIs(spinel_prop_k
                                                                    const uint8_t *   aBuffer,
                                                                    uint16_t          aLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError        error = OT_ERROR_NONE;
+    spinel_ssize_t unpacked;
 
     if (aKey == SPINEL_PROP_STREAM_RAW)
     {
-        SuccessOrExit(error = ParseRadioFrame(mRxRadioFrame, aBuffer, aLength));
+        SuccessOrExit(error = ParseRadioFrame(mRxRadioFrame, aBuffer, aLength, unpacked));
         RadioReceive();
     }
     else if (aKey == SPINEL_PROP_LAST_STATUS)
     {
         spinel_status_t status = SPINEL_STATUS_OK;
-        spinel_ssize_t  unpacked;
 
         unpacked = spinel_datatype_unpack(aBuffer, aLength, "i", &status);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
@@ -769,9 +769,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleValueIs(spinel_prop_k
     }
     else if (aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT)
     {
-        uint8_t        scanChannel;
-        int8_t         maxRssi;
-        spinel_ssize_t unpacked;
+        uint8_t scanChannel;
+        int8_t  maxRssi;
 
         unpacked = spinel_datatype_unpack(aBuffer, aLength, "Cc", &scanChannel, &maxRssi);
 
@@ -780,9 +779,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleValueIs(spinel_prop_k
     }
     else if (aKey == SPINEL_PROP_STREAM_DEBUG)
     {
-        char           logStream[OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE + 1];
-        unsigned int   len = sizeof(logStream);
-        spinel_ssize_t unpacked;
+        char         logStream[OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE + 1];
+        unsigned int len = sizeof(logStream);
 
         unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_DATA_S, logStream, &len);
         assert(len < sizeof(logStream));
@@ -792,9 +790,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleValueIs(spinel_prop_k
     }
     else if ((aKey == SPINEL_PROP_STREAM_LOG) && mSupportsLogStream)
     {
-        const char *   logString;
-        spinel_ssize_t unpacked;
-        uint8_t        logLevel;
+        const char *logString;
+        uint8_t     logLevel;
 
         unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, &logString);
         VerifyOrExit(unpacked >= 0, error = OT_ERROR_PARSE);
@@ -837,9 +834,10 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::ParseRadioFrame(otRadioFrame & aFrame,
-                                                                        const uint8_t *aBuffer,
-                                                                        uint16_t       aLength)
+otError RadioSpinel<InterfaceType, ProcessContextType>::ParseRadioFrame(otRadioFrame &  aFrame,
+                                                                        const uint8_t * aBuffer,
+                                                                        uint16_t        aLength,
+                                                                        spinel_ssize_t &aUnpacked)
 {
     otError        error        = OT_ERROR_NONE;
     uint16_t       flags        = 0;
@@ -848,29 +846,35 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ParseRadioFrame(otRadioF
     unsigned int   receiveError = 0;
     spinel_ssize_t unpacked;
 
-    unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength,
-                                               SPINEL_DATATYPE_DATA_WLEN_S                          // Frame
-                                                               SPINEL_DATATYPE_INT8_S               // RSSI
-                                                               SPINEL_DATATYPE_INT8_S               // Noise Floor
-                                                               SPINEL_DATATYPE_UINT16_S             // Flags
-                                                               SPINEL_DATATYPE_STRUCT_S(            // PHY-data
-                                                                   SPINEL_DATATYPE_UINT8_S          // 802.15.4 channel
-                                                                           SPINEL_DATATYPE_UINT8_S  // 802.15.4 LQI
-                                                                           SPINEL_DATATYPE_UINT64_S // Timestamp (us).
-                                                                   ) SPINEL_DATATYPE_STRUCT_S(      // Vendor-data
-                                                                   SPINEL_DATATYPE_UINT_PACKED_S    // Receive error
-                                                                   ),
-                                               aFrame.mPsdu, &size, &aFrame.mInfo.mRxInfo.mRssi, &noiseFloor, &flags,
-                                               &aFrame.mChannel, &aFrame.mInfo.mRxInfo.mLqi,
-                                               &aFrame.mInfo.mRxInfo.mTimestamp, &receiveError);
+    unpacked = spinel_datatype_unpack_in_place(
+        aBuffer, aLength,
+        SPINEL_DATATYPE_DATA_WLEN_S                          // Frame
+                        SPINEL_DATATYPE_INT8_S               // RSSI
+                        SPINEL_DATATYPE_INT8_S               // Noise Floor
+                        SPINEL_DATATYPE_UINT16_S             // Flags
+                        SPINEL_DATATYPE_STRUCT_S(            // PHY-data
+                            SPINEL_DATATYPE_UINT8_S          // 802.15.4 channel
+                                    SPINEL_DATATYPE_UINT8_S  // 802.15.4 LQI
+                                    SPINEL_DATATYPE_UINT64_S // Timestamp (us).
+                            ) SPINEL_DATATYPE_STRUCT_S(      // Vendor-data
+                            SPINEL_DATATYPE_UINT_PACKED_S    // Receive error
+                            ) SPINEL_DATATYPE_STRUCT_S(      // MAC-data
+                            SPINEL_DATATYPE_UINT8_S          // Security key index
+                                SPINEL_DATATYPE_UINT32_S     // Security frame counter
+                            ),
+        aFrame.mPsdu, &size, &aFrame.mInfo.mRxInfo.mRssi, &noiseFloor, &flags, &aFrame.mChannel,
+        &aFrame.mInfo.mRxInfo.mLqi, &aFrame.mInfo.mRxInfo.mTimestamp, &receiveError, &aFrame.mInfo.mRxInfo.mAckKeyId,
+        &aFrame.mInfo.mRxInfo.mAckFrameCounter);
 
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+    aUnpacked = unpacked;
 
     if (receiveError == OT_ERROR_NONE)
     {
         aFrame.mLength = static_cast<uint8_t>(size);
 
         aFrame.mInfo.mRxInfo.mAckedWithFramePending = ((flags & SPINEL_MD_FLAG_ACKED_FP) != 0);
+        aFrame.mInfo.mRxInfo.mAckedWithSecEnhAck    = ((flags & SPINEL_MD_FLAG_ACKED_SEC) != 0);
     }
     else if (receiveError < OT_NUM_ERRORS)
     {
@@ -1025,6 +1029,17 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKey(uint8_t       
                                   SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
                               aKeyIdMode, aKeyId, aPrevKey.m8, sizeof(otMacKey), aCurrKey.m8, sizeof(otMacKey),
                               aNextKey.m8, sizeof(otMacKey)));
+
+exit:
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacFrameCounter(uint32_t aMacFrameCounter)
+{
+    otError error;
+
+    SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, aMacFrameCounter));
 
 exit:
     return error;
@@ -1433,8 +1448,9 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
                                                                         const uint8_t *   aBuffer,
                                                                         uint16_t          aLength)
 {
-    otError         error  = OT_ERROR_NONE;
-    spinel_status_t status = SPINEL_STATUS_OK;
+    otError         error        = OT_ERROR_NONE;
+    spinel_status_t status       = SPINEL_STATUS_OK;
+    bool            framePending = false;
     spinel_ssize_t  unpacked;
 
     VerifyOrExit(aCommand == SPINEL_CMD_PROP_VALUE_IS && aKey == SPINEL_PROP_LAST_STATUS, error = OT_ERROR_FAILED);
@@ -1445,28 +1461,34 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
     aBuffer += unpacked;
     aLength -= static_cast<uint16_t>(unpacked);
 
+    unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_BOOL_S, &framePending);
+    VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+    aBuffer += unpacked;
+    aLength -= static_cast<uint16_t>(unpacked);
+
     if (status == SPINEL_STATUS_OK)
     {
-        bool framePending = false;
-        unpacked          = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_BOOL_S, &framePending);
-        OT_UNUSED_VARIABLE(framePending);
-        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-
+        SuccessOrExit(error = ParseRadioFrame(mAckRadioFrame, aBuffer, aLength, unpacked));
         aBuffer += unpacked;
-        aLength -= static_cast<spinel_size_t>(unpacked);
-
-        if (aLength > 0)
-        {
-            SuccessOrExit(error = ParseRadioFrame(mAckRadioFrame, aBuffer, aLength));
-        }
-        else
-        {
-            mAckRadioFrame.mLength = 0;
-        }
+        aLength -= static_cast<uint16_t>(unpacked);
     }
     else
     {
         error = SpinelStatusToOtError(status);
+    }
+
+    if ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) && static_cast<Mac::TxFrame *>(mTransmitFrame)->GetSecurityEnabled())
+    {
+        uint8_t  keyId;
+        uint32_t frameCounter;
+
+        // Replace transmit frame security key index and frame counter with the one filled by RCP
+        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT32_S, &keyId,
+                                          &frameCounter);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        static_cast<Mac::TxFrame *>(mTransmitFrame)->SetKeyId(keyId);
+        static_cast<Mac::TxFrame *>(mTransmitFrame)->SetFrameCounter(frameCounter);
     }
 
 exit:

@@ -569,7 +569,7 @@ public:
      *
      */
     void SetSteeringData(const Mac::ExtAddress *aExtAddress);
-#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
+#endif
 
     /**
      * This method gets the assigned parent priority.
@@ -856,8 +856,8 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
-    MeshCoP::SteeringDataTlv mSteeringData;
-#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
+    MeshCoP::SteeringData mSteeringData;
+#endif
 };
 
 #endif // OPENTHREAD_FTD

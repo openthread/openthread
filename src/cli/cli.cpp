@@ -2480,8 +2480,8 @@ void Interpreter::ProcessPromiscuous(uint8_t aArgsLength, char *aArgs[])
     {
         if (strcmp(aArgs[0], "enable") == 0)
         {
-            otLinkSetPcapCallback(mInstance, &HandleLinkPcapReceive, this);
             SuccessOrExit(error = otLinkSetPromiscuous(mInstance, true));
+            otLinkSetPcapCallback(mInstance, &HandleLinkPcapReceive, this);
         }
         else if (strcmp(aArgs[0], "disable") == 0)
         {

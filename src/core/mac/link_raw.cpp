@@ -220,6 +220,17 @@ exit:
     return error;
 }
 
+otError LinkRaw::SetMacFrameCounter(uint32_t aMacFrameCounter)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    mSubMac.SetFrameCounter(aMacFrameCounter);
+
+exit:
+    return error;
+}
+
 // LCOV_EXCL_START
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)

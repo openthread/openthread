@@ -41,6 +41,7 @@
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "meshcop/joiner_router.hpp"
+#include "meshcop/meshcop.hpp"
 #include "net/udp6.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
@@ -1828,12 +1829,11 @@ private:
     Ip6::UdpSocket mSocket;
     uint32_t       mTimeout;
 
-    DiscoverHandler mDiscoverHandler;
-    void *          mDiscoverContext;
-    uint16_t        mDiscoverCcittIndex;
-    uint16_t        mDiscoverAnsiIndex;
-    bool            mDiscoverInProgress;
-    bool            mDiscoverEnableFiltering;
+    DiscoverHandler                       mDiscoverHandler;
+    void *                                mDiscoverContext;
+    MeshCoP::SteeringData::HashBitIndexes mDiscoverFilterIndexes;
+    bool                                  mDiscoverInProgress;
+    bool                                  mDiscoverEnableFiltering;
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     uint16_t mPreviousParentRloc;

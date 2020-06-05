@@ -31,6 +31,10 @@
  *   This file implements common MeshCoP utility functions.
  */
 
+#include "meshcop.hpp"
+
+#include "common/crc16.hpp"
+#include "common/debug.hpp"
 #include "common/locator-getters.hpp"
 #include "crypto/pbkdf2_cmac.h"
 #include "crypto/sha256.hpp"
@@ -39,6 +43,76 @@
 
 namespace ot {
 namespace MeshCoP {
+
+void SteeringData::Init(uint8_t aLength)
+{
+    OT_ASSERT(aLength <= kMaxLength);
+    mLength = aLength;
+    memset(m8, 0, sizeof(m8));
+}
+
+void SteeringData::SetToPermitAllJoiners(void)
+{
+    Init(1);
+    m8[0] = kPermitAll;
+}
+
+void SteeringData::UpdateBloomFilter(const Mac::ExtAddress &aJoinerId)
+{
+    HashBitIndexes indexes;
+
+    OT_ASSERT((mLength > 0) && (mLength <= kMaxLength));
+
+    CalculateHashBitIndexes(aJoinerId, indexes);
+
+    SetBit(indexes.mIndex[0] % GetNumBits());
+    SetBit(indexes.mIndex[1] % GetNumBits());
+}
+
+bool SteeringData::Contains(const Mac::ExtAddress &aJoinerId) const
+{
+    HashBitIndexes indexes;
+
+    CalculateHashBitIndexes(aJoinerId, indexes);
+
+    return Contains(indexes);
+}
+
+bool SteeringData::Contains(const HashBitIndexes &aIndexes) const
+{
+    return (mLength > 0) && GetBit(aIndexes.mIndex[0] % GetNumBits()) && GetBit(aIndexes.mIndex[1] % GetNumBits());
+}
+
+void SteeringData::CalculateHashBitIndexes(const Mac::ExtAddress &aJoinerId, HashBitIndexes &aIndexes)
+{
+    Crc16 ccitt(Crc16::kCcitt);
+    Crc16 ansi(Crc16::kAnsi);
+
+    for (uint8_t i = 0; i < sizeof(Mac::ExtAddress); i++)
+    {
+        ccitt.Update(aJoinerId.m8[i]);
+        ansi.Update(aJoinerId.m8[i]);
+    }
+
+    aIndexes.mIndex[0] = ccitt.Get();
+    aIndexes.mIndex[1] = ansi.Get();
+}
+
+bool SteeringData::DoesAllMatch(uint8_t aMatch) const
+{
+    bool matches = true;
+
+    for (uint8_t i = 0; i < mLength; i++)
+    {
+        if (m8[i] != aMatch)
+        {
+            matches = false;
+            break;
+        }
+    }
+
+    return matches;
+}
 
 void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
 {

@@ -233,6 +233,11 @@ otError otLinkRawSetMacKey(otInstance *    aInstance,
         *static_cast<const Mac::Key *>(aNextKey));
 }
 
+otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetMacFrameCounter(aMacFrameCounter);
+}
+
 #if OPENTHREAD_RADIO
 
 otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)

@@ -103,6 +103,7 @@ otError SpiInterface::Init(Arguments &aArguments)
     uint16_t    spiCsDelay         = OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US;
     uint8_t     spiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
     uint8_t     spiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
+    const char *value;
 
     spiGpioIntDevice   = aArguments.GetValue("gpio-int-device");
     spiGpioResetDevice = aArguments.GetValue("gpio-reset-device");
@@ -111,45 +112,45 @@ otError SpiInterface::Init(Arguments &aArguments)
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
 
-    if (aArguments.GetValue("gpio-int-line"))
+    if ((value = aArguments.GetValue("gpio-int-line")))
     {
-        spiGpioIntLine = static_cast<uint8_t>(atoi(aArguments.GetValue("gpio-int-line")));
+        spiGpioIntLine = static_cast<uint8_t>(atoi(value));
     }
     else
     {
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
-    if (aArguments.GetValue("gpio-reset-line"))
+    if ((value = aArguments.GetValue("gpio-reset-line")))
     {
-        spiGpioResetLine = static_cast<uint8_t>(atoi(aArguments.GetValue("gpio-reset-line")));
+        spiGpioResetLine = static_cast<uint8_t>(atoi(value));
     }
     else
     {
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
-    if (aArguments.GetValue("spi-mode"))
+    if ((value = aArguments.GetValue("spi-mode")))
     {
-        spiMode = static_cast<uint8_t>(atoi(aArguments.GetValue("spi-mode")));
+        spiMode = static_cast<uint8_t>(atoi(value));
     }
-    if (aArguments.GetValue("spi-speed"))
+    if ((value = aArguments.GetValue("spi-speed")))
     {
-        spiSpeed = static_cast<uint32_t>(atoi(aArguments.GetValue("spi-speed")));
+        spiSpeed = static_cast<uint32_t>(atoi(value));
     }
-    if (aArguments.GetValue("spi-reset-delay"))
+    if ((value = aArguments.GetValue("spi-reset-delay")))
     {
-        spiResetDelay = static_cast<uint32_t>(atoi(aArguments.GetValue("spi-reset-delay")));
+        spiResetDelay = static_cast<uint32_t>(atoi(value));
     }
-    if (aArguments.GetValue("spi-cs-delay"))
+    if ((value = aArguments.GetValue("spi-cs-delay")))
     {
-        spiCsDelay = static_cast<uint16_t>(atoi(aArguments.GetValue("spi-cs-delay")));
+        spiCsDelay = static_cast<uint16_t>(atoi(value));
     }
-    if (aArguments.GetValue("spi-align-allowance"))
+    if ((value = aArguments.GetValue("spi-align-allowance")))
     {
-        spiAlignAllowance = static_cast<uint8_t>(atoi(aArguments.GetValue("spi-align-allowance")));
+        spiAlignAllowance = static_cast<uint8_t>(atoi(value));
     }
-    if (aArguments.GetValue("spi-small-packet"))
+    if ((value = aArguments.GetValue("spi-small-packet")))
     {
-        spiSmallPacketSize = static_cast<uint8_t>(atoi(aArguments.GetValue("spi-small-packet")));
+        spiSmallPacketSize = static_cast<uint8_t>(atoi(value));
     }
 
     VerifyOrDie(spiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_FAILURE);

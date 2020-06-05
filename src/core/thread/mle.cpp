@@ -92,8 +92,6 @@ Mle::Mle(Instance &aInstance)
     , mTimeout(kMleEndDeviceTimeout)
     , mDiscoverHandler(NULL)
     , mDiscoverContext(NULL)
-    , mDiscoverCcittIndex(0)
-    , mDiscoverAnsiIndex(0)
     , mDiscoverInProgress(false)
     , mDiscoverEnableFiltering(false)
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
@@ -531,21 +529,11 @@ otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
     if (mDiscoverEnableFiltering)
     {
         Mac::ExtAddress extAddress;
-        Crc16           ccitt(Crc16::kCcitt);
-        Crc16           ansi(Crc16::kAnsi);
 
         Get<Radio>().GetIeeeEui64(extAddress);
         MeshCoP::ComputeJoinerId(extAddress, extAddress);
 
-        // Compute bloom filter (for steering data)
-        for (size_t i = 0; i < sizeof(extAddress.m8); i++)
-        {
-            ccitt.Update(extAddress.m8[i]);
-            ansi.Update(extAddress.m8[i]);
-        }
-
-        mDiscoverCcittIndex = ccitt.Get();
-        mDiscoverAnsiIndex  = ansi.Get();
+        MeshCoP::SteeringData::CalculateHashBitIndexes(extAddress, mDiscoverFilterIndexes);
     }
 
     mDiscoverHandler = aCallback;
@@ -3926,7 +3914,6 @@ void Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInf
     MeshCoP::Tlv                  meshcopTlv;
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
     MeshCoP::NetworkNameTlv       networkName;
-    MeshCoP::SteeringDataTlv      steeringData;
     otActiveScanResult            result;
     uint16_t                      offset;
     uint16_t                      end;
@@ -3974,20 +3961,27 @@ void Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInf
             break;
 
         case MeshCoP::Tlv::kSteeringData:
-            aMessage.Read(offset, sizeof(steeringData), &steeringData);
-            VerifyOrExit(steeringData.IsValid(), error = OT_ERROR_PARSE);
-
-            if (mDiscoverEnableFiltering)
+            if (meshcopTlv.GetLength() > 0)
             {
-                VerifyOrExit((steeringData.GetBit(mDiscoverCcittIndex % steeringData.GetNumBits()) &&
-                              steeringData.GetBit(mDiscoverAnsiIndex % steeringData.GetNumBits())),
-                             OT_NOOP);
+                MeshCoP::SteeringData &steeringData = static_cast<MeshCoP::SteeringData &>(result.mSteeringData);
+                uint8_t                dataLength   = MeshCoP::SteeringData::kMaxLength;
+
+                if (meshcopTlv.GetLength() < dataLength)
+                {
+                    dataLength = meshcopTlv.GetLength();
+                }
+
+                steeringData.Init(dataLength);
+
+                SuccessOrExit(error = Tlv::ReadTlv(aMessage, offset, steeringData.GetData(), dataLength));
+
+                if (mDiscoverEnableFiltering)
+                {
+                    VerifyOrExit(steeringData.Contains(mDiscoverFilterIndexes), OT_NOOP);
+                }
+
+                didCheckSteeringData = true;
             }
-
-            didCheckSteeringData         = true;
-            result.mSteeringData.mLength = steeringData.GetSteeringDataLength();
-            memcpy(result.mSteeringData.m8, steeringData.GetValue(), result.mSteeringData.mLength);
-
             break;
 
         case MeshCoP::Tlv::kJoinerUdpPort:

@@ -352,6 +352,18 @@ otError otLinkRawSetMacKey(otInstance *    aInstance,
                            const otMacKey *aNextKey);
 
 /**
+ * Sets the current MAC frame counter value.
+ *
+ * @param[in]   aInstance         A pointer to an OpenThread instance.
+ * @param[in]   aMacFrameCounter  The MAC frame counter value.
+ *
+ * @retval OT_ERROR_NONE             If successful.
+ * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+ *
+ */
+otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
+
+/**
  * @}
  *
  */

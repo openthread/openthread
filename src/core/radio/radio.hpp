@@ -277,6 +277,17 @@ public:
     }
 
     /**
+     * This method sets the current MAC Frame Counter value.
+     *
+     * @param[in] aMacFrameCounter  The MAC Frame Counter value.
+     *
+     */
+    void SetMacFrameCounter(uint32_t aMacFrameCounter)
+    {
+        otPlatRadioSetMacFrameCounter(GetInstance(), aMacFrameCounter);
+    }
+
+    /**
      * This method gets the radio's transmit power in dBm.
      *
      * @param[out] aPower    A reference to output the transmit power in dBm.

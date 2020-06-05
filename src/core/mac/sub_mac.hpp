@@ -167,6 +167,14 @@ public:
          *
          */
         void EnergyScanDone(int8_t aMaxRssi);
+
+        /**
+         * This method notifies user of `SubMac` that MAC frame counter is updated.
+         *
+         * @param[in]  aFrameCounter  The MAC frame counter value.
+         *
+         */
+        void FrameCounterUpdated(uint32_t aFrameCounter);
     };
 
     /**
@@ -489,6 +497,22 @@ public:
      */
     const Key &GetNextMacKey(void) const { return mNextKey; }
 
+    /**
+     * This method returns the current MAC frame counter value.
+     *
+     * @returns The current MAC frame counter value.
+     *
+     */
+    uint32_t GetFrameCounter(void) const { return mFrameCounter; };
+
+    /**
+     * This method sets the current MAC Frame Counter value.
+     *
+     * @param[in] aFrameCounter  The MAC Frame Counter value.
+     *
+     */
+    void SetFrameCounter(uint32_t aFrameCounter);
+
 private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     static void HandleCslTimer(Timer &aTimer);
@@ -541,6 +565,7 @@ private:
     bool ShouldHandleEnergyScan(void) const;
 
     void ProcessTransmitSecurity(void);
+    void UpdateFrameCounter(uint32_t aFrameCounter);
     void StartCsmaBackoff(void);
     void BeginTransmit(void);
     void SampleRssi(void);
@@ -572,6 +597,7 @@ private:
     Key                mPrevKey;
     Key                mCurrKey;
     Key                mNextKey;
+    uint32_t           mFrameCounter;
     uint8_t            mKeyId;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicro mTimer;
