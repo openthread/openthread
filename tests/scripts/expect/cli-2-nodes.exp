@@ -124,9 +124,11 @@ for {set i 2} {$i <= 11} {incr i} {
 
 # pcap receive
 set spawn_id $spawn_3
-expect -re {={44}\[len =\s+\d+]={28}}
+expect -re {============================================\[len = +\d+]============================}
 expect -re {\|( ([0-9A-Z]{2}|\.\.)){16}\|( .){16}\|}
-expect -re {-{83}}
+expect -- "-----------------------------------------------------------------------------------"
+send "promiscuous disable\n"
+expect "Done"
 
 
 # child
@@ -146,6 +148,66 @@ set child_id $expect_out(1,string)
 expect "Done"
 send "child $child_id\n"
 expect "Ext Addr: $extaddr"
+expect "Done"
+
+
+# router
+set spawn_id $spawn_1
+send "extaddr\n"
+expect -re {([0-9a-f]{16})}
+set extaddr $expect_out(1,string)
+expect "Done"
+send "router list\n"
+expect -re {(\d+)}
+set router_id $expect_out(1,string)
+expect "Done"
+send "router $router_id\n"
+expect -re {Rloc: ([0-9a-f]{4})}
+set rloc $expect_out(1,string)
+expect "Done"
+send "router table\n"
+expect "| ID | RLOC16 | Next Hop | Path Cost | LQ In | LQ Out | Age | Extended MAC     |"
+expect "+----+--------+----------+-----------+-------+--------+-----+------------------+"
+expect -re "\\| +$router_id +\\| +0x$rloc +\\| +\\d+ +\\| +\\d+ +\\| +\\d+ +\\| +\\d+ +\\| +\\d+ +\\| +$extaddr +\\|"
+expect "Done"
+
+
+# scan
+set spawn_id $spawn_1
+send "extaddr\n"
+expect -re {([0-9a-f]{16})}
+set extaddr $expect_out(1,string)
+expect "Done"
+send "panid\n"
+expect -re {([0-9a-f]{4})}
+set pan $expect_out(1,string)
+expect "Done"
+send "extpanid\n"
+expect -re {([0-9a-f]{16})}
+set extpan $expect_out(1,string)
+expect "Done"
+send "networkname\n"
+expect "networkname"
+expect -re {\r\n(.*?)\r\n}
+set network $expect_out(1,string)
+expect "Done"
+send "channel\n"
+expect -re {(\d+)}
+set channel $expect_out(1,string)
+expect "Done"
+
+set spawn_id $spawn_3
+send "scan $channel\n"
+expect "| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |"
+expect "+---+------------------+------------------+------+------------------+----+-----+-----+"
+wait_for "" "\\| +\\d +\\| +$network +\\| +$extpan +\\| +$pan +\\| +$extaddr +\\| +$channel +\\| +-?\\d+ +\\| +\\d +\\|"
+wait_for "" "Done"
+send "scan energy 100\n"
+expect "| Ch | RSSI |"
+expect "+----+------+"
+for {set i 11} {$i <= 26} {incr i} {
+    expect -re "\\| $i \\| +-?\\d+ \\|"
+}
 expect "Done"
 
 
