@@ -27,78 +27,21 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-proc wait_for {command expected} {
-    set result 0
-    for {set i 0} {$i < 20} {incr i} {
-        send "$command\n"
-        expect {
-            -re $expected {
-                set result 1
-            }
-            timeout {
-                # Do nothing
-            }
-        }
-        if {$result == 1} {
-            break
-        }
-    }
-    if {$result == 0} {
-        exit 1
-    }
-}
+source "tests/scripts/expect/_multinode.exp"
 
 
-# setup
 set timeout 1
-spawn $env(OT_COMMAND) 1
-set spawn_1 $spawn_id
-spawn $env(OT_COMMAND) 2
-set spawn_2 $spawn_id
+setup_nodes
 spawn $env(OT_COMMAND) 3
 set spawn_3 $spawn_id
-expect_after {
-    timeout { exit 1 }
-}
-set psk "J01NME"
 
-set spawn_id $spawn_2
-send "eui64\n"
-expect -re {([0-9a-f]{16})}
-set eui64 $expect_out(1,string)
-expect "Done"
 
 set spawn_id $spawn_1
-send "dataset init new\n"
-expect "Done"
-send "dataset commit active\n"
-expect "Done"
-send "ifconfig up\n"
-expect "Done"
-send "thread start\n"
-expect "Done"
-wait_for "state" {leader}
-send "commissioner start\n"
-expect "Done"
-expect "Commissioner: active"
-send "commissioner joiner add $eui64 $psk\n"
-expect "Done"
 send "channel\n"
+expect "channel"
 expect -re {(\d+)}
 set channel $expect_out(1,string)
 expect "Done"
-
-set spawn_id $spawn_2
-send "mode rs\n"
-expect "Done"
-send "ifconfig up\n"
-expect "Done"
-send "joiner start $psk\n"
-expect "Done"
-wait_for "" {Join success}
-send "thread start\n"
-expect "Done"
-wait_for "state" "child"
 
 set spawn_id $spawn_3
 send "channel $channel\n"
@@ -211,11 +154,4 @@ for {set i 11} {$i <= 26} {incr i} {
 expect "Done"
 
 
-# cleanup
-set spawn_id $spawn_1
-send "\x04"
-expect eof
-
-set spawn_id $spawn_2
-send "\x04"
-expect eof
+dispose_nodes
