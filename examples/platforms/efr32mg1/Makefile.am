@@ -66,6 +66,7 @@ libopenthread_efr32mg1_a_CPPFLAGS                                            = \
     -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG1_$(BOARD)/config                      \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32                     \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32/config              \
+    -I$(SDK_SRC_DIR)/platform/bootloader/api                                    \
     -I$(SDK_SRC_DIR)/platform/common/inc                                        \
     -I$(SDK_SRC_DIR)/platform/CMSIS/Include                                     \
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG1P/Include             \

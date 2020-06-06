@@ -40,7 +40,7 @@ KEEP_SYMBOL const ApplicationProperties_t sl_app_properties = {
   /// Version number of this struct
   .structVersion = APPLICATION_PROPERTIES_VERSION,
   /// Type of signature this application is signed with
-  .signatureType = APPLICATION_SIGNATURE_ECDSA_P256,
+  .signatureType = APPLICATION_SIGNATURE_NONE,
   /// Location of the signature. Typically a pointer to the end of the application
   .signatureLocation = 0,
   /// Information about the application

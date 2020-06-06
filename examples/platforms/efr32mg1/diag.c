@@ -37,13 +37,44 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include <openthread/cli.h>
 #include <openthread/config.h>
+#include <openthread/platform/diag.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 
 #include "platform-efr32.h"
+#include "btl_interface.h"
+#include <utils/code_utils.h>
 
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
+struct PlatformDiagCommand
+{
+    const char *mName;
+    otError (*mCommand)(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+};
+
+struct PlatformDiagMessage
+{
+    const char mMessageDescriptor[11];
+    uint8_t    mChannel;
+    int16_t    mID;
+    uint32_t   mCnt;
+};
+
+static otError parseLong(char *aArgs, long *aValue)
+{
+    char *endptr;
+    *aValue = strtol(aArgs, &endptr, 0);
+    return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
+}
+
+static void appendErrorResult(otError aError, char *aOutput, size_t aOutputMaxLen)
+{
+    if (aError != OT_ERROR_NONE)
+    {
+        snprintf(aOutput, aOutputMaxLen, "failed\r\nstatus %#x\r\n", aError);
+    }
+}
 
 /**
  * Diagnostics mode variables.
@@ -54,6 +85,60 @@ static bool sDiagMode = false;
 void otPlatDiagModeSet(bool aMode)
 {
     sDiagMode = aMode;
+}
+
+static otError processLaunchBootloader(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+         bootloader_init();
+         bootloader_rebootAndInstall();
+         snprintf(aOutput, aOutputMaxLen, "Restting Bootloader\r\n");
+    }
+    else
+    {
+        long value;
+
+        error = parseLong(aArgs[0], &value);
+        otEXPECT(error == OT_ERROR_NONE);
+        otEXPECT_ACTION(value >= 0, error = OT_ERROR_INVALID_ARGS);
+        snprintf(aOutput, aOutputMaxLen, "invalid command\r\n");
+    }
+
+exit:
+    appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
+}
+
+
+const struct PlatformDiagCommand sCommands[] = {
+    {"launchbootloader", &processLaunchBootloader},
+};
+
+otError otPlatDiagProcess(otInstance *aInstance,
+                          uint8_t     aArgsLength,
+                          char *      aArgs[],
+                          char *      aOutput,
+                          size_t      aOutputMaxLen)
+{
+    otError error = OT_ERROR_INVALID_COMMAND;
+    size_t  i;
+
+    for (i = 0; i < otARRAY_LENGTH(sCommands); i++)
+    {
+        if (strcmp(aArgs[0], sCommands[i].mName) == 0)
+        {
+            error = sCommands[i].mCommand(aInstance, aArgsLength - 1, aArgsLength > 1 ? &aArgs[1] : NULL, aOutput,
+                                          aOutputMaxLen);
+            break;
+        }
+    }
+
+    return error;
 }
 
 bool otPlatDiagModeGet()
@@ -82,5 +167,3 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 }
-
-#endif // #if OPENTHREAD_CONFIG_DIAG_ENABLE
