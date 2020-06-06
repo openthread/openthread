@@ -1,0 +1,175 @@
+#
+#  Copyright (c) 2020, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+name: POSIX
+
+on: [push, pull_request]
+
+jobs:
+
+  cancel-previous-runs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: rokroskar/workflow-run-cleanup-action@master
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      if: "github.ref != 'refs/heads/master'"
+
+
+  posix-cli:
+    runs-on: ubuntu-18.04
+    env:
+      COVERAGE: 1
+      PYTHONUNBUFFERED: 1
+      READLINE: readline
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 1
+      VIRTUAL_TIME_UART: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y libreadline6-dev
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        ./bootstrap
+        make -f examples/Makefile-simulation
+        make -f src/posix/Makefile-posix
+    - name: Run
+      run: |
+        VERBOSE=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli) -v" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
+  posix-ncp:
+    runs-on: ubuntu-18.04
+    env:
+      COVERAGE: 1
+      NODE_TYPE: ncp-sim
+      PYTHONUNBUFFERED: 1
+      READLINE: readline
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 1
+      VIRTUAL_TIME_UART: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y libreadline6-dev python3-setuptools
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+        sudo python3 -m pip install git+https://github.com/openthread/pyspinel
+    - name: Build
+      run: |
+        ./bootstrap
+        make -f examples/Makefile-simulation
+        make -f src/posix/Makefile-posix
+    - name: Run
+      run: |
+        VERBOSE=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
+  posix-ncp-rcp-migrate:
+    runs-on: ubuntu-18.04
+    env:
+      COVERAGE: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y expect
+    - name: Build
+      run: |
+        ./bootstrap
+        script/check-ncp-rcp-migrate build
+    - name: Run
+      run: |
+        script/check-ncp-rcp-migrate check
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
+  posix-pty:
+    runs-on: ubuntu-18.04
+    env:
+      COVERAGE: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y socat expect
+        cd /tmp
+        wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
+        tar xvf bsd-licensed.tar.gz
+        cd libcoap-bsd-licensed
+        ./autogen.sh
+        ./configure --prefix= --exec-prefix=/usr --with-boost=internal --disable-tests --disable-documentation
+        make -j2
+        sudo make install
+    - name: Build
+      run: |
+        ./bootstrap
+        script/check-posix-pty build
+    - name: Run
+      run: |
+        script/check-posix-pty check
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
+  posix-pty-daemon:
+    runs-on: ubuntu-18.04
+    env:
+      COVERAGE: 1
+      DAEMON: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y socat expect
+        cd /tmp
+        wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
+        tar xvf bsd-licensed.tar.gz
+        cd libcoap-bsd-licensed
+        ./autogen.sh
+        ./configure --prefix= --exec-prefix=/usr --with-boost=internal --disable-tests --disable-documentation
+        make -j2
+        sudo make install
+    - name: Build
+      run: |
+        ./bootstrap
+        script/check-posix-pty build
+    - name: Run
+      run: |
+        script/check-posix-pty check
+    - name: Codecov
+      uses: codecov/codecov-action@v1
