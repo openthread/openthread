@@ -64,7 +64,9 @@ READLINE                             ?= readline
 REFERENCE_DEVICE                     ?= 1
 SERVICE                              ?= 1
 SNTP_CLIENT                          ?= 1
+ifneq ($(DAEMON),1)
 UDP_FORWARD                          ?= 1
+endif
 
 COMMONCFLAGS                         := \
     -g                                  \
