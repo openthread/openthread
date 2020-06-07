@@ -44,7 +44,6 @@ BuildJobs                      ?= 10
 configure_OPTIONS               = \
     --enable-cli                  \
     --enable-mtd                  \
-    --enable-ftd                  \
     --enable-ncp                  \
     --enable-radio-only           \
     --enable-linker-map           \
