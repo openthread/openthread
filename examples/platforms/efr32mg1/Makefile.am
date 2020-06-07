@@ -100,6 +100,7 @@ libopenthread_efr32mg1_a_CPPFLAGS                                            = \
 
 PLATFORM_SOURCES                                                              = \
     alarm.c                                                                     \
+    btl_interface.c                                                             \
     diag.c                                                                      \
     entropy.c                                                                   \
     fem-control.c                                                               \

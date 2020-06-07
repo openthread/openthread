@@ -32,20 +32,30 @@
  *
  */
 
+#include <openthread-core-config.h>
+#include <openthread/config.h>
+
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
 
 #include <openthread/cli.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/config.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/toolchain.h>
 
 #include "platform-efr32.h"
-#include "btl_interface.h"
+#include <common/logging.hpp>
 #include <utils/code_utils.h>
+#include "btl_interface.h"
+#include "retargetserial.h"
+
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 struct PlatformDiagCommand
 {
@@ -92,6 +102,8 @@ static otError processLaunchBootloader(otInstance *aInstance, uint8_t aArgsLengt
     OT_UNUSED_VARIABLE(aInstance);
 
     otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
     if (aArgsLength == 0)
     {
@@ -167,3 +179,5 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 }
+
+#endif // #if OPENTHREAD_CONFIG_DIAG_ENABLE
