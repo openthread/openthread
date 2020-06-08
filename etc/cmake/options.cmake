@@ -132,7 +132,7 @@ endif()
 
 option(OT_EXTERNAL_HEAP "enable external heap support")
 if(OT_EXTERNAL_HEAP)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE=1")
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1")
 endif()
 
 option(OT_IP6_FRAGM "enable ipv6 fragmentation support")
