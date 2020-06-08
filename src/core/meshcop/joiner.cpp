@@ -87,30 +87,6 @@ exit:
     return;
 }
 
-bool Joiner::IsPskdValid(const char *aPskd)
-{
-    bool   valid      = false;
-    size_t pskdLength = StringLength(aPskd, kPskdMaxLength + 1);
-
-    OT_STATIC_ASSERT(static_cast<uint8_t>(kPskdMaxLength) <= static_cast<uint8_t>(Dtls::kPskMaxLength),
-                     "The maximum length of DTLS PSK is smaller than joiner PSKd");
-
-    VerifyOrExit(pskdLength >= kPskdMinLength && pskdLength <= kPskdMaxLength, OT_NOOP);
-
-    for (size_t i = 0; i < pskdLength; i++)
-    {
-        char c = aPskd[i];
-
-        VerifyOrExit(isdigit(c) || isupper(c), OT_NOOP);
-        VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z', OT_NOOP);
-    }
-
-    valid = true;
-
-exit:
-    return valid;
-}
-
 otError Joiner::Start(const char *     aPskd,
                       const char *     aProvisioningUrl,
                       const char *     aVendorName,
@@ -697,3 +673,37 @@ exit:
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_JOINER_ENABLE
+
+#if OPENTHREAD_CONFIG_JOINER_ENABLE || OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+
+namespace ot {
+namespace MeshCoP {
+
+bool Joiner::IsPskdValid(const char *aPskd)
+{
+    bool   valid      = false;
+    size_t pskdLength = StringLength(aPskd, kPskdMaxLength + 1);
+
+    OT_STATIC_ASSERT(static_cast<uint8_t>(kPskdMaxLength) <= static_cast<uint8_t>(Dtls::kPskMaxLength),
+                     "The maximum length of DTLS PSK is smaller than joiner PSKd");
+
+    VerifyOrExit(pskdLength >= kPskdMinLength && pskdLength <= kPskdMaxLength, OT_NOOP);
+
+    for (size_t i = 0; i < pskdLength; i++)
+    {
+        char c = aPskd[i];
+
+        VerifyOrExit(isdigit(c) || isupper(c), OT_NOOP);
+        VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z', OT_NOOP);
+    }
+
+    valid = true;
+
+exit:
+    return valid;
+}
+
+} // namespace MeshCoP
+} // namespace ot
+
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE || OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
