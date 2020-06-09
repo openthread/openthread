@@ -149,6 +149,8 @@ WEAK void PVTVF1_AMBER_IRQHandler(void);
 WEAK void PVTVF1_RED_IRQHandler(void);
 WEAK void BLE_WAKE_UP_TIMER_IRQHandler(void);
 WEAK void SHA_IRQHandler(void);
+WEAK void vMMAC_IntHandlerBbc(void);
+WEAK void vMMAC_IntHandlerPhy(void);
 
 //*****************************************************************************
 // Forward declaration of the driver IRQ handlers. These are aliased
@@ -842,17 +844,34 @@ WEAK void BLE_LL_ALL_IRQHandler(void)
 
 WEAK void ZIGBEE_MAC_IRQHandler(void)
 {
-    ZIGBEE_MAC_DriverIRQHandler();
+    if (vMMAC_IntHandlerBbc)
+    {
+        vMMAC_IntHandlerBbc();
+    }
+    else if (ZIGBEE_MAC_IRQHandler)
+    {
+        ZIGBEE_MAC_IRQHandler();
+    }
+    else
+    {
+        IntDefaultHandler();
+    }
 }
 
 WEAK void ZIGBEE_MODEM_IRQHandler(void)
 {
-    ZIGBEE_MODEM_DriverIRQHandler();
-}
-
-WEAK void RFP_TMU_IRQHandler(void)
-{
-    RFP_TMU_DriverIRQHandler();
+    if (vMMAC_IntHandlerPhy)
+    {
+        vMMAC_IntHandlerPhy();
+    }
+    else if (ZIGBEE_MODEM_IRQHandler)
+    {
+        ZIGBEE_MODEM_IRQHandler();
+    }
+    else
+    {
+        IntDefaultHandler();
+    }
 }
 
 WEAK void RFP_AGC_IRQHandler(void)
