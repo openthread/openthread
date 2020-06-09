@@ -37,6 +37,7 @@ function(ot_get_platforms arg_platforms)
         endif()
     endforeach()
 
+    list(REMOVE_ITEM result utils)
     list(SORT result)
     set(${arg_platforms} "${result}" PARENT_SCOPE)
 endfunction()
