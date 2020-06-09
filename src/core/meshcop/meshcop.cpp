@@ -44,6 +44,12 @@
 namespace ot {
 namespace MeshCoP {
 
+enum
+{
+    kPskdMinLength = 6,  ///< Minimum PSKd length.
+    kPskdMaxLength = 32, ///< Maximum PSKd Length.
+};
+
 void SteeringData::Init(uint8_t aLength)
 {
     OT_ASSERT(aLength <= kMaxLength);
@@ -180,6 +186,32 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_JOINER_ENABLE || OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+bool IsPskdValid(const char *aPskd)
+{
+    bool   valid      = false;
+    size_t pskdLength = StringLength(aPskd, kPskdMaxLength + 1);
+
+    OT_STATIC_ASSERT(static_cast<uint8_t>(kPskdMaxLength) <= static_cast<uint8_t>(Dtls::kPskMaxLength),
+                     "The maximum length of DTLS PSK is smaller than joiner PSKd");
+
+    VerifyOrExit(pskdLength >= kPskdMinLength && pskdLength <= kPskdMaxLength, OT_NOOP);
+
+    for (size_t i = 0; i < pskdLength; i++)
+    {
+        char c = aPskd[i];
+
+        VerifyOrExit(isdigit(c) || isupper(c), OT_NOOP);
+        VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z', OT_NOOP);
+    }
+
+    valid = true;
+
+exit:
+    return valid;
+}
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE || OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 } // namespace MeshCoP
 } // namespace ot
