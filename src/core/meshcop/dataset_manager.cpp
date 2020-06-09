@@ -178,10 +178,28 @@ exit:
 
 otError DatasetManager::Save(const otOperationalDataset &aDataset)
 {
-    otError error = OT_ERROR_NONE;
+    otError error;
 
     SuccessOrExit(error = mLocal.Save(aDataset));
+    HandleDatasetUpdated();
 
+exit:
+    return error;
+}
+
+otError DatasetManager::Save(const otOperationalDatasetTlvs &aDataset)
+{
+    otError error;
+
+    SuccessOrExit(error = mLocal.Save(aDataset));
+    HandleDatasetUpdated();
+
+exit:
+    return error;
+}
+
+void DatasetManager::HandleDatasetUpdated(void)
+{
     switch (Get<Mle::MleRouter>().GetRole())
     {
     case Mle::kRoleDisabled:
@@ -205,9 +223,6 @@ otError DatasetManager::Save(const otOperationalDataset &aDataset)
     default:
         break;
     }
-
-exit:
-    return error;
 }
 
 otError DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
@@ -782,7 +797,18 @@ void PendingDataset::ClearNetwork(void)
 
 otError PendingDataset::Save(const otOperationalDataset &aDataset)
 {
-    otError error = OT_ERROR_NONE;
+    otError error;
+
+    SuccessOrExit(error = DatasetManager::Save(aDataset));
+    StartDelayTimer();
+
+exit:
+    return error;
+}
+
+otError PendingDataset::Save(const otOperationalDatasetTlvs &aDataset)
+{
+    otError error;
 
     SuccessOrExit(error = DatasetManager::Save(aDataset));
     StartDelayTimer();
