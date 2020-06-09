@@ -146,7 +146,7 @@ void ThreadNetif::Up(void)
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     IgnoreError(Get<Sntp::Client>().Start());
 #endif
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETIF_STATE);
+    Get<Notifier>().Signal(kEventThreadNetifStateChanged);
 
 exit:
     return;
@@ -177,7 +177,7 @@ void ThreadNetif::Down(void)
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     IgnoreError(Get<Utils::ChannelMonitor>().Stop());
 #endif
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETIF_STATE);
+    Get<Notifier>().Signal(kEventThreadNetifStateChanged);
 
 exit:
     return;

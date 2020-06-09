@@ -260,7 +260,7 @@ otError HdlcInterface::WaitForFrame(uint64_t aTimeoutUs)
     otError        error = OT_ERROR_NONE;
     struct timeval timeout;
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    struct Event event;
+    struct VirtualTimeEvent event;
 
     timeout.tv_sec  = static_cast<time_t>(aTimeoutUs / US_PER_S);
     timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % US_PER_S);

@@ -49,7 +49,7 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class BorderAgent : public InstanceLocator
+class BorderAgent : public InstanceLocator, public Notifier::Receiver
 {
 public:
     /**
@@ -93,8 +93,8 @@ public:
     void ApplyMeshLocalPrefix(void);
 
 private:
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
-    void        HandleStateChanged(otChangedFlags aFlags);
+    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
 
     static void HandleConnected(bool aConnected, void *aContext)
     {
@@ -162,8 +162,6 @@ private:
 
     TimerMilli         mTimer;
     otBorderAgentState mState;
-
-    Notifier::Callback mNotifierCallback;
 };
 
 } // namespace MeshCoP

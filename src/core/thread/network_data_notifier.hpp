@@ -49,7 +49,7 @@ namespace NetworkData {
  * This class implements the SVR_DATA.ntf transmission logic.
  *
  */
-class Notifier : public InstanceLocator
+class Notifier : public InstanceLocator, public ot::Notifier::Receiver
 {
 public:
     /**
@@ -74,8 +74,8 @@ private:
         kDelaySynchronizeServerData = 300000, ///< milliseconds
     };
 
-    static void HandleStateChanged(ot::Notifier::Callback &aCallback, otChangedFlags aFlags);
-    void        HandleStateChanged(otChangedFlags aFlags);
+    static void HandleNotifierEvents(ot::Notifier::Receiver &aReceiver, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
@@ -88,10 +88,9 @@ private:
 
     void SynchronizeServerData(void);
 
-    ot::Notifier::Callback mNotifierCallback;
-    TimerMilli             mTimer;
-    uint32_t               mNextDelay;
-    bool                   mWaitingForResponse;
+    TimerMilli mTimer;
+    uint32_t   mNextDelay;
+    bool       mWaitingForResponse;
 };
 
 } // namespace NetworkData

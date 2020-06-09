@@ -50,7 +50,7 @@ namespace ot {
  * This class implements OpenThread Time Synchronization Service.
  *
  */
-class TimeSync : public InstanceLocator
+class TimeSync : public InstanceLocator, public Notifier::Receiver
 {
 public:
     /**
@@ -157,7 +157,7 @@ public:
      * @param[in] aFlags Flags that denote the state change events.
      *
      */
-    void HandleStateChanged(otChangedFlags aFlags);
+    void HandleNotifierEvents(Events aEvents);
 
     /**
      * Callback to be called when timer expires.
@@ -173,7 +173,7 @@ private:
      * @param[in] aFlags Flags that denote the state change events.
      *
      */
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
+    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
 
     /**
      * Callback to be called when timer expires.
@@ -216,7 +216,6 @@ private:
     otNetworkTimeSyncCallbackFn
                         mTimeSyncCallback; ///< The callback to be called when time sync is handled or status updated.
     void *              mTimeSyncCallbackContext; ///< The context to be passed to callback.
-    Notifier::Callback  mNotifierCallback;        ///< Callback for thread state changes.
     TimerMilli          mTimer;                   ///< Timer for checking if a resync is required.
     otNetworkTimeStatus mCurrentStatus;           ///< Current network time status.
 };

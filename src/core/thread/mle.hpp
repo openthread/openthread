@@ -305,7 +305,7 @@ private:
  * This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
  *
  */
-class Mle : public InstanceLocator
+class Mle : public InstanceLocator, public Notifier::Receiver
 {
 public:
     /**
@@ -1696,8 +1696,8 @@ private:
         TimeMilli    mSendTime;    // Time when the message shall be sent.
     };
 
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
-    void        HandleStateChanged(otChangedFlags aFlags);
+    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
     static void HandleAttachTimer(Timer &aTimer);
     void        HandleAttachTimer(void);
     static void HandleDelayedResponseTimer(Timer &aTimer);
@@ -1822,8 +1822,6 @@ private:
     Ip6::NetifUnicastAddress   mMeshLocal16;
     Ip6::NetifMulticastAddress mLinkLocalAllThreadNodes;
     Ip6::NetifMulticastAddress mRealmLocalAllThreadNodes;
-
-    Notifier::Callback mNotifierCallback;
 
     otThreadParentResponseCallback mParentResponseCb;
     void *                         mParentResponseCbContext;
