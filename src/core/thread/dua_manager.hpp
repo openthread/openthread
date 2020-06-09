@@ -124,8 +124,15 @@ public:
      */
     const Ip6::InterfaceIdentifier &GetFixedDuaInterfaceIdentifier(void) const { return mFixedDuaInterfaceIdentifier; }
 
+    /*
+     * This method restores duplicate address detection information from non-volatile memory.
+     *
+     */
+    void Restore(void);
+
 private:
     otError GenerateDomainUnicastAddressIid(void);
+    otError Store(void);
 
     Ip6::InterfaceIdentifier mFixedDuaInterfaceIdentifier;
     Ip6::NetifUnicastAddress mDomainUnicastAddress;

@@ -39,6 +39,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "common/settings.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/thread_netif.hpp"
 #include "utils/slaac_address.hpp"
@@ -99,9 +100,16 @@ exit:
 otError DuaManager::GenerateDomainUnicastAddressIid(void)
 {
     otError error;
+    uint8_t dadCounter = mDadCounter;
 
-    if ((error = Get<Utils::Slaac>().GenerateIid(mDomainUnicastAddress, NULL, 0, &mDadCounter)) == OT_ERROR_NONE)
+    if ((error = Get<Utils::Slaac>().GenerateIid(mDomainUnicastAddress, NULL, 0, &dadCounter)) == OT_ERROR_NONE)
     {
+        if (dadCounter != mDadCounter)
+        {
+            mDadCounter = dadCounter;
+            IgnoreError(Store());
+        }
+
         otLogInfoIp6("Generated DUA: %s", mDomainUnicastAddress.GetAddress().ToString().AsCString());
     }
     else
@@ -154,6 +162,25 @@ void DuaManager::ClearFixedDuaInterfaceIdentifier(void)
 
 exit:
     return;
+}
+
+void DuaManager::Restore(void)
+{
+    Settings::DadInfo dadInfo;
+
+    SuccessOrExit(Get<Settings>().ReadDadInfo(dadInfo));
+    mDadCounter = dadInfo.GetDadCounter();
+
+exit:
+    return;
+}
+
+otError DuaManager::Store(void)
+{
+    Settings::DadInfo dadInfo;
+
+    dadInfo.SetDadCounter(mDadCounter);
+    return Get<Settings>().SaveDadInfo(dadInfo);
 }
 
 } // namespace ot
