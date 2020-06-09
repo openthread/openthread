@@ -211,6 +211,11 @@ private:
 #endif
 
     void ProcessDomainName(uint8_t aArgsLength, char *aArgs[]);
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+    void ProcessDua(uint8_t aArgsLength, char *aArgs[]);
+#endif
+
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #if OPENTHREAD_FTD

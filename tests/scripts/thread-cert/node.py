@@ -514,14 +514,23 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def set_domain_prefix(self, prefix):
-        flags = 'prosD'
+    def set_domain_prefix(self, prefix, flags='prosD'):
         self.add_prefix(prefix, flags)
         self.register_netdata()
 
     def remove_domain_prefix(self, prefix):
         self.remove_prefix(prefix)
         self.register_netdata()
+
+    def set_dua_iid(self, iid):
+        cmd = 'dua iid {}'.format(iid)
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def clear_dua_iid(self):
+        cmd = 'dua iid clear'
+        self.send_command(cmd)
+        self._expect('Done')
 
     def set_link_quality(self, addr, lqi):
         cmd = 'macfilter rss add-lqi %s %s' % (addr, lqi)
@@ -748,6 +757,16 @@ class Node:
 
         return None
 
+    def has_ipaddr(self, address):
+        ipaddr = ipaddress.ip_address(address)
+        ipaddrs = self.get_addrs()
+        for addr in ipaddrs:
+            if isinstance(addr, bytearray):
+                addr = bytes(addr)
+            if ipaddress.ip_address(addr) == ipaddr:
+                return True
+        return False
+
     def get_ipmaddrs(self):
         self.send_command('ipmaddr')
         return self._expect_results(r'\S+(:\S*)+')
@@ -880,7 +899,7 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def add_prefix(self, prefix, flags, prf='med'):
+    def add_prefix(self, prefix, flags='paosr', prf='med'):
         cmd = 'prefix add %s %s %s' % (prefix, flags, prf)
         self.send_command(cmd)
         self._expect('Done')
