@@ -281,7 +281,8 @@ class Node(object):
     """ A wpantund OT NCP instance """
 
     # defines the default verbosity setting (can be changed per `Node`)
-    _VERBOSE = False
+    _VERBOSE = os.getenv('TORANJ_VERBOSE',
+                         'no').lower() in ['true', '1', 't', 'y', 'yes']
     _SPEED_UP_FACTOR = 1  # defines the default time speed up factor
 
     # path to `wpantund`, `wpanctl`, `ot-ncp-ftd`,`ot-ncp` and `ot-rcp`
@@ -687,7 +688,7 @@ class Node(object):
     # class methods
 
     @classmethod
-    def init_all_nodes(cls, disable_logs=True, wait_time=15):
+    def init_all_nodes(cls, disable_logs=not _VERBOSE, wait_time=15):
         """Issues a `wpanctl.leave` on all `Node` objects and waits for them to be ready"""
         random.seed(123456)
         time.sleep(0.5)
