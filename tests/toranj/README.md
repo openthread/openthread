@@ -312,7 +312,7 @@ A `wpan.Node()` instance can also provide additional logs and info as the test-c
     node = wpan.Node(verbose=True)     # `node` instance will provide extra logs.
 ```
 
-Alternatively, `wpan.Node._VERBOSE` settings can be changed to enable verbose logging for all nodes. The default value of `wpan.Node._VERBOSE` is determined from environment variable `TORANJ_VERBOSE` (verbose mode is enabled when env variable is set to any of `1`, `True`, `Yes`, `Y`), otherwise it is disabled. When `TORANJ_VERBOSE` is enabled, the OpenThread logging is also enabled (and collected in `wpantund-log<node_index>.log`files) on all nodes.
+Alternatively, `wpan.Node._VERBOSE` settings can be changed to enable verbose logging for all nodes. The default value of `wpan.Node._VERBOSE` is determined from environment variable `TORANJ_VERBOSE` (verbose mode is enabled when env variable is set to any of `1`, `True`, `Yes`, `Y`, `On` (case-insensitive)), otherwise it is disabled. When `TORANJ_VERBOSE` is enabled, the OpenThread logging is also enabled (and collected in `wpantund-log<node_index>.log`files) on all nodes.
 
 Here is example of small test script and its corresponding log output with `verbose` mode enabled:
 
