@@ -72,7 +72,6 @@ target_compile_options(openthread-cc2538 PRIVATE
 
 target_include_directories(openthread-cc2538 PRIVATE
     ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/examples/platforms
     ${PROJECT_SOURCE_DIR}/src/core
 )

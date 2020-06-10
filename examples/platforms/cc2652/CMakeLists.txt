@@ -92,7 +92,6 @@ target_compile_options(openthread-cc2652
 target_include_directories(openthread-cc2652
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
-        ${OT_PRIVATE_INCLUDES}
         ${PROJECT_SOURCE_DIR}/src/core
         ${PROJECT_SOURCE_DIR}/examples/platforms
 )
