@@ -416,7 +416,11 @@ otError Leader::Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRl
 
     for (const NetworkDataTlv *cur = reinterpret_cast<const NetworkDataTlv *>(aTlvs); cur < end; cur = cur->GetNext())
     {
+        uint8_t offset;
+
         VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+
+        offset = static_cast<uint8_t>(reinterpret_cast<const uint8_t *>(cur) - aTlvs);
 
         switch (cur->GetType())
         {
@@ -427,7 +431,7 @@ otError Leader::Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRl
             VerifyOrExit(prefix->IsValid(), error = OT_ERROR_PARSE);
 
             // Ensure there is no duplicate Prefix TLVs with same prefix.
-            VerifyOrExit(prefix == FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aTlvs, aTlvsLength),
+            VerifyOrExit(FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aTlvs, offset) == NULL,
                          error = OT_ERROR_PARSE);
 
             SuccessOrExit(error = ValidatePrefix(*prefix, aRloc16));
@@ -442,8 +446,8 @@ otError Leader::Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRl
 
             // Ensure there is no duplicate Service TLV with same
             // Enterprise Number and Service Data.
-            VerifyOrExit(service == FindService(service->GetEnterpriseNumber(), service->GetServiceData(),
-                                                service->GetServiceDataLength(), aTlvs, aTlvsLength),
+            VerifyOrExit(FindService(service->GetEnterpriseNumber(), service->GetServiceData(),
+                                     service->GetServiceDataLength(), aTlvs, offset) == NULL,
                          error = OT_ERROR_PARSE);
 
             SuccessOrExit(error = ValidateService(*service, aRloc16));
