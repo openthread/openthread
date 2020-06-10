@@ -282,7 +282,7 @@ class Node(object):
 
     # defines the default verbosity setting (can be changed per `Node`)
     _VERBOSE = os.getenv('TORANJ_VERBOSE',
-                         'no').lower() in ['true', '1', 't', 'y', 'yes']
+                         'no').lower() in ['true', '1', 't', 'y', 'yes', 'on']
     _SPEED_UP_FACTOR = 1  # defines the default time speed up factor
 
     # path to `wpantund`, `wpanctl`, `ot-ncp-ftd`,`ot-ncp` and `ot-rcp`
