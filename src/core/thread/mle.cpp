@@ -62,6 +62,7 @@ namespace Mle {
 
 Mle::Mle(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , Notifier::Receiver(aInstance, Mle::HandleNotifierEvents)
     , mRetrieveNewNetworkData(false)
     , mRole(kRoleDisabled)
     , mDeviceMode(DeviceMode::kModeRxOnWhenIdle | DeviceMode::kModeSecureDataRequest)
@@ -69,9 +70,9 @@ Mle::Mle(Instance &aInstance)
     , mReattachState(kReattachStop)
     , mAttachCounter(0)
     , mAnnounceDelay(kAnnounceTimeout)
-    , mAttachTimer(aInstance, &Mle::HandleAttachTimer, this)
-    , mDelayedResponseTimer(aInstance, &Mle::HandleDelayedResponseTimer, this)
-    , mMessageTransmissionTimer(aInstance, &Mle::HandleMessageTransmissionTimer, this)
+    , mAttachTimer(aInstance, Mle::HandleAttachTimer, this)
+    , mDelayedResponseTimer(aInstance, Mle::HandleDelayedResponseTimer, this)
+    , mMessageTransmissionTimer(aInstance, Mle::HandleMessageTransmissionTimer, this)
     , mParentLeaderCost(0)
     , mParentRequestMode(kAttachAny)
     , mParentPriority(0)
@@ -102,13 +103,12 @@ Mle::Mle(Instance &aInstance)
     , mParentSearchBackoffWasCanceled(false)
     , mParentSearchRecentlyDetached(false)
     , mParentSearchBackoffCancelTime(0)
-    , mParentSearchTimer(aInstance, &Mle::HandleParentSearchTimer, this)
+    , mParentSearchTimer(aInstance, Mle::HandleParentSearchTimer, this)
 #endif
     , mAnnounceChannel(0)
     , mAlternateChannel(0)
     , mAlternatePanId(Mac::kPanIdBroadcast)
     , mAlternateTimestamp(0)
-    , mNotifierCallback(aInstance, &Mle::HandleStateChanged, this)
     , mParentResponseCb(NULL)
     , mParentResponseCbContext(NULL)
 {
@@ -314,7 +314,7 @@ void Mle::SetRole(DeviceRole aRole)
 {
     DeviceRole oldRole = mRole;
 
-    SuccessOrExit(Get<Notifier>().Update(mRole, aRole, OT_CHANGED_THREAD_ROLE));
+    SuccessOrExit(Get<Notifier>().Update(mRole, aRole, kEventThreadRoleChanged));
 
     otLogNoteMle("Role %s -> %s", RoleToString(oldRole), RoleToString(mRole));
 
@@ -365,6 +365,10 @@ otError Mle::Restore(void)
 
     IgnoreError(Get<MeshCoP::ActiveDataset>().Restore());
     IgnoreError(Get<MeshCoP::PendingDataset>().Restore());
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+    Get<DuaManager>().Restore();
+#endif
 
     SuccessOrExit(error = Get<Settings>().ReadNetworkInfo(networkInfo));
 
@@ -512,9 +516,7 @@ otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
     otError                      error   = OT_ERROR_NONE;
     Message *                    message = NULL;
     Ip6::Address                 destination;
-    Tlv                          tlv;
     MeshCoP::DiscoveryRequestTlv discoveryRequest;
-    uint16_t                     startOffset;
 
     VerifyOrExit(!mDiscoverInProgress, error = OT_ERROR_BUSY);
 
@@ -539,20 +541,12 @@ otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
     message->SetPanId(aPanId);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDiscoveryRequest));
 
-    // Discovery TLV
-    tlv.SetType(Tlv::kDiscovery);
-    SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-
-    startOffset = message->GetLength();
-
-    // Discovery Request TLV
+    // Append MLE Discovery TLV with a single sub-TLV (MeshCoP Discovery Request).
     discoveryRequest.Init();
     discoveryRequest.SetVersion(kThreadVersion);
     discoveryRequest.SetJoiner(aJoiner);
-    SuccessOrExit(error = discoveryRequest.AppendTo(*message));
 
-    tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
-    message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
+    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kDiscovery, &discoveryRequest, sizeof(discoveryRequest)));
 
     destination.SetToLinkLocalAllRoutersMulticast();
 
@@ -888,12 +882,13 @@ void Mle::UpdateLinkLocalAddress(void)
     mLinkLocal64.GetAddress().SetIid(Get<Mac::Mac>().GetExtAddress());
     Get<ThreadNetif>().AddUnicastAddress(mLinkLocal64);
 
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_LL_ADDR);
+    Get<Notifier>().Signal(kEventThreadLinkLocalAddrChanged);
 }
 
 void Mle::SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix)
 {
-    VerifyOrExit(GetMeshLocalPrefix() != aMeshLocalPrefix, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_ML_ADDR));
+    VerifyOrExit(GetMeshLocalPrefix() != aMeshLocalPrefix,
+                 Get<Notifier>().SignalIfFirst(kEventThreadMeshLocalAddrChanged));
 
     if (Get<ThreadNetif>().IsUp())
     {
@@ -974,7 +969,7 @@ void Mle::ApplyMeshLocalPrefix(void)
 
 exit:
     // Changing the prefix also causes the mesh local address to be different.
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_ML_ADDR);
+    Get<Notifier>().Signal(kEventThreadMeshLocalAddrChanged);
 }
 
 uint16_t Mle::GetRloc16(void) const
@@ -1020,12 +1015,12 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
 #if OPENTHREAD_FTD
         Get<MleRouter>().HandlePartitionChange();
 #endif
-        Get<Notifier>().Signal(OT_CHANGED_THREAD_PARTITION_ID);
+        Get<Notifier>().Signal(kEventThreadPartitionIdChanged);
         mCounters.mPartitionIdChanges++;
     }
     else
     {
-        Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_PARTITION_ID);
+        Get<Notifier>().SignalIfFirst(kEventThreadPartitionIdChanged);
     }
 
     mLeaderData.SetPartitionId(aPartitionId);
@@ -1495,16 +1490,16 @@ exit:
     return error;
 }
 
-void Mle::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void Mle::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<Mle>().HandleStateChanged(aFlags);
+    static_cast<Mle &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
-void Mle::HandleStateChanged(otChangedFlags aFlags)
+void Mle::HandleNotifierEvents(Events aEvents)
 {
     VerifyOrExit(!IsDisabled(), OT_NOOP);
 
-    if (aFlags & OT_CHANGED_THREAD_ROLE)
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
         if (IsChild() && !IsFullThreadDevice() && mAddressRegistrationMode == kAppendMeshLocalOnly)
         {
@@ -1519,7 +1514,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         }
     }
 
-    if ((aFlags & (OT_CHANGED_IP6_ADDRESS_ADDED | OT_CHANGED_IP6_ADDRESS_REMOVED)) != 0)
+    if (aEvents.ContainsAny(kEventIp6AddressAdded | kEventIp6AddressRemoved))
     {
         if (!Get<ThreadNetif>().IsUnicastAddress(mMeshLocal64.GetAddress()))
         {
@@ -1528,7 +1523,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
                                                    OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE));
 
             Get<ThreadNetif>().AddUnicastAddress(mMeshLocal64);
-            Get<Notifier>().Signal(OT_CHANGED_THREAD_ML_ADDR);
+            Get<Notifier>().Signal(kEventThreadMeshLocalAddrChanged);
         }
 
         if (IsChild() && !IsFullThreadDevice())
@@ -1538,7 +1533,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         }
     }
 
-    if ((aFlags & (OT_CHANGED_IP6_MULTICAST_SUBSCRIBED | OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED)) != 0)
+    if (aEvents.ContainsAny(kEventIp6MulticastSubscribed | kEventIp6MulticastUnsubscribed))
     {
         // When multicast subscription changes, SED always notifies its parent as it depends on its
         // parent for indirect transmission. Since Thread 1.2, MED MAY also notify its parent of 1.2
@@ -1556,7 +1551,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         }
     }
 
-    if ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0)
+    if (aEvents.Contains(kEventThreadNetdataChanged))
     {
 #if OPENTHREAD_FTD
         if (IsFullThreadDevice())
@@ -1566,7 +1561,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         else
 #endif
         {
-            if ((aFlags & OT_CHANGED_THREAD_ROLE) == 0)
+            if (!aEvents.Contains(kEventThreadRoleChanged))
             {
                 mChildUpdateRequestState = kChildUpdateRequestPending;
                 ScheduleMessageTransmissionTimer();
@@ -1589,18 +1584,18 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
 #endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     }
 
-    if (aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER))
+    if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadKeySeqCounterChanged))
     {
         // Store the settings on a key seq change, or when role changes and device
         // is attached (i.e., skip `Store()` on role change to detached).
 
-        if ((aFlags & OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER) || IsAttached())
+        if (aEvents.Contains(kEventThreadKeySeqCounterChanged) || IsAttached())
         {
             IgnoreError(Store());
         }
     }
 
-    if (aFlags & OT_CHANGED_SECURITY_POLICY)
+    if (aEvents.Contains(kEventSecurityPolicyChanged))
     {
         Get<Ip6::Filter>().AllowNativeCommissioner(Get<KeyManager>().IsNativeCommissioningAllowed());
     }
@@ -2229,7 +2224,7 @@ void Mle::HandleMessageTransmissionTimer(void)
 {
     // The `mMessageTransmissionTimer` is used for:
     //
-    //  - Delaying OT_CHANGED notification triggered "Child Update Request" transmission (to allow aggregation),
+    //  - Delaying kEvent notification triggered "Child Update Request" transmission (to allow aggregation),
     //  - Retransmission of "Child Update Request",
     //  - Retransmission of "Data Request" on a child,
     //  - Sending periodic keep-alive "Child Update Request" messages on a non-sleepy (rx-on) child.

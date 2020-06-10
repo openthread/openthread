@@ -27,108 +27,28 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-spawn $env(OT_COMMAND) 1
-set timeout 1
-expect_after {
-    timeout { exit 1 }
+proc wait_for {command expected} {
+    set result 0
+    for {set i 0} {$i < 20} {incr i} {
+        send "$command\n"
+        expect {
+            -re $expected {
+                set result 1
+            }
+            timeout {
+                # Do nothing
+            }
+        }
+        if {$result == 1} {
+            break
+        }
+    }
+    if {$result == 0} {
+        exit 1
+    }
 }
 
-send "help\n"
-expect "Done"
-
-send "bufferinfo\n"
-expect "Done"
-
-send "netdatashow\n"
-expect "Done"
-
-send "parent\n"
-expect "Done"
-
-send "delaytimermin 1\n"
-expect "Done"
-send "delaytimermin\n"
-expect "1"
-expect "Done"
-send "delaytimermin 1 2\n"
-send "counters mac 1\n"
-expect "Error 7: InvalidArgs"
-
-send "ifconfig\n"
-expect "down"
-expect "Done"
-send "ifconfig up\n"
-expect "Done"
-send "ifconfig\n"
-expect "up"
-expect "Done"
-
-send "ipaddr add ::\n"
-expect "Done"
-send "ipaddr del ::\n"
-expect "Done"
-
-send "leaderweight 1\n"
-expect "Done"
-send "leaderweight\n"
-expect "1"
-expect "Done"
-
-send "mode rsdn\n"
-expect "Done"
-send "mode\n"
-expect -re "(?=.*r)(?=.*s)(?=.*d)(?=.*n)"
-
-send "parent\n"
-expect "Done"
-
-send "singleton\n"
-expect -re "true|false"
-expect "Done"
-
-send "state\n"
-expect "disabled"
-expect "Done"
-
-send "txpower -10\n"
-expect "Done"
-send "txpower\n"
-expect -- "-10 dBm"
-expect "Done"
-
-send "thread version\n"
-expect "Done"
-
-send "joinerport 10001\n"
-expect "Done"
-send "joinerport\n"
-expect "10001"
-expect "Done"
-
-send "parentpriority 1\n"
-expect "Done"
-send "parentpriority\n"
-expect "1"
-expect "Done"
-
-send "pollperiod 100000\n"
-expect "Done"
-send "pollperiod\n"
-expect "100000"
-expect "Done"
-
-send "prefix add ::/64 low pdcrosn\n"
-expect "Done"
-send "prefix\n"
-expect "0:0:0:0::/64 pdcrosn low"
-expect "Done"
-
-send "preferrouterid 1\n"
-expect "Done"
-
-send "route add ::/64 s low\n"
-expect "Done"
-send "route\n"
-expect "0:0:0:0::/64 s low"
-send "route remove ::/64\n"
-expect "Done"
+proc dispose {} {
+    send "\x04"
+    expect eof
+}

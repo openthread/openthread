@@ -88,7 +88,7 @@ namespace Utils {
  * This class implements a child supervisor.
  *
  */
-class ChildSupervisor : public InstanceLocator
+class ChildSupervisor : public InstanceLocator, public Notifier::Receiver
 {
 public:
     /**
@@ -160,12 +160,11 @@ private:
     void        CheckState(void);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
-    void        HandleStateChanged(otChangedFlags aFlags);
+    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
 
-    uint16_t           mSupervisionInterval;
-    TimerMilli         mTimer;
-    Notifier::Callback mNotifierCallback;
+    uint16_t   mSupervisionInterval;
+    TimerMilli mTimer;
 };
 
 #else // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE && OPENTHREAD_FTD

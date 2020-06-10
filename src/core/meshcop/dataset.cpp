@@ -170,6 +170,12 @@ void Dataset::ConvertTo(otOperationalDataset &aDataset) const
     }
 }
 
+void Dataset::ConvertTo(otOperationalDatasetTlvs &aDataset) const
+{
+    memcpy(aDataset.mTlvs, mTlvs, mLength);
+    aDataset.mLength = static_cast<uint8_t>(mLength);
+}
+
 void Dataset::Set(const Dataset &aDataset)
 {
     memcpy(mTlvs, aDataset.mTlvs, aDataset.mLength);
@@ -182,6 +188,12 @@ void Dataset::Set(const Dataset &aDataset)
     }
 
     mUpdateTime = aDataset.GetUpdateTime();
+}
+
+void Dataset::SetFrom(const otOperationalDatasetTlvs &aDataset)
+{
+    mLength = aDataset.mLength;
+    memcpy(mTlvs, aDataset.mTlvs, mLength);
 }
 
 otError Dataset::SetFrom(const otOperationalDataset &aDataset)

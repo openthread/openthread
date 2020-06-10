@@ -98,7 +98,7 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 uint32_t otPlatAlarmMicroGetNow(void)
 {
-    return (uint32_t)(otPlatTimeGet());
+    return static_cast<uint32_t>(platformAlarmGetNow());
 }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)

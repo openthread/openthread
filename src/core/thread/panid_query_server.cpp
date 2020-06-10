@@ -50,7 +50,7 @@ PanIdQueryServer::PanIdQueryServer(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mChannelMask(0)
     , mPanId(Mac::kPanIdBroadcast)
-    , mTimer(aInstance, &PanIdQueryServer::HandleTimer, this)
+    , mTimer(aInstance, PanIdQueryServer::HandleTimer, this)
     , mPanIdQuery(OT_URI_PATH_PANID_QUERY, &PanIdQueryServer::HandleQuery, this)
 {
     Get<Coap::Coap>().AddResource(mPanIdQuery);

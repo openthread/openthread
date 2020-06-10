@@ -165,9 +165,9 @@ Done
 
 ### active
 
-Usage: `dataset active`
+Usage: `dataset active [binary]`
 
-Print Active Operational Dataset.
+Print Active Operational Dataset in human-readable form.
 
 ```bash
 > dataset active
@@ -181,6 +181,14 @@ Network Name: OpenThread-8f28
 PAN ID: 0x8f28
 PSKc: c23a76e98f1a6483639b1ac1271e2e27
 Security Policy: 0, onrcb
+Done
+```
+
+Print Active Operational Dataset as hex-encoded TLVs.
+
+```bash
+> dataset active binary
+0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
 Done
 ```
 
@@ -344,9 +352,9 @@ Done
 
 ### pending
 
-Usage: `dataset pending`
+Usage: `dataset pending [binary]`
 
-Print Pending Operational Dataset.
+Print Pending Operational Dataset in human-readable form.
 
 ```bash
 > dataset pending
@@ -362,6 +370,14 @@ Network Name: OpenThread-8f28
 PAN ID: 0x8f28
 PSKc: c23a76e98f1a6483639b1ac1271e2e27
 Security Policy: 0, onrcb
+Done
+```
+
+Print Pending Operational Dataset as hex-encoded TLVs.
+
+```bash
+> dataset pending binary
+0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
 Done
 ```
 
@@ -403,5 +419,23 @@ Set security policy.
 
 ```bash
 > dataset securitypolicy 672 onrcb
+Done
+```
+
+### set
+
+Usage: `dataset set <active|pending> <dataset>`
+
+Set the Active Operational Dataset using hex-encoded TLVs.
+
+```bash
+dataset set active 0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
+Done
+```
+
+Set the Pending Operational Dataset using hex-encoded TLVs.
+
+```bash
+dataset set pending 0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
 Done
 ```

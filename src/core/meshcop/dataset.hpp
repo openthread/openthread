@@ -58,9 +58,9 @@ class Dataset
 public:
     enum
     {
-        kMaxSize      = 256, ///< Maximum size of MeshCoP Dataset (bytes)
-        kMaxValueSize = 16,  ///< Maximum size of each Dataset TLV value (bytes)
-        kMaxGetTypes  = 64,  ///< Maximum number of types in MGMT_GET.req
+        kMaxSize      = OT_OPERATIONAL_DATASET_MAX_LENGTH, ///< Maximum size of MeshCoP Dataset (bytes)
+        kMaxValueSize = 16,                                ///< Maximum size of each Dataset TLV value (bytes)
+        kMaxGetTypes  = 64,                                ///< Maximum number of types in MGMT_GET.req
     };
 
     /**
@@ -160,6 +160,14 @@ public:
      *
      */
     void ConvertTo(otOperationalDataset &aDataset) const;
+
+    /**
+     * This method converts the TLV representation to structure representation.
+     *
+     * @param[out] aDataset  A reference to `otOperationalDatasetTlvs` to output the Dataset.
+     *
+     */
+    void ConvertTo(otOperationalDatasetTlvs &aDataset) const;
 
     /**
      * This method returns the Dataset size in bytes.
@@ -283,6 +291,14 @@ public:
      *
      */
     otError SetFrom(const otOperationalDataset &aDataset);
+
+    /**
+     * This method sets the Dataset using @p aDataset.
+     *
+     * @param[in]  aDataset  The input Dataset as otOperationalDatasetTlvs.
+     *
+     */
+    void SetFrom(const otOperationalDatasetTlvs &aDataset);
 
     /**
      * This method removes a TLV from the Dataset.

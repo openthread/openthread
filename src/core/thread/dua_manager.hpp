@@ -89,7 +89,52 @@ public:
      */
     const Ip6::Address &GetDomainUnicastAddress(void) const { return mDomainUnicastAddress.GetAddress(); }
 
+    /**
+     * This method sets the Interface Identifier manually specified for the Thread Domain Unicast Address.
+     *
+     * @param[in]  aIid        A reference to the Interface Identifier to set.
+     *
+     * @retval OT_ERROR_NONE           Successfully set the Interface Identifier.
+     * @retval OT_ERROR_INVALID_ARGS   The specified Interface Identifier is reserved.
+     *
+     */
+    otError SetFixedDuaInterfaceIdentifier(const Ip6::InterfaceIdentifier &aIid);
+
+    /**
+     * This method clears the Interface Identifier manually specified for the Thread Domain Unicast Address.
+     *
+     */
+    void ClearFixedDuaInterfaceIdentifier(void);
+
+    /**
+     * This method indicates whether or not there is Interface Identifier manually specified for the Thread
+     * Domain Unicast Address.
+     *
+     * @retval true  If there is Interface Identifier manually specified.
+     * @retval false If there is no Interface Identifier manually specified.
+     *
+     */
+    bool IsFixedDuaInterfaceIdentifierSet(void) { return !mFixedDuaInterfaceIdentifier.IsUnspecified(); }
+
+    /**
+     * This method gets the Interface Identifier for the Thread Domain Unicast Address if manually specified.
+     *
+     * @returns A reference to the Interface Identifier.
+     *
+     */
+    const Ip6::InterfaceIdentifier &GetFixedDuaInterfaceIdentifier(void) const { return mFixedDuaInterfaceIdentifier; }
+
+    /*
+     * This method restores duplicate address detection information from non-volatile memory.
+     *
+     */
+    void Restore(void);
+
 private:
+    otError GenerateDomainUnicastAddressIid(void);
+    otError Store(void);
+
+    Ip6::InterfaceIdentifier mFixedDuaInterfaceIdentifier;
     Ip6::NetifUnicastAddress mDomainUnicastAddress;
     uint8_t                  mDadCounter;
 };

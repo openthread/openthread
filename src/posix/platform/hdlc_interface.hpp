@@ -145,7 +145,7 @@ public:
      * @param[in] aEvent   The data event.
      *
      */
-    void Process(const Event &aEvent) { Decode(aEvent.mData, aEvent.mDataLength); }
+    void Process(const VirtualTimeEvent &aEvent) { Decode(aEvent.mData, aEvent.mDataLength); }
 #endif
 
 private:

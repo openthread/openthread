@@ -539,6 +539,40 @@ public:
     } OT_TOOL_PACKED_END;
 
     /**
+     * This structure represents the duplicate address detection information for settings storage.
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    class DadInfo
+    {
+    public:
+        /**
+         * This method clears the struct object (setting all the fields to zero).
+         *
+         */
+        void Init(void) { memset(this, 0, sizeof(*this)); }
+
+        /**
+         * This method returns the Dad Counter.
+         *
+         * @returns The Dad Counter value.
+         *
+         */
+        uint8_t GetDadCounter(void) const { return mDadCounter; }
+
+        /**
+         * This method sets the Dad Counter.
+         *
+         * @param[in] aDadCounter The Dad Counter value.
+         *
+         */
+        void SetDadCounter(uint8_t aDadCounter) { mDadCounter = aDadCounter; }
+
+    private:
+        uint8_t mDadCounter; ///< Dad Counter used to resolve address conflict in Thread 1.2 DUA feature.
+    } OT_TOOL_PACKED_END;
+
+    /**
      * This enumeration defines the keys of settings.
      *
      */
@@ -551,6 +585,7 @@ public:
         kKeyChildInfo         = 0x0005, ///< Child information
         kKeyReserved          = 0x0006, ///< Reserved (previously auto-start)
         kKeySlaacIidSecretKey = 0x0007, ///< Secret key used by SLAAC module for generating semantically opaque IID
+        kKeyDadInfo           = 0x0008, ///< Duplicate Address Detection (DAD) information.
     };
 
 protected:
@@ -563,11 +598,17 @@ protected:
     void LogNetworkInfo(const char *aAction, const NetworkInfo &aNetworkInfo) const;
     void LogParentInfo(const char *aAction, const ParentInfo &aParentInfo) const;
     void LogChildInfo(const char *aAction, const ChildInfo &aChildInfo) const;
-#else
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+    void LogDadInfo(const char *aAction, const DadInfo &aDadInfo) const;
+#endif
+#else // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
     void LogNetworkInfo(const char *, const NetworkInfo &) const {}
     void LogParentInfo(const char *, const ParentInfo &) const {}
     void LogChildInfo(const char *, const ChildInfo &) const {}
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+    void LogDadInfo(const char *, const DadInfo &) const {}
 #endif
+#endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
     void LogFailure(otError aError, const char *aAction, bool aIsDelete) const;
@@ -863,6 +904,42 @@ public:
         uint16_t  mIndex;
         bool      mIsDone;
     };
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+
+    /**
+     * This method saves duplicate address detection information.
+     *
+     * @param[in]   aDadInfo           A reference to a `DadInfo` structure to be saved.
+     *
+     * @retval OT_ERROR_NONE              Successfully saved duplicate address detection information in settings.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     *
+     */
+    otError SaveDadInfo(const DadInfo &aDadInfo);
+
+    /**
+     * This method reads duplicate address detection information.
+     *
+     * @param[out]   aDadInfo         A reference to a `DadInfo` structure to output the read content.
+     *
+     * @retval OT_ERROR_NONE              Successfully read the duplicate address detection information.
+     * @retval OT_ERROR_NOT_FOUND         No corresponding value in the setting store.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     *
+     */
+    otError ReadDadInfo(DadInfo &aDadInfo) const;
+
+    /**
+     * This method deletes duplicate address detection information from settings.
+     *
+     * @retval OT_ERROR_NONE             Successfully deleted the value.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     *
+     */
+    otError DeleteDadInfo(void);
+
+#endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
 private:
     otError Read(Key aKey, void *aBuffer, uint16_t &aSize) const;

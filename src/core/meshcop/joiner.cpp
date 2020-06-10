@@ -62,7 +62,7 @@ Joiner::Joiner(Instance &aInstance)
     , mContext(NULL)
     , mJoinerRouterIndex(0)
     , mFinalizeMessage(NULL)
-    , mTimer(aInstance, &Joiner::HandleTimer, this)
+    , mTimer(aInstance, Joiner::HandleTimer, this)
     , mJoinerEntrust(OT_URI_PATH_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this)
 {
     memset(mJoinerRouters, 0, sizeof(mJoinerRouters));
@@ -80,35 +80,11 @@ void Joiner::SetState(otJoinerState aState)
     otJoinerState oldState = mState;
     OT_UNUSED_VARIABLE(oldState);
 
-    SuccessOrExit(Get<Notifier>().Update(mState, aState, OT_CHANGED_JOINER_STATE));
+    SuccessOrExit(Get<Notifier>().Update(mState, aState, kEventJoinerStateChanged));
 
     otLogInfoMeshCoP("JoinerState: %s -> %s", JoinerStateToString(oldState), JoinerStateToString(aState));
 exit:
     return;
-}
-
-bool Joiner::IsPskdValid(const char *aPskd)
-{
-    bool   valid      = false;
-    size_t pskdLength = StringLength(aPskd, kPskdMaxLength + 1);
-
-    OT_STATIC_ASSERT(static_cast<uint8_t>(kPskdMaxLength) <= static_cast<uint8_t>(Dtls::kPskMaxLength),
-                     "The maximum length of DTLS PSK is smaller than joiner PSKd");
-
-    VerifyOrExit(pskdLength >= kPskdMinLength && pskdLength <= kPskdMaxLength, OT_NOOP);
-
-    for (size_t i = 0; i < pskdLength; i++)
-    {
-        char c = aPskd[i];
-
-        VerifyOrExit(isdigit(c) || isupper(c), OT_NOOP);
-        VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z', OT_NOOP);
-    }
-
-    valid = true;
-
-exit:
-    return valid;
 }
 
 otError Joiner::Start(const char *     aPskd,

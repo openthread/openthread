@@ -51,7 +51,7 @@ namespace ot {
 
 namespace MeshCoP {
 
-class JoinerRouter : public InstanceLocator
+class JoinerRouter : public InstanceLocator, public Notifier::Receiver
 {
 public:
     /**
@@ -94,8 +94,8 @@ private:
         Kek              mKek;         // KEK used by MAC layer to encode this message.
     };
 
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
-    void        HandleStateChanged(otChangedFlags aFlags);
+    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -112,6 +112,7 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
+    void           Start(void);
     void           DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek);
     void           SendDelayedJoinerEntrust(void);
     otError        SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);
@@ -122,8 +123,6 @@ private:
 
     TimerMilli   mTimer;
     MessageQueue mDelayedJoinEnts;
-
-    Notifier::Callback mNotifierCallback;
 
     uint16_t mJoinerUdpPort;
 

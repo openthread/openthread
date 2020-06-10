@@ -45,6 +45,25 @@ using ot::Encoding::BigEndian::HostSwap32;
 namespace ot {
 namespace Ip6 {
 
+bool InterfaceIdentifier::IsUnspecified(void) const
+{
+    return (m8[0] == 0 && m8[1] == 0 && m8[2] == 0 && m8[3] == 0 && m8[4] == 0 && m8[5] == 0 && m8[6] == 0 &&
+            m8[7] == 0);
+}
+
+bool InterfaceIdentifier::IsReserved(void) const
+{
+    Address addr;
+
+    addr.SetIid(this->m8);
+    return addr.IsIidReserved();
+}
+
+InterfaceIdentifier::InfoString InterfaceIdentifier::ToString(void) const
+{
+    return InfoString("%02x%02x%02x%02x%02x%02x%02x%02x", m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
+}
+
 bool Address::IsUnspecified(void) const
 {
     return (mFields.m32[0] == 0 && mFields.m32[1] == 0 && mFields.m32[2] == 0 && mFields.m32[3] == 0);
@@ -211,6 +230,11 @@ void Address::SetMulticastNetworkPrefix(const uint8_t *aPrefix, uint8_t aPrefixL
 {
     SetPrefix(kMulticastNetworkPrefixOffset, aPrefix, aPrefixLength);
     mFields.m8[kMulticastNetworkPrefixLengthOffset] = aPrefixLength;
+}
+
+bool Address::HasIid(const uint8_t *aIid) const
+{
+    return (memcmp(mFields.m8 + kInterfaceIdentifierOffset, aIid, kInterfaceIdentifierSize) == 0);
 }
 
 void Address::SetIid(const uint8_t *aIid)

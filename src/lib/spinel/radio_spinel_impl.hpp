@@ -1502,7 +1502,8 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
 {
     otError error = OT_ERROR_INVALID_STATE;
 
-    VerifyOrExit(mState == kStateReceive, OT_NOOP);
+    VerifyOrExit(mState == kStateReceive || (mState == kStateSleep && (mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX)),
+                 OT_NOOP);
 
     mTransmitFrame = &aFrame;
 

@@ -92,7 +92,7 @@ void Commissioner::SetState(otCommissionerState aState)
     otCommissionerState oldState = mState;
     OT_UNUSED_VARIABLE(oldState);
 
-    SuccessOrExit(Get<Notifier>().Update(mState, aState, OT_CHANGED_COMMISSIONER_STATE));
+    SuccessOrExit(Get<Notifier>().Update(mState, aState, kEventCommissionerStateChanged));
 
     otLogInfoMeshCoP("CommissionerState: %s -> %s", StateToString(oldState), StateToString(aState));
 
@@ -280,7 +280,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(MeshCoP::Joiner::IsPskdValid(aPskd), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(IsPskdValid(aPskd), error = OT_ERROR_INVALID_ARGS);
 
     IgnoreError(RemoveJoiner(aEui64, 0, kJoinerOpFlagNotNotifyLeader)); // remove immediately
 

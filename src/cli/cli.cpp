@@ -147,6 +147,9 @@ const struct Command Interpreter::sCommands[] = {
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     {"domainname", &Interpreter::ProcessDomainName},
 #endif
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+    {"dua", &Interpreter::ProcessDua},
+#endif
 #if OPENTHREAD_FTD
     {"eidcache", &Interpreter::ProcessEidCache},
 #endif
@@ -214,6 +217,9 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_FTD
     {"preferrouterid", &Interpreter::ProcessPreferRouterId},
     {"pskc", &Interpreter::ProcessPskc},
+#endif
+    {"rcp", &Interpreter::ProcessRcp},
+#if OPENTHREAD_FTD
     {"releaserouterid", &Interpreter::ProcessReleaseRouterId},
 #endif
     {"reset", &Interpreter::ProcessReset},
@@ -253,7 +259,7 @@ Interpreter::Interpreter(Instance *aInstance)
     , mPingHopLimit(0)
     , mPingAllowZeroHopLimit(false)
     , mPingIdentifier(0)
-    , mPingTimer(*aInstance, &Interpreter::HandlePingTimer, this)
+    , mPingTimer(*aInstance, Interpreter::HandlePingTimer, this)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     , mResolvingInProgress(0)
 #endif
@@ -605,6 +611,51 @@ void Interpreter::ProcessDomainName(uint8_t aArgsLength, char *aArgs[])
 exit:
     AppendResult(error);
 }
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+void Interpreter::ProcessDua(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgsLength >= 1 && strcmp(aArgs[0], "iid") == 0, error = OT_ERROR_INVALID_COMMAND);
+
+    switch (aArgsLength)
+    {
+    case 1:
+    {
+        const otIp6InterfaceIdentifier *iid = otThreadGetFixedDuaInterfaceIdentifier(mInstance);
+
+        if (iid != NULL)
+        {
+            OutputBytes(iid->m8, sizeof(otIp6InterfaceIdentifier));
+            mServer->OutputFormat("\r\n");
+        }
+        break;
+    }
+    case 2:
+        if (strcmp(aArgs[1], "clear") == 0)
+        {
+            SuccessOrExit(error = otThreadSetFixedDuaInterfaceIdentifier(mInstance, NULL));
+        }
+        else
+        {
+            otIp6InterfaceIdentifier iid;
+
+            VerifyOrExit(Hex2Bin(aArgs[1], iid.m8, sizeof(otIp6InterfaceIdentifier)) ==
+                             sizeof(otIp6InterfaceIdentifier),
+                         error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = otThreadSetFixedDuaInterfaceIdentifier(mInstance, &iid));
+        }
+        break;
+    default:
+        error = OT_ERROR_INVALID_ARGS;
+        break;
+    }
+
+exit:
+    AppendResult(error);
+}
+#endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
@@ -2792,7 +2843,30 @@ void Interpreter::ProcessPreferRouterId(uint8_t aArgsLength, char *aArgs[])
 exit:
     AppendResult(error);
 }
+#endif
 
+void Interpreter::ProcessRcp(uint8_t aArgsLength, char *aArgs[])
+{
+    otError     error   = OT_ERROR_NONE;
+    const char *version = otPlatRadioGetVersionString(mInstance);
+
+    VerifyOrExit(version != otGetVersionString(), error = OT_ERROR_NOT_IMPLEMENTED);
+    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(aArgs[0], "version") == 0)
+    {
+        mServer->OutputFormat("%s\r\n", version);
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    AppendResult(error);
+}
+
+#if OPENTHREAD_FTD
 void Interpreter::ProcessReleaseRouterId(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -2806,7 +2880,7 @@ void Interpreter::ProcessReleaseRouterId(uint8_t aArgsLength, char *aArgs[])
 exit:
     AppendResult(error);
 }
-#endif // OPENTHREAD_FTD
+#endif
 
 void Interpreter::ProcessReset(uint8_t aArgsLength, char *aArgs[])
 {

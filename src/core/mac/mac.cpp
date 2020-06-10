@@ -116,7 +116,7 @@ Mac::Mac(Instance &aInstance)
     , mScanHandlerContext(NULL)
     , mSubMac(aInstance)
     , mOperationTask(aInstance, &Mac::HandleOperationTask, this)
-    , mTimer(aInstance, &Mac::HandleTimer, this)
+    , mTimer(aInstance, Mac::HandleTimer, this)
     , mOobFrame(NULL)
     , mKeyIdMode2FrameCounter(0)
     , mCcaSampleCount(0)
@@ -415,7 +415,7 @@ otError Mac::SetPanChannel(uint8_t aChannel)
 
     VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = OT_ERROR_INVALID_ARGS);
 
-    SuccessOrExit(Get<Notifier>().Update(mPanChannel, aChannel, OT_CHANGED_THREAD_CHANNEL));
+    SuccessOrExit(Get<Notifier>().Update(mPanChannel, aChannel, kEventThreadChannelChanged));
 
     mCcaSuccessRateTracker.Reset();
 
@@ -459,7 +459,7 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
     ChannelMask newMask = aMask;
 
     newMask.Intersect(ChannelMask(Get<Radio>().GetSupportedChannelMask()));
-    IgnoreError(Get<Notifier>().Update(mSupportedChannelMask, newMask, OT_CHANGED_SUPPORTED_CHANNEL_MASK));
+    IgnoreError(Get<Notifier>().Update(mSupportedChannelMask, newMask, kEventSupportedChannelMaskChanged));
 }
 
 otError Mac::SetNetworkName(const char *aNameString)
@@ -483,13 +483,13 @@ otError Mac::SetNetworkName(const NameData &aNameData)
 
     if (error == OT_ERROR_ALREADY)
     {
-        Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_NETWORK_NAME);
+        Get<Notifier>().SignalIfFirst(kEventThreadNetworkNameChanged);
         error = OT_ERROR_NONE;
         ExitNow();
     }
 
     SuccessOrExit(error);
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETWORK_NAME);
+    Get<Notifier>().Signal(kEventThreadNetworkNameChanged);
 
 exit:
     return error;
@@ -526,7 +526,7 @@ otError Mac::SetDomainName(const NameData &aNameData)
 
 void Mac::SetPanId(PanId aPanId)
 {
-    SuccessOrExit(Get<Notifier>().Update(mPanId, aPanId, OT_CHANGED_THREAD_PANID));
+    SuccessOrExit(Get<Notifier>().Update(mPanId, aPanId, kEventThreadPanIdChanged));
     mSubMac.SetPanId(mPanId);
 
 exit:
@@ -535,7 +535,7 @@ exit:
 
 void Mac::SetExtendedPanId(const ExtendedPanId &aExtendedPanId)
 {
-    IgnoreError(Get<Notifier>().Update(mExtendedPanId, aExtendedPanId, OT_CHANGED_THREAD_EXT_PANID));
+    IgnoreError(Get<Notifier>().Update(mExtendedPanId, aExtendedPanId, kEventThreadExtPanIdChanged));
 }
 
 void Mac::RequestDirectFrameTransmission(void)

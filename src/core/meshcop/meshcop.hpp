@@ -255,6 +255,23 @@ void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
  */
 otError GetBorderAgentRloc(ThreadNetif &aNetIf, uint16_t &aRloc);
 
+#if OPENTHREAD_CONFIG_JOINER_ENABLE || OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+/**
+ * This method validates the PSKd.
+ *
+ * Per Thread specification, a Joining Device Credential is encoded as
+ * uppercase alphanumeric characters (base32-thread: 0-9, A-Z excluding
+ * I, O, Q, and Z for readability) with a minimum length of 6 such
+ * characters and a maximum length of 32 such characters.
+ *
+ * param[in]  aPskd  The PSKd to validate.
+ *
+ * @retval A boolean indicates whether the given @p aPskd is valid.
+ *
+ */
+bool IsPskdValid(const char *aPskd);
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE || OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+
 } // namespace MeshCoP
 
 } // namespace ot

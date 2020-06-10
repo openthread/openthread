@@ -220,6 +220,40 @@ otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+otError otThreadSetFixedDuaInterfaceIdentifier(otInstance *aInstance, const otIp6InterfaceIdentifier *aIid)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    otError   error    = OT_ERROR_NONE;
+
+    if (aIid)
+    {
+        error = instance.Get<DuaManager>().SetFixedDuaInterfaceIdentifier(
+            *static_cast<const Ip6::InterfaceIdentifier *>(aIid));
+    }
+    else
+    {
+        instance.Get<DuaManager>().ClearFixedDuaInterfaceIdentifier();
+    }
+
+    return error;
+}
+
+const otIp6InterfaceIdentifier *otThreadGetFixedDuaInterfaceIdentifier(otInstance *aInstance)
+{
+    Instance &                      instance = *static_cast<Instance *>(aInstance);
+    const otIp6InterfaceIdentifier *iid      = NULL;
+
+    if (instance.Get<DuaManager>().IsFixedDuaInterfaceIdentifierSet())
+    {
+        iid = &instance.Get<DuaManager>().GetFixedDuaInterfaceIdentifier();
+    }
+
+    return iid;
+}
+#endif // OPENTHREAD_CONFIG_DUA_ENABLE
+
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 uint32_t otThreadGetKeySequenceCounter(otInstance *aInstance)

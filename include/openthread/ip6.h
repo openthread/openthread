@@ -58,6 +58,24 @@ extern "C" {
 #define OT_IP6_ADDRESS_SIZE 16                         ///< Size of an IPv6 address (bytes)
 
 /**
+ * @struct otIp6InterfaceIdentifier
+ *
+ * This structure represents the Interface Identifier of an IPv6 address.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otIp6InterfaceIdentifier
+{
+    uint8_t m8[OT_IP6_IID_SIZE]; ///< The Interface Identifier of an IPv6 address.
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents the Interface Identifier of an IPv6 address.
+ *
+ */
+typedef struct otIp6InterfaceIdentifier otIp6InterfaceIdentifier;
+
+/**
  * @struct otIp6Address
  *
  * This structure represents an IPv6 address.

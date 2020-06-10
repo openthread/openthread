@@ -66,7 +66,25 @@ otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset
     return instance.Get<MeshCoP::ActiveDataset>().Read(*aDataset);
 }
 
+otError otDatasetGetActiveTlvs(otInstance *aInstance, otOperationalDatasetTlvs *aDataset)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    OT_ASSERT(aDataset != NULL);
+
+    return instance.Get<MeshCoP::ActiveDataset>().Read(*aDataset);
+}
+
 otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    OT_ASSERT(aDataset != NULL);
+
+    return instance.Get<MeshCoP::ActiveDataset>().Save(*aDataset);
+}
+
+otError otDatasetSetActiveTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
@@ -84,7 +102,25 @@ otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDatase
     return instance.Get<MeshCoP::PendingDataset>().Read(*aDataset);
 }
 
+otError otDatasetGetPendingTlvs(otInstance *aInstance, otOperationalDatasetTlvs *aDataset)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    OT_ASSERT(aDataset != NULL);
+
+    return instance.Get<MeshCoP::PendingDataset>().Read(*aDataset);
+}
+
 otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    OT_ASSERT(aDataset != NULL);
+
+    return instance.Get<MeshCoP::PendingDataset>().Save(*aDataset);
+}
+
+otError otDatasetSetPendingTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 

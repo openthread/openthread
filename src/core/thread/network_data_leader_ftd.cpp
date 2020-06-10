@@ -57,7 +57,7 @@ namespace NetworkData {
 
 Leader::Leader(Instance &aInstance)
     : LeaderBase(aInstance)
-    , mTimer(aInstance, &Leader::HandleTimer, this)
+    , mTimer(aInstance, Leader::HandleTimer, this)
     , mServerData(OT_URI_PATH_SERVER_DATA, &Leader::HandleServerData, this)
     , mCommissioningDataGet(OT_URI_PATH_COMMISSIONER_GET, &Leader::HandleCommissioningGet, this)
     , mCommissioningDataSet(OT_URI_PATH_COMMISSIONER_SET, &Leader::HandleCommissioningSet, this)
@@ -120,7 +120,7 @@ void Leader::IncrementVersions(bool aIncludeStable)
     }
 
     mVersion++;
-    Get<ot::Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
+    Get<ot::Notifier>().Signal(kEventThreadNetdataChanged);
 }
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
