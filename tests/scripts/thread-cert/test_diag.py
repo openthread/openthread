@@ -34,7 +34,7 @@ import thread_cert
 
 
 class TestDiag(thread_cert.TestCase):
-    support_ncp = False
+    SUPPORT_NCP = False
 
     TOPOLOGY = {1: None}
 

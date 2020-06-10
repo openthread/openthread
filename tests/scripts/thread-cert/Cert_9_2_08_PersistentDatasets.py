@@ -49,7 +49,7 @@ MTDS = [ED, SED]
 
 
 class Cert_9_2_8_PersistentDatasets(thread_cert.TestCase):
-    support_ncp = False
+    SUPPORT_NCP = False
 
     TOPOLOGY = {
         COMMISSIONER: {

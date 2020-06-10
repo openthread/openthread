@@ -38,7 +38,7 @@ LEADER2 = 4
 
 
 class Cert_9_2_14_PanIdQuery(thread_cert.TestCase):
-    support_ncp = False
+    SUPPORT_NCP = False
 
     TOPOLOGY = {
         COMMISSIONER: {

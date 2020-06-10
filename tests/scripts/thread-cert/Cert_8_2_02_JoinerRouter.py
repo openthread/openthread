@@ -37,7 +37,7 @@ JOINER = 3
 
 
 class Cert_8_2_02_JoinerRouter(thread_cert.TestCase):
-    support_ncp = False
+    SUPPORT_NCP = False
 
     TOPOLOGY = {
         COMMISSIONER: {

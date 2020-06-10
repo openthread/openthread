@@ -55,10 +55,10 @@ class NcpSupportMixin():
     """ The mixin to check whether a test case supports NCP.
     """
 
-    support_ncp = True
+    SUPPORT_NCP = True
 
     def __init__(self, *args, **kwargs):
-        if os.getenv('NODE_TYPE', 'sim') == 'ncp-sim' and not self.support_ncp:
+        if os.getenv('NODE_TYPE', 'sim') == 'ncp-sim' and not self.SUPPORT_NCP:
             # 77 means skip this test case in automake tests
             sys.exit(77)
 

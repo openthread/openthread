@@ -49,7 +49,7 @@ MTDS = [ED1, SED1]
 
 
 class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
-    support_ncp = False
+    SUPPORT_NCP = False
 
     TOPOLOGY = {
         COMMISSIONER: {

@@ -49,7 +49,7 @@ SRV_1_SERVER_DATA = 'qux'
 
 
 class Test_Service(thread_cert.TestCase):
-    support_ncp = False
+    SUPPORT_NCP = False
 
     TOPOLOGY = {
         LEADER: {
