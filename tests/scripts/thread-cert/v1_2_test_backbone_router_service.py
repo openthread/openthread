@@ -70,7 +70,7 @@ BBR_REGISTRATION_JITTER = 5
 
 
 class TestBackboneRouterService(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER_1_1: {
             'version': '1.1',
             'whitelist': [BBR_1, BBR_2],

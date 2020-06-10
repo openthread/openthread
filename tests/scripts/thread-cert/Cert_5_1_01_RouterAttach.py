@@ -38,7 +38,7 @@ ROUTER = 2
 
 
 class Cert_5_1_01_RouterAttach(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

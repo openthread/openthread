@@ -100,7 +100,7 @@ TEST_PREFIX3 = '2001:0:0:3::/64'
 
 
 class TestDomainUnicastAddress(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         BBR_1: {
             'version': '1.2',
             'whitelist': [ROUTER_1_1, ROUTER_1_2],

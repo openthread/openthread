@@ -44,7 +44,7 @@ SED = 3
 
 
 class Cert_6_1_2_REEDAttach_SED(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

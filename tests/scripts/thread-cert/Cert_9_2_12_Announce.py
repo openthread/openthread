@@ -49,7 +49,7 @@ DATASET2_PANID = 0xafce
 class Cert_9_2_12_Announce(thread_cert.TestCase):
     support_ncp = False
 
-    topology = {
+    TOPOLOGY = {
         LEADER1: {
             'active_dataset': {
                 'timestamp': DATASET1_TIMESTAMP,

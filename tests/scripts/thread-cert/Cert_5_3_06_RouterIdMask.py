@@ -40,7 +40,7 @@ ROUTER2 = 3
 
 
 class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         DUT_LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

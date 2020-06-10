@@ -39,7 +39,7 @@ ROUTER3 = 5
 
 
 class Cert_6_1_7_EDSynchronization(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

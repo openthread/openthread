@@ -41,7 +41,7 @@ MTDS = [ED1, SED1]
 
 
 class Cert_5_6_3_NetworkDataRegisterAfterAttachLeader(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

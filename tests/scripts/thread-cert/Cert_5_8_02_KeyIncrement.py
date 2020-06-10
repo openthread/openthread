@@ -36,7 +36,7 @@ ROUTER = 2
 
 
 class Cert_5_8_2_KeyIncrement(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'key_switch_guardtime': 0,
             'mode': 'rsdn',

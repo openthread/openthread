@@ -41,7 +41,7 @@ MED1 = 4
 
 
 class Cert_5_2_01_REEDAttach(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

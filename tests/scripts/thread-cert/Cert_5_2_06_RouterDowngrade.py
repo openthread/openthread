@@ -41,7 +41,7 @@ ROUTER24 = 24
 
 
 class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

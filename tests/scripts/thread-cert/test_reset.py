@@ -37,7 +37,7 @@ SED = 4
 
 
 class TestReset(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
