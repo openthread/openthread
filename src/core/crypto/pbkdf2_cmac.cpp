@@ -63,7 +63,7 @@ void otPbkdf2Cmac(const uint8_t *aPassword,
     OT_ASSERT(aIterationCounter % 2 == 0);
     aIterationCounter /= 2;
 
-#if FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     // limit iterations to avoid OSS-Fuzz timeouts
     aIterationCounter = 2;
 #endif
