@@ -857,15 +857,16 @@ bool otPlatRadioIsCoexEnabled(otInstance *aInstance);
 otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics);
 
 /**
- * The radio driver calls this method to notify OpenThread that an ACK is
- * about to be transmitted, so that CSL IE could be updated and MIC could
- * be recalculated IEEE 802.15.4 IEs can be filled.
+ * The radio driver calls this method to notify OpenThread that a frame is
+ * about to be transmitted(triggered by interrupt) so that something like
+ * CSL IE could be updated and security would be processed.
+ *
  * @param[in]   aInstance   The OpenThread instance structure.
  * @param[in]   aFrame      A pointer to the first byte of the ACK frame.
  * @param[in]   aLength     The length of the ACK frame.
  *
  */
-void otPlatRadioTxAckStarted(otInstance *aInstance, uint8_t *aFrame, uint16_t aLength);
+void otPlatRadioTxStartedInterrupt(otInstance *aInstance, uint8_t *aFrame, uint16_t aLength);
 
 /**
  * @}

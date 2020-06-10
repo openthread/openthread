@@ -754,7 +754,7 @@ void radioSendAck(otInstance *aInstance)
     {
         otEXPECT(otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, NULL, 0,
                                           &sAckFrame) == OT_ERROR_NONE);
-        otPlatRadioTxAckStarted(aInstance, sAckFrame.mPsdu, sAckFrame.mLength);
+        otPlatRadioTxStartedInterrupt(aInstance, sAckFrame.mPsdu, sAckFrame.mLength);
     }
     else
 #endif

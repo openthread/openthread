@@ -58,15 +58,13 @@ void Radio::Callbacks::HandleEnergyScanDone(int8_t aMaxRssi)
     Get<Mac::SubMac>().HandleEnergyScanDone(aMaxRssi);
 }
 
-void Radio::Callbacks::HandleTransmitAckStarted(uint8_t *aFrame, uint16_t aLength)
+void Radio::Callbacks::HandleTransmitStartedInterrupt(uint8_t *aFrame, uint16_t aLength)
 {
     Mac::TxFrame frame;
     frame.mPsdu   = aFrame;
     frame.mLength = aLength;
 
-#if !OPENTHREAD_RADIO
     Get<Mac::SubMac>().ProcessTransmitSecurity(frame);
-#endif
 }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE

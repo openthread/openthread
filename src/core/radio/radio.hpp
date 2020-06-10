@@ -155,7 +155,7 @@ public:
          * @param[in]  aLength    The length of the frame.
          *
          */
-        void HandleTransmitAckStarted(uint8_t *aFrame, uint16_t aLength);
+        void HandleTransmitStartedInterrupt(uint8_t *aFrame, uint16_t aLength);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         /**

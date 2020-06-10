@@ -81,13 +81,13 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyS
     }
 }
 
-extern "C" void otPlatRadioTxAckStarted(otInstance *aInstance, uint8_t *aFrame, uint16_t aLength)
+extern "C" void otPlatRadioTxStartedInterrupt(otInstance *aInstance, uint8_t *aFrame, uint16_t aLength)
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
     if (instance->IsInitialized())
     {
-        instance->Get<Radio::Callbacks>().HandleTransmitAckStarted(aFrame, aLength);
+        instance->Get<Radio::Callbacks>().HandleTransmitStartedInterrupt(aFrame, aLength);
     }
 }
 
