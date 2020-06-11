@@ -92,6 +92,10 @@ OPENTHREAD_PUBLIC_CFLAGS                                         += \
     $(NULL)
 endif
 
+$(TARGET_OUT)/mbedtls-config.h : $(LOCAL_PATH)/third_party/mbedtls/mbedtls-config.in.h
+	mkdir -p $(@D)
+	cp -v $< $@
+
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := spi-hdlc-adapter
@@ -115,8 +119,8 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/posix/platform                        \
     $(LOCAL_PATH)/src/posix/platform/include                \
     $(LOCAL_PATH)/third_party                               \
-    $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
+    $(TARGET_OUT)                                           \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
@@ -139,6 +143,8 @@ LOCAL_EXPORT_C_INCLUDE_DIRS     := \
 LOCAL_CPPFLAGS                                                              := \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
+
+LOCAL_GENERATED_SOURCES += $(TARGET_OUT)/mbedtls-config.h
 
 LOCAL_SRC_FILES                                          := \
     src/core/api/backbone_router_api.cpp                    \
@@ -330,8 +336,8 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/core                                  \
     $(LOCAL_PATH)/src/posix/platform                        \
     $(LOCAL_PATH)/src/posix/platform/include                \
-    $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
+    $(TARGET_OUT)                                           \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
@@ -344,6 +350,8 @@ LOCAL_CFLAGS                                                                := \
 LOCAL_CPPFLAGS                                                              := \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
+
+LOCAL_GENERATED_SOURCES += $(TARGET_OUT)/mbedtls-config.h
 
 LOCAL_SRC_FILES                            := \
     src/cli/cli.cpp                           \
@@ -373,8 +381,8 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/core                                  \
     $(LOCAL_PATH)/src/posix/platform                        \
     $(LOCAL_PATH)/src/posix/platform/include                \
-    $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
+    $(TARGET_OUT)                                           \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
@@ -390,6 +398,8 @@ LOCAL_CPPFLAGS                                                              := \
 
 LOCAL_LDLIBS                               := \
     -lutil
+
+LOCAL_GENERATED_SOURCES += $(TARGET_OUT)/mbedtls-config.h
 
 LOCAL_SRC_FILES                            := \
     src/posix/main.c                          \
@@ -411,8 +421,8 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/ncp                                   \
     $(LOCAL_PATH)/src/posix/platform                        \
     $(LOCAL_PATH)/src/posix/platform/include                \
-    $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
+    $(TARGET_OUT)                                           \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
@@ -424,6 +434,8 @@ LOCAL_CFLAGS                                                                := \
 LOCAL_CPPFLAGS                                                              := \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
+
+LOCAL_GENERATED_SOURCES += $(TARGET_OUT)/mbedtls-config.h
 
 LOCAL_SRC_FILES                            := \
     src/lib/spinel/spinel_buffer.cpp          \
@@ -450,8 +462,8 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/ncp                                   \
     $(LOCAL_PATH)/src/posix/platform                        \
     $(LOCAL_PATH)/src/posix/platform/include                \
-    $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
+    $(TARGET_OUT)                                           \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
@@ -464,6 +476,8 @@ LOCAL_CFLAGS                                                                := \
 LOCAL_CPPFLAGS                                                              := \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
+
+LOCAL_GENERATED_SOURCES += $(TARGET_OUT)/mbedtls-config.h
 
 LOCAL_SRC_FILES                            := \
     src/posix/main.c                          \

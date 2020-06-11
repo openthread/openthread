@@ -17,7 +17,7 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                                    = \
-    mbedtls-config.h                            \
+    mbedtls-config.in.h                         \
     repo/include                                \
     $(NULL)
 
