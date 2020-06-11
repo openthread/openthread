@@ -1,6 +1,3 @@
-Project: /_project.yaml
-Book: /_book.yaml
-
 # IPv6 Addressing
 
 Let's take a look at how Thread identifies each device in the network, and what

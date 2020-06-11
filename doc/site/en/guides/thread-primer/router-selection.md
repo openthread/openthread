@@ -1,6 +1,3 @@
-Project: /_project.yaml
-Book: /_book.yaml
-
 # Router Selection
 
 ## Connected Dominating Set

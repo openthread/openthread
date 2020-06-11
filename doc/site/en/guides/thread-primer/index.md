@@ -1,6 +1,3 @@
-Project: /_project.yaml
-Book: /_book.yaml
-
 # What is Thread?
 
 <figure class="attempt-right">

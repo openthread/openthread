@@ -1,6 +1,3 @@
-Project: /_project.yaml
-Book: /_book.yaml
-
 # Node Roles and Types
 
 ## Forwarding roles
