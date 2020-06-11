@@ -168,6 +168,8 @@ SILABS_COMMON_SOURCES                                                           
     gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/crypto_aes.c              \
     gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/crypto_ecp.c              \
     gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/crypto_management.c       \
+    gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/crypto_sha.c              \
+    gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/shax.c                    \
     $(NULL)
 
 SILABS_EFR32MG12_SOURCES                                                                          = \
@@ -186,9 +188,14 @@ SILABS_EFR32MG21_SOURCES                                                        
     gecko_sdk_suite/v2.7/platform/Device/SiliconLabs/EFR32MG21/Source/system_efr32mg21.c        \
     gecko_sdk_suite/v2.7/platform/Device/SiliconLabs/EFR32MG21/Source/GCC/startup_efr32mg21.c   \
     gecko_sdk_suite/v2.7/platform/emlib/src/em_se.c                                             \
-    gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/se_trng.c                       \
     gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/se_aes.c                        \
+    gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/se_ccm.c                        \
+    gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/se_cmac.c                       \
+    gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/se_ecp.c                        \
+    gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/se_jpake.c                      \
     gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/se_management.c                 \
+    gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/se_sha.c                        \
+    gecko_sdk_suite/v2.7/util/third_party/mbedtls/sl_crypto/src/se_trng.c                       \
     $(NULL)
 
 libsilabs_efr32mg12_sdk_a_CPPFLAGS                                                            = \
