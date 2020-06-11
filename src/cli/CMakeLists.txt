@@ -53,7 +53,6 @@ target_compile_options(openthread-cli-mtd PRIVATE
 )
 
 set(COMMON_INCLUDES
-    ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
 )

@@ -40,6 +40,8 @@ set(OT_EXTERNAL_MBEDTLS "" CACHE STRING "Specify external mbedtls library")
 
 add_library(ot-config INTERFACE)
 
+target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/src/core)
+
 include(TestBigEndian)
 TEST_BIG_ENDIAN(OT_BIG_ENDIAN)
 if(OT_BIG_ENDIAN)
@@ -131,10 +133,10 @@ list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 
 if(OT_PLATFORM STREQUAL "posix")
-    list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/src/posix/platform)
+    target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/src/posix/platform)
     add_subdirectory("${PROJECT_SOURCE_DIR}/src/posix/platform")
 elseif(OT_PLATFORM)
-    list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM})
+    target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM})
     add_subdirectory("${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM}")
 endif()
 

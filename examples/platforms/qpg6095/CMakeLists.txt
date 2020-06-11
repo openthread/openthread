@@ -96,7 +96,6 @@ target_compile_options(openthread-qpg6095
 target_include_directories(openthread-qpg6095
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
-        ${OT_PRIVATE_INCLUDES}
         ${PROJECT_SOURCE_DIR}/src/core
         ${PROJECT_SOURCE_DIR}/examples/platforms
 )

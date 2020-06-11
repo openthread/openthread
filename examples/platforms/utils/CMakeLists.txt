@@ -36,7 +36,6 @@ add_library(openthread-platform-utils OBJECT
 
 target_include_directories(openthread-platform-utils PRIVATE
     ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/examples/platforms
     ${PROJECT_SOURCE_DIR}/examples/platforms/utils
     ${PROJECT_SOURCE_DIR}/src/core
