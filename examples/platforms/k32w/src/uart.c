@@ -99,39 +99,42 @@ otError otPlatUartEnable(void)
     usart_config_t config;
     uint32_t       kPlatformClock = CLOCK_GetFreq(kCLOCK_Fro32M);
 
-    /* attach clock for USART0 */
-    CLOCK_AttachClk(kOSC32M_to_USART_CLK);
+    if (!sIsUartInitialized)
+    {
+        /* attach clock for USART0 */
+        CLOCK_AttachClk(kOSC32M_to_USART_CLK);
 
-    /* reset FLEXCOMM0 for USART0 */
-    RESET_PeripheralReset(kFC0_RST_SHIFT_RSTn);
+        /* reset FLEXCOMM0 for USART0 */
+        RESET_PeripheralReset(kFC0_RST_SHIFT_RSTn);
 
-    memset(&sUartHandle, 0, sizeof(sUartHandle));
-    sUartHandle.txState = UART_IDLE;
+        memset(&sUartHandle, 0, sizeof(sUartHandle));
+        sUartHandle.txState = UART_IDLE;
 
-    USART_GetDefaultConfig(&config);
-    config.baudRate_Bps = K32W_UART_BAUD_RATE;
-    config.enableTx     = true;
-    config.enableRx     = true;
-    config.rxWatermark  = kUSART_RxFifo1;
+        USART_GetDefaultConfig(&config);
+        config.baudRate_Bps = K32W_UART_BAUD_RATE;
+        config.enableTx     = true;
+        config.enableRx     = true;
+        config.rxWatermark  = kUSART_RxFifo1;
 
-    uartStatus = USART_Init(USART0, &config, kPlatformClock);
-    otEXPECT_ACTION(uartStatus == kStatus_Success, error = OT_ERROR_INVALID_ARGS);
+        uartStatus = USART_Init(USART0, &config, kPlatformClock);
+        otEXPECT_ACTION(uartStatus == kStatus_Success, error = OT_ERROR_INVALID_ARGS);
 
-    K32WResetRxRingBuffer(&sUartRxRing);
+        K32WResetRxRingBuffer(&sUartRxRing);
 
-    FLEXCOMM_SetIRQHandler(USART0, (flexcomm_irq_handler_t)USART0_IRQHandler, &sUartHandle);
+        FLEXCOMM_SetIRQHandler(USART0, (flexcomm_irq_handler_t)USART0_IRQHandler, &sUartHandle);
 
-    /* Enable interrupt in NVIC. */
+        /* Enable interrupt in NVIC. */
 #if USE_RTOS
-    NVIC_SetPriority(USART0_IRQn, gUartIsrPrio_c >> (8 - __NVIC_PRIO_BITS));
-    NVIC_ClearPendingIRQ(USART0_IRQn);
+        NVIC_SetPriority(USART0_IRQn, gUartIsrPrio_c >> (8 - __NVIC_PRIO_BITS));
+        NVIC_ClearPendingIRQ(USART0_IRQn);
 #endif
-    EnableIRQ(USART0_IRQn);
+        EnableIRQ(USART0_IRQn);
 
-    /* Enable RX interrupt. */
-    USART_EnableInterrupts(USART0, kUSART_RxLevelInterruptEnable | kUSART_RxErrorInterruptEnable);
+        /* Enable RX interrupt. */
+        USART_EnableInterrupts(USART0, kUSART_RxLevelInterruptEnable | kUSART_RxErrorInterruptEnable);
 
-    sIsUartInitialized = true;
+        sIsUartInitialized = true;
+    }
 
 exit:
     return error;
@@ -172,6 +175,7 @@ otError otPlatUartFlush(void)
  * @param[in] aBuf             Pointer to the character buffer
  * @param[in] len              Length of the character buffer
  */
+
 void K32WWriteBlocking(const uint8_t *aBuf, uint32_t len)
 {
     otEXPECT(sIsUartInitialized && sUartHandle.txState != UART_BUSY);
