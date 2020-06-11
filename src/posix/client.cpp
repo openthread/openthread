@@ -55,7 +55,6 @@
 #endif
 
 #include "common/code_utils.hpp"
-#include "common/debug.hpp"
 
 #include "platform-posix.h"
 
@@ -329,7 +328,7 @@ int main(int argc, char *argv[])
 
                 if (lineStart < rval)
                 {
-                    OT_ASSERT(promptState != 0 && promptState != 2);
+                    assert(promptState != 0 && promptState != 2);
                     if (promptState == -1)
                     {
                         VerifyOrExit(DoWrite(STDOUT_FILENO, buffer + lineStart, rval - lineStart),
