@@ -42,6 +42,11 @@
 #include <utils/code_utils.h>
 #include "openthread/platform/uart.h"
 
+#if USE_RTOS
+#include "UART_Serial_Adapter.h"
+#include "openthread-system.h"
+#endif
+
 /* Defines */
 #define K32W_UART_RX_BUFFERS 256
 #define K32W_UART_BAUD_RATE 115200
@@ -117,6 +122,10 @@ otError otPlatUartEnable(void)
     FLEXCOMM_SetIRQHandler(USART0, (flexcomm_irq_handler_t)USART0_IRQHandler, &sUartHandle);
 
     /* Enable interrupt in NVIC. */
+#if USE_RTOS
+    NVIC_SetPriority(USART0_IRQn, gUartIsrPrio_c >> (8 - __NVIC_PRIO_BITS));
+    NVIC_ClearPendingIRQ(USART0_IRQn);
+#endif
     EnableIRQ(USART0_IRQn);
 
     /* Enable RX interrupt. */
@@ -257,6 +266,11 @@ static void USART0_IRQHandler(USART_Type *base, usart_handle_t *handle)
                 sIsTransmitDone      = true;
             }
         }
+
+#if USE_RTOS
+        /* TODO: do we need to make this call on each USART interrupt */
+        otSysEventSignalPending();
+#endif
     }
 }
 

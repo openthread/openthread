@@ -66,6 +66,7 @@ LIB_FLAGS                                                                       
     -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/XCVR/DK6/Build/Include                   \
     -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/XCVR/DK6                                 \
     -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/Common                                   \
+    -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/SerialManager/Source                     \
     -Wno-unknown-pragmas                                                                                             \
     -Wno-sign-compare                                                                                                \
     -Wno-unused-function                                                                                             \
