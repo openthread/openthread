@@ -326,14 +326,10 @@ int main(int argc, char *argv[])
                     }
                 }
 
-                if (lineStart < rval)
+                if (lineStart < rval && promptState != 1)
                 {
                     assert(promptState != 0 && promptState != 2);
-                    if (promptState == -1)
-                    {
-                        VerifyOrExit(DoWrite(STDOUT_FILENO, buffer + lineStart, rval - lineStart),
-                                     ret = OT_EXIT_FAILURE);
-                    }
+                    VerifyOrExit(DoWrite(STDOUT_FILENO, buffer + lineStart, rval - lineStart), ret = OT_EXIT_FAILURE);
                 }
             }
         }
