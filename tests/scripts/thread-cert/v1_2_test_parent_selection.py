@@ -69,7 +69,7 @@ MED_1_2 = 7
 
 
 class TestParentSelection(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER_1_2: {
             'version': '1.2',
             'whitelist': [REED_1_2, ROUTER_1_2, REED_1_1, ROUTER_1_1, MED_1_1],

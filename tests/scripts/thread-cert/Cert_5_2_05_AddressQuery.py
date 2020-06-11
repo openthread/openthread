@@ -42,7 +42,7 @@ ROUTER_SELECTION_JITTER = 1
 
 
 class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode':
                 'rsdn',

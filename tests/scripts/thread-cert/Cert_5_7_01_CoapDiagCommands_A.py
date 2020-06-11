@@ -48,9 +48,9 @@ MTDS = [MED1, SED1]
 
 
 class Cert_5_7_01_CoapDiagCommands_A(thread_cert.TestCase):
-    support_ncp = False
+    SUPPORT_NCP = False
 
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'whitelist': [ROUTER1],
         },

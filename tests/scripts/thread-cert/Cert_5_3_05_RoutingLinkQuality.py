@@ -40,7 +40,7 @@ ROUTER3 = 4
 
 
 class Cert_5_3_5_RoutingLinkQuality(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

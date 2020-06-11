@@ -43,9 +43,9 @@ ED1 = 3
 
 
 class Cert_9_2_17_Orphan(thread_cert.TestCase):
-    support_ncp = False
+    SUPPORT_NCP = False
 
-    topology = {
+    TOPOLOGY = {
         LEADER1: {
             'active_dataset': {
                 'timestamp': 10,

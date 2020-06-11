@@ -40,7 +40,7 @@ ROUTER_32 = 33
 
 
 class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         DUT_LEADER: {
             'mode':
                 'rsdn',

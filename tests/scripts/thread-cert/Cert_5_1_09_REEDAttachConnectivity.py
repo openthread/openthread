@@ -41,7 +41,7 @@ ROUTER2 = 5
 
 
 class Cert_5_1_09_REEDAttachConnectivity(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

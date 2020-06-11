@@ -45,7 +45,7 @@ USER_POLL_PERIOD = CHILD_TIMEOUT // 3
 
 
 class SED_EnhancedKeepAlive(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'version': '1.2'
         },

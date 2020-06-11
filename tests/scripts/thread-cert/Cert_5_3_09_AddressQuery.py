@@ -43,7 +43,7 @@ SED1 = 5
 
 
 class Cert_5_3_09_AddressQuery(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

@@ -42,7 +42,7 @@ MTDS = [ED, SED]
 
 
 class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

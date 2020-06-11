@@ -38,7 +38,7 @@ ROUTER_1 = 2
 
 
 class Router_5_1_01(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'version': '1.2'
         },

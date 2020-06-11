@@ -41,7 +41,7 @@ ROUTER4 = 5
 
 
 class Cert_5_1_08_RouterAttachConnectivity(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

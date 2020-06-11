@@ -48,9 +48,9 @@ MTDS = [ED1, SED1]
 
 
 class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
-    support_ncp = False
+    SUPPORT_NCP = False
 
-    topology = {
+    TOPOLOGY = {
         COMMISSIONER: {
             'active_dataset': {
                 'timestamp': 15,

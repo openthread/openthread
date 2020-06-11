@@ -42,7 +42,7 @@ MTDS = [ED, SED]
 
 
 class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

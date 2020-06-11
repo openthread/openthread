@@ -38,7 +38,7 @@ ED = 4
 
 
 class Cert_6_2_2_NewPartition(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

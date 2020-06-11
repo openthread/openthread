@@ -37,7 +37,7 @@ ED = 3
 
 
 class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

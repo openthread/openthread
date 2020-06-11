@@ -44,7 +44,7 @@ MTDS = [MED1, MED2]
 
 
 class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         DUT_LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
