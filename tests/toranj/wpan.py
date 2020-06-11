@@ -503,7 +503,7 @@ class Node(object):
             'scan -d' +
             (' -c {}'.format(channel) if channel is not None else '') +
             (' -j' if joiner_only else '') +
-            (' -e' if enable_filtering else '') +
+            (' -f' if enable_filtering else '') +
             (' -p {}'.format(panid_filter) if panid_filter is not None else ''))
 
     def permit_join(self, duration_sec=None, port=None, udp=True, tcp=True):
