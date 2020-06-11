@@ -301,6 +301,7 @@ int main(int argc, char *argv[])
                 for (ssize_t i = 0; i < rval; i++)
                 {
                     int prevPromptState = promptState;
+
                     if (FindPrompt(promptState, buffer[i]))
                     {
                         doneState  = 0;
