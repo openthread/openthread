@@ -55,6 +55,7 @@
 #endif
 
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 
 #include "platform-posix.h"
 
@@ -295,16 +296,21 @@ int main(int argc, char *argv[])
             }
             else
             {
-                size_t lineStart = 0;
+                ssize_t lineStart = 0;
 
                 for (ssize_t i = 0; i < rval; i++)
                 {
+                    int prevPromptState = promptState;
                     if (FindPrompt(promptState, buffer[i]))
                     {
                         doneState  = 0;
                         errorState = 0;
                         lineStart  = i + 1;
                         continue;
+                    }
+                    else if (prevPromptState == 1 && i == 0)
+                    {
+                        VerifyOrExit(DoWrite(STDOUT_FILENO, ">", 1), ret = OT_EXIT_FAILURE);
                     }
 
                     if (buffer[i] == '\r' || buffer[i] == '\n')
@@ -318,6 +324,16 @@ int main(int argc, char *argv[])
                     {
                         isFinished = true;
                         ret        = OT_EXIT_SUCCESS;
+                    }
+                }
+
+                if (lineStart < rval)
+                {
+                    OT_ASSERT(promptState != 0 && promptState != 2);
+                    if (promptState == -1)
+                    {
+                        VerifyOrExit(DoWrite(STDOUT_FILENO, buffer + lineStart, rval - lineStart),
+                                     ret = OT_EXIT_FAILURE);
                     }
                 }
             }
