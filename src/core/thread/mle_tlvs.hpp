@@ -50,10 +50,6 @@ namespace Mle {
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
-#define TLVREQUESTTLV_ITERATOR_INIT 0 ///< Initializer for TlvRequestTlvIterator.
-
-typedef uint8_t TlvRequestIterator; ///< Used to iterate through TlvRequestTlv.
-
 /**
  * @addtogroup core-mle-tlvs
  *
