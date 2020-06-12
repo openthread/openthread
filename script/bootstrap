@@ -37,7 +37,7 @@ install_packages_apt()
 {
     # apt-get update and install dependencies
     sudo apt-get update
-    sudo apt-get --no-install-recommends install -y automake g++ libtool lsb-release make cmake ninja-build
+    sudo apt-get --no-install-recommends install -y automake g++ libtool lsb-release make cmake ninja-build shellcheck
 
     PLATFORM=$(lsb_release -is)
     RELEASE=$(lsb_release -rs)
@@ -82,7 +82,7 @@ install_packages_rpm()
 install_packages_brew()
 {
     # add build tools
-    brew install automake libtool cmake ninja shfmt
+    brew install automake libtool cmake ninja shfmt shellcheck
 
     # add ARM toolchain
     brew tap ArmMbed/homebrew-formulae
