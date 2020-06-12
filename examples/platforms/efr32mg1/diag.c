@@ -53,6 +53,9 @@
 #include <common/logging.hpp>
 #include <utils/code_utils.h>
 #include "btl_interface.h"
+#include "rail.h"
+#include "rail_config.h"
+#include "rail_types.h"
 #include "retargetserial.h"
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
@@ -97,7 +100,34 @@ void otPlatDiagModeSet(bool aMode)
     sDiagMode = aMode;
 }
 
-static otError processLaunchBootloader(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+static void setTimer(RAIL_MultiTimer_t * timer,
+                     uint32_t time,
+                     RAIL_MultiTimerCallback_t cb)
+{
+  if (!RAIL_IsMultiTimerRunning(timer)) {
+    RAIL_SetMultiTimer(timer,
+                       time,
+                       RAIL_TIME_DELAY,
+                       cb,
+                       NULL);
+  }
+}
+
+static RAIL_MultiTimer_t bltimer;
+
+static void timerCb(RAIL_MultiTimer_t *tmr,
+                    RAIL_Time_t expectedTimeOfEvent,
+                    void *cbArg)
+{
+	bootloader_init();
+        bootloader_rebootAndInstall();
+}
+
+static otError processLaunchGeckoBootloader(otInstance *aInstance,
+                           uint8_t     aArgsLength,
+                           char *      aArgs[],
+                           char *      aOutput,
+                           size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -107,9 +137,38 @@ static otError processLaunchBootloader(otInstance *aInstance, uint8_t aArgsLengt
 
     if (aArgsLength == 0)
     {
-         bootloader_init();
-         bootloader_rebootAndInstall();
-         snprintf(aOutput, aOutputMaxLen, "Restting Bootloader\r\n");
+         setTimer(&bltimer, 50, &timerCb);
+    }
+    else
+    {
+        long value;
+
+        error = parseLong(aArgs[0], &value);
+        otEXPECT(error == OT_ERROR_NONE);
+        otEXPECT_ACTION(value >= 0, error = OT_ERROR_INVALID_ARGS);
+        snprintf(aOutput, aOutputMaxLen, "invalid command\r\n");
+    }
+
+exit:
+    appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
+}
+
+static otError processEeroVersion(otInstance *aInstance,
+                           uint8_t     aArgsLength,
+                           char *      aArgs[],
+                           char *      aOutput,
+                           size_t      aOutputMaxLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
+
+    if (aArgsLength == 0)
+    {
+        snprintf(aOutput, aOutputMaxLen, "v5.0.0.0.0\r\n");
     }
     else
     {
@@ -128,7 +187,8 @@ exit:
 
 
 const struct PlatformDiagCommand sCommands[] = {
-    {"launchbootloader", &processLaunchBootloader},
+    {"launchbootloader", &processLaunchGeckoBootloader},
+    {"eeroversion", &processEeroVersion},
 };
 
 otError otPlatDiagProcess(otInstance *aInstance,
