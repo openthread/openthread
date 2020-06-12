@@ -457,8 +457,9 @@ otError otThreadDiscover(otInstance *             aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::DiscoverScanner>().Discover(static_cast<Mac::ChannelMask>(aScanChannels), aPanId, aJoiner,
-                                                         aEnableEui64Filtering, aCallback, aCallbackContext);
+    return instance.Get<Mle::DiscoverScanner>().Discover(
+        static_cast<Mac::ChannelMask>(aScanChannels), aPanId, aJoiner, aEnableEui64Filtering,
+        /* aFilterIndexes (use hash of factory EUI64) */ NULL, aCallback, aCallbackContext);
 }
 
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)
