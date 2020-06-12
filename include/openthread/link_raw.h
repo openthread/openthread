@@ -364,6 +364,16 @@ otError otLinkRawSetMacKey(otInstance *    aInstance,
 otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
 
 /**
+ * Get current platform time (64bits width) of the radio chip.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ *
+ * @retval     The current platform time in microseconds.
+ *
+ */
+uint64_t otLinkRawGetRadioTime(otInstance *aInstance);
+
+/**
  * @}
  *
  */

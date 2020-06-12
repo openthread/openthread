@@ -226,11 +226,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_TIMESTAMP>(void)
 {
     otError error = OT_ERROR_NONE;
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    SuccessOrExit(error = mEncoder.WriteUint64(otPlatTimeGet()));
-#else
-    SuccessOrExit(error = mEncoder.WriteUint64(0));
-#endif
+    SuccessOrExit(error = mEncoder.WriteUint64(otLinkRawGetRadioTime(mInstance)));
 
 exit:
     return error;
