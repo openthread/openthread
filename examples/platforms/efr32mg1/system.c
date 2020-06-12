@@ -87,6 +87,7 @@ void otSysInit(int argc, char *argv[])
     CHIP_Init();
     halInitChipSpecific();
     BSP_Init(BSP_INIT_BCC);
+    RAIL_ConfigMultiTimer(true);
 
     CMU_ClockSelectSet(cmuClock_LFE, cmuSelect_LFRCO);
     CMU_ClockEnable(cmuClock_CORELE, true);
