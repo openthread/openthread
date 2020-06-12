@@ -124,6 +124,7 @@ otError Joiner::Start(const char *     aPskd,
 
     SuccessOrExit(error = Get<Mle::DiscoverScanner>().Discover(Mac::ChannelMask(0), Get<Mac::Mac>().GetPanId(),
                                                                /* aJoiner */ true, /* aEnableFiltering */ true,
+                                                               /* aFilterIndexes (use hash of factory EUI64) */ NULL,
                                                                HandleDiscoverResult, this));
     mCallback = aCallback;
     mContext  = aContext;

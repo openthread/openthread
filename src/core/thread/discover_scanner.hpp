@@ -83,6 +83,16 @@ public:
     typedef otHandleActiveScanResult Handler;
 
     /**
+     * This type represents the filter indexes, i.e., hash bit index values for the bloom filter (calculated from a
+     * Joiner ID).
+     *
+     * This is used when filtering is enabled during Discover Scan, i.e., received MLE Discovery Responses with steering
+     * data (bloom filter) not containing the given indexes are filtered.
+     *
+     */
+    typedef MeshCoP::SteeringData::HashBitIndexes FilterIndexes;
+
+    /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -96,7 +106,10 @@ public:
      * @param[in]  aScanChannels      Channel mask listing channels to scan (if empty, use all supported channels).
      * @param[in]  aPanId             The PAN ID filter (set to Broadcast PAN to disable filter).
      * @param[in]  aJoiner            Value of the Joiner Flag in the Discovery Request TLV.
-     * @param[in]  aEnableFiltering   Enable filtering MLE Discovery Responses that don't match our factory EUI64.
+     * @param[in]  aEnableFiltering   Enable filtering MLE Discovery Responses with steering data not containing a
+     *                                given filter indexes.
+     * @param[in]  aFilterIndexes     A pointer to `FilterIndexes` to use for filtering (when enabled).
+     *                                If set to NULL, filter indexes are derived from hash of factory-assigned EUI64.
      * @param[in]  aHandler           A pointer to a function that is called on receiving an MLE Discovery Response.
      * @param[in]  aContext           A pointer to arbitrary context information.
      *
@@ -109,6 +122,7 @@ public:
                      Mac::PanId              aPanId,
                      bool                    aJoiner,
                      bool                    aEnableFiltering,
+                     const FilterIndexes *   aFilterIndexes,
                      Handler                 aHandler,
                      void *                  aContext);
 
@@ -140,15 +154,15 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    Handler                               mHandler;
-    void *                                mHandlerContext;
-    TimerMilli                            mTimer;
-    MeshCoP::SteeringData::HashBitIndexes mFilterIndexes;
-    Mac::ChannelMask                      mScanChannels;
-    State                                 mState;
-    uint8_t                               mScanChannel;
-    bool                                  mEnableFiltering : 1;
-    bool                                  mShouldRestorePanId : 1;
+    Handler          mHandler;
+    void *           mHandlerContext;
+    TimerMilli       mTimer;
+    FilterIndexes    mFilterIndexes;
+    Mac::ChannelMask mScanChannels;
+    State            mState;
+    uint8_t          mScanChannel;
+    bool             mEnableFiltering : 1;
+    bool             mShouldRestorePanId : 1;
 };
 
 } // namespace Mle
