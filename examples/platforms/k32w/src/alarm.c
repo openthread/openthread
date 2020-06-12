@@ -42,6 +42,10 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
+#if USE_RTOS
+#include "openthread-system.h"
+#endif
+
 #define ALARM_USE_CTIMER 0
 #define ALARM_USE_WTIMER 1
 
@@ -211,12 +215,22 @@ void CTIMER0_IRQHandler(void)
     uint32_t flags = CTIMER_GetStatusFlags(CTIMER0);
     CTIMER_ClearStatusFlags(CTIMER0, flags);
     sEventFired = true;
+
+#if USE_RTOS
+    /* TODO: do we need to make this call on each alarm interrupt? */
+    otSysEventSignalPending();
+#endif
 }
 #else
 void WAKE_UP_TIMER0_DriverIRQHandler()
 {
     WTIMER_ClearStatusFlags(WTIMER_TIMER0_ID);
     WTIMER_StartTimer(WTIMER_TIMER0_ID, TIMER0_MAX_COUNT_VALUE);
+
+#if USE_RTOS
+    /* TODO: do we need to make this call on each alarm interrupt? */
+    otSysEventSignalPending();
+#endif
 }
 void WAKE_UP_TIMER1_DriverIRQHandler()
 {
@@ -230,5 +244,10 @@ void WAKE_UP_TIMER1_DriverIRQHandler()
     {
         sEventFired = true;
     }
+
+#if USE_RTOS
+    /* TODO: do we need to make this call on each alarm interrupt? */
+    otSysEventSignalPending();
+#endif
 }
 #endif

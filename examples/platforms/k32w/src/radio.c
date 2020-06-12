@@ -49,6 +49,10 @@
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
+#if USE_RTOS
+#include "openthread-system.h"
+#endif
+
 extern void BOARD_LedDongleToggle(void);
 
 /* Defines */
@@ -821,6 +825,11 @@ static void K32WISR(uint32_t u32IntBitmap)
     default:
         break;
     }
+
+#if USE_RTOS
+    /* TODO: do we need to make this call on each Radio interrupt */
+    otSysEventSignalPending();
+#endif
 }
 /**
  * Process the MAC Header of the latest received packet
