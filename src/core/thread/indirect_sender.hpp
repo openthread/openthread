@@ -120,8 +120,8 @@ public:
         bool     mUseShortAddress : 1;         // Indicates whether to use short or extended address.
         bool     mSourceMatchPending : 1;      // Indicates whether or not pending to add to src match table.
 
-        OT_STATIC_ASSERT(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < (1UL << 14),
-                         "mQueuedMessageCount cannot fit max required!");
+        static_assert(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < (1UL << 14),
+                      "mQueuedMessageCount cannot fit max required!");
     };
 
     /**

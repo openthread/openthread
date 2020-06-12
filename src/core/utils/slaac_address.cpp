@@ -286,8 +286,8 @@ otError Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress,
     Crypto::Sha256 sha256;
     uint8_t        hash[Crypto::Sha256::kHashSize];
 
-    OT_STATIC_ASSERT(sizeof(hash) >= Ip6::Address::kInterfaceIdentifierSize,
-                     "SHA-256 hash size is too small to use as IPv6 address IID");
+    static_assert(sizeof(hash) >= Ip6::Address::kInterfaceIdentifierSize,
+                  "SHA-256 hash size is too small to use as IPv6 address IID");
 
     GetIidSecretKey(secretKey);
 
