@@ -217,7 +217,6 @@ void CTIMER0_IRQHandler(void)
     sEventFired = true;
 
 #if USE_RTOS
-    /* TODO: do we need to make this call on each alarm interrupt? */
     otSysEventSignalPending();
 #endif
 }
@@ -228,7 +227,6 @@ void WAKE_UP_TIMER0_DriverIRQHandler()
     WTIMER_StartTimer(WTIMER_TIMER0_ID, TIMER0_MAX_COUNT_VALUE);
 
 #if USE_RTOS
-    /* TODO: do we need to make this call on each alarm interrupt? */
     otSysEventSignalPending();
 #endif
 }
@@ -246,7 +244,6 @@ void WAKE_UP_TIMER1_DriverIRQHandler()
     }
 
 #if USE_RTOS
-    /* TODO: do we need to make this call on each alarm interrupt? */
     otSysEventSignalPending();
 #endif
 }
