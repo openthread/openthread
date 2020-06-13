@@ -272,7 +272,6 @@ static void USART0_IRQHandler(USART_Type *base, usart_handle_t *handle)
         }
 
 #if USE_RTOS
-        /* TODO: do we need to make this call on each USART interrupt */
         otSysEventSignalPending();
 #endif
     }

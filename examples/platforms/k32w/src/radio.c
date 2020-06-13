@@ -827,7 +827,6 @@ static void K32WISR(uint32_t u32IntBitmap)
     }
 
 #if USE_RTOS
-    /* TODO: do we need to make this call on each Radio interrupt */
     otSysEventSignalPending();
 #endif
 }
