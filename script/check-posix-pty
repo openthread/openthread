@@ -154,11 +154,11 @@ EOF
         sed "s/WPAN/${VALID_NETIF_NAME}/" tests/scripts/misc/radvd_dhcp.conf.in >tests/scripts/misc/radvd_dhcp.conf
         sudo radvd -C "$PWD/tests/scripts/misc/radvd_slaac.conf"
         sleep 3
-        sudo ${OT_CLI_CMD} prefix | grep '2001:db8:1:2::/64 ao med'
+        sudo "${OT_CLI_CMD}" prefix | grep '2001:db8:1:2::/64 ao med'
         sudo killall radvd || true
         sudo radvd -C "$PWD/tests/scripts/misc/radvd_dhcp.conf"
         sleep 3
-        sudo ${OT_CLI_CMD} prefix | grep '2001:db8:1:2::/64 do med'
+        sudo "${OT_CLI_CMD}" prefix | grep '2001:db8:1:2::/64 do med'
         sudo killall radvd || true
     fi
 
