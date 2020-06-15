@@ -155,7 +155,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo apt-get update
-        sudo apt-get --no-install-recommends install -y socat expect
+        sudo apt-get --no-install-recommends install -y socat expect radvd
         cd /tmp
         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
         tar xvf bsd-licensed.tar.gz
