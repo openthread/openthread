@@ -36,7 +36,7 @@
 
 #include <sys/select.h>
 
-#include <openthread/config.h>
+#include <core/openthread-core-config.h>
 #include <openthread/error.h>
 #include <openthread/instance.h>
 
