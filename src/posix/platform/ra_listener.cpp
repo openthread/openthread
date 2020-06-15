@@ -31,8 +31,6 @@
  *   This file implements the router advertisement listener.
  */
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-
 #include "ra_listener.hpp"
 
 #include <arpa/inet.h>
@@ -44,6 +42,7 @@
 #include "platform-posix.h"
 #include "common/code_utils.hpp"
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 // ff02::01
 static const otIp6Address kRaMulticastAddress = {
     {{0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}}};

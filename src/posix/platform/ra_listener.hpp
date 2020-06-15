@@ -34,12 +34,13 @@
 #ifndef OPENTHREAD_POSIX_RA_LISTENER_HPP_
 #define OPENTHREAD_POSIX_RA_LISTENER_HPP_
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#include <sys/select.h>
 
-#include <sys/types.h>
-
+#include <openthread/config.h>
 #include <openthread/error.h>
 #include <openthread/instance.h>
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 namespace ot {
 namespace Posix {
