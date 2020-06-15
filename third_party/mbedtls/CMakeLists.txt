@@ -45,7 +45,7 @@ if(UNIFDEFALL_EXE AND SED_EXE)
             "-I$<JOIN:$<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>,;-I>"
             "-I$<JOIN:${OT_PUBLIC_INCLUDES},;-I>"
             "-I${CMAKE_CURRENT_SOURCE_DIR}/repo/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/mbedtls-config.in.h" |
+            "${CMAKE_CURRENT_SOURCE_DIR}/mbedtls-config.h" |
             ${SED_EXE} '/openthread-core-config\.h/d' >
             ${OT_MBEDTLS_DEFAULT_CONFIG_FILE}
         COMMAND_EXPAND_LISTS
@@ -54,7 +54,7 @@ if(UNIFDEFALL_EXE AND SED_EXE)
     add_dependencies(mbedx509 mbedtls-config.h)
     add_dependencies(mbedcrypto mbedtls-config.h)
 else()
-    configure_file(mbedtls-config.in.h mbedtls-config.h COPYONLY)
+    configure_file(mbedtls-config.h mbedtls-config.h COPYONLY)
 endif()
 
 target_compile_definitions(mbedtls

@@ -209,8 +209,8 @@ static_library("lib-ot-core") {
     "src/core",
     "src/ncp",
     "third_party",
-    "third_party/mbedtls/repo/include",
-    "$root_out_dir/third_party/mbedtls",
+    "third_party/mbedtls",
+    "third_party/mbedtls/repo/include"
   ]
 
   defines = [
@@ -220,19 +220,5 @@ static_library("lib-ot-core") {
     "OPENTHREAD_CONFIG_FILE=<openthread-config-android.h>",
     "PACKAGE_NAME=\"OPENTHREAD-CORE\"",
     "PACKAGE_VERSION=\"1.0.0\""
-  ]
-
-  deps = [
-    ":mbedtls-config",
-  ]
-}
-
-copy("mbedtls-config") {
-  sources = [
-    "third_party/mbedtls/mbedtls-config.in.h",
-  ]
-
-  outputs = [
-    "$root_out_dir/third_party/mbedtls/mbedtls-config.h",
   ]
 }
