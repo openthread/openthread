@@ -426,7 +426,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class MeshLocalPrefix : public otMeshLocalPrefix, public Equatable<MeshLocalPrefix>
+class MeshLocalPrefix : public otMeshLocalPrefix, public PackedEquatable<MeshLocalPrefix>
 {
 public:
     enum
@@ -534,7 +534,7 @@ public:
 };
 
 OT_TOOL_PACKED_BEGIN
-class RouterIdSet : public Equatable<RouterIdSet>
+class RouterIdSet : public PackedEquatable<RouterIdSet>
 {
 public:
     /**

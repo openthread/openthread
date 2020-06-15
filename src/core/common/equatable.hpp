@@ -38,6 +38,8 @@
 
 #include <string.h>
 
+#include <openthread/platform/toolchain.h>
+
 namespace ot {
 
 /**
@@ -74,6 +76,41 @@ public:
      */
     bool operator!=(const Type &aOther) const { return !(*this == aOther); }
 };
+
+/**
+ * This template class defines overloads of operators `==` and `!=`.
+ *
+ * The `==` implementation simply compares all the bytes of two `Type` instances to be equal (using `memcmp()`).
+ *
+ * Users of this class should follow CRTP-style inheritance, i.e., the `Type` class itself should publicly inherit
+ * from `Equatable<Type>`.
+ *
+ */
+template <class Type> OT_TOOL_PACKED_BEGIN class PackedEquatable
+{
+public:
+    /**
+     * This method overloads operator `==` to evaluate whether or not two instances of `Type` are equal.
+     *
+     * @param[in]  aOther  The other `Type` instance to compare with.
+     *
+     * @retval TRUE   If the two `Type` instances are equal.
+     * @retval FALSE  If the two `Type` instances are not equal.
+     *
+     */
+    bool operator==(const Type &aOther) const { return memcmp(this, &aOther, sizeof(Type)) == 0; }
+
+    /**
+     * This method overloads operator `!=` to evaluate whether or not two instances of `Type` are equal.
+     *
+     * @param[in]  aOther  The other `Type` instance to compare with.
+     *
+     * @retval TRUE   If the two `Type` instances are not equal.
+     * @retval FALSE  If the two `Type` instances are equal.
+     *
+     */
+    bool operator!=(const Type &aOther) const { return !(*this == aOther); }
+} OT_TOOL_PACKED_END;
 
 } // namespace ot
 

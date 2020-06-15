@@ -63,8 +63,8 @@ namespace Ip6 {
  */
 OT_TOOL_PACKED_BEGIN
 class InterfaceIdentifier : public otIp6InterfaceIdentifier,
-                            public Equatable<InterfaceIdentifier>,
-                            public Clearable<InterfaceIdentifier>
+                            public PackedEquatable<InterfaceIdentifier>,
+                            public PackedClearable<InterfaceIdentifier>
 {
 public:
     enum
@@ -110,7 +110,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Address : public otIp6Address, public Equatable<Address>, public Clearable<Address>
+class Address : public otIp6Address, public PackedEquatable<Address>, public PackedClearable<Address>
 {
 public:
     /**

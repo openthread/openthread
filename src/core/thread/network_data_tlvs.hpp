@@ -224,7 +224,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class HasRouteEntry : public Equatable<HasRouteEntry>
+class HasRouteEntry : public PackedEquatable<HasRouteEntry>
 {
 public:
     /**
@@ -546,7 +546,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class BorderRouterEntry : public Equatable<BorderRouterEntry>
+class BorderRouterEntry : public PackedEquatable<BorderRouterEntry>
 {
 public:
     enum

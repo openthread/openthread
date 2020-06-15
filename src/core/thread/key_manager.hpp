@@ -65,7 +65,7 @@ namespace ot {
  *
  */
 OT_TOOL_PACKED_BEGIN
-class MasterKey : public otMasterKey, public Equatable<MasterKey>
+class MasterKey : public otMasterKey, public PackedEquatable<MasterKey>
 {
 } OT_TOOL_PACKED_END;
 
@@ -74,7 +74,7 @@ class MasterKey : public otMasterKey, public Equatable<MasterKey>
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Pskc : public otPskc, public Equatable<Pskc>, public Clearable<Pskc>
+class Pskc : public otPskc, public PackedEquatable<Pskc>, public PackedClearable<Pskc>
 {
 public:
 #if !OPENTHREAD_RADIO

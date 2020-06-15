@@ -38,6 +38,8 @@
 
 #include <string.h>
 
+#include <openthread/platform/toolchain.h>
+
 namespace ot {
 
 /**
@@ -52,8 +54,31 @@ namespace ot {
 template <typename Type> class Clearable
 {
 public:
+    /**
+     * This method clears the object (sets all bytes to zero).
+     *
+     */
     void Clear(void) { memset(reinterpret_cast<void *>(this), 0, sizeof(Type)); }
 };
+
+/**
+ * This template class defines a packed Clearable object which provides `Clear()` method.
+ *
+ * The `Clear` implementation simply sets all the bytes of a `Type` instance to zero.
+ *
+ * Users of this class should follow CRTP-style inheritance, i.e., the `Type` class itself should publicly inherit
+ * from `Clearable<Type>`.
+ *
+ */
+template <typename Type> OT_TOOL_PACKED_BEGIN class PackedClearable
+{
+public:
+    /**
+     * This method clears the object (sets all bytes to zero).
+     *
+     */
+    void Clear(void) { memset(reinterpret_cast<void *>(this), 0, sizeof(Type)); }
+} OT_TOOL_PACKED_END;
 
 } // namespace ot
 

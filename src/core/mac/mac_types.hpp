@@ -88,7 +88,7 @@ PanId GenerateRandomPanId(void);
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ExtAddress : public otExtAddress, public Equatable<ExtAddress>, public Clearable<ExtAddress>
+class ExtAddress : public otExtAddress, public PackedEquatable<ExtAddress>, public PackedClearable<ExtAddress>
 {
 public:
     enum
@@ -421,7 +421,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Key : public otMacKey, public Equatable<Key>, public Clearable<Key>
+class Key : public otMacKey, public PackedEquatable<Key>, public PackedClearable<Key>
 {
 public:
     enum
@@ -444,7 +444,9 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ExtendedPanId : public otExtendedPanId, public Equatable<ExtendedPanId>, public Clearable<ExtendedPanId>
+class ExtendedPanId : public otExtendedPanId,
+                      public PackedEquatable<ExtendedPanId>,
+                      public PackedClearable<ExtendedPanId>
 {
 public:
     enum
