@@ -6,7 +6,6 @@ interface WPAN {
         prefix 2001:db8:1:2::/64 { 
                 AdvOnLink on; 
                 AdvAutonomous on; 
-                AdvRouterAddr on; 
         };
 };
 
