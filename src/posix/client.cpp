@@ -182,7 +182,7 @@ static bool DoWrite(int aFile, const void *aBuffer, size_t aSize)
         else
         {
             aBuffer = reinterpret_cast<const uint8_t *>(aBuffer) + rval;
-            aSize -= rval;
+            aSize -= (size_t)rval;
         }
     }
 
@@ -316,7 +316,7 @@ int main(int argc, char *argv[])
 
                     if (buffer[i] == '\r' || buffer[i] == '\n')
                     {
-                        VerifyOrExit(DoWrite(STDOUT_FILENO, buffer + lineStart, i - lineStart + 1),
+                        VerifyOrExit(DoWrite(STDOUT_FILENO, buffer + lineStart, (size_t)(i - lineStart + 1)),
                                      ret = OT_EXIT_FAILURE);
                         lineStart = i + 1;
                     }
@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
                 if (lineStart < rval && promptState != 1)
                 {
                     assert(promptState != 0 && promptState != 2);
-                    VerifyOrExit(DoWrite(STDOUT_FILENO, buffer + lineStart, rval - lineStart), ret = OT_EXIT_FAILURE);
+                    VerifyOrExit(DoWrite(STDOUT_FILENO, buffer + lineStart, (size_t)(rval - lineStart)), ret = OT_EXIT_FAILURE);
                 }
             }
         }
