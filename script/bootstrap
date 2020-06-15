@@ -48,7 +48,7 @@ install_packages_apt()
     elif [ "$PLATFORM" = "Ubuntu" ] && [ "$(echo "$RELEASE >= $UBUNTU2004" | bc)" -eq 1 ]; then
         echo "Ubuntu Release >= $UBUNTU2004"
         # no need to use ppa
-        sudo apt-get --no-install-recommends install -y gcc-arm-none-eabi gdb-multiarch
+        sudo apt-get --no-install-recommends install -y gcc-arm-none-eabi gdb-multiarch libnewlib-arm-none-eabi
     elif ! command -v arm-none-eabi-g++; then
         # add gcc-arm-embedded ppa
         sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa -y
