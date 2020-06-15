@@ -66,6 +66,7 @@ add_library(openthread-posix
     logging.cpp
     misc.cpp
     netif.cpp
+    ra_listener.cpp
     radio.cpp
     radio_url.cpp
     settings.cpp

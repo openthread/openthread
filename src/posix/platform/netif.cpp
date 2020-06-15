@@ -143,6 +143,10 @@ extern int
 #include <openthread/message.h>
 #include <openthread/platform/misc.h>
 
+#ifdef OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#include "ra_listener.hpp"
+#endif
+
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
 #include "net/ip6_address.hpp"
@@ -248,6 +252,10 @@ enum
 #endif
 
 static const size_t kMaxIp6Size = 1536;
+
+#ifdef OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+ot::Posix::RaListener sRaListener;
+#endif
 
 #define OPENTHREAD_POSIX_LOG_TUN_PACKETS 0
 
@@ -1365,6 +1373,9 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     mldListenerInit();
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    SuccessOrDie(sRaListener.Init(sTunIndex));
+#endif
 
     otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
     otIp6SetReceiveCallback(aInstance, processReceive, aInstance);
@@ -1412,6 +1423,10 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
         *aMaxFd = sMLDMonitorFd;
     }
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    sRaListener.UpdateFdSet(*aReadFdSet, *aWriteFdSet, *aErrorFdSet, *aMaxFd);
+#endif
+
 exit:
     return;
 }
@@ -1456,6 +1471,10 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
     {
         processMLDEvent(sInstance);
     }
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    SuccessOrDie(sRaListener.ProcessEvent(sInstance, *aReadFdSet, *aWriteFdSet, *aErrorFdSet));
 #endif
 
 exit:

@@ -42,8 +42,9 @@ at_exit()
 
     sudo killall expect || true
     killall ot-ctl || true
-    killall ot-daemon || true
+    sudo killall ot-daemon || true
     killall socat || true
+    sudo killall radvd || true
 
     exit $EXIT_CODE
 }
@@ -51,7 +52,7 @@ at_exit()
 build()
 {
     make -f examples/Makefile-simulation
-    make -f src/posix/Makefile-posix PLATFORM_NETIF=1 PLATFORM_UDP=1 UDP_FORWARD=0 MAX_POWER_TABLE=1
+    make -f src/posix/Makefile-posix BORDER_ROUTER=1 PLATFORM_NETIF=1 PLATFORM_UDP=1 UDP_FORWARD=0 MAX_POWER_TABLE=1
 }
 
 check()
@@ -149,6 +150,16 @@ EOF
         sudo PATH="$(dirname "${OT_CLI_CMD}"):${PATH}" \
             python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" \
             || die 'multicast group join failed'
+        sed "s/WPAN/${VALID_NETIF_NAME}/" tests/scripts/misc/radvd_slaac.conf.in >tests/scripts/misc/radvd_slaac.conf
+        sed "s/WPAN/${VALID_NETIF_NAME}/" tests/scripts/misc/radvd_dhcp.conf.in >tests/scripts/misc/radvd_dhcp.conf
+        sudo radvd -C "$PWD/tests/scripts/misc/radvd_slaac.conf"
+        sleep 3
+        sudo ${OT_CLI_CMD} prefix | grep '2001:db8:1:2::/64 ao med'
+        sudo killall radvd || true
+        sudo radvd -C "$PWD/tests/scripts/misc/radvd_dhcp.conf"
+        sleep 3
+        sudo ${OT_CLI_CMD} prefix | grep '2001:db8:1:2::/64 do med'
+        sudo killall radvd || true
     fi
 
     LEADER_ALOC=fdde:ad00:beef::ff:fe00:fc00

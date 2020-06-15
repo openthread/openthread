@@ -1,0 +1,12 @@
+interface WPAN { 
+        AdvSendAdvert on;
+        MinRtrAdvInterval 3; 
+        MaxRtrAdvInterval 10;
+        AdvManagedFlag on;
+        prefix 2001:db8:1:2::/64 { 
+                AdvOnLink on; 
+                AdvAutonomous off; 
+                AdvRouterAddr off; 
+        };
+};
+

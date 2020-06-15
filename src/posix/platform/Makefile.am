@@ -49,6 +49,7 @@ libopenthread_posix_a_SOURCES             = \
     logging.cpp                             \
     misc.cpp                                \
     netif.cpp                               \
+    ra_listener.cpp                         \
     radio.cpp                               \
     radio_url.cpp                           \
     settings.cpp                            \
@@ -63,6 +64,7 @@ noinst_HEADERS                            = \
     hdlc_interface.hpp                      \
     openthread-posix-config.h               \
     platform-posix.h                        \
+    ra_listener.hpp                         \
     radio_url.hpp                           \
     $(NULL)
 
