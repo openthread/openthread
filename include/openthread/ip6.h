@@ -116,6 +116,18 @@ struct otIp6Prefix
 typedef struct otIp6Prefix otIp6Prefix;
 
 /**
+ * IPv6 Address origins
+ *
+ */
+enum
+{
+    OT_ADDRESS_ORIGIN_THREAD = 0, ///< Thread assigned address (ALOC, RLOC, MLEID, etc)
+    OT_ADDRESS_ORIGIN_SLAAC  = 1, ///< SLAAC assigned address
+    OT_ADDRESS_ORIGIN_DHCPV6 = 2, ///< DHCPv6 assigned address
+    OT_ADDRESS_ORIGIN_MANUAL = 3, ///< Manually assigned address
+};
+
+/**
  * This structure represents an IPv6 network interface unicast address.
  *
  */
@@ -123,6 +135,7 @@ typedef struct otNetifAddress
 {
     otIp6Address           mAddress;                ///< The IPv6 unicast address.
     uint8_t                mPrefixLength;           ///< The Prefix length (in bits).
+    uint8_t                mAddressOrigin;          ///< The IPv6 address origin.
     bool                   mPreferred : 1;          ///< TRUE if the address is preferred, FALSE otherwise.
     bool                   mValid : 1;              ///< TRUE if the address is valid, FALSE otherwise.
     bool                   mScopeOverrideValid : 1; ///< TRUE if the mScopeOverride value is valid, FALSE otherwise.

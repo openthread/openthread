@@ -51,6 +51,7 @@ DuaManager::DuaManager(Instance &aInstance)
     , mDadCounter(0)
 {
     mDomainUnicastAddress.Clear();
+    mDomainUnicastAddress.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
     mDomainUnicastAddress.mPreferred          = true;
     mDomainUnicastAddress.mValid              = true;
     mDomainUnicastAddress.mScopeOverride      = Ip6::Address::kGlobalScope;

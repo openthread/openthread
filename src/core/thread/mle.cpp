@@ -126,13 +126,15 @@ Mle::Mle(Instance &aInstance)
     // link-local 64
     mLinkLocal64.Clear();
     mLinkLocal64.GetAddress().SetToLinkLocalAddress(Get<Mac::Mac>().GetExtAddress());
-    mLinkLocal64.mPrefixLength = 64;
-    mLinkLocal64.mPreferred    = true;
-    mLinkLocal64.mValid        = true;
+    mLinkLocal64.mPrefixLength  = 64;
+    mLinkLocal64.mAddressOrigin = OT_ADDRESS_ORIGIN_THREAD;
+    mLinkLocal64.mPreferred     = true;
+    mLinkLocal64.mValid         = true;
 
     // Leader Aloc
     mLeaderAloc.Clear();
     mLeaderAloc.mPrefixLength       = MeshLocalPrefix::kLength;
+    mLeaderAloc.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
     mLeaderAloc.mPreferred          = true;
     mLeaderAloc.mValid              = true;
     mLeaderAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
@@ -145,6 +147,7 @@ Mle::Mle(Instance &aInstance)
     {
         mServiceAlocs[i].Clear();
         mServiceAlocs[i].mPrefixLength       = MeshLocalPrefix::kLength;
+        mServiceAlocs[i].mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
         mServiceAlocs[i].mPreferred          = true;
         mServiceAlocs[i].mValid              = true;
         mServiceAlocs[i].mScopeOverride      = Ip6::Address::kRealmLocalScope;
@@ -163,6 +166,7 @@ Mle::Mle(Instance &aInstance)
                                            OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE));
 
     mMeshLocal64.mPrefixLength       = MeshLocalPrefix::kLength;
+    mMeshLocal64.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
     mMeshLocal64.mPreferred          = true;
     mMeshLocal64.mValid              = true;
     mMeshLocal64.mScopeOverride      = Ip6::Address::kRealmLocalScope;
@@ -172,6 +176,7 @@ Mle::Mle(Instance &aInstance)
     mMeshLocal16.Clear();
     mMeshLocal16.GetAddress().SetIidToLocator(0);
     mMeshLocal16.mPrefixLength       = MeshLocalPrefix::kLength;
+    mMeshLocal16.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
     mMeshLocal16.mPreferred          = true;
     mMeshLocal16.mValid              = true;
     mMeshLocal16.mScopeOverride      = Ip6::Address::kRealmLocalScope;

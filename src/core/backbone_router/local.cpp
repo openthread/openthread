@@ -62,6 +62,7 @@ Local::Local(Instance &aInstance)
     mBackboneRouterPrimaryAloc.Clear();
 
     mBackboneRouterPrimaryAloc.mPrefixLength       = Mle::MeshLocalPrefix::kLength;
+    mBackboneRouterPrimaryAloc.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
     mBackboneRouterPrimaryAloc.mPreferred          = true;
     mBackboneRouterPrimaryAloc.mValid              = true;
     mBackboneRouterPrimaryAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
