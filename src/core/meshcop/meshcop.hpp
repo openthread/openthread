@@ -40,6 +40,7 @@
 #include <limits.h>
 
 #include <openthread/instance.h>
+#include <openthread/joiner.h>
 
 #include "coap/coap.hpp"
 #include "common/message.hpp"
@@ -55,6 +56,119 @@ namespace MeshCoP {
 enum
 {
     kBorderAgentUdpPort = 49191, ///< UDP port of border agent service.
+};
+
+/**
+ * This type represents a Joiner Discerner.
+ *
+ */
+class JoinerDiscerner : public otJoinerDiscerner
+{
+    friend class SteeringData;
+
+public:
+    enum
+    {
+        kMaxLength      = OT_JOINER_MAX_DISCERNER_LENGTH, ///< Maximum length of a Joiner Discerner in bits.
+        kInfoStringSize = 45,                             ///< Size of `InfoString` to use with `ToString()
+    };
+
+    /**
+     * This type defines the fixed-length `String` object returned from `ToString()`.
+     *
+     */
+    typedef String<kInfoStringSize> InfoString;
+
+    /**
+     * This method clears the Joiner Discerner.
+     *
+     */
+    void Clear(void) { mLength = 0; }
+
+    /**
+     * This method indicates whether the Joiner Discerner is empty (no value set).
+     *
+     * @returns TRUE if empty, FALSE otherwise.
+     *
+     */
+    bool IsEmpty(void) const { return mLength == 0; }
+
+    /**
+     * This method gets the Joiner Discerner's value.
+     *
+     * @returns The Joiner Discerner value.
+     *
+     */
+    uint64_t GetValue(void) const { return mValue; }
+
+    /**
+     * This method gets the Joiner Discerner's length (in bits).
+     *
+     * @return The Joiner Discerner length.
+     *
+     */
+    uint8_t GetLength(void) const { return mLength; }
+
+    /**
+     * This method indicates whether the Joiner Discerner is valid (i.e. it not empty and its length is within
+     * valid range).
+     *
+     * @returns TRUE if Joiner Discerner is valid, FALSE otherwise.
+     *
+     */
+    bool IsValid(void) const { return (0 < mLength) && (mLength <= kMaxLength); }
+
+    /**
+     * This method generates a Joiner ID from the Discerner.
+     *
+     * @param[out] aJoinerId   A reference to `Mac::ExtAddress` to output the generated Joiner ID.
+     *
+     */
+    void GenerateJoinerId(Mac::ExtAddress &aJoinerId) const;
+
+    /**
+     * This method indicates whether a given Joiner ID matches the Discerner.
+     *
+     * @param[in] aJoiner  A Joiner ID to match with the Discerner.
+     *
+     * @returns TRUE if the Joiner ID matches the Discerner, FALSE otherwise.
+     *
+     */
+    bool Matches(const Mac::ExtAddress &aJoinerId) const;
+
+    /**
+     * This method overloads operator `==` to evaluate whether or not two Joiner Discerner instances are equal.
+     *
+     * @param[in]  aOther  The other Joiner Discerner to compare with.
+     *
+     * @retval TRUE   If the two are equal.
+     * @retval FALSE  If the two are not equal.
+     *
+     */
+    bool operator==(const JoinerDiscerner &aOther) const;
+
+    /**
+     * This method overloads operator `!=` to evaluate whether or not two Joiner Discerner instances are equal.
+     *
+     * @param[in]  aOther  The other Joiner Discerner to compare with.
+     *
+     * @retval TRUE   If the two are not equal.
+     * @retval FALSE  If the two are equal.
+     *
+     */
+    bool operator!=(const JoinerDiscerner &aOther) const { return !(*this == aOther); }
+
+    /**
+     * This method converts the Joiner Discerner to a string.
+     *
+     * @returns An `InfoString` representation of Joiner Discerner.
+     *
+     */
+    InfoString ToString(void) const;
+
+private:
+    uint64_t GetMask(void) const { return (static_cast<uint64_t>(1ULL) << mLength) - 1; }
+    void     CopyTo(Mac::ExtAddress &aExtAddress) const;
 };
 
 /**
@@ -142,6 +256,14 @@ public:
     void UpdateBloomFilter(const Mac::ExtAddress &aJoinerId);
 
     /**
+     * This method updates the bloom filter adding a given Joiner Discerner.
+     *
+     * @param[in]  aDiscerner  The Joiner Discerner to add to bloom filter.
+     *
+     */
+    void UpdateBloomFilter(const JoinerDiscerner &aDiscerner);
+
+    /**
      * This method indicates whether the bloom filter is empty (all the bits are cleared).
      *
      * @returns TRUE if the bloom filter is empty, FALSE otherwise.
@@ -160,12 +282,22 @@ public:
     /**
      * This method indicates whether the bloom filter contains a given Joiner ID.
      *
-     * @param[in] aJoinderId  A Joiner ID.
+     * @param[in] aJoinerId  A Joiner ID.
      *
      * @returns TRUE if the bloom filter contains @p aJoinerId, FALSE otherwise.
      *
      */
     bool Contains(const Mac::ExtAddress &aJoinerId) const;
+
+    /**
+     * This method indicates whether the bloom filter contains a given Joiner Discerner.
+     *
+     * @param[in] aDiscerner   A Joiner Discerner.
+     *
+     * @returns TRUE if the bloom filter contains @p aDiscerner, FALSE otherwise.
+     *
+     */
+    bool Contains(const JoinerDiscerner &aDiscerner) const;
 
     /**
      * This method indicates whether the bloom filter contains the hash bit indexes (derived from a Joiner ID).
@@ -188,6 +320,17 @@ public:
      */
     static void CalculateHashBitIndexes(const Mac::ExtAddress &aJoinerId, HashBitIndexes &aIndexes);
 
+    /**
+     * This static method calculates the bloom filter hash bit indexes from a given Joiner Discerner.
+     *
+     * The first hash bit index is derived using CRC16-CCITT and second one using CRC16-ANSI.
+     *
+     * @param[in]  aDiscerner     The Joiner Discerner to calculate the hash bit indexes.
+     * @param[out] aIndexes       A reference to a `HashBitIndexes` structure to output the calculated index values.
+     *
+     */
+    static void CalculateHashBitIndexes(const JoinerDiscerner &aDiscerner, HashBitIndexes &aIndexes);
+
 private:
     enum
     {
@@ -204,6 +347,7 @@ private:
     void ClearBit(uint8_t aBit) { m8[BitIndex(aBit)] &= ~BitFlag(aBit); }
 
     bool DoesAllMatch(uint8_t aMatch) const;
+    void UpdateBloomFilter(const HashBitIndexes &aIndexes);
 };
 
 /**

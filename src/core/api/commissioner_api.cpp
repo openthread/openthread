@@ -46,33 +46,44 @@ otError otCommissionerStart(otInstance *                 aInstance,
                             otCommissionerJoinerCallback aJoinerCallback,
                             void *                       aCallbackContext)
 {
-    otError error;
-
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    SuccessOrExit(error =
-                      instance.Get<MeshCoP::Commissioner>().Start(aStateCallback, aJoinerCallback, aCallbackContext));
-exit:
-    return error;
+    return instance.Get<MeshCoP::Commissioner>().Start(aStateCallback, aJoinerCallback, aCallbackContext);
 }
 
 otError otCommissionerStop(otInstance *aInstance)
 {
-    otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    SuccessOrExit(error = instance.Get<MeshCoP::Commissioner>().Stop(/* aResign */ true));
+    return instance.Get<MeshCoP::Commissioner>().Stop(/* aResign */ true);
+}
+
+otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aEui64, const char *aPskd, uint32_t aTimeout)
+{
+    otError                error;
+    MeshCoP::Commissioner &commissioner = static_cast<Instance *>(aInstance)->Get<MeshCoP::Commissioner>();
+
+    if (aEui64 == nullptr)
+    {
+        error = commissioner.AddJoinerAny(aPskd, aTimeout);
+        ExitNow();
+    }
+
+    error = commissioner.AddJoiner(*static_cast<const Mac::ExtAddress *>(aEui64), aPskd, aTimeout);
 
 exit:
     return error;
 }
 
-otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aEui64, const char *aPskd, uint32_t aTimeout)
+otError otCommissionerAddJoinerWithDiscerner(otInstance *             aInstance,
+                                             const otJoinerDiscerner *aDiscerner,
+                                             const char *             aPskd,
+                                             uint32_t                 aTimeout)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<MeshCoP::Commissioner>().AddJoiner(static_cast<const Mac::ExtAddress *>(aEui64), aPskd,
-                                                           aTimeout);
+    return instance.Get<MeshCoP::Commissioner>().AddJoiner(*static_cast<const MeshCoP::JoinerDiscerner *>(aDiscerner),
+                                                           aPskd, aTimeout);
 }
 
 otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, uint16_t *aIterator, otJoinerInfo *aJoiner)
@@ -84,9 +95,27 @@ otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, uint16_t *aIterat
 
 otError otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aEui64)
 {
+    otError                error;
+    MeshCoP::Commissioner &commissioner = static_cast<Instance *>(aInstance)->Get<MeshCoP::Commissioner>();
+
+    if (aEui64 == nullptr)
+    {
+        error = commissioner.RemoveJoinerAny(/* aTimeout */ 0);
+        ExitNow();
+    }
+
+    error = commissioner.RemoveJoiner(*static_cast<const Mac::ExtAddress *>(aEui64), /* aTimeout */ 0);
+
+exit:
+    return error;
+}
+
+otError otCommissionerRemoveJoinerWithDiscerner(otInstance *aInstance, const otJoinerDiscerner *aDiscerner)
+{
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<MeshCoP::Commissioner>().RemoveJoiner(static_cast<const Mac::ExtAddress *>(aEui64), 0);
+    return instance.Get<MeshCoP::Commissioner>().RemoveJoiner(
+        *static_cast<const MeshCoP::JoinerDiscerner *>(aDiscerner), 0);
 }
 
 otError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aProvisioningUrl)
