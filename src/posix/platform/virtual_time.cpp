@@ -125,7 +125,7 @@ static void virtualTimeSendEvent(struct VirtualTimeEvent *aEvent, size_t aLength
 
 void virtualTimeReceiveEvent(struct VirtualTimeEvent *aEvent)
 {
-    ssize_t rval = recvfrom(sSockFd, aEvent, sizeof(*aEvent), 0, NULL, NULL);
+    ssize_t rval = recvfrom(sSockFd, aEvent, sizeof(*aEvent), 0, nullptr, nullptr);
 
     if (rval < 0 || (uint16_t)rval < offsetof(struct VirtualTimeEvent, mData))
     {

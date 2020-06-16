@@ -116,12 +116,12 @@ private:
 
     const otCoapTxParameters *GetRequestTxParameters(void) const
     {
-        return mUseDefaultRequestTxParameters ? NULL : &mRequestTxParameters;
+        return mUseDefaultRequestTxParameters ? nullptr : &mRequestTxParameters;
     }
 
     const otCoapTxParameters *GetResponseTxParameters(void) const
     {
-        return mUseDefaultResponseTxParameters ? NULL : &mResponseTxParameters;
+        return mUseDefaultResponseTxParameters ? nullptr : &mResponseTxParameters;
     }
 
     static const Command sCommands[];

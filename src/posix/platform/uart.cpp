@@ -56,7 +56,7 @@ static int sSessionSocket = -1;
 #endif
 
 static bool           sEnabled     = false;
-static const uint8_t *sWriteBuffer = NULL;
+static const uint8_t *sWriteBuffer = nullptr;
 static uint16_t       sWriteLength = 0;
 
 otError otPlatUartEnable(void)
@@ -171,7 +171,7 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
 {
     VerifyOrExit(sEnabled, OT_NOOP);
 
-    if (aReadFdSet != NULL)
+    if (aReadFdSet != nullptr)
     {
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
         int fd = (sSessionSocket == -1 ? sUartSocket : sSessionSocket);
@@ -181,17 +181,17 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
 
         FD_SET(fd, aReadFdSet);
 
-        if (aErrorFdSet != NULL)
+        if (aErrorFdSet != nullptr)
         {
             FD_SET(fd, aErrorFdSet);
         }
 
-        if (aMaxFd != NULL && *aMaxFd < fd)
+        if (aMaxFd != nullptr && *aMaxFd < fd)
         {
             *aMaxFd = fd;
         }
     }
-    if ((aWriteFdSet != NULL) && (sWriteLength > 0))
+    if ((aWriteFdSet != nullptr) && (sWriteLength > 0))
     {
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
         int fd = (sSessionSocket == -1 ? sUartSocket : sSessionSocket);
@@ -201,12 +201,12 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
 
         FD_SET(fd, aWriteFdSet);
 
-        if (aErrorFdSet != NULL)
+        if (aErrorFdSet != nullptr)
         {
             FD_SET(fd, aErrorFdSet);
         }
 
-        if (aMaxFd != NULL && *aMaxFd < fd)
+        if (aMaxFd != nullptr && *aMaxFd < fd)
         {
             *aMaxFd = fd;
         }
@@ -221,7 +221,7 @@ static void InitializeSessionSocket(void)
 {
     int rval;
 
-    VerifyOrExit((rval = accept(sUartSocket, NULL, NULL)) != -1, OT_NOOP);
+    VerifyOrExit((rval = accept(sUartSocket, nullptr, nullptr)) != -1, OT_NOOP);
 
     if (sSessionSocket != -1)
     {
@@ -265,10 +265,10 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         InitializeSessionSocket();
     }
 
-    if (sSessionSocket == -1 && sWriteBuffer != NULL)
+    if (sSessionSocket == -1 && sWriteBuffer != nullptr)
     {
         IgnoreReturnValue(write(STDERR_FILENO, sWriteBuffer, sWriteLength));
-        sWriteBuffer = NULL;
+        sWriteBuffer = nullptr;
         sWriteLength = 0;
         otPlatUartSendDone();
     }

@@ -54,9 +54,9 @@ LinkRaw::LinkRaw(Instance &aInstance)
     , mEnabled(false)
     , mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mPanId(kPanIdBroadcast)
-    , mReceiveDoneCallback(NULL)
-    , mTransmitDoneCallback(NULL)
-    , mEnergyScanDoneCallback(NULL)
+    , mReceiveDoneCallback(nullptr)
+    , mTransmitDoneCallback(nullptr)
+    , mEnergyScanDoneCallback(nullptr)
 #if OPENTHREAD_RADIO
     , mSubMac(aInstance)
 #elif OPENTHREAD_CONFIG_LINK_RAW_ENABLE
@@ -150,7 +150,7 @@ exit:
 
 void LinkRaw::InvokeReceiveDone(RxFrame *aFrame, otError aError)
 {
-    otLogDebgMac("LinkRaw::ReceiveDone(%d bytes), error:%s", (aFrame != NULL) ? aFrame->mLength : 0,
+    otLogDebgMac("LinkRaw::ReceiveDone(%d bytes), error:%s", (aFrame != nullptr) ? aFrame->mLength : 0,
                  otThreadErrorToString(aError));
 
     if (mReceiveDoneCallback && (aError == OT_ERROR_NONE))
@@ -179,7 +179,7 @@ void LinkRaw::InvokeTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aE
     if (mTransmitDoneCallback)
     {
         mTransmitDoneCallback(&GetInstance(), &aFrame, aAckFrame, aError);
-        mTransmitDoneCallback = NULL;
+        mTransmitDoneCallback = nullptr;
     }
 }
 
@@ -198,10 +198,10 @@ exit:
 
 void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
 {
-    if (IsEnabled() && mEnergyScanDoneCallback != NULL)
+    if (IsEnabled() && mEnergyScanDoneCallback != nullptr)
     {
         mEnergyScanDoneCallback(&GetInstance(), aEnergyScanMaxRssi);
-        mEnergyScanDoneCallback = NULL;
+        mEnergyScanDoneCallback = nullptr;
     }
 }
 

@@ -90,11 +90,11 @@ public:
     /**
      * This static method coverts a pointer to `otCoapTxParameters` to `Coap::TxParamters`
      *
-     * If the pointer is NULL, the default parameters are used instead.
+     * If the pointer is nullptr, the default parameters are used instead.
      *
      * @param[in] aTxParameters   A pointer to tx parameter.
      *
-     * @returns A reference to corresponding `TxParamters` if  @p aTxParameters is not NULL, otherwise the default tx
+     * @returns A reference to corresponding `TxParamters` if  @p aTxParameters is not nullptr, otherwise the default tx
      * parameters.
      *
      */
@@ -154,7 +154,7 @@ public:
     /**
      * This constructor initializes the resource.
      *
-     * @param[in]  aUriPath  A pointer to a NULL-terminated string for the URI path.
+     * @param[in]  aUriPath  A pointer to a null-terminated string for the URI path.
      * @param[in]  aHandler  A function pointer that is called when receiving a CoAP message for @p aUriPath.
      * @param[in]  aContext  A pointer to arbitrary context information.
      */
@@ -163,7 +163,7 @@ public:
         mUriPath = aUriPath;
         mHandler = aHandler;
         mContext = aContext;
-        mNext    = NULL;
+        mNext    = nullptr;
     }
 
     /**
@@ -322,7 +322,7 @@ public:
     /* This method sets the default handler for unhandled CoAP requests.
      *
      * @param[in]  aHandler   A function pointer that shall be called when an unhandled request arrives.
-     * @param[in]  aContext   A pointer to arbitrary context information. May be NULL if not used.
+     * @param[in]  aContext   A pointer to arbitrary context information. May be nullptr if not used.
      *
      */
     void SetDefaultHandler(RequestHandler aHandler, void *aContext);
@@ -332,7 +332,7 @@ public:
      *
      * @param[in]  aSettings  The message settings.
      *
-     * @returns A pointer to the message or NULL if failed to allocate message.
+     * @returns A pointer to the message or nullptr if failed to allocate message.
      *
      */
     Message *NewMessage(const Message::Settings &aSettings = Message::Settings::GetDefault());
@@ -340,7 +340,7 @@ public:
     /**
      * This method creates a new message with a CoAP header that has Network Control priority level.
      *
-     * @returns A pointer to the message or NULL if failed to allocate message.
+     * @returns A pointer to the message or nullptr if failed to allocate message.
      *
      */
     Message *NewPriorityMessage(void)
@@ -352,7 +352,7 @@ public:
      * This method sends a CoAP message with custom transmission parameters.
      *
      * If a response for a request is expected, respective function and context information should be provided.
-     * If no response is expected, these arguments should be NULL pointers.
+     * If no response is expected, these arguments should be nullptr pointers.
      * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
      *
      * @param[in]  aMessage      A reference to the message to send.
@@ -368,14 +368,14 @@ public:
     otError SendMessage(Message &               aMessage,
                         const Ip6::MessageInfo &aMessageInfo,
                         const TxParameters &    aTxParameters,
-                        ResponseHandler         aHandler = NULL,
-                        void *                  aContext = NULL);
+                        ResponseHandler         aHandler = nullptr,
+                        void *                  aContext = nullptr);
 
     /**
      * This method sends a CoAP message with default transmission parameters.
      *
      * If a response for a request is expected, respective function and context information should be provided.
-     * If no response is expected, these arguments should be NULL pointers.
+     * If no response is expected, these arguments should be nullptr pointers.
      * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
      *
      * @param[in]  aMessage      A reference to the message to send.
@@ -389,8 +389,8 @@ public:
      */
     otError SendMessage(Message &               aMessage,
                         const Ip6::MessageInfo &aMessageInfo,
-                        ResponseHandler         aHandler = NULL,
-                        void *                  aContext = NULL);
+                        ResponseHandler         aHandler = nullptr,
+                        void *                  aContext = nullptr);
 
     /**
      * This method sends a CoAP reset message.

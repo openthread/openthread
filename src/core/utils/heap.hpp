@@ -193,7 +193,7 @@ public:
      *
      * @returns A pointer to the allocated memory.
      *
-     * @retval  NULL    Indicates not enough memory.
+     * @retval  nullptr    Indicates not enough memory.
      *
      */
     void *CAlloc(size_t aCount, size_t aSize);

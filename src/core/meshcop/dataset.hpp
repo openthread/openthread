@@ -100,7 +100,7 @@ public:
      *
      * @param[in] aType  A TLV type.
      *
-     * @returns A pointer to the TLV or NULL if none is found.
+     * @returns A pointer to the TLV or nullptr if none is found.
      *
      */
     Tlv *GetTlv(Tlv::Type aType) { return const_cast<Tlv *>(const_cast<const Dataset *>(this)->GetTlv(aType)); }
@@ -110,7 +110,7 @@ public:
      *
      * @param[in] aType  The TLV type.
      *
-     * @returns A pointer to the TLV or NULL if none is found.
+     * @returns A pointer to the TLV or nullptr if none is found.
      *
      */
     const Tlv *GetTlv(Tlv::Type aType) const;
@@ -118,7 +118,7 @@ public:
     /**
      * This template method returns a pointer to the TLV with a given template type `TlvType`
      *
-     * @returns A pointer to the TLV or NULL if none is found.
+     * @returns A pointer to the TLV or nullptr if none is found.
      *
      */
     template <typename TlvType> TlvType *GetTlv(void)
@@ -129,7 +129,7 @@ public:
     /**
      * This template method returns a pointer to the TLV with a given template type `TlvType`
      *
-     * @returns A pointer to the TLV or NULL if none is found.
+     * @returns A pointer to the TLV or nullptr if none is found.
      *
      */
     template <typename TlvType> const TlvType *GetTlv(void) const
@@ -329,7 +329,7 @@ public:
      * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
      *
      */
-    otError ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated = NULL) const;
+    otError ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated = nullptr) const;
 
     /**
      * This method converts a Pending Dataset to an Active Dataset.

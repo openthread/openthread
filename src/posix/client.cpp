@@ -64,7 +64,7 @@ static int sSessionFd = -1;
 #if OPENTHREAD_USE_READLINE
 static void InputCallback(char *aLine)
 {
-    if (aLine != NULL)
+    if (aLine != nullptr)
     {
         add_history(aLine);
         dprintf(sSessionFd, "%s\n", aLine);
@@ -259,7 +259,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        ret = select(maxFd + 1, &readFdSet, NULL, NULL, NULL);
+        ret = select(maxFd + 1, &readFdSet, nullptr, nullptr, nullptr);
 
         VerifyOrExit(ret != -1, perror("select"); ret = OT_EXIT_FAILURE);
 
@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
 #if OPENTHREAD_USE_READLINE
             rl_callback_read_char();
 #else
-            VerifyOrExit(fgets(buffer, sizeof(buffer), stdin) != NULL, ret = OT_EXIT_FAILURE);
+            VerifyOrExit(fgets(buffer, sizeof(buffer), stdin) != nullptr, ret = OT_EXIT_FAILURE);
 
             VerifyOrExit(DoWrite(sSessionFd, buffer, strlen(buffer)), ret = OT_EXIT_FAILURE);
 #endif

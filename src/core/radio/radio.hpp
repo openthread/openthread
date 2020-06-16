@@ -107,7 +107,7 @@ public:
         /**
          * This callback method handles a "Receive Done" event from radio platform.
          *
-         * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
+         * @param[in]  aFrame    A pointer to the received frame or nullptr if the receive operation failed.
          * @param[in]  aError    OT_ERROR_NONE when successfully received a frame,
          *                       OT_ERROR_ABORT when reception was aborted and a frame was not received,
          *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
@@ -127,7 +127,7 @@ public:
          * This callback method handles a "Transmit Done" event from radio platform.
          *
          * @param[in]  aFrame     The frame that was transmitted.
-         * @param[in]  aAckFrame  A pointer to the ACK frame, NULL if no ACK was received.
+         * @param[in]  aAckFrame  A pointer to the ACK frame, nullptr if no ACK was received.
          * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted,
          *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
          *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx could not take place due to activity on the
@@ -152,7 +152,7 @@ public:
         /**
          * This callback method handles a "Receive Done" event from radio platform when diagnostics mode is enabled.
          *
-         * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
+         * @param[in]  aFrame    A pointer to the received frame or nullptr if the receive operation failed.
          * @param[in]  aError    OT_ERROR_NONE when successfully received a frame,
          *                       OT_ERROR_ABORT when reception was aborted and a frame was not received,
          *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.

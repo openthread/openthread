@@ -140,7 +140,7 @@ otError GetBorderAgentRloc(ThreadNetif &aNetif, uint16_t &aRloc)
 
     borderAgentLocator = static_cast<const BorderAgentLocatorTlv *>(
         aNetif.Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
-    VerifyOrExit(borderAgentLocator != NULL, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(borderAgentLocator != nullptr, error = OT_ERROR_NOT_FOUND);
 
     aRloc = borderAgentLocator->GetBorderAgentLocator();
 

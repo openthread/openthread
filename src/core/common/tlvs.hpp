@@ -412,7 +412,7 @@ private:
      * This private static method searches within a given message for TLV type and outputs the TLV offset, size and
      * whether it is an Extended TLV.
      *
-     * A NULL pointer can be used for output parameters @p aOffset, @p aSize, or @p aIsExtendedTlv if the parameter
+     * A nullptr pointer can be used for output parameters @p aOffset, @p aSize, or @p aIsExtendedTlv if the parameter
      * is not required.
      *
      * @param[in]   aMessage       A reference to the message to search within.

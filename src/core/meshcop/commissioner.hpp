@@ -112,7 +112,7 @@ public:
     /**
      * This method adds a Joiner entry.
      *
-     * @param[in]  aEui64        A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
+     * @param[in]  aEui64        A pointer to the Joiner's IEEE EUI-64 or nullptr for any Joiner.
      * @param[in]  aPskd         A pointer to the PSKd.
      * @param[in]  aTimeout      A time after which a Joiner is automatically removed, in seconds.
      *
@@ -138,7 +138,7 @@ public:
     /**
      * This method removes a Joiner entry.
      *
-     * @param[in]  aEui64         A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
+     * @param[in]  aEui64         A pointer to the Joiner's IEEE EUI-64 or nullptr for any Joiner.
      * @param[in]  aDelay         The delay to remove Joiner (in seconds).
      * @param[in]  aFlags         The flags for removing the Joiner.
      *
@@ -161,7 +161,7 @@ public:
     /**
      * This method sets the Provisioning URL.
      *
-     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL to set URL to empty string).
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be nullptr to set URL to empty string).
      *
      * @retval OT_ERROR_NONE          Successfully set the Provisioning URL.
      * @retval OT_ERROR_INVALID_ARGS  @p aProvisioningUrl is invalid (too long).

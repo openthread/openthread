@@ -79,7 +79,7 @@ otError DatasetLocal::Restore(Dataset &aDataset)
     mSaved    = true;
     timestamp = aDataset.GetTimestamp();
 
-    if (timestamp != NULL)
+    if (timestamp != nullptr)
     {
         mTimestamp        = *timestamp;
         mTimestampPresent = true;
@@ -196,7 +196,7 @@ otError DatasetLocal::Save(const Dataset &aDataset)
 
     timestamp = aDataset.GetTimestamp();
 
-    if (timestamp != NULL)
+    if (timestamp != nullptr)
     {
         mTimestamp        = *timestamp;
         mTimestampPresent = true;
@@ -214,8 +214,8 @@ exit:
 
 int DatasetLocal::Compare(const Timestamp *aCompare)
 {
-    return (aCompare == NULL) ? (!mTimestampPresent ? 0 : -1)
-                              : (!mTimestampPresent ? 1 : mTimestamp.Compare(*aCompare));
+    return (aCompare == nullptr) ? (!mTimestampPresent ? 0 : -1)
+                                 : (!mTimestampPresent ? 1 : mTimestamp.Compare(*aCompare));
 }
 
 } // namespace MeshCoP

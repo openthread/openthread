@@ -48,8 +48,8 @@ namespace Utils {
 JamDetector::JamDetector(Instance &aInstance)
     : InstanceLocator(aInstance)
     , Notifier::Receiver(aInstance, JamDetector::HandleNotifierEvents)
-    , mHandler(NULL)
-    , mContext(NULL)
+    , mHandler(nullptr)
+    , mContext(nullptr)
     , mTimer(aInstance, JamDetector::HandleTimer, this)
     , mHistoryBitmap(0)
     , mCurSecondStartTime(0)
@@ -68,7 +68,7 @@ otError JamDetector::Start(Handler aHandler, void *aContext)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!mEnabled, error = OT_ERROR_ALREADY);
-    VerifyOrExit(aHandler != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aHandler != nullptr, error = OT_ERROR_INVALID_ARGS);
 
     mHandler = aHandler;
     mContext = aContext;

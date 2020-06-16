@@ -170,7 +170,7 @@ otError Flash::Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 
 otError Flash::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
-    bool first = (Get(aKey, 0, NULL, NULL) == OT_ERROR_NOT_FOUND);
+    bool first = (Get(aKey, 0, nullptr, nullptr) == OT_ERROR_NOT_FOUND);
 
     return Add(aKey, first, aValue, aValueLength);
 }

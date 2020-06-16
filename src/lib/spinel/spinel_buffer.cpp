@@ -38,7 +38,7 @@
 namespace ot {
 namespace Spinel {
 
-const Buffer::FrameTag Buffer::kInvalidTag = NULL;
+const Buffer::FrameTag Buffer::kInvalidTag = nullptr;
 
 Buffer::Buffer(uint8_t *aBuffer, uint16_t aBufferLength)
     : mBuffer(aBuffer)
@@ -54,8 +54,8 @@ Buffer::Buffer(uint8_t *aBuffer, uint16_t aBufferLength)
     otMessageQueueInit(&mWriteFrameMessageQueue);
 #endif
 
-    SetFrameAddedCallback(NULL, NULL);
-    SetFrameRemovedCallback(NULL, NULL);
+    SetFrameAddedCallback(nullptr, nullptr);
+    SetFrameRemovedCallback(nullptr, nullptr);
     Clear();
 }
 
@@ -85,13 +85,13 @@ void Buffer::Clear(void)
     mReadPointer                   = mBuffer;
 
 #if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
-    mReadMessage       = NULL;
+    mReadMessage       = nullptr;
     mReadMessageOffset = 0;
     mReadMessageTail   = mMessageBuffer;
 
     // Free all messages in the queues.
 
-    while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
+    while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != nullptr)
     {
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
 
@@ -102,7 +102,7 @@ void Buffer::Clear(void)
 
     for (uint8_t priority = 0; priority < kNumPrios; priority++)
     {
-        while ((message = otMessageQueueGetHead(&mMessageQueue[priority])) != NULL)
+        while ((message = otMessageQueueGetHead(&mMessageQueue[priority])) != nullptr)
         {
             otMessageQueueDequeue(&mMessageQueue[priority], message);
             otMessageFree(message);
@@ -315,7 +315,7 @@ void Buffer::InFrameDiscard(void)
     mWriteSegmentHead = mWriteSegmentTail = mWriteFrameStart[mWriteDirection];
 
 #if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
-    while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
+    while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != nullptr)
     {
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
 
@@ -396,7 +396,7 @@ otError Buffer::InFrameFeedMessage(otMessage *aMessage)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aMessage != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aMessage != nullptr, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(mWriteDirection != kUnknown, error = OT_ERROR_INVALID_STATE);
 
     // Begin a new segment (if we are not in middle of segment already).
@@ -518,14 +518,14 @@ otError Buffer::InFrameEnd(void)
 
 #if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     // Move all the messages from the frame queue to the main queue.
-    while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
+    while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != nullptr)
     {
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
         otMessageQueueEnqueue(&mMessageQueue[mWriteDirection], message);
     }
 #endif
 
-    if (mFrameAddedCallback != NULL)
+    if (mFrameAddedCallback != nullptr)
     {
         mFrameAddedCallback(mFrameAddedContext, mWriteFrameTag, static_cast<Priority>(mWriteDirection), this);
     }
@@ -635,10 +635,10 @@ otError Buffer::OutFramePrepareMessage(void)
     VerifyOrExit((header & kSegmentHeaderMessageIndicatorFlag) != 0, error = OT_ERROR_NOT_FOUND);
 
     // Update the current message from the queue.
-    mReadMessage = (mReadMessage == NULL) ? otMessageQueueGetHead(&mMessageQueue[mReadDirection])
-                                          : otMessageQueueGetNext(&mMessageQueue[mReadDirection], mReadMessage);
+    mReadMessage = (mReadMessage == nullptr) ? otMessageQueueGetHead(&mMessageQueue[mReadDirection])
+                                             : otMessageQueueGetNext(&mMessageQueue[mReadDirection], mReadMessage);
 
-    VerifyOrExit(mReadMessage != NULL, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(mReadMessage != nullptr, error = OT_ERROR_NOT_FOUND);
 
     // Reset the offset for reading the message.
     mReadMessageOffset = 0;
@@ -660,7 +660,7 @@ otError Buffer::OutFrameFillMessageBuffer(void)
     otError error = OT_ERROR_NONE;
     int     readLength;
 
-    VerifyOrExit(mReadMessage != NULL, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(mReadMessage != nullptr, error = OT_ERROR_NOT_FOUND);
 
     VerifyOrExit(mReadMessageOffset < otMessageGetLength(mReadMessage), error = OT_ERROR_NOT_FOUND);
 
@@ -694,7 +694,7 @@ otError Buffer::OutFrameBegin(void)
     mReadSegmentHead = mReadSegmentTail = mReadFrameStart[mReadDirection];
 
 #if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
-    mReadMessage = NULL;
+    mReadMessage = nullptr;
 #endif
 
     // Prepare the current segment for reading.
@@ -829,7 +829,7 @@ otError Buffer::OutFrameRemove(void)
         {
             otMessage *message;
 
-            if ((message = otMessageQueueGetHead(&mMessageQueue[mReadDirection])) != NULL)
+            if ((message = otMessageQueueGetHead(&mMessageQueue[mReadDirection])) != nullptr)
             {
                 otMessageQueueDequeue(&mMessageQueue[mReadDirection], message);
                 otMessageFree(message);
@@ -854,7 +854,7 @@ otError Buffer::OutFrameRemove(void)
     mReadState       = kReadStateNotActive;
     mReadFrameLength = kUnknownFrameLength;
 
-    if (mFrameRemovedCallback != NULL)
+    if (mFrameRemovedCallback != nullptr)
     {
         mFrameRemovedCallback(mFrameRemovedContext, tag, static_cast<Priority>(mReadDirection), this);
     }
@@ -893,7 +893,7 @@ uint16_t Buffer::OutFrameGetLength(void)
     uint8_t *bufPtr;
     uint8_t  numSegments;
 #if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
-    otMessage *message = NULL;
+    otMessage *message = nullptr;
 #endif
 
     // If the frame length was calculated before, return the previously calculated length.
@@ -927,10 +927,10 @@ uint16_t Buffer::OutFrameGetLength(void)
         // If current segment has an associated message, add its length to frame length.
         if (header & kSegmentHeaderMessageIndicatorFlag)
         {
-            message = (message == NULL) ? otMessageQueueGetHead(&mMessageQueue[mReadDirection])
-                                        : otMessageQueueGetNext(&mMessageQueue[mReadDirection], message);
+            message = (message == nullptr) ? otMessageQueueGetHead(&mMessageQueue[mReadDirection])
+                                           : otMessageQueueGetNext(&mMessageQueue[mReadDirection], message);
 
-            if (message != NULL)
+            if (message != nullptr)
             {
                 frameLength += otMessageGetLength(message);
             }

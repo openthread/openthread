@@ -109,7 +109,7 @@ void FuzzerPlatformProcess(otInstance *aInstance)
         }
         else
         {
-            otPlatRadioTxDone(aInstance, &sRadioTransmitFrame, NULL, OT_ERROR_NONE);
+            otPlatRadioTxDone(aInstance, &sRadioTransmitFrame, nullptr, OT_ERROR_NONE);
         }
     }
 

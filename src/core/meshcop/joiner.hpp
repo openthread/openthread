@@ -67,11 +67,11 @@ public:
      * This method starts the Joiner service.
      *
      * @param[in]  aPskd             A pointer to the PSKd.
-     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
-     * @param[in]  aVendorName       A pointer to the Vendor Name (may be NULL).
-     * @param[in]  aVendorModel      A pointer to the Vendor Model (may be NULL).
-     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be NULL).
-     * @param[in]  aVendorData       A pointer to the Vendor Data (may be NULL).
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be nullptr).
+     * @param[in]  aVendorName       A pointer to the Vendor Name (may be nullptr).
+     * @param[in]  aVendorModel      A pointer to the Vendor Model (may be nullptr).
+     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be nullptr).
+     * @param[in]  aVendorData       A pointer to the Vendor Data (may be nullptr).
      * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
      * @param[in]  aContext          A pointer to application-specific context.
      *

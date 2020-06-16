@@ -237,14 +237,14 @@ public:
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     void HeapFree(void *aPointer)
     {
-        OT_ASSERT(mFree != NULL);
+        OT_ASSERT(mFree != nullptr);
 
         mFree(aPointer);
     }
 
     void *HeapCAlloc(size_t aCount, size_t aSize)
     {
-        OT_ASSERT(mCAlloc != NULL);
+        OT_ASSERT(mCAlloc != nullptr);
 
         return mCAlloc(aCount, aSize);
     }

@@ -242,7 +242,7 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
     // Find Commissioning Data TLV
     commDataTlv = GetCommissioningData();
 
-    if (commDataTlv != NULL)
+    if (commDataTlv != nullptr)
     {
         // Iterate over MeshCoP TLVs and extract desired data
         for (cur = reinterpret_cast<MeshCoP::Tlv *>(commDataTlv->GetValue());
@@ -301,17 +301,17 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
     otError               error = OT_ERROR_NONE;
     Coap::Message *       message;
     CommissioningDataTlv *commDataTlv;
-    uint8_t *             data   = NULL;
+    uint8_t *             data   = nullptr;
     uint8_t               length = 0;
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     commDataTlv = GetCommissioningData();
 
-    if (commDataTlv != NULL)
+    if (commDataTlv != nullptr)
     {
         data   = commDataTlv->GetValue();
         length = commDataTlv->GetLength();
@@ -355,7 +355,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
     }
@@ -368,7 +368,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -381,7 +381,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
     }
@@ -431,7 +431,7 @@ otError Leader::Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRl
             VerifyOrExit(prefix->IsValid(), error = OT_ERROR_PARSE);
 
             // Ensure there is no duplicate Prefix TLVs with same prefix.
-            VerifyOrExit(FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aTlvs, offset) == NULL,
+            VerifyOrExit(FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aTlvs, offset) == nullptr,
                          error = OT_ERROR_PARSE);
 
             SuccessOrExit(error = ValidatePrefix(*prefix, aRloc16));
@@ -447,7 +447,7 @@ otError Leader::Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRl
             // Ensure there is no duplicate Service TLV with same
             // Enterprise Number and Service Data.
             VerifyOrExit(FindService(service->GetEnterpriseNumber(), service->GetServiceData(),
-                                     service->GetServiceDataLength(), aTlvs, offset) == NULL,
+                                     service->GetServiceDataLength(), aTlvs, offset) == nullptr,
                          error = OT_ERROR_PARSE);
 
             SuccessOrExit(error = ValidateService(*service, aRloc16));
@@ -589,7 +589,7 @@ bool Leader::ContainsMatchingEntry(const PrefixTlv *aPrefix, bool aStable, const
     // Check whether `aPrefix` has a Has Route sub-TLV with stable
     // flag `aStable` containing a matching entry to `aEntry`.
 
-    return (aPrefix == NULL) ? false : ContainsMatchingEntry(FindHasRoute(*aPrefix, aStable), aEntry);
+    return (aPrefix == nullptr) ? false : ContainsMatchingEntry(FindHasRoute(*aPrefix, aStable), aEntry);
 }
 
 bool Leader::ContainsMatchingEntry(const HasRouteTlv *aHasRoute, const HasRouteEntry &aEntry)
@@ -598,7 +598,7 @@ bool Leader::ContainsMatchingEntry(const HasRouteTlv *aHasRoute, const HasRouteE
 
     bool contains = false;
 
-    VerifyOrExit(aHasRoute != NULL, OT_NOOP);
+    VerifyOrExit(aHasRoute != nullptr, OT_NOOP);
 
     for (const HasRouteEntry *entry = aHasRoute->GetFirstEntry(); entry <= aHasRoute->GetLastEntry(); entry++)
     {
@@ -618,7 +618,7 @@ bool Leader::ContainsMatchingEntry(const PrefixTlv *aPrefix, bool aStable, const
     // Check whether `aPrefix` has a Border Router sub-TLV with stable
     // flag `aStable` containing a matching entry to `aEntry`.
 
-    return (aPrefix == NULL) ? false : ContainsMatchingEntry(FindBorderRouter(*aPrefix, aStable), aEntry);
+    return (aPrefix == nullptr) ? false : ContainsMatchingEntry(FindBorderRouter(*aPrefix, aStable), aEntry);
 }
 
 bool Leader::ContainsMatchingEntry(const BorderRouterTlv *aBorderRouter, const BorderRouterEntry &aEntry)
@@ -627,7 +627,7 @@ bool Leader::ContainsMatchingEntry(const BorderRouterTlv *aBorderRouter, const B
 
     bool contains = false;
 
-    VerifyOrExit(aBorderRouter != NULL, OT_NOOP);
+    VerifyOrExit(aBorderRouter != nullptr, OT_NOOP);
 
     for (const BorderRouterEntry *entry = aBorderRouter->GetFirstEntry(); entry <= aBorderRouter->GetLastEntry();
          entry++)
@@ -651,10 +651,10 @@ bool Leader::ContainsMatchingServer(const ServiceTlv *aService, const ServerTlv 
     bool             contains = false;
     const ServerTlv *server;
 
-    VerifyOrExit(aService != NULL, OT_NOOP);
+    VerifyOrExit(aService != nullptr, OT_NOOP);
 
     for (const NetworkDataTlv *start = aService->GetSubTlvs();
-         (server = FindTlv<ServerTlv>(start, aService->GetNext(), aServer.IsStable())) != NULL;
+         (server = FindTlv<ServerTlv>(start, aService->GetNext(), aServer.IsStable())) != nullptr;
          start = server->GetNext())
     {
         if (*server == aServer)
@@ -756,10 +756,10 @@ otError Leader::AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags)
     otError    error     = OT_ERROR_NONE;
     PrefixTlv *dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength());
 
-    if (dstPrefix == NULL)
+    if (dstPrefix == nullptr)
     {
         dstPrefix = static_cast<PrefixTlv *>(AppendTlv(PrefixTlv::CalculateSize(aPrefix.GetPrefixLength())));
-        VerifyOrExit(dstPrefix != NULL, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(dstPrefix != nullptr, error = OT_ERROR_NO_BUFS);
 
         dstPrefix->Init(aPrefix.GetDomainId(), aPrefix.GetPrefixLength(), aPrefix.GetPrefix());
     }
@@ -783,7 +783,7 @@ otError Leader::AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags)
     }
 
 exit:
-    if (dstPrefix != NULL)
+    if (dstPrefix != nullptr)
     {
         // `UpdatePrefix()` updates the TLV's stable flag based on
         // its sub-TLVs, or removes the TLV if it contains no sub-TLV.
@@ -804,7 +804,7 @@ otError Leader::AddService(const ServiceTlv &aService, ChangedFlags &aChangedFla
         FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(), aService.GetServiceDataLength());
     const ServerTlv *server;
 
-    if (dstService == NULL)
+    if (dstService == nullptr)
     {
         uint8_t serviceId;
 
@@ -812,19 +812,19 @@ otError Leader::AddService(const ServiceTlv &aService, ChangedFlags &aChangedFla
 
         dstService = static_cast<ServiceTlv *>(
             AppendTlv(ServiceTlv::CalculateSize(aService.GetEnterpriseNumber(), aService.GetServiceDataLength())));
-        VerifyOrExit(dstService != NULL, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(dstService != nullptr, error = OT_ERROR_NO_BUFS);
 
         dstService->Init(serviceId, aService.GetEnterpriseNumber(), aService.GetServiceData(),
                          aService.GetServiceDataLength());
     }
 
     server = FindTlv<ServerTlv>(aService.GetSubTlvs(), aService.GetNext());
-    OT_ASSERT(server != NULL);
+    OT_ASSERT(server != nullptr);
 
     SuccessOrExit(error = AddServer(*server, *dstService, aChangedFlags));
 
 exit:
-    if (dstService != NULL)
+    if (dstService != nullptr)
     {
         // `UpdateService()` updates the TLV's stable flag based on
         // its sub-TLVs, or removes the TLV if it contains no sub-TLV.
@@ -844,7 +844,7 @@ otError Leader::AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix,
     HasRouteTlv *        dstHasRoute = FindHasRoute(aDstPrefix, aHasRoute.IsStable());
     const HasRouteEntry *entry       = aHasRoute.GetFirstEntry();
 
-    if (dstHasRoute == NULL)
+    if (dstHasRoute == nullptr)
     {
         // Ensure there is space for `HasRouteTlv` and a single entry.
         VerifyOrExit(CanInsert(sizeof(HasRouteTlv) + sizeof(HasRouteEntry)), error = OT_ERROR_NO_BUFS);
@@ -885,7 +885,7 @@ otError Leader::AddBorderRouter(const BorderRouterTlv &aBorderRouter,
     uint8_t                  contextId       = 0;
     const BorderRouterEntry *entry           = aBorderRouter.GetFirstEntry();
 
-    if (dstContext == NULL)
+    if (dstContext == nullptr)
     {
         // Allocate a Context ID first. This ensure that if we cannot
         // allocate, we fail and exit before potentially inserting a
@@ -893,12 +893,12 @@ otError Leader::AddBorderRouter(const BorderRouterTlv &aBorderRouter,
         SuccessOrExit(error = AllocateContextId(contextId));
     }
 
-    if (dstBorderRouter == NULL)
+    if (dstBorderRouter == nullptr)
     {
         // Ensure there is space for `BorderRouterTlv` with a single entry
         // and a `ContextTlv` (if not already present).
         VerifyOrExit(CanInsert(sizeof(BorderRouterTlv) + sizeof(BorderRouterEntry) +
-                               ((dstContext == NULL) ? sizeof(ContextTlv) : 0)),
+                               ((dstContext == nullptr) ? sizeof(ContextTlv) : 0)),
                      error = OT_ERROR_NO_BUFS);
 
         dstBorderRouter = static_cast<BorderRouterTlv *>(aDstPrefix.GetNext());
@@ -912,7 +912,7 @@ otError Leader::AddBorderRouter(const BorderRouterTlv &aBorderRouter,
         }
     }
 
-    if (dstContext == NULL)
+    if (dstContext == nullptr)
     {
         // Ensure there is space for a `ContextTlv` and a single entry.
         VerifyOrExit(CanInsert(sizeof(BorderRouterEntry) + sizeof(ContextTlv)), error = OT_ERROR_NO_BUFS);
@@ -978,7 +978,7 @@ otError Leader::AllocateServiceId(uint8_t &aServiceId)
 
     for (serviceId = Mle::kServiceMinId; serviceId <= Mle::kServiceMaxId; serviceId++)
     {
-        if (FindServiceById(serviceId) == NULL)
+        if (FindServiceById(serviceId) == nullptr)
         {
             aServiceId = serviceId;
             error      = OT_ERROR_NONE;
@@ -995,7 +995,7 @@ const ServiceTlv *Leader::FindServiceById(uint8_t aServiceId) const
     const NetworkDataTlv *start = GetTlvsStart();
     const ServiceTlv *    service;
 
-    while ((service = FindTlv<ServiceTlv>(start, GetTlvsEnd())) != NULL)
+    while ((service = FindTlv<ServiceTlv>(start, GetTlvsEnd())) != nullptr)
     {
         if (service->GetServiceId() == aServiceId)
         {
@@ -1055,7 +1055,7 @@ void Leader::StopContextReuseTimer(uint8_t aContextId)
 
 void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode, ChangedFlags &aChangedFlags)
 {
-    RemoveRloc(aRloc16, aMatchMode, NULL, 0, aChangedFlags);
+    RemoveRloc(aRloc16, aMatchMode, nullptr, 0, aChangedFlags);
 }
 
 void Leader::RemoveRloc(uint16_t       aRloc16,
@@ -1170,7 +1170,7 @@ void Leader::RemoveRlocInPrefix(PrefixTlv &      aPrefix,
         cur = cur->GetNext();
     }
 
-    if ((context = FindContext(aPrefix)) != NULL)
+    if ((context = FindContext(aPrefix)) != nullptr)
     {
         if (aPrefix.GetSubTlvsLength() == sizeof(ContextTlv))
         {
@@ -1197,7 +1197,7 @@ void Leader::RemoveRlocInService(ServiceTlv &      aService,
     NetworkDataTlv *start = aService.GetSubTlvs();
     ServerTlv *     server;
 
-    while ((server = FindTlv<ServerTlv>(start, aService.GetNext())) != NULL)
+    while ((server = FindTlv<ServerTlv>(start, aService.GetNext())) != nullptr)
     {
         if (RlocMatch(server->GetServer16(), aRloc16, aMatchMode) && !ContainsMatchingServer(aExcludeService, *server))
         {
@@ -1276,7 +1276,7 @@ void Leader::RemoveContext(uint8_t aContextId)
     NetworkDataTlv *start = GetTlvsStart();
     PrefixTlv *     prefix;
 
-    while ((prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != NULL)
+    while ((prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != nullptr)
     {
         RemoveContext(*prefix, aContextId);
 
@@ -1295,7 +1295,7 @@ void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
     NetworkDataTlv *start = aPrefix.GetSubTlvs();
     ContextTlv *    context;
 
-    while ((context = FindTlv<ContextTlv>(start, aPrefix.GetNext())) != NULL)
+    while ((context = FindTlv<ContextTlv>(start, aPrefix.GetNext())) != nullptr)
     {
         if (context->GetContextId() == aContextId)
         {
@@ -1314,11 +1314,12 @@ void Leader::UpdateContextsAfterReset(void)
     NetworkDataTlv *start;
     PrefixTlv *     prefix;
 
-    for (start = GetTlvsStart(); (prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != NULL; start = prefix->GetNext())
+    for (start = GetTlvsStart(); (prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != nullptr;
+         start = prefix->GetNext())
     {
         ContextTlv *context = FindContext(*prefix);
 
-        if (context == NULL)
+        if (context == nullptr)
         {
             continue;
         }
@@ -1379,7 +1380,7 @@ otError Leader::RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aC
     while (GetNextServer(iterator, rloc16) == OT_ERROR_NONE)
     {
         if (!Mle::Mle::IsActiveRouter(rloc16) && Mle::Mle::RouterIdMatch(Get<Mle::MleRouter>().GetRloc16(), rloc16) &&
-            Get<ChildTable>().FindChild(rloc16, Child::kInStateValid) == NULL)
+            Get<ChildTable>().FindChild(rloc16, Child::kInStateValid) == nullptr)
         {
             // In Thread 1.1 Specification 5.15.6.1, only one RLOC16 TLV entry may appear in SRV_DATA.ntf.
             error = NetworkData::SendServerDataNotification(rloc16, aHandler, aContext);

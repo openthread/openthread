@@ -51,8 +51,8 @@ namespace ot {
 
 EnergyScanClient::EnergyScanClient(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mCallback(NULL)
-    , mContext(NULL)
+    , mCallback(nullptr)
+    , mContext(nullptr)
     , mEnergyScan(OT_URI_PATH_ENERGY_REPORT, &EnergyScanClient::HandleReport, this)
 {
     Get<Coap::Coap>().AddResource(mEnergyScan);
@@ -69,10 +69,10 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
     otError                 error = OT_ERROR_NONE;
     MeshCoP::ChannelMaskTlv channelMask;
     Ip6::MessageInfo        messageInfo;
-    Coap::Message *         message = NULL;
+    Coap::Message *         message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error =
                       message->Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE,
@@ -102,7 +102,7 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
     }
@@ -136,7 +136,7 @@ void EnergyScanClient::HandleReport(Coap::Message &aMessage, const Ip6::MessageI
     SuccessOrExit(MeshCoP::Tlv::FindTlv(aMessage, MeshCoP::Tlv::kEnergyList, sizeof(energyList), energyList.tlv));
     VerifyOrExit(energyList.tlv.IsValid(), OT_NOOP);
 
-    if (mCallback != NULL)
+    if (mCallback != nullptr)
     {
         mCallback(mask, energyList.list, energyList.tlv.GetLength(), mContext);
     }

@@ -204,7 +204,7 @@ void ChannelManager::PreparePendingDataset(void)
     dataset.mDelay                                 = delayInMs;
     dataset.mComponents.mIsDelayPresent            = true;
 
-    error = Get<MeshCoP::PendingDataset>().SendSetRequest(dataset, NULL, 0);
+    error = Get<MeshCoP::PendingDataset>().SendSetRequest(dataset, nullptr, 0);
 
     if (error == OT_ERROR_NONE)
     {

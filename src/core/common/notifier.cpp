@@ -42,7 +42,7 @@ namespace ot {
 
 Notifier::Receiver::Receiver(Instance &aInstance, Handler aHandler)
     : mHandler(aHandler)
-    , mNext(NULL)
+    , mNext(nullptr)
 {
     aInstance.Get<Notifier>().RegisterReceiver(*this);
 }
@@ -56,8 +56,8 @@ Notifier::Notifier(Instance &aInstance)
 {
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
     {
-        mExternalCallbacks[i].mHandler = NULL;
-        mExternalCallbacks[i].mContext = NULL;
+        mExternalCallbacks[i].mHandler = nullptr;
+        mExternalCallbacks[i].mContext = nullptr;
     }
 }
 
@@ -69,17 +69,17 @@ void Notifier::RegisterReceiver(Receiver &aReceiver)
 otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
 {
     otError           error          = OT_ERROR_NONE;
-    ExternalCallback *unusedCallback = NULL;
+    ExternalCallback *unusedCallback = nullptr;
 
-    VerifyOrExit(aCallback != NULL, OT_NOOP);
+    VerifyOrExit(aCallback != nullptr, OT_NOOP);
 
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
     {
         ExternalCallback &callback = mExternalCallbacks[i];
 
-        if (callback.mHandler == NULL)
+        if (callback.mHandler == nullptr)
         {
-            if (unusedCallback == NULL)
+            if (unusedCallback == nullptr)
             {
                 unusedCallback = &callback;
             }
@@ -90,7 +90,7 @@ otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aCont
         VerifyOrExit((callback.mHandler != aCallback) || (callback.mContext != aContext), error = OT_ERROR_ALREADY);
     }
 
-    VerifyOrExit(unusedCallback != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(unusedCallback != nullptr, error = OT_ERROR_NO_BUFS);
 
     unusedCallback->mHandler = aCallback;
     unusedCallback->mContext = aContext;
@@ -101,7 +101,7 @@ exit:
 
 void Notifier::RemoveCallback(otStateChangedCallback aCallback, void *aContext)
 {
-    VerifyOrExit(aCallback != NULL, OT_NOOP);
+    VerifyOrExit(aCallback != nullptr, OT_NOOP);
 
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
     {
@@ -109,8 +109,8 @@ void Notifier::RemoveCallback(otStateChangedCallback aCallback, void *aContext)
 
         if ((callback.mHandler == aCallback) && (callback.mContext == aContext))
         {
-            callback.mHandler = NULL;
-            callback.mContext = NULL;
+            callback.mHandler = nullptr;
+            callback.mContext = nullptr;
         }
     }
 
@@ -152,7 +152,7 @@ void Notifier::EmitEvents(void)
 
     LogEvents(events);
 
-    for (Receiver *receiver = mReceivers.GetHead(); receiver != NULL; receiver = receiver->GetNext())
+    for (Receiver *receiver = mReceivers.GetHead(); receiver != nullptr; receiver = receiver->GetNext())
     {
         receiver->Emit(events);
     }
@@ -161,7 +161,7 @@ void Notifier::EmitEvents(void)
     {
         ExternalCallback &callback = mExternalCallbacks[i];
 
-        if (callback.mHandler != NULL)
+        if (callback.mHandler != nullptr)
         {
             callback.mHandler(events.GetAsFlags(), callback.mContext);
         }

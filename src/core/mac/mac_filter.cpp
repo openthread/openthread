@@ -63,7 +63,7 @@ Filter::FilterEntry *Filter::FindEntry(const ExtAddress &aExtAddress)
         }
     }
 
-    entry = NULL;
+    entry = nullptr;
 
 exit:
     return entry;
@@ -78,7 +78,7 @@ Filter::FilterEntry *Filter::FindAvailableEntry(void)
         VerifyOrExit(entry->IsInUse(), OT_NOOP);
     }
 
-    entry = NULL;
+    entry = nullptr;
 
 exit:
     return entry;
@@ -103,9 +103,9 @@ otError Filter::AddAddress(const ExtAddress &aExtAddress)
     otError      error = OT_ERROR_NONE;
     FilterEntry *entry = FindEntry(aExtAddress);
 
-    if (entry == NULL)
+    if (entry == nullptr)
     {
-        VerifyOrExit((entry = FindAvailableEntry()) != NULL, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit((entry = FindAvailableEntry()) != nullptr, error = OT_ERROR_NO_BUFS);
         entry->mExtAddress = aExtAddress;
     }
 
@@ -121,7 +121,7 @@ otError Filter::RemoveAddress(const ExtAddress &aExtAddress)
     otError      error = OT_ERROR_NONE;
     FilterEntry *entry = FindEntry(aExtAddress);
 
-    if (entry == NULL || !entry->mFiltered)
+    if (entry == nullptr || !entry->mFiltered)
     {
         ExitNow(error = OT_ERROR_NOT_FOUND);
     }
@@ -166,15 +166,15 @@ otError Filter::AddRssIn(const ExtAddress *aExtAddress, int8_t aRss)
     otError      error = OT_ERROR_NONE;
     FilterEntry *entry;
 
-    // Set the default RssIn when aExtAddress is not given (NULL)
-    VerifyOrExit(aExtAddress != NULL, mDefaultRssIn = aRss);
+    // Set the default RssIn when aExtAddress is not given (nullptr)
+    VerifyOrExit(aExtAddress != nullptr, mDefaultRssIn = aRss);
 
     entry = FindEntry(*aExtAddress);
 
-    if (entry == NULL)
+    if (entry == nullptr)
     {
         entry = FindAvailableEntry();
-        VerifyOrExit(entry != NULL, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(entry != nullptr, error = OT_ERROR_NO_BUFS);
 
         entry->mExtAddress = *aExtAddress;
     }
@@ -191,10 +191,10 @@ otError Filter::RemoveRssIn(const ExtAddress *aExtAddress)
     FilterEntry *entry;
 
     // If no aExtAddress is given, remove default RssIn
-    VerifyOrExit(aExtAddress != NULL, mDefaultRssIn = kFixedRssDisabled);
+    VerifyOrExit(aExtAddress != nullptr, mDefaultRssIn = kFixedRssDisabled);
 
     entry = FindEntry(*aExtAddress);
-    VerifyOrExit(entry != NULL, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(entry != nullptr, error = OT_ERROR_NOT_FOUND);
     entry->mRssIn = kFixedRssDisabled;
 
 exit:
@@ -252,14 +252,14 @@ otError Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss)
 
     if (mAddressMode == OT_MAC_FILTER_ADDRESS_MODE_WHITELIST)
     {
-        VerifyOrExit(entry != NULL && entry->mFiltered, error = OT_ERROR_ADDRESS_FILTERED);
+        VerifyOrExit(entry != nullptr && entry->mFiltered, error = OT_ERROR_ADDRESS_FILTERED);
     }
     else if (mAddressMode == OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST)
     {
-        VerifyOrExit(entry == NULL || !entry->mFiltered, error = OT_ERROR_ADDRESS_FILTERED);
+        VerifyOrExit(entry == nullptr || !entry->mFiltered, error = OT_ERROR_ADDRESS_FILTERED);
     }
 
-    if ((entry != NULL) && (entry->mRssIn != kFixedRssDisabled))
+    if ((entry != nullptr) && (entry->mRssIn != kFixedRssDisabled))
     {
         aRss = entry->mRssIn;
     }

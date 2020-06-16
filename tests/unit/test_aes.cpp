@@ -65,7 +65,7 @@ void TestMacBeaconFrame(void)
         0xAC, 0xDE, 0x48, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x05, 0x02,
     };
 
-    VerifyOrQuit(instance != NULL, "Null OpenThread instance");
+    VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
 
     aesCcm.SetKey(key, sizeof(key));
     aesCcm.Init(headerLength, payloadLength, tagLength, nonce, sizeof(nonce));

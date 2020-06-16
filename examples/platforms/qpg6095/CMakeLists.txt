@@ -67,7 +67,12 @@ add_library(openthread-qpg6095
     uart.c
 )
 
-set_property(TARGET openthread-qpg6095 PROPERTY C_STANDARD 99)
+set_target_properties(
+    openthread-qpg6095
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)
 
 target_link_libraries(openthread-qpg6095
     PRIVATE

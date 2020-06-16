@@ -36,7 +36,7 @@
 namespace ot {
 namespace Cli {
 
-Server *Server::sServer = NULL;
+Server *Server::sServer = nullptr;
 
 int Server::OutputFormat(const char *aFormat, ...)
 {

@@ -136,7 +136,7 @@ otError UdpExample::ProcessSend(uint8_t aArgsLength, char *aArgs[])
 {
     otError       error = OT_ERROR_NONE;
     otMessageInfo messageInfo;
-    otMessage *   message       = NULL;
+    otMessage *   message       = nullptr;
     uint8_t       curArg        = 0;
     uint16_t      payloadLength = 0;
     PayloadType   payloadType   = kTypeText;
@@ -179,8 +179,8 @@ otError UdpExample::ProcessSend(uint8_t aArgsLength, char *aArgs[])
         }
     }
 
-    message = otUdpNewMessage(mInterpreter.mInstance, NULL);
-    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+    message = otUdpNewMessage(mInterpreter.mInstance, nullptr);
+    VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
     switch (payloadType)
     {
@@ -222,7 +222,7 @@ otError UdpExample::ProcessSend(uint8_t aArgsLength, char *aArgs[])
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         otMessageFree(message);
     }
@@ -264,7 +264,7 @@ otError UdpExample::Process(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength < 1)
     {
-        IgnoreError(ProcessHelp(0, NULL));
+        IgnoreError(ProcessHelp(0, nullptr));
         error = OT_ERROR_INVALID_ARGS;
     }
     else

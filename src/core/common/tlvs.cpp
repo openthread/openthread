@@ -73,7 +73,7 @@ otError Tlv::FindTlv(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, 
     uint16_t offset;
     uint16_t size;
 
-    SuccessOrExit(error = Find(aMessage, aType, &offset, &size, NULL));
+    SuccessOrExit(error = Find(aMessage, aType, &offset, &size, nullptr));
 
     if (aMaxSize > size)
     {
@@ -88,7 +88,7 @@ exit:
 
 otError Tlv::FindTlvOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset)
 {
-    return Find(aMessage, aType, &aOffset, NULL, NULL);
+    return Find(aMessage, aType, &aOffset, nullptr, nullptr);
 }
 
 otError Tlv::FindTlvValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aValueOffset, uint16_t &aLength)
@@ -150,17 +150,17 @@ otError Tlv::Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uin
 
         if (tlv.GetType() == aType)
         {
-            if (aOffset != NULL)
+            if (aOffset != nullptr)
             {
                 *aOffset = offset;
             }
 
-            if (aSize != NULL)
+            if (aSize != nullptr)
             {
                 *aSize = static_cast<uint16_t>(size);
             }
 
-            if (aIsExtendedTlv != NULL)
+            if (aIsExtendedTlv != nullptr)
             {
                 *aIsExtendedTlv = (tlv.mLength == kExtendedLength);
             }

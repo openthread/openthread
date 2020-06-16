@@ -57,8 +57,8 @@ SubMac::SubMac(Instance &aInstance)
     , mEnergyScanEndTime(0)
     , mTransmitFrame(Get<Radio>().GetTransmitBuffer())
     , mCallbacks(aInstance)
-    , mPcapCallback(NULL)
-    , mPcapCallbackContext(NULL)
+    , mPcapCallback(nullptr)
+    , mPcapCallbackContext(nullptr)
     , mFrameCounter(0)
     , mKeyId(0)
     , mTimer(aInstance, SubMac::HandleTimer, this)
@@ -197,12 +197,12 @@ exit:
 
 void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
 {
-    if (mPcapCallback && (aFrame != NULL) && (aError == OT_ERROR_NONE))
+    if (mPcapCallback && (aFrame != nullptr) && (aError == OT_ERROR_NONE))
     {
         mPcapCallback(aFrame, false, mPcapCallbackContext);
     }
 
-    if (!ShouldHandleTransmitSecurity() && aFrame != NULL && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
+    if (!ShouldHandleTransmitSecurity() && aFrame != nullptr && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
     {
         UpdateFrameCounter(aFrame->mInfo.mRxInfo.mAckFrameCounter);
     }
@@ -239,7 +239,7 @@ exit:
 
 void SubMac::ProcessTransmitSecurity(void)
 {
-    const ExtAddress *extAddress = NULL;
+    const ExtAddress *extAddress = nullptr;
     uint8_t           keyIdMode;
 
     VerifyOrExit(ShouldHandleTransmitSecurity(), OT_NOOP);
@@ -536,7 +536,7 @@ void SubMac::HandleTimer(void)
     case kStateTransmit:
         otLogDebgMac("Ack timer timed out");
         IgnoreError(Get<Radio>().Receive(mTransmitFrame.GetChannel()));
-        HandleTransmitDone(mTransmitFrame, NULL, OT_ERROR_NO_ACK);
+        HandleTransmitDone(mTransmitFrame, nullptr, OT_ERROR_NO_ACK);
         break;
 
     case kStateEnergyScan:

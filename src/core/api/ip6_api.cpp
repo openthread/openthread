@@ -182,7 +182,7 @@ otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
     Instance &instance = *static_cast<Instance *>(aInstance);
     Message * message;
 
-    if (aSettings != NULL)
+    if (aSettings != nullptr)
     {
         message = instance.Get<Ip6::Ip6>().NewMessage(aData, aDataLength, Message::Settings(aSettings));
     }
@@ -234,7 +234,7 @@ otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
 
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
 {
-    OT_ASSERT(aFirst != NULL && aSecond != NULL);
+    OT_ASSERT(aFirst != nullptr && aSecond != nullptr);
 
     return static_cast<const Ip6::Address *>(aFirst)->PrefixMatch(*static_cast<const Ip6::Address *>(aSecond));
 }
@@ -251,7 +251,7 @@ otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageI
     const Ip6::NetifUnicastAddress *netifAddr;
 
     netifAddr = instance.Get<Ip6::Ip6>().SelectSourceAddress(*static_cast<Ip6::MessageInfo *>(aMessageInfo));
-    VerifyOrExit(netifAddr != NULL, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(netifAddr != nullptr, error = OT_ERROR_NOT_FOUND);
     memcpy(&aMessageInfo->mSockAddr, &netifAddr->mAddress, sizeof(aMessageInfo->mSockAddr));
 
 exit:

@@ -116,7 +116,7 @@ public:
 
 protected:
     FrameWritePointer(void)
-        : mWritePointer(NULL)
+        : mWritePointer(nullptr)
         , mRemainingLength(0)
     {
     }
@@ -352,8 +352,9 @@ public:
     /**
      * This method iterates through previously saved frames in the buffer, getting a next frame in the queue.
      *
-     * @param[inout] aFrame   On entry, should point to a previous saved frame or NULL to get the first frame.
-     *                        On exit, the pointer variable is updated to next frame or set to NULL if there are none.
+     * @param[inout] aFrame   On entry, should point to a previous saved frame or nullptr to get the first frame.
+     *                        On exit, the pointer variable is updated to next frame or set to nullptr if there are
+     * none.
      * @param[inout] aLength  On entry, should be a reference to the frame length of the previous saved frame.
      *                        On exit, the reference is updated to the frame length (number of bytes) of next frame.
      *
@@ -365,9 +366,9 @@ public:
     {
         otError error = OT_ERROR_NONE;
 
-        OT_ASSERT(aFrame == NULL || (mBuffer <= aFrame && aFrame < OT_ARRAY_END(mBuffer)));
+        OT_ASSERT(aFrame == nullptr || (mBuffer <= aFrame && aFrame < OT_ARRAY_END(mBuffer)));
 
-        aFrame = (aFrame == NULL) ? mBuffer : aFrame + aLength;
+        aFrame = (aFrame == nullptr) ? mBuffer : aFrame + aLength;
 
         if (aFrame != mWriteFrameStart)
         {
@@ -380,7 +381,7 @@ public:
         else
         {
             aLength = 0;
-            aFrame  = NULL;
+            aFrame  = nullptr;
             error   = OT_ERROR_NOT_FOUND;
         }
 

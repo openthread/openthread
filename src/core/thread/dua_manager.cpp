@@ -76,7 +76,7 @@ void DuaManager::UpdateDomainUnicastAddress(BackboneRouter::Leader::DomainPrefix
 
     prefix = Get<BackboneRouter::Leader>().GetDomainPrefix();
 
-    OT_ASSERT(prefix != NULL);
+    OT_ASSERT(prefix != nullptr);
 
     mDomainUnicastAddress.mPrefixLength = prefix->mLength;
     mDomainUnicastAddress.GetAddress().Clear();
@@ -103,7 +103,7 @@ otError DuaManager::GenerateDomainUnicastAddressIid(void)
     otError error;
     uint8_t dadCounter = mDadCounter;
 
-    if ((error = Get<Utils::Slaac>().GenerateIid(mDomainUnicastAddress, NULL, 0, &dadCounter)) == OT_ERROR_NONE)
+    if ((error = Get<Utils::Slaac>().GenerateIid(mDomainUnicastAddress, nullptr, 0, &dadCounter)) == OT_ERROR_NONE)
     {
         if (dadCounter != mDadCounter)
         {

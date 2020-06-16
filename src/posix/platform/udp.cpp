@@ -191,7 +191,7 @@ static otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMe
     VerifyOrExit(rval > 0, perror("recvmsg"));
     aLength = static_cast<uint16_t>(rval);
 
-    for (struct cmsghdr *cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL; cmsg = CMSG_NXTHDR(&msg, cmsg))
+    for (struct cmsghdr *cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg))
     {
         if (cmsg->cmsg_level == IPPROTO_IPV6)
         {
@@ -226,7 +226,7 @@ otError otPlatUdpSocket(otUdpSocket *aUdpSocket)
     otError error = OT_ERROR_NONE;
     int     fd;
 
-    assert(aUdpSocket->mHandle == NULL);
+    assert(aUdpSocket->mHandle == nullptr);
 
     fd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, kSocketNonBlock);
     VerifyOrExit(fd >= 0, error = OT_ERROR_FAILED);
@@ -242,11 +242,11 @@ otError otPlatUdpClose(otUdpSocket *aUdpSocket)
     otError error = OT_ERROR_NONE;
     int     fd;
 
-    VerifyOrExit(aUdpSocket->mHandle != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
     fd = FdFromHandle(aUdpSocket->mHandle);
     VerifyOrExit(0 == close(fd), error = OT_ERROR_FAILED);
 
-    aUdpSocket->mHandle = NULL;
+    aUdpSocket->mHandle = nullptr;
 
 exit:
     return error;
@@ -258,9 +258,9 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
     int     fd;
 
     assert(sPlatNetifIndex != 0);
-    assert(aUdpSocket->mHandle != NULL);
+    assert(aUdpSocket->mHandle != nullptr);
     VerifyOrExit(sPlatNetifIndex != 0, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(aUdpSocket->mHandle != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aUdpSocket->mSockName.mPort != 0, error = OT_ERROR_INVALID_ARGS);
     fd = FdFromHandle(aUdpSocket->mHandle);
 
@@ -300,7 +300,7 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
     bool isDisconnect = memcmp(&aUdpSocket->mPeerName.mAddress, &in6addr_any, sizeof(in6addr_any)) == 0 &&
                         aUdpSocket->mPeerName.mPort == 0;
 
-    VerifyOrExit(aUdpSocket->mHandle != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
 
     fd = FdFromHandle(aUdpSocket->mHandle);
 
@@ -349,7 +349,7 @@ otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMess
     otError error = OT_ERROR_NONE;
     int     fd;
 
-    VerifyOrExit(aUdpSocket->mHandle != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
     fd = FdFromHandle(aUdpSocket->mHandle);
 
     {
@@ -373,11 +373,11 @@ void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMax
 {
     VerifyOrExit(sPlatNetifIndex != 0, OT_NOOP);
 
-    for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != NULL; socket = socket->mNext)
+    for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != nullptr; socket = socket->mNext)
     {
         int fd;
 
-        if (socket->mHandle == NULL)
+        if (socket->mHandle == nullptr)
         {
             continue;
         }
@@ -385,7 +385,7 @@ void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMax
         fd = FdFromHandle(socket->mHandle);
         FD_SET(fd, aReadFdSet);
 
-        if (aMaxFd != NULL && *aMaxFd < fd)
+        if (aMaxFd != nullptr && *aMaxFd < fd)
         {
             *aMaxFd = fd;
         }
@@ -397,7 +397,7 @@ exit:
 
 void platformUdpInit(const char *aIfName)
 {
-    if (aIfName == NULL)
+    if (aIfName == nullptr)
     {
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
@@ -416,14 +416,14 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 
     VerifyOrExit(sPlatNetifIndex != 0, OT_NOOP);
 
-    for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != NULL; socket = socket->mNext)
+    for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != nullptr; socket = socket->mNext)
     {
         int fd = FdFromHandle(socket->mHandle);
 
         if (fd > 0 && FD_ISSET(fd, aReadFdSet))
         {
             otMessageInfo messageInfo;
-            otMessage *   message = NULL;
+            otMessage *   message = nullptr;
             uint8_t       payload[kMaxUdpSize];
             uint16_t      length = sizeof(payload);
 
@@ -437,7 +437,7 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 
             message = otUdpNewMessage(aInstance, &msgSettings);
 
-            if (message == NULL)
+            if (message == nullptr)
             {
                 continue;
             }

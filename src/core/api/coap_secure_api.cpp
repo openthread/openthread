@@ -61,7 +61,7 @@ void otCoapSecureSetCertificate(otInstance *   aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aX509Cert != NULL && aX509Length != 0 && aPrivateKey != NULL && aPrivateKeyLength != 0);
+    OT_ASSERT(aX509Cert != nullptr && aX509Length != 0 && aPrivateKey != nullptr && aPrivateKeyLength != 0);
 
     instance.GetApplicationCoapSecure().SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
 }
@@ -72,7 +72,7 @@ void otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aX509CaCertificateChain != NULL && aX509CaCertChainLength != 0);
+    OT_ASSERT(aX509CaCertificateChain != nullptr && aX509CaCertChainLength != 0);
 
     instance.GetApplicationCoapSecure().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
 }
@@ -87,7 +87,7 @@ void otCoapSecureSetPsk(otInstance *   aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aPsk != NULL && aPskLength != 0 && aPskIdentity != NULL && aPskIdLength != 0);
+    OT_ASSERT(aPsk != nullptr && aPskLength != 0 && aPskIdentity != nullptr && aPskIdLength != 0);
 
     instance.GetApplicationCoapSecure().SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
 }

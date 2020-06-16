@@ -656,7 +656,7 @@ NcpBase::PropertyHandler NcpBase::FindPropertyHandler(const HandlerEntry *aHandl
         }
     }
 
-    return aHandlerEntries[l].mKey == aKey ? aHandlerEntries[l].mHandler : NULL;
+    return aHandlerEntries[l].mKey == aKey ? aHandlerEntries[l].mHandler : nullptr;
 }
 
 } // namespace Ncp

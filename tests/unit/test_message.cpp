@@ -42,7 +42,7 @@ void TestMessage(void)
     uint8_t          readBuffer[1024];
 
     instance = static_cast<ot::Instance *>(testInitInstance());
-    VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
+    VerifyOrQuit(instance != nullptr, "Null OpenThread instance\n");
 
     messagePool = &instance->Get<ot::MessagePool>();
 
@@ -51,7 +51,7 @@ void TestMessage(void)
         writeBuffer[i] = static_cast<uint8_t>(random());
     }
 
-    VerifyOrQuit((message = messagePool->New(ot::Message::kTypeIp6, 0)) != NULL, "Message::New failed");
+    VerifyOrQuit((message = messagePool->New(ot::Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
     SuccessOrQuit(message->SetLength(sizeof(writeBuffer)), "Message::SetLength failed");
     VerifyOrQuit(message->Write(0, sizeof(writeBuffer), writeBuffer) == sizeof(writeBuffer), "Message::Write failed");
     VerifyOrQuit(message->Read(0, sizeof(readBuffer), readBuffer) == sizeof(readBuffer), "Message::Read failed");

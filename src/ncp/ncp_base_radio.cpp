@@ -57,7 +57,7 @@ otError NcpBase::PackRadioFrame(otRadioFrame *aFrame, otError aError)
     otError  error = OT_ERROR_FAILED;
     uint16_t flags = 0;
 
-    if (aFrame != NULL && aError == OT_ERROR_NONE)
+    if (aFrame != nullptr && aError == OT_ERROR_NONE)
     {
         // Append the frame contents
         SuccessOrExit(mEncoder.WriteDataWithLen(aFrame->mPsdu, aFrame->mLength));
@@ -72,7 +72,7 @@ otError NcpBase::PackRadioFrame(otRadioFrame *aFrame, otError aError)
     SuccessOrExit(mEncoder.WriteInt8(aFrame ? aFrame->mInfo.mRxInfo.mRssi : 0)); // RSSI
     SuccessOrExit(mEncoder.WriteInt8(-128));                                     // Noise Floor (Currently unused)
 
-    if (aFrame != NULL)
+    if (aFrame != nullptr)
     {
         if (aFrame->mInfo.mRxInfo.mAckedWithFramePending)
         {
@@ -142,7 +142,7 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
     if (mCurTransmitTID)
     {
         uint8_t header       = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID;
-        bool    framePending = (aAckFrame != NULL && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
+        bool    framePending = (aAckFrame != nullptr && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
 
         // Clear cached transmit TID
         mCurTransmitTID = 0;
@@ -329,7 +329,7 @@ exit:
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>(void)
 {
     otError             error      = OT_ERROR_NONE;
-    const otExtAddress *extAddress = NULL;
+    const otExtAddress *extAddress = nullptr;
 
     SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
 
@@ -437,7 +437,7 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
     VerifyOrExit(otLinkRawIsEnabled(mInstance), error = OT_ERROR_INVALID_STATE);
 
     frame = otLinkRawGetTransmitBuffer(mInstance);
-    VerifyOrExit(frame != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(frame != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = DecodeStreamRawTxRequest(*frame));
 

@@ -62,8 +62,8 @@ extern "C" void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength)
 
 Console::Console(Instance *aInstance)
     : Server(aInstance)
-    , mCallback(NULL)
-    , mContext(NULL)
+    , mCallback(nullptr)
+    , mContext(nullptr)
 {
 }
 

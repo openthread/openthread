@@ -68,12 +68,12 @@ static OT_DEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {
-    NcpUart * ncpUart  = NULL;
+    NcpUart * ncpUart  = nullptr;
     Instance *instance = static_cast<Instance *>(aInstance);
 
     ncpUart = new (&sNcpRaw) NcpUart(instance);
 
-    if (ncpUart == NULL || ncpUart != NcpBase::GetNcpInstance())
+    if (ncpUart == nullptr || ncpUart != NcpBase::GetNcpInstance())
     {
         OT_ASSERT(false);
     }
@@ -217,7 +217,7 @@ extern "C" void otPlatUartSendDone(void)
 {
     NcpUart *ncpUart = static_cast<NcpUart *>(NcpBase::GetNcpInstance());
 
-    if (ncpUart != NULL)
+    if (ncpUart != nullptr)
     {
         ncpUart->HandleUartSendDone();
     }
@@ -233,7 +233,7 @@ extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
     NcpUart *ncpUart = static_cast<NcpUart *>(NcpBase::GetNcpInstance());
 
-    if (ncpUart != NULL)
+    if (ncpUart != nullptr)
     {
         ncpUart->HandleUartReceiveDone(aBuf, aBufLength);
     }

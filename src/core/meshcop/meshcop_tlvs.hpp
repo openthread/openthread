@@ -204,7 +204,7 @@ public:
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      * @param[in]  aType       The TLV Type to search for.
      *
-     * @returns A pointer to the TLV if found, or NULL if not found.
+     * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
     static Tlv *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType)
@@ -219,7 +219,7 @@ public:
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      * @param[in]  aType       The TLV Type to search for.
      *
-     * @returns A pointer to the TLV if found, or NULL if not found.
+     * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
     static const Tlv *FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType);
@@ -231,7 +231,7 @@ public:
      * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      *
-     * @returns A pointer to the TLV if found, or NULL if not found.
+     * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
     template <typename TlvType> static TlvType *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength)
@@ -246,7 +246,7 @@ public:
      * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      *
-     * @returns A pointer to the TLV if found, or NULL if not found.
+     * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
     template <typename TlvType> static const TlvType *FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength)
@@ -1477,7 +1477,7 @@ public:
     /**
      * This method gets the first Channel Mask Entry in the Channel Mask TLV.
      *
-     * @returns A pointer to first Channel Mask Entry or NULL if not found.
+     * @returns A pointer to first Channel Mask Entry or nullptr if not found.
      *
      */
     const ChannelMaskEntryBase *GetFirstEntry(void) const;
@@ -1485,7 +1485,7 @@ public:
     /**
      * This method gets the first Channel Mask Entry in the Channel Mask TLV.
      *
-     * @returns A pointer to first Channel Mask Entry or NULL if not found.
+     * @returns A pointer to first Channel Mask Entry or nullptr if not found.
      *
      */
     ChannelMaskEntryBase *GetFirstEntry(void);
@@ -1693,7 +1693,7 @@ public:
      */
     void SetVendorName(const char *aVendorName)
     {
-        uint16_t len = (aVendorName == NULL) ? 0 : StringLength(aVendorName, sizeof(mVendorName));
+        uint16_t len = (aVendorName == nullptr) ? 0 : StringLength(aVendorName, sizeof(mVendorName));
 
         SetLength(static_cast<uint8_t>(len));
 
@@ -1762,7 +1762,7 @@ public:
      */
     void SetVendorModel(const char *aVendorModel)
     {
-        uint16_t len = (aVendorModel == NULL) ? 0 : StringLength(aVendorModel, sizeof(mVendorModel));
+        uint16_t len = (aVendorModel == nullptr) ? 0 : StringLength(aVendorModel, sizeof(mVendorModel));
 
         SetLength(static_cast<uint8_t>(len));
 
@@ -1831,7 +1831,7 @@ public:
      */
     void SetVendorSwVersion(const char *aVendorSwVersion)
     {
-        uint16_t len = (aVendorSwVersion == NULL) ? 0 : StringLength(aVendorSwVersion, sizeof(mVendorSwVersion));
+        uint16_t len = (aVendorSwVersion == nullptr) ? 0 : StringLength(aVendorSwVersion, sizeof(mVendorSwVersion));
 
         SetLength(static_cast<uint8_t>(len));
 
@@ -1900,7 +1900,7 @@ public:
      */
     void SetVendorData(const char *aVendorData)
     {
-        uint16_t len = (aVendorData == NULL) ? 0 : StringLength(aVendorData, sizeof(mVendorData));
+        uint16_t len = (aVendorData == nullptr) ? 0 : StringLength(aVendorData, sizeof(mVendorData));
 
         SetLength(static_cast<uint8_t>(len));
 

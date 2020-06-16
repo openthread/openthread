@@ -690,13 +690,13 @@ otError Dataset::ProcessMgmtGetCommand(uint8_t aArgsLength, char *aArgs[])
     {
         SuccessOrExit(error = otDatasetSendMgmtActiveGet(mInterpreter.mInstance, &datasetComponents, tlvs,
                                                          static_cast<uint8_t>(length),
-                                                         destAddrSpecified ? &address : NULL));
+                                                         destAddrSpecified ? &address : nullptr));
     }
     else if (strcmp(aArgs[0], "pending") == 0)
     {
         SuccessOrExit(error = otDatasetSendMgmtPendingGet(mInterpreter.mInstance, &datasetComponents, tlvs,
                                                           static_cast<uint8_t>(length),
-                                                          destAddrSpecified ? &address : NULL));
+                                                          destAddrSpecified ? &address : nullptr));
     }
     else
     {

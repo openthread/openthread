@@ -135,7 +135,8 @@ public:
      *
      * @param[in] aMessage The message for which to get the destination.
      *
-     * @returns  A pointer to the destination child of the message, or NULL if @p aMessage is not of supervision type.
+     * @returns  A pointer to the destination child of the message, or nullptr if @p aMessage is not of supervision
+     * type.
      *
      */
     Child *GetDestination(const Message &aMessage) const;
@@ -177,7 +178,7 @@ public:
     void     Stop(void) {}
     void     SetSupervisionInterval(uint16_t) {}
     uint16_t GetSupervisionInterval(void) const { return 0; }
-    Child *  GetDestination(const Message &) const { return NULL; }
+    Child *  GetDestination(const Message &) const { return nullptr; }
     void     UpdateOnSend(Child &) {}
 };
 
