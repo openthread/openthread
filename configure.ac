@@ -227,7 +227,7 @@ AC_PROG_LIBTOOL
 #
 
 PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Wundef -Wcast-align -Werror -Wno-error=undef -std=c99 -pedantic-errors"
-PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Wundef -Wcast-align -Werror -Wno-error=undef -std=gnu++98 -Wno-c++14-compat -fno-exceptions"
+PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Wundef -Wcast-align -Werror -Wno-error=undef -std=c++11 -Wno-c++14-compat -fno-exceptions -pedantic-errors"
 
 AC_CACHE_CHECK([whether $CC is Clang],
     [nl_cv_clang],
