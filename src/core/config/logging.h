@@ -45,7 +45,6 @@
  * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART
  * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_APP
  * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
- * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL
  * - and others
  *
  * Note:
@@ -68,8 +67,6 @@
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_APP 2
 /** Log output is handled by a platform defined function */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED 3
-/** Log output for NCP goes to Spinel `STREAM_LOG` property (for CLI platform defined function is expected) */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL 4
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
