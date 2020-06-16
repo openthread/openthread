@@ -100,9 +100,12 @@ private:
     void        HandleStateChanged(otCommissionerState aState);
 
     static void HandleJoinerEvent(otCommissionerJoinerEvent aJoinerEvent,
+                                  const otJoinerInfo *      aJoinerInfo,
                                   const otExtAddress *      aJoinerId,
                                   void *                    aContext);
-    void        HandleJoinerEvent(otCommissionerJoinerEvent aJoinerEvent, const otExtAddress *aJoinerId);
+    void        HandleJoinerEvent(otCommissionerJoinerEvent aJoinerEvent,
+                                  const otJoinerInfo *      aJoinerInfo,
+                                  const otExtAddress *      aJoinerId);
 
     static void HandleEnergyReport(uint32_t       aChannelMask,
                                    const uint8_t *aEnergyList,

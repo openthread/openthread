@@ -71,10 +71,35 @@ otJoinerState otJoinerGetState(otInstance *aInstance)
     return instance.Get<MeshCoP::Joiner>().GetState();
 }
 
-void otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId)
+const otExtAddress *otJoinerGetId(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.Get<MeshCoP::Joiner>().GetJoinerId(*static_cast<Mac::ExtAddress *>(aJoinerId));
+    return &instance.Get<MeshCoP::Joiner>().GetId();
 }
+
+otError otJoinerSetDiscerner(otInstance *aInstance, otJoinerDiscerner *aDiscerner)
+{
+    otError          error  = OT_ERROR_NONE;
+    MeshCoP::Joiner &joiner = static_cast<Instance *>(aInstance)->Get<MeshCoP::Joiner>();
+
+    if (aDiscerner != NULL)
+    {
+        error = joiner.SetDiscerner(*static_cast<const MeshCoP::JoinerDiscerner *>(aDiscerner));
+    }
+    else
+    {
+        error = joiner.ClearDiscerner();
+    }
+
+    return error;
+}
+
+const otJoinerDiscerner *otJoinerGetDiscerner(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<MeshCoP::Joiner>().GetDiscerner();
+}
+
 #endif // OPENTHREAD_CONFIG_JOINER_ENABLE
