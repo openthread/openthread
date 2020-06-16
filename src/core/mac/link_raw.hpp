@@ -71,19 +71,21 @@ public:
      * @returns true if enabled, false otherwise.
      *
      */
-    bool IsEnabled(void) const { return mEnabled; }
+    bool IsEnabled(void) const { return mReceiveDoneCallback != NULL; }
 
     /**
      * This method enables/disables the raw link-layer.
      *
-     * @param[in]   aEnabled    Whether enable raw link-layer.
+     * @param[in]   aCallback    A pointer to a function called on receipt of a IEEE 802.15.4 frame, NULL to disable
+     * raw link-layer.
+     *
      *
      * @retval OT_ERROR_INVALID_STATE   Thread stack is enabled.
-     * @retval OT_ERROR_FAILED          The radio could not be enabled.
+     * @retval OT_ERROR_FAILED          The radio could not be enabled/disabled.
      * @retval OT_ERROR_NONE            Successfully enabled/disabled raw link.
      *
      */
-    otError SetEnabled(bool aEnabled);
+    otError SetReceiveDone(otLinkRawReceiveDone aCallback);
 
     /**
      * This method returns the capabilities of the raw link-layer.
@@ -96,13 +98,11 @@ public:
     /**
      * This method starts a (recurring) Receive on the link-layer.
      *
-     * @param[in]  aCallback    A pointer to a function called on receipt of a IEEE 802.15.4 frame.
-     *
      * @retval OT_ERROR_NONE             Successfully transitioned to Receive.
      * @retval OT_ERROR_INVALID_STATE    The radio was disabled or transmitting.
      *
      */
-    otError Receive(otLinkRawReceiveDone aCallback);
+    otError Receive(void);
 
     /**
      * This method invokes the mReceiveDoneCallback, if set.
@@ -302,7 +302,6 @@ public:
 #endif
 
 private:
-    bool                    mEnabled;
     uint8_t                 mReceiveChannel;
     PanId                   mPanId;
     otLinkRawReceiveDone    mReceiveDoneCallback;

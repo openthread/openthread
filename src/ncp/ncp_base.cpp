@@ -1361,7 +1361,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN>(void)
     // stream enabled already
     if (otLinkRawIsEnabled(mInstance) && mIsRawStreamEnabled)
     {
-        error = otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone);
+        error = otLinkRawReceive(mInstance);
     }
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
@@ -1462,7 +1462,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RAW_STREAM_ENABLE
     {
         if (enabled)
         {
-            error = otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone);
+            error = otLinkRawReceive(mInstance);
         }
         else
         {

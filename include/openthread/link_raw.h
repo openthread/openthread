@@ -52,16 +52,29 @@ extern "C" {
  */
 
 /**
+ * This function pointer on receipt of a IEEE 802.15.4 frame.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aFrame       A pointer to the received frame or NULL if the receive operation was aborted.
+ * @param[in]  aError       OT_ERROR_NONE when successfully received a frame.
+ *                          OT_ERROR_ABORT when reception was aborted and a frame was not received.
+ *
+ */
+typedef void (*otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
+
+/**
  * This function enables/disables the raw link-layer.
  *
  * @param[in] aInstance     A pointer to an OpenThread instance.
- * @param[in] aEnabled      TRUE to enable raw link-layer, FALSE otherwise.
+ * @param[in] aCallback     A pointer to a function called on receipt of a IEEE 802.15.4 frame. NULL to disable the
+ * raw-link layer.
  *
- * @retval OT_ERROR_NONE            If the enable state was successfully set.
+ * @retval OT_ERROR_FAILED          The radio could not be enabled/disabled.
  * @retval OT_ERROR_INVALID_STATE   If the OpenThread Ip6 interface is already enabled.
+ * @retval OT_ERROR_NONE            If the enable state was successfully set.
  *
  */
-otError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled);
+otError otLinkRawSetReceiveDone(otInstance *aInstance, otLinkRawReceiveDone aCallback);
 
 /**
  * This function indicates whether or not the raw link-layer is enabled.
@@ -123,28 +136,16 @@ otError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
 otError otLinkRawSleep(otInstance *aInstance);
 
 /**
- * This function pointer on receipt of a IEEE 802.15.4 frame.
- *
- * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aFrame       A pointer to the received frame or NULL if the receive operation was aborted.
- * @param[in]  aError       OT_ERROR_NONE when successfully received a frame.
- *                          OT_ERROR_ABORT when reception was aborted and a frame was not received.
- *
- */
-typedef void (*otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
-
-/**
  * Transitioning the radio from Sleep to Receive.
  * Turn on the radio.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aCallback    A pointer to a function called on receipt of a IEEE 802.15.4 frame.
  *
  * @retval OT_ERROR_NONE             Successfully transitioned to Receive.
  * @retval OT_ERROR_INVALID_STATE    The radio was disabled or transmitting.
  *
  */
-otError otLinkRawReceive(otInstance *aInstance, otLinkRawReceiveDone aCallback);
+otError otLinkRawReceive(otInstance *aInstance);
 
 /**
  * The radio transitions from Transmit to Receive.

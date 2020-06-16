@@ -50,9 +50,9 @@
 
 using namespace ot;
 
-otError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled)
+otError otLinkRawSetReceiveDone(otInstance *aInstance, otLinkRawReceiveDone aCallback)
 {
-    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetEnabled(aEnabled);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetReceiveDone(aCallback);
 }
 
 bool otLinkRawIsEnabled(otInstance *aInstance)
@@ -95,9 +95,9 @@ exit:
     return error;
 }
 
-otError otLinkRawReceive(otInstance *aInstance, otLinkRawReceiveDone aCallback)
+otError otLinkRawReceive(otInstance *aInstance)
 {
-    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().Receive(aCallback);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().Receive();
 }
 
 otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance)

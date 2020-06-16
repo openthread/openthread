@@ -51,7 +51,6 @@ namespace Mac {
 
 LinkRaw::LinkRaw(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mEnabled(false)
     , mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mPanId(kPanIdBroadcast)
     , mReceiveDoneCallback(NULL)
@@ -65,17 +64,17 @@ LinkRaw::LinkRaw(Instance &aInstance)
 {
 }
 
-otError LinkRaw::SetEnabled(bool aEnabled)
+otError LinkRaw::SetReceiveDone(otLinkRawReceiveDone aCallback)
 {
     otError error = OT_ERROR_NONE;
 
-    otLogDebgMac("LinkRaw::Enabled(%s)", aEnabled ? "true" : "false");
+    otLogDebgMac("LinkRaw::Enabled(%s)", (aCallback != NULL ? "true" : "false"));
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     VerifyOrExit(!Get<ThreadNetif>().IsUp(), error = OT_ERROR_INVALID_STATE);
 #endif
 
-    if (aEnabled)
+    if (aCallback)
     {
         SuccessOrExit(error = mSubMac.Enable());
     }
@@ -84,7 +83,7 @@ otError LinkRaw::SetEnabled(bool aEnabled)
         IgnoreError(mSubMac.Disable());
     }
 
-    mEnabled = aEnabled;
+    mReceiveDoneCallback = aCallback;
 
 exit:
     return error;
@@ -135,14 +134,13 @@ exit:
     return error;
 }
 
-otError LinkRaw::Receive(otLinkRawReceiveDone aCallback)
+otError LinkRaw::Receive(void)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = mSubMac.Receive(mReceiveChannel));
-    mReceiveDoneCallback = aCallback;
 
 exit:
     return error;
