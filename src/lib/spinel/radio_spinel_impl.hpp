@@ -198,7 +198,7 @@ RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
     , mDiagOutputMaxLen(0)
 #endif
     , mTxRadioEndUs(UINT64_MAX)
-    , mRadioTimeRecalcStart(0)
+    , mRadioTimeRecalcStart(UINT64_MAX)
     , mRadioTimeOffset(0)
 {
     mVersion[0] = '\0';
@@ -1762,7 +1762,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::CalcRcpTimeOffset(void)
      *         D = T1' - ((T0 + T2)/ 2)
      */
 
-    VerifyOrExit(otPlatTimeGet() >= GetNextRadioTimeRecalcStart(), OT_NOOP);
+    VerifyOrExit(!mIsTimeSynced || (otPlatTimeGet() >= GetNextRadioTimeRecalcStart()), OT_NOOP);
     packed = spinel_datatype_pack(buffer, sizeof(buffer), SPINEL_DATATYPE_UINT64_S, remoteTimestamp);
     VerifyOrExit(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 
