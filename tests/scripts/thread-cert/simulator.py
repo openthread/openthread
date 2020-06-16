@@ -138,7 +138,7 @@ class VirtualTime(BaseSimulator):
     END_OF_TIME = 0x7FFFFFFF
     PORT_OFFSET = int(os.getenv('PORT_OFFSET', '0'))
 
-    BLOCK_TIMEOUT = 4
+    BLOCK_TIMEOUT = 10
 
     RADIO_ONLY = os.getenv('RADIO_DEVICE') is not None
     NCP_SIM = os.getenv('NODE_TYPE', 'sim') == 'ncp-sim'
