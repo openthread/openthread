@@ -52,52 +52,32 @@
  *
  */
 #define MBEDTLS_ENTROPY_HARDWARE_ALT
-#define MBEDTLS_SHA256_C
 
-/**
- * \def MBEDTLS_ECP_INTERNAL_ALT
- * \def ECP_SHORTWEIERSTRASS
- * \def MBEDTLS_ECP_ADD_MIXED_ALT
- * \def MBEDTLS_ECP_DOUBLE_JAC_ALT
- * \def MBEDTLS_ECP_NORMALIZE_JAC_MANY_ALT
- * \def MBEDTLS_ECP_NORMALIZE_JAC_ALT
- *
- * Enable hardware acceleration for the elliptic curve over GF(p) library.
- *
- * Module:  sl_crypto/src/crypto_ecp.c
- * Caller:  library/ecp.c
- *
- * Requires: MBEDTLS_BIGNUM_C, MBEDTLS_ECP_C and at least one
- * MBEDTLS_ECP_DP_XXX_ENABLED and (CRYPTO_COUNT > 0)
- */
-#if defined(CRYPTO_COUNT) && (CRYPTO_COUNT > 0)
-#define MBEDTLS_ECP_INTERNAL_ALT
-#define ECP_SHORTWEIERSTRASS
-#define MBEDTLS_ECP_ADD_MIXED_ALT
-#define MBEDTLS_ECP_DOUBLE_JAC_ALT
-#define MBEDTLS_ECP_NORMALIZE_JAC_MANY_ALT
-#define MBEDTLS_ECP_NORMALIZE_JAC_ALT
-#define MBEDTLS_ECP_RANDOMIZE_JAC_ALT
-#endif
+/* Turn on all hardware acceleration provided by the EFR32xG21's built-in SE */
+#define MBEDTLS_SHA1_ALT
+#define MBEDTLS_SHA1_PROCESS_ALT
+#define MBEDTLS_SHA256_ALT
+#define MBEDTLS_SHA256_PROCESS_ALT
+#define MBEDTLS_SHA512_ALT
+#define MBEDTLS_SHA512_PROCESS_ALT
 
-/**
- * \def MBEDTLS_SHA256_ALT
- *
- * Enable hardware acceleration for the SHA-224 and SHA-256 cryptographic
- * hash algorithms.
- *
- * Module:  sl_crypto/src/crypto_sha.c
- * Caller:  library/entropy.c
- *          library/mbedtls_md.c
- *          library/ssl_cli.c
- *          library/ssl_srv.c
- *          library/ssl_tls.c
- *
- * Requires: MBEDTLS_SHA256_C and (CRYPTO_COUNT > 0)
- * See MBEDTLS_SHA256_C for more information.
- */
-#if defined(CRYPTO_COUNT) && (CRYPTO_COUNT > 0)
-//#define MBEDTLS_SHA256_ALT
-#endif
+#define MBEDTLS_CCM_ALT
+#define MBEDTLS_CMAC_ALT
+
+/* Turning on ECC acceleration is dependant on not requiring curve25519 when
+ * running on EFR32xG21A devices */
+#if (defined(_SILICON_LABS_SECURITY_FEATURE) &&                                   \
+     (_SILICON_LABS_SECURITY_FEATURE == _SILICON_LABS_SECURITY_FEATURE_VAULT)) || \
+    !defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
+#define MBEDTLS_ECDH_GEN_PUBLIC_ALT
+#define MBEDTLS_ECDSA_GENKEY_ALT
+#define MBEDTLS_ECDH_COMPUTE_SHARED_ALT
+#define MBEDTLS_ECDSA_SIGN_ALT
+#define MBEDTLS_ECDSA_VERIFY_ALT
+/* Incompatibility in header files between mbedTLS version in OT and GSDK means
+ * we can't turn on EC-JPAKE acceleration on EFR32xG21 just yet. Will be fixed
+ * for the next GSDK update */
+//#define MBEDTLS_ECJPAKE_ALT
+#endif /* EFR32xG21B or curve25519 not enabled */
 
 #endif // EFR32_MBEDTLS_CONFIG_H

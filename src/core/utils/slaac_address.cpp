@@ -234,9 +234,10 @@ void Slaac::Update(UpdateMode aMode)
                     slaacAddr->Clear();
                     memcpy(&slaacAddr->mAddress, &prefix.mPrefix, BitVectorBytes(prefix.mLength));
 
-                    slaacAddr->mPrefixLength = prefix.mLength;
-                    slaacAddr->mPreferred    = config.mPreferred;
-                    slaacAddr->mValid        = true;
+                    slaacAddr->mPrefixLength  = prefix.mLength;
+                    slaacAddr->mAddressOrigin = OT_ADDRESS_ORIGIN_SLAAC;
+                    slaacAddr->mPreferred     = config.mPreferred;
+                    slaacAddr->mValid         = true;
 
                     IgnoreError(GenerateIid(*slaacAddr));
 

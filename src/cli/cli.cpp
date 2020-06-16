@@ -1556,10 +1556,11 @@ otError Interpreter::ProcessIpAddrAdd(uint8_t aArgsLength, char *aArgs[])
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = otIp6AddressFromString(aArgs[0], &aAddress.mAddress));
-    aAddress.mPrefixLength = 64;
-    aAddress.mPreferred    = true;
-    aAddress.mValid        = true;
-    error                  = otIp6AddUnicastAddress(mInstance, &aAddress);
+    aAddress.mPrefixLength  = 64;
+    aAddress.mPreferred     = true;
+    aAddress.mValid         = true;
+    aAddress.mAddressOrigin = OT_ADDRESS_ORIGIN_MANUAL;
+    error                   = otIp6AddUnicastAddress(mInstance, &aAddress);
 
 exit:
     return error;

@@ -40,6 +40,7 @@
 
 #define OPENTHREAD_USE_READLINE (HAVE_LIBEDIT || HAVE_LIBREADLINE)
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -181,7 +182,7 @@ static bool DoWrite(int aFile, const void *aBuffer, size_t aSize)
         else
         {
             aBuffer = reinterpret_cast<const uint8_t *>(aBuffer) + rval;
-            aSize -= rval;
+            aSize -= static_cast<size_t>(rval);
         }
     }
 
@@ -295,10 +296,12 @@ int main(int argc, char *argv[])
             }
             else
             {
-                size_t lineStart = 0;
+                ssize_t lineStart = 0;
 
                 for (ssize_t i = 0; i < rval; i++)
                 {
+                    int prevPromptState = promptState;
+
                     if (FindPrompt(promptState, buffer[i]))
                     {
                         doneState  = 0;
@@ -306,10 +309,14 @@ int main(int argc, char *argv[])
                         lineStart  = i + 1;
                         continue;
                     }
+                    else if (prevPromptState == 1 && i == 0)
+                    {
+                        VerifyOrExit(DoWrite(STDOUT_FILENO, ">", 1), ret = OT_EXIT_FAILURE);
+                    }
 
                     if (buffer[i] == '\r' || buffer[i] == '\n')
                     {
-                        VerifyOrExit(DoWrite(STDOUT_FILENO, buffer + lineStart, i - lineStart + 1),
+                        VerifyOrExit(DoWrite(STDOUT_FILENO, buffer + lineStart, static_cast<size_t>(i - lineStart + 1)),
                                      ret = OT_EXIT_FAILURE);
                         lineStart = i + 1;
                     }
@@ -319,6 +326,13 @@ int main(int argc, char *argv[])
                         isFinished = true;
                         ret        = OT_EXIT_SUCCESS;
                     }
+                }
+
+                if (lineStart < rval && promptState != 1)
+                {
+                    assert(promptState != 0 && promptState != 2);
+                    VerifyOrExit(DoWrite(STDOUT_FILENO, buffer + lineStart, static_cast<size_t>(rval - lineStart)),
+                                 ret = OT_EXIT_FAILURE);
                 }
             }
         }

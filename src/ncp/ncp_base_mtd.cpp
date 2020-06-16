@@ -1626,8 +1626,9 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_IPV6_ADDRESS_TABLE
     SuccessOrExit(error = mDecoder.ReadUint32(preferredLifetime));
     SuccessOrExit(error = mDecoder.ReadUint32(validLifetime));
 
-    netifAddr.mPreferred = (preferredLifetime != 0);
-    netifAddr.mValid     = (validLifetime != 0);
+    netifAddr.mAddressOrigin = OT_ADDRESS_ORIGIN_MANUAL;
+    netifAddr.mPreferred     = (preferredLifetime != 0);
+    netifAddr.mValid         = (validLifetime != 0);
 
     error = otIp6AddUnicastAddress(mInstance, &netifAddr);
 
