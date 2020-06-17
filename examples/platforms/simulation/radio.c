@@ -117,6 +117,8 @@ static bool sSrcMatchEnabled = false;
 static bool sRadioCoexEnabled = true;
 #endif
 
+otRadioCaps gRadioCaps = OT_RADIO_CAPS_NONE;
+
 static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrigin)
 {
     for (size_t i = 0; i < sizeof(*aReversed); i++)
@@ -462,7 +464,7 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 
     assert(aInstance != NULL);
 
-    return OT_RADIO_CAPS_NONE;
+    return gRadioCaps;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
