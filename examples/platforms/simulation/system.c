@@ -47,10 +47,12 @@
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/radio.h>
 
 uint32_t gNodeId = 1;
 
-extern bool gPlatformPseudoResetWasRequested;
+extern bool        gPlatformPseudoResetWasRequested;
+extern otRadioCaps gRadioCaps;
 
 static volatile bool gTerminate = false;
 
@@ -65,6 +67,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
 {
     char *   endptr;
     uint32_t speedUpFactor = 1;
+    int      argIndex      = 0;
 
     if (gPlatformPseudoResetWasRequested)
     {
@@ -74,31 +77,39 @@ void otSysInit(int aArgCount, char *aArgVector[])
 
     if (aArgCount < 2)
     {
-        fprintf(stderr, "Syntax:\n    %s NodeId [TimeSpeedUpFactor]\n", aArgVector[0]);
+        fprintf(stderr, "Syntax:\n    %s [--sleep-to-tx] NodeId [TimeSpeedUpFactor]\n", aArgVector[0]);
         exit(EXIT_FAILURE);
     }
 
-    openlog(basename(aArgVector[0]), LOG_PID, LOG_USER);
+    openlog(basename(aArgVector[argIndex++]), LOG_PID, LOG_USER);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
 
     signal(SIGTERM, &handleSignal);
     signal(SIGHUP, &handleSignal);
 
-    gNodeId = (uint32_t)strtol(aArgVector[1], &endptr, 0);
+    if (!strcmp(aArgVector[argIndex], "--sleep-to-tx"))
+    {
+        gRadioCaps |= OT_RADIO_CAPS_SLEEP_TO_TX;
+        ++argIndex;
+    }
+
+    gNodeId = (uint32_t)strtol(aArgVector[argIndex], &endptr, 0);
 
     if (*endptr != '\0' || gNodeId < 1 || gNodeId >= WELLKNOWN_NODE_ID)
     {
-        fprintf(stderr, "Invalid NodeId: %s\n", aArgVector[1]);
+        fprintf(stderr, "Invalid NodeId: %s\n", aArgVector[argIndex]);
         exit(EXIT_FAILURE);
     }
 
-    if (aArgCount > 2)
+    ++argIndex;
+
+    if (aArgCount > argIndex)
     {
-        speedUpFactor = (uint32_t)strtol(aArgVector[2], &endptr, 0);
+        speedUpFactor = (uint32_t)strtol(aArgVector[argIndex], &endptr, 0);
 
         if (*endptr != '\0' || speedUpFactor == 0)
         {
-            fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[2]);
+            fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[argIndex]);
             exit(EXIT_FAILURE);
         }
     }
