@@ -524,14 +524,14 @@ void TestBuffer(void)
         WriteTestFrame3(ncpBuffer, Spinel::Buffer::kPriorityHigh);
 
         ncpBuffer.InFrameBegin((j % 2) == 0 ? Spinel::Buffer::kPriorityHigh : Spinel::Buffer::kPriorityLow);
-        IgnoreError(ncpBuffer.InFrameFeedData(sHelloText, sizeof(sHelloText)));
+        SuccessOrQuit(ncpBuffer.InFrameFeedData(sHelloText, sizeof(sHelloText)), "InFrameFeedData() failed.");
 
         message = sMessagePool->New(Message::kTypeIp6, 0);
         VerifyOrQuit(message != NULL, "Null Message");
         SuccessOrQuit(message->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
         message->Write(0, sizeof(sMysteryText), sMysteryText);
 
-        IgnoreError(ncpBuffer.InFrameFeedMessage(message));
+        SuccessOrQuit(ncpBuffer.InFrameFeedMessage(message), "InFrameFeedMessage() failed.");
 
         // Start writing a new frame in middle of an unfinished frame. Ensure the first one is discarded.
         WriteTestFrame1(ncpBuffer, frame1IsHighPriority ? Spinel::Buffer::kPriorityHigh : Spinel::Buffer::kPriorityLow);
@@ -543,7 +543,7 @@ void TestBuffer(void)
         VerifyAndRemoveFrame3(ncpBuffer);
 
         // Start reading few bytes from the frame
-        IgnoreError(ncpBuffer.OutFrameBegin());
+        SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed.");
         ncpBuffer.OutFrameReadByte();
         ncpBuffer.OutFrameReadByte();
         ncpBuffer.OutFrameReadByte();
@@ -598,10 +598,10 @@ void TestBuffer(void)
     printf("\nTest 7: OutFrameRead() in parts\n");
 
     ncpBuffer.InFrameBegin(Spinel::Buffer::kPriorityLow);
-    IgnoreError(ncpBuffer.InFrameFeedData(sMottoText, sizeof(sMottoText)));
-    IgnoreError(ncpBuffer.InFrameEnd());
+    SuccessOrQuit(ncpBuffer.InFrameFeedData(sMottoText, sizeof(sMottoText)), "InFrameFeedData() failed.");
+    SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
 
-    IgnoreError(ncpBuffer.OutFrameBegin());
+    SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed.");
     readOffset = 0;
 
     while ((readLen = ncpBuffer.OutFrameRead(sizeof(readBuffer), readBuffer)) != 0)
@@ -616,7 +616,7 @@ void TestBuffer(void)
 
     VerifyOrQuit(readOffset == sizeof(sMottoText), "Read len does not match expected length.");
 
-    IgnoreError(ncpBuffer.OutFrameRemove());
+    SuccessOrQuit(ncpBuffer.OutFrameRemove(), "OutFrameRemove() failed.");
 
     printf("\n -- PASS\n");
 
@@ -893,7 +893,8 @@ uint32_t GetRandom(uint32_t max)
 
     if (kUseTrueRandomNumberGenerator)
     {
-        IgnoreError(Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&value), sizeof(value)));
+        SuccessOrQuit(Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&value), sizeof(value)),
+                      "Random::Crypto::FillBuffer() failed.");
     }
     else
     {
