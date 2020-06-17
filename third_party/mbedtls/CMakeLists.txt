@@ -26,14 +26,36 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(OT_MBEDTLS_DEFAULT_CONFIG_FILE \"${CMAKE_CURRENT_SOURCE_DIR}/mbedtls-config.h\")
+set(OT_MBEDTLS_DEFAULT_CONFIG_FILE \"${CMAKE_CURRENT_BINARY_DIR}/mbedtls-config.h\")
 
 set(OT_MBEDTLS_CONFIG_FILE "" CACHE STRING "The mbedTLS config file")
 
 set(ENABLE_TESTING OFF CACHE BOOL "Disable mbedtls test" FORCE)
 set(ENABLE_PROGRAMS OFF CACHE BOOL "Disable mbetls program" FORCE)
 
+find_program(UNIFDEFALL_EXE unifdefall)
+find_program(SED_EXE sed)
+
 add_subdirectory(repo)
+
+if(UNIFDEFALL_EXE AND SED_EXE)
+    add_custom_target(mbedtls-config.h
+        ${UNIFDEFALL_EXE}
+            "'-D$<JOIN:$<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>,';'-D>'"
+            "-I$<JOIN:$<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>,;-I>"
+            "-I$<JOIN:${OT_PUBLIC_INCLUDES},;-I>"
+            "-I${CMAKE_CURRENT_SOURCE_DIR}/repo/include"
+            "${CMAKE_CURRENT_SOURCE_DIR}/mbedtls-config.h" |
+            ${SED_EXE} '/openthread-core-config\.h/d' >
+            ${OT_MBEDTLS_DEFAULT_CONFIG_FILE}
+        COMMAND_EXPAND_LISTS
+    )
+    add_dependencies(mbedtls mbedtls-config.h)
+    add_dependencies(mbedx509 mbedtls-config.h)
+    add_dependencies(mbedcrypto mbedtls-config.h)
+else()
+    configure_file(mbedtls-config.h mbedtls-config.h COPYONLY)
+endif()
 
 target_compile_definitions(mbedtls
     PUBLIC
