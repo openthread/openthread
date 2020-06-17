@@ -368,7 +368,7 @@ otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCou
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  *
- * @retval     The current radio time in microseconds.
+ * @returns The current radio time in microseconds.
  *
  */
 uint64_t otLinkRawGetRadioTime(otInstance *aInstance);

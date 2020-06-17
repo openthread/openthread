@@ -3964,7 +3964,7 @@ enum
     SPINEL_PROP_RCP_MAC_FRAME_COUNTER = SPINEL_PROP_RCP__BEGIN + 1,
 
     /// Timestamps when Spinel frame is received and transmitted
-    /** Format: `XX`.
+    /** Format: `X`.
      *
      *  `X`: Spinel frame transmit timestamp
      *

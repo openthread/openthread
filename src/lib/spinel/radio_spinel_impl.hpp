@@ -1261,6 +1261,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Get(spinel_prop_key_t aK
     return error;
 }
 
+// This is not a normal use case for VALUE_GET command and should be only used to get RCP timestamp with dummy payload
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::GetWithParam(spinel_prop_key_t aKey,
                                                                      const uint8_t *   aParam,
