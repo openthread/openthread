@@ -37,3 +37,6 @@ RUN cd ~/src && \
     cd openthread && \
     ./bootstrap && \
     make -f examples/Makefile-simulation
+
+# Install OpenThread Daemon and ot-ctl
+RUN make -f src/posix/Makefile-posix DAEMON=1
