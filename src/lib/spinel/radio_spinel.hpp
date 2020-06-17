@@ -659,7 +659,7 @@ public:
      * @returns The timepoint to start the recalculation of RCP time offset.
      *
      */
-    uint64_t GetNextRadioTimeRecalcStart(void) { return mRadioTimeRecalcStart; }
+    uint64_t GetNextRadioTimeRecalcStart(void) const { return mRadioTimeRecalcStart; }
 
     /**
      * This method gets the current estimated time on RCP.

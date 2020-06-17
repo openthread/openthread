@@ -1781,7 +1781,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::CalcRcpTimeOffset(void)
 
 exit:
     LogIfFail("Error calculating RCP time offset: %s", error);
-#endif
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 }
 
 template <typename InterfaceType, typename ProcessContextType>
