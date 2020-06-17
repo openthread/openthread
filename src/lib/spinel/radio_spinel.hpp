@@ -665,6 +665,7 @@ public:
      * This method gets the current estimated time on RCP.
      *
      * @returns The current estimated RCP time in microseconds.
+     *
      */
     uint64_t GetNow(void);
 
