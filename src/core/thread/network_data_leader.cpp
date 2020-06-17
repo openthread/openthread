@@ -260,12 +260,25 @@ bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress) const
 
     while ((prefix = FindNextMatchingPrefix(aAddress, prefix)) != nullptr)
     {
-        if (FindBorderRouter(*prefix) == nullptr)
+        // check both stable and temporary Border Router TLVs
+        for (int i = 0; i < 2; i++)
         {
-            continue;
-        }
+            const BorderRouterTlv *borderRouter = FindBorderRouter(*prefix, /* aStable */ (i == 0));
 
-        ExitNow(rval = true);
+            if (borderRouter == nullptr)
+            {
+                continue;
+            }
+
+            for (const BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
+                 entry                          = entry->GetNext())
+            {
+                if (entry->IsOnMesh())
+                {
+                    ExitNow(rval = true);
+                }
+            }
+        }
     }
 
 exit:
