@@ -36,6 +36,7 @@
 #include <openthread/link_raw.h>
 #include <openthread/ncp.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -219,6 +220,16 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SRC_MATCH_ENABLED
 {
     // TODO: Would be good to add an `otLinkRaw` API to give the status of source match.
     return mEncoder.WriteBool(mSrcMatchEnabled);
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_TIMESTAMP>(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mEncoder.WriteUint64(otLinkRawGetRadioTime(mInstance)));
+
+exit:
+    return error;
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SRC_MATCH_ENABLED>(void)

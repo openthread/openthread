@@ -68,6 +68,10 @@
 #define TX_WAIT_US (5 * US_PER_S)
 #endif
 
+#ifndef RCP_TIME_OFFSET_CHECK_INTERVAL
+#define RCP_TIME_OFFSET_CHECK_INTERVAL (60 * US_PER_S)
+#endif
+
 using ot::Spinel::Decoder;
 
 namespace ot {
@@ -187,12 +191,15 @@ RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
     , mIsPromiscuous(false)
     , mIsReady(false)
     , mSupportsLogStream(false)
+    , mIsTimeSynced(false)
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     , mDiagMode(false)
     , mDiagOutput(NULL)
     , mDiagOutputMaxLen(0)
 #endif
     , mTxRadioEndUs(UINT64_MAX)
+    , mRadioTimeRecalcStart(UINT64_MAX)
+    , mRadioTimeOffset(0)
 {
     mVersion[0] = '\0';
 }
@@ -987,6 +994,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Process(const ProcessContex
     }
 
     ProcessRadioStateMachine();
+    CalcRcpTimeOffset();
 }
 
 template <typename InterfaceType, typename ProcessContextType>
@@ -1247,6 +1255,27 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Get(spinel_prop_key_t aK
     mPropertyFormat = aFormat;
     va_start(mPropertyArgs, aFormat);
     error = RequestV(true, SPINEL_CMD_PROP_VALUE_GET, aKey, NULL, mPropertyArgs);
+    va_end(mPropertyArgs);
+    mPropertyFormat = NULL;
+
+    return error;
+}
+
+// This is not a normal use case for VALUE_GET command and should be only used to get RCP timestamp with dummy payload
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::GetWithParam(spinel_prop_key_t aKey,
+                                                                     const uint8_t *   aParam,
+                                                                     spinel_size_t     aParamSize,
+                                                                     const char *      aFormat,
+                                                                     ...)
+{
+    otError error;
+
+    assert(mWaitingTid == 0);
+
+    mPropertyFormat = aFormat;
+    va_start(mPropertyArgs, aFormat);
+    error = Request(true, SPINEL_CMD_PROP_VALUE_GET, aKey, SPINEL_DATATYPE_DATA_S, aParam, aParamSize);
     va_end(mPropertyArgs);
     mPropertyFormat = NULL;
 
@@ -1694,6 +1723,72 @@ otRadioState RadioSpinel<InterfaceType, ProcessContextType>::GetState(void) cons
     };
 
     return sOtRadioStateMap[mState];
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+void RadioSpinel<InterfaceType, ProcessContextType>::CalcRcpTimeOffset(void)
+{
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    otError        error = OT_ERROR_NONE;
+    uint64_t       localTxTimestamp;
+    uint64_t       localRxTimestamp;
+    uint64_t       remoteTimestamp = 0;
+    uint8_t        buffer[sizeof(remoteTimestamp)];
+    spinel_ssize_t packed;
+
+    otLogInfoPlat("Trying to get RCP time offset");
+
+    /*
+     * Use a modified Network Time Protocol(NTP) to calculate the time offset
+     * Assume the time offset is D so that local can calculate remote time with,
+     *         T' = T + D
+     * Where T is the local time and T' is the remote time.
+     * The time offset is calculated using timestamp measured at local and remote.
+     *
+     *              T0  P    P T2
+     *  local time --+----+----+--->
+     *                \   |   ^
+     *              get\  |  /is
+     *                  v | /
+     * remote time -------+--------->
+     *                    T1'
+     *
+     * Based on the assumptions,
+     * 1. If the propagation time(P) from local to remote and from remote to local are same.
+     * 2. Both the host and RCP can accurately measure the time they send or receive a message.
+     * The degree to which these assumptions hold true determines the accuracy of the offset.
+     * Then,
+     *         T1' = T0 + P + D and T1' = T2 - P + D
+     * Time offset can be calculated with,
+     *         D = T1' - ((T0 + T2)/ 2)
+     */
+
+    VerifyOrExit(!mIsTimeSynced || (otPlatTimeGet() >= GetNextRadioTimeRecalcStart()), OT_NOOP);
+    packed = spinel_datatype_pack(buffer, sizeof(buffer), SPINEL_DATATYPE_UINT64_S, remoteTimestamp);
+    VerifyOrExit(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
+
+    localTxTimestamp = otPlatTimeGet();
+
+    // Dummy timestamp payload to make request length same as response
+    error = GetWithParam(SPINEL_PROP_RCP_TIMESTAMP, buffer, packed, SPINEL_DATATYPE_UINT64_S, &remoteTimestamp);
+
+    localRxTimestamp = otPlatTimeGet();
+
+    VerifyOrExit(error == OT_ERROR_NONE, mRadioTimeRecalcStart = localRxTimestamp);
+
+    mRadioTimeOffset      = remoteTimestamp - ((localRxTimestamp / 2) + (localTxTimestamp / 2));
+    mIsTimeSynced         = true;
+    mRadioTimeRecalcStart = localRxTimestamp + RCP_TIME_OFFSET_CHECK_INTERVAL;
+
+exit:
+    LogIfFail("Error calculating RCP time offset: %s", error);
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+uint64_t RadioSpinel<InterfaceType, ProcessContextType>::GetNow(void)
+{
+    return mIsTimeSynced ? (otPlatTimeGet() + static_cast<uint64_t>(mRadioTimeOffset)) : UINT64_MAX;
 }
 
 } // namespace Spinel

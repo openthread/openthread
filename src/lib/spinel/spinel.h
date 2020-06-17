@@ -3963,6 +3963,16 @@ enum
      */
     SPINEL_PROP_RCP_MAC_FRAME_COUNTER = SPINEL_PROP_RCP__BEGIN + 1,
 
+    /// Timestamps when Spinel frame is received and transmitted
+    /** Format: `X`.
+     *
+     *  `X`: Spinel frame transmit timestamp
+     *
+     * The Spinel property is used to get timestamp from RCP to calculate host and RCP timer difference.
+     *
+     */
+    SPINEL_PROP_RCP_TIMESTAMP = SPINEL_PROP_RCP__BEGIN + 2,
+
     SPINEL_PROP_RCP__END = 0x900,
 
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,

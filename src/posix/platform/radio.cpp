@@ -214,29 +214,36 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)
 {
-    sRadioSpinel.GetSpinelInterface().UpdateFdSet(*aReadFdSet, *aWriteFdSet, *aMaxFd, *aTimeout);
+    uint64_t now      = otPlatTimeGet();
+    uint64_t deadline = sRadioSpinel.GetNextRadioTimeRecalcStart();
 
     if (sRadioSpinel.IsTransmitting())
     {
-        uint64_t now          = otPlatTimeGet();
         uint64_t txRadioEndUs = sRadioSpinel.GetTxRadioEndUs();
 
-        if (now < txRadioEndUs)
+        if (txRadioEndUs < deadline)
         {
-            uint64_t remain = txRadioEndUs - now;
-
-            if (remain < static_cast<uint64_t>(aTimeout->tv_sec * US_PER_S + aTimeout->tv_usec))
-            {
-                aTimeout->tv_sec  = static_cast<time_t>(remain / US_PER_S);
-                aTimeout->tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
-            }
-        }
-        else
-        {
-            aTimeout->tv_sec  = 0;
-            aTimeout->tv_usec = 0;
+            deadline = txRadioEndUs;
         }
     }
+
+    if (now < deadline)
+    {
+        uint64_t remain = deadline - now;
+
+        if (remain < static_cast<uint64_t>(aTimeout->tv_sec * US_PER_S + aTimeout->tv_usec))
+        {
+            aTimeout->tv_sec  = static_cast<time_t>(remain / US_PER_S);
+            aTimeout->tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
+        }
+    }
+    else
+    {
+        aTimeout->tv_sec  = 0;
+        aTimeout->tv_usec = 0;
+    }
+
+    sRadioSpinel.GetSpinelInterface().UpdateFdSet(*aReadFdSet, *aWriteFdSet, *aMaxFd, *aTimeout);
 
     if (sRadioSpinel.HasPendingFrame() || sRadioSpinel.IsTransmitDone())
     {
@@ -494,4 +501,10 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
 {
     SuccessOrDie(sRadioSpinel.SetMacFrameCounter(aMacFrameCounter));
     OT_UNUSED_VARIABLE(aInstance);
+}
+
+uint64_t otPlatRadioGetNow(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetNow();
 }

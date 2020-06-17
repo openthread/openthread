@@ -37,6 +37,7 @@
 #include <openthread/diag.h>
 #include <openthread/thread.h>
 #include <openthread/platform/diag.h>
+#include <openthread/platform/time.h>
 
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -236,6 +237,12 @@ otError otLinkRawSetMacKey(otInstance *    aInstance,
 otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
 {
     return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetMacFrameCounter(aMacFrameCounter);
+}
+
+uint64_t otLinkRawGetRadioTime(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return otPlatTimeGet();
 }
 
 #if OPENTHREAD_RADIO
