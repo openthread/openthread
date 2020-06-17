@@ -39,6 +39,7 @@
 #include "common/locator.hpp"
 #include "common/notifier.hpp"
 #include "net/netif.hpp"
+#include "thread/network_data.hpp"
 
 namespace ot {
 namespace Utils {
@@ -163,6 +164,8 @@ private:
     void        GetIidSecretKey(IidSecretKey &aKey) const;
     static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
     void        HandleNotifierEvents(Events aEvents);
+    static bool DoesConfigMatchNetifAddr(const NetworkData::OnMeshPrefixConfig &aConfig,
+                                         const Ip6::NetifUnicastAddress &       aAddr);
 
     bool                     mEnabled;
     otIp6SlaacPrefixFilter   mFilter;
