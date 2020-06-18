@@ -170,7 +170,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleReceivedFrame(void *a
 
 template <typename InterfaceType, typename ProcessContextType>
 RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
-    : mInstance(NULL)
+    : mInstance(nullptr)
     , mRxFrameBuffer()
     , mSpinelInterface(HandleReceivedFrame, this, mRxFrameBuffer)
     , mCmdTidsInUse(0)
@@ -178,10 +178,10 @@ RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
     , mTxRadioTid(0)
     , mWaitingTid(0)
     , mWaitingKey(SPINEL_PROP_LAST_STATUS)
-    , mPropertyFormat(NULL)
+    , mPropertyFormat(nullptr)
     , mExpectedCommand(0)
     , mError(OT_ERROR_NONE)
-    , mTransmitFrame(NULL)
+    , mTransmitFrame(nullptr)
     , mShortAddress(0)
     , mPanId(0xffff)
     , mRadioCaps(0)
@@ -194,7 +194,7 @@ RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
     , mIsTimeSynced(false)
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     , mDiagMode(false)
-    , mDiagOutput(NULL)
+    , mDiagOutput(nullptr)
     , mDiagOutputMaxLen(0)
 #endif
     , mTxRadioEndUs(UINT64_MAX)
@@ -410,7 +410,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleNotification(SpinelIn
     spinel_prop_key_t key;
     spinel_size_t     len = 0;
     spinel_ssize_t    unpacked;
-    uint8_t *         data = NULL;
+    uint8_t *         data = nullptr;
     uint32_t          cmd;
     uint8_t           header;
     otError           error           = OT_ERROR_NONE;
@@ -464,7 +464,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleNotification(const ui
     spinel_prop_key_t key;
     spinel_size_t     len = 0;
     spinel_ssize_t    unpacked;
-    uint8_t *         data = NULL;
+    uint8_t *         data = nullptr;
     uint32_t          cmd;
     uint8_t           header;
     otError           error = OT_ERROR_NONE;
@@ -483,7 +483,7 @@ template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::HandleResponse(const uint8_t *aBuffer, uint16_t aLength)
 {
     spinel_prop_key_t key;
-    uint8_t *         data   = NULL;
+    uint8_t *         data   = nullptr;
     spinel_size_t     len    = 0;
     uint8_t           header = 0;
     uint32_t          cmd    = 0;
@@ -693,7 +693,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleWaitingResponse(uint3
     {
         spinel_ssize_t unpacked;
 
-        VerifyOrExit(mDiagOutput != NULL, OT_NOOP);
+        VerifyOrExit(mDiagOutput != nullptr, OT_NOOP);
         unpacked =
             spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, mDiagOutput, &mDiagOutputMaxLen);
         VerifyOrExit(unpacked > 0, mError = OT_ERROR_PARSE);
@@ -708,7 +708,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleWaitingResponse(uint3
                 // reserved SPINEL_DATATYPE_VOID_C indicate caller want to parse the spinel response itself
                 ResponseHandler handler = va_arg(mPropertyArgs, ResponseHandler);
 
-                assert(handler != NULL);
+                assert(handler != nullptr);
                 mError = (this->*handler)(aBuffer, aLength);
             }
             else
@@ -900,7 +900,7 @@ exit:
 template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::ProcessFrameQueue(void)
 {
-    uint8_t *frame = NULL;
+    uint8_t *frame = nullptr;
     uint16_t length;
 
     while (mRxFrameBuffer.GetNextSavedFrame(frame, length) == OT_ERROR_NONE)
@@ -969,7 +969,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::ProcessRadioStateMachine(vo
         mState        = kStateReceive;
         mTxRadioEndUs = UINT64_MAX;
 
-        TransmitDone(mTransmitFrame, (mAckRadioFrame.mLength != 0) ? &mAckRadioFrame : NULL, mTxError);
+        TransmitDone(mTransmitFrame, (mAckRadioFrame.mLength != 0) ? &mAckRadioFrame : nullptr, mTxError);
     }
     else if (mState == kStateTransmitting && otPlatTimeGet() >= mTxRadioEndUs)
     {
@@ -1119,13 +1119,13 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ClearSrcMatchExtEntry(co
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::ClearSrcMatchShortEntries(void)
 {
-    return Set(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, NULL);
+    return Set(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, nullptr);
 }
 
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::ClearSrcMatchExtEntries(void)
 {
-    return Set(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, NULL);
+    return Set(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, nullptr);
 }
 
 template <typename InterfaceType, typename ProcessContextType>
@@ -1254,9 +1254,9 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Get(spinel_prop_key_t aK
 
     mPropertyFormat = aFormat;
     va_start(mPropertyArgs, aFormat);
-    error = RequestV(true, SPINEL_CMD_PROP_VALUE_GET, aKey, NULL, mPropertyArgs);
+    error = RequestV(true, SPINEL_CMD_PROP_VALUE_GET, aKey, nullptr, mPropertyArgs);
     va_end(mPropertyArgs);
-    mPropertyFormat = NULL;
+    mPropertyFormat = nullptr;
 
     return error;
 }
@@ -1277,7 +1277,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::GetWithParam(spinel_prop
     va_start(mPropertyArgs, aFormat);
     error = Request(true, SPINEL_CMD_PROP_VALUE_GET, aKey, SPINEL_DATATYPE_DATA_S, aParam, aParamSize);
     va_end(mPropertyArgs);
-    mPropertyFormat = NULL;
+    mPropertyFormat = nullptr;
 
     return error;
 }
@@ -1657,7 +1657,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Disable(void)
 
     SuccessOrDie(Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, false));
     mState    = kStateDisabled;
-    mInstance = NULL;
+    mInstance = nullptr;
 
 exit:
     return error;
@@ -1676,7 +1676,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::PlatDiagProcess(const ch
 
     error = Set(SPINEL_PROP_NEST_STREAM_MFG, SPINEL_DATATYPE_UTF8_S, aString);
 
-    mDiagOutput       = NULL;
+    mDiagOutput       = nullptr;
     mDiagOutputMaxLen = 0;
 
     return error;

@@ -206,7 +206,7 @@ struct in6_ifreq
 static otError destroyTunnel(void);
 #endif
 
-static otInstance *sInstance  = NULL;
+static otInstance *sInstance  = nullptr;
 static int         sTunFd     = -1; ///< Used to exchange IPv6 packets.
 static int         sIpFd      = -1; ///< Used to manage IPv6 stack on Thread interface.
 static int         sNetlinkFd = -1; ///< Used to receive netlink events.
@@ -256,7 +256,7 @@ static bool UnicastAddressIsSubscribed(otInstance *aInstance, const otNetifAddre
 {
     const otNetifAddress *address = otIp6GetUnicastAddresses(aInstance);
 
-    while (address != NULL)
+    while (address != nullptr)
     {
         if (memcmp(address->mAddress.mFields.m8, netAddr->mAddress.mFields.m8, sizeof(address->mAddress.mFields.m8)) ==
             0)
@@ -513,7 +513,7 @@ exit:
 
 static void processTransmit(otInstance *aInstance)
 {
-    otMessage *message = NULL;
+    otMessage *message = nullptr;
     ssize_t    rval;
     char       packet[kMaxIp6Size];
     otError    error  = OT_ERROR_NONE;
@@ -524,8 +524,8 @@ static void processTransmit(otInstance *aInstance)
     rval = read(sTunFd, packet, sizeof(packet));
     VerifyOrExit(rval > 0, error = OT_ERROR_FAILED);
 
-    message = otIp6NewMessage(aInstance, NULL);
-    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+    message = otIp6NewMessage(aInstance, nullptr);
+    VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     // BSD tunnel drivers have (for legacy reasons), may have a 4-byte header on them
@@ -544,10 +544,10 @@ static void processTransmit(otInstance *aInstance)
     SuccessOrExit(error = otMessageAppend(message, &packet[offset], static_cast<uint16_t>(rval)));
 
     error   = otIp6Send(aInstance, message);
-    message = NULL;
+    message = nullptr;
 
 exit:
-    if (message != NULL)
+    if (message != nullptr)
     {
         otMessageFree(message);
     }
@@ -1084,7 +1084,7 @@ static void processMLDEvent(otInstance *aInstance)
     MLDv2Header *       hdr      = reinterpret_cast<MLDv2Header *>(buffer);
     size_t              offset;
     uint8_t             type;
-    struct ifaddrs *    ifAddrs = NULL;
+    struct ifaddrs *    ifAddrs = nullptr;
     char                addressString[INET6_ADDRSTRLEN + 1];
 
     bufferLen = recvfrom(sMLDMonitorFd, buffer, sizeof(buffer), 0, reinterpret_cast<sockaddr *>(&srcAddr), &addrLen);
@@ -1095,9 +1095,9 @@ static void processMLDEvent(otInstance *aInstance)
 
     // Check whether it is sent by self
     VerifyOrExit(getifaddrs(&ifAddrs) == 0, OT_NOOP);
-    for (struct ifaddrs *ifAddr = ifAddrs; ifAddr != NULL; ifAddr = ifAddr->ifa_next)
+    for (struct ifaddrs *ifAddr = ifAddrs; ifAddr != nullptr; ifAddr = ifAddr->ifa_next)
     {
-        if (ifAddr->ifa_addr != NULL && ifAddr->ifa_addr->sa_family == AF_INET6 &&
+        if (ifAddr->ifa_addr != nullptr && ifAddr->ifa_addr->sa_family == AF_INET6 &&
             strncmp(sTunName, ifAddr->ifa_name, IFNAMSIZ) == 0)
         {
             struct sockaddr_in6 *addr6 = reinterpret_cast<struct sockaddr_in6 *>(ifAddr->ifa_addr);
@@ -1293,7 +1293,7 @@ static void platformConfigureTunDevice(otInstance *aInstance,
     VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
     last_slash = strrchr(OPENTHREAD_POSIX_TUN_DEVICE, '/');
-    VerifyOrDie(last_slash != NULL, OT_EXIT_ERROR_ERRNO);
+    VerifyOrDie(last_slash != nullptr, OT_EXIT_ERROR_ERRNO);
     last_slash++;
 
     strncpy(deviceName, last_slash, deviceNameLen);

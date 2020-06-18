@@ -493,6 +493,12 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := ot-ctl
 LOCAL_MODULE_TAGS := eng
 
+LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
+    -Wno-non-virtual-dtor                                                      \
+    $(NULL)
+
 LOCAL_CFLAGS                                               := \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>  \
     $(NULL)

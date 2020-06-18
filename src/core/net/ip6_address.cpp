@@ -344,8 +344,8 @@ otError Address::FromString(const char *aBuf)
     otError     error  = OT_ERROR_NONE;
     uint8_t *   dst    = reinterpret_cast<uint8_t *>(mFields.m8);
     uint8_t *   endp   = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
-    uint8_t *   colonp = NULL;
-    const char *colonc = NULL;
+    uint8_t *   colonp = nullptr;
+    const char *colonc = nullptr;
     uint16_t    val    = 0;
     uint8_t     count  = 0;
     bool        first  = true;
@@ -379,7 +379,7 @@ otError Address::FromString(const char *aBuf)
             }
             else if (ch == ':')
             {
-                VerifyOrExit(colonp == NULL || first, error = OT_ERROR_PARSE);
+                VerifyOrExit(colonp == nullptr || first, error = OT_ERROR_PARSE);
                 colonp = dst;
             }
 

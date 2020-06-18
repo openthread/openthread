@@ -306,7 +306,7 @@ private:
     void LogCacheEntryChange(EntryChange       aChange,
                              Reason            aReason,
                              const CacheEntry &aEntry,
-                             CacheEntryList *  aList = NULL);
+                             CacheEntryList *  aList = nullptr);
 
     const char *ListToString(const CacheEntryList *aList) const;
 

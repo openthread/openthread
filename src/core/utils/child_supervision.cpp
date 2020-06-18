@@ -63,7 +63,7 @@ void ChildSupervisor::SetSupervisionInterval(uint16_t aInterval)
 
 Child *ChildSupervisor::GetDestination(const Message &aMessage) const
 {
-    Child *  child = NULL;
+    Child *  child = nullptr;
     uint16_t childIndex;
 
     VerifyOrExit(aMessage.GetType() == Message::kTypeSupervision, OT_NOOP);
@@ -77,13 +77,13 @@ exit:
 
 void ChildSupervisor::SendMessage(Child &aChild)
 {
-    Message *message = NULL;
+    Message *message = nullptr;
     uint16_t childIndex;
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0, OT_NOOP);
 
     message = Get<MessagePool>().New(Message::kTypeSupervision, sizeof(uint8_t));
-    VerifyOrExit(message != NULL, OT_NOOP);
+    VerifyOrExit(message != nullptr, OT_NOOP);
 
     // Supervision message is an empty payload 15.4 data frame.
     // The child index is stored here in the message content to allow
@@ -94,13 +94,13 @@ void ChildSupervisor::SendMessage(Child &aChild)
     SuccessOrExit(message->Append(&childIndex, sizeof(childIndex)));
 
     SuccessOrExit(Get<ThreadNetif>().SendMessage(*message));
-    message = NULL;
+    message = nullptr;
 
     otLogInfoUtil("Sending supervision message to child 0x%04x", aChild.GetRloc16());
 
 exit:
 
-    if (message != NULL)
+    if (message != nullptr)
     {
         message->Free();
     }

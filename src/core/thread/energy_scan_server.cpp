@@ -176,7 +176,7 @@ void EnergyScanServer::SendReport(void)
     Ip6::MessageInfo        messageInfo;
     Coap::Message *         message;
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_ENERGY_REPORT));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -203,7 +203,7 @@ exit:
     {
         otLogInfoMeshCoP("Failed to send scan results: %s", otThreadErrorToString(error));
 
-        if (message != NULL)
+        if (message != nullptr)
         {
             message->Free();
         }
@@ -220,7 +220,7 @@ void EnergyScanServer::HandleNotifierEvents(Notifier::Receiver &aReceiver, Event
 void EnergyScanServer::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.Contains(kEventThreadNetdataChanged) && !mActive &&
-        Get<NetworkData::Leader>().GetCommissioningData() == NULL)
+        Get<NetworkData::Leader>().GetCommissioningData() == nullptr)
     {
         mActive = false;
         mTimer.Stop();

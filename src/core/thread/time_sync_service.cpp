@@ -61,8 +61,8 @@ TimeSync::TimeSync(Instance &aInstance)
 #endif
     , mLastTimeSyncReceived(0)
     , mNetworkTimeOffset(0)
-    , mTimeSyncCallback(NULL)
-    , mTimeSyncCallbackContext(NULL)
+    , mTimeSyncCallback(nullptr)
+    , mTimeSyncCallbackContext(nullptr)
     , mTimer(aInstance, HandleTimeout, this)
     , mCurrentStatus(OT_NETWORK_TIME_UNSYNCHRONIZED)
 {
@@ -142,7 +142,7 @@ void TimeSync::IncrementTimeSyncSeq(void)
 
 void TimeSync::NotifyTimeSyncCallback(void)
 {
-    if (mTimeSyncCallback != NULL)
+    if (mTimeSyncCallback != nullptr)
     {
         mTimeSyncCallback(mTimeSyncCallbackContext);
     }

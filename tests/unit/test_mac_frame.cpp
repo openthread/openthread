@@ -64,7 +64,7 @@ void TestMacAddress(void)
     uint8_t         buffer[OT_EXT_ADDRESS_SIZE];
 
     instance = testInitInstance();
-    VerifyOrQuit(instance != NULL, "NULL instance\n");
+    VerifyOrQuit(instance != nullptr, "nullptr instance\n");
 
     // Mac::ExtAddress
 
@@ -201,7 +201,7 @@ void TestMacNetworkName(void)
     VerifyOrQuit(networkName.Set(Mac::NameData(kLongName, sizeof(kLongName) - 1)) == OT_ERROR_ALREADY,
                  "NetworkName::Set() accepted same name without returning OT_ERROR_ALREADY");
 
-    SuccessOrQuit(networkName.Set(Mac::NameData(NULL, 0)), "NetworkName::Set() failed");
+    SuccessOrQuit(networkName.Set(Mac::NameData(nullptr, 0)), "NetworkName::Set() failed");
     CompareNetworkName(networkName, kEmptyName);
 
     SuccessOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1))), "NetworkName::Set() failed");
@@ -363,7 +363,7 @@ void TestMacChannelMask(void)
 
     mask1.Clear();
     VerifyOrQuit(mask1.IsEmpty(), "ChannelMask.IsEmpty failed");
-    VerifyChannelMaskContent(mask1, NULL, 0);
+    VerifyChannelMaskContent(mask1, nullptr, 0);
 
     for (uint16_t index = 0; index < sizeof(channels1); index++)
     {

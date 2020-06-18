@@ -115,7 +115,7 @@ int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint
 
 void otMessageQueueInit(otMessageQueue *aQueue)
 {
-    aQueue->mData = NULL;
+    aQueue->mData = nullptr;
 }
 
 void otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage)
@@ -152,13 +152,13 @@ otMessage *otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage *aMessa
 {
     Message *next;
 
-    VerifyOrExit(aMessage != NULL, next = NULL);
+    VerifyOrExit(aMessage != nullptr, next = nullptr);
 
     {
         const Message &message = *static_cast<const Message *>(aMessage);
         MessageQueue & queue   = *static_cast<MessageQueue *>(aQueue);
 
-        VerifyOrExit(message.GetMessageQueue() == &queue, next = NULL);
+        VerifyOrExit(message.GetMessageQueue() == &queue, next = nullptr);
         next = message.GetNext();
     }
 

@@ -61,7 +61,7 @@ TrickleTimer::TrickleTimer(Instance &aInstance,
     , mIsRunning(false)
     , mInTransmitPhase(false)
 {
-    OT_ASSERT(aTransmitHandler != NULL);
+    OT_ASSERT(aTransmitHandler != nullptr);
 }
 
 void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode)

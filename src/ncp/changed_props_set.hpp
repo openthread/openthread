@@ -127,10 +127,13 @@ public:
      *
      * @param[in] aIndex     The index to an entry.
      *
-     * @returns A pointer to the entry associated with @p aIndex, or NULL if the index is beyond end of array.
+     * @returns A pointer to the entry associated with @p aIndex, or nullptr if the index is beyond end of array.
      *
      */
-    const Entry *GetEntry(uint8_t aIndex) const { return (aIndex < GetNumEntries()) ? &mSupportedProps[aIndex] : NULL; }
+    const Entry *GetEntry(uint8_t aIndex) const
+    {
+        return (aIndex < GetNumEntries()) ? &mSupportedProps[aIndex] : nullptr;
+    }
 
     /**
      * This method indicates if the entry associated with an index is in the set (i.e., it has been changed and

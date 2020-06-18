@@ -1016,7 +1016,7 @@ protected:
     /**
      * This method allocates a new message buffer for preparing an MLE message.
      *
-     * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     * @returns A pointer to the message or nullptr if insufficient message buffers are available.
      *
      */
     Message *NewMleMessage(void);
@@ -1412,7 +1412,7 @@ protected:
     Neighbor *GetNeighbor(const Ip6::Address &aAddress)
     {
         OT_UNUSED_VARIABLE(aAddress);
-        return NULL;
+        return nullptr;
     }
 
     /**

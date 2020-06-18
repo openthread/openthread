@@ -62,7 +62,7 @@ public:
     /**
      * This method processes a factory diagnostics command line.
      *
-     * @param[in]   aString        A NULL-terminated input string.
+     * @param[in]   aString        A null-terminated input string.
      * @param[out]  aOutput        The diagnostics execution result.
      * @param[in]   aOutputMaxLen  The output buffer size.
      *
@@ -102,7 +102,7 @@ public:
     /**
      * The radio driver calls this method to notify OpenThread diagnostics module of a received frame.
      *
-     * @param[in]  aFrame  A pointer to the received frame or NULL if the receive operation failed.
+     * @param[in]  aFrame  A pointer to the received frame or nullptr if the receive operation failed.
      * @param[in]  aError  OT_ERROR_NONE when successfully received a frame,
      *                     OT_ERROR_ABORT when reception was aborted and a frame was not received,
      *                     OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.

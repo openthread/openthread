@@ -52,7 +52,7 @@ void otCryptoHmacSha256(const uint8_t *aKey,
 {
     HmacSha256 hmac;
 
-    OT_ASSERT((aKey != NULL) && (aBuf != NULL) && (aHash != NULL));
+    OT_ASSERT((aKey != nullptr) && (aBuf != nullptr) && (aHash != nullptr));
 
     hmac.Start(aKey, aKeyLength);
     hmac.Update(aBuf, aBufLength);
@@ -74,14 +74,15 @@ void otCryptoAesCcm(const uint8_t *aKey,
 {
     AesCcm aesCcm;
 
-    OT_ASSERT((aKey != NULL) && (aNonce != NULL) && (aPlainText != NULL) && (aCipherText != NULL) && (aTag != NULL));
+    OT_ASSERT((aKey != nullptr) && (aNonce != nullptr) && (aPlainText != nullptr) && (aCipherText != nullptr) &&
+              (aTag != nullptr));
 
     aesCcm.SetKey(aKey, aKeyLength);
     aesCcm.Init(aHeaderLength, aLength, aTagLength, aNonce, aNonceLength);
 
     if (aHeaderLength != 0)
     {
-        OT_ASSERT(aHeader != NULL);
+        OT_ASSERT(aHeader != nullptr);
         aesCcm.Header(aHeader, aHeaderLength);
     }
 

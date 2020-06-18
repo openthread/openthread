@@ -51,7 +51,7 @@ Slaac::Slaac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , Notifier::Receiver(aInstance, Slaac::HandleNotifierEvents)
     , mEnabled(true)
-    , mFilter(NULL)
+    , mFilter(nullptr)
 {
     memset(mAddresses, 0, sizeof(mAddresses));
 }
@@ -85,7 +85,7 @@ void Slaac::SetFilter(otIp6SlaacPrefixFilter aFilter)
     VerifyOrExit(aFilter != mFilter, OT_NOOP);
 
     mFilter = aFilter;
-    otLogInfoUtil("SLAAC: Filter %s", (mFilter != NULL) ? "updated" : "disabled");
+    otLogInfoUtil("SLAAC: Filter %s", (mFilter != nullptr) ? "updated" : "disabled");
 
     VerifyOrExit(mEnabled, OT_NOOP);
     Update(kModeAdd | kModeRemove);
@@ -96,7 +96,7 @@ exit:
 
 bool Slaac::ShouldFilter(const otIp6Prefix &aPrefix) const
 {
-    return (mFilter != NULL) && mFilter(&GetInstance(), &aPrefix);
+    return (mFilter != nullptr) && mFilter(&GetInstance(), &aPrefix);
 }
 
 void Slaac::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
@@ -210,7 +210,7 @@ void Slaac::Update(UpdateMode aMode)
             found = false;
 
             for (const Ip6::NetifUnicastAddress *netifAddr = Get<ThreadNetif>().GetUnicastAddresses();
-                 netifAddr != NULL; netifAddr              = netifAddr->GetNext())
+                 netifAddr != nullptr; netifAddr           = netifAddr->GetNext())
             {
                 if ((netifAddr->mPrefixLength == prefix.mLength) &&
                     (netifAddr->GetAddress().PrefixMatch(prefix.mPrefix) >= prefix.mLength))
@@ -272,7 +272,7 @@ otError Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress,
      *  - RID is random (but stable) Identifier.
      *  - For pseudo-random function `F()` SHA-256 is used in this method.
      *  - `Net_Iface` is set to constant string "wpan".
-     *  - `Network_ID` is not used if `aNetworkId` is NULL (optional per RF-7217).
+     *  - `Network_ID` is not used if `aNetworkId` is nullptr (optional per RF-7217).
      *  - The `secret_key` is randomly generated on first use (using true
      *    random number generator) and saved in non-volatile settings for
      *    future use.

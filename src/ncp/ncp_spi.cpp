@@ -64,12 +64,12 @@ static OT_DEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {
-    NcpSpi *  ncpSpi   = NULL;
+    NcpSpi *  ncpSpi   = nullptr;
     Instance *instance = static_cast<Instance *>(aInstance);
 
     ncpSpi = new (&sNcpRaw) NcpSpi(instance);
 
-    if (ncpSpi == NULL || ncpSpi != NcpBase::GetNcpInstance())
+    if (ncpSpi == nullptr || ncpSpi != NcpBase::GetNcpInstance())
     {
         OT_ASSERT(false);
     }
@@ -287,7 +287,7 @@ void NcpSpi::PrepareNextSpiSendFrame(void)
     // Prepare new transaction by using `mSendFrame` as the output
     // frame while keeping the input frame unchanged.
 
-    error = otPlatSpiSlavePrepareTransaction(mSendFrame, mSendFrameLength, NULL, 0, /* aRequestTrans */ true);
+    error = otPlatSpiSlavePrepareTransaction(mSendFrame, mSendFrameLength, nullptr, 0, /* aRequestTrans */ true);
 
     if (error == OT_ERROR_BUSY)
     {

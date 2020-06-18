@@ -89,7 +89,7 @@ otError otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *aLeaderRloc)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aLeaderRloc != NULL);
+    OT_ASSERT(aLeaderRloc != nullptr);
 
     return instance.Get<Mle::MleRouter>().GetLeaderAddress(*static_cast<Ip6::Address *>(aLeaderRloc));
 }
@@ -123,7 +123,7 @@ otError otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aKey != NULL);
+    OT_ASSERT(aKey != nullptr);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
@@ -243,7 +243,7 @@ otError otThreadSetFixedDuaInterfaceIdentifier(otInstance *aInstance, const otIp
 const otIp6InterfaceIdentifier *otThreadGetFixedDuaInterfaceIdentifier(otInstance *aInstance)
 {
     Instance &                      instance = *static_cast<Instance *>(aInstance);
-    const otIp6InterfaceIdentifier *iid      = NULL;
+    const otIp6InterfaceIdentifier *iid      = nullptr;
 
     if (instance.Get<DuaManager>().IsFixedDuaInterfaceIdentifierSet())
     {
@@ -302,7 +302,7 @@ otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterato
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT((aInfo != NULL) && (aIterator != NULL));
+    OT_ASSERT((aInfo != nullptr) && (aIterator != nullptr));
 
     return instance.Get<Mle::MleRouter>().GetNextNeighborInfo(*aIterator, *aInfo);
 }
@@ -319,7 +319,7 @@ otError otThreadGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData)
     Instance &instance = *static_cast<Instance *>(aInstance);
     otError   error    = OT_ERROR_NONE;
 
-    OT_ASSERT(aLeaderData != NULL);
+    OT_ASSERT(aLeaderData != nullptr);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsAttached(), error = OT_ERROR_DETACHED);
     *aLeaderData = instance.Get<Mle::MleRouter>().GetLeaderData();
@@ -362,7 +362,7 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     otError   error    = OT_ERROR_NONE;
     Router *  parent;
 
-    OT_ASSERT(aParentInfo != NULL);
+    OT_ASSERT(aParentInfo != nullptr);
 
     // Reference device needs get the original parent's info even after the node state changed.
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -393,7 +393,7 @@ otError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aParentRssi != NULL);
+    OT_ASSERT(aParentRssi != nullptr);
 
     *aParentRssi = instance.Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetAverageRss();
 
@@ -408,7 +408,7 @@ otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aLastRssi != NULL);
+    OT_ASSERT(aLastRssi != nullptr);
 
     *aLastRssi = instance.Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetLastRss();
 
@@ -459,7 +459,7 @@ otError otThreadDiscover(otInstance *             aInstance,
 
     return instance.Get<Mle::DiscoverScanner>().Discover(
         static_cast<Mac::ChannelMask>(aScanChannels), aPanId, aJoiner, aEnableEui64Filtering,
-        /* aFilterIndexes (use hash of factory EUI64) */ NULL, aCallback, aCallbackContext);
+        /* aFilterIndexes (use hash of factory EUI64) */ nullptr, aCallback, aCallbackContext);
 }
 
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)

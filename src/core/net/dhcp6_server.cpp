@@ -147,7 +147,7 @@ void Dhcp6Server::Stop(void)
 void Dhcp6Server::AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Context &aContext)
 {
     otError      error    = OT_ERROR_NONE;
-    PrefixAgent *newEntry = NULL;
+    PrefixAgent *newEntry = nullptr;
 
     for (size_t i = 0; i < OT_ARRAY_LENGTH(mPrefixAgents); i++)
     {
@@ -162,7 +162,7 @@ void Dhcp6Server::AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Co
         }
     }
 
-    VerifyOrExit(newEntry != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(newEntry != nullptr, error = OT_ERROR_NO_BUFS);
 
     newEntry->Set(aIp6Prefix, Get<Mle::MleRouter>().GetMeshLocalPrefix(), aContext.mContextId);
     Get<ThreadNetif>().AddUnicastAddress(newEntry->GetAloc());
@@ -335,7 +335,7 @@ otError Dhcp6Server::SendReply(otIp6Address &aDst, uint8_t *aTransactionId, Clie
     Ip6::MessageInfo messageInfo;
     Message *        message;
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != nullptr, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = AppendHeader(*message, aTransactionId));
     SuccessOrExit(error = AppendServerIdentifier(*message));
     SuccessOrExit(error = AppendClientIdentifier(*message, aClientId));
@@ -350,7 +350,7 @@ otError Dhcp6Server::SendReply(otIp6Address &aDst, uint8_t *aTransactionId, Clie
 
 exit:
 
-    if (message != NULL && error != OT_ERROR_NONE)
+    if (message != nullptr && error != OT_ERROR_NONE)
     {
         message->Free();
     }

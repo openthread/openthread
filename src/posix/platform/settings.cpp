@@ -65,7 +65,7 @@ static void getSettingsFileName(otInstance *aInstance, char aFileName[kMaxFileNa
     otPlatRadioGetIeeeEui64(aInstance, reinterpret_cast<uint8_t *>(&nodeId));
     nodeId = ot::Encoding::BigEndian::HostSwap64(nodeId);
     snprintf(aFileName, kMaxFileNameSize, OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "/%s_%" PRIx64 ".%s",
-             offset == NULL ? "0" : offset, nodeId, (aSwap ? "swap" : "data"));
+             offset == nullptr ? "0" : offset, nodeId, (aSwap ? "swap" : "data"));
 }
 
 static int swapOpen(otInstance *aInstance)
@@ -293,7 +293,7 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 
 otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 {
-    return platformSettingsDelete(aInstance, aKey, aIndex, NULL);
+    return platformSettingsDelete(aInstance, aKey, aIndex, nullptr);
 }
 
 /**
@@ -374,7 +374,7 @@ static otError platformSettingsDelete(otInstance *aInstance, uint16_t aKey, int 
 exit:
     VerifyOrDie(error != OT_ERROR_PARSE, OT_EXIT_FAILURE);
 
-    if (aSwapFd != NULL)
+    if (aSwapFd != nullptr)
     {
         *aSwapFd = swapFd;
     }
@@ -411,7 +411,7 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 
 int main()
 {
-    otInstance *instance = NULL;
+    otInstance *instance = nullptr;
     uint8_t     data[60];
 
     for (uint8_t i = 0; i < sizeof(data); ++i)
@@ -438,8 +438,8 @@ int main()
         uint8_t  value[sizeof(data)];
         uint16_t length = sizeof(value);
 
-        assert(otPlatSettingsGet(instance, 0, 0, NULL, NULL) == OT_ERROR_NONE);
-        assert(otPlatSettingsGet(instance, 0, 0, NULL, &length) == OT_ERROR_NONE);
+        assert(otPlatSettingsGet(instance, 0, 0, nullptr, nullptr) == OT_ERROR_NONE);
+        assert(otPlatSettingsGet(instance, 0, 0, nullptr, &length) == OT_ERROR_NONE);
         assert(length == sizeof(data) / 2);
 
         length = sizeof(value);
@@ -457,9 +457,9 @@ int main()
         assert(value[length] == 0);
 
         // wrong index
-        assert(otPlatSettingsGet(instance, 0, 1, NULL, NULL) == OT_ERROR_NOT_FOUND);
+        assert(otPlatSettingsGet(instance, 0, 1, nullptr, nullptr) == OT_ERROR_NOT_FOUND);
         // wrong key
-        assert(otPlatSettingsGet(instance, 1, 0, NULL, NULL) == OT_ERROR_NOT_FOUND);
+        assert(otPlatSettingsGet(instance, 1, 0, nullptr, nullptr) == OT_ERROR_NOT_FOUND);
     }
     otPlatSettingsWipe(instance);
 
@@ -522,7 +522,7 @@ int main()
 
         // delete all records
         assert(otPlatSettingsDelete(instance, 0, -1) == OT_ERROR_NONE);
-        assert(otPlatSettingsGet(instance, 0, 0, NULL, NULL) == OT_ERROR_NOT_FOUND);
+        assert(otPlatSettingsGet(instance, 0, 0, nullptr, nullptr) == OT_ERROR_NOT_FOUND);
     }
     otPlatSettingsWipe(instance);
 
@@ -541,7 +541,7 @@ int main()
         assert(0 == memcmp(value, data, length));
 
         assert(otPlatSettingsDelete(instance, 0, 0) == OT_ERROR_NOT_FOUND);
-        assert(otPlatSettingsGet(instance, 0, 0, NULL, NULL) == OT_ERROR_NOT_FOUND);
+        assert(otPlatSettingsGet(instance, 0, 0, nullptr, nullptr) == OT_ERROR_NOT_FOUND);
     }
     otPlatSettingsWipe(instance);
     otPlatSettingsDeinit(instance);

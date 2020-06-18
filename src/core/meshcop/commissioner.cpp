@@ -70,9 +70,9 @@ Commissioner::Commissioner(Instance &aInstance)
     , mAnnounceBegin(aInstance)
     , mEnergyScan(aInstance)
     , mPanIdQuery(aInstance)
-    , mStateCallback(NULL)
-    , mJoinerCallback(NULL)
-    , mCallbackContext(NULL)
+    , mStateCallback(nullptr)
+    , mJoinerCallback(nullptr)
+    , mCallbackContext(nullptr)
     , mState(OT_COMMISSIONER_STATE_DISABLED)
 {
     memset(mJoiners, 0, sizeof(mJoiners));
@@ -258,7 +258,7 @@ otError Commissioner::SendCommissionerSet(void)
 
     dataset.mIsSteeringDataSet = true;
 
-    SuccessOrExit(error = SendMgmtCommissionerSetRequest(dataset, NULL, 0));
+    SuccessOrExit(error = SendMgmtCommissionerSetRequest(dataset, nullptr, 0));
 
 exit:
     return error;
@@ -291,7 +291,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd
             continue;
         }
 
-        if (aEui64 != NULL)
+        if (aEui64 != nullptr)
         {
             joiner->mEui64 = *aEui64;
             joiner->mAny   = false;
@@ -309,7 +309,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd
 
         IgnoreError(SendCommissionerSet());
 
-        otLogInfoMeshCoP("Added Joiner (%s, %s)", (aEui64 != NULL) ? aEui64->ToString().AsCString() : "*", aPskd);
+        otLogInfoMeshCoP("Added Joiner (%s, %s)", (aEui64 != nullptr) ? aEui64->ToString().AsCString() : "*", aPskd);
 
         ExitNow(error = OT_ERROR_NONE);
     }
@@ -361,7 +361,7 @@ otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDela
             continue;
         }
 
-        if (aEui64 != NULL)
+        if (aEui64 != nullptr)
         {
             if (joiner->mEui64 != *aEui64)
             {
@@ -394,7 +394,7 @@ otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDela
                 IgnoreError(SendCommissionerSet());
             }
 
-            otLogInfoMeshCoP("Removed Joiner (%s)", (aEui64 != NULL) ? aEui64->ToString().AsCString() : "*");
+            otLogInfoMeshCoP("Removed Joiner (%s)", (aEui64 != nullptr) ? aEui64->ToString().AsCString() : "*");
 
             ComputeJoinerId(joiner->mEui64, joinerId);
             SignalJoinerEvent(OT_COMMISSIONER_JOINER_REMOVED, joinerId);
@@ -412,7 +412,7 @@ otError Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
     otError error = OT_ERROR_NONE;
     uint8_t len;
 
-    if (aProvisioningUrl == NULL)
+    if (aProvisioningUrl == nullptr)
     {
         mProvisioningUrl[0] = '\0';
         ExitNow();
@@ -526,7 +526,7 @@ otError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8
     Ip6::MessageInfo messageInfo;
     MeshCoP::Tlv     tlv;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_COMMISSIONER_GET));
 
@@ -553,7 +553,7 @@ otError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
     }
@@ -591,7 +591,7 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_COMMISSIONER_SET));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -639,7 +639,7 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
     }
@@ -672,13 +672,13 @@ exit:
 otError Commissioner::SendPetition(void)
 {
     otError           error   = OT_ERROR_NONE;
-    Coap::Message *   message = NULL;
+    Coap::Message *   message = nullptr;
     Ip6::MessageInfo  messageInfo;
     CommissionerIdTlv commissionerId;
 
     mTransmitAttempts++;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_LEADER_PETITION));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -698,7 +698,7 @@ otError Commissioner::SendPetition(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
     }
@@ -775,10 +775,10 @@ void Commissioner::SendKeepAlive(void)
 void Commissioner::SendKeepAlive(uint16_t aSessionId)
 {
     otError          error   = OT_ERROR_NONE;
-    Coap::Message *  message = NULL;
+    Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_LEADER_KEEP_ALIVE));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -803,7 +803,7 @@ exit:
     {
         otLogWarnMeshCoP("Failed to send keep alive: %s", otThreadErrorToString(error));
 
-        if (message != NULL)
+        if (message != nullptr)
         {
             message->Free();
         }
@@ -999,7 +999,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     Coap::Message *  message;
     Mac::ExtAddress  joinerId;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -1036,7 +1036,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
     }
@@ -1057,7 +1057,7 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
     uint16_t         offset;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
     SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_RELAY_TX));
@@ -1090,7 +1090,7 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
     }

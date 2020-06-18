@@ -122,7 +122,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
     int64_t  remaining = INT32_MAX;
     uint64_t now       = platformAlarmGetNow();
 
-    assert(aTimeout != NULL);
+    assert(aTimeout != nullptr);
 
     if (sIsMsRunning)
     {

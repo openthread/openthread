@@ -64,7 +64,12 @@ add_library(openthread-cc2650
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
-set_property(TARGET openthread-cc2650 PROPERTY C_STANDARD 99)
+set_target_properties(
+    openthread-cc2650
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)
 
 target_link_libraries(openthread-cc2650
     PUBLIC

@@ -250,9 +250,9 @@ const struct Command Interpreter::sCommands[] = {
 };
 
 Interpreter::Interpreter(Instance *aInstance)
-    : mUserCommands(NULL)
+    : mUserCommands(nullptr)
     , mUserCommandsLength(0)
-    , mServer(NULL)
+    , mServer(nullptr)
     , mPingLength(kDefaultPingLength)
     , mPingCount(kDefaultPingCount)
     , mPingInterval(kDefaultPingInterval)
@@ -625,7 +625,7 @@ void Interpreter::ProcessDua(uint8_t aArgsLength, char *aArgs[])
     {
         const otIp6InterfaceIdentifier *iid = otThreadGetFixedDuaInterfaceIdentifier(mInstance);
 
-        if (iid != NULL)
+        if (iid != nullptr)
         {
             OutputBytes(iid->m8, sizeof(otIp6InterfaceIdentifier));
             mServer->OutputFormat("\r\n");
@@ -635,7 +635,7 @@ void Interpreter::ProcessDua(uint8_t aArgsLength, char *aArgs[])
     case 2:
         if (strcmp(aArgs[1], "clear") == 0)
         {
-            SuccessOrExit(error = otThreadSetFixedDuaInterfaceIdentifier(mInstance, NULL));
+            SuccessOrExit(error = otThreadSetFixedDuaInterfaceIdentifier(mInstance, nullptr));
         }
         else
         {
@@ -1353,7 +1353,7 @@ void Interpreter::HandleDnsResponse(const char *aHostname, const Ip6::Address *a
 
     if (aResult == OT_ERROR_NONE)
     {
-        if (aAddress != NULL)
+        if (aAddress != nullptr)
         {
             OutputIp6Address(*aAddress);
         }
@@ -2050,12 +2050,12 @@ void Interpreter::ProcessNetif(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgs);
 
     otError      error    = OT_ERROR_NONE;
-    const char * netif    = NULL;
+    const char * netif    = nullptr;
     unsigned int netifidx = 0;
 
     SuccessOrExit(error = otPlatGetNetif(mInstance, &netif, &netifidx));
 
-    mServer->OutputFormat("%s:%u\r\n", netif ? netif : "<NULL>", netifidx);
+    mServer->OutputFormat("%s:%u\r\n", netif ? netif : "(null)", netifidx);
 
 exit:
     AppendResult(error);
@@ -2415,7 +2415,7 @@ void Interpreter::HandlePingTimer(Timer &aTimer)
 void Interpreter::SendPing(void)
 {
     uint32_t      timestamp = HostSwap32(TimerMilli::GetNow().GetValue());
-    otMessage *   message   = NULL;
+    otMessage *   message   = nullptr;
     otMessageInfo messageInfo;
 
     memset(&messageInfo, 0, sizeof(messageInfo));
@@ -2423,8 +2423,8 @@ void Interpreter::SendPing(void)
     messageInfo.mHopLimit          = mPingHopLimit;
     messageInfo.mAllowZeroHopLimit = mPingAllowZeroHopLimit;
 
-    message = otIp6NewMessage(mInstance, NULL);
-    VerifyOrExit(message != NULL, OT_NOOP);
+    message = otIp6NewMessage(mInstance, nullptr);
+    VerifyOrExit(message != nullptr, OT_NOOP);
 
     SuccessOrExit(otMessageAppend(message, &timestamp, sizeof(timestamp)));
     SuccessOrExit(otMessageSetLength(message, mPingLength));
@@ -2433,10 +2433,10 @@ void Interpreter::SendPing(void)
     SignalPingRequest(static_cast<Ip6::MessageInfo *>(&messageInfo)->GetPeerAddr(), mPingLength, HostSwap32(timestamp),
                       messageInfo.mHopLimit);
 
-    message = NULL;
+    message = nullptr;
 
 exit:
-    if (message != NULL)
+    if (message != nullptr)
     {
         otMessageFree(message);
     }
@@ -2490,7 +2490,7 @@ void Interpreter::ProcessPromiscuous(uint8_t aArgsLength, char *aArgs[])
         }
         else if (strcmp(aArgs[0], "disable") == 0)
         {
-            otLinkSetPcapCallback(mInstance, NULL, NULL);
+            otLinkSetPcapCallback(mInstance, nullptr, nullptr);
             SuccessOrExit(error = otLinkSetPromiscuous(mInstance, false));
         }
         else
@@ -2588,7 +2588,7 @@ otError Interpreter::ProcessPrefixAdd(uint8_t aArgsLength, char *aArgs[])
 
     memset(&config, 0, sizeof(otBorderRouterConfig));
 
-    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == NULL)
+    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == nullptr)
     {
         ExitNow();
     }
@@ -2689,7 +2689,7 @@ otError Interpreter::ProcessPrefixRemove(uint8_t aArgsLength, char *aArgs[])
 
     memset(&prefix, 0, sizeof(otIp6Prefix));
 
-    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == NULL)
+    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == nullptr)
     {
         ExitNow();
     }
@@ -2912,7 +2912,7 @@ otError Interpreter::ProcessRouteAdd(uint8_t aArgsLength, char *aArgs[])
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
-    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == NULL)
+    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == nullptr)
     {
         ExitNow();
     }
@@ -2971,7 +2971,7 @@ otError Interpreter::ProcessRouteRemove(uint8_t aArgsLength, char *aArgs[])
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
-    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == NULL)
+    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == nullptr)
     {
         ExitNow();
     }
@@ -3300,7 +3300,7 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult, void *aCon
 
 void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
 {
-    if (aResult == NULL)
+    if (aResult == nullptr)
     {
         AppendResult(OT_ERROR_NONE);
         ExitNow();
@@ -3331,7 +3331,7 @@ void Interpreter::HandleEnergyScanResult(otEnergyScanResult *aResult, void *aCon
 
 void Interpreter::HandleEnergyScanResult(otEnergyScanResult *aResult)
 {
-    if (aResult == NULL)
+    if (aResult == nullptr)
     {
         AppendResult(OT_ERROR_NONE);
         ExitNow();
@@ -3857,7 +3857,7 @@ otError Interpreter::ProcessMacFilterRss(uint8_t aArgsLength, char *aArgs[])
 
             if (strcmp(aArgs[1], "*") == 0)
             {
-                SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, NULL, rss));
+                SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, nullptr, rss));
             }
             else
             {
@@ -3875,7 +3875,7 @@ otError Interpreter::ProcessMacFilterRss(uint8_t aArgsLength, char *aArgs[])
 
             if (strcmp(aArgs[1], "*") == 0)
             {
-                SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, NULL, rss));
+                SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, nullptr, rss));
             }
             else
             {
@@ -3891,7 +3891,7 @@ otError Interpreter::ProcessMacFilterRss(uint8_t aArgsLength, char *aArgs[])
 
             if (strcmp(aArgs[1], "*") == 0)
             {
-                SuccessOrExit(error = otLinkFilterRemoveRssIn(mInstance, NULL));
+                SuccessOrExit(error = otLinkFilterRemoveRssIn(mInstance, nullptr));
             }
             else
             {
@@ -4003,14 +4003,14 @@ void Interpreter::ProcessDiag(uint8_t aArgsLength, char *aArgs[])
 
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 {
-    char *  aArgs[kMaxArgs] = {NULL};
+    char *  aArgs[kMaxArgs] = {nullptr};
     char *  cmd;
     uint8_t aArgsLength = 0;
     size_t  i           = 0;
 
     mServer = &aServer;
 
-    VerifyOrExit(aBuf != NULL && StringLength(aBuf, aBufLength + 1) <= aBufLength, OT_NOOP);
+    VerifyOrExit(aBuf != nullptr && StringLength(aBuf, aBufLength + 1) <= aBufLength, OT_NOOP);
 
     VerifyOrExit(Utils::CmdLineParser::ParseCmd(aBuf, aArgsLength, aArgs, kMaxArgs) == OT_ERROR_NONE,
                  mServer->OutputFormat("Error: too many args (max %d)\r\n", kMaxArgs));
@@ -4448,7 +4448,7 @@ extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 
-    VerifyOrExit(Server::sServer != NULL, OT_NOOP);
+    VerifyOrExit(Server::sServer != nullptr, OT_NOOP);
 
     Server::sServer->OutputFormatV(aFormat, aArgs);
     Server::sServer->OutputFormat("\r\n");

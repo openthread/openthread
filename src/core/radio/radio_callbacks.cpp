@@ -73,7 +73,7 @@ void Radio::Callbacks::HandleDiagsTransmitDone(Mac::TxFrame &aFrame, otError aEr
 {
 #if OPENTHREAD_RADIO
     // Pass it to notify OpenThread `Diags` module on host side.
-    HandleTransmitDone(aFrame, NULL, aError);
+    HandleTransmitDone(aFrame, nullptr, aError);
 #else
     OT_UNUSED_VARIABLE(aFrame);
     Get<FactoryDiags::Diags>().TransmitDone(aError);

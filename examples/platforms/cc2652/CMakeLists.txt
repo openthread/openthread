@@ -64,7 +64,12 @@ add_library(openthread-cc2652
     uart.c
 )
 
-set_property(TARGET openthread-cc2652 PROPERTY C_STANDARD 99)
+set_target_properties(
+    openthread-cc2652
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)
 
 target_link_libraries(openthread-cc2652
     PUBLIC

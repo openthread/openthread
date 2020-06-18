@@ -287,18 +287,18 @@ otError Dataset::SetFrom(const otOperationalDataset &aDataset)
 
 const Timestamp *Dataset::GetTimestamp(void) const
 {
-    const Timestamp *timestamp = NULL;
+    const Timestamp *timestamp = nullptr;
 
     if (mType == kActive)
     {
         const ActiveTimestampTlv *tlv = GetTlv<ActiveTimestampTlv>();
-        VerifyOrExit(tlv != NULL, OT_NOOP);
+        VerifyOrExit(tlv != nullptr, OT_NOOP);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
     else
     {
         const PendingTimestampTlv *tlv = GetTlv<PendingTimestampTlv>();
-        VerifyOrExit(tlv != NULL, OT_NOOP);
+        VerifyOrExit(tlv != nullptr, OT_NOOP);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
 
@@ -319,14 +319,14 @@ otError Dataset::SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength)
     Tlv *    old            = GetTlv(aType);
     Tlv      tlv;
 
-    if (old != NULL)
+    if (old != nullptr)
     {
         bytesAvailable += sizeof(Tlv) + old->GetLength();
     }
 
     VerifyOrExit(sizeof(Tlv) + aLength <= bytesAvailable, error = OT_ERROR_NO_BUFS);
 
-    if (old != NULL)
+    if (old != nullptr)
     {
         RemoveTlv(old);
     }
@@ -381,7 +381,7 @@ void Dataset::RemoveTlv(Tlv::Type aType)
 {
     Tlv *tlv;
 
-    VerifyOrExit((tlv = GetTlv(aType)) != NULL, OT_NOOP);
+    VerifyOrExit((tlv = GetTlv(aType)) != nullptr, OT_NOOP);
     RemoveTlv(tlv);
 
 exit:

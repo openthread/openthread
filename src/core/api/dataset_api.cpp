@@ -61,7 +61,7 @@ otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aDataset != NULL);
+    OT_ASSERT(aDataset != nullptr);
 
     return instance.Get<MeshCoP::ActiveDataset>().Read(*aDataset);
 }
@@ -70,7 +70,7 @@ otError otDatasetGetActiveTlvs(otInstance *aInstance, otOperationalDatasetTlvs *
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aDataset != NULL);
+    OT_ASSERT(aDataset != nullptr);
 
     return instance.Get<MeshCoP::ActiveDataset>().Read(*aDataset);
 }
@@ -79,7 +79,7 @@ otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aD
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aDataset != NULL);
+    OT_ASSERT(aDataset != nullptr);
 
     return instance.Get<MeshCoP::ActiveDataset>().Save(*aDataset);
 }
@@ -88,7 +88,7 @@ otError otDatasetSetActiveTlvs(otInstance *aInstance, const otOperationalDataset
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aDataset != NULL);
+    OT_ASSERT(aDataset != nullptr);
 
     return instance.Get<MeshCoP::ActiveDataset>().Save(*aDataset);
 }
@@ -97,7 +97,7 @@ otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDatase
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aDataset != NULL);
+    OT_ASSERT(aDataset != nullptr);
 
     return instance.Get<MeshCoP::PendingDataset>().Read(*aDataset);
 }
@@ -106,7 +106,7 @@ otError otDatasetGetPendingTlvs(otInstance *aInstance, otOperationalDatasetTlvs 
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aDataset != NULL);
+    OT_ASSERT(aDataset != nullptr);
 
     return instance.Get<MeshCoP::PendingDataset>().Read(*aDataset);
 }
@@ -115,7 +115,7 @@ otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *a
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aDataset != NULL);
+    OT_ASSERT(aDataset != nullptr);
 
     return instance.Get<MeshCoP::PendingDataset>().Save(*aDataset);
 }
@@ -124,7 +124,7 @@ otError otDatasetSetPendingTlvs(otInstance *aInstance, const otOperationalDatase
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aDataset != NULL);
+    OT_ASSERT(aDataset != nullptr);
 
     return instance.Get<MeshCoP::PendingDataset>().Save(*aDataset);
 }

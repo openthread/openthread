@@ -132,7 +132,7 @@ void ChannelMonitor::HandleEnergyScanResult(Mac::EnergyScanResult *aResult, void
 
 void ChannelMonitor::HandleEnergyScanResult(Mac::EnergyScanResult *aResult)
 {
-    if (aResult == NULL)
+    if (aResult == nullptr)
     {
         if (mChannelMaskIndex == kNumChannelMasks - 1)
         {

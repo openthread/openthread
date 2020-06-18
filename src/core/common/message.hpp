@@ -303,7 +303,7 @@ public:
         /**
          * This constructor initializes the `Settings` object from a given `otMessageSettings`.
          *
-         * @param[in] aSettings  A pointer to `otMessageSettings` to covert from. If NULL default settings (link
+         * @param[in] aSettings  A pointer to `otMessageSettings` to covert from. If nullptr default settings (link
          *                       security enabled with `kPriorityNormal` priority) would be used.
          *
          */
@@ -349,7 +349,7 @@ public:
     /**
      * This method returns a pointer to the next message.
      *
-     * @returns A pointer to the next message in the list or NULL if at the end of the list.
+     * @returns A pointer to the next message in the list or nullptr if at the end of the list.
      *
      */
     Message *GetNext(void) const;
@@ -546,7 +546,7 @@ public:
      *
      * @param[in] aLength  Number of payload bytes to copy.
      *
-     * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     * @returns A pointer to the message or nullptr if insufficient message buffers are available.
      *
      */
     Message *Clone(uint16_t aLength) const;
@@ -558,7 +558,7 @@ public:
      * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
      * copied from the original one.
      *
-     * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     * @returns A pointer to the message or nullptr if insufficient message buffers are available.
      *
      */
     Message *Clone(void) const { return Clone(GetLength()); }
@@ -835,23 +835,23 @@ public:
     /**
      * This method returns a pointer to the message queue (if any) where this message is queued.
      *
-     * @returns A pointer to the message queue or NULL if not in any message queue.
+     * @returns A pointer to the message queue or nullptr if not in any message queue.
      *
      */
     MessageQueue *GetMessageQueue(void) const
     {
-        return (!GetMetadata().mInPriorityQ) ? GetMetadata().mQueue.mMessage : NULL;
+        return (!GetMetadata().mInPriorityQ) ? GetMetadata().mQueue.mMessage : nullptr;
     }
 
     /**
      * This method returns a pointer to the priority message queue (if any) where this message is queued.
      *
-     * @returns A pointer to the priority queue or NULL if not in any priority queue.
+     * @returns A pointer to the priority queue or nullptr if not in any priority queue.
      *
      */
     PriorityQueue *GetPriorityQueue(void) const
     {
-        return (GetMetadata().mInPriorityQ) ? GetMetadata().mQueue.mPriority : NULL;
+        return (GetMetadata().mInPriorityQ) ? GetMetadata().mQueue.mPriority : nullptr;
     }
 
     /**
@@ -930,7 +930,7 @@ private:
      * @returns `true` if the message is in any queue, `false` otherwise.
      *
      */
-    bool IsInAQueue(void) const { return (GetMetadata().mQueue.mMessage != NULL); }
+    bool IsInAQueue(void) const { return (GetMetadata().mQueue.mMessage != nullptr); }
 
     /**
      * This method sets the message queue information for the message.
@@ -1118,7 +1118,7 @@ public:
      *
      * @param[in] aPriority   Priority level.
      *
-     * @returns A pointer to the first message with given priority level or NULL if there is no messages with
+     * @returns A pointer to the first message with given priority level or nullptr if there is no messages with
      *          this priority level.
      *
      */
@@ -1172,12 +1172,12 @@ private:
     }
 
     /**
-     * This private method finds the first non-NULL tail starting from the given priority level and moving forward.
+     * This private method finds the first non-nullptr tail starting from the given priority level and moving forward.
      * It wraps from priority value `kNumPriorities` -1 back to 0.
      *
      * aStartPriorityLevel  Starting priority level.
      *
-     * @returns The first non-NULL tail pointer, or NULL if all the
+     * @returns The first non-nullptr tail pointer, or nullptr if all the
      *
      */
     Message *FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const;
@@ -1212,7 +1212,7 @@ public:
      * @param[in]  aReserveHeader  The number of header bytes to reserve.
      * @param[in]  aPriority       The priority level of the message.
      *
-     * @returns A pointer to the message or NULL if no message buffers are available.
+     * @returns A pointer to the message or nullptr if no message buffers are available.
      *
      */
     Message *New(Message::Type aType, uint16_t aReserveHeader, Message::Priority aPriority);
@@ -1225,7 +1225,7 @@ public:
      * @param[in]  aReserveHeader  The number of header bytes to reserve.
      * @param[in]  aSettings       The message settings.
      *
-     * @returns A pointer to the message or NULL if no message buffers are available.
+     * @returns A pointer to the message or nullptr if no message buffers are available.
      *
      */
     Message *New(Message::Type            aType,

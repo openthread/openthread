@@ -79,7 +79,7 @@ otError Joiner::ProcessId(uint8_t aArgsLength, char *aArgs[])
 otError Joiner::ProcessStart(uint8_t aArgsLength, char *aArgs[])
 {
     otError     error;
-    const char *provisioningUrl = NULL;
+    const char *provisioningUrl = nullptr;
 
     VerifyOrExit(aArgsLength > 1, error = OT_ERROR_INVALID_ARGS);
 
@@ -89,7 +89,7 @@ otError Joiner::ProcessStart(uint8_t aArgsLength, char *aArgs[])
     }
 
     error = otJoinerStart(mInterpreter.mInstance, aArgs[1], provisioningUrl, PACKAGE_NAME,
-                          OPENTHREAD_CONFIG_PLATFORM_INFO, PACKAGE_VERSION, NULL, &Joiner::HandleCallback, this);
+                          OPENTHREAD_CONFIG_PLATFORM_INFO, PACKAGE_VERSION, nullptr, &Joiner::HandleCallback, this);
 
 exit:
     return error;
@@ -111,7 +111,7 @@ otError Joiner::Process(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength < 1)
     {
-        IgnoreError(ProcessHelp(0, NULL));
+        IgnoreError(ProcessHelp(0, nullptr));
     }
     else
     {

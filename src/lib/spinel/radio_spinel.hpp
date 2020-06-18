@@ -323,7 +323,7 @@ public:
      * @param[out] aCoexMetrics  A reference to the coexistence metrics structure.
      *
      * @retval OT_ERROR_NONE          Successfully retrieved the coex metrics.
-     * @retval OT_ERROR_INVALID_ARGS  @p aCoexMetrics was NULL.
+     * @retval OT_ERROR_INVALID_ARGS  @p aCoexMetrics was nullptr.
      *
      */
     otError GetCoexMetrics(otRadioCoexMetrics &aCoexMetrics);
@@ -565,7 +565,7 @@ public:
     /**
      * This method processes platform diagnostics commands.
      *
-     * @param[in]   aString         A NULL-terminated input string.
+     * @param[in]   aString         A null-terminated input string.
      * @param[out]  aOutput         The diagnostics execution result.
      * @param[in]   aOutputMaxLen   The output buffer size.
      *

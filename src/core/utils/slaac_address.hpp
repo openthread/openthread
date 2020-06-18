@@ -115,7 +115,7 @@ public:
      * boolean value from handler determines whether the address is filtered or added (TRUE to filter the address,
      * FALSE to add address).
      *
-     * The filter can be set to `NULL` to disable filtering (i.e., allow SLAAC addresses for all prefixes).
+     * The filter can be set to `nullptr` to disable filtering (i.e., allow SLAAC addresses for all prefixes).
      *
      */
     void SetFilter(otIp6SlaacPrefixFilter aFilter);
@@ -136,9 +136,9 @@ public:
      *
      */
     otError GenerateIid(Ip6::NetifUnicastAddress &aAddress,
-                        uint8_t *                 aNetworkId       = NULL,
+                        uint8_t *                 aNetworkId       = nullptr,
                         uint8_t                   aNetworkIdLength = 0,
-                        uint8_t *                 aDadCounter      = NULL) const;
+                        uint8_t *                 aDadCounter      = nullptr) const;
 
 private:
     enum

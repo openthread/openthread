@@ -591,7 +591,7 @@ public:
     /**
      * This method converts an IPv6 address string to binary.
      *
-     * @param[in]  aBuf  A pointer to the NULL-terminated string.
+     * @param[in]  aBuf  A pointer to the null-terminated string.
      *
      * @retval OT_ERROR_NONE          Successfully parsed the IPv6 address string.
      * @retval OT_ERROR_INVALID_ARGS  Failed to parse the IPv6 address string.

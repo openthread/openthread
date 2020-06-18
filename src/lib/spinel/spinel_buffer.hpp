@@ -222,7 +222,7 @@ public:
      * @retval OT_ERROR_NONE            Successfully added the message to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the message.
      * @retval OT_ERROR_INVALID_STATE   `InFrameBegin()` has not been called earlier to start the frame.
-     * @retval OT_ERROR_INVALID_ARGS    If @p aMessage is NULL.
+     * @retval OT_ERROR_INVALID_ARGS    If @p aMessage is nullptr.
      *
      */
     otError InFrameFeedMessage(otMessage *aMessage);
@@ -405,7 +405,7 @@ public:
      *
      * When a frame is removed all its associated messages will be freed.
      *
-     * If the remove operation is successful, this method will invoke the `FrameRemovedCallback` (if not NULL) before
+     * If the remove operation is successful, this method will invoke the `FrameRemovedCallback` (if not nullptr) before
      * returning the success state.
      *
      * @retval OT_ERROR_NONE            Successfully removed the front frame.

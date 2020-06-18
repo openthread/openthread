@@ -129,7 +129,7 @@ static void Init(void)
     };
 
     Message *message = sInstance->Get<MessagePool>().New(Message::kTypeIp6, 0);
-    VerifyOrQuit(message != NULL, "6lo: Ip6::NewMessage failed");
+    VerifyOrQuit(message != nullptr, "6lo: Ip6::NewMessage failed");
 
     SuccessOrQuit(message->Append(mockNetworkData, sizeof(mockNetworkData)), "6lo: Message::Append failed");
 
@@ -149,7 +149,7 @@ static void Init(void)
  */
 static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 {
-    Message *message = NULL;
+    Message *message = nullptr;
     uint8_t  result[512];
     uint8_t  iphc[512];
     uint8_t  ip6[512];
@@ -175,7 +175,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
     {
         Lowpan::BufferWriter buffer(result, 127);
 
-        VerifyOrQuit((message = sInstance->Get<MessagePool>().New(Message::kTypeIp6, 0)) != NULL,
+        VerifyOrQuit((message = sInstance->Get<MessagePool>().New(Message::kTypeIp6, 0)) != nullptr,
                      "6lo: Ip6::NewMessage failed");
 
         aVector.GetUncompressedStream(*message);
@@ -199,12 +199,12 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
         }
 
         message->Free();
-        message = NULL;
+        message = nullptr;
     }
 
     if (aDecompress)
     {
-        VerifyOrQuit((message = sInstance->Get<MessagePool>().New(Message::kTypeIp6, 0)) != NULL,
+        VerifyOrQuit((message = sInstance->Get<MessagePool>().New(Message::kTypeIp6, 0)) != nullptr,
                      "6lo: Ip6::NewMessage failed");
 
         int decompressedBytes =
@@ -232,7 +232,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
         }
 
         message->Free();
-        message = NULL;
+        message = nullptr;
     }
 
     printf("PASS\n\n");
@@ -1745,7 +1745,7 @@ void TestLowpanIphc(void)
 {
     sInstance = testInitInstance();
 
-    VerifyOrQuit(sInstance != NULL, "NULL instance");
+    VerifyOrQuit(sInstance != nullptr, "nullptr instance");
 
     sIp6    = &sInstance->Get<Ip6::Ip6>();
     sLowpan = &sInstance->Get<Lowpan::Lowpan>();

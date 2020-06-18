@@ -46,8 +46,8 @@ namespace Mle {
 
 DiscoverScanner::DiscoverScanner(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mHandler(NULL)
-    , mHandlerContext(NULL)
+    , mHandler(nullptr)
+    , mHandlerContext(nullptr)
     , mTimer(aInstance, DiscoverScanner::HandleTimer, this)
     , mFilterIndexes()
     , mScanChannels()
@@ -67,7 +67,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
                                   void *                  aContext)
 {
     otError                      error   = OT_ERROR_NONE;
-    Message *                    message = NULL;
+    Message *                    message = nullptr;
     Ip6::Address                 destination;
     MeshCoP::DiscoveryRequestTlv discoveryRequest;
 
@@ -77,7 +77,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
 
     if (mEnableFiltering)
     {
-        if (aFilterIndexes == NULL)
+        if (aFilterIndexes == nullptr)
         {
             Mac::ExtAddress extAddress;
 
@@ -101,7 +101,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
         mScanChannels.Intersect(aScanChannels);
     }
 
-    VerifyOrExit((message = Get<Mle>().NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Mle>().NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
     message->SetSubType(Message::kSubTypeMleDiscoverRequest);
     message->SetPanId(aPanId);
     SuccessOrExit(error = Get<Mle>().AppendHeader(*message, Header::kCommandDiscoveryRequest));
@@ -136,7 +136,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
     }
@@ -216,7 +216,7 @@ void DiscoverScanner::HandleDiscoverComplete(void)
 
         if (mHandler)
         {
-            mHandler(NULL, mHandlerContext);
+            mHandler(nullptr, mHandlerContext);
         }
 
         break;

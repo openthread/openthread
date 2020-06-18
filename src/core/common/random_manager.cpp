@@ -153,7 +153,7 @@ void RandomManager::Entropy::Init(void)
     mbedtls_entropy_init(&mEntropyContext);
 
 #ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
-    mbedtls_entropy_add_source(&mEntropyContext, &RandomManager::Entropy::HandleMbedtlsEntropyPoll, NULL,
+    mbedtls_entropy_add_source(&mEntropyContext, &RandomManager::Entropy::HandleMbedtlsEntropyPoll, nullptr,
                                MBEDTLS_ENTROPY_MIN_HARDWARE, MBEDTLS_ENTROPY_SOURCE_STRONG);
 #endif // OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 }
@@ -175,7 +175,7 @@ int RandomManager::Entropy::HandleMbedtlsEntropyPoll(void *         aData,
     SuccessOrExit(otPlatEntropyGet(reinterpret_cast<uint8_t *>(aOutput), static_cast<uint16_t>(aInLen)));
     rval = 0;
 
-    VerifyOrExit(aOutLen != NULL, OT_NOOP);
+    VerifyOrExit(aOutLen != nullptr, OT_NOOP);
     *aOutLen = aInLen;
 
 exit:
@@ -191,7 +191,7 @@ exit:
 void RandomManager::CryptoCtrDrbg::Init(void)
 {
     mbedtls_ctr_drbg_init(&mCtrDrbg);
-    mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, RandomManager::GetMbedTlsEntropyContext(), NULL, 0);
+    mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, RandomManager::GetMbedTlsEntropyContext(), nullptr, 0);
 }
 
 void RandomManager::CryptoCtrDrbg::Deinit(void)

@@ -66,12 +66,12 @@ otError Ecdsa::Sign(uint8_t *      aOutput,
     mbedtls_mpi_init(&sMpi);
 
     // Parse a private key in PEM format.
-    VerifyOrExit(mbedtls_pk_parse_key(&pkCtx, aPrivateKey, aPrivateKeyLength, NULL, 0) == 0,
+    VerifyOrExit(mbedtls_pk_parse_key(&pkCtx, aPrivateKey, aPrivateKeyLength, nullptr, 0) == 0,
                  error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(mbedtls_pk_get_type(&pkCtx) == MBEDTLS_PK_ECKEY, error = OT_ERROR_INVALID_ARGS);
 
     keypair = mbedtls_pk_ec(pkCtx);
-    OT_ASSERT(keypair != NULL);
+    OT_ASSERT(keypair != nullptr);
 
     VerifyOrExit(mbedtls_ecdsa_from_keypair(&ctx, keypair) == 0, error = OT_ERROR_FAILED);
 

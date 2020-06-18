@@ -57,12 +57,13 @@ namespace ot {
  */
 
 /**
- * This function returns the number of characters that precede the terminating NULL character.
+ * This function returns the number of characters that precede the terminating nullptr character.
  *
  * @param[in] aString      A pointer to the string.
  * @param[in] aMaxLength   The maximum length in bytes.
  *
- * @returns The number of characters that precede the terminating NULL character or @p aMaxLength, whichever is smaller.
+ * @returns The number of characters that precede the terminating nullptr character or @p aMaxLength, whichever is
+ * smaller.
  *
  */
 uint16_t StringLength(const char *aString, uint16_t aMaxLength);
