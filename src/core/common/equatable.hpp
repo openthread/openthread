@@ -77,6 +77,17 @@ public:
     bool operator!=(const Type &aOther) const { return !(*this == aOther); }
 };
 
+#if defined(__ICCARM__) || defined(__ICC8051__)
+
+// This is a workaround for IAR toolchain where we define the
+// `PackedEquatable` as `Equatable`. This aims to address the
+// limitation in IAR toolchain in handling of packed (template)
+// empty base class definition.
+
+#define PackedEquatable Equatable
+
+#else
+
 /**
  * This template class defines overloads of operators `==` and `!=`.
  *
@@ -111,6 +122,8 @@ public:
      */
     bool operator!=(const Type &aOther) const { return !(*this == aOther); }
 } OT_TOOL_PACKED_END;
+
+#endif // defined(__ICCARM__) || defined(__ICC8051__)
 
 } // namespace ot
 

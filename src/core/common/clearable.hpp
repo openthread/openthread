@@ -61,6 +61,17 @@ public:
     void Clear(void) { memset(reinterpret_cast<void *>(this), 0, sizeof(Type)); }
 };
 
+#if defined(__ICCARM__) || defined(__ICC8051__)
+
+// This is a workaround for IAR toolchain where we define the
+// `PackedClearable` as `Clearable`. This aims to address the
+// limitation in IAR toolchain in handling of packed (template)
+// empty base class definition.
+
+#define PackedClearable Clearable
+
+#else
+
 /**
  * This template class defines a packed Clearable object which provides `Clear()` method.
  *
@@ -79,6 +90,8 @@ public:
      */
     void Clear(void) { memset(reinterpret_cast<void *>(this), 0, sizeof(Type)); }
 } OT_TOOL_PACKED_END;
+
+#endif // defined(__ICCARM__) || defined(__ICC8051__)
 
 } // namespace ot
 
