@@ -189,6 +189,15 @@ void otMacFrameSetKeyId(otRadioFrame *aFrame, uint8_t aKeyId)
     static_cast<Mac::Frame *>(aFrame)->SetKeyId(aKeyId);
 }
 
+uint32_t otMacFrameGetFrameCounter(otRadioFrame *aFrame)
+{
+    uint32_t frameCounter = UINT32_MAX;
+
+    IgnoreError(static_cast<Mac::Frame *>(aFrame)->GetFrameCounter(frameCounter));
+
+    return frameCounter;
+}
+
 void otMacFrameSetFrameCounter(otRadioFrame *aFrame, uint32_t aFrameCounter)
 {
     static_cast<Mac::Frame *>(aFrame)->SetFrameCounter(aFrameCounter);

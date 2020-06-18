@@ -253,6 +253,16 @@ uint8_t otMacFrameGetKeyId(otRadioFrame *aFrame);
 void otMacFrameSetKeyId(otRadioFrame *aFrame, uint8_t aKeyId);
 
 /**
+ * Get the frame counter of @p aFrame.
+ *
+ * @param[in]   aFrame          A pointer to the frame.
+ *
+ * @returns The frame counter of the frame. Returns UINT32_MAX if failed.
+ *
+ */
+uint32_t otMacFrameGetFrameCounter(otRadioFrame *aFrame);
+
+/**
  * Set frame counter to @p aFrame.
  *
  * @param[inout]    aFrame         A pointer to the frame to be modified.

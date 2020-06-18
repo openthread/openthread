@@ -845,6 +845,13 @@ void radioProcessFrame(otInstance *aInstance)
     if (otMacFrameIsAckRequested(&sReceiveFrame))
     {
         radioSendAck();
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        if (otMacFrameIsSecurityEnabled(&sAckFrame))
+        {
+            sReceiveFrame.mInfo.mRxInfo.mAckedWithSecEnhAck = true;
+            sReceiveFrame.mInfo.mRxInfo.mAckFrameCounter    = otMacFrameGetFrameCounter(&sAckFrame);
+        }
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     }
 
 exit:
