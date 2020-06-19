@@ -55,11 +55,11 @@ void VerifyMessageQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLen
     if (aExpectedLength == 0)
     {
         message = aMessageQueue.GetHead();
-        VerifyOrQuit(message == NULL, "MessageQueue is not empty when expected len is zero.");
+        VerifyOrQuit(message == nullptr, "MessageQueue is not empty when expected len is zero.");
     }
     else
     {
-        for (message = aMessageQueue.GetHead(); message != NULL; message = message->GetNext())
+        for (message = aMessageQueue.GetHead(); message != nullptr; message = message->GetNext())
         {
             VerifyOrQuit(aExpectedLength != 0, "MessageQueue contains more entries than expected");
 
@@ -82,14 +82,14 @@ void TestMessageQueue(void)
     uint16_t         msgCount, bufferCount;
 
     sInstance = testInitInstance();
-    VerifyOrQuit(sInstance != NULL, "Null instance");
+    VerifyOrQuit(sInstance != nullptr, "Null instance");
 
     sMessagePool = &sInstance->Get<ot::MessagePool>();
 
     for (int i = 0; i < kNumTestMessages; i++)
     {
         msg[i] = sMessagePool->New(ot::Message::kTypeIp6, 0);
-        VerifyOrQuit(msg[i] != NULL, "Message::New failed");
+        VerifyOrQuit(msg[i] != nullptr, "Message::New failed");
     }
 
     VerifyMessageQueueContent(messageQueue, 0);
@@ -189,11 +189,12 @@ void VerifyMessageQueueContentUsingOtApi(otMessageQueue *aQueue, int aExpectedLe
     if (aExpectedLength == 0)
     {
         message = otMessageQueueGetHead(aQueue);
-        VerifyOrQuit(message == NULL, "MessageQueue is not empty when expected len is zero.");
+        VerifyOrQuit(message == nullptr, "MessageQueue is not empty when expected len is zero.");
     }
     else
     {
-        for (message = otMessageQueueGetHead(aQueue); message != NULL; message = otMessageQueueGetNext(aQueue, message))
+        for (message = otMessageQueueGetHead(aQueue); message != nullptr;
+             message = otMessageQueueGetNext(aQueue, message))
         {
             VerifyOrQuit(aExpectedLength != 0, "MessageQueue contains more entries than expected");
 
@@ -217,12 +218,12 @@ void TestMessageQueueOtApis(void)
     otMessageQueue queue, queue2;
 
     sInstance = testInitInstance();
-    VerifyOrQuit(sInstance != NULL, "Null instance");
+    VerifyOrQuit(sInstance != nullptr, "Null instance");
 
     for (int i = 0; i < kNumTestMessages; i++)
     {
-        msg[i] = otIp6NewMessage(sInstance, NULL);
-        VerifyOrQuit(msg[i] != NULL, "otIp6NewMessage() failed.");
+        msg[i] = otIp6NewMessage(sInstance, nullptr);
+        VerifyOrQuit(msg[i] != nullptr, "otIp6NewMessage() failed.");
     }
 
     otMessageQueueInit(&queue);
@@ -250,10 +251,10 @@ void TestMessageQueueOtApis(void)
     VerifyMessageQueueContentUsingOtApi(&queue, 1, msg[2]);
 
     // Check the failure cases for otMessageQueueGetNext()
-    message = otMessageQueueGetNext(&queue, NULL);
-    VerifyOrQuit(message == NULL, "otMessageQueueGetNext(queue, NULL) did not return NULL.");
+    message = otMessageQueueGetNext(&queue, nullptr);
+    VerifyOrQuit(message == nullptr, "otMessageQueueGetNext(queue, nullptr) did not return nullptr.");
     message = otMessageQueueGetNext(&queue, msg[1]);
-    VerifyOrQuit(message == NULL, "otMessageQueueGetNext() did not return NULL for a message not in the queue.");
+    VerifyOrQuit(message == nullptr, "otMessageQueueGetNext() did not return nullptr for a message not in the queue.");
 
     // Check the failure case when attempting to do otMessageQueueGetNext() but passing in a wrong queue pointer.
     otMessageQueueEnqueue(&queue2, msg[0]);
@@ -264,7 +265,7 @@ void TestMessageQueueOtApis(void)
     message = otMessageQueueGetNext(&queue2, msg[0]);
     VerifyOrQuit(message == msg[1], "otMessageQueueGetNext() failed");
     message = otMessageQueueGetNext(&queue, msg[0]);
-    VerifyOrQuit(message == NULL, "otMessageQueueGetNext() did not return NULL for message not in  the queue.");
+    VerifyOrQuit(message == nullptr, "otMessageQueueGetNext() did not return nullptr for message not in  the queue.");
 
     // Remove all element and make sure queue is empty
     otMessageQueueDequeue(&queue, msg[2]);

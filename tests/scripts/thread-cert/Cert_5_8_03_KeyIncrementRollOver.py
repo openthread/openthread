@@ -36,7 +36,7 @@ ROUTER = 2
 
 
 class Cert_5_8_3_KeyIncrementRollOver(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'key_sequence_counter': 127,
             'key_switch_guardtime': 0,

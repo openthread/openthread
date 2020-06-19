@@ -139,10 +139,10 @@ public:
     /**
      * This method gets the Domain Prefix in the Thread Network.
      *
-     * @retval A pointer to the Domain Prefix or NULL if there is no Domain Prefix.
+     * @retval A pointer to the Domain Prefix or nullptr if there is no Domain Prefix.
      *
      */
-    const otIp6Prefix *GetDomainPrefix(void) const { return (mDomainPrefix.mLength == 0) ? NULL : &mDomainPrefix; }
+    const otIp6Prefix *GetDomainPrefix(void) const { return (mDomainPrefix.mLength == 0) ? nullptr : &mDomainPrefix; }
 
     /**
      * This method indicates whether or not the Domain Prefix is available in the Thread Network.

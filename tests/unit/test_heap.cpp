@@ -50,11 +50,11 @@ void TestAllocateSingle(void)
 
     {
         void *p = heap.CAlloc(1, 0);
-        VerifyOrQuit(p == NULL && totalSize == heap.GetFreeSize(), "TestAllocateSingle allocate 1 x 0 byte failed!");
+        VerifyOrQuit(p == nullptr && totalSize == heap.GetFreeSize(), "TestAllocateSingle allocate 1 x 0 byte failed!");
         heap.Free(p);
 
         p = heap.CAlloc(0, 1);
-        VerifyOrQuit(p == NULL && totalSize == heap.GetFreeSize(), "TestAllocateSingle allocate 0 x 1 byte failed!");
+        VerifyOrQuit(p == nullptr && totalSize == heap.GetFreeSize(), "TestAllocateSingle allocate 0 x 1 byte failed!");
         heap.Free(p);
     }
 
@@ -62,7 +62,7 @@ void TestAllocateSingle(void)
     {
         printf("%s allocating %zu bytes...\n", __func__, size);
         void *p = heap.CAlloc(1, size);
-        VerifyOrQuit(p != NULL && !heap.IsClean() && heap.GetFreeSize() + size <= totalSize, "allocating failed!");
+        VerifyOrQuit(p != nullptr && !heap.IsClean() && heap.GetFreeSize() + size <= totalSize, "allocating failed!");
         memset(p, 0xff, size);
         heap.Free(p);
         VerifyOrQuit(heap.IsClean() && heap.GetFreeSize() == totalSize, "freeing failed!\n");
@@ -100,12 +100,12 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
         last->mNext = static_cast<Node *>(heap.CAlloc(1, size));
 
         // No more memory for allocation.
-        if (last->mNext == NULL)
+        if (last->mNext == nullptr)
         {
             break;
         }
 
-        VerifyOrQuit(last->mNext->mNext == NULL, "TestAllocateRandomly memory not initialized to zero!");
+        VerifyOrQuit(last->mNext->mNext == nullptr, "TestAllocateRandomly memory not initialized to zero!");
         last        = last->mNext;
         last->mSize = size;
         ++nnodes;

@@ -73,6 +73,7 @@ const char *otSysGetRadioUrlHelpString(void)
     "    uart-parity[=even|odd]         Uart parity config, optional.\n"                             \
     "    uart-stop[=number-of-bits]     Uart stop bit, default is 1.\n"                              \
     "    uart-baudrate[=baudrate]       Uart baud rate, default is 115200.\n"                        \
+    "    uart-flow-control              Enable flow control, disabled by default.\n"                 \
     "    forkpty-arg[=argument string]  Command line arguments for subprocess, can be repeated.\n"
 
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
@@ -99,28 +100,28 @@ Arguments::Arguments(const char *aUrl)
 {
     char *url = &mUrl[0];
 
-    mPath  = NULL;
-    mStart = NULL;
-    mEnd   = NULL;
+    mPath  = nullptr;
+    mStart = nullptr;
+    mEnd   = nullptr;
 
-    VerifyOrExit(aUrl != NULL, OT_NOOP);
+    VerifyOrExit(aUrl != nullptr, OT_NOOP);
     VerifyOrExit(strnlen(aUrl, sizeof(mUrl)) < sizeof(mUrl), OT_NOOP);
     strncpy(mUrl, aUrl, sizeof(mUrl) - 1);
     url = strstr(url, "://");
-    VerifyOrExit(url != NULL, OT_NOOP);
+    VerifyOrExit(url != nullptr, OT_NOOP);
     url += sizeof("://") - 1;
     mPath = url;
 
     mStart = strstr(url, "?");
 
-    if (mStart != NULL)
+    if (mStart != nullptr)
     {
         mStart[0] = '\0';
         mStart++;
 
         mEnd = mStart + strlen(mStart);
 
-        for (char *cur = strtok(mStart, "&"); cur != NULL; cur = strtok(NULL, "&"))
+        for (char *cur = strtok(mStart, "&"); cur != nullptr; cur = strtok(nullptr, "&"))
             ;
     }
     else
@@ -134,13 +135,13 @@ exit:
 
 const char *Arguments::GetValue(const char *aName, const char *aLastValue)
 {
-    const char * rval  = NULL;
+    const char * rval  = nullptr;
     const size_t len   = strlen(aName);
-    char *       start = (aLastValue == NULL ? mStart : (const_cast<char *>(aLastValue) + strlen(aLastValue) + 1));
+    char *       start = (aLastValue == nullptr ? mStart : (const_cast<char *>(aLastValue) + strlen(aLastValue) + 1));
 
     while (start < mEnd)
     {
-        char *last = NULL;
+        char *last = nullptr;
 
         if (!strncmp(aName, start, len))
         {
@@ -207,7 +208,7 @@ void TestMultipleProtocolsAndDuplicateParameters()
 {
     char                 url[] = "spinel+exec:///path/to/ot-rcp?arg=1&arg=arg2&arg=3";
     ot::Posix::Arguments args(url);
-    const char *         arg = NULL;
+    const char *         arg = nullptr;
 
     assert(!strcmp(args.GetPath(), "/path/to/ot-rcp"));
 

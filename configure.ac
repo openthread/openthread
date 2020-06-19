@@ -137,23 +137,16 @@ case ${host_os} in
 
     *darwin*)
         OPENTHREAD_TARGET=darwin
-        OPENTHREAD_TARGET_DEFINES="-DOPENTHREAD_TARGET_DARWIN"
         ;;
 
     *linux*)
         OPENTHREAD_TARGET=linux
-        OPENTHREAD_TARGET_DEFINES="-DOPENTHREAD_TARGET_LINUX"
         ;;
 
 esac
 
-AC_SUBST(OPENTHREAD_TARGET_DARWIN)
 AM_CONDITIONAL([OPENTHREAD_TARGET_DARWIN], [test "${OPENTHREAD_TARGET}" = "darwin"])
-
-AC_SUBST(OPENTHREAD_TARGET_LINUX)
 AM_CONDITIONAL([OPENTHREAD_TARGET_LINUX], [test "${OPENTHREAD_TARGET}" = "linux"])
-
-AC_SUBST(OPENTHREAD_TARGET_DEFINES)
 
 #
 # Checks for build host programs
@@ -234,7 +227,7 @@ AC_PROG_LIBTOOL
 #
 
 PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Wundef -Wcast-align -Werror -Wno-error=undef -std=c99 -pedantic-errors"
-PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Wundef -Wcast-align -Werror -Wno-error=undef -std=gnu++98 -Wno-c++14-compat -fno-exceptions"
+PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Wundef -Wcast-align -Werror -Wno-error=undef -std=c++11 -Wno-c++14-compat -fno-exceptions -pedantic-errors"
 
 AC_CACHE_CHECK([whether $CC is Clang],
     [nl_cv_clang],

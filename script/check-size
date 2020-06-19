@@ -156,7 +156,7 @@ size_nrf52840()
         reporter=markdown
     else
         reporter=./size-report
-        curl -s "${SIZE_REPORT_URL}/bash" >size-report
+        curl -s --retry 5 "${SIZE_REPORT_URL}/bash" >size-report
         chmod a+x size-report
         export OT_SHA_NEW OT_SHA_OLD
     fi

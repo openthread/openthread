@@ -52,7 +52,13 @@ add_library(openthread-kw41z
     uart.c
 )
 
-set_property(TARGET openthread-kw41z PROPERTY C_STANDARD 99)
+set_target_properties(
+    openthread-kw41z
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)
+
 target_link_libraries(openthread-kw41z PRIVATE nxp-kw41z-driver ot-config)
 target_link_options(openthread-kw41z PRIVATE -T${PROJECT_SOURCE_DIR}/examples/platforms/kw41z/MKW41Z512xxx4.ld)
 target_link_options(openthread-kw41z PRIVATE -Wl,--gc-sections -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
@@ -75,7 +81,6 @@ target_compile_options(openthread-kw41z
 target_include_directories(openthread-kw41z
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
-        ${OT_PRIVATE_INCLUDES}
         ${PROJECT_SOURCE_DIR}/examples/platforms
         ${PROJECT_SOURCE_DIR}/src/core
 )

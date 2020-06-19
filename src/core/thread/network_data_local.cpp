@@ -154,7 +154,7 @@ otError Local::AddPrefix(const uint8_t *      aPrefix,
                        : sizeof(HasRouteTlv) + sizeof(HasRouteEntry);
 
     prefixTlv = static_cast<PrefixTlv *>(AppendTlv(sizeof(PrefixTlv) + prefixLengthBytes + subTlvLength));
-    VerifyOrExit(prefixTlv != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(prefixTlv != nullptr, error = OT_ERROR_NO_BUFS);
 
     prefixTlv->Init(0, aPrefixLength, aPrefix);
     prefixTlv->SetSubTlvsLength(subTlvLength);
@@ -194,8 +194,8 @@ otError Local::RemovePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, Netwo
     otError    error = OT_ERROR_NONE;
     PrefixTlv *tlv;
 
-    VerifyOrExit((tlv = FindPrefix(aPrefix, aPrefixLength)) != NULL, error = OT_ERROR_NOT_FOUND);
-    VerifyOrExit(FindTlv(tlv->GetSubTlvs(), tlv->GetNext(), aSubTlvType) != NULL, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit((tlv = FindPrefix(aPrefix, aPrefixLength)) != nullptr, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(FindTlv(tlv->GetSubTlvs(), tlv->GetNext(), aSubTlvType) != nullptr, error = OT_ERROR_NOT_FOUND);
     RemoveTlv(tlv);
 
 exit:
@@ -259,7 +259,7 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
     VerifyOrExit(serviceTlvSize <= kMaxSize, error = OT_ERROR_NO_BUFS);
 
     serviceTlv = static_cast<ServiceTlv *>(AppendTlv(serviceTlvSize));
-    VerifyOrExit(serviceTlv != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(serviceTlv != nullptr, error = OT_ERROR_NO_BUFS);
 
     serviceTlv->Init(/* aServiceId */ 0, aEnterpriseNumber, aServiceData, aServiceDataLength);
     serviceTlv->SetSubTlvsLength(sizeof(ServerTlv) + aServerDataLength);
@@ -288,7 +288,7 @@ otError Local::RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aService
     otError     error = OT_ERROR_NONE;
     ServiceTlv *tlv;
 
-    VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength)) != NULL,
+    VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength)) != nullptr,
                  error = OT_ERROR_NOT_FOUND);
     RemoveTlv(tlv);
 

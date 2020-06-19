@@ -40,7 +40,7 @@ REED1 = 17
 
 
 class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode':
                 'rsdn',

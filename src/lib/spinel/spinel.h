@@ -692,11 +692,12 @@ typedef uint8_t      spinel_tid_t;
 
 enum
 {
-    SPINEL_MD_FLAG_TX       = 0x0001, //!< Packet was transmitted, not received.
-    SPINEL_MD_FLAG_BAD_FCS  = 0x0004, //!< Packet was received with bad FCS
-    SPINEL_MD_FLAG_DUPE     = 0x0008, //!< Packet seems to be a duplicate
-    SPINEL_MD_FLAG_ACKED_FP = 0x0010, //!< Packet was acknowledged with frame pending set
-    SPINEL_MD_FLAG_RESERVED = 0xFFE2, //!< Flags reserved for future use.
+    SPINEL_MD_FLAG_TX        = 0x0001, //!< Packet was transmitted, not received.
+    SPINEL_MD_FLAG_BAD_FCS   = 0x0004, //!< Packet was received with bad FCS
+    SPINEL_MD_FLAG_DUPE      = 0x0008, //!< Packet seems to be a duplicate
+    SPINEL_MD_FLAG_ACKED_FP  = 0x0010, //!< Packet was acknowledged with frame pending set
+    SPINEL_MD_FLAG_ACKED_SEC = 0x0020, //!< Packet was acknowledged with secure enhance ACK
+    SPINEL_MD_FLAG_RESERVED  = 0xFFC2, //!< Flags reserved for future use.
 };
 
 enum
@@ -3951,6 +3952,26 @@ enum
      *
      */
     SPINEL_PROP_RCP_MAC_KEY = SPINEL_PROP_RCP__BEGIN + 0,
+
+    /// MAC Frame Counter
+    /** Format: `L`.
+     *
+     *  `L`: MAC frame counter
+     *
+     * The Spinel property is used to set MAC frame counter to RCP.
+     *
+     */
+    SPINEL_PROP_RCP_MAC_FRAME_COUNTER = SPINEL_PROP_RCP__BEGIN + 1,
+
+    /// Timestamps when Spinel frame is received and transmitted
+    /** Format: `X`.
+     *
+     *  `X`: Spinel frame transmit timestamp
+     *
+     * The Spinel property is used to get timestamp from RCP to calculate host and RCP timer difference.
+     *
+     */
+    SPINEL_PROP_RCP_TIMESTAMP = SPINEL_PROP_RCP__BEGIN + 2,
 
     SPINEL_PROP_RCP__END = 0x900,
 

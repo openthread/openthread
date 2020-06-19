@@ -78,7 +78,7 @@ void TestNetworkDataIterator(void)
     ExternalRouteConfig config;
 
     instance = testInitInstance();
-    VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
+    VerifyOrQuit(instance != nullptr, "Null OpenThread instance\n");
 
     {
         const uint8_t kNetworkData[] = {0x08, 0x04, 0x0B, 0x02, 0x00, 0x00, 0x03, 0x14, 0x00, 0x40,

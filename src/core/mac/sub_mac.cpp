@@ -57,10 +57,11 @@ SubMac::SubMac(Instance &aInstance)
     , mEnergyScanEndTime(0)
     , mTransmitFrame(Get<Radio>().GetTransmitBuffer())
     , mCallbacks(aInstance)
-    , mPcapCallback(NULL)
-    , mPcapCallbackContext(NULL)
+    , mPcapCallback(nullptr)
+    , mPcapCallbackContext(nullptr)
+    , mFrameCounter(0)
     , mKeyId(0)
-    , mTimer(aInstance, &SubMac::HandleTimer, this)
+    , mTimer(aInstance, SubMac::HandleTimer, this)
 {
     mExtAddress.Clear();
     mPrevKey.Clear();
@@ -196,9 +197,14 @@ exit:
 
 void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
 {
-    if (mPcapCallback && (aFrame != NULL) && (aError == OT_ERROR_NONE))
+    if (mPcapCallback && (aFrame != nullptr) && (aError == OT_ERROR_NONE))
     {
         mPcapCallback(aFrame, false, mPcapCallbackContext);
+    }
+
+    if (!ShouldHandleTransmitSecurity() && aFrame != nullptr && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
+    {
+        UpdateFrameCounter(aFrame->mInfo.mRxInfo.mAckFrameCounter);
     }
 
     mCallbacks.ReceiveDone(aFrame, aError);
@@ -233,7 +239,7 @@ exit:
 
 void SubMac::ProcessTransmitSecurity(void)
 {
-    const ExtAddress *extAddress = NULL;
+    const ExtAddress *extAddress = nullptr;
     uint8_t           keyIdMode;
 
     VerifyOrExit(ShouldHandleTransmitSecurity(), OT_NOOP);
@@ -247,7 +253,11 @@ void SubMac::ProcessTransmitSecurity(void)
 
     if (!mTransmitFrame.IsARetransmission())
     {
+        uint32_t frameCounter = GetFrameCounter();
+
         mTransmitFrame.SetKeyId(mKeyId);
+        mTransmitFrame.SetFrameCounter(frameCounter);
+        UpdateFrameCounter(frameCounter + 1);
     }
 
     extAddress = &GetExtAddress();
@@ -376,6 +386,19 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
     default:
         OT_ASSERT(false);
         OT_UNREACHABLE_CODE(ExitNow());
+    }
+
+    if (!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled())
+    {
+        uint8_t  keyIdMode;
+        uint32_t frameCounter = 0;
+
+        IgnoreError(aFrame.GetKeyIdMode(keyIdMode));
+        if (keyIdMode == Frame::kKeyIdMode1)
+        {
+            OT_ASSERT(aFrame.GetFrameCounter(frameCounter) == OT_ERROR_NONE);
+            UpdateFrameCounter(frameCounter);
+        }
     }
 
     // Determine whether a CSMA retry is required.
@@ -513,7 +536,7 @@ void SubMac::HandleTimer(void)
     case kStateTransmit:
         otLogDebgMac("Ack timer timed out");
         IgnoreError(Get<Radio>().Receive(mTransmitFrame.GetChannel()));
-        HandleTransmitDone(mTransmitFrame, NULL, OT_ERROR_NO_ACK);
+        HandleTransmitDone(mTransmitFrame, nullptr, OT_ERROR_NO_ACK);
         break;
 
     case kStateEnergyScan:
@@ -650,6 +673,25 @@ void SubMac::SetMacKey(uint8_t    aKeyIdMode,
     VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
 
     Get<Radio>().SetMacKey(aKeyIdMode, aKeyId, aPrevKey, aCurrKey, aNextKey);
+
+exit:
+    return;
+}
+
+void SubMac::UpdateFrameCounter(uint32_t aFrameCounter)
+{
+    mFrameCounter = aFrameCounter;
+
+    mCallbacks.FrameCounterUpdated(aFrameCounter);
+}
+
+void SubMac::SetFrameCounter(uint32_t aFrameCounter)
+{
+    mFrameCounter = aFrameCounter;
+
+    VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
+
+    Get<Radio>().SetMacFrameCounter(aFrameCounter);
 
 exit:
     return;

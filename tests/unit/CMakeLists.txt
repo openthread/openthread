@@ -425,6 +425,28 @@ target_link_libraries(test-pskc
 
 add_test(NAME test-pskc COMMAND test-pskc)
 
+add_executable(test-steering-data
+    ${COMMON_SOURCES}
+    test_steering_data.cpp
+)
+
+target_include_directories(test-steering-data
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-steering-data
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-steering-data
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-steering-data COMMAND test-steering-data)
+
 add_executable(test-string
     ${COMMON_SOURCES}
     test_string.cpp
@@ -469,3 +491,9 @@ target_link_libraries(test-timer
 
 add_test(NAME test-timer COMMAND test-timer)
 
+set_target_properties(
+    test-aes test-child test-child-table test-flash test-heap test-hmac-sha256 test-ip6-address test-link-quality test-linked-list test-lowpan test-mac-frame test-message test-message-queue test-netif test-network-data test-priority-queue test-pskc test-steering-data test-string test-timer
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)

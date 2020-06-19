@@ -281,7 +281,8 @@ class Node(object):
     """ A wpantund OT NCP instance """
 
     # defines the default verbosity setting (can be changed per `Node`)
-    _VERBOSE = False
+    _VERBOSE = os.getenv('TORANJ_VERBOSE',
+                         'no').lower() in ['true', '1', 't', 'y', 'yes', 'on']
     _SPEED_UP_FACTOR = 1  # defines the default time speed up factor
 
     # path to `wpantund`, `wpanctl`, `ot-ncp-ftd`,`ot-ncp` and `ot-rcp`
@@ -502,7 +503,7 @@ class Node(object):
             'scan -d' +
             (' -c {}'.format(channel) if channel is not None else '') +
             (' -j' if joiner_only else '') +
-            (' -e' if enable_filtering else '') +
+            (' -f' if enable_filtering else '') +
             (' -p {}'.format(panid_filter) if panid_filter is not None else ''))
 
     def permit_join(self, duration_sec=None, port=None, udp=True, tcp=True):
@@ -687,7 +688,7 @@ class Node(object):
     # class methods
 
     @classmethod
-    def init_all_nodes(cls, disable_logs=True, wait_time=15):
+    def init_all_nodes(cls, disable_logs=not _VERBOSE, wait_time=15):
         """Issues a `wpanctl.leave` on all `Node` objects and waits for them to be ready"""
         random.seed(123456)
         time.sleep(0.5)

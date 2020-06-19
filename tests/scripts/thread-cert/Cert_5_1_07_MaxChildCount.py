@@ -38,7 +38,7 @@ SED1 = 7
 
 
 class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

@@ -48,8 +48,8 @@ namespace Coap {
 CoapSecure::CoapSecure(Instance &aInstance, bool aLayerTwoSecurity)
     : CoapBase(aInstance, &CoapSecure::Send)
     , mDtls(aInstance, aLayerTwoSecurity)
-    , mConnectedCallback(NULL)
-    , mConnectedContext(NULL)
+    , mConnectedCallback(nullptr)
+    , mConnectedContext(nullptr)
     , mTransmitQueue()
     , mTransmitTask(aInstance, &CoapSecure::HandleTransmit, this)
 {
@@ -59,8 +59,8 @@ otError CoapSecure::Start(uint16_t aPort)
 {
     otError error = OT_ERROR_NONE;
 
-    mConnectedCallback = NULL;
-    mConnectedContext  = NULL;
+    mConnectedCallback = nullptr;
+    mConnectedContext  = nullptr;
 
     SuccessOrExit(error = mDtls.Open(&CoapSecure::HandleDtlsReceive, &CoapSecure::HandleDtlsConnected, this));
     SuccessOrExit(error = mDtls.Bind(aPort));
@@ -73,8 +73,8 @@ otError CoapSecure::Start(MeshCoP::Dtls::TransportCallback aCallback, void *aCon
 {
     otError error = OT_ERROR_NONE;
 
-    mConnectedCallback = NULL;
-    mConnectedContext  = NULL;
+    mConnectedCallback = nullptr;
+    mConnectedContext  = nullptr;
 
     SuccessOrExit(error = mDtls.Open(&CoapSecure::HandleDtlsReceive, &CoapSecure::HandleDtlsConnected, this));
     SuccessOrExit(error = mDtls.Bind(aCallback, aContext));
@@ -93,7 +93,7 @@ void CoapSecure::Stop(void)
 {
     mDtls.Close();
 
-    for (ot::Message *message = mTransmitQueue.GetHead(); message != NULL; message = message->GetNext())
+    for (ot::Message *message = mTransmitQueue.GetHead(); message != nullptr; message = message->GetNext())
     {
         mTransmitQueue.Dequeue(*message);
         message->Free();
@@ -189,7 +189,7 @@ void CoapSecure::HandleDtlsConnected(void *aContext, bool aConnected)
 
 void CoapSecure::HandleDtlsConnected(bool aConnected)
 {
-    if (mConnectedCallback != NULL)
+    if (mConnectedCallback != nullptr)
     {
         mConnectedCallback(aConnected, mConnectedContext);
     }
@@ -202,9 +202,9 @@ void CoapSecure::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLeng
 
 void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
-    ot::Message *message = NULL;
+    ot::Message *message = nullptr;
 
-    VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, Message::GetHelpDataReserved())) != NULL,
+    VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, Message::GetHelpDataReserved())) != nullptr,
                  OT_NOOP);
     SuccessOrExit(message->Append(aBuf, aLength));
 
@@ -212,7 +212,7 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 
 exit:
 
-    if (message != NULL)
+    if (message != nullptr)
     {
         message->Free();
     }
@@ -228,10 +228,10 @@ void CoapSecure::HandleTransmit(void)
     otError      error   = OT_ERROR_NONE;
     ot::Message *message = mTransmitQueue.GetHead();
 
-    VerifyOrExit(message != NULL, OT_NOOP);
+    VerifyOrExit(message != nullptr, OT_NOOP);
     mTransmitQueue.Dequeue(*message);
 
-    if (mTransmitQueue.GetHead() != NULL)
+    if (mTransmitQueue.GetHead() != nullptr)
     {
         mTransmitTask.Post();
     }

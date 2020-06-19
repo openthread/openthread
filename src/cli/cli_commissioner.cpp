@@ -122,7 +122,7 @@ otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
 
     if (strcmp(aArgs[2], "*") == 0)
     {
-        addrPtr = NULL;
+        addrPtr = nullptr;
     }
     else
     {
@@ -300,7 +300,7 @@ exit:
 
 otError Commissioner::ProcessProvisioningUrl(uint8_t aArgsLength, char *aArgs[])
 {
-    return otCommissionerSetProvisioningUrl(mInterpreter.mInstance, (aArgsLength > 1) ? aArgs[1] : NULL);
+    return otCommissionerSetProvisioningUrl(mInterpreter.mInstance, (aArgsLength > 1) ? aArgs[1] : nullptr);
 }
 
 otError Commissioner::ProcessSessionId(uint8_t aArgsLength, char *aArgs[])
@@ -392,7 +392,7 @@ otError Commissioner::Process(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength < 1)
     {
-        IgnoreError(ProcessHelp(0, NULL));
+        IgnoreError(ProcessHelp(0, nullptr));
     }
     else
     {

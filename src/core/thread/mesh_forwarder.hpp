@@ -50,6 +50,10 @@
 
 namespace ot {
 
+namespace Mle {
+class DiscoverScanner;
+}
+
 enum
 {
     kReassemblyTimeout = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT,
@@ -171,6 +175,7 @@ class MeshForwarder : public InstanceLocator
     friend class Instance;
     friend class DataPollSender;
     friend class IndirectSender;
+    friend class Mle::DiscoverScanner;
 
 public:
     /**
@@ -312,7 +317,6 @@ public:
      */
     const PriorityQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
 #endif
-
 private:
     enum
     {
@@ -368,7 +372,6 @@ private:
     void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
-    otError  PrepareDiscoverRequest(void);
     void     HandleMesh(uint8_t *               aFrame,
                         uint16_t                aFrameLength,
                         const Mac::Address &    aMacSource,
@@ -438,6 +441,9 @@ private:
 
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 
+    void PauseMessageTransmissions(void) { mTxPaused = true; }
+    void ResumeMessageTransmissions(void);
+
     void LogMessage(MessageAction aAction, const Message &aMessage, const Mac::Address *aAddress, otError aError);
     void LogFrame(const char *aActionText, const Mac::Frame &aFrame, otError aError);
     void LogFragmentFrameDrop(otError                       aError,
@@ -500,7 +506,6 @@ private:
                        otLogLevel          aLogLevel);
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
-    TimerMilli mDiscoverTimer;
     TimerMilli mUpdateTimer;
 
     PriorityQueue mSendQueue;
@@ -514,17 +519,12 @@ private:
     Mac::Address mMacDest;
     uint16_t     mMeshSource;
     uint16_t     mMeshDest;
-    bool         mAddMeshHeader;
-
-    bool mSendBusy;
+    bool         mAddMeshHeader : 1;
+    bool         mEnabled : 1;
+    bool         mTxPaused : 1;
+    bool         mSendBusy : 1;
 
     Tasklet mScheduleTransmissionTask;
-    bool    mEnabled;
-
-    Mac::ChannelMask mScanChannels;
-    uint8_t          mScanChannel;
-    uint16_t         mRestorePanId;
-    bool             mScanning;
 
     otIpCounters mIpCounters;
 

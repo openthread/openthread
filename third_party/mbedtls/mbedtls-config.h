@@ -26,7 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MBEDTLS_CONFIG_H
+// Spans multiple lines to avoid being processed by unifdef
+#ifndef \
+    MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H
 
 #include "openthread-core-config.h"
@@ -76,8 +78,7 @@
 #define MBEDTLS_SSL_PROTO_DTLS
 #define MBEDTLS_SSL_TLS_C
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || \
-    OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #define MBEDTLS_SSL_COOKIE_C
 #define MBEDTLS_SSL_SRV_C
 #endif
@@ -129,7 +130,9 @@
 
 #define MBEDTLS_SSL_CIPHERSUITES         MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8
 
-#if defined(MBEDTLS_USER_CONFIG_FILE)
+// Spans multiple lines to avoid being processed by unifdef
+#if defined(\
+    MBEDTLS_USER_CONFIG_FILE)
 #include MBEDTLS_USER_CONFIG_FILE
 #endif
 

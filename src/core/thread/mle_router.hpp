@@ -377,7 +377,7 @@ public:
      *
      * @param[in]  aAddress  The address of the Neighbor.
      *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, NULL otherwise.
+     * @returns A pointer to the Neighbor corresponding to @p aAddress, nullptr otherwise.
      *
      */
     Neighbor *GetNeighbor(uint16_t aAddress);
@@ -387,7 +387,7 @@ public:
      *
      * @param[in]  aAddress  The address of the Neighbor.
      *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, NULL otherwise.
+     * @returns A pointer to the Neighbor corresponding to @p aAddress, nullptr otherwise.
      *
      */
     Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress);
@@ -397,7 +397,7 @@ public:
      *
      * @param[in]  aAddress  The address of the Neighbor.
      *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, NULL otherwise.
+     * @returns A pointer to the Neighbor corresponding to @p aAddress, nullptr otherwise.
      *
      */
     Neighbor *GetNeighbor(const Mac::Address &aAddress);
@@ -407,7 +407,7 @@ public:
      *
      * @param[in]  aAddress  The address of the Neighbor.
      *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, NULL otherwise.
+     * @returns A pointer to the Neighbor corresponding to @p aAddress, nullptr otherwise.
      *
      */
     Neighbor *GetNeighbor(const Ip6::Address &aAddress);
@@ -418,7 +418,7 @@ public:
      *
      * @param[in]  aAddress  The address of the Neighbor.
      *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, NULL otherwise.
+     * @returns A pointer to the Neighbor corresponding to @p aAddress, nullptr otherwise.
      *
      */
     Neighbor *GetRxOnlyNeighborRouter(const Mac::Address &aAddress);
@@ -569,7 +569,7 @@ public:
      *
      */
     void SetSteeringData(const Mac::ExtAddress *aExtAddress);
-#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
+#endif
 
     /**
      * This method gets the assigned parent priority.
@@ -605,8 +605,8 @@ public:
     /**
      * This method register the "neighbor table changed" callback function.
      *
-     * The provided callback (if non-NULL) will be invoked when a child/router entry is being added/remove to/from the
-     * neighbor table. Subsequent calls to this method will overwrite the previous callback.
+     * The provided callback (if non-nullptr) will be invoked when a child/router entry is being added/remove to/from
+     * the neighbor table. Subsequent calls to this method will overwrite the previous callback.
      *
      * @param[in] aCallback    A pointer to callback handler function.
      *
@@ -856,8 +856,8 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
-    MeshCoP::SteeringDataTlv mSteeringData;
-#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
+    MeshCoP::SteeringData mSteeringData;
+#endif
 };
 
 #endif // OPENTHREAD_FTD

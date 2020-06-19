@@ -28,7 +28,7 @@
 
 # Get a list of the available platforms and output as a list to the 'arg_platforms' argument
 function(ot_get_platforms arg_platforms)
-    set(result "none")
+    list(APPEND result "NO" "posix")
     set(platforms_dir "${PROJECT_SOURCE_DIR}/examples/platforms")
     file(GLOB platforms RELATIVE "${platforms_dir}" "${platforms_dir}/*")
     foreach(platform IN LISTS platforms)
@@ -37,5 +37,7 @@ function(ot_get_platforms arg_platforms)
         endif()
     endforeach()
 
+    list(REMOVE_ITEM result utils)
+    list(SORT result)
     set(${arg_platforms} "${result}" PARENT_SCOPE)
 endfunction()

@@ -84,7 +84,7 @@ public:
      * This method registers a callback to provide received raw DIAG_GET.rsp or an DIAG_GET.ans payload.
      *
      * @param[in]  aCallback         A pointer to a function that is called when an DIAG_GET.rsp or an DIAG_GET.ans
-     *                               is received or NULL to disable the callback.
+     *                               is received or nullptr to disable the callback.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */

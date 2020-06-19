@@ -78,6 +78,13 @@ void SettingsBase::LogChildInfo(const char *aAction, const ChildInfo &aChildInfo
                   aChildInfo.GetMode(), aChildInfo.GetVersion());
 }
 
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+void SettingsBase::LogDadInfo(const char *aAction, const DadInfo &aDadInfo) const
+{
+    otLogInfoCore("Non-volatile: %s DadInfo {DadCounter:%2d}", aAction, aDadInfo.GetDadCounter());
+}
+#endif
+
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
@@ -394,6 +401,54 @@ void Settings::ChildInfoIterator::Read(void)
 exit:
     mIsDone = (error != OT_ERROR_NONE);
 }
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+otError Settings::ReadDadInfo(DadInfo &aDadInfo) const
+{
+    otError  error;
+    uint16_t length = sizeof(DadInfo);
+
+    aDadInfo.Init();
+    SuccessOrExit(error = Read(kKeyDadInfo, &aDadInfo, length));
+    LogDadInfo("Read", aDadInfo);
+
+exit:
+    return error;
+}
+
+otError Settings::SaveDadInfo(const DadInfo &aDadInfo)
+{
+    otError  error = OT_ERROR_NONE;
+    DadInfo  prevDadInfo;
+    uint16_t length = sizeof(DadInfo);
+
+    if ((Read(kKeyDadInfo, &prevDadInfo, length) == OT_ERROR_NONE) && (length == sizeof(DadInfo)) &&
+        (memcmp(&prevDadInfo, &aDadInfo, sizeof(DadInfo)) == 0))
+    {
+        LogDadInfo("Re-saved", aDadInfo);
+        ExitNow();
+    }
+
+    SuccessOrExit(error = Save(kKeyDadInfo, &aDadInfo, sizeof(DadInfo)));
+    LogDadInfo("Saved", aDadInfo);
+
+exit:
+    LogFailure(error, "saving DadInfo", false);
+    return error;
+}
+
+otError Settings::DeleteDadInfo(void)
+{
+    otError error;
+
+    SuccessOrExit(error = Delete(kKeyDadInfo));
+    otLogInfoCore("Non-volatile: Deleted DadInfo");
+
+exit:
+    LogFailure(error, "deleting DadInfo", true);
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
 otError Settings::Read(Key aKey, void *aBuffer, uint16_t &aSize) const
 {

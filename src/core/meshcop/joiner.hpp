@@ -67,11 +67,11 @@ public:
      * This method starts the Joiner service.
      *
      * @param[in]  aPskd             A pointer to the PSKd.
-     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
-     * @param[in]  aVendorName       A pointer to the Vendor Name (may be NULL).
-     * @param[in]  aVendorModel      A pointer to the Vendor Model (may be NULL).
-     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be NULL).
-     * @param[in]  aVendorData       A pointer to the Vendor Data (may be NULL).
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be nullptr).
+     * @param[in]  aVendorName       A pointer to the Vendor Name (may be nullptr).
+     * @param[in]  aVendorModel      A pointer to the Vendor Model (may be nullptr).
+     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be nullptr).
+     * @param[in]  aVendorData       A pointer to the Vendor Data (may be nullptr).
      * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
      * @param[in]  aContext          A pointer to application-specific context.
      *
@@ -109,29 +109,12 @@ public:
      */
     void GetJoinerId(Mac::ExtAddress &aJoinerId) const;
 
-    /**
-     * This method validates the PSKd.
-     *
-     * Per Thread specification, a Joining Device Credential is encoded as
-     * uppercase alphanumeric characters (base32-thread: 0-9, A-Z excluding
-     * I, O, Q, and Z for readability) with a minimum length of 6 such
-     * characters and a maximum length of 32 such characters.
-     *
-     * param[in]  aPskd  The PSKd to validate.
-     *
-     * @retval A boolean indicates whether the given @p aPskd is valid.
-     *
-     */
-    static bool IsPskdValid(const char *aPskd);
-
 private:
     enum
     {
         kJoinerUdpPort         = OPENTHREAD_CONFIG_JOINER_UDP_PORT,
         kConfigExtAddressDelay = 100,  ///< [milliseconds]
         kReponseTimeout        = 4000, ///< Maximum wait time to receive response [milliseconds].
-        kPskdMinLength         = 6,    ///< Minimum PSKd length.
-        kPskdMaxLength         = 32,   ///< Maximum PSKd Length.
     };
 
     struct JoinerRouter

@@ -36,7 +36,7 @@ ED = 2
 
 
 class Cert_6_5_2_ChildResetReattach(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

@@ -103,6 +103,7 @@ otError SpiInterface::Init(Arguments &aArguments)
     uint16_t    spiCsDelay         = OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US;
     uint8_t     spiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
     uint8_t     spiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
+    const char *value;
 
     spiGpioIntDevice   = aArguments.GetValue("gpio-int-device");
     spiGpioResetDevice = aArguments.GetValue("gpio-reset-device");
@@ -111,45 +112,45 @@ otError SpiInterface::Init(Arguments &aArguments)
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
 
-    if (aArguments.GetValue("gpio-int-line"))
+    if ((value = aArguments.GetValue("gpio-int-line")))
     {
-        spiGpioIntLine = static_cast<uint8_t>(atoi(aArguments.GetValue("gpio-int-line")));
+        spiGpioIntLine = static_cast<uint8_t>(atoi(value));
     }
     else
     {
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
-    if (aArguments.GetValue("gpio-reset-line"))
+    if ((value = aArguments.GetValue("gpio-reset-line")))
     {
-        spiGpioResetLine = static_cast<uint8_t>(atoi(aArguments.GetValue("gpio-reset-line")));
+        spiGpioResetLine = static_cast<uint8_t>(atoi(value));
     }
     else
     {
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
-    if (aArguments.GetValue("spi-mode"))
+    if ((value = aArguments.GetValue("spi-mode")))
     {
-        spiMode = static_cast<uint8_t>(atoi(aArguments.GetValue("spi-mode")));
+        spiMode = static_cast<uint8_t>(atoi(value));
     }
-    if (aArguments.GetValue("spi-speed"))
+    if ((value = aArguments.GetValue("spi-speed")))
     {
-        spiSpeed = static_cast<uint32_t>(atoi(aArguments.GetValue("spi-speed")));
+        spiSpeed = static_cast<uint32_t>(atoi(value));
     }
-    if (aArguments.GetValue("spi-reset-delay"))
+    if ((value = aArguments.GetValue("spi-reset-delay")))
     {
-        spiResetDelay = static_cast<uint32_t>(atoi(aArguments.GetValue("spi-reset-delay")));
+        spiResetDelay = static_cast<uint32_t>(atoi(value));
     }
-    if (aArguments.GetValue("spi-cs-delay"))
+    if ((value = aArguments.GetValue("spi-cs-delay")))
     {
-        spiCsDelay = static_cast<uint16_t>(atoi(aArguments.GetValue("spi-cs-delay")));
+        spiCsDelay = static_cast<uint16_t>(atoi(value));
     }
-    if (aArguments.GetValue("spi-align-allowance"))
+    if ((value = aArguments.GetValue("spi-align-allowance")))
     {
-        spiAlignAllowance = static_cast<uint8_t>(atoi(aArguments.GetValue("spi-align-allowance")));
+        spiAlignAllowance = static_cast<uint8_t>(atoi(value));
     }
-    if (aArguments.GetValue("spi-small-packet"))
+    if ((value = aArguments.GetValue("spi-small-packet")))
     {
-        spiSmallPacketSize = static_cast<uint8_t>(atoi(aArguments.GetValue("spi-small-packet")));
+        spiSmallPacketSize = static_cast<uint8_t>(atoi(value));
     }
 
     VerifyOrDie(spiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_FAILURE);
@@ -158,7 +159,7 @@ otError SpiInterface::Init(Arguments &aArguments)
     mSpiSmallPacketSize = spiSmallPacketSize;
     mSpiAlignAllowance  = spiAlignAllowance;
 
-    if (spiGpioIntDevice != NULL)
+    if (spiGpioIntDevice != nullptr)
     {
         // If the interrupt pin is not set, SPI interface will use polling mode.
         InitIntPin(spiGpioIntDevice, spiGpioIntLine);
@@ -269,7 +270,7 @@ void SpiInterface::InitResetPin(const char *aCharDev, uint8_t aLine)
 
     otLogDebgPlat("InitResetPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
 
-    VerifyOrDie((aCharDev != NULL) && (aLine < GPIOHANDLES_MAX), OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie((aCharDev != nullptr) && (aLine < GPIOHANDLES_MAX), OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie((fd = open(aCharDev, O_RDWR)) != -1, OT_EXIT_ERROR_ERRNO);
     mResetGpioValueFd = SetupGpioHandle(fd, aLine, GPIOHANDLE_REQUEST_OUTPUT, label);
 
@@ -283,7 +284,7 @@ void SpiInterface::InitIntPin(const char *aCharDev, uint8_t aLine)
 
     otLogDebgPlat("InitIntPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
 
-    VerifyOrDie((aCharDev != NULL) && (aLine < GPIOHANDLES_MAX), OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie((aCharDev != nullptr) && (aLine < GPIOHANDLES_MAX), OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie((fd = open(aCharDev, O_RDWR)) != -1, OT_EXIT_ERROR_ERRNO);
 
     mIntGpioValueFd = SetupGpioEvent(fd, aLine, GPIOHANDLE_REQUEST_INPUT, GPIOEVENT_REQUEST_FALLING_EDGE, label);
@@ -298,7 +299,7 @@ void SpiInterface::InitSpiDev(const char *aPath, uint8_t aMode, uint32_t aSpeed)
 
     otLogDebgPlat("InitSpiDev: path=%s, mode=%" PRIu8 ", speed=%" PRIu32, aPath, aMode, aSpeed);
 
-    VerifyOrDie((aPath != NULL) && (aMode <= kSpiModeMax), OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie((aPath != nullptr) && (aMode <= kSpiModeMax), OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie((fd = open(aPath, O_RDWR | O_CLOEXEC)) != -1, OT_EXIT_ERROR_ERRNO);
     VerifyOrExit(ioctl(fd, SPI_IOC_WR_MODE, &aMode) != -1, LogError("ioctl(SPI_IOC_WR_MODE)"));
     VerifyOrExit(ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &aSpeed) != -1, LogError("ioctl(SPI_IOC_WR_MAX_SPEED_HZ)"));
@@ -783,7 +784,7 @@ otError SpiInterface::WaitForFrame(uint64_t aTimeoutUs)
         timeout = spiTimeout;
     }
 
-    ret = select(mIntGpioValueFd + 1, &readFdSet, NULL, NULL, &timeout);
+    ret = select(mIntGpioValueFd + 1, &readFdSet, nullptr, nullptr, &timeout);
 
     if (ret > 0 && FD_ISSET(mIntGpioValueFd, &readFdSet))
     {

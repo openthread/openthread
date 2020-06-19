@@ -179,7 +179,7 @@ void HdlcInterface::Deinit(void)
     VerifyOrExit(mSockFd != -1, OT_NOOP);
 
     VerifyOrExit(0 == close(mSockFd), perror("close RCP"));
-    VerifyOrExit(-1 != wait(NULL) || errno == ECHILD, perror("wait RCP"));
+    VerifyOrExit(-1 != wait(nullptr) || errno == ECHILD, perror("wait RCP"));
 
     mSockFd = -1;
 
@@ -260,7 +260,7 @@ otError HdlcInterface::WaitForFrame(uint64_t aTimeoutUs)
     otError        error = OT_ERROR_NONE;
     struct timeval timeout;
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    struct Event event;
+    struct VirtualTimeEvent event;
 
     timeout.tv_sec  = static_cast<time_t>(aTimeoutUs / US_PER_S);
     timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % US_PER_S);
@@ -295,7 +295,7 @@ otError HdlcInterface::WaitForFrame(uint64_t aTimeoutUs)
     FD_SET(mSockFd, &read_fds);
     FD_SET(mSockFd, &error_fds);
 
-    rval = select(mSockFd + 1, &read_fds, NULL, &error_fds, &timeout);
+    rval = select(mSockFd + 1, &read_fds, nullptr, &error_fds, &timeout);
 
     if (rval > 0)
     {
@@ -364,7 +364,7 @@ otError HdlcInterface::WaitForWritable(void)
         FD_SET(mSockFd, &writeFds);
         FD_SET(mSockFd, &errorFds);
 
-        rval = select(mSockFd + 1, NULL, &writeFds, &errorFds, &timeout);
+        rval = select(mSockFd + 1, nullptr, &writeFds, &errorFds, &timeout);
 
         if (rval > 0)
         {
@@ -409,10 +409,8 @@ exit:
 
 int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
 {
-    int         fd       = -1;
-    int         rval     = 0;
-    const char *parity   = aArguments.GetValue("uart-parity");
-    uint32_t    baudrate = 115200;
+    int fd   = -1;
+    int rval = 0;
 
     fd = open(aFile, O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC);
     if (fd == -1)
@@ -424,9 +422,11 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
     if (isatty(fd))
     {
         struct termios tios;
+        const char *   value;
+        speed_t        speed;
 
-        unsigned int speed   = 115200;
-        int          stopBit = 1;
+        int      stopBit  = 1;
+        uint32_t baudrate = 115200;
 
         VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0, OT_NOOP);
 
@@ -434,14 +434,14 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
 
         tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
 
-        if (parity)
+        if ((value = aArguments.GetValue("uart-parity")) != nullptr)
         {
-            if (strncmp(parity, "odd", 3) == 0)
+            if (strncmp(value, "odd", 3) == 0)
             {
                 tios.c_cflag |= PARENB;
                 tios.c_cflag |= PARODD;
             }
-            else if (strncmp(parity, "even", 4) == 0)
+            else if (strncmp(value, "even", 4) == 0)
             {
                 tios.c_cflag |= PARENB;
             }
@@ -451,9 +451,9 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
             }
         }
 
-        if (aArguments.GetValue("uart-stop"))
+        if ((value = aArguments.GetValue("uart-stop")) != nullptr)
         {
-            stopBit = atoi(aArguments.GetValue("uart-stop"));
+            stopBit = atoi(value);
         }
 
         switch (stopBit)
@@ -469,10 +469,11 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
             break;
         }
 
-        if (aArguments.GetValue("uart-baudrate"))
+        if ((value = aArguments.GetValue("uart-baudrate")))
         {
-            baudrate = static_cast<uint32_t>(atoi(aArguments.GetValue("baudrate")));
+            baudrate = static_cast<uint32_t>(atoi(value));
         }
+
         switch (baudrate)
         {
         case 9600:
@@ -560,7 +561,7 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
             break;
         }
 
-        if (aArguments.GetValue("uart-flow-control") != NULL)
+        if (aArguments.GetValue("uart-flow-control") != nullptr)
         {
             tios.c_cflag |= CRTSCTS;
         }
@@ -593,7 +594,7 @@ int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
         cfmakeraw(&tios);
         tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
 
-        VerifyOrExit((pid = forkpty(&fd, NULL, &tios, NULL)) != -1, perror("forkpty()"));
+        VerifyOrExit((pid = forkpty(&fd, nullptr, &tios, nullptr)) != -1, perror("forkpty()"));
     }
 
     if (0 == pid)
@@ -601,13 +602,20 @@ int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
         const int kMaxCommand = 255;
         char      cmd[kMaxCommand];
 
-        rval = snprintf(cmd, sizeof(cmd), "exec %s %s", aCommand, aArguments);
+        if (aArguments == nullptr)
+        {
+            rval = snprintf(cmd, sizeof(cmd), "exec %s", aCommand);
+        }
+        else
+        {
+            rval = snprintf(cmd, sizeof(cmd), "exec %s %s", aCommand, aArguments);
+        }
         VerifyOrExit(rval > 0 && static_cast<size_t>(rval) < sizeof(cmd),
                      fprintf(stderr, "NCP file and configuration is too long!");
                      rval = -1);
 
         VerifyOrExit((rval = execl(SOCKET_UTILS_DEFAULT_SHELL, SOCKET_UTILS_DEFAULT_SHELL, "-c", cmd,
-                                   static_cast<char *>(NULL))) != -1,
+                                   static_cast<char *>(nullptr))) != -1,
                      perror("execl(OT_RCP)"));
     }
     else

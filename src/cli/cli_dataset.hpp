@@ -96,6 +96,7 @@ private:
     otError ProcessMgmtGetCommand(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessPskc(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessSecurityPolicy(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessSet(uint8_t aArgsLength, char *aArgs[]);
 
     Interpreter &mInterpreter;
 

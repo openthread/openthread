@@ -41,7 +41,7 @@ MTDS = [SED2, ED2]
 
 
 class Cert_7_1_4_BorderRouterAsRouter(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

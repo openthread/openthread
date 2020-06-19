@@ -45,12 +45,12 @@ namespace Ip6 {
 
 Mpl::Mpl(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mMatchingAddress(NULL)
-    , mSeedSetTimer(aInstance, &Mpl::HandleSeedSetTimer, this)
+    , mMatchingAddress(nullptr)
+    , mSeedSetTimer(aInstance, Mpl::HandleSeedSetTimer, this)
     , mSeedId(0)
     , mSequence(0)
 #if OPENTHREAD_FTD
-    , mRetransmissionTimer(aInstance, &Mpl::HandleRetransmissionTimer, this)
+    , mRetransmissionTimer(aInstance, Mpl::HandleRetransmissionTimer, this)
     , mTimerExpirations(0)
 #endif
 {
@@ -137,7 +137,7 @@ exit:
 otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
 {
     otError    error    = OT_ERROR_NONE;
-    SeedEntry *insert   = NULL;
+    SeedEntry *insert   = nullptr;
     SeedEntry *group    = mSeedSet;
     SeedEntry *evict    = mSeedSet;
     uint8_t    curCount = 0;
@@ -149,7 +149,7 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
         {
             // unused entries exist
 
-            if (insert == NULL)
+            if (insert == nullptr)
             {
                 // no existing group, set insert and evict entry to be the same
                 insert = &mSeedSet[i];
@@ -164,7 +164,7 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
         {
             // processing new group
 
-            if (aSeedId == group->mSeedId && insert == NULL)
+            if (aSeedId == group->mSeedId && insert == nullptr)
             {
                 // insert at end of existing group
                 insert = &mSeedSet[i];
@@ -193,7 +193,7 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
                 // already received, drop message
                 ExitNow(error = OT_ERROR_DROP);
             }
-            else if (insert == NULL && diff < 0)
+            else if (insert == nullptr && diff < 0)
             {
                 // insert in order of sequence
                 insert = &mSeedSet[i];
@@ -207,7 +207,7 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
         // no free entries available, look to evict an existing entry
         OT_ASSERT(curCount != 0);
 
-        if (aSeedId == group->mSeedId && insert == NULL)
+        if (aSeedId == group->mSeedId && insert == nullptr)
         {
             // insert at end of existing group
             insert = &mSeedSet[kNumSeedEntries];
@@ -224,7 +224,7 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
         // require evict group size to have >= 2 entries
         VerifyOrExit(maxCount > 1, error = OT_ERROR_DROP);
 
-        if (insert == NULL)
+        if (insert == nullptr)
         {
             // no existing entries for aSeedId
             insert = evict;
@@ -298,7 +298,7 @@ void Mpl::HandleSeedSetTimer(void)
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
 {
     otError  error       = OT_ERROR_NONE;
-    Message *messageCopy = NULL;
+    Message *messageCopy = nullptr;
     Metadata metadata;
     uint8_t  hopLimit = 0;
 
@@ -310,7 +310,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
 #endif
 
     VerifyOrExit(GetTimerExpirations() > 0, OT_NOOP);
-    VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((messageCopy = aMessage.Clone()) != nullptr, error = OT_ERROR_NO_BUFS);
 
     if (!aIsOutbound)
     {
@@ -332,7 +332,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
 
 exit:
 
-    if (error != OT_ERROR_NONE && messageCopy != NULL)
+    if (error != OT_ERROR_NONE && messageCopy != nullptr)
     {
         messageCopy->Free();
     }
@@ -351,7 +351,7 @@ void Mpl::HandleRetransmissionTimer(void)
     Message * message;
     Message * nextMessage;
 
-    for (message = mBufferedMessageSet.GetHead(); message != NULL; message = nextMessage)
+    for (message = mBufferedMessageSet.GetHead(); message != nullptr; message = nextMessage)
     {
         nextMessage = message->GetNext();
 
@@ -373,7 +373,7 @@ void Mpl::HandleRetransmissionTimer(void)
             {
                 Message *messageCopy = message->Clone(message->GetLength() - sizeof(Metadata));
 
-                if (messageCopy != NULL)
+                if (messageCopy != nullptr)
                 {
                     if (metadata.mTransmissionCount > 1)
                     {

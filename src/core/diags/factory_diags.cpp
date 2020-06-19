@@ -581,7 +581,7 @@ otError Diags::ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, siz
     {
         if (strcmp(aArgs[0], sCommands[i].mName) == 0)
         {
-            error = (this->*sCommands[i].mCommand)(aArgsLength - 1, (aArgsLength > 1) ? &aArgs[1] : NULL, aOutput,
+            error = (this->*sCommands[i].mCommand)(aArgsLength - 1, (aArgsLength > 1) ? &aArgs[1] : nullptr, aOutput,
                                                    aOutputMaxLen);
             ExitNow();
         }

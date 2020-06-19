@@ -137,6 +137,8 @@ LOCAL_EXPORT_C_INCLUDE_DIRS     := \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
@@ -239,6 +241,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/announce_begin_server.cpp               \
     src/core/thread/announce_sender.cpp                     \
     src/core/thread/child_table.cpp                         \
+    src/core/thread/discover_scanner.cpp                    \
     src/core/thread/dua_manager.cpp                         \
     src/core/thread/energy_scan_server.cpp                  \
     src/core/thread/indirect_sender.cpp                     \
@@ -342,6 +345,8 @@ LOCAL_CFLAGS                                                                := \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
@@ -385,6 +390,8 @@ LOCAL_CFLAGS                                                                := \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
@@ -422,6 +429,8 @@ LOCAL_CFLAGS                                                                := \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
@@ -462,6 +471,8 @@ LOCAL_CFLAGS                                                                := \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
@@ -481,6 +492,12 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := ot-ctl
 LOCAL_MODULE_TAGS := eng
+
+LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
+    -Wno-non-virtual-dtor                                                      \
+    $(NULL)
 
 LOCAL_CFLAGS                                               := \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>  \

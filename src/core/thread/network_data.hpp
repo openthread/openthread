@@ -354,7 +354,7 @@ protected:
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
      *
-     * @returns A pointer to the Border Router TLV if one is found or NULL if no Border Router TLV exists.
+     * @returns A pointer to the Border Router TLV if one is found or nullptr if no Border Router TLV exists.
      *
      */
     static BorderRouterTlv *FindBorderRouter(PrefixTlv &aPrefix)
@@ -367,7 +367,7 @@ protected:
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
      *
-     * @returns A pointer to the Border Router TLV if one is found or NULL if no Border Router TLV exists.
+     * @returns A pointer to the Border Router TLV if one is found or nullptr if no Border Router TLV exists.
      *
      */
     static const BorderRouterTlv *FindBorderRouter(const PrefixTlv &aPrefix);
@@ -378,7 +378,7 @@ protected:
      * @param[in]  aPrefix  A reference to the Prefix TLV.
      * @param[in]  aStable  TRUE to find a stable TLV, FALSE to find a TLV not marked as stable..
      *
-     * @returns A pointer to the Border Router TLV if one is found or NULL if no Border Router TLV exists.
+     * @returns A pointer to the Border Router TLV if one is found or nullptr if no Border Router TLV exists.
      *
      */
     static BorderRouterTlv *FindBorderRouter(PrefixTlv &aPrefix, bool aStable)
@@ -392,7 +392,7 @@ protected:
      * @param[in]  aPrefix  A reference to the Prefix TLV.
      * @param[in]  aStable  TRUE to find a stable TLV, FALSE to find a TLV not marked as stable..
      *
-     * @returns A pointer to the Border Router TLV if one is found or NULL if no Border Router TLV exists.
+     * @returns A pointer to the Border Router TLV if one is found or nullptr if no Border Router TLV exists.
      *
      */
     static const BorderRouterTlv *FindBorderRouter(const PrefixTlv &aPrefix, bool aStable);
@@ -402,7 +402,7 @@ protected:
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
      *
-     * @returns A pointer to the Has Route TLV if one is found or NULL if no Has Route TLV exists.
+     * @returns A pointer to the Has Route TLV if one is found or nullptr if no Has Route TLV exists.
      *
      */
     static HasRouteTlv *FindHasRoute(PrefixTlv &aPrefix)
@@ -415,7 +415,7 @@ protected:
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
      *
-     * @returns A pointer to the Has Route TLV if one is found or NULL if no Has Route TLV exists.
+     * @returns A pointer to the Has Route TLV if one is found or nullptr if no Has Route TLV exists.
      *
      */
     static const HasRouteTlv *FindHasRoute(const PrefixTlv &aPrefix);
@@ -426,7 +426,7 @@ protected:
      * @param[in]  aPrefix  A reference to the Prefix TLV.
      * @param[in]  aStable  TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the Has Route TLV if one is found or NULL if no Has Route TLV exists.
+     * @returns A pointer to the Has Route TLV if one is found or nullptr if no Has Route TLV exists.
      *
      */
     static HasRouteTlv *FindHasRoute(PrefixTlv &aPrefix, bool aStable)
@@ -440,7 +440,7 @@ protected:
      * @param[in]  aPrefix  A reference to the Prefix TLV.
      * @param[in]  aStable  TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the Has Route TLV if one is found or NULL if no Has Route TLV exists.
+     * @returns A pointer to the Has Route TLV if one is found or nullptr if no Has Route TLV exists.
      *
      */
     static const HasRouteTlv *FindHasRoute(const PrefixTlv &aPrefix, bool aStable);
@@ -450,7 +450,7 @@ protected:
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
      *
-     * @returns A pointer to the Context TLV is one is found or NULL if no Context TLV exists.
+     * @returns A pointer to the Context TLV is one is found or nullptr if no Context TLV exists.
      *
      */
     static ContextTlv *FindContext(PrefixTlv &aPrefix)
@@ -463,7 +463,7 @@ protected:
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
      *
-     * @returns A pointer to the Context TLV is one is found or NULL if no Context TLV exists.
+     * @returns A pointer to the Context TLV is one is found or nullptr if no Context TLV exists.
      *
      */
     static const ContextTlv *FindContext(const PrefixTlv &aPrefix);
@@ -474,7 +474,7 @@ protected:
      * @param[in]  aPrefix        A pointer to an IPv6 prefix.
      * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix.
      *
-     * @returns A pointer to the Prefix TLV is one is found or NULL if no matching Prefix TLV exists.
+     * @returns A pointer to the Prefix TLV is one is found or nullptr if no matching Prefix TLV exists.
      *
      */
     PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
@@ -488,7 +488,7 @@ protected:
      * @param[in]  aPrefix        A pointer to an IPv6 prefix.
      * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix.
      *
-     * @returns A pointer to the Prefix TLV is one is found or NULL if no matching Prefix TLV exists.
+     * @returns A pointer to the Prefix TLV is one is found or nullptr if no matching Prefix TLV exists.
      *
      */
     const PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) const;
@@ -501,7 +501,7 @@ protected:
      * @param[in]  aTlvs          A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength    The specified tlvs buffer length pointed to by @p aTlvs.
      *
-     * @returns A pointer to the Prefix TLV is one is found or NULL if no matching Prefix TLV exists.
+     * @returns A pointer to the Prefix TLV is one is found or nullptr if no matching Prefix TLV exists.
      *
      */
     static PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, uint8_t *aTlvs, uint8_t aTlvsLength)
@@ -518,7 +518,7 @@ protected:
      * @param[in]  aTlvs          A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength    The specified tlvs buffer length pointed to by @p aTlvs.
      *
-     * @returns A pointer to the Prefix TLV is one is found or NULL if no matching Prefix TLV exists.
+     * @returns A pointer to the Prefix TLV is one is found or nullptr if no matching Prefix TLV exists.
      *
      */
     static const PrefixTlv *FindPrefix(const uint8_t *aPrefix,
@@ -533,7 +533,7 @@ protected:
      * @param[in]  aServiceData       A pointer to a Service Data.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
      *
-     * @returns A pointer to the Service TLV is one is found or NULL if no matching Service TLV exists.
+     * @returns A pointer to the Service TLV is one is found or nullptr if no matching Service TLV exists.
      *
      */
     ServiceTlv *FindService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
@@ -549,7 +549,7 @@ protected:
      * @param[in]  aServiceData       A pointer to a Service Data.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
      *
-     * @returns A pointer to the Service TLV is one is found or NULL if no matching Service TLV exists.
+     * @returns A pointer to the Service TLV is one is found or nullptr if no matching Service TLV exists.
      *
      */
     const ServiceTlv *FindService(uint32_t       aEnterpriseNumber,
@@ -565,7 +565,7 @@ protected:
      * @param[in]  aTlvs              A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength        The specified tlvs buffer length pointed to by @p aTlvs.
      *
-     * @returns A pointer to the Service TLV is one is found or NULL if no matching Service TLV exists.
+     * @returns A pointer to the Service TLV is one is found or nullptr if no matching Service TLV exists.
      *
      */
     static ServiceTlv *FindService(uint32_t       aEnterpriseNumber,
@@ -587,7 +587,7 @@ protected:
      * @param[in]  aTlvs              A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength        The specified tlvs buffer length pointed to by @p aTlvs.
      *
-     * @returns A pointer to the Service TLV is one is found or NULL if no matching Service TLV exists.
+     * @returns A pointer to the Service TLV is one is found or nullptr if no matching Service TLV exists.
      *
      */
     static const ServiceTlv *FindService(uint32_t       aEnterpriseNumber,
@@ -616,7 +616,7 @@ protected:
      *
      * @param[in]  aTlvSize  The size of TLV (total number of bytes including Type, Length, and Value fields)
      *
-     * @returns A pointer to the TLV if there is space to grow Network Data, or NULL if no space to grow the Network
+     * @returns A pointer to the TLV if there is space to grow Network Data, or nullptr if no space to grow the Network
      *          Data with requested @p aTlvSize number of bytes.
      *
      */
@@ -690,7 +690,7 @@ protected:
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      * @param[in]  aType   The TLV type to find.
      *
-     * @returns A pointer to the TLV if found, or NULL if not found.
+     * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
     static NetworkDataTlv *FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, NetworkDataTlv::Type aType)
@@ -706,7 +706,7 @@ protected:
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      * @param[in]  aType   The TLV type to find.
      *
-     * @returns A pointer to the TLV if found, or NULL if not found.
+     * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
     static const NetworkDataTlv *FindTlv(const NetworkDataTlv *aStart,
@@ -720,7 +720,7 @@ protected:
      * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      *
-     * @returns A pointer to the TLV if found, or NULL if not found.
+     * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
     template <typename TlvType> static TlvType *FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEnd)
@@ -735,7 +735,7 @@ protected:
      * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      *
-     * @returns A pointer to the TLV if found, or NULL if not found.
+     * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
     template <typename TlvType> static const TlvType *FindTlv(const NetworkDataTlv *aStart, const NetworkDataTlv *aEnd)
@@ -752,7 +752,7 @@ protected:
      * @param[in]  aType   The TLV type to find.
      * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or NULL if not found.
+     * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
     static NetworkDataTlv *FindTlv(NetworkDataTlv *     aStart,
@@ -773,7 +773,7 @@ protected:
      * @param[in]  aType   The TLV type to find.
      * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or NULL if not found.
+     * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
     static const NetworkDataTlv *FindTlv(const NetworkDataTlv *aStart,
@@ -789,7 +789,7 @@ protected:
      * @param [in] aEnd    A pointer to the end of the sequence of TLVs.
      * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or NULL if not found.
+     * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
     template <typename TlvType> static TlvType *FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, bool aStable)
@@ -806,7 +806,7 @@ protected:
      * @param [in] aEnd    A pointer to the end of the sequence of TLVs.
      * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or NULL if not found.
+     * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
     template <typename TlvType>

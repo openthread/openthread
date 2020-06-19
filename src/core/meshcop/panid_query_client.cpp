@@ -50,8 +50,8 @@ namespace ot {
 
 PanIdQueryClient::PanIdQueryClient(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mCallback(NULL)
-    , mContext(NULL)
+    , mCallback(nullptr)
+    , mContext(nullptr)
     , mPanIdQuery(OT_URI_PATH_PANID_CONFLICT, &PanIdQueryClient::HandleConflict, this)
 {
     Get<Coap::Coap>().AddResource(mPanIdQuery);
@@ -66,10 +66,10 @@ otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,
     otError                 error = OT_ERROR_NONE;
     MeshCoP::ChannelMaskTlv channelMask;
     Ip6::MessageInfo        messageInfo;
-    Coap::Message *         message = NULL;
+    Coap::Message *         message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error =
                       message->Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE,
@@ -97,7 +97,7 @@ otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
     }
@@ -125,7 +125,7 @@ void PanIdQueryClient::HandleConflict(Coap::Message &aMessage, const Ip6::Messag
 
     VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0, OT_NOOP);
 
-    if (mCallback != NULL)
+    if (mCallback != nullptr)
     {
         mCallback(panId, mask, mContext);
     }

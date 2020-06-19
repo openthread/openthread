@@ -69,7 +69,6 @@ const otMasterKey KeyManager::kDefaultMasterKey = {{
 KeyManager::KeyManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mKeySequence(0)
-    , mMacFrameCounter(0)
     , mMleFrameCounter(0)
     , mStoredMacFrameCounter(0)
     , mStoredMleFrameCounter(0)
@@ -77,7 +76,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKeyRotationTime(kDefaultKeyRotationTime)
     , mKeySwitchGuardTime(kDefaultKeySwitchGuardTime)
     , mKeySwitchGuardEnabled(false)
-    , mKeyRotationTimer(aInstance, &KeyManager::HandleKeyRotationTimer, this)
+    , mKeyRotationTimer(aInstance, KeyManager::HandleKeyRotationTimer, this)
     , mKekFrameCounter(0)
     , mSecurityPolicyFlags(0xff)
     , mIsPskcSet(false)
@@ -100,7 +99,7 @@ void KeyManager::Stop(void)
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 void KeyManager::SetPskc(const Pskc &aPskc)
 {
-    IgnoreError(Get<Notifier>().Update(mPskc, aPskc, OT_CHANGED_PSKC));
+    IgnoreError(Get<Notifier>().Update(mPskc, aPskc, kEventPskcChanged));
     mIsPskcSet = true;
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -110,9 +109,8 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
     otError error = OT_ERROR_NONE;
     Router *parent;
 
-    SuccessOrExit(
-        Get<Notifier>().Update(mMasterKey, aKey, OT_CHANGED_MASTER_KEY | OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
-
+    SuccessOrExit(Get<Notifier>().Update(mMasterKey, aKey, kEventMasterKeyChanged));
+    Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
     mKeySequence = 0;
     UpdateKeyMaterial();
 
@@ -176,7 +174,7 @@ void KeyManager::UpdateKeyMaterial(void)
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
-    VerifyOrExit(aKeySequence != mKeySequence, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
+    VerifyOrExit(aKeySequence != mKeySequence, Get<Notifier>().SignalIfFirst(kEventThreadKeySeqCounterChanged));
 
     if ((aKeySequence == (mKeySequence + 1)) && mKeyRotationTimer.IsRunning())
     {
@@ -193,10 +191,10 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
     mKeySequence = aKeySequence;
     UpdateKeyMaterial();
 
-    mMacFrameCounter = 0;
+    SetMacFrameCounter(0);
     mMleFrameCounter = 0;
 
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
+    Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
 
 exit:
     return;
@@ -212,11 +210,19 @@ const Mle::Key &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
     return mTemporaryMleKey;
 }
 
-void KeyManager::IncrementMacFrameCounter(void)
+uint32_t KeyManager::GetMacFrameCounter(void) const
 {
-    mMacFrameCounter++;
+    return Get<Mac::SubMac>().GetFrameCounter();
+}
 
-    if (mMacFrameCounter >= mStoredMacFrameCounter)
+void KeyManager::SetMacFrameCounter(uint32_t aMacFrameCounter)
+{
+    Get<Mac::SubMac>().SetFrameCounter(aMacFrameCounter);
+}
+
+void KeyManager::MacFrameCounterUpdated(uint32_t aMacFrameCounter)
+{
+    if (aMacFrameCounter >= mStoredMacFrameCounter)
     {
         IgnoreError(Get<Mle::MleRouter>().Store());
     }
@@ -258,7 +264,7 @@ exit:
 
 void KeyManager::SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags)
 {
-    IgnoreError(Get<Notifier>().Update(mSecurityPolicyFlags, aSecurityPolicyFlags, OT_CHANGED_SECURITY_POLICY));
+    IgnoreError(Get<Notifier>().Update(mSecurityPolicyFlags, aSecurityPolicyFlags, kEventSecurityPolicyChanged));
 }
 
 void KeyManager::StartKeyRotationTimer(void)

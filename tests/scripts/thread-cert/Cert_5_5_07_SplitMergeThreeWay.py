@@ -38,7 +38,7 @@ ROUTER3 = 4
 
 
 class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER1: {
             'mode': 'rsdn',
             'panid': 0xface,

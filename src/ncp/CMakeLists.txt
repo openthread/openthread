@@ -66,7 +66,6 @@ target_compile_options(openthread-rcp PRIVATE
 )
 
 set(COMMON_INCLUDES
-    ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
 )

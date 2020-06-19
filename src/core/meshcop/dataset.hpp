@@ -58,9 +58,9 @@ class Dataset
 public:
     enum
     {
-        kMaxSize      = 256, ///< Maximum size of MeshCoP Dataset (bytes)
-        kMaxValueSize = 16,  ///< Maximum size of each Dataset TLV value (bytes)
-        kMaxGetTypes  = 64,  ///< Maximum number of types in MGMT_GET.req
+        kMaxSize      = OT_OPERATIONAL_DATASET_MAX_LENGTH, ///< Maximum size of MeshCoP Dataset (bytes)
+        kMaxValueSize = 16,                                ///< Maximum size of each Dataset TLV value (bytes)
+        kMaxGetTypes  = 64,                                ///< Maximum number of types in MGMT_GET.req
     };
 
     /**
@@ -100,7 +100,7 @@ public:
      *
      * @param[in] aType  A TLV type.
      *
-     * @returns A pointer to the TLV or NULL if none is found.
+     * @returns A pointer to the TLV or nullptr if none is found.
      *
      */
     Tlv *GetTlv(Tlv::Type aType) { return const_cast<Tlv *>(const_cast<const Dataset *>(this)->GetTlv(aType)); }
@@ -110,7 +110,7 @@ public:
      *
      * @param[in] aType  The TLV type.
      *
-     * @returns A pointer to the TLV or NULL if none is found.
+     * @returns A pointer to the TLV or nullptr if none is found.
      *
      */
     const Tlv *GetTlv(Tlv::Type aType) const;
@@ -118,7 +118,7 @@ public:
     /**
      * This template method returns a pointer to the TLV with a given template type `TlvType`
      *
-     * @returns A pointer to the TLV or NULL if none is found.
+     * @returns A pointer to the TLV or nullptr if none is found.
      *
      */
     template <typename TlvType> TlvType *GetTlv(void)
@@ -129,7 +129,7 @@ public:
     /**
      * This template method returns a pointer to the TLV with a given template type `TlvType`
      *
-     * @returns A pointer to the TLV or NULL if none is found.
+     * @returns A pointer to the TLV or nullptr if none is found.
      *
      */
     template <typename TlvType> const TlvType *GetTlv(void) const
@@ -160,6 +160,14 @@ public:
      *
      */
     void ConvertTo(otOperationalDataset &aDataset) const;
+
+    /**
+     * This method converts the TLV representation to structure representation.
+     *
+     * @param[out] aDataset  A reference to `otOperationalDatasetTlvs` to output the Dataset.
+     *
+     */
+    void ConvertTo(otOperationalDatasetTlvs &aDataset) const;
 
     /**
      * This method returns the Dataset size in bytes.
@@ -285,6 +293,14 @@ public:
     otError SetFrom(const otOperationalDataset &aDataset);
 
     /**
+     * This method sets the Dataset using @p aDataset.
+     *
+     * @param[in]  aDataset  The input Dataset as otOperationalDatasetTlvs.
+     *
+     */
+    void SetFrom(const otOperationalDatasetTlvs &aDataset);
+
+    /**
      * This method removes a TLV from the Dataset.
      *
      * @param[in] aType The type of a specific TLV.
@@ -313,7 +329,7 @@ public:
      * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
      *
      */
-    otError ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated = NULL) const;
+    otError ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated = nullptr) const;
 
     /**
      * This method converts a Pending Dataset to an Active Dataset.

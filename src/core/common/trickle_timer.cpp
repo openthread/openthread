@@ -46,7 +46,7 @@ TrickleTimer::TrickleTimer(Instance &aInstance,
                            Handler aTransmitHandler,
                            Handler aIntervalExpiredHandler,
                            void *  aOwner)
-    : TimerMilli(aInstance, &TrickleTimer::HandleTimer, aOwner)
+    : TimerMilli(aInstance, TrickleTimer::HandleTimer, aOwner)
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     , mRedundancyConstant(aRedundancyConstant)
     , mCounter(0)
@@ -61,7 +61,7 @@ TrickleTimer::TrickleTimer(Instance &aInstance,
     , mIsRunning(false)
     , mInTransmitPhase(false)
 {
-    OT_ASSERT(aTransmitHandler != NULL);
+    OT_ASSERT(aTransmitHandler != nullptr);
 }
 
 void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode)

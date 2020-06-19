@@ -58,11 +58,11 @@ namespace MeshCoP {
 Joiner::Joiner(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(OT_JOINER_STATE_IDLE)
-    , mCallback(NULL)
-    , mContext(NULL)
+    , mCallback(nullptr)
+    , mContext(nullptr)
     , mJoinerRouterIndex(0)
-    , mFinalizeMessage(NULL)
-    , mTimer(aInstance, &Joiner::HandleTimer, this)
+    , mFinalizeMessage(nullptr)
+    , mTimer(aInstance, Joiner::HandleTimer, this)
     , mJoinerEntrust(OT_URI_PATH_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this)
 {
     memset(mJoinerRouters, 0, sizeof(mJoinerRouters));
@@ -80,35 +80,11 @@ void Joiner::SetState(otJoinerState aState)
     otJoinerState oldState = mState;
     OT_UNUSED_VARIABLE(oldState);
 
-    SuccessOrExit(Get<Notifier>().Update(mState, aState, OT_CHANGED_JOINER_STATE));
+    SuccessOrExit(Get<Notifier>().Update(mState, aState, kEventJoinerStateChanged));
 
     otLogInfoMeshCoP("JoinerState: %s -> %s", JoinerStateToString(oldState), JoinerStateToString(aState));
 exit:
     return;
-}
-
-bool Joiner::IsPskdValid(const char *aPskd)
-{
-    bool   valid      = false;
-    size_t pskdLength = StringLength(aPskd, kPskdMaxLength + 1);
-
-    OT_STATIC_ASSERT(static_cast<uint8_t>(kPskdMaxLength) <= static_cast<uint8_t>(Dtls::kPskMaxLength),
-                     "The maximum length of DTLS PSK is smaller than joiner PSKd");
-
-    VerifyOrExit(pskdLength >= kPskdMinLength && pskdLength <= kPskdMaxLength, OT_NOOP);
-
-    for (size_t i = 0; i < pskdLength; i++)
-    {
-        char c = aPskd[i];
-
-        VerifyOrExit(isdigit(c) || isupper(c), OT_NOOP);
-        VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z', OT_NOOP);
-    }
-
-    valid = true;
-
-exit:
-    return valid;
 }
 
 otError Joiner::Start(const char *     aPskd,
@@ -146,9 +122,10 @@ otError Joiner::Start(const char *     aPskd,
     SuccessOrExit(error = PrepareJoinerFinalizeMessage(aProvisioningUrl, aVendorName, aVendorModel, aVendorSwVersion,
                                                        aVendorData));
 
-    SuccessOrExit(error = Get<Mle::MleRouter>().Discover(Mac::ChannelMask(0), Get<Mac::Mac>().GetPanId(),
-                                                         /* aJoiner */ true, /* aEnableFiltering */ true,
-                                                         HandleDiscoverResult, this));
+    SuccessOrExit(error = Get<Mle::DiscoverScanner>().Discover(Mac::ChannelMask(0), Get<Mac::Mac>().GetPanId(),
+                                                               /* aJoiner */ true, /* aEnableFiltering */ true,
+                                                               /* aFilterIndexes (use hash of factory EUI64) */ nullptr,
+                                                               HandleDiscoverResult, this));
     mCallback = aCallback;
     mContext  = aContext;
 
@@ -168,8 +145,8 @@ void Joiner::Stop(void)
 {
     otLogInfoMeshCoP("Joiner stopped");
 
-    // Callback is set to `NULL` to skip calling it from `Finish()`
-    mCallback = NULL;
+    // Callback is set to `nullptr` to skip calling it from `Finish()`
+    mCallback = nullptr;
     Finish(OT_ERROR_ABORT);
 }
 
@@ -253,7 +230,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 
     VerifyOrExit(mState == OT_JOINER_STATE_DISCOVER, OT_NOOP);
 
-    if (aResult != NULL)
+    if (aResult != nullptr)
     {
         SaveDiscoveredJoinerRouter(*aResult);
     }
@@ -275,19 +252,11 @@ exit:
 void Joiner::SaveDiscoveredJoinerRouter(const otActiveScanResult &aResult)
 {
     uint8_t       priority;
-    bool          doesAllowAny = true;
-    JoinerRouter *end          = OT_ARRAY_END(mJoinerRouters);
+    bool          doesAllowAny;
+    JoinerRouter *end = OT_ARRAY_END(mJoinerRouters);
     JoinerRouter *entry;
 
-    // Check whether Steering Data allows any joiner (it is all 0xff).
-    for (uint8_t i = 0; i < aResult.mSteeringData.mLength; i++)
-    {
-        if (aResult.mSteeringData.m8[i] != 0xff)
-        {
-            doesAllowAny = false;
-            break;
-        }
-    }
+    doesAllowAny = static_cast<const SteeringData &>(aResult.mSteeringData).PermitsAllJoiners();
 
     otLogInfoMeshCoP("Joiner discover network: %s, pan:0x%04x, port:%d, chan:%d, rssi:%d, allow-any:%s",
                      static_cast<const Mac::ExtAddress &>(aResult.mExtAddress).ToString().AsCString(), aResult.mPanId,
@@ -427,7 +396,7 @@ otError Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     VendorStackVersionTlv vendorStackVersionTlv;
     ProvisioningUrlTlv    provisioningUrlTlv;
 
-    VerifyOrExit((mFinalizeMessage = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((mFinalizeMessage = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     mFinalizeMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     SuccessOrExit(error = mFinalizeMessage->AppendUriPathOptions(OT_URI_PATH_JOINER_FINALIZE));
@@ -455,7 +424,7 @@ otError Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     vendorStackVersionTlv.SetRevision(OPENTHREAD_CONFIG_STACK_VERSION_REV);
     SuccessOrExit(error = vendorStackVersionTlv.AppendTo(*mFinalizeMessage));
 
-    if (aVendorData != NULL)
+    if (aVendorData != nullptr)
     {
         VendorDataTlv vendorDataTlv;
         vendorDataTlv.Init();
@@ -482,10 +451,10 @@ exit:
 
 void Joiner::FreeJoinerFinalizeMessage(void)
 {
-    VerifyOrExit(mState == OT_JOINER_STATE_IDLE && mFinalizeMessage != NULL, OT_NOOP);
+    VerifyOrExit(mState == OT_JOINER_STATE_IDLE && mFinalizeMessage != nullptr, OT_NOOP);
 
     mFinalizeMessage->Free();
-    mFinalizeMessage = NULL;
+    mFinalizeMessage = nullptr;
 
 exit:
     return;
@@ -493,14 +462,14 @@ exit:
 
 void Joiner::SendJoinerFinalize(void)
 {
-    OT_ASSERT(mFinalizeMessage != NULL);
+    OT_ASSERT(mFinalizeMessage != nullptr);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     LogCertMessage("[THCI] direction=send | type=JOIN_FIN.req |", *mFinalizeMessage);
 #endif
 
     SuccessOrExit(Get<Coap::CoapSecure>().SendMessage(*mFinalizeMessage, Joiner::HandleJoinerFinalizeResponse, this));
-    mFinalizeMessage = NULL;
+    mFinalizeMessage = nullptr;
 
     otLogInfoMeshCoP("Joiner sent finalize");
 
@@ -597,7 +566,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6:
     Coap::Message *  message;
     Ip6::MessageInfo responseInfo(aRequestInfo);
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
@@ -611,7 +580,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6:
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
     }

@@ -111,8 +111,8 @@ exit:
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 AnnounceSender::AnnounceSender(Instance &aInstance)
-    : AnnounceSenderBase(aInstance, &AnnounceSender::HandleTimer)
-    , mNotifierCallback(aInstance, HandleStateChanged, this)
+    : AnnounceSenderBase(aInstance, AnnounceSender::HandleTimer)
+    , Notifier::Receiver(aInstance, AnnounceSender::HandleNotifierEvents)
 {
 }
 
@@ -175,14 +175,14 @@ void AnnounceSender::Stop(void)
     otLogInfoMle("Stopping periodic MLE Announcements tx");
 }
 
-void AnnounceSender::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void AnnounceSender::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<AnnounceSender>().HandleStateChanged(aFlags);
+    static_cast<AnnounceSender &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
-void AnnounceSender::HandleStateChanged(otChangedFlags aFlags)
+void AnnounceSender::HandleNotifierEvents(Events aEvents)
 {
-    if ((aFlags & OT_CHANGED_THREAD_ROLE) != 0)
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
         CheckState();
     }

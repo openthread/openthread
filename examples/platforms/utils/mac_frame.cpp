@@ -134,7 +134,7 @@ bool otMacFrameIsVersion2015(const otRadioFrame *aFrame)
 
 void otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, otRadioFrame *aAckFrame)
 {
-    assert(aFrame != NULL && aAckFrame != NULL);
+    assert(aFrame != nullptr && aAckFrame != nullptr);
 
     static_cast<Mac::TxFrame *>(aAckFrame)->GenerateImmAck(*static_cast<const Mac::RxFrame *>(aFrame), aIsFramePending);
 }
@@ -146,7 +146,7 @@ otError otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
                                  uint8_t             aIeLength,
                                  otRadioFrame *      aAckFrame)
 {
-    assert(aFrame != NULL && aAckFrame != NULL);
+    assert(aFrame != nullptr && aAckFrame != nullptr);
 
     return static_cast<Mac::TxFrame *>(aAckFrame)->GenerateEnhAck(*static_cast<const Mac::RxFrame *>(aFrame),
                                                                   aIsFramePending, aIeData, aIeLength);

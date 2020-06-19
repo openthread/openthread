@@ -39,6 +39,7 @@ Done
 - [discover](#discover-channel)
 - [dns](#dns-resolve-hostname-dns-server-ip-dns-server-port)
 - [domainname](#domainname)
+- [dua](#dua-iid)
 - [eidcache](#eidcache)
 - [eui64](#eui64)
 - [extaddr](#extaddr)
@@ -75,6 +76,7 @@ Done
 - [prefix](#prefix-add-prefix-padcrosnD-prf)
 - [promiscuous](#promiscuous)
 - [pskc](#pskc--p-keypassphrase)
+- [rcp](#rcp)
 - [releaserouterid](#releaserouterid-routerid)
 - [reset](#reset)
 - [rloc16](#rloc16)
@@ -558,6 +560,34 @@ Set the Thread Domain Name for Thread 1.2 device.
 
 ```bash
 > domainname Test\ Thread
+Done
+```
+
+### dua iid
+
+Get the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+
+```bash
+> dua iid
+0004000300020001
+Done
+```
+
+### dua iid \<iid\>
+
+Set the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+
+```bash
+> dua iid 0004000300020001
+Done
+```
+
+### dua iid clear
+
+Clear the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+
+```bash
+> dua iid clear
 Done
 ```
 
@@ -1279,6 +1309,20 @@ Disable radio promiscuous operation.
 
 ```bash
 > promiscuous disable
+Done
+```
+
+### rcp
+
+RCP-related commands.
+
+### rcp version
+
+Print RCP version string.
+
+```bash
+> rcp version
+OPENTHREAD/20191113-00825-g82053cc9d-dirty; SIMULATION; Jun  4 2020 17:53:16
 Done
 ```
 

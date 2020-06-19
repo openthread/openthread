@@ -98,7 +98,7 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 uint32_t otPlatAlarmMicroGetNow(void)
 {
-    return (uint32_t)(otPlatTimeGet());
+    return static_cast<uint32_t>(platformAlarmGetNow());
 }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
@@ -122,7 +122,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
     int64_t  remaining = INT32_MAX;
     uint64_t now       = platformAlarmGetNow();
 
-    assert(aTimeout != NULL);
+    assert(aTimeout != nullptr);
 
     if (sIsMsRunning)
     {
@@ -159,8 +159,11 @@ exit:
             remaining = 1;
         }
 
-        aTimeout->tv_sec  = (time_t)(remaining / US_PER_S);
-        aTimeout->tv_usec = remaining % US_PER_S;
+        if (remaining < aTimeout->tv_sec * US_PER_S + aTimeout->tv_usec)
+        {
+            aTimeout->tv_sec  = static_cast<time_t>(remaining / US_PER_S);
+            aTimeout->tv_usec = static_cast<suseconds_t>(remaining % US_PER_S);
+        }
     }
 }
 

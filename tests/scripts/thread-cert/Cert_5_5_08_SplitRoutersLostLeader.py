@@ -39,7 +39,7 @@ ED1 = 5
 
 
 class Cert_5_5_8_SplitRoutersLostLeader(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER1: {
             'mode': 'rsdn',
             'panid': 0xface,

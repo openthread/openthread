@@ -187,6 +187,18 @@ jobs:
         OT_OPTIONS=-DOT_READLINE=OFF VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
     - name: Codecov
       uses: codecov/codecov-action@v1
+    - name: Run TUN Mode
+      run: |
+        sudo apt-get install --no-install-recommends -y dnsmasq bind9-host
+        sudo systemctl start dnsmasq
+        host ipv6.google.com 127.0.0.1
+        echo 'listen-address=::1' | sudo tee /etc/dnsmasq.conf
+        echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
+        sudo systemctl restart dnsmasq
+        host ipv6.google.com ::1
+        OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
+    - name: Codecov
+      uses: codecov/codecov-action@v1
 
   multiple-instance:
     runs-on: ubuntu-18.04
@@ -210,7 +222,7 @@ jobs:
     - name: Codecov
       uses: codecov/codecov-action@v1
 
-  ncp:
+  ncp-gcc-m32:
     runs-on: ubuntu-18.04
     env:
       CFLAGS: -m32
@@ -239,169 +251,30 @@ jobs:
     - name: Codecov
       uses: codecov/codecov-action@v1
 
-  posix-cli:
-    runs-on: ubuntu-18.04
-    env:
-      COVERAGE: 1
-      PYTHONUNBUFFERED: 1
-      READLINE: readline
-      REFERENCE_DEVICE: 1
-      VIRTUAL_TIME: 1
-      VIRTUAL_TIME_UART: 1
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt-get update
-        sudo apt-get --no-install-recommends install -y libreadline6-dev
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-    - name: Build
-      run: |
-        ./bootstrap
-        make -f examples/Makefile-simulation
-        make -f src/posix/Makefile-posix
-    - name: Run
-      run: |
-        VERBOSE=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli) -v" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check
-    - name: Codecov
-      uses: codecov/codecov-action@v1
-
-  posix-ncp:
+  ncp-clang:
     runs-on: ubuntu-18.04
     env:
       COVERAGE: 1
       NODE_TYPE: ncp-sim
       PYTHONUNBUFFERED: 1
-      READLINE: readline
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 1
-      VIRTUAL_TIME_UART: 1
+      CC: clang
+      CXX: clang++
     steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt-get update
-        sudo apt-get --no-install-recommends install -y libreadline6-dev python3-setuptools
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-        sudo python3 -m pip install git+https://github.com/openthread/pyspinel
-    - name: Build
-      run: |
-        ./bootstrap
-        make -f examples/Makefile-simulation
-        make -f src/posix/Makefile-posix
-    - name: Run
-      run: |
-        VERBOSE=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check
-    - name: Codecov
-      uses: codecov/codecov-action@v1
-
-  posix-ncp-rcp-migrate:
-    runs-on: ubuntu-18.04
-    env:
-      COVERAGE: 1
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt-get update
-        sudo apt-get --no-install-recommends install -y expect
-    - name: Build
-      run: |
-        ./bootstrap
-        script/check-ncp-rcp-migrate build
-    - name: Run
-      run: |
-        script/check-ncp-rcp-migrate check
-    - name: Codecov
-      uses: codecov/codecov-action@v1
-
-  posix-pty:
-    runs-on: ubuntu-18.04
-    env:
-      COVERAGE: 1
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt-get update
-        sudo apt-get --no-install-recommends install -y socat expect
-        cd /tmp
-        wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
-        tar xvf bsd-licensed.tar.gz
-        cd libcoap-bsd-licensed
-        ./autogen.sh
-        ./configure --prefix= --exec-prefix=/usr --with-boost=internal --disable-tests --disable-documentation
-        make -j2
-        sudo make install
-    - name: Build
-      run: |
-        ./bootstrap
-        script/check-posix-pty build
-    - name: Run
-      run: |
-        script/check-posix-pty check
-    - name: Codecov
-      uses: codecov/codecov-action@v1
-
-  posix-pty-daemon:
-    runs-on: ubuntu-18.04
-    env:
-      COVERAGE: 1
-      DAEMON: 1
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt-get update
-        sudo apt-get --no-install-recommends install -y socat expect
-        cd /tmp
-        wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
-        tar xvf bsd-licensed.tar.gz
-        cd libcoap-bsd-licensed
-        ./autogen.sh
-        ./configure --prefix= --exec-prefix=/usr --with-boost=internal --disable-tests --disable-documentation
-        make -j2
-        sudo make install
-    - name: Build
-      run: |
-        ./bootstrap
-        script/check-posix-pty build
-    - name: Run
-      run: |
-        script/check-posix-pty check
-    - name: Codecov
-      uses: codecov/codecov-action@v1
-
-  thread-1-2:
-    name: thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}
-    runs-on: ubuntu-18.04
-    env:
-      CFLAGS: -${{ matrix.arch }}
-      CXXFLAGS: -${{ matrix.arch }}
-      LDFLAGS: -${{ matrix.arch }}
-      COVERAGE: 1
-      THREAD_VERSION: 1.2
-      VIRTUAL_TIME: 1
-      CC: ${{ matrix.compiler.c }}
-      CXX: ${{ matrix.compiler.cxx }}
-    strategy:
-      matrix:
-        compiler: [{c: "gcc", cxx: "g++"}, { c: "clang", cxx: "clang++"}]
-        arch: ["m32", "m64"]
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-    - name: Build
-      run: |
-        ./bootstrap
-        ./script/test build
-    - name: Run
-      run: |
-        ./script/test unit
-        ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+      - uses: actions/checkout@v2
+      - name: Bootstrap
+        run: |
+          sudo apt-get update
+          sudo apt-get --no-install-recommends install -y python3-setuptools
+          python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+          sudo python3 -m pip install git+https://github.com/openthread/pyspinel
+      - name: Build
+        run: |
+          ./bootstrap
+          make -f examples/Makefile-simulation
+      - name: Run
+        run: |
+          VERBOSE=1 make -f examples/Makefile-simulation check
+      - name: Codecov
+        uses: codecov/codecov-action@v1

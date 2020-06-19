@@ -40,6 +40,8 @@ set(OT_EXTERNAL_MBEDTLS "" CACHE STRING "Specify external mbedtls library")
 
 add_library(ot-config INTERFACE)
 
+target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/src/core)
+
 include(TestBigEndian)
 TEST_BIG_ENDIAN(OT_BIG_ENDIAN)
 if(OT_BIG_ENDIAN)
@@ -90,19 +92,16 @@ else()
     message(FATAL_ERROR "Thread version unknown: ${OT_THREAD_VERSION}")
 endif()
 
-set(OT_PLATFORM "none" CACHE STRING "Target platform chosen by the user at configure time")
-ot_get_platforms(OT_EXAMPLE_PLATFORMS)
-set_property(CACHE OT_PLATFORM PROPERTY STRINGS ${OT_EXAMPLE_PLATFORMS})
-if(NOT OT_PLATFORM IN_LIST OT_EXAMPLE_PLATFORMS)
-    if(NOT OT_PLATFORM STREQUAL "posix")
-        message(FATAL_ERROR "Platform unknown: ${OT_PLATFORM}")
-    endif()
+set(OT_PLATFORM "NO" CACHE STRING "Target platform chosen by the user at configure time")
+ot_get_platforms(OT_PLATFORMS)
+set_property(CACHE OT_PLATFORM PROPERTY STRINGS ${OT_PLATFORMS})
+if(NOT OT_PLATFORM IN_LIST OT_PLATFORMS)
+    message(FATAL_ERROR "Platform unknown: ${OT_PLATFORM}")
 endif()
 
 set(OT_LOG_OUTPUT_VALUES
     "APP"
     "DEBUG_UART"
-    "NCP_SPINEL"
     "NONE"
     "PLATFORM_DEFINED"
 )
@@ -133,10 +132,10 @@ list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 
 if(OT_PLATFORM STREQUAL "posix")
-    list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/src/posix/platform)
+    target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/src/posix/platform)
     add_subdirectory("${PROJECT_SOURCE_DIR}/src/posix/platform")
-elseif(NOT OT_PLATFORM MATCHES "none")
-    list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM})
+elseif(OT_PLATFORM)
+    target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM})
     add_subdirectory("${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM}")
 endif()
 
@@ -153,7 +152,7 @@ if(OT_PLATFORM STREQUAL "posix")
     else()
         add_subdirectory(src/posix EXCLUDE_FROM_ALL)
     endif()
-elseif(NOT OT_PLATFORM MATCHES "none")
+elseif(OT_PLATFORM)
     add_subdirectory(examples)
 endif()
 

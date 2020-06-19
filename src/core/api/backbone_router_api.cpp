@@ -43,7 +43,7 @@ otError otBackboneRouterGetPrimary(otInstance *aInstance, otBackboneRouterConfig
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aConfig != NULL);
+    OT_ASSERT(aConfig != nullptr);
 
     return instance.Get<BackboneRouter::Leader>().GetConfig(*aConfig);
 }

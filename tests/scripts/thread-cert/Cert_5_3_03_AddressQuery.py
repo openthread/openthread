@@ -42,7 +42,7 @@ MED1_TIMEOUT = 3
 
 
 class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

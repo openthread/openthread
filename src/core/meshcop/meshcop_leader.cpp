@@ -127,7 +127,7 @@ void Leader::SendPetitionResponse(const Coap::Message &   aRequest,
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -154,7 +154,7 @@ exit:
     {
         otLogInfoMeshCoP("Failed to send petition response: %s", otThreadErrorToString(error));
 
-        if (message != NULL)
+        if (message != nullptr)
         {
             message->Free();
         }
@@ -183,7 +183,7 @@ void Leader::HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aM
     borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(
         Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
 
-    if ((borderAgentLocator == NULL) || (sessionId != mSessionId))
+    if ((borderAgentLocator == nullptr) || (sessionId != mSessionId))
     {
         responseState = StateTlv::kReject;
     }
@@ -219,7 +219,7 @@ void Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -236,7 +236,7 @@ exit:
     {
         otLogWarnMeshCoP("Failed to send keep alive response: %s", otThreadErrorToString(error));
 
-        if (message != NULL)
+        if (message != nullptr)
         {
             message->Free();
         }
@@ -249,7 +249,7 @@ void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     Ip6::MessageInfo messageInfo;
     Coap::Message *  message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_DATASET_CHANGED));
 
@@ -266,7 +266,7 @@ exit:
     {
         otLogWarnMeshCoP("Failed to send dataset changed: %s", otThreadErrorToString(error));
 
-        if (message != NULL)
+        if (message != nullptr)
         {
             message->Free();
         }

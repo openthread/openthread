@@ -99,7 +99,7 @@ public:
      * @retval FALSE The tasklet is not posted.
      *
      */
-    bool IsPosted(void) const { return (mNext != NULL); }
+    bool IsPosted(void) const { return (mNext != nullptr); }
 
 private:
     void RunTask(void) { mHandler(*this); }
@@ -168,7 +168,7 @@ public:
      * @retval FALSE  If there are no tasklets pending.
      *
      */
-    bool AreTaskletsPending(void) const { return mTail != NULL; }
+    bool AreTaskletsPending(void) const { return mTail != nullptr; }
 
     /**
      * This method processes all tasklets queued when this is called.

@@ -191,7 +191,7 @@ void TestNetifMulticastAddresses(void)
     VerifyMulticastAddressList(netif, &addresses[2], 3);
 
     netif.UnsubscribeAllNodesMulticast();
-    VerifyMulticastAddressList(netif, NULL, 0);
+    VerifyMulticastAddressList(netif, nullptr, 0);
 
     // The first five elements in `addresses[]` are the default/fixed addresses:
     // kLinkLocalAllRouters, kRealmLocalAllRouters, kLinkLocalAllNodes,

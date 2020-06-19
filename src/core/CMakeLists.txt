@@ -62,7 +62,6 @@ target_compile_options(openthread-radio PRIVATE
 )
 
 set(COMMON_INCLUDES
-    ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/src/core
 )
 
@@ -173,6 +172,7 @@ set(COMMON_SOURCES
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
     thread/child_table.cpp
+    thread/discover_scanner.cpp
     thread/dua_manager.cpp
     thread/energy_scan_server.cpp
     thread/indirect_sender.cpp

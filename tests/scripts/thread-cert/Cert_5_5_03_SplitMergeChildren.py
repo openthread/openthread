@@ -42,7 +42,7 @@ MTDS = [ED1, ED2, ED3]
 
 
 class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

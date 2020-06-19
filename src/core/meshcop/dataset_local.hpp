@@ -125,6 +125,17 @@ public:
     otError Read(otOperationalDataset &aDataset) const;
 
     /**
+     * This method retrieves the dataset from non-volatile memory.
+     *
+     * @param[out]  aDataset  Where to place the dataset.
+     *
+     * @retval OT_ERROR_NONE       Successfully retrieved the dataset.
+     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
+     *
+     */
+    otError Read(otOperationalDatasetTlvs &aDataset) const;
+
+    /**
      * This method returns the local time this dataset was last updated or restored.
      *
      * @returns The local time this dataset was last updated or restored.
@@ -135,7 +146,8 @@ public:
     /**
      * This method stores the dataset into non-volatile memory.
      *
-     * @retval OT_ERROR_NONE  Successfully stored the dataset.
+     * @retval OT_ERROR_NONE              Successfully saved the dataset.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
      *
      */
     otError Save(const otOperationalDataset &aDataset);
@@ -143,7 +155,17 @@ public:
     /**
      * This method stores the dataset into non-volatile memory.
      *
-     * @retval OT_ERROR_NONE  Successfully stored the dataset.
+     * @retval OT_ERROR_NONE              Successfully saved the dataset.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     *
+     */
+    otError Save(const otOperationalDatasetTlvs &aDataset);
+
+    /**
+     * This method stores the dataset into non-volatile memory.
+     *
+     * @retval OT_ERROR_NONE              Successfully saved the dataset.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
      *
      */
     otError Save(const Dataset &aDataset);

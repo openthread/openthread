@@ -621,13 +621,13 @@ void TestDecoder(void)
     // bytes in the frame.
     VerifyOrQuit(decoder.OpenStruct() == OT_ERROR_PARSE, "OpenStruct() did not fail.");
 
-    decoder.ResetToSaved();
+    SuccessOrQuit(decoder.ResetToSaved(), "ResetToSaved() failed.");
 
     SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
     VerifyOrQuit(u8 == kUint8, "ReadUint8() parse failed.");
     VerifyOrQuit(decoder.ReadDataWithLen(dataPtr_1, dataLen_1) == OT_ERROR_PARSE, "ReadDataWithLen() did not fail.");
 
-    decoder.ResetToSaved();
+    SuccessOrQuit(decoder.ResetToSaved(), "ResetToSaved() failed.");
     SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
     SuccessOrQuit(decoder.ReadUint16(u16), "ReadUint16() failed.");
     SuccessOrQuit(decoder.ReadBool(b_1), "ReadUint16() failed.");

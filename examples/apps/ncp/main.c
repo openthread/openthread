@@ -122,16 +122,3 @@ pseudo_reset:
 
     return 0;
 }
-
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP)
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
-{
-    OT_UNUSED_VARIABLE(aLogLevel);
-    OT_UNUSED_VARIABLE(aLogRegion);
-
-    va_list ap;
-    va_start(ap, aFormat);
-    otNcpPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
-    va_end(ap);
-}
-#endif

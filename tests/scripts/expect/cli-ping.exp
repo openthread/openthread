@@ -27,8 +27,14 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-spawn $env(OT_COMMAND) 1
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
+
+
 set timeout 1
+
+
+spawn $env(OT_COMMAND) 1
 expect_after {
     timeout { exit 1 }
 }
@@ -42,5 +48,23 @@ send "ping stop\n"
 expect "Done"
 send "ping ::1 1 2 1 1 1\n"
 expect "Error 7: InvalidArgs"
-send "\x04"
-expect eof
+dispose
+
+
+setup_nodes
+
+set spawn_id $spawn_2
+send "ipaddr\n"
+expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
+set addr $expect_out(1,string)
+expect "Done"
+
+set spawn_id $spawn_1
+send "ping $addr\n"
+expect "16 bytes from $addr: icmp_seq=1"
+send "ping $addr 20 10 0.00123456 255\n"
+for {set i 2} {$i <= 11} {incr i} {
+    expect "28 bytes from $addr: icmp_seq=$i"
+}
+
+dispose_nodes

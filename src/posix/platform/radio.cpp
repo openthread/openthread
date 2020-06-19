@@ -39,7 +39,7 @@
 #include "hdlc_interface.hpp"
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-static ot::Spinel::RadioSpinel<ot::Posix::HdlcInterface, Event> sRadioSpinel;
+static ot::Spinel::RadioSpinel<ot::Posix::HdlcInterface, VirtualTimeEvent> sRadioSpinel;
 #else
 static ot::Spinel::RadioSpinel<ot::Posix::HdlcInterface, RadioProcessContext> sRadioSpinel;
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
@@ -97,25 +97,25 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 void platformRadioInit(otPosixRadioArguments *aArguments)
 {
     ot::Posix::Arguments *args           = reinterpret_cast<ot::Posix::Arguments *>(aArguments);
-    bool                  resetRadio     = (args->GetValue("no-reset") == NULL);
-    bool                  restoreDataset = (args->GetValue("ncp-dataset") != NULL);
+    bool                  resetRadio     = (args->GetValue("no-reset") == nullptr);
+    bool                  restoreDataset = (args->GetValue("ncp-dataset") != nullptr);
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
     uint8_t     channel       = ot::Radio::kChannelMin;
     int8_t      power         = ot::Posix::MaxPowerTable::kPowerDefault;
     const char *maxPowerTable = args->GetValue("max-power-table");
 
-    if (maxPowerTable != NULL)
+    if (maxPowerTable != nullptr)
     {
-        const char *str = NULL;
+        const char *str = nullptr;
 
-        for (str = strtok(const_cast<char *>(maxPowerTable), ","); str != NULL && channel <= ot::Radio::kChannelMax;
-             str = strtok(NULL, ","))
+        for (str = strtok(const_cast<char *>(maxPowerTable), ","); str != nullptr && channel <= ot::Radio::kChannelMax;
+             str = strtok(nullptr, ","))
         {
-            power = static_cast<int8_t>(strtol(str, NULL, 0));
+            power = static_cast<int8_t>(strtol(str, nullptr, 0));
             sMaxPowerTable.SetTransmitPower(channel++, power);
         }
 
-        VerifyOrDie(str == NULL, OT_EXIT_INVALID_ARGUMENTS);
+        VerifyOrDie(str == nullptr, OT_EXIT_INVALID_ARGUMENTS);
     }
 
     // Use the last power if omitted.
@@ -214,29 +214,36 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)
 {
-    sRadioSpinel.GetSpinelInterface().UpdateFdSet(*aReadFdSet, *aWriteFdSet, *aMaxFd, *aTimeout);
+    uint64_t now      = otPlatTimeGet();
+    uint64_t deadline = sRadioSpinel.GetNextRadioTimeRecalcStart();
 
     if (sRadioSpinel.IsTransmitting())
     {
-        uint64_t now          = otPlatTimeGet();
         uint64_t txRadioEndUs = sRadioSpinel.GetTxRadioEndUs();
 
-        if (now < txRadioEndUs)
+        if (txRadioEndUs < deadline)
         {
-            uint64_t remain = txRadioEndUs - now;
-
-            if (remain < static_cast<uint64_t>(aTimeout->tv_sec * US_PER_S + aTimeout->tv_usec))
-            {
-                aTimeout->tv_sec  = static_cast<time_t>(remain / US_PER_S);
-                aTimeout->tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
-            }
-        }
-        else
-        {
-            aTimeout->tv_sec  = 0;
-            aTimeout->tv_usec = 0;
+            deadline = txRadioEndUs;
         }
     }
+
+    if (now < deadline)
+    {
+        uint64_t remain = deadline - now;
+
+        if (remain < static_cast<uint64_t>(aTimeout->tv_sec * US_PER_S + aTimeout->tv_usec))
+        {
+            aTimeout->tv_sec  = static_cast<time_t>(remain / US_PER_S);
+            aTimeout->tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
+        }
+    }
+    else
+    {
+        aTimeout->tv_sec  = 0;
+        aTimeout->tv_usec = 0;
+    }
+
+    sRadioSpinel.GetSpinelInterface().UpdateFdSet(*aReadFdSet, *aWriteFdSet, *aMaxFd, *aTimeout);
 
     if (sRadioSpinel.HasPendingFrame() || sRadioSpinel.IsTransmitDone())
     {
@@ -246,7 +253,7 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
+void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent)
 {
     OT_UNUSED_VARIABLE(aInstance);
     sRadioSpinel.Process(*aEvent);
@@ -326,7 +333,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    assert(aPower != NULL);
+    assert(aPower != nullptr);
     return sRadioSpinel.GetTransmitPower(*aPower);
 }
 
@@ -339,7 +346,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    assert(aThreshold != NULL);
+    assert(aThreshold != nullptr);
     return sRadioSpinel.GetCcaEnergyDetectThreshold(*aThreshold);
 }
 
@@ -374,7 +381,7 @@ otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCo
 
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aCoexMetrics != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aCoexMetrics != nullptr, error = OT_ERROR_INVALID_ARGS);
 
     error = sRadioSpinel.GetCoexMetrics(*aCoexMetrics);
 
@@ -406,7 +413,7 @@ otError otPlatDiagProcess(otInstance *aInstance,
 
 void otPlatDiagModeSet(bool aMode)
 {
-    SuccessOrExit(sRadioSpinel.PlatDiagProcess(aMode ? "start" : "stop", NULL, 0));
+    SuccessOrExit(sRadioSpinel.PlatDiagProcess(aMode ? "start" : "stop", nullptr, 0));
     sRadioSpinel.SetDiagEnabled(aMode);
 
 exit:
@@ -423,7 +430,7 @@ void otPlatDiagTxPowerSet(int8_t aTxPower)
     char cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
 
     snprintf(cmd, sizeof(cmd), "power %d", aTxPower);
-    SuccessOrExit(sRadioSpinel.PlatDiagProcess(cmd, NULL, 0));
+    SuccessOrExit(sRadioSpinel.PlatDiagProcess(cmd, nullptr, 0));
 
 exit:
     return;
@@ -434,7 +441,7 @@ void otPlatDiagChannelSet(uint8_t aChannel)
     char cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
 
     snprintf(cmd, sizeof(cmd), "channel %d", aChannel);
-    SuccessOrExit(sRadioSpinel.PlatDiagProcess(cmd, NULL, 0));
+    SuccessOrExit(sRadioSpinel.PlatDiagProcess(cmd, nullptr, 0));
 
 exit:
     return;
@@ -488,4 +495,16 @@ void otPlatRadioSetMacKey(otInstance *    aInstance,
 {
     SuccessOrDie(sRadioSpinel.SetMacKey(aKeyIdMode, aKeyId, *aPrevKey, *aCurrKey, *aNextKey));
     OT_UNUSED_VARIABLE(aInstance);
+}
+
+void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    SuccessOrDie(sRadioSpinel.SetMacFrameCounter(aMacFrameCounter));
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+uint64_t otPlatRadioGetNow(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetNow();
 }

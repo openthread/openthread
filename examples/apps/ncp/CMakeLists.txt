@@ -28,7 +28,6 @@
 
 set(COMMON_INCLUDES
     ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/examples/platforms
     ${PROJECT_SOURCE_DIR}/src/core
 )

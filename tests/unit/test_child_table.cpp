@@ -126,21 +126,21 @@ void VerifyChildTableContent(ChildTable &aTable, uint16_t aChildListLength, cons
             }
 
             child = aTable.FindChild(aChildList[listIndex].mRloc16, filter);
-            VerifyOrQuit(child != NULL, "FindChild(rloc) failed");
+            VerifyOrQuit(child != nullptr, "FindChild(rloc) failed");
             VerifyOrQuit(ChildMatches(*child, aChildList[listIndex]), "FindChild(rloc) returned incorrect child");
 
             child = aTable.FindChild(static_cast<const Mac::ExtAddress &>(aChildList[listIndex].mExtAddress), filter);
-            VerifyOrQuit(child != NULL, "FindChild(ExtAddress) failed");
+            VerifyOrQuit(child != nullptr, "FindChild(ExtAddress) failed");
             VerifyOrQuit(ChildMatches(*child, aChildList[listIndex]), "FindChild(ExtAddress) returned incorrect child");
 
             address.SetShort(aChildList[listIndex].mRloc16);
             child = aTable.FindChild(address, filter);
-            VerifyOrQuit(child != NULL, "FindChild(address) failed");
+            VerifyOrQuit(child != nullptr, "FindChild(address) failed");
             VerifyOrQuit(ChildMatches(*child, aChildList[listIndex]), "FindChild(address) returned incorrect child");
 
             address.SetExtended(static_cast<const Mac::ExtAddress &>(aChildList[listIndex].mExtAddress));
             child = aTable.FindChild(address, filter);
-            VerifyOrQuit(child != NULL, "FindChild(address) failed");
+            VerifyOrQuit(child != nullptr, "FindChild(address) failed");
             VerifyOrQuit(ChildMatches(*child, aChildList[listIndex]), "FindChild(address) returned incorrect child");
         }
 
@@ -148,12 +148,12 @@ void VerifyChildTableContent(ChildTable &aTable, uint16_t aChildListLength, cons
 
         for (uint16_t listIndex = 0; listIndex <= aChildListLength; listIndex++)
         {
-            Child *startingChild = NULL;
+            Child *startingChild = nullptr;
 
             if (listIndex < aChildListLength)
             {
                 startingChild = aTable.FindChild(aChildList[listIndex].mRloc16, Child::kInStateAnyExceptInvalid);
-                VerifyOrQuit(startingChild != NULL, "FindChild() failed");
+                VerifyOrQuit(startingChild != nullptr, "FindChild() failed");
             }
 
             // Test an iterator starting from `startingChild`.
@@ -167,10 +167,10 @@ void VerifyChildTableContent(ChildTable &aTable, uint16_t aChildListLength, cons
 
                 // Check if the first entry matches the `startingChild`
 
-                if ((startingChild != NULL) && StateMatchesFilter(startingChild->GetState(), filter))
+                if ((startingChild != nullptr) && StateMatchesFilter(startingChild->GetState(), filter))
                 {
                     VerifyOrQuit(!iter.IsDone(), "iterator IsDone() failed");
-                    VerifyOrQuit(iter.GetChild() != NULL, "iterator GetChild() failed");
+                    VerifyOrQuit(iter.GetChild() != nullptr, "iterator GetChild() failed");
                     VerifyOrQuit(iter.GetChild() == startingChild,
                                  "Iterator failed to start from the given child entry");
 
@@ -187,7 +187,7 @@ void VerifyChildTableContent(ChildTable &aTable, uint16_t aChildListLength, cons
                     bool     didFind = false;
                     uint16_t childIndex;
 
-                    VerifyOrQuit(child != NULL, "iter.GetChild() failed");
+                    VerifyOrQuit(child != nullptr, "iter.GetChild() failed");
 
                     childIndex = aTable.GetChildIndex(*child);
                     VerifyOrQuit(childIndex < aTable.GetMaxChildrenAllowed(), "Child Index is out of bound");
@@ -207,13 +207,13 @@ void VerifyChildTableContent(ChildTable &aTable, uint16_t aChildListLength, cons
                     VerifyOrQuit(didFind, "ChildTable::Iterator returned an entry not in the expected list");
                 }
 
-                // Verify that when iterator is done, it points to `NULL`.
+                // Verify that when iterator is done, it points to `nullptr`.
 
-                VerifyOrQuit(iter.GetChild() == NULL, "iterator GetChild() failed");
+                VerifyOrQuit(iter.GetChild() == nullptr, "iterator GetChild() failed");
 
                 iter++;
                 VerifyOrQuit(iter.IsDone(), "iterator Advance() (after iterator is done) failed");
-                VerifyOrQuit(iter.GetChild() == NULL, "iterator GetChild() failed");
+                VerifyOrQuit(iter.GetChild() == nullptr, "iterator GetChild() failed");
 
                 // Verify that the number of children matches the number of entries we get from iterator.
 
@@ -304,7 +304,7 @@ void TestChildTable(void)
     otError     error;
 
     sInstance = testInitInstance();
-    VerifyOrQuit(sInstance != NULL, "Null instance");
+    VerifyOrQuit(sInstance != nullptr, "Null instance");
 
     table = &sInstance->Get<ChildTable>();
 
@@ -337,7 +337,7 @@ void TestChildTable(void)
         Child *child;
 
         child = table->GetNewChild();
-        VerifyOrQuit(child != NULL, "GetNewChild() failed");
+        VerifyOrQuit(child != nullptr, "GetNewChild() failed");
 
         child->SetState(testChildList[i].mState);
         child->SetRloc16(testChildList[i].mRloc16);
@@ -359,7 +359,7 @@ void TestChildTable(void)
         Child *child;
 
         child = table->GetNewChild();
-        VerifyOrQuit(child != NULL, "GetNewChild() failed");
+        VerifyOrQuit(child != nullptr, "GetNewChild() failed");
 
         child->SetState(testChildList[i - 1].mState);
         child->SetRloc16(testChildList[i - 1].mRloc16);
@@ -389,11 +389,11 @@ void TestChildTable(void)
     {
         Child *child = table->GetNewChild();
 
-        VerifyOrQuit(child != NULL, "GetNewChild() failed");
+        VerifyOrQuit(child != nullptr, "GetNewChild() failed");
         child->SetState(Child::kStateValid);
     }
 
-    VerifyOrQuit(table->GetNewChild() == NULL, "GetNewChild() did not fail when table was full");
+    VerifyOrQuit(table->GetNewChild() == nullptr, "GetNewChild() did not fail when table was full");
 
     printf(" -- PASS\n");
 

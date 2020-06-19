@@ -561,7 +561,7 @@ public:
      * @retval OT_ERROR_NONE            Successfully added the message to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the message.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
-     * @retval OT_ERROR_INVALID_ARGS    If @p aMessage is NULL.
+     * @retval OT_ERROR_INVALID_ARGS    If @p aMessage is nullptr.
      *
      */
     otError WriteMessage(otMessage *aMessage) { return mNcpBuffer.InFrameFeedMessage(aMessage); }

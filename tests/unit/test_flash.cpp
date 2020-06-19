@@ -57,7 +57,7 @@ void TestFlash(void)
     // No records in settings
 
     VerifyOrQuit(flash.Delete(0, 0) == OT_ERROR_NOT_FOUND, "Delete() failed");
-    VerifyOrQuit(flash.Get(0, 0, NULL, NULL) == OT_ERROR_NOT_FOUND, "Get() failed");
+    VerifyOrQuit(flash.Get(0, 0, nullptr, nullptr) == OT_ERROR_NOT_FOUND, "Get() failed");
 
     // Multiple records with different keys
 
@@ -85,7 +85,7 @@ void TestFlash(void)
     for (uint16_t key = 0; key < 16; key++)
     {
         VerifyOrQuit(flash.Delete(key, 0) == OT_ERROR_NOT_FOUND, "Delete() failed");
-        VerifyOrQuit(flash.Get(key, 0, NULL, NULL) == OT_ERROR_NOT_FOUND, "Get() failed");
+        VerifyOrQuit(flash.Get(key, 0, nullptr, nullptr) == OT_ERROR_NOT_FOUND, "Get() failed");
     }
 
     // Multiple records with the same key
@@ -112,7 +112,7 @@ void TestFlash(void)
     }
 
     VerifyOrQuit(flash.Delete(0, 0) == OT_ERROR_NOT_FOUND, "Delete() failed");
-    VerifyOrQuit(flash.Get(0, 0, NULL, NULL) == OT_ERROR_NOT_FOUND, "Get() failed");
+    VerifyOrQuit(flash.Get(0, 0, nullptr, nullptr) == OT_ERROR_NOT_FOUND, "Get() failed");
 
     // Multiple records with the same key
 
@@ -145,7 +145,7 @@ void TestFlash(void)
     }
 
     VerifyOrQuit(flash.Delete(0, 0) == OT_ERROR_NOT_FOUND, "Delete() failed");
-    VerifyOrQuit(flash.Get(0, 0, NULL, NULL) == OT_ERROR_NOT_FOUND, "Get() failed");
+    VerifyOrQuit(flash.Get(0, 0, nullptr, nullptr) == OT_ERROR_NOT_FOUND, "Get() failed");
 
     // Wipe()
 
@@ -161,7 +161,7 @@ void TestFlash(void)
     for (uint16_t key = 0; key < 16; key++)
     {
         VerifyOrQuit(flash.Delete(key, 0) == OT_ERROR_NOT_FOUND, "Delete() failed");
-        VerifyOrQuit(flash.Get(key, 0, NULL, NULL) == OT_ERROR_NOT_FOUND, "Get() failed");
+        VerifyOrQuit(flash.Get(key, 0, nullptr, nullptr) == OT_ERROR_NOT_FOUND, "Get() failed");
     }
 
     // Test swap

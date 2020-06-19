@@ -83,7 +83,7 @@ enum
 };
 
 OT_TOOL_PACKED_BEGIN
-struct Event
+struct VirtualTimeEvent
 {
     uint64_t mDelay;
     uint8_t  mEvent;
@@ -331,7 +331,7 @@ void virtualTimeSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength
  * @param[out]  aEvent  A pointer to the event receiving the event.
  *
  */
-void virtualTimeReceiveEvent(struct Event *aEvent);
+void virtualTimeReceiveEvent(struct VirtualTimeEvent *aEvent);
 
 /**
  * This function sends sleep event through virtual time simulation.
@@ -348,7 +348,7 @@ void virtualTimeSendSleepEvent(const struct timeval *aTimeout);
  * @param[in]   aEvent      A pointer to the current event.
  *
  */
-void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
+void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent);
 
 /**
  * This function initializes platform UDP driver.

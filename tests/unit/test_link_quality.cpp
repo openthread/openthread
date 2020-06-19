@@ -92,7 +92,7 @@ void TestLinkQualityData(RssTestData aRssData)
     size_t          i;
 
     sInstance = testInitInstance();
-    VerifyOrQuit(sInstance != NULL, "Null instance");
+    VerifyOrQuit(sInstance != nullptr, "Null instance");
     linkInfo.Init(*sInstance);
 
     printf("- - - - - - - - - - - - - - - - - -\n");

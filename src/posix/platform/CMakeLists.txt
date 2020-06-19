@@ -98,7 +98,6 @@ target_compile_options(openthread-posix PRIVATE
 
 target_include_directories(openthread-posix PRIVATE
     ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include

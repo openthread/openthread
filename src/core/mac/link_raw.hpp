@@ -71,19 +71,21 @@ public:
      * @returns true if enabled, false otherwise.
      *
      */
-    bool IsEnabled(void) const { return mEnabled; }
+    bool IsEnabled(void) const { return mReceiveDoneCallback != NULL; }
 
     /**
      * This method enables/disables the raw link-layer.
      *
-     * @param[in]   aEnabled    Whether enable raw link-layer.
+     * @param[in]   aCallback    A pointer to a function called on receipt of a IEEE 802.15.4 frame, NULL to disable
+     * raw link-layer.
+     *
      *
      * @retval OT_ERROR_INVALID_STATE   Thread stack is enabled.
-     * @retval OT_ERROR_FAILED          The radio could not be enabled.
+     * @retval OT_ERROR_FAILED          The radio could not be enabled/disabled.
      * @retval OT_ERROR_NONE            Successfully enabled/disabled raw link.
      *
      */
-    otError SetEnabled(bool aEnabled);
+    otError SetReceiveDone(otLinkRawReceiveDone aCallback);
 
     /**
      * This method returns the capabilities of the raw link-layer.
@@ -96,18 +98,16 @@ public:
     /**
      * This method starts a (recurring) Receive on the link-layer.
      *
-     * @param[in]  aCallback    A pointer to a function called on receipt of a IEEE 802.15.4 frame.
-     *
      * @retval OT_ERROR_NONE             Successfully transitioned to Receive.
      * @retval OT_ERROR_INVALID_STATE    The radio was disabled or transmitting.
      *
      */
-    otError Receive(otLinkRawReceiveDone aCallback);
+    otError Receive(void);
 
     /**
      * This method invokes the mReceiveDoneCallback, if set.
      *
-     * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
+     * @param[in]  aFrame    A pointer to the received frame or nullptr if the receive operation failed.
      * @param[in]  aError    OT_ERROR_NONE when successfully received a frame,
      *                       OT_ERROR_ABORT when reception was aborted and a frame was not received,
      *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
@@ -140,7 +140,7 @@ public:
      * This method invokes the mTransmitDoneCallback, if set.
      *
      * @param[in]  aFrame     The transmitted frame.
-     * @param[in]  aAckFrame  A pointer to the ACK frame, NULL if no ACK was received.
+     * @param[in]  aAckFrame  A pointer to the ACK frame, nullptr if no ACK was received.
      * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted,
      *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
      *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
@@ -264,13 +264,24 @@ public:
                       const Key &aNextKey);
 
     /**
+     * This method sets the current MAC frame counter value.
+     *
+     * @param[in] aMacFrameCounter  The MAC frame counter value.
+     *
+     * @retval OT_ERROR_NONE             If successful.
+     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     *
+     */
+    otError SetMacFrameCounter(uint32_t aMacFrameCounter);
+
+    /**
      * This method records the status of a frame transmission attempt and is mainly used for logging failures.
      *
      * Unlike `HandleTransmitDone` which is called after all transmission attempts of frame to indicate final status
      * of a frame transmission request, this method is invoked on all frame transmission attempts.
      *
      * @param[in] aFrame      The transmitted frame.
-     * @param[in] aAckFrame   A pointer to the ACK frame, or NULL if no ACK was received.
+     * @param[in] aAckFrame   A pointer to the ACK frame, or nullptr if no ACK was received.
      * @param[in] aError      OT_ERROR_NONE when the frame was transmitted successfully,
      *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
      *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
@@ -291,7 +302,6 @@ public:
 #endif
 
 private:
-    bool                    mEnabled;
     uint8_t                 mReceiveChannel;
     PanId                   mPanId;
     otLinkRawReceiveDone    mReceiveDoneCallback;

@@ -334,7 +334,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>(void)
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>(void)
 {
-    const uint8_t *ptr = NULL;
+    const uint8_t *ptr = nullptr;
     uint16_t       len;
     otError        error = OT_ERROR_NONE;
 
@@ -526,7 +526,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_
         break;
 
     case SPINEL_MESHCOP_COMMISSIONER_STATE_ACTIVE:
-        error = otCommissionerStart(mInstance, NULL, NULL, NULL);
+        error = otCommissionerStart(mInstance, nullptr, nullptr, nullptr);
         break;
 
     default:
@@ -553,8 +553,8 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MESHCOP_COMMISSION
     }
     else
     {
-        // Empty struct indicates any Joiner (no EUI64 is given so NULL is used.).
-        eui64 = NULL;
+        // Empty struct indicates any Joiner (no EUI64 is given so nullptr is used.).
+        eui64 = nullptr;
     }
 
     SuccessOrExit(error = mDecoder.CloseStruct());
@@ -581,8 +581,8 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MESHCOP_COMMISSION
     }
     else
     {
-        // Empty struct indicates any Joiner (no EUI64 is given so NULL is used.).
-        eui64 = NULL;
+        // Empty struct indicates any Joiner (no EUI64 is given so nullptr is used.).
+        eui64 = nullptr;
     }
 
     SuccessOrExit(error = mDecoder.CloseStruct());
@@ -806,7 +806,7 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8
     }
     else
     {
-        error = otCommissionerStart(mInstance, NULL, NULL, NULL);
+        error = otCommissionerStart(mInstance, nullptr, nullptr, nullptr);
     }
 
 exit:
@@ -819,8 +819,8 @@ exit:
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>(void)
 {
     otError             error         = OT_ERROR_NONE;
-    const otExtAddress *eui64         = NULL;
-    const char *        pskd          = NULL;
+    const otExtAddress *eui64         = nullptr;
+    const char *        pskd          = nullptr;
     uint32_t            joinerTimeout = 0;
 
     SuccessOrExit(error = mDecoder.ReadUtf8(pskd));
@@ -828,7 +828,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>(vo
 
     if (mDecoder.ReadEui64(eui64) != OT_ERROR_NONE)
     {
-        eui64 = NULL;
+        eui64 = nullptr;
     }
 
     error = otCommissionerAddJoiner(mInstance, eui64, pskd, joinerTimeout);

@@ -47,7 +47,7 @@ otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *a
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aData != NULL && aDataLength != NULL);
+    OT_ASSERT(aData != nullptr && aDataLength != nullptr);
 
     return instance.Get<NetworkData::Local>().GetNetworkData(aStable, aData, *aDataLength);
 }
@@ -57,7 +57,7 @@ otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRoute
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aConfig != NULL);
+    OT_ASSERT(aConfig != nullptr);
     // Add Prefix validation check:
     // Thread 1.1 Specification 5.13.2 says
     // "A valid prefix MUST NOT allow both DHCPv6 and SLAAC for address configuration"
@@ -85,7 +85,7 @@ otError otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, const otIp6Prefi
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aPrefix != NULL);
+    OT_ASSERT(aPrefix != nullptr);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     error = instance.Get<BackboneRouter::Local>().RemoveDomainPrefix(*aPrefix);
@@ -105,7 +105,7 @@ otError otBorderRouterGetNextOnMeshPrefix(otInstance *           aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aIterator != NULL && aConfig != NULL);
+    OT_ASSERT(aIterator != nullptr && aConfig != nullptr);
 
     return instance.Get<NetworkData::Local>().GetNextOnMeshPrefix(*aIterator, *aConfig);
 }
@@ -114,7 +114,7 @@ otError otBorderRouterAddRoute(otInstance *aInstance, const otExternalRouteConfi
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aConfig != NULL);
+    OT_ASSERT(aConfig != nullptr);
 
     return instance.Get<NetworkData::Local>().AddHasRoutePrefix(
         aConfig->mPrefix.mPrefix.mFields.m8, aConfig->mPrefix.mLength, aConfig->mPreference, aConfig->mStable);
@@ -124,7 +124,7 @@ otError otBorderRouterRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPre
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aPrefix != NULL);
+    OT_ASSERT(aPrefix != nullptr);
 
     return instance.Get<NetworkData::Local>().RemoveHasRoutePrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
 }
@@ -135,7 +135,7 @@ otError otBorderRouterGetNextRoute(otInstance *           aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aIterator != NULL && aConfig != NULL);
+    OT_ASSERT(aIterator != nullptr && aConfig != nullptr);
 
     return instance.Get<NetworkData::Local>().GetNextExternalRoute(*aIterator, *aConfig);
 }

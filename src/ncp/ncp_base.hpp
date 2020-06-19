@@ -92,7 +92,7 @@ public:
      * @param[in]  aStreamId  A numeric identifier for the stream to write to.
      *                        If set to '0', will default to the debug stream.
      * @param[in]  aDataPtr   A pointer to the data to send on the stream.
-     *                        If aDataLen is non-zero, this param MUST NOT be NULL.
+     *                        If aDataLen is non-zero, this param MUST NOT be nullptr.
      * @param[in]  aDataLen   The number of bytes of data from aDataPtr to send.
      *
      * @retval OT_ERROR_NONE         The data was queued for delivery to the host.
@@ -267,6 +267,7 @@ protected:
     otError DecodeChannelMask(uint32_t &aChannelMask);
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    otError PackRadioFrame(otRadioFrame *aFrame, otError aError);
 
     static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
     void        LinkRawReceiveDone(otRadioFrame *aFrame, otError aError);
@@ -334,9 +335,9 @@ protected:
     otError EncodeOperationalDataset(const otOperationalDataset &aDataset);
 
     otError DecodeOperationalDataset(otOperationalDataset &aDataset,
-                                     const uint8_t **      aTlvs             = NULL,
-                                     uint8_t *             aTlvsLength       = NULL,
-                                     const otIp6Address ** aDestIpAddress    = NULL,
+                                     const uint8_t **      aTlvs             = nullptr,
+                                     uint8_t *             aTlvsLength       = nullptr,
+                                     const otIp6Address ** aDestIpAddress    = nullptr,
                                      bool                  aAllowEmptyValues = false);
 
     otError EncodeNeighborInfo(const otNeighborInfo &aNeighborInfo);

@@ -27,11 +27,19 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-spawn $env(OT_COMMAND) 1
+source "tests/scripts/expect/_multinode.exp"
+
 set timeout 1
-expect_after {
-    timeout { exit 1 }
-}
+setup_nodes
+set spawn_id $spawn_1
+
+send "leaderdata\n"
+expect -re {Partition ID: \d+}
+expect -re {Weighting: \d+}
+expect -re {Data Version: \d+}
+expect -re {Stable Data Version: \d+}
+expect -re {Leader Router ID: \d+}
+expect "Done"
 
 send "help\n"
 expect "Done"
@@ -54,6 +62,8 @@ send "delaytimermin 1 2\n"
 send "counters mac 1\n"
 expect "Error 7: InvalidArgs"
 
+send "ifconfig down\n"
+expect "Done"
 send "ifconfig\n"
 expect "down"
 expect "Done"
@@ -99,8 +109,41 @@ expect "Done"
 send "thread version\n"
 expect "Done"
 
+send "version\n"
+expect "Done"
+
 send "joinerport 10001\n"
 expect "Done"
 send "joinerport\n"
 expect "10001"
 expect "Done"
+
+send "parentpriority 1\n"
+expect "Done"
+send "parentpriority\n"
+expect "1"
+expect "Done"
+
+send "pollperiod 100000\n"
+expect "Done"
+send "pollperiod\n"
+expect "100000"
+expect "Done"
+
+send "prefix add ::/64 low pdcrosn\n"
+expect "Done"
+send "prefix\n"
+expect "0:0:0:0::/64 pdcrosn low"
+expect "Done"
+
+send "preferrouterid 1\n"
+expect "Done"
+
+send "route add ::/64 s low\n"
+expect "Done"
+send "route\n"
+expect "0:0:0:0::/64 s low"
+send "route remove ::/64\n"
+expect "Done"
+
+dispose_nodes

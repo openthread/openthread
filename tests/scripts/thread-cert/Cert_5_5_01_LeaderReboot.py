@@ -40,7 +40,7 @@ DUT_ROUTER1 = 2
 
 
 class Cert_5_5_1_LeaderReboot(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         DUT_LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
