@@ -51,8 +51,7 @@
     offset += (unsigned int)charsWritten;                                                 \
     otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) - 1] = 0)
 
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
-    (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 
 int PlatOtLogLevelToSysLogLevel(otLogLevel aLogLevel)
 {

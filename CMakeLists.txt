@@ -102,7 +102,6 @@ endif()
 set(OT_LOG_OUTPUT_VALUES
     "APP"
     "DEBUG_UART"
-    "NCP_SPINEL"
     "NONE"
     "PLATFORM_DEFINED"
 )

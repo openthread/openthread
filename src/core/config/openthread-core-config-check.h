@@ -521,4 +521,8 @@
 #error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_DUA_ENABLE"
 #endif
 
+#ifdef OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL
+#error "OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL is removed, use OPENTHREAD_CONFIG_LOG_OUTPUT_APP instead"
+#endif
+
 #endif // OPENTHREAD_CORE_CONFIG_CHECK_H_
