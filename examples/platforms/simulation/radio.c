@@ -117,10 +117,11 @@ static bool sSrcMatchEnabled = false;
 static bool sRadioCoexEnabled = true;
 #endif
 
+otRadioCaps gRadioCaps =
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-otRadioCaps gRadioCaps = OT_RADIO_CAPS_TRANSMIT_SEC;
+    OT_RADIO_CAPS_TRANSMIT_SEC;
 #else
-otRadioCaps gRadioCaps = OT_RADIO_CAPS_NONE;
+    OT_RADIO_CAPS_NONE;
 #endif
 
 static uint32_t        sMacFrameCounter;
@@ -555,14 +556,14 @@ static void radioComputeCrc(struct RadioMessage *aMessage, uint16_t aLength)
 
 static otError radioProcessTransmitSecurity(otRadioFrame *aFrame)
 {
-    struct otMacKey *key   = NULL;
-    otError          error = OT_ERROR_NONE;
+    otError error = OT_ERROR_NONE;
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    struct otMacKey *key = NULL;
     uint8_t          keyId;
 
     otEXPECT(otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame) &&
              !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
 
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     if (otMacFrameIsAck(aFrame))
     {
         keyId = otMacFrameGetKeyId(aFrame);
@@ -588,7 +589,6 @@ static otError radioProcessTransmitSecurity(otRadioFrame *aFrame)
         }
     }
     else
-#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     {
         key   = &sCurrKey;
         keyId = sKeyId;
@@ -601,6 +601,9 @@ static otError radioProcessTransmitSecurity(otRadioFrame *aFrame)
         otMacFrameSetKeyId(aFrame, keyId);
         otMacFrameSetFrameCounter(aFrame, sMacFrameCounter++);
     }
+#else
+    otEXPECT(!aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
     otMacFrameProcessTransmitAesCcm(aFrame, &sExtAddress);
 

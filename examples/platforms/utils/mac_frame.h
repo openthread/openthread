@@ -238,13 +238,13 @@ bool otMacFrameIsKeyIdMode1(otRadioFrame *aFrame);
  *
  * @param[in]   aFrame          A pointer to the frame.
  *
- * @returns The key ID of the frame. Returns 0 if failed.
+ * @returns The key ID of the frame with key ID mode 1. Returns 0 if failed.
  *
  */
 uint8_t otMacFrameGetKeyId(otRadioFrame *aFrame);
 
 /**
- * Set key ID to @p aFrame.
+ * Set key ID to @p aFrame with key ID mode 1.
  *
  * @param[inout]    aFrame     A pointer to the frame to be modified.
  * @param[in]       aKeyId     Key ID to be set to the frame.
