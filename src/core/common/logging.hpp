@@ -288,7 +288,7 @@ extern "C" {
  * @param[in]  ...  Arguments for the format specification.
  *
  */
-#if OPENTHREAD_CONFIG_LOG_MLE == 1
+#if OPENTHREAD_CONFIG_LOG_MESHCOP == 1
 #define otLogCritMeshCoP(...) otLogCrit(OT_LOG_REGION_MESH_COP, _OT_REGION_MESH_COP_PREFIX __VA_ARGS__)
 #define otLogWarnMeshCoP(...) otLogWarn(OT_LOG_REGION_MESH_COP, _OT_REGION_MESH_COP_PREFIX __VA_ARGS__)
 #define otLogNoteMeshCoP(...) otLogNote(OT_LOG_REGION_MESH_COP, _OT_REGION_MESH_COP_PREFIX __VA_ARGS__)

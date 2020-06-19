@@ -127,6 +127,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_MESHCOP
+ *
+ * Define to enable MeshCoP logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_MESHCOP
+#define OPENTHREAD_CONFIG_LOG_MESHCOP 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_ARP
  *
  * Define to enable EID-to-RLOC map logging.
