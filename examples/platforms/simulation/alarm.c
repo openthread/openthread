@@ -110,7 +110,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor)
         sev.sigev_signo           = OPENTHREAD_CONFIG_MICRO_TIMER_SIGNAL;
         sev.sigev_value.sival_ptr = &sMicroTimer;
 
-        if (-1 == timer_create(OT_SIMULATION_CLOCK_ID, &sev, &sMicroTimer))
+        if (-1 == timer_create(CLOCK_MONOTONIC, &sev, &sMicroTimer))
         {
             perror("timer_create");
             exit(EXIT_FAILURE);

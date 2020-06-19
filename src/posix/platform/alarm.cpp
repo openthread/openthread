@@ -119,7 +119,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor, int aRealTimeSignal)
         sev.sigev_signo           = aRealTimeSignal;
         sev.sigev_value.sival_ptr = &sMicroTimer;
 
-        VerifyOrDie(timer_create(OT_POSIX_CLOCK_ID, &sev, &sMicroTimer) != -1, OT_EXIT_ERROR_ERRNO);
+        VerifyOrDie(timer_create(CLOCK_MONOTONIC, &sev, &sMicroTimer) != -1, OT_EXIT_ERROR_ERRNO);
 
         sRealTimeSignal = aRealTimeSignal;
 #endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE && !OPENTHREAD_POSIX_VIRTUAL_TIME
