@@ -26,7 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(OT_MBEDTLS_DEFAULT_CONFIG_FILE \"${CMAKE_CURRENT_BINARY_DIR}/mbedtls-config.h\")
+set(OT_MBEDTLS_DEFAULT_CONFIG_FILE \"${CMAKE_CURRENT_BINARY_DIR}/openthread-mbedtls-config.h\")
 
 set(OT_MBEDTLS_CONFIG_FILE "" CACHE STRING "The mbedTLS config file")
 
@@ -34,12 +34,18 @@ set(ENABLE_TESTING OFF CACHE BOOL "Disable mbedtls test" FORCE)
 set(ENABLE_PROGRAMS OFF CACHE BOOL "Disable mbetls program" FORCE)
 
 find_program(UNIFDEFALL_EXE unifdefall)
+find_program(UNIFDEF_EXE unifdef)
+if(UNIFDEF_EXE)
+    execute_process(COMMAND ${UNIFDEF_EXE} -V ERROR_VARIABLE VERSION_OUTPUT)
+    string(REGEX MATCH "Version: unifdef-([0-9]+\\.[0-9]+)" VERSION_MATCH "${VERSION_OUTPUT}")
+    set(UNIFDEF_VERSION ${CMAKE_MATCH_1})
+endif()
 find_program(SED_EXE sed)
 
 add_subdirectory(repo)
 
-if(UNIFDEFALL_EXE AND SED_EXE)
-    add_custom_target(mbedtls-config.h
+if(UNIFDEFALL_EXE AND SED_EXE AND UNIFDEF_VERSION VERSION_GREATER_EQUAL 2.10)
+    add_custom_target(openthread-mbedtls-config
         ${UNIFDEFALL_EXE}
             "'-D$<JOIN:$<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>,';'-D>'"
             "-I$<JOIN:$<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>,;-I>"
@@ -47,14 +53,14 @@ if(UNIFDEFALL_EXE AND SED_EXE)
             "-I${CMAKE_CURRENT_SOURCE_DIR}/repo/include"
             "${CMAKE_CURRENT_SOURCE_DIR}/mbedtls-config.h" |
             ${SED_EXE} '/openthread-core-config\.h/d' >
-            ${OT_MBEDTLS_DEFAULT_CONFIG_FILE}
+            openthread-mbedtls-config.h
         COMMAND_EXPAND_LISTS
     )
-    add_dependencies(mbedtls mbedtls-config.h)
-    add_dependencies(mbedx509 mbedtls-config.h)
-    add_dependencies(mbedcrypto mbedtls-config.h)
+    add_dependencies(mbedtls openthread-mbedtls-config)
+    add_dependencies(mbedx509 openthread-mbedtls-config)
+    add_dependencies(mbedcrypto openthread-mbedtls-config)
 else()
-    configure_file(mbedtls-config.h mbedtls-config.h COPYONLY)
+    configure_file(mbedtls-config.h openthread-mbedtls-config.h COPYONLY)
 endif()
 
 target_compile_definitions(mbedtls
