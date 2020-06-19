@@ -161,8 +161,8 @@ exit:
 
         if (remaining < aTimeout->tv_sec * US_PER_S + aTimeout->tv_usec)
         {
-            aTimeout->tv_sec  = (time_t)(remaining / US_PER_S);
-            aTimeout->tv_usec = remaining % US_PER_S;
+            aTimeout->tv_sec  = static_cast<time_t>(remaining / US_PER_S);
+            aTimeout->tv_usec = static_cast<suseconds_t>(remaining % US_PER_S);
         }
     }
 }
