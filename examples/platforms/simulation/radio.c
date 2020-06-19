@@ -117,7 +117,11 @@ static bool sSrcMatchEnabled = false;
 static bool sRadioCoexEnabled = true;
 #endif
 
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 otRadioCaps gRadioCaps = OT_RADIO_CAPS_TRANSMIT_SEC;
+#else
+otRadioCaps gRadioCaps = OT_RADIO_CAPS_NONE;
+#endif
 
 static uint32_t        sMacFrameCounter;
 static uint8_t         sKeyId;

@@ -223,7 +223,7 @@ void otMacFrameSetCslIe(otRadioFrame *aFrame, uint16_t aCslPeriod, uint16_t aCsl
 bool otMacFrameIsSecurityEnabled(otRadioFrame *aFrame);
 
 /**
- * Tell if the key ID mode of @p aFrame is key ID mode 1.
+ * Tell if the key ID mode of @p aFrame is 1.
  *
  * @param[in]   aFrame          A pointer to the frame.
  *
