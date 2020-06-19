@@ -72,7 +72,7 @@ public:
         kPskMaxLength                = 32,
         kGuardTimeNewConnectionMilli = 2000,
 #if !OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-        kApplicationDataMaxLength = 512,
+        kApplicationDataMaxLength = 572,
 #else
         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH,
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
