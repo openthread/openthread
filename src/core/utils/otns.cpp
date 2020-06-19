@@ -103,10 +103,12 @@ void Otns::HandleNotifierEvents(Events aEvents)
         EmitStatus("parid=%x", Get<Mle::Mle>().GetLeaderData().GetPartitionId());
     }
 
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     if (aEvents.Contains(kEventJoinerStateChanged))
     {
         EmitStatus("joiner_state=%d", Get<MeshCoP::Joiner>().GetState());
     }
+#endif
 }
 
 void Otns::EmitNeighborChange(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
