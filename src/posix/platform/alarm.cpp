@@ -50,8 +50,7 @@ static uint32_t sUsAlarm     = 0;
 
 static uint32_t sSpeedUpFactor = 1;
 
-// linux microsecond timer
-#if __linux__
+#ifdef __linux__
 
 #include <signal.h>
 #include <time.h>
@@ -101,7 +100,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor, int aRealTimeSignal)
         otLogWarnPlat("Real time signal not enabled, microsecond timers may be inaccurate!");
 #endif
     }
-#if __linux__
+#ifdef __linux__
     else if (aRealTimeSignal >= SIGRTMIN && aRealTimeSignal <= SIGRTMAX)
     {
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE && !OPENTHREAD_POSIX_VIRTUAL_TIME
