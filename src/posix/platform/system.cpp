@@ -57,7 +57,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #endif
 
     VerifyOrDie(args.GetPath() != nullptr, OT_EXIT_INVALID_ARGUMENTS);
-    platformAlarmInit(aPlatformConfig->mSpeedUpFactor);
+    platformAlarmInit(aPlatformConfig->mSpeedUpFactor, aPlatformConfig->mRealTimeSignal);
     platformRadioInit(&args);
     platformRandomInit();
 

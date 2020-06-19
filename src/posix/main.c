@@ -113,6 +113,7 @@ enum
     OT_POSIX_OPT_SHORT_MAX = 128,
 
     OT_POSIX_OPT_RADIO_VERSION,
+    OT_POSIX_OPT_REAL_TIME_SIGNAL,
 };
 
 static const struct option kOptions[] = {{"debug-level", required_argument, NULL, OT_POSIX_OPT_DEBUG_LEVEL},
@@ -120,6 +121,7 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"help", no_argument, NULL, OT_POSIX_OPT_HELP},
                                          {"interface-name", required_argument, NULL, OT_POSIX_OPT_INTERFACE_NAME},
                                          {"radio-version", no_argument, NULL, OT_POSIX_OPT_RADIO_VERSION},
+                                         {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
                                          {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
                                          {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
                                          {0, 0, 0, 0}};
@@ -138,6 +140,12 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -s  --time-speed factor       Time speed up factor.\n"
             "    -v  --verbose                 Also log to stderr.\n",
             aProgramName);
+#ifdef __linux__
+    fprintf(aStream,
+            "        --real-time-signal        (Linux only) The real-time signal number for microsecond timer.\n"
+            "                                  Use +N for relative value to SIGRTMIN, and use N for absolute value.\n");
+
+#endif
     fprintf(aStream, "%s", otSysGetRadioUrlHelpString());
     exit(aExitCode);
 }
@@ -148,6 +156,9 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 
     aConfig->mPlatformConfig.mSpeedUpFactor = 1;
     aConfig->mLogLevel                      = OT_LOG_LEVEL_CRIT;
+#ifdef __linux__
+    aConfig->mPlatformConfig.mRealTimeSignal = SIGRTMIN;
+#endif
 
     optind = 1;
 
@@ -194,6 +205,18 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case OT_POSIX_OPT_RADIO_VERSION:
             aConfig->mPrintRadioVersion = true;
             break;
+#ifdef __linux__
+        case OT_POSIX_OPT_REAL_TIME_SIGNAL:
+            if (optarg[0] == '+')
+            {
+                aConfig->mPlatformConfig.mRealTimeSignal = SIGRTMIN + atoi(&optarg[1]);
+            }
+            else
+            {
+                aConfig->mPlatformConfig.mRealTimeSignal = atoi(optarg);
+            }
+            break;
+#endif // __linux__
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
             break;

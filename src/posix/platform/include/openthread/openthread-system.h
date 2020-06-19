@@ -76,9 +76,10 @@ typedef struct otPosixRadioArguments otPosixRadioArguments;
  */
 typedef struct otPlatformConfig
 {
-    uint32_t    mSpeedUpFactor; ///< Speed up factor.
-    const char *mInterfaceName; ///< Thread network interface name.
-    const char *mRadioUrl;      ///< Radio url.
+    const char *mInterfaceName;  ///< Thread network interface name.
+    const char *mRadioUrl;       ///< Radio url.
+    int         mRealTimeSignal; ///< The real-time signal for microsecond timer.
+    uint32_t    mSpeedUpFactor;  ///< Speed up factor.
 } otPlatformConfig;
 
 /**
