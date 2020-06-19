@@ -113,7 +113,16 @@ typedef struct otCommissioningDataset
     bool mIsJoinerUdpPortSet : 1; ///< TRUE if Joiner UDP Port is set, FALSE otherwise.
 } otCommissioningDataset;
 
-#define OT_PSKD_MAX_SIZE 32 ///< Size of a Joiner PSKd (bytes)
+#define OT_JOINER_MAX_PSKD_LENGTH 32 ///< Maximum string length of a Joiner PSKd (does not include null char).
+
+/**
+ * This structure represent a Joiner PSKd.
+ *
+ */
+typedef struct otJoinerPskd
+{
+    char m8[OT_JOINER_MAX_PSKD_LENGTH + 1]; ///< Char string array (must be null terminated - +1 is for null char).
+} otJoinerPskd;
 
 /**
  * This enumeration defines a Joiner Info Typer.
@@ -135,11 +144,11 @@ typedef struct otJoinerInfo
     otJoinerInfoType mType; ///< Joiner type.
     union
     {
-        otExtAddress      mEui64;        ///< Joiner EUI64 (when `mType` is `OT_JOINER_INFO_TYPE_EUI64`)
-        otJoinerDiscerner mDiscerner;    ///< Joiner Discerner (when `mType` is `OT_JOINER_INFO_TYPE_DISCERNER`)
-    } mSharedId;                         ///< Shared fields
-    char     mPsk[OT_PSKD_MAX_SIZE + 1]; ///< Joiner PSKd
-    uint32_t mExpirationTime;            ///< Joiner expiration time in msec
+        otExtAddress      mEui64;     ///< Joiner EUI64 (when `mType` is `OT_JOINER_INFO_TYPE_EUI64`)
+        otJoinerDiscerner mDiscerner; ///< Joiner Discerner (when `mType` is `OT_JOINER_INFO_TYPE_DISCERNER`)
+    } mSharedId;                      ///< Shared fields
+    otJoinerPskd mPskd;               ///< Joiner PSKd
+    uint32_t     mExpirationTime;     ///< Joiner expiration time in msec
 } otJoinerInfo;
 
 /**

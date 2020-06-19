@@ -136,6 +136,7 @@ otError Joiner::Start(const char *     aPskd,
                       void *           aContext)
 {
     otError                      error;
+    JoinerPskd                   joinerPskd;
     Mac::ExtAddress              randomAddress;
     SteeringData::HashBitIndexes filterIndexes;
 
@@ -143,7 +144,7 @@ otError Joiner::Start(const char *     aPskd,
 
     VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
 
-    VerifyOrExit(IsPskdValid(aPskd), error = OT_ERROR_INVALID_ARGS);
+    SuccessOrExit(error = joinerPskd.SetFrom(aPskd));
 
     // Use random-generated extended address.
     randomAddress.GenerateRandom();
@@ -151,8 +152,7 @@ otError Joiner::Start(const char *     aPskd,
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(kJoinerUdpPort));
-    SuccessOrExit(error = Get<Coap::CoapSecure>().SetPsk(reinterpret_cast<const uint8_t *>(aPskd),
-                                                         static_cast<uint8_t>(strlen(aPskd))));
+    Get<Coap::CoapSecure>().SetPsk(joinerPskd);
 
     for (JoinerRouter *router = &mJoinerRouters[0]; router < OT_ARRAY_END(mJoinerRouters); router++)
     {

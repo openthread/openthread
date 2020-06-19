@@ -44,11 +44,61 @@
 namespace ot {
 namespace MeshCoP {
 
-enum
+otError JoinerPskd::SetFrom(const char *aPskdString)
 {
-    kPskdMinLength = 6,  ///< Minimum PSKd length.
-    kPskdMaxLength = 32, ///< Maximum PSKd Length.
-};
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(IsPskdValid(aPskdString), error = OT_ERROR_INVALID_ARGS);
+
+    Clear();
+    memcpy(m8, aPskdString, StringLength(aPskdString, sizeof(m8)));
+
+exit:
+    return error;
+}
+
+bool JoinerPskd::operator==(const JoinerPskd &aOther) const
+{
+    bool isEqual = true;
+
+    for (uint8_t i = 0; i < sizeof(m8); i++)
+    {
+        if (m8[i] != aOther.m8[i])
+        {
+            isEqual = false;
+            ExitNow();
+        }
+
+        if (m8[i] == '\0')
+        {
+            break;
+        }
+    }
+
+exit:
+    return isEqual;
+}
+
+bool JoinerPskd::IsPskdValid(const char *aPskString)
+{
+    bool     valid      = false;
+    uint16_t pskdLength = StringLength(aPskString, kMaxLength + 1);
+
+    VerifyOrExit(pskdLength >= kMinLength && pskdLength <= kMaxLength, OT_NOOP);
+
+    for (uint16_t i = 0; i < pskdLength; i++)
+    {
+        char c = aPskString[i];
+
+        VerifyOrExit(isdigit(c) || isupper(c), OT_NOOP);
+        VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z', OT_NOOP);
+    }
+
+    valid = true;
+
+exit:
+    return valid;
+}
 
 void JoinerDiscerner::GenerateJoinerId(Mac::ExtAddress &aJoinerId) const
 {
@@ -299,32 +349,6 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_FTD
-
-#if OPENTHREAD_CONFIG_JOINER_ENABLE || OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-bool IsPskdValid(const char *aPskd)
-{
-    bool   valid      = false;
-    size_t pskdLength = StringLength(aPskd, kPskdMaxLength + 1);
-
-    static_assert(static_cast<uint8_t>(kPskdMaxLength) <= static_cast<uint8_t>(Dtls::kPskMaxLength),
-                  "The maximum length of DTLS PSK is smaller than joiner PSKd");
-
-    VerifyOrExit(pskdLength >= kPskdMinLength && pskdLength <= kPskdMaxLength, OT_NOOP);
-
-    for (size_t i = 0; i < pskdLength; i++)
-    {
-        char c = aPskd[i];
-
-        VerifyOrExit(isdigit(c) || isupper(c), OT_NOOP);
-        VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z', OT_NOOP);
-    }
-
-    valid = true;
-
-exit:
-    return valid;
-}
-#endif // OPENTHREAD_CONFIG_JOINER_ENABLE || OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 } // namespace MeshCoP
 } // namespace ot
