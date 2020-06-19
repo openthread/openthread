@@ -39,11 +39,14 @@
 
 #include <limits.h>
 
+#include <openthread/commissioner.h>
 #include <openthread/instance.h>
 #include <openthread/joiner.h>
 
 #include "coap/coap.hpp"
+#include "common/clearable.hpp"
 #include "common/message.hpp"
+#include "common/string.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 
@@ -56,6 +59,97 @@ namespace MeshCoP {
 enum
 {
     kBorderAgentUdpPort = 49191, ///< UDP port of border agent service.
+};
+
+/**
+ * This type represents a Joiner PSKd.
+ *
+ */
+class JoinerPskd : public otJoinerPskd, public Clearable<JoinerPskd>
+{
+public:
+    enum
+    {
+        kMinLength = 6,                         ///< Minimum PSKd string length (excluding null char).
+        kMaxLength = OT_JOINER_MAX_PSKD_LENGTH, ///< Maximum PSKd string length (excluding null char)
+    };
+
+    /**
+     * This method indicates whether the PSKd if well-formed and valid.
+     *
+     * Per Thread specification, a Joining Device Credential is encoded as uppercase alphanumeric characters
+     * (base32-thread: 0-9, A-Z excluding I, O, Q, and Z for readability) with a minimum length of 6 such characters
+     * and a maximum length of 32 such characters.
+     *
+     * @returns TRUE if the PSKd is valid, FALSE otherwise.
+     *
+     */
+    bool IsValid(void) const { return IsPskdValid(m8); }
+
+    /**
+     * This method sets the joiner PSKd from a given C string.
+     *
+     * @param[in] aPskdString   A pointer to the PSKd C string array.
+     *
+     * @retval OT_ERROR_NONE           The PSKd was updated successfully.
+     * @retval OT_ERROR_INVALID_ARGS   The given PSKd C string is not valid.
+     *
+     */
+    otError SetFrom(const char *aPskdString);
+
+    /**
+     * This method gets the PSKd as a null terminated C string.
+     *
+     * This method must be used after the PSKd is validated, otherwise its behavior is undefined.
+     *
+     * @returns The PSKd as a C string.
+     *
+     */
+    const char *GetAsCString(void) const { return m8; }
+
+    /**
+     * This method gets the PSKd string length.
+     *
+     * This method must be used after the PSKd is validated, otherwise its behavior is undefined.
+     *
+     * @returns The PSKd string length.
+     *
+     */
+    uint8_t GetLength(void) const { return static_cast<uint8_t>(StringLength(m8, kMaxLength + 1)); }
+
+    /**
+     * This method overloads operator `==` to evaluate whether or not two PSKds are equal.
+     *
+     * @param[in]  aOther  The other PSKd to compare with.
+     *
+     * @retval TRUE   If the two are equal.
+     * @retval FALSE  If the two are not equal.
+     *
+     */
+    bool operator==(const JoinerPskd &aOther) const;
+
+    /**
+     * This method overloads operator `!=` to evaluate whether or not two PSKds are equal.
+     *
+     * @param[in]  aOther  The other PSKd to compare with.
+     *
+     * @retval TRUE   If the two are not equal.
+     * @retval FALSE  If the two are equal.
+     *
+     */
+    bool operator!=(const JoinerPskd &aOther) const { return !(*this == aOther); }
+
+    /**
+     * This static method indicates whether a given PSKd string if well-formed and valid.
+     *
+     * @param[in] aPskdString  A pointer to a PSKd string array.
+     *
+     * @sa IsValid()
+     *
+     * @returns TRUE if @p aPskdString is valid, FALSE otherwise.
+     *
+     */
+    static bool IsPskdValid(const char *aPskdString);
 };
 
 /**
@@ -398,23 +492,6 @@ void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
  *
  */
 otError GetBorderAgentRloc(ThreadNetif &aNetIf, uint16_t &aRloc);
-
-#if OPENTHREAD_CONFIG_JOINER_ENABLE || OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-/**
- * This method validates the PSKd.
- *
- * Per Thread specification, a Joining Device Credential is encoded as
- * uppercase alphanumeric characters (base32-thread: 0-9, A-Z excluding
- * I, O, Q, and Z for readability) with a minimum length of 6 such
- * characters and a maximum length of 32 such characters.
- *
- * param[in]  aPskd  The PSKd to validate.
- *
- * @retval A boolean indicates whether the given @p aPskd is valid.
- *
- */
-bool IsPskdValid(const char *aPskd);
-#endif // OPENTHREAD_CONFIG_JOINER_ENABLE || OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 } // namespace MeshCoP
 

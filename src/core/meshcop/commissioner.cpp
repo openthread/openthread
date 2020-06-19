@@ -452,7 +452,6 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64,
     Joiner *joiner;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(IsPskdValid(aPskd), error = OT_ERROR_INVALID_ARGS);
 
     if (aDiscerner != nullptr)
     {
@@ -471,6 +470,8 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64,
 
     VerifyOrExit(joiner != nullptr, error = OT_ERROR_NO_BUFS);
 
+    SuccessOrExit(error = joiner->mPskd.SetFrom(aPskd));
+
     if (aDiscerner != nullptr)
     {
         joiner->mType                = Joiner::kTypeDiscerner;
@@ -485,9 +486,6 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64,
     {
         joiner->mType = Joiner::kTypeAny;
     }
-
-    strncpy(joiner->mPsk, aPskd, sizeof(joiner->mPsk) - 1);
-    joiner->mPsk[sizeof(joiner->mPsk) - 1] = '\0';
 
     joiner->mExpirationTime = TimerMilli::GetNow() + Time::SecToMsec(aTimeout);
 
@@ -525,7 +523,7 @@ void Commissioner::Joiner::CopyToJoinerInfo(otJoinerInfo &aInfo) const
         ExitNow();
     }
 
-    strncpy(aInfo.mPsk, mPsk, sizeof(aInfo.mPsk) - 1);
+    aInfo.mPskd           = mPskd;
     aInfo.mExpirationTime = mExpirationTime - TimerMilli::GetNow();
 
 exit:
@@ -1063,8 +1061,7 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
         joiner = FindBestMatchingJoinerEntry(receivedId);
         VerifyOrExit(joiner != nullptr, OT_NOOP);
 
-        SuccessOrExit(error = Get<Coap::CoapSecure>().SetPsk(reinterpret_cast<const uint8_t *>(joiner->mPsk),
-                                                             static_cast<uint8_t>(strlen(joiner->mPsk))));
+        Get<Coap::CoapSecure>().SetPsk(joiner->mPskd);
         mActiveJoiner = joiner;
 
         LogJoinerEntry("Starting new session with", *joiner);
@@ -1302,17 +1299,17 @@ void Commissioner::LogJoinerEntry(const char *aAction, const Joiner &aJoiner) co
         break;
 
     case Joiner::kTypeAny:
-        otLogInfoMeshCoP("%s Joiner (any, %s)", aAction, aJoiner.mPsk);
+        otLogInfoMeshCoP("%s Joiner (any, %s)", aAction, aJoiner.mPskd.GetAsCString());
         break;
 
     case Joiner::kTypeEui64:
         otLogInfoMeshCoP("%s Joiner (eui64:%s, %s)", aAction, aJoiner.mSharedId.mEui64.ToString().AsCString(),
-                         aJoiner.mPsk);
+                         aJoiner.mPskd.GetAsCString());
         break;
 
     case Joiner::kTypeDiscerner:
         otLogInfoMeshCoP("%s Joiner (disc:%s, %s)", aAction, aJoiner.mSharedId.mDiscerner.ToString().AsCString(),
-                         aJoiner.mPsk);
+                         aJoiner.mPskd.GetAsCString());
         break;
     }
 }

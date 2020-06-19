@@ -345,8 +345,8 @@ private:
             JoinerDiscerner mDiscerner;
         } mSharedId;
 
-        char mPsk[Dtls::kPskMaxLength + 1];
-        Type mType;
+        JoinerPskd mPskd;
+        Type       mType;
 
         void CopyToJoinerInfo(otJoinerInfo &aInfo) const;
     };
