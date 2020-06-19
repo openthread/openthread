@@ -70,16 +70,18 @@ static void microTimerHandler(int aSignal, siginfo_t *aSignalInfo, void *aUserCo
 #endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE && !OPENTHREAD_POSIX_VIRTUAL_TIME
 #endif // __linux__
 
+#ifdef CLOCK_MONOTONIC_RAW
+#define OT_POSIX_CLOCK_ID CLOCK_MONOTONIC_RAW
+#else
+#define OT_POSIX_CLOCK_ID CLOCK_MONOTONIC
+#endif
+
 #if !OPENTHREAD_POSIX_VIRTUAL_TIME
 uint64_t otPlatTimeGet(void)
 {
     struct timespec now;
 
-#ifdef CLOCK_MONOTONIC_RAW
-    VerifyOrDie(clock_gettime(CLOCK_MONOTONIC_RAW, &now) == 0, OT_EXIT_FAILURE);
-#else
-    VerifyOrDie(clock_gettime(CLOCK_MONOTONIC, &now) == 0, OT_EXIT_FAILURE);
-#endif
+    VerifyOrDie(clock_gettime(OT_POSIX_CLOCK_ID, &now) == 0, OT_EXIT_FAILURE);
 
     return (uint64_t)now.tv_sec * US_PER_S + (uint64_t)now.tv_nsec / NS_PER_US;
 }
@@ -117,7 +119,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor, int aRealTimeSignal)
         sev.sigev_signo           = aRealTimeSignal;
         sev.sigev_value.sival_ptr = &sMicroTimer;
 
-        VerifyOrDie(timer_create(CLOCK_REALTIME, &sev, &sMicroTimer) != -1, OT_EXIT_ERROR_ERRNO);
+        VerifyOrDie(timer_create(OT_POSIX_CLOCK_ID, &sev, &sMicroTimer) != -1, OT_EXIT_ERROR_ERRNO);
 
         sRealTimeSignal = aRealTimeSignal;
 #endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE && !OPENTHREAD_POSIX_VIRTUAL_TIME
