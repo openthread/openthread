@@ -78,6 +78,17 @@ for {set i 11} {$i <= 26} {incr i} {
 expect "Done"
 
 set spawn_id $spawn_3
+send "ifconfig up\n"
+expect "Done"
+send "discover $channel\n"
+expect "| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |"
+expect "+---+------------------+------------------+------+------------------+----+-----+-----+"
+wait_for "" "\\| \\d \\| $network +\\| $extpan \\| $pan \\| $extaddr \\| +$channel \\| +-?\\d+ \\| +\\d \\|"
+wait_for "" "Done"
+send "discover something_invalid\n"
+expect "Error 7: InvalidArgs"
+
+set spawn_id $spawn_3
 dispose
 
 dispose_nodes
