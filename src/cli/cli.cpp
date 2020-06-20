@@ -286,6 +286,9 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::HandleDiagnosticGetResponse, this);
 #endif
+#if OPENTHREAD_FTD
+    otThreadSetDiscoveryRequestCallback(mInstance, &Interpreter::HandleDiscoveryRequest, this);
+#endif
 
     mIcmpHandler.mReceiveCallback = Interpreter::HandleIcmpReceive;
     mIcmpHandler.mContext         = this;
@@ -4477,6 +4480,14 @@ void Interpreter::SignalPingReply(const Ip6::Address &aPeerAddress,
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     mInstance->Get<Utils::Otns>().EmitPingReply(aPeerAddress, aPingLength, aTimestamp, aHopLimit);
 #endif
+}
+
+void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo)
+{
+    mServer->OutputFormat("~ Discovery Request from ");
+    OutputBytes(aInfo.mExtAddress->mFields.m8, sizeof(aInfo.mExtAddress));
+    mServer->OutputFormat(": version=%u,joiner=%d,url=%s\r\n", aInfo.mVersion, aInfo.mIsJoiner,
+                          (aInfo.mProvisioningUrl ? aInfo.mProvisioningUrl : "(null)"));
 }
 
 extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)

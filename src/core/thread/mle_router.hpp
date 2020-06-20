@@ -602,6 +602,19 @@ public:
     }
 
     /**
+     * This function sets the callback that is called when processing an MLE Discovery Request message.
+     *
+     * @param[in]  aCallback A pointer to a function that is called to deliver MLE Discovery Request data.
+     * @param[in]  aContext  A pointer to application-specific context.
+     *
+     */
+    void SetDiscoveryRequestCallback(otThreadDiscoveryRequestCallback aCallback, void *aContext)
+    {
+        mDiscoveryRequestCallback        = aCallback;
+        mDiscoveryRequestCallbackContext = aContext;
+    }
+
+    /**
      * This method signals a "neighbor table changed" events (invoking the registered callback function).
      *
      * @param[in] aEvent     The event to emit (child/router added/removed).
@@ -843,6 +856,9 @@ private:
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     MeshCoP::SteeringData mSteeringData;
 #endif
+
+    otThreadDiscoveryRequestCallback mDiscoveryRequestCallback;
+    void *                           mDiscoveryRequestCallbackContext;
 };
 
 #endif // OPENTHREAD_FTD

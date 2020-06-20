@@ -427,6 +427,12 @@ private:
 #endif
     static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);
 
+    static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
+    {
+        static_cast<Interpreter *>(aContext)->HandleDiscoveryRequest(*aInfo);
+    }
+    void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
+
     static const struct Command sCommands[];
     const otCliCommand *        mUserCommands;
     uint8_t                     mUserCommandsLength;

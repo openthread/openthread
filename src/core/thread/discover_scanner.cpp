@@ -118,10 +118,11 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     {
         provisionUrl.Init();
         provisionUrl.SetProvisioningUrl(aProvisioningUrl);
+
         discoveryTlvLength += provisionUrl.GetSize();
     }
 
-    SuccessOrExit(error = Tlv::AppendTl(*message, Tlv::kDiscovery, discoveryTlvLength));
+    SuccessOrExit(error = Tlv::AppendTl(*message, Tlv::kDiscovery, static_cast<uint8_t>(discoveryTlvLength)));
 
     SuccessOrExit(error = discoveryRequest.AppendTo(*message));
 

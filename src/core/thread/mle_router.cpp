@@ -88,6 +88,8 @@ MleRouter::MleRouter(Instance &aInstance)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mMaxChildIpAddresses(0)
 #endif
+    , mDiscoveryRequestCallback(nullptr)
+    , mDiscoveryRequestCallbackContext(nullptr)
 {
     mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
 
@@ -2787,7 +2789,8 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
     otError                      error = OT_ERROR_NONE;
     Tlv                          tlv;
     MeshCoP::Tlv                 meshcopTlv;
-    MeshCoP::DiscoveryRequestTlv discoveryRequest;
+    MeshCoP::DiscoveryRequestTlv discoveryRequest{};
+    MeshCoP::ProvisioningUrlTlv  provisioningUrl{};
     Mac::ExtendedPanId           extPanId;
     uint16_t                     offset;
     uint16_t                     end;
@@ -2814,20 +2817,6 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
             aMessage.Read(offset, sizeof(discoveryRequest), &discoveryRequest);
             VerifyOrExit(discoveryRequest.IsValid(), error = OT_ERROR_PARSE);
 
-            if (discoveryRequest.IsJoiner())
-            {
-#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
-                if (!mSteeringData.IsEmpty())
-                {
-                    break;
-                }
-                else // if steering data is not set out of band, fall back to network data
-#endif
-                {
-                    VerifyOrExit(Get<NetworkData::Leader>().IsJoiningEnabled(), error = OT_ERROR_SECURITY);
-                }
-            }
-
             break;
 
         case MeshCoP::Tlv::kExtendedPanId:
@@ -2836,11 +2825,44 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
 
             break;
 
+        case MeshCoP::Tlv::kProvisioningUrl:
+            aMessage.Read(offset, static_cast<uint16_t>(meshcopTlv.GetSize()), &provisioningUrl);
+            VerifyOrExit(provisioningUrl.IsValid(), error = OT_ERROR_PARSE);
+            break;
+
         default:
             break;
         }
 
         offset += sizeof(meshcopTlv) + meshcopTlv.GetLength();
+    }
+
+    if (discoveryRequest.IsValid())
+    {
+        if (mDiscoveryRequestCallback != nullptr)
+        {
+            otThreadDiscoveryRequestInfo info;
+
+            info.mExtAddress      = &aMessageInfo.GetPeerAddr().GetIid();
+            info.mProvisioningUrl = provisioningUrl.IsValid() ? provisioningUrl.GetProvisioningUrl() : nullptr;
+            info.mVersion         = discoveryRequest.GetVersion();
+            info.mIsJoiner        = discoveryRequest.IsJoiner();
+
+            mDiscoveryRequestCallback(&info, mDiscoveryRequestCallbackContext);
+        }
+
+        if (discoveryRequest.IsJoiner())
+        {
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
+            if (!mSteeringData.IsEmpty())
+            {
+            }
+            else // if steering data is not set out of band, fall back to network data
+#endif
+            {
+                VerifyOrExit(Get<NetworkData::Leader>().IsJoiningEnabled(), error = OT_ERROR_SECURITY);
+            }
+        }
     }
 
     error = SendDiscoveryResponse(aMessageInfo.GetPeerAddr(), aMessage.GetPanId());
