@@ -1532,7 +1532,47 @@ exit:
     return error;
 }
 
-#endif
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_JOINER_DISCERNER>(void)
+{
+    otError                  error;
+    const otJoinerDiscerner *discerner = otJoinerGetDiscerner(mInstance);
+
+    if (discerner == nullptr)
+    {
+        SuccessOrExit(error = mEncoder.WriteUint8(0));
+    }
+    else
+    {
+        SuccessOrExit(error = mEncoder.WriteUint8(discerner->mLength));
+        SuccessOrExit(error = mEncoder.WriteUint64(discerner->mValue));
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_DISCERNER>(void)
+{
+    otError           error = OT_ERROR_NONE;
+    otJoinerDiscerner discerner;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(discerner.mLength));
+
+    if (discerner.mLength == 0)
+    {
+        // Clearing any previously set Joiner Discerner
+        error = otJoinerSetDiscerner(mInstance, nullptr);
+        ExitNow();
+    }
+
+    SuccessOrExit(error = mDecoder.ReadUint64(discerner.mValue));
+    error = otJoinerSetDiscerner(mInstance, &discerner);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ML_PREFIX>(void)
 {
