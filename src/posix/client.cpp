@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
                     {
                         size_t skipPrefix = 0;
 
-                        // read one line successfully
+                        // read one line successfully or line buffer is full
                         lineBuffer[lineBufferWritePos] = '\0';
 
                         if (isBeginOfLine && strncmp("> ", lineBuffer, 2) == 0)
