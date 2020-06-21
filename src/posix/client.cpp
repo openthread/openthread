@@ -61,6 +61,10 @@
 
 const size_t LINE_BUFFER_SIZE = 256;
 
+static_assert(LINE_BUFFER_SIZE >= sizeof("> "), "LINE_BUFFER_SIZE is too small");
+static_assert(LINE_BUFFER_SIZE >= sizeof("Done\r\n"), "LINE_BUFFER_SIZE is too small");
+static_assert(LINE_BUFFER_SIZE >= sizeof("Error "), "LINE_BUFFER_SIZE is too small");
+
 static int sSessionFd = -1;
 
 #if OPENTHREAD_USE_READLINE
@@ -109,10 +113,6 @@ int main(int argc, char *argv[])
     char   lineBuffer[LINE_BUFFER_SIZE];
     size_t lineBufferWritePos = 0;
     bool   isBeginOfLine      = true;
-
-    OT_STATIC_ASSERT(LINE_BUFFER_SIZE >= sizeof("> "), "LINE_BUFFER_SIZE is too small");
-    OT_STATIC_ASSERT(LINE_BUFFER_SIZE >= sizeof("Done\r\n"), "LINE_BUFFER_SIZE is too small");
-    OT_STATIC_ASSERT(LINE_BUFFER_SIZE >= sizeof("Error "), "LINE_BUFFER_SIZE is too small");
 
     sSessionFd = socket(AF_UNIX, SOCK_STREAM, 0);
     VerifyOrExit(sSessionFd != -1, perror("socket"); ret = OT_EXIT_FAILURE);
