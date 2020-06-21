@@ -59,7 +59,11 @@
 
 #include "platform-posix.h"
 
-#define MAXLINE 4096
+const size_t LINE_BUFFER_SIZE = 256;
+
+OT_STATIC_ASSERT(LINE_BUFFER_SIZE >= sizeof("> "), "LINE_BUFFER_SIZE is too small");
+OT_STATIC_ASSERT(LINE_BUFFER_SIZE >= sizeof("Done\r\n"), "LINE_BUFFER_SIZE is too small");
+OT_STATIC_ASSERT(LINE_BUFFER_SIZE >= sizeof("Error "), "LINE_BUFFER_SIZE is too small");
 
 static int sSessionFd = -1;
 
@@ -106,8 +110,9 @@ int main(int argc, char *argv[])
     int    ret;
     bool   isInteractive = true;
     bool   isFinished    = false;
-    char   lineBuffer[MAXLINE + 1];
+    char   lineBuffer[LINE_BUFFER_SIZE];
     size_t lineBufferWritePos = 0;
+    bool   isBeginOfLine      = true;
 
     sSessionFd = socket(AF_UNIX, SOCK_STREAM, 0);
     VerifyOrExit(sSessionFd != -1, perror("socket"); ret = OT_EXIT_FAILURE);
@@ -218,7 +223,7 @@ int main(int argc, char *argv[])
                         // read one line successfully
                         lineBuffer[lineBufferWritePos] = '\0';
 
-                        if (strncmp("> ", lineBuffer, 2) == 0)
+                        if (isBeginOfLine && strncmp("> ", lineBuffer, 2) == 0)
                         {
                             skipPrefix = 2;
                         }
@@ -226,8 +231,9 @@ int main(int argc, char *argv[])
                         VerifyOrExit(DoWrite(STDOUT_FILENO, lineBuffer + skipPrefix, lineBufferWritePos - skipPrefix),
                                      ret = OT_EXIT_FAILURE);
 
-                        if (strncmp("Done\n", lineBuffer, 5) == 0 || strncmp("Done\r\n", lineBuffer, 6) == 0 ||
-                            strncmp("Error ", lineBuffer, 6) == 0)
+                        if (isBeginOfLine &&
+                            (strncmp("Done\n", lineBuffer, 5) == 0 || strncmp("Done\r\n", lineBuffer, 6) == 0 ||
+                             strncmp("Error ", lineBuffer, 6) == 0))
                         {
                             isFinished = true;
                             ret        = OT_EXIT_SUCCESS;
@@ -236,6 +242,7 @@ int main(int argc, char *argv[])
 
                         // reset for next line
                         lineBufferWritePos = 0;
+                        isBeginOfLine      = c == '\n';
                     }
                 }
             }
