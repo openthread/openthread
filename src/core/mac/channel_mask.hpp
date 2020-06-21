@@ -41,7 +41,6 @@
 
 #include "common/string.hpp"
 #include "radio/radio.hpp"
-#include "utils/static_assert.hpp"
 
 namespace ot {
 namespace Mac {
@@ -252,8 +251,8 @@ public:
     InfoString ToString(void) const;
 
 private:
-    OT_STATIC_ASSERT((Radio::kChannelMin < 32) && (Radio::kChannelMax < 32),
-                     "The channel number is larger than 32. `ChannelMask` uses 32 bit mask.");
+    static_assert((Radio::kChannelMin < 32) && (Radio::kChannelMax < 32),
+                  "The channel number is larger than 32. `ChannelMask` uses 32 bit mask.");
     uint32_t mMask;
 };
 

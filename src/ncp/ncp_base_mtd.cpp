@@ -854,7 +854,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>(v
     VerifyOrExit((dataLen <= sizeof(cfg.mServiceData)), error = OT_ERROR_INVALID_ARGS);
     memcpy(cfg.mServiceData, data, dataLen);
 
-    OT_STATIC_ASSERT((sizeof(cfg.mServiceData) <= UINT8_MAX), "Cannot handle full range of buffer length");
+    static_assert((sizeof(cfg.mServiceData) <= UINT8_MAX), "Cannot handle full range of buffer length");
     cfg.mServiceDataLength = static_cast<uint8_t>(dataLen);
 
     SuccessOrExit(error = mDecoder.ReadBool(stable));
@@ -864,7 +864,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>(v
     VerifyOrExit((dataLen <= sizeof(cfg.mServerConfig.mServerData)), error = OT_ERROR_INVALID_ARGS);
     memcpy(cfg.mServerConfig.mServerData, data, dataLen);
 
-    OT_STATIC_ASSERT((sizeof(cfg.mServerConfig.mServerData) <= UINT8_MAX), "Cannot handle full range of buffer length");
+    static_assert((sizeof(cfg.mServerConfig.mServerData) <= UINT8_MAX), "Cannot handle full range of buffer length");
     cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(dataLen);
 
     SuccessOrExit(error = otServerAddService(mInstance, &cfg));

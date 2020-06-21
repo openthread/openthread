@@ -193,8 +193,8 @@ bool IsPskdValid(const char *aPskd)
     bool   valid      = false;
     size_t pskdLength = StringLength(aPskd, kPskdMaxLength + 1);
 
-    OT_STATIC_ASSERT(static_cast<uint8_t>(kPskdMaxLength) <= static_cast<uint8_t>(Dtls::kPskMaxLength),
-                     "The maximum length of DTLS PSK is smaller than joiner PSKd");
+    static_assert(static_cast<uint8_t>(kPskdMaxLength) <= static_cast<uint8_t>(Dtls::kPskMaxLength),
+                  "The maximum length of DTLS PSK is smaller than joiner PSKd");
 
     VerifyOrExit(pskdLength >= kPskdMinLength && pskdLength <= kPskdMaxLength, OT_NOOP);
 

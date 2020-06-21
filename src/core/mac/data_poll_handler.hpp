@@ -122,7 +122,7 @@ public:
         bool     mFramePurgePending : 1;   // Indicates a pending purge request for the current indirect frame.
         bool     mFrameReplacePending : 1; // Indicates a pending replace request for the current indirect frame.
 
-        OT_STATIC_ASSERT(kMaxPollTriggeredTxAttempts < (1 << 5), "mIndirectTxAttempts cannot fit max!");
+        static_assert(kMaxPollTriggeredTxAttempts < (1 << 5), "mIndirectTxAttempts cannot fit max!");
     };
 
     /**
