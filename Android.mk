@@ -33,6 +33,7 @@ OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --ma
 OPENTHREAD_PROJECT_CFLAGS ?= -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"
 
 OPENTHREAD_PUBLIC_CFLAGS                                         := \
+    -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>        \
     -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1                  \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
@@ -83,7 +84,6 @@ endif
 ifeq ($(TARGET_PRODUCT),generic)
 OPENTHREAD_PUBLIC_CFLAGS                                         += \
     -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1                           \
-    -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1                         \
