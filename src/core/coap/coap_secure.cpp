@@ -51,7 +51,7 @@ CoapSecure::CoapSecure(Instance &aInstance, bool aLayerTwoSecurity)
     , mConnectedCallback(nullptr)
     , mConnectedContext(nullptr)
     , mTransmitQueue()
-    , mTransmitTask(aInstance, &CoapSecure::HandleTransmit, this)
+    , mTransmitTask(aInstance, CoapSecure::HandleTransmit, this)
 {
 }
 
