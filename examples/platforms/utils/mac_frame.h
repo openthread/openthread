@@ -211,6 +211,66 @@ otError otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
  */
 void otMacFrameSetCslIe(otRadioFrame *aFrame, uint16_t aCslPeriod, uint16_t aCslPhase);
 
+/**
+ * Tell if the security of @p aFrame is enabled.
+ *
+ * @param[in]   aFrame          A pointer to the frame.
+ *
+ * @retval  true    The frame has security enabled.
+ * @retval  false   The frame does not have security enabled.
+ *
+ */
+bool otMacFrameIsSecurityEnabled(otRadioFrame *aFrame);
+
+/**
+ * Tell if the key ID mode of @p aFrame is 1.
+ *
+ * @param[in]   aFrame          A pointer to the frame.
+ *
+ * @retval  true    The frame key ID mode is 1.
+ * @retval  false   The frame security is not enabled or key ID mode is not 1.
+ *
+ */
+bool otMacFrameIsKeyIdMode1(otRadioFrame *aFrame);
+
+/**
+ * Get the key ID of @p aFrame.
+ *
+ * @param[in]   aFrame          A pointer to the frame.
+ *
+ * @returns The key ID of the frame with key ID mode 1. Returns 0 if failed.
+ *
+ */
+uint8_t otMacFrameGetKeyId(otRadioFrame *aFrame);
+
+/**
+ * Set key ID to @p aFrame with key ID mode 1.
+ *
+ * @param[inout]    aFrame     A pointer to the frame to be modified.
+ * @param[in]       aKeyId     Key ID to be set to the frame.
+ *
+ */
+void otMacFrameSetKeyId(otRadioFrame *aFrame, uint8_t aKeyId);
+
+/**
+ * Get the frame counter of @p aFrame.
+ *
+ * @param[in]   aFrame          A pointer to the frame.
+ *
+ * @returns The frame counter of the frame. Returns UINT32_MAX if failed.
+ *
+ */
+uint32_t otMacFrameGetFrameCounter(otRadioFrame *aFrame);
+
+/**
+ * Set frame counter to @p aFrame.
+ *
+ * @param[inout]    aFrame         A pointer to the frame to be modified.
+ * @param[in]       aFrameCounter  Frame counter to be set to the frame.
+ *
+ */
+void otMacFrameSetFrameCounter(otRadioFrame *aFrame, uint32_t aFrameCounter);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

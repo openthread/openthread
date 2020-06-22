@@ -117,7 +117,18 @@ static bool sSrcMatchEnabled = false;
 static bool sRadioCoexEnabled = true;
 #endif
 
-otRadioCaps gRadioCaps = OT_RADIO_CAPS_NONE;
+otRadioCaps gRadioCaps =
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    OT_RADIO_CAPS_TRANSMIT_SEC;
+#else
+    OT_RADIO_CAPS_NONE;
+#endif
+
+static uint32_t        sMacFrameCounter;
+static uint8_t         sKeyId;
+static struct otMacKey sPrevKey;
+static struct otMacKey sCurrKey;
+static struct otMacKey sNextKey;
 
 static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrigin)
 {
@@ -543,12 +554,66 @@ static void radioComputeCrc(struct RadioMessage *aMessage, uint16_t aLength)
     aMessage->mPsdu[crc_offset + 1] = crc >> 8;
 }
 
+static otError radioProcessTransmitSecurity(otRadioFrame *aFrame)
+{
+    otError error = OT_ERROR_NONE;
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    struct otMacKey *key = NULL;
+    uint8_t          keyId;
+
+    otEXPECT(otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame) &&
+             !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
+
+    if (otMacFrameIsAck(aFrame))
+    {
+        keyId = otMacFrameGetKeyId(aFrame);
+
+        otEXPECT_ACTION(keyId != 0, error = OT_ERROR_FAILED);
+
+        if (keyId == sKeyId)
+        {
+            key = &sCurrKey;
+        }
+        else if (keyId == sKeyId - 1)
+        {
+            key = &sPrevKey;
+        }
+        else if (keyId == sKeyId + 1)
+        {
+            key = &sNextKey;
+        }
+        else
+        {
+            error = OT_ERROR_SECURITY;
+            otEXPECT(false);
+        }
+    }
+    else
+    {
+        key   = &sCurrKey;
+        keyId = sKeyId;
+    }
+
+    aFrame->mInfo.mTxInfo.mAesKey = key;
+
+    if (!aFrame->mInfo.mTxInfo.mIsARetx)
+    {
+        otMacFrameSetKeyId(aFrame, keyId);
+        otMacFrameSetFrameCounter(aFrame, sMacFrameCounter++);
+    }
+#else
+    otEXPECT(!aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+
+    otMacFrameProcessTransmitAesCcm(aFrame, &sExtAddress);
+
+exit:
+    return error;
+}
+
 void radioSendMessage(otInstance *aInstance)
 {
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    bool notifyFrameUpdated = false;
-
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
     {
         uint8_t *timeIe = sTransmitFrame.mPsdu + sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
@@ -562,19 +627,12 @@ void radioSendMessage(otInstance *aInstance)
             time        = time >> 8;
             *(++timeIe) = (uint8_t)(time & 0xff);
         }
-
-        notifyFrameUpdated = true;
     }
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
-    if (notifyFrameUpdated)
-    {
-        otMacFrameProcessTransmitAesCcm(&sTransmitFrame, &sExtAddress);
-    }
-#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     sTransmitMessage.mChannel = sTransmitFrame.mChannel;
 
+    otEXPECT(radioProcessTransmitSecurity(&sTransmitFrame) == OT_ERROR_NONE);
     otPlatRadioTxStarted(aInstance, &sTransmitFrame);
     radioComputeCrc(&sTransmitMessage, sTransmitFrame.mLength);
     radioTransmit(&sTransmitMessage, &sTransmitFrame);
@@ -602,6 +660,8 @@ void radioSendMessage(otInstance *aInstance)
     // Wait for echo radio in virtual time mode.
     sTxWait = true;
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME
+exit:
+    return;
 }
 
 bool platformRadioIsTransmitPending(void)
@@ -754,6 +814,7 @@ void radioSendAck(void)
     {
         otEXPECT(otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, NULL, 0,
                                           &sAckFrame) == OT_ERROR_NONE);
+        otEXPECT(radioProcessTransmitSecurity(&sAckFrame) == OT_ERROR_NONE);
     }
     else
 #endif
@@ -791,6 +852,13 @@ void radioProcessFrame(otInstance *aInstance)
     if (otMacFrameIsAckRequested(&sReceiveFrame))
     {
         radioSendAck();
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        if (otMacFrameIsSecurityEnabled(&sAckFrame))
+        {
+            sReceiveFrame.mInfo.mRxInfo.mAckedWithSecEnhAck = true;
+            sReceiveFrame.mInfo.mRxInfo.mAckFrameCounter    = otMacFrameGetFrameCounter(&sAckFrame);
+        }
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     }
 
 exit:
@@ -947,3 +1015,31 @@ exit:
     return error;
 }
 #endif
+
+void otPlatRadioSetMacKey(otInstance *    aInstance,
+                          uint8_t         aKeyIdMode,
+                          uint8_t         aKeyId,
+                          const otMacKey *aPrevKey,
+                          const otMacKey *aCurrKey,
+                          const otMacKey *aNextKey)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKeyIdMode);
+
+    otEXPECT(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
+
+    sKeyId = aKeyId;
+    memcpy(sPrevKey.m8, aPrevKey->m8, OT_MAC_KEY_SIZE);
+    memcpy(sCurrKey.m8, aCurrKey->m8, OT_MAC_KEY_SIZE);
+    memcpy(sNextKey.m8, aNextKey->m8, OT_MAC_KEY_SIZE);
+
+exit:
+    return;
+}
+
+void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sMacFrameCounter = aMacFrameCounter;
+}
