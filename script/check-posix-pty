@@ -160,10 +160,15 @@ EOF
         sleep 3
         sudo "${OT_CLI_CMD}" prefix | grep '2001:db8:1:2::/64 pdo med'
         sudo killall radvd || true
-        sleep 10
+        sleep 15
+        sudo "${OT_CLI_CMD}" prefix
         sudo "${OT_CLI_CMD}" prefix | grep '2001:db8:1:2::/64 do med'
-        sleep 10
-        sudo "${OT_CLI_CMD}" prefix | grep -L '2001:db8:1:2::'
+        sleep 15
+        FINAL_PREFIX=$(sudo "${OT_CLI_CMD}" prefix) 
+        echo "${FINAL_PREFIX}"
+        if [[ "${FINAL_PREFIX}" == *"2001"* ]]; then
+            exit 1
+        fi
     fi
 
     LEADER_ALOC=fdde:ad00:beef::ff:fe00:fc00

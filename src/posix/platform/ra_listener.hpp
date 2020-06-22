@@ -53,8 +53,8 @@ namespace Posix {
 
 struct RouterEntry
 {
-    time_t               mPreferTimePoint;
-    time_t               mValidTimePoint;
+    uint32_t             mPreferTimePoint;
+    uint32_t             mValidTimePoint;
     otBorderRouterConfig mConfig;
     bool                 mOccupied = false;
 };
@@ -117,7 +117,7 @@ private:
 
     otError      UpdateRouterEntries(otInstance *aInstance);
     RouterEntry &EliminateEntry(void);
-    RouterEntry &GetAvailableRouterEntry(void);
+    RouterEntry &GetAvailableRouterEntry(const otIp6Address &aPrefix, uint8_t aLength);
 
     RouterEntry mRouterEntries[OPENTHREAD_POSIX_CONFIG_MAX_ROUTER_ENTRIES_COUNT];
 
