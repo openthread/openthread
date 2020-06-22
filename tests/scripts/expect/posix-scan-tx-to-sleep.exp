@@ -48,6 +48,7 @@ expect "Done"
 send "thread start\n"
 expect "Done"
 wait_for "state" "leader"
+expect "Done"
 
 send "extaddr\n"
 expect "extaddr"
