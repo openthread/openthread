@@ -63,6 +63,7 @@ proc setup_nodes {} {
     send "thread start\n"
     expect "Done"
     wait_for "state" "leader"
+    expect "Done"
     send "commissioner start\n"
     expect "Done"
     expect "Commissioner: active"
@@ -80,10 +81,11 @@ proc setup_nodes {} {
     expect "Done"
     send "joiner start $psk\n"
     expect "Done"
-    wait_for "" {Join success}
+    wait_for "" "Join success"
     send "thread start\n"
     expect "Done"
     wait_for "state" "child"
+    expect "Done"
 }
 
 proc dispose_nodes {} {
