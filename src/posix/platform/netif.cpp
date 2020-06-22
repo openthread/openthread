@@ -1388,93 +1388,90 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
     sInstance = aInstance;
 }
 
-void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
+void platformNetifUpdateFdSet(otSysMainloopContext *aContext)
 {
-    OT_UNUSED_VARIABLE(aWriteFdSet);
-
     VerifyOrExit(sTunIndex > 0, OT_NOOP);
 
     assert(sTunFd >= 0);
     assert(sNetlinkFd >= 0);
     assert(sIpFd >= 0);
 
-    FD_SET(sTunFd, aReadFdSet);
-    FD_SET(sTunFd, aErrorFdSet);
-    FD_SET(sNetlinkFd, aReadFdSet);
-    FD_SET(sNetlinkFd, aErrorFdSet);
+    FD_SET(sTunFd, &aContext->mReadFdSet);
+    FD_SET(sTunFd, &aContext->mErrorFdSet);
+    FD_SET(sNetlinkFd, &aContext->mReadFdSet);
+    FD_SET(sNetlinkFd, &aContext->mErrorFdSet);
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    FD_SET(sMLDMonitorFd, aReadFdSet);
-    FD_SET(sMLDMonitorFd, aErrorFdSet);
+    FD_SET(sMLDMonitorFd, &aContext->mReadFdSet);
+    FD_SET(sMLDMonitorFd, &aContext->mErrorFdSet);
 #endif
 
-    if (sTunFd > *aMaxFd)
+    if (sTunFd > aContext->mMaxFd)
     {
-        *aMaxFd = sTunFd;
+        aContext->mMaxFd = sTunFd;
     }
 
-    if (sNetlinkFd > *aMaxFd)
+    if (sNetlinkFd > aContext->mMaxFd)
     {
-        *aMaxFd = sNetlinkFd;
+        aContext->mMaxFd = sNetlinkFd;
     }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (sMLDMonitorFd > *aMaxFd)
+    if (sMLDMonitorFd > aContext->mMaxFd)
     {
-        *aMaxFd = sMLDMonitorFd;
+        aContext->mMaxFd = sMLDMonitorFd;
     }
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    sRaListener.UpdateFdSet(*aReadFdSet, *aWriteFdSet, *aErrorFdSet, *aMaxFd);
+    sRaListener.UpdateFdSet(aContext);
 #endif
 
 exit:
     return;
 }
 
-void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet)
+void platformNetifProcess(const otSysMainloopContext *aContext)
 {
-    OT_UNUSED_VARIABLE(aWriteFdSet);
     VerifyOrExit(sTunIndex > 0, OT_NOOP);
 
-    if (FD_ISSET(sTunFd, aErrorFdSet))
+    if (FD_ISSET(sTunFd, &aContext->mErrorFdSet))
     {
         close(sTunFd);
         DieNow(OT_EXIT_FAILURE);
     }
 
-    if (FD_ISSET(sNetlinkFd, aErrorFdSet))
+    if (FD_ISSET(sNetlinkFd, &aContext->mErrorFdSet))
     {
         close(sNetlinkFd);
         DieNow(OT_EXIT_FAILURE);
     }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (FD_ISSET(sMLDMonitorFd, aErrorFdSet))
+    if (FD_ISSET(sMLDMonitorFd, &aContext->mErrorFdSet))
     {
         close(sMLDMonitorFd);
         DieNow(OT_EXIT_FAILURE);
     }
 #endif
 
-    if (FD_ISSET(sTunFd, aReadFdSet))
+    if (FD_ISSET(sTunFd, &aContext->mReadFdSet))
     {
         processTransmit(sInstance);
     }
 
-    if (FD_ISSET(sNetlinkFd, aReadFdSet))
+    if (FD_ISSET(sNetlinkFd, &aContext->mReadFdSet))
     {
         processNetifEvent(sInstance);
     }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (FD_ISSET(sMLDMonitorFd, aReadFdSet))
+    if (FD_ISSET(sMLDMonitorFd, &aContext->mReadFdSet))
     {
         processMLDEvent(sInstance);
     }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    SuccessOrDie(sRaListener.ProcessEvent(sInstance, *aReadFdSet, *aWriteFdSet, *aErrorFdSet));
+    SuccessOrDie(sRaListener.ProcessEvent(sInstance, aContext));
 #endif
 
 exit:

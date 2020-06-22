@@ -257,23 +257,18 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName);
 /**
  * This function updates the file descriptor sets with file descriptors used by platform netif module.
  *
- * @param[inout]  aReadFdSet    A pointer to the read file descriptors.
- * @param[inout]  aWriteFdSet   A pointer to the write file descriptors.
- * @param[inout]  aErrorFdSet   A pointer to the error file descriptors.
- * @param[inout]  aMaxFd        A pointer to the max file descriptor.
+ * @param[inout]  aContext      A pointer to the mainloop context.
  *
  */
-void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd);
+void platformNetifUpdateFdSet(otSysMainloopContext *aContext);
 
 /**
  * This function performs platform netif processing.
  *
- * @param[in]   aReadFdSet      A pointer to the read file descriptors.
- * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
- * @param[in]   aErrorFdSet     A pointer to the error file descriptors.
+ * @param[in]  aContext     A pointer to the mainloop context.
  *
  */
-void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);
+void platformNetifProcess(const otSysMainloopContext *aContext);
 
 /**
  * This function initialize virtual time simulation.

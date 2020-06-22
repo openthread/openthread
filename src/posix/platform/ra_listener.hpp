@@ -37,13 +37,27 @@
 #include <sys/select.h>
 
 #include <core/openthread-core-config.h>
+#include <openthread/border_router.h>
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/openthread-system.h>
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
+#ifndef OPENTHREAD_POSIX_CONFIG_MAX_ROUTER_ENTRIES_COUNT
+#define OPENTHREAD_POSIX_CONFIG_MAX_ROUTER_ENTRIES_COUNT 10
+#endif
+
 namespace ot {
 namespace Posix {
+
+struct RouterEntry
+{
+    time_t               mPreferTimePoint;
+    time_t               mValidTimePoint;
+    otBorderRouterConfig mConfig;
+    bool                 mOccupied = false;
+};
 
 class RaListener
 {
@@ -75,28 +89,19 @@ public:
     /**
      * This method updates the file descriptor sets with file descriptor used by the listener.
      *
-     * @param[inout]  aReadFdSet   A reference to the read file descriptors.
-     * @param[inout]  aWriteFdSet  A reference to the write file descriptors.
-     * @param[inout]  aErrorFdSet  A reference to the error file descriptors.
-     * @param[inout]  aMaxFd       A reference to the max file descriptor.
-     * @param[inout]  aTimeout     A reference to the timeout.
+     * @param[inout]  aContext       A pointer to the mainloop context.
      *
      */
-    void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, fd_set &aErrorFdSet, int &aMaxFd);
+    void UpdateFdSet(otSysMainloopContext *aContext);
 
     /**
      * This method performs the I/O event processing.
      *
-     * @param[in]   aInstance      The OpenThread instance object.
-     * @param[in]  aReadFdSet      A reference to the read file descriptors.
-     * @param[in]  aWriteFdSet     A reference to the write file descriptors.
-     * @param[in]  aErrorFdSet     A reference to the error file descriptors.
+     * @param[in]  aInstance      The OpenThread instance object.
+     * @param[in]  aContext       A pointer to the mainloop context.
      *
      */
-    otError ProcessEvent(otInstance *  aInstance,
-                         const fd_set &aReadFdSet,
-                         const fd_set &aWriteFdSet,
-                         const fd_set &aErrorFdSet);
+    otError ProcessEvent(otInstance *aInstance, const otSysMainloopContext *aContext);
 
     /**
      * This destructor deinitializes the listener.
@@ -107,8 +112,14 @@ public:
     ~RaListener(void);
 
 private:
-    RaListener(const RaListener &);
-    RaListener &operator=(const RaListener &);
+    RaListener(const RaListener &) = delete;
+    RaListener &operator=(const RaListener &) = delete;
+
+    otError      UpdateRouterEntries(otInstance *aInstance);
+    RouterEntry &EliminateEntry(void);
+    RouterEntry &GetAvailableRouterEntry(void);
+
+    RouterEntry mRouterEntries[OPENTHREAD_POSIX_CONFIG_MAX_ROUTER_ENTRIES_COUNT];
 
     int mRaFd;
 };

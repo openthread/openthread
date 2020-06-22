@@ -127,8 +127,7 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
     platformUdpUpdateFdSet(aInstance, &aMainloop->mReadFdSet, &aMainloop->mMaxFd);
 #endif
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-    platformNetifUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet,
-                             &aMainloop->mMaxFd);
+    platformNetifUpdateFdSet(aMainloop);
 #endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
@@ -197,7 +196,7 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
     platformUartProcess(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
     platformAlarmProcess(aInstance);
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-    platformNetifProcess(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
+    platformNetifProcess(aMainloop);
 #endif
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpProcess(aInstance, &aMainloop->mReadFdSet);

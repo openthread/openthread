@@ -38,6 +38,7 @@
 
 #include <openthread/border_router.h>
 #include <openthread/ip6.h>
+#include <openthread/platform/time.h>
 
 #include "platform-posix.h"
 #include "common/code_utils.hpp"
@@ -102,6 +103,10 @@ struct RaHeader
 RaListener::RaListener(void)
     : mRaFd(0)
 {
+    for (auto &entry : mRouterEntries)
+    {
+        entry.mOccupied = false;
+    }
 }
 
 otError RaListener::Init(unsigned int aInterfaceIndex)
@@ -128,32 +133,53 @@ void RaListener::DeInit(void)
     }
 }
 
-void RaListener::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, fd_set &aErrorFdSet, int &aMaxFd)
+void RaListener::UpdateFdSet(otSysMainloopContext *aContext)
 {
-    (void)aWriteFdSet;
+    time_t now = static_cast<time_t>(otPlatTimeGet() / US_PER_S);
 
-    FD_SET(mRaFd, &aReadFdSet);
-    FD_SET(mRaFd, &aErrorFdSet);
+    FD_SET(mRaFd, &aContext->mReadFdSet);
+    FD_SET(mRaFd, &aContext->mErrorFdSet);
 
-    aMaxFd = (mRaFd > aMaxFd) ? mRaFd : aMaxFd;
+    aContext->mMaxFd = (mRaFd > aContext->mMaxFd) ? mRaFd : aContext->mMaxFd;
+
+    for (const auto &entry : mRouterEntries)
+    {
+        if (entry.mPreferTimePoint < now)
+        {
+            aContext->mTimeout.tv_sec  = 0;
+            aContext->mTimeout.tv_usec = 0;
+        }
+        else if (entry.mPreferTimePoint - now <= aContext->mTimeout.tv_sec)
+        {
+            aContext->mTimeout.tv_sec  = entry.mPreferTimePoint - now;
+            aContext->mTimeout.tv_usec = 0;
+        }
+        if (entry.mValidTimePoint < now)
+        {
+            aContext->mTimeout.tv_sec  = 0;
+            aContext->mTimeout.tv_usec = 0;
+        }
+        else if (entry.mValidTimePoint - now <= aContext->mTimeout.tv_sec)
+        {
+            aContext->mTimeout.tv_sec  = entry.mValidTimePoint - now;
+            aContext->mTimeout.tv_usec = 0;
+        }
+    }
 }
 
-otError RaListener::ProcessEvent(otInstance *  aInstance,
-                                 const fd_set &aReadFdSet,
-                                 const fd_set &aWriteFdSet,
-                                 const fd_set &aErrorFdSet)
+otError RaListener::ProcessEvent(otInstance *aInstance, const otSysMainloopContext *aContext)
 {
-    (void)aWriteFdSet;
-
     const size_t kMaxRaEvent = 8192;
     uint8_t      buffer[kMaxRaEvent];
     ssize_t      bufferLen;
     otError      error = OT_ERROR_NONE;
     RaHeader *   header;
     uint8_t *    current;
+    time_t       now = static_cast<time_t>(otPlatTimeGet() / US_PER_S);
 
-    VerifyOrExit(FD_ISSET(mRaFd, &aReadFdSet), OT_NOOP);
-    VerifyOrExit(!FD_ISSET(mRaFd, &aErrorFdSet), error = OT_ERROR_FAILED);
+    VerifyOrExit(!FD_ISSET(mRaFd, &aContext->mErrorFdSet), error = OT_ERROR_FAILED);
+    UpdateRouterEntries(aInstance);
+    VerifyOrExit(FD_ISSET(mRaFd, &aContext->mReadFdSet), OT_NOOP);
 
     bufferLen = recv(mRaFd, buffer, sizeof(buffer), 0);
     VerifyOrExit(bufferLen > 0, OT_NOOP);
@@ -163,6 +189,9 @@ otError RaListener::ProcessEvent(otInstance *  aInstance,
     VerifyOrExit(header->mType == kICMPv6RaType, OT_NOOP);
     bufferLen -= sizeof(RaHeader);
     current += sizeof(RaHeader);
+    // The lifetime of router is independent from the prefix lifetime.
+    // In our currnet implementation we assume the RA on wpan interface is
+    // sent by the localhost itself so we don't handle the router lifetime.
     while (bufferLen > 0)
     {
         RaOption *option = reinterpret_cast<RaOption *>(current);
@@ -174,10 +203,21 @@ otError RaListener::ProcessEvent(otInstance *  aInstance,
 
         if (option->mHeader.mType == kOptionPrefixType)
         {
-            otBorderRouterConfig config;
+            RouterEntry &         entry             = GetAvailableRouterEntry();
+            otBorderRouterConfig &config            = entry.mConfig;
+            uint32_t              preferredLifetime = ntohl(option->mPrefixInformation.mPreferredLifetime);
+            uint32_t              validLifetime     = ntohl(option->mPrefixInformation.mValidLifetime);
 
             VerifyOrExit(optionSize == sizeof(RaOptionHeader) + sizeof(RaPrefixInformation), OT_NOOP);
             memset(&config, 0, sizeof(otBorderRouterConfig));
+            if (validLifetime == 0)
+                continue;
+            if (preferredLifetime != 0)
+            {
+                config.mPreferred      = true;
+                entry.mPreferTimePoint = preferredLifetime == UINT32_MAX ? UINT32_MAX : preferredLifetime + now;
+            }
+            entry.mValidTimePoint  = validLifetime == UINT32_MAX ? UINT32_MAX : validLifetime + now;
             config.mSlaac          = option->mPrefixInformation.mAutoConfiguration;
             config.mDhcp           = header->mMananged;
             config.mPrefix.mLength = option->mPrefixInformation.mPrefixLength;
@@ -186,6 +226,7 @@ otError RaListener::ProcessEvent(otInstance *  aInstance,
             memcpy(&config.mPrefix.mPrefix, &option->mPrefixInformation.mPrefix, sizeof(config.mPrefix.mPrefix));
 
             VerifyOrExit(otBorderRouterAddOnMeshPrefix(aInstance, &config) == OT_ERROR_NONE, OT_NOOP);
+            entry.mOccupied = true;
             VerifyOrExit(otBorderRouterRegister(aInstance) == OT_ERROR_NONE, OT_NOOP);
             {
                 char addressString[INET6_ADDRSTRLEN + 1];
@@ -202,6 +243,86 @@ otError RaListener::ProcessEvent(otInstance *  aInstance,
 
 exit:
     return error;
+}
+
+RouterEntry &RaListener::GetAvailableRouterEntry(void)
+{
+    RouterEntry *entry = nullptr;
+
+    for (auto &currentEntry : mRouterEntries)
+    {
+        if (!currentEntry.mOccupied)
+        {
+            entry = &currentEntry;
+            break;
+        }
+    }
+
+    return entry ? *entry : EliminateEntry();
+}
+
+static bool operator<(const RouterEntry &aLhs, const RouterEntry &aRhs)
+{
+    bool result = false;
+
+    if (!aLhs.mConfig.mPreferred && aRhs.mConfig.mPreferred)
+    {
+        result = true;
+    }
+    else if (aLhs.mConfig.mPreferred == aRhs.mConfig.mPreferred)
+    {
+        result = (aLhs.mValidTimePoint < aRhs.mValidTimePoint) ||
+                 (aLhs.mValidTimePoint == aRhs.mValidTimePoint && aLhs.mPreferTimePoint < aRhs.mPreferTimePoint);
+    }
+
+    return result;
+}
+
+otError RaListener::UpdateRouterEntries(otInstance *aInstance)
+{
+    time_t  now   = static_cast<time_t>(otPlatTimeGet() / US_PER_S);
+    otError error = OT_ERROR_NONE;
+
+    for (auto &entry : mRouterEntries)
+    {
+        if (!entry.mOccupied)
+            continue;
+        if (entry.mValidTimePoint <= now)
+        {
+            char addressString[INET6_ADDRSTRLEN + 1];
+
+            inet_ntop(AF_INET6, &entry.mConfig.mPrefix.mPrefix, addressString, sizeof(addressString));
+            otLogInfoPlat("Removed Prefix %s(%d)", addressString, entry.mConfig.mPrefix.mLength);
+
+            error = otBorderRouterRemoveOnMeshPrefix(aInstance, &entry.mConfig.mPrefix);
+
+            VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_NOT_FOUND, error = OT_ERROR_NONE);
+            entry.mOccupied = false;
+        }
+        else if (entry.mPreferTimePoint < now && entry.mConfig.mPreferred)
+        {
+            entry.mConfig.mPreferred = false;
+
+            SuccessOrExit(error = otBorderRouterAddOnMeshPrefix(aInstance, &entry.mConfig));
+        }
+    }
+exit:
+    return error;
+}
+
+RouterEntry &RaListener::EliminateEntry(void)
+{
+    RouterEntry *entry = &mRouterEntries[0];
+
+    for (size_t i = 0; i < OPENTHREAD_POSIX_CONFIG_MAX_ROUTER_ENTRIES_COUNT; i++)
+    {
+        if (mRouterEntries[i] < *entry)
+        {
+            entry = &mRouterEntries[i];
+        }
+    }
+
+    return *entry;
 }
 
 RaListener::~RaListener()
