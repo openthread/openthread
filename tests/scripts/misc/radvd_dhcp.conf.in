@@ -6,6 +6,8 @@ interface WPAN {
         prefix 2001:db8:1:2::/64 { 
                 AdvOnLink on; 
                 AdvAutonomous off; 
+                AdvValidLifetime 20;
+                AdvPreferredLifetime 10;
         };
 };
 
