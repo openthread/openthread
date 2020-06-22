@@ -101,7 +101,7 @@ struct RaHeader
 } OT_TOOL_PACKED_END;
 
 RaListener::RaListener(void)
-    : mRaFd(0)
+    : mRaFd(-1)
 {
     for (auto &entry : mRouterEntries)
     {
@@ -120,16 +120,20 @@ otError RaListener::Init(unsigned int aInterfaceIndex)
     VerifyOrExit(setsockopt(mRaFd, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq6, sizeof(mreq6)) == 0, error = OT_ERROR_FAILED);
 
 exit:
-    otLogInfoPlat("RaListener::Init error=%s", otThreadErrorToString(error));
+    if (error != OT_ERROR_NONE)
+    {
+        otLogInfoPlat("RaListener::Init error=%s(sys error: %s)", otThreadErrorToString(error), strerror(errno));
+    }
+
     return error;
 }
 
 void RaListener::DeInit(void)
 {
-    if (mRaFd != 0)
+    if (mRaFd != -1)
     {
         close(mRaFd);
-        mRaFd = 0;
+        mRaFd = -1;
     }
 }
 
@@ -178,7 +182,7 @@ otError RaListener::ProcessEvent(otInstance *aInstance, const otSysMainloopConte
     time_t       now = static_cast<time_t>(otPlatTimeGet() / US_PER_S);
 
     VerifyOrExit(!FD_ISSET(mRaFd, &aContext->mErrorFdSet), error = OT_ERROR_FAILED);
-    UpdateRouterEntries(aInstance);
+    SuccessOrExit(error = UpdateRouterEntries(aInstance));
     VerifyOrExit(FD_ISSET(mRaFd, &aContext->mReadFdSet), OT_NOOP);
 
     bufferLen = recv(mRaFd, buffer, sizeof(buffer), 0);
