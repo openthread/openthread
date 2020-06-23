@@ -54,7 +54,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/wrap_string.h"
+#include <string.h>
 #endif // #ifndef SPINEL_PLATFORM_HEADER
 
 // ----------------------------------------------------------------------------
