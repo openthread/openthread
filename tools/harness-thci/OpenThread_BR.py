@@ -50,9 +50,9 @@ LOGX = re.compile(r'.*Under-voltage detected!')
 
 assert LOGX.match('[57522.618196] Under-voltage detected! (0x00050005)')
 
-OTBR_AGENT_SYSLOG_PATTERN = re.compile(r'otbr-agent\[\d+\]: (.*)')
-assert OTBR_AGENT_SYSLOG_PATTERN.match(
-    'otbr-agent[323]: =========[[THCI] direction=send | type=JOIN_FIN.req | len=039]==========]'
+OTBR_AGENT_SYSLOG_PATTERN = re.compile(r'raspberrypi otbr-agent\[\d+\]: (.*)')
+assert OTBR_AGENT_SYSLOG_PATTERN.search(
+    'Jun 23 05:21:22 raspberrypi otbr-agent[323]: =========[[THCI] direction=send | type=JOIN_FIN.req | len=039]==========]'
 ).group(
     1
 ) == '=========[[THCI] direction=send | type=JOIN_FIN.req | len=039]==========]'
@@ -65,6 +65,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         self.log("logining Raspberry Pi ...")
         self.__cli_output_lines = []
         self.__syslog_skip_lines = None
+        self.__syslog_last_read_ts = 0
 
         self.__handle = serial.Serial(self.port, 115200, timeout=0)
         self.__lines = ['']
@@ -88,7 +89,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
 
             if lastLine == RPI_FULL_PROMPT:
                 self.log("prompt found, login success!")
-                self.bash('stty cols 256')
                 loginOk = True
                 break
 
@@ -105,6 +105,9 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         if not loginOk:
             raise Exception('login fail')
 
+        self.bash('stty cols 256')
+        self.__truncateSyslog()
+
     def _disconnect(self):
         if self.__handle:
             self.__handle.close()
@@ -112,7 +115,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
 
     def _cliReadLine(self):
         # read commissioning log if it's commissioning
-        if not self.__cli_output_lines and self.__syslog_skip_lines is not None:
+        if not self.__cli_output_lines:
             self.__readSyslogToCli()
 
         if self.__cli_output_lines:
@@ -125,14 +128,23 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         assert self.__syslog_skip_lines is None
         self.__syslog_skip_lines = int(
             self.bash('wc -l /var/log/syslog')[0].split()[0])
+        self.__syslog_last_read_ts = 0
 
     @watched
     def _onCommissionStop(self):
         assert self.__syslog_skip_lines is not None
         self.__syslog_skip_lines = None
 
-    @watched
     def __readSyslogToCli(self):
+        if self.__syslog_skip_lines is None:
+            return 0
+
+        # read syslog once per second
+        if time.time() < self.__syslog_last_read_ts + 1:
+            return 0
+
+        self.__syslog_last_read_ts = time.time()
+
         lines = self.bash('tail +%d /var/log/syslog' % self.__syslog_skip_lines)
         for line in lines:
             m = OTBR_AGENT_SYSLOG_PATTERN.search(line)
@@ -271,3 +283,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
 
     def __bashWriteLine(self, line):
         self.__bashWrite(line + '\n')
+
+    def __truncateSyslog(self):
+        self.bash('sudo truncate -s 0 /var/log/syslog')

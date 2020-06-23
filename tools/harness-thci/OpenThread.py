@@ -157,10 +157,12 @@ class OpenThreadTHCI(object):
 
     @abstractmethod
     def _onCommissionStart(self):
+        """Called when commissioning starts."""
         pass
 
     @abstractmethod
     def _onCommissionStop(self):
+        """Called when commissioning stops."""
         pass
 
     def __sendCommand(self, cmd, expectEcho=True):
@@ -604,6 +606,8 @@ class OpenThreadTHCI(object):
         self.logThreadStatus = self.logStatus['running']
         logs = Queue()
         t_end = time.time() + durationInSeconds
+        joinSucceed = False
+
         while time.time() < t_end:
 
             if self.logThreadStatus == self.logStatus['pauseReq']:
@@ -621,17 +625,20 @@ class OpenThreadTHCI(object):
                     logs.put(line)
 
                     if 'Join success' in line:
-                        self.joinCommissionedStatus = self.joinStatus['succeed']
-                        break
+                        joinSucceed = True
+                        # read commissioning logs for 3 more seconds
+                        t_end = time.time() + 3
                     elif 'Join failed' in line:
-                        self.joinCommissionedStatus = self.joinStatus['failed']
-                        break
+                        # read commissioning logs for 3 more seconds
+                        t_end = time.time() + 3
                 elif line is None:
                     self.sleep(0.01)
 
             except Exception:
                 pass
 
+        self.joinCommissionedStatus = self.joinStatus[
+            'succeed'] if joinSucceed else self.joinStatus['failed']
         self.logThreadStatus = self.logStatus['stop']
         return logs
 
