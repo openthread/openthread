@@ -266,13 +266,8 @@ class OpenThreadTHCI(object):
 
     def log(self, fmt, *args):
         try:
-            t = time.time()
-            ms = int((t - int(t)) * 1000)
-            t = time.localtime(t)
             msg = fmt % args
-            ModuleHelper.WriteIntoDebugLogger(
-                '%s.%d - %s - %s' %
-                (time.strftime('%m-%d %H:%M:%S', t), ms, self.port, msg))
+            logging.info('%s - %s', self.port, msg)
         except:
             pass
 
