@@ -103,7 +103,7 @@ def retry(n, interval=0):
             for i in range(n + 1):
                 try:
                     return func(*args, **kwargs)
-                except:
+                except Exception:
                     if i == n:
                         raise
 
@@ -273,7 +273,7 @@ class OpenThreadTHCI(object):
         try:
             msg = fmt % args
             logging.info('%s - %s', self.port, msg)
-        except:
+        except Exception:
             pass
 
     def sleep(self, duration):
