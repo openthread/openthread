@@ -92,6 +92,27 @@ def watched(func):
     return wrapped_api_func
 
 
+def retry(n, interval=0):
+    assert n >= 0, n
+
+    def deco(func):
+
+        @functools.wraps(func)
+        def retried_func(*args, **kwargs):
+            for i in range(n + 1):
+                try:
+                    return func(*args, **kwargs)
+                except:
+                    if i == n:
+                        raise
+
+                    time.sleep(interval)
+
+        return retried_func
+
+    return deco
+
+
 def API(api_func):
     return watched(api_func)
 
@@ -171,8 +192,9 @@ class OpenThreadTHCI(object):
         if expectEcho:
             self.__expect(cmd, endswith=True)
 
+    @retry(3)
     @watched
-    def __executeCommand(self, cmd):
+    def __executeCommand(self, cmd, timeout=10):
         """send specific command to reference unit over serial port
 
         Args:
@@ -189,46 +211,28 @@ class OpenThreadTHCI(object):
                    self.logThreadStatus != self.logStatus['stop']):
                 pass
 
-        try:
-            # command retransmit times
-            retry_times = 3
-            while retry_times > 0:
-                retry_times -= 1
-                try:
-                    self.__sendCommand(cmd)
-                except Exception as e:
-                    logging.exception(
-                        '%s: failed to send command[%s]: %s',
-                        self.port,
-                        cmd,
-                        str(e),
-                    )
-                    if retry_times == 0:
-                        raise
-                else:
-                    break
+        self.__sendCommand(cmd)
+        line = None
+        response = []
 
-            line = None
-            response = []
-            retry_times = 10
-            while retry_times > 0:
-                line = self._cliReadLine()
-                if line is not None:
-                    self.log("readline: %s", line)
-                if line:
-                    response.append(line)
-                    if line == 'Done':
-                        break
-                else:
-                    retry_times -= 1
-                    self.sleep(0.2)
-            if line != 'Done':
-                raise Exception('%s: failed to find end of response: %s' %
-                                (self.port, response))
-            return response
-        except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger('sendCommand() Error: ' + str(e))
-            raise
+        t_end = time.time() + timeout
+        while time.time() < t_end:
+            line = self._cliReadLine()
+            if line is None:
+                time.sleep(0.01)
+                continue
+
+            self.log("readline: %s", line)
+            response.append(line)
+
+            if line == 'Done':
+                break
+
+        if line != 'Done':
+            raise Exception('%s: failed to find end of response: %s' %
+                            (self.port, response))
+
+        return response
 
     def __expect(self, expected, timeout=5, endswith=False):
         """Find the `expected` line within `times` tries.
