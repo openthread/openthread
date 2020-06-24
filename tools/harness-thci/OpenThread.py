@@ -77,17 +77,18 @@ def watched(func):
         callstr = '====' * _callStackDepth + "> %s%s%s" % (
             func_name, str(args) if args else "", str(kwargs) if kwargs else "")
 
+        _callStackDepth += 1
         try:
             self.log("%s starts ...", callstr)
-            _callStackDepth += 1
             ret = func(self, *args, **kwargs)
-            _callStackDepth -= 1
             self.log("%s returns %r", callstr, ret)
             return ret
         except Exception as ex:
             self.log("FUNC %s failed: %s\n%s", func_name, str(ex),
                      traceback.format_exc())
             raise
+        finally:
+            _callStackDepth -= 1
 
     return wrapped_api_func
 
