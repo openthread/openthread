@@ -2734,7 +2734,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_WHITELIST_ENABLED
         mode = OT_MAC_FILTER_ADDRESS_MODE_WHITELIST;
     }
 
-    error = otLinkFilterSetAddressMode(mInstance, mode);
+    otLinkFilterSetAddressMode(mInstance, mode);
 
 exit:
     return error;
@@ -2792,7 +2792,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_BLACKLIST_ENABLED
         mode = OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST;
     }
 
-    error = otLinkFilterSetAddressMode(mInstance, mode);
+    otLinkFilterSetAddressMode(mInstance, mode);
 
 exit:
     return error;
@@ -2803,7 +2803,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_FIXED_RSS>(void)
     otError error = OT_ERROR_NONE;
 
     // First, clear the address filter entries.
-    otLinkFilterClearRssIn(mInstance);
+    otLinkFilterClearAllRssIn(mInstance);
 
     while (mDecoder.GetRemainingLengthInStruct() > 0)
     {
@@ -2825,7 +2825,14 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_FIXED_RSS>(void)
 
         SuccessOrExit(error = mDecoder.CloseStruct());
 
-        SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, extAddress, rss));
+        if (extAddress != nullptr)
+        {
+            SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, extAddress, rss));
+        }
+        else
+        {
+            otLinkFilterSetDefaultRssIn(mInstance, rss);
+        }
     }
 
 exit:
@@ -2976,9 +2983,9 @@ exit:
 
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_WHITELIST>(void)
 {
-    otError             error      = OT_ERROR_NONE;
-    const otExtAddress *extAddress = nullptr;
-    int8_t              rss        = OT_MAC_FILTER_FIXED_RSS_DISABLED;
+    otError             error = OT_ERROR_NONE;
+    const otExtAddress *extAddress;
+    int8_t              rss = OT_MAC_FILTER_FIXED_RSS_DISABLED;
 
     SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
 
@@ -3007,8 +3014,8 @@ exit:
 
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_BLACKLIST>(void)
 {
-    otError             error      = OT_ERROR_NONE;
-    const otExtAddress *extAddress = nullptr;
+    otError             error = OT_ERROR_NONE;
+    const otExtAddress *extAddress;
 
     SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
 
@@ -3036,7 +3043,14 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_FIXED_RSS>(voi
 
     SuccessOrExit(mDecoder.ReadInt8(rss));
 
-    error = otLinkFilterAddRssIn(mInstance, extAddress, rss);
+    if (extAddress != nullptr)
+    {
+        error = otLinkFilterAddRssIn(mInstance, extAddress, rss);
+    }
+    else
+    {
+        otLinkFilterSetDefaultRssIn(mInstance, rss);
+    }
 
 exit:
     return error;
@@ -3111,11 +3125,13 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_FIXED_RSS>(voi
         SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
     }
 
-    error = otLinkFilterRemoveRssIn(mInstance, extAddress);
-
-    if (error == OT_ERROR_NOT_FOUND)
+    if (extAddress != nullptr)
     {
-        error = OT_ERROR_NONE;
+        otLinkFilterRemoveRssIn(mInstance, extAddress);
+    }
+    else
+    {
+        otLinkFilterClearDefaultRssIn(mInstance);
     }
 
 exit:
