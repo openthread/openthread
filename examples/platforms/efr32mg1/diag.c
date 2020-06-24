@@ -137,7 +137,8 @@ static otError processLaunchGeckoBootloader(otInstance *aInstance,
 
     if (aArgsLength == 0)
     {
-         setTimer(&bltimer, 50, &timerCb);
+         snprintf(aOutput, aOutputMaxLen, "Launched Bootloader\r\n");
+         setTimer(&bltimer, 250, &timerCb);
     }
     else
     {
@@ -168,7 +169,7 @@ static otError processEeroVersion(otInstance *aInstance,
 
     if (aArgsLength == 0)
     {
-        snprintf(aOutput, aOutputMaxLen, "v5.0.0.0.0\r\n");
+        snprintf(aOutput, aOutputMaxLen, "5.0.0.1\r\n");
     }
     else
     {
