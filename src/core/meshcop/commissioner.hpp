@@ -329,7 +329,7 @@ private:
 
     struct Joiner
     {
-        enum Type
+        enum Type : uint8_t
         {
             kTypeUnused = 0, // Need to be 0 to ensure `memset()` clears all `Joiners`
             kTypeAny,
