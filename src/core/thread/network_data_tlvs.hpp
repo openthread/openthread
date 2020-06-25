@@ -333,29 +333,29 @@ public:
     uint8_t GetNumEntries(void) const { return GetLength() / sizeof(HasRouteEntry); }
 
     /**
-     * This method returns a pointer to the i'th HasRoute entry.
+     * This method returns a pointer to the HasRoute entry at a given index.
      *
-     * @param[in]  i  An index.
+     * @param[in]  aIndex  An index.
      *
-     * @returns A pointer to the i'th HasRoute entry.
+     * @returns A pointer to the HasRoute entry at @p aIndex.
      *
      */
-    HasRouteEntry *GetEntry(uint8_t i)
+    HasRouteEntry *GetEntry(uint8_t aIndex)
     {
-        return reinterpret_cast<HasRouteEntry *>(GetValue() + (i * sizeof(HasRouteEntry)));
+        return reinterpret_cast<HasRouteEntry *>(GetValue() + (aIndex * sizeof(HasRouteEntry)));
     }
 
     /**
-     * This method returns a pointer to the i'th HasRoute entry.
+     * This method returns a pointer to the HasRoute entry at a given index.
      *
-     * @param[in]  i  An index.
+     * @param[in]  aIndex  An index.
      *
-     * @returns A pointer to the i'th HasRoute entry.
+     * @returns A pointer to the HasRoute entry at @p aIndex.
      *
      */
-    const HasRouteEntry *GetEntry(uint8_t i) const
+    const HasRouteEntry *GetEntry(uint8_t aIndex) const
     {
-        return reinterpret_cast<const HasRouteEntry *>(GetValue() + (i * sizeof(HasRouteEntry)));
+        return reinterpret_cast<const HasRouteEntry *>(GetValue() + (aIndex * sizeof(HasRouteEntry)));
     }
 
     /**
@@ -755,29 +755,29 @@ public:
     uint8_t GetNumEntries(void) const { return GetLength() / sizeof(BorderRouterEntry); }
 
     /**
-     * This method returns a pointer to the i'th Border Router entry.
+     * This method returns a pointer to the Border Router entry at a given index
      *
-     * @param[in]  i  The index.
+     * @param[in]  aIndex  The index.
      *
-     * @returns A pointer to the i'th Border Router entry.
+     * @returns A pointer to the Border Router entry at @p aIndex.
      *
      */
-    BorderRouterEntry *GetEntry(uint8_t i)
+    BorderRouterEntry *GetEntry(uint8_t aIndex)
     {
-        return reinterpret_cast<BorderRouterEntry *>(GetValue() + (i * sizeof(BorderRouterEntry)));
+        return reinterpret_cast<BorderRouterEntry *>(GetValue() + (aIndex * sizeof(BorderRouterEntry)));
     }
 
     /**
-     * This method returns a pointer to the i'th Border Router entry.
+     * This method returns a pointer to the Border Router entry at a given index.
      *
-     * @param[in]  i  The index.
+     * @param[in]  aIndex  The index.
      *
-     * @returns A pointer to the i'th Border Router entry.
+     * @returns A pointer to the Border Router entry at @p aIndex
      *
      */
-    const BorderRouterEntry *GetEntry(uint8_t i) const
+    const BorderRouterEntry *GetEntry(uint8_t aIndex) const
     {
-        return reinterpret_cast<const BorderRouterEntry *>(GetValue() + (i * sizeof(BorderRouterEntry)));
+        return reinterpret_cast<const BorderRouterEntry *>(GetValue() + (aIndex * sizeof(BorderRouterEntry)));
     }
 
     /**
