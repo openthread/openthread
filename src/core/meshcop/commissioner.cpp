@@ -161,29 +161,27 @@ void Commissioner::HandleCoapsConnected(bool aConnected)
 
 Commissioner::Joiner *Commissioner::GetUnusedJoinerEntry(void)
 {
-    Joiner *joiner;
+    Joiner *rval = nullptr;
 
-    for (joiner = &mJoiners[0]; joiner < OT_ARRAY_END(mJoiners); joiner++)
+    for (Joiner &joiner : mJoiners)
     {
-        if (joiner->mType == Joiner::kTypeUnused)
+        if (joiner.mType == Joiner::kTypeUnused)
         {
-            ExitNow();
+            rval = &joiner;
+            break;
         }
     }
 
-    joiner = nullptr;
-
-exit:
-    return joiner;
+    return rval;
 }
 
 Commissioner::Joiner *Commissioner::FindJoinerEntry(const Mac::ExtAddress *aEui64)
 {
-    Joiner *joiner;
+    Joiner *rval = nullptr;
 
-    for (joiner = &mJoiners[0]; joiner < OT_ARRAY_END(mJoiners); joiner++)
+    for (Joiner &joiner : mJoiners)
     {
-        switch (joiner->mType)
+        switch (joiner.mType)
         {
         case Joiner::kTypeUnused:
         case Joiner::kTypeDiscerner:
@@ -192,41 +190,37 @@ Commissioner::Joiner *Commissioner::FindJoinerEntry(const Mac::ExtAddress *aEui6
         case Joiner::kTypeAny:
             if (aEui64 == nullptr)
             {
-                ExitNow();
+                ExitNow(rval = &joiner);
             }
             break;
 
         case Joiner::kTypeEui64:
-            if ((aEui64 != nullptr) && (joiner->mSharedId.mEui64 == *aEui64))
+            if ((aEui64 != nullptr) && (joiner.mSharedId.mEui64 == *aEui64))
             {
-                ExitNow();
+                ExitNow(rval = &joiner);
             }
             break;
         }
     }
 
-    joiner = nullptr;
-
 exit:
-    return joiner;
+    return rval;
 }
 
 Commissioner::Joiner *Commissioner::FindJoinerEntry(const JoinerDiscerner &aDiscerner)
 {
-    Joiner *joiner;
+    Joiner *rval = nullptr;
 
-    for (joiner = &mJoiners[0]; joiner < OT_ARRAY_END(mJoiners); joiner++)
+    for (Joiner &joiner : mJoiners)
     {
-        if ((joiner->mType == Joiner::kTypeDiscerner) && (aDiscerner == joiner->mSharedId.mDiscerner))
+        if ((joiner.mType == Joiner::kTypeDiscerner) && (aDiscerner == joiner.mSharedId.mDiscerner))
         {
-            ExitNow();
+            rval = &joiner;
+            break;
         }
     }
 
-    joiner = nullptr;
-
-exit:
-    return joiner;
+    return rval;
 }
 
 Commissioner::Joiner *Commissioner::FindBestMatchingJoinerEntry(const Mac::ExtAddress &aReceivedJoinerId)
@@ -237,9 +231,9 @@ Commissioner::Joiner *Commissioner::FindBestMatchingJoinerEntry(const Mac::ExtAd
     // Prefer a full Joiner ID match, if not found use the entry
     // accepting any joiner.
 
-    for (Joiner *joiner = &mJoiners[0]; joiner < OT_ARRAY_END(mJoiners); joiner++)
+    for (Joiner &joiner : mJoiners)
     {
-        switch (joiner->mType)
+        switch (joiner.mType)
         {
         case Joiner::kTypeUnused:
             break;
@@ -247,26 +241,26 @@ Commissioner::Joiner *Commissioner::FindBestMatchingJoinerEntry(const Mac::ExtAd
         case Joiner::kTypeAny:
             if (best == nullptr)
             {
-                best = joiner;
+                best = &joiner;
             }
             break;
 
         case Joiner::kTypeEui64:
-            ComputeJoinerId(joiner->mSharedId.mEui64, joinerId);
+            ComputeJoinerId(joiner.mSharedId.mEui64, joinerId);
             if (joinerId == aReceivedJoinerId)
             {
-                ExitNow(best = joiner);
+                ExitNow(best = &joiner);
             }
             break;
 
         case Joiner::kTypeDiscerner:
-            if (joiner->mSharedId.mDiscerner.Matches(aReceivedJoinerId))
+            if (joiner.mSharedId.mDiscerner.Matches(aReceivedJoinerId))
             {
                 if ((best == nullptr) ||
                     ((best->mType == Joiner::kTypeDiscerner) &&
-                     (best->mSharedId.mDiscerner.GetLength() < joiner->mSharedId.mDiscerner.GetLength())))
+                     (best->mSharedId.mDiscerner.GetLength() < joiner.mSharedId.mDiscerner.GetLength())))
                 {
-                    best = joiner;
+                    best = &joiner;
                 }
             }
             break;
@@ -383,20 +377,20 @@ void Commissioner::ComputeBloomFilter(SteeringData &aSteeringData) const
 
     aSteeringData.Init();
 
-    for (const Joiner *joiner = &mJoiners[0]; joiner < OT_ARRAY_END(mJoiners); joiner++)
+    for (const Joiner &joiner : mJoiners)
     {
-        switch (joiner->mType)
+        switch (joiner.mType)
         {
         case Joiner::kTypeUnused:
             break;
 
         case Joiner::kTypeEui64:
-            ComputeJoinerId(joiner->mSharedId.mEui64, joinerId);
+            ComputeJoinerId(joiner.mSharedId.mEui64, joinerId);
             aSteeringData.UpdateBloomFilter(joinerId);
             break;
 
         case Joiner::kTypeDiscerner:
-            aSteeringData.UpdateBloomFilter(joiner->mSharedId.mDiscerner);
+            aSteeringData.UpdateBloomFilter(joiner.mSharedId.mDiscerner);
             break;
 
         case Joiner::kTypeAny:
@@ -435,9 +429,9 @@ exit:
 
 void Commissioner::ClearJoiners(void)
 {
-    for (Joiner *joiner = &mJoiners[0]; joiner < OT_ARRAY_END(mJoiners); joiner++)
+    for (Joiner &joiner : mJoiners)
     {
-        joiner->mType = Joiner::kTypeUnused;
+        joiner.mType = Joiner::kTypeUnused;
     }
 
     SendCommissionerSet();
@@ -647,17 +641,17 @@ void Commissioner::HandleJoinerExpirationTimer(void)
 {
     TimeMilli now = TimerMilli::GetNow();
 
-    for (Joiner *joiner = &mJoiners[0]; joiner < OT_ARRAY_END(mJoiners); joiner++)
+    for (Joiner &joiner : mJoiners)
     {
-        if (joiner->mType == Joiner::kTypeUnused)
+        if (joiner.mType == Joiner::kTypeUnused)
         {
             continue;
         }
 
-        if (joiner->mExpirationTime <= now)
+        if (joiner.mExpirationTime <= now)
         {
             otLogDebgMeshCoP("removing joiner due to timeout or successfully joined");
-            RemoveJoinerEntry(*joiner);
+            RemoveJoinerEntry(joiner);
         }
     }
 
@@ -669,20 +663,20 @@ void Commissioner::UpdateJoinerExpirationTimer(void)
     TimeMilli now  = TimerMilli::GetNow();
     TimeMilli next = now.GetDistantFuture();
 
-    for (Joiner *joiner = &mJoiners[0]; joiner < OT_ARRAY_END(mJoiners); joiner++)
+    for (Joiner &joiner : mJoiners)
     {
-        if (joiner->mType == Joiner::kTypeUnused)
+        if (joiner.mType == Joiner::kTypeUnused)
         {
             continue;
         }
 
-        if (joiner->mExpirationTime <= now)
+        if (joiner.mExpirationTime <= now)
         {
             next = now;
         }
-        else if (joiner->mExpirationTime < next)
+        else if (joiner.mExpirationTime < next)
         {
-            next = joiner->mExpirationTime;
+            next = joiner.mExpirationTime;
         }
     }
 
