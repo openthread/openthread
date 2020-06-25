@@ -427,9 +427,6 @@ private:
     void    HandleDtlsReceive(const uint8_t *aBuf, uint16_t aLength);
     otError HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::SubType aMessageSubType);
 
-    static void HandleUdpTransmit(Tasklet &aTasklet);
-    void        HandleUdpTransmit(void);
-
     void Process(void);
 
     State mState;
