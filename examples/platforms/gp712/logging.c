@@ -36,12 +36,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
-#ifndef _WIN32
 #include <syslog.h>
-#endif
 
 #include <openthread/platform/logging.h>
+#include <openthread/platform/toolchain.h>
 
 #include "utils/code_utils.h"
 
@@ -88,8 +86,10 @@ int PlatOtLogLevelToSysLogLevel(otLogLevel aLogLevel)
     return sysloglevel;
 }
 
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
+    OT_UNUSED_VARIABLE(aLogRegion);
+
     char         logString[512];
     unsigned int offset;
     int          charsWritten;
@@ -105,8 +105,6 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
 exit:
     syslog(PlatOtLogLevelToSysLogLevel(aLogLevel), "%s", logString);
-
-    (void)aLogRegion;
 }
 
 #endif

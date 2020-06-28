@@ -36,11 +36,9 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
 
-#include <openthread/types.h>
-
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 
 namespace ot {
 namespace Cli {
@@ -60,16 +58,16 @@ public:
      * @param[in]  aInterpreter  The CLI interpreter.
      *
      */
-    Coap(Interpreter &aInterpreter);
+    explicit Coap(Interpreter &aInterpreter);
 
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
+     * @param[in]  aArgsLength  The number of elements in @p aArgs.
+     * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(int argc, char *argv[]);
+    otError Process(uint8_t aArgsLength, char *aArgs[]);
 
 private:
     enum
@@ -78,35 +76,84 @@ private:
         kMaxBufferSize = 16
     };
 
+    struct Command
+    {
+        const char *mName;
+        otError (Coap::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
+    };
+
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    otError CancelResourceSubscription(void);
+    void    CancelSubscriber(void);
+#endif
+
     void PrintPayload(otMessage *aMessage) const;
 
-    otError ProcessRequest(int argc, char *argv[]);
+    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    otError ProcessCancel(uint8_t aArgsLength, char *aArgs[]);
+#endif
+    otError ProcessParameters(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessRequest(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessResource(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessSet(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
 
-    static void OTCALL HandleServerResponse(void *               aContext,
-                                            otCoapHeader *       aHeader,
-                                            otMessage *          aMessage,
-                                            const otMessageInfo *aMessageInfo);
-    void HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-    static void OTCALL HandleClientResponse(void *               aContext,
-                                            otCoapHeader *       aHeader,
-                                            otMessage *          aMessage,
-                                            const otMessageInfo *aMessageInfo,
-                                            otError              aError);
-    void               HandleClientResponse(otCoapHeader *       aHeader,
-                                            otMessage *          aMessage,
-                                            const otMessageInfo *aMessageInfo,
-                                            otError              aError);
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    static void HandleNotificationResponse(void *               aContext,
+                                           otMessage *          aMessage,
+                                           const otMessageInfo *aMessageInfo,
+                                           otError              aError);
+    void        HandleNotificationResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
+#endif
+
+    static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
+    void        HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
+
+    const otCoapTxParameters *GetRequestTxParameters(void) const
+    {
+        return mUseDefaultRequestTxParameters ? nullptr : &mRequestTxParameters;
+    }
+
+    const otCoapTxParameters *GetResponseTxParameters(void) const
+    {
+        return mUseDefaultResponseTxParameters ? nullptr : &mResponseTxParameters;
+    }
+
+    static const Command sCommands[];
+    Interpreter &        mInterpreter;
+
+    bool mUseDefaultRequestTxParameters;
+    bool mUseDefaultResponseTxParameters;
+
+    otCoapTxParameters mRequestTxParameters;
+    otCoapTxParameters mResponseTxParameters;
 
     otCoapResource mResource;
-    char           mUriPath[kMaxUriLength];
-
-    Interpreter &mInterpreter;
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    otIp6Address mRequestAddr;
+    otSockAddr   mSubscriberSock;
+    char         mRequestUri[kMaxUriLength];
+    uint8_t      mRequestToken[OT_COAP_MAX_TOKEN_LENGTH];
+    uint8_t      mSubscriberToken[OT_COAP_MAX_TOKEN_LENGTH];
+#endif
+    char mUriPath[kMaxUriLength];
+    char mResourceContent[kMaxBufferSize];
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    uint32_t mObserveSerial;
+    uint8_t  mRequestTokenLength;
+    uint8_t  mSubscriberTokenLength;
+    bool     mSubscriberConfirmableNotifications;
+#endif
 };
 
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
 #endif // CLI_COAP_HPP_

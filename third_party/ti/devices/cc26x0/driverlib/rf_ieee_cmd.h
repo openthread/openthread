@@ -1,9 +1,9 @@
 /******************************************************************************
 *  Filename:       rf_ieee_cmd.h
-*  Revised:        $Date$
-*  Revision:       $Revision$
+*  Revised:        2017-08-28 10:10:48 +0200 (Mon, 28 Aug 2017)
+*  Revision:       17894
 *
-*  Description:    CC26x0/CC13x0 API for IEEE 802.15.4 commands
+*  Description:    CC26x0 API for IEEE 802.15.4 commands
 *
 *  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 *  All rights reserved.
@@ -513,8 +513,8 @@ struct __RFC_STRUCT rfc_CMD_IEEE_MOD_SRC_MATCH_s {
       uint8_t bEnable:1;                //!< \brief 0: Disable entry<br>
                                         //!<        1: Enable entry
       uint8_t srcPend:1;                //!<        New value of the pending bit for the entry
-      uint8_t entryType:1;              //!< \brief 0: Extended address<br>
-                                        //!<        1: Short address
+      uint8_t entryType:1;              //!< \brief 0: Short address<br>
+                                        //!<        1: Extended address
    } options;
    uint8_t entryNo;                     //!<        Index of entry to enable or disable
 };

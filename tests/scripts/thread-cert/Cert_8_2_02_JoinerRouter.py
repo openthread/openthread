@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,45 +27,36 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import config
-import node
+import thread_cert
 
 COMMISSIONER = 1
 JOINER_ROUTER = 2
 JOINER = 3
 
-class Cert_8_2_02_JoinerRouter(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1,4):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
+class Cert_8_2_02_JoinerRouter(thread_cert.TestCase):
+    SUPPORT_NCP = False
 
-        self.nodes[COMMISSIONER].set_panid(0xface)
-        self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].set_masterkey('deadbeefdeadbeefdeadbeefdeadbeef')
-        self.nodes[COMMISSIONER].enable_whitelist()
-        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
-
-        self.nodes[JOINER_ROUTER].set_mode('rsdn')
-        self.nodes[JOINER_ROUTER].set_masterkey('00112233445566778899aabbccddeeff')
-        self.nodes[JOINER_ROUTER].enable_whitelist()
-        self.nodes[JOINER_ROUTER].set_router_selection_jitter(1)
-
-        self.nodes[JOINER].set_mode('rsdn')
-        self.nodes[JOINER].set_masterkey('00112233445566778899aabbccddeeff')
-        self.nodes[JOINER].enable_whitelist()
-        self.nodes[JOINER].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+    TOPOLOGY = {
+        COMMISSIONER: {
+            'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        JOINER_ROUTER: {
+            'masterkey': '00112233445566778899aabbccddeeff',
+            'mode': 'rsdn',
+            'router_selection_jitter': 1
+        },
+        JOINER: {
+            'masterkey': '00112233445566778899aabbccddeeff',
+            'mode': 'rsdn',
+            'router_selection_jitter': 1
+        },
+    }
 
     def test(self):
         self.nodes[COMMISSIONER].interface_up()
@@ -75,31 +66,39 @@ class Cert_8_2_02_JoinerRouter(unittest.TestCase):
 
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(5)
-        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER_ROUTER].get_eui64(), 'OPENTHREAD')
-        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER].get_eui64(), 'OPENTHREAD2')
+        self.nodes[COMMISSIONER].commissioner_add_joiner(
+            self.nodes[JOINER_ROUTER].get_eui64(), 'PSKD01')
+        self.nodes[COMMISSIONER].commissioner_add_joiner(
+            self.nodes[JOINER].get_eui64(), 'PSKD02')
         self.simulator.go(5)
 
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[JOINER_ROUTER].get_joiner_id())
-        self.nodes[JOINER_ROUTER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
-
         self.nodes[JOINER_ROUTER].interface_up()
-        self.nodes[JOINER_ROUTER].joiner_start('OPENTHREAD')
+        self.nodes[JOINER_ROUTER].joiner_start('PSKD01')
         self.simulator.go(10)
-        self.assertEqual(self.nodes[JOINER_ROUTER].get_masterkey(), self.nodes[COMMISSIONER].get_masterkey())
-
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[JOINER_ROUTER].get_addr64())
+        self.assertEqual(
+            self.nodes[JOINER_ROUTER].get_masterkey(),
+            self.nodes[COMMISSIONER].get_masterkey(),
+        )
 
         self.nodes[JOINER_ROUTER].thread_start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[JOINER_ROUTER].get_state(), 'router')
 
-        self.nodes[JOINER_ROUTER].add_whitelist(self.nodes[JOINER].get_joiner_id())
+        self.nodes[COMMISSIONER].enable_whitelist()
+        self.nodes[COMMISSIONER].add_whitelist(
+            self.nodes[JOINER_ROUTER].get_addr64())
+
+        self.nodes[JOINER].enable_whitelist()
         self.nodes[JOINER].add_whitelist(self.nodes[JOINER_ROUTER].get_addr64())
 
         self.nodes[JOINER].interface_up()
-        self.nodes[JOINER].joiner_start('2DAERHTNEPO')
+        self.nodes[JOINER].joiner_start('20DKSP')
         self.simulator.go(10)
-        self.assertNotEqual(self.nodes[JOINER].get_masterkey(), self.nodes[COMMISSIONER].get_masterkey())
+        self.assertNotEqual(
+            self.nodes[JOINER].get_masterkey(),
+            self.nodes[COMMISSIONER].get_masterkey(),
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

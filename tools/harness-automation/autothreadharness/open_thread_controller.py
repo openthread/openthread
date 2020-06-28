@@ -27,7 +27,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-
 import logging
 import re
 import socket
@@ -43,8 +42,10 @@ logger = logging.getLogger(__name__)
 
 linesepx = re.compile(r'\r\n|\n')
 
+
 class OpenThreadController(threading.Thread):
     """This is an simple wrapper to communicate with openthread"""
+
     _lock = threading.Lock()
     viewing = False
 
@@ -105,7 +106,10 @@ class OpenThreadController(threading.Thread):
             self.handle.setblocking(0)
             self._is_net = True
         else:
-            self.handle = serial.Serial(self.port, 115200, timeout=0, xonxoff=True)
+            self.handle = serial.Serial(self.port,
+                                        115200,
+                                        timeout=0,
+                                        xonxoff=True)
             self._is_net = False
 
     def _read(self, size=512):
@@ -223,7 +227,7 @@ class OpenThreadController(threading.Thread):
                         res.append(line)
                 break
 
-            except:
+            except BaseException:
                 logger.exception('Failed to send command')
                 self.close()
                 self._init()
@@ -238,7 +242,7 @@ class OpenThreadController(threading.Thread):
         while self.viewing and self._lock.acquire():
             try:
                 line = self._readline()
-            except:
+            except BaseException:
                 pass
             else:
                 logger.info(line)
@@ -275,7 +279,6 @@ class OpenThreadController(threading.Thread):
         self._read()
         self._log and self.resume()
 
-
     def resume(self):
         """Start dumping logs"""
         self._lock.release()
@@ -283,6 +286,7 @@ class OpenThreadController(threading.Thread):
     def pause(self):
         """Start dumping logs"""
         self._lock.acquire()
+
     @property
     def networkname(self):
         """str: Thread network name."""

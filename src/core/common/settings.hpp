@@ -36,9 +36,14 @@
 
 #include "openthread-core-config.h"
 
+#include "common/encoding.hpp"
 #include "common/locator.hpp"
-#include "mac/mac_frame.hpp"
-#include "thread/mle.hpp"
+#include "common/non_copyable.hpp"
+#include "mac/mac_types.hpp"
+#include "utils/flash.hpp"
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+#include "utils/slaac_address.hpp"
+#endif
 
 namespace ot {
 
@@ -46,13 +51,108 @@ namespace MeshCoP {
 class Dataset;
 }
 
+class SettingsDriver : public InstanceLocator, private NonCopyable
+{
+public:
+    /**
+     * Constructor.
+     */
+    explicit SettingsDriver(Instance &aInstance);
+
+    /**
+     * This method initializes the settings storage driver.
+     *
+     */
+    void Init(void);
+
+    /**
+     * This method deinitializes the settings driver.
+     *
+     */
+    void Deinit(void);
+
+    /**
+     * This method adds a value to @p aKey.
+     *
+     * @param[in]  aKey          The key associated with the value.
+     * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
+     *                           MUST NOT be nullptr if @p aValueLength is non-zero.
+     * @param[in]  aValueLength  The length of the data pointed to by @p aValue. May be zero.
+     *
+     * @retval OT_ERROR_NONE     The value was added.
+     * @retval OT_ERROR_NO_BUFS  Not enough space to store the value.
+     *
+     */
+    otError Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+
+    /**
+     * This method removes a value from @p aKey.
+     *
+     * @param[in] aKey    The key associated with the value.
+     * @param[in] aIndex  The index of the value to be removed.
+     *                    If set to -1, all values for @p aKey will be removed.
+     *
+     * @retval OT_ERROR_NONE       The given key and index was found and removed successfully.
+     * @retval OT_ERROR_NOT_FOUND  The given key or index was not found.
+     *
+     */
+    otError Delete(uint16_t aKey, int aIndex);
+
+    /**
+     * This method fetches the value identified by @p aKey.
+     *
+     * @param[in]     aKey          The key associated with the requested value.
+     * @param[in]     aIndex        The index of the specific item to get.
+     * @param[out]    aValue        A pointer to where the value of the setting should be written.
+     *                              May be nullptr if just testing for the presence or length of a key.
+     * @param[inout]  aValueLength  A pointer to the length of the value.
+     *                              When called, this should point to an integer containing the maximum bytes that
+     *                              can be written to @p aValue.
+     *                              At return, the actual length of the setting is written.
+     *                              May be nullptr if performing a presence check.
+     *
+     * @retval OT_ERROR_NONE        The value was fetched successfully.
+     * @retval OT_ERROR_NOT_FOUND   The key was not found.
+     *
+     */
+    otError Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const;
+
+    /**
+     * This method sets or replaces the value identified by @p aKey.
+     *
+     * If there was more than one value previously associated with @p aKey, then they are all deleted and replaced with
+     * this single entry.
+     *
+     * @param[in]  aKey          The key associated with the value.
+     * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
+     *                           MUST NOT be nullptr if @p aValueLength is non-zero.
+     * @param[in]  aValueLength  The length of the data pointed to by @p aValue. May be zero.
+     *
+     * @retval OT_ERROR_NONE     The value was changed.
+     * @retval OT_ERROR_NO_BUFS  Not enough space to store the value.
+     *
+     */
+    otError Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+
+    /**
+     * This method remves all values.
+     *
+     */
+    void Wipe(void);
+
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+private:
+    Flash mFlash;
+#endif
+};
+
 /**
  * This class defines the base class used by `Settings` and `Settings::ChildInfoIterator`.
  *
  * This class provides structure definitions for different settings keys.
  *
  */
-class SettingsBase : public InstanceLocator
+class SettingsBase : public InstanceLocator, private NonCopyable
 {
 public:
     /**
@@ -81,8 +181,190 @@ public:
      * This structure represents the device's own network information for settings storage.
      *
      */
-    struct NetworkInfo
+    OT_TOOL_PACKED_BEGIN
+    class NetworkInfo
     {
+    public:
+        /**
+         * This method clears the struct object (setting all the fields to zero).
+         *
+         */
+        void Init(void)
+        {
+            memset(this, 0, sizeof(*this));
+            SetVersion(OT_THREAD_VERSION_1_1);
+        }
+
+        /**
+         * This method returns the Thread role.
+         *
+         * @returns The Thread role.
+         *
+         */
+        uint8_t GetRole(void) const { return mRole; }
+
+        /**
+         * This method sets the Thread role.
+         *
+         * @param[in] aRole  The Thread Role.
+         *
+         */
+        void SetRole(uint8_t aRole) { mRole = aRole; }
+
+        /**
+         * This method returns the Thread device mode.
+         *
+         * @returns the Thread device mode.
+         *
+         */
+        uint8_t GetDeviceMode(void) const { return mDeviceMode; }
+
+        /**
+         * This method sets the Thread device mode.
+         *
+         * @param[in] aDeviceMode  The Thread device mode.
+         *
+         */
+        void SetDeviceMode(uint8_t aDeviceMode) { mDeviceMode = aDeviceMode; }
+
+        /**
+         * This method returns the RLOC16.
+         *
+         * @returns The RLOC16.
+         *
+         */
+        uint16_t GetRloc16(void) const { return Encoding::LittleEndian::HostSwap16(mRloc16); }
+
+        /**
+         * This method sets the RLOC16.
+         *
+         * @param[in] aRloc16  The RLOC16.
+         *
+         */
+        void SetRloc16(uint16_t aRloc16) { mRloc16 = Encoding::LittleEndian::HostSwap16(aRloc16); }
+
+        /**
+         * This method returns the key sequence.
+         *
+         * @returns The key sequence.
+         *
+         */
+        uint32_t GetKeySequence(void) const { return Encoding::LittleEndian::HostSwap32(mKeySequence); }
+
+        /**
+         * This method sets the key sequence.
+         *
+         * @param[in] aKeySequence  The key sequence.
+         *
+         */
+        void SetKeySequence(uint32_t aKeySequence) { mKeySequence = Encoding::LittleEndian::HostSwap32(aKeySequence); }
+
+        /**
+         * This method returns the MLE frame counter.
+         *
+         * @returns The MLE frame counter.
+         *
+         */
+        uint32_t GetMleFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mMleFrameCounter); }
+
+        /**
+         * This method sets the MLE frame counter.
+         *
+         * @param[in] aMleFrameCounter  The MLE frame counter.
+         *
+         */
+        void SetMleFrameCounter(uint32_t aMleFrameCounter)
+        {
+            mMleFrameCounter = Encoding::LittleEndian::HostSwap32(aMleFrameCounter);
+        }
+
+        /**
+         * This method returns the MAC frame counter.
+         *
+         * @returns The MAC frame counter.
+         *
+         */
+        uint32_t GetMacFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mMacFrameCounter); }
+
+        /**
+         * This method sets the MAC frame counter.
+         *
+         * @param[in] aMacFrameCounter  The MAC frame counter.
+         *
+         */
+        void SetMacFrameCounter(uint32_t aMacFrameCounter)
+        {
+            mMacFrameCounter = Encoding::LittleEndian::HostSwap32(aMacFrameCounter);
+        }
+
+        /**
+         * This method returns the previous partition ID.
+         *
+         * @returns The previous partition ID.
+         *
+         */
+        uint32_t GetPreviousPartitionId(void) const { return Encoding::LittleEndian::HostSwap32(mPreviousPartitionId); }
+
+        /**
+         * This method sets the previous partition id.
+         *
+         * @param[in] aPreviousPartitionId  The previous partition ID.
+         *
+         */
+        void SetPreviousPartitionId(uint32_t aPreviousPartitionId)
+        {
+            mPreviousPartitionId = Encoding::LittleEndian::HostSwap32(aPreviousPartitionId);
+        }
+
+        /**
+         * This method returns the extended address.
+         *
+         * @returns The extended address.
+         *
+         */
+        const Mac::ExtAddress &GetExtAddress(void) const { return mExtAddress; }
+
+        /**
+         * This method sets the extended address.
+         *
+         * @param[in] aExtAddress  The extended address.
+         *
+         */
+        void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
+
+        /**
+         * This method returns the Mesh Local Interface Identifier.
+         *
+         * @returns The Mesh Local Interface Identifier.
+         *
+         */
+        const uint8_t *GetMeshLocalIid(void) const { return mMlIid; }
+
+        /**
+         * This method sets the Mesh Local Interface Identifier.
+         *
+         * @param[in] aMeshLocalIid  The Mesh Local Interface Identifier.
+         *
+         */
+        void SetMeshLocalIid(const uint8_t *aMeshLocalIid) { memcpy(mMlIid, aMeshLocalIid, sizeof(mMlIid)); }
+
+        /**
+         * This method returns the Thread version.
+         *
+         * @returns The Thread version.
+         *
+         */
+        uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
+
+        /**
+         * This method sets the Thread version.
+         *
+         * @param[in] aVersion  The Thread version.
+         *
+         */
+        void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
+
+    private:
         uint8_t         mRole;                   ///< Current Thread role.
         uint8_t         mDeviceMode;             ///< Device mode setting.
         uint16_t        mRloc16;                 ///< RLOC16
@@ -92,44 +374,221 @@ public:
         uint32_t        mPreviousPartitionId;    ///< PartitionId
         Mac::ExtAddress mExtAddress;             ///< Extended Address
         uint8_t         mMlIid[OT_IP6_IID_SIZE]; ///< IID from ML-EID
-    };
+        uint16_t        mVersion;                ///< Version
+    } OT_TOOL_PACKED_END;
 
     /**
      * This structure represents the parent information for settings storage.
      *
      */
-    struct ParentInfo
+    OT_TOOL_PACKED_BEGIN
+    class ParentInfo
     {
+    public:
+        /**
+         * This method clears the struct object (setting all the fields to zero).
+         *
+         */
+        void Init(void)
+        {
+            memset(this, 0, sizeof(*this));
+            SetVersion(OT_THREAD_VERSION_1_1);
+        }
+
+        /**
+         * This method returns the extended address.
+         *
+         * @returns The extended address.
+         *
+         */
+        const Mac::ExtAddress &GetExtAddress(void) const { return mExtAddress; }
+
+        /**
+         * This method sets the extended address.
+         *
+         * @param[in] aExtAddress  The extended address.
+         *
+         */
+        void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
+
+        /**
+         * This method returns the Thread version.
+         *
+         * @returns The Thread version.
+         *
+         */
+        uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
+
+        /**
+         * This method sets the Thread version.
+         *
+         * @param[in] aVersion  The Thread version.
+         *
+         */
+        void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
+
+    private:
         Mac::ExtAddress mExtAddress; ///< Extended Address
-    };
+        uint16_t        mVersion;    ///< Version
+    } OT_TOOL_PACKED_END;
 
     /**
      * This structure represents the child information for settings storage.
      *
      */
-    struct ChildInfo
+    OT_TOOL_PACKED_BEGIN
+    class ChildInfo
     {
+    public:
+        /**
+         * This method clears the struct object (setting all the fields to zero).
+         *
+         */
+        void Init(void)
+        {
+            memset(this, 0, sizeof(*this));
+            SetVersion(OT_THREAD_VERSION_1_1);
+        }
+
+        /**
+         * This method returns the extended address.
+         *
+         * @returns The extended address.
+         *
+         */
+        const Mac::ExtAddress &GetExtAddress(void) const { return mExtAddress; }
+
+        /**
+         * This method sets the extended address.
+         *
+         * @param[in] aExtAddress  The extended address.
+         *
+         */
+        void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
+
+        /**
+         * This method returns the child timeout.
+         *
+         * @returns The child timeout.
+         *
+         */
+        uint32_t GetTimeout(void) const { return Encoding::LittleEndian::HostSwap32(mTimeout); }
+
+        /**
+         * This method sets the child timeout.
+         *
+         * @param[in] aTimeout  The child timeout.
+         *
+         */
+        void SetTimeout(uint32_t aTimeout) { mTimeout = Encoding::LittleEndian::HostSwap32(aTimeout); }
+
+        /**
+         * This method returns the RLOC16.
+         *
+         * @returns The RLOC16.
+         *
+         */
+        uint16_t GetRloc16(void) const { return Encoding::LittleEndian::HostSwap16(mRloc16); }
+
+        /**
+         * This method sets the RLOC16.
+         *
+         * @param[in] aRloc16  The RLOC16.
+         *
+         */
+        void SetRloc16(uint16_t aRloc16) { mRloc16 = Encoding::LittleEndian::HostSwap16(aRloc16); }
+
+        /**
+         * This method returns the Thread device mode.
+         *
+         * @returns The Thread device mode.
+         *
+         */
+        uint8_t GetMode(void) const { return mMode; }
+
+        /**
+         * This method sets the Thread device mode.
+         *
+         * @param[in] aRloc16  The Thread device mode.
+         *
+         */
+        void SetMode(uint8_t aMode) { mMode = aMode; }
+
+        /**
+         * This method returns the Thread version.
+         *
+         * @returns The Thread version.
+         *
+         */
+        uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
+
+        /**
+         * This method sets the Thread version.
+         *
+         * @param[in] aVersion  The Thread version.
+         *
+         */
+        void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
+
+    private:
         Mac::ExtAddress mExtAddress; ///< Extended Address
         uint32_t        mTimeout;    ///< Timeout
         uint16_t        mRloc16;     ///< RLOC16
         uint8_t         mMode;       ///< The MLE device mode
-    };
+        uint16_t        mVersion;    ///< Version
+    } OT_TOOL_PACKED_END;
 
-protected:
+    /**
+     * This structure represents the duplicate address detection information for settings storage.
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    class DadInfo
+    {
+    public:
+        /**
+         * This method clears the struct object (setting all the fields to zero).
+         *
+         */
+        void Init(void) { memset(this, 0, sizeof(*this)); }
+
+        /**
+         * This method returns the Dad Counter.
+         *
+         * @returns The Dad Counter value.
+         *
+         */
+        uint8_t GetDadCounter(void) const { return mDadCounter; }
+
+        /**
+         * This method sets the Dad Counter.
+         *
+         * @param[in] aDadCounter The Dad Counter value.
+         *
+         */
+        void SetDadCounter(uint8_t aDadCounter) { mDadCounter = aDadCounter; }
+
+    private:
+        uint8_t mDadCounter; ///< Dad Counter used to resolve address conflict in Thread 1.2 DUA feature.
+    } OT_TOOL_PACKED_END;
+
     /**
      * This enumeration defines the keys of settings.
      *
      */
     enum Key
     {
-        kKeyActiveDataset   = 0x0001, ///< Active Operational Dataset
-        kKeyPendingDataset  = 0x0002, ///< Pending Operational Dataset
-        kKeyNetworkInfo     = 0x0003, ///< Thread network information
-        kKeyParentInfo      = 0x0004, ///< Parent information
-        kKeyChildInfo       = 0x0005, ///< Child information
-        kKeyThreadAutoStart = 0x0006, ///< Auto-start information
+        kKeyActiveDataset     = 0x0001, ///< Active Operational Dataset
+        kKeyPendingDataset    = 0x0002, ///< Pending Operational Dataset
+        kKeyNetworkInfo       = 0x0003, ///< Thread network information
+        kKeyParentInfo        = 0x0004, ///< Parent information
+        kKeyChildInfo         = 0x0005, ///< Child information
+        kKeyReserved          = 0x0006, ///< Reserved (previously auto-start)
+        kKeySlaacIidSecretKey = 0x0007, ///< Secret key used by SLAAC module for generating semantically opaque IID
+        kKeyDadInfo           = 0x0008, ///< Duplicate Address Detection (DAD) information.
     };
 
+protected:
     explicit SettingsBase(Instance &aInstance)
         : InstanceLocator(aInstance)
     {
@@ -139,16 +598,22 @@ protected:
     void LogNetworkInfo(const char *aAction, const NetworkInfo &aNetworkInfo) const;
     void LogParentInfo(const char *aAction, const ParentInfo &aParentInfo) const;
     void LogChildInfo(const char *aAction, const ChildInfo &aChildInfo) const;
-#else
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+    void LogDadInfo(const char *aAction, const DadInfo &aDadInfo) const;
+#endif
+#else // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
     void LogNetworkInfo(const char *, const NetworkInfo &) const {}
     void LogParentInfo(const char *, const ParentInfo &) const {}
     void LogChildInfo(const char *, const ChildInfo &) const {}
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+    void LogDadInfo(const char *, const DadInfo &) const {}
 #endif
+#endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
-    void LogFailure(otError aError, const char *aAction) const;
+    void LogFailure(otError aError, const char *aAction, bool aIsDelete) const;
 #else
-    void LogFailure(otError, const char *) const {}
+    void LogFailure(otError, const char *, bool) const {}
 #endif
 };
 
@@ -177,6 +642,14 @@ public:
      *
      */
     void Init(void);
+
+    /**
+     * This method de-initializes the platform settings (non-volatile) module.
+     *
+     * This method should be called when OpenThread instance is no longer in use.
+     *
+     */
+    void Deinit(void);
 
     /**
      * This method removes all settings from the non-volatile store.
@@ -284,40 +757,49 @@ public:
      */
     otError DeleteParentInfo(void);
 
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+
     /**
-     * This method saves ThreadAutoStart.
+     * This method saves the SLAAC IID secret key.
      *
-     * @param[in]   aAutoStart            A value to be saved (0 or 1).
+     * @param[in]   aKey                  The SLAAC IID secret key.
      *
      * @retval OT_ERROR_NONE              Successfully saved the value.
      * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
      *
      */
-    otError SaveThreadAutoStart(uint8_t aAutoStart) { return Save(kKeyThreadAutoStart, &aAutoStart, sizeof(uint8_t)); }
+    otError SaveSlaacIidSecretKey(const Utils::Slaac::IidSecretKey &aKey)
+    {
+        return Save(kKeySlaacIidSecretKey, &aKey, sizeof(Utils::Slaac::IidSecretKey));
+    }
 
     /**
-     * This method reads ThreadAutoStart .
+     * This method reads the SLAAC IID secret key.
      *
-     * @param[out]   aAutoStart          A reference to a `uint8_t` to output the read value
+     * @param[out]   aKey          A reference to a SLAAC IID secret key to output the read value.
      *
      * @retval OT_ERROR_NONE              Successfully read the value.
      * @retval OT_ERROR_NOT_FOUND         No corresponding value in the setting store.
      * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
      *
      */
-    otError ReadThreadAutoStart(uint8_t &aAutoStart) const
+    otError ReadSlaacIidSecretKey(Utils::Slaac::IidSecretKey &aKey)
     {
-        return ReadFixedSize(kKeyThreadAutoStart, &aAutoStart, sizeof(uint8_t));
+        uint16_t length = sizeof(aKey);
+
+        return Read(kKeySlaacIidSecretKey, &aKey, length);
     }
 
     /**
-     * This method deletes ThreadAutoStart value from settings.
+     * This method deletes the SLAAC IID secret key value from settings.
      *
      * @retval OT_ERROR_NONE             Successfully deleted the value.
      * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
      *
      */
-    otError DeleteThreadAutoStart(void) { return Delete(kKeyThreadAutoStart); }
+    otError DeleteSlaacIidSecretKey(void) { return Delete(kKeySlaacIidSecretKey); }
+
+#endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
     /**
      * This method adds a Child Info entry to settings.
@@ -356,7 +838,7 @@ public:
          * @param[in]  aInstance  A reference to the OpenThread instance.
          *
          */
-        ChildInfoIterator(Instance &aInstance);
+        explicit ChildInfoIterator(Instance &aInstance);
 
         /**
          * This method resets the iterator to start from the first Child Info entry in the list.
@@ -372,13 +854,27 @@ public:
          * @retval FALSE  The current entry is valid.
          *
          */
-        bool IsDone(void) { return mIsDone; }
+        bool IsDone(void) const { return mIsDone; }
 
         /**
          * This method advances the iterator to move to the next Child Info entry in the list (if any).
          *
          */
         void Advance(void);
+
+        /**
+         * This method overloads operator `++` (pre-increment) to advance the iterator to move to the next Child Info
+         * entry in the list (if any).
+         *
+         */
+        void operator++(void) { Advance(); }
+
+        /**
+         * This method overloads operator `++` (post-increment) to advance the iterator to move to the next Child Info
+         * entry in the list (if any).
+         *
+         */
+        void operator++(int) { Advance(); }
 
         /**
          * This method gets the Child Info corresponding to the current iterator entry in the list.
@@ -405,13 +901,48 @@ public:
         void Read(void);
 
         ChildInfo mChildInfo;
-        uint8_t   mIndex;
+        uint16_t  mIndex;
         bool      mIsDone;
     };
 
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+
+    /**
+     * This method saves duplicate address detection information.
+     *
+     * @param[in]   aDadInfo           A reference to a `DadInfo` structure to be saved.
+     *
+     * @retval OT_ERROR_NONE              Successfully saved duplicate address detection information in settings.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     *
+     */
+    otError SaveDadInfo(const DadInfo &aDadInfo);
+
+    /**
+     * This method reads duplicate address detection information.
+     *
+     * @param[out]   aDadInfo         A reference to a `DadInfo` structure to output the read content.
+     *
+     * @retval OT_ERROR_NONE              Successfully read the duplicate address detection information.
+     * @retval OT_ERROR_NOT_FOUND         No corresponding value in the setting store.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     *
+     */
+    otError ReadDadInfo(DadInfo &aDadInfo) const;
+
+    /**
+     * This method deletes duplicate address detection information from settings.
+     *
+     * @retval OT_ERROR_NONE             Successfully deleted the value.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     *
+     */
+    otError DeleteDadInfo(void);
+
+#endif // OPENTHREAD_CONFIG_DUA_ENABLE
+
 private:
-    otError ReadFixedSize(Key aKey, void *aBuffer, uint16_t aExpectedLength) const;
-    otError Read(Key aKey, void *aBuffer, uint16_t aMaxBufferSize, uint16_t &aReadSize) const;
+    otError Read(Key aKey, void *aBuffer, uint16_t &aSize) const;
     otError Save(Key aKey, const void *aValue, uint16_t aSize);
     otError Add(Key aKey, const void *aValue, uint16_t aSize);
     otError Delete(Key aKey);

@@ -1,0 +1,280 @@
+#
+#  Copyright (c) 2020, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+name: Simulation
+
+on: [push, pull_request]
+
+jobs:
+
+  cancel-previous-runs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: rokroskar/workflow-run-cleanup-action@master
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      if: "github.ref != 'refs/heads/master'"
+
+  distcheck:
+    runs-on: ubuntu-18.04
+    env:
+      CC: clang
+      CXX: clang++
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y llvm-runtime
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Run
+      run: |
+        export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer`
+        export ASAN_OPTIONS=symbolize=1
+        export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS=-DOPENTHREAD_SIMULATION_VIRTUAL_TIME=1
+        ./bootstrap
+        make -f examples/Makefile-simulation distcheck
+
+  cli-ftd-otns:
+    runs-on: ubuntu-18.04
+    env:
+      CFLAGS: -m32
+      CXXFLAGS: -m32
+      LDFLAGS: -m32
+      COVERAGE: 1
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 1
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v1
+      with:
+        go-version: '1.13'
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib
+        ./bootstrap
+    - name: Run OTNS Tests
+      run: |
+        git clone https://github.com/openthread/ot-ns.git --depth 1 --branch master ~/otns
+        export OTDIR=$PWD
+        cd ~/otns
+        ./script/test py-unittests py-examples
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
+  cli-ftd:
+    runs-on: ubuntu-18.04
+    env:
+      CFLAGS: -m32
+      CXXFLAGS: -m32
+      LDFLAGS: -m32
+      COVERAGE: 1
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        ./bootstrap
+        make -f examples/Makefile-simulation
+    - name: Run
+      run: |
+        VERBOSE=1 make -f examples/Makefile-simulation check
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
+  cli-mtd:
+    runs-on: ubuntu-18.04
+    env:
+      CFLAGS: -m32
+      CXXFLAGS: -m32
+      LDFLAGS: -m32
+      COVERAGE: 1
+      REFERENCE_DEVICE: 1
+      USE_MTD: 1
+      VIRTUAL_TIME: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        ./bootstrap
+        make -f examples/Makefile-simulation
+    - name: Run
+      run: |
+        VERBOSE=1 make -f examples/Makefile-simulation check
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
+  cli-time-sync:
+    runs-on: ubuntu-18.04
+    env:
+      CFLAGS: -m32
+      CXXFLAGS: -m32
+      LDFLAGS: -m32
+      COVERAGE: 1
+      REFERENCE_DEVICE: 1
+      TIME_SYNC: 1
+      VIRTUAL_TIME: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        ./bootstrap
+        make -f examples/Makefile-simulation
+    - name: Run
+      run: |
+        VERBOSE=1 make -f examples/Makefile-simulation check
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
+  expects:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build
+    - name: Run
+      run: |
+        OT_OPTIONS=-DOT_TIME_SYNC=ON VIRTUAL_TIME=0 ./script/test build expect
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+    - name: Run RCP Mode
+      run: |
+        OT_OPTIONS=-DOT_READLINE=OFF VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+    - name: Run TUN Mode
+      run: |
+        sudo apt-get install --no-install-recommends -y dnsmasq bind9-host ntp
+        sudo systemctl start dnsmasq ntp
+        host ipv6.google.com 127.0.0.1
+        echo 'listen-address=::1' | sudo tee /etc/dnsmasq.conf
+        echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
+        sudo systemctl restart dnsmasq
+        host ipv6.google.com ::1
+        OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
+  multiple-instance:
+    runs-on: ubuntu-18.04
+    env:
+      COVERAGE: 1
+      MULTIPLE_INSTANCE: 1
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        ./bootstrap
+        make -f examples/Makefile-simulation
+    - name: Run
+      run: |
+        VERBOSE=1 make -f examples/Makefile-simulation check
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
+  ncp-gcc-m32:
+    runs-on: ubuntu-18.04
+    env:
+      CFLAGS: -m32
+      CXXFLAGS: -m32
+      LDFLAGS: -m32
+      COVERAGE: 1
+      NODE_TYPE: ncp-sim
+      PYTHONUNBUFFERED: 1
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+        sudo python3 -m pip install git+https://github.com/openthread/pyspinel
+    - name: Build
+      run: |
+        ./bootstrap
+        make -f examples/Makefile-simulation
+    - name: Run
+      run: |
+        VERBOSE=1 make -f examples/Makefile-simulation check
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
+  ncp-clang:
+    runs-on: ubuntu-18.04
+    env:
+      COVERAGE: 1
+      NODE_TYPE: ncp-sim
+      PYTHONUNBUFFERED: 1
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 1
+      CC: clang
+      CXX: clang++
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bootstrap
+        run: |
+          sudo apt-get update
+          sudo apt-get --no-install-recommends install -y python3-setuptools
+          python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+          sudo python3 -m pip install git+https://github.com/openthread/pyspinel
+      - name: Build
+        run: |
+          ./bootstrap
+          make -f examples/Makefile-simulation
+      - name: Run
+        run: |
+          VERBOSE=1 make -f examples/Makefile-simulation check
+      - name: Codecov
+        uses: codecov/codecov-action@v1

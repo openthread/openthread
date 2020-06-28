@@ -31,13 +31,12 @@
  *   This file implements the message buffer pool and message buffers.
  */
 
-#define WPP_NAME "message.tmh"
-
 #include "message.hpp"
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "net/ip6.hpp"
 
@@ -45,63 +44,73 @@ namespace ot {
 
 MessagePool::MessagePool(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mAllQueue()
+#if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    , mNumFreeBuffers(kNumBuffers)
+    , mFreeBuffers()
+#endif
 {
-#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-    // Initialize Platform buffer pool management.
-    otPlatMessagePoolInit(&GetInstance(), kNumBuffers, sizeof(Buffer));
-#else
+#if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     memset(mBuffers, 0, sizeof(mBuffers));
 
-    mFreeBuffers = mBuffers;
-
-    for (uint16_t i = 0; i < kNumBuffers - 1; i++)
+    for (Buffer *cur = &mBuffers[0]; cur < OT_ARRAY_END(mBuffers); cur++)
     {
-        mBuffers[i].SetNextBuffer(&mBuffers[i + 1]);
+        mFreeBuffers.Push(*cur);
     }
-
-    mBuffers[kNumBuffers - 1].SetNextBuffer(NULL);
-    mNumFreeBuffers = kNumBuffers;
+#else
+    otPlatMessagePoolInit(&GetInstance(), kNumBuffers, sizeof(Buffer));
 #endif
 }
 
-Message *MessagePool::New(uint8_t aType, uint16_t aReserved)
+Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, Message::Priority aPriority)
 {
-    Message *message = NULL;
+    otError  error = OT_ERROR_NONE;
+    Message *message;
 
-    SuccessOrExit(ReclaimBuffers(1));
-
-    VerifyOrExit((message = static_cast<Message *>(NewBuffer())) != NULL);
+    VerifyOrExit((message = static_cast<Message *>(NewBuffer(aPriority))) != nullptr, OT_NOOP);
 
     memset(message, 0, sizeof(*message));
     message->SetMessagePool(this);
     message->SetType(aType);
-    message->SetReserved(aReserved);
+    message->SetReserved(aReserveHeader);
     message->SetLinkSecurityEnabled(true);
-    message->SetPriority(kDefaultMessagePriority);
 
-    if (message->SetLength(0) != OT_ERROR_NONE)
-    {
-        Free(message);
-        message = NULL;
-    }
+    SuccessOrExit(error = message->SetPriority(aPriority));
+    SuccessOrExit(error = message->SetLength(0));
 
 exit:
+    if (error != OT_ERROR_NONE)
+    {
+        Free(message);
+        message = nullptr;
+    }
+
+    return message;
+}
+
+Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, const Message::Settings &aSettings)
+{
+    Message *message = New(aType, aReserveHeader, aSettings.GetPriority());
+
+    if (message)
+    {
+        message->SetLinkSecurityEnabled(aSettings.IsLinkSecurityEnabled());
+    }
+
     return message;
 }
 
 void MessagePool::Free(Message *aMessage)
 {
-    assert(aMessage->Next(MessageInfo::kListAll) == NULL && aMessage->Prev(MessageInfo::kListAll) == NULL);
-
-    assert(aMessage->Next(MessageInfo::kListInterface) == NULL && aMessage->Prev(MessageInfo::kListInterface) == NULL);
+    OT_ASSERT(aMessage->Next() == nullptr && aMessage->Prev() == nullptr);
 
     FreeBuffers(static_cast<Buffer *>(aMessage));
 }
 
-Buffer *MessagePool::NewBuffer(void)
+Buffer *MessagePool::NewBuffer(Message::Priority aPriority)
 {
-    Buffer *buffer = NULL;
+    Buffer *buffer = nullptr;
+
+    SuccessOrExit(ReclaimBuffers(1, aPriority));
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 
@@ -109,127 +118,84 @@ Buffer *MessagePool::NewBuffer(void)
 
 #else
 
-    if (mFreeBuffers != NULL)
+    buffer = mFreeBuffers.Pop();
+
+    if (buffer != nullptr)
     {
-        buffer       = mFreeBuffers;
-        mFreeBuffers = mFreeBuffers->GetNextBuffer();
-        buffer->SetNextBuffer(NULL);
+        buffer->SetNextBuffer(nullptr);
         mNumFreeBuffers--;
     }
 
 #endif
 
-    if (buffer == NULL)
+    if (buffer == nullptr)
     {
-        otLogInfoMem(GetInstance(), "No available message buffer");
+        otLogInfoMem("No available message buffer");
     }
 
+exit:
     return buffer;
 }
 
 void MessagePool::FreeBuffers(Buffer *aBuffer)
 {
-    while (aBuffer != NULL)
+    while (aBuffer != nullptr)
     {
-        Buffer *tmpBuffer = aBuffer->GetNextBuffer();
+        Buffer *next = aBuffer->GetNextBuffer();
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
         otPlatMessagePoolFree(&GetInstance(), aBuffer);
-#else  // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-        aBuffer->SetNextBuffer(mFreeBuffers);
-        mFreeBuffers = aBuffer;
+#else
+        mFreeBuffers.Push(*aBuffer);
         mNumFreeBuffers++;
-#endif // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-        aBuffer = tmpBuffer;
+#endif
+        aBuffer = next;
     }
 }
 
-otError MessagePool::ReclaimBuffers(int aNumBuffers)
+otError MessagePool::ReclaimBuffers(int aNumBuffers, Message::Priority aPriority)
 {
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     while (aNumBuffers > GetFreeBufferCount())
     {
-        MeshForwarder &meshForwarder = GetInstance().GetThreadNetif().GetMeshForwarder();
-        SuccessOrExit(meshForwarder.EvictIndirectMessage());
+        SuccessOrExit(Get<MeshForwarder>().EvictMessage(aPriority));
     }
 
 exit:
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#else
+    OT_UNUSED_VARIABLE(aPriority);
+#endif
 
     // First comparison is to get around issues with comparing
     // signed and unsigned numbers, if aNumBuffers is negative then
     // the second comparison wont be attempted.
-    if (aNumBuffers < 0 || aNumBuffers <= GetFreeBufferCount())
-    {
-        return OT_ERROR_NONE;
-    }
-    else
-    {
-        return OT_ERROR_NO_BUFS;
-    }
+    return (aNumBuffers < 0 || aNumBuffers <= GetFreeBufferCount()) ? OT_ERROR_NONE : OT_ERROR_NO_BUFS;
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 uint16_t MessagePool::GetFreeBufferCount(void) const
 {
-    return otPlatMessagePoolNumFreeBuffers(&GetInstance());
-}
+    uint16_t rval;
+
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    rval = otPlatMessagePoolNumFreeBuffers(&GetInstance());
+#else
+    rval = mNumFreeBuffers;
 #endif
 
-Message *MessagePool::Iterator::Next(void) const
-{
-    Message *next;
-
-    VerifyOrExit(mMessage != NULL, next = NULL);
-
-    if (mMessage == mMessage->GetMessagePool()->GetAllMessagesTail().GetMessage())
-    {
-        next = NULL;
-    }
-    else
-    {
-        next = mMessage->Next(MessageInfo::kListAll);
-    }
-
-exit:
-    return next;
+    return rval;
 }
 
-Message *MessagePool::Iterator::Prev(void) const
+const Message::Settings Message::Settings::kDefault(Message::kWithLinkSecurity, Message::kPriorityNormal);
+
+Message::Settings::Settings(LinkSecurityMode aSecurityMode, Priority aPriority)
+    : mLinkSecurityEnabled(aSecurityMode == kWithLinkSecurity)
+    , mPriority(aPriority)
 {
-    Message *prev;
-
-    VerifyOrExit(mMessage != NULL, prev = NULL);
-
-    if (mMessage == mMessage->GetMessagePool()->GetAllMessagesHead().GetMessage())
-    {
-        prev = NULL;
-    }
-    else
-    {
-        prev = mMessage->Prev(MessageInfo::kListAll);
-    }
-
-exit:
-    return prev;
 }
 
-MessagePool::Iterator MessagePool::GetAllMessagesHead(void) const
+Message::Settings::Settings(const otMessageSettings *aSettings)
+    : mLinkSecurityEnabled((aSettings != nullptr) ? aSettings->mLinkSecurityEnabled : true)
+    , mPriority((aSettings != nullptr) ? static_cast<Priority>(aSettings->mPriority) : kPriorityNormal)
 {
-    Message *head;
-    Message *tail;
-
-    tail = GetAllMessagesTail().GetMessage();
-
-    if (tail != NULL)
-    {
-        head = tail->Next(MessageInfo::kListAll);
-    }
-    else
-    {
-        head = NULL;
-    }
-
-    return Iterator(head);
 }
 
 otError Message::ResizeMessage(uint16_t aLength)
@@ -243,10 +209,10 @@ otError Message::ResizeMessage(uint16_t aLength)
 
     while (curLength < aLength)
     {
-        if (curBuffer->GetNextBuffer() == NULL)
+        if (curBuffer->GetNextBuffer() == nullptr)
         {
-            curBuffer->SetNextBuffer(GetMessagePool()->NewBuffer());
-            VerifyOrExit(curBuffer->GetNextBuffer() != NULL, error = OT_ERROR_NO_BUFS);
+            curBuffer->SetNextBuffer(GetMessagePool()->NewBuffer(GetPriority()));
+            VerifyOrExit(curBuffer->GetNextBuffer() != nullptr, error = OT_ERROR_NO_BUFS);
         }
 
         curBuffer = curBuffer->GetNextBuffer();
@@ -256,7 +222,7 @@ otError Message::ResizeMessage(uint16_t aLength)
     // remove buffers
     lastBuffer = curBuffer;
     curBuffer  = curBuffer->GetNextBuffer();
-    lastBuffer->SetNextBuffer(NULL);
+    lastBuffer->SetNextBuffer(nullptr);
 
     GetMessagePool()->FreeBuffers(curBuffer);
 
@@ -274,20 +240,20 @@ Message *Message::GetNext(void) const
     Message *next;
     Message *tail;
 
-    if (mBuffer.mHead.mInfo.mInPriorityQ)
+    if (GetMetadata().mInPriorityQ)
     {
         PriorityQueue *priorityQueue = GetPriorityQueue();
-        VerifyOrExit(priorityQueue != NULL, next = NULL);
+        VerifyOrExit(priorityQueue != nullptr, next = nullptr);
         tail = priorityQueue->GetTail();
     }
     else
     {
         MessageQueue *messageQueue = GetMessageQueue();
-        VerifyOrExit(messageQueue != NULL, next = NULL);
+        VerifyOrExit(messageQueue != nullptr, next = nullptr);
         tail = messageQueue->GetTail();
     }
 
-    next = (this == tail) ? NULL : Next(MessageInfo::kListInterface);
+    next = (this == tail) ? nullptr : Next();
 
 exit:
     return next;
@@ -300,6 +266,8 @@ otError Message::SetLength(uint16_t aLength)
     uint16_t totalLengthCurrent = GetReserved() + GetLength();
     int      bufs               = 0;
 
+    VerifyOrExit(totalLengthRequest >= GetReserved(), error = OT_ERROR_INVALID_ARGS);
+
     if (totalLengthRequest > kHeadBufferDataSize)
     {
         bufs = (((totalLengthRequest - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
@@ -310,10 +278,16 @@ otError Message::SetLength(uint16_t aLength)
         bufs -= (((totalLengthCurrent - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
     }
 
-    SuccessOrExit(error = GetMessagePool()->ReclaimBuffers(bufs));
+    SuccessOrExit(error = GetMessagePool()->ReclaimBuffers(bufs, GetPriority()));
 
     SuccessOrExit(error = ResizeMessage(totalLengthRequest));
-    mBuffer.mHead.mInfo.mLength = aLength;
+    GetMetadata().mLength = aLength;
+
+    // Correct offset in case shorter length is set.
+    if (GetOffset() > aLength)
+    {
+        SetOffset(aLength);
+    }
 
 exit:
     return error;
@@ -331,78 +305,65 @@ uint8_t Message::GetBufferCount(void) const
     return rval;
 }
 
-otError Message::MoveOffset(int aDelta)
+void Message::MoveOffset(int aDelta)
 {
-    otError error = OT_ERROR_NONE;
-
-    assert(GetOffset() + aDelta <= GetLength());
-    VerifyOrExit(GetOffset() + aDelta <= GetLength(), error = OT_ERROR_INVALID_ARGS);
-
-    mBuffer.mHead.mInfo.mOffset += static_cast<int16_t>(aDelta);
-    assert(mBuffer.mHead.mInfo.mOffset <= GetLength());
-
-exit:
-    return error;
+    OT_ASSERT(GetOffset() + aDelta <= GetLength());
+    GetMetadata().mOffset += static_cast<int16_t>(aDelta);
+    OT_ASSERT(GetMetadata().mOffset <= GetLength());
 }
 
-otError Message::SetOffset(uint16_t aOffset)
+void Message::SetOffset(uint16_t aOffset)
 {
-    otError error = OT_ERROR_NONE;
-
-    assert(aOffset <= GetLength());
-    VerifyOrExit(aOffset <= GetLength(), error = OT_ERROR_INVALID_ARGS);
-
-    mBuffer.mHead.mInfo.mOffset = aOffset;
-
-exit:
-    return error;
+    OT_ASSERT(aOffset <= GetLength());
+    GetMetadata().mOffset = aOffset;
 }
 
 bool Message::IsSubTypeMle(void) const
 {
-    bool rval = false;
+    bool rval;
 
-    if (mBuffer.mHead.mInfo.mSubType == kSubTypeMleAnnounce ||
-        mBuffer.mHead.mInfo.mSubType == kSubTypeMleDiscoverRequest ||
-        mBuffer.mHead.mInfo.mSubType == kSubTypeMleDiscoverResponse ||
-        mBuffer.mHead.mInfo.mSubType == kSubTypeMleChildUpdateRequest ||
-        mBuffer.mHead.mInfo.mSubType == kSubTypeMleDataResponse || mBuffer.mHead.mInfo.mSubType == kSubTypeMleGeneral)
+    switch (GetMetadata().mSubType)
     {
+    case kSubTypeMleGeneral:
+    case kSubTypeMleAnnounce:
+    case kSubTypeMleDiscoverRequest:
+    case kSubTypeMleDiscoverResponse:
+    case kSubTypeMleChildUpdateRequest:
+    case kSubTypeMleDataResponse:
+    case kSubTypeMleChildIdRequest:
         rval = true;
+        break;
+
+    default:
+        rval = false;
+        break;
     }
 
     return rval;
 }
 
-otError Message::SetPriority(uint8_t aPriority)
+otError Message::SetPriority(Priority aPriority)
 {
     otError        error         = OT_ERROR_NONE;
-    PriorityQueue *priorityQueue = NULL;
+    uint8_t        priority      = static_cast<uint8_t>(aPriority);
+    PriorityQueue *priorityQueue = nullptr;
 
-    VerifyOrExit(aPriority < kNumPriorities, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(priority < kNumPriorities, error = OT_ERROR_INVALID_ARGS);
 
-    VerifyOrExit(IsInAQueue(), mBuffer.mHead.mInfo.mPriority = aPriority);
-    VerifyOrExit(mBuffer.mHead.mInfo.mPriority != aPriority);
+    VerifyOrExit(IsInAQueue(), GetMetadata().mPriority = priority);
+    VerifyOrExit(GetMetadata().mPriority != priority, OT_NOOP);
 
-    if (mBuffer.mHead.mInfo.mInPriorityQ)
+    if (GetMetadata().mInPriorityQ)
     {
-        priorityQueue = mBuffer.mHead.mInfo.mQueue.mPriority;
+        priorityQueue = GetMetadata().mQueue.mPriority;
         priorityQueue->Dequeue(*this);
     }
-    else
-    {
-        GetMessagePool()->GetAllMessagesQueue()->RemoveFromList(MessageInfo::kListAll, *this);
-    }
 
-    mBuffer.mHead.mInfo.mPriority = aPriority;
+    GetMetadata().mPriority = priority;
 
-    if (priorityQueue != NULL)
+    if (priorityQueue != nullptr)
     {
         priorityQueue->Enqueue(*this);
-    }
-    else
-    {
-        GetMessagePool()->GetAllMessagesQueue()->AddToList(MessageInfo::kListAll, *this);
     }
 
 exit:
@@ -418,7 +379,7 @@ otError Message::Append(const void *aBuf, uint16_t aLength)
     SuccessOrExit(error = SetLength(GetLength() + aLength));
     bytesWritten = Write(oldLength, aLength, aBuf);
 
-    assert(bytesWritten == (int)aLength);
+    OT_ASSERT(bytesWritten == (int)aLength);
     OT_UNUSED_VARIABLE(bytesWritten);
 
 exit:
@@ -428,11 +389,11 @@ exit:
 otError Message::Prepend(const void *aBuf, uint16_t aLength)
 {
     otError error     = OT_ERROR_NONE;
-    Buffer *newBuffer = NULL;
+    Buffer *newBuffer = nullptr;
 
     while (aLength > GetReserved())
     {
-        VerifyOrExit((newBuffer = GetMessagePool()->NewBuffer()) != NULL, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit((newBuffer = GetMessagePool()->NewBuffer(GetPriority())) != nullptr, error = OT_ERROR_NO_BUFS);
 
         newBuffer->SetNextBuffer(GetNextBuffer());
         SetNextBuffer(newBuffer);
@@ -448,10 +409,10 @@ otError Message::Prepend(const void *aBuf, uint16_t aLength)
     }
 
     SetReserved(GetReserved() - aLength);
-    mBuffer.mHead.mInfo.mLength += aLength;
+    GetMetadata().mLength += aLength;
     SetOffset(GetOffset() + aLength);
 
-    if (aBuf != NULL)
+    if (aBuf != nullptr)
     {
         Write(0, aLength, aBuf);
     }
@@ -460,30 +421,28 @@ exit:
     return error;
 }
 
-otError Message::RemoveHeader(uint16_t aLength)
+void Message::RemoveHeader(uint16_t aLength)
 {
-    assert(aLength <= mBuffer.mHead.mInfo.mLength);
+    OT_ASSERT(aLength <= GetMetadata().mLength);
 
-    mBuffer.mHead.mInfo.mReserved += aLength;
-    mBuffer.mHead.mInfo.mLength -= aLength;
+    GetMetadata().mReserved += aLength;
+    GetMetadata().mLength -= aLength;
 
-    if (mBuffer.mHead.mInfo.mOffset > aLength)
+    if (GetMetadata().mOffset > aLength)
     {
-        mBuffer.mHead.mInfo.mOffset -= aLength;
+        GetMetadata().mOffset -= aLength;
     }
     else
     {
-        mBuffer.mHead.mInfo.mOffset = 0;
+        GetMetadata().mOffset = 0;
     }
-
-    return OT_ERROR_NONE;
 }
 
 uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
 {
-    Buffer * curBuffer;
-    uint16_t bytesCopied = 0;
-    uint16_t bytesToCopy;
+    const Buffer *curBuffer;
+    uint16_t      bytesCopied = 0;
+    uint16_t      bytesToCopy;
 
     if (aOffset >= GetLength())
     {
@@ -525,7 +484,7 @@ uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
 
     while (aOffset >= kBufferDataSize)
     {
-        assert(curBuffer != NULL);
+        OT_ASSERT(curBuffer != nullptr);
 
         curBuffer = curBuffer->GetNextBuffer();
         aOffset -= kBufferDataSize;
@@ -534,7 +493,7 @@ uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
     // begin copy
     while (aLength > 0)
     {
-        assert(curBuffer != NULL);
+        OT_ASSERT(curBuffer != nullptr);
 
         bytesToCopy = kBufferDataSize - aOffset;
 
@@ -563,7 +522,7 @@ int Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
     uint16_t bytesCopied = 0;
     uint16_t bytesToCopy;
 
-    assert(aOffset + aLength <= GetLength());
+    OT_ASSERT(aOffset + aLength <= GetLength());
 
     if (aOffset + aLength >= GetLength())
     {
@@ -600,7 +559,7 @@ int Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
 
     while (aOffset >= kBufferDataSize)
     {
-        assert(curBuffer != NULL);
+        OT_ASSERT(curBuffer != nullptr);
 
         curBuffer = curBuffer->GetNextBuffer();
         aOffset -= kBufferDataSize;
@@ -609,7 +568,7 @@ int Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
     // begin copy
     while (aLength > 0)
     {
-        assert(curBuffer != NULL);
+        OT_ASSERT(curBuffer != nullptr);
 
         bytesToCopy = kBufferDataSize - aOffset;
 
@@ -657,54 +616,59 @@ Message *Message::Clone(uint16_t aLength) const
 {
     otError  error = OT_ERROR_NONE;
     Message *messageCopy;
+    uint16_t offset;
 
-    VerifyOrExit((messageCopy = GetMessagePool()->New(GetType(), GetReserved())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((messageCopy = GetMessagePool()->New(GetType(), GetReserved(), GetPriority())) != nullptr,
+                 error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = messageCopy->SetLength(aLength));
     CopyTo(0, 0, aLength, *messageCopy);
 
     // Copy selected message information.
-    messageCopy->SetOffset(GetOffset());
-    messageCopy->SetInterfaceId(GetInterfaceId());
+    offset = GetOffset() < aLength ? GetOffset() : aLength;
+    messageCopy->SetOffset(offset);
+
     messageCopy->SetSubType(GetSubType());
-    messageCopy->SetPriority(GetPriority());
     messageCopy->SetLinkSecurityEnabled(IsLinkSecurityEnabled());
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    messageCopy->SetTimeSync(IsTimeSync());
+#endif
 
 exit:
 
-    if (error != OT_ERROR_NONE && messageCopy != NULL)
+    if (error != OT_ERROR_NONE && messageCopy != nullptr)
     {
         messageCopy->Free();
-        messageCopy = NULL;
+        messageCopy = nullptr;
     }
 
     return messageCopy;
 }
 
-bool Message::GetChildMask(uint8_t aChildIndex) const
+bool Message::GetChildMask(uint16_t aChildIndex) const
 {
-    assert(aChildIndex < sizeof(mBuffer.mHead.mInfo.mChildMask) * 8);
-    return (mBuffer.mHead.mInfo.mChildMask[aChildIndex / 8] & (0x80 >> (aChildIndex % 8))) != 0;
+    OT_ASSERT(aChildIndex < sizeof(GetMetadata().mChildMask) * 8);
+    return (GetMetadata().mChildMask[aChildIndex / 8] & (0x80 >> (aChildIndex % 8))) != 0;
 }
 
-void Message::ClearChildMask(uint8_t aChildIndex)
+void Message::ClearChildMask(uint16_t aChildIndex)
 {
-    assert(aChildIndex < sizeof(mBuffer.mHead.mInfo.mChildMask) * 8);
-    mBuffer.mHead.mInfo.mChildMask[aChildIndex / 8] &= ~(0x80 >> (aChildIndex % 8));
+    OT_ASSERT(aChildIndex < sizeof(GetMetadata().mChildMask) * 8);
+    GetMetadata().mChildMask[aChildIndex / 8] &= ~(0x80 >> (aChildIndex % 8));
 }
 
-void Message::SetChildMask(uint8_t aChildIndex)
+void Message::SetChildMask(uint16_t aChildIndex)
 {
-    assert(aChildIndex < sizeof(mBuffer.mHead.mInfo.mChildMask) * 8);
-    mBuffer.mHead.mInfo.mChildMask[aChildIndex / 8] |= 0x80 >> (aChildIndex % 8);
+    OT_ASSERT(aChildIndex < sizeof(GetMetadata().mChildMask) * 8);
+    GetMetadata().mChildMask[aChildIndex / 8] |= 0x80 >> (aChildIndex % 8);
 }
 
 bool Message::IsChildPending(void) const
 {
     bool rval = false;
 
-    for (size_t i = 0; i < sizeof(mBuffer.mHead.mInfo.mChildMask); i++)
+    for (size_t i = 0; i < sizeof(GetMetadata().mChildMask); i++)
     {
-        if (mBuffer.mHead.mInfo.mChildMask[i] != 0)
+        if (GetMetadata().mChildMask[i] != 0)
         {
             ExitNow(rval = true);
         }
@@ -734,11 +698,11 @@ uint16_t Message::UpdateChecksum(uint16_t aChecksum, const void *aBuf, uint16_t 
 
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const
 {
-    Buffer * curBuffer;
-    uint16_t bytesCovered = 0;
-    uint16_t bytesToCover;
+    const Buffer *curBuffer;
+    uint16_t      bytesCovered = 0;
+    uint16_t      bytesToCover;
 
-    assert(aOffset + aLength <= GetLength());
+    OT_ASSERT(aOffset + aLength <= GetLength());
 
     aOffset += GetReserved();
 
@@ -769,7 +733,7 @@ uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t 
 
     while (aOffset >= kBufferDataSize)
     {
-        assert(curBuffer != NULL);
+        OT_ASSERT(curBuffer != nullptr);
 
         curBuffer = curBuffer->GetNextBuffer();
         aOffset -= kBufferDataSize;
@@ -778,7 +742,7 @@ uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t 
     // begin copy
     while (aLength > 0)
     {
-        assert(curBuffer != NULL);
+        OT_ASSERT(curBuffer != nullptr);
 
         bytesToCover = kBufferDataSize - aOffset;
 
@@ -799,43 +763,60 @@ uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t 
     return aChecksum;
 }
 
+bool Message::IsTimeSync(void) const
+{
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    return GetMetadata().mTimeSync;
+#else
+    return false;
+#endif
+}
+
 void Message::SetMessageQueue(MessageQueue *aMessageQueue)
 {
-    mBuffer.mHead.mInfo.mQueue.mMessage = aMessageQueue;
-    mBuffer.mHead.mInfo.mInPriorityQ    = false;
+    GetMetadata().mQueue.mMessage = aMessageQueue;
+    GetMetadata().mInPriorityQ    = false;
 }
 
 void Message::SetPriorityQueue(PriorityQueue *aPriorityQueue)
 {
-    mBuffer.mHead.mInfo.mQueue.mPriority = aPriorityQueue;
-    mBuffer.mHead.mInfo.mInPriorityQ     = true;
+    GetMetadata().mQueue.mPriority = aPriorityQueue;
+    GetMetadata().mInPriorityQ     = true;
 }
 
 MessageQueue::MessageQueue(void)
 {
-    SetTail(NULL);
+    SetTail(nullptr);
 }
 
-void MessageQueue::AddToList(uint8_t aList, Message &aMessage, QueuePosition aPosition)
+Message *MessageQueue::GetHead(void) const
 {
-    assert((aMessage.Next(aList) == NULL) && (aMessage.Prev(aList) == NULL));
+    return (GetTail() == nullptr) ? nullptr : GetTail()->Next();
+}
 
-    if (GetTail() == NULL)
+void MessageQueue::Enqueue(Message &aMessage, QueuePosition aPosition)
+{
+    OT_ASSERT(!aMessage.IsInAQueue());
+    OT_ASSERT((aMessage.Next() == nullptr) && (aMessage.Prev() == nullptr));
+
+    aMessage.SetMessageQueue(this);
+
+    if (GetTail() == nullptr)
     {
-        aMessage.Next(aList) = &aMessage;
-        aMessage.Prev(aList) = &aMessage;
+        aMessage.Next() = &aMessage;
+        aMessage.Prev() = &aMessage;
 
         SetTail(&aMessage);
     }
     else
     {
-        Message *head = GetTail()->Next(aList);
+        Message *head = GetTail()->Next();
 
-        aMessage.Next(aList) = head;
-        aMessage.Prev(aList) = GetTail();
+        aMessage.Next() = head;
+        aMessage.Prev() = GetTail();
 
-        head->Prev(aList)      = &aMessage;
-        GetTail()->Next(aList) = &aMessage;
+        head->Prev()      = &aMessage;
+        GetTail()->Next() = &aMessage;
 
         if (aPosition == kQueuePositionTail)
         {
@@ -844,62 +825,28 @@ void MessageQueue::AddToList(uint8_t aList, Message &aMessage, QueuePosition aPo
     }
 }
 
-void MessageQueue::RemoveFromList(uint8_t aList, Message &aMessage)
+void MessageQueue::Dequeue(Message &aMessage)
 {
-    assert((aMessage.Next(aList) != NULL) && (aMessage.Prev(aList) != NULL));
+    OT_ASSERT(aMessage.GetMessageQueue() == this);
+    OT_ASSERT((aMessage.Next() != nullptr) && (aMessage.Prev() != nullptr));
 
     if (&aMessage == GetTail())
     {
-        SetTail(GetTail()->Prev(aList));
+        SetTail(GetTail()->Prev());
 
         if (&aMessage == GetTail())
         {
-            SetTail(NULL);
+            SetTail(nullptr);
         }
     }
 
-    aMessage.Prev(aList)->Next(aList) = aMessage.Next(aList);
-    aMessage.Next(aList)->Prev(aList) = aMessage.Prev(aList);
+    aMessage.Prev()->Next() = aMessage.Next();
+    aMessage.Next()->Prev() = aMessage.Prev();
 
-    aMessage.Prev(aList) = NULL;
-    aMessage.Next(aList) = NULL;
-}
+    aMessage.Prev() = nullptr;
+    aMessage.Next() = nullptr;
 
-Message *MessageQueue::GetHead(void) const
-{
-    return (GetTail() == NULL) ? NULL : GetTail()->Next(MessageInfo::kListInterface);
-}
-
-otError MessageQueue::Enqueue(Message &aMessage, QueuePosition aPosition)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(!aMessage.IsInAQueue(), error = OT_ERROR_ALREADY);
-
-    aMessage.SetMessageQueue(this);
-
-    AddToList(MessageInfo::kListInterface, aMessage, aPosition);
-
-    // Any new message is always added to the end of the `AllMessageQueue` list.
-    aMessage.GetMessagePool()->GetAllMessagesQueue()->AddToList(MessageInfo::kListAll, aMessage);
-
-exit:
-    return error;
-}
-
-otError MessageQueue::Dequeue(Message &aMessage)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aMessage.GetMessageQueue() == this, error = OT_ERROR_NOT_FOUND);
-
-    RemoveFromList(MessageInfo::kListInterface, aMessage);
-    aMessage.GetMessagePool()->GetAllMessagesQueue()->RemoveFromList(MessageInfo::kListAll, aMessage);
-
-    aMessage.SetMessageQueue(NULL);
-
-exit:
-    return error;
+    aMessage.SetMessageQueue(nullptr);
 }
 
 void MessageQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const
@@ -907,7 +854,7 @@ void MessageQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) cons
     aMessageCount = 0;
     aBufferCount  = 0;
 
-    for (const Message *message = GetHead(); message != NULL; message = message->GetNext())
+    for (const Message *message = GetHead(); message != nullptr; message = message->GetNext())
     {
         aMessageCount++;
         aBufferCount += message->GetBufferCount();
@@ -918,20 +865,20 @@ PriorityQueue::PriorityQueue(void)
 {
     for (int priority = 0; priority < Message::kNumPriorities; priority++)
     {
-        mTails[priority] = NULL;
+        mTails[priority] = nullptr;
     }
 }
 
-Message *PriorityQueue::FindFirstNonNullTail(uint8_t aStartPriorityLevel) const
+Message *PriorityQueue::FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const
 {
-    Message *tail = NULL;
+    Message *tail = nullptr;
     uint8_t  priority;
 
-    priority = aStartPriorityLevel;
+    priority = static_cast<uint8_t>(aStartPriorityLevel);
 
     do
     {
-        if (mTails[priority] != NULL)
+        if (mTails[priority] != nullptr)
         {
             tail = mTails[priority];
             break;
@@ -947,27 +894,27 @@ Message *PriorityQueue::GetHead(void) const
 {
     Message *tail;
 
-    tail = FindFirstNonNullTail(Message::kNumPriorities - 1);
+    tail = FindFirstNonNullTail(Message::kPriorityLow);
 
-    return (tail == NULL) ? NULL : tail->Next(MessageInfo::kListInterface);
+    return (tail == nullptr) ? nullptr : tail->Next();
 }
 
-Message *PriorityQueue::GetHeadForPriority(uint8_t aPriority) const
+Message *PriorityQueue::GetHeadForPriority(Message::Priority aPriority) const
 {
     Message *head;
     Message *previousTail;
 
-    if (mTails[aPriority] != NULL)
+    if (mTails[aPriority] != nullptr)
     {
-        previousTail = FindFirstNonNullTail(PrevPriority(aPriority));
+        previousTail = FindFirstNonNullTail(static_cast<Message::Priority>(PrevPriority(aPriority)));
 
-        assert(previousTail != NULL);
+        OT_ASSERT(previousTail != nullptr);
 
-        head = previousTail->Next(MessageInfo::kListInterface);
+        head = previousTail->Next();
     }
     else
     {
-        head = NULL;
+        head = nullptr;
     }
 
     return head;
@@ -975,41 +922,47 @@ Message *PriorityQueue::GetHeadForPriority(uint8_t aPriority) const
 
 Message *PriorityQueue::GetTail(void) const
 {
-    return FindFirstNonNullTail(Message::kNumPriorities - 1);
+    return FindFirstNonNullTail(Message::kPriorityLow);
 }
 
-void PriorityQueue::AddToList(uint8_t aList, Message &aMessage)
+void PriorityQueue::Enqueue(Message &aMessage)
 {
-    uint8_t  priority;
-    Message *tail;
-    Message *next;
+    Message::Priority priority;
+    Message *         tail;
+    Message *         next;
+
+    OT_ASSERT(!aMessage.IsInAQueue());
+
+    aMessage.SetPriorityQueue(this);
 
     priority = aMessage.GetPriority();
 
     tail = FindFirstNonNullTail(priority);
 
-    if (tail != NULL)
+    if (tail != nullptr)
     {
-        next = tail->Next(aList);
+        next = tail->Next();
 
-        aMessage.Next(aList) = next;
-        aMessage.Prev(aList) = tail;
-        next->Prev(aList)    = &aMessage;
-        tail->Next(aList)    = &aMessage;
+        aMessage.Next() = next;
+        aMessage.Prev() = tail;
+        next->Prev()    = &aMessage;
+        tail->Next()    = &aMessage;
     }
     else
     {
-        aMessage.Next(aList) = &aMessage;
-        aMessage.Prev(aList) = &aMessage;
+        aMessage.Next() = &aMessage;
+        aMessage.Prev() = &aMessage;
     }
 
     mTails[priority] = &aMessage;
 }
 
-void PriorityQueue::RemoveFromList(uint8_t aList, Message &aMessage)
+void PriorityQueue::Dequeue(Message &aMessage)
 {
-    uint8_t  priority;
-    Message *tail;
+    Message::Priority priority;
+    Message *         tail;
+
+    OT_ASSERT(aMessage.GetPriorityQueue() == this);
 
     priority = aMessage.GetPriority();
 
@@ -1017,50 +970,22 @@ void PriorityQueue::RemoveFromList(uint8_t aList, Message &aMessage)
 
     if (&aMessage == tail)
     {
-        tail = tail->Prev(aList);
+        tail = tail->Prev();
 
         if ((&aMessage == tail) || (tail->GetPriority() != priority))
         {
-            tail = NULL;
+            tail = nullptr;
         }
 
         mTails[priority] = tail;
     }
 
-    aMessage.Next(aList)->Prev(aList) = aMessage.Prev(aList);
-    aMessage.Prev(aList)->Next(aList) = aMessage.Next(aList);
-    aMessage.Next(aList)              = NULL;
-    aMessage.Prev(aList)              = NULL;
-}
+    aMessage.Next()->Prev() = aMessage.Prev();
+    aMessage.Prev()->Next() = aMessage.Next();
+    aMessage.Next()         = nullptr;
+    aMessage.Prev()         = nullptr;
 
-otError PriorityQueue::Enqueue(Message &aMessage)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(!aMessage.IsInAQueue(), error = OT_ERROR_ALREADY);
-
-    aMessage.SetPriorityQueue(this);
-
-    AddToList(MessageInfo::kListInterface, aMessage);
-    aMessage.GetMessagePool()->GetAllMessagesQueue()->AddToList(MessageInfo::kListAll, aMessage);
-
-exit:
-    return error;
-}
-
-otError PriorityQueue::Dequeue(Message &aMessage)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aMessage.GetPriorityQueue() == this, error = OT_ERROR_NOT_FOUND);
-
-    RemoveFromList(MessageInfo::kListInterface, aMessage);
-    aMessage.GetMessagePool()->GetAllMessagesQueue()->RemoveFromList(MessageInfo::kListAll, aMessage);
-
-    aMessage.SetMessageQueue(NULL);
-
-exit:
-    return error;
+    aMessage.SetMessageQueue(nullptr);
 }
 
 void PriorityQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const
@@ -1068,7 +993,7 @@ void PriorityQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) con
     aMessageCount = 0;
     aBufferCount  = 0;
 
-    for (const Message *message = GetHead(); message != NULL; message = message->GetNext())
+    for (const Message *message = GetHead(); message != nullptr; message = message->GetNext())
     {
         aMessageCount++;
         aBufferCount += message->GetBufferCount();

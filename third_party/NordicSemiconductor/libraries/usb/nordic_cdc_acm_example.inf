@@ -1,63 +1,81 @@
-; Copyright (c) 2017 Nordic Semiconductor
-; Windows 2000, XP, Vista, 7 and 8 (x32 and x64) driver for Nordic CDC ACM example
+; Copyright (c) 2019 Nordic Semiconductor
+; Windows 2000, XP, Vista, 7 and 8 (x32 and x64) driver for Nordic CDC ACM
 
 [Version] 
-Signature   = "$Windows NT$" 
-Class       = Ports 
+Signature   = "$Windows NT$"
+Class       = Ports
 ClassGuid   = {4D36E978-E325-11CE-BFC1-08002BE10318}
-Provider    = %Manufacturer% 
-DriverVer   = 01/08/2013,6.0.0.0 
+Provider    = %Manufacturer%
+DriverVer   = 03/11/2019,1.1.0.0
 CatalogFile = nordic_cdc_acm.cat
 
 ;----------------------------------------------------------
 ; Targets
 ;----------------------------------------------------------
-[Manufacturer] 
+
+[Manufacturer]
 %Manufacturer%=DeviceList, NTAMD64, NTIA64, NTx86
 
-[DeviceList.NTx86] 
-%NORDIC_CDC_ACM_EXAMPLE%=DriverInstall, USB\VID_1915&PID_CAFE&MI_00 
+[DeviceList.NTx86]
+%NORDIC_CDC_ACM_EXAMPLE%       =DriverInstall, USB\VID_1915&PID_520F&MI_00
+%NORDIC_BLE_UART_EXAMPLE%      =DriverInstall, USB\VID_1915&PID_521A&MI_00
+%NORDIC_USB_CDC_CONNECTIVITY%  =DriverInstall, USB\VID_1915&PID_521B&MI_00
+%NORDIC_SDFU_USB_EXAMPLE%      =DriverInstall, USB\VID_1915&PID_521F&MI_00
+%NORDIC_OPENTHREAD_DEVICE%     =DriverInstall, USB\VID_1915&PID_CAFE&MI_01
+%NORDIC_ZIGBEE_CLI_DEVICE%     =DriverInstall, USB\VID_1915&PID_1337&MI_00
+%NORDIC_SNIFFER_802154_DEVICE% =DriverInstall, USB\VID_1915&PID_154A&MI_00
 
 
 [DeviceList.NTAMD64]
-%NORDIC_CDC_ACM_EXAMPLE%=DriverInstall.NTamd64, USB\VID_1915&PID_CAFE&MI_00
+%NORDIC_CDC_ACM_EXAMPLE%       =DriverInstall.NTamd64, USB\VID_1915&PID_520F&MI_00
+%NORDIC_BLE_UART_EXAMPLE%      =DriverInstall.NTamd64, USB\VID_1915&PID_521A&MI_00
+%NORDIC_USB_CDC_CONNECTIVITY%  =DriverInstall.NTamd64, USB\VID_1915&PID_521B&MI_00
+%NORDIC_SDFU_USB_EXAMPLE%      =DriverInstall.NTamd64, USB\VID_1915&PID_521F&MI_00
+%NORDIC_OPENTHREAD_DEVICE%     =DriverInstall.NTamd64, USB\VID_1915&PID_CAFE&MI_01
+%NORDIC_ZIGBEE_CLI_DEVICE%     =DriverInstall.NTamd64, USB\VID_1915&PID_1337&MI_00
+%NORDIC_SNIFFER_802154_DEVICE% =DriverInstall.NTamd64, USB\VID_1915&PID_154A&MI_00
 
 
 [DeviceList.NTIA64]
-%NORDIC_CDC_ACM_EXAMPLE%=DriverInstall.NTamd64, USB\VID_1915&PID_CAFE&MI_00
-
+%NORDIC_CDC_ACM_EXAMPLE%       =DriverInstall.NTamd64, USB\VID_1915&PID_520F&MI_00
+%NORDIC_BLE_UART_EXAMPLE%      =DriverInstall.NTamd64, USB\VID_1915&PID_521A&MI_00
+%NORDIC_USB_CDC_CONNECTIVITY%  =DriverInstall.NTamd64, USB\VID_1915&PID_521B&MI_00
+%NORDIC_SDFU_USB_EXAMPLE%      =DriverInstall.NTamd64, USB\VID_1915&PID_521F&MI_00
+%NORDIC_OPENTHREAD_DEVICE%     =DriverInstall.NTamd64, USB\VID_1915&PID_CAFE&MI_01
+%NORDIC_ZIGBEE_CLI_DEVICE%     =DriverInstall.NTamd64, USB\VID_1915&PID_1337&MI_00
+%NORDIC_SNIFFER_802154_DEVICE% =DriverInstall.NTamd64, USB\VID_1915&PID_154A&MI_00
 
 ;----------------------------------------------------------
 ; Windows 2000, XP, Vista, Windows 7, Windows 8 - 32bit
 ;----------------------------------------------------------
 
-[DestinationDirs] 
-DefaultDestDir=12 
-DriverInstall.NT.Copy=12 
+[DestinationDirs]
+DefaultDestDir=12
+DriverInstall.NT.Copy=12
 
-[DriverInstall.NT] 
+[DriverInstall.NT]
 include=mdmcpq.inf
-CopyFiles=DriverInstall.NT.Copy 
-AddReg=DriverInstall.NT.AddReg 
+CopyFiles=DriverInstall.NT.Copy
+AddReg=DriverInstall.NT.AddReg
 
-[DriverInstall.NT.Copy] 
+[DriverInstall.NT.Copy]
 
 [DriverInstall.NT.AddReg]
-HKR,,DevLoader,,*ntkern 
-HKR,,NTMPDriver,,usbser.sys 
-HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider" 
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,usbser.sys
+HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
 
-[DriverInstall.NT.Services] 
-include=mdmcpq.inf 
-AddService = usbser, 0x00000002, DriverService.NT 
+[DriverInstall.NT.Services]
+include=mdmcpq.inf
+AddService = usbser, 0x00000002, DriverService.NT
 
 [DriverService.NT] 
-DisplayName = %Serial.SvcDesc% 
-ServiceType = 1 ; SERVICE_KERNEL_DRIVER 
-StartType = 3 ; SERVICE_DEMAND_START 
-ErrorControl = 1 ; SERVICE_ERROR_NORMAL 
-ServiceBinary = %12%\usbser.sys 
-LoadOrderGroup = Base 
+DisplayName = %Serial.SvcDesc%
+ServiceType = 1 ; SERVICE_KERNEL_DRIVER
+StartType = 3 ; SERVICE_DEMAND_START
+ErrorControl = 1 ; SERVICE_ERROR_NORMAL
+ServiceBinary = %12%\usbser.sys
+LoadOrderGroup = Base
 
 ;----------------------------------------------------------
 ; Windows XP, Vista, Windows 7, Windows 8 - 64bit
@@ -84,7 +102,14 @@ AddService=usbser, 0x00000002, DriverService.NT
 
 [Strings] 
 Manufacturer = "Nordic Semiconductor" 
-NORDIC_CDC_ACM_EXAMPLE = "nRF52840 OpenThread Device"
+NORDIC_CDC_ACM_EXAMPLE       = "nRF52 USB CDC Demo"
+NORDIC_BLE_UART_EXAMPLE      = "nRF52 USB CDC BLE Demo"
+NORDIC_USB_CDC_CONNECTIVITY  = "nRF52 USB CDC Connectivity"
+NORDIC_SDFU_USB_EXAMPLE      = "nRF52 SDFU USB"
+NORDIC_OPENTHREAD_DEVICE     = "nRF52840 OpenThread Device"
+NORDIC_ZIGBEE_CLI_DEVICE     = "nRF52840 Zigbee CLI Device"
+NORDIC_SNIFFER_802154_DEVICE = "nRF52 802.15.4 Sniffer"
+
 
 Serial.SvcDesc = "USB Serial emulation driver" 
 

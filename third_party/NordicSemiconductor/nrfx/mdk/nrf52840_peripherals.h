@@ -34,6 +34,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #define _NRF52840_PERIPHERALS_H
 
 
+/* Clock Peripheral */
+#define CLOCK_PRESENT
+#define CLOCK_COUNT 1
+
 /* Power Peripheral */
 #define POWER_PRESENT
 #define POWER_COUNT 1
@@ -42,6 +46,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define POWER_FEATURE_RAM_REGISTERS_COUNT       9
 
 #define POWER_FEATURE_VDDH_PRESENT
+#define POWER_FEATURE_VDDH_DCDC_PRESENT
 
 /* Floating Point Unit */
 #define FPU_PRESENT

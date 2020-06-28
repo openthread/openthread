@@ -39,11 +39,11 @@
 #include "common/message.hpp"
 #include "net/udp6.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
-
 namespace ot {
 namespace Dhcp6 {
+
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * @addtogroup core-dhcp6
@@ -61,18 +61,21 @@ namespace Dhcp6 {
  */
 enum
 {
-    kDhcpClientPort      = 546,
-    kDhcpServerPort      = 547,
-    kTransactionIdSize   = 3,
-    kLinkLayerAddressLen = 8,
-    kHardwareTypeEui64   = 27,
+    kDhcpClientPort          = 546,
+    kDhcpServerPort          = 547,
+    kTransactionIdSize       = 3,
+    kLinkLayerAddressLen     = 8,
+    kHardwareTypeEui64       = 27,
+    kHardwareTypeEthernet    = 1,
+    kLinkLayerAddressPlusLen = 6,
 };
 
 /**
  * DHCPv6 Message Types
  *
  */
-typedef enum Type {
+typedef enum Type
+{
     kTypeSolicit            = 1,
     kTypeAdvertise          = 2,
     kTypeRequest            = 3,
@@ -149,7 +152,8 @@ private:
  * DHCPv6 Option Codes
  *
  */
-typedef enum Code {
+typedef enum Code
+{
     kOptionClientIdentifier          = 1,
     kOptionServerIdentifier          = 2,
     kOptionIaNa                      = 3,
@@ -233,7 +237,8 @@ private:
  * Duid Type
  *
  */
-typedef enum DuidType {
+typedef enum DuidType
+{
     kDuidLLT = 1,
     kDuidEN  = 2,
     kDuidLL  = 3,
@@ -469,7 +474,7 @@ public:
      * @returns A pointer to the IPv6 address.
      *
      */
-    otIp6Address *GetAddress(void) { return &mAddress; }
+    Ip6::Address &GetAddress(void) { return mAddress; }
 
     /**
      * This method sets the IPv6 address.
@@ -512,7 +517,7 @@ public:
     void SetValidLifetime(uint32_t aValidLifetime) { mValidLifetime = HostSwap32(aValidLifetime); }
 
 private:
-    otIp6Address mAddress;           ///< IPv6 address
+    Ip6::Address mAddress;           ///< IPv6 address
     uint32_t     mPreferredLifetime; ///< Preferred Lifetime
     uint32_t     mValidLifetime;     ///< Valid Lifetime
 } OT_TOOL_PACKED_END;
@@ -555,7 +560,8 @@ private:
  * Status Code
  *
  */
-typedef enum Status {
+typedef enum Status
+{
     kStatusSuccess      = 0,
     kStatusUnspecFail   = 1,
     kStatusNoAddrsAvail = 2,

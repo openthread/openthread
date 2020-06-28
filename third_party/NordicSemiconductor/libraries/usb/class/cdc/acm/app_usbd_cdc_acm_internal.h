@@ -1,30 +1,30 @@
 /**
- * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
- * 
+ * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- * 
+ *
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,7 +35,7 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 #ifndef APP_USBD_CDC_ACM_INTERNAL_H__
 #define APP_USBD_CDC_ACM_INTERNAL_H__
@@ -92,11 +92,13 @@ typedef struct {
     app_usbd_cdc_comm_protocol_t protocol; //!< User specified CDC protocol.
 
     app_usbd_cdc_acm_user_ev_handler_t user_ev_handler; //!< User event handler.
+
+    uint8_t * p_ep_interval; //!< Endpoint intervals.
 } app_usbd_cdc_acm_inst_t;
 
 
 /**
- * @brief CDC ACM serial state class notify
+ * @brief CDC ACM serial state class notify.
  */
 typedef struct {
     app_usbd_cdc_notify_t cdc_notify;       //!< CDC notify.
@@ -117,15 +119,15 @@ typedef struct {
 } app_usbd_cdc_acm_req_t;
 
 /**
- * @brief CDC ACM rx transfer buffer
+ * @brief CDC ACM rx transfer buffer.
  */
 typedef struct {
-    uint8_t * p_buf;     //!< User buffer pointer.
-    size_t read_left; //!< Bytes left to read into buffer.
+    uint8_t * p_buf;        //!< User buffer pointer.
+    size_t    read_left;    //!< Bytes left to read into buffer.
 } cdc_rx_buffer_t;
 
 /**
- * @brief CDC ACM class context
+ * @brief CDC ACM class context.
  */
 typedef struct {
     app_usbd_cdc_acm_req_t     request;             //!< CDC ACM class request.
@@ -145,6 +147,11 @@ typedef struct {
     size_t  cur_read;                               //!< Bytes currently read to internal buffer.
 } app_usbd_cdc_acm_ctx_t;
 
+/**
+ * @brief Default interval value for comm endpoint IN
+ *
+ */
+#define APP_USBD_CDC_ACM_DEFAULT_INTERVAL   0x10
 
 /**
  * @brief CDC ACM class configuration macro.
@@ -181,9 +188,16 @@ typedef struct {
  * @param data_ein              DATA subclass IN endpoint.
  * @param data_eout             DATA subclass OUT endpoint.
  * @param cdc_protocol          CDC protocol.
+ * @param ep_list               List of endpoints and intervals
  */
-#define APP_USBD_CDC_ACM_INST_CONFIG(user_event_handler, comm_ifc, comm_ein, data_ifc, data_ein, \
-                                     data_eout, cdc_protocol)                                    \
+#define APP_USBD_CDC_ACM_INST_CONFIG(user_event_handler,                                         \
+                                     comm_ifc,                                                   \
+                                     comm_ein,                                                   \
+                                     data_ifc,                                                   \
+                                     data_ein,                                                   \
+                                     data_eout,                                                  \
+                                     cdc_protocol,                                               \
+                                     ep_list)                                                    \
         .inst = {                                                                                \
                 .user_ev_handler = user_event_handler,                                           \
                 .comm_interface  = comm_ifc,                                                     \
@@ -191,7 +205,8 @@ typedef struct {
                 .data_interface  = data_ifc,                                                     \
                 .data_epin       = data_ein,                                                     \
                 .data_epout      = data_eout,                                                    \
-                .protocol        = cdc_protocol                                                  \
+                .protocol        = cdc_protocol,                                                 \
+                .p_ep_interval   = ep_list                                                       \
         }
 
 /**
@@ -233,27 +248,31 @@ extern const app_usbd_class_methods_t app_usbd_cdc_acm_class_methods;
  * @param data_eout             DATA subclass OUT endpoint.
  * @param cdc_protocol          CDC protocol @ref app_usbd_cdc_comm_protocol_t
  */
-/*lint -save -emacro(26 64 123 505 651, APP_USBD_CDC_ACM_GLOBAL_DEF_INTERNAL)*/
-#define APP_USBD_CDC_ACM_GLOBAL_DEF_INTERNAL(instance_name,                                     \
-                                             user_ev_handler,                                   \
-                                             comm_ifc,                                          \
-                                             data_ifc,                                          \
-                                             comm_ein,                                          \
-                                             data_ein,                                          \
-                                             data_eout,                                         \
-                                             cdc_protocol)                                      \
-        APP_USBD_CLASS_INST_GLOBAL_DEF(                                                         \
-                instance_name,                                                                  \
-                app_usbd_cdc_acm,                                                               \
-                &app_usbd_cdc_acm_class_methods,                                                \
-                APP_USBD_CDC_ACM_CONFIG(comm_ifc, comm_ein, data_ifc, data_ein, data_eout),     \
-                (APP_USBD_CDC_ACM_INST_CONFIG(user_ev_handler,                                  \
-                                              comm_ifc,                                         \
-                                              comm_ein,                                         \
-                                              data_ifc,                                         \
-                                              data_ein,                                         \
-                                              data_eout,                                        \
-                                              cdc_protocol))                                    \
+/*lint -save -emacro(26 64 123 505 572 651, APP_USBD_CDC_ACM_GLOBAL_DEF_INTERNAL)*/
+#define APP_USBD_CDC_ACM_GLOBAL_DEF_INTERNAL(instance_name,                                       \
+                                             user_ev_handler,                                     \
+                                             comm_ifc,                                            \
+                                             data_ifc,                                            \
+                                             comm_ein,                                            \
+                                             data_ein,                                            \
+                                             data_eout,                                           \
+                                             cdc_protocol)                                        \
+        static uint8_t CONCAT_2(instance_name, _ep) = {                                           \
+            (APP_USBD_EXTRACT_INTERVAL_FLAG(comm_ein) ? APP_USBD_EXTRACT_INTERVAL_VALUE(comm_ein) \
+             : APP_USBD_CDC_ACM_DEFAULT_INTERVAL)};                                               \
+        APP_USBD_CLASS_INST_GLOBAL_DEF(                                                           \
+                instance_name,                                                                    \
+                app_usbd_cdc_acm,                                                                 \
+                &app_usbd_cdc_acm_class_methods,                                                  \
+                APP_USBD_CDC_ACM_CONFIG(comm_ifc, comm_ein, data_ifc, data_ein, data_eout),       \
+                (APP_USBD_CDC_ACM_INST_CONFIG(user_ev_handler,                                    \
+                                              comm_ifc,                                           \
+                                              comm_ein,                                           \
+                                              data_ifc,                                           \
+                                              data_ein,                                           \
+                                              data_eout,                                          \
+                                              cdc_protocol,                                       \
+                                              &CONCAT_2(instance_name, _ep)))                     \
                 )
 /*lint -restore*/
 

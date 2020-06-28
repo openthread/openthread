@@ -67,7 +67,7 @@
  * @ref APP_USBD_STRINGS_LANGIDS.
  */
 #define APP_USBD_STRINGS_MANUFACTURER    \
-    APP_USBD_STRING_DESC('N', 'o', 'r', 'd', 'i', 'c', ' ', 'S', 'e', 'm', 'i', 'c', 'o', 'n', 'd', 'u', 'c', 't', 'o', 'r')
+    APP_USBD_STRING_DESC("Nordic Semiconductor")
 
 /**
  * @brief Define whether @ref APP_USBD_STRINGS_MANUFACTURER is created by @ref APP_USBD_STRING_DESC
@@ -81,7 +81,7 @@
  * List of product names defined the same way like in @ref APP_USBD_STRINGS_MANUFACTURER
  */
 #define APP_USBD_STRINGS_PRODUCT         \
-    APP_USBD_STRING_DESC('n', 'R', 'F', '5', '2', '8', '4', '0', ' ', 'O', 'p', 'e', 'n', 'T', 'h', 'r', 'e', 'a', 'd', ' ', 'D', 'e', 'v', 'i', 'c', 'e')
+    APP_USBD_STRING_DESC("nRF52840 OpenThread Device")
 
 
 /**
@@ -124,7 +124,7 @@
  * - @c ...     : List of string descriptors for each defined language.
  */
 #define APP_USBD_STRINGS_USER          \
-    X(APP_USER_1, , APP_USBD_STRING_DESC('U', 's', 'e', 'r', ' ', '1'))
+    X(APP_USER_1, , APP_USBD_STRING_DESC("User 1"))
 
 /** @} */
 #endif /* APP_USBD_STRING_CONFIG_H */

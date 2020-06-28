@@ -37,13 +37,20 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/dataset.h>
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/timer.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 
 namespace ot {
 namespace MeshCoP {
 
+/**
+ * This class represents MeshCop Dataset.
+ *
+ */
 class Dataset
 {
     friend class DatasetLocal;
@@ -51,8 +58,19 @@ class Dataset
 public:
     enum
     {
-        kMaxSize      = 256, ///< Maximum size of MeshCoP Dataset (bytes)
-        kMaxValueSize = 16,  /// < Maximum size of each Dataset TLV value (bytes)
+        kMaxSize      = OT_OPERATIONAL_DATASET_MAX_LENGTH, ///< Maximum size of MeshCoP Dataset (bytes)
+        kMaxValueSize = 16,                                ///< Maximum size of each Dataset TLV value (bytes)
+        kMaxGetTypes  = 64,                                ///< Maximum number of types in MGMT_GET.req
+    };
+
+    /**
+     * This enumeration represents the Dataset type (active or pending).
+     *
+     */
+    enum Type
+    {
+        kActive,  ///< Active Dataset
+        kPending, ///< Pending Dataset
     };
 
     /**
@@ -61,7 +79,7 @@ public:
      * @param[in]  aType       The type of the dataset, active or pending.
      *
      */
-    Dataset(const Tlv::Type aType);
+    explicit Dataset(Type aType);
 
     /**
      * This method clears the Dataset.
@@ -70,20 +88,54 @@ public:
     void Clear(void);
 
     /**
-     * This method returns a pointer to the TLV.
+     * This method indicates whether or not the dataset appears to be well-formed.
      *
-     * @returns A pointer to the TLV or NULL if none is found.
+     * @returns TRUE if the dataset appears to be well-formed, FALSE otherwise.
      *
      */
-    Tlv *Get(Tlv::Type aType);
+    bool IsValid(void) const;
 
     /**
-     * This method returns a pointer to the TLV.
+     * This method returns a pointer to the TLV with a given type.
      *
-     * @returns A pointer to the TLV or NULL if none is found.
+     * @param[in] aType  A TLV type.
+     *
+     * @returns A pointer to the TLV or nullptr if none is found.
      *
      */
-    const Tlv *Get(Tlv::Type aType) const;
+    Tlv *GetTlv(Tlv::Type aType) { return const_cast<Tlv *>(const_cast<const Dataset *>(this)->GetTlv(aType)); }
+
+    /**
+     * This method returns a pointer to the TLV with a given type.
+     *
+     * @param[in] aType  The TLV type.
+     *
+     * @returns A pointer to the TLV or nullptr if none is found.
+     *
+     */
+    const Tlv *GetTlv(Tlv::Type aType) const;
+
+    /**
+     * This template method returns a pointer to the TLV with a given template type `TlvType`
+     *
+     * @returns A pointer to the TLV or nullptr if none is found.
+     *
+     */
+    template <typename TlvType> TlvType *GetTlv(void)
+    {
+        return static_cast<TlvType *>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
+    }
+
+    /**
+     * This template method returns a pointer to the TLV with a given template type `TlvType`
+     *
+     * @returns A pointer to the TLV or nullptr if none is found.
+     *
+     */
+    template <typename TlvType> const TlvType *GetTlv(void) const
+    {
+        return static_cast<const TlvType *>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
+    }
 
     /**
      * This method returns a pointer to the byte representation of the Dataset.
@@ -104,8 +156,18 @@ public:
     /**
      * This method converts the TLV representation to structure representation.
      *
+     * @param[out] aDataset  A reference to `otOperationalDataset` to output the Dataset.
+     *
      */
-    void Get(otOperationalDataset &aDataset) const;
+    void ConvertTo(otOperationalDataset &aDataset) const;
+
+    /**
+     * This method converts the TLV representation to structure representation.
+     *
+     * @param[out] aDataset  A reference to `otOperationalDatasetTlvs` to output the Dataset.
+     *
+     */
+    void ConvertTo(otOperationalDatasetTlvs &aDataset) const;
 
     /**
      * This method returns the Dataset size in bytes.
@@ -129,7 +191,7 @@ public:
      * @returns The local time the dataset was last updated.
      *
      */
-    uint32_t GetUpdateTime(void) const { return mUpdateTime; }
+    TimeMilli GetUpdateTime(void) const { return mUpdateTime; }
 
     /**
      * This method returns a reference to the Timestamp.
@@ -141,6 +203,8 @@ public:
 
     /**
      * This method sets the Timestamp value.
+     *
+     * @param[in] aTimestamp   A Timestamp.
      *
      */
     void SetTimestamp(const Timestamp &aTimestamp);
@@ -154,7 +218,44 @@ public:
      * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
      *
      */
-    otError Set(const Tlv &aTlv);
+    otError SetTlv(const Tlv &aTlv);
+
+    /**
+     * This method sets a TLV with a given TLV Type and Value.
+     *
+     * @param[in] aType     The TLV Type.
+     * @param[in] aValue    A pointer to TLV Value.
+     * @param[in] aLength   The TLV Length in bytes (length of @p aValue).
+     *
+     * @retval OT_ERROR_NONE     Successfully set the TLV.
+     * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
+     *
+     */
+    otError SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength);
+
+    /**
+     * This method sets a TLV with a given TLV Type and a `uint16_t` Value.
+     *
+     * @param[in] aType     The TLV Type.
+     * @param[in] aValue    The TLV value (as `uint16_t`).
+     *
+     * @retval OT_ERROR_NONE     Successfully set the TLV.
+     * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
+     *
+     */
+    otError SetUint16Tlv(Tlv::Type aType, uint16_t aValue);
+
+    /**
+     * This method sets a TLV with a given TLV Type and a `uint32_t` Value.
+     *
+     * @param[in] aType     The TLV Type.
+     * @param[in] aValue    The TLV value (as `uint32_t`).
+     *
+     * @retval OT_ERROR_NONE     Successfully set the TLV.
+     * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
+     *
+     */
+    otError SetUint32Tlv(Tlv::Type aType, uint32_t aValue);
 
     /**
      * This method sets the Dataset using TLVs stored in a message buffer.
@@ -177,22 +278,27 @@ public:
      *
      * @param[in]  aDataset  The input Dataset.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Dataset.
-     *
      */
-    otError Set(const Dataset &aDataset);
+    void Set(const Dataset &aDataset);
 
-#if OPENTHREAD_FTD
     /**
-     * This method sets the Dataset.
+     * This method sets the Dataset from a given structure representation.
      *
-     * @param[in]  aDataset  The input Dataset.
+     * @param[in]  aDataset  The input Dataset as otOperationalDataset.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Dataset.
+     * @retval OT_ERROR_NONE          Successfully set the Dataset.
+     * @retval OT_ERROR_INVALID_ARGS  Dataset is missing Active and/or Pending Timestamp.
      *
      */
-    otError Set(const otOperationalDataset &aDataset);
-#endif
+    otError SetFrom(const otOperationalDataset &aDataset);
+
+    /**
+     * This method sets the Dataset using @p aDataset.
+     *
+     * @param[in]  aDataset  The input Dataset as otOperationalDatasetTlvs.
+     *
+     */
+    void SetFrom(const otOperationalDatasetTlvs &aDataset);
 
     /**
      * This method removes a TLV from the Dataset.
@@ -200,10 +306,12 @@ public:
      * @param[in] aType The type of a specific TLV.
      *
      */
-    void Remove(Tlv::Type aType);
+    void RemoveTlv(Tlv::Type aType);
 
     /**
      * This method appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
+     *
+     * @param[in] aMessage       A message to append to.
      *
      * @retval OT_ERROR_NONE     Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to append the message with MLE Dataset TLV.
@@ -214,30 +322,74 @@ public:
     /**
      * This method applies the Active or Pending Dataset to the Thread interface.
      *
-     * @param[in]  aInstance  A reference to the OpenThread instance.
+     * @param[in]  aInstance           A reference to the OpenThread instance.
+     * @param[out] aIsMasterKeyUpdated A pointer to where to place whether master key was updated.
      *
-     * @retval OT_ERROR_NONE  Successfully applied configuration.
+     * @retval OT_ERROR_NONE   Successfully applied configuration.
+     * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
      *
      */
-    otError ApplyConfiguration(Instance &aInstance) const;
+    otError ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated = nullptr) const;
 
     /**
      * This method converts a Pending Dataset to an Active Dataset.
      *
      * This method removes the Delay Timer and Pending Timestamp TLVs
      *
-     * @retval OT_ERROR_NONE  Successfully converted to Active Dataset.
+     */
+    void ConvertToActive(void);
+
+    /**
+     * This method returns a pointer to the start of Dataset TLVs sequence.
+     *
+     * @return  A pointer to the start of Dataset TLVs sequence.
      *
      */
-    otError ConvertToActive(void);
+    Tlv *GetTlvsStart(void) { return reinterpret_cast<Tlv *>(mTlvs); }
+
+    /**
+     * This method returns a pointer to the start of Dataset TLVs sequence.
+     *
+     * @return  A pointer to start of Dataset TLVs sequence.
+     *
+     */
+    const Tlv *GetTlvsStart(void) const { return reinterpret_cast<const Tlv *>(mTlvs); }
+
+    /**
+     * This method returns a pointer to the past-the-end of Dataset TLVs sequence.
+     *
+     * Note that past-the-end points to the byte after the end of the last TLV in Dataset TLVs sequence.
+     *
+     * @return  A pointer to past-the-end of Dataset TLVs sequence.
+     *
+     */
+    Tlv *GetTlvsEnd(void) { return reinterpret_cast<Tlv *>(mTlvs + mLength); }
+
+    /**
+     * This method returns a pointer to the past-the-end of Dataset TLVs sequence.
+     *
+     * Note that past-the-end points to the byte after the end of the last TLV in Dataset TLVs sequence.
+     *
+     * @return  A pointer to past-the-end of Dataset TLVs sequence.
+     *
+     */
+    const Tlv *GetTlvsEnd(void) const { return reinterpret_cast<const Tlv *>(mTlvs + mLength); }
+
+    /**
+     * This static method converts a Dataset Type to a string.
+     *
+     * @param[in]  aType   A Dataset type.
+     *
+     */
+    static const char *TypeToString(Type aType);
 
 private:
-    void Remove(uint8_t *aStart, uint8_t aLength);
+    void RemoveTlv(Tlv *aTlv);
 
     uint8_t   mTlvs[kMaxSize]; ///< The Dataset buffer
-    uint32_t  mUpdateTime;     ///< Local time last updated
+    TimeMilli mUpdateTime;     ///< Local time last updated
     uint16_t  mLength;         ///< The number of valid bytes in @var mTlvs
-    Tlv::Type mType;           ///< Active or Pending
+    Type      mType;           ///< Active or Pending
 };
 
 } // namespace MeshCoP

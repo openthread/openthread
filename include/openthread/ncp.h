@@ -32,11 +32,13 @@
  *  This file defines the top-level functions for the OpenThread NCP module.
  */
 
-#ifndef NCP_H_
-#define NCP_H_
+#ifndef OPENTHREAD_NCP_H_
+#define OPENTHREAD_NCP_H_
 
 #include <stdarg.h>
-#include <openthread/types.h>
+
+#include <openthread/platform/logging.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -120,12 +122,9 @@ typedef bool (*otNcpDelegateAllowPeekPoke)(uint32_t aAddress, uint16_t aCount);
  * @param[in] aAllowPeekDelegate      Delegate function pointer for peek operation.
  * @param[in] aAllowPokeDelegate      Delegate function pointer for poke operation.
  *
- * @retval OT_ERROR_NONE              Successfully registered delegate functions.
- * @retval OT_ERROR_DISABLED_FEATURE  Peek/Poke feature is disabled (by a build-time configuration option).
- *
  */
-otError otNcpRegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
-                                       otNcpDelegateAllowPeekPoke aAllowPokeDelegate);
+void otNcpRegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
+                                    otNcpDelegateAllowPeekPoke aAllowPokeDelegate);
 
 //-----------------------------------------------------------------------------------------
 // Legacy network APIs
@@ -221,4 +220,4 @@ void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers);
 } // extern "C"
 #endif
 
-#endif
+#endif // OPENTHREAD_NCP_H_

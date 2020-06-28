@@ -312,6 +312,10 @@ extern void SafeHapiAuxAdiSelect( FPTR_VOID_UINT8_T fPtr, uint8_t ut8Signal );
 
 
 // FLASH FUNCTIONS
+#define ROM_FlashPowerModeSet \
+    ((void (*)(uint32_t ui32PowerMode, uint32_t ui32BankGracePeriod, uint32_t ui32PumpGracePeriod)) \
+    ROM_API_FLASH_TABLE[0])
+
 #define ROM_FlashPowerModeGet \
     ((uint32_t (*)(void)) \
     ROM_API_FLASH_TABLE[1])

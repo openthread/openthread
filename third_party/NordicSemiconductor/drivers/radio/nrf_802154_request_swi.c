@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,58 +44,48 @@
 #include "nrf_802154_core.h"
 #include "nrf_802154_critical_section.h"
 #include "nrf_802154_debug.h"
+#include "nrf_802154_peripherals.h"
 #include "nrf_802154_rx_buffer.h"
 #include "nrf_802154_swi.h"
-#include "hal/nrf_radio.h"
+#include "nrf_802154_utils.h"
+#include "nrf_radio.h"
 
 #include <nrf.h>
 
-#define REQUEST_FUNCTION_WITH_FAIL_INSTR(func_core, func_swi, fail_instr, ...)                     \
-    bool result = false;                                                                           \
-                                                                                                   \
-    if (active_vector_priority_is_high())                                                          \
-    {                                                                                              \
-        if (nrf_802154_critical_section_enter())                                                   \
-        {                                                                                          \
-            result = func_core(__VA_ARGS__);                                                       \
-            nrf_802154_critical_section_exit();                                                    \
-        }                                                                                          \
-        else                                                                                       \
-        {                                                                                          \
-            fail_instr                                                                             \
-            result = false;                                                                        \
-        }                                                                                          \
-    }                                                                                              \
-    else                                                                                           \
-    {                                                                                              \
-        func_swi(__VA_ARGS__, &result);                                                            \
-    }                                                                                              \
-                                                                                                   \
+/** Assert if SWI interrupt is disabled. */
+static inline void assert_interrupt_status(void)
+{
+    assert(nrf_is_nvic_irq_enabled(NRF_802154_SWI_IRQN));
+}
+
+#define REQUEST_FUNCTION(func_core, func_swi, ...) \
+    bool result = false;                           \
+                                                   \
+    if (active_vector_priority_is_high())          \
+    {                                              \
+        result = func_core(__VA_ARGS__);           \
+    }                                              \
+    else                                           \
+    {                                              \
+        assert_interrupt_status();                 \
+        func_swi(__VA_ARGS__, &result);            \
+    }                                              \
+                                                   \
     return result;
 
-#define REQUEST_FUNCTION(func_core, func_swi, ...)                                                 \
-        REQUEST_FUNCTION_WITH_FAIL_INSTR(func_core, func_swi, , __VA_ARGS__)
-
-#define REQUEST_FUNCTION_NO_ARGS(func_core, func_swi)                                              \
-    bool result = false;                                                                           \
-                                                                                                   \
-    if (active_vector_priority_is_high())                                                          \
-    {                                                                                              \
-        if (nrf_802154_critical_section_enter())                                                   \
-        {                                                                                          \
-            result = func_core();                                                                  \
-            nrf_802154_critical_section_exit();                                                    \
-        }                                                                                          \
-        else                                                                                       \
-        {                                                                                          \
-            result = false;                                                                        \
-        }                                                                                          \
-    }                                                                                              \
-    else                                                                                           \
-    {                                                                                              \
-        func_swi(&result);                                                                         \
-    }                                                                                              \
-                                                                                                   \
+#define REQUEST_FUNCTION_NO_ARGS(func_core, func_swi) \
+    bool result = false;                              \
+                                                      \
+    if (active_vector_priority_is_high())             \
+    {                                                 \
+        result = func_core();                         \
+    }                                                 \
+    else                                              \
+    {                                                 \
+        assert_interrupt_status();                    \
+        func_swi(&result);                            \
+    }                                                 \
+                                                      \
     return result;
 
 /** Check if active vector priority is high enough to call requests directly.
@@ -121,30 +111,32 @@ bool nrf_802154_request_sleep(nrf_802154_term_t term_lvl)
 
 bool nrf_802154_request_receive(nrf_802154_term_t              term_lvl,
                                 req_originator_t               req_orig,
-                                nrf_802154_notification_func_t notify_function)
+                                nrf_802154_notification_func_t notify_function,
+                                bool                           notify_abort)
 {
-    REQUEST_FUNCTION_WITH_FAIL_INSTR(nrf_802154_core_receive,
-                                     nrf_802154_swi_receive,
-                                     notify_function(false); ,
-                                     term_lvl,
-                                     req_orig,
-                                     notify_function)
+    REQUEST_FUNCTION(nrf_802154_core_receive,
+                     nrf_802154_swi_receive,
+                     term_lvl,
+                     req_orig,
+                     notify_function,
+                     notify_abort)
 }
 
 bool nrf_802154_request_transmit(nrf_802154_term_t              term_lvl,
                                  req_originator_t               req_orig,
                                  const uint8_t                * p_data,
                                  bool                           cca,
+                                 bool                           immediate,
                                  nrf_802154_notification_func_t notify_function)
 {
-    REQUEST_FUNCTION_WITH_FAIL_INSTR(nrf_802154_core_transmit,
-                                     nrf_802154_swi_transmit,
-                                     notify_function(false); ,
-                                     term_lvl,
-                                     req_orig,
-                                     p_data,
-                                     cca,
-                                     notify_function)
+    REQUEST_FUNCTION(nrf_802154_core_transmit,
+                     nrf_802154_swi_transmit,
+                     term_lvl,
+                     req_orig,
+                     p_data,
+                     cca,
+                     immediate,
+                     notify_function)
 }
 
 bool nrf_802154_request_energy_detection(nrf_802154_term_t term_lvl,
@@ -163,7 +155,8 @@ bool nrf_802154_request_cca(nrf_802154_term_t term_lvl)
 
 bool nrf_802154_request_continuous_carrier(nrf_802154_term_t term_lvl)
 {
-    REQUEST_FUNCTION(nrf_802154_core_continuous_carrier, nrf_802154_swi_continuous_carrier, term_lvl)
+    REQUEST_FUNCTION(nrf_802154_core_continuous_carrier, nrf_802154_swi_continuous_carrier,
+                     term_lvl)
 }
 
 bool nrf_802154_request_buffer_free(uint8_t * p_data)
@@ -181,3 +174,14 @@ bool nrf_802154_request_cca_cfg_update(void)
     REQUEST_FUNCTION_NO_ARGS(nrf_802154_core_cca_cfg_update, nrf_802154_swi_cca_cfg_update)
 }
 
+bool nrf_802154_request_rssi_measure(void)
+{
+    REQUEST_FUNCTION_NO_ARGS(nrf_802154_core_rssi_measure, nrf_802154_swi_rssi_measure)
+}
+
+bool nrf_802154_request_rssi_measurement_get(int8_t * p_rssi)
+{
+    REQUEST_FUNCTION(nrf_802154_core_last_rssi_measurement_get,
+                     nrf_802154_swi_rssi_measurement_get,
+                     p_rssi)
+}

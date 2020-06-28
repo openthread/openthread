@@ -59,7 +59,7 @@ void mbedtls_sha256_clone(mbedtls_sha256_context *dst, const mbedtls_sha256_cont
 /**
  * documented in sha256_alt.h
  */
-void mbedtls_sha256_starts(mbedtls_sha256_context *ctx, int is224)
+int mbedtls_sha256_starts_ret(mbedtls_sha256_context *ctx, int is224)
 {
     SHA256_initialize(ctx);
 
@@ -75,14 +75,17 @@ void mbedtls_sha256_starts(mbedtls_sha256_context *ctx, int is224)
         ctx->state[6] = 0x64F98FA7;
         ctx->state[7] = 0xBEFA4FA4;
     }
+
+    return 0;
 }
 
 /**
  * documented in sha256_alt.h
  */
-void mbedtls_sha256_update(mbedtls_sha256_context *ctx, const unsigned char *input, size_t ilen)
+int mbedtls_sha256_update_ret(mbedtls_sha256_context *ctx, const unsigned char *input, size_t ilen)
 {
     SHA256_execute(ctx, (uint8_t *)input, (uint32_t)ilen);
+    return 0;
 }
 
 char *workaround_cc2650_rom;
@@ -90,7 +93,7 @@ char *workaround_cc2650_rom;
 /**
  * documented in sha256_alt.h
  */
-void mbedtls_sha256_finish(mbedtls_sha256_context *ctx, unsigned char output[32])
+int mbedtls_sha256_finish_ret(mbedtls_sha256_context *ctx, unsigned char output[32])
 {
     /* workaround for error in copy subroutine of SHA256 ROM implementation.
      * Allocate an extra 64 bytes on the stack to make sure we have buffer
@@ -109,15 +112,15 @@ void mbedtls_sha256_finish(mbedtls_sha256_context *ctx, unsigned char output[32]
     char buffer[64];
     workaround_cc2650_rom = &buffer[0];
     SHA256_output(ctx, (uint8_t *)output);
-    return;
+    return 0;
 }
 
 /**
  * documented in sha256_alt.h
  */
-void mbedtls_sha256_process(mbedtls_sha256_context *ctx, const unsigned char data[64])
+int mbedtls_internal_sha256_process(mbedtls_sha256_context *ctx, const unsigned char data[64])
 {
-    SHA256_execute(ctx, (uint8_t *)data, sizeof(unsigned char) * 64);
+    return SHA256_execute(ctx, (uint8_t *)data, sizeof(unsigned char) * 64);
 }
 
 #endif /* MBEDTLS_SHA256_ALT */

@@ -32,7 +32,7 @@
 #include <openthread-core-config.h>
 #include <stdint.h>
 #include <openthread/config.h>
-#include "openthread/types.h"
+#include <openthread/instance.h>
 
 #ifdef __cplusplus
 extern "C" {

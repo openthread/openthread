@@ -82,11 +82,8 @@ public:
                       void *                             aContext);
 
 private:
-    static void HandleReport(void *               aContext,
-                             otCoapHeader *       aHeader,
-                             otMessage *          aMessage,
-                             const otMessageInfo *aMessageInfo);
-    void        HandleReport(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleReport(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleReport(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otCommissionerEnergyReportCallback mCallback;
     void *                             mContext;

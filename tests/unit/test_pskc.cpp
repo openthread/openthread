@@ -26,36 +26,38 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 #include <openthread/config.h>
-#include <openthread/openthread.h>
 
 #include "common/logging.hpp"
 #include "meshcop/commissioner.hpp"
-#include "utils/wrap_string.h"
+#include "meshcop/meshcop.hpp"
 
 #include "test_platform.h"
 #include "test_util.h"
 
-static const uint8_t sXPanId[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+#if OPENTHREAD_FTD
 
 void TestMinimumPassphrase(void)
 {
-    uint8_t       pskc[OT_PSKC_MAX_SIZE];
-    const uint8_t expectedPskc[] = {0x44, 0x98, 0x8e, 0x22, 0xcf, 0x65, 0x2e, 0xee,
+    ot::Pskc              pskc;
+    const uint8_t         expectedPskc[] = {0x44, 0x98, 0x8e, 0x22, 0xcf, 0x65, 0x2e, 0xee,
                                     0xcc, 0xd1, 0xe4, 0xc0, 0x1d, 0x01, 0x54, 0xf8};
-    const char    passphrase[]   = "123456";
-    otInstance *  instance       = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePSKc(passphrase, "OpenThread", sXPanId, pskc),
+    const otExtendedPanId xpanid         = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}};
+    const char            passphrase[]   = "123456";
+    otInstance *          instance       = testInitInstance();
+    SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("OpenThread"),
+                                            static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc),
                   "TestMinimumPassphrase failed to generate PSKc");
-    VerifyOrQuit(memcmp(pskc, expectedPskc, sizeof(pskc)) == 0, "TestMinimumPassphrase got wrong pskc");
+    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestMinimumPassphrase got wrong pskc");
     testFreeInstance(instance);
 }
 
 void TestMaximumPassphrase(void)
 {
-    uint8_t       pskc[OT_PSKC_MAX_SIZE];
-    const uint8_t expectedPskc[] = {0x9e, 0x81, 0xbd, 0x35, 0xa2, 0x53, 0x76, 0x2f,
+    ot::Pskc              pskc;
+    const uint8_t         expectedPskc[] = {0x9e, 0x81, 0xbd, 0x35, 0xa2, 0x53, 0x76, 0x2f,
                                     0x80, 0xee, 0x04, 0xff, 0x2f, 0xa2, 0x85, 0xe9};
-    const char    passphrase[]   = "1234567812345678"
+    const otExtendedPanId xpanid         = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}};
+    const char            passphrase[]   = "1234567812345678"
                               "1234567812345678"
                               "1234567812345678"
                               "1234567812345678"
@@ -73,18 +75,44 @@ void TestMaximumPassphrase(void)
                               "123456781234567";
 
     otInstance *instance = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePSKc(passphrase, "OpenThread", sXPanId, pskc),
+    SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("OpenThread"),
+                                            static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc),
                   "TestMaximumPassphrase failed to generate PSKc");
-    VerifyOrQuit(memcmp(pskc, expectedPskc, sizeof(pskc)) == 0, "TestMaximumPassphrase got wrong pskc");
+    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestMaximumPassphrase got wrong pskc");
     testFreeInstance(instance);
 }
 
-#ifdef ENABLE_TEST_MAIN
+void TestExampleInSpec(void)
+{
+    ot::Pskc              pskc;
+    const uint8_t         expectedPskc[] = {0xc3, 0xf5, 0x93, 0x68, 0x44, 0x5a, 0x1b, 0x61,
+                                    0x06, 0xbe, 0x42, 0x0a, 0x70, 0x6d, 0x4c, 0xc9};
+    const otExtendedPanId xpanid         = {{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}};
+    const char            passphrase[]   = "12SECRETPASSWORD34";
+
+    otInstance *instance = testInitInstance();
+    SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("Test Network"),
+                                            static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc),
+                  "ExampleInSpec failed to generate PSKc");
+    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestExampleInSpec got wrong pskc");
+    testFreeInstance(instance);
+}
+
 int main(void)
 {
     TestMinimumPassphrase();
     TestMaximumPassphrase();
+    TestExampleInSpec();
     printf("All tests passed\n");
     return 0;
 }
-#endif
+
+#else // #if OPENTHREAD_FTD
+
+int main(void)
+{
+    printf("PSKc generation is not supported on non-ftd build\n");
+    return 0;
+}
+
+#endif // #if OPENTHREAD_FTD

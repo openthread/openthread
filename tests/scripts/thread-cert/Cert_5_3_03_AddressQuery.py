@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,12 +27,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import node
-import config
 import command
+import config
+import thread_cert
 
 LEADER = 1
 ROUTER1 = 2
@@ -41,53 +40,40 @@ ROUTER3 = 4
 MED1 = 5
 MED1_TIMEOUT = 3
 
-class Cert_5_3_3_AddressQuery(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1,6):
-            self.nodes[i] = node.Node(i, (i == MED1), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid()
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER2].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER1].set_panid()
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[DUT_ROUTER2].set_panid()
-        self.nodes[DUT_ROUTER2].set_mode('rsdn')
-        self.nodes[DUT_ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[DUT_ROUTER2].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[DUT_ROUTER2].add_whitelist(self.nodes[MED1].get_addr64())
-        self.nodes[DUT_ROUTER2].enable_whitelist()
-        self.nodes[DUT_ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER3].set_panid()
-        self.nodes[ROUTER3].set_mode('rsdn')
-        self.nodes[ROUTER3].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER3].add_whitelist(self.nodes[DUT_ROUTER2].get_addr64())
-        self.nodes[ROUTER3].enable_whitelist()
-        self.nodes[ROUTER3].set_router_selection_jitter(1)
-
-        self.nodes[MED1].set_panid()
-        self.nodes[MED1].set_mode('rsn')
-        self.nodes[MED1].add_whitelist(self.nodes[DUT_ROUTER2].get_addr64())
-        self.nodes[MED1].set_timeout(MED1_TIMEOUT)
-        self.nodes[MED1].enable_whitelist()
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1, DUT_ROUTER2, ROUTER3]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        DUT_ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, ROUTER3, MED1]
+        },
+        ROUTER3: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, DUT_ROUTER2]
+        },
+        MED1: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'timeout': 3,
+            'whitelist': [DUT_ROUTER2]
+        },
+    }
 
     def test(self):
         # 1
@@ -106,39 +92,51 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
         self.assertEqual(self.nodes[MED1].get_state(), 'child')
 
-
         # 2
-        # Flush the message queue to avoid possible impact on follow-up verification.
+        # Flush the message queue to avoid possible impact on follow-up
+        # verification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
-        router3_mleid = self.nodes[ROUTER3].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        router3_mleid = self.nodes[ROUTER3].get_ip6_address(
+            config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[MED1].ping(router3_mleid))
 
-        # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local address.
+        # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local
+        # address.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/aq')
-        command.check_address_query(msg, self.nodes[DUT_ROUTER2], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+        command.check_address_query(
+            msg,
+            self.nodes[DUT_ROUTER2],
+            config.REALM_LOCAL_ALL_ROUTERS_ADDRESS,
+        )
 
         # 3
-        # Wait the finish of address resolution traffic triggerred by previous ping.
+        # Wait the finish of address resolution traffic triggerred by previous
+        # ping.
         self.simulator.go(5)
 
-        # Flush the message queue to avoid possible impact on follow-up verification.
+        # Flush the message queue to avoid possible impact on follow-up
+        # verification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
-        med1_mleid = self.nodes[MED1].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        med1_mleid = self.nodes[MED1].get_ip6_address(
+            config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[ROUTER1].ping(med1_mleid))
 
         # Verify DUT_ROUTER2 responded with an Address Notification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/an')
-        command.check_address_notification(msg, self.nodes[DUT_ROUTER2], self.nodes[ROUTER1])
+        command.check_address_notification(msg, self.nodes[DUT_ROUTER2],
+                                           self.nodes[ROUTER1])
 
         # 4
-        # Wait the finish of address resolution traffic triggerred by previous ping.
+        # Wait the finish of address resolution traffic triggerred by previous
+        # ping.
         self.simulator.go(5)
 
-        # Flush the message queue to avoid possible impact on follow-up verification.
+        # Flush the message queue to avoid possible impact on follow-up
+        # verification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
         self.assertTrue(self.nodes[MED1].ping(router3_mleid))
@@ -149,27 +147,36 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         assert msg is None, "The Address Query Request is not expected."
 
         # 5
+        # Power off ROUTER3 and wait for leader to expire its Router ID.
+        # In this topology, ROUTER3 has two neighbors (Leader and DUT_ROUTER2),
+        # so the wait time is (MAX_NEIGHBOR_AGE (100s) + worst propagation time (32s * 15) for bad routing +\
+        # INFINITE_COST_TIMEOUT (90s) + transmission time + extra redundancy),
+        # totally ~700s.
         self.nodes[ROUTER3].stop()
+        self.simulator.go(700)
 
-        # Wait for the Leader to expire its Router ID.
-        # MAX_NEIGHBOR_AGE + INFINITE_COST_TIMEOUT + ID_REUSE_DELAY + propagation time + transmission time ~ 580s.
-        self.simulator.go(580)
-
-        # Flush the message queue to avoid possible impact on follow-up verification.
+        # Flush the message queue to avoid possible impact on follow-up
+        # verification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
         self.assertFalse(self.nodes[MED1].ping(router3_mleid))
 
-        # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local address.
+        # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local
+        # address.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/aq')
-        command.check_address_query(msg, self.nodes[DUT_ROUTER2], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+        command.check_address_query(
+            msg,
+            self.nodes[DUT_ROUTER2],
+            config.REALM_LOCAL_ALL_ROUTERS_ADDRESS,
+        )
 
         # 6
         self.nodes[MED1].stop()
         self.simulator.go(MED1_TIMEOUT)
 
-        # Flush the message queue to avoid possible impact on follow-up verification.
+        # Flush the message queue to avoid possible impact on follow-up
+        # verification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
         self.assertFalse(self.nodes[ROUTER1].ping(med1_mleid))
@@ -179,6 +186,7 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/an', False)
         assert msg is None, "The Address Notification is not expected."
+
 
 if __name__ == '__main__':
     unittest.main()

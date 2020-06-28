@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,11 +27,9 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import config
-import node
+import thread_cert
 
 PANID_INIT = 0xface
 
@@ -47,41 +45,41 @@ ROUTER_PENDING_ACTIVE_TIMESTAMP = 25
 COMMISSIONER_PENDING_CHANNEL = 20
 COMMISSIONER_PENDING_PANID = 0xafce
 
-class Cert_9_2_7_DelayTimer(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1,4):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
+class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
+    SUPPORT_NCP = False
 
-        self.nodes[COMMISSIONER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP)
-        self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].set_panid(PANID_INIT)
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[COMMISSIONER].enable_whitelist()
-        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
-
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].set_panid(PANID_INIT)
-        self.nodes[LEADER].set_partition_id(0xffffffff)
-        self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[LEADER].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER].set_active_dataset(ROUTER_ACTIVE_TIMESTAMP)
-        self.nodes[ROUTER].set_pending_dataset(ROUTER_PENDING_TIMESTAMP, ROUTER_PENDING_ACTIVE_TIMESTAMP)
-        self.nodes[ROUTER].set_mode('rsdn')
-        self.nodes[ROUTER].set_panid(PANID_INIT)
-        self.nodes[ROUTER].set_partition_id(0x1)
-        self.nodes[ROUTER].enable_whitelist()
-        self.nodes[ROUTER].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+    TOPOLOGY = {
+        COMMISSIONER: {
+            'active_dataset': {
+                'timestamp': LEADER_ACTIVE_TIMESTAMP
+            },
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'partition_id': 0xffffffff,
+            'router_selection_jitter': 1,
+            'whitelist': [COMMISSIONER]
+        },
+        ROUTER: {
+            'active_dataset': {
+                'timestamp': ROUTER_ACTIVE_TIMESTAMP
+            },
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'partition_id': 1,
+            'pending_dataset': {
+                'pendingtimestamp': ROUTER_PENDING_TIMESTAMP,
+                'activetimestamp': ROUTER_PENDING_ACTIVE_TIMESTAMP
+            },
+            'router_selection_jitter': 1
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
@@ -112,25 +110,36 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
                 break
         self.assertTrue(self.nodes[LEADER].ping(ipaddr))
 
-        self.nodes[COMMISSIONER].send_mgmt_pending_set(pending_timestamp=40,
-                                                       active_timestamp=80,
-                                                       delay_timer=10000,
-                                                       channel=COMMISSIONER_PENDING_CHANNEL,
-                                                       panid=COMMISSIONER_PENDING_PANID)
+        self.nodes[COMMISSIONER].send_mgmt_pending_set(
+            pending_timestamp=40,
+            active_timestamp=80,
+            delay_timer=10000,
+            channel=COMMISSIONER_PENDING_CHANNEL,
+            panid=COMMISSIONER_PENDING_PANID,
+        )
         self.simulator.go(40)
-        self.assertEqual(self.nodes[LEADER].get_panid(), COMMISSIONER_PENDING_PANID)
-        self.assertEqual(self.nodes[COMMISSIONER].get_panid(), COMMISSIONER_PENDING_PANID)
-        self.assertEqual(self.nodes[ROUTER].get_panid(), COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[LEADER].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[COMMISSIONER].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[ROUTER].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
 
-        self.assertEqual(self.nodes[LEADER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
-        self.assertEqual(self.nodes[COMMISSIONER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
-        self.assertEqual(self.nodes[ROUTER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(self.nodes[LEADER].get_channel(),
+                         COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(
+            self.nodes[COMMISSIONER].get_channel(),
+            COMMISSIONER_PENDING_CHANNEL,
+        )
+        self.assertEqual(self.nodes[ROUTER].get_channel(),
+                         COMMISSIONER_PENDING_CHANNEL)
 
         ipaddrs = self.nodes[ROUTER].get_addrs()
         for ipaddr in ipaddrs:
             if ipaddr[0:4] != 'fe80':
                 break
         self.assertTrue(self.nodes[LEADER].ping(ipaddr))
+
 
 if __name__ == '__main__':
     unittest.main()

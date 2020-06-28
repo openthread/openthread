@@ -36,10 +36,10 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
@@ -56,7 +56,7 @@ namespace Utils {
  * @{
  */
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 
 #if OPENTHREAD_FTD
 
@@ -64,7 +64,7 @@ namespace Utils {
  * This class implements the Channel Manager.
  *
  */
-class ChannelManager : public InstanceLocator
+class ChannelManager : public InstanceLocator, public Notifier::Receiver, private NonCopyable
 {
 public:
     enum
@@ -92,7 +92,7 @@ public:
      *
      * A subsequent call to this method will cancel an ongoing previously requested channel change.
      *
-     * If the requested channel changes, it will trigger a `Notifier` event `OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL`.
+     * If the requested channel changes, it will trigger a `Notifier` event `kEventChannelManagerNewChannelChanged`.
      *
      * @param[in] aChannel             The new channel for the Thread network.
      *
@@ -156,7 +156,6 @@ public:
      * @retval OT_ERROR_NONE               Channel selection finished successfully.
      * @retval OT_ERROR_NOT_FOUND          Supported channels is empty, therefore could not select a channel.
      * @retval OT_ERROR_INVALID_STATE      Thread is not enabled or not enough data to select new channel.
-     * @retval OT_ERROR_DISABLED_FEATURE   `ChannelMonintor` feature is disabled by build-time configuration options.
      *
      */
     otError RequestChannelSelect(bool aSkipQualityCheck);
@@ -197,7 +196,7 @@ public:
      * @returns The interval (in seconds).
      *
      */
-    uint32_t GetAutoChannelSelectionInterval(void) { return mAutoSelectInterval; }
+    uint32_t GetAutoChannelSelectionInterval(void) const { return mAutoSelectInterval; }
 
     /**
      * This method gets the supported channel mask.
@@ -273,31 +272,30 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aChangedFlags);
-    void        HandleStateChanged(uint32_t aChangedFlags);
+    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
     void        PreparePendingDataset(void);
     void        StartAutoSelectTimer(void);
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     otError FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccupancy);
-    bool    ShouldAttamptChannelChange(void);
+    bool    ShouldAttemptChannelChange(void);
 #endif
 
-    Mac::ChannelMask   mSupportedChannelMask;
-    Mac::ChannelMask   mFavoredChannelMask;
-    uint64_t           mActiveTimestamp;
-    Notifier::Callback mNotifierCallback;
-    uint16_t           mDelay;
-    uint8_t            mChannel;
-    State              mState;
-    TimerMilli         mTimer;
-    uint32_t           mAutoSelectInterval;
-    bool               mAutoSelectEnabled;
+    Mac::ChannelMask mSupportedChannelMask;
+    Mac::ChannelMask mFavoredChannelMask;
+    uint64_t         mActiveTimestamp;
+    uint16_t         mDelay;
+    uint8_t          mChannel;
+    State            mState;
+    TimerMilli       mTimer;
+    uint32_t         mAutoSelectInterval;
+    bool             mAutoSelectEnabled;
 };
 
 #else // OPENTHREAD_FTD
 
-class ChannelManager
+class ChannelManager : private NonCopyable
 {
 public:
     explicit ChannelManager(Instance &) {}
@@ -305,7 +303,7 @@ public:
 
 #endif // OPENTHREAD_FTD
 
-#endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 /**
  * @}
  *

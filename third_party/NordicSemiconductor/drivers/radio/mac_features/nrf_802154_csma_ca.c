@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,16 +43,20 @@
 
 #include "nrf_802154_config.h"
 #include "nrf_802154_const.h"
+#include "../nrf_802154_debug.h"
 #include "nrf_802154_notification.h"
 #include "nrf_802154_request.h"
+#include "platform/random/nrf_802154_random.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
 
-static uint8_t m_nb;  ///< The number of times the CSMA-CA algorithm was required to back off while attempting the current transmission.
-static uint8_t m_be;  ///< Backoff exponent, which is related to how many backoff periods a device shall wait before attempting to assess a channel.
+#if NRF_802154_CSMA_CA_ENABLED
 
-static const uint8_t    * mp_psdu;       ///< Pointer to PSDU of the frame being transmitted.
-static nrf_802154_timer_t m_timer;       ///< Timer used to back off during CSMA-CA procedure.
-static bool               m_is_running;  ///< Indicates if CSMA-CA procedure is running.
+static uint8_t m_nb;                    ///< The number of times the CSMA-CA algorithm was required to back off while attempting the current transmission.
+static uint8_t m_be;                    ///< Backoff exponent, which is related to how many backoff periods a device shall wait before attempting to assess a channel.
+
+static const uint8_t    * mp_data;      ///< Pointer to a buffer containing PHR and PSDU of the frame being transmitted.
+static nrf_802154_timer_t m_timer;      ///< Timer used to back off during CSMA-CA procedure.
+static bool               m_is_running; ///< Indicates if CSMA-CA procedure is running.
 
 /**
  * @brief Perform appropriate actions for busy channel conditions.
@@ -94,7 +98,7 @@ static void notify_busy_channel(bool result)
 {
     if (!result && (m_nb >= (NRF_802154_CSMA_CA_MAX_CSMA_BACKOFFS - 1)))
     {
-        nrf_802154_notify_transmit_failed(mp_psdu, NRF_802154_TX_ERROR_BUSY_CHANNEL);
+        nrf_802154_notify_transmit_failed(mp_data, NRF_802154_TX_ERROR_BUSY_CHANNEL);
     }
 }
 
@@ -111,19 +115,22 @@ static void frame_transmit(void * p_context)
 {
     (void)p_context;
 
-    if (!procedure_is_running())
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CSMA_FRAME_TRANSMIT);
+
+    if (procedure_is_running())
     {
-        return;
+        if (!nrf_802154_request_transmit(NRF_802154_TERM_NONE,
+                                         REQ_ORIG_CSMA_CA,
+                                         mp_data,
+                                         true,
+                                         NRF_802154_CSMA_CA_WAIT_FOR_TIMESLOT ? false : true,
+                                         notify_busy_channel))
+        {
+            (void)channel_busy();
+        }
     }
 
-    if (!nrf_802154_request_transmit(NRF_802154_TERM_NONE,
-                                     REQ_ORIG_CSMA_CA,
-                                     mp_psdu,
-                                     true,
-                                     notify_busy_channel))
-    {
-        (void)channel_busy();
-    }
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CSMA_FRAME_TRANSMIT);
 }
 
 /**
@@ -131,7 +138,7 @@ static void frame_transmit(void * p_context)
  */
 static void random_backoff_start(void)
 {
-    uint8_t backoff_periods = rand() % (1 << m_be);
+    uint8_t backoff_periods = nrf_802154_random_get() % (1 << m_be);
 
     m_timer.callback  = frame_transmit;
     m_timer.p_context = NULL;
@@ -147,6 +154,8 @@ static bool channel_busy(void)
 
     if (procedure_is_running())
     {
+        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CSMA_CHANNEL_BUSY);
+
         m_nb++;
 
         if (m_be < NRF_802154_CSMA_CA_MAX_BE)
@@ -163,6 +172,8 @@ static bool channel_busy(void)
         {
             procedure_stop();
         }
+
+        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CSMA_CHANNEL_BUSY);
     }
 
     return result;
@@ -172,7 +183,7 @@ void nrf_802154_csma_ca_start(const uint8_t * p_data)
 {
     assert(!procedure_is_running());
 
-    mp_psdu      = p_data;
+    mp_data      = p_data;
     m_nb         = 0;
     m_be         = NRF_802154_CSMA_CA_MIN_BE;
     m_is_running = true;
@@ -182,29 +193,33 @@ void nrf_802154_csma_ca_start(const uint8_t * p_data)
 
 bool nrf_802154_csma_ca_abort(nrf_802154_term_t term_lvl, req_originator_t req_orig)
 {
-    // Don't stop CSMA-CA if request by itself or RAAL.
-    if (req_orig == REQ_ORIG_CSMA_CA ||
-        req_orig == REQ_ORIG_RAAL)
+    bool result = false;
+
+    // Stop CSMA-CA only if request by the core or the higher layer.
+    if ((req_orig != REQ_ORIG_CORE) && (req_orig != REQ_ORIG_HIGHER_LAYER))
     {
         return true;
     }
 
-    // Stop CSMA-CA if termination level is high enough.
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CSMA_ABORT);
+
     if (term_lvl >= NRF_802154_TERM_802154)
     {
-        nrf_802154_timer_sched_remove(&m_timer);
+        // Stop CSMA-CA if termination level is high enough.
+        nrf_802154_timer_sched_remove(&m_timer, NULL);
         procedure_stop();
 
-        return true;
+        result = true;
     }
-
-    // Return success in case procedure is already stopped.
-    if (!procedure_is_running())
+    else if (!procedure_is_running())
     {
-        return true;
+        // Return success in case procedure is already stopped.
+        result = true;
     }
 
-    return false;
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CSMA_ABORT);
+
+    return result;
 }
 
 bool nrf_802154_csma_ca_tx_failed_hook(const uint8_t * p_frame, nrf_802154_tx_error_t error)
@@ -213,9 +228,13 @@ bool nrf_802154_csma_ca_tx_failed_hook(const uint8_t * p_frame, nrf_802154_tx_er
 
     bool result = true;
 
-    if (p_frame == mp_psdu)
+    if (p_frame == mp_data)
     {
+        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CSMA_TX_FAILED);
+
         result = channel_busy();
+
+        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CSMA_TX_FAILED);
     }
 
     return result;
@@ -223,12 +242,17 @@ bool nrf_802154_csma_ca_tx_failed_hook(const uint8_t * p_frame, nrf_802154_tx_er
 
 bool nrf_802154_csma_ca_tx_started_hook(const uint8_t * p_frame)
 {
-    if (p_frame == mp_psdu)
+    if (p_frame == mp_data)
     {
+        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CSMA_TX_STARTED);
+
         assert(!nrf_802154_timer_sched_is_running(&m_timer));
         procedure_stop();
+
+        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CSMA_TX_STARTED);
     }
 
     return true;
 }
 
+#endif // NRF_802154_CSMA_CA_ENABLED

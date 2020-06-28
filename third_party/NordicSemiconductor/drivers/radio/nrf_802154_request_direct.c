@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,28 +40,14 @@
 #include <stdint.h>
 
 #include "nrf_802154_core.h"
-#include "nrf_802154_critical_section.h"
-#include "hal/nrf_radio.h"
+#include "nrf_radio.h"
 
-#define REQUEST_FUNCTION_WITH_FAIL_INSTR(func_core, fail_instr, ...)                               \
-    bool result;                                                                                   \
-                                                                                                   \
-    if (nrf_802154_critical_section_enter())                                                       \
-    {                                                                                              \
-        result = func_core(__VA_ARGS__);                                                           \
-        nrf_802154_critical_section_exit();                                                        \
-    }                                                                                              \
-    else                                                                                           \
-    {                                                                                              \
-        fail_instr                                                                                 \
-        result = false;                                                                            \
-    }                                                                                              \
-                                                                                                   \
+#define REQUEST_FUNCTION(func_core, ...) \
+    bool result;                         \
+                                         \
+    result = func_core(__VA_ARGS__);     \
+                                         \
     return result;
-
-#define REQUEST_FUNCTION(func_core, ...)                                                           \
-        REQUEST_FUNCTION_WITH_FAIL_INSTR(func_core, , __VA_ARGS__)
-
 
 void nrf_802154_request_init(void)
 {
@@ -75,28 +61,26 @@ bool nrf_802154_request_sleep(nrf_802154_term_t term_lvl)
 
 bool nrf_802154_request_receive(nrf_802154_term_t              term_lvl,
                                 req_originator_t               req_orig,
-                                nrf_802154_notification_func_t notify_function)
+                                nrf_802154_notification_func_t notify_function,
+                                bool                           notify_abort)
 {
-    REQUEST_FUNCTION_WITH_FAIL_INSTR(nrf_802154_core_receive,
-                                     notify_function(false); ,
-                                     term_lvl,
-                                     req_orig,
-                                     notify_function)
+    REQUEST_FUNCTION(nrf_802154_core_receive, term_lvl, req_orig, notify_function, notify_abort)
 }
 
 bool nrf_802154_request_transmit(nrf_802154_term_t              term_lvl,
                                  req_originator_t               req_orig,
                                  const uint8_t                * p_data,
                                  bool                           cca,
+                                 bool                           immediate,
                                  nrf_802154_notification_func_t notify_function)
 {
-    REQUEST_FUNCTION_WITH_FAIL_INSTR(nrf_802154_core_transmit,
-                                     notify_function(false); ,
-                                     term_lvl,
-                                     req_orig,
-                                     p_data,
-                                     cca,
-                                     notify_function)
+    REQUEST_FUNCTION(nrf_802154_core_transmit,
+                     term_lvl,
+                     req_orig,
+                     p_data,
+                     cca,
+                     immediate,
+                     notify_function)
 }
 
 bool nrf_802154_request_energy_detection(nrf_802154_term_t term_lvl, uint32_t time_us)
@@ -127,4 +111,14 @@ bool nrf_802154_request_channel_update(void)
 bool nrf_802154_request_cca_cfg_update(void)
 {
     REQUEST_FUNCTION(nrf_802154_core_cca_cfg_update)
+}
+
+bool nrf_802154_request_rssi_measure(void)
+{
+    REQUEST_FUNCTION(nrf_802154_core_rssi_measure)
+}
+
+bool nrf_802154_request_rssi_measurement_get(int8_t * p_rssi)
+{
+    REQUEST_FUNCTION(nrf_802154_core_last_rssi_measurement_get, p_rssi)
 }

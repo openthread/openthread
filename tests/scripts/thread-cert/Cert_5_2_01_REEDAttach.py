@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
@@ -27,60 +27,46 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import node
-import mle
-import config
 import command
-
-import shutil
-import os
+import config
+import mle
+import thread_cert
 
 LEADER = 1
 DUT_ROUTER1 = 2
 REED1 = 3
 MED1 = 4
 
-class Cert_5_2_01_REEDAttach(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1, 5):
-            self.nodes[i] = node.Node(i, i == MED1, simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[DUT_ROUTER1].set_panid(0xface)
-        self.nodes[DUT_ROUTER1].set_mode('rsdn')
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[REED1].get_addr64())
-        self.nodes[DUT_ROUTER1].enable_whitelist()
-        self.nodes[DUT_ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[REED1].set_panid(0xface)
-        self.nodes[REED1].set_mode('rsdn')
-        self.nodes[REED1].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64())
-        self.nodes[REED1].add_whitelist(self.nodes[MED1].get_addr64())
-        self.nodes[REED1].enable_whitelist()
-        self.nodes[REED1].set_router_selection_jitter(1)
-        self.nodes[REED1].set_router_upgrade_threshold(1)
-
-        self.nodes[MED1].set_panid(0xface)
-        self.nodes[MED1].set_mode('rsn')
-        self.nodes[MED1].add_whitelist(self.nodes[REED1].get_addr64())
-        self.nodes[MED1].enable_whitelist()
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+class Cert_5_2_01_REEDAttach(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [DUT_ROUTER1]
+        },
+        DUT_ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, REED1]
+        },
+        REED1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 1,
+            'whitelist': [DUT_ROUTER1, MED1]
+        },
+        MED1: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [REED1]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
@@ -109,7 +95,8 @@ class Cert_5_2_01_REEDAttach(unittest.TestCase):
         command.check_parent_response(msg)
 
         # 4 DUT_ROUTER1: Verify MLE Child ID Response
-        msg = router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        msg = router1_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_RESPONSE)
         msg.assertSentToNode(self.nodes[REED1])
         command.check_child_id_response(msg)
 
@@ -123,26 +110,31 @@ class Cert_5_2_01_REEDAttach(unittest.TestCase):
         # 7 REED1: Verify sending Address Solicit Request to DUT_ROUTER1
         reed1_messages = self.simulator.get_messages_sent_by(REED1)
         msg = reed1_messages.next_coap_message('0.02')
-        reed1_ipv6_address = msg.ipv6_packet.ipv6_header.source_address.compressed
-        msg.assertSentToNode(self.nodes[DUT_ROUTER1]);
+        reed1_ipv6_address = (
+            msg.ipv6_packet.ipv6_header.source_address.compressed)
+        msg.assertSentToNode(self.nodes[DUT_ROUTER1])
         msg.assertCoapMessageRequestUriPath('/a/as')
 
-        # 8 DUT_ROUTER1: Verify forwarding REED1's Address Solicit Request to LEADER
+        # 8 DUT_ROUTER1: Verify forwarding REED1's Address Solicit Request to
+        # LEADER
         router1_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
         msg = router1_messages.next_coap_message('0.02')
-        msg.assertSentToNode(self.nodes[LEADER]);
+        msg.assertSentToNode(self.nodes[LEADER])
         msg.assertCoapMessageRequestUriPath('/a/as')
 
-        # DUT_ROUTER1: Verify forwarding LEADER's Address Solicit Response to REED1
+        # DUT_ROUTER1: Verify forwarding LEADER's Address Solicit Response to
+        # REED1
         msg = router1_messages.next_coap_message('2.04')
         msg.assertSentToDestinationAddress(reed1_ipv6_address)
 
         self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
 
-        # 9 LEADER: Verify connectivity by sending an ICMPv6 Echo Request to REED1
+        # 9 LEADER: Verify connectivity by sending an ICMPv6 Echo Request to
+        # REED1
         for addr in self.nodes[REED1].get_addrs():
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

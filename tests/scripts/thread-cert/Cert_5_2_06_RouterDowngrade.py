@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,38 +27,188 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import node
-import config
 import command
+import config
 import mle
+import thread_cert
 
 LEADER = 1
 DUT_ROUTER1 = 2
 ROUTER2 = 3
 ROUTER24 = 24
 
-class Cert_5_2_06_RouterDowngrade(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1, 25):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-            self.nodes[i].set_panid()
-            self.nodes[i].set_mode('rsdn')
-            self.nodes[i].set_router_selection_jitter(1)
-            if i != DUT_ROUTER1:
-                self.nodes[i].set_router_upgrade_threshold(32)
-                self.nodes[i].set_router_downgrade_threshold(32)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        DUT_ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        4: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        5: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        6: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        7: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        8: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        9: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        10: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        11: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        12: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        13: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        14: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        15: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        16: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        17: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        18: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        19: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        20: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        21: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        22: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        23: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        ROUTER24: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+    }
 
     def test(self):
         # 1 Ensure topology is formed correctly without ROUTER24.
@@ -71,12 +221,14 @@ class Cert_5_2_06_RouterDowngrade(unittest.TestCase):
             self.simulator.go(5)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
-        # This method flushes the message queue so calling this method again will return only the newly logged messages.
+        # This method flushes the message queue so calling this method again
+        # will return only the newly logged messages.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
 
         # 2 ROUTER24: Attach to network.
         # All reference testbed devices have been configured with downgrade threshold as 32 except DUT_ROUTER1,
-        # so we don't need to ensure ROUTER24 has a better link quality on posix.
+        # so we don't need to ensure ROUTER24 has a better link quality on
+        # posix.
         self.nodes[ROUTER24].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER24].get_state(), 'router')
@@ -90,13 +242,16 @@ class Cert_5_2_06_RouterDowngrade(unittest.TestCase):
         dut_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         dut_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
 
-        # Verify it sent an Address Release Message to the Leader when it attached as a child.
+        # Verify it sent an Address Release Message to the Leader when it
+        # attached as a child.
         msg = dut_messages.next_coap_message('0.02')
         command.check_address_release(msg, self.nodes[LEADER])
 
         # 4 & 5
-        router1_rloc = self.nodes[DUT_ROUTER1].get_ip6_address(config.ADDRESS_TYPE.RLOC)
+        router1_rloc = self.nodes[DUT_ROUTER1].get_ip6_address(
+            config.ADDRESS_TYPE.RLOC)
         self.assertTrue(self.nodes[LEADER].ping(router1_rloc))
+
 
 if __name__ == '__main__':
     unittest.main()

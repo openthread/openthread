@@ -38,8 +38,7 @@
 #include <openthread-core-config.h>
 #include <stdint.h>
 #include <openthread/config.h>
-
-#include <openthread/types.h>
+#include <openthread/instance.h>
 
 #include "cc2538-reg.h"
 
@@ -90,5 +89,19 @@ void cc2538RandomInit(void);
  *
  */
 void cc2538UartProcess(void);
+
+#if OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
+/**
+ * Change the state of the CC2592 HGM pin.
+ *
+ * @param	aState	Whether or not to enable HGM
+ */
+void cc2538RadioSetHgm(bool aState);
+
+/**
+ * Retrieve the state of the CC2592 HGM pin.
+ */
+bool cc2538RadioGetHgm(void);
+#endif // OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
 
 #endif // PLATFORM_CC2538_H_

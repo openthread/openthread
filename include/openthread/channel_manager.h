@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_CHANNEL_MANAGER_H_
 #define OPENTHREAD_CHANNEL_MANAGER_H_
 
-#include "openthread/types.h"
+#include <openthread/instance.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,8 +47,8 @@ extern "C" {
  * @brief
  *   This module includes functions for Channel Manager.
  *
- *   The functions in this module are available when Channel Manager feature (`OPENTHREAD_ENABLE_CHANNEL_MANAGER`)
- *   is enabled. Channel Manager is available only on an FTD build.
+ *   The functions in this module are available when Channel Manager feature
+ *   (`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE`) is enabled. Channel Manager is available only on an FTD build.
  *
  * @{
  *
@@ -57,8 +57,8 @@ extern "C" {
 /**
  * This function requests a Thread network channel change.
  *
- * The network switches to the given channel after a specified delay (@sa otChannelManagerSetDelay). The channel change
- * is performed by updating the Pending Operational Dataset.
+ * The network switches to the given channel after a specified delay (see otChannelManagerSetDelay()). The channel
+ * change is performed by updating the Pending Operational Dataset.
  *
  * A subsequent call to this function will cancel an ongoing previously requested channel change.
  *
@@ -117,7 +117,7 @@ otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay);
  *
  * 2) If the first step passes, then `ChannelManager` selects a potentially better channel. It uses the collected
  *    channel quality data by `ChannelMonitor` module. The supported and favored channels are used at this step.
- *    (@sa otChannelManagerSetSupportedChannels, @sa otChannelManagerSetFavoredChannels).
+ *    (see otChannelManagerSetSupportedChannels() and otChannelManagerSetFavoredChannels()).
  *
  * 3) If the newly selected channel is different from the current channel, `ChannelManager` requests/starts the
  *    channel change process (internally invoking a `RequestChannelChange()`).
@@ -127,8 +127,6 @@ otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay);
  *
  * @retval OT_ERROR_NONE               Channel selection finished successfully.
  * @retval OT_ERROR_NOT_FOUND          Supported channel mask is empty, therefore could not select a channel.
- * @retval OT_ERROR_INVALID_STATE      Thread is not enabled or not enough data to select a new channel.
- * @retval OT_ERROR_DISABLED_FEATURE   `ChannelMonintor` feature is disabled by build-time configuration options.
  *
  */
 otError otChannelManagerRequestChannelSelect(otInstance *aInstance, bool aSkipQualityCheck);

@@ -33,7 +33,6 @@ import logging
 import serial
 import time
 
-
 ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta('ABC', (), {})
 logger = logging.getLogger(__name__)
 
@@ -76,7 +75,7 @@ class RfSwitchController(RfShieldController):
         return self._conn.write('{}\r\n'.format(data))
 
     def _display_string(self, string):
-        self._write('DIAGNOSTIC:DISPLAY \"{}\"'.format(string))
+        self._write('DIAGNOSTIC:DISPLAY "{}"'.format(string))
 
     def __enter__(self):
         self._conn = serial.Serial(self._port, 9600)
@@ -92,12 +91,11 @@ class RfSwitchController(RfShieldController):
             self._conn = None
 
 
-CONTROLLERS = {
-    'RF_SWITCH': RfSwitchController,
-}
+CONTROLLERS = {'RF_SWITCH': RfSwitchController}
 
 
 def get_rf_shield_controller(shield_type, params):
     if shield_type in CONTROLLERS:
         return CONTROLLERS[shield_type](**params)
-    logger.exception('Unknown RF shield controller type: {}'.format(shield_type))
+    logger.exception(
+        'Unknown RF shield controller type: {}'.format(shield_type))

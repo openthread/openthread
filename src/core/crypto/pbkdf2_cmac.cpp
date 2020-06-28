@@ -33,12 +33,13 @@
 
 #include "pbkdf2_cmac.h"
 
+#include <string.h>
+
 #include "common/debug.hpp"
-#include "utils/wrap_string.h"
 
 #include <mbedtls/cmac.h>
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_FTD
 
 void otPbkdf2Cmac(const uint8_t *aPassword,
                   uint16_t       aPasswordLen,
@@ -59,8 +60,13 @@ void otPbkdf2Cmac(const uint8_t *aPassword,
     uint16_t     useLen       = 0;
 
     memcpy(prfInput, aSalt, aSaltLen);
-    assert(aIterationCounter % 2 == 0);
+    OT_ASSERT(aIterationCounter % 2 == 0);
     aIterationCounter /= 2;
+
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    // limit iterations to avoid OSS-Fuzz timeouts
+    aIterationCounter = 2;
+#endif
 
     while (keyLen)
     {
@@ -105,4 +111,4 @@ void otPbkdf2Cmac(const uint8_t *aPassword,
     }
 }
 
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD

@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the OpenThread UDP API.
+ *   This file implements the OpenThread DNSv6 API.
  */
 
 #include "openthread-core-config.h"
@@ -36,14 +36,15 @@
 #include <openthread/dns.h>
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 using namespace ot;
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsResponseHandler aHandler, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetDnsClient().Query(aQuery, aHandler, aContext);
+    return instance.Get<Dns::Client>().Query(aQuery, aHandler, aContext);
 }
 #endif

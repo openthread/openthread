@@ -32,12 +32,12 @@
  *   This file includes platform abstractions for miscellaneous behaviors.
  */
 
-#ifndef OT_PLATFORM_MISC_H
-#define OT_PLATFORM_MISC_H 1
+#ifndef OPENTHREAD_PLATFORM_MISC_H_
+#define OPENTHREAD_PLATFORM_MISC_H_
 
 #include <stdint.h>
 
-#include <openthread/types.h>
+#include <openthread/instance.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,7 +67,8 @@ void otPlatReset(otInstance *aInstance);
  * These are in the same order as the Spinel reset reason codes.
  *
  */
-typedef enum {
+typedef enum
+{
     OT_PLAT_RESET_REASON_POWER_ON = 0,
     OT_PLAT_RESET_REASON_EXTERNAL = 1,
     OT_PLAT_RESET_REASON_SOFTWARE = 2,
@@ -120,7 +121,8 @@ void otPlatWakeHost(void);
  * After a reset, the MCU power state MUST be `OT_PLAT_POWER_STATE_ON`.
  *
  */
-typedef enum {
+typedef enum
+{
     /**
      * NCP's MCU stays on and active all the time.
      *
@@ -196,8 +198,23 @@ otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance);
  *
  */
 
+#if defined(OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE) && OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+/**
+ * This function gets the name and index of the platform's network interface (if it exists).
+ *
+ * @param[in]  aInstance      A pointer to OpenThread instance.
+ * @param[out] outNetIfName   A pointer for the returned network interface name.
+ * @param[out] outNetIfIndex  A pointer for the returned network interface index (i.e., if_nametoindex).
+ *
+ * @retval OT_ERROR_NONE     Successfully returned the network interface and index.
+ * @retval OT_ERROR_FAILED   The network interface is not enabled or is unknown.
+ *
+ */
+otError otPlatGetNetif(otInstance *aInstance, const char **outNetIfName, unsigned int *outNetIfIndex);
+#endif
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
 
-#endif // OT_PLATFORM_MISC_H
+#endif // OPENTHREAD_PLATFORM_MISC_H_

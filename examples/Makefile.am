@@ -35,27 +35,16 @@ DIST_SUBDIRS                            = \
     apps                                  \
     $(NULL)
 
-EXTRA_DIST                              = \
-    drivers                               \
-    $(NULL)
-
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
     platforms                             \
     $(NULL)
 
-if OPENTHREAD_EXAMPLES
+if OPENTHREAD_ENABLE_EXAMPLES
 SUBDIRS                                += \
     apps                                  \
     $(NULL)
 endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    platforms                             \
-    apps                                  \
-    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

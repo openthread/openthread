@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,11 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
-import node
+import thread_cert
 
 LEADER = 1
 ROUTER1 = 2
@@ -41,50 +40,40 @@ SED = 5
 
 MTDS = [ED, SED]
 
-class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1,6):
-            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[SED].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER2].set_panid(0xface)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[ED].set_panid(0xface)
-        self.nodes[ED].set_mode('rsn')
-        self.nodes[ED].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ED].enable_whitelist()
-
-        self.nodes[SED].set_panid(0xface)
-        self.nodes[SED].set_mode('s')
-        self.nodes[SED].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[SED].enable_whitelist()
-        self.nodes[SED].set_timeout(3)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1, ROUTER2]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, ED, SED]
+        },
+        ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        ED: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1]
+        },
+        SED: {
+            'is_mtd': True,
+            'mode': 's',
+            'panid': 0xface,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [ROUTER1]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
@@ -110,6 +99,10 @@ class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
         self.nodes[LEADER].add_prefix('2001:2:0:1::/64', 'paros', 'med')
         self.nodes[LEADER].add_route('2001:2:0:2::/64', 'med')
         self.nodes[LEADER].register_netdata()
+
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
+
         self.simulator.go(10)
 
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros', 'low')
@@ -134,6 +127,7 @@ class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
         self.simulator.go(10)
 
         self.assertFalse(self.nodes[SED].ping('2007::1'))
+
 
 if __name__ == '__main__':
     unittest.main()

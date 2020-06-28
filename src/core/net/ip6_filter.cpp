@@ -37,6 +37,8 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/logging.hpp"
+#include "meshcop/meshcop.hpp"
 #include "net/ip6.hpp"
 #include "net/tcp.hpp"
 #include "net/udp6.hpp"
@@ -46,6 +48,7 @@ namespace ot {
 namespace Ip6 {
 
 Filter::Filter(void)
+    : mAllowNativeCommissioner(true)
 {
     memset(mUnsecurePorts, 0, sizeof(mUnsecurePorts));
 }
@@ -65,16 +68,16 @@ bool Filter::Accept(Message &aMessage) const
     }
 
     // Read IPv6 header
-    VerifyOrExit(sizeof(ip6) == aMessage.Read(0, sizeof(ip6), &ip6));
+    VerifyOrExit(sizeof(ip6) == aMessage.Read(0, sizeof(ip6), &ip6), OT_NOOP);
 
     // Allow only link-local unicast or multicast
-    VerifyOrExit(ip6.GetDestination().IsLinkLocal() || ip6.GetDestination().IsLinkLocalMulticast());
+    VerifyOrExit(ip6.GetDestination().IsLinkLocal() || ip6.GetDestination().IsLinkLocalMulticast(), OT_NOOP);
 
     switch (ip6.GetNextHeader())
     {
     case kProtoUdp:
         // Read the UDP header and get the dst port
-        VerifyOrExit(sizeof(udp) == aMessage.Read(sizeof(ip6), sizeof(udp), &udp));
+        VerifyOrExit(sizeof(udp) == aMessage.Read(sizeof(ip6), sizeof(udp), &udp), OT_NOOP);
 
         dstport = udp.GetDestinationPort();
 
@@ -84,11 +87,16 @@ bool Filter::Accept(Message &aMessage) const
             ExitNow(rval = true);
         }
 
+        // Allow native commissioner traffic
+        if (mAllowNativeCommissioner && dstport == MeshCoP::kBorderAgentUdpPort)
+        {
+            ExitNow(rval = true);
+        }
         break;
 
     case kProtoTcp:
         // Read the TCP header and get the dst port
-        VerifyOrExit(sizeof(tcp) == aMessage.Read(sizeof(ip6), sizeof(tcp), &tcp));
+        VerifyOrExit(sizeof(tcp) == aMessage.Read(sizeof(ip6), sizeof(tcp), &tcp), OT_NOOP);
 
         dstport = tcp.GetDestinationPort();
 
@@ -116,6 +124,8 @@ otError Filter::AddUnsecurePort(uint16_t aPort)
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(aPort != 0, error = OT_ERROR_INVALID_ARGS);
+
     for (int i = 0; i < kMaxUnsecurePorts; i++)
     {
         if (mUnsecurePorts[i] == aPort)
@@ -129,6 +139,7 @@ otError Filter::AddUnsecurePort(uint16_t aPort)
         if (mUnsecurePorts[i] == 0)
         {
             mUnsecurePorts[i] = aPort;
+            otLogInfoIp6("Added unsecure port %d", aPort);
             ExitNow();
         }
     }
@@ -143,6 +154,8 @@ otError Filter::RemoveUnsecurePort(uint16_t aPort)
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(aPort != 0, error = OT_ERROR_INVALID_ARGS);
+
     for (int i = 0; i < kMaxUnsecurePorts; i++)
     {
         if (mUnsecurePorts[i] == aPort)
@@ -156,6 +169,7 @@ otError Filter::RemoveUnsecurePort(uint16_t aPort)
 
             // Clear the last port entry.
             mUnsecurePorts[i] = 0;
+            otLogInfoIp6("Removed unsecure port %d", aPort);
             ExitNow();
         }
     }
@@ -164,6 +178,26 @@ otError Filter::RemoveUnsecurePort(uint16_t aPort)
 
 exit:
     return error;
+}
+
+bool Filter::IsUnsecurePort(uint16_t aPort)
+{
+    bool found = false;
+
+    for (int i = 0; i < kMaxUnsecurePorts; i++)
+    {
+        if (mUnsecurePorts[i] == aPort)
+        {
+            found = true;
+            break;
+        }
+    }
+    return found;
+}
+
+void Filter::RemoveAllUnsecurePorts(void)
+{
+    memset(mUnsecurePorts, 0, sizeof(mUnsecurePorts));
 }
 
 const uint16_t *Filter::GetUnsecurePorts(uint8_t &aNumEntries) const

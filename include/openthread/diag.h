@@ -29,13 +29,13 @@
 /**
  * @file
  * @brief
- *  This file defines the top-level functions for the OpenThread diagnostics library.
+ *   This file includes the OpenThread API for Factory Diagnostics.
  */
 
 #ifndef OPENTHREAD_DIAG_H_
 #define OPENTHREAD_DIAG_H_
 
-#include <openthread/types.h>
+#include <openthread/instance.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,41 +52,46 @@ extern "C" {
  */
 
 /**
- * Initialize the diagnostics module.
+ * This function processes a factory diagnostics command line.
  *
- * @param[in]  aInstance  A pointer to the OpenThread instance.
+ * @param[in]   aInstance       A pointer to an OpenThread instance.
+ * @param[in]   aArgsLength     The number of elements in @p aArgs.
+ * @param[in]   aArgs           An array of arguments.
+ * @param[out]  aOutput         The diagnostics execution result.
+ * @param[in]   aOutputMaxLen   The output buffer size.
+ *
+ * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arguments provided.
+ * @retval  OT_ERROR_NONE               The command is successfully process.
+ * @retval  OT_ERROR_NOT_IMPLEMENTED    The command is not supported.
  *
  */
-void otDiagInit(otInstance *aInstance);
+otError otDiagProcessCmd(otInstance *aInstance,
+                         uint8_t     aArgsLength,
+                         char *      aArgs[],
+                         char *      aOutput,
+                         size_t      aOutputMaxLen);
 
 /**
  * This function processes a factory diagnostics command line.
  *
- * @param[in]  aArgCount   The argument counter of diagnostics command line.
- * @param[in]  aArgVector  The argument vector of diagnostics command line.
- *
- * @returns A pointer to the output string.
- *
- */
-const char *otDiagProcessCmd(int aArgCount, char *aArgVector[]);
-
-/**
- * This function processes a factory diagnostics command line.
- *
- * @param[in]  aString  A NULL-terminated input string.
- *
- * @returns A pointer to the output string.
+ * @param[in]   aInstance       A pointer to an OpenThread instance.
+ * @param[in]   aString         A NULL-terminated input string.
+ * @param[out]  aOutput         The diagnostics execution result.
+ * @param[in]   aOutputMaxLen   The output buffer size.
  *
  */
-const char *otDiagProcessCmdLine(const char *aString);
+void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen);
 
 /**
  * This function indicates whether or not the factory diagnostics mode is enabled.
  *
- * @returns TRUE if factory diagnostics mode is enabled, FALSE otherwise.
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval TRUE if factory diagnostics mode is enabled
+ * @retval FALSE if factory diagnostics mode is disabled.
  *
  */
-bool otDiagIsEnabled(void);
+bool otDiagIsEnabled(otInstance *aInstance);
 
 /**
  * @}

@@ -1,0 +1,183 @@
+#!/bin/bash
+#
+#  Copyright (c) 2018, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+set -e
+set -x
+
+die()
+{
+    echo " *** ERROR: " "$*"
+    exit 1
+}
+
+at_exit()
+{
+    EXIT_CODE=$?
+
+    sudo killall expect || true
+    killall ot-ctl || true
+    killall ot-daemon || true
+    killall socat || true
+
+    exit $EXIT_CODE
+}
+
+build()
+{
+    make -f examples/Makefile-simulation
+    make -f src/posix/Makefile-posix PLATFORM_NETIF=1 PLATFORM_UDP=1 UDP_FORWARD=0 MAX_POWER_TABLE=1
+}
+
+check()
+{
+    trap at_exit INT TERM EXIT
+
+    SOCAT_OUTPUT=/tmp/ot-socat
+    OT_OUTPUT=/tmp/ot-output
+    socat -d -d pty,raw,echo=0 pty,raw,echo=0 >/dev/null 2>$SOCAT_OUTPUT &
+    while true; do
+        if test "$(head -n2 $SOCAT_OUTPUT | wc -l)" = 2; then
+            RADIO_PTY=$(head -n1 $SOCAT_OUTPUT | grep -o '/dev/.\+')
+            CORE_PTY=$(head -n2 $SOCAT_OUTPUT | tail -n1 | grep -o '/dev/.\+')
+            break
+        fi
+        echo 'Waiting for socat ready...'
+        sleep 1
+    done
+    echo 'RADIO_PTY' "$RADIO_PTY"
+    echo 'CORE_PTY' "$CORE_PTY"
+
+    RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-rcp)"
+
+    # shellcheck disable=SC2094
+    $RADIO_NCP_PATH 1 >"$RADIO_PTY" <"$RADIO_PTY" &
+
+    # Cover setting a valid network interface name.
+    readonly VALID_NETIF_NAME="wan$(date +%H%M%S)"
+
+    RADIO_URL="spinel+hdlc+uart://${CORE_PTY}?max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26"
+
+    if [[ ${DAEMON} == 1 ]]; then
+        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" -I "${VALID_NETIF_NAME}" "${RADIO_URL}" &
+        sleep 1
+        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl)"
+        sudo "${OT_CLI_CMD}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
+
+        # verify this reset and factoryreset end immediately
+        sudo "${OT_CLI_CMD}" reset
+        # sleep a while for daemon ready
+        sleep 2
+        sudo "${OT_CLI_CMD}" factoryreset
+    else
+        OT_CLI="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli)"
+        sudo "${OT_CLI}" -I "${VALID_NETIF_NAME}" -n "${RADIO_URL}"
+
+        # Cover setting a too long(max is 15 characters) network interface name.
+        # Expect exit code to be 2(OT_EXIT_INVALID_ARGUMENTS).
+        readonly INVALID_NETIF_NAME="wan0123456789123"
+        sudo "${OT_CLI}" -I "${INVALID_NETIF_NAME}" -n "${RADIO_URL}" || test $? = 2
+
+        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) ${RADIO_URL}"
+    fi
+
+    sudo expect <<EOF | tee "${OT_OUTPUT}" &
+spawn ${OT_CLI_CMD}
+send "panid 0xface\r\n"
+expect "Done"
+send "ifconfig up\r\n"
+expect "Done"
+send "thread start\r\n"
+expect "Done"
+sleep 5
+send "state\r\n"
+expect "leader"
+expect "Done"
+send "extaddr\r\n"
+expect "Done"
+send "ipaddr\r\n"
+expect "Done"
+send "coex\r\n"
+expect "Done"
+wait
+EOF
+
+    # wait until the node becomes leader
+    while true; do
+        sleep 5
+        if grep -q leader $OT_OUTPUT; then
+            break
+        else
+            echo 'Still waiting for leader'
+        fi
+    done
+
+    netstat -an | grep -q 61631 || die 'TMF port is not available!'
+
+    extaddr=$(awk '/extaddr/{getline; print}' $OT_OUTPUT | tr -d '\r\n')
+    echo "Extended address is: ${extaddr}"
+
+    if [[ ${DAEMON} == 1 ]]; then
+        sudo killall -9 expect || true
+        sudo killall -9 ot-ctl || true
+        NETIF_INDEX=$(ip link show "${VALID_NETIF_NAME}" | cut -f 1 -d ":" | head -n 1)
+        sudo PATH="$(dirname "${OT_CLI_CMD}"):${PATH}" \
+            python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" \
+            || die 'multicast group join failed'
+    fi
+
+    LEADER_ALOC=fdde:ad00:beef::ff:fe00:fc00
+    # Retrievie extended address through network diagnostic get
+    coap_response=$(echo -n '120100' | xxd -r -p | coap-client -m POST coap://[${LEADER_ALOC}]:61631/d/dg -f- | xxd -p | grep 0008)
+    echo "CoAP response is: ${coap_response}"
+
+    # Verify CoAP response contains the extended address
+    if [[ ${coap_response} == *${extaddr}* ]]; then
+        echo 'Success'
+    else
+        die 'Failed to get extended address'
+    fi
+}
+
+main()
+{
+    case $1 in
+        build)
+            build
+            ;;
+        check)
+            check
+            ;;
+        *)
+            build
+            check
+            ;;
+    esac
+}
+
+main "$@"

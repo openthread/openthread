@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,11 +27,9 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import config
-import node
+import thread_cert
 
 LEADER = 1
 ROUTER1 = 2
@@ -39,54 +37,39 @@ REED0 = 3
 REED1 = 4
 ED = 5
 
-class Cert_6_1_4_REEDAttachConnectivity(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1,6):
-            self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[REED0].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[REED1].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[REED1].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[REED0].set_panid(0xface)
-        self.nodes[REED0].set_mode('rsdn')
-        self.nodes[REED0].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[REED0].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[REED0].set_router_upgrade_threshold(0)
-        self.nodes[REED0].enable_whitelist()
-
-        self.nodes[REED1].set_panid(0xface)
-        self.nodes[REED1].set_mode('rsdn')
-        self.nodes[REED1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[REED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[REED1].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[REED1].set_router_upgrade_threshold(0)
-        self.nodes[REED1].enable_whitelist()
-
-        self.nodes[ED].set_panid(0xface)
-        self.nodes[ED].set_mode('rsn')
-        self.nodes[ED].add_whitelist(self.nodes[REED0].get_addr64())
-        self.nodes[ED].add_whitelist(self.nodes[REED1].get_addr64())
-        self.nodes[ED].enable_whitelist()
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+class Cert_6_1_4_REEDAttachConnectivity(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1, REED0, REED1]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, REED1]
+        },
+        REED0: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_upgrade_threshold': 0,
+            'whitelist': [LEADER, ED]
+        },
+        REED1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_upgrade_threshold': 0,
+            'whitelist': [LEADER, ROUTER1, ED]
+        },
+        ED: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [REED0, REED1]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
@@ -111,6 +94,7 @@ class Cert_6_1_4_REEDAttachConnectivity(unittest.TestCase):
         self.simulator.go(10)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
         self.assertEqual(self.nodes[REED1].get_state(), 'router')
+
 
 if __name__ == '__main__':
     unittest.main()

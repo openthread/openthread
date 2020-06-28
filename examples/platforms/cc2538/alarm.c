@@ -36,7 +36,6 @@
 #include <stdint.h>
 
 #include <openthread/config.h>
-#include <openthread/openthread.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
@@ -66,7 +65,8 @@ uint32_t otPlatAlarmMilliGetNow(void)
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sAlarmT0   = t0;
     sAlarmDt   = dt;
     sIsRunning = true;
@@ -74,7 +74,8 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sIsRunning = false;
 }
 
@@ -106,7 +107,7 @@ void cc2538AlarmProcess(otInstance *aInstance)
         {
             sIsRunning = false;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
             if (otPlatDiagModeGet())
             {

@@ -30,6 +30,14 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES = libopenthread-kw41z.a
 
+# Do not enable -Wundef for this platform
+override CFLAGS                              := $(filter-out -Wundef,$(CFLAGS))
+override CXXFLAGS                            := $(filter-out -Wundef,$(CXXFLAGS))
+
+# Do not enable -Wcast-align for this platform
+override CFLAGS                              := $(filter-out -Wcast-align,$(CFLAGS))
+override CXXFLAGS                            := $(filter-out -Wcast-align,$(CXXFLAGS))
+
 libopenthread_kw41z_a_CPPFLAGS                                                                     = \
     -DCPU_MKW41Z512VHT4                                                                              \
     -I$(top_srcdir)/include                                                                          \
@@ -51,12 +59,15 @@ libopenthread_kw41z_a_CPPFLAGS                                                  
 PLATFORM_SOURCES                                                                                   = \
     alarm.c                                                                                          \
     diag.c                                                                                           \
+    entropy.c                                                                                        \
     flash.c                                                                                          \
     logging.c                                                                                        \
     misc.c                                                                                           \
-    platform.c                                                                                       \
+    openthread-core-kw41z-config.h                                                                   \
+    openthread-core-kw41z-config-check.h                                                             \
+    platform-kw41z.h                                                                                 \
     radio.c                                                                                          \
-    random.c                                                                                         \
+    system.c                                                                                         \
     uart.c                                                                                           \
     $(NULL)
 
@@ -89,15 +100,6 @@ libopenthread_kw41z_a_SOURCES                                                   
     $(NULL)
 
 libopenthread_kw41z_a_SOURCES                                                                     += \
-    $(PLATFORM_SOURCES)                                                                              \
-    $(NULL)
-
-noinst_HEADERS                                                                                     = \
-    platform-kw41z.h                                                                                 \
-    @top_builddir@/third_party/nxp/MKW41Z4/clock_config.h                                            \
-    $(NULL)
-
-PRETTY_FILES                                                                                       = \
     $(PLATFORM_SOURCES)                                                                              \
     $(NULL)
 

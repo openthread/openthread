@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       i2s.h
-*  Revised:        2017-04-20 16:29:17 +0200 (Thu, 20 Apr 2017)
-*  Revision:       48817
+*  Revised:        2017-05-23 12:08:52 +0200 (Tue, 23 May 2017)
+*  Revision:       49048
 *
 *  Description:    Defines and prototypes for the I2S.
 *
@@ -498,14 +498,17 @@ extern void I2SPointerSet(uint32_t ui32Base, bool bInput, void * pNextPointer);
 
 //*****************************************************************************
 //
-//! \brief Registers an interrupt handler for an I2S interrupt.
+//! \brief Registers an interrupt handler for an I2S interrupt in the dynamic interrupt table.
 //!
-//! This function does the actual registering of the interrupt handler. This
-//! function enables the global interrupt in the interrupt controller; specific
-//! I2S interrupts must be enabled via \ref I2SIntEnable(). It is the interrupt
+//! \note Only use this function if you want to use the dynamic vector table (in SRAM)!
+//!
+//! This function registers a function as the interrupt handler for a specific
+//! interrupt and enables the corresponding interrupt in the interrupt controller.
+//!
+//! Specific I2S interrupts must be enabled via \ref I2SIntEnable(). It is the interrupt
 //! handler's responsibility to clear the interrupt source.
 //!
-//! \param ui32Base is the base address of the I2S port.
+//! \param ui32Base is the base address of the I2S module.
 //! \param pfnHandler is a pointer to the function to be called when the
 //! I2S interrupt occurs.
 //!
@@ -530,7 +533,7 @@ I2SIntRegister(uint32_t ui32Base, void (*pfnHandler)(void))
 
 //*****************************************************************************
 //
-//! \brief Unregisters an interrupt handler for a I2S interrupt.
+//! \brief Unregisters an interrupt handler for a I2S interrupt in the dynamic interrupt table.
 //!
 //! This function does the actual unregistering of the interrupt handler. It
 //! clears the handler to be called when an I2S interrupt occurs.  This

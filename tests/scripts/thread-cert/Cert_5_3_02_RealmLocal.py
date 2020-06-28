@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,56 +27,44 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import node
 import config
-import command
+import thread_cert
 
 LEADER = 1
 ROUTER1 = 2
 DUT_ROUTER2 = 3
 SED1 = 4
 
-class Cert_5_3_2_RealmLocal(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1,5):
-            self.nodes[i] = node.Node(i, (i == SED1), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[DUT_ROUTER2].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[DUT_ROUTER2].set_panid(0xface)
-        self.nodes[DUT_ROUTER2].set_mode('rsdn')
-        self.nodes[DUT_ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[DUT_ROUTER2].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[DUT_ROUTER2].enable_whitelist()
-        self.nodes[DUT_ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[SED1].set_panid(0xface)
-        self.nodes[SED1].set_mode('sn')
-        self.nodes[SED1].add_whitelist(self.nodes[DUT_ROUTER2].get_addr64())
-        self.nodes[SED1].enable_whitelist()
-        self.nodes[SED1].set_timeout(3)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, DUT_ROUTER2]
+        },
+        DUT_ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [ROUTER1, SED1]
+        },
+        SED1: {
+            'is_mtd': True,
+            'mode': 'sn',
+            'panid': 0xface,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [DUT_ROUTER2]
+        },
+    }
 
     def test(self):
         # 1
@@ -97,12 +85,15 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         # 2 & 3
-        mleid = self.nodes[DUT_ROUTER2].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        mleid = self.nodes[DUT_ROUTER2].get_ip6_address(
+            config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[LEADER].ping(mleid, size=256))
         self.assertTrue(self.nodes[LEADER].ping(mleid))
 
         # 4 & 5
-        self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2, size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff03::1',
+                                                num_responses=2,
+                                                size=256))
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertFalse(sed_messages.contains_icmp_message())
 
@@ -111,7 +102,9 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.assertFalse(sed_messages.contains_icmp_message())
 
         # 6 & 7
-        self.assertTrue(self.nodes[LEADER].ping('ff03::2', num_responses=2, size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff03::2',
+                                                num_responses=2,
+                                                size=256))
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertFalse(sed_messages.contains_icmp_message())
 
@@ -120,15 +113,23 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.assertFalse(sed_messages.contains_icmp_message())
 
         # 8
-        self.assertTrue(self.nodes[LEADER].ping(config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS, num_responses=3, size=256))
+        self.assertTrue(self.nodes[LEADER].ping(
+            config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
+            num_responses=3,
+            size=256,
+        ))
         self.simulator.go(2)
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertTrue(sed_messages.contains_icmp_message())
 
-        self.assertTrue(self.nodes[LEADER].ping(config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS, num_responses=3))
+        self.assertTrue(self.nodes[LEADER].ping(
+            config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
+            num_responses=3,
+        ))
         self.simulator.go(2)
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertTrue(sed_messages.contains_icmp_message())
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -43,13 +43,13 @@
 
 #include "utils/code_utils.h"
 
-#ifdef OPENTHREAD_TARGET_LINUX
+#ifdef __linux__
 #include <sys/prctl.h>
 int   posix_openpt(int oflag);
 int   grantpt(int fildes);
 int   unlockpt(int fd);
 char *ptsname(int fd);
-#endif // OPENTHREAD_TARGET_LINUX
+#endif // __linux__
 
 static uint8_t        s_receive_buffer[128];
 static const uint8_t *s_write_buffer;
@@ -72,12 +72,13 @@ static void restore_stdout_termios(void)
 
 void platformDummy(void *dummyPointer)
 {
-    (void)dummyPointer;
+    OT_UNUSED_VARIABLE(dummyPointer);
 }
 
 static void cbKeyPressed(uint8_t Param)
 {
-    (void)Param;
+    OT_UNUSED_VARIABLE(Param);
+
     qorvoAlarmScheduleEventArg(0, platformDummy, (void *)&s_in_fd);
 }
 
@@ -103,7 +104,7 @@ otError otPlatUartEnable(void)
     otError        error = OT_ERROR_NONE;
     struct termios termios;
 
-#ifdef OPENTHREAD_TARGET_LINUX
+#ifdef __linux__
     // Ensure we terminate this process if the
     // parent process dies.
     prctl(PR_SET_PDEATHSIG, SIGHUP);
@@ -204,6 +205,11 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 
 exit:
     return error;
+}
+
+otError otPlatUartFlush(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 void platformUartProcess(void)

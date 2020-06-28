@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       prcm.c
-*  Revised:        2017-04-26 18:27:45 +0200 (Wed, 26 Apr 2017)
-*  Revision:       48852
+*  Revised:        2017-07-19 10:58:53 +0200 (Wed, 19 Jul 2017)
+*  Revision:       49363
 *
 *  Description:    Driver for the PRCM.
 *

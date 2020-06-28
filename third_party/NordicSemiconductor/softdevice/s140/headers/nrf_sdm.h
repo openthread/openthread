@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -67,13 +67,16 @@ extern "C" {
 #endif
 
 /** @brief The major version for the SoftDevice binary distributed with this header file. */
-#define SD_MAJOR_VERSION  (6)
+#define SD_MAJOR_VERSION  (7)
 
 /** @brief The minor version for the SoftDevice binary distributed with this header file. */
 #define SD_MINOR_VERSION  (0)
 
 /** @brief The bugfix version for the SoftDevice binary distributed with this header file. */
-#define SD_BUGFIX_VERSION (0)
+#define SD_BUGFIX_VERSION (1)
+
+/** @brief The SoftDevice variant of this firmware. */
+#define SD_VARIANT_ID 140
 
 /** @brief The full version number for the SoftDevice binary this header file was distributed
  *         with, as a decimal number in the form Mmmmbbb, where:
@@ -133,6 +136,12 @@ the start of the SoftDevice (without MBR)*/
  *         address. Use @ref MBR_SIZE as the argument when the SoftDevice is installed just above
  *         the MBR (the usual case). */
 #define SD_SIZE_GET(baseaddr) (*((uint32_t *) ((baseaddr) + SD_SIZE_OFFSET)))
+
+/** @brief Defines the amount of flash that is used by the SoftDevice.
+ *         Add @ref MBR_SIZE to find the first available flash address when the SoftDevice is installed
+ *         just above the MBR (the usual case).
+ */
+#define SD_FLASH_SIZE 0x26000
 
 /** @brief Defines a macro for retrieving the actual FWID value from a given base address. Use
  *         @ref MBR_SIZE as the argument when the SoftDevice is installed just above the MBR (the usual
@@ -264,6 +273,10 @@ typedef struct
  * The protocol stack will be in an undefined state when this happens and the only way to recover will be to
  * perform a reset, using e.g. CMSIS NVIC_SystemReset().
  * If the application returns from the fault handler the SoftDevice will call NVIC_SystemReset().
+ *
+ * @note It is recommended to either perform a reset in the fault handler or to let the SoftDevice reset the device.
+ *       Otherwise SoC peripherals may behave in an undefined way. For example, the RADIO peripherial may
+ *       continously transmit packets.
  *
  * @note This callback is executed in HardFault context, thus SVC functions cannot be called from the fault callback.
  *

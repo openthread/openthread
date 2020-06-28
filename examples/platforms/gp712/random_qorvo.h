@@ -36,7 +36,6 @@
 #define RANDOM_QORVO_H_
 
 #include <stdint.h>
-#include <openthread/types.h>
 
 /**
  * This function initializes the random number service used by OpenThread.
@@ -53,5 +52,4 @@ void qorvoRandomInit(void);
  */
 void qorvoRandomGet(uint8_t *aOutput, uint8_t aOutputLength);
 
-
-#endif  // RANDOM_QORVO_H_
+#endif // RANDOM_QORVO_H_

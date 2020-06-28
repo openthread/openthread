@@ -27,7 +27,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-
 import json
 import logging
 
@@ -41,9 +40,7 @@ class HistoryHelper(object):
             self.data = json.load(open(filename, 'r'))
         except Exception:
             self.logger.exception('file may not exists')
-            self.data = {
-                'golden_device_black_list': []
-            }
+            self.data = {'golden_device_black_list': []}
             self.save()
 
     def save(self):

@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       flash.h
-*  Revised:        2017-04-26 18:27:45 +0200 (Wed, 26 Apr 2017)
-*  Revision:       48852
+*  Revised:        2017-06-05 12:13:49 +0200 (Mon, 05 Jun 2017)
+*  Revision:       49096
 *
 *  Description:    Defines and prototypes for the Flash driver.
 *
@@ -461,12 +461,15 @@ FlashCheckFsmForReady(void)
 
 //*****************************************************************************
 //
-//! \brief Registers an interrupt handler for the flash interrupt.
+//! \brief Registers an interrupt handler for the flash interrupt in the dynamic interrupt table.
 //!
-//! This function does the actual registering of the interrupt handler. This
-//! function enables the global interrupt in the interrupt controller; specific
-//! FLASH interrupts must be enabled via \ref FlashIntEnable(). It is the interrupt
-//! handler's responsibility to clear the interrupt source.
+//! \note Only use this function if you want to use the dynamic vector table (in SRAM)!
+//!
+//! This function registers a function as the interrupt handler for a specific
+//! interrupt and enables the corresponding interrupt in the interrupt controller.
+//!
+//! Specific FLASH interrupts must be enabled via \ref FlashIntEnable(). It is the
+//! interrupt handler's responsibility to clear the interrupt source.
 //!
 //! \param pfnHandler is a pointer to the function to be called when the flash
 //! interrupt occurs.
@@ -489,7 +492,7 @@ FlashIntRegister(void (*pfnHandler)(void))
 
 //*****************************************************************************
 //
-//! \brief Unregisters the interrupt handler for the flash interrupt.
+//! \brief Unregisters the interrupt handler for the flash interrupt in the dynamic interrupt table.
 //!
 //! This function does the actual unregistering of the interrupt handler. It
 //! clears the handler to be called when a FLASH interrupt occurs. This

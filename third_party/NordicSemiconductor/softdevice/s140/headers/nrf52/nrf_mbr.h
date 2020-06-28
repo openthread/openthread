@@ -64,8 +64,21 @@ extern "C" {
 #define MBR_PAGE_SIZE_IN_WORDS  (1024)
 
 /** @brief The size that must be reserved for the MBR when a SoftDevice is written to flash.
-This is the offset where the first byte of the SoftDevice hex file is written.*/
+This is the offset where the first byte of the SoftDevice hex file is written. */
 #define MBR_SIZE                (0x1000)
+
+/** @brief Location (in the flash memory) of the bootloader address. */
+#define MBR_BOOTLOADER_ADDR      (0xFF8)
+
+/** @brief Location (in UICR) of the bootloader address. */
+#define MBR_UICR_BOOTLOADER_ADDR (&(NRF_UICR->NRFFW[0]))
+
+/** @brief Location (in the flash memory) of the address of the MBR parameter page. */
+#define MBR_PARAM_PAGE_ADDR      (0xFFC)
+
+/** @brief Location (in UICR) of the address of the MBR parameter page. */
+#define MBR_UICR_PARAM_PAGE_ADDR (&(NRF_UICR->NRFFW[1]))
+
 
 /** @} */
 
@@ -129,25 +142,29 @@ typedef struct
 
 /**@brief This command copies a new BootLoader.
  *
- * With this command, destination of BootLoader is always the address written in
- * NRF_UICR->BOOTADDR.
+ * The MBR assumes that either @ref MBR_BOOTLOADER_ADDR or @ref MBR_UICR_BOOTLOADER_ADDR is set to
+ * the address where the bootloader will be copied. If both addresses are set, the MBR will prioritize
+ * @ref MBR_BOOTLOADER_ADDR.
  *
- * Destination is erased by this function.
+ * The bootloader destination is erased by this function.
  * If (destination+bl_len) is in the middle of a flash page, that whole flash page will be erased.
  *
- * This function will use the flash protect peripheral (BPROT or ACL) to protect the flash that is
+ * This command requires that @ref MBR_PARAM_PAGE_ADDR or @ref MBR_UICR_PARAM_PAGE_ADDR is set,
+ * see @ref sd_mbr_command.
+ *
+ * This command will use the flash protect peripheral (BPROT or ACL) to protect the flash that is
  * not intended to be written.
  *
- * On success, this function will not return. It will start the new BootLoader from reset-vector as normal.
+ * On success, this function will not return. It will start the new bootloader from reset-vector as normal.
  *
  * @retval ::NRF_ERROR_INTERNAL indicates an internal error that should not happen.
- * @retval ::NRF_ERROR_FORBIDDEN if NRF_UICR->BOOTADDR is not set.
+ * @retval ::NRF_ERROR_FORBIDDEN if the bootloader address is not set.
  * @retval ::NRF_ERROR_INVALID_LENGTH if parameters attempts to read or write outside flash area.
- * @retval ::NRF_ERROR_NO_MEM if no parameter page is provided (see SoftDevice Specification for more info)
+ * @retval ::NRF_ERROR_NO_MEM No MBR parameter page is provided. See @ref sd_mbr_command.
  */
 typedef struct
 {
-  uint32_t *bl_src;  /**< Pointer to the source of the Bootloader to be be copied.*/
+  uint32_t *bl_src;  /**< Pointer to the source of the bootloader to be be copied.*/
   uint32_t bl_len;   /**< Number of 32 bit words to copy for BootLoader. */
 } sd_mbr_command_copy_bl_t;
 
@@ -156,15 +173,22 @@ typedef struct
  * Once this function has been called, this address is where the MBR will start to forward
  * interrupts to after a reset.
  *
- * To restore default forwarding this function should be called with @ref address set to 0. The
- * MBR will then start forwarding interrupts to the address in NFR_UICR->BOOTADDR or to the
- * SoftDevice if the BOOTADDR is not set.
+ * To restore default forwarding, this function should be called with @ref address set to 0. If a
+ * bootloader is present, interrupts will be forwarded to the bootloader. If not, interrupts will
+ * be forwarded to the SoftDevice.
+ *
+ * The location of a bootloader can be specified in @ref MBR_BOOTLOADER_ADDR or
+ * @ref MBR_UICR_BOOTLOADER_ADDR. If both addresses are set, the MBR will prioritize
+ * @ref MBR_BOOTLOADER_ADDR.
+ *
+ * This command requires that @ref MBR_PARAM_PAGE_ADDR or @ref MBR_UICR_PARAM_PAGE_ADDR is set,
+ * see @ref sd_mbr_command.
  *
  * On success, this function will not return. It will reset the device.
  *
  * @retval ::NRF_ERROR_INTERNAL indicates an internal error that should not happen.
  * @retval ::NRF_ERROR_INVALID_ADDR if parameter address is outside of the flash size.
- * @retval ::NRF_ERROR_NO_MEM if no parameter page is provided (see SoftDevice Specification for more info)
+ * @retval ::NRF_ERROR_NO_MEM No MBR parameter page is provided. See @ref sd_mbr_command.
  */
 typedef struct
 {
@@ -213,19 +237,21 @@ typedef struct
  *
  * The @ref SD_MBR_COMMAND_COPY_BL and @ref SD_MBR_COMMAND_VECTOR_TABLE_BASE_SET requires
  * parameters to be retained by the MBR when resetting the IC. This is done in a separate flash
- * page provided by the application. The UICR register UICR.NRFFW[1] must be set to an address
- * corresponding to a page in the application flash space. This page will be cleared by the MBR and
- * used to store the command before reset. When the UICR.NRFFW[1] field is set the page it refers
- * to must not be used by the application. If the UICR.NRFFW[1] is set to 0xFFFFFFFF (the default)
- * MBR commands which use flash will be unavailable and return @ref NRF_ERROR_NO_MEM.
+ * page. The location of the flash page should be provided by the application in either
+ * @ref MBR_PARAM_PAGE_ADDR or @ref MBR_UICR_PARAM_PAGE_ADDR. If both addresses are set, the MBR
+ * will prioritize @ref MBR_PARAM_PAGE_ADDR. This page will be cleared by the MBR and is used to
+ * store the command before reset. When an address is specified, the page it refers to must not be
+ * used by the application. If no address is provided by the application, i.e. both
+ * @ref MBR_PARAM_PAGE_ADDR and @ref MBR_UICR_PARAM_PAGE_ADDR is 0xFFFFFFFF, MBR commands which use
+ * flash will be unavailable and return @ref NRF_ERROR_NO_MEM.
  *
  * @param[in]  param Pointer to a struct describing the command.
  *
- * @note For return values, see ::sd_mbr_command_copy_sd_t, ::sd_mbr_command_copy_bl_t,
- *       ::sd_mbr_command_compare_t, ::sd_mbr_command_vector_table_base_set_t,
- *       ::sd_mbr_command_irq_forward_address_set_t
+ * @note For a complete set of return values, see ::sd_mbr_command_copy_sd_t,
+ *       ::sd_mbr_command_copy_bl_t, ::sd_mbr_command_compare_t,
+ *       ::sd_mbr_command_vector_table_base_set_t, ::sd_mbr_command_irq_forward_address_set_t
  *
- * @retval ::NRF_ERROR_NO_MEM if UICR.NRFFW[1] is not set (i.e. is 0xFFFFFFFF).
+ * @retval ::NRF_ERROR_NO_MEM No MBR parameter page provided
  * @retval ::NRF_ERROR_INVALID_PARAM if an invalid command is given.
 */
 SVCALL(SD_MBR_COMMAND, uint32_t, sd_mbr_command(sd_mbr_command_t* param));

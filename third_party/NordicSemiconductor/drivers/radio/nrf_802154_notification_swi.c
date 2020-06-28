@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,14 +41,13 @@
 
 #include "nrf_802154.h"
 #include "nrf_802154_swi.h"
-#include "raal/nrf_raal_api.h"
 
 void nrf_802154_notification_init(void)
 {
     nrf_802154_swi_init();
 }
 
-void nrf_802154_notify_received(uint8_t * p_data, int8_t power, int8_t lqi)
+void nrf_802154_notify_received(uint8_t * p_data, int8_t power, uint8_t lqi)
 {
     nrf_802154_swi_notify_received(p_data, power, lqi);
 }
@@ -61,7 +60,7 @@ void nrf_802154_notify_receive_failed(nrf_802154_rx_error_t error)
 void nrf_802154_notify_transmitted(const uint8_t * p_frame,
                                    uint8_t       * p_ack,
                                    int8_t          power,
-                                   int8_t          lqi)
+                                   uint8_t         lqi)
 {
     nrf_802154_swi_notify_transmitted(p_frame, p_ack, power, lqi);
 }
@@ -90,4 +89,3 @@ void nrf_802154_notify_cca_failed(nrf_802154_cca_error_t error)
 {
     nrf_802154_swi_notify_cca_failed(error);
 }
-

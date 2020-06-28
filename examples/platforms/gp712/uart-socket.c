@@ -32,26 +32,26 @@
  *
  */
 
-#include "platform_qorvo.h"
 #include "alarm_qorvo.h"
+#include "platform_qorvo.h"
 #include "uart_qorvo.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
-#include <stdlib.h>
+#include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <termios.h>
 #include <unistd.h>
-#include <errno.h>
-#include <signal.h>
-#include <string.h>
 
-#include <sys/types.h>
-#include <sys/socket.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#include <netdb.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #include <pthread.h>
 
@@ -62,27 +62,28 @@
 
 #include "utils/code_utils.h"
 
-#define BUFFER_MAX_SIZE     255
+#define BUFFER_MAX_SIZE 255
 #define SOCKET_PORT 9190
-#define SOCKET_WRITE(socketInfo, buf, length)       sendto(socketInfo.socketId, (const char*)buf, length, 0, &socketInfo.addr, sizeof(socketInfo.addr))
-#define SOCKET_READ(socketId, buf, length)          recv(socketId, buf, length, 0)
+#define SOCKET_WRITE(socketInfo, buf, length) \
+    sendto(socketInfo.socketId, (const char *)buf, length, 0, &socketInfo.addr, sizeof(socketInfo.addr))
+#define SOCKET_READ(socketId, buf, length) recv(socketId, buf, length, 0)
 
 typedef struct
 {
-    uint32_t socketId;
-    bool isValid;
+    uint32_t        socketId;
+    bool            isValid;
     struct sockaddr addr;
-    pthread_t rfReadThread;
+    pthread_t       rfReadThread;
 } PlatSocket_t;
 
-PlatSocket_t   PlatSocketConnection;
-int PlatSocketPipeFd [2];
-int PlatServerSocketId;
+PlatSocket_t PlatSocketConnection;
+int          PlatSocketPipeFd[2];
+int          PlatServerSocketId;
 
 void PlatSocketRxNewConn(uint8_t id);
 void PlatSocketInit(void);
 void PlatSocketDeInit(void);
-int PlatSocketTxData(uint16_t length, uint8_t *pData, uint32_t socketId);
+int  PlatSocketTxData(uint16_t length, uint8_t *pData, uint32_t socketId);
 
 #define PLAT_UART_MAX_CHAR 1024
 
@@ -91,9 +92,9 @@ uint32_t PlatSocketId = 0;
 void PlatSocketSendInput(void *buffer)
 {
     uint8_t  len = 0;
-    uint8_t *buf = (uint8_t *) buffer;
-    len = strlen((char *)buf);
-    otPlatUartReceived((uint8_t *) buf, (uint16_t)len);
+    uint8_t *buf = (uint8_t *)buffer;
+    len          = strlen((char *)buf);
+    otPlatUartReceived((uint8_t *)buf, (uint16_t)len);
     free(buf);
     buf = 0;
     len = 0;
@@ -110,13 +111,13 @@ void PlatSocketRx(uint16_t length, const char *buffer, uint32_t socketId)
         memcpy(buf, buffer, length);
         buf[length]     = '\n';
         buf[length + 1] = 0;
-        qorvoAlarmScheduleEventArg(0, PlatSocketSendInput, (void *) buf);
+        qorvoAlarmScheduleEventArg(0, PlatSocketSendInput, (void *)buf);
     }
 }
 
 void PlatSocketClose(uint32_t socketId)
 {
-    (void)socketId;
+    OT_UNUSED_VARIABLE(socketId);
 }
 
 otError otPlatUartEnable(void)
@@ -142,11 +143,16 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 
     if (PlatSocketId)
     {
-        PlatSocketTxData(aBufLength, (uint8_t *) aBuf, PlatSocketId);
+        PlatSocketTxData(aBufLength, (uint8_t *)aBuf, PlatSocketId);
     }
 
     otPlatUartSendDone();
     return error;
+}
+
+otError otPlatUartFlush(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 void platformUartInit(void)
@@ -159,11 +165,11 @@ void platformUartProcess(void)
 
 int PlatSocketListenForClients()
 {
-    //Setup server side socket
-    int      sockfd;
-    struct   sockaddr_in serv_addr;
-    uint32_t flag = 1;
-    int      ret;
+    // Setup server side socket
+    int                sockfd;
+    struct sockaddr_in serv_addr;
+    uint32_t           flag = 1;
+    int                ret;
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     otEXPECT_ACTION(sockfd >= 0, sockfd = -1);
@@ -175,9 +181,9 @@ int PlatSocketListenForClients()
     memset(&serv_addr, 0, sizeof(serv_addr));
 
     serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(SOCKET_PORT);
-    ret = bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family      = AF_INET;
+    serv_addr.sin_port        = htons(SOCKET_PORT);
+    ret                       = bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
     otEXPECT_ACTION(ret >= 0, close(sockfd); sockfd = -1);
     ret = listen(sockfd, 10);
     otEXPECT_ACTION(ret != -1, exit(1));
@@ -187,16 +193,17 @@ exit:
 
 void PlatSocketRxSignaled(uint8_t id)
 {
-    (void)(id);
-    //Dummy callback function to flush pipe
+    OT_UNUSED_VARIABLE(id);
+
+    // Dummy callback function to flush pipe
     uint8_t readChar;
-    //Remove trigger byte from pipe
-    read(PlatSocketPipeFd [0], &readChar, 1);
+    // Remove trigger byte from pipe
+    read(PlatSocketPipeFd[0], &readChar, 1);
 }
 
 void *PlatSocketReadThread(void *pClientSocket)
 {
-    char buffer[BUFFER_MAX_SIZE];
+    char          buffer[BUFFER_MAX_SIZE];
     PlatSocket_t *clientSocket = ((PlatSocket_t *)pClientSocket);
 
     memset(buffer, 0, BUFFER_MAX_SIZE);
@@ -218,11 +225,11 @@ void *PlatSocketReadThread(void *pClientSocket)
             }
 
             {
-                uint8_t someByte = 0x12; //No functional use  only using pipe to kick main thread
+                uint8_t someByte = 0x12; // No functional use  only using pipe to kick main thread
 
                 PlatSocketRx(readLen, buffer, clientSocket->socketId);
 
-                write(PlatSocketPipeFd [1], &someByte, 1); //[1] = write fd
+                write(PlatSocketPipeFd[1], &someByte, 1); //[1] = write fd
             }
         }
     }
@@ -238,22 +245,20 @@ void *PlatSocketReadThread(void *pClientSocket)
 
 void PlatSocketRxNewConn(uint8_t id)
 {
-    //Find first non-valid client in list - add here
+    // Find first non-valid client in list - add here
     if (PlatSocketConnection.isValid == 0)
     {
-        //Add new client to client list
+        // Add new client to client list
         socklen_t len;
-        len = sizeof(PlatSocketConnection.addr);
-        int retval = accept(id, (struct sockaddr *)&PlatSocketConnection.addr, (socklen_t *) &len);
+        len        = sizeof(PlatSocketConnection.addr);
+        int retval = accept(id, (struct sockaddr *)&PlatSocketConnection.addr, (socklen_t *)&len);
 
         if (retval >= 0)
         {
             int retErr;
             PlatSocketConnection.socketId = retval;
-            retErr = pthread_create(&PlatSocketConnection.rfReadThread,
-                                    NULL,
-                                    PlatSocketReadThread,
-                                    &PlatSocketConnection);
+            retErr =
+                pthread_create(&PlatSocketConnection.rfReadThread, NULL, PlatSocketReadThread, &PlatSocketConnection);
 
             if (retErr)
             {
@@ -267,7 +272,6 @@ void PlatSocketRxNewConn(uint8_t id)
     }
     else
     {
-
         int tempfd;
         tempfd = accept(id, (struct sockaddr *)NULL, NULL);
 
@@ -292,7 +296,7 @@ void PlatSocketInit(void)
 
     // hack
     pipe(PlatSocketPipeFd);
-    qorvoPlatRegisterPollFunction(PlatSocketPipeFd [0], PlatSocketRxSignaled);
+    qorvoPlatRegisterPollFunction(PlatSocketPipeFd[0], PlatSocketRxSignaled);
 }
 
 void platformUartRestore(void)
@@ -314,7 +318,7 @@ int PlatSocketTxData(uint16_t length, uint8_t *pData, uint32_t socketId)
 {
     int result = -1;
 
-    //All sockets
+    // All sockets
     if (PlatSocketConnection.isValid)
     {
         if (PlatSocketConnection.socketId == socketId)
@@ -334,4 +338,3 @@ int PlatSocketTxData(uint16_t length, uint8_t *pData, uint32_t socketId)
 
     return result;
 }
-

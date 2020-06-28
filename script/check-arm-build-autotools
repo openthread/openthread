@@ -1,0 +1,301 @@
+#!/bin/bash
+#
+#  Copyright (c) 2020, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+set -euxo pipefail
+
+reset_source()
+{
+    rm -rf build output tmp
+}
+
+build_cc1352()
+{
+    local options=(
+        "COMMISSIONER=1"
+        "DHCP6_CLIENT=1"
+        "DHCP6_SERVER=1"
+        "DNS_CLIENT=1"
+        "JOINER=1"
+        "SLAAC=1"
+    )
+
+    reset_source
+    make -f examples/Makefile-cc1352 "${options[@]}"
+}
+
+build_cc2538()
+{
+    local options=(
+        "COMMISSIONER=1"
+        "DHCP6_CLIENT=1"
+        "DHCP6_SERVER=1"
+        "DNS_CLIENT=1"
+        "JOINER=1"
+        "SLAAC=1"
+    )
+
+    reset_source
+    make -f examples/Makefile-cc2538 "${options[@]}"
+}
+
+build_cc2650()
+{
+    reset_source
+    make -f examples/Makefile-cc2650
+}
+
+build_cc2652()
+{
+    local options=(
+        "COMMISSIONER=1"
+        "DHCP6_CLIENT=1"
+        "DHCP6_SERVER=1"
+        "DNS_CLIENT=1"
+        "JOINER=1"
+        "SLAAC=1"
+    )
+
+    reset_source
+    make -f examples/Makefile-cc2652 "${options[@]}"
+}
+
+build_jn5189()
+{
+    local options=(
+        "COMMISSIONER=1"
+        "DHCP6_CLIENT=1"
+        "DHCP6_SERVER=1"
+        "DNS_CLIENT=1"
+        "JOINER=1"
+        "SLAAC=1"
+    )
+
+    reset_source
+    make -f examples/Makefile-jn5189 "${options[@]}"
+}
+
+build_k32w061()
+{
+    local options=(
+        "COMMISSIONER=1"
+        "DHCP6_CLIENT=1"
+        "DHCP6_SERVER=1"
+        "DNS_CLIENT=1"
+        "JOINER=1"
+        "SLAAC=1"
+    )
+
+    reset_source
+    make -f examples/Makefile-k32w061 "${options[@]}"
+}
+
+build_kw41z()
+{
+    local options=(
+        "COMMISSIONER=1"
+        "DHCP6_CLIENT=1"
+        "DHCP6_SERVER=1"
+        "DNS_CLIENT=1"
+        "JOINER=1"
+        "SLAAC=1"
+    )
+
+    reset_source
+    make -f examples/Makefile-kw41z "${options[@]}"
+}
+
+build_nrf52811()
+{
+    local options=(
+        "BORDER_ROUTER=1"
+        "COAP=1"
+        "DNS_CLIENT=1"
+        "LINK_RAW=1"
+        "MAC_FILTER=1"
+        "MTD_NETDIAG=1"
+    )
+
+    # UART transport
+    reset_source
+    make -f examples/Makefile-nrf52811 "${options[@]}"
+
+    # SPI transport for NCP
+    reset_source
+    make -f examples/Makefile-nrf52811 "${options[@]}" NCP_SPI=1
+
+    # Build without transport (no CLI or NCP applications)
+    reset_source
+    make -f examples/Makefile-nrf52811 DISABLE_TRANSPORTS=1
+}
+
+build_nrf52833()
+{
+    local options=(
+        "BORDER_AGENT=1"
+        "BORDER_ROUTER=1"
+        "COAP=1"
+        "COAPS=1"
+        "COMMISSIONER=1"
+        "DHCP6_CLIENT=1"
+        "DHCP6_SERVER=1"
+        "DNS_CLIENT=1"
+        "ECDSA=1"
+        "FULL_LOGS=1"
+        "IP6_FRAGM=1"
+        "JOINER=1"
+        "LINK_RAW=1"
+        "MAC_FILTER=1"
+        "MTD_NETDIAG=1"
+        "SERVICE=1"
+        "SLAAC=1"
+        "SNTP_CLIENT=1"
+        "UDP_FORWARD=1"
+    )
+
+    # UART transport
+    reset_source
+    make -f examples/Makefile-nrf52833 "${options[@]}"
+
+    # USB transport
+    reset_source
+    make -f examples/Makefile-nrf52833 "${options[@]}" USB=1
+
+    # SPI transport for NCP
+    reset_source
+    make -f examples/Makefile-nrf52833 "${options[@]}" NCP_SPI=1
+
+    # Build without transport (no CLI or NCP applications)
+    reset_source
+    make -f examples/Makefile-nrf52833 "${options[@]}" DISABLE_TRANSPORTS=1
+}
+
+build_nrf52840()
+{
+    local options=(
+        "BORDER_AGENT=1"
+        "BORDER_ROUTER=1"
+        "COAP=1"
+        "COAPS=1"
+        "COMMISSIONER=1"
+        "DEBUG=1"
+        "DHCP6_CLIENT=1"
+        "DHCP6_SERVER=1"
+        "DNS_CLIENT=1"
+        "ECDSA=1"
+        "FULL_LOGS=1"
+        "IP6_FRAGM=1"
+        "JOINER=1"
+        "LINK_RAW=1"
+        "MAC_FILTER=1"
+        "MTD_NETDIAG=1"
+        "SERVICE=1"
+        "SLAAC=1"
+        "SNTP_CLIENT=1"
+        "UDP_FORWARD=1"
+    )
+
+    # UART transport
+    reset_source
+    make -f examples/Makefile-nrf52840 "${options[@]}"
+
+    # USB transport with bootloader e.g. to support PCA10059 dongle
+    reset_source
+    make -f examples/Makefile-nrf52840 "${options[@]}" BOOTLOADER=1 USB=1
+
+    # SPI transport for NCP
+    reset_source
+    make -f examples/Makefile-nrf52840 "${options[@]}" NCP_SPI=1
+
+    # Build without transport (no CLI or NCP applications)
+    reset_source
+    make -f examples/Makefile-nrf52840 "${options[@]}" DISABLE_TRANSPORTS=1
+
+    # Software cryptography
+    reset_source
+    make -f examples/Makefile-nrf52840 "${options[@]}" DISABLE_BUILTIN_MBEDTLS=0
+
+    # Software cryptography with threading support
+    reset_source
+    make -f examples/Makefile-nrf52840 "${options[@]}" DISABLE_BUILTIN_MBEDTLS=0 MBEDTLS_THREADING=1
+}
+
+build_qpg6095()
+{
+    local options=(
+        "COMMISSIONER=1"
+        "DHCP6_CLIENT=1"
+        "DHCP6_SERVER=1"
+        "DNS_CLIENT=1"
+        "JOINER=1"
+        "SLAAC=1"
+    )
+
+    reset_source
+    make -f examples/Makefile-qpg6095 "${options[@]}"
+}
+
+build_samr21()
+{
+    local options=(
+        "COMMISSIONER=1"
+        "DHCP6_CLIENT=1"
+        "DHCP6_SERVER=1"
+        "DNS_CLIENT=1"
+        "JOINER=1"
+        "SLAAC=1"
+    )
+
+    reset_source
+
+    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.45.0.85.zip
+    unzip -qq asf-standalone-archive-3.45.0.85.zip
+    mv xdk-asf-3.45.0 third_party/microchip/asf
+
+    make -f examples/Makefile-samr21 "${options[@]}"
+}
+
+main()
+{
+    ./bootstrap
+
+    build_cc1352
+    build_cc2538
+    build_cc2650
+    build_cc2652
+    build_jn5189
+    build_k32w061
+    build_kw41z
+    build_nrf52811
+    build_nrf52833
+    build_nrf52840
+    build_qpg6095
+    build_samr21
+}
+
+main "$@"

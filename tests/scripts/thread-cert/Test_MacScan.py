@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -30,35 +30,29 @@
 import time
 import unittest
 
-import node
+import thread_cert
 
 LEADER = 1
 ROUTER = 2
 
-class Test_MacScan(unittest.TestCase):
-    def setUp(self):
-        self.nodes = {}
-        for i in range(1,3):
-            self.nodes[i] = node.Node(i)
 
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[LEADER].set_channel(12)
-        self.nodes[LEADER].set_network_name('OpenThread')
-
-        self.nodes[ROUTER].set_panid(0xface)
-        self.nodes[ROUTER].set_mode('rsdn')
-        self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER].enable_whitelist()
-        self.nodes[ROUTER].set_channel(12)
-        self.nodes[ROUTER].set_network_name('OpenThread')
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
+class Test_MacScan(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'channel': 12,
+            'mode': 'rsdn',
+            'network_name': 'OpenThread',
+            'panid': 0xface,
+            'whitelist': [ROUTER]
+        },
+        ROUTER: {
+            'channel': 12,
+            'mode': 'rsdn',
+            'network_name': 'OpenThread',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
@@ -71,6 +65,7 @@ class Test_MacScan(unittest.TestCase):
 
         results = self.nodes[LEADER].scan()
         self.assertEqual(len(results), 16)
+
 
 if __name__ == '__main__':
     unittest.main()

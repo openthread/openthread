@@ -29,14 +29,14 @@
 #ifndef TEST_LOWPAN_HPP
 #define TEST_LOWPAN_HPP
 
-#include <openthread/openthread.h>
+#include <stdint.h>
 
+#include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "mac/mac.hpp"
 #include "net/ip6_headers.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/thread_netif.hpp"
-#include "utils/wrap_stdint.h"
 
 namespace ot {
 
@@ -61,7 +61,7 @@ public:
      */
     TestIphcVector(const char *aTestName)
     {
-        memset(this, 0, sizeof(*this));
+        memset(reinterpret_cast<void *>(this), 0, sizeof(TestIphcVector));
         mTestName              = aTestName;
         mSrcContext.mContextId = kContextUnused;
         mDstContext.mContextId = kContextUnused;
@@ -73,7 +73,7 @@ public:
      * @param aAddress Pointer to the long MAC address.
      *
      */
-    void SetMacSource(const uint8_t *aAddress) { mMacSource.SetExtended(aAddress, /* reverse */ false); }
+    void SetMacSource(const uint8_t *aAddress) { mMacSource.SetExtended(aAddress); }
 
     /**
      * This method sets short MAC source address.
@@ -89,7 +89,7 @@ public:
      * @param aAddress Pointer to the long MAC address.
      *
      */
-    void SetMacDestination(const uint8_t *aAddress) { mMacDestination.SetExtended(aAddress, /* reverse */ false); }
+    void SetMacDestination(const uint8_t *aAddress) { mMacDestination.SetExtended(aAddress); }
 
     /**
      * This method sets short MAC destination address.
@@ -110,19 +110,19 @@ public:
      * @param aDestination      String represents IPv6 destination address.
      *
      */
-    void SetIpHeader(uint32_t     aVersionClassFlow,
-                     uint16_t     aPayloadLength,
-                     Ip6::IpProto aNextHeader,
-                     uint8_t      aHopLimit,
-                     const char * aSource,
-                     const char * aDestination)
+    void SetIpHeader(uint32_t    aVersionClassFlow,
+                     uint16_t    aPayloadLength,
+                     uint8_t     aNextHeader,
+                     uint8_t     aHopLimit,
+                     const char *aSource,
+                     const char *aDestination)
     {
         mIpHeader.Init(aVersionClassFlow);
         mIpHeader.SetPayloadLength(aPayloadLength);
         mIpHeader.SetNextHeader(aNextHeader);
         mIpHeader.SetHopLimit(aHopLimit);
-        mIpHeader.GetSource().FromString(aSource);
-        mIpHeader.GetDestination().FromString(aDestination);
+        IgnoreError(mIpHeader.GetSource().FromString(aSource));
+        IgnoreError(mIpHeader.GetDestination().FromString(aDestination));
     }
 
     /**
@@ -136,19 +136,19 @@ public:
      * @param aDestination      String represents IPv6 destination address.
      *
      */
-    void SetIpTunneledHeader(uint32_t     aVersionClassFlow,
-                             uint16_t     aPayloadLength,
-                             Ip6::IpProto aNextHeader,
-                             uint8_t      aHopLimit,
-                             const char * aSource,
-                             const char * aDestination)
+    void SetIpTunneledHeader(uint32_t    aVersionClassFlow,
+                             uint16_t    aPayloadLength,
+                             uint8_t     aNextHeader,
+                             uint8_t     aHopLimit,
+                             const char *aSource,
+                             const char *aDestination)
     {
         mIpTunneledHeader.Init(aVersionClassFlow);
         mIpTunneledHeader.SetPayloadLength(aPayloadLength);
         mIpTunneledHeader.SetNextHeader(aNextHeader);
         mIpTunneledHeader.SetHopLimit(aHopLimit);
-        mIpTunneledHeader.GetSource().FromString(aSource);
-        mIpTunneledHeader.GetDestination().FromString(aDestination);
+        IgnoreError(mIpTunneledHeader.GetSource().FromString(aSource));
+        IgnoreError(mIpTunneledHeader.GetDestination().FromString(aDestination));
     }
 
     /**

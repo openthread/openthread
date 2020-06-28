@@ -31,13 +31,18 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 ot_platform_headers                     = \
     alarm-micro.h                         \
     alarm-milli.h                         \
+    ble.h                                 \
     diag.h                                \
+    flash.h                               \
+    entropy.h                             \
     memory.h                              \
     misc.h                                \
     logging.h                             \
+    otns.h                                \
     radio.h                               \
-    random.h                              \
+    time.h                                \
     uart.h                                \
+    udp.h                                 \
     spi-slave.h                           \
     settings.h                            \
     messagepool.h                         \

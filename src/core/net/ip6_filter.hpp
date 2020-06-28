@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/openthread.h>
-
 #include "common/message.hpp"
 
 namespace ot {
@@ -82,8 +80,9 @@ public:
      *
      * @param[in]  aPort  The port value.
      *
-     * @retval OT_ERROR_NONE     The port was successfully added to the allowed unsecure port list.
-     * @retval OT_ERROR_NO_BUFS  The unsecure port list is full.
+     * @retval OT_ERROR_NONE         The port was successfully added to the allowed unsecure port list.
+     * @retval OT_ERROR_INVALID_ARGS The port is invalid (value 0 is reserved for internal use).
+     * @retval OT_ERROR_NO_BUFS      The unsecure port list is full.
      *
      */
     otError AddUnsecurePort(uint16_t aPort);
@@ -93,11 +92,28 @@ public:
      *
      * @param[in]  aPort  The port value.
      *
-     * @retval OT_ERROR_NONE       The port was successfully removed from the allowed unsecure port list.
-     * @retval OT_ERROR_NOT_FOUND  The port was not found in the unsecure port list.
+     * @retval OT_ERROR_NONE         The port was successfully removed from the allowed unsecure port list.
+     * @retval OT_ERROR_INVALID_ARGS The port is invalid (value 0 is reserved for internal use).
+     * @retval OT_ERROR_NOT_FOUND    The port was not found in the unsecure port list.
      *
      */
     otError RemoveUnsecurePort(uint16_t aPort);
+
+    /**
+     * This method checks whether a port is in the unsecure port list.
+     *
+     * @param[in]  aPort  The port value.
+     *
+     * @returns Whether the given port is in the unsecure port list.
+     *
+     */
+    bool IsUnsecurePort(uint16_t aPort);
+
+    /**
+     * This method removes all ports from the allowed unsecure port list.
+     *
+     */
+    void RemoveAllUnsecurePorts(void);
 
     /**
      * This method returns a pointer to the unsecure port list.
@@ -111,12 +127,21 @@ public:
      */
     const uint16_t *GetUnsecurePorts(uint8_t &aNumEntries) const;
 
+    /**
+     * This method sets whether to allow native commissioner traffic.
+     *
+     * @param[in]   aAllow  Whether to allow native commissioner traffic.
+     *
+     */
+    void AllowNativeCommissioner(bool aAllow) { mAllowNativeCommissioner = aAllow; }
+
 private:
     enum
     {
         kMaxUnsecurePorts = 2,
     };
     uint16_t mUnsecurePorts[kMaxUnsecurePorts];
+    bool     mAllowNativeCommissioner;
 };
 
 } // namespace Ip6

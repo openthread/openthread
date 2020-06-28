@@ -40,6 +40,7 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     $(NULL)
 
+if OPENTHREAD_ENABLE_EXECUTABLE
 if OPENTHREAD_ENABLE_CLI
 SUBDIRS                                += cli
 endif
@@ -47,12 +48,6 @@ endif
 if OPENTHREAD_ENABLE_NCP
 SUBDIRS                                += ncp
 endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cli                                   \
-    ncp                                   \
-    $(NULL)
+endif
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

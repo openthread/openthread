@@ -36,7 +36,8 @@
 #define RADIO_QORVO_H_
 
 #include <stdint.h>
-#include <openthread/types.h>
+
+#include <openthread/error.h>
 #include <openthread/platform/radio.h>
 
 /**
@@ -143,7 +144,7 @@ void qorvoRadioClearSrcMatchEntries(void);
  * @param[in]  panid          The panid.
  *
  */
-otError qorvoRadioAddSrcMatchShortEntry(const uint16_t aShortAddress, uint16_t panid);
+otError qorvoRadioAddSrcMatchShortEntry(uint16_t aShortAddress, uint16_t panid);
 
 /**
  * This function adds an extended address plus panid to the source address match list.
@@ -161,7 +162,7 @@ otError qorvoRadioAddSrcMatchExtEntry(const uint8_t *aExtAddress, uint16_t panid
  * @param[in]  panid          The panid.
  *
  */
-otError qorvoRadioClearSrcMatchShortEntry(const uint16_t aShortAddress, uint16_t panid);
+otError qorvoRadioClearSrcMatchShortEntry(uint16_t aShortAddress, uint16_t panid);
 
 /**
  * This function removes an extended address plus panid from the source address match list.
@@ -199,4 +200,4 @@ void cbQorvoRadioTransmitDone(otRadioFrame *aPacket, bool aFramePending, otError
  */
 void cbQorvoRadioReceiveDone(otRadioFrame *aPacket, otError aError);
 
-#endif  // RADIO_QORVO_H_
+#endif // RADIO_QORVO_H_

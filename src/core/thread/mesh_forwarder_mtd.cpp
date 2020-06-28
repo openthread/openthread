@@ -33,60 +33,37 @@
 
 #if OPENTHREAD_MTD
 
-#define WPP_NAME "mesh_forwarder_mtd.tmh"
-
 #include "mesh_forwarder.hpp"
 
 namespace ot {
 
 otError MeshForwarder::SendMessage(Message &aMessage)
 {
-    otError error;
-
     aMessage.SetDirectTransmission();
     aMessage.SetOffset(0);
     aMessage.SetDatagramTag(0);
 
-    SuccessOrExit(error = mSendQueue.Enqueue(aMessage));
+    mSendQueue.Enqueue(aMessage);
     mScheduleTransmissionTask.Post();
+
+    return OT_ERROR_NONE;
+}
+
+otError MeshForwarder::EvictMessage(Message::Priority aPriority)
+{
+    otError  error = OT_ERROR_NOT_FOUND;
+    Message *message;
+
+    VerifyOrExit((message = mSendQueue.GetTail()) != nullptr, OT_NOOP);
+
+    if (message->GetPriority() < static_cast<uint8_t>(aPriority))
+    {
+        RemoveMessage(*message);
+        ExitNow(error = OT_ERROR_NONE);
+    }
 
 exit:
     return error;
-}
-
-otError MeshForwarder::EvictIndirectMessage(void)
-{
-    return OT_ERROR_NOT_FOUND;
-}
-
-otError MeshForwarder::GetIndirectTransmission(void)
-{
-    return OT_ERROR_NOT_FOUND;
-}
-
-otError MeshForwarder::RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild)
-{
-    OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aChild);
-    return OT_ERROR_NOT_FOUND;
-}
-
-void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest)
-{
-    OT_UNUSED_VARIABLE(aFrame);
-    OT_UNUSED_VARIABLE(aError);
-    OT_UNUSED_VARIABLE(aMacDest);
-}
-
-void MeshForwarder::HandleMesh(uint8_t *               aFrame,
-                               uint8_t                 aFrameLength,
-                               const Mac::Address &    aMacSource,
-                               const otThreadLinkInfo &aLinkInfo)
-{
-    OT_UNUSED_VARIABLE(aFrame);
-    OT_UNUSED_VARIABLE(aFrameLength);
-    OT_UNUSED_VARIABLE(aMacSource);
-    OT_UNUSED_VARIABLE(aLinkInfo);
 }
 
 } // namespace ot

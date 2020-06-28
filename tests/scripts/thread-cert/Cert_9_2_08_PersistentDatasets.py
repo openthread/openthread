@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,11 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
-import node
+import thread_cert
 
 COMMISSIONER = 1
 LEADER = 2
@@ -48,41 +47,57 @@ COMMISSIONER_PENDING_PANID = 0xafce
 
 MTDS = [ED, SED]
 
-class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1,6):
-            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
+class Cert_9_2_8_PersistentDatasets(thread_cert.TestCase):
+    SUPPORT_NCP = False
 
-        self.nodes[COMMISSIONER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP, panid=PANID_INIT, channel=CHANNEL_INIT)
-        self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[COMMISSIONER].enable_whitelist()
-        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
-
-        self.nodes[LEADER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP, panid=PANID_INIT, channel=CHANNEL_INIT)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[SED].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP, panid=PANID_INIT, channel=CHANNEL_INIT)
-        self.nodes[ROUTER].set_mode('rsdn')
-        self._setUpRouter()
-
-        self.nodes[ED].set_channel(CHANNEL_INIT)
-        self.nodes[ED].set_panid(PANID_INIT)
-        self.nodes[ED].set_mode('rsn')
-        self._setUpEd()
-
-        self.nodes[SED].set_channel(CHANNEL_INIT)
-        self.nodes[SED].set_panid(PANID_INIT)
-        self.nodes[SED].set_mode('s')
-        self._setUpSed()
+    TOPOLOGY = {
+        COMMISSIONER: {
+            'active_dataset': {
+                'timestamp': LEADER_ACTIVE_TIMESTAMP,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        LEADER: {
+            'active_dataset': {
+                'timestamp': LEADER_ACTIVE_TIMESTAMP,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT
+            },
+            'mode': 'rsdn',
+            'whitelist': [COMMISSIONER, ROUTER, ED, SED]
+        },
+        ROUTER: {
+            'active_dataset': {
+                'timestamp': LEADER_ACTIVE_TIMESTAMP,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        ED: {
+            'channel': CHANNEL_INIT,
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': PANID_INIT,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [LEADER]
+        },
+        SED: {
+            'channel': CHANNEL_INIT,
+            'is_mtd': True,
+            'mode': 's',
+            'panid': PANID_INIT,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [LEADER]
+        },
+    }
 
     def _setUpRouter(self):
         self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
@@ -92,17 +107,12 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
     def _setUpEd(self):
         self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ED].enable_whitelist()
-        self.nodes[ED].set_timeout(3)
+        self.nodes[ED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def _setUpSed(self):
         self.nodes[SED].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[SED].enable_whitelist()
-        self.nodes[SED].set_timeout(3)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
+        self.nodes[SED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def test(self):
         self.nodes[LEADER].start()
@@ -128,11 +138,13 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(3)
 
-        self.nodes[COMMISSIONER].send_mgmt_pending_set(pending_timestamp=10,
-                                                       active_timestamp=70,
-                                                       delay_timer=60000,
-                                                       channel=COMMISSIONER_PENDING_CHANNEL,
-                                                       panid=COMMISSIONER_PENDING_PANID)
+        self.nodes[COMMISSIONER].send_mgmt_pending_set(
+            pending_timestamp=10,
+            active_timestamp=70,
+            delay_timer=60000,
+            channel=COMMISSIONER_PENDING_CHANNEL,
+            panid=COMMISSIONER_PENDING_PANID,
+        )
         self.simulator.go(5)
 
         self.nodes[ROUTER].reset()
@@ -141,13 +153,20 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
 
         self.simulator.go(60)
 
-        self.assertEqual(self.nodes[LEADER].get_panid(), COMMISSIONER_PENDING_PANID)
-        self.assertEqual(self.nodes[COMMISSIONER].get_panid(), COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[LEADER].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[COMMISSIONER].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
 
-        self.assertEqual(self.nodes[LEADER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
-        self.assertEqual(self.nodes[COMMISSIONER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
-        
-        # reset the devices here again to simulate the fact that the devices were disabled the entire time
+        self.assertEqual(self.nodes[LEADER].get_channel(),
+                         COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(
+            self.nodes[COMMISSIONER].get_channel(),
+            COMMISSIONER_PENDING_CHANNEL,
+        )
+
+        # reset the devices here again to simulate the fact that the devices
+        # were disabled the entire time
         self.nodes[ROUTER].reset()
         self._setUpRouter()
         self.nodes[ROUTER].start()
@@ -168,13 +187,18 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
 
         self.simulator.go(10)
 
-        self.assertEqual(self.nodes[ROUTER].get_panid(), COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[ROUTER].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[ED].get_panid(), COMMISSIONER_PENDING_PANID)
-        self.assertEqual(self.nodes[SED].get_panid(), COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[SED].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
 
-        self.assertEqual(self.nodes[ROUTER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
-        self.assertEqual(self.nodes[ED].get_channel(), COMMISSIONER_PENDING_CHANNEL)
-        self.assertEqual(self.nodes[SED].get_channel(), COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(self.nodes[ROUTER].get_channel(),
+                         COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(self.nodes[ED].get_channel(),
+                         COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(self.nodes[SED].get_channel(),
+                         COMMISSIONER_PENDING_CHANNEL)
 
         self.simulator.go(5)
 
@@ -182,7 +206,7 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
         for ipaddr in ipaddrs:
             if ipaddr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[LEADER].ping(ipaddr))
- 
+
         ipaddrs = self.nodes[ED].get_addrs()
         for ipaddr in ipaddrs:
             if ipaddr[0:4] != 'fe80':
@@ -192,6 +216,7 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
         for ipaddr in ipaddrs:
             if ipaddr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[LEADER].ping(ipaddr))
+
 
 if __name__ == '__main__':
     unittest.main()

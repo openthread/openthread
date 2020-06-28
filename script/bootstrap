@@ -31,25 +31,42 @@
 #      example compilation and programming.
 #
 
-# Establish some key directories
-
-srcdir=`dirname ${0}`
-abs_srcdir=`pwd`
-abs_top_srcdir="${abs_srcdir}"
+set -e
 
 install_packages_apt()
 {
-    # apt update and install dependencies
+    # apt-get update and install dependencies
     sudo apt-get update
-    sudo apt-get install automake g++ libtool make
+    sudo apt-get --no-install-recommends install -y automake g++ libtool lsb-release make cmake ninja-build shellcheck
 
-    # add gcc-arm-embedded ppa
-    sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
-    sudo apt-get update
-    sudo apt-get install gcc-arm-embedded
+    PLATFORM=$(lsb_release -is)
+    RELEASE=$(lsb_release -rs)
+    UBUNTU2004=20.04
+
+    if [ "$PLATFORM" = "Raspbian" ]; then
+        sudo apt-get --no-install-recommends install -y binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+    elif [ "$PLATFORM" = "Ubuntu" ] && [ "$(echo "$RELEASE >= $UBUNTU2004" | bc)" -eq 1 ]; then
+        echo "Ubuntu Release >= $UBUNTU2004"
+        # no need to use ppa
+        sudo apt-get --no-install-recommends install -y gcc-arm-none-eabi gdb-multiarch libnewlib-arm-none-eabi
+    elif ! command -v arm-none-eabi-g++; then
+        # add gcc-arm-embedded ppa
+        sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa -y
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y gcc-arm-embedded
+    fi
 
     # add clang-format for pretty
-    sudo apt-get install clang-format-5.0
+    sudo apt-get --no-install-recommends install -y clang-format-6.0
+
+    # add yapf for pretty
+    python3 -m pip install yapf==0.29.0 || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
+
+    # add mdv for local size report
+    python3 -m pip install mdv || echo 'Failed to install markdown render. Install it manually if you need.'
+
+    # add shfmt for shell pretty, try brew only because snap does not support home directory not being /home and doesn't work in docker.
+    command -v shfmt || brew install shfmt || echo 'Failed to install shfmt. Install it manually if you need.'
 }
 
 install_packages_opkg()
@@ -64,18 +81,28 @@ install_packages_rpm()
 
 install_packages_brew()
 {
-    # add autotools
-    brew install automake libtool
+    # add build tools
+    brew install automake libtool cmake ninja shfmt shellcheck
 
     # add ARM toolchain
-    brew tap PX4/homebrew-px4
-    brew install gcc-arm-none-eabi
+    brew tap ArmMbed/homebrew-formulae
+    brew install arm-none-eabi-gcc
 
-    # check for gcc for posix examples
-    if ! which gcc; then
-        echo 'warning: clang/gcc needed for posix examples'
+    # check for gcc for simulation
+    if ! command -v gcc; then
+        echo 'warning: clang/gcc needed for simulation'
         echo 'warning: please install Command Line Tools from https://developer.apple.com/download/more/'
     fi
+
+    # add clang-format for pretty
+    CLANG_FORMAT_VERSION="clang-format version 6.0"
+    command -v clang-format-6.0 || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
+        brew install llvm@6
+        sudo ln -s "$(brew --prefix llvm@6)/bin/clang-format" /usr/local/bin/clang-format-6.0
+    }
+
+    # add yapf for pretty
+    python3 -m pip install yapf || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
 }
 
 install_packages_source()
@@ -86,13 +113,13 @@ install_packages_source()
 install_packages()
 {
     PM=source
-    if which apt-get; then
+    if command -v apt-get; then
         PM=apt
-    elif which rpm; then
+    elif command -v rpm; then
         PM=rpm
-    elif which opkg; then
+    elif command -v opkg; then
         PM=opkg
-    elif which brew; then
+    elif command -v brew; then
         PM=brew
     fi
     install_packages_$PM

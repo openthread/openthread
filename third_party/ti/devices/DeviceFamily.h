@@ -50,76 +50,137 @@
 extern "C" {
 #endif
 
-/* List of DeviceFamily_ID_XYZ values.
- * DeviceFamily_ID may be used in the preprocessor for conditional compilation.
- * DeviceFamily_ID is set as one of these IDs is set based on the top
- * level DeviceFamily_XYZ define.
- */
-#define DeviceFamily_ID_CC26X0         0x00000001
-#define DeviceFamily_ID_CC26X0R2       0x00000002
-#define DeviceFamily_ID_CC26X2         0x00000004
-#define DeviceFamily_ID_CC13X0         0x00000100
-#define DeviceFamily_ID_CC13X2         0x00000200
-#define DeviceFamily_ID_CC3200         0x00010000
-#define DeviceFamily_ID_CC3220         0x00020000
-#define DeviceFamily_ID_MSP432P401x    0x01000000
-#define DeviceFamily_ID_MSP432P4x1xI   0x02000000
-#define DeviceFamily_ID_MSP432P4x1xT   0x04000000
-
-/* Lookup table that sets DeviceFamily_ID and DeviceFamily_DIRECTORY based on the existence
- * of a DeviceFamily_XYZ define.
- * If DeviceFamily_XYZ is undefined, a compiler error is thrown. If multiple DeviceFamily_XYZ
- * are defined, the first one encountered is used.
+/*
+ * DeviceFamily_ID_XYZ values.
  *
- * Currently supported values of DeviceFamily_XYZ are:
- * - DeviceFamily_CC26X0
- * - DeviceFamily_CC26X0R2
- * - DeviceFamily_CC26X2
- * - DeviceFamily_CC13X0
- * - DeviceFamily_CC13X2
- * - DeviceFamily_CC3200
- * - DeviceFamily_CC3220
- * - DeviceFamily_MSP432P401x
- * - DeviceFamily_MSP432P4x1
+ * DeviceFamily_ID may be used in the preprocessor for conditional compilation.
+ * DeviceFamily_ID is set to one of these values based on the top level
+ * DeviceFamily_XYZ define.
  */
-#if defined(DeviceFamily_CC26X0)
+#define DeviceFamily_ID_CC13X0                 1
+#define DeviceFamily_ID_CC26X0                 2
+#define DeviceFamily_ID_CC26X0R2               3
+#define DeviceFamily_ID_CC13X2_V1              4
+#define DeviceFamily_ID_CC13X2_V2              5
+#define DeviceFamily_ID_CC13X2                 DeviceFamily_ID_CC13X2_V1
+#define DeviceFamily_ID_CC26X2_V1              6
+#define DeviceFamily_ID_CC26X2_V2              7
+#define DeviceFamily_ID_CC26X2                 DeviceFamily_ID_CC26X2_V1
+#define DeviceFamily_ID_CC3200                 8
+#define DeviceFamily_ID_CC3220                 9
+#define DeviceFamily_ID_MSP432P401x            10
+#define DeviceFamily_ID_MSP432P4x1xI           11
+#define DeviceFamily_ID_MSP432P4x1xT           12
+#define DeviceFamily_ID_MSP432E401Y            13
+#define DeviceFamily_ID_MSP432E411Y            14
+
+/*
+ * DeviceFamily_PARENT_XYZ values.
+ *
+ * DeviceFamily_PARENT may be used in the preprocessor for conditional
+ * compilation. DeviceFamily_PARENT is set to one of these values based
+ * on the top-level DeviceFamily_XYZ define.
+ */
+#define DeviceFamily_PARENT_CC13X0_CC26X0      1
+#define DeviceFamily_PARENT_CC13X2_CC26X2      2
+#define DeviceFamily_PARENT_MSP432P401R        3
+#define DeviceFamily_PARENT_MSP432P4111        4
+
+/*
+ * Lookup table that sets DeviceFamily_ID, DeviceFamily_DIRECTORY, and
+ * DeviceFamily_PARENT based on the DeviceFamily_XYZ define.
+ * If DeviceFamily_XYZ is undefined, a compiler error is thrown. If
+ * multiple DeviceFamily_XYZ are defined, the first one encountered is used.
+ */
+#if defined(DeviceFamily_CC13X0)
+    #define DeviceFamily_ID             DeviceFamily_ID_CC13X0
+    #define DeviceFamily_DIRECTORY      cc13x0
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X0_CC26X0
+
+#elif defined(DeviceFamily_CC13X2)
+    #define DeviceFamily_ID             DeviceFamily_ID_CC13X2
+    #define DeviceFamily_DIRECTORY      cc13x2_cc26x2_v1
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X2_CC26X2
+
+#elif defined(DeviceFamily_CC13X2_V1)
+    #define DeviceFamily_ID             DeviceFamily_ID_CC13X2_V1
+    #define DeviceFamily_DIRECTORY      cc13x2_cc26x2_v1
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X2_CC26X2
+
+#elif defined(DeviceFamily_CC13X2_V2)
+    #define DeviceFamily_ID             DeviceFamily_ID_CC13X2_V2
+    #define DeviceFamily_DIRECTORY      cc13x2_cc26x2_v2
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X2_CC26X2
+
+#elif defined(DeviceFamily_CC26X0)
     #define DeviceFamily_ID             DeviceFamily_ID_CC26X0
     #define DeviceFamily_DIRECTORY      cc26x0
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X0_CC26X0
+
 #elif defined(DeviceFamily_CC26X0R2)
     #define DeviceFamily_ID             DeviceFamily_ID_CC26X0R2
     #define DeviceFamily_DIRECTORY      cc26x0r2
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X0_CC26X0
+
 #elif defined(DeviceFamily_CC26X2)
     #define DeviceFamily_ID             DeviceFamily_ID_CC26X2
-    #define DeviceFamily_DIRECTORY      cc26x2
-#elif defined(DeviceFamily_CC13X0)
-    #define DeviceFamily_ID             DeviceFamily_ID_CC13X0
-    #define DeviceFamily_DIRECTORY      cc13x0
-#elif defined(DeviceFamily_CC13X2)
-    #define DeviceFamily_ID             DeviceFamily_ID_CC13X2
-    #define DeviceFamily_DIRECTORY      cc26x2
+    #define DeviceFamily_DIRECTORY      cc13x2_cc26x2_v1
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X2_CC26X2
+
+#elif defined(DeviceFamily_CC26X2_V1)
+    #define DeviceFamily_ID             DeviceFamily_ID_CC26X2_V1
+    #define DeviceFamily_DIRECTORY      cc13x2_cc26x2_v1
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X2_CC26X2
+
+#elif defined(DeviceFamily_CC26X2_V2)
+    #define DeviceFamily_ID             DeviceFamily_ID_CC26X2_V2
+    #define DeviceFamily_DIRECTORY      cc13x2_cc26x2_v2
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X2_CC26X2
+
 #elif defined(DeviceFamily_CC3200)
     #define DeviceFamily_ID             DeviceFamily_ID_CC3200
     #define DeviceFamily_DIRECTORY      cc32xx
+
 #elif defined(DeviceFamily_CC3220)
     #define DeviceFamily_ID             DeviceFamily_ID_CC3220
     #define DeviceFamily_DIRECTORY      cc32xx
+
 #elif defined(DeviceFamily_MSP432P401x) || defined(__MSP432P401R__)
     #define DeviceFamily_ID             DeviceFamily_ID_MSP432P401x
     #define DeviceFamily_DIRECTORY      msp432p4xx
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_MSP432P401R
     #if !defined(__MSP432P401R__)
         #define __MSP432P401R__
     #endif
+
 #elif defined(DeviceFamily_MSP432P4x1xI)
     #define DeviceFamily_ID             DeviceFamily_ID_MSP432P4x1xI
     #define DeviceFamily_DIRECTORY      msp432p4xx
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_MSP432P4111
     #if !defined(__MSP432P4111__)
         #define __MSP432P4111__
     #endif
+
 #elif defined(DeviceFamily_MSP432P4x1xT)
     #define DeviceFamily_ID             DeviceFamily_ID_MSP432P4x1xT
     #define DeviceFamily_DIRECTORY      msp432p4xx
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_MSP432P4111
     #if !defined(__MSP432P4111__)
         #define __MSP432P4111__
+    #endif
+
+#elif defined(DeviceFamily_MSP432E401Y)
+    #define DeviceFamily_ID             DeviceFamily_ID_MSP432E401Y
+    #define DeviceFamily_DIRECTORY      msp432e4
+    #if !defined(__MSP432E401Y__)
+        #define __MSP432E401Y__
+    #endif
+
+#elif defined(DeviceFamily_MSP432E411Y)
+    #define DeviceFamily_ID             DeviceFamily_ID_MSP432E411Y
+    #define DeviceFamily_DIRECTORY      msp432e4
+    #if !defined(__MSP432E411Y__)
+        #define __MSP432E411Y__
     #endif
 #else
     #error "DeviceFamily_XYZ undefined. You must defined DeviceFamily_XYZ!"
@@ -128,11 +189,12 @@ extern "C" {
 /*!
  *  @brief  Macro to include correct driverlib path.
  *
- *  @pre    DeviceFamily_XYZ which sets DeviceFamily_DIRECTORY must be defined first.
+ *  @pre    DeviceFamily_XYZ which sets DeviceFamily_DIRECTORY must be defined
+ *          first.
  *
- *  @param  x   A token containing the path of the file to include based on the root
- *              device folder. The preceding forward slash must be omitted.
- *              For example:
+ *  @param  x   A token containing the path of the file to include based on
+ *              the root device folder. The preceding forward slash must be
+ *              omitted. For example:
  *                  - #include DeviceFamily_constructPath(inc/hw_memmap.h)
  *                  - #include DeviceFamily_constructPath(driverlib/ssi.h)
  *

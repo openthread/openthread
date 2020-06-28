@@ -31,23 +31,20 @@
  *   This file implements the Announce Begin Client.
  */
 
-#define WPP_NAME "announce_begin_client.tmh"
-
 #include "announce_begin_client.hpp"
 
-#include <openthread/platform/random.h>
-
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
 namespace ot {
 
@@ -61,54 +58,40 @@ otError AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
                                          uint16_t            aPeriod,
                                          const Ip6::Address &aAddress)
 {
-    otError                           error = OT_ERROR_NONE;
-    Coap::Header                      header;
-    MeshCoP::CommissionerSessionIdTlv sessionId;
-    MeshCoP::ChannelMask0Tlv          channelMask;
-    MeshCoP::CountTlv                 count;
-    MeshCoP::PeriodTlv                period;
+    otError                 error = OT_ERROR_NONE;
+    MeshCoP::ChannelMaskTlv channelMask;
+    Ip6::MessageInfo        messageInfo;
+    Coap::Message *         message = nullptr;
 
-    Ip6::MessageInfo messageInfo;
-    Message *        message = NULL;
+    VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit(GetNetif().GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
+    SuccessOrExit(error =
+                      message->Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE,
+                                    OT_COAP_CODE_POST, OT_URI_PATH_ANNOUNCE_BEGIN));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
-    header.Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OT_URI_PATH_ANNOUNCE_BEGIN);
-    header.SetPayloadMarker();
-
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(GetNetif().GetCoap(), header)) != NULL,
-                 error = OT_ERROR_NO_BUFS);
-
-    sessionId.Init();
-    sessionId.SetCommissionerSessionId(GetNetif().GetCommissioner().GetSessionId());
-    SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kCommissionerSessionId,
+                                               Get<MeshCoP::Commissioner>().GetSessionId()));
 
     channelMask.Init();
-    channelMask.SetMask(aChannelMask);
-    SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
+    channelMask.SetChannelMask(aChannelMask);
+    SuccessOrExit(error = channelMask.AppendTo(*message));
 
-    count.Init();
-    count.SetCount(aCount);
-    SuccessOrExit(error = message->Append(&count, sizeof(count)));
+    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, MeshCoP::Tlv::kCount, aCount));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kPeriod, aPeriod));
 
-    period.Init();
-    period.SetPeriod(aPeriod);
-    SuccessOrExit(error = message->Append(&period, sizeof(period)));
-
-    messageInfo.SetSockAddr(GetNetif().GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(kCoapUdpPort);
-    messageInfo.SetInterfaceId(GetNetif().GetInterfaceId());
 
-    SuccessOrExit(error = GetNetif().GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP(GetInstance(), "sent announce begin query");
+    otLogInfoMeshCoP("sent announce begin query");
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
     }
@@ -118,4 +101,4 @@ exit:
 
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD

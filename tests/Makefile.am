@@ -41,17 +41,13 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     $(NULL)
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    fuzz                                  \
+SUBDIRS                                += \
     unit                                  \
     $(NULL)
 
-if OPENTHREAD_EXAMPLES_POSIX
+if OPENTHREAD_POSIX
 if OPENTHREAD_ENABLE_CLI
 SUBDIRS                                += \
-    unit                                  \
     scripts                               \
     $(NULL)
 endif

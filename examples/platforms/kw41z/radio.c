@@ -63,9 +63,15 @@
                                       ZLL_IRQSTS_TMR2MSK_MASK | \
                                       ZLL_IRQSTS_TMR3MSK_MASK | \
                                       ZLL_IRQSTS_TMR4MSK_MASK )
+#define ZLL_DEFAULT_RX_FILTERING     (ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3) | \
+                                      ZLL_RX_FRAME_FILTER_CMD_FT_MASK | \
+                                      ZLL_RX_FRAME_FILTER_DATA_FT_MASK | \
+                                      ZLL_RX_FRAME_FILTER_ACK_FT_MASK | \
+                                      ZLL_RX_FRAME_FILTER_BEACON_FT_MASK)
 // clang-format on
 
-typedef enum xcvr_state_tag {
+typedef enum xcvr_state_tag
+{
     XCVR_Idle_c,
     XCVR_RX_c,
     XCVR_TX_c,
@@ -74,7 +80,8 @@ typedef enum xcvr_state_tag {
     XCVR_CCCA_c,
 } xcvr_state_t;
 
-typedef enum xcvr_cca_type_tag {
+typedef enum xcvr_cca_type_tag
+{
     XCVR_ED_c,        /* energy detect - CCA bit not active, not to be used for T and CCCA sequences */
     XCVR_CCA_MODE1_c, /* energy detect - CCA bit ACTIVE */
     SCVR_CCA_MODE2_c, /* 802.15.4 compliant signal detect - CCA bit ACTIVE */
@@ -96,9 +103,11 @@ static otError sTxStatus;
 
 static otRadioFrame sTxFrame;
 static otRadioFrame sRxFrame;
+static uint8_t      sTxData[OT_RADIO_FRAME_MAX_SIZE];
 #if DOUBLE_BUFFERING
 static uint8_t sRxData[OT_RADIO_FRAME_MAX_SIZE];
 #endif
+static otInstance *sInstance = NULL;
 
 /* Private functions */
 static void         rf_abort(void);
@@ -117,13 +126,15 @@ static bool         rf_process_rx_frame(void);
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return sState;
 }
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint32_t addrLo;
     uint32_t addrHi;
 
@@ -144,7 +155,7 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     sPanId = aPanId;
     ZLL->MACSHORTADDRS0 &= ~ZLL_MACSHORTADDRS0_MACPANID0_MASK;
@@ -153,7 +164,8 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint32_t addrLo;
     uint32_t addrHi;
 
@@ -166,7 +178,7 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     ZLL->MACSHORTADDRS0 &= ~ZLL_MACSHORTADDRS0_MACSHORTADDRS0_MASK;
     ZLL->MACSHORTADDRS0 |= ZLL_MACSHORTADDRS0_MACSHORTADDRS0(aShortAddress);
@@ -176,6 +188,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
 {
     otEXPECT(!otPlatRadioIsEnabled(aInstance));
 
+    sInstance = aInstance;
     ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_TRCV_MSK_MASK;
     NVIC_ClearPendingIRQ(Radio_1_IRQn);
     NVIC_EnableIRQ(Radio_1_IRQn);
@@ -200,14 +213,16 @@ exit:
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return sState != OT_RADIO_STATE_DISABLED;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError status = OT_ERROR_NONE;
-    (void)aInstance;
 
     otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED)),
                     status = OT_ERROR_INVALID_STATE);
@@ -221,30 +236,34 @@ exit:
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError status = OT_ERROR_NONE;
-    (void)aInstance;
 
     otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED)),
                     status = OT_ERROR_INVALID_STATE);
 
     sState = OT_RADIO_STATE_RECEIVE;
 
-    otEXPECT(rf_get_state() != XCVR_RX_c);
+    /* Check if the channel needs to be changed */
+    if ((sChannel != aChannel) || (rf_get_state() != XCVR_RX_c))
+    {
+        rf_abort();
+        /* Set Power level for auto TX */
+        rf_set_tx_power(sAutoTxPwrLevel);
+        rf_set_channel(aChannel);
+        sRxFrame.mChannel = aChannel;
 
-    rf_abort();
+        /* Filter ACK frames during RX sequence */
+        ZLL->RX_FRAME_FILTER &= ~(ZLL_RX_FRAME_FILTER_ACK_FT_MASK);
+        /* Clear all IRQ flags */
+        ZLL->IRQSTS = ZLL->IRQSTS;
+        /* Start the RX sequence */
+        ZLL->PHY_CTRL |= XCVR_RX_c;
 
-    /* Set Power level for auto TX */
-    rf_set_tx_power(sAutoTxPwrLevel);
-    rf_set_channel(aChannel);
-    sRxFrame.mChannel = aChannel;
-
-    /* Clear all IRQ flags */
-    ZLL->IRQSTS = ZLL->IRQSTS;
-    /* Start the RX sequence */
-    ZLL->PHY_CTRL |= XCVR_RX_c;
-
-    /* Unmask SEQ interrupt */
-    ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
+        /* Unmask SEQ interrupt */
+        ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
+    }
 
 exit:
     return status;
@@ -252,7 +271,7 @@ exit:
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     if (aEnable)
     {
@@ -264,9 +283,10 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
     }
 }
 
-otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint16_t checksum = sPanId + aShortAddress;
 
     return rf_add_addr_table_entry(checksum, false);
@@ -274,15 +294,17 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
 
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint16_t checksum = rf_get_addr_checksum((uint8_t *)aExtAddress->m8, true, sPanId);
 
     return rf_add_addr_table_entry(checksum, true);
 }
 
-otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint16_t checksum = sPanId + aShortAddress;
 
     return rf_remove_addr_table_entry(checksum);
@@ -290,7 +312,8 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
 
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint16_t checksum = rf_get_addr_checksum((uint8_t *)aExtAddress->m8, true, sPanId);
 
     return rf_remove_addr_table_entry(checksum);
@@ -298,7 +321,8 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint32_t i;
 
     for (i = 0; i < RADIO_CONFIG_SRC_MATCH_ENTRY_NUM; i++)
@@ -313,7 +337,8 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint32_t i;
 
     for (i = 0; i < RADIO_CONFIG_SRC_MATCH_ENTRY_NUM; i++)
@@ -328,7 +353,8 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return &sTxFrame;
 }
 
@@ -349,6 +375,14 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     *(uint8_t *)ZLL->PKT_BUFFER_TX = aFrame->mLength;
 
+    /* MKW41Z Reference Manual Section 44.6.2.7 states: "The 802.15.4
+     * Link Layer software prepares data to be transmitted, by loading
+     * the octets, in order, into the Packet Buffer." */
+    for (int i = 0; i < aFrame->mLength - sizeof(uint16_t); i++)
+    {
+        ((uint8_t *)ZLL->PKT_BUFFER_TX)[1 + i] = sTxFrame.mPsdu[i];
+    }
+
     /* Set CCA mode */
     ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_CCATYPE_MASK;
     ZLL->PHY_CTRL |= ZLL_PHY_CTRL_CCATYPE(DEFAULT_CCA_MODE);
@@ -359,6 +393,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     /* Perform automatic reception of ACK frame, if required */
     if (aFrame->mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST)
     {
+        /* Permit the reception of ACK frames during TR sequence */
+        ZLL->RX_FRAME_FILTER |= (ZLL_RX_FRAME_FILTER_ACK_FT_MASK);
         ZLL->PHY_CTRL |= XCVR_TR_c;
         /* Set ACK wait time-out */
         timeout = rf_get_timestamp();
@@ -387,49 +423,49 @@ exit:
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_RSSI_MASK) >> ZLL_LQI_AND_RSSI_RSSI_SHIFT;
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_ENERGY_SCAN;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return (ZLL->PHY_CTRL & ZLL_PHY_CTRL_PROMISCUOUS_MASK) == ZLL_PHY_CTRL_PROMISCUOUS_MASK;
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     if (aEnable)
     {
         ZLL->PHY_CTRL |= ZLL_PHY_CTRL_PROMISCUOUS_MASK;
         /* FRM_VER[11:8] = b1111. Any FrameVersion accepted */
-        ZLL->RX_FRAME_FILTER |= (ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK | ZLL_RX_FRAME_FILTER_ACK_FT_MASK |
-                                 ZLL_RX_FRAME_FILTER_NS_FT_MASK);
+        ZLL->RX_FRAME_FILTER |= (ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK | ZLL_RX_FRAME_FILTER_NS_FT_MASK);
     }
     else
     {
         ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_PROMISCUOUS_MASK;
         /* FRM_VER[11:8] = b0011. Accept FrameVersion 0 and 1 packets, reject all others */
-        /* Beacon, Data and MAC command frame types accepted */
-        ZLL->RX_FRAME_FILTER &= ~(ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK | ZLL_RX_FRAME_FILTER_ACK_FT_MASK |
-                                  ZLL_RX_FRAME_FILTER_NS_FT_MASK | ZLL_RX_FRAME_FILTER_ACTIVE_PROMISCUOUS_MASK);
-        ZLL->RX_FRAME_FILTER |= ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3);
+        ZLL->RX_FRAME_FILTER = ZLL_DEFAULT_RX_FILTERING;
     }
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError  status = OT_ERROR_NONE;
     uint32_t timeout;
-    (void)aInstance;
 
     otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED)),
                     status = OT_ERROR_INVALID_STATE);
@@ -472,16 +508,32 @@ exit:
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     sAutoTxPwrLevel = aPower;
 
     return OT_ERROR_NONE;
 }
 
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return -100;
 }
@@ -734,16 +786,20 @@ static bool rf_process_rx_frame(void)
     /* Check if frame is valid */
     otEXPECT_ACTION((IEEE802154_MIN_LENGTH <= temp) && (temp <= IEEE802154_MAX_LENGTH), status = false);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    // Timestamp
-    sRxFrame.mMsec = otPlatAlarmMilliGetNow();
-    sRxFrame.mUsec = 0; // Don't support microsecond timer for now.
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#error Time sync requires the timestamp of SFD rather than that of rx done!
+#else
+    if (otPlatRadioGetPromiscuous(sInstance))
 #endif
+    {
+        // The current driver only supports milliseconds resolution.
+        sRxFrame.mInfo.mRxInfo.mTimestamp = otPlatAlarmMilliGetNow() * 1000;
+    }
 
     sRxFrame.mLength = temp;
     temp             = (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_LQI_VALUE_MASK) >> ZLL_LQI_AND_RSSI_LQI_VALUE_SHIFT;
-    sRxFrame.mLqi    = rf_lqi_adjust(temp);
-    sRxFrame.mRssi   = rf_lqi_to_rssi(sRxFrame.mLqi);
+    sRxFrame.mInfo.mRxInfo.mLqi  = rf_lqi_adjust(temp);
+    sRxFrame.mInfo.mRxInfo.mRssi = rf_lqi_to_rssi(sRxFrame.mInfo.mRxInfo.mLqi);
 #if DOUBLE_BUFFERING
 
     for (temp = 0; temp < sRxFrame.mLength - 2; temp++)
@@ -800,6 +856,10 @@ void Radio_1_IRQHandler(void)
             break;
 
         case XCVR_TR_c:
+            /* Stop TMR3 */
+            ZLL->IRQSTS = irqStatus | ZLL_IRQSTS_TMR3MSK_MASK;
+            ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_TMR3CMP_EN_MASK;
+
             if ((ZLL->PHY_CTRL & ZLL_PHY_CTRL_CCABFRTX_MASK) && (irqStatus & ZLL_IRQSTS_CCA_MASK))
             {
                 sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
@@ -862,6 +922,8 @@ void Radio_1_IRQHandler(void)
         {
         }
 
+        /* Filter ACK frames during RX sequence*/
+        ZLL->RX_FRAME_FILTER &= ~(ZLL_RX_FRAME_FILTER_ACK_FT_MASK);
         ZLL->IRQSTS = ZLL->IRQSTS;
         ZLL->PHY_CTRL |= XCVR_RX_c;
         ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
@@ -893,12 +955,7 @@ void kw41zRadioInit(void)
 
     /*  Frame Filtering
     FRM_VER[7:6] = b11. Accept FrameVersion 0 and 1 packets, reject all others */
-    ZLL->RX_FRAME_FILTER &= ~ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK;
-    ZLL->RX_FRAME_FILTER = ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3) | //
-                           ZLL_RX_FRAME_FILTER_CMD_FT_MASK |       //
-                           ZLL_RX_FRAME_FILTER_DATA_FT_MASK |      //
-                           ZLL_RX_FRAME_FILTER_ACK_FT_MASK |       //
-                           ZLL_RX_FRAME_FILTER_BEACON_FT_MASK;
+    ZLL->RX_FRAME_FILTER = ZLL_DEFAULT_RX_FILTERING;
 
     /* Set prescaller to obtain 1 symbol (16us) timebase */
     ZLL->TMR_PRESCALE = 0x05;
@@ -922,7 +979,7 @@ void kw41zRadioInit(void)
     rf_set_tx_power(0);
 
     sTxFrame.mLength = 0;
-    sTxFrame.mPsdu   = (uint8_t *)ZLL->PKT_BUFFER_TX + 1;
+    sTxFrame.mPsdu   = sTxData;
     sRxFrame.mLength = 0;
 #if DOUBLE_BUFFERING
     sRxFrame.mPsdu = sRxData;
@@ -949,7 +1006,11 @@ void kw41zRadioProcess(otInstance *aInstance)
 
     if (sRxDone)
     {
-#if OPENTHREAD_ENABLE_DIAG
+        // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+        // See https://github.com/openthread/openthread/pull/3785
+        sRxFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
+
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {

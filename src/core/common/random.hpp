@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,56 +36,48 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
 
-#include <openthread/platform/random.h>
+#include <openthread/error.h>
+
+#include "common/debug.hpp"
+#include "common/random_manager.hpp"
 
 namespace ot {
 namespace Random {
+namespace NonCrypto {
 
 /**
- * @addtogroup core-random
+ * This function generates and returns a random `uint32_t` value.
  *
- * @brief
- *   This module includes definitions for OpenThread random number generation.
- *
- *   The functions in this header file uses the platform random number generator `otPlatRandomGet()`.
- *
- * @{
+ * @returns    A random `uint32_t` value.
  *
  */
+inline uint32_t GetUint32(void)
+{
+    return ot::RandomManager::NonCryptoGetUint32();
+}
 
 /**
  * This function generates and returns a random byte.
  *
- * @returns  A random `uint8_t` value.
+ * @returns A random `uint8_t` value.
  *
  */
 inline uint8_t GetUint8(void)
 {
-    return static_cast<uint8_t>(otPlatRandomGet() & 0xff);
+    return static_cast<uint8_t>(GetUint32() & 0xff);
 }
 
 /**
  * This function generates and returns a random `uint16_t` value.
  *
- * @returns  A random `uint16_t` value.
+ * @returns A random `uint16_t` value.
  *
  */
 inline uint16_t GetUint16(void)
 {
-    return static_cast<uint16_t>(otPlatRandomGet() & 0xffff);
-}
-
-/**
- * This function generates and returns a random `uint32_t` value.
- *
- * @returns  A random `uint32_t` value.
- *
- */
-inline uint32_t GetUint32(void)
-{
-    return otPlatRandomGet();
+    return static_cast<uint16_t>(GetUint32() & 0xffff);
 }
 
 /**
@@ -94,10 +86,11 @@ inline uint32_t GetUint32(void)
  * @param[in]  aMin  A minimum value (this value can be included in returned random result).
  * @param[in]  aMax  A maximum value (this value is excluded from returned random result).
  *
- * @return     A random `uint8_t` value in the given range (i.e., aMin <= random value < aMax).
+ * @returns    A random `uint8_t` value in the given range (i.e., aMin <= random value < aMax).
  */
 inline uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
 {
+    OT_ASSERT(aMax > aMin);
     return (aMin + (GetUint8() % (aMax - aMin)));
 }
 
@@ -109,10 +102,11 @@ inline uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
  * @param[in]  aMin  A minimum value (this value can be included in returned random result).
  * @param[in]  aMax  A maximum value (this value is excluded from returned random result).
  *
- * @return     A random `uint16_t` value in the given range (i.e., aMin <= random value < aMax).
+ * @returns    A random `uint16_t` value in the given range (i.e., aMin <= random value < aMax).
  */
 inline uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
 {
+    OT_ASSERT(aMax > aMin);
     return (aMin + (GetUint16() % (aMax - aMin)));
 }
 
@@ -124,18 +118,20 @@ inline uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
  * @param[in]  aMin  A minimum value (this value can be included in returned random result).
  * @param[in]  aMax  A maximum value (this value is excluded from returned random result).
  *
- * @return     A random `uint32_t` value in the given range (i.e., aMin <= random value < aMax).
+ * @returns    A random `uint32_t` value in the given range (i.e., aMin <= random value < aMax).
+ *
  */
 inline uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax)
 {
+    OT_ASSERT(aMax > aMin);
     return (aMin + (GetUint32() % (aMax - aMin)));
 }
 
 /**
  * This function fills a given buffer with random bytes.
  *
- * @param[out]   aBuffer  A pointer to a buffer to fill with the random bytes.
- * @param[in]    aSize    Size of buffer (number of bytes to fill).
+ * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
+ * @param[in]  aSize    Size of buffer (number of bytes to fill).
  *
  */
 inline void FillBuffer(uint8_t *aBuffer, uint16_t aSize)
@@ -147,9 +143,55 @@ inline void FillBuffer(uint8_t *aBuffer, uint16_t aSize)
 }
 
 /**
- * @}
+ * This function adds a random jitter within a given range to a given value.
+ *
+ * @param[in]  aValue     A value to which the random jitter is added.
+ * @param[in]  aJitter    Maximum jitter. Random jitter is selected from the range `[-aJitter, aJitter]`.
+ *
+ * @returns    The given value with an added random jitter.
  *
  */
+inline uint32_t AddJitter(uint32_t aValue, uint16_t aJitter)
+{
+    aJitter = (aJitter <= aValue) ? aJitter : static_cast<uint16_t>(aValue);
+
+    return aValue + GetUint32InRange(0, 2 * aJitter + 1) - aJitter;
+}
+
+} // namespace NonCrypto
+
+#if !OPENTHREAD_RADIO
+
+namespace Crypto {
+
+/**
+ * This function fills a given buffer with cryptographically secure random bytes.
+ *
+ * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
+ * @param[in]  aSize    Size of buffer (number of bytes to fill).
+ *
+ * @retval OT_ERROR_NONE    Successfully filled buffer with random values.
+ *
+ */
+inline otError FillBuffer(uint8_t *aBuffer, uint16_t aSize)
+{
+    return RandomManager::CryptoFillBuffer(aBuffer, aSize);
+}
+
+/**
+ * This function returns initialized mbedtls_ctr_drbg_context.
+ *
+ * @returns  A pointer to initialized mbedtls_ctr_drbg_context.
+ *
+ */
+inline mbedtls_ctr_drbg_context *MbedTlsContextGet(void)
+{
+    return RandomManager::GetMbedTlsCtrDrbgContext();
+}
+
+} // namespace Crypto
+
+#endif // OPENTHREAD_RADIO
 
 } // namespace Random
 } // namespace ot

@@ -35,13 +35,14 @@
 #ifndef PLATFORM_QORVO_H_
 #define PLATFORM_QORVO_H_
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
-#include <stdint.h>
-#include <openthread/types.h>
+#include <openthread/config.h>
 
-typedef void     (*qorvoPlatPollFunction_t)(uint8_t);
-typedef uint8_t  (*qorvoPlatGotoSleepCheckCallback_t) (void);
+#include <stdbool.h>
+#include <stdint.h>
+
+typedef void (*qorvoPlatPollFunction_t)(uint8_t);
+typedef uint8_t (*qorvoPlatGotoSleepCheckCallback_t)(void);
 
 /**
  * This function registers a callback to a file descriptor.
@@ -76,4 +77,4 @@ void qorvoPlatInit(qorvoPlatGotoSleepCheckCallback_t gotoSleepCheckCallback);
  */
 void qorvoPlatMainLoop(bool canGoToSleep);
 
-#endif  // PLATFORM_QORVO_H_
+#endif // PLATFORM_QORVO_H_

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,57 +27,48 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import config
 import mle
-import node
+import thread_cert
 
 LEADER = 1
 ROUTER1 = 2
 ROUTER2 = 3
 
 
-class Cert_5_1_12_NewRouterSync(unittest.TestCase):
+class Cert_5_1_12_NewRouterSync(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1, ROUTER2]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+    }
 
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
+    def verify_step_4(self, router1_messages, router2_messages, req_receiver,
+                      accept_receiver):
+        if router2_messages.contains_mle_message(
+                mle.CommandType.LINK_REQUEST) and (
+                    router1_messages.contains_mle_message(
+                        mle.CommandType.LINK_ACCEPT) or
+                    router1_messages.contains_mle_message(
+                        mle.CommandType.LINK_ACCEPT_AND_REQUEST)):
 
-        self.nodes = {}
-        for i in range(1, 4):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER2].set_panid(0xface)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
-
-    def verify_step_4(self, router1_messages, router2_messages, req_receiver, accept_receiver):
-        if router2_messages.contains_mle_message(mle.CommandType.LINK_REQUEST) and \
-            (router1_messages.contains_mle_message(mle.CommandType.LINK_ACCEPT) or
-                router1_messages.contains_mle_message(mle.CommandType.LINK_ACCEPT_AND_REQUEST)):
-
-            msg = router2_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
+            msg = router2_messages.next_mle_message(
+                mle.CommandType.LINK_REQUEST)
 
             msg.assertSentToNode(self.nodes[req_receiver])
             msg.assertMleMessageContainsTlv(mle.SourceAddress)
@@ -86,8 +77,10 @@ class Cert_5_1_12_NewRouterSync(unittest.TestCase):
             msg.assertMleMessageContainsTlv(mle.Version)
             msg.assertMleMessageContainsTlv(mle.TlvRequest)
 
-            msg = router1_messages.next_mle_message_of_one_of_command_types(mle.CommandType.LINK_ACCEPT_AND_REQUEST,
-                                                                            mle.CommandType.LINK_ACCEPT)
+            msg = router1_messages.next_mle_message_of_one_of_command_types(
+                mle.CommandType.LINK_ACCEPT_AND_REQUEST,
+                mle.CommandType.LINK_ACCEPT,
+            )
             self.assertIsNotNone(msg)
 
             msg.assertSentToNode(self.nodes[accept_receiver])
@@ -122,7 +115,7 @@ class Cert_5_1_12_NewRouterSync(unittest.TestCase):
 
         self.simulator.go(10)
 
-        leader_messages = self.simulator.get_messages_sent_by(LEADER)
+        self.simulator.get_messages_sent_by(LEADER)
         router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
         router2_messages = self.simulator.get_messages_sent_by(ROUTER2)
 
@@ -139,13 +132,17 @@ class Cert_5_1_12_NewRouterSync(unittest.TestCase):
 
         self.simulator.go(35)
 
-        leader_messages = self.simulator.get_messages_sent_by(LEADER)
+        self.simulator.get_messages_sent_by(LEADER)
         router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
         router2_messages = self.simulator.get_messages_sent_by(ROUTER2)
 
         # 4 - Router1, Router2
-        self.assertTrue(self.verify_step_4(router1_messages, router2_messages, ROUTER1, ROUTER2) or
-                        self.verify_step_4(router2_messages, router1_messages, ROUTER2, ROUTER1))
+        self.assertTrue(
+            self.verify_step_4(router1_messages, router2_messages, ROUTER1,
+                               ROUTER2) or
+            self.verify_step_4(router2_messages, router1_messages, ROUTER2,
+                               ROUTER1))
+
 
 if __name__ == '__main__':
     unittest.main()

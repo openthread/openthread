@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       interrupt.h
-*  Revised:        2017-01-16 19:01:21 +0100 (Mon, 16 Jan 2017)
-*  Revision:       48248
+*  Revised:        2017-06-05 12:13:49 +0200 (Mon, 05 Jun 2017)
+*  Revision:       49096
 *
 *  Description:    Defines and prototypes for the NVIC Interrupt Controller
 *
@@ -122,45 +122,92 @@ extern "C"
 
 //*****************************************************************************
 //
-//! \brief Registers a function to be called when an interrupt occurs.
+//! \brief Registers a function as an interrupt handler in the dynamic vector table.
 //!
-//! This function is used to specify the handler function to be called when the
-//! given interrupt is asserted to the processor. When the interrupt occurs,
-//! if it is enabled (via \ref IntEnable()), the handler function will be called in
-//! interrupt context. Since the handler function can preempt other code, care
-//! must be taken to protect memory or peripherals that are accessed by the
-//! handler and other non-handler code.
+//! \note Only use this function if you want to use the dynamic vector table (in SRAM)!
 //!
-//! \note The use of this function (directly or indirectly via a peripheral
-//! driver interrupt register function) moves the interrupt vector table from
-//! flash to SRAM. Therefore, care must be taken when linking the application
-//! to ensure that the SRAM vector table is located at the beginning of SRAM;
-//! otherwise NVIC will not look in the correct portion of memory for the
-//! vector table (it requires the vector table be on a 1 kB memory alignment).
-//! Normally, the SRAM vector table is so placed via the use of linker scripts.
+//! This function writes a function pointer to the dynamic interrupt vector table
+//! in SRAM to register the function as an interrupt handler (ISR). When the corresponding
+//! interrupt occurs, and it has been enabled (see \ref IntEnable()), the function
+//! pointer is fetched from the dynamic vector table, and the System CPU will
+//! execute the interrupt handler.
 //!
-//! \param ui32Interrupt specifies the interrupt in question.
-//! \param pfnHandler is a pointer to the function to be called.
+//! \note The first call to this function (directly or indirectly via a peripheral
+//! driver interrupt register function) copies the interrupt vector table from
+//! Flash to SRAM. NVIC uses the static vector table (in Flash) until this function
+//! is called.
+//!
+//! \param ui32Interrupt specifies the index in the vector table to modify.
+//! - System exceptions (vectors 0 to 15):
+//!   - INT_NMI_FAULT
+//!   - INT_HARD_FAULT
+//!   - INT_MEMMANAGE_FAULT
+//!   - INT_BUS_FAULT
+//!   - INT_USAGE_FAULT
+//!   - INT_SVCALL
+//!   - INT_DEBUG
+//!   - INT_PENDSV
+//!   - INT_SYSTICK
+//! - Interrupts (vectors >15):
+//!   - INT_AON_GPIO_EDGE
+//!   - INT_I2C_IRQ
+//!   - INT_RFC_CPE_1
+//!   - INT_SPIS_COMB
+//!   - INT_AON_RTC_COMB
+//!   - INT_UART0_COMB
+//!   - INT_AUX_SWEV0
+//!   - INT_SSI0_COMB
+//!   - INT_SSI1_COMB
+//!   - INT_RFC_CPE_0
+//!   - INT_RFC_HW_COMB
+//!   - INT_RFC_CMD_ACK
+//!   - INT_I2S_IRQ
+//!   - INT_AUX_SWEV1
+//!   - INT_WDT_IRQ
+//!   - INT_GPT0A
+//!   - INT_GPT0B
+//!   - INT_GPT1A
+//!   - INT_GPT1B
+//!   - INT_GPT2A
+//!   - INT_GPT2B
+//!   - INT_GPT3A
+//!   - INT_GPT3B
+//!   - INT_CRYPTO_RESULT_AVAIL_IRQ
+//!   - INT_DMA_DONE_COMB
+//!   - INT_DMA_ERR
+//!   - INT_FLASH
+//!   - INT_SWEV0
+//!   - INT_AUX_COMB
+//!   - INT_AON_PROG0
+//!   - INT_PROG0 (Programmable interrupt, see \ref EventRegister())
+//!   - INT_AUX_COMPA
+//!   - INT_AUX_ADC_IRQ
+//!   - INT_TRNG_IRQ
+//! \param pfnHandler is a pointer to the function to register as interrupt handler.
 //!
 //! \return None.
+//!
+//! \sa \ref IntUnregister(), \ref IntEnable()
 //
 //*****************************************************************************
 extern void IntRegister(uint32_t ui32Interrupt, void (*pfnHandler)(void));
 
 //*****************************************************************************
 //
-//! \brief Unregisters the function to be called when an interrupt occurs.
+//! \brief Unregisters an interrupt handler in the dynamic vector table.
 //!
-//! This function is used to indicate that no handler should be called when the
-//! given interrupt is asserted to the processor. The interrupt source will be
-//! automatically disabled (via \ref IntDisable()) if necessary.
+//! This function removes an interrupt handler from the dynamic vector table and
+//! replaces it with the default interrupt handler \ref IntDefaultHandler().
 //!
-//! \param ui32Interrupt specifies the interrupt in question.
+//! \note Remember to disable the interrupt before removing its interrupt handler
+//! from the vector table.
+//!
+//! \param ui32Interrupt specifies the index in the vector table to modify.
+//! - See \ref IntRegister() for list of valid arguments.
 //!
 //! \return None.
 //!
-//! \sa \ref IntRegister() for important information about registering interrupt
-//! handlers.
+//! \sa \ref IntRegister(), \ref IntDisable()
 //
 //*****************************************************************************
 extern void IntUnregister(uint32_t ui32Interrupt);
@@ -170,15 +217,20 @@ extern void IntUnregister(uint32_t ui32Interrupt);
 //! \brief Sets the priority grouping of the interrupt controller.
 //!
 //! This function specifies the split between preemptable priority levels and
-//! subpriority levels in the interrupt priority specification. The range of
-//! the grouping values are dependent upon the hardware implementation; on
-//! the CC26xx family, three bits are available for hardware interrupt
-//! prioritization and therefore priority grouping values of three through
-//! seven have the same effect.
+//! subpriority levels in the interrupt priority specification.
+//!
+//! Three bits are available for hardware interrupt prioritization thus priority
+//! grouping values of three through seven have the same effect.
 //!
 //! \param ui32Bits specifies the number of bits of preemptable priority.
+//! - 0   : No pre-emption priority, eight bits of subpriority.
+//! - 1   : One bit of pre-emption priority, seven bits of subpriority
+//! - 2   : Two bits of pre-emption priority, six bits of subpriority
+//! - 3-7 : Three bits of pre-emption priority, five bits of subpriority
 //!
 //! \return None
+//!
+//! \sa \ref IntPrioritySet()
 //
 //*****************************************************************************
 extern void IntPriorityGroupingSet(uint32_t ui32Bits);
@@ -191,6 +243,10 @@ extern void IntPriorityGroupingSet(uint32_t ui32Bits);
 //! subpriority levels in the interrupt priority specification.
 //!
 //! \return Returns the number of bits of preemptable priority.
+//! - 0   : No pre-emption priority, eight bits of subpriority.
+//! - 1   : One bit of pre-emption priority, seven bits of subpriority
+//! - 2   : Two bits of pre-emption priority, six bits of subpriority
+//! - 3-7 : Three bits of pre-emption priority, five bits of subpriority
 //
 //*****************************************************************************
 extern uint32_t IntPriorityGroupingGet(void);
@@ -199,21 +255,62 @@ extern uint32_t IntPriorityGroupingGet(void);
 //
 //! \brief Sets the priority of an interrupt.
 //!
-//! This function is used to set the priority of an interrupt. When multiple
-//! interrupts are asserted simultaneously, the ones with the highest priority
-//! are processed before the lower priority interrupts. Smaller numbers
-//! correspond to higher interrupt priorities; priority 0 is the highest
+//! This function sets the priority of an interrupt, including system exceptions.
+//! When multiple interrupts are asserted simultaneously, the ones with the highest
+//! priority are processed before the lower priority interrupts. Smaller numbers
+//! correspond to higher interrupt priorities thus priority 0 is the highest
 //! interrupt priority.
 //!
-//! The hardware priority mechanism will only look at the upper N bits of the
-//! priority level (where N is 3 for cc26xx), so any prioritization must be
-//! performed in those bits. The remaining bits can be used to sub-prioritize
-//! the interrupt sources, and may be used by the hardware priority mechanism
-//! on a future part. This arrangement allows priorities to migrate to
-//! different NVIC implementations without changing the gross prioritization
-//! of the interrupts.
+//! \warning This function does not support setting priority of interrupt vectors
+//! one through three which are:
+//! - 1: Reset handler
+//! - 2: NMI handler
+//! - 3: Hard fault handler
 //!
-//! \param ui32Interrupt specifies the interrupt in question.
+//! \param ui32Interrupt specifies the index in the vector table to change priority for.
+//! - System exceptions:
+//!   - INT_MEMMANAGE_FAULT
+//!   - INT_BUS_FAULT
+//!   - INT_USAGE_FAULT
+//!   - INT_SVCALL
+//!   - INT_DEBUG
+//!   - INT_PENDSV
+//!   - INT_SYSTICK
+//! - Interrupts:
+//!   - INT_AON_GPIO_EDGE
+//!   - INT_I2C_IRQ
+//!   - INT_RFC_CPE_1
+//!   - INT_SPIS_COMB
+//!   - INT_AON_RTC_COMB
+//!   - INT_UART0_COMB
+//!   - INT_AUX_SWEV0
+//!   - INT_SSI0_COMB
+//!   - INT_SSI1_COMB
+//!   - INT_RFC_CPE_0
+//!   - INT_RFC_HW_COMB
+//!   - INT_RFC_CMD_ACK
+//!   - INT_I2S_IRQ
+//!   - INT_AUX_SWEV1
+//!   - INT_WDT_IRQ
+//!   - INT_GPT0A
+//!   - INT_GPT0B
+//!   - INT_GPT1A
+//!   - INT_GPT1B
+//!   - INT_GPT2A
+//!   - INT_GPT2B
+//!   - INT_GPT3A
+//!   - INT_GPT3B
+//!   - INT_CRYPTO_RESULT_AVAIL_IRQ
+//!   - INT_DMA_DONE_COMB
+//!   - INT_DMA_ERR
+//!   - INT_FLASH
+//!   - INT_SWEV0
+//!   - INT_AUX_COMB
+//!   - INT_AON_PROG0
+//!   - INT_PROG0 (Programmable interrupt, see \ref EventRegister())
+//!   - INT_AUX_COMPA
+//!   - INT_AUX_ADC_IRQ
+//!   - INT_TRNG_IRQ
 //! \param ui8Priority specifies the priority of the interrupt.
 //! - \ref INT_PRI_LEVEL0 : Highest priority.
 //! - \ref INT_PRI_LEVEL1
@@ -225,6 +322,8 @@ extern uint32_t IntPriorityGroupingGet(void);
 //! - \ref INT_PRI_LEVEL7 : Lowest priority.
 //!
 //! \return None
+//!
+//! \sa \ref IntPriorityGroupingSet()
 //
 //*****************************************************************************
 extern void IntPrioritySet(uint32_t ui32Interrupt, uint8_t ui8Priority);
@@ -235,10 +334,16 @@ extern void IntPrioritySet(uint32_t ui32Interrupt, uint8_t ui8Priority);
 //!
 //! This function gets the priority of an interrupt.
 //!
-//! \param ui32Interrupt specifies the interrupt in question.
+//! \warning This function does not support getting priority of interrupt vectors
+//! one through three which are:
+//! - 1: Reset handler
+//! - 2: NMI handler
+//! - 3: Hard fault handler
+//!
+//! \param ui32Interrupt specifies the index in the vector table to read priority of.
+//! - See \ref IntPrioritySet() for list of valid arguments.
 //!
 //! \return Returns the interrupt priority:
-//! - (-1)                : Invalid interrupt specified as parameter!
 //! - \ref INT_PRI_LEVEL0 : Highest priority.
 //! - \ref INT_PRI_LEVEL1
 //! - \ref INT_PRI_LEVEL2
@@ -255,13 +360,53 @@ extern int32_t IntPriorityGet(uint32_t ui32Interrupt);
 //
 //! \brief Enables an interrupt.
 //!
-//! The specified interrupt is enabled in the interrupt controller. Other
-//! enables for the interrupt (such as at the peripheral level) are unaffected
-//! by this function.
+//! This function enables the specified interrupt in the interrupt controller.
 //!
-//! \param ui32Interrupt specifies the interrupt to be enabled.
+//! \param ui32Interrupt specifies the index in the vector table to enable.
+//! - System exceptions:
+//!   - INT_MEMMANAGE_FAULT
+//!   - INT_BUS_FAULT
+//!   - INT_USAGE_FAULT
+//!   - INT_SYSTICK
+//! - Interrupts:
+//!   - INT_AON_GPIO_EDGE
+//!   - INT_I2C_IRQ
+//!   - INT_RFC_CPE_1
+//!   - INT_SPIS_COMB
+//!   - INT_AON_RTC_COMB
+//!   - INT_UART0_COMB
+//!   - INT_AUX_SWEV0
+//!   - INT_SSI0_COMB
+//!   - INT_SSI1_COMB
+//!   - INT_RFC_CPE_0
+//!   - INT_RFC_HW_COMB
+//!   - INT_RFC_CMD_ACK
+//!   - INT_I2S_IRQ
+//!   - INT_AUX_SWEV1
+//!   - INT_WDT_IRQ
+//!   - INT_GPT0A
+//!   - INT_GPT0B
+//!   - INT_GPT1A
+//!   - INT_GPT1B
+//!   - INT_GPT2A
+//!   - INT_GPT2B
+//!   - INT_GPT3A
+//!   - INT_GPT3B
+//!   - INT_CRYPTO_RESULT_AVAIL_IRQ
+//!   - INT_DMA_DONE_COMB
+//!   - INT_DMA_ERR
+//!   - INT_FLASH
+//!   - INT_SWEV0
+//!   - INT_AUX_COMB
+//!   - INT_AON_PROG0
+//!   - INT_PROG0 (Programmable interrupt, see \ref EventRegister())
+//!   - INT_AUX_COMPA
+//!   - INT_AUX_ADC_IRQ
+//!   - INT_TRNG_IRQ
 //!
 //! \return None
+//!
+//! \sa \ref IntDisable()
 //
 //*****************************************************************************
 extern void IntEnable(uint32_t ui32Interrupt);
@@ -270,13 +415,14 @@ extern void IntEnable(uint32_t ui32Interrupt);
 //
 //! \brief Disables an interrupt.
 //!
-//! The specified interrupt is disabled in the interrupt controller. Other
-//! enables for the interrupt (such as at the peripheral level) are unaffected
-//! by this function.
+//! This function disables the specified interrupt in the interrupt controller.
 //!
-//! \param ui32Interrupt specifies the interrupt to be disabled.
+//! \param ui32Interrupt specifies the index in the vector table to disable.
+//! - See \ref IntEnable() for list of valid arguments.
 //!
 //! \return None
+//!
+//! \sa \ref IntEnable()
 //
 //*****************************************************************************
 extern void IntDisable(uint32_t ui32Interrupt);
@@ -285,34 +431,78 @@ extern void IntDisable(uint32_t ui32Interrupt);
 //
 //! \brief Pends an interrupt.
 //!
-//! The specified interrupt is pended in the interrupt controller. This will
-//! cause the interrupt controller to execute the corresponding interrupt
+//! This function pends the specified interrupt in the interrupt controller.
+//! This causes the interrupt controller to execute the corresponding interrupt
 //! handler at the next available time, based on the current interrupt state
-//! priorities. For example, if called by a higher priority interrupt handler,
-//! the specified interrupt handler will not be called until after the current
-//! interrupt handler has completed execution. The interrupt must have been
-//! enabled for it to be called.
+//! priorities.
 //!
-//! \param ui32Interrupt specifies the interrupt to be pended.
+//! This interrupt controller automatically clears the pending interrupt once the
+//! interrupt handler is executed.
+//!
+//! \param ui32Interrupt specifies the index in the vector table to pend.
+//! - System exceptions:
+//!   - INT_NMI_FAULT
+//!   - INT_PENDSV
+//!   - INT_SYSTICK
+//! - Interrupts:
+//!   - INT_AON_GPIO_EDGE
+//!   - INT_I2C_IRQ
+//!   - INT_RFC_CPE_1
+//!   - INT_SPIS_COMB
+//!   - INT_AON_RTC_COMB
+//!   - INT_UART0_COMB
+//!   - INT_AUX_SWEV0
+//!   - INT_SSI0_COMB
+//!   - INT_SSI1_COMB
+//!   - INT_RFC_CPE_0
+//!   - INT_RFC_HW_COMB
+//!   - INT_RFC_CMD_ACK
+//!   - INT_I2S_IRQ
+//!   - INT_AUX_SWEV1
+//!   - INT_WDT_IRQ
+//!   - INT_GPT0A
+//!   - INT_GPT0B
+//!   - INT_GPT1A
+//!   - INT_GPT1B
+//!   - INT_GPT2A
+//!   - INT_GPT2B
+//!   - INT_GPT3A
+//!   - INT_GPT3B
+//!   - INT_CRYPTO_RESULT_AVAIL_IRQ
+//!   - INT_DMA_DONE_COMB
+//!   - INT_DMA_ERR
+//!   - INT_FLASH
+//!   - INT_SWEV0
+//!   - INT_AUX_COMB
+//!   - INT_AON_PROG0
+//!   - INT_PROG0 (Programmable interrupt, see \ref EventRegister())
+//!   - INT_AUX_COMPA
+//!   - INT_AUX_ADC_IRQ
+//!   - INT_TRNG_IRQ
 //!
 //! \return None
+//!
+//! \sa \ref IntEnable()
 //
 //*****************************************************************************
 extern void IntPendSet(uint32_t ui32Interrupt);
 
 //*****************************************************************************
 //
-//! \brief Query whether an interrupt is pending.
+//! \brief Checks if an interrupt is pending.
 //!
-//! This function will check whether the specified interrupt is pending in the
-//! interrupt controller. The interrupt must have been enabled for it to be
-//! called, so an interrupt can very well be pending waiting to be enabled or
-//! waiting for an interrupt of higher priority to be done executing.
+//! This function checks the interrupt controller to see if an interrupt is pending.
 //!
-//! \note This function does not support the lower 16 IRQ vectors which are
-//! hardware defined for the System CPU.
+//! The interrupt must be enabled in order for the corresponding interrupt handler
+//! to be executed, so an interrupt can be pending waiting to be enabled or waiting
+//! for an interrupt of higher priority to be done executing.
 //!
-//! \param ui32Interrupt specifies the interrupt to be queried.
+//! \note This function does not support reading pending status for system exceptions
+//! (vector table indexes <16).
+//!
+//! \param ui32Interrupt specifies the index in the vector table to check pending
+//! status for.
+//! - See \ref IntPendSet() for list of valid arguments (except system exceptions).
 //!
 //! \return Returns:
 //! - \c true  : Specified interrupt is pending.
@@ -325,12 +515,16 @@ extern bool IntPendGet(uint32_t ui32Interrupt);
 //
 //! \brief Unpends an interrupt.
 //!
-//! The specified interrupt is unpended in the interrupt controller. This will
-//! cause any previously generated interrupts that have not been handled yet
+//! This function unpends the specified interrupt in the interrupt controller.
+//! This causes any previously generated interrupts that have not been handled yet
 //! (due to higher priority interrupts or the interrupt no having been enabled
 //! yet) to be discarded.
 //!
-//! \param ui32Interrupt specifies the interrupt to be unpended.
+//! \note It is not possible to unpend the NMI because it takes effect
+//! immediately when being pended.
+//!
+//! \param ui32Interrupt specifies the index in the vector table to unpend.
+//! - See \ref IntPendSet() for list of valid arguments (except NMI).
 //!
 //! \return None
 //
@@ -339,11 +533,9 @@ extern void IntPendClear(uint32_t ui32Interrupt);
 
 //*****************************************************************************
 //
-//! \brief Enables the processor interrupt.
+//! \brief Enables the CPU interrupt.
 //!
-//! Allows the processor to respond to interrupts. This does not affect the
-//! set of interrupts enabled in the interrupt controller; it just gates the
-//! single interrupt from the controller to the processor.
+//! Allows the CPU to respond to interrupts.
 //!
 //! \return Returns:
 //! - \c true  : Interrupts were disabled and are now enabled.
@@ -353,17 +545,17 @@ extern void IntPendClear(uint32_t ui32Interrupt);
 __STATIC_INLINE bool
 IntMasterEnable(void)
 {
-    // Enable processor interrupts.
+    // Enable CPU interrupts.
     return(CPUcpsie());
 }
 
 //*****************************************************************************
 //
-//! \brief Disables the processor interrupt.
+//! \brief Disables the CPU interrupts with configurable priority.
 //!
-//! Prevents the processor from receiving interrupts. This does not affect the
-//! set of interrupts enabled in the interrupt controller; it just gates the
-//! single interrupt from the controller to the processor.
+//! Prevents the CPU from receiving interrupts except NMI and hard fault. This
+//! does not affect the set of interrupts enabled in the interrupt controller;
+//! it just gates the interrupt from the interrupt controller to the CPU.
 //!
 //! \return Returns:
 //! - \c true  : Interrupts were already disabled when the function was called.
@@ -373,7 +565,7 @@ IntMasterEnable(void)
 __STATIC_INLINE bool
 IntMasterDisable(void)
 {
-    // Disable processor interrupts.
+    // Disable CPU interrupts.
     return(CPUcpsid());
 }
 
@@ -390,12 +582,17 @@ IntMasterDisable(void)
 //! Smaller numbers correspond to higher interrupt priorities. So for example
 //! a priority level mask of 4 will allow interrupts of priority level 0-3,
 //! and interrupts with a numerical priority of 4 and greater will be blocked.
-//!
-//! The hardware priority mechanism will only look at the upper N bits of the
-//! priority level (where N is 3 for the CC26xx family), so any
-//! prioritization must be performed in those bits.
+//! The device supports priority levels 0 through 7.
 //!
 //! \param ui32PriorityMask is the priority level that will be masked.
+//! - 0 : Disable priority masking.
+//! - 1 : Allow priority 0 interrupts, mask interrupts with priority 1-7.
+//! - 2 : Allow priority 0-1 interrupts, mask interrupts with priority 2-7.
+//! - 3 : Allow priority 0-2 interrupts, mask interrupts with priority 3-7.
+//! - 4 : Allow priority 0-3 interrupts, mask interrupts with priority 4-7.
+//! - 5 : Allow priority 0-4 interrupts, mask interrupts with priority 5-7.
+//! - 6 : Allow priority 0-5 interrupts, mask interrupts with priority 6-7.
+//! - 7 : Allow priority 0-6 interrupts, mask interrupts with priority 7.
 //!
 //! \return None.
 //
@@ -418,10 +615,6 @@ IntPriorityMaskSet(uint32_t ui32PriorityMask)
 //! Smaller numbers correspond to higher interrupt priorities. So for example
 //! a priority level mask of 4 will allow interrupts of priority level 0-3,
 //! and interrupts with a numerical priority of 4 and greater will be blocked.
-//!
-//! The hardware priority mechanism will only look at the upper N bits of the
-//! priority level (where N is 3 for the CC26xx family), so any
-//! prioritization must be performed in those bits.
 //!
 //! \return Returns the value of the interrupt priority level mask.
 //

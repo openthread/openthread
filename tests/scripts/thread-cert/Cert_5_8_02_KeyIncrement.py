@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,41 +27,30 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import config
-import node
+import thread_cert
 
 LEADER = 1
 ROUTER = 2
 
-class Cert_5_8_2_KeyIncrement(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1,3):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].set_key_switch_guardtime(0)
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER].set_panid(0xface)
-        self.nodes[ROUTER].set_mode('rsdn')
-        self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER].enable_whitelist()
-        self.nodes[ROUTER].set_key_switch_guardtime(0)
-        self.nodes[ROUTER].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+class Cert_5_8_2_KeyIncrement(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'key_switch_guardtime': 0,
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER]
+        },
+        ROUTER: {
+            'key_switch_guardtime': 0,
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
@@ -82,6 +71,7 @@ class Cert_5_8_2_KeyIncrement(unittest.TestCase):
         addrs = self.nodes[ROUTER].get_addrs()
         for addr in addrs:
             self.assertTrue(self.nodes[LEADER].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

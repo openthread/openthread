@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
 
 #include <mbedtls/md.h>
 
@@ -66,13 +66,13 @@ public:
      * Constructor for initialization of mbedtls_md_context_t.
      *
      */
-    HmacSha256();
+    HmacSha256(void);
 
     /**
      * Destructor for freeing of mbedtls_md_context_t.
      *
      */
-    ~HmacSha256();
+    ~HmacSha256(void);
 
     /**
      * This method sets the key.

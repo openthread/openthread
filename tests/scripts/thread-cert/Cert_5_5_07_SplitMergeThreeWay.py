@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,46 +27,43 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import config
-import node
+import thread_cert
 
 LEADER1 = 1
 ROUTER1 = 2
 ROUTER2 = 3
 ROUTER3 = 4
 
-class Cert_5_5_7_SplitMergeThreeWay(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1,5):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[LEADER1].set_panid(0xface)
-        self.nodes[LEADER1].set_mode('rsdn')
-        self._setUpLeader1()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER1].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER2].set_panid(0xface)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER1].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER3].set_panid(0xface)
-        self.nodes[ROUTER3].set_mode('rsdn')
-        self.nodes[ROUTER3].add_whitelist(self.nodes[LEADER1].get_addr64())
-        self.nodes[ROUTER3].enable_whitelist()
-        self.nodes[ROUTER3].set_router_selection_jitter(1)
+class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [ROUTER1, ROUTER2, ROUTER3]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER1]
+        },
+        ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER1]
+        },
+        ROUTER3: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER1]
+        },
+    }
 
     def _setUpLeader1(self):
         self.nodes[LEADER1].add_whitelist(self.nodes[ROUTER1].get_addr64())
@@ -74,12 +71,6 @@ class Cert_5_5_7_SplitMergeThreeWay(unittest.TestCase):
         self.nodes[LEADER1].add_whitelist(self.nodes[ROUTER3].get_addr64())
         self.nodes[LEADER1].enable_whitelist()
         self.nodes[LEADER1].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
 
     def test(self):
         self.nodes[LEADER1].start()
@@ -119,6 +110,7 @@ class Cert_5_5_7_SplitMergeThreeWay(unittest.TestCase):
         for addr in addrs:
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[ROUTER1].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

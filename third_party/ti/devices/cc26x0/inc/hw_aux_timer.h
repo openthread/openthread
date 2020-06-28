@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_aux_timer_h
-*  Revised:        2017-01-31 09:37:48 +0100 (Tue, 31 Jan 2017)
-*  Revision:       48345
+*  Revised:        2017-05-22 18:50:33 +0200 (Mon, 22 May 2017)
+*  Revision:       49040
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
@@ -68,10 +68,10 @@
 //*****************************************************************************
 // Field:    [13] TICK_SRC_POL
 //
-// Source count polarity for timer 0
+// Tick source polarity for Timer 0.
 // ENUMs:
-// FALL                     Count on falling edges of TICK_SRC
-// RISE                     Count on rising edges of TICK_SRC
+// FALL                     Count on falling edges of TICK_SRC.
+// RISE                     Count on rising edges of TICK_SRC.
 #define AUX_TIMER_T0CFG_TICK_SRC_POL                                0x00002000
 #define AUX_TIMER_T0CFG_TICK_SRC_POL_BITN                                   13
 #define AUX_TIMER_T0CFG_TICK_SRC_POL_M                              0x00002000
@@ -81,39 +81,40 @@
 
 // Field:  [12:8] TICK_SRC
 //
-// Selected tick source for timer 0
+// Select Timer 0 tick source from the synchronous event bus.
 // ENUMs:
-// ADC_IRQ                  Selects ADC_IRQ
-// MCU_EVENT                Selects MCU_EV
-// ACLK_REF                 Selects ACLK_REF
-// AUXIO15                  Selects AUXIO15
-// AUXIO14                  Selects AUXIO14
-// AUXIO13                  Selects AUXIO13
-// AUXIO12                  Selects AUXIO12
-// AUXIO11                  Selects AUXIO11
-// AUXIO10                  Selects AUXIO10
-// AUXIO9                   Selects AUXIO9
-// AUXIO8                   Selects AUXIO8
-// AUXIO7                   Selects AUXIO7
-// AUXIO6                   Selects AUXIO6
-// AUXIO5                   Selects AUXIO5
-// AUXIO4                   Selects AUXIO4
-// AUXIO3                   Selects AUXIO3
-// AUXIO2                   Selects AUXIO2
-// AUXIO1                   Selects AUXIO1
-// AUXIO0                   Selects AUXIO0
-// AON_PROG_WU              Selects AON_PROG_WU
-// AON_SW                   Selects AON_SW
-// OBSMUX1                  Selects OBSMUX1
-// OBSMUX0                  Selects OBSMUX0
-// RTC_4KHZ                 Selects RTC_4KHZ
-// ADC_DONE                 Selects ADC_DONE
-// SMPH_AUTOTAKE_DONE       Selects SMPH_AUTOTAKE_DONE
-// TIMER1_EV                Selects TIMER1_EV
-// TDC_DONE                 Selects TDC_DONE
-// AUX_COMPB                Selects AUX_COMPB
-// AUX_COMPA                Selects AUX_COMPA
-// RTC_CH2_EV               Selects RTC_CH2_EV
+// ADC_IRQ                  AUX_EVCTL:EVSTAT1.ADC_IRQ
+// MCU_EVENT                AUX_EVCTL:EVSTAT1.MCU_EV
+// ACLK_REF                 AUX_EVCTL:EVSTAT1.ACLK_REF
+// AUXIO15                  AUX_EVCTL:EVSTAT1.AUXIO15
+// AUXIO14                  AUX_EVCTL:EVSTAT1.AUXIO14
+// AUXIO13                  AUX_EVCTL:EVSTAT1.AUXIO13
+// AUXIO12                  AUX_EVCTL:EVSTAT1.AUXIO12
+// AUXIO11                  AUX_EVCTL:EVSTAT1.AUXIO11
+// AUXIO10                  AUX_EVCTL:EVSTAT1.AUXIO10
+// AUXIO9                   AUX_EVCTL:EVSTAT1.AUXIO9
+// AUXIO8                   AUX_EVCTL:EVSTAT1.AUXIO8
+// AUXIO7                   AUX_EVCTL:EVSTAT1.AUXIO7
+// AUXIO6                   AUX_EVCTL:EVSTAT1.AUXIO6
+// AUXIO5                   AUX_EVCTL:EVSTAT1.AUXIO5
+// AUXIO4                   AUX_EVCTL:EVSTAT1.AUXIO4
+// AUXIO3                   AUX_EVCTL:EVSTAT1.AUXIO3
+// AUXIO2                   AUX_EVCTL:EVSTAT0.AUXIO2
+// AUXIO1                   AUX_EVCTL:EVSTAT0.AUXIO1
+// AUXIO0                   AUX_EVCTL:EVSTAT0.AUXIO0
+// AON_PROG_WU              AUX_EVCTL:EVSTAT0.AON_PROG_WU
+// AON_SW                   AUX_EVCTL:EVSTAT0.AON_SW
+// OBSMUX1                  AUX_EVCTL:EVSTAT0.OBSMUX1
+// OBSMUX0                  AUX_EVCTL:EVSTAT0.OBSMUX0
+// RTC_4KHZ                 AON_RTC:SUBSEC.VALUE bit 19.
+//                          AON_RTC:CTL.RTC_4KHZ_EN enables this event.
+// ADC_DONE                 AUX_EVCTL:EVSTAT0.ADC_DONE
+// SMPH_AUTOTAKE_DONE       AUX_EVCTL:EVSTAT0.SMPH_AUTOTAKE_DONE
+// TIMER1_EV                AUX_EVCTL:EVSTAT0.TIMER1_EV
+// TDC_DONE                 AUX_EVCTL:EVSTAT0.TDC_DONE
+// AUX_COMPB                AUX_EVCTL:EVSTAT0.AUX_COMPB
+// AUX_COMPA                AUX_EVCTL:EVSTAT0.AUX_COMPA
+// RTC_CH2_EV               AUX_EVCTL:EVSTAT0.AON_RTC_CH2
 #define AUX_TIMER_T0CFG_TICK_SRC_W                                           5
 #define AUX_TIMER_T0CFG_TICK_SRC_M                                  0x00001F00
 #define AUX_TIMER_T0CFG_TICK_SRC_S                                           8
@@ -151,20 +152,25 @@
 
 // Field:   [7:4] PRE
 //
-// Prescaler division ratio is 2^PRE
+// Prescaler division ratio is 2^PRE:
+//
+// 0x0: Divide by 1.
+// 0x1: Divide by 2.
+// 0x2: Divide by 4.
+// ...
+// 0xF: Divide by 32,768.
 #define AUX_TIMER_T0CFG_PRE_W                                                4
 #define AUX_TIMER_T0CFG_PRE_M                                       0x000000F0
 #define AUX_TIMER_T0CFG_PRE_S                                                4
 
 // Field:     [1] MODE
 //
-// Timer 0 mode
+// Timer 0 mode.
+//
+// Configure source for Timer 0 prescaler.
 // ENUMs:
-// TICK                     Timer 0 counter increments only on edges of the
-//                          event set by TICK_SRC. The events are divided
-//                          by the PRE setting.
-// CLK                      Timer 0 increments on every 2^PRE edges of AUX
-//                          clock
+// TICK                     Use event set by TICK_SRC as source for prescaler.
+// CLK                      Use AUX clock as source for prescaler.
 #define AUX_TIMER_T0CFG_MODE                                        0x00000002
 #define AUX_TIMER_T0CFG_MODE_BITN                                            1
 #define AUX_TIMER_T0CFG_MODE_M                                      0x00000002
@@ -174,11 +180,19 @@
 
 // Field:     [0] RELOAD
 //
-// Timer 0 reload setting
+// Timer 0 reload mode.
 // ENUMs:
-// CONT                     Timer is automatically restarted when target is
-//                          reached
-// MAN                      Timer has to be restarted manually
+// CONT                     Continuous mode.
+//
+//                          Timer 0 restarts when the
+//                          counter value becomes equal to or greater than
+//                          ( T0TARGET.VALUE - 1).
+// MAN                      Manual mode.
+//
+//                          Timer 0 stops and
+//                          T0CTL.EN becomes 0 when the counter value
+//                          becomes equal to or greater than
+//                          T0TARGET.VALUE.
 #define AUX_TIMER_T0CFG_RELOAD                                      0x00000001
 #define AUX_TIMER_T0CFG_RELOAD_BITN                                          0
 #define AUX_TIMER_T0CFG_RELOAD_M                                    0x00000001
@@ -193,10 +207,10 @@
 //*****************************************************************************
 // Field:    [13] TICK_SRC_POL
 //
-// Source count polarity for timer 1
+// Tick source polarity for Timer 1.
 // ENUMs:
-// FALL                     Count on falling edges of TICK_SRC
-// RISE                     Count on rising edges of TICK_SRC
+// FALL                     Count on falling edges of TICK_SRC.
+// RISE                     Count on rising edges of TICK_SRC.
 #define AUX_TIMER_T1CFG_TICK_SRC_POL                                0x00002000
 #define AUX_TIMER_T1CFG_TICK_SRC_POL_BITN                                   13
 #define AUX_TIMER_T1CFG_TICK_SRC_POL_M                              0x00002000
@@ -206,39 +220,40 @@
 
 // Field:  [12:8] TICK_SRC
 //
-// Selected tick source for timer 1
+// Select Timer 1 tick source from the synchronous event bus.
 // ENUMs:
-// ADC_IRQ                  Selects ADC_IRQ
-// MCU_EVENT                Selects MCU_EV
-// ACLK_REF                 Selects ACLK_REF
-// AUXIO15                  Selects AUXIO15
-// AUXIO14                  Selects AUXIO14
-// AUXIO13                  Selects AUXIO13
-// AUXIO12                  Selects AUXIO12
-// AUXIO11                  Selects AUXIO11
-// AUXIO10                  Selects AUXIO10
-// AUXIO9                   Selects AUXIO9
-// AUXIO8                   Selects AUXIO8
-// AUXIO7                   Selects AUXIO7
-// AUXIO6                   Selects AUXIO6
-// AUXIO5                   Selects AUXIO5
-// AUXIO4                   Selects AUXIO4
-// AUXIO3                   Selects AUXIO3
-// AUXIO2                   Selects AUXIO2
-// AUXIO1                   Selects AUXIO1
-// AUXIO0                   Selects AUXIO0
-// AON_PROG_WU              Selects AON_PROG_WU
-// AON_SW                   Selects AON_SW
-// OBSMUX1                  Selects OBSMUX1
-// OBSMUX0                  Selects OBSMUX0
-// RTC_4KHZ                 Selects RTC_4KHZ
-// ADC_DONE                 Selects ADC_DONE
-// SMPH_AUTOTAKE_DONE       Selects SMPH_AUTOTAKE_DONE
-// TIMER0_EV                Selects TIMER0_EV
-// TDC_DONE                 Selects TDC_DONE
-// AUX_COMPB                Selects AUX_COMPB
-// AUX_COMPA                Selects AUX_COMPA
-// RTC_CH2_EV               Selects RTC_CH2_EV
+// ADC_IRQ                  AUX_EVCTL:EVSTAT1.ADC_IRQ
+// MCU_EVENT                AUX_EVCTL:EVSTAT1.MCU_EV
+// ACLK_REF                 AUX_EVCTL:EVSTAT1.ACLK_REF
+// AUXIO15                  AUX_EVCTL:EVSTAT1.AUXIO15
+// AUXIO14                  AUX_EVCTL:EVSTAT1.AUXIO14
+// AUXIO13                  AUX_EVCTL:EVSTAT1.AUXIO13
+// AUXIO12                  AUX_EVCTL:EVSTAT1.AUXIO12
+// AUXIO11                  AUX_EVCTL:EVSTAT1.AUXIO11
+// AUXIO10                  AUX_EVCTL:EVSTAT1.AUXIO10
+// AUXIO9                   AUX_EVCTL:EVSTAT1.AUXIO9
+// AUXIO8                   AUX_EVCTL:EVSTAT1.AUXIO8
+// AUXIO7                   AUX_EVCTL:EVSTAT1.AUXIO7
+// AUXIO6                   AUX_EVCTL:EVSTAT1.AUXIO6
+// AUXIO5                   AUX_EVCTL:EVSTAT1.AUXIO5
+// AUXIO4                   AUX_EVCTL:EVSTAT1.AUXIO4
+// AUXIO3                   AUX_EVCTL:EVSTAT1.AUXIO3
+// AUXIO2                   AUX_EVCTL:EVSTAT0.AUXIO2
+// AUXIO1                   AUX_EVCTL:EVSTAT0.AUXIO1
+// AUXIO0                   AUX_EVCTL:EVSTAT0.AUXIO0
+// AON_PROG_WU              AUX_EVCTL:EVSTAT0.AON_PROG_WU
+// AON_SW                   AUX_EVCTL:EVSTAT0.AON_SW
+// OBSMUX1                  AUX_EVCTL:EVSTAT0.OBSMUX1
+// OBSMUX0                  AUX_EVCTL:EVSTAT0.OBSMUX0
+// RTC_4KHZ                 AON_RTC:SUBSEC.VALUE bit 19.
+//                          AON_RTC:CTL.RTC_4KHZ_EN enables this event.
+// ADC_DONE                 AUX_EVCTL:EVSTAT0.ADC_DONE
+// SMPH_AUTOTAKE_DONE       AUX_EVCTL:EVSTAT0.SMPH_AUTOTAKE_DONE
+// TIMER0_EV                AUX_EVCTL:EVSTAT0.TIMER0_EV
+// TDC_DONE                 AUX_EVCTL:EVSTAT0.TDC_DONE
+// AUX_COMPB                AUX_EVCTL:EVSTAT0.AUX_COMPB
+// AUX_COMPA                AUX_EVCTL:EVSTAT0.AUX_COMPA
+// RTC_CH2_EV               AUX_EVCTL:EVSTAT0.AON_RTC_CH2
 #define AUX_TIMER_T1CFG_TICK_SRC_W                                           5
 #define AUX_TIMER_T1CFG_TICK_SRC_M                                  0x00001F00
 #define AUX_TIMER_T1CFG_TICK_SRC_S                                           8
@@ -276,20 +291,25 @@
 
 // Field:   [7:4] PRE
 //
-// Prescaler division ratio is 2^PRE
+// Prescaler division ratio is 2^PRE:
+//
+// 0x0: Divide by 1.
+// 0x1: Divide by 2.
+// 0x2: Divide by 4.
+// ...
+// 0xF: Divide by 32,768.
 #define AUX_TIMER_T1CFG_PRE_W                                                4
 #define AUX_TIMER_T1CFG_PRE_M                                       0x000000F0
 #define AUX_TIMER_T1CFG_PRE_S                                                4
 
 // Field:     [1] MODE
 //
-// Timer 1 mode
+// Timer 1 mode.
+//
+// Configure source for Timer 1 prescaler.
 // ENUMs:
-// TICK                     Timer 1 counter increments only on edges of the
-//                          event set by TICK_SRC. The events are divided
-//                          by the PRE setting.
-// CLK                      Timer 1 increments on every 2^PRE edges of AUX
-//                          clock
+// TICK                     Use event set by TICK_SRC as source for prescaler.
+// CLK                      Use AUX clock as source for prescaler.
 #define AUX_TIMER_T1CFG_MODE                                        0x00000002
 #define AUX_TIMER_T1CFG_MODE_BITN                                            1
 #define AUX_TIMER_T1CFG_MODE_M                                      0x00000002
@@ -299,11 +319,19 @@
 
 // Field:     [0] RELOAD
 //
-// Timer 1 reload setting
+// Timer 1 reload mode.
 // ENUMs:
-// CONT                     Timer is automatically restarted when target is
-//                          reached
-// MAN                      Timer has to be restarted manually
+// CONT                     Continuous mode.
+//
+//                          Timer 1 restarts when the
+//                          counter value becomes equal to or greater than
+//                          ( T1TARGET.VALUE - 1).
+// MAN                      Manual mode.
+//
+//                          Timer 1 stops and
+//                          T1CTL.EN becomes 0 when the counter value
+//                          becomes equal to or greater than
+//                          T1TARGET.VALUE.
 #define AUX_TIMER_T1CFG_RELOAD                                      0x00000001
 #define AUX_TIMER_T1CFG_RELOAD_BITN                                          0
 #define AUX_TIMER_T1CFG_RELOAD_M                                    0x00000001
@@ -318,12 +346,12 @@
 //*****************************************************************************
 // Field:     [0] EN
 //
-// Timer 0 run enable control. The counter restarts when enabling the timer. If
-// T0CFG.RELOAD = 0, the timer is automatically disabled when reaching
-// T0TARGET.VALUE
+// Timer 0 enable.
 //
-// 0: Disable timer 0
-// 1: Enable timer 0
+// 0: Disable Timer 0.
+// 1: Enable Timer 0.
+//
+// The counter restarts from 0 when you enable Timer 0.
 #define AUX_TIMER_T0CTL_EN                                          0x00000001
 #define AUX_TIMER_T0CTL_EN_BITN                                              0
 #define AUX_TIMER_T0CTL_EN_M                                        0x00000001
@@ -336,13 +364,29 @@
 //*****************************************************************************
 // Field:  [15:0] VALUE
 //
-// Timer 0 counts from 0 to VALUE. Then gives an event and restarts if
-// configured to do to so in the T0CFG.RELOAD setting. If VALUE is changed
-// while timer 0 is running so that the count becomes higher than VALUE timer 0
-// will also restart if configured to do so.
+// Timer 0 target value.
 //
-// If T0CFG.MODE=0,no prescaler is used, and VALUE equals 1, the TIMER0_EV
-// event line will be always set
+// Manual Reload Mode:
+// - Timer 0 increments until the counter value becomes equal to or greater
+// than VALUE.
+// - AUX_TIMER0_EV pulses high for 1 AUX clock period when the counter value is
+// equal to or greater than VALUE.
+//
+// Note: When VALUE is 0, Timer 0 counts to 1. AUX_TIMER0_EV pulses high for 1
+// AUX clock period.
+//
+// Continuous Reload Mode:
+// - Timer 0 increments until the counter value becomes equal to or greater
+// than ( VALUE - 1), then restarts from 0.
+// - AUX_TIMER0_EV pulses high for 1 AUX clock period when the counter value is
+// 0, except for when you enable the timer.
+//
+// Note: When VALUE is less than 2, Timer 0 counter value remains 0.
+// AUX_TIMER0_EV goes high and remains high 1 AUX clock period after you enable
+// the timer.
+//
+//
+// It is allowed to update the VALUE while the timer runs.
 #define AUX_TIMER_T0TARGET_VALUE_W                                          16
 #define AUX_TIMER_T0TARGET_VALUE_M                                  0x0000FFFF
 #define AUX_TIMER_T0TARGET_VALUE_S                                           0
@@ -354,13 +398,29 @@
 //*****************************************************************************
 // Field:   [7:0] VALUE
 //
-// Timer 1 counts from 0 to VALUE. Then gives an event and restarts if
-// configured to do to so in the T1CFG.RELOAD setting. If VALUE is changed
-// while timer 1 is running so that the count becomes higher than VALUE timer 1
-// will also restart if configured to do so.
+// Timer 1 target value.
 //
-// If T1CFG.MODE=0,no prescaler is used, and VALUE equals 1, the TIMER1_EV
-// event line will be always set
+// Manual Reload Mode:
+// - Timer 1 increments until the counter value becomes equal to or greater
+// than VALUE.
+// - AUX_TIMER1_EV pulses high for 1 AUX clock period when the counter value is
+// equal to or greater than VALUE.
+//
+// Note: When VALUE is 0, Timer 1 counts to 1. AUX_TIMER1_EV pulses high for 1
+// AUX clock period.
+//
+// Continuous Reload Mode:
+// - Timer 1 increments until the counter value becomes equal to or greater
+// than ( VALUE - 1), then restarts from 0.
+// - AUX_TIMER1_EV pulses high for 1 AUX clock period when the counter value is
+// 0, except for when you enable the timer.
+//
+// Note: When VALUE is less than 2, Timer 1 counter value remains 0.
+// AUX_TIMER1_EV goes high and remains high 1 AUX clock period after you enable
+// the timer.
+//
+//
+// It is allowed to update the VALUE while the timer runs.
 #define AUX_TIMER_T1TARGET_VALUE_W                                           8
 #define AUX_TIMER_T1TARGET_VALUE_M                                  0x000000FF
 #define AUX_TIMER_T1TARGET_VALUE_S                                           0
@@ -372,12 +432,12 @@
 //*****************************************************************************
 // Field:     [0] EN
 //
-// Timer 1 run enable control. The counter restarts when enabling the timer. If
-// T1CFG.RELOAD = 0, the timer is automatically disabled when reaching
-// T1TARGET.VALUE
+// Timer 1 enable.
 //
-// 0: Disable timer 1
-// 1: Enable timer 1
+// 0: Disable Timer 1.
+// 1: Enable Timer 1.
+//
+// The counter restarts from 0 when you enable Timer 1.
 #define AUX_TIMER_T1CTL_EN                                          0x00000001
 #define AUX_TIMER_T1CTL_EN_BITN                                              0
 #define AUX_TIMER_T1CTL_EN_M                                        0x00000001

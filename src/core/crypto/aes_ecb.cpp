@@ -36,7 +36,7 @@
 namespace ot {
 namespace Crypto {
 
-AesEcb::AesEcb()
+AesEcb::AesEcb(void)
 {
     mbedtls_aes_init(&mContext);
 }
@@ -51,7 +51,7 @@ void AesEcb::Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSiz
     mbedtls_aes_crypt_ecb(&mContext, MBEDTLS_AES_ENCRYPT, aInput, aOutput);
 }
 
-AesEcb::~AesEcb()
+AesEcb::~AesEcb(void)
 {
     mbedtls_aes_free(&mContext);
 }

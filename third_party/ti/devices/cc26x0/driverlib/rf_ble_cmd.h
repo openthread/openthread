@@ -1,9 +1,9 @@
 /******************************************************************************
 *  Filename:       rf_ble_cmd.h
-*  Revised:        2017-01-30 18:00:26 +0100 (Mon, 30 Jan 2017)
-*  Revision:       17599
+*  Revised:        2017-07-05 16:17:29 +0200 (Wed, 05 Jul 2017)
+*  Revision:       17839
 *
-*  Description:    CC26x0/CC13x0 API for Bluetooth Low Energy commands
+*  Description:    CC26x0 API for Bluetooth Low Energy commands
 *
 *  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 *  All rights reserved.

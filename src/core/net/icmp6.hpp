@@ -39,13 +39,14 @@
 #include <openthread/icmp6.h>
 
 #include "common/encoding.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_headers.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 namespace ot {
 namespace Ip6 {
+
+using ot::Encoding::BigEndian::HostSwap16;
 
 /**
  * @addtogroup core-ip6-icmp6
@@ -83,9 +84,12 @@ public:
      */
     enum Type
     {
-        kTypeDstUnreach  = OT_ICMP6_TYPE_DST_UNREACH,  ///< Destination Unreachable
-        kTypeEchoRequest = OT_ICMP6_TYPE_ECHO_REQUEST, ///< Echo Request
-        kTypeEchoReply   = OT_ICMP6_TYPE_ECHO_REPLY,   ///< Echo Reply
+        kTypeDstUnreach       = OT_ICMP6_TYPE_DST_UNREACH,       ///< Destination Unreachable
+        kTypePacketToBig      = OT_ICMP6_TYPE_PACKET_TO_BIG,     ///< Packet To Big
+        kTypeTimeExceeded     = OT_ICMP6_TYPE_TIME_EXCEEDED,     ///< Time Exceeded
+        kTypeParameterProblem = OT_ICMP6_TYPE_PARAMETER_PROBLEM, ///< Parameter Problem
+        kTypeEchoRequest      = OT_ICMP6_TYPE_ECHO_REQUEST,      ///< Echo Request
+        kTypeEchoReply        = OT_ICMP6_TYPE_ECHO_REPLY,        ///< Echo Reply
     };
 
     /**
@@ -95,7 +99,17 @@ public:
     enum Code
     {
         kCodeDstUnreachNoRoute = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE, ///< Destination Unreachable No Route
+        kCodeFragmReasTimeEx   = OT_ICMP6_CODE_FRAGM_REAS_TIME_EX,   ///< Fragment Reassembly Time Exceeded
     };
+
+    /**
+     * This method indicates whether the ICMPv6 message is an error message.
+     *
+     * @retval TRUE if the ICMPv6 message is an error message.
+     * @retval FALSE if the ICMPv6 message is an informational message.
+     *
+     */
+    bool IsError(void) const { return mType < OT_ICMP6_TYPE_ECHO_REQUEST; }
 
     /**
      * This method returns the ICMPv6 message type.
@@ -198,7 +212,7 @@ public:
  * This class implements ICMPv6 message handlers.
  *
  */
-class IcmpHandler : public otIcmp6Handler
+class IcmpHandler : public otIcmp6Handler, public LinkedListEntry<IcmpHandler>
 {
     friend class Icmp;
 
@@ -214,7 +228,7 @@ public:
     {
         mReceiveCallback = aCallback;
         mContext         = aContext;
-        mNext            = NULL;
+        mNext            = nullptr;
     }
 
 private:
@@ -222,8 +236,6 @@ private:
     {
         mReceiveCallback(mContext, &aMessage, &aMessageInfo, &aIcmp6Header);
     }
-
-    IcmpHandler *GetNext(void) { return static_cast<IcmpHandler *>(mNext); }
 };
 
 /**
@@ -246,7 +258,7 @@ public:
      *
      * @param[in]  aReserved  The number of header bytes to reserve after the ICMP header.
      *
-     * @returns A pointer to the message or NULL if no buffers are available.
+     * @returns A pointer to the message or nullptr if no buffers are available.
      *
      */
     Message *NewMessage(uint16_t aReserved);
@@ -282,7 +294,7 @@ public:
      * @param[in]  aType         The ICMPv6 message type.
      * @param[in]  aCode         The ICMPv6 message code.
      * @param[in]  aMessageInfo  A reference to the message info.
-     * @param[in]  aHeader       The IPv6 header of the error-causing message.
+     * @param[in]  aMessage      The error-causing IPv6 message.
      *
      * @retval OT_ERROR_NONE     Successfully enqueued the ICMPv6 error message.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available.
@@ -291,7 +303,7 @@ public:
     otError SendError(IcmpHeader::Type   aType,
                       IcmpHeader::Code   aCode,
                       const MessageInfo &aMessageInfo,
-                      const Header &     aHeader);
+                      const Message &    aMessage);
 
     /**
      * This method handles an ICMPv6 message.
@@ -309,14 +321,11 @@ public:
     /**
      * This method updates the ICMPv6 checksum.
      *
-     * @param[in]  aMessage               A reference to the ICMPv6 message.
-     * @param[in]  aPseudoHeaderChecksum  The pseudo-header checksum value.
-     *
-     * @retval OT_ERROR_NONE          Successfully updated the ICMPv6 checksum.
-     * @retval OT_ERROR_INVALID_ARGS  The message was invalid.
+     * @param[in]  aMessage   A reference to the ICMPv6 message.
+     * @param[in]  aChecksum  The pseudo-header checksum value.
      *
      */
-    otError UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
+    void UpdateChecksum(Message &aMessage, uint16_t aChecksum);
 
     /**
      * This method indicates whether or not ICMPv6 Echo processing is enabled.
@@ -345,9 +354,9 @@ public:
     bool ShouldHandleEchoRequest(const MessageInfo &aMessageInfo);
 
 private:
-    otError HandleEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
+    otError HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo);
 
-    IcmpHandler *mHandlers;
+    LinkedList<IcmpHandler> mHandlers;
 
     uint16_t        mEchoSequence;
     otIcmp6EchoMode mEchoMode;
@@ -361,4 +370,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // NET_ICMP6_HPP_
+#endif // ICMP6_HPP_

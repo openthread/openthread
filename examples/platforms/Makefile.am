@@ -31,16 +31,19 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
+    cc1352                                \
     cc2538                                \
     cc2650                                \
     cc2652                                \
-    da15000                               \
-    efr32                                 \
-    emsk                                  \
+    efr32mg12                             \
+    efr32mg13                             \
+    efr32mg21                             \
     gp712                                 \
+    k32w                                  \
     kw41z                                 \
-    nrf52840                              \
-    posix                                 \
+    nrf528xx                              \
+    simulation                            \
+    qpg6095                               \
     samr21                                \
     utils                                 \
     $(NULL)
@@ -51,69 +54,64 @@ SUBDIRS                                 = \
     utils                                 \
     $(NULL)
 
-if OPENTHREAD_EXAMPLES_CC2538
+if OPENTHREAD_PLATFORM_CC1352
+SUBDIRS                                += cc1352
+endif
+
+if OPENTHREAD_PLATFORM_CC2538
 SUBDIRS                                += cc2538
 endif
 
-if OPENTHREAD_EXAMPLES_CC2650
+if OPENTHREAD_PLATFORM_CC2650
 SUBDIRS                                += cc2650
 endif
 
-if OPENTHREAD_EXAMPLES_CC2652
+if OPENTHREAD_PLATFORM_CC2652
 SUBDIRS                                += cc2652
 endif
 
-if OPENTHREAD_EXAMPLES_DA15000
-SUBDIRS                                += da15000
+if OPENTHREAD_PLATFORM_EFR32MG12
+SUBDIRS                                += efr32mg12
 endif
 
-if OPENTHREAD_EXAMPLES_EFR32
-SUBDIRS                                += efr32
+if OPENTHREAD_PLATFORM_EFR32MG13
+SUBDIRS                                += efr32mg13
 endif
 
-if OPENTHREAD_EXAMPLES_EMSK
-SUBDIRS                                += emsk
+if OPENTHREAD_PLATFORM_EFR32MG21
+SUBDIRS                                += efr32mg21
 endif
 
-if OPENTHREAD_EXAMPLES_GP712
+if OPENTHREAD_PLATFORM_GP712
 SUBDIRS                                += gp712
 endif
 
-if OPENTHREAD_EXAMPLES_KW41Z
+if OPENTHREAD_PLATFORM_K32W
+SUBDIRS                                += k32w
+endif
+
+if OPENTHREAD_PLATFORM_KW41Z
 SUBDIRS                                += kw41z
 endif
 
-if OPENTHREAD_EXAMPLES_NRF52840
-SUBDIRS                                += nrf52840
+if OPENTHREAD_PLATFORM_NRF528XX
+SUBDIRS                                += nrf528xx
 endif
 
-if OPENTHREAD_EXAMPLES_POSIX
-SUBDIRS                                += posix
+if OPENTHREAD_PLATFORM_SIMULATION
+SUBDIRS                                += simulation
 endif
 
-if OPENTHREAD_EXAMPLES_SAMR21
+if OPENTHREAD_PLATFORM_QPG6095
+SUBDIRS                                += qpg6095
+endif
+
+if OPENTHREAD_PLATFORM_SAMR21
 SUBDIRS                                += samr21
 endif
 
 noinst_HEADERS                          = \
-    platform.h                            \
-    $(NULL)
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cc2538                                \
-    cc2650                                \
-    cc2652                                \
-    da15000                               \
-    efr32                                 \
-    emsk                                  \
-    gp712                                 \
-    kw41z                                 \
-    nrf52840                              \
-    posix                                 \
-    samr21                                \
-    utils                                 \
+    openthread-system.h                   \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

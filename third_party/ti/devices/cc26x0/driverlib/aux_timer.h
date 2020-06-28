@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       aux_timer.h
-*  Revised:        2017-05-03 14:53:24 +0200 (Wed, 03 May 2017)
-*  Revision:       48884
+*  Revised:        2017-06-05 12:13:49 +0200 (Mon, 05 Jun 2017)
+*  Revision:       49096
 *
 *  Description:    Defines and prototypes for the AUX Timer
 *

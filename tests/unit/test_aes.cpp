@@ -27,11 +27,9 @@
  */
 
 #include <openthread/config.h>
-#include <openthread/openthread.h>
 
 #include "common/debug.hpp"
 #include "crypto/aes_ccm.hpp"
-#include "utils/wrap_string.h"
 
 #include "test_platform.h"
 #include "test_util.h"
@@ -67,18 +65,20 @@ void TestMacBeaconFrame(void)
         0xAC, 0xDE, 0x48, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x05, 0x02,
     };
 
-    VerifyOrQuit(instance != NULL, "Null OpenThread instance");
+    VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
 
     aesCcm.SetKey(key, sizeof(key));
     aesCcm.Init(headerLength, payloadLength, tagLength, nonce, sizeof(nonce));
     aesCcm.Header(test, headerLength);
-    aesCcm.Finalize(test + headerLength, &tagLength);
+    VerifyOrQuit(aesCcm.GetTagLength() == tagLength, "AesCcm::GetTagLength() failed");
+    aesCcm.Finalize(test + headerLength);
 
     VerifyOrQuit(memcmp(test, encrypted, sizeof(encrypted)) == 0, "TestMacBeaconFrame encrypt failed");
 
     aesCcm.Init(headerLength, payloadLength, tagLength, nonce, sizeof(nonce));
     aesCcm.Header(test, headerLength);
-    aesCcm.Finalize(test + headerLength, &tagLength);
+    VerifyOrQuit(aesCcm.GetTagLength() == tagLength, "AesCcm::GetTagLength() failed");
+    aesCcm.Finalize(test + headerLength);
 
     VerifyOrQuit(memcmp(test, decrypted, sizeof(decrypted)) == 0, "TestMacBeaconFrame decrypt failed");
 
@@ -123,19 +123,20 @@ void TestMacCommandFrame()
     aesCcm.SetKey(key, sizeof(key));
     aesCcm.Init(headerLength, payloadLength, tagLength, nonce, sizeof(nonce));
     aesCcm.Header(test, headerLength);
-    aesCcm.Payload(test + headerLength, test + headerLength, payloadLength, true);
-    aesCcm.Finalize(test + headerLength + payloadLength, &tagLength);
-    VerifyOrQuit(memcmp(test, encrypted, sizeof(encrypted)) == 0, "TestMacCommandFrame encrypt failed\n");
+    aesCcm.Payload(test + headerLength, test + headerLength, payloadLength, ot::Crypto::AesCcm::kEncrypt);
+    VerifyOrQuit(aesCcm.GetTagLength() == tagLength, "AesCcm::GetTagLength() failed");
+    aesCcm.Finalize(test + headerLength + payloadLength);
+    VerifyOrQuit(memcmp(test, encrypted, sizeof(encrypted)) == 0, "TestMacCommandFrame encrypt failed");
 
     aesCcm.Init(headerLength, payloadLength, tagLength, nonce, sizeof(nonce));
     aesCcm.Header(test, headerLength);
-    aesCcm.Payload(test + headerLength, test + headerLength, payloadLength, false);
-    aesCcm.Finalize(test + headerLength + payloadLength, &tagLength);
+    aesCcm.Payload(test + headerLength, test + headerLength, payloadLength, ot::Crypto::AesCcm::kDecrypt);
+    VerifyOrQuit(aesCcm.GetTagLength() == tagLength, "AesCcm::GetTagLength() failed");
+    aesCcm.Finalize(test + headerLength + payloadLength);
 
-    VerifyOrQuit(memcmp(test, decrypted, sizeof(decrypted)) == 0, "TestMacCommandFrame decrypt failed\n");
+    VerifyOrQuit(memcmp(test, decrypted, sizeof(decrypted)) == 0, "TestMacCommandFrame decrypt failed");
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestMacBeaconFrame();
@@ -143,4 +144,3 @@ int main(void)
     printf("All tests passed\n");
     return 0;
 }
-#endif

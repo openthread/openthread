@@ -32,11 +32,24 @@
 
 #include <openthread/diag.h>
 #include <openthread/ncp.h>
-#include <openthread/openthread.h>
+#include <openthread/tasklet.h>
 
-#include "platform.h"
+#include "openthread-system.h"
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_EXAMPLES_SIMULATION
+#include <setjmp.h>
+#include <unistd.h>
+
+jmp_buf gResetJump;
+
+void __gcov_flush();
+#endif
+
+#ifndef OPENTHREAD_ENABLE_COVERAGE
+#define OPENTHREAD_ENABLE_COVERAGE 0
+#endif
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
     return calloc(aNum, aSize);
@@ -50,23 +63,34 @@ void otPlatFree(void *aPtr)
 
 void otTaskletsSignalPending(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 int main(int argc, char *argv[])
 {
-    otInstance *sInstance;
+    otInstance *instance;
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_EXAMPLES_SIMULATION
+    if (setjmp(gResetJump))
+    {
+        alarm(0);
+#if OPENTHREAD_ENABLE_COVERAGE
+        __gcov_flush();
+#endif
+        execvp(argv[0], argv);
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     size_t   otInstanceBufferLength = 0;
     uint8_t *otInstanceBuffer       = NULL;
 #endif
 
 pseudo_reset:
 
-    PlatformInit(argc, argv);
+    otSysInit(argc, argv);
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     // Call to query the buffer size
     (void)otInstanceInit(NULL, &otInstanceBufferLength);
 
@@ -75,26 +99,22 @@ pseudo_reset:
     assert(otInstanceBuffer);
 
     // Initialize OpenThread with the buffer
-    sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
+    instance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
 #else
-    sInstance = otInstanceInitSingle();
+    instance = otInstanceInitSingle();
 #endif
-    assert(sInstance);
+    assert(instance);
 
-    otNcpInit(sInstance);
+    otNcpInit(instance);
 
-#if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(sInstance);
-#endif
-
-    while (!PlatformPseudoResetWasRequested())
+    while (!otSysPseudoResetWasRequested())
     {
-        otTaskletsProcess(sInstance);
-        PlatformProcessDrivers(sInstance);
+        otTaskletsProcess(instance);
+        otSysProcessDrivers(instance);
     }
 
-    otInstanceFinalize(sInstance);
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    otInstanceFinalize(instance);
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     free(otInstanceBuffer);
 #endif
 
@@ -102,21 +122,3 @@ pseudo_reset:
 
     return 0;
 }
-
-    /*
-     * Provide, if required an "otPlatLog()" function
-     */
-
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP)
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
-{
-    OT_UNUSED_VARIABLE(aLogLevel);
-    OT_UNUSED_VARIABLE(aLogRegion);
-    OT_UNUSED_VARIABLE(aFormat);
-
-    va_list ap;
-    va_start(ap, aFormat);
-    otNcpPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
-    va_end(ap);
-}
-#endif

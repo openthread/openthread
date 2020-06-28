@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,11 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
-import node
+import thread_cert
 
 LEADER = 1
 ROUTER = 2
@@ -40,43 +39,34 @@ SED1 = 4
 
 MTDS = [ED1, SED1]
 
-class Cert_5_6_1_NetworkDataLeaderAsBr(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1,5):
-            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER].set_panid(0xface)
-        self.nodes[ROUTER].set_mode('rsdn')
-        self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER].add_whitelist(self.nodes[ED1].get_addr64())
-        self.nodes[ROUTER].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[ROUTER].enable_whitelist()
-        self.nodes[ROUTER].set_router_selection_jitter(1)
-
-        self.nodes[ED1].set_panid(0xface)
-        self.nodes[ED1].set_mode('rsn')
-        self.nodes[ED1].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[ED1].enable_whitelist()
-
-        self.nodes[SED1].set_panid(0xface)
-        self.nodes[SED1].set_mode('s')
-        self.nodes[SED1].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[SED1].enable_whitelist()
-        self.nodes[SED1].set_timeout(3)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+class Cert_5_6_1_NetworkDataLeaderAsBr(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER]
+        },
+        ROUTER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, ED1, SED1]
+        },
+        ED1: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [ROUTER]
+        },
+        SED1: {
+            'is_mtd': True,
+            'mode': 's',
+            'panid': 0xface,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [ROUTER]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
@@ -86,6 +76,12 @@ class Cert_5_6_1_NetworkDataLeaderAsBr(unittest.TestCase):
         self.nodes[LEADER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[LEADER].add_prefix('2001:2:0:2::/64', 'paro')
         self.nodes[LEADER].register_netdata()
+
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
+        self.simulator.set_lowpan_context(2, '2001:2:0:2::/64')
+
+        self.simulator.go(5)
 
         self.nodes[ROUTER].start()
         self.simulator.go(5)
@@ -112,6 +108,7 @@ class Cert_5_6_1_NetworkDataLeaderAsBr(unittest.TestCase):
         for addr in addrs:
             if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

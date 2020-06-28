@@ -32,10 +32,9 @@
  *   This file defines the raw OpenThread IEEE 802.15.4 Link Layer API.
  */
 
-#ifndef LINK_RAW_H_
-#define LINK_RAW_H_
+#ifndef OPENTHREAD_LINK_RAW_H_
+#define OPENTHREAD_LINK_RAW_H_
 
-#include <openthread/types.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -53,16 +52,29 @@ extern "C" {
  */
 
 /**
+ * This function pointer on receipt of a IEEE 802.15.4 frame.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aFrame       A pointer to the received frame or NULL if the receive operation was aborted.
+ * @param[in]  aError       OT_ERROR_NONE when successfully received a frame.
+ *                          OT_ERROR_ABORT when reception was aborted and a frame was not received.
+ *
+ */
+typedef void (*otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
+
+/**
  * This function enables/disables the raw link-layer.
  *
  * @param[in] aInstance     A pointer to an OpenThread instance.
- * @param[in] aEnabled      TRUE to enable raw link-layer, FALSE otherwise.
+ * @param[in] aCallback     A pointer to a function called on receipt of a IEEE 802.15.4 frame. NULL to disable the
+ * raw-link layer.
  *
- * @retval OT_ERROR_NONE            If the enable state was successfully set.
+ * @retval OT_ERROR_FAILED          The radio could not be enabled/disabled.
  * @retval OT_ERROR_INVALID_STATE   If the OpenThread Ip6 interface is already enabled.
+ * @retval OT_ERROR_NONE            If the enable state was successfully set.
  *
  */
-otError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled);
+otError otLinkRawSetReceiveDone(otInstance *aInstance, otLinkRawReceiveDone aCallback);
 
 /**
  * This function indicates whether or not the raw link-layer is enabled.
@@ -99,6 +111,18 @@ bool otLinkRawGetPromiscuous(otInstance *aInstance);
 otError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable);
 
 /**
+ * Set the Short Address for address filtering.
+ *
+ * @param[in] aInstance      A pointer to an OpenThread instance.
+ * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
+ *
+ * @retval OT_ERROR_NONE             If successful.
+ * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+ *
+ */
+otError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
+
+/**
  * Transition the radio from Receive to Sleep.
  * Turn off the radio.
  *
@@ -112,28 +136,16 @@ otError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable);
 otError otLinkRawSleep(otInstance *aInstance);
 
 /**
- * This function pointer on receipt of a IEEE 802.15.4 frame.
- *
- * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aFrame       A pointer to the received frame or NULL if the receive operation was aborted.
- * @param[in]  aError       OT_ERROR_NONE when successfully received a frame.
- *                          OT_ERROR_ABORT when reception was aborted and a frame was not received.
- *
- */
-typedef void(OTCALL *otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
-
-/**
  * Transitioning the radio from Sleep to Receive.
  * Turn on the radio.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aCallback    A pointer to a function called on receipt of a IEEE 802.15.4 frame.
  *
  * @retval OT_ERROR_NONE             Successfully transitioned to Receive.
  * @retval OT_ERROR_INVALID_STATE    The radio was disabled or transmitting.
  *
  */
-otError otLinkRawReceive(otInstance *aInstance, otLinkRawReceiveDone aCallback);
+otError otLinkRawReceive(otInstance *aInstance);
 
 /**
  * The radio transitions from Transmit to Receive.
@@ -175,17 +187,16 @@ typedef void (*otLinkRawTransmitDone)(otInstance *  aInstance,
  *
  * The transmit sequence consists of:
  * 1. Transitioning the radio to Transmit from Receive.
- * 2. Transmits the psdu on the given channel and at the given transmit power.
+ * 2. Transmits the PSDU on the given channel and at the given transmit power.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aFrame       A pointer to the frame that was transmitted.
  * @param[in]  aCallback    A pointer to a function called on completion of the transmission.
  *
  * @retval OT_ERROR_NONE          Successfully transitioned to Transmit.
  * @retval OT_ERROR_INVALID_STATE The radio was not in the Receive state.
  *
  */
-otError otLinkRawTransmit(otInstance *aInstance, otRadioFrame *aFrame, otLinkRawTransmitDone aCallback);
+otError otLinkRawTransmit(otInstance *aInstance, otLinkRawTransmitDone aCallback);
 
 /**
  * Get the most recent RSSI measurement.
@@ -235,10 +246,10 @@ otError otLinkRawEnergyScan(otInstance *            aInstance,
                             otLinkRawEnergyScanDone aCallback);
 
 /**
- * Enable/Disable source match for AutoPend.
+ * Enable/Disable source match for frame pending.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aEnable      Enable/disable source match for automatical pending.
+ * @param[in]  aEnable      Enable/disable source match for frame pending.
  *
  * @retval OT_ERROR_NONE             If successful.
  * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
@@ -257,7 +268,7 @@ otError otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable);
  * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
  *
  */
-otError otLinkRawSrcMatchAddShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
+otError otLinkRawSrcMatchAddShortEntry(otInstance *aInstance, uint16_t aShortAddress);
 
 /**
  * Adding extended address to the source match table.
@@ -283,7 +294,7 @@ otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const otExtAddress *
  * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
  *
  */
-otError otLinkRawSrcMatchClearShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
+otError otLinkRawSrcMatchClearShortEntry(otInstance *aInstance, uint16_t aShortAddress);
 
 /**
  * Removing extended address to the source match table of the radio.
@@ -321,6 +332,49 @@ otError otLinkRawSrcMatchClearShortEntries(otInstance *aInstance);
 otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
 
 /**
+ * Update MAC keys and key index.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[in]   aKeyIdMode   The key ID mode.
+ * @param[in]   aKeyId       The key index.
+ * @param[in]   aPrevKey     The previous MAC key.
+ * @param[in]   aCurrKey     The current MAC key.
+ * @param[in]   aNextKey     The next MAC key.
+ *
+ * @retval OT_ERROR_NONE             If successful.
+ * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+ *
+ */
+otError otLinkRawSetMacKey(otInstance *    aInstance,
+                           uint8_t         aKeyIdMode,
+                           uint8_t         aKeyId,
+                           const otMacKey *aPrevKey,
+                           const otMacKey *aCurrKey,
+                           const otMacKey *aNextKey);
+
+/**
+ * Sets the current MAC frame counter value.
+ *
+ * @param[in]   aInstance         A pointer to an OpenThread instance.
+ * @param[in]   aMacFrameCounter  The MAC frame counter value.
+ *
+ * @retval OT_ERROR_NONE             If successful.
+ * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+ *
+ */
+otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
+
+/**
+ * Get current platform time (64bits width) of the radio chip.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns The current radio time in microseconds.
+ *
+ */
+uint64_t otLinkRawGetRadioTime(otInstance *aInstance);
+
+/**
  * @}
  *
  */
@@ -329,4 +383,4 @@ otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
 } // extern "C"
 #endif
 
-#endif // LINK_RAW_H_
+#endif // OPENTHREAD_LINK_RAW_H_

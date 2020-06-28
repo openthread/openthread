@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_JOINER_H_
 #define OPENTHREAD_JOINER_H_
 
-#include <openthread/types.h>
+#include <openthread/platform/radio.h>
 #include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
@@ -48,6 +48,9 @@ extern "C" {
  * @brief
  *   This module includes functions for the Thread Joiner role.
  *
+ * @note
+ *   The functions in this module require `OPENTHREAD_CONFIG_JOINER_ENABLE=1`.
+ *
  * @{
  *
  */
@@ -56,7 +59,8 @@ extern "C" {
  * This enumeration defines the Joiner State.
  *
  */
-typedef enum otJoinerState {
+typedef enum otJoinerState
+{
     OT_JOINER_STATE_IDLE      = 0,
     OT_JOINER_STATE_DISCOVER  = 1,
     OT_JOINER_STATE_CONNECT   = 2,
@@ -64,6 +68,18 @@ typedef enum otJoinerState {
     OT_JOINER_STATE_ENTRUST   = 4,
     OT_JOINER_STATE_JOINED    = 5,
 } otJoinerState;
+
+#define OT_JOINER_MAX_DISCERNER_LENGTH 64 ///< Maximum length of a Joiner Discerner in bits.
+
+/**
+ * This structure represents a Joiner Discerner.
+ *
+ */
+typedef struct otJoinerDiscerner
+{
+    uint64_t mValue;  ///< Discerner value (the lowest `mLength` bits specify the discerner).
+    uint8_t  mLength; ///< Length (number of bits) - must be non-zero and at most `OT_JOINER_MAX_DISCERNER_LENGTH`.
+} otJoinerDiscerner;
 
 /**
  * This function pointer is called to notify the completion of a join operation.
@@ -75,46 +91,42 @@ typedef enum otJoinerState {
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void(OTCALL *otJoinerCallback)(otError aError, void *aContext);
+typedef void (*otJoinerCallback)(otError aError, void *aContext);
 
 /**
  * This function enables the Thread Joiner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aPSKd             A pointer to the PSKd.
+ * @param[in]  aPskd             A pointer to the PSKd.
  * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
- * @param[in]  aVendorName       A pointer to the Vendor Name (must be static).
- * @param[in]  aVendorModel      A pointer to the Vendor Model (must be static).
- * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (must be static).
- * @param[in]  aVendorData       A pointer to the Vendor Data (must be static).
+ * @param[in]  aVendorName       A pointer to the Vendor Name (may be NULL).
+ * @param[in]  aVendorModel      A pointer to the Vendor Model (may be NULL).
+ * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be NULL).
+ * @param[in]  aVendorData       A pointer to the Vendor Data (may be NULL).
  * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
  * @param[in]  aContext          A pointer to application-specific context.
  *
  * @retval OT_ERROR_NONE              Successfully started the Commissioner role.
- * @retval OT_ERROR_INVALID_ARGS      @p aPSKd or @p aProvisioningUrl is invalid.
- * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
+ * @retval OT_ERROR_INVALID_ARGS      @p aPskd or @p aProvisioningUrl is invalid.
  *
  */
-OTAPI otError OTCALL otJoinerStart(otInstance *     aInstance,
-                                   const char *     aPSKd,
-                                   const char *     aProvisioningUrl,
-                                   const char *     aVendorName,
-                                   const char *     aVendorModel,
-                                   const char *     aVendorSwVersion,
-                                   const char *     aVendorData,
-                                   otJoinerCallback aCallback,
-                                   void *           aContext);
+otError otJoinerStart(otInstance *     aInstance,
+                      const char *     aPskd,
+                      const char *     aProvisioningUrl,
+                      const char *     aVendorName,
+                      const char *     aVendorModel,
+                      const char *     aVendorSwVersion,
+                      const char *     aVendorData,
+                      otJoinerCallback aCallback,
+                      void *           aContext);
 
 /**
  * This function disables the Thread Joiner role.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @retval OT_ERROR_NONE              Successfully disabled the Joiner role.
- * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
- *
  */
-OTAPI otError OTCALL otJoinerStop(otInstance *aInstance);
+void otJoinerStop(otInstance *aInstance);
 
 /**
  * This function returns the Joiner State.
@@ -129,22 +141,51 @@ OTAPI otError OTCALL otJoinerStop(otInstance *aInstance);
  * @retval OT_JOINER_STATE_JOINED
  *
  */
-OTAPI otJoinerState OTCALL otJoinerGetState(otInstance *aInstance);
+otJoinerState otJoinerGetState(otInstance *aInstance);
 
 /**
- * Get the Joiner ID.
+ * This method gets the Joiner ID.
  *
- * Joiner ID is the first 64 bits of the result of computing SHA-256 over factory-assigned
- * IEEE EUI-64, which is used as IEEE 802.15.4 Extended Address during commissioning process.
+ * If a Joiner Discerner is not set, Joiner ID is the first 64 bits of the result of computing SHA-256 over
+ * factory-assigned IEEE EUI-64. Otherwise the Joiner ID is calculated from the Joiner Discerner value.
+ *
+ * The Joiner ID is also used as the device's IEEE 802.15.4 Extended Address during commissioning process.
  *
  * @param[in]   aInstance  A pointer to the OpenThread instance.
- * @param[out]  aJoinerId  A pointer to where the Joiner ID is placed.
  *
- * @retval OT_ERROR_NONE              Successfully retrieved the Joiner ID.
- * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
+ * @returns A pointer to the Joiner ID.
  *
  */
-OTAPI otError OTCALL otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId);
+const otExtAddress *otJoinerGetId(otInstance *aInstance);
+
+/**
+ * This method sets the Joiner Discerner.
+ *
+ * The Joiner Discerner is used to calculate the Joiner ID used during commissioning/joining process.
+ *
+ * By default (when a discerner is not provided or set to NULL), Joiner ID is derived as first 64 bits of the result
+ * of computing SHA-256 over factory-assigned IEEE EUI-64. Note that this is the main behavior expected by Thread
+ * specification.
+ *
+ * @param[in]   aInstance    A pointer to the OpenThread instance.
+ * @param[in]   aDiscerner   A pointer to a Joiner Discerner. If NULL clears any previously set discerner.
+ *
+ * @retval OT_ERROR_NONE           The Joiner Discerner updated successfully.
+ * @retval OT_ERROR_INVALID_ARGS   @p aDisciminrator is not valid (specified length is not within valid range).
+ * @retval OT_ERROR_INVALID_STATE  There is an ongoing Joining process so Joiner Discerner could not be changed.
+ *
+ */
+otError otJoinerSetDiscerner(otInstance *aInstance, otJoinerDiscerner *aDiscerner);
+
+/**
+ * This method gets the Joiner Discerner.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ *
+ * @returns A pointer to Joiner Discerner or NULL if none is set.
+ *
+ */
+const otJoinerDiscerner *otJoinerGetDiscerner(otInstance *aInstance);
 
 /**
  * @}

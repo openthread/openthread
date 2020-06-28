@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,12 +27,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import node
-import config
 import command
+import config
+import thread_cert
 
 LEADER = 1
 DUT_ROUTER1 = 2
@@ -44,49 +43,52 @@ ED4 = 7
 
 MTDS = [SED1, ED1, ED2, ED3, ED4]
 
-class Cert_5_3_4_AddressMapCache(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1,8):
-            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED2].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED3].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED4].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[DUT_ROUTER1].set_panid(0xface)
-        self.nodes[DUT_ROUTER1].set_mode('rsdn')
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[DUT_ROUTER1].enable_whitelist()
-        self.nodes[DUT_ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[SED1].set_panid(0xface)
-        self.nodes[SED1].set_mode('s')
-        self.nodes[SED1].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64())
-
-        # Set the SED1's timeout in order to receive the icmp reply when keep alive with DUT_ROUTER.
-        self.nodes[SED1].set_timeout(5)
-        self.nodes[SED1].enable_whitelist()
-
-        for ED in [ED1, ED2, ED3, ED4]:
-            self.nodes[ED].set_panid(0xface)
-            self.nodes[ED].set_mode('rsn')
-            self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
-            self.nodes[ED].enable_whitelist()
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [DUT_ROUTER1, ED1, ED2, ED3, ED4]
+        },
+        DUT_ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, SED1]
+        },
+        SED1: {
+            'is_mtd': True,
+            'mode': 's',
+            'panid': 0xface,
+            'timeout': 5,
+            'whitelist': [DUT_ROUTER1]
+        },
+        ED1: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+        ED2: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+        ED3: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+        ED4: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+    }
 
     def test(self):
         # 1
@@ -104,33 +106,44 @@ class Cert_5_3_4_AddressMapCache(unittest.TestCase):
         for i in MTDS:
             self.assertEqual(self.nodes[i].get_state(), 'child')
 
-        # This method flushes the message queue so calling this method again will return only the newly logged messages.
+        # This method flushes the message queue so calling this method again
+        # will return only the newly logged messages.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
 
         # 2
         for ED in [ED1, ED2, ED3, ED4]:
-            ed_mleid = self.nodes[ED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+            ed_mleid = self.nodes[ED].get_ip6_address(
+                config.ADDRESS_TYPE.ML_EID)
             self.assertTrue(self.nodes[SED1].ping(ed_mleid))
             self.simulator.go(5)
 
-            # Verify DUT_ROUTER1 generated an Address Query Request to find each node's RLOC.
+            # Verify DUT_ROUTER1 generated an Address Query Request to find
+            # each node's RLOC.
             dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
             msg = dut_messages.next_coap_message('0.02', '/a/aq')
-            command.check_address_query(msg, self.nodes[DUT_ROUTER1], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+            command.check_address_query(
+                msg,
+                self.nodes[DUT_ROUTER1],
+                config.REALM_LOCAL_ALL_ROUTERS_ADDRESS,
+            )
 
         # 3 & 4
-        # This method flushes the message queue so calling this method again will return only the newly logged messages.
+        # This method flushes the message queue so calling this method again
+        # will return only the newly logged messages.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
 
         for ED in [ED1, ED2, ED3, ED4]:
-            ed_mleid = self.nodes[ED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+            ed_mleid = self.nodes[ED].get_ip6_address(
+                config.ADDRESS_TYPE.ML_EID)
             self.assertTrue(self.nodes[SED1].ping(ed_mleid))
             self.simulator.go(5)
 
             # Verify DUT_ROUTER1 didn't generate an Address Query Request.
             dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
             msg = dut_messages.next_coap_message('0.02', '/a/aq', False)
-            assert msg is None, "Error: The DUT sent an unexpected Address Query Request"
+            assert (msg is None
+                   ), "Error: The DUT sent an unexpected Address Query Request"
+
 
 if __name__ == '__main__':
     unittest.main()

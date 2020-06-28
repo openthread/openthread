@@ -32,26 +32,18 @@ AM_MAKEFLAGS                        = --no-print-directory
 
 AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-address-sanitizer        \
-    --enable-application-coap         \
-    --enable-border-router            \
-    --enable-cli-app=all              \
-    --enable-commissioner             \
-    --enable-dhcp6-client             \
-    --enable-dhcp6-server             \
-    --enable-diag                     \
-    --enable-dns-client               \
-    --enable-joiner                   \
-    --enable-mac-filter               \
-    --enable-ncp-app=all              \
-    --enable-service                  \
-    --with-examples=posix             \
-    --with-ncp-bus=uart               \
+    --enable-cli                      \
+    --enable-ftd                      \
+    --enable-mtd                      \
+    --enable-ncp                      \
+    --enable-radio-only               \
+    --with-examples=simulation        \
     $(NULL)
 
 SUBDIRS                             = \
     include                           \
-    src                               \
     third_party                       \
+    src                               \
     examples                          \
     tests                             \
     tools                             \
@@ -77,14 +69,6 @@ dist_doc_DATA                       = \
 
 DISTCLEANFILES                      = \
     .local-version                    \
-    $(NULL)
-
-PRETTY_SUBDIRS                      = \
-    examples                          \
-    include                           \
-    src                               \
-    tests                             \
-    tools                             \
     $(NULL)
 
 # Ignore the pseudo flash files on Posix platform during diskcheck

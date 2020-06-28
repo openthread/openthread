@@ -33,10 +33,12 @@
 
 #include <openthread/coap.h>
 
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 #include "common/debug.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
@@ -59,144 +61,87 @@ namespace Coap {
  */
 
 /**
- * Protocol Constants (RFC 7252).
+ * This type represents a function pointer which is called when a CoAP response is received or on the request timeout.
+ *
+ * Please see otCoapResponseHandler for details.
  *
  */
-enum
-{
-    kAckTimeout                 = OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT,
-    kAckRandomFactorNumerator   = OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_NUMERATOR,
-    kAckRandomFactorDenominator = OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_DENOMINATOR,
-    kMaxRetransmit              = OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT,
-    kNStart                     = 1,
-    kDefaultLeisure             = 5,
-    kProbingRate                = 1,
-
-    // Note that 2 << (kMaxRetransmit - 1) is equal to kMaxRetransmit power of 2
-    kMaxTransmitSpan =
-        kAckTimeout * ((2 << (kMaxRetransmit - 1)) - 1) * kAckRandomFactorNumerator / kAckRandomFactorDenominator,
-    kMaxTransmitWait =
-        kAckTimeout * ((2 << kMaxRetransmit) - 1) * kAckRandomFactorNumerator / kAckRandomFactorDenominator,
-    kMaxLatency       = 100,
-    kProcessingDelay  = kAckTimeout,
-    kMaxRtt           = 2 * kMaxLatency + kProcessingDelay,
-    kExchangeLifetime = kMaxTransmitSpan + 2 * (kMaxLatency) + kProcessingDelay,
-    kNonLifetime      = kMaxTransmitSpan + kMaxLatency
-};
+typedef otCoapResponseHandler ResponseHandler;
 
 /**
- * This class implements metadata required for CoAP retransmission.
+ * This type represents a function pointer which is called when a CoAP request associated with a given URI path is
+ * received.
+ *
+ * Please see otCoapRequestHandler for details.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class CoapMetadata
+typedef otCoapRequestHandler RequestHandler;
+
+/**
+ * This structure represents the CoAP transmission parameters.
+ *
+ */
+class TxParameters : public otCoapTxParameters
 {
     friend class CoapBase;
+    friend class ResponsesQueue;
 
 public:
     /**
-     * Default constructor for the object.
+     * This static method coverts a pointer to `otCoapTxParameters` to `Coap::TxParamters`
+     *
+     * If the pointer is nullptr, the default parameters are used instead.
+     *
+     * @param[in] aTxParameters   A pointer to tx parameter.
+     *
+     * @returns A reference to corresponding `TxParamters` if  @p aTxParameters is not nullptr, otherwise the default tx
+     * parameters.
      *
      */
-    CoapMetadata(void)
-        : mDestinationPort(0)
-        , mResponseHandler(NULL)
-        , mResponseContext(NULL)
-        , mNextTimerShot(0)
-        , mRetransmissionTimeout(0)
-        , mRetransmissionCount(0)
-        , mAcknowledged(false)
-        , mConfirmable(false){};
-
-    /**
-     * This constructor initializes the object with specific values.
-     *
-     * @param[in]  aConfirmable  Information if the request is confirmable or not.
-     * @param[in]  aMessageInfo  Addressing information.
-     * @param[in]  aHandler      Pointer to a handler function for the response.
-     * @param[in]  aContext      Context for the handler function.
-     *
-     */
-    CoapMetadata(bool                    aConfirmable,
-                 const Ip6::MessageInfo &aMessageInfo,
-                 otCoapResponseHandler   aHandler,
-                 void *                  aContext);
-
-    /**
-     * This method appends request data to the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval OT_ERROR_NONE     Successfully appended the bytes.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
-     *
-     */
-    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); };
-
-    /**
-     * This method reads request data from the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @returns The number of bytes read.
-     *
-     */
-    uint16_t ReadFrom(const Message &aMessage)
+    static const TxParameters &From(const otCoapTxParameters *aTxParameters)
     {
-        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    };
-
-    /**
-     * This method updates request data in the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @returns The number of bytes updated.
-     *
-     */
-    int UpdateIn(Message &aMessage) const
-    {
-        return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+        return aTxParameters ? *static_cast<const TxParameters *>(aTxParameters) : GetDefault();
     }
 
     /**
-     * This method checks if the message shall be sent before the given time.
+     * This method validates whether the CoAP transmission parameters are valid.
      *
-     * @param[in]  aTime  A time to compare.
+     * @returns Whether the parameters are valid.
      *
-     * @retval TRUE   If the message shall be sent before the given time.
-     * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) >= 0); };
+    bool IsValid(void) const;
 
     /**
-     * This method checks if the message shall be sent after the given time.
+     * This static method returns default CoAP tx parameters.
      *
-     * @param[in]  aTime  A time to compare.
+     * @returns The default tx parameters.
      *
-     * @retval TRUE   If the message shall be sent after the given time.
-     * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) < 0); };
+    static const TxParameters &GetDefault(void) { return static_cast<const TxParameters &>(kDefaultTxParameters); }
 
 private:
-    Ip6::Address          mSourceAddress;         ///< IPv6 address of the message source.
-    Ip6::Address          mDestinationAddress;    ///< IPv6 address of the message destination.
-    uint16_t              mDestinationPort;       ///< UDP port of the message destination.
-    otCoapResponseHandler mResponseHandler;       ///< A function pointer that is called on response reception.
-    void *                mResponseContext;       ///< A pointer to arbitrary context information.
-    uint32_t              mNextTimerShot;         ///< Time when the timer should shoot for this message.
-    uint32_t              mRetransmissionTimeout; ///< Delay that is applied to next retransmission.
-    uint8_t               mRetransmissionCount;   ///< Number of retransmissions.
-    bool                  mAcknowledged : 1;      ///< Information that request was acknowledged.
-    bool                  mConfirmable : 1;       ///< Information that message is confirmable.
-} OT_TOOL_PACKED_END;
+    enum
+    {
+        kDefaultAckTimeout                 = 2000, // in millisecond
+        kDefaultAckRandomFactorNumerator   = 3,
+        kDefaultAckRandomFactorDenominator = 2,
+        kDefaultMaxRetransmit              = 4,
+        kDefaultMaxLatency                 = 100000, // in millisecond
+    };
+
+    uint32_t CalculateInitialRetransmissionTimeout(void) const;
+    uint32_t CalculateExchangeLifetime(void) const;
+    uint32_t CalculateMaxTransmitWait(void) const;
+    uint32_t CalculateSpan(uint8_t aMaxRetx) const;
+
+    static const otCoapTxParameters kDefaultTxParameters;
+};
 
 /**
  * This class implements CoAP resource handling.
  *
  */
-class Resource : public otCoapResource
+class Resource : public otCoapResource, public LinkedListEntry<Resource>
 {
     friend class CoapBase;
 
@@ -209,126 +154,31 @@ public:
     /**
      * This constructor initializes the resource.
      *
-     * @param[in]  aUriPath  A pointer to a NULL-terminated string for the Uri-Path.
+     * @param[in]  aUriPath  A pointer to a null-terminated string for the URI path.
      * @param[in]  aHandler  A function pointer that is called when receiving a CoAP message for @p aUriPath.
      * @param[in]  aContext  A pointer to arbitrary context information.
      */
-    Resource(const char *aUriPath, otCoapRequestHandler aHandler, void *aContext)
+    Resource(const char *aUriPath, RequestHandler aHandler, void *aContext)
     {
         mUriPath = aUriPath;
         mHandler = aHandler;
         mContext = aContext;
-        mNext    = NULL;
+        mNext    = nullptr;
     }
 
     /**
-     * This method returns a pointer to the next resource.
+     * This method returns a pointer to the URI path.
      *
-     * @returns A Pointer to the next resource.
+     * @returns A pointer to the URI path.
      *
      */
-    Resource *GetNext(void) const { return static_cast<Resource *>(mNext); };
+    const char *GetUriPath(void) const { return mUriPath; }
 
 private:
-    void HandleRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+    void HandleRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
     {
-        mHandler(mContext, &aHeader, &aMessage, &aMessageInfo);
+        mHandler(mContext, &aMessage, &aMessageInfo);
     }
-};
-
-/**
- * This class implements metadata required for caching CoAP responses.
- *
- */
-class EnqueuedResponseHeader
-{
-public:
-    /**
-     * Default constructor creating empty object.
-     *
-     */
-    EnqueuedResponseHeader(void)
-        : mDequeueTime(0)
-        , mMessageInfo()
-    {
-    }
-
-    /**
-     * Constructor creating object with valid dequeue time and message info.
-     *
-     * @param[in]  aMessageInfo  The message info containing source endpoint identification.
-     *
-     */
-    EnqueuedResponseHeader(const Ip6::MessageInfo &aMessageInfo)
-        : mDequeueTime(TimerMilli::GetNow() + TimerMilli::SecToMsec(kExchangeLifetime))
-        , mMessageInfo(aMessageInfo)
-    {
-    }
-
-    /**
-     * This method append metadata to the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval OT_ERROR_NONE     Successfully appended the bytes.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
-     */
-    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
-
-    /**
-     * This method reads request data from the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @returns The number of bytes read.
-     *
-     */
-    uint16_t ReadFrom(const Message &aMessage)
-    {
-        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    }
-
-    /**
-     * This method removes metadata from the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     */
-    static void RemoveFrom(Message &aMessage)
-    {
-        assert(aMessage.SetLength(aMessage.GetLength() - sizeof(EnqueuedResponseHeader)) == OT_ERROR_NONE);
-    }
-
-    /**
-     * This method checks if the message shall be sent before the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent before the given time.
-     * @retval FALSE  Otherwise.
-     *
-     */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mDequeueTime) >= 0); }
-
-    /**
-     * This method returns number of milliseconds in which the message should be sent.
-     *
-     * @returns  The number of milliseconds in which the message should be sent.
-     *
-     */
-    uint32_t GetRemainingTime(void) const;
-
-    /**
-     * This method returns the message info of cached CoAP response.
-     *
-     * @returns  The message info of the cached CoAP response.
-     *
-     */
-    const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
-
-private:
-    uint32_t               mDequeueTime;
-    const Ip6::MessageInfo mMessageInfo;
 };
 
 /**
@@ -342,82 +192,52 @@ public:
      * Default class constructor.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     * @param[in]  aHandler   A timer handler provided by owner of `RespponseQueue`.
-     * @param[in]  aContext   A pointer to arbitrary context information (used along with timer handler).
      *
      */
-    ResponsesQueue(Instance &aInstance, Timer::Handler aHandler, void *aContext);
+    explicit ResponsesQueue(Instance &aInstance);
 
     /**
-     * Add given response to the cache.
+     * This method adds a given response to the cache.
      *
      * If matching response (the same Message ID, source endpoint address and port) exists in the cache given
      * response is not added.
+     *
      * The CoAP response is copied before it is added to the cache.
      *
      * @param[in]  aMessage      The CoAP response to add to the cache.
      * @param[in]  aMessageInfo  The message info corresponding to @p aMessage.
+     * @param[in]  aTxParameters Transmission parameters.
      *
      */
-    void EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const TxParameters &aTxParameters);
 
     /**
-     * Remove the oldest response from the cache.
-     *
-     */
-    void DequeueOldestResponse(void);
-
-    /**
-     * Remove all responses from the cache.
+     * This method removes all responses from the cache.
      *
      */
     void DequeueAllResponses(void);
 
     /**
-     * Get a copy of CoAP response from the cache that matches given Message ID and source endpoint.
-     *
-     * @param[in]  aHeader       The CoAP message header containing Message ID.
-     * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
-     * @param[out] aResponse     A pointer to a copy of a cached CoAP response matching given arguments.
-     *
-     * @retval OT_ERROR_NONE       Matching response found and successfully created a copy.
-     * @retval OT_ERROR_NO_BUFS    Matching response found but there is not sufficient buffer to create a copy.
-     * @retval OT_ERROR_NOT_FOUND  Matching response not found.
-     *
-     */
-    otError GetMatchedResponseCopy(const Header &aHeader, const Ip6::MessageInfo &aMessageInfo, Message **aResponse);
-
-    /**
-     * Get a copy of CoAP response from the cache that matches given Message ID and source endpoint.
+     * This method gets a copy of CoAP response from the cache that matches a given Message ID and source endpoint.
      *
      * @param[in]  aRequest      The CoAP message containing Message ID.
      * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
-     * @param[out] aResponse     A pointer to a copy of a cached CoAP response matching given arguments.
+     * @param[out] aResponse     A pointer to return a copy of a cached CoAP response matching given arguments.
      *
      * @retval OT_ERROR_NONE       Matching response found and successfully created a copy.
      * @retval OT_ERROR_NO_BUFS    Matching response found but there is not sufficient buffer to create a copy.
      * @retval OT_ERROR_NOT_FOUND  Matching response not found.
-     * @retval OT_ERROR_PARSE      Could not parse CoAP header in the request message.
      *
      */
     otError GetMatchedResponseCopy(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo, Message **aResponse);
 
     /**
-     * Get a reference to the cached CoAP responses queue.
+     * This method gets a reference to the cached CoAP responses queue.
      *
      * @returns  A reference to the cached CoAP responses queue.
      *
      */
     const MessageQueue &GetResponses(void) const { return mQueue; }
-
-    /**
-     * Callback handler for timer.
-     *
-     * This method must be invoked by the owner of `ResponsesQueue` instance when the timer expires from the `aHandler`
-     * callback function provided in the constructor.
-     *
-     */
-    void HandleTimer(void);
 
 private:
     enum
@@ -425,27 +245,37 @@ private:
         kMaxCachedResponses = OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES,
     };
 
-    void DequeueResponse(Message &aMessage)
+    struct ResponseMetadata
     {
-        mQueue.Dequeue(aMessage);
-        aMessage.Free();
-    }
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        void    ReadFrom(const Message &aMessage);
 
-    MessageQueue mQueue;
-    TimerMilli   mTimer;
+        TimeMilli        mDequeueTime;
+        Ip6::MessageInfo mMessageInfo;
+    };
+
+    const Message *FindMatchedResponse(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo) const;
+    void           DequeueResponse(Message &aMessage);
+    void           UpdateQueue(void);
+
+    static void HandleTimer(Timer &aTimer);
+    void        HandleTimer(void);
+
+    MessageQueue      mQueue;
+    TimerMilliContext mTimer;
 };
 
 /**
- * This class implements the common base for CoAP client and server.
+ * This class implements the CoAP client and server.
  *
  */
-class CoapBase : public InstanceLocator
+class CoapBase : public InstanceLocator, private NonCopyable
 {
     friend class ResponsesQueue;
 
 public:
     /**
-     * This function pointer is called before CoAP server processing a CoAP packets.
+     * This function pointer is called before CoAP server processing a CoAP message.
      *
      * @param[in]   aMessage        A reference to the message.
      @ @param[in]   aMessageInfo    A reference to the message info associated with @p aMessage.
@@ -460,41 +290,26 @@ public:
     typedef otError (*Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
     /**
-     * This method starts the CoAP service.
-     *
-     * @param[in]  aPort  The local UDP port to bind to.
-     *
-     * @retval OT_ERROR_NONE  Successfully started the CoAP service.
+     * This method clears requests and responses used by this CoAP agent.
      *
      */
-    otError Start(uint16_t aPort);
+    void ClearRequestsAndResponses(void);
 
     /**
-     * This method stops the CoAP service.
+     * This method clears requests with specified source address used by this CoAP agent.
      *
-     * @retval OT_ERROR_NONE  Successfully stopped the CoAP service.
-     *
-     */
-    otError Stop(void);
-
-    /**
-     * This method returns a port number used by CoAP service.
-     *
-     * @returns A port number.
+     * @param[in]  aAddress A reference to the specified address.
      *
      */
-    uint16_t GetPort(void) { return mSocket.GetSockName().mPort; };
+    void ClearRequests(const Ip6::Address &aAddress);
 
     /**
      * This method adds a resource to the CoAP server.
      *
      * @param[in]  aResource  A reference to the resource.
      *
-     * @retval OT_ERROR_NONE     Successfully added @p aResource.
-     * @retval OT_ERROR_ALREADY  The @p aResource was already added.
-     *
      */
-    otError AddResource(Resource &aResource);
+    void AddResource(Resource &aResource);
 
     /**
      * This method removes a resource from the CoAP server.
@@ -504,29 +319,63 @@ public:
      */
     void RemoveResource(Resource &aResource);
 
-    /* This function sets the default handler for unhandled CoAP requests.
+    /* This method sets the default handler for unhandled CoAP requests.
      *
      * @param[in]  aHandler   A function pointer that shall be called when an unhandled request arrives.
-     * @param[in]  aContext   A pointer to arbitrary context information. May be NULL if not used.
+     * @param[in]  aContext   A pointer to arbitrary context information. May be nullptr if not used.
+     *
      */
-    void SetDefaultHandler(otCoapRequestHandler aHandler, void *aContext);
+    void SetDefaultHandler(RequestHandler aHandler, void *aContext);
 
     /**
      * This method creates a new message with a CoAP header.
      *
-     * @param[in]  aHeader      A reference to a CoAP header that is used to create the message.
-     * @param[in]  aPrority     The message priority level.
+     * @param[in]  aSettings  The message settings.
      *
-     * @returns A pointer to the message or NULL if failed to allocate message.
+     * @returns A pointer to the message or nullptr if failed to allocate message.
      *
      */
-    Message *NewMessage(const Header &aHeader, uint8_t aPriority = kDefaultCoapMessagePriority);
+    Message *NewMessage(const Message::Settings &aSettings = Message::Settings::GetDefault());
 
     /**
-     * This method sends a CoAP message.
+     * This method creates a new message with a CoAP header that has Network Control priority level.
+     *
+     * @returns A pointer to the message or nullptr if failed to allocate message.
+     *
+     */
+    Message *NewPriorityMessage(void)
+    {
+        return NewMessage(Message::Settings(Message::kWithLinkSecurity, Message::kPriorityNet));
+    }
+
+    /**
+     * This method sends a CoAP message with custom transmission parameters.
      *
      * If a response for a request is expected, respective function and context information should be provided.
-     * If no response is expected, these arguments should be NULL pointers.
+     * If no response is expected, these arguments should be nullptr pointers.
+     * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
+     *
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     * @param[in]  aTxParameters A reference to transmission parameters for this message.
+     * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     *
+     * @retval OT_ERROR_NONE     Successfully sent CoAP message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to send the CoAP message.
+     *
+     */
+    otError SendMessage(Message &               aMessage,
+                        const Ip6::MessageInfo &aMessageInfo,
+                        const TxParameters &    aTxParameters,
+                        ResponseHandler         aHandler = nullptr,
+                        void *                  aContext = nullptr);
+
+    /**
+     * This method sends a CoAP message with default transmission parameters.
+     *
+     * If a response for a request is expected, respective function and context information should be provided.
+     * If no response is expected, these arguments should be nullptr pointers.
      * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
      *
      * @param[in]  aMessage      A reference to the message to send.
@@ -535,92 +384,78 @@ public:
      * @param[in]  aContext      A pointer to arbitrary context information.
      *
      * @retval OT_ERROR_NONE     Successfully sent CoAP message.
-     * @retval OT_ERROR_NO_BUFS  Failed to allocate retransmission data.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to send the CoAP response.
      *
      */
     otError SendMessage(Message &               aMessage,
                         const Ip6::MessageInfo &aMessageInfo,
-                        otCoapResponseHandler   aHandler = NULL,
-                        void *                  aContext = NULL);
+                        ResponseHandler         aHandler = nullptr,
+                        void *                  aContext = nullptr);
 
     /**
      * This method sends a CoAP reset message.
      *
-     * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
      * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
      *
      * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
-     * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aRequest is not of confirmable type.
      *
      */
-    otError SendReset(Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
-    {
-        return SendEmptyMessage(OT_COAP_TYPE_RESET, aRequestHeader, aMessageInfo);
-    };
+    otError SendReset(Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method sends header-only CoAP response message.
      *
      * @param[in]  aCode           The CoAP code of this response.
-     * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
      * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
      *
      * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
-     * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aRequest header is not of confirmable type.
      *
      */
-    otError SendHeaderResponse(Header::Code aCode, const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
+    otError SendHeaderResponse(Message::Code aCode, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method sends a CoAP ACK empty message which is used in Separate Response for confirmable requests.
      *
-     * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
      * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
      *
      * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
-     * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aRequest header is not of confirmable type.
      *
      */
-    otError SendAck(Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
-    {
-        return SendEmptyMessage(OT_COAP_TYPE_ACKNOWLEDGMENT, aRequestHeader, aMessageInfo);
-    };
+    otError SendAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method sends a CoAP ACK message on which a dummy CoAP response is piggybacked.
      *
-     * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
      * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
      *
      * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
-     * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aRequest header is not of confirmable type.
      *
      */
-    otError SendEmptyAck(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
-    {
-        return (aRequestHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE
-                    ? SendHeaderResponse(OT_COAP_CODE_CHANGED, aRequestHeader, aMessageInfo)
-                    : OT_ERROR_INVALID_ARGS);
-    }
+    otError SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method sends a header-only CoAP message to indicate no resource matched for the request.
      *
-     * @param[in]  aRequestHeader        A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
      * @param[in]  aMessageInfo          The message info corresponding to the CoAP request.
      *
      * @retval OT_ERROR_NONE         Successfully enqueued the CoAP response message.
      * @retval OT_ERROR_NO_BUFS      Insufficient buffers available to send the CoAP response.
      *
      */
-    otError SendNotFound(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
-    {
-        return SendHeaderResponse(OT_COAP_CODE_NOT_FOUND, aRequestHeader, aMessageInfo);
-    }
+    otError SendNotFound(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method aborts CoAP transactions associated with given handler and context.
@@ -634,7 +469,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  CoAP transaction associated with given handler was not found.
      *
      */
-    otError AbortTransaction(otCoapResponseHandler aHandler, void *aContext);
+    otError AbortTransaction(ResponseHandler aHandler, void *aContext);
 
     /**
      * This method sets interceptor to be called before processing a CoAP packet.
@@ -643,11 +478,7 @@ public:
      * @param[in]   aContext        A pointer to arbitrary context information.
      *
      */
-    void SetInterceptor(Interceptor aInterceptor, void *aContext)
-    {
-        mInterceptor = aInterceptor;
-        mContext     = aContext;
-    }
+    void SetInterceptor(Interceptor aInterceptor, void *aContext);
 
     /**
      * This method returns a reference to the request message list.
@@ -667,94 +498,94 @@ public:
 
 protected:
     /**
-     * This constructor initializes the object.
+     * This function pointer is called to send a CoAP message.
      *
-     * @param[in]  aInstance                      A reference to the OpenThread instance.
-     * @param[in]  aRetransmissionTimerHandler    A timer handler provided by sub-class for `mRetranmissionTimer`.
-     * @param[in]  aResponsesQueueTimerHandler    A timer handler provided by sub-class for `mReponsesQueue` timer.
-     *
-     */
-    CoapBase(Instance &     aInstance,
-             Timer::Handler aRetransmissionTimerHandler,
-             Timer::Handler aResponsesQueueTimerHandler);
-
-    /**
-     * Retransmission timer handler.
-     *
-     * This method must be invoked by sub-class when the timer expires from the `aRetransmissionTimerHandler`
-     * callback function provided in the constructor.
-     *
-     */
-    void HandleRetransmissionTimer(void);
-
-    /**
-     * `ResponsesQueue` timer handler.
-     *
-     * This method must be invoked by sub-class when the timer expires from the `aResponsesQueueTimerHandler`
-     * callback function provided in the constructor.
-     *
-     */
-    void HandleResponsesQueueTimer(void) { mResponsesQueue.HandleTimer(); }
-
-    /**
-     * This method sends a message.
-     *
+     * @param[in]  aCoapBase     A reference to the CoAP agent.
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
+     * @retval OT_ERROR_NONE     Successfully sent CoAP message.
+     * @retval OT_ERROR_NO_BUFS  Failed to allocate retransmission data.
+     *
      */
-    virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    typedef otError (*Sender)(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * This method receives a message.
+     * This constructor initializes the object.
+     *
+     * @param[in]  aInstance        A reference to the OpenThread instance.
+     * @param[in]  aSender          A function pointer to send CoAP message, which SHOULD be a static
+     *                              member method of a descendant of this class.
+     *
+     */
+    CoapBase(Instance &aInstance, Sender aSender);
+
+    /**
+     * This method receives a CoAP message.
      *
      * @param[in]  aMessage      A reference to the received message.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    virtual void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    Ip6::UdpSocket mSocket;
+    void Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
-    enum
+    struct Metadata
     {
-        kDefaultCoapMessagePriority = Message::kPriorityLow,
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        void    ReadFrom(const Message &aMessage);
+        int     UpdateIn(Message &aMessage) const;
+
+        Ip6::Address    mSourceAddress;            // IPv6 address of the message source.
+        Ip6::Address    mDestinationAddress;       // IPv6 address of the message destination.
+        uint16_t        mDestinationPort;          // UDP port of the message destination.
+        ResponseHandler mResponseHandler;          // A function pointer that is called on response reception.
+        void *          mResponseContext;          // A pointer to arbitrary context information.
+        TimeMilli       mNextTimerShot;            // Time when the timer should shoot for this message.
+        uint32_t        mRetransmissionTimeout;    // Delay that is applied to next retransmission.
+        uint8_t         mRetransmissionsRemaining; // Number of retransmissions remaining.
+        bool            mAcknowledged : 1;         // Information that request was acknowledged.
+        bool            mConfirmable : 1;          // Information that message is confirmable.
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        bool mObserve : 1; // Information that this request involves Observations.
+#endif
     };
 
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleRetransmissionTimer(Timer &aTimer);
+    void        HandleRetransmissionTimer(void);
 
-    Message *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength, const CoapMetadata &aCoapMetadata);
+    void     ClearRequests(const Ip6::Address *aAddress);
+    Message *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength, const Metadata &aMetadata);
     void     DequeueMessage(Message &aMessage);
-    Message *FindRelatedRequest(const Header &          aResponseHeader,
-                                const Ip6::MessageInfo &aMessageInfo,
-                                Header &                aRequestHeader,
-                                CoapMetadata &          aCoapMetadata);
+    Message *FindRelatedRequest(const Message &aResponse, const Ip6::MessageInfo &aMessageInfo, Metadata &aMetadata);
     void     FinalizeCoapTransaction(Message &               aRequest,
-                                     const CoapMetadata &    aCoapMetadata,
-                                     Header *                aResponseHeader,
+                                     const Metadata &        aMetadata,
                                      Message *               aResponse,
                                      const Ip6::MessageInfo *aMessageInfo,
                                      otError                 aResult);
 
-    void ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void ProcessReceivedResponse(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError SendEmptyMessage(Header::Type aType, const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
+    void    SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError SendEmptyMessage(Message::Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
 
-    MessageQueue mPendingRequests;
-    uint16_t     mMessageId;
-    TimerMilli   mRetransmissionTimer;
+    otError Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    Resource *mResources;
+    MessageQueue      mPendingRequests;
+    uint16_t          mMessageId;
+    TimerMilliContext mRetransmissionTimer;
+
+    LinkedList<Resource> mResources;
 
     void *         mContext;
     Interceptor    mInterceptor;
     ResponsesQueue mResponsesQueue;
 
-    otCoapRequestHandler mDefaultHandler;
-    void *               mDefaultHandlerContext;
+    RequestHandler mDefaultHandler;
+    void *         mDefaultHandlerContext;
+
+    const Sender mSender;
 };
 
 /**
@@ -772,34 +603,33 @@ public:
      */
     explicit Coap(Instance &aInstance);
 
-private:
-    static void HandleRetransmissionTimer(Timer &aTimer);
-    static void HandleResponsesQueueTimer(Timer &aTimer);
-};
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-
-/**
- * This class implements the application CoAP client and server.
- *
- */
-class ApplicationCoap : public CoapBase
-{
-public:
     /**
-     * This constructor initializes the object.
+     * This method starts the CoAP service.
      *
-     * @param[in] aInstance      A reference to the OpenThread instance.
+     * @param[in]  aPort  The local UDP port to bind to.
+     *
+     * @retval OT_ERROR_NONE    Successfully started the CoAP service.
+     * @retval OT_ERROR_ALREADY Already started.
      *
      */
-    explicit ApplicationCoap(Instance &aInstance);
+    otError Start(uint16_t aPort);
+
+    /**
+     * This method stops the CoAP service.
+     *
+     * @retval OT_ERROR_NONE    Successfully stopped the CoAP service.
+     * @retval OT_ERROR_FAILED  Failed to stop CoAP agent.
+     *
+     */
+    otError Stop(void);
 
 private:
-    static void HandleRetransmissionTimer(Timer &aTimer);
-    static void HandleResponsesQueueTimer(Timer &aTimer);
-};
+    static otError Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void    HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    otError        Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-#endif
+    Ip6::UdpSocket mSocket;
+};
 
 } // namespace Coap
 } // namespace ot

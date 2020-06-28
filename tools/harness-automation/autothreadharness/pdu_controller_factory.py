@@ -40,5 +40,7 @@ class PduControllerFactory(object):
             return pdu_controller.IpPowerSocketPduController()
         elif _type == 'MANUAL_PDU_CONTROLLER':
             return pdu_controller.ManualPduController()
+        elif _type == 'EATON_PDU_CONTROLLER':
+            return pdu_controller.EatonPduController()
         else:
             return pdu_controller.DummyPduController()

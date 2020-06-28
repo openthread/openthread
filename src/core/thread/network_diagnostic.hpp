@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
+#include <openthread/netdiag.h>
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
@@ -63,6 +63,17 @@ namespace NetworkDiagnostic {
 class NetworkDiagnostic : public InstanceLocator
 {
 public:
+    enum
+    {
+        kIteratorInit = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT, ///< Initializer value for Iterator.
+    };
+
+    /**
+     * This type represents an iterator used to iterate through Network Diagnostic TLVs from `GetNextDiagTlv()`.
+     *
+     */
+    typedef otNetworkDiagIterator Iterator;
+
     /**
      * This constructor initializes the object.
      *
@@ -73,7 +84,7 @@ public:
      * This method registers a callback to provide received raw DIAG_GET.rsp or an DIAG_GET.ans payload.
      *
      * @param[in]  aCallback         A pointer to a function that is called when an DIAG_GET.rsp or an DIAG_GET.ans
-     *                               is received or NULL to disable the callback.
+     *                               is received or nullptr to disable the callback.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
@@ -100,44 +111,45 @@ public:
      */
     otError SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
+    /**
+     * This static method gets the next Network Diagnostic TLV in a given message.
+     *
+     * @param[in]     aMessage         A message.
+     * @param[inout]  aIterator        The Network Diagnostic iterator. To get the first TLV set it to `kIteratorInit`.
+     * @param[out]    aNetworkDiagTlv  A reference to a Network Diagnostic TLV to output the next TLV.
+     *
+     * @retval OT_ERROR_NONE       Successfully found the next Network Diagnostic TLV.
+     * @retval OT_ERROR_NOT_FOUND  No subsequent Network Diagnostic TLV exists in the message.
+     * @retval OT_ERROR_PARSE      Parsing the next Network Diagnostic failed.
+     *
+     */
+    static otError GetNextDiagTlv(const Coap::Message &aMessage,
+                                  Iterator &           aIterator,
+                                  otNetworkDiagTlv &   aNetworkDiagTlv);
+
 private:
     otError AppendIp6AddressList(Message &aMessage);
     otError AppendChildTable(Message &aMessage);
-    otError FillRequestedTlvs(Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
+    void    FillMacCountersTlv(MacCountersTlv &aMacCountersTlv);
+    otError FillRequestedTlvs(const Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
 
-    static void HandleDiagnosticGetRequest(void *               aContext,
-                                           otCoapHeader *       aHeader,
-                                           otMessage *          aMessage,
-                                           const otMessageInfo *aMessageInfo);
-    void HandleDiagnosticGetRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticGetRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleDiagnosticGetRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticGetQuery(void *               aContext,
-                                         otCoapHeader *       aHeader,
-                                         otMessage *          aMessage,
-                                         const otMessageInfo *aMessageInfo);
-    void HandleDiagnosticGetQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticGetQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleDiagnosticGetQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDiagnosticGetResponse(void *               aContext,
-                                            otCoapHeader *       aHeader,
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
                                             otError              aResult);
-    void        HandleDiagnosticGetResponse(Coap::Header &          aHeader,
-                                            Message &               aMessage,
-                                            const Ip6::MessageInfo &aMessageInfo,
-                                            otError                 aResult);
+    void HandleDiagnosticGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
 
-    static void HandleDiagnosticGetAnswer(void *               aContext,
-                                          otCoapHeader *       aHeader,
-                                          otMessage *          aMessage,
-                                          const otMessageInfo *aMessageInfo);
-    void HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticGetAnswer(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticReset(void *               aContext,
-                                      otCoapHeader *       aHeader,
-                                      otMessage *          aMessage,
-                                      const otMessageInfo *aMessageInfo);
-    void        HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticReset(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleDiagnosticReset(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Coap::Resource mDiagnosticGetRequest;
     Coap::Resource mDiagnosticGetQuery;

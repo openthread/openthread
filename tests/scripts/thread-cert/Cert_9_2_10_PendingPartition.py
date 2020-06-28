@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,11 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
-import node
+import thread_cert
 
 CHANNEL_INIT = 19
 PANID_INIT = 0xface
@@ -47,54 +46,58 @@ SED1 = 5
 
 MTDS = [ED1, SED1]
 
-class Cert_9_2_10_PendingPartition(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1,6):
-            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
+class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
+    SUPPORT_NCP = False
 
-        self.nodes[COMMISSIONER].set_active_dataset(15, channel=CHANNEL_INIT, panid=PANID_INIT)
-        self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[COMMISSIONER].enable_whitelist()
-        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
-
-        self.nodes[LEADER].set_active_dataset(15, channel=CHANNEL_INIT, panid=PANID_INIT)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].set_partition_id(0xffffffff)
-        self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[LEADER].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER1].set_active_dataset(15, channel=CHANNEL_INIT, panid=PANID_INIT)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ED1].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ED1].set_channel(CHANNEL_INIT)
-        self.nodes[ED1].set_panid(PANID_INIT)
-        self.nodes[ED1].set_mode('rsn')
-        self.nodes[ED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ED1].enable_whitelist()
-
-        self.nodes[SED1].set_channel(CHANNEL_INIT)
-        self.nodes[SED1].set_panid(PANID_INIT)
-        self.nodes[SED1].set_mode('s')
-        self.nodes[SED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[SED1].enable_whitelist()
-        self.nodes[SED1].set_timeout(3)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+    TOPOLOGY = {
+        COMMISSIONER: {
+            'active_dataset': {
+                'timestamp': 15,
+                'panid': 0xface,
+                'channel': 19
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        LEADER: {
+            'active_dataset': {
+                'timestamp': 15,
+                'panid': 0xface,
+                'channel': 19
+            },
+            'mode': 'rsdn',
+            'partition_id': 0xffffffff,
+            'router_selection_jitter': 1,
+            'whitelist': [COMMISSIONER, ROUTER1]
+        },
+        ROUTER1: {
+            'active_dataset': {
+                'timestamp': 15,
+                'panid': 0xface,
+                'channel': 19
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, ED1, SED1]
+        },
+        ED1: {
+            'channel': 19,
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1]
+        },
+        SED1: {
+            'channel': 19,
+            'is_mtd': True,
+            'mode': 's',
+            'panid': 0xface,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [ROUTER1]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
@@ -119,11 +122,13 @@ class Cert_9_2_10_PendingPartition(unittest.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
-        self.nodes[COMMISSIONER].send_mgmt_pending_set(pending_timestamp=30,
-                                                       active_timestamp=165,
-                                                       delay_timer=150000,
-                                                       channel=CHANNEL_FINAL,
-                                                       panid=PANID_FINAL)
+        self.nodes[COMMISSIONER].send_mgmt_pending_set(
+            pending_timestamp=30,
+            active_timestamp=165,
+            delay_timer=150000,
+            channel=CHANNEL_FINAL,
+            panid=PANID_FINAL,
+        )
         self.simulator.go(5)
 
         print(self.nodes[COMMISSIONER].get_channel())
@@ -170,6 +175,7 @@ class Cert_9_2_10_PendingPartition(unittest.TestCase):
                 break
 
         self.assertTrue(self.nodes[LEADER].ping(ipaddr))
+
 
 if __name__ == '__main__':
     unittest.main()

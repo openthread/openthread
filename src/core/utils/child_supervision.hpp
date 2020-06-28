@@ -37,13 +37,14 @@
 
 #include "openthread-core-config.h"
 
+#include <stdint.h>
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "thread/topology.hpp"
-#include "utils/wrap_stdint.h"
 
 namespace ot {
 
@@ -81,13 +82,13 @@ namespace Utils {
  *
  */
 
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE && OPENTHREAD_FTD
 
 /**
  * This class implements a child supervisor.
  *
  */
-class ChildSupervisor : public InstanceLocator
+class ChildSupervisor : public InstanceLocator, public Notifier::Receiver
 {
 public:
     /**
@@ -134,7 +135,8 @@ public:
      *
      * @param[in] aMessage The message for which to get the destination.
      *
-     * @returns  A pointer to the destination child of the message, or NULL if @p aMessage is not of supervision type.
+     * @returns  A pointer to the destination child of the message, or nullptr if @p aMessage is not of supervision
+     * type.
      *
      */
     Child *GetDestination(const Message &aMessage) const;
@@ -159,15 +161,14 @@ private:
     void        CheckState(void);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
-    void        HandleStateChanged(uint32_t aFlags);
+    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
 
-    uint16_t           mSupervisionInterval;
-    TimerMilli         mTimer;
-    Notifier::Callback mNotifierCallback;
+    uint16_t   mSupervisionInterval;
+    TimerMilli mTimer;
 };
 
-#else // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
+#else // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE && OPENTHREAD_FTD
 
 class ChildSupervisor
 {
@@ -177,13 +178,13 @@ public:
     void     Stop(void) {}
     void     SetSupervisionInterval(uint16_t) {}
     uint16_t GetSupervisionInterval(void) const { return 0; }
-    Child *  GetDestination(const Message &) const { return NULL; }
+    Child *  GetDestination(const Message &) const { return nullptr; }
     void     UpdateOnSend(Child &) {}
 };
 
-#endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
+#endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE && OPENTHREAD_FTD
 
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 /**
  * This class implements a child supervision listener.
@@ -238,16 +239,16 @@ public:
     /**
      * This method updates the supervision listener state. It informs the listener of a received frame.
      *
-     * @param[in]   aSource    The source MAC address of the received frame
-     * @param[in]   aIsSecure  TRUE to indicate that the received frame is secure, FALSE otherwise.
+     * @param[in]   aSourceAddress    The source MAC address of the received frame
+     * @param[in]   aIsSecure         TRUE to indicate that the received frame is secure, FALSE otherwise.
      *
      */
-    void UpdateOnReceive(const Mac::Address &aSource, bool aIsSeucre);
+    void UpdateOnReceive(const Mac::Address &aSourceAddress, bool aIsSecure);
 
 private:
     enum
     {
-        kDefaultTimeout = OPENTHREAD_CONFIG_SUPERVISION_CHECK_TIMEOUT, // (seconds)
+        kDefaultTimeout = OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT, // (seconds)
     };
 
     void        RestartTimer(void);
@@ -258,7 +259,7 @@ private:
     TimerMilli mTimer;
 };
 
-#else // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#else // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 class SupervisionListener
 {
@@ -271,7 +272,7 @@ public:
     void     UpdateOnReceive(const Mac::Address &, bool) {}
 };
 
-#endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 /**
  * @}

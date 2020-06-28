@@ -58,7 +58,7 @@ AC_DEFUN([NL_ENABLE_COVERAGE],
             AC_ARG_ENABLE(coverage,
                 [AS_HELP_STRING([--enable-coverage],[Enable the generation of code-coverage instances @<:@default=$1@:>@.])],
                 [
-                    case "${enableval}" in 
+                    case "${enableval}" in
 
                     no|yes)
                         nl_cv_build_coverage=${enableval}
@@ -78,21 +78,23 @@ AC_DEFUN([NL_ENABLE_COVERAGE],
                     if test "${nl_cv_build_optimized}" = "yes"; then
                         AC_MSG_WARN([--enable-optimization was specified, coverage disabled])
                         nl_cv_build_coverage=no
-            
+
                     else
                         nl_cv_build_coverage=$1
-            
+
                     fi
                 ])
 
-            if test "${nl_cv_build_coverage}" = "yes"; then         
+            if test "${nl_cv_build_coverage}" = "yes"; then
                 if test "${GCC}" != "yes"; then
                     AC_MSG_ERROR([GCC or a GCC-compatible toolchain is required for --enable-coverage])
-
                 else
                     NL_COVERAGE_CPPFLAGS="--coverage"
-                    NL_COVERAGE_LIBS="-lgcov"
-
+                    if ${CC} --version | grep -q clang; then
+                        NL_COVERAGE_LDFLAGS="--coverage"
+                    else
+                        NL_COVERAGE_LIBS="-lgcov"
+                    fi
                 fi
             fi
     ])

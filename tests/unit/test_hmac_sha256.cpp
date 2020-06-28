@@ -27,11 +27,9 @@
  */
 
 #include <openthread/config.h>
-#include <openthread/openthread.h>
 
 #include "common/debug.hpp"
 #include "crypto/hmac_sha256.hpp"
-#include "utils/wrap_string.h"
 
 #include "test_platform.h"
 #include "test_util.h"
@@ -53,8 +51,8 @@ void TestHmacSha256(void)
             },
         },
         {
-            NULL,
-            NULL,
+            nullptr,
+            nullptr,
             {},
         },
     };
@@ -66,26 +64,24 @@ void TestHmacSha256(void)
         ot::Crypto::HmacSha256 hmac;
         uint8_t                hash[ot::Crypto::HmacSha256::kHashSize];
 
-        VerifyOrQuit(instance != NULL, "Null OpenThread instance");
+        VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
 
-        for (int i = 0; tests[i].key != NULL; i++)
+        for (int i = 0; tests[i].key != nullptr; i++)
         {
             hmac.Start(reinterpret_cast<const uint8_t *>(tests[i].key), static_cast<uint16_t>(strlen(tests[i].key)));
             hmac.Update(reinterpret_cast<const uint8_t *>(tests[i].data), static_cast<uint16_t>(strlen(tests[i].data)));
             hmac.Finish(hash);
 
-            VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0, "HMAC-SHA-256 failed\n");
+            VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0, "HMAC-SHA-256 failed");
         }
     }
 
     testFreeInstance(instance);
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestHmacSha256();
     printf("All tests passed\n");
     return 0;
 }
-#endif

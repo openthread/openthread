@@ -1,0 +1,2 @@
+Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com
+Copyright 2018 Silicon Laboratories, Inc. http://www.silabs.com

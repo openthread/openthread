@@ -39,18 +39,13 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     $(NULL)
 
-if OPENTHREAD_EXAMPLES_POSIX
+if OPENTHREAD_POSIX
 if OPENTHREAD_ENABLE_CLI
 SUBDIRS                                += \
     thread-cert                           \
     $(NULL)
 endif
 endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
 

@@ -36,15 +36,15 @@
 namespace ot {
 namespace Crypto {
 
-HmacSha256::HmacSha256()
+HmacSha256::HmacSha256(void)
 {
-    const mbedtls_md_info_t *mdInfo = NULL;
+    const mbedtls_md_info_t *mdInfo = nullptr;
     mbedtls_md_init(&mContext);
     mdInfo = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
     mbedtls_md_setup(&mContext, mdInfo, 1);
 }
 
-HmacSha256::~HmacSha256()
+HmacSha256::~HmacSha256(void)
 {
     mbedtls_md_free(&mContext);
 }

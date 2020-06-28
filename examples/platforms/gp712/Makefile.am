@@ -28,6 +28,10 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+# Do not enable -Wcast-align for this platform
+override CFLAGS    := $(filter-out -Wcast-align,$(CFLAGS))
+override CXXFLAGS  := $(filter-out -Wcast-align,$(CXXFLAGS))
+
 lib_LIBRARIES                             = libopenthread-gp712.a
 
 libopenthread_gp712_a_CPPFLAGS            = \
@@ -40,28 +44,28 @@ libopenthread_gp712_a_CPPFLAGS            = \
 
 PLATFORM_SOURCES                          = \
     alarm.c                                 \
+    alarm_qorvo.h                           \
     diag.c                                  \
-    misc.c                                  \
-    logging.c                               \
-    platform.c                              \
-    radio.c                                 \
-    random.c                                \
-    uart-posix.c                            \
+    entropy.c                               \
     flash.c                                 \
+    logging.c                               \
+    misc.c                                  \
+    openthread-core-gp712-config.h          \
+    openthread-core-gp712-config-check.h    \
+    platform_qorvo.h                        \
+    radio.c                                 \
+    radio_qorvo.h                           \
+    random_qorvo.h                          \
+    system.c                                \
+    uart-posix.c                            \
+    uart_qorvo.h                            \
     $(NULL)
-
-#    uart-socket.c                          \
-#
 
 Dash                                      = -
 libopenthread_gp712_a_LIBADD              = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 libopenthread_gp712_a_SOURCES             = \
-    $(PLATFORM_SOURCES)                     \
-    $(NULL)
-
-PRETTY_FILES                              = \
     $(PLATFORM_SOURCES)                     \
     $(NULL)
 

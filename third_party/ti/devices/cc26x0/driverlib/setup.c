@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       setup.c
-*  Revised:        2017-05-04 22:07:49 +0200 (Thu, 04 May 2017)
-*  Revision:       48905
+*  Revised:        2017-08-30 11:09:05 +0200 (Wed, 30 Aug 2017)
+*  Revision:       49664
 *
 *  Description:    Setup file for CC13xx/CC26xx devices.
 *
@@ -336,7 +336,6 @@ TrimAfterColdResetWakeupFromShutDown(uint32_t ui32Fcfg1Revision)
     NOROM_SetupAfterColdResetWakeupFromShutDownCfg3( ccfg_ModeConfReg );
 #endif
 
-    //
     // Allow AUX to power down
     AUXWUCPowerCtrl( AUX_WUC_POWER_DOWN );
 

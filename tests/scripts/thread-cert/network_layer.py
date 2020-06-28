@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import io
 import struct
 
 from binascii import hexlify
@@ -48,6 +47,7 @@ class TlvType(IntEnum):
     ND_DATA = 9
     THREAD_NETWORK_DATA = 10
     MLE_ROUTING = 11
+    XTAL_ACCURACY = 254
 
 
 class StatusValues(IntEnum):
@@ -97,7 +97,8 @@ class MacExtendedAddress(object):
         return self.mac_address == other.mac_address
 
     def __repr__(self):
-        return "MacExtendedAddress(mac_address={})".format(hexlify(self.mac_address))
+        return "MacExtendedAddress(mac_address={})".format(
+            hexlify(self.mac_address))
 
 
 class MacExtendedAddressFactory(object):
@@ -224,10 +225,12 @@ class RouterMask(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-        return self.id_sequence == other.id_sequence and self.router_id_mask == other.router_id_mask
+        return (self.id_sequence == other.id_sequence and
+                self.router_id_mask == other.router_id_mask)
 
     def __repr__(self):
-        return "RouterMask(id_sequence={}, router_id_mask={})".format(self.id_sequence, hex(self.router_id_mask))
+        return "RouterMask(id_sequence={}, router_id_mask={})".format(
+            self.id_sequence, hex(self.router_id_mask))
 
 
 class RouterMaskFactory(object):
@@ -253,7 +256,8 @@ class NdOption(object):
         return self.options == other.options
 
     def __repr__(self):
-        return "NdOption(options=[{}])".format(", ".join([str(opt) for opt in self.options]))
+        return "NdOption(options=[{}])".format(", ".join(
+            [str(opt) for opt in self.options]))
 
 
 class NdOptionFactory(object):
@@ -275,6 +279,19 @@ class NdDataFactory(object):
         raise NotImplementedError("TODO: Not implemented yet")
 
 
+class XtalAccuracy:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("XtalAccuracy is not implemented yet.")
+
+
+class XtalAccuracyFactory:
+
+    def parse(self, data, message_info):
+        return XtalAccuracy()
+
+
 class ThreadNetworkData(object):
 
     def __init__(self, tlvs):
@@ -289,7 +306,8 @@ class ThreadNetworkData(object):
         return self.tlvs == other.tlvs
 
     def __repr__(self):
-        return "ThreadNetworkData(tlvs=[{}])".format(", ".join([str(tlv) for tlv in self.tlvs]))
+        return "ThreadNetworkData(tlvs=[{}])".format(", ".join(
+            [str(tlv) for tlv in self.tlvs]))
 
 
 class ThreadNetworkDataFactory(object):
@@ -300,23 +318,3 @@ class ThreadNetworkDataFactory(object):
     def parse(self, data, message_info):
         tlvs = self._network_data_tlvs_factory.parse(data, message_info)
         return ThreadNetworkData(tlvs)
-
-
-class NetworkLayerTlvsFactory(object):
-
-    def __init__(self, tlvs_factories):
-        self._tlvs_factories = tlvs_factories
-
-    def parse(self, data, message_info):
-        tlvs = []
-
-        while data.tell() < len(data.getvalue()):
-            _type = ord(data.read(1))
-            length = ord(data.read(1))
-
-            factory = self._tlvs_factories[_type]
-            tlv = factory.parse(io.BytesIO(data.read(length)), message_info)
-
-            tlvs.append(tlv)
-
-        return tlvs

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,12 +27,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import node
-import config
 import command
+import config
+import thread_cert
 
 LEADER = 1
 ROUTER1 = 2
@@ -41,44 +40,121 @@ ED1 = 17
 DUT_REED = 18
 ROUTER_SELECTION_JITTER = 1
 
-class Cert_5_2_5_AddressQuery(unittest.TestCase):
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
 
-        self.nodes = {}
-        for i in range(1, 19):
-            self.nodes[i] = node.Node(i, (i == ED1), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid()
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].enable_whitelist()
-
-        for i in range(2, 17):
-            self.nodes[i].set_panid()
-            self.nodes[i].set_mode('rsdn')
-            self.nodes[i].add_whitelist(self.nodes[LEADER].get_addr64())
-            self.nodes[LEADER].add_whitelist(self.nodes[i].get_addr64())
-            self.nodes[i].enable_whitelist()
-            self.nodes[i].set_router_selection_jitter(1)
-
-        self.nodes[ED1].set_panid()
-        self.nodes[ED1].set_mode('rsn')
-        self.nodes[ED1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED1].get_addr64())
-        self.nodes[ED1].enable_whitelist()
-
-        self.nodes[DUT_REED].set_panid()
-        self.nodes[DUT_REED].set_mode('rsdn')
-        self.nodes[DUT_REED].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[DUT_REED].get_addr64())
-        self.nodes[DUT_REED].enable_whitelist()
-        self.nodes[DUT_REED].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'mode':
+                'rsdn',
+            'panid':
+                0xface,
+            'whitelist': [
+                ROUTER1, BR, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, ED1
+            ]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, DUT_REED]
+        },
+        BR: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        4: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        5: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        6: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        7: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        8: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        9: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        10: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        11: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        12: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        13: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        14: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        15: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        16: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        ED1: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+        DUT_REED: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [ROUTER1]
+        },
+    }
 
     def test(self):
         # 1. LEADER: DHCPv6 Server for prefix 2001::/64.
@@ -87,6 +163,7 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
         self.nodes[LEADER].add_prefix('2001::/64', 'pdros')
         self.nodes[LEADER].register_netdata()
+        self.simulator.set_lowpan_context(1, '2001::/64')
 
         # 2. BR: SLAAC Server for prefix 2002::/64.
         self.nodes[BR].start()
@@ -94,6 +171,7 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
         self.assertEqual(self.nodes[BR].get_state(), 'router')
         self.nodes[BR].add_prefix('2002::/64', 'paros')
         self.nodes[BR].register_netdata()
+        self.simulator.set_lowpan_context(2, '2002::/64')
 
         # 3. Bring up remaining devices except DUT_REED.
         for i in range(2, 17):
@@ -122,18 +200,25 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
         self.nodes[DUT_REED].add_whitelist(self.nodes[BR].get_addr64())
         self.nodes[BR].add_whitelist(self.nodes[DUT_REED].get_addr64())
 
-        # 6. Verify DUT_REED would send Address Notification when ping to its ML-EID.
+        # 6. Verify DUT_REED would send Address Notification when ping to its
+        # ML-EID.
         mleid = self.nodes[DUT_REED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[ED1].ping(mleid))
 
-        reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
-        msg = reed_messages.next_coap_message('0.02')
-        command.check_address_notification(msg, self.nodes[DUT_REED], self.nodes[LEADER])
+        # Wait for sniffer collecting packets
+        self.simulator.go(1)
 
-        # 7 & 8. Verify DUT_REED would send Address Notification when ping to its 2001::EID and 2002::EID.
+        reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
+        msg = reed_messages.next_coap_message('0.02', '/a/an')
+        command.check_address_notification(msg, self.nodes[DUT_REED],
+                                           self.nodes[LEADER])
+
+        # 7 & 8. Verify DUT_REED would send Address Notification when ping to
+        # its 2001::EID and 2002::EID.
         flag2001 = 0
         flag2002 = 0
-        for global_address in self.nodes[DUT_REED].get_ip6_address(config.ADDRESS_TYPE.GLOBAL):
+        for global_address in self.nodes[DUT_REED].get_ip6_address(
+                config.ADDRESS_TYPE.GLOBAL):
             if global_address[0:4] == '2001':
                 flag2001 += 1
             elif global_address[0:4] == '2002':
@@ -142,12 +227,17 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
                 raise "Error: Address is unexpected."
             self.assertTrue(self.nodes[ED1].ping(global_address))
 
-            reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
-            msg = reed_messages.next_coap_message('0.02')
-            command.check_address_notification(msg, self.nodes[DUT_REED], self.nodes[LEADER])
+            # Wait for sniffer collecting packets
+            self.simulator.go(1)
 
-        assert flag2001 == 1 , "Error: Expecting address 2001::EID not appear."
-        assert flag2002 == 1 , "Error: Expecting address 2002::EID not appear."
+            reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
+            msg = reed_messages.next_coap_message('0.02', '/a/an')
+            command.check_address_notification(msg, self.nodes[DUT_REED],
+                                               self.nodes[LEADER])
+
+        assert flag2001 == 1, "Error: Expecting address 2001::EID not appear."
+        assert flag2002 == 1, "Error: Expecting address 2002::EID not appear."
+
 
 if __name__ == '__main__':
     unittest.main()

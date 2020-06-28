@@ -6,13 +6,14 @@
 - It can be used to simulate multiple nodes forming complex network topologies.
 - It allows testing of network interactions between many nodes (IPv6 traffic exchanges).
 
-`toranj` is developed in Python. `toranj` runs wpantund natively with OpenThread in NCP mode on POSIX simulation platform.
-`toranj` tests will run as part of travis pull request validation in OpenThread and/or `wpantund` GitHub projects.
-
+`toranj` is developed in Python. `toranj` runs wpantund natively with OpenThread in NCP mode on POSIX simulation platform. `toranj` tests will run as part of GitHub Actions pull request validation in OpenThread and/or `wpantund` GitHub projects.
 
 ## Setup
 
-`toranj` requires wpantund to be installed. Please follow [`wpantund` installation guide](https://github.com/openthread/wpantund/blob/master/INSTALL.md#wpantund-installation-guide).
+`toranj` requires `wpantund` to be installed.
+
+- Please follow [`wpantund` installation guide](https://github.com/openthread/wpantund/blob/master/INSTALL.md#wpantund-installation-guide). Note that `toranj` expects `wpantund` installed from latest master branch.
+- Alternative way to install `wpantund` is to use the same commands from git workflow [Simulation](https://github.com/openthread/openthread/blob/4b55284bd20f99a88e8e2c617ba358a0a5547f5d/.github/workflows/simulation.yml#L336-L341) for build target `toranj-test-framework`.
 
 To run all tests, `start` script can be used. This script will build OpenThread with proper configuration options and starts running all test.
 
@@ -37,7 +38,6 @@ To run a specific test
 
 `wpan.Node()` class creates a Thread node instance. It creates a sub-process to run `wpantund` and OpenThread, and provides methods to control the node.
 
-
 ```python
 >>> import wpan
 >>> node1 = wpan.Node()
@@ -47,6 +47,7 @@ Node (index=1, interface_name=wpan1)
 >>> node2
 Node (index=2, interface_name=wpan2)
 ```
+
 Note: You may need to run as `sudo` to allow `wpantund` to create tunnel interface (i.e., use `sudo python`).
 
 ### `wpan.Node` methods providing `wpanctl` commands
@@ -63,6 +64,7 @@ Note: You may need to run as `sudo` to allow `wpantund` to create tunnel interfa
 ```
 
 Example:
+
 ```python
 >>> node.get(wpan.WPAN_NAME)
 '"test-network"'
@@ -75,6 +77,7 @@ Example:
 ```
 
 - Common network operations:
+
 ```python
     node.reset()            # Reset the NCP
     node.status()           # Get current status
@@ -89,6 +92,7 @@ Example:
 ```
 
 Example:
+
 ```python
 >>> result = node.status()
 >>> print result
@@ -124,6 +128,7 @@ wpan1 => [
 ```
 
 - Scan:
+
 ```python
     node.active_scan(channel=None)
     node.energy_scan(channel=None)
@@ -131,7 +136,8 @@ wpan1 => [
     node.permit_join(duration_sec=None, port=None, udp=True, tcp=True)
 ```
 
--  On-mesh prefixes and off-mesh routes:
+- On-mesh prefixes and off-mesh routes:
+
 ```python
     node.config_gateway(prefix, default_route=False)
     node.add_route(route_prefix, prefix_len_in_bytes=None, priority=None)
@@ -142,21 +148,14 @@ A direct `wpanctl` command can be issued using `node.wpanctl(command)` with a gi
 
 `wpan` module provides variables for different `wpantund` properties. Some commonly used are:
 
-- Network/NCP properties:
-        WPAN_STATE, WPAN_NAME, WPAN_PANID, WPAN_XPANID, WPAN_KEY, WPAN_CHANNEL, WPAN_HW_ADDRESS,
-        WPAN_EXT_ADDRESS, WPAN_POLL_INTERVAL, WPAN_NODE_TYPE, WPAN_ROLE, WPAN_PARTITION_ID
+- Network/NCP properties: WPAN_STATE, WPAN_NAME, WPAN_PANID, WPAN_XPANID, WPAN_KEY, WPAN_CHANNEL, WPAN_HW_ADDRESS, WPAN_EXT_ADDRESS, WPAN_POLL_INTERVAL, WPAN_NODE_TYPE, WPAN_ROLE, WPAN_PARTITION_ID
 
-- IPv6 Addresses:
-        WPAN_IP6_LINK_LOCAL_ADDRESS, WPAN_IP6_MESH_LOCAL_ADDRESS, WPAN_IP6_MESH_LOCAL_PREFIX,
-        WPAN_IP6_ALL_ADDRESSES, WPAN_IP6_MULTICAST_ADDRESSES
+- IPv6 Addresses: WPAN_IP6_LINK_LOCAL_ADDRESS, WPAN_IP6_MESH_LOCAL_ADDRESS, WPAN_IP6_MESH_LOCAL_PREFIX, WPAN_IP6_ALL_ADDRESSES, WPAN_IP6_MULTICAST_ADDRESSES
 
-- Thread Properties:
-        WPAN_THREAD_RLOC16, WPAN_THREAD_ROUTER_ID, WPAN_THREAD_LEADER_ADDRESS,
-        WPAN_THREAD_LEADER_ROUTER_ID, WPAN_THREAD_LEADER_WEIGHT, WPAN_THREAD_LEADER_NETWORK_DATA,
+- Thread Properties: WPAN_THREAD_RLOC16, WPAN_THREAD_ROUTER_ID, WPAN_THREAD_LEADER_ADDRESS, WPAN_THREAD_LEADER_ROUTER_ID, WPAN_THREAD_LEADER_WEIGHT, WPAN_THREAD_LEADER_NETWORK_DATA,
 
         WPAN_THREAD_CHILD_TABLE, WPAN_THREAD_CHILD_TABLE_ADDRESSES, WPAN_THREAD_NEIGHBOR_TABLE,
         WPAN_THREAD_ROUTER_TABLE
-
 
 Method `join_node()` can be used by a node to join another node:
 
@@ -175,6 +174,7 @@ Method `whitelist_node()` can be used to add a given node to the whitelist of th
 #### Example (simple 3-node topology)
 
 Script below shows how to create a 3-node network topology with `node1` and `node2` being routers, and `node3` an end-device connected to `node2`:
+
 ```python
 >>> import wpan
 >>> node1 = wpan.Node()
@@ -200,12 +200,12 @@ Script below shows how to create a 3-node network topology with `node1` and `nod
 
 >>> print node2.get(wpan.WPAN_THREAD_NEIGHBOR_TABLE)
 [
-    "EAC1672C3EAB30A4, RLOC16:9401, LQIn:3, AveRssi:-20, LastRssi:-20, Age:30, LinkFC:6, MleFC:0, IsChild:yes, RxOnIdle:yes, FFD:yes, SecDataReq:yes, FullNetData:yes"
-    "A2042C8762576FD5, RLOC16:dc00, LQIn:3, AveRssi:-20, LastRssi:-20, Age:5, LinkFC:21, MleFC:18, IsChild:no, RxOnIdle:yes, FFD:yes, SecDataReq:no, FullNetData:yes"
+    "EAC1672C3EAB30A4, RLOC16:9401, LQIn:3, AveRssi:-20, LastRssi:-20, Age:30, LinkFC:6, MleFC:0, IsChild:yes, RxOnIdle:yes, FTD:yes, SecDataReq:yes, FullNetData:yes"
+    "A2042C8762576FD5, RLOC16:dc00, LQIn:3, AveRssi:-20, LastRssi:-20, Age:5, LinkFC:21, MleFC:18, IsChild:no, RxOnIdle:yes, FTD:yes, SecDataReq:no, FullNetData:yes"
 ]
 >>> print node1.get(wpan.WPAN_THREAD_NEIGHBOR_TABLE)
 [
-    "960947C53415DAA1, RLOC16:9400, LQIn:3, AveRssi:-20, LastRssi:-20, Age:18, LinkFC:15, MleFC:11, IsChild:no, RxOnIdle:yes, FFD:yes, SecDataReq:no, FullNetData:yes"
+    "960947C53415DAA1, RLOC16:9400, LQIn:3, AveRssi:-20, LastRssi:-20, Age:18, LinkFC:15, MleFC:11, IsChild:no, RxOnIdle:yes, FTD:yes, SecDataReq:no, FullNetData:yes"
 ]
 
 ```
@@ -221,12 +221,14 @@ Script below shows how to create a 3-node network topology with `node1` and `nod
 ```
 
 - `src` and `dst` can be
-   - either a string containing an IPv6 address
-   - or a tuple (ipv6 address as string, port). if no port is given, a random port number is used.
+
+  - either a string containing an IPv6 address
+  - or a tuple (ipv6 address as string, port). if no port is given, a random port number is used.
 
 - `data` can be
-   - either a string containing the message to be sent,
-   - or an int indicating size of the message (a random message with the given length will be generated).
+
+  - either a string containing the message to be sent,
+  - or an int indicating size of the message (a random message with the given length will be generated).
 
 - `count` gives number of times the message will be sent (default is 1).
 
@@ -254,6 +256,7 @@ After `perform_async_tx_rx()` is done, the `AsyncSender` and `AsyncReceiver` obj
 #### Example
 
 Sending 10 messages containing `"Hello there!"` from `node1` to `node2` using their mesh-local addresses:
+
 ```python
 # `node1` and `node2` are already joined and are part of the same Thread network.
 
@@ -299,17 +302,17 @@ True
 
 ### Logs and Verbose mode
 
-Every `wpan.Node()` instance will save its corresponding `wpantund` logs. By default the logs are saved in a file
-`wpantun-log<node_index>.log`. By setting `wpan.Node__TUND_LOG_TO_FILE` to `False` the logs are written to `stdout` as the test-cases are executed.
+Every `wpan.Node()` instance will save its corresponding `wpantund` logs. By default the logs are saved in a file `wpantun-log<node_index>.log`. By setting `wpan.Node__TUND_LOG_TO_FILE` to `False` the logs are written to `stdout` as the test-cases are executed.
 
 When `start.sh` script is used to run all test-cases, if any test fails, to help with debugging of the issue, the last 30 lines of `wpantund` logs of every node involved in the test-case is dumped to `stdout`.
 
-A `wpan.Node()` instance can also provide additional logs and info as the test-cases are run (verbose mode). By default this is disabled. It can be enabled for a node instance when it is created:
+A `wpan.Node()` instance can also provide additional logs and info as the test-cases are run (verbose mode). It can be enabled for a node instance when it is created:
+
 ```python
     node = wpan.Node(verbose=True)     # `node` instance will provide extra logs.
 ```
 
-Alternatively, `wpan.Node._VERBOSE` settings can be changed to enable verbose logging for all nodes.
+Alternatively, `wpan.Node._VERBOSE` settings can be changed to enable verbose logging for all nodes. The default value of `wpan.Node._VERBOSE` is determined from environment variable `TORANJ_VERBOSE` (verbose mode is enabled when env variable is set to any of `1`, `True`, `Yes`, `Y`, `On` (case-insensitive)), otherwise it is disabled. When `TORANJ_VERBOSE` is enabled, the OpenThread logging is also enabled (and collected in `wpantund-log<node_index>.log`files) on all nodes.
 
 Here is example of small test script and its corresponding log output with `verbose` mode enabled:
 
@@ -334,6 +337,7 @@ recver = node2.prepare_rx(sender)
 wpan.Node.perform_async_tx_rx()
 
 ```
+
 ```
 $ Node1.__init__() cmd: /usr/local/sbin/wpantund -o Config:NCP:SocketPath "system:../../examples/apps/ncp/ot-ncp-ftd 1" -o Config:TUN:InterfaceName wpan1 -o Config:NCP:DriverName spinel -o Daemon:SyslogMask "all -debug"
 $ Node2.__init__() cmd: /usr/local/sbin/wpantund -o Config:NCP:SocketPath "system:../../examples/apps/ncp/ot-ncp-ftd 2" -o Config:TUN:InterfaceName wpan2 -o Config:NCP:DriverName spinel -o Daemon:SyslogMask "all -debug"
@@ -364,6 +368,6 @@ $ Node2.wpanctl('get -v IPv6:LinkLocalAddress') -> '"fe80::ec08:f348:646f:d37d"'
 
 ```
 
-------
+---
 
 What does `"toranj"` mean? it's the name of a common symmetric weaving [pattern](https://en.wikipedia.org/wiki/Persian_carpet#/media/File:Toranj_-_special_circular_design_of_Iranian_carpets.JPG) used in Persian carpets.
