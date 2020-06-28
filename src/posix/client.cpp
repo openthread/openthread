@@ -218,22 +218,22 @@ int main(int argc, char *argv[])
                     lineBuffer[lineBufferWritePos++] = c;
                     if (c == '\n' || lineBufferWritePos >= sizeof(lineBuffer) - 1)
                     {
-                        size_t skipPrefix = 0;
+                        char * line = lineBuffer;
+                        size_t len  = lineBufferWritePos;
 
                         // read one line successfully or line buffer is full
-                        lineBuffer[lineBufferWritePos] = '\0';
+                        line[len] = '\0';
 
                         if (isBeginOfLine && strncmp("> ", lineBuffer, 2) == 0)
                         {
-                            skipPrefix = 2;
+                            line += 2;
+                            len -= 2;
                         }
 
-                        VerifyOrExit(DoWrite(STDOUT_FILENO, lineBuffer + skipPrefix, lineBufferWritePos - skipPrefix),
-                                     ret = OT_EXIT_FAILURE);
+                        VerifyOrExit(DoWrite(STDOUT_FILENO, line, len), ret = OT_EXIT_FAILURE);
 
-                        if (isBeginOfLine &&
-                            (strncmp("Done\n", lineBuffer, 5) == 0 || strncmp("Done\r\n", lineBuffer, 6) == 0 ||
-                             strncmp("Error ", lineBuffer, 6) == 0))
+                        if (isBeginOfLine && (strncmp("Done\n", line, 5) == 0 || strncmp("Done\r\n", line, 6) == 0 ||
+                                              strncmp("Error ", line, 6) == 0))
                         {
                             isFinished = true;
                             ret        = OT_EXIT_SUCCESS;
