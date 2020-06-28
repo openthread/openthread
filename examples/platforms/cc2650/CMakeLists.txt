@@ -64,7 +64,12 @@ add_library(openthread-cc2650
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
-set_property(TARGET openthread-cc2650 PROPERTY C_STANDARD 99)
+set_target_properties(
+    openthread-cc2650
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)
 
 target_link_libraries(openthread-cc2650
     PUBLIC
@@ -91,7 +96,6 @@ target_compile_options(openthread-cc2650 PRIVATE ${OT_CFLAGS})
 target_include_directories(openthread-cc2650
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
-        ${OT_PRIVATE_INCLUDES}
         ${PROJECT_SOURCE_DIR}/src/core
         ${PROJECT_SOURCE_DIR}/examples/platforms
 )

@@ -150,11 +150,12 @@ public:
      * This method sets the received signal strength for the messages from the Extended Address.
      * The default received signal strength for all received messages would be set if no Extended Address is specified.
      *
-     * @param[in]  aExtAddress  A pointer to the Extended Address, or NULL to set the default received signal strength.
+     * @param[in]  aExtAddress  A pointer to the Extended Address, or nullptr to set the default received signal
+     * strength.
      * @param[in]  aRss         The received signal strength to set.
      *
      * @retval OT_ERROR_NONE     Successfully set @p aRss for @p aExtAddress, or
-     *                           set the default @p aRss for all received messages if @p aExtAddress is NULL.
+     *                           set the default @p aRss for all received messages if @p aExtAddress is nullptr.
      * @retval OT_ERROR_NO_BUFS  No available entry exists.
      *
      */
@@ -168,8 +169,8 @@ public:
      *
      * @retval OT_ERROR_NONE       Successfully removed the received signal strength setting for the received
      *                             messages from @p aExtAddress or removed the default received signal strength
-     *                             setting if @p aExtAddress is NULL.
-     * @retval OT_ERROR_NOT_FOUND  @p aExtAddress is not in the RssIn filter if it is not NULL.
+     *                             setting if @p aExtAddress is nullptr.
+     * @retval OT_ERROR_NOT_FOUND  @p aExtAddress is not in the RssIn filter if it is not nullptr.
      *
      */
     otError RemoveRssIn(const ExtAddress *aExtAddress);

@@ -50,7 +50,7 @@ PanIdQueryServer::PanIdQueryServer(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mChannelMask(0)
     , mPanId(Mac::kPanIdBroadcast)
-    , mTimer(aInstance, &PanIdQueryServer::HandleTimer, this)
+    , mTimer(aInstance, PanIdQueryServer::HandleTimer, this)
     , mPanIdQuery(OT_URI_PATH_PANID_QUERY, &PanIdQueryServer::HandleQuery, this)
 {
     Get<Coap::Coap>().AddResource(mPanIdQuery);
@@ -95,7 +95,7 @@ void PanIdQueryServer::HandleScanResult(Mac::ActiveScanResult *aScanResult, void
 
 void PanIdQueryServer::HandleScanResult(Mac::ActiveScanResult *aScanResult)
 {
-    if (aScanResult != NULL)
+    if (aScanResult != nullptr)
     {
         if (aScanResult->mPanId == mPanId)
         {
@@ -115,7 +115,7 @@ void PanIdQueryServer::SendConflict(void)
     Ip6::MessageInfo        messageInfo;
     Coap::Message *         message;
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_PANID_CONFLICT));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -139,7 +139,7 @@ exit:
     {
         otLogWarnMeshCoP("Failed to send panid conflict: %s", otThreadErrorToString(error));
 
-        if (message != NULL)
+        if (message != nullptr)
         {
             message->Free();
         }

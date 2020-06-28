@@ -47,6 +47,7 @@
 #include "meshcop/dtls.hpp"
 #include "meshcop/energy_scan_client.hpp"
 #include "meshcop/panid_query_client.hpp"
+#include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/mle.hpp"
@@ -58,16 +59,6 @@ namespace MeshCoP {
 class Commissioner : public InstanceLocator
 {
 public:
-    /**
-     * Joiner operation flags.
-     *
-     */
-    enum JoinerOpFlag
-    {
-        kJoinerOpFlagDefault         = 0,      ///< The default flags
-        kJoinerOpFlagNotNotifyLeader = 1 << 0, ///< Do not notify Leader
-    };
-
     /**
      * This constructor initializes the Commissioner object.
      *
@@ -110,9 +101,8 @@ public:
     void ClearJoiners(void);
 
     /**
-     * This method adds a Joiner entry.
+     * This method adds a Joiner entry accepting any Joiner.
      *
-     * @param[in]  aEui64        A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
      * @param[in]  aPskd         A pointer to the PSKd.
      * @param[in]  aTimeout      A time after which a Joiner is automatically removed, in seconds.
      *
@@ -121,7 +111,41 @@ public:
      * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
      *
      */
-    otError AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd, uint32_t aTimeout);
+    otError AddJoinerAny(const char *aPskd, uint32_t aTimeout) { return AddJoiner(nullptr, nullptr, aPskd, aTimeout); }
+
+    /**
+     * This method adds a Joiner entry.
+     *
+     * @param[in]  aEui64        The Joiner's IEEE EUI-64.
+     * @param[in]  aPskd         A pointer to the PSKd.
+     * @param[in]  aTimeout      A time after which a Joiner is automatically removed, in seconds.
+     *
+     * @retval OT_ERROR_NONE           Successfully added the Joiner.
+     * @retval OT_ERROR_NO_BUFS        No buffers available to add the Joiner.
+     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
+     *
+     */
+    otError AddJoiner(const Mac::ExtAddress &aEui64, const char *aPskd, uint32_t aTimeout)
+    {
+        return AddJoiner(&aEui64, nullptr, aPskd, aTimeout);
+    }
+
+    /**
+     * This method adds a Joiner entry with a Joiner Discerner.
+     *
+     * @param[in]  aDiscerner  A Joiner Discerner.
+     * @param[in]  aPskd       A pointer to the PSKd.
+     * @param[in]  aTimeout    A time after which a Joiner is automatically removed, in seconds.
+     *
+     * @retval OT_ERROR_NONE           Successfully added the Joiner.
+     * @retval OT_ERROR_NO_BUFS        No buffers available to add the Joiner.
+     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
+     *
+     */
+    otError AddJoiner(const JoinerDiscerner &aDiscerner, const char *aPskd, uint32_t aTimeout)
+    {
+        return AddJoiner(nullptr, &aDiscerner, aPskd, aTimeout);
+    }
 
     /**
      * This method get joiner info at aIterator position.
@@ -136,19 +160,48 @@ public:
     otError GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner) const;
 
     /**
+     * This method removes a Joiner entry accepting any Joiner.
+     *
+     * @param[in]  aDelay         The delay to remove Joiner (in seconds).
+     *
+     * @retval OT_ERROR_NONE           Successfully added the Joiner.
+     * @retval OT_ERROR_NOT_FOUND      The Joiner entry accepting any Joiner was not found.
+     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
+     *
+     */
+    otError RemoveJoinerAny(uint32_t aDelay) { return RemoveJoiner(nullptr, nullptr, aDelay); }
+
+    /**
      * This method removes a Joiner entry.
      *
-     * @param[in]  aEui64         A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
+     * @param[in]  aEui64         The Joiner's IEEE EUI-64.
      * @param[in]  aDelay         The delay to remove Joiner (in seconds).
-     * @param[in]  aFlags         The flags for removing the Joiner.
      *
      * @retval OT_ERROR_NONE           Successfully added the Joiner.
      * @retval OT_ERROR_NOT_FOUND      The Joiner specified by @p aEui64 was not found.
      * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
      *
-     * @sa JoinerOpFlag
      */
-    otError RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay, JoinerOpFlag aFlags = kJoinerOpFlagDefault);
+    otError RemoveJoiner(const Mac::ExtAddress &aEui64, uint32_t aDelay)
+    {
+        return RemoveJoiner(&aEui64, nullptr, aDelay);
+    }
+
+    /**
+     * This method removes a Joiner entry.
+     *
+     * @param[in]  aDiscerner     A Joiner Discerner.
+     * @param[in]  aDelay         The delay to remove Joiner (in seconds).
+     *
+     * @retval OT_ERROR_NONE           Successfully added the Joiner.
+     * @retval OT_ERROR_NOT_FOUND      The Joiner specified by @p aEui64 was not found.
+     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
+     *
+     */
+    otError RemoveJoiner(const JoinerDiscerner &aDiscerner, uint32_t aDelay)
+    {
+        return RemoveJoiner(nullptr, &aDiscerner, aDelay);
+    }
 
     /**
      * This method gets the Provisioning URL.
@@ -161,7 +214,7 @@ public:
     /**
      * This method sets the Provisioning URL.
      *
-     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL to set URL to empty string).
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be nullptr to set URL to empty string).
      *
      * @retval OT_ERROR_NONE          Successfully set the Provisioning URL.
      * @retval OT_ERROR_INVALID_ARGS  @p aProvisioningUrl is invalid (too long).
@@ -274,6 +327,43 @@ private:
         kRemoveJoinerDelay    = 20, ///< Delay to remove successfully joined joiner
     };
 
+    struct Joiner
+    {
+        enum Type : uint8_t
+        {
+            kTypeUnused = 0, // Need to be 0 to ensure `memset()` clears all `Joiners`
+            kTypeAny,
+            kTypeEui64,
+            kTypeDiscerner,
+        };
+
+        TimeMilli mExpirationTime;
+
+        union
+        {
+            Mac::ExtAddress mEui64;
+            JoinerDiscerner mDiscerner;
+        } mSharedId;
+
+        JoinerPskd mPskd;
+        Type       mType;
+
+        void CopyToJoinerInfo(otJoinerInfo &aInfo) const;
+    };
+
+    Joiner *GetUnusedJoinerEntry(void);
+    Joiner *FindJoinerEntry(const Mac::ExtAddress *aEui64);
+    Joiner *FindJoinerEntry(const JoinerDiscerner &aDiscerner);
+    Joiner *FindBestMatchingJoinerEntry(const Mac::ExtAddress &aRxJoinerId);
+    void    RemoveJoinerEntry(Joiner &aJoiner);
+
+    otError AddJoiner(const Mac::ExtAddress *aEui64,
+                      const JoinerDiscerner *aDiscerner,
+                      const char *           aPskd,
+                      uint32_t               aTimeout);
+    otError RemoveJoiner(const Mac::ExtAddress *aEui64, const JoinerDiscerner *aDiscerner, uint32_t aDelay);
+    void    RemoveJoiner(Joiner &aJoiner, uint32_t aDelay);
+
     void AddCoapResources(void);
     void RemoveCoapResources(void);
 
@@ -327,34 +417,28 @@ private:
     static otError SendRelayTransmit(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError        SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otError SendCommissionerSet(void);
+    void    ComputeBloomFilter(SteeringData &aSteeringData) const;
+    void    SendCommissionerSet(void);
     otError SendPetition(void);
     void    SendKeepAlive(void);
     void    SendKeepAlive(uint16_t aSessionId);
 
     void SetState(otCommissionerState aState);
-    void SignalJoinerEvent(otCommissionerJoinerEvent aEvent, const Mac::ExtAddress &aJoinerId);
+    void SignalJoinerEvent(otCommissionerJoinerEvent aEvent, const Joiner *aJoiner) const;
+    void LogJoinerEntry(const char *aAction, const Joiner &aJoiner) const;
 
     static const char *StateToString(otCommissionerState aState);
 
-    struct Joiner
-    {
-        Mac::ExtAddress mEui64;
-        TimeMilli       mExpirationTime;
-        char            mPsk[Dtls::kPskMaxLength + 1];
-        bool            mValid : 1;
-        bool            mAny : 1;
-    };
     Joiner mJoiners[OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES];
 
-    uint8_t    mJoinerIid[Ip6::Address::kInterfaceIdentifierSize];
-    uint16_t   mJoinerPort;
-    uint16_t   mJoinerRloc;
-    uint16_t   mSessionId;
-    uint8_t    mJoinerIndex;
-    uint8_t    mTransmitAttempts;
-    TimerMilli mJoinerExpirationTimer;
-    TimerMilli mTimer;
+    Joiner *                 mActiveJoiner;
+    Ip6::InterfaceIdentifier mJoinerIid;
+    uint16_t                 mJoinerPort;
+    uint16_t                 mJoinerRloc;
+    uint16_t                 mSessionId;
+    uint8_t                  mTransmitAttempts;
+    TimerMilli               mJoinerExpirationTimer;
+    TimerMilli               mTimer;
 
     Coap::Resource mRelayReceive;
     Coap::Resource mDatasetChanged;
@@ -368,11 +452,11 @@ private:
 
     char mProvisioningUrl[OT_PROVISIONING_URL_MAX_SIZE + 1]; // + 1 is for null char at end of string.
 
+    otCommissionerState mState;
+
     otCommissionerStateCallback  mStateCallback;
     otCommissionerJoinerCallback mJoinerCallback;
     void *                       mCallbackContext;
-
-    otCommissionerState mState;
 };
 
 } // namespace MeshCoP

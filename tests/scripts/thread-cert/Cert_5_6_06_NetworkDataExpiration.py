@@ -41,7 +41,7 @@ MTDS = [ED1, SED1]
 
 
 class Cert_5_6_6_NetworkDataExpiration(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
@@ -109,7 +109,7 @@ class Cert_5_6_6_NetworkDataExpiration(thread_cert.TestCase):
             if addr[0:3] == '200':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
-        self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'pacs')
+        self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'paos')
         self.nodes[ROUTER].register_netdata()
 
         # Set lowpan context of sniffer

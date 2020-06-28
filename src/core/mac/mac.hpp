@@ -239,7 +239,7 @@ public:
      * @retval OT_ERROR_NONE           Successfully scheduled the frame transmission.
      * @retval OT_ERROR_ALREADY        MAC layer is busy sending a previously requested frame.
      * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
-     * @retval OT_ERROR_INVALID_ARGS   The argument @p aOobFrame is NULL.
+     * @retval OT_ERROR_INVALID_ARGS   The argument @p aOobFrame is nullptr.
      *
      */
     otError RequestOutOfBandFrameTransmission(otRadioFrame *aOobFrame);
@@ -477,7 +477,7 @@ public:
     /**
      * This method is called to handle a received frame.
      *
-     * @param[in]  aFrame  A pointer to the received frame, or NULL if the receive operation was aborted.
+     * @param[in]  aFrame  A pointer to the received frame, or nullptr if the receive operation was aborted.
      * @param[in]  aError  OT_ERROR_NONE when successfully received a frame,
      *                     OT_ERROR_ABORT when reception was aborted and a frame was not received.
      *
@@ -500,7 +500,7 @@ public:
      * of a frame transmission request, this method is invoked on all frame transmission attempts.
      *
      * @param[in] aFrame      The transmitted frame.
-     * @param[in] aAckFrame   A pointer to the ACK frame, or NULL if no ACK was received.
+     * @param[in] aAckFrame   A pointer to the ACK frame, or nullptr if no ACK was received.
      * @param[in] aError      OT_ERROR_NONE when the frame was transmitted successfully,
      *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
      *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
@@ -520,7 +520,7 @@ public:
      * This method is called to handle transmit events.
      *
      * @param[in]  aFrame      The frame that was transmitted.
-     * @param[in]  aAckFrame   A pointer to the ACK frame, NULL if no ACK was received.
+     * @param[in]  aAckFrame   A pointer to the ACK frame, nullptr if no ACK was received.
      * @param[in]  aError      OT_ERROR_NONE when the frame was transmitted successfully,
      *                         OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
      *                         OT_ERROR_CHANNEL_ACCESS_FAILURE when the tx failed due to activity on the channel,
@@ -565,7 +565,7 @@ public:
      * This method registers a callback to provide received raw IEEE 802.15.4 frames.
      *
      * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
-     * or NULL to disable the callback.
+     * or nullptr to disable the callback.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
@@ -721,8 +721,12 @@ public:
      *
      * @param[in]  aPeriod  The CSL period in 10 symbols.
      *
+     * @retval OT_ERROR_NONE           Successfully set the CSL period.
+     * @retval OT_ERROR_INVALID_STATE  Invalid state to change this
+     * parameter.
+     *
      */
-    void SetCslPeriod(uint16_t aPeriod);
+    otError SetCslPeriod(uint16_t aPeriod);
 
     /**
      * This method gets the CSL timeout.
@@ -737,8 +741,12 @@ public:
      *
      * @param[in]  aTimeout  The CSL timeout in seconds.
      *
+     * @retval OT_ERROR_NONE           Successfully set the CSL timeout.
+     * @retval OT_ERROR_INVALID_STATE  Invalid state to change this
+     * parameter.
+     *
      */
-    void SetCslTimeout(uint32_t aTimeout);
+    otError SetCslTimeout(uint32_t aTimeout);
 
     /**
      * This indicates whether CSL IEs should be included in transmitted frames.

@@ -79,7 +79,7 @@ otError DatasetLocal::Restore(Dataset &aDataset)
     mSaved    = true;
     timestamp = aDataset.GetTimestamp();
 
-    if (timestamp != NULL)
+    if (timestamp != nullptr)
     {
         mTimestamp        = *timestamp;
         mTimestampPresent = true;
@@ -133,9 +133,21 @@ otError DatasetLocal::Read(otOperationalDataset &aDataset) const
 
     memset(&aDataset, 0, sizeof(aDataset));
 
-    error = Read(dataset);
-    SuccessOrExit(error);
+    SuccessOrExit(error = Read(dataset));
+    dataset.ConvertTo(aDataset);
 
+exit:
+    return error;
+}
+
+otError DatasetLocal::Read(otOperationalDatasetTlvs &aDataset) const
+{
+    Dataset dataset(mType);
+    otError error;
+
+    memset(&aDataset, 0, sizeof(aDataset));
+
+    SuccessOrExit(error = Read(dataset));
     dataset.ConvertTo(aDataset);
 
 exit:
@@ -144,17 +156,23 @@ exit:
 
 otError DatasetLocal::Save(const otOperationalDataset &aDataset)
 {
-    otError error = OT_ERROR_NONE;
+    otError error;
     Dataset dataset(mType);
 
-    error = dataset.SetFrom(aDataset);
-    SuccessOrExit(error);
-
-    error = Save(dataset);
-    SuccessOrExit(error);
+    SuccessOrExit(error = dataset.SetFrom(aDataset));
+    SuccessOrExit(error = Save(dataset));
 
 exit:
     return error;
+}
+
+otError DatasetLocal::Save(const otOperationalDatasetTlvs &aDataset)
+{
+    Dataset dataset(mType);
+
+    dataset.SetFrom(aDataset);
+
+    return Save(dataset);
 }
 
 otError DatasetLocal::Save(const Dataset &aDataset)
@@ -178,7 +196,7 @@ otError DatasetLocal::Save(const Dataset &aDataset)
 
     timestamp = aDataset.GetTimestamp();
 
-    if (timestamp != NULL)
+    if (timestamp != nullptr)
     {
         mTimestamp        = *timestamp;
         mTimestampPresent = true;
@@ -196,8 +214,8 @@ exit:
 
 int DatasetLocal::Compare(const Timestamp *aCompare)
 {
-    return (aCompare == NULL) ? (!mTimestampPresent ? 0 : -1)
-                              : (!mTimestampPresent ? 1 : mTimestamp.Compare(*aCompare));
+    return (aCompare == nullptr) ? (!mTimestampPresent ? 0 : -1)
+                                 : (!mTimestampPresent ? 1 : mTimestamp.Compare(*aCompare));
 }
 
 } // namespace MeshCoP

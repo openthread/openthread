@@ -83,7 +83,14 @@ set_target_properties(
         CXX_STANDARD 11
 )
 
-target_link_libraries(openthread-posix PUBLIC openthread-platform PRIVATE ot-config util)
+target_link_libraries(openthread-posix
+    PUBLIC
+        openthread-platform
+    PRIVATE
+        ot-config
+        util
+        $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:rt>
+)
 
 target_compile_definitions(openthread-posix
     PUBLIC
@@ -98,7 +105,6 @@ target_compile_options(openthread-posix PRIVATE
 
 target_include_directories(openthread-posix PRIVATE
     ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include

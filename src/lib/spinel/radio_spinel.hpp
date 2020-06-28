@@ -323,7 +323,7 @@ public:
      * @param[out] aCoexMetrics  A reference to the coexistence metrics structure.
      *
      * @retval OT_ERROR_NONE          Successfully retrieved the coex metrics.
-     * @retval OT_ERROR_INVALID_ARGS  @p aCoexMetrics was NULL.
+     * @retval OT_ERROR_INVALID_ARGS  @p aCoexMetrics was nullptr.
      *
      */
     otError GetCoexMetrics(otRadioCoexMetrics &aCoexMetrics);
@@ -565,7 +565,7 @@ public:
     /**
      * This method processes platform diagnostics commands.
      *
-     * @param[in]   aString         A NULL-terminated input string.
+     * @param[in]   aString         A null-terminated input string.
      * @param[out]  aOutput         The diagnostics execution result.
      * @param[in]   aOutputMaxLen   The output buffer size.
      *
@@ -653,6 +653,22 @@ public:
      */
     otError RestoreDatasetFromNcp(void);
 
+    /**
+     * This method returns the next timepoint to recalculate RCP time offset.
+     *
+     * @returns The timepoint to start the recalculation of RCP time offset.
+     *
+     */
+    uint64_t GetNextRadioTimeRecalcStart(void) const { return mRadioTimeRecalcStart; }
+
+    /**
+     * This method gets the current estimated time on RCP.
+     *
+     * @returns The current estimated RCP time in microseconds.
+     *
+     */
+    uint64_t GetNow(void);
+
 private:
     enum
     {
@@ -704,6 +720,26 @@ private:
      *
      */
     otError Get(spinel_prop_key_t aKey, const char *aFormat, ...);
+
+    /**
+     * This method tries to retrieve a spinel property from OpenThread transceiver with parameter appended.
+     *
+     * @param[in]   aKey        Spinel property key.
+     * @param[in]   aParam      Parameter appended to spinel command.
+     * @param[in]   aParamSize  Size of parameter appended to spinel command
+     * @param[in]   aFormat     Spinel formatter to unpack property value.
+     * @param[out]  ...         Variable arguments list.
+     *
+     * @retval  OT_ERROR_NONE               Successfully got the property.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     *
+     */
+    otError GetWithParam(spinel_prop_key_t aKey,
+                         const uint8_t *   aParam,
+                         spinel_size_t     aParamSize,
+                         const char *      aFormat,
+                         ...);
 
     /**
      * This method tries to update a spinel property of OpenThread transceiver.
@@ -790,6 +826,8 @@ private:
 
     void TransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
 
+    void CalcRcpTimeOffset(void);
+
     otInstance *mInstance;
 
     SpinelInterface::RxFrameBuffer mRxFrameBuffer;
@@ -828,6 +866,7 @@ private:
     bool  mIsPromiscuous : 1;     ///< Promiscuous mode.
     bool  mIsReady : 1;           ///< NCP ready.
     bool  mSupportsLogStream : 1; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
+    bool  mIsTimeSynced : 1;      ///< Host has calculated the time difference between host and RCP.
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     bool   mDiagMode;
@@ -836,6 +875,8 @@ private:
 #endif
 
     uint64_t mTxRadioEndUs;
+    uint64_t mRadioTimeRecalcStart; ///< When to recalculate RCP time offset.
+    int64_t  mRadioTimeOffset;      ///< Time difference with estimated RCP time minus host time.
 };
 
 } // namespace Spinel

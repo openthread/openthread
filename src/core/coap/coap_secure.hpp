@@ -33,6 +33,7 @@
 
 #include "coap/coap.hpp"
 #include "meshcop/dtls.hpp"
+#include "meshcop/meshcop.hpp"
 
 #include <openthread/coap_secure.h>
 
@@ -160,6 +161,14 @@ public:
      */
     otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
+    /**
+     * This method sets the PSK.
+     *
+     * @param[in]  aPskd  A Joiner PSKd.
+     *
+     */
+    void SetPsk(const MeshCoP::JoinerPskd &aPskd);
+
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
@@ -250,7 +259,7 @@ public:
      * This method sends a CoAP message over secure DTLS connection.
      *
      * If a response for a request is expected, respective function and context information should be provided.
-     * If no response is expected, these arguments should be NULL pointers.
+     * If no response is expected, these arguments should be nullptr pointers.
      * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
      *
      * @param[in]  aMessage      A reference to the message to send.
@@ -262,13 +271,13 @@ public:
      * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
      *
      */
-    otError SendMessage(Message &aMessage, ResponseHandler aHandler = NULL, void *aContext = NULL);
+    otError SendMessage(Message &aMessage, ResponseHandler aHandler = nullptr, void *aContext = nullptr);
 
     /**
      * This method sends a CoAP message over secure DTLS connection.
      *
      * If a response for a request is expected, respective function and context information should be provided.
-     * If no response is expected, these arguments should be NULL pointers.
+     * If no response is expected, these arguments should be nullptr pointers.
      * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
      *
      * @param[in]  aMessage      A reference to the message to send.
@@ -283,8 +292,8 @@ public:
      */
     otError SendMessage(Message &               aMessage,
                         const Ip6::MessageInfo &aMessageInfo,
-                        ResponseHandler         aHandler = NULL,
-                        void *                  aContext = NULL);
+                        ResponseHandler         aHandler = nullptr,
+                        void *                  aContext = nullptr);
 
     /**
      * This method is used to pass UDP messages to the secure CoAP server.

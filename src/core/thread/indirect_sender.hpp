@@ -251,10 +251,10 @@ public:
         uint16_t  mCslPeriod;       ///< The CSL sample period in 10 symbols(160 microseconds)
         uint16_t  mCslPhase;        ///< The time when the next CSL sample will start.
         TimeMilli mCslLastHeard;    ///< Time when last frame containing CSL IE heard.
+#endif
 
-#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        OT_STATIC_ASSERT(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < (1UL << 14),
-                         "mQueuedMessageCount cannot fit max required!");
+        static_assert(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < (1UL << 14),
+                      "mQueuedMessageCount cannot fit max required!");
     };
 
     /**

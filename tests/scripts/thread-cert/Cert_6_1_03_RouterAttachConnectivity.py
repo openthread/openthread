@@ -40,7 +40,7 @@ ED = 5
 
 
 class Cert_6_1_3_RouterAttachConnectivity(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

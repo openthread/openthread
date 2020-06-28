@@ -36,6 +36,7 @@
 #include <openthread/link_raw.h>
 #include <openthread/ncp.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -56,7 +57,7 @@ otError NcpBase::PackRadioFrame(otRadioFrame *aFrame, otError aError)
     otError  error = OT_ERROR_FAILED;
     uint16_t flags = 0;
 
-    if (aFrame != NULL && aError == OT_ERROR_NONE)
+    if (aFrame != nullptr && aError == OT_ERROR_NONE)
     {
         // Append the frame contents
         SuccessOrExit(mEncoder.WriteDataWithLen(aFrame->mPsdu, aFrame->mLength));
@@ -71,7 +72,7 @@ otError NcpBase::PackRadioFrame(otRadioFrame *aFrame, otError aError)
     SuccessOrExit(mEncoder.WriteInt8(aFrame ? aFrame->mInfo.mRxInfo.mRssi : 0)); // RSSI
     SuccessOrExit(mEncoder.WriteInt8(-128));                                     // Noise Floor (Currently unused)
 
-    if (aFrame != NULL)
+    if (aFrame != nullptr)
     {
         if (aFrame->mInfo.mRxInfo.mAckedWithFramePending)
         {
@@ -141,7 +142,7 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
     if (mCurTransmitTID)
     {
         uint8_t header       = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID;
-        bool    framePending = (aAckFrame != NULL && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
+        bool    framePending = (aAckFrame != nullptr && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
 
         // Clear cached transmit TID
         mCurTransmitTID = 0;
@@ -189,7 +190,7 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
     // Make sure we are back listening on the original receive channel,
     // since the energy scan could have been on a different channel.
-    IgnoreError(otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone));
+    IgnoreError(otLinkRawReceive(mInstance));
 
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_MAC_ENERGY_SCAN_RESULT));
@@ -219,6 +220,16 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SRC_MATCH_ENABLED
 {
     // TODO: Would be good to add an `otLinkRaw` API to give the status of source match.
     return mEncoder.WriteBool(mSrcMatchEnabled);
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_TIMESTAMP>(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mEncoder.WriteUint64(otLinkRawGetRadioTime(mInstance)));
+
+exit:
+    return error;
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SRC_MATCH_ENABLED>(void)
@@ -318,7 +329,7 @@ exit:
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>(void)
 {
     otError             error      = OT_ERROR_NONE;
-    const otExtAddress *extAddress = NULL;
+    const otExtAddress *extAddress = nullptr;
 
     SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
 
@@ -337,23 +348,11 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_ENABLED>(void)
 
     if (value == false)
     {
-        // If we have raw stream enabled stop receiving
-        if (mIsRawStreamEnabled)
-        {
-            IgnoreError(otLinkRawSleep(mInstance));
-        }
-
-        error = otLinkRawSetEnable(mInstance, false);
+        error = otLinkRawSetReceiveDone(mInstance, NULL);
     }
     else
     {
-        error = otLinkRawSetEnable(mInstance, true);
-
-        // If we have raw stream enabled already, start receiving
-        if (error == OT_ERROR_NONE && mIsRawStreamEnabled)
-        {
-            error = otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone);
-        }
+        error = otLinkRawSetReceiveDone(mInstance, &NcpBase::LinkRawReceiveDone);
     }
 
 exit:
@@ -426,7 +425,7 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
     VerifyOrExit(otLinkRawIsEnabled(mInstance), error = OT_ERROR_INVALID_STATE);
 
     frame = otLinkRawGetTransmitBuffer(mInstance);
-    VerifyOrExit(frame != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(frame != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = DecodeStreamRawTxRequest(*frame));
 

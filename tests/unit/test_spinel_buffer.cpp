@@ -133,8 +133,8 @@ void FrameAddedCallback(void *                   aContext,
 {
     CallbackContext *callbackContext = reinterpret_cast<CallbackContext *>(aContext);
 
-    VerifyOrQuit(aNcpBuffer != NULL, "Null Spinel::Buffer in the callback");
-    VerifyOrQuit(callbackContext != NULL, "Null context in the callback");
+    VerifyOrQuit(aNcpBuffer != nullptr, "Null Spinel::Buffer in the callback");
+    VerifyOrQuit(callbackContext != nullptr, "Null context in the callback");
     VerifyOrQuit(aTag != Spinel::Buffer::kInvalidTag, "Invalid tag in the callback");
     VerifyOrQuit(aTag == aNcpBuffer->InFrameGetLastTag(), "InFrameGetLastTag() does not match the tag from callback");
 
@@ -150,8 +150,8 @@ void FrameRemovedCallback(void *                   aContext,
 {
     CallbackContext *callbackContext = reinterpret_cast<CallbackContext *>(aContext);
 
-    VerifyOrQuit(aNcpBuffer != NULL, "Null Spinel::Buffer in the callback");
-    VerifyOrQuit(callbackContext != NULL, "Null context in the callback");
+    VerifyOrQuit(aNcpBuffer != nullptr, "Null Spinel::Buffer in the callback");
+    VerifyOrQuit(callbackContext != nullptr, "Null context in the callback");
     VerifyOrQuit(aTag != Spinel::Buffer::kInvalidTag, "Invalid tag in the callback");
 
     VerifyAndRemoveTagFromHistory(aTag, aPriority);
@@ -177,7 +177,7 @@ void WriteTestFrame1(Spinel::Buffer &aNcpBuffer, Spinel::Buffer::Priority aPrior
     CallbackContext oldContext;
 
     message = sMessagePool->New(Message::kTypeIp6, 0);
-    VerifyOrQuit(message != NULL, "Null Message");
+    VerifyOrQuit(message != nullptr, "Null Message");
     SuccessOrQuit(message->SetLength(sizeof(sMottoText)), "Could not set the length of message.");
     message->Write(0, sizeof(sMottoText), sMottoText);
 
@@ -221,12 +221,12 @@ void WriteTestFrame2(Spinel::Buffer &aNcpBuffer, Spinel::Buffer::Priority aPrior
     CallbackContext oldContext = sContext;
 
     message1 = sMessagePool->New(Message::kTypeIp6, 0);
-    VerifyOrQuit(message1 != NULL, "Null Message");
+    VerifyOrQuit(message1 != nullptr, "Null Message");
     SuccessOrQuit(message1->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
     message1->Write(0, sizeof(sMysteryText), sMysteryText);
 
     message2 = sMessagePool->New(Message::kTypeIp6, 0);
-    VerifyOrQuit(message2 != NULL, "Null Message");
+    VerifyOrQuit(message2 != nullptr, "Null Message");
     SuccessOrQuit(message2->SetLength(sizeof(sHelloText)), "Could not set the length of message.");
     message2->Write(0, sizeof(sHelloText), sHelloText);
 
@@ -266,7 +266,7 @@ void WriteTestFrame3(Spinel::Buffer &aNcpBuffer, Spinel::Buffer::Priority aPrior
     CallbackContext oldContext = sContext;
 
     message1 = sMessagePool->New(Message::kTypeIp6, 0);
-    VerifyOrQuit(message1 != NULL, "Null Message");
+    VerifyOrQuit(message1 != nullptr, "Null Message");
 
     // An empty message with no content.
     SuccessOrQuit(message1->SetLength(0), "Could not set the length of message.");
@@ -524,14 +524,14 @@ void TestBuffer(void)
         WriteTestFrame3(ncpBuffer, Spinel::Buffer::kPriorityHigh);
 
         ncpBuffer.InFrameBegin((j % 2) == 0 ? Spinel::Buffer::kPriorityHigh : Spinel::Buffer::kPriorityLow);
-        ncpBuffer.InFrameFeedData(sHelloText, sizeof(sHelloText));
+        SuccessOrQuit(ncpBuffer.InFrameFeedData(sHelloText, sizeof(sHelloText)), "InFrameFeedData() failed.");
 
         message = sMessagePool->New(Message::kTypeIp6, 0);
-        VerifyOrQuit(message != NULL, "Null Message");
+        VerifyOrQuit(message != nullptr, "Null Message");
         SuccessOrQuit(message->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
         message->Write(0, sizeof(sMysteryText), sMysteryText);
 
-        ncpBuffer.InFrameFeedMessage(message);
+        SuccessOrQuit(ncpBuffer.InFrameFeedMessage(message), "InFrameFeedMessage() failed.");
 
         // Start writing a new frame in middle of an unfinished frame. Ensure the first one is discarded.
         WriteTestFrame1(ncpBuffer, frame1IsHighPriority ? Spinel::Buffer::kPriorityHigh : Spinel::Buffer::kPriorityLow);
@@ -543,7 +543,7 @@ void TestBuffer(void)
         VerifyAndRemoveFrame3(ncpBuffer);
 
         // Start reading few bytes from the frame
-        ncpBuffer.OutFrameBegin();
+        SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed.");
         ncpBuffer.OutFrameReadByte();
         ncpBuffer.OutFrameReadByte();
         ncpBuffer.OutFrameReadByte();
@@ -598,10 +598,10 @@ void TestBuffer(void)
     printf("\nTest 7: OutFrameRead() in parts\n");
 
     ncpBuffer.InFrameBegin(Spinel::Buffer::kPriorityLow);
-    ncpBuffer.InFrameFeedData(sMottoText, sizeof(sMottoText));
-    ncpBuffer.InFrameEnd();
+    SuccessOrQuit(ncpBuffer.InFrameFeedData(sMottoText, sizeof(sMottoText)), "InFrameFeedData() failed.");
+    SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
 
-    ncpBuffer.OutFrameBegin();
+    SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed.");
     readOffset = 0;
 
     while ((readLen = ncpBuffer.OutFrameRead(sizeof(readBuffer), readBuffer)) != 0)
@@ -616,7 +616,7 @@ void TestBuffer(void)
 
     VerifyOrQuit(readOffset == sizeof(sMottoText), "Read len does not match expected length.");
 
-    ncpBuffer.OutFrameRemove();
+    SuccessOrQuit(ncpBuffer.OutFrameRemove(), "OutFrameRemove() failed.");
 
     printf("\n -- PASS\n");
 
@@ -732,7 +732,7 @@ void TestBuffer(void)
     VerifyOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, 0) == OT_ERROR_INVALID_STATE, "Incorrect error status");
     VerifyOrQuit(ncpBuffer.InFrameEnd() == OT_ERROR_INVALID_STATE, "Incorrect error status");
     message = sMessagePool->New(Message::kTypeIp6, 0);
-    VerifyOrQuit(message != NULL, "Null Message");
+    VerifyOrQuit(message != nullptr, "Null Message");
     SuccessOrQuit(message->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
     message->Write(0, sizeof(sMysteryText), sMysteryText);
     VerifyOrQuit(ncpBuffer.InFrameFeedMessage(message) == OT_ERROR_INVALID_STATE, "Incorrect error status");
@@ -893,7 +893,8 @@ uint32_t GetRandom(uint32_t max)
 
     if (kUseTrueRandomNumberGenerator)
     {
-        Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&value), sizeof(value));
+        SuccessOrQuit(Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&value), sizeof(value)),
+                      "Random::Crypto::FillBuffer() failed.");
     }
     else
     {

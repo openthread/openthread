@@ -45,18 +45,17 @@
 #include "common/instance.hpp"
 #include "common/new.hpp"
 #include "net/ip6.hpp"
-#include "utils/static_assert.hpp"
 
 #if OPENTHREAD_CONFIG_NCP_UART_ENABLE
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE -
-                                                                  ot::Ncp::NcpBase::kSpinelCmdHeaderSize -
-                                                                  ot::Ncp::NcpBase::kSpinelPropIdSize,
-                 "diag output should be smaller than NCP UART rx buffer");
+static_assert(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE -
+                                                               ot::Ncp::NcpBase::kSpinelCmdHeaderSize -
+                                                               ot::Ncp::NcpBase::kSpinelPropIdSize,
+              "diag output should be smaller than NCP UART rx buffer");
 
-OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE,
-                 "diag command line should be smaller than NCP UART rx buffer");
+static_assert(OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE,
+              "diag command line should be smaller than NCP UART rx buffer");
 #endif
 
 namespace ot {
@@ -68,12 +67,12 @@ static OT_DEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {
-    NcpUart * ncpUart  = NULL;
+    NcpUart * ncpUart  = nullptr;
     Instance *instance = static_cast<Instance *>(aInstance);
 
     ncpUart = new (&sNcpRaw) NcpUart(instance);
 
-    if (ncpUart == NULL || ncpUart != NcpBase::GetNcpInstance())
+    if (ncpUart == nullptr || ncpUart != NcpBase::GetNcpInstance())
     {
         OT_ASSERT(false);
     }
@@ -217,7 +216,7 @@ extern "C" void otPlatUartSendDone(void)
 {
     NcpUart *ncpUart = static_cast<NcpUart *>(NcpBase::GetNcpInstance());
 
-    if (ncpUart != NULL)
+    if (ncpUart != nullptr)
     {
         ncpUart->HandleUartSendDone();
     }
@@ -233,7 +232,7 @@ extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
     NcpUart *ncpUart = static_cast<NcpUart *>(NcpBase::GetNcpInstance());
 
-    if (ncpUart != NULL)
+    if (ncpUart != nullptr)
     {
         ncpUart->HandleUartReceiveDone(aBuf, aBufLength);
     }

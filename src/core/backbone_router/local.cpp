@@ -62,6 +62,7 @@ Local::Local(Instance &aInstance)
     mBackboneRouterPrimaryAloc.Clear();
 
     mBackboneRouterPrimaryAloc.mPrefixLength       = Mle::MeshLocalPrefix::kLength;
+    mBackboneRouterPrimaryAloc.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
     mBackboneRouterPrimaryAloc.mPreferred          = true;
     mBackboneRouterPrimaryAloc.mValid              = true;
     mBackboneRouterPrimaryAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
@@ -121,7 +122,7 @@ void Local::Reset(void)
     {
         // Increase sequence number when changing from Primary to Secondary.
         mSequenceNumber++;
-        Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL);
+        Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
         SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);
     }
 
@@ -160,7 +161,7 @@ void Local::SetConfig(const BackboneRouterConfig &aConfig)
 
     if (update)
     {
-        Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL);
+        Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
 
         if (AddService() == OT_ERROR_NONE)
         {
@@ -244,7 +245,7 @@ void Local::SetState(BackboneRouterState aState)
 
     mState = aState;
 
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE);
+    Get<Notifier>().Signal(kEventThreadBackboneRouterStateChanged);
 
 exit:
     return;
@@ -281,7 +282,7 @@ void Local::UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRout
         mSequenceNumber      = aConfig.mSequenceNumber + 1;
         mReregistrationDelay = aConfig.mReregistrationDelay;
         mMlrTimeout          = aConfig.mMlrTimeout;
-        Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL);
+        Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
         if (AddService(true /* Force registration to refresh and restore Primary state */) == OT_ERROR_NONE)
         {
             Get<NetworkData::Notifier>().HandleServerDataUpdated();

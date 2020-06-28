@@ -188,7 +188,7 @@ otError CoapSecure::ProcessStop(uint8_t aArgsLength, char *aArgs[])
 otError CoapSecure::ProcessRequest(uint8_t aArgsLength, char *aArgs[])
 {
     otError       error   = OT_ERROR_NONE;
-    otMessage *   message = NULL;
+    otMessage *   message = nullptr;
     otMessageInfo messageInfo;
     uint16_t      payloadLength = 0;
     uint8_t       indexShifter  = 0;
@@ -259,8 +259,8 @@ otError CoapSecure::ProcessRequest(uint8_t aArgsLength, char *aArgs[])
         }
     }
 
-    message = otCoapNewMessage(mInterpreter.mInstance, NULL);
-    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+    message = otCoapNewMessage(mInterpreter.mInstance, nullptr);
+    VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
     otCoapMessageInit(message, coapType, coapCode);
     otCoapMessageGenerateToken(message, ot::Coap::Message::kDefaultTokenLength);
@@ -292,12 +292,12 @@ otError CoapSecure::ProcessRequest(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        error = otCoapSecureSendRequest(mInterpreter.mInstance, message, NULL, NULL);
+        error = otCoapSecureSendRequest(mInterpreter.mInstance, message, nullptr, nullptr);
     }
 
 exit:
 
-    if ((error != OT_ERROR_NONE) && (message != NULL))
+    if ((error != OT_ERROR_NONE) && (message != nullptr))
     {
         otMessageFree(message);
     }
@@ -393,7 +393,7 @@ otError CoapSecure::Process(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength < 1)
     {
-        IgnoreError(ProcessHelp(0, NULL));
+        IgnoreError(ProcessHelp(0, nullptr));
         error = OT_ERROR_INVALID_ARGS;
     }
     else
@@ -448,7 +448,7 @@ void CoapSecure::HandleRequest(void *aContext, otMessage *aMessage, const otMess
 void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     otError    error             = OT_ERROR_NONE;
-    otMessage *responseMessage   = NULL;
+    otMessage *responseMessage   = nullptr;
     otCoapCode responseCode      = OT_COAP_CODE_EMPTY;
     char       responseContent[] = "helloWorld";
 
@@ -493,8 +493,8 @@ void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessag
             responseCode = OT_COAP_CODE_VALID;
         }
 
-        responseMessage = otCoapNewMessage(mInterpreter.mInstance, NULL);
-        VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
+        responseMessage = otCoapNewMessage(mInterpreter.mInstance, nullptr);
+        VerifyOrExit(responseMessage != nullptr, error = OT_ERROR_NO_BUFS);
 
         SuccessOrExit(
             error = otCoapMessageInitResponse(responseMessage, aMessage, OT_COAP_TYPE_ACKNOWLEDGMENT, responseCode));
@@ -516,7 +516,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        if (responseMessage != NULL)
+        if (responseMessage != nullptr)
         {
             mInterpreter.mServer->OutputFormat("coaps send response error %d: %s\r\n", error,
                                                otThreadErrorToString(error));
@@ -561,13 +561,13 @@ void CoapSecure::DefaultHandler(void *aContext, otMessage *aMessage, const otMes
 void CoapSecure::DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     otError    error           = OT_ERROR_NONE;
-    otMessage *responseMessage = NULL;
+    otMessage *responseMessage = nullptr;
 
     if ((otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE) ||
         (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET))
     {
-        responseMessage = otCoapNewMessage(mInterpreter.mInstance, NULL);
-        VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
+        responseMessage = otCoapNewMessage(mInterpreter.mInstance, nullptr);
+        VerifyOrExit(responseMessage != nullptr, error = OT_ERROR_NO_BUFS);
 
         SuccessOrExit(error = otCoapMessageInitResponse(responseMessage, aMessage, OT_COAP_TYPE_NON_CONFIRMABLE,
                                                         OT_COAP_CODE_NOT_FOUND));
@@ -576,7 +576,7 @@ void CoapSecure::DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessa
     }
 
 exit:
-    if (error != OT_ERROR_NONE && responseMessage != NULL)
+    if (error != OT_ERROR_NONE && responseMessage != nullptr)
     {
         otMessageFree(responseMessage);
     }

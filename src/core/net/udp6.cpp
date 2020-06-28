@@ -63,7 +63,7 @@ static bool IsMle(Instance &aInstance, uint16_t aPort)
 UdpSocket::UdpSocket(Udp &aUdp)
     : InstanceLocator(aUdp.GetInstance())
 {
-    mHandle = NULL;
+    mHandle = nullptr;
 }
 
 Message *UdpSocket::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
@@ -208,8 +208,8 @@ Udp::Udp(Instance &aInstance)
     , mReceivers()
     , mSockets()
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
-    , mUdpForwarderContext(NULL)
-    , mUdpForwarder(NULL)
+    , mUdpForwarderContext(nullptr)
+    , mUdpForwarder(nullptr)
 #endif
 {
 }
@@ -224,7 +224,7 @@ otError Udp::RemoveReceiver(UdpReceiver &aReceiver)
     otError error;
 
     SuccessOrExit(error = mReceivers.Remove(aReceiver));
-    aReceiver.SetNext(NULL);
+    aReceiver.SetNext(nullptr);
 
 exit:
     return error;
@@ -238,7 +238,7 @@ void Udp::AddSocket(UdpSocket &aSocket)
 void Udp::RemoveSocket(UdpSocket &aSocket)
 {
     SuccessOrExit(mSockets.Remove(aSocket));
-    aSocket.SetNext(NULL);
+    aSocket.SetNext(nullptr);
 
 exit:
     return;
@@ -272,7 +272,7 @@ otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     if (aMessageInfo.IsHostInterface())
     {
-        VerifyOrExit(mUdpForwarder != NULL, error = OT_ERROR_NO_ROUTE);
+        VerifyOrExit(mUdpForwarder != nullptr, error = OT_ERROR_NO_ROUTE);
         mUdpForwarder(&aMessage, aMessageInfo.mPeerPort, &aMessageInfo.GetPeerAddr(), aMessageInfo.mSockPort,
                       mUdpForwarderContext);
         // message is consumed by the callback

@@ -607,6 +607,41 @@ def check_address_registration_tlv(
     return found
 
 
+def check_compressed_address_registration_tlv(command_msg,
+                                              cid,
+                                              iid,
+                                              cid_present_once=False):
+    '''Check whether or not a compressed IPv6 address in AddressRegistrationTlv.
+    note: only compare the iid part of the address.
+
+        Args:
+            command_msg (MleMessage) : The Mle message to check.
+            cid (int): The context id of the domain prefix.
+            iid (string): The Interface Identifier.
+            cid_present_once(boolean): True if cid entry should apprear only once in AR Tlv.
+                                       False otherwise.
+    '''
+    found = False
+    cid_cnt = 0
+
+    addresses = command_msg.assertMleMessageContainsTlv(
+        mle.AddressRegistration).addresses
+
+    for item in addresses:
+        if isinstance(item, mle.AddressCompressed):
+            if cid == item.cid:
+                cid_cnt = cid_cnt + 1
+                if iid == item.iid.hex():
+                    found = True
+                    break
+    assert found, 'Error: Expected (cid, iid):({},{}) Not Found'.format(
+        cid, iid)
+
+    assert cid_present_once == (
+        cid_cnt == 1), 'Error: Expected cid present {} but present {}'.format(
+            'once' if cid_present_once else '', cid_cnt)
+
+
 def assert_contains_tlv(tlvs, check_type, tlv_type):
     """Assert a tlv list contains specific tlv and return the first qualified.
     """

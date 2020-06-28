@@ -213,7 +213,7 @@ otError otCoapSendRequestWithParameters(otInstance *              aInstance,
     Instance &                instance     = *static_cast<Instance *>(aInstance);
     const Coap::TxParameters &txParameters = Coap::TxParameters::From(aTxParameters);
 
-    if (aTxParameters != NULL)
+    if (aTxParameters != nullptr)
     {
         VerifyOrExit(txParameters.IsValid(), error = OT_ERROR_INVALID_ARGS);
     }
@@ -270,7 +270,7 @@ otError otCoapSendResponseWithParameters(otInstance *              aInstance,
 
     return instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                     Coap::TxParameters::From(aTxParameters), NULL, NULL);
+                                                     Coap::TxParameters::From(aTxParameters), nullptr, nullptr);
 }
 
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE

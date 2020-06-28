@@ -95,7 +95,7 @@ MED_1_2 --- LEADER_1_2 --- MED_1_1
 
 
 class TestMulticastRegistration(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER_1_2: {
             'version': '1.2',
             'whitelist': [MED_1_2, SED_1_2, MED_1_1, SED_1_1, ROUTER_1_1],

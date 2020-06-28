@@ -48,7 +48,7 @@
 namespace ot {
 
 AnnounceBeginServer::AnnounceBeginServer(Instance &aInstance)
-    : AnnounceSenderBase(aInstance, &AnnounceBeginServer::HandleTimer)
+    : AnnounceSenderBase(aInstance, AnnounceBeginServer::HandleTimer)
     , mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this)
 {
     Get<Coap::Coap>().AddResource(mAnnounceBegin);

@@ -51,8 +51,8 @@ void TestHmacSha256(void)
             },
         },
         {
-            NULL,
-            NULL,
+            nullptr,
+            nullptr,
             {},
         },
     };
@@ -64,9 +64,9 @@ void TestHmacSha256(void)
         ot::Crypto::HmacSha256 hmac;
         uint8_t                hash[ot::Crypto::HmacSha256::kHashSize];
 
-        VerifyOrQuit(instance != NULL, "Null OpenThread instance");
+        VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
 
-        for (int i = 0; tests[i].key != NULL; i++)
+        for (int i = 0; tests[i].key != nullptr; i++)
         {
             hmac.Start(reinterpret_cast<const uint8_t *>(tests[i].key), static_cast<uint16_t>(strlen(tests[i].key)));
             hmac.Update(reinterpret_cast<const uint8_t *>(tests[i].data), static_cast<uint16_t>(strlen(tests[i].data)));

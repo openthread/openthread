@@ -504,6 +504,16 @@ void otPlatRadioSetMacKey(otInstance *    aInstance,
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
 
 /**
+ * Get the current estimated time (64bits width) of the radio chip.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns The current time in microseconds. UINT64_MAX when platform does not support or radio time is not ready.
+ *
+ */
+uint64_t otPlatRadioGetNow(otInstance *aInstance);
+
+/**
  * @}
  *
  */
@@ -871,14 +881,6 @@ bool otPlatRadioIsCoexEnabled(otInstance *aInstance);
 otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics);
 
 /**
- * Get the current time (64bits width) of the radio chip.
- *
- * @returns The current time in microseconds.
- *
- */
-uint64_t otPlatRadioGetNow(void);
-
-/**
  * Enable or disable CSL receiver.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
@@ -887,6 +889,7 @@ uint64_t otPlatRadioGetNow(void);
  * 52840)
  *
  * @retval  OT_ERROR_NOT_SUPPORTED  Radio driver doesn't support CSL.
+ * @retval  OT_ERROR_FAILED         Other platform specific errors.
  * @retval  OT_ERROR_NONE           Successfully enabled or disabled CSL.
  *
  */

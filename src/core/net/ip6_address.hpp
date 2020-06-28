@@ -58,6 +58,54 @@ namespace Ip6 {
  */
 
 /**
+ * This class represents the Interface Identifier of an IPv6 address.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class InterfaceIdentifier : public otIp6InterfaceIdentifier,
+                            public Equatable<InterfaceIdentifier>,
+                            public Clearable<InterfaceIdentifier>
+{
+public:
+    enum
+    {
+        kInfoStringSize = 17, // Max chars for the info string (`ToString()`).
+    };
+
+    /**
+     * This type defines the fixed-length `String` object returned from `ToString()`.
+     *
+     */
+    typedef String<kInfoStringSize> InfoString;
+
+    /**
+     * This method indicates whether or not the Interface Identifier is unspecified.
+     *
+     * @retval true  If the Interface Identifier is unspecified.
+     * @retval false If the Interface Identifier is not unspecified.
+     *
+     */
+    bool IsUnspecified(void) const;
+
+    /**
+     * This method indicates whether or not the Interface Identifier is reserved (RFC 5453).
+     *
+     * @retval true  If the Interface Identifier is reserved.
+     * @retval false If the Interface Identifier is not reserved.
+     *
+     */
+    bool IsReserved(void) const;
+
+    /**
+     * This method converts an Interface Identifier to a string.
+     *
+     * @returns An `InfoString` containing the string representation of the Interface Identifier.
+     *
+     */
+    InfoString ToString(void) const;
+} OT_TOOL_PACKED_END;
+
+/**
  * This class implements an IPv6 address object.
  *
  */
@@ -81,7 +129,7 @@ public:
      */
     enum
     {
-        kInterfaceIdentifierSize = 8,  ///< Interface Identifier size in bytes.
+        kInterfaceIdentifierSize = OT_IP6_IID_SIZE, ///< Interface Identifier size in bytes.
         kIp6AddressStringSize    = 40, ///< Max buffer size in bytes to store an IPv6 address in string format.
     };
 
@@ -452,12 +500,42 @@ public:
     uint8_t *GetIid(void) { return mFields.m8 + kInterfaceIdentifierOffset; }
 
     /**
+     * This method indicates whether or not the IPv6 address has the specified Interface Identifier.
+     *
+     * @param[in]  aIid  A pointer to the Interface Identifier.
+     *
+     * @retval true  If the IPv6 address has the specified Interface Identifier.
+     * @retval false If the IPv6 address doesn't have the specified Interface Identifier.
+     *
+     */
+    bool HasIid(const uint8_t *aIid) const;
+
+    /**
+     * This method indicates whether or not the IPv6 address has the specified Interface Identifier.
+     *
+     * @param[in]  aIid  A reference to the Interface Identifier.
+     *
+     * @retval true  If the IPv6 address has the specified Interface Identifier.
+     * @retval false If the IPv6 address doesn't have the specified Interface Identifier.
+     *
+     */
+    bool HasIid(const InterfaceIdentifier &aIid) const { return HasIid(aIid.m8); }
+
+    /**
+     * This method sets the Interface Identifier.
+     *
+     * @param[in]  aIid  A pointer to the Interface Identifier.
+     *
+     */
+    void SetIid(const uint8_t *aIid);
+
+    /**
      * This method sets the Interface Identifier.
      *
      * @param[in]  aIid  A reference to the Interface Identifier.
      *
      */
-    void SetIid(const uint8_t *aIid);
+    void SetIid(const InterfaceIdentifier &aIid) { SetIid(aIid.m8); }
 
     /**
      * This method sets the Interface Identifier.
@@ -513,7 +591,7 @@ public:
     /**
      * This method converts an IPv6 address string to binary.
      *
-     * @param[in]  aBuf  A pointer to the NULL-terminated string.
+     * @param[in]  aBuf  A pointer to the null-terminated string.
      *
      * @retval OT_ERROR_NONE          Successfully parsed the IPv6 address string.
      * @retval OT_ERROR_INVALID_ARGS  Failed to parse the IPv6 address string.

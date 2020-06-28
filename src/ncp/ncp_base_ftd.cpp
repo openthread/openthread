@@ -334,7 +334,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>(void)
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>(void)
 {
-    const uint8_t *ptr = NULL;
+    const uint8_t *ptr = nullptr;
     uint16_t       len;
     otError        error = OT_ERROR_NONE;
 
@@ -526,7 +526,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_
         break;
 
     case SPINEL_MESHCOP_COMMISSIONER_STATE_ACTIVE:
-        error = otCommissionerStart(mInstance, NULL, NULL, NULL);
+        error = otCommissionerStart(mInstance, nullptr, nullptr, nullptr);
         break;
 
     default:
@@ -538,23 +538,72 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS>(void)
+{
+    otError      error = OT_ERROR_NONE;
+    uint16_t     iter  = 0;
+    otJoinerInfo joinerInfo;
+
+    while (otCommissionerGetNextJoinerInfo(mInstance, &iter, &joinerInfo) == OT_ERROR_NONE)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        SuccessOrExit(error = mEncoder.OpenStruct()); // Joiner Id (any, EUI64 or a Joiner Discerner) struct
+
+        switch (joinerInfo.mType)
+        {
+        case OT_JOINER_INFO_TYPE_ANY:
+            break;
+
+        case OT_JOINER_INFO_TYPE_EUI64:
+            SuccessOrExit(error = mEncoder.WriteEui64(joinerInfo.mSharedId.mEui64));
+            break;
+
+        case OT_JOINER_INFO_TYPE_DISCERNER:
+            SuccessOrExit(error = mEncoder.WriteUint8(joinerInfo.mSharedId.mDiscerner.mLength));
+            SuccessOrExit(error = mEncoder.WriteUint64(joinerInfo.mSharedId.mDiscerner.mValue));
+            break;
+        }
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+
+        SuccessOrExit(error = mEncoder.WriteUint32(joinerInfo.mExpirationTime));
+        SuccessOrExit(error = mEncoder.WriteUtf8(joinerInfo.mPskd.m8));
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS>(void)
 {
     otError             error = OT_ERROR_NONE;
+    otJoinerDiscerner   discerner;
+    bool                withDiscerner = false;
     const otExtAddress *eui64;
     uint32_t            timeout;
     const char *        psk;
 
     SuccessOrExit(error = mDecoder.OpenStruct());
 
-    if (!mDecoder.IsAllReadInStruct())
+    switch (mDecoder.GetRemainingLengthInStruct())
     {
+    case 0:
+        // Empty struct indicates any joiner
+        eui64 = nullptr;
+        break;
+
+    case sizeof(spinel_eui64_t):
         SuccessOrExit(error = mDecoder.ReadEui64(eui64));
-    }
-    else
-    {
-        // Empty struct indicates any Joiner (no EUI64 is given so NULL is used.).
-        eui64 = NULL;
+        break;
+
+    default:
+        SuccessOrExit(error = mDecoder.ReadUint8(discerner.mLength));
+        SuccessOrExit(error = mDecoder.ReadUint64(discerner.mValue));
+        withDiscerner = true;
+        break;
     }
 
     SuccessOrExit(error = mDecoder.CloseStruct());
@@ -562,7 +611,14 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MESHCOP_COMMISSION
     SuccessOrExit(error = mDecoder.ReadUint32(timeout));
     SuccessOrExit(error = mDecoder.ReadUtf8(psk));
 
-    error = otCommissionerAddJoiner(mInstance, eui64, psk, timeout);
+    if (withDiscerner)
+    {
+        error = otCommissionerAddJoinerWithDiscerner(mInstance, &discerner, psk, timeout);
+    }
+    else
+    {
+        error = otCommissionerAddJoiner(mInstance, eui64, psk, timeout);
+    }
 
 exit:
     return error;
@@ -571,23 +627,40 @@ exit:
 template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS>(void)
 {
     otError             error = OT_ERROR_NONE;
+    otJoinerDiscerner   discerner;
+    bool                withDiscerner = false;
     const otExtAddress *eui64;
 
     SuccessOrExit(error = mDecoder.OpenStruct());
 
-    if (!mDecoder.IsAllReadInStruct())
+    switch (mDecoder.GetRemainingLengthInStruct())
     {
+    case 0:
+        // Empty struct indicates any joiner
+        eui64 = nullptr;
+        break;
+
+    case sizeof(spinel_eui64_t):
         SuccessOrExit(error = mDecoder.ReadEui64(eui64));
-    }
-    else
-    {
-        // Empty struct indicates any Joiner (no EUI64 is given so NULL is used.).
-        eui64 = NULL;
+        break;
+
+    default:
+        SuccessOrExit(error = mDecoder.ReadUint8(discerner.mLength));
+        SuccessOrExit(error = mDecoder.ReadUint64(discerner.mValue));
+        withDiscerner = true;
+        break;
     }
 
     SuccessOrExit(error = mDecoder.CloseStruct());
 
-    error = otCommissionerRemoveJoiner(mInstance, eui64);
+    if (withDiscerner)
+    {
+        error = otCommissionerRemoveJoinerWithDiscerner(mInstance, &discerner);
+    }
+    else
+    {
+        error = otCommissionerRemoveJoiner(mInstance, eui64);
+    }
 
 exit:
     return error;
@@ -806,7 +879,7 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8
     }
     else
     {
-        error = otCommissionerStart(mInstance, NULL, NULL, NULL);
+        error = otCommissionerStart(mInstance, nullptr, nullptr, nullptr);
     }
 
 exit:
@@ -819,8 +892,8 @@ exit:
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>(void)
 {
     otError             error         = OT_ERROR_NONE;
-    const otExtAddress *eui64         = NULL;
-    const char *        pskd          = NULL;
+    const otExtAddress *eui64         = nullptr;
+    const char *        pskd          = nullptr;
     uint32_t            joinerTimeout = 0;
 
     SuccessOrExit(error = mDecoder.ReadUtf8(pskd));
@@ -828,7 +901,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>(vo
 
     if (mDecoder.ReadEui64(eui64) != OT_ERROR_NONE)
     {
-        eui64 = NULL;
+        eui64 = nullptr;
     }
 
     error = otCommissionerAddJoiner(mInstance, eui64, pskd, joinerTimeout);

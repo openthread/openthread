@@ -45,7 +45,7 @@ ROUTER_SELECTION_JITTER = 1
 
 
 class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode':
                 'rsdn',

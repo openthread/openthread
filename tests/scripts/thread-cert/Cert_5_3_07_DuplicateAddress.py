@@ -45,7 +45,7 @@ MTDS = [MED1, SED1, MED3]
 
 
 class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         DUT_LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

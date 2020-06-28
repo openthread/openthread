@@ -75,7 +75,7 @@ public:
      */
     UdpReceiver(otUdpHandler aHandler, void *aContext)
     {
-        mNext    = NULL;
+        mNext    = nullptr;
         mHandler = aHandler;
         mContext = aContext;
     }
@@ -110,7 +110,7 @@ public:
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
      * @param[in]  aSettings  The message settings (default is used if not provided).
      *
-     * @returns A pointer to the message or NULL if no buffers are available.
+     * @returns A pointer to the message or nullptr if no buffers are available.
      *
      */
     Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());
@@ -272,7 +272,7 @@ public:
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
      * @param[in]  aSettings  The message settings.
      *
-     * @returns A pointer to the message or NULL if no buffers are available.
+     * @returns A pointer to the message or nullptr if no buffers are available.
      *
      */
     Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());

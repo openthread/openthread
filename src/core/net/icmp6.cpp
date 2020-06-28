@@ -94,7 +94,7 @@ otError Icmp::SendError(IcmpHeader::Type   aType,
 {
     otError           error = OT_ERROR_NONE;
     MessageInfo       messageInfoLocal;
-    Message *         message = NULL;
+    Message *         message = nullptr;
     IcmpHeader        icmp6Header;
     Header            ip6Header;
     Message::Settings settings(Message::kWithLinkSecurity, Message::kPriorityNet);
@@ -113,7 +113,7 @@ otError Icmp::SendError(IcmpHeader::Type   aType,
 
     messageInfoLocal = aMessageInfo;
 
-    VerifyOrExit((message = Get<Ip6>().NewMessage(0, settings)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Ip6>().NewMessage(0, settings)) != nullptr, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = message->SetLength(sizeof(icmp6Header) + sizeof(ip6Header)));
 
     message->Write(sizeof(icmp6Header), sizeof(ip6Header), &ip6Header);
@@ -129,7 +129,7 @@ otError Icmp::SendError(IcmpHeader::Type   aType,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
     }
@@ -197,7 +197,7 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
 {
     otError     error = OT_ERROR_NONE;
     IcmpHeader  icmp6Header;
-    Message *   replyMessage = NULL;
+    Message *   replyMessage = nullptr;
     MessageInfo replyMessageInfo;
     uint16_t    payloadLength;
 
@@ -209,7 +209,7 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
     icmp6Header.Init();
     icmp6Header.SetType(IcmpHeader::kTypeEchoReply);
 
-    if ((replyMessage = Get<Ip6>().NewMessage(0)) == NULL)
+    if ((replyMessage = Get<Ip6>().NewMessage(0)) == nullptr)
     {
         otLogDebgIcmp("Failed to allocate a new message");
         ExitNow();
@@ -236,7 +236,7 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
 
 exit:
 
-    if (error != OT_ERROR_NONE && replyMessage != NULL)
+    if (error != OT_ERROR_NONE && replyMessage != nullptr)
     {
         replyMessage->Free();
     }

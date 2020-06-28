@@ -44,7 +44,7 @@ otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aData != NULL && aDataLength != NULL);
+    OT_ASSERT(aData != nullptr && aDataLength != nullptr);
 
     return instance.Get<NetworkData::Leader>().GetNetworkData(aStable, aData, *aDataLength);
 }

@@ -37,7 +37,7 @@ ED = 3
 
 
 class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

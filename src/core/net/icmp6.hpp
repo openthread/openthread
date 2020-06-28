@@ -228,7 +228,7 @@ public:
     {
         mReceiveCallback = aCallback;
         mContext         = aContext;
-        mNext            = NULL;
+        mNext            = nullptr;
     }
 
 private:
@@ -258,7 +258,7 @@ public:
      *
      * @param[in]  aReserved  The number of header bytes to reserve after the ICMP header.
      *
-     * @returns A pointer to the message or NULL if no buffers are available.
+     * @returns A pointer to the message or nullptr if no buffers are available.
      *
      */
     Message *NewMessage(uint16_t aReserved);

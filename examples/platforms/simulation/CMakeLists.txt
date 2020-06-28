@@ -71,7 +71,12 @@ add_library(openthread-simulation
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
-set_property(TARGET openthread-simulation PROPERTY C_STANDARD 99)
+set_target_properties(
+    openthread-simulation
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)
 
 find_library(LIBRT rt)
 if(LIBRT)
@@ -94,7 +99,6 @@ target_compile_options(openthread-simulation PRIVATE
 
 target_include_directories(openthread-simulation PRIVATE
     ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/examples/platforms
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core

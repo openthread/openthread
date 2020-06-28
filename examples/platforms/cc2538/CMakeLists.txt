@@ -55,7 +55,12 @@ add_library(openthread-cc2538
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
-set_property(TARGET openthread-cc2538 PROPERTY C_STANDARD 99)
+set_target_properties(
+    openthread-cc2538
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)
 
 target_link_libraries(openthread-cc2538 PRIVATE openthread-platform-utils ot-config)
 target_link_options(openthread-cc2538 PUBLIC -T${PROJECT_SOURCE_DIR}/examples/platforms/cc2538/cc2538.ld)
@@ -72,7 +77,6 @@ target_compile_options(openthread-cc2538 PRIVATE
 
 target_include_directories(openthread-cc2538 PRIVATE
     ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/examples/platforms
     ${PROJECT_SOURCE_DIR}/src/core
 )

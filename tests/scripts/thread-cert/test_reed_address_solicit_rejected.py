@@ -47,9 +47,9 @@ SRV_0_SERVER_DATA = 'bar'
 
 
 class TestREEDAddressSolicitRejected(thread_cert.TestCase):
-    support_ncp = False
+    SUPPORT_NCP = False
 
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface

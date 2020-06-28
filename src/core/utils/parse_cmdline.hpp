@@ -63,7 +63,7 @@ public:
      *       and @p aArgs will point to the arguments in the input @p aString. Backslash ('\') can be used
      *       to escape separators (' ', '\t', '\r', '\n') and the backslash itself.
      *
-     * @param[in]   aString         A NULL-terminated input string.
+     * @param[in]   aString         A null-terminated input string.
      * @param[out]  aArgsLength     The argument counter of the command line.
      * @param[out]  aArgs           The argument vector of the command line.
      * @param[in]   aArgsLengthMax  The maximum argument counter.

@@ -838,7 +838,7 @@ uint8_t Frame::FindPayloadIndex(void) const
 {
     uint8_t index = SkipSecurityHeaderIndex();
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    const uint8_t *cur    = NULL;
+    const uint8_t *cur    = nullptr;
     const uint8_t *footer = GetFooter();
 #endif
 
@@ -887,7 +887,7 @@ const uint8_t *Frame::GetPayload(void) const
     uint8_t        index   = FindPayloadIndex();
     const uint8_t *payload = GetPsdu() + index;
 
-    VerifyOrExit(index != kInvalidIndex, payload = NULL);
+    VerifyOrExit(index != kInvalidIndex, payload = nullptr);
 
 exit:
     return payload;
@@ -938,7 +938,7 @@ exit:
 const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
 {
     uint8_t        index   = FindHeaderIeIndex();
-    const uint8_t *cur     = NULL;
+    const uint8_t *cur     = nullptr;
     const uint8_t *payload = GetPayload();
 
     VerifyOrExit(index != kInvalidIndex, OT_NOOP);
@@ -957,14 +957,14 @@ const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
 
         cur += sizeof(HeaderIe);
 
-        VerifyOrExit(cur + len <= payload, cur = NULL);
+        VerifyOrExit(cur + len <= payload, cur = nullptr);
 
         cur += len;
     }
 
     if (cur == payload)
     {
-        cur = NULL;
+        cur = nullptr;
     }
 
 exit:
@@ -978,7 +978,7 @@ void Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
     uint8_t *cur = GetHeaderIe(Frame::kHeaderIeCsl);
     CslIe *  csl;
 
-    OT_ASSERT(cur != NULL);
+    OT_ASSERT(cur != nullptr);
 
     csl = reinterpret_cast<CslIe *>(cur + sizeof(HeaderIe));
     csl->SetPeriod(aCslPeriod);
@@ -989,20 +989,20 @@ void Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 const TimeIe *Frame::GetTimeIe(void) const
 {
-    const TimeIe * timeIe                              = NULL;
-    const uint8_t *cur                                 = NULL;
+    const TimeIe * timeIe                              = nullptr;
+    const uint8_t *cur                                 = nullptr;
     uint8_t        oui[VendorIeHeader::kVendorOuiSize] = {VendorIeHeader::kVendorOuiNest & 0xff,
                                                    (VendorIeHeader::kVendorOuiNest >> 8) & 0xff,
                                                    (VendorIeHeader::kVendorOuiNest >> 16) & 0xff};
 
     cur = GetHeaderIe(kHeaderIeVendor);
-    VerifyOrExit(cur != NULL, OT_NOOP);
+    VerifyOrExit(cur != nullptr, OT_NOOP);
 
     cur += sizeof(HeaderIe);
 
     timeIe = reinterpret_cast<const TimeIe *>(cur);
-    VerifyOrExit(memcmp(oui, timeIe->GetVendorOui(), VendorIeHeader::kVendorOuiSize) == 0, timeIe = NULL);
-    VerifyOrExit(timeIe->GetSubType() == VendorIeHeader::kVendorIeTime, timeIe = NULL);
+    VerifyOrExit(memcmp(oui, timeIe->GetVendorOui(), VendorIeHeader::kVendorOuiSize) == 0, timeIe = nullptr);
+    VerifyOrExit(timeIe->GetSubType() == VendorIeHeader::kVendorIeTime, timeIe = nullptr);
 
 exit:
     return timeIe;
@@ -1092,7 +1092,6 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     PanId    panId;
     uint8_t  footerLength;
     uint8_t  securityControlField;
-    uint32_t frameCounter;
     uint8_t  keyId;
 
     mChannel = aFrame.mChannel;
@@ -1170,18 +1169,16 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     if (aFrame.GetSecurityEnabled())
     {
         SuccessOrExit(error = aFrame.GetSecurityControlField(securityControlField));
-        SuccessOrExit(error = aFrame.GetFrameCounter(frameCounter));
         SuccessOrExit(error = aFrame.GetKeyId(keyId));
 
         SetSecurityControlField(securityControlField);
-        SetFrameCounter(frameCounter);
         SetKeyId(keyId);
     }
 
     // Set header IE
     if (aIeLength > 0)
     {
-        OT_ASSERT(aIeData != NULL);
+        OT_ASSERT(aIeData != nullptr);
         memcpy(GetPsdu() + FindHeaderIeIndex(), aIeData, aIeLength);
     }
 

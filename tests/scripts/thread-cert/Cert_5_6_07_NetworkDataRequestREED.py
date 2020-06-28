@@ -37,7 +37,7 @@ REED = 3
 
 
 class Cert_5_6_7_NetworkDataRequestREED(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

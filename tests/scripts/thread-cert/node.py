@@ -108,7 +108,7 @@ class Node:
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             if 'RADIO_DEVICE' in os.environ:
-                cmd += ' -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
+                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
                     os.environ['RADIO_DEVICE'], nodeid)
             else:
                 cmd += ' %d' % nodeid
@@ -123,14 +123,14 @@ class Node:
                 cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             if 'RADIO_DEVICE_1_1' in os.environ:
-                cmd += ' -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
+                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
                     os.environ['RADIO_DEVICE_1_1'], nodeid)
             else:
                 cmd += ' %d' % nodeid
 
         print("%s" % cmd)
 
-        self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=4)
+        self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=10)
 
         # Add delay to ensure that the process is ready to receive commands.
         timeout = 0.4
@@ -151,7 +151,7 @@ class Node:
         # If Thread version of node matches the testing environment version.
         if self.version == self.env_version:
             if 'RADIO_DEVICE' in os.environ:
-                args = ' spinel+hdlc+uart://%s?forkpty-arg=%d' % (
+                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (
                     os.environ['RADIO_DEVICE'], nodeid)
             else:
                 args = ''
@@ -190,7 +190,7 @@ class Node:
         # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability.
         elif self.version == '1.1':
             if 'RADIO_DEVICE_1_1' in os.environ:
-                args = ' spinel+hdlc+uart://%s?forkpty-arg=%d' % (
+                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (
                     os.environ['RADIO_DEVICE_1_1'], nodeid)
             else:
                 args = ''
@@ -211,7 +211,7 @@ class Node:
         cmd += ' %d' % nodeid
         print("%s" % cmd)
 
-        self.pexpect = pexpect.spawn(cmd, timeout=4)
+        self.pexpect = pexpect.spawn(cmd, timeout=10)
 
         # Add delay to ensure that the process is ready to receive commands.
         time.sleep(0.2)
@@ -514,14 +514,23 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def set_domain_prefix(self, prefix):
-        flags = 'prosD'
+    def set_domain_prefix(self, prefix, flags='prosD'):
         self.add_prefix(prefix, flags)
         self.register_netdata()
 
     def remove_domain_prefix(self, prefix):
         self.remove_prefix(prefix)
         self.register_netdata()
+
+    def set_dua_iid(self, iid):
+        cmd = 'dua iid {}'.format(iid)
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def clear_dua_iid(self):
+        cmd = 'dua iid clear'
+        self.send_command(cmd)
+        self._expect('Done')
 
     def set_link_quality(self, addr, lqi):
         cmd = 'macfilter rss add-lqi %s %s' % (addr, lqi)
@@ -760,6 +769,16 @@ class Node:
 
         return None
 
+    def has_ipaddr(self, address):
+        ipaddr = ipaddress.ip_address(address)
+        ipaddrs = self.get_addrs()
+        for addr in ipaddrs:
+            if isinstance(addr, bytearray):
+                addr = bytes(addr)
+            if ipaddress.ip_address(addr) == ipaddr:
+                return True
+        return False
+
     def get_ipmaddrs(self):
         self.send_command('ipmaddr')
         return self._expect_results(r'\S+(:\S*)+')
@@ -892,7 +911,7 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def add_prefix(self, prefix, flags, prf='med'):
+    def add_prefix(self, prefix, flags='paosr', prf='med'):
         cmd = 'prefix add %s %s %s' % (prefix, flags, prf)
         self.send_command(cmd)
         self._expect('Done')

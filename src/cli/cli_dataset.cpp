@@ -66,6 +66,7 @@ const Dataset::Command Dataset::sCommands[] = {
     {"pendingtimestamp", &Dataset::ProcessPendingTimestamp},
     {"pskc", &Dataset::ProcessPskc},
     {"securitypolicy", &Dataset::ProcessSecurityPolicy},
+    {"set", &Dataset::ProcessSet},
 };
 
 otOperationalDataset Dataset::sDataset;
@@ -248,14 +249,29 @@ exit:
 
 otError Dataset::ProcessActive(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
+    otError error;
 
-    otOperationalDataset dataset;
-    otError              error;
+    if (aArgsLength == 0)
+    {
+        otOperationalDataset dataset;
 
-    SuccessOrExit(error = otDatasetGetActive(mInterpreter.mInstance, &dataset));
-    error = Print(dataset);
+        SuccessOrExit(error = otDatasetGetActive(mInterpreter.mInstance, &dataset));
+        error = Print(dataset);
+    }
+    else if ((aArgsLength == 1) && (strcmp(aArgs[0], "binary") == 0))
+    {
+        otOperationalDatasetTlvs dataset;
+
+        VerifyOrExit(strlen(aArgs[0]) <= OT_OPERATIONAL_DATASET_MAX_LENGTH * 2, error = OT_ERROR_NO_BUFS);
+
+        SuccessOrExit(error = otDatasetGetActiveTlvs(mInterpreter.mInstance, &dataset));
+        mInterpreter.OutputBytes(dataset.mTlvs, dataset.mLength);
+        mInterpreter.mServer->OutputFormat("\r\n");
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
 
 exit:
     return error;
@@ -263,14 +279,29 @@ exit:
 
 otError Dataset::ProcessPending(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
+    otError error;
 
-    otOperationalDataset dataset;
-    otError              error;
+    if (aArgsLength == 0)
+    {
+        otOperationalDataset dataset;
 
-    SuccessOrExit(error = otDatasetGetPending(mInterpreter.mInstance, &dataset));
-    error = Print(dataset);
+        SuccessOrExit(error = otDatasetGetPending(mInterpreter.mInstance, &dataset));
+        error = Print(dataset);
+    }
+    else if ((aArgsLength == 1) && (strcmp(aArgs[0], "binary") == 0))
+    {
+        otOperationalDatasetTlvs dataset;
+
+        VerifyOrExit(strlen(aArgs[0]) <= OT_OPERATIONAL_DATASET_MAX_LENGTH * 2, error = OT_ERROR_NO_BUFS);
+
+        SuccessOrExit(error = otDatasetGetPendingTlvs(mInterpreter.mInstance, &dataset));
+        mInterpreter.OutputBytes(dataset.mTlvs, dataset.mLength);
+        mInterpreter.mServer->OutputFormat("\r\n");
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
 
 exit:
     return error;
@@ -659,13 +690,13 @@ otError Dataset::ProcessMgmtGetCommand(uint8_t aArgsLength, char *aArgs[])
     {
         SuccessOrExit(error = otDatasetSendMgmtActiveGet(mInterpreter.mInstance, &datasetComponents, tlvs,
                                                          static_cast<uint8_t>(length),
-                                                         destAddrSpecified ? &address : NULL));
+                                                         destAddrSpecified ? &address : nullptr));
     }
     else if (strcmp(aArgs[0], "pending") == 0)
     {
         SuccessOrExit(error = otDatasetSendMgmtPendingGet(mInterpreter.mInstance, &datasetComponents, tlvs,
                                                           static_cast<uint8_t>(length),
-                                                          destAddrSpecified ? &address : NULL));
+                                                          destAddrSpecified ? &address : nullptr));
     }
     else
     {
@@ -755,6 +786,32 @@ otError Dataset::ProcessSecurityPolicy(uint8_t aArgsLength, char *aArgs[])
     }
 
     sDataset.mComponents.mIsSecurityPolicyPresent = true;
+
+exit:
+    return error;
+}
+
+otError Dataset::ProcessSet(uint8_t aArgsLength, char *aArgs[])
+{
+    otError                  error = OT_ERROR_NONE;
+    otOperationalDatasetTlvs dataset;
+
+    VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(aArgs[0], "active") == 0)
+    {
+        dataset.mLength = static_cast<uint8_t>(Interpreter::Hex2Bin(aArgs[1], dataset.mTlvs, sizeof(dataset.mTlvs)));
+        SuccessOrExit(error = otDatasetSetActiveTlvs(mInterpreter.mInstance, &dataset));
+    }
+    else if (strcmp(aArgs[0], "pending") == 0)
+    {
+        dataset.mLength = static_cast<uint8_t>(Interpreter::Hex2Bin(aArgs[1], dataset.mTlvs, sizeof(dataset.mTlvs)));
+        SuccessOrExit(error = otDatasetSetPendingTlvs(mInterpreter.mInstance, &dataset));
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
 
 exit:
     return error;

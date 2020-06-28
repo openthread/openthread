@@ -50,16 +50,38 @@ static uint32_t sUsAlarm     = 0;
 
 static uint32_t sSpeedUpFactor = 1;
 
+#ifdef __linux__
+
+#include <signal.h>
+#include <time.h>
+
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE && !OPENTHREAD_POSIX_VIRTUAL_TIME
+static timer_t sMicroTimer;
+static int     sRealTimeSignal = 0;
+
+static void microTimerHandler(int aSignal, siginfo_t *aSignalInfo, void *aUserContext)
+{
+    assert(aSignal == sRealTimeSignal);
+    assert(aSignalInfo->si_value.sival_ptr == &sMicroTimer);
+    OT_UNUSED_VARIABLE(aSignal);
+    OT_UNUSED_VARIABLE(aSignalInfo);
+    OT_UNUSED_VARIABLE(aUserContext);
+}
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE && !OPENTHREAD_POSIX_VIRTUAL_TIME
+#endif // __linux__
+
+#ifdef CLOCK_MONOTONIC_RAW
+#define OT_POSIX_CLOCK_ID CLOCK_MONOTONIC_RAW
+#else
+#define OT_POSIX_CLOCK_ID CLOCK_MONOTONIC
+#endif
+
 #if !OPENTHREAD_POSIX_VIRTUAL_TIME
 uint64_t otPlatTimeGet(void)
 {
     struct timespec now;
 
-#ifdef CLOCK_MONOTONIC_RAW
-    VerifyOrDie(clock_gettime(CLOCK_MONOTONIC_RAW, &now) == 0, OT_EXIT_FAILURE);
-#else
-    VerifyOrDie(clock_gettime(CLOCK_MONOTONIC, &now) == 0, OT_EXIT_FAILURE);
-#endif
+    VerifyOrDie(clock_gettime(OT_POSIX_CLOCK_ID, &now) == 0, OT_EXIT_FAILURE);
 
     return (uint64_t)now.tv_sec * US_PER_S + (uint64_t)now.tv_nsec / NS_PER_US;
 }
@@ -70,9 +92,43 @@ static uint64_t platformAlarmGetNow(void)
     return otPlatTimeGet() * sSpeedUpFactor;
 }
 
-void platformAlarmInit(uint32_t aSpeedUpFactor)
+void platformAlarmInit(uint32_t aSpeedUpFactor, int aRealTimeSignal)
 {
     sSpeedUpFactor = aSpeedUpFactor;
+
+    if (aRealTimeSignal == 0)
+    {
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+        otLogWarnPlat("Real time signal not enabled, microsecond timers may be inaccurate!");
+#endif
+    }
+#ifdef __linux__
+    else if (aRealTimeSignal >= SIGRTMIN && aRealTimeSignal <= SIGRTMAX)
+    {
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE && !OPENTHREAD_POSIX_VIRTUAL_TIME
+        struct sigaction sa;
+        struct sigevent  sev;
+
+        sa.sa_flags     = SA_SIGINFO;
+        sa.sa_sigaction = microTimerHandler;
+        sigemptyset(&sa.sa_mask);
+
+        VerifyOrDie(sigaction(aRealTimeSignal, &sa, NULL) != -1, OT_EXIT_ERROR_ERRNO);
+
+        sev.sigev_notify          = SIGEV_SIGNAL;
+        sev.sigev_signo           = aRealTimeSignal;
+        sev.sigev_value.sival_ptr = &sMicroTimer;
+
+        VerifyOrDie(timer_create(CLOCK_MONOTONIC, &sev, &sMicroTimer) != -1, OT_EXIT_ERROR_ERRNO);
+
+        sRealTimeSignal = aRealTimeSignal;
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE && !OPENTHREAD_POSIX_VIRTUAL_TIME
+    }
+#endif // __linux__
+    else
+    {
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
 }
 
 uint32_t otPlatAlarmMilliGetNow(void)
@@ -98,7 +154,7 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 uint32_t otPlatAlarmMicroGetNow(void)
 {
-    return (uint32_t)(otPlatTimeGet());
+    return static_cast<uint32_t>(platformAlarmGetNow());
 }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
@@ -107,6 +163,25 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 
     sUsAlarm     = aT0 + aDt;
     sIsUsRunning = true;
+
+#ifdef __linux__
+    if (sRealTimeSignal != 0)
+    {
+        struct itimerspec its;
+        uint32_t          diff = sUsAlarm - otPlatAlarmMicroGetNow();
+
+        its.it_value.tv_sec  = diff / US_PER_S;
+        its.it_value.tv_nsec = (diff % US_PER_S) * NS_PER_US;
+
+        its.it_interval.tv_sec  = 0;
+        its.it_interval.tv_nsec = 0;
+
+        if (-1 == timer_settime(sMicroTimer, 0, &its, NULL))
+        {
+            otLogWarnPlat("Failed to update microsecond timer: %s", strerror(errno));
+        }
+    }
+#endif // __linux__
 }
 
 void otPlatAlarmMicroStop(otInstance *aInstance)
@@ -114,6 +189,18 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 
     sIsUsRunning = false;
+
+#ifdef __linux__
+    if (sRealTimeSignal != 0)
+    {
+        struct itimerspec its = {{0, 0}, {0, 0}};
+
+        if (-1 == timer_settime(sMicroTimer, 0, &its, NULL))
+        {
+            otLogWarnPlat("Failed to stop microsecond timer: %s", strerror(errno));
+        }
+    }
+#endif // __linux__
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
@@ -122,7 +209,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
     int64_t  remaining = INT32_MAX;
     uint64_t now       = platformAlarmGetNow();
 
-    assert(aTimeout != NULL);
+    assert(aTimeout != nullptr);
 
     if (sIsMsRunning)
     {
@@ -159,8 +246,11 @@ exit:
             remaining = 1;
         }
 
-        aTimeout->tv_sec  = (time_t)(remaining / US_PER_S);
-        aTimeout->tv_usec = remaining % US_PER_S;
+        if (remaining < aTimeout->tv_sec * US_PER_S + aTimeout->tv_usec)
+        {
+            aTimeout->tv_sec  = static_cast<time_t>(remaining / US_PER_S);
+            aTimeout->tv_usec = static_cast<suseconds_t>(remaining % US_PER_S);
+        }
     }
 }
 

@@ -152,7 +152,7 @@ public:
      * This method scans network data for given Service ID and returns pointer to the respective TLV, if present.
      *
      * @param aServiceId Service ID to look for.
-     * @return Pointer to the Service TLV for given Service ID, or NULL if not present.
+     * @return Pointer to the Service TLV for given Service ID, or nullptr if not present.
      *
      */
     const ServiceTlv *FindServiceById(uint8_t aServiceId) const;

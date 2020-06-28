@@ -33,6 +33,7 @@ OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --ma
 OPENTHREAD_PROJECT_CFLAGS ?= -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"
 
 OPENTHREAD_PUBLIC_CFLAGS                                         := \
+    -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>        \
     -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1                  \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
@@ -83,7 +84,6 @@ endif
 ifeq ($(TARGET_PRODUCT),generic)
 OPENTHREAD_PUBLIC_CFLAGS                                         += \
     -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1                           \
-    -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1                         \
@@ -137,6 +137,8 @@ LOCAL_EXPORT_C_INCLUDE_DIRS     := \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
@@ -239,6 +241,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/announce_begin_server.cpp               \
     src/core/thread/announce_sender.cpp                     \
     src/core/thread/child_table.cpp                         \
+    src/core/thread/discover_scanner.cpp                    \
     src/core/thread/dua_manager.cpp                         \
     src/core/thread/energy_scan_server.cpp                  \
     src/core/thread/indirect_sender.cpp                     \
@@ -342,6 +345,8 @@ LOCAL_CFLAGS                                                                := \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
@@ -385,10 +390,13 @@ LOCAL_CFLAGS                                                                := \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
 LOCAL_LDLIBS                               := \
+    -lrt                                      \
     -lutil
 
 LOCAL_SRC_FILES                            := \
@@ -422,6 +430,8 @@ LOCAL_CFLAGS                                                                := \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
@@ -462,6 +472,8 @@ LOCAL_CFLAGS                                                                := \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
@@ -470,6 +482,7 @@ LOCAL_SRC_FILES                            := \
     $(NULL)
 
 LOCAL_LDLIBS                               := \
+    -lrt                                      \
     -lutil
 
 LOCAL_STATIC_LIBRARIES = libopenthread-ncp ot-core
@@ -481,6 +494,12 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := ot-ctl
 LOCAL_MODULE_TAGS := eng
+
+LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
+    -Wno-non-virtual-dtor                                                      \
+    $(NULL)
 
 LOCAL_CFLAGS                                               := \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>  \

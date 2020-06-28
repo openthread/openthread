@@ -31,6 +31,7 @@
  */
 
 #include <openthread/instance.h>
+#include <openthread/platform/time.h>
 
 #include "common/instance.hpp"
 #include "radio/radio.hpp"
@@ -154,4 +155,16 @@ OT_TOOL_WEAK void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t 
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aMacFrameCounter);
+}
+
+OT_TOOL_WEAK uint64_t otPlatTimeGet(void)
+{
+    return UINT64_MAX;
+}
+
+OT_TOOL_WEAK uint64_t otPlatRadioGetNow(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return UINT64_MAX;
 }

@@ -48,14 +48,14 @@ namespace Utils {
 
 ChannelManager::ChannelManager(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , Notifier::Receiver(aInstance, ChannelManager::HandleNotifierEvents)
     , mSupportedChannelMask(0)
     , mFavoredChannelMask(0)
     , mActiveTimestamp(0)
-    , mNotifierCallback(aInstance, &ChannelManager::HandleStateChanged, this)
     , mDelay(kMinimumDelay)
     , mChannel(0)
     , mState(kStateIdle)
-    , mTimer(aInstance, &ChannelManager::HandleTimer, this)
+    , mTimer(aInstance, ChannelManager::HandleTimer, this)
     , mAutoSelectInterval(kDefaultAutoSelectInterval)
     , mAutoSelectEnabled(false)
 {
@@ -77,7 +77,7 @@ void ChannelManager::RequestChannelChange(uint8_t aChannel)
 
     mTimer.Start(1 + Random::NonCrypto::GetUint32InRange(0, kRequestStartJitterInterval));
 
-    Get<Notifier>().Signal(OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL);
+    Get<Notifier>().Signal(kEventChannelManagerNewChannelChanged);
 
 exit:
     return;
@@ -204,7 +204,7 @@ void ChannelManager::PreparePendingDataset(void)
     dataset.mDelay                                 = delayInMs;
     dataset.mComponents.mIsDelayPresent            = true;
 
-    error = Get<MeshCoP::PendingDataset>().SendSetRequest(dataset, NULL, 0);
+    error = Get<MeshCoP::PendingDataset>().SendSetRequest(dataset, nullptr, 0);
 
     if (error == OT_ERROR_NONE)
     {
@@ -252,14 +252,14 @@ void ChannelManager::HandleTimer(void)
     }
 }
 
-void ChannelManager::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aChangedFlags)
+void ChannelManager::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<ChannelManager>().HandleStateChanged(aChangedFlags);
+    static_cast<ChannelManager &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
-void ChannelManager::HandleStateChanged(otChangedFlags aChangedFlags)
+void ChannelManager::HandleNotifierEvents(Events aEvents)
 {
-    VerifyOrExit((aChangedFlags & OT_CHANGED_THREAD_CHANNEL) != 0, OT_NOOP);
+    VerifyOrExit(aEvents.Contains(kEventThreadChannelChanged), OT_NOOP);
     VerifyOrExit(mChannel == Get<Mac::Mac>().GetPanChannel(), OT_NOOP);
 
     mState = kStateIdle;

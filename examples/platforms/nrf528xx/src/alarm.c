@@ -688,7 +688,6 @@ void RTC_IRQ_HANDLER(void)
     }
 }
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 uint64_t otPlatTimeGet(void)
 {
     return nrf5AlarmGetCurrentTime();
@@ -698,4 +697,3 @@ uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return XTAL_ACCURACY;
 }
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

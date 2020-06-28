@@ -40,8 +40,6 @@
 
 #include <openthread/error.h>
 
-#include "utils/static_assert.hpp"
-
 /**
  * This macro calculates the number of elements in an array.
  *

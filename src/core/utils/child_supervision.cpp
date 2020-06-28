@@ -49,9 +49,9 @@ namespace Utils {
 
 ChildSupervisor::ChildSupervisor(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , Notifier::Receiver(aInstance, ChildSupervisor::HandleNotifierEvents)
     , mSupervisionInterval(kDefaultSupervisionInterval)
-    , mTimer(aInstance, &ChildSupervisor::HandleTimer, this)
-    , mNotifierCallback(aInstance, &ChildSupervisor::HandleStateChanged, this)
+    , mTimer(aInstance, ChildSupervisor::HandleTimer, this)
 {
 }
 
@@ -63,7 +63,7 @@ void ChildSupervisor::SetSupervisionInterval(uint16_t aInterval)
 
 Child *ChildSupervisor::GetDestination(const Message &aMessage) const
 {
-    Child *  child = NULL;
+    Child *  child = nullptr;
     uint16_t childIndex;
 
     VerifyOrExit(aMessage.GetType() == Message::kTypeSupervision, OT_NOOP);
@@ -77,13 +77,13 @@ exit:
 
 void ChildSupervisor::SendMessage(Child &aChild)
 {
-    Message *message = NULL;
+    Message *message = nullptr;
     uint16_t childIndex;
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0, OT_NOOP);
 
     message = Get<MessagePool>().New(Message::kTypeSupervision, sizeof(uint8_t));
-    VerifyOrExit(message != NULL, OT_NOOP);
+    VerifyOrExit(message != nullptr, OT_NOOP);
 
     // Supervision message is an empty payload 15.4 data frame.
     // The child index is stored here in the message content to allow
@@ -94,13 +94,13 @@ void ChildSupervisor::SendMessage(Child &aChild)
     SuccessOrExit(message->Append(&childIndex, sizeof(childIndex)));
 
     SuccessOrExit(Get<ThreadNetif>().SendMessage(*message));
-    message = NULL;
+    message = nullptr;
 
     otLogInfoUtil("Sending supervision message to child 0x%04x", aChild.GetRloc16());
 
 exit:
 
-    if (message != NULL)
+    if (message != nullptr)
     {
         message->Free();
     }
@@ -162,14 +162,14 @@ void ChildSupervisor::CheckState(void)
     }
 }
 
-void ChildSupervisor::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void ChildSupervisor::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<ChildSupervisor>().HandleStateChanged(aFlags);
+    static_cast<ChildSupervisor &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
-void ChildSupervisor::HandleStateChanged(otChangedFlags aFlags)
+void ChildSupervisor::HandleNotifierEvents(Events aEvents)
 {
-    if ((aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_CHILD_ADDED | OT_CHANGED_THREAD_CHILD_REMOVED)) != 0)
+    if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadChildAdded | kEventThreadChildRemoved))
     {
         CheckState();
     }
@@ -180,7 +180,7 @@ void ChildSupervisor::HandleStateChanged(otChangedFlags aFlags)
 SupervisionListener::SupervisionListener(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimeout(0)
-    , mTimer(aInstance, &SupervisionListener::HandleTimer, this)
+    , mTimer(aInstance, SupervisionListener::HandleTimer, this)
 {
     SetTimeout(kDefaultTimeout);
 }

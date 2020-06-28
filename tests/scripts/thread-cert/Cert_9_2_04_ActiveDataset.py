@@ -36,9 +36,9 @@ LEADER = 2
 
 
 class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
-    support_ncp = False
+    SUPPORT_NCP = False
 
-    topology = {
+    TOPOLOGY = {
         COMMISSIONER: {
             'active_dataset': {
                 'timestamp': 10,

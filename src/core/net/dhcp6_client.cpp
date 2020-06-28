@@ -54,9 +54,9 @@ namespace Dhcp6 {
 Dhcp6Client::Dhcp6Client(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(Get<Ip6::Udp>())
-    , mTrickleTimer(aInstance, &Dhcp6Client::HandleTrickleTimer, NULL, this)
+    , mTrickleTimer(aInstance, Dhcp6Client::HandleTrickleTimer, nullptr, this)
     , mStartTime(0)
-    , mIdentityAssociationCurrent(NULL)
+    , mIdentityAssociationCurrent(nullptr)
 {
     memset(mIdentityAssociations, 0, sizeof(mIdentityAssociations));
 }
@@ -114,7 +114,7 @@ void Dhcp6Client::UpdateAddresses(void)
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
     {
-        IdentityAssociation *ia = NULL;
+        IdentityAssociation *ia = nullptr;
 
         if (!config.mDhcp)
         {
@@ -128,7 +128,7 @@ void Dhcp6Client::UpdateAddresses(void)
             if (mIdentityAssociations[i].mStatus == kIaStatusInvalid)
             {
                 // record an available ia
-                if (ia == NULL)
+                if (ia == nullptr)
                 {
                     ia = &mIdentityAssociations[i];
                 }
@@ -142,7 +142,7 @@ void Dhcp6Client::UpdateAddresses(void)
 
         if (!found)
         {
-            if (ia != NULL)
+            if (ia != nullptr)
             {
                 ia->mPrefixAgentRloc            = config.mRloc16;
                 ia->mNetifAddress.mAddress      = config.mPrefix.mPrefix;
@@ -189,7 +189,7 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
     bool rval = false;
 
     // not interrupt in-progress solicit
-    VerifyOrExit(mIdentityAssociationCurrent == NULL || mIdentityAssociationCurrent->mStatus != kIaStatusSoliciting,
+    VerifyOrExit(mIdentityAssociationCurrent == nullptr || mIdentityAssociationCurrent->mStatus != kIaStatusSoliciting,
                  OT_NOOP);
 
     mTrickleTimer.Stop();
@@ -227,7 +227,7 @@ bool Dhcp6Client::HandleTrickleTimer(void)
 {
     bool rval = true;
 
-    VerifyOrExit(mIdentityAssociationCurrent != NULL, rval = false);
+    VerifyOrExit(mIdentityAssociationCurrent != nullptr, rval = false);
 
     switch (mIdentityAssociationCurrent->mStatus)
     {
@@ -242,7 +242,7 @@ bool Dhcp6Client::HandleTrickleTimer(void)
         break;
 
     case kIaStatusSolicitReplied:
-        mIdentityAssociationCurrent = NULL;
+        mIdentityAssociationCurrent = nullptr;
 
         if (!ProcessNextIdentityAssociation())
         {
@@ -267,7 +267,7 @@ void Dhcp6Client::Solicit(uint16_t aRloc16)
     Message *        message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = AppendHeader(*message));
     SuccessOrExit(error = AppendElapsedTime(*message));
@@ -290,7 +290,7 @@ void Dhcp6Client::Solicit(uint16_t aRloc16)
 
 exit:
 
-    if (message != NULL)
+    if (message != nullptr)
     {
         otLogWarnIp6("Failed to send DHCPv6 Solicit: %s", otThreadErrorToString(error));
 
@@ -342,7 +342,7 @@ otError Dhcp6Client::AppendIaNa(Message &aMessage, uint16_t aRloc16)
     uint16_t length = 0;
     IaNa     option;
 
-    VerifyOrExit(mIdentityAssociationCurrent != NULL, error = OT_ERROR_DROP);
+    VerifyOrExit(mIdentityAssociationCurrent != nullptr, error = OT_ERROR_DROP);
 
     for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
     {
@@ -585,12 +585,13 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
 
         if (ia.mNetifAddress.GetAddress().PrefixMatch(option.GetAddress()) >= ia.mNetifAddress.mPrefixLength)
         {
-            mIdentityAssociations[i].mNetifAddress.mAddress   = option.GetAddress();
-            mIdentityAssociations[i].mPreferredLifetime       = option.GetPreferredLifetime();
-            mIdentityAssociations[i].mValidLifetime           = option.GetValidLifetime();
-            mIdentityAssociations[i].mNetifAddress.mPreferred = option.GetPreferredLifetime() != 0;
-            mIdentityAssociations[i].mNetifAddress.mValid     = option.GetValidLifetime() != 0;
-            mIdentityAssociations[i].mStatus                  = kIaStatusSolicitReplied;
+            mIdentityAssociations[i].mNetifAddress.mAddress       = option.GetAddress();
+            mIdentityAssociations[i].mPreferredLifetime           = option.GetPreferredLifetime();
+            mIdentityAssociations[i].mValidLifetime               = option.GetValidLifetime();
+            mIdentityAssociations[i].mNetifAddress.mAddressOrigin = OT_ADDRESS_ORIGIN_DHCPV6;
+            mIdentityAssociations[i].mNetifAddress.mPreferred     = option.GetPreferredLifetime() != 0;
+            mIdentityAssociations[i].mNetifAddress.mValid         = option.GetValidLifetime() != 0;
+            mIdentityAssociations[i].mStatus                      = kIaStatusSolicitReplied;
             Get<ThreadNetif>().AddUnicastAddress(ia.mNetifAddress);
             break;
         }

@@ -61,9 +61,9 @@ Heap::Heap(void)
 
 void *Heap::CAlloc(size_t aCount, size_t aSize)
 {
-    void *   ret  = NULL;
-    Block *  prev = NULL;
-    Block *  curr = NULL;
+    void *   ret  = nullptr;
+    Block *  prev = nullptr;
+    Block *  curr = nullptr;
     uint16_t size = static_cast<uint16_t>(aCount * aSize);
 
     VerifyOrExit(size, OT_NOOP);
@@ -144,7 +144,7 @@ Block &Heap::BlockPrev(const Block &aBlock)
 
 void Heap::Free(void *aPointer)
 {
-    if (aPointer == NULL)
+    if (aPointer == nullptr)
     {
         return;
     }

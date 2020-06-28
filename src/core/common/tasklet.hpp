@@ -67,12 +67,12 @@ class Tasklet : public InstanceLocator, public OwnerLocator
 
 public:
     /**
-     * This function pointer is called when the tasklet is run.
+     * This function reference is called when the tasklet is run.
      *
      * @param[in]  aTasklet  A reference to the tasklet being run.
      *
      */
-    typedef void (*Handler)(Tasklet &aTasklet);
+    typedef void (&Handler)(Tasklet &aTasklet);
 
     /**
      * This constructor creates a tasklet instance.
@@ -99,7 +99,7 @@ public:
      * @retval FALSE The tasklet is not posted.
      *
      */
-    bool IsPosted(void) const { return (mNext != NULL); }
+    bool IsPosted(void) const { return (mNext != nullptr); }
 
 private:
     void RunTask(void) { mHandler(*this); }
@@ -168,7 +168,7 @@ public:
      * @retval FALSE  If there are no tasklets pending.
      *
      */
-    bool AreTaskletsPending(void) const { return mTail != NULL; }
+    bool AreTaskletsPending(void) const { return mTail != nullptr; }
 
     /**
      * This method processes all tasklets queued when this is called.

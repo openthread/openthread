@@ -43,7 +43,7 @@ MLE_MIN_LINKS = 3
 
 
 class Cert_5_2_7_REEDSynchronization(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

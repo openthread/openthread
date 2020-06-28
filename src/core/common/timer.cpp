@@ -100,7 +100,7 @@ void TimerMilli::Stop(void)
 
 void TimerScheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
 {
-    Timer *prev = NULL;
+    Timer *prev = nullptr;
     Time   now(aAlarmApi.AlarmGetNow());
 
     Remove(aTimer, aAlarmApi);
@@ -113,7 +113,7 @@ void TimerScheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
         }
     }
 
-    if (prev == NULL)
+    if (prev == nullptr)
     {
         mTimerList.Push(aTimer);
         SetAlarm(aAlarmApi);

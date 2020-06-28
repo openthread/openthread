@@ -102,7 +102,7 @@ public:
         /**
          * This method notifies user of `SubMac` of a received frame.
          *
-         * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
+         * @param[in]  aFrame    A pointer to the received frame or nullptr if the receive operation failed.
          * @param[in]  aError    OT_ERROR_NONE when successfully received a frame,
          *                       OT_ERROR_ABORT when reception was aborted and a frame was not received,
          *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
@@ -130,7 +130,7 @@ public:
          * of a frame transmission, this method is invoked on all frame transmission attempts.
          *
          * @param[in] aFrame      The transmitted frame.
-         * @param[in] aAckFrame   A pointer to the ACK frame, or NULL if no ACK was received.
+         * @param[in] aAckFrame   A pointer to the ACK frame, or nullptr if no ACK was received.
          * @param[in] aError      OT_ERROR_NONE when the frame was transmitted successfully,
          *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
          *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
@@ -151,7 +151,7 @@ public:
          * the received ACK frame.
          *
          * @param[in]  aFrame     The transmitted frame.
-         * @param[in]  aAckFrame  A pointer to the ACK frame, NULL if no ACK was received.
+         * @param[in]  aAckFrame  A pointer to the ACK frame, nullptr if no ACK was received.
          * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted,
          *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
          *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
@@ -245,7 +245,7 @@ public:
      * This method registers a callback to provide received packet capture for IEEE 802.15.4 frames.
      *
      * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
-     *                                or NULL to disable the callback.
+     *                                or nullptr to disable the callback.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */

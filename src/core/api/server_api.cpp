@@ -46,7 +46,7 @@ otError otServerGetNetDataLocal(otInstance *aInstance, bool aStable, uint8_t *aD
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aData != NULL && aDataLength != NULL);
+    OT_ASSERT(aData != nullptr && aDataLength != nullptr);
 
     return instance.Get<NetworkData::Local>().GetNetworkData(aStable, aData, *aDataLength);
 }

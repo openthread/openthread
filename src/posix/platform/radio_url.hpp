@@ -59,12 +59,12 @@ public:
      * This method returns the url agument value.
      *
      * @param[in] aName       Argument name.
-     * @param[in] aLastValue  The last iterated argument value, NULL for first value.
+     * @param[in] aLastValue  The last iterated argument value, nullptr for first value.
      *
      * @returns The argument value.
      *
      */
-    const char *GetValue(const char *aName, const char *aLastValue = NULL);
+    const char *GetValue(const char *aName, const char *aLastValue = nullptr);
 
 private:
     enum

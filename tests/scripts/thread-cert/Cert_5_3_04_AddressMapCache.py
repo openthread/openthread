@@ -45,7 +45,7 @@ MTDS = [SED1, ED1, ED2, ED3, ED4]
 
 
 class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

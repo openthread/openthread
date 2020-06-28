@@ -134,7 +134,7 @@ private:
  * This class implements an AnnounceSender.
  *
  */
-class AnnounceSender : public AnnounceSenderBase
+class AnnounceSender : public AnnounceSenderBase, public Notifier::Receiver
 {
 public:
     /**
@@ -157,10 +157,8 @@ private:
     void        CheckState(void);
     void        Stop(void);
     static void HandleTimer(Timer &aTimer);
-    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
-    void        HandleStateChanged(otChangedFlags aFlags);
-
-    Notifier::Callback mNotifierCallback;
+    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
+    void        HandleNotifierEvents(Events aEvents);
 };
 
 #endif // OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE

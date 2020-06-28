@@ -69,7 +69,7 @@ public:
     /**
      * This method gets the next entry in the linked list.
      *
-     * @returns A pointer to the next entry in the linked list or NULL if at the end of the list.
+     * @returns A pointer to the next entry in the linked list or nullptr if at the end of the list.
      *
      */
     const Type *GetNext(void) const { return static_cast<const Type *>(static_cast<const Type *>(this)->mNext); }
@@ -77,7 +77,7 @@ public:
     /**
      * This method gets the next entry in the linked list.
      *
-     * @returns A pointer to the next entry in the linked list or NULL if at the end of the list.
+     * @returns A pointer to the next entry in the linked list or nullptr if at the end of the list.
      *
      */
     Type *GetNext(void) { return static_cast<Type *>(static_cast<Type *>(this)->mNext); }
@@ -106,14 +106,14 @@ public:
      *
      */
     LinkedList(void)
-        : mHead(NULL)
+        : mHead(nullptr)
     {
     }
 
     /**
      * This method returns the entry at the head of the linked list
      *
-     * @returns Pointer to the entry at the head of the linked list, or NULL if list is empty.
+     * @returns Pointer to the entry at the head of the linked list, or nullptr if list is empty.
      *
      */
     Type *GetHead(void) { return mHead; }
@@ -121,7 +121,7 @@ public:
     /**
      * This method returns the entry at the head of the linked list.
      *
-     * @returns Pointer to the entry at the head of the linked list, or NULL if list is empty.
+     * @returns Pointer to the entry at the head of the linked list, or nullptr if list is empty.
      *
      */
     const Type *GetHead(void) const { return mHead; }
@@ -138,7 +138,7 @@ public:
      * This method clears the linked list.
      *
      */
-    void Clear(void) { mHead = NULL; }
+    void Clear(void) { mHead = nullptr; }
 
     /**
      * This method indicates whether the linked list is empty or not.
@@ -147,7 +147,7 @@ public:
      * @retval FALSE  If the linked list is not empty.
      *
      */
-    bool IsEmpty(void) const { return (mHead == NULL); }
+    bool IsEmpty(void) const { return (mHead == nullptr); }
 
     /**
      * This method pushes an entry at the head of the linked list.
@@ -179,14 +179,14 @@ public:
      *
      * @note This method does not change the popped entry itself, i.e., the popped entry next pointer stays as before.
      *
-     * @returns The entry that was popped if list is not empty, or NULL if list is empty.
+     * @returns The entry that was popped if list is not empty, or nullptr if list is empty.
      *
      */
     Type *Pop(void)
     {
         Type *entry = mHead;
 
-        if (mHead != NULL)
+        if (mHead != nullptr)
         {
             mHead = mHead->GetNext();
         }
@@ -199,17 +199,17 @@ public:
      *
      * @note This method does not change the popped entry itself, i.e., the popped entry next pointer stays as before.
      *
-     * @param[in] aPrevEntry  A pointer to a previous entry. If it is not NULL the entry after this will be popped,
-     *                        otherwise (if it is NULL) the entry at head of the list is popped.
+     * @param[in] aPrevEntry  A pointer to a previous entry. If it is not nullptr the entry after this will be popped,
+     *                        otherwise (if it is nullptr) the entry at head of the list is popped.
      *
-     * @returns Pointer to the entry that was popped, or NULL if there is no entry to pop.
+     * @returns Pointer to the entry that was popped, or nullptr if there is no entry to pop.
      *
      */
     Type *PopAfter(Type *aPrevEntry)
     {
         Type *entry;
 
-        if (aPrevEntry == NULL)
+        if (aPrevEntry == nullptr)
         {
             entry = Pop();
         }
@@ -217,7 +217,7 @@ public:
         {
             entry = aPrevEntry->GetNext();
 
-            if (entry != NULL)
+            if (entry != nullptr)
             {
                 aPrevEntry->SetNext(entry->GetNext());
             }
@@ -239,7 +239,7 @@ public:
     {
         bool contains = false;
 
-        for (Type *cur = mHead; cur != NULL; cur = cur->GetNext())
+        for (Type *cur = mHead; cur != nullptr; cur = cur->GetNext())
         {
             if (cur == &aEntry)
             {
@@ -297,9 +297,9 @@ public:
             Pop();
             error = OT_ERROR_NONE;
         }
-        else if (mHead != NULL)
+        else if (mHead != nullptr)
         {
-            for (Type *cur = mHead; cur->GetNext() != NULL; cur = cur->GetNext())
+            for (Type *cur = mHead; cur->GetNext() != nullptr; cur = cur->GetNext())
             {
                 if (cur->GetNext() == &aEntry)
                 {
@@ -318,7 +318,7 @@ public:
      *
      * @param[in]  aEntry      A reference to an entry to find.
      * @param[out] aPrevEntry  A pointer to output previous entry on success (when @p aEntry is found is the list).
-     *                         @p aPrevEntry is set to NULL if the @p aEntry is head of the list. Otherwise it
+     *                         @p aPrevEntry is set to nullptr if the @p aEntry is head of the list. Otherwise it
      *                         is updated to point to previous entry before @p aEntry in the list.
      *
      * @retval OT_ERROR_NONE       The entry was found in the list and @p aPrevEntry was updated successfully.
@@ -331,12 +331,12 @@ public:
 
         if (mHead == &aEntry)
         {
-            aPrevEntry = NULL;
+            aPrevEntry = nullptr;
             error      = OT_ERROR_NONE;
         }
         else
         {
-            for (Type *cur = mHead; cur->GetNext() != NULL; cur = cur->GetNext())
+            for (Type *cur = mHead; cur->GetNext() != nullptr; cur = cur->GetNext())
             {
                 if (cur->GetNext() == &aEntry)
                 {
@@ -353,16 +353,16 @@ public:
     /**
      * This method returns the tail of the linked list (i.e., the last entry in the list).
      *
-     * @returns A pointer to tail entry in the linked list or NULL if list is empty.
+     * @returns A pointer to tail entry in the linked list or nullptr if list is empty.
      *
      */
     const Type *GetTail(void) const
     {
         const Type *tail = mHead;
 
-        if (tail != NULL)
+        if (tail != nullptr)
         {
-            while (tail->GetNext() != NULL)
+            while (tail->GetNext() != nullptr)
             {
                 tail = tail->GetNext();
             }
@@ -374,7 +374,7 @@ public:
     /**
      * This method returns the tail of the linked list (i.e., the last entry in the list).
      *
-     * @returns A pointer to tail entry in the linked list or NULL if list is empty.
+     * @returns A pointer to tail entry in the linked list or nullptr if list is empty.
      *
      */
     Type *GetTail(void) { return const_cast<Type *>(const_cast<const LinkedList<Type> *>(this)->GetTail()); }

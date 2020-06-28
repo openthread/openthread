@@ -75,6 +75,7 @@
 #include "net/sntp_client.hpp"
 #include "thread/address_resolver.hpp"
 #include "thread/announce_begin_server.hpp"
+#include "thread/discover_scanner.hpp"
 #include "thread/energy_scan_server.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/mesh_forwarder.hpp"
@@ -210,6 +211,7 @@ private:
     Mac::Mac                mMac;
     MeshForwarder           mMeshForwarder;
     Mle::MleRouter          mMleRouter;
+    Mle::DiscoverScanner    mDiscoverScanner;
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     NetworkData::Local mNetworkDataLocal;
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

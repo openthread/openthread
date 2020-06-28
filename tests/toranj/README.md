@@ -306,13 +306,13 @@ Every `wpan.Node()` instance will save its corresponding `wpantund` logs. By def
 
 When `start.sh` script is used to run all test-cases, if any test fails, to help with debugging of the issue, the last 30 lines of `wpantund` logs of every node involved in the test-case is dumped to `stdout`.
 
-A `wpan.Node()` instance can also provide additional logs and info as the test-cases are run (verbose mode). By default this is disabled. It can be enabled for a node instance when it is created:
+A `wpan.Node()` instance can also provide additional logs and info as the test-cases are run (verbose mode). It can be enabled for a node instance when it is created:
 
 ```python
     node = wpan.Node(verbose=True)     # `node` instance will provide extra logs.
 ```
 
-Alternatively, `wpan.Node._VERBOSE` settings can be changed to enable verbose logging for all nodes.
+Alternatively, `wpan.Node._VERBOSE` settings can be changed to enable verbose logging for all nodes. The default value of `wpan.Node._VERBOSE` is determined from environment variable `TORANJ_VERBOSE` (verbose mode is enabled when env variable is set to any of `1`, `True`, `Yes`, `Y`, `On` (case-insensitive)), otherwise it is disabled. When `TORANJ_VERBOSE` is enabled, the OpenThread logging is also enabled (and collected in `wpantund-log<node_index>.log`files) on all nodes.
 
 Here is example of small test script and its corresponding log output with `verbose` mode enabled:
 

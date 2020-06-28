@@ -34,9 +34,15 @@ add_library(openthread-platform-utils OBJECT
     soft_source_match_table.c
 )
 
+set_target_properties(
+    openthread-platform-utils
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)
+
 target_include_directories(openthread-platform-utils PRIVATE
     ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/examples/platforms
     ${PROJECT_SOURCE_DIR}/examples/platforms/utils
     ${PROJECT_SOURCE_DIR}/src/core

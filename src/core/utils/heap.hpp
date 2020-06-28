@@ -41,7 +41,6 @@
 #include <stdint.h>
 
 #include "common/non_copyable.hpp"
-#include "utils/static_assert.hpp"
 
 namespace ot {
 namespace Utils {
@@ -193,7 +192,7 @@ public:
      *
      * @returns A pointer to the allocated memory.
      *
-     * @retval  NULL    Indicates not enough memory.
+     * @retval  nullptr    Indicates not enough memory.
      *
      */
     void *CAlloc(size_t aCount, size_t aSize);
@@ -246,7 +245,7 @@ private:
         kGuardBlockOffset   = kMemorySize - sizeof(uint16_t),                     ///< Offset of the guard block.
     };
 
-    OT_STATIC_ASSERT(kMemorySize % kAlignSize == 0, "The heap memory size is not aligned to kAlignSize!");
+    static_assert(kMemorySize % kAlignSize == 0, "The heap memory size is not aligned to kAlignSize!");
 
     /**
      * This method returns the block at offset @p aOffset.

@@ -71,12 +71,12 @@ inline void DataPollHandler::Callbacks::HandleFrameChangeDone(Child &aChild)
 
 DataPollHandler::DataPollHandler(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mIndirectTxChild(NULL)
+    , mIndirectTxChild(nullptr)
     , mFrameContext()
     , mCallbacks(aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     , mCslTxChild(NULL)
-    , mCslTimer(aInstance, &DataPollHandler::HandleCslTimer, this)
+    , mCslTimer(aInstance, DataPollHandler::HandleCslTimer, this)
 #endif
 {
 }
@@ -92,7 +92,7 @@ void DataPollHandler::Clear(void)
         child.ResetIndirectTxAttempts();
     }
 
-    mIndirectTxChild = NULL;
+    mIndirectTxChild = nullptr;
 }
 
 void DataPollHandler::HandleNewFrame(Child &aChild)
@@ -139,7 +139,7 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
 
     SuccessOrExit(aFrame.GetSrcAddr(macSource));
     child = Get<ChildTable>().FindChild(macSource, Child::kInStateValidOrRestoring);
-    VerifyOrExit(child != NULL, OT_NOOP);
+    VerifyOrExit(child != nullptr, OT_NOOP);
 
     child->SetLastHeard(TimerMilli::GetNow());
     child->ResetLinkFailures();
@@ -158,7 +158,7 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
         ExitNow();
     }
 
-    if (mIndirectTxChild == NULL)
+    if (mIndirectTxChild == nullptr)
     {
         mIndirectTxChild = child;
         Get<Mac::Mac>().RequestIndirectFrameTransmission();
@@ -176,7 +176,7 @@ otError DataPollHandler::HandleFrameRequest(Mac::TxFrame &aFrame)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mIndirectTxChild != NULL, error = OT_ERROR_ABORT);
+    VerifyOrExit(mIndirectTxChild != nullptr, error = OT_ERROR_ABORT);
 
     SuccessOrExit(error = mCallbacks.PrepareFrameForChild(aFrame, mFrameContext, *mIndirectTxChild));
 
@@ -208,9 +208,9 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
 {
     Child *child = mIndirectTxChild;
 
-    VerifyOrExit(child != NULL, OT_NOOP);
+    VerifyOrExit(child != nullptr, OT_NOOP);
 
-    mIndirectTxChild = NULL;
+    mIndirectTxChild = nullptr;
     HandleSentFrame(aFrame, aError, *child);
 
 exit:
@@ -307,13 +307,13 @@ void DataPollHandler::ProcessPendingPolls(void)
 
         // Find the child with earliest poll receive time.
 
-        if ((mIndirectTxChild == NULL) || (child->GetLastHeard() < mIndirectTxChild->GetLastHeard()))
+        if ((mIndirectTxChild == nullptr) || (child->GetLastHeard() < mIndirectTxChild->GetLastHeard()))
         {
             mIndirectTxChild = child;
         }
     }
 
-    if (mIndirectTxChild != NULL)
+    if (mIndirectTxChild != nullptr)
     {
         mIndirectTxChild->SetDataPollPending(false);
         Get<Mac::Mac>().RequestIndirectFrameTransmission();
@@ -371,7 +371,7 @@ void DataPollHandler::UpdateCslChild(Child &aChild)
 {
     if (aChild.IsCslSynchronized() && aChild.GetIndirectMessageCount() > 0 && mCslTxChild != &aChild)
     {
-        uint64_t  radioNow = otPlatRadioGetNow();
+        uint64_t  radioNow = otPlatRadioGetNow(&GetInstance());
         TimeMicro now      = TimerMicro::GetNow();
         uint32_t  delay    = GetNextCslTransmitRequestDelay(aChild, radioNow);
 
@@ -398,7 +398,7 @@ void DataPollHandler::UpdateCslTimer(void)
     VerifyOrExit(mCslTxChild == NULL && !mCslTimer.IsRunning(), OT_NOOP);
 
     now       = TimerMicro::GetNow();
-    radioNow  = otPlatRadioGetNow();
+    radioNow  = otPlatRadioGetNow(&GetInstance());
     nextDelay = TimeMicro::kMaxDuration;
 
     for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)

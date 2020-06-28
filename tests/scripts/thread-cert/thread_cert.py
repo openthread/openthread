@@ -55,10 +55,10 @@ class NcpSupportMixin():
     """ The mixin to check whether a test case supports NCP.
     """
 
-    support_ncp = True
+    SUPPORT_NCP = True
 
     def __init__(self, *args, **kwargs):
-        if os.getenv('NODE_TYPE', 'sim') == 'ncp-sim' and not self.support_ncp:
+        if os.getenv('NODE_TYPE', 'sim') == 'ncp-sim' and not self.SUPPORT_NCP:
             # 77 means skip this test case in automake tests
             sys.exit(77)
 
@@ -71,6 +71,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
     The `topology` member of sub-class is used to create test topology.
     """
 
+    TOPOLOGY = None
+
     def setUp(self):
         """Create simulator, nodes and apply configurations.
         """
@@ -80,7 +82,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         self.nodes = {}
 
         initial_topology = {}
-        for i, params in self.topology.items():
+        for i, params in self.TOPOLOGY.items():
             if params:
                 params = dict(DEFAULT_PARAMS, **params)
             else:

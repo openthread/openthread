@@ -47,10 +47,10 @@ namespace Utils {
 
 JamDetector::JamDetector(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mHandler(NULL)
-    , mContext(NULL)
-    , mNotifierCallback(aInstance, HandleStateChanged, this)
-    , mTimer(aInstance, &JamDetector::HandleTimer, this)
+    , Notifier::Receiver(aInstance, JamDetector::HandleNotifierEvents)
+    , mHandler(nullptr)
+    , mContext(nullptr)
+    , mTimer(aInstance, JamDetector::HandleTimer, this)
     , mHistoryBitmap(0)
     , mCurSecondStartTime(0)
     , mSampleInterval(0)
@@ -68,7 +68,7 @@ otError JamDetector::Start(Handler aHandler, void *aContext)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!mEnabled, error = OT_ERROR_ALREADY);
-    VerifyOrExit(aHandler != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aHandler != nullptr, error = OT_ERROR_INVALID_ARGS);
 
     mHandler = aHandler;
     mContext = aContext;
@@ -271,14 +271,14 @@ void JamDetector::SetJamState(bool aNewState)
     }
 }
 
-void JamDetector::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void JamDetector::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<JamDetector>().HandleStateChanged(aFlags);
+    static_cast<JamDetector &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
-void JamDetector::HandleStateChanged(otChangedFlags aFlags)
+void JamDetector::HandleNotifierEvents(Events aEvents)
 {
-    if (aFlags & OT_CHANGED_THREAD_ROLE)
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
         CheckState();
     }

@@ -33,12 +33,14 @@ Done
 - [commissioner](README_COMMISSIONER.md)
 - [contextreusedelay](#contextreusedelay)
 - [counters](#counters)
+- [csl](#csl)
 - [dataset](README_DATASET.md)
 - [delaytimermin](#delaytimermin)
 - [diag](#diag)
 - [discover](#discover-channel)
 - [dns](#dns-resolve-hostname-dns-server-ip-dns-server-port)
 - [domainname](#domainname)
+- [dua](#dua-iid)
 - [eidcache](#eidcache)
 - [eui64](#eui64)
 - [extaddr](#extaddr)
@@ -75,6 +77,7 @@ Done
 - [prefix](#prefix-add-prefix-padcrosnD-prf)
 - [promiscuous](#promiscuous)
 - [pskc](#pskc--p-keypassphrase)
+- [rcp](#rcp)
 - [releaserouterid](#releaserouterid-routerid)
 - [reset](#reset)
 - [rloc16](#rloc16)
@@ -512,17 +515,6 @@ Set the CSL timeout in seconds.
 Done
 ```
 
-### csl headerie disable | enable
-
-Disable or enable the SSED device to include CSL IE in header.
-
-`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` and `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` are required. This feature is only for certification test purpose and used to suppress/exclude the CSL IE for the frame transmitted, without impacting the periodic sample.
-
-```bash
-> csl headerie enable
-Done
-```
-
 ### networktime
 
 Get the Thread network time and the time sync parameters.
@@ -608,6 +600,34 @@ Set the Thread Domain Name for Thread 1.2 device.
 
 ```bash
 > domainname Test\ Thread
+Done
+```
+
+### dua iid
+
+Get the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+
+```bash
+> dua iid
+0004000300020001
+Done
+```
+
+### dua iid \<iid\>
+
+Set the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+
+```bash
+> dua iid 0004000300020001
+Done
+```
+
+### dua iid clear
+
+Clear the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+
+```bash
+> dua iid clear
 Done
 ```
 
@@ -1329,6 +1349,20 @@ Disable radio promiscuous operation.
 
 ```bash
 > promiscuous disable
+Done
+```
+
+### rcp
+
+RCP-related commands.
+
+### rcp version
+
+Print RCP version string.
+
+```bash
+> rcp version
+OPENTHREAD/20191113-00825-g82053cc9d-dirty; SIMULATION; Jun  4 2020 17:53:16
 Done
 ```
 

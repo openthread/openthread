@@ -54,7 +54,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/wrap_string.h"
+#include <string.h>
 #endif // #ifndef SPINEL_PLATFORM_HEADER
 
 // ----------------------------------------------------------------------------
@@ -1889,6 +1889,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_MESHCOP_COMMISSIONER_SESSION_ID:
         ret = "MESHCOP_COMMISSIONER_SESSION_ID";
+        break;
+
+    case SPINEL_PROP_MESHCOP_JOINER_DISCERNER:
+        ret = "MESHCOP_JOINER_DISCERNER";
         break;
 
     case SPINEL_PROP_MESHCOP_COMMISSIONER_ANNOUNCE_BEGIN:

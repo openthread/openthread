@@ -37,7 +37,7 @@ ED = 3
 
 
 class Cert_5_6_8_ContextManagement(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'context_reuse_delay': 10,
             'mode': 'rsdn',

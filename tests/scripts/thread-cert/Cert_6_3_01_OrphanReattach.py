@@ -37,7 +37,7 @@ ED = 3
 
 
 class Cert_6_3_1_OrphanReattach(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,

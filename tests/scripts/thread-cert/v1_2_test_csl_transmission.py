@@ -39,7 +39,7 @@ CSL_TIMEOUT = 30  # 30s
 
 
 class SSED_CslTransmission(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'version': '1.2',
         },

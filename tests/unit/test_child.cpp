@@ -117,7 +117,7 @@ void TestChildIp6Address(void)
     const uint8_t meshLocalIid[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
 
     sInstance = testInitInstance();
-    VerifyOrQuit(sInstance != NULL, "Null instance");
+    VerifyOrQuit(sInstance != nullptr, "Null instance");
 
     child.Init(*sInstance);
 
@@ -145,7 +145,7 @@ void TestChildIp6Address(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     printf("Child state after init");
     child.Clear();
-    VerifyChildIp6Addresses(child, 0, NULL);
+    VerifyChildIp6Addresses(child, 0, nullptr);
     printf(" -- PASS\n");
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -157,7 +157,7 @@ void TestChildIp6Address(void)
         VerifyChildIp6Addresses(child, 1, &addresses[index]);
 
         child.ClearIp6Addresses();
-        VerifyChildIp6Addresses(child, 0, NULL);
+        VerifyChildIp6Addresses(child, 0, nullptr);
     }
 
     printf(" -- PASS\n");
@@ -197,7 +197,7 @@ void TestChildIp6Address(void)
                      "RemoveIp6Address() did not fail when removing an address not on the list");
     }
 
-    VerifyChildIp6Addresses(child, 0, NULL);
+    VerifyChildIp6Addresses(child, 0, nullptr);
     printf(" -- PASS\n");
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

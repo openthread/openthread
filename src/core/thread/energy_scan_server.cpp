@@ -48,6 +48,7 @@ namespace ot {
 
 EnergyScanServer::EnergyScanServer(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , Notifier::Receiver(aInstance, EnergyScanServer::HandleNotifierEvents)
     , mChannelMask(0)
     , mChannelMaskCurrent(0)
     , mPeriod(0)
@@ -55,8 +56,7 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
     , mCount(0)
     , mActive(false)
     , mScanResultsLength(0)
-    , mTimer(aInstance, &EnergyScanServer::HandleTimer, this)
-    , mNotifierCallback(aInstance, &EnergyScanServer::HandleStateChanged, this)
+    , mTimer(aInstance, EnergyScanServer::HandleTimer, this)
     , mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this)
 {
     Get<Coap::Coap>().AddResource(mEnergyScan);
@@ -176,7 +176,7 @@ void EnergyScanServer::SendReport(void)
     Ip6::MessageInfo        messageInfo;
     Coap::Message *         message;
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_ENERGY_REPORT));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -203,7 +203,7 @@ exit:
     {
         otLogInfoMeshCoP("Failed to send scan results: %s", otThreadErrorToString(error));
 
-        if (message != NULL)
+        if (message != nullptr)
         {
             message->Free();
         }
@@ -212,15 +212,15 @@ exit:
     mActive = false;
 }
 
-void EnergyScanServer::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void EnergyScanServer::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
 {
-    aCallback.GetOwner<EnergyScanServer>().HandleStateChanged(aFlags);
+    static_cast<EnergyScanServer &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
-void EnergyScanServer::HandleStateChanged(otChangedFlags aFlags)
+void EnergyScanServer::HandleNotifierEvents(Events aEvents)
 {
-    if ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0 && !mActive &&
-        Get<NetworkData::Leader>().GetCommissioningData() == NULL)
+    if (aEvents.Contains(kEventThreadNetdataChanged) && !mActive &&
+        Get<NetworkData::Leader>().GetCommissioningData() == nullptr)
     {
         mActive = false;
         mTimer.Stop();

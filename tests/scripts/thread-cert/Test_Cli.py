@@ -35,7 +35,7 @@ LEADER = 1
 
 
 class Cert_Cli(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {},
     }
 

@@ -37,7 +37,7 @@ ROUTER = 2
 
 
 class Test_MacScan(thread_cert.TestCase):
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'channel': 12,
             'mode': 'rsdn',

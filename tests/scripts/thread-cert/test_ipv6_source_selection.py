@@ -37,9 +37,9 @@ ROUTER = 2
 
 
 class TestIPv6SourceSelection(thread_cert.TestCase):
-    support_ncp = False
+    SUPPORT_NCP = False
 
-    topology = {
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xcafe,

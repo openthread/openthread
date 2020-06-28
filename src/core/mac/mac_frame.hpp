@@ -878,7 +878,7 @@ public:
     /**
      * This method returns a pointer to the vendor specific Time IE.
      *
-     * @returns A pointer to the Time IE, NULL if not found.
+     * @returns A pointer to the Time IE, nullptr if not found.
      *
      */
     TimeIe *GetTimeIe(void) { return const_cast<TimeIe *>(const_cast<const Frame *>(this)->GetTimeIe()); }
@@ -886,7 +886,7 @@ public:
     /**
      * This method returns a pointer to the vendor specific Time IE.
      *
-     * @returns A pointer to the Time IE, NULL if not found.
+     * @returns A pointer to the Time IE, nullptr if not found.
      *
      */
     const TimeIe *GetTimeIe(void) const;
@@ -910,7 +910,7 @@ public:
      *
      * @param[in] aIeId  The Element Id of the Header IE.
      *
-     * @returns A pointer to the Header IE, NULL if not found.
+     * @returns A pointer to the Header IE, nullptr if not found.
      *
      */
     uint8_t *GetHeaderIe(uint8_t aIeId)
@@ -923,7 +923,7 @@ public:
      *
      * @param[in] aIeId  The Element Id of the Header IE.
      *
-     * @returns A pointer to the Header IE, NULL if not found.
+     * @returns A pointer to the Header IE, nullptr if not found.
      *
      */
     const uint8_t *GetHeaderIe(uint8_t aIeId) const;

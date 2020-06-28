@@ -62,7 +62,7 @@ ChannelMonitor::ChannelMonitor(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mChannelMaskIndex(0)
     , mSampleCount(0)
-    , mTimer(aInstance, &ChannelMonitor::HandleTimer, this)
+    , mTimer(aInstance, ChannelMonitor::HandleTimer, this)
 {
     memset(mChannelOccupancy, 0, sizeof(mChannelOccupancy));
 }
@@ -132,7 +132,7 @@ void ChannelMonitor::HandleEnergyScanResult(Mac::EnergyScanResult *aResult, void
 
 void ChannelMonitor::HandleEnergyScanResult(Mac::EnergyScanResult *aResult)
 {
-    if (aResult == NULL)
+    if (aResult == nullptr)
     {
         if (mChannelMaskIndex == kNumChannelMasks - 1)
         {

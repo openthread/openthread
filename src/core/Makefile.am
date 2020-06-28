@@ -214,6 +214,7 @@ SOURCES_COMMON                             = \
     thread/announce_begin_server.cpp         \
     thread/announce_sender.cpp               \
     thread/child_table.cpp                   \
+    thread/discover_scanner.cpp              \
     thread/dua_manager.cpp                   \
     thread/energy_scan_server.cpp            \
     thread/indirect_sender.cpp               \
@@ -424,6 +425,7 @@ HEADERS_COMMON                             = \
     thread/announce_begin_server.hpp         \
     thread/announce_sender.hpp               \
     thread/child_table.hpp                   \
+    thread/discover_scanner.hpp              \
     thread/dua_manager.hpp                   \
     thread/energy_scan_server.hpp            \
     thread/indirect_sender.hpp               \
@@ -461,7 +463,6 @@ HEADERS_COMMON                             = \
     utils/otns.hpp                           \
     utils/parse_cmdline.hpp                  \
     utils/slaac_address.hpp                  \
-    utils/static_assert.hpp                  \
     $(NULL)
 
 noinst_HEADERS                             = \

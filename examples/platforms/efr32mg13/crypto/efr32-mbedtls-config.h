@@ -86,7 +86,7 @@
  * See MBEDTLS_SHA256_C for more information.
  */
 #if defined(CRYPTO_COUNT) && (CRYPTO_COUNT > 0)
-//#define MBEDTLS_SHA256_ALT
+#define MBEDTLS_SHA256_ALT
 #endif
 
 #endif // EFR32_MBEDTLS_CONFIG_H

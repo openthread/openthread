@@ -39,7 +39,7 @@ namespace ot {
 namespace Spinel {
 
 Decoder::Decoder(void)
-    : mFrame(NULL)
+    : mFrame(nullptr)
     , mLength(0)
     , mIndex(0)
     , mEnd(0)
@@ -53,7 +53,7 @@ Decoder::Decoder(void)
 void Decoder::Init(const uint8_t *aFrame, uint16_t aLength)
 {
     mFrame  = aFrame;
-    mLength = (mFrame != NULL) ? aLength : 0;
+    mLength = (mFrame != nullptr) ? aLength : 0;
 
     Reset();
     ClearSavedPosition();

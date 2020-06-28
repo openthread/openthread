@@ -55,7 +55,6 @@
 #include "lib/spinel/spinel_buffer.hpp"
 #include "lib/spinel/spinel_decoder.hpp"
 #include "lib/spinel/spinel_encoder.hpp"
-#include "utils/static_assert.hpp"
 
 namespace ot {
 namespace Ncp {
@@ -92,7 +91,7 @@ public:
      * @param[in]  aStreamId  A numeric identifier for the stream to write to.
      *                        If set to '0', will default to the debug stream.
      * @param[in]  aDataPtr   A pointer to the data to send on the stream.
-     *                        If aDataLen is non-zero, this param MUST NOT be NULL.
+     *                        If aDataLen is non-zero, this param MUST NOT be nullptr.
      * @param[in]  aDataLen   The number of bytes of data from aDataPtr to send.
      *
      * @retval OT_ERROR_NONE         The data was queued for delivery to the host.
@@ -335,9 +334,9 @@ protected:
     otError EncodeOperationalDataset(const otOperationalDataset &aDataset);
 
     otError DecodeOperationalDataset(otOperationalDataset &aDataset,
-                                     const uint8_t **      aTlvs             = NULL,
-                                     uint8_t *             aTlvsLength       = NULL,
-                                     const otIp6Address ** aDestIpAddress    = NULL,
+                                     const uint8_t **      aTlvs             = nullptr,
+                                     uint8_t *             aTlvsLength       = nullptr,
+                                     const otIp6Address ** aDestIpAddress    = nullptr,
                                      bool                  aAllowEmptyValues = false);
 
     otError EncodeNeighborInfo(const otNeighborInfo &aNeighborInfo);
@@ -416,9 +415,9 @@ protected:
     otError HandlePropertySet_SPINEL_PROP_HOST_POWER_STATE(uint8_t aHeader);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <=
-                         OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE - kSpinelCmdHeaderSize - kSpinelPropIdSize,
-                     "diag output buffer should be smaller than NCP UART tx buffer");
+    static_assert(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <=
+                      OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE - kSpinelCmdHeaderSize - kSpinelPropIdSize,
+                  "diag output buffer should be smaller than NCP UART tx buffer");
 
     otError HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader);
 #endif

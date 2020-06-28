@@ -73,11 +73,12 @@ public:
          * given child and will go through all entries in the child table (matching the filter) till it gets back to
          * the starting `Child` entry.
          *
-         * If the given starting `Child` pointer is `NULL`, then the iterator starts from beginning of the child table.
+         * If the given starting `Child` pointer is `nullptr`, then the iterator starts from beginning of the child
+         * table.
          *
          * @param[in] aInstance        A reference to the OpenThread instance.
          * @param[in] aFilter          A child state filter.
-         * @param[in] aStartingChild   A pointer to a child. If non-NULL, the iterator starts from the given entry.
+         * @param[in] aStartingChild   A pointer to a child. If non-nullptr, the iterator starts from the given entry.
          *
          */
         Iterator(Instance &aInstance, Child::StateFilter aFilter, Child *aStartingChild);
@@ -96,14 +97,14 @@ public:
          * @retval FALSE  The current entry is valid.
          *
          */
-        bool IsDone(void) const { return (mChild == NULL); }
+        bool IsDone(void) const { return (mChild == nullptr); }
 
         /**
          * This method advances the iterator.
          *
          * The iterator is moved to point to the next `Child` entry matching the given state filter in the constructor.
          * If there are no more `Child` entries matching the given filter, the iterator becomes empty (i.e.,
-         * `GetChild()` returns `NULL` and `IsDone()` returns `true`).
+         * `GetChild()` returns `nullptr` and `IsDone()` returns `true`).
          *
          */
         void Advance(void);
@@ -113,7 +114,7 @@ public:
          *
          * The iterator is moved to point to the next `Child` entry matching the given state filter in the constructor.
          * If there are no more `Child` entries matching the given filter, the iterator becomes empty (i.e.,
-         * `GetChild()` returns `NULL` and `IsDone()` returns `true`).
+         * `GetChild()` returns `nullptr` and `IsDone()` returns `true`).
          *
          */
         void operator++(void) { Advance(); }
@@ -123,7 +124,7 @@ public:
          *
          * The iterator is moved to point to the next `Child` entry matching the given state filter in the constructor.
          * If there are no more `Child` entries matching the given filter, the iterator becomes empty (i.e.,
-         * `GetChild()` returns `NULL` and `IsDone()` returns `true`).
+         * `GetChild()` returns `nullptr` and `IsDone()` returns `true`).
          *
          */
         void operator++(int) { Advance(); }
@@ -131,7 +132,7 @@ public:
         /**
          * This method gets the `Child` entry to which the iterator is currently pointing.
          *
-         * @returns A pointer to the `Child` entry, or `NULL` if the iterator is done and/or empty.
+         * @returns A pointer to the `Child` entry, or `nullptr` if the iterator is done and/or empty.
          *
          */
         Child *GetChild(void) { return mChild; }
@@ -167,12 +168,12 @@ public:
     uint16_t GetChildIndex(const Child &aChild) const { return static_cast<uint16_t>(&aChild - mChildren); }
 
     /**
-     * This method returns a pointer to a `Child` entry at a given index, or `NULL` if the index is out of bounds,
+     * This method returns a pointer to a `Child` entry at a given index, or `nullptr` if the index is out of bounds,
      * i.e., index is larger or equal to maximum number of children allowed (@sa GetMaxChildrenAllowed()).
      *
      * @param[in]  aChildIndex  A child index.
      *
-     * @returns A pointer to the `Child` corresponding to the given index, or `NULL` if the index is out of bounds.
+     * @returns A pointer to the `Child` corresponding to the given index, or `nullptr` if the index is out of bounds.
      *
      */
     Child *GetChildAtIndex(uint16_t aChildIndex);
@@ -182,7 +183,7 @@ public:
      *
      * @note The returned child entry will be cleared (`memset` to zero).
      *
-     * @returns A pointer to a new `Child` entry, or `NULL` if all `Child` entries are in use.
+     * @returns A pointer to a new `Child` entry, or `nullptr` if all `Child` entries are in use.
      *
      */
     Child *GetNewChild(void);
@@ -193,7 +194,7 @@ public:
      * @param[in]  aRloc16  A RLOC16 address.
      * @param[in]  aFilter  A child state filter.
      *
-     * @returns  A pointer to the `Child` entry if one is found, or `NULL` otherwise.
+     * @returns  A pointer to the `Child` entry if one is found, or `nullptr` otherwise.
      *
      */
     Child *FindChild(uint16_t aRloc16, Child::StateFilter aFilter);
@@ -205,7 +206,7 @@ public:
      * @param[in]  aAddress A reference to an extended address.
      * @param[in]  aFilter  A child state filter.
      *
-     * @returns  A pointer to the `Child` entry if one is found, or `NULL` otherwise.
+     * @returns  A pointer to the `Child` entry if one is found, or `nullptr` otherwise.
      *
      */
     Child *FindChild(const Mac::ExtAddress &aAddress, Child::StateFilter aFilter);
@@ -216,7 +217,7 @@ public:
      * @param[in]  aAddress A reference to a MAC address.
      * @param[in]  aFilter  A child state filter.
      *
-     * @returns  A pointer to the `Child` entry if one is found, or `NULL` otherwise.
+     * @returns  A pointer to the `Child` entry if one is found, or `nullptr` otherwise.
      *
      */
     Child *FindChild(const Mac::Address &aAddress, Child::StateFilter aFilter);

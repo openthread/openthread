@@ -36,9 +36,9 @@ JOINER = 2
 
 
 class Cert_8_1_02_Commissioning(thread_cert.TestCase):
-    support_ncp = False
+    SUPPORT_NCP = False
 
-    topology = {
+    TOPOLOGY = {
         COMMISSIONER: {
             'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
             'mode': 'rsdn',

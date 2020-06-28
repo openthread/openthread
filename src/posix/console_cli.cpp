@@ -64,7 +64,7 @@ static int sReadFd;
 
 static void InputCallback(char *aLine)
 {
-    if (aLine != NULL)
+    if (aLine != nullptr)
     {
         size_t len;
 
@@ -95,7 +95,7 @@ void otxConsoleInit(otInstance *aInstance)
     rl_inhibit_completion = true;
     sReadFd               = fileno(rl_instream);
     rl_callback_handler_install(sPrompt, InputCallback);
-    otCliConsoleInit(aInstance, OutputCallback, NULL);
+    otCliConsoleInit(aInstance, OutputCallback, nullptr);
 }
 
 void otxConsoleDeinit(void)

@@ -58,7 +58,7 @@ void platformRandomInit(void)
 #if __SANITIZE_ADDRESS__ != 0
 
     // Multiplying gNodeId assures that no two nodes gets the same seed within an hour.
-    sState = (uint32_t)time(NULL) + (3600 * gNodeId);
+    sState = (uint32_t)time(nullptr) + (3600 * gNodeId);
 
 #endif // __SANITIZE_ADDRESS__
 }
@@ -95,20 +95,20 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 
 #if __SANITIZE_ADDRESS__ == 0
 
-    FILE * file = NULL;
+    FILE * file = nullptr;
     size_t readLength;
 
     VerifyOrExit(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
 
     file = fopen("/dev/urandom", "rb");
-    VerifyOrExit(file != NULL, error = OT_ERROR_FAILED);
+    VerifyOrExit(file != nullptr, error = OT_ERROR_FAILED);
 
     readLength = fread(aOutput, 1, aOutputLength, file);
     VerifyOrExit(readLength == aOutputLength, error = OT_ERROR_FAILED);
 
 exit:
 
-    if (file != NULL)
+    if (file != nullptr)
     {
         fclose(file);
     }

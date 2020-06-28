@@ -60,14 +60,136 @@ namespace ot {
  */
 
 /**
+ * This enumeration type represents events emitted from OpenThread Notifier.
+ *
+ */
+enum Event
+{
+    kEventIp6AddressAdded                  = OT_CHANGED_IP6_ADDRESS_ADDED,            ///< IPv6 address was added
+    kEventIp6AddressRemoved                = OT_CHANGED_IP6_ADDRESS_REMOVED,          ///< IPv6 address was removed
+    kEventThreadRoleChanged                = OT_CHANGED_THREAD_ROLE,                  ///< Role changed
+    kEventThreadLinkLocalAddrChanged       = OT_CHANGED_THREAD_LL_ADDR,               ///< Link-local address changed
+    kEventThreadMeshLocalAddrChanged       = OT_CHANGED_THREAD_ML_ADDR,               ///< Mesh-local address changed
+    kEventThreadRlocAdded                  = OT_CHANGED_THREAD_RLOC_ADDED,            ///< RLOC was added
+    kEventThreadRlocRemoved                = OT_CHANGED_THREAD_RLOC_REMOVED,          ///< RLOC was removed
+    kEventThreadPartitionIdChanged         = OT_CHANGED_THREAD_PARTITION_ID,          ///< Partition ID changed
+    kEventThreadKeySeqCounterChanged       = OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER,  ///< Key Sequence changed
+    kEventThreadNetdataChanged             = OT_CHANGED_THREAD_NETDATA,               ///< Network Data changed
+    kEventThreadChildAdded                 = OT_CHANGED_THREAD_CHILD_ADDED,           ///< Child was added
+    kEventThreadChildRemoved               = OT_CHANGED_THREAD_CHILD_REMOVED,         ///< Child was removed
+    kEventIp6MulticastSubscribed           = OT_CHANGED_IP6_MULTICAST_SUBSCRIBED,     ///< Multicast address added
+    kEventIp6MulticastUnsubscribed         = OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED,   ///< Multicast address removed
+    kEventThreadChannelChanged             = OT_CHANGED_THREAD_CHANNEL,               ///< Network channel changed
+    kEventThreadPanIdChanged               = OT_CHANGED_THREAD_PANID,                 ///< Network PAN ID changed
+    kEventThreadNetworkNameChanged         = OT_CHANGED_THREAD_NETWORK_NAME,          ///< Network name changed
+    kEventThreadExtPanIdChanged            = OT_CHANGED_THREAD_EXT_PANID,             ///< Extended PAN ID changed
+    kEventMasterKeyChanged                 = OT_CHANGED_MASTER_KEY,                   ///< Master Key changed
+    kEventPskcChanged                      = OT_CHANGED_PSKC,                         ///< PSKc changed
+    kEventSecurityPolicyChanged            = OT_CHANGED_SECURITY_POLICY,              ///< Security Policy changed
+    kEventChannelManagerNewChannelChanged  = OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL,  ///< New Channel (channel-manager)
+    kEventSupportedChannelMaskChanged      = OT_CHANGED_SUPPORTED_CHANNEL_MASK,       ///< Channel mask changed
+    kEventCommissionerStateChanged         = OT_CHANGED_COMMISSIONER_STATE,           ///< Commissioner state changed
+    kEventThreadNetifStateChanged          = OT_CHANGED_THREAD_NETIF_STATE,           ///< Netif state changed
+    kEventThreadBackboneRouterStateChanged = OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE, ///< Backbone Router state changed
+    kEventThreadBackboneRouterLocalChanged = OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL, ///< Local Backbone Router changed
+    kEventJoinerStateChanged               = OT_CHANGED_JOINER_STATE,                 ///< Joiner state changed
+};
+
+/**
+ * This type represents a list of events.
+ *
+ */
+class Events
+{
+public:
+    /**
+     * This type represents a bit-field indicating a list of events (with values from `Event`)
+     *
+     */
+    typedef otChangedFlags Flags;
+
+    /**
+     * This constructor initializes the `Events` list (as empty).
+     *
+     */
+    Events(void)
+        : mEventFlags(0)
+    {
+    }
+
+    /**
+     * This method clears the `Events` list.
+     *
+     */
+    void Clear(void) { mEventFlags = 0; }
+
+    /**
+     * This method indicates whether the `Events` list contains a given event.
+     *
+     * @param[in] aEvent  The event to check.
+     *
+     * @returns TRUE if the list contains the @p aEvent, FALSE otherwise.
+     *
+     */
+    bool Contains(Event aEvent) const { return (mEventFlags & aEvent) != 0; }
+
+    /**
+     * This method indicates whether the `Events` list contains any of a given set of events.
+     *
+     * @param[in] aEvents  The events set to check (must be a collection of `Event` constants combined using `|`).
+     *
+     * @returns TRUE if the list contains any of the @p aEvents set, FALSE otherwise.
+     *
+     */
+    bool ContainsAny(Flags aEvents) const { return (mEventFlags & aEvents) != 0; }
+
+    /**
+     * This method indicates whether the `Events` list contains all of a given set of events.
+     *
+     * @param[in] aEvents  The events set to check (must be collection of `Event` constants combined using `|`).
+     *
+     * @returns TRUE if the list contains all of the @p aEvents set, FALSE otherwise.
+     *
+     */
+    bool ContainsAll(Flags aEvents) const { return (mEventFlags & aEvents) == aEvents; }
+
+    /**
+     * This method adds a given event to the `Events` list.
+     *
+     * @param[in] aEvent  The event to add.
+     *
+     */
+    void Add(Event aEvent) { mEventFlags |= aEvent; }
+
+    /**
+     * This method indicates whether the `Events` list is empty.
+     *
+     * @returns TRUE if the list is empty, FALSE otherwise.
+     *
+     */
+    bool IsEmpty(void) const { return (mEventFlags == 0); }
+
+    /**
+     * This method gets the `Events` list as bit-field `Flags` value.
+     *
+     * @returns The list as bit-field `Flags` value.
+     *
+     */
+    Flags GetAsFlags(void) const { return mEventFlags; }
+
+private:
+    Flags mEventFlags;
+};
+
+/**
  * This class implements the OpenThread Notifier.
  *
  * It can be used to register callbacks that notify of state or configuration changes within OpenThread.
  *
  * Two callback models are provided:
  *
- * - A `Notifier::Callback` object that upon initialization (from its constructor) auto-registers itself with
- *   the `Notifier`. This model is mainly used by OpenThread core modules.
+ * - A `Notifier::Receiver` class which should be inherited by OpenThread core types to register themselves as a
+ *    receiver of `Notifier` events.
  *
  * - A `otStateChangedCallback` callback handler which needs to be explicitly registered with the `Notifier`. This is
  *   commonly used by external users (provided as an OpenThread public API). Max number of such callbacks that can be
@@ -78,39 +200,38 @@ class Notifier : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This class defines a `Notifier` callback instance.
+     * This class defines a `Notifier::Receiver` instance.
      *
      */
-    class Callback : public OwnerLocator, public LinkedListEntry<Callback>
+    class Receiver : public LinkedListEntry<Receiver>
     {
         friend class Notifier;
-        friend class LinkedListEntry<Callback>;
+        friend class LinkedListEntry<Receiver>;
 
     public:
         /**
-         * This type defines the function pointer which is called to notify of state or configuration changes.
+         * This type defines the function reference which is invoked to notify of events (state/configuration changes)..
          *
-         * @param[in] aCallback    A reference to callback instance.
-         * @param[in] aFlags       A bit-field indicating specific state or configuration that has changed.
+         * @param[in] aReceiver    A reference to `Receiver` instance.
+         * @param[in] aEvents      The list of events.
          *
          */
-        typedef void (*Handler)(Callback &aCallback, otChangedFlags aFlags);
+        typedef void (&Handler)(Receiver &aReceiver, Events aEvents);
 
         /**
-         * This constructor initializes a `Callback` instance and registers it with `Notifier`.
+         * This constructor initializes a `Receiver` instance and registers it with `Notifier`.
          *
          * @param[in] aInstance   A reference to OpenThread instance.
-         * @param[in] aHandler    A function pointer to the callback handler.
-         * @param[in] aOwner      A pointer to the owner of the `Callback` instance.
+         * @param[in] aHandler    The handler function reference.
          *
          */
-        Callback(Instance &aInstance, Handler aHandler, void *aOwner);
+        Receiver(Instance &aInstance, Handler aHandler);
 
     private:
-        void Invoke(otChangedFlags aFlags) { mHandler(*this, aFlags); }
+        void Emit(Events aEvents) { mHandler(*this, aEvents); }
 
         Handler   mHandler;
-        Callback *mNext;
+        Receiver *mNext;
     };
 
     /**
@@ -144,70 +265,69 @@ public:
     void RemoveCallback(otStateChangedCallback aCallback, void *aContext);
 
     /**
-     * This method schedules signaling of changed flags.
+     * This method schedules signaling of an event.
      *
-     * @param[in]  aFlags       A bit-field indicating what configuration or state has changed.
-     *
-     */
-    void Signal(otChangedFlags aFlags);
-
-    /**
-     * This method schedules signaling of changed flags only if the set of flags has not been signaled before (first
-     * time signal).
-     *
-     * @param[in]  aFlags       A bit-field indicating what configuration or state has changed.
+     * @param[in]  aEvent     The event to signal.
      *
      */
-    void SignalIfFirst(otChangedFlags aFlags);
+    void Signal(Event aEvent);
 
     /**
-     * This method indicates whether or not a changed callback is pending.
+     * This method schedules signaling of am event only if the event has not been signaled before (first time signal).
      *
-     * @returns TRUE if a state changed callback is pending, FALSE otherwise.
+     * @param[in]  aEvent     The event to signal.
      *
      */
-    bool IsPending(void) const { return (mFlagsToSignal != 0); }
+    void SignalIfFirst(Event aFlags);
 
     /**
-     * This method indicates whether or not a changed notification for a given set of flags has been signaled before.
+     * This method indicates whether or not an event signal callback is pending/scheduled.
      *
-     * @param[in]  aFlags   A bit-field containing the flag-bits to check.
-     *
-     * @retval TRUE    All flag bits in @p aFlags have been signaled before.
-     * @retval FALSE   At least one flag bit in @p aFlags has not been signaled before.
+     * @returns TRUE if a callback is pending, FALSE otherwise.
      *
      */
-    bool HasSignaled(otChangedFlags aFlags) const { return (mSignaledFlags & aFlags) == aFlags; }
+    bool IsPending(void) const { return !mEventsToSignal.IsEmpty(); }
 
     /**
-     * This template method updates a variable of a type `Type` with a new value and signals the given changed flags.
+     * This method indicates whether or not an event has been signaled before.
      *
-     * If the variable is already set to the same value, this method returns `OT_ERROR_ALREADY` and the changed flags
-     * is signaled using `SignalIfFirst()` (i.e. signal is scheduled only if the flag has not been signaled before).
+     * @param[in]  aEvent    The event to check.
+     *
+     * @retval TRUE    The event @p aEvent have been signaled before.
+     * @retval FALSE   The event @p aEvent has not been signaled before.
+     *
+     */
+    bool HasSignaled(Event aEvent) const { return mSignaledEvents.Contains(aEvent); }
+
+    /**
+     * This template method updates a variable of a type `Type` with a new value and signals the given event.
+     *
+     * If the variable is already set to the same value, this method returns `OT_ERROR_ALREADY` and the event is
+     * signaled using `SignalIfFirst()` (i.e., signal is scheduled only if event has not been signaled before).
      *
      * The template `Type` should support comparison operator `==` and assignment operator `=`.
      *
      * @param[inout] aVariable    A reference to the variable to update.
      * @param[in]    aNewValue    The new value.
-     * @param[in]    aFlags       The changed flags to signal.
+     * @param[in]    aEvent       The event to signal.
      *
-     * @retval OT_ERROR_NONE      The variable was update successfully and @p aFlags was signaled.
+     * @retval OT_ERROR_NONE      The variable was update successfully and @p aEvent was signaled.
      * @retval OT_ERROR_ALREADY   The variable was already set to the same value.
      *
      */
-    template <typename Type> otError Update(Type &aVariable, const Type &aNewValue, otChangedFlags aFlags)
+    template <typename Type> otError Update(Type &aVariable, const Type &aNewValue, Event aEvent)
     {
         otError error = OT_ERROR_NONE;
 
         if (aVariable == aNewValue)
         {
-            SignalIfFirst(aFlags);
+            SignalIfFirst(aEvent);
             error = OT_ERROR_ALREADY;
         }
         else
         {
             aVariable = aNewValue;
-            Signal(aFlags);
+            Signal(aEvent);
         }
 
         return error;
@@ -228,17 +348,17 @@ private:
         void *                 mContext;
     };
 
-    void        RegisterCallback(Callback &aCallback);
-    static void HandleStateChanged(Tasklet &aTasklet);
-    void        HandleStateChanged(void);
+    void        RegisterReceiver(Receiver &aReceiver);
+    static void EmitEvents(Tasklet &aTasklet);
+    void        EmitEvents(void);
 
-    void        LogChangedFlags(otChangedFlags aFlags) const;
-    const char *FlagToString(otChangedFlags aFlag) const;
+    void        LogEvents(Events aEvents) const;
+    const char *EventToString(Event aEvent) const;
 
-    otChangedFlags       mFlagsToSignal;
-    otChangedFlags       mSignaledFlags;
+    Events               mEventsToSignal;
+    Events               mSignaledEvents;
     Tasklet              mTask;
-    LinkedList<Callback> mCallbacks;
+    LinkedList<Receiver> mReceivers;
     ExternalCallback     mExternalCallbacks[kMaxExternalHandlers];
 };
 

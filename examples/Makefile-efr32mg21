@@ -84,6 +84,8 @@ EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suit
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/mbedtls
+EFR32_MBEDTLS_CPPFLAGS += -Wno-unused-function
+EFR32_MBEDTLS_CPPFLAGS += -Wno-unused-parameter
 
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/efr32mg21/
 HAL_CONF_DIR     = $(CONFIG_FILE_PATH)/$(shell echo $(BOARD) | tr A-Z a-z)
