@@ -29,7 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set timeout 1
+set timeout 3
 
 spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?forkpty-arg=--sleep-to-tx 1"
 set node_1 $spawn_id

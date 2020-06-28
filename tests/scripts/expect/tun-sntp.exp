@@ -30,7 +30,7 @@
 source "tests/scripts/expect/_common.exp"
 
 spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?forkpty-arg=1"
-set timeout 1
+set timeout 3
 expect_after {
     timeout { exit 1 }
 }
@@ -44,7 +44,6 @@ expect "Done"
 wait_for "state" "leader"
 expect "Done"
 
-set timeout 2
 send "sntp query ::1 123\n"
 expect -re {SNTP response - Unix time: \d+ \(era: \d+\)}
 expect "Done"

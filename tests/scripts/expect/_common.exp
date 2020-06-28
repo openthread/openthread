@@ -30,7 +30,10 @@
 proc wait_for {command expected} {
     set result 0
     for {set i 0} {$i < 20} {incr i} {
-        send "$command\n"
+        if {$command != ""} {
+            send "$command\n"
+        }
+
         expect {
             -re $expected {
                 set result 1
