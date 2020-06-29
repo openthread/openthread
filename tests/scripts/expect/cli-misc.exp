@@ -146,14 +146,4 @@ expect "0:0:0:0::/64 s low"
 send "route remove ::/64\n"
 expect "Done"
 
-send "networktime 20 200\n"
-expect "Done"
-send "networktime\n"
-expect -re {Network Time:     \d+us \((unsynchronized|resync needed|synchronized)\)}
-expect "Time Sync Period: 20s"
-expect "XTAL Threshold:   200ppm"
-expect "Done"
-send "networktime something_invalid\n"
-expect "Error 7: InvalidArgs"
-
 dispose_nodes

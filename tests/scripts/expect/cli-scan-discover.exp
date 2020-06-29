@@ -33,7 +33,7 @@ source "tests/scripts/expect/_multinode.exp"
 set timeout 1
 setup_nodes
 
-spawn $env(OT_COMMAND) 3
+set spawn_id [spawn_node 3]
 set spawn_3 $spawn_id
 
 set spawn_id $spawn_1
@@ -54,7 +54,7 @@ set extpan $expect_out(1,string)
 expect "Done"
 send "networkname\n"
 expect "networkname"
-expect -re {\r\n(.*?)\r\n}
+expect -re {[\r\n]([^\r\n]+?)[\r\n]}
 set network $expect_out(1,string)
 expect "Done"
 send "channel\n"

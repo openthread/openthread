@@ -30,26 +30,15 @@
 source "tests/scripts/expect/_common.exp"
 
 set spawn_id [spawn_node 1]
-set timeout 1
 
-send "routereligible disable\n"
+send "networktime 20 200\n"
 expect "Done"
-send "routereligible\n"
-expect "Disabled"
+send "networktime\n"
+expect -re {Network Time:     \d+us \((unsynchronized|resync needed|synchronized)\)}
+expect "Time Sync Period: 20s"
+expect "XTAL Threshold:   200ppm"
 expect "Done"
-send "routereligible enable\n"
-expect "Done"
-send "routereligible\n"
-expect "Enabled"
-expect "Done"
-send "routereligible something_invalid\n"
+send "networktime something_invalid\n"
 expect "Error 7: InvalidArgs"
-send "mode rs\n"
-expect "Done"
-send "routereligible\n"
-expect "Disabled"
-expect "Done"
-send "routereligible enable\n"
-expect "Error 27: NotCapable"
 
 dispose
