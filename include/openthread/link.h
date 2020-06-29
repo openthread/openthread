@@ -748,10 +748,9 @@ void otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aM
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
-  * @param[in]  aExtAddress  A pointer to the Extended Address (MUST NOT be NULL).
+ * @param[in]  aExtAddress  A pointer to the Extended Address (MUST NOT be NULL).
  *
  * @retval OT_ERROR_NONE           Successfully added @p aExtAddress to MAC filter.
- * @retval OT_ERROR_ALREADY        If @p aExtAddress was already in MAC filter.
  * @retval OT_ERROR_NO_BUFS        No available entry exists.
  *
  */
@@ -762,14 +761,13 @@ otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAd
  *
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
+ * No action is performed if there is no existing entry in Filter matching the given Extended Address.
+ *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aExtAddress  A pointer to the Extended Address (MUST NOT be NULL).
  *
- * @retval OT_ERROR_NONE           Successfully removed @p aExtAddress from MAC filter.
- * @retval OT_ERROR_NOT_FOUND      @p aExtAddress is not in MAC filter.
- *
  */
-otError otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
+void otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * This method clears all the Extended Addresses from MAC filter.

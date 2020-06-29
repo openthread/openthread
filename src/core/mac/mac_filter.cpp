@@ -94,27 +94,20 @@ otError Filter::AddAddress(const ExtAddress &aExtAddress)
         entry->mExtAddress = aExtAddress;
     }
 
-    VerifyOrExit(!entry->mFiltered, error = OT_ERROR_ALREADY);
     entry->mFiltered = true;
 
 exit:
     return error;
 }
 
-otError Filter::RemoveAddress(const ExtAddress &aExtAddress)
+void Filter::RemoveAddress(const ExtAddress &aExtAddress)
 {
-    otError      error = OT_ERROR_NONE;
     FilterEntry *entry = FindEntry(aExtAddress);
 
-    if (entry == nullptr || !entry->mFiltered)
+    if (entry != nullptr)
     {
-        ExitNow(error = OT_ERROR_NOT_FOUND);
+        entry->mFiltered = false;
     }
-
-    entry->mFiltered = false;
-
-exit:
-    return error;
 }
 
 void Filter::ClearAddresses(void)

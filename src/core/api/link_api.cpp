@@ -241,13 +241,13 @@ otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAd
     return instance.Get<Mac::Filter>().AddAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
 
-otError otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
+void otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     OT_ASSERT(aExtAddress != nullptr);
 
-    return instance.Get<Mac::Filter>().RemoveAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
+    instance.Get<Mac::Filter>().RemoveAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
 
 void otLinkFilterClearAddresses(otInstance *aInstance)

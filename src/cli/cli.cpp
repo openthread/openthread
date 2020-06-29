@@ -3791,7 +3791,7 @@ otError Interpreter::ProcessMacFilterAddress(uint8_t aArgsLength, char *aArgs[])
             VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
             VerifyOrExit(Hex2Bin(aArgs[1], extAddr.m8, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE,
                          error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = otLinkFilterRemoveAddress(mInstance, &extAddr));
+            otLinkFilterRemoveAddress(mInstance, &extAddr);
         }
         else if (strcmp(aArgs[0], "clear") == 0)
         {

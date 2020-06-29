@@ -77,14 +77,14 @@ public:
      * This enumeration type represents the MAC Filter mode.
      *
      */
-    enum Mode
+    enum Mode : uint8_t
     {
         kModeRssInOnly = OT_MAC_FILTER_ADDRESS_MODE_DISABLED,  ///< No address filtering. RSS-In update only.
         kModeWhitelist = OT_MAC_FILTER_ADDRESS_MODE_WHITELIST, ///< Enable whitelist address filter mode.
         kModeBlacklist = OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST, ///< Enable blacklist address filter mode.
     };
 
-    enum
+    enum : int8_t
     {
         kFixedRssDisabled = OT_MAC_FILTER_FIXED_RSS_DISABLED, ///< Value to indicate no fixed RSS is set.
     };
@@ -117,7 +117,6 @@ public:
      * @param[in]  aExtAddress  A reference to the Extended Address.
      *
      * @retval OT_ERROR_NONE           Successfully added @p aExtAddress to the filter.
-     * @retval OT_ERROR_ALREADY        If @p aExtAddress was already in the Filter.
      * @retval OT_ERROR_NO_BUFS        No available entry exists.
      *
      */
@@ -126,13 +125,12 @@ public:
     /**
      * This method removes an Extended Address from the filter.
      *
-     * @param[in]  aExtAddress  A reference to the Extended Address.
+     * No action is performed if there is no existing entry in the filter list matching the given Extended Address.
      *
-     * @retval OT_ERROR_NONE           Successfully removed @p aExtAddress from the filter.
-     * @retval OT_ERROR_NOT_FOUND      @p aExtAddress is not in the filter.
+     * @param[in]  aExtAddress  A reference to the Extended Address to remove.
      *
      */
-    otError RemoveAddress(const ExtAddress &aExtAddress);
+    void RemoveAddress(const ExtAddress &aExtAddress);
 
     /**
      * This method clears all Extended Addresses from the filter.
@@ -159,7 +157,7 @@ public:
      * @param[in]  aExtAddress  An Extended Address
      * @param[in]  aRss         The received signal strength to set.
      *
-     * @retval OT_ERROR_NONE     Successfully set @p aRss for @p aExtAddress, or
+     * @retval OT_ERROR_NONE     Successfully set @p aRss for @p aExtAddress.
      * @retval OT_ERROR_NO_BUFS  No available entry exists.
      *
      */

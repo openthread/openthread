@@ -2755,14 +2755,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_BLACKLIST>(void)
         SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
         SuccessOrExit(error = mDecoder.CloseStruct());
 
-        error = otLinkFilterRemoveAddress(mInstance, extAddress);
-
-        if (error == OT_ERROR_ALREADY)
-        {
-            error = OT_ERROR_NONE;
-        }
-
-        SuccessOrExit(error);
+        otLinkFilterRemoveAddress(mInstance, extAddress);
     }
 
 exit:
@@ -3086,12 +3079,7 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_WHITELIST>(voi
 
     SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
 
-    error = otLinkFilterRemoveAddress(mInstance, extAddress);
-
-    if (error == OT_ERROR_NOT_FOUND)
-    {
-        error = OT_ERROR_NONE;
-    }
+    otLinkFilterRemoveAddress(mInstance, extAddress);
 
 exit:
     return error;
@@ -3104,12 +3092,7 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_BLACKLIST>(voi
 
     SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
 
-    error = otLinkFilterRemoveAddress(mInstance, extAddress);
-
-    if (error == OT_ERROR_NOT_FOUND)
-    {
-        error = OT_ERROR_NONE;
-    }
+    otLinkFilterRemoveAddress(mInstance, extAddress);
 
 exit:
     return error;
