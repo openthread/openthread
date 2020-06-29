@@ -338,7 +338,7 @@ envsetup()
     fi
 
     if [[ ${OT_OPTIONS+x} ]]; then
-        read -r -a ot_extra_options <<< "${OT_OPTIONS}"
+        read -r -a ot_extra_options <<<"${OT_OPTIONS}"
     else
         ot_extra_options=()
     fi
