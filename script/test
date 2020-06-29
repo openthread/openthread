@@ -337,8 +337,11 @@ envsetup()
         export -n VERBOSE
     fi
 
-    read -r -a ot_extra_options_in <<<"${OT_OPTIONS-}"
-    ot_extra_options=${ot_extra_options_in:-()}
+    if [[ ${OT_OPTIONS+x} ]]; then
+        read -r -a ot_extra_options <<<"${OT_OPTIONS}"
+    else
+        ot_extra_options=()
+    fi
 }
 
 main()
