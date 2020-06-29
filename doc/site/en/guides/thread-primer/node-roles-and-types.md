@@ -50,8 +50,9 @@ An FTD can operate as a Router (Parent) or an End Device (Child).
 
 ### Minimal Thread Device
 
-A Minimal Thread Device does not subscribe to multicast traffic and forwards all
-messages to its Parent. There are two types of MTDs:
+A Minimal Thread Device does not subscribe to the all-routers
+multicast address and forwards all messages to its Parent. There are
+two types of MTDs:
 
 *   Minimal End Device (MED) — transceiver always on, does not need to poll for
     messages from its parent
