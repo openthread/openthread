@@ -35,6 +35,7 @@
 #include <openthread/ncp.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/spi-slave.h>
+#include <openthread/platform/toolchain.h>
 
 #include "openthread-core-config.h"
 #include "common/code_utils.hpp"
@@ -279,6 +280,9 @@ void NcpSpi::PrepareNextSpiSendFrame(void)
 
     readLength = mTxFrameBuffer.OutFrameRead(frameLength, sendFrame.GetData());
     OT_ASSERT(readLength == frameLength);
+
+    // Suppress the warning when assertions are disabled
+    OT_UNUSED_VARIABLE(readLength);
 
     sendFrame.SetHeaderDataLen(frameLength);
     mSendFrameLength = frameLength + kSpiHeaderSize;

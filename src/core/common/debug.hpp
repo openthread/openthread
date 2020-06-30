@@ -57,7 +57,7 @@
  */
 #ifndef FILE_NAME
 #define FILE_NAME __FILE__
-#endif // FILE_NAME
+#endif
 
 #define OT_ASSERT(cond)                            \
     do                                             \
@@ -88,9 +88,7 @@
 
 #else // OPENTHREAD_CONFIG_ASSERT_ENABLE
 
-#include "openthread/platform/toolchain.h"
-
-#define OT_ASSERT(cond) OT_UNUSED_VARIABLE(cond)
+#define OT_ASSERT(cond)
 
 #endif // OPENTHREAD_CONFIG_ASSERT_ENABLE
 
