@@ -137,6 +137,7 @@ void Dhcp6Client::UpdateAddresses(void)
             else if (MatchNetifAddressWithPrefix(mIdentityAssociations[i].mNetifAddress, config.mPrefix))
             {
                 found = true;
+                ia    = &mIdentityAssociations[i];
                 break;
             }
         }
@@ -145,7 +146,6 @@ void Dhcp6Client::UpdateAddresses(void)
         {
             if (ia != nullptr)
             {
-                ia->mPrefixAgentRloc            = config.mRloc16;
                 ia->mNetifAddress.mAddress      = config.mPrefix.mPrefix;
                 ia->mNetifAddress.mPrefixLength = config.mPrefix.mLength;
                 ia->mStatus                     = kIaStatusSolicit;
@@ -157,6 +157,8 @@ void Dhcp6Client::UpdateAddresses(void)
                 continue;
             }
         }
+
+        ia->mPrefixAgentRloc = config.mRloc16;
     }
 
     if (doesAgentExist)
