@@ -375,5 +375,7 @@ const uint8_t * nrf_802154_enh_ack_generator_create(const uint8_t * p_frame)
     // Set IE header.
     ie_header_set(p_ie_data, ie_data_len, p_sec_end);
 
+    nrf_802154_tx_process_security(m_ack_data);
+
     return m_ack_data;
 }

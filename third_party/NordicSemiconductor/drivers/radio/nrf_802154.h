@@ -829,6 +829,14 @@ extern void nrf_802154_cca_done(bool channel_free);
 extern void nrf_802154_cca_failed(nrf_802154_cca_error_t error);
 
 /**
+ * @brief Process transmit security because driver is about to transmit frame.
+ *
+ * @param[in]  p_ack_frame  Pointer to a buffer that contains PHR and PSDU of the ACK frame
+ *                          that is about to be transmitted.
+ */
+extern void nrf_802154_tx_process_security(uint8_t *p_ack_frame);
+
+/**
  * @}
  * @defgroup nrf_802154_memman Driver memory management
  * @{

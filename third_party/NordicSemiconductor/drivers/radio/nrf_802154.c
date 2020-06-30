@@ -840,3 +840,8 @@ __WEAK void nrf_802154_cca_failed(nrf_802154_cca_error_t error)
 {
     (void)error;
 }
+
+__WEAK void nrf_802154_tx_process_security(uint8_t *p_ack_frame)
+{
+    (void)p_ack_frame;
+}

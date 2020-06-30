@@ -120,6 +120,14 @@ typedef enum
 
 static uint32_t sPendingEvents;
 
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+static uint32_t        sMacFrameCounter;
+static uint8_t         sKeyId;
+static struct otMacKey sPrevKey;
+static struct otMacKey sCurrKey;
+static struct otMacKey sNextKey;
+#endif
+
 static void dataInit(void)
 {
     sDisabled = true;
@@ -429,7 +437,11 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 
     return (otRadioCaps)(OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF |
-                         OT_RADIO_CAPS_SLEEP_TO_TX);
+                         OT_RADIO_CAPS_SLEEP_TO_TX
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+                         | OT_RADIO_CAPS_TRANSMIT_SEC
+#endif
+    );
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -971,3 +983,101 @@ uint32_t nrf_802154_random_get(void)
 {
     return otRandomNonCryptoGetUint32();
 }
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+void otPlatRadioSetMacKey(otInstance *    aInstance,
+                          uint8_t         aKeyIdMode,
+                          uint8_t         aKeyId,
+                          const otMacKey *aPrevKey,
+                          const otMacKey *aCurrKey,
+                          const otMacKey *aNextKey)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKeyIdMode);
+
+    assert(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
+
+    sKeyId = aKeyId;
+    memcpy(sPrevKey.m8, aPrevKey->m8, OT_MAC_KEY_SIZE);
+    memcpy(sCurrKey.m8, aCurrKey->m8, OT_MAC_KEY_SIZE);
+    memcpy(sNextKey.m8, aNextKey->m8, OT_MAC_KEY_SIZE);
+}
+
+void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sMacFrameCounter = aMacFrameCounter;
+}
+
+void nrf_802154_tx_process_security(uint8_t *p_ack_frame)
+{
+    otRadioFrame     ackFrame;
+    otRadioFrame *   frame;
+    struct otMacKey *key = NULL;
+    uint8_t          keyId;
+
+    if (p_ack_frame != NULL)
+    {
+        memset(&ackFrame, 0, sizeof(ackFrame));
+        ackFrame.mPsdu    = &p_ack_frame[1];
+        ackFrame.mLength  = p_ack_frame[0];
+        ackFrame.mChannel = nrf_802154_channel_get();
+        frame             = &ackFrame;
+    }
+    else
+    {
+        frame = &sTransmitFrame;
+    }
+
+    otEXPECT(otMacFrameIsSecurityEnabled(frame) && otMacFrameIsKeyIdMode1(frame) &&
+             !frame->mInfo.mTxInfo.mIsSecurityProcessed);
+
+    if (p_ack_frame != NULL)
+    {
+        keyId = otMacFrameGetKeyId(frame);
+
+        otEXPECT(keyId != 0);
+
+        if (keyId == sKeyId)
+        {
+            key = &sCurrKey;
+        }
+        else if (keyId == sKeyId - 1)
+        {
+            key = &sPrevKey;
+        }
+        else if (keyId == sKeyId + 1)
+        {
+            key = &sNextKey;
+        }
+        else
+        {
+            otEXPECT(false);
+        }
+    }
+    else
+    {
+        key   = &sCurrKey;
+        keyId = sKeyId;
+    }
+
+    frame->mInfo.mTxInfo.mAesKey = key;
+
+    if (!frame->mInfo.mTxInfo.mIsARetx)
+    {
+        otMacFrameSetKeyId(frame, keyId);
+        otMacFrameSetFrameCounter(frame, sMacFrameCounter++);
+    }
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (frame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset == 0)
+#endif
+    {
+        otMacFrameProcessTransmitAesCcm(frame, &sExtAddress);
+    }
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
