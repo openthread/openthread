@@ -70,8 +70,8 @@ bool Dhcp6Client::MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aN
 
 void Dhcp6Client::UpdateAddresses(void)
 {
-    bool                            found    = false;
-    bool                            newAgent = false;
+    bool                            found          = false;
+    bool                            doesAgentExist = false;
     NetworkData::Iterator           iterator;
     NetworkData::OnMeshPrefixConfig config;
 
@@ -121,7 +121,8 @@ void Dhcp6Client::UpdateAddresses(void)
             continue;
         }
 
-        found = false;
+        doesAgentExist = true;
+        found          = false;
 
         for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); i++)
         {
@@ -149,16 +150,16 @@ void Dhcp6Client::UpdateAddresses(void)
                 ia->mNetifAddress.mPrefixLength = config.mPrefix.mLength;
                 ia->mStatus                     = kIaStatusSolicit;
                 ia->mValidLifetime              = 0;
-                newAgent                        = true;
             }
             else
             {
                 otLogWarnIp6("Insufficient memory for new DHCP prefix");
+                continue;
             }
         }
     }
 
-    if (newAgent)
+    if (doesAgentExist)
     {
         Start();
     }
@@ -172,11 +173,16 @@ void Dhcp6Client::Start(void)
 {
     Ip6::SockAddr sockaddr;
 
+    VerifyOrExit(!mSocket.IsBound(), OT_NOOP);
+
     sockaddr.mPort = kDhcpClientPort;
     IgnoreError(mSocket.Open(&Dhcp6Client::HandleUdpReceive, this));
     IgnoreError(mSocket.Bind(sockaddr));
 
     ProcessNextIdentityAssociation();
+
+exit:
+    return;
 }
 
 void Dhcp6Client::Stop(void)
