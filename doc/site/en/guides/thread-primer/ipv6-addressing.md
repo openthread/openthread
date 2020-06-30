@@ -226,10 +226,12 @@ Key Point: A major difference between FTDs and MTDs are that FTDs subscribe to
 the `ff03::2` multicast address. MTDs do not.
 
 You might notice that Sleepy End Devices (SEDs) are not included as a
-recipient in the multicast table above. There is an additional unicast
-prefix-based multicast address used for All Thread Nodes, including SEDs. This
-multicast address varies by Thread network, because it is built on the
-unicast Mesh-Local prefix.
+recipient in the multicast table above. Instead, Thread defines
+link-local and realm-local scope unicast prefix-based IPv6 multicast
+address used for All Thread Nodes, including SEDs. These multicast
+addresses vary by Thread network, because it is built on the unicast
+Mesh-Local prefix (see [RFC 3306](https://tools.ietf.org/html/rfc3306)
+for more details on unicast-prefix-based IPv6 multicast addresses).
 
 Arbitrary scopes beyond those already listed are also supported for Thread
 devices.
