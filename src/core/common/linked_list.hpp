@@ -334,7 +334,7 @@ public:
             aPrevEntry = nullptr;
             error      = OT_ERROR_NONE;
         }
-        else
+        else if (mHead != nullptr)
         {
             for (Type *cur = mHead; cur->GetNext() != nullptr; cur = cur->GetNext())
             {
