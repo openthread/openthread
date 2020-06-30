@@ -48,6 +48,18 @@ proc wait_for {command expected} {
     }
 }
 
+proc spawn_node {id} {
+    if {[info exists ::env(RCP_COMMAND)] && $::env(RCP_COMMAND) != ""} {
+        spawn $::env(OT_COMMAND) "spinel+hdlc+uart://$::env(RCP_COMMAND)?forkpty-arg=$id"
+    } else {
+        spawn $::env(OT_COMMAND) $id
+    }
+    expect_after {
+        timeout { exit 1 }
+    }
+    return $spawn_id
+}
+
 proc dispose {} {
     send "\x04"
     expect eof

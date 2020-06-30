@@ -38,13 +38,8 @@ proc setup_nodes {} {
     global spawn_id
     global env
 
-    spawn $env(OT_COMMAND) 1
-    set spawn_1 $spawn_id
-    spawn $env(OT_COMMAND) 2
-    set spawn_2 $spawn_id
-    expect_after {
-        timeout { exit 1 }
-    }
+    set spawn_1 [spawn_node 1]
+    set spawn_2 [spawn_node 2]
     set psk "J01NME"
 
     set spawn_id $spawn_2
