@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #  Copyright (c) 2017, The OpenThread Authors.
 #  All rights reserved.
@@ -31,13 +31,17 @@
 #      example compilation and programming.
 #
 
-set -e
+set -euxo pipefail
 
 install_packages_apt()
 {
+    echo 'Installing toolchain dependencies...'
+
     # apt-get update and install dependencies
     sudo apt-get update
     sudo apt-get --no-install-recommends install -y automake g++ libtool lsb-release make cmake ninja-build shellcheck
+
+    echo 'Installing GNU Arm Embedded Toolchain...'
 
     PLATFORM=$(lsb_release -is)
     RELEASE=$(lsb_release -rs)
@@ -56,17 +60,19 @@ install_packages_apt()
         sudo apt-get --no-install-recommends install -y gcc-arm-embedded
     fi
 
+    echo 'Installing pretty tools useful for code contributions...'
+
     # add clang-format for pretty
     sudo apt-get --no-install-recommends install -y clang-format-6.0
 
     # add yapf for pretty
-    python3 -m pip install yapf==0.29.0 || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
+    python3 -m pip install yapf==0.29.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
 
     # add mdv for local size report
-    python3 -m pip install mdv || echo 'Failed to install markdown render. Install it manually if you need.'
+    python3 -m pip install mdv || echo 'WARNING: could not install mdv, which is useful if you plan to contribute markdown to the OpenThread project.'
 
     # add shfmt for shell pretty, try brew only because snap does not support home directory not being /home and doesn't work in docker.
-    command -v shfmt || brew install shfmt || echo 'Failed to install shfmt. Install it manually if you need.'
+    command -v shfmt || brew install shfmt || echo 'WARNING: could not install shfmt, which is useful if you plan to contribute shell scripts to the OpenThread project.'
 }
 
 install_packages_opkg()
@@ -81,8 +87,12 @@ install_packages_rpm()
 
 install_packages_brew()
 {
+    echo 'Installing toolchain dependencies...'
+
     # add build tools
     brew install automake libtool cmake ninja shfmt shellcheck
+
+    echo 'Installing GNU Arm Embedded Toolchain...'
 
     # add ARM toolchain
     brew tap ArmMbed/homebrew-formulae
@@ -93,6 +103,8 @@ install_packages_brew()
         echo 'warning: clang/gcc needed for simulation'
         echo 'warning: please install Command Line Tools from https://developer.apple.com/download/more/'
     fi
+
+    echo 'Installing pretty tools useful for code contributions...'
 
     # add clang-format for pretty
     CLANG_FORMAT_VERSION="clang-format version 6.0"
@@ -128,6 +140,7 @@ install_packages()
 main()
 {
     install_packages
+    echo 'bootstrap completed successfully.'
 }
 
 main
