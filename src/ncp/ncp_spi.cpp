@@ -81,7 +81,7 @@ NcpSpi::NcpSpi(Instance *aInstance)
     , mTxState(kTxStateIdle)
     , mHandlingRxFrame(false)
     , mResetFlag(true)
-    , mPrepareTxFrameTask(*aInstance, &NcpSpi::PrepareTxFrame, this)
+    , mPrepareTxFrameTask(*aInstance, NcpSpi::PrepareTxFrame, this)
     , mSendFrameLength(0)
 {
     SpiFrame sendFrame(mSendFrame);
@@ -102,14 +102,15 @@ NcpSpi::NcpSpi(Instance *aInstance)
 
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToTxBuffer, this);
 
-    otPlatSpiSlaveEnable(&NcpSpi::SpiTransactionComplete, &NcpSpi::SpiTransactionProcess, this);
+    IgnoreError(otPlatSpiSlaveEnable(&NcpSpi::SpiTransactionComplete, &NcpSpi::SpiTransactionProcess, this));
 
     // We signal an interrupt on this first transaction to
     // make sure that the host processor knows that our
     // reset flag was set.
 
-    otPlatSpiSlavePrepareTransaction(mEmptySendFrameZeroAccept, kSpiHeaderSize, mEmptyReceiveFrame, kSpiHeaderSize,
-                                     /* aRequestTransactionFlag */ true);
+    IgnoreError(otPlatSpiSlavePrepareTransaction(mEmptySendFrameZeroAccept, kSpiHeaderSize, mEmptyReceiveFrame,
+                                                 kSpiHeaderSize,
+                                                 /* aRequestTransactionFlag */ true));
 }
 
 bool NcpSpi::SpiTransactionComplete(void *   aContext,
@@ -217,7 +218,8 @@ exit:
 
     sendFrame.SetHeaderAcceptLen(aInputLen - kSpiHeaderSize);
 
-    otPlatSpiSlavePrepareTransaction(aOutputBuf, aOutputLen, aInputBuf, aInputLen, (mTxState == kTxStateSending));
+    IgnoreError(
+        otPlatSpiSlavePrepareTransaction(aOutputBuf, aOutputLen, aInputBuf, aInputLen, (mTxState == kTxStateSending)));
 
     return shouldProcess;
 }
@@ -302,7 +304,7 @@ void NcpSpi::PrepareNextSpiSendFrame(void)
         ExitNow();
     }
 
-    mTxFrameBuffer.OutFrameRemove();
+    IgnoreError(mTxFrameBuffer.OutFrameRemove());
 
 exit:
     return;
@@ -367,8 +369,9 @@ void NcpSpi::HandleRxFrame(void)
     {
         sendFrame.SetHeaderAcceptLen(kSpiBufferSize - kSpiHeaderSize);
 
-        otPlatSpiSlavePrepareTransaction(mEmptySendFrameFullAccept, kSpiHeaderSize, mReceiveFrame, kSpiBufferSize,
-                                         /* aRequestTrans */ false);
+        IgnoreError(otPlatSpiSlavePrepareTransaction(mEmptySendFrameFullAccept, kSpiHeaderSize, mReceiveFrame,
+                                                     kSpiBufferSize,
+                                                     /* aRequestTrans */ false));
 
         // No need to check the error status. Getting `OT_ERROR_BUSY`
         // is OK as everything will be set up properly from callback when
