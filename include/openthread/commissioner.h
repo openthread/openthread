@@ -116,7 +116,7 @@ typedef struct otCommissioningDataset
 #define OT_JOINER_MAX_PSKD_LENGTH 32 ///< Maximum string length of a Joiner PSKd (does not include null char).
 
 /**
- * This structure represent a Joiner PSKd.
+ * This structure represents a Joiner PSKd.
  *
  */
 typedef struct otJoinerPskd

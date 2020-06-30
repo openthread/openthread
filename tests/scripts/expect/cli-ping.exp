@@ -34,10 +34,8 @@ source "tests/scripts/expect/_multinode.exp"
 set timeout 3
 
 
-spawn $env(OT_COMMAND) 1
-expect_after {
-    timeout { exit 1 }
-}
+set spawn_id [spawn_node 1]
+
 send "ping ::1 1 2 1 1\n"
 expect "Done"
 send "ping stop\n"
@@ -48,6 +46,7 @@ send "ping stop\n"
 expect "Done"
 send "ping ::1 1 2 1 1 1\n"
 expect "Error 7: InvalidArgs"
+
 dispose
 
 
