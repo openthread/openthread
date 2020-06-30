@@ -47,7 +47,7 @@
 
 #define OT_ASSERT(cond) assert(cond)
 
-#elif OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
+#elif OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT // defined(__APPLE__) || defined(__linux__)
 
 #include "openthread/platform/misc.h"
 
@@ -57,7 +57,7 @@
  */
 #ifndef FILE_NAME
 #define FILE_NAME __FILE__
-#endif
+#endif // FILE_NAME
 
 #define OT_ASSERT(cond)                            \
     do                                             \
@@ -71,7 +71,7 @@
         }                                          \
     } while (0)
 
-#else
+#else // OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 
 #define OT_ASSERT(cond) \
     do                  \
@@ -86,9 +86,11 @@
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 
-#else
+#else // OPENTHREAD_CONFIG_ASSERT_ENABLE
 
-#define OT_ASSERT(cond)
+#include "openthread/platform/toolchain.h"
+
+#define OT_ASSERT(cond) OT_UNUSED_VARIABLE(cond)
 
 #endif // OPENTHREAD_CONFIG_ASSERT_ENABLE
 
