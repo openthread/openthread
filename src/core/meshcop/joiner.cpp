@@ -144,7 +144,7 @@ otError Joiner::Start(const char *     aPskd,
 
     VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
     // Verify IPv6 stack is down and Thread stack is not fully enabled.
-    VerifyOrExit(Get<ThreadNetif>().IsUp() && Get<Mle::Mle>().GetRole() == OT_DEVICE_ROLE_DISABLED,
+    VerifyOrExit(Get<ThreadNetif>().IsUp() && Get<Mle::Mle>().GetRole() == Mle::kRoleDisabled,
                  error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = joinerPskd.SetFrom(aPskd));
