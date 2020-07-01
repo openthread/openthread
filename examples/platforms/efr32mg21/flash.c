@@ -31,14 +31,14 @@
  *   This file implements the OpenThread platform abstraction for the non-volatile storage.
  */
 
-#include <openthread/config.h>
 #include "openthread-core-efr32-config.h"
+#include <openthread/config.h>
 
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE // Use OT NV system
 
+#include "em_msc.h"
 #include <string.h>
 #include <openthread/instance.h>
-#include "em_msc.h"
 
 #define FLASH_PAGE_NUM 2
 #define FLASH_DATA_END_ADDR (FLASH_BASE + FLASH_SIZE)
@@ -100,16 +100,16 @@ void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset
 
 #else // Defaults to Silabs nvm3 system
 
+#include "nvm3_default.h"
+#include <string.h>
 #include <openthread/platform/settings.h>
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
-#include "nvm3_default.h"
-#include <string.h>
 
-#define NVM3KEY_DOMAIN_OPENTHREAD  0x20000U
+#define NVM3KEY_DOMAIN_OPENTHREAD 0x20000U
 #define NUM_INDEXED_SETTINGS \
     OPENTHREAD_CONFIG_MLE_MAX_CHILDREN // Indexed key types are only supported for kKeyChildInfo (=='child table').
-#define ENUM_NVM3_KEY_LIST_SIZE 4 // List size used when enumerating nvm3 keys.
+#define ENUM_NVM3_KEY_LIST_SIZE 4      // List size used when enumerating nvm3 keys.
 
 static otError          addSetting(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 static nvm3_ObjectKey_t makeNvm3ObjKey(uint16_t otSettingsKey, int index);
@@ -236,7 +236,7 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 
     OT_UNUSED_VARIABLE(aInstance);
 
-    otError err;
+    otError          err;
     nvm3_ObjectKey_t nvm3Key  = makeNvm3ObjKey(aKey, 0); // The base nvm3 key value.
     bool             idxFound = false;
     int              idx      = 0;
