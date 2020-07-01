@@ -33,13 +33,14 @@ if(NOT OT_CONFIG)
     set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
 endif()
 
-set(OT_BOOTLOADER "USB" CACHE STRING "OT bootloader type")
-if(${OT_BOOTLOADER} STREQUAL "USB")
-    list(APPEND OT_PLATFORM_DEFINES "APP_USBD_NRF_DFU_TRIGGER_ENABLED=1")
+#set(OT_BOOTLOADER "USB" CACHE STRING "OT bootloader type")
+option(OT_BOOTLOADER "OT nrf bootloader type")
+if(OT_BOOTLOADER STREQUAL "USB")
+     list(APPEND OT_PLATFORM_DEFINES "APP_USBD_NRF_DFU_TRIGGER_ENABLED=1")
     set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/nrf52840/nrf52840_bootloader_usb.ld")
-elseif(${OT_BOOTLOADER} STREQUAL "UART")
+elseif(OT_BOOTLOADER STREQUAL "UART")
     set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/nrf52840/nrf52840_bootloader_uart.ld")
-elseif(${OT_BOOTLOADER} STREQUAL "BLE")
+elseif(OT_BOOTLOADER STREQUAL "BLE")
     set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/nrf52840/nrf52840_bootloader_ble.ld")
 else()
     set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/nrf52840/nrf52840.ld")
@@ -49,7 +50,6 @@ list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-nrf52840-config-check.h\""
 )
 if(NOT OT_EXTERNAL_MBEDTLS)
-    list(APPEND OT_PLATFORM_DEFINES "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"")
     if(OT_MBEDTLS_THREADING)
         list(APPEND OT_PLATFORM_DEFINES "MBEDTLS_THREADING_C")
         list(APPEND OT_PLATFORM_DEFINES "MBEDTLS_THREADING_ALT")
@@ -233,23 +233,25 @@ target_compile_definitions(openthread-nrf52840-softdevice-sdk
         ${OT_PLATFORM_DEFINES}
 )
 
-target_compile_options(openthread-nrf52840 PRIVATE
-    ${OT_CFLAGS}
-    -DCONFIG_GPIO_AS_PINRESET
-    -DNRF52840_XXAA
-    -DUSE_APP_CONFIG=1
-    -DPLATFORM_OPENTHREAD_VANILLA
-    -Wno-expansion-to-defined
-    -Wno-unused-parameter
+target_compile_options(openthread-nrf52840
+    PRIVATE
+        ${OT_CFLAGS}
+        -DCONFIG_GPIO_AS_PINRESET
+        -DNRF52840_XXAA
+        -DUSE_APP_CONFIG=1
+        -DPLATFORM_OPENTHREAD_VANILLA
+        -Wno-expansion-to-defined
+        -Wno-unused-parameter
 )
-target_compile_options(openthread-nrf52840-transport PRIVATE
-    ${OT_CFLAGS}
-    -DCONFIG_GPIO_AS_PINRESET
-    -DNRF52840_XXAA
-    -DUSE_APP_CONFIG=1
-    -DPLATFORM_OPENTHREAD_VANILLA
-    -Wno-expansion-to-defined
-    -Wno-unused-parameter
+target_compile_options(openthread-nrf52840-transport
+    PRIVATE
+        ${OT_CFLAGS}
+        -DCONFIG_GPIO_AS_PINRESET
+        -DNRF52840_XXAA
+        -DUSE_APP_CONFIG=1
+        -DPLATFORM_OPENTHREAD_VANILLA
+        -Wno-expansion-to-defined
+        -Wno-unused-parameter
 )
 target_compile_options(openthread-nrf52840-sdk
     PRIVATE

@@ -187,6 +187,7 @@ if(OT_PLATFORM_EXAMPLE)
                 nrfx/mdk/gcc_startup_nrf52811.S
                 nrfx/mdk/system_nrf52811.c
         )
+        target_link_libraries(nordicsemi-nrf52811-sdk PRIVATE ot-config)
     elseif(OT_PLATFORM_EXAMPLE STREQUAL "nrf52833")
         add_library(nordicsemi-nrf52833-sdk)
         target_compile_definitions(nordicsemi-nrf52833-sdk
@@ -210,6 +211,7 @@ if(OT_PLATFORM_EXAMPLE)
                 nrfx/mdk/gcc_startup_nrf52833.S
                 nrfx/mdk/system_nrf52833.c
         )
+        target_link_libraries(nordicsemi-nrf52833-sdk PRIVATE ot-config)
     elseif(OT_PLATFORM_EXAMPLE STREQUAL "nrf52840")
         add_library(nordicsemi-nrf52840-sdk)
         target_compile_definitions(nordicsemi-nrf52840-sdk
@@ -233,6 +235,7 @@ if(OT_PLATFORM_EXAMPLE)
                 nrfx/mdk/gcc_startup_nrf52840.S
                 nrfx/mdk/system_nrf52840.c
         )
+        target_link_libraries(nordicsemi-nrf52840-sdk PRIVATE ot-config)
     else()
         message(FATAL_ERROR "Platform examples unknown: ${OT_PLATFORM_EXAMPLE}")
     endif()
