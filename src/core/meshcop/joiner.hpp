@@ -77,7 +77,7 @@ public:
      * @param[in]  aContext          A pointer to application-specific context.
      *
      * @retval OT_ERROR_BUSY          The previous attempt is still on-going.
-     * @retval OT_ERROR_INVALID_STATE The IPv6 stack is not enabled or Thread stack is fully enabled.
+     * @retval OT_ERROR_INVALID_STATE Thread stack is fully enabled already.
      * @retval OT_ERROR_NONE          Successfully started the Joiner service.
      *
      */
