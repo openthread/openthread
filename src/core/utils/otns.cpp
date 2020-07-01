@@ -38,7 +38,6 @@
 
 #include "common/debug.hpp"
 #include "common/locator-getters.hpp"
-#include "common/logging.hpp"
 
 namespace ot {
 namespace Utils {
@@ -133,10 +132,5 @@ void Otns::EmitNeighborChange(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
 
 } // namespace Utils
 } // namespace ot
-
-OT_TOOL_WEAK void otPlatOtnsStatus(const char *aStatus)
-{
-    otLogOtns("[OTNS] %s", aStatus);
-}
 
 #endif // (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
