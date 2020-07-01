@@ -76,7 +76,9 @@ public:
      * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
      * @param[in]  aContext          A pointer to application-specific context.
      *
-     * @retval OT_ERROR_NONE  Successfully started the Joiner service.
+     * @retval OT_ERROR_BUSY          The previous attempt is still on-going.
+     * @retval OT_ERROR_INVALID_STATE The IPv6 stack is not enabled or Thread stack is fully enabled.
+     * @retval OT_ERROR_NONE          Successfully started the Joiner service.
      *
      */
     otError Start(const char *     aPskd,
