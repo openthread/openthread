@@ -3901,7 +3901,7 @@ otError MleRouter::CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header
     if (aMeshDest == Get<Mac::Mac>().GetShortAddress())
     {
         // mesh destination is this device
-        if (Get<ThreadNetif>().IsUnicastAddress(aIp6Header.GetDestination()))
+        if (Get<ThreadNetif>().HasUnicastAddress(aIp6Header.GetDestination()))
         {
             // IPv6 destination is this device
             ExitNow();

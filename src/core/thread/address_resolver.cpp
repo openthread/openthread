@@ -800,7 +800,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
     otLogInfoArp("Received address query from 0x%04x for target %s", aMessageInfo.GetPeerAddr().GetLocator(),
                  target.ToString().AsCString());
 
-    if (Get<ThreadNetif>().IsUnicastAddress(target))
+    if (Get<ThreadNetif>().HasUnicastAddress(target))
     {
         SendAddressQueryResponse(target, Get<Mle::MleRouter>().GetMeshLocal64().GetIid(), nullptr,
                                  aMessageInfo.GetPeerAddr());
