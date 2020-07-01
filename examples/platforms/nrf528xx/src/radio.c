@@ -66,10 +66,12 @@
 #define SHORT_ADDRESS_SIZE    2            ///< Size of MAC short address.
 #define US_PER_MS             1000ULL      ///< Microseconds in millisecond.
 
-#define ACK_REQUEST_OFFSET    1            ///< Byte containing Ack request bit (+1 for frame length byte).
-#define ACK_REQUEST_BIT       (1 << 5)     ///< Ack request bit.
-#define FRAME_PENDING_OFFSET  1            ///< Byte containing pending bit (+1 for frame length byte).
-#define FRAME_PENDING_BIT     (1 << 4)     ///< Frame Pending bit.
+#define ACK_REQUEST_OFFSET       1         ///< Byte containing Ack request bit (+1 for frame length byte).
+#define ACK_REQUEST_BIT          (1 << 5)  ///< Ack request bit.
+#define FRAME_PENDING_OFFSET     1         ///< Byte containing pending bit (+1 for frame length byte).
+#define FRAME_PENDING_BIT        (1 << 4)  ///< Frame Pending bit.
+#define SECURITY_ENABLED_OFFSET  1         ///< Byte containing security enabled bit (+1 for frame length byte).
+#define SECURITY_ENABLED_BIT     (1 << 3)  ///< Security enabled bit.
 
 #define RSSI_SETTLE_TIME_US   40           ///< RSSI settle time in microseconds.
 
@@ -126,6 +128,9 @@ static uint8_t         sKeyId;
 static struct otMacKey sPrevKey;
 static struct otMacKey sCurrKey;
 static struct otMacKey sNextKey;
+static bool            sAckedWithSecEnhAck;
+static uint32_t        sAckFrameCounter;
+static uint8_t         sAckKeyId;
 #endif
 
 static void dataInit(void)
@@ -836,6 +841,24 @@ void nrf_802154_received_timestamp_raw(uint8_t *p_data, int8_t power, uint8_t lq
 
     sAckedWithFramePending = false;
 
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    // Inform if this frame was acknowledged with secured Enh-ACK.
+    if (p_data[ACK_REQUEST_OFFSET] & ACK_REQUEST_BIT && otMacFrameIsVersion2015(receivedFrame))
+    {
+        receivedFrame->mInfo.mRxInfo.mAckedWithSecEnhAck = sAckedWithSecEnhAck;
+        receivedFrame->mInfo.mRxInfo.mAckFrameCounter    = sAckFrameCounter;
+        receivedFrame->mInfo.mRxInfo.mAckKeyId           = sAckKeyId;
+    }
+    else
+    {
+        receivedFrame->mInfo.mRxInfo.mAckedWithSecEnhAck = false;
+        receivedFrame->mInfo.mRxInfo.mAckFrameCounter    = 0;
+        receivedFrame->mInfo.mRxInfo.mAckKeyId           = 0;
+    }
+
+    sAckedWithSecEnhAck = false;
+#endif
+
     otSysEventSignalPending();
 }
 
@@ -869,6 +892,9 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
     }
 
     sAckedWithFramePending = false;
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    sAckedWithSecEnhAck = false;
+#endif
 
     setPendingEvent(kPendingEventReceiveFailed);
 }
@@ -877,6 +903,11 @@ void nrf_802154_tx_ack_started(const uint8_t *p_data)
 {
     // Check if the frame pending bit is set in ACK frame.
     sAckedWithFramePending = p_data[FRAME_PENDING_OFFSET] & FRAME_PENDING_BIT;
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    // Check if the ACK frame is a secured Enh-ACK.
+    sAckedWithSecEnhAck = p_data[SECURITY_ENABLED_OFFSET] & SECURITY_ENABLED_BIT;
+#endif
 }
 
 void nrf_802154_transmitted_raw(const uint8_t *aFrame, uint8_t *aAckPsdu, int8_t aPower, uint8_t aLqi)
@@ -1055,6 +1086,9 @@ void nrf_802154_tx_process_security(uint8_t *p_ack_frame)
         {
             otEXPECT(false);
         }
+
+        sAckFrameCounter = sMacFrameCounter;
+        sAckKeyId        = keyId;
     }
     else
     {
