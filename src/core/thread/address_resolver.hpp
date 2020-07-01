@@ -220,6 +220,8 @@ private:
         bool CanEvict(void) const { return mInfo.mOther.mCanEvict; }
         void SetCanEvict(bool aCanEvict) { mInfo.mOther.mCanEvict = aCanEvict; }
 
+        bool Matches(const Ip6::Address &aEid) const { return GetTarget() == aEid; }
+
     private:
         enum
         {
@@ -271,7 +273,6 @@ private:
 
     void        Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId);
     void        Remove(const Ip6::Address &aEid, Reason aReason);
-    CacheEntry *FindCacheEntryInList(CacheEntryList &aList, const Ip6::Address &aEid, CacheEntry *&aPrevEntry);
     CacheEntry *FindCacheEntry(const Ip6::Address &aEid, CacheEntryList *&aList, CacheEntry *&aPrevEntry);
     CacheEntry *NewCacheEntry(bool aSnoopedEntry);
     void        RemoveCacheEntry(CacheEntry &aEntry, CacheEntryList &aList, CacheEntry *aPrevEntry, Reason aReason);
