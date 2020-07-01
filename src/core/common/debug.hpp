@@ -47,7 +47,7 @@
 
 #define OT_ASSERT(cond) assert(cond)
 
-#elif OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT // defined(__APPLE__) || defined(__linux__)
+#elif OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 
 #include "openthread/platform/misc.h"
 
