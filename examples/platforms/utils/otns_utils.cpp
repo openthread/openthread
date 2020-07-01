@@ -35,7 +35,7 @@
 
 /*
  * Implementation note:
- *   These are all "weak" so that a platform may if it chooses  override the instance.
+ *   These are all "weak" so that a platform may if it chooses to override the instance.
  */
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
