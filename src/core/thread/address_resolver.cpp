@@ -223,24 +223,6 @@ void AddressResolver::Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId)
     }
 }
 
-AddressResolver::CacheEntry *AddressResolver::FindCacheEntryInList(CacheEntryList &    aList,
-                                                                   const Ip6::Address &aEid,
-                                                                   CacheEntry *&       aPrevEntry)
-{
-    CacheEntry *entry;
-
-    for (CacheEntry *prev = nullptr; (entry = GetEntryAfter(prev, aList)) != nullptr; prev = entry)
-    {
-        if (entry->GetTarget() == aEid)
-        {
-            aPrevEntry = prev;
-            break;
-        }
-    }
-
-    return entry;
-}
-
 AddressResolver::CacheEntry *AddressResolver::FindCacheEntry(const Ip6::Address &aEid,
                                                              CacheEntryList *&   aList,
                                                              CacheEntry *&       aPrevEntry)
@@ -251,7 +233,7 @@ AddressResolver::CacheEntry *AddressResolver::FindCacheEntry(const Ip6::Address 
     for (size_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
     {
         aList = lists[index];
-        entry = FindCacheEntryInList(*aList, aEid, aPrevEntry);
+        entry = aList->FindMatching(aEid, aPrevEntry);
         VerifyOrExit(entry == nullptr, OT_NOOP);
     }
 
