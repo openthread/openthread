@@ -239,6 +239,9 @@ do_expect()
             echo -e "${COLOR_FAIL}FAIL${COLOR_NONE} ${script}"
             exit "${exit_code}"
         }
+        if [[ ${VERBOSE} == 1 ]]; then
+            cat "${log_file}" >&2
+        fi
         echo -e "${COLOR_PASS}PASS${COLOR_NONE} ${script}"
     done < <(
         if [[ $# != 0 ]]; then
