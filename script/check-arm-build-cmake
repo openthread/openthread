@@ -81,7 +81,7 @@ build_kw41z()
 build_nrf52840()
 {
     reset_source
-    "$(dirname "$0")"/cmake-build nrf52840 $1 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
+    "$(dirname "$0")"/cmake-build nrf52840 "$1" "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
 }
 
 build_qpg6095()
