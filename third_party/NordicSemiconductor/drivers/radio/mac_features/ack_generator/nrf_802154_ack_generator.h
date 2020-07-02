@@ -49,6 +49,6 @@ void nrf_802154_ack_generator_init(void);
  * @returns  Either pointer to a constant buffer that contains PHR and PSDU
  *           of the created ACK frame, or NULL in case of an invalid frame.
  */
-const uint8_t * nrf_802154_ack_generator_create(const uint8_t * p_frame);
+uint8_t * nrf_802154_ack_generator_create(const uint8_t * p_frame);
 
 #endif // NRF_802154_ACK_GENERATOR_H

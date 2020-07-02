@@ -697,7 +697,7 @@ void nrf_802154_ack_timeout_set(uint32_t time)
 
 #endif // NRF_802154_ACK_TIMEOUT_ENABLED
 
-__WEAK void nrf_802154_tx_ack_started(const uint8_t * p_data)
+__WEAK void nrf_802154_tx_ack_started(uint8_t * p_data)
 {
     (void)p_data;
 }
@@ -839,9 +839,4 @@ __WEAK void nrf_802154_cca_done(bool channel_free)
 __WEAK void nrf_802154_cca_failed(nrf_802154_cca_error_t error)
 {
     (void)error;
-}
-
-__WEAK void nrf_802154_tx_process_security(uint8_t *p_ack_frame)
-{
-    (void)p_ack_frame;
 }

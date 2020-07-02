@@ -165,7 +165,7 @@ static rx_buffer_t * const mp_current_rx_buffer = &nrf_802154_rx_buffers[0];
 
 #endif
 
-static const uint8_t * mp_ack;         ///< Pointer to Ack frame buffer.
+static uint8_t *       mp_ack;         ///< Pointer to Ack frame buffer.
 static const uint8_t * mp_tx_data;     ///< Pointer to the data to transmit.
 static uint32_t        m_ed_time_left; ///< Remaining time of the current energy detection procedure [us].
 static uint8_t         m_ed_result;    ///< Result of the current energy detection procedure.
@@ -3002,8 +3002,6 @@ bool nrf_802154_core_transmit(nrf_802154_term_t              term_lvl,
 
         if (result)
         {
-            nrf_802154_tx_process_security(NULL);
-
             // Set state to RX in case sleep terminate succeeded, but transmit_begin fails.
             state_set(RADIO_STATE_RX);
 

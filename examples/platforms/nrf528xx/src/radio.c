@@ -204,6 +204,86 @@ static inline void clearPendingEvents(void)
     } while (__STREXW(pendingEvents, (uint32_t *)&sPendingEvents));
 }
 
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+static void nrf_802154_tx_process_security(uint8_t *p_ack_frame)
+{
+    otRadioFrame *frame = NULL;
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    otRadioFrame     ackFrame;
+    struct otMacKey *key = NULL;
+    uint8_t          keyId;
+
+    if (p_ack_frame != NULL)
+    {
+        memset(&ackFrame, 0, sizeof(ackFrame));
+        ackFrame.mPsdu      = &p_ack_frame[1];
+        ackFrame.mLength    = p_ack_frame[0];
+        ackFrame.mChannel   = nrf_802154_channel_get();
+        sAckedWithSecEnhAck = false;
+        frame               = &ackFrame;
+    }
+    else
+    {
+        frame = &sTransmitFrame;
+    }
+
+    otEXPECT(otMacFrameIsSecurityEnabled(frame) && otMacFrameIsKeyIdMode1(frame) &&
+             !frame->mInfo.mTxInfo.mIsSecurityProcessed);
+
+    if (p_ack_frame != NULL)
+    {
+        keyId = otMacFrameGetKeyId(frame);
+
+        otEXPECT(keyId != 0);
+
+        if (keyId == sKeyId)
+        {
+            key = &sCurrKey;
+        }
+        else if (keyId == sKeyId - 1)
+        {
+            key = &sPrevKey;
+        }
+        else if (keyId == sKeyId + 1)
+        {
+            key = &sNextKey;
+        }
+        else
+        {
+            otEXPECT(false);
+        }
+
+        sAckFrameCounter    = sMacFrameCounter;
+        sAckKeyId           = keyId;
+        sAckedWithSecEnhAck = true;
+    }
+    else
+    {
+        key   = &sCurrKey;
+        keyId = sKeyId;
+    }
+
+    frame->mInfo.mTxInfo.mAesKey = key;
+
+    if (!frame->mInfo.mTxInfo.mIsARetx)
+    {
+        otMacFrameSetKeyId(frame, keyId);
+        otMacFrameSetFrameCounter(frame, sMacFrameCounter++);
+    }
+#elif OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    otEXPECT(sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0);
+    frame = &sTransmitFrame;
+#else
+    otEXPECT(false);
+#endif
+
+    otMacFrameProcessTransmitAesCcm(frame, &sExtAddress);
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+
 #if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
@@ -899,14 +979,14 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
     setPendingEvent(kPendingEventReceiveFailed);
 }
 
-void nrf_802154_tx_ack_started(const uint8_t *p_data)
+void nrf_802154_tx_ack_started(uint8_t *p_data)
 {
     // Check if the frame pending bit is set in ACK frame.
     sAckedWithFramePending = p_data[FRAME_PENDING_OFFSET] & FRAME_PENDING_BIT;
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    // Check if the ACK frame is a secured Enh-ACK.
-    sAckedWithSecEnhAck = p_data[SECURITY_ENABLED_OFFSET] & SECURITY_ENABLED_BIT;
+    // Update IE and secure Enh-ACK.
+    nrf_802154_tx_process_security(p_data);
 #endif
 }
 
@@ -971,9 +1051,9 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 void nrf_802154_tx_started(const uint8_t *aFrame)
 {
-    bool notifyFrameUpdated = false;
     assert(aFrame == sTransmitPsdu);
 
+    // Update IE and secure transmit frame
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
     {
@@ -988,15 +1068,10 @@ void nrf_802154_tx_started(const uint8_t *aFrame)
             time        = time >> 8;
             *(++timeIe) = (uint8_t)(time & 0xff);
         }
-
-        notifyFrameUpdated = true;
     }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-    if (notifyFrameUpdated)
-    {
-        otMacFrameProcessTransmitAesCcm(&sTransmitFrame, &sExtAddress);
-    }
+    nrf_802154_tx_process_security(NULL);
 }
 #endif
 
@@ -1039,79 +1114,5 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
     OT_UNUSED_VARIABLE(aInstance);
 
     sMacFrameCounter = aMacFrameCounter;
-}
-
-void nrf_802154_tx_process_security(uint8_t *p_ack_frame)
-{
-    otRadioFrame     ackFrame;
-    otRadioFrame *   frame;
-    struct otMacKey *key = NULL;
-    uint8_t          keyId;
-
-    if (p_ack_frame != NULL)
-    {
-        memset(&ackFrame, 0, sizeof(ackFrame));
-        ackFrame.mPsdu    = &p_ack_frame[1];
-        ackFrame.mLength  = p_ack_frame[0];
-        ackFrame.mChannel = nrf_802154_channel_get();
-        frame             = &ackFrame;
-    }
-    else
-    {
-        frame = &sTransmitFrame;
-    }
-
-    otEXPECT(otMacFrameIsSecurityEnabled(frame) && otMacFrameIsKeyIdMode1(frame) &&
-             !frame->mInfo.mTxInfo.mIsSecurityProcessed);
-
-    if (p_ack_frame != NULL)
-    {
-        keyId = otMacFrameGetKeyId(frame);
-
-        otEXPECT(keyId != 0);
-
-        if (keyId == sKeyId)
-        {
-            key = &sCurrKey;
-        }
-        else if (keyId == sKeyId - 1)
-        {
-            key = &sPrevKey;
-        }
-        else if (keyId == sKeyId + 1)
-        {
-            key = &sNextKey;
-        }
-        else
-        {
-            otEXPECT(false);
-        }
-
-        sAckFrameCounter = sMacFrameCounter;
-        sAckKeyId        = keyId;
-    }
-    else
-    {
-        key   = &sCurrKey;
-        keyId = sKeyId;
-    }
-
-    frame->mInfo.mTxInfo.mAesKey = key;
-
-    if (!frame->mInfo.mTxInfo.mIsARetx)
-    {
-        otMacFrameSetKeyId(frame, keyId);
-        otMacFrameSetFrameCounter(frame, sMacFrameCounter++);
-    }
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (frame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset == 0)
-#endif
-    {
-        otMacFrameProcessTransmitAesCcm(frame, &sExtAddress);
-    }
-
-exit:
-    return;
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
