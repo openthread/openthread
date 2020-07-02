@@ -30,6 +30,7 @@ add_library(openthread-platform-utils OBJECT
     debug_uart.c
     logging_rtt.c
     mac_frame.cpp
+    otns_utils.cpp
     settings_ram.c
     soft_source_match_table.c
 )

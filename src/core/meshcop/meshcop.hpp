@@ -129,7 +129,7 @@ public:
     bool operator==(const JoinerPskd &aOther) const;
 
     /**
-     * This method overloads operator `!=` to evaluate whether or not two PSKds are equal.
+     * This method overloads operator `!=` to evaluate whether or not two PSKds are unequal.
      *
      * @param[in]  aOther  The other PSKd to compare with.
      *

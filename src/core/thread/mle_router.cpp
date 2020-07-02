@@ -1612,7 +1612,7 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
 
     VerifyOrExit(IsRouterEligible(), error = OT_ERROR_INVALID_STATE);
 
-    // A Router MUST NOT send an MLE Parent Response if:
+    // A Router/REED MUST NOT send an MLE Parent Response if:
 
     // 0. It is detached or attempting to another partition
     VerifyOrExit(!IsDetached() && !IsAttaching(), error = OT_ERROR_DROP);
@@ -1635,6 +1635,10 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
                      (leader->GetCost() + GetLinkCost(leader->GetNextHop()) < kMaxRouteCost),
                  error = OT_ERROR_DROP);
 
+    // 4. It is a REED and there are already `kMaxRouters` active routers in
+    // the network (because Leader would reject any further address solicit).
+    // ==> Verified below when checking the scan mask.
+
     aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
 
     // Version
@@ -1652,6 +1656,7 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
 
     case kRoleChild:
         VerifyOrExit(ScanMaskTlv::IsEndDeviceFlagSet(scanMask), OT_NOOP);
+        VerifyOrExit(mRouterTable.GetActiveRouterCount() < kMaxRouters, error = OT_ERROR_DROP);
         break;
 
     case kRoleRouter:
@@ -3896,7 +3901,7 @@ otError MleRouter::CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header
     if (aMeshDest == Get<Mac::Mac>().GetShortAddress())
     {
         // mesh destination is this device
-        if (Get<ThreadNetif>().IsUnicastAddress(aIp6Header.GetDestination()))
+        if (Get<ThreadNetif>().HasUnicastAddress(aIp6Header.GetDestination()))
         {
             // IPv6 destination is this device
             ExitNow();

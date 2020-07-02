@@ -130,7 +130,7 @@ public:
      * @param[in]   aDiscerner  A Joiner Discerner
      *
      * @retval OT_ERROR_NONE           The Joiner Discerner updated successfully.
-     * @retval OT_ERROR_INVALID_ARGS   @p aDisciminrator is not valid (specified length is not within valid range).
+     * @retval OT_ERROR_INVALID_ARGS   @p aDiscerner is not valid (specified length is not within valid range).
      * @retval OT_ERROR_INVALID_STATE  There is an ongoing Joining process so Joiner Discerner could not be changed.
      *
      */

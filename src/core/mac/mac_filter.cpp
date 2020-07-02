@@ -41,61 +41,46 @@ namespace ot {
 namespace Mac {
 
 Filter::Filter(void)
-    : mAddressMode(OT_MAC_FILTER_ADDRESS_MODE_DISABLED)
+    : mMode(kModeRssInOnly)
     , mDefaultRssIn(kFixedRssDisabled)
 {
-    for (FilterEntry *entry = &mFilterEntries[0]; entry < OT_ARRAY_END(mFilterEntries); entry++)
+    for (FilterEntry &entry : mFilterEntries)
     {
-        entry->mFiltered = false;
-        entry->mRssIn    = kFixedRssDisabled;
+        entry.mFiltered = false;
+        entry.mRssIn    = kFixedRssDisabled;
     }
 }
 
 Filter::FilterEntry *Filter::FindEntry(const ExtAddress &aExtAddress)
 {
-    FilterEntry *entry;
+    FilterEntry *rval = nullptr;
 
-    for (entry = &mFilterEntries[0]; entry < OT_ARRAY_END(mFilterEntries); entry++)
+    for (FilterEntry &entry : mFilterEntries)
     {
-        if (entry->IsInUse() && (aExtAddress == entry->mExtAddress))
+        if (entry.IsInUse() && (aExtAddress == entry.mExtAddress))
         {
-            ExitNow();
+            ExitNow(rval = &entry);
         }
     }
 
-    entry = nullptr;
-
 exit:
-    return entry;
+    return rval;
 }
 
 Filter::FilterEntry *Filter::FindAvailableEntry(void)
 {
-    FilterEntry *entry;
+    FilterEntry *rval = nullptr;
 
-    for (entry = &mFilterEntries[0]; entry < OT_ARRAY_END(mFilterEntries); entry++)
+    for (FilterEntry &entry : mFilterEntries)
     {
-        VerifyOrExit(entry->IsInUse(), OT_NOOP);
+        if (!entry.IsInUse())
+        {
+            ExitNow(rval = &entry);
+        }
     }
 
-    entry = nullptr;
-
 exit:
-    return entry;
-}
-
-otError Filter::SetAddressMode(otMacFilterAddressMode aMode)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aMode == OT_MAC_FILTER_ADDRESS_MODE_DISABLED || aMode == OT_MAC_FILTER_ADDRESS_MODE_WHITELIST ||
-                     aMode == OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST,
-                 error = OT_ERROR_INVALID_ARGS);
-
-    mAddressMode = aMode;
-
-exit:
-    return error;
+    return rval;
 }
 
 otError Filter::AddAddress(const ExtAddress &aExtAddress)
@@ -109,34 +94,27 @@ otError Filter::AddAddress(const ExtAddress &aExtAddress)
         entry->mExtAddress = aExtAddress;
     }
 
-    VerifyOrExit(!entry->mFiltered, error = OT_ERROR_ALREADY);
     entry->mFiltered = true;
 
 exit:
     return error;
 }
 
-otError Filter::RemoveAddress(const ExtAddress &aExtAddress)
+void Filter::RemoveAddress(const ExtAddress &aExtAddress)
 {
-    otError      error = OT_ERROR_NONE;
     FilterEntry *entry = FindEntry(aExtAddress);
 
-    if (entry == nullptr || !entry->mFiltered)
+    if (entry != nullptr)
     {
-        ExitNow(error = OT_ERROR_NOT_FOUND);
+        entry->mFiltered = false;
     }
-
-    entry->mFiltered = false;
-
-exit:
-    return error;
 }
 
 void Filter::ClearAddresses(void)
 {
-    for (FilterEntry *entry = &mFilterEntries[0]; entry < OT_ARRAY_END(mFilterEntries); entry++)
+    for (FilterEntry &entry : mFilterEntries)
     {
-        entry->mFiltered = false;
+        entry.mFiltered = false;
     }
 }
 
@@ -161,22 +139,17 @@ otError Filter::GetNextAddress(Iterator &aIterator, Entry &aEntry) const
     return error;
 }
 
-otError Filter::AddRssIn(const ExtAddress *aExtAddress, int8_t aRss)
+otError Filter::AddRssIn(const ExtAddress &aExtAddress, int8_t aRss)
 {
     otError      error = OT_ERROR_NONE;
-    FilterEntry *entry;
-
-    // Set the default RssIn when aExtAddress is not given (nullptr)
-    VerifyOrExit(aExtAddress != nullptr, mDefaultRssIn = aRss);
-
-    entry = FindEntry(*aExtAddress);
+    FilterEntry *entry = FindEntry(aExtAddress);
 
     if (entry == nullptr)
     {
         entry = FindAvailableEntry();
         VerifyOrExit(entry != nullptr, error = OT_ERROR_NO_BUFS);
 
-        entry->mExtAddress = *aExtAddress;
+        entry->mExtAddress = aExtAddress;
     }
 
     entry->mRssIn = aRss;
@@ -185,27 +158,23 @@ exit:
     return error;
 }
 
-otError Filter::RemoveRssIn(const ExtAddress *aExtAddress)
+void Filter::RemoveRssIn(const ExtAddress &aExtAddress)
 {
-    otError      error = OT_ERROR_NONE;
-    FilterEntry *entry;
+    FilterEntry *entry = FindEntry(aExtAddress);
 
-    // If no aExtAddress is given, remove default RssIn
-    VerifyOrExit(aExtAddress != nullptr, mDefaultRssIn = kFixedRssDisabled);
+    VerifyOrExit(entry != nullptr, OT_NOOP);
 
-    entry = FindEntry(*aExtAddress);
-    VerifyOrExit(entry != nullptr, error = OT_ERROR_NOT_FOUND);
     entry->mRssIn = kFixedRssDisabled;
 
 exit:
-    return error;
+    return;
 }
 
-void Filter::ClearRssIn(void)
+void Filter::ClearAllRssIn(void)
 {
-    for (FilterEntry *entry = &mFilterEntries[0]; entry < OT_ARRAY_END(mFilterEntries); entry++)
+    for (FilterEntry &entry : mFilterEntries)
     {
-        entry->mRssIn = kFixedRssDisabled;
+        entry.mRssIn = kFixedRssDisabled;
     }
 
     mDefaultRssIn = kFixedRssDisabled;
@@ -246,17 +215,28 @@ otError Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss)
 {
     otError      error = OT_ERROR_NONE;
     FilterEntry *entry = FindEntry(aExtAddress);
+    bool         isInFilterList;
 
     // Use the default RssIn setting for all receiving messages first.
     aRss = mDefaultRssIn;
 
-    if (mAddressMode == OT_MAC_FILTER_ADDRESS_MODE_WHITELIST)
+    // In whitelist mode, entry must be present in the list, in
+    // blacklist mode it must not be present.
+
+    isInFilterList = (entry != nullptr) && entry->mFiltered;
+
+    switch (mMode)
     {
-        VerifyOrExit(entry != nullptr && entry->mFiltered, error = OT_ERROR_ADDRESS_FILTERED);
-    }
-    else if (mAddressMode == OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST)
-    {
-        VerifyOrExit(entry == nullptr || !entry->mFiltered, error = OT_ERROR_ADDRESS_FILTERED);
+    case kModeRssInOnly:
+        break;
+
+    case kModeWhitelist:
+        VerifyOrExit(isInFilterList, error = OT_ERROR_ADDRESS_FILTERED);
+        break;
+
+    case kModeBlacklist:
+        VerifyOrExit(!isInFilterList, error = OT_ERROR_ADDRESS_FILTERED);
+        break;
     }
 
     if ((entry != nullptr) && (entry->mRssIn != kFixedRssDisabled))

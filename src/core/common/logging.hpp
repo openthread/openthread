@@ -1159,6 +1159,19 @@ extern "C" {
 #endif
 
 /**
+ * @def otLogOtns
+ *
+ * This method generates a log with level none for the Core region,
+ * and is specifically for OTNS visualization use.
+ *
+ * @param[in]  ...       Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+#define otLogOtns(...) _otLogFormatter(OT_LOG_LEVEL_NONE, OT_LOG_REGION_CORE, _OT_LEVEL_NONE_PREFIX __VA_ARGS__, NULL)
+#endif
+
+/**
  * @def otDumpCrit
  *
  * This method generates a memory dump with log level critical.

@@ -28,67 +28,17 @@
 #
 
 source "tests/scripts/expect/_common.exp"
-source "tests/scripts/expect/_multinode.exp"
 
-set timeout 3
-setup_nodes
+set spawn_id [spawn_node 1]
 
-set spawn_id [spawn_node 3]
-set spawn_3 $spawn_id
-
-set spawn_id $spawn_1
-send "extaddr\n"
-expect "extaddr"
-expect -re {([0-9a-f]{16})}
-set extaddr $expect_out(1,string)
+send "networktime 20 200\n"
 expect "Done"
-send "panid\n"
-expect "panid"
-expect -re {([0-9a-f]{4})}
-set pan $expect_out(1,string)
+send "networktime\n"
+expect -re {Network Time:     \d+us \((unsynchronized|resync needed|synchronized)\)}
+expect "Time Sync Period: 20s"
+expect "XTAL Threshold:   200ppm"
 expect "Done"
-send "extpanid\n"
-expect "extpanid"
-expect -re {([0-9a-f]{16})}
-set extpan $expect_out(1,string)
-expect "Done"
-send "networkname\n"
-expect "networkname"
-expect -re {[\r\n]([^\r\n]+?)[\r\n]}
-set network $expect_out(1,string)
-expect "Done"
-send "channel\n"
-expect "channel"
-expect -re {(\d+)}
-set channel $expect_out(1,string)
-expect "Done"
-
-set spawn_id $spawn_3
-send "scan $channel\n"
-expect "| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |"
-expect "+---+------------------+------------------+------+------------------+----+-----+-----+"
-wait_for "" "\\| \\d \\| $network +\\| $extpan \\| $pan \\| $extaddr \\| +$channel \\| +-?\\d+ \\| +\\d \\|"
-wait_for "" "Done"
-send "scan energy 100\n"
-expect "| Ch | RSSI |"
-expect "+----+------+"
-for {set i 11} {$i <= 26} {incr i} {
-    expect -re "\\| +$i \\| +-?\\d+ \\|"
-}
-expect "Done"
-
-set spawn_id $spawn_3
-send "ifconfig up\n"
-expect "Done"
-send "discover $channel\n"
-expect "| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |"
-expect "+---+------------------+------------------+------+------------------+----+-----+-----+"
-wait_for "" "\\| \\d \\| $network +\\| $extpan \\| $pan \\| $extaddr \\| +$channel \\| +-?\\d+ \\| +\\d \\|"
-wait_for "" "Done"
-send "discover something_invalid\n"
+send "networktime something_invalid\n"
 expect "Error 7: InvalidArgs"
 
-set spawn_id $spawn_3
 dispose
-
-dispose_nodes
