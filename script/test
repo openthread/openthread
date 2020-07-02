@@ -219,10 +219,12 @@ do_expect()
         test_patterns=(-name 'cli-*.exp' -o -name 'simulation-*.exp')
     fi
 
-    local temp_dir=$(mktemp -d)
+    local temp_dir
+    temp_dir=$(mktemp -d)
     trap 'rm -r "$temp_dir"' EXIT
 
-    local log_file="${temp_dir}/log_expect"
+    local log_file
+    log_file="${temp_dir}/log_expect"
     while read -r script; do
         sudo rm -rf tmp
         {
