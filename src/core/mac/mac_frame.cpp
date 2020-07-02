@@ -1057,7 +1057,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     aesCcm.Finalize(GetFooter());
 
     SetIsSecurityProcessed(true);
-    
+
 exit:
     return;
 #endif // OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
