@@ -172,6 +172,9 @@ jobs:
 
   expects:
     runs-on: ubuntu-18.04
+    env:
+      CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1
+      CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap

@@ -83,7 +83,8 @@ Coap::Coap(Interpreter &aInterpreter)
     memset(&mRequestUri, 0, sizeof(mRequestUri));
 #endif
     memset(&mUriPath, 0, sizeof(mUriPath));
-    strncpy(mResourceContent, "0", sizeof(mResourceContent) - 1);
+    strncpy(mResourceContent, "0", sizeof(mResourceContent));
+    mResourceContent[sizeof(mResourceContent) - 1] = '\0';
 }
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
@@ -214,8 +215,9 @@ otError Coap::ProcessSet(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength > 1)
     {
-        VerifyOrExit(strlen(aArgs[1]) < (kMaxBufferSize - 1), error = OT_ERROR_INVALID_ARGS);
-        strncpy(mResourceContent, aArgs[1], sizeof(mResourceContent) - 1);
+        VerifyOrExit(strlen(aArgs[1]) < sizeof(mResourceContent), error = OT_ERROR_INVALID_ARGS);
+        strncpy(mResourceContent, aArgs[1], sizeof(mResourceContent));
+        mResourceContent[sizeof(mResourceContent) - 1] = '\0';
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         if (mSubscriberTokenLength > 0)

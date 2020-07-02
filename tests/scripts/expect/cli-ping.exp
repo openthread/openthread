@@ -53,7 +53,8 @@ dispose
 setup_nodes
 
 set spawn_id $spawn_2
-send "ipaddr\n"
+send "ipaddr mleid\n"
+expect "ipaddr mleid"
 expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
 set addr $expect_out(1,string)
 expect "Done"

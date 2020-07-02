@@ -97,6 +97,7 @@ private:
     otError ProcessPsk(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessRequest(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessResource(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessSet(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessX509(uint8_t aArgsLength, char *aArgs[]);
@@ -122,6 +123,7 @@ private:
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];
+    char           mResourceContent[kMaxBufferSize];
 
     bool    mShutdownFlag;
     bool    mUseCertificate;
