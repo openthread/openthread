@@ -34,23 +34,21 @@ add_library(jlinkrtt
 if(OT_PLATFORM STREQUAL "nrf52811")
     target_compile_options(jlinkrtt PRIVATE
         -DNRF52811_XXAA
-        -DSEGGER_RTT_CONFIG_H=\"${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"
-        -DUSE_APP_CONFIG=1
     )
 elseif(OT_PLATFORM STREQUAL "nrf52833")
     target_compile_options(jlinkrtt PRIVATE
         -DNRF52833_XXAA
-        -DSEGGER_RTT_CONFIG_H=\"${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"
-        -DUSE_APP_CONFIG=1
     )
 else()
     target_compile_options(jlinkrtt PRIVATE
         -DNRF52840_XXAA
-        -DSEGGER_RTT_CONFIG_H=\"${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"
-        -DUSE_APP_CONFIG=1
     )
 endif()
 
+target_compile_options(jlinkrtt PRIVATE
+    -DSEGGER_RTT_CONFIG_H=\"${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"
+    -DUSE_APP_CONFIG=1
+)
 
 target_include_directories(jlinkrtt PRIVATE
     ${PROJECT_SOURCE_DIR}/include

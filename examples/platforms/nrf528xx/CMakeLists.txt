@@ -27,13 +27,13 @@
 #
 
 if(OT_NCP_SPI)
-    target_compile_definitions(ot-config INTERFACE "SPIS_AS_SERIAL_TRANSPORT=1")
+    list(APPEND OT_PLATFORM_DEFINES "SPIS_AS_SERIAL_TRANSPORT=1")
 else()
     option(OT_USB "enable nrf USB as serial transport support")
     if(OT_USB)
-        target_compile_definitions(ot-config INTERFACE "USB_CDC_AS_SERIAL_TRANSPORT=1")
+        list(APPEND OT_PLATFORM_DEFINES "USB_CDC_AS_SERIAL_TRANSPORT=1")
     else()
-        target_compile_definitions(ot-config INTERFACE "UART_AS_SERIAL_TRANSPORT=1")
+        list(APPEND OT_PLATFORM_DEFINES "UART_AS_SERIAL_TRANSPORT=1")
     endif()
 endif()
 
