@@ -202,6 +202,32 @@ exit:
     return error;
 }
 
+bool UdpSocket::Matches(const MessageInfo &aMessageInfo) const
+{
+    bool matches = false;
+
+    VerifyOrExit(GetSockName().mPort == aMessageInfo.GetSockPort(), OT_NOOP);
+
+    VerifyOrExit(aMessageInfo.GetSockAddr().IsMulticast() || GetSockName().GetAddress().IsUnspecified() ||
+                     GetSockName().GetAddress() == aMessageInfo.GetSockAddr(),
+                 OT_NOOP);
+
+    // Verify source if connected socket
+    if (GetPeerName().mPort != 0)
+    {
+        VerifyOrExit(GetPeerName().mPort == aMessageInfo.GetPeerPort(), OT_NOOP);
+
+        VerifyOrExit(GetPeerName().GetAddress().IsUnspecified() ||
+                         GetPeerName().GetAddress() == aMessageInfo.GetPeerAddr(),
+                     OT_NOOP);
+    }
+
+    matches = true;
+
+exit:
+    return matches;
+}
+
 Udp::Udp(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEphemeralPort(kDynamicPortMin)
@@ -341,40 +367,18 @@ exit:
 
 void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
 {
-    // find socket
-    for (UdpSocket *socket = mSockets.GetHead(); socket; socket = socket->GetNext())
-    {
-        if (socket->GetSockName().mPort != aMessageInfo.GetSockPort())
-        {
-            continue;
-        }
+    UdpSocket *socket;
+    UdpSocket *prev;
 
-        if (!aMessageInfo.GetSockAddr().IsMulticast() && !socket->GetSockName().GetAddress().IsUnspecified() &&
-            socket->GetSockName().GetAddress() != aMessageInfo.GetSockAddr())
-        {
-            continue;
-        }
+    socket = mSockets.FindMatching(aMessageInfo, prev);
+    VerifyOrExit(socket != nullptr, OT_NOOP);
 
-        // verify source if connected socket
-        if (socket->GetPeerName().mPort != 0)
-        {
-            if (socket->GetPeerName().mPort != aMessageInfo.GetPeerPort())
-            {
-                continue;
-            }
+    aMessage.RemoveHeader(aMessage.GetOffset());
+    OT_ASSERT(aMessage.GetOffset() == 0);
+    socket->HandleUdpReceive(aMessage, aMessageInfo);
 
-            if (!socket->GetPeerName().GetAddress().IsUnspecified() &&
-                socket->GetPeerName().GetAddress() != aMessageInfo.GetPeerAddr())
-            {
-                continue;
-            }
-        }
-
-        aMessage.RemoveHeader(aMessage.GetOffset());
-        OT_ASSERT(aMessage.GetOffset() == 0);
-        socket->HandleUdpReceive(aMessage, aMessageInfo);
-        break;
-    }
+exit:
+    return;
 }
 
 void Udp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
