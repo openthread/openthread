@@ -219,16 +219,21 @@ do_expect()
         test_patterns=(-name 'cli-*.exp' -o -name 'simulation-*.exp')
     fi
 
+    local temp_dir=$(mktemp -d)
+    trap 'rm -r "$temp_dir"' EXIT
+
+    local log_file="${temp_dir}/log_expect"
     while read -r script; do
         sudo rm -rf tmp
         {
             if [[ ${OT_NATIVE_IP} == 1 ]]; then
-                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" sudo -E "${script}"
+                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" sudo -E expect -df "${script}" 2> "${log_file}"
             else
-                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" "${script}"
+                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" expect -df "${script}" 2> "${log_file}"
             fi
         } || {
             local exit_code=$?
+            cat "${log_file}" >&2
             echo -e "${COLOR_FAIL}FAIL${COLOR_NONE} ${script}"
             exit "${exit_code}"
         }
