@@ -155,7 +155,7 @@ main()
     echo "${OT_PLATFORMS[@]}" | grep -wq "${platform}" || die "${platform}"
 
     local nrf_build_type=""
-    if [[ "${platform}" == nrf528* ]]; then
+    if [[ ${platform} == nrf528* ]]; then
         nrf_build_type="$2"
         echo "${OT_NRF528XX_BUILD_TYPES[@]}" | grep -wq "${nrf_build_type}" || die "${nrf_build_type}"
         shift
