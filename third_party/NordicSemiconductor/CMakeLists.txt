@@ -42,6 +42,36 @@ set(COMMON_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/drivers/radio/rsch/raal/softdevice
 )
 
+set(EXAMPLE_INCLUDES
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/cmsis
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/dependencies
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/clock
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/common
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/power
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/systick
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/usbd
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/app_error
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/atfifo
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/atomic
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/block_dev
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/delay
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/usb
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/usb/config
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/usb/class/cdc
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/utf_converter
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx/hal
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx/drivers
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx/drivers/include
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx/mdk
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx/soc
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/softdevice/s140/headers
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/softdevice/s140/headers/nrf52
+)
+
 set(COMMON_FLAG
     -DSPIS_ENABLED=1
     -DSPIS0_ENABLED=1
@@ -51,7 +81,6 @@ set(COMMON_FLAG
     -DENABLE_FEM=1
     -DUSE_APP_CONFIG=1
 )
-
 
 set(COMMON_SOURCES
     dependencies/app_util_platform.c
@@ -133,115 +162,32 @@ set(RADIO_DRIVER_SINGLE_PHY_SOURCES
     drivers/radio/rsch/raal/single_phy/single_phy.c
 )
 
-if(OT_PLATFORM_EXAMPLE)
-    set(EXAMPLE_INCLUDES
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/cmsis
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/dependencies
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/clock
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/common
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/power
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/systick
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/usbd
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/app_error
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/atfifo
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/atomic
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/block_dev
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/delay
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/usb
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/usb/config
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/usb/class/cdc
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/utf_converter
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx/hal
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx/drivers
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx/drivers/include
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx/mdk
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx/soc
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/softdevice/s140/headers
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/softdevice/s140/headers/nrf52
-    )
-    if(OT_PLATFORM_EXAMPLE STREQUAL "nrf52811")
-        add_library(nordicsemi-nrf52811-sdk)
-        target_compile_definitions(nordicsemi-nrf52811-sdk
-            PRIVATE
-                ${COMMON_FLAG}
-                -DNRF52811_XXAA
-                -DNRF_802154_PROJECT_CONFIG=\"platform-config.h\"
-                -D__HEAP_SIZE=0
-                -D__STACK_SIZE=2048
-        )
-        target_include_directories(nordicsemi-nrf52811-sdk
-            PUBLIC
-                ${COMMON_INCLUDES}
-                ${EXAMPLE_INCLUDES}
-                ${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx/nrf52811
-                ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/nrf52811/config
-        )
-        set_property(SOURCE nrfx/mdk/gcc_startup_nrf52811.S PROPERTY LANGUAGE C)
-        target_sources(nordicsemi-nrf52811-sdk
-            PRIVATE
-                ${COMMON_SOURCES}
-                nrfx/mdk/gcc_startup_nrf52811.S
-                nrfx/mdk/system_nrf52811.c
-        )
-        target_link_libraries(nordicsemi-nrf52811-sdk PRIVATE ot-config)
-    elseif(OT_PLATFORM_EXAMPLE STREQUAL "nrf52833")
-        add_library(nordicsemi-nrf52833-sdk)
-        target_compile_definitions(nordicsemi-nrf52833-sdk
-            PRIVATE
-                ${COMMON_FLAG}
-                -DNRF52833_XXAA
-                -DNRF_802154_PROJECT_CONFIG=\"platform-config.h\"
-        )
-        target_include_directories(nordicsemi-nrf52833-sdk
-            PUBLIC
-                ${COMMON_INCLUDES}
-                ${EXAMPLE_INCLUDES}
-                ${PROJECT_SOURCE_DIR}/examples/platforms/nrf52833
-                ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/nrf52833/config
-        )
-        set_property(SOURCE nrfx/mdk/gcc_startup_nrf52833.S PROPERTY LANGUAGE C)
-        target_sources(nordicsemi-nrf52833-sdk
-            PRIVATE
-                ${COMMON_SOURCES}
-                ${USB_SOURCES}
-                nrfx/mdk/gcc_startup_nrf52833.S
-                nrfx/mdk/system_nrf52833.c
-        )
-        target_link_libraries(nordicsemi-nrf52833-sdk PRIVATE ot-config)
-    elseif(OT_PLATFORM_EXAMPLE STREQUAL "nrf52840")
-        add_library(nordicsemi-nrf52840-sdk)
-        target_compile_definitions(nordicsemi-nrf52840-sdk
-            PRIVATE
-                ${COMMON_FLAG}
-                -DNRF52840_XXAA
-                -DNRF_802154_PROJECT_CONFIG=\"platform-config.h\"
-        )
-        target_include_directories(nordicsemi-nrf52840-sdk
-            PUBLIC
-                ${COMMON_INCLUDES}
-                ${EXAMPLE_INCLUDES}
-                ${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx/nrf52840/
-                ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/nrf52840/config
-        )
-        set_property(SOURCE nrfx/mdk/gcc_startup_nrf52840.S PROPERTY LANGUAGE C)
-        target_sources(nordicsemi-nrf52840-sdk
-            PRIVATE
-                ${COMMON_SOURCES}
-                ${USB_SOURCES}
-                nrfx/mdk/gcc_startup_nrf52840.S
-                nrfx/mdk/system_nrf52840.c
-        )
-        target_link_libraries(nordicsemi-nrf52840-sdk PRIVATE ot-config)
-    else()
-        message(FATAL_ERROR "Platform examples unknown: ${OT_PLATFORM_EXAMPLE}")
-    endif()
-endif()
-
 if(OT_PLATFORM STREQUAL "nrf52811")
+    add_library(nordicsemi-nrf52811-sdk)
+    target_compile_definitions(nordicsemi-nrf52811-sdk
+        PRIVATE
+            ${COMMON_FLAG}
+            -DNRF52811_XXAA
+            -DNRF_802154_PROJECT_CONFIG=\"platform-config.h\"
+            -D__HEAP_SIZE=0
+            -D__STACK_SIZE=2048
+    )
+    target_include_directories(nordicsemi-nrf52811-sdk
+        PUBLIC
+            ${COMMON_INCLUDES}
+            ${EXAMPLE_INCLUDES}
+            ${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx/nrf52811
+            ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/nrf52811/config
+    )
+    set_property(SOURCE nrfx/mdk/gcc_startup_nrf52811.S PROPERTY LANGUAGE C)
+    target_sources(nordicsemi-nrf52811-sdk
+        PRIVATE
+            ${COMMON_SOURCES}
+            nrfx/mdk/gcc_startup_nrf52811.S
+            nrfx/mdk/system_nrf52811.c
+    )
+    target_link_libraries(nordicsemi-nrf52811-sdk PRIVATE ot-config)
+
     add_library(nordicsemi-nrf52811-radio-driver)
     target_compile_definitions(nordicsemi-nrf52811-radio-driver
         PRIVATE
@@ -264,6 +210,30 @@ if(OT_PLATFORM STREQUAL "nrf52811")
             ${RADIO_DRIVER_SINGLE_PHY_SOURCES}
     )
 elseif(OT_PLATFORM STREQUAL "nrf52833")
+    add_library(nordicsemi-nrf52833-sdk)
+    target_compile_definitions(nordicsemi-nrf52833-sdk
+        PRIVATE
+            ${COMMON_FLAG}
+            -DNRF52833_XXAA
+            -DNRF_802154_PROJECT_CONFIG=\"platform-config.h\"
+    )
+    target_include_directories(nordicsemi-nrf52833-sdk
+        PUBLIC
+            ${COMMON_INCLUDES}
+            ${EXAMPLE_INCLUDES}
+            ${PROJECT_SOURCE_DIR}/examples/platforms/nrf52833
+            ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/nrf52833/config
+    )
+    set_property(SOURCE nrfx/mdk/gcc_startup_nrf52833.S PROPERTY LANGUAGE C)
+    target_sources(nordicsemi-nrf52833-sdk
+        PRIVATE
+            ${COMMON_SOURCES}
+            ${USB_SOURCES}
+            nrfx/mdk/gcc_startup_nrf52833.S
+            nrfx/mdk/system_nrf52833.c
+    )
+    target_link_libraries(nordicsemi-nrf52833-sdk PRIVATE ot-config)
+
     add_library(nordicsemi-nrf52833-radio-driver)
     target_compile_definitions(nordicsemi-nrf52833-radio-driver
         PRIVATE
@@ -306,6 +276,30 @@ elseif(OT_PLATFORM STREQUAL "nrf52833")
             ${RADIO_DRIVER_SINGLE_PHY_SOURCES}
     )
 elseif(OT_PLATFORM STREQUAL "nrf52840")
+    add_library(nordicsemi-nrf52840-sdk)
+    target_compile_definitions(nordicsemi-nrf52840-sdk
+        PRIVATE
+            ${COMMON_FLAG}
+            -DNRF52840_XXAA
+            -DNRF_802154_PROJECT_CONFIG=\"platform-config.h\"
+    )
+    target_include_directories(nordicsemi-nrf52840-sdk
+        PUBLIC
+            ${COMMON_INCLUDES}
+            ${EXAMPLE_INCLUDES}
+            ${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx/nrf52840/
+            ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/nrf52840/config
+    )
+    set_property(SOURCE nrfx/mdk/gcc_startup_nrf52840.S PROPERTY LANGUAGE C)
+    target_sources(nordicsemi-nrf52840-sdk
+        PRIVATE
+            ${COMMON_SOURCES}
+            ${USB_SOURCES}
+            nrfx/mdk/gcc_startup_nrf52840.S
+            nrfx/mdk/system_nrf52840.c
+    )
+    target_link_libraries(nordicsemi-nrf52840-sdk PRIVATE ot-config)
+
     add_library(nordicsemi-nrf52840-radio-driver)
     target_compile_definitions(nordicsemi-nrf52840-radio-driver
         PRIVATE
