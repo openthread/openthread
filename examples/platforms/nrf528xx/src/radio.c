@@ -205,7 +205,7 @@ static inline void clearPendingEvents(void)
 }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-static void nrf_802154_tx_ack_process_security(uint8_t *p_ack_frame)
+static void txAckProcessSecurity(uint8_t *p_ack_frame)
 {
     otRadioFrame     ackFrame;
     struct otMacKey *key = NULL;
@@ -951,7 +951,7 @@ void nrf_802154_tx_ack_started(uint8_t *p_data)
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     // Update IE and secure Enh-ACK.
-    nrf_802154_tx_ack_process_security(p_data);
+    txAckProcessSecurity(p_data);
 #endif
 }
 
