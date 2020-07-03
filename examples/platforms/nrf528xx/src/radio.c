@@ -56,7 +56,6 @@
 
 #include <nrf.h>
 #include <nrf_802154.h>
-#include <nrf_802154_critical_section.h>
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
@@ -1090,14 +1089,14 @@ void otPlatRadioSetMacKey(otInstance *    aInstance,
 
     assert(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
 
-    if (nrf_802154_critical_section_enter())
-    {
-        sKeyId = aKeyId;
-        memcpy(sPrevKey.m8, aPrevKey->m8, OT_MAC_KEY_SIZE);
-        memcpy(sCurrKey.m8, aCurrKey->m8, OT_MAC_KEY_SIZE);
-        memcpy(sNextKey.m8, aNextKey->m8, OT_MAC_KEY_SIZE);
-        nrf_802154_critical_section_exit();
-    }
+    CRITICAL_REGION_ENTER();
+
+    sKeyId = aKeyId;
+    memcpy(sPrevKey.m8, aPrevKey->m8, OT_MAC_KEY_SIZE);
+    memcpy(sCurrKey.m8, aCurrKey->m8, OT_MAC_KEY_SIZE);
+    memcpy(sNextKey.m8, aNextKey->m8, OT_MAC_KEY_SIZE);
+
+    CRITICAL_REGION_EXIT();
 }
 
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
