@@ -100,6 +100,7 @@ void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset
 
 #else // Defaults to Silabs nvm3 system
 
+#include "nvm3.h"
 #include "nvm3_default.h"
 #include <string.h>
 #include <openthread/platform/settings.h>
@@ -330,7 +331,6 @@ static otError addSetting(uint16_t aKey, const uint8_t *aValue, uint16_t aValueL
         }
     }
 
-exit:
     return err;
 }
 
