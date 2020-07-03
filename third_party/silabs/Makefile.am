@@ -192,6 +192,11 @@ SILABS_EFR32MG1_SOURCES                                                         
     gecko_sdk_suite/v2.7/platform/Device/SiliconLabs/EFR32MG1P/Source/GCC/startup_efr32mg1p.c     \
     $(NULL)
 
+SILABS_EFR32MG1_SOURCES                                                                          = \
+    gecko_sdk_suite/v2.7/platform/Device/SiliconLabs/EFR32MG1P/Source/system_efr32mg1p.c          \
+    gecko_sdk_suite/v2.7/platform/Device/SiliconLabs/EFR32MG1P/Source/GCC/startup_efr32mg1p.c     \
+    $(NULL)
+
 SILABS_EFR32MG12_SOURCES                                                                          = \
     gecko_sdk_suite/v2.7/platform/Device/SiliconLabs/EFR32MG12P/Source/system_efr32mg12p.c          \
     gecko_sdk_suite/v2.7/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/startup_efr32mg12p.c     \
@@ -227,7 +232,6 @@ libsilabs_efr32mg1_sdk_a_SOURCES                                                
     $(SILABS_COMMON_SOURCES)                                                                    \
     $(SILABS_EFR32MG1_SOURCES)                                                                  \
     $(NULL)
-
 
 libsilabs_efr32mg12_sdk_a_CPPFLAGS                                                            = \
     $(COMMONCPPFLAGS)                                                                           \
