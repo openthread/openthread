@@ -339,7 +339,7 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 
 void MeshForwarder::GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr)
 {
-    aIp6Addr.ToExtAddress(aMacAddr);
+    aIp6Addr.GetIid().ConvertToMacAddress(aMacAddr);
 
     if (aMacAddr.GetExtended() != Get<Mac::Mac>().GetExtAddress())
     {
@@ -355,11 +355,11 @@ void MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::
     }
     else if (Get<Mle::MleRouter>().IsRoutingLocator(aIp6Addr))
     {
-        aMacAddr.SetShort(aIp6Addr.GetLocator());
+        aMacAddr.SetShort(aIp6Addr.GetIid().GetLocator());
     }
     else
     {
-        aIp6Addr.ToExtAddress(aMacAddr);
+        aIp6Addr.GetIid().ConvertToMacAddress(aMacAddr);
     }
 }
 

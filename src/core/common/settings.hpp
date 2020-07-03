@@ -40,6 +40,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
+#include "net/ip6_address.hpp"
 #include "utils/flash.hpp"
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
@@ -338,7 +339,7 @@ public:
          * @returns The Mesh Local Interface Identifier.
          *
          */
-        const uint8_t *GetMeshLocalIid(void) const { return mMlIid; }
+        const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mMlIid; }
 
         /**
          * This method sets the Mesh Local Interface Identifier.
@@ -346,7 +347,7 @@ public:
          * @param[in] aMeshLocalIid  The Mesh Local Interface Identifier.
          *
          */
-        void SetMeshLocalIid(const uint8_t *aMeshLocalIid) { memcpy(mMlIid, aMeshLocalIid, sizeof(mMlIid)); }
+        void SetMeshLocalIid(const Ip6::InterfaceIdentifier &aMeshLocalIid) { mMlIid = aMeshLocalIid; }
 
         /**
          * This method returns the Thread version.
@@ -365,16 +366,16 @@ public:
         void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
 
     private:
-        uint8_t         mRole;                   ///< Current Thread role.
-        uint8_t         mDeviceMode;             ///< Device mode setting.
-        uint16_t        mRloc16;                 ///< RLOC16
-        uint32_t        mKeySequence;            ///< Key Sequence
-        uint32_t        mMleFrameCounter;        ///< MLE Frame Counter
-        uint32_t        mMacFrameCounter;        ///< MAC Frame Counter
-        uint32_t        mPreviousPartitionId;    ///< PartitionId
-        Mac::ExtAddress mExtAddress;             ///< Extended Address
-        uint8_t         mMlIid[OT_IP6_IID_SIZE]; ///< IID from ML-EID
-        uint16_t        mVersion;                ///< Version
+        uint8_t                  mRole;                ///< Current Thread role.
+        uint8_t                  mDeviceMode;          ///< Device mode setting.
+        uint16_t                 mRloc16;              ///< RLOC16
+        uint32_t                 mKeySequence;         ///< Key Sequence
+        uint32_t                 mMleFrameCounter;     ///< MLE Frame Counter
+        uint32_t                 mMacFrameCounter;     ///< MAC Frame Counter
+        uint32_t                 mPreviousPartitionId; ///< PartitionId
+        Mac::ExtAddress          mExtAddress;          ///< Extended Address
+        Ip6::InterfaceIdentifier mMlIid;               ///< IID from ML-EID
+        uint16_t                 mVersion;             ///< Version
     } OT_TOOL_PACKED_END;
 
     /**

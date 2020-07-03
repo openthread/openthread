@@ -200,9 +200,8 @@ private:
         Mac::ShortAddress GetRloc16(void) const { return mRloc16; }
         void              SetRloc16(Mac::ShortAddress aRloc16) { mRloc16 = aRloc16; }
 
-        const uint8_t *GetMeshLocalIid(void) const { return mInfo.mCached.mMeshLocalIid; }
-        bool           HasMeshLocalIid(const uint8_t *aIid) const;
-        void           SetMeshLocalIid(const uint8_t *aIid);
+        const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mInfo.mCached.mMeshLocalIid; }
+        void SetMeshLocalIid(const Ip6::InterfaceIdentifier &aIid) { mInfo.mCached.mMeshLocalIid = aIid; }
 
         uint32_t GetLastTransactionTime(void) const { return mInfo.mCached.mLastTransactionTime; }
         void     SetLastTransactionTime(uint32_t aTime) { mInfo.mCached.mLastTransactionTime = aTime; }
@@ -236,8 +235,8 @@ private:
         {
             struct
             {
-                uint32_t mLastTransactionTime;
-                uint8_t  mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize];
+                uint32_t                 mLastTransactionTime;
+                Ip6::InterfaceIdentifier mMeshLocalIid;
             } mCached;
 
             struct
@@ -278,11 +277,13 @@ private:
     void        RemoveCacheEntry(CacheEntry &aEntry, CacheEntryList &aList, CacheEntry *aPrevEntry, Reason aReason);
 
     otError SendAddressQuery(const Ip6::Address &aEid);
-    void SendAddressError(const Ip6::Address &aTarget, const uint8_t *aMeshLocalIid, const Ip6::Address *aDestination);
-    void SendAddressQueryResponse(const Ip6::Address &aTarget,
-                                  const uint8_t *     aMeshLocalIid,
-                                  const uint32_t *    aLastTransactionTimeTlv,
-                                  const Ip6::Address &aDestination);
+    void    SendAddressError(const Ip6::Address &            aTarget,
+                             const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                             const Ip6::Address *            aDestination);
+    void    SendAddressQueryResponse(const Ip6::Address &            aTarget,
+                                     const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                     const uint32_t *                aLastTransactionTimeTlv,
+                                     const Ip6::Address &            aDestination);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 

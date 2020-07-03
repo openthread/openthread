@@ -57,12 +57,9 @@ void SettingsBase::LogNetworkInfo(const char *aAction, const NetworkInfo &aNetwo
         Mle::Mle::RoleToString(static_cast<Mle::DeviceRole>(aNetworkInfo.GetRole())), aNetworkInfo.GetDeviceMode(),
         aNetworkInfo.GetVersion(), aNetworkInfo.GetKeySequence());
 
-    otLogInfoCore(
-        "Non-volatile: ... pid:0x%x, mlecntr:0x%x, maccntr:0x%x, mliid:%02x%02x%02x%02x%02x%02x%02x%02x}",
-        aNetworkInfo.GetPreviousPartitionId(), aNetworkInfo.GetMleFrameCounter(), aNetworkInfo.GetMacFrameCounter(),
-        aNetworkInfo.GetMeshLocalIid()[0], aNetworkInfo.GetMeshLocalIid()[1], aNetworkInfo.GetMeshLocalIid()[2],
-        aNetworkInfo.GetMeshLocalIid()[3], aNetworkInfo.GetMeshLocalIid()[4], aNetworkInfo.GetMeshLocalIid()[5],
-        aNetworkInfo.GetMeshLocalIid()[6], aNetworkInfo.GetMeshLocalIid()[7]);
+    otLogInfoCore("Non-volatile: ... pid:0x%x, mlecntr:0x%x, maccntr:0x%x, mliid:%s}",
+                  aNetworkInfo.GetPreviousPartitionId(), aNetworkInfo.GetMleFrameCounter(),
+                  aNetworkInfo.GetMacFrameCounter(), aNetworkInfo.GetMeshLocalIid().ToString().AsCString());
 }
 
 void SettingsBase::LogParentInfo(const char *aAction, const ParentInfo &aParentInfo) const

@@ -1037,8 +1037,8 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
     if (mIsReceiveIp6FilterEnabled)
     {
         // do not pass messages sent to an RLOC/ALOC, except Service Locator
-        VerifyOrExit(!aMessageInfo.GetSockAddr().IsIidLocator() ||
-                         aMessageInfo.GetSockAddr().IsIidAnycastServiceLocator(),
+        VerifyOrExit(!aMessageInfo.GetSockAddr().GetIid().IsLocator() ||
+                         aMessageInfo.GetSockAddr().GetIid().IsAnycastServiceLocator(),
                      error = OT_ERROR_NO_ROUTE);
 
         switch (aIpProto)
@@ -1374,7 +1374,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
         uint8_t        candidatePrefixMatched;
         uint8_t        overrideScope;
 
-        if (candidateAddr->IsIidAnycastLocator())
+        if (candidateAddr->GetIid().IsAnycastLocator())
         {
             // Don't use anycast address as source address.
             continue;
@@ -1444,7 +1444,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             rvalPrefixMatched = candidatePrefixMatched;
         }
         else if ((candidatePrefixMatched == rvalPrefixMatched) &&
-                 (destination->IsIidRoutingLocator() == candidateAddr->IsIidRoutingLocator()))
+                 (destination->GetIid().IsRoutingLocator() == candidateAddr->GetIid().IsRoutingLocator()))
         {
             // Additional rule: Prefer RLOC source for RLOC destination, EID source for anything else
             rvalAddr          = addr;

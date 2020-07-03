@@ -279,7 +279,8 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
     result.mChannel = linkInfo->mChannel;
     result.mRssi    = linkInfo->mRss;
     result.mLqi     = linkInfo->mLqi;
-    aMessageInfo.GetPeerAddr().ToExtAddress(*static_cast<Mac::ExtAddress *>(&result.mExtAddress));
+
+    aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(static_cast<Mac::ExtAddress &>(result.mExtAddress));
 
     // Process MeshCoP TLVs
     while (offset < end)

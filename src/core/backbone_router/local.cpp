@@ -67,7 +67,7 @@ Local::Local(Instance &aInstance)
     mBackboneRouterPrimaryAloc.mValid              = true;
     mBackboneRouterPrimaryAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
     mBackboneRouterPrimaryAloc.mScopeOverrideValid = true;
-    mBackboneRouterPrimaryAloc.GetAddress().SetLocator(Mle::kAloc16BackboneRouterPrimary);
+    mBackboneRouterPrimaryAloc.GetAddress().GetIid().SetLocator(Mle::kAloc16BackboneRouterPrimary);
 
     // All Network Backbone Routers Multicast Address.
     mAllNetworkBackboneRouters.Clear();
