@@ -59,9 +59,7 @@
 #include "fem-control.h"
 #endif
 
-#define USE_EFR32_LOG                                                                   \
-    ((OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
-     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL))
+#define USE_EFR32_LOG (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 
 void halInitChipSpecific(void);
 
@@ -87,7 +85,6 @@ void otSysInit(int argc, char *argv[])
     CHIP_Init();
     halInitChipSpecific();
     BSP_Init(BSP_INIT_BCC);
-    RAIL_ConfigMultiTimer(true);
 
     CMU_ClockSelectSet(cmuClock_LFE, cmuSelect_LFRCO);
     CMU_ClockEnable(cmuClock_CORELE, true);

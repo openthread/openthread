@@ -35,8 +35,8 @@
 
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x00004000, LENGTH = 0x40000-0x4000
-  RAM (rwx)  : ORIGIN = 0x20000000, LENGTH = 32768 - 1024
+  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0x00040000
+  RAM (rwx)  : ORIGIN = 0x20000002, LENGTH = 32K
 }
 
 /* Linker script to place sections and symbol values. Should be used together
@@ -82,7 +82,6 @@ SECTIONS
     __Vectors_End = .;
     __Vectors_Size = __Vectors_End - __Vectors;
     __end__ = .;
-    KEEP(*(.application_properties))
 
     *(.text*)
 

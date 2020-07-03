@@ -32,62 +32,18 @@
  *
  */
 
-#include <openthread-core-config.h>
-#include <openthread/config.h>
-
-#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
 
-#include <openthread/cli.h>
-#include <openthread/platform/alarm-milli.h>
 #include <openthread/config.h>
-#include <openthread/platform/diag.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
-#include <openthread/platform/toolchain.h>
 
 #include "platform-efr32.h"
-#include <common/logging.hpp>
-#include <utils/code_utils.h>
-#include "btl_interface.h"
-#include "rail.h"
-#include "rail_config.h"
-#include "rail_types.h"
-#include "retargetserial.h"
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-
-struct PlatformDiagCommand
-{
-    const char *mName;
-    otError (*mCommand)(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-};
-
-struct PlatformDiagMessage
-{
-    const char mMessageDescriptor[11];
-    uint8_t    mChannel;
-    int16_t    mID;
-    uint32_t   mCnt;
-};
-
-static otError parseLong(char *aArgs, long *aValue)
-{
-    char *endptr;
-    *aValue = strtol(aArgs, &endptr, 0);
-    return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
-}
-
-static void appendErrorResult(otError aError, char *aOutput, size_t aOutputMaxLen)
-{
-    if (aError != OT_ERROR_NONE)
-    {
-        snprintf(aOutput, aOutputMaxLen, "failed\r\nstatus %#x\r\n", aError);
-    }
-}
 
 /**
  * Diagnostics mode variables.
@@ -98,120 +54,6 @@ static bool sDiagMode = false;
 void otPlatDiagModeSet(bool aMode)
 {
     sDiagMode = aMode;
-}
-
-static void setTimer(RAIL_MultiTimer_t * timer,
-                     uint32_t time,
-                     RAIL_MultiTimerCallback_t cb)
-{
-  if (!RAIL_IsMultiTimerRunning(timer)) {
-    RAIL_SetMultiTimer(timer,
-                       time,
-                       RAIL_TIME_DELAY,
-                       cb,
-                       NULL);
-  }
-}
-
-static RAIL_MultiTimer_t bltimer;
-
-static void timerCb(RAIL_MultiTimer_t *tmr,
-                    RAIL_Time_t expectedTimeOfEvent,
-                    void *cbArg)
-{
-	bootloader_init();
-        bootloader_rebootAndInstall();
-}
-
-static otError processLaunchGeckoBootloader(otInstance *aInstance,
-                           uint8_t     aArgsLength,
-                           char *      aArgs[],
-                           char *      aOutput,
-                           size_t      aOutputMaxLen)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    otError error = OT_ERROR_NONE;
-
-    otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
-
-    if (aArgsLength == 0)
-    {
-         snprintf(aOutput, aOutputMaxLen, "Launched Bootloader\r\n");
-         setTimer(&bltimer, 250, &timerCb);
-    }
-    else
-    {
-        long value;
-
-        error = parseLong(aArgs[0], &value);
-        otEXPECT(error == OT_ERROR_NONE);
-        otEXPECT_ACTION(value >= 0, error = OT_ERROR_INVALID_ARGS);
-        snprintf(aOutput, aOutputMaxLen, "invalid command\r\n");
-    }
-
-exit:
-    appendErrorResult(error, aOutput, aOutputMaxLen);
-    return error;
-}
-
-static otError processEeroVersion(otInstance *aInstance,
-                           uint8_t     aArgsLength,
-                           char *      aArgs[],
-                           char *      aOutput,
-                           size_t      aOutputMaxLen)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    otError error = OT_ERROR_NONE;
-
-    otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
-
-    if (aArgsLength == 0)
-    {
-        snprintf(aOutput, aOutputMaxLen, "5.0.0.1\r\n");
-    }
-    else
-    {
-        long value;
-
-        error = parseLong(aArgs[0], &value);
-        otEXPECT(error == OT_ERROR_NONE);
-        otEXPECT_ACTION(value >= 0, error = OT_ERROR_INVALID_ARGS);
-        snprintf(aOutput, aOutputMaxLen, "invalid command\r\n");
-    }
-
-exit:
-    appendErrorResult(error, aOutput, aOutputMaxLen);
-    return error;
-}
-
-
-const struct PlatformDiagCommand sCommands[] = {
-    {"launchbootloader", &processLaunchGeckoBootloader},
-    {"eeroversion", &processEeroVersion},
-};
-
-otError otPlatDiagProcess(otInstance *aInstance,
-                          uint8_t     aArgsLength,
-                          char *      aArgs[],
-                          char *      aOutput,
-                          size_t      aOutputMaxLen)
-{
-    otError error = OT_ERROR_INVALID_COMMAND;
-    size_t  i;
-
-    for (i = 0; i < otARRAY_LENGTH(sCommands); i++)
-    {
-        if (strcmp(aArgs[0], sCommands[i].mName) == 0)
-        {
-            error = sCommands[i].mCommand(aInstance, aArgsLength - 1, aArgsLength > 1 ? &aArgs[1] : NULL, aOutput,
-                                          aOutputMaxLen);
-            break;
-        }
-    }
-
-    return error;
 }
 
 bool otPlatDiagModeGet()
