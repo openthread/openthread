@@ -94,6 +94,7 @@ private:
 class UdpSocket : public otUdpSocket, public InstanceLocator, public LinkedListEntry<UdpSocket>
 {
     friend class Udp;
+    friend class LinkedList<UdpSocket>;
 
 public:
     /**
@@ -189,6 +190,14 @@ public:
     SockAddr &GetSockName(void) { return *static_cast<SockAddr *>(&mSockName); }
 
     /**
+     * This method returns the local socket address.
+     *
+     * @returns A reference to the local socket address.
+     *
+     */
+    const SockAddr &GetSockName(void) const { return *static_cast<const SockAddr *>(&mSockName); }
+
+    /**
      * This method returns the peer's socket address.
      *
      * @returns A reference to the peer's socket address.
@@ -196,7 +205,17 @@ public:
      */
     SockAddr &GetPeerName(void) { return *static_cast<SockAddr *>(&mPeerName); }
 
+    /**
+     * This method returns the peer's socket address.
+     *
+     * @returns A reference to the peer's socket address.
+     *
+     */
+    const SockAddr &GetPeerName(void) const { return *static_cast<const SockAddr *>(&mPeerName); }
+
 private:
+    bool Matches(const MessageInfo &aMessageInfo) const;
+
     void HandleUdpReceive(Message &aMessage, const MessageInfo &aMessageInfo)
     {
         mHandler(mContext, &aMessage, &aMessageInfo);

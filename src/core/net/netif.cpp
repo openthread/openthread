@@ -100,18 +100,9 @@ Netif::Netif(Instance &aInstance)
 
 bool Netif::IsMulticastSubscribed(const Address &aAddress) const
 {
-    bool rval = false;
+    const NetifMulticastAddress *prev;
 
-    for (const NetifMulticastAddress *cur = mMulticastAddresses.GetHead(); cur; cur = cur->GetNext())
-    {
-        if (cur->GetAddress() == aAddress)
-        {
-            ExitNow(rval = true);
-        }
-    }
-
-exit:
-    return rval;
+    return mMulticastAddresses.FindMatching(aAddress, prev) != nullptr;
 }
 
 void Netif::SubscribeAllNodesMulticast(void)
@@ -363,22 +354,14 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
 {
     otError                error = OT_ERROR_NONE;
     NetifMulticastAddress *entry;
-    NetifMulticastAddress *last = nullptr;
+    NetifMulticastAddress *prev;
 
-    for (entry = mMulticastAddresses.GetHead(); entry; entry = entry->GetNext())
-    {
-        if (entry->GetAddress() == aAddress)
-        {
-            VerifyOrExit(IsMulticastAddressExternal(*entry), error = OT_ERROR_INVALID_ARGS);
-
-            mMulticastAddresses.PopAfter(last);
-            break;
-        }
-
-        last = entry;
-    }
-
+    entry = mMulticastAddresses.FindMatching(aAddress, prev);
     VerifyOrExit(entry != nullptr, error = OT_ERROR_NOT_FOUND);
+
+    VerifyOrExit(IsMulticastAddressExternal(*entry), error = OT_ERROR_INVALID_ARGS);
+
+    mMulticastAddresses.PopAfter(prev);
 
     entry->MarkAsNotInUse();
 
@@ -433,20 +416,21 @@ exit:
 
 otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError              error = OT_ERROR_NONE;
+    NetifUnicastAddress *existingEntry;
+    NetifUnicastAddress *prev;
 
-    for (NetifUnicastAddress *entry = mUnicastAddresses.GetHead(); entry; entry = entry->GetNext())
+    existingEntry = mUnicastAddresses.FindMatching(aAddress.GetAddress(), prev);
+
+    if (existingEntry != nullptr)
     {
-        if (entry->GetAddress() == aAddress.GetAddress())
-        {
-            VerifyOrExit(IsUnicastAddressExternal(*entry), error = OT_ERROR_ALREADY);
+        VerifyOrExit(IsUnicastAddressExternal(*existingEntry), error = OT_ERROR_ALREADY);
 
-            entry->mPrefixLength  = aAddress.mPrefixLength;
-            entry->mAddressOrigin = aAddress.mAddressOrigin;
-            entry->mPreferred     = aAddress.mPreferred;
-            entry->mValid         = aAddress.mValid;
-            ExitNow();
-        }
+        existingEntry->mPrefixLength  = aAddress.mPrefixLength;
+        existingEntry->mAddressOrigin = aAddress.mAddressOrigin;
+        existingEntry->mPreferred     = aAddress.mPreferred;
+        existingEntry->mValid         = aAddress.mValid;
+        ExitNow();
     }
 
     VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
@@ -472,25 +456,16 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
 {
     otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
-    NetifUnicastAddress *last = nullptr;
+    NetifUnicastAddress *prev;
 
-    for (entry = mUnicastAddresses.GetHead(); entry; entry = entry->GetNext())
-    {
-        if (entry->GetAddress() == aAddress)
-        {
-            VerifyOrExit(IsUnicastAddressExternal(*entry), error = OT_ERROR_INVALID_ARGS);
-
-            mUnicastAddresses.PopAfter(last);
-            break;
-        }
-
-        last = entry;
-    }
-
+    entry = mUnicastAddresses.FindMatching(aAddress, prev);
     VerifyOrExit(entry != nullptr, error = OT_ERROR_NOT_FOUND);
 
-    entry->MarkAsNotInUse();
+    VerifyOrExit(IsUnicastAddressExternal(*entry), error = OT_ERROR_INVALID_ARGS);
 
+    mUnicastAddresses.PopAfter(prev);
+
+    entry->MarkAsNotInUse();
     Get<Notifier>().Signal(kEventIp6AddressRemoved);
 
 exit:
@@ -510,18 +485,9 @@ void Netif::RemoveAllExternalUnicastAddresses(void)
 
 bool Netif::HasUnicastAddress(const Address &aAddress) const
 {
-    bool rval = false;
+    const NetifUnicastAddress *prev;
 
-    for (const NetifUnicastAddress *cur = mUnicastAddresses.GetHead(); cur; cur = cur->GetNext())
-    {
-        if (cur->GetAddress() == aAddress)
-        {
-            ExitNow(rval = true);
-        }
-    }
-
-exit:
-    return rval;
+    return mUnicastAddresses.FindMatching(aAddress, prev) != nullptr;
 }
 
 } // namespace Ip6
