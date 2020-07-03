@@ -227,7 +227,7 @@ jobs:
         sudo cmake --install build
     - name: Run
       run: |
-        export OPENTHREAD="$(pwd)"
+        export OT_COMM_OPENTHREAD="$(pwd)"
         cd /tmp/ot-commissioner/tests/integration
         ./bootstrap.sh
         ./run_tests.sh
