@@ -56,6 +56,7 @@
 
 #include <nrf.h>
 #include <nrf_802154.h>
+#include <nrf_802154_critical_section.h>
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
@@ -205,18 +206,18 @@ static inline void clearPendingEvents(void)
 }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-static void txAckProcessSecurity(uint8_t *p_ack_frame)
+static void txAckProcessSecurity(uint8_t *aAckFrame)
 {
     otRadioFrame     ackFrame;
     struct otMacKey *key = NULL;
     uint8_t          keyId;
 
     sAckedWithSecEnhAck = false;
-    otEXPECT(p_ack_frame[SECURITY_ENABLED_OFFSET] & SECURITY_ENABLED_BIT);
+    otEXPECT(aAckFrame[SECURITY_ENABLED_OFFSET] & SECURITY_ENABLED_BIT);
 
     memset(&ackFrame, 0, sizeof(ackFrame));
-    ackFrame.mPsdu   = &p_ack_frame[1];
-    ackFrame.mLength = p_ack_frame[0];
+    ackFrame.mPsdu   = &aAckFrame[1];
+    ackFrame.mLength = aAckFrame[0];
 
     keyId = otMacFrameGetKeyId(&ackFrame);
 
@@ -493,11 +494,10 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 
     return (otRadioCaps)(OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF |
-                         OT_RADIO_CAPS_SLEEP_TO_TX
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-                         | OT_RADIO_CAPS_TRANSMIT_SEC
+                         OT_RADIO_CAPS_TRANSMIT_SEC |
 #endif
-    );
+                         OT_RADIO_CAPS_SLEEP_TO_TX);
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -1090,10 +1090,14 @@ void otPlatRadioSetMacKey(otInstance *    aInstance,
 
     assert(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
 
-    sKeyId = aKeyId;
-    memcpy(sPrevKey.m8, aPrevKey->m8, OT_MAC_KEY_SIZE);
-    memcpy(sCurrKey.m8, aCurrKey->m8, OT_MAC_KEY_SIZE);
-    memcpy(sNextKey.m8, aNextKey->m8, OT_MAC_KEY_SIZE);
+    if (nrf_802154_critical_section_enter())
+    {
+        sKeyId = aKeyId;
+        memcpy(sPrevKey.m8, aPrevKey->m8, OT_MAC_KEY_SIZE);
+        memcpy(sCurrKey.m8, aCurrKey->m8, OT_MAC_KEY_SIZE);
+        memcpy(sNextKey.m8, aNextKey->m8, OT_MAC_KEY_SIZE);
+        nrf_802154_critical_section_exit();
+    }
 }
 
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
