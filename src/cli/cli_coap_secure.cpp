@@ -51,7 +51,8 @@ const struct CoapSecure::Command CoapSecure::sCommands[] = {
     {"delete", &CoapSecure::ProcessRequest}, {"disconnect", &CoapSecure::ProcessDisconnect},
     {"get", &CoapSecure::ProcessRequest},    {"post", &CoapSecure::ProcessRequest},
     {"put", &CoapSecure::ProcessRequest},    {"resource", &CoapSecure::ProcessResource},
-    {"start", &CoapSecure::ProcessStart},    {"stop", &CoapSecure::ProcessStop},
+    {"set", &CoapSecure::ProcessSet},        {"start", &CoapSecure::ProcessStart},
+    {"stop", &CoapSecure::ProcessStop},
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     {"psk", &CoapSecure::ProcessPsk},
 #endif
@@ -70,6 +71,8 @@ CoapSecure::CoapSecure(Interpreter &aInterpreter)
     memset(&mResource, 0, sizeof(mResource));
     memset(&mPsk, 0, sizeof(mPsk));
     memset(&mPskId, 0, sizeof(mPskId));
+    strncpy(mResourceContent, "0", sizeof(mResourceContent));
+    mResourceContent[sizeof(mResourceContent) - 1] = '\0';
 }
 
 void CoapSecure::PrintPayload(otMessage *aMessage) const
@@ -129,6 +132,25 @@ otError CoapSecure::ProcessResource(uint8_t aArgsLength, char *aArgs[])
     else
     {
         mInterpreter.mServer->OutputFormat("%s\r\n", mResource.mUriPath);
+    }
+
+exit:
+    return error;
+}
+
+otError CoapSecure::ProcessSet(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength > 1)
+    {
+        VerifyOrExit(strlen(aArgs[1]) < sizeof(mResourceContent), error = OT_ERROR_INVALID_ARGS);
+        strncpy(mResourceContent, aArgs[1], sizeof(mResourceContent));
+        mResourceContent[sizeof(mResourceContent) - 1] = '\0';
+    }
+    else
+    {
+        mInterpreter.mServer->OutputFormat("%s\r\n", mResourceContent);
     }
 
 exit:
@@ -447,10 +469,9 @@ void CoapSecure::HandleRequest(void *aContext, otMessage *aMessage, const otMess
 
 void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    otError    error             = OT_ERROR_NONE;
-    otMessage *responseMessage   = nullptr;
-    otCoapCode responseCode      = OT_COAP_CODE_EMPTY;
-    char       responseContent[] = "helloWorld";
+    otError    error           = OT_ERROR_NONE;
+    otMessage *responseMessage = nullptr;
+    otCoapCode responseCode    = OT_COAP_CODE_EMPTY;
 
     mInterpreter.mServer->OutputFormat("coaps request from ");
     mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
@@ -506,7 +527,8 @@ void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessag
 
         if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
         {
-            SuccessOrExit(error = otMessageAppend(responseMessage, &responseContent, sizeof(responseContent)));
+            SuccessOrExit(error = otMessageAppend(responseMessage, &mResourceContent,
+                                                  static_cast<uint16_t>(strlen(mResourceContent))));
         }
 
         SuccessOrExit(error = otCoapSecureSendResponse(mInterpreter.mInstance, responseMessage, aMessageInfo));

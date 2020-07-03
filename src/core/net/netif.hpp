@@ -71,6 +71,7 @@ class NetifUnicastAddress : public otNetifAddress,
                             public Clearable<NetifUnicastAddress>
 {
     friend class Netif;
+    friend class LinkedList<NetifUnicastAddress>;
 
 public:
     /**
@@ -101,6 +102,8 @@ public:
     }
 
 private:
+    bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
+
     // In an unused/available entry (i.e., entry not present in a linked
     // list), the next pointer is set to point back to the entry itself.
     bool IsInUse(void) const { return GetNext() != this; }
@@ -116,6 +119,7 @@ class NetifMulticastAddress : public otNetifMulticastAddress,
                               public Clearable<NetifMulticastAddress>
 {
     friend class Netif;
+    friend class LinkedList<NetifMulticastAddress>;
 
 public:
     /**
@@ -154,6 +158,8 @@ public:
     }
 
 private:
+    bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
+
     // In an unused/available entry (i.e., entry not present in a linked
     // list), the next pointer is set to point back to the entry itself.
     bool IsInUse(void) const { return GetNext() != this; }
