@@ -55,11 +55,11 @@ Filter::Filter(void)
 
 bool Filter::Accept(Message &aMessage) const
 {
-    bool      rval = false;
-    Header    ip6;
-    UdpHeader udp;
-    TcpHeader tcp;
-    uint16_t  dstport;
+    bool        rval = false;
+    Header      ip6;
+    Udp::Header udp;
+    Tcp::Header tcp;
+    uint16_t    dstport;
 
     // Allow all received IPv6 datagrams with link security enabled
     if (aMessage.IsLinkSecurityEnabled())

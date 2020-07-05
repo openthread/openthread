@@ -947,19 +947,19 @@ void AddressResolver::HandleIcmpReceive(void *               aContext,
 
     static_cast<AddressResolver *>(aContext)->HandleIcmpReceive(*static_cast<Message *>(aMessage),
                                                                 *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                                *static_cast<const Ip6::IcmpHeader *>(aIcmpHeader));
+                                                                *static_cast<const Ip6::Icmp::Header *>(aIcmpHeader));
 }
 
-void AddressResolver::HandleIcmpReceive(Message &               aMessage,
-                                        const Ip6::MessageInfo &aMessageInfo,
-                                        const Ip6::IcmpHeader & aIcmpHeader)
+void AddressResolver::HandleIcmpReceive(Message &                aMessage,
+                                        const Ip6::MessageInfo & aMessageInfo,
+                                        const Ip6::Icmp::Header &aIcmpHeader)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     Ip6::Header ip6Header;
 
-    VerifyOrExit(aIcmpHeader.GetType() == Ip6::IcmpHeader::kTypeDstUnreach, OT_NOOP);
-    VerifyOrExit(aIcmpHeader.GetCode() == Ip6::IcmpHeader::kCodeDstUnreachNoRoute, OT_NOOP);
+    VerifyOrExit(aIcmpHeader.GetType() == Ip6::Icmp::Header::kTypeDstUnreach, OT_NOOP);
+    VerifyOrExit(aIcmpHeader.GetCode() == Ip6::Icmp::Header::kCodeDstUnreachNoRoute, OT_NOOP);
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header), OT_NOOP);
 
     Remove(ip6Header.GetDestination(), kReasonReceivedIcmpDstUnreachNoRoute);

@@ -299,7 +299,9 @@ private:
                                   otMessage *          aMessage,
                                   const otMessageInfo *aMessageInfo,
                                   const otIcmp6Header *aIcmpHeader);
-    void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Ip6::IcmpHeader &aIcmpHeader);
+    void        HandleIcmpReceive(Message &                aMessage,
+                                  const Ip6::MessageInfo & aMessageInfo,
+                                  const Ip6::Icmp::Header &aIcmpHeader);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
@@ -324,8 +326,8 @@ private:
     CacheEntryList mQueryRetryList;
     CacheEntryList mUnusedList;
 
-    Ip6::IcmpHandler mIcmpHandler;
-    TimerMilli       mTimer;
+    Ip6::Icmp::Handler mIcmpHandler;
+    TimerMilli         mTimer;
 };
 
 /**

@@ -151,7 +151,7 @@ private:
     static bool HandleTrickleTimer(TrickleTimer &aTrickleTimer);
     bool        HandleTrickleTimer(void);
 
-    Ip6::UdpSocket mSocket;
+    Ip6::Udp::Socket mSocket;
 
     TrickleTimer mTrickleTimer;
 

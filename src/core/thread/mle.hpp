@@ -1741,8 +1741,8 @@ private:
 
     Challenge mParentCandidateChallenge;
 
-    Ip6::UdpSocket mSocket;
-    uint32_t       mTimeout;
+    Ip6::Udp::Socket mSocket;
+    uint32_t         mTimeout;
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     uint16_t mPreviousParentRloc;
