@@ -27,27 +27,30 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-spawn $env(OT_COMMAND) 1
-set timeout 1
-expect_after {
-    timeout { exit 1 }
-}
+source "tests/scripts/expect/_common.exp"
+
+set spawn_id [spawn_node 1]
+set timeout 3
+
 send "pskc 00112233445566778899aabbccddeeff\n"
-expect "Done\r\n"
+expect "Done"
 send "pskc\n"
-expect "00112233445566778899aabbccddeeff\r\nDone\r\n"
+expect "00112233445566778899aabbccddeeff"
+expect "Done"
 send "factoryreset\n"
 sleep 0.1
 send "networkname Test\\ Network\n"
-expect "Done\r\n"
+expect "Done"
 send "extpanid 0001020304050607\n"
-expect "Done\r\n"
+expect "Done"
 send "pskc -p 12SECRETPASSWORD34\n"
-expect "Done\r\n"
+expect "Done"
 send "pskc\n"
-expect "c3f59368445a1b6106be420a706d4cc9\r\nDone\r\n"
+expect "c3f59368445a1b6106be420a706d4cc9"
+expect "Done"
 send "factoryreset\n"
 sleep 0.1
 send "pskc -x\n"
-expect "Error 7: InvalidArgs\r\n"
-send_user "\r\n"
+expect "Error 7: InvalidArgs"
+
+dispose

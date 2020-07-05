@@ -3112,15 +3112,22 @@ enum
     SPINEL_PROP_MESHCOP_COMMISSIONER_STATE = SPINEL_PROP_MESHCOP__BEGIN + 2,
 
     // Thread Commissioner Joiners
-    /** Format `A(t(E)UL)` - insert or remove only
+    /** Format `A(t(t(E|CX)UL))` - get, insert or remove.
      *
      * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
      *
-     * Data per item is:
+     * Data per array entry is:
      *
-     *  `t(E)` | `t()`: Joiner EUI64. Empty struct indicates any Joiner
-     *  `L`           : Timeout (in seconds) after which the Joiner is automatically removed
-     *  `U`           : PSKd
+     *  `t()` | `t(E)` | `t(CX)` : Joiner info struct (formatting varies).
+     *
+     *   -  `t()` or empty struct indicates any joiner.
+     *   -  `t(E)` specifies the Joiner EUI-64.
+     *   -  `t(CX) specifies Joiner Discerner, `C` is Discerner length (in bits), and `X` is Discerner value.
+     *
+     * The struct is followed by:
+     *
+     *  `L` : Timeout after which to remove Joiner (when written should be in seconds, when read is in milliseconds)
+     *  `U` : PSKd
      *
      * For CMD_PROP_VALUE_REMOVE the timeout and PSKd are optional.
      *
@@ -3142,6 +3149,32 @@ enum
      *
      */
     SPINEL_PROP_MESHCOP_COMMISSIONER_SESSION_ID = SPINEL_PROP_MESHCOP__BEGIN + 5,
+
+    /// Thread Joiner Discerner
+    /** Format `CX`  - Read-write
+     *
+     * Required capability: SPINEL_CAP_THREAD_JOINER
+     *
+     * This property represents a Joiner Discerner.
+     *
+     * The Joiner Discerner is used to calculate the Joiner ID used during commissioning/joining process.
+     *
+     * By default (when a discerner is not provided or cleared), Joiner ID is derived as first 64 bits of the result
+     * of computing SHA-256 over factory-assigned IEEE EUI-64. Note that this is the main behavior expected by Thread
+     * specification.
+     *
+     * Format:
+     *
+     *   'C' : The Joiner Discerner bit length (number of bits).
+     *   `X` : The Joiner Discerner value (64-bit unsigned)  - Only present/applicable when length is non-zero.
+     *
+     * When writing to this property, the length can be set to zero to clear any previously set Joiner Discerner value.
+     *
+     * When reading this property if there is no currently set Joiner Discerner, zero is returned as the length (with
+     * no value field).
+     *
+     */
+    SPINEL_PROP_MESHCOP_JOINER_DISCERNER = SPINEL_PROP_MESHCOP__BEGIN + 6,
 
     SPINEL_PROP_MESHCOP__END = 0x90,
 

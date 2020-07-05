@@ -51,7 +51,7 @@ Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEventsToSignal()
     , mSignaledEvents()
-    , mTask(aInstance, &Notifier::EmitEvents, this)
+    , mTask(aInstance, Notifier::EmitEvents, this)
     , mReceivers()
 {
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)

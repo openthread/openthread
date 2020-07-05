@@ -60,6 +60,12 @@ LDADD_COMMON                                                           = \
     -lutil                                                               \
     $(NULL)
 
+if OPENTHREAD_TARGET_LINUX
+LDADD_COMMON                                                          += \
+    -lrt                                                                 \
+    $(NULL)
+endif
+
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 LDADD_COMMON                                                          += \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \

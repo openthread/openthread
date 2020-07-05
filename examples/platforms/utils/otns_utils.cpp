@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -25,50 +25,25 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+#include <openthread-core-config.h>
+#include <openthread/config.h>
 
-/**
- * @file
- *   This file includes macros for static assert for C++03.
+#include <openthread/platform/otns.h>
+#include <openthread/platform/toolchain.h>
+
+#include "common/logging.hpp"
+
+/*
+ * Implementation note:
+ *   These are all "weak" so that a platform may if it chooses to override the instance.
  */
 
-#ifndef OPENTHREAD_STATIC_ASSERT_HPP_
-#define OPENTHREAD_STATIC_ASSERT_HPP_
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
 
-#ifdef __cplusplus
-
-/**
- * Some compilers such as Keil MDK-ARM does not support __COUNTER__ macro.
- */
-#ifndef __COUNTER__
-#define __COUNTER__ __LINE__
-#endif
-
-namespace ot {
-
-template <int> struct StaticAssertError;
-template <> struct StaticAssertError<true>
+OT_TOOL_WEAK
+void otPlatOtnsStatus(const char *aStatus)
 {
-    StaticAssertError(...);
-};
+    otLogOtns("[OTNS] %s", aStatus);
+}
 
-} // namespace ot
-
-#define __OT_STATIC_ASSERT_ERROR(aError, aLine) aError##aLine
-#define _OT_STATIC_ASSERT_ERROR(aLine) __OT_STATIC_ASSERT_ERROR(StaticAssertError, aLine)
-
-/**
- * This macro does static assert.
- *
- * @param[in]   aExpression An expression to assert.
- * @param[in]   aMessage    A message to describe what is wrong when @p aExpression is false.
- *
- */
-#define OT_STATIC_ASSERT(aExpression, aMessage)                                                             \
-    enum                                                                                                    \
-    {                                                                                                       \
-        _OT_STATIC_ASSERT_ERROR(__COUNTER__) = sizeof(ot::StaticAssertError<(aExpression) != 0>(aMessage)), \
-    }
-
-#endif // __cplusplus
-
-#endif // OPENTHREAD_STATIC_ASSERT_HPP_
+#endif // OPENTHREAD_CONFIG_OTNS_ENABLE

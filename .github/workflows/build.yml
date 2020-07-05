@@ -153,12 +153,32 @@ jobs:
         script/check-simulation-build
         script/check-posix-build
 
+  clang:
+    name: clang-${{ matrix.clang_ver }}
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        clang_ver: ["6.0", "7", "8", "9"]
+    env:
+      CC: clang-${{ matrix.clang_ver }}
+      CXX: clang++-${{ matrix.clang_ver }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bootstrap
+        run: |
+          sudo apt-get update
+          sudo apt-get --no-install-recommends install -y clang-${{ matrix.clang_ver }} clang++-${{ matrix.clang_ver }} ninja-build libreadline-dev libncurses-dev
+      - name: Build
+        run: |
+          script/check-simulation-build
+          script/check-posix-build
+
   clang-m32:
     name: clang-m32-${{ matrix.clang_ver }}
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        clang_ver: [9]
+        clang_ver: ["6.0", "7", "8", "9"]
     env:
       CC: clang-${{ matrix.clang_ver }}
       CXX: clang++-${{ matrix.clang_ver }}
@@ -175,6 +195,7 @@ jobs:
           sudo apt-get --no-install-recommends install -y libreadline-dev:i386 libncurses-dev:i386
       - name: Build
         run: |
+          script/check-simulation-build
           script/check-posix-build
 
   gn:

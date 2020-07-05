@@ -462,7 +462,6 @@ HEADERS_COMMON                             = \
     utils/otns.hpp                           \
     utils/parse_cmdline.hpp                  \
     utils/slaac_address.hpp                  \
-    utils/static_assert.hpp                  \
     $(NULL)
 
 noinst_HEADERS                             = \

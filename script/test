@@ -49,7 +49,7 @@ readonly VIRTUAL_TIME="${VIRTUAL_TIME:-1}"
 build_simulation()
 {
     local version="$1"
-    local options=("-DOT_THREAD_VERSION=${version}")
+    local options=("-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON")
 
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_DUA=ON")
@@ -82,7 +82,7 @@ build_simulation()
 build_posix()
 {
     local version="$1"
-    local options=("-DOT_THREAD_VERSION=${version}")
+    local options=("-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON")
 
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_DUA=ON")
@@ -204,40 +204,46 @@ do_expect()
 {
     local ot_command
     local rcp_command=
-    local test_pattern
+    local test_patterns
 
     if [[ ${NODE_MODE} == rcp ]]; then
         ot_command="${OT_CLI_PATH}"
         rcp_command="${RADIO_DEVICE}"
         if [[ ${OT_NATIVE_IP} == 1 ]]; then
-            test_pattern='tun-*.exp'
+            test_patterns=(-name 'tun-*.exp')
         else
-            test_pattern='posix-*.exp'
+            test_patterns=(-name 'posix-*.exp' -o -name 'cli-*.exp')
         fi
     else
         ot_command="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/cli/ot-cli-ftd"
-        test_pattern='cli-*.exp'
+        test_patterns=(-name 'cli-*.exp' -o -name 'simulation-*.exp')
     fi
 
+    local log_file="tmp/log_expect"
     while read -r script; do
         sudo rm -rf tmp
+        mkdir tmp
         {
             if [[ ${OT_NATIVE_IP} == 1 ]]; then
-                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" sudo -E "${script}"
+                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" sudo -E expect -df "${script}" 2>"${log_file}"
             else
-                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" "${script}"
+                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" expect -df "${script}" 2>"${log_file}"
             fi
         } || {
             local exit_code=$?
+            cat "${log_file}" >&2
             echo -e "${COLOR_FAIL}FAIL${COLOR_NONE} ${script}"
             exit "${exit_code}"
         }
+        if [[ ${VERBOSE} == 1 ]]; then
+            cat "${log_file}" >&2
+        fi
         echo -e "${COLOR_PASS}PASS${COLOR_NONE} ${script}"
     done < <(
         if [[ $# != 0 ]]; then
             for script in "$@"; do echo ${script}; done
         else
-            find tests/scripts/expect -type f -executable -name "${test_pattern}"
+            find tests/scripts/expect -type f -executable \( "${test_patterns[@]}" \)
         fi
     )
 
@@ -337,8 +343,11 @@ envsetup()
         export -n VERBOSE
     fi
 
-    read -r -a ot_extra_options_in <<<"${OT_OPTIONS-}"
-    ot_extra_options=${ot_extra_options_in:-()}
+    if [[ ${OT_OPTIONS+x} ]]; then
+        read -r -a ot_extra_options <<<"${OT_OPTIONS}"
+    else
+        ot_extra_options=()
+    fi
 }
 
 main()

@@ -66,7 +66,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mEnabled(false)
     , mTxPaused(false)
     , mSendBusy(false)
-    , mScheduleTransmissionTask(aInstance, ScheduleTransmissionTask, this)
+    , mScheduleTransmissionTask(aInstance, MeshForwarder::ScheduleTransmissionTask, this)
 #if OPENTHREAD_FTD
     , mIndirectSender(aInstance)
 #endif

@@ -42,7 +42,6 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
-#include "utils/static_assert.hpp"
 
 namespace ot {
 
@@ -639,8 +638,8 @@ private:
 
     const HelpData &GetHelpData(void) const
     {
-        OT_STATIC_ASSERT(sizeof(mBuffer.mHead.mMetadata) + sizeof(HelpData) + kHelpDataAlignment <= sizeof(mBuffer),
-                         "Insufficient buffer size for CoAP processing!");
+        static_assert(sizeof(mBuffer.mHead.mMetadata) + sizeof(HelpData) + kHelpDataAlignment <= sizeof(mBuffer),
+                      "Insufficient buffer size for CoAP processing!");
 
         return *static_cast<const HelpData *>(OT_ALIGN(mBuffer.mHead.mData, kHelpDataAlignment));
     }

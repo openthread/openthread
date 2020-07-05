@@ -853,28 +853,43 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ParseRadioFrame(otRadioF
     unsigned int   receiveError = 0;
     spinel_ssize_t unpacked;
 
-    unpacked = spinel_datatype_unpack_in_place(
-        aBuffer, aLength,
-        SPINEL_DATATYPE_DATA_WLEN_S                          // Frame
-                        SPINEL_DATATYPE_INT8_S               // RSSI
-                        SPINEL_DATATYPE_INT8_S               // Noise Floor
-                        SPINEL_DATATYPE_UINT16_S             // Flags
-                        SPINEL_DATATYPE_STRUCT_S(            // PHY-data
-                            SPINEL_DATATYPE_UINT8_S          // 802.15.4 channel
-                                    SPINEL_DATATYPE_UINT8_S  // 802.15.4 LQI
-                                    SPINEL_DATATYPE_UINT64_S // Timestamp (us).
-                            ) SPINEL_DATATYPE_STRUCT_S(      // Vendor-data
-                            SPINEL_DATATYPE_UINT_PACKED_S    // Receive error
-                            ) SPINEL_DATATYPE_STRUCT_S(      // MAC-data
-                            SPINEL_DATATYPE_UINT8_S          // Security key index
-                                SPINEL_DATATYPE_UINT32_S     // Security frame counter
-                            ),
-        aFrame.mPsdu, &size, &aFrame.mInfo.mRxInfo.mRssi, &noiseFloor, &flags, &aFrame.mChannel,
-        &aFrame.mInfo.mRxInfo.mLqi, &aFrame.mInfo.mRxInfo.mTimestamp, &receiveError, &aFrame.mInfo.mRxInfo.mAckKeyId,
-        &aFrame.mInfo.mRxInfo.mAckFrameCounter);
+    VerifyOrExit(aLength > 0, aFrame.mLength = 0);
+
+    unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength,
+                                               SPINEL_DATATYPE_DATA_WLEN_S                          // Frame
+                                                               SPINEL_DATATYPE_INT8_S               // RSSI
+                                                               SPINEL_DATATYPE_INT8_S               // Noise Floor
+                                                               SPINEL_DATATYPE_UINT16_S             // Flags
+                                                               SPINEL_DATATYPE_STRUCT_S(            // PHY-data
+                                                                   SPINEL_DATATYPE_UINT8_S          // 802.15.4 channel
+                                                                           SPINEL_DATATYPE_UINT8_S  // 802.15.4 LQI
+                                                                           SPINEL_DATATYPE_UINT64_S // Timestamp (us).
+                                                                   ) SPINEL_DATATYPE_STRUCT_S(      // Vendor-data
+                                                                   SPINEL_DATATYPE_UINT_PACKED_S    // Receive error
+                                                                   ),
+                                               aFrame.mPsdu, &size, &aFrame.mInfo.mRxInfo.mRssi, &noiseFloor, &flags,
+                                               &aFrame.mChannel, &aFrame.mInfo.mRxInfo.mLqi,
+                                               &aFrame.mInfo.mRxInfo.mTimestamp, &receiveError);
 
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
     aUnpacked = unpacked;
+
+    aBuffer += unpacked;
+    aLength -= static_cast<uint16_t>(unpacked);
+
+    if (mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC)
+    {
+        unpacked =
+            spinel_datatype_unpack_in_place(aBuffer, aLength,
+                                            SPINEL_DATATYPE_STRUCT_S(        // MAC-data
+                                                SPINEL_DATATYPE_UINT8_S      // Security key index
+                                                    SPINEL_DATATYPE_UINT32_S // Security frame counter
+                                                ),
+                                            &aFrame.mInfo.mRxInfo.mAckKeyId, &aFrame.mInfo.mRxInfo.mAckFrameCounter);
+
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        aUnpacked += unpacked;
+    }
 
     if (receiveError == OT_ERROR_NONE)
     {

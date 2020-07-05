@@ -31,13 +31,11 @@ source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
 
-set timeout 1
+set timeout 3
 
 
-spawn $env(OT_COMMAND) 1
-expect_after {
-    timeout { exit 1 }
-}
+set spawn_id [spawn_node 1]
+
 send "promiscuous\n"
 expect "Disabled"
 expect "Done"
@@ -50,6 +48,7 @@ send "promiscuous disable\n"
 expect "Done"
 send "promiscuous a\n"
 expect "Error 7: InvalidArgs"
+
 dispose
 
 
@@ -62,7 +61,7 @@ expect -re {(\d+)}
 set channel $expect_out(1,string)
 expect "Done"
 
-spawn $env(OT_COMMAND) 3
+set spawn_id [spawn_node 3]
 set spawn_3 $spawn_id
 send "channel $channel\n"
 expect "Done"

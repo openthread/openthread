@@ -27,6 +27,7 @@
  */
 
 #include <stdarg.h>
+#include <string.h>
 
 #include "test_platform.h"
 
@@ -45,28 +46,51 @@ struct EntryBase
 
 struct Entry : public EntryBase, ot::LinkedListEntry<Entry>
 {
+public:
+    Entry(const char *aName, uint16_t aId)
+        : mName(aName)
+        , mId(aId)
+    {
+    }
+
+    const char *GetName(void) const { return mName; }
+    uint16_t    GetId(void) const { return mId; }
+    bool        Matches(const char *aName) const { return strcmp(mName, aName) == 0; }
+    bool        Matches(uint16_t aId) const { return mId == aId; }
+
+private:
+    const char *mName;
+    uint16_t    mId;
 };
 
 // This function verifies the content of the linked list matches a given list of entries.
 void VerifyLinkedListContent(const ot::LinkedList<Entry> *aList, ...)
 {
-    va_list args;
-    Entry * argEntry;
-    Entry * argPrev = nullptr;
+    va_list      args;
+    Entry *      argEntry;
+    Entry *      argPrev = nullptr;
+    const Entry *prev;
+    uint16_t     unusedId = 100;
 
     va_start(args, aList);
 
     for (const Entry *entry = aList->GetHead(); entry; entry = entry->GetNext())
     {
-        Entry *prev;
-
         argEntry = va_arg(args, Entry *);
         VerifyOrQuit(argEntry != nullptr, "List contains more entries than expected");
         VerifyOrQuit(argEntry == entry, "List does not contain the same entry");
         VerifyOrQuit(aList->Contains(*argEntry), "List::Contains() failed");
+        VerifyOrQuit(aList->ContainsMatching(argEntry->GetName()), "List::ContainsMatching() failed");
+        VerifyOrQuit(aList->ContainsMatching(argEntry->GetId()), "List::ContainsMatching() failed");
 
         SuccessOrQuit(aList->Find(*argEntry, prev), "List::Find() failed");
         VerifyOrQuit(prev == argPrev, "List::Find() returned prev entry is incorrect");
+
+        VerifyOrQuit(aList->FindMatching(argEntry->GetName(), prev) == argEntry, "List::FindMatching() failed");
+        VerifyOrQuit(prev == argPrev, "List::FindMatching() returned prev entry is incorrect");
+
+        VerifyOrQuit(aList->FindMatching(argEntry->GetId(), prev) == argEntry, "List::FindMatching() failed");
+        VerifyOrQuit(prev == argPrev, "List::FindMatching() returned prev entry is incorrect");
 
         argPrev = argEntry;
     }
@@ -75,25 +99,37 @@ void VerifyLinkedListContent(const ot::LinkedList<Entry> *aList, ...)
     VerifyOrQuit(argEntry == nullptr, "List contains less entries than expected");
 
     VerifyOrQuit(aList->GetTail() == argPrev, "List::GetTail() failed");
+
+    VerifyOrQuit(!aList->ContainsMatching("none"), "List::ContainsMatching() succeeded for a missing entry");
+    VerifyOrQuit(!aList->ContainsMatching(unusedId), "List::ContainsMatching() succeeded for a missing entry");
+
+    VerifyOrQuit(aList->FindMatching("none", prev) == nullptr,
+                 "LinkedList::FindMatching() succeeded for a missing entry");
+    VerifyOrQuit(aList->FindMatching(unusedId, prev) == nullptr,
+                 "LinkedList::FindMatching() succeeded for a missing entry");
 }
 
 void TestLinkedList(void)
 {
-    Entry                 a, b, c, d, e;
+    Entry                 a("a", 1), b("b", 2), c("c", 3), d("d", 4), e("e", 5);
+    Entry *               prev;
     ot::LinkedList<Entry> list;
 
     VerifyOrQuit(list.IsEmpty(), "LinkedList::IsEmpty() failed after init");
     VerifyOrQuit(list.GetHead() == nullptr, "LinkedList::GetHead() failed after init");
     VerifyOrQuit(list.Pop() == nullptr, "LinkedList::Pop() failed when empty");
+    VerifyOrQuit(list.Find(a, prev) == OT_ERROR_NOT_FOUND, "LinkedList::Find() succeeded for a missing entry");
 
     VerifyLinkedListContent(&list, nullptr);
 
     list.Push(a);
     VerifyOrQuit(!list.IsEmpty(), "LinkedList::IsEmpty() failed");
     VerifyLinkedListContent(&list, &a, nullptr);
+    VerifyOrQuit(list.Find(b, prev) == OT_ERROR_NOT_FOUND, "LinkedList::Find() succeeded for a missing entry");
 
     SuccessOrQuit(list.Add(b), "LinkedList::Add() failed");
     VerifyLinkedListContent(&list, &b, &a, nullptr);
+    VerifyOrQuit(list.Find(c, prev) == OT_ERROR_NOT_FOUND, "LinkedList::Find() succeeded for a missing entry");
 
     list.Push(c);
     VerifyLinkedListContent(&list, &c, &b, &a, nullptr);
@@ -111,6 +147,18 @@ void TestLinkedList(void)
 
     VerifyOrQuit(list.Pop() == &e, "LinkedList::Pop() failed");
     VerifyLinkedListContent(&list, &d, &c, &b, &a, nullptr);
+    VerifyOrQuit(list.Find(e, prev) == OT_ERROR_NOT_FOUND, "LinkedList::Find() succeeded for a missing entry");
+
+    VerifyOrQuit(list.FindMatching(d.GetName(), prev) == &d, "List::FindMatching() failed");
+    VerifyOrQuit(prev == nullptr, "List::FindMatching() failed");
+    VerifyOrQuit(list.FindMatching(c.GetId(), prev) == &c, "List::FindMatching() failed");
+    VerifyOrQuit(prev == &d, "List::FindMatching() failed");
+    VerifyOrQuit(list.FindMatching(b.GetName(), prev) == &b, "List::FindMatching() failed");
+    VerifyOrQuit(prev == &c, "List::FindMatching() failed");
+    VerifyOrQuit(list.FindMatching(a.GetId(), prev) == &a, "List::FindMatching() failed");
+    VerifyOrQuit(prev == &b, "List::FindMatching() failed");
+    VerifyOrQuit(list.FindMatching(e.GetId(), prev) == nullptr, "List::FindMatching() succeeded for a missing entry");
+    VerifyOrQuit(list.FindMatching(e.GetName(), prev) == nullptr, "List::FindMatching() succeeded for a missing entry");
 
     list.SetHead(&e);
     VerifyLinkedListContent(&list, &e, &d, &c, &b, &a, nullptr);
@@ -120,12 +168,15 @@ void TestLinkedList(void)
 
     VerifyOrQuit(list.Remove(c) == OT_ERROR_NOT_FOUND, "LinkedList::Remove() failed");
     VerifyLinkedListContent(&list, &e, &d, &b, &a, nullptr);
+    VerifyOrQuit(list.Find(c, prev) == OT_ERROR_NOT_FOUND, "LinkedList::Find() succeeded for a missing entry");
 
     SuccessOrQuit(list.Remove(e), "LinkedList::Remove() failed");
     VerifyLinkedListContent(&list, &d, &b, &a, nullptr);
+    VerifyOrQuit(list.Find(e, prev) == OT_ERROR_NOT_FOUND, "LinkedList::Find() succeeded for a missing entry");
 
     SuccessOrQuit(list.Remove(a), "LinkedList::Remove() failed");
     VerifyLinkedListContent(&list, &d, &b, nullptr);
+    VerifyOrQuit(list.Find(a, prev) == OT_ERROR_NOT_FOUND, "LinkedList::Find() succeeded for a missing entry");
 
     list.Push(a);
     list.Push(c);
@@ -153,10 +204,32 @@ void TestLinkedList(void)
     VerifyOrQuit(list.PopAfter(nullptr) == &a, "LinkedList::PopAfter() failed");
     VerifyLinkedListContent(&list, &d, &b, &c, nullptr);
 
+    list.Push(e);
+    list.Push(a);
+    VerifyLinkedListContent(&list, &a, &e, &d, &b, &c, nullptr);
+
+    VerifyOrQuit(list.RemoveMatching(a.GetName()) == &a, "LinkedList::RemoveMatching() failed");
+    VerifyLinkedListContent(&list, &e, &d, &b, &c, nullptr);
+
+    VerifyOrQuit(list.RemoveMatching(c.GetId()) == &c, "LinkedList::RemoveMatching() failed");
+    VerifyLinkedListContent(&list, &e, &d, &b, nullptr);
+
+    VerifyOrQuit(list.RemoveMatching(c.GetId()) == nullptr, "LinkedList::RemoveMatching() succeeded for missing entry");
+    VerifyOrQuit(list.RemoveMatching(a.GetName()) == nullptr,
+                 "LinkedList::RemoveMatching() succeeded for missing entry");
+
+    VerifyOrQuit(list.RemoveMatching(d.GetId()) == &d, "LinkedList::RemoveMatching() failed");
+    VerifyLinkedListContent(&list, &e, &b, nullptr);
+
     list.Clear();
     VerifyOrQuit(list.IsEmpty(), "LinkedList::IsEmpty() failed after Clear()");
     VerifyOrQuit(list.PopAfter(nullptr) == nullptr, "LinkedList::PopAfter() failed");
     VerifyLinkedListContent(&list, nullptr);
+    VerifyOrQuit(list.Find(a, prev) == OT_ERROR_NOT_FOUND, "LinkedList::Find() succeeded for a missing entry");
+    VerifyOrQuit(list.FindMatching(b.GetName(), prev) == nullptr, "LinkedList::FindMatching() succeeded when empty");
+    VerifyOrQuit(list.FindMatching(c.GetId(), prev) == nullptr, "LinkedList::FindMatching() succeeded when empty");
+    VerifyOrQuit(list.RemoveMatching(a.GetName()) == nullptr, "LinkedList::RemoveMatching() succeeded when empty");
+    VerifyOrQuit(list.Remove(a) == OT_ERROR_NOT_FOUND, "LinkedList::Remove() succeeded when empty");
 }
 
 int main(void)

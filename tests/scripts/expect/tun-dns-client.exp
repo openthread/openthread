@@ -27,24 +27,25 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+source "tests/scripts/expect/_common.exp"
+
 spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?forkpty-arg=1"
-set timeout 1
+set timeout 3
 expect_after {
     timeout { exit 1 }
 }
+
 send "panid 0xface\n"
 expect "Done"
 send "ifconfig up\n"
 expect "Done"
 send "thread start\n"
 expect "Done"
-sleep 5
-send "state\n"
-expect "leader"
+wait_for "state" "leader"
 expect "Done"
+
 send "dns resolve ipv6.google.com ::1 53\n"
-set timeout 2
 expect "DNS response for ipv6.google.com"
 expect "Done"
-send "\x04"
-expect eof
+
+dispose

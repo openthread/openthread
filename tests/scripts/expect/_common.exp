@@ -30,7 +30,10 @@
 proc wait_for {command expected} {
     set result 0
     for {set i 0} {$i < 20} {incr i} {
-        send "$command\n"
+        if {$command != ""} {
+            send "$command\n"
+        }
+
         expect {
             -re $expected {
                 set result 1
@@ -46,6 +49,18 @@ proc wait_for {command expected} {
     if {$result == 0} {
         exit 1
     }
+}
+
+proc spawn_node {id} {
+    if {[info exists ::env(RCP_COMMAND)] && $::env(RCP_COMMAND) != ""} {
+        spawn $::env(OT_COMMAND) "spinel+hdlc+uart://$::env(RCP_COMMAND)?forkpty-arg=$id"
+    } else {
+        spawn $::env(OT_COMMAND) $id
+    }
+    expect_after {
+        timeout { exit 1 }
+    }
+    return $spawn_id
 }
 
 proc dispose {} {

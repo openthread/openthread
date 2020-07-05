@@ -35,7 +35,6 @@
 namespace ot {
 namespace Ncp {
 
-#if __cplusplus >= 201103L
 constexpr bool NcpBase::AreHandlerEntriesSorted(const HandlerEntry *aHandlerEntries, size_t aSize)
 {
     return aSize < 2 ? true
@@ -43,16 +42,14 @@ constexpr bool NcpBase::AreHandlerEntriesSorted(const HandlerEntry *aHandlerEntr
                         AreHandlerEntriesSorted(aHandlerEntries, aSize - 1));
 }
 
-#define OT_NCP_CONST constexpr
-#else
-#define OT_NCP_CONST const
-#endif
-
 NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 {
-#define OT_NCP_GET_HANDLER_ENTRY(aPropertyName) {aPropertyName, &NcpBase::HandlePropertyGet<aPropertyName>}
+#define OT_NCP_GET_HANDLER_ENTRY(aPropertyName)                   \
+    {                                                             \
+        aPropertyName, &NcpBase::HandlePropertyGet<aPropertyName> \
+    }
 
-    OT_NCP_CONST static HandlerEntry sHandlerEntries[] = {
+    constexpr static HandlerEntry sHandlerEntries[] = {
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_LAST_STATUS),
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_PROTOCOL_VERSION),
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_NCP_VERSION),
@@ -132,16 +129,20 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD),
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE),
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD_MODE),
-#if OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_MESHCOP_JOINER_STATE),
 #endif
+#if OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_MESHCOP_COMMISSIONER_STATE),
+        OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS),
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL),
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_MESHCOP_COMMISSIONER_SESSION_ID),
 #endif
 #endif // OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
+        OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_MESHCOP_JOINER_DISCERNER),
+#endif
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE),
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_SERVER_SERVICES),
@@ -330,19 +331,20 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 
 #undef OT_NCP_GET_HANDLER_ENTRY
 
-#if __cplusplus >= 201103L
     static_assert(AreHandlerEntriesSorted(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries)),
                   "NCP property getter entries not sorted!");
-#endif
 
     return FindPropertyHandler(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries), aKey);
 }
 
 NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 {
-#define OT_NCP_SET_HANDLER_ENTRY(aPropertyName) {aPropertyName, &NcpBase::HandlePropertySet<aPropertyName>}
+#define OT_NCP_SET_HANDLER_ENTRY(aPropertyName)                   \
+    {                                                             \
+        aPropertyName, &NcpBase::HandlePropertySet<aPropertyName> \
+    }
 
-    OT_NCP_CONST static HandlerEntry sHandlerEntries[] = {
+    constexpr static HandlerEntry sHandlerEntries[] = {
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_POWER_STATE),
 #if OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_MCU_POWER_STATE),
@@ -406,6 +408,9 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL),
 #endif
 #endif // OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
+        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_MESHCOP_JOINER_DISCERNER),
+#endif
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE),
 #endif
@@ -532,19 +537,20 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 
 #undef OT_NCP_SET_HANDLER_ENTRY
 
-#if __cplusplus >= 201103L
     static_assert(AreHandlerEntriesSorted(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries)),
                   "NCP property setter entries not sorted!");
-#endif
 
     return FindPropertyHandler(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries), aKey);
 }
 
 NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aKey)
 {
-#define OT_NCP_INSERT_HANDLER_ENTRY(aPropertyName) {aPropertyName, &NcpBase::HandlePropertyInsert<aPropertyName>}
+#define OT_NCP_INSERT_HANDLER_ENTRY(aPropertyName)                   \
+    {                                                                \
+        aPropertyName, &NcpBase::HandlePropertyInsert<aPropertyName> \
+    }
 
-    OT_NCP_CONST static HandlerEntry sHandlerEntries[] = {
+    constexpr static HandlerEntry sHandlerEntries[] = {
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
         OT_NCP_INSERT_HANDLER_ENTRY(SPINEL_PROP_THREAD_ON_MESH_NETS),
@@ -579,19 +585,20 @@ NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aK
 
 #undef OT_NCP_INSERT_HANDLER_ENTRY
 
-#if __cplusplus >= 201103L
     static_assert(AreHandlerEntriesSorted(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries)),
                   "NCP property setter entries not sorted!");
-#endif
 
     return FindPropertyHandler(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries), aKey);
 }
 
 NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aKey)
 {
-#define OT_NCP_REMOVE_HANDLER_ENTRY(aPropertyName) {aPropertyName, &NcpBase::HandlePropertyRemove<aPropertyName>}
+#define OT_NCP_REMOVE_HANDLER_ENTRY(aPropertyName)                   \
+    {                                                                \
+        aPropertyName, &NcpBase::HandlePropertyRemove<aPropertyName> \
+    }
 
-    OT_NCP_CONST static HandlerEntry sHandlerEntries[] = {
+    constexpr static HandlerEntry sHandlerEntries[] = {
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
         OT_NCP_REMOVE_HANDLER_ENTRY(SPINEL_PROP_THREAD_ON_MESH_NETS),
@@ -626,10 +633,8 @@ NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aK
 
 #undef OT_NCP_REMOVE_HANDLER_ENTRY
 
-#if __cplusplus >= 201103L
     static_assert(AreHandlerEntriesSorted(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries)),
                   "NCP property setter entries not sorted!");
-#endif
 
     return FindPropertyHandler(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries), aKey);
 }

@@ -38,13 +38,8 @@ proc setup_nodes {} {
     global spawn_id
     global env
 
-    spawn $env(OT_COMMAND) 1
-    set spawn_1 $spawn_id
-    spawn $env(OT_COMMAND) 2
-    set spawn_2 $spawn_id
-    expect_after {
-        timeout { exit 1 }
-    }
+    set spawn_1 [spawn_node 1]
+    set spawn_2 [spawn_node 2]
     set psk "J01NME"
 
     set spawn_id $spawn_2
@@ -63,6 +58,7 @@ proc setup_nodes {} {
     send "thread start\n"
     expect "Done"
     wait_for "state" "leader"
+    expect "Done"
     send "commissioner start\n"
     expect "Done"
     expect "Commissioner: active"
@@ -80,10 +76,11 @@ proc setup_nodes {} {
     expect "Done"
     send "joiner start $psk\n"
     expect "Done"
-    wait_for "" {Join success}
+    wait_for "" "Join success"
     send "thread start\n"
     expect "Done"
     wait_for "state" "child"
+    expect "Done"
 }
 
 proc dispose_nodes {} {

@@ -31,13 +31,11 @@ source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
 
-set timeout 1
+set timeout 3
 
 
-spawn $env(OT_COMMAND) 1
-expect_after {
-    timeout { exit 1 }
-}
+set spawn_id [spawn_node 1]
+
 send "ping ::1 1 2 1 1\n"
 expect "Done"
 send "ping stop\n"
@@ -48,13 +46,15 @@ send "ping stop\n"
 expect "Done"
 send "ping ::1 1 2 1 1 1\n"
 expect "Error 7: InvalidArgs"
+
 dispose
 
 
 setup_nodes
 
 set spawn_id $spawn_2
-send "ipaddr\n"
+send "ipaddr mleid\n"
+expect "ipaddr mleid"
 expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
 set addr $expect_out(1,string)
 expect "Done"

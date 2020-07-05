@@ -51,7 +51,7 @@ CoapSecure::CoapSecure(Instance &aInstance, bool aLayerTwoSecurity)
     , mConnectedCallback(nullptr)
     , mConnectedContext(nullptr)
     , mTransmitQueue()
-    , mTransmitTask(aInstance, &CoapSecure::HandleTransmit, this)
+    , mTransmitTask(aInstance, CoapSecure::HandleTransmit, this)
 {
 }
 
@@ -113,6 +113,21 @@ otError CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aC
 otError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
 {
     return mDtls.SetPsk(aPsk, aPskLength);
+}
+
+void CoapSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
+{
+    otError error;
+
+    OT_UNUSED_VARIABLE(error);
+
+    static_assert(static_cast<uint16_t>(MeshCoP::JoinerPskd::kMaxLength) <=
+                      static_cast<uint16_t>(MeshCoP::Dtls::kPskMaxLength),
+                  "The maximum length of DTLS PSK is smaller than joiner PSKd");
+
+    error = mDtls.SetPsk(reinterpret_cast<const uint8_t *>(aPskd.GetAsCString()), aPskd.GetLength());
+
+    OT_ASSERT(error == OT_ERROR_NONE);
 }
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE

@@ -108,7 +108,7 @@ class Node:
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             if 'RADIO_DEVICE' in os.environ:
-                cmd += ' -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
+                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
                     os.environ['RADIO_DEVICE'], nodeid)
             else:
                 cmd += ' %d' % nodeid
@@ -123,7 +123,7 @@ class Node:
                 cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             if 'RADIO_DEVICE_1_1' in os.environ:
-                cmd += ' -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
+                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
                     os.environ['RADIO_DEVICE_1_1'], nodeid)
             else:
                 cmd += ' %d' % nodeid
@@ -151,7 +151,7 @@ class Node:
         # If Thread version of node matches the testing environment version.
         if self.version == self.env_version:
             if 'RADIO_DEVICE' in os.environ:
-                args = ' spinel+hdlc+uart://%s?forkpty-arg=%d' % (
+                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (
                     os.environ['RADIO_DEVICE'], nodeid)
             else:
                 args = ''
@@ -190,7 +190,7 @@ class Node:
         # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability.
         elif self.version == '1.1':
             if 'RADIO_DEVICE_1_1' in os.environ:
-                args = ' spinel+hdlc+uart://%s?forkpty-arg=%d' % (
+                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (
                     os.environ['RADIO_DEVICE_1_1'], nodeid)
             else:
                 args = ''

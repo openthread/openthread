@@ -138,6 +138,14 @@ exit:
     return;
 }
 
+bool Slaac::DoesConfigMatchNetifAddr(const NetworkData::OnMeshPrefixConfig &aConfig,
+                                     const Ip6::NetifUnicastAddress &       aAddr)
+{
+    return (((aConfig.mOnMesh && (aAddr.mPrefixLength == aConfig.mPrefix.mLength)) ||
+             (!aConfig.mOnMesh && (aAddr.mPrefixLength == 128))) &&
+            (aAddr.GetAddress().PrefixMatch(aConfig.mPrefix.mPrefix) >= aConfig.mPrefix.mLength));
+}
+
 void Slaac::Update(UpdateMode aMode)
 {
     NetworkData::Iterator           iterator;
@@ -165,16 +173,13 @@ void Slaac::Update(UpdateMode aMode)
 
                 while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
                 {
-                    otIp6Prefix &prefix = config.mPrefix;
-
                     if (config.mDp)
                     {
                         // Skip domain prefix which is processed in MLE.
                         continue;
                     }
 
-                    if (config.mSlaac && !ShouldFilter(prefix) && (prefix.mLength == slaacAddr->mPrefixLength) &&
-                        (slaacAddr->GetAddress().PrefixMatch(prefix.mPrefix) >= prefix.mLength))
+                    if (config.mSlaac && !ShouldFilter(config.mPrefix) && DoesConfigMatchNetifAddr(config, *slaacAddr))
                     {
                         found = true;
                         break;
@@ -212,8 +217,7 @@ void Slaac::Update(UpdateMode aMode)
             for (const Ip6::NetifUnicastAddress *netifAddr = Get<ThreadNetif>().GetUnicastAddresses();
                  netifAddr != nullptr; netifAddr           = netifAddr->GetNext())
             {
-                if ((netifAddr->mPrefixLength == prefix.mLength) &&
-                    (netifAddr->GetAddress().PrefixMatch(prefix.mPrefix) >= prefix.mLength))
+                if (DoesConfigMatchNetifAddr(config, *netifAddr))
                 {
                     found = true;
                     break;
@@ -234,7 +238,7 @@ void Slaac::Update(UpdateMode aMode)
                     slaacAddr->Clear();
                     memcpy(&slaacAddr->mAddress, &prefix.mPrefix, BitVectorBytes(prefix.mLength));
 
-                    slaacAddr->mPrefixLength  = prefix.mLength;
+                    slaacAddr->mPrefixLength  = config.mOnMesh ? prefix.mLength : 128;
                     slaacAddr->mAddressOrigin = OT_ADDRESS_ORIGIN_SLAAC;
                     slaacAddr->mPreferred     = config.mPreferred;
                     slaacAddr->mValid         = true;
@@ -286,8 +290,8 @@ otError Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress,
     Crypto::Sha256 sha256;
     uint8_t        hash[Crypto::Sha256::kHashSize];
 
-    OT_STATIC_ASSERT(sizeof(hash) >= Ip6::Address::kInterfaceIdentifierSize,
-                     "SHA-256 hash size is too small to use as IPv6 address IID");
+    static_assert(sizeof(hash) >= Ip6::Address::kInterfaceIdentifierSize,
+                  "SHA-256 hash size is too small to use as IPv6 address IID");
 
     GetIidSecretKey(secretKey);
 
