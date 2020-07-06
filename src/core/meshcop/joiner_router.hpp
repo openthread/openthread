@@ -127,7 +127,6 @@ private:
     uint16_t mJoinerUdpPort;
 
     bool mIsJoinerPortConfigured : 1;
-    bool mExpectJoinEntRsp : 1;
 };
 
 } // namespace MeshCoP
