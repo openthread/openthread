@@ -133,10 +133,11 @@ void Otns::EmitNeighborChange(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
 void Otns::EmitTransmit(const Mac::TxFrame &aFrame)
 {
     Mac::Address dst;
+    uint16_t     frameControlField = aFrame.GetFrameControlField();
+    uint8_t      channel           = aFrame.GetChannel();
+    uint8_t      sequence          = aFrame.GetSequence();
+    
     IgnoreError(aFrame.GetDstAddr(dst));
-    uint16_t frameControlField = aFrame.GetFrameControlField();
-    uint8_t channel = aFrame.GetChannel();
-    uint8_t sequence = aFrame.GetSequence();
 
     if (dst.IsShort())
     {

@@ -982,14 +982,14 @@ protected:
         kSequenceIndex = kFcfSize,
     };
 
-    uint8_t  FindDstPanIdIndex(void) const;
-    uint8_t  FindDstAddrIndex(void) const;
-    uint8_t  FindSrcPanIdIndex(void) const;
-    uint8_t  FindSrcAddrIndex(void) const;
-    uint8_t  SkipAddrFieldIndex(void) const;
-    uint8_t  FindSecurityHeaderIndex(void) const;
-    uint8_t  SkipSecurityHeaderIndex(void) const;
-    uint8_t  FindPayloadIndex(void) const;
+    uint8_t FindDstPanIdIndex(void) const;
+    uint8_t FindDstAddrIndex(void) const;
+    uint8_t FindSrcPanIdIndex(void) const;
+    uint8_t FindSrcAddrIndex(void) const;
+    uint8_t SkipAddrFieldIndex(void) const;
+    uint8_t FindSecurityHeaderIndex(void) const;
+    uint8_t SkipSecurityHeaderIndex(void) const;
+    uint8_t FindPayloadIndex(void) const;
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     uint8_t FindHeaderIeIndex(void) const;
 #endif
