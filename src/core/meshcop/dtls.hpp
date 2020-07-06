@@ -413,6 +413,9 @@ private:
     uint8_t              mPsk[kPskMaxLength];
     uint8_t              mPskLength;
     mbedtls_ecp_group_id mCurves[2];
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
+    int mHashes[1];
+#endif
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
