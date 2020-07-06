@@ -97,6 +97,7 @@ Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
 #endif
 
     memset(mCipherSuites, 0, sizeof(mCipherSuites));
+    memset(mCurves, 0, sizeof(mCurves));
     memset(mPsk, 0, sizeof(mPsk));
     memset(&mSsl, 0, sizeof(mSsl));
     memset(&mConf, 0, sizeof(mConf));
@@ -286,6 +287,11 @@ otError Dtls::Setup(bool aClient)
 
     OT_ASSERT(mCipherSuites[1] == 0);
     mbedtls_ssl_conf_ciphersuites(&mConf, mCipherSuites);
+    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    {
+        OT_ASSERT(mCurves[1] == MBEDTLS_ECP_DP_NONE);
+        mbedtls_ssl_conf_curves(&mConf, mCurves);
+    }
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
     mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);
@@ -439,6 +445,8 @@ otError Dtls::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
     mPskLength       = aPskLength;
     mCipherSuites[0] = MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8;
     mCipherSuites[1] = 0;
+    mCurves[0]       = MBEDTLS_ECP_DP_SECP256R1;
+    mCurves[1]       = MBEDTLS_ECP_DP_NONE;
 
 exit:
     return error;
