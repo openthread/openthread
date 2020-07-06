@@ -71,7 +71,7 @@
         }                                          \
     } while (0)
 
-#else
+#else // OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 
 #define OT_ASSERT(cond) \
     do                  \
@@ -86,7 +86,7 @@
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 
-#else
+#else // OPENTHREAD_CONFIG_ASSERT_ENABLE
 
 #define OT_ASSERT(cond)
 

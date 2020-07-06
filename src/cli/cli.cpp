@@ -3803,17 +3803,17 @@ otError Interpreter::ProcessMacFilterAddress(uint8_t aArgsLength, char *aArgs[])
         if (strcmp(aArgs[0], "disable") == 0)
         {
             VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = otLinkFilterSetAddressMode(mInstance, OT_MAC_FILTER_ADDRESS_MODE_DISABLED));
+            otLinkFilterSetAddressMode(mInstance, OT_MAC_FILTER_ADDRESS_MODE_DISABLED);
         }
         else if (strcmp(aArgs[0], "whitelist") == 0)
         {
             VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = otLinkFilterSetAddressMode(mInstance, OT_MAC_FILTER_ADDRESS_MODE_WHITELIST));
+            otLinkFilterSetAddressMode(mInstance, OT_MAC_FILTER_ADDRESS_MODE_WHITELIST);
         }
         else if (strcmp(aArgs[0], "blacklist") == 0)
         {
             VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = otLinkFilterSetAddressMode(mInstance, OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST));
+            otLinkFilterSetAddressMode(mInstance, OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST);
         }
         else if (strcmp(aArgs[0], "add") == 0)
         {
@@ -3839,7 +3839,7 @@ otError Interpreter::ProcessMacFilterAddress(uint8_t aArgsLength, char *aArgs[])
             VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
             VerifyOrExit(Hex2Bin(aArgs[1], extAddr.m8, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE,
                          error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = otLinkFilterRemoveAddress(mInstance, &extAddr));
+            otLinkFilterRemoveAddress(mInstance, &extAddr);
         }
         else if (strcmp(aArgs[0], "clear") == 0)
         {
@@ -3905,7 +3905,7 @@ otError Interpreter::ProcessMacFilterRss(uint8_t aArgsLength, char *aArgs[])
 
             if (strcmp(aArgs[1], "*") == 0)
             {
-                SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, nullptr, rss));
+                otLinkFilterSetDefaultRssIn(mInstance, rss);
             }
             else
             {
@@ -3923,7 +3923,7 @@ otError Interpreter::ProcessMacFilterRss(uint8_t aArgsLength, char *aArgs[])
 
             if (strcmp(aArgs[1], "*") == 0)
             {
-                SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, nullptr, rss));
+                otLinkFilterSetDefaultRssIn(mInstance, rss);
             }
             else
             {
@@ -3939,19 +3939,19 @@ otError Interpreter::ProcessMacFilterRss(uint8_t aArgsLength, char *aArgs[])
 
             if (strcmp(aArgs[1], "*") == 0)
             {
-                SuccessOrExit(error = otLinkFilterRemoveRssIn(mInstance, nullptr));
+                otLinkFilterClearDefaultRssIn(mInstance);
             }
             else
             {
                 VerifyOrExit(Hex2Bin(aArgs[1], extAddr.m8, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE,
                              error = OT_ERROR_INVALID_ARGS);
 
-                SuccessOrExit(error = otLinkFilterRemoveRssIn(mInstance, &extAddr));
+                otLinkFilterRemoveRssIn(mInstance, &extAddr);
             }
         }
         else if (strcmp(aArgs[0], "clear") == 0)
         {
-            otLinkFilterClearRssIn(mInstance);
+            otLinkFilterClearAllRssIn(mInstance);
         }
         else
         {

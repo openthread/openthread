@@ -28,8 +28,7 @@
 
 /**
  * @file
- *   This file implements the OpenThread platform abstraction for the non-volatile
- *   storage for the EFR32 platform using the Silabs Nvm3 interface.
+ *   This file implements the OpenThread platform abstraction for the non-volatile storage.
  */
 
 #include "openthread-core-efr32-config.h"
@@ -106,8 +105,9 @@ void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset
 #include <string.h>
 #include <openthread/platform/settings.h>
 #include "common/code_utils.hpp"
+#include "common/logging.hpp"
 
-#define NVM3KEY_DOMAIN_OPENTHREAD 0x20000U // NVM3 Default Instance key space region for Thread stack
+#define NVM3KEY_DOMAIN_OPENTHREAD 0x20000U
 #define NUM_INDEXED_SETTINGS \
     OPENTHREAD_CONFIG_MLE_MAX_CHILDREN // Indexed key types are only supported for kKeyChildInfo (=='child table').
 #define ENUM_NVM3_KEY_LIST_SIZE 4      // List size used when enumerating nvm3 keys.
@@ -116,24 +116,13 @@ static otError          addSetting(uint16_t aKey, const uint8_t *aValue, uint16_
 static nvm3_ObjectKey_t makeNvm3ObjKey(uint16_t otSettingsKey, int index);
 static otError          mapNvm3Error(Ecode_t nvm3Res);
 
-extern nvm3_Init_t    nvm3_defaultInitData;
-extern nvm3_Handle_t *nvm3_defaultHandle;
-
 void otPlatSettingsInit(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otError err;
-    bool    needClose = false;
-
-    err = mapNvm3Error(nvm3_open(nvm3_defaultHandle, &nvm3_defaultInitData));
-    SuccessOrExit(err);
-    needClose = true;
-
-exit:
-    if (needClose)
+    if (mapNvm3Error(nvm3_open(nvm3_defaultHandle, nvm3_defaultInit)) != OT_ERROR_NONE)
     {
-        nvm3_close(nvm3_defaultHandle);
+        otLogDebgPlat("Error initializing nvm3 instance");
     }
 }
 
@@ -153,12 +142,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
     OT_UNUSED_VARIABLE(aInstance);
 
     otError  err;
-    bool     needClose   = false;
     uint16_t valueLength = 0;
-
-    err = mapNvm3Error(nvm3_open(nvm3_defaultHandle, &nvm3_defaultInitData));
-    SuccessOrExit(err);
-    needClose = true;
 
     nvm3_ObjectKey_t nvm3Key  = makeNvm3ObjKey(aKey, 0); // The base nvm3 key value.
     bool             idxFound = false;
@@ -211,11 +195,6 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
     }
 
 exit:
-    if (needClose)
-    {
-        nvm3_close(nvm3_defaultHandle);
-    }
-
     if (aValueLength != NULL)
     {
         *aValueLength = valueLength; // always return actual nvm3 object length.
@@ -258,13 +237,7 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 
     OT_UNUSED_VARIABLE(aInstance);
 
-    otError err;
-    bool    needClose = false;
-
-    err = mapNvm3Error(nvm3_open(nvm3_defaultHandle, &nvm3_defaultInitData));
-    SuccessOrExit(err);
-    needClose = true;
-
+    otError          err;
     nvm3_ObjectKey_t nvm3Key  = makeNvm3ObjKey(aKey, 0); // The base nvm3 key value.
     bool             idxFound = false;
     int              idx      = 0;
@@ -306,11 +279,6 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
     }
 
 exit:
-    if (needClose)
-    {
-        nvm3_close(nvm3_defaultHandle);
-    }
-
     return err;
 }
 
@@ -334,11 +302,6 @@ static otError addSetting(uint16_t aKey, const uint8_t *aValue, uint16_t aValueL
     // nvm3 object is created at the first available Key + index.
 
     otError err;
-    bool    needClose = false;
-
-    err = mapNvm3Error(nvm3_open(nvm3_defaultHandle, &nvm3_defaultInitData));
-    SuccessOrExit(err);
-    needClose = true;
 
     if ((aValueLength == 0) || (aValue == NULL))
     {
@@ -368,11 +331,6 @@ static otError addSetting(uint16_t aKey, const uint8_t *aValue, uint16_t aValueL
         }
     }
 
-exit:
-    if (needClose)
-    {
-        nvm3_close(nvm3_defaultHandle);
-    }
     return err;
 }
 

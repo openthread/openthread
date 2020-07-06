@@ -7,7 +7,7 @@
 <a href="http://threadgroup.org/">Thread<sup>®</sup></a> is an IPv6-based
 networking protocol designed for low-power Internet of Things devices in an IEEE
 802.15.4-2006 wireless mesh network, commonly called a Wireless Personal Area
-Network (WPAN). Thread is independent of other 802.15.4 mesh networking
+Network (WPAN). Thread is independent of other 802.15 mesh networking
 protocols, such a ZigBee, Z-Wave, and Bluetooth LE.
 
 Thread's primary features include:

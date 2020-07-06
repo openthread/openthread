@@ -27,11 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-spawn $env(OT_COMMAND) 1
-set timeout 1
-expect_after {
-    timeout { exit 1 }
-}
+source "tests/scripts/expect/_common.exp"
+
+set spawn_id [spawn_node 1]
+set timeout 3
 
 send "counters\n"
 expect "mac"
@@ -51,3 +50,5 @@ send "counters mle 1\n"
 expect "Error 7: InvalidArgs"
 send "counters other\n"
 expect "Error 7: InvalidArgs"
+
+dispose

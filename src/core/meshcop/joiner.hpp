@@ -76,7 +76,9 @@ public:
      * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
      * @param[in]  aContext          A pointer to application-specific context.
      *
-     * @retval OT_ERROR_NONE  Successfully started the Joiner service.
+     * @retval OT_ERROR_NONE          Successfully started the Joiner service.
+     * @retval OT_ERROR_BUSY          The previous attempt is still on-going.
+     * @retval OT_ERROR_INVALID_STATE The IPv6 stack is not enabled or Thread stack is fully enabled.
      *
      */
     otError Start(const char *     aPskd,
@@ -130,7 +132,7 @@ public:
      * @param[in]   aDiscerner  A Joiner Discerner
      *
      * @retval OT_ERROR_NONE           The Joiner Discerner updated successfully.
-     * @retval OT_ERROR_INVALID_ARGS   @p aDisciminrator is not valid (specified length is not within valid range).
+     * @retval OT_ERROR_INVALID_ARGS   @p aDiscerner is not valid (specified length is not within valid range).
      * @retval OT_ERROR_INVALID_STATE  There is an ongoing Joining process so Joiner Discerner could not be changed.
      *
      */

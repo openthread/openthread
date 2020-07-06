@@ -29,11 +29,8 @@
 
 source "tests/scripts/expect/_common.exp"
 
-spawn $env(OT_COMMAND) 1
-set timeout 1
-expect_after {
-    timeout { exit 1 }
-}
+set spawn_id [spawn_node 1]
+set timeout 3
 
 send "coex disable\n"
 expect "Done"

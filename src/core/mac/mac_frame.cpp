@@ -1040,12 +1040,11 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     uint8_t        nonce[Crypto::AesCcm::kNonceSize];
     uint8_t        tagLength;
     Crypto::AesCcm aesCcm;
-    otError        error;
 
     VerifyOrExit(GetSecurityEnabled(), OT_NOOP);
 
-    SuccessOrExit(error = GetSecurityLevel(securityLevel));
-    SuccessOrExit(error = GetFrameCounter(frameCounter));
+    SuccessOrExit(GetSecurityLevel(securityLevel));
+    SuccessOrExit(GetFrameCounter(frameCounter));
 
     Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
 

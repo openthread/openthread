@@ -1206,7 +1206,7 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
     }
     else
     {
-        if (Get<ThreadNetif>().IsUnicastAddress(header.GetDestination()))
+        if (Get<ThreadNetif>().HasUnicastAddress(header.GetDestination()))
         {
             receive = true;
         }

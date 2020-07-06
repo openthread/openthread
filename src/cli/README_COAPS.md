@@ -100,6 +100,7 @@ coaps response sent
 - [psk](#psk-psk-pskid)
 - [put](#put-uri-path-type-payload)
 - [resource](#resource-uri-path)
+- [set](#set-new-content)
 - [start](#start)
 - [stop](#stop)
 - [x509](#x509)
@@ -119,6 +120,7 @@ post
 psk
 put
 resource
+set
 start
 stop
 x509
@@ -211,6 +213,15 @@ Sets the URI path for the test resource.
 Done
 > coaps resource
 test-resource
+Done
+```
+
+### set \[new-content\]
+
+Sets the content sent by the test resource.
+
+```bash
+> coaps set Testing123
 Done
 ```
 
