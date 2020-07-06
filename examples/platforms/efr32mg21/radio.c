@@ -949,6 +949,10 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 
 void efr32RadioProcess(otInstance *aInstance)
 {
+    // We should process the received packet first. Adding it at the end of this function,
+    // will delay the stack notification until the next call to efr32RadioProcess()
+    processNextRxPacket(aInstance);
+
     if (sState == OT_RADIO_STATE_TRANSMIT && sTransmitBusy == false)
     {
         if (sTransmitError != OT_ERROR_NONE)
@@ -989,8 +993,6 @@ void efr32RadioProcess(otInstance *aInstance)
         sRailDebugCounters.mRailEventEnergyScanCompleted++;
 #endif
     }
-
-    processNextRxPacket(aInstance, sRxBandConfig->mRailHandle);
 }
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
