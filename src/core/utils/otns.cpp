@@ -136,7 +136,7 @@ void Otns::EmitTransmit(const Mac::TxFrame &aFrame)
     uint16_t     frameControlField = aFrame.GetFrameControlField();
     uint8_t      channel           = aFrame.GetChannel();
     uint8_t      sequence          = aFrame.GetSequence();
-    
+
     IgnoreError(aFrame.GetDstAddr(dst));
 
     if (dst.IsShort())
