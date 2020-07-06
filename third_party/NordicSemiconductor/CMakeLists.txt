@@ -201,6 +201,8 @@ if(OT_PLATFORM STREQUAL "nrf52811")
     target_include_directories(nordicsemi-nrf52811-radio-driver
         PUBLIC
             ${COMMON_INCLUDES}
+            ${EXAMPLE_INCLUDES}
+            ${OT_PUBLIC_INCLUDES}
             ${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx/nrf52811
             ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/nrf52811/config
     )
@@ -221,7 +223,7 @@ elseif(OT_PLATFORM STREQUAL "nrf52833")
         PUBLIC
             ${COMMON_INCLUDES}
             ${EXAMPLE_INCLUDES}
-            ${PROJECT_SOURCE_DIR}/examples/platforms/nrf52833
+            ${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx/nrf52833
             ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/nrf52833/config
     )
     set_property(SOURCE nrfx/mdk/gcc_startup_nrf52833.S PROPERTY LANGUAGE C)
@@ -245,7 +247,9 @@ elseif(OT_PLATFORM STREQUAL "nrf52833")
     target_include_directories(nordicsemi-nrf52833-radio-driver
         PUBLIC
             ${COMMON_INCLUDES}
-            ${PROJECT_SOURCE_DIR}/examples/platforms/nrf52833
+            ${EXAMPLE_INCLUDES}
+            ${OT_PUBLIC_INCLUDES}
+            ${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx/nrf52833
             ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/nrf52833/config
     )
     target_sources(nordicsemi-nrf52833-radio-driver
@@ -267,7 +271,9 @@ elseif(OT_PLATFORM STREQUAL "nrf52833")
     target_include_directories(nordicsemi-nrf52833-radio-driver-softdevice
         PUBLIC
             ${COMMON_INCLUDES}
-            ${PROJECT_SOURCE_DIR}/examples/platforms/nrf52833
+            ${EXAMPLE_INCLUDES}
+            ${OT_PUBLIC_INCLUDES}
+            ${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx/nrf52833
             ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/nrf52833/config
     )
     target_sources(nordicsemi-nrf52833-radio-driver-softdevice
@@ -338,7 +344,6 @@ elseif(OT_PLATFORM STREQUAL "nrf52840")
             ${COMMON_INCLUDES}
             ${EXAMPLE_INCLUDES}
             ${OT_PUBLIC_INCLUDES}
-            ${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx/nrf52840/
             ${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx/nrf52840/
             ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/nrf52840/config
     )

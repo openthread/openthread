@@ -72,7 +72,27 @@ set(NRF_INCLUDES
     ${PROJECT_SOURCE_DIR}/src/core
 )
 
-if(OT_PLATFORM STREQUAL "nrf52840")
+if(OT_PLATFORM STREQUAL "nrf52811")
+    set(NRF_TRANSPORT_SOURCES
+        src/transport/spi-slave.c
+        src/transport/transport.c
+        src/transport/uart.c
+    )
+    set(NRF52811_3RD_LIBS
+        nordicsemi-nrf52811-radio-driver
+        nordicsemi-nrf52811-sdk
+        jlinkrtt
+    )
+    include(nrf52811/nrf52811.cmake)
+elseif(OT_PLATFORM STREQUAL "nrf52833")
+    set(NRF52833_3RD_LIBS
+        nordicsemi-nrf52833-radio-driver
+        nordicsemi-nrf52833-radio-driver-softdevice
+        nordicsemi-nrf52833-sdk
+        jlinkrtt
+    )
+    include(nrf52833/nrf52833.cmake)
+elseif(OT_PLATFORM STREQUAL "nrf52840")
     set(NRF52840_3RD_LIBS
         nordicsemi-nrf52840-radio-driver
         nordicsemi-nrf52840-radio-driver-softdevice

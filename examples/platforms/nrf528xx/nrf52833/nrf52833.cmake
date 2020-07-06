@@ -26,55 +26,44 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(OT_PLATFORM_LIB "openthread-nrf52840" "openthread-nrf52840-transport" PARENT_SCOPE)
+set(OT_PLATFORM_LIB "openthread-nrf52833" "openthread-nrf52833-transport" PARENT_SCOPE)
 
 if(NOT OT_CONFIG)
-    set(OT_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/nrf52840/openthread-core-nrf52840-config.h")
+    set(OT_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/nrf52833/openthread-core-nrf52833-config.h")
     set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
 endif()
 
 option(OT_BOOTLOADER "OT nrf bootloader type")
 if(OT_BOOTLOADER STREQUAL "USB")
     list(APPEND OT_PLATFORM_DEFINES "APP_USBD_NRF_DFU_TRIGGER_ENABLED=1")
-    set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/nrf52840/nrf52840_bootloader_usb.ld")
+    set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/nrf52833/nrf52833_bootloader_usb.ld")
 elseif(OT_BOOTLOADER STREQUAL "UART")
-    set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/nrf52840/nrf52840_bootloader_uart.ld")
+    set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/nrf52833/nrf52833_bootloader_uart.ld")
 elseif(OT_BOOTLOADER STREQUAL "BLE")
-    set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/nrf52840/nrf52840_bootloader_ble.ld")
+    set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/nrf52833/nrf52833_bootloader_ble.ld")
 else()
-    set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/nrf52840/nrf52840.ld")
+    set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/nrf52833/nrf52833.ld")
 endif()
 
 list(APPEND OT_PLATFORM_DEFINES
-    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-nrf52840-config-check.h\""
+    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-nrf52833-config-check.h\""
 )
-if(NOT OT_EXTERNAL_MBEDTLS)
-    if(OT_MBEDTLS_THREADING)
-        list(APPEND OT_PLATFORM_DEFINES "MBEDTLS_THREADING_C")
-        list(APPEND OT_PLATFORM_DEFINES "MBEDTLS_THREADING_ALT")
-        list(APPEND OT_PUBLIC_INCLUDES
-            "${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/nrf_security/include/software-only-threading"
-        )
-    endif()
-else()
-    list(APPEND OT_PLATFORM_DEFINES "MBEDTLS_CONFIG_FILE=\"nrf-config.h\"")
-    list(APPEND OT_PUBLIC_INCLUDES
-        "${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/nrf_security/include"
-        "${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/nrf_security/config"
-        "${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/nrf_security/nrf_cc310_plat/include"
-    )
-endif()
+list(APPEND OT_PUBLIC_INCLUDES
+    "${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_plat_config"
+    "${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/nrf_security/nrfx/mdk"
+     "${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/cmsis"
+)
 
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 target_compile_definitions(ot-config INTERFACE
-    "MBEDTLS_USER_CONFIG_FILE=\"nrf52840-mbedtls-config.h\""
+    "MBEDTLS_USER_CONFIG_FILE=\"nrf52833-mbedtls-config.h\""
 )
-list(APPEND OT_PUBLIC_INCLUDES "${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_plat_config")
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
 
 set(COMM_FLAGS
+    -DDISABLE_CC310=1
     -DCONFIG_GPIO_AS_PINRESET
-    -DNRF52840_XXAA
+    -DNRF52833_XXAA
     -DUSE_APP_CONFIG=1
     -Wno-unused-parameter
     -Wno-expansion-to-defined
@@ -84,135 +73,133 @@ if(OT_CFLAGS MATCHES "-pedantic-errors")
 endif()
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
-add_library(openthread-nrf52840
+add_library(openthread-nrf52833
     ${NRF_COMM_SOURCES}
     ${NRF_SINGLEPHY_SOURCES}
 )
 
-add_library(openthread-nrf52840-transport
+add_library(openthread-nrf52833-transport
     ${NRF_TRANSPORT_SOURCES}
 )
 
-add_library(openthread-nrf52840-sdk
+add_library(openthread-nrf52833-sdk
     ${NRF_COMM_SOURCES}
     ${NRF_SINGLEPHY_SOURCES}
 )
 
-add_library(openthread-nrf52840-softdevice-sdk
+add_library(openthread-nrf52833-softdevice-sdk
     ${NRF_COMM_SOURCES}
     ${NRF_SOFTDEVICE_SOURCES}
 )
 
-set_target_properties(openthread-nrf52840 openthread-nrf52840-transport openthread-nrf52840-sdk openthread-nrf52840-softdevice-sdk
+set_target_properties(openthread-nrf52833 openthread-nrf52833-transport openthread-nrf52833-sdk openthread-nrf52833-softdevice-sdk
     PROPERTIES
         C_STANDARD 99
         CXX_STANDARD 11
 )
 
-target_link_libraries(openthread-nrf52840
+target_link_libraries(openthread-nrf52833
     PUBLIC
         ${OT_MBEDTLS}
-        ${NRF52840_3RD_LIBS}
+        ${NRF52833_3RD_LIBS}
     PRIVATE
         openthread-platform-utils
         ot-config
 )
 
-target_link_libraries(openthread-nrf52840-transport
+target_link_libraries(openthread-nrf52833-transport
     PUBLIC
         ${OT_MBEDTLS}
     PRIVATE
-        nordicsemi-nrf52840-sdk
+        nordicsemi-nrf52833-sdk
         ot-config
 )
 
-target_link_libraries(openthread-nrf52840-sdk
+target_link_libraries(openthread-nrf52833-sdk
     PUBLIC
         ${OT_MBEDTLS}
-        ${NRF52840_3RD_LIBS}
+        ${NRF52833_3RD_LIBS}
     PRIVATE
         openthread-platform-utils
         ot-config
 )
 
-target_link_libraries(openthread-nrf52840-softdevice-sdk
+target_link_libraries(openthread-nrf52833-softdevice-sdk
     PUBLIC
         ${OT_MBEDTLS}
-        ${NRF52840_3RD_LIBS}
+        ${NRF52833_3RD_LIBS}
     PRIVATE
         openthread-platform-utils
         ot-config
 )
 
-target_link_options(openthread-nrf52840
+target_link_options(openthread-nrf52833
     PUBLIC
         -T${LD_FILE}
         -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 
-target_link_options(openthread-nrf52840-transport
+target_link_options(openthread-nrf52833-transport
     PUBLIC
         -T${LD_FILE}
         -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 
-target_link_options(openthread-nrf52840-sdk
+target_link_options(openthread-nrf52833-sdk
     PUBLIC
         -T${LD_FILE}
         -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 
-target_link_options(openthread-nrf52840-softdevice-sdk
+target_link_options(openthread-nrf52833-softdevice-sdk
     PUBLIC
         -T${LD_FILE}
         -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 
-target_compile_definitions(openthread-nrf52840
+target_compile_definitions(openthread-nrf52833
     PUBLIC
         ${OT_PLATFORM_DEFINES}
 )
 
-target_compile_definitions(openthread-nrf52840-transport
+target_compile_definitions(openthread-nrf52833-transport
     PUBLIC
         ${OT_PLATFORM_DEFINES}
 )
 
-target_compile_definitions(openthread-nrf52840-sdk
+target_compile_definitions(openthread-nrf52833-sdk
     PUBLIC
         ${OT_PLATFORM_DEFINES}
 )
 
-target_compile_definitions(openthread-nrf52840-softdevice-sdk
+target_compile_definitions(openthread-nrf52833-softdevice-sdk
     PUBLIC
         ${OT_PLATFORM_DEFINES}
 )
 
-target_compile_options(openthread-nrf52840
-    PRIVATE
-        ${OT_CFLAGS}
-        ${COMM_FLAGS}
-        -DPLATFORM_OPENTHREAD_VANILLA
-)
-
-target_compile_options(openthread-nrf52840-transport
-    PRIVATE
-        ${OT_CFLAGS}
-        ${COMM_FLAGS}
-        -DPLATFORM_OPENTHREAD_VANILLA
-)
-
-target_compile_options(openthread-nrf52840-sdk
+target_compile_options(openthread-nrf52833
     PRIVATE
         ${OT_CFLAGS}
         ${COMM_FLAGS}
 )
 
-target_compile_options(openthread-nrf52840-softdevice-sdk
+target_compile_options(openthread-nrf52833-transport
+    PRIVATE
+        ${OT_CFLAGS}
+        ${COMM_FLAGS}
+)
+
+target_compile_options(openthread-nrf52833-sdk
+    PRIVATE
+        ${OT_CFLAGS}
+        ${COMM_FLAGS}
+)
+
+target_compile_options(openthread-nrf52833-softdevice-sdk
     PRIVATE
         ${OT_CFLAGS}
         ${COMM_FLAGS}
@@ -220,30 +207,30 @@ target_compile_options(openthread-nrf52840-softdevice-sdk
         -DS140
 )
 
-target_include_directories(openthread-nrf52840
+target_include_directories(openthread-nrf52833
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/nrf52840
+        ${CMAKE_CURRENT_SOURCE_DIR}/nrf52833
         ${NRF_INCLUDES}
         ${OT_PUBLIC_INCLUDES}
 )
 
-target_include_directories(openthread-nrf52840-transport
+target_include_directories(openthread-nrf52833-transport
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/nrf52840
+        ${CMAKE_CURRENT_SOURCE_DIR}/nrf52833
         ${NRF_INCLUDES}
         ${OT_PUBLIC_INCLUDES}
 )
 
-target_include_directories(openthread-nrf52840-sdk
+target_include_directories(openthread-nrf52833-sdk
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/nrf52840
+        ${CMAKE_CURRENT_SOURCE_DIR}/nrf52833
         ${NRF_INCLUDES}
         ${OT_PUBLIC_INCLUDES}
 )
 
-target_include_directories(openthread-nrf52840-softdevice-sdk
+target_include_directories(openthread-nrf52833-softdevice-sdk
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/nrf52840
+        ${CMAKE_CURRENT_SOURCE_DIR}/nrf52833
         ${NRF_INCLUDES}
         ${OT_PUBLIC_INCLUDES}
 )
