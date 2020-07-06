@@ -118,7 +118,7 @@ $ arm-none-eabi-objcopy -O ihex ot-cli-ftd ot-cli-ftd.ihex
 $ <path-to-simplicity-studio>/developer/adapter_packs/commander/commander
 ```
 
-In the J-Link Device drop-down list select the serial number of the device to flash. Click the Adapter Connect button. Esnure the Debug Interface drop-down list is set to SWD and click the Target Connect button. Click on the Flash icon on the left side of the window to switch to the flash page. In the Flash MCU pane enter the path of the ot-cli-ftd.s37 file or choose the file with the Browse... button. Click the Flash button located under the Browse... button.
+In the J-Link Device drop-down list select the serial number of the device to flash. Click the Adapter Connect button. Ensure the Debug Interface drop-down list is set to SWD and click the Target Connect button. Click on the Flash icon on the left side of the window to switch to the flash page. In the Flash MCU pane enter the path of the ot-cli-ftd.s37 file or choose the file with the Browse... button. Click the Flash button located under the Browse... button.
 
 ## Run the example with EFR32MG13 boards
 

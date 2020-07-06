@@ -756,7 +756,7 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
         else
 #endif
         {
-            // signal MAC layer for each received frame if promiscous is enabled
+            // signal MAC layer for each received frame if promiscuous is enabled
             // otherwise only signal MAC layer for non-ACK frame
             if (sPromiscuous || sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)
             {

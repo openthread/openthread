@@ -838,7 +838,7 @@ static void processNextRxPacket(otInstance *aInstance)
     }
     else
     {
-        // signal MAC layer for each received frame if promiscous is enabled
+        // signal MAC layer for each received frame if promiscuous is enabled
         // otherwise only signal MAC layer for non-ACK frame
         otEXPECT(sPromiscuous || (length != IEEE802154_ACK_LENGTH));
 
