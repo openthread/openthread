@@ -51,4 +51,13 @@ void Radio::SetShortAddress(Mac::ShortAddress aShortAddress)
 #endif
 }
 
+otError Radio::Transmit(Mac::TxFrame &aFrame)
+{
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+    Get<Utils::Otns>().EmitTransmit(aFrame);
+#endif
+
+    return otPlatRadioTransmit(GetInstance(), &aFrame);
+}
+
 } // namespace ot

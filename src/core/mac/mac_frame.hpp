@@ -965,6 +965,14 @@ public:
      */
     InfoString ToInfoString(void) const;
 
+    /**
+     * This method returns the Frame Control field of the frame.
+     *
+     * @returns The Frame Control field.
+     *
+     */
+    uint16_t GetFrameControlField(void) const;
+
 protected:
     enum
     {
@@ -974,7 +982,6 @@ protected:
         kSequenceIndex = kFcfSize,
     };
 
-    uint16_t GetFrameControlField(void) const;
     uint8_t  FindDstPanIdIndex(void) const;
     uint8_t  FindDstAddrIndex(void) const;
     uint8_t  FindSrcPanIdIndex(void) const;
