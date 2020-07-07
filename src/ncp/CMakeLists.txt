@@ -30,6 +30,13 @@ add_library(openthread-ncp-ftd)
 add_library(openthread-ncp-mtd)
 add_library(openthread-rcp)
 
+option(OT_NCP_SPI "enable NCP SPI support")
+if(OT_NCP_SPI)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_SPI_ENABLE=1")
+else()
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1")
+endif()
+
 # We depend on C++11 to validate that NCP handlers are sorted.
 set_target_properties(
     openthread-ncp-ftd openthread-ncp-mtd openthread-rcp
