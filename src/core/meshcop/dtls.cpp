@@ -57,7 +57,7 @@ namespace ot {
 namespace MeshCoP {
 
 const mbedtls_ecp_group_id Dtls::sCurves[] = {MBEDTLS_ECP_DP_SECP256R1, MBEDTLS_ECP_DP_NONE};
-#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
+#ifdef MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED
 const int Dtls::sHashes[] = {MBEDTLS_MD_NONE};
 #endif
 
