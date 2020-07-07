@@ -124,6 +124,11 @@ otError UdpSocket::Connect(const SockAddr &aSockAddr)
 
     mPeerName = aSockAddr;
 
+    if (!IsBound())
+    {
+        SuccessOrExit(error = Bind(GetSockName()));
+    }
+
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     if (!IsMle(GetInstance(), mSockName.mPort))
     {

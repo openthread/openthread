@@ -44,6 +44,7 @@ On node 1, you should see a print out similar to below:
 - [connect](#connect-ip-port)
 - [open](#open)
 - [send](#send-ip-port-message)
+- [listsockets](#listsockets)
 
 ## Command Details
 
@@ -59,6 +60,7 @@ close
 connect
 open
 send
+listsockets
 Done
 ```
 
@@ -163,5 +165,20 @@ Done
 Done
 
 > udp send -s 800
+Done
+```
+
+### listsockets
+
+List all UDP sockets.
+
+```bash
+> udp listsockets
+|                 Local Address                 |                  Peer Address                 |
++-----------------------------------------------+-----------------------------------------------+
+| 0:0:0:0:0:0:0:0:49153                         | 0:0:0:0:0:0:0:0:*                             |
+| 0:0:0:0:0:0:0:0:49152                         | 0:0:0:0:0:0:0:0:*                             |
+| 0:0:0:0:0:0:0:0:61631                         | 0:0:0:0:0:0:0:0:*                             |
+| 0:0:0:0:0:0:0:0:19788                         | 0:0:0:0:0:0:0:0:*                             |
 Done
 ```
