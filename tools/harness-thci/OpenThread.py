@@ -290,7 +290,6 @@ class OpenThreadTHCI(object):
         self.port = params.get('SerialPort')
 
         self.UIStatusMsg = ''
-        self.__handle = None
         self.AutoDUTEnable = False
         self._is_net = False  # whether device is through ser2net
         self.logStatus = {
@@ -1189,9 +1188,6 @@ class OpenThreadTHCI(object):
     def powerUp(self):
         """power up the Thread device"""
         print('%s call powerUp' % self.port)
-        if not self.__handle:
-            self._connect()
-
         self.isPowerDown = False
 
         if not self.__isOpenThreadRunning():
