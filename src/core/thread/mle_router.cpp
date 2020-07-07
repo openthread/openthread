@@ -972,6 +972,9 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
             VerifyOrExit(route.IsValid(), error = OT_ERROR_PARSE);
             SuccessOrExit(error = ProcessRouteTlv(route));
             UpdateRoutes(route, routerId);
+            // need to update router after ProcessRouteTlv
+            router = mRouterTable.GetRouter(routerId);
+            OT_ASSERT(router != nullptr);
         }
 
         // update routing table
