@@ -334,7 +334,7 @@ void nrf_802154_enh_ack_generator_init(void)
     // Intentionally empty.
 }
 
-const uint8_t * nrf_802154_enh_ack_generator_create(const uint8_t * p_frame)
+uint8_t * nrf_802154_enh_ack_generator_create(const uint8_t * p_frame)
 {
 
     nrf_802154_frame_parser_mhr_data_t frame_offsets;
