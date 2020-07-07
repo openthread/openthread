@@ -153,6 +153,7 @@ otError SubMac::Enable(void)
 
     SuccessOrExit(error = Get<Radio>().Enable());
     SuccessOrExit(error = Get<Radio>().Sleep());
+
     SetState(kStateSleep);
 
 exit:
@@ -175,7 +176,14 @@ exit:
 
 otError SubMac::Sleep(void)
 {
-    otError error = Get<Radio>().Sleep();
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mState == kStateSleep, error = OT_ERROR_BUSY);
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    VerifyOrExit(mCslState == kCslIdle || mCslState == kCslSleep, error = OT_ERROR_BUSY);
+#endif
+
+    error = Get<Radio>().Sleep();
 
     if (error != OT_ERROR_NONE)
     {
@@ -278,11 +286,6 @@ void SubMac::ProcessTransmitSecurity(void)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Transmit security will be processed after time IE content is updated.
     VerifyOrExit(mTransmitFrame.GetTimeIeOffset() == 0, OT_NOOP);
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    // Transmit security will be processed after time IE content is updated.
-    VerifyOrExit(mTransmitFrame.mInfo.mTxInfo.mCslPresent == 0, OT_NOOP);
 #endif
 
     mTransmitFrame.ProcessTransmitAesCcm(*extAddress);

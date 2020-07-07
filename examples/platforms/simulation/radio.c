@@ -120,9 +120,9 @@ static uint8_t sAckIeDataLength = 0;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static uint8_t  sCslIeHeader[IE_HEADER_SIZE] = {0x04, 0x0d};
-static uint32_t sCslSampleTime;
-static uint32_t sCslPeriod;
+static const uint8_t sCslIeHeader[IE_HEADER_SIZE] = {0x04, 0x0d};
+static uint32_t      sCslSampleTime;
+static uint32_t      sCslPeriod;
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
@@ -651,7 +651,7 @@ void radioSendMessage(otInstance *aInstance)
             *(++timeIe) = (uint8_t)(time & 0xff);
         }
     }
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (sCslPeriod > 0)
@@ -842,8 +842,8 @@ void radioSendAck(otInstance *aInstance)
     // Use enh-ack for 802.15.4-2015 frames
     if (otMacFrameIsVersion2015(&sReceiveFrame))
     {
-        otEXPECT(otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, NULL, 0,
-                                          &sAckFrame) == OT_ERROR_NONE);
+        otEXPECT(otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending,
+                                          sAckIeData, sAckIeDataLength, &sAckFrame) == OT_ERROR_NONE);
         otEXPECT(radioProcessTransmitSecurity(&sAckFrame) == OT_ERROR_NONE);
     }
     else
@@ -1063,13 +1063,12 @@ static otError updateIeData(otInstance *aInstance)
     otError error  = OT_ERROR_NONE;
     uint8_t offset = 0;
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (sCslPeriod > 0)
     {
         memcpy(sAckIeData, sCslIeHeader, IE_HEADER_SIZE);
         offset += IE_HEADER_SIZE + CSL_IE_SIZE; // reserve space for CSL IE
     }
-#endif
+
     sAckIeDataLength = offset;
 
     return error;

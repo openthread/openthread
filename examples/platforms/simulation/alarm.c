@@ -310,12 +310,9 @@ uint64_t otPlatTimeGet(void)
     return platformGetNow();
 }
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || \
-    OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return 0;
 }
-#endif
 
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0

@@ -1007,16 +1007,6 @@ bool otLinkIsPromiscuous(otInstance *aInstance);
 otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
 
 /**
- * This function gets the CSL accuracy.
- *
- * @param[in]  aInstance      A pointer to an OpenThread instance.
- *
- * @returns The CSL accuracy in ppm.
- *
- */
-uint8_t otLinkCslGetAccuracy(otInstance *aInstance);
-
-/**
  * This function gets the CSL channel.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
