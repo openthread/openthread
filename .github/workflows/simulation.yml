@@ -231,6 +231,10 @@ jobs:
         ./run_tests.sh
     - name: Codecov
       uses: codecov/codecov-action@v1
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        file: /tmp/test-ot-commissioner/
 
   multiple-instance:
     runs-on: ubuntu-18.04
