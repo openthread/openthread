@@ -1103,6 +1103,10 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
 {
     OT_UNUSED_VARIABLE(aInstance);
 
+    CRITICAL_REGION_ENTER();
+
     sMacFrameCounter = aMacFrameCounter;
+
+    CRITICAL_REGION_EXIT();
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
