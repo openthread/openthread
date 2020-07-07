@@ -51,41 +51,48 @@ otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSett
 
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext)
 {
-    otError           error;
-    Instance &        instance = *static_cast<Instance *>(aInstance);
-    Ip6::Udp::Socket &socket   = *new (aSocket) Ip6::Udp::Socket(instance.Get<Ip6::Udp>());
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = socket.Open(aCallback, aContext);
-
-    return error;
+    return instance.Get<Ip6::Udp>().Open(*static_cast<Ip6::Udp::SocketHandle *>(aSocket), aCallback, aContext);
 }
 
-otError otUdpClose(otUdpSocket *aSocket)
+otError otUdpClose(otInstance *aInstance, otUdpSocket *aSocket)
 {
-    otError           error  = OT_ERROR_INVALID_STATE;
-    Ip6::Udp::Socket &socket = *static_cast<Ip6::Udp::Socket *>(aSocket);
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = socket.Close();
-
-    return error;
+    return instance.Get<Ip6::Udp>().Close(*static_cast<Ip6::Udp::SocketHandle *>(aSocket));
 }
 
-otError otUdpBind(otUdpSocket *aSocket, otSockAddr *aSockName)
+otError otUdpBind(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName)
 {
-    Ip6::Udp::Socket &socket = *static_cast<Ip6::Udp::Socket *>(aSocket);
-    return socket.Bind(*static_cast<const Ip6::SockAddr *>(aSockName));
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Ip6::Udp>().Bind(*static_cast<Ip6::Udp::SocketHandle *>(aSocket),
+                                         *static_cast<const Ip6::SockAddr *>(aSockName));
 }
 
-otError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName)
+otError otUdpConnect(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName)
 {
-    Ip6::Udp::Socket &socket = *static_cast<Ip6::Udp::Socket *>(aSocket);
-    return socket.Connect(*static_cast<const Ip6::SockAddr *>(aSockName));
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Ip6::Udp>().Connect(*static_cast<Ip6::Udp::SocketHandle *>(aSocket),
+                                            *static_cast<const Ip6::SockAddr *>(aSockName));
 }
 
-otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+otError otUdpSend(otInstance *aInstance, otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    Ip6::Udp::Socket &socket = *static_cast<Ip6::Udp::Socket *>(aSocket);
-    return socket.SendTo(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Ip6::Udp>().SendTo(*static_cast<Ip6::Udp::SocketHandle *>(aSocket),
+                                           *static_cast<Message *>(aMessage),
+                                           *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+otUdpSocket *otUdpGetSockets(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Ip6::Udp>().GetUdpSockets();
 }
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
@@ -118,13 +125,6 @@ void otUdpForwardReceive(otInstance *        aInstance,
     static_cast<ot::Message *>(aMessage)->Free();
 }
 #endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
-
-otUdpSocket *otUdpGetSockets(otInstance *aInstance)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Udp>().GetUdpSockets();
-}
 
 otError otUdpAddReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver)
 {

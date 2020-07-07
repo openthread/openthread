@@ -56,7 +56,7 @@ namespace MeshCoP {
 JoinerRouter::JoinerRouter(Instance &aInstance)
     : InstanceLocator(aInstance)
     , Notifier::Receiver(aInstance, JoinerRouter::HandleNotifierEvents)
-    , mSocket(aInstance.Get<Ip6::Udp>())
+    , mSocket(aInstance)
     , mRelayTransmit(OT_URI_PATH_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this)
     , mTimer(aInstance, JoinerRouter::HandleTimer, this)
     , mJoinerUdpPort(0)
