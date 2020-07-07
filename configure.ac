@@ -780,7 +780,7 @@ AC_MSG_CHECKING([whether to build examples])
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Build example applications for one of: simulation, cc1352, cc2538, cc2650, cc2652, efr32mg12, efr32mg13, efr32mg21,
+        [Build example applications for one of: simulation, cc1352, cc2538, cc2650, cc2652, efr32mg1, efr32mg12, efr32mg13, efr32mg21,
          gp712, jn5189, k32w061, kw41z, nrf52811, nrf52833, nrf52840, qpg6095, samr21 @<:@default=no@:>@.
          Note that building example applications also builds the associated OpenThread platform libraries
          and any third_party libraries needed to support the examples.])],
@@ -788,7 +788,7 @@ AC_ARG_WITH(examples,
         case "${with_examples}" in
         no)
             ;;
-        simulation|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg13|efr32mg21|gp712|jn5189|k32w061|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
+        simulation|cc1352|cc2538|cc2650|cc2652|efr32mg1|efr32mg12|efr32mg13|efr32mg21|gp712|jn5189|k32w061|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
             ;;
         *)
             AC_MSG_RESULT(ERROR)
@@ -805,6 +805,7 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC1352],    [test "${with_examples}" = "cc13
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538],    [test "${with_examples}" = "cc2538"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650],    [test "${with_examples}" = "cc2650"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2652],    [test "${with_examples}" = "cc2652"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG1],  [test "${with_examples}" = "efr32mg1"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG12], [test "${with_examples}" = "efr32mg12"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG13], [test "${with_examples}" = "efr32mg13"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG21], [test "${with_examples}" = "efr32mg21"])
@@ -840,11 +841,11 @@ AC_MSG_CHECKING([whether to build platform libraries])
 AC_ARG_WITH(platform,
     [AS_HELP_STRING([--with-platform=TARGET],
         [Build OpenThread platform libraries for one of: cc1352, cc2538, cc2650, cc2652,
-         efr32mg12, efr32mg13, efr32mg21, gp712, jn5189, kw41z, nrf52811, nrf52833, nrf52840, posix, qpg6095, samr21, simulation @<:@default=simulation@:>@.])],
+         efr32mg1, efr32mg12, efr32mg13, efr32mg21, gp712, jn5189, kw41z, nrf52811, nrf52833, nrf52840, posix, qpg6095, samr21, simulation @<:@default=simulation@:>@.])],
     [
         # Make sure the given target is valid.
         case "${with_platform}" in
-        no|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg13|efr32mg21|gp712|jn5189|kw41z|nrf52811|nrf52833|nrf52840|posix|qpg6095|samr21|simulation)
+        no|cc1352|cc2538|cc2650|cc2652|efr32mg1|efr32mg12|efr32mg13|efr32mg21|gp712|jn5189|kw41z|nrf52811|nrf52833|nrf52840|posix|qpg6095|samr21|simulation)
             ;;
         *)
             AC_MSG_RESULT(ERROR)
@@ -879,6 +880,7 @@ AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC1352],    [test "${with_platform}" = "cc13
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2538],    [test "${with_platform}" = "cc2538"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2650],    [test "${with_platform}" = "cc2650"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2652],    [test "${with_platform}" = "cc2652"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_EFR32MG1],  [test "${with_platform}" = "efr32mg1"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_EFR32MG12], [test "${with_platform}" = "efr32mg12"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_EFR32MG13], [test "${with_platform}" = "efr32mg13"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_EFR32MG21], [test "${with_platform}" = "efr32mg21"])
@@ -1038,6 +1040,7 @@ examples/platforms/cc1352/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
 examples/platforms/cc2652/Makefile
+examples/platforms/efr32mg1/Makefile
 examples/platforms/efr32mg12/Makefile
 examples/platforms/efr32mg12/sleepy-demo/Makefile
 examples/platforms/efr32mg12/sleepy-demo/sleepy-demo-ftd/Makefile

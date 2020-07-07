@@ -45,6 +45,13 @@ DIST_SUBDIRS                            = \
 
 SUBDIRS =
 
+if OPENTHREAD_PLATFORM_EFR32MG1
+SUBDIRS                                += \
+    silabs                                \
+    jlink                                 \
+    $(NULL)
+endif
+
 if OPENTHREAD_PLATFORM_EFR32MG12
 SUBDIRS                                += \
     silabs                                \
