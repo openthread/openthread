@@ -56,6 +56,11 @@
 namespace ot {
 namespace MeshCoP {
 
+const mbedtls_ecp_group_id Dtls::sCurves[] = {MBEDTLS_ECP_DP_SECP256R1, MBEDTLS_ECP_DP_NONE};
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
+const int Dtls::sHashes[] = {MBEDTLS_MD_NONE};
+#endif
+
 Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
     : InstanceLocator(aInstance)
     , mState(kStateClosed)
@@ -97,10 +102,6 @@ Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
 #endif
 
     memset(mCipherSuites, 0, sizeof(mCipherSuites));
-    memset(mCurves, 0, sizeof(mCurves));
-#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
-    memset(mHashes, 0, sizeof(mHashes));
-#endif
     memset(mPsk, 0, sizeof(mPsk));
     memset(&mSsl, 0, sizeof(mSsl));
     memset(&mConf, 0, sizeof(mConf));
@@ -292,10 +293,9 @@ otError Dtls::Setup(bool aClient)
     mbedtls_ssl_conf_ciphersuites(&mConf, mCipherSuites);
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        OT_ASSERT(mCurves[1] == MBEDTLS_ECP_DP_NONE);
-        mbedtls_ssl_conf_curves(&mConf, mCurves);
+        mbedtls_ssl_conf_curves(&mConf, sCurves);
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
-        mbedtls_ssl_conf_sig_hashes(&mConf, mHashes);
+        mbedtls_ssl_conf_sig_hashes(&mConf, sHashes);
 #endif
     }
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
@@ -451,11 +451,6 @@ otError Dtls::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
     mPskLength       = aPskLength;
     mCipherSuites[0] = MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8;
     mCipherSuites[1] = 0;
-    mCurves[0]       = MBEDTLS_ECP_DP_SECP256R1;
-    mCurves[1]       = MBEDTLS_ECP_DP_NONE;
-#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
-    mHashes[0] = MBEDTLS_MD_NONE;
-#endif
 
 exit:
     return error;

@@ -409,12 +409,13 @@ private:
 
     State mState;
 
-    int                  mCipherSuites[2];
-    uint8_t              mPsk[kPskMaxLength];
-    uint8_t              mPskLength;
-    mbedtls_ecp_group_id mCurves[2];
+    int     mCipherSuites[2];
+    uint8_t mPsk[kPskMaxLength];
+    uint8_t mPskLength;
+
+    static const mbedtls_ecp_group_id sCurves[];
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
-    int mHashes[1];
+    static const int sHashes[];
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
