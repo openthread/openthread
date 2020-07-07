@@ -294,7 +294,7 @@ otError Dtls::Setup(bool aClient)
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
         mbedtls_ssl_conf_curves(&mConf, sCurves);
-#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
+#ifdef MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED
         mbedtls_ssl_conf_sig_hashes(&mConf, sHashes);
 #endif
     }
