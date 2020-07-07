@@ -61,7 +61,6 @@ JoinerRouter::JoinerRouter(Instance &aInstance)
     , mTimer(aInstance, JoinerRouter::HandleTimer, this)
     , mJoinerUdpPort(0)
     , mIsJoinerPortConfigured(false)
-    , mExpectJoinEntRsp(false)
 {
     Get<Coap::Coap>().AddResource(mRelayTransmit);
 }
@@ -294,12 +293,6 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
 
     metadata.ReadFrom(*message);
 
-    // The message can be sent during CoAP transaction if KEK did not
-    // change (i.e., retransmission). Otherweise, we wait for Joiner
-    // Entrust Response before handling any other pending delayed
-    // Jointer Entrust message.
-    VerifyOrExit(!mExpectJoinEntRsp || (Get<KeyManager>().GetKek() == metadata.mKek), OT_NOOP);
-
     if (TimerMilli::GetNow() < metadata.mSendTime)
     {
         mTimer.FireAt(metadata.mSendTime);
@@ -337,8 +330,6 @@ otError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo)
 
     otLogInfoMeshCoP("Sent joiner entrust length = %d", message->GetLength());
     otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.ntf");
-
-    mExpectJoinEntRsp = true;
 
 exit:
     if (error != OT_ERROR_NONE && message != nullptr)
@@ -453,7 +444,6 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message *         aMessage,
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    mExpectJoinEntRsp = false;
     SendDelayedJoinerEntrust();
 
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage != nullptr, OT_NOOP);
