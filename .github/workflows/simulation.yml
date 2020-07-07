@@ -210,7 +210,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y ninja-build
-        git clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch master
+        git clone https://github.com/Moandor-y/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch fix-kill
     - name: Build
       run: |
         cd /tmp/ot-commissioner
