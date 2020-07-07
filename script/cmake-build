@@ -126,7 +126,7 @@ readonly OT_nrf52833_OPTIONS=(
     "-DOT_UDP_FORWARD=ON"
 )
 
-readonly OT_nrf52840_OPTIONS=${OT_nrf52833_OPTIONS[@]}
+readonly OT_nrf52840_OPTIONS=("${OT_nrf52833_OPTIONS[@]:0}")
 
 die()
 {
@@ -199,51 +199,51 @@ main()
             options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=MinSizeRel")
             ;;
         nrf52811)
-            local_options+=(${OT_nrf52811_OPTIONS[@]} "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/nrf528xx/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
+            local_options+=("${OT_nrf52811_OPTIONS[@]}" "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/nrf528xx/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
             case "${nrf_build_type}" in
                 UART_trans)
                     OT_CMAKE_NINJA_TARGET=("ot-cli-mtd" "ot-ncp-mtd" "ot-rcp")
-                    options+=(${local_options[@]})
+                    options+=("${local_options[@]}")
                     ;;
                 SPI_trans_NCP)
                     OT_CMAKE_NINJA_TARGET=("ot-ncp-mtd" "ot-rcp")
-                    options+=(${local_options[@]} "-DOT_NCP_SPI=ON")
+                    options+=("${local_options[@]}" "-DOT_NCP_SPI=ON")
                     ;;
             esac
             ;;
         nrf52833)
-            local_options+=(${OT_nrf52833_OPTIONS[@]} "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/nrf528xx/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
+            local_options+=("${OT_nrf52833_OPTIONS[@]}" "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/nrf528xx/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
             case "${nrf_build_type}" in
                 UART_trans)
-                    options+=(${local_options[@]})
+                    options+=("${local_options[@]}")
                     ;;
                 USB_trans_bl)
-                    options+=(${local_options[@]} "-DOT_USB=ON" "-DOT_BOOTLOADER=USB")
+                    options+=("${local_options[@]}" "-DOT_USB=ON" "-DOT_BOOTLOADER=USB")
                     ;;
                 SPI_trans_NCP)
                     OT_CMAKE_NINJA_TARGET=("ot-ncp-ftd" "ot-ncp-mtd" "ot-rcp")
-                    options+=(${local_options[@]} "-DOT_NCP_SPI=ON")
+                    options+=("${local_options[@]}" "-DOT_NCP_SPI=ON")
                     ;;
             esac
             ;;
         nrf52840)
-            local_options+=(${OT_nrf52840_OPTIONS[@]} "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/nrf528xx/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
+            local_options+=("${OT_nrf52840_OPTIONS[@]}" "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/nrf528xx/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
             case "${nrf_build_type}" in
                 UART_trans)
-                    options+=(${local_options[@]} "-DOT_EXTERNAL_MBEDTLS=nordicsemi-mbedtls")
+                    options+=("${local_options[@]}" "-DOT_EXTERNAL_MBEDTLS=nordicsemi-mbedtls")
                     ;;
                 USB_trans_bl)
-                    options+=(${local_options[@]} "-DOT_USB=ON" "-DOT_BOOTLOADER=USB" "-DOT_EXTERNAL_MBEDTLS=nordicsemi-mbedtls")
+                    options+=("${local_options[@]}" "-DOT_USB=ON" "-DOT_BOOTLOADER=USB" "-DOT_EXTERNAL_MBEDTLS=nordicsemi-mbedtls")
                     ;;
                 SPI_trans_NCP)
                     OT_CMAKE_NINJA_TARGET=("ot-ncp-ftd" "ot-ncp-mtd" "ot-rcp")
-                    options+=(${local_options[@]} "-DOT_NCP_SPI=ON" "-DOT_EXTERNAL_MBEDTLS=nordicsemi-mbedtls")
+                    options+=("${local_options[@]}" "-DOT_NCP_SPI=ON" "-DOT_EXTERNAL_MBEDTLS=nordicsemi-mbedtls")
                     ;;
                 soft_crypto)
-                    options+=(${local_options[@]})
+                    options+=("${local_options[@]}")
                     ;;
                 soft_crypto_threading)
-                    options+=(${local_options[@]} "-DOT_MBEDTLS_THREADING=ON")
+                    options+=("${local_options[@]}" "-DOT_MBEDTLS_THREADING=ON")
                     ;;
             esac
             ;;
