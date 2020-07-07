@@ -135,6 +135,8 @@ otError UdpSocket::Connect(const SockAddr &aSockAddr)
         error = otPlatUdpConnect(this);
     }
 #endif
+
+exit:
     return error;
 }
 
