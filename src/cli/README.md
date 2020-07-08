@@ -63,6 +63,7 @@ Done
 - [neighbor](#neighbor-list)
 - [netdataregister](#netdataregister)
 - [netdatashow](#netdatashow)
+- [netstat](#netstat)
 - [networkdiagnostic](#networkdiagnostic-get-addr-type-)
 - [networkidtimeout](#networkidtimeout)
 - [networkname](#networkname)
@@ -1039,6 +1040,21 @@ Show Thread Leader network data.
 ```bash
 > netdatashow
 08040b020000
+Done
+```
+
+### netstat
+
+List all UDP sockets.
+
+```bash
+> netstat
+|                 Local Address                 |                  Peer Address                 |
++-----------------------------------------------+-----------------------------------------------+
+| 0:0:0:0:0:0:0:0:49153                         | 0:0:0:0:0:0:0:0:*                             |
+| 0:0:0:0:0:0:0:0:49152                         | 0:0:0:0:0:0:0:0:*                             |
+| 0:0:0:0:0:0:0:0:61631                         | 0:0:0:0:0:0:0:0:*                             |
+| 0:0:0:0:0:0:0:0:19788                         | 0:0:0:0:0:0:0:0:*                             |
 Done
 ```
 

@@ -92,11 +92,6 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    otError ProcessListSockets(uint8_t aArgsLength, char *aArgs[]);
-    int     OutputSocketAddress(const otSockAddr &aAddress);
-#endif
-
     static const Command sCommands[];
     Interpreter &        mInterpreter;
 

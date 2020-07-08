@@ -46,15 +46,8 @@ namespace ot {
 namespace Cli {
 
 const struct UdpExample::Command UdpExample::sCommands[] = {
-    {"help", &UdpExample::ProcessHelp},
-    {"bind", &UdpExample::ProcessBind},
-    {"close", &UdpExample::ProcessClose},
-    {"connect", &UdpExample::ProcessConnect},
-    {"open", &UdpExample::ProcessOpen},
-    {"send", &UdpExample::ProcessSend},
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    {"listsockets", &UdpExample::ProcessListSockets},
-#endif
+    {"help", &UdpExample::ProcessHelp},       {"bind", &UdpExample::ProcessBind}, {"close", &UdpExample::ProcessClose},
+    {"connect", &UdpExample::ProcessConnect}, {"open", &UdpExample::ProcessOpen}, {"send", &UdpExample::ProcessSend},
 };
 
 UdpExample::UdpExample(Interpreter &aInterpreter)
@@ -131,66 +124,6 @@ otError UdpExample::ProcessClose(uint8_t aArgsLength, char *aArgs[])
 
     return otUdpClose(&mSocket);
 }
-
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-otError UdpExample::ProcessListSockets(uint8_t aArgsLength, char *aArgs[])
-{
-    otUdpSocket *socket = otUdpGetSockets(mInterpreter.mInstance);
-
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
-
-    mInterpreter.mServer->OutputFormat(
-        "|                 Local Address                 |                  Peer Address                 |\n");
-    mInterpreter.mServer->OutputFormat(
-        "+-----------------------------------------------+-----------------------------------------------+\n");
-
-    while (socket)
-    {
-        constexpr int kMaxOutputLength = 45;
-        int           outputLength;
-
-        mInterpreter.mServer->OutputFormat("| ");
-
-        outputLength = OutputSocketAddress(socket->mSockName);
-        for (int i = outputLength; i < kMaxOutputLength; ++i)
-        {
-            mInterpreter.mServer->OutputFormat(" ");
-        }
-        mInterpreter.mServer->OutputFormat(" | ");
-
-        outputLength = OutputSocketAddress(socket->mPeerName);
-        for (int i = outputLength; i < kMaxOutputLength; ++i)
-        {
-            mInterpreter.mServer->OutputFormat(" ");
-        }
-        mInterpreter.mServer->OutputFormat(" |\n");
-
-        socket = socket->mNext;
-    }
-
-    return OT_ERROR_NONE;
-}
-
-int UdpExample::OutputSocketAddress(const otSockAddr &aAddress)
-{
-    int outputLength = 0;
-
-    outputLength += mInterpreter.OutputIp6Address(aAddress.mAddress);
-
-    outputLength += mInterpreter.mServer->OutputFormat(":");
-    if (aAddress.mPort == 0)
-    {
-        outputLength += mInterpreter.mServer->OutputFormat("*");
-    }
-    else
-    {
-        outputLength += mInterpreter.mServer->OutputFormat("%d", aAddress.mPort);
-    }
-
-    return outputLength;
-}
-#endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
 otError UdpExample::ProcessOpen(uint8_t aArgsLength, char *aArgs[])
 {

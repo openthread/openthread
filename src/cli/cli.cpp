@@ -193,6 +193,9 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     {"netif", &Interpreter::ProcessNetif},
 #endif
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    {"netstat", &Interpreter::ProcessNetstat},
+#endif
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     {"networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic},
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
@@ -2061,6 +2064,66 @@ exit:
     AppendResult(error);
 }
 #endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+void Interpreter::ProcessNetstat(uint8_t aArgsLength, char *aArgs[])
+{
+    otUdpSocket *socket = otUdpGetSockets(mInstance);
+
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    mServer->OutputFormat(
+        "|                 Local Address                 |                  Peer Address                 |\n");
+    mServer->OutputFormat(
+        "+-----------------------------------------------+-----------------------------------------------+\n");
+
+    while (socket)
+    {
+        constexpr int kMaxOutputLength = 45;
+        int           outputLength;
+
+        mServer->OutputFormat("| ");
+
+        outputLength = OutputSocketAddress(socket->mSockName);
+        for (int i = outputLength; i < kMaxOutputLength; ++i)
+        {
+            mServer->OutputFormat(" ");
+        }
+        mServer->OutputFormat(" | ");
+
+        outputLength = OutputSocketAddress(socket->mPeerName);
+        for (int i = outputLength; i < kMaxOutputLength; ++i)
+        {
+            mServer->OutputFormat(" ");
+        }
+        mServer->OutputFormat(" |\n");
+
+        socket = socket->mNext;
+    }
+
+    AppendResult(OT_ERROR_NONE);
+}
+
+int Interpreter::OutputSocketAddress(const otSockAddr &aAddress)
+{
+    int outputLength = 0;
+
+    outputLength += OutputIp6Address(aAddress.mAddress);
+
+    outputLength += mServer->OutputFormat(":");
+    if (aAddress.mPort == 0)
+    {
+        outputLength += mServer->OutputFormat("*");
+    }
+    else
+    {
+        outputLength += mServer->OutputFormat("%d", aAddress.mPort);
+    }
+
+    return outputLength;
+}
+#endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 void Interpreter::ProcessService(uint8_t aArgsLength, char *aArgs[])

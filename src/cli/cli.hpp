@@ -297,6 +297,10 @@ private:
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     void ProcessNetif(uint8_t aArgsLength, char *aArgs[]);
 #endif
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    void ProcessNetstat(uint8_t aArgsLength, char *aArgs[]);
+    int  OutputSocketAddress(const otSockAddr &aAddress);
+#endif
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessService(uint8_t aArgsLength, char *aArgs[]);
 #endif
