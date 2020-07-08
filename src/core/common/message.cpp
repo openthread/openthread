@@ -46,17 +46,10 @@ MessagePool::MessagePool(Instance &aInstance)
     : InstanceLocator(aInstance)
 #if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     , mNumFreeBuffers(kNumBuffers)
-    , mFreeBuffers()
+    , mBufferPool()
 #endif
 {
-#if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-    memset(mBuffers, 0, sizeof(mBuffers));
-
-    for (Buffer *cur = &mBuffers[0]; cur < OT_ARRAY_END(mBuffers); cur++)
-    {
-        mFreeBuffers.Push(*cur);
-    }
-#else
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     otPlatMessagePoolInit(&GetInstance(), kNumBuffers, sizeof(Buffer));
 #endif
 }
@@ -118,22 +111,20 @@ Buffer *MessagePool::NewBuffer(Message::Priority aPriority)
 
 #else
 
-    buffer = mFreeBuffers.Pop();
+    buffer = mBufferPool.Allocate();
+    VerifyOrExit(buffer != nullptr, OT_NOOP);
 
-    if (buffer != nullptr)
-    {
-        buffer->SetNextBuffer(nullptr);
-        mNumFreeBuffers--;
-    }
+    mNumFreeBuffers--;
+    buffer->SetNextBuffer(nullptr);
 
 #endif
 
+exit:
     if (buffer == nullptr)
     {
         otLogInfoMem("No available message buffer");
     }
 
-exit:
     return buffer;
 }
 
@@ -145,7 +136,7 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
         otPlatMessagePoolFree(&GetInstance(), aBuffer);
 #else
-        mFreeBuffers.Push(*aBuffer);
+        mBufferPool.Free(*aBuffer);
         mNumFreeBuffers++;
 #endif
         aBuffer = next;

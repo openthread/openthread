@@ -381,6 +381,28 @@ target_link_libraries(test-network-data
 
 add_test(NAME test-network-data COMMAND test-network-data)
 
+add_executable(test-pool
+    ${COMMON_SOURCES}
+    test_pool.cpp
+)
+
+target_include_directories(test-pool
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-pool
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-pool
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-pool COMMAND test-pool)
+
 add_executable(test-priority-queue
     ${COMMON_SOURCES}
     test_priority_queue.cpp
@@ -492,7 +514,7 @@ target_link_libraries(test-timer
 add_test(NAME test-timer COMMAND test-timer)
 
 set_target_properties(
-    test-aes test-child test-child-table test-flash test-heap test-hmac-sha256 test-ip6-address test-link-quality test-linked-list test-lowpan test-mac-frame test-message test-message-queue test-netif test-network-data test-priority-queue test-pskc test-steering-data test-string test-timer
+    test-aes test-child test-child-table test-flash test-heap test-hmac-sha256 test-ip6-address test-link-quality test-linked-list test-lowpan test-mac-frame test-message test-message-queue test-netif test-network-data test-pool test-priority-queue test-pskc test-steering-data test-string test-timer
     PROPERTIES
         C_STANDARD 99
         CXX_STANDARD 11

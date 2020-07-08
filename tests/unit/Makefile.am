@@ -121,6 +121,7 @@ check_PROGRAMS                                                     += \
     test-message-queue                                                \
     test-netif                                                        \
     test-network-data                                                 \
+    test-pool                                                         \
     test-priority-queue                                               \
     test-pskc                                                         \
     test-steering-data                                                \
@@ -216,6 +217,9 @@ test_netif_SOURCES           = $(COMMON_SOURCES) test_netif.cpp
 
 test_network_data_LDADD      = $(COMMON_LDADD)
 test_network_data_SOURCES    = $(COMMON_SOURCES) test_network_data.cpp
+
+test_pool_LDADD              = $(COMMON_LDADD)
+test_pool_SOURCES            = $(COMMON_SOURCES) test_pool.cpp
 
 test_priority_queue_LDADD    = $(COMMON_LDADD)
 test_priority_queue_SOURCES  = $(COMMON_SOURCES) test_priority_queue.cpp

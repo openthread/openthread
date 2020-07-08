@@ -46,6 +46,7 @@
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/pool.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/link_quality.hpp"
 
@@ -1254,9 +1255,8 @@ private:
     otError ReclaimBuffers(int aNumBuffers, Message::Priority aPriority);
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT == 0
-    uint16_t           mNumFreeBuffers;
-    Buffer             mBuffers[kNumBuffers];
-    LinkedList<Buffer> mFreeBuffers;
+    uint16_t                  mNumFreeBuffers;
+    Pool<Buffer, kNumBuffers> mBufferPool;
 #endif
 };
 

@@ -250,7 +250,8 @@ private:
         } mInfo;
     };
 
-    typedef LinkedList<CacheEntry> CacheEntryList;
+    typedef Pool<CacheEntry, kCacheEntries> CacheEntryPool;
+    typedef LinkedList<CacheEntry>          CacheEntryList;
 
     enum EntryChange
     {
@@ -270,6 +271,8 @@ private:
         kReasonEvictingForNewEntry,
         kReasonRemovingEid,
     };
+
+    CacheEntryPool &GetCacheEntryPool(void) { return mCacheEntryPool; }
 
     void        Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId);
     void        Remove(const Ip6::Address &aEid, Reason aReason);
@@ -317,12 +320,11 @@ private:
     Coap::Resource mAddressQuery;
     Coap::Resource mAddressNotification;
 
-    CacheEntry     mCacheEntries[kCacheEntries];
+    CacheEntryPool mCacheEntryPool;
     CacheEntryList mCachedList;
     CacheEntryList mSnoopedList;
     CacheEntryList mQueryList;
     CacheEntryList mQueryRetryList;
-    CacheEntryList mUnusedList;
 
     Ip6::IcmpHandler mIcmpHandler;
     TimerMilli       mTimer;

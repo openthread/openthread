@@ -103,11 +103,6 @@ public:
 
 private:
     bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
-
-    // In an unused/available entry (i.e., entry not present in a linked
-    // list), the next pointer is set to point back to the entry itself.
-    bool IsInUse(void) const { return GetNext() != this; }
-    void MarkAsNotInUse(void) { SetNext(this); }
 };
 
 /**
@@ -159,11 +154,6 @@ public:
 
 private:
     bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
-
-    // In an unused/available entry (i.e., entry not present in a linked
-    // list), the next pointer is set to point back to the entry itself.
-    bool IsInUse(void) const { return GetNext() != this; }
-    void MarkAsNotInUse(void) { mNext = this; }
 };
 
 /**
@@ -254,10 +244,7 @@ public:
      * @retval FALSE  The address is not an external address (it is an OpenThread internal address).
      *
      */
-    bool IsUnicastAddressExternal(const NetifUnicastAddress &aAddress) const
-    {
-        return (&mExtUnicastAddresses[0] <= &aAddress) && (&aAddress < OT_ARRAY_END(mExtUnicastAddresses));
-    }
+    bool IsUnicastAddressExternal(const NetifUnicastAddress &aAddress) const;
 
     /**
      * This method adds an external (to OpenThread) unicast address to the network interface.
@@ -336,10 +323,7 @@ public:
      * @retval FALSE  The address is not an external address (it is an OpenThread internal address).
      *
      */
-    bool IsMulticastAddressExternal(const NetifMulticastAddress &aAddress) const
-    {
-        return (&mExtMulticastAddresses[0] <= &aAddress) && (&aAddress < OT_ARRAY_END(mExtMulticastAddresses));
-    }
+    bool IsMulticastAddressExternal(const NetifMulticastAddress &aAddress) const;
 
     /**
      * This method subscribes the network interface to a multicast address.
@@ -446,8 +430,8 @@ private:
     otIp6AddressCallback mAddressCallback;
     void *               mAddressCallbackContext;
 
-    NetifUnicastAddress   mExtUnicastAddresses[OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS];
-    NetifMulticastAddress mExtMulticastAddresses[OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS];
+    Pool<NetifUnicastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS>   mExtUnicastAddressPool;
+    Pool<NetifMulticastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS> mExtMulticastAddressPool;
 
     static const otNetifMulticastAddress kRealmLocalAllMplForwardersMulticastAddress;
     static const otNetifMulticastAddress kLinkLocalAllNodesMulticastAddress;
