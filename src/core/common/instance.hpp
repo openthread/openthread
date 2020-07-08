@@ -736,6 +736,11 @@ template <> inline BackboneRouter::Local &Instance::Get(void)
 {
     return mThreadNetif.mBackboneRouterLocal;
 }
+template <> inline BackboneRouter::Manager &Instance::Get(void)
+{
+    return mThreadNetif.mBackboneRouterManager;
+}
+
 #endif
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
@@ -744,6 +749,13 @@ template <> inline DuaManager &Instance::Get(void)
     return mThreadNetif.mDuaManager;
 }
 #endif
+
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MLR_ENABLE
+template <> inline MlrManager &Instance::Get(void)
+{
+    return mThreadNetif.mMlrManager;
+}
+#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MLR_ENABLE
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 

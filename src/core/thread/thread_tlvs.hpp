@@ -51,6 +51,10 @@ using ot::Encoding::BigEndian::HostSwap32;
 enum
 {
     kCoapUdpPort = 61631,
+
+    // Thread 1.2.0 5.19.13 limits the number of IPv6 addresses should be [1, 15].
+    kIPv6AddressesNumMin = 1,
+    kIPv6AddressesNumMax = 15,
 };
 
 /**
@@ -77,6 +81,7 @@ public:
         kNDOption            = 8,  ///< ND Option TLV
         kNDData              = 9,  ///< ND Data TLV
         kThreadNetworkData   = 10, ///< Thread Network Data TLV
+        kIPv6Addresses       = 14, ///< IPv6 Addresses TLV
     };
 
     /**
@@ -115,6 +120,20 @@ public:
         kTooFewRouters         = 2, ///< Address Solicit due to too few routers.
         kHaveChildIdRequest    = 3, ///< Address Solicit due to child ID request.
         kParentPartitionChange = 4, ///< Address Solicit due to parent partition change
+    };
+
+    /**
+     * Multicast Listener Registration (MLR) Status values
+     *
+     */
+    enum MlrStatus
+    {
+        kMlrSuccess        = 0, ///< Successful (de)registration of all IPv6 addresses.
+        kMlrInvalid        = 2, ///< Invalid IPv6 address(es) in request.
+        kMlrNoPersistent   = 3, ///< This device does not support persistent registrations.
+        kMlrNoResources    = 4, ///< BBR resource shortage.
+        kMlrBbrNotPrimary  = 5, ///< BBR is not Primary at this moment.
+        kMlrGeneralFailure = 6, ///< Reason(s) for failure are not further specified.
     };
 };
 
@@ -224,6 +243,51 @@ private:
 
     uint8_t mTlvs[kMaxSize];
 } OT_TOOL_PACKED_END;
+
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+
+/**
+ * This class implements IPv6 Addresses TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class IPv6AddressesTlv : public ThreadTlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kIPv6Addresses); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const
+    {
+        return GetLength() >= sizeof(Ip6::Address) * kIPv6AddressesNumMin &&
+               GetLength() <= sizeof(Ip6::Address) * kIPv6AddressesNumMax && (GetLength() % sizeof(Ip6::Address)) == 0;
+    }
+
+    /**
+     * This method returns a pointer to the IPv6 address entry.
+     *
+     * @param[in]  aIndex  The index into the IPv6 address list.
+     *
+     * @returns A reference to the IPv6 address.
+     *
+     */
+    const Ip6::Address &GetIp6Address(uint8_t aIndex) const
+    {
+        return *reinterpret_cast<const Ip6::Address *>(GetValue() + (aIndex * sizeof(Ip6::Address)));
+    }
+} OT_TOOL_PACKED_END;
+
+#endif // OPENTHREAD_CONFIG_MLR_ENABLE
 
 } // namespace ot
 

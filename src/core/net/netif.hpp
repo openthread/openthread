@@ -46,6 +46,7 @@
 #include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
 #include "net/socket.hpp"
+#include "thread/mlr_types.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -152,8 +153,16 @@ public:
         return static_cast<NetifMulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
     }
 
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
+    MlrState GetMlrState() const { return mMlrState; }
+    void     SetMlrState(MlrState aState) { mMlrState = aState; }
+#endif
 private:
     bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
+
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
+    MlrState mMlrState : 2;
+#endif
 };
 
 /**
@@ -313,6 +322,7 @@ public:
      *
      */
     const NetifMulticastAddress *GetMulticastAddresses(void) const { return mMulticastAddresses.GetHead(); }
+    NetifMulticastAddress *      GetMulticastAddresses(void) { return mMulticastAddresses.GetHead(); }
 
     /**
      * This method indicates whether a multicast address is an external or internal address.

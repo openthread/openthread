@@ -130,6 +130,11 @@ if(OT_DUA)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DUA_ENABLE=1")
 endif()
 
+option(OT_MLR "enable Multicast Listener Registration feature for Thread 1.2")
+if(OT_MLR)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MLR_ENABLE=1")
+endif()
+
 option(OT_EXTERNAL_HEAP "enable external heap support")
 if(OT_EXTERNAL_HEAP)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1")

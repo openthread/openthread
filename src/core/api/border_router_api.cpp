@@ -39,7 +39,6 @@
 
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
 
 using namespace ot;
 
