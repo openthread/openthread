@@ -27,7 +27,7 @@
 #
 
 cmake_policy(SET CMP0048 NEW)
-cmake_minimum_required(VERSION 3.11.4)
+cmake_minimum_required(VERSION 3.10.2)
 
 file(READ .default-version OT_DEFAULT_VERSION)
 string(STRIP ${OT_DEFAULT_VERSION} OT_DEFAULT_VERSION)
