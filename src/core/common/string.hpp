@@ -212,6 +212,29 @@ public:
         return error;
     }
 
+    /**
+     * This method appends an array of bytes in hex representation (using "%02x" style) to the `String` object.
+     *
+     * @param[in] aBytes    A pointer to buffer containing the bytes to append.
+     * @param[in] aLength   The length of @p aBytes buffer (in bytes).
+     *
+     * @retval OT_ERROR_NONE           Updated the string successfully.
+     * @retval OT_ERROR_NO_BUFS        String could not fit in the storage.
+     *
+     */
+    otError AppendHexBytes(const uint8_t *aBytes, uint16_t aLength)
+    {
+        otError error = OT_ERROR_NONE;
+
+        while (aLength--)
+        {
+            SuccessOrExit(error = Append("%02x", *aBytes++));
+        }
+
+    exit:
+        return error;
+    }
+
 private:
     uint16_t mLength;
     char     mBuffer[kSize];
