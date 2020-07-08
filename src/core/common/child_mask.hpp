@@ -105,19 +105,20 @@ public:
     }
 
     /**
-     * This method returns if all Child masks are cleared.
+     * This method returns if any Child mask is set.
      *
-     * @returns Whether all Child masks are cleared.
+     * @returns Whether any Child mask is set.
+     *
      */
-    bool IsEmpty() const
+    bool GetAny() const
     {
-        bool rval = true;
+        bool rval = false;
 
         for (size_t i = 0; i < sizeof(mMask); i++)
         {
             if (mMask[i] != 0)
             {
-                ExitNow(rval = false);
+                ExitNow(rval = true);
             }
         }
 
