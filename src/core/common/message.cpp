@@ -652,7 +652,7 @@ void Message::SetChildMask(uint16_t aChildIndex)
 
 bool Message::IsChildPending(void) const
 {
-    return GetMetadata().mChildMask.GetAny();
+    return GetMetadata().mChildMask.HasAny();
 }
 
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aValue)

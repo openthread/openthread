@@ -54,11 +54,6 @@ namespace ot {
  *
  */
 
-enum
-{
-    kChildMaskBytes = BitVectorBytes(OPENTHREAD_CONFIG_MLE_MAX_CHILDREN)
-};
-
 /**
  * This class represents a bit-vector of child mask.
  *
@@ -110,7 +105,7 @@ public:
      * @returns Whether any Child mask is set.
      *
      */
-    bool GetAny() const
+    bool HasAny() const
     {
         bool rval = false;
 
@@ -127,6 +122,11 @@ public:
     }
 
 private:
+    enum
+    {
+        kChildMaskBytes = BitVectorBytes(OPENTHREAD_CONFIG_MLE_MAX_CHILDREN)
+    };
+
     uint8_t mMask[kChildMaskBytes];
 };
 
