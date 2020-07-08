@@ -727,6 +727,11 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def del_ipmaddr(self, ipmaddr):
+        cmd = 'ipmaddr del %s' % ipmaddr
+        self.send_command(cmd)
+        self._expect('Done')
+
     def get_addrs(self):
         self.send_command('ipaddr')
 

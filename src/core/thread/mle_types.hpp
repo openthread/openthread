@@ -248,10 +248,10 @@ enum
     kServiceMaxId = 0x0f, ///< Maximal Service ID.
 };
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE || OPENTHREAD_CONFIG_MLR_ENABLE
 
 /**
- * Backbone Router constants
+ * Backbone Router / MLR constants
  *
  */
 enum
@@ -265,7 +265,7 @@ enum
 static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin,
               "kMlrTimeoutDefault must be larger than or equal to kMlrTimeoutMin");
 
-#endif
+#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE || OPENTHREAD_CONFIG_MLR_ENABLE
 
 /**
  * This type represents a MLE device mode.

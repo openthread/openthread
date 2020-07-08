@@ -120,11 +120,13 @@ size_nrf52840()
         "JOINER=1"
         "LINK_RAW=1"
         "MAC_FILTER=1"
+        "MLR=1"
         "MTD_NETDIAG=1"
         "SERVICE=1"
         "SLAAC=1"
         "SNTP_CLIENT=1"
         "TIME_SYNC=1"
+        "THREAD_VERSION=1.2"
         "UDP_FORWARD=1"
     )
 

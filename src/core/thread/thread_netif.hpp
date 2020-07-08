@@ -52,10 +52,15 @@
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #include "backbone_router/bbr_local.hpp"
+#include "backbone_router/bbr_manager.hpp"
 #endif
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
 #include "thread/dua_manager.hpp"
+#endif
+
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+#include "thread/mlr_manager.hpp"
 #endif
 
 #include "meshcop/dataset_manager.hpp"
@@ -253,10 +258,14 @@ private:
     BackboneRouter::Leader mBackboneRouterLeader;
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    BackboneRouter::Local mBackboneRouterLocal;
+    BackboneRouter::Local   mBackboneRouterLocal;
+    BackboneRouter::Manager mBackboneRouterManager;
 #endif
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     DuaManager mDuaManager;
+#endif
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+    MlrManager mMlrManager;
 #endif
     Utils::ChildSupervisor     mChildSupervisor;
     Utils::SupervisionListener mSupervisionListener;
