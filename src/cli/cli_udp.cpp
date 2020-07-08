@@ -47,8 +47,7 @@ namespace Cli {
 
 const struct UdpExample::Command UdpExample::sCommands[] = {
     {"help", &UdpExample::ProcessHelp},       {"bind", &UdpExample::ProcessBind}, {"close", &UdpExample::ProcessClose},
-    {"connect", &UdpExample::ProcessConnect}, {"open", &UdpExample::ProcessOpen}, {"send", &UdpExample::ProcessSend},
-};
+    {"connect", &UdpExample::ProcessConnect}, {"open", &UdpExample::ProcessOpen}, {"send", &UdpExample::ProcessSend}};
 
 UdpExample::UdpExample(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
