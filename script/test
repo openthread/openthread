@@ -68,13 +68,17 @@ build_simulation()
         options+=("-DOT_CSL_RECEIVER=ON")
     fi
 
-    OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}" "${ot_extra_options[@]}"
+    if [[ ${ot_extra_options[*]+x} ]]; then
+        options+=("${ot_extra_options[@]}")
+    fi
+
+    OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
 
     if [[ ${version} == "1.2" ]]; then
 
         options+=("-DOT_BACKBONE_ROUTER=ON")
 
-        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-simulation-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}" "${ot_extra_options[@]}"
+        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-simulation-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
 
     fi
 }
@@ -96,13 +100,17 @@ build_posix()
         options+=("-DOT_PLATFORM_UDP=ON" "-DOT_PLATFORM_NETIF=ON")
     fi
 
-    OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-posix-${version}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}" "${ot_extra_options[@]}"
+    if [[ ${ot_extra_options[*]+x} ]]; then
+        options+=("${ot_extra_options[@]}")
+    fi
+
+    OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-posix-${version}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
 
     if [[ ${version} == "1.2" ]]; then
 
         options+=("-DOT_BACKBONE_ROUTER=ON")
 
-        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-posix-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}" "${ot_extra_options[@]}"
+        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-posix-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
     fi
 }
 
@@ -303,18 +311,23 @@ EXAMPLES:
 
 do_package()
 {
+    local builddir
     local options=("-DCMAKE_BUILD_TYPE=Release")
-    local builddir="${OT_BUILDDIR}/cmake/openthread-sim"
 
-    OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}" "${ot_extra_options[@]}"
+    if [[ ${ot_extra_options[*]+x} ]]; then
+        options+=("${ot_extra_options[@]}")
+    fi
+
+    builddir="${OT_BUILDDIR}/cmake/openthread-sim"
+    OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
     ls "${builddir}"/openthread-simulation-*.deb
 
     builddir="${OT_BUILDDIR}/cmake/openthread-host"
-    OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}" "${ot_extra_options[@]}"
+    OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
     ls "${builddir}"/openthread-standalone-*.deb
 
     builddir="${OT_BUILDDIR}/cmake/openthread-daemon"
-    OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}" "${ot_extra_options[@]}" "-DOT_DAEMON=ON -DOT_PLATFORM_NETIF=ON -DOT_PLATFORM_UDP=ON"
+    OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build posix -DOT_DAEMON=ON -DOT_PLATFORM_NETIF=ON -DOT_PLATFORM_UDP=ON "${options[@]}"
     ls "${builddir}"/openthread-daemon-*.deb
 }
 
