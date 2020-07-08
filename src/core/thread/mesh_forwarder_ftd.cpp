@@ -416,13 +416,13 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessa
     }
     else if (mle.IsRoutingLocator(ip6Header.GetDestination()))
     {
-        uint16_t rloc16 = ip6Header.GetDestination().GetLocator();
+        uint16_t rloc16 = ip6Header.GetDestination().GetIid().GetLocator();
         VerifyOrExit(mle.IsRouterIdValid(Mle::Mle::RouterIdFromRloc16(rloc16)), error = OT_ERROR_DROP);
         mMeshDest = rloc16;
     }
     else if (mle.IsAnycastLocator(ip6Header.GetDestination()))
     {
-        uint16_t aloc16 = ip6Header.GetDestination().GetLocator();
+        uint16_t aloc16 = ip6Header.GetDestination().GetIid().GetLocator();
 
         if (aloc16 == Mle::kAloc16Leader)
         {
@@ -600,7 +600,7 @@ void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Messa
     Ip6::MessageInfo messageInfo;
 
     messageInfo.GetPeerAddr() = Get<Mle::MleRouter>().GetMeshLocal16();
-    messageInfo.GetPeerAddr().SetLocator(aMeshSource);
+    messageInfo.GetPeerAddr().GetIid().SetLocator(aMeshSource);
 
     IgnoreError(Get<Ip6::Icmp>().SendError(Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
                                            messageInfo, aMessage));
@@ -699,7 +699,7 @@ void MeshForwarder::UpdateRoutes(const uint8_t *     aFrame,
     VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort(), OT_NOOP);
     SuccessOrExit(GetIp6Header(aFrame, aFrameLength, aMeshSource, aMeshDest, ip6Header));
 
-    if (!ip6Header.GetSource().IsIidLocator() &&
+    if (!ip6Header.GetSource().GetIid().IsLocator() &&
         Get<NetworkData::Leader>().IsOnMesh(ip6Header.GetSource()) /* only for on mesh address which may require AQ */)
     {
         if (Get<AddressResolver>().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort()) ==

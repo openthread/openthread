@@ -569,18 +569,18 @@ void AddressResolver::HandleAddressNotification(void *aContext, otMessage *aMess
 
 void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Ip6::Address    target;
-    uint8_t         meshLocalIid[Ip6::Address::kInterfaceIdentifierSize];
-    uint16_t        rloc16;
-    uint32_t        lastTransactionTime;
-    CacheEntryList *list;
-    CacheEntry *    entry;
-    CacheEntry *    prev;
+    Ip6::Address             target;
+    Ip6::InterfaceIdentifier meshLocalIid;
+    uint16_t                 rloc16;
+    uint32_t                 lastTransactionTime;
+    CacheEntryList *         list;
+    CacheEntry *             entry;
+    CacheEntry *             prev;
 
     VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
 
     SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
-    SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, meshLocalIid, sizeof(meshLocalIid)));
+    SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, &meshLocalIid, sizeof(meshLocalIid)));
     SuccessOrExit(Tlv::FindUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16));
 
     switch (Tlv::FindUint32Tlv(aMessage, ThreadTlv::kLastTransactionTime, lastTransactionTime))
@@ -594,8 +594,8 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
         ExitNow();
     }
 
-    otLogInfoArp("Received address notification from 0x%04x for %s to 0x%04x", aMessageInfo.GetPeerAddr().GetLocator(),
-                 target.ToString().AsCString(), rloc16);
+    otLogInfoArp("Received address notification from 0x%04x for %s to 0x%04x",
+                 aMessageInfo.GetPeerAddr().GetIid().GetLocator(), target.ToString().AsCString(), rloc16);
 
     entry = FindCacheEntry(target, list, prev);
     VerifyOrExit(entry != nullptr, OT_NOOP);
@@ -609,7 +609,7 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
             // by more than one device. Try to resolve the duplicate
             // address by sending an Address Error message.
 
-            VerifyOrExit(entry->HasMeshLocalIid(meshLocalIid), SendAddressError(target, meshLocalIid, nullptr));
+            VerifyOrExit(entry->GetMeshLocalIid() == meshLocalIid, SendAddressError(target, meshLocalIid, nullptr));
 
             VerifyOrExit(lastTransactionTime < entry->GetLastTransactionTime(), OT_NOOP);
         }
@@ -635,9 +635,9 @@ exit:
     return;
 }
 
-void AddressResolver::SendAddressError(const Ip6::Address &aTarget,
-                                       const uint8_t *     aMeshLocalIid,
-                                       const Ip6::Address *aDestination)
+void AddressResolver::SendAddressError(const Ip6::Address &            aTarget,
+                                       const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                       const Ip6::Address *            aDestination)
 {
     otError          error;
     Coap::Message *  message;
@@ -650,8 +650,7 @@ void AddressResolver::SendAddressError(const Ip6::Address &aTarget,
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aTarget, sizeof(aTarget)));
-    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kMeshLocalEid, aMeshLocalIid,
-                                         Ip6::Address::kInterfaceIdentifierSize));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kMeshLocalEid, &aMeshLocalIid, sizeof(aMeshLocalIid)));
 
     if (aDestination == nullptr)
     {
@@ -690,11 +689,11 @@ void AddressResolver::HandleAddressError(void *aContext, otMessage *aMessage, co
 
 void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError         error = OT_ERROR_NONE;
-    Ip6::Address    target;
-    uint8_t         meshLocalIid[Ip6::Address::kInterfaceIdentifierSize];
-    Mac::ExtAddress macAddr;
-    Ip6::Address    destination;
+    otError                  error = OT_ERROR_NONE;
+    Ip6::Address             target;
+    Ip6::InterfaceIdentifier meshLocalIid;
+    Mac::ExtAddress          extAddr;
+    Ip6::Address             destination;
 
     VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
 
@@ -709,13 +708,12 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
     }
 
     SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, meshLocalIid, sizeof(meshLocalIid)));
+    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, &meshLocalIid, sizeof(meshLocalIid)));
 
     for (const Ip6::NetifUnicastAddress *address = Get<ThreadNetif>().GetUnicastAddresses(); address;
          address                                 = address->GetNext())
     {
-        if (address->GetAddress() == target &&
-            memcmp(Get<Mle::MleRouter>().GetMeshLocal64().GetIid(), meshLocalIid, sizeof(meshLocalIid)))
+        if (address->GetAddress() == target && Get<Mle::MleRouter>().GetMeshLocal64().GetIid() != meshLocalIid)
         {
             // Target EID matches address and Mesh Local EID differs
             Get<ThreadNetif>().RemoveUnicastAddress(*address);
@@ -723,8 +721,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
         }
     }
 
-    macAddr.Set(meshLocalIid);
-    macAddr.ToggleLocal();
+    meshLocalIid.ConvertToExtAddress(extAddr);
 
     for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
@@ -735,7 +732,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
             continue;
         }
 
-        if (child.GetExtAddress() != macAddr)
+        if (child.GetExtAddress() != extAddr)
         {
             // Mesh Local EID differs, so check whether Target EID
             // matches a child address and if so remove it.
@@ -773,7 +770,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
 
     SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
 
-    otLogInfoArp("Received address query from 0x%04x for target %s", aMessageInfo.GetPeerAddr().GetLocator(),
+    otLogInfoArp("Received address query from 0x%04x for target %s", aMessageInfo.GetPeerAddr().GetIid().GetLocator(),
                  target.ToString().AsCString());
 
     if (Get<ThreadNetif>().HasUnicastAddress(target))
@@ -804,10 +801,10 @@ exit:
     return;
 }
 
-void AddressResolver::SendAddressQueryResponse(const Ip6::Address &aTarget,
-                                               const uint8_t *     aMeshLocalIid,
-                                               const uint32_t *    aLastTransactionTime,
-                                               const Ip6::Address &aDestination)
+void AddressResolver::SendAddressQueryResponse(const Ip6::Address &            aTarget,
+                                               const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                               const uint32_t *                aLastTransactionTime,
+                                               const Ip6::Address &            aDestination)
 {
     otError          error;
     Coap::Message *  message;
@@ -820,8 +817,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address &aTarget,
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aTarget, sizeof(aTarget)));
-    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kMeshLocalEid, aMeshLocalIid,
-                                         Ip6::Address::kInterfaceIdentifierSize));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kMeshLocalEid, &aMeshLocalIid, sizeof(aMeshLocalIid)));
     SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, ThreadTlv::kRloc16, Get<Mle::MleRouter>().GetRloc16()));
 
     if (aLastTransactionTime != nullptr)
@@ -1068,16 +1064,6 @@ void AddressResolver::CacheEntry::SetNext(CacheEntry *aEntry)
 
 exit:
     return;
-}
-
-bool AddressResolver::CacheEntry::HasMeshLocalIid(const uint8_t *aIid) const
-{
-    return memcmp(mInfo.mCached.mMeshLocalIid, aIid, Ip6::Address::kInterfaceIdentifierSize) == 0;
-}
-
-void AddressResolver::CacheEntry::SetMeshLocalIid(const uint8_t *aIid)
-{
-    memcpy(mInfo.mCached.mMeshLocalIid, aIid, Ip6::Address::kInterfaceIdentifierSize);
 }
 
 } // namespace ot

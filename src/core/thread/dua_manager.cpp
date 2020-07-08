@@ -147,7 +147,7 @@ void DuaManager::ClearFixedDuaInterfaceIdentifier(void)
     // Nothing to clear.
     VerifyOrExit(IsFixedDuaInterfaceIdentifierSet(), OT_NOOP);
 
-    if (GetDomainUnicastAddress().HasIid(mFixedDuaInterfaceIdentifier) &&
+    if (GetDomainUnicastAddress().GetIid() == mFixedDuaInterfaceIdentifier &&
         Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
     {
         Get<ThreadNetif>().RemoveUnicastAddress(mDomainUnicastAddress);

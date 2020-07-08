@@ -500,7 +500,8 @@ Message *CoapBase::FindRelatedRequest(const Message &         aResponse,
         aMetadata.ReadFrom(*message);
 
         if (((aMetadata.mDestinationAddress == aMessageInfo.GetPeerAddr()) ||
-             aMetadata.mDestinationAddress.IsMulticast() || aMetadata.mDestinationAddress.IsIidAnycastLocator()) &&
+             aMetadata.mDestinationAddress.IsMulticast() ||
+             aMetadata.mDestinationAddress.GetIid().IsAnycastLocator()) &&
             (aMetadata.mDestinationPort == aMessageInfo.GetPeerPort()))
         {
             switch (aResponse.GetType())

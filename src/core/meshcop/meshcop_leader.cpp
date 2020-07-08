@@ -94,7 +94,7 @@ void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
     }
 
     data.mBorderAgentLocator.Init();
-    data.mBorderAgentLocator.SetBorderAgentLocator(aMessageInfo.GetPeerAddr().GetLocator());
+    data.mBorderAgentLocator.SetBorderAgentLocator(aMessageInfo.GetPeerAddr().GetIid().GetLocator());
 
     data.mCommissionerSessionId.Init();
     data.mCommissionerSessionId.SetCommissionerSessionId(++mSessionId);
@@ -194,7 +194,7 @@ void Leader::HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aM
     }
     else
     {
-        uint16_t rloc = aMessageInfo.GetPeerAddr().GetLocator();
+        uint16_t rloc = aMessageInfo.GetPeerAddr().GetIid().GetLocator();
 
         if (borderAgentLocator->GetBorderAgentLocator() != rloc)
         {

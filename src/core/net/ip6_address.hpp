@@ -66,10 +66,13 @@ class InterfaceIdentifier : public otIp6InterfaceIdentifier,
                             public Equatable<InterfaceIdentifier>,
                             public Clearable<InterfaceIdentifier>
 {
+    friend class Address;
+
 public:
     enum
     {
-        kInfoStringSize = 17, // Max chars for the info string (`ToString()`).
+        kSize           = OT_IP6_IID_SIZE, ///< Size of an IPv6 Interface Identifier (in bytes).
+        kInfoStringSize = 17,              ///< Max chars for the info string (`ToString()`).
     };
 
     /**
@@ -97,12 +100,161 @@ public:
     bool IsReserved(void) const;
 
     /**
+     * This method indicates whether or not the Interface Identifier is Subnet-Router Anycast (RFC 4291).
+     *
+     * @retval TRUE   If the Interface Identifier is a Subnet-Router Anycast address.
+     * @retval FALSE  If the Interface Identifier is not a Subnet-Router Anycast address.
+     *
+     */
+    bool IsSubnetRouterAnycast(void) const;
+
+    /**
+     * This method indicates whether or not the Interface Identifier is Reserved Subnet Anycast (RFC 2526).
+     *
+     * @retval TRUE   If the Interface Identifier is a Reserved Subnet Anycast address.
+     * @retval FALSE  If the Interface Identifier is not a Reserved Subnet Anycast address.
+     *
+     */
+    bool IsReservedSubnetAnycast(void) const;
+
+    /**
+     * This method generates and sets the Interface Identifier to a crypto-secure random byte sequence.
+     *
+     */
+    void GenerateRandom(void);
+
+    /**
+     * This method gets the Interface Identifier as a pointer to a byte array.
+     *
+     * @returns A pointer to a byte array (of size `kSize`) containing the Interface Identifier.
+     *
+     */
+    const uint8_t *GetBytes(void) const { return mFields.m8; }
+
+    /**
+     * This method sets the Interface Identifier from a given byte array.
+     *
+     * @param[in] aBuffer    Pointer to an array containing the Interface Identifier. `kSize` bytes from the buffer
+     *                       are copied to form the Interface Identifier.
+     *
+     */
+    void SetBytes(const uint8_t *aBuffer);
+
+    /**
+     * This method sets the Interface Identifier from a given IEEE 802.15.4 Extended Address.
+     *
+     * @param[in] aExtAddress  An Extended Address.
+     *
+     */
+    void SetFromExtAddress(const Mac::ExtAddress &aExtAddress);
+
+    /**
+     * This method converts the Interface Identifier to an IEEE 802.15.4 Extended Address.
+     *
+     * @param[out]  aExtAddress  A reference to an Extended Address where the converted address is placed.
+     *
+     */
+    void ConvertToExtAddress(Mac::ExtAddress &aExtAddress) const;
+
+    /**
+     * This method converts the Interface Identifier to an IEEE 802.15.4 MAC Address.
+     *
+     * @param[out]  aMacAddress  A reference to a MAC Address where the converted address is placed.
+     *
+     */
+    void ConvertToMacAddress(Mac::Address &aMacAddress) const;
+
+    /**
+     * This method sets the Interface Identifier to Routing/Anycast Locator pattern `0000:00ff:fe00:xxxx` with a given
+     * locator (RLOC16 or ALOC16) value.
+     *
+     * @param[in]  aLocator    RLOC16 or ALOC16.
+     *
+     */
+    void SetToLocator(uint16_t aLocator);
+
+    /**
+     * This method indicates whether or not the Interface Identifier matches the locator pattern `0000:00ff:fe00:xxxx`.
+     *
+     * @retval TRUE   If the IID matches the locator pattern.
+     * @retval FALSE  If the IID does not match the locator pattern.
+     *
+     */
+    bool IsLocator(void) const;
+
+    /**
+     * This method indicates whether or not the Interface Identifier (IID) matches a Routing Locator (RLOC).
+     *
+     * In addition to checking that the IID matches the locator pattern (`0000:00ff:fe00:xxxx`), this method also
+     * checks that the locator value is a valid RLOC16.
+     *
+     * @retval TRUE   If the IID matches a RLOC address.
+     * @retval FALSE  If the IID does not match a RLOC address.
+     *
+     */
+    bool IsRoutingLocator(void) const;
+
+    /**
+     * This method indicates whether or not the Interface Identifier (IID) matches an Anycast Locator (ALOC).
+     *
+     * In addition to checking that the IID matches the locator pattern (`0000:00ff:fe00:xxxx`), this method also
+     * checks that the locator value is any valid ALOC16 (0xfc00 - 0xfcff).
+     *
+     * @retval TRUE   If the IID matches a ALOC address.
+     * @retval FALSE  If the IID does not match a ALOC address.
+     *
+     */
+    bool IsAnycastLocator(void) const;
+
+    /**
+     * This method indicates whether or not the Interface Identifier (IID) matches a Service Anycast  Locator (ALOC).
+     *
+     * In addition to checking that the IID matches the locator pattern (`0000:00ff:fe00:xxxx`), this method also
+     * checks that the locator value is a valid Service ALOC16 (0xfc10 – 0xfc2f).
+     *
+     * @retval TRUE   If the IID matches a ALOC address.
+     * @retval FALSE  If the IID does not match a ALOC address.
+     *
+     */
+    bool IsAnycastServiceLocator(void) const;
+
+    /**
+     * This method gets the Interface Identifier (IID) address locator fields.
+     *
+     * This method assumes the IID to match the locator pattern `0000:00ff:fe00:xxxx` (does not explicitly check this)
+     * and returns the last `uint16` portion of the IID.
+     *
+     * @returns The RLOC16 or ALOC16.
+     *
+     */
+    uint16_t GetLocator(void) const { return HostSwap16(mFields.m16[3]); }
+
+    /**
+     * This method sets the Interface Identifier (IID) address locator field.
+     *
+     * Unlike `SetToLocator()`, this method only changes the last 2 bytes of the IID and keeps the rest of the address
+     * as before.
+     *
+     * @param[in]  aLocator   RLOC16 or ALOC16.
+     *
+     */
+    void SetLocator(uint16_t aLocator) { mFields.m16[3] = HostSwap16(aLocator); }
+
+    /**
      * This method converts an Interface Identifier to a string.
      *
      * @returns An `InfoString` containing the string representation of the Interface Identifier.
      *
      */
     InfoString ToString(void) const;
+
+private:
+    enum : uint8_t
+    {
+        kAloc16Mask            = 0xfc, // The mask for Aloc16.
+        kRloc16ReservedBitMask = 0x02, // The mask for the reserved bit of Rloc16.
+    };
+
 } OT_TOOL_PACKED_END;
 
 /**
@@ -119,8 +271,7 @@ public:
      */
     enum
     {
-        kAloc16Mask            = 0xfc, ///< The mask for Aloc16.
-        kRloc16ReservedBitMask = 0x02, ///< The mask for the reserved bit of Rloc16.
+        kAloc16Mask = InterfaceIdentifier::kAloc16Mask, ///< The mask for Aloc16.
     };
 
     /**
@@ -129,8 +280,8 @@ public:
      */
     enum
     {
-        kInterfaceIdentifierSize = OT_IP6_IID_SIZE, ///< Interface Identifier size in bytes.
-        kIp6AddressStringSize    = 40, ///< Max buffer size in bytes to store an IPv6 address in string format.
+        kSize                 = OT_IP6_ADDRESS_SIZE, ///< Size of an IPv6 Address (in bytes).
+        kIp6AddressStringSize = 40, ///< Max buffer size in bytes to store an IPv6 address in string format.
     };
 
     /**
@@ -193,10 +344,10 @@ public:
     /**
      * This methods sets the IPv6 address to a Link-Local address with a given Interface Identifier.
      *
-     * @param[in]  aIid   A pointer to a buffer containing the Interface Identifier.
+     * @param[in]  aIid   An Interface Identifier.
      *
      */
-    void SetToLinkLocalAddress(const uint8_t *aIid);
+    void SetToLinkLocalAddress(const InterfaceIdentifier &aIid);
 
     /**
      * This method indicates whether or not the IPv6 address is multicast address.
@@ -310,100 +461,6 @@ public:
     bool IsMulticastLargerThanRealmLocal(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address is Subnet-Router Anycast (RFC 4291).
-     *
-     * @retval TRUE   If the IPv6 address is a Subnet-Router Anycast address.
-     * @retval FALSE  If the IPv6 address is not a Subnet-Router Anycast address.
-     *
-     */
-    bool IsSubnetRouterAnycast(void) const;
-
-    /**
-     * This method indicates whether or not the IPv6 address is Reserved Subnet Anycast (RFC 2526).
-     *
-     * @retval TRUE   If the IPv6 address is a Reserved Subnet Anycast address.
-     * @retval FALSE  If the IPv6 address is not a Reserved Subnet Anycast address.
-     *
-     */
-    bool IsReservedSubnetAnycast(void) const;
-
-    /**
-     * This method indicates whether or not the IPv6 address contains Reserved IPv6 IID (RFC 5453).
-     *
-     * @retval TRUE   If the IPv6 address contains a reserved IPv6 IID.
-     * @retval FALSE  If the IPv6 address does not contain a reserved IPv6 IID.
-     *
-     */
-    bool IsIidReserved(void) const;
-
-    /**
-     * This method indicates whether or not the Interface Identifier (IID) of the IPv6 address matches the locator
-     * pattern (`0000:00ff:fe00:xxxx`).
-     *
-     * @retval TRUE   If the IPv6 address IID matches the locator pattern
-     * @retval FALSE  If the IPv6 address IID does not match the locator pattern
-     *
-     */
-    bool IsIidLocator(void) const;
-
-    /**
-     * This method indicates whether or not the IPv6 address's Interface Identifier (IID) matches a Routing Locator
-     * (RLOC).
-     *
-     * In addition to checking that the IID matches the locator pattern (`0000:00ff:fe00:xxxx`), this method also
-     * checks that the locator value is a valid RLOC16.
-     *
-     * @retval TRUE   If the IPv6 address's IID matches a RLOC address.
-     * @retval FALSE  If the IPv6 address's IID does not match a RLOC address.
-     *
-     */
-    bool IsIidRoutingLocator(void) const;
-
-    /**
-     * This method indicates whether or not the IPv6 address's Interface Identifier (IID) matches an Anycast Locator
-     * (ALOC).
-     *
-     * In addition to checking that the IID matches the locator pattern (`0000:00ff:fe00:xxxx`), this method also
-     * checks that the locator value is any valid ALOC16 (0xfc00 - 0xfcff).
-     *
-     * @retval TRUE   If the IPv6 address's IID matches a ALOC address.
-     * @retval FALSE  If the IPv6 address's IID does not match a ALOC address.
-     *
-     */
-    bool IsIidAnycastLocator(void) const;
-
-    /**
-     * This method indicates whether or not the IPv6 address's Interface Identifier (IID) matches a Service Anycast
-     * Locator (ALOC).
-     *
-     * In addition to checking that the IID matches the locator pattern (`0000:00ff:fe00:xxxx`), this method also
-     * checks that the locator value is a valid Service ALOC16 (0xfc10 – 0xfc2f).
-     *
-     * @retval TRUE   If the IPv6 address's IID matches a ALOC address.
-     * @retval FALSE  If the IPv6 address's IID does not match a ALOC address.
-     *
-     */
-    bool IsIidAnycastServiceLocator(void) const;
-
-    /**
-     * This method gets the IPv6 address locator.
-     *
-     * @returns RLOC16 or ALOC16.
-     *
-     */
-    uint16_t GetLocator(void) const { return HostSwap16(mFields.m16[7]); }
-
-    /**
-     * This method sets the IPv6 address locator.
-     *
-     * This method only changes the last 2 bytes of the address and keeps the rest of the address as before.
-     *
-     * @param[in]  aLocator   RLOC16 or ALOC16.
-     *
-     */
-    void SetLocator(uint16_t aLocator) { mFields.m16[7] = HostSwap16(aLocator); }
-
-    /**
      * This method sets the IPv6 address to a Routing Locator (RLOC) IPv6 address with a given Mesh-local prefix and
      * RLOC16 value.
      *
@@ -484,91 +541,31 @@ public:
     }
 
     /**
-     * This method returns a pointer to the Interface Identifier.
+     * This method returns the Interface Identifier of the IPv6 address.
      *
-     * @returns A pointer to the Interface Identifier.
+     * @returns A reference to the Interface Identifier.
      *
      */
-    const uint8_t *GetIid(void) const { return mFields.m8 + kInterfaceIdentifierOffset; }
+    const InterfaceIdentifier &GetIid(void) const
+    {
+        return static_cast<const InterfaceIdentifier &>(mFields.mComponents.mIid);
+    }
 
     /**
-     * This method returns a pointer to the Interface Identifier.
+     * This method returns the Interface Identifier of the IPv6 address.
      *
-     * @returns A pointer to the Interface Identifier.
-     *
-     */
-    uint8_t *GetIid(void) { return mFields.m8 + kInterfaceIdentifierOffset; }
-
-    /**
-     * This method indicates whether or not the IPv6 address has the specified Interface Identifier.
-     *
-     * @param[in]  aIid  A pointer to the Interface Identifier.
-     *
-     * @retval true  If the IPv6 address has the specified Interface Identifier.
-     * @retval false If the IPv6 address doesn't have the specified Interface Identifier.
+     * @returns A reference to the Interface Identifier.
      *
      */
-    bool HasIid(const uint8_t *aIid) const;
-
-    /**
-     * This method indicates whether or not the IPv6 address has the specified Interface Identifier.
-     *
-     * @param[in]  aIid  A reference to the Interface Identifier.
-     *
-     * @retval true  If the IPv6 address has the specified Interface Identifier.
-     * @retval false If the IPv6 address doesn't have the specified Interface Identifier.
-     *
-     */
-    bool HasIid(const InterfaceIdentifier &aIid) const { return HasIid(aIid.m8); }
+    InterfaceIdentifier &GetIid(void) { return static_cast<InterfaceIdentifier &>(mFields.mComponents.mIid); }
 
     /**
      * This method sets the Interface Identifier.
      *
-     * @param[in]  aIid  A pointer to the Interface Identifier.
+     * @param[in]  aIid  An Interface Identifier.
      *
      */
-    void SetIid(const uint8_t *aIid);
-
-    /**
-     * This method sets the Interface Identifier.
-     *
-     * @param[in]  aIid  A reference to the Interface Identifier.
-     *
-     */
-    void SetIid(const InterfaceIdentifier &aIid) { SetIid(aIid.m8); }
-
-    /**
-     * This method sets the Interface Identifier.
-     *
-     * @param[in]  aExtAddress  A reference to the extended address.
-     *
-     */
-    void SetIid(const Mac::ExtAddress &aExtAddress);
-
-    /**
-     * This method sets the Interface Identifier to Routing/Anycast Locator pattern `0000:00ff:fe00:xxxx` with a given
-     * locator (RLOC16 or ALOC16) value.
-     *
-     * @param[in]  aLocator    RLOC16 or ALOC16.
-     *
-     */
-    void SetIidToLocator(uint16_t aLocator);
-
-    /**
-     * This method converts the IPv6 Interface Identifier to an IEEE 802.15.4 Extended Address.
-     *
-     * @param[out]  aExtAddress  A reference to the extended address.
-     *
-     */
-    void ToExtAddress(Mac::ExtAddress &aExtAddress) const;
-
-    /**
-     * This method converts the IPv6 Interface Identifier to an IEEE 802.15.4 MAC Address.
-     *
-     * @param[out]  aMacAddress  A reference to the MAC address.
-     *
-     */
-    void ToExtAddress(Mac::Address &aMacAddress) const;
+    void SetIid(const InterfaceIdentifier &aIid) { GetIid() = aIid; }
 
     /**
      * This method returns the IPv6 address scope.
@@ -631,7 +628,6 @@ private:
 
     enum
     {
-        kInterfaceIdentifierOffset          = 8, ///< Interface Identifier offset in bytes.
         kIp4AddressSize                     = 4, ///< Size of the IPv4 address.
         kMulticastNetworkPrefixLengthOffset = 3, ///< Prefix-Based Multicast Address (RFC3306).
         kMulticastNetworkPrefixOffset       = 4, ///< Prefix-Based Multicast Address (RFC3306).

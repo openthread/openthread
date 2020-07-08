@@ -67,11 +67,11 @@ otError Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aContext
     switch (aMacAddr.GetType())
     {
     case Mac::Address::kTypeShort:
-        aIpAddress.SetIidToLocator(aMacAddr.GetShort());
+        aIpAddress.GetIid().SetToLocator(aMacAddr.GetShort());
         break;
 
     case Mac::Address::kTypeExtended:
-        aIpAddress.SetIid(aMacAddr.GetExtended());
+        aIpAddress.GetIid().SetFromExtAddress(aMacAddr.GetExtended());
         break;
 
     default:
@@ -104,16 +104,16 @@ otError Lowpan::CompressSourceIid(const Mac::Address &aMacAddr,
 
     IgnoreError(ComputeIid(aMacAddr, aContext, ipaddr));
 
-    if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
+    if (ipaddr.GetIid() == aIpAddr.GetIid())
     {
         aHcCtl |= kHcSrcAddrMode3;
     }
     else
     {
-        tmp.SetShort(aIpAddr.GetLocator());
+        tmp.SetShort(aIpAddr.GetIid().GetLocator());
         IgnoreError(ComputeIid(tmp, aContext, ipaddr));
 
-        if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
+        if (ipaddr.GetIid() == aIpAddr.GetIid())
         {
             aHcCtl |= kHcSrcAddrMode2;
             SuccessOrExit(error = buf.Write(aIpAddr.mFields.m8 + 14, 2));
@@ -121,7 +121,7 @@ otError Lowpan::CompressSourceIid(const Mac::Address &aMacAddr,
         else
         {
             aHcCtl |= kHcSrcAddrMode1;
-            SuccessOrExit(error = buf.Write(aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize));
+            SuccessOrExit(error = buf.Write(aIpAddr.GetIid().GetBytes(), Ip6::InterfaceIdentifier::kSize));
         }
     }
 
@@ -147,16 +147,16 @@ otError Lowpan::CompressDestinationIid(const Mac::Address &aMacAddr,
 
     IgnoreError(ComputeIid(aMacAddr, aContext, ipaddr));
 
-    if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
+    if (ipaddr.GetIid() == aIpAddr.GetIid())
     {
         aHcCtl |= kHcDstAddrMode3;
     }
     else
     {
-        tmp.SetShort(aIpAddr.GetLocator());
+        tmp.SetShort(aIpAddr.GetIid().GetLocator());
         IgnoreError(ComputeIid(tmp, aContext, ipaddr));
 
-        if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
+        if (ipaddr.GetIid() == aIpAddr.GetIid())
         {
             aHcCtl |= kHcDstAddrMode2;
             SuccessOrExit(error = buf.Write(aIpAddr.mFields.m8 + 14, 2));
@@ -164,7 +164,7 @@ otError Lowpan::CompressDestinationIid(const Mac::Address &aMacAddr,
         else
         {
             aHcCtl |= kHcDstAddrMode1;
-            SuccessOrExit(error = buf.Write(aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize));
+            SuccessOrExit(error = buf.Write(aIpAddr.GetIid().GetBytes(), Ip6::InterfaceIdentifier::kSize));
         }
     }
 
@@ -785,9 +785,9 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
         break;
 
     case kHcSrcAddrMode1:
-        VerifyOrExit(cur + Ip6::Address::kInterfaceIdentifierSize <= end, OT_NOOP);
-        aIp6Header.GetSource().SetIid(cur);
-        cur += Ip6::Address::kInterfaceIdentifierSize;
+        VerifyOrExit(cur + Ip6::InterfaceIdentifier::kSize <= end, OT_NOOP);
+        aIp6Header.GetSource().GetIid().SetBytes(cur);
+        cur += Ip6::InterfaceIdentifier::kSize;
         break;
 
     case kHcSrcAddrMode2:
@@ -830,9 +830,9 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
             break;
 
         case kHcDstAddrMode1:
-            VerifyOrExit(cur + Ip6::Address::kInterfaceIdentifierSize <= end, OT_NOOP);
-            aIp6Header.GetDestination().SetIid(cur);
-            cur += Ip6::Address::kInterfaceIdentifierSize;
+            VerifyOrExit(cur + Ip6::InterfaceIdentifier::kSize <= end, OT_NOOP);
+            aIp6Header.GetDestination().GetIid().SetBytes(cur);
+            cur += Ip6::InterfaceIdentifier::kSize;
             break;
 
         case kHcDstAddrMode2:

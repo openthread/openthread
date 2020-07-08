@@ -585,12 +585,12 @@ public:
     otError GetMeshLocalIp6Address(Ip6::Address &aAddress) const;
 
     /**
-     * This method returns a pointer to the Mesh Local Interface Identifier.
+     * This method returns the Mesh Local Interface Identifier.
      *
-     * @returns a pointer to the Mesh Local Interface Identifier.
+     * @returns The Mesh Local Interface Identifier.
      *
      */
-    const uint8_t *GetMeshLocalIid(void) const { return mMeshLocalIid; }
+    const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mMeshLocalIid; }
 
     /**
      * This method gets the next IPv6 address in the list.
@@ -753,9 +753,9 @@ private:
         kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1,
     };
 
-    uint8_t      mNetworkDataVersion;                                   ///< Current Network Data version
-    uint8_t      mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize]; ///< IPv6 address IID for mesh-local address
-    Ip6::Address mIp6Address[kNumIp6Addresses];                         ///< Registered IPv6 addresses
+    uint8_t                  mNetworkDataVersion;           ///< Current Network Data version
+    Ip6::InterfaceIdentifier mMeshLocalIid;                 ///< IPv6 address IID for mesh-local address
+    Ip6::Address             mIp6Address[kNumIp6Addresses]; ///< Registered IPv6 addresses
 
     uint32_t mTimeout; ///< Child timeout
 

@@ -66,7 +66,12 @@ extern "C" {
 OT_TOOL_PACKED_BEGIN
 struct otIp6InterfaceIdentifier
 {
-    uint8_t m8[OT_IP6_IID_SIZE]; ///< The Interface Identifier of an IPv6 address.
+    union OT_TOOL_PACKED_FIELD
+    {
+        uint8_t  m8[OT_IP6_IID_SIZE];                     ///< 8-bit fields
+        uint16_t m16[OT_IP6_IID_SIZE / sizeof(uint16_t)]; ///< 16-bit fields
+        uint32_t m32[OT_IP6_IID_SIZE / sizeof(uint32_t)]; ///< 32-bit fields
+    } mFields;                                            ///< The Interface Identifier accessor fields
 } OT_TOOL_PACKED_END;
 
 /**
@@ -74,6 +79,43 @@ struct otIp6InterfaceIdentifier
  *
  */
 typedef struct otIp6InterfaceIdentifier otIp6InterfaceIdentifier;
+
+/**
+ * @struct otIp6NetworkPrefix
+ *
+ * This structure represents the Network Prefix of an IPv6 address (most significant 64 bits of the address).
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otIp6NetworkPrefix
+{
+    uint8_t m8[OT_IP6_PREFIX_SIZE]; ///< The Network Prefix.
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents the Network Prefix of an IPv6 address (most significant 64 bits of the address).
+ *
+ */
+typedef struct otIp6NetworkPrefix otIp6NetworkPrefix;
+
+/**
+ * @struct otIp6AddressComponents
+ *
+ * This structure represents the components of an IPv6 address.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otIp6AddressComponents
+{
+    otIp6NetworkPrefix       mNetworkPrefix; ///< The Network Prefix (most significant 64 bits of the address)
+    otIp6InterfaceIdentifier mIid;           ///< The Interface Identifier (least significant 64 bits of the address)
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents the components of an IPv6 address.
+ *
+ */
+typedef struct otIp6AddressComponents otIp6AddressComponents;
 
 /**
  * @struct otIp6Address
@@ -86,10 +128,11 @@ struct otIp6Address
 {
     union OT_TOOL_PACKED_FIELD
     {
-        uint8_t  m8[OT_IP6_ADDRESS_SIZE];                     ///< 8-bit fields
-        uint16_t m16[OT_IP6_ADDRESS_SIZE / sizeof(uint16_t)]; ///< 16-bit fields
-        uint32_t m32[OT_IP6_ADDRESS_SIZE / sizeof(uint32_t)]; ///< 32-bit fields
-    } mFields;                                                ///< IPv6 accessor fields
+        uint8_t                m8[OT_IP6_ADDRESS_SIZE];                     ///< 8-bit fields
+        uint16_t               m16[OT_IP6_ADDRESS_SIZE / sizeof(uint16_t)]; ///< 16-bit fields
+        uint32_t               m32[OT_IP6_ADDRESS_SIZE / sizeof(uint32_t)]; ///< 32-bit fields
+        otIp6AddressComponents mComponents;                                 ///< IPv6 address components
+    } mFields;                                                              ///< IPv6 accessor fields
 } OT_TOOL_PACKED_END;
 
 /**

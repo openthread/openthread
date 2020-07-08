@@ -923,28 +923,28 @@ public:
     void SetContextId(uint8_t aContextId) { mControl = kCompressed | aContextId; }
 
     /**
-     * This method returns a pointer to the IID value.
+     * This method returns the IID value.
      *
-     * @returns A pointer to the IID value.
+     * @returns The IID value.
      *
      */
-    const uint8_t *GetIid(void) const { return mIid; }
+    const Ip6::InterfaceIdentifier &GetIid(void) const { return mIid; }
 
     /**
      * This method sets the IID value.
      *
-     * @param[in]  aIid  A pointer to the IID value.
+     * @param[in]  aIid  The IID value.
      *
      */
-    void SetIid(const uint8_t *aIid) { memcpy(mIid, aIid, sizeof(mIid)); }
+    void SetIid(const Ip6::InterfaceIdentifier &aIid) { mIid = aIid; }
 
     /**
-     * This method returns a pointer to the IPv6 Address value.
+     * This method returns the IPv6 Address value.
      *
-     * @returns A pointer to the IPv6 Address value.
+     * @returns The IPv6 Address value.
      *
      */
-    const Ip6::Address *GetIp6Address(void) const { return &mIp6Address; }
+    const Ip6::Address &GetIp6Address(void) const { return mIp6Address; }
 
     /**
      * This method sets the IPv6 Address value.
@@ -964,8 +964,8 @@ private:
     uint8_t mControl;
     union
     {
-        uint8_t      mIid[Ip6::Address::kInterfaceIdentifierSize];
-        Ip6::Address mIp6Address;
+        Ip6::InterfaceIdentifier mIid;
+        Ip6::Address             mIp6Address;
     } OT_TOOL_PACKED_FIELD;
 } OT_TOOL_PACKED_END;
 

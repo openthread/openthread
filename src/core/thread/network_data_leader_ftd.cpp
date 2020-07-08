@@ -144,7 +144,7 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
 
     otLogInfoNetData("Received network data registration");
 
-    VerifyOrExit(aMessageInfo.GetPeerAddr().IsIidRoutingLocator(), OT_NOOP);
+    VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator(), OT_NOOP);
 
     switch (Tlv::FindUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16))
     {
@@ -160,7 +160,8 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
     if (ThreadTlv::FindTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) == OT_ERROR_NONE)
     {
         VerifyOrExit(networkData.IsValid(), OT_NOOP);
-        RegisterNetworkData(aMessageInfo.GetPeerAddr().GetLocator(), networkData.GetTlvs(), networkData.GetLength());
+        RegisterNetworkData(aMessageInfo.GetPeerAddr().GetIid().GetLocator(), networkData.GetTlvs(),
+                            networkData.GetLength());
     }
 
     SuccessOrExit(Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo));
