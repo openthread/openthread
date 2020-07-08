@@ -68,7 +68,7 @@ build_simulation()
         options+=("-DOT_CSL_RECEIVER=ON")
     fi
 
-    if [[ ${ot_extra_options[@]+x} ]]; then
+    if [[ ${ot_extra_options[*]+x} ]]; then
         options+=("${ot_extra_options[@]}")
     fi
 
@@ -100,7 +100,7 @@ build_posix()
         options+=("-DOT_PLATFORM_UDP=ON" "-DOT_PLATFORM_NETIF=ON")
     fi
 
-    if [[ ${ot_extra_options[@]+x} ]]; then
+    if [[ ${ot_extra_options[*]+x} ]]; then
         options+=("${ot_extra_options[@]}")
     fi
 
@@ -314,7 +314,7 @@ do_package()
     local builddir
     local options=("-DCMAKE_BUILD_TYPE=Release")
 
-    if [[ ${ot_extra_options[@]+} ]]; then
+    if [[ ${ot_extra_options[*]+x} ]]; then
         options+=("${ot_extra_options[@]}")
     fi
 
