@@ -461,7 +461,7 @@ private:
     void *           mContext;
 
     Ip6::MessageInfo mPeerAddress;
-    Ip6::UdpSocket   mSocket;
+    Ip6::Udp::Socket mSocket;
 
     TransportCallback mTransportCallback;
     void *            mTransportContext;

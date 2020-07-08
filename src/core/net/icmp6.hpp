@@ -38,6 +38,7 @@
 
 #include <openthread/icmp6.h>
 
+#include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -58,186 +59,6 @@ using ot::Encoding::BigEndian::HostSwap16;
  *
  */
 
-/*
- * This class implements ICMPv6 header generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class IcmpHeader : public otIcmp6Header
-{
-public:
-    /**
-     * This method initializes the ICMPv6 header to all zeros.
-     *
-     */
-    void Init(void)
-    {
-        mType        = 0;
-        mCode        = 0;
-        mChecksum    = 0;
-        mData.m32[0] = 0;
-    }
-
-    /**
-     * ICMPv6 Message Types
-     *
-     */
-    enum Type
-    {
-        kTypeDstUnreach       = OT_ICMP6_TYPE_DST_UNREACH,       ///< Destination Unreachable
-        kTypePacketToBig      = OT_ICMP6_TYPE_PACKET_TO_BIG,     ///< Packet To Big
-        kTypeTimeExceeded     = OT_ICMP6_TYPE_TIME_EXCEEDED,     ///< Time Exceeded
-        kTypeParameterProblem = OT_ICMP6_TYPE_PARAMETER_PROBLEM, ///< Parameter Problem
-        kTypeEchoRequest      = OT_ICMP6_TYPE_ECHO_REQUEST,      ///< Echo Request
-        kTypeEchoReply        = OT_ICMP6_TYPE_ECHO_REPLY,        ///< Echo Reply
-    };
-
-    /**
-     * ICMPv6 Message Codes
-     *
-     */
-    enum Code
-    {
-        kCodeDstUnreachNoRoute = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE, ///< Destination Unreachable No Route
-        kCodeFragmReasTimeEx   = OT_ICMP6_CODE_FRAGM_REAS_TIME_EX,   ///< Fragment Reassembly Time Exceeded
-    };
-
-    /**
-     * This method indicates whether the ICMPv6 message is an error message.
-     *
-     * @retval TRUE if the ICMPv6 message is an error message.
-     * @retval FALSE if the ICMPv6 message is an informational message.
-     *
-     */
-    bool IsError(void) const { return mType < OT_ICMP6_TYPE_ECHO_REQUEST; }
-
-    /**
-     * This method returns the ICMPv6 message type.
-     *
-     * @returns The ICMPv6 message type.
-     *
-     */
-    Type GetType(void) const { return static_cast<Type>(mType); }
-
-    /**
-     * This method sets the ICMPv6 message type.
-     *
-     * @param[in]  aType  The ICMPv6 message type.
-     *
-     */
-    void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
-
-    /**
-     * This method returns the ICMPv6 message code.
-     *
-     * @returns The ICMPv6 message code.
-     *
-     */
-    Code GetCode(void) const { return static_cast<Code>(mCode); }
-
-    /**
-     * This method sets the ICMPv6 message code.
-     *
-     * @param[in]  aCode  The ICMPv6 message code.
-     */
-    void SetCode(Code aCode) { mCode = static_cast<uint8_t>(aCode); }
-
-    /**
-     * This method returns the ICMPv6 message checksum.
-     *
-     * @returns The ICMPv6 message checksum.
-     *
-     */
-    uint16_t GetChecksum(void) const { return HostSwap16(mChecksum); }
-
-    /**
-     * This method sets the ICMPv6 message checksum.
-     *
-     * @param[in]  aChecksum  The ICMPv6 message checksum.
-     *
-     */
-    void SetChecksum(uint16_t aChecksum) { mChecksum = HostSwap16(aChecksum); }
-
-    /**
-     * This method returns the ICMPv6 message ID for Echo Requests and Replies.
-     *
-     * @returns The ICMPv6 message ID.
-     *
-     */
-    uint16_t GetId(void) const { return HostSwap16(mData.m16[0]); }
-
-    /**
-     * This method sets the ICMPv6 message ID for Echo Requests and Replies.
-     *
-     * @param[in]  aId  The ICMPv6 message ID.
-     *
-     */
-    void SetId(uint16_t aId) { mData.m16[0] = HostSwap16(aId); }
-
-    /**
-     * This method returns the ICMPv6 message sequence for Echo Requests and Replies.
-     *
-     * @returns The ICMPv6 message sequence.
-     *
-     */
-    uint16_t GetSequence(void) const { return HostSwap16(mData.m16[1]); }
-
-    /**
-     * This method sets the ICMPv6 message sequence for Echo Requests and Replies.
-     *
-     * @param[in]  aSequence  The ICMPv6 message sequence.
-     *
-     */
-    void SetSequence(uint16_t aSequence) { mData.m16[1] = HostSwap16(aSequence); }
-
-    /**
-     * This static method returns the byte offset of the Checksum field in the ICMPv6 header.
-     *
-     * @returns The byte offset of the Checksum field.
-     *
-     */
-    static uint8_t GetChecksumOffset(void) { return offsetof(otIcmp6Header, mChecksum); }
-
-    /**
-     * This static method returns the byte offset of the ICMPv6 payload.
-     *
-     * @returns The Byte offset of the ICMPv6 payload.
-     *
-     */
-    static uint8_t GetDataOffset(void) { return offsetof(otIcmp6Header, mData); }
-
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements ICMPv6 message handlers.
- *
- */
-class IcmpHandler : public otIcmp6Handler, public LinkedListEntry<IcmpHandler>
-{
-    friend class Icmp;
-
-public:
-    /**
-     * This constructor creates an ICMPv6 message handler.
-     *
-     * @param[in]  aCallback  A pointer to the function that is called when receiving an ICMPv6 message.
-     * @param[in]  aContext   A pointer to arbitrary context information.
-     *
-     */
-    IcmpHandler(otIcmp6ReceiveCallback aCallback, void *aContext)
-    {
-        mReceiveCallback = aCallback;
-        mContext         = aContext;
-        mNext            = nullptr;
-    }
-
-private:
-    void HandleReceiveMessage(Message &aMessage, const MessageInfo &aMessageInfo, const IcmpHeader &aIcmp6Header)
-    {
-        mReceiveCallback(mContext, &aMessage, &aMessageInfo, &aIcmp6Header);
-    }
-};
-
 /**
  * This class implements ICMPv6.
  *
@@ -245,6 +66,167 @@ private:
 class Icmp : public InstanceLocator
 {
 public:
+    /*
+     * This class implements ICMPv6 header generation and parsing.
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    class Header : public otIcmp6Header, public Clearable<Header>
+    {
+    public:
+        /**
+         * ICMPv6 Message Types
+         *
+         */
+        enum Type : uint8_t
+        {
+            kTypeDstUnreach       = OT_ICMP6_TYPE_DST_UNREACH,       ///< Destination Unreachable
+            kTypePacketToBig      = OT_ICMP6_TYPE_PACKET_TO_BIG,     ///< Packet To Big
+            kTypeTimeExceeded     = OT_ICMP6_TYPE_TIME_EXCEEDED,     ///< Time Exceeded
+            kTypeParameterProblem = OT_ICMP6_TYPE_PARAMETER_PROBLEM, ///< Parameter Problem
+            kTypeEchoRequest      = OT_ICMP6_TYPE_ECHO_REQUEST,      ///< Echo Request
+            kTypeEchoReply        = OT_ICMP6_TYPE_ECHO_REPLY,        ///< Echo Reply
+        };
+
+        /**
+         * ICMPv6 Message Codes
+         *
+         */
+        enum Code : uint8_t
+        {
+            kCodeDstUnreachNoRoute = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE, ///< Destination Unreachable No Route
+            kCodeFragmReasTimeEx   = OT_ICMP6_CODE_FRAGM_REAS_TIME_EX,   ///< Fragment Reassembly Time Exceeded
+        };
+
+        enum : uint8_t
+        {
+            kTypeFieldOffset     = 0, ///< The byte offset of Type field in ICMP6 header.
+            kCodeFieldOffset     = 1, ///< The byte offset of Code field in ICMP6 header.
+            kChecksumFieldOffset = 2, ///< The byte offset of Checksum field in ICMP6 header.
+            kDataFieldOffset     = 4, ///< The byte offset of Data field in ICMP6 header.
+        };
+
+        /**
+         * This method indicates whether the ICMPv6 message is an error message.
+         *
+         * @retval TRUE if the ICMPv6 message is an error message.
+         * @retval FALSE if the ICMPv6 message is an informational message.
+         *
+         */
+        bool IsError(void) const { return mType < OT_ICMP6_TYPE_ECHO_REQUEST; }
+
+        /**
+         * This method returns the ICMPv6 message type.
+         *
+         * @returns The ICMPv6 message type.
+         *
+         */
+        Type GetType(void) const { return static_cast<Type>(mType); }
+
+        /**
+         * This method sets the ICMPv6 message type.
+         *
+         * @param[in]  aType  The ICMPv6 message type.
+         *
+         */
+        void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
+
+        /**
+         * This method returns the ICMPv6 message code.
+         *
+         * @returns The ICMPv6 message code.
+         *
+         */
+        Code GetCode(void) const { return static_cast<Code>(mCode); }
+
+        /**
+         * This method sets the ICMPv6 message code.
+         *
+         * @param[in]  aCode  The ICMPv6 message code.
+         *
+         */
+        void SetCode(Code aCode) { mCode = static_cast<uint8_t>(aCode); }
+
+        /**
+         * This method returns the ICMPv6 message checksum.
+         *
+         * @returns The ICMPv6 message checksum.
+         *
+         */
+        uint16_t GetChecksum(void) const { return HostSwap16(mChecksum); }
+
+        /**
+         * This method sets the ICMPv6 message checksum.
+         *
+         * @param[in]  aChecksum  The ICMPv6 message checksum.
+         *
+         */
+        void SetChecksum(uint16_t aChecksum) { mChecksum = HostSwap16(aChecksum); }
+
+        /**
+         * This method returns the ICMPv6 message ID for Echo Requests and Replies.
+         *
+         * @returns The ICMPv6 message ID.
+         *
+         */
+        uint16_t GetId(void) const { return HostSwap16(mData.m16[0]); }
+
+        /**
+         * This method sets the ICMPv6 message ID for Echo Requests and Replies.
+         *
+         * @param[in]  aId  The ICMPv6 message ID.
+         *
+         */
+        void SetId(uint16_t aId) { mData.m16[0] = HostSwap16(aId); }
+
+        /**
+         * This method returns the ICMPv6 message sequence for Echo Requests and Replies.
+         *
+         * @returns The ICMPv6 message sequence.
+         *
+         */
+        uint16_t GetSequence(void) const { return HostSwap16(mData.m16[1]); }
+
+        /**
+         * This method sets the ICMPv6 message sequence for Echo Requests and Replies.
+         *
+         * @param[in]  aSequence  The ICMPv6 message sequence.
+         *
+         */
+        void SetSequence(uint16_t aSequence) { mData.m16[1] = HostSwap16(aSequence); }
+
+    } OT_TOOL_PACKED_END;
+
+    /**
+     * This class implements ICMPv6 message handlers.
+     *
+     */
+    class Handler : public otIcmp6Handler, public LinkedListEntry<Handler>
+    {
+        friend class Icmp;
+
+    public:
+        /**
+         * This constructor creates an ICMPv6 message handler.
+         *
+         * @param[in]  aCallback  A pointer to the function that is called when receiving an ICMPv6 message.
+         * @param[in]  aContext   A pointer to arbitrary context information.
+         *
+         */
+        Handler(otIcmp6ReceiveCallback aCallback, void *aContext)
+        {
+            mReceiveCallback = aCallback;
+            mContext         = aContext;
+            mNext            = nullptr;
+        }
+
+    private:
+        void HandleReceiveMessage(Message &aMessage, const MessageInfo &aMessageInfo, const Header &aIcmp6Header)
+        {
+            mReceiveCallback(mContext, &aMessage, &aMessageInfo, &aIcmp6Header);
+        }
+    };
+
     /**
      * This constructor initializes the object.
      *
@@ -272,7 +254,7 @@ public:
      * @retval OT_ERROR_ALREADY  The ICMPv6 handler is already registered.
      *
      */
-    otError RegisterHandler(IcmpHandler &aHandler);
+    otError RegisterHandler(Handler &aHandler);
 
     /**
      * This method sends an ICMPv6 Echo Request message.
@@ -300,10 +282,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available.
      *
      */
-    otError SendError(IcmpHeader::Type   aType,
-                      IcmpHeader::Code   aCode,
-                      const MessageInfo &aMessageInfo,
-                      const Message &    aMessage);
+    otError SendError(Header::Type aType, Header::Code aCode, const MessageInfo &aMessageInfo, const Message &aMessage);
 
     /**
      * This method handles an ICMPv6 message.
@@ -356,7 +335,7 @@ public:
 private:
     otError HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo);
 
-    LinkedList<IcmpHandler> mHandlers;
+    LinkedList<Handler> mHandlers;
 
     uint16_t        mEchoSequence;
     otIcmp6EchoMode mEchoMode;

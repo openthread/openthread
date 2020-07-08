@@ -118,8 +118,8 @@ private:
     otError        SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);
     Coap::Message *PrepareJoinerEntrustMessage(void);
 
-    Ip6::UdpSocket mSocket;
-    Coap::Resource mRelayTransmit;
+    Ip6::Udp::Socket mSocket;
+    Coap::Resource   mRelayTransmit;
 
     TimerMilli   mTimer;
     MessageQueue mDelayedJoinEnts;

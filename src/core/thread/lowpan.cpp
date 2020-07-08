@@ -562,12 +562,12 @@ exit:
 
 otError Lowpan::CompressUdp(Message &aMessage, BufferWriter &aBuf)
 {
-    otError        error       = OT_ERROR_NONE;
-    BufferWriter   buf         = aBuf;
-    uint16_t       startOffset = aMessage.GetOffset();
-    Ip6::UdpHeader udpHeader;
-    uint16_t       source;
-    uint16_t       destination;
+    otError          error       = OT_ERROR_NONE;
+    BufferWriter     buf         = aBuf;
+    uint16_t         startOffset = aMessage.GetOffset();
+    Ip6::Udp::Header udpHeader;
+    uint16_t         source;
+    uint16_t         destination;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(udpHeader), &udpHeader) == sizeof(udpHeader),
                  error = OT_ERROR_PARSE);
@@ -597,10 +597,11 @@ otError Lowpan::CompressUdp(Message &aMessage, BufferWriter &aBuf)
     else
     {
         SuccessOrExit(error = buf.Write(kUdpDispatch));
-        SuccessOrExit(error = buf.Write(&udpHeader, Ip6::UdpHeader::GetLengthOffset()));
+        SuccessOrExit(error = buf.Write(&udpHeader, Ip6::Udp::Header::kLengthFieldOffset));
     }
 
-    SuccessOrExit(error = buf.Write(reinterpret_cast<uint8_t *>(&udpHeader) + Ip6::UdpHeader::GetChecksumOffset(), 2));
+    SuccessOrExit(error =
+                      buf.Write(reinterpret_cast<uint8_t *>(&udpHeader) + Ip6::Udp::Header::kChecksumFieldOffset, 2));
 
     aMessage.MoveOffset(sizeof(udpHeader));
 
@@ -1010,7 +1011,7 @@ exit:
     return (error == OT_ERROR_NONE) ? static_cast<int>(cur - aBuf) : -1;
 }
 
-int Lowpan::DecompressUdpHeader(Ip6::UdpHeader &aUdpHeader, const uint8_t *aBuf, uint16_t aBufLength)
+int Lowpan::DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, const uint8_t *aBuf, uint16_t aBufLength)
 {
     otError        error = OT_ERROR_PARSE;
     const uint8_t *cur   = aBuf;
@@ -1077,8 +1078,8 @@ exit:
 
 int Lowpan::DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength, uint16_t aDatagramLength)
 {
-    Ip6::UdpHeader udpHeader;
-    int            headerLen = -1;
+    Ip6::Udp::Header udpHeader;
+    int              headerLen = -1;
 
     headerLen = DecompressUdpHeader(udpHeader, aBuf, aBufLength);
     VerifyOrExit(headerLen >= 0, OT_NOOP);
