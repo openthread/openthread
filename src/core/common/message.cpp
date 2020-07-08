@@ -637,36 +637,22 @@ exit:
 
 bool Message::GetChildMask(uint16_t aChildIndex) const
 {
-    OT_ASSERT(aChildIndex < sizeof(GetMetadata().mChildMask) * 8);
-    return (GetMetadata().mChildMask[aChildIndex / 8] & (0x80 >> (aChildIndex % 8))) != 0;
+    return GetMetadata().mChildMask.Get(aChildIndex);
 }
 
 void Message::ClearChildMask(uint16_t aChildIndex)
 {
-    OT_ASSERT(aChildIndex < sizeof(GetMetadata().mChildMask) * 8);
-    GetMetadata().mChildMask[aChildIndex / 8] &= ~(0x80 >> (aChildIndex % 8));
+    GetMetadata().mChildMask.Clear(aChildIndex);
 }
 
 void Message::SetChildMask(uint16_t aChildIndex)
 {
-    OT_ASSERT(aChildIndex < sizeof(GetMetadata().mChildMask) * 8);
-    GetMetadata().mChildMask[aChildIndex / 8] |= 0x80 >> (aChildIndex % 8);
+    GetMetadata().mChildMask.Set(aChildIndex);
 }
 
 bool Message::IsChildPending(void) const
 {
-    bool rval = false;
-
-    for (size_t i = 0; i < sizeof(GetMetadata().mChildMask); i++)
-    {
-        if (GetMetadata().mChildMask[i] != 0)
-        {
-            ExitNow(rval = true);
-        }
-    }
-
-exit:
-    return rval;
+    return !GetMetadata().mChildMask.IsEmpty();
 }
 
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aValue)

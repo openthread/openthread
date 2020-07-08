@@ -41,6 +41,7 @@
 #include <openthread/message.h>
 #include <openthread/platform/messagepool.h>
 
+#include "common/child_mask.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/linked_list.hpp"
@@ -64,9 +65,8 @@ namespace ot {
 
 enum
 {
-    kNumBuffers     = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS,
-    kBufferSize     = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE,
-    kChildMaskBytes = BitVectorBytes(OPENTHREAD_CONFIG_MLE_MAX_CHILDREN),
+    kNumBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS,
+    kBufferSize = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE,
 };
 
 class Message;
@@ -96,9 +96,9 @@ struct MessageMetadata
     uint16_t    mOffset;      ///< A byte offset within the message.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
 
-    uint8_t  mChildMask[kChildMaskBytes]; ///< A bit-vector to indicate which sleepy children need to receive this.
-    uint16_t mMeshDest;                   ///< Used for unicast non-link-local messages.
-    uint8_t  mTimeout;                    ///< Seconds remaining before dropping the message.
+    ChildMask mChildMask; ///< A ChildMask to indicate which sleepy children need to receive this.
+    uint16_t  mMeshDest;  ///< Used for unicast non-link-local messages.
+    uint8_t   mTimeout;   ///< Seconds remaining before dropping the message.
     union
     {
         uint16_t mPanId;   ///< Used for MLE Discover Request and Response messages.
