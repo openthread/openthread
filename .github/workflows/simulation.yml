@@ -229,6 +229,9 @@ jobs:
         cd /tmp/ot-commissioner/tests/integration
         ./bootstrap.sh
         ./run_tests.sh
+    - name: Copy Codecov Files
+      run: |
+        cp -vr /tmp/test-ot-commissioner/ot-br-posix/build/* build/
     - name: Codecov
       uses: codecov/codecov-action@v1
 
