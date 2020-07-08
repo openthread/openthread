@@ -105,7 +105,7 @@ public:
      * @returns Whether any Child mask is set.
      *
      */
-    bool HasAny() const
+    bool HasAny(void) const
     {
         bool rval = false;
 
