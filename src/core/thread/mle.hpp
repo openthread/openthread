@@ -554,7 +554,7 @@ public:
      */
     const MeshLocalPrefix &GetMeshLocalPrefix(void) const
     {
-        return reinterpret_cast<const MeshLocalPrefix &>(mMeshLocal16.GetAddress());
+        return static_cast<const MeshLocalPrefix &>(mMeshLocal16.GetAddress().GetPrefix());
     }
 
     /**

@@ -43,7 +43,6 @@
 #include "common/equatable.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
-#include "thread/mle_types.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -56,6 +55,32 @@ namespace Ip6 {
  * @{
  *
  */
+
+/**
+ * This class represents the Network Prefix of an IPv6 address (most significant 64 bits of the address).
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class NetworkPrefix : public otIp6NetworkPrefix, public Equatable<NetworkPrefix>, public Clearable<NetworkPrefix>
+{
+public:
+    enum
+    {
+        kSize   = OT_IP6_PREFIX_SIZE,            ///< Size in bytes.
+        kLength = OT_IP6_PREFIX_SIZE * CHAR_BIT, ///< Length of Network Prefix in bits.
+    };
+
+    /**
+     * This method generates and sets the Network Prefix to a crypto-secure random Unique Local Address (ULA) based
+     * on the pattern `fdxx:xxxx:xxxx:` (RFC 4193).
+     *
+     * @retval OT_ERROR_NONE     Successfully generated a random ULA Network Prefix
+     * @retval OT_ERROR_FAILED   Failed to generate random ULA Network Prefix.
+     *
+     */
+    otError GenerateRandomUla(void);
+
+} OT_TOOL_PACKED_END;
 
 /**
  * This class represents the Interface Identifier of an IPv6 address.
@@ -461,29 +486,40 @@ public:
     bool IsMulticastLargerThanRealmLocal(void) const;
 
     /**
-     * This method sets the IPv6 address to a Routing Locator (RLOC) IPv6 address with a given Mesh-local prefix and
+     * This method sets the IPv6 address to a Routing Locator (RLOC) IPv6 address with a given Network Prefix and
      * RLOC16 value.
      *
-     * @param[in]  aMeshLocalPrefix  A Mesh Local Prefix.
+     * @param[in]  aNetworkPrefix    A Network Prefix.
      * @param[in]  aRloc16           A RLOC16 value.
      *
      */
-    void SetToRoutingLocator(const Mle::MeshLocalPrefix &aMeshLocalPrefix, uint16_t aRloc16)
+    void SetToRoutingLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aRloc16)
     {
-        SetToLocator(aMeshLocalPrefix, aRloc16);
+        SetToLocator(aNetworkPrefix, aRloc16);
     }
 
     /**
-     * This method sets the IPv6 address to a Anycast Locator (ALOC) IPv6 address with a given Mesh-local prefix and
+     * This method sets the IPv6 address to a Anycast Locator (ALOC) IPv6 address with a given Network Prefix and
      * ALOC16 value.
      *
-     * @param[in]  aMeshLocalPrefix  A Mesh Local Prefix.
+     * @param[in]  aNetworkPrefix    A Network Prefix.
      * @param[in]  aAloc16           A ALOC16 value.
      *
      */
-    void SetToAnycastLocator(const Mle::MeshLocalPrefix &aMeshLocalPrefix, uint16_t aAloc16)
+    void SetToAnycastLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aAloc16)
     {
-        SetToLocator(aMeshLocalPrefix, aAloc16);
+        SetToLocator(aNetworkPrefix, aAloc16);
+    }
+
+    /**
+     * This method returns the Network Prefix of the IPv6 address (most significant 64 bits of the address).
+     *
+     * @returns A reference to the Network Prefix.
+     *
+     */
+    const NetworkPrefix &GetPrefix(void) const
+    {
+        return static_cast<const NetworkPrefix &>(mFields.mComponents.mNetworkPrefix);
     }
 
     /**
@@ -499,15 +535,12 @@ public:
     void SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
 
     /**
-     * This method sets the IPv6 address prefix to the given Mesh Local Prefix.
+     * This method sets the IPv6 address prefix to the given Network Prefix.
      *
-     * @param[in]  aMeshLocalPrefix   A Mesh Local Prefix.
+     * @param[in]  aNetworkPrefix   A Network Prefix.
      *
      */
-    void SetPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix)
-    {
-        SetPrefix(aMeshLocalPrefix.m8, Mle::MeshLocalPrefix::kLength);
-    }
+    void SetPrefix(const NetworkPrefix &aNetworkPrefix);
 
     /**
      * This method sets the prefix content of the Prefix-Based Multicast Address.
@@ -519,14 +552,14 @@ public:
     void SetMulticastNetworkPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
 
     /**
-     * This method sets the prefix content of Mesh Local Prefix-Based Multicast Address.
+     * This method sets the prefix content of Prefix-Based Multicast Address.
      *
-     * @param[in]  aMeshLocalPrefix   A reference to the Mesh Local Prefix.
+     * @param[in]  aNetworkPrefix   A reference to a Network Prefix.
      *
      */
-    void SetMulticastNetworkPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix)
+    void SetMulticastNetworkPrefix(const NetworkPrefix &aNetworkPrefix)
     {
-        SetMulticastNetworkPrefix(aMeshLocalPrefix.m8, Mle::MeshLocalPrefix::kLength);
+        SetMulticastNetworkPrefix(aNetworkPrefix.m8, NetworkPrefix::kLength);
     }
 
     /**
@@ -618,7 +651,7 @@ public:
 
 private:
     void SetPrefix(uint8_t aOffset, const uint8_t *aPrefix, uint8_t aPrefixLength);
-    void SetToLocator(const Mle::MeshLocalPrefix &aMeshLocalPrefix, uint16_t aLocator);
+    void SetToLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator);
 
     static const Address &GetLinkLocalAllNodesMulticast(void);
     static const Address &GetLinkLocalAllRoutersMulticast(void);
