@@ -56,6 +56,11 @@
 namespace ot {
 namespace MeshCoP {
 
+const mbedtls_ecp_group_id Dtls::sCurves[] = {MBEDTLS_ECP_DP_SECP256R1, MBEDTLS_ECP_DP_NONE};
+#ifdef MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED
+const int Dtls::sHashes[] = {MBEDTLS_MD_NONE};
+#endif
+
 Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
     : InstanceLocator(aInstance)
     , mState(kStateClosed)
@@ -286,6 +291,13 @@ otError Dtls::Setup(bool aClient)
 
     OT_ASSERT(mCipherSuites[1] == 0);
     mbedtls_ssl_conf_ciphersuites(&mConf, mCipherSuites);
+    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    {
+        mbedtls_ssl_conf_curves(&mConf, sCurves);
+#ifdef MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED
+        mbedtls_ssl_conf_sig_hashes(&mConf, sHashes);
+#endif
+    }
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
     mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);

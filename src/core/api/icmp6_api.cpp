@@ -58,7 +58,7 @@ otError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Ip6::Icmp>().RegisterHandler(*static_cast<Ip6::IcmpHandler *>(aHandler));
+    return instance.Get<Ip6::Icmp>().RegisterHandler(*static_cast<Ip6::Icmp::Handler *>(aHandler));
 }
 
 otError otIcmp6SendEchoRequest(otInstance *         aInstance,

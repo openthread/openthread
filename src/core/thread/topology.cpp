@@ -121,37 +121,15 @@ void Child::Clear(void)
 
 void Child::ClearIp6Addresses(void)
 {
-    memset(mMeshLocalIid, 0, sizeof(mMeshLocalIid));
+    mMeshLocalIid.Clear();
     memset(mIp6Address, 0, sizeof(mIp6Address));
-}
-
-/**
- * Determines if all elements in an array are zero.
- *
- * @param[in]  aArray   A pointer to an array of bytes.
- * @param[in]  aLength  Array length (number of bytes).
- *
- * @returns TRUE if all bytes in the array are zero, FALSE otherwise.
- *
- */
-static bool IsAllZero(const uint8_t *aArray, uint8_t aLength)
-{
-    bool retval = true;
-
-    for (; aLength != 0; aArray++, aLength--)
-    {
-        VerifyOrExit(*aArray == 0, retval = false);
-    }
-
-exit:
-    return retval;
 }
 
 otError Child::GetMeshLocalIp6Address(Ip6::Address &aAddress) const
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(!IsAllZero(mMeshLocalIid, sizeof(mMeshLocalIid)), error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(!mMeshLocalIid.IsUnspecified(), error = OT_ERROR_NOT_FOUND);
 
     aAddress.SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
     aAddress.SetIid(mMeshLocalIid);
@@ -193,8 +171,8 @@ otError Child::AddIp6Address(const Ip6::Address &aAddress)
 
     if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
-        VerifyOrExit(IsAllZero(mMeshLocalIid, sizeof(mMeshLocalIid)), error = OT_ERROR_ALREADY);
-        memcpy(mMeshLocalIid, aAddress.GetIid(), Ip6::Address::kInterfaceIdentifierSize);
+        VerifyOrExit(mMeshLocalIid.IsUnspecified(), error = OT_ERROR_ALREADY);
+        mMeshLocalIid = aAddress.GetIid();
         ExitNow();
     }
 
@@ -224,9 +202,9 @@ otError Child::RemoveIp6Address(const Ip6::Address &aAddress)
 
     if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
-        if (memcmp(aAddress.GetIid(), mMeshLocalIid, Ip6::Address::kInterfaceIdentifierSize) == 0)
+        if (aAddress.GetIid() == mMeshLocalIid)
         {
-            memset(mMeshLocalIid, 0, sizeof(mMeshLocalIid));
+            mMeshLocalIid.Clear();
             error = OT_ERROR_NONE;
         }
 
@@ -265,7 +243,7 @@ bool Child::HasIp6Address(const Ip6::Address &aAddress) const
 
     if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
-        retval = (memcmp(aAddress.GetIid(), mMeshLocalIid, Ip6::Address::kInterfaceIdentifierSize) == 0);
+        retval = (aAddress.GetIid() == mMeshLocalIid);
         ExitNow();
     }
 

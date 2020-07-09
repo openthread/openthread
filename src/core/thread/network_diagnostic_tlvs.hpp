@@ -884,7 +884,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return !IsExtended() && (GetLength() % OT_IP6_ADDRESS_SIZE == 0); }
+    bool IsValid(void) const { return !IsExtended() && (GetLength() % sizeof(Ip6::Address) == 0); }
 
     /**
      * This method returns a pointer to the IPv6 address entry.

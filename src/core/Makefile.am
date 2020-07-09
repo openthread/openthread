@@ -337,6 +337,7 @@ HEADERS_COMMON                             = \
     common/new.hpp                           \
     common/non_copyable.hpp                  \
     common/notifier.hpp                      \
+    common/pool.hpp                          \
     common/random.hpp                        \
     common/random_manager.hpp                \
     common/settings.hpp                      \

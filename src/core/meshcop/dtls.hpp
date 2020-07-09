@@ -413,6 +413,11 @@ private:
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
 
+    static const mbedtls_ecp_group_id sCurves[];
+#ifdef MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED
+    static const int sHashes[];
+#endif
+
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     const uint8_t *    mCaChainSrc;
@@ -456,7 +461,7 @@ private:
     void *           mContext;
 
     Ip6::MessageInfo mPeerAddress;
-    Ip6::UdpSocket   mSocket;
+    Ip6::Udp::Socket mSocket;
 
     TransportCallback mTransportCallback;
     void *            mTransportContext;

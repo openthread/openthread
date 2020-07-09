@@ -203,6 +203,38 @@ jobs:
     - name: Codecov
       uses: codecov/codecov-action@v1
 
+  external-commissioner:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y ninja-build
+        git clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch master
+    - name: Build
+      run: |
+        cd /tmp/ot-commissioner
+        script/bootstrap.sh
+        cmake -GNinja                           \
+              -DCMAKE_CXX_STANDARD=11           \
+              -DCMAKE_CXX_STANDARD_REQUIRED=ON  \
+              -DCMAKE_BUILD_TYPE=Release        \
+              -DCMAKE_INSTALL_PREFIX=/usr/local \
+              -S . -B build
+        cmake --build build
+        sudo cmake --install build
+    - name: Run
+      run: |
+        export OT_COMM_OPENTHREAD="$(pwd)"
+        cd /tmp/ot-commissioner/tests/integration
+        ./bootstrap.sh
+        ./run_tests.sh
+    - name: Copy Codecov Files
+      run: |
+        cp -vr /tmp/test-ot-commissioner/ot-br-posix/build/* build/
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
   multiple-instance:
     runs-on: ubuntu-18.04
     env:

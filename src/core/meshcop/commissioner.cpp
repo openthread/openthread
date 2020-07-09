@@ -121,8 +121,7 @@ void Commissioner::SignalJoinerEvent(otCommissionerJoinerEvent aEvent, const Joi
     }
     else if (aJoiner == mActiveJoiner)
     {
-        joinerId.Set(mJoinerIid.m8);
-        joinerId.ToggleLocal();
+        mJoinerIid.ConvertToExtAddress(joinerId);
     }
     else
     {
@@ -1048,9 +1047,7 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
         Joiner *        joiner;
 
         mJoinerIid = joinerIid;
-
-        receivedId.Set(mJoinerIid.m8);
-        receivedId.ToggleLocal();
+        mJoinerIid.ConvertToExtAddress(receivedId);
 
         joiner = FindBestMatchingJoinerEntry(receivedId);
         VerifyOrExit(joiner != nullptr, OT_NOOP);
@@ -1230,7 +1227,7 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
     aMessage.CopyTo(0, offset, aMessage.GetLength(), *message);
 
     messageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.GetPeerAddr().SetLocator(mJoinerRloc);
+    messageInfo.GetPeerAddr().GetIid().SetLocator(mJoinerRloc);
     messageInfo.SetPeerPort(kCoapUdpPort);
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
