@@ -350,17 +350,17 @@ uint32_t DataPollHandler::GetNextCslTransmitRequestDelay(const Child &aChild, ui
     uint16_t phase = (aRadioNow / OT_US_PER_TEN_SYMBOLS) % aChild.GetCslPeriod();
     int16_t  diff  = static_cast<int16_t>(aChild.GetCslPhase() - phase);
 
-    if (diff > kCslMaxFrameRequestAhead)
+    if (diff > kCslFrameRequestAheadMax)
     {
-        delay = static_cast<uint16_t>(aChild.GetCslPhase() - phase - kCslMaxFrameRequestAhead) * OT_US_PER_TEN_SYMBOLS;
+        delay = static_cast<uint16_t>(aChild.GetCslPhase() - phase - kCslFrameRequestAheadMax) * OT_US_PER_TEN_SYMBOLS;
     }
-    else if (diff > kCslMinFrameRequestAhead)
+    else if (diff > kCslFrameRequestAheadMin && !Get<Mac::Mac>().IsInTransmitState())
     {
         delay = 0;
     }
     else
     {
-        delay = static_cast<uint16_t>(aChild.GetCslPeriod() + aChild.GetCslPhase() - phase - kCslMaxFrameRequestAhead) *
+        delay = static_cast<uint16_t>(aChild.GetCslPeriod() + aChild.GetCslPhase() - phase - kCslFrameRequestAheadMax) *
                 OT_US_PER_TEN_SYMBOLS;
     }
 

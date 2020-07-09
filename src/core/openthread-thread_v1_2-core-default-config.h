@@ -57,6 +57,28 @@
 #define OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW 5
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_CSL_FRAME_REQUEST_AHEAD_MAX
+ *
+ * The maximum time ahead allowed for a CSL transmitter request a
+ * transmisson for MAC layer.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CSL_FRAME_REQUEST_AHEAD_MAX
+#define OPENTHREAD_CONFIG_CSL_FRAME_REQUEST_AHEAD_MAX 50 ///< 8ms, in units of 10 symbols.
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CSL_FRAME_REQUEST_AHEAD_MIN
+ *
+ * The minimum time ahead allowed for a CSL transmitter request a
+ * transmisson for MAC layer.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CSL_FRAME_REQUEST_AHEAD_MIN
+#define OPENTHREAD_CONFIG_CSL_FRAME_REQUEST_AHEAD_MIN 1 ///< 160us, in units of 10 symbols.
+#endif
+
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 #endif // OPENTHREAD_THREAD_V1_2_CORE_DEFAULT_CONFIG_H_

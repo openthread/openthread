@@ -118,4 +118,26 @@
 
 #endif
 
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+
+/**
+ * @def OPENTHREAD_CONFIG_CSL_FRAME_REQUEST_AHEAD_MAX
+ *
+ * The maximum time ahead allowed for a CSL transmitter request a
+ * transmisson for MAC layer.
+ *
+ */
+#define OPENTHREAD_CONFIG_CSL_FRAME_REQUEST_AHEAD_MAX 60 ///< 9.6ms, in units of 10 symbols.
+
+/**
+ * @def OPENTHREAD_CONFIG_CSL_FRAME_REQUEST_AHEAD_MIN
+ *
+ * The minimum time ahead allowed for a CSL transmitter request a
+ * transmisson for MAC layer.
+ *
+ */
+#define OPENTHREAD_CONFIG_CSL_FRAME_REQUEST_AHEAD_MIN 13 ///< 2ms, in units of 10 symbols.
+
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_
