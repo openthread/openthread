@@ -2086,14 +2086,14 @@ void Interpreter::ProcessNetstat(uint8_t aArgsLength, char *aArgs[])
         mServer->OutputFormat("| ");
 
         outputLength = OutputSocketAddress(socket->mSockName);
-        for (int i = outputLength; i < kMaxOutputLength; ++i)
+        for (int i = outputLength; 0 <= i && i < kMaxOutputLength; ++i)
         {
             mServer->OutputFormat(" ");
         }
         mServer->OutputFormat(" | ");
 
         outputLength = OutputSocketAddress(socket->mPeerName);
-        for (int i = outputLength; i < kMaxOutputLength; ++i)
+        for (int i = outputLength; 0 <= i && i < kMaxOutputLength; ++i)
         {
             mServer->OutputFormat(" ");
         }
@@ -2107,21 +2107,27 @@ void Interpreter::ProcessNetstat(uint8_t aArgsLength, char *aArgs[])
 
 int Interpreter::OutputSocketAddress(const otSockAddr &aAddress)
 {
-    int outputLength = 0;
+    int outputLength;
+    int result = 0;
 
-    outputLength += OutputIp6Address(aAddress.mAddress);
+    VerifyOrExit((outputLength = OutputIp6Address(aAddress.mAddress)) >= 0, result = -1);
+    result += outputLength;
 
-    outputLength += mServer->OutputFormat(":");
+    VerifyOrExit((outputLength = mServer->OutputFormat(":")) >= 0, result = -1);
+    result += outputLength;
     if (aAddress.mPort == 0)
     {
-        outputLength += mServer->OutputFormat("*");
+        VerifyOrExit((outputLength = mServer->OutputFormat("*")) >= 0, result = -1);
+        result += outputLength;
     }
     else
     {
-        outputLength += mServer->OutputFormat("%d", aAddress.mPort);
+        VerifyOrExit((outputLength = mServer->OutputFormat("%d", aAddress.mPort)) >= 0, result = -1);
+        result += outputLength;
     }
 
-    return outputLength;
+exit:
+    return result;
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
