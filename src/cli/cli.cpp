@@ -193,6 +193,7 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     {"netif", &Interpreter::ProcessNetif},
 #endif
+    {"netstat", &Interpreter::ProcessNetstat},
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     {"networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic},
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
@@ -376,9 +377,9 @@ void Interpreter::OutputBytes(const uint8_t *aBytes, uint8_t aLength) const
     }
 }
 
-void Interpreter::OutputIp6Address(const otIp6Address &aAddress) const
+int Interpreter::OutputIp6Address(const otIp6Address &aAddress) const
 {
-    mServer->OutputFormat(
+    return mServer->OutputFormat(
         "%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(aAddress.mFields.m16[0]), HostSwap16(aAddress.mFields.m16[1]),
         HostSwap16(aAddress.mFields.m16[2]), HostSwap16(aAddress.mFields.m16[3]), HostSwap16(aAddress.mFields.m16[4]),
         HostSwap16(aAddress.mFields.m16[5]), HostSwap16(aAddress.mFields.m16[6]), HostSwap16(aAddress.mFields.m16[7]));
@@ -2061,6 +2062,70 @@ exit:
     AppendResult(error);
 }
 #endif
+
+void Interpreter::ProcessNetstat(uint8_t aArgsLength, char *aArgs[])
+{
+    otUdpSocket *socket = otUdpGetSockets(mInstance);
+
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    mServer->OutputFormat(
+        "|                 Local Address                 |                  Peer Address                 |\n");
+    mServer->OutputFormat(
+        "+-----------------------------------------------+-----------------------------------------------+\n");
+
+    while (socket)
+    {
+        constexpr int kMaxOutputLength = 45;
+        int           outputLength;
+
+        mServer->OutputFormat("| ");
+
+        outputLength = OutputSocketAddress(socket->mSockName);
+        for (int i = outputLength; 0 <= i && i < kMaxOutputLength; ++i)
+        {
+            mServer->OutputFormat(" ");
+        }
+        mServer->OutputFormat(" | ");
+
+        outputLength = OutputSocketAddress(socket->mPeerName);
+        for (int i = outputLength; 0 <= i && i < kMaxOutputLength; ++i)
+        {
+            mServer->OutputFormat(" ");
+        }
+        mServer->OutputFormat(" |\n");
+
+        socket = socket->mNext;
+    }
+
+    AppendResult(OT_ERROR_NONE);
+}
+
+int Interpreter::OutputSocketAddress(const otSockAddr &aAddress)
+{
+    int outputLength;
+    int result = 0;
+
+    VerifyOrExit((outputLength = OutputIp6Address(aAddress.mAddress)) >= 0, result = -1);
+    result += outputLength;
+
+    VerifyOrExit((outputLength = mServer->OutputFormat(":")) >= 0, result = -1);
+    result += outputLength;
+    if (aAddress.mPort == 0)
+    {
+        VerifyOrExit((outputLength = mServer->OutputFormat("*")) >= 0, result = -1);
+        result += outputLength;
+    }
+    else
+    {
+        VerifyOrExit((outputLength = mServer->OutputFormat("%d", aAddress.mPort)) >= 0, result = -1);
+        result += outputLength;
+    }
+
+exit:
+    return result;
+}
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 void Interpreter::ProcessService(uint8_t aArgsLength, char *aArgs[])

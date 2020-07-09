@@ -425,7 +425,6 @@ public:
      */
     void UpdateChecksum(Message &aMessage, uint16_t aChecksum);
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     /**
      * This method returns the head of UDP Sockets list.
      *
@@ -433,7 +432,6 @@ public:
      *
      */
     Socket *GetUdpSockets(void) { return mSockets.GetHead(); }
-#endif
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     /**
