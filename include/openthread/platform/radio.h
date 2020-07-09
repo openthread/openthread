@@ -913,7 +913,7 @@ void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime);
  * @param[in]   aLength     The length of the ACK frame.
  *
  */
-void otPlatRadioTxAckStarted(otInstance *aInstance, uint8_t *aFrame, uint16_t aLength);
+void otPlatRadioTxAckStarted(otInstance *aInstance, const uint8_t *aFrame, uint16_t aLength);
 
 /**
  * @}

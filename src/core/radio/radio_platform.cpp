@@ -82,7 +82,7 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyS
     }
 }
 
-extern "C" void otPlatRadioTxAckStarted(otInstance *aInstance, uint8_t *aFrame, uint16_t aLength)
+extern "C" void otPlatRadioTxAckStarted(otInstance *aInstance, const uint8_t *aFrame, uint16_t aLength)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aFrame);

@@ -810,16 +810,6 @@ public:
      */
     void UpdateFrameControlField(Neighbor *aNeighbor, bool aIsTimeSync, uint16_t &aFcf) const;
 
-    /**
-     * This method processes transmit security on the frame which is going to be sent.
-     *
-     * This method prepares the frame, fills Mac auxiliary header.
-     *
-     * @param[in]  aFrame     A reference to the MAC frame buffer which is going to be sent.
-     *
-     */
-    void ProcessTransmitSecurity(TxFrame &aFrame);
-
 private:
     enum
     {
@@ -870,6 +860,7 @@ private:
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
     otError ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
+    void    ProcessTransmitSecurity(TxFrame &aFrame);
     void    UpdateIdleMode(void);
     void    StartOperation(Operation aOperation);
     void    FinishOperation(void);
