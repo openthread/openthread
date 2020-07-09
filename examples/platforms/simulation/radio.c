@@ -844,13 +844,25 @@ void radioSendAck(otInstance *aInstance)
     {
         otEXPECT(otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending,
                                           sAckIeData, sAckIeDataLength, &sAckFrame) == OT_ERROR_NONE);
-        otEXPECT(radioProcessTransmitSecurity(&sAckFrame) == OT_ERROR_NONE);
     }
     else
 #endif
     {
         otMacFrameGenerateImmAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, &sAckFrame);
     }
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (sCslPeriod > 0)
+    {
+        otMacFrameSetCslIe(&sAckFrame, (uint16_t)sCslPeriod, getCslPhase());
+    }
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (otMacFrameIsSecurityEnabled(&sAckFrame))
+    {
+        otEXPECT(radioProcessTransmitSecurity(&sAckFrame) == OT_ERROR_NONE);
+    }
+#endif
 
     otPlatRadioTxAckStarted(aInstance, sAckFrame.mPsdu, sAckFrame.mLength);
     sAckMessage.mChannel = sReceiveFrame.mChannel;

@@ -906,8 +906,7 @@ void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime);
 
 /**
  * The radio driver calls this method to notify OpenThread that an ACK is
- * about to be transmitted, so that CSL IE could be updated and MIC could
- * be recalculated IEEE 802.15.4 IEs can be filled.
+ * about to be transmitted, currently it does nothing.
  *
  * @param[in]   aInstance   The OpenThread instance structure.
  * @param[in]   aFrame      A pointer to the first byte of the ACK frame.
