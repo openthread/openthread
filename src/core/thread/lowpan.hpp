@@ -309,7 +309,7 @@ public:
      * @returns The size of the compressed header in bytes or -1 if decompression fails.
      *
      */
-    int DecompressUdpHeader(Ip6::UdpHeader &aUdpHeader, const uint8_t *aBuf, uint16_t aBufLength);
+    int DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, const uint8_t *aBuf, uint16_t aBufLength);
 
 private:
     enum

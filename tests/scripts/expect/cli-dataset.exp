@@ -142,6 +142,29 @@ expect "Security Policy: 678, onrcb"
 expect "Done"
 send "dataset init pending\n"
 expect "Error 23: NotFound"
+
+set spawn_id $spawn_1
+send "ipaddr mleid\n"
+expect "ipaddr mleid"
+expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
+set addr $expect_out(1,string)
+expect "Done"
+
+set spawn_id $spawn_2
+send "dataset mgmtgetcommand active \
+activetimestamp pendingtimestamp masterkey networkname extpanid \
+localprefix delaytimer panid channel \
+binary 000102030405060708090a0b0e0f0c333435 \
+address $addr\n"
+expect "Done"
+send "dataset mgmtgetcommand pending \
+activetimestamp pendingtimestamp masterkey networkname extpanid \
+localprefix delaytimer panid channel \
+binary 000102030405060708090a0b0e0f0c333435 \
+address $addr\n"
+expect "Done"
+
+set spawn_id $spawn_1
 send "dataset active binary\n"
 expect "dataset active binary"
 expect -re {([0-9a-f]+)}
@@ -154,7 +177,33 @@ expect $binary
 expect "Done"
 send "dataset set active $binary\n"
 expect "Done"
-send "help\n"
+send "dataset help\n"
 expect "Done"
+send "dataset\n"
+expect "Done"
+send "dataset init something_invalid\n"
+expect "Error 7: InvalidArgs"
+send "dataset active something_invalid\n"
+expect "Error 7: InvalidArgs"
+send "dataset pending something_invalid\n"
+expect "Error 7: InvalidArgs"
+send "dataset commit something_invalid\n"
+expect "Error 7: InvalidArgs"
+send "dataset mgmtsetcommand something_invalid\n"
+expect "Error 7: InvalidArgs"
+send "dataset mgmtsetcommand active something_invalid\n"
+expect "Error 7: InvalidArgs"
+send "dataset mgmtgetcommand something_invalid\n"
+expect "Error 7: InvalidArgs"
+send "dataset mgmtgetcommand active something_invalid\n"
+expect "Error 7: InvalidArgs"
+send "dataset pskc -p 123456\n"
+expect "Done"
+send "dataset pskc\n"
+expect "Error 7: InvalidArgs"
+send "dataset securitypolicy 678 something_invalid\n"
+expect "Error 7: InvalidArgs"
+send "dataset set something_invalid 00\n"
+expect "Error 7: InvalidArgs"
 
 dispose_nodes

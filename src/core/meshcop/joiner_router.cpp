@@ -61,7 +61,6 @@ JoinerRouter::JoinerRouter(Instance &aInstance)
     , mTimer(aInstance, JoinerRouter::HandleTimer, this)
     , mJoinerUdpPort(0)
     , mIsJoinerPortConfigured(false)
-    , mExpectJoinEntRsp(false)
 {
     Get<Coap::Coap>().AddResource(mRelayTransmit);
 }
@@ -158,8 +157,8 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kJoinerUdpPort, aMessageInfo.GetPeerPort()));
-    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kJoinerIid, aMessageInfo.GetPeerAddr().mFields.m8 + 8,
-                                         Ip6::Address::kInterfaceIdentifierSize));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kJoinerIid, &aMessageInfo.GetPeerAddr().GetIid(),
+                                         Ip6::InterfaceIdentifier::kSize));
     SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kJoinerRouterLocator, Get<Mle::MleRouter>().GetRloc16()));
 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);
@@ -171,7 +170,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.GetPeerAddr().SetLocator(borderAgentRloc);
+    messageInfo.GetPeerAddr().GetIid().SetLocator(borderAgentRloc);
     messageInfo.SetPeerPort(kCoapUdpPort);
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
@@ -196,22 +195,22 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otError           error;
-    uint16_t          joinerPort;
-    uint8_t           joinerIid[Ip6::Address::kInterfaceIdentifierSize];
-    Kek               kek;
-    uint16_t          offset;
-    uint16_t          length;
-    Message *         message = nullptr;
-    Message::Settings settings(Message::kNoLinkSecurity, Message::kPriorityNet);
-    Ip6::MessageInfo  messageInfo;
+    otError                  error;
+    uint16_t                 joinerPort;
+    Ip6::InterfaceIdentifier joinerIid;
+    Kek                      kek;
+    uint16_t                 offset;
+    uint16_t                 length;
+    Message *                message = nullptr;
+    Message::Settings        settings(Message::kNoLinkSecurity, Message::kPriorityNet);
+    Ip6::MessageInfo         messageInfo;
 
     VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
 
     otLogInfoMeshCoP("Received relay transmit");
 
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kJoinerUdpPort, joinerPort));
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, Tlv::kJoinerIid, joinerIid, sizeof(joinerIid)));
+    SuccessOrExit(error = Tlv::FindTlv(aMessage, Tlv::kJoinerIid, &joinerIid, sizeof(joinerIid)));
 
     SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
 
@@ -294,12 +293,6 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
 
     metadata.ReadFrom(*message);
 
-    // The message can be sent during CoAP transaction if KEK did not
-    // change (i.e., retransmission). Otherweise, we wait for Joiner
-    // Entrust Response before handling any other pending delayed
-    // Jointer Entrust message.
-    VerifyOrExit(!mExpectJoinEntRsp || (Get<KeyManager>().GetKek() == metadata.mKek), OT_NOOP);
-
     if (TimerMilli::GetNow() < metadata.mSendTime)
     {
         mTimer.FireAt(metadata.mSendTime);
@@ -337,8 +330,6 @@ otError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo)
 
     otLogInfoMeshCoP("Sent joiner entrust length = %d", message->GetLength());
     otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.ntf");
-
-    mExpectJoinEntRsp = true;
 
 exit:
     if (error != OT_ERROR_NONE && message != nullptr)
@@ -453,7 +444,6 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message *         aMessage,
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    mExpectJoinEntRsp = false;
     SendDelayedJoinerEntrust();
 
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage != nullptr, OT_NOOP);

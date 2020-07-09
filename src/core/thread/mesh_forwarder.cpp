@@ -339,7 +339,7 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 
 void MeshForwarder::GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr)
 {
-    aIp6Addr.ToExtAddress(aMacAddr);
+    aIp6Addr.GetIid().ConvertToMacAddress(aMacAddr);
 
     if (aMacAddr.GetExtended() != Get<Mac::Mac>().GetExtAddress())
     {
@@ -355,11 +355,11 @@ void MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::
     }
     else if (Get<Mle::MleRouter>().IsRoutingLocator(aIp6Addr))
     {
-        aMacAddr.SetShort(aIp6Addr.GetLocator());
+        aMacAddr.SetShort(aIp6Addr.GetIid().GetLocator());
     }
     else
     {
-        aIp6Addr.ToExtAddress(aMacAddr);
+        aIp6Addr.GetIid().ConvertToMacAddress(aMacAddr);
     }
 }
 
@@ -1242,12 +1242,12 @@ otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
                                         const Mac::Address &aMacDest,
                                         Message::Priority & aPriority)
 {
-    otError         error = OT_ERROR_NONE;
-    Ip6::Header     ip6Header;
-    Ip6::UdpHeader  udpHeader;
-    Ip6::IcmpHeader icmpHeader;
-    uint8_t         headerLength;
-    bool            nextHeaderCompressed;
+    otError           error = OT_ERROR_NONE;
+    Ip6::Header       ip6Header;
+    Ip6::Udp::Header  udpHeader;
+    Ip6::Icmp::Header icmpHeader;
+    uint8_t           headerLength;
+    bool              nextHeaderCompressed;
 
     SuccessOrExit(error = DecompressIp6Header(aFrame, aFrameLength, aMacSource, aMacDest, ip6Header, headerLength,
                                               nextHeaderCompressed));
@@ -1278,8 +1278,8 @@ otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
     }
     else
     {
-        VerifyOrExit(aFrameLength >= sizeof(Ip6::UdpHeader), error = OT_ERROR_PARSE);
-        memcpy(&udpHeader, aFrame, sizeof(Ip6::UdpHeader));
+        VerifyOrExit(aFrameLength >= sizeof(Ip6::Udp::Header), error = OT_ERROR_PARSE);
+        memcpy(&udpHeader, aFrame, sizeof(Ip6::Udp::Header));
     }
 
     if (udpHeader.GetDestinationPort() == Mle::kUdpPort || udpHeader.GetDestinationPort() == kCoapUdpPort)
@@ -1304,8 +1304,8 @@ otError MeshForwarder::ParseIp6UdpTcpHeader(const Message &aMessage,
     otError error = OT_ERROR_PARSE;
     union
     {
-        Ip6::UdpHeader udp;
-        Ip6::TcpHeader tcp;
+        Ip6::Udp::Header udp;
+        Ip6::Tcp::Header tcp;
     } header;
 
     aChecksum   = 0;
@@ -1318,7 +1318,8 @@ otError MeshForwarder::ParseIp6UdpTcpHeader(const Message &aMessage,
     switch (aIp6Header.GetNextHeader())
     {
     case Ip6::kProtoUdp:
-        VerifyOrExit(sizeof(Ip6::UdpHeader) == aMessage.Read(sizeof(Ip6::Header), sizeof(Ip6::UdpHeader), &header.udp),
+        VerifyOrExit(sizeof(Ip6::Udp::Header) ==
+                         aMessage.Read(sizeof(Ip6::Header), sizeof(Ip6::Udp::Header), &header.udp),
                      OT_NOOP);
         aChecksum   = header.udp.GetChecksum();
         aSourcePort = header.udp.GetSourcePort();
@@ -1326,7 +1327,8 @@ otError MeshForwarder::ParseIp6UdpTcpHeader(const Message &aMessage,
         break;
 
     case Ip6::kProtoTcp:
-        VerifyOrExit(sizeof(Ip6::TcpHeader) == aMessage.Read(sizeof(Ip6::Header), sizeof(Ip6::TcpHeader), &header.tcp),
+        VerifyOrExit(sizeof(Ip6::Tcp::Header) ==
+                         aMessage.Read(sizeof(Ip6::Header), sizeof(Ip6::Tcp::Header), &header.tcp),
                      OT_NOOP);
         aChecksum   = header.tcp.GetChecksum();
         aSourcePort = header.tcp.GetSourcePort();

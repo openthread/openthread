@@ -428,7 +428,7 @@ public:
      * @retval OT_ERROR_INVALID_STATE The radio was not in the Receive state.
      *
      */
-    otError Transmit(Mac::TxFrame &aFrame) { return otPlatRadioTransmit(GetInstance(), &aFrame); }
+    otError Transmit(Mac::TxFrame &aFrame);
 
     /**
      * This method gets the most recent RSSI measurement.

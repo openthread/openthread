@@ -73,7 +73,7 @@ void nrf_802154_ack_generator_init(void)
     nrf_802154_enh_ack_generator_init();
 }
 
-const uint8_t * nrf_802154_ack_generator_create(const uint8_t * p_frame)
+uint8_t * nrf_802154_ack_generator_create(const uint8_t * p_frame)
 {
     // This function should not be called if ACK is not requested.
     assert(p_frame[ACK_REQUEST_OFFSET] & ACK_REQUEST_BIT);
