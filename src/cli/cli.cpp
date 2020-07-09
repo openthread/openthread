@@ -193,9 +193,7 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     {"netif", &Interpreter::ProcessNetif},
 #endif
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     {"netstat", &Interpreter::ProcessNetstat},
-#endif
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     {"networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic},
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
@@ -2065,7 +2063,6 @@ exit:
 }
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 void Interpreter::ProcessNetstat(uint8_t aArgsLength, char *aArgs[])
 {
     otUdpSocket *socket = otUdpGetSockets(mInstance);
@@ -2129,7 +2126,6 @@ int Interpreter::OutputSocketAddress(const otSockAddr &aAddress)
 exit:
     return result;
 }
-#endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 void Interpreter::ProcessService(uint8_t aArgsLength, char *aArgs[])
