@@ -181,6 +181,7 @@ public:
      * @returns The number of bytes placed in the output queue.
      *
      * @retval  -1  Driver is broken.
+     *
      */
     int OutputIp6Address(const otIp6Address &aAddress) const;
 
