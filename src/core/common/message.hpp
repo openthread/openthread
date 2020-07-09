@@ -41,7 +41,6 @@
 #include <openthread/message.h>
 #include <openthread/platform/messagepool.h>
 
-#include "common/child_mask.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/linked_list.hpp"
@@ -49,6 +48,7 @@
 #include "common/non_copyable.hpp"
 #include "common/pool.hpp"
 #include "mac/mac_types.hpp"
+#include "thread/child_mask.hpp"
 #include "thread/link_quality.hpp"
 
 namespace ot {
