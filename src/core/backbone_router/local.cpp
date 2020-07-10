@@ -137,9 +137,14 @@ void Local::GetConfig(BackboneRouterConfig &aConfig) const
     aConfig.mMlrTimeout          = mMlrTimeout;
 }
 
-void Local::SetConfig(const BackboneRouterConfig &aConfig)
+otError Local::SetConfig(const BackboneRouterConfig &aConfig)
 {
-    bool update = false;
+    otError error  = OT_ERROR_NONE;
+    bool    update = false;
+
+    // Validate configuration according to Thread Spec. 5.21.3.3
+    VerifyOrExit(aConfig.mReregistrationDelay >= 1, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aConfig.mReregistrationDelay * 2 < aConfig.mMlrTimeout, error = OT_ERROR_INVALID_ARGS);
 
     if (aConfig.mReregistrationDelay != mReregistrationDelay)
     {
@@ -169,7 +174,9 @@ void Local::SetConfig(const BackboneRouterConfig &aConfig)
         }
     }
 
-    LogBackboneRouterService("Set", OT_ERROR_NONE);
+exit:
+    LogBackboneRouterService("Set", error);
+    return error;
 }
 
 otError Local::AddService(bool aForce)
