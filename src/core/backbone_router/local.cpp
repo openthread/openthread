@@ -143,8 +143,7 @@ otError Local::SetConfig(const BackboneRouterConfig &aConfig)
     bool    update = false;
 
     // Validate configuration according to Thread 1.2.1 Specification 5.21.3.3:
-    // " The Reregistration Delay in seconds MUST be lower than (0.5 * MLR Timeout). 
-    // It MUST be at least 1."
+    // "The Reregistration Delay in seconds MUST be lower than (0.5 * MLR Timeout). It MUST be at least 1."
     VerifyOrExit(aConfig.mReregistrationDelay >= 1, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aConfig.mReregistrationDelay * 2 < aConfig.mMlrTimeout, error = OT_ERROR_INVALID_ARGS);
 
