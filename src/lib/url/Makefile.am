@@ -28,11 +28,32 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-SUBDIRS                                 = \
-    hdlc                                  \
-    platform                              \
-    spinel                                \
-    url                                   \
+noinst_LIBRARIES = libopenthread-url.a
+
+libopenthread_url_a_CPPFLAGS                = \
+    -I$(top_srcdir)/include                   \
+    -I$(top_srcdir)/src                       \
+    $(NULL)
+
+libopenthread_url_a_SOURCES                 = \
+    url.cpp                                   \
+    url.hpp                                   \
+    $(NULL)
+
+check_PROGRAMS = test-url
+
+test_url_CPPFLAGS                                             = \
+    -I$(top_srcdir)/include                                     \
+    -I$(top_srcdir)/src                                         \
+    -DSELF_TEST                                                 \
+    $(NULL)
+
+test_url_SOURCES                    = \
+    url.cpp                           \
+    $(NULL)
+
+TESTS                               = \
+    test-url                          \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

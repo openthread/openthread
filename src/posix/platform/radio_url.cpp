@@ -29,7 +29,6 @@
 #include "posix/platform/radio_url.hpp"
 
 #include <stdio.h>
-#include <string.h>
 
 #include <openthread/openthread-system.h>
 
@@ -96,142 +95,12 @@ const char *otSysGetRadioUrlHelpString(void)
 namespace ot {
 namespace Posix {
 
-Arguments::Arguments(const char *aUrl)
+RadioUrl::RadioUrl(const char *aUrl)
 {
-    char *url = &mUrl[0];
-
-    mPath  = nullptr;
-    mStart = nullptr;
-    mEnd   = nullptr;
-
-    VerifyOrExit(aUrl != nullptr, OT_NOOP);
-    VerifyOrExit(strnlen(aUrl, sizeof(mUrl)) < sizeof(mUrl), OT_NOOP);
+    VerifyOrDie(strnlen(aUrl, sizeof(mUrl)) < sizeof(mUrl), OT_EXIT_INVALID_ARGUMENTS);
     strncpy(mUrl, aUrl, sizeof(mUrl) - 1);
-    url = strstr(url, "://");
-    VerifyOrExit(url != nullptr, OT_NOOP);
-    url += sizeof("://") - 1;
-    mPath = url;
-
-    mStart = strstr(url, "?");
-
-    if (mStart != nullptr)
-    {
-        mStart[0] = '\0';
-        mStart++;
-
-        mEnd = mStart + strlen(mStart);
-
-        for (char *cur = strtok(mStart, "&"); cur != nullptr; cur = strtok(nullptr, "&"))
-            ;
-    }
-    else
-    {
-        mEnd   = url + strlen(url);
-        mStart = mEnd;
-    }
-exit:
-    return;
-}
-
-const char *Arguments::GetValue(const char *aName, const char *aLastValue)
-{
-    const char * rval  = nullptr;
-    const size_t len   = strlen(aName);
-    char *       start = (aLastValue == nullptr ? mStart : (const_cast<char *>(aLastValue) + strlen(aLastValue) + 1));
-
-    while (start < mEnd)
-    {
-        char *last = nullptr;
-
-        if (!strncmp(aName, start, len))
-        {
-            if (start[len] == '=')
-            {
-                ExitNow(rval = &start[len + 1]);
-            }
-            else if (start[len] == '&' || start[len] == '\0')
-            {
-                ExitNow(rval = "");
-            }
-        }
-        last  = start;
-        start = last + strlen(last) + 1;
-    }
-
-exit:
-    return rval;
+    SuccessOrDie(Url::Url::Init(mUrl));
 }
 
 } // namespace Posix
 } // namespace ot
-
-#ifndef SELF_TEST
-#define SELF_TEST 0
-#endif
-
-#if SELF_TEST
-#include <assert.h>
-
-void TestSimple()
-{
-    char                 url[] = "spinel:///dev/ttyUSB0?baudrate=115200";
-    ot::Posix::Arguments args(url);
-
-    assert(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
-    assert(!strcmp(args.GetValue("baudrate"), "115200"));
-
-    printf("PASS %s\r\n", __func__);
-}
-
-void TestSimpleNoArguments()
-{
-    char                 url[] = "spinel:///dev/ttyUSB0";
-    ot::Posix::Arguments args(url);
-
-    assert(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
-
-    printf("PASS %s\r\n", __func__);
-}
-
-void TestMultipleProtocols()
-{
-    char                 url[] = "spinel+spi:///dev/ttyUSB0?baudrate=115200";
-    ot::Posix::Arguments args(url);
-
-    assert(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
-    assert(!strcmp(args.GetValue("baudrate"), "115200"));
-
-    printf("PASS %s\r\n", __func__);
-}
-
-void TestMultipleProtocolsAndDuplicateParameters()
-{
-    char                 url[] = "spinel+exec:///path/to/ot-rcp?arg=1&arg=arg2&arg=3";
-    ot::Posix::Arguments args(url);
-    const char *         arg = nullptr;
-
-    assert(!strcmp(args.GetPath(), "/path/to/ot-rcp"));
-
-    arg = args.GetValue("arg");
-    assert(!strcmp(arg, "1"));
-
-    arg = args.GetValue("arg", arg);
-    assert(!strcmp(arg, "arg2"));
-
-    arg = args.GetValue("arg", arg);
-    assert(!strcmp(arg, "3"));
-
-    printf("PASS %s\r\n", __func__);
-}
-
-int main()
-{
-    TestSimple();
-    TestSimpleNoArguments();
-    TestMultipleProtocols();
-    TestMultipleProtocolsAndDuplicateParameters();
-
-    return 0;
-}
-
-#endif // SELF_TEST

@@ -55,7 +55,6 @@ CPPFLAGS_COMMON                                                        = \
 LIBTOOLFLAGS_COMMON = --preserve-dup-deps
 
 LDADD_COMMON                                                           = \
-    $(top_builddir)/src/lib/platform/libopenthread-platform.a            \
     $(top_builddir)/src/posix/platform/libopenthread-posix.a             \
     -lutil                                                               \
     $(NULL)

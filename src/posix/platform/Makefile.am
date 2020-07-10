@@ -27,6 +27,7 @@
 #
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+include $(top_srcdir)/src/lib/common.am
 
 lib_LIBRARIES                             = libopenthread-posix.a
 
@@ -59,6 +60,11 @@ libopenthread_posix_a_SOURCES             = \
     virtual_time.cpp                        \
     $(NULL)
 
+libopenthread_posix_a_LIBADD                                                        = \
+    $(call ot_list_objects,$(top_builddir)/src/lib/url/libopenthread-url.a)           \
+    $(call ot_list_objects,$(top_builddir)/src/lib/platform/libopenthread-platform.a) \
+    $(NULL)
+
 noinst_HEADERS                            = \
     hdlc_interface.hpp                      \
     openthread-posix-config.h               \
@@ -77,7 +83,7 @@ if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
-check_PROGRAMS = test-settings test-radio-url
+check_PROGRAMS = test-settings
 
 test_settings_CPPFLAGS                                        = \
     -I$(top_srcdir)/include                                     \
@@ -92,22 +98,8 @@ test_settings_SOURCES                     = \
     settings.cpp                            \
     $(NULL)
 
-test_radio_url_CPPFLAGS                                       = \
-    -I$(top_srcdir)/include                                     \
-    -I$(top_srcdir)/src                                         \
-    -I$(top_srcdir)/src/core                                    \
-    -I$(top_srcdir)/src/posix/platform/include                  \
-    -DOPENTHREAD_CONFIG_LOG_PLATFORM=0                          \
-    -DSELF_TEST                                                 \
-    $(NULL)
-
-test_radio_url_SOURCES                    = \
-    radio_url.cpp                           \
-    $(NULL)
-
 TESTS                                     = \
     test-settings                           \
-    test-radio-url                          \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

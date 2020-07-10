@@ -65,12 +65,6 @@ enum
 };
 
 /**
- * This structure represents the radio URL.
- *
- */
-typedef struct otPosixRadioArguments otPosixRadioArguments;
-
-/**
  * This structure represents platform specific configurations.
  *
  */

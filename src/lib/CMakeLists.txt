@@ -29,3 +29,4 @@
 add_subdirectory(hdlc)
 add_subdirectory(platform)
 add_subdirectory(spinel)
+add_subdirectory(url)

@@ -26,33 +26,65 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_RADIO_URL_HPP_
-#define POSIX_PLATFORM_RADIO_URL_HPP_
+#ifndef OT_LIB_URL_URL_HPP_
+#define OT_LIB_URL_URL_HPP_
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <openthread/error.h>
 
-#include <openthread/openthread-system.h>
-
-#include "lib/url/url.hpp"
-
-namespace ot {
-namespace Posix {
-
-class RadioUrl : public ot::Url::Url
+struct otUrl
 {
-public:
-    RadioUrl(const char *aUrl);
-
-private:
-    enum
-    {
-        kRadioUrlMaxSize = 512,
-    };
-    char mUrl[kRadioUrlMaxSize];
+    const char *mProtocol; ///< The URL protocol.
+    const char *mPath;     ///< The path.
+    const char *mQuery;    ///< The start of the URL query string.
+    const char *mEnd;      ///< The end of the URL buffer.
 };
 
-} // namespace Posix
+namespace ot {
+namespace Url {
+
+class Url : public otUrl
+{
+public:
+    /**
+     * This method initializes the URL.
+     *
+     * @param[in]   aUrl    A buffer stores the null-terminated URL string.
+     *
+     * @retval  OT_ERROR_NONE   Successfully parsed the URL.
+     * @retval  OT_ERROR_PARSE  Failed to parse the string as a URL.
+     *
+     */
+    otError Init(char *aUrl);
+
+    /**
+     * This method gets the path in URl.
+     *
+     * @returns The path in url.
+     *
+     */
+    const char *GetPath(void) const { return mPath; }
+
+    /**
+     * This method returns the URL agument value.
+     *
+     * @param[in] aName       Argument name.
+     * @param[in] aLastValue  The last iterated argument value, nullptr for first value.
+     *
+     * @returns The argument value.
+     *
+     */
+    const char *GetValue(const char *aName, const char *aLastValue = nullptr) const;
+
+    /**
+     * This method returns the URL protocol.
+     *
+     * @returns The URL protocol.
+     *
+     */
+    const char *GetProtocol(void) const { return mProtocol; }
+};
+
+} // namespace Url
 } // namespace ot
 
-#endif // POSIX_PLATFORM_RADIO_URL_HPP_
+#endif // OT_LIB_URL_URL_HPP_
