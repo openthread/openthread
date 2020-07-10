@@ -332,7 +332,7 @@ public:
      * @return DTLS session's message info.
      *
      */
-    const Ip6::MessageInfo &GetPeerAddress(void) const { return mPeerAddress; }
+    const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
 
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -460,7 +460,7 @@ private:
     ReceiveHandler   mReceiveHandler;
     void *           mContext;
 
-    Ip6::MessageInfo mPeerAddress;
+    Ip6::MessageInfo mMessageInfo;
     Ip6::Udp::Socket mSocket;
 
     TransportCallback mTransportCallback;

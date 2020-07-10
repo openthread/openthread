@@ -45,7 +45,6 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/new.hpp"
 #include "common/timer.hpp"
 #include "crypto/mbedtls.hpp"
 #include "crypto/sha256.hpp"
@@ -150,8 +149,8 @@ otError Dtls::Connect(const Ip6::SockAddr &aSockAddr)
 
     VerifyOrExit(mState == kStateOpen, error = OT_ERROR_INVALID_STATE);
 
-    memcpy(&mPeerAddress.mPeerAddr, &aSockAddr.mAddress, sizeof(mPeerAddress.mPeerAddr));
-    mPeerAddress.mPeerPort = aSockAddr.mPort;
+    mMessageInfo.SetPeerAddr(aSockAddr.GetAddress());
+    mMessageInfo.SetPeerPort(aSockAddr.mPort);
 
     error = Setup(true);
 
@@ -180,16 +179,16 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
         sockAddr.mPort    = aMessageInfo.GetPeerPort();
         IgnoreError(mSocket.Connect(sockAddr));
 
-        mPeerAddress.SetPeerAddr(aMessageInfo.GetPeerAddr());
-        mPeerAddress.SetPeerPort(aMessageInfo.GetPeerPort());
-        mPeerAddress.SetIsHostInterface(aMessageInfo.IsHostInterface());
+        mMessageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
+        mMessageInfo.SetPeerPort(aMessageInfo.GetPeerPort());
+        mMessageInfo.SetIsHostInterface(aMessageInfo.IsHostInterface());
 
         if (Get<ThreadNetif>().HasUnicastAddress(aMessageInfo.GetSockAddr()))
         {
-            mPeerAddress.SetSockAddr(aMessageInfo.GetSockAddr());
+            mMessageInfo.SetSockAddr(aMessageInfo.GetSockAddr());
         }
 
-        mPeerAddress.SetSockPort(aMessageInfo.GetSockPort());
+        mMessageInfo.SetSockPort(aMessageInfo.GetSockPort());
 
         SuccessOrExit(Setup(false));
         break;
@@ -197,8 +196,8 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
 
     default:
         // Once DTLS session is started, communicate only with a peer.
-        VerifyOrExit((mPeerAddress.GetPeerAddr() == aMessageInfo.GetPeerAddr()) &&
-                         (mPeerAddress.GetPeerPort() == aMessageInfo.GetPeerPort()),
+        VerifyOrExit((mMessageInfo.GetPeerAddr() == aMessageInfo.GetPeerAddr()) &&
+                         (mMessageInfo.GetPeerPort() == aMessageInfo.GetPeerPort()),
                      OT_NOOP);
         break;
     }
@@ -206,7 +205,7 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
 #ifdef MBEDTLS_SSL_SRV_C
     if (mState == MeshCoP::Dtls::kStateConnecting)
     {
-        IgnoreError(SetClientId(mPeerAddress.GetPeerAddr().mFields.m8, sizeof(mPeerAddress.GetPeerAddr().mFields)));
+        IgnoreError(SetClientId(mMessageInfo.GetPeerAddr().mFields.m8, sizeof(mMessageInfo.GetPeerAddr().mFields)));
     }
 #endif
 
@@ -432,7 +431,7 @@ void Dtls::Disconnect(void)
     mState = kStateCloseNotify;
     mTimer.Start(kGuardTimeNewConnectionMilli);
 
-    new (&mPeerAddress) Ip6::MessageInfo();
+    mMessageInfo.Clear();
     IgnoreError(mSocket.Connect(Ip6::SockAddr()));
 
     FreeMbedtls();
@@ -933,11 +932,11 @@ otError Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::Sub
 
     if (mTransportCallback)
     {
-        SuccessOrExit(error = mTransportCallback(mTransportContext, *message, mPeerAddress));
+        SuccessOrExit(error = mTransportCallback(mTransportContext, *message, mMessageInfo));
     }
     else
     {
-        SuccessOrExit(error = mSocket.SendTo(*message, mPeerAddress));
+        SuccessOrExit(error = mSocket.SendTo(*message, mMessageInfo));
     }
 
 exit:
