@@ -64,7 +64,7 @@ public:
     /**
      * This method returns if a given Child index is masked.
      *
-     * @param aChildIndex  The Child index.
+     * @param[in] aChildIndex  The Child index.
      *
      * @retval TRUE   If the given Child index is set.
      * @retval FALSE  If the given Child index is clear.
