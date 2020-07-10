@@ -53,14 +53,14 @@ namespace Ip6 {
  * This class implements message information for an IPv6 message.
  *
  */
-class MessageInfo : public otMessageInfo
+class MessageInfo : public otMessageInfo, public Clearable<MessageInfo>
 {
 public:
     /**
      * This constructor initializes the object.
      *
      */
-    MessageInfo(void) { memset(this, 0, sizeof(*this)); }
+    MessageInfo(void) { Clear(); }
 
     /**
      * This method returns a reference to the local socket address.
