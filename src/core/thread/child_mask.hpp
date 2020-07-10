@@ -66,7 +66,8 @@ public:
      *
      * @param aChildIndex  The Child index.
      *
-     * @returns Whether the given Child index is masked.
+     * @retval TRUE   If the given Child index is set.
+     * @retval FALSE  If the given Child index is clear.
      *
      */
     bool Get(uint16_t aChildIndex) const
@@ -78,7 +79,7 @@ public:
     /**
      * This method sets the mask of a given Child index.
      *
-     * @param aChildIndex  The Child index.
+     * @param[in] aChildIndex  The Child index.
      *
      */
     void Set(uint16_t aChildIndex)
@@ -90,7 +91,7 @@ public:
     /**
      * This method clears the mask of a given Child index.
      *
-     * @param aChildIndex  The Child index.
+     * @param[in] aChildIndex  The Child index.
      *
      */
     void Clear(uint16_t aChildIndex)
@@ -102,7 +103,8 @@ public:
     /**
      * This method returns if any Child mask is set.
      *
-     * @returns Whether any Child mask is set.
+     * @retval TRUE   If any Child index is set.
+     * @retval FALSE  If all Child indexes are clear.
      *
      */
     bool HasAny(void) const
