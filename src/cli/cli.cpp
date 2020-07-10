@@ -582,7 +582,7 @@ otError Interpreter::ProcessBackboneRouterLocal(uint8_t aArgsLength, char *aArgs
                 }
             }
 
-            otBackboneRouterSetConfig(mInstance, &config);
+            SuccessOrExit(error = otBackboneRouterSetConfig(mInstance, &config));
         }
     }
     else
