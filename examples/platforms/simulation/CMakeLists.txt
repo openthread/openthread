@@ -84,7 +84,6 @@ if(LIBRT)
 endif()
 
 target_link_libraries(openthread-simulation PRIVATE
-    openthread-platform-utils
     openthread-platform
     ot-config)
 
