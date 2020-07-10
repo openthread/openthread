@@ -204,6 +204,7 @@ jobs:
       uses: codecov/codecov-action@v1
 
   external-commissioner:
+    continue-on-error: true
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
