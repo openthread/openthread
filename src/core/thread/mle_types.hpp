@@ -258,8 +258,12 @@ enum
 {
     kRegistrationDelayDefault         = 1200, //< In seconds.
     kMlrTimeoutDefault                = 3600, //< In seconds.
+    kMlrTimeoutMin                    = 300,  //< In seconds.
     kBackboneRouterRegistrationJitter = 5,    //< In seconds.
 };
+
+static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin,
+              "kMlrTimeoutDefault must be larger than or equal to kMlrTimeoutMin");
 
 #endif
 
