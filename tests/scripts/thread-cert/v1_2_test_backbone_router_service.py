@@ -263,7 +263,7 @@ class TestBackboneRouterService(thread_cert.TestCase):
 
         # 6a) Check the uniqueness of DUA by comparing the one in above 4a).
         bbr2_dua2 = self.nodes[BBR_2].get_addr(config.DOMAIN_PREFIX)
-        assert bbr2_dua == bbr2_dua2, 'Error: Unexpected different DUA (%s v.s. %s)'.format(
+        assert bbr2_dua == bbr2_dua2, 'Error: Unexpected different DUA ({} v.s. {})'.format(
             bbr2_dua, bbr2_dua2)
 
         # 6b) Check communication via DUA

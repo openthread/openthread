@@ -500,8 +500,7 @@ void Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 otError Interpreter::ProcessBackboneRouterLocal(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    ;
+    otError                error = OT_ERROR_NONE;
     otBackboneRouterConfig config;
     unsigned long          value;
 
