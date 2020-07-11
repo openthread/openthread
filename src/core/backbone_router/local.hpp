@@ -105,7 +105,7 @@ public:
      * @param[in]  aConfig  The configuration to set.
      *
      * @retval OT_ERROR_NONE          Successfully updated configuration.
-     * @retval OT_ERROR_INVALID_ARGS  If the specified configuration is invalid.
+     * @retval OT_ERROR_INVALID_ARGS  The configuration in @p aConfig is invalid.
      *
      */
     otError SetConfig(const BackboneRouterConfig &aConfig);

@@ -116,7 +116,7 @@ void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aC
  * @param[in]  aConfig               A pointer to the Backbone Router configuration to take effect.
  *
  * @retval OT_ERROR_NONE          Successfully updated configuration.
- * @retval OT_ERROR_INVALID_ARGS  If the specified configuration is invalid.
+ * @retval OT_ERROR_INVALID_ARGS  The configuration in @p aConfig is invalid.
  *
  * @sa otBackboneRouterSetEnabled
  * @sa otBackboneRouterGetState
