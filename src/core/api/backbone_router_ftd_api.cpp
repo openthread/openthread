@@ -64,13 +64,13 @@ void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aC
     instance.Get<BackboneRouter::Local>().GetConfig(*aConfig);
 }
 
-void otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterConfig *aConfig)
+otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterConfig *aConfig)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     OT_ASSERT(aConfig != nullptr);
 
-    instance.Get<BackboneRouter::Local>().SetConfig(*aConfig);
+    return instance.Get<BackboneRouter::Local>().SetConfig(*aConfig);
 }
 
 otError otBackboneRouterRegister(otInstance *aInstance)

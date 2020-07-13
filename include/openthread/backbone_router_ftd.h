@@ -115,13 +115,16 @@ void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aC
  * @param[in]  aInstance             A pointer to an OpenThread instance.
  * @param[in]  aConfig               A pointer to the Backbone Router configuration to take effect.
  *
+ * @retval OT_ERROR_NONE          Successfully updated configuration.
+ * @retval OT_ERROR_INVALID_ARGS  The configuration in @p aConfig is invalid.
+ *
  * @sa otBackboneRouterSetEnabled
  * @sa otBackboneRouterGetState
  * @sa otBackboneRouterGetConfig
  * @sa otBackboneRouterRegister
  *
  */
-void otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterConfig *aConfig);
+otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterConfig *aConfig);
 
 /**
  * This function explicitly registers local Backbone Router configuration.

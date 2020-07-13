@@ -104,8 +104,11 @@ public:
      *
      * @param[in]  aConfig  The configuration to set.
      *
+     * @retval OT_ERROR_NONE          Successfully updated configuration.
+     * @retval OT_ERROR_INVALID_ARGS  The configuration in @p aConfig is invalid.
+     *
      */
-    void SetConfig(const BackboneRouterConfig &aConfig);
+    otError SetConfig(const BackboneRouterConfig &aConfig);
 
     /**
      * This method registers Backbone Router Dataset to Leader.
