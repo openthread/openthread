@@ -915,6 +915,16 @@ public:
      */
     otError GetLocatorAddress(Ip6::Address &aAddress, uint16_t aLocator) const;
 
+    /**
+     * This method indicates whether or not the device has restored the network information from
+     * non-volatile settings after boot.
+     *
+     * @retval true  Sucessfully restored the network information.
+     * @retval false No valid network information was found.
+     *
+     */
+    bool HasRestored(void) const { return mHasRestored; }
+
 protected:
     /**
      * States during attach (when searching for a parent).
@@ -1734,6 +1744,7 @@ private:
 
     AddressRegistrationMode mAddressRegistrationMode;
 
+    bool       mHasRestored;
     uint8_t    mParentLinkMargin;
     bool       mParentIsSingleton;
     bool       mReceivedResponseFromParent;

@@ -86,6 +86,7 @@ Mle::Mle(Instance &aInstance)
     , mDataRequestAttempts(0)
     , mDataRequestState(kDataRequestNone)
     , mAddressRegistrationMode(kAppendAllAddresses)
+    , mHasRestored(false)
     , mParentLinkMargin(0)
     , mParentIsSingleton(false)
     , mReceivedResponseFromParent(false)
@@ -438,6 +439,9 @@ otError Mle::Restore(void)
         Get<MleRouter>().RestoreChildren();
     }
 #endif
+
+    // Sucessfully restored the network information from non-volatile settings after boot.
+    mHasRestored = true;
 
 exit:
     return error;
