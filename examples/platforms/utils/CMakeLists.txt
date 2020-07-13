@@ -42,15 +42,17 @@ set_target_properties(
         CXX_STANDARD 11
 )
 
+target_compile_definitions(openthread-platform-utils PRIVATE
+    $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
+)
+
 target_include_directories(openthread-platform-utils PRIVATE
     ${OT_PUBLIC_INCLUDES}
+    $<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>
     ${PROJECT_SOURCE_DIR}/examples/platforms
     ${PROJECT_SOURCE_DIR}/examples/platforms/utils
-    ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/third_party/jlink/SEGGER_RTT_V640/RTT
 )
 
 # Provide a static library implementation of platform-utils for non-cmake platforms
 add_library(openthread-platform-utils-static $<TARGET_OBJECTS:openthread-platform-utils>)
-target_link_libraries(openthread-platform-utils-static PUBLIC openthread-platform-utils)
-target_link_libraries(openthread-platform-utils PRIVATE ot-config)
