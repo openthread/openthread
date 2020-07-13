@@ -211,9 +211,9 @@ jobs:
     - name: Bootstrap
       continue-on-error: true
       run: |
-        exit 1
         sudo apt-get --no-install-recommends install -y ninja-build
         git clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch master
+        exit 1
     - name: Build
       run: |
         cd /tmp/ot-commissioner
