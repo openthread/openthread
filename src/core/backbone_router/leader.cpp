@@ -289,19 +289,9 @@ void Leader::UpdateDomainPrefixConfig(void)
 #endif
 }
 
-bool Leader::IsOnDomain(const Ip6::Address &aAddress) const
+bool Leader::IsDomainUnicast(const Ip6::Address &aAddress) const
 {
-    bool rval = false;
-
-    VerifyOrExit(mDomainPrefix.mLength > 0, OT_NOOP);
-
-    if (aAddress.PrefixMatch(mDomainPrefix.mPrefix) >= mDomainPrefix.mLength)
-    {
-        rval = true;
-    }
-
-exit:
-    return rval;
+    return HasDomainPrefix() && aAddress.PrefixMatch(mDomainPrefix.mPrefix) >= mDomainPrefix.mLength;
 }
 
 } // namespace BackboneRouter

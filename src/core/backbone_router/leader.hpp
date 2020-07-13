@@ -157,10 +157,11 @@ public:
      *
      * @param[in]  aAddress A reference to the address.
      *
-     * @retval true if @p aAddress is a domain unicast address, false otherwise.
+     * @retval true  @p aAddress is a domain unicast address.
+     * @retval false @p aAddress is not a domain unicast address.
      *
      */
-    bool IsOnDomain(const Ip6::Address &aAddress) const;
+    bool IsDomainUnicast(const Ip6::Address &aAddress) const;
 
 private:
     void UpdateBackboneRouterPrimary(void);
