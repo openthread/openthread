@@ -35,6 +35,7 @@
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
+#include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
@@ -286,6 +287,21 @@ void Leader::UpdateDomainPrefixConfig(void)
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     Get<DuaManager>().UpdateDomainUnicastAddress(state);
 #endif
+}
+
+bool Leader::IsOnDomain(const Ip6::Address &aAddress) const
+{
+    bool rval = false;
+
+    VerifyOrExit(mDomainPrefix.mLength > 0, OT_NOOP);
+
+    if (aAddress.PrefixMatch(mDomainPrefix.mPrefix) >= mDomainPrefix.mLength)
+    {
+        rval = true;
+    }
+
+exit:
+    return rval;
 }
 
 } // namespace BackboneRouter
