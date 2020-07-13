@@ -292,20 +292,27 @@ otError Tlv::AppendUint32Tlv(Message &aMessage, uint8_t aType, uint32_t aValue)
 
 otError Tlv::AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength)
 {
-    otError error = OT_ERROR_NONE;
-    Tlv     tlv;
+    otError error;
 
-    OT_ASSERT(aLength <= Tlv::kBaseTlvMaxLength);
-
-    tlv.SetType(aType);
-    tlv.SetLength(aLength);
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
+    SuccessOrExit(error = AppendTl(aMessage, aType, aLength));
 
     VerifyOrExit(aLength > 0, OT_NOOP);
     error = aMessage.Append(aValue, aLength);
 
 exit:
     return error;
+}
+
+otError Tlv::AppendTl(Message &aMessage, uint8_t aType, uint8_t aLength)
+{
+    Tlv tlv;
+
+    OT_ASSERT(aLength <= Tlv::kBaseTlvMaxLength);
+
+    tlv.SetType(aType);
+    tlv.SetLength(aLength);
+
+    return aMessage.Append(&tlv, sizeof(tlv));
 }
 
 } // namespace ot

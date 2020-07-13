@@ -401,6 +401,21 @@ public:
      */
     static otError AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength);
 
+    /**
+     * This static method appends a TLV with a given type and length.
+     *
+     * On success this method grows the message by the size of the TLV.
+     *
+     * @param[in]  aMessage      A reference to the message to append to.
+     * @param[in]  aType         The TLV type.
+     * @param[in]  aLength       The value length (in bytes).
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the TLV to the message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
+     *
+     */
+    static otError AppendTl(Message &aMessage, uint8_t aType, uint8_t aLength);
+
 protected:
     enum
     {
