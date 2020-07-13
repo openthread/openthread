@@ -209,6 +209,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
+      continue-on-error: true
       run: |
         exit 1
         sudo apt-get --no-install-recommends install -y ninja-build
