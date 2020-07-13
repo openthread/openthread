@@ -55,12 +55,16 @@
 #include "backbone_router/bbr_manager.hpp"
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
 #include "thread/dua_manager.hpp"
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
 #include "thread/mlr_manager.hpp"
+#endif
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+#include "thread/dua_manager.hpp"
 #endif
 
 #include "meshcop/dataset_manager.hpp"
@@ -261,11 +265,11 @@ private:
     BackboneRouter::Local   mBackboneRouterLocal;
     BackboneRouter::Manager mBackboneRouterManager;
 #endif
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    DuaManager mDuaManager;
-#endif
 #if OPENTHREAD_CONFIG_MLR_ENABLE
     MlrManager mMlrManager;
+#endif
+#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+    DuaManager mDuaManager;
 #endif
     Utils::ChildSupervisor     mChildSupervisor;
     Utils::SupervisionListener mSupervisionListener;

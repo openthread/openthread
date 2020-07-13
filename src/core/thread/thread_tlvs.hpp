@@ -135,6 +135,22 @@ public:
         kMlrBbrNotPrimary  = 5, ///< BBR is not Primary at this moment.
         kMlrGeneralFailure = 6, ///< Reason(s) for failure are not further specified.
     };
+
+    /**
+     * Domain Unicast Address (DUA) Registration Status values
+     *
+     */
+    enum DuaStatus : uint8_t
+    {
+        kDuaSuccess    = 0,     ///< Successful registration.
+        kDuaReRegister = 1,     ///< Registration was accepted but immediate reregistration is required to solve
+                                ///< any potential conflicting state across Domain.
+        kDuaInvalid        = 2, ///< Registration rejected (Fatal): Target EID is not a valid DUA.
+        kDuaDuplicate      = 3, ///< Registration rejected (Fatal): DUA is already in use by another device.
+        kDuaNoResources    = 4, ///< Registration rejected (Non-fatal): Backbone Router Resource shortage.
+        kDuaNotPrimary     = 5, ///< Registration rejected (Non-fatal): Backbone Router is not primary at this moment.
+        kDuaGeneralFailure = 6, ///< Registration failure (Non-fatal): Reason(s) not futher specified.
+    };
 };
 
 /**

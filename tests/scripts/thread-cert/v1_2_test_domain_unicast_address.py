@@ -311,6 +311,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         self.simulator.go(WAIT_TIME)
 
         WAIT_TIME = MED_TIMEOUT
+        self.simulator.go(WAIT_TIME)
         dua = self.nodes[MED_1_2].get_addr(config.DOMAIN_PREFIX)
         assert dua, 'Error: Expected DUA not found'
         assert ipaddress.ip_address(med_1_2_dua) == ipaddress.ip_address(

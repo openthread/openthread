@@ -261,6 +261,45 @@ exit:
     return retval;
 }
 
+#if OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+void Child::RemovePreviousDomainUnicastAddress(void)
+{
+    for (uint16_t index = 0; index < kNumIp6Addresses; index++)
+    {
+        VerifyOrExit(!mIp6Address[index].IsUnspecified(), OT_NOOP);
+        otLogInfoDua("CIP: %s", mIp6Address[index].ToString().AsCString());
+
+        if (Get<BackboneRouter::Leader>().IsPreviousDomainUnicast(mIp6Address[index]))
+        {
+            RemoveIp6Address(mIp6Address[index]);
+            ExitNow();
+        }
+    }
+exit:
+    return;
+}
+
+bool Child::GetDomainUnicastAddress(Ip6::Address &aAddress) const
+{
+    bool retval = false;
+
+    for (uint16_t index = 0; index < kNumIp6Addresses; index++)
+    {
+        VerifyOrExit(!mIp6Address[index].IsUnspecified(), OT_NOOP);
+        otLogInfoDua("CIP: %s", mIp6Address[index].ToString().AsCString());
+
+        if (Get<BackboneRouter::Leader>().IsDomainUnicast(mIp6Address[index]))
+        {
+            aAddress = mIp6Address[index];
+            ExitNow(retval = true);
+        }
+    }
+
+exit:
+    return retval;
+}
+#endif
+
 void Child::GenerateChallenge(void)
 {
     IgnoreError(Random::Crypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge)));

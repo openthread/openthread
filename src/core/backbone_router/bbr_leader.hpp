@@ -40,6 +40,8 @@
 #include <openthread/backbone_router.h>
 #include <openthread/ip6.h>
 
+#include "coap/coap.hpp"
+#include "coap/coap_message.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_address.hpp"
 
@@ -163,6 +165,17 @@ public:
      */
     bool IsDomainUnicast(const Ip6::Address &aAddress) const;
 
+    /**
+     * This method indicates whether or not the address was a Domain Unicast Address with deprecated Domain Prefix.
+     *
+     * @param[in]  aAddress A reference to the address.
+     *
+     * @retval true  @p aAddress is a domain Unicast Address with deprecated Domain Prefix.
+     * @retval false @p aAddress is a not domain Unicast Address with deprecated Domain Prefix.
+     *
+     */
+    bool IsPreviousDomainUnicast(const Ip6::Address &aAddress) const;
+
 private:
     void UpdateBackboneRouterPrimary(void);
     void UpdateDomainPrefixConfig(void);
@@ -176,8 +189,9 @@ private:
     void LogDomainPrefix(DomainPrefixState, const otIp6Prefix &) const {}
 #endif
 
-    BackboneRouterConfig mConfig;       ///< Primary Backbone Router information.
-    otIp6Prefix          mDomainPrefix; ///< Domain Prefix in the Thread network.
+    BackboneRouterConfig mConfig;               ///< Primary Backbone Router information.
+    otIp6Prefix          mDomainPrefix;         ///< Domain Prefix in the Thread network.
+    otIp6Prefix          mPreviousDomainPrefix; ///< Previous Domain Prefix that was in the Thread network.
 };
 
 } // namespace BackboneRouter

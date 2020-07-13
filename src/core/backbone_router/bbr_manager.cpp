@@ -42,6 +42,7 @@
 #include "common/random.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
+#include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
 
 namespace ot {
@@ -52,6 +53,11 @@ Manager::Manager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , Notifier::Receiver(aInstance, Manager::HandleNotifierEvents)
     , mMulticastListenerRegistration(OT_URI_PATH_MLR, Manager::HandleMulticastListenerRegistration, this)
+    , mDuaRegistration(OT_URI_PATH_DUA_REGISTRATION_REQUEST, Manager::HandleDuaRegistration, this)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mDuaResponseStatus(ThreadStatusTlv::kDuaSuccess)
+    , mDuaResponseIsSpecified(false)
+#endif
 {
 }
 
@@ -62,10 +68,12 @@ void Manager::HandleNotifierEvents(Events aEvents)
         if (Get<BackboneRouter::Local>().GetState() == OT_BACKBONE_ROUTER_STATE_DISABLED)
         {
             Get<Coap::Coap>().RemoveResource(mMulticastListenerRegistration);
+            Get<Coap::Coap>().RemoveResource(mDuaRegistration);
         }
         else
         {
             Get<Coap::Coap>().AddResource(mMulticastListenerRegistration);
+            Get<Coap::Coap>().AddResource(mDuaRegistration);
         }
     }
 }
@@ -117,6 +125,102 @@ exit:
 
     otLogInfoBbr("Sent MLR.rsp (status=%d): %s", aStatus, otThreadErrorToString(error));
 }
+
+void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    otError                    error               = OT_ERROR_NONE;
+    ThreadStatusTlv::DuaStatus status              = ThreadStatusTlv::kDuaSuccess;
+    bool                       isPrimary           = Get<BackboneRouter::Local>().IsPrimary();
+    uint32_t                   lastTransactionTime = 0;
+    Ip6::Address               target;
+    Ip6::InterfaceIdentifier   meshLocalIid;
+
+    otLogInfoBbr("Received DUA.req on %s", isPrimary ? "PBBR" : "SBBR");
+
+    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_PARSE);
+
+    SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+    SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, &meshLocalIid, sizeof(meshLocalIid)));
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (mDuaResponseIsSpecified)
+    {
+        if (mDuaResponseTargetMlIid.IsUnspecified() || mDuaResponseTargetMlIid == meshLocalIid)
+        {
+            mDuaResponseIsSpecified = false;
+            ExitNow(status = mDuaResponseStatus);
+        }
+    }
+#endif
+
+    VerifyOrExit(isPrimary, status = ThreadStatusTlv::kDuaNotPrimary);
+    VerifyOrExit(Get<BackboneRouter::Leader>().IsDomainUnicast(target), status = ThreadStatusTlv::kDuaInvalid);
+
+    if (Tlv::FindUint32Tlv(aMessage, ThreadTlv::kLastTransactionTime, lastTransactionTime) == OT_ERROR_NONE)
+    {
+        // hasLastTransactionTime = true;
+    }
+
+    // TODO: (DUA) Add ND-PROXY table management
+    // TODO: (DUA) Add DAD process
+    // TODO: (DUA) Extended Address Query
+
+exit:
+    if (error == OT_ERROR_NONE)
+    {
+        SendDuaRegistrationResponse(aMessage, aMessageInfo, target, status);
+    }
+
+    return;
+}
+
+void Manager::SendDuaRegistrationResponse(const Coap::Message &      aMessage,
+                                          const Ip6::MessageInfo &   aMessageInfo,
+                                          const Ip6::Address &       aTarget,
+                                          ThreadStatusTlv::DuaStatus aStatus)
+{
+    otError        error   = OT_ERROR_NONE;
+    Coap::Message *message = nullptr;
+
+    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+
+    SuccessOrExit(message->SetDefaultResponseHeader(aMessage));
+    SuccessOrExit(message->SetPayloadMarker());
+
+    SuccessOrExit(Tlv::AppendUint8Tlv(*message, ThreadTlv::kStatus, static_cast<uint8_t>(aStatus)));
+    SuccessOrExit(Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aTarget, sizeof(aTarget)));
+
+    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
+
+exit:
+    if (error != OT_ERROR_NONE && message != nullptr)
+    {
+        message->Free();
+    }
+
+    otLogInfoBbr("Sent DUA.rsp for DUA %s, status %d %s", aTarget.ToString().AsCString(), aStatus,
+                 otThreadErrorToString(error));
+
+    return;
+}
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void Manager::ConfigNextDuaRegistrationResponse(const Ip6::InterfaceIdentifier *aMlIid, uint8_t aStatus)
+{
+    mDuaResponseIsSpecified = true;
+
+    if (aMlIid)
+    {
+        mDuaResponseTargetMlIid = *aMlIid;
+    }
+    else
+    {
+        mDuaResponseTargetMlIid.Clear();
+    }
+
+    mDuaResponseStatus = static_cast<ThreadStatusTlv::DuaStatus>(aStatus);
+}
+#endif
 
 } // namespace BackboneRouter
 

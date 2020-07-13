@@ -640,6 +640,25 @@ public:
      */
     bool HasIp6Address(const Ip6::Address &aAddress) const;
 
+#if OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+    /**
+     * This method retrieves the Domain Unicast Address registered by the child.
+     *
+     * @param[in]  aAddress   A reference whether to put the Domain Unicast Address.
+     *
+     * @retval true  Domain Unicast Address exists in the list.
+     * @retval false Domain Unicast Address was not found in the list.
+     *
+     */
+    bool GetDomainUnicastAddress(Ip6::Address &aAddress) const;
+
+    /**
+     * This method removes deperated DUAs registered by the child when Domain Prefix refreshes.
+     *
+     */
+    void RemovePreviousDomainUnicastAddress(void);
+#endif
+
     /**
      * This method gets the child timeout.
      *

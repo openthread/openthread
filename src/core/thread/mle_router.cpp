@@ -2039,12 +2039,22 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     uint8_t                  storedCount     = 0;
     uint16_t                 offset          = 0;
     uint16_t                 end             = 0;
+#if OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+    Ip6::Address oldDua;
+    bool         oldHasDua = false;
+    bool         hasDua    = false;
+#endif
 
     VerifyOrExit(aMessage.Read(aOffset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
     VerifyOrExit(tlv.GetLength() <= (aMessage.GetLength() - aOffset - sizeof(tlv)), error = OT_ERROR_PARSE);
 
     offset = aOffset + sizeof(tlv);
     end    = offset + tlv.GetLength();
+
+#if OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+    oldHasDua = aChild.GetDomainUnicastAddress(oldDua);
+#endif
+
     aChild.ClearIp6Addresses();
 
     while (offset < end)
@@ -2072,6 +2082,25 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
 
             memcpy(&address, context.mPrefix, BitVectorBytes(context.mPrefixLength));
             address.SetIid(entry.GetIid());
+
+#if OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address))
+            {
+                hasDua = true;
+
+                if (oldHasDua)
+                {
+                    if (oldDua != address)
+                    {
+                        Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, kChildDuaChanged);
+                    }
+                }
+                else
+                {
+                    Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, kChildDuaAdded);
+                }
+            }
+#endif
         }
         else
         {
@@ -2133,6 +2162,13 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         // Clear EID-to-RLOC cache for the unicast address registered by the child.
         Get<AddressResolver>().Remove(address);
     }
+#if OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+    // Dua is removed
+    if (oldHasDua && !hasDua)
+    {
+        Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, kChildDuaRemoved);
+    }
+#endif
 
     if (registeredCount == 0)
     {
@@ -4757,6 +4793,9 @@ void MleRouter::Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
 
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
         Get<Notifier>().Signal(kEventThreadChildRemoved);
+#if OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+        Get<DuaManager>().UpdateChildDomainUnicastAddress(static_cast<Child &>(aNeighbor), kChildDuaRemoved);
+#endif
         break;
 
     default:

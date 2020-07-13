@@ -491,6 +491,8 @@ def create_default_uri_path_based_payload_factories():
         '/d/dq': network_diag_tlvs_factory,
         '/d/dr': network_diag_tlvs_factory,
         '/n/mr': network_layer_tlvs_factory,
+        '/n/dr': network_layer_tlvs_factory,
+        '/n/dn': network_layer_tlvs_factory,
     }
 
 

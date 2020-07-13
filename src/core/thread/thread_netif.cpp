@@ -111,11 +111,11 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mBackboneRouterLocal(aInstance)
     , mBackboneRouterManager(aInstance)
 #endif
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    , mDuaManager(aInstance)
-#endif
 #if OPENTHREAD_CONFIG_MLR_ENABLE
     , mMlrManager(aInstance)
+#endif
+#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+    , mDuaManager(aInstance)
 #endif
     , mChildSupervisor(aInstance)
     , mSupervisionListener(aInstance)

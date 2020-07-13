@@ -54,7 +54,8 @@ void Leader::Reset(void)
     mConfig.mServer16 = Mac::kShortAddrInvalid;
 
     // Domain Prefix Length 0 indicates no available Domain Prefix in the Thread network.
-    mDomainPrefix.mLength = 0;
+    mDomainPrefix.mLength         = 0;
+    mPreviousDomainPrefix.mLength = 0;
 }
 
 otError Leader::GetConfig(BackboneRouterConfig &aConfig) const
@@ -230,6 +231,10 @@ void Leader::UpdateBackboneRouterPrimary(void)
 #if OPENTHREAD_CONFIG_MLR_ENABLE
     Get<MlrManager>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
 #endif
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+    Get<DuaManager>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
+#endif
 }
 
 void Leader::UpdateDomainPrefixConfig(void)
@@ -278,6 +283,8 @@ void Leader::UpdateDomainPrefixConfig(void)
             state = kDomainPrefixRefreshed;
         }
 
+        mPreviousDomainPrefix = mDomainPrefix;
+
         mDomainPrefix = config.mPrefix;
     }
 
@@ -287,14 +294,26 @@ void Leader::UpdateDomainPrefixConfig(void)
     Get<Local>().UpdateAllDomainBackboneRouters(state);
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    Get<DuaManager>().UpdateDomainUnicastAddress(state);
+#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+    Get<DuaManager>().HandleDomainPrefixUpdate(state);
 #endif
 }
 
 bool Leader::IsDomainUnicast(const Ip6::Address &aAddress) const
 {
+    otLogInfoDua("Domain Prefix : %s/%d",
+                 static_cast<const Ip6::Address *>(&mDomainPrefix.mPrefix)->ToString().AsCString(),
+                 mDomainPrefix.mLength);
     return HasDomainPrefix() && aAddress.PrefixMatch(mDomainPrefix.mPrefix) >= mDomainPrefix.mLength;
+}
+
+bool Leader::IsPreviousDomainUnicast(const Ip6::Address &aAddress) const
+{
+    otLogInfoDua("Previous Domain Prefix : %s/%d",
+                 static_cast<const Ip6::Address *>(&mPreviousDomainPrefix.mPrefix)->ToString().AsCString(),
+                 mPreviousDomainPrefix.mLength);
+    return mPreviousDomainPrefix.mLength > 0 &&
+           aAddress.PrefixMatch(mPreviousDomainPrefix.mPrefix) >= mPreviousDomainPrefix.mLength;
 }
 
 } // namespace BackboneRouter
