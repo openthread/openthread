@@ -209,11 +209,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
-      continue-on-error: true
       run: |
         sudo apt-get --no-install-recommends install -y ninja-build
         git clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch master
-        exit 1
     - name: Build
       run: |
         cd /tmp/ot-commissioner
