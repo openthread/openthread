@@ -59,11 +59,14 @@
 
 #include "platform-posix.h"
 
-const size_t LINE_BUFFER_SIZE = 256;
+enum
+{
+    kLineBufferSize = 256,
+};
 
-static_assert(LINE_BUFFER_SIZE >= sizeof("> "), "LINE_BUFFER_SIZE is too small");
-static_assert(LINE_BUFFER_SIZE >= sizeof("Done\r\n"), "LINE_BUFFER_SIZE is too small");
-static_assert(LINE_BUFFER_SIZE >= sizeof("Error "), "LINE_BUFFER_SIZE is too small");
+static_assert(kLineBufferSize >= sizeof("> "), "kLineBufferSize is too small");
+static_assert(kLineBufferSize >= sizeof("Done\r\n"), "kLineBufferSize is too small");
+static_assert(kLineBufferSize >= sizeof("Error "), "kLineBufferSize is too small");
 
 static int sSessionFd = -1;
 
@@ -110,7 +113,7 @@ int main(int argc, char *argv[])
     int    ret;
     bool   isInteractive = true;
     bool   isFinished    = false;
-    char   lineBuffer[LINE_BUFFER_SIZE];
+    char   lineBuffer[kLineBufferSize];
     size_t lineBufferWritePos = 0;
     bool   isBeginOfLine      = true;
 
