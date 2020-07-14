@@ -41,6 +41,7 @@ namespace ot {
 
 void TestFlash(void)
 {
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
     uint8_t readBuffer[256];
     uint8_t writeBuffer[256];
 
@@ -182,6 +183,7 @@ void TestFlash(void)
         VerifyOrQuit(length == key, "Get() did not return expected length");
         VerifyOrQuit(memcmp(readBuffer, writeBuffer, length) == 0, "Get() did not return expected value");
     }
+#endif // OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
 }
 
 } // namespace ot

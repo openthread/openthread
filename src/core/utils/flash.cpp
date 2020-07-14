@@ -35,6 +35,8 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+
 namespace ot {
 
 const uint32_t ot::Flash::sSwapActive;
@@ -306,3 +308,5 @@ void Flash::Wipe(void)
 }
 
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
