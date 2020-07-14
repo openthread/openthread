@@ -34,8 +34,8 @@ import logging
 import struct
 
 from network_data import SubTlvsFactory
-import common
 from tlvs_parsing import UnknownTlvFactory
+import common
 
 
 class TlvType(IntEnum):
