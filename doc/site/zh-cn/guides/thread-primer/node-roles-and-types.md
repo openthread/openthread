@@ -93,7 +93,7 @@ Note: 一个 Thread 网络中可以有多个 Border Router。
 <a href="../images/ot-primer-partitions_2x.png"><img src="../images/ot-primer-partitions.png" srcset="../images/ot-primer-partitions.png 1x, ../images/ot-primer-partitions_2x.png 2x" border="0" alt="OT Partitions" /></a>
 </figure>
 
-一个 Thread 网络可能由多个分区组成。当一组 Thread 设备不能再与另一组 Thread 设备通信时，会发生这种情况。每个分区在逻辑上均作为独立的 Thread 网络来运行，它们具有各自的 Leader、Router ID 和网络数据，同时分区前相同的安全凭证都将被保留下来。
+一个 Thread 网络可能由多个分区组成。当一组 Thread 设备不能再与另一组 Thread 设备通信时，会发生这种情况。每个分区在逻辑上均作为独立的 Thread 网络来运行，它们具有各自的 Leader、Router ID 分配和网络数据，同时分区前相同的安全凭证都将被保留下来。
 
 当分区之间可以连通时，它们会自动合并。
 

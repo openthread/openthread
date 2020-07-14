@@ -97,7 +97,7 @@ RLOC 只是 Thread 设备可以获得的多种 IPv6 单播地址之一。另一�
       <th colspan=2><h3>Mesh-Local EID (ML-EID)</h3></th>
     </tr>
     <tr>
-      <td colspan=2 style="background-color:rgb(238, 241, 242)">一个 EID，用于标识 Thread 接口。用于访问同一 Thread 分区内的 Thread 接口。也称为 ULA（Unique Local Address）。</td>
+      <td colspan=2 style="background-color:rgb(238, 241, 242)">一种用于标识 Thread 接口的 EID，其与网络拓扑无关。用于访问同一 Thread 分区内的 Thread 接口。也称为 ULA（Unique Local Address）。</td>
     </tr>
     <tr>
       <td width="25%" style="background-color:rgb(238, 241, 242)"><b>示例</b></td><td><code>fde5:8dba:82e1:1:416:993c:8399:35ab</code></td>
@@ -195,8 +195,6 @@ RLOC 只是 Thread 设备可以获得的多种 IPv6 单播地址之一。另一�
 | `ff03::2` | Mesh-Local | 所有 FTD        |
 
 Key Point: FTD 和 MTD 之间的主要区别在于 FTD 订阅了 `ff03::2` 多播地址。而 MTD 没有订阅。
-
-你可能会注意到，上面的多播表中没有将 SED 作为接收者包括在内。所有 Thread 节点（包括 SED）会订阅一个特殊的基于单播 prefix 的多播地址。该多播地址基于单播 Mesh-Local prefix 构成，因 Thread 网络而异。
 
 你可能会注意到，上面的多播表中没有将 SED 作为接收者包括在内。Thread 为所有 Thread 节点（包括 SED）定义了（link-local 和 realm-local 域）基于单播 prefix 的 IPv6 多播地址。这些多播地址基于单播 Mesh-Local prefix 构成，因 Thread 网络而异。（有关基于单播 prefix 的 IPv6 多播地址的详情，请参阅 [RFC 3306](https://tools.ietf.org/html/rfc3306)）。
 
