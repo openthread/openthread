@@ -288,6 +288,11 @@ void Leader::UpdateDomainPrefixConfig(void)
 #endif
 }
 
+bool Leader::IsDomainUnicast(const Ip6::Address &aAddress) const
+{
+    return HasDomainPrefix() && aAddress.PrefixMatch(mDomainPrefix.mPrefix) >= mDomainPrefix.mLength;
+}
+
 } // namespace BackboneRouter
 } // namespace ot
 

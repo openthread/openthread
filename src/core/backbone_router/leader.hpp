@@ -152,6 +152,17 @@ public:
      */
     bool HasDomainPrefix(void) const { return (mDomainPrefix.mLength > 0); }
 
+    /**
+     * This method indicates whether or not the address is a Domain Unicast Address.
+     *
+     * @param[in]  aAddress A reference to the address.
+     *
+     * @retval true  @p aAddress is a domain unicast address.
+     * @retval false @p aAddress is not a domain unicast address.
+     *
+     */
+    bool IsDomainUnicast(const Ip6::Address &aAddress) const;
+
 private:
     void UpdateBackboneRouterPrimary(void);
     void UpdateDomainPrefixConfig(void);
