@@ -138,9 +138,9 @@ void MeshForwarder::RemoveMessage(Message &aMessage)
     if (queue == &mSendQueue)
     {
 #if OPENTHREAD_FTD
-        for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+        for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
         {
-            IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, *iter.GetChild()));
+            IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, child));
         }
 #endif
 

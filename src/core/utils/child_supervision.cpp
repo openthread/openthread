@@ -120,10 +120,8 @@ void ChildSupervisor::HandleTimer(void)
 {
     VerifyOrExit(mSupervisionInterval != 0, OT_NOOP);
 
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        Child &child = *iter.GetChild();
-
         child.IncrementSecondsSinceLastSupervision();
 
         if ((child.GetSecondsSinceLastSupervision() >= mSupervisionInterval) && !child.IsRxOnWhenIdle())
