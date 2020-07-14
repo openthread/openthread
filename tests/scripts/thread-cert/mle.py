@@ -454,7 +454,7 @@ class LeaderData(object):
                 self.leader_router_id == other.leader_router_id)
 
     def __repr__(self):
-        return "LeaderData(partition_id={}, weighting={}, data_version={}, stable_data_version={},leader_router_id={}".format(
+        return 'LeaderData(partition_id={}, weighting={}, data_version={}, stable_data_version={},leader_router_id={}'.format(
             self.partition_id,
             self.weighting,
             self.data_version,
