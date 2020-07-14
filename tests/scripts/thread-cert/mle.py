@@ -1139,7 +1139,7 @@ class MleCommandFactory:
             return self._tlvs_factories[_type]
         except KeyError:
             logging.error(
-                "Could not find TLV factory. Unsupported TLV type: {}".format(
+                'Could not find TLV factory. Unsupported TLV type: {}'.format(
                     _type))
             return UnknownTlvFactory(_type)
 
