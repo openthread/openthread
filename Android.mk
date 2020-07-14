@@ -273,11 +273,11 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
     src/lib/hdlc/hdlc.cpp                                   \
-    src/lib/url/url.cpp                                     \
     src/lib/platform/exit_code.c                            \
     src/lib/spinel/spinel.c                                 \
     src/lib/spinel/spinel_decoder.cpp                       \
     src/lib/spinel/spinel_encoder.cpp                       \
+    src/lib/url/url.cpp                                     \
     src/posix/platform/alarm.cpp                            \
     src/posix/platform/entropy.cpp                          \
     src/posix/platform/hdlc_interface.cpp                   \

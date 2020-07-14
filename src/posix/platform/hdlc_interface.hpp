@@ -198,7 +198,7 @@ private:
     static void HandleHdlcFrame(void *aContext, otError aError);
     void        HandleHdlcFrame(otError aError);
 
-    static int OpenFile(const char *aFile, RadioUrl &aRadioUrl);
+    static int OpenFile(const RadioUrl &aRadioUrl);
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     static int ForkPty(const char *aCommand, const char *aRadioUrl);
 #endif

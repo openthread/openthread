@@ -149,7 +149,7 @@ otError HdlcInterface::Init(const RadioUrl &aRadioUrl)
 
     if (S_ISCHR(st.st_mode))
     {
-        mSockFd = OpenFile(aRadioUrl.GetPath(), aRadioUrl);
+        mSockFd = OpenFile(aRadioUrl);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
@@ -409,12 +409,12 @@ exit:
     return error;
 }
 
-int HdlcInterface::OpenFile(const char *aFile, const RadioUrl &aRadioUrl)
+int HdlcInterface::OpenFile(const RadioUrl &aRadioUrl)
 {
     int fd   = -1;
     int rval = 0;
 
-    fd = open(aFile, O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC);
+    fd = open(aRadioUrl.GetPath(), O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC);
     if (fd == -1)
     {
         perror("open uart failed");
