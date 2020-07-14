@@ -28,6 +28,7 @@
 #
 
 import io
+import logging
 import struct
 
 from binascii import hexlify
@@ -35,6 +36,7 @@ from binascii import hexlify
 import common
 
 from enum import IntEnum
+from tlvs_parsing import UnknownTlvFactory
 
 
 class CommandType(IntEnum):
@@ -452,15 +454,13 @@ class LeaderData(object):
                 self.leader_router_id == other.leader_router_id)
 
     def __repr__(self):
-        return (
-            "LeaderData(partition_id={}, weighting={}, data_version={}, stable_data_version={},",
-            "leader_router_id={})").format(
-                self.partition_id,
-                self.weighting,
-                self.data_version,
-                self.stable_data_version,
-                self.leader_router_id,
-            )
+        return "LeaderData(partition_id={}, weighting={}, data_version={}, stable_data_version={},leader_router_id={}".format(
+            self.partition_id,
+            self.weighting,
+            self.data_version,
+            self.stable_data_version,
+            self.leader_router_id,
+        )
 
 
 class LeaderDataFactory:
@@ -1138,9 +1138,10 @@ class MleCommandFactory:
         try:
             return self._tlvs_factories[_type]
         except KeyError:
-            raise KeyError(
+            logging.error(
                 "Could not find TLV factory. Unsupported TLV type: {}".format(
                     _type))
+            return UnknownTlvFactory(_type)
 
     def _parse_tlv(self, data, message_info):
         _type = TlvType(ord(data.read(1)))

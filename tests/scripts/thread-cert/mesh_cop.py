@@ -30,10 +30,12 @@
 from binascii import hexlify
 from enum import IntEnum
 import io
+import logging
 import struct
 
 from network_data import SubTlvsFactory
 import common
+from tlvs_parsing import UnknownTlvFactory
 
 
 class TlvType(IntEnum):
@@ -931,9 +933,10 @@ class MeshCopCommandFactory:
         try:
             return self._tlvs_factories[_type]
         except KeyError:
-            raise KeyError(
+            logging.error(
                 "Could not find TLV factory. Unsupported TLV type: {}".format(
                     _type))
+            return UnknownTlvFactory(_type)
 
     def _parse_tlv(self, data):
         _type = TlvType(ord(data.read(1)))
