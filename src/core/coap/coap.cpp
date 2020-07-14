@@ -1014,7 +1014,7 @@ const otCoapTxParameters TxParameters::kDefaultTxParameters = {
 
 Coap::Coap(Instance &aInstance)
     : CoapBase(aInstance, &Coap::Send)
-    , mSocket(aInstance.Get<Ip6::Udp>())
+    , mSocket(aInstance)
 {
 }
 

@@ -48,7 +48,7 @@ namespace Dhcp6 {
 
 Dhcp6Server::Dhcp6Server(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mSocket(Get<Ip6::Udp>())
+    , mSocket(aInstance)
     , mPrefixAgentsCount(0)
     , mPrefixAgentsMask(0)
 {

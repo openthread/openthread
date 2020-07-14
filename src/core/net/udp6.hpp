@@ -68,54 +68,12 @@ public:
      * This class implements a UDP/IPv6 socket.
      *
      */
-    class Socket : public otUdpSocket, public InstanceLocator, public LinkedListEntry<Socket>
+    class SocketHandle : public otUdpSocket, public LinkedListEntry<SocketHandle>
     {
         friend class Udp;
-        friend class LinkedList<Socket>;
+        friend class LinkedList<SocketHandle>;
 
     public:
-        /**
-         * This constructor initializes the object.
-         *
-         * @param[in]  aUdp  A reference to the UDP transport object.
-         *
-         */
-        explicit Socket(Udp &aUdp);
-
-        /**
-         * This method returns a new UDP message with sufficient header space reserved.
-         *
-         * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-         * @param[in]  aSettings  The message settings (default is used if not provided).
-         *
-         * @returns A pointer to the message or nullptr if no buffers are available.
-         *
-         */
-        Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());
-
-        /**
-         * This method opens the UDP socket.
-         *
-         * @param[in]  aHandler  A pointer to a function that is called when receiving UDP messages.
-         * @param[in]  aContext  A pointer to arbitrary context information.
-         *
-         * @retval OT_ERROR_NONE     Successfully opened the socket.
-         * @retval OT_ERROR_ALREADY  The socket is already open.
-         *
-         */
-        otError Open(otUdpReceive aHandler, void *aContext);
-
-        /**
-         * This method binds the UDP socket.
-         *
-         * @param[in]  aSockAddr  A reference to the socket address.
-         *
-         * @retval OT_ERROR_NONE    Successfully bound the socket.
-         * @retval OT_ERROR_FAILED  Failed to bind UDP Socket.
-         *
-         */
-        otError Bind(const SockAddr &aSockAddr);
-
         /**
          * This method indicates whether or not the socket is bound.
          *
@@ -124,39 +82,6 @@ public:
          *
          */
         bool IsBound(void) const { return mSockName.mPort != 0; }
-
-        /**
-         * This method connects the UDP socket.
-         *
-         * @param[in]  aSockAddr  A reference to the socket address.
-         *
-         * @retval OT_ERROR_NONE    Successfully connected the socket.
-         * @retval OT_ERROR_FAILED  Failed to connect UDP Socket.
-         *
-         */
-        otError Connect(const SockAddr &aSockAddr);
-
-        /**
-         * This method closes the UDP socket.
-         *
-         * @retval OT_ERROR_NONE    Successfully closed the UDP socket.
-         * @retval OT_ERROR_FAILED  Failed to close UDP Socket.
-         *
-         */
-        otError Close(void);
-
-        /**
-         * This method sends a UDP message.
-         *
-         * @param[in]  aMessage      The message to send.
-         * @param[in]  aMessageInfo  The message info associated with @p aMessage.
-         *
-         * @retval OT_ERROR_NONE          Successfully sent the UDP message.
-         * @retval OT_ERROR_INVALID_ARGS  If no peer is specified in @p aMessageInfo or by connect().
-         * @retval OT_ERROR_NO_BUFS       Insufficient available buffer to add the UDP and IPv6 headers.
-         *
-         */
-        otError SendTo(Message &aMessage, const MessageInfo &aMessageInfo);
 
         /**
          * This method returns the local socket address.
@@ -197,6 +122,91 @@ public:
         {
             mHandler(mContext, &aMessage, &aMessageInfo);
         }
+    };
+
+    /**
+     * This class implements a UDP/IPv6 socket.
+     *
+     */
+    class Socket : public InstanceLocator, public SocketHandle
+    {
+        friend class Udp;
+
+    public:
+        /**
+         * This constructor initializes the object.
+         *
+         * @param[in]  aInstance  A reference to OpenThread instance.
+         *
+         */
+        explicit Socket(Instance &aInstance);
+
+        /**
+         * This method returns a new UDP message with sufficient header space reserved.
+         *
+         * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
+         * @param[in]  aSettings  The message settings (default is used if not provided).
+         *
+         * @returns A pointer to the message or nullptr if no buffers are available.
+         *
+         */
+        Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());
+
+        /**
+         * This method opens the UDP socket.
+         *
+         * @param[in]  aHandler  A pointer to a function that is called when receiving UDP messages.
+         * @param[in]  aContext  A pointer to arbitrary context information.
+         *
+         * @retval OT_ERROR_NONE     Successfully opened the socket.
+         * @retval OT_ERROR_FAILED   Failed to open the socket.
+         *
+         */
+        otError Open(otUdpReceive aHandler, void *aContext);
+
+        /**
+         * This method binds the UDP socket.
+         *
+         * @param[in]  aSockAddr  A reference to the socket address.
+         *
+         * @retval OT_ERROR_NONE    Successfully bound the socket.
+         * @retval OT_ERROR_FAILED  Failed to bind UDP Socket.
+         *
+         */
+        otError Bind(const SockAddr &aSockAddr);
+
+        /**
+         * This method connects the UDP socket.
+         *
+         * @param[in]  aSockAddr  A reference to the socket address.
+         *
+         * @retval OT_ERROR_NONE    Successfully connected the socket.
+         * @retval OT_ERROR_FAILED  Failed to connect UDP Socket.
+         *
+         */
+        otError Connect(const SockAddr &aSockAddr);
+
+        /**
+         * This method closes the UDP socket.
+         *
+         * @retval OT_ERROR_NONE    Successfully closed the UDP socket.
+         * @retval OT_ERROR_FAILED  Failed to close UDP Socket.
+         *
+         */
+        otError Close(void);
+
+        /**
+         * This method sends a UDP message.
+         *
+         * @param[in]  aMessage      The message to send.
+         * @param[in]  aMessageInfo  The message info associated with @p aMessage.
+         *
+         * @retval OT_ERROR_NONE          Successfully sent the UDP message.
+         * @retval OT_ERROR_INVALID_ARGS  If no peer is specified in @p aMessageInfo or by Connect().
+         * @retval OT_ERROR_NO_BUFS       Insufficient available buffer to add the UDP and IPv6 headers.
+         *
+         */
+        otError SendTo(Message &aMessage, const MessageInfo &aMessageInfo);
     };
 
     /**
@@ -320,7 +330,7 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aIp6  A reference to OpenThread instance.
+     * @param[in]  aInstance  A reference to OpenThread instance.
      *
      */
     explicit Udp(Instance &aInstance);
@@ -348,20 +358,66 @@ public:
     otError RemoveReceiver(Receiver &aReceiver);
 
     /**
-     * This method adds a UDP socket.
+     * This method opens a UDP socket.
      *
-     * @param[in]  aSocket  A reference to the UDP socket.
+     * @param[in]  aSocket   A reference to the socket.
+     * @param[in]  aHandler  A pointer to a function that is called when receiving UDP messages.
+     * @param[in]  aContext  A pointer to arbitrary context information.
+     *
+     * @retval OT_ERROR_NONE     Successfully opened the socket.
+     * @retval OT_ERROR_FAILED   Failed to open the socket.
      *
      */
-    void AddSocket(Socket &aSocket);
+    otError Open(SocketHandle &aSocket, otUdpReceive aHandler, void *aContext);
 
     /**
-     * This method removes a UDP socket.
+     * This method binds a UDP socket.
      *
-     * @param[in]  aSocket  A reference to the UDP socket.
+     * @param[in]  aSocket    A reference to the socket.
+     * @param[in]  aSockAddr  A reference to the socket address.
+     *
+     * @retval OT_ERROR_NONE    Successfully bound the socket.
+     * @retval OT_ERROR_FAILED  Failed to bind UDP Socket.
      *
      */
-    void RemoveSocket(Socket &aSocket);
+    otError Bind(SocketHandle &aSocket, const SockAddr &aSockAddr);
+
+    /**
+     * This method connects a UDP socket.
+     *
+     * @param[in]  aSocket    A reference to the socket.
+     * @param[in]  aSockAddr  A reference to the socket address.
+     *
+     * @retval OT_ERROR_NONE    Successfully connected the socket.
+     * @retval OT_ERROR_FAILED  Failed to connect UDP Socket.
+     *
+     */
+    otError Connect(SocketHandle &aSocket, const SockAddr &aSockAddr);
+
+    /**
+     * This method closes the UDP socket.
+     *
+     * @param[in]  aSocket    A reference to the socket.
+     *
+     * @retval OT_ERROR_NONE    Successfully closed the UDP socket.
+     * @retval OT_ERROR_FAILED  Failed to close UDP Socket.
+     *
+     */
+    otError Close(SocketHandle &aSocket);
+
+    /**
+     * This method sends a UDP message using a socket.
+     *
+     * @param[in]  aSocket       A reference to the socket.
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aMessageInfo  The message info associated with @p aMessage.
+     *
+     * @retval OT_ERROR_NONE          Successfully sent the UDP message.
+     * @retval OT_ERROR_INVALID_ARGS  If no peer is specified in @p aMessageInfo or by Connect().
+     * @retval OT_ERROR_NO_BUFS       Insufficient available buffer to add the UDP and IPv6 headers.
+     *
+     */
+    otError SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo &aMessageInfo);
 
     /**
      * This method returns a new ephemeral port.
@@ -431,7 +487,7 @@ public:
      * @returns A pointer to the head of UDP Socket linked list.
      *
      */
-    Socket *GetUdpSockets(void) { return mSockets.GetHead(); }
+    SocketHandle *GetUdpSockets(void) { return mSockets.GetHead(); }
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     /**
@@ -455,9 +511,13 @@ private:
         kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
     };
 
-    uint16_t             mEphemeralPort;
-    LinkedList<Receiver> mReceivers;
-    LinkedList<Socket>   mSockets;
+    void AddSocket(SocketHandle &aSocket);
+    void RemoveSocket(SocketHandle &aSocket);
+    bool IsMlePort(uint16_t aPort) const;
+
+    uint16_t                 mEphemeralPort;
+    LinkedList<Receiver>     mReceivers;
+    LinkedList<SocketHandle> mSockets;
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     void *         mUdpForwarderContext;
     otUdpForwarder mUdpForwarder;

@@ -126,7 +126,7 @@ typedef struct otUdpSocket
     otSockAddr          mPeerName; ///< The peer IPv6 socket address.
     otUdpReceive        mHandler;  ///< A function pointer to the application callback.
     void *              mContext;  ///< A pointer to application-specific context.
-    void *              mHandle;   ///< A handle to platform's UDP
+    void *              mHandle;   ///< A handle to platform's UDP.
     struct otUdpSocket *mNext;     ///< A pointer to the next UDP socket (internal use only).
 } otUdpSocket;
 
@@ -137,7 +137,7 @@ typedef struct otUdpSocket
  * OT_MESSAGE_PRIORITY_NORMAL by default.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aSettings  A pointer to the message settings or NULL to set default settings.
+ * @param[in]  aSettings  A pointer to the message settings or NULL to use default settings.
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
  *
@@ -157,68 +157,51 @@ otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSett
  * @retval OT_ERROR_NONE    Successfully opened the socket.
  * @retval OT_ERROR_FAILED  Failed to open the socket.
  *
- * @sa otUdpNewMessage
- * @sa otUdpClose
- * @sa otUdpBind
- * @sa otUdpConnect
- * @sa otUdpSend
- *
  */
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext);
 
 /**
  * Close a UDP/IPv6 socket.
  *
- * @param[in]  aSocket  A pointer to a UDP socket structure.
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aSocket    A pointer to a UDP socket structure.
  *
- * @retval OT_ERROR_NONE  Successfully closed the socket.
- *
- * @sa otUdpNewMessage
- * @sa otUdpOpen
- * @sa otUdpBind
- * @sa otUdpConnect
- * @sa otUdpSend
+ * @retval OT_ERROR_NONE   Successfully closed the socket.
+ * @retval OT_ERROR_FAILED Failed to close UDP Socket.
  *
  */
-otError otUdpClose(otUdpSocket *aSocket);
+otError otUdpClose(otInstance *aInstance, otUdpSocket *aSocket);
 
 /**
  * Bind a UDP/IPv6 socket.
  *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aSocket    A pointer to a UDP socket structure.
  * @param[in]  aSockName  A pointer to an IPv6 socket address structure.
  *
- * @retval OT_ERROR_NONE  Bind operation was successful.
- *
- * @sa otUdpNewMessage
- * @sa otUdpOpen
- * @sa otUdpConnect
- * @sa otUdpClose
- * @sa otUdpSend
+ * @retval OT_ERROR_NONE   Bind operation was successful.
+ * @retval OT_ERROR_FAILED Failed to bind UDP socket.
  *
  */
-otError otUdpBind(otUdpSocket *aSocket, otSockAddr *aSockName);
+otError otUdpBind(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName);
 
 /**
  * Connect a UDP/IPv6 socket.
  *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aSocket    A pointer to a UDP socket structure.
  * @param[in]  aSockName  A pointer to an IPv6 socket address structure.
  *
- * @retval OT_ERROR_NONE  Connect operation was successful.
- *
- * @sa otUdpNewMessage
- * @sa otUdpOpen
- * @sa otUdpBind
- * @sa otUdpClose
- * @sa otUdpSend
+ * @retval OT_ERROR_NONE   Connect operation was successful.
+ * @retval OT_ERROR_FAILED Failed to connect UDP socket.
  *
  */
-otError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName);
+otError otUdpConnect(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName);
 
 /**
  * Send a UDP/IPv6 message.
  *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aSocket       A pointer to a UDP socket structure.
  * @param[in]  aMessage      A pointer to a message buffer.
  * @param[in]  aMessageInfo  A pointer to a message info structure.
@@ -227,18 +210,22 @@ otError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName);
  * reference @p aMessage. If the return value is not OT_ERROR_NONE, the caller retains ownership of @p aMessage,
  * including freeing @p aMessage if the message buffer is no longer needed.
  *
- * @retval OT_ERROR_NONE            The message is successfully scheduled for sending.
- * @retval OT_ERROR_INVALID_ARGS    Invalid arguments are given.
- *
- * @sa otUdpNewMessage
- * @sa otUdpOpen
- * @sa otUdpClose
- * @sa otUdpBind
- * @sa otUdpConnect
- * @sa otUdpSend
+ * @retval OT_ERROR_NONE           The message is successfully scheduled for sending.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid arguments are given.
+ * @retval OT_ERROR_NO_BUFS        Insufficient available buffer to add the UDP and IPv6 headers.
  *
  */
-otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+otError otUdpSend(otInstance *aInstance, otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+/**
+ * This function gets the head of linked list of UDP Sockets.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the head of UDP Socket linked list.
+ *
+ */
+otUdpSocket *otUdpGetSockets(otInstance *aInstance);
 
 /**
  * @}
@@ -301,16 +288,6 @@ void otUdpForwardReceive(otInstance *        aInstance,
                          uint16_t            aPeerPort,
                          const otIp6Address *aPeerAddr,
                          uint16_t            aSockPort);
-
-/**
- * This function gets the existing UDP Sockets.
- *
- * @param[in]  aInstance            A pointer to an OpenThread instance.
- *
- * @returns A pointer to the first UDP Socket.
- *
- */
-otUdpSocket *otUdpGetSockets(otInstance *aInstance);
 
 /**
  * @}

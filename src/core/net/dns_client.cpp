@@ -73,7 +73,7 @@ QueryMetadata::QueryMetadata(otDnsResponseHandler aHandler, void *aContext)
 }
 
 Client::Client(Ip6::Netif &aNetif)
-    : mSocket(aNetif.Get<Ip6::Udp>())
+    : mSocket(aNetif.GetInstance())
     , mMessageId(0)
     , mRetransmissionTimer(aNetif.GetInstance(), Client::HandleRetransmissionTimer, this)
 {
