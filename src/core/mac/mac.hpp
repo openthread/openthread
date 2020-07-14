@@ -40,7 +40,6 @@
 #include <openthread/platform/time.h>
 
 #include "common/locator.hpp"
-#include "common/message.hpp"
 #include "common/tasklet.hpp"
 #include "common/timer.hpp"
 #include "mac/channel_mask.hpp"
