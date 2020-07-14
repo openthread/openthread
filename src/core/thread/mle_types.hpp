@@ -249,7 +249,7 @@ enum
     kServiceMaxId = 0x0f, ///< Maximal Service ID.
 };
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE || OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
  * Backbone Router / MLR constants
@@ -261,12 +261,13 @@ enum
     kMlrTimeoutDefault                = 3600, //< In seconds.
     kMlrTimeoutMin                    = 300,  //< In seconds.
     kBackboneRouterRegistrationJitter = 5,    //< In seconds.
+    kParentAggregateDelay             = 5,    //< In seconds.
 };
 
 static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin,
               "kMlrTimeoutDefault must be larger than or equal to kMlrTimeoutMin");
 
-#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE || OPENTHREAD_CONFIG_MLR_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
  * This type represents a MLE device mode.

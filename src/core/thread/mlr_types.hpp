@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 namespace ot {
 
@@ -51,14 +51,14 @@ namespace ot {
  * Multicast Listener Registration state for multicast addresses.
  *
  */
-typedef enum MlrState
+enum MlrState
 {
     kMlrStateToRegister,  ///< The multicast address is to be registered.
     kMlrStateRegistering, ///< The multicast address is being registered.
     kMlrStateRegistered,  ///< The multicast address is registered.
-} MlrState;
+};
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MLR_ENABLE
+#endif // OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 #endif // MLR_TYPES_HPP_

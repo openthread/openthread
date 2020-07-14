@@ -59,7 +59,7 @@
 #include "thread/dua_manager.hpp"
 #endif
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 #include "thread/mlr_manager.hpp"
 #endif
 
@@ -264,7 +264,7 @@ private:
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     DuaManager mDuaManager;
 #endif
-#if OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     MlrManager mMlrManager;
 #endif
     Utils::ChildSupervisor     mChildSupervisor;

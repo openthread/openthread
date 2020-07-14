@@ -29,12 +29,13 @@
 
 import ipaddress
 import unittest
+from typing import Union, List
 
 import config
 import network_layer
 import thread_cert
 
-_, BBR_1, BBR_2, ROUTER_1_2, ROUTER_1_1, SED_1, MED_1, FED_1 = range(8)
+_, BBR_1, BBR_2, ROUTER_1_2, ROUTER_1_1, SED_1, MED_1, MED_2, FED_1 = range(9)
 
 WAIT_ATTACH = 5
 WAIT_REDUNDANCE = 3
@@ -44,6 +45,7 @@ SED_POLL_PERIOD = 1000  # 1s
 
 REREG_DELAY = 10
 MLR_TIMEOUT = 300
+PARENT_AGGREGATE_DELAY = 5
 
 MA1 = 'ff04::1234:777a:1'
 MA1g = 'ff0e::1234:777a:1'
@@ -60,9 +62,9 @@ MA6 = 'ff02::10'
      |     /   \                       |
      |    /     \                      |
    ROUTER_1_2  ROUTER_1_1
-    |     |  \                         |
-    |     |   \                        |
-  SED_1  MED_1 FED_1
+    |     |  \____                     |
+    |     |       \                    |
+  SED_1  MED_1/2  FED_1
 """
 
 
@@ -82,7 +84,7 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         },
         ROUTER_1_2: {
             'version': '1.2',
-            'whitelist': [BBR_1, BBR_2, SED_1, MED_1, FED_1],
+            'whitelist': [BBR_1, BBR_2, SED_1, MED_1, MED_2, FED_1],
             'router_selection_jitter': 1,
         },
         ROUTER_1_1: {
@@ -91,6 +93,12 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
             'router_selection_jitter': 1,
         },
         MED_1: {
+            'mode': 'rsn',
+            'version': '1.2',
+            'whitelist': [ROUTER_1_2],
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+        },
+        MED_2: {
             'mode': 'rsn',
             'version': '1.2',
             'whitelist': [ROUTER_1_2],
@@ -179,6 +187,11 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         self.simulator.go(WAIT_ATTACH)
         self.assertEqual(self.nodes[MED_1].get_state(), 'child')
 
+        # Bring up MED_2
+        self.nodes[MED_2].start()
+        self.simulator.go(WAIT_ATTACH)
+        self.assertEqual(self.nodes[MED_2].get_state(), 'child')
+
         # Bring up SED_1
         self.nodes[SED_1].set_pollperiod(SED_POLL_PERIOD)
         self.nodes[SED_1].start()
@@ -190,6 +203,12 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         self.__check_mlr_ok(FED_1, is_ftd=True)
         self.__check_mlr_ok(MED_1, is_ftd=False)
         self.__check_mlr_ok(SED_1, is_ftd=False)
+
+        # Make sure Parent registers multiple MAs of MED Children in one MLR.req
+        self.__check_parent_merge_med_mlr_req([MED_1, MED_2], ROUTER_1_2)
+
+        # Make sure Parent does not send MLR.req of Child if it's already subscribed by Netif or other Children
+        self.__check_not_send_mlr_req_if_subscribed([MED_1, MED_2], ROUTER_1_2)
 
         # Switch to parent 1.1
         self.__switch_to_1_1_parent()
@@ -210,36 +229,94 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
             (id, 'FTD' if is_ftd else 'MTD', '1.1' if is_parent_1p1 else '1.2'))
         expect_mlr_req = is_ftd or is_parent_1p1
 
+        if id == ROUTER_1_2:
+            parent_id = None
+        else:
+            parent_id = ROUTER_1_1 if is_parent_1p1 else ROUTER_1_2
+
         for addr in [MA1, MA1g, MA2, MA3, MA4]:
-            self.__check_ipmaddr_add(id, addr, expect_mlr_req=expect_mlr_req)
+            self.__check_ipmaddr_add(
+                id,
+                parent_id,
+                addr,
+                expect_mlr_req=expect_mlr_req,
+                expect_mlr_req_proxied=(not expect_mlr_req))
 
         for addr in [MA5, MA6]:
-            self.__check_ipmaddr_add(id, addr, expect_mlr_req=False)
+            self.__check_ipmaddr_add(id,
+                                     parent_id,
+                                     addr,
+                                     expect_mlr_req=False,
+                                     expect_mlr_req_proxied=False)
         print('=' * 120)
 
-    def __check_ipmaddr_add(self, id, addr, expect_mlr_req=True):
+    def __check_ipmaddr_add(self,
+                            id,
+                            parent_id,
+                            addr,
+                            expect_mlr_req=True,
+                            expect_mlr_req_proxied=False):
         """Check MLR works for the added multicast address"""
+        print("Node %d: ipmaddr %s" % (id, addr))
         self.flush_all()
         self.nodes[id].add_ipmaddr(addr)
         self.assertTrue(self.nodes[id].has_ipmaddr(addr))
-        self.simulator.go(3)
+        self.simulator.go(PARENT_AGGREGATE_DELAY + WAIT_REDUNDANCE)
 
-        reg_mas = self.__get_registered_MAs(id)
-        if expect_mlr_req:
-            assert ipaddress.IPv6Address(addr) in reg_mas, (addr, reg_mas)
+        self.__check_send_mlr_req(id,
+                                  addr,
+                                  should_send=expect_mlr_req,
+                                  expect_mlr_rsp=expect_mlr_req)
+        # Parent should either forward or proxy the MLR.req
+        if parent_id:
+            self.__check_send_mlr_req(parent_id,
+                                      addr,
+                                      should_send=expect_mlr_req or
+                                      expect_mlr_req_proxied,
+                                      expect_mlr_rsp=expect_mlr_req_proxied)
 
-            messages = self.simulator.get_messages_sent_by(BBR_1)
-            messages.next_coap_message('2.04')
-
-            self.__check_rereg(id, addr)
-            self.__check_renewing(id, addr)
-        else:
-            assert ipaddress.IPv6Address(addr) not in reg_mas, (addr, reg_mas)
+        self.__check_rereg(id,
+                           parent_id,
+                           addr,
+                           expect_mlr_req=expect_mlr_req,
+                           expect_mlr_req_proxied=expect_mlr_req_proxied)
+        self.__check_renewing(id,
+                              parent_id,
+                              addr,
+                              expect_mlr_req=expect_mlr_req,
+                              expect_mlr_req_proxied=expect_mlr_req_proxied)
 
         self.nodes[id].del_ipmaddr(addr)
         self.simulator.go(1)
 
-    def __get_registered_MAs(self, id):
+    def __check_send_mlr_req(self,
+                             id,
+                             addrs: Union[List[str], str],
+                             should_send=True,
+                             expect_mlr_rsp=False,
+                             expect_mlr_req_num=None,
+                             expect_unique_reg=False):
+        if isinstance(addrs, str):
+            addrs = [addrs]
+
+        reg_mas = self.__get_registered_MAs(
+            id, expect_mlr_req_num=expect_mlr_req_num)
+        if should_send:
+            for addr in addrs:
+                self.assertIn(ipaddress.IPv6Address(addr), reg_mas)
+                if expect_unique_reg:
+                    self.assertEqual(1,
+                                     reg_mas.count(ipaddress.IPv6Address(addr)))
+
+            # BBR should send MLR.rsp ACK
+            if expect_mlr_rsp:
+                messages = self.simulator.get_messages_sent_by(BBR_1)
+                messages.next_coap_message('2.04')
+        else:
+            for addr in addrs:
+                self.assertNotIn(ipaddress.IPv6Address(addr), reg_mas)
+
+    def __get_registered_MAs(self, id, expect_mlr_req_num=None):
         """Get MAs registered via MLR.req by the node"""
         messages = self.simulator.get_messages_sent_by(id)
         reg_mas = []
@@ -250,25 +327,65 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
             if not msg:
                 break
             addrs = msg.get_coap_message_tlv(network_layer.IPv6Addresses)
-            reg_mas.extend(addrs)
+            reg_mas.append(addrs)
 
         print('Node %d registered MAs: %s' % (id, reg_mas))
+
+        if expect_mlr_req_num is not None:
+            self.assertEqual(len(reg_mas), expect_mlr_req_num)
+
+        # expand from [[...], [...], ...] to [...]
+        reg_mas = [ma for mas in reg_mas for ma in mas]
+
         return reg_mas
 
-    def __check_renewing(self, id, addr):
+    def __check_renewing(self,
+                         id,
+                         parent_id,
+                         addr,
+                         expect_mlr_req=True,
+                         expect_mlr_req_proxied=False):
         """Check if MLR works that a node can renew it's registered MAs"""
         self.flush_all()
         self.simulator.go(MLR_TIMEOUT + WAIT_REDUNDANCE)
 
-        reg_mas = self.__get_registered_MAs(id)
-        assert ipaddress.IPv6Address(addr) in reg_mas, (addr, reg_mas)
+        self.__check_send_mlr_req(id,
+                                  addr,
+                                  should_send=expect_mlr_req,
+                                  expect_mlr_rsp=expect_mlr_req)
+        # Parent should either forward or proxy the MLR.req
+        if parent_id:
+            self.__check_send_mlr_req(parent_id,
+                                      addr,
+                                      should_send=expect_mlr_req or
+                                      expect_mlr_req_proxied,
+                                      expect_mlr_rsp=expect_mlr_req_proxied)
 
-    def __check_rereg(self, id, addr):
+    def __check_rereg(self,
+                      id,
+                      parent_id,
+                      addr,
+                      expect_mlr_req=True,
+                      expect_mlr_req_proxied=False):
         """Check if MLR works that a node can do MLR reregistration when necessary"""
-        self.__check_rereg_seqno(id, addr)
-        self.__check_rereg_pbbr_change(id, addr)
+        self.__check_rereg_seqno(id,
+                                 parent_id,
+                                 addr,
+                                 expect_mlr_req=expect_mlr_req,
+                                 expect_mlr_req_proxied=expect_mlr_req_proxied)
+        self.__check_rereg_pbbr_change(
+            id,
+            parent_id,
+            addr,
+            expect_mlr_req=expect_mlr_req,
+            expect_mlr_req_proxied=expect_mlr_req_proxied)
 
-    def __check_rereg_seqno(self, id, addr):
+    def __check_rereg_seqno(self,
+                            id,
+                            parent_id,
+                            addr,
+                            expect_mlr_req=True,
+                            expect_mlr_req_proxied=False):
         """Check if MLR works that a node can do MLR reregistration when PBBR seqno changes"""
         # Change seq on PBBR and expect MLR.req within REREG_DELAY
         self.flush_all()
@@ -276,10 +393,24 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         self.nodes[BBR_1].set_backbone_router(seqno=self.pbbr_seq)
         self.simulator.go(REREG_DELAY + WAIT_REDUNDANCE)
 
-        reg_mas = self.__get_registered_MAs(id)
-        assert ipaddress.IPv6Address(addr) in reg_mas, (addr, reg_mas)
+        self.__check_send_mlr_req(id,
+                                  addr,
+                                  should_send=expect_mlr_req,
+                                  expect_mlr_rsp=expect_mlr_req)
+        # Parent should either forward or proxy the MLR.req
+        if parent_id:
+            self.__check_send_mlr_req(parent_id,
+                                      addr,
+                                      should_send=expect_mlr_req or
+                                      expect_mlr_req_proxied,
+                                      expect_mlr_rsp=expect_mlr_req_proxied)
 
-    def __check_rereg_pbbr_change(self, id, addr):
+    def __check_rereg_pbbr_change(self,
+                                  id,
+                                  parent_id,
+                                  addr,
+                                  expect_mlr_req=True,
+                                  expect_mlr_req_proxied=False):
         """Check if MLR works that a node can do MLR reregistration when PBBR changes"""
         # Make BBR_2 to be Primary and expect MLR.req within REREG_DELAY
         self.flush_all()
@@ -288,8 +419,18 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         self.assertEqual(self.nodes[BBR_2].get_backbone_router_state(),
                          'Primary')
         self.simulator.go(REREG_DELAY + WAIT_REDUNDANCE)
-        reg_mas = self.__get_registered_MAs(id)
-        assert ipaddress.IPv6Address(addr) in reg_mas, (addr, reg_mas)
+
+        self.__check_send_mlr_req(id,
+                                  addr,
+                                  should_send=expect_mlr_req,
+                                  expect_mlr_rsp=expect_mlr_req)
+        # Parent should either forward or proxy the MLR.req
+        if parent_id:
+            self.__check_send_mlr_req(parent_id,
+                                      addr,
+                                      should_send=expect_mlr_req or
+                                      expect_mlr_req_proxied,
+                                      expect_mlr_rsp=expect_mlr_req_proxied)
 
         # Restore BBR_1 to be Primary and BBR_2 to be Secondary
         self.nodes[BBR_2].disable_backbone_router()
@@ -393,6 +534,83 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         self.nodes[MED_1].del_ipmaddr(MA1)
         self.nodes[SED_1].del_ipmaddr(MA1)
 
+        self.simulator.go(WAIT_REDUNDANCE)
+
+    def __check_parent_merge_med_mlr_req(self, meds, parent_id):
+        """Check that the 1.2 parent merge multiple multicast addresses for MED children."""
+        self.flush_all()
+        for med in meds:
+            self.nodes[med].add_ipmaddr(MA1)
+
+        self.nodes[meds[0]].add_ipmaddr(MA2)
+        self.nodes[meds[1]].add_ipmaddr(MA3)
+
+        self.simulator.go(PARENT_AGGREGATE_DELAY + WAIT_REDUNDANCE)
+
+        self.__check_send_mlr_req(parent_id, [MA1, MA2, MA3],
+                                  should_send=True,
+                                  expect_mlr_rsp=True,
+                                  expect_mlr_req_num=1,
+                                  expect_unique_reg=True)
+
+        # restore
+        self.nodes[meds[0]].del_ipmaddr(MA2)
+        self.nodes[meds[1]].del_ipmaddr(MA3)
+        for med in meds:
+            self.nodes[med].del_ipmaddr(MA1)
+
+        self.simulator.go(WAIT_REDUNDANCE)
+
+    def __check_not_send_mlr_req_if_subscribed(self, meds, parent_id):
+        """Check that the 1.2 parent does not send MLR.req if the MA is already subscribed."""
+        # Parent should register MA1 on Netif
+        self.flush_all()
+        self.nodes[parent_id].add_ipmaddr(MA1)
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.__check_send_mlr_req(parent_id,
+                                  MA1,
+                                  should_send=True,
+                                  expect_mlr_rsp=True)
+
+        # Parent should not register MA1 of Child 1 because it's already registerd
+        self.flush_all()
+        self.nodes[meds[0]].add_ipmaddr(MA1)
+        self.simulator.go(PARENT_AGGREGATE_DELAY + WAIT_REDUNDANCE)
+        self.__check_send_mlr_req(parent_id, MA1, should_send=False)
+
+        # Parent should register MA2 of Child 1 because it's new
+        self.flush_all()
+        self.nodes[meds[0]].add_ipmaddr(MA2)
+        self.simulator.go(PARENT_AGGREGATE_DELAY + WAIT_REDUNDANCE)
+        self.__check_send_mlr_req(parent_id, MA2, should_send=True)
+
+        # Parent should not register MA2 of Child 2 because it's already registered for Child 1
+        self.flush_all()
+        self.nodes[meds[1]].add_ipmaddr(MA2)
+        self.simulator.go(PARENT_AGGREGATE_DELAY + WAIT_REDUNDANCE)
+        self.__check_send_mlr_req(parent_id, MA2, should_send=False)
+
+        # Parent should register MA3 of Child 2 because it's new
+        self.flush_all()
+        self.nodes[meds[1]].add_ipmaddr(MA3)
+        self.simulator.go(PARENT_AGGREGATE_DELAY + WAIT_REDUNDANCE)
+        self.__check_send_mlr_req(parent_id, MA3, should_send=True)
+
+        # Parent should not register MA2 and MA3 because they are already registered for Child2 itself
+        self.flush_all()
+        self.nodes[meds[1]].del_ipmaddr(MA2)
+        self.nodes[meds[1]].del_ipmaddr(MA3)
+        self.nodes[meds[1]].add_ipmaddr(MA2)
+        self.nodes[meds[1]].add_ipmaddr(MA3)
+        self.simulator.go(PARENT_AGGREGATE_DELAY + WAIT_REDUNDANCE)
+        self.__check_send_mlr_req(parent_id, [MA2, MA3], should_send=False)
+
+        # Restore
+        self.nodes[parent_id].del_ipmaddr(MA1)
+        self.nodes[meds[0]].del_ipmaddr(MA1)
+        self.nodes[meds[0]].del_ipmaddr(MA2)
+        self.nodes[meds[1]].del_ipmaddr(MA2)
+        self.nodes[meds[1]].del_ipmaddr(MA3)
         self.simulator.go(WAIT_REDUNDANCE)
 
 

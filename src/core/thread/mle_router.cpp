@@ -2040,11 +2040,33 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     uint16_t                 offset          = 0;
     uint16_t                 end             = 0;
 
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    Ip6::Address oldMlrRegisteredAddresses[OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1];
+    uint16_t     oldMlrRegisteredAddressNum = 0;
+#endif
+
     VerifyOrExit(aMessage.Read(aOffset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
     VerifyOrExit(tlv.GetLength() <= (aMessage.GetLength() - aOffset - sizeof(tlv)), error = OT_ERROR_PARSE);
 
     offset = aOffset + sizeof(tlv);
     end    = offset + tlv.GetLength();
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    // Retrieve registered multicast addresses of the Child
+    if (aChild.HasAnyMlrRegisteredAddress())
+    {
+        auto childAddresses = aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal);
+
+        for (auto iter = childAddresses.begin(); iter != childAddresses.end(); iter++)
+        {
+            if (aChild.GetAddressMlrState(iter.GetAsIndex()) == kMlrStateRegistered)
+            {
+                oldMlrRegisteredAddresses[oldMlrRegisteredAddressNum++] = *iter.GetAddress();
+            }
+        }
+    }
+#endif
+
     aChild.ClearIp6Addresses();
 
     while (offset < end)
@@ -2133,6 +2155,10 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         // Clear EID-to-RLOC cache for the unicast address registered by the child.
         Get<AddressResolver>().Remove(address);
     }
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    Get<MlrManager>().UpdateProxiedSubscriptions(aChild, oldMlrRegisteredAddresses, oldMlrRegisteredAddressNum);
+#endif
 
     if (registeredCount == 0)
     {
