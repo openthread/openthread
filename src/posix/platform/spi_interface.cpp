@@ -91,7 +91,7 @@ SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
 {
 }
 
-otError SpiInterface::Init(RadioUrl &aRadioUrl)
+otError SpiInterface::Init(const RadioUrl &aRadioUrl)
 {
     const char *spiGpioIntDevice;
     const char *spiGpioResetDevice;

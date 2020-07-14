@@ -138,7 +138,7 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
 {
 }
 
-otError HdlcInterface::Init(RadioUrl &aRadioUrl)
+otError HdlcInterface::Init(const RadioUrl &aRadioUrl)
 {
     otError     error = OT_ERROR_NONE;
     struct stat st;
@@ -409,7 +409,7 @@ exit:
     return error;
 }
 
-int HdlcInterface::OpenFile(const char *aFile, RadioUrl &aRadioUrl)
+int HdlcInterface::OpenFile(const char *aFile, const RadioUrl &aRadioUrl)
 {
     int fd   = -1;
     int rval = 0;
