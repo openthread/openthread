@@ -68,7 +68,6 @@ EXTRA_DIST                                                         = \
     Cert_5_5_04_SplitMergeRouters.py                                 \
     Cert_5_5_05_SplitMergeREED.py                                    \
     Cert_5_5_07_SplitMergeThreeWay.py                                \
-    Cert_5_5_08_SplitRoutersLostLeader.py                            \
     Cert_5_6_01_NetworkDataRegisterBeforeAttachLeader.py             \
     Cert_5_6_02_NetworkDataRegisterBeforeAttachRouter.py             \
     Cert_5_6_03_NetworkDataRegisterAfterAttachLeader.py              \
@@ -223,7 +222,6 @@ check_SCRIPTS                                                      = \
     Cert_5_5_04_SplitMergeRouters.py                                 \
     Cert_5_5_05_SplitMergeREED.py                                    \
     Cert_5_5_07_SplitMergeThreeWay.py                                \
-    Cert_5_5_08_SplitRoutersLostLeader.py                            \
     Cert_5_6_01_NetworkDataRegisterBeforeAttachLeader.py             \
     Cert_5_6_02_NetworkDataRegisterBeforeAttachRouter.py             \
     Cert_5_6_03_NetworkDataRegisterAfterAttachLeader.py              \
