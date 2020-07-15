@@ -237,10 +237,10 @@ void initUdp(void)
         return;
     }
 
-    error = otUdpBind(&sFtdSocket, &sockaddr);
+    error = otUdpBind(instance, &sFtdSocket, &sockaddr);
     if (error != OT_ERROR_NONE)
     {
-        otUdpClose(&sFtdSocket);
+        otUdpClose(instance, &sFtdSocket);
         otCliOutputFormat("FTD failed to bind udp multicast\r\n");
         return;
     }
@@ -277,7 +277,7 @@ void applicationTick(void)
 
                 if (error == OT_ERROR_NONE)
                 {
-                    error = otUdpSend(&sFtdSocket, message, &messageInfo);
+                    error = otUdpSend(instance, &sFtdSocket, message, &messageInfo);
 
                     if (error == OT_ERROR_NONE)
                     {
