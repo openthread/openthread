@@ -126,6 +126,7 @@ size_nrf52840()
         "SNTP_CLIENT=1"
         "TIME_SYNC=1"
         "UDP_FORWARD=1"
+        "THREAD_VERSION=1.2"
     )
 
     rm -rf "${OT_TMP_DIR}"
