@@ -165,7 +165,7 @@ public:
      * @param[in]  aConfig  The Primary Backbone Router service.
      *
      */
-    void UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRouterConfig &aConfig);
+    void HandleBackboneRouterPrimaryUpdate(Leader::State aState, const BackboneRouterConfig &aConfig);
 
     /**
      * This method gets the Domain Prefix configuration.

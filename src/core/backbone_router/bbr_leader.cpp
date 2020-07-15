@@ -224,7 +224,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
     LogBackboneRouterPrimary(state, mConfig);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Get<BackboneRouter::Local>().UpdateBackboneRouterPrimary(state, mConfig);
+    Get<BackboneRouter::Local>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
 #endif
 }
 
