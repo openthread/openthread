@@ -27,11 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?forkpty-arg=1"
-set timeout 3
-expect_after {
-    timeout { exit 1 }
-}
+source "tests/scripts/expect/_common.exp"
+
+set spawn_id [spawn_node 1]
+
 send "diag rcp\n"
 expect "diagnostics mode is disabled"
 expect "Done"
@@ -54,5 +53,5 @@ expect "status 0x7"
 expect "Done"
 send "diag rcp power 10\n"
 expect "Done"
-send "\x04"
-expect eof
+
+dispose
