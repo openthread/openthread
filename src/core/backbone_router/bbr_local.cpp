@@ -262,7 +262,7 @@ exit:
     return;
 }
 
-void Local::UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRouterConfig &aConfig)
+void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const BackboneRouterConfig &aConfig)
 {
     OT_UNUSED_VARIABLE(aState);
 
