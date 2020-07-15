@@ -44,6 +44,8 @@ namespace ot {
 
 class RouterTable : public InstanceLocator
 {
+    class IteratorBuilder;
+
 public:
     /**
      * This class represents an iterator for iterating through entries in the router table.
@@ -51,6 +53,8 @@ public:
      */
     class Iterator : public InstanceLocator
     {
+        friend class IteratorBuilder;
+
     public:
         /**
          * This constructor initializes an `Iterator` instance to start from beginning of the router table.
@@ -61,13 +65,7 @@ public:
         explicit Iterator(Instance &aInstance);
 
         /**
-         * This method resets the iterator to start over.
-         *
-         */
-        void Reset(void);
-
-        /**
-         * This method indicates if the iterator has reached the end of the list.
+         * This method indicates if the iterator has reached the end of the list, i.e., iterator is empty.
          *
          * @retval TRUE   The iterator has reached the end of the list.
          * @retval FALSE  The iterator currently points to a valid entry.
@@ -76,19 +74,10 @@ public:
         bool IsDone(void) const { return (mRouter == nullptr); }
 
         /**
-         * This method advances the iterator.
-         *
-         * The iterator is moved to point to the next entry.  If there are no more entries matching the iterator
-         * becomes empty (i.e., `GetRouter()` returns `nullptr` and `IsDone()` returns `true`).
-         *
-         */
-        void Advance(void);
-
-        /**
          * This method overloads `++` operator (pre-increment) to advance the iterator.
          *
          * The iterator is moved to point to the next entry.  If there are no more entries matching the iterator
-         * becomes empty (i.e., `GetRouter()` returns `nullptr` and `IsDone()` returns `true`).
+         * becomes empty (i.e., `IsDone()` returns `true`).
          *
          */
         void operator++(void) { Advance(); }
@@ -97,20 +86,70 @@ public:
          * This method overloads `++` operator (post-increment) to advance the iterator.
          *
          * The iterator is moved to point to the next entry.  If there are no more entries matching the iterator
-         * becomes empty (i.e., `GetRouter()` returns `nullptr` and `IsDone()` returns `true`).
+         * becomes empty (i.e., `IsDone()` returns `true`).
          *
          */
         void operator++(int) { Advance(); }
 
         /**
-         * This method gets the entry to which the iterator is currently pointing.
+         * This method overloads the `*` dereference operator and gets a reference to `Router` entry to which the
+         * iterator is currently pointing.
          *
-         * @returns A pointer to the current entry, or `nullptr` if the iterator is done/empty.
+         * This method MUST be used when the iterator is not empty/finished (i.e., `IsDone()` returns `false`).
+         *
+         * @returns A reference to the `Router` entry currently pointed by the iterator.
          *
          */
-        Router *GetRouter(void) { return mRouter; }
+        Router &operator*(void) { return *mRouter; }
+
+        /**
+         * This method overloads the `->` dereference operator and gets a pointer to `Router` entry to which the
+         * iterator is currently pointing.
+         *
+         * @returns A pointer to the `Router` entry associated with the iterator, or `nullptr` if iterator is
+         * empty/done.
+         *
+         */
+        Router *operator->(void) { return mRouter; }
+
+        /**
+         * This method overloads operator `==` to evaluate whether or not two `Iterator` instances point to the same
+         * router entry.
+         *
+         * @param[in]  aOther  The other `Iterator` to compare with.
+         *
+         * @retval TRUE   If the two `Iterator` objects point to the same router entry or both are done.
+         * @retval FALSE  If the two `Iterator` objects do not point to the same router entry.
+         *
+         */
+        bool operator==(const Iterator &aOther) { return mRouter == aOther.mRouter; }
+
+        /**
+         * This method overloads operator `!=` to evaluate whether or not two `Iterator` instances point to the same
+         * router entry.
+         *
+         * @param[in]  aOther  The other `Iterator` to compare with.
+         *
+         * @retval TRUE   If the two `Iterator` objects do not point to the same router entry.
+         * @retval FALSE  If the two `Iterator` objects point to the same router entry or both are done.
+         *
+         */
+        bool operator!=(const Iterator &aOther) { return mRouter != aOther.mRouter; }
 
     private:
+        enum IteratorType
+        {
+            kEndIterator,
+        };
+
+        Iterator(Instance &aInstance, IteratorType)
+            : InstanceLocator(aInstance)
+            , mRouter(nullptr)
+        {
+        }
+
+        void Advance(void);
+
         Router *mRouter;
     };
 
@@ -350,7 +389,21 @@ public:
      */
     void ProcessTimerTick(void);
 
+    IteratorBuilder Iterate(void) { return IteratorBuilder(GetInstance()); }
+
 private:
+    class IteratorBuilder : public InstanceLocator
+    {
+    public:
+        IteratorBuilder(Instance &aInstance)
+            : InstanceLocator(aInstance)
+        {
+        }
+
+        Iterator begin(void) { return Iterator(GetInstance()); }
+        Iterator end(void) { return Iterator(GetInstance(), Iterator::kEndIterator); }
+    };
+
     void          UpdateAllocation(void);
     const Router *GetFirstEntry(void) const;
     const Router *GetNextEntry(const Router *aRouter) const;
