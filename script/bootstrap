@@ -38,7 +38,7 @@ install_packages_apt()
     echo 'Installing toolchain dependencies...'
 
     # apt-get update and install dependencies
-    sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+    sudo apt-get update
     sudo apt-get --no-install-recommends install -y automake g++ libtool lsb-release make cmake ninja-build shellcheck
 
     echo 'Installing GNU Arm Embedded Toolchain...'
