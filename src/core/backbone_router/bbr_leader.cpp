@@ -31,7 +31,7 @@
  *   This file implements Primary Backbone Router service management in the Thread Network.
  */
 
-#include "leader.hpp"
+#include "bbr_leader.hpp"
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 

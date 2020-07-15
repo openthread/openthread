@@ -39,7 +39,7 @@
 #include <stdint.h>
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-#include "backbone_router/leader.hpp"
+#include "backbone_router/bbr_leader.hpp"
 #endif
 
 #include "coap/coap.hpp"

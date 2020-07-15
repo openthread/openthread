@@ -31,7 +31,7 @@
  *   This file implements local Backbone Router service.
  */
 
-#include "local.hpp"
+#include "bbr_local.hpp"
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
