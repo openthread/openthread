@@ -40,7 +40,7 @@
 #include <openthread/backbone_router.h>
 #include <openthread/backbone_router_ftd.h>
 
-#include "backbone_router/leader.hpp"
+#include "backbone_router/bbr_leader.hpp"
 #include "common/locator.hpp"
 #include "net/netif.hpp"
 #include "thread/network_data.hpp"

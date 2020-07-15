@@ -144,8 +144,8 @@ SOURCES_COMMON                             = \
     api/thread_api.cpp                       \
     api/thread_ftd_api.cpp                   \
     api/udp_api.cpp                          \
-    backbone_router/leader.cpp               \
-    backbone_router/local.cpp                \
+    backbone_router/bbr_leader.cpp           \
+    backbone_router/bbr_local.cpp            \
     coap/coap.cpp                            \
     coap/coap_message.cpp                    \
     coap/coap_secure.cpp                     \
@@ -315,8 +315,8 @@ endif # OPENTHREAD_ENABLE_VENDOR_EXTENSION
 
 HEADERS_COMMON                             = \
     openthread-core-config.h                 \
-    backbone_router/leader.hpp               \
-    backbone_router/local.hpp                \
+    backbone_router/bbr_leader.hpp           \
+    backbone_router/bbr_local.hpp            \
     coap/coap.hpp                            \
     coap/coap_message.hpp                    \
     coap/coap_secure.hpp                     \
