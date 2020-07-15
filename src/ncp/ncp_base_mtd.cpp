@@ -60,6 +60,9 @@
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 #include <openthread/server.h>
 #endif
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
+#include <openthread/platform/legacy.h>
+#endif
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -287,12 +290,18 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_STACK_UP>(void)
         if (enabled != false)
         {
             error = otThreadSetEnabled(mInstance, true);
-            StartLegacy();
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
+            mLegacyNodeDidJoin = false;
+            otLegacyStart();
+#endif
         }
         else
         {
             error = otThreadSetEnabled(mInstance, false);
-            StopLegacy();
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
+            mLegacyNodeDidJoin = false;
+            otLegacyStop();
+#endif
         }
     }
 
@@ -3155,42 +3164,29 @@ exit:
 
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE
 
-void NcpBase::RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
+void NcpBase::SyncLegacyState()
 {
-    mLegacyHandlers = aHandlers;
     bool isEnabled;
-
-    VerifyOrExit(mLegacyHandlers != nullptr, OT_NOOP);
 
     isEnabled = (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED);
 
     if (isEnabled)
     {
-        if (mLegacyHandlers->mStartLegacy)
-        {
-            mLegacyHandlers->mStartLegacy();
-        }
+        otLegacyStart();
     }
     else
     {
-        if (mLegacyHandlers->mStopLegacy)
-        {
-            mLegacyHandlers->mStopLegacy();
-        }
+        otLegacyStop();
     }
 
-    if (mLegacyHandlers->mSetLegacyUlaPrefix)
-    {
-        mLegacyHandlers->mSetLegacyUlaPrefix(mLegacyUlaPrefix);
-    }
+    otSetLegacyUlaPrefix(mLegacyUlaPrefix);
 
-exit:
     return;
 }
 
 void NcpBase::HandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
 {
-    memcpy(mLegacyUlaPrefix, aUlaPrefix, OT_NCP_LEGACY_ULA_PREFIX_LENGTH);
+    memcpy(mLegacyUlaPrefix, aUlaPrefix, OT_LEGACY_ULA_PREFIX_LENGTH);
     mChangedPropsSet.AddProperty(SPINEL_PROP_NEST_LEGACY_ULA_PREFIX);
     mUpdateChangedPropsTask.Post();
 }
@@ -3221,10 +3217,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NEST_LEGACY_ULA_PREFI
     memset(mLegacyUlaPrefix, 0, sizeof(mLegacyUlaPrefix));
     memcpy(mLegacyUlaPrefix, ptr, len);
 
-    if ((mLegacyHandlers != nullptr) && (mLegacyHandlers->mSetLegacyUlaPrefix != nullptr))
-    {
-        mLegacyHandlers->mSetLegacyUlaPrefix(mLegacyUlaPrefix);
-    }
+    otSetLegacyUlaPrefix(mLegacyUlaPrefix);
 
 exit:
     return error;
@@ -3238,26 +3231,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NEST_LEGACY_LAST_NODE
     }
 
     return mEncoder.WriteEui64(mLegacyLastJoinedNode);
-}
-
-void NcpBase::StartLegacy(void)
-{
-    mLegacyNodeDidJoin = false;
-
-    if ((mLegacyHandlers != nullptr) && (mLegacyHandlers->mStartLegacy != nullptr))
-    {
-        mLegacyHandlers->mStartLegacy();
-    }
-}
-
-void NcpBase::StopLegacy(void)
-{
-    mLegacyNodeDidJoin = false;
-
-    if ((mLegacyHandlers != nullptr) && (mLegacyHandlers->mStopLegacy != nullptr))
-    {
-        mLegacyHandlers->mStopLegacy();
-    }
 }
 
 #endif // OPENTHREAD_CONFIG_LEGACY_ENABLE
@@ -3798,49 +3771,26 @@ exit:
 // MARK: Legacy network APIs
 // ----------------------------------------------------------------------------
 
-void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
-{
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE
-    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
-
-    if (ncp != nullptr)
-    {
-        ncp->RegisterLegacyHandlers(aHandlers);
-    }
-
-#else
-    OT_UNUSED_VARIABLE(aHandlers);
-#endif
-}
-
-void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
+void otHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
 {
-#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
 
     if (ncp != nullptr)
     {
         ncp->HandleDidReceiveNewLegacyUlaPrefix(aUlaPrefix);
     }
-
-#else
-    OT_UNUSED_VARIABLE(aUlaPrefix);
-#endif
 }
 
-void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
+void otHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
 {
-#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
 
     if (ncp != nullptr)
     {
         ncp->HandleLegacyNodeDidJoin(aExtAddr);
     }
-
-#else
-    OT_UNUSED_VARIABLE(aExtAddr);
-#endif
 }
+#endif // OPENTHREAD_CONFIG_LEGACY_ENABLE
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD

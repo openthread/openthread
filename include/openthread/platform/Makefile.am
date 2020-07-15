@@ -37,6 +37,7 @@ ot_platform_headers                     = \
     entropy.h                             \
     memory.h                              \
     misc.h                                \
+    legacy.h                              \
     logging.h                             \
     otns.h                                \
     radio.h                               \

@@ -87,6 +87,7 @@ set(COMMON_SOURCES
     api/ip6_api.cpp
     api/jam_detection_api.cpp
     api/joiner_api.cpp
+    api/legacy_api.cpp
     api/link_api.cpp
     api/link_raw_api.cpp
     api/logging_api.cpp

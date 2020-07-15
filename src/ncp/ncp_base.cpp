@@ -279,9 +279,10 @@ NcpBase::NcpBase(Instance *aInstance)
 #endif // OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE
     mLegacyNodeDidJoin = false;
-    mLegacyHandlers    = nullptr;
     memset(mLegacyUlaPrefix, 0, sizeof(mLegacyUlaPrefix));
     memset(&mLegacyLastJoinedNode, 0, sizeof(mLegacyLastJoinedNode));
+    otLegacyInit();
+    SyncLegacyState();
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
     mChangedPropsSet.AddLastStatus(SPINEL_STATUS_RESET_UNKNOWN);
@@ -1943,7 +1944,9 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MCU_POWER_STATE>(void
         if (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED)
         {
             IgnoreError(otThreadSetEnabled(mInstance, false));
-            StopLegacy();
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
+            otLegacyStop();
+#endif
         }
 
         if (otIp6IsEnabled(mInstance))

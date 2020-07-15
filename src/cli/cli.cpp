@@ -4523,20 +4523,3 @@ exit:
 
 } // namespace Cli
 } // namespace ot
-
-#if OPENTHREAD_CONFIG_LEGACY_ENABLE
-OT_TOOL_WEAK void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
-{
-    OT_UNUSED_VARIABLE(aHandlers);
-}
-
-OT_TOOL_WEAK void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
-{
-    OT_UNUSED_VARIABLE(aUlaPrefix);
-}
-
-OT_TOOL_WEAK void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
-{
-    OT_UNUSED_VARIABLE(aExtAddr);
-}
-#endif // OPENTHREAD_CONFIG_LEGACY_ENABLE

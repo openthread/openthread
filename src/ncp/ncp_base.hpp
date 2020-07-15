@@ -45,6 +45,7 @@
 #if OPENTHREAD_FTD
 #include <openthread/thread_ftd.h>
 #endif
+#include <openthread/platform/legacy.h>
 #include <openthread/message.h>
 #include <openthread/ncp.h>
 
@@ -144,13 +145,6 @@ public:
      */
     void HandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix);
 
-    /**
-     * This method registers a set of legacy handlers with NCP.
-     *
-     * @param[in] aHandlers    A pointer to a handler struct.
-     *
-     */
-    void RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers);
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
@@ -435,11 +429,7 @@ protected:
     void ResetCounters(void);
 
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE
-    void StartLegacy(void);
-    void StopLegacy(void);
-#else
-    void StartLegacy(void) {}
-    void StopLegacy(void) {}
+    void SyncLegacyState(void);
 #endif
 
     static uint8_t      ConvertLogLevel(otLogLevel aLogLevel);
@@ -592,10 +582,9 @@ protected:
     uint32_t mDroppedOutboundIpFrameCounter;  // Number of dropped outbound data/IP frames.
     uint32_t mDroppedInboundIpFrameCounter;   // Number of dropped inbound data/IP frames.
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE
-    const otNcpLegacyHandlers *mLegacyHandlers;
-    uint8_t                    mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];
-    otExtAddress               mLegacyLastJoinedNode;
-    bool                       mLegacyNodeDidJoin;
+    uint8_t      mLegacyUlaPrefix[OT_LEGACY_ULA_PREFIX_LENGTH];
+    otExtAddress mLegacyLastJoinedNode;
+    bool         mLegacyNodeDidJoin;
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 

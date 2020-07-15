@@ -161,6 +161,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/ip6_api.cpp                                \
     src/core/api/jam_detection_api.cpp                      \
     src/core/api/joiner_api.cpp                             \
+    src/core/api/legacy_api.cpp                             \
     src/core/api/link_api.cpp                               \
     src/core/api/link_raw_api.cpp                           \
     src/core/api/logging_api.cpp                            \
