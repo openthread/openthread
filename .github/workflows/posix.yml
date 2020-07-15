@@ -54,7 +54,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y libreadline6-dev
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -82,7 +82,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y libreadline6-dev python3-setuptools
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         sudo python3 -m pip install git+https://github.com/openthread/pyspinel
@@ -105,7 +105,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y expect
     - name: Build
       run: |
@@ -125,7 +125,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y socat expect
         cd /tmp
         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
@@ -154,7 +154,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y socat expect
         cd /tmp
         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
