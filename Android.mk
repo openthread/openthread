@@ -174,8 +174,8 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/thread_api.cpp                             \
     src/core/api/thread_ftd_api.cpp                         \
     src/core/api/udp_api.cpp                                \
-    src/core/backbone_router/leader.cpp                     \
-    src/core/backbone_router/local.cpp                      \
+    src/core/backbone_router/bbr_leader.cpp                 \
+    src/core/backbone_router/bbr_local.cpp                  \
     src/core/coap/coap.cpp                                  \
     src/core/coap/coap_message.cpp                          \
     src/core/coap/coap_secure.cpp                           \
@@ -277,6 +277,7 @@ LOCAL_SRC_FILES                                          := \
     src/lib/spinel/spinel.c                                 \
     src/lib/spinel/spinel_decoder.cpp                       \
     src/lib/spinel/spinel_encoder.cpp                       \
+    src/lib/url/url.cpp                                     \
     src/posix/platform/alarm.cpp                            \
     src/posix/platform/entropy.cpp                          \
     src/posix/platform/hdlc_interface.cpp                   \

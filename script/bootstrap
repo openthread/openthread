@@ -49,7 +49,7 @@ install_packages_apt()
 
     if [ "$PLATFORM" = "Raspbian" ]; then
         sudo apt-get --no-install-recommends install -y binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
-    elif [ "$PLATFORM" = "Ubuntu" ] && [ "$(echo "$RELEASE >= $UBUNTU2004" | bc)" -eq 1 ]; then
+    elif [ "$PLATFORM" = "Ubuntu" ] && [[ ! $RELEASE < $UBUNTU2004 ]]; then
         echo "Ubuntu Release >= $UBUNTU2004"
         # no need to use ppa
         sudo apt-get --no-install-recommends install -y gcc-arm-none-eabi gdb-multiarch libnewlib-arm-none-eabi

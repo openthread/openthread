@@ -94,15 +94,15 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     SuccessOrDie(sRadioSpinel.SetPromiscuous(aEnable));
 }
 
-void platformRadioInit(otPosixRadioArguments *aArguments)
+void platformRadioInit(otUrl *aRadioUrl)
 {
-    ot::Posix::Arguments *args           = reinterpret_cast<ot::Posix::Arguments *>(aArguments);
-    bool                  resetRadio     = (args->GetValue("no-reset") == nullptr);
-    bool                  restoreDataset = (args->GetValue("ncp-dataset") != nullptr);
+    ot::Posix::RadioUrl &radioUrl       = *static_cast<ot::Posix::RadioUrl *>(aRadioUrl);
+    bool                 resetRadio     = (radioUrl.GetValue("no-reset") == nullptr);
+    bool                 restoreDataset = (radioUrl.GetValue("ncp-dataset") != nullptr);
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
     uint8_t     channel       = ot::Radio::kChannelMin;
     int8_t      power         = ot::Posix::MaxPowerTable::kPowerDefault;
-    const char *maxPowerTable = args->GetValue("max-power-table");
+    const char *maxPowerTable = radioUrl.GetValue("max-power-table");
 
     if (maxPowerTable != nullptr)
     {
@@ -126,7 +126,7 @@ void platformRadioInit(otPosixRadioArguments *aArguments)
     }
 #endif
 
-    SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(*args));
+    SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(radioUrl));
     sRadioSpinel.Init(resetRadio, restoreDataset);
 }
 

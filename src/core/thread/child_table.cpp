@@ -44,16 +44,6 @@ namespace ot {
 ChildTable::Iterator::Iterator(Instance &aInstance, Child::StateFilter aFilter)
     : InstanceLocator(aInstance)
     , mFilter(aFilter)
-    , mStart(nullptr)
-    , mChild(nullptr)
-{
-    Reset();
-}
-
-ChildTable::Iterator::Iterator(Instance &aInstance, Child::StateFilter aFilter, Child *aStartingChild)
-    : InstanceLocator(aInstance)
-    , mFilter(aFilter)
-    , mStart(aStartingChild)
     , mChild(nullptr)
 {
     Reset();
@@ -61,12 +51,7 @@ ChildTable::Iterator::Iterator(Instance &aInstance, Child::StateFilter aFilter, 
 
 void ChildTable::Iterator::Reset(void)
 {
-    if (mStart == nullptr)
-    {
-        mStart = &Get<ChildTable>().mChildren[0];
-    }
-
-    mChild = mStart;
+    mChild = &Get<ChildTable>().mChildren[0];
 
     if (!mChild->MatchesFilter(mFilter))
     {
@@ -76,22 +61,12 @@ void ChildTable::Iterator::Reset(void)
 
 void ChildTable::Iterator::Advance(void)
 {
-    ChildTable &childTable = Get<ChildTable>();
-    Child *     listStart  = &childTable.mChildren[0];
-    Child *     listEnd    = &childTable.mChildren[childTable.mMaxChildrenAllowed];
-
     VerifyOrExit(mChild != nullptr, OT_NOOP);
 
     do
     {
         mChild++;
-
-        if (mChild >= listEnd)
-        {
-            mChild = listStart;
-        }
-
-        VerifyOrExit(mChild != mStart, mChild = nullptr);
+        VerifyOrExit(mChild < &Get<ChildTable>().mChildren[Get<ChildTable>().mMaxChildrenAllowed], mChild = nullptr);
     } while (!mChild->MatchesFilter(mFilter));
 
 exit:

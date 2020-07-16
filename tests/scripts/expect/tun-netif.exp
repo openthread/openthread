@@ -29,11 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?forkpty-arg=1"
-set timeout 3
-expect_after {
-    timeout { exit 1 }
-}
+set spawn_id [spawn_node 1]
 
 send "netif\n"
 expect -re {[\r\n][^\r\n:]+?:\d+}

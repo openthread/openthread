@@ -951,7 +951,7 @@ void efr32RadioProcess(otInstance *aInstance)
 {
     // We should process the received packet first. Adding it at the end of this function,
     // will delay the stack notification until the next call to efr32RadioProcess()
-    processNextRxPacket(aInstance);
+    processNextRxPacket(aInstance, sRxBandConfig->mRailHandle);
 
     if (sState == OT_RADIO_STATE_TRANSMIT && sTransmitBusy == false)
     {

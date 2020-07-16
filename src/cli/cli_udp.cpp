@@ -86,7 +86,7 @@ otError UdpExample::ProcessBind(uint8_t aArgsLength, char *aArgs[])
 
     sockaddr.mPort = static_cast<uint16_t>(value);
 
-    error = otUdpBind(&mSocket, &sockaddr);
+    error = otUdpBind(mInterpreter.mInstance, &mSocket, &sockaddr);
 
 exit:
     return error;
@@ -110,7 +110,7 @@ otError UdpExample::ProcessConnect(uint8_t aArgsLength, char *aArgs[])
 
     sockaddr.mPort = static_cast<uint16_t>(value);
 
-    error = otUdpConnect(&mSocket, &sockaddr);
+    error = otUdpConnect(mInterpreter.mInstance, &mSocket, &sockaddr);
 
 exit:
     return error;
@@ -121,7 +121,7 @@ otError UdpExample::ProcessClose(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    return otUdpClose(&mSocket);
+    return otUdpClose(mInterpreter.mInstance, &mSocket);
 }
 
 otError UdpExample::ProcessOpen(uint8_t aArgsLength, char *aArgs[])
@@ -218,7 +218,7 @@ otError UdpExample::ProcessSend(uint8_t aArgsLength, char *aArgs[])
     }
     }
 
-    error = otUdpSend(&mSocket, message, &messageInfo);
+    error = otUdpSend(mInterpreter.mInstance, &mSocket, message, &messageInfo);
 
 exit:
 

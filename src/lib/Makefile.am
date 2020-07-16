@@ -32,6 +32,7 @@ SUBDIRS                                 = \
     hdlc                                  \
     platform                              \
     spinel                                \
+    url                                   \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

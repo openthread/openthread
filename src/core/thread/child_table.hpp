@@ -49,6 +49,8 @@ namespace ot {
  */
 class ChildTable : public InstanceLocator
 {
+    class IteratorBuilder;
+
 public:
     /**
      * This class represents an iterator for iterating through the child entries in the child table.
@@ -56,32 +58,17 @@ public:
      */
     class Iterator : public InstanceLocator
     {
+        friend class IteratorBuilder;
+
     public:
         /**
-         * This constructor initializes an `Iterator` instance to start from beginning of the child table.
+         * This constructor initializes an `Iterator` instance.
          *
          * @param[in] aInstance  A reference to the OpenThread instance.
          * @param[in] aFilter    A child state filter.
          *
          */
         Iterator(Instance &aInstance, Child::StateFilter aFilter);
-
-        /**
-         * This constructor initializes an `Iterator` instance to start from a given child.
-         *
-         * This constructor allows the iterator to start from a given `Child` entry. The iterator will start from the
-         * given child and will go through all entries in the child table (matching the filter) till it gets back to
-         * the starting `Child` entry.
-         *
-         * If the given starting `Child` pointer is `nullptr`, then the iterator starts from beginning of the child
-         * table.
-         *
-         * @param[in] aInstance        A reference to the OpenThread instance.
-         * @param[in] aFilter          A child state filter.
-         * @param[in] aStartingChild   A pointer to a child. If non-nullptr, the iterator starts from the given entry.
-         *
-         */
-        Iterator(Instance &aInstance, Child::StateFilter aFilter, Child *aStartingChild);
 
         /**
          * This method resets the iterator to start over.
@@ -98,16 +85,6 @@ public:
          *
          */
         bool IsDone(void) const { return (mChild == nullptr); }
-
-        /**
-         * This method advances the iterator.
-         *
-         * The iterator is moved to point to the next `Child` entry matching the given state filter in the constructor.
-         * If there are no more `Child` entries matching the given filter, the iterator becomes empty (i.e.,
-         * `GetChild()` returns `nullptr` and `IsDone()` returns `true`).
-         *
-         */
-        void Advance(void);
 
         /**
          * This method overloads `++` operator (pre-increment) to advance the iterator.
@@ -137,9 +114,61 @@ public:
          */
         Child *GetChild(void) { return mChild; }
 
+        /**
+         * This method overloads the `*` dereference operator and gets a reference to `Child` entry to which the
+         * iterator is currently pointing.
+         *
+         * This method MUST be used when the iterator is not empty/finished (i.e., `IsDone()` returns `false`).
+         *
+         * @returns A reference to the `Child` entry currently pointed by the iterator.
+         *
+         */
+        Child &operator*(void) { return *mChild; }
+
+        /**
+         * This method overloads the `->` dereference operator and gets a pointer to `Child` entry to which the iterator
+         * is currently pointing.
+         *
+         * @returns A pointer to the `Child` entry associated with the iterator, or `nullptr` if iterator is empty/done.
+         *
+         */
+        Child *operator->(void) { return mChild; }
+
+        /**
+         * This method overloads operator `==` to evaluate whether or not two `Iterator` instances point to the same
+         * child entry.
+         *
+         * @param[in]  aOther  The other `Iterator` to compare with.
+         *
+         * @retval TRUE   If the two `Iterator` objects point to the same child entry or both are done.
+         * @retval FALSE  If the two `Iterator` objects do not point to the same child entry.
+         *
+         */
+        bool operator==(const Iterator &aOther) const { return mChild == aOther.mChild; }
+
+        /**
+         * This method overloads operator `!=` to evaluate whether or not two `Iterator` instances point to the same
+         * child entry.
+         *
+         * @param[in]  aOther  The other `Iterator` to compare with.
+         *
+         * @retval TRUE   If the two `Iterator` objects do not point to the same child entry.
+         * @retval FALSE  If the two `Iterator` objects point to the same child entry or both are done.
+         *
+         */
+        bool operator!=(const Iterator &aOther) const { return mChild != aOther.mChild; }
+
     private:
+        Iterator(Instance &aInstance)
+            : InstanceLocator(aInstance)
+            , mFilter(Child::StateFilter::kInStateValid)
+            , mChild(nullptr)
+        {
+        }
+
+        void Advance(void);
+
         Child::StateFilter mFilter;
-        Child *            mStart;
         Child *            mChild;
     };
 
@@ -276,10 +305,41 @@ public:
      */
     otError SetMaxChildrenAllowed(uint16_t aMaxChildren);
 
+    /**
+     * This method enables range-based `for` loop iteration over all child entries in the child table matching a given
+     * state filter.
+     *
+     * This method should be used as follows:
+     *
+     *     for (Child &child : aChildTable.Iterate(aFilter)) { ... }
+     *
+     * @param[in] aFilter  A child state filter.
+     *
+     * @returns An IteratorBuilder instance.
+     *
+     */
+    IteratorBuilder Iterate(Child::StateFilter aFilter) { return IteratorBuilder(GetInstance(), aFilter); }
+
 private:
     enum
     {
         kMaxChildren = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN,
+    };
+
+    class IteratorBuilder : public InstanceLocator
+    {
+    public:
+        IteratorBuilder(Instance &aInstance, Child::StateFilter aFilter)
+            : InstanceLocator(aInstance)
+            , mFilter(aFilter)
+        {
+        }
+
+        Iterator begin(void) { return Iterator(GetInstance(), mFilter); }
+        Iterator end(void) { return Iterator(GetInstance()); }
+
+    private:
+        Child::StateFilter mFilter;
     };
 
     uint16_t mMaxChildrenAllowed;

@@ -313,7 +313,7 @@ public:
      * @return DTLS session's message info.
      *
      */
-    const Ip6::MessageInfo &GetPeerAddress(void) const { return mDtls.GetPeerAddress(); }
+    const Ip6::MessageInfo &GetMessageInfo(void) const { return mDtls.GetMessageInfo(); }
 
 private:
     static otError Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

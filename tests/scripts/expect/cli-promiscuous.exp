@@ -31,9 +31,6 @@ source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
 
-set timeout 3
-
-
 set spawn_id [spawn_node 1]
 
 send "promiscuous\n"

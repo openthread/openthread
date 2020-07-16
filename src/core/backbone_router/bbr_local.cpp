@@ -31,7 +31,7 @@
  *   This file implements local Backbone Router service.
  */
 
-#include "local.hpp"
+#include "bbr_local.hpp"
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
@@ -137,9 +137,18 @@ void Local::GetConfig(BackboneRouterConfig &aConfig) const
     aConfig.mMlrTimeout          = mMlrTimeout;
 }
 
-void Local::SetConfig(const BackboneRouterConfig &aConfig)
+otError Local::SetConfig(const BackboneRouterConfig &aConfig)
 {
-    bool update = false;
+    otError error  = OT_ERROR_NONE;
+    bool    update = false;
+
+    VerifyOrExit(aConfig.mMlrTimeout >= Mle::kMlrTimeoutMin, error = OT_ERROR_INVALID_ARGS);
+    // Validate configuration according to Thread 1.2.1 Specification 5.21.3.3:
+    // "The Reregistration Delay in seconds MUST be lower than (0.5 * MLR Timeout). It MUST be at least 1."
+    VerifyOrExit(aConfig.mReregistrationDelay >= 1, error = OT_ERROR_INVALID_ARGS);
+    static_assert(sizeof(aConfig.mReregistrationDelay) < sizeof(aConfig.mMlrTimeout),
+                  "the calculation below might overflow");
+    VerifyOrExit(aConfig.mReregistrationDelay * 2 < aConfig.mMlrTimeout, error = OT_ERROR_INVALID_ARGS);
 
     if (aConfig.mReregistrationDelay != mReregistrationDelay)
     {
@@ -169,7 +178,9 @@ void Local::SetConfig(const BackboneRouterConfig &aConfig)
         }
     }
 
-    LogBackboneRouterService("Set", OT_ERROR_NONE);
+exit:
+    LogBackboneRouterService("Set", error);
+    return error;
 }
 
 otError Local::AddService(bool aForce)
@@ -251,7 +262,7 @@ exit:
     return;
 }
 
-void Local::UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRouterConfig &aConfig)
+void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const BackboneRouterConfig &aConfig)
 {
     OT_UNUSED_VARIABLE(aState);
 

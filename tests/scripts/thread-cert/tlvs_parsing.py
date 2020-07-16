@@ -27,6 +27,26 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 
 import io
+import logging
+
+
+class UnknownTlv(object):
+
+    def __init__(self, type, data):
+        self.type = type
+        self.data = data
+
+    def __repr__(self):
+        return 'UnknownTlv(%d, %s)' % (self.type, self.data)
+
+
+class UnknownTlvFactory(object):
+
+    def __init__(self, type):
+        self._type = type
+
+    def parse(self, data, message_info):
+        return UnknownTlv(self._type, data)
 
 
 class SubTlvsFactory(object):
@@ -38,8 +58,10 @@ class SubTlvsFactory(object):
         try:
             return self._sub_tlvs_factories[_type]
         except KeyError:
-            raise RuntimeError(
-                "Could not find factory. Factory type = {}.".format(_type))
+            logging.error(
+                'Could not find TLV factory. Unsupported TLV type: {}'.format(
+                    _type))
+            return UnknownTlvFactory(_type)
 
     def parse(self, data, message_info):
         sub_tlvs = []

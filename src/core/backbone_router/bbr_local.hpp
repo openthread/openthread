@@ -40,7 +40,7 @@
 #include <openthread/backbone_router.h>
 #include <openthread/backbone_router_ftd.h>
 
-#include "backbone_router/leader.hpp"
+#include "backbone_router/bbr_leader.hpp"
 #include "common/locator.hpp"
 #include "net/netif.hpp"
 #include "thread/network_data.hpp"
@@ -104,8 +104,11 @@ public:
      *
      * @param[in]  aConfig  The configuration to set.
      *
+     * @retval OT_ERROR_NONE          Successfully updated configuration.
+     * @retval OT_ERROR_INVALID_ARGS  The configuration in @p aConfig is invalid.
+     *
      */
-    void SetConfig(const BackboneRouterConfig &aConfig);
+    otError SetConfig(const BackboneRouterConfig &aConfig);
 
     /**
      * This method registers Backbone Router Dataset to Leader.
@@ -162,7 +165,7 @@ public:
      * @param[in]  aConfig  The Primary Backbone Router service.
      *
      */
-    void UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRouterConfig &aConfig);
+    void HandleBackboneRouterPrimaryUpdate(Leader::State aState, const BackboneRouterConfig &aConfig);
 
     /**
      * This method gets the Domain Prefix configuration.

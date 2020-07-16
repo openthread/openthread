@@ -53,7 +53,7 @@ namespace Dhcp6 {
 
 Dhcp6Client::Dhcp6Client(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mSocket(Get<Ip6::Udp>())
+    , mSocket(aInstance)
     , mTrickleTimer(aInstance, Dhcp6Client::HandleTrickleTimer, nullptr, this)
     , mStartTime(0)
     , mIdentityAssociationCurrent(nullptr)

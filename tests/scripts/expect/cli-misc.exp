@@ -27,9 +27,9 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-set timeout 3
 setup_nodes
 set spawn_id $spawn_1
 

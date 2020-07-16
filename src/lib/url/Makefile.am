@@ -1,4 +1,3 @@
-#!/usr/bin/expect -f
 #
 #  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
@@ -27,63 +26,34 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-source "tests/scripts/expect/_common.exp"
+include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-set spawn_id [spawn_node 1]
+noinst_LIBRARIES = libopenthread-url.a
 
-send "ifconfig up\n"
-expect "Done"
-send "thread start\n"
-expect "Done"
+libopenthread_url_a_CPPFLAGS                = \
+    -I$(top_srcdir)/include                   \
+    -I$(top_srcdir)/src                       \
+    $(NULL)
 
-send "channel monitor stop\n"
-expect "Done"
-send "channel monitor\n"
-expect "enabled: 0"
-expect "Done"
-send "channel monitor start\n"
-expect "Done"
-send "channel monitor\n"
-expect "enabled: 1"
-expect -re {interval: \d+}
-expect -re {threshold: -?\d+}
-expect -re {window: \d+}
-expect -re {count: \d+}
-expect "occupancies:"
-for {set i 11} {$i <= 26} {incr i} {
-    expect -re "ch $i \\(0x\[0-9a-f\]{4}\\) +\\d+\\.\\d+% busy"
-}
-expect "Done"
-send "channel monitor something_invalid\n"
-expect "Error 7: InvalidArgs"
+libopenthread_url_a_SOURCES                 = \
+    url.cpp                                   \
+    url.hpp                                   \
+    $(NULL)
 
-send "channel manager change 15\n"
-expect "Done"
-send "channel manager\n"
-expect "channel: 15"
-expect "auto: 0"
-expect "Done"
-send "channel manager select 1\n"
-expect "Error 13: InvalidState" # Because of insufficient channel monitor samples
-send "channel manager delay 200\n"
-expect "Done"
-send "channel manager interval 20000\n"
-expect "Done"
-send "channel manager supported 0x7fff800\n"
-expect "Done"
-send "channel manager favored 0x7fff800\n"
-expect "Done"
-send "channel manager auto 1\n"
-expect "Done"
-send "channel manager\n"
-expect "channel: 15"
-expect "auto: 1"
-expect "delay: 200"
-expect "interval: 20000"
-expect "supported: { 11-26}"
-expect "favored: { 11-26}"
-expect "Done"
-send "channel manager something_invalid\n"
-expect "Error 7: InvalidArgs"
+check_PROGRAMS = test-url
 
-dispose
+test_url_CPPFLAGS                                             = \
+    -I$(top_srcdir)/include                                     \
+    -I$(top_srcdir)/src                                         \
+    -DSELF_TEST                                                 \
+    $(NULL)
+
+test_url_SOURCES                    = \
+    url.cpp                           \
+    $(NULL)
+
+TESTS                               = \
+    test-url                          \
+    $(NULL)
+
+include $(abs_top_nlbuild_autotools_dir)/automake/post.am

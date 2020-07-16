@@ -148,8 +148,11 @@ bool InterfaceIdentifier::IsAnycastServiceLocator(void) const
 
 InterfaceIdentifier::InfoString InterfaceIdentifier::ToString(void) const
 {
-    return InfoString("%02x%02x%02x%02x%02x%02x%02x%02x", mFields.m8[0], mFields.m8[1], mFields.m8[2], mFields.m8[3],
-                      mFields.m8[4], mFields.m8[5], mFields.m8[6], mFields.m8[7]);
+    InfoString string;
+
+    IgnoreError(string.AppendHexBytes(mFields.m8, kSize));
+
+    return string;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

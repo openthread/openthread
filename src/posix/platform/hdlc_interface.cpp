@@ -138,30 +138,30 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
 {
 }
 
-otError HdlcInterface::Init(Arguments &aArguments)
+otError HdlcInterface::Init(const RadioUrl &aRadioUrl)
 {
     otError     error = OT_ERROR_NONE;
     struct stat st;
 
     VerifyOrExit(mSockFd == -1, error = OT_ERROR_ALREADY);
 
-    VerifyOrDie(stat(aArguments.GetPath(), &st) == 0, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(stat(aRadioUrl.GetPath(), &st) == 0, OT_EXIT_INVALID_ARGUMENTS);
 
     if (S_ISCHR(st.st_mode))
     {
-        mSockFd = OpenFile(aArguments.GetPath(), aArguments);
+        mSockFd = OpenFile(aRadioUrl);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else if (S_ISREG(st.st_mode))
     {
-        mSockFd = ForkPty(aArguments.GetPath(), aArguments.GetValue("forkpty-arg"));
+        mSockFd = ForkPty(aRadioUrl.GetPath(), aRadioUrl.GetValue("forkpty-arg"));
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else
     {
-        otLogCritPlat("Radio file '%s' not supported", aArguments.GetPath());
+        otLogCritPlat("Radio file '%s' not supported", aRadioUrl.GetPath());
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
@@ -409,12 +409,12 @@ exit:
     return error;
 }
 
-int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
+int HdlcInterface::OpenFile(const RadioUrl &aRadioUrl)
 {
     int fd   = -1;
     int rval = 0;
 
-    fd = open(aFile, O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC);
+    fd = open(aRadioUrl.GetPath(), O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC);
     if (fd == -1)
     {
         perror("open uart failed");
@@ -436,7 +436,7 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
 
         tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
 
-        if ((value = aArguments.GetValue("uart-parity")) != nullptr)
+        if ((value = aRadioUrl.GetValue("uart-parity")) != nullptr)
         {
             if (strncmp(value, "odd", 3) == 0)
             {
@@ -453,7 +453,7 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
             }
         }
 
-        if ((value = aArguments.GetValue("uart-stop")) != nullptr)
+        if ((value = aRadioUrl.GetValue("uart-stop")) != nullptr)
         {
             stopBit = atoi(value);
         }
@@ -471,7 +471,7 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
             break;
         }
 
-        if ((value = aArguments.GetValue("uart-baudrate")))
+        if ((value = aRadioUrl.GetValue("uart-baudrate")))
         {
             baudrate = static_cast<uint32_t>(atoi(value));
         }
@@ -563,7 +563,7 @@ int HdlcInterface::OpenFile(const char *aFile, Arguments &aArguments)
             break;
         }
 
-        if (aArguments.GetValue("uart-flow-control") != nullptr)
+        if (aRadioUrl.GetValue("uart-flow-control") != nullptr)
         {
             tios.c_cflag |= CRTSCTS;
         }
@@ -583,7 +583,7 @@ exit:
 }
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
-int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
+int HdlcInterface::ForkPty(const char *aCommand, const char *aRadioUrl)
 {
     int fd   = -1;
     int pid  = -1;
@@ -604,13 +604,13 @@ int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
         const int kMaxCommand = 255;
         char      cmd[kMaxCommand];
 
-        if (aArguments == nullptr)
+        if (aRadioUrl == nullptr)
         {
             rval = snprintf(cmd, sizeof(cmd), "exec %s", aCommand);
         }
         else
         {
-            rval = snprintf(cmd, sizeof(cmd), "exec %s %s", aCommand, aArguments);
+            rval = snprintf(cmd, sizeof(cmd), "exec %s %s", aCommand, aRadioUrl);
         }
         VerifyOrExit(rval > 0 && static_cast<size_t>(rval) < sizeof(cmd),
                      fprintf(stderr, "NCP file and configuration is too long!");

@@ -26,43 +26,75 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_RADIO_URL_HPP_
-#define POSIX_PLATFORM_RADIO_URL_HPP_
+#ifndef OT_LIB_URL_URL_HPP_
+#define OT_LIB_URL_URL_HPP_
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <openthread/openthread-system.h>
-
-#include "lib/url/url.hpp"
-
-namespace ot {
-namespace Posix {
+#include <openthread/error.h>
 
 /**
- * This class implements the radio URL processing.
+ * @struct otUrl
+ *
+ * This structure represents a URL.
  *
  */
-class RadioUrl : public ot::Url::Url
+struct otUrl
+{
+    const char *mProtocol; ///< The URL protocol.
+    const char *mPath;     ///< The path.
+    const char *mQuery;    ///< The start of the URL query string.
+    const char *mEnd;      ///< The end of the URL buffer.
+};
+
+namespace ot {
+namespace Url {
+
+/**
+ * This class implements the URL processing.
+ *
+ */
+class Url : public otUrl
 {
 public:
     /**
-     * This constructor initializes the object.
+     * This method initializes the URL.
      *
-     * @param[in]   aUrl    The null-terminated URL string.
+     * @param[in]   aUrl    A buffer stores the null-terminated URL string.
+     *
+     * @retval  OT_ERROR_NONE   Successfully parsed the URL.
+     * @retval  OT_ERROR_PARSE  Failed to parse the string as a URL.
      *
      */
-    RadioUrl(const char *aUrl);
+    otError Init(char *aUrl);
 
-private:
-    enum
-    {
-        kRadioUrlMaxSize = 512,
-    };
-    char mUrl[kRadioUrlMaxSize];
+    /**
+     * This method gets the path in URL.
+     *
+     * @returns The path in url.
+     *
+     */
+    const char *GetPath(void) const { return mPath; }
+
+    /**
+     * This method gets the value of parameter @p aName.
+     *
+     * @param[in] aName       The parameter name.
+     * @param[in] aLastValue  The last iterated parameter value, nullptr for the first value.
+     *
+     * @returns The parameter value.
+     *
+     */
+    const char *GetValue(const char *aName, const char *aLastValue = nullptr) const;
+
+    /**
+     * This method returns the URL protocol.
+     *
+     * @returns The URL protocol.
+     *
+     */
+    const char *GetProtocol(void) const { return mProtocol; }
 };
 
-} // namespace Posix
+} // namespace Url
 } // namespace ot
 
-#endif // POSIX_PLATFORM_RADIO_URL_HPP_
+#endif // OT_LIB_URL_URL_HPP_

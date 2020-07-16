@@ -65,7 +65,11 @@ void ExtAddress::GenerateRandom(void)
 
 ExtAddress::InfoString ExtAddress::ToString(void) const
 {
-    return InfoString("%02x%02x%02x%02x%02x%02x%02x%02x", m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
+    InfoString string;
+
+    IgnoreError(string.AppendHexBytes(m8, sizeof(ExtAddress)));
+
+    return string;
 }
 
 void ExtAddress::CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder aByteOrder)
@@ -94,7 +98,11 @@ Address::InfoString Address::ToString(void) const
 
 ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
 {
-    return InfoString("%02x%02x%02x%02x%02x%02x%02x%02x", m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
+    InfoString string;
+
+    IgnoreError(string.AppendHexBytes(m8, sizeof(ExtendedPanId)));
+
+    return string;
 }
 
 uint8_t NameData::CopyTo(char *aBuffer, uint8_t aMaxSize) const

@@ -38,7 +38,7 @@
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-#include "backbone_router/leader.hpp"
+#include "backbone_router/bbr_leader.hpp"
 #include "common/locator.hpp"
 #include "net/netif.hpp"
 

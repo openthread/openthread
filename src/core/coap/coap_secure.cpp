@@ -173,7 +173,7 @@ otError CoapSecure::SendMessage(Message &aMessage, ResponseHandler aHandler, voi
 
     VerifyOrExit(IsConnected(), error = OT_ERROR_INVALID_STATE);
 
-    error = CoapBase::SendMessage(aMessage, mDtls.GetPeerAddress(), aHandler, aContext);
+    error = CoapBase::SendMessage(aMessage, mDtls.GetMessageInfo(), aHandler, aContext);
 
 exit:
     return error;
@@ -223,7 +223,7 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
                  OT_NOOP);
     SuccessOrExit(message->Append(aBuf, aLength));
 
-    CoapBase::Receive(*message, mDtls.GetPeerAddress());
+    CoapBase::Receive(*message, mDtls.GetMessageInfo());
 
 exit:
 

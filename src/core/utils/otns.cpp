@@ -145,10 +145,7 @@ void Otns::EmitTransmit(const Mac::TxFrame &aFrame)
     }
     else if (dst.IsExtended())
     {
-        Mac::ExtAddress revExtAddress;
-        revExtAddress.Set(dst.GetExtended().m8, Mac::ExtAddress::kReverseByteOrder);
-        EmitStatus("transmit=%d,%04x,%d,%s", channel, frameControlField, sequence,
-                   revExtAddress.ToString().AsCString());
+        EmitStatus("transmit=%d,%04x,%d,%s", channel, frameControlField, sequence, dst.ToString().AsCString());
     }
     else
     {

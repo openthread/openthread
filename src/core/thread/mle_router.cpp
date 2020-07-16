@@ -330,11 +330,11 @@ void MleRouter::SetStateRouter(uint16_t aRloc16)
     Get<Mac::Mac>().SetBeaconEnabled(true);
 
     // remove children that do not have matching RLOC16
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
     {
-        if (RouterIdFromRloc16(iter.GetChild()->GetRloc16()) != mRouterId)
+        if (RouterIdFromRloc16(child.GetRloc16()) != mRouterId)
         {
-            RemoveNeighbor(*iter.GetChild());
+            RemoveNeighbor(child);
         }
     }
 }
@@ -370,11 +370,11 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
     Get<AddressResolver>().Clear();
 
     // remove children that do not have matching RLOC16
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
     {
-        if (RouterIdFromRloc16(iter.GetChild()->GetRloc16()) != mRouterId)
+        if (RouterIdFromRloc16(child.GetRloc16()) != mRouterId)
         {
-            RemoveNeighbor(*iter.GetChild());
+            RemoveNeighbor(child);
         }
     }
 
@@ -1847,9 +1847,8 @@ void MleRouter::HandleStateUpdateTimer(void)
     }
 
     // update children state
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
-        Child &  child   = *iter.GetChild();
         uint32_t timeout = 0;
 
         switch (child.GetState())
@@ -2145,14 +2144,14 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         // table is timed out and then trying to register its globally unique
         // IPv6 address as the new child.
 
-        for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+        for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
         {
-            if (iter.GetChild() == &aChild)
+            if (&child == &aChild)
             {
                 continue;
             }
 
-            IgnoreError(iter.GetChild()->RemoveIp6Address(address));
+            IgnoreError(child.RemoveIp6Address(address));
         }
 
         // Clear EID-to-RLOC cache for the unicast address registered by the child.
@@ -2774,9 +2773,8 @@ void MleRouter::SynchronizeChildNetworkData(void)
 {
     VerifyOrExit(IsRouterOrLeader(), OT_NOOP);
 
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        Child & child = *iter.GetChild();
         uint8_t version;
 
         if (child.IsRxOnWhenIdle())
@@ -3504,7 +3502,6 @@ Neighbor *MleRouter::GetNeighbor(const Mac::Address &aAddress)
 Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
 {
     Lowpan::Context context;
-    Child *         child;
     Neighbor *      rval = nullptr;
 
     if (aAddress.IsLinkLocal())
@@ -3520,19 +3517,17 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
         context.mContextId = 0xff;
     }
 
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
     {
-        child = iter.GetChild();
-
         if ((context.mContextId == kMeshLocalPrefixContextId) && aAddress.GetIid().IsLocator() &&
-            (aAddress.GetIid().GetLocator() == child->GetRloc16()))
+            (aAddress.GetIid().GetLocator() == child.GetRloc16()))
         {
-            ExitNow(rval = child);
+            ExitNow(rval = &child);
         }
 
-        if (child->HasIp6Address(aAddress))
+        if (child.HasIp6Address(aAddress))
         {
-            ExitNow(rval = child);
+            ExitNow(rval = &child);
         }
     }
 
@@ -3804,9 +3799,9 @@ void MleRouter::RefreshStoredChildren(void)
 {
     SuccessOrExit(Get<Settings>().DeleteChildInfo());
 
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
-        SuccessOrExit(StoreChild(*iter.GetChild()));
+        SuccessOrExit(StoreChild(child));
     }
 
 exit:
@@ -4162,9 +4157,9 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
     IgnoreError(SendLinkRequest(nullptr));
 
     // send child id responses
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateChildIdRequest); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateChildIdRequest))
     {
-        IgnoreError(SendChildIdResponse(*iter.GetChild()));
+        IgnoreError(SendChildIdResponse(child));
     }
 
 exit:
@@ -4723,9 +4718,9 @@ bool MleRouter::HasChildren(void)
 
 void MleRouter::RemoveChildren(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
     {
-        RemoveNeighbor(*iter.GetChild());
+        RemoveNeighbor(child);
     }
 }
 
@@ -4763,10 +4758,8 @@ otError MleRouter::GetMaxChildTimeout(uint32_t &aTimeout) const
 
     VerifyOrExit(IsRouterOrLeader(), error = OT_ERROR_INVALID_STATE);
 
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        Child &child = *iter.GetChild();
-
         if (child.IsFullThreadDevice())
         {
             continue;
@@ -4835,10 +4828,8 @@ bool MleRouter::HasSleepyChildrenSubscribed(const Ip6::Address &aAddress)
 {
     bool rval = false;
 
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
     {
-        Child &child = *iter.GetChild();
-
         if (child.IsRxOnWhenIdle())
         {
             continue;
