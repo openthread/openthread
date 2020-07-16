@@ -504,7 +504,7 @@ extern "C" {
  */
 
 /**
- * @def otLogInfoMlr
+ * @def otLogNoteMlr
  *
  * This method generates a log with level note for the Multicast Listener Registration (MLR) region.
  *
