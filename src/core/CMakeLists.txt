@@ -187,7 +187,7 @@ set(COMMON_SOURCES
     thread/mle_router.cpp
     thread/mle_types.cpp
     thread/mlr_manager.cpp
-        thread/multicast_listener_registration_table.cpp
+    thread/multicast_listener_registration_table.cpp
     thread/network_data.cpp
     thread/network_data_leader.cpp
     thread/network_data_leader_ftd.cpp

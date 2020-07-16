@@ -233,6 +233,7 @@ void MulticastListenerRegistrationTable::LogRegistration(const char *        aAc
 {
     OT_UNUSED_VARIABLE(aAddress);
     OT_UNUSED_VARIABLE(aAction);
+    OT_UNUSED_VARIABLE(aError);
 
 #if OPENTHREAD_CONFIG_LOG_BBR && OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
     if (aError == OT_ERROR_NONE)

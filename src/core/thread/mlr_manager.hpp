@@ -124,7 +124,7 @@ private:
     void ScheduleSend(uint16_t aDelay);
     void ResetTimer(void);
     void UpdateReregistrationDelay(bool aRereg);
-    void Reregistration(void);
+    void Reregister(void);
 
     static void HandleTimer(Timer &aTimer) { aTimer.GetOwner<MlrManager>().HandleTimer(); }
     void        HandleTimer(void);

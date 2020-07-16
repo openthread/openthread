@@ -286,14 +286,14 @@ void MlrManager::HandleTimer(void)
     {
         if (--mReregistrationDelay == 0)
         {
-            Reregistration();
+            Reregister();
         }
     }
 
     ResetTimer();
 }
 
-void MlrManager::Reregistration(void)
+void MlrManager::Reregister(void)
 {
     mTable.SetAllToRegister();
     ScheduleSend(0);
