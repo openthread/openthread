@@ -89,9 +89,9 @@ QueryMetadata::QueryMetadata(otSntpResponseHandler aHandler, void *aContext)
     mDestinationAddress.Clear();
 }
 
-Client::Client(Ip6::Netif &aNetif)
-    : mSocket(aNetif.GetInstance())
-    , mRetransmissionTimer(aNetif.GetInstance(), Client::HandleRetransmissionTimer, this)
+Client::Client(Instance &aInstance)
+    : mSocket(aInstance)
+    , mRetransmissionTimer(aInstance, Client::HandleRetransmissionTimer, this)
     , mUnixEra(0)
 {
 }
