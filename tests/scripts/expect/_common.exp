@@ -29,6 +29,7 @@
 
 proc wait_for {command expected} {
     set result 0
+    set timeout 1
     for {set i 0} {$i < 20} {incr i} {
         if {$command != ""} {
             send "$command\n"
@@ -67,3 +68,5 @@ proc dispose {} {
     send "\x04"
     expect eof
 }
+
+set timeout 10

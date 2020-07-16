@@ -30,7 +30,6 @@
 source "tests/scripts/expect/_common.exp"
 
 set spawn_id [spawn_node 1]
-set timeout 3
 
 send "extaddr 99aabbccddeeff00\n"
 expect "Done"

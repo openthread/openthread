@@ -30,7 +30,6 @@
 source "tests/scripts/expect/_common.exp"
 
 set spawn_id [spawn_node 1]
-set timeout 3
 
 send "pskc 00112233445566778899aabbccddeeff\n"
 expect "Done"
