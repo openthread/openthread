@@ -31,6 +31,12 @@
 
 #include <openthread/error.h>
 
+/**
+ * @struct otUrl
+ *
+ * This structure represents a URL.
+ *
+ */
 struct otUrl
 {
     const char *mProtocol; ///< The URL protocol.
@@ -42,6 +48,10 @@ struct otUrl
 namespace ot {
 namespace Url {
 
+/**
+ * This class implements the URL processing.
+ *
+ */
 class Url : public otUrl
 {
 public:
@@ -57,7 +67,7 @@ public:
     otError Init(char *aUrl);
 
     /**
-     * This method gets the path in URl.
+     * This method gets the path in URL.
      *
      * @returns The path in url.
      *
@@ -65,12 +75,12 @@ public:
     const char *GetPath(void) const { return mPath; }
 
     /**
-     * This method returns the URL agument value.
+     * This method gets the value of parameter @p aName.
      *
-     * @param[in] aName       Argument name.
-     * @param[in] aLastValue  The last iterated argument value, nullptr for first value.
+     * @param[in] aName       The parameter name.
+     * @param[in] aLastValue  The last iterated parameter value, nullptr for the first value.
      *
-     * @returns The argument value.
+     * @returns The parameter value.
      *
      */
     const char *GetValue(const char *aName, const char *aLastValue = nullptr) const;
