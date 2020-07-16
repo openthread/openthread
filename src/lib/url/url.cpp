@@ -122,7 +122,7 @@ exit:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
 
-void TestSimple()
+void TestSimple(void)
 {
     char         url[] = "spinel:///dev/ttyUSB0?baudrate=115200";
     ot::Url::Url args;
