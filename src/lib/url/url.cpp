@@ -139,7 +139,7 @@ void TestSimple()
     printf("PASS %s\r\n", __func__);
 }
 
-void TestSimpleNoQueryString()
+void TestSimpleNoQueryString(void)
 {
     char         url[] = "spinel:///dev/ttyUSB0";
     ot::Url::Url args;
@@ -153,7 +153,7 @@ void TestSimpleNoQueryString()
     printf("PASS %s\r\n", __func__);
 }
 
-void TestMultipleProtocols()
+void TestMultipleProtocols(void)
 {
     char         url[] = "spinel+spi:///dev/ttyUSB0?baudrate=115200";
     ot::Url::Url args;
@@ -165,7 +165,7 @@ void TestMultipleProtocols()
     printf("PASS %s\r\n", __func__);
 }
 
-void TestMultipleProtocolsAndDuplicateParameters()
+void TestMultipleProtocolsAndDuplicateParameters(void)
 {
     char         url[] = "spinel+exec:///path/to/ot-rcp?arg=1&arg=arg2&arg=3";
     ot::Url::Url args;
@@ -192,7 +192,7 @@ void TestMultipleProtocolsAndDuplicateParameters()
 
 #pragma GCC diagnostic pop
 
-int main()
+int main(void)
 {
     TestSimple();
     TestSimpleNoQueryString();

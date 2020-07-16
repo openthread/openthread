@@ -79,7 +79,7 @@ public:
      *
      * @note This method should be called before reading and sending spinel frames to the interface.
      *
-     * @param[in]  aRadioUrl         Arguments parsed from radio url.
+     * @param[in]  aRadioUrl          Arguments parsed from radio url.
      *
      * @retval OT_ERROR_NONE          The interface is initialized successfully.
      * @retval OT_ERROR_ALREADY       The interface is already initialized.
