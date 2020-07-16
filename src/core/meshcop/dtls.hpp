@@ -351,7 +351,7 @@ private:
     {
         kGuardTimeNewConnectionMilli = 2000,
 #if !OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-        kApplicationDataMaxLength = 512,
+        kApplicationDataMaxLength = 1152,
 #else
         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH,
 #endif
