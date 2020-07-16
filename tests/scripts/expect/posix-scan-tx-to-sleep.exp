@@ -29,8 +29,6 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set timeout 1
-
 spawn $env(OT_COMMAND) "spinel+hdlc+uart://$env(RCP_COMMAND)?forkpty-arg=--sleep-to-tx 1"
 set node_1 $spawn_id
 expect_after {
@@ -48,6 +46,7 @@ expect "Done"
 send "thread start\n"
 expect "Done"
 wait_for "state" "leader"
+expect "Done"
 
 send "extaddr\n"
 expect "extaddr"

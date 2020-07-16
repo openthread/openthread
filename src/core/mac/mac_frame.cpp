@@ -1040,12 +1040,11 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     uint8_t        nonce[Crypto::AesCcm::kNonceSize];
     uint8_t        tagLength;
     Crypto::AesCcm aesCcm;
-    otError        error;
 
     VerifyOrExit(GetSecurityEnabled(), OT_NOOP);
 
-    SuccessOrExit(error = GetSecurityLevel(securityLevel));
-    SuccessOrExit(error = GetFrameCounter(frameCounter));
+    SuccessOrExit(GetSecurityLevel(securityLevel));
+    SuccessOrExit(GetFrameCounter(frameCounter));
 
     Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
 
@@ -1092,7 +1091,6 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     PanId    panId;
     uint8_t  footerLength;
     uint8_t  securityControlField;
-    uint32_t frameCounter;
     uint8_t  keyId;
 
     mChannel = aFrame.mChannel;
@@ -1170,11 +1168,9 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     if (aFrame.GetSecurityEnabled())
     {
         SuccessOrExit(error = aFrame.GetSecurityControlField(securityControlField));
-        SuccessOrExit(error = aFrame.GetFrameCounter(frameCounter));
         SuccessOrExit(error = aFrame.GetKeyId(keyId));
 
         SetSecurityControlField(securityControlField);
-        SetFrameCounter(frameCounter);
         SetKeyId(keyId);
     }
 

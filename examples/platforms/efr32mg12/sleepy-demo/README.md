@@ -1,6 +1,6 @@
 # EFR32MG12 Sleepy Demo Example
 
-The EFR32 Sleepy applications demonstrates Sleepy End Device behaviour using the EFR32's low power EM2 mode. The steps below will take you through the process of building and running the demo
+The EFR32 Sleepy applications demonstrates Sleepy End Device behavior using the EFR32's low power EM2 mode. The steps below will take you through the process of building and running the demo
 
 For setting up the build environment refer to [examples/platforms/efr32mg12/README.md](../README.md).
 
@@ -35,7 +35,7 @@ sleepy-demo-ftd started
 sleepy-demo-ftd changed to leader
 ```
 
-When the sleepy-demo-mtd device starts it joins the preconfigured Thread network before disabling Rx-On-Idle to become a Sleepy-End-Device.
+When the sleepy-demo-mtd device starts it joins the pre-configured Thread network before disabling Rx-On-Idle to become a Sleepy-End-Device.
 
 Use the command "child table" in the FTD console and observe the R flag of the child is 0.
 
@@ -62,9 +62,9 @@ This will toggle the state of LED0 on the MTD. If the MTD is operating as a slee
 
 ## 5. Monitoring power consumption of the MTD
 
-Open the Energy Profiler within Silicon Labs Simplicity Studio. Within the Quick Access menu select Start Energy Capture... and select the MTD device. When operating as a Sleepy End Device with no LEDs on the current should be under 20 microamps with occassional spikes during waking and polling the parent. With the LED on the MTD has a current consumption of approximately 1mA.
+Open the Energy Profiler within Silicon Labs Simplicity Studio. Within the Quick Access menu select Start Energy Capture... and select the MTD device. When operating as a Sleepy End Device with no LEDs on the current should be under 20 microamps with occasional spikes during waking and polling the parent. With the LED on the MTD has a current consumption of approximately 1mA.
 
-When operating as a Minial End Device with the Rx on Idle observe that the current is in the order of 10ma.
+When operating as a Minimal End Device with the Rx on Idle observe that the current is in the order of 10ma.
 
 With further configuration of GPIOs and peripherals it is possible to reduce the sleepy current consumption further.
 

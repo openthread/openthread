@@ -31,7 +31,7 @@
  *   This file implements Primary Backbone Router service management in the Thread Network.
  */
 
-#include "leader.hpp"
+#include "bbr_leader.hpp"
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
@@ -224,7 +224,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
     LogBackboneRouterPrimary(state, mConfig);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Get<BackboneRouter::Local>().UpdateBackboneRouterPrimary(state, mConfig);
+    Get<BackboneRouter::Local>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
 #endif
 }
 
@@ -286,6 +286,11 @@ void Leader::UpdateDomainPrefixConfig(void)
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     Get<DuaManager>().UpdateDomainUnicastAddress(state);
 #endif
+}
+
+bool Leader::IsDomainUnicast(const Ip6::Address &aAddress) const
+{
+    return HasDomainPrefix() && aAddress.PrefixMatch(mDomainPrefix.mPrefix) >= mDomainPrefix.mLength;
 }
 
 } // namespace BackboneRouter

@@ -57,7 +57,7 @@ Ip6::Ip6(Instance &aInstance)
     , mReceiveIp6DatagramCallback(nullptr)
     , mReceiveIp6DatagramCallbackContext(nullptr)
     , mSendQueue()
-    , mSendQueueTask(aInstance, HandleSendQueue, this)
+    , mSendQueueTask(aInstance, Ip6::HandleSendQueue, this)
     , mIcmp(aInstance)
     , mUdp(aInstance)
     , mMpl(aInstance)
@@ -884,7 +884,7 @@ void Ip6::UpdateReassemblyList(void)
         else
         {
             otLogNoteIp6("Reassembly timeout.");
-            SendIcmpError(*message, IcmpHeader::kTypeTimeExceeded, IcmpHeader::kCodeFragmReasTimeEx);
+            SendIcmpError(*message, Icmp::Header::kTypeTimeExceeded, Icmp::Header::kCodeFragmReasTimeEx);
 
             mReassemblyList.Dequeue(*message);
             message->Free();
@@ -892,7 +892,7 @@ void Ip6::UpdateReassemblyList(void)
     }
 }
 
-void Ip6::SendIcmpError(Message &aMessage, IcmpHeader::Type aIcmpType, IcmpHeader::Code aIcmpCode)
+void Ip6::SendIcmpError(Message &aMessage, Icmp::Header::Type aIcmpType, Icmp::Header::Code aIcmpCode)
 {
     otError     error = OT_ERROR_NONE;
     Header      header;
@@ -1037,8 +1037,8 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
     if (mIsReceiveIp6FilterEnabled)
     {
         // do not pass messages sent to an RLOC/ALOC, except Service Locator
-        VerifyOrExit(!aMessageInfo.GetSockAddr().IsIidLocator() ||
-                         aMessageInfo.GetSockAddr().IsIidAnycastServiceLocator(),
+        VerifyOrExit(!aMessageInfo.GetSockAddr().GetIid().IsLocator() ||
+                         aMessageInfo.GetSockAddr().GetIid().IsAnycastServiceLocator(),
                      error = OT_ERROR_NO_ROUTE);
 
         switch (aIpProto)
@@ -1046,18 +1046,18 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
         case kProtoIcmp6:
             if (mIcmp.ShouldHandleEchoRequest(aMessageInfo))
             {
-                IcmpHeader icmp;
+                Icmp::Header icmp;
                 aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
 
                 // do not pass ICMP Echo Request messages
-                VerifyOrExit(icmp.GetType() != IcmpHeader::kTypeEchoRequest, error = OT_ERROR_DROP);
+                VerifyOrExit(icmp.GetType() != Icmp::Header::kTypeEchoRequest, error = OT_ERROR_DROP);
             }
 
             break;
 
         case kProtoUdp:
         {
-            UdpHeader udp;
+            Udp::Header udp;
             aMessage.Read(aMessage.GetOffset(), sizeof(udp), &udp);
 
             switch (udp.GetDestinationPort())
@@ -1206,7 +1206,7 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
     }
     else
     {
-        if (Get<ThreadNetif>().IsUnicastAddress(header.GetDestination()))
+        if (Get<ThreadNetif>().HasUnicastAddress(header.GetDestination()))
         {
             receive = true;
         }
@@ -1374,7 +1374,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
         uint8_t        candidatePrefixMatched;
         uint8_t        overrideScope;
 
-        if (candidateAddr->IsIidAnycastLocator())
+        if (candidateAddr->GetIid().IsAnycastLocator())
         {
             // Don't use anycast address as source address.
             continue;
@@ -1444,7 +1444,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             rvalPrefixMatched = candidatePrefixMatched;
         }
         else if ((candidatePrefixMatched == rvalPrefixMatched) &&
-                 (destination->IsIidRoutingLocator() == candidateAddr->IsIidRoutingLocator()))
+                 (destination->GetIid().IsRoutingLocator() == candidateAddr->GetIid().IsRoutingLocator()))
         {
             // Additional rule: Prefer RLOC source for RLOC destination, EID source for anything else
             rvalAddr          = addr;

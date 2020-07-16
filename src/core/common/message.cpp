@@ -46,17 +46,10 @@ MessagePool::MessagePool(Instance &aInstance)
     : InstanceLocator(aInstance)
 #if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     , mNumFreeBuffers(kNumBuffers)
-    , mFreeBuffers()
+    , mBufferPool()
 #endif
 {
-#if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-    memset(mBuffers, 0, sizeof(mBuffers));
-
-    for (Buffer *cur = &mBuffers[0]; cur < OT_ARRAY_END(mBuffers); cur++)
-    {
-        mFreeBuffers.Push(*cur);
-    }
-#else
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     otPlatMessagePoolInit(&GetInstance(), kNumBuffers, sizeof(Buffer));
 #endif
 }
@@ -118,22 +111,20 @@ Buffer *MessagePool::NewBuffer(Message::Priority aPriority)
 
 #else
 
-    buffer = mFreeBuffers.Pop();
+    buffer = mBufferPool.Allocate();
+    VerifyOrExit(buffer != nullptr, OT_NOOP);
 
-    if (buffer != nullptr)
-    {
-        buffer->SetNextBuffer(nullptr);
-        mNumFreeBuffers--;
-    }
+    mNumFreeBuffers--;
+    buffer->SetNextBuffer(nullptr);
 
 #endif
 
+exit:
     if (buffer == nullptr)
     {
         otLogInfoMem("No available message buffer");
     }
 
-exit:
     return buffer;
 }
 
@@ -145,7 +136,7 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
         otPlatMessagePoolFree(&GetInstance(), aBuffer);
 #else
-        mFreeBuffers.Push(*aBuffer);
+        mBufferPool.Free(*aBuffer);
         mNumFreeBuffers++;
 #endif
         aBuffer = next;
@@ -646,36 +637,22 @@ exit:
 
 bool Message::GetChildMask(uint16_t aChildIndex) const
 {
-    OT_ASSERT(aChildIndex < sizeof(GetMetadata().mChildMask) * 8);
-    return (GetMetadata().mChildMask[aChildIndex / 8] & (0x80 >> (aChildIndex % 8))) != 0;
+    return GetMetadata().mChildMask.Get(aChildIndex);
 }
 
 void Message::ClearChildMask(uint16_t aChildIndex)
 {
-    OT_ASSERT(aChildIndex < sizeof(GetMetadata().mChildMask) * 8);
-    GetMetadata().mChildMask[aChildIndex / 8] &= ~(0x80 >> (aChildIndex % 8));
+    GetMetadata().mChildMask.Clear(aChildIndex);
 }
 
 void Message::SetChildMask(uint16_t aChildIndex)
 {
-    OT_ASSERT(aChildIndex < sizeof(GetMetadata().mChildMask) * 8);
-    GetMetadata().mChildMask[aChildIndex / 8] |= 0x80 >> (aChildIndex % 8);
+    GetMetadata().mChildMask.Set(aChildIndex);
 }
 
 bool Message::IsChildPending(void) const
 {
-    bool rval = false;
-
-    for (size_t i = 0; i < sizeof(GetMetadata().mChildMask); i++)
-    {
-        if (GetMetadata().mChildMask[i] != 0)
-        {
-            ExitNow(rval = true);
-        }
-    }
-
-exit:
-    return rval;
+    return GetMetadata().mChildMask.HasAny();
 }
 
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aValue)

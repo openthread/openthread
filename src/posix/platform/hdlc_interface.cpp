@@ -235,16 +235,18 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
     {
         ssize_t rval = write(mSockFd, aFrame, aLength);
 
-        if (rval > 0)
+        if (rval == aLength)
+        {
+            break;
+        }
+        else if (rval > 0)
         {
             aLength -= static_cast<uint16_t>(rval);
             aFrame += static_cast<uint16_t>(rval);
-            continue;
         }
-
-        if ((rval < 0) && (errno != EAGAIN) && (errno != EWOULDBLOCK) && (errno != EINTR))
+        else if (rval < 0)
         {
-            DieNow(OT_EXIT_ERROR_ERRNO);
+            VerifyOrDie((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == EINTR), OT_EXIT_ERROR_ERRNO);
         }
 
         SuccessOrExit(error = WaitForWritable());

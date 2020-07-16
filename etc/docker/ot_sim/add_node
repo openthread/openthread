@@ -1,2 +1,0 @@
-#!/bin/bash
-docker exec -it otsim node "$1"

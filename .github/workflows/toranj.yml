@@ -48,7 +48,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y dbus libdbus-1-dev
         sudo apt-get --no-install-recommends install -y autoconf-archive
         sudo apt-get --no-install-recommends install -y bsdtar
@@ -77,7 +77,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y dbus libdbus-1-dev
         sudo apt-get --no-install-recommends install -y autoconf-archive
         sudo apt-get --no-install-recommends install -y bsdtar

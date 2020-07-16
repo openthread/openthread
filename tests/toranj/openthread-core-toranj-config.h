@@ -56,6 +56,14 @@
 #define OPENTHREAD_CONFIG_COMMISSIONER_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES
+ *
+ * The maximum number of Joiner entries maintained by the Commissioner.
+ *
+ */
+#define OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES 4
+
+/**
  * @def OPENTHREAD_CONFIG_DIAG_ENABLE
  *
  * Define to 1 to enable Factory Diagnostics support.
@@ -222,7 +230,7 @@
  * Selects if, and where the LOG output goes to.
  *
  */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_APP
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL

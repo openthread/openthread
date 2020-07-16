@@ -53,6 +53,6 @@ void nrf_802154_enh_ack_generator_init(void);
  * @returns  Pointer to a constant buffer that contains PHR and PSDU
  *           of the created Enhanced ACK frame.
  */
-const uint8_t * nrf_802154_enh_ack_generator_create(const uint8_t * p_frame);
+uint8_t * nrf_802154_enh_ack_generator_create(const uint8_t * p_frame);
 
 #endif // NRF_802154_ENH_ACK_GENERATOR_H

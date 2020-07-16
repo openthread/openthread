@@ -756,7 +756,7 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
         else
 #endif
         {
-            // signal MAC layer for each received frame if promiscous is enabled
+            // signal MAC layer for each received frame if promiscuous is enabled
             // otherwise only signal MAC layer for non-ACK frame
             if (sPromiscuous || sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)
             {
@@ -949,6 +949,10 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 
 void efr32RadioProcess(otInstance *aInstance)
 {
+    // We should process the received packet first. Adding it at the end of this function,
+    // will delay the stack notification until the next call to efr32RadioProcess()
+    processNextRxPacket(aInstance, sRxBandConfig->mRailHandle);
+
     if (sState == OT_RADIO_STATE_TRANSMIT && sTransmitBusy == false)
     {
         if (sTransmitError != OT_ERROR_NONE)
@@ -989,8 +993,6 @@ void efr32RadioProcess(otInstance *aInstance)
         sRailDebugCounters.mRailEventEnergyScanCompleted++;
 #endif
     }
-
-    processNextRxPacket(aInstance, sRxBandConfig->mRailHandle);
 }
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)

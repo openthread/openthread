@@ -277,11 +277,11 @@ void initUdp(void)
         return;
     }
 
-    error = otUdpBind(&sMtdSocket, &sockaddr);
+    error = otUdpBind(instance, &sMtdSocket, &sockaddr);
 
     if (error != OT_ERROR_NONE)
     {
-        otUdpClose(&sMtdSocket);
+        otUdpClose(instance, &sMtdSocket);
         return;
     }
 }
@@ -333,7 +333,7 @@ void applicationTick(void)
 
             if (error == OT_ERROR_NONE)
             {
-                error = otUdpSend(&sMtdSocket, message, &messageInfo);
+                error = otUdpSend(instance, &sMtdSocket, message, &messageInfo);
 
                 if (error == OT_ERROR_NONE)
                 {

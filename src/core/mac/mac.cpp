@@ -115,7 +115,7 @@ Mac::Mac(Instance &aInstance)
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
     , mSubMac(aInstance)
-    , mOperationTask(aInstance, &Mac::HandleOperationTask, this)
+    , mOperationTask(aInstance, Mac::HandleOperationTask, this)
     , mTimer(aInstance, Mac::HandleTimer, this)
     , mOobFrame(nullptr)
     , mKeyIdMode2FrameCounter(0)

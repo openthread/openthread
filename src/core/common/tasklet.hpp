@@ -67,12 +67,12 @@ class Tasklet : public InstanceLocator, public OwnerLocator
 
 public:
     /**
-     * This function pointer is called when the tasklet is run.
+     * This function reference is called when the tasklet is run.
      *
      * @param[in]  aTasklet  A reference to the tasklet being run.
      *
      */
-    typedef void (*Handler)(Tasklet &aTasklet);
+    typedef void (&Handler)(Tasklet &aTasklet);
 
     /**
      * This constructor creates a tasklet instance.

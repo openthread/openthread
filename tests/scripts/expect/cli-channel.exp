@@ -28,56 +28,62 @@
 #
 
 source "tests/scripts/expect/_common.exp"
-source "tests/scripts/expect/_multinode.exp"
 
-set timeout 1
-setup_nodes
+set spawn_id [spawn_node 1]
 
-spawn $env(OT_COMMAND) 3
-set spawn_3 $spawn_id
-
-set spawn_id $spawn_1
-send "extaddr\n"
-expect "extaddr"
-expect -re {([0-9a-f]{16})}
-set extaddr $expect_out(1,string)
+send "ifconfig up\n"
 expect "Done"
-send "panid\n"
-expect "panid"
-expect -re {([0-9a-f]{4})}
-set pan $expect_out(1,string)
-expect "Done"
-send "extpanid\n"
-expect "extpanid"
-expect -re {([0-9a-f]{16})}
-set extpan $expect_out(1,string)
-expect "Done"
-send "networkname\n"
-expect "networkname"
-expect -re {\r\n(.*?)\r\n}
-set network $expect_out(1,string)
-expect "Done"
-send "channel\n"
-expect "channel"
-expect -re {(\d+)}
-set channel $expect_out(1,string)
+send "thread start\n"
 expect "Done"
 
-set spawn_id $spawn_3
-send "scan $channel\n"
-expect "| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |"
-expect "+---+------------------+------------------+------+------------------+----+-----+-----+"
-wait_for "" "\\| \\d \\| $network +\\| $extpan \\| $pan \\| $extaddr \\| +$channel \\| +-?\\d+ \\| +\\d \\|"
-wait_for "" "Done"
-send "scan energy 100\n"
-expect "| Ch | RSSI |"
-expect "+----+------+"
+send "channel monitor stop\n"
+expect "Done"
+send "channel monitor\n"
+expect "enabled: 0"
+expect "Done"
+send "channel monitor start\n"
+expect "Done"
+send "channel monitor\n"
+expect "enabled: 1"
+expect -re {interval: \d+}
+expect -re {threshold: -?\d+}
+expect -re {window: \d+}
+expect -re {count: \d+}
+expect "occupancies:"
 for {set i 11} {$i <= 26} {incr i} {
-    expect -re "\\| +$i \\| +-?\\d+ \\|"
+    expect -re "ch $i \\(0x\[0-9a-f\]{4}\\) +\\d+\\.\\d+% busy"
 }
 expect "Done"
+send "channel monitor something_invalid\n"
+expect "Error 7: InvalidArgs"
 
-set spawn_id $spawn_3
+send "channel manager change 15\n"
+expect "Done"
+send "channel manager\n"
+expect "channel: 15"
+expect "auto: 0"
+expect "Done"
+send "channel manager select 1\n"
+expect "Error 13: InvalidState" # Because of insufficient channel monitor samples
+send "channel manager delay 200\n"
+expect "Done"
+send "channel manager interval 20000\n"
+expect "Done"
+send "channel manager supported 0x7fff800\n"
+expect "Done"
+send "channel manager favored 0x7fff800\n"
+expect "Done"
+send "channel manager auto 1\n"
+expect "Done"
+send "channel manager\n"
+expect "channel: 15"
+expect "auto: 1"
+expect "delay: 200"
+expect "interval: 20000"
+expect "supported: { 11-26}"
+expect "favored: { 11-26}"
+expect "Done"
+send "channel manager something_invalid\n"
+expect "Error 7: InvalidArgs"
+
 dispose
-
-dispose_nodes

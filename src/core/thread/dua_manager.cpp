@@ -131,7 +131,7 @@ otError DuaManager::SetFixedDuaInterfaceIdentifier(const Ip6::InterfaceIdentifie
     mFixedDuaInterfaceIdentifier = aIid;
     otLogInfoIp6("Set DUA IID: %s", mFixedDuaInterfaceIdentifier.ToString().AsCString());
 
-    if (Get<ThreadNetif>().IsUnicastAddress(GetDomainUnicastAddress()))
+    if (Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
     {
         Get<ThreadNetif>().RemoveUnicastAddress(mDomainUnicastAddress);
         mDomainUnicastAddress.GetAddress().SetIid(mFixedDuaInterfaceIdentifier);
@@ -147,8 +147,8 @@ void DuaManager::ClearFixedDuaInterfaceIdentifier(void)
     // Nothing to clear.
     VerifyOrExit(IsFixedDuaInterfaceIdentifierSet(), OT_NOOP);
 
-    if (GetDomainUnicastAddress().HasIid(mFixedDuaInterfaceIdentifier) &&
-        Get<ThreadNetif>().IsUnicastAddress(GetDomainUnicastAddress()))
+    if (GetDomainUnicastAddress().GetIid() == mFixedDuaInterfaceIdentifier &&
+        Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
     {
         Get<ThreadNetif>().RemoveUnicastAddress(mDomainUnicastAddress);
 

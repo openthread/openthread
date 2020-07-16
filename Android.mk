@@ -33,6 +33,7 @@ OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --ma
 OPENTHREAD_PROJECT_CFLAGS ?= -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"
 
 OPENTHREAD_PUBLIC_CFLAGS                                         := \
+    -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>        \
     -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1                  \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
@@ -83,7 +84,6 @@ endif
 ifeq ($(TARGET_PRODUCT),generic)
 OPENTHREAD_PUBLIC_CFLAGS                                         += \
     -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1                           \
-    -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1                         \
@@ -174,8 +174,8 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/thread_api.cpp                             \
     src/core/api/thread_ftd_api.cpp                         \
     src/core/api/udp_api.cpp                                \
-    src/core/backbone_router/leader.cpp                     \
-    src/core/backbone_router/local.cpp                      \
+    src/core/backbone_router/bbr_leader.cpp                 \
+    src/core/backbone_router/bbr_local.cpp                  \
     src/core/coap/coap.cpp                                  \
     src/core/coap/coap_message.cpp                          \
     src/core/coap/coap_secure.cpp                           \
@@ -396,6 +396,7 @@ LOCAL_CPPFLAGS                                                              := \
     $(NULL)
 
 LOCAL_LDLIBS                               := \
+    -lrt                                      \
     -lutil
 
 LOCAL_SRC_FILES                            := \
@@ -481,6 +482,7 @@ LOCAL_SRC_FILES                            := \
     $(NULL)
 
 LOCAL_LDLIBS                               := \
+    -lrt                                      \
     -lutil
 
 LOCAL_STATIC_LIBRARIES = libopenthread-ncp ot-core

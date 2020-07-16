@@ -253,12 +253,12 @@ public:
      * This fields represent uncompressed IPv6 packet.
      *
      */
-    Mac::Address   mMacSource;
-    Mac::Address   mMacDestination;
-    Ip6::Header    mIpHeader;
-    Payload        mExtHeader;
-    Ip6::Header    mIpTunneledHeader;
-    Ip6::UdpHeader mUdpHeader;
+    Mac::Address     mMacSource;
+    Mac::Address     mMacDestination;
+    Ip6::Header      mIpHeader;
+    Payload          mExtHeader;
+    Ip6::Header      mIpTunneledHeader;
+    Ip6::Udp::Header mUdpHeader;
 
     /**
      * This fields represent compressed IPv6 packet.

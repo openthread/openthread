@@ -46,6 +46,7 @@
 #include "common/message.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/dtls.hpp"
+#include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 
 namespace ot {
@@ -75,7 +76,9 @@ public:
      * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
      * @param[in]  aContext          A pointer to application-specific context.
      *
-     * @retval OT_ERROR_NONE  Successfully started the Joiner service.
+     * @retval OT_ERROR_NONE          Successfully started the Joiner service.
+     * @retval OT_ERROR_BUSY          The previous attempt is still on-going.
+     * @retval OT_ERROR_INVALID_STATE The IPv6 stack is not enabled or Thread stack is fully enabled.
      *
      */
     otError Start(const char *     aPskd,
@@ -104,10 +107,47 @@ public:
     /**
      * This method retrieves the Joiner ID.
      *
-     * @param[out]  aJoinerId  The Joiner ID.
+     * @returns The Joiner ID.
      *
      */
-    void GetJoinerId(Mac::ExtAddress &aJoinerId) const;
+    const Mac::ExtAddress &GetId(void) const { return mId; }
+
+    /**
+     * This method gets the Jointer Discerner.
+     *
+     * @returns A pointer to the current Joiner Discerner or `nullptr` if none is set.
+     *
+     */
+    const JoinerDiscerner *GetDiscerner(void) const;
+
+    /**
+     * This method sets the Joiner Discerner.
+     *
+     * The Joiner Discerner is used to calculate the Joiner ID used during commissioning/joining process.
+     *
+     * By default (when a discerner is not provided or cleared), Joiner ID is derived as first 64 bits of the
+     * result of computing SHA-256 over factory-assigned IEEE EUI-64. Note that this is the main behavior expected by
+     * Thread specification.
+     *
+     * @param[in]   aDiscerner  A Joiner Discerner
+     *
+     * @retval OT_ERROR_NONE           The Joiner Discerner updated successfully.
+     * @retval OT_ERROR_INVALID_ARGS   @p aDiscerner is not valid (specified length is not within valid range).
+     * @retval OT_ERROR_INVALID_STATE  There is an ongoing Joining process so Joiner Discerner could not be changed.
+     *
+     */
+    otError SetDiscerner(const JoinerDiscerner &aDiscerner);
+
+    /**
+     * This method clears any previously set Joiner Discerner.
+     *
+     * When cleared, Joiner ID is derived as first 64 bits of SHA-256 of factory-assigned IEEE EUI-64.
+     *
+     * @retval OT_ERROR_NONE           The Joiner Discerner cleared and Joiner ID updated.
+     * @retval OT_ERROR_INVALID_STATE  There is an ongoing Joining process so Joiner Discerner could not be changed.
+     *
+     */
+    otError ClearDiscerner(void);
 
 private:
     enum
@@ -147,6 +187,7 @@ private:
     static const char *JoinerStateToString(otJoinerState aState);
 
     void    SetState(otJoinerState aState);
+    void    SetIdFromIeeeEui64(void);
     void    SaveDiscoveredJoinerRouter(const otActiveScanResult &aResult);
     void    TryNextJoinerRouter(otError aPrevError);
     otError Connect(JoinerRouter &aRouter);
@@ -165,6 +206,9 @@ private:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     void LogCertMessage(const char *aText, const Coap::Message &aMessage) const;
 #endif
+
+    Mac::ExtAddress mId;
+    JoinerDiscerner mDiscerner;
 
     otJoinerState mState;
 

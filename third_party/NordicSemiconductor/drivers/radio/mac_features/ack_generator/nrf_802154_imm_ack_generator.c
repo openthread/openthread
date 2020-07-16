@@ -53,7 +53,7 @@ void nrf_802154_imm_ack_generator_init(void)
     memcpy(m_ack_data, ack_data, sizeof(ack_data));
 }
 
-const uint8_t * nrf_802154_imm_ack_generator_create(const uint8_t * p_frame)
+uint8_t * nrf_802154_imm_ack_generator_create(const uint8_t * p_frame)
 {
     // Set valid sequence number in ACK frame.
     m_ack_data[DSN_OFFSET] = p_frame[DSN_OFFSET];

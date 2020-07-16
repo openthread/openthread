@@ -854,7 +854,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>(v
     VerifyOrExit((dataLen <= sizeof(cfg.mServiceData)), error = OT_ERROR_INVALID_ARGS);
     memcpy(cfg.mServiceData, data, dataLen);
 
-    OT_STATIC_ASSERT((sizeof(cfg.mServiceData) <= UINT8_MAX), "Cannot handle full range of buffer length");
+    static_assert((sizeof(cfg.mServiceData) <= UINT8_MAX), "Cannot handle full range of buffer length");
     cfg.mServiceDataLength = static_cast<uint8_t>(dataLen);
 
     SuccessOrExit(error = mDecoder.ReadBool(stable));
@@ -864,7 +864,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>(v
     VerifyOrExit((dataLen <= sizeof(cfg.mServerConfig.mServerData)), error = OT_ERROR_INVALID_ARGS);
     memcpy(cfg.mServerConfig.mServerData, data, dataLen);
 
-    OT_STATIC_ASSERT((sizeof(cfg.mServerConfig.mServerData) <= UINT8_MAX), "Cannot handle full range of buffer length");
+    static_assert((sizeof(cfg.mServerConfig.mServerData) <= UINT8_MAX), "Cannot handle full range of buffer length");
     cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(dataLen);
 
     SuccessOrExit(error = otServerAddService(mInstance, &cfg));
@@ -1532,7 +1532,47 @@ exit:
     return error;
 }
 
-#endif
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_JOINER_DISCERNER>(void)
+{
+    otError                  error;
+    const otJoinerDiscerner *discerner = otJoinerGetDiscerner(mInstance);
+
+    if (discerner == nullptr)
+    {
+        SuccessOrExit(error = mEncoder.WriteUint8(0));
+    }
+    else
+    {
+        SuccessOrExit(error = mEncoder.WriteUint8(discerner->mLength));
+        SuccessOrExit(error = mEncoder.WriteUint64(discerner->mValue));
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_DISCERNER>(void)
+{
+    otError           error = OT_ERROR_NONE;
+    otJoinerDiscerner discerner;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(discerner.mLength));
+
+    if (discerner.mLength == 0)
+    {
+        // Clearing any previously set Joiner Discerner
+        error = otJoinerSetDiscerner(mInstance, nullptr);
+        ExitNow();
+    }
+
+    SuccessOrExit(error = mDecoder.ReadUint64(discerner.mValue));
+    error = otJoinerSetDiscerner(mInstance, &discerner);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ML_PREFIX>(void)
 {
@@ -2694,7 +2734,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_WHITELIST_ENABLED
         mode = OT_MAC_FILTER_ADDRESS_MODE_WHITELIST;
     }
 
-    error = otLinkFilterSetAddressMode(mInstance, mode);
+    otLinkFilterSetAddressMode(mInstance, mode);
 
 exit:
     return error;
@@ -2715,14 +2755,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_BLACKLIST>(void)
         SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
         SuccessOrExit(error = mDecoder.CloseStruct());
 
-        error = otLinkFilterRemoveAddress(mInstance, extAddress);
-
-        if (error == OT_ERROR_ALREADY)
-        {
-            error = OT_ERROR_NONE;
-        }
-
-        SuccessOrExit(error);
+        otLinkFilterRemoveAddress(mInstance, extAddress);
     }
 
 exit:
@@ -2752,7 +2785,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_BLACKLIST_ENABLED
         mode = OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST;
     }
 
-    error = otLinkFilterSetAddressMode(mInstance, mode);
+    otLinkFilterSetAddressMode(mInstance, mode);
 
 exit:
     return error;
@@ -2763,7 +2796,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_FIXED_RSS>(void)
     otError error = OT_ERROR_NONE;
 
     // First, clear the address filter entries.
-    otLinkFilterClearRssIn(mInstance);
+    otLinkFilterClearAllRssIn(mInstance);
 
     while (mDecoder.GetRemainingLengthInStruct() > 0)
     {
@@ -2785,7 +2818,14 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_FIXED_RSS>(void)
 
         SuccessOrExit(error = mDecoder.CloseStruct());
 
-        SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, extAddress, rss));
+        if (extAddress != nullptr)
+        {
+            SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, extAddress, rss));
+        }
+        else
+        {
+            otLinkFilterSetDefaultRssIn(mInstance, rss);
+        }
     }
 
 exit:
@@ -2936,9 +2976,9 @@ exit:
 
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_WHITELIST>(void)
 {
-    otError             error      = OT_ERROR_NONE;
-    const otExtAddress *extAddress = nullptr;
-    int8_t              rss        = OT_MAC_FILTER_FIXED_RSS_DISABLED;
+    otError             error = OT_ERROR_NONE;
+    const otExtAddress *extAddress;
+    int8_t              rss = OT_MAC_FILTER_FIXED_RSS_DISABLED;
 
     SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
 
@@ -2967,8 +3007,8 @@ exit:
 
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_BLACKLIST>(void)
 {
-    otError             error      = OT_ERROR_NONE;
-    const otExtAddress *extAddress = nullptr;
+    otError             error = OT_ERROR_NONE;
+    const otExtAddress *extAddress;
 
     SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
 
@@ -2996,7 +3036,14 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_FIXED_RSS>(voi
 
     SuccessOrExit(mDecoder.ReadInt8(rss));
 
-    error = otLinkFilterAddRssIn(mInstance, extAddress, rss);
+    if (extAddress != nullptr)
+    {
+        error = otLinkFilterAddRssIn(mInstance, extAddress, rss);
+    }
+    else
+    {
+        otLinkFilterSetDefaultRssIn(mInstance, rss);
+    }
 
 exit:
     return error;
@@ -3032,12 +3079,7 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_WHITELIST>(voi
 
     SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
 
-    error = otLinkFilterRemoveAddress(mInstance, extAddress);
-
-    if (error == OT_ERROR_NOT_FOUND)
-    {
-        error = OT_ERROR_NONE;
-    }
+    otLinkFilterRemoveAddress(mInstance, extAddress);
 
 exit:
     return error;
@@ -3050,12 +3092,7 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_BLACKLIST>(voi
 
     SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
 
-    error = otLinkFilterRemoveAddress(mInstance, extAddress);
-
-    if (error == OT_ERROR_NOT_FOUND)
-    {
-        error = OT_ERROR_NONE;
-    }
+    otLinkFilterRemoveAddress(mInstance, extAddress);
 
 exit:
     return error;
@@ -3071,11 +3108,13 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_FIXED_RSS>(voi
         SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
     }
 
-    error = otLinkFilterRemoveRssIn(mInstance, extAddress);
-
-    if (error == OT_ERROR_NOT_FOUND)
+    if (extAddress != nullptr)
     {
-        error = OT_ERROR_NONE;
+        otLinkFilterRemoveRssIn(mInstance, extAddress);
+    }
+    else
+    {
+        otLinkFilterClearDefaultRssIn(mInstance);
     }
 
 exit:

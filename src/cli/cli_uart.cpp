@@ -51,7 +51,6 @@
 #include "common/logging.hpp"
 #include "common/new.hpp"
 #include "common/tasklet.hpp"
-#include "utils/static_assert.hpp"
 
 #if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
 #include <openthread/platform/debug_uart.h>
@@ -90,14 +89,14 @@
 #endif // OT_CLI_UART_LOCK_HDR_FILE
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE,
-                 "diag output buffer should be smaller than CLI UART tx buffer");
-OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE <= OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
-                 "diag command line should be smaller than CLI UART rx buffer");
+static_assert(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE,
+              "diag output buffer should be smaller than CLI UART tx buffer");
+static_assert(OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE <= OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
+              "diag command line should be smaller than CLI UART rx buffer");
 #endif
 
-OT_STATIC_ASSERT(OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH <= OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
-                 "command line should be should be smaller than CLI rx buffer");
+static_assert(OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH <= OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
+              "command line should be should be smaller than CLI rx buffer");
 
 namespace ot {
 namespace Cli {

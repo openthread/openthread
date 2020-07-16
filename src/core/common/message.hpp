@@ -46,7 +46,9 @@
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/pool.hpp"
 #include "mac/mac_types.hpp"
+#include "thread/child_mask.hpp"
 #include "thread/link_quality.hpp"
 
 namespace ot {
@@ -63,9 +65,8 @@ namespace ot {
 
 enum
 {
-    kNumBuffers     = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS,
-    kBufferSize     = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE,
-    kChildMaskBytes = BitVectorBytes(OPENTHREAD_CONFIG_MLE_MAX_CHILDREN),
+    kNumBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS,
+    kBufferSize = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE,
 };
 
 class Message;
@@ -95,9 +96,9 @@ struct MessageMetadata
     uint16_t    mOffset;      ///< A byte offset within the message.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
 
-    uint8_t  mChildMask[kChildMaskBytes]; ///< A bit-vector to indicate which sleepy children need to receive this.
-    uint16_t mMeshDest;                   ///< Used for unicast non-link-local messages.
-    uint8_t  mTimeout;                    ///< Seconds remaining before dropping the message.
+    ChildMask mChildMask; ///< A ChildMask to indicate which sleepy children need to receive this.
+    uint16_t  mMeshDest;  ///< Used for unicast non-link-local messages.
+    uint8_t   mTimeout;   ///< Seconds remaining before dropping the message.
     union
     {
         uint16_t mPanId;   ///< Used for MLE Discover Request and Response messages.
@@ -1254,9 +1255,8 @@ private:
     otError ReclaimBuffers(int aNumBuffers, Message::Priority aPriority);
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT == 0
-    uint16_t           mNumFreeBuffers;
-    Buffer             mBuffers[kNumBuffers];
-    LinkedList<Buffer> mFreeBuffers;
+    uint16_t                  mNumFreeBuffers;
+    Pool<Buffer, kNumBuffers> mBufferPool;
 #endif
 };
 

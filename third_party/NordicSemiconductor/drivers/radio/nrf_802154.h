@@ -537,7 +537,7 @@ bool nrf_802154_continuous_carrier(void);
  *
  * @param[in]  p_data  Pointer to a buffer with PHR and PSDU of the ACK frame.
  */
-extern void nrf_802154_tx_ack_started(const uint8_t * p_data);
+extern void nrf_802154_tx_ack_started(uint8_t * p_data);
 
 #if NRF_802154_USE_RAW_API
 

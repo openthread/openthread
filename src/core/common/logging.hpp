@@ -288,7 +288,7 @@ extern "C" {
  * @param[in]  ...  Arguments for the format specification.
  *
  */
-#if OPENTHREAD_CONFIG_LOG_MLE == 1
+#if OPENTHREAD_CONFIG_LOG_MESHCOP == 1
 #define otLogCritMeshCoP(...) otLogCrit(OT_LOG_REGION_MESH_COP, _OT_REGION_MESH_COP_PREFIX __VA_ARGS__)
 #define otLogWarnMeshCoP(...) otLogWarn(OT_LOG_REGION_MESH_COP, _OT_REGION_MESH_COP_PREFIX __VA_ARGS__)
 #define otLogNoteMeshCoP(...) otLogNote(OT_LOG_REGION_MESH_COP, _OT_REGION_MESH_COP_PREFIX __VA_ARGS__)
@@ -1156,6 +1156,19 @@ extern "C" {
 #define otLogNotePlat(...)
 #define otLogInfoPlat(...)
 #define otLogDebgPlat(...)
+#endif
+
+/**
+ * @def otLogOtns
+ *
+ * This method generates a log with level none for the Core region,
+ * and is specifically for OTNS visualization use.
+ *
+ * @param[in]  ...       Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+#define otLogOtns(...) _otLogFormatter(OT_LOG_LEVEL_NONE, OT_LOG_REGION_CORE, _OT_LEVEL_NONE_PREFIX __VA_ARGS__, NULL)
 #endif
 
 /**

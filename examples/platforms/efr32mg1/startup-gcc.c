@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,47 +28,28 @@
 
 /**
  * @file
- *   This file includes macros for static assert for C++03.
+ *   This file implements gcc-specific startup code for the efr32.
  */
 
-#ifndef OPENTHREAD_STATIC_ASSERT_HPP_
-#define OPENTHREAD_STATIC_ASSERT_HPP_
+__extension__ typedef int __guard __attribute__((mode(__DI__)));
 
-#ifdef __cplusplus
-
-/**
- * Some compilers such as Keil MDK-ARM does not support __COUNTER__ macro.
- */
-#ifndef __COUNTER__
-#define __COUNTER__ __LINE__
-#endif
-
-namespace ot {
-
-template <int> struct StaticAssertError;
-template <> struct StaticAssertError<true>
+int __cxa_guard_acquire(__guard *g)
 {
-    StaticAssertError(...);
-};
+    return !*(char *)(g);
+}
 
-} // namespace ot
+void __cxa_guard_release(__guard *g)
+{
+    *(char *)g = 1;
+}
 
-#define __OT_STATIC_ASSERT_ERROR(aError, aLine) aError##aLine
-#define _OT_STATIC_ASSERT_ERROR(aLine) __OT_STATIC_ASSERT_ERROR(StaticAssertError, aLine)
+void __cxa_guard_abort(__guard *g)
+{
+    (void)g;
+}
 
-/**
- * This macro does static assert.
- *
- * @param[in]   aExpression An expression to assert.
- * @param[in]   aMessage    A message to describe what is wrong when @p aExpression is false.
- *
- */
-#define OT_STATIC_ASSERT(aExpression, aMessage)                                                             \
-    enum                                                                                                    \
-    {                                                                                                       \
-        _OT_STATIC_ASSERT_ERROR(__COUNTER__) = sizeof(ot::StaticAssertError<(aExpression) != 0>(aMessage)), \
-    }
-
-#endif // __cplusplus
-
-#endif // OPENTHREAD_STATIC_ASSERT_HPP_
+void __cxa_pure_virtual(void)
+{
+    while (1)
+        ;
+}

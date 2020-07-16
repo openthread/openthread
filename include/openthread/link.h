@@ -722,19 +722,11 @@ void otLinkSetMaxFrameRetriesIndirect(otInstance *aInstance, uint8_t aMaxFrameRe
 /**
  * This function gets the address mode of MAC filter.
  *
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @returns  the address mode.
- *
- * @sa otLinkFilterSetAddressMode
- * @sa otLinkFilterAddAddress
- * @sa otLinkFilterRemoveAddress
- * @sa otLinkFilterClearAddresses
- * @sa otLinkFilterGetNextAddress
- * @sa otLinkFilterAddRssIn
- * @sa otLinkFilterRemoveRssIn
- * @sa otLinkFilterClearRssIn
- * @sa otLinkFilterGetNextRssIn
  *
  */
 otMacFilterAddressMode otLinkFilterGetAddressMode(otInstance *aInstance);
@@ -742,45 +734,24 @@ otMacFilterAddressMode otLinkFilterGetAddressMode(otInstance *aInstance);
 /**
  * This function sets the address mode of MAC filter.
  *
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aMode      The address mode to set.
  *
- * @retval OT_ERROR_NONE           Successfully set the address mode.
- * @retval OT_ERROR_INVALID_ARGS   @p aMode is not valid.
- *
- * @sa otLinkFilterGetAddressMode
- * @sa otLinkFilterAddAddress
- * @sa otLinkFilterRemoveAddress
- * @sa otLinkFilterClearAddresses
- * @sa otLinkFilterGetNextAddress
- * @sa otLinkFilterAddRssIn
- * @sa otLinkFilterRemoveRssIn
- * @sa otLinkFilterClearRssIn
- * @sa otLinkFilterGetNextRssIn
- *
  */
-otError otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aMode);
+void otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aMode);
 
 /**
  * This method adds an Extended Address to MAC filter.
  *
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aExtAddress  A reference to the Extended Address.
+ * @param[in]  aExtAddress  A pointer to the Extended Address (MUST NOT be NULL).
  *
  * @retval OT_ERROR_NONE           Successfully added @p aExtAddress to MAC filter.
- * @retval OT_ERROR_ALREADY        If @p aExtAddress was already in MAC filter.
- * @retval OT_ERROR_INVALID_ARGS   If @p aExtAddress is NULL.
  * @retval OT_ERROR_NO_BUFS        No available entry exists.
- *
- * @sa otLinkFilterGetAddressMode
- * @sa otLinkFilterSetAddressMode
- * @sa otLinkFilterRemoveAddress
- * @sa otLinkFilterClearAddresses
- * @sa otLinkFilterGetNextAddress
- * @sa otLinkFilterAddRssIn
- * @sa otLinkFilterRemoveRssIn
- * @sa otLinkFilterClearRssIn
- * @sa otLinkFilterGetNextRssIn
  *
  */
 otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
@@ -788,40 +759,22 @@ otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAd
 /**
  * This method removes an Extended Address from MAC filter.
  *
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ *
+ * No action is performed if there is no existing entry in Filter matching the given Extended Address.
+ *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aExtAddress  A reference to the Extended Address.
- *
- * @retval OT_ERROR_NONE           Successfully removed @p aExtAddress from MAC filter.
- * @retval OT_ERROR_INVALID_ARGS   If @p aExtAddress is NULL.
- * @retval OT_ERROR_NOT_FOUND      @p aExtAddress is not in MAC filter.
- *
- * @sa otLinkFilterGetAddressMode
- * @sa otLinkFilterSetAddressMode
- * @sa otLinkFilterAddAddress
- * @sa otLinkFilterClearAddresses
- * @sa otLinkFilterGetNextAddress
- * @sa otLinkFilterAddRssIn
- * @sa otLinkFilterRemoveRssIn
- * @sa otLinkFilterClearRssIn
- * @sa otLinkFilterGetNextRssIn
+ * @param[in]  aExtAddress  A pointer to the Extended Address (MUST NOT be NULL).
  *
  */
-otError otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
+void otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * This method clears all the Extended Addresses from MAC filter.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
- * @sa otLinkFilterGetAddressMode
- * @sa otLinkFilterSetAddressMode
- * @sa otLinkFilterAddAddress
- * @sa otLinkFilterRemoveAddress
- * @sa otLinkFilterGetNextAddress
- * @sa otLinkFilterAddRssIn
- * @sa otLinkFilterRemoveRssIn
- * @sa otLinkFilterClearRssIn
- * @sa otLinkFilterGetNextRssIn
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  */
 void otLinkFilterClearAddresses(otInstance *aInstance);
@@ -829,119 +782,96 @@ void otLinkFilterClearAddresses(otInstance *aInstance);
 /**
  * This method gets an in-use address filter entry.
  *
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ *
  * @param[in]     aInstance  A pointer to an OpenThread instance.
  * @param[inout]  aIterator  A pointer to the MAC filter iterator context. To get the first in-use address filter entry,
- *                           it should be set to OT_MAC_FILTER_ITERATOR_INIT.
- * @param[out]    aEntry     A pointer to where the information is placed.
+ *                           it should be set to OT_MAC_FILTER_ITERATOR_INIT. MUST NOT be NULL.
+ * @param[out]    aEntry     A pointer to where the information is placed. MUST NOT be NULL.
  *
  * @retval OT_ERROR_NONE          Successfully retrieved an in-use address filter entry.
- * @retval OT_ERROR_INVALID_ARGS  If @p aIterator or @p aEntry is NULL.
  * @retval OT_ERROR_NOT_FOUND     No subsequent entry exists.
- *
- * @sa otLinkFilterGetAddressMode
- * @sa otLinkFilterSetAddressMode
- * @sa otLinkFilterAddAddress
- * @sa otLinkFilterRemoveAddress
- * @sa otLinkFilterClearAddresses
- * @sa otLinkFilterAddRssIn
- * @sa otLinkFilterRemoveRssIn
- * @sa otLinkFilterClearRssIn
- * @sa otLinkFilterGetNextRssIn
  *
  */
 otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
- * This method sets the received signal strength (in dBm) for the messages from the Extended Address.
- * The default received signal strength for all received messages would be set if no Extended Address is specified.
+ * This method adds a fixed received signal strength (in dBm) entry for the messages from a given Extended Address in
+ * MAC Filter.
+ *
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address, or NULL to set the default received signal
- *                          strength.
- * @param[in]  aRss         The received signal strength (in dBm) to set.
+ * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address. MUST NOT be NULL.
+ * @param[in]  aRss         A received signal strength (in dBm).
  *
- * @retval OT_ERROR_NONE           Successfully set @p aRss for @p aExtAddress or set the default @p aRss for all
- *                                 received messages if @p aExtAddress is NULL.
+ * @retval OT_ERROR_NONE           Successfully added an entry for @p aExtAddress and @p aRss.
  * @retval OT_ERROR_NO_BUFS        No available entry exists.
- *
- * @sa otLinkFilterGetAddressMode
- * @sa otLinkFilterSetAddressMode
- * @sa otLinkFilterAddAddress
- * @sa otLinkFilterRemoveAddress
- * @sa otLinkFilterClearAddresses
- * @sa otLinkFilterGetNextAddress
- * @sa otLinkFilterRemoveRssIn
- * @sa otLinkFilterClearRssIn
- * @sa otLinkFilterGetNextRssIn
  *
  */
 otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss);
 
 /**
- * This method removes the received signal strength setting for the received messages from the Extended Address or
- * removes the default received signal strength setting if no Extended Address is specified.
+ * This method removes a MAC Filter entry for fixed received signal strength setting for a given Extended Address.
+ *
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ *
+ * No action is performed if there is no existing entry in Filter matching the given Extended Address.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address, or NULL to reset the default received
- *                          signal strength.
- *
- * @retval OT_ERROR_NONE       Successfully removed received signal strength setting for @p aExtAddress or
- *                             removed the default received signal strength setting if @p aExtAddress is NULL.
- * @retval OT_ERROR_NOT_FOUND  @p aExtAddress is not in MAC filter if it is not NULL.
- *
- * @sa otLinkFilterGetAddressMode
- * @sa otLinkFilterSetAddressMode
- * @sa otLinkFilterAddAddress
- * @sa otLinkFilterRemoveAddress
- * @sa otLinkFilterClearAddresses
- * @sa otLinkFilterGetNextAddress
- * @sa otLinkFilterAddRssIn
- * @sa otLinkFilterClearRssIn
- * @sa otLinkFilterGetNextRssIn
+ * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address. MUST NOT be NULL.
  *
  */
-otError otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddress);
+void otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
- * This method clears all the received signal strength settings.
+ * This method sets the default received signal strength (in dBm) on MAC Filter.
+ *
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ *
+ * The default RSS value is used for all received frames from addresses for which there is no explicit RSS-IN entry
+ * in the Filter list (added using `otLinkFilterAddRssIn()`).
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aRss         The default received signal strength (in dBm) to set.
+ *
+ */
+void otLinkFilterSetDefaultRssIn(otInstance *aInstance, int8_t aRss);
+
+/**
+ * This method clears any previously set default received signal strength (in dBm) on MAC Filter.
+ *
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ *
+ */
+void otLinkFilterClearDefaultRssIn(otInstance *aInstance);
+
+/**
+ * This method clears all the received signal strength entries (including default RSS-in) on MAC Filter.
+ *
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @sa otLinkFilterGetAddressMode
- * @sa otLinkFilterSetAddressMode
- * @sa otLinkFilterAddAddress
- * @sa otLinkFilterRemoveAddress
- * @sa otLinkFilterClearAddresses
- * @sa otLinkFilterGetNextAddress
- * @sa otLinkFilterAddRssIn
- * @sa otLinkFilterRemoveRssIn
- * @sa otLinkFilterGetNextRssIn
- *
  */
-void otLinkFilterClearRssIn(otInstance *aInstance);
+void otLinkFilterClearAllRssIn(otInstance *aInstance);
 
 /**
  * This method gets an in-use RssIn filter entry.
  *
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ *
  * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aIterator  A reference to the MAC filter iterator context. To get the first in-use RssIn Filter entry,
- *                           it should be set to OT_MAC_FILTER_ITERATOR_INIT.
- * @param[out]    aEntry     A reference to where the information is placed. The last entry would have the extended
+ * @param[inout]  aIterator  A pointer to the MAC filter iterator context. MUST NOT be NULL.
+ *                           To get the first entry, it should be set to OT_MAC_FILTER_ITERATOR_INIT.
+ * @param[out]    aEntry     A pointer to where the information is placed. The last entry would have the extended
  *                           address as all 0xff to indicate the default received signal strength if it was set.
+                             @p aEntry MUST NOT be NULL.
  *
- * @retval OT_ERROR_NONE          Successfully retrieved an in-use RssIn Filter entry.
- * @retval OT_ERROR_INVALID_ARGS  If @p aIterator or @p aEntry is NULL.
+ * @retval OT_ERROR_NONE          Successfully retrieved the next entry.
  * @retval OT_ERROR_NOT_FOUND     No subsequent entry exists.
- *
- * @sa otLinkFilterGetAddressMode
- * @sa otLinkFilterSetAddressMode
- * @sa otLinkFilterAddAddress
- * @sa otLinkFilterRemoveAddress
- * @sa otLinkFilterClearAddresses
- * @sa otLinkFilterGetNextAddress
- * @sa otLinkFilterAddRssIn
- * @sa otLinkFilterRemoveRssIn
- * @sa otLinkFilterClearRssIn
  *
  */
 otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);

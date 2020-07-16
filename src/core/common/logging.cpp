@@ -123,7 +123,7 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
         cur += strlen(cur);
     }
 
-    snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "[%s len=%03u]", aId, static_cast<uint16_t>(aLength));
+    snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "[%s len=%03u]", aId, static_cast<unsigned>(aLength));
     cur += strlen(cur);
 
     for (size_t i = 0; i < (width - idlen) / 2 - 4; i++)

@@ -214,7 +214,7 @@ private:
 
     otError SendReply(otIp6Address &aDst, uint8_t *aTransactionId, ClientIdentifier &aClientId, IaNa &aIaNa);
 
-    Ip6::UdpSocket mSocket;
+    Ip6::Udp::Socket mSocket;
 
     PrefixAgent mPrefixAgents[OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES];
     uint8_t     mPrefixAgentsCount;

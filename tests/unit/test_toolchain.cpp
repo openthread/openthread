@@ -34,7 +34,6 @@
 
 #include "test_util.h"
 #include "thread/topology.hpp"
-#include "utils/static_assert.hpp"
 
 extern "C" {
 uint32_t       otNetifAddress_Size_c();
@@ -52,7 +51,7 @@ void test_packed1()
         uint16_t mShort;
     } OT_TOOL_PACKED_END;
 
-    OT_STATIC_ASSERT(sizeof(packed_t) == 7, "packed_t should be packed to 7 bytes");
+    static_assert(sizeof(packed_t) == 7, "packed_t should be packed to 7 bytes");
 
     VerifyOrQuit(sizeof(packed_t) == 7, "Toolchain::OT_TOOL_PACKED failed 1");
 }
@@ -66,7 +65,7 @@ void test_packed2()
         uint8_t mByte;
     } OT_TOOL_PACKED_END;
 
-    OT_STATIC_ASSERT(sizeof(packed_t) == 4, "packed_t should be packed to 4 bytes");
+    static_assert(sizeof(packed_t) == 4, "packed_t should be packed to 4 bytes");
 
     VerifyOrQuit(sizeof(packed_t) == 4, "Toolchain::OT_TOOL_PACKED failed 2");
 }
@@ -89,7 +88,7 @@ void test_packed_union()
         } OT_TOOL_PACKED_FIELD;
     } OT_TOOL_PACKED_END;
 
-    OT_STATIC_ASSERT(sizeof(packed_t) == 5, "packed_t should be packed to 5 bytes");
+    static_assert(sizeof(packed_t) == 5, "packed_t should be packed to 5 bytes");
 
     VerifyOrQuit(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3");
 }

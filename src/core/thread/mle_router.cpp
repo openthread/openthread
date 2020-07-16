@@ -611,9 +611,9 @@ void MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::MessageInf
     case OT_ERROR_NONE:
         if (IsActiveRouter(sourceAddress))
         {
-            Mac::ExtAddress macAddr;
+            Mac::ExtAddress extAddr;
 
-            aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
+            aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
 
             neighbor = mRouterTable.GetRouter(RouterIdFromRloc16(sourceAddress));
             VerifyOrExit(neighbor != nullptr, error = OT_ERROR_PARSE);
@@ -623,7 +623,7 @@ void MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::MessageInf
             {
                 const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
 
-                neighbor->SetExtAddress(macAddr);
+                neighbor->SetExtAddress(extAddr);
                 neighbor->GetLinkInfo().Clear();
                 neighbor->GetLinkInfo().AddRss(linkInfo->mRss);
                 neighbor->ResetLinkFailures();
@@ -632,7 +632,7 @@ void MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::MessageInf
             }
             else
             {
-                VerifyOrExit(neighbor->GetExtAddress() == macAddr, OT_NOOP);
+                VerifyOrExit(neighbor->GetExtAddress() == extAddr, OT_NOOP);
             }
         }
 
@@ -818,7 +818,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     Router *                router;
     Neighbor::State         neighborState;
-    Mac::ExtAddress         macAddr;
+    Mac::ExtAddress         extAddr;
     uint16_t                version;
     Challenge               response;
     uint16_t                sourceAddress;
@@ -972,6 +972,9 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
             VerifyOrExit(route.IsValid(), error = OT_ERROR_PARSE);
             SuccessOrExit(error = ProcessRouteTlv(route));
             UpdateRoutes(route, routerId);
+            // need to update router after ProcessRouteTlv
+            router = mRouterTable.GetRouter(routerId);
+            OT_ASSERT(router != nullptr);
         }
 
         // update routing table
@@ -984,8 +987,8 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     }
 
     // finish link synchronization
-    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
-    router->SetExtAddress(macAddr);
+    aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
+    router->SetExtAddress(extAddr);
     router->SetRloc16(sourceAddress);
     router->SetLinkFrameCounter(linkFrameCounter);
     router->SetMleFrameCounter(mleFrameCounter);
@@ -1171,7 +1174,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     uint8_t linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
-    Mac::ExtAddress macAddr;
+    Mac::ExtAddress extAddr;
     uint16_t        sourceAddress = Mac::kShortAddrInvalid;
     LeaderData      leaderData;
     RouteTlv        route;
@@ -1180,7 +1183,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
     uint8_t         routerId;
     uint8_t         routerCount;
 
-    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
+    aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
 
     // Source Address
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kSourceAddress, sourceAddress));
@@ -1368,7 +1371,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
             if (IsFullThreadDevice() && !router->IsStateValid() && !router->IsStateLinkRequest() &&
                 (mRouterTable.GetActiveLinkCount() < OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS))
             {
-                router->SetExtAddress(macAddr);
+                router->SetExtAddress(extAddr);
                 router->GetLinkInfo().Clear();
                 router->GetLinkInfo().AddRss(linkInfo->mRss);
                 router->ResetLinkFailures();
@@ -1415,7 +1418,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
         if (!router->IsStateValid() && !router->IsStateLinkRequest() && (mChallengeTimeout == 0) &&
             (linkMargin >= OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN))
         {
-            router->SetExtAddress(macAddr);
+            router->SetExtAddress(extAddr);
             router->GetLinkInfo().Clear();
             router->GetLinkInfo().AddRss(linkInfo->mRss);
             router->ResetLinkFailures();
@@ -1598,7 +1601,7 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
 {
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
-    Mac::ExtAddress         macAddr;
+    Mac::ExtAddress         extAddr;
     uint16_t                version;
     uint8_t                 scanMask;
     Challenge               challenge;
@@ -1612,7 +1615,7 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
 
     VerifyOrExit(IsRouterEligible(), error = OT_ERROR_INVALID_STATE);
 
-    // A Router MUST NOT send an MLE Parent Response if:
+    // A Router/REED MUST NOT send an MLE Parent Response if:
 
     // 0. It is detached or attempting to another partition
     VerifyOrExit(!IsDetached() && !IsAttaching(), error = OT_ERROR_DROP);
@@ -1635,7 +1638,11 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
                      (leader->GetCost() + GetLinkCost(leader->GetNextHop()) < kMaxRouteCost),
                  error = OT_ERROR_DROP);
 
-    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
+    // 4. It is a REED and there are already `kMaxRouters` active routers in
+    // the network (because Leader would reject any further address solicit).
+    // ==> Verified below when checking the scan mask.
+
+    aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
 
     // Version
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kVersion, version));
@@ -1652,6 +1659,7 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
 
     case kRoleChild:
         VerifyOrExit(ScanMaskTlv::IsEndDeviceFlagSet(scanMask), OT_NOOP);
+        VerifyOrExit(mRouterTable.GetActiveRouterCount() < kMaxRouters, error = OT_ERROR_DROP);
         break;
 
     case kRoleRouter:
@@ -1663,14 +1671,14 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
     // Challenge
     SuccessOrExit(error = ReadChallenge(aMessage, challenge));
 
-    child = mChildTable.FindChild(macAddr, Child::kInStateAnyExceptInvalid);
+    child = mChildTable.FindChild(extAddr, Child::kInStateAnyExceptInvalid);
 
     if (child == nullptr)
     {
         VerifyOrExit((child = mChildTable.GetNewChild()) != nullptr, OT_NOOP);
 
         // MAC Address
-        child->SetExtAddress(macAddr);
+        child->SetExtAddress(extAddr);
         child->GetLinkInfo().Clear();
         child->GetLinkInfo().AddRss(linkInfo->mRss);
         child->ResetLinkFailures();
@@ -2071,7 +2079,7 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         }
         else
         {
-            address = *entry.GetIp6Address();
+            address = entry.GetIp6Address();
         }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -2152,7 +2160,7 @@ void MleRouter::HandleChildIdRequest(const Message &         aMessage,
 {
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
-    Mac::ExtAddress         macAddr;
+    Mac::ExtAddress         extAddr;
     uint16_t                version;
     Challenge               response;
     uint32_t                linkFrameCounter;
@@ -2176,9 +2184,9 @@ void MleRouter::HandleChildIdRequest(const Message &         aMessage,
     VerifyOrExit(IsAttached(), error = OT_ERROR_INVALID_STATE);
 
     // Find Child
-    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
+    aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
 
-    child = mChildTable.FindChild(macAddr, Child::kInStateAnyExceptInvalid);
+    child = mChildTable.FindChild(extAddr, Child::kInStateAnyExceptInvalid);
     VerifyOrExit(child != nullptr, error = OT_ERROR_ALREADY);
 
     // Version
@@ -2244,7 +2252,7 @@ void MleRouter::HandleChildIdRequest(const Message &         aMessage,
     }
 
     // Remove from router table
-    router = mRouterTable.GetRouter(macAddr);
+    router = mRouterTable.GetRouter(extAddr);
     if (router != nullptr)
     {
         // The `router` here can be invalid
@@ -2328,7 +2336,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     static const uint8_t kMaxResponseTlvs = 10;
 
     otError         error = OT_ERROR_NONE;
-    Mac::ExtAddress macAddr;
+    Mac::ExtAddress extAddr;
     uint8_t         modeBitmask;
     DeviceMode      mode;
     Challenge       challenge;
@@ -2362,8 +2370,8 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     }
 
     // Find Child
-    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
-    child = mChildTable.FindChild(macAddr, Child::kInStateAnyExceptInvalid);
+    aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
+    child = mChildTable.FindChild(extAddr, Child::kInStateAnyExceptInvalid);
 
     tlvs[tlvslength++] = Tlv::kSourceAddress;
 
@@ -3443,15 +3451,15 @@ Neighbor *MleRouter::GetNeighbor(const Mac::Address &aAddress)
 
 Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
 {
-    Mac::Address    macAddr;
     Lowpan::Context context;
     Child *         child;
     Neighbor *      rval = nullptr;
 
     if (aAddress.IsLinkLocal())
     {
-        aAddress.ToExtAddress(macAddr);
+        Mac::Address macAddr;
 
+        aAddress.GetIid().ConvertToMacAddress(macAddr);
         ExitNow(rval = GetNeighbor(macAddr));
     }
 
@@ -3464,8 +3472,8 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
     {
         child = iter.GetChild();
 
-        if ((context.mContextId == kMeshLocalPrefixContextId) && aAddress.IsIidLocator() &&
-            (aAddress.GetLocator() == child->GetRloc16()))
+        if ((context.mContextId == kMeshLocalPrefixContextId) && aAddress.GetIid().IsLocator() &&
+            (aAddress.GetIid().GetLocator() == child->GetRloc16()))
         {
             ExitNow(rval = child);
         }
@@ -3478,9 +3486,9 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
 
     VerifyOrExit(context.mContextId == kMeshLocalPrefixContextId, rval = nullptr);
 
-    if (aAddress.IsIidLocator())
+    if (aAddress.GetIid().IsLocator())
     {
-        rval = mRouterTable.GetNeighbor(aAddress.GetLocator());
+        rval = mRouterTable.GetNeighbor(aAddress.GetIid().GetLocator());
     }
 
 exit:
@@ -3896,7 +3904,7 @@ otError MleRouter::CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header
     if (aMeshDest == Get<Mac::Mac>().GetShortAddress())
     {
         // mesh destination is this device
-        if (Get<ThreadNetif>().IsUnicastAddress(aIp6Header.GetDestination()))
+        if (Get<ThreadNetif>().HasUnicastAddress(aIp6Header.GetDestination()))
         {
             // IPv6 destination is this device
             ExitNow();

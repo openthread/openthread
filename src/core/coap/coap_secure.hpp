@@ -33,6 +33,7 @@
 
 #include "coap/coap.hpp"
 #include "meshcop/dtls.hpp"
+#include "meshcop/meshcop.hpp"
 
 #include <openthread/coap_secure.h>
 
@@ -159,6 +160,14 @@ public:
      *
      */
     otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
+
+    /**
+     * This method sets the PSK.
+     *
+     * @param[in]  aPskd  A Joiner PSKd.
+     *
+     */
+    void SetPsk(const MeshCoP::JoinerPskd &aPskd);
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
@@ -304,7 +313,7 @@ public:
      * @return DTLS session's message info.
      *
      */
-    const Ip6::MessageInfo &GetPeerAddress(void) const { return mDtls.GetPeerAddress(); }
+    const Ip6::MessageInfo &GetMessageInfo(void) const { return mDtls.GetMessageInfo(); }
 
 private:
     static otError Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

@@ -51,7 +51,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y llvm-runtime
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Run
@@ -78,13 +78,13 @@ jobs:
         go-version: '1.13'
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y g++-multilib
         ./bootstrap
     - name: Run OTNS Tests
       run: |
         git clone https://github.com/openthread/ot-ns.git --depth 1 --branch master ~/otns
-        export OTDIR=$PWD
+        export OT_DIR=$PWD
         cd ~/otns
         ./script/test py-unittests py-examples
     - name: Codecov
@@ -103,7 +103,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y g++-multilib
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -130,7 +130,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y g++-multilib
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -157,7 +157,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y g++-multilib
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -172,6 +172,9 @@ jobs:
 
   expects:
     runs-on: ubuntu-18.04
+    env:
+      CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1
+      CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
@@ -179,7 +182,7 @@ jobs:
         OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build
     - name: Run
       run: |
-        VIRTUAL_TIME=0 ./script/test build expect
+        OT_OPTIONS=-DOT_TIME_SYNC=ON VIRTUAL_TIME=0 ./script/test build expect
     - name: Codecov
       uses: codecov/codecov-action@v1
     - name: Run RCP Mode
@@ -189,14 +192,47 @@ jobs:
       uses: codecov/codecov-action@v1
     - name: Run TUN Mode
       run: |
-        sudo apt-get install --no-install-recommends -y dnsmasq bind9-host
-        sudo systemctl start dnsmasq
+        sudo apt-get install --no-install-recommends -y dnsmasq bind9-host ntp
+        sudo systemctl start dnsmasq ntp
         host ipv6.google.com 127.0.0.1
         echo 'listen-address=::1' | sudo tee /etc/dnsmasq.conf
         echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
         sudo systemctl restart dnsmasq
         host ipv6.google.com ::1
         OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
+  external-commissioner:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/*
+        sudo apt-get --no-install-recommends install -y ninja-build
+        git clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch master
+    - name: Build
+      run: |
+        cd /tmp/ot-commissioner
+        script/bootstrap.sh
+        cmake -GNinja                           \
+              -DCMAKE_CXX_STANDARD=11           \
+              -DCMAKE_CXX_STANDARD_REQUIRED=ON  \
+              -DCMAKE_BUILD_TYPE=Release        \
+              -DCMAKE_INSTALL_PREFIX=/usr/local \
+              -S . -B build
+        cmake --build build
+        sudo cmake --install build
+    - name: Run
+      run: |
+        export OT_COMM_OPENTHREAD="$(pwd)"
+        cd /tmp/ot-commissioner/tests/integration
+        ./bootstrap.sh
+        ./run_tests.sh
+    - name: Copy Codecov Files
+      run: |
+        cp -vr /tmp/test-ot-commissioner/ot-br-posix/build/* build/
     - name: Codecov
       uses: codecov/codecov-action@v1
 
@@ -237,7 +273,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         sudo python3 -m pip install git+https://github.com/openthread/pyspinel
@@ -265,7 +301,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Bootstrap
         run: |
-          sudo apt-get update
+          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
           sudo apt-get --no-install-recommends install -y python3-setuptools
           python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
           sudo python3 -m pip install git+https://github.com/openthread/pyspinel

@@ -200,9 +200,8 @@ private:
         Mac::ShortAddress GetRloc16(void) const { return mRloc16; }
         void              SetRloc16(Mac::ShortAddress aRloc16) { mRloc16 = aRloc16; }
 
-        const uint8_t *GetMeshLocalIid(void) const { return mInfo.mCached.mMeshLocalIid; }
-        bool           HasMeshLocalIid(const uint8_t *aIid) const;
-        void           SetMeshLocalIid(const uint8_t *aIid);
+        const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mInfo.mCached.mMeshLocalIid; }
+        void SetMeshLocalIid(const Ip6::InterfaceIdentifier &aIid) { mInfo.mCached.mMeshLocalIid = aIid; }
 
         uint32_t GetLastTransactionTime(void) const { return mInfo.mCached.mLastTransactionTime; }
         void     SetLastTransactionTime(uint32_t aTime) { mInfo.mCached.mLastTransactionTime = aTime; }
@@ -220,6 +219,8 @@ private:
         bool CanEvict(void) const { return mInfo.mOther.mCanEvict; }
         void SetCanEvict(bool aCanEvict) { mInfo.mOther.mCanEvict = aCanEvict; }
 
+        bool Matches(const Ip6::Address &aEid) const { return GetTarget() == aEid; }
+
     private:
         enum
         {
@@ -234,8 +235,8 @@ private:
         {
             struct
             {
-                uint32_t mLastTransactionTime;
-                uint8_t  mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize];
+                uint32_t                 mLastTransactionTime;
+                Ip6::InterfaceIdentifier mMeshLocalIid;
             } mCached;
 
             struct
@@ -248,7 +249,8 @@ private:
         } mInfo;
     };
 
-    typedef LinkedList<CacheEntry> CacheEntryList;
+    typedef Pool<CacheEntry, kCacheEntries> CacheEntryPool;
+    typedef LinkedList<CacheEntry>          CacheEntryList;
 
     enum EntryChange
     {
@@ -269,19 +271,22 @@ private:
         kReasonRemovingEid,
     };
 
+    CacheEntryPool &GetCacheEntryPool(void) { return mCacheEntryPool; }
+
     void        Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId);
     void        Remove(const Ip6::Address &aEid, Reason aReason);
-    CacheEntry *FindCacheEntryInList(CacheEntryList &aList, const Ip6::Address &aEid, CacheEntry *&aPrevEntry);
     CacheEntry *FindCacheEntry(const Ip6::Address &aEid, CacheEntryList *&aList, CacheEntry *&aPrevEntry);
     CacheEntry *NewCacheEntry(bool aSnoopedEntry);
     void        RemoveCacheEntry(CacheEntry &aEntry, CacheEntryList &aList, CacheEntry *aPrevEntry, Reason aReason);
 
     otError SendAddressQuery(const Ip6::Address &aEid);
-    void SendAddressError(const Ip6::Address &aTarget, const uint8_t *aMeshLocalIid, const Ip6::Address *aDestination);
-    void SendAddressQueryResponse(const Ip6::Address &aTarget,
-                                  const uint8_t *     aMeshLocalIid,
-                                  const uint32_t *    aLastTransactionTimeTlv,
-                                  const Ip6::Address &aDestination);
+    void    SendAddressError(const Ip6::Address &            aTarget,
+                             const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                             const Ip6::Address *            aDestination);
+    void    SendAddressQueryResponse(const Ip6::Address &            aTarget,
+                                     const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                     const uint32_t *                aLastTransactionTimeTlv,
+                                     const Ip6::Address &            aDestination);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
@@ -298,7 +303,9 @@ private:
                                   otMessage *          aMessage,
                                   const otMessageInfo *aMessageInfo,
                                   const otIcmp6Header *aIcmpHeader);
-    void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Ip6::IcmpHeader &aIcmpHeader);
+    void        HandleIcmpReceive(Message &                aMessage,
+                                  const Ip6::MessageInfo & aMessageInfo,
+                                  const Ip6::Icmp::Header &aIcmpHeader);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
@@ -316,15 +323,14 @@ private:
     Coap::Resource mAddressQuery;
     Coap::Resource mAddressNotification;
 
-    CacheEntry     mCacheEntries[kCacheEntries];
+    CacheEntryPool mCacheEntryPool;
     CacheEntryList mCachedList;
     CacheEntryList mSnoopedList;
     CacheEntryList mQueryList;
     CacheEntryList mQueryRetryList;
-    CacheEntryList mUnusedList;
 
-    Ip6::IcmpHandler mIcmpHandler;
-    TimerMilli       mTimer;
+    Ip6::Icmp::Handler mIcmpHandler;
+    TimerMilli         mTimer;
 };
 
 /**

@@ -27,7 +27,7 @@
 #
 
 cmake_policy(SET CMP0048 NEW)
-cmake_minimum_required(VERSION 3.11.4)
+cmake_minimum_required(VERSION 3.10.2)
 
 file(READ .default-version OT_DEFAULT_VERSION)
 string(STRIP ${OT_DEFAULT_VERSION} OT_DEFAULT_VERSION)
@@ -60,8 +60,8 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
 
     if(OT_COVERAGE)
         target_compile_definitions(ot-config INTERFACE "OPENTHREAD_ENABLE_COVERAGE=1")
-        add_compile_options(-g -O0 --coverage)
-        add_link_options(--coverage)
+        target_compile_options(ot-config INTERFACE -g -O0 --coverage)
+        target_link_libraries(ot-config INTERFACE --coverage)
     endif()
 
     set(OT_CFLAGS
@@ -102,7 +102,6 @@ endif()
 set(OT_LOG_OUTPUT_VALUES
     "APP"
     "DEBUG_UART"
-    "NCP_SPINEL"
     "NONE"
     "PLATFORM_DEFINED"
 )

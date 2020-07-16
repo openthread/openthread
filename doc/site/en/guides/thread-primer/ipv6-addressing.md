@@ -37,8 +37,8 @@ location in the network topology.
 All devices are assigned a Router ID and a Child ID. Each Router maintains a
 table of all their Children, the combination of which uniquely identifies a
 device within the topology.  For example, consider the highlighted nodes in the
-following topology, where the number on a Router (pentagon) is the Router ID,
-and the number on an End Device (circle) is the Child ID:
+following topology, where the number in a Router (pentagon) is the Router ID,
+and the number in an End Device (circle) is the Child ID:
 
 <figure>
 <a href="../images/ot-primer-rloc-topology_2x.png"><img src="../images/ot-primer-rloc-topology.png" srcset="../images/ot-primer-rloc-topology.png 1x, ../images/ot-primer-rloc-topology_2x.png 2x" border="0" width="600" alt="OT RLOC Topology" /></a>
@@ -215,21 +215,23 @@ Multicast is used to communicate information to multiple devices at once. In a
 Thread network, specific addresses are reserved for multicast use with different
 groups of devices, depending on the scope.
 
-IPv6 Address | Scope | Delivered to
----- | ---- | ----
-`ff02::1` | Link-Local | All FTDs and MEDs
-`ff02::2` | Link-Local | All FTDs
-`ff03::1` | Mesh-Local | All FTDs and MEDs
-`ff03::2` | Mesh-Local | All FTDs
+| IPv6 Address | Scope      | Delivered to      |
+| ------------ | ---------- | ----------------- |
+| `ff02::1`    | Link-Local | All FTDs and MEDs |
+| `ff02::2`    | Link-Local | All FTDs          |
+| `ff03::1`    | Mesh-Local | All FTDs and MEDs |
+| `ff03::2`    | Mesh-Local | All FTDs          |
 
 Key Point: A major difference between FTDs and MTDs are that FTDs subscribe to
 the `ff03::2` multicast address. MTDs do not.
 
 You might notice that Sleepy End Devices (SEDs) are not included as a
-recipient in the multicast table above. There is an additional unicast
-prefix-based multicast address used for All Thread Nodes, including SEDs. This
-multicast address varies by Thread network, because it is built on the
-unicast Mesh-Local prefix.
+recipient in the multicast table above. Instead, Thread defines
+link-local and realm-local scope unicast prefix-based IPv6 multicast
+address used for All Thread Nodes, including SEDs. These multicast
+addresses vary by Thread network, because it is built on the unicast
+Mesh-Local prefix (see [RFC 3306](https://tools.ietf.org/html/rfc3306)
+for more details on unicast-prefix-based IPv6 multicast addresses).
 
 Arbitrary scopes beyond those already listed are also supported for Thread
 devices.
@@ -250,14 +252,14 @@ obtain the RLOC.
 
 Thread defines the following ALOC16 values:
 
-ALOC16 | Type
----- | ----
-`0xfc00` | Leader
-`0xfc01` – `0xfc0f` | DHCPv6 Agent
-`0xfc10` – `0xfc2f` | Service
-`0xfc30` – `0xfc37` | Commissioner
-`0xfc40` – `0xfc4e` | Neighbor Discovery Agent
-`0xfc38` – `0xfc3f`<br>`0xfc4f` – `0xfcff` | Reserved
+| ALOC16                                     | Type                     |
+| ------------------------------------------ | ------------------------ |
+| `0xfc00`                                   | Leader                   |
+| `0xfc01` – `0xfc0f`                        | DHCPv6 Agent             |
+| `0xfc10` – `0xfc2f`                        | Service                  |
+| `0xfc30` – `0xfc37`                        | Commissioner             |
+| `0xfc40` – `0xfc4e`                        | Neighbor Discovery Agent |
+| `0xfc38` – `0xfc3f`<br>`0xfc4f` – `0xfcff` | Reserved                 |
 
 ## Recap
 

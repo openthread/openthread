@@ -77,6 +77,7 @@ enum
 enum
 {
     EFR32_RECEIVE_SENSITIVITY    = -100, // dBm
+    EFR32_RSSI_AVERAGING_TIME    = 16,   // us
     EFR32_RSSI_AVERAGING_TIMEOUT = 300,  // us
 };
 
@@ -657,19 +658,29 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
-    int8_t rssi = OT_RADIO_RSSI_INVALID;
+    otError  error;
+    uint32_t start;
+    int8_t   rssi = OT_RADIO_RSSI_INVALID;
+
     OT_UNUSED_VARIABLE(aInstance);
 
-    if ((RAIL_GetRadioState(gRailHandle) & RAIL_RF_STATE_RX))
+    error = efr32StartEnergyScan(ENERGY_SCAN_MODE_SYNC, sReceiveFrame.mChannel, EFR32_RSSI_AVERAGING_TIME);
+    otEXPECT(error == OT_ERROR_NONE);
+
+    start = RAIL_GetTime();
+
+    // waiting for the event RAIL_EVENT_RSSI_AVERAGE_DONE
+    while (sEnergyScanStatus == ENERGY_SCAN_STATUS_IN_PROGRESS &&
+           ((RAIL_GetTime() - start) < EFR32_RSSI_AVERAGING_TIMEOUT))
+        ;
+
+    if (sEnergyScanStatus == ENERGY_SCAN_STATUS_COMPLETED)
     {
-        int16_t railRssi = RAIL_RSSI_INVALID;
-        railRssi         = RAIL_GetRssi(gRailHandle, true);
-        if (railRssi != RAIL_RSSI_INVALID)
-        {
-            rssi = railRssi / QUARTER_DBM_IN_DBM;
-        }
+        rssi = sEnergyScanResultDbm;
     }
 
+    sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
+exit:
     return rssi;
 }
 
@@ -838,7 +849,7 @@ static void processNextRxPacket(otInstance *aInstance)
     }
     else
     {
-        // signal MAC layer for each received frame if promiscous is enabled
+        // signal MAC layer for each received frame if promiscuous is enabled
         // otherwise only signal MAC layer for non-ACK frame
         otEXPECT(sPromiscuous || (length != IEEE802154_ACK_LENGTH));
 
@@ -1059,6 +1070,10 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 
 void efr32RadioProcess(otInstance *aInstance)
 {
+    // We should process the received packet first. Adding it at the end of this function,
+    // will delay the stack notification until the next call to efr32RadioProcess()
+    processNextRxPacket(aInstance);
+
     if (sState == OT_RADIO_STATE_TRANSMIT && sTransmitBusy == false)
     {
         if (sTransmitError != OT_ERROR_NONE)
@@ -1099,8 +1114,6 @@ void efr32RadioProcess(otInstance *aInstance)
         sRailDebugCounters.mRailEventEnergyScanCompleted++;
 #endif
     }
-
-    processNextRxPacket(aInstance);
 }
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)

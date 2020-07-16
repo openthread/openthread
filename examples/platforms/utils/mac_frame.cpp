@@ -159,3 +159,46 @@ void otMacFrameSetCslIe(otRadioFrame *aFrame, uint16_t aCslPeriod, uint16_t aCsl
     static_cast<Mac::Frame *>(aFrame)->SetCslIe(aCslPeriod, aCslPhase);
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+bool otMacFrameIsSecurityEnabled(otRadioFrame *aFrame)
+{
+    return static_cast<const Mac::Frame *>(aFrame)->GetSecurityEnabled();
+}
+
+bool otMacFrameIsKeyIdMode1(otRadioFrame *aFrame)
+{
+    uint8_t keyIdMode;
+    otError error;
+
+    error = static_cast<const Mac::Frame *>(aFrame)->GetKeyIdMode(keyIdMode);
+
+    return (error == OT_ERROR_NONE) ? (keyIdMode == Mac::Frame::kKeyIdMode1) : false;
+}
+
+uint8_t otMacFrameGetKeyId(otRadioFrame *aFrame)
+{
+    uint8_t keyId = 0;
+
+    IgnoreError(static_cast<const Mac::Frame *>(aFrame)->GetKeyId(keyId));
+
+    return keyId;
+}
+
+void otMacFrameSetKeyId(otRadioFrame *aFrame, uint8_t aKeyId)
+{
+    static_cast<Mac::Frame *>(aFrame)->SetKeyId(aKeyId);
+}
+
+uint32_t otMacFrameGetFrameCounter(otRadioFrame *aFrame)
+{
+    uint32_t frameCounter = UINT32_MAX;
+
+    IgnoreError(static_cast<Mac::Frame *>(aFrame)->GetFrameCounter(frameCounter));
+
+    return frameCounter;
+}
+
+void otMacFrameSetFrameCounter(otRadioFrame *aFrame, uint32_t aFrameCounter)
+{
+    static_cast<Mac::Frame *>(aFrame)->SetFrameCounter(aFrameCounter);
+}

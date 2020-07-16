@@ -41,7 +41,6 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_frame.hpp"
-#include "utils/static_assert.hpp"
 
 namespace ot {
 
@@ -91,9 +90,9 @@ public:
 #endif
     };
 
-    OT_STATIC_ASSERT((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT),
-                     "OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT or OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT "
-                     "must be set to 1 to specify the radio mode");
+    static_assert((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT),
+                  "OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT or OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT "
+                  "must be set to 1 to specify the radio mode");
 
     /**
      * This class defines the callbacks from `Radio`.
@@ -429,7 +428,7 @@ public:
      * @retval OT_ERROR_INVALID_STATE The radio was not in the Receive state.
      *
      */
-    otError Transmit(Mac::TxFrame &aFrame) { return otPlatRadioTransmit(GetInstance(), &aFrame); }
+    otError Transmit(Mac::TxFrame &aFrame);
 
     /**
      * This method gets the most recent RSSI measurement.

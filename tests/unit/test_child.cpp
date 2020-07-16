@@ -114,7 +114,10 @@ void TestChildIp6Address(void)
         "fd00:1234::204c:3d7c:98f6:9a1b",
     };
 
-    const uint8_t meshLocalIid[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    const uint8_t            meshLocalIidArray[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    Ip6::InterfaceIdentifier meshLocalIid;
+
+    meshLocalIid.SetBytes(meshLocalIidArray);
 
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != nullptr, "Null instance");

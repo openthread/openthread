@@ -169,7 +169,7 @@ static void SendErrorMessage(Coap::CoapSecure &aCoapSecure, ForwardContext &aFor
 
     VerifyOrExit((message = NewMeshCoPMessage(aCoapSecure)) != nullptr, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = aForwardContext.ToHeader(*message, CoapCodeFromError(aError)));
-    SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetPeerAddress()));
+    SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetMessageInfo()));
 
 exit:
     if (error != OT_ERROR_NONE)
@@ -209,7 +209,7 @@ static void SendErrorMessage(Coap::CoapSecure &   aCoapSecure,
 
     SuccessOrExit(error = message->SetToken(aRequest.GetToken(), aRequest.GetTokenLength()));
 
-    SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetPeerAddress()));
+    SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetMessageInfo()));
 
 exit:
     if (error != OT_ERROR_NONE)
@@ -463,7 +463,7 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
     SuccessOrExit(error =
                       Tlv::AppendTlv(*message, Tlv::kIPv6Address, &aMessageInfo.GetPeerAddr(), sizeof(Ip6::Address)));
 
-    SuccessOrExit(error = Get<Coap::CoapSecure>().SendMessage(*message, Get<Coap::CoapSecure>().GetPeerAddress()));
+    SuccessOrExit(error = Get<Coap::CoapSecure>().SendMessage(*message, Get<Coap::CoapSecure>().GetMessageInfo()));
 
     otLogInfoMeshCoP("Sent to commissioner on %s", OT_URI_PATH_PROXY_RX);
 
@@ -513,7 +513,7 @@ otError BorderAgent::ForwardToCommissioner(Coap::Message &aForwardMessage, const
     aMessage.CopyTo(aMessage.GetOffset(), offset, aMessage.GetLength() - aMessage.GetOffset(), aForwardMessage);
 
     SuccessOrExit(error =
-                      Get<Coap::CoapSecure>().SendMessage(aForwardMessage, Get<Coap::CoapSecure>().GetPeerAddress()));
+                      Get<Coap::CoapSecure>().SendMessage(aForwardMessage, Get<Coap::CoapSecure>().GetMessageInfo()));
 
     otLogInfoMeshCoP("Sent to commissioner");
 
@@ -563,7 +563,7 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.GetPeerAddr().SetLocator(joinerRouterRloc);
+    messageInfo.GetPeerAddr().GetIid().SetLocator(joinerRouterRloc);
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
 
