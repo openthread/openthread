@@ -386,7 +386,7 @@ extern "C" {
  */
 
 /**
- * @def otLogInfoArp
+ * @def otLogNoteArp
  *
  * This method generates a log with level note for the EID-to-RLOC mapping region.
  *
@@ -444,7 +444,7 @@ extern "C" {
  */
 
 /**
- * @def otLogInfoBbr
+ * @def otLogNoteBbr
  *
  * This method generates a log with level note for the Backbone Router (BBR) region.
  *
@@ -502,7 +502,7 @@ extern "C" {
  */
 
 /**
- * @def otLogInfoNetData
+ * @def otLogNoteNetData
  *
  * This method generates a log with level note for the Network Data region.
  *
@@ -1002,7 +1002,7 @@ extern "C" {
  */
 
 /**
- * @def otLogInfoCli
+ * @def otLogNoteCli
  *
  * This method generates a log with level note for the CLI region.
  *
