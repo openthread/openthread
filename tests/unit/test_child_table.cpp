@@ -144,97 +144,85 @@ void VerifyChildTableContent(ChildTable &aTable, uint16_t aChildListLength, cons
             VerifyOrQuit(ChildMatches(*child, aChildList[listIndex]), "FindChild(address) returned incorrect child");
         }
 
-        // Verify `ChildTable::Iterator` behavior when starting from different child entries.
+        // Verify `ChildTable::Iterator` behavior.
 
-        for (uint16_t listIndex = 0; listIndex <= aChildListLength; listIndex++)
         {
-            Child *startingChild = nullptr;
+            ChildTable::Iterator iter(*sInstance, filter);
+            bool                 childObserved[kMaxChildren];
+            uint16_t             numChildren = 0;
 
-            if (listIndex < aChildListLength)
+            memset(childObserved, 0, sizeof(childObserved));
+
+            // Use the iterator and verify that each returned `Child` entry is in the expected list.
+
+            for (; !iter.IsDone(); iter++)
             {
-                startingChild = aTable.FindChild(aChildList[listIndex].mRloc16, Child::kInStateAnyExceptInvalid);
-                VerifyOrQuit(startingChild != nullptr, "FindChild() failed");
-            }
+                Child *  child    = iter.GetChild();
+                Child &  childRef = *iter;
+                bool     didFind  = false;
+                uint16_t childIndex;
 
-            // Test an iterator starting from `startingChild`.
+                VerifyOrQuit(child != nullptr, "iter.GetChild() failed");
+                VerifyOrQuit(&childRef == child, "iter.operator*() failed");
+                VerifyOrQuit(iter->GetRloc16() == child->GetRloc16(), "iter.operator->() failed");
 
-            {
-                ChildTable::Iterator iter(*sInstance, filter, startingChild);
-                bool                 childObserved[kMaxChildren];
-                uint16_t             numChildren = 0;
-
-                memset(childObserved, 0, sizeof(childObserved));
-
-                // Check if the first entry matches the `startingChild`
-
-                if ((startingChild != nullptr) && StateMatchesFilter(startingChild->GetState(), filter))
-                {
-                    VerifyOrQuit(!iter.IsDone(), "iterator IsDone() failed");
-                    VerifyOrQuit(iter.GetChild() != nullptr, "iterator GetChild() failed");
-                    VerifyOrQuit(iter.GetChild() == startingChild,
-                                 "Iterator failed to start from the given child entry");
-
-                    iter++;
-                    iter.Reset();
-                    VerifyOrQuit(iter.GetChild() == startingChild, "iterator Reset() failed");
-                }
-
-                // Use the iterator and verify that each returned `Child` entry is in the expected list.
-
-                for (; !iter.IsDone(); iter++)
-                {
-                    Child *  child   = iter.GetChild();
-                    bool     didFind = false;
-                    uint16_t childIndex;
-
-                    VerifyOrQuit(child != nullptr, "iter.GetChild() failed");
-
-                    childIndex = aTable.GetChildIndex(*child);
-                    VerifyOrQuit(childIndex < aTable.GetMaxChildrenAllowed(), "Child Index is out of bound");
-                    VerifyOrQuit(aTable.GetChildAtIndex(childIndex) == child, "GetChildAtIndex() failed");
-
-                    for (uint16_t index = 0; index < aChildListLength; index++)
-                    {
-                        if (ChildMatches(*iter.GetChild(), aChildList[index]))
-                        {
-                            childObserved[index] = true;
-                            numChildren++;
-                            didFind = true;
-                            break;
-                        }
-                    }
-
-                    VerifyOrQuit(didFind, "ChildTable::Iterator returned an entry not in the expected list");
-                }
-
-                // Verify that when iterator is done, it points to `nullptr`.
-
-                VerifyOrQuit(iter.GetChild() == nullptr, "iterator GetChild() failed");
-
-                iter++;
-                VerifyOrQuit(iter.IsDone(), "iterator Advance() (after iterator is done) failed");
-                VerifyOrQuit(iter.GetChild() == nullptr, "iterator GetChild() failed");
-
-                // Verify that the number of children matches the number of entries we get from iterator.
-
-                VerifyOrQuit(aTable.GetNumChildren(filter) == numChildren, "GetNumChildren() failed");
-                VerifyOrQuit(aTable.HasChildren(filter) == (numChildren != 0), "HasChildren() failed");
-
-                // Verify that there is no missing or extra entry between the expected list
-                // and what was observed/returned by the iterator.
+                childIndex = aTable.GetChildIndex(*child);
+                VerifyOrQuit(childIndex < aTable.GetMaxChildrenAllowed(), "Child Index is out of bound");
+                VerifyOrQuit(aTable.GetChildAtIndex(childIndex) == child, "GetChildAtIndex() failed");
 
                 for (uint16_t index = 0; index < aChildListLength; index++)
                 {
-                    if (StateMatchesFilter(aChildList[index].mState, filter))
+                    if (ChildMatches(*iter.GetChild(), aChildList[index]))
                     {
-                        VerifyOrQuit(childObserved[index], "iterator failed to return an expected entry");
-                    }
-                    else
-                    {
-                        VerifyOrQuit(!childObserved[index], "iterator returned an extra unexpected entry");
+                        childObserved[index] = true;
+                        numChildren++;
+                        didFind = true;
+                        break;
                     }
                 }
+
+                VerifyOrQuit(didFind, "ChildTable::Iterator returned an entry not in the expected list");
             }
+
+            // Verify that when iterator is done, it points to `nullptr`.
+
+            VerifyOrQuit(iter.GetChild() == nullptr, "iterator GetChild() failed");
+
+            iter++;
+            VerifyOrQuit(iter.IsDone(), "iterator Advance() (after iterator is done) failed");
+            VerifyOrQuit(iter.GetChild() == nullptr, "iterator GetChild() failed");
+
+            // Verify that the number of children matches the number of entries we get from iterator.
+
+            VerifyOrQuit(aTable.GetNumChildren(filter) == numChildren, "GetNumChildren() failed");
+            VerifyOrQuit(aTable.HasChildren(filter) == (numChildren != 0), "HasChildren() failed");
+
+            // Verify that there is no missing or extra entry between the expected list
+            // and what was observed/returned by the iterator.
+
+            for (uint16_t index = 0; index < aChildListLength; index++)
+            {
+                if (StateMatchesFilter(aChildList[index].mState, filter))
+                {
+                    VerifyOrQuit(childObserved[index], "iterator failed to return an expected entry");
+                }
+                else
+                {
+                    VerifyOrQuit(!childObserved[index], "iterator returned an extra unexpected entry");
+                }
+            }
+
+            // Verify the behavior of range-based `for` iteration.
+
+            iter.Reset();
+
+            for (Child &child : aTable.Iterate(filter))
+            {
+                VerifyOrQuit(&child == iter.GetChild(), "range-based for loop Iterate() failed");
+                iter++;
+            }
+
+            VerifyOrQuit(iter.IsDone(), "range-based for loop Iterate() did not return all entries");
         }
     }
 

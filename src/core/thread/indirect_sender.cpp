@@ -72,10 +72,10 @@ void IndirectSender::Stop(void)
 {
     VerifyOrExit(mEnabled, OT_NOOP);
 
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
-        iter.GetChild()->SetIndirectMessage(nullptr);
-        mSourceMatchController.ResetMessageCount(*iter.GetChild());
+        child.SetIndirectMessage(nullptr);
+        mSourceMatchController.ResetMessageCount(child);
     }
 
     mDataPollHandler.Clear();
@@ -556,14 +556,14 @@ exit:
 
 void IndirectSender::ClearMessagesForRemovedChildren(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptValidOrRestoring); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptValidOrRestoring))
     {
-        if (iter.GetChild()->GetIndirectMessageCount() == 0)
+        if (child.GetIndirectMessageCount() == 0)
         {
             continue;
         }
 
-        ClearAllMessagesForSleepyChild(*iter.GetChild());
+        ClearAllMessagesForSleepyChild(child);
     }
 }
 

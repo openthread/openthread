@@ -79,9 +79,8 @@ DataPollHandler::DataPollHandler(Instance &aInstance)
 
 void DataPollHandler::Clear(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
-        Child &child = *iter.GetChild();
         child.SetDataPollPending(false);
         child.SetFrameReplacePending(false);
         child.SetFramePurgePending(false);
@@ -289,20 +288,18 @@ exit:
 
 void DataPollHandler::ProcessPendingPolls(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
     {
-        Child *child = iter.GetChild();
-
-        if (!child->IsDataPollPending())
+        if (!child.IsDataPollPending())
         {
             continue;
         }
 
         // Find the child with earliest poll receive time.
 
-        if ((mIndirectTxChild == nullptr) || (child->GetLastHeard() < mIndirectTxChild->GetLastHeard()))
+        if ((mIndirectTxChild == nullptr) || (child.GetLastHeard() < mIndirectTxChild->GetLastHeard()))
         {
-            mIndirectTxChild = child;
+            mIndirectTxChild = &child;
         }
     }
 
