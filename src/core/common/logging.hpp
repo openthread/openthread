@@ -90,6 +90,7 @@ extern "C" {
 #define _OT_REGION_CORE_PREFIX "-CORE----: "
 #define _OT_REGION_UTIL_PREFIX "-UTIL----: "
 #define _OT_REGION_BBR_PREFIX "-BBR-----: "
+#define _OT_REGION_MLR_PREFIX "-MLR-----: "
 #else
 #define _OT_REGION_API_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLE_PREFIX _OT_REGION_SUFFIX
@@ -108,6 +109,7 @@ extern "C" {
 #define _OT_REGION_CORE_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_UTIL_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_BBR_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_MLR_PREFIX _OT_REGION_SUFFIX
 #endif
 
 /**
@@ -481,6 +483,64 @@ extern "C" {
 #define otLogNoteBbr(...)
 #define otLogInfoBbr(...)
 #define otLogDebgBbr(...)
+#endif
+
+/**
+ * @def otLogCritMlr
+ *
+ * This method generates a log with level critical for the Multicast Listener Registration (MLR) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnMlr
+ *
+ * This method generates a log with level warning for the Multicast Listener Registration (MLR) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoMlr
+ *
+ * This method generates a log with level note for the Multicast Listener Registration (MLR) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoMlr
+ *
+ * This method generates a log with level info for the Multicast Listener Registration (MLR) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgMlr
+ *
+ * This method generates a log with level debug for the Multicast Listener Registration (MLR) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_MLR == 1
+#define otLogCritMlr(...) otLogCrit(OT_LOG_REGION_MLR, _OT_REGION_MLR_PREFIX __VA_ARGS__)
+#define otLogWarnMlr(...) otLogWarn(OT_LOG_REGION_MLR, _OT_REGION_MLR_PREFIX __VA_ARGS__)
+#define otLogNoteMlr(...) otLogNote(OT_LOG_REGION_MLR, _OT_REGION_MLR_PREFIX __VA_ARGS__)
+#define otLogInfoMlr(...) otLogInfo(OT_LOG_REGION_MLR, _OT_REGION_MLR_PREFIX __VA_ARGS__)
+#define otLogDebgMlr(...) otLogDebg(OT_LOG_REGION_MLR, _OT_REGION_MLR_PREFIX __VA_ARGS__)
+#else
+#define otLogCritMlr(...)
+#define otLogWarnMlr(...)
+#define otLogNoteMlr(...)
+#define otLogInfoMlr(...)
+#define otLogDebgMlr(...)
 #endif
 
 /**
@@ -1521,6 +1581,74 @@ extern "C" {
 #define otDumpNoteBbr(aId, aBuf, aLength)
 #define otDumpInfoBbr(aId, aBuf, aLength)
 #define otDumpDebgBbr(aId, aBuf, aLength)
+#endif
+
+/**
+ * @def otDumpCritMlr
+ *
+ * This method generates a memory dump with log level critical and region Multicast Listener Registration (MLR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpWarnMlr
+ *
+ * This method generates a memory dump with log level warning and region Multicast Listener Registration (MLR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpNoteMlr
+ *
+ * This method generates a memory dump with log level note and region Multicast Listener Registration (MLR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpInfoMlr
+ *
+ * This method generates a memory dump with log level info and region Multicast Listener Registration (MLR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpDebgMlr
+ *
+ * This method generates a memory dump with log level debug and region Multicast Listener Registration (MLR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_MLR == 1
+#define otDumpCritMlr(aId, aBuf, aLength) otDumpCrit(OT_LOG_REGION_MLR, aId, aBuf, aLength)
+#define otDumpWarnMlr(aId, aBuf, aLength) otDumpWarn(OT_LOG_REGION_MLR, aId, aBuf, aLength)
+#define otDumpNoteMlr(aId, aBuf, aLength) otDumpNote(OT_LOG_REGION_MLR, aId, aBuf, aLength)
+#define otDumpInfoMlr(aId, aBuf, aLength) otDumpInfo(OT_LOG_REGION_MLR, aId, aBuf, aLength)
+#define otDumpDebgMlr(aId, aBuf, aLength) otDumpDebg(OT_LOG_REGION_MLR, aId, aBuf, aLength)
+#else
+#define otDumpCritMlr(aId, aBuf, aLength)
+#define otDumpWarnMlr(aId, aBuf, aLength)
+#define otDumpNoteMlr(aId, aBuf, aLength)
+#define otDumpInfoMlr(aId, aBuf, aLength)
+#define otDumpDebgMlr(aId, aBuf, aLength)
 #endif
 
 /**
