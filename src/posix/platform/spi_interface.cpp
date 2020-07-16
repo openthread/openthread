@@ -91,7 +91,7 @@ SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
 {
 }
 
-otError SpiInterface::Init(Arguments &aArguments)
+otError SpiInterface::Init(const RadioUrl &aRadioUrl)
 {
     const char *spiGpioIntDevice;
     const char *spiGpioResetDevice;
@@ -105,14 +105,14 @@ otError SpiInterface::Init(Arguments &aArguments)
     uint8_t     spiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
     const char *value;
 
-    spiGpioIntDevice   = aArguments.GetValue("gpio-int-device");
-    spiGpioResetDevice = aArguments.GetValue("gpio-reset-device");
+    spiGpioIntDevice   = aRadioUrl.GetValue("gpio-int-device");
+    spiGpioResetDevice = aRadioUrl.GetValue("gpio-reset-device");
     if (!spiGpioIntDevice || !spiGpioResetDevice)
     {
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
 
-    if ((value = aArguments.GetValue("gpio-int-line")))
+    if ((value = aRadioUrl.GetValue("gpio-int-line")))
     {
         spiGpioIntLine = static_cast<uint8_t>(atoi(value));
     }
@@ -120,7 +120,7 @@ otError SpiInterface::Init(Arguments &aArguments)
     {
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
-    if ((value = aArguments.GetValue("gpio-reset-line")))
+    if ((value = aRadioUrl.GetValue("gpio-reset-line")))
     {
         spiGpioResetLine = static_cast<uint8_t>(atoi(value));
     }
@@ -128,27 +128,27 @@ otError SpiInterface::Init(Arguments &aArguments)
     {
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
-    if ((value = aArguments.GetValue("spi-mode")))
+    if ((value = aRadioUrl.GetValue("spi-mode")))
     {
         spiMode = static_cast<uint8_t>(atoi(value));
     }
-    if ((value = aArguments.GetValue("spi-speed")))
+    if ((value = aRadioUrl.GetValue("spi-speed")))
     {
         spiSpeed = static_cast<uint32_t>(atoi(value));
     }
-    if ((value = aArguments.GetValue("spi-reset-delay")))
+    if ((value = aRadioUrl.GetValue("spi-reset-delay")))
     {
         spiResetDelay = static_cast<uint32_t>(atoi(value));
     }
-    if ((value = aArguments.GetValue("spi-cs-delay")))
+    if ((value = aRadioUrl.GetValue("spi-cs-delay")))
     {
         spiCsDelay = static_cast<uint16_t>(atoi(value));
     }
-    if ((value = aArguments.GetValue("spi-align-allowance")))
+    if ((value = aRadioUrl.GetValue("spi-align-allowance")))
     {
         spiAlignAllowance = static_cast<uint8_t>(atoi(value));
     }
-    if ((value = aArguments.GetValue("spi-small-packet")))
+    if ((value = aRadioUrl.GetValue("spi-small-packet")))
     {
         spiSmallPacketSize = static_cast<uint8_t>(atoi(value));
     }
@@ -170,7 +170,7 @@ otError SpiInterface::Init(Arguments &aArguments)
     }
 
     InitResetPin(spiGpioResetDevice, spiGpioResetLine);
-    InitSpiDev(aArguments.GetPath(), spiMode, spiSpeed);
+    InitSpiDev(aRadioUrl.GetPath(), spiMode, spiSpeed);
 
     // Reset RCP chip.
     TrigerReset();

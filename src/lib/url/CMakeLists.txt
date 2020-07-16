@@ -26,13 +26,15 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+add_library(openthread-url
+    url.cpp
+)
 
-SUBDIRS                                 = \
-    hdlc                                  \
-    platform                              \
-    spinel                                \
-    url                                   \
-    $(NULL)
+set_target_properties(
+    openthread-url
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)
 
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+target_link_libraries(openthread-url PRIVATE ot-config)

@@ -34,8 +34,6 @@
 #ifndef CODE_UTILS_HPP_
 #define CODE_UTILS_HPP_
 
-#include "openthread-core-config.h"
-
 #include <stdbool.h>
 
 #include <openthread/error.h>

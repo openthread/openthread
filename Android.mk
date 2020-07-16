@@ -277,6 +277,7 @@ LOCAL_SRC_FILES                                          := \
     src/lib/spinel/spinel.c                                 \
     src/lib/spinel/spinel_decoder.cpp                       \
     src/lib/spinel/spinel_encoder.cpp                       \
+    src/lib/url/url.cpp                                     \
     src/posix/platform/alarm.cpp                            \
     src/posix/platform/entropy.cpp                          \
     src/posix/platform/hdlc_interface.cpp                   \

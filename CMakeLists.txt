@@ -40,7 +40,11 @@ set(OT_EXTERNAL_MBEDTLS "" CACHE STRING "Specify external mbedtls library")
 
 add_library(ot-config INTERFACE)
 
-target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/src/core)
+target_include_directories(ot-config INTERFACE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/src/core
+)
 
 include(TestBigEndian)
 TEST_BIG_ENDIAN(OT_BIG_ENDIAN)

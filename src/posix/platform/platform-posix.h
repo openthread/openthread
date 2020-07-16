@@ -166,7 +166,7 @@ void platformAlarmAdvanceNow(uint64_t aDelta);
  * @param[in]  aPlatformConfig  Platform configuration structure.
  *
  */
-void platformRadioInit(otPosixRadioArguments *aArguments);
+void platformRadioInit(otUrl *aRadioUrl);
 
 /**
  * This function shuts down the radio service used by OpenThread.

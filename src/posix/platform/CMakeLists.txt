@@ -87,6 +87,7 @@ target_link_libraries(openthread-posix
     PUBLIC
         openthread-platform
     PRIVATE
+        openthread-url
         ot-config
         util
         $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:rt>
