@@ -39,9 +39,19 @@
 namespace ot {
 namespace Posix {
 
+/**
+ * This class implements the radio URL processing.
+ *
+ */
 class RadioUrl : public ot::Url::Url
 {
 public:
+    /**
+     * This constructor initializes the object.
+     *
+     * @param[in]   aUrl    The null-terminated URL string.
+     *
+     */
     RadioUrl(const char *aUrl);
 
 private:
