@@ -52,19 +52,19 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mCoap(aInstance)
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     , mDhcp6Client(aInstance)
-#endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+#endif
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
     , mDhcp6Server(aInstance)
-#endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+#endif
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
     , mSlaac(aInstance)
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    , mDnsClient(Get<ThreadNetif>())
-#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+    , mDnsClient(aInstance)
+#endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
-    , mSntpClient(Get<ThreadNetif>())
-#endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+    , mSntpClient(aInstance)
+#endif
     , mActiveDataset(aInstance)
     , mPendingDataset(aInstance)
     , mKeyManager(aInstance)
@@ -89,21 +89,21 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #endif
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     , mCommissioner(aInstance)
-#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+#endif
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
     , mCoapSecure(aInstance)
 #endif
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
     , mJoiner(aInstance)
-#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
+#endif
 #if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
     , mJamDetector(aInstance)
-#endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
+#endif
 #if OPENTHREAD_FTD
     , mJoinerRouter(aInstance)
     , mLeader(aInstance)
     , mAddressResolver(aInstance)
-#endif // OPENTHREAD_FTD
+#endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     , mBackboneRouterLeader(aInstance)
 #endif

@@ -72,10 +72,10 @@ QueryMetadata::QueryMetadata(otDnsResponseHandler aHandler, void *aContext)
     mDestinationAddress.Clear();
 }
 
-Client::Client(Ip6::Netif &aNetif)
-    : mSocket(aNetif.GetInstance())
+Client::Client(Instance &aInstance)
+    : mSocket(aInstance)
     , mMessageId(0)
-    , mRetransmissionTimer(aNetif.GetInstance(), Client::HandleRetransmissionTimer, this)
+    , mRetransmissionTimer(aInstance, Client::HandleRetransmissionTimer, this)
 {
 }
 
