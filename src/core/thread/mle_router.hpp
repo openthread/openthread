@@ -419,7 +419,7 @@ public:
      * @param[out]  aTlv  A reference to the tlv to be filled.
      *
      */
-    void FillRouteTlv(RouteTlv &aTlv);
+    void FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor = nullptr);
 
     /**
      * This method generates an MLE Child Update Request message to be sent to the parent.
@@ -582,7 +582,7 @@ private:
 
     otError AppendConnectivity(Message &aMessage);
     otError AppendChildAddresses(Message &aMessage, Child &aChild);
-    otError AppendRoute(Message &aMessage);
+    otError AppendRoute(Message &aMessage, Neighbor *aNeighbor = nullptr);
     otError AppendActiveDataset(Message &aMessage);
     otError AppendPendingDataset(Message &aMessage);
     void    HandleDetachStart(void);
