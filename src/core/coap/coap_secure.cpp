@@ -83,12 +83,6 @@ exit:
     return error;
 }
 
-void CoapSecure::SetConnectedCallback(ConnectedCallback aCallback, void *aContext)
-{
-    mConnectedCallback = aCallback;
-    mConnectedContext  = aContext;
-}
-
 void CoapSecure::Stop(void)
 {
     mDtls.Close();
@@ -110,11 +104,6 @@ otError CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aC
     return mDtls.Connect(aSockAddr);
 }
 
-otError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
-{
-    return mDtls.SetPsk(aPsk, aPskLength);
-}
-
 void CoapSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
 {
     otError error;
@@ -129,43 +118,6 @@ void CoapSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
 
     OT_ASSERT(error == OT_ERROR_NONE);
 }
-
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-void CoapSecure::SetCertificate(const uint8_t *aX509Cert,
-                                uint32_t       aX509Length,
-                                const uint8_t *aPrivateKey,
-                                uint32_t       aPrivateKeyLength)
-{
-    mDtls.SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
-}
-
-void CoapSecure::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
-{
-    mDtls.SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
-}
-#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-
-#ifdef MBEDTLS_BASE64_C
-otError CoapSecure::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
-{
-    return mDtls.GetPeerCertificateBase64(aPeerCert, aCertLength, aCertBufferSize);
-}
-#endif // MBEDTLS_BASE64_C
-
-void CoapSecure::SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext)
-{
-    mConnectedCallback = aCallback;
-    mConnectedContext  = aContext;
-}
-
-void CoapSecure::SetSslAuthMode(bool aVerifyPeerCertificate)
-{
-    mDtls.SetSslAuthMode(aVerifyPeerCertificate);
-}
-
-#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 otError CoapSecure::SendMessage(Message &aMessage, ResponseHandler aHandler, void *aContext)
 {
