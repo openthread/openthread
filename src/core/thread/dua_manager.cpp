@@ -111,11 +111,11 @@ otError DuaManager::GenerateDomainUnicastAddressIid(void)
             IgnoreError(Store());
         }
 
-        otLogInfoIp6("Generated DUA: %s", mDomainUnicastAddress.GetAddress().ToString().AsCString());
+        otLogInfoDua("Generated DUA: %s", mDomainUnicastAddress.GetAddress().ToString().AsCString());
     }
     else
     {
-        otLogWarnIp6("Generate DUA: %s", otThreadErrorToString(error));
+        otLogWarnDua("Generate DUA: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -129,7 +129,7 @@ otError DuaManager::SetFixedDuaInterfaceIdentifier(const Ip6::InterfaceIdentifie
     VerifyOrExit(mFixedDuaInterfaceIdentifier.IsUnspecified() || mFixedDuaInterfaceIdentifier != aIid, OT_NOOP);
 
     mFixedDuaInterfaceIdentifier = aIid;
-    otLogInfoIp6("Set DUA IID: %s", mFixedDuaInterfaceIdentifier.ToString().AsCString());
+    otLogInfoDua("Set DUA IID: %s", mFixedDuaInterfaceIdentifier.ToString().AsCString());
 
     if (Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
     {
@@ -158,7 +158,7 @@ void DuaManager::ClearFixedDuaInterfaceIdentifier(void)
         }
     }
 
-    otLogInfoIp6("Cleared DUA IID: %s", mFixedDuaInterfaceIdentifier.ToString().AsCString());
+    otLogInfoDua("Cleared DUA IID: %s", mFixedDuaInterfaceIdentifier.ToString().AsCString());
     mFixedDuaInterfaceIdentifier.Clear();
 
 exit:
