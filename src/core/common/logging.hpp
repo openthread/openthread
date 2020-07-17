@@ -91,6 +91,7 @@ extern "C" {
 #define _OT_REGION_UTIL_PREFIX "-UTIL----: "
 #define _OT_REGION_BBR_PREFIX "-BBR-----: "
 #define _OT_REGION_MLR_PREFIX "-MLR-----: "
+#define _OT_REGION_DUA_PREFIX "-DUA-----: "
 #else
 #define _OT_REGION_API_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLE_PREFIX _OT_REGION_SUFFIX
@@ -110,6 +111,7 @@ extern "C" {
 #define _OT_REGION_UTIL_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_BBR_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLR_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_DUA_PREFIX _OT_REGION_SUFFIX
 #endif
 
 /**
@@ -1161,6 +1163,64 @@ extern "C" {
 #endif
 
 /**
+ * @def otLogCritDua
+ *
+ * This method generates a log with level critical for the Domain Unicast Address region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnDua
+ *
+ * This method generates a log with level warning for the Domain Unicast Address region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogNoteDua
+ *
+ * This method generates a log with level note for the Domain Unicast Address region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoDua
+ *
+ * This method generates a log with level info for the Domain Unicast Address region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgDua
+ *
+ * This method generates a log with level debug for the Domain Unicast Address region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_DUA == 1
+#define otLogCritDua(...) otLogCrit(OT_LOG_REGION_DUA, _OT_REGION_DUA_PREFIX __VA_ARGS__)
+#define otLogWarnDua(...) otLogWarn(OT_LOG_REGION_DUA, _OT_REGION_DUA_PREFIX __VA_ARGS__)
+#define otLogNoteDua(...) otLogNote(OT_LOG_REGION_DUA, _OT_REGION_DUA_PREFIX __VA_ARGS__)
+#define otLogInfoDua(...) otLogInfo(OT_LOG_REGION_DUA, _OT_REGION_DUA_PREFIX __VA_ARGS__)
+#define otLogDebgDua(...) otLogDebg(OT_LOG_REGION_DUA, _OT_REGION_DUA_PREFIX __VA_ARGS__)
+#else
+#define otLogCritDua(...)
+#define otLogWarnDua(...)
+#define otLogNoteDua(...)
+#define otLogInfoDua(...)
+#define otLogDebgDua(...)
+#endif
+
+/**
  * @def otLogCritPlat
  *
  * This method generates a log with level critical for the Platform region.
@@ -1921,6 +1981,74 @@ extern "C" {
 #define otDumpNoteCore(aId, aBuf, aLength)
 #define otDumpInfoCore(aId, aBuf, aLength)
 #define otDumpDebgCore(aId, aBuf, aLength)
+#endif
+
+/**
+ * @def otDumpCritDua
+ *
+ * This method generates a memory dump with log level critical and region Domain Unicast Address.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpWarnDua
+ *
+ * This method generates a memory dump with log level warning and region Domain Unicast Address.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpNoteDua
+ *
+ * This method generates a memory dump with log level note and region Domain Unicast Address.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpInfoDua
+ *
+ * This method generates a memory dump with log level info and region Domain Unicast Address.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpDebgDua
+ *
+ * This method generates a memory dump with log level debug and region Domain Unicast Address.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_DUA == 1
+#define otDumpCritDua(aId, aBuf, aLength) otDumpCrit(OT_LOG_REGION_DUA, aId, aBuf, aLength)
+#define otDumpWarnDua(aId, aBuf, aLength) otDumpWarn(OT_LOG_REGION_DUA, aId, aBuf, aLength)
+#define otDumpNoteDua(aId, aBuf, aLength) otDumpNote(OT_LOG_REGION_DUA, aId, aBuf, aLength)
+#define otDumpInfoDua(aId, aBuf, aLength) otDumpInfo(OT_LOG_REGION_DUA, aId, aBuf, aLength)
+#define otDumpDebgDua(aId, aBuf, aLength) otDumpDebg(OT_LOG_REGION_DUA, aId, aBuf, aLength)
+#else
+#define otDumpCritDua(aId, aBuf, aLength)
+#define otDumpWarnDua(aId, aBuf, aLength)
+#define otDumpNoteDua(aId, aBuf, aLength)
+#define otDumpInfoDua(aId, aBuf, aLength)
+#define otDumpDebgDua(aId, aBuf, aLength)
 #endif
 
 /**

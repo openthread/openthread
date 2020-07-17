@@ -612,8 +612,13 @@ unsigned int NcpBase::ConvertLogRegion(otLogRegion aLogRegion)
     case OT_LOG_REGION_BBR:
         spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_BBR;
         break;
+
     case OT_LOG_REGION_MLR:
         spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_MLR;
+        break;
+
+    case OT_LOG_REGION_DUA:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_DUA;
         break;
     }
 
