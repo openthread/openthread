@@ -4118,8 +4118,8 @@ exit:
 
 bool MleRouter::IsExpectedToBecomeRouter(void) const
 {
-    return IsRouterEligible() && !IsRouterOrLeader() &&
-           (Get<RouterTable>().GetActiveRouterCount() < GetRouterUpgradeThreshold()) && !mAddressSolicitRejected;
+    return IsRouterEligible() && !IsRouterOrLeader() && !mAddressSolicitRejected &&
+           (GetRouterSelectionJitterTimeout() != 0 || mAddressSolicitPending);
 }
 
 void MleRouter::HandleAddressSolicit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
