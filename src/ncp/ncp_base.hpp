@@ -537,6 +537,8 @@ protected:
     bool            mDiscoveryScanJoinerFlag;
     bool            mDiscoveryScanEnableFiltering;
     uint16_t        mDiscoveryScanPanId;
+    uint8_t         mAdvType;
+    const char *    mAdvData;
 
     Tasklet         mUpdateChangedPropsTask;
     uint32_t        mThreadChangedFlags;

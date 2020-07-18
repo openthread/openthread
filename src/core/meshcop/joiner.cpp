@@ -132,6 +132,7 @@ otError Joiner::Start(const char *     aPskd,
                       const char *     aVendorModel,
                       const char *     aVendorSwVersion,
                       const char *     aVendorData,
+                      const char *     aJoinerAdvertisement,
                       otJoinerCallback aCallback,
                       void *           aContext)
 {

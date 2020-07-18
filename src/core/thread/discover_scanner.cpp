@@ -63,13 +63,16 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
                                   bool                    aJoiner,
                                   bool                    aEnableFiltering,
                                   const FilterIndexes *   aFilterIndexes,
+                                  uint8_t                 aAdvType,
+                                  const char *            aAdvData,
                                   Handler                 aCallback,
                                   void *                  aContext)
 {
-    otError                      error   = OT_ERROR_NONE;
-    Message *                    message = nullptr;
-    Ip6::Address                 destination;
-    MeshCoP::DiscoveryRequestTlv discoveryRequest;
+    otError                         error   = OT_ERROR_NONE;
+    Message *                       message = nullptr;
+    Ip6::Address                    destination;
+    MeshCoP::DiscoveryRequestTlv    discoveryRequest;
+    MeshCoP::JoinerAdvertisementTlv joinerAdvertisement;
 
     VerifyOrExit(mState == kStateIdle, error = OT_ERROR_BUSY);
 
@@ -106,12 +109,19 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     message->SetPanId(aPanId);
     SuccessOrExit(error = Get<Mle>().AppendHeader(*message, Header::kCommandDiscoveryRequest));
 
-    // Append MLE Discovery TLV with a single sub-TLV (MeshCoP Discovery Request).
+    // Append MLE Discovery TLV with sub-TLV (MeshCoP Discovery Request).
     discoveryRequest.Init();
     discoveryRequest.SetVersion(kThreadVersion);
     discoveryRequest.SetJoiner(aJoiner);
 
     SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kDiscovery, &discoveryRequest, sizeof(discoveryRequest)));
+
+    // Append MLE Discovery TLV with sub-TLV (MeshCoP Joiner Advertisement).
+    joinerAdvertisement.Init();
+    joinerAdvertisement.SetAdvType(aAdvType);
+    joinerAdvertisement.SetAdvData(aAdvData);
+
+    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kDiscovery, &joinerAdvertisement, sizeof(joinerAdvertisement)));
 
     destination.SetToLinkLocalAllRoutersMulticast();
 

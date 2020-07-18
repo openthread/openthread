@@ -205,6 +205,8 @@ NcpBase::NcpBase(Instance *aInstance)
     , mDiscoveryScanJoinerFlag(false)
     , mDiscoveryScanEnableFiltering(false)
     , mDiscoveryScanPanId(0xffff)
+    , mAdvType(0)
+    , mAdvData(nullptr)
     , mUpdateChangedPropsTask(*aInstance, NcpBase::UpdateChangedProps, this)
     , mThreadChangedFlags(0)
     , mChangedPropsSet()
@@ -1650,7 +1652,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>(void)
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     case SPINEL_SCAN_STATE_DISCOVER:
         error = otThreadDiscover(mInstance, mScanChannelMask, mDiscoveryScanPanId, mDiscoveryScanJoinerFlag,
-                                 mDiscoveryScanEnableFiltering, &HandleActiveScanResult_Jump, this);
+                                 mDiscoveryScanEnableFiltering, mAdvType, mAdvData, &HandleActiveScanResult_Jump, this);
 
         SuccessOrExit(error);
         break;

@@ -111,6 +111,7 @@ public:
         kEnergyList              = OT_MESHCOP_TLV_ENERGY_LIST,              ///< Energy List TLV
         kDiscoveryRequest        = OT_MESHCOP_TLV_DISCOVERYREQUEST,         ///< Discovery Request TLV
         kDiscoveryResponse       = OT_MESHCOP_TLV_DISCOVERYRESPONSE,        ///< Discovery Response TLV
+        kJoinerAdvertisement     = OT_MESHCOP_TLV_JOINERADVERTISEMENT,      ///< Joiner Advertisement TLV
     };
 
     /**
@@ -2352,6 +2353,105 @@ private:
     };
     uint8_t mFlags;
     uint8_t mReserved;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Joiner Advertisement TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class JoinerAdvertisementTlv : public Tlv
+{
+public:
+    enum
+    {
+        kType = kJoinerAdvertisement, ///< The TLV Type.
+    };
+
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kJoinerAdvertisement);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+        mAdvType = 0;
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the AdvType value.
+     *
+     * @returns The AdvType value.
+     *
+     */
+    uint8_t GetAdvType(void) const { return mAdvType; }
+
+    /**
+     * This method sets the AdvType value.
+     *
+     * @param[in]  aAdvType  The AdvType value.
+     *
+     */
+    void SetAdvType(uint8_t aAdvType)
+    {
+        mAdvType = aAdvType;
+    }
+
+    /**
+     * This method returns the Adv Data length.
+     *
+     * @returns The Adv Data length.
+     *
+     */
+    uint8_t GetAdvDataLength(void) const
+    {
+        return GetLength() <= sizeof(mAdvData) ? GetLength() : sizeof(mAdvData);
+    }
+
+    /**
+     * This method returns the Adv Data value.
+     *
+     * @returns The Adv Data value.
+     *
+     */
+    const char *GetAdvData(void) const { return mAdvData; }
+
+    /**
+     * This method sets the Adv Data value.
+     *
+     * @param[in]  aAdvData  A pointer to the Adv Data value.
+     *
+     */
+    void SetAdvData(const char *aAdvData)
+    {
+        uint16_t len = (aAdvData == nullptr) ? 0 : StringLength(aAdvData, sizeof(mAdvData));
+
+        SetLength(static_cast<uint8_t>(len));
+
+        if (len > 0)
+        {
+            memcpy(mAdvData, aAdvData, len);
+        }
+    }
+
+private:
+    enum
+    {
+        kMaxLength = 64,
+    };
+
+    uint8_t mAdvType;
+    char mAdvData[kMaxLength];
 } OT_TOOL_PACKED_END;
 
 } // namespace MeshCoP

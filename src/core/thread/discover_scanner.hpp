@@ -123,6 +123,8 @@ public:
                      bool                    aJoiner,
                      bool                    aEnableFiltering,
                      const FilterIndexes *   aFilterIndexes,
+                     uint8_t                 aAdvType,
+                     const char *            aAdvData,
                      Handler                 aHandler,
                      void *                  aContext);
 

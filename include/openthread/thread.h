@@ -253,6 +253,8 @@ otError otThreadDiscover(otInstance *             aInstance,
                          uint16_t                 aPanId,
                          bool                     aJoiner,
                          bool                     aEnableEui64Filtering,
+                         uint8_t                  aAdvType,
+                         const char *             aAdvData,
                          otHandleActiveScanResult aCallback,
                          void *                   aCallbackContext);
 
