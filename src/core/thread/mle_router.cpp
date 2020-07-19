@@ -4118,7 +4118,7 @@ exit:
 
 bool MleRouter::IsExpectedToBecomeRouter(void) const
 {
-    return IsRouterEligible() && !IsRouterOrLeader() && !mAddressSolicitRejected &&
+    return IsRouterEligible() && IsChild() && !mAddressSolicitRejected &&
            (GetRouterSelectionJitterTimeout() != 0 || mAddressSolicitPending);
 }
 
