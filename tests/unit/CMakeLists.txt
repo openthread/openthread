@@ -336,6 +336,29 @@ target_link_libraries(test-message-queue
 
 add_test(NAME test-message-queue COMMAND test-message-queue)
 
+add_executable(test-multicast-listeners-table
+        ${COMMON_SOURCES}
+        test_multicast_listeners_table.cpp
+        )
+
+target_include_directories(test-multicast-listeners-table
+        PRIVATE
+        ${COMMON_INCLUDES}
+        )
+
+target_compile_options(test-multicast-listeners-table
+        PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+        )
+
+target_link_libraries(test-multicast-listeners-table
+        PRIVATE
+        ${COMMON_LIBS}
+        )
+
+add_test(NAME test-multicast-listeners-table COMMAND test-multicast-listeners-table)
+
+
 add_executable(test-netif
     ${COMMON_SOURCES}
     test_netif.cpp
@@ -513,7 +536,7 @@ target_link_libraries(test-timer
 add_test(NAME test-timer COMMAND test-timer)
 
 set_target_properties(
-    test-aes test-child test-child-table test-flash test-heap test-hmac-sha256 test-ip6-address test-link-quality test-linked-list test-lowpan test-mac-frame test-message test-message-queue test-netif test-network-data test-pool test-priority-queue test-pskc test-steering-data test-string test-timer
+    test-aes test-child test-child-table test-flash test-heap test-hmac-sha256 test-ip6-address test-link-quality test-linked-list test-lowpan test-mac-frame test-message test-message-queue test-multicast-listeners-table test-netif test-network-data test-pool test-priority-queue test-pskc test-steering-data test-string test-timer
     PROPERTIES
         C_STANDARD 99
         CXX_STANDARD 11

@@ -45,4 +45,19 @@
 #define OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS
+ *
+ * This setting configures the maximum number of Multicast Listeners on a Backbone Router.
+ *
+ * Note: According to Thread Conformance v1.2.0, a Thread Border Router MUST be able to hold a Multicast Listeners Table
+ * in memory with at least seventy five (75) entries.
+ *
+ * @sa MulticastListenersTable
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS
+#define OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS 75
+#endif
+
 #endif // CONFIG_BACKBONE_ROUTER_H_

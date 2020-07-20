@@ -40,6 +40,8 @@ import time
 import unittest
 import binascii
 
+from typing import Union
+
 
 class Node:
 
@@ -527,6 +529,35 @@ class Node:
         cmd = 'dua iid clear'
         self.send_command(cmd)
         self._expect('Done')
+
+    def multicast_listener_list(self):
+        cmd = 'bbr mgmt mlr listener'
+        self.send_command(cmd)
+
+        table = {}
+        for line in self._expect_results("\S+ \d+"):
+            line = line.split()
+            assert len(line) == 2, line
+            ip = ipaddress.IPv6Address(line[0])
+            timeout = int(line[1])
+            assert ip not in table
+
+            table[ip] = timeout
+
+        return table
+
+    def multicast_listener_clear(self):
+        cmd = f'bbr mgmt mlr listener clear'
+        self.send_command(cmd)
+        self._expect("Done")
+
+    def multicast_listener_add(self, ip: Union[ipaddress.IPv6Address, str], timeout: int = 0):
+        if not isinstance(ip, ipaddress.IPv6Address):
+            ip = ipaddress.IPv6Address(ip)
+
+        cmd = f'bbr mgmt mlr listener add {ip.compressed} {timeout}'
+        self.send_command(cmd)
+        self._expect(r"(Done|Error .*)")
 
     def set_link_quality(self, addr, lqi):
         cmd = 'macfilter rss add-lqi %s %s' % (addr, lqi)

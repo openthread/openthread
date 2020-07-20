@@ -142,6 +142,49 @@ known status value:
 Done
 ```
 
+### bbr mgmt mlr listener
+
+Show the Multicast Listeners.
+
+Only for testing/reference Backbone Router device.
+
+```bash
+> bbr mgmt mlr listener
+ff04:0:0:0:0:0:0:abcd 3534000
+ff04:0:0:0:0:0:0:eeee 3537610
+Done
+```
+
+### bbr mgmt mlr listener add \<ipaddr\> \[\<timeout\>\]
+
+Add a Multicast Listener with a given Ip6 multicast address and timeout (in seconds).
+
+Only for testing/reference Backbone Router device.
+
+```bash
+> bbr mgmt mlr listener add ff04::1
+Done
+> bbr mgmt mlr listener add ff04::2 300
+Done
+> bbr mgmt mlr listener
+ff04:0:0:0:0:0:0:2 261
+ff04:0:0:0:0:0:0:1 3522
+Done
+```
+
+### bbr mgmt mlr listener clear
+
+Removes all the Multicast Listeners.
+
+Only for testing/reference Backbone Router device.
+
+```bash
+> bbr mgmt mlr listener clear
+Done
+> bbr mgmt mlr listener
+Done
+```
+
 ### bbr state
 
 Show local Backbone state ([`Disabled`,`Primary`, `Secondary`]) for Thread 1.2 FTD.
