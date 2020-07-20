@@ -1541,10 +1541,8 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
     VerifyOrExit(changed, OT_NOOP);
     otLogInfoMle("Route table updated");
 
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
+    for (Router &router : Get<RouterTable>().Iterate())
     {
-        Router &router = *iter.GetRouter();
-
         otLogInfoMle("    %04x -> %04x, cost:%d %d, lqin:%d, lqout:%d, link:%s", router.GetRloc16(),
                      (router.GetNextHop() == kInvalidRouterId) ? 0xffff : Rloc16FromRouterId(router.GetNextHop()),
                      router.GetCost(), mRouterTable.GetLinkCost(router), router.GetLinkInfo().GetLinkQuality(),
@@ -1870,9 +1868,8 @@ void MleRouter::HandleStateUpdateTimer(void)
     }
 
     // update router state
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
+    for (Router &router : Get<RouterTable>().Iterate())
     {
-        Router & router = *iter.GetRouter();
         uint32_t age;
 
         if (router.GetRloc16() == GetRloc16())
@@ -4372,9 +4369,8 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
 
     aTlv.SetActiveRouters(mRouterTable.GetActiveRouterCount());
 
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
+    for (Router &router : Get<RouterTable>().Iterate())
     {
-        Router &router = *iter.GetRouter();
         uint8_t linkQuality;
 
         if (router.GetRloc16() == GetRloc16())
@@ -4479,10 +4475,8 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv)
     aTlv.SetRouterIdSequence(mRouterTable.GetRouterIdSequence());
     aTlv.SetRouterIdMask(mRouterTable.GetRouterIdSet());
 
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++, routerCount++)
+    for (Router &router : Get<RouterTable>().Iterate())
     {
-        Router &router = *iter.GetRouter();
-
         if (router.GetRloc16() == GetRloc16())
         {
             aTlv.SetLinkQualityIn(routerCount, 0);
@@ -4521,6 +4515,8 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv)
             aTlv.SetLinkQualityOut(routerCount, router.GetLinkQualityOut());
             aTlv.SetLinkQualityIn(routerCount, router.GetLinkInfo().GetLinkQuality());
         }
+
+        routerCount++;
     }
 
     aTlv.SetRouteDataLength(routerCount);
@@ -4551,10 +4547,8 @@ bool MleRouter::HasMinDowngradeNeighborRouters(void)
     uint8_t linkQuality;
     uint8_t routerCount = 0;
 
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
+    for (Router &router : Get<RouterTable>().Iterate())
     {
-        Router &router = *iter.GetRouter();
-
         if (!router.IsStateValid())
         {
             continue;
@@ -4581,9 +4575,8 @@ bool MleRouter::HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute,
     bool rval = true;
 
     // process local neighbor routers
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
+    for (Router &router : Get<RouterTable>().Iterate())
     {
-        Router &router           = *iter.GetRouter();
         uint8_t localLinkQuality = 0;
         uint8_t peerLinkQuality  = 0;
         uint8_t routerCount      = 0;
