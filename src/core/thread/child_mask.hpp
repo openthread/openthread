@@ -111,9 +111,9 @@ public:
     {
         bool rval = false;
 
-        for (size_t i = 0; i < sizeof(mMask); i++)
+        for (uint8_t b : mMask)
         {
-            if (mMask[i] != 0)
+            if (b != 0)
             {
                 ExitNow(rval = true);
             }

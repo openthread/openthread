@@ -182,12 +182,12 @@ otError MeshForwarder::EvictMessage(Message::Priority aPriority)
     Message *      evict    = nullptr;
 
     // search for a lower priority message to evict (choose lowest priority message among all queues)
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(queues); index++)
+    for (PriorityQueue *queue : queues)
     {
         for (uint8_t priority = 0; priority < aPriority; priority++)
         {
-            for (Message *message = queues[index]->GetHeadForPriority(static_cast<Message::Priority>(priority));
-                 message; message = message->GetNext())
+            for (Message *message = queue->GetHeadForPriority(static_cast<Message::Priority>(priority)); message;
+                 message          = message->GetNext())
             {
                 if (message->GetPriority() != priority)
                 {

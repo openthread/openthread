@@ -109,10 +109,8 @@ void VerifyChildTableContent(ChildTable &aTable, uint16_t aChildListLength, cons
 {
     printf("Test ChildTable with %d entries", aChildListLength);
 
-    for (uint16_t k = 0; k < OT_ARRAY_LENGTH(kAllFilters); k++)
+    for (Child::StateFilter filter : kAllFilters)
     {
-        Child::StateFilter filter = kAllFilters[k];
-
         // Verify that we can find all children from given list by rloc or extended address.
 
         for (uint16_t listIndex = 0; listIndex < aChildListLength; listIndex++)
@@ -302,10 +300,8 @@ void TestChildTable(void)
     VerifyOrQuit(table->GetMaxChildrenAllowed() == table->GetMaxChildren(),
                  "GetMaxChildrenAllowed() initial value is incorrect ");
 
-    for (uint16_t i = 0; i < OT_ARRAY_LENGTH(kAllFilters); i++)
+    for (Child::StateFilter filter : kAllFilters)
     {
-        Child::StateFilter filter = kAllFilters[i];
-
         VerifyOrQuit(table->HasChildren(filter) == false, "HasChildren() failed after init");
         VerifyOrQuit(table->GetNumChildren(filter) == 0, "GetNumChildren() failed after init");
     }

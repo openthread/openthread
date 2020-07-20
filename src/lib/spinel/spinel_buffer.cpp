@@ -46,9 +46,9 @@ Buffer::Buffer(uint8_t *aBuffer, uint16_t aBufferLength)
     , mBufferLength(aBufferLength)
 {
 #if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
-    for (uint8_t priority = 0; priority < kNumPrios; priority++)
+    for (otMessageQueue &queue : mMessageQueue)
     {
-        otMessageQueueInit(&mMessageQueue[priority]);
+        otMessageQueueInit(&queue);
     }
 
     otMessageQueueInit(&mWriteFrameMessageQueue);
@@ -100,11 +100,11 @@ void Buffer::Clear(void)
         // be freed.
     }
 
-    for (uint8_t priority = 0; priority < kNumPrios; priority++)
+    for (otMessageQueue &queue : mMessageQueue)
     {
-        while ((message = otMessageQueueGetHead(&mMessageQueue[priority])) != nullptr)
+        while ((message = otMessageQueueGetHead(&queue)) != nullptr)
         {
-            otMessageQueueDequeue(&mMessageQueue[priority], message);
+            otMessageQueueDequeue(&queue, message);
             otMessageFree(message);
         }
     }

@@ -86,10 +86,10 @@ void TestMessageQueue(void)
 
     sMessagePool = &sInstance->Get<ot::MessagePool>();
 
-    for (int i = 0; i < kNumTestMessages; i++)
+    for (auto &m : msg)
     {
-        msg[i] = sMessagePool->New(ot::Message::kTypeIp6, 0);
-        VerifyOrQuit(msg[i] != nullptr, "Message::New failed");
+        m = sMessagePool->New(ot::Message::kTypeIp6, 0);
+        VerifyOrQuit(m != nullptr, "Message::New failed");
     }
 
     VerifyMessageQueueContent(messageQueue, 0);
@@ -220,10 +220,10 @@ void TestMessageQueueOtApis(void)
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != nullptr, "Null instance");
 
-    for (int i = 0; i < kNumTestMessages; i++)
+    for (auto &m : msg)
     {
-        msg[i] = otIp6NewMessage(sInstance, nullptr);
-        VerifyOrQuit(msg[i] != nullptr, "otIp6NewMessage() failed.");
+        m = otIp6NewMessage(sInstance, nullptr);
+        VerifyOrQuit(m != nullptr, "otIp6NewMessage() failed.");
     }
 
     otMessageQueueInit(&queue);

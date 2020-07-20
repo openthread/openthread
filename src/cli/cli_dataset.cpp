@@ -192,11 +192,11 @@ otError Dataset::Process(uint8_t aArgsLength, char *aArgs[])
         ExitNow(error = Print(sDataset));
     }
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
+    for (const struct Command &sCommand : sCommands)
     {
-        if (strcmp(aArgs[0], sCommands[i].mName) == 0)
+        if (strcmp(aArgs[0], sCommand.mName) == 0)
         {
-            error = (this->*sCommands[i].mCommand)(aArgsLength - 1, aArgs + 1);
+            error = (this->*sCommand.mCommand)(aArgsLength - 1, aArgs + 1);
             break;
         }
     }
@@ -210,9 +210,9 @@ otError Dataset::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
+    for (const struct Command &sCommand : sCommands)
     {
-        mInterpreter.mServer->OutputFormat("%s\r\n", sCommands[i].mName);
+        mInterpreter.mServer->OutputFormat("%s\r\n", sCommand.mName);
     }
 
     return OT_ERROR_NONE;

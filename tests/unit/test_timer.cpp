@@ -585,14 +585,10 @@ int TestTimerTime(void)
     ot::Time t1;
     ot::Time t2;
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(kStartTimes); i++)
+    for (uint32_t start : kStartTimes)
     {
-        uint32_t start = kStartTimes[i];
-
-        for (size_t j = 0; j < OT_ARRAY_LENGTH(kDurations); j++)
+        for (uint32_t duration : kDurations)
         {
-            uint32_t duration = kDurations[j];
-
             printf("TestTimerTime() start=%-10x  duration=%-10x ", start, duration);
 
             t1.SetValue(start);

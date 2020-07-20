@@ -176,15 +176,15 @@ otError Child::AddIp6Address(const Ip6::Address &aAddress)
         ExitNow();
     }
 
-    for (uint16_t index = 0; index < kNumIp6Addresses; index++)
+    for (Ip6::Address &ip6Address : mIp6Address)
     {
-        if (mIp6Address[index].IsUnspecified())
+        if (ip6Address.IsUnspecified())
         {
-            mIp6Address[index] = aAddress;
+            ip6Address = aAddress;
             ExitNow();
         }
 
-        VerifyOrExit(mIp6Address[index] != aAddress, error = OT_ERROR_ALREADY);
+        VerifyOrExit(ip6Address != aAddress, error = OT_ERROR_ALREADY);
     }
 
     error = OT_ERROR_NO_BUFS;
@@ -247,11 +247,11 @@ bool Child::HasIp6Address(const Ip6::Address &aAddress) const
         ExitNow();
     }
 
-    for (uint16_t index = 0; index < kNumIp6Addresses; index++)
+    for (const Ip6::Address &ip6Address : mIp6Address)
     {
-        VerifyOrExit(!mIp6Address[index].IsUnspecified(), OT_NOOP);
+        VerifyOrExit(!ip6Address.IsUnspecified(), OT_NOOP);
 
-        if (mIp6Address[index] == aAddress)
+        if (ip6Address == aAddress)
         {
             ExitNow(retval = true);
         }

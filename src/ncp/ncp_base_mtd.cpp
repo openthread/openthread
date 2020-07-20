@@ -3744,13 +3744,13 @@ void NcpBase::ProcessThreadChangedFlags(void)
 
     // Convert OT_CHANGED flags to corresponding NCP property update.
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(kFlags); i++)
+    for (auto kFlag : kFlags)
     {
-        uint32_t threadFlag = kFlags[i].mThreadFlag;
+        uint32_t threadFlag = kFlag.mThreadFlag;
 
         if (mThreadChangedFlags & threadFlag)
         {
-            spinel_prop_key_t propKey           = kFlags[i].mPropKey;
+            spinel_prop_key_t propKey           = kFlag.mPropKey;
             bool              shouldAddProperty = true;
 
             // Child table changes are reported using the `HandleChildAdded()` and

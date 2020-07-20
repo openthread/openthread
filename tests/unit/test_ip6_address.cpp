@@ -130,9 +130,9 @@ void TestIp6AddressFromString(void)
         {":f:0:0:c:0:f:f:.", {0}, OT_ERROR_PARSE},
     };
 
-    for (uint32_t index = 0; index < OT_ARRAY_LENGTH(testVectors); index++)
+    for (auto &testVector : testVectors)
     {
-        checkAddressFromString(&testVectors[index]);
+        checkAddressFromString(&testVector);
     }
 }
 
@@ -194,10 +194,8 @@ void TestIp6AddressSetPrefix(void)
     allZeroAddress.Clear();
     memset(&allOneAddress, 0xff, sizeof(allOneAddress));
 
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(kPrefixes); index++)
+    for (auto prefix : kPrefixes)
     {
-        const uint8_t *prefix = kPrefixes[index];
-
         memcpy(address.mFields.m8, prefix, sizeof(address));
         printf("Prefix is %s\n", address.ToString().AsCString());
 

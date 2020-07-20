@@ -450,9 +450,9 @@ void Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
+    for (const struct Command &sCommand : sCommands)
     {
-        mServer->OutputFormat("%s\r\n", sCommands[i].mName);
+        mServer->OutputFormat("%s\r\n", sCommand.mName);
     }
 
     for (uint8_t i = 0; i < mUserCommandsLength; i++)
@@ -876,9 +876,9 @@ void Interpreter::ProcessChild(uint8_t aArgsLength, char *aArgs[])
                 mServer->OutputFormat("|%1d", childInfo.mFullNetworkData);
                 mServer->OutputFormat("| ");
 
-                for (size_t j = 0; j < sizeof(childInfo.mExtAddress); j++)
+                for (uint8_t b : childInfo.mExtAddress.m8)
                 {
-                    mServer->OutputFormat("%02x", childInfo.mExtAddress.m8[j]);
+                    mServer->OutputFormat("%02x", b);
                 }
 
                 mServer->OutputFormat(" |\r\n");
@@ -900,9 +900,9 @@ void Interpreter::ProcessChild(uint8_t aArgsLength, char *aArgs[])
     mServer->OutputFormat("Rloc: %04x\r\n", childInfo.mRloc16);
     mServer->OutputFormat("Ext Addr: ");
 
-    for (size_t j = 0; j < sizeof(childInfo.mExtAddress); j++)
+    for (uint8_t b : childInfo.mExtAddress.m8)
     {
-        mServer->OutputFormat("%02x", childInfo.mExtAddress.m8[j]);
+        mServer->OutputFormat("%02x", b);
     }
 
     mServer->OutputFormat("\r\n");
@@ -1837,9 +1837,9 @@ void Interpreter::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
     {
         const otPskc *pskc = otThreadGetPskc(mInstance);
 
-        for (int i = 0; i < OT_PSKC_MAX_SIZE; i++)
+        for (uint8_t b : pskc->m8)
         {
-            mServer->OutputFormat("%02x", pskc->m8[i]);
+            mServer->OutputFormat("%02x", b);
         }
 
         mServer->OutputFormat("\r\n");
@@ -2000,9 +2000,9 @@ void Interpreter::ProcessNeighbor(uint8_t aArgsLength, char *aArgs[])
                 mServer->OutputFormat("|%1d", neighborInfo.mFullNetworkData);
                 mServer->OutputFormat("| ");
 
-                for (size_t j = 0; j < sizeof(neighborInfo.mExtAddress); j++)
+                for (uint8_t b : neighborInfo.mExtAddress.m8)
                 {
-                    mServer->OutputFormat("%02x", neighborInfo.mExtAddress.m8[j]);
+                    mServer->OutputFormat("%02x", b);
                 }
 
                 mServer->OutputFormat(" |\r\n");
@@ -2321,9 +2321,9 @@ void Interpreter::ProcessParent(uint8_t aArgsLength, char *aArgs[])
     SuccessOrExit(error = otThreadGetParentInfo(mInstance, &parentInfo));
     mServer->OutputFormat("Ext Addr: ");
 
-    for (size_t i = 0; i < sizeof(parentInfo.mExtAddress); i++)
+    for (uint8_t b : parentInfo.mExtAddress.m8)
     {
-        mServer->OutputFormat("%02x", parentInfo.mExtAddress.m8[i]);
+        mServer->OutputFormat("%02x", b);
     }
 
     mServer->OutputFormat("\r\n");
@@ -3163,9 +3163,9 @@ void Interpreter::ProcessRouter(uint8_t aArgsLength, char *aArgs[])
                 mServer->OutputFormat("| %3d ", routerInfo.mAge);
                 mServer->OutputFormat("| ");
 
-                for (size_t j = 0; j < sizeof(routerInfo.mExtAddress); j++)
+                for (uint8_t b : routerInfo.mExtAddress.m8)
                 {
-                    mServer->OutputFormat("%02x", routerInfo.mExtAddress.m8[j]);
+                    mServer->OutputFormat("%02x", b);
                 }
 
                 mServer->OutputFormat(" |\r\n");
@@ -3196,9 +3196,9 @@ void Interpreter::ProcessRouter(uint8_t aArgsLength, char *aArgs[])
         {
             mServer->OutputFormat("Ext Addr: ");
 
-            for (size_t j = 0; j < sizeof(routerInfo.mExtAddress); j++)
+            for (uint8_t b : routerInfo.mExtAddress.m8)
             {
-                mServer->OutputFormat("%02x", routerInfo.mExtAddress.m8[j]);
+                mServer->OutputFormat("%02x", b);
             }
 
             mServer->OutputFormat("\r\n");

@@ -139,16 +139,16 @@ Mle::Mle(Instance &aInstance)
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
     // Service Alocs
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mServiceAlocs); i++)
+    for (Ip6::NetifUnicastAddress &serviceAloc : mServiceAlocs)
     {
-        mServiceAlocs[i].Clear();
-        mServiceAlocs[i].mPrefixLength       = MeshLocalPrefix::kLength;
-        mServiceAlocs[i].mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
-        mServiceAlocs[i].mPreferred          = true;
-        mServiceAlocs[i].mValid              = true;
-        mServiceAlocs[i].mScopeOverride      = Ip6::Address::kRealmLocalScope;
-        mServiceAlocs[i].mScopeOverrideValid = true;
-        mServiceAlocs[i].GetAddress().GetIid().SetLocator(Mac::kShortAddrInvalid);
+        serviceAloc.Clear();
+        serviceAloc.mPrefixLength       = MeshLocalPrefix::kLength;
+        serviceAloc.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
+        serviceAloc.mPreferred          = true;
+        serviceAloc.mValid              = true;
+        serviceAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
+        serviceAloc.mScopeOverrideValid = true;
+        serviceAloc.GetAddress().GetIid().SetLocator(Mac::kShortAddrInvalid);
     }
 
 #endif
@@ -883,13 +883,13 @@ void Mle::ApplyMeshLocalPrefix(void)
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mServiceAlocs); i++)
+    for (Ip6::NetifUnicastAddress &serviceAloc : mServiceAlocs)
     {
-        if (mServiceAlocs[i].GetAddress().GetIid().GetLocator() != Mac::kShortAddrInvalid)
+        if (serviceAloc.GetAddress().GetIid().GetLocator() != Mac::kShortAddrInvalid)
         {
-            Get<ThreadNetif>().RemoveUnicastAddress(mServiceAlocs[i]);
-            mServiceAlocs[i].GetAddress().SetPrefix(GetMeshLocalPrefix());
-            Get<ThreadNetif>().AddUnicastAddress(mServiceAlocs[i]);
+            Get<ThreadNetif>().RemoveUnicastAddress(serviceAloc);
+            serviceAloc.GetAddress().SetPrefix(GetMeshLocalPrefix());
+            Get<ThreadNetif>().AddUnicastAddress(serviceAloc);
         }
     }
 

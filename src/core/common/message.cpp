@@ -840,9 +840,9 @@ void MessageQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) cons
 
 PriorityQueue::PriorityQueue(void)
 {
-    for (int priority = 0; priority < Message::kNumPriorities; priority++)
+    for (auto &mTail : mTails)
     {
-        mTails[priority] = nullptr;
+        mTail = nullptr;
     }
 }
 

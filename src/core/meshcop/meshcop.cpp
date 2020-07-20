@@ -247,10 +247,10 @@ void SteeringData::CalculateHashBitIndexes(const Mac::ExtAddress &aJoinerId, Has
     Crc16 ccitt(Crc16::kCcitt);
     Crc16 ansi(Crc16::kAnsi);
 
-    for (uint8_t i = 0; i < sizeof(Mac::ExtAddress); i++)
+    for (uint8_t b : aJoinerId.m8)
     {
-        ccitt.Update(aJoinerId.m8[i]);
-        ansi.Update(aJoinerId.m8[i]);
+        ccitt.Update(b);
+        ansi.Update(b);
     }
 
     aIndexes.mIndex[0] = ccitt.Get();
