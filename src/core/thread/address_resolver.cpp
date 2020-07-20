@@ -42,6 +42,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "common/time.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle_router.hpp"
@@ -787,7 +788,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
 
         if (child.HasIp6Address(target))
         {
-            lastTransactionTime = TimerMilli::GetNow() - child.GetLastHeard();
+            lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child.GetLastHeard());
             SendAddressQueryResponse(target, child.GetMeshLocalIid(), &lastTransactionTime, aMessageInfo.GetPeerAddr());
             ExitNow();
         }

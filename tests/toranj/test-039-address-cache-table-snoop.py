@@ -322,7 +322,9 @@ for index in range(NUM_ADDRESSES):
            str(NUM_ADDRESSES - index - 1))
     verify(cache_table[index].rloc16 == r3_rloc)
     verify(cache_table[index].state == wpan.ADDRESS_CACHE_ENTRY_STATE_CACHED)
-    verify(cache_table[index].last_trans > 0)
+    # SED's keep-alive period (`POLL_PERIOD`) is 200ms, `last_trans` should always be 0 as it is
+    # the number of seconds since a keep-alive was last received from the child.
+    verify(cache_table[index].last_trans == 0)
 
 # Send again to r2. This should cause the related cache entries to be moved to top of the list:
 
