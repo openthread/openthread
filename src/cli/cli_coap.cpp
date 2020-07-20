@@ -173,9 +173,9 @@ otError Coap::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    for (const struct Command &sCommand : sCommands)
+    for (const Command &command : sCommands)
     {
-        mInterpreter.mServer->OutputFormat("%s\r\n", sCommand.mName);
+        mInterpreter.mServer->OutputFormat("%s\r\n", command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -523,11 +523,11 @@ otError Coap::Process(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        for (const struct Command &sCommand : sCommands)
+        for (const Command &command : sCommands)
         {
-            if (strcmp(aArgs[0], sCommand.mName) == 0)
+            if (strcmp(aArgs[0], command.mName) == 0)
             {
-                error = (this->*sCommand.mCommand)(aArgsLength, aArgs);
+                error = (this->*command.mCommand)(aArgsLength, aArgs);
                 break;
             }
         }

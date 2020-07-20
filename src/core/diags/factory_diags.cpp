@@ -577,12 +577,12 @@ otError Diags::ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, siz
         aOutput[0] = '\0';
     }
 
-    for (const struct Command &sCommand : sCommands)
+    for (const Command &command : sCommands)
     {
-        if (strcmp(aArgs[0], sCommand.mName) == 0)
+        if (strcmp(aArgs[0], command.mName) == 0)
         {
-            error = (this->*sCommand.mCommand)(aArgsLength - 1, (aArgsLength > 1) ? &aArgs[1] : nullptr, aOutput,
-                                               aOutputMaxLen);
+            error = (this->*command.mCommand)(aArgsLength - 1, (aArgsLength > 1) ? &aArgs[1] : nullptr, aOutput,
+                                              aOutputMaxLen);
             ExitNow();
         }
     }

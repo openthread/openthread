@@ -86,7 +86,7 @@ void TestPool(EntryPool &aPool, bool aInitWithInstance)
 
     VerifyOrQuit(aPool.GetSize() == kPoolSize, "Pool::GetSize() failed");
 
-    for (auto &entry : entries)
+    for (Entry *&entry : entries)
     {
         entry = aPool.Allocate();
         VerifyOrQuit(entry != nullptr, "Pool::Allocate() failed");

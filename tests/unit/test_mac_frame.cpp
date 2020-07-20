@@ -365,9 +365,9 @@ void TestMacChannelMask(void)
     VerifyOrQuit(mask1.IsEmpty(), "ChannelMask.IsEmpty failed");
     VerifyChannelMaskContent(mask1, nullptr, 0);
 
-    for (unsigned char index : channels1)
+    for (uint8_t channel : channels1)
     {
-        mask1.AddChannel(index);
+        mask1.AddChannel(channel);
     }
 
     printf("channels1 = %s\n", mask1.ToString().AsCString());
@@ -377,9 +377,9 @@ void TestMacChannelMask(void)
 
     mask2.Clear();
 
-    for (unsigned char index : channels2)
+    for (uint8_t channel : channels2)
     {
-        mask2.AddChannel(index);
+        mask2.AddChannel(channel);
     }
 
     printf("channels2 = %s\n", mask2.ToString().AsCString());

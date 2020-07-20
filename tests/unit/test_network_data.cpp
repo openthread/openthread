@@ -53,9 +53,9 @@ void PrintExternalRouteConfig(const ExternalRouteConfig &aConfig)
 {
     printf("\nprefix:");
 
-    for (unsigned char i : aConfig.mPrefix.mPrefix.mFields.m8)
+    for (uint8_t b : aConfig.mPrefix.mPrefix.mFields.m8)
     {
-        printf("%02x", i);
+        printf("%02x", b);
     }
 
     printf(", length:%d, rloc16:%04x, preference:%d, stable:%d, nexthop:%d", aConfig.mPrefix.mLength, aConfig.mRloc16,

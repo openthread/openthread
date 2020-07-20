@@ -76,9 +76,9 @@ void Dhcp6Client::UpdateAddresses(void)
     NetworkData::OnMeshPrefixConfig config;
 
     // remove addresses directly if prefix not valid in network data
-    for (IdentityAssociation &ia : mIdentityAssociations)
+    for (IdentityAssociation &idAssociation : mIdentityAssociations)
     {
-        if (ia.mStatus == kIaStatusInvalid || ia.mValidLifetime == 0)
+        if (idAssociation.mStatus == kIaStatusInvalid || idAssociation.mValidLifetime == 0)
         {
             continue;
         }
@@ -93,7 +93,7 @@ void Dhcp6Client::UpdateAddresses(void)
                 continue;
             }
 
-            if (MatchNetifAddressWithPrefix(ia.mNetifAddress, config.mPrefix))
+            if (MatchNetifAddressWithPrefix(idAssociation.mNetifAddress, config.mPrefix))
             {
                 found = true;
                 break;
@@ -102,8 +102,8 @@ void Dhcp6Client::UpdateAddresses(void)
 
         if (!found)
         {
-            Get<ThreadNetif>().RemoveUnicastAddress(ia.mNetifAddress);
-            ia.mStatus = kIaStatusInvalid;
+            Get<ThreadNetif>().RemoveUnicastAddress(idAssociation.mNetifAddress);
+            idAssociation.mStatus = kIaStatusInvalid;
         }
     }
 
@@ -112,7 +112,7 @@ void Dhcp6Client::UpdateAddresses(void)
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
     {
-        IdentityAssociation *ia = nullptr;
+        IdentityAssociation *idAssociation = nullptr;
 
         if (!config.mDhcp)
         {
@@ -122,32 +122,32 @@ void Dhcp6Client::UpdateAddresses(void)
         doesAgentExist = true;
         found          = false;
 
-        for (IdentityAssociation &eachIa : mIdentityAssociations)
+        for (IdentityAssociation &ia : mIdentityAssociations)
         {
-            if (eachIa.mStatus == kIaStatusInvalid)
+            if (ia.mStatus == kIaStatusInvalid)
             {
-                // record an available ia
-                if (ia == nullptr)
+                // record an available IdentityAssociation
+                if (idAssociation == nullptr)
                 {
-                    ia = &eachIa;
+                    idAssociation = &ia;
                 }
             }
-            else if (MatchNetifAddressWithPrefix(eachIa.mNetifAddress, config.mPrefix))
+            else if (MatchNetifAddressWithPrefix(ia.mNetifAddress, config.mPrefix))
             {
-                found = true;
-                ia    = &eachIa;
+                found         = true;
+                idAssociation = &ia;
                 break;
             }
         }
 
         if (!found)
         {
-            if (ia != nullptr)
+            if (idAssociation != nullptr)
             {
-                ia->mNetifAddress.mAddress      = config.mPrefix.mPrefix;
-                ia->mNetifAddress.mPrefixLength = config.mPrefix.mLength;
-                ia->mStatus                     = kIaStatusSolicit;
-                ia->mValidLifetime              = 0;
+                idAssociation->mNetifAddress.mAddress      = config.mPrefix.mPrefix;
+                idAssociation->mNetifAddress.mPrefixLength = config.mPrefix.mLength;
+                idAssociation->mStatus                     = kIaStatusSolicit;
+                idAssociation->mValidLifetime              = 0;
             }
             else
             {
@@ -156,7 +156,7 @@ void Dhcp6Client::UpdateAddresses(void)
             }
         }
 
-        ia->mPrefixAgentRloc = config.mRloc16;
+        idAssociation->mPrefixAgentRloc = config.mRloc16;
     }
 
     if (doesAgentExist)
@@ -200,9 +200,9 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
 
     mTrickleTimer.Stop();
 
-    for (IdentityAssociation &ia : mIdentityAssociations)
+    for (IdentityAssociation &idAssociation : mIdentityAssociations)
     {
-        if (ia.mStatus != kIaStatusSolicit)
+        if (idAssociation.mStatus != kIaStatusSolicit)
         {
             continue;
         }
@@ -210,7 +210,7 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
         // new transaction id
         IgnoreError(Random::Crypto::FillBuffer(mTransactionId, kTransactionIdSize));
 
-        mIdentityAssociationCurrent = &ia;
+        mIdentityAssociationCurrent = &idAssociation;
 
         mTrickleTimer.Start(Time::SecToMsec(kTrickleTimerImin), Time::SecToMsec(kTrickleTimerImax),
                             TrickleTimer::kModeNormal);
@@ -350,14 +350,14 @@ otError Dhcp6Client::AppendIaNa(Message &aMessage, uint16_t aRloc16)
 
     VerifyOrExit(mIdentityAssociationCurrent != nullptr, error = OT_ERROR_DROP);
 
-    for (IdentityAssociation &ia : mIdentityAssociations)
+    for (IdentityAssociation &idAssociation : mIdentityAssociations)
     {
-        if (ia.mStatus == kIaStatusInvalid || ia.mStatus == kIaStatusSolicitReplied)
+        if (idAssociation.mStatus == kIaStatusInvalid || idAssociation.mStatus == kIaStatusSolicitReplied)
         {
             continue;
         }
 
-        if (ia.mPrefixAgentRloc == aRloc16)
+        if (idAssociation.mPrefixAgentRloc == aRloc16)
         {
             count++;
         }
@@ -386,11 +386,12 @@ otError Dhcp6Client::AppendIaAddress(Message &aMessage, uint16_t aRloc16)
 
     option.Init();
 
-    for (IdentityAssociation &ia : mIdentityAssociations)
+    for (IdentityAssociation &idAssociation : mIdentityAssociations)
     {
-        if ((ia.mStatus == kIaStatusSolicit || ia.mStatus == kIaStatusSoliciting) && (ia.mPrefixAgentRloc == aRloc16))
+        if ((idAssociation.mStatus == kIaStatusSolicit || idAssociation.mStatus == kIaStatusSoliciting) &&
+            (idAssociation.mPrefixAgentRloc == aRloc16))
         {
-            option.SetAddress(ia.mNetifAddress.mAddress);
+            option.SetAddress(idAssociation.mNetifAddress.mAddress);
             option.SetPreferredLifetime(0);
             option.SetValidLifetime(0);
             SuccessOrExit(error = aMessage.Append(&option, sizeof(option)));
@@ -577,23 +578,24 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
                   (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option)))),
                  error = OT_ERROR_PARSE);
 
-    for (IdentityAssociation &ia : mIdentityAssociations)
+    for (IdentityAssociation &idAssociation : mIdentityAssociations)
     {
-        if (ia.mStatus == kIaStatusInvalid || ia.mValidLifetime != 0)
+        if (idAssociation.mStatus == kIaStatusInvalid || idAssociation.mValidLifetime != 0)
         {
             continue;
         }
 
-        if (ia.mNetifAddress.GetAddress().PrefixMatch(option.GetAddress()) >= ia.mNetifAddress.mPrefixLength)
+        if (idAssociation.mNetifAddress.GetAddress().PrefixMatch(option.GetAddress()) >=
+            idAssociation.mNetifAddress.mPrefixLength)
         {
-            ia.mNetifAddress.mAddress       = option.GetAddress();
-            ia.mPreferredLifetime           = option.GetPreferredLifetime();
-            ia.mValidLifetime               = option.GetValidLifetime();
-            ia.mNetifAddress.mAddressOrigin = OT_ADDRESS_ORIGIN_DHCPV6;
-            ia.mNetifAddress.mPreferred     = option.GetPreferredLifetime() != 0;
-            ia.mNetifAddress.mValid         = option.GetValidLifetime() != 0;
-            ia.mStatus                      = kIaStatusSolicitReplied;
-            Get<ThreadNetif>().AddUnicastAddress(ia.mNetifAddress);
+            idAssociation.mNetifAddress.mAddress       = option.GetAddress();
+            idAssociation.mPreferredLifetime           = option.GetPreferredLifetime();
+            idAssociation.mValidLifetime               = option.GetValidLifetime();
+            idAssociation.mNetifAddress.mAddressOrigin = OT_ADDRESS_ORIGIN_DHCPV6;
+            idAssociation.mNetifAddress.mPreferred     = option.GetPreferredLifetime() != 0;
+            idAssociation.mNetifAddress.mValid         = option.GetValidLifetime() != 0;
+            idAssociation.mStatus                      = kIaStatusSolicitReplied;
+            Get<ThreadNetif>().AddUnicastAddress(idAssociation.mNetifAddress);
             break;
         }
     }

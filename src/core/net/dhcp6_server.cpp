@@ -64,11 +64,11 @@ otError Dhcp6Server::UpdateService(void)
     Lowpan::Context                 lowpanContext;
 
     // remove dhcp agent aloc and prefix delegation
-    for (PrefixAgent &pa : mPrefixAgents)
+    for (PrefixAgent &prefixAgent : mPrefixAgents)
     {
         bool found = false;
 
-        if (!pa.IsValid())
+        if (!prefixAgent.IsValid())
         {
             continue;
         }
@@ -82,9 +82,9 @@ otError Dhcp6Server::UpdateService(void)
                 continue;
             }
 
-            error = Get<NetworkData::Leader>().GetContext(pa.GetPrefix(), lowpanContext);
+            error = Get<NetworkData::Leader>().GetContext(prefixAgent.GetPrefix(), lowpanContext);
 
-            if ((error == OT_ERROR_NONE) && (pa.GetContextId() == lowpanContext.mContextId))
+            if ((error == OT_ERROR_NONE) && (prefixAgent.GetContextId() == lowpanContext.mContextId))
             {
                 // still in network data
                 found = true;
@@ -94,7 +94,7 @@ otError Dhcp6Server::UpdateService(void)
 
         if (!found)
         {
-            pa.Clear();
+            prefixAgent.Clear();
             mPrefixAgentsCount--;
         }
     }
@@ -149,13 +149,13 @@ void Dhcp6Server::AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Co
     otError      error    = OT_ERROR_NONE;
     PrefixAgent *newEntry = nullptr;
 
-    for (PrefixAgent &pa : mPrefixAgents)
+    for (PrefixAgent &prefixAgent : mPrefixAgents)
     {
-        if (!pa.IsValid())
+        if (!prefixAgent.IsValid())
         {
-            newEntry = &pa;
+            newEntry = &prefixAgent;
         }
-        else if (pa.IsPrefixMatch(aIp6Prefix))
+        else if (prefixAgent.IsPrefixMatch(aIp6Prefix))
         {
             // already added
             ExitNow();
@@ -449,11 +449,11 @@ otError Dhcp6Server::AppendIaAddress(Message &aMessage, ClientIdentifier &aClien
     else
     {
         // if not specified, apply all configured prefixes
-        for (const PrefixAgent &pa : mPrefixAgents)
+        for (const PrefixAgent &prefixAgent : mPrefixAgents)
         {
-            if (pa.IsValid())
+            if (prefixAgent.IsValid())
             {
-                SuccessOrExit(error = AddIaAddress(aMessage, pa.GetPrefix(), aClientId));
+                SuccessOrExit(error = AddIaAddress(aMessage, prefixAgent.GetPrefix(), aClientId));
             }
         }
     }
@@ -489,11 +489,11 @@ otError Dhcp6Server::AppendRapidCommit(Message &aMessage)
 
 void Dhcp6Server::ApplyMeshLocalPrefix(void)
 {
-    for (PrefixAgent &pa : mPrefixAgents)
+    for (PrefixAgent &prefixAgent : mPrefixAgents)
     {
-        if (pa.IsValid())
+        if (prefixAgent.IsValid())
         {
-            PrefixAgent *entry = &pa;
+            PrefixAgent *entry = &prefixAgent;
 
             Get<ThreadNetif>().RemoveUnicastAddress(entry->GetAloc());
             entry->GetAloc().GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());

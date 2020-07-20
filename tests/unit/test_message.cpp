@@ -46,9 +46,9 @@ void TestMessage(void)
 
     messagePool = &instance->Get<ot::MessagePool>();
 
-    for (unsigned char &i : writeBuffer)
+    for (uint8_t &b : writeBuffer)
     {
-        i = static_cast<uint8_t>(random());
+        b = static_cast<uint8_t>(random());
     }
 
     VerifyOrQuit((message = messagePool->New(ot::Message::kTypeIp6, 0)) != nullptr, "Message::New failed");

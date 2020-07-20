@@ -130,7 +130,7 @@ void TestIp6AddressFromString(void)
         {":f:0:0:c:0:f:f:.", {0}, OT_ERROR_PARSE},
     };
 
-    for (auto &testVector : testVectors)
+    for (Ip6AddressStringTestVector &testVector : testVectors)
     {
         checkAddressFromString(&testVector);
     }

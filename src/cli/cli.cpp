@@ -450,9 +450,9 @@ void Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    for (const struct Command &sCommand : sCommands)
+    for (const Command &command : sCommands)
     {
-        mServer->OutputFormat("%s\r\n", sCommand.mName);
+        mServer->OutputFormat("%s\r\n", command.mName);
     }
 
     for (uint8_t i = 0; i < mUserCommandsLength; i++)
