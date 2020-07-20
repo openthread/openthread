@@ -68,7 +68,6 @@ EXTRA_DIST                                                         = \
     Cert_5_5_04_SplitMergeRouters.py                                 \
     Cert_5_5_05_SplitMergeREED.py                                    \
     Cert_5_5_07_SplitMergeThreeWay.py                                \
-    Cert_5_5_08_SplitRoutersLostLeader.py                            \
     Cert_5_6_01_NetworkDataRegisterBeforeAttachLeader.py             \
     Cert_5_6_02_NetworkDataRegisterBeforeAttachRouter.py             \
     Cert_5_6_03_NetworkDataRegisterAfterAttachLeader.py              \
@@ -76,10 +75,8 @@ EXTRA_DIST                                                         = \
     Cert_5_6_05_NetworkDataRegisterAfterAttachRouter.py              \
     Cert_5_6_06_NetworkDataExpiration.py                             \
     Cert_5_6_07_NetworkDataRequestREED.py                            \
-    Cert_5_6_08_ContextManagement.py                                 \
     Cert_5_6_09_NetworkDataForwarding.py                             \
     Cert_5_7_01_CoapDiagCommands_A.py                                \
-    Cert_5_8_01_KeySynchronization.py                                \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
     Cert_6_1_01_RouterAttach.py                                      \
@@ -223,7 +220,6 @@ check_SCRIPTS                                                      = \
     Cert_5_5_04_SplitMergeRouters.py                                 \
     Cert_5_5_05_SplitMergeREED.py                                    \
     Cert_5_5_07_SplitMergeThreeWay.py                                \
-    Cert_5_5_08_SplitRoutersLostLeader.py                            \
     Cert_5_6_01_NetworkDataRegisterBeforeAttachLeader.py             \
     Cert_5_6_02_NetworkDataRegisterBeforeAttachRouter.py             \
     Cert_5_6_03_NetworkDataRegisterAfterAttachLeader.py              \
@@ -231,10 +227,8 @@ check_SCRIPTS                                                      = \
     Cert_5_6_05_NetworkDataRegisterAfterAttachRouter.py              \
     Cert_5_6_06_NetworkDataExpiration.py                             \
     Cert_5_6_07_NetworkDataRequestREED.py                            \
-    Cert_5_6_08_ContextManagement.py                                 \
     Cert_5_6_09_NetworkDataForwarding.py                             \
     Cert_5_7_01_CoapDiagCommands_A.py                                \
-    Cert_5_8_01_KeySynchronization.py                                \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
     Cert_6_1_01_RouterAttach.py                                      \
