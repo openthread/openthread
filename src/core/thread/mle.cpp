@@ -3849,7 +3849,7 @@ bool Mle::IsAnycastLocator(const Ip6::Address &aAddress) const
 
 bool Mle::IsMeshLocalAddress(const Ip6::Address &aAddress) const
 {
-    return (memcmp(&GetMeshLocalPrefix(), &aAddress, MeshLocalPrefix::kSize) == 0);
+    return (aAddress.GetPrefix() == GetMeshLocalPrefix());
 }
 
 otError Mle::CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header)
