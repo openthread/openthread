@@ -188,6 +188,12 @@ void MlrManager::SendMulticastListenerRegistration(void)
 
     mMlrPending = true;
 
+    // TODO: not enable fast polls for SSED
+    if (!Get<Mle::Mle>().IsRxOnWhenIdle())
+    {
+        Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
+    }
+
 exit:
     if (error != OT_ERROR_NONE)
     {
@@ -204,7 +210,7 @@ exit:
         }
     }
 
-`    otLogInfoMlr("Send MLR.req: %s", otThreadErrorToString(error));
+    otLogInfoMlr("Send MLR.req: %s", otThreadErrorToString(error));
     LogMulticastAddresses();
 }
 
