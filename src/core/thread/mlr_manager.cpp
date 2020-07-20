@@ -204,7 +204,7 @@ exit:
         }
     }
 
-    otLogInfoBbr("Send MLR.req: %s", otThreadErrorToString(error));
+`    otLogInfoMlr("Send MLR.req: %s", otThreadErrorToString(error));
     LogMulticastAddresses();
 }
 
@@ -252,7 +252,7 @@ exit:
         }
     }
 
-    otLogInfoBbr("Receive MLR.rsp, result=%s, status=%d, error=%s", otThreadErrorToString(aResult), status,
+    otLogInfoMlr("Receive MLR.rsp, result=%s, status=%d, error=%s", otThreadErrorToString(aResult), status,
                  otThreadErrorToString(error));
 }
 
@@ -328,14 +328,14 @@ void MlrManager::UpdateReregistrationDelay(bool aRereg)
 
     ResetTimer();
 
-    otLogDebgBbr("MlrManager::UpdateReregistrationDelay: rereg=%d, needSendMlr=%d, ReregDelay=%lu", aRereg, needSendMlr,
+    otLogDebgMlr("MlrManager::UpdateReregistrationDelay: rereg=%d, needSendMlr=%d, ReregDelay=%lu", aRereg, needSendMlr,
                  mReregistrationDelay);
 }
 
 void MlrManager::LogMulticastAddresses(void)
 {
 #if OPENTHREAD_CONFIG_LOG_BBR && OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
-    otLogDebgBbr("-------- Multicast Addresses --------");
+    otLogDebgMlr("-------- Multicast Addresses --------");
 
     for (const Ip6::NetifMulticastAddress *addr = Get<ThreadNetif>().GetMulticastAddresses(); addr != nullptr;
          addr                                   = addr->GetNext())
@@ -345,7 +345,7 @@ void MlrManager::LogMulticastAddresses(void)
         {
             auto state = addr->GetMlrState();
 
-            otLogDebgBbr("%-32s%c", addr->GetAddress().ToString().AsCString(), "-rR"[state]);
+            otLogDebgMlr("%-32s%c", addr->GetAddress().ToString().AsCString(), "-rR"[state]);
         }
     }
 #endif
