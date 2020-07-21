@@ -285,7 +285,7 @@ exit:
 
 bool Netif::IsMulticastAddressExternal(const NetifMulticastAddress &aAddress) const
 {
-    return mExtMulticastAddressPool.IsPoolEntry(aAddress);
+    return mExtMulticastAddressPool.IsPoolEntry(static_cast<const ExternalNetifMulticastAddress &>(aAddress));
 }
 
 void Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
@@ -319,7 +319,7 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     otError                error                      = OT_ERROR_NONE;
     NetifMulticastAddress &linkLocalAllRoutersAddress = static_cast<NetifMulticastAddress &>(
         const_cast<otNetifMulticastAddress &>(kLinkLocalAllRoutersMulticastAddress));
-    NetifMulticastAddress *entry;
+    ExternalNetifMulticastAddress *entry;
 
     VerifyOrExit(!IsMulticastSubscribed(aAddress), error = OT_ERROR_ALREADY);
 
@@ -359,7 +359,7 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
 
     mMulticastAddresses.PopAfter(prev);
 
-    mExtMulticastAddressPool.Free(*entry);
+    mExtMulticastAddressPool.Free(static_cast<ExternalNetifMulticastAddress &>(*entry));
 
     Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
