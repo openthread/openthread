@@ -33,7 +33,7 @@
 
 #include "mlr_manager.hpp"
 
-#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
@@ -54,11 +54,6 @@ MlrManager::MlrManager(Instance &aInstance)
     , mSendDelay(0)
     , mMlrPending(false)
 {
-}
-
-void MlrManager::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
-{
-    static_cast<MlrManager &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void MlrManager::HandleNotifierEvents(Events aEvents)
@@ -264,20 +259,14 @@ exit:
 
 void MlrManager::HandleTimer(void)
 {
-    if (mSendDelay > 0)
+    if (mSendDelay > 0 && --mSendDelay == 0)
     {
-        if (--mSendDelay == 0)
-        {
-            SendMulticastListenerRegistration();
-        }
+        SendMulticastListenerRegistration();
     }
 
-    if (mReregistrationDelay > 0)
+    if (mReregistrationDelay > 0 && --mReregistrationDelay == 0)
     {
-        if (--mReregistrationDelay == 0)
-        {
-            Reregister();
-        }
+        Reregister();
     }
 
     ResetTimer();
@@ -305,9 +294,9 @@ void MlrManager::UpdateReregistrationDelay(bool aRereg)
     }
     else
     {
-        otBackboneRouterConfig config;
-        uint32_t               reregDelay;
-        uint32_t               effectiveMlrTimeout;
+        BackboneRouter::BackboneRouterConfig config;
+        uint32_t                             reregDelay;
+        uint32_t                             effectiveMlrTimeout;
 
         IgnoreError(Get<BackboneRouter::Leader>().GetConfig(config));
 
@@ -349,7 +338,7 @@ void MlrManager::LogMulticastAddresses(void)
         if (Get<ThreadNetif>().IsMulticastAddressExternal(*addr) &&
             addr->GetAddress().IsMulticastLargerThanRealmLocal())
         {
-            auto state = addr->GetMlrState();
+            MlrState state = addr->GetMlrState();
 
             otLogDebgMlr("%-32s%c", addr->GetAddress().ToString().AsCString(), "-rR"[state]);
         }
@@ -357,7 +346,7 @@ void MlrManager::LogMulticastAddresses(void)
 #endif
 }
 
-size_t MlrManager::CountNetifMulticastAddressesToRegister()
+uint16_t MlrManager::CountNetifMulticastAddressesToRegister(void) const
 {
     size_t count = 0;
 
@@ -389,4 +378,4 @@ void MlrManager::SetNetifMulticastAddressMlrState(MlrState aFromState, MlrState 
 
 } // namespace ot
 
-#endif // (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
+#endif // OPENTHREAD_CONFIG_MLR_ENABLE

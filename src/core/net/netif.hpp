@@ -154,8 +154,21 @@ public:
     }
 
 #if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
-    MlrState GetMlrState() const { return mMlrState; }
-    void     SetMlrState(MlrState aState) { mMlrState = aState; }
+    /**
+     * This method returns the current Multicast Listener Registration (MLR) state.
+     *
+     * @returns The current Multicast Listener Registration state.
+     *
+     */
+    MlrState GetMlrState(void) const { return mMlrState; }
+
+    /**
+     * This method sets the Multicast Listener Registration (MLR) state.
+     *
+     * @param[in] aState  The new Multicast Listener Registration state.
+     *
+     */
+    void SetMlrState(MlrState aState) { mMlrState = aState; }
 #endif
 private:
     bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }

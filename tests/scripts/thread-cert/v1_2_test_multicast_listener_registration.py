@@ -66,7 +66,7 @@ MA6 = 'ff02::10'
 """
 
 
-class TestDomainUnicastAddress(thread_cert.TestCase):
+class TestMulticastListenerRegistration(thread_cert.TestCase):
     TOPOLOGY = {
         BBR_1: {
             'version': '1.2',

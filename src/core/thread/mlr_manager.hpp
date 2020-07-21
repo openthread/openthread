@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE
 
 #include "backbone_router/bbr_leader.hpp"
 #include "coap/coap_message.hpp"
@@ -92,8 +92,11 @@ private:
         kTimerInterval = 1000,
     };
 
-    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
-    void        HandleNotifierEvents(Events aEvents);
+    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
+    {
+        static_cast<MlrManager &>(aReceiver).HandleNotifierEvents(aEvents);
+    }
+    void HandleNotifierEvents(Events aEvents);
 
     void SendMulticastListenerRegistration(void);
 
@@ -110,8 +113,8 @@ private:
                                                      const Ip6::MessageInfo *aMessageInfo,
                                                      otError                 aResult);
 
-    size_t CountNetifMulticastAddressesToRegister();
-    void   SetNetifMulticastAddressMlrState(MlrState aFromState, MlrState aToState);
+    uint16_t CountNetifMulticastAddressesToRegister(void) const;
+    void     SetNetifMulticastAddressMlrState(MlrState aFromState, MlrState aToState);
 
     void ScheduleSend(uint16_t aDelay);
     void ResetTimer(void);
@@ -131,5 +134,5 @@ private:
 
 } // namespace ot
 
-#endif // (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
+#endif // OPENTHREAD_CONFIG_MLR_ENABLE
 #endif // MLR_MANAGER_HPP_
