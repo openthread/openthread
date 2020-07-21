@@ -336,7 +336,7 @@ exit:
     return error;
 }
 
-otError Settings::DeleteChildInfo(void)
+otError Settings::DeleteAllChildInfo(void)
 {
     otError error;
 
@@ -353,13 +353,6 @@ Settings::ChildInfoIterator::ChildInfoIterator(Instance &aInstance)
     , mIndex(0)
     , mIsDone(false)
 {
-    Reset();
-}
-
-void Settings::ChildInfoIterator::Reset(void)
-{
-    mIndex  = 0;
-    mIsDone = false;
     Read();
 }
 
