@@ -67,6 +67,17 @@ namespace ot {
 OT_TOOL_PACKED_BEGIN
 class MasterKey : public otMasterKey, public Equatable<MasterKey>
 {
+public:
+#if !OPENTHREAD_RADIO
+    /**
+     * This method generates a cryptographically secure random sequence to populate the Thread Master Key.
+     *
+     * @retval OT_ERROR_NONE     Successfully generated a random Thread Master Key.
+     * @retval OT_ERROR_FAILED   Failed to generate random sequence.
+     *
+     */
+    otError GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(m8)); }
+#endif
 } OT_TOOL_PACKED_END;
 
 /**
