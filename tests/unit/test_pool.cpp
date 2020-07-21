@@ -86,12 +86,12 @@ void TestPool(EntryPool &aPool, bool aInitWithInstance)
 
     VerifyOrQuit(aPool.GetSize() == kPoolSize, "Pool::GetSize() failed");
 
-    for (uint16_t i = 0; i < kPoolSize; i++)
+    for (Entry *&entry : entries)
     {
-        entries[i] = aPool.Allocate();
-        VerifyOrQuit(entries[i] != nullptr, "Pool::Allocate() failed");
+        entry = aPool.Allocate();
+        VerifyOrQuit(entry != nullptr, "Pool::Allocate() failed");
 
-        VerifyEntry(aPool, *entries[i], aInitWithInstance);
+        VerifyEntry(aPool, *entry, aInitWithInstance);
     }
 
     for (uint16_t numEntriesToFree = 1; numEntriesToFree <= kPoolSize; numEntriesToFree++)

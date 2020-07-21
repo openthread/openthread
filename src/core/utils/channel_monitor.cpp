@@ -193,9 +193,9 @@ void ChannelMonitor::LogResults(void)
     const size_t        kStringSize = 128;
     String<kStringSize> logString;
 
-    for (size_t i = 0; i < kNumChannels; i++)
+    for (uint16_t channel : mChannelOccupancy)
     {
-        IgnoreError(logString.Append("%02x ", mChannelOccupancy[i] >> 8));
+        IgnoreError(logString.Append("%02x ", channel >> 8));
     }
 
     otLogInfoUtil("ChannelMonitor: %u [%s]", mSampleCount, logString.AsCString());

@@ -585,21 +585,17 @@ int TestTimerTime(void)
     ot::Time t1;
     ot::Time t2;
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(kStartTimes); i++)
+    for (uint32_t startTime : kStartTimes)
     {
-        uint32_t start = kStartTimes[i];
-
-        for (size_t j = 0; j < OT_ARRAY_LENGTH(kDurations); j++)
+        for (uint32_t duration : kDurations)
         {
-            uint32_t duration = kDurations[j];
+            printf("TestTimerTime() start=%-10x  duration=%-10x ", startTime, duration);
 
-            printf("TestTimerTime() start=%-10x  duration=%-10x ", start, duration);
-
-            t1.SetValue(start);
-            VerifyOrQuit(t1.GetValue() == start, "Time::SetValue() failed.");
+            t1.SetValue(startTime);
+            VerifyOrQuit(t1.GetValue() == startTime, "Time::SetValue() failed.");
 
             t2 = t1;
-            VerifyOrQuit(t1.GetValue() == start, "Time assignment failed.");
+            VerifyOrQuit(t1.GetValue() == startTime, "Time assignment failed.");
 
             VerifyOrQuit(t1 == t2, "Time == failed.");
             VerifyOrQuit(!(t1 != t2), "Time != failed.");

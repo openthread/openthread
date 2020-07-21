@@ -270,7 +270,7 @@ void TestMacHeader(void)
          Mac::Frame::kSecMic32 | Mac::Frame::kKeyIdMode2, 19, 6},
     };
 
-    for (unsigned i = 0; i < OT_ARRAY_LENGTH(tests); i++)
+    for (const auto &test : tests)
     {
         uint8_t      psdu[Mac::Frame::kMtu];
         Mac::TxFrame frame;
@@ -278,10 +278,10 @@ void TestMacHeader(void)
         frame.mPsdu   = psdu;
         frame.mLength = 0;
 
-        frame.InitMacHeader(tests[i].fcf, tests[i].secCtl);
-        VerifyOrQuit(frame.GetHeaderLength() == tests[i].headerLength, "MacHeader test failed");
-        VerifyOrQuit(frame.GetFooterLength() == tests[i].footerLength, "MacHeader test failed");
-        VerifyOrQuit(frame.GetLength() == tests[i].headerLength + tests[i].footerLength, "MacHeader test failed");
+        frame.InitMacHeader(test.fcf, test.secCtl);
+        VerifyOrQuit(frame.GetHeaderLength() == test.headerLength, "MacHeader test failed");
+        VerifyOrQuit(frame.GetFooterLength() == test.footerLength, "MacHeader test failed");
+        VerifyOrQuit(frame.GetLength() == test.headerLength + test.footerLength, "MacHeader test failed");
     }
 }
 
@@ -365,9 +365,9 @@ void TestMacChannelMask(void)
     VerifyOrQuit(mask1.IsEmpty(), "ChannelMask.IsEmpty failed");
     VerifyChannelMaskContent(mask1, nullptr, 0);
 
-    for (uint16_t index = 0; index < sizeof(channels1); index++)
+    for (uint8_t channel : channels1)
     {
-        mask1.AddChannel(channels1[index]);
+        mask1.AddChannel(channel);
     }
 
     printf("channels1 = %s\n", mask1.ToString().AsCString());
@@ -377,9 +377,9 @@ void TestMacChannelMask(void)
 
     mask2.Clear();
 
-    for (uint16_t index = 0; index < sizeof(channels2); index++)
+    for (uint8_t channel : channels2)
     {
-        mask2.AddChannel(channels2[index]);
+        mask2.AddChannel(channel);
     }
 
     printf("channels2 = %s\n", mask2.ToString().AsCString());

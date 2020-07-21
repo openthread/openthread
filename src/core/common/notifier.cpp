@@ -54,10 +54,10 @@ Notifier::Notifier(Instance &aInstance)
     , mTask(aInstance, Notifier::EmitEvents, this)
     , mReceivers()
 {
-    for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
+    for (ExternalCallback &callback : mExternalCallbacks)
     {
-        mExternalCallbacks[i].mHandler = nullptr;
-        mExternalCallbacks[i].mContext = nullptr;
+        callback.mHandler = nullptr;
+        callback.mContext = nullptr;
     }
 }
 
@@ -73,10 +73,8 @@ otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aCont
 
     VerifyOrExit(aCallback != nullptr, OT_NOOP);
 
-    for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
+    for (ExternalCallback &callback : mExternalCallbacks)
     {
-        ExternalCallback &callback = mExternalCallbacks[i];
-
         if (callback.mHandler == nullptr)
         {
             if (unusedCallback == nullptr)
@@ -103,10 +101,8 @@ void Notifier::RemoveCallback(otStateChangedCallback aCallback, void *aContext)
 {
     VerifyOrExit(aCallback != nullptr, OT_NOOP);
 
-    for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
+    for (ExternalCallback &callback : mExternalCallbacks)
     {
-        ExternalCallback &callback = mExternalCallbacks[i];
-
         if ((callback.mHandler == aCallback) && (callback.mContext == aContext))
         {
             callback.mHandler = nullptr;
@@ -157,10 +153,8 @@ void Notifier::EmitEvents(void)
         receiver->Emit(events);
     }
 
-    for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
+    for (ExternalCallback &callback : mExternalCallbacks)
     {
-        ExternalCallback &callback = mExternalCallbacks[i];
-
         if (callback.mHandler != nullptr)
         {
             callback.mHandler(events.GetAsFlags(), callback.mContext);

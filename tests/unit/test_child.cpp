@@ -136,11 +136,10 @@ void TestChildIp6Address(void)
 
     numAddresses++;
 
-    for (uint8_t index = 0; index < static_cast<uint8_t>(OT_ARRAY_LENGTH(ip6Addresses)); index++)
+    for (const char *ip6Address : ip6Addresses)
     {
         VerifyOrQuit(numAddresses < kMaxChildIp6Addresses, "Too many IPv6 addresses in the unit test");
-        SuccessOrQuit(addresses[numAddresses++].FromString(ip6Addresses[index]),
-                      "could not convert IPv6 address from string");
+        SuccessOrQuit(addresses[numAddresses++].FromString(ip6Address), "could not convert IPv6 address from string");
     }
 
     printf(" -- PASS\n");
