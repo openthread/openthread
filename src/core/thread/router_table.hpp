@@ -389,6 +389,16 @@ public:
      */
     void ProcessTimerTick(void);
 
+    /**
+     * This method enables range-based `for` loop iteration over all router entries in the router table.
+     *
+     * This method should be used as follows:
+     *
+     *     for (Router &router : Get<RouterTable>().Iterate()) { ... }
+     *
+     * @returns An IteratorBuilder instance.
+     *
+     */
     IteratorBuilder Iterate(void) { return IteratorBuilder(GetInstance()); }
 
 private:
