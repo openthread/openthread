@@ -132,6 +132,14 @@ public:
      */
     static void EmitTransmit(const Mac::TxFrame &aFrame);
 
+    /**
+     * This function emits the device mode to OTNS.
+     *
+     * @param[in] aMode The device mode.
+     *
+     */
+    static void EmitDeviceMode(Mle::DeviceMode aMode);
+
 private:
     static void EmitStatus(const char *aFmt, ...);
 
