@@ -396,7 +396,7 @@ public:
      *
      *     for (Router &router : Get<RouterTable>().Iterate()) { ... }
      *
-     * @returns An IteratorBuilder instance.
+     * @returns An `IteratorBuilder` instance.
      *
      */
     IteratorBuilder Iterate(void) { return IteratorBuilder(GetInstance()); }
