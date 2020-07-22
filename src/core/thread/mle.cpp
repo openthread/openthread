@@ -1522,7 +1522,7 @@ void Mle::HandleNotifierEvents(Events aEvents)
         Get<BackboneRouter::Leader>().Update();
 #endif
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-        this->UpdateServiceAlocs();
+        UpdateServiceAlocs();
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
