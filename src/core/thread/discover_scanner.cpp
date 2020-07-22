@@ -121,7 +121,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     joinerAdvertisement.SetAdvType(aAdvType);
     joinerAdvertisement.SetAdvData(aAdvData);
 
-    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kDiscovery, &joinerAdvertisement, sizeof(joinerAdvertisement)));
+    SuccessOrExit(error = joinerAdvertisement.AppendTo(*message));
 
     destination.SetToLinkLocalAllRoutersMulticast();
 

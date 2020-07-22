@@ -132,7 +132,6 @@ otError Joiner::Start(const char *     aPskd,
                       const char *     aVendorModel,
                       const char *     aVendorSwVersion,
                       const char *     aVendorData,
-                      const char *     aJoinerAdvertisement,
                       otJoinerCallback aCallback,
                       void *           aContext)
 {
@@ -176,7 +175,7 @@ otError Joiner::Start(const char *     aPskd,
 
     SuccessOrExit(error = Get<Mle::DiscoverScanner>().Discover(Mac::ChannelMask(0), Get<Mac::Mac>().GetPanId(),
                                                                /* aJoiner */ true, /* aEnableFiltering */ true,
-                                                               &filterIndexes, HandleDiscoverResult, this));
+                                                               &filterIndexes, 0, nullptr, HandleDiscoverResult, this));
     mCallback = aCallback;
     mContext  = aContext;
 
