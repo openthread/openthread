@@ -222,7 +222,7 @@ public:
         explicit ExternalMulticastAddressIterator(Netif &aNetif)
             : mNetif(aNetif)
         {
-            AdvanceFrom(const_cast<NetifMulticastAddress *>(mNetif.GetMulticastAddresses()));
+            AdvanceFrom(mNetif.GetMulticastAddresses());
         }
 
         /**
@@ -304,7 +304,7 @@ public:
         {
         }
 
-        void AdvanceFrom(NetifMulticastAddress *aAddr)
+        void AdvanceFrom(const NetifMulticastAddress *aAddr)
         {
             while (aAddr != nullptr && !mNetif.IsMulticastAddressExternal(*aAddr))
             {
