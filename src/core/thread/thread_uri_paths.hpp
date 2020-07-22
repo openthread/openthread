@@ -292,6 +292,14 @@ namespace ot {
  */
 #define OT_URI_PATH_DIAGNOSTIC_RESET "d/dr"
 
+/**
+ * @def OT_URI_PATH_MLR
+ *
+ * The URI Path for Multicast Listener Registration.
+ *
+ */
+#define OT_URI_PATH_MLR "n/mr"
+
 } // namespace ot
 
 #endif // THREAD_URIS_HPP_

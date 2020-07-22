@@ -109,9 +109,13 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     , mBackboneRouterLocal(aInstance)
+    , mBackboneRouterManager(aInstance)
 #endif
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     , mDuaManager(aInstance)
+#endif
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+    , mMlrManager(aInstance)
 #endif
     , mChildSupervisor(aInstance)
     , mSupervisionListener(aInstance)

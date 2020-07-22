@@ -521,6 +521,10 @@
 #error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_DUA_ENABLE"
 #endif
 
+#if OPENTHREAD_CONFIG_MLR_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
+#error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MLR_ENABLE"
+#endif
+
 #ifdef OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL
 #error "OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL is removed, use OPENTHREAD_CONFIG_LOG_OUTPUT_APP instead"
 #endif

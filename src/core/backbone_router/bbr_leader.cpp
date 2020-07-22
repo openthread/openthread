@@ -226,6 +226,10 @@ void Leader::UpdateBackboneRouterPrimary(void)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     Get<BackboneRouter::Local>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
 #endif
+
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+    Get<MlrManager>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
+#endif
 }
 
 void Leader::UpdateDomainPrefixConfig(void)

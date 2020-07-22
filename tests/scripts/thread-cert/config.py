@@ -336,6 +336,8 @@ def create_deafult_network_tlvs_factories():
         # which is in fact MLE Route64 TLV. Thread specificaton v1.1. - Chapter 5.20
         network_layer.TlvType.MLE_ROUTING:
             create_default_mle_tlv_route64_factory(),
+        network_layer.TlvType.IPv6_ADDRESSES:
+            network_layer.IPv6AddressesFactory(),
     }
 
 
@@ -488,6 +490,7 @@ def create_default_uri_path_based_payload_factories():
         '/d/dg': network_diag_tlvs_factory,
         '/d/dq': network_diag_tlvs_factory,
         '/d/dr': network_diag_tlvs_factory,
+        '/n/mr': network_layer_tlvs_factory,
     }
 
 

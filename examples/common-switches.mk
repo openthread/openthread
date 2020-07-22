@@ -61,6 +61,7 @@ endif
 LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
 MLE_LONG_ROUTES     ?= 0
+MLR                 ?= 0
 MTD_NETDIAG         ?= 0
 MULTIPLE_INSTANCE   ?= 0
 OTNS                ?= 0
@@ -203,6 +204,10 @@ endif
 # Enable MLE long routes extension (experimental, breaks Thread conformance)
 ifeq ($(MLE_LONG_ROUTES),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE=1
+endif
+
+ifeq ($(MLR),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MLR_ENABLE=1
 endif
 
 ifeq ($(MTD_NETDIAG),1)
