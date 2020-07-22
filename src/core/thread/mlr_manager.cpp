@@ -146,9 +146,10 @@ void MlrManager::SendMulticastListenerRegistration(void)
     addressesTlv.SetLength(sizeof(Ip6::Address) * num);
     SuccessOrExit(error = message->Append(&addressesTlv, sizeof(addressesTlv)));
 
-    for (Ip6::ExternalNetifMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
+    for (Ip6::ExternalNetifMulticastAddress &addr :
+         Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
     {
-        if (addr.GetAddress().IsMulticastLargerThanRealmLocal() && addr.GetMlrState() == kMlrStateToRegister)
+        if (addr.GetMlrState() == kMlrStateToRegister)
         {
             SuccessOrExit(error = message->Append(&addr.GetAddress(), sizeof(Ip6::Address)));
             addr.SetMlrState(kMlrStateRegistering);
@@ -330,14 +331,12 @@ void MlrManager::LogMulticastAddresses(void)
 #if OPENTHREAD_CONFIG_LOG_BBR && OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
     otLogDebgMlr("-------- Multicast Addresses --------");
 
-    for (const Ip6::ExternalNetifMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
+    for (const Ip6::ExternalNetifMulticastAddress &addr :
+         Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
     {
-        if (addr.GetAddress().IsMulticastLargerThanRealmLocal())
-        {
-            MlrState state = addr.GetMlrState();
+        MlrState state = addr.GetMlrState();
 
-            otLogDebgMlr("%-32s%c", addr.GetAddress().ToString().AsCString(), "-rR"[state]);
-        }
+        otLogDebgMlr("%-32s%c", addr.GetAddress().ToString().AsCString(), "-rR"[state]);
     }
 #endif
 }
@@ -346,9 +345,10 @@ uint16_t MlrManager::CountNetifMulticastAddressesToRegister(void) const
 {
     uint16_t count = 0;
 
-    for (const Ip6::ExternalNetifMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
+    for (const Ip6::ExternalNetifMulticastAddress &addr :
+         Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
     {
-        if (addr.GetAddress().IsMulticastLargerThanRealmLocal() && addr.GetMlrState() == kMlrStateToRegister)
+        if (addr.GetMlrState() == kMlrStateToRegister)
         {
             count++;
         }
@@ -359,9 +359,10 @@ uint16_t MlrManager::CountNetifMulticastAddressesToRegister(void) const
 
 void MlrManager::SetNetifMulticastAddressMlrState(MlrState aFromState, MlrState aToState)
 {
-    for (Ip6::ExternalNetifMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
+    for (Ip6::ExternalNetifMulticastAddress &addr :
+         Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
     {
-        if (addr.GetAddress().IsMulticastLargerThanRealmLocal() && addr.GetMlrState() == aFromState)
+        if (addr.GetMlrState() == aFromState)
         {
             addr.SetMlrState(aToState);
         }
