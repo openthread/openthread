@@ -41,6 +41,7 @@
 
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
+#include "common/time.hpp"
 #include "common/timer.hpp"
 #include "mac/channel_mask.hpp"
 #include "mac/mac_filter.hpp"
@@ -218,7 +219,15 @@ public:
     void RequestIndirectFrameTransmission(void);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    void RequestCslFrameTransmission(void);
+    /**
+     * This method requests `Mac` to start a Csl Tx operation after a delay of
+     * @p aDelay time.
+     *
+     * @param[in]  aDelay  Delay time for `Mac` to start a Csl Tx, in units of
+     * milliseconds.
+     *
+     */
+    void RequestCslFrameTransmission(uint32_t aDelay);
 #endif
 
 #endif
@@ -946,6 +955,9 @@ private:
     uint8_t     mMaxFrameRetriesDirect;
 #if OPENTHREAD_FTD
     uint8_t mMaxFrameRetriesIndirect;
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    TimeMilli mCslTxFireTime;
 #endif
 
     union

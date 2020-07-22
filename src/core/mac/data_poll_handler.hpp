@@ -89,24 +89,18 @@ public:
     class ChildInfo
     {
         friend class DataPollHandler;
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        friend class CslTxScheduler;
+#endif
 
     private:
         bool IsDataPollPending(void) const { return mDataPollPending; }
         void SetDataPollPending(bool aPending) { mDataPollPending = aPending; }
 
-        uint32_t GetIndirectFrameCounter(void) const { return mIndirectFrameCounter; }
-        void     SetIndirectFrameCounter(uint32_t aFrameCounter) { mIndirectFrameCounter = aFrameCounter; }
-
-        uint8_t GetIndirectKeyId(void) const { return mIndirectKeyId; }
-        void    SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
-
         uint8_t GetIndirectTxAttempts(void) const { return mIndirectTxAttempts; }
         void    SetIndirectTxAttemptsToMax(void) { mIndirectTxAttempts = kMaxPollTriggeredTxAttempts; }
         void    ResetIndirectTxAttempts(void) { mIndirectTxAttempts = 0; }
         void    IncrementIndirectTxAttempts(void) { mIndirectTxAttempts++; }
-
-        uint8_t GetIndirectDataSequenceNumber(void) const { return mIndirectDsn; }
-        void    SetIndirectDataSequenceNumber(uint8_t aDsn) { mIndirectDsn = aDsn; }
 
         bool IsFramePurgePending(void) const { return mFramePurgePending; }
         void SetFramePurgePending(bool aPurgePending) { mFramePurgePending = aPurgePending; }
@@ -114,13 +108,10 @@ public:
         bool IsFrameReplacePending(void) const { return mFrameReplacePending; }
         void SetFrameReplacePending(bool aReplacePending) { mFrameReplacePending = aReplacePending; }
 
-        uint32_t mIndirectFrameCounter;    // Frame counter for current indirect frame (used for retx).
-        uint8_t  mIndirectKeyId;           // Key Id for current indirect frame (used for retx).
-        uint8_t  mIndirectDsn;             // MAC level Data Sequence Number (DSN) for retx attempts.
-        uint8_t  mIndirectTxAttempts : 5;  // Number of data poll triggered tx attempts.
-        bool     mDataPollPending : 1;     // Indicates whether or not a Data Poll was received.
-        bool     mFramePurgePending : 1;   // Indicates a pending purge request for the current indirect frame.
-        bool     mFrameReplacePending : 1; // Indicates a pending replace request for the current indirect frame.
+        uint8_t mIndirectTxAttempts : 5;  // Number of data poll triggered tx attempts.
+        bool    mDataPollPending : 1;     // Indicates whether or not a Data Poll was received.
+        bool    mFramePurgePending : 1;   // Indicates a pending purge request for the current indirect frame.
+        bool    mFrameReplacePending : 1; // Indicates a pending replace request for the current indirect frame.
 
         static_assert(kMaxPollTriggeredTxAttempts < (1 << 5), "mIndirectTxAttempts cannot fit max!");
     };
@@ -257,11 +248,6 @@ public:
      */
     void RequestFrameChange(FrameChange aChange, Child &aChild);
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    void    UpdateCslChild(Child &aChild);
-    otError HandleCslFrameRequest(Mac::TxFrame &aFrame);
-#endif
-
 private:
     // Callbacks from MAC
     void    HandleDataPoll(Mac::RxFrame &aFrame);
@@ -280,29 +266,6 @@ private:
     Child *                 mIndirectTxChild;
     Callbacks::FrameContext mFrameContext;
     Callbacks               mCallbacks;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    static const uint16_t kCslFrameRequestAheadMax = OPENTHREAD_CONFIG_CSL_FRAME_REQUEST_AHEAD_MAX;
-
-    /**
-     * The minimal allowed time in units of 10 symbols before CSL transmission to request CSL transmission.
-     *
-     * This aims to leave enough preparation time so that the transmitting can happen exactly at SSED's sample time.
-     *
-     */
-    static const uint16_t kCslFrameRequestAheadMin = OPENTHREAD_CONFIG_CSL_FRAME_REQUEST_AHEAD_MIN;
-
-    void        UpdateCslTimer(void);
-    static void HandleCslTimer(Timer &aTimer);
-    void        HandleCslTimer(void);
-
-    /// Compute the delay in us to request CSL transmit for the child based on its transmit phase and the radio time.
-    uint32_t GetNextCslTransmitRequestDelay(const Child &aChild, uint64_t aRadioNow);
-
-    Child *    mCslTxChild;
-    TimerMicro mCslTimer; ///< The max CSL period is about 10s, the current micro timer supports that delay.
-
-#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE && OPENTHREAD_FTD
 };
 
 /**

@@ -404,6 +404,14 @@ public:
     otError Receive(uint8_t aChannel) { return otPlatRadioReceive(GetInstance(), aChannel); }
 
     /**
+     * This method updates the csl sample time in radio.
+     *
+     * @param[in]  aCslSampleTime  The csl sample time.
+     *
+     */
+    void UpdateCslSampleTime(uint32_t aCslSampleTime) { otPlatRadioUpdateCslSampleTime(aCslSampleTime); }
+
+    /**
      * This method gets the radio transmit frame buffer.
      *
      * OpenThread forms the IEEE 802.15.4 frame in this buffer then calls `Transmit()` to request transmission.

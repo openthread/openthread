@@ -284,6 +284,8 @@ def create_default_mle_tlvs_factories():
             mle.ActiveOperationalDatasetFactory(),
         mle.TlvType.PENDING_OPERATIONAL_DATASET:
             mle.PendingOperationalDatasetFactory(),
+        mle.TlvType.CSL_SYNCHRONIZED_TIMEOUT:
+            mle.CslSynchronizedTimeoutFactory(),
         mle.TlvType.TIME_REQUEST:
             mle.TimeRequestFactory(),
         mle.TlvType.TIME_PARAMETER:

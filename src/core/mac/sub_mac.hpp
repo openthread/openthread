@@ -297,6 +297,21 @@ public:
      */
     otError Receive(uint8_t aChannel);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    /**
+     * This method let `SubMac` start CSL sample and switch the radio state
+     * between `Receive` and `Sleep` according the CSL timer. When CslSample is
+     * started, `mState` will become `kStateCslSample`. But it could be doing
+     * `Sleep` or `Receive` at this moment(depending on `mCslState`).
+     *
+     * @retval OT_ERROR_NONE     Successfully started CSL sampling.
+     * @retval OT_ERROR_BUSY     The radio was transmitting.
+     * @retval OT_ERROR_INVALID_STATE The radio was disabled.
+     *
+     */
+    otError CslSample(void);
+#endif
+
     /**
      * This method gets the radio transmit frame.
      *
@@ -537,15 +552,18 @@ private:
 
     enum State
     {
-        kStateDisabled, ///< Radio is disabled.
-        kStateSleep,    ///< Radio is in sleep.
-        kStateReceive,  ///< Radio in in receive.
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        kStateCslTransmit, ///< CSL transmission.
-#endif
+        kStateDisabled,    ///< Radio is disabled.
+        kStateSleep,       ///< Radio is in sleep.
+        kStateReceive,     ///< Radio in in receive.
         kStateCsmaBackoff, ///< CSMA backoff before transmission.
         kStateTransmit,    ///< Radio is transmitting.
         kStateEnergyScan,  ///< Energy scan.
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        kStateCslTransmit, ///< CSL transmission.
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        kStateCslSample, ///< CSL receive.
+#endif
     };
 
     bool RadioSupportsCsmaBackoff(void) const
@@ -610,7 +628,7 @@ private:
      * The SSED sample window in units of 10 symbols.
      *
      */
-    static const uint32_t kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW;
+    static const uint32_t kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * OT_US_PER_TEN_SYMBOLS;
 
     /**
      * The minimum SSED sample window in units of 10 symbols.

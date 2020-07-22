@@ -40,6 +40,7 @@
 #include "common/message.hpp"
 #include "mac/data_poll_handler.hpp"
 #include "mac/mac_frame.hpp"
+#include "thread/csl_tx_scheduler.hpp"
 #include "thread/indirect_sender_frame_context.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/src_match_controller.hpp"
@@ -65,6 +66,9 @@ class IndirectSender : public InstanceLocator, public IndirectSenderBase
 {
     friend class Instance;
     friend class DataPollHandler::Callbacks;
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    friend class CslTxScheduler::Callbacks;
+#endif
 
 public:
     /**
@@ -76,6 +80,8 @@ public:
     class ChildInfo
     {
         friend class IndirectSender;
+        friend class DataPollHandler;
+        friend class CslTxScheduler;
         friend class SourceMatchController;
 
     public:
@@ -87,128 +93,6 @@ public:
          */
         uint16_t GetIndirectMessageCount(void) const { return mQueuedMessageCount; }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        /**
-         * This method indicates whether or not the child enables CSL.
-         *
-         * @returns TRUE if the child enables CSL, FALSE otherwise.
-         *
-         */
-        bool IsCslEnabled(void) const { return mCslPeriod > 0; }
-
-        /**
-         * This method indicates whether or not the child is CSL synchronized.
-         *
-         * @returns TRUE if the child is CSL synchronized, FALSE otherwise.
-         *
-         */
-        bool IsCslSynchronized(void) const { return mCslSynchronized && mCslPeriod > 0; }
-
-        /**
-         * This method sets whether or not the child is CSL synchronized.
-         *
-         * @param[in]   aCslSynchronized    Whether CSL is synchronized.
-         *
-         */
-        void SetCslSynchronized(bool aCslSynchronized) { mCslSynchronized = aCslSynchronized; }
-
-        /**
-         * This method gets the child CSL Channel.
-         *
-         * @returns The child CSL Channel.
-         *
-         */
-        uint8_t GetCslChannel(void) const { return mCslChannel; }
-
-        /**
-         * This method sets the child CSL Channel.
-         *
-         * @param[in]  aChannel  The CSL Channel.
-         *
-         */
-        void SetCslChannel(uint8_t aChannel) { mCslChannel = aChannel; }
-
-        /**
-         * This method gets the child CSL sync timeout.
-         *
-         * @returns The child CSL sync timeout.
-         *
-         */
-        uint32_t GetCslSyncTimeout(void) const { return mCslSyncTimeout; }
-
-        /**
-         * This method sets the child CSL sync timeout.
-         *
-         * @param[in]  aTimeout The Child CSL sync timeout.
-         *
-         */
-        void SetCslSyncTimeout(uint32_t aTimeout) { mCslSyncTimeout = aTimeout; }
-
-        /**
-         * This method gets the child last CSL sync time.
-         *
-         * @returns The child last CSL sync time.
-         *
-         */
-        uint32_t GetCslLastSyncTime(void) const { return mCslLastSyncTime; }
-
-        /**
-         * This method sets the child last CSL sync time.
-         *
-         * @param[in]  aTime The Child last CSL sync time.
-         *
-         */
-        void SetCslLastSyncTime(uint32_t aTime) { mCslLastSyncTime = aTime; }
-
-        /**
-         * This method gets the child CSL Period.
-         *
-         * @returns The child CSL Period.
-         *
-         */
-        uint16_t GetCslPeriod(void) const { return mCslPeriod; }
-
-        /**
-         * This method sets the child CSL Period.
-         *
-         * @param[in]  aPeriod The Child CSL Period.
-         *
-         */
-        void SetCslPeriod(uint16_t aPeriod) { mCslPeriod = aPeriod; }
-
-        /**
-         * This method gets the child CSL Phase based on time of radio driver.
-         *
-         * @returns The child CSL Phase.
-         *
-         */
-        uint16_t GetCslPhase(void) const { return mCslPhase; }
-
-        /**
-         * This method sets the child CSL Phase based on time of radio driver.
-         *
-         * @param[in]  aPhase The Child CSL Phase.
-         *
-         */
-        void SetCslPhase(uint16_t aPhase) { mCslPhase = aPhase; }
-
-        /**
-         * This method returns the time last frame containing CSL IE was heard.
-         *
-         * @returns The time last frame containing CSL IE was heard.
-         *
-         */
-        TimeMilli GetCslLastHeard(void) const { return mCslLastHeard; }
-
-        /**
-         * This method sets the time last frame containing CSL IE was heard.
-         *
-         * @returns The time last frame containing CSL IE was heard.
-         *
-         */
-        void SetCslLastHeard(TimeMilli aCslLastHeard) { mCslLastHeard = aCslLastHeard; }
-
-#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     private:
         Message *GetIndirectMessage(void) { return mIndirectMessage; }
         void     SetIndirectMessage(Message *aMessage) { mIndirectMessage = aMessage; }
@@ -234,6 +118,15 @@ public:
 
         const Mac::Address &GetMacAddress(Mac::Address &aMacAddress) const;
 
+        uint32_t GetIndirectFrameCounter(void) const { return mIndirectFrameCounter; }
+        void     SetIndirectFrameCounter(uint32_t aFrameCounter) { mIndirectFrameCounter = aFrameCounter; }
+
+        uint8_t GetIndirectKeyId(void) const { return mIndirectKeyId; }
+        void    SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
+
+        uint8_t GetIndirectDataSequenceNumber(void) const { return mIndirectDsn; }
+        void    SetIndirectDataSequenceNumber(uint8_t aDsn) { mIndirectDsn = aDsn; }
+
         Message *mIndirectMessage;             // Current indirect message.
         uint16_t mIndirectFragmentOffset : 14; // 6LoWPAN fragment offset for the indirect message.
         bool     mIndirectTxSuccess : 1;       // Indicates tx success/failure of current indirect message.
@@ -241,17 +134,9 @@ public:
         uint16_t mQueuedMessageCount : 14;     // Number of queued indirect messages for the child.
         bool     mUseShortAddress : 1;         // Indicates whether to use short or extended address.
         bool     mSourceMatchPending : 1;      // Indicates whether or not pending to add to src match table.
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        bool mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
-
-        uint8_t  mCslChannel;     ///< The channel the device will listen on.
-        uint32_t mCslSyncTimeout; ///< The sync timeout, in microseconds.
-
-        uint32_t  mCslLastSyncTime; ///< The time when received the latest CSL sync message.
-        uint16_t  mCslPeriod;       ///< The CSL sample period in 10 symbols(160 microseconds)
-        uint16_t  mCslPhase;        ///< The time when the next CSL sample will start.
-        TimeMilli mCslLastHeard;    ///< Time when last frame containing CSL IE heard.
-#endif
+        uint32_t mIndirectFrameCounter;        // Frame counter for current indirect frame (used for retx).
+        uint8_t  mIndirectKeyId;               // Key Id for current indirect frame (used for retx).
+        uint8_t  mIndirectDsn;                 // MAC level Data Sequence Number (DSN) for retx attempts.
 
         static_assert(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < (1UL << 14),
                       "mQueuedMessageCount cannot fit max required!");
@@ -354,6 +239,9 @@ private:
     bool                  mEnabled;
     SourceMatchController mSourceMatchController;
     DataPollHandler       mDataPollHandler;
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    CslTxScheduler mCslTxScheduler;
+#endif
 };
 
 /**

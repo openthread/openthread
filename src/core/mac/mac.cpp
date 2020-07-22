@@ -113,6 +113,9 @@ Mac::Mac(Instance &aInstance)
 #if OPENTHREAD_FTD
     , mMaxFrameRetriesIndirect(kDefaultMaxFrameRetriesIndirect)
 #endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    , mCslTxFireTime(TimeMilli::kMaxDuration)
+#endif
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
     , mSubMac(aInstance)
@@ -592,10 +595,11 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-void Mac::RequestCslFrameTransmission(void)
+void Mac::RequestCslFrameTransmission(uint32_t aDelay)
 {
     VerifyOrExit(mEnabled, OT_NOOP);
-    VerifyOrExit(!mPendingTransmitDataCsl && (mOperation != kOperationTransmitDataCsl), OT_NOOP);
+
+    mCslTxFireTime = mTimer.GetNow() + aDelay;
 
     StartOperation(kOperationTransmitDataCsl);
 
@@ -647,23 +651,42 @@ void Mac::UpdateIdleMode(void)
 
     VerifyOrExit(mOperation == kOperationIdle, OT_NOOP);
 
+    if (!mRxOnWhenIdle)
+    {
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
-    if (mShouldDelaySleep)
-    {
-        mTimer.Start(kSleepDelay);
-        mShouldDelaySleep = false;
-        mDelayingSleep    = true;
-        otLogDebgMac("Idle mode: Sleep delayed");
-    }
+        if (mShouldDelaySleep)
+        {
+            mTimer.Start(kSleepDelay);
+            mShouldDelaySleep = false;
+            mDelayingSleep    = true;
+            otLogDebgMac("Idle mode: Sleep delayed");
+        }
 
-    if (mDelayingSleep)
-    {
-        shouldSleep = false;
-    }
+        if (mDelayingSleep)
+        {
+            shouldSleep = false;
+        }
 #endif
+    }
+    else
+    {
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        if (mPendingTransmitDataCsl)
+        {
+            mTimer.FireAt(mCslTxFireTime);
+        }
+#endif
+    }
 
     if (shouldSleep)
     {
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        if (mSubMac.IsCslStarted())
+        {
+            IgnoreError(mSubMac.CslSample());
+            ExitNow();
+        }
+#endif
         IgnoreError(mSubMac.Sleep());
         otLogDebgMac("Idle mode: Radio sleeping");
     }
@@ -786,6 +809,13 @@ void Mac::PerformNextOperation(void)
         mPendingWaitingForData = false;
         mOperation             = kOperationWaitingForData;
     }
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    else if (mPendingTransmitDataCsl && !(mTimer.GetNow() < mCslTxFireTime))
+    {
+        mPendingTransmitDataCsl = false;
+        mOperation              = kOperationTransmitDataCsl;
+    }
+#endif
     else if (mPendingTransmitOobFrame)
     {
         mPendingTransmitOobFrame = false;
@@ -812,13 +842,6 @@ void Mac::PerformNextOperation(void)
         mPendingTransmitDataIndirect = false;
         mOperation                   = kOperationTransmitDataIndirect;
     }
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    else if (mPendingTransmitDataCsl)
-    {
-        mPendingTransmitDataCsl = false;
-        mOperation              = kOperationTransmitDataCsl;
-    }
-#endif
 #endif // OPENTHREAD_FTD
     else if (mPendingTransmitPoll && (!mPendingTransmitDataDirect || mShouldTxPollBeforeData))
     {
@@ -917,11 +940,11 @@ otError Mac::PrepareDataRequest(TxFrame &aFrame)
     aFrame.SetDstPanId(GetPanId());
     aFrame.SetSrcAddr(src);
     aFrame.SetDstAddr(dst);
-    IgnoreError(aFrame.SetCommandId(Frame::kMacCmdDataRequest));
-
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     IgnoreError(AppendHeaderIe(false, aFrame));
 #endif
+
+    IgnoreError(aFrame.SetCommandId(Frame::kMacCmdDataRequest));
 
 exit:
     return error;
@@ -1087,6 +1110,9 @@ void Mac::BeginTransmit(void)
     VerifyOrExit(IsEnabled(), error = OT_ERROR_ABORT);
     sendFrame.SetIsARetransmission(false);
     sendFrame.SetIsSecurityProcessed(false);
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    sendFrame.SetTxPeriod(0);
+#endif
 
     switch (mOperation)
     {
@@ -1140,7 +1166,7 @@ void Mac::BeginTransmit(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
     {
-        SuccessOrExit(error = Get<DataPollHandler>().HandleCslFrameRequest(sendFrame));
+        SuccessOrExit(error = Get<CslTxScheduler>().HandleFrameRequest(sendFrame));
         sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsCsl);
         sendFrame.SetMaxFrameRetries(kMaxFrameRetriesCsl);
         // If the frame is marked as a retransmission, then data sequence number is already set.
@@ -1438,6 +1464,14 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
 #if OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
+        mCounters.mTxData++;
+
+        otDumpDebgMac("TX", aFrame.GetHeader(), aFrame.GetLength());
+        FinishOperation();
+        Get<CslTxScheduler>().HandleSentFrame(aFrame, aError);
+        PerformNextOperation();
+
+        break;
 #endif
     case kOperationTransmitDataIndirect:
         mCounters.mTxData++;
@@ -1496,17 +1530,28 @@ void Mac::HandleTimer(void)
         PerformNextOperation();
         break;
 
-#if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     case kOperationIdle:
-        if (mDelayingSleep)
+        if (!mRxOnWhenIdle)
         {
-            otLogDebgMac("Sleep delay timeout expired");
-            mDelayingSleep = false;
-            UpdateIdleMode();
-        }
-
-        break;
+#if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
+            if (mDelayingSleep)
+            {
+                otLogDebgMac("Sleep delay timeout expired");
+                mDelayingSleep = false;
+                UpdateIdleMode();
+            }
 #endif
+        }
+        else
+        {
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+            if (mPendingTransmitDataCsl)
+            {
+                PerformNextOperation();
+            }
+#endif
+        }
+        break;
 
     default:
         OT_ASSERT(false);
