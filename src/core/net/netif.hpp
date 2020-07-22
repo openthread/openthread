@@ -163,7 +163,7 @@ class ExternalNetifMulticastAddress : public NetifMulticastAddress
     friend class LinkedList<ExternalNetifMulticastAddress>;
 
 public:
-#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE
     /**
      * This method returns the current Multicast Listener Registration (MLR) state.
      *
@@ -187,7 +187,7 @@ private:
         return static_cast<ExternalNetifMulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
     }
 
-#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE
     MlrState mMlrState : 2;
 #endif
 };

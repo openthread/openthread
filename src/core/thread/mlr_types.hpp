@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE
 
 namespace ot {
 
@@ -60,5 +60,5 @@ typedef enum MlrState
 
 } // namespace ot
 
-#endif // (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
+#endif // OPENTHREAD_CONFIG_MLR_ENABLE
 #endif // MLR_TYPES_HPP_

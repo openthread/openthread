@@ -336,7 +336,7 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     VerifyOrExit(entry != nullptr, error = OT_ERROR_NO_BUFS);
 
     entry->mAddress = aAddress;
-#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE
     entry->mMlrState = kMlrStateToRegister;
 #endif
     mMulticastAddresses.Push(*entry);
