@@ -390,7 +390,7 @@ public:
     void ProcessTimerTick(void);
 
     /**
-     * This method enables range-based `for` loop iteration over all router entries in the router table.
+     * This method enables range-based `for` loop iteration over all Router entries in the Router table.
      *
      * This method should be used as follows:
      *
