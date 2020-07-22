@@ -128,7 +128,7 @@ void MlrManager::SendMulticastListenerRegistration(void)
     VerifyOrExit(mle.IsFullThreadDevice() || mle.GetParent().IsThreadVersion1p1(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = OT_ERROR_INVALID_STATE);
 
-    num = CountNetifMulticastAddressesToRegister();
+    num = static_cast<uint8_t>(CountNetifMulticastAddressesToRegister());
     VerifyOrExit(num > 0, error = OT_ERROR_NOT_FOUND);
     if (num > kIPv6AddressesNumMax)
     {
@@ -344,7 +344,7 @@ void MlrManager::LogMulticastAddresses(void)
 
 uint16_t MlrManager::CountNetifMulticastAddressesToRegister(void) const
 {
-    size_t count = 0;
+    uint16_t count = 0;
 
     for (const Ip6::ExternalNetifMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
     {

@@ -163,17 +163,6 @@ class ExternalNetifMulticastAddress : public NetifMulticastAddress
     friend class LinkedList<ExternalNetifMulticastAddress>;
 
 public:
-    /**
-     * This method returns the next `ExternalNetifMulticastAddress` instance in the a linked list.
-     *
-     * @returns A pointer to the next `ExternalNetifMulticastAddress` instance.
-     *
-     */
-    ExternalNetifMulticastAddress *GetNext(void)
-    {
-        return static_cast<ExternalNetifMulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
-    }
-
 #if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
     /**
      * This method returns the current Multicast Listener Registration (MLR) state.
@@ -193,6 +182,11 @@ public:
 #endif
 
 private:
+    ExternalNetifMulticastAddress *GetNext(void)
+    {
+        return static_cast<ExternalNetifMulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
+    }
+
 #if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_MLR_ENABLE
     MlrState mMlrState : 2;
 #endif
@@ -228,15 +222,7 @@ public:
         explicit ExternalMulticastAddressIterator(Netif &aNetif)
             : mNetif(aNetif)
         {
-            const NetifMulticastAddress *addr = mNetif.GetMulticastAddresses();
-
-            while (addr != nullptr && !aNetif.IsMulticastAddressExternal(*addr))
-            {
-                addr = addr->GetNext();
-            }
-
-            mMulticastAddress =
-                const_cast<ExternalNetifMulticastAddress *>(static_cast<const ExternalNetifMulticastAddress *>(addr));
+            AdvanceFrom(const_cast<NetifMulticastAddress *>(mNetif.GetMulticastAddresses()));
         }
 
         /**
@@ -246,7 +232,7 @@ public:
          * empty.
          *
          */
-        void operator++(void) { Advance(); }
+        void operator++(void) { AdvanceFrom(mCurrent->GetNext()); }
 
         /**
          * This method overloads `++` operator (post-increment) to advance the iterator.
@@ -255,7 +241,7 @@ public:
          * empty.
          *
          */
-        void operator++(int) { Advance(); }
+        void operator++(int) { AdvanceFrom(mCurrent->GetNext()); }
 
         /**
          * This method overloads the `*` dereference operator and gets a reference to `ExternalNetifMulticastAddress`
@@ -266,7 +252,7 @@ public:
          * @returns A reference to the `ExternalNetifMulticastAddress` entry currently pointed by the iterator.
          *
          */
-        ExternalNetifMulticastAddress &operator*(void) { return *mMulticastAddress; }
+        ExternalNetifMulticastAddress &operator*(void) { return *mCurrent; }
 
         /**
          * This method overloads the `->` dereference operator and gets a pointer to `ExternalNetifMulticastAddress`
@@ -276,7 +262,7 @@ public:
          * iterator is empty.
          *
          */
-        ExternalNetifMulticastAddress *operator->(void) { return mMulticastAddress; }
+        ExternalNetifMulticastAddress *operator->(void) { return mCurrent; }
 
         /**
          * This method overloads operator `==` to evaluate whether or not two `ExternalMulticastAddressIterator`
@@ -290,10 +276,7 @@ public:
          * `ExternalNetifMulticastAddress` entry.
          *
          */
-        bool operator==(const ExternalMulticastAddressIterator &aOther)
-        {
-            return mMulticastAddress == aOther.mMulticastAddress;
-        }
+        bool operator==(const ExternalMulticastAddressIterator &aOther) { return mCurrent == aOther.mCurrent; }
 
         /**
          * This method overloads operator `!=` to evaluate whether or not two `ExternalMulticastAddressIterator`
@@ -307,10 +290,7 @@ public:
          * `ExternalNetifMulticastAddress` entry or both are done.
          *
          */
-        bool operator!=(const ExternalMulticastAddressIterator &aOther)
-        {
-            return mMulticastAddress != aOther.mMulticastAddress;
-        }
+        bool operator!=(const ExternalMulticastAddressIterator &aOther) { return mCurrent != aOther.mCurrent; }
 
     private:
         enum IteratorType
@@ -320,25 +300,23 @@ public:
 
         ExternalMulticastAddressIterator(Netif &aNetif, IteratorType)
             : mNetif(aNetif)
-            , mMulticastAddress(nullptr)
+            , mCurrent(nullptr)
         {
         }
 
-        void Advance(void)
+        void AdvanceFrom(NetifMulticastAddress *aAddr)
         {
-            const NetifMulticastAddress *addr = mMulticastAddress->GetNext();
-
-            while (addr != nullptr && !mNetif.IsMulticastAddressExternal(*addr))
+            while (aAddr != nullptr && !mNetif.IsMulticastAddressExternal(*aAddr))
             {
-                addr = addr->GetNext();
+                aAddr = aAddr->GetNext();
             }
 
-            mMulticastAddress =
-                const_cast<ExternalNetifMulticastAddress *>(static_cast<const ExternalNetifMulticastAddress *>(addr));
+            mCurrent =
+                const_cast<ExternalNetifMulticastAddress *>(static_cast<const ExternalNetifMulticastAddress *>(aAddr));
         }
 
         Netif &                        mNetif;
-        ExternalNetifMulticastAddress *mMulticastAddress;
+        ExternalNetifMulticastAddress *mCurrent;
     };
 
     /**
