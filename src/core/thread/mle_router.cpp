@@ -3663,10 +3663,9 @@ void MleRouter::RestoreChildren(void)
     bool     foundDuplicate = false;
     uint16_t numChildren    = 0;
 
-    for (Settings::ChildInfoIterator iter(GetInstance()); !iter.IsDone(); iter++)
+    for (const Settings::ChildInfo &childInfo : Get<Settings>().IterateChildInfo())
     {
-        Child *                    child;
-        const Settings::ChildInfo &childInfo = iter.GetChildInfo();
+        Child *child;
 
         child = mChildTable.FindChild(childInfo.GetExtAddress(), Child::kInStateAnyExceptInvalid);
 
@@ -3742,7 +3741,7 @@ otError MleRouter::StoreChild(const Child &aChild)
 
 void MleRouter::RefreshStoredChildren(void)
 {
-    SuccessOrExit(Get<Settings>().DeleteChildInfo());
+    SuccessOrExit(Get<Settings>().DeleteAllChildInfo());
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
