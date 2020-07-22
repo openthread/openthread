@@ -36,7 +36,9 @@
 
 #include "openthread-core-config.h"
 
+#include "common/clearable.hpp"
 #include "common/encoding.hpp"
+#include "common/equatable.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
@@ -183,16 +185,16 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class NetworkInfo
+    class NetworkInfo : public Equatable<NetworkInfo>, private Clearable<NetworkInfo>
     {
     public:
         /**
-         * This method clears the struct object (setting all the fields to zero).
+         * This method initializes the `NetworkInfo` object.
          *
          */
         void Init(void)
         {
-            memset(this, 0, sizeof(*this));
+            Clear();
             SetVersion(OT_THREAD_VERSION_1_1);
         }
 
@@ -383,16 +385,16 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class ParentInfo
+    class ParentInfo : public Equatable<ParentInfo>, private Clearable<ParentInfo>
     {
     public:
         /**
-         * This method clears the struct object (setting all the fields to zero).
+         * This method initializes the `ParentInfo` object.
          *
          */
         void Init(void)
         {
-            memset(this, 0, sizeof(*this));
+            Clear();
             SetVersion(OT_THREAD_VERSION_1_1);
         }
 
@@ -544,14 +546,14 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class DadInfo
+    class DadInfo : public Equatable<DadInfo>, private Clearable<DadInfo>
     {
     public:
         /**
-         * This method clears the struct object (setting all the fields to zero).
+         * This method initializes the `DadInfo` object.
          *
          */
-        void Init(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void) { Clear(); }
 
         /**
          * This method returns the Dad Counter.
