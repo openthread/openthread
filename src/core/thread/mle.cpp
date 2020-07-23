@@ -1235,14 +1235,7 @@ bool Mle::HasUnregisteredAddress(void)
         // For sleepy end-device, we register any external multicast
         // addresses.
 
-        for (const Ip6::NetifMulticastAddress *address = Get<ThreadNetif>().GetMulticastAddresses(); address != nullptr;
-             address                                   = address->GetNext())
-        {
-            if (Get<ThreadNetif>().IsMulticastAddressExternal(*address))
-            {
-                ExitNow(retval = true);
-            }
-        }
+        retval = Get<ThreadNetif>().HasAnyExternalMulticastAddress();
     }
 
 exit:
@@ -1341,25 +1334,19 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
 #endif
     )
     {
-        for (const Ip6::NetifMulticastAddress *addr = Get<ThreadNetif>().GetMulticastAddresses(); addr != nullptr;
-             addr                                   = addr->GetNext())
+        for (const Ip6::NetifMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
         {
-            if (!Get<ThreadNetif>().IsMulticastAddressExternal(*addr))
-            {
-                continue;
-            }
-
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
             // For Thread 1.2 MED, skip multicast address with scope not
             // larger than realm local when registering.
-            if (IsRxOnWhenIdle() && !addr->GetAddress().IsMulticastLargerThanRealmLocal())
+            if (IsRxOnWhenIdle() && !addr.GetAddress().IsMulticastLargerThanRealmLocal())
             {
                 continue;
             }
 #endif
 
             entry.SetUncompressed();
-            entry.SetIp6Address(addr->GetAddress());
+            entry.SetIp6Address(addr.GetAddress());
             SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
             length += entry.GetLength();
 
