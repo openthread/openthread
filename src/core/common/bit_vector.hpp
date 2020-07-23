@@ -53,6 +53,8 @@ namespace ot {
 /**
  * This class represents a bit-vector.
  *
+ * @tparam N  Specifies the number of bits.
+ *
  */
 template <uint16_t N> class BitVector : public Equatable<BitVector<N>>
 {
