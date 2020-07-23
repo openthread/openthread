@@ -65,7 +65,7 @@ set extpan $expect_out(1,string)
 expect "Done"
 send "networkname\n"
 expect "networkname"
-expect -re {[\r\n]([^\r\n]+)[\r\n]}
+expect -re {[^\w-]([\w-]+)[^\w-]}
 set network $expect_out(1,string)
 expect "Done"
 send "channel\n"
