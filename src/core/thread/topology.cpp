@@ -261,42 +261,41 @@ exit:
     return retval;
 }
 
-#if OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 void Child::RemovePreviousDomainUnicastAddress(void)
 {
-    for (uint16_t index = 0; index < kNumIp6Addresses; index++)
+    for (const Ip6::Address &ip6Address : mIp6Address)
     {
-        VerifyOrExit(!mIp6Address[index].IsUnspecified(), OT_NOOP);
-        otLogInfoDua("CIP: %s", mIp6Address[index].ToString().AsCString());
+        VerifyOrExit(!ip6Address.IsUnspecified(), OT_NOOP);
 
-        if (Get<BackboneRouter::Leader>().IsPreviousDomainUnicast(mIp6Address[index]))
+        if (Get<BackboneRouter::Leader>().IsPreviousDomainUnicast(ip6Address))
         {
-            RemoveIp6Address(mIp6Address[index]);
+            IgnoreError(RemoveIp6Address(ip6Address));
             ExitNow();
         }
     }
+
 exit:
     return;
 }
 
-bool Child::GetDomainUnicastAddress(Ip6::Address &aAddress) const
+otError Child::GetDomainUnicastAddress(Ip6::Address &aAddress) const
 {
-    bool retval = false;
+    otError error = OT_ERROR_NOT_FOUND;
 
-    for (uint16_t index = 0; index < kNumIp6Addresses; index++)
+    for (const Ip6::Address &ip6Address : mIp6Address)
     {
-        VerifyOrExit(!mIp6Address[index].IsUnspecified(), OT_NOOP);
-        otLogInfoDua("CIP: %s", mIp6Address[index].ToString().AsCString());
+        VerifyOrExit(!ip6Address.IsUnspecified(), OT_NOOP);
 
-        if (Get<BackboneRouter::Leader>().IsDomainUnicast(mIp6Address[index]))
+        if (Get<BackboneRouter::Leader>().IsDomainUnicast(ip6Address))
         {
-            aAddress = mIp6Address[index];
-            ExitNow(retval = true);
+            aAddress = ip6Address;
+            ExitNow(error = OT_ERROR_NONE);
         }
     }
 
 exit:
-    return retval;
+    return error;
 }
 #endif
 

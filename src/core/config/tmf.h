@@ -173,13 +173,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+ * @def OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
  *
  * Define to 1 for Thread 1.2 FTD device to register DUA of its MTD children registered
  * even if it doesn't enable DUA feature itself.
  *
  */
-#define OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE \
+#define OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE \
     (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2) && OPENTHREAD_FTD
 
 #endif // CONFIG_TMF_H_

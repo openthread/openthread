@@ -278,9 +278,9 @@ static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin,
  */
 enum ChildDuaState
 {
-    kChildDuaAdded,
-    kChildDuaChanged,
-    kChildDuaRemoved,
+    kChildDuaAdded,   ///< A new DUA registered by the Child via Address Registration.
+    kChildDuaChanged, ///< A different DUA registered by the Child via Address Registration.
+    kChildDuaRemoved, ///< DUA registered by the Child is removed and not in Address Registration.
 };
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 

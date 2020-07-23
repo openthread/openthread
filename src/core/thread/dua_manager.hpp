@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 
 #include "backbone_router/bbr_leader.hpp"
 #include "coap/coap.hpp"
@@ -151,11 +151,17 @@ public:
     void Restore(void);
 #endif
 
-#if OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void UpdateChildDomainUnicastAddress(const Child &aChild, Mle::ChildDuaState aState);
 #endif
 
 private:
+    enum
+    {
+        kNewRouterRegistrationDelay = 5,    ///< Delay (in seconds) for waiting link establishment for a new Router.
+        kStateUpdatePeriod          = 1000, ///< 1000ms period  (i.e. 1s)
+    };
+
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     otError GenerateDomainUnicastAddressIid(void);
     otError Store(void);
@@ -165,12 +171,16 @@ private:
     void UpdateRegistrationDelay(uint8_t aDelay);
 #endif
 
-#if OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void SendAddressNotification(Ip6::Address &aAddress, ThreadStatusTlv::DuaStatus aStatus, const Child &aChild);
 #endif
 
-    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
-    void        HandleNotifierEvents(Events aEvents);
+    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
+    {
+        static_cast<DuaManager &>(aReceiver).HandleNotifierEvents(aEvents);
+    }
+
+    void HandleNotifierEvents(Events aEvents);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
@@ -202,32 +212,11 @@ private:
     void UpdateReregistrationDelay(void);
     void UpdateCheckDelay(uint8_t aDelay);
 
-    enum
-    {
-        kNewRouterRegistrationDelay = 5,    ///< Delay (in seconds) for waiting link establishment for a new Router.
-        kStateUpdatePeriod          = 1000, ///< 1000ms period  (i.e. 1s)
-    };
-
     TimerMilli     mTimer;
     Tasklet        mRegistrationTask;
     Coap::Resource mDuaNotification;
 
     bool mIsDuaPending : 1;
-
-    union
-    {
-        struct
-        {
-            uint16_t mReregistrationDelay; ///< Delay (in seconds) for DUA re-registration.
-            uint8_t  mCheckDelay;          ///< Delay (in seconds) for checking whether or not registration is required.
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-            uint8_t mRegistrationDelay; ///< Delay (in seconds) for DUA registration.
-#endif
-#if OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
-#endif
-        } mFields;
-        uint32_t mValue; ///< Non-zero indicates timer should start.
-    } mDelay;
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     enum DuaState
@@ -239,21 +228,34 @@ private:
     };
 
     DuaState  mDuaState : 2;
+    uint8_t   mDadCounter;
     TimeMilli mLastRegistrationTime; ///< The time (in milliseconds) when sent last DUA.req or received DUA.rsp.
     Ip6::InterfaceIdentifier mFixedDuaInterfaceIdentifier;
     Ip6::NetifUnicastAddress mDomainUnicastAddress;
-    uint8_t                  mDadCounter;
 #endif
 
-#if OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+    union
+    {
+        struct
+        {
+            uint16_t mReregistrationDelay; ///< Delay (in seconds) for DUA re-registration.
+            uint8_t  mCheckDelay;          ///< Delay (in seconds) for checking whether or not registration is required.
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+            uint8_t mRegistrationDelay; ///< Delay (in seconds) for DUA registration.
+#endif
+        } mFields;
+        uint32_t mValue; ///< Non-zero indicates timer should start.
+    } mDelay;
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     ChildMask mChildDuaMask;              ///< Child Mask for child who registers DUA via Child Update Request.
     ChildMask mChildDuaRegisterMask;      ///< Child Mask for child's DUA that was registered by the parent on behalf.
-    uint16_t  mChildIndexDuaRegistering;  ///< Child Index of the DUA is being registered.
-    bool      mRegisterCurrentChildIndex; ///< ReRegister the child just registered.
+    uint16_t  mChildIndexDuaRegistering;  ///< Child Index of the DUA being registered.
+    bool      mRegisterCurrentChildIndex; ///< Re-reegister the child just registered.
 #endif
 };
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+#endif // OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 #endif // DUA_MANAGER_HPP_

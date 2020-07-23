@@ -114,7 +114,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MLR_ENABLE
     , mMlrManager(aInstance)
 #endif
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     , mDuaManager(aInstance)
 #endif
     , mChildSupervisor(aInstance)

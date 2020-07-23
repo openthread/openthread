@@ -135,8 +135,6 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
     Ip6::Address               target;
     Ip6::InterfaceIdentifier   meshLocalIid;
 
-    otLogInfoBbr("Received DUA.req on %s", isPrimary ? "PBBR" : "SBBR");
-
     VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_PARSE);
 
     SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
@@ -158,7 +156,7 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
 
     if (Tlv::FindUint32Tlv(aMessage, ThreadTlv::kLastTransactionTime, lastTransactionTime) == OT_ERROR_NONE)
     {
-        // hasLastTransactionTime = true;
+        // TODO: (DUA) hasLastTransactionTime = true;
     }
 
     // TODO: (DUA) Add ND-PROXY table management
@@ -166,12 +164,13 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
     // TODO: (DUA) Extended Address Query
 
 exit:
+
+    otLogInfoBbr("Received DUA.req on %s: %s", isPrimary ? "PBBR" : "SBBR", otThreadErrorToString(error));
+
     if (error == OT_ERROR_NONE)
     {
         SendDuaRegistrationResponse(aMessage, aMessageInfo, target, status);
     }
-
-    return;
 }
 
 void Manager::SendDuaRegistrationResponse(const Coap::Message &      aMessage,
@@ -200,8 +199,6 @@ exit:
 
     otLogInfoBbr("Sent DUA.rsp for DUA %s, status %d %s", aTarget.ToString().AsCString(), aStatus,
                  otThreadErrorToString(error));
-
-    return;
 }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE

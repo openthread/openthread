@@ -750,7 +750,7 @@ template <> inline MlrManager &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_RPOXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 template <> inline DuaManager &Instance::Get(void)
 {
     return mThreadNetif.mDuaManager;
