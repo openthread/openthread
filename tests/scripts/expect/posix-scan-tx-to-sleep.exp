@@ -63,6 +63,7 @@ expect "extpanid"
 expect -re {([0-9a-f]{16})}
 set extpan $expect_out(1,string)
 expect "Done"
+expect "> "
 send "networkname\n"
 expect "networkname"
 expect -re {[\r\n]([^\r\n]+)[\r\n]}
