@@ -280,6 +280,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         assert dua2, 'Error: Expected DUA ({}) not found'.format(dua2)
         assert dua2 != dua, 'Error: Expected Different DUA not found, same DUA {}'.format(
             dua2)
+
         # e) (repeated) Configure BBR_1 to respond with per remaining error status:
         #   - increase BBR seqno to trigger reregistration
         #   - ROUTER_1_2 should re-register within BBR_REREGISTRATION_DELAY. For the not fatal errors, ROUTER_1_2
@@ -288,6 +289,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
                 ST_DUA_REREGISTER, ST_DUA_NO_RESOURCES, ST_DUA_BBR_NOT_PRIMARY,
                 ST_DUA_GENERAL_FAILURE
         ]:
+            print('Testing Status %d...'.format(status))
             # Flush relative message queues.
             self.flush_nodes([ROUTER_1_2])
             seq_num = seq_num + 1
@@ -314,7 +316,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
 
         # Configure children
         for node in [FED_1_2_1, FED_1_2_2]:
-            self.nodes[node].router_disable()
+            self.nodes[node].set_routereligible(False)
 
         for node in [SED_1_2_1, SED_1_2_2]:
             self.nodes[node].set_pollperiod(SED_POLL_PERIOD)

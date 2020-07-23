@@ -99,14 +99,17 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
         }
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-        // Remove Children's DUAs
-        for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+        if (mChildDuaMask.HasAny())
         {
-            uint16_t childIndex = Get<ChildTable>().GetChildIndex(child);
-
-            if (mChildDuaMask.Get(childIndex))
+            // Remove Children's DUAs
+            for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
             {
-                child.RemovePreviousDomainUnicastAddress();
+                uint16_t childIndex = Get<ChildTable>().GetChildIndex(child);
+
+                if (mChildDuaMask.Get(childIndex))
+                {
+                    child.RemovePreviousDomainUnicastAddress();
+                }
             }
 
             mChildDuaMask.ClearAll();
@@ -275,7 +278,7 @@ void DuaManager::UpdateRegistrationDelay(uint8_t aDelay)
     {
         mDelay.mFields.mRegistrationDelay = aDelay;
 
-        otLogDebgDua("update regdelay%d", mDelay.mFields.mRegistrationDelay);
+        otLogDebgDua("update regdelay %d", mDelay.mFields.mRegistrationDelay);
         ScheduleTimer();
     }
 }
@@ -293,11 +296,9 @@ void DuaManager::UpdateReregistrationDelay(void)
     if (mDelay.mFields.mReregistrationDelay == 0 || mDelay.mFields.mReregistrationDelay > delay)
     {
         mDelay.mFields.mReregistrationDelay = delay;
-
+        ScheduleTimer();
         otLogDebgDua("update reregdelay %d", mDelay.mFields.mReregistrationDelay);
     }
-
-    ScheduleTimer();
 
 exit:
     return;
@@ -327,12 +328,8 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
 #if OPENTHREAD_CONFIG_DUA_ENABLE && OPENTHREAD_FTD
         else if (mle.IsRouter())
         {
-            if (mDelay.mFields.mReregistrationDelay == 0 ||
-                mDelay.mFields.mReregistrationDelay > kNewRouterRegistrationDelay)
-            {
-                // Wait for link establishment with neighboring routers.
-                UpdateRegistrationDelay(kNewRouterRegistrationDelay);
-            }
+            // Wait for link establishment with neighboring routers.
+            UpdateRegistrationDelay(kNewRouterRegistrationDelay);
         }
         else if (mle.IsExpectedToBecomeRouter())
         {
@@ -357,11 +354,6 @@ void DuaManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State
     {
         UpdateReregistrationDelay();
     }
-}
-
-void DuaManager::HandleTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<DuaManager>().HandleTimer();
 }
 
 void DuaManager::HandleTimer(void)
@@ -420,7 +412,7 @@ void DuaManager::HandleTimer(void)
 
     if (attempt)
     {
-        PerformNextRegistration();
+        mRegistrationTask.Post();
     }
 
     ScheduleTimer();
@@ -436,11 +428,6 @@ void DuaManager::ScheduleTimer(void)
     {
         mTimer.Start(kStateUpdatePeriod);
     }
-}
-
-void DuaManager::HandleRegistrationTask(Tasklet &aTasklet)
-{
-    aTasklet.GetOwner<DuaManager>().PerformNextRegistration();
 }
 
 void DuaManager::PerformNextRegistration(void)
@@ -462,7 +449,7 @@ void DuaManager::PerformNextRegistration(void)
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     VerifyOrExit(mle.IsRouterOrLeader() || !mle.IsExpectedToBecomeRouter(), OT_NOOP);
     VerifyOrExit((mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0) ||
-                     mChildDuaMask != mChildDuaRegisterMask,
+                     mChildDuaMask != mChildDuaRegisteredMask,
                  OT_NOOP);
 #else
     VerifyOrExit(mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0, OT_NOOP);
@@ -498,9 +485,10 @@ void DuaManager::PerformNextRegistration(void)
             {
                 uint16_t childIndex = Get<ChildTable>().GetChildIndex(child);
 
-                if (mChildDuaMask.Get(childIndex) && !mChildDuaRegisterMask.Get(childIndex))
+                if (mChildDuaMask.Get(childIndex) && !mChildDuaRegisteredMask.Get(childIndex))
                 {
                     mChildIndexDuaRegistering = childIndex;
+                    break;
                 }
             }
         }
@@ -508,7 +496,7 @@ void DuaManager::PerformNextRegistration(void)
             uint32_t lastTransactionTime;
             Child *  child = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
 
-            OT_ASSERT(child->GetDomainUnicastAddress(dua) == OT_ERROR_NONE);
+            VerifyOrExit(child->GetDomainUnicastAddress(dua) == OT_ERROR_NONE, error = OT_ERROR_ABORT);
 
             lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child->GetLastHeard());
 
@@ -655,11 +643,13 @@ void DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
         VerifyOrExit(child != NULL, OT_NOOP);
         VerifyOrExit(child->HasIp6Address(target), OT_NOOP);
 
+        mRegisterCurrentChildIndex = false;
+
         switch (status)
         {
         case ThreadStatusTlv::kDuaSuccess:
             // Mark as Registered
-            mChildDuaRegisterMask.Set(mChildIndexDuaRegistering);
+            mChildDuaRegisteredMask.Set(mChildIndexDuaRegistering);
             break;
         case ThreadStatusTlv::kDuaReRegister:
             mRegisterCurrentChildIndex = true;
@@ -670,15 +660,14 @@ void DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
         case ThreadStatusTlv::kDuaDuplicate:
             SendAddressNotification(target, static_cast<ThreadStatusTlv::DuaStatus>(status), *child);
             IgnoreError(child->RemoveIp6Address(target));
+            mChildDuaMask.Clear(mChildIndexDuaRegistering);
             break;
         case ThreadStatusTlv::kDuaNoResources:
             // fall through
         case ThreadStatusTlv::kDuaNotPrimary:
             // fall through
         case ThreadStatusTlv::kDuaGeneralFailure:
-            mChildDuaRegisterMask.Clear(mChildIndexDuaRegistering);
             UpdateReregistrationDelay();
-
             break;
         }
     }
@@ -747,18 +736,18 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
         }
 
         mChildDuaMask.Clear(childIndex);
-        mChildDuaRegisterMask.Clear(childIndex);
+        mChildDuaRegisteredMask.Clear(childIndex);
     }
 
     if (aState == Mle::kChildDuaAdded || aState == Mle::kChildDuaChanged)
     {
-        if (mChildDuaMask == mChildDuaRegisterMask)
+        if (mChildDuaMask == mChildDuaRegisteredMask)
         {
             UpdateCheckDelay(Random::NonCrypto::GetUint8InRange(1, Mle::kParentAggregateDelay));
         }
 
         mChildDuaMask.Set(childIndex);
-        mChildDuaRegisterMask.Clear(childIndex);
+        mChildDuaRegisteredMask.Clear(childIndex);
     }
 
 exit:

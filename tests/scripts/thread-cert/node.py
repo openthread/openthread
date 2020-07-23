@@ -761,7 +761,6 @@ class Node:
         addrs = self.get_addrs()
 
         for addr in addrs:
-            print(addr)
             if isinstance(addr, bytearray):
                 addr = bytes(addr)
             ipv6_address = ipaddress.ip_address(addr)
@@ -1489,8 +1488,8 @@ class Node:
     def udp_check_rx(self, bytes_should_rx):
         self._expect('%d bytes' % bytes_should_rx)
 
-    def router_disable(self):
-        cmd = 'routereligible disable'
+    def set_routereligible(self, enable: bool):
+        cmd = f'routereligible {"enable" if enable else "disable"}'
         self.send_command(cmd)
         self._expect('Done')
 

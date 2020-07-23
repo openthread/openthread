@@ -171,7 +171,7 @@ public:
      * @param[in]  aAddress A reference to the address.
      *
      * @retval true  @p aAddress is a Domain Unicast Address with deprecated Domain Prefix.
-     * @retval false @p aAddress is a not Domain Unicast Address with deprecated Domain Prefix.
+     * @retval false @p aAddress is not a Domain Unicast Address with deprecated Domain Prefix.
      *
      */
     bool IsPreviousDomainUnicast(const Ip6::Address &aAddress) const;

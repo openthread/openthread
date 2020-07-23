@@ -137,8 +137,8 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
 
     VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_PARSE);
 
-    SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
-    SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, &meshLocalIid, sizeof(meshLocalIid)));
+    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, &meshLocalIid, sizeof(meshLocalIid)));
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     if (mDuaResponseIsSpecified)

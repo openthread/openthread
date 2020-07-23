@@ -180,6 +180,8 @@ otError otBackboneRouterGetDomainPrefix(otInstance *aInstance, otBorderRouterCon
  * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
  *       Only used for test and certification.
  *
+ * TODO: (DUA) support coap error code and corresponding process for certification purpose.
+ *
  * @param[in] aInstance A pointer to an OpenThread instance.
  * @param[in] aMlIid    A pointer to the Mesh Local IID. If NULL, respond with @p aStatus for any
  *                      coming DUA.req, otherwise only respond the one with matching @p aMlIid.

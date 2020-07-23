@@ -82,7 +82,7 @@ public:
     explicit DuaManager(Instance &aInstance);
 
     /**
-     * This method notifies Domain Prefix status
+     * This method notifies Domain Prefix status.
      *
      * @param[in]  aState  The Domain Prefix state or state change.
      *
@@ -182,11 +182,13 @@ private:
 
     void HandleNotifierEvents(Events aEvents);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    static void HandleTimer(Timer &aTimer) { aTimer.GetOwner<DuaManager>().HandleTimer(); }
 
-    static void HandleRegistrationTask(Tasklet &aTasklet);
-    void        ScheduleTimer(void);
+    void HandleTimer(void);
+
+    static void HandleRegistrationTask(Tasklet &aTasklet) { aTasklet.GetOwner<DuaManager>().PerformNextRegistration(); }
+
+    void ScheduleTimer(void);
 
     static void HandleDuaResponse(void *               aContext,
                                   otMessage *          aMessage,
@@ -249,9 +251,9 @@ private:
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     ChildMask mChildDuaMask;              ///< Child Mask for child who registers DUA via Child Update Request.
-    ChildMask mChildDuaRegisterMask;      ///< Child Mask for child's DUA that was registered by the parent on behalf.
+    ChildMask mChildDuaRegisteredMask;    ///< Child Mask for child's DUA that was registered by the parent on behalf.
     uint16_t  mChildIndexDuaRegistering;  ///< Child Index of the DUA being registered.
-    bool      mRegisterCurrentChildIndex; ///< Re-reegister the child just registered.
+    bool      mRegisterCurrentChildIndex; ///< Re-register the child just registered.
 #endif
 };
 
