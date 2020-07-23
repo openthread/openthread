@@ -54,7 +54,7 @@ namespace ot {
  * This class represents a bit-vector.
  *
  */
-template <uint16_t N> class BitVector
+template <uint16_t N> class BitVector : public Equatable<BitVector<N>>
 {
 public:
     /**
