@@ -41,7 +41,7 @@ uint32_t       otNetifAddress_offset_mNext_c();
 otNetifAddress CreateNetif_c();
 }
 
-void test_packed1()
+void test_packed1(void)
 {
     OT_TOOL_PACKED_BEGIN
     struct packed_t
@@ -56,7 +56,7 @@ void test_packed1()
     VerifyOrQuit(sizeof(packed_t) == 7, "Toolchain::OT_TOOL_PACKED failed 1");
 }
 
-void test_packed2()
+void test_packed2(void)
 {
     OT_TOOL_PACKED_BEGIN
     struct packed_t
@@ -70,7 +70,7 @@ void test_packed2()
     VerifyOrQuit(sizeof(packed_t) == 4, "Toolchain::OT_TOOL_PACKED failed 2");
 }
 
-void test_packed_union()
+void test_packed_union(void)
 {
     typedef struct
     {
@@ -93,7 +93,7 @@ void test_packed_union()
     VerifyOrQuit(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3");
 }
 
-void test_packed_enum()
+void test_packed_enum(void)
 {
     ot::Neighbor neighbor;
     neighbor.SetState(ot::Neighbor::kStateValid);
@@ -102,16 +102,66 @@ void test_packed_enum()
     VerifyOrQuit(neighbor.GetState() == ot::Neighbor::kStateValid, "Toolchain::OT_TOOL_PACKED failed 4");
 }
 
-void test_addr_sizes()
+void test_addr_sizes(void)
 {
     VerifyOrQuit(offsetof(otNetifAddress, mNext) == otNetifAddress_offset_mNext_c(),
                  "mNext should offset the same in C & C++");
     VerifyOrQuit(sizeof(otNetifAddress) == otNetifAddress_Size_c(), "otNetifAddress should the same in C & C++");
 }
 
-void test_addr_bitfield()
+void test_addr_bitfield(void)
 {
     VerifyOrQuit(CreateNetif_c().mScopeOverrideValid == true, "Toolchain::test_addr_size_cpp");
+}
+
+void test_packed_alignment(void)
+{
+    OT_TOOL_PACKED_BEGIN
+    struct PackedStruct
+    {
+        uint32_t mUint32;
+        uint8_t  mByte;
+        uint16_t mUint16;
+    } OT_TOOL_PACKED_END;
+
+    PackedStruct   packedStruct;
+    PackedStruct   packedStructCopy;
+    const uint8_t *packedStructBytes = reinterpret_cast<const uint8_t *>(&packedStruct);
+    uint8_t        buffer[sizeof(PackedStruct) * 2 + 1];
+
+    VerifyOrQuit(sizeof(PackedStruct) == 7, "Toolchain::OT_TOOL_PACKED failed");
+
+    packedStruct.mUint32 = 0x12345678;
+    packedStruct.mByte   = 0xfe;
+    packedStruct.mUint16 = 0xabcd;
+
+    for (uint16_t start = 0; start < sizeof(PackedStruct); start++)
+    {
+        uint8_t *ptr = &buffer[start];
+
+        memset(buffer, 0, sizeof(buffer));
+
+        *reinterpret_cast<PackedStruct *>(ptr) = packedStruct;
+
+        for (uint16_t i = 0; i < start; i++)
+        {
+            VerifyOrQuit(buffer[i] == 0, "Toolchain::OT_TOOL_PACKED alignment failed - pre-size write");
+        }
+
+        VerifyOrQuit(memcmp(ptr, packedStructBytes, sizeof(PackedStruct)) == 0,
+                     "Toolchain::OT_TOOL_PACKED alignment failed");
+
+        for (uint16_t i = start + sizeof(packedStruct); i < sizeof(buffer); i++)
+        {
+            VerifyOrQuit(buffer[i] == 0, "Toolchain::OT_TOOL_PACKED alignment failed - post-size write");
+        }
+
+        memset(&packedStructCopy, 0, sizeof(PackedStruct));
+        packedStructCopy = *reinterpret_cast<PackedStruct *>(ptr);
+
+        VerifyOrQuit(memcmp(&packedStructCopy, &packedStruct, sizeof(PackedStruct)) == 0,
+                     "Toolchain::OT_TOOL_PACKED failed - read error");
+    }
 }
 
 void TestToolchain(void)
@@ -122,6 +172,7 @@ void TestToolchain(void)
     test_packed_enum();
     test_addr_sizes();
     test_addr_bitfield();
+    test_packed_alignment();
 }
 
 int main(void)
