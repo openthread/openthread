@@ -3640,23 +3640,6 @@ exit:
     return error;
 }
 
-otError MleRouter::GetChildNextIp6Address(uint16_t                   aChildIndex,
-                                          Child::Ip6AddressIterator &aIterator,
-                                          Ip6::Address &             aAddress)
-{
-    otError error = OT_ERROR_NONE;
-    Child * child = nullptr;
-
-    child = mChildTable.GetChildAtIndex(aChildIndex);
-    VerifyOrExit(child != nullptr, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(child->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_ARGS);
-
-    error = child->GetNextIp6Address(aIterator, aAddress);
-
-exit:
-    return error;
-}
-
 void MleRouter::RestoreChildren(void)
 {
     otError  error          = OT_ERROR_NONE;
@@ -4425,19 +4408,17 @@ otError MleRouter::AppendConnectivity(Message &aMessage)
 
 otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
 {
-    otError                   error;
-    Ip6::Address              address;
-    Child::Ip6AddressIterator iterator;
-    Tlv                       tlv;
-    AddressRegistrationEntry  entry;
-    Lowpan::Context           context;
-    uint8_t                   length      = 0;
-    uint16_t                  startOffset = aMessage.GetLength();
+    otError                  error;
+    Tlv                      tlv;
+    AddressRegistrationEntry entry;
+    Lowpan::Context          context;
+    uint8_t                  length      = 0;
+    uint16_t                 startOffset = aMessage.GetLength();
 
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-    while (aChild.GetNextIp6Address(iterator, address) == OT_ERROR_NONE)
+    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
     {
         if (address.IsMulticast() || Get<NetworkData::Leader>().GetContext(address, context) != OT_ERROR_NONE)
         {

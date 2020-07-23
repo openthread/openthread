@@ -369,6 +369,31 @@ uint8_t Address::PrefixMatch(const otIp6Address &aOther) const
     return PrefixMatch(mFields.m8, aOther.mFields.m8, sizeof(Address));
 }
 
+bool Address::MatchesFilter(TypeFilter aFilter) const
+{
+    bool matches = true;
+
+    switch (aFilter)
+    {
+    case kTypeAny:
+        break;
+
+    case kTypeUnicast:
+        matches = !IsUnspecified() && !IsMulticast();
+        break;
+
+    case kTypeMulticast:
+        matches = IsMulticast();
+        break;
+
+    case kTypeMulticastLargerThanRealmLocal:
+        matches = IsMulticastLargerThanRealmLocal();
+        break;
+    }
+
+    return matches;
+}
+
 otError Address::FromString(const char *aBuf)
 {
     otError     error  = OT_ERROR_NONE;
