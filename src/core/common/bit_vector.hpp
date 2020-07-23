@@ -34,7 +34,7 @@
 #ifndef BIT_VECTOR_HPP_
 #define BIT_VECTOR_HPP_
 
-#include "../openthread-core-config.h"
+#include "openthread-core-config.h"
 
 #include "debug.hpp"
 
