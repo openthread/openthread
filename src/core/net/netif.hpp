@@ -219,11 +219,20 @@ public:
          * @param[in] aNetif  A reference to the Netif instance.
          *
          */
-        explicit ExternalMulticastAddressIterator(Netif &aNetif)
+        explicit ExternalMulticastAddressIterator(const Netif &aNetif)
             : mNetif(aNetif)
         {
             AdvanceFrom(mNetif.GetMulticastAddresses());
         }
+
+        /**
+         * This method indicates whether the iterator has reached end of the list.
+         *
+         * @retval TRUE   There are no more entries in the list (reached end of the list).
+         * @retval FALSE  The current address entry is valid.
+         *
+         */
+        bool IsDone(void) const { return mCurrent != nullptr; }
 
         /**
          * This method overloads `++` operator (pre-increment) to advance the iterator.
@@ -298,7 +307,7 @@ public:
             kEndIterator,
         };
 
-        ExternalMulticastAddressIterator(Netif &aNetif, IteratorType)
+        ExternalMulticastAddressIterator(const Netif &aNetif, IteratorType)
             : mNetif(aNetif)
             , mCurrent(nullptr)
         {
@@ -315,7 +324,7 @@ public:
                 const_cast<ExternalNetifMulticastAddress *>(static_cast<const ExternalNetifMulticastAddress *>(aAddr));
         }
 
-        Netif &                        mNetif;
+        const Netif &                  mNetif;
         ExternalNetifMulticastAddress *mCurrent;
     };
 
@@ -569,6 +578,15 @@ public:
         return ExternalMulticastAddressIteratorBuilder(*this);
     }
 
+    /**
+     * This method indicates whether or not the network interfaces is subscribed to any external multicast address.
+     *
+     * @retval TRUE  The network interface is subscribed to at least one external multicast address.
+     * @retval FALSE The network interface is not subscribed to any external multicast address.
+     *
+     */
+    bool HasAnyExternalMulticastAddress(void) const { return !ExternalMulticastAddressIterator(*this).IsDone(); }
+
 protected:
     /**
      * This method subscribes the network interface to the realm-local all MPL forwarders, link-local, and realm-local
@@ -595,7 +613,7 @@ private:
     class ExternalMulticastAddressIteratorBuilder
     {
     public:
-        ExternalMulticastAddressIteratorBuilder(Netif &aNetif)
+        ExternalMulticastAddressIteratorBuilder(const Netif &aNetif)
             : mNetif(aNetif)
         {
         }
@@ -607,7 +625,7 @@ private:
         }
 
     private:
-        Netif &mNetif;
+        const Netif &mNetif;
     };
 
     LinkedList<NetifUnicastAddress>   mUnicastAddresses;
