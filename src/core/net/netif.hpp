@@ -220,7 +220,7 @@ public:
          * @param[in] aFilter  The Ip6 address type filter.
          *
          */
-        explicit ExternalMulticastAddressIterator(const Netif &aNetif, Address::TypeFilter aFilter)
+        explicit ExternalMulticastAddressIterator(const Netif &aNetif, Address::TypeFilter aFilter = Address::kTypeAny)
             : mNetif(aNetif)
             , mFilter(aFilter)
         {
@@ -575,7 +575,7 @@ public:
      *     for (Ip6::ExternalNetifMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
      *     { ... }
      *
-     * or to iterate over a subset of extern multicast addresses determined by a given address type filter
+     * or to iterate over a subset of external multicast addresses determined by a given address type filter
      *
      *     for (Ip6::ExternalNetifMulticastAddress &addr :
      * Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal)) { ... }
