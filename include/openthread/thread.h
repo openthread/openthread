@@ -240,6 +240,8 @@ bool otThreadIsSingleton(otInstance *aInstance);
  * @param[in]  aPanId                 The PAN ID filter (set to Broadcast PAN to disable filter).
  * @param[in]  aJoiner                Value of the Joiner Flag in the Discovery Request TLV.
  * @param[in]  aEnableEui64Filtering  TRUE to filter responses on EUI-64, FALSE otherwise.
+ * @param[in]  aOui                   The Vendor OUI for Joiner Advertisement TLV
+ * @param[in]  aAdvData               A pointer to AdvData for Joiner Advertisement TLV
  * @param[in]  aCallback              A pointer to a function called on receiving an MLE Discovery Response or
  *                                    scan completes.
  * @param[in]  aCallbackContext       A pointer to application-specific context.
@@ -253,7 +255,7 @@ otError otThreadDiscover(otInstance *             aInstance,
                          uint16_t                 aPanId,
                          bool                     aJoiner,
                          bool                     aEnableEui64Filtering,
-                         uint8_t                  aAdvType,
+                         uint32_t                 aOui,
                          const char *             aAdvData,
                          otHandleActiveScanResult aCallback,
                          void *                   aCallbackContext);

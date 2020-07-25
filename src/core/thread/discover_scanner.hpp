@@ -109,6 +109,8 @@ public:
      * @param[in]  aEnableFiltering   Enable filtering MLE Discovery Responses with steering data not containing a
      *                                given filter indexes.
      * @param[in]  aFilterIndexes     A pointer to `FilterIndexes` to use for filtering (when enabled).
+     * @param[in]  aOui               The Vendor OUI for Joiner Advertisement TLV
+     * @param[in]  aAdvData           A pointer to AdvData for Joiner Advertisement TLV
      *                                If set to nullptr, filter indexes are derived from hash of factory-assigned EUI64.
      * @param[in]  aHandler           A pointer to a function that is called on receiving an MLE Discovery Response.
      * @param[in]  aContext           A pointer to arbitrary context information.
@@ -123,7 +125,7 @@ public:
                      bool                    aJoiner,
                      bool                    aEnableFiltering,
                      const FilterIndexes *   aFilterIndexes,
-                     uint8_t                 aAdvType,
+                     uint32_t                aOui,
                      const char *            aAdvData,
                      Handler                 aHandler,
                      void *                  aContext);

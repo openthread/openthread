@@ -1261,7 +1261,7 @@ void Interpreter::ProcessDiscover(uint8_t aArgsLength, char *aArgs[])
     otError       error        = OT_ERROR_NONE;
     uint32_t      scanChannels = 0;
     long          value;
-    uint8_t       advType      = 0;
+    uint32_t      oui          = 0;
     const char *  advData      = nullptr;
 
     if (aArgsLength > 0)
@@ -1273,7 +1273,7 @@ void Interpreter::ProcessDiscover(uint8_t aArgsLength, char *aArgs[])
     }
 
     SuccessOrExit(error = otThreadDiscover(mInstance, scanChannels, OT_PANID_BROADCAST, false, false,
-                                           advType, advData, &Interpreter::HandleActiveScanResult, this));
+                                           oui, advData, &Interpreter::HandleActiveScanResult, this));
     mServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     mServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 

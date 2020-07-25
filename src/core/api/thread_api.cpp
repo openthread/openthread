@@ -452,7 +452,7 @@ otError otThreadDiscover(otInstance *             aInstance,
                          uint16_t                 aPanId,
                          bool                     aJoiner,
                          bool                     aEnableEui64Filtering,
-                         uint8_t                  aAdvType,
+                         uint32_t                 aOui,
                          const char  *            aAdvData,
                          otHandleActiveScanResult aCallback,
                          void *                   aCallbackContext)
@@ -461,7 +461,7 @@ otError otThreadDiscover(otInstance *             aInstance,
 
     return instance.Get<Mle::DiscoverScanner>().Discover(
         static_cast<Mac::ChannelMask>(aScanChannels), aPanId, aJoiner, aEnableEui64Filtering,
-        /* aFilterIndexes (use hash of factory EUI64) */ nullptr, aAdvType, aAdvData, aCallback, aCallbackContext);
+        /* aFilterIndexes (use hash of factory EUI64) */ nullptr, aOui, aAdvData, aCallback, aCallbackContext);
 }
 
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)

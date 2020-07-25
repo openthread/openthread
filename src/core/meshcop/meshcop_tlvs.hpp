@@ -2376,7 +2376,6 @@ public:
     {
         SetType(kJoinerAdvertisement);
         SetLength(sizeof(*this) - sizeof(Tlv));
-        mAdvType = 0;
     }
 
     /**
@@ -2389,22 +2388,28 @@ public:
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the AdvType value.
+     * This method returns the Vendor OUI value.
      *
-     * @returns The AdvType value.
+     * @returns The Vendor OUI value.
      *
      */
-    uint8_t GetAdvType(void) const { return mAdvType; }
+    uint32_t GetOui(void) const
+    {
+        return (static_cast<uint32_t>(mOui[0]) << 16) | (static_cast<uint32_t>(mOui[1]) << 8) |
+               static_cast<uint32_t>(mOui[2]);
+    }
 
     /**
-     * This method sets the AdvType value.
+     * This method returns the Vendor OUI value.
      *
-     * @param[in]  aAdvType  The AdvType value.
+     * @param[in]  aOui The Vendor OUI value.
      *
      */
-    void SetAdvType(uint8_t aAdvType)
+    void SetOui(uint32_t aOui)
     {
-        mAdvType = aAdvType;
+        mOui[0] = (aOui >> 16) & 0xff;
+        mOui[1] = (aOui >> 8) & 0xff;
+        mOui[2] = aOui & 0xff;
     }
 
     /**
@@ -2450,7 +2455,7 @@ private:
         kMaxLength = 64,
     };
 
-    uint8_t mAdvType;
+    uint8_t mOui[3];
     char mAdvData[kMaxLength];
 } OT_TOOL_PACKED_END;
 
