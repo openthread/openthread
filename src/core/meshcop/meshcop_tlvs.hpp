@@ -111,6 +111,7 @@ public:
         kEnergyList              = OT_MESHCOP_TLV_ENERGY_LIST,              ///< Energy List TLV
         kDiscoveryRequest        = OT_MESHCOP_TLV_DISCOVERYREQUEST,         ///< Discovery Request TLV
         kDiscoveryResponse       = OT_MESHCOP_TLV_DISCOVERYRESPONSE,        ///< Discovery Response TLV
+        kJoinerAdvertisement     = OT_MESHCOP_TLV_JOINERADVERTISEMENT,      ///< Joiner Advertisement TLV
     };
 
     /**
@@ -2352,6 +2353,103 @@ private:
     };
     uint8_t mFlags;
     uint8_t mReserved;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Joiner Advertisement TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class JoinerAdvertisementTlv : public Tlv
+{
+public:
+    enum
+    {
+        kType = kJoinerAdvertisement, ///< The TLV Type.
+    };
+
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kJoinerAdvertisement);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() >= sizeof(mOui) && GetLength() <= sizeof(mOui) + sizeof(mAdvData); }
+
+    /**
+     * This method returns the Vendor OUI value.
+     *
+     * @returns The Vendor OUI value.
+     *
+     */
+    uint32_t GetOui(void) const
+    {
+        return (static_cast<uint32_t>(mOui[0]) << 16) | (static_cast<uint32_t>(mOui[1]) << 8) |
+               static_cast<uint32_t>(mOui[2]);
+    }
+
+    /**
+     * This method returns the Vendor OUI value.
+     *
+     * @param[in]  aOui The Vendor OUI value.
+     *
+     */
+    void SetOui(uint32_t aOui)
+    {
+        mOui[0] = (aOui >> 16) & 0xff;
+        mOui[1] = (aOui >> 8) & 0xff;
+        mOui[2] = aOui & 0xff;
+    }
+
+    /**
+     * This method returns the Adv Data length.
+     *
+     * @returns The AdvData length.
+     *
+     */
+    uint8_t GetAdvDataLength(void) const { return GetLength() - sizeof(mOui); }
+
+    /**
+     * This method returns the Adv Data value.
+     *
+     * @returns A pointer to the Adv Data value.
+     *
+     */
+    const uint8_t *GetAdvData(void) const { return mAdvData; }
+
+    /**
+     * This method sets the Adv Data value.
+     *
+     * @param[in]  aAdvData  A pointer to the Adv Data value.
+     *
+     */
+    void SetAdvData(const uint8_t *aAdvData, uint8_t aAdvDataLength)
+    {
+        OT_ASSERT((aAdvData != nullptr) && (aAdvDataLength > 0) && (aAdvDataLength <= kMaxLength));
+
+        SetLength(aAdvDataLength + sizeof(mOui));
+        memcpy(mAdvData, aAdvData, aAdvDataLength);
+    }
+
+private:
+    enum
+    {
+        kMaxLength = 64,
+    };
+
+    uint8_t mOui[3];
+    uint8_t mAdvData[kMaxLength];
 } OT_TOOL_PACKED_END;
 
 } // namespace MeshCoP

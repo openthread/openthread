@@ -265,6 +265,28 @@ otError otThreadDiscover(otInstance *             aInstance,
 bool otThreadIsDiscoverInProgress(otInstance *aInstance);
 
 /**
+ * This method sets the Thread Joiner Advertisement when discovering Thread network.
+ *
+ * Thread Joiner Advertisement is used to allow a Joiner advertise its own application-specific information
+ * (such as Vendor ID, Product ID, Discriminator, etc.) unsolicitedly via a newly-proposed Joiner Advertisement TLV,
+ * and to make this information available to Commissioners or Commissioner Candidates without human interactions.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aOui             The Vendor IEEE OUI value which will be included in the Joiner Advertisement. Only the
+ *                              least significant 3 bytes will be used, and the most significant byte will be ignored.
+ * @param[in]  aAdvData         The AdvData which will be included in the Joiner Advertisement.
+ * @param[in]  aAdvDataLength   The length of AdvData
+ *
+ * @retval OT_ERROR_NONE         Successfully set Joiner Advertisement.
+ * @retval OT_ERROR_INVALID_ARGS Invalid AdvData.
+ *
+ */
+otError otThreadSetJoinerAdvertisement(otInstance *   aInstance,
+                                       uint32_t       aOui,
+                                       const uint8_t *aAdvData,
+                                       uint8_t        aAdvDataLength);
+
+/**
  * Get the Thread Child Timeout used when operating in the Child role.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
