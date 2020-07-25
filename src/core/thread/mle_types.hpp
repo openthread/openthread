@@ -267,6 +267,8 @@ enum
 static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin,
               "kMlrTimeoutDefault must be larger than or equal to kMlrTimeoutMin");
 
+static_assert(Mle::kParentAggregateDelay > 1, "kParentAggregateDelay should be larger than 1 second");
+
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**

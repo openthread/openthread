@@ -191,7 +191,6 @@ exit:
 
     if (aChild.HasAnyMlrToRegisterAddress())
     {
-        static_assert(Mle::kParentAggregateDelay > 1, "kParentAggregateDelay should be larger than 1 second");
         ScheduleSend(Random::NonCrypto::GetUint16InRange(1, Mle::kParentAggregateDelay));
     }
 }
