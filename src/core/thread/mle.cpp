@@ -2233,9 +2233,10 @@ exit:
 
 otError Mle::SendChildUpdateRequest(void)
 {
-    otError      error = OT_ERROR_NONE;
-    Ip6::Address destination;
-    Message *    message = nullptr;
+    otError                 error = OT_ERROR_NONE;
+    Ip6::Address            destination;
+    Message *               message = nullptr;
+    AddressRegistrationMode mode    = kAppendAllAddresses;
 
     if (!mParent.IsStateValidOrRestoring())
     {
@@ -2252,16 +2253,12 @@ otError Mle::SendChildUpdateRequest(void)
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
 
-    if (!IsFullThreadDevice())
-    {
-        SuccessOrExit(error = AppendAddressRegistration(*message));
-    }
-
     switch (mRole)
     {
     case kRoleDetached:
         mParentRequestChallenge.GenerateRandom();
         SuccessOrExit(error = AppendChallenge(*message, mParentRequestChallenge));
+        mode = kAppendMeshLocalOnly;
         break;
 
     case kRoleChild:
@@ -2275,6 +2272,11 @@ otError Mle::SendChildUpdateRequest(void)
     case kRoleLeader:
         OT_ASSERT(false);
         OT_UNREACHABLE_CODE(break);
+    }
+
+    if (!IsFullThreadDevice())
+    {
+        SuccessOrExit(error = AppendAddressRegistration(*message, mode));
     }
 
     destination.SetToLinkLocalAddress(mParent.GetExtAddress());
