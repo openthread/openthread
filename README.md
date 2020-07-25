@@ -1,4 +1,4 @@
-[![OpenThread][ot-logo]][ot-repo] [![Build][ot-gh-action-build-svg]][ot-gh-action-build] [![Simulation][ot-gh-action-simulation-svg]][ot-gh-action-simulation] [![Language grade: C/C++][ot-lgtm-svg]][ot-lgtm] [![Coverage Status][ot-codecov-svg]][ot-codecov] [![Build Status][ot-docker-dev-svg]][ot-docker-dev]
+[![OpenThread][ot-logo]][ot-repo] [![Build][ot-gh-action-build-svg]][ot-gh-action-build] [![Simulation][ot-gh-action-simulation-svg]][ot-gh-action-simulation] [![Docker][ot-gh-action-docker-svg]][ot-gh-action-docker] [![Language grade: C/C++][ot-lgtm-svg]][ot-lgtm] [![Coverage Status][ot-codecov-svg]][ot-codecov]
 
 ---
 
@@ -21,12 +21,12 @@ More information about Thread can be found at [threadgroup.org](http://threadgro
 [ot-gh-action-build-svg]: https://github.com/openthread/openthread/workflows/Build/badge.svg?branch=master&event=push
 [ot-gh-action-simulation]: https://github.com/openthread/openthread/actions?query=workflow%3ASimulation+branch%3Amaster+event%3Apush
 [ot-gh-action-simulation-svg]: https://github.com/openthread/openthread/workflows/Simulation/badge.svg?branch=master&event=push
+[ot-gh-action-docker]: https://github.com/openthread/openthread/actions?query=workflow%3ADocker+branch%3Amaster+event%3Apush
+[ot-gh-action-docker-svg]: https://github.com/openthread/openthread/workflows/Docker/badge.svg?branch=master&event=push
 [ot-lgtm]: https://lgtm.com/projects/g/openthread/openthread/context:cpp
 [ot-lgtm-svg]: https://img.shields.io/lgtm/grade/cpp/g/openthread/openthread.svg?logo=lgtm&logoWidth=18
 [ot-codecov]: https://codecov.io/gh/openthread/openthread
 [ot-codecov-svg]: https://codecov.io/gh/openthread/openthread/branch/master/graph/badge.svg
-[ot-docker-dev]: https://hub.docker.com/r/openthread/environment
-[ot-docker-dev-svg]: https://img.shields.io/docker/cloud/build/openthread/environment.svg?label=docker%20%7C%20dev
 
 # Who supports OpenThread?
 
