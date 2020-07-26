@@ -120,7 +120,7 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
     }
     """All nodes are created with default configurations"""
 
-    def test(self):
+    def _bootstrap(self):
         # starting context id
         context_id = 1
 
@@ -198,17 +198,14 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         self.simulator.go(WAIT_ATTACH)
         self.assertEqual(self.nodes[SED_1].get_state(), 'child')
 
+    def test(self):
+        self._bootstrap()
+
         # Verify MLR.req for each device when parent is 1.2
         self.__check_mlr_ok(ROUTER_1_2, is_ftd=True)
         self.__check_mlr_ok(FED_1, is_ftd=True)
         self.__check_mlr_ok(MED_1, is_ftd=False)
         self.__check_mlr_ok(SED_1, is_ftd=False)
-
-        # Make sure Parent registers multiple MAs of MED Children in one MLR.req
-        self.__check_parent_merge_med_mlr_req([MED_1, MED_2], ROUTER_1_2)
-
-        # Make sure Parent does not send MLR.req of Child if it's already subscribed by Netif or other Children
-        self.__check_not_send_mlr_req_if_subscribed([MED_1, MED_2], ROUTER_1_2)
 
         # Switch to parent 1.1
         self.__switch_to_1_1_parent()
@@ -220,6 +217,18 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
 
         # Switch to parent 1.2
         self.__switch_to_1_2_parent()
+
+    def testParentMergeMedMlrReq(self):
+        self._bootstrap()
+
+        # Make sure Parent registers multiple MAs of MED Children in one MLR.req
+        self.__check_parent_merge_med_mlr_req([MED_1, MED_2], ROUTER_1_2)
+
+    def testNotSendMlrReqIfSubscribed(self):
+        self._bootstrap()
+
+        # Make sure Parent does not send MLR.req of Child if it's already subscribed by Netif or other Children
+        self.__check_not_send_mlr_req_if_subscribed([MED_1, MED_2], ROUTER_1_2)
 
     def __check_mlr_ok(self, id, is_ftd, is_parent_1p1=False):
         """Check if MLR works for the node"""
