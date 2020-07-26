@@ -300,17 +300,14 @@ exit:
 MlrState Child::GetAddressMlrState(const Ip6::Address &aAddress)
 {
     uint16_t addressIndex;
-    bool     toRegister, registered;
 
     OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < OT_ARRAY_END(mIp6Address));
 
     addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
-    toRegister   = mMlrToRegisterMask.Get(addressIndex);
-    registered   = mMlrRegisteredMask.Get(addressIndex);
 
-    OT_ASSERT(!(toRegister && registered));
-
-    return toRegister ? kMlrStateToRegister : (registered ? kMlrStateRegistered : kMlrStateRegistering);
+    return mMlrToRegisterMask.Get(addressIndex)
+               ? kMlrStateToRegister
+               : (mMlrRegisteredMask.Get(addressIndex) ? kMlrStateRegistered : kMlrStateRegistering);
 }
 
 void Child::SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState)
