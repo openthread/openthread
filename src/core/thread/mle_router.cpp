@@ -2055,13 +2055,12 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     // Retrieve registered multicast addresses of the Child
     if (aChild.HasAnyMlrRegisteredAddress())
     {
-        auto childAddresses = aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal);
-
-        for (auto iter = childAddresses.begin(); iter != childAddresses.end(); iter++)
+        for (const Ip6::Address &childAddress :
+             aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
         {
-            if (aChild.GetAddressMlrState(iter.GetAsIndex()) == kMlrStateRegistered)
+            if (aChild.GetAddressMlrState(childAddress) == kMlrStateRegistered)
             {
-                oldMlrRegisteredAddresses[oldMlrRegisteredAddressNum++] = *iter.GetAddress();
+                oldMlrRegisteredAddresses[oldMlrRegisteredAddressNum++] = childAddress;
             }
         }
     }

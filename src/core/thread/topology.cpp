@@ -281,14 +281,13 @@ void Child::GenerateChallenge(void)
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 bool Child::HasMlrRegisteredAddress(const Ip6::Address &aAddress)
 {
-    bool has       = false;
-    auto addresses = IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal);
+    bool has = false;
 
     VerifyOrExit(mMlrRegisteredMask.HasAny(), OT_NOOP);
 
-    for (auto iter = addresses.begin(); iter != addresses.end(); iter++)
+    for (const Ip6::Address &address : IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
     {
-        if (mMlrRegisteredMask.Get(iter.GetAsIndex()) && *iter.GetAddress() == aAddress)
+        if (GetAddressMlrState(address) == kMlrStateRegistered && address == aAddress)
         {
             ExitNow(has = true);
         }
@@ -298,23 +297,32 @@ exit:
     return has;
 }
 
-MlrState Child::GetAddressMlrState(uint16_t aAddressIndex)
+MlrState Child::GetAddressMlrState(const Ip6::Address &aAddress)
 {
-    bool     toRegister = mMlrToRegisterMask.Get(aAddressIndex);
-    bool     registered = mMlrRegisteredMask.Get(aAddressIndex);
-    MlrState mlrState;
+    uint16_t addressIndex;
+    bool     toRegister, registered;
+
+    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < OT_ARRAY_END(mIp6Address));
+
+    addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
+    toRegister   = mMlrToRegisterMask.Get(addressIndex);
+    registered   = mMlrRegisteredMask.Get(addressIndex);
 
     OT_ASSERT(!(toRegister && registered));
 
-    mlrState = toRegister ? kMlrStateToRegister : (registered ? kMlrStateRegistered : kMlrStateRegistering);
-
-    return mlrState;
+    return toRegister ? kMlrStateToRegister : (registered ? kMlrStateRegistered : kMlrStateRegistering);
 }
 
-void Child::SetAddressMlrState(uint16_t aAddressIndex, MlrState aState)
+void Child::SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState)
 {
-    mMlrToRegisterMask.Set(aAddressIndex, aState == kMlrStateToRegister);
-    mMlrRegisteredMask.Set(aAddressIndex, aState == kMlrStateRegistered);
+    uint16_t addressIndex;
+
+    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < OT_ARRAY_END(mIp6Address));
+
+    addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
+
+    mMlrToRegisterMask.Set(addressIndex, aState == kMlrStateToRegister);
+    mMlrRegisteredMask.Set(addressIndex, aState == kMlrStateRegistered);
 }
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 

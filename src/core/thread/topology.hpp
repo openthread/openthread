@@ -506,16 +506,6 @@ public:
     };
 
     /**
-     * This class represents a bit-vector of Child Ip6 address mask.
-     *
-     * An Ip6 address index is in the range [0, OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD-1].
-     *
-     * @sa Child
-     *
-     */
-    typedef BitVector<OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD> ChildIp6AddressMask;
-
-    /**
      * This class defines an iterator used to go through IPv6 address entries of a child.
      *
      */
@@ -874,23 +864,23 @@ public:
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
-     * This method returns MLR state of an Ip6 address.
+     * This method returns MLR state of an Ip6 multicast address.
      *
-     * @param[in] aAddressIndex  The Ip6 address index.
+     * @param[in] aAddress  The Ip6 multicast address.
      *
-     * @returns MLR state of the Ip6 address.
+     * @returns MLR state of the Ip6 multicast address.
      *
      */
-    MlrState GetAddressMlrState(uint16_t aAddressIndex);
+    MlrState GetAddressMlrState(const Ip6::Address &aAddress);
 
     /**
-     * This method sets MLR state of an Ip6 address.
+     * This method sets MLR state of an Ip6 multicast address.
      *
-     * @param[in] aAddressIndex  The Ip6 address index.
-     * @param[in] aState         The target MLR state.
+     * @param[in] aAddress  The Ip6 multicast address.
+     * @param[in] aState    The target MLR state.
      *
      */
-    void SetAddressMlrState(uint16_t aAddressIndex, MlrState aState);
+    void SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState);
 
     /**
      * This method returns if the Child has Ip6 address @p aAddress of MLR state `kMlrStateRegistered`.
@@ -931,6 +921,8 @@ private:
     {
         kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1,
     };
+
+    typedef BitVector<kNumIp6Addresses> ChildIp6AddressMask;
 
     class AddressIteratorBuilder
     {
