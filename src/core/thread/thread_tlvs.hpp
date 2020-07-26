@@ -142,9 +142,8 @@ public:
      */
     enum DuaStatus : uint8_t
     {
-        kDuaSuccess    = 0,     ///< Successful registration.
-        kDuaReRegister = 1,     ///< Registration was accepted but immediate reregistration is required to solve
-                                ///< any potential conflicting state across Domain.
+        kDuaSuccess        = 0, ///< Successful registration.
+        kDuaReRegister     = 1, ///< Registration was accepted but immediate reregistration is required to solve.
         kDuaInvalid        = 2, ///< Registration rejected (Fatal): Target EID is not a valid DUA.
         kDuaDuplicate      = 3, ///< Registration rejected (Fatal): DUA is already in use by another device.
         kDuaNoResources    = 4, ///< Registration rejected (Non-fatal): Backbone Router Resource shortage.

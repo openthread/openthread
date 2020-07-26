@@ -644,19 +644,10 @@ public:
     /**
      * This method retrieves the Domain Unicast Address registered by the child.
      *
-     * @param[out ]  aAddress   A reference where to put the Domain Unicast Address.
-     *
-     * @retval OT_ERROR_NONE       Domain Unicast Address exists in the list.
-     * @retval OT_ERROR_NOT_FOUND  Domain Unicast Address was not found in the list.
+     * @returns A pointer to Domain Unicast Address registered by the child if there is.
      *
      */
-    otError GetDomainUnicastAddress(Ip6::Address &aAddress) const;
-
-    /**
-     * This method removes deperated DUAs registered by the child when Domain Prefix refreshes.
-     *
-     */
-    void RemovePreviousDomainUnicastAddress(void);
+    const Ip6::Address *GetDomainUnicastAddress(void) const;
 #endif
 
     /**

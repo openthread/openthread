@@ -262,26 +262,9 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-void Child::RemovePreviousDomainUnicastAddress(void)
+const Ip6::Address *Child::GetDomainUnicastAddress(void) const
 {
-    for (const Ip6::Address &ip6Address : mIp6Address)
-    {
-        VerifyOrExit(!ip6Address.IsUnspecified(), OT_NOOP);
-
-        if (Get<BackboneRouter::Leader>().IsPreviousDomainUnicast(ip6Address))
-        {
-            IgnoreError(RemoveIp6Address(ip6Address));
-            ExitNow();
-        }
-    }
-
-exit:
-    return;
-}
-
-otError Child::GetDomainUnicastAddress(Ip6::Address &aAddress) const
-{
-    otError error = OT_ERROR_NOT_FOUND;
+    const Ip6::Address *addr = nullptr;
 
     for (const Ip6::Address &ip6Address : mIp6Address)
     {
@@ -289,13 +272,12 @@ otError Child::GetDomainUnicastAddress(Ip6::Address &aAddress) const
 
         if (Get<BackboneRouter::Leader>().IsDomainUnicast(ip6Address))
         {
-            aAddress = ip6Address;
-            ExitNow(error = OT_ERROR_NONE);
+            ExitNow(addr = &ip6Address);
         }
     }
 
 exit:
-    return error;
+    return addr;
 }
 #endif
 

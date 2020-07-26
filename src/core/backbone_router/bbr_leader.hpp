@@ -168,7 +168,7 @@ public:
     /**
      * This method indicates whether or not the address was a Domain Unicast Address with deprecated Domain Prefix.
      *
-     * @param[in]  aAddress A reference to the address.
+     * @param[in] aAddress  A reference to the address.
      *
      * @retval true  @p aAddress is a Domain Unicast Address with deprecated Domain Prefix.
      * @retval false @p aAddress is not a Domain Unicast Address with deprecated Domain Prefix.
@@ -189,9 +189,8 @@ private:
     void LogDomainPrefix(DomainPrefixState, const otIp6Prefix &) const {}
 #endif
 
-    BackboneRouterConfig mConfig;               ///< Primary Backbone Router information.
-    otIp6Prefix          mDomainPrefix;         ///< Domain Prefix in the Thread network.
-    otIp6Prefix          mPreviousDomainPrefix; ///< Previous Domain Prefix that was in the Thread network.
+    BackboneRouterConfig mConfig;       ///< Primary Backbone Router information.
+    otIp6Prefix          mDomainPrefix; ///< Domain Prefix in the Thread network.
 };
 
 } // namespace BackboneRouter

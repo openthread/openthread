@@ -207,8 +207,8 @@ private:
             *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
     }
 
-    void HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void ProcessDuaResponse(Coap::Message &aMessage);
+    void    HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError ProcessDuaResponse(Coap::Message &aMessage);
 
     void PerformNextRegistration(void);
     void UpdateReregistrationDelay(void);
@@ -250,6 +250,9 @@ private:
     } mDelay;
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+    // TODO: (DUA) may re-evaluate the alternative option of distributing the flags into the child table:
+    //       - Child class itself have some padding - may save some RAM
+    //       - Avoid cross reference between a bit-vector and the child entry
     ChildMask mChildDuaMask;              ///< Child Mask for child who registers DUA via Child Update Request.
     ChildMask mChildDuaRegisteredMask;    ///< Child Mask for child's DUA that was registered by the parent on behalf.
     uint16_t  mChildIndexDuaRegistering;  ///< Child Index of the DUA being registered.

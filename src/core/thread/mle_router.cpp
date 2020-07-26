@@ -2040,9 +2040,9 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     uint16_t                 offset          = 0;
     uint16_t                 end             = 0;
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    Ip6::Address oldDua;
-    bool         oldHasDua = false;
-    bool         hasDua    = false;
+    Ip6::Address        oldDua;
+    const Ip6::Address *oldDuaPtr = nullptr;
+    bool                hasDua    = false;
 #endif
 
     VerifyOrExit(aMessage.Read(aOffset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
@@ -2052,7 +2052,10 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     end    = offset + tlv.GetLength();
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    oldHasDua = (aChild.GetDomainUnicastAddress(oldDua) == OT_ERROR_NONE);
+    if ((oldDuaPtr = aChild.GetDomainUnicastAddress()) != nullptr)
+    {
+        oldDua = *oldDuaPtr;
+    }
 #endif
 
     aChild.ClearIp6Addresses();
@@ -2088,7 +2091,7 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
             {
                 hasDua = true;
 
-                if (oldHasDua)
+                if (oldDuaPtr != nullptr)
                 {
                     if (oldDua != address)
                     {
@@ -2164,7 +2167,7 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     }
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     // Dua is removed
-    if (oldHasDua && !hasDua)
+    if (oldDuaPtr != nullptr && !hasDua)
     {
         Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, kChildDuaRemoved);
     }

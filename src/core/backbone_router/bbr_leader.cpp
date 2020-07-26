@@ -54,8 +54,7 @@ void Leader::Reset(void)
     mConfig.mServer16 = Mac::kShortAddrInvalid;
 
     // Domain Prefix Length 0 indicates no available Domain Prefix in the Thread network.
-    mDomainPrefix.mLength         = 0;
-    mPreviousDomainPrefix.mLength = 0;
+    mDomainPrefix.mLength = 0;
 }
 
 otError Leader::GetConfig(BackboneRouterConfig &aConfig) const
@@ -283,8 +282,6 @@ void Leader::UpdateDomainPrefixConfig(void)
             state = kDomainPrefixRefreshed;
         }
 
-        mPreviousDomainPrefix = mDomainPrefix;
-
         mDomainPrefix = config.mPrefix;
     }
 
@@ -301,19 +298,7 @@ void Leader::UpdateDomainPrefixConfig(void)
 
 bool Leader::IsDomainUnicast(const Ip6::Address &aAddress) const
 {
-    otLogInfoDua("Domain Prefix : %s/%d",
-                 static_cast<const Ip6::Address *>(&mDomainPrefix.mPrefix)->ToString().AsCString(),
-                 mDomainPrefix.mLength);
     return HasDomainPrefix() && aAddress.PrefixMatch(mDomainPrefix.mPrefix) >= mDomainPrefix.mLength;
-}
-
-bool Leader::IsPreviousDomainUnicast(const Ip6::Address &aAddress) const
-{
-    otLogInfoDua("Previous Domain Prefix : %s/%d",
-                 static_cast<const Ip6::Address *>(&mPreviousDomainPrefix.mPrefix)->ToString().AsCString(),
-                 mPreviousDomainPrefix.mLength);
-    return mPreviousDomainPrefix.mLength > 0 &&
-           aAddress.PrefixMatch(mPreviousDomainPrefix.mPrefix) >= mPreviousDomainPrefix.mLength;
 }
 
 } // namespace BackboneRouter

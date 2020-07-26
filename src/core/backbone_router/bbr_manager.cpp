@@ -141,13 +141,10 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
     SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, &meshLocalIid, sizeof(meshLocalIid)));
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    if (mDuaResponseIsSpecified)
+    if (mDuaResponseIsSpecified && (mDuaResponseTargetMlIid.IsUnspecified() || mDuaResponseTargetMlIid == meshLocalIid))
     {
-        if (mDuaResponseTargetMlIid.IsUnspecified() || mDuaResponseTargetMlIid == meshLocalIid)
-        {
-            mDuaResponseIsSpecified = false;
-            ExitNow(status = mDuaResponseStatus);
-        }
+        mDuaResponseIsSpecified = false;
+        ExitNow(status = mDuaResponseStatus);
     }
 #endif
 
@@ -186,7 +183,7 @@ void Manager::SendDuaRegistrationResponse(const Coap::Message &      aMessage,
     SuccessOrExit(message->SetDefaultResponseHeader(aMessage));
     SuccessOrExit(message->SetPayloadMarker());
 
-    SuccessOrExit(Tlv::AppendUint8Tlv(*message, ThreadTlv::kStatus, static_cast<uint8_t>(aStatus)));
+    SuccessOrExit(Tlv::AppendUint8Tlv(*message, ThreadTlv::kStatus, aStatus));
     SuccessOrExit(Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aTarget, sizeof(aTarget)));
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));

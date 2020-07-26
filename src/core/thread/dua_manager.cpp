@@ -101,17 +101,6 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         if (mChildDuaMask.HasAny())
         {
-            // Remove Children's DUAs
-            for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
-            {
-                uint16_t childIndex = Get<ChildTable>().GetChildIndex(child);
-
-                if (mChildDuaMask.Get(childIndex))
-                {
-                    child.RemovePreviousDomainUnicastAddress();
-                }
-            }
-
             mChildDuaMask.ClearAll();
             mChildDuaRegisteredMask.ClearAll();
             mRegisterCurrentChildIndex = false;
@@ -333,7 +322,7 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
         }
         else if (mle.IsExpectedToBecomeRouter())
         {
-            // Will check again In case the device decides to stay REED when jitter timeout expires.
+            // Will check again in case the device decides to stay REED when jitter timeout expires.
             UpdateRegistrationDelay(mle.GetRouterSelectionJitterTimeout() + 1);
         }
 #endif
@@ -369,45 +358,30 @@ void DuaManager::HandleTimer(void)
         mDomainUnicastAddress.mPreferred = true;
     }
 
-    if (mDelay.mFields.mRegistrationDelay > 0)
+    if ((mDelay.mFields.mRegistrationDelay > 0) && (--mDelay.mFields.mRegistrationDelay == 0))
     {
-        mDelay.mFields.mRegistrationDelay--;
-
-        if (mDelay.mFields.mRegistrationDelay == 0)
-        {
-            attempt = true;
-        }
+        attempt = true;
     }
 #endif
 
-    if (mDelay.mFields.mCheckDelay > 0)
+    if ((mDelay.mFields.mCheckDelay > 0) && (--mDelay.mFields.mCheckDelay == 0))
     {
-        mDelay.mFields.mCheckDelay--;
-
-        if (mDelay.mFields.mCheckDelay == 0)
-        {
-            attempt = true;
-        }
+        attempt = true;
     }
 
-    if (mDelay.mFields.mReregistrationDelay > 0)
+    if ((mDelay.mFields.mReregistrationDelay > 0) && (--mDelay.mFields.mReregistrationDelay == 0))
     {
-        mDelay.mFields.mReregistrationDelay--;
-
-        if (mDelay.mFields.mReregistrationDelay == 0)
-        {
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-            if (mDuaState != kNotExist)
-            {
-                mDuaState = kToRegister;
-            }
+        if (mDuaState != kNotExist)
+        {
+            mDuaState = kToRegister;
+        }
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-            mChildDuaRegisteredMask.ClearAll();
+        mChildDuaRegisteredMask.ClearAll();
 #endif
-            attempt = true;
-        }
+        attempt = true;
     }
 
     if (attempt)
@@ -438,24 +412,24 @@ void DuaManager::PerformNextRegistration(void)
     Ip6::MessageInfo messageInfo;
     Ip6::Address     dua;
 
-    VerifyOrExit(mle.IsAttached(), OT_NOOP);
-    VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), OT_NOOP);
+    VerifyOrExit(mle.IsAttached(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = OT_ERROR_INVALID_STATE);
 
     // Only allow one outgoing DUA.req
-    VerifyOrExit(!mIsDuaPending, OT_NOOP);
+    VerifyOrExit(!mIsDuaPending, error = OT_ERROR_BUSY);
 
     // Only send DUA.req when necessary
 #if OPENTHREAD_CONFIG_DUA_ENABLE
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    VerifyOrExit(mle.IsRouterOrLeader() || !mle.IsExpectedToBecomeRouter(), OT_NOOP);
+    VerifyOrExit(mle.IsRouterOrLeader() || !mle.IsExpectedToBecomeRouter(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit((mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0) ||
                      mChildDuaMask != mChildDuaRegisteredMask,
-                 OT_NOOP);
+                 error = OT_ERROR_NOT_FOUND);
 #else
-    VerifyOrExit(mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0, OT_NOOP);
+    VerifyOrExit(mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0, error = OT_ERROR_NOT_FOUND);
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 
-    VerifyOrExit(mle.IsFullThreadDevice() || mle.GetParent().IsThreadVersion1p1(), OT_NOOP);
+    VerifyOrExit(mle.IsFullThreadDevice() || mle.GetParent().IsThreadVersion1p1(), error = OT_ERROR_INVALID_STATE);
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
     // Prepare DUA.req
@@ -493,11 +467,13 @@ void DuaManager::PerformNextRegistration(void)
             }
         }
         {
-            uint32_t lastTransactionTime;
-            Child *  child = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
+            uint32_t            lastTransactionTime;
+            const Ip6::Address *duaPtr = nullptr;
+            Child *             child  = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
 
-            VerifyOrExit(child->GetDomainUnicastAddress(dua) == OT_ERROR_NONE, error = OT_ERROR_ABORT);
+            VerifyOrExit((duaPtr = child->GetDomainUnicastAddress()) != nullptr, error = OT_ERROR_ABORT);
 
+            dua                 = *duaPtr;
             lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child->GetLastHeard());
 
             SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &dua, sizeof(dua)));
@@ -534,9 +510,6 @@ void DuaManager::PerformNextRegistration(void)
         Get<DataPollSender>().SendFastPolls();
     }
 
-    otLogInfoDua("Sent DUA.req for DUA %s From %s to %s", dua.ToString().AsCString(),
-                 messageInfo.GetSockAddr().ToString().AsCString(), messageInfo.GetPeerAddr().ToString().AsCString());
-
 exit:
     if (error == OT_ERROR_NO_BUFS)
     {
@@ -547,35 +520,44 @@ exit:
     {
         message->Free();
     }
+
+    otLogInfoDua("Sent DUA.req for DUA %s: %s", dua.ToString().AsCString(), otThreadErrorToString(error));
 }
 
 void DuaManager::HandleDuaResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, otError aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
+    otError error;
 
     mIsDuaPending = false;
 
     if (aResult == OT_ERROR_RESPONSE_TIMEOUT)
     {
         UpdateCheckDelay(Mle::KResponseTimeoutDelay);
-        ExitNow();
+        ExitNow(error = aResult);
     }
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage.GetCode() == OT_COAP_CODE_CHANGED, OT_NOOP);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage.GetCode() == OT_COAP_CODE_CHANGED, error = OT_ERROR_PARSE);
 
-    ProcessDuaResponse(aMessage);
+    error = ProcessDuaResponse(aMessage);
 
 exit:
-    mRegistrationTask.Post();
+    if (error != OT_ERROR_RESPONSE_TIMEOUT)
+    {
+        mRegistrationTask.Post();
+    }
+
+    otLogInfoDua("Received DUA.req: %s", otThreadErrorToString(error));
 }
 
 void DuaManager::HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
+    otError error;
 
-    otLogInfoDua("Received DUA.ntf");
+    OT_UNUSED_VARIABLE(error);
 
-    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
+    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_PARSE);
 
     if (aMessage.IsConfirmable())
     {
@@ -585,19 +567,20 @@ void DuaManager::HandleDuaNotification(Coap::Message &aMessage, const Ip6::Messa
         }
     }
 
-    ProcessDuaResponse(aMessage);
+    error = ProcessDuaResponse(aMessage);
 
 exit:
-    return;
+    otLogInfoDua("Received DUA.ntf: %d", otThreadErrorToString(error));
 }
 
-void DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
+otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
 {
+    otError      error = OT_ERROR_NONE;
     Ip6::Address target;
     uint8_t      status;
 
-    SuccessOrExit(Tlv::FindUint8Tlv(aMessage, ThreadTlv::kStatus, status));
-    SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+    SuccessOrExit(error = Tlv::FindUint8Tlv(aMessage, ThreadTlv::kStatus, status));
+    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     if (Get<ThreadNetif>().HasUnicastAddress(target))
@@ -626,9 +609,7 @@ void DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
 
             break;
         case ThreadStatusTlv::kDuaNoResources:
-            // fall through
         case ThreadStatusTlv::kDuaNotPrimary:
-            // fall through
         case ThreadStatusTlv::kDuaGeneralFailure:
             UpdateReregistrationDelay();
             break;
@@ -640,8 +621,8 @@ void DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
     {
         Child *child = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
 
-        VerifyOrExit(child != NULL, OT_NOOP);
-        VerifyOrExit(child->HasIp6Address(target), OT_NOOP);
+        VerifyOrExit(child != NULL, error = OT_ERROR_NOT_FOUND);
+        VerifyOrExit(child->HasIp6Address(target), error = OT_ERROR_NOT_FOUND);
 
         mRegisterCurrentChildIndex = false;
 
@@ -656,16 +637,14 @@ void DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
             mDelay.mFields.mCheckDelay = Mle::kImmediateReRegisterDelay;
             break;
         case ThreadStatusTlv::kDuaInvalid:
-            // fall through
         case ThreadStatusTlv::kDuaDuplicate:
             SendAddressNotification(target, static_cast<ThreadStatusTlv::DuaStatus>(status), *child);
             IgnoreError(child->RemoveIp6Address(target));
             mChildDuaMask.Clear(mChildIndexDuaRegistering);
+            mChildDuaRegisteredMask.Clear(mChildIndexDuaRegistering);
             break;
         case ThreadStatusTlv::kDuaNoResources:
-            // fall through
         case ThreadStatusTlv::kDuaNotPrimary:
-            // fall through
         case ThreadStatusTlv::kDuaGeneralFailure:
             UpdateReregistrationDelay();
             break;
@@ -675,6 +654,7 @@ void DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
 
 exit:
     ScheduleTimer();
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
@@ -695,8 +675,7 @@ void DuaManager::SendAddressNotification(Ip6::Address &             aAddress,
     SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, ThreadTlv::kStatus, static_cast<uint8_t>(aStatus)));
     SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aAddress, sizeof(aAddress)));
 
-    messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(),
-                                                  HostSwap16(aChild.GetRloc16()));
+    messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), aChild.GetRloc16());
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
 
