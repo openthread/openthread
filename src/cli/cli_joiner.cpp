@@ -57,7 +57,8 @@ otError Joiner::ProcessDiscerner(uint8_t aArgsLength, char *aArgs[])
         otJoinerDiscerner discerner;
 
         memset(&discerner, 0, sizeof(discerner));
-        SuccessOrExit(error = Interpreter::ParseJoinerDiscerner(aArgs[1], discerner));
+        VerifyOrExit(OT_ERROR_NONE == Interpreter::ParseJoinerDiscerner(aArgs[1], discerner),
+                     error = OT_ERROR_INVALID_ARGS);
         SuccessOrExit(error = otJoinerSetDiscerner(mInterpreter.mInstance, &discerner));
     }
     else if (aArgsLength == 1)
