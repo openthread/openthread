@@ -35,11 +35,16 @@ Usage: `joiner discerner [discerner]`
 
 Print or set the Joiner Discerner.
 
+- discerner: `*` to clear discener, `number/length` to set discerner
+
+
 ```bash
 > joiner discerner 0xabc/12
 Done
 > joiner discerner
 abc/12
+Done
+> joiner discerner *
 Done
 ```
 
