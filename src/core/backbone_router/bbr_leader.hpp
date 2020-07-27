@@ -142,7 +142,10 @@ public:
      * @retval A pointer to the Domain Prefix or nullptr if there is no Domain Prefix.
      *
      */
-    const otIp6Prefix *GetDomainPrefix(void) const { return (mDomainPrefix.mLength == 0) ? nullptr : &mDomainPrefix; }
+    const Ip6::Prefix *GetDomainPrefix(void) const
+    {
+        return (mDomainPrefix.GetLength() == 0) ? nullptr : &mDomainPrefix;
+    }
 
     /**
      * This method indicates whether or not the Domain Prefix is available in the Thread Network.
@@ -150,7 +153,7 @@ public:
      * @retval TRUE if there is Domain Prefix, FALSE otherwise.
      *
      */
-    bool HasDomainPrefix(void) const { return (mDomainPrefix.mLength > 0); }
+    bool HasDomainPrefix(void) const { return (mDomainPrefix.GetLength() > 0); }
 
     /**
      * This method indicates whether or not the address is a Domain Unicast Address.
@@ -168,16 +171,16 @@ private:
     void UpdateDomainPrefixConfig(void);
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
     void               LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &aConfig) const;
-    void               LogDomainPrefix(DomainPrefixState aState, const otIp6Prefix &aPrefix) const;
+    void               LogDomainPrefix(DomainPrefixState aState, const Ip6::Prefix &aPrefix) const;
     static const char *StateToString(State aState);
     static const char *DomainPrefixStateToString(DomainPrefixState aState);
 #else
     void LogBackboneRouterPrimary(State, const BackboneRouterConfig &) const {}
-    void LogDomainPrefix(DomainPrefixState, const otIp6Prefix &) const {}
+    void LogDomainPrefix(DomainPrefixState, const Ip6::Prefix &) const {}
 #endif
 
     BackboneRouterConfig mConfig;       ///< Primary Backbone Router information.
-    otIp6Prefix          mDomainPrefix; ///< Domain Prefix in the Thread network.
+    Ip6::Prefix          mDomainPrefix; ///< Domain Prefix in the Thread network.
 };
 
 } // namespace BackboneRouter

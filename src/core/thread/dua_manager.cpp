@@ -62,7 +62,7 @@ DuaManager::DuaManager(Instance &aInstance)
 
 void DuaManager::UpdateDomainUnicastAddress(BackboneRouter::Leader::DomainPrefixState aState)
 {
-    const otIp6Prefix *prefix;
+    const Ip6::Prefix *prefix;
 
     if ((aState == BackboneRouter::Leader::kDomainPrefixRemoved) ||
         (aState == BackboneRouter::Leader::kDomainPrefixRefreshed))
@@ -78,9 +78,9 @@ void DuaManager::UpdateDomainUnicastAddress(BackboneRouter::Leader::DomainPrefix
 
     OT_ASSERT(prefix != nullptr);
 
-    mDomainUnicastAddress.mPrefixLength = prefix->mLength;
+    mDomainUnicastAddress.mPrefixLength = prefix->GetLength();
     mDomainUnicastAddress.GetAddress().Clear();
-    mDomainUnicastAddress.GetAddress().SetPrefix(prefix->mPrefix.mFields.m8, prefix->mLength);
+    mDomainUnicastAddress.GetAddress().SetPrefix(*prefix);
 
     // Apply cached DUA Interface Identifier manually specified.
     if (IsFixedDuaInterfaceIdentifierSet())

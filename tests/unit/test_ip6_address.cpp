@@ -217,10 +217,68 @@ void TestIp6AddressSetPrefix(void)
     }
 }
 
+void TestIp6Prefix(void)
+{
+    const uint8_t kPrefixes[][OT_IP6_ADDRESS_SIZE] = {
+        {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef},
+        {0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55},
+        {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+    };
+
+    ot::Ip6::Prefix  prefix;
+    ot::Ip6::Address address1, address2;
+
+    for (auto prefixBytes : kPrefixes)
+    {
+        memcpy(address1.mFields.m8, prefixBytes, sizeof(address1));
+        address2 = address1;
+        address2.mFields.m8[0] ^= 0x80; // Change first bit.
+
+        for (uint8_t prefixLength = 1; prefixLength <= ot::Ip6::Prefix::kMaxLength; prefixLength++)
+        {
+            prefix.Set(prefixBytes, prefixLength);
+
+            printf("Prefix %s\n", prefix.ToString().AsCString());
+
+            VerifyOrQuit(prefix.GetLength() == prefixLength, "Prefix::GetLength() failed");
+            VerifyOrQuit(prefix.IsValid(), "Prefix::IsValid() failed");
+            VerifyOrQuit(prefix.IsEqual(prefixBytes, prefixLength), "Prefix::IsEqual() failed");
+
+            VerifyOrQuit(address1.MatchesPrefix(prefix), "Address::MatchesPrefix() failed");
+            VerifyOrQuit(!address2.MatchesPrefix(prefix), "Address::MatchedPrefix() failed");
+
+            VerifyOrQuit(prefix == prefix, "Prefix::operator==() failed");
+
+            for (uint8_t subPrefixLength = 1; subPrefixLength <= prefixLength; subPrefixLength++)
+            {
+                ot::Ip6::Prefix subPrefix;
+
+                subPrefix.Set(prefixBytes, subPrefixLength);
+
+                VerifyOrQuit(prefix.ContainsPrefix(subPrefix), "Prefix::ContainsPrefix() failed");
+
+                if (prefixLength == subPrefixLength)
+                {
+                    VerifyOrQuit(prefix == subPrefix, "Prefix::operator==() failed");
+                    VerifyOrQuit(prefix.IsEqual(subPrefix.GetBytes(), subPrefix.GetLength()),
+                                 "Prefix::IsEqual() failed");
+                }
+                else
+                {
+                    VerifyOrQuit(prefix != subPrefix, "Prefix::operator!= failed");
+                    VerifyOrQuit(!prefix.IsEqual(subPrefix.GetBytes(), subPrefix.GetLength()),
+                                 "Prefix::IsEqual() failed");
+                }
+            }
+        }
+    }
+}
+
 int main(void)
 {
     TestIp6AddressSetPrefix();
     TestIp6AddressFromString();
+    TestIp6Prefix();
     printf("All tests passed\n");
     return 0;
 }

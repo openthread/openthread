@@ -159,7 +159,7 @@ private:
 
     typedef uint8_t UpdateMode;
 
-    bool        ShouldFilter(const otIp6Prefix &aPrefix) const;
+    bool        ShouldFilter(const Ip6::Prefix &aPrefix) const;
     void        Update(UpdateMode aMode);
     void        GetIidSecretKey(IidSecretKey &aKey) const;
     static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);

@@ -85,21 +85,6 @@ private:
     {
     public:
         /**
-         * This method indicates whether or not @p aPrefix matches this entry.
-         *
-         * @param[in]  aPrefix  The prefix to compare.
-         *
-         * @retval TRUE if the prefix matches.
-         * @retval FALSE if the prefix does not match.
-         *
-         */
-        bool IsPrefixMatch(const otIp6Prefix &aPrefix) const
-        {
-            return (mPrefix.mLength == aPrefix.mLength) &&
-                   (GetPrefix().PrefixMatch(static_cast<const Ip6::Address &>(aPrefix.mPrefix)) >= mPrefix.mLength);
-        }
-
-        /**
          * This method indicates whether or not @p aAddress has a matching prefix.
          *
          * @param[in]  aAddress  The IPv6 address to compare.
@@ -108,10 +93,7 @@ private:
          * @retval FALSE if the address does not have a matching prefix.
          *
          */
-        bool IsPrefixMatch(const Ip6::Address &aAddress) const
-        {
-            return (aAddress.PrefixMatch(static_cast<const Ip6::Address &>(mPrefix.mPrefix)) >= mPrefix.mLength);
-        }
+        bool IsPrefixMatch(const Ip6::Address &aAddress) const { return aAddress.MatchesPrefix(GetPrefix()); }
 
         /**
          * This method indicates whether or not this entry is valid.
@@ -150,7 +132,26 @@ private:
          * @returns The IPv6 prefix.
          *
          */
-        const Ip6::Address &GetPrefix(void) const { return static_cast<const Ip6::Address &>(mPrefix.mPrefix); }
+        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+
+        /**
+         * This method returns the IPv6 prefix.
+         *
+         * @returns The IPv6 prefix.
+         *
+         */
+        Ip6::Prefix &GetPrefix(void) { return mPrefix; }
+
+        /**
+         * This method returns the IPv6 prefix as an IPv6 address.
+         *
+         * @returns The IPv6 prefix as an IPv6 address.
+         *
+         */
+        const Ip6::Address &GetPrefixAsAddress(void) const
+        {
+            return static_cast<const Ip6::Address &>(mPrefix.mPrefix);
+        }
 
         /**
          * This method sets the ALOC.
@@ -160,7 +161,7 @@ private:
          * @param[in]  aContextId        The 6LoWPAN Context ID.
          *
          */
-        void Set(const otIp6Prefix &aPrefix, const Mle::MeshLocalPrefix &aMeshLocalPrefix, uint8_t aContextId)
+        void Set(const Ip6::Prefix &aPrefix, const Mle::MeshLocalPrefix &aMeshLocalPrefix, uint8_t aContextId)
         {
             mPrefix = aPrefix;
 
@@ -173,7 +174,7 @@ private:
 
     private:
         Ip6::NetifUnicastAddress mAloc;
-        otIp6Prefix              mPrefix;
+        Ip6::Prefix              mPrefix;
     };
 
     enum : uint16_t
@@ -184,7 +185,7 @@ private:
     void Start(void);
     void Stop(void);
 
-    void AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Context &aContext);
+    void AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext);
 
     otError AppendHeader(Message &aMessage, const TransactionId &aTransactionId);
     otError AppendClientIdentifier(Message &aMessage, ClientIdentifier &aClientId);
