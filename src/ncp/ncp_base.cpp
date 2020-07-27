@@ -612,6 +612,14 @@ unsigned int NcpBase::ConvertLogRegion(otLogRegion aLogRegion)
     case OT_LOG_REGION_BBR:
         spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_BBR;
         break;
+
+    case OT_LOG_REGION_MLR:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_MLR;
+        break;
+
+    case OT_LOG_REGION_DUA:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_DUA;
+        break;
     }
 
     return spinelLogRegion;
@@ -1372,8 +1380,15 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_PROMISCUOUS_MODE>(void)
 {
-    return mEncoder.WriteUint8(otPlatRadioGetPromiscuous(mInstance) ? SPINEL_MAC_PROMISCUOUS_MODE_FULL
-                                                                    : SPINEL_MAC_PROMISCUOUS_MODE_OFF);
+    bool isPromiscuous;
+
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    isPromiscuous = otLinkRawGetPromiscuous(mInstance);
+#else
+    isPromiscuous = otLinkIsPromiscuous(mInstance);
+#endif
+
+    return mEncoder.WriteUint8(isPromiscuous ? SPINEL_MAC_PROMISCUOUS_MODE_FULL : SPINEL_MAC_PROMISCUOUS_MODE_OFF);
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_PROMISCUOUS_MODE>(void)
@@ -1386,12 +1401,20 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_PROMISCUOUS_MODE>
     switch (mode)
     {
     case SPINEL_MAC_PROMISCUOUS_MODE_OFF:
-        otPlatRadioSetPromiscuous(mInstance, false);
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+        error = otLinkRawSetPromiscuous(mInstance, false);
+#else
+        error = otLinkSetPromiscuous(mInstance, false);
+#endif
         break;
 
     case SPINEL_MAC_PROMISCUOUS_MODE_NETWORK:
     case SPINEL_MAC_PROMISCUOUS_MODE_FULL:
-        otPlatRadioSetPromiscuous(mInstance, true);
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+        error = otLinkRawSetPromiscuous(mInstance, true);
+#else
+        error = otLinkSetPromiscuous(mInstance, true);
+#endif
         break;
 
     default:

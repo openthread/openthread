@@ -44,14 +44,8 @@ namespace ot {
 
 RouterTable::Iterator::Iterator(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mRouter(nullptr)
+    , mRouter(Get<RouterTable>().GetFirstEntry())
 {
-    Reset();
-}
-
-void RouterTable::Iterator::Reset(void)
-{
-    mRouter = Get<RouterTable>().GetFirstEntry();
 }
 
 void RouterTable::Iterator::Advance(void)

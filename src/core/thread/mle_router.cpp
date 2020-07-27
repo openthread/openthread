@@ -1553,10 +1553,8 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
     VerifyOrExit(changed, OT_NOOP);
     otLogInfoMle("Route table updated");
 
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
+    for (Router &router : Get<RouterTable>().Iterate())
     {
-        Router &router = *iter.GetRouter();
-
         otLogInfoMle("    %04x -> %04x, cost:%d %d, lqin:%d, lqout:%d, link:%s", router.GetRloc16(),
                      (router.GetNextHop() == kInvalidRouterId) ? 0xffff : Rloc16FromRouterId(router.GetNextHop()),
                      router.GetCost(), mRouterTable.GetLinkCost(router), router.GetLinkInfo().GetLinkQuality(),
@@ -1891,9 +1889,8 @@ void MleRouter::HandleStateUpdateTimer(void)
     }
 
     // update router state
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
+    for (Router &router : Get<RouterTable>().Iterate())
     {
-        Router & router = *iter.GetRouter();
         uint32_t age;
 
         if (router.GetRloc16() == GetRloc16())
@@ -3695,33 +3692,15 @@ exit:
     return error;
 }
 
-otError MleRouter::GetChildNextIp6Address(uint16_t                   aChildIndex,
-                                          Child::Ip6AddressIterator &aIterator,
-                                          Ip6::Address &             aAddress)
-{
-    otError error = OT_ERROR_NONE;
-    Child * child = nullptr;
-
-    child = mChildTable.GetChildAtIndex(aChildIndex);
-    VerifyOrExit(child != nullptr, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(child->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_ARGS);
-
-    error = child->GetNextIp6Address(aIterator, aAddress);
-
-exit:
-    return error;
-}
-
 void MleRouter::RestoreChildren(void)
 {
     otError  error          = OT_ERROR_NONE;
     bool     foundDuplicate = false;
     uint16_t numChildren    = 0;
 
-    for (Settings::ChildInfoIterator iter(GetInstance()); !iter.IsDone(); iter++)
+    for (const Settings::ChildInfo &childInfo : Get<Settings>().IterateChildInfo())
     {
-        Child *                    child;
-        const Settings::ChildInfo &childInfo = iter.GetChildInfo();
+        Child *child;
 
         child = mChildTable.FindChild(childInfo.GetExtAddress(), Child::kInStateAnyExceptInvalid);
 
@@ -3797,7 +3776,7 @@ otError MleRouter::StoreChild(const Child &aChild)
 
 void MleRouter::RefreshStoredChildren(void)
 {
-    SuccessOrExit(Get<Settings>().DeleteChildInfo());
+    SuccessOrExit(Get<Settings>().DeleteAllChildInfo());
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
@@ -4170,8 +4149,8 @@ exit:
 
 bool MleRouter::IsExpectedToBecomeRouter(void) const
 {
-    return IsRouterEligible() && !IsRouterOrLeader() &&
-           (Get<RouterTable>().GetActiveRouterCount() < GetRouterUpgradeThreshold()) && !mAddressSolicitRejected;
+    return IsRouterEligible() && IsChild() && !mAddressSolicitRejected &&
+           (GetRouterSelectionJitterTimeout() != 0 || mAddressSolicitPending);
 }
 
 void MleRouter::HandleAddressSolicit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -4424,9 +4403,8 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
 
     aTlv.SetActiveRouters(mRouterTable.GetActiveRouterCount());
 
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
+    for (Router &router : Get<RouterTable>().Iterate())
     {
-        Router &router = *iter.GetRouter();
         uint8_t linkQuality;
 
         if (router.GetRloc16() == GetRloc16())
@@ -4482,19 +4460,17 @@ otError MleRouter::AppendConnectivity(Message &aMessage)
 
 otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
 {
-    otError                   error;
-    Ip6::Address              address;
-    Child::Ip6AddressIterator iterator;
-    Tlv                       tlv;
-    AddressRegistrationEntry  entry;
-    Lowpan::Context           context;
-    uint8_t                   length      = 0;
-    uint16_t                  startOffset = aMessage.GetLength();
+    otError                  error;
+    Tlv                      tlv;
+    AddressRegistrationEntry entry;
+    Lowpan::Context          context;
+    uint8_t                  length      = 0;
+    uint16_t                 startOffset = aMessage.GetLength();
 
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-    while (aChild.GetNextIp6Address(iterator, address) == OT_ERROR_NONE)
+    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
     {
         if (address.IsMulticast() || Get<NetworkData::Leader>().GetContext(address, context) != OT_ERROR_NONE)
         {
@@ -4531,10 +4507,8 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv)
     aTlv.SetRouterIdSequence(mRouterTable.GetRouterIdSequence());
     aTlv.SetRouterIdMask(mRouterTable.GetRouterIdSet());
 
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++, routerCount++)
+    for (Router &router : Get<RouterTable>().Iterate())
     {
-        Router &router = *iter.GetRouter();
-
         if (router.GetRloc16() == GetRloc16())
         {
             aTlv.SetLinkQualityIn(routerCount, 0);
@@ -4573,6 +4547,8 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv)
             aTlv.SetLinkQualityOut(routerCount, router.GetLinkQualityOut());
             aTlv.SetLinkQualityIn(routerCount, router.GetLinkInfo().GetLinkQuality());
         }
+
+        routerCount++;
     }
 
     aTlv.SetRouteDataLength(routerCount);
@@ -4603,10 +4579,8 @@ bool MleRouter::HasMinDowngradeNeighborRouters(void)
     uint8_t linkQuality;
     uint8_t routerCount = 0;
 
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
+    for (Router &router : Get<RouterTable>().Iterate())
     {
-        Router &router = *iter.GetRouter();
-
         if (!router.IsStateValid())
         {
             continue;
@@ -4633,9 +4607,8 @@ bool MleRouter::HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute,
     bool rval = true;
 
     // process local neighbor routers
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
+    for (Router &router : Get<RouterTable>().Iterate())
     {
-        Router &router           = *iter.GetRouter();
         uint8_t localLinkQuality = 0;
         uint8_t peerLinkQuality  = 0;
         uint8_t routerCount      = 0;

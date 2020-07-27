@@ -276,6 +276,30 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_MLR
+ *
+ * Note: available since Thread 1.2.
+ *
+ * Define to enable Multicast Listener Registration (MLR) region logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_MLR
+#define OPENTHREAD_CONFIG_LOG_MLR 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_DUA
+ *
+ * Note: available since Thread 1.2.
+ *
+ * Define to enable Domain Unicast Address (DUA) region logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_DUA
+#define OPENTHREAD_CONFIG_LOG_DUA 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
  *
  * Define to prepend the log level to all log messages.

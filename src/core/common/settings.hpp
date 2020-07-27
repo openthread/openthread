@@ -36,7 +36,9 @@
 
 #include "openthread-core-config.h"
 
+#include "common/clearable.hpp"
 #include "common/encoding.hpp"
+#include "common/equatable.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
@@ -153,7 +155,7 @@ private:
  * This class provides structure definitions for different settings keys.
  *
  */
-class SettingsBase : public InstanceLocator, private NonCopyable
+class SettingsBase : public InstanceLocator
 {
 public:
     /**
@@ -183,16 +185,16 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class NetworkInfo
+    class NetworkInfo : public Equatable<NetworkInfo>, private Clearable<NetworkInfo>
     {
     public:
         /**
-         * This method clears the struct object (setting all the fields to zero).
+         * This method initializes the `NetworkInfo` object.
          *
          */
         void Init(void)
         {
-            memset(this, 0, sizeof(*this));
+            Clear();
             SetVersion(OT_THREAD_VERSION_1_1);
         }
 
@@ -383,16 +385,16 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class ParentInfo
+    class ParentInfo : public Equatable<ParentInfo>, private Clearable<ParentInfo>
     {
     public:
         /**
-         * This method clears the struct object (setting all the fields to zero).
+         * This method initializes the `ParentInfo` object.
          *
          */
         void Init(void)
         {
-            memset(this, 0, sizeof(*this));
+            Clear();
             SetVersion(OT_THREAD_VERSION_1_1);
         }
 
@@ -544,14 +546,14 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class DadInfo
+    class DadInfo : public Equatable<DadInfo>, private Clearable<DadInfo>
     {
     public:
         /**
-         * This method clears the struct object (setting all the fields to zero).
+         * This method initializes the `DadInfo` object.
          *
          */
-        void Init(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void) { Clear(); }
 
         /**
          * This method returns the Dad Counter.
@@ -622,8 +624,10 @@ protected:
  * This class defines methods related to non-volatile storage of settings.
  *
  */
-class Settings : public SettingsBase
+class Settings : public SettingsBase, private NonCopyable
 {
+    class ChildInfoIteratorBuilder;
+
 public:
     /**
      * This constructor initializes a `Settings` object.
@@ -824,7 +828,20 @@ public:
      * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
      *
      */
-    otError DeleteChildInfo(void);
+    otError DeleteAllChildInfo(void);
+
+    /**
+     * This method enables range-based `for` loop iteration over all child info entries in the `Settings`.
+     *
+     * This method should be used as follows:
+     *
+     *     for (const ChildInfo &childInfo : Get<Settings>().IterateChildInfo()) { ... }
+     *
+     *
+     * @returns A ChildInfoIteratorBuilder instance.
+     *
+     */
+    ChildInfoIteratorBuilder IterateChildInfo(void) { return ChildInfoIteratorBuilder(GetInstance()); }
 
     /**
      * This class defines an iterator to access all Child Info entries in the settings.
@@ -832,6 +849,8 @@ public:
      */
     class ChildInfoIterator : public SettingsBase
     {
+        friend class ChildInfoIteratorBuilder;
+
     public:
         /**
          * This constructor initializes a `ChildInfoInterator` object.
@@ -842,12 +861,6 @@ public:
         explicit ChildInfoIterator(Instance &aInstance);
 
         /**
-         * This method resets the iterator to start from the first Child Info entry in the list.
-         *
-         */
-        void Reset(void);
-
-        /**
          * This method indicates whether there are no more Child Info entries in the list (iterator has reached end of
          * the list), or the current entry is valid.
          *
@@ -856,12 +869,6 @@ public:
          *
          */
         bool IsDone(void) const { return mIsDone; }
-
-        /**
-         * This method advances the iterator to move to the next Child Info entry in the list (if any).
-         *
-         */
-        void Advance(void);
 
         /**
          * This method overloads operator `++` (pre-increment) to advance the iterator to move to the next Child Info
@@ -898,7 +905,58 @@ public:
          */
         otError Delete(void);
 
+        /**
+         * This method overloads the `*` dereference operator and gets a reference to `ChildInfo` entry to which the
+         * iterator is currently pointing.
+         *
+         * @note This method should be used only if `IsDone()` is returning FALSE indicating that the iterator is
+         * pointing to a valid entry.
+         *
+         *
+         * @returns A reference to the `ChildInfo` entry currently pointed by the iterator.
+         *
+         */
+        const ChildInfo &operator*(void)const { return mChildInfo; }
+
+        /**
+         * This method overloads operator `==` to evaluate whether or not two iterator instances are equal.
+         *
+         * @param[in]  aOther  The other iterator to compare with.
+         *
+         * @retval TRUE   If the two iterator objects are equal
+         * @retval FALSE  If the two iterator objects are not equal.
+         *
+         */
+        bool operator==(const ChildInfoIterator &aOther) const
+        {
+            return (mIsDone && aOther.mIsDone) || (!mIsDone && !aOther.mIsDone && (mIndex == aOther.mIndex));
+        }
+
+        /**
+         * This method overloads operator `!=` to evaluate whether or not two iterator instances are unequal.
+         *
+         * @param[in]  aOther  The other iterator to compare with.
+         *
+         * @retval TRUE   If the two iterator objects are unequal.
+         * @retval FALSE  If the two iterator objects are not unequal.
+         *
+         */
+        bool operator!=(const ChildInfoIterator &aOther) const { return !(*this == aOther); }
+
     private:
+        enum IteratorType
+        {
+            kEndIterator,
+        };
+
+        ChildInfoIterator(Instance &aInstance, IteratorType)
+            : SettingsBase(aInstance)
+            , mIndex(0)
+            , mIsDone(true)
+        {
+        }
+
+        void Advance(void);
         void Read(void);
 
         ChildInfo mChildInfo;
@@ -943,6 +1001,18 @@ public:
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
 private:
+    class ChildInfoIteratorBuilder : public InstanceLocator
+    {
+    public:
+        ChildInfoIteratorBuilder(Instance &aInstance)
+            : InstanceLocator(aInstance)
+        {
+        }
+
+        ChildInfoIterator begin(void) { return ChildInfoIterator(GetInstance()); }
+        ChildInfoIterator end(void) { return ChildInfoIterator(GetInstance(), ChildInfoIterator::kEndIterator); }
+    };
+
     otError Read(Key aKey, void *aBuffer, uint16_t &aSize) const;
     otError Save(Key aKey, const void *aValue, uint16_t aSize);
     otError Add(Key aKey, const void *aValue, uint16_t aSize);

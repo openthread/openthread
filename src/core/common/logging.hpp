@@ -90,6 +90,8 @@ extern "C" {
 #define _OT_REGION_CORE_PREFIX "-CORE----: "
 #define _OT_REGION_UTIL_PREFIX "-UTIL----: "
 #define _OT_REGION_BBR_PREFIX "-BBR-----: "
+#define _OT_REGION_MLR_PREFIX "-MLR-----: "
+#define _OT_REGION_DUA_PREFIX "-DUA-----: "
 #else
 #define _OT_REGION_API_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLE_PREFIX _OT_REGION_SUFFIX
@@ -108,6 +110,8 @@ extern "C" {
 #define _OT_REGION_CORE_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_UTIL_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_BBR_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_MLR_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_DUA_PREFIX _OT_REGION_SUFFIX
 #endif
 
 /**
@@ -386,7 +390,7 @@ extern "C" {
  */
 
 /**
- * @def otLogInfoArp
+ * @def otLogNoteArp
  *
  * This method generates a log with level note for the EID-to-RLOC mapping region.
  *
@@ -444,7 +448,7 @@ extern "C" {
  */
 
 /**
- * @def otLogInfoBbr
+ * @def otLogNoteBbr
  *
  * This method generates a log with level note for the Backbone Router (BBR) region.
  *
@@ -484,6 +488,64 @@ extern "C" {
 #endif
 
 /**
+ * @def otLogCritMlr
+ *
+ * This method generates a log with level critical for the Multicast Listener Registration (MLR) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnMlr
+ *
+ * This method generates a log with level warning for the Multicast Listener Registration (MLR) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogNoteMlr
+ *
+ * This method generates a log with level note for the Multicast Listener Registration (MLR) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoMlr
+ *
+ * This method generates a log with level info for the Multicast Listener Registration (MLR) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgMlr
+ *
+ * This method generates a log with level debug for the Multicast Listener Registration (MLR) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_MLR == 1
+#define otLogCritMlr(...) otLogCrit(OT_LOG_REGION_MLR, _OT_REGION_MLR_PREFIX __VA_ARGS__)
+#define otLogWarnMlr(...) otLogWarn(OT_LOG_REGION_MLR, _OT_REGION_MLR_PREFIX __VA_ARGS__)
+#define otLogNoteMlr(...) otLogNote(OT_LOG_REGION_MLR, _OT_REGION_MLR_PREFIX __VA_ARGS__)
+#define otLogInfoMlr(...) otLogInfo(OT_LOG_REGION_MLR, _OT_REGION_MLR_PREFIX __VA_ARGS__)
+#define otLogDebgMlr(...) otLogDebg(OT_LOG_REGION_MLR, _OT_REGION_MLR_PREFIX __VA_ARGS__)
+#else
+#define otLogCritMlr(...)
+#define otLogWarnMlr(...)
+#define otLogNoteMlr(...)
+#define otLogInfoMlr(...)
+#define otLogDebgMlr(...)
+#endif
+
+/**
  * @def otLogCritNetData
  *
  * This method generates a log with level critical for the Network Data region.
@@ -502,7 +564,7 @@ extern "C" {
  */
 
 /**
- * @def otLogInfoNetData
+ * @def otLogNoteNetData
  *
  * This method generates a log with level note for the Network Data region.
  *
@@ -1002,7 +1064,7 @@ extern "C" {
  */
 
 /**
- * @def otLogInfoCli
+ * @def otLogNoteCli
  *
  * This method generates a log with level note for the CLI region.
  *
@@ -1098,6 +1160,64 @@ extern "C" {
 #define otLogNoteCoap(...)
 #define otLogInfoCoap(...)
 #define otLogDebgCoap(...)
+#endif
+
+/**
+ * @def otLogCritDua
+ *
+ * This method generates a log with level critical for the Domain Unicast Address region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnDua
+ *
+ * This method generates a log with level warning for the Domain Unicast Address region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogNoteDua
+ *
+ * This method generates a log with level note for the Domain Unicast Address region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoDua
+ *
+ * This method generates a log with level info for the Domain Unicast Address region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgDua
+ *
+ * This method generates a log with level debug for the Domain Unicast Address region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_DUA == 1
+#define otLogCritDua(...) otLogCrit(OT_LOG_REGION_DUA, _OT_REGION_DUA_PREFIX __VA_ARGS__)
+#define otLogWarnDua(...) otLogWarn(OT_LOG_REGION_DUA, _OT_REGION_DUA_PREFIX __VA_ARGS__)
+#define otLogNoteDua(...) otLogNote(OT_LOG_REGION_DUA, _OT_REGION_DUA_PREFIX __VA_ARGS__)
+#define otLogInfoDua(...) otLogInfo(OT_LOG_REGION_DUA, _OT_REGION_DUA_PREFIX __VA_ARGS__)
+#define otLogDebgDua(...) otLogDebg(OT_LOG_REGION_DUA, _OT_REGION_DUA_PREFIX __VA_ARGS__)
+#else
+#define otLogCritDua(...)
+#define otLogWarnDua(...)
+#define otLogNoteDua(...)
+#define otLogInfoDua(...)
+#define otLogDebgDua(...)
 #endif
 
 /**
@@ -1524,6 +1644,74 @@ extern "C" {
 #endif
 
 /**
+ * @def otDumpCritMlr
+ *
+ * This method generates a memory dump with log level critical and region Multicast Listener Registration (MLR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpWarnMlr
+ *
+ * This method generates a memory dump with log level warning and region Multicast Listener Registration (MLR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpNoteMlr
+ *
+ * This method generates a memory dump with log level note and region Multicast Listener Registration (MLR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpInfoMlr
+ *
+ * This method generates a memory dump with log level info and region Multicast Listener Registration (MLR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpDebgMlr
+ *
+ * This method generates a memory dump with log level debug and region Multicast Listener Registration (MLR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_MLR == 1
+#define otDumpCritMlr(aId, aBuf, aLength) otDumpCrit(OT_LOG_REGION_MLR, aId, aBuf, aLength)
+#define otDumpWarnMlr(aId, aBuf, aLength) otDumpWarn(OT_LOG_REGION_MLR, aId, aBuf, aLength)
+#define otDumpNoteMlr(aId, aBuf, aLength) otDumpNote(OT_LOG_REGION_MLR, aId, aBuf, aLength)
+#define otDumpInfoMlr(aId, aBuf, aLength) otDumpInfo(OT_LOG_REGION_MLR, aId, aBuf, aLength)
+#define otDumpDebgMlr(aId, aBuf, aLength) otDumpDebg(OT_LOG_REGION_MLR, aId, aBuf, aLength)
+#else
+#define otDumpCritMlr(aId, aBuf, aLength)
+#define otDumpWarnMlr(aId, aBuf, aLength)
+#define otDumpNoteMlr(aId, aBuf, aLength)
+#define otDumpInfoMlr(aId, aBuf, aLength)
+#define otDumpDebgMlr(aId, aBuf, aLength)
+#endif
+
+/**
  * @def otDumpCritIcmp
  *
  * This method generates a memory dump with log level debug and region ICMPv6.
@@ -1793,6 +1981,74 @@ extern "C" {
 #define otDumpNoteCore(aId, aBuf, aLength)
 #define otDumpInfoCore(aId, aBuf, aLength)
 #define otDumpDebgCore(aId, aBuf, aLength)
+#endif
+
+/**
+ * @def otDumpCritDua
+ *
+ * This method generates a memory dump with log level critical and region Domain Unicast Address.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpWarnDua
+ *
+ * This method generates a memory dump with log level warning and region Domain Unicast Address.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpNoteDua
+ *
+ * This method generates a memory dump with log level note and region Domain Unicast Address.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpInfoDua
+ *
+ * This method generates a memory dump with log level info and region Domain Unicast Address.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpDebgDua
+ *
+ * This method generates a memory dump with log level debug and region Domain Unicast Address.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_DUA == 1
+#define otDumpCritDua(aId, aBuf, aLength) otDumpCrit(OT_LOG_REGION_DUA, aId, aBuf, aLength)
+#define otDumpWarnDua(aId, aBuf, aLength) otDumpWarn(OT_LOG_REGION_DUA, aId, aBuf, aLength)
+#define otDumpNoteDua(aId, aBuf, aLength) otDumpNote(OT_LOG_REGION_DUA, aId, aBuf, aLength)
+#define otDumpInfoDua(aId, aBuf, aLength) otDumpInfo(OT_LOG_REGION_DUA, aId, aBuf, aLength)
+#define otDumpDebgDua(aId, aBuf, aLength) otDumpDebg(OT_LOG_REGION_DUA, aId, aBuf, aLength)
+#else
+#define otDumpCritDua(aId, aBuf, aLength)
+#define otDumpWarnDua(aId, aBuf, aLength)
+#define otDumpNoteDua(aId, aBuf, aLength)
+#define otDumpInfoDua(aId, aBuf, aLength)
+#define otDumpDebgDua(aId, aBuf, aLength)
 #endif
 
 /**

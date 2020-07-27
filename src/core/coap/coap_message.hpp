@@ -284,8 +284,8 @@ public:
      */
     bool IsTokenEqual(const Message &aMessage) const
     {
-        return ((this->GetTokenLength() == aMessage.GetTokenLength()) &&
-                (memcmp(this->GetToken(), aMessage.GetToken(), this->GetTokenLength()) == 0));
+        return ((GetTokenLength() == aMessage.GetTokenLength()) &&
+                (memcmp(GetToken(), aMessage.GetToken(), GetTokenLength()) == 0));
     }
 
     /**

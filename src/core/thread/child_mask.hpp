@@ -36,11 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/error.h>
-
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
+#include "common/bit_vector.hpp"
 
 namespace ot {
 
@@ -58,79 +54,7 @@ namespace ot {
  * This class represents a bit-vector of child mask.
  *
  */
-class ChildMask
-{
-public:
-    /**
-     * This method returns if a given Child index is masked.
-     *
-     * @param[in] aChildIndex  The Child index.
-     *
-     * @retval TRUE   If the given Child index is set.
-     * @retval FALSE  If the given Child index is clear.
-     *
-     */
-    bool Get(uint16_t aChildIndex) const
-    {
-        OT_ASSERT(aChildIndex < OPENTHREAD_CONFIG_MLE_MAX_CHILDREN);
-        return (mMask[aChildIndex / 8] & (0x80 >> (aChildIndex % 8))) != 0;
-    }
-
-    /**
-     * This method sets the mask of a given Child index.
-     *
-     * @param[in] aChildIndex  The Child index.
-     *
-     */
-    void Set(uint16_t aChildIndex)
-    {
-        OT_ASSERT(aChildIndex < OPENTHREAD_CONFIG_MLE_MAX_CHILDREN);
-        mMask[aChildIndex / 8] |= 0x80 >> (aChildIndex % 8);
-    }
-
-    /**
-     * This method clears the mask of a given Child index.
-     *
-     * @param[in] aChildIndex  The Child index.
-     *
-     */
-    void Clear(uint16_t aChildIndex)
-    {
-        OT_ASSERT(aChildIndex < OPENTHREAD_CONFIG_MLE_MAX_CHILDREN);
-        mMask[aChildIndex / 8] &= ~(0x80 >> (aChildIndex % 8));
-    }
-
-    /**
-     * This method returns if any Child mask is set.
-     *
-     * @retval TRUE   If any Child index is set.
-     * @retval FALSE  If all Child indexes are clear.
-     *
-     */
-    bool HasAny(void) const
-    {
-        bool rval = false;
-
-        for (size_t i = 0; i < sizeof(mMask); i++)
-        {
-            if (mMask[i] != 0)
-            {
-                ExitNow(rval = true);
-            }
-        }
-
-    exit:
-        return rval;
-    }
-
-private:
-    enum
-    {
-        kChildMaskBytes = BitVectorBytes(OPENTHREAD_CONFIG_MLE_MAX_CHILDREN)
-    };
-
-    uint8_t mMask[kChildMaskBytes];
-};
+typedef BitVector<OPENTHREAD_CONFIG_MLE_MAX_CHILDREN> ChildMask;
 
 /**
  * @}

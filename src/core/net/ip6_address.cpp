@@ -47,6 +47,16 @@ namespace ot {
 namespace Ip6 {
 
 //---------------------------------------------------------------------------------------------------------------------
+// NetworkPrefix methods
+
+otError NetworkPrefix::GenerateRandomUla(void)
+{
+    m8[0] = 0xfd;
+
+    return Random::Crypto::FillBuffer(&m8[1], kSize - 1);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // InterfaceIdentifier methods
 
 bool InterfaceIdentifier::IsUnspecified(void) const
@@ -252,6 +262,11 @@ void Address::SetToRealmLocalAllMplForwarders(void)
     *this = GetRealmLocalAllMplForwarders();
 }
 
+void Address::SetPrefix(const NetworkPrefix &aNetworkPrefix)
+{
+    mFields.mComponents.mNetworkPrefix = aNetworkPrefix;
+}
+
 void Address::SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
 {
     SetPrefix(0, aPrefix, aPrefixLength);
@@ -286,9 +301,9 @@ void Address::SetMulticastNetworkPrefix(const uint8_t *aPrefix, uint8_t aPrefixL
     mFields.m8[kMulticastNetworkPrefixLengthOffset] = aPrefixLength;
 }
 
-void Address::SetToLocator(const Mle::MeshLocalPrefix &aMeshLocalPrefix, uint16_t aLocator)
+void Address::SetToLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator)
 {
-    SetPrefix(aMeshLocalPrefix);
+    SetPrefix(aNetworkPrefix);
     GetIid().SetToLocator(aLocator);
 }
 
@@ -352,6 +367,31 @@ uint8_t Address::PrefixMatch(const uint8_t *aPrefixA, const uint8_t *aPrefixB, u
 uint8_t Address::PrefixMatch(const otIp6Address &aOther) const
 {
     return PrefixMatch(mFields.m8, aOther.mFields.m8, sizeof(Address));
+}
+
+bool Address::MatchesFilter(TypeFilter aFilter) const
+{
+    bool matches = true;
+
+    switch (aFilter)
+    {
+    case kTypeAny:
+        break;
+
+    case kTypeUnicast:
+        matches = !IsUnspecified() && !IsMulticast();
+        break;
+
+    case kTypeMulticast:
+        matches = IsMulticast();
+        break;
+
+    case kTypeMulticastLargerThanRealmLocal:
+        matches = IsMulticastLargerThanRealmLocal();
+        break;
+    }
+
+    return matches;
 }
 
 otError Address::FromString(const char *aBuf)

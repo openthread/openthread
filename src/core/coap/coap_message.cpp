@@ -306,7 +306,7 @@ Message *Message::Clone(uint16_t aLength) const
 
     VerifyOrExit(message != nullptr, OT_NOOP);
 
-    memcpy(&message->GetHelpData(), &GetHelpData(), sizeof(GetHelpData()));
+    message->GetHelpData() = GetHelpData();
 
 exit:
     return message;

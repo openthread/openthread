@@ -97,7 +97,11 @@ public:
      * @param[in]  aContext   A pointer to arbitrary context information.
      *
      */
-    void SetConnectedCallback(ConnectedCallback aCallback, void *aContext);
+    void SetConnectedCallback(ConnectedCallback aCallback, void *aContext)
+    {
+        mConnectedCallback = aCallback;
+        mConnectedContext  = aContext;
+    }
 
     /**
      * This method stops the secure CoAP agent.
@@ -159,7 +163,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  The PSK is invalid.
      *
      */
-    otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
+    otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength) { return mDtls.SetPsk(aPsk, aPskLength); }
 
     /**
      * This method sets the PSK.
@@ -204,7 +208,10 @@ public:
     void SetCertificate(const uint8_t *aX509Cert,
                         uint32_t       aX509Length,
                         const uint8_t *aPrivateKey,
-                        uint32_t       aPrivateKeyLength);
+                        uint32_t       aPrivateKeyLength)
+    {
+        mDtls.SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
+    }
 
     /**
      * This method sets the trusted top level CAs. It is needed for validate the certificate of the peer.
@@ -215,7 +222,10 @@ public:
      * @param[in]  aX509CaCertChainLength   The length of chain.
      *
      */
-    void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
+    void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
+    {
+        mDtls.SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
+    }
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #ifdef MBEDTLS_BASE64_C
@@ -232,7 +242,10 @@ public:
      * @retval OT_ERROR_NO_BUFS  Can't allocate memory for certificate.
      *
      */
-    otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
+    otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
+    {
+        return mDtls.GetPeerCertificateBase64(aPeerCert, aCertLength, aCertBufferSize);
+    }
 #endif // MBEDTLS_BASE64_C
 
     /**
@@ -242,7 +255,11 @@ public:
      * @param[in]  aContext      A pointer to arbitrary context information.
      *
      */
-    void SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext);
+    void SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext)
+    {
+        mConnectedCallback = aCallback;
+        mConnectedContext  = aContext;
+    }
 
     /**
      * This method sets the authentication mode for the CoAP secure connection. It disables or enables the verification
@@ -251,7 +268,7 @@ public:
      * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should be verified
      *
      */
-    void SetSslAuthMode(bool aVerifyPeerCertificate);
+    void SetSslAuthMode(bool aVerifyPeerCertificate) { mDtls.SetSslAuthMode(aVerifyPeerCertificate); }
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 

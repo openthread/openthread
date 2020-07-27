@@ -46,6 +46,7 @@
 #include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
 #include "net/socket.hpp"
+#include "thread/mlr_types.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -156,6 +157,41 @@ private:
     bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
 };
 
+class ExternalNetifMulticastAddress : public NetifMulticastAddress
+{
+    friend class Netif;
+    friend class LinkedList<ExternalNetifMulticastAddress>;
+
+public:
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+    /**
+     * This method returns the current Multicast Listener Registration (MLR) state.
+     *
+     * @returns The current Multicast Listener Registration state.
+     *
+     */
+    MlrState GetMlrState(void) const { return mMlrState; }
+
+    /**
+     * This method sets the Multicast Listener Registration (MLR) state.
+     *
+     * @param[in] aState  The new Multicast Listener Registration state.
+     *
+     */
+    void SetMlrState(MlrState aState) { mMlrState = aState; }
+#endif
+
+private:
+    ExternalNetifMulticastAddress *GetNext(void)
+    {
+        return static_cast<ExternalNetifMulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
+    }
+
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+    MlrState mMlrState : 2;
+#endif
+};
+
 /**
  * This class implements an IPv6 network interface.
  *
@@ -164,8 +200,138 @@ class Netif : public InstanceLocator, public LinkedListEntry<Netif>, private Non
 {
     friend class Ip6;
     friend class Address;
+    class ExternalMulticastAddressIteratorBuilder;
 
 public:
+    /**
+     * This class represents an iterator for iterating external multicast addresses in a Netif instance.
+     *
+     */
+    class ExternalMulticastAddressIterator
+    {
+        friend class ExternalMulticastAddressIteratorBuilder;
+
+    public:
+        /**
+         * This constructor initializes an `ExternalMulticastAddressIterator` instance to start from the first external
+         * multicast address that matches a given Ip6 address type filter.
+         *
+         * @param[in] aNetif   A reference to the Netif instance.
+         * @param[in] aFilter  The Ip6 address type filter.
+         *
+         */
+        explicit ExternalMulticastAddressIterator(const Netif &aNetif, Address::TypeFilter aFilter = Address::kTypeAny)
+            : mNetif(aNetif)
+            , mFilter(aFilter)
+        {
+            AdvanceFrom(mNetif.GetMulticastAddresses());
+        }
+
+        /**
+         * This method indicates whether the iterator has reached end of the list.
+         *
+         * @retval TRUE   There are no more entries in the list (reached end of the list).
+         * @retval FALSE  The current address entry is valid.
+         *
+         */
+        bool IsDone(void) const { return mCurrent != nullptr; }
+
+        /**
+         * This method overloads `++` operator (pre-increment) to advance the iterator.
+         *
+         * The iterator is moved to point to the next entry.  If there are no more entries matching the iterator becomes
+         * empty.
+         *
+         */
+        void operator++(void) { AdvanceFrom(mCurrent->GetNext()); }
+
+        /**
+         * This method overloads `++` operator (post-increment) to advance the iterator.
+         *
+         * The iterator is moved to point to the next entry.  If there are no more entries matching the iterator becomes
+         * empty.
+         *
+         */
+        void operator++(int) { AdvanceFrom(mCurrent->GetNext()); }
+
+        /**
+         * This method overloads the `*` dereference operator and gets a reference to `ExternalNetifMulticastAddress`
+         * entry to which the iterator is currently pointing.
+         *
+         * This method MUST be used when the iterator is not empty.
+         *
+         * @returns A reference to the `ExternalNetifMulticastAddress` entry currently pointed by the iterator.
+         *
+         */
+        ExternalNetifMulticastAddress &operator*(void) { return *mCurrent; }
+
+        /**
+         * This method overloads the `->` dereference operator and gets a pointer to `ExternalNetifMulticastAddress`
+         * entry to which the iterator is current pointing.
+         *
+         * @returns A pointer to the `ExternalNetifMulticastAddress` entry associated with the iterator, or `nullptr` if
+         * iterator is empty.
+         *
+         */
+        ExternalNetifMulticastAddress *operator->(void) { return mCurrent; }
+
+        /**
+         * This method overloads operator `==` to evaluate whether or not two `ExternalMulticastAddressIterator`
+         * instances point to the same `ExternalNetifMulticastAddress` entry.
+         *
+         * @param[in] aOther  The other `Iterator` to compare with.
+         *
+         * @retval TRUE   If the two `ExternalMulticastAddressIterator` objects point to the same
+         * `ExternalNetifMulticastAddress` entry or both are done.
+         * @retval FALSE  If the two `ExternalMulticastAddressIterator` objects do not point to the same
+         * `ExternalNetifMulticastAddress` entry.
+         *
+         */
+        bool operator==(const ExternalMulticastAddressIterator &aOther) { return mCurrent == aOther.mCurrent; }
+
+        /**
+         * This method overloads operator `!=` to evaluate whether or not two `ExternalMulticastAddressIterator`
+         * instances point to the same `ExternalNetifMulticastAddress` entry.
+         *
+         * @param[in]  aOther  The other `ExternalMulticastAddressIterator` to compare with.
+         *
+         * @retval TRUE   If the two `ExternalMulticastAddressIterator` objects do not point to the same
+         * `ExternalNetifMulticastAddress` entry.
+         * @retval FALSE  If the two `ExternalMulticastAddressIterator` objects point to the same
+         * `ExternalNetifMulticastAddress` entry or both are done.
+         *
+         */
+        bool operator!=(const ExternalMulticastAddressIterator &aOther) { return mCurrent != aOther.mCurrent; }
+
+    private:
+        enum IteratorType
+        {
+            kEndIterator,
+        };
+
+        ExternalMulticastAddressIterator(const Netif &aNetif, IteratorType)
+            : mNetif(aNetif)
+            , mCurrent(nullptr)
+        {
+        }
+
+        void AdvanceFrom(const NetifMulticastAddress *aAddr)
+        {
+            while (aAddr != nullptr &&
+                   !(mNetif.IsMulticastAddressExternal(*aAddr) && aAddr->GetAddress().MatchesFilter(mFilter)))
+            {
+                aAddr = aAddr->GetNext();
+            }
+
+            mCurrent =
+                const_cast<ExternalNetifMulticastAddress *>(static_cast<const ExternalNetifMulticastAddress *>(aAddr));
+        }
+
+        const Netif &                  mNetif;
+        ExternalNetifMulticastAddress *mCurrent;
+        Address::TypeFilter            mFilter;
+    };
+
     /**
      * This constructor initializes the network interface.
      *
@@ -400,6 +566,40 @@ public:
      */
     void SetMulticastPromiscuous(bool aEnabled) { mMulticastPromiscuous = aEnabled; }
 
+    /**
+     * This method enables range-based `for` loop iteration over external multicast addresses on the Netif that matches
+     * a given Ip6 address type filter.
+     *
+     * This method should be used like follows: to iterate over all external multicast addresses
+     *
+     *     for (Ip6::ExternalNetifMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
+     *     { ... }
+     *
+     * or to iterate over a subset of external multicast addresses determined by a given address type filter
+     *
+     *     for (Ip6::ExternalNetifMulticastAddress &addr :
+     * Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal)) { ... }
+     *
+     * @param[in] aFilter  The Ip6 address type filter.
+     *
+     * @returns An `ExternalMulticastAddressIteratorBuilder` instance.
+     *
+     */
+    ExternalMulticastAddressIteratorBuilder IterateExternalMulticastAddresses(
+        Address::TypeFilter aFilter = Address::kTypeAny)
+    {
+        return ExternalMulticastAddressIteratorBuilder(*this, aFilter);
+    }
+
+    /**
+     * This method indicates whether or not the network interfaces is subscribed to any external multicast address.
+     *
+     * @retval TRUE  The network interface is subscribed to at least one external multicast address.
+     * @retval FALSE The network interface is not subscribed to any external multicast address.
+     *
+     */
+    bool HasAnyExternalMulticastAddress(void) const { return !ExternalMulticastAddressIterator(*this).IsDone(); }
+
 protected:
     /**
      * This method subscribes the network interface to the realm-local all MPL forwarders, link-local, and realm-local
@@ -423,6 +623,26 @@ private:
         kMulticastPrefixLength = 128, ///< Multicast prefix length used to notify internal address changes.
     };
 
+    class ExternalMulticastAddressIteratorBuilder
+    {
+    public:
+        ExternalMulticastAddressIteratorBuilder(const Netif &aNetif, Address::TypeFilter aFilter)
+            : mNetif(aNetif)
+            , mFilter(aFilter)
+        {
+        }
+
+        ExternalMulticastAddressIterator begin(void) { return ExternalMulticastAddressIterator(mNetif, mFilter); }
+        ExternalMulticastAddressIterator end(void)
+        {
+            return ExternalMulticastAddressIterator(mNetif, ExternalMulticastAddressIterator::kEndIterator);
+        }
+
+    private:
+        const Netif &       mNetif;
+        Address::TypeFilter mFilter;
+    };
+
     LinkedList<NetifUnicastAddress>   mUnicastAddresses;
     LinkedList<NetifMulticastAddress> mMulticastAddresses;
     bool                              mMulticastPromiscuous;
@@ -430,8 +650,8 @@ private:
     otIp6AddressCallback mAddressCallback;
     void *               mAddressCallbackContext;
 
-    Pool<NetifUnicastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS>   mExtUnicastAddressPool;
-    Pool<NetifMulticastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS> mExtMulticastAddressPool;
+    Pool<NetifUnicastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS>           mExtUnicastAddressPool;
+    Pool<ExternalNetifMulticastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS> mExtMulticastAddressPool;
 
     static const otNetifMulticastAddress kRealmLocalAllMplForwardersMulticastAddress;
     static const otNetifMulticastAddress kLinkLocalAllNodesMulticastAddress;

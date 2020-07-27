@@ -554,7 +554,7 @@ public:
      */
     const MeshLocalPrefix &GetMeshLocalPrefix(void) const
     {
-        return reinterpret_cast<const MeshLocalPrefix &>(mMeshLocal16.GetAddress());
+        return static_cast<const MeshLocalPrefix &>(mMeshLocal16.GetAddress().GetPrefix());
     }
 
     /**
@@ -920,6 +920,16 @@ public:
      *
      */
     void ScheduleChildUpdateRequest(void);
+
+    /*
+     * This method indicates whether or not the device has restored the network information from
+     * non-volatile settings after boot.
+     *
+     * @retval true  Sucessfully restored the network information.
+     * @retval false No valid network information was found.
+     *
+     */
+    bool HasRestored(void) const { return mHasRestored; }
 
 protected:
     /**
@@ -1775,6 +1785,7 @@ private:
 
     AddressRegistrationMode mAddressRegistrationMode;
 
+    bool       mHasRestored;
     uint8_t    mParentLinkMargin;
     bool       mParentIsSingleton;
     bool       mReceivedResponseFromParent;

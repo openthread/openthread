@@ -84,7 +84,7 @@ set(COMMON_SOURCES
 set(OT_NCP_VENDOR_HOOK_SOURCE "" CACHE STRING "set vendor hook source file for NCP")
 if(OT_NCP_VENDOR_HOOK_SOURCE)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=1")
-    list(APPEND COMMON_SOURCES ${OT_NCP_VENDOR_HOOK_SOURCE})
+    list(APPEND COMMON_SOURCES ${OT_NCP_VENDOR_HOOK_SOURCE_DIR}${OT_NCP_VENDOR_HOOK_SOURCE})
 endif()
 
 target_include_directories(openthread-ncp-ftd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
@@ -93,6 +93,8 @@ target_include_directories(openthread-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE $
 
 target_sources(openthread-ncp-ftd PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-ncp-mtd PRIVATE ${COMMON_SOURCES})
+target_include_directories(openthread-ncp-ftd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(openthread-ncp-mtd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_sources(openthread-rcp PRIVATE
     changed_props_set.cpp

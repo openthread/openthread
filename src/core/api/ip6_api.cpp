@@ -252,7 +252,7 @@ otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageI
 
     netifAddr = instance.Get<Ip6::Ip6>().SelectSourceAddress(*static_cast<Ip6::MessageInfo *>(aMessageInfo));
     VerifyOrExit(netifAddr != nullptr, error = OT_ERROR_NOT_FOUND);
-    memcpy(&aMessageInfo->mSockAddr, &netifAddr->mAddress, sizeof(aMessageInfo->mSockAddr));
+    aMessageInfo->mSockAddr = netifAddr->GetAddress();
 
 exit:
     return error;

@@ -169,6 +169,7 @@ otError DatasetManager::Save(const Dataset &aDataset)
     }
     else if (compare < 0)
     {
+        VerifyOrExit(!Get<Mle::MleRouter>().IsLeader(), error = OT_ERROR_INVALID_STATE);
         SendSet();
     }
 

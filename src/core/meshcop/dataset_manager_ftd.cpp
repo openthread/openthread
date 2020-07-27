@@ -318,12 +318,11 @@ otError ActiveDataset::CreateNewNetwork(otOperationalDataset &aDataset)
 
     aDataset.mActiveTimestamp = 1;
 
-    SuccessOrExit(error = Random::Crypto::FillBuffer(aDataset.mMasterKey.m8, sizeof(aDataset.mMasterKey)));
+    SuccessOrExit(error = static_cast<MasterKey &>(aDataset.mMasterKey).GenerateRandom());
     SuccessOrExit(error = static_cast<Pskc &>(aDataset.mPskc).GenerateRandom());
     SuccessOrExit(error = Random::Crypto::FillBuffer(aDataset.mExtendedPanId.m8, sizeof(aDataset.mExtendedPanId)));
 
-    aDataset.mMeshLocalPrefix.m8[0] = 0xfd;
-    SuccessOrExit(error = Random::Crypto::FillBuffer(&aDataset.mMeshLocalPrefix.m8[1], OT_MESH_LOCAL_PREFIX_SIZE - 1));
+    SuccessOrExit(error = static_cast<Ip6::NetworkPrefix &>(aDataset.mMeshLocalPrefix).GenerateRandomUla());
 
     aDataset.mSecurityPolicy.mFlags = Get<KeyManager>().GetSecurityPolicyFlags();
 

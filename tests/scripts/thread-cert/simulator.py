@@ -135,7 +135,7 @@ class VirtualTime(BaseSimulator):
     BASE_PORT = 9000
     MAX_NODES = 34
     MAX_MESSAGE = 1024
-    END_OF_TIME = 0x7FFFFFFF
+    END_OF_TIME = float('inf')
     PORT_OFFSET = int(os.getenv('PORT_OFFSET', '0'))
 
     BLOCK_TIMEOUT = 10

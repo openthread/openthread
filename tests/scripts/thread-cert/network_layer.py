@@ -27,8 +27,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import ipaddress
 import struct
-
 from binascii import hexlify
 from enum import IntEnum
 
@@ -47,6 +47,7 @@ class TlvType(IntEnum):
     ND_DATA = 9
     THREAD_NETWORK_DATA = 10
     MLE_ROUTING = 11
+    IPv6_ADDRESSES = 14
     XTAL_ACCURACY = 254
 
 
@@ -318,3 +319,20 @@ class ThreadNetworkDataFactory(object):
     def parse(self, data, message_info):
         tlvs = self._network_data_tlvs_factory.parse(data, message_info)
         return ThreadNetworkData(tlvs)
+
+
+class IPv6Addresses(list):
+    pass
+
+
+class IPv6AddressesFactory(object):
+
+    def parse(self, data, message_info):
+        data = bytes(data.read())
+        assert len(data) % 16 == 0, data
+        addrs = IPv6Addresses()
+        for i in range(0, len(data), 16):
+            addr = ipaddress.IPv6Address(data[i:i + 16])
+            addrs.append(addr)
+
+        return addrs

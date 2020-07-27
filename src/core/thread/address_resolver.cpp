@@ -42,6 +42,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "common/time.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle_router.hpp"
@@ -76,10 +77,9 @@ void AddressResolver::Clear(void)
 {
     CacheEntryList *lists[] = {&mCachedList, &mSnoopedList, &mQueryList, &mQueryRetryList};
 
-    for (size_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
+    for (CacheEntryList *list : lists)
     {
-        CacheEntryList *list = lists[index];
-        CacheEntry *    entry;
+        CacheEntry *entry;
 
         while ((entry = list->Pop()) != nullptr)
         {
@@ -192,11 +192,10 @@ void AddressResolver::Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId)
 {
     CacheEntryList *lists[] = {&mCachedList, &mSnoopedList};
 
-    for (size_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
+    for (CacheEntryList *list : lists)
     {
-        CacheEntryList *list = lists[index];
-        CacheEntry *    prev = nullptr;
-        CacheEntry *    entry;
+        CacheEntry *prev = nullptr;
+        CacheEntry *entry;
 
         while ((entry = GetEntryAfter(prev, *list)) != nullptr)
         {
@@ -224,9 +223,9 @@ AddressResolver::CacheEntry *AddressResolver::FindCacheEntry(const Ip6::Address 
     CacheEntry *    entry   = nullptr;
     CacheEntryList *lists[] = {&mCachedList, &mSnoopedList, &mQueryList, &mQueryRetryList};
 
-    for (size_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
+    for (CacheEntryList *list : lists)
     {
-        aList = lists[index];
+        aList = list;
         entry = aList->FindMatching(aEid, aPrevEntry);
         VerifyOrExit(entry == nullptr, OT_NOOP);
     }
@@ -276,12 +275,11 @@ AddressResolver::CacheEntry *AddressResolver::NewCacheEntry(bool aSnoopedEntry)
     newEntry = mCacheEntryPool.Allocate();
     VerifyOrExit(newEntry == nullptr, OT_NOOP);
 
-    for (size_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
+    for (CacheEntryList *list : lists)
     {
-        CacheEntryList *list = lists[index];
-        CacheEntry *    prev;
-        CacheEntry *    entry;
-        uint16_t        numNonEvictable = 0;
+        CacheEntry *prev;
+        CacheEntry *entry;
+        uint16_t    numNonEvictable = 0;
 
         for (prev = nullptr; (entry = GetEntryAfter(prev, *list)) != nullptr; prev = entry)
         {
@@ -787,7 +785,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
 
         if (child.HasIp6Address(target))
         {
-            lastTransactionTime = TimerMilli::GetNow() - child.GetLastHeard();
+            lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child.GetLastHeard());
             SendAddressQueryResponse(target, child.GetMeshLocalIid(), &lastTransactionTime, aMessageInfo.GetPeerAddr());
             ExitNow();
         }

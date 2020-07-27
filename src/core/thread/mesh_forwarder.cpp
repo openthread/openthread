@@ -1247,12 +1247,11 @@ otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
                                         const Mac::Address &aMacDest,
                                         Message::Priority & aPriority)
 {
-    otError           error = OT_ERROR_NONE;
-    Ip6::Header       ip6Header;
-    Ip6::Udp::Header  udpHeader;
-    Ip6::Icmp::Header icmpHeader;
-    uint8_t           headerLength;
-    bool              nextHeaderCompressed;
+    otError     error = OT_ERROR_NONE;
+    Ip6::Header ip6Header;
+    uint16_t    dstPort;
+    uint8_t     headerLength;
+    bool        nextHeaderCompressed;
 
     SuccessOrExit(error = DecompressIp6Header(aFrame, aFrameLength, aMacSource, aMacDest, ip6Header, headerLength,
                                               nextHeaderCompressed));
@@ -1261,35 +1260,46 @@ otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
     aFrame += headerLength;
     aFrameLength -= headerLength;
 
-    if (ip6Header.GetNextHeader() == Ip6::kProtoIcmp6 && aFrameLength)
+    switch (ip6Header.GetNextHeader())
     {
-        // Just check the first byte which is an ICMPv6 type.
-        memcpy(&icmpHeader, aFrame, sizeof(icmpHeader.mType));
+    case Ip6::kProtoIcmp6:
+
+        VerifyOrExit(aFrameLength >= sizeof(Ip6::Icmp::Header), error = OT_ERROR_PARSE);
 
         // Only ICMPv6 error messages are prioritized.
-        if (icmpHeader.IsError())
+        if (reinterpret_cast<const Ip6::Icmp::Header *>(aFrame)->IsError())
         {
             aPriority = Message::kPriorityNet;
         }
 
-        ExitNow();
-    }
+        break;
 
-    VerifyOrExit(ip6Header.GetNextHeader() == Ip6::kProtoUdp, OT_NOOP);
+    case Ip6::kProtoUdp:
 
-    if (nextHeaderCompressed)
-    {
-        VerifyOrExit(Get<Lowpan::Lowpan>().DecompressUdpHeader(udpHeader, aFrame, aFrameLength) >= 0, OT_NOOP);
-    }
-    else
-    {
-        VerifyOrExit(aFrameLength >= sizeof(Ip6::Udp::Header), error = OT_ERROR_PARSE);
-        memcpy(&udpHeader, aFrame, sizeof(Ip6::Udp::Header));
-    }
+        if (nextHeaderCompressed)
+        {
+            Ip6::Udp::Header udpHeader;
 
-    if (udpHeader.GetDestinationPort() == Mle::kUdpPort || udpHeader.GetDestinationPort() == kCoapUdpPort)
-    {
-        aPriority = Message::kPriorityNet;
+            VerifyOrExit(Get<Lowpan::Lowpan>().DecompressUdpHeader(udpHeader, aFrame, aFrameLength) >= 0,
+                         error = OT_ERROR_PARSE);
+
+            dstPort = udpHeader.GetDestinationPort();
+        }
+        else
+        {
+            VerifyOrExit(aFrameLength >= sizeof(Ip6::Udp::Header), error = OT_ERROR_PARSE);
+            dstPort = reinterpret_cast<const Ip6::Udp::Header *>(aFrame)->GetDestinationPort();
+        }
+
+        if ((dstPort == Mle::kUdpPort) || (dstPort == kCoapUdpPort))
+        {
+            aPriority = Message::kPriorityNet;
+        }
+
+        break;
+
+    default:
+        break;
     }
 
 exit:

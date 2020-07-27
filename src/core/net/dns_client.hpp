@@ -129,10 +129,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aNetif    A reference to the network interface that DNS client should be assigned to.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Client(Ip6::Netif &aNetif);
+    explicit Client(Instance &aInstance);
 
     /**
      * This method starts the DNS client.
