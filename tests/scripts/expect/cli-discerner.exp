@@ -27,49 +27,55 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
-    set result 0
-    set timeout 1
-    for {set i 0} {$i < 20} {incr i} {
-        if {$command != ""} {
-            send "$command\n"
-        }
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
 
-        expect {
-            -re $success {
-                set result 1
-            }
-            -re $failure {
-                exit 1
-            }
-            timeout {
-                # Do nothing
-            }
-        }
-        if {$result == 1} {
-            break
-        }
-    }
-    if {$result == 0} {
-        exit 1
-    }
-}
 
-proc spawn_node {id} {
-    if {[info exists ::env(RCP_COMMAND)] && $::env(RCP_COMMAND) != ""} {
-        spawn $::env(OT_COMMAND) "spinel+hdlc+uart://$::env(RCP_COMMAND)?forkpty-arg=$id"
-    } else {
-        spawn $::env(OT_COMMAND) $id
-    }
-    expect_after {
-        timeout { exit 1 }
-    }
-    return $spawn_id
-}
+setup_leader
 
-proc dispose {} {
-    send "\x04"
-    expect eof
-}
+set pskd "J01NME"
+set discerner "0xabc/12"
 
-set timeout 10
+send "commissioner start\n"
+expect "Done"
+expect "Commissioner: active"
+send "commissioner joiner add 1/0 $pskd\n"
+expect "InvalidArgs"
+send "commissioner joiner add $discerner $pskd\n"
+expect "Done"
+
+set spawn_2 [spawn_node 2]
+
+set spawn_id $spawn_2
+send "mode rs\n"
+expect "Done"
+send "ifconfig up\n"
+expect "Done"
+send "joiner discerner\n"
+expect "Error"
+send "joiner discerner 1\n"
+expect "NotFound"
+send "joiner discerner 1/\n"
+expect "InvalidArgs"
+send "joiner discerner 1/128\n"
+expect "InvalidArgs"
+send "joiner discerner 1/-1\n"
+expect "InvalidArgs"
+send "joiner discerner 1/0\n"
+expect "InvalidArgs"
+send "joiner discerner invalid/20\n"
+expect "InvalidArgs"
+send "joiner discerner $discerner\n"
+expect "Done"
+send "joiner discerner\n"
+expect "$discerner"
+expect "Done"
+send "joiner start $pskd\n"
+expect "Done"
+wait_for "" "Join success" "Join failed"
+send "thread start\n"
+expect "Done"
+wait_for "state" "child"
+expect "Done"
+
+dispose_nodes

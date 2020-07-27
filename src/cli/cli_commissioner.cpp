@@ -116,19 +116,25 @@ otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
 {
     otError             error;
     otExtAddress        addr;
-    const otExtAddress *addrPtr;
+    const otExtAddress *addrPtr = nullptr;
+    otJoinerDiscerner   discerner;
 
     VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);
 
+    memset(&discerner, 0, sizeof(discerner));
+
     if (strcmp(aArgs[2], "*") == 0)
     {
-        addrPtr = nullptr;
     }
-    else
+    else if ((error = Interpreter::ParseJoinerDiscerner(aArgs[2], discerner)) == OT_ERROR_NOT_FOUND)
     {
         VerifyOrExit(Interpreter::Hex2Bin(aArgs[2], addr.m8, sizeof(addr)) == sizeof(addr),
                      error = OT_ERROR_INVALID_ARGS);
         addrPtr = &addr;
+    }
+    else if (error != OT_ERROR_NONE)
+    {
+        ExitNow();
     }
 
     if (strcmp(aArgs[1], "add") == 0)
@@ -142,8 +148,16 @@ otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
             SuccessOrExit(error = Interpreter::ParseUnsignedLong(aArgs[4], timeout));
         }
 
-        SuccessOrExit(
-            error = otCommissionerAddJoiner(mInterpreter.mInstance, addrPtr, aArgs[3], static_cast<uint32_t>(timeout)));
+        if (discerner.mLength)
+        {
+            SuccessOrExit(error = otCommissionerAddJoinerWithDiscerner(mInterpreter.mInstance, &discerner, aArgs[3],
+                                                                       static_cast<uint32_t>(timeout)));
+        }
+        else
+        {
+            SuccessOrExit(error = otCommissionerAddJoiner(mInterpreter.mInstance, addrPtr, aArgs[3],
+                                                          static_cast<uint32_t>(timeout)));
+        }
     }
     else if (strcmp(aArgs[1], "remove") == 0)
     {

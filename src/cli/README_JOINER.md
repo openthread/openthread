@@ -7,6 +7,7 @@ See [README_COMMISSIONING.md](README_COMMISSIONING.md).
 ## Command List
 
 - [help](#help)
+- [discerner](#discerner)
 - [id](#id)
 - [start](#start)
 - [stop](#stop)
@@ -25,6 +26,20 @@ help
 id
 start
 stop
+Done
+```
+
+### discerner
+
+Usage: `joiner discerner [discerner]`
+
+Print or set the Joiner Discerner.
+
+```bash
+> joiner discerner 0xabc/12
+Done
+> joiner discerner
+abc/12
 Done
 ```
 
