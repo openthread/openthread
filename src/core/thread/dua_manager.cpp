@@ -105,7 +105,6 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
             mChildDuaRegisteredMask.ClearAll();
             mRegisterCurrentChildIndex = false;
         }
-
 #endif
     }
 
@@ -453,11 +452,15 @@ void DuaManager::PerformNextRegistration(void)
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
     {
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+        uint32_t            lastTransactionTime;
+        const Ip6::Address *duaPtr = nullptr;
+        Child *             child  = nullptr;
+
         if (!mRegisterCurrentChildIndex)
         {
-            for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+            for (Child &iter : Get<ChildTable>().Iterate(Child::kInStateValid))
             {
-                uint16_t childIndex = Get<ChildTable>().GetChildIndex(child);
+                uint16_t childIndex = Get<ChildTable>().GetChildIndex(iter);
 
                 if (mChildDuaMask.Get(childIndex) && !mChildDuaRegisteredMask.Get(childIndex))
                 {
@@ -466,21 +469,18 @@ void DuaManager::PerformNextRegistration(void)
                 }
             }
         }
-        {
-            uint32_t            lastTransactionTime;
-            const Ip6::Address *duaPtr = nullptr;
-            Child *             child  = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
 
-            VerifyOrExit((duaPtr = child->GetDomainUnicastAddress()) != nullptr, error = OT_ERROR_ABORT);
+        child = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
 
-            dua                 = *duaPtr;
-            lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child->GetLastHeard());
+        VerifyOrExit((duaPtr = child->GetDomainUnicastAddress()) != nullptr, error = OT_ERROR_ABORT);
 
-            SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &dua, sizeof(dua)));
-            SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kMeshLocalEid, &child->GetMeshLocalIid(),
-                                                 sizeof(Ip6::InterfaceIdentifier)));
-            SuccessOrExit(error = Tlv::AppendUint32Tlv(*message, ThreadTlv::kLastTransactionTime, lastTransactionTime));
-        }
+        dua = *duaPtr;
+        SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &dua, sizeof(dua)));
+        SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kMeshLocalEid, &child->GetMeshLocalIid(),
+                                             sizeof(Ip6::InterfaceIdentifier)));
+
+        lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child->GetLastHeard());
+        SuccessOrExit(error = Tlv::AppendUint32Tlv(*message, ThreadTlv::kLastTransactionTime, lastTransactionTime));
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     }
 
@@ -589,6 +589,7 @@ otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
         {
         case ThreadStatusTlv::kDuaSuccess:
             mLastRegistrationTime = TimerMilli::GetNow();
+            mDuaState             = kRegistered;
             break;
         case ThreadStatusTlv::kDuaReRegister:
             mDuaState                  = kToRegister;
@@ -701,12 +702,12 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
 {
     uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
-    if (aState == Mle::kChildDuaRemoved || aState == Mle::kChildDuaChanged)
+    if (aState == Mle::ChildDuaState::kRemoved || aState == Mle::ChildDuaState::kChanged)
     {
         VerifyOrExit(mChildDuaMask.Get(childIndex) == true, OT_NOOP);
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-        if (mIsDuaPending && mDuaState != kRegistering && mChildIndexDuaRegistering == childIndex)
+        if (mIsDuaPending && mDuaState != DuaState::kRegistering && mChildIndexDuaRegistering == childIndex)
 #else
         if (mIsDuaPending && mChildIndexDuaRegistering == childIndex)
 #endif
@@ -718,7 +719,7 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
         mChildDuaRegisteredMask.Clear(childIndex);
     }
 
-    if (aState == Mle::kChildDuaAdded || aState == Mle::kChildDuaChanged)
+    if (aState == Mle::ChildDuaState::kAdded || aState == Mle::ChildDuaState::kChanged)
     {
         if (mChildDuaMask == mChildDuaRegisteredMask)
         {

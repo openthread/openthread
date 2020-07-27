@@ -165,17 +165,6 @@ public:
      */
     bool IsDomainUnicast(const Ip6::Address &aAddress) const;
 
-    /**
-     * This method indicates whether or not the address was a Domain Unicast Address with deprecated Domain Prefix.
-     *
-     * @param[in] aAddress  A reference to the address.
-     *
-     * @retval true  @p aAddress is a Domain Unicast Address with deprecated Domain Prefix.
-     * @retval false @p aAddress is not a Domain Unicast Address with deprecated Domain Prefix.
-     *
-     */
-    bool IsPreviousDomainUnicast(const Ip6::Address &aAddress) const;
-
 private:
     void UpdateBackboneRouterPrimary(void);
     void UpdateDomainPrefixConfig(void);

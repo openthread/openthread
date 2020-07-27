@@ -162,7 +162,7 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
 
 exit:
 
-    otLogInfoBbr("Received DUA.req on %s: %s", isPrimary ? "PBBR" : "SBBR", otThreadErrorToString(error));
+    otLogInfoBbr("Received DUA.req on %s: %s", (isPrimary ? "PBBR" : "SBBR"), otThreadErrorToString(error));
 
     if (error == OT_ERROR_NONE)
     {

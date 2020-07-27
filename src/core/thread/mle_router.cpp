@@ -2095,12 +2095,12 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
                 {
                     if (oldDua != address)
                     {
-                        Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, kChildDuaChanged);
+                        Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, ChildDuaState::kChanged);
                     }
                 }
                 else
                 {
-                    Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, kChildDuaAdded);
+                    Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, ChildDuaState::kAdded);
                 }
             }
 #endif
@@ -2169,7 +2169,7 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     // Dua is removed
     if (oldDuaPtr != nullptr && !hasDua)
     {
-        Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, kChildDuaRemoved);
+        Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, ChildDuaState::kRemoved);
     }
 #endif
 
@@ -4797,7 +4797,7 @@ void MleRouter::Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
         Get<Notifier>().Signal(kEventThreadChildRemoved);
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-        Get<DuaManager>().UpdateChildDomainUnicastAddress(static_cast<Child &>(aNeighbor), kChildDuaRemoved);
+        Get<DuaManager>().UpdateChildDomainUnicastAddress(static_cast<Child &>(aNeighbor), ChildDuaState::kRemoved);
 #endif
         break;
 
