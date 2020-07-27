@@ -422,7 +422,7 @@ void DuaManager::PerformNextRegistration(void)
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     VerifyOrExit(mle.IsRouterOrLeader() || !mle.IsExpectedToBecomeRouter(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit((mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0) ||
-                     mChildDuaMask != mChildDuaRegisteredMask,
+                     (mChildDuaMask.HasAny() && mChildDuaMask != mChildDuaRegisteredMask),
                  error = OT_ERROR_NOT_FOUND);
 #else
     VerifyOrExit(mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0, error = OT_ERROR_NOT_FOUND);
@@ -470,9 +470,10 @@ void DuaManager::PerformNextRegistration(void)
             }
         }
 
-        child = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
+        child  = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
+        duaPtr = child->GetDomainUnicastAddress();
 
-        VerifyOrExit((duaPtr = child->GetDomainUnicastAddress()) != nullptr, error = OT_ERROR_ABORT);
+        OT_ASSERT(duaPtr != nullptr);
 
         dua = *duaPtr;
         SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &dua, sizeof(dua)));
@@ -702,10 +703,10 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
 {
     uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
-    if (aState == Mle::ChildDuaState::kRemoved || aState == Mle::ChildDuaState::kChanged)
+    if ((aState == Mle::ChildDuaState::kRemoved || aState == Mle::ChildDuaState::kChanged) &&
+        mChildDuaMask.Get(childIndex))
     {
-        VerifyOrExit(mChildDuaMask.Get(childIndex) == true, OT_NOOP);
-
+        // Abort on going proxy DUA.req for this child
 #if OPENTHREAD_CONFIG_DUA_ENABLE
         if (mIsDuaPending && mDuaState != DuaState::kRegistering && mChildIndexDuaRegistering == childIndex)
 #else
@@ -730,7 +731,6 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
         mChildDuaRegisteredMask.Clear(childIndex);
     }
 
-exit:
     return;
 }
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
