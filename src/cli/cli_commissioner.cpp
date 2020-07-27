@@ -123,8 +123,10 @@ otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
 
     memset(&discerner, 0, sizeof(discerner));
 
-    if (strcmp(aArgs[2], "*") != 0 &&
-        (error = Interpreter::ParseJoinerDiscerner(aArgs[2], discerner)) == OT_ERROR_NOT_FOUND)
+    if (strcmp(aArgs[2], "*") == 0)
+    {
+    }
+    else if ((error = Interpreter::ParseJoinerDiscerner(aArgs[2], discerner)) == OT_ERROR_NOT_FOUND)
     {
         VerifyOrExit(Interpreter::Hex2Bin(aArgs[2], addr.m8, sizeof(addr)) == sizeof(addr),
                      error = OT_ERROR_INVALID_ARGS);
