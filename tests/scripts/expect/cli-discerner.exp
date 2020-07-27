@@ -28,8 +28,6 @@
 #
 
 source "tests/scripts/expect/_common.exp"
-source "tests/scripts/expect/_multinode.exp"
-
 
 setup_leader
 
@@ -80,4 +78,7 @@ expect "Done"
 wait_for "state" "child"
 expect "Done"
 
-dispose_nodes
+dispose
+
+set spawn_id $spawn_1
+dispose

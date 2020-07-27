@@ -67,6 +67,27 @@ proc spawn_node {id} {
     return $spawn_id
 }
 
+proc setup_leader {} {
+    # Sets up a Thread network spawn_1 as the leader.
+    global spawn_1
+    global spawn_id
+    global env
+
+    set spawn_1 [spawn_node 1]
+
+    set spawn_id $spawn_1
+    send "dataset init new\n"
+    expect "Done"
+    send "dataset commit active\n"
+    expect "Done"
+    send "ifconfig up\n"
+    expect "Done"
+    send "thread start\n"
+    expect "Done"
+    wait_for "state" "leader"
+    expect "Done"
+}
+
 proc dispose {} {
     send "\x04"
     expect eof
