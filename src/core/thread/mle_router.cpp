@@ -2837,9 +2837,9 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
         {
             otThreadDiscoveryRequestInfo info;
 
-            info.mExtAddress = &aMessageInfo.GetPeerAddr().GetIid();
-            info.mVersion    = discoveryRequest.GetVersion();
-            info.mIsJoiner   = discoveryRequest.IsJoiner();
+            aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(*static_cast<Mac::ExtAddress *>(&info.mExtAddress));
+            info.mVersion  = discoveryRequest.GetVersion();
+            info.mIsJoiner = discoveryRequest.IsJoiner();
 
             mDiscoveryRequestCallback(&info, mDiscoveryRequestCallbackContext);
         }

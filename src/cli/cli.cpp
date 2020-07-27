@@ -4485,7 +4485,7 @@ void Interpreter::SignalPingReply(const Ip6::Address &aPeerAddress,
 void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo)
 {
     mServer->OutputFormat("~ Discovery Request from ");
-    OutputBytes(aInfo.mExtAddress->mFields.m8, sizeof(aInfo.mExtAddress));
+    OutputBytes(aInfo.mExtAddress.m8, sizeof(aInfo.mExtAddress.m8));
     mServer->OutputFormat(": version=%u,joiner=%d\r\n", aInfo.mVersion, aInfo.mIsJoiner);
 }
 
