@@ -82,5 +82,4 @@ expect "Done"
 
 dispose
 
-set spawn_id $spawn_1
-dispose
+dispose_leader

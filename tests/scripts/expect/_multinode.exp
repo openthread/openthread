@@ -75,12 +75,10 @@ proc setup_nodes {} {
 }
 
 proc dispose_nodes {} {
-    global spawn_1
     global spawn_2
     global spawn_id
 
-    set spawn_id $spawn_1
-    dispose
+    dispose_leader
     set spawn_id $spawn_2
     dispose
 }

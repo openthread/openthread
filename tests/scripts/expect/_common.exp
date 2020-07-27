@@ -93,4 +93,12 @@ proc dispose {} {
     expect eof
 }
 
+proc dispose_leader {} {
+    global spawn_1
+    global spawn_id
+
+    set spawn_id $spawn_1
+    dispose
+}
+
 set timeout 10
