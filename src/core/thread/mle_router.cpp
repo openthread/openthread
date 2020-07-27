@@ -2055,6 +2055,8 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     // Retrieve registered multicast addresses of the Child
     if (aChild.HasAnyMlrRegisteredAddress())
     {
+        OT_ASSERT(aChild.IsStateValid());
+
         for (const Ip6::Address &childAddress :
              aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
         {
@@ -4651,6 +4653,11 @@ void MleRouter::SetChildStateToValid(Child &aChild)
 
     aChild.SetState(Neighbor::kStateValid);
     IgnoreError(StoreChild(aChild));
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    Get<MlrManager>().UpdateProxiedSubscriptions(aChild, nullptr, 0);
+#endif
+
     Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED, aChild);
 
 exit:

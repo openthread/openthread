@@ -139,7 +139,7 @@ bool MlrManager::IsAddressMlrRegisteredByAnyChildExcept(const Ip6::Address &aAdd
 
     OT_ASSERT(aAddress.IsMulticastLargerThanRealmLocal());
 
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
         if (&child != aExceptChild && child.HasMlrRegisteredAddress(aAddress))
         {
@@ -155,7 +155,7 @@ void MlrManager::UpdateProxiedSubscriptions(Child &             aChild,
                                             const Ip6::Address *aOldMlrRegisteredAddresses,
                                             uint16_t            aOldMlrRegisteredAddressNum)
 {
-    VerifyOrExit(aChild.IsStateValidOrRestoring(), OT_NOOP);
+    VerifyOrExit(aChild.IsStateValid(), OT_NOOP);
 
     // Search the new multicast addresses and set its flag accordingly
     for (const Ip6::Address &address : aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
@@ -194,7 +194,7 @@ exit:
 
 void MlrManager::SetChildMulticastAddressMlrState(MlrState aFromState, MlrState aToState)
 {
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
         for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
         {
@@ -274,7 +274,7 @@ void MlrManager::SendMulticastListenerRegistration(void)
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     // Append Child multicast addresses
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
         if (addressesNum >= kIPv6AddressesNumMax)
         {
@@ -495,7 +495,7 @@ void MlrManager::LogMulticastAddresses(void)
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
         for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
         {
