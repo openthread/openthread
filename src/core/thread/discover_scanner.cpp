@@ -63,7 +63,6 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
                                   bool                    aJoiner,
                                   bool                    aEnableFiltering,
                                   const FilterIndexes *   aFilterIndexes,
-                                  const char *            aProvisioningUrl,
                                   Handler                 aCallback,
                                   void *                  aContext)
 {
@@ -71,8 +70,6 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     Message *                    message = nullptr;
     Ip6::Address                 destination;
     MeshCoP::DiscoveryRequestTlv discoveryRequest;
-    MeshCoP::ProvisioningUrlTlv  provisionUrl;
-    size_t                       discoveryTlvLength = sizeof(discoveryRequest);
 
     VerifyOrExit(mState == kStateIdle, error = OT_ERROR_BUSY);
 
@@ -114,22 +111,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     discoveryRequest.SetVersion(kThreadVersion);
     discoveryRequest.SetJoiner(aJoiner);
 
-    if (aProvisioningUrl)
-    {
-        provisionUrl.Init();
-        provisionUrl.SetProvisioningUrl(aProvisioningUrl);
-
-        discoveryTlvLength += provisionUrl.GetSize();
-    }
-
-    SuccessOrExit(error = Tlv::AppendTl(*message, Tlv::kDiscovery, static_cast<uint8_t>(discoveryTlvLength)));
-
-    SuccessOrExit(error = discoveryRequest.AppendTo(*message));
-
-    if (aProvisioningUrl)
-    {
-        SuccessOrExit(error = provisionUrl.AppendTo(*message));
-    }
+    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kDiscovery, &discoveryRequest, sizeof(discoveryRequest)));
 
     destination.SetToLinkLocalAllRoutersMulticast();
 

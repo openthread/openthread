@@ -110,7 +110,6 @@ public:
      *                                given filter indexes.
      * @param[in]  aFilterIndexes     A pointer to `FilterIndexes` to use for filtering (when enabled).
      *                                If set to nullptr, filter indexes are derived from hash of factory-assigned EUI64.
-     * @param[in]  aProvisioningUrl   A pointer to the Provisioning URL (may be nullptr).
      * @param[in]  aHandler           A pointer to a function that is called on receiving an MLE Discovery Response.
      * @param[in]  aContext           A pointer to arbitrary context information.
      *
@@ -124,7 +123,6 @@ public:
                      bool                    aJoiner,
                      bool                    aEnableFiltering,
                      const FilterIndexes *   aFilterIndexes,
-                     const char *            aProvisioningUrl,
                      Handler                 aHandler,
                      void *                  aContext);
 

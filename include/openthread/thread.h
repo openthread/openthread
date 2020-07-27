@@ -787,10 +787,9 @@ void otThreadRegisterParentResponseCallback(otInstance *                   aInst
  */
 typedef struct otThreadDiscoveryRequestInfo
 {
-    const otIp6InterfaceIdentifier *mExtAddress;      ///< IEEE 802.15.4 Extended Address of the requester
-    const char *                    mProvisioningUrl; ///< The provisioning URL if attached.
-    uint8_t                         mVersion : 4;     ///< Thread version.
-    bool                            mIsJoiner : 1;    ///< Whether is from joiner.
+    const otIp6InterfaceIdentifier *mExtAddress;   ///< IEEE 802.15.4 Extended Address of the requester
+    uint8_t                         mVersion : 4;  ///< Thread version.
+    bool                            mIsJoiner : 1; ///< Whether is from joiner.
 } otThreadDiscoveryRequestInfo;
 
 /**

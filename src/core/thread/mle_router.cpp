@@ -2790,7 +2790,6 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
     Tlv                          tlv;
     MeshCoP::Tlv                 meshcopTlv;
     MeshCoP::DiscoveryRequestTlv discoveryRequest{};
-    MeshCoP::ProvisioningUrlTlv  provisioningUrl{};
     Mac::ExtendedPanId           extPanId;
     uint16_t                     offset;
     uint16_t                     end;
@@ -2825,11 +2824,6 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
 
             break;
 
-        case MeshCoP::Tlv::kProvisioningUrl:
-            aMessage.Read(offset, static_cast<uint16_t>(meshcopTlv.GetSize()), &provisioningUrl);
-            VerifyOrExit(provisioningUrl.IsValid(), error = OT_ERROR_PARSE);
-            break;
-
         default:
             break;
         }
@@ -2843,10 +2837,9 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
         {
             otThreadDiscoveryRequestInfo info;
 
-            info.mExtAddress      = &aMessageInfo.GetPeerAddr().GetIid();
-            info.mProvisioningUrl = provisioningUrl.IsValid() ? provisioningUrl.GetProvisioningUrl() : nullptr;
-            info.mVersion         = discoveryRequest.GetVersion();
-            info.mIsJoiner        = discoveryRequest.IsJoiner();
+            info.mExtAddress = &aMessageInfo.GetPeerAddr().GetIid();
+            info.mVersion    = discoveryRequest.GetVersion();
+            info.mIsJoiner   = discoveryRequest.IsJoiner();
 
             mDiscoveryRequestCallback(&info, mDiscoveryRequestCallbackContext);
         }

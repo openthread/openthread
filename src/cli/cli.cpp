@@ -4486,8 +4486,7 @@ void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aIn
 {
     mServer->OutputFormat("~ Discovery Request from ");
     OutputBytes(aInfo.mExtAddress->mFields.m8, sizeof(aInfo.mExtAddress));
-    mServer->OutputFormat(": version=%u,joiner=%d,url=%s\r\n", aInfo.mVersion, aInfo.mIsJoiner,
-                          (aInfo.mProvisioningUrl ? aInfo.mProvisioningUrl : "(null)"));
+    mServer->OutputFormat(": version=%u,joiner=%d\r\n", aInfo.mVersion, aInfo.mIsJoiner);
 }
 
 extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)
