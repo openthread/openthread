@@ -279,7 +279,7 @@ void Child::GenerateChallenge(void)
 }
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-bool Child::HasMlrRegisteredAddress(const Ip6::Address &aAddress)
+bool Child::HasMlrRegisteredAddress(const Ip6::Address &aAddress) const
 {
     bool has = false;
 
@@ -297,7 +297,7 @@ exit:
     return has;
 }
 
-MlrState Child::GetAddressMlrState(const Ip6::Address &aAddress)
+MlrState Child::GetAddressMlrState(const Ip6::Address &aAddress) const
 {
     uint16_t addressIndex;
 

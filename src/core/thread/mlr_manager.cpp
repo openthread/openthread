@@ -88,20 +88,20 @@ void MlrManager::UpdateLocalSubscriptions(void)
 {
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     // Check multicast addresses are newly listened against Children
-    for (Ip6::ExternalNetifMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
+    for (Ip6::ExternalNetifMulticastAddress &addr :
+         Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
     {
-        if (addr.GetAddress().IsMulticastLargerThanRealmLocal() && addr.GetMlrState() == kMlrStateToRegister &&
-            IsAddressMlrRegisteredByAnyChild(addr.GetAddress()))
+        if (addr.GetMlrState() == kMlrStateToRegister && IsAddressMlrRegisteredByAnyChild(addr.GetAddress()))
         {
             addr.SetMlrState(kMlrStateRegistered);
         }
     }
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#endif
 
     ScheduleSend(0);
 }
 
-bool MlrManager::IsAddressMlrRegisteredByNetif(const Ip6::Address &aAddress)
+bool MlrManager::IsAddressMlrRegisteredByNetif(const Ip6::Address &aAddress) const
 {
     bool ret = false;
 
@@ -121,9 +121,10 @@ exit:
 
 void MlrManager::SetNetifMulticastAddressMlrState(MlrState aFromState, MlrState aToState)
 {
-    for (Ip6::ExternalNetifMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
+    for (Ip6::ExternalNetifMulticastAddress &addr :
+         Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
     {
-        if (addr.GetAddress().IsMulticastLargerThanRealmLocal() && addr.GetMlrState() == aFromState)
+        if (addr.GetMlrState() == aFromState)
         {
             addr.SetMlrState(aToState);
         }
@@ -133,7 +134,7 @@ void MlrManager::SetNetifMulticastAddressMlrState(MlrState aFromState, MlrState 
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
-bool MlrManager::IsAddressMlrRegisteredByAnyChildExcept(const Ip6::Address &aAddress, const Child *aExceptChild)
+bool MlrManager::IsAddressMlrRegisteredByAnyChildExcept(const Ip6::Address &aAddress, const Child *aExceptChild) const
 {
     bool ret = false;
 
@@ -179,7 +180,6 @@ void MlrManager::UpdateProxiedSubscriptions(Child &             aChild,
         // Check if it's a new multicast address against other Children
         isMlrRegistered = isMlrRegistered || IsAddressMlrRegisteredByAnyChildExcept(address, &aChild);
 
-        // Set MLR state accordingly
         aChild.SetAddressMlrState(address, isMlrRegistered ? kMlrStateRegistered : kMlrStateToRegister);
     }
 
@@ -257,14 +257,15 @@ void MlrManager::SendMulticastListenerRegistration(void)
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
     // Append Netif multicast addresses
-    for (Ip6::ExternalNetifMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
+    for (Ip6::ExternalNetifMulticastAddress &addr :
+         Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
     {
         if (addressesNum >= kIPv6AddressesNumMax)
         {
             break;
         }
 
-        if (addr.GetAddress().IsMulticastLargerThanRealmLocal() && addr.GetMlrState() == kMlrStateToRegister)
+        if (addr.GetMlrState() == kMlrStateToRegister)
         {
             AppendToUniqueAddressList(addresses, addressesNum, addr.GetAddress());
             addr.SetMlrState(kMlrStateRegistering);

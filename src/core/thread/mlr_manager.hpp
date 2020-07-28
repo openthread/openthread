@@ -94,7 +94,7 @@ public:
      *
      * @param[in]  aChild                       A reference to the child information.
      * @param[in]  aOldMlrRegisteredAddresses   A pointer to an array of the Child's previously registered Ip6
-     * addresses.
+     *                                          addresses.
      * @param[in]  aOldMlrRegisteredAddressNum  The number of previously registered Ip6 addresses.
      *
      */
@@ -133,16 +133,16 @@ private:
 #if OPENTHREAD_CONFIG_MLR_ENABLE
     void UpdateLocalSubscriptions(void);
     void SetNetifMulticastAddressMlrState(MlrState aFromState, MlrState aToState);
-    bool IsAddressMlrRegisteredByNetif(const Ip6::Address &aAddress);
+    bool IsAddressMlrRegisteredByNetif(const Ip6::Address &aAddress) const;
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     void SetChildMulticastAddressMlrState(MlrState aFromState, MlrState aToState);
-    bool IsAddressMlrRegisteredByAnyChild(const Ip6::Address &aAddress)
+    bool IsAddressMlrRegisteredByAnyChild(const Ip6::Address &aAddress) const
     {
         return IsAddressMlrRegisteredByAnyChildExcept(aAddress, nullptr);
     }
-    bool IsAddressMlrRegisteredByAnyChildExcept(const Ip6::Address &aAddress, const Child *aExceptChild);
+    bool IsAddressMlrRegisteredByAnyChildExcept(const Ip6::Address &aAddress, const Child *aExceptChild) const;
 #endif
 
     void SetMulticastAddressMlrState(MlrState aFromState, MlrState aToState)
