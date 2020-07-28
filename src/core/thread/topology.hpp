@@ -947,14 +947,14 @@ private:
 
     Ip6::InterfaceIdentifier mMeshLocalIid;                 ///< IPv6 address IID for mesh-local address
     Ip6::Address             mIp6Address[kNumIp6Addresses]; ///< Registered IPv6 addresses
-    uint32_t mTimeout;            ///< Child timeout
+    uint32_t                 mTimeout;                      ///< Child timeout
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     ChildIp6AddressMask mMlrToRegisterMask;
     ChildIp6AddressMask mMlrRegisteredMask;
 #endif
 
-    uint8_t  mNetworkDataVersion; ///< Current Network Data version
+    uint8_t mNetworkDataVersion; ///< Current Network Data version
 
     union
     {
