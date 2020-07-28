@@ -715,10 +715,8 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
         {
             IgnoreError(Get<Coap::Coap>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
 
-            if (aState == Mle::ChildDuaState::kRemoved && mRegisterCurrentChildIndex)
-            {
-                mRegisterCurrentChildIndex = false;
-            }
+            // Reset mRegisterCurrentChildIndex properly
+            mRegisterCurrentChildIndex = mRegisterCurrentChildIndex && (aState == Mle::ChildDuaState::kRemoved);
         }
 
         mChildDuaMask.Clear(childIndex);
