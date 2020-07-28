@@ -171,7 +171,7 @@ private:
  * DHCPv6 Option Codes.
  *
  */
-enum Code : uint8_t
+enum Code : uint16_t
 {
     kOptionClientIdentifier          = 1,
     kOptionServerIdentifier          = 2,
