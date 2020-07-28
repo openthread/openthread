@@ -2045,6 +2045,11 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     bool                hasDua    = false;
 #endif
 
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    Ip6::Address oldMlrRegisteredAddresses[OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1];
+    uint16_t     oldMlrRegisteredAddressNum = 0;
+#endif
+
     VerifyOrExit(aMessage.Read(aOffset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
     VerifyOrExit(tlv.GetLength() <= (aMessage.GetLength() - aOffset - sizeof(tlv)), error = OT_ERROR_PARSE);
 
@@ -2055,6 +2060,23 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     if ((oldDuaPtr = aChild.GetDomainUnicastAddress()) != nullptr)
     {
         oldDua = *oldDuaPtr;
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    // Retrieve registered multicast addresses of the Child
+    if (aChild.HasAnyMlrRegisteredAddress())
+    {
+        OT_ASSERT(aChild.IsStateValid());
+
+        for (const Ip6::Address &childAddress :
+             aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+        {
+            if (aChild.GetAddressMlrState(childAddress) == kMlrStateRegistered)
+            {
+                oldMlrRegisteredAddresses[oldMlrRegisteredAddressNum++] = childAddress;
+            }
+        }
     }
 #endif
 
@@ -2171,6 +2193,10 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     {
         Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, ChildDuaState::kRemoved);
     }
+#endif
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    Get<MlrManager>().UpdateProxiedSubscriptions(aChild, oldMlrRegisteredAddresses, oldMlrRegisteredAddressNum);
 #endif
 
     if (registeredCount == 0)
@@ -3679,23 +3705,6 @@ exit:
     return error;
 }
 
-otError MleRouter::GetChildNextIp6Address(uint16_t                   aChildIndex,
-                                          Child::Ip6AddressIterator &aIterator,
-                                          Ip6::Address &             aAddress)
-{
-    otError error = OT_ERROR_NONE;
-    Child * child = nullptr;
-
-    child = mChildTable.GetChildAtIndex(aChildIndex);
-    VerifyOrExit(child != nullptr, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(child->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_ARGS);
-
-    error = child->GetNextIp6Address(aIterator, aAddress);
-
-exit:
-    return error;
-}
-
 void MleRouter::RestoreChildren(void)
 {
     otError  error          = OT_ERROR_NONE;
@@ -4464,19 +4473,17 @@ otError MleRouter::AppendConnectivity(Message &aMessage)
 
 otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
 {
-    otError                   error;
-    Ip6::Address              address;
-    Child::Ip6AddressIterator iterator;
-    Tlv                       tlv;
-    AddressRegistrationEntry  entry;
-    Lowpan::Context           context;
-    uint8_t                   length      = 0;
-    uint16_t                  startOffset = aMessage.GetLength();
+    otError                  error;
+    Tlv                      tlv;
+    AddressRegistrationEntry entry;
+    Lowpan::Context          context;
+    uint8_t                  length      = 0;
+    uint16_t                 startOffset = aMessage.GetLength();
 
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-    while (aChild.GetNextIp6Address(iterator, address) == OT_ERROR_NONE)
+    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
     {
         if (address.IsMulticast() || Get<NetworkData::Leader>().GetContext(address, context) != OT_ERROR_NONE)
         {
@@ -4684,6 +4691,11 @@ void MleRouter::SetChildStateToValid(Child &aChild)
 
     aChild.SetState(Neighbor::kStateValid);
     IgnoreError(StoreChild(aChild));
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    Get<MlrManager>().UpdateProxiedSubscriptions(aChild, nullptr, 0);
+#endif
+
     Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED, aChild);
 
 exit:

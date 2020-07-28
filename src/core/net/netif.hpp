@@ -214,16 +214,27 @@ public:
     public:
         /**
          * This constructor initializes an `ExternalMulticastAddressIterator` instance to start from the first external
-         * multicast address.
+         * multicast address that matches a given Ip6 address type filter.
          *
-         * @param[in] aNetif  A reference to the Netif instance.
+         * @param[in] aNetif   A reference to the Netif instance.
+         * @param[in] aFilter  The Ip6 address type filter.
          *
          */
-        explicit ExternalMulticastAddressIterator(Netif &aNetif)
+        explicit ExternalMulticastAddressIterator(const Netif &aNetif, Address::TypeFilter aFilter = Address::kTypeAny)
             : mNetif(aNetif)
+            , mFilter(aFilter)
         {
             AdvanceFrom(mNetif.GetMulticastAddresses());
         }
+
+        /**
+         * This method indicates whether the iterator has reached end of the list.
+         *
+         * @retval TRUE   There are no more entries in the list (reached end of the list).
+         * @retval FALSE  The current address entry is valid.
+         *
+         */
+        bool IsDone(void) const { return mCurrent != nullptr; }
 
         /**
          * This method overloads `++` operator (pre-increment) to advance the iterator.
@@ -298,7 +309,7 @@ public:
             kEndIterator,
         };
 
-        ExternalMulticastAddressIterator(Netif &aNetif, IteratorType)
+        ExternalMulticastAddressIterator(const Netif &aNetif, IteratorType)
             : mNetif(aNetif)
             , mCurrent(nullptr)
         {
@@ -306,7 +317,8 @@ public:
 
         void AdvanceFrom(const NetifMulticastAddress *aAddr)
         {
-            while (aAddr != nullptr && !mNetif.IsMulticastAddressExternal(*aAddr))
+            while (aAddr != nullptr &&
+                   !(mNetif.IsMulticastAddressExternal(*aAddr) && aAddr->GetAddress().MatchesFilter(mFilter)))
             {
                 aAddr = aAddr->GetNext();
             }
@@ -315,8 +327,9 @@ public:
                 const_cast<ExternalNetifMulticastAddress *>(static_cast<const ExternalNetifMulticastAddress *>(aAddr));
         }
 
-        Netif &                        mNetif;
+        const Netif &                  mNetif;
         ExternalNetifMulticastAddress *mCurrent;
+        Address::TypeFilter            mFilter;
     };
 
     /**
@@ -554,20 +567,38 @@ public:
     void SetMulticastPromiscuous(bool aEnabled) { mMulticastPromiscuous = aEnabled; }
 
     /**
-     * This method enables range-based `for` loop iteration over all external multicast addresses on the Netif.
+     * This method enables range-based `for` loop iteration over external multicast addresses on the Netif that matches
+     * a given Ip6 address type filter.
      *
-     * This method should be used like follows:
+     * This method should be used like follows: to iterate over all external multicast addresses
      *
      *     for (Ip6::ExternalNetifMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
      *     { ... }
      *
+     * or to iterate over a subset of external multicast addresses determined by a given address type filter
+     *
+     *     for (Ip6::ExternalNetifMulticastAddress &addr :
+     * Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal)) { ... }
+     *
+     * @param[in] aFilter  The Ip6 address type filter.
+     *
      * @returns An `ExternalMulticastAddressIteratorBuilder` instance.
      *
      */
-    ExternalMulticastAddressIteratorBuilder IterateExternalMulticastAddresses(void)
+    ExternalMulticastAddressIteratorBuilder IterateExternalMulticastAddresses(
+        Address::TypeFilter aFilter = Address::kTypeAny)
     {
-        return ExternalMulticastAddressIteratorBuilder(*this);
+        return ExternalMulticastAddressIteratorBuilder(*this, aFilter);
     }
+
+    /**
+     * This method indicates whether or not the network interfaces is subscribed to any external multicast address.
+     *
+     * @retval TRUE  The network interface is subscribed to at least one external multicast address.
+     * @retval FALSE The network interface is not subscribed to any external multicast address.
+     *
+     */
+    bool HasAnyExternalMulticastAddress(void) const { return !ExternalMulticastAddressIterator(*this).IsDone(); }
 
 protected:
     /**
@@ -595,19 +626,21 @@ private:
     class ExternalMulticastAddressIteratorBuilder
     {
     public:
-        ExternalMulticastAddressIteratorBuilder(Netif &aNetif)
+        ExternalMulticastAddressIteratorBuilder(const Netif &aNetif, Address::TypeFilter aFilter)
             : mNetif(aNetif)
+            , mFilter(aFilter)
         {
         }
 
-        ExternalMulticastAddressIterator begin(void) { return ExternalMulticastAddressIterator(mNetif); }
+        ExternalMulticastAddressIterator begin(void) { return ExternalMulticastAddressIterator(mNetif, mFilter); }
         ExternalMulticastAddressIterator end(void)
         {
             return ExternalMulticastAddressIterator(mNetif, ExternalMulticastAddressIterator::kEndIterator);
         }
 
     private:
-        Netif &mNetif;
+        const Netif &       mNetif;
+        Address::TypeFilter mFilter;
     };
 
     LinkedList<NetifUnicastAddress>   mUnicastAddresses;

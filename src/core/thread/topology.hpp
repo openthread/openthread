@@ -497,6 +497,8 @@ private:
  */
 class Child : public Neighbor, public IndirectSender::ChildInfo, public DataPollHandler::ChildInfo
 {
+    class AddressIteratorBuilder;
+
 public:
     enum
     {
@@ -504,53 +506,160 @@ public:
     };
 
     /**
-     * This class defines an iterator used by `GetNextIp6Address()` to go through IPv6 address entries of a child.
+     * This class defines an iterator used to go through IPv6 address entries of a child.
      *
      */
-    class Ip6AddressIterator
+    class AddressIterator
     {
-        friend class Child;
+        friend class AddressIteratorBuilder;
 
     public:
         /**
-         * This constructor initializes the iterator object.
-         *
-         * After initialization a call to `GetNextIp6Address()` would start at the first IPv6 address entry in the list.
+         * This type represents an index indicating the current IPv6 address entry to which the iterator is pointing.
          *
          */
-        Ip6AddressIterator(void)
-            : mIndex(0)
+        typedef otChildIp6AddressIterator Index;
+
+        /**
+         * This constructor initializes the iterator associated with a given `Child` starting from beginning of the
+         * IPv6 address list.
+         *
+         * @param[in] aChild    A reference to a child entry.
+         * @param[in] aFilter   An IPv6 address type filter restricting iterator to certain type of addresses.
+         *
+         */
+        AddressIterator(const Child &aChild, Ip6::Address::TypeFilter aFilter = Ip6::Address::kTypeAny)
+            : AddressIterator(aChild, 0, aFilter)
         {
         }
 
         /**
-         * This method resets the iterator.
+         * This constructor initializes the iterator associated with a given `Child` starting from a given index
          *
-         * After reset the next call to `GetNextIp6Address()` would start at the first IPv6 address entry in the list.
+         * @param[in]  aChild   A reference to the child entry.
+         * @param[in]  aIndex   An index (`Index`) with which to initialize the iterator.
+         * @param[in]  aFilter  An IPv6 address type filter restricting iterator to certain type of addresses.
          *
          */
-        void Reset(void) { mIndex = 0; }
+        AddressIterator(const Child &aChild, Index aIndex, Ip6::Address::TypeFilter aFilter = Ip6::Address::kTypeAny)
+            : mChild(aChild)
+            , mFilter(aFilter)
+            , mIndex(aIndex)
+        {
+            Update();
+        }
 
         /**
-         * This method sets the iterator from an `otChildIp6AddressIterator`
+         * This method converts the iterator into an index.
          *
-         * @param[in]   aChildAddressIterator  A child address iterator
+         * @returns An index corresponding to the iterator.
          *
          */
-        void Set(otChildIp6AddressIterator aChildAddressIterator) { mIndex = aChildAddressIterator; }
+        Index GetAsIndex(void) const { return mIndex; }
 
         /**
-         * This method returns the iterator as an `otChildIp6AddressIterator`
+         * This method gets the iterator's associated `Child` entry.
          *
-         * @returns The iterator as an `otChildIp6AddressIterator`
+         * @returns The associated child entry.
          *
          */
-        otChildIp6AddressIterator Get(void) const { return mIndex; }
+        const Child &GetChild(void) const { return mChild; }
+
+        /**
+         * This method gets the current `Child` IPv6 Address to which the iterator is pointing.
+         *
+         * @returns  A pointer to the associated IPv6 Address, or nullptr if iterator is done.
+         *
+         */
+        const Ip6::Address *GetAddress(void) const;
+
+        /**
+         * This method indicates whether the iterator has reached end of the list.
+         *
+         * @retval TRUE   There are no more entries in the list (reached end of the list).
+         * @retval FALSE  The current entry is valid.
+         *
+         */
+        bool IsDone(void) const { return (mIndex >= kMaxIndex); }
+
+        /**
+         * This method overloads `++` operator (pre-increment) to advance the iterator.
+         *
+         * The iterator is moved to point to the next `Address` entry.  If there are no more `Ip6::Address` entries
+         * `IsDone()` returns `true`.
+         *
+         */
+        void operator++(void) { mIndex++, Update(); }
+
+        /**
+         * This method overloads `++` operator (post-increment) to advance the iterator.
+         *
+         * The iterator is moved to point to the next `Address` entry.  If there are no more `Ip6::Address` entries
+         *  `IsDone()` returns `true`.
+         *
+         */
+        void operator++(int) { mIndex++, Update(); }
+
+        /**
+         * This method overloads the `*` dereference operator and gets a reference to `Ip6::Address` to which the
+         * iterator is currently pointing.
+         *
+         * This method MUST be used when the iterator is not done (i.e., `IsDone()` returns `false`).
+         *
+         * @returns A reference to the `Ip6::Address` entry currently pointed by the iterator.
+         *
+         */
+        const Ip6::Address &operator*(void)const { return *GetAddress(); }
+
+        /**
+         * This method overloads operator `==` to evaluate whether or not two `Iterator` instances are equal.
+         *
+         * This method MUST be used when the two iterators are associated with the same `Child` entry.
+         *
+         * @param[in]  aOther  The other `Iterator` to compare with.
+         *
+         * @retval TRUE   If the two `Iterator` objects are equal.
+         * @retval FALSE  If the two `Iterator` objects are not equal.
+         *
+         */
+        bool operator==(const AddressIterator &aOther) const { return (mIndex == aOther.mIndex); }
+
+        /**
+         * This method overloads operator `!=` to evaluate whether or not two `Iterator` instances are unequal.
+         *
+         * This method MUST be used when the two iterators are associated with the same `Child` entry.
+         *
+         * @param[in]  aOther  The other `Iterator` to compare with.
+         *
+         * @retval TRUE   If the two `Iterator` objects are unequal.
+         * @retval FALSE  If the two `Iterator` objects are not unequal.
+         *
+         */
+        bool operator!=(const AddressIterator &aOther) const { return !(*this == aOther); }
 
     private:
-        void Increment(void) { mIndex++; }
+        enum IteratorType : uint8_t
+        {
+            kEndIterator,
+        };
 
-        otChildIp6AddressIterator mIndex;
+        enum : uint16_t
+        {
+            kMaxIndex = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD,
+        };
+
+        AddressIterator(const Child &aChild, IteratorType)
+            : mChild(aChild)
+            , mIndex(kMaxIndex)
+        {
+        }
+
+        void Update(void);
+
+        const Child &            mChild;
+        Ip6::Address::TypeFilter mFilter;
+        Index                    mIndex;
+        Ip6::Address             mMeshLocalAddress;
     };
 
     /**
@@ -593,16 +702,26 @@ public:
     const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mMeshLocalIid; }
 
     /**
-     * This method gets the next IPv6 address in the list.
+     * This method enables range-based `for` loop iteration over all (or a subset of) IPv6 addresses.
      *
-     * @param[inout] aIterator           A reference to an IPv6 address iterator.
-     * @param[out]   aAddress            A reference to an IPv6 address to provide the next address (if any).
+     * This method should be used as follows: to iterate over all addresses
      *
-     * @retval       OT_ERROR_NONE       Successfully found the next address and updated @p aAddress and @p aIterator.
-     * @retval       OT_ERROR_NOT_FOUND  No subsequent IPv6 address exists in the IPv6 address list.
+     *     for (const Ip6::Address &address : child.IterateIp6Addresses()) { ... }
+     *
+     * or to iterate over a subset of IPv6 addresses determined by a given address type filter
+     *
+     *     for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticast)) { ... }
+     *
+     * @param[in] aFilter  An IPv6 address type filter restricting iteration to certain type of addresses (default is
+     *                     to accept any address type).
+     *
+     * @returns An IteratorBuilder instance.
      *
      */
-    otError GetNextIp6Address(Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const;
+    AddressIteratorBuilder IterateIp6Addresses(Ip6::Address::TypeFilter aFilter = Ip6::Address::kTypeAny) const
+    {
+        return AddressIteratorBuilder(*this, aFilter);
+    }
 
     /**
      * This method adds an IPv6 address to the list.
@@ -753,6 +872,60 @@ public:
 
 #endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    /**
+     * This method returns MLR state of an Ip6 multicast address.
+     *
+     * @note The @p aAdddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
+     *
+     * @param[in] aAddress  The Ip6 multicast address.
+     *
+     * @returns MLR state of the Ip6 multicast address.
+     *
+     */
+    MlrState GetAddressMlrState(const Ip6::Address &aAddress) const;
+
+    /**
+     * This method sets MLR state of an Ip6 multicast address.
+     *
+     * @note The @p aAdddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
+     *
+     * @param[in] aAddress  The Ip6 multicast address.
+     * @param[in] aState    The target MLR state.
+     *
+     */
+    void SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState);
+
+    /**
+     * This method returns if the Child has Ip6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     *
+     * @param[in] aAddress  The Ip6 address.
+     *
+     * @retval true   If the Child has Ip6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * @retval false  If the Child does not have Ip6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     *
+     */
+    bool HasMlrRegisteredAddress(const Ip6::Address &aAddress) const;
+
+    /**
+     * This method returns if the Child has any Ip6 address of MLR state `kMlrStateRegistered`.
+     *
+     * @retval true   If the Child has any Ip6 address of MLR state `kMlrStateRegistered`.
+     * @retval false  If the Child does not have any Ip6 address of MLR state `kMlrStateRegistered`.
+     *
+     */
+    bool HasAnyMlrRegisteredAddress(void) const { return mMlrRegisteredMask.HasAny(); }
+
+    /**
+     * This method returns if the Child has any Ip6 address of MLR state `kMlrStateToRegister`.
+     *
+     * @retval true   If the Child has any Ip6 address of MLR state `kMlrStateToRegister`.
+     * @retval false  If the Child does not have any Ip6 address of MLR state `kMlrStateToRegister`.
+     *
+     */
+    bool HasAnyMlrToRegisterAddress(void) const { return mMlrToRegisterMask.HasAny(); }
+#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+
 private:
 #if OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD < 2
 #error OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD should be at least set to 2.
@@ -763,11 +936,35 @@ private:
         kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1,
     };
 
-    uint8_t                  mNetworkDataVersion;           ///< Current Network Data version
+    typedef BitVector<kNumIp6Addresses> ChildIp6AddressMask;
+
+    class AddressIteratorBuilder
+    {
+    public:
+        AddressIteratorBuilder(const Child &aChild, Ip6::Address::TypeFilter aFilter)
+            : mChild(aChild)
+            , mFilter(aFilter)
+        {
+        }
+
+        AddressIterator begin(void) { return AddressIterator(mChild, mFilter); }
+        AddressIterator end(void) { return AddressIterator(mChild, AddressIterator::kEndIterator); }
+
+    private:
+        const Child &            mChild;
+        Ip6::Address::TypeFilter mFilter;
+    };
+
     Ip6::InterfaceIdentifier mMeshLocalIid;                 ///< IPv6 address IID for mesh-local address
     Ip6::Address             mIp6Address[kNumIp6Addresses]; ///< Registered IPv6 addresses
+    uint32_t                 mTimeout;                      ///< Child timeout
 
-    uint32_t mTimeout; ///< Child timeout
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    ChildIp6AddressMask mMlrToRegisterMask;
+    ChildIp6AddressMask mMlrRegisteredMask;
+#endif
+
+    uint8_t mNetworkDataVersion; ///< Current Network Data version
 
     union
     {

@@ -36,7 +36,10 @@
 
 #include "openthread-core-config.h"
 
-#include "debug.hpp"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/encoding.hpp"
+#include "common/equatable.hpp"
 
 namespace ot {
 
@@ -83,6 +86,7 @@ public:
     void Set(uint16_t aIndex)
     {
         OT_ASSERT(aIndex < N);
+
         mMask[aIndex / 8] |= 0x80 >> (aIndex % 8);
     }
 
@@ -95,6 +99,7 @@ public:
     void Clear(uint16_t aIndex)
     {
         OT_ASSERT(aIndex < N);
+
         mMask[aIndex / 8] &= ~(0x80 >> (aIndex % 8));
     }
 

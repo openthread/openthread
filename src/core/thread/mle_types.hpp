@@ -272,6 +272,8 @@ enum
 static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin,
               "kMlrTimeoutDefault must be larger than or equal to kMlrTimeoutMin");
 
+static_assert(Mle::kParentAggregateDelay > 1, "kParentAggregateDelay should be larger than 1 second");
+
 /**
  * State change of Child's DUA
  *
@@ -282,6 +284,7 @@ enum class ChildDuaState : uint8_t
     kChanged, ///< A different DUA registered by the Child via Address Registration.
     kRemoved, ///< DUA registered by the Child is removed and not in Address Registration.
 };
+
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**

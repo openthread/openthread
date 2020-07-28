@@ -325,6 +325,18 @@ public:
     };
 
     /**
+     * This enumeration defines IPv6 address type filter.
+     *
+     */
+    enum TypeFilter : uint8_t
+    {
+        kTypeAny,                           ///< Accept any IPv6 address (unicast or multicast).
+        kTypeUnicast,                       ///< Accept unicast IPv6 addresses only.
+        kTypeMulticast,                     ///< Accept multicast IPv6 addresses only.
+        kTypeMulticastLargerThanRealmLocal, ///< Accept multicast IPv6 addresses with scope larger than Realm Local.
+    };
+
+    /**
      * This type defines the fixed-length `String` object returned from `ToString()`.
      *
      */
@@ -617,6 +629,17 @@ public:
      *
      */
     uint8_t PrefixMatch(const otIp6Address &aOther) const;
+
+    /**
+     * This method indicates whether address matches a given type filter.
+     *
+     * @param[in] aFilter   An address type filter.
+     *
+     * @retval TRUE   The address matches @p aFilter.
+     * @retval FALSE  The address does not match @p aFilter.
+     *
+     */
+    bool MatchesFilter(TypeFilter aFilter) const;
 
     /**
      * This method converts an IPv6 address string to binary.

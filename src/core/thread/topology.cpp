@@ -111,6 +111,39 @@ void Neighbor::GenerateChallenge(void)
         Random::Crypto::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge)));
 }
 
+const Ip6::Address *Child::AddressIterator::GetAddress(void) const
+{
+    // `mIndex` value of zero indicates mesh-local IPv6 address.
+    // Non-zero value specifies the index into address array starting
+    // from one for first element (i.e, `mIndex - 1` gives the array
+    // index).
+
+    return (mIndex == 0) ? &mMeshLocalAddress : ((mIndex < kMaxIndex) ? &mChild.mIp6Address[mIndex - 1] : nullptr);
+}
+
+void Child::AddressIterator::Update(void)
+{
+    const Ip6::Address *address;
+
+    while (true)
+    {
+        if ((mIndex == 0) && (mChild.GetMeshLocalIp6Address(mMeshLocalAddress) != OT_ERROR_NONE))
+        {
+            mIndex++;
+        }
+
+        address = GetAddress();
+
+        VerifyOrExit((address != nullptr) && !address->IsUnspecified(), mIndex = kMaxIndex);
+
+        VerifyOrExit(!address->MatchesFilter(mFilter), OT_NOOP);
+        mIndex++;
+    }
+
+exit:
+    return;
+}
+
 void Child::Clear(void)
 {
     Instance &instance = GetInstance();
@@ -123,6 +156,10 @@ void Child::ClearIp6Addresses(void)
 {
     mMeshLocalIid.Clear();
     memset(mIp6Address, 0, sizeof(mIp6Address));
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    mMlrToRegisterMask.ClearAll();
+    mMlrRegisteredMask.ClearAll();
+#endif
 }
 
 otError Child::GetMeshLocalIp6Address(Ip6::Address &aAddress) const
@@ -133,31 +170,6 @@ otError Child::GetMeshLocalIp6Address(Ip6::Address &aAddress) const
 
     aAddress.SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
     aAddress.SetIid(mMeshLocalIid);
-
-exit:
-    return error;
-}
-
-otError Child::GetNextIp6Address(Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const
-{
-    otError                   error = OT_ERROR_NONE;
-    otChildIp6AddressIterator index;
-
-    // Index zero corresponds to the Mesh Local IPv6 address (if any).
-
-    if (aIterator.Get() == 0)
-    {
-        aIterator.Increment();
-        VerifyOrExit(GetMeshLocalIp6Address(aAddress) == OT_ERROR_NOT_FOUND, OT_NOOP);
-    }
-
-    index = aIterator.Get() - 1;
-
-    VerifyOrExit(index < kNumIp6Addresses, error = OT_ERROR_NOT_FOUND);
-
-    VerifyOrExit(!mIp6Address[index].IsUnspecified(), error = OT_ERROR_NOT_FOUND);
-    aAddress = mIp6Address[index];
-    aIterator.Increment();
 
 exit:
     return error;
@@ -285,6 +297,66 @@ void Child::GenerateChallenge(void)
 {
     IgnoreError(Random::Crypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge)));
 }
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+bool Child::HasMlrRegisteredAddress(const Ip6::Address &aAddress) const
+{
+    bool has = false;
+
+    VerifyOrExit(mMlrRegisteredMask.HasAny(), OT_NOOP);
+
+    for (const Ip6::Address &address : IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+    {
+        if (GetAddressMlrState(address) == kMlrStateRegistered && address == aAddress)
+        {
+            ExitNow(has = true);
+        }
+    }
+
+exit:
+    return has;
+}
+
+MlrState Child::GetAddressMlrState(const Ip6::Address &aAddress) const
+{
+    uint16_t addressIndex;
+
+    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < OT_ARRAY_END(mIp6Address));
+
+    addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
+
+    return mMlrToRegisterMask.Get(addressIndex)
+               ? kMlrStateToRegister
+               : (mMlrRegisteredMask.Get(addressIndex) ? kMlrStateRegistered : kMlrStateRegistering);
+}
+
+void Child::SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState)
+{
+    uint16_t addressIndex;
+
+    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < OT_ARRAY_END(mIp6Address));
+
+    addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
+
+    if (aState == kMlrStateToRegister)
+    {
+        mMlrToRegisterMask.Set(addressIndex);
+    }
+    else
+    {
+        mMlrToRegisterMask.Clear(addressIndex);
+    }
+
+    if (aState == kMlrStateRegistered)
+    {
+        mMlrRegisteredMask.Set(addressIndex);
+    }
+    else
+    {
+        mMlrRegisteredMask.Clear(addressIndex);
+    }
+}
+#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 void Router::Clear(void)
 {

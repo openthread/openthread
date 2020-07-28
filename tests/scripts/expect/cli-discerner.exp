@@ -29,56 +29,57 @@
 
 source "tests/scripts/expect/_common.exp"
 
-proc setup_nodes {} {
-    # Sets up a Thread network with 2 nodes, spawn_1 as the leader and spawn_2
-    # as a child.
+setup_leader
 
-    global spawn_1
-    global spawn_2
-    global spawn_id
-    global env
+set pskd "J01NME"
+set discerner "0xabc/12"
 
-    set spawn_2 [spawn_node 2]
-    set psk "J01NME"
+send "commissioner start\n"
+expect "Done"
+expect "Commissioner: active"
+send "commissioner joiner add 1/0 $pskd\n"
+expect "InvalidArgs"
+send "commissioner joiner add $discerner $pskd\n"
+expect "Done"
 
-    set spawn_id $spawn_2
-    send "eui64\n"
-    expect -re {([0-9a-f]{16})}
-    set eui64 $expect_out(1,string)
-    expect "Done"
+set spawn_2 [spawn_node 2]
 
-    setup_leader
+set spawn_id $spawn_2
+send "mode rs\n"
+expect "Done"
+send "ifconfig up\n"
+expect "Done"
+send "joiner discerner\n"
+expect "NotFound"
+send "joiner discerner 1/1 2\n"
+expect "InvalidArgs"
+send "joiner discerner 1\n"
+expect "InvalidArgs"
+send "joiner discerner 1/\n"
+expect "InvalidArgs"
+send "joiner discerner 1/128\n"
+expect "InvalidArgs"
+send "joiner discerner 1/-1\n"
+expect "InvalidArgs"
+send "joiner discerner 1/0\n"
+expect "InvalidArgs"
+send "joiner discerner invalid/20\n"
+expect "InvalidArgs"
+send "joiner discerner clear\n"
+expect "Done"
+send "joiner discerner $discerner\n"
+expect "Done"
+send "joiner discerner\n"
+expect "$discerner"
+expect "Done"
+send "joiner start $pskd\n"
+expect "Done"
+wait_for "" "Join success" "Join failed"
+send "thread start\n"
+expect "Done"
+wait_for "state" "child"
+expect "Done"
 
-    set spawn_id $spawn_1
-    send "commissioner start\n"
-    expect "Done"
-    expect "Commissioner: active"
-    send "commissioner joiner add $eui64 $psk\n"
-    expect "Done"
-    send "channel\n"
-    expect -re {(\d+)}
-    set channel $expect_out(1,string)
-    expect "Done"
+dispose
 
-    set spawn_id $spawn_2
-    send "mode rs\n"
-    expect "Done"
-    send "ifconfig up\n"
-    expect "Done"
-    send "joiner start $psk\n"
-    expect "Done"
-    wait_for "" "Join success"
-    send "thread start\n"
-    expect "Done"
-    wait_for "state" "child"
-    expect "Done"
-}
-
-proc dispose_nodes {} {
-    global spawn_2
-    global spawn_id
-
-    dispose_leader
-    set spawn_id $spawn_2
-    dispose
-}
+dispose_leader

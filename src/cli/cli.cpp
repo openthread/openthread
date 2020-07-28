@@ -399,6 +399,30 @@ otError Interpreter::ParseUnsignedLong(char *aString, unsigned long &aUnsignedLo
     return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_INVALID_ARGS;
 }
 
+otError Interpreter::ParseJoinerDiscerner(char *aString, otJoinerDiscerner &aDiscerner)
+{
+    otError       error     = OT_ERROR_NONE;
+    char *        separator = strstr(aString, "/");
+    unsigned long length;
+
+    VerifyOrExit(separator != nullptr, error = OT_ERROR_NOT_FOUND);
+
+    SuccessOrExit(error = ParseUnsignedLong(separator + 1, length));
+    VerifyOrExit(length > 0 && length <= 64, error = OT_ERROR_INVALID_ARGS);
+
+    {
+        char *             end;
+        unsigned long long value = strtoull(aString, &end, 0);
+        aDiscerner.mValue        = value;
+        VerifyOrExit(end == separator, error = OT_ERROR_INVALID_ARGS);
+    }
+
+    aDiscerner.mLength = static_cast<uint8_t>(length);
+
+exit:
+    return error;
+}
+
 otError Interpreter::ParsePingInterval(const char *aString, uint32_t &aInterval)
 {
     otError        error    = OT_ERROR_NONE;

@@ -227,7 +227,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
     Get<BackboneRouter::Local>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
 #endif
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     Get<MlrManager>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
 #endif
 
