@@ -78,24 +78,16 @@ public:
     }
 
     /**
-     * This method sets or clears the mask of a given index.
+     * This method sets the mask of a given index.
      *
      * @param[in] aIndex  The index.
-     * @param[in] aSet    TRUE to sets the mask, or FALSE to clear the mask.
      *
      */
-    void Set(uint16_t aIndex, bool aSet = true)
+    void Set(uint16_t aIndex)
     {
         OT_ASSERT(aIndex < N);
 
-        if (aSet)
-        {
-            mMask[aIndex / 8] |= 0x80 >> (aIndex % 8);
-        }
-        else
-        {
-            mMask[aIndex / 8] &= ~(0x80 >> (aIndex % 8));
-        }
+        mMask[aIndex / 8] |= 0x80 >> (aIndex % 8);
     }
 
     /**
@@ -104,7 +96,12 @@ public:
      * @param[in] aIndex  The index.
      *
      */
-    void Clear(uint16_t aIndex) { Set(aIndex, false); }
+    void Clear(uint16_t aIndex)
+    {
+        OT_ASSERT(aIndex < N);
+
+        mMask[aIndex / 8] &= ~(0x80 >> (aIndex % 8));
+    }
 
     /**
      * This method clears all indexes.

@@ -318,8 +318,23 @@ void Child::SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState)
 
     addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
 
-    mMlrToRegisterMask.Set(addressIndex, aState == kMlrStateToRegister);
-    mMlrRegisteredMask.Set(addressIndex, aState == kMlrStateRegistered);
+    if (aState == kMlrStateToRegister)
+    {
+        mMlrToRegisterMask.Set(addressIndex);
+    }
+    else
+    {
+        mMlrToRegisterMask.Clear(addressIndex);
+    }
+
+    if (aState == kMlrStateRegistered)
+    {
+        mMlrRegisteredMask.Set(addressIndex);
+    }
+    else
+    {
+        mMlrRegisteredMask.Clear(addressIndex);
+    }
 }
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
