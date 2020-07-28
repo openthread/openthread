@@ -156,6 +156,10 @@ void Child::ClearIp6Addresses(void)
 {
     mMeshLocalIid.Clear();
     memset(mIp6Address, 0, sizeof(mIp6Address));
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    mMlrToRegisterMask.ClearAll();
+    mMlrRegisteredMask.ClearAll();
+#endif
 }
 
 otError Child::GetMeshLocalIp6Address(Ip6::Address &aAddress) const
@@ -273,6 +277,66 @@ void Child::GenerateChallenge(void)
 {
     IgnoreError(Random::Crypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge)));
 }
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+bool Child::HasMlrRegisteredAddress(const Ip6::Address &aAddress) const
+{
+    bool has = false;
+
+    VerifyOrExit(mMlrRegisteredMask.HasAny(), OT_NOOP);
+
+    for (const Ip6::Address &address : IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+    {
+        if (GetAddressMlrState(address) == kMlrStateRegistered && address == aAddress)
+        {
+            ExitNow(has = true);
+        }
+    }
+
+exit:
+    return has;
+}
+
+MlrState Child::GetAddressMlrState(const Ip6::Address &aAddress) const
+{
+    uint16_t addressIndex;
+
+    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < OT_ARRAY_END(mIp6Address));
+
+    addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
+
+    return mMlrToRegisterMask.Get(addressIndex)
+               ? kMlrStateToRegister
+               : (mMlrRegisteredMask.Get(addressIndex) ? kMlrStateRegistered : kMlrStateRegistering);
+}
+
+void Child::SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState)
+{
+    uint16_t addressIndex;
+
+    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < OT_ARRAY_END(mIp6Address));
+
+    addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
+
+    if (aState == kMlrStateToRegister)
+    {
+        mMlrToRegisterMask.Set(addressIndex);
+    }
+    else
+    {
+        mMlrToRegisterMask.Clear(addressIndex);
+    }
+
+    if (aState == kMlrStateRegistered)
+    {
+        mMlrRegisteredMask.Set(addressIndex);
+    }
+    else
+    {
+        mMlrRegisteredMask.Clear(addressIndex);
+    }
+}
+#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 void Router::Clear(void)
 {

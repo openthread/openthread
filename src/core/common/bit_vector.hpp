@@ -86,6 +86,7 @@ public:
     void Set(uint16_t aIndex)
     {
         OT_ASSERT(aIndex < N);
+
         mMask[aIndex / 8] |= 0x80 >> (aIndex % 8);
     }
 
@@ -98,6 +99,7 @@ public:
     void Clear(uint16_t aIndex)
     {
         OT_ASSERT(aIndex < N);
+
         mMask[aIndex / 8] &= ~(0x80 >> (aIndex % 8));
     }
 

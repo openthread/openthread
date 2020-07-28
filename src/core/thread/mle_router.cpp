@@ -2040,11 +2040,34 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     uint16_t                 offset          = 0;
     uint16_t                 end             = 0;
 
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    Ip6::Address oldMlrRegisteredAddresses[OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1];
+    uint16_t     oldMlrRegisteredAddressNum = 0;
+#endif
+
     VerifyOrExit(aMessage.Read(aOffset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
     VerifyOrExit(tlv.GetLength() <= (aMessage.GetLength() - aOffset - sizeof(tlv)), error = OT_ERROR_PARSE);
 
     offset = aOffset + sizeof(tlv);
     end    = offset + tlv.GetLength();
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    // Retrieve registered multicast addresses of the Child
+    if (aChild.HasAnyMlrRegisteredAddress())
+    {
+        OT_ASSERT(aChild.IsStateValid());
+
+        for (const Ip6::Address &childAddress :
+             aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+        {
+            if (aChild.GetAddressMlrState(childAddress) == kMlrStateRegistered)
+            {
+                oldMlrRegisteredAddresses[oldMlrRegisteredAddressNum++] = childAddress;
+            }
+        }
+    }
+#endif
+
     aChild.ClearIp6Addresses();
 
     while (offset < end)
@@ -2133,6 +2156,10 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         // Clear EID-to-RLOC cache for the unicast address registered by the child.
         Get<AddressResolver>().Remove(address);
     }
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    Get<MlrManager>().UpdateProxiedSubscriptions(aChild, oldMlrRegisteredAddresses, oldMlrRegisteredAddressNum);
+#endif
 
     if (registeredCount == 0)
     {
@@ -4626,6 +4653,11 @@ void MleRouter::SetChildStateToValid(Child &aChild)
 
     aChild.SetState(Neighbor::kStateValid);
     IgnoreError(StoreChild(aChild));
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    Get<MlrManager>().UpdateProxiedSubscriptions(aChild, nullptr, 0);
+#endif
+
     Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED, aChild);
 
 exit:

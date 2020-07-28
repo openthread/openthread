@@ -862,6 +862,60 @@ public:
 
 #endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    /**
+     * This method returns MLR state of an Ip6 multicast address.
+     *
+     * @note The @p aAdddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
+     *
+     * @param[in] aAddress  The Ip6 multicast address.
+     *
+     * @returns MLR state of the Ip6 multicast address.
+     *
+     */
+    MlrState GetAddressMlrState(const Ip6::Address &aAddress) const;
+
+    /**
+     * This method sets MLR state of an Ip6 multicast address.
+     *
+     * @note The @p aAdddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
+     *
+     * @param[in] aAddress  The Ip6 multicast address.
+     * @param[in] aState    The target MLR state.
+     *
+     */
+    void SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState);
+
+    /**
+     * This method returns if the Child has Ip6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     *
+     * @param[in] aAddress  The Ip6 address.
+     *
+     * @retval true   If the Child has Ip6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * @retval false  If the Child does not have Ip6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     *
+     */
+    bool HasMlrRegisteredAddress(const Ip6::Address &aAddress) const;
+
+    /**
+     * This method returns if the Child has any Ip6 address of MLR state `kMlrStateRegistered`.
+     *
+     * @retval true   If the Child has any Ip6 address of MLR state `kMlrStateRegistered`.
+     * @retval false  If the Child does not have any Ip6 address of MLR state `kMlrStateRegistered`.
+     *
+     */
+    bool HasAnyMlrRegisteredAddress(void) const { return mMlrRegisteredMask.HasAny(); }
+
+    /**
+     * This method returns if the Child has any Ip6 address of MLR state `kMlrStateToRegister`.
+     *
+     * @retval true   If the Child has any Ip6 address of MLR state `kMlrStateToRegister`.
+     * @retval false  If the Child does not have any Ip6 address of MLR state `kMlrStateToRegister`.
+     *
+     */
+    bool HasAnyMlrToRegisterAddress(void) const { return mMlrToRegisterMask.HasAny(); }
+#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+
 private:
 #if OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD < 2
 #error OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD should be at least set to 2.
@@ -871,6 +925,8 @@ private:
     {
         kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1,
     };
+
+    typedef BitVector<kNumIp6Addresses> ChildIp6AddressMask;
 
     class AddressIteratorBuilder
     {
@@ -889,11 +945,16 @@ private:
         Ip6::Address::TypeFilter mFilter;
     };
 
-    uint8_t                  mNetworkDataVersion;           ///< Current Network Data version
     Ip6::InterfaceIdentifier mMeshLocalIid;                 ///< IPv6 address IID for mesh-local address
     Ip6::Address             mIp6Address[kNumIp6Addresses]; ///< Registered IPv6 addresses
+    uint32_t                 mTimeout;                      ///< Child timeout
 
-    uint32_t mTimeout; ///< Child timeout
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    ChildIp6AddressMask mMlrToRegisterMask;
+    ChildIp6AddressMask mMlrRegisteredMask;
+#endif
+
+    uint8_t mNetworkDataVersion; ///< Current Network Data version
 
     union
     {
