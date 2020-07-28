@@ -81,14 +81,14 @@ public:
      * This method sets the mask of a given index.
      *
      * @param[in] aIndex  The index.
-     * @param[in] aSet    TRUE to set the mask, or FALSE to clear the mask.
+     * @param[in] aValue  TRUE to set the mask, or FALSE to clear the mask.
      *
      */
-    void Set(uint16_t aIndex, bool aSet)
+    void Set(uint16_t aIndex, bool aValue)
     {
         OT_ASSERT(aIndex < N);
 
-        if (aSet)
+        if (aValue)
         {
             mMask[aIndex / 8] |= 0x80 >> (aIndex % 8);
         }
