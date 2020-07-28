@@ -27,7 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-proc wait_for {command expected} {
+proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
     set result 0
     set timeout 1
     for {set i 0} {$i < 20} {incr i} {
@@ -36,8 +36,11 @@ proc wait_for {command expected} {
         }
 
         expect {
-            -re $expected {
+            -re $success {
                 set result 1
+            }
+            -re $failure {
+                exit 1
             }
             timeout {
                 # Do nothing
@@ -64,9 +67,38 @@ proc spawn_node {id} {
     return $spawn_id
 }
 
+proc setup_leader {} {
+    # Sets up a Thread network spawn_1 as the leader.
+    global spawn_1
+    global spawn_id
+    global env
+
+    set spawn_1 [spawn_node 1]
+
+    set spawn_id $spawn_1
+    send "dataset init new\n"
+    expect "Done"
+    send "dataset commit active\n"
+    expect "Done"
+    send "ifconfig up\n"
+    expect "Done"
+    send "thread start\n"
+    expect "Done"
+    wait_for "state" "leader"
+    expect "Done"
+}
+
 proc dispose {} {
     send "\x04"
     expect eof
+}
+
+proc dispose_leader {} {
+    global spawn_1
+    global spawn_id
+
+    set spawn_id $spawn_1
+    dispose
 }
 
 set timeout 10
