@@ -33,16 +33,17 @@ Done
 
 Usage: `joiner discerner [discerner]`
 
-Print or set the Joiner Discerner.
+Print or set the Joiner Discerner. Note this value takes the place of the
+place of EUI-64 during the joiner session of Thread commissioning.
 
-- discerner: `*` to clear discener, `number/length` to set discerner
+- discerner: `clear` to clear discerner, `number/length` to set discerner
 
 
 ```bash
 > joiner discerner 0xabc/12
 Done
 > joiner discerner
-abc/12
+0xabc/12
 Done
 > joiner discerner *
 Done

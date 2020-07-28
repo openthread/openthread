@@ -125,6 +125,7 @@ otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
 
     if (strcmp(aArgs[2], "*") == 0)
     {
+        // Intentionally empty
     }
     else if ((error = Interpreter::ParseJoinerDiscerner(aArgs[2], discerner)) == OT_ERROR_NOT_FOUND)
     {

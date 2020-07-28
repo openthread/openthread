@@ -57,7 +57,7 @@ otError Joiner::ProcessDiscerner(uint8_t aArgsLength, char *aArgs[])
         otJoinerDiscerner discerner;
 
         memset(&discerner, 0, sizeof(discerner));
-        if (strcmp(aArgs[1], "*") == 0)
+        if (strcmp(aArgs[1], "clear") == 0)
         {
             SuccessOrExit(error = otJoinerSetDiscerner(mInterpreter.mInstance, nullptr));
         }
