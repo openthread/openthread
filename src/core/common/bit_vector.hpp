@@ -59,7 +59,7 @@ namespace ot {
  * @tparam N  Specifies the number of bits.
  *
  */
-template <uint16_t N> class BitVector : public Equatable<BitVector<N>>
+template <uint16_t N> class BitVector : public Equatable<BitVector<N>>, public Clearable<BitVector<N>>
 {
 public:
     /**
@@ -81,33 +81,22 @@ public:
      * This method sets the mask of a given index.
      *
      * @param[in] aIndex  The index.
+     * @param[in] aSet    TRUE to set the mask, or FALSE to clear the mask.
      *
      */
-    void Set(uint16_t aIndex)
+    void Set(uint16_t aIndex, bool aSet)
     {
         OT_ASSERT(aIndex < N);
 
-        mMask[aIndex / 8] |= 0x80 >> (aIndex % 8);
+        if (aSet)
+        {
+            mMask[aIndex / 8] |= 0x80 >> (aIndex % 8);
+        }
+        else
+        {
+            mMask[aIndex / 8] &= ~(0x80 >> (aIndex % 8));
+        };
     }
-
-    /**
-     * This method clears the mask of a given index.
-     *
-     * @param[in] aIndex  The index.
-     *
-     */
-    void Clear(uint16_t aIndex)
-    {
-        OT_ASSERT(aIndex < N);
-
-        mMask[aIndex / 8] &= ~(0x80 >> (aIndex % 8));
-    }
-
-    /**
-     * This method clears all indexes.
-     *
-     */
-    void ClearAll(void) { memset(mMask, 0, sizeof(mMask)); }
 
     /**
      * This method returns if any mask is set.
