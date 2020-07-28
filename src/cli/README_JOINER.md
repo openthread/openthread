@@ -43,7 +43,7 @@ Done
 > joiner discerner
 0xabc/12
 Done
-> joiner discerner *
+> joiner discerner clear
 Done
 ```
 
