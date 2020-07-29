@@ -65,7 +65,7 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     if(OT_COVERAGE)
         target_compile_definitions(ot-config INTERFACE "OPENTHREAD_ENABLE_COVERAGE=1")
         target_compile_options(ot-config INTERFACE -g -O0 --coverage)
-        target_link_libraries(ot-config INTERFACE --coverage)
+        target_link_options(ot-config INTERFACE --coverage)
     endif()
 
     set(OT_CFLAGS
