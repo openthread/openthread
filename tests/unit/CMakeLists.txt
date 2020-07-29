@@ -33,7 +33,6 @@ set(COMMON_SOURCES
 
 set(COMMON_LIBS
     openthread-ftd
-    openthread-ncp-ftd
     ot-config
     ${OT_MBEDTLS}
     util
