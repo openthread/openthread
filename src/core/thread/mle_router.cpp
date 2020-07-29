@@ -3216,7 +3216,7 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
             SuccessOrExit(error = AppendLinkFrameCounter(*message));
             break;
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         case Tlv::kCslAccuracy:
             SuccessOrExit(error = AppendCslAccuracy(*message));
             break;

@@ -591,22 +591,6 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
     }
 }
 
-uint64_t otPlatTimeGet(void)
-{
-    struct timeval tv;
-
-    gettimeofday(&tv, nullptr);
-
-    return (uint64_t)tv.tv_sec * 1000000 + (uint64_t)tv.tv_usec;
-}
-
-uint64_t otPlatRadioGetNow(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    return otPlatTimeGet();
-}
-
 uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return 0;

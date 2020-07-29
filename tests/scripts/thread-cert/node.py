@@ -664,6 +664,10 @@ class Node:
         self.send_command('pollperiod %d' % pollperiod)
         self._expect('Done')
 
+    def get_csl_info(self):
+        self.send_command('csl')
+        self._expect('Done')
+
     def set_csl_channel(self, csl_channel):
         self.send_command('csl channel %d' % csl_channel)
         self._expect('Done')

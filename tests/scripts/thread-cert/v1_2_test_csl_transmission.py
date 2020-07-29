@@ -36,6 +36,7 @@ SSED_1 = 2
 
 CSL_PERIOD = 500 * 6.25  # 500ms
 CSL_TIMEOUT = 30  # 30s
+CSL_CHANNEL = 12
 
 
 class SSED_CslTransmission(thread_cert.TestCase):
@@ -54,6 +55,9 @@ class SSED_CslTransmission(thread_cert.TestCase):
 
         self.nodes[SSED_1].set_csl_period(CSL_PERIOD)
         self.nodes[SSED_1].set_csl_timeout(CSL_TIMEOUT)
+        self.nodes[SSED_1].set_csl_channel(CSL_CHANNEL)
+
+        self.nodes[SSED_1].get_csl_info()
 
         self.nodes[LEADER].start()
         self.simulator.go(5)
