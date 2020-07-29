@@ -905,17 +905,6 @@ otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const o
 void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime);
 
 /**
- * The radio driver calls this method to notify OpenThread that an ACK is
- * about to be transmitted, currently it does nothing.
- *
- * @param[in]   aInstance   The OpenThread instance structure.
- * @param[in]   aFrame      A pointer to the first byte of the ACK frame.
- * @param[in]   aLength     The length of the ACK frame.
- *
- */
-void otPlatRadioTxAckStarted(otInstance *aInstance, const uint8_t *aFrame, uint16_t aLength);
-
-/**
  * @}
  *
  */

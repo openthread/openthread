@@ -89,7 +89,7 @@ struct RadioMessage
 
 static void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame);
 static void radioSendMessage(otInstance *aInstance);
-static void radioSendAck(otInstance *aInstance);
+static void radioSendAck(void);
 static void radioProcessFrame(otInstance *aInstance);
 
 static otRadioState        sState = OT_RADIO_STATE_DISABLED;
@@ -824,7 +824,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 }
 
-void radioSendAck(otInstance *aInstance)
+void radioSendAck(void)
 {
     if (
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
@@ -864,7 +864,6 @@ void radioSendAck(otInstance *aInstance)
     }
 #endif
 
-    otPlatRadioTxAckStarted(aInstance, sAckFrame.mPsdu, sAckFrame.mLength);
     sAckMessage.mChannel = sReceiveFrame.mChannel;
 
     radioComputeCrc(&sAckMessage, sAckFrame.mLength);
@@ -894,7 +893,7 @@ void radioProcessFrame(otInstance *aInstance)
     // generate acknowledgment
     if (otMacFrameIsAckRequested(&sReceiveFrame))
     {
-        radioSendAck(aInstance);
+        radioSendAck();
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         if (otMacFrameIsSecurityEnabled(&sAckFrame))
         {
