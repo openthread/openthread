@@ -56,7 +56,7 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_CLI_TX_BUFFER_SIZE
+ * @def OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE
  *
  * The size of CLI message buffer in bytes.
  *
