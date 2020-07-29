@@ -34,12 +34,12 @@
 #ifndef CLI_CONSOLE_HPP_
 #define CLI_CONSOLE_HPP_
 
+#include "cli_config.h"
 #include "openthread-core-config.h"
 
 #include <openthread/cli.h>
 
 #include "cli/cli.hpp"
-#include "cli/cli_server.hpp"
 
 namespace ot {
 namespace Cli {
@@ -48,16 +48,18 @@ namespace Cli {
  * This class implements the CLI server on top of the CONSOLE platform abstraction.
  *
  */
-class Console : public Server
+class Console : public Interpreter
 {
 public:
     /**
-     * Constructor
+     * This method initializes the Console interpreter.
      *
      * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aCallback  A pointer to a callback method.
+     * @param[in]  aContext   A pointer to a user context.
      *
      */
-    explicit Console(Instance *aInstance);
+    static void Initialize(otInstance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext);
 
     /**
      * This method delivers raw characters to the client.
@@ -68,29 +70,17 @@ public:
      * @returns The number of bytes placed in the output queue.
      *
      */
-    virtual int Output(const char *aBuf, uint16_t aBufLength);
-
-    /**
-     * This method sets a callback that is called when console has some output.
-     *
-     * @param[in]  aCallback   A pointer to a callback method.
-     *
-     */
-    void SetOutputCallback(otCliConsoleOutputCallback aCallback);
-
-    /**
-     * This method sets a context that is returned with the callback.
-     *
-     * @param[in]  aContext   A pointer to a user context.
-     *
-     */
-    void SetContext(void *aContext);
-
-    void ReceiveTask(char *aBuf, uint16_t aBufLength);
+    int Output(const char *aBuf, uint16_t aBufLength);
 
 private:
+    explicit Console(Instance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext);
+
     otCliConsoleOutputCallback mCallback;
     void *                     mContext;
+
+    static Console *sConsole;
+
+    friend class Interpreter;
 };
 
 } // namespace Cli

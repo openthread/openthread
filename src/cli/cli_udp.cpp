@@ -37,7 +37,6 @@
 #include <openthread/udp.h>
 
 #include "cli/cli.hpp"
-#include "cli/cli_server.hpp"
 #include "common/encoding.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
@@ -67,7 +66,7 @@ otError UdpExample::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.mServer->OutputFormat("%s\r\n", command.mName);
+        mInterpreter.OutputFormat("%s\r\n", command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -242,7 +241,7 @@ otError UdpExample::ProcessLinkSecurity(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        mInterpreter.mServer->OutputFormat("%s\r\n", mLinkSecurityEnabled ? "Enabled" : "Disabled");
+        mInterpreter.OutputFormat("%s\r\n", mLinkSecurityEnabled ? "Enabled" : "Disabled");
     }
     else if (strcmp(aArgs[0], "enable") == 0)
     {
@@ -321,14 +320,14 @@ void UdpExample::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMes
     uint8_t buf[1500];
     int     length;
 
-    mInterpreter.mServer->OutputFormat("%d bytes from ", otMessageGetLength(aMessage) - otMessageGetOffset(aMessage));
+    mInterpreter.OutputFormat("%d bytes from ", otMessageGetLength(aMessage) - otMessageGetOffset(aMessage));
     mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
-    mInterpreter.mServer->OutputFormat(" %d ", aMessageInfo->mPeerPort);
+    mInterpreter.OutputFormat(" %d ", aMessageInfo->mPeerPort);
 
     length      = otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, sizeof(buf) - 1);
     buf[length] = '\0';
 
-    mInterpreter.mServer->OutputFormat("%s\r\n", buf);
+    mInterpreter.OutputFormat("%s\r\n", buf);
 }
 
 } // namespace Cli

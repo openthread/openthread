@@ -35,6 +35,8 @@
 #ifndef CONFIG_CLI_H_
 #define CONFIG_CLI_H_
 
+#include <openthread/config.h>
+
 /**
  * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
  *
@@ -73,6 +75,19 @@
  */
 #ifndef OPENTHREAD_CONFIG_UART_CLI_RAW
 #define OPENTHREAD_CONFIG_UART_CLI_RAW 0
+#endif
+
+#define OT_CLI_TRANSPORT_UART (1)
+#define OT_CLI_TRANSPORT_CONSOLE (2)
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_TRANSPORT
+ *
+ * The transport of the CLI.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_TRANSPORT
+#define OPENTHREAD_CONFIG_CLI_TRANSPORT OT_CLI_TRANSPORT_UART
 #endif
 
 #endif // CONFIG_CLI_H_

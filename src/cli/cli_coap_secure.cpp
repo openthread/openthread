@@ -39,7 +39,6 @@
 #include <openthread/ip6.h>
 
 #include "cli/cli.hpp"
-#include "cli/cli_server.hpp"
 // header for place your x509 certificate and private key
 #include "x509_cert_key.hpp"
 
@@ -84,7 +83,7 @@ void CoapSecure::PrintPayload(otMessage *aMessage) const
 
     if (length > 0)
     {
-        mInterpreter.mServer->OutputFormat(" with payload: ");
+        mInterpreter.OutputFormat(" with payload: ");
 
         while (length > 0)
         {
@@ -98,7 +97,7 @@ void CoapSecure::PrintPayload(otMessage *aMessage) const
         }
     }
 
-    mInterpreter.mServer->OutputFormat("\r\n");
+    mInterpreter.OutputFormat("\r\n");
 }
 
 otError CoapSecure::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
@@ -108,7 +107,7 @@ otError CoapSecure::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.mServer->OutputFormat("%s\r\n", command.mName);
+        mInterpreter.OutputFormat("%s\r\n", command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -131,7 +130,7 @@ otError CoapSecure::ProcessResource(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        mInterpreter.mServer->OutputFormat("%s\r\n", mResource.mUriPath);
+        mInterpreter.OutputFormat("%s\r\n", mResource.mUriPath);
     }
 
 exit:
@@ -150,7 +149,7 @@ otError CoapSecure::ProcessSet(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        mInterpreter.mServer->OutputFormat("%s\r\n", mResourceContent);
+        mInterpreter.OutputFormat("%s\r\n", mResourceContent);
     }
 
 exit:
@@ -448,11 +447,11 @@ void CoapSecure::HandleConnected(bool aConnected)
 {
     if (aConnected)
     {
-        mInterpreter.mServer->OutputFormat("coaps connected\r\n");
+        mInterpreter.OutputFormat("coaps connected\r\n");
     }
     else
     {
-        mInterpreter.mServer->OutputFormat("coaps disconnected\r\n");
+        mInterpreter.OutputFormat("coaps disconnected\r\n");
 
         if (mShutdownFlag)
         {
@@ -473,30 +472,30 @@ void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessag
     otMessage *responseMessage = nullptr;
     otCoapCode responseCode    = OT_COAP_CODE_EMPTY;
 
-    mInterpreter.mServer->OutputFormat("coaps request from ");
+    mInterpreter.OutputFormat("coaps request from ");
     mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
-    mInterpreter.mServer->OutputFormat(" ");
+    mInterpreter.OutputFormat(" ");
 
     switch (otCoapMessageGetCode(aMessage))
     {
     case OT_COAP_CODE_GET:
-        mInterpreter.mServer->OutputFormat("GET");
+        mInterpreter.OutputFormat("GET");
         break;
 
     case OT_COAP_CODE_DELETE:
-        mInterpreter.mServer->OutputFormat("DELETE");
+        mInterpreter.OutputFormat("DELETE");
         break;
 
     case OT_COAP_CODE_PUT:
-        mInterpreter.mServer->OutputFormat("PUT");
+        mInterpreter.OutputFormat("PUT");
         break;
 
     case OT_COAP_CODE_POST:
-        mInterpreter.mServer->OutputFormat("POST");
+        mInterpreter.OutputFormat("POST");
         break;
 
     default:
-        mInterpreter.mServer->OutputFormat("Undefined\r\n");
+        mInterpreter.OutputFormat("Undefined\r\n");
         return;
     }
 
@@ -540,14 +539,13 @@ exit:
     {
         if (responseMessage != nullptr)
         {
-            mInterpreter.mServer->OutputFormat("coaps send response error %d: %s\r\n", error,
-                                               otThreadErrorToString(error));
+            mInterpreter.OutputFormat("coaps send response error %d: %s\r\n", error, otThreadErrorToString(error));
             otMessageFree(responseMessage);
         }
     }
     else if (responseCode >= OT_COAP_CODE_RESPONSE_MIN)
     {
-        mInterpreter.mServer->OutputFormat("coaps response sent\r\n");
+        mInterpreter.OutputFormat("coaps response sent\r\n");
     }
 }
 
@@ -562,12 +560,11 @@ void CoapSecure::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessa
 
     if (aError != OT_ERROR_NONE)
     {
-        mInterpreter.mServer->OutputFormat("coaps receive response error %d: %s\r\n", aError,
-                                           otThreadErrorToString(aError));
+        mInterpreter.OutputFormat("coaps receive response error %d: %s\r\n", aError, otThreadErrorToString(aError));
     }
     else
     {
-        mInterpreter.mServer->OutputFormat("coaps response from ");
+        mInterpreter.OutputFormat("coaps response from ");
         mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
 
         PrintPayload(aMessage);

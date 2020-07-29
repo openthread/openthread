@@ -36,6 +36,7 @@
 #include <openthread/platform/logging.h>
 
 #include "openthread-system.h"
+#include "cli/cli_config.h"
 
 #if OPENTHREAD_EXAMPLES_SIMULATION
 #include <setjmp.h>
@@ -106,7 +107,9 @@ pseudo_reset:
 #endif
     assert(instance);
 
+#if OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_UART
     otCliUartInit(instance);
+#endif
 
     while (!otSysPseudoResetWasRequested())
     {
