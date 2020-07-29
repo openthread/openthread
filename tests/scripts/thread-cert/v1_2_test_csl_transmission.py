@@ -67,6 +67,15 @@ class SSED_CslTransmission(thread_cert.TestCase):
         self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.simulator.go(5)
 
+        self.nodes[SSED_1].set_csl_period(0)
+        self.assertFalse(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
+        self.simulator.go(2)
+
+        self.nodes[SSED_1].set_pollperiod(1000)
+        self.simulator.go(2)
+        self.nodes[SSED_1].set_pollperiod(0)
+        self.simulator.go(5)
+
 
 if __name__ == '__main__':
     unittest.main()
