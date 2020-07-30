@@ -40,6 +40,8 @@
 #include <openthread/backbone_router.h>
 #include <openthread/ip6.h>
 
+#include "coap/coap.hpp"
+#include "coap/coap_message.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_address.hpp"
 
@@ -160,8 +162,8 @@ public:
      *
      * @param[in]  aAddress A reference to the address.
      *
-     * @retval true  @p aAddress is a domain unicast address.
-     * @retval false @p aAddress is not a domain unicast address.
+     * @retval true  @p aAddress is a Domain Unicast Address.
+     * @retval false @p aAddress is not a Domain Unicast Address.
      *
      */
     bool IsDomainUnicast(const Ip6::Address &aAddress) const;

@@ -300,6 +300,39 @@ namespace ot {
  */
 #define OT_URI_PATH_MLR "n/mr"
 
+/**
+ * @def OT_URI_PATH_DUA_REGISTRATION_REQUEST
+ *
+ * The URI Path for Domain Unicast Address Registration Request (DUA.req).
+ *
+ */
+#define OT_URI_PATH_DUA_REGISTRATION_REQUEST "n/dr"
+
+/**
+ * @def OT_URI_PATH_DUA_REGISTRATION_NOTIFY
+ *
+ * The URI Path for Domain Unicast Address Registration Notification (DUA.ntf).
+ *
+ */
+#define OT_URI_PATH_DUA_REGISTRATION_NOTIFY "n/dn"
+
+/**
+ * @def OT_URI_PATH_BACKBONE_QUERY
+ *
+ * The URI Path for Backbone Query (BB.qry).
+ *
+ */
+#define OT_URI_PATH_BACKBONE_QUERY "b/bq"
+
+/**
+ * @def OT_URI_PATH_BACKBONE_ANSWER
+ *
+ * The URI Path for Backbone Answer with destination to a link-local unicast address (BB.ans),
+ * or Proactive Backbone Notification with destination to a link-local multicast address (PRO_BB.ntf).
+ *
+ */
+#define OT_URI_PATH_BACKBONE_ANSWER "b/ba"
+
 } // namespace ot
 
 #endif // THREAD_URIS_HPP_

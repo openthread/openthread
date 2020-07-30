@@ -522,6 +522,13 @@ class Node:
         self.remove_prefix(prefix)
         self.register_netdata()
 
+    def set_next_dua_response(self, status, iid=None):
+        cmd = 'bbr mgmt dua {}'.format(status)
+        if iid is not None:
+            cmd += ' ' + str(iid)
+        self.send_command(cmd)
+        self._expect('Done')
+
     def set_dua_iid(self, iid):
         cmd = 'dua iid {}'.format(iid)
         self.send_command(cmd)
@@ -1480,6 +1487,11 @@ class Node:
 
     def udp_check_rx(self, bytes_should_rx):
         self._expect('%d bytes' % bytes_should_rx)
+
+    def set_routereligible(self, enable: bool):
+        cmd = f'routereligible {"enable" if enable else "disable"}'
+        self.send_command(cmd)
+        self._expect('Done')
 
     def router_list(self):
         cmd = 'router list'

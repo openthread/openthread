@@ -514,9 +514,37 @@ void Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     else
     {
-        error = ProcessBackboneRouterLocal(aArgsLength, aArgs);
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        if (strcmp(aArgs[0], "mgmt") == 0)
+        {
+            unsigned long value;
+
+            VerifyOrExit((aArgsLength == 3 || aArgsLength == 4), error = OT_ERROR_INVALID_ARGS);
+
+            if (strcmp(aArgs[1], "dua") == 0)
+            {
+                otIp6InterfaceIdentifier *mlIid = nullptr;
+                otIp6InterfaceIdentifier  iid;
+
+                SuccessOrExit(error = ParseUnsignedLong(aArgs[2], value));
+
+                if (aArgsLength == 4)
+                {
+                    VerifyOrExit(Hex2Bin(aArgs[3], iid.mFields.m8, sizeof(iid)) == sizeof(iid),
+                                 error = OT_ERROR_INVALID_ARGS);
+                    mlIid = &iid;
+                }
+
+                otBackboneRouterConfigNextDuaRegistrationResponse(mInstance, mlIid, static_cast<uint8_t>(value));
+                ExitNow();
+            }
+        }
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        SuccessOrExit(error = ProcessBackboneRouterLocal(aArgsLength, aArgs));
     }
-#endif
+
+exit:
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
     AppendResult(error);
 }

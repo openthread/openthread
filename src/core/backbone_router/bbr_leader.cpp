@@ -227,6 +227,10 @@ void Leader::UpdateBackboneRouterPrimary(void)
 #if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     Get<MlrManager>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
 #endif
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+    Get<DuaManager>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
+#endif
 }
 
 void Leader::UpdateDomainPrefixConfig(void)
@@ -282,8 +286,8 @@ void Leader::UpdateDomainPrefixConfig(void)
     Get<Local>().UpdateAllDomainBackboneRouters(state);
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    Get<DuaManager>().UpdateDomainUnicastAddress(state);
+#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+    Get<DuaManager>().HandleDomainPrefixUpdate(state);
 #endif
 }
 

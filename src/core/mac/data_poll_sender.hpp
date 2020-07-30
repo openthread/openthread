@@ -210,7 +210,7 @@ public:
      * @param[in] aNumFastPolls  If non-zero, number of fast polls to send, if zero, default value is used instead.
      *
      */
-    void SendFastPolls(uint8_t aNumFastPolls);
+    void SendFastPolls(uint8_t aNumFastPolls = 0);
 
     /**
      * This method asks data poll sender to stop fast polls when the expecting response is received.

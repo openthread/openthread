@@ -759,6 +759,16 @@ public:
      */
     bool HasIp6Address(const Ip6::Address &aAddress) const;
 
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+    /**
+     * This method retrieves the Domain Unicast Address registered by the child.
+     *
+     * @returns A pointer to Domain Unicast Address registered by the child if there is.
+     *
+     */
+    const Ip6::Address *GetDomainUnicastAddress(void) const;
+#endif
+
     /**
      * This method gets the child timeout.
      *
