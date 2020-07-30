@@ -91,12 +91,17 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
 {
     const otIp6Prefix *prefix = nullptr;
 
-    if (aState == BackboneRouter::Leader::kDomainPrefixRefreshed)
+    if ((aState == BackboneRouter::Leader::kDomainPrefixRemoved) ||
+        (aState == BackboneRouter::Leader::kDomainPrefixRefreshed))
     {
         if (mIsDuaPending)
         {
             IgnoreError(Get<Coap::Coap>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
         }
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+        RemoveDomainUnicastAddress();
+#endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         if (mChildDuaMask.HasAny())
@@ -108,30 +113,22 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
 #endif
     }
 
-    if ((aState == BackboneRouter::Leader::kDomainPrefixAdded) ||
-        (aState == BackboneRouter::Leader::kDomainPrefixRefreshed) ||
-        (aState == BackboneRouter::Leader::kDomainPrefixUnchanged))
-    {
-        prefix = Get<BackboneRouter::Leader>().GetDomainPrefix();
-
-        OT_ASSERT(prefix != nullptr);
-    }
-
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-    if ((aState == BackboneRouter::Leader::kDomainPrefixRemoved) ||
-        (aState == BackboneRouter::Leader::kDomainPrefixRefreshed))
+    switch (aState)
     {
-        RemoveDomainUnicastAddress();
-    }
+    case BackboneRouter::Leader::kDomainPrefixUnchanged:
+        // In case removed for some reason e.g. the kDuaInvalid response from PBBR forcely
+        VerifyOrExit(!Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()), OT_NOOP);
 
-    VerifyOrExit(aState == BackboneRouter::Leader::kDomainPrefixAdded ||
-                     aState == BackboneRouter::Leader::kDomainPrefixRefreshed ||
-                     (aState == BackboneRouter::Leader::kDomainPrefixUnchanged &&
-                      !Get<ThreadNetif>().HasUnicastAddress(
-                          GetDomainUnicastAddress())) /* in case removed for some reason e.g. the kDuaInvalid response
-                                                         from PBBR forcely */
-                 ,
-                 OT_NOOP);
+        // fall through
+    case BackboneRouter::Leader::kDomainPrefixRefreshed:
+    case BackboneRouter::Leader::kDomainPrefixAdded:
+        prefix = Get<BackboneRouter::Leader>().GetDomainPrefix();
+        OT_ASSERT(prefix != nullptr);
+        break;
+    default:
+        ExitNow();
+    }
 
     mDomainUnicastAddress.mPrefixLength = prefix->mLength;
     mDomainUnicastAddress.GetAddress().Clear();
@@ -560,12 +557,9 @@ void DuaManager::HandleDuaNotification(Coap::Message &aMessage, const Ip6::Messa
 
     VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_PARSE);
 
-    if (aMessage.IsConfirmable())
+    if (aMessage.IsConfirmable() && Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
     {
-        if (Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
-        {
-            otLogInfoDua("Sent DUA.ntf acknowledgment");
-        }
+        otLogInfoDua("Sent DUA.ntf acknowledgment");
     }
 
     error = ProcessDuaResponse(aMessage);
