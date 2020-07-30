@@ -80,8 +80,8 @@ DuaManager::DuaManager(Instance &aInstance)
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    mChildDuaMask.ClearAll();
-    mChildDuaRegisteredMask.ClearAll();
+    mChildDuaMask.Clear();
+    mChildDuaRegisteredMask.Clear();
 #endif
 
     Get<Coap::Coap>().AddResource(mDuaNotification);
@@ -106,8 +106,8 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         if (mChildDuaMask.HasAny())
         {
-            mChildDuaMask.ClearAll();
-            mChildDuaRegisteredMask.ClearAll();
+            mChildDuaMask.Clear();
+            mChildDuaRegisteredMask.Clear();
             mRegisterCurrentChildIndex = false;
         }
 #endif
@@ -375,7 +375,7 @@ void DuaManager::HandleTimer(void)
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-        mChildDuaRegisteredMask.ClearAll();
+        mChildDuaRegisteredMask.Clear();
 #endif
         attempt = true;
     }
@@ -626,7 +626,7 @@ otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
         {
         case ThreadStatusTlv::kDuaSuccess:
             // Mark as Registered
-            mChildDuaRegisteredMask.Set(mChildIndexDuaRegistering);
+            mChildDuaRegisteredMask.Set(mChildIndexDuaRegistering, true);
             break;
         case ThreadStatusTlv::kDuaReRegister:
             mRegisterCurrentChildIndex = true;
@@ -636,8 +636,8 @@ otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
         case ThreadStatusTlv::kDuaDuplicate:
             SendAddressNotification(target, static_cast<ThreadStatusTlv::DuaStatus>(status), *child);
             IgnoreError(child->RemoveIp6Address(target));
-            mChildDuaMask.Clear(mChildIndexDuaRegistering);
-            mChildDuaRegisteredMask.Clear(mChildIndexDuaRegistering);
+            mChildDuaMask.Set(mChildIndexDuaRegistering, false);
+            mChildDuaRegisteredMask.Set(mChildIndexDuaRegistering, false);
             break;
         case ThreadStatusTlv::kDuaNoResources:
         case ThreadStatusTlv::kDuaNotPrimary:
@@ -713,8 +713,8 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
             mRegisterCurrentChildIndex = mRegisterCurrentChildIndex && (aState == Mle::ChildDuaState::kRemoved);
         }
 
-        mChildDuaMask.Clear(childIndex);
-        mChildDuaRegisteredMask.Clear(childIndex);
+        mChildDuaMask.Set(childIndex, false);
+        mChildDuaRegisteredMask.Set(childIndex, false);
     }
 
     if (aState == Mle::ChildDuaState::kAdded || aState == Mle::ChildDuaState::kChanged)
@@ -724,8 +724,8 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
             UpdateCheckDelay(Random::NonCrypto::GetUint8InRange(1, Mle::kParentAggregateDelay));
         }
 
-        mChildDuaMask.Set(childIndex);
-        mChildDuaRegisteredMask.Clear(childIndex);
+        mChildDuaMask.Set(childIndex, true);
+        mChildDuaRegisteredMask.Set(childIndex, false);
     }
 
     return;
