@@ -116,6 +116,9 @@ Mac::Mac(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     , mCslTxFireTime(TimeMilli::kMaxDuration)
 #endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    , mCslPeriodInactive(0)
+#endif
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
     , mSubMac(aInstance)
@@ -412,13 +415,11 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (mRxOnWhenIdle)
     {
-        // Shut down CSL when the device's role is CSL receiver and its mode is Rx-On
-        StopCsl();
+        ChangeCslState(/* aStopCsl */ true);
     }
     else
     {
-        // Try start CSL receiver.
-        IgnoreError(StartCsl());
+        ChangeCslState(/* aStopCsl */ false);
     }
 #endif
 
@@ -442,19 +443,6 @@ otError Mac::SetPanChannel(uint8_t aChannel)
     VerifyOrExit(!mUsingTemporaryChannel, OT_NOOP);
 
     mRadioChannel = mPanChannel;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (mRxOnWhenIdle)
-    {
-        // Shut down CSL when the device's role is CSL receiver and its mode is Rx-On
-        StopCsl();
-    }
-    else
-    {
-        // Try start CSL receiver.
-        IgnoreError(StartCsl());
-    }
-#endif
 
     UpdateIdleMode();
 
@@ -681,7 +669,7 @@ void Mac::UpdateIdleMode(void)
     if (shouldSleep)
     {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (mSubMac.IsCslStarted())
+        if (IsCslEnabled())
         {
             IgnoreError(mSubMac.CslSample());
             ExitNow();
@@ -810,7 +798,7 @@ void Mac::PerformNextOperation(void)
         mOperation             = kOperationWaitingForData;
     }
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    else if (mPendingTransmitDataCsl && !(mTimer.GetNow() < mCslTxFireTime))
+    else if (mPendingTransmitDataCsl && mTimer.GetNow() >= mCslTxFireTime)
     {
         mPendingTransmitDataCsl = false;
         mOperation              = kOperationTransmitDataCsl;
@@ -1166,9 +1154,9 @@ void Mac::BeginTransmit(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
     {
-        SuccessOrExit(error = Get<CslTxScheduler>().HandleFrameRequest(sendFrame));
         sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsCsl);
         sendFrame.SetMaxFrameRetries(kMaxFrameRetriesCsl);
+        SuccessOrExit(error = Get<CslTxScheduler>().HandleFrameRequest(sendFrame));
         // If the frame is marked as a retransmission, then data sequence number is already set.
         if (!sendFrame.IsARetransmission())
         {
@@ -2217,7 +2205,7 @@ void Mac::SetCslChannel(uint8_t aChannel)
 
     mSubMac.SetCslChannel(aChannel);
 
-    if (mSubMac.IsCslStarted())
+    if (IsCslEnabled())
     {
         Get<Mle::Mle>().ScheduleChildUpdateRequest();
     }
@@ -2225,30 +2213,11 @@ exit:
     return;
 }
 
-otError Mac::SetCslPeriod(uint16_t aPeriod)
+void Mac::SetCslPeriod(uint16_t aPeriod)
 {
-    otError error = OT_ERROR_NONE;
+    mCslPeriodInactive = aPeriod;
 
-    VerifyOrExit(GetCslPeriod() != aPeriod, OT_NOOP);
-    VerifyOrExit(!GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
-
-    mSubMac.SetCslPeriod(aPeriod);
-
-    if (aPeriod == 0)
-    {
-        StopCsl();
-    }
-    else if (mSubMac.IsCslStarted())
-    {
-        Get<Mle::Mle>().ScheduleChildUpdateRequest();
-    }
-    else
-    {
-        IgnoreError(StartCsl());
-    }
-
-exit:
-    return error;
+    ChangeCslState(/* aStopCsl = */ false);
 }
 
 otError Mac::SetCslTimeout(uint32_t aTimeout)
@@ -2260,7 +2229,7 @@ otError Mac::SetCslTimeout(uint32_t aTimeout)
 
     mSubMac.SetCslTimeout(aTimeout);
 
-    if (mSubMac.IsCslStarted())
+    if (IsCslEnabled())
     {
         Get<Mle::Mle>().ScheduleChildUpdateRequest();
     }
@@ -2269,43 +2238,39 @@ exit:
     return error;
 }
 
-bool Mac::ShouldIncludeCslIe(void) const
+bool Mac::DoesParentSupportCsl(void) const
 {
-    return mSubMac.IsCslStarted() && !Get<Mle::Mle>().IsRxOnWhenIdle();
+    return !GetRxOnWhenIdle() && Get<Mle::MleRouter>().IsChild() &&
+           Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported();
 }
 
-otError Mac::StartCsl(void)
+bool Mac::IsCslEnabled(void) const
 {
-    otError   error  = OT_ERROR_NONE;
-    Neighbor &parent = Get<Mle::Mle>().GetParent();
-
-    VerifyOrExit(!mRxOnWhenIdle && Get<Mle::MleRouter>().GetRole() == Mle::kRoleChild, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(parent.IsEnhancedKeepAliveSupported(), error = OT_ERROR_NOT_CAPABLE);
-
-    SuccessOrExit(error = otPlatRadioEnableCsl(&GetInstance(), mSubMac.GetCslPeriod(), &parent.GetExtAddress()));
-
-    SuccessOrExit(error = mSubMac.StartCsl());
-
-    Get<Mle::Mle>().ScheduleChildUpdateRequest();
-
-exit:
-    return error;
+    return DoesParentSupportCsl() && (GetCslPeriod() > 0);
 }
 
-void Mac::StopCsl(void)
+void Mac::ChangeCslState(bool aStopCsl)
 {
-    Neighbor &parent = Get<Mle::Mle>().GetParent();
+    uint16_t cslPeriod = aStopCsl ? 0 : mCslPeriodInactive;
 
-    VerifyOrExit(mSubMac.IsCslStarted(), OT_NOOP); // This is required to avoid StopCsl is called during initialization
-                                                   // and call otPlatRadioEnableCsl
+    if (cslPeriod != 0)
+    {
+        VerifyOrExit(DoesParentSupportCsl(), OT_NOOP);
+    }
 
-    mSubMac.StopCsl();
+    mSubMac.SetCslPeriod(cslPeriod);
 
-    SuccessOrExit(otPlatRadioEnableCsl(&GetInstance(), 0, &parent.GetExtAddress()));
+    IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), &Get<Mle::Mle>().GetParent().GetExtAddress()));
+
+    if (GetCslPeriod() > 0)
+    {
+        Get<Mle::Mle>().ScheduleChildUpdateRequest();
+    }
 
 exit:
     return;
 }
+
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -2318,8 +2283,8 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
     VerifyOrExit(cur != NULL && child != NULL && aFrame.GetSecurityEnabled(), OT_NOOP);
 
     child->SetCslPeriod(csl->GetPeriod());
-    // Use ceiling to ensure the the time diff will be within OT_US_PER_TEN_SYMBOLS
-    child->SetCslPhase(((aFrame.GetTimestamp() + OT_US_PER_TEN_SYMBOLS - 1) / OT_US_PER_TEN_SYMBOLS + csl->GetPhase()) %
+    // Use ceiling to ensure the the time diff will be within kUsPerTenSymbols
+    child->SetCslPhase(((aFrame.GetTimestamp() + kUsPerTenSymbols - 1) / kUsPerTenSymbols + csl->GetPhase()) %
                        csl->GetPeriod());
     child->SetCslSynchronized(true);
     child->SetCslLastHeard(TimerMilli::GetNow());
@@ -2355,7 +2320,7 @@ otError Mac::AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame) const
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (ShouldIncludeCslIe())
+    if (IsCslEnabled())
     {
         OT_ASSERT(aFrame.GetSecurityEnabled());
 
@@ -2409,7 +2374,7 @@ void Mac::UpdateFrameControlField(Neighbor *aNeighbor, bool aIsTimeSync, uint16_
     else
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (ShouldIncludeCslIe())
+        if (IsCslEnabled())
     {
         aFcf |= Frame::kFcfFrameVersion2015 | Frame::kFcfIePresent;
     }

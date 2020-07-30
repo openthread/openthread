@@ -411,6 +411,22 @@ public:
      */
     void UpdateCslSampleTime(uint32_t aCslSampleTime) { otPlatRadioUpdateCslSampleTime(aCslSampleTime); }
 
+    /** This method enables csl sampling in radio.
+     *
+     * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
+     * @param[in]  aExtAddr      The extended source address of incoming frame, ack to which needs CSL.(request by NRF
+     * 52840)
+     *
+     * @retval  OT_ERROR_NOT_SUPPORTED  Radio driver doesn't support CSL.
+     * @retval  OT_ERROR_FAILED         Other platform specific errors.
+     * @retval  OT_ERROR_NONE           Successfully enabled or disabled CSL.
+     *
+     */
+    otError EnableCsl(uint32_t aCslPeriod, const otExtAddress *aExtAddr)
+    {
+        return otPlatRadioEnableCsl(GetInstance(), aCslPeriod, aExtAddr);
+    }
+
     /**
      * This method gets the radio transmit frame buffer.
      *

@@ -220,11 +220,9 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     /**
-     * This method requests `Mac` to start a Csl Tx operation after a delay of
-     * @p aDelay time.
+     * This method requests `Mac` to start a Csl Tx operation after a delay of @p aDelay time.
      *
-     * @param[in]  aDelay  Delay time for `Mac` to start a Csl Tx, in units of
-     * milliseconds.
+     * @param[in]  aDelay  Delay time for `Mac` to start a Csl Tx, in units of milliseconds.
      *
      */
     void RequestCslFrameTransmission(uint32_t aDelay);
@@ -724,12 +722,8 @@ public:
      *
      * @param[in]  aPeriod  The CSL period in 10 symbols.
      *
-     * @retval OT_ERROR_NONE           Successfully set the CSL period.
-     * @retval OT_ERROR_INVALID_STATE  Invalid state to change this
-     * parameter.
-     *
      */
-    otError SetCslPeriod(uint16_t aPeriod);
+    void SetCslPeriod(uint16_t aPeriod);
 
     /**
      * This method gets the CSL timeout.
@@ -752,40 +746,30 @@ public:
     otError SetCslTimeout(uint32_t aTimeout);
 
     /**
-     * This indicates whether CSL IEs should be included in transmitted frames.
-     *
-     * @retval TRUE if CSL IEs should be included in transmitted frames.
-     * @retval FALSE if CSL IEs should not be included in transmitted frames.
+     * This method indicates whether the current parent supports CSL.
      *
      */
-    bool ShouldIncludeCslIe(void) const;
+    bool DoesParentSupportCsl(void) const;
 
     /**
-     * This method starts CSL sample.
-     *
-     * @retval OT_ERROR_NONE           Successfully started CSL.
-     * @retval OT_ERROR_ALREADY        CSL Receiver has already been started.
-     * @retval OT_ERROR_NOT_CAPABLE    The parent does not support CSL transmitter role.
-     * @retval OT_ERROR_INVALID_ARGS   CSL period is 0.
-     * @retval OT_ERROR_INVALID_STATE  RxOnWhenIdle is true or not in Child role.
+     * This method indicates whether CSL is started at the moment.
      *
      */
-    otError StartCsl(void);
+    bool IsCslEnabled(void) const;
 
     /**
-     * This method stops CSL sample.
+     * This method tries to notify `SubMac` to change CSL state according to
+     * these factors:
+     * 1. The CSL period set in `Mac`(i.e. `mCslPeriodInactive`);
+     * 2. If `SubMac` is required to stop;
+     * 3. If the node has attached to a parent and its parent supports CSL;
      *
+     * @param[in]  aStopCsl  If it's required to stop CSL. If true, `SubMac`
+     *                       would stop CSL. Otherwise, `SubMac` would set
+     *                       CSL period to the value to `mCslPeriodInactive`
+     *                       and start or stop CSL accordingly.
      */
-    void StopCsl(void);
-
-    /**
-     * This method indicates whether or not CSL receiver is started.
-     *
-     * @retval true   CSL is started.
-     * @retval false  CSL is not started.
-     *
-     */
-    bool IsCslStarted(void) const { return mSubMac.IsCslStarted(); }
+    void ChangeCslState(bool aStopCsl);
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
@@ -958,6 +942,9 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     TimeMilli mCslTxFireTime;
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    uint16_t mCslPeriodInactive;
 #endif
 
     union

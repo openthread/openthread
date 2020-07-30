@@ -372,15 +372,6 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
-     * This method indicates whether or not CSL is enabled.
-     *
-     * @retval true     CSL is enabled.
-     * @retval false    CSL is disabled.
-     *
-     */
-    bool IsCslEnabled(void) const { return mCslPeriod > 0; }
-
-    /**
      * This method indicates whether or not CSL receiver is started.
      *
      * @retval true   CSL is started.
@@ -628,7 +619,7 @@ private:
      * The SSED sample window in units of 10 symbols.
      *
      */
-    static const uint32_t kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * OT_US_PER_TEN_SYMBOLS;
+    static const uint32_t kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols;
 
     /**
      * The minimum SSED sample window in units of 10 symbols.

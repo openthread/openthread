@@ -145,19 +145,19 @@ void CslTxScheduler::RescheduleCslTx(void)
 uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild, uint64_t aRadioNow)
 {
     uint32_t delay;
-    uint16_t period_offset = (aRadioNow / OT_US_PER_TEN_SYMBOLS) % aChild.GetCslPeriod();
+    uint16_t period_offset = (aRadioNow / kUsPerTenSymbols) % aChild.GetCslPeriod();
     int16_t  diff          = static_cast<int16_t>(aChild.GetCslPhase() - period_offset);
 
     if (diff > kCslFrameRequestAheadThreshold)
     {
         delay = static_cast<uint16_t>(aChild.GetCslPhase() - period_offset - kCslFrameRequestAheadThreshold) *
-                OT_US_PER_TEN_SYMBOLS;
+                kUsPerTenSymbols;
     }
     else
     {
         delay = static_cast<uint16_t>(aChild.GetCslPeriod() + aChild.GetCslPhase() - period_offset -
                                       kCslFrameRequestAheadThreshold) *
-                OT_US_PER_TEN_SYMBOLS;
+                kUsPerTenSymbols;
     }
 
     return delay;

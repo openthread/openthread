@@ -355,7 +355,7 @@ void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
     aFrame.SetSrcAddr(mMacSource.GetShort());
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (Get<Mac::Mac>().ShouldIncludeCslIe())
+    if (Get<Mac::Mac>().IsCslEnabled())
     {
         Mac::HeaderIe ieList[2]; // CSL + Termination
 

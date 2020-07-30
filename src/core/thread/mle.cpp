@@ -736,7 +736,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    IgnoreError(Get<Mac::Mac>().StartCsl());
+    Get<Mac::Mac>().ChangeCslState(/* aStopCsl */ false);
 #endif
 }
 
@@ -1461,7 +1461,7 @@ otError Mle::AppendCslTimeout(Message &aMessage)
     otError       error;
     CslTimeoutTlv cslTimeout;
 
-    OT_ASSERT(Get<Mac::Mac>().IsCslStarted());
+    OT_ASSERT(Get<Mac::Mac>().IsCslEnabled());
 
     cslTimeout.Init();
     cslTimeout.SetTimeout(Get<Mac::Mac>().GetCslTimeout() == 0 ? mTimeout : Get<Mac::Mac>().GetCslTimeout());
@@ -2169,9 +2169,9 @@ void Mle::ScheduleMessageTransmissionTimer(void)
     case kChildUpdateRequestActive:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         // CSL transmitter may respond in next CSL cycle.
-        if (Get<Mac::Mac>().IsCslStarted())
+        if (Get<Mac::Mac>().IsCslEnabled())
         {
-            ExitNow(interval = Get<Mac::Mac>().GetCslPeriod() * OT_US_PER_TEN_SYMBOLS / 1000 +
+            ExitNow(interval = Get<Mac::Mac>().GetCslPeriod() * kUsPerTenSymbols / 1000 +
                                static_cast<uint32_t>(kUnicastRetransmissionDelay));
         }
         else
@@ -2308,7 +2308,7 @@ otError Mle::SendChildUpdateRequest(void)
         SuccessOrExit(error = AppendLeaderData(*message));
         SuccessOrExit(error = AppendTimeout(*message, mTimeout));
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (Get<Mac::Mac>().IsCslStarted())
+        if (Get<Mac::Mac>().IsCslEnabled())
         {
             SuccessOrExit(error = AppendCslChannel(*message));
             SuccessOrExit(error = AppendCslTimeout(*message));
@@ -2336,7 +2336,7 @@ otError Mle::SendChildUpdateRequest(void)
     if (!IsRxOnWhenIdle())
     {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        Get<DataPollSender>().SetAttachMode(!Get<Mac::Mac>().IsCslStarted());
+        Get<DataPollSender>().SetAttachMode(!Get<Mac::Mac>().IsCslEnabled());
 #else
         Get<DataPollSender>().SetAttachMode(true);
 #endif
