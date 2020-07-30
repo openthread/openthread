@@ -57,16 +57,7 @@ namespace Dhcp6 {
  *
  */
 
-/**
- * DHCPv6 default constant
- *
- */
-#define OT_DHCP6_DEFAULT_IA_NA_T1 0xffffffffU
-#define OT_DHCP6_DEFAULT_IA_NA_T2 0xffffffffU
-#define OT_DHCP6_DEFAULT_PREFERRED_LIFETIME 0xffffffffU
-#define OT_DHCP6_DEFAULT_VALID_LIFETIME 0xffffffffU
-
-class Dhcp6Server : public InstanceLocator
+class Server : public InstanceLocator
 {
 public:
     /**
@@ -75,13 +66,13 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Dhcp6Server(Instance &aInstance);
+    explicit Server(Instance &aInstance);
 
     /**
      * This method updates DHCP Agents and DHCP Alocs.
      *
      */
-    otError UpdateService();
+    otError UpdateService(void);
 
     /**
      * This method applies the Mesh Local Prefix.
@@ -105,7 +96,7 @@ private:
         bool IsPrefixMatch(const otIp6Prefix &aPrefix) const
         {
             return (mPrefix.mLength == aPrefix.mLength) &&
-                   (otIp6PrefixMatch(&mPrefix.mPrefix, &aPrefix.mPrefix) >= mPrefix.mLength);
+                   (GetPrefix().PrefixMatch(static_cast<const Ip6::Address &>(aPrefix.mPrefix)) >= mPrefix.mLength);
         }
 
         /**
@@ -117,9 +108,9 @@ private:
          * @retval FALSE if the address does not have a matching prefix.
          *
          */
-        bool IsPrefixMatch(const otIp6Address &aAddress) const
+        bool IsPrefixMatch(const Ip6::Address &aAddress) const
         {
-            return (otIp6PrefixMatch(&mPrefix.mPrefix, &aAddress) >= mPrefix.mLength);
+            return (aAddress.PrefixMatch(static_cast<const Ip6::Address &>(mPrefix.mPrefix)) >= mPrefix.mLength);
         }
 
         /**
@@ -185,12 +176,17 @@ private:
         otIp6Prefix              mPrefix;
     };
 
+    enum : uint16_t
+    {
+        kNumPrefixes = OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES,
+    };
+
     void Start(void);
     void Stop(void);
 
     void AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Context &aContext);
 
-    otError AppendHeader(Message &aMessage, uint8_t *aTransactionId);
+    otError AppendHeader(Message &aMessage, const TransactionId &aTransactionId);
     otError AppendClientIdentifier(Message &aMessage, ClientIdentifier &aClientId);
     otError AppendServerIdentifier(Message &aMessage);
     otError AppendIaNa(Message &aMessage, IaNa &aIaNa);
@@ -204,7 +200,7 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void ProcessSolicit(Message &aMessage, otIp6Address &aDst, uint8_t *aTransactionId);
+    void ProcessSolicit(Message &aMessage, const Ip6::Address &aDst, const TransactionId &aTransactionId);
 
     uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode);
     otError  ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClientId);
@@ -212,11 +208,14 @@ private:
     otError  ProcessIaAddress(Message &aMessage, uint16_t aOffset);
     otError  ProcessElapsedTime(Message &aMessage, uint16_t aOffset);
 
-    otError SendReply(otIp6Address &aDst, uint8_t *aTransactionId, ClientIdentifier &aClientId, IaNa &aIaNa);
+    otError SendReply(const Ip6::Address & aDst,
+                      const TransactionId &aTransactionId,
+                      ClientIdentifier &   aClientId,
+                      IaNa &               aIaNa);
 
     Ip6::Udp::Socket mSocket;
 
-    PrefixAgent mPrefixAgents[OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES];
+    PrefixAgent mPrefixAgents[kNumPrefixes];
     uint8_t     mPrefixAgentsCount;
     uint8_t     mPrefixAgentsMask;
 };

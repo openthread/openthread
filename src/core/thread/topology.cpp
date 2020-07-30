@@ -157,8 +157,8 @@ void Child::ClearIp6Addresses(void)
     mMeshLocalIid.Clear();
     memset(mIp6Address, 0, sizeof(mIp6Address));
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    mMlrToRegisterMask.ClearAll();
-    mMlrRegisteredMask.ClearAll();
+    mMlrToRegisterMask.Clear();
+    mMlrRegisteredMask.Clear();
 #endif
 }
 
@@ -338,23 +338,8 @@ void Child::SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState)
 
     addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
 
-    if (aState == kMlrStateToRegister)
-    {
-        mMlrToRegisterMask.Set(addressIndex);
-    }
-    else
-    {
-        mMlrToRegisterMask.Clear(addressIndex);
-    }
-
-    if (aState == kMlrStateRegistered)
-    {
-        mMlrRegisteredMask.Set(addressIndex);
-    }
-    else
-    {
-        mMlrRegisteredMask.Clear(addressIndex);
-    }
+    mMlrToRegisterMask.Set(addressIndex, aState == kMlrStateToRegister);
+    mMlrRegisteredMask.Set(addressIndex, aState == kMlrStateRegistered);
 }
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 

@@ -647,14 +647,14 @@ template <> inline NetworkDiagnostic::NetworkDiagnostic &Instance::Get(void)
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
-template <> inline Dhcp6::Dhcp6Client &Instance::Get(void)
+template <> inline Dhcp6::Client &Instance::Get(void)
 {
     return mThreadNetif.mDhcp6Client;
 }
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
-template <> inline Dhcp6::Dhcp6Server &Instance::Get(void)
+template <> inline Dhcp6::Server &Instance::Get(void)
 {
     return mThreadNetif.mDhcp6Server;
 }

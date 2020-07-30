@@ -886,7 +886,7 @@ void Mle::ApplyMeshLocalPrefix(void)
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
-    Get<Dhcp6::Dhcp6Server>().ApplyMeshLocalPrefix();
+    Get<Dhcp6::Server>().ApplyMeshLocalPrefix();
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -1513,11 +1513,11 @@ void Mle::HandleNotifierEvents(Events aEvents)
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
-        IgnoreError(Get<Dhcp6::Dhcp6Server>().UpdateService());
+        IgnoreError(Get<Dhcp6::Server>().UpdateService());
 #endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
-        Get<Dhcp6::Dhcp6Client>().UpdateAddresses();
+        Get<Dhcp6::Client>().UpdateAddresses();
 #endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     }
 
