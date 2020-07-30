@@ -188,7 +188,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND     No Domain Prefix was configured or @p aPrefix doesn't match.
      *
      */
-    otError RemoveDomainPrefix(const otIp6Prefix &aPrefix);
+    otError RemoveDomainPrefix(const Ip6::Prefix &aPrefix);
 
     /**
      * This method sets the local Domain Prefix configuration.

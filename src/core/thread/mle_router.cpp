@@ -2093,7 +2093,8 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
                 continue;
             }
 
-            memcpy(&address, context.mPrefix, BitVectorBytes(context.mPrefixLength));
+            address.Clear();
+            address.SetPrefix(context.mPrefix);
             address.SetIid(entry.GetIid());
         }
         else

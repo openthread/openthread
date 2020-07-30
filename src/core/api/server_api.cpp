@@ -78,7 +78,8 @@ otError otServerGetNextService(otInstance *aInstance, otNetworkDataIterator *aIt
 
     VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.Get<NetworkData::Local>().GetNextService(*aIterator, *aConfig);
+    error = instance.Get<NetworkData::Local>().GetNextService(*aIterator,
+                                                              *static_cast<NetworkData::ServiceConfig *>(aConfig));
 
 exit:
     return error;

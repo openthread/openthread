@@ -40,6 +40,7 @@
 #include <openthread/server.h>
 
 #include "coap/coap.hpp"
+#include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "net/udp6.hpp"
@@ -96,22 +97,60 @@ enum
 typedef otNetworkDataIterator Iterator;
 
 /**
- * This type represents an On Mesh Prefix (Border Router) configuration.
+ * This class represents an On Mesh Prefix (Border Router) configuration.
  *
  */
-typedef otBorderRouterConfig OnMeshPrefixConfig;
+class OnMeshPrefixConfig : public otBorderRouterConfig, public Clearable<OnMeshPrefixConfig>
+{
+public:
+    /**
+     * This method get the prefix.
+     *
+     * @return The prefix.
+     *
+     */
+    const Ip6::Prefix &GetPrefix(void) const { return static_cast<const Ip6::Prefix &>(mPrefix); }
+
+    /**
+     * This method get the prefix.
+     *
+     * @return The prefix.
+     *
+     */
+    Ip6::Prefix &GetPrefix(void) { return static_cast<Ip6::Prefix &>(mPrefix); }
+};
 
 /**
- * This type represents an External Route configuration.
+ * This class represents an External Route configuration.
  *
  */
-typedef otExternalRouteConfig ExternalRouteConfig;
+class ExternalRouteConfig : public otExternalRouteConfig, public Clearable<ExternalRouteConfig>
+{
+public:
+    /**
+     * This method get the prefix.
+     *
+     * @return The prefix.
+     *
+     */
+    const Ip6::Prefix &GetPrefix(void) const { return static_cast<const Ip6::Prefix &>(mPrefix); }
+
+    /**
+     * This method get the prefix.
+     *
+     * @return The prefix.
+     *
+     */
+    Ip6::Prefix &GetPrefix(void) { return static_cast<Ip6::Prefix &>(mPrefix); }
+};
 
 /**
  * This type represents a Service configuration.
  *
  */
-typedef otServiceConfig ServiceConfig;
+class ServiceConfig : public otServiceConfig, public Clearable<ServiceConfig>
+{
+};
 
 /**
  * This class implements Network Data processing.
@@ -450,7 +489,7 @@ protected:
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
      *
-     * @returns A pointer to the Context TLV is one is found or nullptr if no Context TLV exists.
+     * @returns A pointer to the Context TLV if one is found or nullptr if no Context TLV exists.
      *
      */
     static ContextTlv *FindContext(PrefixTlv &aPrefix)
@@ -463,7 +502,7 @@ protected:
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
      *
-     * @returns A pointer to the Context TLV is one is found or nullptr if no Context TLV exists.
+     * @returns A pointer to the Context TLV if one is found or nullptr if no Context TLV exists.
      *
      */
     static const ContextTlv *FindContext(const PrefixTlv &aPrefix);
@@ -472,9 +511,9 @@ protected:
      * This method returns a pointer to a Prefix TLV.
      *
      * @param[in]  aPrefix        A pointer to an IPv6 prefix.
-     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix.
+     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix (in bits).
      *
-     * @returns A pointer to the Prefix TLV is one is found or nullptr if no matching Prefix TLV exists.
+     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
      *
      */
     PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
@@ -486,12 +525,35 @@ protected:
      * This method returns a pointer to a Prefix TLV.
      *
      * @param[in]  aPrefix        A pointer to an IPv6 prefix.
-     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix.
+     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix (in bits).
      *
-     * @returns A pointer to the Prefix TLV is one is found or nullptr if no matching Prefix TLV exists.
+     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
      *
      */
     const PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) const;
+
+    /**
+     * This method returns a pointer to a Prefix TLV.
+     *
+     * @param[in]  aPrefix        An IPv6 prefix.
+     *
+     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
+     *
+     */
+    PrefixTlv *FindPrefix(const Ip6::Prefix &aPrefix) { return FindPrefix(aPrefix.GetBytes(), aPrefix.GetLength()); }
+
+    /**
+     * This method returns a pointer to a Prefix TLV.
+     *
+     * @param[in]  aPrefix        An IPv6 prefix.
+     *
+     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
+     *
+     */
+    const PrefixTlv *FindPrefix(const Ip6::Prefix &aPrefix) const
+    {
+        return FindPrefix(aPrefix.GetBytes(), aPrefix.GetLength());
+    }
 
     /**
      * This method returns a pointer to a Prefix TLV in a specified tlvs buffer.
@@ -501,7 +563,7 @@ protected:
      * @param[in]  aTlvs          A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength    The specified tlvs buffer length pointed to by @p aTlvs.
      *
-     * @returns A pointer to the Prefix TLV is one is found or nullptr if no matching Prefix TLV exists.
+     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
      *
      */
     static PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, uint8_t *aTlvs, uint8_t aTlvsLength)
@@ -518,7 +580,7 @@ protected:
      * @param[in]  aTlvs          A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength    The specified tlvs buffer length pointed to by @p aTlvs.
      *
-     * @returns A pointer to the Prefix TLV is one is found or nullptr if no matching Prefix TLV exists.
+     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
      *
      */
     static const PrefixTlv *FindPrefix(const uint8_t *aPrefix,
@@ -533,7 +595,7 @@ protected:
      * @param[in]  aServiceData       A pointer to a Service Data.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
      *
-     * @returns A pointer to the Service TLV is one is found or nullptr if no matching Service TLV exists.
+     * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
      */
     ServiceTlv *FindService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
@@ -549,7 +611,7 @@ protected:
      * @param[in]  aServiceData       A pointer to a Service Data.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
      *
-     * @returns A pointer to the Service TLV is one is found or nullptr if no matching Service TLV exists.
+     * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
      */
     const ServiceTlv *FindService(uint32_t       aEnterpriseNumber,
@@ -565,7 +627,7 @@ protected:
      * @param[in]  aTlvs              A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength        The specified tlvs buffer length pointed to by @p aTlvs.
      *
-     * @returns A pointer to the Service TLV is one is found or nullptr if no matching Service TLV exists.
+     * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
      */
     static ServiceTlv *FindService(uint32_t       aEnterpriseNumber,
@@ -587,7 +649,7 @@ protected:
      * @param[in]  aTlvs              A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength        The specified tlvs buffer length pointed to by @p aTlvs.
      *
-     * @returns A pointer to the Service TLV is one is found or nullptr if no matching Service TLV exists.
+     * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
      */
     static const ServiceTlv *FindService(uint32_t       aEnterpriseNumber,
@@ -657,18 +719,6 @@ protected:
      *
      */
     static void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength);
-
-    /**
-     * This method computes the number of IPv6 Prefix bits that match.
-     *
-     * @param[in]  a        A pointer to the first IPv6 Prefix.
-     * @param[in]  b        A pointer to the second IPv6 prefix.
-     * @param[in]  aLength  The maximum length in bits to compare.
-     *
-     * @returns The number of matching bits.
-     *
-     */
-    static int8_t PrefixMatch(const uint8_t *a, const uint8_t *b, uint8_t aLength);
 
     /**
      * This method sends a Server Data Notification message to the Leader.

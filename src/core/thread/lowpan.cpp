@@ -57,7 +57,7 @@ Lowpan::Lowpan(Instance &aInstance)
 
 void Lowpan::CopyContext(const Context &aContext, Ip6::Address &aAddress)
 {
-    aAddress.SetPrefix(aContext.mPrefix, aContext.mPrefixLength);
+    aAddress.SetPrefix(aContext.mPrefix);
 }
 
 otError Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress)
@@ -78,12 +78,12 @@ otError Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aContext
         ExitNow(error = OT_ERROR_PARSE);
     }
 
-    if (aContext.mPrefixLength > 64)
+    if (aContext.mPrefix.GetLength() > 64)
     {
-        for (int i = (aContext.mPrefixLength & ~7); i < aContext.mPrefixLength; i++)
+        for (int i = (aContext.mPrefix.GetLength() & ~7); i < aContext.mPrefix.GetLength(); i++)
         {
             aIpAddress.mFields.m8[i / CHAR_BIT] &= ~(0x80 >> (i % CHAR_BIT));
-            aIpAddress.mFields.m8[i / CHAR_BIT] |= aContext.mPrefix[i / CHAR_BIT] & (0x80 >> (i % CHAR_BIT));
+            aIpAddress.mFields.m8[i / CHAR_BIT] |= aContext.mPrefix.GetBytes()[i / CHAR_BIT] & (0x80 >> (i % CHAR_BIT));
         }
     }
 
@@ -213,8 +213,8 @@ otError Lowpan::CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl,
             {
                 // Check if multicast address can be compressed using Context ID 0.
                 if (Get<NetworkData::Leader>().GetContext(0, multicastContext) == OT_ERROR_NONE &&
-                    multicastContext.mPrefixLength == aIpAddr.mFields.m8[3] &&
-                    memcmp(multicastContext.mPrefix, aIpAddr.mFields.m8 + 4, 8) == 0)
+                    multicastContext.mPrefix.GetLength() == aIpAddr.mFields.m8[3] &&
+                    memcmp(multicastContext.mPrefix.GetBytes(), aIpAddr.mFields.m8 + 4, 8) == 0)
                 {
                     aHcCtl |= kHcDstAddrContext | kHcDstAddrMode0;
                     SuccessOrExit(error = buf.Write(aIpAddr.mFields.m8 + 1, 2));
@@ -684,8 +684,8 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
     VerifyOrExit((hcCtl & kHcDispatchMask) == kHcDispatch, OT_NOOP);
 
     // Context Identifier
-    srcContext.mPrefixLength = 0;
-    dstContext.mPrefixLength = 0;
+    srcContext.mPrefix.SetLength(0);
+    dstContext.mPrefix.SetLength(0);
 
     if ((hcCtl & kHcContextId) != 0)
     {
@@ -909,8 +909,8 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
                 VerifyOrExit(dstContextValid, OT_NOOP);
                 aIp6Header.GetDestination().mFields.m8[1] = cur[0];
                 aIp6Header.GetDestination().mFields.m8[2] = cur[1];
-                aIp6Header.GetDestination().mFields.m8[3] = dstContext.mPrefixLength;
-                memcpy(aIp6Header.GetDestination().mFields.m8 + 4, dstContext.mPrefix, 8);
+                aIp6Header.GetDestination().mFields.m8[3] = dstContext.mPrefix.GetLength();
+                memcpy(aIp6Header.GetDestination().mFields.m8 + 4, dstContext.mPrefix.GetBytes(), 8);
                 memcpy(aIp6Header.GetDestination().mFields.m8 + 12, cur + 2, 4);
                 cur += 6;
                 break;
