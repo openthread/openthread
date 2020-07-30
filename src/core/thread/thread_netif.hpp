@@ -59,7 +59,7 @@
 #include "thread/dua_manager.hpp"
 #endif
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 #include "thread/mlr_manager.hpp"
 #endif
 
@@ -194,10 +194,10 @@ private:
 
     Coap::Coap mCoap;
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
-    Dhcp6::Dhcp6Client mDhcp6Client;
+    Dhcp6::Client mDhcp6Client;
 #endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
-    Dhcp6::Dhcp6Server mDhcp6Server;
+    Dhcp6::Server mDhcp6Server;
 #endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
     Utils::Slaac mSlaac;
@@ -264,7 +264,7 @@ private:
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     DuaManager mDuaManager;
 #endif
-#if OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     MlrManager mMlrManager;
 #endif
     Utils::ChildSupervisor     mChildSupervisor;

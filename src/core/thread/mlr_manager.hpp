@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 #include "backbone_router/bbr_leader.hpp"
 #include "coap/coap_message.hpp"
@@ -44,6 +44,8 @@
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "net/netif.hpp"
+#include "thread/thread_tlvs.hpp"
+#include "thread/topology.hpp"
 
 namespace ot {
 
@@ -86,6 +88,21 @@ public:
     void HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State               aState,
                                            const BackboneRouter::BackboneRouterConfig &aConfig);
 
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    /**
+     * This method updates the Multicast Subscription Table according to the Child information.
+     *
+     * @param[in]  aChild                       A reference to the child information.
+     * @param[in]  aOldMlrRegisteredAddresses   A pointer to an array of the Child's previously registered Ip6
+     *                                          addresses.
+     * @param[in]  aOldMlrRegisteredAddressNum  The number of previously registered Ip6 addresses.
+     *
+     */
+    void UpdateProxiedSubscriptions(Child &             aChild,
+                                    const Ip6::Address *aOldMlrRegisteredAddresses,
+                                    uint16_t            aOldMlrRegisteredAddressNum);
+#endif
+
 private:
     enum
     {
@@ -113,8 +130,34 @@ private:
                                                      const Ip6::MessageInfo *aMessageInfo,
                                                      otError                 aResult);
 
-    uint16_t CountNetifMulticastAddressesToRegister(void) const;
-    void     SetNetifMulticastAddressMlrState(MlrState aFromState, MlrState aToState);
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+    void UpdateLocalSubscriptions(void);
+    void SetNetifMulticastAddressMlrState(MlrState aFromState, MlrState aToState);
+    bool IsAddressMlrRegisteredByNetif(const Ip6::Address &aAddress) const;
+#endif
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    void SetChildMulticastAddressMlrState(MlrState aFromState, MlrState aToState);
+    bool IsAddressMlrRegisteredByAnyChild(const Ip6::Address &aAddress) const
+    {
+        return IsAddressMlrRegisteredByAnyChildExcept(aAddress, nullptr);
+    }
+    bool IsAddressMlrRegisteredByAnyChildExcept(const Ip6::Address &aAddress, const Child *aExceptChild) const;
+#endif
+
+    void SetMulticastAddressMlrState(MlrState aFromState, MlrState aToState)
+    {
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+        SetNetifMulticastAddressMlrState(aFromState, aToState);
+#endif
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+        SetChildMulticastAddressMlrState(aFromState, aToState);
+#endif
+    }
+
+    void AppendToUniqueAddressList(Ip6::Address (&aAddresses)[kIPv6AddressesNumMax],
+                                   uint8_t &           aAddressNum,
+                                   const Ip6::Address &aAddress);
 
     void ScheduleSend(uint16_t aDelay);
     void ResetTimer(void);
@@ -134,5 +177,5 @@ private:
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MLR_ENABLE
+#endif // OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 #endif // MLR_MANAGER_HPP_

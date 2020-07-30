@@ -79,6 +79,7 @@ private:
         otError (Joiner::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
     };
 
+    otError ProcessDiscerner(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessId(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);

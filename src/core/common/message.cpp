@@ -642,12 +642,12 @@ bool Message::GetChildMask(uint16_t aChildIndex) const
 
 void Message::ClearChildMask(uint16_t aChildIndex)
 {
-    GetMetadata().mChildMask.Clear(aChildIndex);
+    GetMetadata().mChildMask.Set(aChildIndex, false);
 }
 
 void Message::SetChildMask(uint16_t aChildIndex)
 {
-    GetMetadata().mChildMask.Set(aChildIndex);
+    GetMetadata().mChildMask.Set(aChildIndex, true);
 }
 
 bool Message::IsChildPending(void) const

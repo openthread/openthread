@@ -654,14 +654,14 @@ template <> inline NetworkDiagnostic::NetworkDiagnostic &Instance::Get(void)
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
-template <> inline Dhcp6::Dhcp6Client &Instance::Get(void)
+template <> inline Dhcp6::Client &Instance::Get(void)
 {
     return mThreadNetif.mDhcp6Client;
 }
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
-template <> inline Dhcp6::Dhcp6Server &Instance::Get(void)
+template <> inline Dhcp6::Server &Instance::Get(void)
 {
     return mThreadNetif.mDhcp6Server;
 }
@@ -757,7 +757,7 @@ template <> inline DuaManager &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 template <> inline MlrManager &Instance::Get(void)
 {
     return mThreadNetif.mMlrManager;
