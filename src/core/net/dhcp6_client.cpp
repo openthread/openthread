@@ -57,10 +57,9 @@ Client::Client(Instance &aInstance)
     memset(mIdentityAssociations, 0, sizeof(mIdentityAssociations));
 }
 
-bool Client::MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aNetifAddress, const otIp6Prefix &aIp6Prefix)
+bool Client::MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aNetifAddress, const Ip6::Prefix &aIp6Prefix)
 {
-    return (aIp6Prefix.mLength == aNetifAddress.mPrefixLength) &&
-           (aNetifAddress.GetAddress().PrefixMatch(aIp6Prefix.mPrefix) >= aIp6Prefix.mLength);
+    return aNetifAddress.HasPrefix(aIp6Prefix);
 }
 
 void Client::UpdateAddresses(void)
@@ -88,7 +87,7 @@ void Client::UpdateAddresses(void)
                 continue;
             }
 
-            if (MatchNetifAddressWithPrefix(idAssociation.mNetifAddress, config.mPrefix))
+            if (MatchNetifAddressWithPrefix(idAssociation.mNetifAddress, config.GetPrefix()))
             {
                 found = true;
                 break;
@@ -127,7 +126,7 @@ void Client::UpdateAddresses(void)
                     idAssociation = &ia;
                 }
             }
-            else if (MatchNetifAddressWithPrefix(ia.mNetifAddress, config.mPrefix))
+            else if (MatchNetifAddressWithPrefix(ia.mNetifAddress, config.GetPrefix()))
             {
                 found         = true;
                 idAssociation = &ia;

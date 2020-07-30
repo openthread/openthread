@@ -82,7 +82,7 @@ otError Server::UpdateService(void)
                 continue;
             }
 
-            error = Get<NetworkData::Leader>().GetContext(prefixAgent.GetPrefix(), lowpanContext);
+            error = Get<NetworkData::Leader>().GetContext(prefixAgent.GetPrefixAsAddress(), lowpanContext);
 
             if ((error == OT_ERROR_NONE) && (prefixAgent.GetContextId() == lowpanContext.mContextId))
             {
@@ -114,7 +114,7 @@ otError Server::UpdateService(void)
 
         if (error == OT_ERROR_NONE)
         {
-            AddPrefixAgent(config.mPrefix, lowpanContext);
+            AddPrefixAgent(config.GetPrefix(), lowpanContext);
         }
     }
 
@@ -144,7 +144,7 @@ void Server::Stop(void)
     IgnoreError(mSocket.Close());
 }
 
-void Server::AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Context &aContext)
+void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext)
 {
     otError      error    = OT_ERROR_NONE;
     PrefixAgent *newEntry = nullptr;
@@ -155,7 +155,7 @@ void Server::AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Context
         {
             newEntry = &prefixAgent;
         }
-        else if (prefixAgent.IsPrefixMatch(aIp6Prefix))
+        else if (prefixAgent.GetPrefix() == aIp6Prefix)
         {
             // already added
             ExitNow();
@@ -445,7 +445,7 @@ otError Server::AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId)
         {
             if (mPrefixAgentsMask & (1 << i))
             {
-                SuccessOrExit(error = AddIaAddress(aMessage, mPrefixAgents[i].GetPrefix(), aClientId));
+                SuccessOrExit(error = AddIaAddress(aMessage, mPrefixAgents[i].GetPrefixAsAddress(), aClientId));
             }
         }
     }
@@ -456,7 +456,7 @@ otError Server::AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId)
         {
             if (prefixAgent.IsValid())
             {
-                SuccessOrExit(error = AddIaAddress(aMessage, prefixAgent.GetPrefix(), aClientId));
+                SuccessOrExit(error = AddIaAddress(aMessage, prefixAgent.GetPrefixAsAddress(), aClientId));
             }
         }
     }

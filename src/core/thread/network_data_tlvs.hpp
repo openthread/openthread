@@ -429,8 +429,20 @@ public:
         SetType(kTypePrefix);
         mDomainId     = aDomainId;
         mPrefixLength = aPrefixLength;
-        memcpy(GetPrefix(), aPrefix, BitVectorBytes(aPrefixLength));
+        memcpy(GetPrefix(), aPrefix, Ip6::Prefix::SizeForLength(aPrefixLength));
         SetSubTlvsLength(0);
+    }
+
+    /**
+     * This method initializes the TLV.
+     *
+     * @param[in]  aDomainId      The Domain ID.
+     * @param[in]  aPrefix        The Prefix.
+     *
+     */
+    void Init(uint8_t aDomainId, const Ip6::Prefix aPrefix)
+    {
+        Init(aDomainId, aPrefix.GetLength(), aPrefix.GetBytes());
     }
 
     /**
@@ -443,8 +455,8 @@ public:
     bool IsValid(void) const
     {
         return ((GetLength() >= sizeof(*this) - sizeof(NetworkDataTlv)) &&
-                (GetLength() >= BitVectorBytes(mPrefixLength) + sizeof(*this) - sizeof(NetworkDataTlv)) &&
-                (BitVectorBytes(mPrefixLength) <= sizeof(Ip6::Address)));
+                (GetLength() >= Ip6::Prefix::SizeForLength(mPrefixLength) + sizeof(*this) - sizeof(NetworkDataTlv)) &&
+                (Ip6::Prefix::SizeForLength(mPrefixLength) <= sizeof(Ip6::Address)));
     }
 
     /**
@@ -480,6 +492,42 @@ public:
     const uint8_t *GetPrefix(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
 
     /**
+     * This method copies the Prefix from TLV into a given `Ip6::Prefix`.
+     *
+     * @param[out] aPrefix  An `Ip6::Prefix` to copy the Prefix from TLV into.
+     *
+     */
+    void CopyPrefixTo(Ip6::Prefix &aPrefix) const { aPrefix.Set(GetPrefix(), GetPrefixLength()); }
+
+    /**
+     * This method indicates whether the Prefix from TLV is equal to a given `Ip6::Prefix`.
+     *
+     * @param[in] aPrefix  A Prefix to compare with.
+     *
+     * @retval TRUE   The TLV's Prefix is equal to @p aPrefix.
+     * @retval FALSE  The TLV's Prefix is not equal to @p aPrefix.
+     *
+     */
+    bool IsEqual(Ip6::Prefix &aPrefix) const { return aPrefix.IsEqual(GetPrefix(), GetPrefixLength()); }
+
+    /**
+     * This method indicates whether the Prefix from TLV is equal to a given Prefix.
+     *
+     * @param[in]  aPrefix        A pointer to an IPv6 prefix to compare with.
+     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix (in bits).
+     *
+     * @retval TRUE   The TLV's Prefix is equal to @p aPrefix.
+     * @retval FALSE  The TLV's Prefix is not euqal @p aPrefix.
+     *
+     */
+    bool IsEqual(const uint8_t *aPrefix, uint8_t aPrefixLength) const
+    {
+        return (aPrefixLength == mPrefixLength) &&
+               (Ip6::Prefix::MatchLength(GetPrefix(), aPrefix, Ip6::Prefix::SizeForLength(aPrefixLength)) >=
+                mPrefixLength);
+    }
+
+    /**
      * This method returns a pointer to the Sub-TLVs.
      *
      * @returns A pointer to the Sub-TLVs.
@@ -487,7 +535,7 @@ public:
      */
     NetworkDataTlv *GetSubTlvs(void)
     {
-        return reinterpret_cast<NetworkDataTlv *>(GetPrefix() + BitVectorBytes(mPrefixLength));
+        return reinterpret_cast<NetworkDataTlv *>(GetPrefix() + Ip6::Prefix::SizeForLength(mPrefixLength));
     }
 
     /**
@@ -498,7 +546,7 @@ public:
      */
     const NetworkDataTlv *GetSubTlvs(void) const
     {
-        return reinterpret_cast<const NetworkDataTlv *>(GetPrefix() + BitVectorBytes(mPrefixLength));
+        return reinterpret_cast<const NetworkDataTlv *>(GetPrefix() + Ip6::Prefix::SizeForLength(mPrefixLength));
     }
 
     /**
@@ -509,7 +557,7 @@ public:
      */
     uint8_t GetSubTlvsLength(void) const
     {
-        return GetLength() - (sizeof(*this) - sizeof(NetworkDataTlv) + BitVectorBytes(mPrefixLength));
+        return GetLength() - (sizeof(*this) - sizeof(NetworkDataTlv) + Ip6::Prefix::SizeForLength(mPrefixLength));
     }
 
     /**
@@ -520,7 +568,7 @@ public:
      */
     void SetSubTlvsLength(uint8_t aLength)
     {
-        SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + BitVectorBytes(mPrefixLength) + aLength);
+        SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + Ip6::Prefix::SizeForLength(mPrefixLength) + aLength);
     }
 
     /**
@@ -534,7 +582,10 @@ public:
      * @returns    The size (number of bytes) of the Prefix TLV.
      *
      */
-    static uint16_t CalculateSize(uint8_t aPrefixLength) { return sizeof(PrefixTlv) + BitVectorBytes(aPrefixLength); }
+    static uint16_t CalculateSize(uint8_t aPrefixLength)
+    {
+        return sizeof(PrefixTlv) + Ip6::Prefix::SizeForLength(aPrefixLength);
+    }
 
 private:
     uint8_t mDomainId;
