@@ -205,7 +205,6 @@ typedef struct otSockAddr
 {
     otIp6Address mAddress; ///< An IPv6 address.
     uint16_t     mPort;    ///< A transport-layer port.
-    int8_t       mScopeId; ///< An IPv6 scope identifier.
 } otSockAddr;
 
 /**
