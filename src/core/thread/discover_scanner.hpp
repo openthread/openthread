@@ -155,11 +155,6 @@ private:
         kStateScanDone,
     };
 
-    enum
-    {
-        kMaxLength = 64,
-    };
-
     // Methods used by `MeshForwarder`
     otError PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame);
     void    HandleDiscoveryRequestFrameTxDone(Message &aMessage);
@@ -181,10 +176,9 @@ private:
     uint32_t         mOui;
     uint8_t          mScanChannel;
     uint8_t          mAdvDataLength;
-    uint8_t          mAdvData[kMaxLength];
+    uint8_t          mAdvData[MeshCoP::JoinerAdvertisementTlv::kAdvDataMaxLength];
     bool             mEnableFiltering : 1;
     bool             mShouldRestorePanId : 1;
-    bool             mHasJoinerAdvertisement : 1;
 };
 
 } // namespace Mle

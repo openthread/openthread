@@ -56,7 +56,6 @@ DiscoverScanner::DiscoverScanner(Instance &aInstance)
     , mAdvDataLength(0)
     , mEnableFiltering(false)
     , mShouldRestorePanId(false)
-    , mHasJoinerAdvertisement(false)
 {
 }
 
@@ -70,6 +69,8 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
 {
     otError                         error   = OT_ERROR_NONE;
     Message *                       message = nullptr;
+    uint16_t                        startOffset;
+    Tlv                             tlv;
     Ip6::Address                    destination;
     MeshCoP::DiscoveryRequestTlv    discoveryRequest;
     MeshCoP::JoinerAdvertisementTlv joinerAdvertisement;
@@ -109,22 +110,30 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     message->SetPanId(aPanId);
     SuccessOrExit(error = Get<Mle>().AppendHeader(*message, Header::kCommandDiscoveryRequest));
 
-    // Append MLE Discovery TLV with a single sub-TLV (MeshCoP Discovery Request).
+    tlv.SetType(Tlv::kDiscovery);
+    SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+
+    startOffset = message->GetLength();
+
+    // Append sub-TLV MeshCoP Discovery Request.
     discoveryRequest.Init();
     discoveryRequest.SetVersion(kThreadVersion);
     discoveryRequest.SetJoiner(aJoiner);
 
-    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kDiscovery, &discoveryRequest, sizeof(discoveryRequest)));
+    SuccessOrExit(error = discoveryRequest.AppendTo(*message));
 
-    if (mHasJoinerAdvertisement)
+    if (mAdvDataLength != 0)
     {
-        // Append MLE Discovery TLV with sub-TLV (MeshCoP Joiner Advertisement).
+        // Append sub-TLV MeshCoP Joiner Advertisement.
         joinerAdvertisement.Init();
         joinerAdvertisement.SetOui(mOui);
         joinerAdvertisement.SetAdvData(mAdvData, mAdvDataLength);
 
         SuccessOrExit(error = joinerAdvertisement.AppendTo(*message));
     }
+
+    tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
+    message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
 
     destination.SetToLinkLocalAllRoutersMulticast();
 
@@ -161,15 +170,14 @@ otError DiscoverScanner::SetJoinerAdvertisement(uint32_t aOui, const uint8_t *aA
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit((aAdvData != nullptr) && (aAdvDataLength != 0) && (aAdvDataLength <= kMaxLength),
+    VerifyOrExit((aAdvData != nullptr) && (aAdvDataLength != 0) &&
+                     (aAdvDataLength <= MeshCoP::JoinerAdvertisementTlv::kAdvDataMaxLength),
                  error = OT_ERROR_INVALID_ARGS);
 
     mOui           = aOui;
     mAdvDataLength = aAdvDataLength;
 
     memcpy(mAdvData, aAdvData, aAdvDataLength);
-
-    mHasJoinerAdvertisement = true;
 
 exit:
     return error;

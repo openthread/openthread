@@ -2365,7 +2365,8 @@ class JoinerAdvertisementTlv : public Tlv
 public:
     enum
     {
-        kType = kJoinerAdvertisement, ///< The TLV Type.
+        kType             = kJoinerAdvertisement,         ///< The TLV Type.
+        kAdvDataMaxLength = OT_JOINER_ADVDATA_MAX_LENGTH, ///< The Max Length of AdvData
     };
 
     /**
@@ -2436,20 +2437,15 @@ public:
      */
     void SetAdvData(const uint8_t *aAdvData, uint8_t aAdvDataLength)
     {
-        OT_ASSERT((aAdvData != nullptr) && (aAdvDataLength > 0) && (aAdvDataLength <= kMaxLength));
+        OT_ASSERT((aAdvData != nullptr) && (aAdvDataLength > 0) && (aAdvDataLength <= kAdvDataMaxLength));
 
         SetLength(aAdvDataLength + sizeof(mOui));
         memcpy(mAdvData, aAdvData, aAdvDataLength);
     }
 
 private:
-    enum
-    {
-        kMaxLength = 64,
-    };
-
     uint8_t mOui[3];
-    uint8_t mAdvData[kMaxLength];
+    uint8_t mAdvData[kAdvDataMaxLength];
 } OT_TOOL_PACKED_END;
 
 } // namespace MeshCoP
