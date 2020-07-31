@@ -286,7 +286,7 @@ otError otThreadSetJoinerAdvertisement(otInstance *   aInstance,
                                        const uint8_t *aAdvData,
                                        uint8_t        aAdvDataLength);
 
-#define OT_JOINER_ADVDATA_MAX_LENGTH 64 ///<Maximum AdvData Length of Joiner Advertisement
+#define OT_JOINER_ADVDATA_MAX_LENGTH 64 ///< Maximum AdvData Length of Joiner Advertisement
 
 /**
  * Get the Thread Child Timeout used when operating in the Child role.
