@@ -345,57 +345,6 @@ public:
     void RemoveRouterLink(Router &aRouter);
 
     /**
-     * This method returns a pointer to a Neighbor object.
-     *
-     * @param[in]  aAddress  The address of the Neighbor.
-     *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, nullptr otherwise.
-     *
-     */
-    Neighbor *GetNeighbor(uint16_t aAddress);
-
-    /**
-     * This method returns a pointer to a Neighbor object.
-     *
-     * @param[in]  aAddress  The address of the Neighbor.
-     *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, nullptr otherwise.
-     *
-     */
-    Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress);
-
-    /**
-     * This method returns a pointer to a Neighbor object.
-     *
-     * @param[in]  aAddress  The address of the Neighbor.
-     *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, nullptr otherwise.
-     *
-     */
-    Neighbor *GetNeighbor(const Mac::Address &aAddress);
-
-    /**
-     * This method returns a pointer to a Neighbor object.
-     *
-     * @param[in]  aAddress  The address of the Neighbor.
-     *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, nullptr otherwise.
-     *
-     */
-    Neighbor *GetNeighbor(const Ip6::Address &aAddress);
-
-    /**
-     * This method returns a pointer to a Neighbor object if a one-way link is maintained
-     * as in the instance of an FTD child with neighbor routers.
-     *
-     * @param[in]  aAddress  The address of the Neighbor.
-     *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, nullptr otherwise.
-     *
-     */
-    Neighbor *GetRxOnlyNeighborRouter(const Mac::Address &aAddress);
-
-    /**
      * This method indicates whether or not the RLOC16 is an MTD child of this device.
      *
      * @param[in]  aRloc16  The RLOC16.
@@ -405,20 +354,6 @@ public:
      *
      */
     bool IsMinimalChild(uint16_t aRloc16);
-
-    /**
-     * This method gets the next neighbor information. It is used to iterate through the entries of
-     * the neighbor table.
-     *
-     * @param[inout]  aIterator  A reference to the iterator context. To get the first neighbor entry
-                                 it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
-     * @param[out]    aNeighInfo The neighbor information.
-     *
-     * @retval OT_ERROR_NONE          Successfully found the next neighbor entry in table.
-     * @retval OT_ERROR_NOT_FOUND     No subsequent neighbor entry exists in the table.
-     *
-     */
-    otError GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo);
 
     /**
      * This method indicates whether or not the given Thread partition attributes are preferred.
@@ -796,11 +731,6 @@ public:
 
     otError RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
     void    RemoveRouterLink(Router &) { IgnoreError(BecomeDetached()); }
-
-    Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress) { return Mle::GetNeighbor(aAddress); }
-    Neighbor *GetNeighbor(const Mac::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
-
-    otError GetNextNeighborInfo(otNeighborInfoIterator &, otNeighborInfo &) { return OT_ERROR_NOT_IMPLEMENTED; }
 
     static bool IsRouterIdValid(uint8_t aRouterId) { return aRouterId <= kMaxRouterId; }
 

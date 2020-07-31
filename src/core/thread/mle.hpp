@@ -45,6 +45,7 @@
 #include "net/udp6.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
+#include "thread/neighbor_table.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -1382,50 +1383,6 @@ protected:
     otError CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header);
 
     /**
-     * This method returns a pointer to the neighbor object.
-     *
-     * @param[in]  aAddress  A reference to the MAC address.
-     *
-     * @returns A pointer to the neighbor object.
-     *
-     */
-    Neighbor *GetNeighbor(const Mac::Address &aAddress);
-
-    /**
-     * This method returns a pointer to the neighbor object.
-     *
-     * @param[in]  aAddress  A reference to the MAC short address.
-     *
-     * @returns A pointer to the neighbor object.
-     *
-     */
-    Neighbor *GetNeighbor(Mac::ShortAddress aAddress);
-
-    /**
-     * This method returns a pointer to the neighbor object.
-     *
-     * @param[in]  aAddress  A reference to the MAC extended address.
-     *
-     * @returns A pointer to the neighbor object.
-     *
-     */
-    Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress);
-
-    /**
-     * This method returns a pointer to the neighbor object.
-     *
-     * @param[in]  aAddress  A reference to the IPv6 address.
-     *
-     * @returns A pointer to the neighbor object.
-     *
-     */
-    Neighbor *GetNeighbor(const Ip6::Address &aAddress)
-    {
-        OT_UNUSED_VARIABLE(aAddress);
-        return nullptr;
-    }
-
-    /**
      * This method returns the next hop towards an RLOC16 destination.
      *
      * @param[in]  aDestination  The RLOC16 of the destination.
@@ -1605,6 +1562,7 @@ protected:
     DeviceRole    mRole;                     ///< Current Thread role.
     Router        mParent;                   ///< Parent information.
     Router        mParentCandidate;          ///< Parent candidate information.
+    NeighborTable mNeighborTable;            ///< The neighbor table.
     DeviceMode    mDeviceMode;               ///< Device mode setting.
     AttachState   mAttachState;              ///< The parent request state.
     ReattachState mReattachState;            ///< Reattach state

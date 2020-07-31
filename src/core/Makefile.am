@@ -229,6 +229,7 @@ SOURCES_COMMON                             = \
     thread/mle_router.cpp                    \
     thread/mle_types.cpp                     \
     thread/mlr_manager.cpp                   \
+    thread/neighbor_table.cpp                \
     thread/network_data.cpp                  \
     thread/network_data_leader.cpp           \
     thread/network_data_leader_ftd.cpp       \
@@ -445,6 +446,7 @@ HEADERS_COMMON                             = \
     thread/mle_types.hpp                     \
     thread/mlr_manager.hpp                   \
     thread/mlr_types.hpp                     \
+    thread/neighbor_table.hpp                \
     thread/network_data.hpp                  \
     thread/network_data_leader.hpp           \
     thread/network_data_leader_ftd.hpp       \

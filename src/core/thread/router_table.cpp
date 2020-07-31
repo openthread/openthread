@@ -373,6 +373,11 @@ Router *RouterTable::GetNeighbor(const Mac::ExtAddress &aExtAddress)
     return FindRouter(Router::AddressMatcher(aExtAddress, Router::kInStateValid));
 }
 
+Router *RouterTable::GetNeighbor(const Mac::Address &aMacAddress)
+{
+    return FindRouter(Router::AddressMatcher(aMacAddress, Router::kInStateValid));
+}
+
 const Router *RouterTable::GetRouter(uint8_t aRouterId) const
 {
     const Router *router = nullptr;

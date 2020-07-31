@@ -187,6 +187,7 @@ set(COMMON_SOURCES
     thread/mle_router.cpp
     thread/mle_types.cpp
     thread/mlr_manager.cpp
+    thread/neighbor_table.cpp
     thread/network_data.cpp
     thread/network_data_leader.cpp
     thread/network_data_leader_ftd.cpp

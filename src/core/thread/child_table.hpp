@@ -49,6 +49,7 @@ namespace ot {
  */
 class ChildTable : public InstanceLocator
 {
+    friend class NeighborTable;
     class IteratorBuilder;
 
 public:
