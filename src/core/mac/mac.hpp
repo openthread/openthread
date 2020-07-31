@@ -757,20 +757,6 @@ public:
      */
     bool IsCslEnabled(void) const;
 
-    /**
-     * This method tries to notify `SubMac` to change CSL state according to
-     * these factors:
-     * 1. The CSL period set in `Mac`(i.e. `mCslPeriodInactive`);
-     * 2. If `SubMac` is required to stop;
-     * 3. If the node has attached to a parent and its parent supports CSL;
-     *
-     * @param[in]  aStopCsl  If it's required to stop CSL. If true, `SubMac`
-     *                       would stop CSL. Otherwise, `SubMac` would set
-     *                       CSL period to the value to `mCslPeriodInactive`
-     *                       and start or stop CSL accordingly.
-     */
-    void ChangeCslState(bool aStopCsl);
-
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
@@ -942,9 +928,6 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     TimeMilli mCslTxFireTime;
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint16_t mCslPeriodInactive;
 #endif
 
     union

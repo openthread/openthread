@@ -116,9 +116,6 @@ Mac::Mac(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     , mCslTxFireTime(TimeMilli::kMaxDuration)
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    , mCslPeriodInactive(0)
-#endif
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
     , mSubMac(aInstance)
@@ -411,17 +408,6 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
         mShouldDelaySleep = false;
 #endif
     }
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (mRxOnWhenIdle)
-    {
-        ChangeCslState(/* aStopCsl */ true);
-    }
-    else
-    {
-        ChangeCslState(/* aStopCsl */ false);
-    }
-#endif
 
     mSubMac.SetRxOnWhenBackoff(mRxOnWhenIdle || mPromiscuous);
     UpdateIdleMode();
@@ -1927,6 +1913,9 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
     Get<MeshForwarder>().HandleReceivedFrame(*aFrame);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    UpdateIdleMode();
+#endif
 
 exit:
 
@@ -2215,9 +2204,15 @@ exit:
 
 void Mac::SetCslPeriod(uint16_t aPeriod)
 {
-    mCslPeriodInactive = aPeriod;
+    mSubMac.SetCslPeriod(aPeriod);
+    IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), &Get<Mle::Mle>().GetParent().GetExtAddress()));
 
-    ChangeCslState(/* aStopCsl = */ false);
+    if (IsCslEnabled())
+    {
+        Get<Mle::Mle>().ScheduleChildUpdateRequest();
+    }
+
+    UpdateIdleMode();
 }
 
 otError Mac::SetCslTimeout(uint32_t aTimeout)
@@ -2238,37 +2233,10 @@ exit:
     return error;
 }
 
-bool Mac::DoesParentSupportCsl(void) const
-{
-    return !GetRxOnWhenIdle() && Get<Mle::MleRouter>().IsChild() &&
-           Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported();
-}
-
 bool Mac::IsCslEnabled(void) const
 {
-    return DoesParentSupportCsl() && (GetCslPeriod() > 0);
-}
-
-void Mac::ChangeCslState(bool aStopCsl)
-{
-    uint16_t cslPeriod = aStopCsl ? 0 : mCslPeriodInactive;
-
-    if (cslPeriod != 0)
-    {
-        VerifyOrExit(DoesParentSupportCsl(), OT_NOOP);
-    }
-
-    mSubMac.SetCslPeriod(cslPeriod);
-
-    IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), &Get<Mle::Mle>().GetParent().GetExtAddress()));
-
-    if (GetCslPeriod() > 0)
-    {
-        Get<Mle::Mle>().ScheduleChildUpdateRequest();
-    }
-
-exit:
-    return;
+    return (GetCslPeriod() > 0) && !GetRxOnWhenIdle() && Get<Mle::MleRouter>().IsChild() &&
+           Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported();
 }
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE

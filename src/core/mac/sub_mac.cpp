@@ -340,6 +340,10 @@ void SubMac::StartCsmaBackoff(void)
         {
             mTimer.Start((phaseDesired - phaseNow) * kUsPerTenSymbols);
         }
+        else if (phaseNow > phaseDesired)
+        {
+            mTimer.Start((phaseDesired + mTransmitFrame.mInfo.mTxInfo.mPeriod - phaseNow) * kUsPerTenSymbols);
+        }
         else
         {
             BeginTransmit();
