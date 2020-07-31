@@ -606,8 +606,9 @@ otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const o
     return OT_ERROR_NONE;
 }
 
-void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime)
+void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime)
 {
+    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aCslSampleTime);
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE

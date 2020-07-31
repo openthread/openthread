@@ -844,25 +844,22 @@ void radioSendAck(void)
     {
         otEXPECT(otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending,
                                           sAckIeData, sAckIeDataLength, &sAckFrame) == OT_ERROR_NONE);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        if (sCslPeriod > 0)
+        {
+            otMacFrameSetCslIe(&sAckFrame, (uint16_t)sCslPeriod, getCslPhase());
+        }
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        if (otMacFrameIsSecurityEnabled(&sAckFrame))
+        {
+            otEXPECT(radioProcessTransmitSecurity(&sAckFrame) == OT_ERROR_NONE);
+        }
     }
     else
 #endif
     {
         otMacFrameGenerateImmAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, &sAckFrame);
     }
-
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (sCslPeriod > 0)
-    {
-        otMacFrameSetCslIe(&sAckFrame, (uint16_t)sCslPeriod, getCslPhase());
-    }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (otMacFrameIsSecurityEnabled(&sAckFrame))
-    {
-        otEXPECT(radioProcessTransmitSecurity(&sAckFrame) == OT_ERROR_NONE);
-    }
-#endif
 
     sAckMessage.mChannel = sReceiveFrame.mChannel;
 
@@ -1084,9 +1081,7 @@ static otError updateIeData(otInstance *aInstance)
 
     return error;
 }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -1101,8 +1096,10 @@ otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const o
     return error;
 }
 
-void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime)
+void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     sCslSampleTime = aCslSampleTime;
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE

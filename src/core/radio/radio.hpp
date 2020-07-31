@@ -409,7 +409,7 @@ public:
      * @param[in]  aCslSampleTime  The csl sample time.
      *
      */
-    void UpdateCslSampleTime(uint32_t aCslSampleTime) { otPlatRadioUpdateCslSampleTime(aCslSampleTime); }
+    void UpdateCslSampleTime(uint32_t aCslSampleTime) { otPlatRadioUpdateCslSampleTime(GetInstance(), aCslSampleTime); }
 
     /** This method enables csl sampling in radio.
      *

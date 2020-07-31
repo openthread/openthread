@@ -2278,9 +2278,11 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
 {
     const uint8_t *cur   = aFrame.GetHeaderIe(Frame::kHeaderIeCsl);
     Child *        child = Get<ChildTable>().FindChild(aSrcAddr, Child::kInStateAnyExceptInvalid);
-    const CslIe *  csl   = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
+    const CslIe *  csl;
 
     VerifyOrExit(cur != NULL && child != NULL && aFrame.GetSecurityEnabled(), OT_NOOP);
+
+    csl = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
 
     child->SetCslPeriod(csl->GetPeriod());
     // Use ceiling to ensure the the time diff will be within kUsPerTenSymbols

@@ -899,10 +899,11 @@ otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const o
  * Update CSL sample time in radio driver. Sample time is stored in radio driver as a copy to calculate phase when
  * sending ACK with CSL IE.
  *
+ * @param[in]  aInstance         The OpenThread instance structure.
  * @param[in]  aCslSampleTime    The latest sample time.
  *
  */
-void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime);
+void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime);
 
 /**
  * @}
