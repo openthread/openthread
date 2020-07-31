@@ -92,6 +92,28 @@ public:
     Address &GetAddress(void) { return static_cast<Address &>(mAddress); }
 
     /**
+     * This method returns the address's prefix length (in bits).
+     *
+     * @returns The prefix length (in bits).
+     *
+     */
+    uint8_t GetPrefixLength(void) const { return mPrefixLength; }
+
+    /**
+     * This method indicates whether the address has a given prefix (i.e. same prefix length and matches the prefix).
+     *
+     * @param[in] aPrefix   A prefix to check against.
+     *
+     * @retval TRUE  The address has and fully matches the @p aPrefix.
+     * @retval FALSE The address does not contain or match the @p aPrefix.
+     *
+     */
+    bool HasPrefix(const Prefix &aPrefix) const
+    {
+        return (mPrefixLength == aPrefix.GetLength()) && GetAddress().MatchesPrefix(aPrefix);
+    }
+
+    /**
      * This method returns the IPv6 scope value.
      *
      * @returns The IPv6 scope value.

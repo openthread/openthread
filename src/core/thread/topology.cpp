@@ -273,6 +273,26 @@ exit:
     return retval;
 }
 
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+const Ip6::Address *Child::GetDomainUnicastAddress(void) const
+{
+    const Ip6::Address *addr = nullptr;
+
+    for (const Ip6::Address &ip6Address : mIp6Address)
+    {
+        VerifyOrExit(!ip6Address.IsUnspecified(), OT_NOOP);
+
+        if (Get<BackboneRouter::Leader>().IsDomainUnicast(ip6Address))
+        {
+            ExitNow(addr = &ip6Address);
+        }
+    }
+
+exit:
+    return addr;
+}
+#endif
+
 void Child::GenerateChallenge(void)
 {
     IgnoreError(Random::Crypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge)));

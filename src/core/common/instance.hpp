@@ -750,17 +750,17 @@ template <> inline BackboneRouter::Manager &Instance::Get(void)
 
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-template <> inline DuaManager &Instance::Get(void)
-{
-    return mThreadNetif.mDuaManager;
-}
-#endif
-
 #if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 template <> inline MlrManager &Instance::Get(void)
 {
     return mThreadNetif.mMlrManager;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+template <> inline DuaManager &Instance::Get(void)
+{
+    return mThreadNetif.mDuaManager;
 }
 #endif
 

@@ -94,7 +94,7 @@ exit:
     return;
 }
 
-bool Slaac::ShouldFilter(const otIp6Prefix &aPrefix) const
+bool Slaac::ShouldFilter(const Ip6::Prefix &aPrefix) const
 {
     return (mFilter != nullptr) && mFilter(&GetInstance(), &aPrefix);
 }
@@ -143,7 +143,7 @@ bool Slaac::DoesConfigMatchNetifAddr(const NetworkData::OnMeshPrefixConfig &aCon
 {
     return (((aConfig.mOnMesh && (aAddr.mPrefixLength == aConfig.mPrefix.mLength)) ||
              (!aConfig.mOnMesh && (aAddr.mPrefixLength == 128))) &&
-            (aAddr.GetAddress().PrefixMatch(aConfig.mPrefix.mPrefix) >= aConfig.mPrefix.mLength));
+            (aAddr.GetAddress().MatchesPrefix(aConfig.GetPrefix())));
 }
 
 void Slaac::Update(UpdateMode aMode)
@@ -179,7 +179,8 @@ void Slaac::Update(UpdateMode aMode)
                         continue;
                     }
 
-                    if (config.mSlaac && !ShouldFilter(config.mPrefix) && DoesConfigMatchNetifAddr(config, *slaacAddr))
+                    if (config.mSlaac && !ShouldFilter(config.GetPrefix()) &&
+                        DoesConfigMatchNetifAddr(config, *slaacAddr))
                     {
                         found = true;
                         break;
@@ -205,7 +206,7 @@ void Slaac::Update(UpdateMode aMode)
 
         while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
         {
-            otIp6Prefix &prefix = config.mPrefix;
+            Ip6::Prefix &prefix = config.GetPrefix();
 
             if (config.mDp || !config.mSlaac || ShouldFilter(prefix))
             {
@@ -236,7 +237,7 @@ void Slaac::Update(UpdateMode aMode)
                     }
 
                     slaacAddr->Clear();
-                    memcpy(&slaacAddr->mAddress, &prefix.mPrefix, BitVectorBytes(prefix.mLength));
+                    slaacAddr->GetAddress().SetPrefix(prefix);
 
                     slaacAddr->mPrefixLength  = config.mOnMesh ? prefix.mLength : 128;
                     slaacAddr->mAddressOrigin = OT_ADDRESS_ORIGIN_SLAAC;
