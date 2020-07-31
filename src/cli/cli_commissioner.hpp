@@ -94,6 +94,7 @@ private:
     otError ProcessProvisioningUrl(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessSessionId(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessState(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
 
     static void HandleStateChanged(otCommissionerState aState, void *aContext);
@@ -115,6 +116,8 @@ private:
 
     static void HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
     void        HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
+
+    static const char *StateToString(otCommissionerState aState);
 
     static const Command sCommands[];
     Interpreter &        mInterpreter;
