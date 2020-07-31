@@ -44,6 +44,7 @@ namespace ot {
 
 class RouterTable : public InstanceLocator
 {
+    friend class NeighborTable;
     class IteratorBuilder;
 
 public:
@@ -270,6 +271,16 @@ public:
      *
      */
     Router *GetNeighbor(const Mac::ExtAddress &aExtAddress);
+
+    /**
+     * This method returns the neighbor for a given MAC address.
+     *
+     * @param[in]  aMacAddress  A MAC address
+     *
+     * @returns A pointer to the router or nullptr if the router could not be found.
+     *
+     */
+    Router *GetNeighbor(const Mac::Address &aMacAddress);
 
     /**
      * This method returns the router for a given router id.
