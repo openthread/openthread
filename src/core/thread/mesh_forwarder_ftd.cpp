@@ -731,13 +731,13 @@ bool MeshForwarder::UpdateFragmentLifetime(void)
 {
     bool shouldRun = false;
 
-    for (FragmentPriorityEntry *entry = &mFragmentEntries[0]; entry < OT_ARRAY_END(mFragmentEntries); entry++)
+    for (FragmentPriorityEntry &entry : mFragmentEntries)
     {
-        if (entry->GetLifetime() != 0)
+        if (entry.GetLifetime() != 0)
         {
-            entry->DecrementLifetime();
+            entry.DecrementLifetime();
 
-            if (entry->GetLifetime() != 0)
+            if (entry.GetLifetime() != 0)
             {
                 shouldRun = true;
             }
@@ -787,38 +787,34 @@ exit:
 
 FragmentPriorityEntry *MeshForwarder::FindFragmentPriorityEntry(uint16_t aTag, uint16_t aSrcRloc16)
 {
-    FragmentPriorityEntry *entry;
+    FragmentPriorityEntry *rval = nullptr;
 
-    for (entry = &mFragmentEntries[0]; entry < OT_ARRAY_END(mFragmentEntries); entry++)
+    for (FragmentPriorityEntry &entry : mFragmentEntries)
     {
-        if ((entry->GetLifetime() != 0) && (entry->GetDatagramTag() == aTag) && (entry->GetSrcRloc16() == aSrcRloc16))
+        if ((entry.GetLifetime() != 0) && (entry.GetDatagramTag() == aTag) && (entry.GetSrcRloc16() == aSrcRloc16))
         {
-            ExitNow();
+            rval = &entry;
+            break;
         }
     }
 
-    entry = nullptr;
-
-exit:
-    return entry;
+    return rval;
 }
 
 FragmentPriorityEntry *MeshForwarder::GetUnusedFragmentPriorityEntry(void)
 {
-    FragmentPriorityEntry *entry;
+    FragmentPriorityEntry *rval = nullptr;
 
-    for (entry = &mFragmentEntries[0]; entry < OT_ARRAY_END(mFragmentEntries); entry++)
+    for (FragmentPriorityEntry &entry : mFragmentEntries)
     {
-        if (entry->GetLifetime() == 0)
+        if (entry.GetLifetime() == 0)
         {
-            ExitNow();
+            rval = &entry;
+            break;
         }
     }
 
-    entry = nullptr;
-
-exit:
-    return entry;
+    return rval;
 }
 
 otError MeshForwarder::GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
