@@ -156,9 +156,9 @@ otError Joiner::Start(const char *     aPskd,
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(kJoinerUdpPort));
     Get<Coap::CoapSecure>().SetPsk(joinerPskd);
 
-    for (JoinerRouter *router = &mJoinerRouters[0]; router < OT_ARRAY_END(mJoinerRouters); router++)
+    for (JoinerRouter &router : mJoinerRouters)
     {
-        router->mPriority = 0; // Priority zero means entry is not in-use.
+        router.mPriority = 0; // Priority zero means entry is not in-use.
     }
 
     SuccessOrExit(error = PrepareJoinerFinalizeMessage(aProvisioningUrl, aVendorName, aVendorModel, aVendorSwVersion,

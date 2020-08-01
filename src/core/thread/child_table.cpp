@@ -77,18 +77,18 @@ ChildTable::ChildTable(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mMaxChildrenAllowed(kMaxChildren)
 {
-    for (Child *child = &mChildren[0]; child < OT_ARRAY_END(mChildren); child++)
+    for (Child &child : mChildren)
     {
-        child->Init(aInstance);
-        child->Clear();
+        child.Init(aInstance);
+        child.Clear();
     }
 }
 
 void ChildTable::Clear(void)
 {
-    for (Child *child = &mChildren[0]; child < OT_ARRAY_END(mChildren); child++)
+    for (Child &child : mChildren)
     {
-        child->Clear();
+        child.Clear();
     }
 }
 

@@ -59,9 +59,9 @@ RouterTable::RouterTable(Instance &aInstance)
     , mRouterIdSequence(Random::NonCrypto::GetUint8())
     , mActiveRouterCount(0)
 {
-    for (uint8_t index = 0; index < Mle::kMaxRouters; index++)
+    for (Router &router : mRouters)
     {
-        mRouters[index].Init(aInstance);
+        router.Init(aInstance);
     }
 
     Clear();
@@ -96,10 +96,8 @@ void RouterTable::Clear(void)
 
 void RouterTable::ClearNeighbors(void)
 {
-    for (uint8_t index = 0; index < Mle::kMaxRouters; index++)
+    for (Router &router : mRouters)
     {
-        Router &router = mRouters[index];
-
         if (router.IsStateValid())
         {
             Get<Mle::MleRouter>().Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, router);
