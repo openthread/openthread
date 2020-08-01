@@ -379,7 +379,7 @@ exit:
 otError Joiner::Connect(JoinerRouter &aRouter)
 {
     otError       error = OT_ERROR_NOT_FOUND;
-    Ip6::SockAddr sockaddr;
+    Ip6::SockAddr sockAddr(aRouter.mJoinerUdpPort);
 
     otLogInfoMeshCoP("Joiner connecting to %s, pan:0x%04x, chan:%d", aRouter.mExtAddr.ToString().AsCString(),
                      aRouter.mPanId, aRouter.mChannel);
@@ -388,10 +388,9 @@ otError Joiner::Connect(JoinerRouter &aRouter)
     SuccessOrExit(error = Get<Mac::Mac>().SetPanChannel(aRouter.mChannel));
     SuccessOrExit(error = Get<Ip6::Filter>().AddUnsecurePort(kJoinerUdpPort));
 
-    sockaddr.GetAddress().SetToLinkLocalAddress(aRouter.mExtAddr);
-    sockaddr.mPort = aRouter.mJoinerUdpPort;
+    sockAddr.GetAddress().SetToLinkLocalAddress(aRouter.mExtAddr);
 
-    SuccessOrExit(error = Get<Coap::CoapSecure>().Connect(sockaddr, Joiner::HandleSecureCoapClientConnect, this));
+    SuccessOrExit(error = Get<Coap::CoapSecure>().Connect(sockAddr, Joiner::HandleSecureCoapClientConnect, this));
 
     SetState(OT_JOINER_STATE_CONNECT);
 

@@ -95,9 +95,19 @@ otError Udp::Socket::Bind(const SockAddr &aSockAddr)
     return Get<Udp>().Bind(*this, aSockAddr);
 }
 
+otError Udp::Socket::Bind(uint16_t aPort)
+{
+    return Bind(SockAddr(aPort));
+}
+
 otError Udp::Socket::Connect(const SockAddr &aSockAddr)
 {
     return Get<Udp>().Connect(*this, aSockAddr);
+}
+
+otError Udp::Socket::Connect(uint16_t aPort)
+{
+    return Bind(SockAddr(aPort));
 }
 
 otError Udp::Socket::Close(void)
