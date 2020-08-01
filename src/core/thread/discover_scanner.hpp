@@ -137,9 +137,9 @@ public:
     /**
      * This method sets Joiner Advertisement.
      *
-     * @param[in]  aOui             The Vendor OUI for Joiner Advertisement
-     * @param[in]  aAdvData         A pointer to AdvData for Joiner Advertisement
-     * @param[in]  aAdvDataLength   The length of AdvData
+     * @param[in]  aOui             The Vendor OUI for Joiner Advertisement.
+     * @param[in]  aAdvData         A pointer to AdvData for Joiner Advertisement.
+     * @param[in]  aAdvDataLength   The length of AdvData.
      *
      * @retval OT_ERROR_NONE            Successfully set Joiner Advertisement.
      * @retval OT_ERROR_INVALID_ARGS    Invalid AdvData.

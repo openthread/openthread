@@ -274,7 +274,7 @@ bool otThreadIsDiscoverInProgress(otInstance *aInstance);
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aOui             The Vendor IEEE OUI value that will be included in the Joiner Advertisement. Only the
  *                              least significant 3 bytes will be used, and the most significant byte will be ignored.
- * @param[in]  aAdvData         The AdvData that will be included in the Joiner Advertisement.
+ * @param[in]  aAdvData         A pointer to the AdvData that will be included in the Joiner Advertisement.
  * @param[in]  aAdvDataLength   The length of AdvData in bytes.
  *
  * @retval OT_ERROR_NONE         Successfully set Joiner Advertisement.

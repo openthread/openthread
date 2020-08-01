@@ -2432,7 +2432,8 @@ public:
     /**
      * This method sets the Adv Data value.
      *
-     * @param[in]  aAdvData  A pointer to the Adv Data value.
+     * @param[in]  aAdvData        A pointer to the AdvData value.
+     * @param[in]  aAdvDataLength  The length of AdvData in bytes.
      *
      */
     void SetAdvData(const uint8_t *aAdvData, uint8_t aAdvDataLength)
