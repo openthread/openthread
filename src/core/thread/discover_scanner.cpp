@@ -69,7 +69,6 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
 {
     otError                         error   = OT_ERROR_NONE;
     Message *                       message = nullptr;
-    uint16_t                        startOffset;
     Tlv                             tlv;
     Ip6::Address                    destination;
     MeshCoP::DiscoveryRequestTlv    discoveryRequest;
@@ -110,30 +109,31 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     message->SetPanId(aPanId);
     SuccessOrExit(error = Get<Mle>().AppendHeader(*message, Header::kCommandDiscoveryRequest));
 
-    tlv.SetType(Tlv::kDiscovery);
-    SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-
-    startOffset = message->GetLength();
-
-    // Append sub-TLV MeshCoP Discovery Request.
+    // Prepare sub-TLV MeshCoP Discovery Request.
     discoveryRequest.Init();
     discoveryRequest.SetVersion(kThreadVersion);
     discoveryRequest.SetJoiner(aJoiner);
 
+    if (mAdvDataLength != 0)
+    {
+        // Prepare sub-TLV MeshCoP Joiner Advertisement.
+        joinerAdvertisement.Init();
+        joinerAdvertisement.SetOui(mOui);
+        joinerAdvertisement.SetAdvData(mAdvData, mAdvDataLength);
+    }
+
+    // Append Discovery TLV with one or two sub-TLVs.
+    tlv.SetType(Tlv::kDiscovery);
+    tlv.SetLength(
+        static_cast<uint8_t>(discoveryRequest.GetSize() + ((mAdvDataLength != 0) ? joinerAdvertisement.GetSize() : 0)));
+
+    SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
     SuccessOrExit(error = discoveryRequest.AppendTo(*message));
 
     if (mAdvDataLength != 0)
     {
-        // Append sub-TLV MeshCoP Joiner Advertisement.
-        joinerAdvertisement.Init();
-        joinerAdvertisement.SetOui(mOui);
-        joinerAdvertisement.SetAdvData(mAdvData, mAdvDataLength);
-
         SuccessOrExit(error = joinerAdvertisement.AppendTo(*message));
     }
-
-    tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
-    message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
 
     destination.SetToLinkLocalAllRoutersMulticast();
 
