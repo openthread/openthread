@@ -267,15 +267,15 @@ bool otThreadIsDiscoverInProgress(otInstance *aInstance);
 /**
  * This method sets the Thread Joiner Advertisement when discovering Thread network.
  *
- * Thread Joiner Advertisement is used to allow a Joiner advertise its own application-specific information
- * (such as Vendor ID, Product ID, Discriminator, etc.) unsolicitedly via a newly-proposed Joiner Advertisement TLV,
- * and to make this information available to Commissioners or Commissioner Candidates without human interactions.
+ * Thread Joiner Advertisement is used to allow a Joiner to advertise its own application-specific information
+ * (such as Vendor ID, Product ID, Discriminator, etc.) via a newly-proposed Joiner Advertisement TLV,
+ * and to make this information available to Commissioners or Commissioner Candidates without human interaction.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
- * @param[in]  aOui             The Vendor IEEE OUI value which will be included in the Joiner Advertisement. Only the
+ * @param[in]  aOui             The Vendor IEEE OUI value that will be included in the Joiner Advertisement. Only the
  *                              least significant 3 bytes will be used, and the most significant byte will be ignored.
- * @param[in]  aAdvData         The AdvData which will be included in the Joiner Advertisement.
- * @param[in]  aAdvDataLength   The length of AdvData
+ * @param[in]  aAdvData         The AdvData that will be included in the Joiner Advertisement.
+ * @param[in]  aAdvDataLength   The length of AdvData in bytes.
  *
  * @retval OT_ERROR_NONE         Successfully set Joiner Advertisement.
  * @retval OT_ERROR_INVALID_ARGS Invalid AdvData.
