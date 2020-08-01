@@ -47,7 +47,7 @@ const struct Commissioner::Command Commissioner::sCommands[] = {
     {"mgmtget", &Commissioner::ProcessMgmtGet},     {"mgmtset", &Commissioner::ProcessMgmtSet},
     {"panid", &Commissioner::ProcessPanId},         {"provisioningurl", &Commissioner::ProcessProvisioningUrl},
     {"sessionid", &Commissioner::ProcessSessionId}, {"start", &Commissioner::ProcessStart},
-    {"stop", &Commissioner::ProcessStop},
+    {"state", &Commissioner::ProcessState},         {"stop", &Commissioner::ProcessStop},
 };
 
 otError Commissioner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
@@ -344,20 +344,27 @@ void Commissioner::HandleStateChanged(otCommissionerState aState, void *aContext
 
 void Commissioner::HandleStateChanged(otCommissionerState aState)
 {
-    mInterpreter.mServer->OutputFormat("Commissioner: ");
+    mInterpreter.mServer->OutputFormat("Commissioner: %s\r\n", StateToString(aState));
+}
+
+const char *Commissioner::StateToString(otCommissionerState aState)
+{
+    const char *rval = "unknown";
 
     switch (aState)
     {
     case OT_COMMISSIONER_STATE_DISABLED:
-        mInterpreter.mServer->OutputFormat("disabled\r\n");
+        rval = "disabled";
         break;
     case OT_COMMISSIONER_STATE_PETITION:
-        mInterpreter.mServer->OutputFormat("petitioning\r\n");
+        rval = "petitioning";
         break;
     case OT_COMMISSIONER_STATE_ACTIVE:
-        mInterpreter.mServer->OutputFormat("active\r\n");
+        rval = "active";
         break;
     }
+
+    return rval;
 }
 
 void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
@@ -409,6 +416,16 @@ otError Commissioner::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgs);
 
     return otCommissionerStop(mInterpreter.mInstance);
+}
+
+otError Commissioner::ProcessState(uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    mInterpreter.mServer->OutputFormat("%s\r\n", StateToString(otCommissionerGetState(mInterpreter.mInstance)));
+
+    return OT_ERROR_NONE;
 }
 
 otError Commissioner::Process(uint8_t aArgsLength, char *aArgs[])
