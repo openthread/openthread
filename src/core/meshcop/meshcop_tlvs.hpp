@@ -2401,7 +2401,7 @@ public:
     }
 
     /**
-     * This method returns the Vendor OUI value.
+     * This method sets the Vendor OUI value.
      *
      * @param[in]  aOui The Vendor OUI value.
      *
