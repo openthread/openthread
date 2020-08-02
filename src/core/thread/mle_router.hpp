@@ -430,7 +430,7 @@ public:
      * @param[out]  aChildInfo  The child information.
      *
      */
-    otError GetChildInfoById(uint16_t aChildId, otChildInfo &aChildInfo);
+    otError GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo);
 
     /**
      * This method retains diagnostic information for an attached child by the internal table index.
@@ -439,7 +439,7 @@ public:
      * @param[out]  aChildInfo   The child information.
      *
      */
-    otError GetChildInfoByIndex(uint16_t aChildIndex, otChildInfo &aChildInfo);
+    otError GetChildInfoByIndex(uint16_t aChildIndex, Child::Info &aChildInfo);
 
     /**
      * This method indicates whether or not the RLOC16 is an MTD child of this device.
@@ -464,7 +464,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND     No subsequent neighbor entry exists in the table.
      *
      */
-    otError GetNextNeighborInfo(otNeighborInfoIterator &aIterator, otNeighborInfo &aNeighInfo);
+    otError GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo);
 
     /**
      * This method indicates whether or not the given Thread partition attributes are preferred.
@@ -706,8 +706,6 @@ private:
     otError AppendRoute(Message &aMessage);
     otError AppendActiveDataset(Message &aMessage);
     otError AppendPendingDataset(Message &aMessage);
-    otError GetChildInfo(Child &aChild, otChildInfo &aChildInfo);
-    void    GetNeighborInfo(Neighbor &aNeighbor, otNeighborInfo &aNeighInfo);
     void    RefreshStoredChildren(void);
     void    HandleDetachStart(void);
     void    HandleChildStart(AttachMode aMode);
