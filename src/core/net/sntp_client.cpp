@@ -98,11 +98,10 @@ Client::Client(Instance &aInstance)
 
 otError Client::Start(void)
 {
-    otError       error;
-    Ip6::SockAddr addr;
+    otError error;
 
     SuccessOrExit(error = mSocket.Open(&Client::HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(addr));
+    SuccessOrExit(error = mSocket.Bind());
 
 exit:
     return error;
