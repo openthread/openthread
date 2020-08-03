@@ -80,6 +80,7 @@ class PcapCodec(object):
         pkt = self.encode_frame(frame, *timestamp)
         self._pcap_file.write(pkt)
         self._pcap_file.flush()
+        return pkt
 
     def __del__(self):
         self._pcap_file.close()
