@@ -3663,7 +3663,7 @@ void MleRouter::SetRouterId(uint8_t aRouterId)
     mPreviousRouterId = mRouterId;
 }
 
-otError MleRouter::GetChildInfoById(uint16_t aChildId, otChildInfo &aChildInfo)
+otError MleRouter::GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo)
 {
     otError  error = OT_ERROR_NONE;
     Child *  child;
@@ -3675,24 +3675,24 @@ otError MleRouter::GetChildInfoById(uint16_t aChildId, otChildInfo &aChildInfo)
     }
 
     rloc16 = Get<Mac::Mac>().GetShortAddress() | aChildId;
-    child  = mChildTable.FindChild(rloc16, Child::kInStateAnyExceptInvalid);
+    child  = mChildTable.FindChild(rloc16, Child::kInStateValidOrRestoring);
     VerifyOrExit(child != nullptr, error = OT_ERROR_NOT_FOUND);
 
-    error = GetChildInfo(*child, aChildInfo);
+    aChildInfo.SetFrom(*child);
 
 exit:
     return error;
 }
 
-otError MleRouter::GetChildInfoByIndex(uint16_t aChildIndex, otChildInfo &aChildInfo)
+otError MleRouter::GetChildInfoByIndex(uint16_t aChildIndex, Child::Info &aChildInfo)
 {
     otError error = OT_ERROR_NONE;
     Child * child = nullptr;
 
     child = mChildTable.GetChildAtIndex(aChildIndex);
-    VerifyOrExit(child != nullptr, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit((child != nullptr) && child->IsStateValidOrRestoring(), error = OT_ERROR_NOT_FOUND);
 
-    error = GetChildInfo(*child, aChildInfo);
+    aChildInfo.SetFrom(*child);
 
 exit:
     return error;
@@ -3793,59 +3793,10 @@ exit:
     return;
 }
 
-otError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
+otError MleRouter::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
 {
     otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aChild.IsStateValidOrRestoring(), error = OT_ERROR_NOT_FOUND);
-
-    memset(&aChildInfo, 0, sizeof(aChildInfo));
-    aChildInfo.mExtAddress         = aChild.GetExtAddress();
-    aChildInfo.mTimeout            = aChild.GetTimeout();
-    aChildInfo.mRloc16             = aChild.GetRloc16();
-    aChildInfo.mChildId            = ChildIdFromRloc16(aChild.GetRloc16());
-    aChildInfo.mNetworkDataVersion = aChild.GetNetworkDataVersion();
-    aChildInfo.mAge                = Time::MsecToSec(TimerMilli::GetNow() - aChild.GetLastHeard());
-    aChildInfo.mLinkQualityIn      = aChild.GetLinkInfo().GetLinkQuality();
-    aChildInfo.mAverageRssi        = aChild.GetLinkInfo().GetAverageRss();
-    aChildInfo.mLastRssi           = aChild.GetLinkInfo().GetLastRss();
-    aChildInfo.mFrameErrorRate     = aChild.GetLinkInfo().GetFrameErrorRate();
-    aChildInfo.mMessageErrorRate   = aChild.GetLinkInfo().GetMessageErrorRate();
-    aChildInfo.mRxOnWhenIdle       = aChild.IsRxOnWhenIdle();
-    aChildInfo.mSecureDataRequest  = aChild.IsSecureDataRequest();
-    aChildInfo.mFullThreadDevice   = aChild.IsFullThreadDevice();
-    aChildInfo.mFullNetworkData    = aChild.IsFullNetworkData();
-    aChildInfo.mIsStateRestoring   = aChild.IsStateRestoring();
-
-exit:
-    return error;
-}
-
-void MleRouter::GetNeighborInfo(Neighbor &aNeighbor, otNeighborInfo &aNeighInfo)
-{
-    aNeighInfo.mExtAddress        = aNeighbor.GetExtAddress();
-    aNeighInfo.mAge               = Time::MsecToSec(TimerMilli::GetNow() - aNeighbor.GetLastHeard());
-    aNeighInfo.mRloc16            = aNeighbor.GetRloc16();
-    aNeighInfo.mLinkFrameCounter  = aNeighbor.GetLinkFrameCounter();
-    aNeighInfo.mMleFrameCounter   = aNeighbor.GetMleFrameCounter();
-    aNeighInfo.mLinkQualityIn     = aNeighbor.GetLinkInfo().GetLinkQuality();
-    aNeighInfo.mAverageRssi       = aNeighbor.GetLinkInfo().GetAverageRss();
-    aNeighInfo.mLastRssi          = aNeighbor.GetLinkInfo().GetLastRss();
-    aNeighInfo.mFrameErrorRate    = aNeighbor.GetLinkInfo().GetFrameErrorRate();
-    aNeighInfo.mMessageErrorRate  = aNeighbor.GetLinkInfo().GetMessageErrorRate();
-    aNeighInfo.mRxOnWhenIdle      = aNeighbor.IsRxOnWhenIdle();
-    aNeighInfo.mSecureDataRequest = aNeighbor.IsSecureDataRequest();
-    aNeighInfo.mFullThreadDevice  = aNeighbor.IsFullThreadDevice();
-    aNeighInfo.mFullNetworkData   = aNeighbor.IsFullNetworkData();
-}
-
-otError MleRouter::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, otNeighborInfo &aNeighInfo)
-{
-    otError   error    = OT_ERROR_NONE;
-    Neighbor *neighbor = nullptr;
-    int16_t   index;
-
-    memset(&aNeighInfo, 0, sizeof(aNeighInfo));
+    int16_t index;
 
     // Non-negative iterator value gives the Child index into child table
 
@@ -3862,7 +3813,7 @@ otError MleRouter::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, otNeig
 
             if (child->IsStateValid())
             {
-                neighbor            = child;
+                aNeighInfo.SetFrom(*child);
                 aNeighInfo.mIsChild = true;
                 index++;
                 aIterator = index;
@@ -3881,7 +3832,7 @@ otError MleRouter::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, otNeig
 
         if (router != nullptr && router->IsStateValid())
         {
-            neighbor            = router;
+            aNeighInfo.SetFrom(*router);
             aNeighInfo.mIsChild = false;
             index++;
             aIterator = -index;
@@ -3893,12 +3844,6 @@ otError MleRouter::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, otNeig
     error     = OT_ERROR_NOT_FOUND;
 
 exit:
-
-    if (neighbor != nullptr)
-    {
-        GetNeighborInfo(*neighbor, aNeighInfo);
-    }
-
     return error;
 }
 
@@ -4776,13 +4721,12 @@ void MleRouter::Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
         {
         case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
         case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
-            error = GetChildInfo(static_cast<Child &>(aNeighbor), info.mInfo.mChild);
-            OT_ASSERT(error == OT_ERROR_NONE);
+            static_cast<Child::Info &>(info.mInfo.mChild).SetFrom(static_cast<Child &>(aNeighbor));
             break;
 
         case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
         case OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED:
-            GetNeighborInfo(aNeighbor, info.mInfo.mRouter);
+            static_cast<Neighbor::Info &>(info.mInfo.mRouter).SetFrom(aNeighbor);
             break;
         }
 
