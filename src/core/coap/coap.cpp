@@ -1020,12 +1020,10 @@ Coap::Coap(Instance &aInstance)
 
 otError Coap::Start(uint16_t aPort)
 {
-    otError       error;
-    Ip6::SockAddr sockaddr;
+    otError error;
 
-    sockaddr.mPort = aPort;
     SuccessOrExit(error = mSocket.Open(&Coap::HandleUdpReceive, this));
-    VerifyOrExit((error = mSocket.Bind(sockaddr)) == OT_ERROR_NONE, IgnoreError(mSocket.Close()));
+    VerifyOrExit((error = mSocket.Bind(aPort)) == OT_ERROR_NONE, IgnoreError(mSocket.Close()));
 
 exit:
     return error;

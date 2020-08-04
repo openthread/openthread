@@ -132,11 +132,8 @@ otError Server::UpdateService(void)
 
 void Server::Start(void)
 {
-    Ip6::SockAddr sockaddr;
-
-    sockaddr.mPort = kDhcpServerPort;
     IgnoreError(mSocket.Open(&Server::HandleUdpReceive, this));
-    IgnoreError(mSocket.Bind(sockaddr));
+    IgnoreError(mSocket.Bind(kDhcpServerPort));
 }
 
 void Server::Stop(void)

@@ -202,13 +202,11 @@ Mle::Mle(Instance &aInstance)
 
 otError Mle::Enable(void)
 {
-    otError       error = OT_ERROR_NONE;
-    Ip6::SockAddr sockaddr;
+    otError error = OT_ERROR_NONE;
 
     UpdateLinkLocalAddress();
-    sockaddr.mPort = kUdpPort;
     SuccessOrExit(error = mSocket.Open(&Mle::HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(sockaddr));
+    SuccessOrExit(error = mSocket.Bind(kUdpPort));
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     StartParentSearchTimer();

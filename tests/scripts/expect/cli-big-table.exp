@@ -28,51 +28,51 @@
 #
 
 source "tests/scripts/expect/_common.exp"
-source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes
+set max_node 15
+set spawn_ids(1) [spawn_node 1]
+set spawn_id $spawn_ids(1)
+expect_after {
+    timeout { exit 1 }
+}
+send "panid 0xface\n"
+expect "Done"
+send "ifconfig up\n"
+expect "Done"
+send "thread start\n"
+expect "Done"
+wait_for "state" "leader"
+expect "Done"
 
-set spawn_id $spawn_2
-send "commissioner state\n"
-expect "disabled"
-expect "Done"
-send "commissioner start\n"
-expect "Done"
-expect "Commissioner: active"
-send "commissioner state\n"
-expect "active"
-expect "Done"
-send "commissioner provisioningurl openthread.io\n"
-expect "Done"
-send "commissioner joiner add * J01NME 1\n"
-expect "Done"
-send "commissioner joiner remove *\n"
-expect "Done"
-send "commissioner sessionid\n"
-expect "commissioner sessionid"
-expect -re {(\d+)}
-set sessionid $expect_out(1,string)
-send "commissioner mgmtset sessionid $sessionid steeringdata ffffffff joinerudpport 10001\n"
-expect "Done"
-send "commissioner mgmtset sessionid $sessionid locator 0x0100\n"
-expect "Done"
-send "commissioner mgmtget sessionid steeringdata joinerudpport locator binary 0b081209\n"
-expect "Done"
-send "commissioner stop\n"
-expect "Commissioner: disabled"
-expect "Done"
-send "commissioner state\n"
-expect "disabled"
-expect "Done"
-send "commissioner help\n"
-expect "Done"
-send "commissioner joiner something_invalid\n"
-expect "Error 7: InvalidArgs"
-send "commissioner mgmtget something_invalid\n"
-expect "Error 7: InvalidArgs"
-send "commissioner mgmtset something_invalid\n"
-expect "Error 7: InvalidArgs"
-send "commissioner\n"
-expect "Error 35: InvalidCommand"
+for {set i 2} {$i <= $max_node} {incr i} {
+    set spawn_ids($i) [spawn_node $i]
+    set spawn_id $spawn_ids($i)
+    expect_after {
+        timeout { exit 1 }
+    }
+    send "mode rs\n"
+    expect "Done"
+    send "panid 0xface\n"
+    expect "Done"
+    send "ifconfig up\n"
+    expect "Done"
+    send "thread start\n"
+    expect "Done"
+    wait_for "state" "child"
+    expect "Done"
+}
 
-dispose_nodes
+set spawn_id $spawn_ids(1)
+expect_after {
+    timeout { exit 1 }
+}
+send "child table\n"
+expect "Done"
+
+for {set i 1} {$i <= $max_node} {incr i} {
+    set spawn_id $spawn_ids($i)
+    expect_after {
+        timeout { exit 1 }
+    }
+    dispose
+}

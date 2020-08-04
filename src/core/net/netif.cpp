@@ -321,6 +321,7 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
         const_cast<otNetifMulticastAddress &>(kLinkLocalAllRoutersMulticastAddress));
     ExternalNetifMulticastAddress *entry;
 
+    VerifyOrExit(aAddress.IsMulticast(), error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(!IsMulticastSubscribed(aAddress), error = OT_ERROR_ALREADY);
 
     // Check that the address is not one of the fixed addresses:
@@ -419,6 +420,8 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
     otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
     NetifUnicastAddress *prev;
+
+    VerifyOrExit(!aAddress.GetAddress().IsMulticast(), error = OT_ERROR_INVALID_ARGS);
 
     entry = mUnicastAddresses.FindMatching(aAddress.GetAddress(), prev);
 

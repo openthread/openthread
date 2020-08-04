@@ -41,6 +41,7 @@
 
 #include "coap/coap.hpp"
 #include "common/clearable.hpp"
+#include "common/equatable.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "net/udp6.hpp"
@@ -100,11 +101,15 @@ typedef otNetworkDataIterator Iterator;
  * This class represents an On Mesh Prefix (Border Router) configuration.
  *
  */
-class OnMeshPrefixConfig : public otBorderRouterConfig, public Clearable<OnMeshPrefixConfig>
+class OnMeshPrefixConfig : public otBorderRouterConfig,
+                           public Clearable<OnMeshPrefixConfig>,
+                           public Equatable<OnMeshPrefixConfig>
 {
+    friend class NetworkData;
+
 public:
     /**
-     * This method get the prefix.
+     * This method gets the prefix.
      *
      * @return The prefix.
      *
@@ -112,23 +117,32 @@ public:
     const Ip6::Prefix &GetPrefix(void) const { return static_cast<const Ip6::Prefix &>(mPrefix); }
 
     /**
-     * This method get the prefix.
+     * This method gets the prefix.
      *
      * @return The prefix.
      *
      */
     Ip6::Prefix &GetPrefix(void) { return static_cast<Ip6::Prefix &>(mPrefix); }
+
+private:
+    void SetFrom(const PrefixTlv &        aPrefixTlv,
+                 const BorderRouterTlv &  aBorderRouterTlv,
+                 const BorderRouterEntry &aBorderRouterEntry);
 };
 
 /**
  * This class represents an External Route configuration.
  *
  */
-class ExternalRouteConfig : public otExternalRouteConfig, public Clearable<ExternalRouteConfig>
+class ExternalRouteConfig : public otExternalRouteConfig,
+                            public Clearable<ExternalRouteConfig>,
+                            public Equatable<ExternalRouteConfig>
 {
+    friend class NetworkData;
+
 public:
     /**
-     * This method get the prefix.
+     * This method gets the prefix.
      *
      * @return The prefix.
      *
@@ -136,12 +150,18 @@ public:
     const Ip6::Prefix &GetPrefix(void) const { return static_cast<const Ip6::Prefix &>(mPrefix); }
 
     /**
-     * This method get the prefix.
+     * This method gets the prefix.
      *
      * @return The prefix.
      *
      */
     Ip6::Prefix &GetPrefix(void) { return static_cast<Ip6::Prefix &>(mPrefix); }
+
+private:
+    void SetFrom(Instance &           aInstance,
+                 const PrefixTlv &    aPrefixTlv,
+                 const HasRouteTlv &  aHasRouteTlv,
+                 const HasRouteEntry &aEntry);
 };
 
 /**
@@ -150,6 +170,84 @@ public:
  */
 class ServiceConfig : public otServiceConfig, public Clearable<ServiceConfig>
 {
+    friend class NetworkData;
+
+public:
+    /**
+     * This class represents a Server configuration.
+     *
+     */
+    class ServerConfig : public otServerConfig
+    {
+        friend class ServiceConfig;
+
+    public:
+        /**
+         * This method overloads operator `==` to evaluate whether or not two `ServerConfig` instances are equal.
+         *
+         * @param[in]  aOther  The other `ServerConfig` instance to compare with.
+         *
+         * @retval TRUE   If the two `ServerConfig` instances are equal.
+         * @retval FALSE  If the two `ServerConfig` instances are not equal.
+         *
+         */
+        bool operator==(const ServerConfig &aOther) const;
+
+        /**
+         * This method overloads operator `!=` to evaluate whether or not two `ServerConfig` instances are unequal.
+         *
+         * @param[in]  aOther  The other `ServerConfig` instance to compare with.
+         *
+         * @retval TRUE   If the two `ServerConfig` instances are unequal.
+         * @retval FALSE  If the two `ServerConfig` instances are not unequal.
+         *
+         */
+        bool operator!=(const ServerConfig &aOther) const { return !(*this == aOther); }
+
+    private:
+        void SetFrom(const ServerTlv &aServerTlv);
+    };
+
+    /**
+     * This method gets the Server configuration.
+     *
+     * @returns The Server configuration.
+     *
+     */
+    const ServerConfig &GetServerConfig(void) const { return static_cast<const ServerConfig &>(mServerConfig); }
+
+    /**
+     * This method gets the Server configuration.
+     *
+     * @returns The Server configuration.
+     *
+     */
+    ServerConfig &GetServerConfig(void) { return static_cast<ServerConfig &>(mServerConfig); }
+
+    /**
+     * This method overloads operator `==` to evaluate whether or not two `ServiceConfig` instances are equal.
+     *
+     * @param[in]  aOther  The other `ServiceConfig` instance to compare with.
+     *
+     * @retval TRUE   If the two `ServiceConfig` instances are equal.
+     * @retval FALSE  If the two `ServiceConfig` instances are not equal.
+     *
+     */
+    bool operator==(const ServiceConfig &aOther) const;
+
+    /**
+     * This method overloads operator `!=` to evaluate whether or not two `ServiceConfig` instances are unequal.
+     *
+     * @param[in]  aOther  The other `ServiceConfig` instance to compare with.
+     *
+     * @retval TRUE   If the two `ServiceConfig` instances are unequal.
+     * @retval FALSE  If the two `ServiceConfig` instances are not unequal.
+     *
+     */
+    bool operator!=(const ServiceConfig &aOther) const { return !(*this == aOther); }
+
+private:
+    void SetFrom(const ServiceTlv &aServiceTlv, const ServerTlv &aServerTlv);
 };
 
 /**

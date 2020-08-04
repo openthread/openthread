@@ -3564,8 +3564,7 @@ Neighbor *MleRouter::GetNeighbor(const Mac::Address &aAddress)
 
 Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
 {
-    Lowpan::Context context;
-    Neighbor *      rval = nullptr;
+    Neighbor *rval = nullptr;
 
     if (aAddress.IsLinkLocal())
     {
@@ -3575,30 +3574,23 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
         ExitNow(rval = GetNeighbor(macAddr));
     }
 
-    if (Get<NetworkData::Leader>().GetContext(aAddress, context) != OT_ERROR_NONE)
+    if (IsRoutingLocator(aAddress))
     {
-        context.mContextId = 0xff;
+        uint16_t rloc16 = aAddress.GetIid().GetLocator();
+
+        rval = mChildTable.FindChild(rloc16, Child::kInStateValidOrRestoring);
+        VerifyOrExit(rval == nullptr, OT_NOOP);
+
+        rval = mRouterTable.GetNeighbor(rloc16);
+        ExitNow();
     }
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
     {
-        if ((context.mContextId == kMeshLocalPrefixContextId) && aAddress.GetIid().IsLocator() &&
-            (aAddress.GetIid().GetLocator() == child.GetRloc16()))
-        {
-            ExitNow(rval = &child);
-        }
-
         if (child.HasIp6Address(aAddress))
         {
             ExitNow(rval = &child);
         }
-    }
-
-    VerifyOrExit(context.mContextId == kMeshLocalPrefixContextId, rval = nullptr);
-
-    if (aAddress.GetIid().IsLocator())
-    {
-        rval = mRouterTable.GetNeighbor(aAddress.GetIid().GetLocator());
     }
 
 exit:

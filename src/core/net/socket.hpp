@@ -209,10 +209,35 @@ class SockAddr : public otSockAddr, public Clearable<SockAddr>
 {
 public:
     /**
-     * This constructor initializes the object.
+     * This constructor initializes the socket address (all fields are set to zero).
      *
      */
     SockAddr(void) { Clear(); }
+
+    /**
+     * This constructor initializes the socket address with a given port number.
+     *
+     * @param[in] aPort   A port number.
+     *
+     */
+    explicit SockAddr(uint16_t aPort)
+    {
+        mPort = aPort;
+        GetAddress().Clear();
+    }
+
+    /**
+     * This constructor initializes the socket address with a given address and port number.
+     *
+     * @param[in] aAddress  An IPv6 address.
+     * @param[in] aPort     A port number.
+     *
+     */
+    SockAddr(const Address &aAddress, uint16_t aPort)
+    {
+        mAddress = aAddress;
+        mPort    = aPort;
+    }
 
     /**
      * This method returns a reference to the IPv6 address.

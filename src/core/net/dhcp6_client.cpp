@@ -165,13 +165,10 @@ void Client::UpdateAddresses(void)
 
 void Client::Start(void)
 {
-    Ip6::SockAddr sockaddr;
-
     VerifyOrExit(!mSocket.IsBound(), OT_NOOP);
 
-    sockaddr.mPort = kDhcpClientPort;
     IgnoreError(mSocket.Open(&Client::HandleUdpReceive, this));
-    IgnoreError(mSocket.Bind(sockaddr));
+    IgnoreError(mSocket.Bind(kDhcpClientPort));
 
     ProcessNextIdentityAssociation();
 

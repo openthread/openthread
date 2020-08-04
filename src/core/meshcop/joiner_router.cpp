@@ -84,15 +84,13 @@ void JoinerRouter::Start(void)
 
     if (Get<NetworkData::Leader>().IsJoiningEnabled())
     {
-        Ip6::SockAddr sockaddr;
+        uint16_t port = GetJoinerUdpPort();
 
         VerifyOrExit(!mSocket.IsBound(), OT_NOOP);
 
-        sockaddr.mPort = GetJoinerUdpPort();
-
         IgnoreError(mSocket.Open(&JoinerRouter::HandleUdpReceive, this));
-        IgnoreError(mSocket.Bind(sockaddr));
-        IgnoreError(Get<Ip6::Filter>().AddUnsecurePort(sockaddr.mPort));
+        IgnoreError(mSocket.Bind(port));
+        IgnoreError(Get<Ip6::Filter>().AddUnsecurePort(port));
         otLogInfoMeshCoP("Joiner Router: start");
     }
     else

@@ -173,8 +173,8 @@ jobs:
   expects:
     runs-on: ubuntu-18.04
     env:
-      CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1
-      CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1
+      CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
+      CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
@@ -221,6 +221,8 @@ jobs:
               -DCMAKE_CXX_STANDARD_REQUIRED=ON  \
               -DCMAKE_BUILD_TYPE=Release        \
               -DCMAKE_INSTALL_PREFIX=/usr/local \
+              -DOT_COMM_COVERAGE=ON             \
+              -DOT_COMM_CCM=OFF                 \
               -S . -B build
         cmake --build build
         sudo cmake --install build
