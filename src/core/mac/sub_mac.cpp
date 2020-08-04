@@ -332,8 +332,6 @@ void SubMac::StartCsmaBackoff(void)
         uint32_t phaseNow     = (otPlatTimeGet() / kUsPerTenSymbols) % mTransmitFrame.mInfo.mTxInfo.mPeriod;
         uint32_t phaseDesired = mTransmitFrame.mInfo.mTxInfo.mPhase;
 
-        mTransmitFrame.SetCsmaCaEnabled(false);
-
         SetState(kStateCslTransmit);
 
         if (phaseNow < phaseDesired)
@@ -395,7 +393,14 @@ void SubMac::BeginTransmit(void)
     VerifyOrExit(mState == kStateCsmaBackoff, OT_NOOP);
 #endif
 
-    mTransmitFrame.SetCsmaCaEnabled(true);
+    if (mTransmitFrame.mInfo.mTxInfo.mPeriod != 0)
+    {
+        mTransmitFrame.SetCsmaCaEnabled(false);
+    }
+    else
+    {
+        mTransmitFrame.SetCsmaCaEnabled(true);
+    }
 
     if ((mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX) == 0)
     {
