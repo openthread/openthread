@@ -171,7 +171,7 @@ otError DiscoverScanner::SetJoinerAdvertisement(uint32_t aOui, const uint8_t *aA
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit((aAdvData != nullptr) && (aAdvDataLength != 0) &&
-                     (aAdvDataLength <= MeshCoP::JoinerAdvertisementTlv::kAdvDataMaxLength),
+                     (aAdvDataLength <= MeshCoP::JoinerAdvertisementTlv::kAdvDataMaxLength) && (aOui <= kMaxOui),
                  error = OT_ERROR_INVALID_ARGS);
 
     mOui           = aOui;
