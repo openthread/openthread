@@ -79,6 +79,7 @@ void Otns::EmitStatus(const char *aFmt, ...)
     va_start(ap, aFmt);
 
     n = vsnprintf(statusStr, sizeof(statusStr), aFmt, ap);
+    OT_UNUSED_VARIABLE(n);
     OT_ASSERT(n >= 0);
 
     va_end(ap);

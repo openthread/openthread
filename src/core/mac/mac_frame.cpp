@@ -1184,7 +1184,7 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     // Set frame length
     footerLength = GetFooterLength();
     OT_ASSERT(footerLength != kInvalidIndex);
-    mLength = SkipSecurityHeaderIndex() + aIeLength + GetFooterLength();
+    mLength = SkipSecurityHeaderIndex() + aIeLength + footerLength;
 
 exit:
     return error;
