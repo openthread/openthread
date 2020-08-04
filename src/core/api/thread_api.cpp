@@ -304,7 +304,7 @@ otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterato
 
     OT_ASSERT((aInfo != nullptr) && (aIterator != nullptr));
 
-    return instance.Get<Mle::MleRouter>().GetNextNeighborInfo(*aIterator, *aInfo);
+    return instance.Get<Mle::MleRouter>().GetNextNeighborInfo(*aIterator, *static_cast<Neighbor::Info *>(aInfo));
 }
 
 otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
@@ -460,6 +460,16 @@ otError otThreadDiscover(otInstance *             aInstance,
     return instance.Get<Mle::DiscoverScanner>().Discover(
         static_cast<Mac::ChannelMask>(aScanChannels), aPanId, aJoiner, aEnableEui64Filtering,
         /* aFilterIndexes (use hash of factory EUI64) */ nullptr, aCallback, aCallbackContext);
+}
+
+otError otThreadSetJoinerAdvertisement(otInstance *   aInstance,
+                                       uint32_t       aOui,
+                                       const uint8_t *aAdvData,
+                                       uint8_t        aAdvDataLength)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mle::DiscoverScanner>().SetJoinerAdvertisement(aOui, aAdvData, aAdvDataLength);
 }
 
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)

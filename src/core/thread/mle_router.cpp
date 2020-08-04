@@ -2041,12 +2041,47 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     uint8_t                  storedCount     = 0;
     uint16_t                 offset          = 0;
     uint16_t                 end             = 0;
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+    Ip6::Address        oldDua;
+    const Ip6::Address *oldDuaPtr = nullptr;
+    bool                hasDua    = false;
+#endif
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    Ip6::Address oldMlrRegisteredAddresses[OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1];
+    uint16_t     oldMlrRegisteredAddressNum = 0;
+#endif
 
     VerifyOrExit(aMessage.Read(aOffset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
     VerifyOrExit(tlv.GetLength() <= (aMessage.GetLength() - aOffset - sizeof(tlv)), error = OT_ERROR_PARSE);
 
     offset = aOffset + sizeof(tlv);
     end    = offset + tlv.GetLength();
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+    if ((oldDuaPtr = aChild.GetDomainUnicastAddress()) != nullptr)
+    {
+        oldDua = *oldDuaPtr;
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    // Retrieve registered multicast addresses of the Child
+    if (aChild.HasAnyMlrRegisteredAddress())
+    {
+        OT_ASSERT(aChild.IsStateValid());
+
+        for (const Ip6::Address &childAddress :
+             aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+        {
+            if (aChild.GetAddressMlrState(childAddress) == kMlrStateRegistered)
+            {
+                oldMlrRegisteredAddresses[oldMlrRegisteredAddressNum++] = childAddress;
+            }
+        }
+    }
+#endif
+
     aChild.ClearIp6Addresses();
 
     while (offset < end)
@@ -2072,8 +2107,28 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
                 continue;
             }
 
-            memcpy(&address, context.mPrefix, BitVectorBytes(context.mPrefixLength));
+            address.Clear();
+            address.SetPrefix(context.mPrefix);
             address.SetIid(entry.GetIid());
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address))
+            {
+                hasDua = true;
+
+                if (oldDuaPtr != nullptr)
+                {
+                    if (oldDua != address)
+                    {
+                        Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, ChildDuaState::kChanged);
+                    }
+                }
+                else
+                {
+                    Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, ChildDuaState::kAdded);
+                }
+            }
+#endif
         }
         else
         {
@@ -2135,6 +2190,17 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         // Clear EID-to-RLOC cache for the unicast address registered by the child.
         Get<AddressResolver>().Remove(address);
     }
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+    // Dua is removed
+    if (oldDuaPtr != nullptr && !hasDua)
+    {
+        Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, ChildDuaState::kRemoved);
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    Get<MlrManager>().UpdateProxiedSubscriptions(aChild, oldMlrRegisteredAddresses, oldMlrRegisteredAddressNum);
+#endif
 
     if (registeredCount == 0)
     {
@@ -3461,8 +3527,7 @@ Neighbor *MleRouter::GetNeighbor(const Mac::Address &aAddress)
 
 Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
 {
-    Lowpan::Context context;
-    Neighbor *      rval = nullptr;
+    Neighbor *rval = nullptr;
 
     if (aAddress.IsLinkLocal())
     {
@@ -3472,30 +3537,23 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
         ExitNow(rval = GetNeighbor(macAddr));
     }
 
-    if (Get<NetworkData::Leader>().GetContext(aAddress, context) != OT_ERROR_NONE)
+    if (IsRoutingLocator(aAddress))
     {
-        context.mContextId = 0xff;
+        uint16_t rloc16 = aAddress.GetIid().GetLocator();
+
+        rval = mChildTable.FindChild(rloc16, Child::kInStateValidOrRestoring);
+        VerifyOrExit(rval == nullptr, OT_NOOP);
+
+        rval = mRouterTable.GetNeighbor(rloc16);
+        ExitNow();
     }
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
     {
-        if ((context.mContextId == kMeshLocalPrefixContextId) && aAddress.GetIid().IsLocator() &&
-            (aAddress.GetIid().GetLocator() == child.GetRloc16()))
-        {
-            ExitNow(rval = &child);
-        }
-
         if (child.HasIp6Address(aAddress))
         {
             ExitNow(rval = &child);
         }
-    }
-
-    VerifyOrExit(context.mContextId == kMeshLocalPrefixContextId, rval = nullptr);
-
-    if (aAddress.GetIid().IsLocator())
-    {
-        rval = mRouterTable.GetNeighbor(aAddress.GetIid().GetLocator());
     }
 
 exit:
@@ -3620,7 +3678,7 @@ void MleRouter::SetRouterId(uint8_t aRouterId)
     mPreviousRouterId = mRouterId;
 }
 
-otError MleRouter::GetChildInfoById(uint16_t aChildId, otChildInfo &aChildInfo)
+otError MleRouter::GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo)
 {
     otError  error = OT_ERROR_NONE;
     Child *  child;
@@ -3632,24 +3690,24 @@ otError MleRouter::GetChildInfoById(uint16_t aChildId, otChildInfo &aChildInfo)
     }
 
     rloc16 = Get<Mac::Mac>().GetShortAddress() | aChildId;
-    child  = mChildTable.FindChild(rloc16, Child::kInStateAnyExceptInvalid);
+    child  = mChildTable.FindChild(rloc16, Child::kInStateValidOrRestoring);
     VerifyOrExit(child != nullptr, error = OT_ERROR_NOT_FOUND);
 
-    error = GetChildInfo(*child, aChildInfo);
+    aChildInfo.SetFrom(*child);
 
 exit:
     return error;
 }
 
-otError MleRouter::GetChildInfoByIndex(uint16_t aChildIndex, otChildInfo &aChildInfo)
+otError MleRouter::GetChildInfoByIndex(uint16_t aChildIndex, Child::Info &aChildInfo)
 {
     otError error = OT_ERROR_NONE;
     Child * child = nullptr;
 
     child = mChildTable.GetChildAtIndex(aChildIndex);
-    VerifyOrExit(child != nullptr, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit((child != nullptr) && child->IsStateValidOrRestoring(), error = OT_ERROR_NOT_FOUND);
 
-    error = GetChildInfo(*child, aChildInfo);
+    aChildInfo.SetFrom(*child);
 
 exit:
     return error;
@@ -3750,59 +3808,10 @@ exit:
     return;
 }
 
-otError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
+otError MleRouter::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
 {
     otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aChild.IsStateValidOrRestoring(), error = OT_ERROR_NOT_FOUND);
-
-    memset(&aChildInfo, 0, sizeof(aChildInfo));
-    aChildInfo.mExtAddress         = aChild.GetExtAddress();
-    aChildInfo.mTimeout            = aChild.GetTimeout();
-    aChildInfo.mRloc16             = aChild.GetRloc16();
-    aChildInfo.mChildId            = ChildIdFromRloc16(aChild.GetRloc16());
-    aChildInfo.mNetworkDataVersion = aChild.GetNetworkDataVersion();
-    aChildInfo.mAge                = Time::MsecToSec(TimerMilli::GetNow() - aChild.GetLastHeard());
-    aChildInfo.mLinkQualityIn      = aChild.GetLinkInfo().GetLinkQuality();
-    aChildInfo.mAverageRssi        = aChild.GetLinkInfo().GetAverageRss();
-    aChildInfo.mLastRssi           = aChild.GetLinkInfo().GetLastRss();
-    aChildInfo.mFrameErrorRate     = aChild.GetLinkInfo().GetFrameErrorRate();
-    aChildInfo.mMessageErrorRate   = aChild.GetLinkInfo().GetMessageErrorRate();
-    aChildInfo.mRxOnWhenIdle       = aChild.IsRxOnWhenIdle();
-    aChildInfo.mSecureDataRequest  = aChild.IsSecureDataRequest();
-    aChildInfo.mFullThreadDevice   = aChild.IsFullThreadDevice();
-    aChildInfo.mFullNetworkData    = aChild.IsFullNetworkData();
-    aChildInfo.mIsStateRestoring   = aChild.IsStateRestoring();
-
-exit:
-    return error;
-}
-
-void MleRouter::GetNeighborInfo(Neighbor &aNeighbor, otNeighborInfo &aNeighInfo)
-{
-    aNeighInfo.mExtAddress        = aNeighbor.GetExtAddress();
-    aNeighInfo.mAge               = Time::MsecToSec(TimerMilli::GetNow() - aNeighbor.GetLastHeard());
-    aNeighInfo.mRloc16            = aNeighbor.GetRloc16();
-    aNeighInfo.mLinkFrameCounter  = aNeighbor.GetLinkFrameCounter();
-    aNeighInfo.mMleFrameCounter   = aNeighbor.GetMleFrameCounter();
-    aNeighInfo.mLinkQualityIn     = aNeighbor.GetLinkInfo().GetLinkQuality();
-    aNeighInfo.mAverageRssi       = aNeighbor.GetLinkInfo().GetAverageRss();
-    aNeighInfo.mLastRssi          = aNeighbor.GetLinkInfo().GetLastRss();
-    aNeighInfo.mFrameErrorRate    = aNeighbor.GetLinkInfo().GetFrameErrorRate();
-    aNeighInfo.mMessageErrorRate  = aNeighbor.GetLinkInfo().GetMessageErrorRate();
-    aNeighInfo.mRxOnWhenIdle      = aNeighbor.IsRxOnWhenIdle();
-    aNeighInfo.mSecureDataRequest = aNeighbor.IsSecureDataRequest();
-    aNeighInfo.mFullThreadDevice  = aNeighbor.IsFullThreadDevice();
-    aNeighInfo.mFullNetworkData   = aNeighbor.IsFullNetworkData();
-}
-
-otError MleRouter::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, otNeighborInfo &aNeighInfo)
-{
-    otError   error    = OT_ERROR_NONE;
-    Neighbor *neighbor = nullptr;
-    int16_t   index;
-
-    memset(&aNeighInfo, 0, sizeof(aNeighInfo));
+    int16_t index;
 
     // Non-negative iterator value gives the Child index into child table
 
@@ -3819,7 +3828,7 @@ otError MleRouter::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, otNeig
 
             if (child->IsStateValid())
             {
-                neighbor            = child;
+                aNeighInfo.SetFrom(*child);
                 aNeighInfo.mIsChild = true;
                 index++;
                 aIterator = index;
@@ -3838,7 +3847,7 @@ otError MleRouter::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, otNeig
 
         if (router != nullptr && router->IsStateValid())
         {
-            neighbor            = router;
+            aNeighInfo.SetFrom(*router);
             aNeighInfo.mIsChild = false;
             index++;
             aIterator = -index;
@@ -3850,12 +3859,6 @@ otError MleRouter::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, otNeig
     error     = OT_ERROR_NOT_FOUND;
 
 exit:
-
-    if (neighbor != nullptr)
-    {
-        GetNeighborInfo(*neighbor, aNeighInfo);
-    }
-
     return error;
 }
 
@@ -4641,6 +4644,11 @@ void MleRouter::SetChildStateToValid(Child &aChild)
 
     aChild.SetState(Neighbor::kStateValid);
     IgnoreError(StoreChild(aChild));
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    Get<MlrManager>().UpdateProxiedSubscriptions(aChild, nullptr, 0);
+#endif
+
     Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED, aChild);
 
 exit:
@@ -4728,13 +4736,12 @@ void MleRouter::Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
         {
         case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
         case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
-            error = GetChildInfo(static_cast<Child &>(aNeighbor), info.mInfo.mChild);
-            OT_ASSERT(error == OT_ERROR_NONE);
+            static_cast<Child::Info &>(info.mInfo.mChild).SetFrom(static_cast<Child &>(aNeighbor));
             break;
 
         case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
         case OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED:
-            GetNeighborInfo(aNeighbor, info.mInfo.mRouter);
+            static_cast<Neighbor::Info &>(info.mInfo.mRouter).SetFrom(aNeighbor);
             break;
         }
 
@@ -4753,6 +4760,9 @@ void MleRouter::Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
 
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
         Get<Notifier>().Signal(kEventThreadChildRemoved);
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+        Get<DuaManager>().UpdateChildDomainUnicastAddress(static_cast<Child &>(aNeighbor), ChildDuaState::kRemoved);
+#endif
         break;
 
     default:

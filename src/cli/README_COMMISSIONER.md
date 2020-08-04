@@ -81,15 +81,21 @@ Energy: 00050000 0 0 0 0
 
 ### joiner add
 
-Usage: `commissioner joiner add <eui64> <pskd>`
+Usage: `commissioner joiner add <eui64>|<discerner> <pskd>`
 
 Add a Joiner entry.
 
 - eui64: The IEEE EUI-64 of the Joiner or '\*' to match any Joiner.
+- discerner: The Joiner discerner in format `number/length`.
 - pskd: Pre-Shared Key for the Joiner.
 
 ```bash
 > commissioner joiner add d45e64fa83f81cf7 J01NME
+Done
+```
+
+```bash
+> commissioner joiner add 0xabc/12 J01NME
 Done
 ```
 

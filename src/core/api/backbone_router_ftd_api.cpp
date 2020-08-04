@@ -107,7 +107,20 @@ otError otBackboneRouterGetDomainPrefix(otInstance *aInstance, otBorderRouterCon
 
     OT_ASSERT(aConfig != nullptr);
 
-    return instance.Get<BackboneRouter::Local>().GetDomainPrefix(*aConfig);
+    return instance.Get<BackboneRouter::Local>().GetDomainPrefix(
+        *static_cast<NetworkData::OnMeshPrefixConfig *>(aConfig));
 }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance *                    aInstance,
+                                                       const otIp6InterfaceIdentifier *aMlIid,
+                                                       uint8_t                         aStatus)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<BackboneRouter::Manager>().ConfigNextDuaRegistrationResponse(
+        static_cast<const Ip6::InterfaceIdentifier *>(aMlIid), aStatus);
+}
+#endif
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

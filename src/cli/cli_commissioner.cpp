@@ -47,7 +47,7 @@ const struct Commissioner::Command Commissioner::sCommands[] = {
     {"mgmtget", &Commissioner::ProcessMgmtGet},     {"mgmtset", &Commissioner::ProcessMgmtSet},
     {"panid", &Commissioner::ProcessPanId},         {"provisioningurl", &Commissioner::ProcessProvisioningUrl},
     {"sessionid", &Commissioner::ProcessSessionId}, {"start", &Commissioner::ProcessStart},
-    {"stop", &Commissioner::ProcessStop},
+    {"state", &Commissioner::ProcessState},         {"stop", &Commissioner::ProcessStop},
 };
 
 otError Commissioner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
@@ -116,19 +116,26 @@ otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
 {
     otError             error;
     otExtAddress        addr;
-    const otExtAddress *addrPtr;
+    const otExtAddress *addrPtr = nullptr;
+    otJoinerDiscerner   discerner;
 
     VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);
 
+    memset(&discerner, 0, sizeof(discerner));
+
     if (strcmp(aArgs[2], "*") == 0)
     {
-        addrPtr = nullptr;
+        // Intentionally empty
     }
-    else
+    else if ((error = Interpreter::ParseJoinerDiscerner(aArgs[2], discerner)) == OT_ERROR_NOT_FOUND)
     {
         VerifyOrExit(Interpreter::Hex2Bin(aArgs[2], addr.m8, sizeof(addr)) == sizeof(addr),
                      error = OT_ERROR_INVALID_ARGS);
         addrPtr = &addr;
+    }
+    else if (error != OT_ERROR_NONE)
+    {
+        ExitNow();
     }
 
     if (strcmp(aArgs[1], "add") == 0)
@@ -142,8 +149,16 @@ otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
             SuccessOrExit(error = Interpreter::ParseUnsignedLong(aArgs[4], timeout));
         }
 
-        SuccessOrExit(
-            error = otCommissionerAddJoiner(mInterpreter.mInstance, addrPtr, aArgs[3], static_cast<uint32_t>(timeout)));
+        if (discerner.mLength)
+        {
+            SuccessOrExit(error = otCommissionerAddJoinerWithDiscerner(mInterpreter.mInstance, &discerner, aArgs[3],
+                                                                       static_cast<uint32_t>(timeout)));
+        }
+        else
+        {
+            SuccessOrExit(error = otCommissionerAddJoiner(mInterpreter.mInstance, addrPtr, aArgs[3],
+                                                          static_cast<uint32_t>(timeout)));
+        }
     }
     else if (strcmp(aArgs[1], "remove") == 0)
     {
@@ -329,20 +344,27 @@ void Commissioner::HandleStateChanged(otCommissionerState aState, void *aContext
 
 void Commissioner::HandleStateChanged(otCommissionerState aState)
 {
-    mInterpreter.mServer->OutputFormat("Commissioner: ");
+    mInterpreter.mServer->OutputFormat("Commissioner: %s\r\n", StateToString(aState));
+}
+
+const char *Commissioner::StateToString(otCommissionerState aState)
+{
+    const char *rval = "unknown";
 
     switch (aState)
     {
     case OT_COMMISSIONER_STATE_DISABLED:
-        mInterpreter.mServer->OutputFormat("disabled\r\n");
+        rval = "disabled";
         break;
     case OT_COMMISSIONER_STATE_PETITION:
-        mInterpreter.mServer->OutputFormat("petitioning\r\n");
+        rval = "petitioning";
         break;
     case OT_COMMISSIONER_STATE_ACTIVE:
-        mInterpreter.mServer->OutputFormat("active\r\n");
+        rval = "active";
         break;
     }
+
+    return rval;
 }
 
 void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
@@ -394,6 +416,16 @@ otError Commissioner::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgs);
 
     return otCommissionerStop(mInterpreter.mInstance);
+}
+
+otError Commissioner::ProcessState(uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    mInterpreter.mServer->OutputFormat("%s\r\n", StateToString(otCommissionerGetState(mInterpreter.mInstance)));
+
+    return OT_ERROR_NONE;
 }
 
 otError Commissioner::Process(uint8_t aArgsLength, char *aArgs[])

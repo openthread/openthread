@@ -172,12 +172,7 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
         ExitNow();
 
     case MeshCoP::Dtls::kStateOpen:
-    {
-        Ip6::SockAddr sockAddr;
-
-        sockAddr.mAddress = aMessageInfo.GetPeerAddr();
-        sockAddr.mPort    = aMessageInfo.GetPeerPort();
-        IgnoreError(mSocket.Connect(sockAddr));
+        IgnoreError(mSocket.Connect(Ip6::SockAddr(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort())));
 
         mMessageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
         mMessageInfo.SetPeerPort(aMessageInfo.GetPeerPort());
@@ -192,7 +187,6 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
 
         SuccessOrExit(Setup(false));
         break;
-    }
 
     default:
         // Once DTLS session is started, communicate only with a peer.
@@ -217,14 +211,12 @@ exit:
 
 otError Dtls::Bind(uint16_t aPort)
 {
-    otError       error;
-    Ip6::SockAddr sockaddr;
+    otError error;
 
     VerifyOrExit(mState == kStateOpen, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mTransportCallback == nullptr, error = OT_ERROR_ALREADY);
 
-    sockaddr.mPort = aPort;
-    SuccessOrExit(error = mSocket.Bind(sockaddr));
+    SuccessOrExit(error = mSocket.Bind(aPort));
 
 exit:
     return error;
@@ -432,7 +424,7 @@ void Dtls::Disconnect(void)
     mTimer.Start(kGuardTimeNewConnectionMilli);
 
     mMessageInfo.Clear();
-    IgnoreError(mSocket.Connect(Ip6::SockAddr()));
+    IgnoreError(mSocket.Connect());
 
     FreeMbedtls();
 

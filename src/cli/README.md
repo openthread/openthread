@@ -118,6 +118,27 @@ BBR Primary: None
 Done
 ```
 
+### bbr mgmt dua \<status\> [meshLocalIid]
+
+Configure the response status for DUA.req with meshLocalIid in payload. Without meshLocalIid, simply respond any coming DUA.req next with the specified status.
+
+Only for testing/reference device.
+
+known status value:
+
+- 0: ST_DUA_SUCCESS
+- 1: ST_DUA_REREGISTER
+- 2: ST_DUA_INVALID
+- 3: ST_DUA_DUPLICATE
+- 4: ST_DUA_NO_RESOURCES
+- 5: ST_DUA_BBR_NOT_PRIMARY
+- 6: ST_DUA_GENERAL_FAILURE
+
+```bash
+> bbr mgmt dua 1 2f7c235e5025a2fd
+Done
+```
+
 ### bbr state
 
 Show local Backbone state ([`Disabled`,`Primary`, `Secondary`]) for Thread 1.2 FTD.

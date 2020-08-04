@@ -135,6 +135,21 @@ public:
         kMlrBbrNotPrimary  = 5, ///< BBR is not Primary at this moment.
         kMlrGeneralFailure = 6, ///< Reason(s) for failure are not further specified.
     };
+
+    /**
+     * Domain Unicast Address (DUA) Registration Status values
+     *
+     */
+    enum DuaStatus : uint8_t
+    {
+        kDuaSuccess        = 0, ///< Successful registration.
+        kDuaReRegister     = 1, ///< Registration was accepted but immediate reregistration is required to solve.
+        kDuaInvalid        = 2, ///< Registration rejected (Fatal): Target EID is not a valid DUA.
+        kDuaDuplicate      = 3, ///< Registration rejected (Fatal): DUA is already in use by another device.
+        kDuaNoResources    = 4, ///< Registration rejected (Non-fatal): Backbone Router Resource shortage.
+        kDuaNotPrimary     = 5, ///< Registration rejected (Non-fatal): Backbone Router is not primary at this moment.
+        kDuaGeneralFailure = 6, ///< Registration failure (Non-fatal): Reason(s) not futher specified.
+    };
 };
 
 /**
@@ -244,7 +259,7 @@ private:
     uint8_t mTlvs[kMaxSize];
 } OT_TOOL_PACKED_END;
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 /**
  * This class implements IPv6 Addresses TLV generation and parsing.
@@ -287,7 +302,7 @@ public:
     }
 } OT_TOOL_PACKED_END;
 
-#endif // OPENTHREAD_CONFIG_MLR_ENABLE
+#endif // OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 } // namespace ot
 

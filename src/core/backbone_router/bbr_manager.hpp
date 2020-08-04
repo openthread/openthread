@@ -64,6 +64,21 @@ public:
      */
     explicit Manager(Instance &aInstance);
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * This method configures response status for next DUA registration.
+     *
+     * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+     *       Only used for test and certification.
+     *
+     * @param[in] aMlIid    A pointer to the Mesh Local IID. If NULL, respond with @p aStatus for any
+     *                      coming DUA.req, otherwise only respond the one with matching @p aMlIid.
+     * @param[in] aStatus   The status to respond.
+     *
+     */
+    void ConfigNextDuaRegistrationResponse(const Ip6::InterfaceIdentifier *aMlIid, uint8_t aStatus);
+#endif
+
 private:
     static void HandleMulticastListenerRegistration(void *               aContext,
                                                     otMessage *          aMessage,
@@ -77,6 +92,17 @@ private:
                                                    const Ip6::MessageInfo &   aMessageInfo,
                                                    ThreadStatusTlv::MlrStatus aStatus);
 
+    static void HandleDuaRegistration(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+    {
+        static_cast<Manager *>(aContext)->HandleDuaRegistration(*static_cast<const Coap::Message *>(aMessage),
+                                                                *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    }
+    void HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void SendDuaRegistrationResponse(const Coap::Message &      aMessage,
+                                     const Ip6::MessageInfo &   aMessageInfo,
+                                     const Ip6::Address &       aTarget,
+                                     ThreadStatusTlv::DuaStatus aStatus);
+
     static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
     {
         static_cast<Manager &>(aReceiver).HandleNotifierEvents(aEvents);
@@ -84,6 +110,13 @@ private:
     void HandleNotifierEvents(Events aEvents);
 
     Coap::Resource mMulticastListenerRegistration;
+    Coap::Resource mDuaRegistration;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    Ip6::InterfaceIdentifier   mDuaResponseTargetMlIid;
+    ThreadStatusTlv::DuaStatus mDuaResponseStatus;
+    bool                       mDuaResponseIsSpecified : 1;
+#endif
 };
 
 } // namespace BackboneRouter

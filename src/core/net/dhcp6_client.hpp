@@ -61,45 +61,10 @@ namespace Dhcp6 {
  */
 
 /**
- * Some constants
- *
- */
-enum
-{
-    kTrickleTimerImin = 1,
-    kTrickleTimerImax = 120,
-};
-
-/**
- * Status of IdentityAssociation
- *
- */
-enum IaStatus
-{
-    kIaStatusInvalid,
-    kIaStatusSolicit,
-    kIaStatusSoliciting,
-    kIaStatusSolicitReplied,
-};
-
-/**
- * This class implements IdentityAssociation.
- *
- */
-struct IdentityAssociation
-{
-    Ip6::NetifUnicastAddress mNetifAddress;      ///< the NetifAddress
-    uint32_t                 mPreferredLifetime; ///< The preferred lifetime.
-    uint32_t                 mValidLifetime;     ///< The valid lifetime.
-    uint16_t                 mPrefixAgentRloc;   ///< Rloc of Prefix Agent
-    uint8_t                  mStatus;            ///< Status of IdentityAssociation
-};
-
-/**
  * This class implements DHCPv6 Client.
  *
  */
-class Dhcp6Client : public InstanceLocator
+class Client : public InstanceLocator
 {
 public:
     /**
@@ -108,7 +73,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Dhcp6Client(Instance &aInstance);
+    explicit Client(Instance &aInstance);
 
     /**
      * This method update addresses that shall be automatically created using DHCP.
@@ -118,10 +83,33 @@ public:
     void UpdateAddresses(void);
 
 private:
+    enum
+    {
+        kTrickleTimerImin = 1,
+        kTrickleTimerImax = 120,
+    };
+
+    enum IaStatus : uint8_t
+    {
+        kIaStatusInvalid,
+        kIaStatusSolicit,
+        kIaStatusSoliciting,
+        kIaStatusSolicitReplied,
+    };
+
+    struct IdentityAssociation
+    {
+        Ip6::NetifUnicastAddress mNetifAddress;
+        uint32_t                 mPreferredLifetime;
+        uint32_t                 mValidLifetime;
+        uint16_t                 mPrefixAgentRloc;
+        IaStatus                 mStatus;
+    };
+
     void Start(void);
     void Stop(void);
 
-    static bool MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aAddress, const otIp6Prefix &aIp6Prefix);
+    static bool MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aAddress, const Ip6::Prefix &aIp6Prefix);
 
     void Solicit(uint16_t aRloc16);
 
@@ -155,8 +143,8 @@ private:
 
     TrickleTimer mTrickleTimer;
 
-    uint8_t   mTransactionId[kTransactionIdSize];
-    TimeMilli mStartTime;
+    TransactionId mTransactionId;
+    TimeMilli     mStartTime;
 
     IdentityAssociation  mIdentityAssociations[OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES];
     IdentityAssociation *mIdentityAssociationCurrent;

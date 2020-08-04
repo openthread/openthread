@@ -94,7 +94,7 @@ exit:
     return;
 }
 
-bool Slaac::ShouldFilter(const otIp6Prefix &aPrefix) const
+bool Slaac::ShouldFilter(const Ip6::Prefix &aPrefix) const
 {
     return (mFilter != nullptr) && mFilter(&GetInstance(), &aPrefix);
 }
@@ -143,14 +143,13 @@ bool Slaac::DoesConfigMatchNetifAddr(const NetworkData::OnMeshPrefixConfig &aCon
 {
     return (((aConfig.mOnMesh && (aAddr.mPrefixLength == aConfig.mPrefix.mLength)) ||
              (!aConfig.mOnMesh && (aAddr.mPrefixLength == 128))) &&
-            (aAddr.GetAddress().PrefixMatch(aConfig.mPrefix.mPrefix) >= aConfig.mPrefix.mLength));
+            (aAddr.GetAddress().MatchesPrefix(aConfig.GetPrefix())));
 }
 
 void Slaac::Update(UpdateMode aMode)
 {
     NetworkData::Iterator           iterator;
     NetworkData::OnMeshPrefixConfig config;
-    Ip6::NetifUnicastAddress *      slaacAddr;
     bool                            found;
 
     if (aMode & kModeRemove)
@@ -158,9 +157,9 @@ void Slaac::Update(UpdateMode aMode)
         // If enabled, remove any SLAAC addresses with no matching on-mesh prefix,
         // otherwise (when disabled) remove all previously added SLAAC addresses.
 
-        for (slaacAddr = &mAddresses[0]; slaacAddr < OT_ARRAY_END(mAddresses); slaacAddr++)
+        for (Ip6::NetifUnicastAddress &slaacAddr : mAddresses)
         {
-            if (!slaacAddr->mValid)
+            if (!slaacAddr.mValid)
             {
                 continue;
             }
@@ -179,7 +178,8 @@ void Slaac::Update(UpdateMode aMode)
                         continue;
                     }
 
-                    if (config.mSlaac && !ShouldFilter(config.mPrefix) && DoesConfigMatchNetifAddr(config, *slaacAddr))
+                    if (config.mSlaac && !ShouldFilter(config.GetPrefix()) &&
+                        DoesConfigMatchNetifAddr(config, slaacAddr))
                     {
                         found = true;
                         break;
@@ -189,10 +189,10 @@ void Slaac::Update(UpdateMode aMode)
 
             if (!found)
             {
-                otLogInfoUtil("SLAAC: Removing address %s", slaacAddr->GetAddress().ToString().AsCString());
+                otLogInfoUtil("SLAAC: Removing address %s", slaacAddr.GetAddress().ToString().AsCString());
 
-                Get<ThreadNetif>().RemoveUnicastAddress(*slaacAddr);
-                slaacAddr->mValid = false;
+                Get<ThreadNetif>().RemoveUnicastAddress(slaacAddr);
+                slaacAddr.mValid = false;
             }
         }
     }
@@ -205,7 +205,7 @@ void Slaac::Update(UpdateMode aMode)
 
         while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
         {
-            otIp6Prefix &prefix = config.mPrefix;
+            Ip6::Prefix &prefix = config.GetPrefix();
 
             if (config.mDp || !config.mSlaac || ShouldFilter(prefix))
             {
@@ -228,26 +228,26 @@ void Slaac::Update(UpdateMode aMode)
             {
                 bool added = false;
 
-                for (slaacAddr = &mAddresses[0]; slaacAddr < OT_ARRAY_END(mAddresses); slaacAddr++)
+                for (Ip6::NetifUnicastAddress &slaacAddr : mAddresses)
                 {
-                    if (slaacAddr->mValid)
+                    if (slaacAddr.mValid)
                     {
                         continue;
                     }
 
-                    slaacAddr->Clear();
-                    memcpy(&slaacAddr->mAddress, &prefix.mPrefix, BitVectorBytes(prefix.mLength));
+                    slaacAddr.Clear();
+                    slaacAddr.GetAddress().SetPrefix(prefix);
 
-                    slaacAddr->mPrefixLength  = config.mOnMesh ? prefix.mLength : 128;
-                    slaacAddr->mAddressOrigin = OT_ADDRESS_ORIGIN_SLAAC;
-                    slaacAddr->mPreferred     = config.mPreferred;
-                    slaacAddr->mValid         = true;
+                    slaacAddr.mPrefixLength  = config.mOnMesh ? prefix.mLength : 128;
+                    slaacAddr.mAddressOrigin = OT_ADDRESS_ORIGIN_SLAAC;
+                    slaacAddr.mPreferred     = config.mPreferred;
+                    slaacAddr.mValid         = true;
 
-                    IgnoreError(GenerateIid(*slaacAddr));
+                    IgnoreError(GenerateIid(slaacAddr));
 
-                    otLogInfoUtil("SLAAC: Adding address %s", slaacAddr->GetAddress().ToString().AsCString());
+                    otLogInfoUtil("SLAAC: Adding address %s", slaacAddr.GetAddress().ToString().AsCString());
 
-                    Get<ThreadNetif>().AddUnicastAddress(*slaacAddr);
+                    Get<ThreadNetif>().AddUnicastAddress(slaacAddr);
 
                     added = true;
                     break;

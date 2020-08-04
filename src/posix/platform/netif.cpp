@@ -292,7 +292,8 @@ static void InitNetaskWithPrefixLength(struct in6_addr *address, uint8_t prefixL
 
 static uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
 {
-    return ot::Ip6::Address::PrefixMatch(netmask->sin6_addr.s6_addr, allOnes, 128);
+    return otIp6PrefixMatch(reinterpret_cast<const otIp6Address *>(netmask->sin6_addr.s6_addr),
+                            reinterpret_cast<const otIp6Address *>(allOnes));
 }
 #endif
 

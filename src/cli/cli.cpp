@@ -402,6 +402,30 @@ otError Interpreter::ParseUnsignedLong(char *aString, unsigned long &aUnsignedLo
     return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_INVALID_ARGS;
 }
 
+otError Interpreter::ParseJoinerDiscerner(char *aString, otJoinerDiscerner &aDiscerner)
+{
+    otError       error     = OT_ERROR_NONE;
+    char *        separator = strstr(aString, "/");
+    unsigned long length;
+
+    VerifyOrExit(separator != nullptr, error = OT_ERROR_NOT_FOUND);
+
+    SuccessOrExit(error = ParseUnsignedLong(separator + 1, length));
+    VerifyOrExit(length > 0 && length <= 64, error = OT_ERROR_INVALID_ARGS);
+
+    {
+        char *             end;
+        unsigned long long value = strtoull(aString, &end, 0);
+        aDiscerner.mValue        = value;
+        VerifyOrExit(end == separator, error = OT_ERROR_INVALID_ARGS);
+    }
+
+    aDiscerner.mLength = static_cast<uint8_t>(length);
+
+exit:
+    return error;
+}
+
 otError Interpreter::ParsePingInterval(const char *aString, uint32_t &aInterval)
 {
     otError        error    = OT_ERROR_NONE;
@@ -493,9 +517,37 @@ void Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     else
     {
-        error = ProcessBackboneRouterLocal(aArgsLength, aArgs);
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        if (strcmp(aArgs[0], "mgmt") == 0)
+        {
+            unsigned long value;
+
+            VerifyOrExit((aArgsLength == 3 || aArgsLength == 4), error = OT_ERROR_INVALID_ARGS);
+
+            if (strcmp(aArgs[1], "dua") == 0)
+            {
+                otIp6InterfaceIdentifier *mlIid = nullptr;
+                otIp6InterfaceIdentifier  iid;
+
+                SuccessOrExit(error = ParseUnsignedLong(aArgs[2], value));
+
+                if (aArgsLength == 4)
+                {
+                    VerifyOrExit(Hex2Bin(aArgs[3], iid.mFields.m8, sizeof(iid)) == sizeof(iid),
+                                 error = OT_ERROR_INVALID_ARGS);
+                    mlIid = &iid;
+                }
+
+                otBackboneRouterConfigNextDuaRegistrationResponse(mInstance, mlIid, static_cast<uint8_t>(value));
+                ExitNow();
+            }
+        }
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        SuccessOrExit(error = ProcessBackboneRouterLocal(aArgsLength, aArgs));
     }
-#endif
+
+exit:
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
     AppendResult(error);
 }

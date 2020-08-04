@@ -47,6 +47,72 @@
 namespace ot {
 namespace NetworkData {
 
+void OnMeshPrefixConfig::SetFrom(const PrefixTlv &        aPrefixTlv,
+                                 const BorderRouterTlv &  aBorderRouterTlv,
+                                 const BorderRouterEntry &aBorderRouterEntry)
+{
+    Clear();
+
+    aPrefixTlv.CopyPrefixTo(GetPrefix());
+    mPreference   = aBorderRouterEntry.GetPreference();
+    mPreferred    = aBorderRouterEntry.IsPreferred();
+    mSlaac        = aBorderRouterEntry.IsSlaac();
+    mDhcp         = aBorderRouterEntry.IsDhcp();
+    mConfigure    = aBorderRouterEntry.IsConfigure();
+    mDefaultRoute = aBorderRouterEntry.IsDefaultRoute();
+    mOnMesh       = aBorderRouterEntry.IsOnMesh();
+    mStable       = aBorderRouterTlv.IsStable();
+    mRloc16       = aBorderRouterEntry.GetRloc();
+    mNdDns        = aBorderRouterEntry.IsNdDns();
+    mDp           = aBorderRouterEntry.IsDp();
+}
+
+void ExternalRouteConfig::SetFrom(Instance &           aInstance,
+                                  const PrefixTlv &    aPrefixTlv,
+                                  const HasRouteTlv &  aHasRouteTlv,
+                                  const HasRouteEntry &aHasRouteEntry)
+{
+    Clear();
+
+    aPrefixTlv.CopyPrefixTo(GetPrefix());
+    mPreference          = aHasRouteEntry.GetPreference();
+    mStable              = aHasRouteTlv.IsStable();
+    mRloc16              = aHasRouteEntry.GetRloc();
+    mNextHopIsThisDevice = (aHasRouteEntry.GetRloc() == aInstance.Get<Mle::MleRouter>().GetRloc16());
+}
+
+bool ServiceConfig::ServerConfig::operator==(const ServerConfig &aOther) const
+{
+    return (mStable == aOther.mStable) && (mServerDataLength == aOther.mServerDataLength) &&
+           (memcmp(mServerData, aOther.mServerData, mServerDataLength) == 0);
+}
+
+void ServiceConfig::ServerConfig::SetFrom(const ServerTlv &aServerTlv)
+{
+    mStable           = aServerTlv.IsStable();
+    mRloc16           = aServerTlv.GetServer16();
+    mServerDataLength = aServerTlv.GetServerDataLength();
+    memcpy(&mServerData, aServerTlv.GetServerData(), mServerDataLength);
+}
+
+bool ServiceConfig::operator==(const ServiceConfig &aOther) const
+{
+    return (mEnterpriseNumber == aOther.mEnterpriseNumber) && (mServiceDataLength == aOther.mServiceDataLength) &&
+           (memcmp(mServiceData, aOther.mServiceData, mServiceDataLength) == 0) &&
+           (GetServerConfig() == aOther.GetServerConfig());
+}
+
+void ServiceConfig::SetFrom(const ServiceTlv &aServiceTlv, const ServerTlv &aServerTlv)
+{
+    Clear();
+
+    mServiceId         = aServiceTlv.GetServiceId();
+    mEnterpriseNumber  = aServiceTlv.GetEnterpriseNumber();
+    mServiceDataLength = aServiceTlv.GetServiceDataLength();
+    memcpy(&mServiceData, aServiceTlv.GetServiceData(), mServiceDataLength);
+    GetServerConfig().SetFrom(aServerTlv);
+}
+
 NetworkData::NetworkData(Instance &aInstance, Type aType)
     : InstanceLocator(aInstance)
     , mType(aType)
@@ -218,7 +284,7 @@ otError NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aCon
         {
             if (cur->GetType() == NetworkDataTlv::kTypePrefix)
             {
-                const PrefixTlv *prefix = static_cast<const PrefixTlv *>(cur);
+                const PrefixTlv *prefixTlv = static_cast<const PrefixTlv *>(cur);
 
                 switch (subCur->GetType())
                 {
@@ -239,22 +305,7 @@ otError NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aCon
 
                             aConfig.mExternalRoute = nullptr;
                             aConfig.mService       = nullptr;
-                            memset(aConfig.mOnMeshPrefix, 0, sizeof(OnMeshPrefixConfig));
-
-                            memcpy(&aConfig.mOnMeshPrefix->mPrefix.mPrefix, prefix->GetPrefix(),
-                                   BitVectorBytes(prefix->GetPrefixLength()));
-                            aConfig.mOnMeshPrefix->mPrefix.mLength = prefix->GetPrefixLength();
-                            aConfig.mOnMeshPrefix->mPreference     = borderRouterEntry->GetPreference();
-                            aConfig.mOnMeshPrefix->mPreferred      = borderRouterEntry->IsPreferred();
-                            aConfig.mOnMeshPrefix->mSlaac          = borderRouterEntry->IsSlaac();
-                            aConfig.mOnMeshPrefix->mDhcp           = borderRouterEntry->IsDhcp();
-                            aConfig.mOnMeshPrefix->mConfigure      = borderRouterEntry->IsConfigure();
-                            aConfig.mOnMeshPrefix->mDefaultRoute   = borderRouterEntry->IsDefaultRoute();
-                            aConfig.mOnMeshPrefix->mOnMesh         = borderRouterEntry->IsOnMesh();
-                            aConfig.mOnMeshPrefix->mStable         = borderRouter->IsStable();
-                            aConfig.mOnMeshPrefix->mRloc16         = borderRouterEntry->GetRloc();
-                            aConfig.mOnMeshPrefix->mNdDns          = borderRouterEntry->IsNdDns();
-                            aConfig.mOnMeshPrefix->mDp             = borderRouterEntry->IsDp();
+                            aConfig.mOnMeshPrefix->SetFrom(*prefixTlv, *borderRouter, *borderRouterEntry);
 
                             ExitNow(error = OT_ERROR_NONE);
                         }
@@ -280,16 +331,7 @@ otError NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aCon
 
                             aConfig.mOnMeshPrefix = nullptr;
                             aConfig.mService      = nullptr;
-                            memset(aConfig.mExternalRoute, 0, sizeof(ExternalRouteConfig));
-
-                            memcpy(&aConfig.mExternalRoute->mPrefix.mPrefix, prefix->GetPrefix(),
-                                   BitVectorBytes(prefix->GetPrefixLength()));
-                            aConfig.mExternalRoute->mPrefix.mLength = prefix->GetPrefixLength();
-                            aConfig.mExternalRoute->mPreference     = hasRouteEntry->GetPreference();
-                            aConfig.mExternalRoute->mStable         = hasRoute->IsStable();
-                            aConfig.mExternalRoute->mRloc16         = hasRouteEntry->GetRloc();
-                            aConfig.mExternalRoute->mNextHopIsThisDevice =
-                                (hasRouteEntry->GetRloc() == Get<Mle::MleRouter>().GetRloc16());
+                            aConfig.mExternalRoute->SetFrom(GetInstance(), *prefixTlv, *hasRoute, *hasRouteEntry);
 
                             ExitNow(error = OT_ERROR_NONE);
                         }
@@ -319,20 +361,7 @@ otError NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aCon
                     {
                         aConfig.mOnMeshPrefix  = nullptr;
                         aConfig.mExternalRoute = nullptr;
-                        memset(aConfig.mService, 0, sizeof(ServiceConfig));
-
-                        aConfig.mService->mServiceId         = service->GetServiceId();
-                        aConfig.mService->mEnterpriseNumber  = service->GetEnterpriseNumber();
-                        aConfig.mService->mServiceDataLength = service->GetServiceDataLength();
-
-                        memcpy(&aConfig.mService->mServiceData, service->GetServiceData(),
-                               service->GetServiceDataLength());
-
-                        aConfig.mService->mServerConfig.mStable           = server->IsStable();
-                        aConfig.mService->mServerConfig.mServerDataLength = server->GetServerDataLength();
-                        memcpy(&aConfig.mService->mServerConfig.mServerData, server->GetServerData(),
-                               server->GetServerDataLength());
-                        aConfig.mService->mServerConfig.mRloc16 = server->GetServer16();
+                        aConfig.mService->SetFrom(*service, *server);
 
                         iterator.MarkEntryAsNotNew();
 
@@ -373,7 +402,7 @@ bool NetworkData::ContainsOnMeshPrefixes(const NetworkData &aCompare, uint16_t a
 
         while ((error = GetNextOnMeshPrefix(innerIterator, aRloc16, innerConfig)) == OT_ERROR_NONE)
         {
-            if (memcmp(&outerConfig, &innerConfig, sizeof(outerConfig)) == 0)
+            if (outerConfig == innerConfig)
             {
                 break;
             }
@@ -403,7 +432,7 @@ bool NetworkData::ContainsExternalRoutes(const NetworkData &aCompare, uint16_t a
 
         while ((error = GetNextExternalRoute(innerIterator, aRloc16, innerConfig)) == OT_ERROR_NONE)
         {
-            if (memcmp(&outerConfig, &innerConfig, sizeof(outerConfig)) == 0)
+            if (outerConfig == innerConfig)
             {
                 break;
             }
@@ -433,13 +462,7 @@ bool NetworkData::ContainsServices(const NetworkData &aCompare, uint16_t aRloc16
 
         while ((error = GetNextService(innerIterator, aRloc16, innerConfig)) == OT_ERROR_NONE)
         {
-            if ((outerConfig.mEnterpriseNumber == innerConfig.mEnterpriseNumber) &&
-                (outerConfig.mServiceDataLength == innerConfig.mServiceDataLength) &&
-                (memcmp(outerConfig.mServiceData, innerConfig.mServiceData, outerConfig.mServiceDataLength) == 0) &&
-                (outerConfig.mServerConfig.mStable == innerConfig.mServerConfig.mStable) &&
-                (outerConfig.mServerConfig.mServerDataLength == innerConfig.mServerConfig.mServerDataLength) &&
-                (memcmp(outerConfig.mServerConfig.mServerData, innerConfig.mServerConfig.mServerData,
-                        outerConfig.mServerConfig.mServerDataLength) == 0))
+            if (outerConfig == innerConfig)
             {
                 break;
             }
@@ -671,8 +694,7 @@ const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix,
 
         VerifyOrExit(prefixTlv != nullptr, OT_NOOP);
 
-        if (prefixTlv->GetPrefixLength() == aPrefixLength &&
-            PrefixMatch(prefixTlv->GetPrefix(), aPrefix, aPrefixLength) >= aPrefixLength)
+        if (prefixTlv->IsEqual(aPrefix, aPrefixLength))
         {
             ExitNow();
         }
@@ -684,18 +706,6 @@ const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix,
 
 exit:
     return prefixTlv;
-}
-
-int8_t NetworkData::PrefixMatch(const uint8_t *a, const uint8_t *b, uint8_t aLength)
-{
-    uint8_t matchedLength;
-
-    // Note that he `Ip6::Address::PrefixMatch` expects the prefix
-    // length to be in bytes unit.
-
-    matchedLength = Ip6::Address::PrefixMatch(a, b, BitVectorBytes(aLength));
-
-    return (matchedLength >= aLength) ? static_cast<int8_t>(matchedLength) : -1;
 }
 
 const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,

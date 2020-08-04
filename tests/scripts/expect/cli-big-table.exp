@@ -29,56 +29,50 @@
 
 source "tests/scripts/expect/_common.exp"
 
-proc setup_nodes {} {
-    # Sets up a Thread network with 2 nodes, spawn_1 as the leader and spawn_2
-    # as a child.
+set max_node 15
+set spawn_ids(1) [spawn_node 1]
+set spawn_id $spawn_ids(1)
+expect_after {
+    timeout { exit 1 }
+}
+send "panid 0xface\n"
+expect "Done"
+send "ifconfig up\n"
+expect "Done"
+send "thread start\n"
+expect "Done"
+wait_for "state" "leader"
+expect "Done"
 
-    global spawn_1
-    global spawn_2
-    global spawn_id
-    global env
-
-    set spawn_2 [spawn_node 2]
-    set psk "J01NME"
-
-    set spawn_id $spawn_2
-    send "eui64\n"
-    expect -re {([0-9a-f]{16})}
-    set eui64 $expect_out(1,string)
-    expect "Done"
-
-    setup_leader
-
-    set spawn_id $spawn_1
-    send "commissioner start\n"
-    expect "Done"
-    expect "Commissioner: active"
-    send "commissioner joiner add $eui64 $psk\n"
-    expect "Done"
-    send "channel\n"
-    expect -re {(\d+)}
-    set channel $expect_out(1,string)
-    expect "Done"
-
-    set spawn_id $spawn_2
+for {set i 2} {$i <= $max_node} {incr i} {
+    set spawn_ids($i) [spawn_node $i]
+    set spawn_id $spawn_ids($i)
+    expect_after {
+        timeout { exit 1 }
+    }
     send "mode rs\n"
+    expect "Done"
+    send "panid 0xface\n"
     expect "Done"
     send "ifconfig up\n"
     expect "Done"
-    send "joiner start $psk\n"
-    expect "Done"
-    wait_for "" "Join success"
     send "thread start\n"
     expect "Done"
     wait_for "state" "child"
     expect "Done"
 }
 
-proc dispose_nodes {} {
-    global spawn_2
-    global spawn_id
+set spawn_id $spawn_ids(1)
+expect_after {
+    timeout { exit 1 }
+}
+send "child table\n"
+expect "Done"
 
-    dispose_leader
-    set spawn_id $spawn_2
+for {set i 1} {$i <= $max_node} {incr i} {
+    set spawn_id $spawn_ids($i)
+    expect_after {
+        timeout { exit 1 }
+    }
     dispose
 }

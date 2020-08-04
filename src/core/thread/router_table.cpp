@@ -59,9 +59,9 @@ RouterTable::RouterTable(Instance &aInstance)
     , mRouterIdSequence(Random::NonCrypto::GetUint8())
     , mActiveRouterCount(0)
 {
-    for (uint8_t index = 0; index < Mle::kMaxRouters; index++)
+    for (Router &router : mRouters)
     {
-        mRouters[index].Init(aInstance);
+        router.Init(aInstance);
     }
 
     Clear();
@@ -96,10 +96,8 @@ void RouterTable::Clear(void)
 
 void RouterTable::ClearNeighbors(void)
 {
-    for (uint8_t index = 0; index < Mle::kMaxRouters; index++)
+    for (Router &router : mRouters)
     {
-        Router &router = mRouters[index];
-
         if (router.IsStateValid())
         {
             Get<Mle::MleRouter>().Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, router);
@@ -417,7 +415,7 @@ Router *RouterTable::GetRouter(const Mac::ExtAddress &aExtAddress)
     return router;
 }
 
-otError RouterTable::GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterInfo)
+otError RouterTable::GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo)
 {
     otError error = OT_ERROR_NONE;
     Router *router;
@@ -437,17 +435,7 @@ otError RouterTable::GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterInfo
     router = GetRouter(routerId);
     VerifyOrExit(router != nullptr, error = OT_ERROR_NOT_FOUND);
 
-    memset(&aRouterInfo, 0, sizeof(aRouterInfo));
-    aRouterInfo.mRouterId        = routerId;
-    aRouterInfo.mRloc16          = Mle::Mle::Rloc16FromRouterId(routerId);
-    aRouterInfo.mExtAddress      = router->GetExtAddress();
-    aRouterInfo.mAllocated       = true;
-    aRouterInfo.mNextHop         = router->GetNextHop();
-    aRouterInfo.mLinkEstablished = router->IsStateValid();
-    aRouterInfo.mPathCost        = router->GetCost();
-    aRouterInfo.mLinkQualityIn   = router->GetLinkInfo().GetLinkQuality();
-    aRouterInfo.mLinkQualityOut  = router->GetLinkQualityOut();
-    aRouterInfo.mAge             = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - router->GetLastHeard()));
+    aRouterInfo.SetFrom(*router);
 
 exit:
     return error;

@@ -249,7 +249,7 @@ enum
     kServiceMaxId = 0x0f, ///< Maximal Service ID.
 };
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE || OPENTHREAD_CONFIG_MLR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
  * Backbone Router / MLR constants
@@ -257,16 +257,35 @@ enum
  */
 enum
 {
-    kRegistrationDelayDefault         = 1200, //< In seconds.
-    kMlrTimeoutDefault                = 3600, //< In seconds.
-    kMlrTimeoutMin                    = 300,  //< In seconds.
-    kBackboneRouterRegistrationJitter = 5,    //< In seconds.
+    kRegistrationDelayDefault         = 1200, ///< In seconds.
+    kMlrTimeoutDefault                = 3600, ///< In seconds.
+    kMlrTimeoutMin                    = 300,  ///< In seconds.
+    kBackboneRouterRegistrationJitter = 5,    ///< In seconds.
+    kParentAggregateDelay             = 5,    ///< In seconds.
+    kNoBufDelay                       = 5,    ///< In seconds.
+    kImmediateReRegisterDelay         = 1,    ///< In seconds.
+    KResponseTimeoutDelay             = 30,   ///< In seconds.
+    kDuaDadPeriod                     = 100,  ///< In seconds. Time period after which the address
+                                              ///< becomes "Preferred" if no duplicate address error.
 };
 
 static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin,
               "kMlrTimeoutDefault must be larger than or equal to kMlrTimeoutMin");
 
-#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE || OPENTHREAD_CONFIG_MLR_ENABLE
+static_assert(Mle::kParentAggregateDelay > 1, "kParentAggregateDelay should be larger than 1 second");
+
+/**
+ * State change of Child's DUA
+ *
+ */
+enum class ChildDuaState : uint8_t
+{
+    kAdded,   ///< A new DUA registered by the Child via Address Registration.
+    kChanged, ///< A different DUA registered by the Child via Address Registration.
+    kRemoved, ///< DUA registered by the Child is removed and not in Address Registration.
+};
+
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
  * This type represents a MLE device mode.
