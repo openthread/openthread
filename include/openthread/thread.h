@@ -811,9 +811,12 @@ void otThreadRegisterParentResponseCallback(otInstance *                   aInst
  */
 typedef struct otThreadDiscoveryRequestInfo
 {
-    otExtAddress mExtAddress;   ///< IEEE 802.15.4 Extended Address of the requester
-    uint8_t      mVersion : 4;  ///< Thread version.
-    bool         mIsJoiner : 1; ///< Whether is from joiner.
+    otExtAddress mExtAddress;                            ///< IEEE 802.15.4 Extended Address of the requester
+    uint8_t      mVersion : 4;                           ///< Thread version.
+    bool         mIsJoiner : 1;                          ///< Whether is from joiner.
+    uint32_t     mOui;                                   ///< The vendor Oui
+    uint8_t      mAdvDataLength;                         ///< The advertisement data length
+    uint8_t      mAdvData[OT_JOINER_ADVDATA_MAX_LENGTH]; ///< The advertisement data length
 } otThreadDiscoveryRequestInfo;
 
 /**

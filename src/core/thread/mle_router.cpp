@@ -2857,17 +2857,20 @@ void MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
 
 void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError                      error = OT_ERROR_NONE;
-    Tlv                          tlv;
-    MeshCoP::Tlv                 meshcopTlv;
-    MeshCoP::DiscoveryRequestTlv discoveryRequest;
-    Mac::ExtendedPanId           extPanId;
-    uint16_t                     offset;
-    uint16_t                     end;
+    otError                         error = OT_ERROR_NONE;
+    Tlv                             tlv;
+    MeshCoP::Tlv                    meshcopTlv;
+    MeshCoP::DiscoveryRequestTlv    discoveryRequest;
+    MeshCoP::JoinerAdvertisementTlv joinerAdvertisement;
+    uint16_t                        joinerAdvertisementSize;
+    Mac::ExtendedPanId              extPanId;
+    uint16_t                        offset;
+    uint16_t                        end;
 
     LogMleMessage("Receive Discovery Request", aMessageInfo.GetPeerAddr());
 
     discoveryRequest.SetLength(0);
+    joinerAdvertisement.SetLength(0);
 
     // only Routers and REEDs respond
     VerifyOrExit(IsRouterEligible(), error = OT_ERROR_INVALID_STATE);
@@ -2891,6 +2894,15 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
 
             break;
 
+        case MeshCoP::Tlv::kJoinerAdvertisement:
+            joinerAdvertisementSize = meshcopTlv.GetLength() < sizeof(joinerAdvertisement)
+                                          ? meshcopTlv.GetLength()
+                                          : sizeof(joinerAdvertisement);
+            aMessage.Read(offset, joinerAdvertisementSize, &joinerAdvertisement);
+            VerifyOrExit(joinerAdvertisement.IsValid(), error = OT_ERROR_PARSE);
+
+            break;
+
         case MeshCoP::Tlv::kExtendedPanId:
             SuccessOrExit(error = Tlv::ReadTlv(aMessage, offset, &extPanId, sizeof(extPanId)));
             VerifyOrExit(Get<Mac::Mac>().GetExtendedPanId() != extPanId, error = OT_ERROR_DROP);
@@ -2910,9 +2922,17 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
         {
             otThreadDiscoveryRequestInfo info;
 
+            memset(&info, 0, sizeof(info));
             aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(*static_cast<Mac::ExtAddress *>(&info.mExtAddress));
             info.mVersion  = discoveryRequest.GetVersion();
             info.mIsJoiner = discoveryRequest.IsJoiner();
+
+            if (joinerAdvertisement.IsValid())
+            {
+                info.mOui           = joinerAdvertisement.GetOui();
+                info.mAdvDataLength = joinerAdvertisement.GetAdvDataLength();
+                memcpy(info.mAdvData, joinerAdvertisement.GetAdvData(), joinerAdvertisement.GetAdvDataLength());
+            }
 
             mDiscoveryRequestCallback(&info, mDiscoveryRequestCallbackContext);
         }
