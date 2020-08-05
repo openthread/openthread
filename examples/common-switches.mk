@@ -283,6 +283,10 @@ ifeq ($(OTNS),1)
 COMMONCFLAGS += -DOPENTHREAD_CONFIG_OTNS_ENABLE=1
 endif
 
+ifneq ($(SPINEL_ENCRYPTER_LIBS),)
+configure_OPTIONS              += --with-ncp-spinel-encrypter-libs=$(SPINEL_ENCRYPTER_LIBS)
+endif
+
 ifeq ($(FULL_LOGS),1)
 # HINT: Add more here, or comment out ones you do not need/want
 LOG_FLAGS += -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG
