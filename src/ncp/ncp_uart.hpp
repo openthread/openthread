@@ -39,7 +39,7 @@
 #include "ncp/ncp_base.hpp"
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
-#include "spinel_encrypter.hpp"
+#include "lib/spinel/spinel_encrypter.hpp"
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
 namespace ot {
@@ -90,14 +90,14 @@ private:
      * Wraps Spinel::Buffer allowing to read data through spinel encrypter.
      * Creates additional buffers to allow transforming of the whole spinel frames.
      */
-    class Spinel::BufferEncrypterReader
+    class BufferEncrypterReader
     {
     public:
         /**
          * C-tor.
          * Takes a reference to Spinel::Buffer in order to read spinel frames.
          */
-        explicit Spinel::BufferEncrypterReader(Spinel::Buffer &aTxFrameBuffer);
+        explicit BufferEncrypterReader(Spinel::Buffer &aTxFrameBuffer);
         bool    IsEmpty(void) const;
         otError OutFrameBegin(void);
         bool    OutFrameHasEnded(void);
@@ -137,7 +137,7 @@ private:
     Tasklet                              mUartSendTask;
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
-    Spinel::BufferEncrypterReader mTxFrameBufferEncrypterReader;
+    BufferEncrypterReader mTxFrameBufferEncrypterReader;
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 };
 
