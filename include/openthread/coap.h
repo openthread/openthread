@@ -60,7 +60,7 @@ extern "C" {
 
 #define OT_COAP_MAX_TOKEN_LENGTH 8 ///< Max token length as specified (RFC 7252).
 
-#define OT_COAP_MAX_RETRANSMIT 30 ///< Max retransmit supported by OpenThread.
+#define OT_COAP_MAX_RETRANSMIT 20 ///< Max retransmit supported by OpenThread.
 
 #define OT_COAP_MIN_ACK_TIMEOUT 1000 ///< Minimal ACK timeout in milliseconds supported by OpenThread.
 
@@ -367,6 +367,10 @@ typedef struct otCoapResource
 
 /**
  * This structure represents the CoAP transmission parameters.
+ *
+ * @note mAckTimeout * ((2 ** (mMaxRetransmit + 1)) - 1) * (mAckRandomFactorNumerator / mAckRandomFactorDenominator)
+ *       must not exceed what can be represented by a uint32_t (0xffffffff). This limitation allows OpenThread to
+ *       avoid 64-bit arithmetic.
  *
  */
 typedef struct otCoapTxParameters
