@@ -194,7 +194,15 @@ Done
 
 ### activetimestamp
 
-Usage: `dataset activetimestamp <timestamp>`
+Usage: `dataset activetimestamp [timestamp]`
+
+Get active timestamp.
+
+```bash
+> dataset activetimestamp
+123456789
+Done
+```
 
 Set active timestamp.
 
@@ -205,7 +213,15 @@ Done
 
 ### channel
 
-Usage: `channel <channel>`
+Usage: `channel [channel]`
+
+Get channel.
+
+```bash
+> dataset channel
+12
+Done
+```
 
 Set channel.
 
@@ -216,7 +232,15 @@ Done
 
 ### channelmask
 
-Usage: `dataset channelmask <channelmask>`
+Usage: `dataset channelmask [channelmask]`
+
+Get channel mask.
+
+```bash
+> dataset channelmask
+0x07fff800
+Done
+```
 
 Set channel mask.
 
@@ -249,7 +273,15 @@ Done
 
 ### delay
 
-Usage: `dataset delay <delay>`
+Usage: `dataset delay [delay]`
+
+Get delay timer value.
+
+```bash
+> dataset delay
+1000
+Done
+```
 
 Set delay timer value.
 
@@ -260,7 +292,15 @@ Done
 
 ### extpanid
 
-Usage: `dataset extpanid <extpanid>`
+Usage: `dataset extpanid [extpanid]`
+
+Get extended panid.
+
+```bash
+> dataset extpanid
+000db80123456789
+Done
+```
 
 Set extended panid.
 
@@ -284,7 +324,15 @@ Done
 
 ### masterkey
 
-Usage: `dataset masterkey <key>`
+Usage: `dataset masterkey [key]`
+
+Get master key
+
+```bash
+> dataset masterkey
+00112233445566778899aabbccddeeff
+Done
+```
 
 Set master key.
 
@@ -295,7 +343,14 @@ Done
 
 ### meshlocalprefix
 
-Usage: `dataset meshlocalprefix <prefix>`
+Usage: `dataset meshlocalprefix [prefix]`
+
+Get mesh local prefix.
+
+```bash
+> dataset meshlocalprefix fd00:db8:0:0::/64
+Done
+```
 
 Set mesh local prefix.
 
@@ -328,7 +383,15 @@ Done
 
 ### networkname
 
-Usage: `dataset networkname <name>`
+Usage: `dataset networkname [name]`
+
+Get network name.
+
+```bash
+> datset networkname
+OpenThread
+Done
+```
 
 Set network name.
 
@@ -341,7 +404,15 @@ Done
 
 ### panid
 
-Usage: `dataset panid <panid>`
+Usage: `dataset panid [panid]`
+
+Get panid.
+
+```bash
+> dataset panid
+0x1234
+Done
+```
 
 Set panid.
 
@@ -383,7 +454,15 @@ Done
 
 ### pendingtimestamp
 
-Usage: `dataset pendingtimestamp <timestamp>`
+Usage: `dataset pendingtimestamp [timestamp]`
+
+Get pending timestamp.
+
+```bash
+> dataset pendingtimestamp
+123456789
+Done
+```
 
 Set pending timestamp.
 
@@ -394,7 +473,17 @@ Done
 
 ### pskc
 
-Usage: `pskc [-p] <key>|<passphrase>`
+Usage: `pskc [-p] [<key>|<passphrase>]`
+
+Get pskc.
+
+```bash
+> dataset pskc
+67c0c203aa0b042bfb5381c47aef4d9e
+Done
+```
+
+Set pskc.
 
 With `-p`(**only for FTD**) generate pskc from \<passphrase\> (UTF-8 encoded) together with network name and extended PAN ID in the dataset buffer if set or values in the current stack if not, otherwise set pskc as \<key\> (hex format).
 
@@ -407,7 +496,15 @@ Done
 
 ### securitypolicy
 
-Usage: `dataset securitypolicy <rotationtime> [onrcb]`
+Usage: `dataset securitypolicy [<rotationtime> [onrcb]]`
+
+Get security policy.
+
+```bash
+> dataset securitypolicy
+672 onrcb
+Done
+```
 
 Set security policy.
 
