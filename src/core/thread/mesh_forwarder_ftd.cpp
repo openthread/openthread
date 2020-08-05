@@ -93,7 +93,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
                     // destined for some sleepy children which subscribed the multicast address.
                     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
                     {
-                        if (mle.IsSleepyChildSubscribed(ip6Header.GetDestination(), child))
+                        if (!child.IsRxOnWhenIdle() && child.HasIp6Address(ip6Header.GetDestination()))
                         {
                             mIndirectSender.AddMessageForSleepyChild(aMessage, child);
                         }

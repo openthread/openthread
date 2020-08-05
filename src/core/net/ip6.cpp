@@ -311,7 +311,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aM
     {
 #if OPENTHREAD_FTD
         if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal() &&
-            Get<Mle::MleRouter>().HasSleepyChildrenSubscribed(aHeader.GetDestination()))
+            Get<ChildTable>().HasSleepyChildWithAddress(aHeader.GetDestination()))
         {
             Message *messageCopy = nullptr;
 
@@ -517,7 +517,7 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t 
     if (aMessageInfo.GetPeerAddr().IsMulticastLargerThanRealmLocal())
     {
 #if OPENTHREAD_FTD
-        if (Get<Mle::MleRouter>().HasSleepyChildrenSubscribed(header.GetDestination()))
+        if (Get<ChildTable>().HasSleepyChildWithAddress(header.GetDestination()))
         {
             Message *messageCopy = nullptr;
 
@@ -1193,7 +1193,7 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
 
 #if OPENTHREAD_FTD
             if (header.GetDestination().IsMulticastLargerThanRealmLocal() &&
-                Get<Mle::MleRouter>().HasSleepyChildrenSubscribed(header.GetDestination()))
+                Get<ChildTable>().HasSleepyChildWithAddress(header.GetDestination()))
             {
                 forward = true;
             }
