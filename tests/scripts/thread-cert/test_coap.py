@@ -146,8 +146,7 @@ class TestCoapMessageOptionHeader(unittest.TestCase):
         # THEN
         self.assertEqual(extended_value + 269, actual_value)
 
-    def test_should_create_CoapOptionHeader_when_from_bytes_classmethod_is_called(
-        self):
+    def test_should_create_CoapOptionHeader_when_from_bytes_classmethod_is_called(self):
         # GIVEN
         delta = any_4bits_value_different_than_13_and_14()
         length = any_4bits_value_different_than_13_and_14()
@@ -161,8 +160,7 @@ class TestCoapMessageOptionHeader(unittest.TestCase):
         self.assertEqual(delta, option_header.delta)
         self.assertEqual(length, option_header.length)
 
-    def test_should_return_True_when_is_payload_marker_property_called_with_delta_and_length_equal_15(
-        self):
+    def test_should_return_True_when_is_payload_marker_property_called_with_delta_and_length_equal_15(self):
         # GIVEN
         delta = 15
         length = 15
@@ -205,8 +203,7 @@ class TestCoapOption(unittest.TestCase):
 
 class TestCoapOptionsFactory(unittest.TestCase):
 
-    def test_should_create_list_of_CoapOption_from_bytearray_when_parse_method_is_called(
-        self):
+    def test_should_create_list_of_CoapOption_from_bytearray_when_parse_method_is_called(self):
         # GIVEN
         delta = any_4bits_value_lower_or_equal_than_12()
         length = any_4bits_value_lower_or_equal_than_12()
@@ -276,8 +273,7 @@ class TestCoapCode(unittest.TestCase):
         _class, detail = actual_dotted.split(".")
         self.assertEqual(code, (int(_class) << 5) | int(detail))
 
-    def test_should_create_CoapCode_when_from_class_and_detail_classmethod_is_called(
-        self):
+    def test_should_create_CoapCode_when_from_class_and_detail_classmethod_is_called(self):
         # GIVEN
         code = any_code()
 
@@ -290,8 +286,7 @@ class TestCoapCode(unittest.TestCase):
         # THEN
         self.assertEqual(code, actual_coap_obj.code)
 
-    def test_should_create_CoapCode_when_from_dotted_string_classmethod_is_called(
-        self):
+    def test_should_create_CoapCode_when_from_dotted_string_classmethod_is_called(self):
         # GIVEN
         code = any_code()
 
@@ -366,8 +361,7 @@ class TestCoapMessage(unittest.TestCase):
         # THEN
         self.assertEqual(code, actual_code)
 
-    def test_should_return_message_id_value_when_message_id_property_is_called(
-        self):
+    def test_should_return_message_id_value_when_message_id_property_is_called(self):
         # GIVEN
         message_id = any_message_id()
 
@@ -467,8 +461,7 @@ class TestCoapMessage(unittest.TestCase):
         # THEN
         self.assertEqual(payload, actual_payload)
 
-    def test_should_return_uri_path_value_when_uri_path_property_is_called(
-        self):
+    def test_should_return_uri_path_value_when_uri_path_property_is_called(self):
         # GIVEN
         uri_path = any_uri_path()
 
@@ -492,8 +485,7 @@ class TestCoapMessage(unittest.TestCase):
 
 class TestCoapMessageIdToUriPathBinder(unittest.TestCase):
 
-    def test_should_add_uri_path_to_binds_when_add_uri_path_for_method_is_called(
-        self):
+    def test_should_add_uri_path_to_binds_when_add_uri_path_for_method_is_called(self):
         # GIVEN
         message_id = any_message_id()
         token = any_token()
@@ -507,8 +499,7 @@ class TestCoapMessageIdToUriPathBinder(unittest.TestCase):
         # THEN
         self.assertEqual(uri_path, binder.get_uri_path_for(message_id, token))
 
-    def test_should_raise_KeyError_when_get_uri_path_for_is_called_but_it_is_not_present_in_database(
-        self):
+    def test_should_raise_KeyError_when_get_uri_path_for_is_called_but_it_is_not_present_in_database(self):
         # GIVEN
         message_id = any_message_id()
         token = any_token()
@@ -517,8 +508,7 @@ class TestCoapMessageIdToUriPathBinder(unittest.TestCase):
         binder = coap.CoapMessageIdToUriPathBinder()
 
         # THEN
-        self.assertRaises(RuntimeError, binder.get_uri_path_for, message_id,
-                          token)
+        self.assertRaises(RuntimeError, binder.get_uri_path_for, message_id, token)
 
 
 class TestCoapMessageFactory(unittest.TestCase):
@@ -535,14 +525,11 @@ class TestCoapMessageFactory(unittest.TestCase):
     def _create_coap_message_factory(self):
         return coap.CoapMessageFactory(
             options_factory=coap.CoapOptionsFactory(),
-            uri_path_based_payload_factories={
-                "/a/as": self._create_dummy_payload_factory()
-            },
+            uri_path_based_payload_factories={"/a/as": self._create_dummy_payload_factory()},
             message_id_to_uri_path_binder=coap.CoapMessageIdToUriPathBinder(),
         )
 
-    def test_should_create_CoapMessage_from_solicit_request_data_when_parse_method_is_called(
-        self):
+    def test_should_create_CoapMessage_from_solicit_request_data_when_parse_method_is_called(self):
         # GIVEN
         data = bytearray([
             0x42,
@@ -606,8 +593,7 @@ class TestCoapMessageFactory(unittest.TestCase):
             coap_message.payload,
         )
 
-    def test_should_create_CoapMessage_from_solicit_response_data_when_parse_method_is_called(
-        self):
+    def test_should_create_CoapMessage_from_solicit_response_data_when_parse_method_is_called(self):
         # GIVEN
         data = bytearray([
             0x62,
@@ -642,9 +628,7 @@ class TestCoapMessageFactory(unittest.TestCase):
 
         factory = coap.CoapMessageFactory(
             options_factory=coap.CoapOptionsFactory(),
-            uri_path_based_payload_factories={
-                "/a/as": self._create_dummy_payload_factory()
-            },
+            uri_path_based_payload_factories={"/a/as": self._create_dummy_payload_factory()},
             message_id_to_uri_path_binder=mid_binder,
         )
 

@@ -80,8 +80,7 @@ class Cert_5_3_5_RoutingLinkQuality(thread_cert.TestCase):
             self.assertEqual(self.nodes[router].get_state(), 'router')
 
         # 2 & 3
-        leader_rloc = self.nodes[LEADER].get_ip6_address(
-            config.ADDRESS_TYPE.RLOC)
+        leader_rloc = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.RLOC)
 
         # Verify the ICMPv6 Echo Request took the least cost path.
         self.assertTrue(self.nodes[ROUTER3].ping(leader_rloc))
@@ -89,10 +88,8 @@ class Cert_5_3_5_RoutingLinkQuality(thread_cert.TestCase):
         command.check_icmp_path(self.simulator, path, self.nodes)
 
         # 4 & 5
-        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64(),
-                                         config.RSSI['LINK_QULITY_1'])
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(),
-                                              config.RSSI['LINK_QULITY_1'])
+        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64(), config.RSSI['LINK_QULITY_1'])
+        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), config.RSSI['LINK_QULITY_1'])
         self.simulator.go(3 * config.MAX_ADVERTISEMENT_INTERVAL)
 
         # Verify the ICMPv6 Echo Request took the longer path because it cost
@@ -102,10 +99,8 @@ class Cert_5_3_5_RoutingLinkQuality(thread_cert.TestCase):
         command.check_icmp_path(self.simulator, path, self.nodes)
 
         # 6 & 7
-        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64(),
-                                         config.RSSI['LINK_QULITY_2'])
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(),
-                                              config.RSSI['LINK_QULITY_2'])
+        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64(), config.RSSI['LINK_QULITY_2'])
+        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), config.RSSI['LINK_QULITY_2'])
         self.simulator.go(3 * config.MAX_ADVERTISEMENT_INTERVAL)
 
         # Verify the direct neighbor would be prioritized when there are two
@@ -115,15 +110,12 @@ class Cert_5_3_5_RoutingLinkQuality(thread_cert.TestCase):
         command.check_icmp_path(self.simulator, path, self.nodes)
 
         # 8 & 9
-        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64(),
-                                         config.RSSI['LINK_QULITY_0'])
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(),
-                                              config.RSSI['LINK_QULITY_0'])
+        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64(), config.RSSI['LINK_QULITY_0'])
+        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), config.RSSI['LINK_QULITY_0'])
         self.simulator.go(3 * config.MAX_ADVERTISEMENT_INTERVAL)
 
         # Verify the ICMPv6 Echo Request took the longer path.
-        leader_rloc = self.nodes[LEADER].get_ip6_address(
-            config.ADDRESS_TYPE.RLOC)
+        leader_rloc = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.RLOC)
         self.assertTrue(self.nodes[ROUTER3].ping(leader_rloc))
         path = [ROUTER3, DUT_ROUTER1, ROUTER2, LEADER]
         command.check_icmp_path(self.simulator, path, self.nodes)

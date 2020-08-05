@@ -124,8 +124,7 @@ c3_rloc = int(c3.get(wpan.WPAN_THREAD_RLOC16), 16)
 
 
 def check_r1_router_table():
-    router_table = wpan.parse_router_table_result(
-        r1.get(wpan.WPAN_THREAD_ROUTER_TABLE))
+    router_table = wpan.parse_router_table_result(r1.get(wpan.WPAN_THREAD_ROUTER_TABLE))
     verify(len(router_table) == 3)
     for entry in router_table:
         if entry.rloc16 == r3_rloc:
@@ -156,8 +155,7 @@ verify(sender.was_successful and recver.was_successful)
 # The address cache table on r1 should contain two entries for
 # c2 and c3 addresses.
 
-addr_cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+addr_cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 verify(len(addr_cache_table) == 2)
 
 for entry in addr_cache_table:
@@ -228,8 +226,7 @@ verify(sender.was_successful and recver.was_successful)
 
 # The address cache table on r1 should have c2's address removed.
 
-addr_cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+addr_cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 verify(len(addr_cache_table) == 1)
 
 for entry in addr_cache_table:
@@ -248,8 +245,7 @@ verify(sender.was_successful and recver.was_successful)
 
 # The address cache table on r1 should have both c1 and c2.
 
-addr_cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+addr_cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 verify(len(addr_cache_table) == 2)
 
 for entry in addr_cache_table:
@@ -312,8 +308,7 @@ verify(sender.was_successful and recver.was_successful)
 #
 # verify that the address cache table is updated correctly.
 
-addr_cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+addr_cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 verify(len(addr_cache_table) == 2)
 
 for entry in addr_cache_table:
@@ -381,8 +376,7 @@ verify(sender.was_successful and recver.was_successful)
 #
 # verify that the address cache table is updated correctly.
 
-addr_cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+addr_cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 verify(len(addr_cache_table) == 2)
 
 for entry in addr_cache_table:

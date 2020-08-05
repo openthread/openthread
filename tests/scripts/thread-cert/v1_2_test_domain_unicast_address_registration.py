@@ -181,8 +181,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         #    Prefix without `P_slaac`.
         self.nodes[BBR_1].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         self.nodes[BBR_1].set_bbr_registration_jitter(BBR_REGISTRATION_JITTER)
-        self.nodes[BBR_1].set_backbone_router(
-            seqno=seq_num, reg_delay=BBR_REREGISTRATION_DELAY)
+        self.nodes[BBR_1].set_backbone_router(seqno=seq_num, reg_delay=BBR_REREGISTRATION_DELAY)
         self.nodes[BBR_1].start()
         WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
         self.simulator.go(WAIT_TIME)
@@ -190,8 +189,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         self.nodes[BBR_1].enable_backbone_router()
         WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
-        self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(),
-                         'Primary')
+        self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(), 'Primary')
         assert self.nodes[BBR_1].has_ipmaddr(config.ALL_NETWORK_BBRS_ADDRESS)
         assert not self.nodes[BBR_1].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
 
@@ -210,8 +208,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         self.flush_nodes([ROUTER_1_2])
 
         self.nodes[ROUTER_1_2].set_dua_iid(DUA_IID_MANUAL1)
-        self.nodes[ROUTER_1_2].set_router_selection_jitter(
-            ROUTER_SELECTION_JITTER)
+        self.nodes[ROUTER_1_2].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         self.nodes[ROUTER_1_2].start()
         WAIT_TIME = WAIT_ATTACH
         self.simulator.go(WAIT_TIME)
@@ -278,17 +275,13 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
 
         dua2 = self.nodes[ROUTER_1_2].get_addr(config.DOMAIN_PREFIX)
         assert dua2, 'Error: Expected DUA ({}) not found'.format(dua2)
-        assert dua2 != dua, 'Error: Expected Different DUA not found, same DUA {}'.format(
-            dua2)
+        assert dua2 != dua, 'Error: Expected Different DUA not found, same DUA {}'.format(dua2)
 
         # e) (repeated) Configure BBR_1 to respond with per remaining error status:
         #   - increase BBR seqno to trigger reregistration
         #   - ROUTER_1_2 should re-register within BBR_REREGISTRATION_DELAY. For the not fatal errors, ROUTER_1_2
         #     should re-register within another BBR_REREGISTRATION_DELAY (with least delay if ST_DUA_REREGISTER)
-        for status in [
-                ST_DUA_REREGISTER, ST_DUA_NO_RESOURCES, ST_DUA_BBR_NOT_PRIMARY,
-                ST_DUA_GENERAL_FAILURE
-        ]:
+        for status in [ST_DUA_REREGISTER, ST_DUA_NO_RESOURCES, ST_DUA_BBR_NOT_PRIMARY, ST_DUA_GENERAL_FAILURE]:
             print('Testing Status %d...'.format(status))
             # Flush relative message queues.
             self.flush_nodes([ROUTER_1_2])
@@ -304,8 +297,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
             self.__check_dua_registration_tmf(ROUTER_1_2, 2)
 
         # Bring up Router_1_1
-        self.nodes[ROUTER_1_1].set_router_selection_jitter(
-            ROUTER_SELECTION_JITTER)
+        self.nodes[ROUTER_1_1].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         self.nodes[ROUTER_1_1].start()
         WAIT_TIME = WAIT_ATTACH
         self.simulator.go(WAIT_TIME)
@@ -328,8 +320,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         #    is of Thread 1.1 version.
         # 4) Bring up FED_1_2_2, it sends DUA.req itself as it it FTD.
         for node in [FED_1_2_1, MED_1_2_1, SED_1_2_1, FED_1_2_2]:
-            print("Starting child {} (extaddr: {})...".format(
-                node, self.nodes[node].get_addr64()))
+            print("Starting child {} (extaddr: {})...".format(node, self.nodes[node].get_addr64()))
             # Flush all message queues.
             self.flush_all()
             self.nodes[node].start()
@@ -343,8 +334,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         # 5) MED_1_2_2, SED_1_2_2, MTDs should should register their DUA to their parent
         #    by Child Update Request, and the parent would send DUA.req for them on behalf.
         for node in [MED_1_2_2, SED_1_2_2]:
-            print("Starting child {} (extaddr: {})...".format(
-                node, self.nodes[node].get_addr64()))
+            print("Starting child {} (extaddr: {})...".format(node, self.nodes[node].get_addr64()))
             # Flush all message queues.
             self.flush_all()
             self.nodes[node].start()

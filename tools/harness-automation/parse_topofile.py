@@ -105,8 +105,7 @@ def device_calculate(topo_file, case_list):
 
                 matched_case = re.match(r'(.*)-(.*)', line, re.M | re.I)
 
-                if 'all' not in case_list and matched_case.group(
-                        1) not in case_list:
+                if 'all' not in case_list and matched_case.group(1) not in case_list:
                     continue
 
                 logging.info('case %s:' % matched_case.group(1))
@@ -126,8 +125,7 @@ def device_calculate(topo_file, case_list):
 
             for _, vendor in role_vendor_list:
                 case_vendor_dict[vendor] += 1
-                testbed_vendor_dict[vendor] = max(testbed_vendor_dict[vendor],
-                                                  case_vendor_dict[vendor])
+                testbed_vendor_dict[vendor] = max(testbed_vendor_dict[vendor], case_vendor_dict[vendor])
 
             logging.info('\tvendor devices  : %s' % dict(case_vendor_dict))
 
@@ -143,19 +141,16 @@ def device_calculate(topo_file, case_list):
         if 'Any' in testbed_vendor_dict:
             testbed_vendor_dict['Any'] = count_any
 
-    logging.info('\nTestbed needed vendor devices:%s' %
-                 dict(testbed_vendor_dict))
+    logging.info('\nTestbed needed vendor devices:%s' % dict(testbed_vendor_dict))
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='parse TopologyConfig file and list all devices by case')
+    parser = argparse.ArgumentParser(description='parse TopologyConfig file and list all devices by case')
     parser.add_argument(
         '-f',
         dest='topo_file',
         default='C:/GRL/Thread1.1/Thread_Harness/TestScripts/TopologyConfig.txt',
-        help=
-        'Topology config file (default: C:/GRL/Thread1.1/Thread_Harness/TestScripts/TopologyConfig.txt)',
+        help='Topology config file (default: C:/GRL/Thread1.1/Thread_Harness/TestScripts/TopologyConfig.txt)',
     )
 
     parser.add_argument('-c',

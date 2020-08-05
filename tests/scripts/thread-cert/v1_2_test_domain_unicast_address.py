@@ -147,10 +147,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
 
         messages = self.simulator.get_messages_sent_by(node)
         msg = messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        command.check_compressed_address_registration_tlv(msg,
-                                                          dp_cid,
-                                                          iid,
-                                                          cid_present_once=True)
+        command.check_compressed_address_registration_tlv(msg, dp_cid, iid, cid_present_once=True)
 
     def test(self):
         # starting context id
@@ -168,8 +165,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         self.nodes[BBR_1].enable_backbone_router()
         WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
-        self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(),
-                         'Primary')
+        self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(), 'Primary')
         assert self.nodes[BBR_1].has_ipmaddr(config.ALL_NETWORK_BBRS_ADDRESS)
         assert not self.nodes[BBR_1].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
 
@@ -182,8 +178,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         domain_prefix_cid = context_id
 
         # 2) Bring up ROUTER_1_1, no DUA was added due to that `P_slaac` flag is not set.
-        self.nodes[ROUTER_1_1].set_router_selection_jitter(
-            ROUTER_SELECTION_JITTER)
+        self.nodes[ROUTER_1_1].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
         self.nodes[ROUTER_1_1].start()
         self.simulator.go(WAIT_TIME)
@@ -192,8 +187,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         assert not dua, 'Error: Unexpected DUA ({})'.format(dua)
 
         # 3) Bring up ROUTER_1_2, verify that it has DUA generated.
-        self.nodes[ROUTER_1_2].set_router_selection_jitter(
-            ROUTER_SELECTION_JITTER)
+        self.nodes[ROUTER_1_2].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         self.nodes[ROUTER_1_2].start()
         WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
         self.simulator.go(WAIT_TIME)
@@ -211,8 +205,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         self.assertEqual(self.nodes[MED_1_2].get_state(), 'child')
 
         # 4a) DUA_IID_MANUAL1 is registered in Address Registration TLV via Child Update Request.
-        self.__check_dua_registration(MED_1_2, DUA_IID_MANUAL1,
-                                      domain_prefix_cid)
+        self.__check_dua_registration(MED_1_2, DUA_IID_MANUAL1, domain_prefix_cid)
 
         # 4b) Remove DUA_IID_MANUAL1, a new DUA generated via SLAAC would be registered in Address
         #   Registration TLV via Child Update Request.
@@ -228,8 +221,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         assert med_1_2_dua, 'Error: Expected DUA not found'
 
         med_1_2_dua_iid = self.__get_iid(med_1_2_dua)
-        self.__check_dua_registration(MED_1_2, med_1_2_dua_iid,
-                                      domain_prefix_cid)
+        self.__check_dua_registration(MED_1_2, med_1_2_dua_iid, domain_prefix_cid)
 
         # 4c) Set DUA_IID_MANUAL2 which should override the generated one and be registered in Address
         #   Registration TLV via Child Update Request.
@@ -242,8 +234,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
 
         dua = self.nodes[MED_1_2].get_addr(config.DOMAIN_PREFIX)
 
-        self.__check_dua_registration(MED_1_2, DUA_IID_MANUAL2,
-                                      domain_prefix_cid)
+        self.__check_dua_registration(MED_1_2, DUA_IID_MANUAL2, domain_prefix_cid)
 
         # 4d) Remove DUA_IID_MANUAL2, a new DUA generated via SLAAC, the same as in above b) would
         #     be registered in Address Registration TLV via  Child Update Request.
@@ -259,15 +250,13 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         assert ipaddress.ip_address(med_1_2_dua) == ipaddress.ip_address(
             dua), 'Error: Expected same SLAAC DUA not generated'
 
-        self.__check_dua_registration(MED_1_2, med_1_2_dua_iid,
-                                      domain_prefix_cid)
+        self.__check_dua_registration(MED_1_2, med_1_2_dua_iid, domain_prefix_cid)
 
         # 5) Change BBR_1 from config.DOMAIN_PREFIX to config.DOMAIN_PRFIX_ALTER. Verify that MED_1_2
         #   generates a new Interface Identifier different from the one generated in 4d) due to the
         #   Domain Prefix change.
         context_id += 1
-        self.simulator.set_lowpan_context(context_id,
-                                          config.DOMAIN_PREFIX_ALTER)
+        self.simulator.set_lowpan_context(context_id, config.DOMAIN_PREFIX_ALTER)
         self.nodes[BBR_1].set_domain_prefix(config.DOMAIN_PREFIX_ALTER)
         WAIT_TIME = WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
@@ -286,8 +275,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         assert ipaddress.ip_address(med_1_2_dua) == ipaddress.ip_address(
             dua), 'Error: Expected same SLAAC DUA not generated'
 
-        self.__check_dua_registration(MED_1_2, med_1_2_dua_iid,
-                                      domain_prefix_cid)
+        self.__check_dua_registration(MED_1_2, med_1_2_dua_iid, domain_prefix_cid)
 
         #7) Configure ROUTER_1_1 as Border Router with 3 SLAAC prefixes, verify MED_1_2 would register
         #   its DUA in Address Registration TLV.
@@ -317,8 +305,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         assert ipaddress.ip_address(med_1_2_dua) == ipaddress.ip_address(
             dua), 'Error: Expected same SLAAC DUA not generated'
 
-        self.__check_dua_registration(MED_1_2, med_1_2_dua_iid,
-                                      domain_prefix_cid)
+        self.__check_dua_registration(MED_1_2, med_1_2_dua_iid, domain_prefix_cid)
 
         #8) Bring up SED_1_2, verify that it generates one DUA, and registers it to its parent, though the parent
         #   is a Thread 1.1 device.

@@ -132,8 +132,7 @@ class Cert_5_1_10_RouterAttachLinkQuality(thread_cert.TestCase):
         msg.assertSentToNode(self.nodes[ROUTER3])
 
         # 5 - Router3
-        msg = router3_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_REQUEST)
+        msg = router3_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         msg.assertSentToNode(self.nodes[ROUTER1])
         msg.assertMleMessageContainsTlv(mle.Response)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)

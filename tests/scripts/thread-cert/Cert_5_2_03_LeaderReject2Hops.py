@@ -51,9 +51,8 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'router_upgrade_threshold':
                 32,
             'whitelist': [
-                ROUTER_1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
-                18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-                ROUTER_31
+                ROUTER_1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
+                28, 29, 30, 31, ROUTER_31
             ]
         },
         ROUTER_1: {
@@ -358,8 +357,7 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
         msg.assertCoapMessageContainsTlv(network_layer.Status)
 
         status_tlv = msg.get_coap_message_tlv(network_layer.Status)
-        self.assertEqual(network_layer.StatusValues.NO_ADDRESS_AVAILABLE,
-                         status_tlv.status)
+        self.assertEqual(network_layer.StatusValues.NO_ADDRESS_AVAILABLE, status_tlv.status)
 
 
 if __name__ == '__main__':

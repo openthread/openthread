@@ -74,8 +74,7 @@ def verify_prefix(
     This function verifies that the `prefix` is present on all the nodes in the `node_list`.
     """
     for node in node_list:
-        prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
+        prefixes = wpan.parse_on_mesh_prefix_result(node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         for p in prefixes:
             if p.prefix == prefix:
                 verify(int(p.prefix_len) == prefix_len)
@@ -89,8 +88,7 @@ def verify_prefix(
                 verify(p.priority == priority)
                 break
         else:
-            raise wpan.VerifyError("Did not find prefix {} on node {}".format(
-                prefix, node))
+            raise wpan.VerifyError("Did not find prefix {} on node {}".format(prefix, node))
 
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -179,10 +177,8 @@ wpan.verify_within(check_partition_id_match, long_wait)
 def check_r1_r2_roles():
     r1_type = r1.get(wpan.WPAN_NODE_TYPE)
     r2_type = r2.get(wpan.WPAN_NODE_TYPE)
-    verify(
-        (r1_type == wpan.NODE_TYPE_LEADER and
-         r2_type == wpan.NODE_TYPE_ROUTER) or
-        (r2_type == wpan.NODE_TYPE_LEADER and r1_type == wpan.NODE_TYPE_ROUTER))
+    verify((r1_type == wpan.NODE_TYPE_LEADER and r2_type == wpan.NODE_TYPE_ROUTER) or
+           (r2_type == wpan.NODE_TYPE_LEADER and r1_type == wpan.NODE_TYPE_ROUTER))
 
 
 wpan.verify_within(check_r1_r2_roles, short_wait)

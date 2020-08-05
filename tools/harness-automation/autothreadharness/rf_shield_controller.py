@@ -97,5 +97,4 @@ CONTROLLERS = {'RF_SWITCH': RfSwitchController}
 def get_rf_shield_controller(shield_type, params):
     if shield_type in CONTROLLERS:
         return CONTROLLERS[shield_type](**params)
-    logger.exception(
-        'Unknown RF shield controller type: {}'.format(shield_type))
+    logger.exception('Unknown RF shield controller type: {}'.format(shield_type))

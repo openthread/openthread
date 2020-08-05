@@ -117,8 +117,7 @@ class Cert_5_3_09_AddressQuery(thread_cert.TestCase):
         # Verify DUT_ROUTER2 sent an Address Query Request
         dut_router2_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_router2_messages.next_coap_message('0.02', '/a/aq')
-        msg.assertSentToDestinationAddress(
-            config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+        msg.assertSentToDestinationAddress(config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
         command.check_address_query(
             msg,
             self.nodes[DUT_ROUTER2],
@@ -127,9 +126,7 @@ class Cert_5_3_09_AddressQuery(thread_cert.TestCase):
 
         # Verify the DUT_ROUTER2 forwarded the ICMPv6 Echo Request to ROUTER3
         msg = dut_router2_messages.get_icmp_message(ipv6.ICMP_ECHO_REQUEST)
-        assert (
-            msg is not None
-        ), "Error: The DUT_ROUTER2 didn't forward ICMPv6 Echo Request to ROUTER3"
+        assert (msg is not None), "Error: The DUT_ROUTER2 didn't forward ICMPv6 Echo Request to ROUTER3"
         msg.assertSentToNode(self.nodes[ROUTER3])
 
         # 4 ROUTER1: ROUTER1 sends an ICMPv6 Echo Request to the SED1 using GUA
@@ -144,8 +141,7 @@ class Cert_5_3_09_AddressQuery(thread_cert.TestCase):
         # Verify DUT_ROUTER2 sent an Address Notification message
         dut_router2_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_router2_messages.next_coap_message('0.02', '/a/an')
-        command.check_address_notification(msg, self.nodes[DUT_ROUTER2],
-                                           self.nodes[ROUTER1])
+        command.check_address_notification(msg, self.nodes[DUT_ROUTER2], self.nodes[ROUTER1])
 
         # 5 SED1: SED1 sends an ICMPv6 Echo Request to the ROUTER3 using GUA
         # 2001:: address
@@ -158,16 +154,11 @@ class Cert_5_3_09_AddressQuery(thread_cert.TestCase):
         dut_router2_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         dut_router2_messages_temp = copy.deepcopy(dut_router2_messages)
         msg = dut_router2_messages.next_coap_message('0.02', '/a/aq', False)
-        assert (
-            msg is None
-        ), "Error: The DUT_ROUTER2 sent an unexpected Address Query Request"
+        assert (msg is None), "Error: The DUT_ROUTER2 sent an unexpected Address Query Request"
 
         # Verify DUT_ROUTER2 forwarded the ICMPv6 Echo Reply to SED1
-        msg = dut_router2_messages_temp.get_icmp_message(
-            ipv6.ICMP_ECHO_RESPONSE)
-        assert (
-            msg is not None
-        ), "Error: The DUT_ROUTER2 didn't forward ICMPv6 Echo Reply to SED1"
+        msg = dut_router2_messages_temp.get_icmp_message(ipv6.ICMP_ECHO_RESPONSE)
+        assert (msg is not None), "Error: The DUT_ROUTER2 didn't forward ICMPv6 Echo Reply to SED1"
         msg.assertSentToNode(self.nodes[SED1])
 
         # 6 DUT_ROUTER2: Power off ROUTER3 and wait 580s to alow LEADER to
@@ -181,8 +172,7 @@ class Cert_5_3_09_AddressQuery(thread_cert.TestCase):
         # Verify DUT_ROUTER2 sent an Address Query Request
         dut_router2_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_router2_messages.next_coap_message('0.02', '/a/aq')
-        msg.assertSentToDestinationAddress(
-            config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+        msg.assertSentToDestinationAddress(config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
 
         # 7 SED1: Power off SED1 and wait to allow DUT_ROUTER2 to timeout the
         # child
@@ -196,9 +186,7 @@ class Cert_5_3_09_AddressQuery(thread_cert.TestCase):
         # Verify DUT_ROUTER2 didn't generate an Address Notification message
         dut_router2_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_router2_messages.next_coap_message('0.02', '/a/an', False)
-        assert (
-            msg is None
-        ), "Error: The DUT_ROUTER2 sent an unexpected Address Notification message"
+        assert (msg is None), "Error: The DUT_ROUTER2 sent an unexpected Address Notification message"
 
 
 if __name__ == '__main__':
