@@ -48,78 +48,6 @@ namespace ot {
 namespace Dns {
 
 /**
- * This class implements metadata required for DNS retransmission.
- *
- */
-class QueryMetadata
-{
-    friend class Client;
-
-public:
-    /**
-     * Default constructor for the object.
-     *
-     */
-    QueryMetadata(void);
-
-    /**
-     * This constructor initializes the object with specific values.
-     *
-     * @param[in]  aHandler  Pointer to a handler function for the response.
-     * @param[in]  aContext  Context for the handler function.
-     *
-     */
-    QueryMetadata(otDnsResponseHandler aHandler, void *aContext);
-
-    /**
-     * This method appends request data to the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval OT_ERROR_NONE     Successfully appended the bytes.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
-     *
-     */
-    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
-
-    /**
-     * This method reads request data from the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     */
-    void ReadFrom(const Message &aMessage)
-    {
-        uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-        OT_ASSERT(length == sizeof(*this));
-        OT_UNUSED_VARIABLE(length);
-    }
-
-    /**
-     * This method updates request data in the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @returns The number of bytes updated.
-     *
-     */
-    int UpdateIn(Message &aMessage) const
-    {
-        return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    }
-
-private:
-    const char *         mHostname;            ///< A hostname to be find.
-    otDnsResponseHandler mResponseHandler;     ///< A function pointer that is called on response reception.
-    void *               mResponseContext;     ///< A pointer to arbitrary context information.
-    TimeMilli            mTransmissionTime;    ///< Time when the timer should shoot for this message.
-    Ip6::Address         mSourceAddress;       ///< IPv6 address of the message source.
-    Ip6::Address         mDestinationAddress;  ///< IPv6 address of the message destination.
-    uint16_t             mDestinationPort;     ///< UDP port of the message destination.
-    uint8_t              mRetransmissionCount; ///< Number of retransmissions.
-};
-
-/**
  * This class implements DNS client.
  *
  */
@@ -191,6 +119,22 @@ private:
     enum
     {
         kBufSize = 16
+    };
+
+    struct QueryMetadata
+    {
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        void    ReadFrom(const Message &aMessage);
+        void    UpdateIn(Message &aMessage) const;
+
+        const char *         mHostname;
+        otDnsResponseHandler mResponseHandler;
+        void *               mResponseContext;
+        TimeMilli            mTransmissionTime;
+        Ip6::Address         mSourceAddress;
+        Ip6::Address         mDestinationAddress;
+        uint16_t             mDestinationPort;
+        uint8_t              mRetransmissionCount;
     };
 
     Message *NewMessage(const Header &aHeader);
