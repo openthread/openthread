@@ -371,30 +371,6 @@ public:
     int8_t GetNoiseFloor(void);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    /**
-     * This method indicates whether or not CSL receiver is started.
-     *
-     * @retval true   CSL is started.
-     * @retval false  CSL is not started.
-     *
-     */
-    bool IsCslStarted(void) const { return mCslState != kCslIdle; }
-
-    /**
-     * This method starts CSL sample.
-     *
-     * @retval OT_ERROR_NONE           Successfully started CSL.
-     * @retval OT_ERROR_INVALID_ARGS   CSL period is 0.
-     * @retval OT_ERROR_ALREADY        CSL Receiver has already been started.
-     *
-     */
-    otError StartCsl(void);
-
-    /**
-     * This method stops CSL sample.
-     *
-     */
-    void StopCsl(void);
 
     /**
      * This method gets the CSL accuracy.
@@ -619,16 +595,9 @@ private:
      * The SSED sample window in units of 10 symbols.
      *
      */
-    static const uint32_t kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols;
-
-    /**
-     * The minimum SSED sample window in units of 10 symbols.
-     *
-     * No official definition found in Thread or 802.15.4 specifications. From how CSL works,
-     * this window should be no less than the `macCslInterval` whose minimal value is 1.
-     *
-     */
-    static const uint32_t kCslMinSampleWindow = 1;
+    enum : uint32_t{
+        kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols,
+    };
 
     enum CslState{
         kCslIdle = 0, ///< CSL receiver is not started.

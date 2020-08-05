@@ -393,14 +393,7 @@ void SubMac::BeginTransmit(void)
     VerifyOrExit(mState == kStateCsmaBackoff, OT_NOOP);
 #endif
 
-    if (mTransmitFrame.mInfo.mTxInfo.mPeriod != 0)
-    {
-        mTransmitFrame.SetCsmaCaEnabled(false);
-    }
-    else
-    {
-        mTransmitFrame.SetCsmaCaEnabled(true);
-    }
+    mTransmitFrame.SetCsmaCaEnabled(mTransmitFrame.mInfo.mTxInfo.mPeriod != 0);
 
     if ((mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX) == 0)
     {
@@ -845,6 +838,8 @@ void SubMac::SetCslChannel(uint8_t aChannel)
 
 void SubMac::SetCslPeriod(uint16_t aPeriod)
 {
+    VerifyOrExit(mCslPeriod != aPeriod, OT_NOOP);
+
     mCslPeriod = aPeriod;
 
     mCslTimer.Stop();
@@ -867,6 +862,11 @@ void SubMac::SetCslPeriod(uint16_t aPeriod)
             SetState(kStateSleep);
         }
     }
+
+    otLogDebgMac("Csl Period is set to: %u", mCslPeriod);
+
+exit:
+    return;
 }
 
 void SubMac::SetCslTimeout(uint32_t aTimeout)
@@ -901,7 +901,6 @@ void SubMac::HandleCslTimer(void)
     switch (mCslState)
     {
     case kCslSample:
-    {
         mCslState = kCslSleep;
         // kUsPerTenSymbols: computing CSL Phase using floor division.
         mCslTimer.StartAt(mCslSampleTime, mCslPeriod * kUsPerTenSymbols - kUsPerTenSymbols);
@@ -911,10 +910,8 @@ void SubMac::HandleCslTimer(void)
             otLogDebgMac("CSL sleep %u", mCslTimer.GetNow().GetValue());
         }
         break;
-    }
 
     case kCslSleep:
-    {
         mCslState = kCslSample;
 
         mCslSampleTime += mCslPeriod * kUsPerTenSymbols;
@@ -928,7 +925,6 @@ void SubMac::HandleCslTimer(void)
             otLogDebgMac("CSL Sample %u", mCslTimer.GetNow().GetValue());
         }
         break;
-    }
 
     case kCslIdle:
         break;

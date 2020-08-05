@@ -118,15 +118,6 @@ public:
 
         const Mac::Address &GetMacAddress(Mac::Address &aMacAddress) const;
 
-        uint32_t GetIndirectFrameCounter(void) const { return mIndirectFrameCounter; }
-        void     SetIndirectFrameCounter(uint32_t aFrameCounter) { mIndirectFrameCounter = aFrameCounter; }
-
-        uint8_t GetIndirectKeyId(void) const { return mIndirectKeyId; }
-        void    SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
-
-        uint8_t GetIndirectDataSequenceNumber(void) const { return mIndirectDsn; }
-        void    SetIndirectDataSequenceNumber(uint8_t aDsn) { mIndirectDsn = aDsn; }
-
         Message *mIndirectMessage;             // Current indirect message.
         uint16_t mIndirectFragmentOffset : 14; // 6LoWPAN fragment offset for the indirect message.
         bool     mIndirectTxSuccess : 1;       // Indicates tx success/failure of current indirect message.
@@ -134,9 +125,6 @@ public:
         uint16_t mQueuedMessageCount : 14;     // Number of queued indirect messages for the child.
         bool     mUseShortAddress : 1;         // Indicates whether to use short or extended address.
         bool     mSourceMatchPending : 1;      // Indicates whether or not pending to add to src match table.
-        uint32_t mIndirectFrameCounter;        // Frame counter for current indirect frame (used for retx).
-        uint8_t  mIndirectKeyId;               // Key Id for current indirect frame (used for retx).
-        uint8_t  mIndirectDsn;                 // MAC level Data Sequence Number (DSN) for retx attempts.
 
         static_assert(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < (1UL << 14),
                       "mQueuedMessageCount cannot fit max required!");

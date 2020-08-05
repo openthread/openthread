@@ -746,12 +746,6 @@ public:
     otError SetCslTimeout(uint32_t aTimeout);
 
     /**
-     * This method indicates whether the current parent supports CSL.
-     *
-     */
-    bool DoesParentSupportCsl(void) const;
-
-    /**
      * This method indicates whether CSL is started at the moment.
      *
      */

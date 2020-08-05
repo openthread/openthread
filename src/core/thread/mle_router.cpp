@@ -422,12 +422,7 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 otError Mle::AppendCslAccuracy(Message &aMessage)
 {
-    CslAccuracyTlv cslAccuracy;
-
-    cslAccuracy.Init();
-    cslAccuracy.SetAccuracy(static_cast<uint8_t>(otPlatTimeGetXtalAccuracy()));
-
-    return aMessage.Append(&cslAccuracy, sizeof(CslAccuracyTlv));
+    return Tlv::AppendUint8Tlv(aMessage, Tlv::kCslAccuracy, static_cast<uint8_t>(otPlatTimeGetXtalAccuracy()));
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
@@ -1874,6 +1869,7 @@ void MleRouter::HandleStateUpdateTimer(void)
         {
             otLogInfoMle("Child CSL synchronization expired");
             child.SetCslSynchronized(false);
+            Get<CslTxScheduler>().Update();
         }
 #endif
 
@@ -2544,7 +2540,6 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    // CSL
     if (child->IsCslSynchronized())
     {
         CslChannelTlv cslChannel;
@@ -2563,8 +2558,6 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         {
             child->SetCslChannel(Get<Mac::Mac>().GetPanChannel());
         }
-
-        tlvs[tlvslength++] = Tlv::kSourceAddress;
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 

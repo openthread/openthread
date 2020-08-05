@@ -1459,17 +1459,9 @@ exit:
 
 otError Mle::AppendCslTimeout(Message &aMessage)
 {
-    otError       error;
-    CslTimeoutTlv cslTimeout;
-
     OT_ASSERT(Get<Mac::Mac>().IsCslEnabled());
-
-    cslTimeout.Init();
-    cslTimeout.SetTimeout(Get<Mac::Mac>().GetCslTimeout() == 0 ? mTimeout : Get<Mac::Mac>().GetCslTimeout());
-
-    error = aMessage.Append(&cslTimeout, sizeof(CslTimeoutTlv));
-
-    return error;
+    return Tlv::AppendUint32Tlv(aMessage, Tlv::kCslTimeout,
+                                Get<Mac::Mac>().GetCslTimeout() == 0 ? mTimeout : Get<Mac::Mac>().GetCslTimeout());
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 

@@ -1139,7 +1139,6 @@ void Mac::BeginTransmit(void)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
-    {
         sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsCsl);
         sendFrame.SetMaxFrameRetries(kMaxFrameRetriesCsl);
         SuccessOrExit(error = Get<CslTxScheduler>().HandleFrameRequest(sendFrame));
@@ -1150,8 +1149,8 @@ void Mac::BeginTransmit(void)
         }
 
         break;
-    }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
+#endif
 #endif // OPENTHREAD_FTD
 
     case kOperationTransmitOutOfBandFrame:
@@ -1913,9 +1912,8 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
     Get<MeshForwarder>().HandleReceivedFrame(*aFrame);
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
     UpdateIdleMode();
-#endif
 
 exit:
 
@@ -2261,6 +2259,8 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
     otLogDebgMac("Timestamp=%lu Sequence=%u CslPeriod=%hu CslPhase=%hu TransmitPhase=%hu",
                  static_cast<uint32_t>(aFrame.GetTimestamp()), aFrame.GetSequence(), csl->GetPeriod(), csl->GetPhase(),
                  child->GetCslPhase());
+
+    Get<CslTxScheduler>().Update();
 
 exit:
     return;

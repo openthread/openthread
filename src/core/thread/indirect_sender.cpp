@@ -103,9 +103,6 @@ void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
     mSourceMatchController.IncrementMessageCount(aChild);
 
     RequestMessageUpdate(aChild);
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    mCslTxScheduler.Update();
-#endif
 
 exit:
     return;
@@ -359,13 +356,11 @@ otError IndirectSender::PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext 
     {
     case Message::kTypeIp6:
         aContext.mMessageNextOffset = PrepareDataFrame(aFrame, aChild, *message);
-        aContext.mMessage           = message;
         break;
 
     case Message::kTypeSupervision:
         PrepareEmptyFrame(aFrame, aChild, kSupervisionMsgAckRequest);
         aContext.mMessageNextOffset = message->GetLength();
-        aContext.mMessage           = message;
         break;
 
     default:

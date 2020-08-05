@@ -62,7 +62,7 @@ inline void CslTxScheduler::Callbacks::HandleSentFrameToChild(const Mac::TxFrame
 CslTxScheduler::CslTxScheduler(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mCslTxChild(nullptr)
-    , mBusy(false)
+    , mCslTxMessage(nullptr)
     , mFrameContext()
     , mCallbacks(aInstance)
 {
@@ -70,7 +70,7 @@ CslTxScheduler::CslTxScheduler(Instance &aInstance)
 
 void CslTxScheduler::Update(void)
 {
-    if (!mBusy)
+    if (mCslTxMessage == nullptr)
     {
         RescheduleCslTx();
     }
@@ -78,10 +78,10 @@ void CslTxScheduler::Update(void)
     {
         // `Mac` has already started the CSL tx, so wait for tx done callback
         // to call `RescheduleCslTx`
-        if ((mCslTxChild != nullptr) && (mCslTxChild->GetIndirectMessage() != mFrameContext.mMessage))
+        if ((mCslTxChild != nullptr) && (mCslTxChild->GetIndirectMessage() != mCslTxMessage))
         {
             mCslTxChild                      = nullptr;
-            mFrameContext.mMessage           = nullptr;
+            mCslTxMessage                    = nullptr;
             mFrameContext.mMessageNextOffset = 0;
         }
     }
@@ -101,24 +101,28 @@ void CslTxScheduler::Clear(void)
     }
 
     mFrameContext.mMessageNextOffset = 0;
-    mFrameContext.mMessage           = nullptr;
     mCslTxChild                      = nullptr;
-    mBusy                            = false;
+    mCslTxMessage                    = nullptr;
 }
 
+/**
+ * This method always finds the most recent csl tx among all children,
+ * and request `Mac` to do csl tx at specific time. It shouldn't be called
+ * when `Mac` is already starting to do the csl tx(indicated by `mCslTxMessage`).
+ *
+ */
 void CslTxScheduler::RescheduleCslTx(void)
 {
     uint64_t radioNow     = otPlatRadioGetNow(&GetInstance());
     uint32_t minDelayTime = TimeMicro::kMaxDuration;
     Child *  bestChild    = nullptr;
 
-    for (ChildTable::Iterator iter(GetInstance(), Child::StateFilter::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
-        Child &  child = *iter.GetChild();
         uint32_t delay;
 
         if (!child.IsCslSynchronized() || child.GetIndirectMessageCount() == 0 ||
-            child.GetCslTxAttempts() > kMaxCslTriggeredTxAttempts)
+            child.GetCslTxAttempts() >= kMaxCslTriggeredTxAttempts)
         {
             continue;
         }
@@ -131,24 +135,20 @@ void CslTxScheduler::RescheduleCslTx(void)
         }
     }
 
-    if (bestChild != mCslTxChild)
+    if (bestChild != nullptr)
     {
-        if (bestChild != nullptr)
-        {
-            Get<Mac::Mac>().RequestCslFrameTransmission(minDelayTime / 1000UL);
-        }
-
-        mCslTxChild = bestChild;
+        Get<Mac::Mac>().RequestCslFrameTransmission(minDelayTime / 1000UL);
     }
+
+    mCslTxChild = bestChild;
 }
 
 uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild, uint64_t aRadioNow)
 {
     uint32_t delay;
     uint16_t period_offset = (aRadioNow / kUsPerTenSymbols) % aChild.GetCslPeriod();
-    int16_t  diff          = static_cast<int16_t>(aChild.GetCslPhase() - period_offset);
 
-    if (diff > kCslFrameRequestAheadThreshold)
+    if (aChild.GetCslPhase() > period_offset + kCslFrameRequestAheadThreshold)
     {
         delay = static_cast<uint16_t>(aChild.GetCslPhase() - period_offset - kCslFrameRequestAheadThreshold) *
                 kUsPerTenSymbols;
@@ -169,9 +169,8 @@ otError CslTxScheduler::HandleFrameRequest(Mac::TxFrame &aFrame)
 
     VerifyOrExit(mCslTxChild != nullptr, error = OT_ERROR_ABORT);
 
-    mBusy = true;
-    error = mCallbacks.PrepareFrameForChild(aFrame, mFrameContext, *mCslTxChild);
-    VerifyOrExit(error == OT_ERROR_NONE, OT_NOOP);
+    SuccessOrExit(error = mCallbacks.PrepareFrameForChild(aFrame, mFrameContext, *mCslTxChild));
+    mCslTxMessage = mCslTxChild->GetIndirectMessage();
 
     if (mCslTxChild->GetIndirectTxAttempts() > 0 || mCslTxChild->GetCslTxAttempts() > 0)
     {
@@ -207,8 +206,8 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError)
 
     VerifyOrExit(child != nullptr, OT_NOOP); // The result is no longer interested by upper layer
 
-    mCslTxChild = nullptr;
-    mBusy       = false;
+    mCslTxChild   = nullptr;
+    mCslTxMessage = nullptr;
 
     HandleSentFrame(aFrame, aError, *child);
 
@@ -238,18 +237,21 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError,
         // dropped until indirect tx attempts count reaches max. So here it
         // would set sequence number and schedule next csl tx.
 
-        aChild.SetIndirectDataSequenceNumber(aFrame.GetSequence());
-
-        if (aFrame.GetSecurityEnabled())
+        if (!aFrame.IsEmpty())
         {
-            uint32_t frameCounter;
-            uint8_t  keyId;
+            aChild.SetIndirectDataSequenceNumber(aFrame.GetSequence());
 
-            IgnoreError(aFrame.GetFrameCounter(frameCounter));
-            aChild.SetIndirectFrameCounter(frameCounter);
+            if (aFrame.GetSecurityEnabled())
+            {
+                uint32_t frameCounter;
+                uint8_t  keyId;
 
-            IgnoreError(aFrame.GetKeyId(keyId));
-            aChild.SetIndirectKeyId(keyId);
+                IgnoreError(aFrame.GetFrameCounter(frameCounter));
+                aChild.SetIndirectFrameCounter(frameCounter);
+
+                IgnoreError(aFrame.GetKeyId(keyId));
+                aChild.SetIndirectKeyId(keyId);
+            }
         }
 
         RescheduleCslTx();
