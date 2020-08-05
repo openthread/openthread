@@ -122,7 +122,7 @@ $ (gdb) c
    > dataset
    Active Timestamp: 1
    Channel: 13
-   Channel Mask: 07fff800
+   Channel Mask: 0x07fff800
    Ext PAN ID: d63e8e3e495ebbc3
    Mesh Local Prefix: fd3d:b50b:f96d:722d/64
    Master Key: dfd34f0f05cad978ec4e32b0413038ff

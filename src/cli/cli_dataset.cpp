@@ -98,7 +98,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsChannelMaskPresent)
     {
-        mInterpreter.mServer->OutputFormat("Channel Mask: %08x\r\n", aDataset.mChannelMask);
+        mInterpreter.mServer->OutputFormat("Channel Mask: 0x%08x\r\n", aDataset.mChannelMask);
     }
 
     if (aDataset.mComponents.mIsDelayPresent)
