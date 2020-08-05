@@ -37,7 +37,7 @@ The Pending Operational Dataset is used to communicate changes to the Active Ope
    > dataset
    Active Timestamp: 1
    Channel: 13
-   Channel Mask: 07fff800
+   Channel Mask: 0x07fff800
    Ext PAN ID: d63e8e3e495ebbc3
    Mesh Local Prefix: fd3d:b50b:f96d:722d/64
    Master Key: dfd34f0f05cad978ec4e32b0413038ff
@@ -96,7 +96,7 @@ After the device successfully attaches to a Thread network, the device will retr
    > dataset active
    Active Timestamp: 1
    Channel: 13
-   Channel Mask: 07fff800
+   Channel Mask: 0x07fff800
    Ext PAN ID: d63e8e3e495ebbc3
    Mesh Local Prefix: fd3d:b50b:f96d:722d/64
    Master Key: dfd34f0f05cad978ec4e32b0413038ff
@@ -173,7 +173,7 @@ Print Active Operational Dataset in human-readable form.
 > dataset active
 Active Timestamp: 1
 Channel: 13
-Channel Mask: 07fff800
+Channel Mask: 0x07fff800
 Ext PAN ID: d63e8e3e495ebbc3
 Mesh Local Prefix: fd3d:b50b:f96d:722d/64
 Master Key: dfd34f0f05cad978ec4e32b0413038ff
@@ -361,7 +361,7 @@ Print Pending Operational Dataset in human-readable form.
 Pending Timestamp: 2
 Active Timestamp: 15
 Channel: 16
-Channel Mask: 07fff800
+Channel Mask: 0x07fff800
 Delay: 58706
 Ext PAN ID: d63e8e3e495ebbc3
 Mesh Local Prefix: fd3d:b50b:f96d:722d/64
