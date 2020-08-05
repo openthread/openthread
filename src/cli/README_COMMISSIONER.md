@@ -17,8 +17,8 @@ See [README_COMMISSIONING.md](README_COMMISSIONING.md).
 - [provisioningurl](#provisioningurl)
 - [sessionid](#sessionid)
 - [start](#start)
-- [stop](#stop)
 - [state](#state)
+- [stop](#stop)
 
 ## Command Details
 
@@ -191,19 +191,6 @@ Done
 Commissioner: active
 ```
 
-### stop
-
-Usage: `commissioner stop`
-
-Stop the Commissioner role.
-
-This command will cause the device to send `LEAD_KA[Reject]` messages.
-
-```bash
-> commissioner stop
-Done
-```
-
 ### state
 
 Usage: `commissioner state`
@@ -215,5 +202,18 @@ This command will return the current Commissioner state.
 ```bash
 > commissioner state
 active
+Done
+```
+
+### stop
+
+Usage: `commissioner stop`
+
+Stop the Commissioner role.
+
+This command will cause the device to send `LEAD_KA[Reject]` messages.
+
+```bash
+> commissioner stop
 Done
 ```
