@@ -39,7 +39,7 @@ The Pending Operational Dataset is used to communicate changes to the Active Ope
    Channel: 13
    Channel Mask: 0x07fff800
    Ext PAN ID: d63e8e3e495ebbc3
-   Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+   Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
    Master Key: dfd34f0f05cad978ec4e32b0413038ff
    Network Name: OpenThread-8f28
    PAN ID: 0x8f28
@@ -98,7 +98,7 @@ After the device successfully attaches to a Thread network, the device will retr
    Channel: 13
    Channel Mask: 0x07fff800
    Ext PAN ID: d63e8e3e495ebbc3
-   Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+   Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
    Master Key: dfd34f0f05cad978ec4e32b0413038ff
    Network Name: OpenThread-8f28
    PAN ID: 0x8f28
@@ -175,7 +175,7 @@ Active Timestamp: 1
 Channel: 13
 Channel Mask: 0x07fff800
 Ext PAN ID: d63e8e3e495ebbc3
-Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
 Master Key: dfd34f0f05cad978ec4e32b0413038ff
 Network Name: OpenThread-8f28
 PAN ID: 0x8f28
@@ -364,7 +364,7 @@ Channel: 16
 Channel Mask: 0x07fff800
 Delay: 58706
 Ext PAN ID: d63e8e3e495ebbc3
-Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
 Master Key: dfd34f0f05cad978ec4e32b0413038ff
 Network Name: OpenThread-8f28
 PAN ID: 0x8f28
