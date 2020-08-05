@@ -117,7 +117,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     {
         const uint8_t *prefix = aDataset.mMeshLocalPrefix.m8;
         mInterpreter.mServer->OutputFormat(
-            "Mesh Local Prefix: %x:%x:%x:%x/64\r\n", (static_cast<uint16_t>(prefix[0]) << 8) | prefix[1],
+            "Mesh Local Prefix: %x:%x:%x:%x::/64\r\n", (static_cast<uint16_t>(prefix[0]) << 8) | prefix[1],
             (static_cast<uint16_t>(prefix[2]) << 8) | prefix[3], (static_cast<uint16_t>(prefix[4]) << 8) | prefix[5],
             (static_cast<uint16_t>(prefix[6]) << 8) | prefix[7]);
     }
