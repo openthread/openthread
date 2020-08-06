@@ -155,6 +155,11 @@ private:
         kStateScanDone,
     };
 
+    enum : uint32_t
+    {
+        kMaxOui = 0xffffff,
+    };
+
     // Methods used by `MeshForwarder`
     otError PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame);
     void    HandleDiscoveryRequestFrameTxDone(Message &aMessage);

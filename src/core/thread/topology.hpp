@@ -38,6 +38,7 @@
 
 #include <openthread/thread_ftd.h>
 
+#include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
@@ -89,6 +90,22 @@ public:
         kInStateValidOrAttaching,          ///< Accept child with `IsStateValidOrAttaching()` being `true`.
         kInStateAnyExceptInvalid,          ///< Accept child in any state except `kStateInvalid`.
         kInStateAnyExceptValidOrRestoring, ///< Accept child in any state except `IsStateValidOrRestoring()`.
+    };
+
+    /**
+     * This type represents diagnostic information for a neighboring node.
+     *
+     */
+    class Info : public otNeighborInfo, public Clearable<Info>
+    {
+    public:
+        /**
+         * This method sets the `Info` instance from a given `Neighbor`.
+         *
+         * @param[in] aNeighbor   A neighbor.
+         *
+         */
+        void SetFrom(const Neighbor &aNeighbor);
     };
 
     /**
@@ -414,6 +431,14 @@ public:
     LinkQualityInfo &GetLinkInfo(void) { return mLinkInfo; }
 
     /**
+     * This method returns the LinkQualityInfo object.
+     *
+     * @returns The LinkQualityInfo object.
+     *
+     */
+    const LinkQualityInfo &GetLinkInfo(void) const { return mLinkInfo; }
+
+    /**
      * This method generates a new challenge value for MLE Link Request/Response exchanges.
      *
      */
@@ -510,6 +535,22 @@ public:
     enum
     {
         kMaxRequestTlvs = 5,
+    };
+
+    /**
+     * This class represents diagnostic information for a Thread Child.
+     *
+     */
+    class Info : public otChildInfo, public Clearable<Info>
+    {
+    public:
+        /**
+         * This method sets the `Info` instance from a given `Child`.
+         *
+         * @param[in] aChild   A neighbor.
+         *
+         */
+        void SetFrom(const Child &aChild);
     };
 
     /**
@@ -993,6 +1034,22 @@ private:
 class Router : public Neighbor
 {
 public:
+    /**
+     * This class represents diagnostic information for a Thread Router.
+     *
+     */
+    class Info : public otRouterInfo, public Clearable<Info>
+    {
+    public:
+        /**
+         * This method sets the `Info` instance from a given `Router`.
+         *
+         * @param[in] aRouter   A router.
+         *
+         */
+        void SetFrom(const Router &aRouter);
+    };
+
     /**
      * This method initializes the `Router` object.
      *

@@ -837,22 +837,24 @@ exit:
 uint8_t Frame::FindPayloadIndex(void) const
 {
     uint8_t index = SkipSecurityHeaderIndex();
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    const uint8_t *cur    = nullptr;
-    const uint8_t *footer = GetFooter();
-#endif
 
     VerifyOrExit(index != kInvalidIndex, OT_NOOP);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    cur = GetPsdu() + index;
-
     if (IsIePresent())
     {
-        while (cur + sizeof(HeaderIe) <= footer)
+        const uint8_t *cur    = &mPsdu[index];
+        const uint8_t *footer = GetFooter();
+
+        do
         {
-            const HeaderIe *ie  = reinterpret_cast<const HeaderIe *>(cur);
-            uint8_t         len = static_cast<uint8_t>(ie->GetLength());
+            const HeaderIe *ie;
+            uint8_t         len;
+
+            VerifyOrExit(cur + sizeof(HeaderIe) <= footer, index = kInvalidIndex);
+
+            ie  = reinterpret_cast<const HeaderIe *>(cur);
+            len = static_cast<uint8_t>(ie->GetLength());
 
             cur += sizeof(HeaderIe);
             index += sizeof(HeaderIe);
@@ -866,11 +868,18 @@ uint8_t Frame::FindPayloadIndex(void) const
             {
                 break;
             }
-        }
+
+            // If `cur == footer` we exit the `while()` loop. This covers the
+            // case where frame contains one or more Header IEs but no data
+            // payload. In this case, spec does not require Header IE
+            // termination to be included (it is optional) since the end of
+            // frame can be determined from frame length and footer length.
+
+        } while (cur < footer);
 
         // Assume no Payload IE in current implementation
     }
-#endif
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
     // Command ID
     if ((GetFrameControlField() & kFcfFrameTypeMask) == kFcfFrameMacCmd)
@@ -1186,7 +1195,7 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     // Set frame length
     footerLength = GetFooterLength();
     OT_ASSERT(footerLength != kInvalidIndex);
-    mLength = SkipSecurityHeaderIndex() + aIeLength + GetFooterLength();
+    mLength = SkipSecurityHeaderIndex() + aIeLength + footerLength;
 
 exit:
     return error;

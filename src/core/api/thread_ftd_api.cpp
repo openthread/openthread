@@ -259,7 +259,7 @@ otError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChi
 
     OT_ASSERT(aChildInfo != nullptr);
 
-    return instance.Get<Mle::MleRouter>().GetChildInfoById(aChildId, *aChildInfo);
+    return instance.Get<ChildTable>().GetChildInfoById(aChildId, *static_cast<Child::Info *>(aChildInfo));
 }
 
 otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint16_t aChildIndex, otChildInfo *aChildInfo)
@@ -268,7 +268,7 @@ otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint16_t aChildIndex,
 
     OT_ASSERT(aChildInfo != nullptr);
 
-    return instance.Get<Mle::MleRouter>().GetChildInfoByIndex(aChildIndex, *aChildInfo);
+    return instance.Get<ChildTable>().GetChildInfoByIndex(aChildIndex, *static_cast<Child::Info *>(aChildInfo));
 }
 
 otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
@@ -319,7 +319,7 @@ otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRoute
 
     OT_ASSERT(aRouterInfo != nullptr);
 
-    return instance.Get<RouterTable>().GetRouterInfo(aRouterId, *aRouterInfo);
+    return instance.Get<RouterTable>().GetRouterInfo(aRouterId, *static_cast<Router::Info *>(aRouterInfo));
 }
 
 otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntryInfo, otCacheEntryIterator *aIterator)

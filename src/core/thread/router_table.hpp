@@ -331,7 +331,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND     No router entry with the given id.
      *
      */
-    otError GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterInfo);
+    otError GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo);
 
     /**
      * This method returns the Router ID Sequence.
