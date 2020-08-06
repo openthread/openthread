@@ -247,6 +247,7 @@ const struct Command Interpreter::sCommands[] = {
     {"thread", &Interpreter::ProcessThread},
     {"txpower", &Interpreter::ProcessTxPower},
     {"udp", &Interpreter::ProcessUdp},
+    {"unsecureport", &Interpreter::ProcessUnsecurePort},
     {"version", &Interpreter::ProcessVersion},
 };
 
@@ -3684,6 +3685,63 @@ void Interpreter::ProcessUdp(uint8_t aArgsLength, char *aArgs[])
 {
     otError error;
     error = mUdp.Process(aArgsLength, aArgs);
+    AppendResult(error);
+}
+
+void Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgsLength >= 1, error = OT_ERROR_INVALID_ARGS);
+
+    if ((aArgsLength == 2) && (strcmp(aArgs[0], "add") == 0))
+    {
+        long value;
+
+        SuccessOrExit(error = ParseLong(aArgs[1], value));
+        SuccessOrExit(error = otIp6AddUnsecurePort(mInstance, static_cast<uint16_t>(value)));
+    }
+    else if ((aArgsLength == 2) && (strcmp(aArgs[0], "remove") == 0))
+    {
+        if (strcmp(aArgs[1], "all") == 0)
+        {
+            otIp6RemoveAllUnsecurePorts(mInstance);
+        }
+        else
+        {
+            long value;
+
+            SuccessOrExit(error = ParseLong(aArgs[1], value));
+            SuccessOrExit(error = otIp6RemoveUnsecurePort(mInstance, static_cast<uint16_t>(value)));
+        }
+    }
+    else if (strcmp(aArgs[0], "get") == 0)
+    {
+        const uint16_t *ports;
+        uint8_t         numPorts;
+
+        ports = otIp6GetUnsecurePorts(mInstance, &numPorts);
+
+        if ((ports == NULL) || numPorts == 0)
+        {
+            mServer->OutputFormat("Empty");
+        }
+        else
+        {
+            for (uint8_t i = 0; i < numPorts; i++)
+            {
+                mServer->OutputFormat("%d ", ports[i]);
+            }
+        }
+
+        mServer->OutputFormat("\r\n");
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
+
+exit:
     AppendResult(error);
 }
 

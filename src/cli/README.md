@@ -94,6 +94,7 @@ Done
 - [state](#state)
 - [thread](#thread-start)
 - [txpower](#txpower)
+- [unsecureport](#unsecureport-add-port)
 - [version](#version)
 
 ## OpenThread Command Details
@@ -1698,6 +1699,43 @@ Set the transmit power.
 
 ```bash
 > txpower -10
+Done
+```
+
+### unsecureport add \<port\>
+
+Add a port to the allowed unsecured port list.
+
+```bash
+> unsecureport add 1234
+Done
+```
+
+### unsecureport remove \<port\>
+
+Remove a port from the allowed unsecured port list.
+
+```bash
+> unsecureport remove 1234
+Done
+```
+
+### unsecureport remove all
+
+Remove all ports from the allowed unsecured port list.
+
+```bash
+> unsecureport remove 1234
+Done
+```
+
+### unsecureport get
+
+Print all ports from the allowed unsecured port list.
+
+```bash
+> unsecureport get
+1234
 Done
 ```
 

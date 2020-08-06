@@ -45,12 +45,17 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Cli {
 
-const struct UdpExample::Command UdpExample::sCommands[] = {
-    {"help", &UdpExample::ProcessHelp},       {"bind", &UdpExample::ProcessBind}, {"close", &UdpExample::ProcessClose},
-    {"connect", &UdpExample::ProcessConnect}, {"open", &UdpExample::ProcessOpen}, {"send", &UdpExample::ProcessSend}};
+const struct UdpExample::Command UdpExample::sCommands[] = {{"help", &UdpExample::ProcessHelp},
+                                                            {"bind", &UdpExample::ProcessBind},
+                                                            {"close", &UdpExample::ProcessClose},
+                                                            {"connect", &UdpExample::ProcessConnect},
+                                                            {"open", &UdpExample::ProcessOpen},
+                                                            {"send", &UdpExample::ProcessSend},
+                                                            {"linksecurity", &UdpExample::ProcessLinkSecurity}};
 
 UdpExample::UdpExample(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
+    , mLinkSecurityEnabled(true)
 {
     memset(&mSocket, 0, sizeof(mSocket));
 }
@@ -134,12 +139,13 @@ otError UdpExample::ProcessOpen(uint8_t aArgsLength, char *aArgs[])
 
 otError UdpExample::ProcessSend(uint8_t aArgsLength, char *aArgs[])
 {
-    otError       error = OT_ERROR_NONE;
-    otMessageInfo messageInfo;
-    otMessage *   message       = nullptr;
-    uint8_t       curArg        = 0;
-    uint16_t      payloadLength = 0;
-    PayloadType   payloadType   = kTypeText;
+    otError           error = OT_ERROR_NONE;
+    otMessageInfo     messageInfo;
+    otMessage *       message         = nullptr;
+    uint8_t           curArg          = 0;
+    uint16_t          payloadLength   = 0;
+    PayloadType       payloadType     = kTypeText;
+    otMessageSettings messageSettings = {mLinkSecurityEnabled, OT_MESSAGE_PRIORITY_NORMAL};
 
     memset(&messageInfo, 0, sizeof(messageInfo));
 
@@ -179,7 +185,7 @@ otError UdpExample::ProcessSend(uint8_t aArgsLength, char *aArgs[])
         }
     }
 
-    message = otUdpNewMessage(mInterpreter.mInstance, nullptr);
+    message = otUdpNewMessage(mInterpreter.mInstance, &messageSettings);
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
     switch (payloadType)
@@ -225,6 +231,30 @@ exit:
     if (error != OT_ERROR_NONE && message != nullptr)
     {
         otMessageFree(message);
+    }
+
+    return error;
+}
+
+otError UdpExample::ProcessLinkSecurity(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        mInterpreter.mServer->OutputFormat("%s\r\n", mLinkSecurityEnabled ? "Enabled" : "Disabled");
+    }
+    else if (strcmp(aArgs[0], "enable") == 0)
+    {
+        mLinkSecurityEnabled = true;
+    }
+    else if (strcmp(aArgs[0], "disable") == 0)
+    {
+        mLinkSecurityEnabled = false;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
     }
 
     return error;
