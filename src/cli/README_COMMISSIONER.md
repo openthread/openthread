@@ -17,6 +17,7 @@ See [README_COMMISSIONING.md](README_COMMISSIONING.md).
 - [provisioningurl](#provisioningurl)
 - [sessionid](#sessionid)
 - [start](#start)
+- [state](#state)
 - [stop](#stop)
 
 ## Command Details
@@ -188,6 +189,20 @@ This command will cause the device to send `LEAD_PET` and `LEAD_KA` messages.
 Commissioner: petitioning
 Done
 Commissioner: active
+```
+
+### state
+
+Usage: `commissioner state`
+
+Get Commissioner state.
+
+This command will return the current Commissioner state.
+
+```bash
+> commissioner state
+active
+Done
 ```
 
 ### stop
