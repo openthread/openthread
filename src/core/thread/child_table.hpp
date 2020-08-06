@@ -397,7 +397,13 @@ private:
         Child::StateFilter mFilter;
     };
 
-    void RefreshStoredChildren(void);
+    Child *FindChild(const Child::AddressMatcher &aMatcher)
+    {
+        return const_cast<Child *>(const_cast<const ChildTable *>(this)->FindChild(aMatcher));
+    }
+
+    const Child *FindChild(const Child::AddressMatcher &aMatcher) const;
+    void         RefreshStoredChildren(void);
 
     uint16_t mMaxChildrenAllowed;
     Child    mChildren[kMaxChildren];

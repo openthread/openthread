@@ -423,6 +423,12 @@ private:
         return const_cast<Router *>(const_cast<const RouterTable *>(this)->GetNextEntry(aRouter));
     }
 
+    const Router *FindRouter(const Router::AddressMatcher &aMatcher) const;
+    Router *      FindRouter(const Router::AddressMatcher &aMatcher)
+    {
+        return const_cast<Router *>(const_cast<const RouterTable *>(this)->FindRouter(aMatcher));
+    }
+
     Router           mRouters[Mle::kMaxRouters];
     Mle::RouterIdSet mAllocatedRouterIds;
     uint8_t          mRouterIdReuseDelay[Mle::kMaxRouterId + 1];
