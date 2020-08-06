@@ -1,1 +1,3 @@
 buildconfig = "//third_party/build_gn/BUILDCONFIG.gn"
+
+secondary_source = "//etc/gn"
