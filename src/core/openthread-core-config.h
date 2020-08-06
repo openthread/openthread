@@ -60,6 +60,7 @@
 #include "config/child_supervision.h"
 #include "config/coap.h"
 #include "config/commissioner.h"
+#include "config/csl.h"
 #include "config/dhcp6_client.h"
 #include "config/dhcp6_server.h"
 #include "config/diag.h"
@@ -76,8 +77,6 @@
 #include "config/sntp_client.h"
 #include "config/time_sync.h"
 #include "config/tmf.h"
-
-#include "openthread-thread_v1_2-core-default-config.h"
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
     OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE

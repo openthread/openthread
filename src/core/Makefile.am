@@ -318,7 +318,6 @@ endif # OPENTHREAD_ENABLE_VENDOR_EXTENSION
 
 HEADERS_COMMON                             = \
     openthread-core-config.h                 \
-    openthread-thread_v1_2-core-default-config.h \
     backbone_router/bbr_leader.hpp           \
     backbone_router/bbr_local.hpp            \
     backbone_router/bbr_manager.hpp          \
@@ -360,6 +359,7 @@ HEADERS_COMMON                             = \
     config/child_supervision.h               \
     config/coap.h                            \
     config/commissioner.h                    \
+    config/csl.h                             \
     config/dhcp6_client.h                    \
     config/dhcp6_server.h                    \
     config/diag.h                            \

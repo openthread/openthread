@@ -81,7 +81,6 @@ void CslTxScheduler::Update(void)
         if ((mCslTxChild != nullptr) && (mCslTxChild->GetIndirectMessage() != mCslTxMessage))
         {
             mCslTxChild                      = nullptr;
-            mCslTxMessage                    = nullptr;
             mFrameContext.mMessageNextOffset = 0;
         }
     }

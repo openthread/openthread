@@ -44,6 +44,11 @@
 
 namespace ot {
 
+enum
+{
+    kUsPerTenSymbols = OT_US_PER_TEN_SYMBOLS, ///< The microseconds per 10 symbols.
+};
+
 /**
  * @addtogroup core-radio
  *

@@ -1771,12 +1771,6 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     error = ProcessReceiveSecurity(*aFrame, srcaddr, neighbor);
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    if (aFrame->GetVersion() == Frame::kFcfFrameVersion2015)
-    {
-        ProcessCsl(*aFrame, srcaddr);
-    }
-#endif
     switch (error)
     {
     case OT_ERROR_DUPLICATED:
@@ -1804,6 +1798,13 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     default:
         ExitNow();
     }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    if (aFrame->GetVersion() == Frame::kFcfFrameVersion2015)
+    {
+        ProcessCsl(*aFrame, srcaddr);
+    }
+#endif
 
     Get<DataPollSender>().ProcessFrame(*aFrame);
 

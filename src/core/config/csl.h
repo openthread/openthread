@@ -28,8 +28,8 @@
 
 /**
  * @file
- *   This file includes default compile-time configuration constants
- *   for Thread 1.2 in OpenThread's implementation.
+ *   This file includes default compile-time configuration for CSL.
+ *
  */
 
 #ifndef OPENTHREAD_THREAD_V1_2_CORE_DEFAULT_CONFIG_H_
@@ -38,13 +38,13 @@
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
- * @def OPENTHREAD_CONFIG_DEFAULT_CSL_SYNCHRONIZED_TIMEOUT
+ * @def OPENTHREAD_CONFIG_CSL_DEFAULT_SYNCHRONIZED_TIMEOUT
  *
  * The default CSL sample duration in seconds.
  *
  */
-#ifndef OPENTHREAD_CONFIG_DEFAULT_CSL_SYNCHRONIZED_TIMEOUT
-#define OPENTHREAD_CONFIG_DEFAULT_CSL_SYNCHRONIZED_TIMEOUT 100
+#ifndef OPENTHREAD_CONFIG_CSL_DEFAULT_SYNCHRONIZED_TIMEOUT
+#define OPENTHREAD_CONFIG_CSL_DEFAULT_SYNCHRONIZED_TIMEOUT 100
 #endif
 
 /**

@@ -115,12 +115,12 @@ static int8_t         sCcaEdThresh = -74;
 static bool sSrcMatchEnabled = false;
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-static uint8_t sAckIeData[ACK_IE_MAX_SIZE];
+static uint8_t sAckIeData[OT_ACK_IE_MAX_SIZE];
 static uint8_t sAckIeDataLength = 0;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static const uint8_t sCslIeHeader[IE_HEADER_SIZE] = {0x04, 0x0d};
+static const uint8_t sCslIeHeader[OT_IE_HEADER_IE_SIZE] = {0x04, 0x0d};
 static uint32_t      sCslSampleTime;
 static uint32_t      sCslPeriod;
 #endif
@@ -361,13 +361,13 @@ void platformRadioInit(void)
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static uint16_t getCslPhase()
+static uint16_t getCslPhase(void)
 {
     uint32_t curTime       = otPlatAlarmMicroGetNow();
-    uint32_t cslPeriodInUs = sCslPeriod * kUsPerTenSymbols;
+    uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
     uint32_t diff = ((sCslSampleTime % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
 
-    return (uint16_t)(diff / kUsPerTenSymbols);
+    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
@@ -1073,8 +1073,8 @@ static otError updateIeData(otInstance *aInstance)
 
     if (sCslPeriod > 0)
     {
-        memcpy(sAckIeData, sCslIeHeader, IE_HEADER_SIZE);
-        offset += IE_HEADER_SIZE + CSL_IE_SIZE; // reserve space for CSL IE
+        memcpy(sAckIeData, sCslIeHeader, OT_IE_HEADER_IE_SIZE);
+        offset += OT_IE_HEADER_IE_SIZE + OT_CSL_IE_SIZE; // reserve space for CSL IE
     }
 
     sAckIeDataLength = offset;

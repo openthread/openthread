@@ -97,10 +97,19 @@ public:
         bool IsDataPollPending(void) const { return mDataPollPending; }
         void SetDataPollPending(bool aPending) { mDataPollPending = aPending; }
 
+        uint32_t GetIndirectFrameCounter(void) const { return mIndirectFrameCounter; }
+        void     SetIndirectFrameCounter(uint32_t aFrameCounter) { mIndirectFrameCounter = aFrameCounter; }
+
+        uint8_t GetIndirectKeyId(void) const { return mIndirectKeyId; }
+        void    SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
+
         uint8_t GetIndirectTxAttempts(void) const { return mIndirectTxAttempts; }
         void    SetIndirectTxAttemptsToMax(void) { mIndirectTxAttempts = kMaxPollTriggeredTxAttempts; }
         void    ResetIndirectTxAttempts(void) { mIndirectTxAttempts = 0; }
         void    IncrementIndirectTxAttempts(void) { mIndirectTxAttempts++; }
+
+        uint8_t GetIndirectDataSequenceNumber(void) const { return mIndirectDsn; }
+        void    SetIndirectDataSequenceNumber(uint8_t aDsn) { mIndirectDsn = aDsn; }
 
         bool IsFramePurgePending(void) const { return mFramePurgePending; }
         void SetFramePurgePending(bool aPurgePending) { mFramePurgePending = aPurgePending; }
@@ -108,22 +117,13 @@ public:
         bool IsFrameReplacePending(void) const { return mFrameReplacePending; }
         void SetFrameReplacePending(bool aReplacePending) { mFrameReplacePending = aReplacePending; }
 
-        uint32_t GetIndirectFrameCounter(void) const { return mIndirectFrameCounter; }
-        void     SetIndirectFrameCounter(uint32_t aFrameCounter) { mIndirectFrameCounter = aFrameCounter; }
-
-        uint8_t GetIndirectKeyId(void) const { return mIndirectKeyId; }
-        void    SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
-
-        uint8_t GetIndirectDataSequenceNumber(void) const { return mIndirectDsn; }
-        void    SetIndirectDataSequenceNumber(uint8_t aDsn) { mIndirectDsn = aDsn; }
-
+        uint32_t mIndirectFrameCounter;    // Frame counter for current indirect frame (used for retx).
+        uint8_t  mIndirectKeyId;           // Key Id for current indirect frame (used for retx).
+        uint8_t  mIndirectDsn;             // MAC level Data Sequence Number (DSN) for retx attempts.
         uint8_t  mIndirectTxAttempts : 5;  // Number of data poll triggered tx attempts.
         bool     mDataPollPending : 1;     // Indicates whether or not a Data Poll was received.
         bool     mFramePurgePending : 1;   // Indicates a pending purge request for the current indirect frame.
         bool     mFrameReplacePending : 1; // Indicates a pending replace request for the current indirect frame.
-        uint32_t mIndirectFrameCounter;    // Frame counter for current indirect frame (used for retx).
-        uint8_t  mIndirectKeyId;           // Key Id for current indirect frame (used for retx).
-        uint8_t  mIndirectDsn;             // MAC level Data Sequence Number (DSN) for retx attempts.
 
         static_assert(kMaxPollTriggeredTxAttempts < (1 << 5), "mIndirectTxAttempts cannot fit max!");
     };
