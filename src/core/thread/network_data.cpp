@@ -348,6 +348,11 @@ otError NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aCon
             {
                 const ServiceTlv *service = static_cast<const ServiceTlv *>(cur);
 
+                if (aConfig.mService == nullptr)
+                {
+                    continue;
+                }
+
                 if (subCur->GetType() == NetworkDataTlv::kTypeServer)
                 {
                     const ServerTlv *server = static_cast<const ServerTlv *>(subCur);
