@@ -52,18 +52,12 @@ openthread_cli_sources = [
 
 static_library("libopenthread-cli-ftd") {
   sources = openthread_cli_sources
-  public_deps = [
-    "../../include/openthread:cli-api",
-    "../core:libopenthread-ftd",
-  ]
+  public_deps = [ "../core:libopenthread-ftd" ]
   visibility = [ "../../*" ]
 }
 
 static_library("libopenthread-cli-mtd") {
   sources = openthread_cli_sources
-  public_deps = [
-    "../../include/openthread:cli-api",
-    "../core:libopenthread-mtd",
-  ]
+  public_deps = [ "../core:libopenthread-mtd" ]
   visibility = [ "../../*" ]
 }

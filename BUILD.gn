@@ -253,27 +253,27 @@ config("openthread_radio_config") {
 }
 
 group("libopenthread-ftd") {
-  public_deps = [ "include/openthread:core-api" ]
+  public_deps = [ "include/openthread" ]
   deps = [ "src/core:libopenthread-ftd" ]
 }
 
 group("libopenthread-mtd") {
-  public_deps = [ "include/openthread:core-api" ]
+  public_deps = [ "include/openthread" ]
   deps = [ "src/core:libopenthread-mtd" ]
 }
 
 group("libopenthread-radio") {
-  public_deps = [ "include/openthread:core-api" ]
+  public_deps = [ "include/openthread" ]
   deps = [ "src/core:libopenthread-radio" ]
 }
 
 group("libopenthread-cli-ftd") {
-  public_deps = [ "include/openthread:cli-api" ]
+  public_deps = [ "include/openthread" ]
   deps = [ "src/cli:libopenthread-cli-ftd" ]
 }
 
 group("libopenthread-cli-mtd") {
-  public_deps = [ "include/openthread:cli-api" ]
+  public_deps = [ "include/openthread" ]
   deps = [ "src/cli:libopenthread-cli-mtd" ]
 }
 

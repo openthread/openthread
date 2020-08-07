@@ -42,7 +42,9 @@ source_set("openthread_config_generic") {
   public_configs = [ ":openthread_config_generic_config" ]
 }
 
-group("libopenthread_config") {
+source_set("openthread_config") {
+  public = [ "config.h" ]
+
   if (openthread_config_file == "") {
     public_deps = [ ":openthread_config_generic" ]
   } else {
@@ -52,7 +54,7 @@ group("libopenthread_config") {
   public_configs = [ "../..:openthread_config" ]
 }
 
-source_set("core-api") {
+source_set("openthread") {
   public = [
     "backbone_router.h",
     "backbone_router_ftd.h",
@@ -61,10 +63,10 @@ source_set("core-api") {
     "channel_manager.h",
     "channel_monitor.h",
     "child_supervision.h",
+    "cli.h",
     "coap.h",
     "coap_secure.h",
     "commissioner.h",
-    "config.h",
     "crypto.h",
     "dataset.h",
     "dataset_ftd.h",
@@ -82,6 +84,7 @@ source_set("core-api") {
     "link_raw.h",
     "logging.h",
     "message.h",
+    "ncp.h",
     "netdata.h",
     "netdiag.h",
     "network_time.h",
@@ -114,15 +117,5 @@ source_set("core-api") {
     "udp.h",
   ]
 
-  public_deps = [ ":libopenthread_config" ]
-}
-
-source_set("cli-api") {
-  public = [ "cli.h" ]
-  public_deps = [ ":core-api" ]
-}
-
-source_set("ncp-api") {
-  public = [ "ncp.h" ]
-  public_deps = [ ":core-api" ]
+  public_deps = [ ":openthread_config" ]
 }

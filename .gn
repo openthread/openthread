@@ -1,3 +1,5 @@
 buildconfig = "//third_party/build_gn/BUILDCONFIG.gn"
 
 secondary_source = "//etc/gn"
+
+check_system_includes = true

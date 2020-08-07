@@ -237,7 +237,6 @@ openthread_core_files = [
   "net/tcp.hpp",
   "net/udp6.cpp",
   "net/udp6.hpp",
-  "openthread-core-config.h",
   "radio/radio.cpp",
   "radio/radio.hpp",
   "radio/radio_callbacks.cpp",
@@ -398,14 +397,14 @@ source_set("libopenthread_core_config") {
     ":core_config",
     "../..:openthread_config",
   ]
-  public_deps = [ "../../include/openthread:libopenthread_config" ]
+  public_deps = [ "../../include/openthread:openthread_config" ]
 }
 
 source_set("libopenthread_headers") {
   public = openthread_core_headers
   public_deps = [
     ":libopenthread_core_config",
-    "../../include/openthread:core-api",
+    "../../include/openthread",
   ]
 }
 
