@@ -35,7 +35,6 @@ send "unsecureport remove all\n"
 expect "Done"
 
 send "unsecureport get\n"
-expect "Empty"
 expect "Done"
 
 send "unsecureport add 123\n"
@@ -59,7 +58,6 @@ send "unsecureport remove all\n"
 expect "Done"
 
 send "unsecureport get\n"
-expect "Empty"
 expect "Done"
 
 dispose

@@ -3694,15 +3694,18 @@ void Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
 
     VerifyOrExit(aArgsLength >= 1, error = OT_ERROR_INVALID_ARGS);
 
-    if ((aArgsLength == 2) && (strcmp(aArgs[0], "add") == 0))
+    if (strcmp(aArgs[0], "add") == 0)
     {
         long value;
 
+        VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
         SuccessOrExit(error = ParseLong(aArgs[1], value));
         SuccessOrExit(error = otIp6AddUnsecurePort(mInstance, static_cast<uint16_t>(value)));
     }
-    else if ((aArgsLength == 2) && (strcmp(aArgs[0], "remove") == 0))
+    else if (strcmp(aArgs[0], "remove") == 0)
     {
+        VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+
         if (strcmp(aArgs[1], "all") == 0)
         {
             otIp6RemoveAllUnsecurePorts(mInstance);
@@ -3722,11 +3725,7 @@ void Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
 
         ports = otIp6GetUnsecurePorts(mInstance, &numPorts);
 
-        if ((ports == NULL) || numPorts == 0)
-        {
-            mServer->OutputFormat("Empty");
-        }
-        else
+        if ((ports != NULL) && (numPorts != 0))
         {
             for (uint8_t i = 0; i < numPorts; i++)
             {

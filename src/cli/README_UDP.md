@@ -101,7 +101,7 @@ Done
 Indicates whether the link security is enabled or disabled.
 
 ```bash
-> linksecurity
+> udp linksecurity
 Enabled
 Done
 ```
@@ -111,7 +111,7 @@ Done
 Enable link security.
 
 ```bash
-> linksecurity enable
+> udp linksecurity enable
 Done
 ```
 
@@ -120,7 +120,7 @@ Done
 Disable link security.
 
 ```bash
-> linksecurity disable
+> udp linksecurity disable
 Done
 ```
 
