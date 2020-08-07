@@ -1673,7 +1673,7 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
 
     if (child == nullptr)
     {
-        VerifyOrExit((child = mChildTable.GetNewChild()) != nullptr, OT_NOOP);
+        VerifyOrExit((child = mChildTable.GetNewChild()) != nullptr, error = OT_ERROR_NO_BUFS);
 
         // MAC Address
         child->SetExtAddress(extAddr);
@@ -1997,6 +1997,7 @@ exit:
     if (error != OT_ERROR_NONE && message != nullptr)
     {
         message->Free();
+        otLogWarnMle("Failed to send Parent Response: %s", otThreadErrorToString(error));
     }
 }
 
