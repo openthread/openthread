@@ -678,22 +678,6 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
-     * This method sets the CSL accuracy.
-     *
-     * @returns CSL accuracy(ppm).
-     *
-     */
-    uint8_t GetCslAccuracy(void) const { return mSubMac.GetCslAccuracy(); }
-
-    /**
-     * This method sets the CSL accurary.
-     *
-     * @param[in]  aAccuracy  CSL accuracy(ppm).
-     *
-     */
-    void SetCslAccuracy(uint8_t aAccuracy) { mSubMac.SetCslAccuracy(aAccuracy); }
-
-    /**
      * This method gets the CSL channel.
      *
      * @returns CSL channel.

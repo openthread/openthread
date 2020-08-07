@@ -591,10 +591,12 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
     }
 }
 
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return 0;
 }
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)

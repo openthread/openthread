@@ -373,20 +373,6 @@ public:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
-     * This method gets the CSL accuracy.
-     *
-     * @returns CSL accuracy.
-     *
-     */
-    uint8_t GetCslAccuracy(void) const { return mCslAccuracy; }
-
-    /**
-     * This method sets the CSL accurary.
-     *
-     */
-    void SetCslAccuracy(uint8_t aAccuracy) { mCslAccuracy = aAccuracy; }
-
-    /**
      * This method gets the CSL channel.
      *
      * @returns CSL channel.
@@ -608,7 +594,6 @@ private:
     uint32_t  mCslTimeout;    ///< The CSL synchronized timeout in seconds.
     TimeMicro mCslSampleTime; ///< The CSL sample time of the current period.
     uint16_t  mCslPeriod;     ///< The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t   mCslAccuracy;   ///< The accuracy of the clock that is used by the device, in units of ppm.
     uint8_t   mCslChannel;    ///< The CSL sample channel.
 
     CslState mCslState;

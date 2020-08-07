@@ -103,7 +103,6 @@ public:
         kDiscovery           = 26, ///< Thread Discovery TLV
         kCslChannel          = 80, ///< CSL Channel TLV
         kCslTimeout          = 85, ///< CSL Timeout TLV
-        kCslAccuracy         = 86, ///< CSL Accuracy TLV
 
         /**
          * Applicable/Required only when time synchronization service

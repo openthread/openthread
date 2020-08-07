@@ -419,13 +419,6 @@ exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-otError Mle::AppendCslAccuracy(Message &aMessage)
-{
-    return Tlv::AppendUint8Tlv(aMessage, Tlv::kCslAccuracy, static_cast<uint8_t>(otPlatTimeGetXtalAccuracy()));
-}
-#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-
 void MleRouter::SendAdvertisement(void)
 {
     otError      error = OT_ERROR_NONE;
@@ -3274,12 +3267,6 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
         case Tlv::kLinkFrameCounter:
             SuccessOrExit(error = AppendLinkFrameCounter(*message));
             break;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        case Tlv::kCslAccuracy:
-            SuccessOrExit(error = AppendCslAccuracy(*message));
-            break;
-#endif
         }
     }
 
