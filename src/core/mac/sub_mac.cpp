@@ -223,7 +223,6 @@ otError SubMac::CslSample(void)
         ExitNow(error = OT_ERROR_INVALID_STATE);
     default:
         OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(ExitNow());
     }
 
     SetState(kStateCslSample);
