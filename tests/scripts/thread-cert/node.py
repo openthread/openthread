@@ -43,12 +43,7 @@ import binascii
 
 class Node:
 
-    def __init__(self,
-                 nodeid,
-                 is_mtd=False,
-                 simulator=None,
-                 version=None,
-                 is_bbr=False):
+    def __init__(self, nodeid, is_mtd=False, simulator=None, version=None, is_bbr=False):
         self.nodeid = nodeid
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
@@ -108,8 +103,8 @@ class Node:
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             if 'RADIO_DEVICE' in os.environ:
-                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
-                    os.environ['RADIO_DEVICE'], nodeid)
+                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE'],
+                                                                                           nodeid)
             else:
                 cmd += ' %d' % nodeid
 
@@ -151,8 +146,8 @@ class Node:
         # If Thread version of node matches the testing environment version.
         if self.version == self.env_version:
             if 'RADIO_DEVICE' in os.environ:
-                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (
-                    os.environ['RADIO_DEVICE'], nodeid)
+                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE'],
+                                                                                        nodeid)
             else:
                 args = ''
 
@@ -190,8 +185,8 @@ class Node:
         # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability.
         elif self.version == '1.1':
             if 'RADIO_DEVICE_1_1' in os.environ:
-                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (
-                    os.environ['RADIO_DEVICE_1_1'], nodeid)
+                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE_1_1'],
+                                                                                        nodeid)
             else:
                 args = ''
 
@@ -288,8 +283,7 @@ class Node:
         import fdpexpect
 
         serialPort = '/dev/ttyUSB%d' % ((nodeid - 1) * 2)
-        self.pexpect = fdpexpect.fdspawn(
-            os.open(serialPort, os.O_RDWR | os.O_NONBLOCK | os.O_NOCTTY))
+        self.pexpect = fdpexpect.fdspawn(os.open(serialPort, os.O_RDWR | os.O_NONBLOCK | os.O_NOCTTY))
 
     def __del__(self):
         self.destroy()
@@ -298,8 +292,7 @@ class Node:
         if not self._initialized:
             return
 
-        if (hasattr(self.pexpect, 'proc') and self.pexpect.proc.poll() is None
-                or
+        if (hasattr(self.pexpect, 'proc') and self.pexpect.proc.poll() is None or
                 not hasattr(self.pexpect, 'proc') and self.pexpect.isalive()):
             print("%d: exit" % self.nodeid)
             self.pexpect.send('exit\n')
@@ -316,8 +309,7 @@ class Node:
         dummy_format_str = br"\[THCI\].*?type=%s.*?"
         join_ent_ntf = dummy_format_str % br"JOIN_ENT\.ntf"
         join_ent_rsp = dummy_format_str % br"JOIN_ENT\.rsp"
-        pattern = (b"(" + join_fin_req + b")|(" + join_fin_rsp + b")|(" +
-                   join_ent_ntf + b")|(" + join_ent_rsp + b")")
+        pattern = (b"(" + join_fin_req + b")|(" + join_fin_rsp + b")|(" + join_ent_ntf + b")|(" + join_ent_rsp + b")")
 
         messages = []
         # There are at most 4 cert messages both for joiner and commissioner
@@ -351,11 +343,7 @@ class Node:
                 res = re.search(hex_pattern, log)
                 if not res:
                     break
-                data = [
-                    int(hex, 16)
-                    for hex in res.group(0)[1:-1].split(b' ')
-                    if hex and hex != b'..'
-                ]
+                data = [int(hex, 16) for hex in res.group(0)[1:-1].split(b' ') if hex and hex != b'..']
                 payload += bytearray(data)
                 log = log[res.end() - 1:]
 
@@ -813,8 +801,7 @@ class Node:
         addrs = self.get_addrs()
         for addr in addrs:
             segs = addr.split(':')
-            if (segs[4] == '0' and segs[5] == 'ff' and segs[6] == 'fe00' and
-                    segs[7] == 'fc00'):
+            if (segs[4] == '0' and segs[5] == 'ff' and segs[6] == 'fe00' and segs[7] == 'fc00'):
                 return addr
         return None
 
@@ -854,31 +841,26 @@ class Node:
     def __getGlobalAddress(self):
         global_address = []
         for ip6Addr in self.get_addrs():
-            if ((not re.match(config.LINK_LOCAL_REGEX_PATTERN, ip6Addr, re.I))
-                    and (not re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN,
-                                      ip6Addr, re.I)) and
-                (not re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr,
-                              re.I))):
+            if ((not re.match(config.LINK_LOCAL_REGEX_PATTERN, ip6Addr, re.I)) and
+                (not re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I)) and
+                (not re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I))):
                 global_address.append(ip6Addr)
 
         return global_address
 
     def __getRloc(self):
         for ip6Addr in self.get_addrs():
-            if (re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I)
-                    and re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr,
-                                 re.I) and
-                    not (re.match(config.ALOC_FLAG_REGEX_PATTERN, ip6Addr,
-                                  re.I))):
+            if (re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I) and
+                    re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I) and
+                    not (re.match(config.ALOC_FLAG_REGEX_PATTERN, ip6Addr, re.I))):
                 return ip6Addr
         return None
 
     def __getAloc(self):
         aloc = []
         for ip6Addr in self.get_addrs():
-            if (re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I)
-                    and re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr,
-                                 re.I) and
+            if (re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I) and
+                    re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I) and
                     re.match(config.ALOC_FLAG_REGEX_PATTERN, ip6Addr, re.I)):
                 aloc.append(ip6Addr)
 
@@ -886,10 +868,8 @@ class Node:
 
     def __getMleid(self):
         for ip6Addr in self.get_addrs():
-            if re.match(
-                    config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr,
-                    re.I) and not (re.match(
-                        config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I)):
+            if re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr,
+                        re.I) and not (re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I)):
                 return ip6Addr
 
         return None
@@ -952,8 +932,7 @@ class Node:
         self._expect('Done')
 
     def send_network_diag_get(self, addr, tlv_types):
-        self.send_command('networkdiagnostic get %s %s' %
-                          (addr, ' '.join([str(t.value) for t in tlv_types])))
+        self.send_command('networkdiagnostic get %s %s' % (addr, ' '.join([str(t.value) for t in tlv_types])))
 
         if isinstance(self.simulator, simulator.VirtualTime):
             self.simulator.go(8)
@@ -964,8 +943,7 @@ class Node:
         self._expect('Done', timeout=timeout)
 
     def send_network_diag_reset(self, addr, tlv_types):
-        self.send_command('networkdiagnostic reset %s %s' %
-                          (addr, ' '.join([str(t.value) for t in tlv_types])))
+        self.send_command('networkdiagnostic reset %s %s' % (addr, ' '.join([str(t.value) for t in tlv_types])))
 
         if isinstance(self.simulator, simulator.VirtualTime):
             self.simulator.go(8)
@@ -1008,9 +986,7 @@ class Node:
     def scan(self):
         self.send_command('scan')
 
-        return self._expect_results(
-            r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)'
-        )
+        return self._expect_results(r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)')
 
     def ping(self, ipaddr, num_responses=1, size=None, timeout=5):
         cmd = 'ping %s' % ipaddr
@@ -1090,18 +1066,13 @@ class Node:
             self._expect('Done')
 
         # Set the meshlocal prefix in config.py
-        self.send_command('dataset meshlocalprefix %s' %
-                          config.MESH_LOCAL_PREFIX.split('/')[0])
+        self.send_command('dataset meshlocalprefix %s' % config.MESH_LOCAL_PREFIX.split('/')[0])
         self._expect('Done')
 
         self.send_command('dataset commit active')
         self._expect('Done')
 
-    def set_pending_dataset(self,
-                            pendingtimestamp,
-                            activetimestamp,
-                            panid=None,
-                            channel=None):
+    def set_pending_dataset(self, pendingtimestamp, activetimestamp, panid=None, channel=None):
         self.send_command('dataset clear')
         self._expect('Done')
 
@@ -1124,8 +1095,7 @@ class Node:
             self._expect('Done')
 
         # Set the meshlocal prefix in config.py
-        self.send_command('dataset meshlocalprefix %s' %
-                          config.MESH_LOCAL_PREFIX.split('/')[0])
+        self.send_command('dataset meshlocalprefix %s' % config.MESH_LOCAL_PREFIX.split('/')[0])
         self._expect('Done')
 
         self.send_command('dataset commit pending')
@@ -1288,10 +1258,9 @@ class Node:
         else:
             timeout = 5
 
-        self._expect(
-            r'coap response from ([\da-f:]+)(?: OBS=(\d+))?'
-            r'(?: with payload: ([\da-f]+))?\b',
-            timeout=timeout)
+        self._expect(r'coap response from ([\da-f:]+)(?: OBS=(\d+))?'
+                     r'(?: with payload: ([\da-f]+))?\b',
+                     timeout=timeout)
         (source, observe, payload) = self.pexpect.match.groups()
         source = source.decode('UTF-8')
 
@@ -1314,10 +1283,9 @@ class Node:
         else:
             timeout = 5
 
-        self._expect(
-            r'coap request from ([\da-f:]+)(?: OBS=(\d+))?'
-            r'(?: with payload: ([\da-f]+))?\b',
-            timeout=timeout)
+        self._expect(r'coap request from ([\da-f:]+)(?: OBS=(\d+))?'
+                     r'(?: with payload: ([\da-f]+))?\b',
+                     timeout=timeout)
         (source, observe, payload) = self.pexpect.match.groups()
         source = source.decode('UTF-8')
 
@@ -1352,10 +1320,7 @@ class Node:
         else:
             timeout = 5
 
-        self._expect(
-            r'Received ACK in reply to notification '
-            r'from ([\da-f:]+)\b',
-            timeout=timeout)
+        self._expect(r'Received ACK in reply to notification ' r'from ([\da-f:]+)\b', timeout=timeout)
         (source,) = self.pexpect.match.groups()
         source = source.decode('UTF-8')
 

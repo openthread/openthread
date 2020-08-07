@@ -263,8 +263,7 @@ class MacFrame:
 
         data.seek(fcs_start)
         if aux_sec_header and aux_sec_header.security_level:
-            mic, payload_end = self._parse_mic(data,
-                                               aux_sec_header.security_level)
+            mic, payload_end = self._parse_mic(data, aux_sec_header.security_level)
         else:
             payload_end = fcs_start
             mic = None
@@ -280,13 +279,11 @@ class MacFrame:
             # TODO: support HT1 when there are Payload IEs in our code
             assert id != MacFrame.IEEE802154_HEADER_IE_HT1, \
                 'Currently there should be no HT1!'
-            header_ie_length = (header_ie &
-                                MacFrame.IEEE802154_HEADER_IE_LENGTH_MASK)
+            header_ie_length = (header_ie & MacFrame.IEEE802154_HEADER_IE_LENGTH_MASK)
             assert cur_pos + 2 + header_ie_length <= payload_end, \
                 'Parsing Header IE error, IE id:{} length:{}'.format(id, header_ie_length)
             header_ie_content = data.read(header_ie_length)
-            header_ie_list.append(
-                InformationElement(id, header_ie_length, header_ie_content))
+            header_ie_list.append(InformationElement(id, header_ie_length, header_ie_content))
             cur_pos += 2 + header_ie_length
             if id == MacFrame.IEEE802154_HEADER_IE_HT2:
                 break
@@ -329,16 +326,12 @@ class MacFrame:
                     message_info.open_payload_length = 1
 
             if src_address.type == MacAddressType.SHORT:
-                message_info.source_mac_address = DeviceDescriptors.get_extended(
-                    src_address).mac_address
+                message_info.source_mac_address = DeviceDescriptors.get_extended(src_address).mac_address
             else:
                 message_info.source_mac_address = src_address.mac_address
 
-            sec_obj = CryptoEngine(
-                MacCryptoMaterialCreator(config.DEFAULT_MASTER_KEY))
-            self.payload = MacPayload(
-                bytearray(open_payload) +
-                sec_obj.decrypt(private_payload, mic, message_info))
+            sec_obj = CryptoEngine(MacCryptoMaterialCreator(config.DEFAULT_MASTER_KEY))
+            self.payload = MacPayload(bytearray(open_payload) + sec_obj.decrypt(private_payload, mic, message_info))
 
         else:
             self.payload = MacPayload(payload)
@@ -367,14 +360,10 @@ class MacFrame:
 
     def _parse_address(self, data, mode):
         if mode == MacHeader.AddressMode.SHORT:
-            return MacAddress(data.read(2),
-                              MacAddressType.SHORT,
-                              big_endian=False)
+            return MacAddress(data.read(2), MacAddressType.SHORT, big_endian=False)
 
         if mode == MacHeader.AddressMode.EXTENDED:
-            return MacAddress(data.read(8),
-                              MacAddressType.LONG,
-                              big_endian=False)
+            return MacAddress(data.read(8), MacAddressType.LONG, big_endian=False)
 
         else:
             return None

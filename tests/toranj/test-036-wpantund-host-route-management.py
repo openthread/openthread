@@ -56,19 +56,16 @@ def verify_interface_routes(node, route_list):
     This function verifies that node has the same interface routes as given by `route_list` which is an array of
     tuples of (route, prefix_len, metric).
     """
-    node_routes = wpan.parse_interface_routes_result(
-        node.get(wpan.WPAN_IP6_INTERFACE_ROUTES))
+    node_routes = wpan.parse_interface_routes_result(node.get(wpan.WPAN_IP6_INTERFACE_ROUTES))
 
     verify(len(route_list) == len(node_routes))
 
     for route in route_list:
         for node_route in node_routes:
-            if (node_route.route_prefix, node_route.prefix_len,
-                    node_route.metric) == route:
+            if (node_route.route_prefix, node_route.prefix_len, node_route.metric) == route:
                 break
         else:
-            raise wpan.VerifyError('Did not find route {} on node {}'.format(
-                route, node))
+            raise wpan.VerifyError('Did not find route {} on node {}'.format(route, node))
 
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -162,8 +159,7 @@ r2.add_route(ROUTE3, prefix_len=LEN3, priority=HIGH_PRIORITY)
 
 # We expect to see all 3 routes added on r1 host interface with same priority levels as r2.
 def check_routes_on_r1_1():
-    verify_interface_routes(r1, [(ROUTE1, LEN1, LOW_METRIC),
-                                 (ROUTE2, LEN2, MEDIUM_METRIC),
+    verify_interface_routes(r1, [(ROUTE1, LEN1, LOW_METRIC), (ROUTE2, LEN2, MEDIUM_METRIC),
                                  (ROUTE3, LEN3, HIGH_METRIC)])
 
 
@@ -178,8 +174,7 @@ r3.add_route(ROUTE2, prefix_len=LEN2, priority=LOW_PRIORITY)
 
 # We expect the host interface routes on r1 to change accordingly
 def check_routes_on_r1_2():
-    route_list = [(ROUTE1, LEN1, MEDIUM_METRIC), (ROUTE2, LEN2, MEDIUM_METRIC),
-                  (ROUTE3, LEN3, HIGH_METRIC)]
+    route_list = [(ROUTE1, LEN1, MEDIUM_METRIC), (ROUTE2, LEN2, MEDIUM_METRIC), (ROUTE3, LEN3, HIGH_METRIC)]
     verify_interface_routes(r1, route_list)
 
 
@@ -196,8 +191,7 @@ r2.remove_route(ROUTE3, prefix_len=LEN3)
 
 # We expect the host interface routes on r1 to again change accordingly:
 def check_routes_on_r1_3():
-    verify_interface_routes(r1, [(ROUTE1, LEN1, MEDIUM_METRIC),
-                                 (ROUTE2, LEN2, LOW_METRIC)])
+    verify_interface_routes(r1, [(ROUTE1, LEN1, MEDIUM_METRIC), (ROUTE2, LEN2, LOW_METRIC)])
 
 
 wpan.verify_within(check_routes_on_r1_3, WAIT_TIME)
@@ -215,16 +209,14 @@ verify_interface_routes(r2, [])
 #      - it is added at lower preference level.
 
 r1.set(wpan.WPAN_DAEMON_OFF_MESH_ROUTE_FILTER_SELF_AUTO_ADDED, 'false')
-verify(
-    r1.get(wpan.WPAN_DAEMON_OFF_MESH_ROUTE_FILTER_SELF_AUTO_ADDED) == 'false')
+verify(r1.get(wpan.WPAN_DAEMON_OFF_MESH_ROUTE_FILTER_SELF_AUTO_ADDED) == 'false')
 
 # Add ROUTE1 on r1 with low-priority. Since it's also present on r3 with
 # medium priority, we should still see the route on host (as medium).
 
 r1.add_route(ROUTE1, prefix_len=LEN1, priority=LOW_PRIORITY)
 
-verify_interface_routes(r1, [(ROUTE1, LEN1, MEDIUM_METRIC),
-                             (ROUTE2, LEN2, LOW_METRIC)])
+verify_interface_routes(r1, [(ROUTE1, LEN1, MEDIUM_METRIC), (ROUTE2, LEN2, LOW_METRIC)])
 
 # Now change ROUTE1 on r1 to be same priority as on r2, now the route should
 # no longer be present on host interface routes.
@@ -248,8 +240,7 @@ verify_interface_routes(r1, [])
 r1.remove_route(ROUTE1, prefix_len=LEN1)
 r1.remove_route(ROUTE2, prefix_len=LEN2)
 
-verify_interface_routes(r1, [(ROUTE1, LEN1, MEDIUM_METRIC),
-                             (ROUTE2, LEN2, LOW_METRIC)])
+verify_interface_routes(r1, [(ROUTE1, LEN1, MEDIUM_METRIC), (ROUTE2, LEN2, LOW_METRIC)])
 
 verify_interface_routes(r2, [])
 
@@ -266,8 +257,7 @@ verify_interface_routes(r1, [(ROUTE2, LEN2, LOW_METRIC)])
 
 r1.remove_route(ROUTE1, prefix_len=LEN1)
 
-verify_interface_routes(r1, [(ROUTE1, LEN1, MEDIUM_METRIC),
-                             (ROUTE2, LEN2, LOW_METRIC)])
+verify_interface_routes(r1, [(ROUTE1, LEN1, MEDIUM_METRIC), (ROUTE2, LEN2, LOW_METRIC)])
 
 verify_interface_routes(r2, [])
 

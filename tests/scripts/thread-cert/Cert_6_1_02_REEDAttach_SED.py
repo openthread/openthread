@@ -90,8 +90,7 @@ class Cert_6_1_2_REEDAttach_SED(thread_cert.TestCase):
         check_parent_request(msg, is_first_request=False)
 
         # Step 6 - DUT sends Child ID Request
-        msg = sed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST,
-                                            sent_to_node=self.nodes[REED])
+        msg = sed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[REED])
         check_child_id_request(
             msg,
             address_registration=CheckType.CONTAIN,
@@ -108,8 +107,8 @@ class Cert_6_1_2_REEDAttach_SED(thread_cert.TestCase):
 
         # Step 11 - SED sends periodic 802.15.4 Data Request messages
         msg = sed_messages.next_message()
-        self.assertEqual(False, msg.isMacAddressTypeLong(
-        ))  # Extra check, keep-alive messages are of short types of mac address
+        self.assertEqual(
+            False, msg.isMacAddressTypeLong())  # Extra check, keep-alive messages are of short types of mac address
         self.assertEqual(msg.type, message.MessageType.COMMAND)
         self.assertEqual(
             msg.mac_header.command_type,

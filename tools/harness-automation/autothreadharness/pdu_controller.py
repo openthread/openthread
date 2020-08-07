@@ -45,9 +45,7 @@ logger = logging.getLogger(__name__)
 try:
     from pysnmp.hlapi import SnmpEngine, CommunityData, UdpTransportTarget, ContextData, getCmd, setCmd, ObjectType, ObjectIdentity, Integer32
 except ImportError:
-    logger.warning(
-        'PySNMP module is not installed. Install if EATON_PDU_CONTROLLER is used'
-    )
+    logger.warning('PySNMP module is not installed. Install if EATON_PDU_CONTROLLER is used')
 
 
 class PduController(object):
@@ -188,8 +186,7 @@ class NordicBoardPduController(PduController):
         boards_serial_numbers = params['boards_serial_numbers']
 
         for serial_number in boards_serial_numbers:
-            logger.info('Resetting board with the serial number: %s',
-                        serial_number)
+            logger.info('Resetting board with the serial number: %s', serial_number)
             self._pin_reset(serial_number)
 
     def close(self):
@@ -208,12 +205,9 @@ class EatonPduController(PduController):
 
     def open(self, **params):
         missing_fields = ['ip', 'port']
-        missing_fields = [
-            field for field in missing_fields if field not in params.keys()
-        ]
+        missing_fields = [field for field in missing_fields if field not in params.keys()]
         if missing_fields:
-            raise KeyError(
-                'Missing keys in PDU params: {}'.format(missing_fields))
+            raise KeyError('Missing keys in PDU params: {}'.format(missing_fields))
         self.params = params
         self.type = 'pdu'
         self.ip = self.params['ip']
@@ -221,8 +215,7 @@ class EatonPduController(PduController):
         self._community = 'public'
         self._snmp_engine = SnmpEngine()
         self._community_data = CommunityData(self._community, mpModel=0)
-        self._udp_transport_target = UdpTransportTarget(
-            (self.ip, self.snmp_agent_port))
+        self._udp_transport_target = UdpTransportTarget((self.ip, self.snmp_agent_port))
         self._context = ContextData()
 
     def _outlet_oid_get(self, param, socket):
@@ -237,16 +230,11 @@ class EatonPduController(PduController):
             full OID identifying the SNMP object (str)
         """
         parameters = {
-            'get_state':
-                self.outlet_oid_cmd_get_state_base,
-            'set_on':
-                self.outlet_oid_cmd_set_on_base,
-            'set_off':
-                self.outlet_oid_cmd_set_off_base,
-            'set_reboot_delay':
-                self.outlet_oid_cmd_set_reboot_delay_seconds_base,
-            'reboot':
-                self.outlet_oid_cmd_reboot_base
+            'get_state': self.outlet_oid_cmd_get_state_base,
+            'set_on': self.outlet_oid_cmd_set_on_base,
+            'set_off': self.outlet_oid_cmd_set_off_base,
+            'set_reboot_delay': self.outlet_oid_cmd_set_reboot_delay_seconds_base,
+            'reboot': self.outlet_oid_cmd_reboot_base
         }
 
         return parameters[param.lower()] + str(socket)
@@ -261,8 +249,7 @@ class EatonPduController(PduController):
             value (int): Value to be written to the OID as Integer32.
         """
         errorIndication, errorStatus, errorIndex, varBinds = next(
-            setCmd(self._snmp_engine, self._community_data,
-                   self._udp_transport_target, self._context,
+            setCmd(self._snmp_engine, self._community_data, self._udp_transport_target, self._context,
                    ObjectType(ObjectIdentity(oid), Integer32(value))))
 
         if errorIndication:
@@ -285,8 +272,7 @@ class EatonPduController(PduController):
             OID value (int)
         """
         errorIndication, errorStatus, errorIndex, varBinds = next(
-            getCmd(self._snmp_engine, self._community_data,
-                   self._udp_transport_target, self._context,
+            getCmd(self._snmp_engine, self._community_data, self._udp_transport_target, self._context,
                    ObjectType(ObjectIdentity(oid))))
 
         if errorIndication:
@@ -349,16 +335,13 @@ class EatonPduController(PduController):
             time.sleep(2)
 
             timeout = time.time() + self.PDU_COMMAND_TIMEOUT
-            while ((time.time() < timeout) and
-                   not self.validate_state(socket, 0)):
+            while ((time.time() < timeout) and not self.validate_state(socket, 0)):
                 time.sleep(0.1)
 
             if self.validate_state(socket, 0):
-                logger.debug('Turned OFF socket {} at {}'.format(
-                    socket, self.ip))
+                logger.debug('Turned OFF socket {} at {}'.format(socket, self.ip))
             else:
-                logger.error('Failed to turn OFF socket {} at {}'.format(
-                    socket, self.ip))
+                logger.error('Failed to turn OFF socket {} at {}'.format(socket, self.ip))
 
     def turn_on(self, sockets):
         """
@@ -375,16 +358,13 @@ class EatonPduController(PduController):
             time.sleep(2)
 
             timeout = time.time() + self.PDU_COMMAND_TIMEOUT
-            while ((time.time() < timeout) and
-                   not self.validate_state(socket, 1)):
+            while ((time.time() < timeout) and not self.validate_state(socket, 1)):
                 time.sleep(0.1)
 
             if self.validate_state(socket, 1):
-                logger.debug('Turned ON socket {} at {}'.format(
-                    socket, self.ip))
+                logger.debug('Turned ON socket {} at {}'.format(socket, self.ip))
             else:
-                logger.error('Failed to turn ON socket {} at {}'.format(
-                    socket, self.ip))
+                logger.error('Failed to turn ON socket {} at {}'.format(socket, self.ip))
 
     def close(self):
         self._community = None
@@ -413,8 +393,7 @@ class IpPowerSocketPduController(PduController):
     def open(self, **params):
         self._base_url = 'http://{}/outs.cgi?out'.format(params['ip'])
         password_manager = HTTPPasswordMgrWithDefaultRealm()
-        password_manager.add_password(None, self._base_url, params['user'],
-                                      params['pass'])
+        password_manager.add_password(None, self._base_url, params['user'], params['pass'])
         authentication_handler = HTTPBasicAuthHandler(password_manager)
         self._opener = build_opener(authentication_handler)
 

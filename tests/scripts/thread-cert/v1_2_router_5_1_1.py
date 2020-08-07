@@ -112,8 +112,7 @@ class Router_5_1_01(thread_cert.TestCase):
         assert msg.get_mle_message_tlv(mle.Version).version == 3
 
         # 5 - Leader responds with a Child ID Response
-        msg = leader_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_RESPONSE)
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
         msg.assertSentToNode(self.nodes[ROUTER_1])
         msg.assertMleMessageContainsTlv(mle.SourceAddress)
         msg.assertMleMessageContainsTlv(mle.LeaderData)
@@ -149,8 +148,7 @@ class Router_5_1_01(thread_cert.TestCase):
         self.assertIn(mle.TlvType.LINK_MARGIN, tlv_request.tlvs)
 
         # 9 - Leader sends a Unicast Link Accept
-        msg = leader_messages.next_mle_message(
-            mle.CommandType.LINK_ACCEPT_AND_REQUEST)
+        msg = leader_messages.next_mle_message(mle.CommandType.LINK_ACCEPT_AND_REQUEST)
         msg.assertMleMessageContainsTlv(mle.SourceAddress)
         msg.assertMleMessageContainsTlv(mle.LeaderData)
         msg.assertMleMessageContainsTlv(mle.Response)
@@ -170,10 +168,8 @@ class Router_5_1_01(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.Route64)
 
         # 11 - Verify connectivity by sending an ICMPv6 Echo Request to the DUT link local address
-        self.assertTrue(self.nodes[LEADER].ping(
-            self.nodes[ROUTER_1].get_linklocal()))
-        self.assertTrue(self.nodes[ROUTER_1].ping(
-            self.nodes[LEADER].get_linklocal()))
+        self.assertTrue(self.nodes[LEADER].ping(self.nodes[ROUTER_1].get_linklocal()))
+        self.assertTrue(self.nodes[ROUTER_1].ping(self.nodes[LEADER].get_linklocal()))
 
 
 if __name__ == '__main__':

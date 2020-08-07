@@ -60,8 +60,7 @@ class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
         self.assertEqual(self.nodes[DUT_ROUTER1].get_state(), 'router')
 
         # 2 & 3
-        link_local = self.nodes[DUT_ROUTER1].get_ip6_address(
-            config.ADDRESS_TYPE.LINK_LOCAL)
+        link_local = self.nodes[DUT_ROUTER1].get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
         self.assertTrue(self.nodes[LEADER].ping(link_local, size=256))
         self.assertTrue(self.nodes[LEADER].ping(link_local))
 
@@ -74,8 +73,7 @@ class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
         self.assertTrue(self.nodes[LEADER].ping('ff02::2'))
 
         # 8
-        self.assertTrue(self.nodes[LEADER].ping(
-            config.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS))
+        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS))
 
 
 if __name__ == '__main__':

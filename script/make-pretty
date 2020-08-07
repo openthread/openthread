@@ -114,7 +114,7 @@ do_python_format()
     echo -e '======================'
 
     git ls-files "${OT_PYTHON_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n10 -P"$OT_BUILD_JOBS" python3 -m yapf --verbose --style google -ipr
+        | xargs -n10 -P"$OT_BUILD_JOBS" python3 -m yapf --verbose --style '{based_on_style: google, column_limit: 119}' -ipr
 }
 
 do_python_check()
@@ -124,7 +124,7 @@ do_python_check()
     echo -e '====================='
 
     git ls-files "${OT_PYTHON_SOURCES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n10 -P"$OT_BUILD_JOBS" python3 -m yapf --verbose --style google -dpr
+        | xargs -n10 -P"$OT_BUILD_JOBS" python3 -m yapf --verbose --style '{based_on_style: google, column_limit: 119}' -dpr
 }
 
 do_shell_format()

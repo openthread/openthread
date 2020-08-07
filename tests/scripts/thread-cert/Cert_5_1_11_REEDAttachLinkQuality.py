@@ -141,8 +141,7 @@ class Cert_5_1_11_REEDAttachLinkQuality(thread_cert.TestCase):
         self.assertEqual(1, scan_mask_tlv.end_device)
 
         # 6 - Router1
-        msg = router1_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_REQUEST)
+        msg = router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
         msg.assertMleMessageContainsTlv(mle.Mode)
         msg.assertMleMessageContainsTlv(mle.Response)

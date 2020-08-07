@@ -109,8 +109,7 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
         router2_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
 
         # Leader or Router1 can be parent of Router2
-        if leader_messages.contains_mle_message(
-                mle.CommandType.CHILD_ID_RESPONSE):
+        if leader_messages.contains_mle_message(mle.CommandType.CHILD_ID_RESPONSE):
             leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
 
             msg = router2_messages.next_coap_message("0.02")
@@ -118,8 +117,7 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
 
             msg = leader_messages.next_coap_message("2.04")
 
-        elif router1_messages.contains_mle_message(
-                mle.CommandType.CHILD_ID_RESPONSE):
+        elif router1_messages.contains_mle_message(mle.CommandType.CHILD_ID_RESPONSE):
             router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
 
             msg = router2_messages.next_coap_message("0.02")
@@ -135,8 +133,7 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
         # 5 - Router1
         # Router1 make two attempts to reconnect to its current Partition.
         for _ in range(4):
-            msg = router1_messages.next_mle_message(
-                mle.CommandType.PARENT_REQUEST)
+            msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
             msg.assertSentWithHopLimit(255)
             msg.assertSentToDestinationAddress("ff02::2")
             msg.assertMleMessageContainsTlv(mle.Mode)
@@ -162,8 +159,7 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
         self.assertEqual(0, scan_mask_tlv.end_device)
 
         # 7 - Router1
-        msg = router1_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_REQUEST)
+        msg = router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         msg.assertSentToNode(self.nodes[ROUTER2])
         msg.assertMleMessageContainsTlv(mle.Response)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)

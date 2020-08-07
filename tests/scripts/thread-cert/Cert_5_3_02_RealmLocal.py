@@ -85,15 +85,12 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         # 2 & 3
-        mleid = self.nodes[DUT_ROUTER2].get_ip6_address(
-            config.ADDRESS_TYPE.ML_EID)
+        mleid = self.nodes[DUT_ROUTER2].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[LEADER].ping(mleid, size=256))
         self.assertTrue(self.nodes[LEADER].ping(mleid))
 
         # 4 & 5
-        self.assertTrue(self.nodes[LEADER].ping('ff03::1',
-                                                num_responses=2,
-                                                size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2, size=256))
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertFalse(sed_messages.contains_icmp_message())
 
@@ -102,9 +99,7 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
         self.assertFalse(sed_messages.contains_icmp_message())
 
         # 6 & 7
-        self.assertTrue(self.nodes[LEADER].ping('ff03::2',
-                                                num_responses=2,
-                                                size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff03::2', num_responses=2, size=256))
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertFalse(sed_messages.contains_icmp_message())
 

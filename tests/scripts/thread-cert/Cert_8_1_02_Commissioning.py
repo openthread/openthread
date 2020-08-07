@@ -58,8 +58,7 @@ class Cert_8_1_02_Commissioning(thread_cert.TestCase):
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'leader')
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(3)
-        self.nodes[COMMISSIONER].commissioner_add_joiner(
-            self.nodes[JOINER].get_eui64(), 'PSKD01')
+        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER].get_eui64(), 'PSKD01')
 
         self.nodes[JOINER].interface_up()
         self.nodes[JOINER].joiner_start('10DKSP')

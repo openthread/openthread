@@ -128,52 +128,41 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
         check_data_response(
             msg,
-            network_data_check=NetworkDataCheck(prefixes_check=PrefixesCheck(
-                prefix_check_list=[
-                    SinglePrefixCheck(prefix=b'2001000200000001'),
-                    SinglePrefixCheck(prefix=b'2001000200000002'),
-                ])),
+            network_data_check=NetworkDataCheck(prefixes_check=PrefixesCheck(prefix_check_list=[
+                SinglePrefixCheck(prefix=b'2001000200000001'),
+                SinglePrefixCheck(prefix=b'2001000200000002'),
+            ])),
         )
 
         # Step 4 - DUT sends a MLE Child ID Response to Router1
-        msg = leader_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_RESPONSE)
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
         check_child_id_response(
             msg,
-            network_data_check=NetworkDataCheck(prefixes_check=PrefixesCheck(
-                prefix_cnt=2)),
+            network_data_check=NetworkDataCheck(prefixes_check=PrefixesCheck(prefix_cnt=2)),
         )
 
         # Step 6 - DUT sends a MLE Child ID Response to SED1
-        msg = leader_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_RESPONSE)
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
         check_child_id_response(
             msg,
             network_data_check=NetworkDataCheck(prefixes_check=PrefixesCheck(
-                prefix_check_list=[SinglePrefixCheck(
-                    border_router_16=0xfffe)])),
+                prefix_check_list=[SinglePrefixCheck(border_router_16=0xfffe)])),
         )
 
         # For Step 10
-        msg_chd_upd_res_to_sed = leader_messages.next_mle_message(
-            mle.CommandType.CHILD_UPDATE_RESPONSE)
+        msg_chd_upd_res_to_sed = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
 
         # Step 8 - DUT sends a MLE Child ID Response to MED1
-        msg = leader_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_RESPONSE)
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
         check_child_id_response(
             msg,
-            network_data_check=NetworkDataCheck(prefixes_check=PrefixesCheck(
-                prefix_cnt=2)),
+            network_data_check=NetworkDataCheck(prefixes_check=PrefixesCheck(prefix_cnt=2)),
         )
 
         # Step 10 - DUT sends Child Update Response
-        msg_chd_upd_res_to_med = leader_messages.next_mle_message(
-            mle.CommandType.CHILD_UPDATE_RESPONSE)
-        msg = med1_messages.next_mle_message(
-            mle.CommandType.CHILD_UPDATE_REQUEST)
-        check_child_update_request_from_child(
-            msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1, 2])
+        msg_chd_upd_res_to_med = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
+        msg = med1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        check_child_update_request_from_child(msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1, 2])
 
         check_child_update_response(
             msg_chd_upd_res_to_med,
@@ -181,10 +170,8 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
             CIDs=[1, 2],
         )
 
-        msg = sed1_messages.next_mle_message(
-            mle.CommandType.CHILD_UPDATE_REQUEST)
-        check_child_update_request_from_child(
-            msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1])
+        msg = sed1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        check_child_update_request_from_child(msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1])
         check_child_update_response(
             msg_chd_upd_res_to_sed,
             address_registration=CheckType.CONTAIN,
