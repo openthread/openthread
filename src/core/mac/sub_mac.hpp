@@ -407,7 +407,7 @@ public:
     /**
      * This method gets the CSL timeout.
      *
-     * @returns CSL timeout
+     * @returns CSL timeout.
      *
      */
     uint32_t GetCslTimeout(void) const { return mCslTimeout; }
