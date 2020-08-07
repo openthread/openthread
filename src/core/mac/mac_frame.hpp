@@ -43,8 +43,12 @@
 #include "mac/mac_types.hpp"
 
 namespace ot {
-
 namespace Mac {
+
+using ot::Encoding::LittleEndian::HostSwap16;
+using ot::Encoding::LittleEndian::HostSwap64;
+using ot::Encoding::LittleEndian::ReadUint24;
+using ot::Encoding::LittleEndian::WriteUint24;
 
 /**
  * @addtogroup core-mac
@@ -54,26 +58,18 @@ namespace Mac {
  */
 
 /**
- * This class implements IEEE 802.15.4 IE (Information Element) generation and parsing.
+ * This class implements IEEE 802.15.4 IE (Information Element) header generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
 class HeaderIe
 {
 public:
-    enum
-    {
-        kIdOffset     = 7,
-        kIdMask       = 0xff << kIdOffset,
-        kLengthOffset = 0,
-        kLengthMask   = 0x7f << kLengthOffset,
-    };
-
     /**
      * This method initializes the Header IE.
      *
      */
-    void Init(void) { mHeaderIe = 0; }
+    void Init(void) { mFields.m16 = 0; }
 
     /**
      * This method returns the IE Element Id.
@@ -81,7 +77,7 @@ public:
      * @returns the IE Element Id.
      *
      */
-    uint16_t GetId(void) const { return (ot::Encoding::LittleEndian::HostSwap16(mHeaderIe) & kIdMask) >> kIdOffset; }
+    uint16_t GetId(void) const { return (HostSwap16(mFields.m16) & kIdMask) >> kIdOffset; }
 
     /**
      * This method sets the IE Element Id.
@@ -91,8 +87,7 @@ public:
      */
     void SetId(uint16_t aId)
     {
-        mHeaderIe = ot::Encoding::LittleEndian::HostSwap16(
-            (ot::Encoding::LittleEndian::HostSwap16(mHeaderIe) & ~kIdMask) | ((aId << kIdOffset) & kIdMask));
+        mFields.m16 = HostSwap16((HostSwap16(mFields.m16) & ~kIdMask) | ((aId << kIdOffset) & kIdMask));
     }
 
     /**
@@ -101,10 +96,7 @@ public:
      * @returns the IE content length.
      *
      */
-    uint16_t GetLength(void) const
-    {
-        return (ot::Encoding::LittleEndian::HostSwap16(mHeaderIe) & kLengthMask) >> kLengthOffset;
-    }
+    uint8_t GetLength(void) const { return mFields.m8[0] & kLengthMask; }
 
     /**
      * This method sets the IE content length.
@@ -112,15 +104,35 @@ public:
      * @param[in]  aLength  The IE content length.
      *
      */
-    void SetLength(uint16_t aLength)
-    {
-        mHeaderIe =
-            ot::Encoding::LittleEndian::HostSwap16((ot::Encoding::LittleEndian::HostSwap16(mHeaderIe) & ~kLengthMask) |
-                                                   ((aLength << kLengthOffset) & kLengthMask));
-    }
+    void SetLength(uint8_t aLength) { mFields.m8[0] = (mFields.m8[0] & ~kLengthMask) | (aLength & kLengthMask); }
 
 private:
-    uint16_t mHeaderIe;
+    // Header IE format:
+    //
+    // +-----------+------------+--------+
+    // | Bits: 0-6 |    7-14    |   15   |
+    // +-----------+------------+--------+
+    // | Length    | Element ID | Type=0 |
+    // +-----------+------------+--------+
+
+    enum : uint8_t
+    {
+        kSize       = 2,
+        kIdOffset   = 7,
+        kLengthMask = 0x7f
+    };
+
+    enum : uint16_t
+    {
+        kIdMask = 0x00ff << kIdOffset,
+    };
+
+    union OT_TOOL_PACKED_FIELD
+    {
+        uint8_t  m8[kSize];
+        uint16_t m16;
+    } mFields;
+
 } OT_TOOL_PACKED_END;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -132,28 +144,21 @@ OT_TOOL_PACKED_BEGIN
 class VendorIeHeader
 {
 public:
-    enum
-    {
-        kVendorOuiNest = 0x18b430,
-        kVendorOuiSize = 3,
-        kVendorIeTime  = 0x01,
-    };
-
     /**
      * This method returns the Vendor OUI.
      *
      * @returns the Vendor OUI.
      *
      */
-    const uint8_t *GetVendorOui(void) const { return mVendorOui; }
+    uint32_t GetVendorOui(void) const { return ReadUint24(mOui); }
 
     /**
      * This method sets the Vendor OUI.
      *
-     * @param[in]  aVendorOui  A pointer to the Vendor OUI.
+     * @param[in]  aVendorOui  A Vendor OUI.
      *
      */
-    void SetVendorOui(const uint8_t *aVendorOui) { memcpy(mVendorOui, aVendorOui, kVendorOuiSize); }
+    void SetVendorOui(uint32_t aVendorOui) { WriteUint24(aVendorOui, mOui); }
 
     /**
      * This method returns the Vendor IE sub-type.
@@ -172,7 +177,12 @@ public:
     void SetSubType(uint8_t aSubType) { mSubType = aSubType; }
 
 private:
-    uint8_t mVendorOui[kVendorOuiSize];
+    enum : uint8_t
+    {
+        kOuiSize = 3,
+    };
+
+    uint8_t mOui[kOuiSize];
     uint8_t mSubType;
 } OT_TOOL_PACKED_END;
 
@@ -184,17 +194,24 @@ OT_TOOL_PACKED_BEGIN
 class TimeIe : public VendorIeHeader
 {
 public:
+    enum : uint32_t
+    {
+        kVendorOuiNest = 0x18b430,
+    };
+
+    enum : uint8_t
+    {
+        kVendorIeTime = 0x01,
+    };
+
     /**
      * This method initializes the time IE.
      *
      */
     void Init(void)
     {
-        uint8_t oui[3] = {VendorIeHeader::kVendorOuiNest & 0xff, (VendorIeHeader::kVendorOuiNest >> 8) & 0xff,
-                          (VendorIeHeader::kVendorOuiNest >> 16) & 0xff};
-
-        SetVendorOui(oui);
-        SetSubType(VendorIeHeader::kVendorIeTime);
+        SetVendorOui(kVendorOuiNest);
+        SetSubType(kVendorIeTime);
     }
 
     /**
@@ -219,7 +236,7 @@ public:
      * @returns the network time, in microseconds.
      *
      */
-    uint64_t GetTime(void) const { return ot::Encoding::LittleEndian::HostSwap64(mTime); }
+    uint64_t GetTime(void) const { return HostSwap64(mTime); }
 
     /**
      * This method sets the network time.
@@ -227,7 +244,7 @@ public:
      * @param[in]  aTime  The network time.
      *
      */
-    void SetTime(uint64_t aTime) { mTime = ot::Encoding::LittleEndian::HostSwap64(aTime); }
+    void SetTime(uint64_t aTime) { mTime = HostSwap64(aTime); }
 
 private:
     uint8_t  mSequence;
@@ -729,7 +746,7 @@ public:
      * @returns The MAC Frame Length.
      *
      */
-    uint16_t GetLength(void) const { return GetPsduLength(); }
+    uint16_t GetLength(void) const { return mLength; }
 
     /**
      * This method sets the MAC Frame Length.
@@ -737,7 +754,7 @@ public:
      * @param[in]  aLength  The MAC Frame Length.
      *
      */
-    void SetLength(uint16_t aLength) { SetPsduLength(aLength); }
+    void SetLength(uint16_t aLength) { mLength = aLength; }
 
     /**
      * This method returns the MAC header size.
@@ -800,14 +817,6 @@ public:
      *
      */
     uint16_t GetPsduLength(void) const { return mLength; }
-
-    /**
-     * This method sets the IEEE 802.15.4 PSDU length.
-     *
-     * @param[in]  aLength  The IEEE 802.15.4 PSDU length.
-     *
-     */
-    void SetPsduLength(uint16_t aLength) { mLength = aLength; }
 
     /**
      * This method returns a pointer to the PSDU.
@@ -1304,7 +1313,7 @@ public:
      */
     void Init(void)
     {
-        mSuperframeSpec     = ot::Encoding::LittleEndian::HostSwap16(kSuperFrameSpec);
+        mSuperframeSpec     = HostSwap16(kSuperFrameSpec);
         mGtsSpec            = 0;
         mPendingAddressSpec = 0;
     }
@@ -1318,8 +1327,7 @@ public:
      */
     bool IsValid(void) const
     {
-        return (mSuperframeSpec == ot::Encoding::LittleEndian::HostSwap16(kSuperFrameSpec)) && (mGtsSpec == 0) &&
-               (mPendingAddressSpec == 0);
+        return (mSuperframeSpec == HostSwap16(kSuperFrameSpec)) && (mGtsSpec == 0) && (mPendingAddressSpec == 0);
     }
 
     /**
@@ -1519,7 +1527,7 @@ public:
      * @returns the CSL Period.
      *
      */
-    uint16_t GetPeriod(void) const { return Encoding::LittleEndian::HostSwap16(mPeriod); }
+    uint16_t GetPeriod(void) const { return HostSwap16(mPeriod); }
 
     /**
      * This method sets the CSL Period.
@@ -1527,7 +1535,7 @@ public:
      * @param[in]  aPeriod  The CSL Period.
      *
      */
-    void SetPeriod(uint16_t aPeriod) { mPeriod = Encoding::LittleEndian::HostSwap16(aPeriod); }
+    void SetPeriod(uint16_t aPeriod) { mPeriod = HostSwap16(aPeriod); }
 
     /**
      * This method returns the CSL Phase.
@@ -1535,7 +1543,7 @@ public:
      * @returns the CSL Phase.
      *
      */
-    uint16_t GetPhase(void) const { return Encoding::LittleEndian::HostSwap16(mPhase); }
+    uint16_t GetPhase(void) const { return HostSwap16(mPhase); }
 
     /**
      * This method sets the CSL Phase.
@@ -1543,7 +1551,7 @@ public:
      * @param[in]  aPhase  The CSL Phase.
      *
      */
-    void SetPhase(uint16_t aPhase) { mPhase = Encoding::LittleEndian::HostSwap16(aPhase); }
+    void SetPhase(uint16_t aPhase) { mPhase = HostSwap16(aPhase); }
 
 private:
     uint16_t mPhase;
