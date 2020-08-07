@@ -40,7 +40,7 @@ import time
 import unittest
 import binascii
 
-from typing import Union
+from typing import Union, Dict
 
 
 class Node:
@@ -530,7 +530,7 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def multicast_listener_list(self):
+    def multicast_listener_list(self) -> Dict[ipaddress.IPv6Address, int]:
         cmd = 'bbr mgmt mlr listener'
         self.send_command(cmd)
 
@@ -558,6 +558,11 @@ class Node:
         cmd = f'bbr mgmt mlr listener add {ip.compressed} {timeout}'
         self.send_command(cmd)
         self._expect(r"(Done|Error .*)")
+
+    def set_next_mlr_response(self, status: int):
+        cmd = 'bbr mgmt mlr response {}'.format(status)
+        self.send_command(cmd)
+        self._expect('Done')
 
     def set_link_quality(self, addr, lqi):
         cmd = 'macfilter rss add-lqi %s %s' % (addr, lqi)

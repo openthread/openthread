@@ -185,6 +185,26 @@ Done
 Done
 ```
 
+### bbr mgmt mlr response \<status\>
+
+Configure the response status for the next MLR.req.
+
+Only for testing/reference device.
+
+Known status values:
+
+- 0: ST_MLR_SUCCESS
+- 2: ST_MLR_INVALID
+- 3: ST_MLR_NO_PERSISTENT
+- 4: ST_MLR_NO_RESOURCES
+- 5: ST_MLR_BBR_NOT_PRIMARY
+- 6: ST_MLR_GENERAL_FAILURE
+
+```bash
+> bbr mgmt mlr response 2
+Done
+```
+
 ### bbr state
 
 Show local Backbone state ([`Disabled`,`Primary`, `Secondary`]) for Thread 1.2 FTD.
