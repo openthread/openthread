@@ -161,20 +161,16 @@ class TestMulticastRegistration(thread_cert.TestCase):
 
         messages = self.simulator.get_messages_sent_by(node)
 
-        msg = messages.next_mle_message(
-            mle.CommandType.CHILD_UPDATE_REQUEST,
-            assert_enabled=child_update_request_assert)
+        msg = messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST,
+                                        assert_enabled=child_update_request_assert)
 
         if msg:
-            is_in = command.check_address_registration_tlv(
-                msg, multicast_address)
+            is_in = command.check_address_registration_tlv(msg, multicast_address)
 
             if in_address_registration:
-                assert is_in, 'Error: Expected {} in AddressRegistrationTLV not found'.format(
-                    multicast_address)
+                assert is_in, 'Error: Expected {} in AddressRegistrationTLV not found'.format(multicast_address)
             else:
-                assert not is_in, 'Error: Unexpected {} in AddressRegistrationTLV'.format(
-                    multicast_address)
+                assert not is_in, 'Error: Unexpected {} in AddressRegistrationTLV'.format(multicast_address)
 
     def test(self):
 
@@ -257,8 +253,7 @@ class TestMulticastRegistration(thread_cert.TestCase):
                                             in_address_registration=True)
 
         #6) Bring up ROUTER_1_1.
-        self.nodes[ROUTER_1_1].set_router_selection_jitter(
-            ROUTER_SELECTION_JITTER)
+        self.nodes[ROUTER_1_1].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         self.nodes[ROUTER_1_1].start()
         WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
         self.simulator.go(WAIT_TIME)

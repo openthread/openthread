@@ -74,8 +74,7 @@ def verify_prefix(
     This function verifies that the `prefix` is present on all the nodes in the `node_list`.
     """
     for node in node_list:
-        prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
+        prefixes = wpan.parse_on_mesh_prefix_result(node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         for p in prefixes:
             if p.prefix == prefix:
                 verify(int(p.prefix_len) == prefix_len)
@@ -89,8 +88,7 @@ def verify_prefix(
                 verify(p.priority == priority)
                 break
         else:
-            raise wpan.VerifyError('Did not find prefix {} on node {}'.format(
-                prefix, node))
+            raise wpan.VerifyError('Did not find prefix {} on node {}'.format(prefix, node))
 
 
 # -----------------------------------------------------------------------------------------------------------------------

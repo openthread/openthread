@@ -102,17 +102,14 @@ class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
             self.assertEqual(self.nodes[i].get_state(), 'child')
 
         # 4 MED1: MED1 send an ICMPv6 Echo Request to the MED2 ML-EID
-        med2_ml_eid = self.nodes[MED2].get_ip6_address(
-            config.ADDRESS_TYPE.ML_EID)
+        med2_ml_eid = self.nodes[MED2].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(med2_ml_eid is not None)
         self.assertTrue(self.nodes[MED1].ping(med2_ml_eid))
 
         # Verify DUT_LEADER didn't generate an Address Query Request
         leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = leader_messages.next_coap_message('0.02', '/a/aq', False)
-        assert (
-            msg is None
-        ), "Error: The DUT_LEADER sent an unexpected Address Query Request"
+        assert (msg is None), "Error: The DUT_LEADER sent an unexpected Address Query Request"
 
         # Wait for sniffer got packets
         self.simulator.go(1)
@@ -120,8 +117,7 @@ class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
         # Verify MED2 sent an ICMPv6 Echo Reply
         med2_messages = self.simulator.get_messages_sent_by(MED2)
         msg = med2_messages.get_icmp_message(ipv6.ICMP_ECHO_RESPONSE)
-        assert (msg is not None
-               ), "Error: The MED2 didn't send ICMPv6 Echo Reply to MED1"
+        assert (msg is not None), "Error: The MED2 didn't send ICMPv6 Echo Reply to MED1"
 
         # 5 MED1: MED1 send an ICMPv6 Echo Request to the MED2 2001::GUA
         addr = self.nodes[MED2].get_addr("2001::/64")
@@ -131,9 +127,7 @@ class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
         # Verify DUT_LEADER didn't generate an Address Query Request
         leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = leader_messages.next_coap_message('0.02', '/a/aq', False)
-        assert (
-            msg is None
-        ), "Error: The DUT_LEADER sent an unexpected Address Query Request"
+        assert (msg is None), "Error: The DUT_LEADER sent an unexpected Address Query Request"
 
         # Wait for sniffer got packets
         self.simulator.go(1)
@@ -141,8 +135,7 @@ class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
         # Verify MED2 sent an ICMPv6 Echo Reply
         med2_messages = self.simulator.get_messages_sent_by(MED2)
         msg = med2_messages.get_icmp_message(ipv6.ICMP_ECHO_RESPONSE)
-        assert (msg is not None
-               ), "Error: The MED2 didn't send ICMPv6 Echo Reply to MED1"
+        assert (msg is not None), "Error: The MED2 didn't send ICMPv6 Echo Reply to MED1"
 
         # 6 MED1: MED1 send an ICMPv6 Echo Request to the MED2 2002::GUA
         addr = self.nodes[MED2].get_addr("2002::/64")
@@ -152,9 +145,7 @@ class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
         # Verify DUT_LEADER didn't generate an Address Query Request
         leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = leader_messages.next_coap_message('0.02', '/a/aq', False)
-        assert (
-            msg is None
-        ), "Error: The DUT_LEADER sent an unexpected Address Query Request"
+        assert (msg is None), "Error: The DUT_LEADER sent an unexpected Address Query Request"
 
         # Wait for sniffer got packets
         self.simulator.go(1)
@@ -162,8 +153,7 @@ class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
         # Verify MED2 sent an ICMPv6 Echo Reply
         med2_messages = self.simulator.get_messages_sent_by(MED2)
         msg = med2_messages.get_icmp_message(ipv6.ICMP_ECHO_RESPONSE)
-        assert (msg is not None
-               ), "Error: The MED2 didn't send ICMPv6 Echo Reply to MED1"
+        assert (msg is not None), "Error: The MED2 didn't send ICMPv6 Echo Reply to MED1"
 
         # 7 MED1: MED1 send an ICMPv6 Echo Request to the MED2 2003::GUA
         addr = self.nodes[MED2].get_addr("2003::/64")
@@ -173,9 +163,7 @@ class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
         # Verify DUT_LEADER didn't generate an Address Query Request
         leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = leader_messages.next_coap_message('0.02', '/a/aq', False)
-        assert (
-            msg is None
-        ), "Error: The DUT_LEADER sent an unexpected Address Query Request"
+        assert (msg is None), "Error: The DUT_LEADER sent an unexpected Address Query Request"
 
         # Wait for sniffer got packets
         self.simulator.go(1)
@@ -183,8 +171,7 @@ class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
         # Verify MED2 sent an ICMPv6 Echo Reply
         med2_messages = self.simulator.get_messages_sent_by(MED2)
         msg = med2_messages.get_icmp_message(ipv6.ICMP_ECHO_RESPONSE)
-        assert (msg is not None
-               ), "Error: The MED2 didn't send ICMPv6 Echo Reply to MED1"
+        assert (msg is not None), "Error: The MED2 didn't send ICMPv6 Echo Reply to MED1"
 
 
 if __name__ == '__main__':

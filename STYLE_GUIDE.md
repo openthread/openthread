@@ -188,4 +188,4 @@
 
 ## Format and Style
 
-- All code should adhere to [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html).
+- All code should adhere to [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html) except maximum line length being 119.

@@ -83,32 +83,27 @@ node.form("mcu-power-state")
 verify(node.is_associated())
 
 node.set(wpan.WPAN_NCP_MCU_POWER_STATE, 'low-power')
-verify(
-    node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
+verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 verify(node.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATED)
 
 node.set(wpan.WPAN_NCP_MCU_POWER_STATE, 'on')
 verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_ON)
 
-node.set(wpan.WPAN_NCP_MCU_POWER_STATE,
-         'lp')  # special short-form string for low-power
-verify(
-    node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
+node.set(wpan.WPAN_NCP_MCU_POWER_STATE, 'lp')  # special short-form string for low-power
+verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 
 node.set(wpan.WPAN_NCP_MCU_POWER_STATE, wpan.MCU_POWER_STATE_ON)
 verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_ON)
 
 node.set(wpan.WPAN_NCP_MCU_POWER_STATE, wpan.MCU_POWER_STATE_LOW_POWER)
-verify(
-    node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
+verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 verify(node.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATED)
 
 # Verify that `wpantund` will restore the user-set value after NCP reset
 
 node.reset()
 time.sleep(1)
-verify(
-    node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
+verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 node.set(wpan.WPAN_NCP_MCU_POWER_STATE, wpan.MCU_POWER_STATE_ON)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -129,8 +124,7 @@ wpan.verify_within(check_wpan_is_in_deep_sleep_state, WAIT_TIME)
 # Verify that reading/getting a property does not impact the wpantund state.
 
 node.get(wpan.WPAN_THREAD_RLOC16)
-verify(
-    node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
+verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 verify(node.get(wpan.WPAN_STATE) == wpan.STATE_DEEP_SLEEP)
 
 # Setting the power state to `on` should change wpantund state to `OFFLINE`
@@ -143,8 +137,7 @@ wpan.verify_within(check_wpan_is_in_offline_state, WAIT_TIME)
 
 node.wpanctl('begin-low-power')
 wpan.verify_within(check_wpan_is_in_deep_sleep_state, WAIT_TIME)
-verify(
-    node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
+verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 
 node.set(wpan.WPAN_NCP_MCU_POWER_STATE, wpan.MCU_POWER_STATE_ON)
 wpan.verify_within(check_wpan_is_in_offline_state, WAIT_TIME)
@@ -158,8 +151,7 @@ node.set('Daemon:AutoAssociateAfterReset', '0')
 # Verify that issuing a `begin-low-power` when in "associated" state
 # does not change the state.
 node.wpanctl('begin-low-power')
-verify(
-    node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
+verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 verify(node.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATED)
 
 # After reset, power state should remain `LOW_POWER` (wpantund would restore the value
@@ -190,8 +182,7 @@ verify(node.get('Daemon:Enabled') == 'true')
 node.set('Daemon:Enabled', 'false')
 verify(node.get('Daemon:Enabled') == 'false')
 wpan.verify_within(check_wpan_is_in_deep_sleep_state, WAIT_TIME)
-verify(
-    node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
+verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 
 # Enabling `wpantund` should update the `MCU_POWER_STATE` back to `ON`.
 node.set('Daemon:Enabled', 'true')
@@ -209,8 +200,7 @@ verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_ON)
 node.set('Daemon:Enabled', 'false')
 verify(node.get('Daemon:Enabled') == 'false')
 wpan.verify_within(check_wpan_is_in_deep_sleep_state, WAIT_TIME)
-verify(
-    node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
+verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 
 node.set('Daemon:Enabled', 'true')
 wpan.verify_within(check_wpan_is_in_commissioned_state, WAIT_TIME)
@@ -225,13 +215,11 @@ node.leave()
 node.set('Daemon:AutoAssociateAfterReset', '1')
 
 node.set(wpan.WPAN_NCP_MCU_POWER_STATE, wpan.MCU_POWER_STATE_LOW_POWER)
-verify(
-    node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
+verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 
 node.form("resume-test")
 verify(node.is_associated())
-verify(
-    node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
+verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 
 node.reset()
 
@@ -240,8 +228,7 @@ node.reset()
 # is enabled, network should be recovered.
 
 wpan.verify_within(check_wpan_is_in_associating_state, WAIT_TIME)
-verify(
-    node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
+verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

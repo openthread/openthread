@@ -62,8 +62,7 @@ class CryptoEngine:
             tuple: Encrypted message (bytearray), MIC (bytearray)
 
         """
-        key, nonce, auth_data = self._crypto_material_creator.create_key_and_nonce_and_authenticated_data(
-            message_info)
+        key, nonce, auth_data = self._crypto_material_creator.create_key_and_nonce_and_authenticated_data(message_info)
 
         cipher = AES.new(key, AES.MODE_CCM, nonce, mac_len=self.mic_length)
         cipher.update(auth_data)
@@ -82,8 +81,7 @@ class CryptoEngine:
             bytearray: Decrypted message.
 
         """
-        key, nonce, auth_data = self._crypto_material_creator.create_key_and_nonce_and_authenticated_data(
-            message_info)
+        key, nonce, auth_data = self._crypto_material_creator.create_key_and_nonce_and_authenticated_data(message_info)
 
         cipher = AES.new(key, AES.MODE_CCM, nonce, mac_len=self.mic_length)
         cipher.update(auth_data)
@@ -158,8 +156,7 @@ class MacCryptoMaterialCreator(CryptoMaterialCreator):
         """
         return bytes(eui64 + struct.pack(">LB", frame_counter, security_level))
 
-    def _create_authenticated_data(self, mhr, auxiliary_security_header,
-                                   extra_open_fields):
+    def _create_authenticated_data(self, mhr, auxiliary_security_header, extra_open_fields):
         """ Create Authenticated Data
 
         Read more: 7.6.3.3 CCM prerequisites - Std 802.15.4-2006
@@ -176,8 +173,7 @@ class MacCryptoMaterialCreator(CryptoMaterialCreator):
         return bytes(mhr + auxiliary_security_header + extra_open_fields)
 
     def create_key_and_nonce_and_authenticated_data(self, message_info):
-        _, mac_key = self._generate_keys(
-            message_info.aux_sec_hdr.sequence_counter)
+        _, mac_key = self._generate_keys(message_info.aux_sec_hdr.sequence_counter)
 
         nonce = self._create_nonce(
             message_info.source_mac_address,
@@ -222,11 +218,9 @@ class MleCryptoMaterialCreator(CryptoMaterialCreator):
             bytes: created Nonce
 
         """
-        return bytes(source_eui64[:8] +
-                     struct.pack(">LB", frame_counter, security_level))
+        return bytes(source_eui64[:8] + struct.pack(">LB", frame_counter, security_level))
 
-    def _create_authenticated_data(self, source_address, destination_address,
-                                   auxiliary_security_header):
+    def _create_authenticated_data(self, source_address, destination_address, auxiliary_security_header):
         """ Create Authenticated Data
 
         Read more: 4.8 - Thread v1.0 Specification
@@ -240,12 +234,10 @@ class MleCryptoMaterialCreator(CryptoMaterialCreator):
             bytes: Authenticated Data
 
         """
-        return bytes(source_address.packed + destination_address.packed +
-                     auxiliary_security_header)
+        return bytes(source_address.packed + destination_address.packed + auxiliary_security_header)
 
     def create_key_and_nonce_and_authenticated_data(self, message_info):
-        mle_key, _ = self._generate_keys(
-            message_info.aux_sec_hdr.sequence_counter)
+        mle_key, _ = self._generate_keys(message_info.aux_sec_hdr.sequence_counter)
 
         nonce = self._create_nonce(
             message_info.source_mac_address.mac_address,
@@ -306,8 +298,7 @@ class AuxiliarySecurityHeader:
             key_source = self.key_id[:4]
             format = ">I" if self._big_endian else "<I"
         else:
-            raise ValueError("Unsupported Key Index Mode: {}".format(
-                self.key_id_mode))
+            raise ValueError("Unsupported Key Index Mode: {}".format(self.key_id_mode))
 
         return struct.unpack(format, key_source)[0]
 
@@ -370,22 +361,18 @@ class AuxiliarySecurityHeaderFactory:
         return self._key_id_lengths[key_id_mode]
 
     def parse(self, data, message_info):
-        security_control_bytes = bytearray(
-            data.read(self._SECURITY_CONTROL_LENGTH))
+        security_control_bytes = bytearray(data.read(self._SECURITY_CONTROL_LENGTH))
         frame_counter_bytes = bytearray(data.read(self._FRAME_COUNTER_LENGTH))
 
-        security_level, key_id_mode = self._parse_security_control(
-            security_control_bytes[0])
+        security_level, key_id_mode = self._parse_security_control(security_control_bytes[0])
         frame_counter = self._parse_frame_counter(frame_counter_bytes)
 
         key_id_length = self._key_id_length(key_id_mode)
         key_id_bytes = bytearray(data.read(key_id_length))
 
-        aux_sec_hdr = AuxiliarySecurityHeader(key_id_mode, security_level,
-                                              frame_counter, key_id_bytes)
+        aux_sec_hdr = AuxiliarySecurityHeader(key_id_mode, security_level, frame_counter, key_id_bytes)
 
-        message_info.aux_sec_hdr_bytes = (security_control_bytes +
-                                          frame_counter_bytes + key_id_bytes)
+        message_info.aux_sec_hdr_bytes = (security_control_bytes + frame_counter_bytes + key_id_bytes)
         message_info.aux_sec_hdr = aux_sec_hdr
 
         return aux_sec_hdr

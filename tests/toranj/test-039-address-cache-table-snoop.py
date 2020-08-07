@@ -124,8 +124,7 @@ NUM_QUERY_ADDRS = 5
 MAX_STAGGER_INTERVAL = 2.5
 
 for num in range(NUM_QUERY_ADDRS):
-    sender = r1.prepare_tx((r1_address, PORT),
-                           (PREFIX + "800:" + str(num), PORT), "hi nobody!", 1)
+    sender = r1.prepare_tx((r1_address, PORT), (PREFIX + "800:" + str(num), PORT), "hi nobody!", 1)
     wpan.Node.perform_async_tx_rx()
     verify(sender.was_successful)
     # Wait before next tx to stagger the address queries
@@ -138,8 +137,7 @@ r3_rloc = int(r3.get(wpan.WPAN_THREAD_RLOC16), 16)
 
 # Verify that we do see entries in cache table for all the addresses and all are in "query" state
 
-addr_cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+addr_cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 
 verify(len(addr_cache_table) == NUM_QUERY_ADDRS)
 for entry in addr_cache_table:
@@ -156,11 +154,9 @@ for entry in addr_cache_table:
 
 
 def check_cache_entry_switch_to_retry_state():
-    cache_table = wpan.parse_address_cache_table_result(
-        r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+    cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
     for index in range(NUM_QUERY_ADDRS):
-        verify(cache_table[index].state ==
-               wpan.ADDRESS_CACHE_ENTRY_STATE_RETRY_QUERY)
+        verify(cache_table[index].state == wpan.ADDRESS_CACHE_ENTRY_STATE_RETRY_QUERY)
         verify(cache_table[index].retry_delay == 2 * INITIAL_RETRY_DELAY)
 
 
@@ -169,8 +165,7 @@ wpan.verify_within(check_cache_entry_switch_to_retry_state, WAIT_TIME)
 # Try sending again to same addresses which are in "retry-delay" state.
 
 for num in range(NUM_QUERY_ADDRS):
-    sender = r1.prepare_tx((r1_address, PORT),
-                           (PREFIX + "800:" + str(num), PORT), "hi nobody!", 1)
+    sender = r1.prepare_tx((r1_address, PORT), (PREFIX + "800:" + str(num), PORT), "hi nobody!", 1)
     wpan.Node.perform_async_tx_rx()
     verify(sender.was_successful)
 
@@ -180,28 +175,22 @@ wpan.verify_within(check_cache_entry_switch_to_retry_state, WAIT_TIME)
 
 # Now wait for them to get to zero timeout.
 
-cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 
 
 def check_cache_entry_in_retry_state_to_get_to_zero_timeout():
-    cache_table = wpan.parse_address_cache_table_result(
-        r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+    cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
     for index in range(NUM_QUERY_ADDRS):
-        verify(cache_table[index].state ==
-               wpan.ADDRESS_CACHE_ENTRY_STATE_RETRY_QUERY)
+        verify(cache_table[index].state == wpan.ADDRESS_CACHE_ENTRY_STATE_RETRY_QUERY)
         verify(cache_table[index].timeout == 0)
 
 
-wpan.verify_within(check_cache_entry_in_retry_state_to_get_to_zero_timeout,
-                   WAIT_TIME)
+wpan.verify_within(check_cache_entry_in_retry_state_to_get_to_zero_timeout, WAIT_TIME)
 
 # Now try again using the same addresses.
 
 for num in range(NUM_QUERY_ADDRS):
-    sender = r1.prepare_tx((r1_address, PORT),
-                           (PREFIX + "800:" + str(num), PORT),
-                           "hi again nobody!", 1)
+    sender = r1.prepare_tx((r1_address, PORT), (PREFIX + "800:" + str(num), PORT), "hi again nobody!", 1)
     wpan.Node.perform_async_tx_rx()
     verify(sender.was_successful)
 
@@ -209,8 +198,7 @@ for num in range(NUM_QUERY_ADDRS):
 
 
 def check_cache_entry_switch_to_query_state():
-    cache_table = wpan.parse_address_cache_table_result(
-        r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+    cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
     for index in range(NUM_QUERY_ADDRS):
         verify(cache_table[index].state == wpan.ADDRESS_CACHE_ENTRY_STATE_QUERY)
         verify(cache_table[index].can_evict() == True)
@@ -223,15 +211,13 @@ wpan.verify_within(check_cache_entry_switch_to_query_state, WAIT_TIME)
 # Verify snoop optimization.
 
 for num in range(NUM_ADDRESSES):
-    sender = r2.prepare_tx((PREFIX + "2:" + str(num), PORT), (r1_address, PORT),
-                           "hi r1 from r2 (snoop me)", 1)
+    sender = r2.prepare_tx((PREFIX + "2:" + str(num), PORT), (r1_address, PORT), "hi r1 from r2 (snoop me)", 1)
     recver = r1.prepare_rx(sender)
     wpan.Node.perform_async_tx_rx()
     verify(sender.was_successful)
     verify(recver.was_successful)
 
-cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 
 # We expect to see new "snooped" entries at the top of list.
 # Also verify that only MAX_SNOOPED_NON_EVICTABLE of snooped entries are non-evictable.
@@ -239,8 +225,7 @@ cache_table = wpan.parse_address_cache_table_result(
 verify(len(cache_table) >= NUM_ADDRESSES)
 
 for index in range(NUM_ADDRESSES):
-    verify(cache_table[index].address == PREFIX + "2:" +
-           str(NUM_ADDRESSES - index - 1))
+    verify(cache_table[index].address == PREFIX + "2:" + str(NUM_ADDRESSES - index - 1))
     verify(cache_table[index].rloc16 == r2_rloc)
     verify(cache_table[index].state == wpan.ADDRESS_CACHE_ENTRY_STATE_SNOOPED)
     if index < NUM_ADDRESSES - MAX_SNOOPED_NON_EVICTABLE:
@@ -253,23 +238,20 @@ for index in range(NUM_ADDRESSES):
 # From r1 send to r2 using the addresses from snooped entries:
 
 for num in range(NUM_ADDRESSES):
-    sender = r1.prepare_tx((r1_address, PORT), (PREFIX + "2:" + str(num), PORT),
-                           "hi back r2 from r1", 1)
+    sender = r1.prepare_tx((r1_address, PORT), (PREFIX + "2:" + str(num), PORT), "hi back r2 from r1", 1)
     recver = r2.prepare_rx(sender)
     wpan.Node.perform_async_tx_rx()
     verify(sender.was_successful)
     verify(recver.was_successful)
 
-cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 
 # We expect to see the entries to be in "cached" state now.
 
 verify(len(cache_table) >= NUM_ADDRESSES)
 
 for index in range(NUM_ADDRESSES):
-    verify(cache_table[index].address == PREFIX + "2:" +
-           str(NUM_ADDRESSES - index - 1))
+    verify(cache_table[index].address == PREFIX + "2:" + str(NUM_ADDRESSES - index - 1))
     verify(cache_table[index].rloc16 == r2_rloc)
     verify(cache_table[index].state == wpan.ADDRESS_CACHE_ENTRY_STATE_CACHED)
 
@@ -280,23 +262,19 @@ for index in range(NUM_ADDRESSES):
 # Send from r1 to all addresses on r3.
 
 for num in range(NUM_ADDRESSES):
-    sender = r1.prepare_tx((r1_address, PORT), (PREFIX + "3:" + str(num), PORT),
-                           "hi r3 from r1", 1)
+    sender = r1.prepare_tx((r1_address, PORT), (PREFIX + "3:" + str(num), PORT), "hi r3 from r1", 1)
     recver = r3.prepare_rx(sender)
     wpan.Node.perform_async_tx_rx()
     verify(sender.was_successful)
     verify(recver.was_successful)
-    cache_table = wpan.parse_address_cache_table_result(
-        r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+    cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 
 # We expect to see the cache entries for the addresses pointing to r3.
 
-cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 
 for index in range(NUM_ADDRESSES):
-    verify(cache_table[index].address == PREFIX + "3:" +
-           str(NUM_ADDRESSES - index - 1))
+    verify(cache_table[index].address == PREFIX + "3:" + str(NUM_ADDRESSES - index - 1))
     verify(cache_table[index].rloc16 == r3_rloc)
     verify(cache_table[index].state == wpan.ADDRESS_CACHE_ENTRY_STATE_CACHED)
     verify(cache_table[index].last_trans == 0)
@@ -304,9 +282,7 @@ for index in range(NUM_ADDRESSES):
 # Send from r1 to all addresses on c3 (sleepy child of r3)
 
 for num in range(NUM_ADDRESSES):
-    sender = r1.prepare_tx((r1_address, PORT),
-                           (PREFIX + "c3:" + str(num), PORT), "hi c3 from r1",
-                           1)
+    sender = r1.prepare_tx((r1_address, PORT), (PREFIX + "c3:" + str(num), PORT), "hi c3 from r1", 1)
     recver = c3.prepare_rx(sender)
     wpan.Node.perform_async_tx_rx()
     verify(sender.was_successful)
@@ -314,12 +290,10 @@ for num in range(NUM_ADDRESSES):
 
 # We expect to see the cache entries for c3 addresses pointing to r3.
 
-cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 
 for index in range(NUM_ADDRESSES):
-    verify(cache_table[index].address == PREFIX + "c3:" +
-           str(NUM_ADDRESSES - index - 1))
+    verify(cache_table[index].address == PREFIX + "c3:" + str(NUM_ADDRESSES - index - 1))
     verify(cache_table[index].rloc16 == r3_rloc)
     verify(cache_table[index].state == wpan.ADDRESS_CACHE_ENTRY_STATE_CACHED)
     # SED's keep-alive period (`POLL_PERIOD`) is 200ms, `last_trans` should always be 0 as it is
@@ -329,19 +303,16 @@ for index in range(NUM_ADDRESSES):
 # Send again to r2. This should cause the related cache entries to be moved to top of the list:
 
 for num in range(NUM_ADDRESSES):
-    sender = r1.prepare_tx((r1_address, PORT), (PREFIX + "2:" + str(num), PORT),
-                           "hi again r2 from r1", 1)
+    sender = r1.prepare_tx((r1_address, PORT), (PREFIX + "2:" + str(num), PORT), "hi again r2 from r1", 1)
     recver = r2.prepare_rx(sender)
     wpan.Node.perform_async_tx_rx()
     verify(sender.was_successful)
     verify(recver.was_successful)
 
-cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 
 for index in range(NUM_ADDRESSES):
-    verify(cache_table[index].address == PREFIX + "2:" +
-           str(NUM_ADDRESSES - index - 1))
+    verify(cache_table[index].address == PREFIX + "2:" + str(NUM_ADDRESSES - index - 1))
     verify(cache_table[index].rloc16 == r2_rloc)
     verify(cache_table[index].state == wpan.ADDRESS_CACHE_ENTRY_STATE_CACHED)
 
@@ -352,13 +323,11 @@ for index in range(NUM_ADDRESSES):
 verify(len(cache_table) == MAX_CACHE_ENTRIES)
 
 for num in range(NUM_QUERY_ADDRS):
-    sender = r1.prepare_tx((r1_address, PORT),
-                           (PREFIX + "900:" + str(num), PORT), "hi nobody!", 1)
+    sender = r1.prepare_tx((r1_address, PORT), (PREFIX + "900:" + str(num), PORT), "hi nobody!", 1)
     wpan.Node.perform_async_tx_rx()
     verify(sender.was_successful)
 
-cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 
 verify(len(cache_table) == MAX_CACHE_ENTRIES)
 
@@ -366,22 +335,17 @@ verify(len(cache_table) == MAX_CACHE_ENTRIES)
 # `MAX_SNOOPED_NON_EVICTABLE` entries.
 
 for num in range(NUM_ADDRESSES):
-    sender = c2.prepare_tx((PREFIX + "c2:" + str(num), PORT),
-                           (r1_address, PORT), "hi r1 from c2 (snoop me)", 1)
+    sender = c2.prepare_tx((PREFIX + "c2:" + str(num), PORT), (r1_address, PORT), "hi r1 from c2 (snoop me)", 1)
     recver = r1.prepare_rx(sender)
     wpan.Node.perform_async_tx_rx()
     verify(sender.was_successful)
     verify(recver.was_successful)
 
-cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 
 verify(len(cache_table) == MAX_CACHE_ENTRIES)
 
-snooped_entries = [
-    entry for entry in cache_table
-    if entry.state == wpan.ADDRESS_CACHE_ENTRY_STATE_SNOOPED
-]
+snooped_entries = [entry for entry in cache_table if entry.state == wpan.ADDRESS_CACHE_ENTRY_STATE_SNOOPED]
 verify(len(snooped_entries) == MAX_SNOOPED_NON_EVICTABLE)
 
 for entry in snooped_entries:
@@ -394,24 +358,20 @@ for entry in snooped_entries:
 # others would  go through full address query.
 
 for num in range(NUM_ADDRESSES):
-    sender = r1.prepare_tx((r1_address, PORT),
-                           (PREFIX + "c2:" + str(num), PORT), "hi c2 from r1",
-                           1)
+    sender = r1.prepare_tx((r1_address, PORT), (PREFIX + "c2:" + str(num), PORT), "hi c2 from r1", 1)
     recver = c2.prepare_rx(sender)
     wpan.Node.perform_async_tx_rx()
     verify(sender.was_successful)
     verify(recver.was_successful)
 
-cache_table = wpan.parse_address_cache_table_result(
-    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
 
 verify(len(cache_table) == MAX_CACHE_ENTRIES)
 
 # Verify that c2 entries are now at the top of cache list.
 
 for index in range(NUM_ADDRESSES):
-    verify(cache_table[index].address == PREFIX + "c2:" +
-           str(NUM_ADDRESSES - index - 1))
+    verify(cache_table[index].address == PREFIX + "c2:" + str(NUM_ADDRESSES - index - 1))
     verify(cache_table[index].rloc16 == c2_rloc)
     verify(cache_table[index].state == wpan.ADDRESS_CACHE_ENTRY_STATE_CACHED)
 

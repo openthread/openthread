@@ -118,8 +118,7 @@ class CoapOption(object):
         return self._value
 
     def __repr__(self):
-        return "CoapOption(type={}, value={})".format(self.type,
-                                                      hexlify(self.value))
+        return "CoapOption(type={}, value={})".format(self.type, hexlify(self.value))
 
 
 class CoapOptionsFactory(object):
@@ -176,8 +175,7 @@ class CoapCode(object):
 
     @property
     def dotted(self):
-        return ".".join(
-            ["{:01d}".format(self._class), "{:02d}".format(self.detail)])
+        return ".".join(["{:01d}".format(self._class), "{:02d}".format(self.detail)])
 
     def __eq__(self, other):
         if isinstance(other, int):
@@ -190,8 +188,7 @@ class CoapCode(object):
             return self.code == other.code
 
         else:
-            raise TypeError("Could not compare {} and {}".format(
-                type(self), type(other)))
+            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
 
     def __repr__(self):
         return self.dotted
@@ -258,18 +255,17 @@ class CoapMessage(object):
 
     def __repr__(self):
         options_str = ", ".join([repr(opt) for opt in self.options])
-        return (
-            "CoapMessage(version={}, type={}, code={}, message_id={}, token={}, options=[{}], payload={},",
-            "uri-path='{}')").format(
-                self.version,
-                CoapMessageType.name[self.type],
-                self.code,
-                self.message_id,
-                hexlify(self.token),
-                options_str,
-                self.payload,
-                self.uri_path,
-            )
+        return ("CoapMessage(version={}, type={}, code={}, message_id={}, token={}, options=[{}], payload={},",
+                "uri-path='{}')").format(
+                    self.version,
+                    CoapMessageType.name[self.type],
+                    self.code,
+                    self.message_id,
+                    hexlify(self.token),
+                    options_str,
+                    self.payload,
+                    self.uri_path,
+                )
 
 
 class CoapMessageProxy(object):
@@ -290,8 +286,7 @@ class CoapMessageProxy(object):
         self._coap_message = coap_message
         self._message_info = message_info
         self._mid_to_uri_path_binder = mid_to_uri_path_binder
-        self._uri_path_based_payload_factories = (
-            uri_path_based_payload_factories)
+        self._uri_path_based_payload_factories = (uri_path_based_payload_factories)
 
     @property
     def version(self):
@@ -324,13 +319,11 @@ class CoapMessageProxy(object):
     @property
     def payload(self):
         try:
-            binded_uri_path = self._mid_to_uri_path_binder.get_uri_path_for(
-                self.message_id, self.token)
+            binded_uri_path = self._mid_to_uri_path_binder.get_uri_path_for(self.message_id, self.token)
 
             factory = self._uri_path_based_payload_factories[binded_uri_path]
 
-            return factory.parse(io.BytesIO(self._coap_message.payload),
-                                 self._message_info)
+            return factory.parse(io.BytesIO(self._coap_message.payload), self._message_info)
 
         except RuntimeError:
             return self._coap_message.payload
@@ -341,18 +334,17 @@ class CoapMessageProxy(object):
 
     def __repr__(self):
         options_str = ", ".join([repr(opt) for opt in self.options])
-        return (
-            "CoapMessageProxy(version={}, type={}, code={}, message_id={}, token={}, options=[{}], payload={},",
-            "uri-path='{}')").format(
-                self.version,
-                self.type,
-                self.code,
-                self.message_id,
-                hexlify(self.token),
-                options_str,
-                self.payload,
-                self.uri_path,
-            )
+        return ("CoapMessageProxy(version={}, type={}, code={}, message_id={}, token={}, options=[{}], payload={},",
+                "uri-path='{}')").format(
+                    self.version,
+                    self.type,
+                    self.code,
+                    self.message_id,
+                    hexlify(self.token),
+                    options_str,
+                    self.payload,
+                    self.uri_path,
+                )
 
 
 class CoapMessageIdToUriPathBinder:
@@ -368,9 +360,8 @@ class CoapMessageIdToUriPathBinder:
         try:
             return self._uri_path_binds[message_id][hexlify(token)]
         except KeyError:
-            raise RuntimeError(
-                "Could not find URI PATH for message_id: {} and token: {}".
-                format(message_id, hexlify(token)))
+            raise RuntimeError("Could not find URI PATH for message_id: {} and token: {}".format(
+                message_id, hexlify(token)))
 
 
 class CoapMessageFactory(object):
@@ -383,8 +374,7 @@ class CoapMessageFactory(object):
         message_id_to_uri_path_binder,
     ):
         self._options_factory = options_factory
-        self._uri_path_based_payload_factories = (
-            uri_path_based_payload_factories)
+        self._uri_path_based_payload_factories = (uri_path_based_payload_factories)
         self._mid_to_uri_path_binder = message_id_to_uri_path_binder
 
     def _uri_path_from(self, options):
@@ -409,8 +399,7 @@ class CoapMessageFactory(object):
         return version, _type, token_length
 
     def parse(self, data, message_info):
-        version, _type, token_length = self._parse_initial_byte(
-            data, message_info)
+        version, _type, token_length = self._parse_initial_byte(data, message_info)
 
         code = CoapCode(ord(data.read(1)))
         message_id = struct.unpack(">H", data.read(2))[0]
@@ -420,8 +409,7 @@ class CoapMessageFactory(object):
 
         uri_path = self._uri_path_from(options)
         if uri_path is not None:
-            self._mid_to_uri_path_binder.add_uri_path_for(
-                message_id, token, uri_path)
+            self._mid_to_uri_path_binder.add_uri_path_for(message_id, token, uri_path)
 
         coap_message = CoapMessage(
             version,

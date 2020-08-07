@@ -91,9 +91,7 @@ node2.form(
 # from node1
 
 verify(node2.is_associated())
-verify(
-    node2.get(wpan.WPAN_IP6_MESH_LOCAL_PREFIX) == node1.get(
-        wpan.WPAN_IP6_MESH_LOCAL_PREFIX))
+verify(node2.get(wpan.WPAN_IP6_MESH_LOCAL_PREFIX) == node1.get(wpan.WPAN_IP6_MESH_LOCAL_PREFIX))
 
 # Ensure that there are only two addresses on the node2 (link-local and mesh-local address) and that RLOC
 # address is correctly filtered (by wpantund).

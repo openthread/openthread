@@ -111,8 +111,7 @@ class Cert_5_1_01_RouterAttach(thread_cert.TestCase):
         msg.assertMleMessageDoesNotContainTlv(mle.AddressRegistration)
 
         # 5 - Leader
-        msg = leader_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_RESPONSE)
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
         msg.assertSentToNode(self.nodes[ROUTER])
         msg.assertMleMessageContainsTlv(mle.SourceAddress)
         msg.assertMleMessageContainsTlv(mle.LeaderData)
@@ -147,8 +146,7 @@ class Cert_5_1_01_RouterAttach(thread_cert.TestCase):
         self.assertIn(mle.TlvType.LINK_MARGIN, tlv_request.tlvs)
 
         # 9 - Leader
-        msg = leader_messages.next_mle_message(
-            mle.CommandType.LINK_ACCEPT_AND_REQUEST)
+        msg = leader_messages.next_mle_message(mle.CommandType.LINK_ACCEPT_AND_REQUEST)
         msg.assertMleMessageContainsTlv(mle.SourceAddress)
         msg.assertMleMessageContainsTlv(mle.LeaderData)
         msg.assertMleMessageContainsTlv(mle.Response)

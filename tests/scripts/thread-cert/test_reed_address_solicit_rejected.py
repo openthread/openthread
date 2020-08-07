@@ -71,8 +71,7 @@ class TestREEDAddressSolicitRejected(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[REED].get_state(), 'child')
 
-        self.nodes[REED].add_service(SRV_0_ENT_NUMBER, SRV_0_SERVICE_DATA,
-                                     SRV_0_SERVER_DATA)
+        self.nodes[REED].add_service(SRV_0_ENT_NUMBER, SRV_0_SERVICE_DATA, SRV_0_SERVER_DATA)
         self.nodes[REED].register_netdata()
         self.simulator.go(2)
 
@@ -93,20 +92,16 @@ class TestREEDAddressSolicitRejected(thread_cert.TestCase):
 
         # restore routerupgradethreshold to 16 and add service
         self.nodes[REED].set_router_upgrade_threshold(16)
-        self.nodes[REED].add_service(SRV_0_ENT_NUMBER, SRV_0_SERVICE_DATA,
-                                     SRV_0_SERVER_DATA)
+        self.nodes[REED].add_service(SRV_0_ENT_NUMBER, SRV_0_SERVICE_DATA, SRV_0_SERVER_DATA)
         self.nodes[REED].register_netdata()
         self.simulator.go(130)
         self.assertEqual(self.hasAloc(REED, SRV_0_ID), True)
 
     def hasAloc(self, node_id, service_id):
-        for addr in self.nodes[node_id].get_ip6_address(
-                config.ADDRESS_TYPE.ALOC):
+        for addr in self.nodes[node_id].get_ip6_address(config.ADDRESS_TYPE.ALOC):
             m = re.match('.*:fc(..)$', addr, re.I)
             if m is not None:
-                if m.group(
-                        1) == str(service_id +
-                                  10):  # for service_id=3 look for '...:fc13'
+                if m.group(1) == str(service_id + 10):  # for service_id=3 look for '...:fc13'
                     return True
 
         return False

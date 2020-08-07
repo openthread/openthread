@@ -120,8 +120,7 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         self.assertEqual(msg.get_mle_message_tlv(mle.Version).version, 3)
 
         # 5 - Leader responds with a Child ID Response
-        msg = leader_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_RESPONSE)
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
         msg.assertSentToNode(self.nodes[SED_1])
         msg.assertMleMessageContainsTlv(mle.SourceAddress)
         msg.assertMleMessageContainsTlv(mle.LeaderData)
@@ -131,8 +130,7 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         msg.assertMleMessageContainsOptionalTlv(mle.AddressRegistration)
 
         leader_aloc = self.nodes[LEADER].get_addr_leader_aloc()
-        self.assertTrue(self.nodes[SED_1].ping(leader_aloc,
-                                               timeout=USER_POLL_PERIOD * 2))
+        self.assertTrue(self.nodes[SED_1].ping(leader_aloc, timeout=USER_POLL_PERIOD * 2))
 
         # 6 - Timeout Child
         self.nodes[LEADER].enable_whitelist()
@@ -143,15 +141,13 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         self.nodes[SED_1].set_pollperiod(USER_POLL_PERIOD * 1000)
         self.nodes[LEADER].disable_whitelist()
         self.nodes[SED_1].disable_whitelist()
-        self.assertFalse(self.nodes[SED_1].ping(leader_aloc,
-                                                timeout=USER_POLL_PERIOD * 2))
+        self.assertFalse(self.nodes[SED_1].ping(leader_aloc, timeout=USER_POLL_PERIOD * 2))
         self.flush_all()
 
         # 7 - Wait SED_1 to re-attach
         self.simulator.go(240)
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
-        msg = leader_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_RESPONSE)
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
         msg.assertSentToNode(self.nodes[SED_1])
         msg.assertMleMessageContainsTlv(mle.SourceAddress)
         msg.assertMleMessageContainsTlv(mle.LeaderData)
@@ -159,8 +155,7 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         msg.assertMleMessageContainsOptionalTlv(mle.NetworkData)
         msg.assertMleMessageContainsOptionalTlv(mle.Route64)
         msg.assertMleMessageContainsOptionalTlv(mle.AddressRegistration)
-        self.assertTrue(self.nodes[SED_1].ping(leader_aloc,
-                                               timeout=USER_POLL_PERIOD * 2))
+        self.assertTrue(self.nodes[SED_1].ping(leader_aloc, timeout=USER_POLL_PERIOD * 2))
         self.flush_all()
 
         # 8 - Verify enhanced keep-alive works
@@ -179,8 +174,7 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         self.nodes[LEADER].disable_whitelist()
         self.nodes[SED_1].disable_whitelist()
         self.nodes[SED_1].set_pollperiod(USER_POLL_PERIOD * 1000)
-        self.assertTrue(self.nodes[SED_1].ping(leader_aloc,
-                                               timeout=USER_POLL_PERIOD * 2))
+        self.assertTrue(self.nodes[SED_1].ping(leader_aloc, timeout=USER_POLL_PERIOD * 2))
 
         # 9 - Verify child resets keep-alive timer
         self.nodes[SED_1].set_pollperiod(DEFAULT_POLL_PERIOD * 1000)

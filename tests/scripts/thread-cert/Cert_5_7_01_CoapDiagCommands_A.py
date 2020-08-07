@@ -109,10 +109,8 @@ class Cert_5_7_01_CoapDiagCommands_A(thread_cert.TestCase):
 
         # 2 - Leader sends DIAG_GET.req
         tlv_types = [
-            TlvType.EXT_ADDRESS, TlvType.ADDRESS16, TlvType.MODE,
-            TlvType.CONNECTIVITY, TlvType.ROUTE64, TlvType.LEADER_DATA,
-            TlvType.NETWORK_DATA, TlvType.IPV6_ADDRESS_LIST,
-            TlvType.CHANNEL_PAGES
+            TlvType.EXT_ADDRESS, TlvType.ADDRESS16, TlvType.MODE, TlvType.CONNECTIVITY, TlvType.ROUTE64,
+            TlvType.LEADER_DATA, TlvType.NETWORK_DATA, TlvType.IPV6_ADDRESS_LIST, TlvType.CHANNEL_PAGES
         ]
         self.nodes[LEADER].send_network_diag_get(dut_rloc, tlv_types)
         self.simulator.go(2)
@@ -120,8 +118,7 @@ class Cert_5_7_01_CoapDiagCommands_A(thread_cert.TestCase):
         dut_messages = self.simulator.get_messages_sent_by(DUT)
 
         diag_get_rsp = dut_messages.next_coap_message(code='2.04')
-        diag_get_rsp.assertCoapMessageContainsTlv(
-            network_layer.MacExtendedAddress)
+        diag_get_rsp.assertCoapMessageContainsTlv(network_layer.MacExtendedAddress)
         diag_get_rsp.assertCoapMessageContainsTlv(mle.Address16)
         diag_get_rsp.assertCoapMessageContainsTlv(mle.Mode)
         diag_get_rsp.assertCoapMessageContainsTlv(mle.Connectivity)
@@ -132,19 +129,16 @@ class Cert_5_7_01_CoapDiagCommands_A(thread_cert.TestCase):
         diag_get_rsp.assertCoapMessageContainsTlv(network_diag.ChannelPages)
 
         # 3 - Leader sends DIAG_GET.req (MAC Counters TLV type included)
-        self.nodes[LEADER].send_network_diag_get(dut_rloc,
-                                                 [TlvType.MAC_COUNTERS])
+        self.nodes[LEADER].send_network_diag_get(dut_rloc, [TlvType.MAC_COUNTERS])
         self.simulator.go(2)
 
         dut_messages = self.simulator.get_messages_sent_by(DUT)
         diag_get_rsp = dut_messages.next_coap_message(code='2.04')
         diag_get_rsp.assertCoapMessageContainsTlv(network_diag.MacCounters)
-        mac_counters = diag_get_rsp.get_coap_message_tlv(
-            network_diag.MacCounters)
+        mac_counters = diag_get_rsp.get_coap_message_tlv(network_diag.MacCounters)
 
         # 4 - Leader sends DIAG_GET.req (Timeout/Polling Period TLV type included)
-        self.nodes[LEADER].send_network_diag_get(dut_rloc,
-                                                 [TlvType.POLLING_PERIOD])
+        self.nodes[LEADER].send_network_diag_get(dut_rloc, [TlvType.POLLING_PERIOD])
         self.simulator.go(2)
 
         dut_messages = self.simulator.get_messages_sent_by(DUT)
@@ -152,20 +146,16 @@ class Cert_5_7_01_CoapDiagCommands_A(thread_cert.TestCase):
         diag_get_rsp.assertCoapMessageDoesNotContainTlv(mle.Timeout)
 
         # 5 - Leader sends DIAG_GET.req (Battery Level and Supply Voltage TLV types included)
-        self.nodes[LEADER].send_network_diag_get(
-            dut_rloc, [TlvType.BATTERY_LEVEL, TlvType.SUPPLY_VOLTAGE])
+        self.nodes[LEADER].send_network_diag_get(dut_rloc, [TlvType.BATTERY_LEVEL, TlvType.SUPPLY_VOLTAGE])
         self.simulator.go(2)
 
         dut_messages = self.simulator.get_messages_sent_by(DUT)
         diag_get_rsp = dut_messages.next_coap_message(code='2.04')
-        diag_get_rsp.assertCoapMessageContainsOptionalTlv(
-            network_diag.BatteryLevel)
-        diag_get_rsp.assertCoapMessageContainsOptionalTlv(
-            network_diag.SupplyVoltage)
+        diag_get_rsp.assertCoapMessageContainsOptionalTlv(network_diag.BatteryLevel)
+        diag_get_rsp.assertCoapMessageContainsOptionalTlv(network_diag.SupplyVoltage)
 
         # 6 - Leader sends DIAG_GET.req (Child Table TLV types included)
-        self.nodes[LEADER].send_network_diag_get(dut_rloc,
-                                                 [TlvType.CHILD_TABLE])
+        self.nodes[LEADER].send_network_diag_get(dut_rloc, [TlvType.CHILD_TABLE])
         self.simulator.go(2)
 
         dut_messages = self.simulator.get_messages_sent_by(DUT)
@@ -176,8 +166,7 @@ class Cert_5_7_01_CoapDiagCommands_A(thread_cert.TestCase):
         # TODO(wgtdkp): more validations
 
         # 7 - Leader sends DIAG_RST.ntf (MAC Counters TLV type included)
-        self.nodes[LEADER].send_network_diag_reset(dut_rloc,
-                                                   [TlvType.MAC_COUNTERS])
+        self.nodes[LEADER].send_network_diag_reset(dut_rloc, [TlvType.MAC_COUNTERS])
         self.simulator.go(2)
 
         dut_messages = self.simulator.get_messages_sent_by(DUT)
@@ -186,20 +175,16 @@ class Cert_5_7_01_CoapDiagCommands_A(thread_cert.TestCase):
         dut_messages.next_coap_message(code='2.04')
 
         # 8 - Leader Sends DIAG_GET.req (MAC Counters TLV type included)
-        self.nodes[LEADER].send_network_diag_get(dut_rloc,
-                                                 [TlvType.MAC_COUNTERS])
+        self.nodes[LEADER].send_network_diag_get(dut_rloc, [TlvType.MAC_COUNTERS])
         self.simulator.go(2)
 
         dut_messages = self.simulator.get_messages_sent_by(DUT)
         diag_get_rsp = dut_messages.next_coap_message(code='2.04')
         diag_get_rsp.assertCoapMessageContainsTlv(network_diag.MacCounters)
-        reset_mac_counters = diag_get_rsp.get_coap_message_tlv(
-            network_diag.MacCounters)
+        reset_mac_counters = diag_get_rsp.get_coap_message_tlv(network_diag.MacCounters)
 
-        self.assertEqual(len(mac_counters.counters),
-                         len(reset_mac_counters.counters))
-        for old_counter, new_counter in zip(mac_counters.counters,
-                                            reset_mac_counters.counters):
+        self.assertEqual(len(mac_counters.counters), len(reset_mac_counters.counters))
+        for old_counter, new_counter in zip(mac_counters.counters, reset_mac_counters.counters):
             self.assertTrue(new_counter == 0 or new_counter < old_counter)
 
 

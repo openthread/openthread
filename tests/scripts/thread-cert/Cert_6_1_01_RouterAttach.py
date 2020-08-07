@@ -98,8 +98,7 @@ class Cert_6_1_1_RouterAttach(thread_cert.TestCase):
         msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
 
         # 5 - leader
-        msg = leader_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_RESPONSE)
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
         msg.assertSentToNode(self.nodes[ED])
 
         # 6 - leader
