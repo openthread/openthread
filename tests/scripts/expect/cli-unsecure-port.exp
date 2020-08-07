@@ -60,4 +60,7 @@ expect "Done"
 send "unsecureport get\n"
 expect "Done"
 
+send "unsecureport invalid_command\n"
+expect "Error 35: InvalidCommand"
+
 dispose
