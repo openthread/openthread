@@ -61,9 +61,6 @@ Ip6::Ip6(Instance &aInstance)
     , mIcmp(aInstance)
     , mUdp(aInstance)
     , mMpl(aInstance)
-#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
-    , mTimer(aInstance, Ip6::HandleTimer, this)
-#endif
 {
 }
 
@@ -778,10 +775,7 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
         assertValue = aMessage.CopyTo(0, 0, aMessage.GetOffset(), *message);
         OT_ASSERT(assertValue == aMessage.GetOffset());
 
-        if (!mTimer.IsRunning())
-        {
-            mTimer.Start(kStateUpdatePeriod);
-        }
+        Get<TimeTicker>().RegisterReceiver(TimeTicker::kIp6FragmentReassembler);
 
         mReassemblyList.Enqueue(*message);
 
@@ -850,18 +844,13 @@ void Ip6::CleanupFragmentationBuffer(void)
     }
 }
 
-void Ip6::HandleTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<Ip6>().HandleUpdateTimer();
-}
-
-void Ip6::HandleUpdateTimer(void)
+void Ip6::HandleTimeTick(void)
 {
     UpdateReassemblyList();
 
-    if (mReassemblyList.GetHead() != nullptr)
+    if (mReassemblyList.GetHead() == nullptr)
     {
-        mTimer.Start(kStateUpdatePeriod);
+        Get<TimeTicker>().UnregisterReceiver(TimeTicker::kIp6FragmentReassembler);
     }
 }
 

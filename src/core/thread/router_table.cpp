@@ -498,7 +498,7 @@ exit:
     return;
 }
 
-void RouterTable::ProcessTimerTick(void)
+void RouterTable::HandleTimeTick(void)
 {
     Mle::MleRouter &mle = Get<Mle::MleRouter>();
 

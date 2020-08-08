@@ -41,6 +41,7 @@
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "common/time_ticker.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
@@ -79,7 +80,6 @@ void ThreadLinkInfo::SetFrom(const Mac::RxFrame &aFrame)
 
 MeshForwarder::MeshForwarder(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mUpdateTimer(aInstance, MeshForwarder::HandleUpdateTimer, this)
     , mMessageNextOffset(0)
     , mSendMessage(nullptr)
     , mMeshSource()
@@ -123,7 +123,7 @@ void MeshForwarder::Stop(void)
     VerifyOrExit(mEnabled, OT_NOOP);
 
     mDataPollSender.StopPolling();
-    mUpdateTimer.Stop();
+    Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMeshForwarder);
     Get<Mle::DiscoverScanner>().Stop();
 
     while ((message = mSendQueue.GetHead()) != nullptr)
@@ -1009,10 +1009,7 @@ void MeshForwarder::HandleFragment(const uint8_t *       aFrame,
 
         mReassemblyList.Enqueue(*message);
 
-        if (!mUpdateTimer.IsRunning())
-        {
-            mUpdateTimer.Start(kStateUpdatePeriod);
-        }
+        Get<TimeTicker>().RegisterReceiver(TimeTicker::kMeshForwarder);
     }
     else // Received frame is a "next fragment".
     {
@@ -1091,22 +1088,19 @@ void MeshForwarder::ClearReassemblyList(void)
     }
 }
 
-void MeshForwarder::HandleUpdateTimer(Timer &aTimer)
+void MeshForwarder::HandleTimeTick(void)
 {
-    aTimer.GetOwner<MeshForwarder>().HandleUpdateTimer();
-}
-
-void MeshForwarder::HandleUpdateTimer(void)
-{
-    bool shouldRun = false;
+    bool contineRxingTicks = false;
 
 #if OPENTHREAD_FTD
-    shouldRun = mFragmentPriorityList.UpdateOnTimeTick();
+    contineRxingTicks = mFragmentPriorityList.UpdateOnTimeTick();
 #endif
 
-    if (UpdateReassemblyList() || shouldRun)
+    contineRxingTicks = UpdateReassemblyList() || contineRxingTicks;
+
+    if (!contineRxingTicks)
     {
-        mUpdateTimer.Start(kStateUpdatePeriod);
+        Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMeshForwarder);
     }
 }
 

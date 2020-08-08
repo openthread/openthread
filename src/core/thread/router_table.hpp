@@ -398,7 +398,7 @@ public:
      * This method updates the router table and must be called with a one second period.
      *
      */
-    void ProcessTimerTick(void);
+    void HandleTimeTick(void);
 
     /**
      * This method enables range-based `for` loop iteration over all Router entries in the Router table.

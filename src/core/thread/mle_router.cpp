@@ -59,7 +59,6 @@ namespace Mle {
 MleRouter::MleRouter(Instance &aInstance)
     : Mle(aInstance)
     , mAdvertiseTimer(aInstance, MleRouter::HandleAdvertiseTimer, nullptr, this)
-    , mStateUpdateTimer(aInstance, MleRouter::HandleStateUpdateTimer, this)
     , mAddressSolicit(OT_URI_PATH_ADDRESS_SOLICIT, &MleRouter::HandleAddressSolicit, this)
     , mAddressRelease(OT_URI_PATH_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this)
     , mChildTable(aInstance)
@@ -164,7 +163,7 @@ otError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     {
     case kRoleDetached:
         SuccessOrExit(error = SendLinkRequest(nullptr));
-        mStateUpdateTimer.Start(kStateUpdatePeriod);
+        Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
         break;
 
     case kRoleChild:
@@ -231,7 +230,7 @@ void MleRouter::HandleDetachStart(void)
 {
     mRouterTable.ClearNeighbors();
     StopLeader();
-    mStateUpdateTimer.Stop();
+    Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMleRouter);
 }
 
 void MleRouter::HandleChildStart(AttachMode aMode)
@@ -242,7 +241,7 @@ void MleRouter::HandleChildStart(AttachMode aMode)
     mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
 
     StopLeader();
-    mStateUpdateTimer.Start(kStateUpdatePeriod);
+    Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
 
     if (mRouterEligible)
     {
@@ -358,7 +357,7 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
 
     Get<ThreadNetif>().SubscribeAllRoutersMulticast();
     mPreviousPartitionIdRouter = mLeaderData.GetPartitionId();
-    mStateUpdateTimer.Start(kStateUpdatePeriod);
+    Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
 
     Get<NetworkData::Leader>().Start();
     Get<MeshCoP::ActiveDataset>().StartLeader();
@@ -1710,18 +1709,11 @@ exit:
     }
 }
 
-void MleRouter::HandleStateUpdateTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<MleRouter>().HandleStateUpdateTimer();
-}
-
-void MleRouter::HandleStateUpdateTimer(void)
+void MleRouter::HandleTimeTick(void)
 {
     bool routerStateUpdate = false;
 
-    VerifyOrExit(IsFullThreadDevice(), OT_NOOP);
-
-    mStateUpdateTimer.Start(kStateUpdatePeriod);
+    VerifyOrExit(IsFullThreadDevice(), Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMleRouter));
 
     if (mChallengeTimeout > 0)
     {
@@ -1937,7 +1929,7 @@ void MleRouter::HandleStateUpdateTimer(void)
         }
     }
 
-    mRouterTable.ProcessTimerTick();
+    mRouterTable.HandleTimeTick();
 
     SynchronizeChildNetworkData();
 

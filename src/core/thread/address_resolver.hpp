@@ -39,6 +39,7 @@
 #include "coap/coap.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "net/icmp6.hpp"
@@ -62,6 +63,8 @@ namespace ot {
  */
 class AddressResolver : public InstanceLocator
 {
+    friend class TimeTicker;
+
 public:
     /**
      * This type represents an iterator used for iterating through the EID cache table entries.
@@ -180,7 +183,6 @@ private:
         kAddressQueryInitialRetryDelay = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_INITIAL_RETRY_DELAY, // in seconds
         kAddressQueryMaxRetryDelay     = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY,     // in seconds
         kSnoopBlockEvictionTimeout     = OPENTHREAD_CONFIG_TMF_SNOOP_CACHE_ENTRY_TIMEOUT,         // in seconds
-        kStateUpdatePeriod             = 1000u,                                                   // in milliseconds
         kIteratorListIndex             = 0,
         kIteratorEntryIndex            = 1,
     };
@@ -307,8 +309,7 @@ private:
                                   const Ip6::MessageInfo & aMessageInfo,
                                   const Ip6::Icmp::Header &aIcmpHeader);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimeTick(void);
 
     void LogCacheEntryChange(EntryChange       aChange,
                              Reason            aReason,
@@ -330,7 +331,6 @@ private:
     CacheEntryList mQueryRetryList;
 
     Ip6::Icmp::Handler mIcmpHandler;
-    TimerMilli         mTimer;
 };
 
 /**

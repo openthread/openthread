@@ -48,7 +48,6 @@ namespace ot {
 
 MlrManager::MlrManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance, MlrManager::HandleTimer, this)
     , mReregistrationDelay(0)
     , mSendDelay(0)
     , mMlrPending(false)
@@ -222,20 +221,20 @@ void MlrManager::ScheduleSend(uint16_t aDelay)
         mSendDelay = aDelay;
     }
 
-    ResetTimer();
+    UpdateTimeTickerRegistration();
 exit:
     return;
 }
 
-void MlrManager::ResetTimer(void)
+void MlrManager::UpdateTimeTickerRegistration(void)
 {
     if (mSendDelay == 0 && mReregistrationDelay == 0)
     {
-        mTimer.Stop();
+        Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMlrManager);
     }
-    else if (!mTimer.IsRunning())
+    else
     {
-        mTimer.Start(kTimerInterval);
+        Get<TimeTicker>().RegisterReceiver(TimeTicker::kMlrManager);
     }
 }
 
@@ -411,7 +410,7 @@ exit:
     }
 }
 
-void MlrManager::HandleTimer(void)
+void MlrManager::HandleTimeTick(void)
 {
     if (mSendDelay > 0 && --mSendDelay == 0)
     {
@@ -423,7 +422,7 @@ void MlrManager::HandleTimer(void)
         Reregister();
     }
 
-    ResetTimer();
+    UpdateTimeTickerRegistration();
 }
 
 void MlrManager::Reregister(void)
@@ -476,7 +475,7 @@ void MlrManager::UpdateReregistrationDelay(bool aRereg)
         }
     }
 
-    ResetTimer();
+    UpdateTimeTickerRegistration();
 
     otLogDebgMlr("MlrManager::UpdateReregistrationDelay: rereg=%d, needSendMlr=%d, ReregDelay=%lu", aRereg, needSendMlr,
                  mReregistrationDelay);

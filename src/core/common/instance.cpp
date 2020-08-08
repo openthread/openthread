@@ -74,6 +74,7 @@ Instance::Instance(void)
     , mRadio(*this)
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mNotifier(*this)
+    , mTimeTicker(*this)
     , mSettings(*this)
     , mSettingsDriver(*this)
     , mMessagePool(*this)

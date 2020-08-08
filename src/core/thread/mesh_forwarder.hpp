@@ -39,6 +39,7 @@
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
+#include "common/time_ticker.hpp"
 #include "mac/channel_mask.hpp"
 #include "mac/data_poll_sender.hpp"
 #include "mac/mac.hpp"
@@ -150,6 +151,7 @@ class MeshForwarder : public InstanceLocator
     friend class DataPollSender;
     friend class IndirectSender;
     friend class Mle::DiscoverScanner;
+    friend class TimeTicker;
 
 public:
     /**
@@ -297,11 +299,6 @@ private:
         kReassemblyTimeout = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT, // Reassembly timeout (in seconds).
     };
 
-    enum : uint32_t
-    {
-        kStateUpdatePeriod = 1000, // State update period in milliseconds.
-    };
-
     enum MessageAction ///< Defines the action parameter in `LogMessageInfo()` method.
     {
         kMessageReceive,         ///< Indicates that the message was received.
@@ -427,8 +424,7 @@ private:
     Neighbor *UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, otError aError, const Mac::Address &aMacDest);
     void      HandleSentFrame(Mac::TxFrame &aFrame, otError aError);
 
-    static void HandleUpdateTimer(Timer &aTimer);
-    void        HandleUpdateTimer(void);
+    void        HandleTimeTick(void);
     static void ScheduleTransmissionTask(Tasklet &aTasklet);
     void        ScheduleTransmissionTask(void);
 
@@ -512,8 +508,6 @@ private:
                        otError             aError,
                        otLogLevel          aLogLevel);
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
-
-    TimerMilli mUpdateTimer;
 
     PriorityQueue mSendQueue;
     MessageQueue  mReassemblyList;

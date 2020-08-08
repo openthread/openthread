@@ -191,6 +191,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/common/settings.cpp                            \
     src/core/common/string.cpp                              \
     src/core/common/tasklet.cpp                             \
+    src/core/common/time_ticker.cpp                         \
     src/core/common/timer.cpp                               \
     src/core/common/tlvs.cpp                                \
     src/core/common/trickle_timer.cpp                       \
