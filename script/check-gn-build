@@ -38,7 +38,7 @@ main()
 {
     gn gen --check gn-out
     ninja -C gn-out
-    test -f gn-out/obj/lib-ot-core.a
+    test -f gn-out/obj/src/core/libopenthread-ftd.a
 }
 
 main "$@"
