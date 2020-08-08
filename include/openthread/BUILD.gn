@@ -28,8 +28,8 @@
 import("../../etc/gn/openthread.gni")
 
 copy("copy_openthread_config_generic") {
-  sources = [ "../../etc/cmake/openthread-config-generic.h" ]
-  outputs = [ "${root_gen_dir}/include/{{source_file_part}}" ]
+  sources = [ "../../etc/cmake/openthread-config-generic.h.in" ]
+  outputs = [ "${root_gen_dir}/include/{{source_name_part}}" ]
 }
 
 config("openthread_config_generic_config") {
