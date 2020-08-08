@@ -66,7 +66,6 @@ add_library(openthread-simulation
     system.c
     uart.c
     virtual_time/alarm-sim.c
-    virtual_time/otns.c
     virtual_time/platform-sim.c
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
