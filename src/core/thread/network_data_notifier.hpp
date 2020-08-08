@@ -49,7 +49,7 @@ namespace NetworkData {
  * This class implements the SVR_DATA.ntf transmission logic.
  *
  */
-class Notifier : public InstanceLocator, public ot::Notifier::Receiver
+class Notifier : public InstanceLocator, private ot::Notifier::Receiver
 {
 public:
     /**

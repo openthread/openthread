@@ -70,7 +70,7 @@ namespace ot {
  * This class implements managing DUA.
  *
  */
-class DuaManager : public InstanceLocator, public Notifier::Receiver
+class DuaManager : public InstanceLocator, private Notifier::Receiver
 {
 public:
     /**

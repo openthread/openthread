@@ -305,7 +305,7 @@ private:
  * This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
  *
  */
-class Mle : public InstanceLocator, public Notifier::Receiver
+class Mle : public InstanceLocator, private Notifier::Receiver
 {
     friend class DiscoverScanner;
 

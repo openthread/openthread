@@ -57,7 +57,7 @@ namespace Utils {
  * This class implements the SLAAC utility for Thread protocol.
  *
  */
-class Slaac : public InstanceLocator, public Notifier::Receiver
+class Slaac : public InstanceLocator, private Notifier::Receiver
 {
 public:
     enum

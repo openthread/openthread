@@ -208,7 +208,7 @@ public:
         friend class Notifier;
         friend class LinkedListEntry<Receiver>;
 
-    public:
+    protected:
         /**
          * This type defines the function reference which is invoked to notify of events (state/configuration changes)..
          *

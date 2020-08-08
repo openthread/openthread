@@ -88,7 +88,7 @@ namespace Utils {
  * This class implements a child supervisor.
  *
  */
-class ChildSupervisor : public InstanceLocator, public Notifier::Receiver
+class ChildSupervisor : public InstanceLocator, private Notifier::Receiver
 {
 public:
     /**

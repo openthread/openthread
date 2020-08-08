@@ -50,7 +50,7 @@ namespace ot {
  * This class implements OpenThread Time Synchronization Service.
  *
  */
-class TimeSync : public InstanceLocator, public Notifier::Receiver
+class TimeSync : public InstanceLocator, private Notifier::Receiver
 {
 public:
     /**

@@ -49,7 +49,7 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class BorderAgent : public InstanceLocator, public Notifier::Receiver
+class BorderAgent : public InstanceLocator, private Notifier::Receiver
 {
 public:
     /**

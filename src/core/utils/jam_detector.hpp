@@ -48,7 +48,7 @@ class ThreadNetif;
 
 namespace Utils {
 
-class JamDetector : public InstanceLocator, public Notifier::Receiver
+class JamDetector : public InstanceLocator, private Notifier::Receiver
 {
 public:
     /**

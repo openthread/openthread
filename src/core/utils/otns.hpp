@@ -56,7 +56,7 @@ namespace Utils {
  * This class implements the OTNS Stub that interacts with OTNS.
  *
  */
-class Otns : public InstanceLocator, public Notifier::Receiver, private NonCopyable
+class Otns : public InstanceLocator, private Notifier::Receiver, private NonCopyable
 {
 public:
     /**

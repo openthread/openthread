@@ -67,7 +67,7 @@ namespace ot {
  * This class implements MLR management.
  *
  */
-class MlrManager : public InstanceLocator, public Notifier::Receiver
+class MlrManager : public InstanceLocator, private Notifier::Receiver
 {
 public:
     /**

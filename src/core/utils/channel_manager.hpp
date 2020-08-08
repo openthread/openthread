@@ -64,7 +64,7 @@ namespace Utils {
  * This class implements the Channel Manager.
  *
  */
-class ChannelManager : public InstanceLocator, public Notifier::Receiver, private NonCopyable
+class ChannelManager : public InstanceLocator, private Notifier::Receiver, private NonCopyable
 {
 public:
     enum

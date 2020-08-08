@@ -51,7 +51,7 @@ namespace ot {
 
 namespace MeshCoP {
 
-class JoinerRouter : public InstanceLocator, public Notifier::Receiver
+class JoinerRouter : public InstanceLocator, private Notifier::Receiver
 {
 public:
     /**

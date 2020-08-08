@@ -134,7 +134,7 @@ private:
  * This class implements an AnnounceSender.
  *
  */
-class AnnounceSender : public AnnounceSenderBase, public Notifier::Receiver
+class AnnounceSender : public AnnounceSenderBase, private Notifier::Receiver
 {
 public:
     /**

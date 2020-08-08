@@ -50,7 +50,7 @@ namespace ot {
  * This class implements handling Energy Scan Requests.
  *
  */
-class EnergyScanServer : public InstanceLocator, public Notifier::Receiver
+class EnergyScanServer : public InstanceLocator, private Notifier::Receiver
 {
 public:
     /**
