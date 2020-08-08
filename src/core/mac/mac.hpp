@@ -722,15 +722,13 @@ public:
      *
      * @param[in]  aTimeout  The CSL timeout in seconds.
      *
-     * @retval OT_ERROR_NONE           Successfully set the CSL timeout.
-     * @retval OT_ERROR_INVALID_STATE  Invalid state to change this
-     * parameter.
-     *
      */
-    otError SetCslTimeout(uint32_t aTimeout);
+    void SetCslTimeout(uint32_t aTimeout);
 
     /**
      * This method indicates whether CSL is started at the moment.
+     *
+     * @retval TURE if CSL is actually running at the moment, FALSE otherwise.
      *
      */
     bool IsCslEnabled(void) const;
@@ -759,7 +757,7 @@ public:
      * If this is a csl transmission frame or header IE is present in this frame,
      * the version should be set to 2015. Otherwise, the version would be set to 2006.
      *
-     * @param[in]   aNeighbor    A pointer to the destination device, could be `NULL`.
+     * @param[in]   aNeighbor    A pointer to the destination device, could be `nullptr`.
      * @param[in]   aIsTimeSync  A boolean indicates if time sync is being used.
      * @param[out]  aFcf         A reference to the frame control field to set.
      *

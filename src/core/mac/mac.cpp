@@ -642,15 +642,15 @@ void Mac::UpdateIdleMode(void)
         }
 #endif
     }
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     else
     {
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         if (mPendingTransmitDataCsl)
         {
             mTimer.FireAt(mCslTxFireTime);
         }
-#endif
     }
+#endif
 
     if (shouldSleep)
     {
@@ -890,7 +890,7 @@ otError Mac::PrepareDataRequest(TxFrame &aFrame)
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     Neighbor *parent = &Get<Mle::MleRouter>().GetParentCandidate();
 #else
-    Neighbor *parent = NULL;
+    Neighbor *parent = nullptr;
 #endif
 
     SuccessOrExit(error = Get<DataPollSender>().GetPollDestinationAddress(dst));
@@ -1515,15 +1515,12 @@ void Mac::HandleTimer(void)
             }
 #endif
         }
-        else
-        {
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-            if (mPendingTransmitDataCsl)
-            {
-                PerformNextOperation();
-            }
-#endif
+        else if (mPendingTransmitDataCsl)
+        {
+            PerformNextOperation();
         }
+#endif
         break;
 
     default:
@@ -2214,12 +2211,9 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
     UpdateIdleMode();
 }
 
-otError Mac::SetCslTimeout(uint32_t aTimeout)
+void Mac::SetCslTimeout(uint32_t aTimeout)
 {
-    otError error = OT_ERROR_NONE;
-
     VerifyOrExit(GetCslTimeout() != aTimeout, OT_NOOP);
-    VerifyOrExit(!GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
 
     mSubMac.SetCslTimeout(aTimeout);
 
@@ -2229,7 +2223,7 @@ otError Mac::SetCslTimeout(uint32_t aTimeout)
     }
 
 exit:
-    return error;
+    return;
 }
 
 bool Mac::IsCslEnabled(void) const
@@ -2247,7 +2241,7 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
     Child *        child = Get<ChildTable>().FindChild(aSrcAddr, Child::kInStateAnyExceptInvalid);
     const CslIe *  csl;
 
-    VerifyOrExit(cur != NULL && child != NULL && aFrame.GetSecurityEnabled(), OT_NOOP);
+    VerifyOrExit(cur != nullptr && child != nullptr && aFrame.GetSecurityEnabled(), OT_NOOP);
 
     csl = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
 
@@ -2352,7 +2346,7 @@ void Mac::UpdateFrameControlField(Neighbor *aNeighbor, bool aIsTimeSync, uint16_
     else
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        if (aNeighbor != NULL && !Get<Mle::MleRouter>().IsActiveRouter(aNeighbor->GetRloc16()) &&
+        if (aNeighbor != nullptr && !Get<Mle::MleRouter>().IsActiveRouter(aNeighbor->GetRloc16()) &&
             static_cast<Child *>(aNeighbor)->IsCslSynchronized())
     {
         aFcf |= Frame::kFcfFrameVersion2015;

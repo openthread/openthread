@@ -149,8 +149,8 @@ typedef uint16_t otShortAddress;
  */
 enum
 {
-    OT_IE_HEADER_IE_SIZE = 2,  ///< Size of IE header in bytes
-    OT_CSL_IE_SIZE       = 4,  ///< Size of CSL IE content in bytes
+    OT_IE_HEADER_IE_SIZE = 2,  ///< Size of IE header in bytes.
+    OT_CSL_IE_SIZE       = 4,  ///< Size of CSL IE content in bytes.
     OT_ACK_IE_MAX_SIZE   = 16, ///< Max length for header IE in ACK.
 };
 
@@ -885,8 +885,7 @@ otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCo
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
- * @param[in]  aExtAddr      The extended source address of incoming frame, ack to which needs CSL.(request by NRF
- * 52840)
+ * @param[in]  aExtAddr      The extended source address of CSL receiver's parent device(requested by NRF52840).
  *
  * @retval  OT_ERROR_NOT_SUPPORTED  Radio driver doesn't support CSL.
  * @retval  OT_ERROR_FAILED         Other platform specific errors.
@@ -896,8 +895,9 @@ otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCo
 otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr);
 
 /**
- * Update CSL sample time in radio driver. Sample time is stored in radio driver as a copy to calculate phase when
- * sending ACK with CSL IE.
+ * Update CSL sample time in radio driver.
+ *
+ * Sample time is stored in radio driver as a copy to calculate phase when sending ACK with CSL IE.
  *
  * @param[in]  aInstance         The OpenThread instance structure.
  * @param[in]  aCslSampleTime    The latest sample time.

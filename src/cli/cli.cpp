@@ -1293,10 +1293,10 @@ void Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
 
     if (aArgsLength == 0)
     {
-        mServer->OutputFormat("CSL Channel: %u\r\n", otLinkCslGetChannel(mInstance));
-        mServer->OutputFormat("CSL Period: %u(in units of 10 symbols), %ums\r\n", otLinkCslGetPeriod(mInstance),
+        mServer->OutputFormat("Channel: %u\r\n", otLinkCslGetChannel(mInstance));
+        mServer->OutputFormat("Period: %u(in units of 10 symbols), %ums\r\n", otLinkCslGetPeriod(mInstance),
                               otLinkCslGetPeriod(mInstance) * kUsPerTenSymbols / 1000);
-        mServer->OutputFormat("CSL Synchronized Timeout: %us\r\n", otLinkCslGetTimeout(mInstance));
+        mServer->OutputFormat("Timeout: %us\r\n", otLinkCslGetTimeout(mInstance));
     }
     else if (aArgsLength == 2)
     {

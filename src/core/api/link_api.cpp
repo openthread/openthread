@@ -508,11 +508,14 @@ uint16_t otLinkCslGetPeriod(otInstance *aInstance)
 
 otError otLinkCslSetPeriod(otInstance *aInstance, uint16_t aPeriod)
 {
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
+    VerifyOrExit((aPeriod == 0 || kMinCslPeriod <= aPeriod), error = OT_ERROR_INVALID_ARGS);
     instance.Get<Mac::Mac>().SetCslPeriod(aPeriod);
 
-    return OT_ERROR_NONE;
+exit:
+    return error;
 }
 
 uint32_t otLinkCslGetTimeout(otInstance *aInstance)
@@ -525,8 +528,10 @@ otError otLinkCslSetTimeout(otInstance *aInstance, uint32_t aTimeout)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.Get<Mac::Mac>().SetCslTimeout(aTimeout);
+    VerifyOrExit(kMaxCslTimeout >= aTimeout, error = OT_ERROR_INVALID_ARGS);
+    instance.Get<Mac::Mac>().SetCslTimeout(aTimeout);
 
+exit:
     return error;
 }
 

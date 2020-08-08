@@ -369,7 +369,7 @@ static uint16_t getCslPhase(void)
 
     return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
 }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#endif
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
@@ -658,7 +658,7 @@ void radioSendMessage(otInstance *aInstance)
     {
         otMacFrameSetCslIe(&sTransmitFrame, (uint16_t)sCslPeriod, getCslPhase());
     }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#endif
 
     sTransmitMessage.mChannel = sTransmitFrame.mChannel;
 
@@ -849,7 +849,7 @@ void radioSendAck(void)
         {
             otMacFrameSetCslIe(&sAckFrame, (uint16_t)sCslPeriod, getCslPhase());
         }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#endif
         if (otMacFrameIsSecurityEnabled(&sAckFrame))
         {
             otEXPECT(radioProcessTransmitSecurity(&sAckFrame) == OT_ERROR_NONE);

@@ -504,9 +504,9 @@ Get the CSL configuration.
 
 ```bash
 > csl
-CSL Channel: 11
-CSL Period: 1000 (in units of 10 symbols), 160ms
-CSL Synchronized Timeout: 1000s
+Channel: 11
+Period: 1000 (in units of 10 symbols), 160ms
+Timeout: 1000s
 Done
 ```
 

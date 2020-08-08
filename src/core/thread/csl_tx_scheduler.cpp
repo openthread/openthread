@@ -74,15 +74,12 @@ void CslTxScheduler::Update(void)
     {
         RescheduleCslTx();
     }
-    else
+    else if ((mCslTxChild != nullptr) && (mCslTxChild->GetIndirectMessage() != mCslTxMessage))
     {
         // `Mac` has already started the CSL tx, so wait for tx done callback
         // to call `RescheduleCslTx`
-        if ((mCslTxChild != nullptr) && (mCslTxChild->GetIndirectMessage() != mCslTxMessage))
-        {
-            mCslTxChild                      = nullptr;
-            mFrameContext.mMessageNextOffset = 0;
-        }
+        mCslTxChild                      = nullptr;
+        mFrameContext.mMessageNextOffset = 0;
     }
 }
 
@@ -107,7 +104,7 @@ void CslTxScheduler::Clear(void)
 /**
  * This method always finds the most recent csl tx among all children,
  * and request `Mac` to do csl tx at specific time. It shouldn't be called
- * when `Mac` is already starting to do the csl tx(indicated by `mCslTxMessage`).
+ * when `Mac` is already starting to do the csl tx (indicated by `mCslTxMessage`).
  *
  */
 void CslTxScheduler::RescheduleCslTx(void)

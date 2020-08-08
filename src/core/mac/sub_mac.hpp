@@ -299,10 +299,11 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
-     * This method let `SubMac` start CSL sample and switch the radio state
-     * between `Receive` and `Sleep` according the CSL timer. When CslSample is
-     * started, `mState` will become `kStateCslSample`. But it could be doing
-     * `Sleep` or `Receive` at this moment(depending on `mCslState`).
+     * This method let `SubMac` start CSL sample.
+     *
+     * `SubMac` would switch the radio state between `Receive` and `Sleep` according the CSL timer. When CslSample is
+     * started, `mState` will become `kStateCslSample`. But it could be doing `Sleep` or `Receive` at this moment
+     * (depending on `mCslState`).
      *
      * @retval OT_ERROR_NONE     Successfully started CSL sampling.
      * @retval OT_ERROR_BUSY     The radio was transmitting.
@@ -407,7 +408,7 @@ public:
     /**
      * This method gets the CSL timeout.
      *
-     * @returns CSL timeout.
+     * @returns CSL timeout
      *
      */
     uint32_t GetCslTimeout(void) const { return mCslTimeout; }
@@ -585,7 +586,11 @@ private:
         kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols,
     };
 
-    enum CslState{
+    /**
+     * Csl state, always updated by `mCslTimer`.
+     *
+     */
+    enum CslState : uint8_t{
         kCslIdle = 0, ///< CSL receiver is not started.
         kCslSample,   ///< Sampling CSL channel.
         kCslSleep,    ///< Radio in sleep.

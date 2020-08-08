@@ -148,7 +148,7 @@
 /**
  * @def OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW
  *
- * The CSL sample window in 10 symbols.
+ * The CSL sample window in units of 10 symbols.
  *
  */
 #ifndef OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW

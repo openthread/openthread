@@ -1023,7 +1023,6 @@ uint8_t otLinkCslGetChannel(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE           Successfully set the CSL parameters.
  * @retval OT_ERROR_INVALID_ARGS   Invalid @p aChannel.
- * @retval OT_ERROR_INVALID_STATE  Invalid state to change this parameter.
  *
  */
 otError otLinkCslSetChannel(otInstance *aInstance, uint8_t aChannel);
@@ -1046,7 +1045,6 @@ uint16_t otLinkCslGetPeriod(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE           Successfully set the CSL period.
  * @retval OT_ERROR_INVALID_ARGS   Invalid CSL period.
- * @retval OT_ERROR_INVALID_STATE  Invalid state to change this parameter.
  *
  */
 otError otLinkCslSetPeriod(otInstance *aInstance, uint16_t aPeriod);
@@ -1069,7 +1067,6 @@ uint32_t otLinkCslGetTimeout(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE           Successfully set the CSL timeout.
  * @retval OT_ERROR_INVALID_ARGS   Invalid CSL timeout.
- * @retval OT_ERROR_INVALID_STATE  Invalid state to change this parameter.
  *
  */
 otError otLinkCslSetTimeout(otInstance *aInstance, uint32_t aTimeout);

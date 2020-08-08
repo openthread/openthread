@@ -1359,8 +1359,8 @@ protected:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Thread Discovery TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Address Registration TLV.
+     * @retval OT_ERROR_NONE     Successfully appended the CSL Channel TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the CSL Channel TLV.
      *
      */
     otError AppendCslChannel(Message &aMessage);
@@ -1370,8 +1370,8 @@ protected:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Thread Discovery TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Address Registration TLV.
+     * @retval OT_ERROR_NONE     Successfully appended the CSL Timeout TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the CSL Timeout TLV.
      *
      */
     otError AppendCslTimeout(Message &aMessage);

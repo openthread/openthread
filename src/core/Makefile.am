@@ -359,7 +359,6 @@ HEADERS_COMMON                             = \
     config/child_supervision.h               \
     config/coap.h                            \
     config/commissioner.h                    \
-    config/csl.h                             \
     config/dhcp6_client.h                    \
     config/dhcp6_server.h                    \
     config/diag.h                            \

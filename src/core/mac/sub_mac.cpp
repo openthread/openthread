@@ -877,7 +877,7 @@ void SubMac::FillCsl(Frame &aFrame)
 {
     uint8_t *cur = aFrame.GetHeaderIe(Frame::kHeaderIeCsl);
 
-    if (cur != NULL)
+    if (cur != nullptr)
     {
         CslIe *csl = reinterpret_cast<CslIe *>(cur + sizeof(HeaderIe));
 
