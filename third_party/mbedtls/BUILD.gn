@@ -29,8 +29,8 @@ declare_args() {
   # Configuration file for MbedTLS.
   mbedtls_config_file = "mbedtls-config.h"
 
-  # Extra configs for MbedTLS
-  mbedtls_project_deps = [ "../../src/core:libopenthread_core_config" ]
+  # Extra dependencies for MbedTLS
+  mbedtls_deps = [ "../../src/core:libopenthread_core_config" ]
 }
 
 config("mbedtls_config") {
@@ -190,7 +190,7 @@ static_library("mbedtls") {
     "repo/library/xtea.c",
   ]
 
-  public_deps = mbedtls_project_deps
+  public_deps = mbedtls_deps
 
   public_configs = [ ":mbedtls_config" ]
 }
