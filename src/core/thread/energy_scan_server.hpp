@@ -50,8 +50,10 @@ namespace ot {
  * This class implements handling Energy Scan Requests.
  *
  */
-class EnergyScanServer : public InstanceLocator, public Notifier::Receiver
+class EnergyScanServer : public InstanceLocator
 {
+    friend class ot::Notifier;
+
 public:
     /**
      * This constructor initializes the object.
@@ -75,8 +77,7 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
-    void        HandleNotifierEvents(Events aEvents);
+    void HandleNotifierEvents(Events aEvents);
 
     void SendReport(void);
 

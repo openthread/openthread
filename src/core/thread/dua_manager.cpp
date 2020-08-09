@@ -51,7 +51,6 @@ namespace ot {
 
 DuaManager::DuaManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , Notifier::Receiver(aInstance, DuaManager::HandleNotifierEvents)
     , mTimer(aInstance, DuaManager::HandleTimer, this)
     , mRegistrationTask(aInstance, DuaManager::HandleRegistrationTask, this)
     , mDuaNotification(OT_URI_PATH_DUA_REGISTRATION_NOTIFY, &DuaManager::HandleDuaNotification, this)

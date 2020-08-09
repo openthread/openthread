@@ -49,7 +49,6 @@ namespace Utils {
 
 ChildSupervisor::ChildSupervisor(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , Notifier::Receiver(aInstance, ChildSupervisor::HandleNotifierEvents)
     , mSupervisionInterval(kDefaultSupervisionInterval)
     , mTimer(aInstance, ChildSupervisor::HandleTimer, this)
 {
@@ -158,11 +157,6 @@ void ChildSupervisor::CheckState(void)
         mTimer.Stop();
         otLogInfoUtil("Stopping Child Supervision");
     }
-}
-
-void ChildSupervisor::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
-{
-    static_cast<ChildSupervisor &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void ChildSupervisor::HandleNotifierEvents(Events aEvents)

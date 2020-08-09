@@ -47,7 +47,6 @@ namespace Utils {
 
 JamDetector::JamDetector(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , Notifier::Receiver(aInstance, JamDetector::HandleNotifierEvents)
     , mHandler(nullptr)
     , mContext(nullptr)
     , mTimer(aInstance, JamDetector::HandleTimer, this)
@@ -269,11 +268,6 @@ void JamDetector::SetJamState(bool aNewState)
     {
         mHandler(mJamState, mContext);
     }
-}
-
-void JamDetector::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
-{
-    static_cast<JamDetector &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void JamDetector::HandleNotifierEvents(Events aEvents)

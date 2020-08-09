@@ -53,8 +53,10 @@ namespace BackboneRouter {
  * This class implements the definitions for Backbone Router management.
  *
  */
-class Manager : public InstanceLocator, public Notifier::Receiver
+class Manager : public InstanceLocator
 {
+    friend class ot::Notifier;
+
 public:
     /**
      * This constructor initializes the Backbone Router manager.
@@ -102,11 +104,6 @@ private:
                                      const Ip6::MessageInfo &   aMessageInfo,
                                      const Ip6::Address &       aTarget,
                                      ThreadStatusTlv::DuaStatus aStatus);
-
-    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
-    {
-        static_cast<Manager &>(aReceiver).HandleNotifierEvents(aEvents);
-    }
     void HandleNotifierEvents(Events aEvents);
 
     Coap::Resource mMulticastListenerRegistration;
