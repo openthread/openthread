@@ -26,6 +26,12 @@
 #
 
 declare_args() {
+  # Thread version: 1.1, 1.2
+  openthread_config_thread_version = ""
+
+  # Log output: none, debug_uart, app, platform
+  openthread_config_log_output = ""
+
   # Enable assertions.
   openthread_config_assert_enable = true
 

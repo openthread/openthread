@@ -30,6 +30,31 @@ import("etc/gn/openthread.gni")
 config("openthread_config") {
   defines = []
 
+  if (openthread_config_thread_version == "1.1") {
+    defines += [ "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_1" ]
+  } else if (openthread_config_thread_version == "1.2") {
+    defines += [ "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_2" ]
+  } else if (openthread_config_thread_version != "") {
+    assert(false,
+           "Unrecognized Thread version: ${openthread_config_thread_version}")
+  }
+
+  if (openthread_config_log_output == "none") {
+    defines +=
+        [ "OPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_NONE" ]
+  } else if (openthread_config_log_output == "debug_uart") {
+    defines += [
+      "OPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART",
+    ]
+  } else if (openthread_config_log_output == "app") {
+    defines +=
+        [ "OPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_APP" ]
+  } else if (openthread_config_log_output == "platform_defined") {
+    defines += [ "OPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED" ]
+  } else if (openthread_config_log_output != "") {
+    assert(false, "Unrecognized log output: ${openthread_config_log_output}")
+  }
+
   if (openthread_config_assert_enable) {
     defines += [ "OPENTHREAD_CONFIG_ASSERT_ENABLE=1" ]
   } else {
