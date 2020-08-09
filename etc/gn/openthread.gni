@@ -44,9 +44,6 @@ declare_args() {
   # Enable border router support
   openthread_config_border_router_enable = false
 
-  # Enable builtin mbedtls management
-  openthread_config_enable_builtin_mbedtls_management = true
-
   # Enable channel manager support
   openthread_config_channel_manager_enable = false
 
@@ -200,6 +197,11 @@ declare_args() {
 
   # Package version for OpenThread.
   openthread_package_version = "1.0.0"
+}
+
+declare_args() {
+  # Enable builtin mbedtls management
+  openthread_config_enable_builtin_mbedtls_management = openthread_external_mbedtls == ""
 }
 
 if (openthread_external_mbedtls != "") {
