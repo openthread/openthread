@@ -398,6 +398,7 @@ source_set("libopenthread_core_config") {
     "../..:openthread_config",
   ]
   public_deps = [ "../../include/openthread:openthread_config" ]
+  public_deps += openthread_core_config_deps
 }
 
 source_set("libopenthread_core_headers") {

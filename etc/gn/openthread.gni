@@ -186,8 +186,11 @@ declare_args() {
   # OpenThread project-specific core config header
   openthread_project_core_config_file = ""
 
-  # OpenThread project-specific config check header
+  # OpenThread platform-specific config check header
   openthread_core_config_platform_check_file = ""
+
+  # Extra deps for OpenThread core configuration.
+  openthread_core_config_deps = []
 
   # Library to provide platform code to OpenThread.
   openthread_platform_deps = []
