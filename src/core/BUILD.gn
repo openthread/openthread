@@ -400,18 +400,19 @@ source_set("libopenthread_core_config") {
   public_deps = [ "../../include/openthread:openthread_config" ]
 }
 
-source_set("libopenthread_headers") {
+source_set("libopenthread_core_headers") {
   public = openthread_core_headers
   public_deps = [
     ":libopenthread_core_config",
     "../../include/openthread",
   ]
+  visibility += [ "*" ]
 }
 
 group("libopenthread_platform") {
   public_deps = openthread_platform_deps
   public_deps += [
-    ":libopenthread_headers",
+    ":libopenthread_core_headers",
     "${mbedtls_target}",
   ]
 }

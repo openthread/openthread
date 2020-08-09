@@ -260,7 +260,10 @@ config("openthread_config") {
 
   include_dirs = openthread_project_include_dirs
 
-  include_dirs += [ "include" ]
+  include_dirs += [
+    "${root_gen_dir}/include",
+    "include",
+  ]
 
   cflags_cc = [ "-Wno-non-virtual-dtor" ]
 }

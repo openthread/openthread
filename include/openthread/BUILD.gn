@@ -33,7 +33,10 @@ copy("copy_openthread_config_generic") {
 }
 
 config("openthread_config_generic_config") {
-  include_dirs = [ "${root_gen_dir}/include" ]
+  include_dirs = [
+    "${root_gen_dir}/include",
+    "..",
+  ]
 }
 
 source_set("openthread_config_generic") {

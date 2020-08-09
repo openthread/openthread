@@ -48,7 +48,7 @@ spinel_sources = [
 
 config("spinel_config") {
   defines = [ "SPINEL_PLATFORM_HEADER=${spinel_platform_header}" ]
-  include_dirs = [ "." ]
+  include_dirs = [ ".." ]
 }
 
 source_set("spinel-api") {
@@ -60,7 +60,7 @@ static_library("libopenthread-spinel-ncp") {
   sources = spinel_sources
   public_deps = [
     ":spinel-api",
-    "../../core:libopenthread_headers",
+    "../../core:libopenthread_core_headers",
   ]
   defines = [ "OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1" ]
 }
@@ -69,7 +69,7 @@ static_library("libopenthread-spinel-rcp") {
   sources = spinel_sources
   public_deps = [
     ":spinel-api",
-    "../../core:libopenthread_headers",
+    "../../core:libopenthread_core_headers",
   ]
   defines = [ "OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0" ]
 }
