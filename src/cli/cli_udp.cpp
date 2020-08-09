@@ -49,9 +49,9 @@ const struct UdpExample::Command UdpExample::sCommands[] = {{"help", &UdpExample
                                                             {"bind", &UdpExample::ProcessBind},
                                                             {"close", &UdpExample::ProcessClose},
                                                             {"connect", &UdpExample::ProcessConnect},
+                                                            {"linksecurity", &UdpExample::ProcessLinkSecurity},
                                                             {"open", &UdpExample::ProcessOpen},
-                                                            {"send", &UdpExample::ProcessSend},
-                                                            {"linksecurity", &UdpExample::ProcessLinkSecurity}};
+                                                            {"send", &UdpExample::ProcessSend}};
 
 UdpExample::UdpExample(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)

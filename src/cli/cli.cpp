@@ -3725,7 +3725,7 @@ void Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
 
         ports = otIp6GetUnsecurePorts(mInstance, &numPorts);
 
-        if ((ports != NULL) && (numPorts != 0))
+        if (ports != NULL)
         {
             for (uint8_t i = 0; i < numPorts; i++)
             {
