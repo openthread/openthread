@@ -312,4 +312,23 @@ void otSysProcessDrivers(otInstance *aInstance)
 #endif
 }
 
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+
+void otPlatOtnsStatus(const char *aStatus)
+{
+    struct Event event;
+    uint16_t     statusLength = (uint16_t)strlen(aStatus);
+
+    assert(statusLength < sizeof(event.mData));
+
+    memcpy(event.mData, aStatus, statusLength);
+    event.mDataLength = statusLength;
+    event.mDelay      = 0;
+    event.mEvent      = OT_SIM_EVENT_OTNS_STATUS_PUSH;
+
+    otSimSendEvent(&event);
+}
+
+#endif // OPENTHREAD_CONFIG_OTNS_ENABLE
+
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME
