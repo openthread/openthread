@@ -71,13 +71,13 @@ public:
      * @returns true if enabled, false otherwise.
      *
      */
-    bool IsEnabled(void) const { return mReceiveDoneCallback != NULL; }
+    bool IsEnabled(void) const { return mReceiveDoneCallback != nullptr; }
 
     /**
      * This method enables/disables the raw link-layer.
      *
-     * @param[in]   aCallback    A pointer to a function called on receipt of a IEEE 802.15.4 frame, NULL to disable
-     * raw link-layer.
+     * @param[in]  aCallback  A pointer to a function called on receipt of a IEEE 802.15.4 frame, nullptr to disable
+     *                        raw link-layer.
      *
      *
      * @retval OT_ERROR_INVALID_STATE   Thread stack is enabled.
