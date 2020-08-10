@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
 #include "mac/channel_mask.hpp"
@@ -54,11 +55,6 @@ namespace Mle {
 class DiscoverScanner;
 }
 
-enum
-{
-    kReassemblyTimeout = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT,
-};
-
 /**
  * @addtogroup core-mesh-forwarding
  *
@@ -67,103 +63,6 @@ enum
  *
  * @{
  */
-
-/**
- * This class represents an IPv6 fragment priority entry
- *
- */
-class FragmentPriorityEntry
-{
-public:
-    /**
-     * This method returns the fragment datagram tag value.
-     *
-     * @returns The fragment datagram tag value.
-     *
-     */
-    uint16_t GetDatagramTag(void) const { return mDatagramTag; }
-
-    /**
-     * This method sets the fragment datagram tag value.
-     *
-     * @param[in]  aDatagramTag  The fragment datagram tag value.
-     *
-     */
-    void SetDatagramTag(uint16_t aDatagramTag) { mDatagramTag = aDatagramTag; }
-
-    /**
-     * This method returns the source Rloc16 of the fragment.
-     *
-     * @returns The source Rloc16 value.
-     *
-     */
-    uint16_t GetSrcRloc16(void) const { return mSrcRloc16; }
-
-    /**
-     * This method sets the source Rloc16 value of the fragment.
-     *
-     * @param[in]  aSrcRloc16  The source Rloc16 value.
-     *
-     */
-    void SetSrcRloc16(uint16_t aSrcRloc16) { mSrcRloc16 = aSrcRloc16; }
-
-    /**
-     * This method returns the fragment priority value.
-     *
-     * @returns The fragment priority value.
-     *
-     */
-    Message::Priority GetPriority(void) const { return static_cast<Message::Priority>(mPriority); }
-
-    /**
-     * This method sets the fragment priority value.
-     *
-     * @param[in]  aPriority  The fragment priority value.
-     *
-     */
-    void SetPriority(Message::Priority aPriority) { mPriority = aPriority; }
-
-    /**
-     * This method returns the fragment priority entry's remaining lifetime.
-     *
-     * @returns The fragment priority entry's remaining lifetime.
-     *
-     */
-    uint8_t GetLifetime(void) const { return mLifetime; }
-
-    /**
-     * This method sets the remaining lifetime of the fragment priority entry.
-     *
-     * @param[in]  aLifetime  The remaining lifetime of the fragment priority entry (in seconds).
-     *
-     */
-    void SetLifetime(uint8_t aLifetime)
-    {
-        if (aLifetime > kMaxLifeTime)
-        {
-            aLifetime = kMaxLifeTime;
-        }
-
-        mLifetime = aLifetime;
-    }
-
-    /**
-     * This method decrements the entry lifetime.
-     *
-     */
-    void DecrementLifetime(void) { mLifetime--; }
-
-private:
-    enum
-    {
-        kMaxLifeTime = 5, ///< The maximum lifetime of the fragment entry (in seconds).
-    };
-
-    uint16_t mSrcRloc16;    ///< The source Rloc16 of the datagram.
-    uint16_t mDatagramTag;  ///< The datagram tag of the fragment header.
-    uint8_t  mPriority : 3; ///< The priority level of the first fragment.
-    uint8_t  mLifetime : 3; ///< The lifetime of the entry (in seconds). 0 means the entry is invalid.
-};
 
 /**
  * This class implements mesh forwarding within Thread.
@@ -318,15 +217,14 @@ public:
     const PriorityQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
 #endif
 private:
-    enum
+    enum : uint8_t
     {
-        kStateUpdatePeriod = 1000, ///< State update period in milliseconds.
+        kReassemblyTimeout = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT, // Reassembly timeout (in seconds).
+    };
 
-        /**
-         * The number of fragment priority entries.
-         *
-         */
-        kNumFragmentPriorityEntries = OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES,
+    enum : uint32_t
+    {
+        kStateUpdatePeriod = 1000, // State update period in milliseconds.
     };
 
     enum MessageAction ///< Defines the action parameter in `LogMessageInfo()` method.
@@ -338,6 +236,46 @@ private:
         kMessageReassemblyDrop,  ///< Indicates that the message is being dropped from reassembly list.
         kMessageEvict,           ///< Indicates that the message was evicted.
     };
+
+#if OPENTHREAD_FTD
+    class FragmentPriorityList : public Clearable<FragmentPriorityList>
+    {
+    public:
+        class Entry : public Clearable<Entry>
+        {
+            friend class FragmentPriorityList;
+
+        public:
+            Message::Priority GetPriority(void) const { return mPriority; }
+            bool              IsExpired(void) const { return (mLifetime == 0); }
+            void              DecrementLifetime(void) { mLifetime--; }
+            void              ResetLifetime(void) { mLifetime = kReassemblyTimeout; }
+
+            bool Matches(uint16_t aSrcRloc16, uint16_t aTag) const
+            {
+                return (mSrcRloc16 == aSrcRloc16) && (mDatagramTag == aTag);
+            }
+
+        private:
+            uint16_t          mSrcRloc16;
+            uint16_t          mDatagramTag;
+            Message::Priority mPriority;
+            uint8_t           mLifetime;
+        };
+
+        Entry *AllocateEntry(uint16_t aSrcRloc16, uint16_t aTag, Message::Priority aPriority);
+        Entry *FindEntry(uint16_t aSrcRloc16, uint16_t aTag);
+        bool   UpdateOnTimeTick(void);
+
+    private:
+        enum : uint16_t
+        {
+            kNumEntries = OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES,
+        };
+
+        Entry mEntries[kNumEntries];
+    };
+#endif // OPENTHREAD_FTD
 
     void    SendIcmpErrorIfDstUnreach(const Message &     aMessage,
                                       const Mac::Address &aMacSource,
@@ -400,7 +338,6 @@ private:
     otError UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage);
     otError UpdateMeshRoute(Message &aMessage);
     bool    UpdateReassemblyList(void);
-    bool    UpdateFragmentLifetime(void);
     void    UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                                    uint16_t                aFragmentLength,
                                    uint16_t                aSrcRloc16,
@@ -415,8 +352,6 @@ private:
     Neighbor *UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, otError aError, const Mac::Address &aMacDest);
     void      HandleSentFrame(Mac::TxFrame &aFrame, otError aError);
 
-    static void HandleDiscoverTimer(Timer &aTimer);
-    void        HandleDiscoverTimer(void);
     static void HandleUpdateTimer(Timer &aTimer);
     void        HandleUpdateTimer(void);
     static void ScheduleTransmissionTask(Tasklet &aTasklet);
@@ -435,9 +370,6 @@ private:
                                     const Mac::Address &aMeshSource,
                                     const Mac::Address &aMeshDest,
                                     Message::Priority & aPriority);
-
-    FragmentPriorityEntry *FindFragmentPriorityEntry(uint16_t aTag, uint16_t aSrcRloc16);
-    FragmentPriorityEntry *GetUnusedFragmentPriorityEntry(void);
 
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 
@@ -529,9 +461,9 @@ private:
     otIpCounters mIpCounters;
 
 #if OPENTHREAD_FTD
-    FragmentPriorityEntry mFragmentEntries[kNumFragmentPriorityEntries];
-    PriorityQueue         mResolvingQueue;
-    IndirectSender        mIndirectSender;
+    FragmentPriorityList mFragmentPriorityList;
+    PriorityQueue        mResolvingQueue;
+    IndirectSender       mIndirectSender;
 #endif
 
     DataPollSender mDataPollSender;
