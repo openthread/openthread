@@ -1994,10 +1994,14 @@ void MleRouter::SendParentResponse(Child *aChild, const Challenge &aChallenge, b
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != nullptr)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
         otLogWarnMle("Failed to send Parent Response: %s", otThreadErrorToString(error));
+
+        if (message != nullptr)
+        {
+            message->Free();
+        }
     }
 }
 
