@@ -3696,7 +3696,7 @@ void Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
 
     if (strcmp(aArgs[0], "add") == 0)
     {
-        long value;
+        unsigned long value;
 
         VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
         SuccessOrExit(error = ParseLong(aArgs[1], value));
@@ -3713,7 +3713,7 @@ void Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
         }
         else
         {
-            long value;
+            unsigned long value;
 
             SuccessOrExit(error = ParseLong(aArgs[1], value));
             VerifyOrExit(value <= 0xffff, error = OT_ERROR_INVALID_ARGS);

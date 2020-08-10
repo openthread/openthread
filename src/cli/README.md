@@ -1725,7 +1725,7 @@ Done
 Remove all ports from the allowed unsecured port list.
 
 ```bash
-> unsecureport remove 1234
+> unsecureport remove all
 Done
 ```
 
