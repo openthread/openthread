@@ -46,7 +46,6 @@ namespace NetworkData {
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , ot::Notifier::Receiver(aInstance, Notifier::HandleNotifierEvents)
     , mTimer(aInstance, Notifier::HandleTimer, this)
     , mNextDelay(0)
     , mWaitingForResponse(false)
@@ -99,11 +98,6 @@ exit:
         OT_ASSERT(false);
         OT_UNREACHABLE_CODE(break);
     }
-}
-
-void Notifier::HandleNotifierEvents(ot::Notifier::Receiver &aReceiver, Events aEvents)
-{
-    static_cast<Notifier &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void Notifier::HandleNotifierEvents(Events aEvents)

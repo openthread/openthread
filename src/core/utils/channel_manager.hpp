@@ -64,8 +64,10 @@ namespace Utils {
  * This class implements the Channel Manager.
  *
  */
-class ChannelManager : public InstanceLocator, public Notifier::Receiver, private NonCopyable
+class ChannelManager : public InstanceLocator, private NonCopyable
 {
+    friend class ot::Notifier;
+
 public:
     enum
     {
@@ -272,7 +274,6 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
     void        HandleNotifierEvents(Events aEvents);
     void        PreparePendingDataset(void);
     void        StartAutoSelectTimer(void);

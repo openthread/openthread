@@ -88,8 +88,10 @@ namespace Utils {
  * This class implements a child supervisor.
  *
  */
-class ChildSupervisor : public InstanceLocator, public Notifier::Receiver
+class ChildSupervisor : public InstanceLocator
 {
+    friend class ot::Notifier;
+
 public:
     /**
      * This constructor initializes the object.
@@ -161,7 +163,6 @@ private:
     void        CheckState(void);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
     void        HandleNotifierEvents(Events aEvents);
 
     uint16_t   mSupervisionInterval;

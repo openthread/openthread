@@ -67,8 +67,10 @@ namespace ot {
  * This class implements MLR management.
  *
  */
-class MlrManager : public InstanceLocator, public Notifier::Receiver
+class MlrManager : public InstanceLocator
 {
+    friend class ot::Notifier;
+
 public:
     /**
      * This constructor initializes the object.
@@ -109,10 +111,6 @@ private:
         kTimerInterval = 1000,
     };
 
-    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
-    {
-        static_cast<MlrManager &>(aReceiver).HandleNotifierEvents(aEvents);
-    }
     void HandleNotifierEvents(Events aEvents);
 
     void SendMulticastListenerRegistration(void);

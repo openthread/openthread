@@ -62,7 +62,6 @@ namespace Mle {
 
 Mle::Mle(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , Notifier::Receiver(aInstance, Mle::HandleNotifierEvents)
     , mRetrieveNewNetworkData(false)
     , mRole(kRoleDisabled)
     , mNeighborTable(aInstance)
@@ -1425,11 +1424,6 @@ otError Mle::AppendPendingTimestamp(Message &aMessage)
 
 exit:
     return error;
-}
-
-void Mle::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
-{
-    static_cast<Mle &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void Mle::HandleNotifierEvents(Events aEvents)

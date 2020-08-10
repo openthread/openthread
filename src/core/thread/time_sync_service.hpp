@@ -50,8 +50,10 @@ namespace ot {
  * This class implements OpenThread Time Synchronization Service.
  *
  */
-class TimeSync : public InstanceLocator, public Notifier::Receiver
+class TimeSync : public InstanceLocator
 {
+    friend class ot::Notifier;
+
 public:
     /**
      * This constructor initializes the object.
@@ -152,14 +154,6 @@ public:
     }
 
     /**
-     * Callback to be called when thread state changes.
-     *
-     * @param[in] aFlags Flags that denote the state change events.
-     *
-     */
-    void HandleNotifierEvents(Events aEvents);
-
-    /**
      * Callback to be called when timer expires.
      *
      */
@@ -169,11 +163,10 @@ private:
     /**
      * Callback to be called when thread state changes.
      *
-     * @param[in] aCallback Callback context.
      * @param[in] aFlags Flags that denote the state change events.
      *
      */
-    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
+    void HandleNotifierEvents(Events aEvents);
 
     /**
      * Callback to be called when timer expires.

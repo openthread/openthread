@@ -306,9 +306,10 @@ private:
  * This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
  *
  */
-class Mle : public InstanceLocator, public Notifier::Receiver
+class Mle : public InstanceLocator
 {
     friend class DiscoverScanner;
+    friend class ot::Notifier;
 
 public:
     /**
@@ -1621,7 +1622,6 @@ private:
         TimeMilli    mSendTime;    // Time when the message shall be sent.
     };
 
-    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
     void        HandleNotifierEvents(Events aEvents);
     static void HandleAttachTimer(Timer &aTimer);
     void        HandleAttachTimer(void);

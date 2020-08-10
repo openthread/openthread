@@ -70,8 +70,10 @@ namespace ot {
  * This class implements managing DUA.
  *
  */
-class DuaManager : public InstanceLocator, public Notifier::Receiver
+class DuaManager : public InstanceLocator
 {
+    friend class ot::Notifier;
+
 public:
     /**
      * This constructor initializes the object.
@@ -174,11 +176,6 @@ private:
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void SendAddressNotification(Ip6::Address &aAddress, ThreadStatusTlv::DuaStatus aStatus, const Child &aChild);
 #endif
-
-    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
-    {
-        static_cast<DuaManager &>(aReceiver).HandleNotifierEvents(aEvents);
-    }
 
     void HandleNotifierEvents(Events aEvents);
 
