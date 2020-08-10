@@ -947,17 +947,21 @@ otError Dataset::ProcessSet(uint8_t aArgsLength, char *aArgs[])
 {
     otError                  error = OT_ERROR_NONE;
     otOperationalDatasetTlvs dataset;
+    int                      tlvsLength;
 
     VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
 
+    tlvsLength = Interpreter::Hex2Bin(aArgs[1], dataset.mTlvs, sizeof(dataset.mTlvs));
+    VerifyOrExit((0 <= tlvsLength) && (static_cast<size_t>(tlvsLength) <= sizeof(dataset.mTlvs)),
+                 error = OT_ERROR_INVALID_ARGS);
+    dataset.mLength = static_cast<uint8_t>(tlvsLength);
+
     if (strcmp(aArgs[0], "active") == 0)
     {
-        dataset.mLength = static_cast<uint8_t>(Interpreter::Hex2Bin(aArgs[1], dataset.mTlvs, sizeof(dataset.mTlvs)));
         SuccessOrExit(error = otDatasetSetActiveTlvs(mInterpreter.mInstance, &dataset));
     }
     else if (strcmp(aArgs[0], "pending") == 0)
     {
-        dataset.mLength = static_cast<uint8_t>(Interpreter::Hex2Bin(aArgs[1], dataset.mTlvs, sizeof(dataset.mTlvs)));
         SuccessOrExit(error = otDatasetSetPendingTlvs(mInterpreter.mInstance, &dataset));
     }
     else
