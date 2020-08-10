@@ -122,10 +122,8 @@ public:
     }
 
     uint16_t GetKey(void) const { return mKey; }
-    void     SetKey(uint16_t aKey) { mKey = aKey; }
 
     uint16_t GetLength(void) const { return mLength; }
-    void     SetLength(uint16_t aLength) { mLength = aLength; }
 
     uint16_t GetDataSize(void) const { return (mLength + 3) & 0xfffc; }
 
@@ -133,19 +131,28 @@ public:
 
     bool IsValid(void) const { return ((mFlags & (kFlagAddComplete | kFlagDelete)) == kFlagDelete); }
 
-    bool IsAddBeginSet(void) const { return (mFlags & kFlagAddBegin) == 0; }
     void SetAddBeginFlag(void) { mFlags &= ~kFlagAddBegin; }
 
-    bool IsAddCompleteSet(void) const { return (mFlags & kFlagAddComplete) == 0; }
     void SetAddCompleteFlag(void) { mFlags &= ~kFlagAddComplete; }
 
-    bool IsDeleted(void) const { return (mFlags & kFlagDelete) == 0; }
     void SetDeleted(void) { mFlags &= ~kFlagDelete; }
 
     bool IsFirst(void) const { return (mFlags & kFlagFirst) == 0; }
     void SetFirst(void) { mFlags &= ~kFlagFirst; }
 
+    bool IsFree(void) const { return !IsAddBeginSet(); }
+
+protected:
+    bool IsIntegrityOk(void) const
+    {
+        OT_ASSERT(IsAddBeginSet());
+        return IsAddCompleteSet();
+    }
+
 private:
+    bool IsAddBeginSet(void) const { return (mFlags & kFlagAddBegin) == 0; }
+    bool IsAddCompleteSet(void) const { return (mFlags & kFlagAddComplete) == 0; }
+
     enum
     {
         kFlagsInit       = 0xffff, ///< Flags initialize to all-ones.
@@ -173,6 +180,8 @@ public:
 
         memcpy(mData, aData, aDataLength);
     }
+
+    bool IsIntegrityOk(void) const { return RecordHeader::IsIntegrityOk(); }
 
     inline void LoadHeader(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset)
     {
@@ -206,8 +215,8 @@ static_assert(sizeof(Record) % kFlashWordSize == 0, "wrong Record size");
 
 void Flash::Init(void)
 {
-    RecordHeader recordHeader;
-    SwapHeader   swapHeader;
+    Record     record;
+    SwapHeader swapHeader;
 
     otPlatFlashInit(&GetInstance());
 
@@ -230,15 +239,18 @@ void Flash::Init(void)
         }
     }
 
-    for (mSwapUsed = mSwapHeaderSize; mSwapUsed <= mSwapSize - sizeof(recordHeader); mSwapUsed += recordHeader.GetSize())
+    for (mSwapUsed = mSwapHeaderSize; mSwapUsed <= mSwapSize - sizeof(RecordHeader); mSwapUsed += record.GetSize())
     {
-        recordHeader.Load(&GetInstance(), mSwapIndex, mSwapUsed);
-        if (!recordHeader.IsAddBeginSet())
+        record.LoadHeader(&GetInstance(), mSwapIndex, mSwapUsed);
+
+        if (record.IsFree())
         {
             break;
         }
 
-        if (!recordHeader.IsAddCompleteSet())
+        record.LoadData(&GetInstance(), mSwapIndex, mSwapUsed);
+
+        if (!record.IsIntegrityOk())
         {
             break;
         }
@@ -392,7 +404,7 @@ void Flash::Swap(void)
     {
         record.LoadHeader(&GetInstance(), mSwapIndex, srcOffset);
 
-        VerifyOrExit(record.IsAddBeginSet(), OT_NOOP);
+        VerifyOrExit(!record.IsFree(), OT_NOOP);
 
         if (!record.IsValid() || DoesValidRecordExist(srcOffset + record.GetSize(), record.GetKey()))
         {
