@@ -77,11 +77,9 @@ def verify_prefix(
     `prefix` is associated with the given `rloc16` (as an integer).
     """
     for node in node_list:
-        prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
+        prefixes = wpan.parse_on_mesh_prefix_result(node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         for p in prefixes:
-            if (p.prefix == prefix and p.origin == "ncp" and
-                    int(p.rloc16(), 0) == rloc16):
+            if (p.prefix == prefix and p.origin == "ncp" and int(p.rloc16(), 0) == rloc16):
                 verify(int(p.prefix_len) == prefix_len)
                 verify(p.is_stable() == stable)
                 verify(p.is_on_mesh() == on_mesh)
@@ -93,8 +91,7 @@ def verify_prefix(
                 verify(p.priority == priority)
                 break
         else:
-            raise wpan.VerifyError("Did not find prefix {} on node {}".format(
-                prefix, node))
+            raise wpan.VerifyError("Did not find prefix {} on node {}".format(prefix, node))
 
 
 def verify_no_prefix(node_list, prefix, rloc16):
@@ -103,14 +100,10 @@ def verify_no_prefix(node_list, prefix, rloc16):
     given `rloc16`.
     """
     for node in node_list:
-        prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
+        prefixes = wpan.parse_on_mesh_prefix_result(node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         for p in prefixes:
-            if (p.prefix == prefix and p.origin == "ncp" and
-                    int(p.rloc16(), 0) == rloc16):
-                raise wpan.VerifyError(
-                    "Did find prefix {} with rloc {} on node {}".format(
-                        prefix, hex(rloc16), node))
+            if (p.prefix == prefix and p.origin == "ncp" and int(p.rloc16(), 0) == rloc16):
+                raise wpan.VerifyError("Did find prefix {} with rloc {} on node {}".format(prefix, hex(rloc16), node))
 
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -141,8 +134,7 @@ c3.join_node(leader, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 c3.set(wpan.WPAN_POLL_INTERVAL, '400')
 
 # Clear the "full network data" flag on c3.
-c3.set(wpan.WPAN_THREAD_DEVICE_MODE,
-       str(wpan.THREAD_MODE_FLAG_SECURE_DATA_REQUEST))
+c3.set(wpan.WPAN_THREAD_DEVICE_MODE, str(wpan.THREAD_MODE_FLAG_SECURE_DATA_REQUEST))
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
@@ -165,8 +157,7 @@ def test_prefix_add_remove():
     # Network Data version and stable version are updated correctly.
 
     old_version = int(leader.get(wpan.WPAN_THREAD_NETWORK_DATA_VERSION), 0)
-    old_stable_version = int(
-        leader.get(wpan.WPAN_THREAD_STABLE_NETWORK_DATA_VERSION), 0)
+    old_stable_version = int(leader.get(wpan.WPAN_THREAD_STABLE_NETWORK_DATA_VERSION), 0)
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # Add a stable prefix and check all nodes see the prefix
@@ -190,8 +181,7 @@ def test_prefix_add_remove():
     wpan.verify_within(check_prefix1, WAIT_TIME)
 
     new_version = int(leader.get(wpan.WPAN_THREAD_NETWORK_DATA_VERSION), 0)
-    new_stable_version = int(
-        leader.get(wpan.WPAN_THREAD_STABLE_NETWORK_DATA_VERSION), 0)
+    new_stable_version = int(leader.get(wpan.WPAN_THREAD_STABLE_NETWORK_DATA_VERSION), 0)
 
     verify(new_version == ((old_version + 1) % 256))
     verify(new_stable_version == ((old_stable_version + 1) % 256))
@@ -216,8 +206,7 @@ def test_prefix_add_remove():
     wpan.verify_within(check_prefix2, WAIT_TIME)
 
     new_version = int(leader.get(wpan.WPAN_THREAD_NETWORK_DATA_VERSION), 0)
-    new_stable_version = int(
-        leader.get(wpan.WPAN_THREAD_STABLE_NETWORK_DATA_VERSION), 0)
+    new_stable_version = int(leader.get(wpan.WPAN_THREAD_STABLE_NETWORK_DATA_VERSION), 0)
 
     verify(new_version == ((old_version + 1) % 256))
     verify(new_stable_version == old_stable_version)
@@ -237,8 +226,7 @@ def test_prefix_add_remove():
     wpan.verify_within(check_prefix2, WAIT_TIME)
 
     new_version = int(leader.get(wpan.WPAN_THREAD_NETWORK_DATA_VERSION), 0)
-    new_stable_version = int(
-        leader.get(wpan.WPAN_THREAD_STABLE_NETWORK_DATA_VERSION), 0)
+    new_stable_version = int(leader.get(wpan.WPAN_THREAD_STABLE_NETWORK_DATA_VERSION), 0)
 
     verify(new_version == ((old_version + 1) % 256))
     verify(new_stable_version == ((old_stable_version + 1) % 256))
@@ -258,8 +246,7 @@ def test_prefix_add_remove():
     wpan.verify_within(check_no_prefix2, WAIT_TIME)
 
     new_version = int(leader.get(wpan.WPAN_THREAD_NETWORK_DATA_VERSION), 0)
-    new_stable_version = int(
-        leader.get(wpan.WPAN_THREAD_STABLE_NETWORK_DATA_VERSION), 0)
+    new_stable_version = int(leader.get(wpan.WPAN_THREAD_STABLE_NETWORK_DATA_VERSION), 0)
 
     verify(new_version == ((old_version + 1) % 256))
     verify(new_stable_version == old_stable_version)
@@ -289,36 +276,26 @@ test_prefix_add_remove()
 leader.add_route(prefix1, stable=False)
 num_routes = num_routes + 1
 test_prefix_add_remove()
-verify(
-    len(wpan.parse_list(c2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) ==
-    num_routes)
+verify(len(wpan.parse_list(c2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) == num_routes)
 
 leader.add_route(prefix2, stable=True)
 num_routes = num_routes + 1
 test_prefix_add_remove()
-verify(
-    len(wpan.parse_list(c2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) ==
-    num_routes)
+verify(len(wpan.parse_list(c2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) == num_routes)
 
 leader.add_prefix(prefix3, stable=True)
 test_prefix_add_remove()
-verify(
-    len(wpan.parse_list(c2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) ==
-    num_routes)
+verify(len(wpan.parse_list(c2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) == num_routes)
 
 leader.remove_route(prefix2)
 num_routes = num_routes - 1
 test_prefix_add_remove()
-verify(
-    len(wpan.parse_list(c2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) ==
-    num_routes)
+verify(len(wpan.parse_list(c2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) == num_routes)
 
 leader.remove_route(prefix1)
 num_routes = num_routes - 1
 test_prefix_add_remove()
-verify(
-    len(wpan.parse_list(c2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) ==
-    num_routes)
+verify(len(wpan.parse_list(c2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) == num_routes)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

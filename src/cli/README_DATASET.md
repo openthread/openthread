@@ -37,9 +37,9 @@ The Pending Operational Dataset is used to communicate changes to the Active Ope
    > dataset
    Active Timestamp: 1
    Channel: 13
-   Channel Mask: 07fff800
+   Channel Mask: 0x07fff800
    Ext PAN ID: d63e8e3e495ebbc3
-   Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+   Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
    Master Key: dfd34f0f05cad978ec4e32b0413038ff
    Network Name: OpenThread-8f28
    PAN ID: 0x8f28
@@ -96,9 +96,9 @@ After the device successfully attaches to a Thread network, the device will retr
    > dataset active
    Active Timestamp: 1
    Channel: 13
-   Channel Mask: 07fff800
+   Channel Mask: 0x07fff800
    Ext PAN ID: d63e8e3e495ebbc3
-   Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+   Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
    Master Key: dfd34f0f05cad978ec4e32b0413038ff
    Network Name: OpenThread-8f28
    PAN ID: 0x8f28
@@ -173,9 +173,9 @@ Print Active Operational Dataset in human-readable form.
 > dataset active
 Active Timestamp: 1
 Channel: 13
-Channel Mask: 07fff800
+Channel Mask: 0x07fff800
 Ext PAN ID: d63e8e3e495ebbc3
-Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
 Master Key: dfd34f0f05cad978ec4e32b0413038ff
 Network Name: OpenThread-8f28
 PAN ID: 0x8f28
@@ -194,7 +194,15 @@ Done
 
 ### activetimestamp
 
-Usage: `dataset activetimestamp <timestamp>`
+Usage: `dataset activetimestamp [timestamp]`
+
+Get active timestamp.
+
+```bash
+> dataset activetimestamp
+123456789
+Done
+```
 
 Set active timestamp.
 
@@ -205,7 +213,15 @@ Done
 
 ### channel
 
-Usage: `channel <channel>`
+Usage: `channel [channel]`
+
+Get channel.
+
+```bash
+> dataset channel
+12
+Done
+```
 
 Set channel.
 
@@ -216,7 +232,15 @@ Done
 
 ### channelmask
 
-Usage: `dataset channelmask <channelmask>`
+Usage: `dataset channelmask [channelmask]`
+
+Get channel mask.
+
+```bash
+> dataset channelmask
+0x07fff800
+Done
+```
 
 Set channel mask.
 
@@ -249,7 +273,15 @@ Done
 
 ### delay
 
-Usage: `dataset delay <delay>`
+Usage: `dataset delay [delay]`
+
+Get delay timer value.
+
+```bash
+> dataset delay
+1000
+Done
+```
 
 Set delay timer value.
 
@@ -260,7 +292,15 @@ Done
 
 ### extpanid
 
-Usage: `dataset extpanid <extpanid>`
+Usage: `dataset extpanid [extpanid]`
+
+Get extended panid.
+
+```bash
+> dataset extpanid
+000db80123456789
+Done
+```
 
 Set extended panid.
 
@@ -284,7 +324,15 @@ Done
 
 ### masterkey
 
-Usage: `dataset masterkey <key>`
+Usage: `dataset masterkey [key]`
+
+Get master key
+
+```bash
+> dataset masterkey
+00112233445566778899aabbccddeeff
+Done
+```
 
 Set master key.
 
@@ -295,7 +343,14 @@ Done
 
 ### meshlocalprefix
 
-Usage: `dataset meshlocalprefix <prefix>`
+Usage: `dataset meshlocalprefix [prefix]`
+
+Get mesh local prefix.
+
+```bash
+> dataset meshlocalprefix fd00:db8:0:0::/64
+Done
+```
 
 Set mesh local prefix.
 
@@ -328,7 +383,15 @@ Done
 
 ### networkname
 
-Usage: `dataset networkname <name>`
+Usage: `dataset networkname [name]`
+
+Get network name.
+
+```bash
+> datset networkname
+OpenThread
+Done
+```
 
 Set network name.
 
@@ -341,7 +404,15 @@ Done
 
 ### panid
 
-Usage: `dataset panid <panid>`
+Usage: `dataset panid [panid]`
+
+Get panid.
+
+```bash
+> dataset panid
+0x1234
+Done
+```
 
 Set panid.
 
@@ -361,10 +432,10 @@ Print Pending Operational Dataset in human-readable form.
 Pending Timestamp: 2
 Active Timestamp: 15
 Channel: 16
-Channel Mask: 07fff800
+Channel Mask: 0x07fff800
 Delay: 58706
 Ext PAN ID: d63e8e3e495ebbc3
-Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
 Master Key: dfd34f0f05cad978ec4e32b0413038ff
 Network Name: OpenThread-8f28
 PAN ID: 0x8f28
@@ -383,7 +454,15 @@ Done
 
 ### pendingtimestamp
 
-Usage: `dataset pendingtimestamp <timestamp>`
+Usage: `dataset pendingtimestamp [timestamp]`
+
+Get pending timestamp.
+
+```bash
+> dataset pendingtimestamp
+123456789
+Done
+```
 
 Set pending timestamp.
 
@@ -394,7 +473,17 @@ Done
 
 ### pskc
 
-Usage: `pskc [-p] <key>|<passphrase>`
+Usage: `pskc [-p] [<key>|<passphrase>]`
+
+Get pskc.
+
+```bash
+> dataset pskc
+67c0c203aa0b042bfb5381c47aef4d9e
+Done
+```
+
+Set pskc.
 
 With `-p`(**only for FTD**) generate pskc from \<passphrase\> (UTF-8 encoded) together with network name and extended PAN ID in the dataset buffer if set or values in the current stack if not, otherwise set pskc as \<key\> (hex format).
 
@@ -407,7 +496,15 @@ Done
 
 ### securitypolicy
 
-Usage: `dataset securitypolicy <rotationtime> [onrcb]`
+Usage: `dataset securitypolicy [<rotationtime> [onrcb]]`
+
+Get security policy.
+
+```bash
+> dataset securitypolicy
+672 onrcb
+Done
+```
 
 Set security policy.
 

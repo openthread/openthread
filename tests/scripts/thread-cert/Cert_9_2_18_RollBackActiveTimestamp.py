@@ -139,8 +139,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
-        self.nodes[COMMISSIONER].send_mgmt_active_set(active_timestamp=20000,
-                                                      network_name='GRL')
+        self.nodes[COMMISSIONER].send_mgmt_active_set(active_timestamp=20000, network_name='GRL')
         self.simulator.go(5)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(

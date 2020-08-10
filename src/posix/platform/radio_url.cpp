@@ -67,7 +67,7 @@ const char *otSysGetRadioUrlHelpString(void)
 
 #define OT_RADIO_URL_HELP_BUS                                                                        \
     "    spinel+hdlc+uart://${PATH_TO_UART_DEVICE}?${Parameters} for real uart device\n"             \
-    "    spinel+hdlc+fortpty://${PATH_TO_UART_DEVICE}?${Parameters} for forking a pty subprocess.\n" \
+    "    spinel+hdlc+forkpty://${PATH_TO_UART_DEVICE}?${Parameters} for forking a pty subprocess.\n" \
     "Parameters:\n"                                                                                  \
     "    uart-parity[=even|odd]         Uart parity config, optional.\n"                             \
     "    uart-stop[=number-of-bits]     Uart stop bit, default is 1.\n"                              \

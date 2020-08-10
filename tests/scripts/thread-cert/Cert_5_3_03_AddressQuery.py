@@ -97,8 +97,7 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
         # verification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
-        router3_mleid = self.nodes[ROUTER3].get_ip6_address(
-            config.ADDRESS_TYPE.ML_EID)
+        router3_mleid = self.nodes[ROUTER3].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[MED1].ping(router3_mleid))
 
         # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local
@@ -120,15 +119,13 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
         # verification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
-        med1_mleid = self.nodes[MED1].get_ip6_address(
-            config.ADDRESS_TYPE.ML_EID)
+        med1_mleid = self.nodes[MED1].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[ROUTER1].ping(med1_mleid))
 
         # Verify DUT_ROUTER2 responded with an Address Notification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/an')
-        command.check_address_notification(msg, self.nodes[DUT_ROUTER2],
-                                           self.nodes[ROUTER1])
+        command.check_address_notification(msg, self.nodes[DUT_ROUTER2], self.nodes[ROUTER1])
 
         # 4
         # Wait the finish of address resolution traffic triggerred by previous

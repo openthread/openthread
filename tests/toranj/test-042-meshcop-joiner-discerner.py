@@ -86,29 +86,20 @@ verify(int(joiner1.get(wpan.WPAN_THREAD_JOINER_DISCERNER_VALUE), 0) == 0)
 
 joiner1.set(wpan.WPAN_THREAD_JOINER_DISCERNER_BIT_LENGTH, str(D_LEN1))
 joiner1.set(wpan.WPAN_THREAD_JOINER_DISCERNER_VALUE, DISCERNER1)
-verify(
-    int(joiner1.get(wpan.WPAN_THREAD_JOINER_DISCERNER_BIT_LENGTH), 0) == D_LEN1)
-verify(
-    int(joiner1.get(wpan.WPAN_THREAD_JOINER_DISCERNER_VALUE), 0) == int(
-        DISCERNER1, 0))
+verify(int(joiner1.get(wpan.WPAN_THREAD_JOINER_DISCERNER_BIT_LENGTH), 0) == D_LEN1)
+verify(int(joiner1.get(wpan.WPAN_THREAD_JOINER_DISCERNER_VALUE), 0) == int(DISCERNER1, 0))
 
 joiner2.set(wpan.WPAN_THREAD_JOINER_DISCERNER_BIT_LENGTH, str(D_LEN2))
 joiner2.set(wpan.WPAN_THREAD_JOINER_DISCERNER_VALUE, DISCERNER2)
-verify(
-    int(joiner2.get(wpan.WPAN_THREAD_JOINER_DISCERNER_BIT_LENGTH), 0) == D_LEN2)
-verify(
-    int(joiner2.get(wpan.WPAN_THREAD_JOINER_DISCERNER_VALUE), 0) == int(
-        DISCERNER2, 0))
+verify(int(joiner2.get(wpan.WPAN_THREAD_JOINER_DISCERNER_BIT_LENGTH), 0) == D_LEN2)
+verify(int(joiner2.get(wpan.WPAN_THREAD_JOINER_DISCERNER_VALUE), 0) == int(DISCERNER2, 0))
 
 # Check clearing of a previously set Joiner Discerner
 
 joiner3.set(wpan.WPAN_THREAD_JOINER_DISCERNER_BIT_LENGTH, str(D_LEN2))
 joiner3.set(wpan.WPAN_THREAD_JOINER_DISCERNER_VALUE, DISCERNER2)
-verify(
-    int(joiner3.get(wpan.WPAN_THREAD_JOINER_DISCERNER_BIT_LENGTH), 0) == D_LEN2)
-verify(
-    int(joiner3.get(wpan.WPAN_THREAD_JOINER_DISCERNER_VALUE), 0) == int(
-        DISCERNER2, 0))
+verify(int(joiner3.get(wpan.WPAN_THREAD_JOINER_DISCERNER_BIT_LENGTH), 0) == D_LEN2)
+verify(int(joiner3.get(wpan.WPAN_THREAD_JOINER_DISCERNER_VALUE), 0) == int(DISCERNER2, 0))
 
 joiner3.set(wpan.WPAN_THREAD_JOINER_DISCERNER_BIT_LENGTH, '0')
 verify(int(joiner3.get(wpan.WPAN_THREAD_JOINER_DISCERNER_BIT_LENGTH), 0) == 0)
@@ -118,14 +109,11 @@ verify(int(joiner3.get(wpan.WPAN_THREAD_JOINER_DISCERNER_VALUE), 0) == 0)
 
 commr.commissioner_start()
 
-commr.commissioner_add_joiner_with_discerner(DISCERNER1, D_LEN1, PSK1,
-                                             JOINER_TIMOUT)
-commr.commissioner_add_joiner_with_discerner(DISCERNER2, D_LEN2, PSK2,
-                                             JOINER_TIMOUT)
+commr.commissioner_add_joiner_with_discerner(DISCERNER1, D_LEN1, PSK1, JOINER_TIMOUT)
+commr.commissioner_add_joiner_with_discerner(DISCERNER2, D_LEN2, PSK2, JOINER_TIMOUT)
 commr.commissioner_add_joiner(EUI64_3, PSK3, JOINER_TIMOUT)
 
-verify(
-    len(wpan.parse_list(commr.get(wpan.WPAN_THREAD_COMMISSIONER_JOINERS))) == 3)
+verify(len(wpan.parse_list(commr.get(wpan.WPAN_THREAD_COMMISSIONER_JOINERS))) == 3)
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Start `joiner2` first

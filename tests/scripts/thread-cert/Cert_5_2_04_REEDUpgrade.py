@@ -47,13 +47,9 @@ ROUTER_SELECTION_JITTER = 1
 class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
-            'mode':
-                'rsdn',
-            'panid':
-                0xface,
-            'whitelist': [
-                2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ROUTER
-            ]
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ROUTER]
         },
         2: {
             'mode': 'rsdn',
@@ -189,8 +185,7 @@ class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
         msg.assertMleMessageDoesNotContainTlv(mle.Route64)
 
         # 4 Wait for DUT_REED to send the second packet.
-        self.simulator.go(REED_ADVERTISEMENT_INTERVAL +
-                          REED_ADVERTISEMENT_MAX_JITTER)
+        self.simulator.go(REED_ADVERTISEMENT_INTERVAL + REED_ADVERTISEMENT_MAX_JITTER)
 
         # 5 DUT_REED: Verify the second MLE Advertisement.
         reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
@@ -239,8 +234,7 @@ class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
         # Leader.
         mleid = None
         for addr in self.nodes[LEADER].get_addrs():
-            if (addr.startswith(MESH_LOCAL_PREFIX) and
-                    addr.find(ROUTING_LOCATOR) == -1):
+            if (addr.startswith(MESH_LOCAL_PREFIX) and addr.find(ROUTING_LOCATOR) == -1):
                 mleid = addr
                 break
 

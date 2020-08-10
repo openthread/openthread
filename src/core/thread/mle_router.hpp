@@ -345,34 +345,6 @@ public:
     void RemoveRouterLink(Router &aRouter);
 
     /**
-     * This method restores children information from non-volatile memory.
-     *
-     */
-    void RestoreChildren(void);
-
-    /**
-     * This method remove a stored child information from non-volatile memory.
-     *
-     * @param[in]  aChildRloc16   The child RLOC16 to remove.
-     *
-     * @retval  OT_ERROR_NONE        Successfully remove child.
-     * @retval  OT_ERROR_NOT_FOUND   There is no specified child stored in non-volatile memory.
-     *
-     */
-    otError RemoveStoredChild(uint16_t aChildRloc16);
-
-    /**
-     * This method store a child information into non-volatile memory.
-     *
-     * @param[in]  aChild          A reference to the child to store.
-     *
-     * @retval  OT_ERROR_NONE      Successfully store child.
-     * @retval  OT_ERROR_NO_BUFS   Insufficient available buffers to store child.
-     *
-     */
-    otError StoreChild(const Child &aChild);
-
-    /**
      * This method returns a pointer to a Neighbor object.
      *
      * @param[in]  aAddress  The address of the Neighbor.
@@ -422,24 +394,6 @@ public:
      *
      */
     Neighbor *GetRxOnlyNeighborRouter(const Mac::Address &aAddress);
-
-    /**
-     * This method retains diagnostic information for an attached child by Child ID or RLOC16.
-     *
-     * @param[in]   aChildId    The Child ID or RLOC16 for an attached child.
-     * @param[out]  aChildInfo  The child information.
-     *
-     */
-    otError GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo);
-
-    /**
-     * This method retains diagnostic information for an attached child by the internal table index.
-     *
-     * @param[in]   aChildIndex  The table index.
-     * @param[out]  aChildInfo   The child information.
-     *
-     */
-    otError GetChildInfoByIndex(uint16_t aChildIndex, Child::Info &aChildInfo);
 
     /**
      * This method indicates whether or not the RLOC16 is an MTD child of this device.
@@ -624,29 +578,6 @@ public:
     void Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor);
 
     /**
-     * This method returns whether the device has any sleepy children subscribed the address.
-     *
-     * @param[in]  aAddress  The reference of the address.
-     *
-     * @retval TRUE   If the device has any sleepy children subscribed the address @p aAddress.
-     * @retval FALSE  If the device doesn't have any sleepy children subscribed the address @p aAddress.
-     *
-     */
-    bool HasSleepyChildrenSubscribed(const Ip6::Address &aAddress);
-
-    /**
-     * This method returns whether the specific child subscribed the address.
-     *
-     * @param[in]  aAddress  The reference of the address.
-     * @param[in]  aChild    The reference of the child.
-     *
-     * @retval TRUE   If the sleepy child @p aChild subscribed the address @p aAddress.
-     * @retval FALSE  If the sleepy child @p aChild did not subscribe the address @p aAddress.
-     *
-     */
-    bool IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild);
-
-    /**
      * This method resets the MLE Advertisement Trickle timer interval.
      *
      */
@@ -719,7 +650,6 @@ private:
     otError AppendRoute(Message &aMessage);
     otError AppendActiveDataset(Message &aMessage);
     otError AppendPendingDataset(Message &aMessage);
-    void    RefreshStoredChildren(void);
     void    HandleDetachStart(void);
     void    HandleChildStart(AttachMode aMode);
     void    HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);

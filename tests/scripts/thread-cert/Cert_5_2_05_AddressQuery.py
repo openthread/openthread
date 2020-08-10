@@ -44,13 +44,9 @@ ROUTER_SELECTION_JITTER = 1
 class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
-            'mode':
-                'rsdn',
-            'panid':
-                0xface,
-            'whitelist': [
-                ROUTER1, BR, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, ED1
-            ]
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1, BR, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, ED1]
         },
         ROUTER1: {
             'mode': 'rsdn',
@@ -210,15 +206,13 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
 
         reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
         msg = reed_messages.next_coap_message('0.02', '/a/an')
-        command.check_address_notification(msg, self.nodes[DUT_REED],
-                                           self.nodes[LEADER])
+        command.check_address_notification(msg, self.nodes[DUT_REED], self.nodes[LEADER])
 
         # 7 & 8. Verify DUT_REED would send Address Notification when ping to
         # its 2001::EID and 2002::EID.
         flag2001 = 0
         flag2002 = 0
-        for global_address in self.nodes[DUT_REED].get_ip6_address(
-                config.ADDRESS_TYPE.GLOBAL):
+        for global_address in self.nodes[DUT_REED].get_ip6_address(config.ADDRESS_TYPE.GLOBAL):
             if global_address[0:4] == '2001':
                 flag2001 += 1
             elif global_address[0:4] == '2002':
@@ -232,8 +226,7 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
 
             reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
             msg = reed_messages.next_coap_message('0.02', '/a/an')
-            command.check_address_notification(msg, self.nodes[DUT_REED],
-                                               self.nodes[LEADER])
+            command.check_address_notification(msg, self.nodes[DUT_REED], self.nodes[LEADER])
 
         assert flag2001 == 1, "Error: Expecting address 2001::EID not appear."
         assert flag2002 == 1, "Error: Expecting address 2002::EID not appear."

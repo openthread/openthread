@@ -48,30 +48,6 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Dns {
 
-QueryMetadata::QueryMetadata(void)
-    : mHostname(nullptr)
-    , mResponseHandler(nullptr)
-    , mResponseContext(nullptr)
-    , mTransmissionTime()
-    , mDestinationPort(0)
-    , mRetransmissionCount(0)
-{
-    mSourceAddress.Clear();
-    mDestinationAddress.Clear();
-}
-
-QueryMetadata::QueryMetadata(otDnsResponseHandler aHandler, void *aContext)
-    : mHostname(nullptr)
-    , mResponseHandler(aHandler)
-    , mResponseContext(aContext)
-    , mTransmissionTime()
-    , mDestinationPort(0)
-    , mRetransmissionCount(0)
-{
-    mSourceAddress.Clear();
-    mDestinationAddress.Clear();
-}
-
 Client::Client(Instance &aInstance)
     : mSocket(aInstance)
     , mMessageId(0)
@@ -112,7 +88,7 @@ otError Client::Stop(void)
 otError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, void *aContext)
 {
     otError                 error;
-    QueryMetadata           queryMetadata(aHandler, aContext);
+    QueryMetadata           queryMetadata;
     Message *               message     = nullptr;
     Message *               messageCopy = nullptr;
     Header                  header;
@@ -140,10 +116,12 @@ otError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, v
     messageInfo = static_cast<const Ip6::MessageInfo *>(aQuery->mMessageInfo);
 
     queryMetadata.mHostname            = aQuery->mHostname;
+    queryMetadata.mResponseHandler     = aHandler;
+    queryMetadata.mResponseContext     = aContext;
     queryMetadata.mTransmissionTime    = TimerMilli::GetNow() + kResponseTimeout;
     queryMetadata.mSourceAddress       = messageInfo->GetSockAddr();
-    queryMetadata.mDestinationPort     = messageInfo->GetPeerPort();
     queryMetadata.mDestinationAddress  = messageInfo->GetPeerAddr();
+    queryMetadata.mDestinationPort     = messageInfo->GetPeerPort();
     queryMetadata.mRetransmissionCount = 0;
 
     VerifyOrExit((messageCopy = CopyAndEnqueueMessage(*message, queryMetadata)) != nullptr, error = OT_ERROR_NO_BUFS);
@@ -520,6 +498,19 @@ exit:
     {
         FinalizeDnsTransaction(*message, queryMetadata, nullptr, 0, error);
     }
+}
+
+void Client::QueryMetadata::ReadFrom(const Message &aMessage)
+{
+    uint16_t length = aMessage.GetLength();
+
+    OT_ASSERT(length >= sizeof(*this));
+    aMessage.Read(length - sizeof(*this), sizeof(*this), this);
+}
+
+void Client::QueryMetadata::UpdateIn(Message &aMessage) const
+{
+    aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
 }
 
 } // namespace Dns

@@ -57,6 +57,8 @@ namespace MeshCoP {
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::ReadUint24;
+using ot::Encoding::BigEndian::WriteUint24;
 
 /**
  * This class implements MeshCoP TLV generation and parsing.
@@ -1980,11 +1982,7 @@ public:
      * @returns The Vendor Stack Vendor OUI value.
      *
      */
-    uint32_t GetOui(void) const
-    {
-        return (static_cast<uint32_t>(mOui[0]) << 16) | (static_cast<uint32_t>(mOui[1]) << 8) |
-               static_cast<uint32_t>(mOui[2]);
-    }
+    uint32_t GetOui(void) const { return ReadUint24(mOui); }
 
     /**
      * This method returns the Stack Vendor OUI value.
@@ -1992,12 +1990,7 @@ public:
      * @param[in]  aOui  The Vendor Stack Vendor OUI value.
      *
      */
-    void SetOui(uint32_t aOui)
-    {
-        mOui[0] = (aOui >> 16) & 0xff;
-        mOui[1] = (aOui >> 8) & 0xff;
-        mOui[2] = aOui & 0xff;
-    }
+    void SetOui(uint32_t aOui) { WriteUint24(aOui, mOui); }
 
     /**
      * This method returns the Build value.
@@ -2406,11 +2399,7 @@ public:
      * @returns The Vendor OUI value.
      *
      */
-    uint32_t GetOui(void) const
-    {
-        return (static_cast<uint32_t>(mOui[0]) << 16) | (static_cast<uint32_t>(mOui[1]) << 8) |
-               static_cast<uint32_t>(mOui[2]);
-    }
+    uint32_t GetOui(void) const { return ReadUint24(mOui); }
 
     /**
      * This method sets the Vendor OUI value.
@@ -2418,12 +2407,7 @@ public:
      * @param[in]  aOui The Vendor OUI value.
      *
      */
-    void SetOui(uint32_t aOui)
-    {
-        mOui[0] = (aOui >> 16) & 0xff;
-        mOui[1] = (aOui >> 8) & 0xff;
-        mOui[2] = aOui & 0xff;
-    }
+    void SetOui(uint32_t aOui) { return WriteUint24(aOui, mOui); }
 
     /**
      * This method returns the Adv Data length.

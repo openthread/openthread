@@ -2550,7 +2550,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     {
         if (childDidChange)
         {
-            IgnoreError(StoreChild(*child));
+            IgnoreError(mChildTable.StoreChild(*child));
         }
     }
 
@@ -3419,7 +3419,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
             Get<AddressResolver>().Remove(aNeighbor.GetRloc16());
         }
 
-        IgnoreError(RemoveStoredChild(aNeighbor.GetRloc16()));
+        mChildTable.RemoveStoredChild(static_cast<Child &>(aNeighbor));
     }
     else if (aNeighbor.IsStateValid())
     {
@@ -3678,136 +3678,6 @@ void MleRouter::SetRouterId(uint8_t aRouterId)
 {
     mRouterId         = aRouterId;
     mPreviousRouterId = mRouterId;
-}
-
-otError MleRouter::GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo)
-{
-    otError  error = OT_ERROR_NONE;
-    Child *  child;
-    uint16_t rloc16;
-
-    if ((aChildId & ~kMaxChildId) != 0)
-    {
-        aChildId = ChildIdFromRloc16(aChildId);
-    }
-
-    rloc16 = Get<Mac::Mac>().GetShortAddress() | aChildId;
-    child  = mChildTable.FindChild(rloc16, Child::kInStateValidOrRestoring);
-    VerifyOrExit(child != nullptr, error = OT_ERROR_NOT_FOUND);
-
-    aChildInfo.SetFrom(*child);
-
-exit:
-    return error;
-}
-
-otError MleRouter::GetChildInfoByIndex(uint16_t aChildIndex, Child::Info &aChildInfo)
-{
-    otError error = OT_ERROR_NONE;
-    Child * child = nullptr;
-
-    child = mChildTable.GetChildAtIndex(aChildIndex);
-    VerifyOrExit((child != nullptr) && child->IsStateValidOrRestoring(), error = OT_ERROR_NOT_FOUND);
-
-    aChildInfo.SetFrom(*child);
-
-exit:
-    return error;
-}
-
-void MleRouter::RestoreChildren(void)
-{
-    otError  error          = OT_ERROR_NONE;
-    bool     foundDuplicate = false;
-    uint16_t numChildren    = 0;
-
-    for (const Settings::ChildInfo &childInfo : Get<Settings>().IterateChildInfo())
-    {
-        Child *child;
-
-        child = mChildTable.FindChild(childInfo.GetExtAddress(), Child::kInStateAnyExceptInvalid);
-
-        if (child == nullptr)
-        {
-            VerifyOrExit((child = mChildTable.GetNewChild()) != nullptr, error = OT_ERROR_NO_BUFS);
-        }
-        else
-        {
-            foundDuplicate = true;
-        }
-
-        child->Clear();
-
-        child->SetExtAddress(childInfo.GetExtAddress());
-        child->GetLinkInfo().Clear();
-        child->SetRloc16(childInfo.GetRloc16());
-        child->SetTimeout(childInfo.GetTimeout());
-        child->SetDeviceMode(DeviceMode(childInfo.GetMode()));
-        child->SetState(Neighbor::kStateRestored);
-        child->SetLastHeard(TimerMilli::GetNow());
-        child->SetVersion(static_cast<uint8_t>(childInfo.GetVersion()));
-        Get<IndirectSender>().SetChildUseShortAddress(*child, true);
-        numChildren++;
-    }
-
-exit:
-
-    if (foundDuplicate || (numChildren > mChildTable.GetMaxChildren()) || (error != OT_ERROR_NONE))
-    {
-        // If there is any error, e.g., there are more saved children
-        // in non-volatile settings than could be restored or there are
-        // duplicate entries with same extended address, refresh the stored
-        // children info to ensure that the non-volatile settings remain
-        // consistent with the child table.
-
-        RefreshStoredChildren();
-    }
-}
-
-otError MleRouter::RemoveStoredChild(uint16_t aChildRloc16)
-{
-    otError error = OT_ERROR_NOT_FOUND;
-
-    for (Settings::ChildInfoIterator iter(GetInstance()); !iter.IsDone(); iter++)
-    {
-        if (iter.GetChildInfo().GetRloc16() == aChildRloc16)
-        {
-            error = iter.Delete();
-            ExitNow();
-        }
-    }
-
-exit:
-    return error;
-}
-
-otError MleRouter::StoreChild(const Child &aChild)
-{
-    Settings::ChildInfo childInfo;
-
-    IgnoreError(RemoveStoredChild(aChild.GetRloc16()));
-
-    childInfo.Init();
-    childInfo.SetExtAddress(aChild.GetExtAddress());
-    childInfo.SetTimeout(aChild.GetTimeout());
-    childInfo.SetRloc16(aChild.GetRloc16());
-    childInfo.SetMode(aChild.GetDeviceMode().Get());
-    childInfo.SetVersion(aChild.GetVersion());
-
-    return Get<Settings>().AddChildInfo(childInfo);
-}
-
-void MleRouter::RefreshStoredChildren(void)
-{
-    SuccessOrExit(Get<Settings>().DeleteAllChildInfo());
-
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
-    {
-        SuccessOrExit(StoreChild(child));
-    }
-
-exit:
-    return;
 }
 
 otError MleRouter::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
@@ -4645,7 +4515,7 @@ void MleRouter::SetChildStateToValid(Child &aChild)
     VerifyOrExit(!aChild.IsStateValid(), OT_NOOP);
 
     aChild.SetState(Neighbor::kStateValid);
-    IgnoreError(StoreChild(aChild));
+    IgnoreError(mChildTable.StoreChild(aChild));
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     Get<MlrManager>().UpdateProxiedSubscriptions(aChild, nullptr, 0);
@@ -4770,32 +4640,6 @@ void MleRouter::Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
     default:
         break;
     }
-}
-
-bool MleRouter::HasSleepyChildrenSubscribed(const Ip6::Address &aAddress)
-{
-    bool rval = false;
-
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
-    {
-        if (child.IsRxOnWhenIdle())
-        {
-            continue;
-        }
-
-        if (IsSleepyChildSubscribed(aAddress, child))
-        {
-            ExitNow(rval = true);
-        }
-    }
-
-exit:
-    return rval;
-}
-
-bool MleRouter::IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild)
-{
-    return aChild.IsStateValidOrRestoring() && !aChild.IsRxOnWhenIdle() && aChild.HasIp6Address(aAddress);
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

@@ -248,8 +248,7 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
         command.check_address_release(msg, self.nodes[LEADER])
 
         # 4 & 5
-        router1_rloc = self.nodes[DUT_ROUTER1].get_ip6_address(
-            config.ADDRESS_TYPE.RLOC)
+        router1_rloc = self.nodes[DUT_ROUTER1].get_ip6_address(config.ADDRESS_TYPE.RLOC)
         self.assertTrue(self.nodes[LEADER].ping(router1_rloc))
 
 

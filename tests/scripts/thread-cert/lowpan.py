@@ -220,8 +220,7 @@ class LowpanHopByHopFactory:
 
         ext_header_data = data.read(ext_header_length)
 
-        options = self._hop_by_hop_options_factory.parse(
-            io.BytesIO(ext_header_data), message_info)
+        options = self._hop_by_hop_options_factory.parse(io.BytesIO(ext_header_data), message_info)
 
         ext_header = ipv6.HopByHop(next_header, options)
 
@@ -237,8 +236,7 @@ class LowpanExtensionHeadersFactory:
     NHC_NH_COMPRESSED = 1
 
     def __init__(self, ext_headers_factories):
-        self._ext_headers_factories = (
-            ext_headers_factories if ext_headers_factories is not None else {})
+        self._ext_headers_factories = (ext_headers_factories if ext_headers_factories is not None else {})
 
     def _decompress_nh(self, hc, data):
         if hc.nh == self.NHC_NH_INLINE:
@@ -252,9 +250,7 @@ class LowpanExtensionHeadersFactory:
             return self._ext_headers_factories[eid]
 
         except BaseException:
-            raise RuntimeError(
-                "Could not find an extension header factory for the EID type: {}"
-                .format(eid))
+            raise RuntimeError("Could not find an extension header factory for the EID type: {}".format(eid))
 
     def parse(self, data, message_info):
         nhc = LowpanNHC.from_bytes(bytearray(data.read(1)))
@@ -332,8 +328,7 @@ class Context:
 
         elif isinstance(prefix, bytearray):
             self._prefix = prefix
-            self._prefix_length = (prefix_length if prefix_length is not None
-                                   else len(self._prefix) * 8)
+            self._prefix_length = (prefix_length if prefix_length is not None else len(self._prefix) * 8)
 
     @property
     def prefix(self):
@@ -368,9 +363,7 @@ class ContextManager(dict):
 
     def __check_index(self, index):
         if index < 0 or index > 15:
-            raise IndexError(
-                "Invalid index: {}. Valid index is in range [0, 15]".format(
-                    index))
+            raise IndexError("Invalid index: {}. Valid index is in range [0, 15]".format(index))
 
     def __check_type(self, value):
         if not isinstance(value, Context):
@@ -391,8 +384,7 @@ class ContextManager(dict):
 class LowpanIpv6HeaderFactory:
     """ Factory that produces IPv6 header. """
 
-    IPV6_LINKLOCAL_PREFIX = bytearray(
-        [0xfe, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+    IPV6_LINKLOCAL_PREFIX = bytearray([0xfe, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
 
     SHORT_ADDR_PADDING_BYTES = bytearray([0x00, 0x00, 0x00, 0xff, 0xfe, 0x00])
 
@@ -546,8 +538,7 @@ class LowpanIpv6HeaderFactory:
             return self.IPV6_LINKLOCAL_PREFIX + bytearray(data.read(8))
 
         elif iphc.sam == self.IPHC_SAM_16B:
-            return (self.IPV6_LINKLOCAL_PREFIX + self.SHORT_ADDR_PADDING_BYTES +
-                    bytearray(data.read(2)))
+            return (self.IPV6_LINKLOCAL_PREFIX + self.SHORT_ADDR_PADDING_BYTES + bytearray(data.read(2)))
 
         elif iphc.sam == self.IPHC_SAM_ELIDED:
             return self.IPV6_LINKLOCAL_PREFIX + src_mac_addr.convert_to_iid()
@@ -587,10 +578,8 @@ class LowpanIpv6HeaderFactory:
                 prefix_overlapping_byte = prefix[prefix_length_all_bytes - 1]
                 address_overlapping_byte = address_bytes[-required_bytes]
 
-                overlapping_byte = prefix_overlapping_byte & ~(
-                    0xff >> prefix_length_rest_bits)
-                overlapping_byte |= address_overlapping_byte & (
-                    0xff >> prefix_length_rest_bits)
+                overlapping_byte = prefix_overlapping_byte & ~(0xff >> prefix_length_rest_bits)
+                overlapping_byte |= address_overlapping_byte & (0xff >> prefix_length_rest_bits)
 
                 src_addr += bytearray([overlapping_byte])
                 required_bytes -= 1
@@ -602,8 +591,7 @@ class LowpanIpv6HeaderFactory:
             required_bytes -= prefix_length_all_bytes
             required_bytes -= len(address_bytes)
 
-            src_addr = (prefix[:prefix_length_all_bytes] +
-                        bytearray([0x00] * required_bytes) + address_bytes)
+            src_addr = (prefix[:prefix_length_all_bytes] + bytearray([0x00] * required_bytes) + address_bytes)
 
         return src_addr
 
@@ -622,8 +610,7 @@ class LowpanIpv6HeaderFactory:
 
         elif iphc.sam == self.IPHC_SAM_16B:
             context = self._context_manager[sci]
-            address_bytes = self.SHORT_ADDR_PADDING_BYTES + bytearray(
-                data.read(2))
+            address_bytes = self.SHORT_ADDR_PADDING_BYTES + bytearray(data.read(2))
 
             return self._merge_prefix_with_address(
                 prefix=context.prefix,
@@ -645,8 +632,7 @@ class LowpanIpv6HeaderFactory:
             return self._decompress_src_addr_stateless(iphc, src_mac_addr, data)
 
         elif iphc.sac == self.IPHC_SAC_STATEFUL:
-            return self._decompress_src_addr_stateful(iphc, src_mac_addr, sci,
-                                                      data)
+            return self._decompress_src_addr_stateful(iphc, src_mac_addr, sci, data)
 
     def _decompress_unicast_dst_addr_stateless(self, iphc, dst_mac_addr, data):
         if iphc.dam == self.IPHC_DAM_128B:
@@ -656,14 +642,12 @@ class LowpanIpv6HeaderFactory:
             return self.IPV6_LINKLOCAL_PREFIX + bytearray(data.read(8))
 
         elif iphc.dam == self.IPHC_DAM_16B:
-            return (self.IPV6_LINKLOCAL_PREFIX + self.SHORT_ADDR_PADDING_BYTES +
-                    bytearray(data.read(2)))
+            return (self.IPV6_LINKLOCAL_PREFIX + self.SHORT_ADDR_PADDING_BYTES + bytearray(data.read(2)))
 
         elif iphc.dam == self.IPHC_DAM_ELIDED:
             return self.IPV6_LINKLOCAL_PREFIX + dst_mac_addr.convert_to_iid()
 
-    def _decompress_unicast_dst_addr_stateful(self, iphc, dst_mac_addr, dci,
-                                              data):
+    def _decompress_unicast_dst_addr_stateful(self, iphc, dst_mac_addr, dci, data):
         if iphc.dam == self.IPHC_DAM_128B:
             raise RuntimeError("Reserved")
 
@@ -678,8 +662,7 @@ class LowpanIpv6HeaderFactory:
 
         elif iphc.dam == self.IPHC_DAM_16B:
             context = self._context_manager[dci]
-            address_bytes = self.SHORT_ADDR_PADDING_BYTES + bytearray(
-                data.read(2))
+            address_bytes = self.SHORT_ADDR_PADDING_BYTES + bytearray(data.read(2))
 
             return self._merge_prefix_with_address(
                 prefix=context.prefix,
@@ -698,12 +681,10 @@ class LowpanIpv6HeaderFactory:
 
     def _decompress_unicast_dst_addr(self, iphc, dst_mac_addr, dci, data):
         if iphc.dac == self.IPHC_DAC_STATELESS:
-            return self._decompress_unicast_dst_addr_stateless(
-                iphc, dst_mac_addr, data)
+            return self._decompress_unicast_dst_addr_stateless(iphc, dst_mac_addr, data)
 
         elif iphc.dac == self.IPHC_DAC_STATEFUL:
-            return self._decompress_unicast_dst_addr_stateful(
-                iphc, dst_mac_addr, dci, data)
+            return self._decompress_unicast_dst_addr_stateful(iphc, dst_mac_addr, dci, data)
 
     def _decompress_multicast_dst_addr_stateless(self, iphc, data):
         if iphc.dam == self.IPHC_DAM_128B:
@@ -711,17 +692,14 @@ class LowpanIpv6HeaderFactory:
 
         elif iphc.dam == self.IPHC_DAM_48B:
             addr48b = bytearray(data.read(6))
-            return (bytearray([0xff, addr48b[0]]) + bytearray([0x00] * 9) +
-                    addr48b[1:])
+            return (bytearray([0xff, addr48b[0]]) + bytearray([0x00] * 9) + addr48b[1:])
 
         elif iphc.dam == self.IPHC_DAM_32B:
             addr32b = bytearray(data.read(4))
-            return (bytearray([0xff, addr32b[0]]) + bytearray([0x00] * 11) +
-                    addr32b[1:])
+            return (bytearray([0xff, addr32b[0]]) + bytearray([0x00] * 11) + addr32b[1:])
 
         elif iphc.dam == self.IPHC_DAM_8B:
-            return (bytearray([0xff, 0x02]) + bytearray([0x00] * 13) +
-                    data.read(1))
+            return (bytearray([0xff, 0x02]) + bytearray([0x00] * 13) + data.read(1))
 
     def _decompress_multicast_dst_addr_stateful(self, iphc, dci, data):
         if iphc.dam == self.IPHC_M_DAM_00:
@@ -739,8 +717,7 @@ class LowpanIpv6HeaderFactory:
             if missing_bytes > 0:
                 prefix += bytearray([0x00] * missing_bytes)
 
-            return (bytearray([0xff]) + addr48b[:2] +
-                    bytearray([prefix_length]) + prefix + addr48b[2:])
+            return (bytearray([0xff]) + addr48b[:2] + bytearray([prefix_length]) + prefix + addr48b[2:])
 
         elif iphc.dam == self.IPHC_M_DAM_01:
             raise RuntimeError("Reserved")
@@ -760,8 +737,7 @@ class LowpanIpv6HeaderFactory:
 
     def _decompress_dst_addr(self, iphc, dst_mac_addr, dci, data):
         if iphc.m == self.IPHC_M_NO:
-            return self._decompress_unicast_dst_addr(iphc, dst_mac_addr, dci,
-                                                     data)
+            return self._decompress_unicast_dst_addr(iphc, dst_mac_addr, dci, data)
 
         elif iphc.m == self.IPHC_M_YES:
             return self._decompress_multicast_dst_addr(iphc, dci, data)
@@ -780,15 +756,11 @@ class LowpanIpv6HeaderFactory:
 
         hop_limit = self._decompress_hlim(iphc, data)
 
-        src_address = self._decompress_src_addr(iphc,
-                                                message_info.source_mac_address,
-                                                sci, data)
+        src_address = self._decompress_src_addr(iphc, message_info.source_mac_address, sci, data)
 
-        dst_address = self._decompress_dst_addr(
-            iphc, message_info.destination_mac_address, dci, data)
+        dst_address = self._decompress_dst_addr(iphc, message_info.destination_mac_address, dci, data)
 
-        header = ipv6.IPv6Header(src_address, dst_address, traffic_class,
-                                 flow_label, hop_limit)
+        header = ipv6.IPv6Header(src_address, dst_address, traffic_class, flow_label, hop_limit)
 
         header.next_header = next_header
 
@@ -805,8 +777,7 @@ class LowpanDecompressor:
         lowpan_udp_header_factory,
     ):
         self._lowpan_ip_header_factory = lowpan_ip_header_factory
-        self._lowpan_extension_headers_factory = (
-            lowpan_extension_headers_factory)
+        self._lowpan_extension_headers_factory = (lowpan_extension_headers_factory)
         self._lowpan_udp_header_factory = lowpan_udp_header_factory
 
     def _is_ipv6_extension_header(self, header_first_byte):
@@ -840,8 +811,7 @@ class LowpanDecompressor:
                 header_first_byte = ord(self._peek_n_bytes(data, 1))
 
                 if self._is_ipv6_extension_header(header_first_byte):
-                    extension_header = self._lowpan_extension_headers_factory.parse(
-                        data, message_info)
+                    extension_header = self._lowpan_extension_headers_factory.parse(data, message_info)
                     extension_headers.append(extension_header)
 
                     # Update next header field in the previous header
@@ -853,8 +823,7 @@ class LowpanDecompressor:
                         break
 
                 elif self._is_udp_header(header_first_byte):
-                    udp_header = self._lowpan_udp_header_factory.parse(
-                        data, message_info)
+                    udp_header = self._lowpan_udp_header_factory.parse(data, message_info)
 
                     # Update next header field in the previous header
                     previous_header.next_header = udp_header.type
@@ -868,8 +837,7 @@ class LowpanDecompressor:
 class LowpanMeshHeader(object):
     """ Class representing 6LoWPAN mesh header (RFC 4944 5.2). """
 
-    def __init__(self, hops_left, originator_address,
-                 final_destination_address):
+    def __init__(self, hops_left, originator_address, final_destination_address):
         self._hops_left = hops_left
         self._originator_address = originator_address
         self._final_destination_address = final_destination_address
@@ -906,13 +874,10 @@ class LowpanMeshHeaderFactory:
         else:
             hops_left = ord(data.read(1))
 
-        originator_address = self._parse_address(data,
-                                                 is_short_originator_address)
-        final_destination_address = self._parse_address(
-            data, is_short_final_destination_address)
+        originator_address = self._parse_address(data, is_short_originator_address)
+        final_destination_address = self._parse_address(data, is_short_final_destination_address)
 
-        return LowpanMeshHeader(hops_left, originator_address,
-                                final_destination_address)
+        return LowpanMeshHeader(hops_left, originator_address, final_destination_address)
 
 
 class LowpanFragmentationHeader(object):
@@ -961,9 +926,7 @@ class LowpanFragmentsBuffer(object):
 
     def write(self, data):
         if (self._position + len(data)) > len(self._buffer):
-            raise ValueError(
-                "Write failure. Data length is bigger than the destination buffer length."
-            )
+            raise ValueError("Write failure. Data length is bigger than the destination buffer length.")
 
         for i, byte in enumerate(data):
             self._buffer[self._position + i] = byte
@@ -973,9 +936,7 @@ class LowpanFragmentsBuffer(object):
 
     def seek(self, offset):
         if offset >= len(self._buffer):
-            raise ValueError(
-                "Could not seek current offset. Offset value is bigger than the buffer length."
-            )
+            raise ValueError("Could not seek current offset. Offset value is bigger than the buffer length.")
 
         self._position = offset
 
@@ -987,8 +948,7 @@ class LowpanFragmentsBuffer(object):
 
     def read(self):
         if not self.whole_packet_received():
-            raise ValueError(
-                "Only a part of the packet has been stored in the buffer.")
+            raise ValueError("Only a part of the packet has been stored in the buffer.")
 
         return bytearray(self._buffer)
 
@@ -1003,25 +963,19 @@ class LowpanFragmentsBuffersManager(object):
 
     def _create_key(self, message_info, datagram_tag):
         key = (bytes(message_info.source_mac_address.mac_address) +
-               bytes(message_info.destination_mac_address.mac_address) +
-               bytes(datagram_tag))
+               bytes(message_info.destination_mac_address.mac_address) + bytes(datagram_tag))
         return key
 
     def _allocate_fragments_buffer(self, key, datagram_size):
         if datagram_size is None or datagram_size < 0:
-            raise ValueError(
-                "Could not allocate fragments buffer. Invalid datagram size: {}"
-                .format(datagram_size))
+            raise ValueError("Could not allocate fragments buffer. Invalid datagram size: {}".format(datagram_size))
 
         fragments_buffer = LowpanFragmentsBuffer(datagram_size)
 
         self._fragments_buffers[key] = fragments_buffer
         return fragments_buffer
 
-    def get_fragments_buffer(self,
-                             message_info,
-                             datagram_tag,
-                             datagram_size=None):
+    def get_fragments_buffer(self, message_info, datagram_tag, datagram_size=None):
         key = self._create_key(message_info, datagram_tag)
 
         if key not in self._fragments_buffers:
@@ -1046,8 +1000,7 @@ class LowpanParser(object):
     ):
         self._lowpan_mesh_header_factory = lowpan_mesh_header_factory
         self._lowpan_decompressor = lowpan_decompressor
-        self._lowpan_fragments_buffers_manager = (
-            lowpan_fragements_buffers_manager)
+        self._lowpan_fragments_buffers_manager = (lowpan_fragements_buffers_manager)
         self._ipv6_packet_factory = ipv6_packet_factory
 
     def _peek_n_bytes(self, data, n):
@@ -1079,14 +1032,12 @@ class LowpanParser(object):
             fragmentation_header.datagram_size,
         )
 
-        ipv6_header, extension_headers, udp_header = self._decompress_iphc(
-            data, message_info)
+        ipv6_header, extension_headers, udp_header = self._decompress_iphc(data, message_info)
 
         uncompressed_data = data.read()
 
         # Update payload lengths
-        ipv6_header.payload_length = fragmentation_header.datagram_size - len(
-            ipv6_header)
+        ipv6_header.payload_length = fragmentation_header.datagram_size - len(ipv6_header)
 
         fragments_buffer.seek(0)
         fragments_buffer.write(ipv6_header.to_bytes())
@@ -1102,8 +1053,8 @@ class LowpanParser(object):
         if fragments_buffer.whole_packet_received():
             data = io.BytesIO(fragments_buffer.read())
 
-            self._lowpan_fragments_buffers_manager.free_fragments_buffer(
-                message_info, fragmentation_header.datagram_tag)
+            self._lowpan_fragments_buffers_manager.free_fragments_buffer(message_info,
+                                                                         fragmentation_header.datagram_tag)
 
             return self._ipv6_packet_factory.parse(data, message_info)
 
@@ -1126,16 +1077,15 @@ class LowpanParser(object):
         if fragments_buffer.whole_packet_received():
             data = io.BytesIO(fragments_buffer.read())
 
-            self._lowpan_fragments_buffers_manager.free_fragments_buffer(
-                message_info, fragmentation_header.datagram_tag)
+            self._lowpan_fragments_buffers_manager.free_fragments_buffer(message_info,
+                                                                         fragmentation_header.datagram_tag)
 
             return self._ipv6_packet_factory.parse(data, message_info)
 
         return None
 
     def _handle_iphc_header(self, data, message_info):
-        ipv6_header, extension_headers, udp_header = self._decompress_iphc(
-            data, message_info)
+        ipv6_header, extension_headers, udp_header = self._decompress_iphc(data, message_info)
 
         uncompressed_data = data.read()
 
@@ -1155,8 +1105,7 @@ class LowpanParser(object):
 
         decompressed_data = ipv6_header.to_bytes() + decompressed_data
 
-        return self._ipv6_packet_factory.parse(io.BytesIO(decompressed_data),
-                                               message_info)
+        return self._ipv6_packet_factory.parse(io.BytesIO(decompressed_data), message_info)
 
     def set_lowpan_context(self, cid, prefix):
         self._lowpan_decompressor.set_lowpan_context(cid, prefix)
@@ -1167,25 +1116,19 @@ class LowpanParser(object):
             first_byte = ord(self._peek_n_bytes(data, n=1))
 
             if self._is_mesh_header(first_byte):
-                mesh_header = self._lowpan_mesh_header_factory.parse(
-                    data, message_info)
+                mesh_header = self._lowpan_mesh_header_factory.parse(data, message_info)
 
-                message_info.source_mac_address = (
-                    mesh_header.originator_address)
-                message_info.destination_mac_address = (
-                    mesh_header.final_destination_address)
+                message_info.source_mac_address = (mesh_header.originator_address)
+                message_info.destination_mac_address = (mesh_header.final_destination_address)
 
             elif self._is_first_fragmentation_header(first_byte):
-                return self._handle_first_fragmentation_header(
-                    data, message_info)
+                return self._handle_first_fragmentation_header(data, message_info)
 
             elif self._is_subsequent_fragmentation_header(first_byte):
-                return self._handle_subsequent_fragmentation_header(
-                    data, message_info)
+                return self._handle_subsequent_fragmentation_header(data, message_info)
 
             elif self._is_iphc(first_byte):
                 return self._handle_iphc_header(data, message_info)
 
             else:
-                raise RuntimeError(
-                    "Unsupported header type: 0x{:02x}".format(first_byte))
+                raise RuntimeError("Unsupported header type: 0x{:02x}".format(first_byte))

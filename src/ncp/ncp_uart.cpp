@@ -133,7 +133,7 @@ void NcpUart::EncodeAndSendToUart(void)
     uint16_t len;
     bool     prevHostPowerState;
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
-    Spinel::BufferEncrypterReader &txFrameBuffer = mTxFrameBufferEncrypterReader;
+    BufferEncrypterReader &txFrameBuffer = mTxFrameBufferEncrypterReader;
 #else
     Spinel::Buffer &txFrameBuffer = mTxFrameBuffer;
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
@@ -308,19 +308,19 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
-NcpUart::Spinel::BufferEncrypterReader::SpinelBufferEncrypterReader(Spinel::Buffer &aTxFrameBuffer)
+NcpUart::BufferEncrypterReader::BufferEncrypterReader(Spinel::Buffer &aTxFrameBuffer)
     : mTxFrameBuffer(aTxFrameBuffer)
     , mDataBufferReadIndex(0)
     , mOutputDataLength(0)
 {
 }
 
-bool NcpUart::Spinel::BufferEncrypterReader::IsEmpty(void) const
+bool NcpUart::BufferEncrypterReader::IsEmpty(void) const
 {
     return mTxFrameBuffer.IsEmpty() && !mOutputDataLength;
 }
 
-otError NcpUart::Spinel::BufferEncrypterReader::OutFrameBegin(void)
+otError NcpUart::BufferEncrypterReader::OutFrameBegin(void)
 {
     otError status = OT_ERROR_FAILED;
 
@@ -350,22 +350,22 @@ otError NcpUart::Spinel::BufferEncrypterReader::OutFrameBegin(void)
     return status;
 }
 
-bool NcpUart::Spinel::BufferEncrypterReader::OutFrameHasEnded(void)
+bool NcpUart::BufferEncrypterReader::OutFrameHasEnded(void)
 {
     return (mDataBufferReadIndex >= mOutputDataLength);
 }
 
-uint8_t NcpUart::Spinel::BufferEncrypterReader::OutFrameReadByte(void)
+uint8_t NcpUart::BufferEncrypterReader::OutFrameReadByte(void)
 {
     return mDataBuffer[mDataBufferReadIndex++];
 }
 
-otError NcpUart::Spinel::BufferEncrypterReader::OutFrameRemove(void)
+otError NcpUart::BufferEncrypterReader::OutFrameRemove(void)
 {
     return mTxFrameBuffer.OutFrameRemove();
 }
 
-void NcpUart::Spinel::BufferEncrypterReader::Reset(void)
+void NcpUart::BufferEncrypterReader::Reset(void)
 {
     mOutputDataLength    = 0;
     mDataBufferReadIndex = 0;

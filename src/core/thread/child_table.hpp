@@ -320,6 +320,61 @@ public:
      */
     IteratorBuilder Iterate(Child::StateFilter aFilter) { return IteratorBuilder(GetInstance(), aFilter); }
 
+    /**
+     * This method retains diagnostic information for an attached child by Child ID or RLOC16.
+     *
+     * @param[in]   aChildId    The Child ID or RLOC16 for an attached child.
+     * @param[out]  aChildInfo  A reference to a `Child::Info` to populate with the child information.
+     *
+     */
+    otError GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo);
+
+    /**
+     * This method retains diagnostic information for an attached child by the internal table index.
+     *
+     * @param[in]   aChildIndex  The table index.
+     * @param[out]  aChildInfo   A reference to a `Child::Info` to populate with the child information.
+     *
+     */
+    otError GetChildInfoByIndex(uint16_t aChildIndex, Child::Info &aChildInfo);
+
+    /**
+     * This method restores child table from non-volatile memory.
+     *
+     */
+    void Restore(void);
+
+    /**
+     * This method removes a stored child information from non-volatile memory.
+     *
+     * @param[in]  aChildRloc16     A reference to the child to remove from non-volatile memory.
+     *
+     */
+    void RemoveStoredChild(const Child &aChild);
+
+    /**
+     * This method store a child information into non-volatile memory.
+     *
+     * @param[in]  aChild          A reference to the child to store.
+     *
+     * @retval  OT_ERROR_NONE      Successfully store child.
+     * @retval  OT_ERROR_NO_BUFS   Insufficient available buffers to store child.
+     *
+     */
+    otError StoreChild(const Child &aChild);
+
+    /**
+     * This method indicates whether the child table contains any sleepy child (in states valid or restoring) with a
+     * given IPv6 address.
+     *
+     * @param[in]  aIp6Address  An IPv6 address.
+     *
+     * @retval TRUE   If the child table contains any sleepy child with @p aIp6Address.
+     * @retval FALSE  If the child table does not contain any sleepy child with @p aIp6Address.
+     *
+     */
+    bool HasSleepyChildWithAddress(const Ip6::Address &aIp6ddress) const;
+
 private:
     enum
     {
@@ -341,6 +396,8 @@ private:
     private:
         Child::StateFilter mFilter;
     };
+
+    void RefreshStoredChildren(void);
 
     uint16_t mMaxChildrenAllowed;
     Child    mChildren[kMaxChildren];

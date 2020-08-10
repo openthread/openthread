@@ -26,7 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-url
+add_library(openthread-url EXCLUDE_FROM_ALL
     url.cpp
 )
 

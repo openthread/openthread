@@ -434,7 +434,7 @@ otError Mle::Restore(void)
     {
         Get<MleRouter>().SetRouterId(RouterIdFromRloc16(GetRloc16()));
         Get<MleRouter>().SetPreviousPartitionId(networkInfo.GetPreviousPartitionId());
-        Get<MleRouter>().RestoreChildren();
+        Get<ChildTable>().Restore();
     }
 #endif
 

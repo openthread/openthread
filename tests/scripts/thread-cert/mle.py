@@ -143,10 +143,8 @@ class Mode(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return (self.receiver == other.receiver and
-                self.secure == other.secure and
-                self.device_type == other.device_type and
-                self.network_data == other.network_data)
+        return (self.receiver == other.receiver and self.secure == other.secure and
+                self.device_type == other.device_type and self.network_data == other.network_data)
 
     def __repr__(self):
         return "Mode(receiver={}, secure={}, device_type={}, network_data={})".format(
@@ -254,8 +252,7 @@ class LinkLayerFrameCounter(object):
         return self.frame_counter == other.frame_counter
 
     def __repr__(self):
-        return "LinkLayerFrameCounter(frame_counter={})".format(
-            self.frame_counter)
+        return "LinkLayerFrameCounter(frame_counter={})".format(self.frame_counter)
 
 
 class LinkLayerFrameCounterFactory:
@@ -312,12 +309,10 @@ class LinkQualityAndRouteData(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return (self.output == other.output and self.input == other.input and
-                self.route == other.route)
+        return (self.output == other.output and self.input == other.input and self.route == other.route)
 
     def __repr__(self):
-        return "LinkQualityAndRouteData(ouput={}, input={}, route={})".format(
-            self.output, self.input, self.route)
+        return "LinkQualityAndRouteData(ouput={}, input={}, route={})".format(self.output, self.input, self.route)
 
 
 class LinkQualityAndRouteDataFactory:
@@ -332,8 +327,7 @@ class LinkQualityAndRouteDataFactory:
 
 class Route64(object):
 
-    def __init__(self, id_sequence, router_id_mask,
-                 link_quality_and_route_data):
+    def __init__(self, id_sequence, router_id_mask, link_quality_and_route_data):
         self._id_sequence = id_sequence
         self._router_id_mask = router_id_mask
         self._link_quality_and_route_data = link_quality_and_route_data
@@ -353,14 +347,11 @@ class Route64(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return (self.id_sequence == other.id_sequence and
-                self.router_id_mask == other.router_id_mask and
-                self.link_quality_and_route_data ==
-                other.link_quality_and_route_data)
+        return (self.id_sequence == other.id_sequence and self.router_id_mask == other.router_id_mask and
+                self.link_quality_and_route_data == other.link_quality_and_route_data)
 
     def __repr__(self):
-        lqrd_str = ", ".join(
-            ["{}".format(lqrd) for lqrd in self.link_quality_and_route_data])
+        lqrd_str = ", ".join(["{}".format(lqrd) for lqrd in self.link_quality_and_route_data])
         return "Route64(id_sequence={}, router_id_mask={}, link_quality_and_route_data=[{}])".format(
             self.id_sequence, hex(self.router_id_mask), lqrd_str)
 
@@ -377,8 +368,7 @@ class Route64Factory:
         link_quality_and_route_data = []
 
         while data.tell() < len(data.getvalue()):
-            link_quality_and_route_data.append(
-                self._lqrd_factory.parse(data, message_info))
+            link_quality_and_route_data.append(self._lqrd_factory.parse(data, message_info))
 
         return Route64(id_sequence, router_id_mask, link_quality_and_route_data)
 
@@ -447,10 +437,8 @@ class LeaderData(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return (self.partition_id == other.partition_id and
-                self.weighting == other.weighting and
-                self.data_version == other.data_version and
-                self.stable_data_version == other.stable_data_version and
+        return (self.partition_id == other.partition_id and self.weighting == other.weighting and
+                self.data_version == other.data_version and self.stable_data_version == other.stable_data_version and
                 self.leader_router_id == other.leader_router_id)
 
     def __repr__(self):
@@ -552,12 +540,10 @@ class ScanMask(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return (self.router == other.router and
-                self.end_device == other.end_device)
+        return (self.router == other.router and self.end_device == other.end_device)
 
     def __repr__(self):
-        return "ScanMask(router={}, end_device={})".format(
-            self.router, self.end_device)
+        return "ScanMask(router={}, end_device={})".format(self.router, self.end_device)
 
 
 class ScanMaskFactory:
@@ -636,14 +622,10 @@ class Connectivity(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return (self.pp == other.pp and
-                self.link_quality_3 == other.link_quality_3 and
-                self.link_quality_2 == other.link_quality_2 and
-                self.link_quality_1 == other.link_quality_1 and
-                self.leader_cost == other.leader_cost and
-                self.id_sequence == other.id_sequence and
-                self.active_routers == other.active_routers and
-                self.sed_buffer_size == other.sed_buffer_size and
+        return (self.pp == other.pp and self.link_quality_3 == other.link_quality_3 and
+                self.link_quality_2 == other.link_quality_2 and self.link_quality_1 == other.link_quality_1 and
+                self.leader_cost == other.leader_cost and self.id_sequence == other.id_sequence and
+                self.active_routers == other.active_routers and self.sed_buffer_size == other.sed_buffer_size and
                 self.sed_datagram_count == other.sed_datagram_count)
 
     def __repr__(self):
@@ -791,8 +773,7 @@ class AddressFull(object):
         return self.ipv6_address == other.ipv6_address
 
     def __repr__(self):
-        return "AddressFull(ipv6_address={}')".format(hexlify(
-            self.ipv6_address))
+        return "AddressFull(ipv6_address={}')".format(hexlify(self.ipv6_address))
 
 
 class AddressFullFactory:
@@ -823,8 +804,7 @@ class AddressCompressed(object):
         return self.cid == other.cid and self.iid == other.iid
 
     def __repr__(self):
-        return "AddressCompressed(cid={}, iid={}')".format(
-            self.cid, hexlify(self.iid))
+        return "AddressCompressed(cid={}, iid={}')".format(self.cid, hexlify(self.iid))
 
 
 class AddressCompressedFactory:
@@ -850,8 +830,7 @@ class AddressRegistration(object):
         return self.addresses == other.addresses
 
     def __repr__(self):
-        addresses_str = ", ".join(
-            ["{}".format(address) for address in self.addresses])
+        addresses_str = ", ".join(["{}".format(address) for address in self.addresses])
         return "AddressRegistration(addresses=[{}])".format(addresses_str)
 
 
@@ -869,11 +848,9 @@ class AddressRegistrationFactory:
             data.seek(-1, io.SEEK_CUR)
 
             if compressed:
-                addresses.append(
-                    self._addr_compressed_factory.parse(data, message_info))
+                addresses.append(self._addr_compressed_factory.parse(data, message_info))
             else:
-                addresses.append(
-                    self._addr_full_factory.parse(data, message_info))
+                addresses.append(self._addr_full_factory.parse(data, message_info))
 
         return AddressRegistration(addresses)
 
@@ -895,12 +872,10 @@ class Channel(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return (self.channel_page == other.channel_page and
-                self.channel == other.channel)
+        return (self.channel_page == other.channel_page and self.channel == other.channel)
 
     def __repr__(self):
-        return "Channel(channel_page={}, channel={})".format(
-            self.channel_page, self.channel)
+        return "Channel(channel_page={}, channel={})".format(self.channel_page, self.channel)
 
 
 class ChannelFactory:
@@ -958,8 +933,7 @@ class ActiveTimestamp(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return (self.timestamp_seconds == other.timestamp_seconds and
-                self.timestamp_ticks == other.timestamp_ticks and
+        return (self.timestamp_seconds == other.timestamp_seconds and self.timestamp_ticks == other.timestamp_ticks and
                 self.u == other.u)
 
     def __repr__(self):
@@ -1001,8 +975,7 @@ class PendingTimestamp(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return (self.timestamp_seconds == other.timestamp_seconds and
-                self.timestamp_ticks == other.timestamp_ticks and
+        return (self.timestamp_seconds == other.timestamp_seconds and self.timestamp_ticks == other.timestamp_ticks and
                 self.u == other.u)
 
     def __repr__(self):
@@ -1138,9 +1111,7 @@ class MleCommandFactory:
         try:
             return self._tlvs_factories[_type]
         except KeyError:
-            logging.error(
-                'Could not find TLV factory. Unsupported TLV type: {}'.format(
-                    _type))
+            logging.error('Could not find TLV factory. Unsupported TLV type: {}'.format(_type))
             return UnknownTlvFactory(_type)
 
     def _parse_tlv(self, data, message_info):
@@ -1192,8 +1163,8 @@ class MleMessageSecured(MleMessage):
         return self._mic
 
     def __repr__(self):
-        return "MleMessageSecured(aux_sec_hdr={}, command={}, mic=\"{}\")".format(
-            self.aux_sec_hdr, self.command, hexlify(self.mic))
+        return "MleMessageSecured(aux_sec_hdr={}, command={}, mic=\"{}\")".format(self.aux_sec_hdr, self.command,
+                                                                                  hexlify(self.mic))
 
 
 class MleMessageFactory:
@@ -1208,15 +1179,12 @@ class MleMessageFactory:
 
         enc_data_length = len(data.getvalue())
 
-        enc_data = bytearray(
-            data.read(enc_data_length - data.tell() -
-                      self._crypto_engine.mic_length))
+        enc_data = bytearray(data.read(enc_data_length - data.tell() - self._crypto_engine.mic_length))
         mic = bytearray(data.read())
 
         dec_data = self._crypto_engine.decrypt(enc_data, mic, message_info)
 
-        command = self._mle_command_factory.parse(io.BytesIO(dec_data),
-                                                  message_info)
+        command = self._mle_command_factory.parse(io.BytesIO(dec_data), message_info)
 
         return MleMessageSecured(aux_sec_hdr, command, mic)
 
@@ -1236,5 +1204,4 @@ class MleMessageFactory:
 
         else:
             raise RuntimeError(
-                "Could not create MLE message. Unknown security indicator value: {}"
-                .format(security_indicator))
+                "Could not create MLE message. Unknown security indicator value: {}".format(security_indicator))

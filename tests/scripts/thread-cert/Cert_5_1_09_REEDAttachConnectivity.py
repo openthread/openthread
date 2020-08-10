@@ -143,8 +143,7 @@ class Cert_5_1_09_REEDAttachConnectivity(thread_cert.TestCase):
         )
 
         # 6 - Router2
-        msg = router2_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_REQUEST)
+        msg = router2_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         msg.assertSentToNode(self.nodes[REED1])
         msg.assertMleMessageContainsTlv(mle.Response)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
