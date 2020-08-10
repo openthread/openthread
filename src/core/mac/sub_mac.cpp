@@ -66,7 +66,7 @@ SubMac::SubMac(Instance &aInstance)
     , mKeyId(0)
     , mTimer(aInstance, SubMac::HandleTimer, this)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    , mCslTimeout(OPENTHREAD_CONFIG_CSL_DEFAULT_SYNCHRONIZED_TIMEOUT)
+    , mCslTimeout(OPENTHREAD_CONFIG_CSL_TIMEOUT)
     , mCslPeriod(0)
     , mCslChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mCslState(kCslIdle)

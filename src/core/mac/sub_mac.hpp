@@ -299,7 +299,7 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
-     * This method let `SubMac` start CSL sample.
+     * This method lets `SubMac` start CSL sample.
      *
      * `SubMac` would switch the radio state between `Receive` and `Sleep` according the CSL timer. When CslSample is
      * started, `mState` will become `kStateCslSample`. But it could be doing `Sleep` or `Receive` at this moment
