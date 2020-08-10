@@ -113,7 +113,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor, int aRealTimeSignal)
         sa.sa_sigaction = microTimerHandler;
         sigemptyset(&sa.sa_mask);
 
-        VerifyOrDie(sigaction(aRealTimeSignal, &sa, NULL) != -1, OT_EXIT_ERROR_ERRNO);
+        VerifyOrDie(sigaction(aRealTimeSignal, &sa, nullptr) != -1, OT_EXIT_ERROR_ERRNO);
 
         sev.sigev_notify          = SIGEV_SIGNAL;
         sev.sigev_signo           = aRealTimeSignal;
@@ -176,7 +176,7 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
         its.it_interval.tv_sec  = 0;
         its.it_interval.tv_nsec = 0;
 
-        if (-1 == timer_settime(sMicroTimer, 0, &its, NULL))
+        if (-1 == timer_settime(sMicroTimer, 0, &its, nullptr))
         {
             otLogWarnPlat("Failed to update microsecond timer: %s", strerror(errno));
         }
@@ -195,7 +195,7 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
     {
         struct itimerspec its = {{0, 0}, {0, 0}};
 
-        if (-1 == timer_settime(sMicroTimer, 0, &its, NULL))
+        if (-1 == timer_settime(sMicroTimer, 0, &its, nullptr))
         {
             otLogWarnPlat("Failed to stop microsecond timer: %s", strerror(errno));
         }

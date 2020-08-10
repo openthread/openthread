@@ -68,7 +68,7 @@ otError LinkRaw::SetReceiveDone(otLinkRawReceiveDone aCallback)
 {
     otError error = OT_ERROR_NONE;
 
-    otLogDebgMac("LinkRaw::Enabled(%s)", (aCallback != NULL ? "true" : "false"));
+    otLogDebgMac("LinkRaw::Enabled(%s)", (aCallback != nullptr ? "true" : "false"));
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     VerifyOrExit(!Get<ThreadNetif>().IsUp(), error = OT_ERROR_INVALID_STATE);
