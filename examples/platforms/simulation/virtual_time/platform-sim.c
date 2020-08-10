@@ -314,8 +314,6 @@ void otSysProcessDrivers(otInstance *aInstance)
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
 
-#include <openthread/platform/alarm-micro.h>
-
 void otPlatOtnsStatus(const char *aStatus)
 {
     struct Event event;
