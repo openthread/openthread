@@ -55,6 +55,7 @@ Manager::Manager(Instance &aInstance)
     , mDuaRegistration(OT_URI_PATH_DUA_REGISTRATION_REQUEST, Manager::HandleDuaRegistration, this)
     , mMulticastListenersTable(aInstance)
     , mTimer(aInstance, Manager::HandleTimer, this)
+    , mBackboneNetifIndex(0)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mDuaResponseStatus(ThreadStatusTlv::kDuaSuccess)
     , mDuaResponseIsSpecified(false)
@@ -158,8 +159,13 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 exit:
     if (error == OT_ERROR_NONE)
     {
-        SendMulticastListenerRegistrationResponse(aMessage, aMessageInfo, status, failedAddresses, failedAddressNum);
-        // TODO: (MLR) send BMLR.req
+        SendMulticastListenerRegistrationResponse(aMessage, aMessageInfo, status, addresses, failedAddressNum);
+    }
+
+    if (successAddressNum > 0)
+    {
+        SendBackboneMulticastListenerRegistration(&addresses[OT_ARRAY_LENGTH(addresses) - successAddressNum],
+                                                  successAddressNum, timeout);
     }
 }
 
@@ -202,6 +208,49 @@ exit:
     }
 
     otLogInfoBbr("Sent MLR.rsp (status=%d): %s", aStatus, otThreadErrorToString(error));
+}
+
+void Manager::SendBackboneMulticastListenerRegistration(const Ip6::Address *aAddresses,
+                                                        uint8_t             aAddressNum,
+                                                        uint32_t            aTimeout)
+{
+    otError          error   = OT_ERROR_NONE;
+    Coap::Message *  message = nullptr;
+    Ip6::MessageInfo messageInfo;
+    IPv6AddressesTlv addressesTlv;
+
+    OT_ASSERT(aAddressNum >= kIPv6AddressesNumMin && aAddressNum <= kIPv6AddressesNumMax);
+
+    VerifyOrExit((message = GetBackboneCoap().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+
+    message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
+    SuccessOrExit(message->SetToken(Coap::Message::kDefaultTokenLength));
+    SuccessOrExit(message->AppendUriPathOptions(OT_URI_PATH_BACKBONE_MLR));
+    SuccessOrExit(message->SetPayloadMarker());
+
+    addressesTlv.Init();
+    addressesTlv.SetLength(sizeof(Ip6::Address) * aAddressNum);
+    SuccessOrExit(error = message->Append(&addressesTlv, sizeof(addressesTlv)));
+    SuccessOrExit(error = message->Append(aAddresses, sizeof(Ip6::Address) * aAddressNum));
+
+    SuccessOrExit(ThreadTlv::AppendUint32Tlv(*message, ThreadTlv::kTimeout, aTimeout));
+
+    messageInfo.SetPeerAddr(Get<BackboneRouter::Local>().GetAllNetworkBackboneRoutersAddress());
+    messageInfo.SetPeerPort(kCoapUdpPort); // TODO: Provide API for configuring Backbone COAP port.
+
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    messageInfo.SetHopLimit(Mle::kDefaultBackboneHoplimit);
+    messageInfo.SetIsHostInterface(true);
+
+    SuccessOrExit(error = GetBackboneCoap().SendMessage(*message, messageInfo, nullptr, nullptr));
+
+exit:
+    if (error != OT_ERROR_NONE && message != nullptr)
+    {
+        message->Free();
+    }
+
+    otLogInfoBbr("Sent BMLR.ntf: %s", otThreadErrorToString(error));
 }
 
 void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -276,6 +325,22 @@ exit:
                  otThreadErrorToString(error));
 }
 
+void Manager::SetBackboneNetif(uint32_t aNetifIndex)
+{
+    mBackboneNetifIndex = aNetifIndex;
+    otLogNoteBbr("Set Backbone Netif index = %d", mBackboneNetifIndex);
+}
+
+uint32_t Manager::GetBackboneNetif(void)
+{
+    return mBackboneNetifIndex;
+}
+
+Coap::Coap &Manager::GetBackboneCoap(void)
+{
+    return GetInstance().GetBackboneCoap();
+}
+
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 void Manager::ConfigNextDuaRegistrationResponse(const Ip6::InterfaceIdentifier *aMlIid, uint8_t aStatus)
 {
@@ -292,6 +357,7 @@ void Manager::ConfigNextDuaRegistrationResponse(const Ip6::InterfaceIdentifier *
 
     mDuaResponseStatus = static_cast<ThreadStatusTlv::DuaStatus>(aStatus);
 }
+
 #endif
 
 } // namespace BackboneRouter

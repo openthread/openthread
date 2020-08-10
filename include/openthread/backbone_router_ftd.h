@@ -228,6 +228,29 @@ void otBackboneRouterSetMulticastListenerCallback(otInstance *                  
                                                   void *                                    aContext);
 
 /**
+ * This function sets the Backbone network interface index.
+ *
+ * @param[in] aInstance    A pointer to an OpenThread instance.
+ * @param[in] aNetifIndex  The Backbone network interface index.
+ *
+ * @sa otBackboneRouterGetBackboneNetifIndex
+ *
+ */
+void otBackboneRouterSetBackboneNetifIndex(otInstance *aInstance, uint32_t aNetifIndex);
+
+/**
+ * This function gets the Backbone network interface index.
+ *
+ * @param[in] aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns  The Backbone network interface index.
+ *
+ * @sa otBackboneRouterSetBackboneNetifIndex
+ *
+ */
+uint32_t otBackboneRouterGetBackboneNetifIndex(otInstance *aInstance);
+
+/**
  * This method clears the Multicast Listeners.
  *
  * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.

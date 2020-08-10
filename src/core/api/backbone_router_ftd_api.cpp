@@ -120,6 +120,20 @@ void otBackboneRouterSetMulticastListenerCallback(otInstance *                  
     instance.Get<BackboneRouter::MulticastListenersTable>().SetCallback(aCallback, aContext);
 }
 
+void otBackboneRouterSetBackboneNetifIndex(otInstance *aInstance, uint32_t aNetifIndex)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<BackboneRouter::Manager>().SetBackboneNetif(aNetifIndex);
+}
+
+uint32_t otBackboneRouterGetBackboneNetifIndex(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<BackboneRouter::Manager>().GetBackboneNetif();
+}
+
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance *                    aInstance,
                                                        const otIp6InterfaceIdentifier *aMlIid,

@@ -90,6 +90,21 @@ public:
      */
     MulticastListenersTable &GetMulticastListenersTable(void) { return mMulticastListenersTable; }
 
+    /**
+     * This method sets the Backbone network interface index.
+     *
+     * @param[in] aNetifIndex  The Backbone network interface index.
+     *
+     */
+    void SetBackboneNetif(uint32_t aNetifIndex);
+
+    /**
+     * This method gets the Backbone network interface index.
+     *
+     * @returns  The Backbone network interface index.
+     */
+    uint32_t GetBackboneNetif(void);
+
 private:
     enum
     {
@@ -109,6 +124,9 @@ private:
                                                    ThreadStatusTlv::MlrStatus aStatus,
                                                    Ip6::Address *             aFailedAddresses,
                                                    uint8_t                    aFailedAddressNum);
+    void SendBackboneMulticastListenerRegistration(const Ip6::Address *aAddresses,
+                                                   uint8_t             aAddressNum,
+                                                   uint32_t            aTimeout);
 
     static void HandleDuaRegistration(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
@@ -125,12 +143,14 @@ private:
 
     static void HandleTimer(Timer &aTimer) { aTimer.GetOwner<Manager>().HandleTimer(); }
     void        HandleTimer(void);
+    Coap::Coap &GetBackboneCoap(void);
 
     Coap::Resource mMulticastListenerRegistration;
     Coap::Resource mDuaRegistration;
 
     MulticastListenersTable mMulticastListenersTable;
     TimerMilli              mTimer;
+    uint32_t                mBackboneNetifIndex;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     Ip6::InterfaceIdentifier   mDuaResponseTargetMlIid;

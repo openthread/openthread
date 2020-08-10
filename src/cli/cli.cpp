@@ -92,6 +92,11 @@
 #include <openthread/platform/debug_uart.h>
 #endif
 
+#if OPENTHREAD_POSIX
+#include <net/if.h>
+#endif
+
+#include "cli_server.hpp"
 #include "common/encoding.hpp"
 #include "common/string.hpp"
 
@@ -555,6 +560,15 @@ void Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
             }
         }
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
+#if OPENTHREAD_POSIX
+        if (strcmp(aArgs[0], "netif") == 0)
+        {
+            error = ProcessBackboneRouterNetif(aArgsLength - 1, aArgs + 1);
+            ExitNow();
+        }
+#endif
+
         SuccessOrExit(error = ProcessBackboneRouterLocal(aArgsLength, aArgs));
     }
 
@@ -718,6 +732,38 @@ otError Interpreter::ProcessBackboneRouterLocal(uint8_t aArgsLength, char *aArgs
 exit:
     return error;
 }
+
+#if OPENTHREAD_POSIX
+otError Interpreter::ProcessBackboneRouterNetif(uint8_t aArgsLength, char **aArgs)
+{
+    otError       error = OT_ERROR_NONE;
+    uint32_t      netifIndex;
+    unsigned long value;
+
+    if (aArgsLength == 0)
+    {
+        mServer->OutputFormat("%lu\r\n", otBackboneRouterGetBackboneNetifIndex(mInstance));
+        ExitNow();
+    }
+
+    VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+
+    if (ParseUnsignedLong(aArgs[0], value) == OT_ERROR_NONE)
+    {
+        netifIndex = value;
+    }
+    else
+    {
+        VerifyOrExit((netifIndex = if_nametoindex(aArgs[0])) != 0, error = OT_ERROR_FAILED);
+    }
+
+    otBackboneRouterSetBackboneNetifIndex(mInstance, netifIndex);
+
+exit:
+    return error;
+}
+#endif
+
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 void Interpreter::ProcessDomainName(uint8_t aArgsLength, char *aArgs[])

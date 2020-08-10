@@ -185,6 +185,31 @@ Done
 Done
 ```
 
+### bbr netif
+
+Get the Backbone network interface index.
+
+Only for Posix Backbone Router devices.
+
+```bash
+> bbr netif
+0
+Done
+```
+
+### bbr netif <interface-name | interface-index>
+
+Set the Backbone network interface index value or by name.
+
+Only for Posix Backbone Router devices.
+
+```bash
+> bbr netif eth0
+Done
+> bbr netif 2
+Done
+```
+
 ### bbr state
 
 Show local Backbone state ([`Disabled`,`Primary`, `Secondary`]) for Thread 1.2 FTD.

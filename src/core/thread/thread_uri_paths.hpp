@@ -333,6 +333,14 @@ namespace ot {
  */
 #define OT_URI_PATH_BACKBONE_ANSWER "b/ba"
 
+/**
+ * @def OT_URI_PATH_BACKBONE_MLR
+ *
+ * The URI Path for Backbone Multicast Listener Report.
+ *
+ */
+#define OT_URI_PATH_BACKBONE_MLR "b/bmr"
+
 } // namespace ot
 
 #endif // THREAD_URIS_HPP_

@@ -279,6 +279,11 @@ private:
     otError ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char **aArgs);
     void    PrintMulticastListenersTable(void);
 #endif
+
+#if OPENTHREAD_POSIX
+    otError ProcessBackboneRouterNetif(uint8_t aArgsLength, char **aArgs);
+#endif
+
 #endif
 
     void ProcessDomainName(uint8_t aArgsLength, char *aArgs[]);
