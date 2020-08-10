@@ -133,16 +133,11 @@ class MacCounters:
         return self.counters == other.counters
 
     def __repr__(self):
-        return ('MacCounters(' +
-                f'if_in_unknown_protos={self.if_in_unknown_protos}, ' +
-                f'if_in_errors={self.if_in_errors}, ' +
-                f'if_out_errors={self.if_out_errors}, ' +
-                f'if_in_ucast_pkts={self.if_in_ucast_pkts}, ' +
-                f'if_in_broadcast_pkts={self.if_in_broadcast_pkts}, ' +
-                f'if_in_discards={self.if_in_discards}, ' +
-                f'if_out_ucast_pkts={self.if_out_ucast_pkts}, ' +
-                f'if_out_broadcast_pkts={self.if_out_broadcast_pkts}, ' +
-                f'if_out_discards={self.if_out_discards})')
+        return ('MacCounters(' + f'if_in_unknown_protos={self.if_in_unknown_protos}, ' +
+                f'if_in_errors={self.if_in_errors}, ' + f'if_out_errors={self.if_out_errors}, ' +
+                f'if_in_ucast_pkts={self.if_in_ucast_pkts}, ' + f'if_in_broadcast_pkts={self.if_in_broadcast_pkts}, ' +
+                f'if_in_discards={self.if_in_discards}, ' + f'if_out_ucast_pkts={self.if_out_ucast_pkts}, ' +
+                f'if_out_broadcast_pkts={self.if_out_broadcast_pkts}, ' + f'if_out_discards={self.if_out_discards})')
 
 
 class MacCountersFactory:
@@ -221,8 +216,7 @@ class ChildTableEntry:
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return (self.timeout == other.timeout and
-                self.child_id == other.child_id and self.mode == other.mode)
+        return (self.timeout == other.timeout and self.child_id == other.child_id and self.mode == other.mode)
 
     def __repr__(self):
         return f'ChildTableEntry(timeout={self.timeout}, child_id={self.child_id}, mode={self.mode})'

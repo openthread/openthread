@@ -42,14 +42,9 @@ REED1 = 17
 class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
-            'mode':
-                'rsdn',
-            'panid':
-                0xface,
-            'whitelist': [
-                ROUTER2, ROUTER3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                ROUTER15
-            ]
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER2, ROUTER3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ROUTER15]
         },
         ROUTER1: {
             'mode': 'rsdn',

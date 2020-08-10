@@ -74,8 +74,7 @@ WAIT_TIME = 0.36  # in seconds
 
 for poll_interval in [100, 200, 500, 50]:  # in milliseconds
 
-    poll_count_before = int(child.get(wpan.WPAN_NCP_COUNTER_TX_PKT_DATA_POLL),
-                            0)
+    poll_count_before = int(child.get(wpan.WPAN_NCP_COUNTER_TX_PKT_DATA_POLL), 0)
 
     child.set(wpan.WPAN_POLL_INTERVAL, str(poll_interval))
     verify(int(child.get(wpan.WPAN_POLL_INTERVAL), 0) == poll_interval)
@@ -86,8 +85,7 @@ for poll_interval in [100, 200, 500, 50]:  # in milliseconds
 
     expected_polls = WAIT_TIME * 1000 * speedup / poll_interval
 
-    print("poll interval {} ms, polls -> actual {}, expected {}".format(
-        poll_interval, actual_polls, expected_polls))
+    print("poll interval {} ms, polls -> actual {}, expected {}".format(poll_interval, actual_polls, expected_polls))
 
     verify(actual_polls >= int(expected_polls))
 

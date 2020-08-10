@@ -83,12 +83,96 @@ public:
      */
     enum StateFilter
     {
-        kInStateValid,                     ///< Accept child only in `kStateValid`.
-        kInStateValidOrRestoring,          ///< Accept child with `IsStateValidOrRestoring()` being `true`.
-        kInStateChildIdRequest,            ///< Accept child only in `Child:kStateChildIdRequest`.
-        kInStateValidOrAttaching,          ///< Accept child with `IsStateValidOrAttaching()` being `true`.
-        kInStateAnyExceptInvalid,          ///< Accept child in any state except `kStateInvalid`.
-        kInStateAnyExceptValidOrRestoring, ///< Accept child in any state except `IsStateValidOrRestoring()`.
+        kInStateValid,                     ///< Accept neighbor only in `kStateValid`.
+        kInStateValidOrRestoring,          ///< Accept neighbor with `IsStateValidOrRestoring()` being `true`.
+        kInStateChildIdRequest,            ///< Accept neighbor only in `Child:kStateChildIdRequest`.
+        kInStateValidOrAttaching,          ///< Accept neighbor with `IsStateValidOrAttaching()` being `true`.
+        kInStateInvalid,                   ///< Accept neighbor only in `kStateInvalid`.
+        kInStateAnyExceptInvalid,          ///< Accept neighbor in any state except `kStateInvalid`.
+        kInStateAnyExceptValidOrRestoring, ///< Accept neighbor in any state except `IsStateValidOrRestoring()`.
+        kInStateAny,                       ///< Accept neighbor in any state.
+    };
+
+    /**
+     * This class represents an Address Matcher used to find a neighbor (child/router) with a given MAC address also
+     * matching a given state filter.
+     *
+     */
+    class AddressMatcher
+    {
+    public:
+        /**
+         * This constructor initializes the `AddressMatcher` with a given MAC short address (RCOC16) and state filter.
+         *
+         * @param[in]  aShortAddress   A MAC short address (RLOC16).
+         * @param[in]  aStateFilter    A state filter.
+         *
+         */
+        AddressMatcher(Mac::ShortAddress aShortAddress, StateFilter aStateFilter)
+            : AddressMatcher(aStateFilter, aShortAddress, nullptr)
+        {
+        }
+
+        /**
+         * This constructor initializes the `AddressMatcher` with a given MAC extended address and state filter.
+         *
+         * @param[in]  aExtAddress     A MAC extended address.
+         * @param[in]  aStateFilter    A state filter.
+         *
+         */
+        AddressMatcher(const Mac::ExtAddress &aExtAddress, StateFilter aStateFilter)
+            : AddressMatcher(aStateFilter, Mac::kShortAddrInvalid, &aExtAddress)
+        {
+        }
+
+        /**
+         * This constructor initializes the `AddressMatcher` with a given MAC address and state filter.
+         *
+         * @param[in]  aMacAddress     A MAC address.
+         * @param[in]  aStateFilter    A state filter.
+         *
+         */
+        AddressMatcher(const Mac::Address &aMacAddress, StateFilter aStateFilter)
+            : AddressMatcher(aStateFilter,
+                             aMacAddress.IsShort() ? aMacAddress.GetShort()
+                                                   : static_cast<Mac::ShortAddress>(Mac::kShortAddrInvalid),
+                             aMacAddress.IsExtended() ? &aMacAddress.GetExtended() : nullptr)
+        {
+        }
+
+        /**
+         * This constructor initializes the `AddressMatcher` with a given state filter (it accepts any address).
+         *
+         * @param[in]  aStateFilter    A state filter.
+         *
+         */
+        explicit AddressMatcher(StateFilter aStateFilter)
+            : AddressMatcher(aStateFilter, Mac::kShortAddrInvalid, nullptr)
+        {
+        }
+
+        /**
+         * This method indicates if a given neighbor matches the address and state filter of `AddressMatcher`.
+         *
+         * @param[in] aNeighbor   A neighbor.
+         *
+         * @retval TRUE   Neighbor @p aNeighbor matches the address and state filter.
+         * @retval FALSE  Neighbor @p aNeighbor does not match the address or state filter.
+         *
+         */
+        bool Matches(const Neighbor &aNeighbor) const;
+
+    private:
+        AddressMatcher(StateFilter aStateFilter, Mac::ShortAddress aShortAddress, const Mac::ExtAddress *aExtAddress)
+            : mStateFilter(aStateFilter)
+            , mShortAddress(aShortAddress)
+            , mExtAddress(aExtAddress)
+        {
+        }
+
+        StateFilter            mStateFilter;
+        Mac::ShortAddress      mShortAddress;
+        const Mac::ExtAddress *mExtAddress;
     };
 
     /**
@@ -209,6 +293,16 @@ public:
      *
      */
     bool MatchesFilter(StateFilter aFilter) const;
+
+    /**
+     * This method indicates whether neighbor matches a given `AddressMatcher`.
+     *
+     * @param[in]  aMatcher   An `AddressMatcher` to match against.
+     *
+     * @returns TRUE if the neighbor matches the address and state filter of @p aMatcher, FALSE otherwise.
+     *
+     */
+    bool Matches(const AddressMatcher &aMatcher) const { return aMatcher.Matches(*this); }
 
     /**
      * This method gets the device mode flags.

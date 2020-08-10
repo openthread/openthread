@@ -93,8 +93,7 @@ for node in [node1, node2, node3, node4]:
 
 # Filter on specific PAN ID.
 
-scan_result = wpan.parse_scan_result(
-    scanner.discover_scan(panid_filter="0x0002"))
+scan_result = wpan.parse_scan_result(scanner.discover_scan(panid_filter="0x0002"))
 
 verify(len(scan_result) == 2)
 for node in [node2, node3]:
@@ -117,8 +116,7 @@ for node in [node1, node2]:
 
 # Scan with filter enabled
 
-scan_result = wpan.parse_scan_result(
-    scanner.discover_scan(enable_filtering=True))
+scan_result = wpan.parse_scan_result(scanner.discover_scan(enable_filtering=True))
 
 verify(len(scan_result) == 1)
 verify(node1.is_in_scan_result(scan_result))

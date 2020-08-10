@@ -105,8 +105,7 @@ class TestTargetEid(unittest.TestCase):
         # THEN
         self.assertEqual(eid, actual_eid)
 
-    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(
-        self):
+    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(self):
         # GIVEN
         eid = any_eid()
 
@@ -118,8 +117,7 @@ class TestTargetEid(unittest.TestCase):
 
 class TestTargetEidFactory(unittest.TestCase):
 
-    def test_should_create_TargetEid_from_bytearray_when_parse_method_is_called(
-        self):
+    def test_should_create_TargetEid_from_bytearray_when_parse_method_is_called(self):
         # GIVEN
         eid = any_eid()
 
@@ -135,8 +133,7 @@ class TestTargetEidFactory(unittest.TestCase):
 
 class TestMacExtendedAddress(unittest.TestCase):
 
-    def test_should_return_mac_address_value_when_mac_address_property_is_called(
-        self):
+    def test_should_return_mac_address_value_when_mac_address_property_is_called(self):
         # GIVEN
         mac_address = any_mac_extended_address()
 
@@ -148,34 +145,29 @@ class TestMacExtendedAddress(unittest.TestCase):
         # THEN
         self.assertEqual(mac_address, actual_mac_address)
 
-    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(
-        self):
+    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(self):
         # GIVEN
         mac_address = any_mac_extended_address()
 
         mac_extended_address = network_layer.MacExtendedAddress(mac_address)
 
         # THEN
-        self.assertEqual(mac_extended_address,
-                         network_layer.MacExtendedAddress(mac_address))
+        self.assertEqual(mac_extended_address, network_layer.MacExtendedAddress(mac_address))
 
 
 class TestMacExtendedAddressFactory(unittest.TestCase):
 
-    def test_should_create_MacExtendedAddress_from_bytearray_when_parse_method_is_called(
-        self):
+    def test_should_create_MacExtendedAddress_from_bytearray_when_parse_method_is_called(self):
         # GIVEN
         mac_address = any_mac_extended_address()
 
         factory = network_layer.MacExtendedAddressFactory()
 
         # WHEN
-        mac_extended_address = factory.parse(io.BytesIO(mac_address),
-                                             common.MessageInfo())
+        mac_extended_address = factory.parse(io.BytesIO(mac_address), common.MessageInfo())
 
         # THEN
-        self.assertTrue(
-            isinstance(mac_extended_address, network_layer.MacExtendedAddress))
+        self.assertTrue(isinstance(mac_extended_address, network_layer.MacExtendedAddress))
         self.assertEqual(mac_address, mac_extended_address.mac_address)
 
 
@@ -193,8 +185,7 @@ class TestRloc16(unittest.TestCase):
         # THEN
         self.assertEqual(rloc16, actual_rloc16)
 
-    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(
-        self):
+    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(self):
         # GIVEN
         rloc16 = any_rloc16()
 
@@ -206,8 +197,7 @@ class TestRloc16(unittest.TestCase):
 
 class TestRloc16Factory(unittest.TestCase):
 
-    def test_should_create_Rloc16_from_bytearray_when_parse_method_is_called(
-        self):
+    def test_should_create_Rloc16_from_bytearray_when_parse_method_is_called(self):
         # GIVEN
         rloc16 = any_rloc16()
 
@@ -237,8 +227,7 @@ class TestMlEid(unittest.TestCase):
         # THEN
         self.assertEqual(ml_eid, actual_ml_eid)
 
-    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(
-        self):
+    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(self):
         # GIVEN
         ml_eid = any_ml_eid()
 
@@ -250,8 +239,7 @@ class TestMlEid(unittest.TestCase):
 
 class TestMlEidFactory(unittest.TestCase):
 
-    def test_should_create_MlEid_from_bytearray_when_parse_method_is_called(
-        self):
+    def test_should_create_MlEid_from_bytearray_when_parse_method_is_called(self):
         # GIVEN
         ml_eid = any_ml_eid()
 
@@ -279,8 +267,7 @@ class TestStatus(unittest.TestCase):
         # THEN
         self.assertEqual(status, actual_status)
 
-    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(
-        self):
+    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(self):
         # GIVEN
         status = any_status()
 
@@ -292,8 +279,7 @@ class TestStatus(unittest.TestCase):
 
 class TestStatusFactory(unittest.TestCase):
 
-    def test_should_create_Status_from_bytearray_when_parse_method_is_called(
-        self):
+    def test_should_create_Status_from_bytearray_when_parse_method_is_called(self):
         # GIVEN
         status = any_status()
 
@@ -315,8 +301,7 @@ class TestTimeSinceLastTransaction(unittest.TestCase):
         # GIVEN
         seconds = any_seconds()
 
-        time_since_last_transaction = network_layer.TimeSinceLastTransaction(
-            seconds)
+        time_since_last_transaction = network_layer.TimeSinceLastTransaction(seconds)
 
         # WHEN
         actual_seconds = time_since_last_transaction.seconds
@@ -324,13 +309,11 @@ class TestTimeSinceLastTransaction(unittest.TestCase):
         # THEN
         self.assertEqual(seconds, actual_seconds)
 
-    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(
-        self):
+    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(self):
         # GIVEN
         seconds = any_seconds()
 
-        time_since_last_transaction = network_layer.TimeSinceLastTransaction(
-            seconds)
+        time_since_last_transaction = network_layer.TimeSinceLastTransaction(seconds)
 
         # THEN
         self.assertEqual(
@@ -341,8 +324,7 @@ class TestTimeSinceLastTransaction(unittest.TestCase):
 
 class TestTimeSinceLastTransactionFactory(unittest.TestCase):
 
-    def test_should_create_TimeSinceLastTransaction_from_bytearray_when_parse_method_is_called(
-        self):
+    def test_should_create_TimeSinceLastTransaction_from_bytearray_when_parse_method_is_called(self):
         # GIVEN
         seconds = any_seconds()
 
@@ -351,27 +333,23 @@ class TestTimeSinceLastTransactionFactory(unittest.TestCase):
         data = bytearray(struct.pack(">L", seconds))
 
         # WHEN
-        time_since_last_transaction = factory.parse(io.BytesIO(data),
-                                                    common.MessageInfo())
+        time_since_last_transaction = factory.parse(io.BytesIO(data), common.MessageInfo())
 
         # THEN
-        self.assertTrue(
-            isinstance(
-                time_since_last_transaction,
-                network_layer.TimeSinceLastTransaction,
-            ))
+        self.assertTrue(isinstance(
+            time_since_last_transaction,
+            network_layer.TimeSinceLastTransaction,
+        ))
         self.assertEqual(seconds, time_since_last_transaction.seconds)
 
 
 class TestRouterMask(unittest.TestCase):
 
-    def test_should_return_id_sequence_value_when_id_sequence_property_is_called(
-        self):
+    def test_should_return_id_sequence_value_when_id_sequence_property_is_called(self):
         # GIVEN
         id_sequence = any_id_sequence()
 
-        router_mask = network_layer.RouterMask(id_sequence,
-                                               any_router_id_mask())
+        router_mask = network_layer.RouterMask(id_sequence, any_router_id_mask())
 
         # WHEN
         actual_id_sequence = router_mask.id_sequence
@@ -379,13 +357,11 @@ class TestRouterMask(unittest.TestCase):
         # THEN
         self.assertEqual(id_sequence, actual_id_sequence)
 
-    def test_should_return_router_id_mask_value_when_router_id_mask_property_is_called(
-        self):
+    def test_should_return_router_id_mask_value_when_router_id_mask_property_is_called(self):
         # GIVEN
         router_id_mask = any_router_id_mask()
 
-        router_mask = network_layer.RouterMask(any_id_sequence(),
-                                               router_id_mask)
+        router_mask = network_layer.RouterMask(any_id_sequence(), router_id_mask)
 
         # WHEN
         actual_router_id_mask = router_mask.router_id_mask
@@ -393,8 +369,7 @@ class TestRouterMask(unittest.TestCase):
         # THEN
         self.assertEqual(router_id_mask, actual_router_id_mask)
 
-    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(
-        self):
+    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(self):
         # GIVEN
         id_sequence = any_id_sequence()
         router_id_mask = any_router_id_mask()
@@ -402,14 +377,12 @@ class TestRouterMask(unittest.TestCase):
         router_mask = network_layer.RouterMask(id_sequence, router_id_mask)
 
         # THEN
-        self.assertEqual(router_mask,
-                         network_layer.RouterMask(id_sequence, router_id_mask))
+        self.assertEqual(router_mask, network_layer.RouterMask(id_sequence, router_id_mask))
 
 
 class TestRouterMaskFactory(unittest.TestCase):
 
-    def test_should_create_RouterMask_from_bytearray_when_parse_method_is_called(
-        self):
+    def test_should_create_RouterMask_from_bytearray_when_parse_method_is_called(self):
         # GIVEN
         id_sequence = any_id_sequence()
         router_id_mask = any_router_id_mask()
@@ -441,8 +414,7 @@ class TestNdOption(unittest.TestCase):
         # THEN
         self.assertEqual(options, actual_options)
 
-    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(
-        self):
+    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(self):
         # GIVEN
         options = any_options()
 
@@ -454,8 +426,7 @@ class TestNdOption(unittest.TestCase):
 
 class TestNdOptionFactory(unittest.TestCase):
 
-    def test_should_create_NdOption_from_bytearray_when_parse_method_is_called(
-        self):
+    def test_should_create_NdOption_from_bytearray_when_parse_method_is_called(self):
         # GIVEN
         options = any_options()
 
@@ -485,22 +456,19 @@ class TestThreadNetworkData(unittest.TestCase):
         # THEN
         self.assertEqual(tlvs, actual_tlvs)
 
-    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(
-        self):
+    def test_should_return_True_when_try_to_equal_two_the_same_type_objects_with_the_same_values(self):
         # GIVEN
         tlvs = any_tlvs_data()
 
         thread_network_data = network_layer.ThreadNetworkData(tlvs)
 
         # THEN
-        self.assertEqual(thread_network_data,
-                         network_layer.ThreadNetworkData(tlvs))
+        self.assertEqual(thread_network_data, network_layer.ThreadNetworkData(tlvs))
 
 
 class TestThreadNetworkDataFactory(unittest.TestCase):
 
-    def test_should_create_ThreadNetworkData_from_bytearray_when_parse_method_is_called(
-        self):
+    def test_should_create_ThreadNetworkData_from_bytearray_when_parse_method_is_called(self):
         # GIVEN
         tlvs = any_tlvs_data()
 
@@ -509,16 +477,13 @@ class TestThreadNetworkDataFactory(unittest.TestCase):
             def parse(self, data, message_info):
                 return bytearray(data.read())
 
-        factory = network_layer.ThreadNetworkDataFactory(
-            DummyNetworkDataTlvsFactory())
+        factory = network_layer.ThreadNetworkDataFactory(DummyNetworkDataTlvsFactory())
 
         # WHEN
-        thread_network_data = factory.parse(io.BytesIO(tlvs),
-                                            common.MessageInfo())
+        thread_network_data = factory.parse(io.BytesIO(tlvs), common.MessageInfo())
 
         # THEN
-        self.assertTrue(
-            isinstance(thread_network_data, network_layer.ThreadNetworkData))
+        self.assertTrue(isinstance(thread_network_data, network_layer.ThreadNetworkData))
         self.assertEqual(tlvs, thread_network_data.tlvs)
 
 

@@ -128,8 +128,7 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
         # address.
         dut_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = dut_messages.next_coap_message('0.02', '/a/aq')
-        command.check_address_query(msg, self.nodes[DUT_LEADER],
-                                    config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+        command.check_address_query(msg, self.nodes[DUT_LEADER], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
 
         # 5 & 6
         # Verify DUT_LEADER sent an Address Error Notification to the Realm
@@ -137,8 +136,7 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
         self.simulator.go(5)
         dut_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = dut_messages.next_coap_message('0.02', '/a/ae')
-        command.check_address_error_notification(
-            msg, self.nodes[DUT_LEADER], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+        command.check_address_error_notification(msg, self.nodes[DUT_LEADER], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
 
 
 if __name__ == '__main__':

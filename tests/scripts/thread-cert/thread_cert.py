@@ -109,47 +109,38 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 self.nodes[i].set_network_name(params['network_name'])
 
             if 'router_selection_jitter' in params:
-                self.nodes[i].set_router_selection_jitter(
-                    params['router_selection_jitter'])
+                self.nodes[i].set_router_selection_jitter(params['router_selection_jitter'])
             if 'router_upgrade_threshold' in params:
-                self.nodes[i].set_router_upgrade_threshold(
-                    params['router_upgrade_threshold'])
+                self.nodes[i].set_router_upgrade_threshold(params['router_upgrade_threshold'])
             if 'router_downgrade_threshold' in params:
-                self.nodes[i].set_router_downgrade_threshold(
-                    params['router_downgrade_threshold'])
+                self.nodes[i].set_router_downgrade_threshold(params['router_downgrade_threshold'])
 
             if 'timeout' in params:
                 self.nodes[i].set_timeout(params['timeout'])
 
             if 'active_dataset' in params:
-                self.nodes[i].set_active_dataset(
-                    params['active_dataset']['timestamp'],
-                    panid=params['active_dataset'].get('panid'),
-                    channel=params['active_dataset'].get('channel'),
-                    channel_mask=params['active_dataset'].get('channel_mask'),
-                    master_key=params['active_dataset'].get('master_key'))
+                self.nodes[i].set_active_dataset(params['active_dataset']['timestamp'],
+                                                 panid=params['active_dataset'].get('panid'),
+                                                 channel=params['active_dataset'].get('channel'),
+                                                 channel_mask=params['active_dataset'].get('channel_mask'),
+                                                 master_key=params['active_dataset'].get('master_key'))
 
             if 'pending_dataset' in params:
-                self.nodes[i].set_pending_dataset(
-                    params['pending_dataset']['pendingtimestamp'],
-                    params['pending_dataset']['activetimestamp'],
-                    panid=params['pending_dataset'].get('panid'),
-                    channel=params['pending_dataset'].get('channel'))
+                self.nodes[i].set_pending_dataset(params['pending_dataset']['pendingtimestamp'],
+                                                  params['pending_dataset']['activetimestamp'],
+                                                  panid=params['pending_dataset'].get('panid'),
+                                                  channel=params['pending_dataset'].get('channel'))
 
             if 'key_switch_guardtime' in params:
-                self.nodes[i].set_key_switch_guardtime(
-                    params['key_switch_guardtime'])
+                self.nodes[i].set_key_switch_guardtime(params['key_switch_guardtime'])
             if 'key_sequence_counter' in params:
-                self.nodes[i].set_key_sequence_counter(
-                    params['key_sequence_counter'])
+                self.nodes[i].set_key_sequence_counter(params['key_sequence_counter'])
 
             if 'network_id_timeout' in params:
-                self.nodes[i].set_network_id_timeout(
-                    params['network_id_timeout'])
+                self.nodes[i].set_network_id_timeout(params['network_id_timeout'])
 
             if 'context_reuse_delay' in params:
-                self.nodes[i].set_context_reuse_delay(
-                    params['context_reuse_delay'])
+                self.nodes[i].set_context_reuse_delay(params['context_reuse_delay'])
 
             if 'max_children' in params:
                 self.nodes[i].set_max_children(params['max_children'])
@@ -164,8 +155,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 rssi = None
                 if isinstance(j, tuple):
                     j, rssi = j
-                self.nodes[i].add_whitelist(self.nodes[j].get_addr64(),
-                                            rssi=rssi)
+                self.nodes[i].add_whitelist(self.nodes[j].get_addr64(), rssi=rssi)
             self.nodes[i].enable_whitelist()
 
         self._inspector = debug.Inspector(self)
@@ -205,6 +195,4 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         """
         Clean up node files in tmp directory
         """
-        os.system(
-            f"rm -f tmp/{PORT_OFFSET}_*.flash tmp/{PORT_OFFSET}_*.data tmp/{PORT_OFFSET}_*.swap"
-        )
+        os.system(f"rm -f tmp/{PORT_OFFSET}_*.flash tmp/{PORT_OFFSET}_*.data tmp/{PORT_OFFSET}_*.swap")

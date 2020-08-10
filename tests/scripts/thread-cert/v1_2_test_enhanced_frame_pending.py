@@ -85,15 +85,12 @@ class SED_EnhancedFramePending(thread_cert.TestCase):
         self.nodes[SED_1].udp_start('::', common.UDP_TEST_PORT)
 
         # 2 - Ping Leader
-        self.assertTrue(self.nodes[SED_1].ping(self.nodes[LEADER].get_rloc(),
-                                               timeout=CHILD_TIMEOUT))
+        self.assertTrue(self.nodes[SED_1].ping(self.nodes[LEADER].get_rloc(), timeout=CHILD_TIMEOUT))
 
         self.flush_all()
 
         # 3 - Send to SED
-        self.nodes[LEADER].udp_send(UDP_BYTES_COUNT,
-                                    self.nodes[SED_1].get_rloc(),
-                                    common.UDP_TEST_PORT)
+        self.nodes[LEADER].udp_send(UDP_BYTES_COUNT, self.nodes[SED_1].get_rloc(), common.UDP_TEST_PORT)
 
         # 4 - Wait for half polling period
         self.simulator.go(DEFAULT_POLL_PERIOD // 2)
@@ -101,9 +98,7 @@ class SED_EnhancedFramePending(thread_cert.TestCase):
             self.nodes[SED_1].udp_check_rx(UDP_BYTES_COUNT)
 
         # 5 - Send to Leader
-        self.nodes[SED_1].udp_send(UDP_BYTES_COUNT,
-                                   self.nodes[LEADER].get_rloc(),
-                                   common.UDP_TEST_PORT)
+        self.nodes[SED_1].udp_send(UDP_BYTES_COUNT, self.nodes[LEADER].get_rloc(), common.UDP_TEST_PORT)
         self.simulator.go(1)
         self.nodes[LEADER].udp_check_rx(UDP_BYTES_COUNT)
         sed_messages = self.simulator.get_messages_sent_by(SED_1)

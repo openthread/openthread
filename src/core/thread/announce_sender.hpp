@@ -134,8 +134,10 @@ private:
  * This class implements an AnnounceSender.
  *
  */
-class AnnounceSender : public AnnounceSenderBase, public Notifier::Receiver
+class AnnounceSender : public AnnounceSenderBase
 {
+    friend class ot::Notifier;
+
 public:
     /**
      * This constructor initializes the object.
@@ -157,7 +159,6 @@ private:
     void        CheckState(void);
     void        Stop(void);
     static void HandleTimer(Timer &aTimer);
-    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
     void        HandleNotifierEvents(Events aEvents);
 };
 

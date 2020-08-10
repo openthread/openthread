@@ -51,7 +51,6 @@ namespace BackboneRouter {
 
 Manager::Manager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , Notifier::Receiver(aInstance, Manager::HandleNotifierEvents)
     , mMulticastListenerRegistration(OT_URI_PATH_MLR, Manager::HandleMulticastListenerRegistration, this)
     , mDuaRegistration(OT_URI_PATH_DUA_REGISTRATION_REQUEST, Manager::HandleDuaRegistration, this)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE

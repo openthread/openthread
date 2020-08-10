@@ -118,21 +118,16 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
             panid=COMMISSIONER_PENDING_PANID,
         )
         self.simulator.go(40)
-        self.assertEqual(self.nodes[LEADER].get_panid(),
-                         COMMISSIONER_PENDING_PANID)
-        self.assertEqual(self.nodes[COMMISSIONER].get_panid(),
-                         COMMISSIONER_PENDING_PANID)
-        self.assertEqual(self.nodes[ROUTER].get_panid(),
-                         COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[LEADER].get_panid(), COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[COMMISSIONER].get_panid(), COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[ROUTER].get_panid(), COMMISSIONER_PENDING_PANID)
 
-        self.assertEqual(self.nodes[LEADER].get_channel(),
-                         COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(self.nodes[LEADER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
         self.assertEqual(
             self.nodes[COMMISSIONER].get_channel(),
             COMMISSIONER_PENDING_CHANNEL,
         )
-        self.assertEqual(self.nodes[ROUTER].get_channel(),
-                         COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(self.nodes[ROUTER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
 
         ipaddrs = self.nodes[ROUTER].get_addrs()
         for ipaddr in ipaddrs:

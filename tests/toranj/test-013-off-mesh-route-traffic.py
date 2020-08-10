@@ -144,15 +144,9 @@ def check_off_mesh_routes():
     # its WPAN_THREAD_OFF_MESH_ROUTES list (one time as part of network-wide
     # network data and again as part of the local network data). Note that
     # `r1 and `r2` each add a route, while `sed2` does not.
-    verify(
-        len(wpan.parse_list(r1.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) ==
-        NUM_ROUTES + NUM_ROUTES_LOCAL)
-    verify(
-        len(wpan.parse_list(r2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) ==
-        NUM_ROUTES + NUM_ROUTES_LOCAL)
-    verify(
-        len(wpan.parse_list(sed2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) ==
-        NUM_ROUTES)
+    verify(len(wpan.parse_list(r1.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) == NUM_ROUTES + NUM_ROUTES_LOCAL)
+    verify(len(wpan.parse_list(r2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) == NUM_ROUTES + NUM_ROUTES_LOCAL)
+    verify(len(wpan.parse_list(sed2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) == NUM_ROUTES)
 
 
 wpan.verify_within(check_off_mesh_routes, WAIT_TIME)

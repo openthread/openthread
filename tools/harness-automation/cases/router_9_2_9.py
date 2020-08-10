@@ -37,8 +37,7 @@ class Router_9_2_9(HarnessCase):
     case = '9 2 9'
     golden_devices_required = 3
     case_need_shield = True
-    device_order = [('Router_2', False), ('Commissioner', True), ('DUT', False),
-                    ('Leader', True)]
+    device_order = [('Router_2', False), ('Commissioner', True), ('DUT', False), ('Leader', True)]
 
     def on_dialog(self, dialog, title):
         pass

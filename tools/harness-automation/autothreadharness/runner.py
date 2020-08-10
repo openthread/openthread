@@ -56,11 +56,7 @@ class SimpleTestResult(unittest.TestResult):
 
     executions = 0
 
-    def __init__(self,
-                 path,
-                 auto_reboot_args=None,
-                 keep_explorer=False,
-                 add_all_devices=False):
+    def __init__(self, path, auto_reboot_args=None, keep_explorer=False, add_all_devices=False):
         """Record test results in json file
 
         Args:
@@ -88,21 +84,16 @@ class SimpleTestResult(unittest.TestResult):
         # create start up script if auto reboot enabled
         if self.auto_reboot_args:
             test.auto_reboot = True
-            os.system(
-                'echo %s > "%s"' %
-                (' '.join(self.auto_reboot_args +
-                          ['-c', test.__class__.__name__]), RESUME_SCRIPT_PATH))
+            os.system('echo %s > "%s"' %
+                      (' '.join(self.auto_reboot_args + ['-c', test.__class__.__name__]), RESUME_SCRIPT_PATH))
 
         # record start timestamp
         self.started = time.strftime('%Y-%m-%dT%H:%M:%S')
 
         os.system('mkdir %s' % test.result_dir)
-        self.log_handler = logging.FileHandler(
-            '%s\\auto-%s.log' %
-            (test.result_dir, time.strftime('%Y%m%d%H%M%S')))
+        self.log_handler = logging.FileHandler('%s\\auto-%s.log' % (test.result_dir, time.strftime('%Y%m%d%H%M%S')))
         self.log_handler.setLevel(logging.DEBUG)
-        self.log_handler.setFormatter(
-            logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+        self.log_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
         logger.addHandler(self.log_handler)
 
     def add_result(self, test, passed, error=None):
@@ -126,9 +117,7 @@ class SimpleTestResult(unittest.TestResult):
         if self.auto_reboot_args:
             os.system('del "%s"' % RESUME_SCRIPT_PATH)
 
-        json.dump(OrderedDict(sorted(self.result.items(), key=lambda t: t[0])),
-                  open(self.path, 'w'),
-                  indent=2)
+        json.dump(OrderedDict(sorted(self.result.items(), key=lambda t: t[0])), open(self.path, 'w'), indent=2)
 
         # save logs
         logger.removeHandler(self.log_handler)
@@ -169,10 +158,7 @@ def list_devices(names=None, continue_from=None, **kwargs):
     """List devices in settings file and print versions"""
 
     if not names:
-        names = [
-            device for device, _type in settings.GOLDEN_DEVICES
-            if _type == 'OpenThread'
-        ]
+        names = [device for device, _type in settings.GOLDEN_DEVICES if _type == 'OpenThread']
 
     if continue_from:
         continue_from = names.index(continue_from)
@@ -218,11 +204,7 @@ def discover(
 
     if blacklist:
         try:
-            excludes = [
-                line.strip('\n')
-                for line in open(blacklist, 'r').readlines()
-                if not line.startswith('#')
-            ]
+            excludes = [line.strip('\n') for line in open(blacklist, 'r').readlines() if not line.startswith('#')]
         except BaseException:
             logger.exception('Failed to open test case black list file')
             raise
@@ -243,11 +225,9 @@ def discover(
     new_th = False
     harness_info = ConfigParser.ConfigParser()
     harness_info.read('%s\\info.ini' % settings.HARNESS_HOME)
-    if harness_info.has_option('Thread_Harness_Info',
-                               'Version') and harness_info.has_option(
-                                   'Thread_Harness_Info', 'Mode'):
-        harness_version = harness_info.get('Thread_Harness_Info',
-                                           'Version').rsplit(' ', 1)[1]
+    if harness_info.has_option('Thread_Harness_Info', 'Version') and harness_info.has_option(
+            'Thread_Harness_Info', 'Mode'):
+        harness_version = harness_info.get('Thread_Harness_Info', 'Version').rsplit(' ', 1)[1]
         harness_mode = harness_info.get('Thread_Harness_Info', 'Mode')
 
         if harness_mode == 'External' and harness_version > '1.4.0':
@@ -273,9 +253,7 @@ def discover(
                 case_name = str(case.__class__.__name__)
 
                 # grep name
-                if name_greps and not any(
-                        fnmatch.fnmatch(case_name, name_grep)
-                        for name_grep in name_greps):
+                if name_greps and not any(fnmatch.fnmatch(case_name, name_grep) for name_grep in name_greps):
                     logger.info('case[%s] skipped by name greps', case_name)
                     continue
 
@@ -287,17 +265,15 @@ def discover(
                 # skip cases
                 if case_name in log:
                     if ((log[case_name]['passed'] and ('p' in skip)) or
-                        (log[case_name]['passed'] is False and ('f' in skip)) or
-                        (log[case_name]['passed'] is None and ('e' in skip))):
-                        logger.warning('case[%s] skipped for its status[%s]',
-                                       case_name, log[case_name]['passed'])
+                        (log[case_name]['passed'] is False and ('f' in skip)) or (log[case_name]['passed'] is None and
+                                                                                  ('e' in skip))):
+                        logger.warning('case[%s] skipped for its status[%s]', case_name, log[case_name]['passed'])
                         continue
 
                 # continue from
                 if continue_from:
                     if continue_from != case_name:
-                        logger.warning('case[%s] skipped for continue from[%s]',
-                                       case_name, continue_from)
+                        logger.warning('case[%s] skipped for continue from[%s]', case_name, continue_from)
                         continue
                     else:
                         continue_from = None
@@ -309,9 +285,8 @@ def discover(
 
                 # max devices
                 if max_devices and case.golden_devices_required > max_devices:
-                    logger.warning(
-                        'case[%s] skipped for exceeding max golden devices allowed[%d]',
-                        case_name, max_devices)
+                    logger.warning('case[%s] skipped for exceeding max golden devices allowed[%d]', case_name,
+                                   max_devices)
                     continue
 
                 suite.addTest(case)
@@ -343,8 +318,7 @@ def discover(
         settings.PDU_CONTROLLER_OPEN_PARAMS = {}
         settings.PDU_CONTROLLER_REBOOT_PARAMS = {}
 
-    result = SimpleTestResult(result_file, auto_reboot_args, keep_explorer,
-                              add_all_devices)
+    result = SimpleTestResult(result_file, auto_reboot_args, keep_explorer, add_all_devices)
     for case in suite:
         logger.info(case.__class__.__name__)
 
@@ -356,8 +330,7 @@ def discover(
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Thread harness test case runner')
+    parser = argparse.ArgumentParser(description='Thread harness test case runner')
     parser.add_argument('--auto-reboot',
                         '-a',
                         action='store_true',
@@ -375,31 +348,15 @@ def main():
                         type=str,
                         help='file to list test cases to skip',
                         default=None)
-    parser.add_argument('--continue-from',
-                        '-c',
-                        type=str,
-                        default=None,
-                        help='first case to test')
-    parser.add_argument('--delete-history',
-                        '-d',
-                        action='store_true',
-                        default=False,
-                        help='clear history on startup')
+    parser.add_argument('--continue-from', '-c', type=str, default=None, help='first case to test')
+    parser.add_argument('--delete-history', '-d', action='store_true', default=False, help='clear history on startup')
     parser.add_argument('--keep-explorer',
                         '-e',
                         action='store_true',
                         default=False,
                         help='do not restart explorer.exe at the end')
-    parser.add_argument('--name-greps',
-                        '-g',
-                        action='append',
-                        default=None,
-                        help='grep case by names')
-    parser.add_argument('--list-file',
-                        '-i',
-                        type=str,
-                        default=None,
-                        help='file to list cases names to test')
+    parser.add_argument('--name-greps', '-g', action='append', default=None, help='grep case by names')
+    parser.add_argument('--list-file', '-i', type=str, default=None, help='file to list cases names to test')
     parser.add_argument(
         '--skip',
         '-k',
@@ -408,21 +365,9 @@ def main():
         help='type of results to skip. e for error, f for fail, p for pass.',
         default='',
     )
-    parser.add_argument('--list-devices',
-                        '-l',
-                        action='store_true',
-                        default=False,
-                        help='list devices')
-    parser.add_argument('--manual-reset',
-                        '-m',
-                        action='store_true',
-                        default=False,
-                        help='reset devices manually')
-    parser.add_argument('--dry-run',
-                        '-n',
-                        action='store_true',
-                        default=False,
-                        help='just show what to run')
+    parser.add_argument('--list-devices', '-l', action='store_true', default=False, help='list devices')
+    parser.add_argument('--manual-reset', '-m', action='store_true', default=False, help='reset devices manually')
+    parser.add_argument('--dry-run', '-n', action='store_true', default=False, help='just show what to run')
     parser.add_argument(
         '--result-file',
         '-o',
@@ -436,31 +381,19 @@ def main():
                         type=str,
                         help='file name pattern, default to "*.py"',
                         default='*.py')
-    parser.add_argument('--rerun-fails',
-                        '-r',
-                        type=int,
-                        default=0,
-                        help='number of times to rerun failed test cases')
+    parser.add_argument('--rerun-fails', '-r', type=int, default=0, help='number of times to rerun failed test cases')
     parser.add_argument('--add-all-devices',
                         '-t',
                         action='store_true',
                         default=False,
                         help='add all devices to the test bed')
-    parser.add_argument('--max-devices',
-                        '-u',
-                        type=int,
-                        default=0,
-                        help='max golden devices allowed')
+    parser.add_argument('--max-devices', '-u', type=int, default=0, help='max golden devices allowed')
 
     args = vars(parser.parse_args())
 
     if args['list_file']:
         try:
-            names = [
-                line.strip('\n')
-                for line in open(args['list_file'], 'r').readlines()
-                if not line.startswith('#')
-            ]
+            names = [line.strip('\n') for line in open(args['list_file'], 'r').readlines() if not line.startswith('#')]
         except BaseException:
             logger.exception('Failed to open test case list file')
             raise
@@ -478,10 +411,7 @@ def main():
 
     if rerun_fails > 0:
         for i in range(rerun_fails):
-            failed_names = {
-                name for name in result.result
-                if result.result[name]['passed'] is False
-            }
+            failed_names = {name for name in result.result if result.result[name]['passed'] is False}
             if not failed_names:
                 break
             logger.info('Rerunning failed test cases')

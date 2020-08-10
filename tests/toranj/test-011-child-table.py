@@ -71,8 +71,7 @@ for child in children:
 
 # Get the child table and verify all children are in the table.
 
-child_table = wpan.parse_child_table_result(
-    router.get(wpan.WPAN_THREAD_CHILD_TABLE))
+child_table = wpan.parse_child_table_result(router.get(wpan.WPAN_THREAD_CHILD_TABLE))
 
 verify(len(child_table) == len(children))
 
@@ -82,8 +81,7 @@ for child in children:
         if entry.ext_address == ext_addr:
             break
     else:
-        print('Failed to find a child entry for extended address {} in table'.
-              format(ext_addr))
+        print('Failed to find a child entry for extended address {} in table'.format(ext_addr))
         exit(1)
 
     verify(int(entry.rloc16, 16) == int(child.get(wpan.WPAN_THREAD_RLOC16), 16))

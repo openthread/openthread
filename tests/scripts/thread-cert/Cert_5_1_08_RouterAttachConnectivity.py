@@ -125,8 +125,7 @@ class Cert_5_1_08_RouterAttachConnectivity(thread_cert.TestCase):
         msg.assertSentToNode(self.nodes[ROUTER4])
 
         # 4 - Router4
-        msg = router4_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_REQUEST)
+        msg = router4_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         msg.assertSentToNode(self.nodes[ROUTER3])
         msg.assertMleMessageContainsTlv(mle.Response)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)

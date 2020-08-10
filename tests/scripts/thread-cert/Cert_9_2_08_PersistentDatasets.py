@@ -153,13 +153,10 @@ class Cert_9_2_8_PersistentDatasets(thread_cert.TestCase):
 
         self.simulator.go(60)
 
-        self.assertEqual(self.nodes[LEADER].get_panid(),
-                         COMMISSIONER_PENDING_PANID)
-        self.assertEqual(self.nodes[COMMISSIONER].get_panid(),
-                         COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[LEADER].get_panid(), COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[COMMISSIONER].get_panid(), COMMISSIONER_PENDING_PANID)
 
-        self.assertEqual(self.nodes[LEADER].get_channel(),
-                         COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(self.nodes[LEADER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
         self.assertEqual(
             self.nodes[COMMISSIONER].get_channel(),
             COMMISSIONER_PENDING_CHANNEL,
@@ -187,18 +184,13 @@ class Cert_9_2_8_PersistentDatasets(thread_cert.TestCase):
 
         self.simulator.go(10)
 
-        self.assertEqual(self.nodes[ROUTER].get_panid(),
-                         COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[ROUTER].get_panid(), COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[ED].get_panid(), COMMISSIONER_PENDING_PANID)
-        self.assertEqual(self.nodes[SED].get_panid(),
-                         COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[SED].get_panid(), COMMISSIONER_PENDING_PANID)
 
-        self.assertEqual(self.nodes[ROUTER].get_channel(),
-                         COMMISSIONER_PENDING_CHANNEL)
-        self.assertEqual(self.nodes[ED].get_channel(),
-                         COMMISSIONER_PENDING_CHANNEL)
-        self.assertEqual(self.nodes[SED].get_channel(),
-                         COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(self.nodes[ROUTER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(self.nodes[ED].get_channel(), COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(self.nodes[SED].get_channel(), COMMISSIONER_PENDING_CHANNEL)
 
         self.simulator.go(5)
 

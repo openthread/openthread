@@ -51,7 +51,6 @@ namespace ot {
 
 TimeSync::TimeSync(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , Notifier::Receiver(aInstance, TimeSync::HandleNotifierEvents)
     , mTimeSyncRequired(false)
     , mTimeSyncSeq(OT_TIME_SYNC_INVALID_SEQ)
     , mTimeSyncPeriod(OPENTHREAD_CONFIG_TIME_SYNC_PERIOD)
@@ -207,11 +206,6 @@ void TimeSync::HandleNotifierEvents(Events aEvents)
 void TimeSync::HandleTimeout(void)
 {
     CheckAndHandleChanges(false);
-}
-
-void TimeSync::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
-{
-    static_cast<TimeSync &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void TimeSync::HandleTimeout(Timer &aTimer)

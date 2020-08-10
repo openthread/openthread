@@ -47,8 +47,7 @@ def map_pp(pp_byte):
 
 def expect_the_same_class(self, other):
     if not isinstance(other, self.__class__):
-        raise TypeError("Expected the same class. Got {} and {}".format(
-            type(self), type(other)))
+        raise TypeError("Expected the same class. Got {} and {}".format(type(self), type(other)))
 
 
 class MessageInfo(object):
@@ -144,22 +143,16 @@ class MacAddress(object):
 
     def convert_to_iid(self):
         if self._type == MacAddressType.SHORT:
-            return (bytearray([0x00, 0x00, 0x00, 0xff, 0xfe, 0x00]) +
-                    self._mac_address[:2])
+            return (bytearray([0x00, 0x00, 0x00, 0xff, 0xfe, 0x00]) + self._mac_address[:2])
         elif self._type == MacAddressType.LONG:
-            return (bytearray([self._mac_address[0] ^ 0x02]) +
-                    self._mac_address[1:])
+            return (bytearray([self._mac_address[0] ^ 0x02]) + self._mac_address[1:])
         else:
-            raise RuntimeError(
-                "Could not convert to IID. Invalid MAC address type: {}".format(
-                    self._type))
+            raise RuntimeError("Could not convert to IID. Invalid MAC address type: {}".format(self._type))
 
     @classmethod
     def from_eui64(cls, eui64, big_endian=True):
         if not isinstance(eui64, bytearray):
-            raise RuntimeError(
-                "Could not create MAC address from EUI64. Invalid data type: {}"
-                .format(type(eui64)))
+            raise RuntimeError("Could not create MAC address from EUI64. Invalid data type: {}".format(type(eui64)))
 
         return cls(eui64, MacAddressType.LONG)
 
@@ -170,16 +163,12 @@ class MacAddress(object):
         elif isinstance(rloc16, bytearray):
             mac_address = rloc16[:2]
         else:
-            raise RuntimeError(
-                "Could not create MAC address from RLOC16. Invalid data type: {}"
-                .format(type(rloc16)))
+            raise RuntimeError("Could not create MAC address from RLOC16. Invalid data type: {}".format(type(rloc16)))
 
         return cls(mac_address, MacAddressType.SHORT)
 
     def __eq__(self, other):
-        return (self.type == other.type) and (
-            self.mac_address == other.mac_address)
+        return (self.type == other.type) and (self.mac_address == other.mac_address)
 
     def __repr__(self):
-        return "MacAddress(mac_address=b'{}', type={})".format(
-            hexlify(self.mac_address), MacAddressType(self._type))
+        return "MacAddress(mac_address=b'{}', type={})".format(hexlify(self.mac_address), MacAddressType(self._type))

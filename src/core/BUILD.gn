@@ -506,6 +506,7 @@ openthread_core_files = [
   "thread/mlr_manager.cpp",
   "thread/mlr_manager.hpp",
   "thread/mlr_types.hpp",
+  "thread/neighbor_table.cpp",
   "thread/network_data.cpp",
   "thread/network_data.hpp",
   "thread/network_data_leader.cpp",

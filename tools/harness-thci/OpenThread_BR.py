@@ -53,9 +53,7 @@ assert LOGX.match('[57522.618196] Under-voltage detected! (0x00050005)')
 OTBR_AGENT_SYSLOG_PATTERN = re.compile(r'raspberrypi otbr-agent\[\d+\]: (.*)')
 assert OTBR_AGENT_SYSLOG_PATTERN.search(
     'Jun 23 05:21:22 raspberrypi otbr-agent[323]: =========[[THCI] direction=send | type=JOIN_FIN.req | len=039]==========]'
-).group(
-    1
-) == '=========[[THCI] direction=send | type=JOIN_FIN.req | len=039]==========]'
+).group(1) == '=========[[THCI] direction=send | type=JOIN_FIN.req | len=039]==========]'
 
 
 class OpenThread_BR(OpenThreadTHCI, IThci):
@@ -126,8 +124,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     @watched
     def _onCommissionStart(self):
         assert self.__syslog_skip_lines is None
-        self.__syslog_skip_lines = int(
-            self.bash('wc -l /var/log/syslog')[0].split()[0])
+        self.__syslog_skip_lines = int(self.bash('wc -l /var/log/syslog')[0].split()[0])
         self.__syslog_last_read_ts = 0
 
     @watched
@@ -191,10 +188,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         self.__bashWrite('\x03')
         raise Exception('%s: failed to find end of response' % self.port)
 
-    def __bashExpect(self,
-                     expected,
-                     timeout=DEFAULT_COMMAND_TIMEOUT,
-                     endswith=False):
+    def __bashExpect(self, expected, timeout=DEFAULT_COMMAND_TIMEOUT, endswith=False):
         print('[%s] Expecting [%r]' % (self.port, expected))
 
         deadline = time.time() + timeout
@@ -248,10 +242,8 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         try:
             tail += self.__bashRead(timeout=timeout)
             tail = tail.replace(RPI_FULL_PROMPT, RPI_FULL_PROMPT + '\r\n')
-            tail = tail.replace(RPI_USERNAME_PROMPT,
-                                RPI_USERNAME_PROMPT + '\r\n')
-            tail = tail.replace(RPI_PASSWORD_PROMPT,
-                                RPI_PASSWORD_PROMPT + '\r\n')
+            tail = tail.replace(RPI_USERNAME_PROMPT, RPI_USERNAME_PROMPT + '\r\n')
+            tail = tail.replace(RPI_PASSWORD_PROMPT, RPI_PASSWORD_PROMPT + '\r\n')
         finally:
             self.__lines += [l.rstrip('\r') for l in LINESEPX.split(tail)]
             assert len(self.__lines) >= 1, self.__lines

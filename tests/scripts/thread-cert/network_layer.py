@@ -98,8 +98,7 @@ class MacExtendedAddress(object):
         return self.mac_address == other.mac_address
 
     def __repr__(self):
-        return "MacExtendedAddress(mac_address={})".format(
-            hexlify(self.mac_address))
+        return "MacExtendedAddress(mac_address={})".format(hexlify(self.mac_address))
 
 
 class MacExtendedAddressFactory(object):
@@ -226,12 +225,10 @@ class RouterMask(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-        return (self.id_sequence == other.id_sequence and
-                self.router_id_mask == other.router_id_mask)
+        return (self.id_sequence == other.id_sequence and self.router_id_mask == other.router_id_mask)
 
     def __repr__(self):
-        return "RouterMask(id_sequence={}, router_id_mask={})".format(
-            self.id_sequence, hex(self.router_id_mask))
+        return "RouterMask(id_sequence={}, router_id_mask={})".format(self.id_sequence, hex(self.router_id_mask))
 
 
 class RouterMaskFactory(object):
@@ -257,8 +254,7 @@ class NdOption(object):
         return self.options == other.options
 
     def __repr__(self):
-        return "NdOption(options=[{}])".format(", ".join(
-            [str(opt) for opt in self.options]))
+        return "NdOption(options=[{}])".format(", ".join([str(opt) for opt in self.options]))
 
 
 class NdOptionFactory(object):
@@ -307,8 +303,7 @@ class ThreadNetworkData(object):
         return self.tlvs == other.tlvs
 
     def __repr__(self):
-        return "ThreadNetworkData(tlvs=[{}])".format(", ".join(
-            [str(tlv) for tlv in self.tlvs]))
+        return "ThreadNetworkData(tlvs=[{}])".format(", ".join([str(tlv) for tlv in self.tlvs]))
 
 
 class ThreadNetworkDataFactory(object):

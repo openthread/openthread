@@ -78,14 +78,12 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         # Get CommissionerSessionId from LEAD_PET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04', assert_enabled=True)
-        commissioner_session_id_tlv = command.get_sub_tlv(
-            msg.coap.payload, mesh_cop.CommissionerSessionId)
+        commissioner_session_id_tlv = command.get_sub_tlv(msg.coap.payload, mesh_cop.CommissionerSessionId)
 
         # Step 2 - Harness instructs commissioner to send
         # MGMT_COMMISSIONER_SET.req to Leader
         steering_data_tlv = mesh_cop.SteeringData(bytes([0xff]))
-        self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs(
-            [steering_data_tlv])
+        self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs([steering_data_tlv])
         self.simulator.go(5)
 
         # Step 3 - Leader responds to MGMT_COMMISSIONER_SET.req with
@@ -93,17 +91,14 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
         # (mesh_cop.State(mesh_cop.MeshCopState.REJECT),) <- this a tuple, don't delete the comma
-        command.check_coap_message(
-            msg, [mesh_cop.State(mesh_cop.MeshCopState.REJECT)])
+        command.check_coap_message(msg, [mesh_cop.State(mesh_cop.MeshCopState.REJECT)])
         self.simulator.get_messages_sent_by(COMMISSIONER)  # Skip LEAD_PET.req
 
         # Step 4 - Harness instructs commissioner to send
         # MGMT_COMMISSIONER_SET.req to Leader
-        self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs(
-            [steering_data_tlv, commissioner_session_id_tlv])
+        self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs([steering_data_tlv, commissioner_session_id_tlv])
         self.simulator.go(5)
-        commissioner_messages = self.simulator.get_messages_sent_by(
-            COMMISSIONER)
+        commissioner_messages = self.simulator.get_messages_sent_by(COMMISSIONER)
         msg = commissioner_messages.next_coap_message('0.02', uri_path='/c/cs')
         rloc = ip_address(self.nodes[LEADER].get_rloc())
         leader_aloc = ip_address(self.nodes[LEADER].get_addr_leader_aloc())
@@ -116,22 +111,20 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         # Step 5 - Leader sends MGMT_COMMISSIONER_SET.rsp to commissioner
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        command.check_coap_message(
-            msg, [mesh_cop.State(mesh_cop.MeshCopState.ACCEPT)])
+        command.check_coap_message(msg, [mesh_cop.State(mesh_cop.MeshCopState.ACCEPT)])
 
         # Step 6 - Leader sends a multicast MLE Data Response
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
         command.check_data_response(
             msg,
-            command.NetworkDataCheck(
-                commissioning_data_check=command.CommissioningDataCheck(
-                    stable=0,
-                    sub_tlv_type_list=[
-                        mesh_cop.CommissionerSessionId,
-                        mesh_cop.SteeringData,
-                        mesh_cop.BorderAgentLocator,
-                    ],
-                )),
+            command.NetworkDataCheck(commissioning_data_check=command.CommissioningDataCheck(
+                stable=0,
+                sub_tlv_type_list=[
+                    mesh_cop.CommissionerSessionId,
+                    mesh_cop.SteeringData,
+                    mesh_cop.BorderAgentLocator,
+                ],
+            )),
         )
 
         # Step 7 - Harness instructs commissioner to send
@@ -145,8 +138,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         # MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        command.check_coap_message(
-            msg, [mesh_cop.State(mesh_cop.MeshCopState.REJECT)])
+        command.check_coap_message(msg, [mesh_cop.State(mesh_cop.MeshCopState.REJECT)])
 
         # Step 9 - Harness instructs commissioner to send
         # MGMT_COMMISSIONER_SET.req to Leader
@@ -161,8 +153,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         # MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        command.check_coap_message(
-            msg, [mesh_cop.State(mesh_cop.MeshCopState.REJECT)])
+        command.check_coap_message(msg, [mesh_cop.State(mesh_cop.MeshCopState.REJECT)])
 
         # Step 11 - Harness instructs commissioner to send
         # MGMT_COMMISSIONER_SET.req to Leader
@@ -174,8 +165,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         # MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        command.check_coap_message(
-            msg, [mesh_cop.State(mesh_cop.MeshCopState.REJECT)])
+        command.check_coap_message(msg, [mesh_cop.State(mesh_cop.MeshCopState.REJECT)])
 
         # Step 13 - Harness instructs commissioner to send
         # MGMT_COMMISSIONER_SET.req to Leader
@@ -190,8 +180,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         # MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        command.check_coap_message(
-            msg, [mesh_cop.State(mesh_cop.MeshCopState.ACCEPT)])
+        command.check_coap_message(msg, [mesh_cop.State(mesh_cop.MeshCopState.ACCEPT)])
 
         # Step 15 - Send ICMPv6 Echo Request to Leader
         leader_rloc = self.nodes[LEADER].get_rloc()

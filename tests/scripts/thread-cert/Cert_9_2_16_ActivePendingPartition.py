@@ -134,22 +134,17 @@ class Cert_9_2_16_ActivePendingPartition(thread_cert.TestCase):
         )
         self.simulator.go(5)
 
-        self.nodes[COMMISSIONER].send_mgmt_active_set(active_timestamp=15,
-                                                      network_name='threadCert')
+        self.nodes[COMMISSIONER].send_mgmt_active_set(active_timestamp=15, network_name='threadCert')
         self.simulator.go(100)
 
         self.nodes[ROUTER2].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
-        self.assertEqual(self.nodes[COMMISSIONER].get_network_name(),
-                         NETWORK_NAME_FINAL)
-        self.assertEqual(self.nodes[LEADER].get_network_name(),
-                         NETWORK_NAME_FINAL)
-        self.assertEqual(self.nodes[ROUTER1].get_network_name(),
-                         NETWORK_NAME_FINAL)
-        self.assertEqual(self.nodes[ROUTER2].get_network_name(),
-                         NETWORK_NAME_FINAL)
+        self.assertEqual(self.nodes[COMMISSIONER].get_network_name(), NETWORK_NAME_FINAL)
+        self.assertEqual(self.nodes[LEADER].get_network_name(), NETWORK_NAME_FINAL)
+        self.assertEqual(self.nodes[ROUTER1].get_network_name(), NETWORK_NAME_FINAL)
+        self.assertEqual(self.nodes[ROUTER2].get_network_name(), NETWORK_NAME_FINAL)
 
         self.simulator.go(100)
 
