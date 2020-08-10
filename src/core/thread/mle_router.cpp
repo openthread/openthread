@@ -2855,12 +2855,14 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
     otError                      error = OT_ERROR_NONE;
     Tlv                          tlv;
     MeshCoP::Tlv                 meshcopTlv;
-    MeshCoP::DiscoveryRequestTlv discoveryRequest{};
+    MeshCoP::DiscoveryRequestTlv discoveryRequest;
     Mac::ExtendedPanId           extPanId;
     uint16_t                     offset;
     uint16_t                     end;
 
     LogMleMessage("Receive Discovery Request", aMessageInfo.GetPeerAddr());
+
+    discoveryRequest.SetLength(0);
 
     // only Routers and REEDs respond
     VerifyOrExit(IsRouterEligible(), error = OT_ERROR_INVALID_STATE);
