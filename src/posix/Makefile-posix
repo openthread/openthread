@@ -70,6 +70,7 @@ endif
 
 COMMONCFLAGS                         := \
     -g                                  \
+    -DOPENTHREAD_CONFIG_UART_CLI_RAW=1  \
     $(NULL)
 
 # If the user has asserted COVERAGE, alter the configuration options
