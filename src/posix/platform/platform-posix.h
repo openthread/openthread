@@ -399,7 +399,8 @@ int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption
  *
  * Note: only required for POSIX app daemon.
  *
- * @param aInterfaceName  The Thread interface name.
+ * @param[in] aInterfaceName  The Thread interface name.
+ *
  */
 void platformUartSetThreadNetifName(const char *aInterfaceName);
 
