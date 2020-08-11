@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 
         if (ret == -1)
         {
-            fprintf(stderr, "OpenThread daemon is not running.\n");
+            fprintf(stderr, "Connect OpenThread daemon failed: %s: %s\n", strerror(errno), sockname.sun_path);
             ExitNow(ret = OT_EXIT_FAILURE);
         }
     }
