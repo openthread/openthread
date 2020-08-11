@@ -109,8 +109,6 @@ noinst_HEADERS                          = \
     openthread/platform/debug_uart.h      \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
 install-headers: install-includeHEADERS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
