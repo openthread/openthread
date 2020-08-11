@@ -142,6 +142,7 @@ private:
     uint32_t mSwapUsed;
     uint8_t  mSwapIndex;
     uint8_t  mSwapHeaderSize;
+    uint8_t  mFormat;
 };
 
 } // namespace ot

@@ -324,13 +324,10 @@ void TestFlash(void)
     flashTest.SetReaderWriter(true, true);
     TestFlash(flashTest);
 
-#if 0
     // new read vs old write
     testFlashReset();
     flashTest.SetReaderWriter(true, false);
     TestFlash(flashTest);
-    printf("Format v2 Legacy compatibility passed\n");
-#endif
 }
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
