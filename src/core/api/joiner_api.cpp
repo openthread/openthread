@@ -83,7 +83,7 @@ otError otJoinerSetDiscerner(otInstance *aInstance, otJoinerDiscerner *aDiscerne
     otError          error  = OT_ERROR_NONE;
     MeshCoP::Joiner &joiner = static_cast<Instance *>(aInstance)->Get<MeshCoP::Joiner>();
 
-    if (aDiscerner != NULL)
+    if (aDiscerner != nullptr)
     {
         error = joiner.SetDiscerner(*static_cast<const MeshCoP::JoinerDiscerner *>(aDiscerner));
     }

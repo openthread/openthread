@@ -105,13 +105,23 @@ exit:
 
 Child *ChildTable::GetNewChild(void)
 {
-    Child *child = mChildren;
+    Child *child = FindChild(Child::AddressMatcher(Child::kInStateInvalid));
+
+    VerifyOrExit(child != nullptr, OT_NOOP);
+    child->Clear();
+
+exit:
+    return child;
+}
+
+const Child *ChildTable::FindChild(const Child::AddressMatcher &aMatcher) const
+{
+    const Child *child = mChildren;
 
     for (uint16_t num = mMaxChildrenAllowed; num != 0; num--, child++)
     {
-        if (child->IsStateInvalid())
+        if (child->Matches(aMatcher))
         {
-            child->Clear();
             ExitNow();
         }
     }
@@ -124,76 +134,22 @@ exit:
 
 Child *ChildTable::FindChild(uint16_t aRloc16, Child::StateFilter aFilter)
 {
-    Child *child = mChildren;
-
-    for (uint16_t num = mMaxChildrenAllowed; num != 0; num--, child++)
-    {
-        if (child->MatchesFilter(aFilter) && (child->GetRloc16() == aRloc16))
-        {
-            ExitNow();
-        }
-    }
-
-    child = nullptr;
-
-exit:
-    return child;
+    return FindChild(Child::AddressMatcher(aRloc16, aFilter));
 }
 
-Child *ChildTable::FindChild(const Mac::ExtAddress &aAddress, Child::StateFilter aFilter)
+Child *ChildTable::FindChild(const Mac::ExtAddress &aExtAddress, Child::StateFilter aFilter)
 {
-    Child *child = mChildren;
-
-    for (uint16_t num = mMaxChildrenAllowed; num != 0; num--, child++)
-    {
-        if (child->MatchesFilter(aFilter) && (child->GetExtAddress() == aAddress))
-        {
-            ExitNow();
-        }
-    }
-
-    child = nullptr;
-
-exit:
-    return child;
+    return FindChild(Child::AddressMatcher(aExtAddress, aFilter));
 }
 
-Child *ChildTable::FindChild(const Mac::Address &aAddress, Child::StateFilter aFilter)
+Child *ChildTable::FindChild(const Mac::Address &aMacAddress, Child::StateFilter aFilter)
 {
-    Child *child = nullptr;
-
-    switch (aAddress.GetType())
-    {
-    case Mac::Address::kTypeShort:
-        child = FindChild(aAddress.GetShort(), aFilter);
-        break;
-
-    case Mac::Address::kTypeExtended:
-        child = FindChild(aAddress.GetExtended(), aFilter);
-        break;
-
-    default:
-        break;
-    }
-
-    return child;
+    return FindChild(Child::AddressMatcher(aMacAddress, aFilter));
 }
 
 bool ChildTable::HasChildren(Child::StateFilter aFilter) const
 {
-    bool         rval  = false;
-    const Child *child = mChildren;
-
-    for (uint16_t num = mMaxChildrenAllowed; num != 0; num--, child++)
-    {
-        if (child->MatchesFilter(aFilter))
-        {
-            ExitNow(rval = true);
-        }
-    }
-
-exit:
-    return rval;
+    return (FindChild(Child::AddressMatcher(aFilter)) != nullptr);
 }
 
 uint16_t ChildTable::GetNumChildren(Child::StateFilter aFilter) const

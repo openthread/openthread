@@ -48,8 +48,10 @@ class ThreadNetif;
 
 namespace Utils {
 
-class JamDetector : public InstanceLocator, public Notifier::Receiver
+class JamDetector : public InstanceLocator
 {
+    friend class ot::Notifier;
+
 public:
     /**
      * This function pointer is called if jam state changes (assuming jamming detection is enabled).
@@ -190,7 +192,6 @@ private:
     void        HandleTimer(void);
     void        UpdateHistory(bool aDidExceedThreshold);
     void        UpdateJamState(void);
-    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents);
     void        HandleNotifierEvents(Events aEvents);
 
     Handler    mHandler;                  // Handler/callback to inform about jamming state

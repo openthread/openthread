@@ -491,7 +491,7 @@ start:
     // Initialize MAC header
     fcf = Mac::Frame::kFcfFrameData;
 
-    Get<Mac::Mac>().UpdateFrameControlField(Get<Mle::MleRouter>().GetNeighbor(aMacDest), aMessage.IsTimeSync(), fcf);
+    Get<Mac::Mac>().UpdateFrameControlField(Get<NeighborTable>().FindNeighbor(aMacDest), aMessage.IsTimeSync(), fcf);
 
     fcf |= (aMacDest.IsShort()) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
     fcf |= (aMacSource.IsShort()) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
@@ -745,7 +745,7 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, otError
 
     VerifyOrExit(mEnabled, OT_NOOP);
 
-    neighbor = Get<Mle::MleRouter>().GetNeighbor(aMacDest);
+    neighbor = Get<NeighborTable>().FindNeighbor(aMacDest);
     VerifyOrExit(neighbor != nullptr, OT_NOOP);
 
     VerifyOrExit(aFrame.GetAckRequest(), OT_NOOP);

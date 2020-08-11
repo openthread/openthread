@@ -53,8 +53,10 @@ namespace BackboneRouter {
  * This class implements the definitions for Backbone Router management.
  *
  */
-class Manager : public InstanceLocator, public Notifier::Receiver
+class Manager : public InstanceLocator
 {
+    friend class ot::Notifier;
+
 public:
     /**
      * This constructor initializes the Backbone Router manager.
@@ -71,7 +73,7 @@ public:
      * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
      *       Only used for test and certification.
      *
-     * @param[in] aMlIid    A pointer to the Mesh Local IID. If NULL, respond with @p aStatus for any
+     * @param[in] aMlIid    A pointer to the Mesh Local IID. If nullptr, respond with @p aStatus for any
      *                      coming DUA.req, otherwise only respond the one with matching @p aMlIid.
      * @param[in] aStatus   The status to respond.
      *
@@ -102,11 +104,6 @@ private:
                                      const Ip6::MessageInfo &   aMessageInfo,
                                      const Ip6::Address &       aTarget,
                                      ThreadStatusTlv::DuaStatus aStatus);
-
-    static void HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
-    {
-        static_cast<Manager &>(aReceiver).HandleNotifierEvents(aEvents);
-    }
     void HandleNotifierEvents(Events aEvents);
 
     Coap::Resource mMulticastListenerRegistration;

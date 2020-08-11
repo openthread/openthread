@@ -443,6 +443,11 @@ template <> inline Mle::DiscoverScanner &Instance::Get(void)
     return mThreadNetif.mDiscoverScanner;
 }
 
+template <> inline NeighborTable &Instance::Get(void)
+{
+    return mThreadNetif.mMleRouter.mNeighborTable;
+}
+
 #if OPENTHREAD_FTD
 template <> inline ChildTable &Instance::Get(void)
 {

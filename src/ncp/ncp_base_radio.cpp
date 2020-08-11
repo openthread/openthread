@@ -348,7 +348,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_ENABLED>(void)
 
     if (value == false)
     {
-        error = otLinkRawSetReceiveDone(mInstance, NULL);
+        error = otLinkRawSetReceiveDone(mInstance, nullptr);
     }
     else
     {

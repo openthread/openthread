@@ -1243,7 +1243,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
     VerifyOrExit(!aFrame.IsEmpty(), OT_NOOP);
 
     IgnoreError(aFrame.GetDstAddr(dstAddr));
-    neighbor = Get<Mle::MleRouter>().GetNeighbor(dstAddr);
+    neighbor = Get<NeighborTable>().FindNeighbor(dstAddr);
 
     // Record frame transmission success/failure state (for a neighbor).
 
@@ -1683,7 +1683,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     IgnoreError(aFrame->GetSrcAddr(srcaddr));
     IgnoreError(aFrame->GetDstAddr(dstaddr));
-    neighbor = Get<Mle::MleRouter>().GetNeighbor(srcaddr);
+    neighbor = Get<NeighborTable>().FindNeighbor(srcaddr);
 
     // Destination Address Filtering
     switch (dstaddr.GetType())
@@ -1701,7 +1701,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
         // Allow multicasts from neighbor routers if FTD
         if (neighbor == nullptr && dstaddr.IsBroadcast() && Get<Mle::MleRouter>().IsFullThreadDevice())
         {
-            neighbor = Get<Mle::MleRouter>().GetRxOnlyNeighborRouter(srcaddr);
+            neighbor = Get<NeighborTable>().FindRxOnlyNeighborRouter(srcaddr);
         }
 #endif
 

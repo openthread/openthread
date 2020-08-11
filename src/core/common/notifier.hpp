@@ -42,7 +42,6 @@
 #include <openthread/instance.h>
 #include <openthread/platform/toolchain.h>
 
-#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/tasklet.hpp"
@@ -184,56 +183,17 @@ private:
 /**
  * This class implements the OpenThread Notifier.
  *
- * It can be used to register callbacks that notify of state or configuration changes within OpenThread.
+ * For core internal modules, `Notifier` class emits events directly to them by invoking method `HandleNotifierEvents()`
+ * on the module instance.
  *
- * Two callback models are provided:
- *
- * - A `Notifier::Receiver` class which should be inherited by OpenThread core types to register themselves as a
- *    receiver of `Notifier` events.
- *
- * - A `otStateChangedCallback` callback handler which needs to be explicitly registered with the `Notifier`. This is
- *   commonly used by external users (provided as an OpenThread public API). Max number of such callbacks that can be
- *   registered at the same time is specified by `OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS` configuration parameter.
+ * A `otStateChangedCallback` callback can be explicitly registered with the `Notifier`. This is mainly intended for use
+ * by external users (i.e.provided as an OpenThread public API). Max number of such callbacks that can be registered at
+ * the same time is specified by `OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS` configuration parameter.
  *
  */
 class Notifier : public InstanceLocator, private NonCopyable
 {
 public:
-    /**
-     * This class defines a `Notifier::Receiver` instance.
-     *
-     */
-    class Receiver : public LinkedListEntry<Receiver>
-    {
-        friend class Notifier;
-        friend class LinkedListEntry<Receiver>;
-
-    public:
-        /**
-         * This type defines the function reference which is invoked to notify of events (state/configuration changes)..
-         *
-         * @param[in] aReceiver    A reference to `Receiver` instance.
-         * @param[in] aEvents      The list of events.
-         *
-         */
-        typedef void (&Handler)(Receiver &aReceiver, Events aEvents);
-
-        /**
-         * This constructor initializes a `Receiver` instance and registers it with `Notifier`.
-         *
-         * @param[in] aInstance   A reference to OpenThread instance.
-         * @param[in] aHandler    The handler function reference.
-         *
-         */
-        Receiver(Instance &aInstance, Handler aHandler);
-
-    private:
-        void Emit(Events aEvents) { mHandler(*this, aEvents); }
-
-        Handler   mHandler;
-        Receiver *mNext;
-    };
-
     /**
      * This constructor initializes a `Notifier` instance.
      *
@@ -348,18 +308,16 @@ private:
         void *                 mContext;
     };
 
-    void        RegisterReceiver(Receiver &aReceiver);
     static void EmitEvents(Tasklet &aTasklet);
     void        EmitEvents(void);
 
     void        LogEvents(Events aEvents) const;
     const char *EventToString(Event aEvent) const;
 
-    Events               mEventsToSignal;
-    Events               mSignaledEvents;
-    Tasklet              mTask;
-    LinkedList<Receiver> mReceivers;
-    ExternalCallback     mExternalCallbacks[kMaxExternalHandlers];
+    Events           mEventsToSignal;
+    Events           mSignaledEvents;
+    Tasklet          mTask;
+    ExternalCallback mExternalCallbacks[kMaxExternalHandlers];
 };
 
 /**

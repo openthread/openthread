@@ -62,9 +62,9 @@ namespace Mle {
 
 Mle::Mle(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , Notifier::Receiver(aInstance, Mle::HandleNotifierEvents)
     , mRetrieveNewNetworkData(false)
     , mRole(kRoleDisabled)
+    , mNeighborTable(aInstance)
     , mDeviceMode(DeviceMode::kModeRxOnWhenIdle | DeviceMode::kModeSecureDataRequest)
     , mAttachState(kAttachStateIdle)
     , mReattachState(kReattachStop)
@@ -1465,11 +1465,6 @@ otError Mle::AppendCslTimeout(Message &aMessage)
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-void Mle::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
-{
-    static_cast<Mle &>(aReceiver).HandleNotifierEvents(aEvents);
-}
-
 void Mle::HandleNotifierEvents(Events aEvents)
 {
     VerifyOrExit(!IsDisabled(), OT_NOOP);
@@ -2040,7 +2035,7 @@ otError Mle::SendChildIdRequest(void)
             //
             // Parent state is not normally invalidated after becoming a Router/Leader (see #1875).  When trying to
             // attach to a better partition, invalidating old parent state (especially when in kStateRestored) ensures
-            // that GetNeighbor() returns mParentCandidate when processing the Child ID Response.
+            // that FindNeighbor() returns mParentCandidate when processing the Child ID Response.
             mParent.SetState(Neighbor::kStateInvalid);
         }
     }
@@ -2689,30 +2684,8 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     aMessage.Read(aMessage.GetOffset(), sizeof(command), &command);
     aMessage.MoveOffset(sizeof(command));
 
-    switch (mRole)
-    {
-    case kRoleDetached:
-    case kRoleChild:
-        neighbor = GetNeighbor(extAddr);
-        break;
-
-    case kRoleRouter:
-    case kRoleLeader:
-        if (command == Header::kCommandChildIdResponse)
-        {
-            neighbor = GetNeighbor(extAddr);
-        }
-        else
-        {
-            neighbor = Get<MleRouter>().GetNeighbor(extAddr);
-        }
-
-        break;
-
-    default:
-        neighbor = nullptr;
-        break;
-    }
+    neighbor = (command == Header::kCommandChildIdResponse) ? mNeighborTable.FindParent(extAddr)
+                                                            : mNeighborTable.FindNeighbor(extAddr);
 
     if (neighbor != nullptr && neighbor->IsStateValid())
     {
@@ -3832,59 +3805,6 @@ void Mle::ProcessAnnounce(void)
     Get<Mac::Mac>().SetPanId(newPanId);
 
     IgnoreError(Start(/* aAnnounceAttach */ true));
-}
-
-Neighbor *Mle::GetNeighbor(uint16_t aAddress)
-{
-    Neighbor *rval = nullptr;
-
-    if (mParent.IsStateValidOrRestoring() && (mParent.GetRloc16() == aAddress))
-    {
-        rval = &mParent;
-    }
-    else if (mParentCandidate.IsStateValid() && (mParentCandidate.GetRloc16() == aAddress))
-    {
-        rval = &mParentCandidate;
-    }
-
-    return rval;
-}
-
-Neighbor *Mle::GetNeighbor(const Mac::ExtAddress &aAddress)
-{
-    Neighbor *rval = nullptr;
-
-    if (mParent.IsStateValidOrRestoring() && (mParent.GetExtAddress() == aAddress))
-    {
-        rval = &mParent;
-    }
-    else if (mParentCandidate.IsStateValid() && (mParentCandidate.GetExtAddress() == aAddress))
-    {
-        rval = &mParentCandidate;
-    }
-
-    return rval;
-}
-
-Neighbor *Mle::GetNeighbor(const Mac::Address &aAddress)
-{
-    Neighbor *neighbor = nullptr;
-
-    switch (aAddress.GetType())
-    {
-    case Mac::Address::kTypeShort:
-        neighbor = GetNeighbor(aAddress.GetShort());
-        break;
-
-    case Mac::Address::kTypeExtended:
-        neighbor = GetNeighbor(aAddress.GetExtended());
-        break;
-
-    default:
-        break;
-    }
-
-    return neighbor;
 }
 
 uint16_t Mle::GetNextHop(uint16_t aDestination) const

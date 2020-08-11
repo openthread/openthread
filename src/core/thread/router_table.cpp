@@ -342,19 +342,27 @@ uint8_t RouterTable::GetActiveLinkCount(void) const
     return activeLinks;
 }
 
+const Router *RouterTable::FindRouter(const Router::AddressMatcher &aMatcher) const
+{
+    const Router *router;
+
+    for (router = GetFirstEntry(); router != nullptr; router = GetNextEntry(router))
+    {
+        if (router->Matches(aMatcher))
+        {
+            break;
+        }
+    }
+
+    return router;
+}
+
 Router *RouterTable::GetNeighbor(uint16_t aRloc16)
 {
     Router *router = nullptr;
 
     VerifyOrExit(aRloc16 != Get<Mle::MleRouter>().GetRloc16(), OT_NOOP);
-
-    for (router = GetFirstEntry(); router != nullptr; router = GetNextEntry(router))
-    {
-        if (router->IsStateValid() && router->GetRloc16() == aRloc16)
-        {
-            ExitNow();
-        }
-    }
+    router = FindRouter(Router::AddressMatcher(aRloc16, Router::kInStateValid));
 
 exit:
     return router;
@@ -362,20 +370,12 @@ exit:
 
 Router *RouterTable::GetNeighbor(const Mac::ExtAddress &aExtAddress)
 {
-    Router *router = nullptr;
+    return FindRouter(Router::AddressMatcher(aExtAddress, Router::kInStateValid));
+}
 
-    VerifyOrExit(aExtAddress != Get<Mac::Mac>().GetExtAddress(), OT_NOOP);
-
-    for (router = GetFirstEntry(); router != nullptr; router = GetNextEntry(router))
-    {
-        if (router->IsStateValid() && router->GetExtAddress() == aExtAddress)
-        {
-            ExitNow();
-        }
-    }
-
-exit:
-    return router;
+Router *RouterTable::GetNeighbor(const Mac::Address &aMacAddress)
+{
+    return FindRouter(Router::AddressMatcher(aMacAddress, Router::kInStateValid));
 }
 
 const Router *RouterTable::GetRouter(uint8_t aRouterId) const
@@ -387,14 +387,7 @@ const Router *RouterTable::GetRouter(uint8_t aRouterId) const
     VerifyOrExit(aRouterId < Mle::kInvalidRouterId, OT_NOOP);
 
     rloc16 = Mle::Mle::Rloc16FromRouterId(aRouterId);
-
-    for (router = GetFirstEntry(); router != nullptr; router = GetNextEntry(router))
-    {
-        if (router->GetRloc16() == rloc16)
-        {
-            break;
-        }
-    }
+    router = FindRouter(Router::AddressMatcher(rloc16, Router::kInStateAny));
 
 exit:
     return router;
@@ -402,17 +395,7 @@ exit:
 
 Router *RouterTable::GetRouter(const Mac::ExtAddress &aExtAddress)
 {
-    Router *router = nullptr;
-
-    for (router = GetFirstEntry(); router != nullptr; router = GetNextEntry(router))
-    {
-        if (router->GetExtAddress() == aExtAddress)
-        {
-            break;
-        }
-    }
-
-    return router;
+    return FindRouter(Router::AddressMatcher(aExtAddress, Router::kInStateAny));
 }
 
 otError RouterTable::GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo)

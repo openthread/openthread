@@ -49,7 +49,6 @@ namespace Utils {
 
 Slaac::Slaac(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , Notifier::Receiver(aInstance, Slaac::HandleNotifierEvents)
     , mEnabled(true)
     , mFilter(nullptr)
 {
@@ -97,11 +96,6 @@ exit:
 bool Slaac::ShouldFilter(const Ip6::Prefix &aPrefix) const
 {
     return (mFilter != nullptr) && mFilter(&GetInstance(), &aPrefix);
-}
-
-void Slaac::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
-{
-    static_cast<Slaac &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void Slaac::HandleNotifierEvents(Events aEvents)

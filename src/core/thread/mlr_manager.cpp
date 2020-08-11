@@ -48,7 +48,6 @@ namespace ot {
 
 MlrManager::MlrManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , Notifier::Receiver(aInstance, MlrManager::HandleNotifierEvents)
     , mTimer(aInstance, MlrManager::HandleTimer, this)
     , mReregistrationDelay(0)
     , mSendDelay(0)

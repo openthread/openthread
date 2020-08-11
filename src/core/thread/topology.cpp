@@ -41,6 +41,28 @@
 
 namespace ot {
 
+bool Neighbor::AddressMatcher::Matches(const Neighbor &aNeighbor) const
+{
+    bool matches = false;
+
+    VerifyOrExit(aNeighbor.MatchesFilter(mStateFilter), OT_NOOP);
+
+    if (mShortAddress != Mac::kShortAddrInvalid)
+    {
+        VerifyOrExit(mShortAddress == aNeighbor.GetRloc16(), OT_NOOP);
+    }
+
+    if (mExtAddress != nullptr)
+    {
+        VerifyOrExit(*mExtAddress == aNeighbor.GetExtAddress(), OT_NOOP);
+    }
+
+    matches = true;
+
+exit:
+    return matches;
+}
+
 void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
 {
     Clear();
@@ -112,12 +134,20 @@ bool Neighbor::MatchesFilter(StateFilter aFilter) const
         matches = IsStateValidOrAttaching();
         break;
 
+    case kInStateInvalid:
+        matches = IsStateInvalid();
+        break;
+
     case kInStateAnyExceptInvalid:
         matches = !IsStateInvalid();
         break;
 
     case kInStateAnyExceptValidOrRestoring:
         matches = !IsStateValidOrRestoring();
+        break;
+
+    case kInStateAny:
+        matches = true;
         break;
     }
 

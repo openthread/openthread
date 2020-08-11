@@ -51,7 +51,6 @@ namespace ot {
 
 DuaManager::DuaManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , Notifier::Receiver(aInstance, DuaManager::HandleNotifierEvents)
     , mTimer(aInstance, DuaManager::HandleTimer, this)
     , mRegistrationTask(aInstance, DuaManager::HandleRegistrationTask, this)
     , mDuaNotification(OT_URI_PATH_DUA_REGISTRATION_NOTIFY, &DuaManager::HandleDuaNotification, this)
@@ -616,7 +615,7 @@ otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
     {
         Child *child = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
 
-        VerifyOrExit(child != NULL, error = OT_ERROR_NOT_FOUND);
+        VerifyOrExit(child != nullptr, error = OT_ERROR_NOT_FOUND);
         VerifyOrExit(child->HasIp6Address(target), error = OT_ERROR_NOT_FOUND);
 
         mRegisterCurrentChildIndex = false;
@@ -685,7 +684,7 @@ exit:
         otLogWarnDua("Sent ADDR_NTF for child %04x DUA %s Error %s", aChild.GetRloc16(),
                      aAddress.ToString().AsCString(), otThreadErrorToString(error));
 
-        if (message != NULL)
+        if (message != nullptr)
         {
             message->Free();
         }

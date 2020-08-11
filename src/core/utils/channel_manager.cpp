@@ -48,7 +48,6 @@ namespace Utils {
 
 ChannelManager::ChannelManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , Notifier::Receiver(aInstance, ChannelManager::HandleNotifierEvents)
     , mSupportedChannelMask(0)
     , mFavoredChannelMask(0)
     , mActiveTimestamp(0)
@@ -250,11 +249,6 @@ void ChannelManager::HandleTimer(void)
         PreparePendingDataset();
         break;
     }
-}
-
-void ChannelManager::HandleNotifierEvents(Notifier::Receiver &aReceiver, Events aEvents)
-{
-    static_cast<ChannelManager &>(aReceiver).HandleNotifierEvents(aEvents);
 }
 
 void ChannelManager::HandleNotifierEvents(Events aEvents)

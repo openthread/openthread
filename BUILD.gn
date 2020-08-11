@@ -152,6 +152,7 @@ static_library("lib-ot-core") {
     "src/core/thread/mle_router.cpp",
     "src/core/thread/mle_types.cpp",
     "src/core/thread/mlr_manager.cpp",
+    "src/core/thread/neighbor_table.cpp",
     "src/core/thread/network_data.cpp",
     "src/core/thread/network_data_leader.cpp",
     "src/core/thread/network_data_leader_ftd.cpp",

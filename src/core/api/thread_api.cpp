@@ -304,7 +304,7 @@ otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterato
 
     OT_ASSERT((aInfo != nullptr) && (aIterator != nullptr));
 
-    return instance.Get<Mle::MleRouter>().GetNextNeighborInfo(*aIterator, *static_cast<Neighbor::Info *>(aInfo));
+    return instance.Get<NeighborTable>().GetNextNeighborInfo(*aIterator, *static_cast<Neighbor::Info *>(aInfo));
 }
 
 otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
