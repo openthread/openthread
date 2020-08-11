@@ -134,10 +134,9 @@ public:
     void Wipe(void);
 
 private:
-    otError Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t aValueLength);
-    bool    DoesValidRecordExist(uint32_t aOffset, uint16_t aKey) const;
-    void    SanitizeFreeSpace(void);
-    void    Swap(void);
+    bool DoesValidRecordExist(uint32_t aOffset, uint16_t aKey) const;
+    void SanitizeFreeSpace(void);
+    void Swap(void);
 
     uint32_t mSwapSize;
     uint32_t mSwapUsed;

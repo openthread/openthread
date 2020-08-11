@@ -41,13 +41,26 @@ namespace ot {
 
 enum
 {
-    kFlashWordSize = 4, // in bytes
+    kFlashWordSizeV1 = 4, // in bytes
+    kFlashWordSizeV2 = 8, // in bytes
+};
+
+enum
+{
+    kFormatV1 = 0,
+    kFormatV2 = 1,
 };
 
 OT_TOOL_PACKED_BEGIN
 class SwapHeader
 {
 public:
+    inline void Init()
+    {
+        mMarker   = kMarkerInit;
+        mReserved = 0xffffffff;
+    }
+
     inline void Load(otInstance *aInstance, uint8_t aSwapIndex)
     {
         otPlatFlashRead(aInstance, aSwapIndex, 0, this, sizeof(*this));
@@ -58,44 +71,49 @@ public:
         otPlatFlashWrite(aInstance, aSwapIndex, 0, this, sizeof(*this));
     }
 
-    bool IsActive() const { return mMarker == kActive; }
+    bool IsActive() const { return (mMarker & kActiveMask) == kActive; }
 
-    void SetActive() { mMarker = kActive; }
-    void SetInactive() { mMarker = kInactive; }
+    void SetInactive()
+    {
+        mMarker   = ~mMarker;
+        mReserved = 0xffffffff;
+    }
 
-    uint8_t GetSize() const { return sizeof(mMarker); }
+    uint8_t GetSize() const { return GetFormat() == kFormatV1 ? sizeof(mMarker) : sizeof(*this); }
+
+    uint8_t GetFormat() const { return kFormatTop - (mMarker >> kFormatShift); }
 
 private:
     enum : uint32_t
     {
-        kActive   = 0xbe5cc5ee,
-        kInactive = 0xbe5cc5ec,
+        kActive = 0x0e5cc5ee,
 
-        kMarkerInit = kActive,
+        kActiveMask = 0xfffffff,
+
+        kFormatTop   = 0xb,
+        kFormatShift = 28,
+
+        kMarkerInit = ((uint32_t)(kFormatTop - kFormatV2) << kFormatShift) | kActive,
     };
 
     uint32_t mMarker;
+    uint32_t mReserved;
 } OT_TOOL_PACKED_END;
-static_assert(sizeof(SwapHeader) % kFlashWordSize == 0, "wrong SwapHeader size");
+static_assert(sizeof(SwapHeader) % kFlashWordSizeV2 == 0, "wrong SwapHeader size");
 
 OT_TOOL_PACKED_BEGIN
 class RecordHeader
 {
-public:
-    void Init(uint16_t aKey, bool aFirst, uint16_t aLength)
+protected:
+    void Init(uint16_t aKey, uint16_t aLength)
     {
-        mKey   = aKey;
-        mFlags = kFlagsInit & ~kFlagAddBegin;
-
-        if (aFirst)
-        {
-            mFlags &= ~kFlagFirst;
-        }
-
+        mKey      = aKey;
+        mFlags    = kFlagsInit;
         mLength   = aLength;
         mReserved = 0xffff;
     };
 
+public:
     inline void Load(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset)
     {
         otPlatFlashRead(aInstance, aSwapIndex, aOffset, this, sizeof(*this));
@@ -125,20 +143,23 @@ public:
 
     uint16_t GetLength(void) const { return mLength; }
 
-    uint16_t GetDataSize(void) const { return (mLength + 3) & 0xfffc; }
+    uint16_t GetDataSize(void) const
+    {
+        uint16_t wordMask = (GetFormat() == kFormatV1) ? (kFlashWordSizeV1 - 1) : (kFlashWordSizeV2 - 1);
+        return (mLength + wordMask) & ~wordMask;
+    }
 
     uint16_t GetSize(void) const { return sizeof(*this) + GetDataSize(); }
 
     bool IsValid(void) const { return ((mFlags & (kFlagAddComplete | kFlagDelete)) == kFlagDelete); }
 
-    void SetAddBeginFlag(void) { mFlags &= ~kFlagAddBegin; }
-
-    void SetAddCompleteFlag(void) { mFlags &= ~kFlagAddComplete; }
-
-    void SetDeleted(void) { mFlags &= ~kFlagDelete; }
+    void SetDeleted(void)
+    {
+        memset(this, 0xff, sizeof(*this));
+        mFlags &= ~kFlagDelete;
+    }
 
     bool IsFirst(void) const { return (mFlags & kFlagFirst) == 0; }
-    void SetFirst(void) { mFlags &= ~kFlagFirst; }
 
     bool IsFree(void) const { return !IsAddBeginSet(); }
 
@@ -149,17 +170,25 @@ protected:
         return IsAddCompleteSet();
     }
 
+    uint8_t GetFormat() const { return kFormatTop - (mFlags >> kFormatShift); }
+
 private:
     bool IsAddBeginSet(void) const { return (mFlags & kFlagAddBegin) == 0; }
     bool IsAddCompleteSet(void) const { return (mFlags & kFlagAddComplete) == 0; }
 
     enum
     {
-        kFlagsInit       = 0xffff, ///< Flags initialize to all-ones.
         kFlagAddBegin    = 1 << 0, ///< 0 indicates record write has started, 1 otherwise.
         kFlagAddComplete = 1 << 1, ///< 0 indicates record write has completed, 1 otherwise.
         kFlagDelete      = 1 << 2, ///< 0 indicates record was deleted, 1 otherwise.
         kFlagFirst       = 1 << 3, ///< 0 indicates first record for key, 1 otherwise.
+
+        /* The record's format version is in the upper nibble of mFlags */
+        kFormatTop   = 0xf,
+        kFormatShift = 12,
+
+        /* Initial value of flags: kFlagAddBegin, kFlagAddComplete and format version */
+        kFlagsInit = ((kFormatTop - kFormatV2) << kFormatShift) | (0xfff & ~(kFlagAddBegin | kFlagAddComplete)),
     };
 
     uint16_t mKey;
@@ -167,21 +196,39 @@ private:
     uint16_t mLength;
     uint16_t mReserved;
 } OT_TOOL_PACKED_END;
-static_assert(sizeof(RecordHeader) % kFlashWordSize == 0, "wrong RecordHeader size");
+static_assert(sizeof(RecordHeader) % kFlashWordSizeV2 == 0, "wrong RecordHeader size");
 
 OT_TOOL_PACKED_BEGIN
 class Record : public RecordHeader
 {
 public:
-    void Init(uint16_t aKey, bool aFirst, const uint8_t *aData, uint16_t aDataLength)
+    void Init(uint16_t aKey, const uint8_t *aData, uint16_t aDataLength)
     {
         OT_ASSERT(aDataLength <= kMaxDataSize);
-        RecordHeader::Init(aKey, aFirst, aDataLength);
+        RecordHeader::Init(aKey, aDataLength);
 
         memcpy(mData, aData, aDataLength);
+
+        /* fill slack space with 0xff to avoid writing 0 more than once to each bit */
+        memset(mData + aDataLength, 0xff, GetDataSize() - aDataLength);
+
+        // TODO: calculate CRC
     }
 
-    bool IsIntegrityOk(void) const { return RecordHeader::IsIntegrityOk(); }
+    bool IsIntegrityOk(void) const
+    {
+        if (!RecordHeader::IsIntegrityOk())
+        {
+            return false;
+        }
+
+        if (GetFormat() >= kFormatV2)
+        {
+            // TODO: check CRC
+        }
+
+        return true;
+    }
 
     inline void LoadHeader(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset)
     {
@@ -198,11 +245,6 @@ public:
         otPlatFlashWrite(aInstance, aSwapIndex, aOffset, this, GetSize());
     }
 
-    inline void SaveHeader(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset)
-    {
-        RecordHeader::Save(aInstance, aSwapIndex, aOffset);
-    }
-
 private:
     enum
     {
@@ -211,7 +253,7 @@ private:
 
     uint8_t mData[kMaxDataSize];
 } OT_TOOL_PACKED_END;
-static_assert(sizeof(Record) % kFlashWordSize == 0, "wrong Record size");
+static_assert(sizeof(Record) % kFlashWordSizeV2 == 0, "wrong Record size");
 
 void Flash::Init(void)
 {
@@ -292,7 +334,7 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
 {
     otError      error       = OT_ERROR_NOT_FOUND;
     uint16_t     valueLength = 0;
-    int          index       = 0; // This must be initalized to 0. See [Note] in Delete().
+    int          index       = 0;
     uint32_t     offset;
     RecordHeader recordHeader;
 
@@ -305,11 +347,6 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
             continue;
         }
 
-        if (recordHeader.IsFirst())
-        {
-            index = 0;
-        }
-
         if (index == aIndex)
         {
             if (aValue && aValueLength)
@@ -319,6 +356,7 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
 
             valueLength = recordHeader.GetLength();
             error       = OT_ERROR_NONE;
+            break;
         }
 
         index++;
@@ -334,23 +372,17 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
 
 otError Flash::Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
-    return Add(aKey, true, aValue, aValueLength);
+    Delete(aKey, -1);
+    return Add(aKey, aValue, aValueLength);
 }
 
 otError Flash::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
-{
-    bool first = (Get(aKey, 0, nullptr, nullptr) == OT_ERROR_NOT_FOUND);
-
-    return Add(aKey, first, aValue, aValueLength);
-}
-
-otError Flash::Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t aValueLength)
 {
     otError  error = OT_ERROR_NONE;
     Record   record;
     uint16_t size;
 
-    record.Init(aKey, aFirst, aValue, aValueLength);
+    record.Init(aKey, aValue, aValueLength);
     size = record.GetSize();
 
     OT_ASSERT((mSwapSize - size) >= mSwapHeaderSize);
@@ -362,9 +394,6 @@ otError Flash::Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t a
     }
 
     record.Save(&GetInstance(), mSwapIndex, mSwapUsed);
-
-    record.SetAddCompleteFlag();
-    record.SaveHeader(&GetInstance(), mSwapIndex, mSwapUsed);
 
     mSwapUsed += size;
 
@@ -417,9 +446,10 @@ void Flash::Swap(void)
     }
 
 exit:
-    swapHeader.SetActive();
+    swapHeader.Init();
     swapHeader.Save(&GetInstance(), dstIndex);
 
+    swapHeader.Load(&GetInstance(), mSwapIndex);
     swapHeader.SetInactive();
     swapHeader.Save(&GetInstance(), mSwapIndex);
 
@@ -430,21 +460,19 @@ exit:
 otError Flash::Delete(uint16_t aKey, int aIndex)
 {
     otError      error = OT_ERROR_NOT_FOUND;
-    int          index = 0; // This must be initalized to 0. See [Note] below.
+    int          index = 0;
     RecordHeader recordHeader;
+    uint16_t     size;
 
-    for (uint32_t offset = mSwapHeaderSize; offset < mSwapUsed; offset += recordHeader.GetSize())
+    for (uint32_t offset = mSwapHeaderSize; offset < mSwapUsed; offset += size)
     {
         recordHeader.Load(&GetInstance(), mSwapIndex, offset);
+
+        size = recordHeader.GetSize();
 
         if ((recordHeader.GetKey() != aKey) || !recordHeader.IsValid())
         {
             continue;
-        }
-
-        if (recordHeader.IsFirst())
-        {
-            index = 0;
         }
 
         if ((aIndex == index) || (aIndex == -1))
@@ -452,16 +480,11 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
             recordHeader.SetDeleted();
             recordHeader.Save(&GetInstance(), mSwapIndex, offset);
             error = OT_ERROR_NONE;
-        }
 
-        /* [Note] If the operation gets interrupted here and aIndex is 0, the next record (index == 1) will never get
-         * marked as first. However, this is not actually an issue because all the methods that iterate over the
-         * settings area initialize the index to 0, without expecting any record to be effectively marked as first. */
-
-        if ((index == 1) && (aIndex == 0))
-        {
-            recordHeader.SetFirst();
-            recordHeader.Save(&GetInstance(), mSwapIndex, offset);
+            if (aIndex != -1)
+            {
+                break;
+            }
         }
 
         index++;
@@ -473,9 +496,10 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
 void Flash::Wipe(void)
 {
     SwapHeader swapHeader;
-    swapHeader.SetActive();
 
     otPlatFlashErase(&GetInstance(), 0);
+
+    swapHeader.Init();
     swapHeader.Save(&GetInstance(), 0);
 
     mSwapIndex      = 0;
