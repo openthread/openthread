@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,50 +27,38 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-name: Simulation 1.2
 
-on: [push, pull_request]
+class Error(Exception):
+    """
+    Base error class for all Packet Verification errors.
+    """
+    pass
 
-jobs:
 
-  cancel-previous-runs:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: rokroskar/workflow-run-cleanup-action@master
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      if: "github.ref != 'refs/heads/master'"
+class PacketNotFound(Error):
+    """
+    Represents an error that the packet was not found.
+    """
 
-  thread-1-2:
-    name: thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}
-    runs-on: ubuntu-18.04
-    env:
-      CFLAGS: -${{ matrix.arch }}
-      CXXFLAGS: -${{ matrix.arch }}
-      LDFLAGS: -${{ matrix.arch }}
-      COVERAGE: 1
-      THREAD_VERSION: 1.2
-      VIRTUAL_TIME: 1
-      CC: ${{ matrix.compiler.c }}
-      CXX: ${{ matrix.compiler.cxx }}
-    strategy:
-      matrix:
-        compiler: [{c: "gcc", cxx: "g++"}, { c: "clang", cxx: "clang++"}]
-        arch: ["m32", "m64"]
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build python3-setuptools python3-wheel
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-    - name: Build
-      run: |
-        ./bootstrap
-        ./script/test build
-    - name: Run
-      run: |
-        ./script/test unit
-        ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    def __init__(self, start_index, stop_index):
+        self._start_index = start_index
+        self._stop_index = stop_index
+
+
+class UnexpectedPacketFound(Error):
+    """
+    Represents an error that the packet was found unexpectedly.
+    """
+
+    def __init__(self, idx, pkt):
+        self._idx = idx
+        self._pkt = pkt
+
+
+class VerifyFailed(Error):
+    """
+    Represents an error that the packet failed to pass verification criteria.
+    """
+
+    def __init__(self, pkt):
+        self._pkt = pkt
