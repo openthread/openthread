@@ -203,8 +203,8 @@ int main(int argc, char *argv[])
 
         memset(&sockname, 0, sizeof(struct sockaddr_un));
         sockname.sun_family = AF_UNIX;
-        snprintf(sockname.sun_path, sizeof(sockname.sun_path), "%s%s%s", OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME,
-                 config.mInterfaceName, OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_EXTNAME);
+        snprintf(sockname.sun_path, sizeof(sockname.sun_path), OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "%s.sock",
+                 config.mInterfaceName);
 
         ret = connect(sSessionFd, reinterpret_cast<const struct sockaddr *>(&sockname), sizeof(struct sockaddr_un));
 
