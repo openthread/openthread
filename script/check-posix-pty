@@ -87,13 +87,13 @@ check()
         sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" -I "${VALID_NETIF_NAME}" "${RADIO_URL}" &
         sleep 1
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl)"
-        sudo "${OT_CLI_CMD}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
+        sudo "${OT_CLI_CMD}" -I "${VALID_NETIF_NAME}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
 
         # verify this reset and factoryreset end immediately
-        sudo "${OT_CLI_CMD}" reset
+        sudo "${OT_CLI_CMD}" -I "${VALID_NETIF_NAME}" reset
         # sleep a while for daemon ready
         sleep 2
-        sudo "${OT_CLI_CMD}" factoryreset
+        sudo "${OT_CLI_CMD}" -I "${VALID_NETIF_NAME}" factoryreset
     else
         OT_CLI="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli)"
         sudo "${OT_CLI}" -I "${VALID_NETIF_NAME}" -n "${RADIO_URL}"
