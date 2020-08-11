@@ -30,14 +30,83 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 # Always package (e.g. for 'make dist') these subdirectories.
 
-DIST_SUBDIRS                            = \
+EXTRA_DIST                              = \
     openthread                            \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
+openthread_headers                      = \
+    openthread/backbone_router.h          \
+    openthread/backbone_router_ftd.h      \
+    openthread/border_agent.h             \
+    openthread/border_router.h            \
+    openthread/channel_manager.h          \
+    openthread/channel_monitor.h          \
+    openthread/child_supervision.h        \
+    openthread/cli.h                      \
+    openthread/coap_secure.h              \
+    openthread/coap.h                     \
+    openthread/commissioner.h             \
+    openthread/crypto.h                   \
+    openthread/dataset.h                  \
+    openthread/dataset_ftd.h              \
+    openthread/diag.h                     \
+    openthread/dns.h                      \
+    openthread/entropy.h                  \
+    openthread/error.h                    \
+    openthread/heap.h                     \
+    openthread/icmp6.h                    \
+    openthread/instance.h                 \
+    openthread/ip6.h                      \
+    openthread/jam_detection.h            \
+    openthread/joiner.h                   \
+    openthread/link.h                     \
+    openthread/link_raw.h                 \
+    openthread/logging.h                  \
+    openthread/message.h                  \
+    openthread/ncp.h                      \
+    openthread/netdata.h                  \
+    openthread/netdiag.h                  \
+    openthread/network_time.h             \
+    openthread/random_crypto.h            \
+    openthread/random_noncrypto.h         \
+    openthread/server.h                   \
+    openthread/sntp.h                     \
+    openthread/tasklet.h                  \
+    openthread/thread.h                   \
+    openthread/thread_ftd.h               \
+    openthread/udp.h                      \
+    $(NULL)
 
-SUBDIRS                                 = \
-    openthread                            \
+openthreaddir = $(includedir)/openthread
+dist_openthread_HEADERS = $(openthread_headers)
+
+ot_platform_headers                     = \
+    openthread/platform/alarm-micro.h     \
+    openthread/platform/alarm-milli.h     \
+    openthread/platform/ble.h             \
+    openthread/platform/diag.h            \
+    openthread/platform/flash.h           \
+    openthread/platform/entropy.h         \
+    openthread/platform/memory.h          \
+    openthread/platform/misc.h            \
+    openthread/platform/logging.h         \
+    openthread/platform/otns.h            \
+    openthread/platform/radio.h           \
+    openthread/platform/time.h            \
+    openthread/platform/uart.h            \
+    openthread/platform/udp.h             \
+    openthread/platform/spi-slave.h       \
+    openthread/platform/settings.h        \
+    openthread/platform/messagepool.h     \
+    openthread/platform/toolchain.h       \
+    $(NULL)
+
+ot_platformdir = $(includedir)/openthread/platform
+dist_ot_platform_HEADERS = $(ot_platform_headers)
+
+noinst_HEADERS                          = \
+    openthread/config.h                   \
+    openthread/platform/debug_uart.h      \
     $(NULL)
 
 install-headers: install-includeHEADERS
