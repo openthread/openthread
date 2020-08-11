@@ -3699,7 +3699,7 @@ void Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
         unsigned long value;
 
         VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
-        SuccessOrExit(error = ParseLong(aArgs[1], value));
+        SuccessOrExit(error = ParseUnsignedLong(aArgs[1], value));
         VerifyOrExit(value <= 0xffff, error = OT_ERROR_INVALID_ARGS);
         SuccessOrExit(error = otIp6AddUnsecurePort(mInstance, static_cast<uint16_t>(value)));
     }
@@ -3715,7 +3715,7 @@ void Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
         {
             unsigned long value;
 
-            SuccessOrExit(error = ParseLong(aArgs[1], value));
+            SuccessOrExit(error = ParseUnsignedLong(aArgs[1], value));
             VerifyOrExit(value <= 0xffff, error = OT_ERROR_INVALID_ARGS);
             SuccessOrExit(error = otIp6RemoveUnsecurePort(mInstance, static_cast<uint16_t>(value)));
         }
