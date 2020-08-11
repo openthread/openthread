@@ -371,6 +371,7 @@ private:
     void ProcessDataset(uint8_t aArgsLength, char *aArgs[]);
     void ProcessTxPower(uint8_t aArgsLength, char *aArgs[]);
     void ProcessUdp(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[]);
     void ProcessVersion(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     void    ProcessMacFilter(uint8_t aArgsLength, char *aArgs[]);

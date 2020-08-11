@@ -247,6 +247,7 @@ const struct Command Interpreter::sCommands[] = {
     {"thread", &Interpreter::ProcessThread},
     {"txpower", &Interpreter::ProcessTxPower},
     {"udp", &Interpreter::ProcessUdp},
+    {"unsecureport", &Interpreter::ProcessUnsecurePort},
     {"version", &Interpreter::ProcessVersion},
 };
 
@@ -3684,6 +3685,64 @@ void Interpreter::ProcessUdp(uint8_t aArgsLength, char *aArgs[])
 {
     otError error;
     error = mUdp.Process(aArgsLength, aArgs);
+    AppendResult(error);
+}
+
+void Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgsLength >= 1, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(aArgs[0], "add") == 0)
+    {
+        unsigned long value;
+
+        VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = ParseUnsignedLong(aArgs[1], value));
+        VerifyOrExit(value <= 0xffff, error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = otIp6AddUnsecurePort(mInstance, static_cast<uint16_t>(value)));
+    }
+    else if (strcmp(aArgs[0], "remove") == 0)
+    {
+        VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+
+        if (strcmp(aArgs[1], "all") == 0)
+        {
+            otIp6RemoveAllUnsecurePorts(mInstance);
+        }
+        else
+        {
+            unsigned long value;
+
+            SuccessOrExit(error = ParseUnsignedLong(aArgs[1], value));
+            VerifyOrExit(value <= 0xffff, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = otIp6RemoveUnsecurePort(mInstance, static_cast<uint16_t>(value)));
+        }
+    }
+    else if (strcmp(aArgs[0], "get") == 0)
+    {
+        const uint16_t *ports;
+        uint8_t         numPorts;
+
+        ports = otIp6GetUnsecurePorts(mInstance, &numPorts);
+
+        if (ports != NULL)
+        {
+            for (uint8_t i = 0; i < numPorts; i++)
+            {
+                mServer->OutputFormat("%d ", ports[i]);
+            }
+        }
+
+        mServer->OutputFormat("\r\n");
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
+
+exit:
     AppendResult(error);
 }
 

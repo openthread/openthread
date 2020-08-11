@@ -28,69 +28,39 @@
 #
 
 source "tests/scripts/expect/_common.exp"
-source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes
+set spawn_id [spawn_node 1]
 
-set spawn_id $spawn_2
-send "udp open\n"
-expect "Done"
-send "udp bind :: 11001\n"
-expect "Done"
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr_2 $expect_out(1,string)
-
-set spawn_id $spawn_1
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr_1 $expect_out(1,string)
-send "udp open\n"
-expect "Done"
-send "udp bind :: 11002\n"
-expect "Done"
-send "udp connect $addr_2 11001\n"
-expect "Done"
-send "udp send -s 10\n"
-expect "Done"
-send "udp send -x a68656c6c6f\n"
-expect "Done"
-send "udp send -t there\n"
+send "unsecureport remove all\n"
 expect "Done"
 
-set spawn_id $spawn_2
-expect "10 bytes from $addr_1 11002 0123456789"
-expect "6 bytes from $addr_1 11002"
-expect "hello"
-expect "5 bytes from $addr_1 11002 there"
-
-set spawn_id $spawn_1
-send "udp help\n"
-expect "Done"
-send "udp connect something_invalid\n"
-expect "Error 7: InvalidArgs"
-send "udp send -x something_invalid\n"
-expect "Error 7: InvalidArgs"
-send "udp\n"
-expect "Error 7: InvalidArgs"
-
-send "udp linksecurity\n"
-expect "Enabled"
-expect "Done"
-send "udp linksecurity disable\n"
-expect "Done"
-send "udp linksecurity\n"
-expect "Disabled"
-expect "Done"
-send "udp linksecurity enable\n"
-expect "Done"
-send "udp linksecurity\n"
-expect "Enabled"
+send "unsecureport get\n"
 expect "Done"
 
-send "udp linksecurity something_invalid\n"
+send "unsecureport add 123\n"
+expect "Done"
+
+send "unsecureport add 456\n"
+expect "Done"
+
+send "unsecureport get\n"
+expect "123 456"
+expect "Done"
+
+send "unsecureport remove 123\n"
+expect "Done"
+
+send "unsecureport get\n"
+expect "456"
+expect "Done"
+
+send "unsecureport remove all\n"
+expect "Done"
+
+send "unsecureport get\n"
+expect "Done"
+
+send "unsecureport invalid_command\n"
 expect "Error 35: InvalidCommand"
 
-dispose_nodes
+dispose
