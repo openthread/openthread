@@ -51,6 +51,7 @@
 #if HAVE_LIBEDIT
 #include <editline/readline.h>
 #elif HAVE_LIBREADLINE
+#include <getopt.h>
 #include <readline/history.h>
 #include <readline/readline.h>
 #endif
@@ -67,6 +68,29 @@ enum
 static_assert(kLineBufferSize >= sizeof("> "), "kLineBufferSize is too small");
 static_assert(kLineBufferSize >= sizeof("Done\r\n"), "kLineBufferSize is too small");
 static_assert(kLineBufferSize >= sizeof("Error "), "kLineBufferSize is too small");
+
+const char kDefaultThreadNetworkInterfaceName[] = "wpan0";
+
+typedef struct ClientConfig
+{
+    const char *mInterfaceName; ///< Thread network interface name.
+    char **     mArgs;
+    uint16_t    mArgCount;
+} ClientConfig;
+
+/**
+ * This enumeration defines the argument return values.
+ *
+ */
+enum
+{
+    OT_POSIX_OPT_HELP           = 'h',
+    OT_POSIX_OPT_INTERFACE_NAME = 'I',
+};
+
+static const struct option kClientOptions[] = {{"help", no_argument, NULL, OT_POSIX_OPT_HELP},
+                                               {"interface-name", required_argument, NULL, OT_POSIX_OPT_INTERFACE_NAME},
+                                               {0, 0, 0, 0}};
 
 static int sSessionFd = -1;
 
@@ -108,14 +132,68 @@ exit:
     return ret;
 }
 
+static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
+{
+    fprintf(aStream,
+            "Syntax:\n"
+            "    %s [Options]\n"
+            "Options:\n"
+            "    -h  --help                    Display this usage information.\n"
+            "    -I  --interface-name name     Thread network interface name.\n",
+            aProgramName);
+    exit(aExitCode);
+}
+
+static void ParseArg(int aArgCount, char *aArgVector[], ClientConfig *aConfig)
+{
+    memset(aConfig, 0, sizeof(*aConfig));
+
+    optind = 1;
+
+    while (true)
+    {
+        int index  = 0;
+        int option = getopt_long(aArgCount, aArgVector, "hI:", kClientOptions, &index);
+
+        if (option == -1)
+        {
+            break;
+        }
+
+        switch (option)
+        {
+        case OT_POSIX_OPT_HELP:
+            PrintUsage(aArgVector[0], stdout, OT_EXIT_SUCCESS);
+            break;
+        case OT_POSIX_OPT_INTERFACE_NAME:
+            aConfig->mInterfaceName = optarg;
+            break;
+        default:
+            PrintUsage(aArgVector[0], stderr, 128);
+            break;
+        }
+    }
+
+    if (aConfig->mInterfaceName == nullptr)
+    {
+        aConfig->mInterfaceName = kDefaultThreadNetworkInterfaceName;
+    }
+
+    aConfig->mArgs     = &aArgVector[optind];
+    aConfig->mArgCount = aArgCount - optind;
+}
+
 int main(int argc, char *argv[])
 {
-    int    ret;
-    bool   isInteractive = true;
-    bool   isFinished    = false;
-    char   lineBuffer[kLineBufferSize];
-    size_t lineBufferWritePos = 0;
-    bool   isBeginOfLine      = true;
+    int          ret;
+    bool         isInteractive = true;
+    bool         isFinished    = false;
+    char         lineBuffer[kLineBufferSize];
+    size_t       lineBufferWritePos = 0;
+    bool         isBeginOfLine      = true;
+    ClientConfig config;
+
+    ParseArg(argc, argv, &config);
 
     sSessionFd = socket(AF_UNIX, SOCK_STREAM, 0);
     VerifyOrExit(sSessionFd != -1, perror("socket"); ret = OT_EXIT_FAILURE);
@@ -125,7 +203,8 @@ int main(int argc, char *argv[])
 
         memset(&sockname, 0, sizeof(struct sockaddr_un));
         sockname.sun_family = AF_UNIX;
-        strncpy(sockname.sun_path, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
+        snprintf(sockname.sun_path, sizeof(sockname.sun_path), "%s%s%s", OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME,
+                 config.mInterfaceName, OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_EXTNAME);
 
         ret = connect(sSessionFd, reinterpret_cast<const struct sockaddr *>(&sockname), sizeof(struct sockaddr_un));
 
@@ -136,11 +215,11 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (argc > 1)
+    if (config.mArgCount > 0)
     {
-        for (int i = 1; i < argc; i++)
+        for (int i = 0; i < config.mArgCount; i++)
         {
-            VerifyOrExit(DoWrite(sSessionFd, argv[i], strlen(argv[i])), ret = OT_EXIT_FAILURE);
+            VerifyOrExit(DoWrite(sSessionFd, config.mArgs[i], strlen(config.mArgs[i])), ret = OT_EXIT_FAILURE);
             VerifyOrExit(DoWrite(sSessionFd, " ", 1), ret = OT_EXIT_FAILURE);
         }
         VerifyOrExit(DoWrite(sSessionFd, "\n", 1), ret = OT_EXIT_FAILURE);

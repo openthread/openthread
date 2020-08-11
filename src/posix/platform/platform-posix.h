@@ -63,12 +63,6 @@
 #define OPENTHREAD_POSIX_VIRTUAL_TIME 0
 #endif
 
-/**
- * This is the socket name used by daemon mode.
- *
- */
-#define OPENTHREAD_POSIX_DAEMON_SOCKET_NAME OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME ".sock"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -399,6 +393,15 @@ enum SocketBlockOption
  *
  */
 int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption aBlockOption);
+
+/**
+ * This function configures the Thread interface name for Uart.
+ *
+ * Note: only required for POSIX app daemon.
+ *
+ * @param aInterfaceName  The Thread interface name.
+ */
+void platformUartSetThreadNetifName(const char *aInterfaceName);
 
 #ifdef __cplusplus
 }

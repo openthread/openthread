@@ -43,11 +43,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <net/if.h>
 #include <openthread/platform/uart.h>
 
 #include "common/code_utils.hpp"
-
-#define OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME ".lock"
 
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 static int sUartSocket    = -1;
@@ -58,12 +57,23 @@ static int sSessionSocket = -1;
 static bool           sEnabled     = false;
 static const uint8_t *sWriteBuffer = nullptr;
 static uint16_t       sWriteLength = 0;
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+static char sThreadNetifName[IFNAMSIZ] = "";
+#endif
+
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+void platformUartSetThreadNetifName(const char *aInterfaceName)
+{
+    strncpy(sThreadNetifName, aInterfaceName, sizeof(sThreadNetifName));
+}
+#endif
 
 otError otPlatUartEnable(void)
 {
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     struct sockaddr_un sockname;
+    char               lockname[108];
     int                ret;
 
     // This allows implementing pseudo reset.
@@ -76,7 +86,10 @@ otError otPlatUartEnable(void)
         DieNow(OT_EXIT_FAILURE);
     }
 
-    sUartLock = open(OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK, O_CREAT | O_RDONLY | O_CLOEXEC, 0600);
+    assert(strcmp(sThreadNetifName, ""));
+    snprintf(lockname, sizeof(lockname), OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "%s.lock", sThreadNetifName);
+
+    sUartLock = open(lockname, O_CREAT | O_RDONLY | O_CLOEXEC, 0600);
 
     if (sUartLock == -1)
     {
@@ -88,13 +101,11 @@ otError otPlatUartEnable(void)
         DieNowWithMessage("flock", OT_EXIT_ERROR_ERRNO);
     }
 
-    memset(&sockname, 0, sizeof(struct sockaddr_un));
-
-    (void)unlink(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
-
     sockname.sun_family = AF_UNIX;
-    assert(sizeof(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME) < sizeof(sockname.sun_path));
-    strncpy(sockname.sun_path, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
+    snprintf(sockname.sun_path, sizeof(sockname.sun_path), OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "%s.sock",
+             sThreadNetifName);
+
+    (void)unlink(sockname.sun_path);
 
     ret = bind(sUartSocket, (const struct sockaddr *)&sockname, sizeof(struct sockaddr_un));
 

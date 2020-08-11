@@ -1366,6 +1366,9 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     mldListenerInit();
 #endif
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+    platformUartSetThreadNetifName(sTunName);
+#endif
 
     otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
     otIp6SetReceiveCallback(aInstance, processReceive, aInstance);
