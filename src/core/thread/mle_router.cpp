@@ -88,6 +88,8 @@ MleRouter::MleRouter(Instance &aInstance)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mMaxChildIpAddresses(0)
 #endif
+    , mDiscoveryRequestCallback(nullptr)
+    , mDiscoveryRequestCallbackContext(nullptr)
 {
     mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
 
@@ -2860,6 +2862,8 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
 
     LogMleMessage("Receive Discovery Request", aMessageInfo.GetPeerAddr());
 
+    discoveryRequest.SetLength(0);
+
     // only Routers and REEDs respond
     VerifyOrExit(IsRouterEligible(), error = OT_ERROR_INVALID_STATE);
 
@@ -2880,20 +2884,6 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
             aMessage.Read(offset, sizeof(discoveryRequest), &discoveryRequest);
             VerifyOrExit(discoveryRequest.IsValid(), error = OT_ERROR_PARSE);
 
-            if (discoveryRequest.IsJoiner())
-            {
-#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
-                if (!mSteeringData.IsEmpty())
-                {
-                    break;
-                }
-                else // if steering data is not set out of band, fall back to network data
-#endif
-                {
-                    VerifyOrExit(Get<NetworkData::Leader>().IsJoiningEnabled(), error = OT_ERROR_SECURITY);
-                }
-            }
-
             break;
 
         case MeshCoP::Tlv::kExtendedPanId:
@@ -2907,6 +2897,33 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
         }
 
         offset += sizeof(meshcopTlv) + meshcopTlv.GetLength();
+    }
+
+    if (discoveryRequest.IsValid())
+    {
+        if (mDiscoveryRequestCallback != nullptr)
+        {
+            otThreadDiscoveryRequestInfo info;
+
+            aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(*static_cast<Mac::ExtAddress *>(&info.mExtAddress));
+            info.mVersion  = discoveryRequest.GetVersion();
+            info.mIsJoiner = discoveryRequest.IsJoiner();
+
+            mDiscoveryRequestCallback(&info, mDiscoveryRequestCallbackContext);
+        }
+
+        if (discoveryRequest.IsJoiner())
+        {
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
+            if (!mSteeringData.IsEmpty())
+            {
+            }
+            else // if steering data is not set out of band, fall back to network data
+#endif
+            {
+                VerifyOrExit(Get<NetworkData::Leader>().IsJoiningEnabled(), error = OT_ERROR_SECURITY);
+            }
+        }
     }
 
     error = SendDiscoveryResponse(aMessageInfo.GetPeerAddr(), aMessage.GetPanId());
