@@ -41,11 +41,32 @@ namespace ot {
 
 enum
 {
-    kSwapMarkerSize = 4, // in bytes
+    kFlashWordSize = 4, // in bytes
 };
 
-static const uint32_t sSwapActive   = 0xbe5cc5ee;
-static const uint32_t sSwapInactive = 0xbe5cc5ec;
+OT_TOOL_PACKED_BEGIN
+class SwapHeader
+{
+public:
+    bool IsActive() const { return mMarker == kActive; }
+
+    void SetActive() { mMarker = kActive; }
+    void SetInactive() { mMarker = kInactive; }
+
+    uint8_t GetSize() const { return sizeof(mMarker); }
+
+private:
+    enum : uint32_t
+    {
+        kActive   = 0xbe5cc5ee,
+        kInactive = 0xbe5cc5ec,
+
+        kMarkerInit = kActive,
+    };
+
+    uint32_t mMarker;
+} OT_TOOL_PACKED_END;
+static_assert(sizeof(SwapHeader) % kFlashWordSize == 0, "wrong SwapHeader size");
 
 OT_TOOL_PACKED_BEGIN
 class RecordHeader
@@ -102,6 +123,7 @@ private:
     uint16_t mLength;
     uint16_t mReserved;
 } OT_TOOL_PACKED_END;
+static_assert(sizeof(RecordHeader) % kFlashWordSize == 0, "wrong RecordHeader size");
 
 OT_TOOL_PACKED_BEGIN
 class Record : public RecordHeader
@@ -118,11 +140,12 @@ public:
 private:
     enum
     {
-        kMaxDataSize = 255,
+        kMaxDataSize = 256,
     };
 
     uint8_t mData[kMaxDataSize];
 } OT_TOOL_PACKED_END;
+static_assert(sizeof(Record) % kFlashWordSize == 0, "wrong Record size");
 
 void Flash::Init(void)
 {
@@ -134,7 +157,7 @@ void Flash::Init(void)
 
     for (mSwapIndex = 0;; mSwapIndex++)
     {
-        uint32_t swapMarker;
+        SwapHeader swapHeader;
 
         if (mSwapIndex >= 2)
         {
@@ -142,15 +165,16 @@ void Flash::Init(void)
             ExitNow();
         }
 
-        otPlatFlashRead(&GetInstance(), mSwapIndex, 0, &swapMarker, sizeof(swapMarker));
+        otPlatFlashRead(&GetInstance(), mSwapIndex, 0, &swapHeader, sizeof(swapHeader));
 
-        if (swapMarker == sSwapActive)
+        if (swapHeader.IsActive())
         {
+            mSwapHeaderSize = swapHeader.GetSize();
             break;
         }
     }
 
-    for (mSwapUsed = kSwapMarkerSize; mSwapUsed <= mSwapSize - sizeof(record); mSwapUsed += record.GetSize())
+    for (mSwapUsed = mSwapHeaderSize; mSwapUsed <= mSwapSize - sizeof(record); mSwapUsed += record.GetSize())
     {
         otPlatFlashRead(&GetInstance(), mSwapIndex, mSwapUsed, &record, sizeof(record));
         if (!record.IsAddBeginSet())
@@ -204,7 +228,7 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
     uint32_t     offset;
     RecordHeader record;
 
-    for (offset = kSwapMarkerSize; offset < mSwapUsed; offset += record.GetSize())
+    for (offset = mSwapHeaderSize; offset < mSwapUsed; offset += record.GetSize())
     {
         otPlatFlashRead(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
 
@@ -267,7 +291,7 @@ otError Flash::Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t a
     record.Init(aKey, aFirst);
     record.SetData(aValue, aValueLength);
 
-    OT_ASSERT((mSwapSize - record.GetSize()) >= kSwapMarkerSize);
+    OT_ASSERT((mSwapSize - record.GetSize()) >= mSwapHeaderSize);
 
     if ((mSwapSize - record.GetSize()) < mSwapUsed)
     {
@@ -307,13 +331,14 @@ exit:
 
 void Flash::Swap(void)
 {
-    uint8_t  dstIndex  = !mSwapIndex;
-    uint32_t dstOffset = kSwapMarkerSize;
-    Record   record;
+    uint8_t    dstIndex  = !mSwapIndex;
+    uint32_t   dstOffset = mSwapHeaderSize;
+    Record     record;
+    SwapHeader swapHeader;
 
     otPlatFlashErase(&GetInstance(), dstIndex);
 
-    for (uint32_t srcOffset = kSwapMarkerSize; srcOffset < mSwapUsed; srcOffset += record.GetSize())
+    for (uint32_t srcOffset = mSwapHeaderSize; srcOffset < mSwapUsed; srcOffset += record.GetSize())
     {
         otPlatFlashRead(&GetInstance(), mSwapIndex, srcOffset, &record, sizeof(RecordHeader));
 
@@ -330,8 +355,11 @@ void Flash::Swap(void)
     }
 
 exit:
-    otPlatFlashWrite(&GetInstance(), dstIndex, 0, &sSwapActive, sizeof(sSwapActive));
-    otPlatFlashWrite(&GetInstance(), mSwapIndex, 0, &sSwapInactive, sizeof(sSwapInactive));
+    swapHeader.SetActive();
+    otPlatFlashWrite(&GetInstance(), dstIndex, 0, &swapHeader, sizeof(swapHeader));
+
+    swapHeader.SetInactive();
+    otPlatFlashWrite(&GetInstance(), mSwapIndex, 0, &swapHeader, sizeof(swapHeader));
 
     mSwapIndex = dstIndex;
     mSwapUsed  = dstOffset;
@@ -343,7 +371,7 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
     int          index = 0; // This must be initalized to 0. See [Note] below.
     RecordHeader record;
 
-    for (uint32_t offset = kSwapMarkerSize; offset < mSwapUsed; offset += record.GetSize())
+    for (uint32_t offset = mSwapHeaderSize; offset < mSwapUsed; offset += record.GetSize())
     {
         otPlatFlashRead(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
 
@@ -382,11 +410,15 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
 
 void Flash::Wipe(void)
 {
-    otPlatFlashErase(&GetInstance(), 0);
-    otPlatFlashWrite(&GetInstance(), 0, 0, &sSwapActive, sizeof(sSwapActive));
+    SwapHeader swapHeader;
+    swapHeader.SetActive();
 
-    mSwapIndex = 0;
-    mSwapUsed  = sizeof(sSwapActive);
+    otPlatFlashErase(&GetInstance(), 0);
+    otPlatFlashWrite(&GetInstance(), 0, 0, &swapHeader, sizeof(swapHeader));
+
+    mSwapIndex      = 0;
+    mSwapHeaderSize = swapHeader.GetSize();
+    mSwapUsed       = mSwapHeaderSize;
 }
 
 } // namespace ot

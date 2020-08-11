@@ -32,7 +32,6 @@
 #include "openthread-core-config.h"
 
 #include <stdint.h>
-#include <string.h>
 
 #include <openthread/error.h>
 #include <openthread/platform/toolchain.h>
@@ -143,6 +142,7 @@ private:
     uint32_t mSwapSize;
     uint32_t mSwapUsed;
     uint8_t  mSwapIndex;
+    uint8_t  mSwapHeaderSize;
 };
 
 } // namespace ot
