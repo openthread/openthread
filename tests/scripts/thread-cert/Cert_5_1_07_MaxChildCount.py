@@ -192,22 +192,18 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
         for i in range(1, 5):
             rloc16 = pv.vars['MED%d_RLOC16' % i]
             _pkts = router_pkts.copy()
-            p = _pkts.filter('wpan.dst16 == {rloc16}',
-                             rloc16=rloc16).filter_ping_request().must_next()
+            p = _pkts.filter('wpan.dst16 == {rloc16}', rloc16=rloc16).filter_ping_request().must_next()
             _pkts.filter('wpan.dst16 == {rloc16}',
-                         rloc16=leader_rloc16).filter_ping_reply(
-                             identifier=p.icmpv6.echo.identifier).must_next()
+                         rloc16=leader_rloc16).filter_ping_reply(identifier=p.icmpv6.echo.identifier).must_next()
 
         # Step 3: The DUT MUST properly forward ICMPv6 Echo Requests to all SED children
         #         The DUT MUST properly forward ICMPv6 Echo Replies to the Leader
         for i in range(1, 7):
             rloc16 = pv.vars['SED%d_RLOC16' % i]
             _pkts = router_pkts.copy()
-            p = _pkts.filter('wpan.dst16 == {rloc16}',
-                             rloc16=rloc16).filter_ping_request().must_next()
+            p = _pkts.filter('wpan.dst16 == {rloc16}', rloc16=rloc16).filter_ping_request().must_next()
             _pkts.filter('wpan.dst16 == {rloc16}',
-                         rloc16=leader_rloc16).filter_ping_reply(
-                             identifier=p.icmpv6.echo.identifier).must_next()
+                         rloc16=leader_rloc16).filter_ping_reply(identifier=p.icmpv6.echo.identifier).must_next()
 
 
 if __name__ == '__main__':

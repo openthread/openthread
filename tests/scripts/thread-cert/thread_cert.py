@@ -85,8 +85,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._start_time = None
-        self._do_packet_verification = PACKET_VERIFICATION and hasattr(
-            self, 'verify')
+        self._do_packet_verification = PACKET_VERIFICATION and hasattr(self, 'verify')
 
     def setUp(self):
         """Create simulator, nodes and apply configurations.
@@ -187,8 +186,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         """
         if self._do_packet_verification and os.uname().sysname != "Linux":
             raise NotImplementedError(
-                f'{self.testcase_name}: Packet Verification not available on {os.uname().sysname} (Linux only).'
-            )
+                f'{self.testcase_name}: Packet Verification not available on {os.uname().sysname} (Linux only).')
 
         if self._do_packet_verification:
             time.sleep(3)
@@ -227,16 +225,13 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         """
         Clean up node files in tmp directory
         """
-        os.system(
-            f"rm -f tmp/{PORT_OFFSET}_*.flash tmp/{PORT_OFFSET}_*.data tmp/{PORT_OFFSET}_*.swap"
-        )
+        os.system(f"rm -f tmp/{PORT_OFFSET}_*.flash tmp/{PORT_OFFSET}_*.data tmp/{PORT_OFFSET}_*.swap")
 
     def _verify_packets(self, test_info_path: str):
         pv = PacketVerifier(test_info_path)
         pv.add_common_vars()
         self.verify(pv)
-        print("Packet verification passed: %s" % test_info_path,
-              file=sys.stderr)
+        print("Packet verification passed: %s" % test_info_path, file=sys.stderr)
 
     @property
     def testcase_name(self):
@@ -313,9 +308,6 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
     def assure_run_ok(self, cmd, shell=False):
         if not shell and isinstance(cmd, str):
             cmd = cmd.split()
-        proc = subprocess.run(cmd,
-                              stdout=sys.stdout,
-                              stderr=sys.stderr,
-                              shell=shell)
+        proc = subprocess.run(cmd, stdout=sys.stdout, stderr=sys.stderr, shell=shell)
         print(">>> %s => %d" % (cmd, proc.returncode), file=sys.stderr)
         proc.check_returncode()

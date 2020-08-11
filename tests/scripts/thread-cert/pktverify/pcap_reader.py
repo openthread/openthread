@@ -44,9 +44,7 @@ class PcapReader(object):
     """
 
     @classmethod
-    def read(cls,
-             filename: str,
-             tshark_path: Optional[str] = None) -> PacketFilter:
+    def read(cls, filename: str, tshark_path: Optional[str] = None) -> PacketFilter:
         """
         Read packets from a given Pcap file.
 
@@ -60,11 +58,10 @@ class PcapReader(object):
         logging.info("Using tshark path: %s", tshark_path)
         subprocess.check_call(f"{tshark_path} -v", shell=True)
         os.system(f"ls -l {filename}")
-        filecap = pyshark.FileCapture(
-            filename,
-            tshark_path=tshark_path,
-            override_prefs=consts.WIRESHARK_OVERRIDE_PREFS,
-            decode_as=consts.WIRESHARK_DECODE_AS_ENTRIES)
+        filecap = pyshark.FileCapture(filename,
+                                      tshark_path=tshark_path,
+                                      override_prefs=consts.WIRESHARK_OVERRIDE_PREFS,
+                                      decode_as=consts.WIRESHARK_DECODE_AS_ENTRIES)
         filecap.load_packets()
         return PacketFilter(tuple(map(Packet, filecap._packets)))
 

@@ -52,10 +52,9 @@ class PacketVerifier(object):
     LLABMA = 'ff32:40:fd00:7d03:7d03:7d03:0:3'  # Link-Local All BBRs multicast address
 
     def __init__(self, test_info_path):
-        logging.basicConfig(
-            level=logging.INFO,
-            format='File "%(pathname)s", line %(lineno)d, in %(funcName)s\n'
-            '%(asctime)s - %(levelname)s - %(message)s')
+        logging.basicConfig(level=logging.INFO,
+                            format='File "%(pathname)s", line %(lineno)d, in %(funcName)s\n'
+                            '%(asctime)s - %(levelname)s - %(message)s')
 
         ti = TestInfo(test_info_path)
         pkts = PcapReader.read(ti.pcap_path)
@@ -90,18 +89,12 @@ class PacketVerifier(object):
             NET_NAME=PacketVerifier.NET_NAME,
             MM_PORT=PacketVerifier.MM_PORT,
             MC_PORT=PacketVerifier.MC_PORT,
-            LLANMA=PacketVerifier.
-            LLANMA,  # Link-Local All Nodes multicast address
-            LLARMA=PacketVerifier.
-            LLARMA,  # Link-Local All Routers multicast address
-            RLANMA=PacketVerifier.
-            RLANMA,  # realm-local all-nodes multicast address
-            RLARMA=PacketVerifier.
-            RLARMA,  # realm-local all-routers multicast address
-            RLAMFMA=PacketVerifier.
-            RLAMFMA,  # realm-local ALL_MPL_FORWARDERS address
-            LLABMA=PacketVerifier.
-            LLABMA,  # Link-Local All BBRs multicast address
+            LLANMA=PacketVerifier.LLANMA,  # Link-Local All Nodes multicast address
+            LLARMA=PacketVerifier.LLARMA,  # Link-Local All Routers multicast address
+            RLANMA=PacketVerifier.RLANMA,  # realm-local all-nodes multicast address
+            RLARMA=PacketVerifier.RLARMA,  # realm-local all-routers multicast address
+            RLAMFMA=PacketVerifier.RLAMFMA,  # realm-local ALL_MPL_FORWARDERS address
+            LLABMA=PacketVerifier.LLABMA,  # Link-Local All BBRs multicast address
             MA1=consts.MA1,
             MA2=consts.MA2,
             MA3=consts.MA3,
@@ -133,15 +126,12 @@ class PacketVerifier(object):
                 elif addr.is_link_local:
                     key = name + '_LLA'
                 else:
-                    logging.warning(
-                        "IPv6 address ignored: name=%s, addr=%s, is_global=%s, is_link_local=%s",
-                        name, addr, addr.is_global, addr.is_link_local)
+                    logging.warning("IPv6 address ignored: name=%s, addr=%s, is_global=%s, is_link_local=%s", name,
+                                    addr, addr.is_global, addr.is_link_local)
                     continue
 
                 if key in self._vars:
-                    logging.warning(
-                        "duplicate IPv6 address type: name=%s, addr=%s,%s",
-                        name, addr, self._vars[key])
+                    logging.warning("duplicate IPv6 address type: name=%s, addr=%s,%s", name, addr, self._vars[key])
                     continue
 
                 self._vars[key] = addr
@@ -218,8 +208,7 @@ class PacketVerifier(object):
                         .filter_coap_request("/b/bq") \
                         .filter(lambda p: p.coap.tlv.target_eid == DUA)
                     p = filter.must_next()
-                    after_dad_index = self.max_index(after_dad_index,
-                                                     pkts.index)
+                    after_dad_index = self.max_index(after_dad_index, pkts.index)
 
                     with pkts.save_index():
                         # try to find the next multicast
@@ -232,9 +221,7 @@ class PacketVerifier(object):
 
             # SBBR: Does not respond: SBBR does not respond to the BB.qry message.
             if sbbr is not None:
-                dad_pkts_range = pkts.range(before_dad_index,
-                                            after_dad_index,
-                                            cascade=False)
+                dad_pkts_range = pkts.range(before_dad_index, after_dad_index, cascade=False)
                 dad_pkts_range.filter_eth_src(SBBR_ETH) \
                     .filter_LLABMA() \
                     .filter_coap_ack("/b/bq") \
@@ -331,11 +318,8 @@ class PacketVerifier(object):
         if sbbr is not None:
             # SBBR: Does not respond to the ND Neighbor Solicitation message.
             SBBR_ETH = self.vars[sbbr + '_ETH']
-            pkts_in_range = pkts.range(idx_after_n_dr,
-                                       pkts.index,
-                                       cascade=False)
-            pkts_in_range.filter_eth_src(SBBR_ETH).filter_LLANMA(
-            ).filter_icmpv6_nd_na(DUA).must_not_next()
+            pkts_in_range = pkts.range(idx_after_n_dr, pkts.index, cascade=False)
+            pkts_in_range.filter_eth_src(SBBR_ETH).filter_LLANMA().filter_icmpv6_nd_na(DUA).must_not_next()
 
         return result
 
@@ -351,28 +335,21 @@ class PacketVerifier(object):
         extaddr = self.vars[name]
 
         src_pkts = pkts.filter_wpan_src64(extaddr)
-        src_pkts.filter_mle_cmd(
-            MLE_CHILD_ID_REQUEST).must_next()  # Child Id Request
+        src_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()  # Child Id Request
         result.record_last('child_id_request', pkts)
 
         dst_pkts = pkts.filter_wpan_dst64(extaddr)
-        dst_pkts.filter_mle_cmd(
-            MLE_CHILD_ID_RESPONSE).must_next()  # Child Id Response
+        dst_pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()  # Child Id Response
         result.record_last('child_id_response', pkts)
 
         with pkts.save_index():
-            src_pkts.filter_mle_cmd(
-                MLE_ADVERTISEMENT).must_next()  # MLE Advertisement
+            src_pkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next()  # MLE Advertisement
             result.record_last('mle_advertisement', pkts)
             logging.info(f"verify attached: d={name}, result={result}")
 
         return result
 
-    def verify_ping(self,
-                    src: str,
-                    dst: str,
-                    bbr: str = None,
-                    pkts: 'PacketVerifier' = None) -> VerifyResult:
+    def verify_ping(self, src: str, dst: str, bbr: str = None, pkts: 'PacketVerifier' = None) -> VerifyResult:
         """
         Verify the ping process.
 
@@ -410,8 +387,7 @@ class PacketVerifier(object):
         ping_id = p.icmpv6.echo.identifier
         logging.info("verify_ping: ping_id=%x", ping_id)
         result.record_last('ping_request', pkts)
-        ping_req = ping_req.filter(
-            lambda p: p.icmpv6.echo.identifier == ping_id)
+        ping_req = ping_req.filter(lambda p: p.icmpv6.echo.identifier == ping_id)
 
         # BBR unicasts the ping packet to TD.
         if bbr:

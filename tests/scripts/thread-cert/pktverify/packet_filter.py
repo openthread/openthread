@@ -84,17 +84,13 @@ class PacketFilter(object):
     def _check_type_ok(self):
         assert self._last_index == -1 or 0 <= self._last_index < len(self._pkts)
 
-        assert isinstance(self._start_index, tuple) and len(
-            self._start_index) == 2, self._start_index
-        assert isinstance(self._stop_index, tuple) and len(
-            self._stop_index) == 2, self._stop_index
-        assert isinstance(self._index, tuple) and len(
-            self._index) == 2, self._index
+        assert isinstance(self._start_index, tuple) and len(self._start_index) == 2, self._start_index
+        assert isinstance(self._stop_index, tuple) and len(self._stop_index) == 2, self._stop_index
+        assert isinstance(self._index, tuple) and len(self._index) == 2, self._index
         self._check_idx_range_ok((0, 0), self._start_index)
         self._check_idx_range_ok(self._start_index, self._index)
         self._check_idx_range_ok(self._index, self._stop_index)
-        self._check_idx_range_ok(self._stop_index,
-                                 (len(self._pkts), len(self._pkts)))
+        self._check_idx_range_ok(self._stop_index, (len(self._pkts), len(self._pkts)))
 
     def _check_idx_range_ok(self, start, stop):
         assert start[0] <= stop[0], (start, stop)
@@ -156,18 +152,16 @@ class PacketFilter(object):
         :return: a new PacketFilter
         """
         print('\n>>> filtering in range %s~%s%s:' %
-              (self._index, self._stop_index,
-               "<end>" if self._stop_index == len(self._pkts) else "<stop>"),
+              (self._index, self._stop_index, "<end>" if self._stop_index == len(self._pkts) else "<stop>"),
               file=sys.stderr)
 
         func = make_filter_func(func, **vars)
         self._check_type_ok()
-        return PacketFilter(
-            self._pkts,
-            self._index,
-            self._stop_index,
-            filter_func=lambda p: self._filter_func(p) and func(p),
-            parent=self if cascade else None)
+        return PacketFilter(self._pkts,
+                            self._index,
+                            self._stop_index,
+                            filter_func=lambda p: self._filter_func(p) and func(p),
+                            parent=self if cascade else None)
 
     def filter_if(self, cond: bool, *args, **kwargs) -> 'PacketFilter':
         """
@@ -209,19 +203,15 @@ class PacketFilter(object):
         while idx < stop_idx:
             p = self._pkts[idx]
 
-            sys.stderr.write('#%d %s' %
-                             (idx + 1, '\n' if idx % 40 == 39 else ''))
+            sys.stderr.write('#%d %s' % (idx + 1, '\n' if idx % 40 == 39 else ''))
             if self._filter_func(p):
-                if p.wpan and not (self._index[0] <= idx < self._stop_index[0]
-                                  ):  # wpan matched but not in range
+                if p.wpan and not (self._index[0] <= idx < self._stop_index[0]):  # wpan matched but not in range
                     pass
-                elif p.eth and not (self._index[1] <= idx < self._stop_index[1]
-                                   ):  # eth matched but not in range
+                elif p.eth and not (self._index[1] <= idx < self._stop_index[1]):  # eth matched but not in range
                     pass
                 else:
                     self._on_found_next(idx, p)
-                    print("\n>>> found packet at #%d!" % (idx + 1,),
-                          file=sys.stderr)
+                    print("\n>>> found packet at #%d!" % (idx + 1,), file=sys.stderr)
                     return p
 
             idx += 1
@@ -258,36 +248,26 @@ class PacketFilter(object):
 
         if p.wpan:
             wpan_idx = idx + 1
-            eth_idx = max(
-                self._index[1],
-                self._find_prev_packet(
-                    idx + 1,
-                    p.sniff_timestamp - consts.AUTO_SEEK_BACK_MAX_DURATION,
-                    ETH))
+            eth_idx = max(self._index[1],
+                          self._find_prev_packet(idx + 1, p.sniff_timestamp - consts.AUTO_SEEK_BACK_MAX_DURATION, ETH))
         else:
             eth_idx = idx + 1
             wpan_idx = max(
                 self._index[0],
-                self._find_prev_packet(
-                    idx + 1,
-                    p.sniff_timestamp - consts.AUTO_SEEK_BACK_MAX_DURATION,
-                    WPAN))
+                self._find_prev_packet(idx + 1, p.sniff_timestamp - consts.AUTO_SEEK_BACK_MAX_DURATION, WPAN))
 
         # make sure index never go back
         assert wpan_idx >= self._index[0]
         assert eth_idx >= self._index[1]
 
-        print('\n>>>_on_found_next %d %s => %s' % (idx, self._index,
-                                                   (wpan_idx, eth_idx)),
-              file=sys.stderr)
+        print('\n>>>_on_found_next %d %s => %s' % (idx, self._index, (wpan_idx, eth_idx)), file=sys.stderr)
         self._set_found_index(idx, (wpan_idx, eth_idx))
 
     def _find_prev_packet(self, idx, min_sniff_timestamp, pkttype):
         assert pkttype in (WPAN, ETH)
 
         prev_idx = idx
-        while idx > 0 and self._pkts[idx -
-                                     1].sniff_timestamp >= min_sniff_timestamp:
+        while idx > 0 and self._pkts[idx - 1].sniff_timestamp >= min_sniff_timestamp:
             idx -= 1
             if pkttype == WPAN and self._pkts[idx].wpan:
                 prev_idx = idx
@@ -315,21 +295,13 @@ class PacketFilter(object):
 
         assert self._start_index <= start <= self._stop_index
         assert self._start_index <= stop <= self._stop_index
-        return PacketFilter(self._pkts,
-                            start,
-                            stop,
-                            filter_func=self._filter_func,
-                            parent=self if cascade else None)
+        return PacketFilter(self._pkts, start, stop, filter_func=self._filter_func, parent=self if cascade else None)
 
     def copy(self) -> 'PacketFilter':
         """
         :return: a copy of the current PacketFilter
         """
-        return PacketFilter(self._pkts,
-                            self._index,
-                            self._stop_index,
-                            filter_func=self._filter_func,
-                            parent=None)
+        return PacketFilter(self._pkts, self._index, self._stop_index, filter_func=self._filter_func, parent=None)
 
     def __getitem__(self, index: int) -> Packet:
         """
@@ -339,11 +311,7 @@ class PacketFilter(object):
         assert isinstance(index, int), index
         return self._pkts[index]
 
-    def seek_back(self,
-                  max_duration: float,
-                  *,
-                  eth=False,
-                  wpan=False) -> 'PacketFilter':
+    def seek_back(self, max_duration: float, *, eth=False, wpan=False) -> 'PacketFilter':
         """
         Move the current index back in time within the specified max duration. Either eth or wpan must be True.
 
@@ -356,27 +324,22 @@ class PacketFilter(object):
 
         wpan_idx = self._index[0]
         if wpan and wpan_idx < len(self._pkts):
-            wpan_idx = self._find_prev_packet(
-                wpan_idx, self._pkts[wpan_idx].sniff_timestamp - max_duration,
-                WPAN)
+            wpan_idx = self._find_prev_packet(wpan_idx, self._pkts[wpan_idx].sniff_timestamp - max_duration, WPAN)
             wpan_idx = max(self._start_index[0], wpan_idx)
 
         eth_idx = self._index[1]
         if eth and eth_idx < len(self._pkts):
-            eth_idx = self._find_prev_packet(
-                eth_idx, self._pkts[eth_idx].sniff_timestamp - max_duration,
-                ETH)
+            eth_idx = self._find_prev_packet(eth_idx, self._pkts[eth_idx].sniff_timestamp - max_duration, ETH)
             eth_idx = max(self._start_index[1], eth_idx)
 
-        print("\n>>> back %s wpan=%s, eth=%s: index %s => %s" %
-              (max_duration, wpan, eth, self._index, (wpan_idx, eth_idx)),
+        print("\n>>> back %s wpan=%s, eth=%s: index %s => %s" % (max_duration, wpan, eth, self._index,
+                                                                 (wpan_idx, eth_idx)),
               file=sys.stderr)
         self._index = (wpan_idx, eth_idx)
         self._check_type_ok()
         return self
 
-    def _set_found_index(self, last_index: Tuple[int, int], index: Tuple[int,
-                                                                         int]):
+    def _set_found_index(self, last_index: Tuple[int, int], index: Tuple[int, int]):
         self._last_index = last_index
         self._index = index
         self._check_type_ok()
@@ -405,9 +368,8 @@ class PacketFilter(object):
         assert isinstance(uri_path, str), uri_path
         assert port is None or isinstance(port, int), port
         return self.filter(
-            lambda p:
-            (p.coap.is_post and p.coap.opt.uri_path_recon == uri_path and
-             (port is None or p.udp.dstport == port)), **kwargs)
+            lambda p: (p.coap.is_post and p.coap.opt.uri_path_recon == uri_path and
+                       (port is None or p.udp.dstport == port)), **kwargs)
 
     def filter_coap_ack(self, uri_path, port=None, **kwargs):
         """
@@ -421,9 +383,8 @@ class PacketFilter(object):
         assert isinstance(uri_path, str), uri_path
         assert port is None or isinstance(port, int), port
         return self.filter(
-            lambda p:
-            (p.coap.is_ack and p.coap.opt.uri_path_recon == uri_path and
-             (port is None or p.udp.dstport == port)), **kwargs)
+            lambda p: (p.coap.is_ack and p.coap.opt.uri_path_recon == uri_path and
+                       (port is None or p.udp.dstport == port)), **kwargs)
 
     def filter_wpan(self, **kwargs):
         """
@@ -458,9 +419,7 @@ class PacketFilter(object):
     def filter_ping_reply(self, **kwargs):
         identifier = kwargs.pop('identifier', None)
         return self.filter(
-            lambda p:
-            (p.icmpv6.is_ping_reply and
-             (identifier is None or p.icmpv6.echo.identifier == identifier)),
+            lambda p: (p.icmpv6.is_ping_reply and (identifier is None or p.icmpv6.echo.identifier == identifier)),
             **kwargs)
 
     def filter_eth(self, **kwargs):
@@ -475,14 +434,10 @@ class PacketFilter(object):
         return self.filter(lambda p: p.ipv6.dst == addr, **kwargs)
 
     def filter_LLANMA(self, **kwargs):
-        return self.filter(
-            lambda p: p.ipv6.dst == consts.
-            LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS, **kwargs)
+        return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS, **kwargs)
 
     def filter_LLABMA(self, **kwargs):
-        return self.filter(
-            lambda p: p.ipv6.dst == consts.
-            LINK_LOCAL_ALL_BBRS_MULTICAST_ADDRESS, **kwargs)
+        return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_BBRS_MULTICAST_ADDRESS, **kwargs)
 
     def filter_mle(self, **kwargs):
         return self.filter(attrgetter('mle'), **kwargs)
@@ -495,14 +450,12 @@ class PacketFilter(object):
         return self.filter(attrgetter('icmpv6'), **kwargs)
 
     def filter_icmpv6_nd_ns(self, target_address: Ipv6Addr):
-        return self.filter(
-            lambda p: (p.icmpv6.is_neighbor_solicitation and p.icmpv6.nd.ns.
-                       target_address == target_address))
+        return self.filter(lambda p:
+                           (p.icmpv6.is_neighbor_solicitation and p.icmpv6.nd.ns.target_address == target_address))
 
     def filter_icmpv6_nd_na(self, target_address: Ipv6Addr):
-        return self.filter(
-            lambda p: (p.icmpv6.is_neighbor_advertisement and p.icmpv6.nd.na.
-                       target_address == target_address))
+        return self.filter(lambda p:
+                           (p.icmpv6.is_neighbor_advertisement and p.icmpv6.nd.na.target_address == target_address))
 
     def filter_has_bbr_dataset(self):
         return self.filter("""

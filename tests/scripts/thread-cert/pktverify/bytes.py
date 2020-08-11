@@ -68,8 +68,7 @@ class Bytes(bytearray):
         Converts the Bytes to a string of hextets separated by ":"
         """
         assert len(self) % 2 == 0, self.format_octets()
-        return ':'.join('%04x' % (self[i] * 256 + self[i + 1])
-                        for i in range(0, len(self), 2))
+        return ':'.join('%04x' % (self[i] * 256 + self[i + 1]) for i in range(0, len(self), 2))
 
     __str__ = format_octets
 
@@ -99,8 +98,7 @@ class Bytes(bytearray):
             if not s:
                 return bytearray(b"")
 
-            return bytearray(
-                int(x[i:i + 2], 16) for x in s.split(':') for i in (0, 2))
+            return bytearray(int(x[i:i + 2], 16) for x in s.split(':') for i in (0, 2))
         except Exception:
             raise ValueError(s)
 
@@ -127,16 +125,14 @@ class Bytes(bytearray):
             other = self.__class__(other)
 
         eq = super().__eq__(other)
-        print("[%r %s %r]" % (self, "==" if eq else "!=", other),
-              file=sys.stderr)
+        print("[%r %s %r]" % (self, "==" if eq else "!=", other), file=sys.stderr)
         return eq
 
 
 if __name__ == '__main__':
     # some simple tests
     x = Bytes(b"\x01\x02\x03\x04")
-    assert eval(repr(x)) == x, repr(
-        x)  # representation of Bytes should be able to be evaluated back
+    assert eval(repr(x)) == x, repr(x)  # representation of Bytes should be able to be evaluated back
     assert x == str(x), (x, str(x))
 
     assert x.format_compact() == "01020304", x.format_compact()

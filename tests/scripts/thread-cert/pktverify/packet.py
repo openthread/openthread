@@ -80,9 +80,7 @@ class Packet(object):
 
     @property
     def layer_names(self) -> List[str]:
-        return [
-            l.layer_name for l in self._packet.layers if l.layer_name != 'data'
-        ]
+        return [l.layer_name for l in self._packet.layers if l.layer_name != 'data']
 
     @cached_property
     def wpan(self) -> WpanLayer:

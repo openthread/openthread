@@ -47,24 +47,11 @@ class TestInfo(object):
             self.testcase = test_info.get('testcase', '')
             self._pcap = test_info.get('pcap', 'current.pcap')
             self.topology = self._convert_keys_to_ints(test_info['topology'])
-            self.extaddrs = {
-                int(k): ExtAddr(v)
-                for k, v in test_info.get('extaddrs', {}).items()
-            }
-            self.ethaddrs = {
-                int(k): EthAddr(v)
-                for k, v in test_info.get('ethaddrs', {}).items()
-            }
-            self.ipaddrs = {
-                int(k): [Ipv6Addr(x) for x in l
-                        ] for k, l in test_info.get('ipaddrs', {}).items()
-            }
-            self.mleids = {
-                int(k): Ipv6Addr(v)
-                for k, v in test_info.get('mleids', {}).items()
-            }
-            self.rloc16s = self._convert_hex_values(
-                self._convert_keys_to_ints(test_info.get('rloc16s', {})))
+            self.extaddrs = {int(k): ExtAddr(v) for k, v in test_info.get('extaddrs', {}).items()}
+            self.ethaddrs = {int(k): EthAddr(v) for k, v in test_info.get('ethaddrs', {}).items()}
+            self.ipaddrs = {int(k): [Ipv6Addr(x) for x in l] for k, l in test_info.get('ipaddrs', {}).items()}
+            self.mleids = {int(k): Ipv6Addr(v) for k, v in test_info.get('mleids', {}).items()}
+            self.rloc16s = self._convert_hex_values(self._convert_keys_to_ints(test_info.get('rloc16s', {})))
             self.extra_vars = test_info.get('extra_vars', {})
 
     def __str__(self):
@@ -72,9 +59,7 @@ class TestInfo(object):
         macs.update({k + '_ETH': v for k, v in self.ethaddrs.items()})
         macs = ",\n\t".join("%s=%s" % (k, v) for k, v in macs.items())
 
-        return "TestInfo<{case}|{pcap}|\n\t{macs}>".format(case=self.testcase,
-                                                           pcap=self._pcap,
-                                                           macs=macs)
+        return "TestInfo<{case}|{pcap}|\n\t{macs}>".format(case=self.testcase, pcap=self._pcap, macs=macs)
 
     @property
     def pcap_path(self) -> str:

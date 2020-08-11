@@ -185,6 +185,5 @@ if __name__ == '__main__':
     assert a[:4] == "00112233"
     assert a[-4:] == "ccddeeff"
 
-    assert Ipv6Addr("fd00:db8::ff:fe00:8001") == Ipv6Addr(
-        "fd00:0db8:0000:0000:0000:00ff:fe00:8001")
+    assert Ipv6Addr("fd00:db8::ff:fe00:8001") == Ipv6Addr("fd00:0db8:0000:0000:0000:00ff:fe00:8001")
     print(Ipv6Addr("fdde:ad00:beef:0:9d87:85f0:3358:3fff"))

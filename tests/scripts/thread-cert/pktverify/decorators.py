@@ -42,9 +42,7 @@ def cached(f):
     @wraps(f)
     def once_f(self):
         try:
-            v = object.__getattribute__(
-                self, cache_key
-            )  # can not use getattr, will trigger __getattr__ wrongly
+            v = object.__getattribute__(self, cache_key)  # can not use getattr, will trigger __getattr__ wrongly
         except AttributeError:
             v = f(self)
             setattr(self, cache_key, v)

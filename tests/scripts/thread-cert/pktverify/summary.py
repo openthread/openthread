@@ -70,9 +70,7 @@ class NodeSummary(object):
         return None
 
     def _iter_ipaddrs_rev(self):
-        return sorted(self._ipaddrs.items(),
-                      key=operator.itemgetter(1),
-                      reverse=True)
+        return sorted(self._ipaddrs.items(), key=operator.itemgetter(1), reverse=True)
 
     def add_ipaddr(self, ipaddr, index):
         if ipaddr not in self._ipaddrs:
@@ -128,9 +126,7 @@ class Summary(object):
     def _analyze_leader(self):
         for p in self._pkts:
 
-            if p.mle.cmd in [
-                    consts.MLE_DATA_RESPONSE, consts.MLE_ADVERTISEMENT
-            ]:
+            if p.mle.cmd in [consts.MLE_DATA_RESPONSE, consts.MLE_ADVERTISEMENT]:
 
                 p.mle.__getattr__('tlv')
                 p.mle.__getattr__('tlv.leader_data')

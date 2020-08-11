@@ -33,15 +33,12 @@ from pktverify.bytes import Bytes
 DOMAIN_PREFIX = Bytes('fd00:7d03:7d03:7d03')
 BACKBONE_IPV6_PREFIX = Bytes('2001:0db8:0001:0000')
 
-LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr(
-    'ff32:40:fdde:ad00:beef:0:0:1')
-REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr(
-    'ff33:40:fdde:ad00:beef:0:0:1')
+LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr('ff32:40:fdde:ad00:beef:0:0:1')
+REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr('ff33:40:fdde:ad00:beef:0:0:1')
 REALM_LOCAL_ALL_ROUTERS_ADDRESS = Ipv6Addr('ff03::2')
 LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS = Ipv6Addr('ff02::1')
 LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS = Ipv6Addr('ff02::2')
-LINK_LOCAL_ALL_BBRS_MULTICAST_ADDRESS = Ipv6Addr(
-    'ff32:40:fd00:7d03:7d03:7d03:0:3')
+LINK_LOCAL_ALL_BBRS_MULTICAST_ADDRESS = Ipv6Addr('ff32:40:fd00:7d03:7d03:7d03:0:3')
 
 # MA in Test Plan, make sure these are same as ../config.py
 MA1 = Ipv6Addr('ff04::1234:777a:1')
@@ -123,18 +120,12 @@ AUTO_SEEK_BACK_MAX_DURATION = 0.01
 
 # Wireshark configs
 WIRESHARK_OVERRIDE_PREFS = {
-    '6lowpan.context0':
-        'fd00:db8::/64',
-    '6lowpan.context1':
-        'fd00:7d03:7d03:7d03::/64',
-    'wpan.802154_fcs_ok':
-        'FALSE',
-    'wpan.802154_sec_suite':
-        'AES-128 Encryption, 32-bit Integrity Protection',
-    'thread.thr_seq_ctr':
-        '00000000',
-    'uat:ieee802154_keys':
-        '"00112233445566778899aabbccddeeff","1","Thread hash"',
+    '6lowpan.context0': 'fd00:db8::/64',
+    '6lowpan.context1': 'fd00:7d03:7d03:7d03::/64',
+    'wpan.802154_fcs_ok': 'FALSE',
+    'wpan.802154_sec_suite': 'AES-128 Encryption, 32-bit Integrity Protection',
+    'thread.thr_seq_ctr': '00000000',
+    'uat:ieee802154_keys': '"00112233445566778899aabbccddeeff","1","Thread hash"',
 }
 
 WIRESHARK_DECODE_AS_ENTRIES = {
@@ -151,7 +142,5 @@ TIMEOUT_REGISTER_MA = 5
 if __name__ == '__main__':
     from pktverify.addrs import Ipv6Addr
 
-    assert Ipv6Addr("fe80:0000:0000:0000:0200:0000:0000:0004").startswith(
-        LINK_LOCAL_PREFIX)
-    assert Ipv6Addr("fd00:0db8:0000:0000:0000:00ff:fe00:8001").startswith(
-        DEFAULT_MESH_LOCAL_PREFIX)
+    assert Ipv6Addr("fe80:0000:0000:0000:0200:0000:0000:0004").startswith(LINK_LOCAL_PREFIX)
+    assert Ipv6Addr("fd00:0db8:0000:0000:0000:00ff:fe00:8001").startswith(DEFAULT_MESH_LOCAL_PREFIX)

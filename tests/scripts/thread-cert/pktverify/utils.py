@@ -74,17 +74,14 @@ def make_filter_func(func: Union[str, Callable], **vars) -> Callable:
                     'null': nullField,
                 })
     else:
-        assert not vars, 'can not provide vars for non-str filter: %r %r' % (
-            func, vars)
+        assert not vars, 'can not provide vars for non-str filter: %r %r' % (func, vars)
 
     assert callable(func)
     return func
 
 
 def _install_travis_thread_wireshark():
-    logging.info(
-        "downloading thread-wireshark from https://github.com/openthread/wireshark/releases ..."
-    )
+    logging.info("downloading thread-wireshark from https://github.com/openthread/wireshark/releases ...")
 
     download_url = 'https://github.com/openthread/wireshark/releases/download/ot-pktverify-20200727/thread-wireshark.tar.gz'
     save_file = '/tmp/thread-wireshark.tar.gz'

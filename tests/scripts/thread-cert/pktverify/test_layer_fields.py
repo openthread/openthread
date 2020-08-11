@@ -69,8 +69,7 @@ class TestLayerFields(unittest.TestCase):
                         layer.show()
                         raise
 
-                    self._check_missing_fields(p, layer_name,
-                                               getattr(p._packet, layer_name))
+                    self._check_missing_fields(p, layer_name, getattr(p._packet, layer_name))
                 else:
                     if layer_name in REAL_LAYER_NAMES:
                         self.assertFalse(layer)
@@ -110,8 +109,7 @@ class TestLayerFields(unittest.TestCase):
         self.assertIsInstanceOrNull(mle.tlv.leader_data.partition_id, int)
         self.assertIsInstanceOrNull(mle.tlv.leader_data.weighting, int)
         self.assertIsInstanceOrNull(mle.tlv.leader_data.data_version, int)
-        self.assertIsInstanceOrNull(mle.tlv.leader_data.stable_data_version,
-                                    int)
+        self.assertIsInstanceOrNull(mle.tlv.leader_data.stable_data_version, int)
         self.assertIsInstanceOrNull(mle.tlv.leader_data.router_id, int)
 
     def _test_wpan(self, p):
@@ -171,8 +169,7 @@ class TestLayerFields(unittest.TestCase):
 
         for layer in sorted(p.layers, key=lambda l: l.layer_name):
             if 'thread_meshcop.tlv.commissioner_sess_id' in layer._layer._all_fields:
-                self.assertIsInstance(thread_meshcop.tlv.commissioner_sess_id,
-                                      int)
+                self.assertIsInstance(thread_meshcop.tlv.commissioner_sess_id, int)
 
             if 'thread_meshcop.tlv.net_name' in layer._layer._all_fields:
                 self.assertIsInstance(thread_meshcop.tlv.net_name, str)
@@ -227,11 +224,8 @@ class TestLayerFields(unittest.TestCase):
                 self.assertIsInstance(thread_meshcop.tlv.xpan_id, Bytes)
 
             for field in layer._layer._all_fields:
-                if field.startswith(
-                        'thread_meshcop') and not layer_fields.is_layer_field(
-                            field) and field not in ('thread_meshcop.tlv',
-                                                     'thread_meshcop.tlv.type',
-                                                     'thread_meshcop.tlv.len8'):
+                if field.startswith('thread_meshcop') and not layer_fields.is_layer_field(field) and field not in (
+                        'thread_meshcop.tlv', 'thread_meshcop.tlv.type', 'thread_meshcop.tlv.len8'):
                     print('found %s = %s in layer %s' % (
                         field,
                         layer._layer.get_field(field),
@@ -312,11 +306,9 @@ class TestLayerFields(unittest.TestCase):
             if f.startswith('_ws') or f.startswith('data'):
                 continue
 
-            logging.info('_check_missing_fields: %s = %r' %
-                         (f, _layer._all_fields[f]))
+            logging.info('_check_missing_fields: %s = %r' % (f, _layer._all_fields[f]))
             if f in {
-                    '', 'icmpv6.checksum.status', 'ip.ttl.lncb',
-                    'wpan.aux_sec.key_source.bytes', 'wpan.src64.origin'
+                    '', 'icmpv6.checksum.status', 'ip.ttl.lncb', 'wpan.aux_sec.key_source.bytes', 'wpan.src64.origin'
             }:
                 # TODO: handle these fields
                 continue
@@ -334,8 +326,7 @@ class TestLayerFields(unittest.TestCase):
                 if isinstance(parser, layer_fields._first):
                     parser = parser._sub_parse
 
-                if parser in (layer_fields._raw_hex, layer_fields._hex,
-                              layer_fields._raw_hex_rev, layer_fields._dec,
+                if parser in (layer_fields._raw_hex, layer_fields._hex, layer_fields._raw_hex_rev, layer_fields._dec,
                               layer_fields._auto):
                     self.assertIsInstance(rv, int)
                 elif isinstance(parser, layer_fields._list):
@@ -358,7 +349,6 @@ class TestLayerFields(unittest.TestCase):
                     raise NotImplementedError(parser)
             except Exception:
                 logging.info('checking [%s] %s=%r, %r, %r (%d)' %
-                             (layer_name, f, v, v.get_default_value(),
-                              v.raw_value, len(v.fields)),
+                             (layer_name, f, v, v.get_default_value(), v.raw_value, len(v.fields)),
                              file=sys.stderr)
                 raise

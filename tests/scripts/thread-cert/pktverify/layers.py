@@ -91,9 +91,7 @@ class Layer(object):
         """
         path = '%s.%s' % (self.layer_name, name)
         v = get_layer_field(self._packet, path)
-        assert not isinstance(
-            v, (LayerField, LayerFieldsContainer)), '%s = %s(%r)' % (
-                path, v.__class__.__name__, v)
+        assert not isinstance(v, (LayerField, LayerFieldsContainer)), '%s = %s(%r)' % (path, v.__class__.__name__, v)
         setattr(self, name, v)
         return v
 
@@ -113,8 +111,7 @@ class ThreadMeshcopLayer(Layer):
     """
 
     def __bool__(self):
-        raise NotImplementedError(
-            "thread_meshcop is not a real layer, please do not check as bool")
+        raise NotImplementedError("thread_meshcop is not a real layer, please do not check as bool")
 
 
 class ThreadNetworkDataLayer(Layer):
@@ -123,8 +120,7 @@ class ThreadNetworkDataLayer(Layer):
     """
 
     def __bool__(self):
-        raise NotImplementedError(
-            "thread_nwd is not a real layer, please do not check as bool")
+        raise NotImplementedError("thread_nwd is not a real layer, please do not check as bool")
 
 
 class Icmpv6Layer(Layer):

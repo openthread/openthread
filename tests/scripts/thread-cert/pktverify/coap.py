@@ -118,8 +118,7 @@ class CoapTlvParser(object):
         try:
             parse_func = getattr(CoapTlvParser, f'_parse_{t}')
         except AttributeError:
-            raise NotImplementedError(
-                f"Please implement _parse_{t} for COAP TLV: type={t}")
+            raise NotImplementedError(f"Please implement _parse_{t} for COAP TLV: type={t}")
 
         return parse_func(v)
 

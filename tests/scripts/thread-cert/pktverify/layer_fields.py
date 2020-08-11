@@ -40,8 +40,7 @@ from pktverify.null_field import nullField
 
 def _auto(v: Union[LayerFieldsContainer, LayerField]):
     """parse the layer field automatically according to its format"""
-    assert not isinstance(v, LayerFieldsContainer) or len(
-        v.fields) == 1, v.fields
+    assert not isinstance(v, LayerFieldsContainer) or len(v.fields) == 1, v.fields
     dv = v.get_default_value()
     rv = v.raw_value
 
@@ -62,8 +61,7 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
         except (ValueError, TypeError):
             pass
 
-    if ':' in dv and '::' not in dv and dv.replace(':',
-                                                   '') == rv:  # '88:00', '8800'
+    if ':' in dv and '::' not in dv and dv.replace(':', '') == rv:  # '88:00', '8800'
         return int(rv, 16)
 
     if dv.endswith(' CST'):
@@ -107,15 +105,13 @@ def _raw_hex(v: Union[LayerFieldsContainer, LayerField]) -> int:
 
     try:
         int(v.get_default_value())
-        assert int(v.get_default_value()) == iv, (v.get_default_value(),
-                                                  v.raw_value)
+        assert int(v.get_default_value()) == iv, (v.get_default_value(), v.raw_value)
     except ValueError:
         pass
 
     try:
         int(v.get_default_value(), 16)
-        assert int(v.get_default_value(),
-                   16) == iv, (v.get_default_value(), v.raw_value)
+        assert int(v.get_default_value(), 16) == iv, (v.get_default_value(), v.raw_value)
     except ValueError:
         pass
 
@@ -133,15 +129,13 @@ def _raw_hex_rev(v: Union[LayerFieldsContainer, LayerField]) -> int:
 
     try:
         int(v.get_default_value())
-        assert int(v.get_default_value()) == iv, (v.get_default_value(),
-                                                  v.raw_value)
+        assert int(v.get_default_value()) == iv, (v.get_default_value(), v.raw_value)
     except ValueError:
         pass
 
     try:
         int(v.get_default_value(), 16)
-        assert int(v.get_default_value(),
-                   16) == iv, (v.get_default_value(), v.raw_value)
+        assert int(v.get_default_value(), 16) == iv, (v.get_default_value(), v.raw_value)
     except ValueError:
         pass
 
@@ -186,8 +180,7 @@ def _ipv6_addr(v: Union[LayerFieldsContainer, LayerField]) -> Ipv6Addr:
 
 def _eth_addr(v: Union[LayerFieldsContainer, LayerField]) -> EthAddr:
     """parse the layer field as an Ethernet MAC address"""
-    assert not isinstance(v, LayerFieldsContainer) or len(
-        v.fields) == 1, v.fields
+    assert not isinstance(v, LayerFieldsContainer) or len(v.fields) == 1, v.fields
     return EthAddr(v.get_default_value())
 
 
@@ -608,10 +601,8 @@ def get_layer_field(packet: RawPacket, field_uri: str) -> Any:
                     print("[%s = %r] " % (field_uri, v), file=sys.stderr)
                     return v
                 except Exception as ex:
-                    raise ValueError(
-                        'can not parse field %s = %r' %
-                        (field_uri,
-                         (v.get_default_value(), v.raw_value))) from ex
+                    raise ValueError('can not parse field %s = %r' % (field_uri,
+                                                                      (v.get_default_value(), v.raw_value))) from ex
 
         print("[%s = %s] " % (field_uri, "null"), file=sys.stderr)
         return nullField
@@ -620,9 +611,7 @@ def get_layer_field(packet: RawPacket, field_uri: str) -> Any:
         from pktverify.layer_fields_container import LayerFieldsContainer
         return LayerFieldsContainer(packet, field_uri)
     else:
-        raise NotImplementedError(
-            'Field %s is not valid, please add it to `_LAYER_FIELDS`' %
-            field_uri)
+        raise NotImplementedError('Field %s is not valid, please add it to `_LAYER_FIELDS`' % field_uri)
 
 
 def check_layer_field_exists(packet, field_uri):
@@ -637,10 +626,8 @@ def check_layer_field_exists(packet, field_uri):
     secs = field_uri.split('.')
     layer_name = secs[0]
 
-    if not is_layer_field(field_uri) and not is_layer_field_container(
-            field_uri):
-        raise NotImplementedError('%s is neither a field or field container' %
-                                  field_uri)
+    if not is_layer_field(field_uri) and not is_layer_field_container(field_uri):
+        raise NotImplementedError('%s is neither a field or field container' % field_uri)
 
     candidate_layers = _get_candidate_layers(packet, layer_name)
     for layer in candidate_layers:
