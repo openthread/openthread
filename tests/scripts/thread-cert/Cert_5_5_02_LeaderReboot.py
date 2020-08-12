@@ -33,6 +33,7 @@ import config
 import thread_cert
 import pktverify.consts as consts
 from pktverify.packet_verifier import PacketVerifier
+from pktverify.null_field import nullField
 
 LEADER = 1
 ROUTER = 2
@@ -108,18 +109,17 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
         # Step 2: The DUT MUST send properly formatted MLE Advertisements
         _rpkts.filter_mle_cmd(consts.MLE_CHILD_ID_RESPONSE).must_next()
         _lpkts = leader_pkts.range(_rpkts.index)
-        _lpkts.filter_mle_cmd(consts.MLE_ADVERTISEMENT).must_next().must_verify(
-            lambda p: {0, 11, 9} == set(p.mle.tlv.type))
+        _lpkts.filter_mle_cmd(
+            consts.MLE_ADVERTISEMENT).must_next().must_verify(lambda p: {0, 11, 9} == set(p.mle.tlv.type))
 
-        _rpkts.filter_mle_cmd(consts.MLE_ADVERTISEMENT).must_next().must_verify(
-            lambda p: {0, 11, 9} == set(p.mle.tlv.type))
+        _rpkts.filter_mle_cmd(
+            consts.MLE_ADVERTISEMENT).must_next().must_verify(lambda p: {0, 11, 9} == set(p.mle.tlv.type))
 
         # Step4: Router_1 MUST attempt to reattach to its original partition by
         # sending MLE Parent Requests to the All-Routers multicast
         # address (FFxx::xx) with a hop limit of 255.
         _rpkts.filter_mle_cmd(
-            consts.MLE_PARENT_REQUEST).must_next().must_verify(
-                lambda p: {1, 3, 14, 18} == set(p.mle.tlv.type))
+            consts.MLE_PARENT_REQUEST).must_next().must_verify(lambda p: {1, 3, 14, 18} == set(p.mle.tlv.type))
         lreset_start = _rpkts.index
 
         # Step 5: Leader MUST NOT respond to the MLE Parent Requests
@@ -128,65 +128,55 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
         # Step 6:Router_1 MUST attempt to attach to any other Partition
         # within range by sending a MLE Parent Request.
         _rpkts.filter_mle_cmd(
-            consts.MLE_PARENT_REQUEST).must_next().must_verify(
-                lambda p: {1, 3, 14, 18} == set(p.mle.tlv.type))
+            consts.MLE_PARENT_REQUEST).must_next().must_verify(lambda p: {1, 3, 14, 18} == set(p.mle.tlv.type))
         lreset_stop = _rpkts.index
 
         # Step3: The Leader MUST stop sending MLE advertisements.
-        leader_pkts.range(lreset_start, lreset_stop).filter_mle_cmd(
-            consts.MLE_ADVERTISEMENT).must_not_next()
+        leader_pkts.range(lreset_start, lreset_stop).filter_mle_cmd(consts.MLE_ADVERTISEMENT).must_not_next()
 
         # Step 7: Take over leader role of a new Partition and
         # begin transmitting MLE Advertisements
-        _temppkts = _rpkts.copy()
-        _temppkts.filter_mle_cmd(
-            consts.MLE_ADVERTISEMENT).must_next().must_verify(
-                lambda p: {0, 11, 9} == set(p.mle.tlv.type))
+        with _rpkts.save_index():
+            _rpkts.filter_mle_cmd(
+                consts.MLE_ADVERTISEMENT).must_next().must_verify(lambda p: {0, 11, 9} == set(p.mle.tlv.type))
 
         # Step 8: Router_1 MUST respond with an MLE Child Update Response,
         # with the updated TLVs of the new partition
-        _rpkts.filter_mle_cmd(14).must_next().must_verify(
-            lambda p: {0, 1, 11, 19} < set(p.mle.tlv.type))
+        _rpkts.filter_mle_cmd(
+            consts.MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(lambda p: {0, 1, 11, 19} < set(p.mle.tlv.type))
 
         # Step 9: The Leader MUST send properly formatted MLE Parent
         # Requests to the All-Routers multicast address
         _lpkts.filter_mle_cmd(
-            consts.MLE_PARENT_REQUEST).must_next().must_verify(
-                lambda p: {1, 3, 14, 18} == set(p.mle.tlv.type))
+            consts.MLE_PARENT_REQUEST).must_next().must_verify(lambda p: {1, 3, 14, 18} == set(p.mle.tlv.type))
 
         # Step 10: Router_1 MUST send an MLE Parent Response
-        _rpkts.filter_mle_cmd(
-            consts.MLE_PARENT_RESPONSE).must_next().must_verify(
-                lambda p: {0, 11, 5, 4, 3, 16, 15, 18} < set(p.mle.tlv.type))
+        _rpkts.filter_mle_cmd(consts.MLE_PARENT_RESPONSE).must_next().must_verify(
+            lambda p: {0, 11, 5, 4, 3, 16, 15, 18} < set(p.mle.tlv.type))
 
         # Step 11: Leader send MLE Child ID Request
-        _lpkts.filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST).must_next(
-        ).must_verify(
+        _lpkts.filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST).must_next().must_verify(
             lambda p: {4, 5, 1, 2, 18, 13, 10, 12, 9, 22} < set(p.mle.tlv.type))
 
         #Step 12: Router_1 send MLE Child ID Response
         _rpkts.filter_mle_cmd(
-            consts.MLE_CHILD_ID_RESPONSE).must_next().must_verify(
-                lambda p: {0, 11, 10, 12, 9} < set(p.mle.tlv.type))
+            consts.MLE_CHILD_ID_RESPONSE).must_next().must_verify(lambda p: {0, 11, 10, 12, 9} < set(p.mle.tlv.type))
 
         #Step 13: Leader send an Address Solicit Request
         _lpkts.filter_coap_request("/a/as").must_next().must_verify(
-            lambda p: p.coap.tlv.ext_mac_addr and p.coap.tlv.rloc16 and p.coap.
-            tlv.status)
+            lambda p: p.coap.tlv.ext_mac_addr and p.coap.tlv.rloc16 is not nullField and p.coap.tlv.status != 0)
 
         #Step 14: Router_1 send an Address Solicit Response
-        _rpkts.filter_coap_ack("/a/as").must_next().must_verify(
-            lambda p: p.coap.tlv.router_mask_assigned and p.coap.tlv.rloc16 and
-            (p.coap.tlv.status == 0))
+        _rpkts.filter_coap_ack("/a/as").must_next().must_verify(lambda p: p.coap.tlv.router_mask_assigned and p.coap.
+                                                                tlv.rloc16 is not nullField and p.coap.tlv.status == 0)
 
         #Step 15: Leader Send a Multicast Link Request
-        _lpkts.filter_mle_cmd(consts.MLE_LINK_REQUEST).must_next().must_verify(
-            lambda p: {18, 13, 0, 11, 3} < set(p.mle.tlv.type))
+        _lpkts.filter_mle_cmd(
+            consts.MLE_LINK_REQUEST).must_next().must_verify(lambda p: {18, 13, 0, 11, 3} < set(p.mle.tlv.type))
 
         #Step 16: Router_1 send a Unicast Link Accept
-        _rpkts.filter_mle_cmd(
-            consts.MLE_LINK_ACCEPT_AND_REQUEST).must_next().must_verify(
-                lambda p: {18, 0, 4, 8, 16, 11} < set(p.mle.tlv.type))
+        _rpkts.filter_mle_cmd(consts.MLE_LINK_ACCEPT_AND_REQUEST).must_next().must_verify(
+            lambda p: {18, 0, 4, 8, 16, 11} < set(p.mle.tlv.type))
 
         #Step 17: Router_1 MUST respond with an ICMPv6 Echo Reply
         _rpkts.filter_ping_request().filter_wpan_dst64(MED).must_next()
