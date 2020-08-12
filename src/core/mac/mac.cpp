@@ -1418,14 +1418,10 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     uint8_t           securityLevel;
     uint8_t           keyIdMode;
     uint32_t          frameCounter;
-    uint8_t           nonce[Crypto::AesCcm::kNonceSize];
-    uint8_t           tag[Frame::kMaxMicSize];
-    uint8_t           tagLength;
     uint8_t           keyid;
     uint32_t          keySequence = 0;
     const Key *       macKey;
     const ExtAddress *extAddress;
-    Crypto::AesCcm    aesCcm;
 
     VerifyOrExit(aFrame.GetSecurityEnabled(), error = OT_ERROR_NONE);
 
@@ -1502,26 +1498,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         OT_UNREACHABLE_CODE(break);
     }
 
-    Crypto::AesCcm::GenerateNonce(*extAddress, frameCounter, securityLevel, nonce);
-    tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
-
-    aesCcm.SetKey(*macKey);
-
-    aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
-    aesCcm.Header(aFrame.GetHeader(), aFrame.GetHeaderLength());
-
-#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), Crypto::AesCcm::kDecrypt);
-#else
-    // For fuzz tests, execute AES but do not alter the payload
-    uint8_t fuzz[OT_RADIO_FRAME_MAX_SIZE];
-    aesCcm.Payload(fuzz, aFrame.GetPayload(), aFrame.GetPayloadLength(), Crypto::AesCcm::kDecrypt);
-#endif
-    aesCcm.Finalize(tag);
-
-#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, OT_NOOP);
-#endif
+    VerifyOrExit(OT_ERROR_NONE == aFrame.ProcessReceiveAesCcm(*extAddress, *macKey), OT_NOOP);
 
     if ((keyIdMode == Frame::kKeyIdMode1) && aNeighbor->IsStateValid())
     {
