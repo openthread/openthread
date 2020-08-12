@@ -70,7 +70,7 @@ static_assert(kLineBufferSize >= sizeof("> "), "kLineBufferSize is too small");
 static_assert(kLineBufferSize >= sizeof("Done\r\n"), "kLineBufferSize is too small");
 static_assert(kLineBufferSize >= sizeof("Error "), "kLineBufferSize is too small");
 
-const char kDefaultThreadNetworkInterfaceName[] = "wpan0";
+static constexpr char kDefaultThreadNetworkInterfaceName[] = "wpan0";
 
 typedef struct ClientConfig
 {
