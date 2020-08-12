@@ -1269,6 +1269,14 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
 
             mBroadcastTransmitCount = 0;
         }
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        // Verify Enh-ACK integrity by checking its MIC
+        if ((aError == OT_ERROR_NONE) && (aAckFrame != nullptr))
+        {
+            aError = (ProcessEnhAckSecurity(aFrame, *aAckFrame) == OT_ERROR_NONE) ? OT_ERROR_NONE : OT_ERROR_NO_ACK;
+        }
+#endif
     }
 
     // Determine next action based on current operation.
@@ -1521,6 +1529,89 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
+{
+    otError     error = OT_ERROR_SECURITY;
+    uint8_t     securityLevel;
+    uint8_t     txKeyId;
+    uint8_t     ackKeyId;
+    uint8_t     keyIdMode;
+    Address     srcAddr;
+    Neighbor *  neighbor;
+    KeyManager &keyManager = Get<KeyManager>();
+    const Key * macKey;
+
+    VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = OT_ERROR_NONE);
+
+    IgnoreError(aAckFrame.GetSecurityLevel(securityLevel));
+    VerifyOrExit(securityLevel == Frame::kSecEncMic32, OT_NOOP);
+
+    IgnoreError(aAckFrame.GetKeyIdMode(keyIdMode));
+    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1, error = OT_ERROR_NONE);
+
+    IgnoreError(aTxFrame.GetKeyId(txKeyId));
+    IgnoreError(aAckFrame.GetKeyId(ackKeyId));
+
+    VerifyOrExit(txKeyId == ackKeyId, OT_NOOP);
+
+    IgnoreError(aAckFrame.GetSrcAddr(srcAddr));
+
+    if (srcAddr.GetType() == Address::kTypeShort)
+    {
+        neighbor = Get<NeighborTable>().FindNeighbor(srcAddr);
+
+        if (neighbor != nullptr)
+        {
+            srcAddr.SetExtended(neighbor->GetExtAddress());
+        }
+    }
+
+    if (srcAddr.GetType() != Address::kTypeExtended)
+    {
+        // Get Enh-ACK source address from transmitted frame destination address
+        IgnoreError(aTxFrame.GetDstAddr(srcAddr));
+
+        if (srcAddr.GetType() == Address::kTypeShort)
+        {
+            neighbor = Get<NeighborTable>().FindNeighbor(srcAddr);
+
+            if (neighbor != nullptr)
+            {
+                srcAddr.SetExtended(neighbor->GetExtAddress());
+            }
+        }
+    }
+
+    VerifyOrExit(srcAddr.GetType() == Address::kTypeExtended, OT_NOOP);
+
+    if (ackKeyId == (keyManager.GetCurrentKeySequence() & 0x7f))
+    {
+        macKey = &mSubMac.GetCurrentMacKey();
+    }
+    else if (ackKeyId == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
+    {
+        macKey = &mSubMac.GetPreviousMacKey();
+    }
+    else if (ackKeyId == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
+    {
+        macKey = &mSubMac.GetNextMacKey();
+    }
+    else
+    {
+        ExitNow();
+    }
+
+    if (aAckFrame.ProcessReceiveAesCcm(srcAddr.GetExtended(), *macKey) == OT_ERROR_NONE)
+    {
+        error = OT_ERROR_NONE;
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 {

@@ -1163,15 +1163,15 @@ otError RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &
 
     return OT_ERROR_NONE;
 #else
-    otError        error        = OT_ERROR_SECURITY;
-    uint32_t       frameCounter = 0;
-    uint8_t        securityLevel;
-    uint8_t        nonce[Crypto::AesCcm::kNonceSize];
-    uint8_t        tag[kMaxMicSize];
-    uint8_t        tagLength;
+    otError error = OT_ERROR_SECURITY;
+    uint32_t frameCounter = 0;
+    uint8_t securityLevel;
+    uint8_t nonce[Crypto::AesCcm::kNonceSize];
+    uint8_t tag[kMaxMicSize];
+    uint8_t tagLength;
     Crypto::AesCcm aesCcm;
 
-    VerifyOrExit(GetSecurityEnabled(), OT_NOOP);
+    VerifyOrExit(GetSecurityEnabled(), error = OT_ERROR_NONE);
 
     SuccessOrExit(GetSecurityLevel(securityLevel));
     SuccessOrExit(GetFrameCounter(frameCounter));
