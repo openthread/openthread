@@ -229,13 +229,8 @@ void Slaac::Update(UpdateMode aMode)
                         continue;
                     }
 
-                    slaacAddr.Clear();
+                    slaacAddr.InitAsSlaacOrigin(config.mOnMesh ? prefix.mLength : 128, config.mPreferred);
                     slaacAddr.GetAddress().SetPrefix(prefix);
-
-                    slaacAddr.mPrefixLength  = config.mOnMesh ? prefix.mLength : 128;
-                    slaacAddr.mAddressOrigin = OT_ADDRESS_ORIGIN_SLAAC;
-                    slaacAddr.mPreferred     = config.mPreferred;
-                    slaacAddr.mValid         = true;
 
                     IgnoreError(GenerateIid(slaacAddr));
 

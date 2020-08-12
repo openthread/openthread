@@ -76,6 +76,37 @@ class NetifUnicastAddress : public otNetifAddress,
 
 public:
     /**
+     * This method clears and initializes the unicast address as a preferred, valid, thread-origin address with 64-bit
+     * prefix length.
+     *
+     */
+    void InitAsThreadOrigin(void);
+
+    /**
+     * This method clears and initializes the unicast address as a preferred, valid, thread-origin, realm-local scope
+     * (overridden) address with 64-bit prefix length.
+     *
+     */
+    void InitAsThreadOriginRealmLocalScope(void);
+
+    /**
+     * This method clears and initializes the unicast address as a valid (but not preferred), thread-origin, global
+     * scope address.
+     *
+     */
+    void InitAsThreadOriginGlobalScope(void);
+
+    /**
+     * This method clears and initializes the unicast address as a valid, SLAAC-origin address with a given preferred
+     * flag and a given prefix length.
+     *
+     * @param[in] aPrefixLength    The prefix length (in bits).
+     * @param[in] aPreferred       The preferred flag.
+     *
+     */
+    void InitAsSlaacOrigin(uint8_t aPrefixLength, bool aPreferred);
+
+    /**
      * This method returns the unicast address.
      *
      * @returns The unicast address.
@@ -122,6 +153,18 @@ public:
     uint8_t GetScope(void) const
     {
         return mScopeOverrideValid ? static_cast<uint8_t>(mScopeOverride) : GetAddress().GetScope();
+    }
+
+    /**
+     * This method sets the IPv6 scope override value.
+     *
+     * @param[in]  aScope  The IPv6 scope value.
+     *
+     */
+    void SetScopeOverride(uint8_t aScope)
+    {
+        mScopeOverride      = aScope;
+        mScopeOverrideValid = true;
     }
 
 private:
