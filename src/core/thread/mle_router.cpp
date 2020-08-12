@@ -64,7 +64,6 @@ MleRouter::MleRouter(Instance &aInstance)
     , mAddressRelease(OT_URI_PATH_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this)
     , mChildTable(aInstance)
     , mRouterTable(aInstance)
-    , mNeighborTableChangedCallback(nullptr)
     , mChallengeTimeout(0)
     , mNextChildId(kMaxChildId)
     , mNetworkIdTimeout(kNetworkIdTimeout)
@@ -1004,7 +1003,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     router->SetState(Neighbor::kStateValid);
     router->SetKeySequence(aKeySequence);
 
-    Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED, *router);
+    mNeighborTable.Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED, *router);
 
     if (aRequest)
     {
@@ -3413,7 +3412,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 
         if (aNeighbor.IsStateValidOrRestoring())
         {
-            Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED, aNeighbor);
+            mNeighborTable.Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED, aNeighbor);
         }
 
         Get<IndirectSender>().ClearAllMessagesForSleepyChild(static_cast<Child &>(aNeighbor));
@@ -3430,7 +3429,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     {
         OT_ASSERT(mRouterTable.Contains(aNeighbor));
 
-        Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, aNeighbor);
+        mNeighborTable.Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, aNeighbor);
         mRouterTable.RemoveRouterLink(static_cast<Router &>(aNeighbor));
     }
 
@@ -4369,7 +4368,7 @@ void MleRouter::SetChildStateToValid(Child &aChild)
     Get<MlrManager>().UpdateProxiedSubscriptions(aChild, nullptr, 0);
 #endif
 
-    Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED, aChild);
+    mNeighborTable.Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED, aChild);
 
 exit:
     return;
@@ -4439,55 +4438,6 @@ otError MleRouter::GetMaxChildTimeout(uint32_t &aTimeout) const
 
 exit:
     return error;
-}
-
-void MleRouter::Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
-{
-    if (mNeighborTableChangedCallback != nullptr)
-    {
-        otNeighborTableEntryInfo info;
-        otError                  error;
-
-        OT_UNUSED_VARIABLE(error);
-
-        info.mInstance = &GetInstance();
-
-        switch (aEvent)
-        {
-        case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
-        case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
-            static_cast<Child::Info &>(info.mInfo.mChild).SetFrom(static_cast<Child &>(aNeighbor));
-            break;
-
-        case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
-        case OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED:
-            static_cast<Neighbor::Info &>(info.mInfo.mRouter).SetFrom(aNeighbor);
-            break;
-        }
-
-        mNeighborTableChangedCallback(aEvent, &info);
-    }
-
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-    Get<Utils::Otns>().EmitNeighborChange(aEvent, aNeighbor);
-#endif
-
-    switch (aEvent)
-    {
-    case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
-        Get<Notifier>().Signal(kEventThreadChildAdded);
-        break;
-
-    case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
-        Get<Notifier>().Signal(kEventThreadChildRemoved);
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-        Get<DuaManager>().UpdateChildDomainUnicastAddress(static_cast<Child &>(aNeighbor), ChildDuaState::kRemoved);
-#endif
-        break;
-
-    default:
-        break;
-    }
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

@@ -380,7 +380,7 @@ void otThreadRegisterNeighborTableCallback(otInstance *aInstance, otNeighborTabl
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.Get<Mle::MleRouter>().RegisterNeighborTableChangedCallback(aCallback);
+    instance.Get<NeighborTable>().RegisterCallback(aCallback);
 }
 
 void otThreadSetDiscoveryRequestCallback(otInstance *                     aInstance,
