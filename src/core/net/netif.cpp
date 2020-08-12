@@ -343,6 +343,9 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     mMulticastAddresses.Push(*entry);
     Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
+    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    mAddressCallback(&aAddress, kMulticastPrefixLength, /* IsAdded */ true, mAddressCallbackContext);
+
 exit:
     return error;
 }
@@ -363,6 +366,9 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
     mExtMulticastAddressPool.Free(static_cast<ExternalNetifMulticastAddress &>(*entry));
 
     Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
+
+    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    mAddressCallback(&aAddress, kMulticastPrefixLength, /* IsAdded */ false, mAddressCallbackContext);
 
 exit:
     return error;
