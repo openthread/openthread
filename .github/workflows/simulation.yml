@@ -106,11 +106,13 @@ jobs:
           python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
       - name: Build
         run: |
-          ./bootstrap
-          make -f examples/Makefile-simulation
+          ./script/test build
       - name: Run
         run: |
-          VERBOSE=1 make -f examples/Makefile-simulation check
+          for i in {1..10}
+          do
+            ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
+          done
       - name: Codecov
         uses: codecov/codecov-action@v1
 
