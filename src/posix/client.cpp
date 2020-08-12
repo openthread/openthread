@@ -41,6 +41,7 @@
 #define OPENTHREAD_USE_READLINE (HAVE_LIBEDIT || HAVE_LIBREADLINE)
 
 #include <assert.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -74,8 +75,8 @@ const char kDefaultThreadNetworkInterfaceName[] = "wpan0";
 typedef struct ClientConfig
 {
     const char *mInterfaceName; ///< Thread network interface name.
-    char **     mArgs;
-    uint16_t    mArgCount;
+    char **     mArgs;          ///< Arguments after options.
+    uint16_t    mArgCount;      ///< The number of arguments.
 } ClientConfig;
 
 /**
