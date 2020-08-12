@@ -154,7 +154,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], ClientConfig *aConfig)
     while (true)
     {
         int index  = 0;
-        int option = getopt_long(aArgCount, aArgVector, "hI:", kClientOptions, &index);
+        int option = getopt_long(aArgCount, aArgVector, "+hI:", kClientOptions, &index);
 
         if (option == -1)
         {
