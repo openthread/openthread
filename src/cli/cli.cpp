@@ -250,6 +250,7 @@ const struct Command Interpreter::sCommands[] = {
     {"thread", &Interpreter::ProcessThread},
     {"txpower", &Interpreter::ProcessTxPower},
     {"udp", &Interpreter::ProcessUdp},
+    {"unsecureport", &Interpreter::ProcessUnsecurePort},
     {"version", &Interpreter::ProcessVersion},
 };
 
@@ -288,6 +289,9 @@ Interpreter::Interpreter(Instance *aInstance)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::HandleDiagnosticGetResponse, this);
+#endif
+#if OPENTHREAD_FTD
+    otThreadSetDiscoveryRequestCallback(mInstance, &Interpreter::HandleDiscoveryRequest, this);
 #endif
 
     mIcmpHandler.mReceiveCallback = Interpreter::HandleIcmpReceive;
@@ -3735,6 +3739,64 @@ void Interpreter::ProcessUdp(uint8_t aArgsLength, char *aArgs[])
     AppendResult(error);
 }
 
+void Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgsLength >= 1, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(aArgs[0], "add") == 0)
+    {
+        unsigned long value;
+
+        VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = ParseUnsignedLong(aArgs[1], value));
+        VerifyOrExit(value <= 0xffff, error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = otIp6AddUnsecurePort(mInstance, static_cast<uint16_t>(value)));
+    }
+    else if (strcmp(aArgs[0], "remove") == 0)
+    {
+        VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+
+        if (strcmp(aArgs[1], "all") == 0)
+        {
+            otIp6RemoveAllUnsecurePorts(mInstance);
+        }
+        else
+        {
+            unsigned long value;
+
+            SuccessOrExit(error = ParseUnsignedLong(aArgs[1], value));
+            VerifyOrExit(value <= 0xffff, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = otIp6RemoveUnsecurePort(mInstance, static_cast<uint16_t>(value)));
+        }
+    }
+    else if (strcmp(aArgs[0], "get") == 0)
+    {
+        const uint16_t *ports;
+        uint8_t         numPorts;
+
+        ports = otIp6GetUnsecurePorts(mInstance, &numPorts);
+
+        if (ports != NULL)
+        {
+            for (uint8_t i = 0; i < numPorts; i++)
+            {
+                mServer->OutputFormat("%d ", ports[i]);
+            }
+        }
+
+        mServer->OutputFormat("\r\n");
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
+
+exit:
+    AppendResult(error);
+}
+
 void Interpreter::ProcessVersion(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
@@ -4577,6 +4639,13 @@ void Interpreter::SignalPingReply(const Ip6::Address &aPeerAddress,
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     mInstance->Get<Utils::Otns>().EmitPingReply(aPeerAddress, aPingLength, aTimestamp, aHopLimit);
 #endif
+}
+
+void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo)
+{
+    mServer->OutputFormat("~ Discovery Request from ");
+    OutputBytes(aInfo.mExtAddress.m8, sizeof(aInfo.mExtAddress.m8));
+    mServer->OutputFormat(": version=%u,joiner=%d\r\n", aInfo.mVersion, aInfo.mIsJoiner);
 }
 
 extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)

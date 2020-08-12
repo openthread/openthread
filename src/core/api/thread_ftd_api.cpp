@@ -383,4 +383,12 @@ void otThreadRegisterNeighborTableCallback(otInstance *aInstance, otNeighborTabl
     instance.Get<Mle::MleRouter>().RegisterNeighborTableChangedCallback(aCallback);
 }
 
+void otThreadSetDiscoveryRequestCallback(otInstance *                     aInstance,
+                                         otThreadDiscoveryRequestCallback aCallback,
+                                         void *                           aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Mle::MleRouter>().SetDiscoveryRequestCallback(aCallback, aContext);
+}
 #endif // OPENTHREAD_FTD

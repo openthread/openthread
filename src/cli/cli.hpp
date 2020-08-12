@@ -372,6 +372,7 @@ private:
     void ProcessDataset(uint8_t aArgsLength, char *aArgs[]);
     void ProcessTxPower(uint8_t aArgsLength, char *aArgs[]);
     void ProcessUdp(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[]);
     void ProcessVersion(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     void    ProcessMacFilter(uint8_t aArgsLength, char *aArgs[]);
@@ -428,6 +429,12 @@ private:
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
     static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);
+
+    static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
+    {
+        static_cast<Interpreter *>(aContext)->HandleDiscoveryRequest(*aInfo);
+    }
+    void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
 
     static const struct Command sCommands[];
     const otCliCommand *        mUserCommands;

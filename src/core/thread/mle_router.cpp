@@ -88,6 +88,8 @@ MleRouter::MleRouter(Instance &aInstance)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mMaxChildIpAddresses(0)
 #endif
+    , mDiscoveryRequestCallback(nullptr)
+    , mDiscoveryRequestCallbackContext(nullptr)
 {
     mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
 
@@ -723,7 +725,7 @@ otError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
         switch (aRequestedTlvs.mTlvs[i])
         {
         case Tlv::kRoute:
-            SuccessOrExit(error = AppendRoute(*message));
+            SuccessOrExit(error = AppendRoute(*message, aNeighbor));
             break;
 
         case Tlv::kAddress16:
@@ -1673,7 +1675,7 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
 
     if (child == nullptr)
     {
-        VerifyOrExit((child = mChildTable.GetNewChild()) != nullptr, OT_NOOP);
+        VerifyOrExit((child = mChildTable.GetNewChild()) != nullptr, error = OT_ERROR_NO_BUFS);
 
         // MAC Address
         child->SetExtAddress(extAddr);
@@ -2004,9 +2006,14 @@ void MleRouter::SendParentResponse(Child *aChild, const Challenge &aChallenge, b
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != nullptr)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
+        otLogWarnMle("Failed to send Parent Response: %s", otThreadErrorToString(error));
+
+        if (message != nullptr)
+        {
+            message->Free();
+        }
     }
 }
 
@@ -2892,6 +2899,8 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
 
     LogMleMessage("Receive Discovery Request", aMessageInfo.GetPeerAddr());
 
+    discoveryRequest.SetLength(0);
+
     // only Routers and REEDs respond
     VerifyOrExit(IsRouterEligible(), error = OT_ERROR_INVALID_STATE);
 
@@ -2912,20 +2921,6 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
             aMessage.Read(offset, sizeof(discoveryRequest), &discoveryRequest);
             VerifyOrExit(discoveryRequest.IsValid(), error = OT_ERROR_PARSE);
 
-            if (discoveryRequest.IsJoiner())
-            {
-#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
-                if (!mSteeringData.IsEmpty())
-                {
-                    break;
-                }
-                else // if steering data is not set out of band, fall back to network data
-#endif
-                {
-                    VerifyOrExit(Get<NetworkData::Leader>().IsJoiningEnabled(), error = OT_ERROR_SECURITY);
-                }
-            }
-
             break;
 
         case MeshCoP::Tlv::kExtendedPanId:
@@ -2939,6 +2934,33 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
         }
 
         offset += sizeof(meshcopTlv) + meshcopTlv.GetLength();
+    }
+
+    if (discoveryRequest.IsValid())
+    {
+        if (mDiscoveryRequestCallback != nullptr)
+        {
+            otThreadDiscoveryRequestInfo info;
+
+            aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(*static_cast<Mac::ExtAddress *>(&info.mExtAddress));
+            info.mVersion  = discoveryRequest.GetVersion();
+            info.mIsJoiner = discoveryRequest.IsJoiner();
+
+            mDiscoveryRequestCallback(&info, mDiscoveryRequestCallbackContext);
+        }
+
+        if (discoveryRequest.IsJoiner())
+        {
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
+            if (!mSteeringData.IsEmpty())
+            {
+            }
+            else // if steering data is not set out of band, fall back to network data
+#endif
+            {
+                VerifyOrExit(Get<NetworkData::Leader>().IsJoiningEnabled(), error = OT_ERROR_SECURITY);
+            }
+        }
     }
 
     error = SendDiscoveryResponse(aMessageInfo.GetPeerAddr(), aMessage.GetPanId());
@@ -4149,15 +4171,62 @@ exit:
     return error;
 }
 
-void MleRouter::FillRouteTlv(RouteTlv &aTlv)
+void MleRouter::FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor)
 {
-    uint8_t routerCount = 0;
+    uint8_t     routerIdSequence = mRouterTable.GetRouterIdSequence();
+    RouterIdSet routerIdSet      = mRouterTable.GetRouterIdSet();
+    uint8_t     routerCount;
 
-    aTlv.SetRouterIdSequence(mRouterTable.GetRouterIdSequence());
-    aTlv.SetRouterIdMask(mRouterTable.GetRouterIdSet());
+    if (aNeighbor && IsActiveRouter(aNeighbor->GetRloc16()))
+    {
+        // Sending a Link Accept message that may require truncation
+        // of Route64 TLV
+
+        routerCount = mRouterTable.GetActiveRouterCount();
+
+        if (routerCount > RouteTlv::kLinkAcceptMaxRouters)
+        {
+            for (uint8_t routerId = 0; routerId <= kMaxRouterId; routerId++)
+            {
+                if (routerCount <= RouteTlv::kLinkAcceptMaxRouters)
+                {
+                    break;
+                }
+
+                if ((routerId == RouterIdFromRloc16(GetRloc16())) || (routerId == aNeighbor->GetRouterId()) ||
+                    (routerId == GetLeaderId()))
+                {
+                    // Route64 TLV must contain this device and the
+                    // neighboring router to ensure that at least this
+                    // link can be established.
+                    continue;
+                }
+
+                if (routerIdSet.Contains(routerId))
+                {
+                    routerIdSet.Remove(routerId);
+                    routerCount--;
+                }
+            }
+
+            // Ensure that the neighbor will process the current
+            // Route64 TLV in a subsequent message exchange
+            routerIdSequence -= RouteTlv::kLinkAcceptSequenceRollback;
+        }
+    }
+
+    aTlv.SetRouterIdSequence(routerIdSequence);
+    aTlv.SetRouterIdMask(routerIdSet);
+
+    routerCount = 0;
 
     for (Router &router : Get<RouterTable>().Iterate())
     {
+        if (!routerIdSet.Contains(router.GetRouterId()))
+        {
+            continue;
+        }
+
         if (router.GetRloc16() == GetRloc16())
         {
             aTlv.SetLinkQualityIn(routerCount, 0);
@@ -4203,12 +4272,12 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv)
     aTlv.SetRouteDataLength(routerCount);
 }
 
-otError MleRouter::AppendRoute(Message &aMessage)
+otError MleRouter::AppendRoute(Message &aMessage, Neighbor *aNeighbor)
 {
     RouteTlv tlv;
 
     tlv.Init();
-    FillRouteTlv(tlv);
+    FillRouteTlv(tlv, aNeighbor);
 
     return tlv.AppendTo(aMessage);
 }

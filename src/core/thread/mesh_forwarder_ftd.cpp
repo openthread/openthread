@@ -741,17 +741,17 @@ exit:
     return;
 }
 
-bool MeshForwarder::UpdateFragmentLifetime(void)
+bool MeshForwarder::FragmentPriorityList::UpdateOnTimeTick(void)
 {
     bool shouldRun = false;
 
-    for (FragmentPriorityEntry &entry : mFragmentEntries)
+    for (Entry &entry : mEntries)
     {
-        if (entry.GetLifetime() != 0)
+        if (!entry.IsExpired())
         {
             entry.DecrementLifetime();
 
-            if (entry.GetLifetime() != 0)
+            if (!entry.IsExpired())
             {
                 shouldRun = true;
             }
@@ -766,46 +766,47 @@ void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHead
                                            uint16_t                aSrcRloc16,
                                            Message::Priority       aPriority)
 {
-    FragmentPriorityEntry *entry;
+    FragmentPriorityList::Entry *entry;
 
-    if (aFragmentHeader.GetDatagramOffset() == 0)
+    entry = mFragmentPriorityList.FindEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag());
+
+    if (entry == nullptr)
     {
-        VerifyOrExit((entry = GetUnusedFragmentPriorityEntry()) != nullptr, OT_NOOP);
+        VerifyOrExit(aFragmentHeader.GetDatagramOffset() == 0, OT_NOOP);
 
-        entry->SetDatagramTag(aFragmentHeader.GetDatagramTag());
-        entry->SetSrcRloc16(aSrcRloc16);
-        entry->SetPriority(aPriority);
-        entry->SetLifetime(kReassemblyTimeout);
+        entry = mFragmentPriorityList.AllocateEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag(), aPriority);
+
+        VerifyOrExit(entry != nullptr, OT_NOOP);
 
         if (!mUpdateTimer.IsRunning())
         {
             mUpdateTimer.Start(kStateUpdatePeriod);
         }
+
+        ExitNow();
+    }
+
+    if (aFragmentHeader.GetDatagramOffset() + aFragmentLength >= aFragmentHeader.GetDatagramSize())
+    {
+        entry->Clear();
     }
     else
     {
-        VerifyOrExit((entry = FindFragmentPriorityEntry(aFragmentHeader.GetDatagramTag(), aSrcRloc16)) != nullptr,
-                     OT_NOOP);
-
-        entry->SetLifetime(kReassemblyTimeout);
-
-        if (aFragmentHeader.GetDatagramOffset() + aFragmentLength >= aFragmentHeader.GetDatagramSize())
-        {
-            entry->SetLifetime(0);
-        }
+        entry->ResetLifetime();
     }
 
 exit:
     return;
 }
 
-FragmentPriorityEntry *MeshForwarder::FindFragmentPriorityEntry(uint16_t aTag, uint16_t aSrcRloc16)
+MeshForwarder::FragmentPriorityList::Entry *MeshForwarder::FragmentPriorityList::FindEntry(uint16_t aSrcRloc16,
+                                                                                           uint16_t aTag)
 {
-    FragmentPriorityEntry *rval = nullptr;
+    Entry *rval = nullptr;
 
-    for (FragmentPriorityEntry &entry : mFragmentEntries)
+    for (Entry &entry : mEntries)
     {
-        if ((entry.GetLifetime() != 0) && (entry.GetDatagramTag() == aTag) && (entry.GetSrcRloc16() == aSrcRloc16))
+        if (!entry.IsExpired() && entry.Matches(aSrcRloc16, aTag))
         {
             rval = &entry;
             break;
@@ -815,30 +816,37 @@ FragmentPriorityEntry *MeshForwarder::FindFragmentPriorityEntry(uint16_t aTag, u
     return rval;
 }
 
-FragmentPriorityEntry *MeshForwarder::GetUnusedFragmentPriorityEntry(void)
+MeshForwarder::FragmentPriorityList::Entry *MeshForwarder::FragmentPriorityList::AllocateEntry(
+    uint16_t          aSrcRloc16,
+    uint16_t          aTag,
+    Message::Priority aPriority)
 {
-    FragmentPriorityEntry *rval = nullptr;
+    Entry *newEntry = nullptr;
 
-    for (FragmentPriorityEntry &entry : mFragmentEntries)
+    for (Entry &entry : mEntries)
     {
-        if (entry.GetLifetime() == 0)
+        if (entry.IsExpired())
         {
-            rval = &entry;
+            entry.mSrcRloc16   = aSrcRloc16;
+            entry.mDatagramTag = aTag;
+            entry.mPriority    = aPriority;
+            entry.ResetLifetime();
+            newEntry = &entry;
             break;
         }
     }
 
-    return rval;
+    return newEntry;
 }
 
 otError MeshForwarder::GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                                            uint16_t                aSrcRloc16,
                                            Message::Priority &     aPriority)
 {
-    otError                error = OT_ERROR_NONE;
-    FragmentPriorityEntry *entry;
+    otError                      error = OT_ERROR_NONE;
+    FragmentPriorityList::Entry *entry;
 
-    entry = FindFragmentPriorityEntry(aFragmentHeader.GetDatagramTag(), aSrcRloc16);
+    entry = mFragmentPriorityList.FindEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag());
     VerifyOrExit(entry != nullptr, error = OT_ERROR_NOT_FOUND);
     aPriority = entry->GetPriority();
 

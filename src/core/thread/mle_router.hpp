@@ -419,7 +419,7 @@ public:
      * @param[out]  aTlv  A reference to the tlv to be filled.
      *
      */
-    void FillRouteTlv(RouteTlv &aTlv);
+    void FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor = nullptr);
 
     /**
      * This method generates an MLE Child Update Request message to be sent to the parent.
@@ -488,6 +488,19 @@ public:
     void RegisterNeighborTableChangedCallback(otNeighborTableCallback aCallback)
     {
         mNeighborTableChangedCallback = aCallback;
+    }
+
+    /**
+     * This function sets the callback that is called when processing an MLE Discovery Request message.
+     *
+     * @param[in]  aCallback A pointer to a function that is called to deliver MLE Discovery Request data.
+     * @param[in]  aContext  A pointer to application-specific context.
+     *
+     */
+    void SetDiscoveryRequestCallback(otThreadDiscoveryRequestCallback aCallback, void *aContext)
+    {
+        mDiscoveryRequestCallback        = aCallback;
+        mDiscoveryRequestCallbackContext = aContext;
     }
 
     /**
@@ -569,7 +582,7 @@ private:
 
     otError AppendConnectivity(Message &aMessage);
     otError AppendChildAddresses(Message &aMessage, Child &aChild);
-    otError AppendRoute(Message &aMessage);
+    otError AppendRoute(Message &aMessage, Neighbor *aNeighbor = nullptr);
     otError AppendActiveDataset(Message &aMessage);
     otError AppendPendingDataset(Message &aMessage);
     void    HandleDetachStart(void);
@@ -706,6 +719,9 @@ private:
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     MeshCoP::SteeringData mSteeringData;
 #endif
+
+    otThreadDiscoveryRequestCallback mDiscoveryRequestCallback;
+    void *                           mDiscoveryRequestCallbackContext;
 };
 
 #endif // OPENTHREAD_FTD

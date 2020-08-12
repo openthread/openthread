@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,46 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-target_compile_definitions(ot-config INTERFACE
-    OPENTHREAD_CONFIG_UART_CLI_RAW=1
-)
+import sys
 
-add_executable(ot-cli
-    main.c
-    $<$<BOOL:${READLINE}>:console_cli.cpp>
-)
-
-set_target_properties(
-    ot-cli
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
-target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
-
-target_compile_definitions(ot-cli PRIVATE
-    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
-    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI
-    ${OT_PLATFORM_DEFINES}
-)
-
-target_compile_options(ot-cli PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_link_libraries(ot-cli
-    openthread-cli-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-cli-ftd
-    openthread-hdlc
-    openthread-spinel-rcp
-    mbedcrypto
-    ${READLINE_LINK_LIBRARIES}
-)
-
-
-install(TARGETS ot-cli DESTINATION bin)
-
+# make sure we are using Python3.6+
+assert sys.version_info.major == 3 and sys.version_info.minor >= 6

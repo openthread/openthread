@@ -31,6 +31,8 @@ import unittest
 
 import config
 import thread_cert
+from pktverify.consts import MLE_PARENT_RESPONSE, MLE_CHILD_ID_RESPONSE
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER = 2
@@ -40,11 +42,13 @@ SED1 = 7
 class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
             'whitelist': [ROUTER]
         },
         ROUTER: {
+            'name': 'ROUTER',
             'max_children': 10,
             'mode': 'rsdn',
             'panid': 0xface,
@@ -52,6 +56,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'whitelist': [LEADER, 3, 4, 5, 6, SED1, 8, 9, 10, 11, 12]
         },
         3: {
+            'name': 'MED1',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
@@ -59,6 +64,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'whitelist': [ROUTER]
         },
         4: {
+            'name': 'MED2',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
@@ -66,6 +72,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'whitelist': [ROUTER]
         },
         5: {
+            'name': 'MED3',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
@@ -73,6 +80,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'whitelist': [ROUTER]
         },
         6: {
+            'name': 'MED4',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
@@ -80,6 +88,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'whitelist': [ROUTER]
         },
         SED1: {
+            'name': 'SED1',
             'is_mtd': True,
             'mode': 's',
             'panid': 0xface,
@@ -87,6 +96,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'whitelist': [ROUTER]
         },
         8: {
+            'name': 'SED2',
             'is_mtd': True,
             'mode': 's',
             'panid': 0xface,
@@ -94,6 +104,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'whitelist': [ROUTER]
         },
         9: {
+            'name': 'SED3',
             'is_mtd': True,
             'mode': 's',
             'panid': 0xface,
@@ -101,6 +112,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'whitelist': [ROUTER]
         },
         10: {
+            'name': 'SED4',
             'is_mtd': True,
             'mode': 's',
             'panid': 0xface,
@@ -108,6 +120,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'whitelist': [ROUTER]
         },
         11: {
+            'name': 'SED5',
             'is_mtd': True,
             'mode': 's',
             'panid': 0xface,
@@ -115,6 +128,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'whitelist': [ROUTER]
         },
         12: {
+            'name': 'SED6',
             'is_mtd': True,
             'mode': 's',
             'panid': 0xface,
@@ -137,6 +151,9 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             self.simulator.go(7)
             self.assertEqual(self.nodes[i].get_state(), 'child')
 
+        self.collect_rloc16s()
+        self.collect_ipaddrs()
+
         ipaddrs = self.nodes[SED1].get_addrs()
         for addr in ipaddrs:
             if addr[0:4] != 'fe80' and 'ff:fe00' not in addr:
@@ -149,6 +166,44 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
                 if addr[0:4] != 'fe80' and 'ff:fe00' not in addr:
                     self.assertTrue(self.nodes[LEADER].ping(addr, size=106))
                     break
+
+    def verify(self, pv: PacketVerifier):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        ROUTER = pv.vars['ROUTER']
+        router_pkts = pkts.filter_wpan_src64(ROUTER)
+
+        # Step 1: The DUT MUST send properly formatted MLE Parent Response
+        #         and MLE Child ID Response to each child.
+        for i in range(1, 7):
+            _pkts = router_pkts.copy().filter_wpan_dst64(pv.vars['SED%d' % i])
+            _pkts.filter_mle_cmd(MLE_PARENT_RESPONSE).must_next()
+            _pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+
+        for i in range(1, 5):
+            _pkts = router_pkts.copy().filter_wpan_dst64(pv.vars['MED%d' % i])
+            _pkts.filter_mle_cmd(MLE_PARENT_RESPONSE).must_next()
+            _pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+
+        # Step 2:The DUT MUST properly forward ICMPv6 Echo Requests to all MED children
+        #        The DUT MUST properly forward ICMPv6 Echo Replies to the Leader
+        leader_rloc16 = pv.vars['LEADER_RLOC16']
+        for i in range(1, 5):
+            rloc16 = pv.vars['MED%d_RLOC16' % i]
+            _pkts = router_pkts.copy()
+            p = _pkts.filter('wpan.dst16 == {rloc16}', rloc16=rloc16).filter_ping_request().must_next()
+            _pkts.filter('wpan.dst16 == {rloc16}',
+                         rloc16=leader_rloc16).filter_ping_reply(identifier=p.icmpv6.echo.identifier).must_next()
+
+        # Step 3: The DUT MUST properly forward ICMPv6 Echo Requests to all SED children
+        #         The DUT MUST properly forward ICMPv6 Echo Replies to the Leader
+        for i in range(1, 7):
+            rloc16 = pv.vars['SED%d_RLOC16' % i]
+            _pkts = router_pkts.copy()
+            p = _pkts.filter('wpan.dst16 == {rloc16}', rloc16=rloc16).filter_ping_request().must_next()
+            _pkts.filter('wpan.dst16 == {rloc16}',
+                         rloc16=leader_rloc16).filter_ping_reply(identifier=p.icmpv6.echo.identifier).must_next()
 
 
 if __name__ == '__main__':

@@ -158,9 +158,30 @@ EXTRA_DIST                                                         = \
     test_network_layer.py                                            \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
+    test_router_reattach.py                                          \
     test_service.py                                                  \
     thread_cert.py                                                   \
     tlvs_parsing.py                                                  \
+    thread_cert.py                                                   \
+    pktverify/__init__.py                                            \
+    pktverify/addrs.py                                               \
+    pktverify/bytes.py                                               \
+    pktverify/coap.py                                                \
+    pktverify/consts.py                                              \
+    pktverify/decorators.py                                          \
+    pktverify/errors.py                                              \
+    pktverify/layer_fields.py                                        \
+    pktverify/layer_fields_container.py                              \
+    pktverify/layers.py                                              \
+    pktverify/null_field.py                                          \
+    pktverify/packet.py                                              \
+    pktverify/packet_filter.py                                       \
+    pktverify/packet_verifier.py                                     \
+    pktverify/pcap_reader.py                                         \
+    pktverify/summary.py                                             \
+    pktverify/test_info.py                                           \
+    pktverify/utils.py                                               \
+    pktverify/verify_result.py                                       \
     $(NULL)
 
 check_PROGRAMS                                                     = \
@@ -183,6 +204,7 @@ check_SCRIPTS                                                      = \
     test_network_layer.py                                            \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
+    test_router_reattach.py                                          \
     test_service.py                                                  \
     Cert_5_1_01_RouterAttach.py                                      \
     Cert_5_1_02_ChildAddressTimeout.py                               \

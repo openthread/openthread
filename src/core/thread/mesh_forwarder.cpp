@@ -77,7 +77,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     ResetCounters();
 
 #if OPENTHREAD_FTD
-    memset(mFragmentEntries, 0, sizeof(mFragmentEntries));
+    mFragmentPriorityList.Clear();
 #endif
 }
 
@@ -118,7 +118,7 @@ void MeshForwarder::Stop(void)
 
 #if OPENTHREAD_FTD
     mIndirectSender.Stop();
-    memset(mFragmentEntries, 0, sizeof(mFragmentEntries));
+    mFragmentPriorityList.Clear();
 #endif
 
     mEnabled     = false;
@@ -1108,7 +1108,7 @@ void MeshForwarder::HandleUpdateTimer(void)
     bool shouldRun = false;
 
 #if OPENTHREAD_FTD
-    shouldRun = UpdateFragmentLifetime();
+    shouldRun = mFragmentPriorityList.UpdateOnTimeTick();
 #endif
 
     if (UpdateReassemblyList() || shouldRun)

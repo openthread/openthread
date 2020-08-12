@@ -112,7 +112,13 @@ class RealTime(BaseSimulator):
         time.sleep(duration)
 
     def stop(self):
-        pass
+        if self.is_running:
+            # self._sniffer.stop()  # FIXME: seems it blocks forever
+            self._sniffer = None
+
+    @property
+    def is_running(self):
+        return self._sniffer is not None
 
 
 class VirtualTime(BaseSimulator):
@@ -170,8 +176,13 @@ class VirtualTime(BaseSimulator):
             self.stop()
 
     def stop(self):
-        self.sock.close()
-        self.sock = None
+        if self.sock:
+            self.sock.close()
+            self.sock = None
+
+    @property
+    def is_running(self):
+        return self.sock is not None
 
     def _add_message(self, nodeid, message_obj):
         addr = ('127.0.0.1', self.port + nodeid)
