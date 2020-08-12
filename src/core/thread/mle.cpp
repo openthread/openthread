@@ -129,26 +129,14 @@ Mle::Mle(Instance &aInstance)
     mLinkLocal64.mValid         = true;
 
     // Leader Aloc
-    mLeaderAloc.Clear();
-    mLeaderAloc.mPrefixLength       = MeshLocalPrefix::kLength;
-    mLeaderAloc.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
-    mLeaderAloc.mPreferred          = true;
-    mLeaderAloc.mValid              = true;
-    mLeaderAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
-    mLeaderAloc.mScopeOverrideValid = true;
+    InitNetifUnicastAddress(mLeaderAloc);
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
     // Service Alocs
     for (Ip6::NetifUnicastAddress &serviceAloc : mServiceAlocs)
     {
-        serviceAloc.Clear();
-        serviceAloc.mPrefixLength       = MeshLocalPrefix::kLength;
-        serviceAloc.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
-        serviceAloc.mPreferred          = true;
-        serviceAloc.mValid              = true;
-        serviceAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
-        serviceAloc.mScopeOverrideValid = true;
+        InitNetifUnicastAddress(serviceAloc);
         serviceAloc.GetAddress().GetIid().SetLocator(Mac::kShortAddrInvalid);
     }
 
@@ -158,26 +146,13 @@ Mle::Mle(Instance &aInstance)
     meshLocalPrefix.SetFromExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
 
     // mesh-local 64
-    mMeshLocal64.Clear();
+    InitNetifUnicastAddress(mMeshLocal64);
     mMeshLocal64.GetAddress().GetIid().GenerateRandom();
 
-    mMeshLocal64.mPrefixLength       = MeshLocalPrefix::kLength;
-    mMeshLocal64.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
-    mMeshLocal64.mPreferred          = true;
-    mMeshLocal64.mValid              = true;
-    mMeshLocal64.mScopeOverride      = Ip6::Address::kRealmLocalScope;
-    mMeshLocal64.mScopeOverrideValid = true;
-
     // mesh-local 16
-    mMeshLocal16.Clear();
+    InitNetifUnicastAddress(mMeshLocal16);
     mMeshLocal16.GetAddress().GetIid().SetToLocator(0);
-    mMeshLocal16.mPrefixLength       = MeshLocalPrefix::kLength;
-    mMeshLocal16.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
-    mMeshLocal16.mPreferred          = true;
-    mMeshLocal16.mValid              = true;
-    mMeshLocal16.mScopeOverride      = Ip6::Address::kRealmLocalScope;
-    mMeshLocal16.mScopeOverrideValid = true;
-    mMeshLocal16.mRloc               = true;
+    mMeshLocal16.mRloc = true;
 
     // Store RLOC address reference in MPL module.
     Get<Ip6::Mpl>().SetMatchingAddress(mMeshLocal16.GetAddress());
@@ -185,19 +160,28 @@ Mle::Mle(Instance &aInstance)
     // link-local all thread nodes
     mLinkLocalAllThreadNodes.Clear();
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff32);
-    mLinkLocalAllThreadNodes.GetAddress().mFields.m16[6] = HostSwap16(0x0000);
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
 
     // realm-local all thread nodes
     mRealmLocalAllThreadNodes.Clear();
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff33);
-    mRealmLocalAllThreadNodes.GetAddress().mFields.m16[6] = HostSwap16(0x0000);
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
 
     SetMeshLocalPrefix(meshLocalPrefix);
 
     // `SetMeshLocalPrefix()` also adds the Mesh-Local EID and subscribes
     // to the Link- and Realm-Local All Thread Nodes multicast addresses.
+}
+
+void Mle::InitNetifUnicastAddress(Ip6::NetifUnicastAddress &aAddress)
+{
+    aAddress.Clear();
+    aAddress.mPrefixLength       = MeshLocalPrefix::kLength;
+    aAddress.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
+    aAddress.mPreferred          = true;
+    aAddress.mValid              = true;
+    aAddress.mScopeOverride      = Ip6::Address::kRealmLocalScope;
+    aAddress.mScopeOverrideValid = true;
 }
 
 otError Mle::Enable(void)

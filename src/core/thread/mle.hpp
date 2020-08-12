@@ -1622,6 +1622,7 @@ private:
         TimeMilli    mSendTime;    // Time when the message shall be sent.
     };
 
+    void        InitNetifUnicastAddress(Ip6::NetifUnicastAddress &aAddress);
     void        HandleNotifierEvents(Events aEvents);
     static void HandleAttachTimer(Timer &aTimer);
     void        HandleAttachTimer(void);
