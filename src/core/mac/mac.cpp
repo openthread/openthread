@@ -1544,6 +1544,7 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     const Key * macKey;
 
     VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = OT_ERROR_NONE);
+    VerifyOrExit(aAckFrame.IsVersion2015(), OT_NOOP);
 
     IgnoreError(aAckFrame.GetSecurityLevel(securityLevel));
     VerifyOrExit(securityLevel == Frame::kSecEncMic32, OT_NOOP);
@@ -1609,6 +1610,11 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     }
 
 exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogInfoMac("Frame tx attempt failed, error: Enh-ACK security check fail");
+    }
+
     return error;
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
