@@ -31,6 +31,8 @@ import unittest
 
 import config
 import thread_cert
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER = 2
@@ -43,23 +45,27 @@ MTDS = [ED1, SED1]
 class Cert_5_6_2_NetworkDataRouterAsBr(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
             'whitelist': [ROUTER, ED1, SED1]
         },
         ROUTER: {
+            'name': 'ROUTER',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'whitelist': [LEADER]
         },
         ED1: {
+            'name': 'MED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
             'whitelist': [LEADER]
         },
         SED1: {
+            'name': 'SED',
             'is_mtd': True,
             'mode': 's',
             'panid': 0xface,
@@ -106,6 +112,50 @@ class Cert_5_6_2_NetworkDataRouterAsBr(thread_cert.TestCase):
         for addr in addrs:
             if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        ROUTER = pv.vars['ROUTER']
+        MED = pv.vars['MED']
+        SED = pv.vars['SED']
+        _lpkts = pkts.filter_wpan_src64(LEADER)
+
+        # Step 1: The DUT MUST send properly formatted MLE Advertisements
+        _lpkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(lambda p: {11, 9, 0} == set(p.mle.tlv.type))
+
+        # Step 3: The DUT MUST properly attach Router_1 device to the network,
+        # and transmit Network Data during the attach phase in the
+        # Child ID Response frame of the Network Data TLV
+        _lpkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next().must_verify(
+            lambda p: p.wpan.dst64 == ROUTER and {0, 11, 22, 10, 12} < set(p.mle.tlv.type))
+
+        # Step 5: The DUT Automatically sends a CoAP Response frame and
+        # MLE Data Response message
+        _lpkts.filter_coap_ack("/a/as").must_next()
+        _lpkts.filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
+            lambda p: {4, 1, 2, 3, 1, 2, 3} == set(p.thread_nwd.tlv.type))
+        _lpkts_med = _lpkts.copy()
+        _lpkts_sed = _lpkts.copy()
+
+        # Step 7: The DUT MUST send a MLE Child ID Response to SED_1,
+        # containing the stable Network Data
+        _lpkts_sed.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).filter_wpan_dst64(SED).must_next().must_verify(
+            lambda p: {1, 2, 3} == set(p.thread_nwd.tlv.type))
+
+        # Step 9: The DUT MUST send a MLE Child ID Response to MED_1,
+        # containing the full Network Data
+        _lpkts_med.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).filter_wpan_dst64(MED).must_next().must_verify(
+            lambda p: {4, 1, 2, 3, 1, 2, 3} == set(p.thread_nwd.tlv.type))
+
+        # Step 10: The DUT MUST send a unicast MLE Child Update
+        # Response to each of MED_1 and SED_1
+        _lpkts_med.filter_mle_cmd(14).must_next().must_verify(
+            lambda p: p.wpan.dst64 == MED and {0, 1, 11, 19} < set(p.mle.tlv.type))
+        _lpkts_sed.filter_mle_cmd(14).must_next().must_verify(
+            lambda p: p.wpan.dst64 == SED and {0, 1, 11, 19} < set(p.mle.tlv.type))
 
 
 if __name__ == '__main__':
