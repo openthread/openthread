@@ -86,7 +86,8 @@ check()
     if [[ ${DAEMON} == 1 ]]; then
         sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" -I "${VALID_NETIF_NAME}" "${RADIO_URL}" &
         sleep 1
-        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl) -I ${VALID_NETIF_NAME}"
+        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl)"
+        OT_CLI_ARGS="-I ${VALID_NETIF_NAME}"
         sudo "${OT_CLI_CMD}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
 
         # verify this reset and factoryreset end immediately
@@ -104,10 +105,11 @@ check()
         sudo "${OT_CLI}" -I "${INVALID_NETIF_NAME}" -n "${RADIO_URL}" || test $? = 2
 
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) ${RADIO_URL}"
+        OT_CLI_ARGS=""
     fi
 
     sudo expect <<EOF | tee "${OT_OUTPUT}" &
-spawn ${OT_CLI_CMD}
+spawn ${OT_CLI_CMD} ${OT_CLI_ARGS}
 send "panid 0xface\r\n"
 expect "Done"
 send "ifconfig up\r\n"
