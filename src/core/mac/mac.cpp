@@ -1549,7 +1549,6 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 {
     Address   srcaddr;
     Address   dstaddr;
-    PanId     panid;
     Neighbor *neighbor;
     otError   error = aError;
 
@@ -1567,34 +1566,20 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     IgnoreError(aFrame->GetDstAddr(dstaddr));
     neighbor = Get<NeighborTable>().FindNeighbor(srcaddr);
 
-    // Destination Address Filtering
-    switch (dstaddr.GetType())
-    {
-    case Address::kTypeNone:
-        break;
-
-    case Address::kTypeShort:
-        IgnoreError(aFrame->GetDstPanId(panid));
-        VerifyOrExit((panid == kShortAddrBroadcast || panid == mPanId) &&
-                         ((mRxOnWhenIdle && dstaddr.IsBroadcast()) || dstaddr.GetShort() == GetShortAddress()),
-                     error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
-
 #if OPENTHREAD_FTD
+    if (dstaddr.GetType() == Address::kTypeShort)
+    {
         // Allow multicasts from neighbor routers if FTD
         if (neighbor == nullptr && dstaddr.IsBroadcast() && Get<Mle::MleRouter>().IsFullThreadDevice())
         {
             neighbor = Get<NeighborTable>().FindRxOnlyNeighborRouter(srcaddr);
         }
+    }
 #endif
 
-        break;
-
-    case Address::kTypeExtended:
-        IgnoreError(aFrame->GetDstPanId(panid));
-        VerifyOrExit(panid == mPanId && dstaddr.GetExtended() == GetExtAddress(),
-                     error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
-        break;
-    }
+    // Destination Address Filtering
+    VerifyOrExit(aFrame->IsAddrMatch(mPanId, GetShortAddress(), GetExtAddress(), mRxOnWhenIdle),
+                 error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
 
     // Source Address Filtering
     switch (srcaddr.GetType())
