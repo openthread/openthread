@@ -275,6 +275,31 @@ uint8_t otNetDataGetVersion(otInstance *aInstance);
 uint8_t otNetDataGetStableVersion(otInstance *aInstance);
 
 /**
+ * Check if the steering data allows a Joiner.
+ *
+ * @param[in]  aEui64             A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
+ *
+ * @retval OT_ERROR_NONE          The joiner is in the bloom filter.
+ * @retval OT_ERROR_NOT_FOUND     The joiner is not in the bloom filter.
+ *
+ */
+otError otNetDataSteeringDataHasJoiner(otInstance *aInstance, const otExtAddress *aEui64);
+
+// Forward declaration
+struct otJoinerDiscerner;
+
+/**
+ * Check if the steering data allows a Joiner with a given discerner value.
+ *
+ * @param[in]  aDiscerner         A pointer to the Joiner Discerner.
+ *
+ * @retval OT_ERROR_NONE          The joiner is in the bloom filter.
+ * @retval OT_ERROR_NOT_FOUND     The joiner is not in the bloom filter.
+ *
+ */
+otError otNetDataSteeringDataHasJoinerWithDiscerner(otInstance *aInstance, const struct otJoinerDiscerner *aDiscerner);
+
+/**
  * @}
  *
  */

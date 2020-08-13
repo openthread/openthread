@@ -784,7 +784,7 @@ public:
      * @param[out]  aSteeringData   A reference to a `SteeringData` to copy into.
      *
      */
-    void CopyTo(SteeringData &aSteeringData);
+    void CopyTo(SteeringData &aSteeringData) const;
 
 private:
     uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];

@@ -186,6 +186,7 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_FTD
     {"neighbor", &Interpreter::ProcessNeighbor},
 #endif
+    {"netdata", &Interpreter::ProcessNetworkData},
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     {"netdataregister", &Interpreter::ProcessNetworkDataRegister},
 #endif
@@ -2235,6 +2236,48 @@ exit:
     AppendResult(error);
 }
 #endif
+
+void Interpreter::ProcessNetworkData(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error;
+
+    if (aArgsLength > 2 && strcmp(aArgs[0], "steeringdata") == 0)
+    {
+        if (strcmp(aArgs[1], "has") == 0)
+        {
+            otExtAddress      addr;
+            otJoinerDiscerner discerner;
+
+            discerner.mLength = 0;
+
+            error = Interpreter::ParseJoinerDiscerner(aArgs[2], discerner);
+
+            if (error == OT_ERROR_NOT_FOUND)
+            {
+                VerifyOrExit(Interpreter::Hex2Bin(aArgs[2], addr.m8, sizeof(addr)) == sizeof(addr),
+                             error = OT_ERROR_INVALID_ARGS);
+            }
+            else if (error != OT_ERROR_NONE)
+            {
+                ExitNow();
+            }
+
+            if (discerner.mLength)
+            {
+                ExitNow(error = otNetDataSteeringDataHasJoinerWithDiscerner(mInstance, &discerner));
+            }
+            else
+            {
+                ExitNow(error = otNetDataSteeringDataHasJoiner(mInstance, &addr));
+            }
+        }
+    }
+
+    error = OT_ERROR_INVALID_COMMAND;
+
+exit:
+    AppendResult(error);
+}
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 void Interpreter::ProcessNetworkDataRegister(uint8_t aArgsLength, char *aArgs[])

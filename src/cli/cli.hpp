@@ -292,6 +292,7 @@ private:
 #if OPENTHREAD_FTD
     void ProcessNeighbor(uint8_t aArgsLength, char *aArgs[]);
 #endif
+    void ProcessNetworkData(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessNetworkDataRegister(uint8_t aArgsLength, char *aArgs[]);
 #endif
