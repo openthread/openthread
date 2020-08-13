@@ -102,15 +102,17 @@ jobs:
       - name: Bootstrap
         run: |
           sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-          sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel
+          sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel ninja-build
           python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
       - name: Build
         run: |
-          ./bootstrap
-          make -f examples/Makefile-simulation
+          ./script/test build
       - name: Run
         run: |
-          VERBOSE=1 make -f examples/Makefile-simulation check
+          for i in {1..10}
+          do
+            ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
+          done
       - name: Codecov
         uses: codecov/codecov-action@v1
 
