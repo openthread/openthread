@@ -433,6 +433,11 @@ class PacketFilter(object):
         assert isinstance(addr, (str, Ipv6Addr))
         return self.filter(lambda p: p.ipv6.dst == addr, **kwargs)
 
+    def filter_ipv6_src_dst(self, src_addr, dst_addr, **kwargs):
+        assert isinstance(src_addr, (str, Ipv6Addr))
+        assert isinstance(dst_addr, (str, Ipv6Addr))
+        return self.filter(lambda p: p.ipv6.src == src_addr and p.ipv6.dst == dst_addr, **kwargs)
+
     def filter_LLANMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS, **kwargs)
 
