@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the CLI server on the CONSOLE service.
+ *   This file implements the CLI interpreter on the CONSOLE service.
  */
 
 #include "cli_console.hpp"

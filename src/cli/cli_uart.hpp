@@ -44,7 +44,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the CLI server on top of the UART platform abstraction.
+ * This class implements the CLI interpreter on top of the UART platform abstraction.
  *
  */
 class Uart : public Interpreter
