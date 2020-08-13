@@ -31,6 +31,8 @@ import unittest
 
 import config
 import thread_cert
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER = 2
@@ -43,28 +45,32 @@ MTDS = [ED1, SED1]
 class Cert_5_6_6_NetworkDataExpiration(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'whitelist': [ROUTER, ED1, SED1]
         },
         ROUTER: {
+            'name': 'ROUTER',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED1, SED1]
+            'whitelist': [LEADER]
         },
         ED1: {
+            'name': 'MED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'whitelist': [LEADER]
         },
         SED1: {
+            'name': 'SED',
             'is_mtd': True,
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'whitelist': [LEADER]
         },
     }
 
@@ -87,32 +93,12 @@ class Cert_5_6_6_NetworkDataExpiration(thread_cert.TestCase):
 
         self.nodes[ROUTER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[ROUTER].add_prefix('2001:2:0:2::/64', 'paro')
+        self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'paos')
         self.nodes[ROUTER].register_netdata()
 
         # Set lowpan context of sniffer
         self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
         self.simulator.set_lowpan_context(2, '2001:2:0:2::/64')
-
-        self.simulator.go(10)
-
-        addrs = self.nodes[ED1].get_addrs()
-        self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
-        self.assertTrue(any('2001:2:0:2' in addr[0:10] for addr in addrs))
-        for addr in addrs:
-            if addr[0:3] == '200':
-                self.assertTrue(self.nodes[LEADER].ping(addr))
-
-        addrs = self.nodes[SED1].get_addrs()
-        self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
-        self.assertFalse(any('2001:2:0:2' in addr[0:10] for addr in addrs))
-        for addr in addrs:
-            if addr[0:3] == '200':
-                self.assertTrue(self.nodes[LEADER].ping(addr))
-
-        self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'paos')
-        self.nodes[ROUTER].register_netdata()
-
-        # Set lowpan context of sniffer
         self.simulator.set_lowpan_context(3, '2001:2:0:3::/64')
 
         self.simulator.go(10)
@@ -154,6 +140,80 @@ class Cert_5_6_6_NetworkDataExpiration(thread_cert.TestCase):
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
         self.nodes[ROUTER].stop()
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        MED = pv.vars['MED']
+        SED = pv.vars['SED']
+        _lpkts = pkts.filter_wpan_src64(LEADER)
+
+        # Step 1: Ensure the topology is formed correctly
+        _lpkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).filter_wpan_dst64(SED).must_next()
+
+        # Step 4: The DUT Automatically sends a CoAP Response frame after
+        # Router_1 remove Prefix 3
+        _lpkts.copy().filter_coap_ack("/a/sd").must_next()
+        _lpkts.copy().filter_coap_ack("/a/sd").must_next()
+
+        # Step 4: The DUT MUST send a multicast MLE Data Response with
+        # the new network information collected from Router_1
+        _lpkts.filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
+            lambda p: {4, 1, 2, 3, 1, 2, 3, 1, 2, 3} == set(p.thread_nwd.tlv.type))
+        _lpkts_med = _lpkts.copy()
+        _lpkts_sed = _lpkts.copy()
+
+        # Step 7: The DUT MUST send a unicast MLE Child Update
+        # Response to MED_1
+        _lpkts_med.filter_mle_cmd(14).must_next().must_verify(
+            lambda p: p.wpan.dst64 == MED and {0, 1, 11, 19} < set(p.mle.tlv.type))
+
+        # Step 8: The DUT MUST send a unicast MLE Child Update
+        # Request to SED_1
+        _lpkts_sed.filter_mle_cmd(13).must_next().must_verify(lambda p: p.wpan.dst64 == SED and {0, 11, 12, 22} == set(
+            p.mle.tlv.type) and {1, 2, 3, 1, 2, 3} == set(p.thread_nwd.tlv.type))
+
+        # Step 10: The DUT MUST send a unicast MLE Child Update
+        # Response to SED_1
+        pkt_1 = _lpkts_sed.filter_mle_cmd(14).filter_wpan_dst64(SED).must_next()
+        pkt_1.must_verify(lambda p: {0, 1, 11, 19} < set(p.mle.tlv.type))
+
+        # Step 12: The DUT updates Router ID Set and removes Router_1
+        # from Network Data TLV after Router_1 power off
+        # Step 13: The DUT MUST multicast a MLE Data Response with the
+        # new network information
+        pkt_2 = _lpkts.filter_mle_cmd(MLE_DATA_RESPONSE).must_next()
+        pkt_2.must_verify(lambda p: {4, 1, 2, 3, 1, 2, 3, 1, 2, 3} == set(p.thread_nwd.tlv.type))
+        self.assertEqual(pkt_2.mle.tlv.leader_data.data_version, pkt_1.mle.tlv.leader_data.data_version + 1)
+        self.assertEqual(pkt_2.mle.tlv.leader_data.stable_data_version,
+                         pkt_1.mle.tlv.leader_data.stable_data_version + 1)
+
+        _lpkts_med = _lpkts.copy()
+        _lpkts_sed = _lpkts.copy()
+
+        # Step 15: The DUT MUST send a unicast MLE Child Update
+        # Response to MED_1
+        pkt_2 = _lpkts_med.filter_mle_cmd(14).filter_wpan_dst64(MED).must_next()
+        pkt_2.must_verify(lambda p: {0, 1, 11, 19} < set(p.mle.tlv.type))
+        self.assertEqual(pkt_2.mle.tlv.leader_data.data_version, pkt_1.mle.tlv.leader_data.data_version + 1)
+        self.assertEqual(pkt_2.mle.tlv.leader_data.stable_data_version,
+                         pkt_1.mle.tlv.leader_data.stable_data_version + 1)
+
+        # Step 16: The DUT MUST send a unicast MLE Child Update
+        # Request to SED_1
+        pkt_2 = _lpkts_sed.filter_mle_cmd(13).filter_wpan_dst64(SED).must_next()
+        pkt_2.must_verify(
+            lambda p: {0, 11, 12, 22} == set(p.mle.tlv.type) and {1, 2, 3, 1, 2, 3} == set(p.thread_nwd.tlv.type))
+        self.assertEqual(pkt_2.mle.tlv.leader_data.data_version, pkt_1.mle.tlv.leader_data.data_version + 1)
+        self.assertEqual(pkt_2.mle.tlv.leader_data.stable_data_version,
+                         pkt_1.mle.tlv.leader_data.stable_data_version + 1)
+
+        # Step 18: The DUT MUST send a unicast MLE Child Update
+        # Response to SED_1
+        _lpkts_sed.filter_mle_cmd(14).filter_wpan_dst64(SED).must_next().must_verify(
+            lambda p: {0, 1, 11, 19} < set(p.mle.tlv.type))
 
 
 if __name__ == '__main__':
