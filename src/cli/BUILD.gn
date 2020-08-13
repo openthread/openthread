@@ -41,8 +41,6 @@ openthread_cli_sources = [
   "cli_dataset.hpp",
   "cli_joiner.cpp",
   "cli_joiner.hpp",
-  "cli_server.cpp",
-  "cli_server.hpp",
   "cli_uart.cpp",
   "cli_uart.hpp",
   "cli_udp.cpp",
