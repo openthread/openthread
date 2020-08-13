@@ -36,11 +36,13 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
+#include "thread/dua_manager.hpp"
 
 namespace ot {
 
 NeighborTable::NeighborTable(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mCallback(nullptr)
 {
 }
 
@@ -252,5 +254,52 @@ exit:
 }
 
 #endif
+
+void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
+{
+    if (mCallback != nullptr)
+    {
+        EntryInfo info;
+
+        info.mInstance = &GetInstance();
+
+        switch (aEvent)
+        {
+        case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
+        case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
+            static_cast<Child::Info &>(info.mInfo.mChild).SetFrom(static_cast<const Child &>(aNeighbor));
+            break;
+
+        case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
+        case OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED:
+            static_cast<Neighbor::Info &>(info.mInfo.mRouter).SetFrom(aNeighbor);
+            break;
+        }
+
+        mCallback(aEvent, &info);
+    }
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    Get<Utils::Otns>().EmitNeighborChange(aEvent, aNeighbor);
+#endif
+
+    switch (aEvent)
+    {
+    case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
+        Get<Notifier>().Signal(kEventThreadChildAdded);
+        break;
+
+    case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
+        Get<Notifier>().Signal(kEventThreadChildRemoved);
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+        Get<DuaManager>().UpdateChildDomainUnicastAddress(static_cast<const Child &>(aNeighbor),
+                                                          Mle::ChildDuaState::kRemoved);
+#endif
+        break;
+
+    default:
+        break;
+    }
+}
 
 } // namespace ot

@@ -100,7 +100,7 @@ void RouterTable::ClearNeighbors(void)
     {
         if (router.IsStateValid())
         {
-            Get<Mle::MleRouter>().Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, router);
+            Get<NeighborTable>().Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, router);
         }
 
         router.SetState(Neighbor::kStateInvalid);
