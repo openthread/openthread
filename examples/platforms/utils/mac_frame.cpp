@@ -36,36 +36,12 @@ using namespace ot;
 bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
                              otPanId             aPanId,
                              otShortAddress      aShortAddress,
-                             const otExtAddress *aExtAddress)
+                             const otExtAddress *aExtAddress,
+                             bool                aRxOnWhenIdle)
 {
-    const Mac::Frame &frame = *static_cast<const Mac::Frame *>(aFrame);
-    bool              rval  = false;
-    Mac::Address      dst;
-    Mac::PanId        panid;
-
-    SuccessOrExit(frame.GetDstAddr(dst));
-
-    switch (dst.GetType())
-    {
-    case Mac::Address::kTypeShort:
-        SuccessOrExit(frame.GetDstPanId(panid));
-        rval = (panid == Mac::kPanIdBroadcast || panid == aPanId) &&
-               (dst.GetShort() == Mac::kShortAddrBroadcast || dst.GetShort() == aShortAddress);
-        break;
-
-    case Mac::Address::kTypeExtended:
-        SuccessOrExit(frame.GetDstPanId(panid));
-        rval = (panid == Mac::kPanIdBroadcast || panid == aPanId) &&
-               dst.GetExtended() == *static_cast<const Mac::ExtAddress *>(aExtAddress);
-        break;
-
-    case Mac::Address::kTypeNone:
-        rval = true;
-        break;
-    }
-
-exit:
-    return rval;
+    return static_cast<const Mac::Frame *>(aFrame)->IsAddrMatch(
+        static_cast<Mac::PanId>(aPanId), static_cast<Mac::ShortAddress>(aShortAddress),
+        *static_cast<const Mac::ExtAddress *>(aExtAddress), aRxOnWhenIdle);
 }
 
 bool otMacFrameIsAck(const otRadioFrame *aFrame)

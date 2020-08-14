@@ -972,6 +972,46 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
+bool Frame::IsAddrMatch(PanId             aPanId,
+                        ShortAddress      aShortAddress,
+                        const ExtAddress &aExtAddress,
+                        bool              aRxOnWhenIdle) const
+{
+    bool    rval = false;
+    Address dst;
+    PanId   panid;
+
+    SuccessOrExit(GetDstAddr(dst));
+
+    // Verify address match
+    switch (dst.GetType())
+    {
+    case Address::kTypeShort:
+        VerifyOrExit((aRxOnWhenIdle && dst.IsBroadcast()) || dst.GetShort() == aShortAddress, OT_NOOP);
+        break;
+
+    case Address::kTypeExtended:
+        VerifyOrExit(dst.GetExtended() == aExtAddress, OT_NOOP);
+        break;
+
+    case Address::kTypeNone:
+        break;
+    }
+
+    // Verify Pan ID if exist
+    if (IsDstPanIdPresent())
+    {
+        SuccessOrExit(GetDstPanId(panid));
+        VerifyOrExit((panid == Mac::kPanIdBroadcast && (dst.GetType() == Address::kTypeShort)) || panid == aPanId,
+                     OT_NOOP);
+    }
+
+    rval = true;
+
+exit:
+    return rval;
+}
+
 void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 {
     uint8_t *      psduBuffer   = mPsdu;
@@ -1099,22 +1139,22 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     // Set sequence number
     mPsdu[kSequenceIndex] = aFrame.GetSequence();
 
-    // Set address field
-    if (aFrame.IsSrcPanIdPresent())
-    {
-        SuccessOrExit(error = aFrame.GetSrcPanId(panId));
-    }
-    else if (aFrame.IsDstPanIdPresent())
-    {
-        SuccessOrExit(error = aFrame.GetDstPanId(panId));
-    }
-    else
-    {
-        ExitNow(error = OT_ERROR_PARSE);
-    }
-
     if (IsDstPanIdPresent())
     {
+        // Set address field
+        if (aFrame.IsSrcPanIdPresent())
+        {
+            SuccessOrExit(error = aFrame.GetSrcPanId(panId));
+        }
+        else if (aFrame.IsDstPanIdPresent())
+        {
+            SuccessOrExit(error = aFrame.GetDstPanId(panId));
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_PARSE);
+        }
+
         SetDstPanId(panId);
     }
 
