@@ -329,7 +329,7 @@ private:
                                 uint8_t *           aPrefixMatchLength,
                                 uint16_t *          aRloc16) const;
     otError DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16) const;
-    otError SteeringDataCheck(FilterIndexes &aFilterIndexes) const;
+    otError SteeringDataCheck(const FilterIndexes &aFilterIndexes) const;
 };
 
 /**
