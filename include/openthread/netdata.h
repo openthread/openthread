@@ -277,6 +277,7 @@ uint8_t otNetDataGetStableVersion(otInstance *aInstance);
 /**
  * Check if the steering data includes a Joiner.
  *
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aEui64             A pointer to the Joiner's IEEE EUI-64.
  *
  * @retval OT_ERROR_NONE          @p aEui64 is included in the steering data.
@@ -292,6 +293,7 @@ struct otJoinerDiscerner;
 /**
  * Check if the steering data includes a Joiner with a given discerner value.
  *
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aDiscerner         A pointer to the Joiner Discerner.
  *
  * @retval OT_ERROR_NONE          @p aDiscerner is included in the steering data.
