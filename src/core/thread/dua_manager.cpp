@@ -68,13 +68,7 @@ DuaManager::DuaManager(Instance &aInstance)
     mDelay.mValue = 0;
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-    mDomainUnicastAddress.Clear();
-    mDomainUnicastAddress.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
-    mDomainUnicastAddress.mPreferred          = false;
-    mDomainUnicastAddress.mValid              = true;
-    mDomainUnicastAddress.mScopeOverride      = Ip6::Address::kGlobalScope;
-    mDomainUnicastAddress.mScopeOverrideValid = true;
-
+    mDomainUnicastAddress.InitAsThreadOriginGlobalScope();
     mFixedDuaInterfaceIdentifier.Clear();
 #endif
 

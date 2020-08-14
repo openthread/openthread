@@ -495,5 +495,37 @@ bool Netif::IsUnicastAddressExternal(const NetifUnicastAddress &aAddress) const
     return mExtUnicastAddressPool.IsPoolEntry(aAddress);
 }
 
+void NetifUnicastAddress::InitAsThreadOrigin(void)
+{
+    Clear();
+    mPrefixLength  = NetworkPrefix::kLength;
+    mAddressOrigin = OT_ADDRESS_ORIGIN_THREAD;
+    mPreferred     = true;
+    mValid         = true;
+}
+
+void NetifUnicastAddress::InitAsThreadOriginRealmLocalScope(void)
+{
+    InitAsThreadOrigin();
+    SetScopeOverride(Address::kRealmLocalScope);
+}
+
+void NetifUnicastAddress::InitAsThreadOriginGlobalScope(void)
+{
+    Clear();
+    mAddressOrigin = OT_ADDRESS_ORIGIN_THREAD;
+    mValid         = true;
+    SetScopeOverride(Address::kGlobalScope);
+}
+
+void NetifUnicastAddress::InitAsSlaacOrigin(uint8_t aPrefixLength, bool aPreferred)
+{
+    Clear();
+    mPrefixLength  = aPrefixLength;
+    mAddressOrigin = OT_ADDRESS_ORIGIN_SLAAC;
+    mPreferred     = aPreferred;
+    mValid         = true;
+}
+
 } // namespace Ip6
 } // namespace ot
