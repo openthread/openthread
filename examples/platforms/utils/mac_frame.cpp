@@ -41,26 +41,32 @@ bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
     const Mac::Frame &frame = *static_cast<const Mac::Frame *>(aFrame);
     bool              rval  = false;
     Mac::Address      dst;
-    Mac::PanId        panid;
+
+    SuccessOrExit(frame.GetDstAddr(dst));
 
     switch (dst.GetType())
     {
     case Mac::Address::kTypeShort:
-        SuccessOrExit(frame.GetDstPanId(panid));
-        rval = (panid == Mac::kPanIdBroadcast || panid == aPanId) &&
-               (dst.GetShort() == Mac::kShortAddrBroadcast || dst.GetShort() == aShortAddress);
+        VerifyOrExit(dst.GetShort() == Mac::kShortAddrBroadcast || dst.GetShort() == aShortAddress, OT_NOOP);
         break;
 
     case Mac::Address::kTypeExtended:
-        SuccessOrExit(frame.GetDstPanId(panid));
-        rval = (panid == Mac::kPanIdBroadcast || panid == aPanId) &&
-               dst.GetExtended() == *static_cast<const Mac::ExtAddress *>(aExtAddress);
+        VerifyOrExit(dst.GetExtended() == *static_cast<const Mac::ExtAddress *>(aExtAddress), OT_NOOP);
         break;
 
     case Mac::Address::kTypeNone:
-        rval = true;
         break;
     }
+
+    if (frame.IsDstPanIdPresent())
+    {
+        Mac::PanId panid;
+
+        SuccessOrExit(frame.GetDstPanId(panid));
+        VerifyOrExit(panid == Mac::kPanIdBroadcast || panid == aPanId, OT_NOOP);
+    }
+
+    rval = true;
 
 exit:
     return rval;
