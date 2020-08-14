@@ -40,8 +40,6 @@
 
 using namespace ot;
 
-typedef MeshCoP::SteeringData::HashBitIndexes FilterIndexes;
-
 otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -117,6 +115,6 @@ otError otNetDataSteeringDataCheckJoiner(otInstance *aInstance, const otExtAddre
 
 otError otNetDataSteeringDataCheckJoinerWithDiscerner(otInstance *aInstance, const otJoinerDiscerner *aDiscerner)
 {
-    return static_cast<Instance *>(aInstance)->Get<NetworkData::Leader>().SteeringDataCheckJoinerWithDiscerner(
+    return static_cast<Instance *>(aInstance)->Get<NetworkData::Leader>().SteeringDataCheckJoiner(
         *static_cast<const MeshCoP::JoinerDiscerner *>(aDiscerner));
 }

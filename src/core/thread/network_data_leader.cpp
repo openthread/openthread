@@ -569,7 +569,7 @@ otError LeaderBase::SteeringDataCheckJoiner(const Mac::ExtAddress &aEui64) const
     return SteeringDataCheck(filterIndexes);
 }
 
-otError LeaderBase::SteeringDataCheckJoinerWithDiscerner(const MeshCoP::JoinerDiscerner &aDiscerner) const
+otError LeaderBase::SteeringDataCheckJoiner(const MeshCoP::JoinerDiscerner &aDiscerner) const
 {
     FilterIndexes filterIndexes;
 

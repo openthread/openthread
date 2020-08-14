@@ -267,7 +267,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND     The joiner is not in the bloom filter.
      *
      */
-    otError SteeringDataCheckJoinerWithDiscerner(const MeshCoP::JoinerDiscerner &aDiscerner) const;
+    otError SteeringDataCheckJoiner(const MeshCoP::JoinerDiscerner &aDiscerner) const;
 
     /**
      * This method gets the Rloc of Dhcp Agent of specified contextId.
