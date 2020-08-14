@@ -109,44 +109,14 @@ uint8_t otNetDataGetStableVersion(otInstance *aInstance)
     return instance.Get<Mle::MleRouter>().GetLeaderData().GetStableDataVersion();
 }
 
-static otError SteeringDataCheck(Instance &aInstance, FilterIndexes &aFilterIndexes)
-{
-    otError               error = OT_ERROR_NOT_FOUND;
-    const MeshCoP::Tlv *  steeringDataTlv;
-    MeshCoP::SteeringData steeringData;
-
-    steeringDataTlv = aInstance.Get<NetworkData::Leader>().GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
-    VerifyOrExit(steeringDataTlv != nullptr, OT_NOOP);
-
-    static_cast<const MeshCoP::SteeringDataTlv *>(steeringDataTlv)->CopyTo(steeringData);
-
-    VerifyOrExit(steeringData.Contains(aFilterIndexes), OT_NOOP);
-
-    error = OT_ERROR_NONE;
-
-exit:
-    return error;
-}
-
 otError otNetDataSteeringDataHasJoiner(otInstance *aInstance, const otExtAddress *aEui64)
 {
-    Mac::ExtAddress extAddress = *static_cast<const Mac::ExtAddress *>(aEui64);
-    FilterIndexes   filterIndexes;
-    Instance &      instance = *static_cast<Instance *>(aInstance);
-
-    MeshCoP::ComputeJoinerId(extAddress, extAddress);
-    MeshCoP::SteeringData::CalculateHashBitIndexes(extAddress, filterIndexes);
-
-    return SteeringDataCheck(instance, filterIndexes);
+    return static_cast<Instance *>(aInstance)->Get<NetworkData::Leader>().SteeringDataCheckJoiner(
+        *static_cast<const Mac::ExtAddress *>(aEui64));
 }
 
 otError otNetDataSteeringDataHasJoinerWithDiscerner(otInstance *aInstance, const otJoinerDiscerner *aDiscerner)
 {
-    Instance &    instance = *static_cast<Instance *>(aInstance);
-    FilterIndexes filterIndexes;
-
-    MeshCoP::SteeringData::CalculateHashBitIndexes(*static_cast<const MeshCoP::JoinerDiscerner *>(aDiscerner),
-                                                   filterIndexes);
-
-    return SteeringDataCheck(instance, filterIndexes);
+    return static_cast<Instance *>(aInstance)->Get<NetworkData::Leader>().SteeringDataCheckJoinerWithDiscerner(
+        *static_cast<const MeshCoP::JoinerDiscerner *>(aDiscerner));
 }
