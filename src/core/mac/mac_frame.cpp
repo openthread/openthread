@@ -972,14 +972,14 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-bool Frame::IsAddrMatch(otPanId           aPanId,
-                        otShortAddress    aShortAddress,
+bool Frame::IsAddrMatch(PanId             aPanId,
+                        ShortAddress      aShortAddress,
                         const ExtAddress &aExtAddress,
                         bool              aRxOnWhenIdle) const
 {
-    bool         rval = false;
-    Mac::Address dst;
-    Mac::PanId   panid;
+    bool    rval = false;
+    Address dst;
+    PanId   panid;
 
     SuccessOrExit(GetDstAddr(dst));
 

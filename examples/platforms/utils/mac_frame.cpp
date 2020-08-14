@@ -40,7 +40,8 @@ bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
                              bool                aRxOnWhenIdle)
 {
     return static_cast<const Mac::Frame *>(aFrame)->IsAddrMatch(
-        aPanId, aShortAddress, *static_cast<const Mac::ExtAddress *>(aExtAddress), aRxOnWhenIdle);
+        static_cast<Mac::PanId>(aPanId), static_cast<Mac::ShortAddress>(aShortAddress),
+        *static_cast<const Mac::ExtAddress *>(aExtAddress), aRxOnWhenIdle);
 }
 
 bool otMacFrameIsAck(const otRadioFrame *aFrame)

@@ -993,10 +993,7 @@ public:
      * @returns Frame destination address and PAN ID match.
      *
      */
-    bool IsAddrMatch(otPanId           aPanId,
-                     otShortAddress    aShortAddress,
-                     const ExtAddress &aExtAddress,
-                     bool              aRxOnWhenIdle) const;
+    bool IsAddrMatch(PanId aPanId, ShortAddress aShortAddress, const ExtAddress &aExtAddress, bool aRxOnWhenIdle) const;
 
 protected:
     enum
