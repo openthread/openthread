@@ -279,7 +279,8 @@ uint8_t otNetDataGetStableVersion(otInstance *aInstance);
  *
  * @param[in]  aEui64             A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
  *
- * @retval OT_ERROR_NONE          The joiner is in the bloom filter.
+ * @retval OT_ERROR_NONE          The joiner is allowed by the steering data.
+ * @retval OT_ERROR_INVALID_STATE No steering data present.
  * @retval OT_ERROR_NOT_FOUND     The Joiner is not allowed by the steering data.
  *
  */
@@ -294,6 +295,7 @@ struct otJoinerDiscerner;
  * @param[in]  aDiscerner         A pointer to the Joiner Discerner.
  *
  * @retval OT_ERROR_NONE          The Joiner Discerner is allowed by the steering data.
+ * @retval OT_ERROR_INVALID_STATE No steering data present.
  * @retval OT_ERROR_NOT_FOUND     The Joiner Discerner is not allowed by the steering data.
  *
  */
