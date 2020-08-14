@@ -1157,7 +1157,7 @@ exit:
 
 otError RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &aMacKey)
 {
-#if OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
+#if OPENTHREAD_RADIO
     OT_UNUSED_VARIABLE(aExtAddress);
     OT_UNUSED_VARIABLE(aMacKey);
 
@@ -1200,7 +1200,7 @@ otError RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &
 
 exit:
     return error;
-#endif // OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
+#endif // OPENTHREAD_RADIO
 }
 
 // LCOV_EXCL_START
