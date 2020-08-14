@@ -239,15 +239,13 @@ static void txAckProcessSecurity(uint8_t *aAckFrame)
         otEXPECT(false);
     }
 
-    sAckFrameCounter    = sMacFrameCounter;
+    sAckFrameCounter    = otMacFrameGetFrameCounter(&ackFrame);
     sAckKeyId           = keyId;
     sAckedWithSecEnhAck = true;
 
     ackFrame.mInfo.mTxInfo.mAesKey = key;
 
     otMacFrameSetKeyId(&ackFrame, keyId);
-    otMacFrameSetFrameCounter(&ackFrame, sMacFrameCounter++);
-
     otMacFrameProcessTransmitAesCcm(&ackFrame, &sExtAddress);
 
 exit:

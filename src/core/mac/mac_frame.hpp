@@ -301,7 +301,7 @@ public:
         kSecEncMic128 = 7 << 0,
         kSecLevelMask = 7 << 0,
 
-        kSecLevelAckNonce    = 1 << 7,
+        kSecLevelAckNonce = 1 << 7,
 
         kMic0Size   = 0,
         kMic32Size  = 32 / CHAR_BIT,

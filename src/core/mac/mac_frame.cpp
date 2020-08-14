@@ -1100,8 +1100,6 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     Address  address;
     PanId    panId;
     uint8_t  footerLength;
-    uint8_t  securityControlField;
-    uint8_t  keyId;
 
     mChannel = aFrame.mChannel;
     memset(&mInfo.mTxInfo, 0, sizeof(mInfo.mTxInfo));
@@ -1178,11 +1176,17 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     // Set security header
     if (aFrame.GetSecurityEnabled())
     {
+        uint8_t  securityControlField;
+        uint8_t  keyId;
+        uint32_t frameCounter;
+
         SuccessOrExit(error = aFrame.GetSecurityControlField(securityControlField));
         SuccessOrExit(error = aFrame.GetKeyId(keyId));
+        SuccessOrExit(error = aFrame.GetFrameCounter(frameCounter));
 
         SetSecurityControlField(securityControlField);
         SetKeyId(keyId);
+        SetFrameCounter(frameCounter);
     }
 
     // Set header IE

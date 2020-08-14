@@ -202,11 +202,6 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
         mPcapCallback(aFrame, false, mPcapCallbackContext);
     }
 
-    if (!ShouldHandleTransmitSecurity() && aFrame != nullptr && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
-    {
-        UpdateFrameCounter(aFrame->mInfo.mRxInfo.mAckFrameCounter);
-    }
-
     mCallbacks.ReceiveDone(aFrame, aError);
 }
 

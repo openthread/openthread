@@ -300,6 +300,9 @@ static void security_header_set(const nrf_802154_frame_parser_mhr_data_t * p_fra
 
     if (!fc_suppressed)
     {
+        memcpy((uint8_t *)p_ack->p_sec_ctrl + SECURITY_CONTROL_SIZE,
+                 p_frame->p_sec_ctrl + SECURITY_CONTROL_SIZE,
+                 FRAME_COUNTER_SIZE);
         m_ack_data[PHR_OFFSET] += FRAME_COUNTER_SIZE;
     }
 

@@ -592,15 +592,16 @@ static otError radioProcessTransmitSecurity(otRadioFrame *aFrame)
     {
         key   = &sCurrKey;
         keyId = sKeyId;
+
+        if (!aFrame->mInfo.mTxInfo.mIsARetx)
+        {
+            otMacFrameSetKeyId(aFrame, keyId);
+            otMacFrameSetFrameCounter(aFrame, sMacFrameCounter++);
+        }
     }
 
     aFrame->mInfo.mTxInfo.mAesKey = key;
 
-    if (!aFrame->mInfo.mTxInfo.mIsARetx)
-    {
-        otMacFrameSetKeyId(aFrame, keyId);
-        otMacFrameSetFrameCounter(aFrame, sMacFrameCounter++);
-    }
 #else
     otEXPECT(!aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
