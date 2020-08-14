@@ -41,8 +41,8 @@ at_exit()
     EXIT_CODE=$?
 
     sudo killall expect || true
-    killall ot-ctl || true
-    killall ot-daemon || true
+    sudo killall ot-ctl || true
+    sudo killall ot-daemon || true
     killall socat || true
 
     exit $EXIT_CODE
@@ -109,7 +109,7 @@ check()
     fi
 
     sudo expect <<EOF | tee "${OT_OUTPUT}" &
-spawn ${OT_CLI_CMD} "${OT_CLI_ARGS[@]}"
+spawn ${OT_CLI_CMD} ${OT_CLI_ARGS[@]}
 send "panid 0xface\r\n"
 expect "Done"
 send "ifconfig up\r\n"

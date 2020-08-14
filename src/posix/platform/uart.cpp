@@ -64,7 +64,7 @@ static char sThreadNetifName[IFNAMSIZ] = "";
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 void platformUartSetThreadNetifName(const char *aInterfaceName)
 {
-    strncpy(sThreadNetifName, aInterfaceName, sizeof(sThreadNetifName));
+    strncpy(sThreadNetifName, aInterfaceName, sizeof(sThreadNetifName)-1);
 }
 #endif
 
