@@ -61,7 +61,7 @@ Done
 - [masterkey](#masterkey)
 - [mode](#mode)
 - [neighbor](#neighbor-list)
-- [netdata](#netdata)
+- [netdata](#netdata-steeringdata-check-eui64discerner)
 - [netdataregister](#netdataregister)
 - [netdatashow](#netdatashow)
 - [netstat](#netstat)
