@@ -102,7 +102,7 @@ public:
         void      SetCslLastHeard(TimeMilli aCslLastHeard) { mCslLastHeard = aCslLastHeard; }
 
     private:
-        uint8_t   mCslTxAttempts : 7;   // Number of csl triggered tx attempts.
+        uint8_t   mCslTxAttempts : 7;   ///< Number of csl triggered tx attempts.
         bool      mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
         uint8_t   mCslChannel;          ///< The channel the device will listen on.
         uint32_t  mCslSyncTimeout;      ///< The sync timeout, in microseconds.

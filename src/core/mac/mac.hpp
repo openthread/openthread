@@ -762,7 +762,7 @@ public:
      * @param[out]  aFcf         A reference to the frame control field to set.
      *
      */
-    void UpdateFrameControlField(Neighbor *aNeighbor, bool aIsTimeSync, uint16_t &aFcf) const;
+    void UpdateFrameControlField(const Neighbor *aNeighbor, bool aIsTimeSync, uint16_t &aFcf) const;
 
 private:
     enum

@@ -2325,7 +2325,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-void Mac::UpdateFrameControlField(Neighbor *aNeighbor, bool aIsTimeSync, uint16_t &aFcf) const
+void Mac::UpdateFrameControlField(const Neighbor *aNeighbor, bool aIsTimeSync, uint16_t &aFcf) const
 {
     OT_UNUSED_VARIABLE(aIsTimeSync);
     OT_UNUSED_VARIABLE(aNeighbor);
@@ -2347,7 +2347,7 @@ void Mac::UpdateFrameControlField(Neighbor *aNeighbor, bool aIsTimeSync, uint16_
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         if (aNeighbor != nullptr && !Get<Mle::MleRouter>().IsActiveRouter(aNeighbor->GetRloc16()) &&
-            static_cast<Child *>(aNeighbor)->IsCslSynchronized())
+            static_cast<const Child *>(aNeighbor)->IsCslSynchronized())
     {
         aFcf |= Frame::kFcfFrameVersion2015;
     }
