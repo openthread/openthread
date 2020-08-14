@@ -156,13 +156,12 @@ EOF
     coap_response=$(echo -n '120100' | xxd -r -p | coap-client -m POST coap://[${LEADER_ALOC}]:61631/d/dg -f- | xxd -p | grep 0008)
     echo "CoAP response is: ${coap_response}"
 
-    #    # Verify CoAP response contains the extended address
-    #    if [[ ${coap_response} == *${extaddr}* ]]; then
-    #        echo 'Success'
-    #    else
-    #        die 'Failed to get extended address'
-    #    fi
-    #
+    # Verify CoAP response contains the extended address
+    if [[ ${coap_response} == *${extaddr}* ]]; then
+        echo 'Success'
+    else
+        die 'Failed to get extended address'
+    fi
 
     # add another node as a Router to verify that multiple platform netifs works
     RADIO_URL2="spinel+hdlc+uart://${RADIO_NCP_PATH}?forkpty-arg=2"
