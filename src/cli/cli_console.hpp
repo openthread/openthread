@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file contains definitions for a CLI server on the CONSOLE service.
+ *   This file contains definitions for a CLI interpreter on the CONSOLE service.
  */
 
 #ifndef CLI_CONSOLE_HPP_
@@ -45,7 +45,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the CLI server on top of the CONSOLE platform abstraction.
+ * This class implements the CLI interpreter on top of the CONSOLE platform abstraction.
  *
  */
 class Console : public Interpreter

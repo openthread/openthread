@@ -77,7 +77,6 @@ namespace ot {
 namespace Cli {
 
 class Interpreter;
-class Server;
 
 /**
  * This structure represents a CLI command.

@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the CLI server on the UART service.
+ *   This file implements the CLI interpreter on the UART service.
  */
 
 #include "cli_uart.hpp"

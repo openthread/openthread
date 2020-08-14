@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file contains definitions for a CLI server on the UART service.
+ *   This file contains definitions for a CLI interpreter on the UART service.
  */
 
 #ifndef CLI_UART_HPP_
