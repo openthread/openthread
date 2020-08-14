@@ -213,8 +213,8 @@ static int         sNetlinkFd = -1; ///< Used to receive netlink events.
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
 static int sMLDMonitorFd = -1; ///< Used to receive MLD events.
 #endif
-static unsigned int sTunIndex = 0;
-static char         sTunName[IFNAMSIZ];
+static unsigned int sTunIndex          = 0;
+static char         sTunName[IFNAMSIZ] = "";
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
 // ff02::16
 static const otIp6Address kMLDv2MulticastAddress = {
@@ -614,8 +614,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
         case IFA_LOCAL:
         case IFA_BROADCAST:
         case IFA_ANYCAST:
-        case IFA_MULTICAST:
-        {
+        case IFA_MULTICAST: {
             ot::Ip6::Address addr;
             memcpy(&addr, RTA_DATA(rta), sizeof(addr));
 
@@ -1366,9 +1365,6 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     mldListenerInit();
 #endif
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    platformUartSetThreadNetifName(sTunName);
-#endif
 
     otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
     otIp6SetReceiveCallback(aInstance, processReceive, aInstance);
@@ -1482,4 +1478,12 @@ exit:
 
     return error;
 }
+
+const char *platformGetThreadNetifName(void)
+{
+    assert(sTunName[0] != '\0');
+
+    return sTunName;
+}
+
 #endif // OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE

@@ -56,7 +56,6 @@
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
 static uint32_t sPlatNetifIndex = 0;
-static char     sPlatNetifName[IFNAMSIZ];
 
 static const size_t kMaxUdpSize = 1280;
 
@@ -265,8 +264,8 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
     VerifyOrExit(aUdpSocket->mSockName.mPort != 0, error = OT_ERROR_INVALID_ARGS);
     fd = FdFromHandle(aUdpSocket->mHandle);
 
-    VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, sPlatNetifName,
-                            static_cast<socklen_t>(strnlen(sPlatNetifName, IFNAMSIZ))) == 0,
+    VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, platformGetThreadNetifName(),
+                            static_cast<socklen_t>(strnlen(platformGetThreadNetifName(), IFNAMSIZ))) == 0,
                  error = OT_ERROR_FAILED);
 
     {
@@ -407,7 +406,6 @@ void platformUdpInit(const char *aIfName)
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
 
-    strncpy(sPlatNetifName, aIfName, sizeof(sPlatNetifName) - 1);
     sPlatNetifIndex = if_nametoindex(aIfName);
 
     if (sPlatNetifIndex == 0)

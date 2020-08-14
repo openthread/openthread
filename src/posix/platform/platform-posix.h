@@ -395,14 +395,12 @@ enum SocketBlockOption
 int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption aBlockOption);
 
 /**
- * This function configures the Thread interface name for Uart.
+ * This function gets the Thread interface name.
  *
- * Note: only required for POSIX app daemon.
- *
- * @param[in] aInterfaceName  The Thread interface name.
+ * @return  The Thread network interface name.
  *
  */
-void platformUartSetThreadNetifName(const char *aInterfaceName);
+const char *platformGetThreadNetifName(void);
 
 #ifdef __cplusplus
 }

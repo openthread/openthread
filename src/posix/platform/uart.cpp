@@ -57,16 +57,6 @@ static int sSessionSocket = -1;
 static bool           sEnabled     = false;
 static const uint8_t *sWriteBuffer = nullptr;
 static uint16_t       sWriteLength = 0;
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-static char sThreadNetifName[IFNAMSIZ] = "";
-#endif
-
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-void platformUartSetThreadNetifName(const char *aInterfaceName)
-{
-    strncpy(sThreadNetifName, aInterfaceName, sizeof(sThreadNetifName) - 1);
-}
-#endif
 
 otError otPlatUartEnable(void)
 {
@@ -86,8 +76,8 @@ otError otPlatUartEnable(void)
         DieNow(OT_EXIT_FAILURE);
     }
 
-    assert(strcmp(sThreadNetifName, ""));
-    snprintf(lockname, sizeof(lockname), OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "%s.lock", sThreadNetifName);
+    snprintf(lockname, sizeof(lockname), OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "%s.lock",
+             platformGetThreadNetifName());
 
     sUartLock = open(lockname, O_CREAT | O_RDONLY | O_CLOEXEC, 0600);
 
@@ -103,7 +93,7 @@ otError otPlatUartEnable(void)
 
     sockname.sun_family = AF_UNIX;
     snprintf(sockname.sun_path, sizeof(sockname.sun_path), OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "%s.sock",
-             sThreadNetifName);
+             platformGetThreadNetifName());
 
     (void)unlink(sockname.sun_path);
 
