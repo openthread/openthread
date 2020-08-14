@@ -246,7 +246,7 @@ public:
     otError SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength);
 
     /**
-     * This method checks if the steering data allows a Joiner.
+     * This method checks if the steering data includes a Joiner.
      *
      * @param[in]  aEui64             A reference to the Joiner's IEEE EUI-64.
      *
@@ -258,7 +258,7 @@ public:
     otError SteeringDataCheckJoiner(const Mac::ExtAddress &aEui64) const;
 
     /**
-     * This method checks if the steering data allows a Joiner with a given discerner value.
+     * This method checks if the steering data includes a Joiner with a given discerner value.
      *
      * @param[in]  aDiscerner         A reference to the Joiner Discerner.
      *

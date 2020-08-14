@@ -275,13 +275,13 @@ uint8_t otNetDataGetVersion(otInstance *aInstance);
 uint8_t otNetDataGetStableVersion(otInstance *aInstance);
 
 /**
- * Check if the steering data allows a Joiner.
+ * Check if the steering data includes a Joiner.
  *
  * @param[in]  aEui64             A pointer to the Joiner's IEEE EUI-64.
  *
- * @retval OT_ERROR_NONE          The joiner is allowed by the steering data.
+ * @retval OT_ERROR_NONE          @p aEui64 is included in the steering data.
  * @retval OT_ERROR_INVALID_STATE No steering data present.
- * @retval OT_ERROR_NOT_FOUND     The Joiner is not allowed by the steering data.
+ * @retval OT_ERROR_NOT_FOUND     @p aEui64 is not included in the steering data.
  *
  */
 otError otNetDataSteeringDataCheckJoiner(otInstance *aInstance, const otExtAddress *aEui64);
@@ -290,13 +290,13 @@ otError otNetDataSteeringDataCheckJoiner(otInstance *aInstance, const otExtAddre
 struct otJoinerDiscerner;
 
 /**
- * Check if the steering data allows a Joiner with a given discerner value.
+ * Check if the steering data includes a Joiner with a given discerner value.
  *
  * @param[in]  aDiscerner         A pointer to the Joiner Discerner.
  *
- * @retval OT_ERROR_NONE          The Joiner Discerner is allowed by the steering data.
+ * @retval OT_ERROR_NONE          @p aDiscerner is included in the steering data.
  * @retval OT_ERROR_INVALID_STATE No steering data present.
- * @retval OT_ERROR_NOT_FOUND     The Joiner Discerner is not allowed by the steering data.
+ * @retval OT_ERROR_NOT_FOUND     @p aDiscerner is not included in the steering data.
  *
  */
 otError otNetDataSteeringDataCheckJoinerWithDiscerner(otInstance *                    aInstance,

@@ -541,7 +541,7 @@ exit:
     return;
 }
 
-otError LeaderBase::SteeringDataCheck(FilterIndexes &aFilterIndexes) const
+otError LeaderBase::SteeringDataCheck(const FilterIndexes &aFilterIndexes) const
 {
     otError               error = OT_ERROR_NONE;
     const MeshCoP::Tlv *  steeringDataTlv;
