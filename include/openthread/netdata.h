@@ -277,14 +277,14 @@ uint8_t otNetDataGetStableVersion(otInstance *aInstance);
 /**
  * Check if the steering data allows a Joiner.
  *
- * @param[in]  aEui64             A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
+ * @param[in]  aEui64             A pointer to the Joiner's IEEE EUI-64.
  *
  * @retval OT_ERROR_NONE          The joiner is allowed by the steering data.
  * @retval OT_ERROR_INVALID_STATE No steering data present.
  * @retval OT_ERROR_NOT_FOUND     The Joiner is not allowed by the steering data.
  *
  */
-otError otNetDataSteeringDataHasJoiner(otInstance *aInstance, const otExtAddress *aEui64);
+otError otNetDataSteeringDataCheckJoiner(otInstance *aInstance, const otExtAddress *aEui64);
 
 // Forward declaration
 struct otJoinerDiscerner;
@@ -299,7 +299,8 @@ struct otJoinerDiscerner;
  * @retval OT_ERROR_NOT_FOUND     The Joiner Discerner is not allowed by the steering data.
  *
  */
-otError otNetDataSteeringDataHasJoinerWithDiscerner(otInstance *aInstance, const struct otJoinerDiscerner *aDiscerner);
+otError otNetDataSteeringDataCheckJoinerWithDiscerner(otInstance *                    aInstance,
+                                                      const struct otJoinerDiscerner *aDiscerner);
 
 /**
  * @}

@@ -2243,7 +2243,7 @@ void Interpreter::ProcessNetworkData(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength > 2 && strcmp(aArgs[0], "steeringdata") == 0)
     {
-        if (strcmp(aArgs[1], "has") == 0)
+        if (strcmp(aArgs[1], "check") == 0)
         {
             otExtAddress      addr;
             otJoinerDiscerner discerner;
@@ -2264,11 +2264,11 @@ void Interpreter::ProcessNetworkData(uint8_t aArgsLength, char *aArgs[])
 
             if (discerner.mLength)
             {
-                ExitNow(error = otNetDataSteeringDataHasJoinerWithDiscerner(mInstance, &discerner));
+                ExitNow(error = otNetDataSteeringDataCheckJoinerWithDiscerner(mInstance, &discerner));
             }
             else
             {
-                ExitNow(error = otNetDataSteeringDataHasJoiner(mInstance, &addr));
+                ExitNow(error = otNetDataSteeringDataCheckJoiner(mInstance, &addr));
             }
         }
     }
