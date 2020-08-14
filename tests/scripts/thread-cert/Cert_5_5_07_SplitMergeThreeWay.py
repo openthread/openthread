@@ -138,10 +138,8 @@ class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
         router1_pkts.range(leader_pkts.index).filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
             lambda p: {0, 11, 9} == set(p.mle.tlv.type))
 
-        # Step4: Each router forms a partition with the
-        # lowest possible partition ID
-        # Step 5: Router_1 MUST send MLE Parent Requests
-        # and MUST make two separate attempts
+        # Step 4: Each router forms a partition with the lowest possible partition ID
+        # Step 5: Router_1 MUST send MLE Parent Requests and MUST make two separate attempts
         router1_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(lambda p: {1, 3, 14, 18} == set(
             p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 1)
         lreset_start = router1_pkts.index
@@ -158,17 +156,16 @@ class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
         p = leader_pkts.range(lreset_start, lreset_stop)
         p.filter_mle_cmd(MLE_PARENT_RESPONSE).must_not_next()
 
-        # Step3: The Leader MUST stop sending MLE advertisements.
+        # Step 3: The Leader MUST stop sending MLE advertisements.
         p = leader_pkts.range(lreset_start, lreset_stop)
         p.filter_mle_cmd(MLE_ADVERTISEMENT).must_not_next()
 
-        # Step 8: Router_1 take over leader role of a new Partition and
-        # begin transmitting MLE Advertisements
+        # Step 8: Router_1 take over leader role of a new Partition and begin transmitting MLE Advertisements
         router1_pkts.copy().filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
             lambda p: {0, 11, 9} == set(p.mle.tlv.type))
 
-        # Step 9: The Leader MUST send properly formatted MLE Parent
-        # Requests to the All-Routers multicast address
+        # Step 9: The Leader MUST send properly formatted MLE Parent Requests to the
+        # All-Routers multicast address
         _lpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
             lambda p: {1, 3, 14, 18} == set(p.mle.tlv.type))
 
