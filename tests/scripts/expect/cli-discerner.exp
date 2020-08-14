@@ -34,6 +34,12 @@ setup_leader
 set pskd "J01NME"
 set discerner "0xabc/12"
 
+send "netdata typo check $discerner\n"
+expect "InvalidCommand"
+send "netdata steeringdata typo $discerner\n"
+expect "InvalidCommand"
+send "netdata steeringdata check $discerner/0\n"
+expect "InvalidArgs"
 send "netdata steeringdata check $discerner\n"
 expect "InvalidState"
 send "commissioner start\n"
