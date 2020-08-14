@@ -1049,6 +1049,13 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     SuccessOrExit(GetSecurityLevel(securityLevel));
     SuccessOrExit(GetFrameCounter(frameCounter));
 
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    if (GetType() == kFcfFrameAck)
+    {
+        securityLevel |= kSecLevelAckNonce;
+    }
+#endif
+
     Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
 
     aesCcm.SetKey(GetAesKey());
@@ -1215,6 +1222,13 @@ otError RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &
 
     SuccessOrExit(GetSecurityLevel(securityLevel));
     SuccessOrExit(GetFrameCounter(frameCounter));
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    if (GetType() == kFcfFrameAck)
+    {
+        securityLevel |= kSecLevelAckNonce;
+    }
+#endif
 
     Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
 
