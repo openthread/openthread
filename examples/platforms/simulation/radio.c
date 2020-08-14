@@ -845,7 +845,7 @@ void radioProcessFrame(otInstance *aInstance)
 
     otEXPECT(sPromiscuous == false);
 
-    otEXPECT_ACTION(otMacFrameDoesAddrMatch(&sReceiveFrame, sPanid, sShortAddress, &sExtAddress, true),
+    otEXPECT_ACTION(otMacFrameDoesAddrMatch(&sReceiveFrame, sPanid, sShortAddress, &sExtAddress),
                     error = OT_ERROR_ABORT);
 
     // generate acknowledgment

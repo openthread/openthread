@@ -119,7 +119,6 @@ bool otMacFrameIsAckRequested(const otRadioFrame *aFrame);
  * @param[in]   aPanId          The PAN id to match with.
  * @param[in]   aShortAddress   The short address to match with.
  * @param[in]   aExtAddress     The extended address to match with.
- * @param[in]   aRxOnWhenIdle   Is radio rx on when idle.
  *
  * @retval  true    It is a broadcast or matches with the PAN id and one of the addresses.
  * @retval  false   It doesn't match.
@@ -128,8 +127,7 @@ bool otMacFrameIsAckRequested(const otRadioFrame *aFrame);
 bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
                              otPanId             aPanId,
                              otShortAddress      aShortAddress,
-                             const otExtAddress *aExtAddress,
-                             bool                aRxOnWhenIdle);
+                             const otExtAddress *aExtAddress);
 
 /**
  * Get source MAC address.

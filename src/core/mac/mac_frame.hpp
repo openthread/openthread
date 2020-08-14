@@ -982,19 +982,6 @@ public:
      */
     uint16_t GetFrameControlField(void) const;
 
-    /**
-     * This method checks if frame destination address and PAN ID matches what is expected.
-     *
-     * @param[in] aPanId           Expected PAN ID.
-     * @param[in] aShortAddress    Expected short address.
-     * @param[in] aExtAddress      Reference to expected extended address.
-     * @param[in] aRxOnWhenIdle    Is radio rx on when idle.
-     *
-     * @returns Frame destination address and PAN ID match.
-     *
-     */
-    bool IsAddrMatch(PanId aPanId, ShortAddress aShortAddress, const ExtAddress &aExtAddress, bool aRxOnWhenIdle) const;
-
 protected:
     enum
     {
