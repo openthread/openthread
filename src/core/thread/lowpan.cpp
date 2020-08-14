@@ -1177,7 +1177,7 @@ int Lowpan::Decompress(Message &           aMessage,
             HostSwap16(aMessage.GetOffset() - currentOffset - sizeof(Ip6::Header) + aBufLength - compressedLength);
     }
 
-    aMessage.Write(currentOffset + Ip6::Header::GetPayloadLengthOffset(), sizeof(ip6PayloadLength), &ip6PayloadLength);
+    aMessage.Write(currentOffset + Ip6::Header::kPayloadLengthFieldOffset, sizeof(ip6PayloadLength), &ip6PayloadLength);
 
     error = OT_ERROR_NONE;
 

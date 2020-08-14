@@ -150,7 +150,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
             continue;
         }
 
-        cur->Read(Ip6::Header::GetDestinationOffset(), sizeof(ip6Dst), &ip6Dst);
+        cur->Read(Ip6::Header::kDestinationFieldOffset, sizeof(ip6Dst), &ip6Dst);
 
         if (ip6Dst == aEid)
         {

@@ -314,9 +314,9 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
 
     if (!aIsOutbound)
     {
-        aMessage.Read(Header::GetHopLimitOffset(), Header::GetHopLimitSize(), &hopLimit);
+        aMessage.Read(Header::kHopLimitFieldOffset, sizeof(hopLimit), &hopLimit);
         VerifyOrExit(hopLimit-- > 1, error = OT_ERROR_DROP);
-        messageCopy->Write(Header::GetHopLimitOffset(), Header::GetHopLimitSize(), &hopLimit);
+        messageCopy->Write(Header::kHopLimitFieldOffset, sizeof(hopLimit), &hopLimit);
     }
 
     metadata.mSeedId            = aSeedId;
