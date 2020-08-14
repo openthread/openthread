@@ -178,7 +178,7 @@ EOF
         OT_CLI_ARGS2=()
     fi
 
-    sudo expect <<EOF
+    sudo expect <<EOF &
 spawn ${OT_CLI_CMD2} ${OT_CLI_ARGS2[@]}
 send "panid 0xface\r\n"
 expect "Done"
