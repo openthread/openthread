@@ -237,16 +237,7 @@ otError Mle::Start(bool aAnnounceAttach)
 
     if (Get<Mac::Mac>().GetPanId() == Mac::kPanIdBroadcast)
     {
-        // if PAN ID is not configured, pick a random one to start
-
-        uint16_t panid;
-
-        do
-        {
-            panid = Random::NonCrypto::GetUint16();
-        } while (panid == Mac::kPanIdBroadcast);
-
-        Get<Mac::Mac>().SetPanId(panid);
+        Get<Mac::Mac>().SetPanId(Mac::GenerateRandomPanId());
     }
 
     SetStateDetached();
