@@ -238,7 +238,7 @@ static void InitializeSessionSocket(void)
     // to simply ignore it.
 #if defined(SO_NOSIGPIPE)
     rval = 1;
-    VerifyOrExit(rval = setsockopt(sSessionSocket, SOL_SOCKET, SO_NOSIGPIPE, &rval, sizeof(rval)) != -1, OT_NOOP);
+    VerifyOrExit((rval = setsockopt(sSessionSocket, SOL_SOCKET, SO_NOSIGPIPE, &rval, sizeof(rval))) != -1, OT_NOOP);
 #else
 #warning "no support for MSG_NOSIGNAL or SO_NOSIGPIPE"
 #endif
