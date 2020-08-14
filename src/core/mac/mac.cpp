@@ -1506,7 +1506,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         OT_UNREACHABLE_CODE(break);
     }
 
-    VerifyOrExit(OT_ERROR_NONE == aFrame.ProcessReceiveAesCcm(*extAddress, *macKey), OT_NOOP);
+    SuccessOrExit(aFrame.ProcessReceiveAesCcm(*extAddress, *macKey));
 
     if ((keyIdMode == Frame::kKeyIdMode1) && aNeighbor->IsStateValid())
     {

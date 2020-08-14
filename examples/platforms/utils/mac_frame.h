@@ -169,7 +169,7 @@ void otMacFrameProcessTransmitAesCcm(otRadioFrame *aFrame, const otExtAddress *a
  *                          for AES CCM computation.
  * @param[in]  aMacKey      A pointer to the MAC key to decrypt the received frame.
  *
- * @retval OT_ERROR_NONE      Process of received frame AES CCM succeed.
+ * @retval OT_ERROR_NONE      Process of received frame AES CCM succeeded.
  * @retval OT_ERROR_SECURITY  Received frame MIC check failed.
  *
  */
