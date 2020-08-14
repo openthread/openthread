@@ -614,7 +614,8 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
         case IFA_LOCAL:
         case IFA_BROADCAST:
         case IFA_ANYCAST:
-        case IFA_MULTICAST: {
+        case IFA_MULTICAST:
+        {
             ot::Ip6::Address addr;
             memcpy(&addr, RTA_DATA(rta), sizeof(addr));
 
