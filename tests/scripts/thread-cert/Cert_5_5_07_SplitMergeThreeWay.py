@@ -152,13 +152,13 @@ class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
             lambda p: {1, 3, 14, 18} == set(p.mle.tlv.type))
         lreset_stop = router1_pkts.index
 
-        # Step 6: The Leader does not respond to the Parent Requests
-        p = leader_pkts.range(lreset_start, lreset_stop)
-        p.filter_mle_cmd(MLE_PARENT_RESPONSE).must_not_next()
-
         # Step 3: The Leader MUST stop sending MLE advertisements.
         p = leader_pkts.range(lreset_start, lreset_stop)
         p.filter_mle_cmd(MLE_ADVERTISEMENT).must_not_next()
+
+        # Step 6: The Leader does not respond to the Parent Requests
+        p = leader_pkts.range(lreset_start, lreset_stop)
+        p.filter_mle_cmd(MLE_PARENT_RESPONSE).must_not_next()
 
         # Step 8: Router_1 take over leader role of a new Partition and begin transmitting MLE Advertisements
         router1_pkts.copy().filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
