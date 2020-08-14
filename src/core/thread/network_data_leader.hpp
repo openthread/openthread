@@ -262,9 +262,9 @@ public:
      *
      * @param[in]  aDiscerner         A reference to the Joiner Discerner.
      *
-     * @retval OT_ERROR_NONE          The joiner is in the bloom filter.
+     * @retval OT_ERROR_NONE          @p aDiscerner is in the bloom filter.
      * @retval OT_ERROR_INVALID_STATE No steering data present.
-     * @retval OT_ERROR_NOT_FOUND     The joiner is not in the bloom filter.
+     * @retval OT_ERROR_NOT_FOUND     @p aDiscerner is not in the bloom filter.
      *
      */
     otError SteeringDataCheckJoiner(const MeshCoP::JoinerDiscerner &aDiscerner) const;
