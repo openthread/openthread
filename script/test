@@ -65,7 +65,7 @@ build_simulation()
     fi
 
     if [[ ${version} == "1.2" ]]; then
-        options+=("-DOT_CSL_RECEIVER=ON")
+        options+=("-DOT_CSL_RECEIVER=ON" "-DOT_BACKBONE_ROUTER=ON")
     fi
 
     if [[ ${ot_extra_options[*]+x} ]]; then
@@ -73,14 +73,6 @@ build_simulation()
     fi
 
     OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
-
-    if [[ ${version} == "1.2" ]]; then
-
-        options+=("-DOT_BACKBONE_ROUTER=ON")
-
-        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-simulation-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
-
-    fi
 }
 
 build_posix()
@@ -91,6 +83,7 @@ build_posix()
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_DUA=ON")
         options+=("-DOT_MLR=ON")
+        options+=("-DOT_BACKBONE_ROUTER=ON")
     fi
 
     if [[ ${VIRTUAL_TIME} == 1 ]]; then
@@ -106,13 +99,6 @@ build_posix()
     fi
 
     OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-posix-${version}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
-
-    if [[ ${version} == "1.2" ]]; then
-
-        options+=("-DOT_BACKBONE_ROUTER=ON")
-
-        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-posix-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
-    fi
 }
 
 do_build()
@@ -156,7 +142,6 @@ do_cert()
 
     if [[ ${THREAD_VERSION} == "1.2" ]]; then
         export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
-        export top_builddir_1_2_bbr="${OT_BUILDDIR}/cmake/openthread-simulation-1.2-bbr"
     fi
 
     [[ ! -d tmp ]] || rm -rvf tmp
@@ -169,7 +154,6 @@ do_cert_suite()
 
     if [[ ${THREAD_VERSION} == "1.2" ]]; then
         export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
-        export top_builddir_1_2_bbr="${OT_BUILDDIR}/cmake/openthread-simulation-1.2-bbr"
     fi
 
     local pass_count=0
@@ -360,8 +344,6 @@ envsetup()
             export RADIO_DEVICE_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1/examples/apps/ncp/ot-rcp"
             export OT_CLI_PATH_1_1="${OT_BUILDDIR}/cmake/openthread-posix-1.1/src/posix/ot-cli"
             export OT_NCP_PATH_1_1="${OT_BUILDDIR}/cmake/openthread-posix-1.1/src/posix/ot-ncp"
-            export OT_CLI_PATH_1_2_BBR="${OT_BUILDDIR}/cmake/openthread-posix-1.2-bbr/src/posix/ot-cli"
-            export OT_NCP_PATH_1_2_BBR="${OT_BUILDDIR}/cmake/openthread-posix-1.2-bbr/src/posix/ot-ncp"
         fi
     fi
 
