@@ -151,7 +151,7 @@ EOF
         sudo "${OT_CLI}" -I "${VALID_NETIF_NAME2}" -n "${RADIO_URL2}"
     fi
 
-    sudo expect <<EOF |
+    sudo expect <<EOF | netstat -an | grep -q 61631 || die 'TMF port is not available!'
 spawn ${OT_CLI_CMD} ${OT_CLI_ARGS2[@]}
 send "panid 0xface\r\n"
 expect "Done"
@@ -165,8 +165,6 @@ expect "router"
 expect "Done"
 wait
 EOF
-
-    netstat -an | grep -q 61631 || die 'TMF port is not available!'
 
     extaddr=$(awk '/extaddr/{getline; print}' $OT_OUTPUT | tr -d '\r\n')
     echo "Extended address is: ${extaddr}"
