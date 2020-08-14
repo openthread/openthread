@@ -599,10 +599,10 @@ void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Messa
                                            Ip6::Icmp::Header::kCodeDstUnreachNoRoute, messageInfo, aMessage));
 }
 
-void MeshForwarder::HandleMesh(uint8_t *               aFrame,
-                               uint16_t                aFrameLength,
-                               const Mac::Address &    aMacSource,
-                               const otThreadLinkInfo &aLinkInfo)
+void MeshForwarder::HandleMesh(uint8_t *             aFrame,
+                               uint16_t              aFrameLength,
+                               const Mac::Address &  aMacSource,
+                               const ThreadLinkInfo &aLinkInfo)
 {
     otError            error   = OT_ERROR_NONE;
     Message *          message = nullptr;
@@ -612,7 +612,7 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
     uint16_t           headerLength;
 
     // Security Check: only process Mesh Header frames that had security enabled.
-    VerifyOrExit(aLinkInfo.mLinkSecurity, error = OT_ERROR_SECURITY);
+    VerifyOrExit(aLinkInfo.IsLinkSecurityEnabled(), error = OT_ERROR_SECURITY);
 
     SuccessOrExit(error = meshHeader.ParseFrom(aFrame, aFrameLength, headerLength));
 
@@ -658,9 +658,7 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
         SuccessOrExit(error = message->SetLength(meshHeader.GetHeaderLength() + aFrameLength));
         offset += meshHeader.WriteTo(*message, offset);
         message->Write(offset, aFrameLength, aFrame);
-        message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
-        message->SetPanId(aLinkInfo.mPanId);
-        message->AddRss(aLinkInfo.mRss);
+        message->SetLinkInfo(aLinkInfo);
 
         LogMessage(kMessageReceive, *message, &aMacSource, OT_ERROR_NONE);
 
@@ -672,7 +670,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         otLogInfoMac("Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s", otThreadErrorToString(error),
-                     aFrameLength, aMacSource.ToString().AsCString(), aLinkInfo.mLinkSecurity ? "yes" : "no");
+                     aFrameLength, aMacSource.ToString().AsCString(), aLinkInfo.IsLinkSecurityEnabled() ? "yes" : "no");
 
         if (message != nullptr)
         {

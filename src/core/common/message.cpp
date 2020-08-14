@@ -655,6 +655,17 @@ bool Message::IsChildPending(void) const
     return GetMetadata().mChildMask.HasAny();
 }
 
+void Message::SetLinkInfo(const ThreadLinkInfo &aLinkInfo)
+{
+    SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
+    SetPanId(aLinkInfo.mPanId);
+    AddRss(aLinkInfo.mRss);
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    SetTimeSyncSeq(aLinkInfo.mTimeSyncSeq);
+    SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);
+#endif
+}
+
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aValue)
 {
     uint16_t result = aChecksum + aValue;

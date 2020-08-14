@@ -40,6 +40,9 @@
 #include "net/ip6_address.hpp"
 
 namespace ot {
+
+class ThreadLinkInfo;
+
 namespace Ip6 {
 
 /**
@@ -159,20 +162,28 @@ public:
     void SetHopLimit(uint8_t aHopLimit) { mHopLimit = aHopLimit; }
 
     /**
-     * This method returns a pointer to the Link Info.
+     * This method returns a pointer to the link-specific information object.
      *
-     * @returns A pointer to the Link Info.
+     * @returns A pointer to the link-specific information object.
      *
      */
     const void *GetLinkInfo(void) const { return mLinkInfo; }
 
     /**
-     * This method sets the pointer to the Link Info.
+     * This method sets the pointer to the link-specific information object.
      *
-     * @param[in]  aLinkInfo  A pointer to the Link Info.
+     * @param[in]  aLinkInfo  A pointer to the link-specific information object.
      *
      */
     void SetLinkInfo(const void *aLinkInfo) { mLinkInfo = aLinkInfo; }
+
+    /**
+     * This method returns a pointer to the link-specific information as a `ThreadLinkInfo`.
+     *
+     * @returns A pointer to to the link-specific information object as `ThreadLinkInfo`.
+     *
+     */
+    const ThreadLinkInfo *GetThreadLinkInfo(void) const { return reinterpret_cast<const ThreadLinkInfo *>(mLinkInfo); }
 
     /**
      * This method indicates whether peer is via the host interface.
