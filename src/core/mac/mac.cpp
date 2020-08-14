@@ -1587,6 +1587,8 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 
     VerifyOrExit(srcAddr.GetType() == Address::kTypeExtended, OT_NOOP);
 
+    ackKeyId--;
+
     if (ackKeyId == (keyManager.GetCurrentKeySequence() & 0x7f))
     {
         macKey = &mSubMac.GetCurrentMacKey();
