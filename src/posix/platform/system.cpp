@@ -212,4 +212,4 @@ void otPlatOtnsStatus(const char *aStatus)
     otLogOtns("[OTNS] %s", aStatus);
 }
 
-#endif // OPENTHREAD_CONFIG_OTNS_ENABLE
+#endif
