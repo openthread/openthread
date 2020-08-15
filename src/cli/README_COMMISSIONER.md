@@ -82,13 +82,14 @@ Energy: 00050000 0 0 0 0
 
 ### joiner add
 
-Usage: `commissioner joiner add <eui64>|<discerner> <pskd>`
+Usage: `commissioner joiner add <eui64>|<discerner> <pskd> [timeout]`
 
 Add a Joiner entry.
 
 - eui64: The IEEE EUI-64 of the Joiner or '\*' to match any Joiner.
 - discerner: The Joiner discerner in format `number/length`.
 - pskd: Pre-Shared Key for the Joiner.
+- timeout: joiner timeout in seconds.
 
 ```bash
 > commissioner joiner add d45e64fa83f81cf7 J01NME
@@ -102,14 +103,20 @@ Done
 
 ### joiner remove
 
-Usage: `commissioner joiner remove <eui64>`
+Usage: `commissioner joiner remove <eui64>|<discerner>`
 
 Remove a Joiner entry.
 
 - eui64: The IEEE EUI-64 of the Joiner or '\*' to match any Joiner.
+- discerner: The Joiner discerner in format `number/length`.
 
 ```bash
 > commissioner joiner remove d45e64fa83f81cf7
+Done
+```
+
+```bash
+> commissioner joiner remove 0xabc/12
 Done
 ```
 

@@ -61,6 +61,7 @@ Done
 - [masterkey](#masterkey)
 - [mode](#mode)
 - [neighbor](#neighbor-list)
+- [netdata](#netdata-steeringdata-check-eui64discerner)
 - [netdataregister](#netdataregister)
 - [netdatashow](#netdatashow)
 - [netstat](#netstat)
@@ -1044,6 +1045,22 @@ Print table of neighbors.
 |   R  | 0xc800 |   2 |      -29 |       -29 |1|0|1|1| 9a91556102c39ddb |
 |   R  | 0xf000 |   3 |      -28 |       -28 |1|0|1|1| 0ad7ed6beaa6016d |
 Done
+```
+
+### netdata steeringdata check \<eui64\>|\<discerner\>
+
+Check whether the steering data includes a joiner.
+
+- eui64: The IEEE EUI-64 of the Joiner.
+- discerner: The Joiner discerner in format `number/length`.
+
+```bash
+> netdata steeeringdata check d45e64fa83f81cf7
+Done
+> netdata steeeringdata check 0xabc/12
+Done
+> netdata steeeringdata check 0xdef/12
+Error: NotFound
 ```
 
 ### netdataregister

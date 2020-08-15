@@ -162,7 +162,14 @@ otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
     }
     else if (strcmp(aArgs[1], "remove") == 0)
     {
-        SuccessOrExit(error = otCommissionerRemoveJoiner(mInterpreter.mInstance, addrPtr));
+        if (discerner.mLength)
+        {
+            SuccessOrExit(error = otCommissionerRemoveJoinerWithDiscerner(mInterpreter.mInstance, &discerner));
+        }
+        else
+        {
+            SuccessOrExit(error = otCommissionerRemoveJoiner(mInterpreter.mInstance, addrPtr));
+        }
     }
     else
     {
