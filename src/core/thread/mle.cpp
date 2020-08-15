@@ -3046,19 +3046,19 @@ exit:
 
 void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence)
 {
-    otError                 error    = OT_ERROR_NONE;
-    const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
-    Challenge               response;
-    uint16_t                version;
-    uint16_t                sourceAddress;
-    LeaderData              leaderData;
-    uint8_t                 linkMarginFromTlv;
-    uint8_t                 linkMargin;
-    uint8_t                 linkQuality;
-    ConnectivityTlv         connectivity;
-    uint32_t                linkFrameCounter;
-    uint32_t                mleFrameCounter;
-    Mac::ExtAddress         extAddress;
+    otError               error    = OT_ERROR_NONE;
+    const ThreadLinkInfo *linkInfo = aMessageInfo.GetThreadLinkInfo();
+    Challenge             response;
+    uint16_t              version;
+    uint16_t              sourceAddress;
+    LeaderData            leaderData;
+    uint8_t               linkMarginFromTlv;
+    uint8_t               linkMargin;
+    uint8_t               linkQuality;
+    ConnectivityTlv       connectivity;
+    uint32_t              linkFrameCounter;
+    uint32_t              mleFrameCounter;
+    Mac::ExtAddress       extAddress;
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeParameterTlv timeParameter;
 #endif
@@ -3089,7 +3089,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
     // Link Margin
     SuccessOrExit(error = Tlv::FindUint8Tlv(aMessage, Tlv::kLinkMargin, linkMarginFromTlv));
 
-    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
+    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->GetRss());
 
     if (linkMargin > linkMarginFromTlv)
     {
@@ -3109,7 +3109,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
 
         parentinfo.mExtAddr      = extAddress;
         parentinfo.mRloc16       = sourceAddress;
-        parentinfo.mRssi         = linkInfo->mRss;
+        parentinfo.mRssi         = linkInfo->GetRss();
         parentinfo.mPriority     = connectivity.GetParentPriority();
         parentinfo.mLinkQuality3 = connectivity.GetLinkQuality3();
         parentinfo.mLinkQuality2 = connectivity.GetLinkQuality2();
@@ -3225,7 +3225,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
     mParentCandidate.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                               DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
     mParentCandidate.GetLinkInfo().Clear();
-    mParentCandidate.GetLinkInfo().AddRss(linkInfo->mRss);
+    mParentCandidate.GetLinkInfo().AddRss(linkInfo->GetRss());
     mParentCandidate.ResetLinkFailures();
     mParentCandidate.SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMarginFromTlv));
     mParentCandidate.SetState(Neighbor::kStateParentResponse);
