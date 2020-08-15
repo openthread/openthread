@@ -139,7 +139,7 @@ EOF
 
     netstat -an | grep -q 61631 || die 'TMF port is not available!'
 
-    extaddr=$(awk '/extaddr/{getline; print}' $OT_OUTPUT | tr -d '\r\n')
+    extaddr=$(grep -aoE '[0-9a-z]{16}' $OT_OUTPUT)
     echo "Extended address is: ${extaddr}"
 
     if [[ ${DAEMON} == 1 ]]; then

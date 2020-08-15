@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file contains definitions for a CLI server on the UART service.
+ *   This file contains definitions for a CLI interpreter on the UART service.
  */
 
 #ifndef CLI_UART_HPP_
@@ -37,7 +37,6 @@
 #include "openthread-core-config.h"
 
 #include "cli/cli.hpp"
-#include "cli/cli_server.hpp"
 #include "common/instance.hpp"
 #include "common/tasklet.hpp"
 
@@ -45,19 +44,13 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the CLI server on top of the UART platform abstraction.
+ * This class implements the CLI interpreter on top of the UART platform abstraction.
  *
  */
-class Uart : public Server
+class Uart : public Interpreter
 {
 public:
-    /**
-     * Constructor
-     *
-     * @param[in]  aInstance  The OpenThread instance structure.
-     *
-     */
-    explicit Uart(Instance *aInstance);
+    static void Initialize(otInstance *aInstance);
 
     /**
      * This method delivers raw characters to the client.
@@ -68,12 +61,20 @@ public:
      * @returns The number of bytes placed in the output queue.
      *
      */
-    virtual int Output(const char *aBuf, uint16_t aBufLength);
+    int Output(const char *aBuf, uint16_t aBufLength);
 
     void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
     void SendDoneTask(void);
 
 private:
+    /**
+     * Constructor
+     *
+     * @param[in]  aInstance  The OpenThread instance structure.
+     *
+     */
+    explicit Uart(Instance *aInstance);
+
     enum
     {
         kRxBufferSize = OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
@@ -90,7 +91,8 @@ private:
     uint16_t mTxHead;
     uint16_t mTxLength;
 
-    uint16_t mSendLength;
+    uint16_t     mSendLength;
+    static Uart *sUart;
 
     friend class Interpreter;
 };
