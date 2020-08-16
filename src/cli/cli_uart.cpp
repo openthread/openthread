@@ -105,17 +105,10 @@ namespace Cli {
 
 static OT_DEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
-Uart *Uart::sUart = nullptr;
-
-Interpreter &Interpreter::GetInterpreter(void)
-{
-    return *Uart::sUart;
-}
-
 void Uart::Initialize(otInstance *aInstance)
 {
-    Instance *instance = static_cast<Instance *>(aInstance);
-    sUart              = new (&sCliUartRaw) Uart(instance);
+    Instance *instance        = static_cast<Instance *>(aInstance);
+    Interpreter::sInterpreter = new (&sCliUartRaw) Uart(instance);
 }
 
 Uart::Uart(Instance *aInstance)

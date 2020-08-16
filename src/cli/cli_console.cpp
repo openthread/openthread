@@ -69,18 +69,11 @@ extern "C" void otPlatUartSendDone(void)
 {
 }
 
-Console *Console::sConsole = nullptr;
-
-Interpreter &Interpreter::GetInterpreter(void)
-{
-    return *Console::sConsole;
-}
-
 void Console::Initialize(otInstance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext)
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    sConsole = new (&sCliConsoleRaw) Console(instance, aCallback, aContext);
+    Interpreter::sInterpreter = new (&sCliConsoleRaw) Console(instance, aCallback, aContext);
 }
 
 Console::Console(Instance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext)

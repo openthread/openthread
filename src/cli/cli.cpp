@@ -251,6 +251,8 @@ const struct Command Interpreter::sCommands[] = {
     {"version", &Interpreter::ProcessVersion},
 };
 
+Interpreter *Interpreter::sInterpreter = nullptr;
+
 Interpreter::Interpreter(Instance *aInstance)
     : mUserCommands(nullptr)
     , mUserCommandsLength(0)
@@ -4648,30 +4650,50 @@ int Interpreter::OutputFormatV(const char *aFormat, va_list aArguments)
 
 extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)
 {
+    VerifyOrExit(Interpreter::IsInitialized(), OT_NOOP);
+
     Interpreter::GetInterpreter().SetUserCommands(aUserCommands, aLength);
+exit:
+    return;
 }
 
 extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength)
 {
+    VerifyOrExit(Interpreter::IsInitialized(), OT_NOOP);
+
     Interpreter::GetInterpreter().OutputBytes(aBytes, aLength);
+exit:
+    return;
 }
 
 extern "C" void otCliOutputFormat(const char *aFmt, ...)
 {
+    VerifyOrExit(Interpreter::IsInitialized(), OT_NOOP);
+
     va_list aAp;
     va_start(aAp, aFmt);
     Interpreter::GetInterpreter().OutputFormatV(aFmt, aAp);
     va_end(aAp);
+exit:
+    return;
 }
 
 extern "C" void otCliOutput(const char *aString, uint16_t aLength)
 {
+    VerifyOrExit(Interpreter::IsInitialized(), OT_NOOP);
+
     Interpreter::GetInterpreter().Output(aString, aLength);
+exit:
+    return;
 }
 
 extern "C" void otCliAppendResult(otError aError)
 {
+    VerifyOrExit(Interpreter::IsInitialized(), OT_NOOP);
+
     Interpreter::GetInterpreter().AppendResult(aError);
+exit:
+    return;
 }
 
 extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
@@ -4679,8 +4701,12 @@ extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 
+    VerifyOrExit(Interpreter::IsInitialized(), OT_NOOP);
+
     Interpreter::GetInterpreter().OutputFormatV(aFormat, aArgs);
     Interpreter::GetInterpreter().OutputFormat("\r\n");
+exit:
+    return;
 }
 
 } // namespace Cli

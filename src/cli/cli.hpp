@@ -115,7 +115,15 @@ public:
      * @returns A reference to the interpreter object.
      *
      */
-    static Interpreter &GetInterpreter(void);
+    static Interpreter &GetInterpreter(void) { return *sInterpreter; }
+
+    /**
+     * This method returns whether the interpreter is initialized.
+     *
+     * @returns  Whether the interpreter is initialized.
+     *
+     */
+    static bool IsInitialized(void) { return sInterpreter != nullptr; }
 
     /**
      * This method interprets a CLI command.
@@ -235,6 +243,9 @@ public:
      * @param[in]  aLength        @p aUserCommands length.
      */
     void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength);
+
+protected:
+    static Interpreter *sInterpreter;
 
 private:
     enum
