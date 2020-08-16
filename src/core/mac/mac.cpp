@@ -1591,7 +1591,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
         break;
     }
 
-    // Verify destination Pan ID if exist
+    // Verify destination PAN ID if present
     if (aFrame->IsDstPanIdPresent())
     {
         PanId panid;
