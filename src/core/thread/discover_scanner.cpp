@@ -292,7 +292,7 @@ exit:
 void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
     otError                       error    = OT_ERROR_NONE;
-    const otThreadLinkInfo *      linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
+    const ThreadLinkInfo *        linkInfo = aMessageInfo.GetThreadLinkInfo();
     Tlv                           tlv;
     MeshCoP::Tlv                  meshcopTlv;
     MeshCoP::DiscoveryResponseTlv discoveryResponse;

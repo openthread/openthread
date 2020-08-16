@@ -120,78 +120,37 @@ Mle::Mle(Instance &aInstance)
     mParentCandidate.Clear();
     ResetCounters();
 
-    // link-local 64
-    mLinkLocal64.Clear();
+    mLinkLocal64.InitAsThreadOrigin();
     mLinkLocal64.GetAddress().SetToLinkLocalAddress(Get<Mac::Mac>().GetExtAddress());
-    mLinkLocal64.mPrefixLength  = 64;
-    mLinkLocal64.mAddressOrigin = OT_ADDRESS_ORIGIN_THREAD;
-    mLinkLocal64.mPreferred     = true;
-    mLinkLocal64.mValid         = true;
 
-    // Leader Aloc
-    mLeaderAloc.Clear();
-    mLeaderAloc.mPrefixLength       = MeshLocalPrefix::kLength;
-    mLeaderAloc.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
-    mLeaderAloc.mPreferred          = true;
-    mLeaderAloc.mValid              = true;
-    mLeaderAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
-    mLeaderAloc.mScopeOverrideValid = true;
+    mLeaderAloc.InitAsThreadOriginRealmLocalScope();
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-
-    // Service Alocs
     for (Ip6::NetifUnicastAddress &serviceAloc : mServiceAlocs)
     {
-        serviceAloc.Clear();
-        serviceAloc.mPrefixLength       = MeshLocalPrefix::kLength;
-        serviceAloc.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
-        serviceAloc.mPreferred          = true;
-        serviceAloc.mValid              = true;
-        serviceAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
-        serviceAloc.mScopeOverrideValid = true;
+        serviceAloc.InitAsThreadOriginRealmLocalScope();
         serviceAloc.GetAddress().GetIid().SetLocator(Mac::kShortAddrInvalid);
     }
-
 #endif
 
-    // initialize Mesh Local Prefix
     meshLocalPrefix.SetFromExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
 
-    // mesh-local 64
-    mMeshLocal64.Clear();
+    mMeshLocal64.InitAsThreadOriginRealmLocalScope();
     mMeshLocal64.GetAddress().GetIid().GenerateRandom();
 
-    mMeshLocal64.mPrefixLength       = MeshLocalPrefix::kLength;
-    mMeshLocal64.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
-    mMeshLocal64.mPreferred          = true;
-    mMeshLocal64.mValid              = true;
-    mMeshLocal64.mScopeOverride      = Ip6::Address::kRealmLocalScope;
-    mMeshLocal64.mScopeOverrideValid = true;
-
-    // mesh-local 16
-    mMeshLocal16.Clear();
+    mMeshLocal16.InitAsThreadOriginRealmLocalScope();
     mMeshLocal16.GetAddress().GetIid().SetToLocator(0);
-    mMeshLocal16.mPrefixLength       = MeshLocalPrefix::kLength;
-    mMeshLocal16.mAddressOrigin      = OT_ADDRESS_ORIGIN_THREAD;
-    mMeshLocal16.mPreferred          = true;
-    mMeshLocal16.mValid              = true;
-    mMeshLocal16.mScopeOverride      = Ip6::Address::kRealmLocalScope;
-    mMeshLocal16.mScopeOverrideValid = true;
-    mMeshLocal16.mRloc               = true;
+    mMeshLocal16.mRloc = true;
 
     // Store RLOC address reference in MPL module.
     Get<Ip6::Mpl>().SetMatchingAddress(mMeshLocal16.GetAddress());
 
-    // link-local all thread nodes
     mLinkLocalAllThreadNodes.Clear();
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff32);
-    mLinkLocalAllThreadNodes.GetAddress().mFields.m16[6] = HostSwap16(0x0000);
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
 
-    // realm-local all thread nodes
     mRealmLocalAllThreadNodes.Clear();
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff33);
-    mRealmLocalAllThreadNodes.GetAddress().mFields.m16[6] = HostSwap16(0x0000);
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
 
     SetMeshLocalPrefix(meshLocalPrefix);
@@ -243,16 +202,7 @@ otError Mle::Start(bool aAnnounceAttach)
 
     if (Get<Mac::Mac>().GetPanId() == Mac::kPanIdBroadcast)
     {
-        // if PAN ID is not configured, pick a random one to start
-
-        uint16_t panid;
-
-        do
-        {
-            panid = Random::NonCrypto::GetUint16();
-        } while (panid == Mac::kPanIdBroadcast);
-
-        Get<Mac::Mac>().SetPanId(panid);
+        Get<Mac::Mac>().SetPanId(Mac::GenerateRandomPanId());
     }
 
     SetStateDetached();
@@ -2950,12 +2900,6 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
     {
         if (IsChild())
         {
-#if OPENTHREAD_FTD
-            // An FTD skips handling LeaderData of a different partition.
-            VerifyOrExit(!IsFullThreadDevice() || (leaderData.GetPartitionId() == mLeaderData.GetPartitionId() &&
-                                                   leaderData.GetLeaderRouterId() == GetLeaderId()),
-                         error = OT_ERROR_DROP);
-#endif
             SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
             mRetrieveNewNetworkData = true;
         }
@@ -3163,19 +3107,19 @@ exit:
 
 void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence)
 {
-    otError                 error    = OT_ERROR_NONE;
-    const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
-    Challenge               response;
-    uint16_t                version;
-    uint16_t                sourceAddress;
-    LeaderData              leaderData;
-    uint8_t                 linkMarginFromTlv;
-    uint8_t                 linkMargin;
-    uint8_t                 linkQuality;
-    ConnectivityTlv         connectivity;
-    uint32_t                linkFrameCounter;
-    uint32_t                mleFrameCounter;
-    Mac::ExtAddress         extAddress;
+    otError               error    = OT_ERROR_NONE;
+    const ThreadLinkInfo *linkInfo = aMessageInfo.GetThreadLinkInfo();
+    Challenge             response;
+    uint16_t              version;
+    uint16_t              sourceAddress;
+    LeaderData            leaderData;
+    uint8_t               linkMarginFromTlv;
+    uint8_t               linkMargin;
+    uint8_t               linkQuality;
+    ConnectivityTlv       connectivity;
+    uint32_t              linkFrameCounter;
+    uint32_t              mleFrameCounter;
+    Mac::ExtAddress       extAddress;
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeParameterTlv timeParameter;
 #endif
@@ -3206,7 +3150,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
     // Link Margin
     SuccessOrExit(error = Tlv::FindUint8Tlv(aMessage, Tlv::kLinkMargin, linkMarginFromTlv));
 
-    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
+    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->GetRss());
 
     if (linkMargin > linkMarginFromTlv)
     {
@@ -3226,7 +3170,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
 
         parentinfo.mExtAddr      = extAddress;
         parentinfo.mRloc16       = sourceAddress;
-        parentinfo.mRssi         = linkInfo->mRss;
+        parentinfo.mRssi         = linkInfo->GetRss();
         parentinfo.mPriority     = connectivity.GetParentPriority();
         parentinfo.mLinkQuality3 = connectivity.GetLinkQuality3();
         parentinfo.mLinkQuality2 = connectivity.GetLinkQuality2();
@@ -3342,7 +3286,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
     mParentCandidate.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                               DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
     mParentCandidate.GetLinkInfo().Clear();
-    mParentCandidate.GetLinkInfo().AddRss(linkInfo->mRss);
+    mParentCandidate.GetLinkInfo().AddRss(linkInfo->GetRss());
     mParentCandidate.ResetLinkFailures();
     mParentCandidate.SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMarginFromTlv));
     mParentCandidate.SetState(Neighbor::kStateParentResponse);

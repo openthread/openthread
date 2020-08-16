@@ -47,6 +47,7 @@
 #include "common/notifier.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/neighbor_table.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -123,7 +124,7 @@ public:
      * @param[in]  aNeighbor  The neighbor that is added or removed.
      *
      */
-    static void EmitNeighborChange(otNeighborTableEvent aEvent, Neighbor &aNeighbor);
+    static void EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor);
 
     /**
      * This function emits a transmit event to OTNS.

@@ -28,10 +28,12 @@
 
 /**
  * @file
- *   This file implements the CLI server on the CONSOLE service.
+ *   This file implements the CLI interpreter on the CONSOLE service.
  */
 
 #include "cli_console.hpp"
+
+#if OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_CONSOLE
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -48,38 +50,49 @@ static OT_DEFINE_ALIGNED_VAR(sCliConsoleRaw, sizeof(Console), uint64_t);
 
 extern "C" void otCliConsoleInit(otInstance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext)
 {
-    Instance *instance = static_cast<Instance *>(aInstance);
-
-    Server::sServer = new (&sCliConsoleRaw) Console(instance);
-    static_cast<Console *>(Server::sServer)->SetOutputCallback(aCallback);
-    static_cast<Console *>(Server::sServer)->SetContext(aContext);
+    Console::Initialize(aInstance, aCallback, aContext);
 }
 
 extern "C" void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength)
 {
-    static_cast<Console *>(Server::sServer)->ReceiveTask(aBuf, aBufLength);
+    Interpreter::GetInterpreter().ProcessLine(aBuf, aBufLength);
 }
 
-Console::Console(Instance *aInstance)
-    : Server(aInstance)
-    , mCallback(nullptr)
-    , mContext(nullptr)
+// Add stubs for simulation
+extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    OT_UNUSED_VARIABLE(aBuf);
+    OT_UNUSED_VARIABLE(aBufLength);
+}
+
+extern "C" void otPlatUartSendDone(void)
 {
 }
 
-void Console::SetContext(void *aContext)
+Console *Console::sConsole = nullptr;
+
+Interpreter &Interpreter::GetInterpreter(void)
 {
-    mContext = aContext;
+    return *Console::sConsole;
 }
 
-void Console::SetOutputCallback(otCliConsoleOutputCallback aCallback)
+void Console::Initialize(otInstance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext)
 {
-    mCallback = aCallback;
+    Instance *instance = static_cast<Instance *>(aInstance);
+
+    sConsole = new (&sCliConsoleRaw) Console(instance, aCallback, aContext);
 }
 
-void Console::ReceiveTask(char *aBuf, uint16_t aBufLength)
+Console::Console(Instance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext)
+    : Interpreter(aInstance)
+    , mCallback(aCallback)
+    , mContext(aContext)
 {
-    mInterpreter.ProcessLine(aBuf, aBufLength, *this);
+}
+
+int Interpreter::Output(const char *aBuf, uint16_t aBufLength)
+{
+    return static_cast<Console *>(this)->Output(aBuf, aBufLength);
 }
 
 int Console::Output(const char *aBuf, uint16_t aBufLength)
@@ -89,3 +102,5 @@ int Console::Output(const char *aBuf, uint16_t aBufLength)
 
 } // namespace Cli
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_CONSOLE

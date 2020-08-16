@@ -477,20 +477,6 @@ public:
     otError GetMaxChildTimeout(uint32_t &aTimeout) const;
 
     /**
-     * This method register the "neighbor table changed" callback function.
-     *
-     * The provided callback (if non-nullptr) will be invoked when a child/router entry is being added/remove to/from
-     * the neighbor table. Subsequent calls to this method will overwrite the previous callback.
-     *
-     * @param[in] aCallback    A pointer to callback handler function.
-     *
-     */
-    void RegisterNeighborTableChangedCallback(otNeighborTableCallback aCallback)
-    {
-        mNeighborTableChangedCallback = aCallback;
-    }
-
-    /**
      * This function sets the callback that is called when processing an MLE Discovery Request message.
      *
      * @param[in]  aCallback A pointer to a function that is called to deliver MLE Discovery Request data.
@@ -502,15 +488,6 @@ public:
         mDiscoveryRequestCallback        = aCallback;
         mDiscoveryRequestCallbackContext = aContext;
     }
-
-    /**
-     * This method signals a "neighbor table changed" events (invoking the registered callback function).
-     *
-     * @param[in] aEvent     The event to emit (child/router added/removed).
-     * @param[in] aNeighbor  The neighbor that is being added/removed.
-     *
-     */
-    void Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor);
 
     /**
      * This method resets the MLE Advertisement Trickle timer interval.
@@ -681,8 +658,6 @@ private:
 
     ChildTable  mChildTable;
     RouterTable mRouterTable;
-
-    otNeighborTableCallback mNeighborTableChangedCallback;
 
     uint8_t   mChallengeTimeout;
     Challenge mChallenge;

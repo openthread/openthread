@@ -36,7 +36,6 @@
 #include <inttypes.h>
 
 #include "cli/cli.hpp"
-#include "cli/cli_server.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
 
@@ -74,7 +73,7 @@ otError Joiner::ProcessDiscerner(uint8_t aArgsLength, char *aArgs[])
 
         VerifyOrExit(discerner != nullptr, error = OT_ERROR_NOT_FOUND);
 
-        mInterpreter.mServer->OutputFormat("0x%" PRIx64 "/%u\r\n", discerner->mValue, discerner->mLength);
+        mInterpreter.OutputFormat("0x%" PRIx64 "/%u\r\n", discerner->mValue, discerner->mLength);
     }
     else
     {
@@ -92,7 +91,7 @@ otError Joiner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.mServer->OutputFormat("%s\r\n", command.mName);
+        mInterpreter.OutputFormat("%s\r\n", command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -108,7 +107,7 @@ otError Joiner::ProcessId(uint8_t aArgsLength, char *aArgs[])
     joinerId = otJoinerGetId(mInterpreter.mInstance);
 
     mInterpreter.OutputBytes(joinerId->m8, sizeof(otExtAddress));
-    mInterpreter.mServer->OutputFormat("\r\n");
+    mInterpreter.OutputFormat("\r\n");
 
     return OT_ERROR_NONE;
 }
@@ -175,11 +174,11 @@ void Joiner::HandleCallback(otError aError)
     switch (aError)
     {
     case OT_ERROR_NONE:
-        mInterpreter.mServer->OutputFormat("Join success\r\n");
+        mInterpreter.OutputFormat("Join success\r\n");
         break;
 
     default:
-        mInterpreter.mServer->OutputFormat("Join failed [%s]\r\n", otThreadErrorToString(aError));
+        mInterpreter.OutputFormat("Join failed [%s]\r\n", otThreadErrorToString(aError));
         break;
     }
 }

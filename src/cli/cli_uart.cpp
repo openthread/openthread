@@ -28,10 +28,12 @@
 
 /**
  * @file
- *   This file implements the CLI server on the UART service.
+ *   This file implements the CLI interpreter on the UART service.
  */
 
 #include "cli_uart.hpp"
+
+#if OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_UART
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -103,15 +105,21 @@ namespace Cli {
 
 static OT_DEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
-extern "C" void otCliUartInit(otInstance *aInstance)
+Uart *Uart::sUart = nullptr;
+
+Interpreter &Interpreter::GetInterpreter(void)
+{
+    return *Uart::sUart;
+}
+
+void Uart::Initialize(otInstance *aInstance)
 {
     Instance *instance = static_cast<Instance *>(aInstance);
-
-    Server::sServer = new (&sCliUartRaw) Uart(instance);
+    sUart              = new (&sCliUartRaw) Uart(instance);
 }
 
 Uart::Uart(Instance *aInstance)
-    : Server(aInstance)
+    : Interpreter(aInstance)
 {
     mRxLength   = 0;
     mTxHead     = 0;
@@ -119,11 +127,6 @@ Uart::Uart(Instance *aInstance)
     mSendLength = 0;
 
     IgnoreError(otPlatUartEnable());
-}
-
-extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
-{
-    static_cast<Uart *>(Server::sServer)->ReceiveTask(aBuf, aBufLength);
 }
 
 void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
@@ -232,12 +235,17 @@ otError Uart::ProcessCommand(void)
 #endif
     if (mRxLength > 0)
     {
-        mInterpreter.ProcessLine(mRxBuffer, mRxLength, *this);
+        ProcessLine(mRxBuffer, mRxLength);
     }
 
     mRxLength = 0;
 
     return error;
+}
+
+int Interpreter::Output(const char *aBuf, uint16_t aBufLength)
+{
+    return static_cast<Uart *>(this)->Output(aBuf, aBufLength);
 }
 
 int Uart::Output(const char *aBuf, uint16_t aBufLength)
@@ -317,11 +325,6 @@ exit:
     return;
 }
 
-extern "C" void otPlatUartSendDone(void)
-{
-    static_cast<Uart *>(Server::sServer)->SendDoneTask();
-}
-
 void Uart::SendDoneTask(void)
 {
     mTxHead = (mTxHead + mSendLength) % kTxBufferSize;
@@ -331,5 +334,22 @@ void Uart::SendDoneTask(void)
     Send();
 }
 
+extern "C" void otCliUartInit(otInstance *aInstance)
+{
+    Uart::Initialize(aInstance);
+}
+
+extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    static_cast<Uart &>(Interpreter::GetInterpreter()).ReceiveTask(aBuf, aBufLength);
+}
+
+extern "C" void otPlatUartSendDone(void)
+{
+    static_cast<Uart &>(Interpreter::GetInterpreter()).SendDoneTask();
+}
+
 } // namespace Cli
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_UART

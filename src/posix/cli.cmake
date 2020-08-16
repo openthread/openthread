@@ -44,6 +44,10 @@ set_target_properties(
 
 target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
 
+if(OT_READLINE)
+    set(OT_CLI_TRANSPORT "CONSOLE" CACHE STRING "set CLI to use console interpreter" FORCE)
+endif()
+
 target_compile_definitions(ot-cli PRIVATE
     $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
     OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI

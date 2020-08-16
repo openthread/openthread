@@ -55,6 +55,7 @@ proc setup_nodes {} {
     expect "Commissioner: active"
     send "commissioner joiner add $eui64 $psk\n"
     expect "Done"
+    wait_for "netdata steeringdata check $eui64" "Done"
     send "channel\n"
     expect -re {(\d+)}
     set channel $expect_out(1,string)

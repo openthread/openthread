@@ -49,6 +49,30 @@ class NeighborTable : public InstanceLocator
 {
 public:
     /**
+     * This function pointer is called to notify that a child or router neighbor is being added to or removed from
+     * neighbor table.
+     *
+     * Note that this callback in invoked while the neighbor/child table is being updated and always before the related
+     * `Notifier` event.
+     *
+     */
+    typedef otNeighborTableCallback Callback;
+
+    /**
+     * This type represents a neighbor table entry info (child or router) and is used as a parameter in the neighbor
+     * table callback.
+     *
+     */
+    typedef otNeighborTableEntryInfo EntryInfo;
+
+    /**
+     * This enumeration defines the constants used in `NeighborTable::Callback` to indicate whether a child or router
+     * neighbor is being added or removed.
+     *
+     */
+    typedef otNeighborTableEvent Event;
+
+    /**
      * This constructor initializes the `NeighborTable` instance.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -158,12 +182,36 @@ public:
      */
     otError GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo);
 
+    /**
+     * This method registers the "neighbor table changed" callback function.
+     *
+     * The provided callback (if non-nullptr) will be invoked when a child/router entry is being added/remove to/from
+     * the neighbor table. Subsequent calls to this method will overwrite the previous callback.
+     *
+     * @param[in] aCallback    A pointer to callback handler function.
+     *
+     */
+    void RegisterCallback(Callback aCallback) { mCallback = aCallback; }
+
+    /**
+     * This method signals a "neighbor table changed" event.
+     *
+     * This method invokes the `NeighborTable::Callback` and also signals the change through a related `Notifier` event.
+     *
+     * @param[in] aEvent     The event to emit (child/router added/removed).
+     * @param[in] aNeighbor  The neighbor that is being added/removed.
+     *
+     */
+    void Signal(Event aEvent, const Neighbor &aNeighbor);
+
 private:
     Neighbor *FindParent(const Neighbor::AddressMatcher &aMatcher);
     Neighbor *FindNeighbor(const Neighbor::AddressMatcher &aMatcher);
 #if OPENTHREAD_FTD
     Neighbor *FindChildOrRouter(const Neighbor::AddressMatcher &aMatcher);
 #endif
+
+    Callback mCallback;
 };
 
 } // namespace ot

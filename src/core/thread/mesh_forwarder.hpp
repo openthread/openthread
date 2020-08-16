@@ -65,6 +65,81 @@ class DiscoverScanner;
  */
 
 /**
+ * This class represents link-specific information for messages received from the Thread radio.
+ *
+ */
+class ThreadLinkInfo : public otThreadLinkInfo, public Clearable<ThreadLinkInfo>
+{
+public:
+    /**
+     * This method returns the IEEE 802.15.4 Source PAN ID.
+     *
+     * @returns The IEEE 802.15.4 Source PAN ID.
+     *
+     */
+    Mac::PanId GetPanId(void) const { return mPanId; }
+
+    /**
+     * This method returns the IEEE 802.15.4 Channel.
+     *
+     * @returns The IEEE 802.15.4 Channel.
+     *
+     */
+    uint8_t GetChannel(void) const { return mChannel; }
+
+    /**
+     * This method indicates whether or not link security is enabled.
+     *
+     * @retval TRUE   If link security is enabled.
+     * @retval FALSE  If link security is not enabled.
+     *
+     */
+    bool IsLinkSecurityEnabled(void) const { return mLinkSecurity; }
+
+    /**
+     * This method returns the Received Signal Strength (RSS) in dBm.
+     *
+     * @returns The Received Signal Strength (RSS) in dBm.
+     *
+     */
+    int8_t GetRss(void) const { return mRss; }
+
+    /**
+     * This method returns the frame/radio Link Quality Indicator (LQI) value.
+     *
+     * @returns The Link Quality Indicator value.
+     *
+     */
+    uint8_t GetLqi(void) const { return mLqi; }
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    /**
+     * This method returns the Time Sync Sequence.
+     *
+     * @returns The Time Sync Sequence.
+     *
+     */
+    uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; }
+
+    /**
+     * This method returns the time offset to the Thread network time (in microseconds).
+     *
+     * @returns The time offset to the Thread network time (in microseconds).
+     *
+     */
+    int64_t GetNetworkTimeOffset(void) const { return mNetworkTimeOffset; }
+#endif
+
+    /**
+     * This method sets the `ThreadLinkInfo` from a given received frame.
+     *
+     * @param[in] aFrame  A received frame.
+     *
+     */
+    void SetFrom(const Mac::RxFrame &aFrame);
+};
+
+/**
  * This class implements mesh forwarding within Thread.
  *
  */
@@ -310,20 +385,20 @@ private:
     void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
-    void     HandleMesh(uint8_t *               aFrame,
-                        uint16_t                aFrameLength,
-                        const Mac::Address &    aMacSource,
-                        const otThreadLinkInfo &aLinkInfo);
-    void     HandleFragment(const uint8_t *         aFrame,
-                            uint16_t                aFrameLength,
-                            const Mac::Address &    aMacSource,
-                            const Mac::Address &    aMacDest,
-                            const otThreadLinkInfo &aLinkInfo);
-    void     HandleLowpanHC(const uint8_t *         aFrame,
-                            uint16_t                aFrameLength,
-                            const Mac::Address &    aMacSource,
-                            const Mac::Address &    aMacDest,
-                            const otThreadLinkInfo &aLinkInfo);
+    void     HandleMesh(uint8_t *             aFrame,
+                        uint16_t              aFrameLength,
+                        const Mac::Address &  aMacSource,
+                        const ThreadLinkInfo &aLinkInfo);
+    void     HandleFragment(const uint8_t *       aFrame,
+                            uint16_t              aFrameLength,
+                            const Mac::Address &  aMacSource,
+                            const Mac::Address &  aMacDest,
+                            const ThreadLinkInfo &aLinkInfo);
+    void     HandleLowpanHC(const uint8_t *       aFrame,
+                            uint16_t              aFrameLength,
+                            const Mac::Address &  aMacSource,
+                            const Mac::Address &  aMacDest,
+                            const ThreadLinkInfo &aLinkInfo);
     uint16_t PrepareDataFrame(Mac::TxFrame &      aFrame,
                               Message &           aMessage,
                               const Mac::Address &aMacSource,
@@ -342,7 +417,7 @@ private:
                                    uint16_t                aFragmentLength,
                                    uint16_t                aSrcRloc16,
                                    Message::Priority       aPriority);
-    otError HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource);
+    otError HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource);
     void    ClearReassemblyList(void);
     void    RemoveMessage(Message &aMessage);
     void    HandleDiscoverComplete(void);

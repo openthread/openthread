@@ -107,7 +107,7 @@ void Otns::HandleNotifierEvents(Events aEvents)
 #endif
 }
 
-void Otns::EmitNeighborChange(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
+void Otns::EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor)
 {
     switch (aEvent)
     {
