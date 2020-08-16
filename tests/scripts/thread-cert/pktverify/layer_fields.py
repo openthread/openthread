@@ -479,6 +479,11 @@ _LAYER_FIELDS = {
     'coap.tlv.router_mask_assigned': _auto,
     'coap.tlv.router_mask_id_seq': _auto,
 
+    # dtls
+    'dtls.handshake.type': _list(_auto),
+    'dtls.handshake.cookie': _auto,
+    'dtls.record.content_type': _list(_auto),
+
     # thread_address
     'thread_address.tlv.type': _list(_auto),
     'thread_address.tlv.status': _auto,
