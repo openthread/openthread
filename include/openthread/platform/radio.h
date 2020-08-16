@@ -885,7 +885,7 @@ otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCo
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
- * @param[in]  aExtAddr      The extended source address of CSL receiver's parent device(when the platforms generate
+ * @param[in]  aExtAddr      The extended source address of CSL receiver's parent device (when the platforms generate
  *                           enhanced ack, platforms may need to know acks to which address should include CSL IE).
  *
  * @retval  OT_ERROR_NOT_SUPPORTED  Radio driver doesn't support CSL.

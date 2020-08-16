@@ -643,12 +643,9 @@ void Mac::UpdateIdleMode(void)
 #endif
     }
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    else
+    else if (mPendingTransmitDataCsl)
     {
-        if (mPendingTransmitDataCsl)
-        {
-            mTimer.FireAt(mCslTxFireTime);
-        }
+        mTimer.FireAt(mCslTxFireTime);
     }
 #endif
 

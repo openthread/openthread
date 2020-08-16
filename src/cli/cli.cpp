@@ -1293,7 +1293,7 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 void Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
+    otError error = OT_ERROR_INVALID_ARGS;
 
     if (aArgsLength == 0)
     {
@@ -1320,14 +1320,6 @@ void Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
         {
             SuccessOrExit(error = otLinkCslSetTimeout(mInstance, static_cast<uint32_t>(value)));
         }
-        else
-        {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
-        }
-    }
-    else
-    {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
 exit:
