@@ -29,42 +29,75 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/message.hpp"
+#include "common/random.hpp"
 
 #include "test_platform.h"
-#include "test_util.h"
+#include "test_util.hpp"
+
+namespace ot {
 
 void TestMessage(void)
 {
-    ot::Instance *   instance;
-    ot::MessagePool *messagePool;
-    ot::Message *    message;
-    uint8_t          writeBuffer[1024];
-    uint8_t          readBuffer[1024];
+    enum : uint16_t
+    {
+        kMaxSize = (kBufferSize * 3 + 24),
+    };
 
-    instance = static_cast<ot::Instance *>(testInitInstance());
+    Instance *   instance;
+    MessagePool *messagePool;
+    Message *    message;
+    uint8_t      writeBuffer[kMaxSize];
+    uint8_t      readBuffer[kMaxSize];
+    uint8_t      zeroBuffer[kMaxSize];
+
+    memset(zeroBuffer, 0, sizeof(zeroBuffer));
+
+    instance = static_cast<Instance *>(testInitInstance());
     VerifyOrQuit(instance != nullptr, "Null OpenThread instance\n");
 
-    messagePool = &instance->Get<ot::MessagePool>();
+    messagePool = &instance->Get<MessagePool>();
 
-    for (uint8_t &b : writeBuffer)
+    Random::NonCrypto::FillBuffer(writeBuffer, kMaxSize);
+
+    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
+    SuccessOrQuit(message->SetLength(kMaxSize), "Message::SetLength failed");
+    VerifyOrQuit(message->Write(0, kMaxSize, writeBuffer) == kMaxSize, "Message::Write failed");
+    VerifyOrQuit(message->Read(0, kMaxSize, readBuffer) == kMaxSize, "Message::Read failed");
+    VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0, "Message compare failed");
+    VerifyOrQuit(message->GetLength() == kMaxSize, "Message::GetLength failed");
+
+    for (uint16_t offset = 0; offset < kMaxSize; offset++)
     {
-        b = static_cast<uint8_t>(random());
+        for (uint16_t length = 0; length < kMaxSize - offset; length++)
+        {
+            for (uint16_t i = 0; i < length; i++)
+            {
+                writeBuffer[offset + i]++;
+            }
+
+            VerifyOrQuit(message->Write(offset, length, &writeBuffer[offset]) == length, "Message::Write failed");
+
+            VerifyOrQuit(message->Read(0, kMaxSize, readBuffer) == kMaxSize, "Message::Read failed");
+            VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0, "Message compare failed");
+
+            memset(readBuffer, 0, sizeof(readBuffer));
+            VerifyOrQuit(message->Read(offset, length, readBuffer) == length, "Message::Read failed");
+            VerifyOrQuit(memcmp(readBuffer, &writeBuffer[offset], length) == 0, "Message compare failed");
+            VerifyOrQuit(memcmp(&readBuffer[length], zeroBuffer, kMaxSize - length) == 0, "Message read after length");
+        }
     }
 
-    VerifyOrQuit((message = messagePool->New(ot::Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
-    SuccessOrQuit(message->SetLength(sizeof(writeBuffer)), "Message::SetLength failed");
-    VerifyOrQuit(message->Write(0, sizeof(writeBuffer), writeBuffer) == sizeof(writeBuffer), "Message::Write failed");
-    VerifyOrQuit(message->Read(0, sizeof(readBuffer), readBuffer) == sizeof(readBuffer), "Message::Read failed");
-    VerifyOrQuit(memcmp(writeBuffer, readBuffer, sizeof(writeBuffer)) == 0, "Message compare failed");
-    VerifyOrQuit(message->GetLength() == 1024, "Message::GetLength failed");
+    VerifyOrQuit(message->GetLength() == kMaxSize, "Message::GetLength failed");
     message->Free();
 
     testFreeInstance(instance);
 }
 
+} // namespace ot
+
 int main(void)
 {
-    TestMessage();
+    ot::TestMessage();
     printf("All tests passed\n");
     return 0;
 }
