@@ -1295,6 +1295,7 @@ void Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
         OutputFormat("Period: %u(in units of 10 symbols), %ums\r\n", otLinkCslGetPeriod(mInstance),
                      otLinkCslGetPeriod(mInstance) * kUsPerTenSymbols / 1000);
         OutputFormat("Timeout: %us\r\n", otLinkCslGetTimeout(mInstance));
+        error = OT_ERROR_NONE;
     }
     else if (aArgsLength == 2)
     {
