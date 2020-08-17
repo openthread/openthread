@@ -84,6 +84,8 @@ ADDR_SOL_URI = '/a/as'
 ADDR_REL_URI = '/a/ar'
 SVR_DATA_URI = '/a/sd'
 ND_DATA_URI = '/a/nd'
+RLY_RX_URI = '/c/rx'
+RLY_TX_URI = '/c/tx'
 
 # MLE TLVs
 SOURCE_ADDRESS_TLV = 0
