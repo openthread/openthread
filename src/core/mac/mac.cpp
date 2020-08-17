@@ -847,7 +847,12 @@ otError Mac::PrepareDataRequest(TxFrame &aFrame)
     }
 
     aFrame.InitMacHeader(fcf, Frame::kKeyIdMode1 | Frame::kSecEncMic32);
-    aFrame.SetDstPanId(GetPanId());
+
+    if (aFrame.IsDstPanIdPresent())
+    {
+        aFrame.SetDstPanId(GetPanId());
+    }
+
     aFrame.SetSrcAddr(src);
     aFrame.SetDstAddr(dst);
     IgnoreError(aFrame.SetCommandId(Frame::kMacCmdDataRequest));
