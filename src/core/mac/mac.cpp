@@ -884,17 +884,12 @@ otError Mac::PrepareDataRequest(TxFrame &aFrame)
     otError  error = OT_ERROR_NONE;
     Address  src, dst;
     uint16_t fcf;
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    Neighbor *parent = &Get<Mle::MleRouter>().GetParentCandidate();
-#else
-    Neighbor *parent = nullptr;
-#endif
 
     SuccessOrExit(error = Get<DataPollSender>().GetPollDestinationAddress(dst));
     VerifyOrExit(!dst.IsNone(), error = OT_ERROR_ABORT);
 
     fcf = Frame::kFcfFrameMacCmd | Frame::kFcfPanidCompression | Frame::kFcfAckRequest | Frame::kFcfSecurityEnabled;
-    UpdateFrameControlField(parent, /* aIsTimeSync */ false, fcf);
+    UpdateFrameControlField(nullptr, /* aIsTimeSync */ false, fcf);
 
     if (dst.IsExtended())
     {
