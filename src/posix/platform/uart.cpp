@@ -217,13 +217,13 @@ static void InitializeSessionSocket(void)
     int newSessionSocket;
     int rval;
 
-    VerifyOrExit((newSessionSokcet = accept(sUartSocket, nullptr, nullptr)) != -1, rval = -1);
+    VerifyOrExit((newSessionSocket = accept(sUartSocket, nullptr, nullptr)) != -1, rval = -1);
 
-    VerifyOrExit((rval = fcntl(newSessionSokcet, F_GETFD, 0)) != -1, OT_NOOP);
+    VerifyOrExit((rval = fcntl(newSessionSocket, F_GETFD, 0)) != -1, OT_NOOP);
 
     rval |= FD_CLOEXEC;
 
-    VerifyOrExit((rval = fcntl(newSessionSokcet, F_SETFD, rval)) != -1, OT_NOOP);
+    VerifyOrExit((rval = fcntl(newSessionSocket, F_SETFD, rval)) != -1, OT_NOOP);
 
 #ifndef __linux__
     // some platforms (macOS, Solaris) don't have MSG_NOSIGNAL
