@@ -118,7 +118,7 @@ uint8_t Frame::FindDstPanIdIndex(void) const
 {
     uint8_t index;
 
-    VerifyOrExit((GetFrameControlField() & kFcfDstAddrMask) != kFcfDstAddrNone, index = kInvalidIndex);
+    VerifyOrExit(IsDstPanIdPresent(), index = kInvalidIndex);
 
     index = kFcfSize + kDsnSize;
 
@@ -180,11 +180,7 @@ void Frame::SetDstPanId(PanId aPanId)
 
 uint8_t Frame::FindDstAddrIndex(void) const
 {
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     return kFcfSize + kDsnSize + (IsDstPanIdPresent() ? sizeof(PanId) : 0);
-#else
-    return kFcfSize + kDsnSize + sizeof(PanId);
-#endif
 }
 
 otError Frame::GetDstAddr(Address &aAddress) const
@@ -252,23 +248,24 @@ uint8_t Frame::FindSrcPanIdIndex(void) const
     uint8_t  index = 0;
     uint16_t fcf   = GetFrameControlField();
 
-    VerifyOrExit((fcf & kFcfDstAddrMask) != kFcfDstAddrNone || (fcf & kFcfSrcAddrMask) != kFcfSrcAddrNone,
-                 index = kInvalidIndex);
+    VerifyOrExit(IsSrcPanIdPresent(), index = kInvalidIndex);
 
     index += kFcfSize + kDsnSize;
 
-    if ((fcf & kFcfPanidCompression) == 0)
+    if (IsDstPanIdPresent(fcf))
     {
-        switch (fcf & kFcfDstAddrMask)
-        {
-        case kFcfDstAddrShort:
-            index += sizeof(PanId) + sizeof(ShortAddress);
-            break;
+        index += sizeof(PanId);
+    }
 
-        case kFcfDstAddrExt:
-            index += sizeof(PanId) + sizeof(ExtAddress);
-            break;
-        }
+    switch (fcf & kFcfDstAddrMask)
+    {
+    case kFcfDstAddrShort:
+        index += sizeof(ShortAddress);
+        break;
+
+    case kFcfDstAddrExt:
+        index += sizeof(ExtAddress);
+        break;
     }
 
 exit:
