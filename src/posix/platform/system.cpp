@@ -40,6 +40,7 @@
 #include <openthread-core-config.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/otns.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/uart.h>
 
@@ -203,3 +204,12 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
     platformUdpProcess(aInstance, &aMainloop->mReadFdSet);
 #endif
 }
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+
+void otPlatOtnsStatus(const char *aStatus)
+{
+    otLogOtns("[OTNS] %s", aStatus);
+}
+
+#endif
