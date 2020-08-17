@@ -230,7 +230,7 @@ otError SubMac::CslSample(void)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMac("RadioCslSample() failed, error: %s", otThreadErrorToString(error));
+        otLogWarnMac("CslSample() failed, error: %s", otThreadErrorToString(error));
     }
     return error;
 }
@@ -862,7 +862,7 @@ void SubMac::SetCslPeriod(uint16_t aPeriod)
         }
     }
 
-    otLogDebgMac("Csl Period is set to: %u", mCslPeriod);
+    otLogDebgMac("Csl Period: %u", mCslPeriod);
 
 exit:
     return;
@@ -884,7 +884,7 @@ void SubMac::FillCsl(Frame &aFrame)
         csl->SetPeriod(mCslPeriod);
         csl->SetPhase(GetCslPhase());
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        otLogDebgMac("%10lu:SetCsl() seq=%u phase=%hu", static_cast<uint32_t>(otPlatTimeGet()), aFrame.GetSequence(),
+        otLogDebgMac("%10u:FillCsl() seq=%u phase=%hu", static_cast<uint32_t>(otPlatTimeGet()), aFrame.GetSequence(),
                      csl->GetPhase());
 #endif
     }
@@ -945,7 +945,7 @@ uint16_t SubMac::GetCslPhase(void) const
     }
     else
     {
-        delta = now - mCslSampleTime;
+        delta = mCslSampleTime - now;
     }
 
     return static_cast<uint16_t>(delta / kUsPerTenSymbols);

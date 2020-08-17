@@ -305,8 +305,8 @@ public:
      * started, `mState` will become `kStateCslSample`. But it could be doing `Sleep` or `Receive` at this moment
      * (depending on `mCslState`).
      *
-     * @retval OT_ERROR_NONE     Successfully started CSL sampling.
-     * @retval OT_ERROR_BUSY     The radio was transmitting.
+     * @retval OT_ERROR_NONE          Successfully started CSL sampling.
+     * @retval OT_ERROR_BUSY          The radio was transmitting.
      * @retval OT_ERROR_INVALID_STATE The radio was disabled.
      *
      */

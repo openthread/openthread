@@ -424,8 +424,8 @@ public:
     /** This method enables csl sampling in radio.
      *
      * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
-     * @param[in]  aExtAddr      The extended source address of incoming frame, ack to which needs CSL.(request by NRF
-     * 52840)
+     * @param[in]  aExtAddr      The extended source address of CSL receiver's parent device (when the platforms
+     * generate enhanced ack, platforms may need to know acks to which address should include CSL IE).
      *
      * @retval  OT_ERROR_NOT_SUPPORTED  Radio driver doesn't support CSL.
      * @retval  OT_ERROR_FAILED         Other platform specific errors.
