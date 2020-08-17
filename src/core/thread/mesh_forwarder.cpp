@@ -888,7 +888,11 @@ void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
     SuccessOrExit(error = aFrame.GetSrcAddr(macSource));
     SuccessOrExit(error = aFrame.GetDstAddr(macDest));
 
-    IgnoreError(aFrame.GetSrcPanId(linkInfo.mPanId));
+    if (OT_ERROR_NONE != aFrame.GetSrcPanId(linkInfo.mPanId))
+    {
+        linkInfo.mPanId = Get<Mac::Mac>().GetPanId();
+    }
+
     linkInfo.mChannel      = aFrame.GetChannel();
     linkInfo.mRss          = aFrame.GetRssi();
     linkInfo.mLqi          = aFrame.GetLqi();
