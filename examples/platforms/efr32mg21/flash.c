@@ -31,7 +31,7 @@
  *   This file implements the OpenThread platform abstraction for the non-volatile storage.
  */
 
-#include "openthread-core-efr32-config.h"
+#include <openthread-core-config.h>
 #include <openthread/config.h>
 
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE // Use OT NV system
