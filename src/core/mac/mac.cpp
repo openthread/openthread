@@ -242,7 +242,11 @@ otError Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, Active
     VerifyOrExit(address.IsExtended(), error = OT_ERROR_PARSE);
     aResult.mExtAddress = address.GetExtended();
 
-    IgnoreError(aBeaconFrame->GetSrcPanId(aResult.mPanId));
+    if (OT_ERROR_NONE != aBeaconFrame->GetSrcPanId(aResult.mPanId))
+    {
+        IgnoreError(aBeaconFrame->GetDstPanId(aResult.mPanId));
+    }
+
     aResult.mChannel = aBeaconFrame->GetChannel();
     aResult.mRssi    = aBeaconFrame->GetRssi();
     aResult.mLqi     = aBeaconFrame->GetLqi();
