@@ -46,12 +46,12 @@ main()
 
     git fetch --depth 1 origin "${OT_SHA_OLD}"
 
-    if git diff --quiet "${OT_SHA_OLD}" -- include; then
+    if git diff --name-only "${OT_SHA_OLD}" -- include/openthread; then
         echo 'No OpenThread public APIs updates.'
         exit 0
     fi
 
-    git diff "${OT_SHA_OLD}" -- include | tee >(cat >&2) | grep -aP '[-+]#define OPENTHREAD_API_VERSION (.+)' >"${OT_VERSIONS_FILE}" || die 'Version number is not updated!'
+    git diff "${OT_SHA_OLD}" -- include/openthread | tee >(cat >&2) | grep -aP '[-+]#define OPENTHREAD_API_VERSION (.+)' >"${OT_VERSIONS_FILE}" || die 'Version number is not updated!'
 
     [[ $(wc -l <"${OT_VERSIONS_FILE}") == 2 ]] || die 'Multiple OPENTHREAD_API_VERSION definitions found!'
 

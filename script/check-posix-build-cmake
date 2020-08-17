@@ -50,11 +50,11 @@ build()
 main()
 {
     reset_source
-    build
+    build "$@"
 
     if [[ $OSTYPE != "darwin"* ]]; then
         reset_source
-        build -DOT_POSIX_CONFIG_RCP_BUS=SPI
+        build -DOT_POSIX_CONFIG_RCP_BUS=SPI "$@"
     fi
 }
 

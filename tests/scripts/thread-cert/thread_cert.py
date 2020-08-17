@@ -27,13 +27,22 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import json
 import os
+import subprocess
 import sys
+import time
 import unittest
 
 import config
 import debug
 from node import Node
+
+PACKET_VERIFICATION = int(os.getenv('PACKET_VERIFICATION', 0))
+
+if PACKET_VERIFICATION:
+    from pktverify.addrs import ExtAddr
+    from pktverify.packet_verifier import PacketVerifier
 
 PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
@@ -73,6 +82,11 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
     TOPOLOGY = None
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._start_time = None
+        self._do_packet_verification = PACKET_VERIFICATION and hasattr(self, 'verify')
+
     def setUp(self):
         """Create simulator, nodes and apply configurations.
         """
@@ -81,18 +95,21 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         self.simulator = config.create_default_simulator()
         self.nodes = {}
 
-        initial_topology = {}
+        self._initial_topology = initial_topology = {}
+
         for i, params in self.TOPOLOGY.items():
             if params:
                 params = dict(DEFAULT_PARAMS, **params)
             else:
                 params = DEFAULT_PARAMS.copy()
+
             initial_topology[i] = params
 
             self.nodes[i] = Node(
                 i,
                 params['is_mtd'],
                 simulator=self.simulator,
+                name=params.get('name'),
                 version=params['version'],
                 is_bbr=params['is_bbr'],
             )
@@ -159,6 +176,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             self.nodes[i].enable_whitelist()
 
         self._inspector = debug.Inspector(self)
+        self._collect_test_info_after_setup()
 
     def inspect(self):
         self._inspector.inspect()
@@ -166,13 +184,25 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
     def tearDown(self):
         """Destroy nodes and simulator.
         """
+        if self._do_packet_verification and os.uname().sysname != "Linux":
+            raise NotImplementedError(
+                f'{self.testcase_name}: Packet Verification not available on {os.uname().sysname} (Linux only).')
+
+        if self._do_packet_verification:
+            time.sleep(3)
+
         for node in list(self.nodes.values()):
             node.stop()
             node.destroy()
 
         self.simulator.stop()
-        del self.nodes
-        del self.simulator
+
+        if self._do_packet_verification:
+            self._test_info['pcap'] = self._get_pcap_filename()
+
+            test_info_path = self._output_test_info()
+            os.environ['LD_LIBRARY_PATH'] = '/tmp/thread-wireshark'
+            self._verify_packets(test_info_path)
 
     def flush_all(self):
         """Flush away all captured messages of all nodes.
@@ -196,3 +226,88 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         Clean up node files in tmp directory
         """
         os.system(f"rm -f tmp/{PORT_OFFSET}_*.flash tmp/{PORT_OFFSET}_*.data tmp/{PORT_OFFSET}_*.swap")
+
+    def _verify_packets(self, test_info_path: str):
+        pv = PacketVerifier(test_info_path)
+        pv.add_common_vars()
+        self.verify(pv)
+        print("Packet verification passed: %s" % test_info_path, file=sys.stderr)
+
+    @property
+    def testcase_name(self):
+        return os.path.splitext(os.path.basename(sys.argv[0]))[0]
+
+    def collect_ipaddrs(self):
+        if not self._do_packet_verification:
+            return
+
+        test_info = self._test_info
+
+        for i, node in self.nodes.items():
+            ipaddrs = node.get_addrs()
+            test_info['ipaddrs'][i] = ipaddrs
+            mleid = node.get_mleid()
+            test_info['mleids'][i] = mleid
+
+    def collect_rloc16s(self):
+        if not self._do_packet_verification:
+            return
+
+        test_info = self._test_info
+        test_info['rloc16s'] = {}
+
+        for i, node in self.nodes.items():
+            test_info['rloc16s'][i] = '0x%04x' % node.get_addr16()
+
+    def collect_extra_vars(self, **vars):
+        if not self._do_packet_verification:
+            return
+
+        for k in vars.keys():
+            assert isinstance(k, str), k
+
+        test_vars = self._test_info.setdefault("extra_vars", {})
+        test_vars.update(vars)
+
+    def _collect_test_info_after_setup(self):
+        """
+        Collect test info after setUp
+        """
+        if not self._do_packet_verification:
+            return
+
+        test_info = self._test_info = {
+            'testcase': self.testcase_name,
+            'start_time': time.ctime(self._start_time),
+            'pcap': '',
+            'extaddrs': {},
+            'ethaddrs': {},
+            'ipaddrs': {},
+            'mleids': {},
+            'topology': self._initial_topology,
+        }
+
+        for i, node in self.nodes.items():
+            extaddr = node.get_addr64()
+            test_info['extaddrs'][i] = ExtAddr(extaddr).format_octets()
+
+    def _output_test_info(self):
+        """
+        Output test info to json file after tearDown
+        """
+        filename = f'{self.testcase_name}.json'
+        with open(filename, 'wt') as ofd:
+            ofd.write(json.dumps(self._test_info, indent=1, sort_keys=True))
+
+        return filename
+
+    def _get_pcap_filename(self):
+        current_pcap = os.getenv('TEST_NAME', 'current') + '.pcap'
+        return os.path.abspath(current_pcap)
+
+    def assure_run_ok(self, cmd, shell=False):
+        if not shell and isinstance(cmd, str):
+            cmd = cmd.split()
+        proc = subprocess.run(cmd, stdout=sys.stdout, stderr=sys.stderr, shell=shell)
+        print(">>> %s => %d" % (cmd, proc.returncode), file=sys.stderr)
+        proc.check_returncode()

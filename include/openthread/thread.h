@@ -806,6 +806,37 @@ void otThreadRegisterParentResponseCallback(otInstance *                   aInst
                                             void *                         aContext);
 
 /**
+ * This structure represents the Thread Discovery Request data.
+ *
+ */
+typedef struct otThreadDiscoveryRequestInfo
+{
+    otExtAddress mExtAddress;   ///< IEEE 802.15.4 Extended Address of the requester
+    uint8_t      mVersion : 4;  ///< Thread version.
+    bool         mIsJoiner : 1; ///< Whether is from joiner.
+} otThreadDiscoveryRequestInfo;
+
+/**
+ * This function pointer is called every time an MLE Discovery Request message is received.
+ *
+ * @param[in]  aInfo     A pointer to the Discovery Request info data.
+ * @param[in]  aContext  A pointer to callback application-specific context.
+ *
+ */
+typedef void (*otThreadDiscoveryRequestCallback)(const otThreadDiscoveryRequestInfo *aInfo, void *aContext);
+
+/**
+ * This function sets a callback to receive MLE Discovery Request data.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aCallback  A pointer to a function that is called upon receiving an MLE Discovery Request message.
+ * @param[in]  aContext   A pointer to callback application-specific context.
+ *
+ */
+void otThreadSetDiscoveryRequestCallback(otInstance *                     aInstnace,
+                                         otThreadDiscoveryRequestCallback aCallback,
+                                         void *                           aContext);
+/**
  * @}
  *
  */

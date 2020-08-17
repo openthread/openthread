@@ -87,6 +87,7 @@ private:
     otError ProcessConnect(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessOpen(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessSend(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessLinkSecurity(uint8_t aArgsLength, char *aArgs[]);
     otError WriteCharToBuffer(otMessage *aMessage, uint16_t aSize);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
@@ -95,6 +96,7 @@ private:
     static const Command sCommands[];
     Interpreter &        mInterpreter;
 
+    bool        mLinkSecurityEnabled;
     otUdpSocket mSocket;
 };
 

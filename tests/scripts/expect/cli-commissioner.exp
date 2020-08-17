@@ -32,6 +32,15 @@ source "tests/scripts/expect/_multinode.exp"
 
 setup_nodes
 
+set eui64 "d45e64fa83f81cf7"
+set spawn_id $spawn_1
+send "commissioner joiner add $eui64 J01NME\n"
+expect "Done"
+wait_for "netdata steeringdata check $eui64" "Done"
+send "commissioner joiner remove $eui64\n"
+expect "Done"
+wait_for "netdata steeringdata check $eui64" "NotFound"
+
 set spawn_id $spawn_2
 send "commissioner state\n"
 expect "disabled"

@@ -541,5 +541,42 @@ exit:
     return;
 }
 
+otError LeaderBase::SteeringDataCheck(const FilterIndexes &aFilterIndexes) const
+{
+    otError               error = OT_ERROR_NONE;
+    const MeshCoP::Tlv *  steeringDataTlv;
+    MeshCoP::SteeringData steeringData;
+
+    steeringDataTlv = GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
+    VerifyOrExit(steeringDataTlv != nullptr, error = OT_ERROR_INVALID_STATE);
+
+    static_cast<const MeshCoP::SteeringDataTlv *>(steeringDataTlv)->CopyTo(steeringData);
+
+    VerifyOrExit(steeringData.Contains(aFilterIndexes), error = OT_ERROR_NOT_FOUND);
+
+exit:
+    return error;
+}
+
+otError LeaderBase::SteeringDataCheckJoiner(const Mac::ExtAddress &aEui64) const
+{
+    FilterIndexes   filterIndexes;
+    Mac::ExtAddress joinerId;
+
+    MeshCoP::ComputeJoinerId(aEui64, joinerId);
+    MeshCoP::SteeringData::CalculateHashBitIndexes(joinerId, filterIndexes);
+
+    return SteeringDataCheck(filterIndexes);
+}
+
+otError LeaderBase::SteeringDataCheckJoiner(const MeshCoP::JoinerDiscerner &aDiscerner) const
+{
+    FilterIndexes filterIndexes;
+
+    MeshCoP::SteeringData::CalculateHashBitIndexes(aDiscerner, filterIndexes);
+
+    return SteeringDataCheck(filterIndexes);
+}
+
 } // namespace NetworkData
 } // namespace ot

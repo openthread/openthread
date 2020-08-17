@@ -42,6 +42,7 @@ On node 1, you should see a print out similar to below:
 - [bind](#bind-ip-port)
 - [close](#close)
 - [connect](#connect-ip-port)
+- [linksecurity](#linksecurity)
 - [open](#open)
 - [send](#send-ip-port-message)
 
@@ -92,6 +93,34 @@ Specifies the peer with which the socket is to be associated.
 
 ```bash
 > udp connect fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234
+Done
+```
+
+### linksecurity
+
+Indicates whether the link security is enabled or disabled.
+
+```bash
+> udp linksecurity
+Enabled
+Done
+```
+
+### linksecurity enable
+
+Enable link security.
+
+```bash
+> udp linksecurity enable
+Done
+```
+
+### linksecurity disable
+
+Disable link security.
+
+```bash
+> udp linksecurity disable
 Done
 ```
 

@@ -419,7 +419,7 @@ public:
      * @param[out]  aTlv  A reference to the tlv to be filled.
      *
      */
-    void FillRouteTlv(RouteTlv &aTlv);
+    void FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor = nullptr);
 
     /**
      * This method generates an MLE Child Update Request message to be sent to the parent.
@@ -477,27 +477,17 @@ public:
     otError GetMaxChildTimeout(uint32_t &aTimeout) const;
 
     /**
-     * This method register the "neighbor table changed" callback function.
+     * This function sets the callback that is called when processing an MLE Discovery Request message.
      *
-     * The provided callback (if non-nullptr) will be invoked when a child/router entry is being added/remove to/from
-     * the neighbor table. Subsequent calls to this method will overwrite the previous callback.
-     *
-     * @param[in] aCallback    A pointer to callback handler function.
+     * @param[in]  aCallback A pointer to a function that is called to deliver MLE Discovery Request data.
+     * @param[in]  aContext  A pointer to application-specific context.
      *
      */
-    void RegisterNeighborTableChangedCallback(otNeighborTableCallback aCallback)
+    void SetDiscoveryRequestCallback(otThreadDiscoveryRequestCallback aCallback, void *aContext)
     {
-        mNeighborTableChangedCallback = aCallback;
+        mDiscoveryRequestCallback        = aCallback;
+        mDiscoveryRequestCallbackContext = aContext;
     }
-
-    /**
-     * This method signals a "neighbor table changed" events (invoking the registered callback function).
-     *
-     * @param[in] aEvent     The event to emit (child/router added/removed).
-     * @param[in] aNeighbor  The neighbor that is being added/removed.
-     *
-     */
-    void Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor);
 
     /**
      * This method resets the MLE Advertisement Trickle timer interval.
@@ -569,7 +559,7 @@ private:
 
     otError AppendConnectivity(Message &aMessage);
     otError AppendChildAddresses(Message &aMessage, Child &aChild);
-    otError AppendRoute(Message &aMessage);
+    otError AppendRoute(Message &aMessage, Neighbor *aNeighbor = nullptr);
     otError AppendActiveDataset(Message &aMessage);
     otError AppendPendingDataset(Message &aMessage);
     void    HandleDetachStart(void);
@@ -669,8 +659,6 @@ private:
     ChildTable  mChildTable;
     RouterTable mRouterTable;
 
-    otNeighborTableCallback mNeighborTableChangedCallback;
-
     uint8_t   mChallengeTimeout;
     Challenge mChallenge;
 
@@ -706,6 +694,9 @@ private:
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     MeshCoP::SteeringData mSteeringData;
 #endif
+
+    otThreadDiscoveryRequestCallback mDiscoveryRequestCallback;
+    void *                           mDiscoveryRequestCallbackContext;
 };
 
 #endif // OPENTHREAD_FTD

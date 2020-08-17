@@ -332,6 +332,23 @@ do_package()
     ls "${builddir}"/openthread-daemon-*.deb
 }
 
+do_tar()
+{
+    local target_name="openthread-simulation-$1"
+    local build_dir="${OT_BUILDDIR}/cmake"
+    tar -cf "${target_name}.tar" -C "${build_dir}" "${target_name}"
+    mv "${target_name}.tar" "${build_dir}/"
+    rm -rf "${build_dir:?}/${target_name}"
+}
+
+do_untar()
+{
+    local target_name="openthread-simulation-$1"
+    local build_dir="${OT_BUILDDIR}/cmake"
+    tar -xf "${build_dir}/${target_name}.tar" -C "${build_dir}"
+    rm "${build_dir:?}/${target_name}.tar"
+}
+
 envsetup()
 {
     if [[ ${NODE_MODE} == 'rcp' ]]; then
@@ -417,6 +434,14 @@ main()
             expect)
                 shift
                 do_expect "$@"
+                ;;
+            tar)
+                shift
+                do_tar "$1"
+                ;;
+            untar)
+                shift
+                do_untar "$1"
                 ;;
         esac
         shift

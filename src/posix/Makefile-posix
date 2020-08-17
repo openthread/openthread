@@ -70,6 +70,7 @@ endif
 
 COMMONCFLAGS                         := \
     -g                                  \
+    -DOPENTHREAD_CONFIG_UART_CLI_RAW=1  \
     $(NULL)
 
 # If the user has asserted COVERAGE, alter the configuration options
@@ -108,6 +109,7 @@ endif
 
 ifneq ($(READLINE),)
 configure_OPTIONS              += --with-readline=$(READLINE)
+CLI_TRANSPORT                   = $(if $(and $(filter-out no,$(READLINE)),$(filter 0,$(DAEMON))),CONSOLE,UART)
 endif
 
 ifeq ($(RCP_BUS),spi)

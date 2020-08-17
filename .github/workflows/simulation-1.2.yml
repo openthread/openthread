@@ -61,7 +61,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build
+        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build python3-setuptools python3-wheel
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -71,5 +71,21 @@ jobs:
       run: |
         ./script/test unit
         ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
+    - name: Keep-1-2-only
+      run: |
+        ./script/test tar 1.1
+        ./script/test tar 1.2-bbr
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+    - name: Keep-1-2-bbr-only
+      run: |
+        ./script/test tar 1.2
+        ./script/test untar 1.2-bbr
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+    - name: Keep-1-1-only
+      run: |
+        ./script/test tar 1.2-bbr
+        ./script/test untar 1.1
     - name: Codecov
       uses: codecov/codecov-action@v1

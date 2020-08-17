@@ -784,7 +784,7 @@ public:
      * @param[out]  aSteeringData   A reference to a `SteeringData` to copy into.
      *
      */
-    void CopyTo(SteeringData &aSteeringData);
+    void CopyTo(SteeringData &aSteeringData) const;
 
 private:
     uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];
@@ -1614,6 +1614,18 @@ public:
     uint8_t GetProvisioningUrlLength(void) const
     {
         return GetLength() <= sizeof(mProvisioningUrl) ? GetLength() : sizeof(mProvisioningUrl);
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const
+    {
+        return GetType() == kProvisioningUrl && mProvisioningUrl[GetProvisioningUrlLength()] == '\0';
     }
 
     /**

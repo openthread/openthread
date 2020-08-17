@@ -107,7 +107,7 @@ otError Udp::Socket::Connect(const SockAddr &aSockAddr)
 
 otError Udp::Socket::Connect(uint16_t aPort)
 {
-    return Bind(SockAddr(aPort));
+    return Connect(SockAddr(aPort));
 }
 
 otError Udp::Socket::Close(void)
