@@ -33,6 +33,7 @@ Done
 - [commissioner](README_COMMISSIONER.md)
 - [contextreusedelay](#contextreusedelay)
 - [counters](#counters)
+- [csl](#csl)
 - [dataset](README_DATASET.md)
 - [delaytimermin](#delaytimermin)
 - [diag](#diag)
@@ -496,6 +497,45 @@ Reset the counter value.
 > counters mac reset
 Done
 > counters mle reset
+Done
+```
+
+### csl
+
+Get the CSL configuration.
+
+```bash
+> csl
+Channel: 11
+Period: 1000 (in units of 10 symbols), 160ms
+Timeout: 1000s
+Done
+```
+
+### csl channel \<channel\>
+
+Set CSL channel.
+
+```bash
+> csl channel 20
+Done
+```
+
+### csl period \<period\>
+
+Set CSL period in units of 10 symbols. Disable CSL by setting this parameter to `0`.
+
+```bash
+> csl period 3000
+Done
+```
+
+### csl timeout \<timeout\>
+
+Set the CSL timeout in seconds.
+
+```bash
+> csl timeout 10
 Done
 ```
 

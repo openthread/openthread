@@ -101,6 +101,8 @@ public:
         kActiveDataset       = 24, ///< Active Operational Dataset TLV
         kPendingDataset      = 25, ///< Pending Operational Dataset TLV
         kDiscovery           = 26, ///< Thread Discovery TLV
+        kCslChannel          = 80, ///< CSL Channel TLV
+        kCslTimeout          = 85, ///< CSL Timeout TLV
 
         /**
          * Applicable/Required only when time synchronization service
@@ -1195,6 +1197,73 @@ public:
      */
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 } OT_TOOL_PACKED_END;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+/**
+ * This class implements CSL Channel TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CslChannelTlv : public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kCslChannel);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Channel Page value.
+     *
+     * @returns The Channel Page value.
+     *
+     */
+    uint8_t GetChannelPage(void) const { return mChannelPage; }
+
+    /**
+     * This method sets the Channel Page value.
+     *
+     * @param[in]  aChannelPage  The Channel Page value.
+     *
+     */
+    void SetChannelPage(uint8_t aChannelPage) { mChannelPage = aChannelPage; }
+
+    /**
+     * This method returns the Channel value.
+     *
+     * @returns The Channel value.
+     *
+     */
+    uint16_t GetChannel(void) const { return HostSwap16(mChannel); }
+
+    /**
+     * This method sets the Channel value.
+     *
+     * @param[in]  aChannel  The Channel value.
+     *
+     */
+    void SetChannel(uint16_t aChannel) { mChannel = HostSwap16(aChannel); }
+
+private:
+    uint8_t  mChannelPage;
+    uint16_t mChannel;
+} OT_TOOL_PACKED_END;
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 /**
  * @}

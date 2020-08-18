@@ -941,11 +941,13 @@ void Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
     uint8_t *cur = GetHeaderIe(Frame::kHeaderIeCsl);
     CslIe *  csl;
 
-    OT_ASSERT(cur != nullptr);
+    VerifyOrExit(cur != nullptr, OT_NOOP);
 
     csl = reinterpret_cast<CslIe *>(cur + sizeof(HeaderIe));
     csl->SetPeriod(aCslPeriod);
     csl->SetPhase(aCslPhase);
+exit:
+    return;
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 

@@ -35,6 +35,9 @@
 
 #include <stdio.h>
 
+#include <openthread/platform/time.h>
+
+#include "mac_frame.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -62,6 +65,13 @@ SubMac::SubMac(Instance &aInstance)
     , mFrameCounter(0)
     , mKeyId(0)
     , mTimer(aInstance, SubMac::HandleTimer, this)
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    , mCslTimeout(OPENTHREAD_CONFIG_CSL_TIMEOUT)
+    , mCslPeriod(0)
+    , mCslChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
+    , mCslState(kCslIdle)
+    , mCslTimer(aInstance, SubMac::HandleCslTimer, this)
+#endif
 {
     mExtAddress.Clear();
     mPrevKey.Clear();
@@ -143,6 +153,7 @@ otError SubMac::Enable(void)
 
     SuccessOrExit(error = Get<Radio>().Enable());
     SuccessOrExit(error = Get<Radio>().Sleep());
+
     SetState(kStateSleep);
 
 exit:
@@ -195,6 +206,36 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+otError SubMac::CslSample(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    switch (mCslState)
+    {
+    case kCslSample:
+        error = Get<Radio>().Receive(mCslChannel);
+        break;
+    case kCslSleep:
+        error = Get<Radio>().Sleep();
+        break;
+    case kCslIdle:
+        ExitNow(error = OT_ERROR_INVALID_STATE);
+    default:
+        OT_ASSERT(false);
+    }
+
+    SetState(kStateCslSample);
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMac("CslSample() failed, error: %s", otThreadErrorToString(error));
+    }
+    return error;
+}
+#endif
+
 void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
 {
     if (mPcapCallback && (aFrame != nullptr) && (aError == OT_ERROR_NONE))
@@ -218,6 +259,9 @@ otError SubMac::Send(void)
     {
     case kStateDisabled:
     case kStateCsmaBackoff:
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    case kStateCslTransmit:
+#endif
     case kStateTransmit:
     case kStateEnergyScan:
         ExitNow(error = OT_ERROR_INVALID_STATE);
@@ -225,6 +269,9 @@ otError SubMac::Send(void)
 
     case kStateSleep:
     case kStateReceive:
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    case kStateCslSample:
+#endif
         break;
     }
 
@@ -278,6 +325,30 @@ void SubMac::StartCsmaBackoff(void)
     uint32_t backoff;
     uint32_t backoffExponent = kMinBE + mTransmitRetries + mCsmaBackoffs;
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    if (mTransmitFrame.mInfo.mTxInfo.mPeriod != 0)
+    {
+        uint32_t phaseNow     = (otPlatTimeGet() / kUsPerTenSymbols) % mTransmitFrame.mInfo.mTxInfo.mPeriod;
+        uint32_t phaseDesired = mTransmitFrame.mInfo.mTxInfo.mPhase;
+
+        SetState(kStateCslTransmit);
+
+        if (phaseNow < phaseDesired)
+        {
+            mTimer.Start((phaseDesired - phaseNow) * kUsPerTenSymbols);
+        }
+        else if (phaseNow > phaseDesired)
+        {
+            mTimer.Start((phaseDesired + mTransmitFrame.mInfo.mTxInfo.mPeriod - phaseNow) * kUsPerTenSymbols);
+        }
+        else
+        {
+            BeginTransmit();
+        }
+
+        ExitNow();
+    }
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     SetState(kStateCsmaBackoff);
 
     VerifyOrExit(ShouldHandleCsmaBackOff(), BeginTransmit());
@@ -315,9 +386,13 @@ void SubMac::BeginTransmit(void)
 
     OT_UNUSED_VARIABLE(error);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    VerifyOrExit(mState == kStateCsmaBackoff || mState == kStateCslTransmit, OT_NOOP);
+#else
     VerifyOrExit(mState == kStateCsmaBackoff, OT_NOOP);
+#endif
 
-    mTransmitFrame.SetCsmaCaEnabled(true);
+    mTransmitFrame.SetCsmaCaEnabled(mTransmitFrame.mInfo.mTxInfo.mPeriod != 0);
 
     if ((mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX) == 0)
     {
@@ -454,11 +529,17 @@ otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     case kStateDisabled:
     case kStateCsmaBackoff:
     case kStateTransmit:
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    case kStateCslTransmit:
+#endif
     case kStateEnergyScan:
         ExitNow(error = OT_ERROR_INVALID_STATE);
 
     case kStateReceive:
     case kStateSleep:
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    case kStateCslSample:
+#endif
         break;
     }
 
@@ -529,6 +610,11 @@ void SubMac::HandleTimer(void)
 {
     switch (mState)
     {
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    case kStateCslTransmit:
+        BeginTransmit();
+        break;
+#endif
     case kStateCsmaBackoff:
         BeginTransmit();
         break;
@@ -723,12 +809,148 @@ const char *SubMac::StateToString(State aState)
     case kStateEnergyScan:
         str = "EnergyScan";
         break;
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    case kStateCslTransmit:
+        str = "CslTransmit";
+        break;
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    case kStateCslSample:
+        str = "CslSample";
+        break;
+#endif
     }
 
     return str;
 }
 
 // LCOV_EXCL_STOP
+
+//---------------------------------------------------------------------------------------------------------------------
+// CSL Receiver methods
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+void SubMac::SetCslChannel(uint8_t aChannel)
+{
+    mCslChannel = aChannel;
+}
+
+void SubMac::SetCslPeriod(uint16_t aPeriod)
+{
+    VerifyOrExit(mCslPeriod != aPeriod, OT_NOOP);
+
+    mCslPeriod = aPeriod;
+
+    mCslTimer.Stop();
+
+    if (mCslPeriod > 0)
+    {
+        mCslSampleTime = mCslTimer.GetNow();
+        Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetValue());
+
+        mCslState = kCslSample;
+        HandleCslTimer();
+    }
+    else
+    {
+        mCslState = kCslIdle;
+
+        if (mState == kStateCslSample)
+        {
+            IgnoreError(Get<Radio>().Sleep());
+            SetState(kStateSleep);
+        }
+    }
+
+    otLogDebgMac("Csl Period: %u", mCslPeriod);
+
+exit:
+    return;
+}
+
+void SubMac::SetCslTimeout(uint32_t aTimeout)
+{
+    mCslTimeout = aTimeout;
+}
+
+void SubMac::FillCsl(Frame &aFrame)
+{
+    uint8_t *cur = aFrame.GetHeaderIe(Frame::kHeaderIeCsl);
+
+    if (cur != nullptr)
+    {
+        CslIe *csl = reinterpret_cast<CslIe *>(cur + sizeof(HeaderIe));
+
+        csl->SetPeriod(mCslPeriod);
+        csl->SetPhase(GetCslPhase());
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        otLogDebgMac("%10u:FillCsl() seq=%u phase=%hu", static_cast<uint32_t>(otPlatTimeGet()), aFrame.GetSequence(),
+                     csl->GetPhase());
+#endif
+    }
+}
+
+void SubMac::HandleCslTimer(Timer &aTimer)
+{
+    aTimer.GetOwner<SubMac>().HandleCslTimer();
+}
+
+void SubMac::HandleCslTimer(void)
+{
+    switch (mCslState)
+    {
+    case kCslSample:
+        mCslState = kCslSleep;
+        // kUsPerTenSymbols: computing CSL Phase using floor division.
+        mCslTimer.StartAt(mCslSampleTime, mCslPeriod * kUsPerTenSymbols - kUsPerTenSymbols);
+        if (mState == kStateCslSample)
+        {
+            IgnoreError(Get<Radio>().Sleep());
+            otLogDebgMac("CSL sleep %u", mCslTimer.GetNow().GetValue());
+        }
+        break;
+
+    case kCslSleep:
+        mCslState = kCslSample;
+
+        mCslSampleTime += mCslPeriod * kUsPerTenSymbols;
+        Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetValue());
+
+        mCslTimer.StartAt(mCslSampleTime, kCslSampleWindow);
+
+        if (mState == kStateCslSample)
+        {
+            IgnoreError(Get<Radio>().Receive(mCslChannel));
+            otLogDebgMac("CSL Sample %u", mCslTimer.GetNow().GetValue());
+        }
+        break;
+
+    case kCslIdle:
+        break;
+
+    default:
+        OT_ASSERT(false);
+        break;
+    }
+}
+
+uint16_t SubMac::GetCslPhase(void) const
+{
+    TimeMicro now = TimerMicro::GetNow();
+    uint32_t  delta;
+
+    if (mCslSampleTime < now)
+    {
+        delta = mCslSampleTime + mCslPeriod * kUsPerTenSymbols - now;
+    }
+    else
+    {
+        delta = mCslSampleTime - now;
+    }
+
+    return static_cast<uint16_t>(delta / kUsPerTenSymbols);
+}
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 } // namespace Mac
 } // namespace ot

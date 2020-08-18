@@ -229,6 +229,7 @@ def create_default_mle_tlvs_factories():
         mle.TlvType.PANID: mle.PanIdFactory(),
         mle.TlvType.ACTIVE_TIMESTAMP: mle.ActiveTimestampFactory(),
         mle.TlvType.PENDING_TIMESTAMP: mle.PendingTimestampFactory(),
+        mle.TlvType.CSL_SYNCHRONIZED_TIMEOUT: mle.CslSynchronizedTimeoutFactory(),
         mle.TlvType.ACTIVE_OPERATIONAL_DATASET: mle.ActiveOperationalDatasetFactory(),
         mle.TlvType.PENDING_OPERATIONAL_DATASET: mle.PendingOperationalDatasetFactory(),
         mle.TlvType.TIME_REQUEST: mle.TimeRequestFactory(),

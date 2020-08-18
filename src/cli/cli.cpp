@@ -132,6 +132,9 @@ const struct Command Interpreter::sCommands[] = {
     {"contextreusedelay", &Interpreter::ProcessContextIdReuseDelay},
 #endif
     {"counters", &Interpreter::ProcessCounters},
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    {"csl", &Interpreter::ProcessCsl},
+#endif
     {"dataset", &Interpreter::ProcessDataset},
 #if OPENTHREAD_FTD
     {"delaytimermin", &Interpreter::ProcessDelayTimerMin},
@@ -1282,6 +1285,44 @@ void Interpreter::ProcessCounters(uint8_t aArgsLength, char *aArgs[])
 exit:
     AppendResult(error);
 }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+void Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
+{
+    otError error = OT_ERROR_INVALID_ARGS;
+
+    if (aArgsLength == 0)
+    {
+        OutputFormat("Channel: %u\r\n", otLinkCslGetChannel(mInstance));
+        OutputFormat("Period: %u(in units of 10 symbols), %ums\r\n", otLinkCslGetPeriod(mInstance),
+                     otLinkCslGetPeriod(mInstance) * kUsPerTenSymbols / 1000);
+        OutputFormat("Timeout: %us\r\n", otLinkCslGetTimeout(mInstance));
+        error = OT_ERROR_NONE;
+    }
+    else if (aArgsLength == 2)
+    {
+        long value;
+
+        SuccessOrExit(error = ParseLong(argv[1], value));
+
+        if (strcmp(argv[0], "channel") == 0)
+        {
+            SuccessOrExit(error = otLinkCslSetChannel(mInstance, static_cast<uint8_t>(value)));
+        }
+        else if (strcmp(argv[0], "period") == 0)
+        {
+            SuccessOrExit(error = otLinkCslSetPeriod(mInstance, static_cast<uint16_t>(value)));
+        }
+        else if (strcmp(argv[0], "timeout") == 0)
+        {
+            SuccessOrExit(error = otLinkCslSetTimeout(mInstance, static_cast<uint32_t>(value)));
+        }
+    }
+
+exit:
+    AppendResult(error);
+}
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessDelayTimerMin(uint8_t aArgsLength, char *aArgs[])

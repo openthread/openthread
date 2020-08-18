@@ -307,6 +307,7 @@ private:
     void ProcessContextIdReuseDelay(uint8_t aArgsLength, char *aArgs[]);
 #endif
     void ProcessCounters(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessCsl(uint8_t aArgsLength, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessDelayTimerMin(uint8_t aArgsLength, char *aArgs[]);
 #endif

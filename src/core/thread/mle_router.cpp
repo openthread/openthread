@@ -1853,6 +1853,16 @@ void MleRouter::HandleStateUpdateTimer(void)
             OT_UNREACHABLE_CODE(break);
         }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        if (child.IsCslSynchronized() &&
+            TimerMilli::GetNow() - child.GetCslLastHeard() >= Time::SecToMsec(child.GetCslTimeout()))
+        {
+            otLogInfoMle("Child CSL synchronization expired");
+            child.SetCslSynchronized(false);
+            Get<CslTxScheduler>().Update();
+        }
+#endif
+
         if (TimerMilli::GetNow() - child.GetLastHeard() >= timeout)
         {
             otLogInfoMle("Child timeout expired");
@@ -2522,6 +2532,28 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     default:
         ExitNow(error = OT_ERROR_PARSE);
     }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    if (child->IsCslSynchronized())
+    {
+        CslChannelTlv cslChannel;
+        uint32_t      cslTimeout;
+
+        if (Tlv::FindUint32Tlv(aMessage, Tlv::kCslTimeout, cslTimeout) == OT_ERROR_NONE)
+        {
+            child->SetCslTimeout(cslTimeout);
+        }
+
+        if (Tlv::FindTlv(aMessage, Tlv::kCslChannel, sizeof(cslChannel), cslChannel) == OT_ERROR_NONE)
+        {
+            child->SetCslChannel(static_cast<uint8_t>(cslChannel.GetChannel()));
+        }
+        else
+        {
+            child->SetCslChannel(Get<Mac::Mac>().GetPanChannel());
+        }
+    }
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
     child->SetLastHeard(TimerMilli::GetNow());
 

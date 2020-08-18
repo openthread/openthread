@@ -173,6 +173,7 @@ set(COMMON_SOURCES
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
     thread/child_table.cpp
+    thread/csl_tx_scheduler.cpp
     thread/discover_scanner.cpp
     thread/dua_manager.cpp
     thread/energy_scan_server.cpp

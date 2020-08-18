@@ -918,6 +918,12 @@ public:
     otError GetLocatorAddress(Ip6::Address &aAddress, uint16_t aLocator) const;
 
     /**
+     * This method schedules a Child Update Request.
+     *
+     */
+    void ScheduleChildUpdateRequest(void);
+
+    /*
      * This method indicates whether or not the device has restored the network information from
      * non-volatile settings after boot.
      *
@@ -1348,6 +1354,30 @@ protected:
      */
     otError AppendXtalAccuracy(Message &aMessage);
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    /**
+     * This method appends a CSL Channel TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the CSL Channel TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the CSL Channel TLV.
+     *
+     */
+    otError AppendCslChannel(Message &aMessage);
+
+    /**
+     * This method appends a CSL Sync Timeout TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the CSL Timeout TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the CSL Timeout TLV.
+     *
+     */
+    otError AppendCslTimeout(Message &aMessage);
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
      * This method appends a Active Timestamp TLV to a message.

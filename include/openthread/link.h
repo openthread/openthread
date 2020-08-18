@@ -52,6 +52,7 @@ extern "C" {
  * @{
  *
  */
+#define OT_US_PER_TEN_SYMBOLS 160 ///< The microseconds per 10 symbols.
 
 /**
  * This structure represents link-specific information for messages received from the Thread radio.
@@ -1003,6 +1004,72 @@ bool otLinkIsPromiscuous(otInstance *aInstance);
  *
  */
 otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
+
+/**
+ * This function gets the CSL channel.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The CSL channel.
+ *
+ */
+uint8_t otLinkCslGetChannel(otInstance *aInstance);
+
+/**
+ * This function sets the CSL channel.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aChannel       The CSL sample channel.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the CSL parameters.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid @p aChannel.
+ *
+ */
+otError otLinkCslSetChannel(otInstance *aInstance, uint8_t aChannel);
+
+/**
+ * This function gets the CSL period.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The CSL period in units of 10 symbols.
+ *
+ */
+uint16_t otLinkCslGetPeriod(otInstance *aInstance);
+
+/**
+ * This function sets the CSL period.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aPeriod        The CSL period in units of 10 symbols.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the CSL period.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid CSL period.
+ *
+ */
+otError otLinkCslSetPeriod(otInstance *aInstance, uint16_t aPeriod);
+
+/**
+ * This function gets the CSL timeout.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The CSL timeout in seconds.
+ *
+ */
+uint32_t otLinkCslGetTimeout(otInstance *aInstance);
+
+/**
+ * This function sets the CSL timeout.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aTimeout       The CSL timeout in seconds.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the CSL timeout.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid CSL timeout.
+ *
+ */
+otError otLinkCslSetTimeout(otInstance *aInstance, uint32_t aTimeout);
 
 /**
  * This function returns the current CCA (Clear Channel Assessment) failure rate.

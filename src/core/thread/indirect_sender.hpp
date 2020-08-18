@@ -40,6 +40,7 @@
 #include "common/message.hpp"
 #include "mac/data_poll_handler.hpp"
 #include "mac/mac_frame.hpp"
+#include "thread/csl_tx_scheduler.hpp"
 #include "thread/indirect_sender_frame_context.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/src_match_controller.hpp"
@@ -65,6 +66,9 @@ class IndirectSender : public InstanceLocator, public IndirectSenderBase
 {
     friend class Instance;
     friend class DataPollHandler::Callbacks;
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    friend class CslTxScheduler::Callbacks;
+#endif
 
 public:
     /**
@@ -76,6 +80,8 @@ public:
     class ChildInfo
     {
         friend class IndirectSender;
+        friend class DataPollHandler;
+        friend class CslTxScheduler;
         friend class SourceMatchController;
 
     public:
@@ -221,6 +227,9 @@ private:
     bool                  mEnabled;
     SourceMatchController mSourceMatchController;
     DataPollHandler       mDataPollHandler;
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    CslTxScheduler mCslTxScheduler;
+#endif
 };
 
 /**

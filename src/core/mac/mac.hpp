@@ -41,6 +41,7 @@
 
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
+#include "common/time.hpp"
 #include "common/timer.hpp"
 #include "mac/channel_mask.hpp"
 #include "mac/mac_filter.hpp"
@@ -81,12 +82,13 @@ enum
         OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT, ///< macMaxCsmaBackoffs for direct transmissions
     kMaxCsmaBackoffsIndirect =
         OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT, ///< macMaxCsmaBackoffs for indirect transmissions
+    kMaxCsmaBackoffsCsl = 0,                              ///< macMaxCsmaBackoffs for CSL transmissions
 
     kDefaultMaxFrameRetriesDirect =
         OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT, ///< macDefaultMaxFrameRetries for direct transmissions
     kDefaultMaxFrameRetriesIndirect =
         OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT, ///< macDefaultMaxFrameRetries for indirect
-                                                                  ///< transmissions
+    kMaxFrameRetriesCsl = 0,                                      ///< macMaxFrameRetries for CSL transmissions
 
     kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
 };
@@ -215,6 +217,17 @@ public:
      *
      */
     void RequestIndirectFrameTransmission(void);
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    /**
+     * This method requests `Mac` to start a Csl Tx operation after a delay of @p aDelay time.
+     *
+     * @param[in]  aDelay  Delay time for `Mac` to start a Csl Tx, in units of milliseconds.
+     *
+     */
+    void RequestCslFrameTransmission(uint32_t aDelay);
+#endif
+
 #endif
 
     /**
@@ -663,6 +676,65 @@ public:
      */
     bool IsEnabled(void) const { return mEnabled; }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    /**
+     * This method gets the CSL channel.
+     *
+     * @returns CSL channel.
+     *
+     */
+    uint8_t GetCslChannel(void) const { return mSubMac.GetCslChannel(); }
+
+    /**
+     * This method sets the CSL channel.
+     *
+     * @param[in]  aChannel  The CSL channel.
+     *
+     */
+    void SetCslChannel(uint8_t aChannel);
+
+    /**
+     * This method gets the CSL period.
+     *
+     * @returns CSL period in units of 10 symbols.
+     *
+     */
+    uint16_t GetCslPeriod(void) const { return mSubMac.GetCslPeriod(); }
+
+    /**
+     * This method sets the CSL period.
+     *
+     * @param[in]  aPeriod  The CSL period in 10 symbols.
+     *
+     */
+    void SetCslPeriod(uint16_t aPeriod);
+
+    /**
+     * This method gets the CSL timeout.
+     *
+     * @returns CSL timeout in seconds.
+     *
+     */
+    uint32_t GetCslTimeout(void) const { return mSubMac.GetCslTimeout(); }
+
+    /**
+     * This method sets the CSL timeout.
+     *
+     * @param[in]  aTimeout  The CSL timeout in seconds.
+     *
+     */
+    void SetCslTimeout(uint32_t aTimeout);
+
+    /**
+     * This method indicates whether CSL is started at the moment.
+     *
+     * @retval TURE if CSL is actually running at the moment, FALSE otherwise.
+     *
+     */
+    bool IsCslEnabled(void) const;
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     /**
      * This method appends header IEs to a TX-frame according to its
@@ -675,8 +747,8 @@ public:
      * @retval OT_ERROR_NOT_FOUND  If cannot find header IE position in the frame.
      *
      */
-    static otError AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame);
-#endif
+    otError AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame) const;
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
     /**
      * This method updates frame control field.
@@ -685,11 +757,12 @@ public:
      * If this is a csl transmission frame or header IE is present in this frame,
      * the version should be set to 2015. Otherwise, the version would be set to 2006.
      *
+     * @param[in]   aNeighbor    A pointer to the destination device, could be `nullptr`.
      * @param[in]   aIsTimeSync  A boolean indicates if time sync is being used.
      * @param[out]  aFcf         A reference to the frame control field to set.
      *
      */
-    static void UpdateFrameControlField(bool aIsTimeSync, uint16_t &aFcf);
+    void UpdateFrameControlField(const Neighbor *aNeighbor, bool aIsTimeSync, uint16_t &aFcf) const;
 
 private:
     enum
@@ -708,6 +781,9 @@ private:
         kOperationTransmitDataDirect,
 #if OPENTHREAD_FTD
         kOperationTransmitDataIndirect,
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        kOperationTransmitDataCsl,
+#endif
 #endif
         kOperationTransmitPoll,
         kOperationWaitingForData,
@@ -737,8 +813,8 @@ private:
     };
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
-    void    ProcessTransmitSecurity(TxFrame &aFrame);
     otError ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
+    void    ProcessTransmitSecurity(TxFrame &aFrame);
     void    UpdateIdleMode(void);
     void    StartOperation(Operation aOperation);
     void    FinishOperation(void);
@@ -771,6 +847,9 @@ private:
     uint8_t GetTimeIeOffset(const Frame &aFrame);
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
+#endif
     static const char *OperationToString(Operation aOperation);
 
     static const otMacKey        sMode2Key;
@@ -786,6 +865,9 @@ private:
     bool mPendingTransmitDataDirect : 1;
 #if OPENTHREAD_FTD
     bool mPendingTransmitDataIndirect : 1;
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    bool mPendingTransmitDataCsl : 1;
 #endif
     bool mPendingTransmitPoll : 1;
     bool mPendingTransmitOobFrame : 1;
@@ -819,6 +901,9 @@ private:
     uint8_t     mMaxFrameRetriesDirect;
 #if OPENTHREAD_FTD
     uint8_t mMaxFrameRetriesIndirect;
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    TimeMilli mCslTxFireTime;
 #endif
 
     union

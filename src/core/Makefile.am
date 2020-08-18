@@ -215,6 +215,7 @@ SOURCES_COMMON                             = \
     thread/announce_begin_server.cpp         \
     thread/announce_sender.cpp               \
     thread/child_table.cpp                   \
+    thread/csl_tx_scheduler.cpp              \
     thread/discover_scanner.cpp              \
     thread/dua_manager.cpp                   \
     thread/energy_scan_server.cpp            \
@@ -431,6 +432,7 @@ HEADERS_COMMON                             = \
     thread/announce_sender.hpp               \
     thread/child_mask.hpp                    \
     thread/child_table.hpp                   \
+    thread/csl_tx_scheduler.hpp              \
     thread/discover_scanner.hpp              \
     thread/dua_manager.hpp                   \
     thread/energy_scan_server.hpp            \

@@ -297,6 +297,22 @@ public:
      */
     otError Receive(uint8_t aChannel);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    /**
+     * This method lets `SubMac` start CSL sample.
+     *
+     * `SubMac` would switch the radio state between `Receive` and `Sleep` according the CSL timer. When CslSample is
+     * started, `mState` will become `kStateCslSample`. But it could be doing `Sleep` or `Receive` at this moment
+     * (depending on `mCslState`).
+     *
+     * @retval OT_ERROR_NONE          Successfully entered CSL operation (sleep or receive according to CSL timer).
+     * @retval OT_ERROR_BUSY          The radio was transmitting.
+     * @retval OT_ERROR_INVALID_STATE The radio was disabled.
+     *
+     */
+    otError CslSample(void);
+#endif
+
     /**
      * This method gets the radio transmit frame.
      *
@@ -355,6 +371,65 @@ public:
      */
     int8_t GetNoiseFloor(void);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+    /**
+     * This method gets the CSL channel.
+     *
+     * @returns CSL channel.
+     *
+     */
+    uint8_t GetCslChannel(void) const { return mCslChannel; }
+
+    /**
+     * This method sets the CSL channel.
+     *
+     * @param[in]  aChannel  The CSL channel.
+     *
+     */
+    void SetCslChannel(uint8_t aChannel);
+
+    /**
+     * This method gets the CSL period.
+     *
+     * @returns CSL period.
+     *
+     */
+    uint16_t GetCslPeriod(void) const { return mCslPeriod; }
+
+    /**
+     * This method sets the CSL period.
+     *
+     * @param[in]  aPeriod  The CSL period in 10 symbols.
+     *
+     */
+    void SetCslPeriod(uint16_t aPeriod);
+
+    /**
+     * This method gets the CSL timeout.
+     *
+     * @returns CSL timeout
+     *
+     */
+    uint32_t GetCslTimeout(void) const { return mCslTimeout; }
+
+    /**
+     * This method sets the CSL timeout.
+     *
+     * @param[in]  aTimeout  The CSL timeout in seconds.
+     *
+     */
+    void SetCslTimeout(uint32_t aTimeout);
+
+    /**
+     * This method fills the CSL parameter to the frame.
+     *
+     * @param[inout]    aFrame  A reference to the frame to fill CSL parameter.
+     *
+     */
+    void FillCsl(Frame &aFrame);
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
     /**
      * This method sets MAC keys and key index.
      *
@@ -408,6 +483,12 @@ public:
     void SetFrameCounter(uint32_t aFrameCounter);
 
 private:
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    static void HandleCslTimer(Timer &aTimer);
+    void        HandleCslTimer(void);
+    uint16_t    GetCslPhase(void) const;
+#endif
+
     enum
     {
         kMinBE             = 3,  ///< macMinBE (IEEE 802.15.4-2006).
@@ -431,6 +512,12 @@ private:
         kStateCsmaBackoff, ///< CSMA backoff before transmission.
         kStateTransmit,    ///< Radio is transmitting.
         kStateEnergyScan,  ///< Energy scan.
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        kStateCslTransmit, ///< CSL transmission.
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        kStateCslSample, ///< CSL receive.
+#endif
     };
 
     bool RadioSupportsCsmaBackoff(void) const
@@ -489,6 +576,35 @@ private:
 #else
     TimerMilli mTimer;
 #endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    /**
+     * The SSED sample window in units of 10 symbols.
+     *
+     */
+    enum : uint32_t{
+        kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols,
+    };
+
+    /**
+     * Csl state, always updated by `mCslTimer`.
+     *
+     */
+    enum CslState : uint8_t{
+        kCslIdle = 0, ///< CSL receiver is not started.
+        kCslSample,   ///< Sampling CSL channel.
+        kCslSleep,    ///< Radio in sleep.
+    };
+
+    uint32_t  mCslTimeout;    ///< The CSL synchronized timeout in seconds.
+    TimeMicro mCslSampleTime; ///< The CSL sample time of the current period.
+    uint16_t  mCslPeriod;     ///< The CSL sample period, in units of 10 symbols (160 microseconds).
+    uint8_t   mCslChannel;    ///< The CSL sample channel.
+
+    CslState mCslState;
+
+    TimerMicro mCslTimer;
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 };
 
 /**

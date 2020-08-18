@@ -326,4 +326,48 @@
     (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2) && OPENTHREAD_MTD
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD
+ *
+ * This setting configures the minimum CSL period that could be used, in units of milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD
+#define OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD 10
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT
+ *
+ * This setting configures the maximum CSL timeout that could be used, in units of seconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT
+#define OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT 10000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CSL_TIMEOUT
+ *
+ * The default CSL timeout in seconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CSL_TIMEOUT
+#define OPENTHREAD_CONFIG_CSL_TIMEOUT 100
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW
+ *
+ * The CSL sample window in 10 symbols.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW
+#define OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW 5
+#endif
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
 #endif // CONFIG_MAC_H_

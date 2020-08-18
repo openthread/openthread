@@ -1296,6 +1296,11 @@ public:
      *
      */
     otError GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    void SetTxPhase(uint16_t aPhase) { mInfo.mTxInfo.mPhase = aPhase; }
+    void SetTxPeriod(uint16_t aPeriod) { mInfo.mTxInfo.mPeriod = aPeriod; }
+#endif
 };
 
 OT_TOOL_PACKED_BEGIN

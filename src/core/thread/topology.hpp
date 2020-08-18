@@ -45,6 +45,7 @@
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
+#include "thread/csl_tx_scheduler.hpp"
 #include "thread/indirect_sender.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
@@ -614,7 +615,13 @@ private:
  * This class represents a Thread Child.
  *
  */
-class Child : public Neighbor, public IndirectSender::ChildInfo, public DataPollHandler::ChildInfo
+class Child : public Neighbor,
+              public IndirectSender::ChildInfo,
+              public DataPollHandler::ChildInfo
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    ,
+              public CslTxScheduler::ChildInfo
+#endif
 {
     class AddressIteratorBuilder;
 

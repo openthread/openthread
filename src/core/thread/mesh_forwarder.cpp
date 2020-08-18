@@ -434,7 +434,12 @@ otError MeshForwarder::HandleFrameRequest(Mac::TxFrame &aFrame)
         {
             SuccessOrExit(error = Get<Mle::DiscoverScanner>().PrepareDiscoveryRequestFrame(aFrame));
         }
-
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        if (Get<Mac::Mac>().IsCslEnabled() && mSendMessage->IsSubTypeMle())
+        {
+            mSendMessage->SetLinkSecurityEnabled(true);
+        }
+#endif
         mMessageNextOffset =
             PrepareDataFrame(aFrame, *mSendMessage, mMacSource, mMacDest, mAddMeshHeader, mMeshSource, mMeshDest);
 
@@ -508,7 +513,7 @@ start:
     // Initialize MAC header
     fcf = Mac::Frame::kFcfFrameData;
 
-    Get<Mac::Mac>().UpdateFrameControlField(aMessage.IsTimeSync(), fcf);
+    Get<Mac::Mac>().UpdateFrameControlField(Get<NeighborTable>().FindNeighbor(aMacDest), aMessage.IsTimeSync(), fcf);
 
     fcf |= (aMacDest.IsShort()) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
     fcf |= (aMacSource.IsShort()) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;

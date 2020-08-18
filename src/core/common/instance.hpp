@@ -524,6 +524,13 @@ template <> inline DataPollHandler &Instance::Get(void)
     return mThreadNetif.mMeshForwarder.mIndirectSender.mDataPollHandler;
 }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+template <> inline CslTxScheduler &Instance::Get(void)
+{
+    return mThreadNetif.mMeshForwarder.mIndirectSender.mCslTxScheduler;
+}
+#endif
+
 template <> inline AddressResolver &Instance::Get(void)
 {
     return mThreadNetif.mAddressResolver;
