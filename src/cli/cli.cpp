@@ -251,6 +251,8 @@ const struct Command Interpreter::sCommands[] = {
     {"version", &Interpreter::ProcessVersion},
 };
 
+Interpreter *Interpreter::sInterpreter = nullptr;
+
 Interpreter::Interpreter(Instance *aInstance)
     : mUserCommands(nullptr)
     , mUserCommandsLength(0)
@@ -4679,8 +4681,12 @@ extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 
+    VerifyOrExit(Interpreter::IsInitialized(), OT_NOOP);
+
     Interpreter::GetInterpreter().OutputFormatV(aFormat, aArgs);
     Interpreter::GetInterpreter().OutputFormat("\r\n");
+exit:
+    return;
 }
 
 } // namespace Cli
