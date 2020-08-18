@@ -89,8 +89,8 @@ public:
         uint8_t GetCslChannel(void) const { return mCslChannel; }
         void    SetCslChannel(uint8_t aChannel) { mCslChannel = aChannel; }
 
-        uint32_t GetCslSyncTimeout(void) const { return mCslSyncTimeout; }
-        void     SetCslSyncTimeout(uint32_t aTimeout) { mCslSyncTimeout = aTimeout; }
+        uint32_t GetCslSyncTimeout(void) const { return mCslTimeout; }
+        void     SetCslSyncTimeout(uint32_t aTimeout) { mCslTimeout = aTimeout; }
 
         uint16_t GetCslPeriod(void) const { return mCslPeriod; }
         void     SetCslPeriod(uint16_t aPeriod) { mCslPeriod = aPeriod; }
@@ -105,8 +105,8 @@ public:
         uint8_t   mCslTxAttempts : 7;   ///< Number of csl triggered tx attempts.
         bool      mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
         uint8_t   mCslChannel;          ///< The channel the device will listen on.
-        uint32_t  mCslSyncTimeout;      ///< The sync timeout, in microseconds.
-        uint16_t  mCslPeriod;           ///< The CSL sample period in 10 symbols(160 microseconds)
+        uint32_t  mCslTimeout;          ///< The sync timeout, in seconds.
+        uint16_t  mCslPeriod;           ///< CSL sampled listening period in units of 10 symbols (160 microseconds).
         uint16_t  mCslPhase;            ///< The time when the next CSL sample will start.
         TimeMilli mCslLastHeard;        ///< Time when last frame containing CSL IE heard.
 
@@ -139,8 +139,8 @@ public:
          * @param[out] aContext  A reference to a `FrameContext` where the context for the new frame would be placed.
          * @param[in]  aChild    The child for which to prepare the frame.
          *
-         * @retval OT_ERROR_NONE   Frame was prepared successfully
-         * @retval OT_ERROR_ABORT  CSLtransmission to child should be aborted (no frame for the child).
+         * @retval OT_ERROR_NONE   Frame was prepared successfully.
+         * @retval OT_ERROR_ABORT  CSL transmission should be aborted (no frame for the child).
          *
          */
         otError PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
@@ -171,7 +171,7 @@ public:
     explicit CslTxScheduler(Instance &aInstance);
 
     /**
-     * This method updates the next CSL transmission(finds the nearest child).
+     * This method updates the next CSL transmission (finds the nearest child).
      *
      * It would then request the `Mac` to do the CSL tx. If the last CSL tx has been fired at `Mac` but hasn't been
      * done yet, and it's aborted, this method would set `mCslTxChild` to `nullptr` to notify the `HandleTransmitDone`

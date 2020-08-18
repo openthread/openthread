@@ -2243,7 +2243,7 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
                        csl->GetPeriod());
     child->SetCslSynchronized(true);
     child->SetCslLastHeard(TimerMilli::GetNow());
-    otLogDebgMac("Timestamp=%lu Sequence=%u CslPeriod=%hu CslPhase=%hu TransmitPhase=%hu",
+    otLogDebgMac("Timestamp=%u Sequence=%u CslPeriod=%hu CslPhase=%hu TransmitPhase=%hu",
                  static_cast<uint32_t>(aFrame.GetTimestamp()), aFrame.GetSequence(), csl->GetPeriod(), csl->GetPhase(),
                  child->GetCslPhase());
 
