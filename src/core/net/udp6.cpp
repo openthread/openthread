@@ -41,9 +41,8 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
+#include "net/checksum.hpp"
 #include "net/ip6.hpp"
-
-using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 namespace Ip6 {
@@ -364,27 +363,16 @@ exit:
 
 otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 {
-    otError  error = OT_ERROR_NONE;
-    Header   udpHeader;
-    uint16_t payloadLength;
-    uint16_t checksum;
-
-    payloadLength = aMessage.GetLength() - aMessage.GetOffset();
-
-    // check length
-    VerifyOrExit(payloadLength >= sizeof(Header), error = OT_ERROR_PARSE);
-
-    // verify checksum
-    checksum = Ip6::ComputePseudoheaderChecksum(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(), payloadLength,
-                                                kProtoUdp);
-    checksum = aMessage.UpdateChecksum(checksum, aMessage.GetOffset(), payloadLength);
-
-#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(checksum == 0xffff, error = OT_ERROR_DROP);
-#endif
+    otError error = OT_ERROR_NONE;
+    Header  udpHeader;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(udpHeader), &udpHeader) == sizeof(udpHeader),
                  error = OT_ERROR_PARSE);
+
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessageInfo, kProtoUdp));
+#endif
+
     aMessage.MoveOffset(sizeof(udpHeader));
     aMessageInfo.mPeerPort = udpHeader.GetSourcePort();
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
@@ -418,19 +406,6 @@ void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
 
 exit:
     return;
-}
-
-void Udp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
-{
-    aChecksum = aMessage.UpdateChecksum(aChecksum, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
-
-    if (aChecksum != 0xffff)
-    {
-        aChecksum = ~aChecksum;
-    }
-
-    aChecksum = HostSwap16(aChecksum);
-    aMessage.Write(aMessage.GetOffset() + Header::kChecksumFieldOffset, sizeof(aChecksum), &aChecksum);
 }
 
 bool Udp::IsMlePort(uint16_t aPort) const

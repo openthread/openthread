@@ -255,6 +255,14 @@ public:
     Address &GetSource(void) { return mSource; }
 
     /**
+     * This method returns the IPv6 Source address.
+     *
+     * @returns A reference to the IPv6 Source address.
+     *
+     */
+    const Address &GetSource(void) const { return mSource; }
+
+    /**
      * This method sets the IPv6 Source address.
      *
      * @param[in]  aSource  A reference to the IPv6 Source address.
@@ -269,6 +277,14 @@ public:
      *
      */
     Address &GetDestination(void) { return mDestination; }
+
+    /**
+     * This method returns the IPv6 Destination address.
+     *
+     * @returns A reference to the IPv6 Destination address.
+     *
+     */
+    const Address &GetDestination(void) const { return mDestination; }
 
     /**
      * This method sets the IPv6 Destination address.
