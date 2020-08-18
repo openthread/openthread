@@ -235,7 +235,6 @@ class MacFrame:
         if dest_pan_present:
             dest_pan_id = struct.unpack("<H", data.read(2))[0]
         else:
-            print("dest pan id none, seq ", seq)
             dest_pan_id = None
 
         dest_address = self._parse_address(data, dest_addr_mode)
