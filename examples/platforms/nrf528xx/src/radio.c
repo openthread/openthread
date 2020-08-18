@@ -954,7 +954,11 @@ void nrf_802154_tx_ack_started(uint8_t *p_data)
 #endif
 }
 
-void nrf_802154_transmitted_raw(const uint8_t *aFrame, uint8_t *aAckPsdu, int8_t aPower, uint8_t aLqi)
+void nrf_802154_transmitted_timestamp_raw(const uint8_t *aFrame,
+                                          uint8_t *      aAckPsdu,
+                                          int8_t         aPower,
+                                          uint8_t        aLqi,
+                                          uint32_t       ack_time)
 {
     assert(aFrame == sTransmitPsdu);
 
@@ -964,11 +968,15 @@ void nrf_802154_transmitted_raw(const uint8_t *aFrame, uint8_t *aAckPsdu, int8_t
     }
     else
     {
-        sAckFrame.mPsdu               = &aAckPsdu[1];
-        sAckFrame.mLength             = aAckPsdu[0];
-        sAckFrame.mInfo.mRxInfo.mRssi = aPower;
-        sAckFrame.mInfo.mRxInfo.mLqi  = aLqi;
-        sAckFrame.mChannel            = nrf_802154_channel_get();
+        uint32_t offset =
+            (int32_t)otPlatAlarmMicroGetNow() - (int32_t)nrf_802154_first_symbol_timestamp_get(ack_time, aAckPsdu[0]);
+
+        sAckFrame.mInfo.mRxInfo.mTimestamp = nrf5AlarmGetCurrentTime() - offset;
+        sAckFrame.mPsdu                    = &aAckPsdu[1];
+        sAckFrame.mLength                  = aAckPsdu[0];
+        sAckFrame.mInfo.mRxInfo.mRssi      = aPower;
+        sAckFrame.mInfo.mRxInfo.mLqi       = aLqi;
+        sAckFrame.mChannel                 = nrf_802154_channel_get();
     }
 
     setPendingEvent(kPendingEventFrameTransmitted);
