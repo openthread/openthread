@@ -197,7 +197,7 @@ class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
         router2_pkts = pkts.filter_wpan_src64(ROUTER_2)
         reed_pkts = pkts.filter_wpan_src64(REED)
 
-        router2_pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+        router2_pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).filter_wpan_dst64(REED).must_next()
         _start_idx = router2_pkts.index
         reed_pkts.index = _start_idx
 
