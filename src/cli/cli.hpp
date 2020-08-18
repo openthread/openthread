@@ -115,7 +115,12 @@ public:
      * @returns A reference to the interpreter object.
      *
      */
-    static Interpreter &GetInterpreter(void) { return *sInterpreter; }
+    static Interpreter &GetInterpreter(void)
+    {
+        OT_ASSERT(sInterpreter != nullptr);
+
+        return *sInterpreter;
+    }
 
     /**
      * This method returns whether the interpreter is initialized.
