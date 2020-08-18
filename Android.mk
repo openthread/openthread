@@ -31,10 +31,11 @@ LOCAL_PATH := $(call my-dir)
 OPENTHREAD_DEFAULT_VERSION := $(shell cat $(LOCAL_PATH)/.default-version)
 OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --match "[0-9].*" 2> /dev/null)
 OPENTHREAD_PROJECT_CFLAGS ?= -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"
+OPENTHREAD_PROJECT_CONFIG_FILE ?= \<openthread-config-android.h\>
 
 OPENTHREAD_PUBLIC_CFLAGS                                         := \
     -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
-    -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>        \
+    -DOPENTHREAD_CONFIG_FILE=$(OPENTHREAD_PROJECT_CONFIG_FILE)      \
     -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1                  \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
     -DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1                      \
@@ -498,8 +499,8 @@ LOCAL_CPPFLAGS                                                              := \
     -pedantic-errors                                                           \
     $(NULL)
 
-LOCAL_CFLAGS                                               := \
-    -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>  \
+LOCAL_CFLAGS                                                := \
+    -DOPENTHREAD_CONFIG_FILE=$(OPENTHREAD_PROJECT_CONFIG_FILE) \
     $(NULL)
 
 LOCAL_C_INCLUDES                                         := \
