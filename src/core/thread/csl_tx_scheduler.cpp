@@ -90,7 +90,7 @@ void CslTxScheduler::Clear(void)
         child.SetCslTxAttempts(0);
         child.SetCslSynchronized(false);
         child.SetCslChannel(0);
-        child.SetCslSyncTimeout(0);
+        child.SetCslTimeout(0);
         child.SetCslPeriod(0);
         child.SetCslPhase(0);
         child.SetCslLastHeard(TimeMilli(0));

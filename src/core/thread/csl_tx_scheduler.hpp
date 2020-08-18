@@ -89,8 +89,8 @@ public:
         uint8_t GetCslChannel(void) const { return mCslChannel; }
         void    SetCslChannel(uint8_t aChannel) { mCslChannel = aChannel; }
 
-        uint32_t GetCslSyncTimeout(void) const { return mCslTimeout; }
-        void     SetCslSyncTimeout(uint32_t aTimeout) { mCslTimeout = aTimeout; }
+        uint32_t GetCslTimeout(void) const { return mCslTimeout; }
+        void     SetCslTimeout(uint32_t aTimeout) { mCslTimeout = aTimeout; }
 
         uint16_t GetCslPeriod(void) const { return mCslPeriod; }
         void     SetCslPeriod(uint16_t aPeriod) { mCslPeriod = aPeriod; }

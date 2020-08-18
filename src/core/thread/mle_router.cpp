@@ -1855,7 +1855,7 @@ void MleRouter::HandleStateUpdateTimer(void)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         if (child.IsCslSynchronized() &&
-            TimerMilli::GetNow() - child.GetCslLastHeard() >= Time::SecToMsec(child.GetCslSyncTimeout()))
+            TimerMilli::GetNow() - child.GetCslLastHeard() >= Time::SecToMsec(child.GetCslTimeout()))
         {
             otLogInfoMle("Child CSL synchronization expired");
             child.SetCslSynchronized(false);
@@ -2541,7 +2541,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
 
         if (Tlv::FindUint32Tlv(aMessage, Tlv::kCslTimeout, cslTimeout) == OT_ERROR_NONE)
         {
-            child->SetCslSyncTimeout(cslTimeout);
+            child->SetCslTimeout(cslTimeout);
         }
 
         if (Tlv::FindTlv(aMessage, Tlv::kCslChannel, sizeof(cslChannel), cslChannel) == OT_ERROR_NONE)
