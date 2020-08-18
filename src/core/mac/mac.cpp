@@ -1558,6 +1558,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 {
     Address   srcaddr;
     Address   dstaddr;
+    PanId     panid;
     Neighbor *neighbor;
     otError   error = aError;
 
@@ -1601,10 +1602,8 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     }
 
     // Verify destination PAN ID if present
-    if (aFrame->IsDstPanIdPresent())
+    if (OT_ERROR_NONE == aFrame->GetDstPanId(panid))
     {
-        PanId panid;
-        SuccessOrExit(aFrame->GetDstPanId(panid));
         VerifyOrExit(panid == kShortAddrBroadcast || panid == mPanId, error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
     }
 
