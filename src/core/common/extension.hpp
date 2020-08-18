@@ -38,6 +38,7 @@
 
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/notifier.hpp"
 
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
 
@@ -95,6 +96,14 @@ public:
      *
      */
     void SignalNcpInit(Ncp::NcpBase &aNcpInstance);
+
+    /**
+     * This method notifies the extension object of events from  OpenThread `Notifier`.
+     *
+     * @param[in] aEvents   The list of events emitted by `Notifier`.
+     *
+     */
+    void HandleNotifierEvents(Events aEvents);
 
 protected:
     /**

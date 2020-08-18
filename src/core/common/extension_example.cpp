@@ -92,5 +92,12 @@ void ExtensionBase::SignalNcpInit(Ncp::NcpBase &aNcpBase)
     OT_UNUSED_VARIABLE(aNcpBase);
 }
 
+void ExtensionBase::HandleNotifierEvents(Events aEvents)
+{
+    // TODO: Implement vendor extension code here to handle notifier events.
+
+    OT_UNUSED_VARIABLE(aEvents);
+}
+
 } // namespace Extension
 } // namespace ot
