@@ -54,6 +54,9 @@ bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
     case Mac::Address::kTypeExtended:
         VerifyOrExit(dst.GetExtended() == *static_cast<const Mac::ExtAddress *>(aExtAddress), rval = false);
         break;
+
+    case Mac::Address::kTypeNone:
+        break;
     }
 
     SuccessOrExit(frame.GetDstPanId(panid));
