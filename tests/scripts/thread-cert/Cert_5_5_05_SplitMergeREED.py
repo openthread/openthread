@@ -30,7 +30,7 @@
 import unittest
 
 import thread_cert
-from pktverify.consts import MLE_LINK_REQUEST, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE
+from pktverify.consts import MLE_LINK_REQUEST, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, VERSION_TLV, TLV_REQUEST_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, CHALLENGE_TLV, LINK_MARGIN_TLV
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -209,7 +209,7 @@ class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
         _end_idx = router1_pkts.index
 
         # Step 2: The DUT MUST NOT attempt to become an active router by sending an Address Solicit Request
-        reed_pkts.range(_start_idx, _end_idx).filter_coap_request("/a/as").must_not_next()
+        reed_pkts.range(_start_idx, _end_idx).filter_coap_request(ADDR_SOL_URI).must_not_next()
 
         # Step 4: The DUT send a Parent Response to Router_1
         reed_pkts.filter_mle_cmd(MLE_PARENT_RESPONSE).must_next().must_verify(lambda p: p.wpan.dst64 == ROUTER_1)
@@ -219,12 +219,13 @@ class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
 
         # Step 6: DUT send an Address Solicit Request to Leader,
         # receives short address and becomes a router
-        reed_pkts.filter_coap_request("/a/as").must_next().must_verify(
+        reed_pkts.range(router1_pkts.index).filter_coap_request(ADDR_SOL_URI).must_next().must_verify(
             lambda p: p.coap.tlv.ext_mac_addr and p.coap.tlv.status)
 
         # Step 7: DUT send a Multicast Link Request
-        reed_pkts.filter_mle_cmd(MLE_LINK_REQUEST).must_next().must_verify(
-            lambda p: {18, 13, 0, 11, 3, 16} <= set(p.mle.tlv.type))
+        reed_pkts.filter_mle_cmd(MLE_LINK_REQUEST).must_next().must_verify(lambda p: {
+            VERSION_TLV, TLV_REQUEST_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, CHALLENGE_TLV, LINK_MARGIN_TLV
+        } <= set(p.mle.tlv.type))
 
         # Step 8: DUT send Child ID Response to Router_1
         reed_pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next().must_verify(lambda p: p.wpan.dst64 == ROUTER_1)
