@@ -46,8 +46,6 @@
 
 #include "common/code_utils.hpp"
 
-uint64_t gNodeId = 0;
-
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 {
     otInstance *        instance = nullptr;
