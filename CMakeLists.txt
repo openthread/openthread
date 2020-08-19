@@ -123,10 +123,10 @@ if(OT_LOG_OUTPUT)
     message(STATUS "Log output: ${OT_LOG_OUTPUT}")
 endif()
 
-# OT_CONFIG allows users to specify the path to OpenThread project core
+# OT_CONFIG allows users to specify the path to a customized OpenThread
 # config header file. The default value of this parameter is empty string.
 # When not specified by user (value is ""), a platform cmake file may
-# choose to change this variable to provide its own core config header
+# choose to change this variable to provide its own OpenThread config header
 # file instead.
 
 set(OT_CONFIG "" CACHE STRING "OpenThread project-specific config header file chosen by user at configure time")
@@ -144,8 +144,8 @@ elseif(OT_PLATFORM)
 endif()
 
 if(OT_CONFIG)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
-    message(STATUS "Project core config: \"${OT_CONFIG}\"")
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_FILE=\"${OT_CONFIG}\"")
+    message(STATUS "OpenThread Config File: \"${OT_CONFIG}\"")
 endif()
 
 target_compile_definitions(ot-config INTERFACE ${OT_PLATFORM_DEFINES})
