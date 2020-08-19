@@ -30,7 +30,7 @@
 import unittest
 
 import thread_cert
-from pktverify.consts import MLE_ADVERTISEMENT, MLE_LINK_REQUEST, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, VERSION_TLV, TLV_REQUEST_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, CHALLENGE_TLV, LINK_MARGIN_TLV
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_LINK_REQUEST, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, VERSION_TLV, TLV_REQUEST_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, CHALLENGE_TLV, LINK_MARGIN_TLV, NL_MAC_EXTENDED_ADDRESS_TLV, NL_STATUS_TLV
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -225,7 +225,7 @@ class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
         # Step 6: DUT send an Address Solicit Request to Leader,
         # receives short address and becomes a router
         reed_pkts.range(router1_pkts.index).filter_coap_request(ADDR_SOL_URI).must_next().must_verify(
-            lambda p: p.coap.tlv.ext_mac_addr and p.coap.tlv.status)
+            lambda p: {NL_MAC_EXTENDED_ADDRESS_TLV, NL_STATUS_TLV} <= set(p.coap.tlv.type))
 
         # Step 7: DUT send a Multicast Link Request
         reed_pkts.filter_mle_cmd(MLE_LINK_REQUEST).must_next().must_verify(lambda p: {
