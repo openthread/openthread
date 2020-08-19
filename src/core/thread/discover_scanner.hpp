@@ -147,17 +147,6 @@ public:
      */
     otError SetJoinerAdvertisement(uint32_t aOui, const uint8_t *aAdvData, uint8_t aAdvDataLength);
 
-    /**
-     * This method returns Joiner Advertisement.
-     *
-     * @param[out]  aOui            The Vendor OUI for Joiner Advertisement.
-     * @param[out]  aAdvDataLength  The length of the Advertisement data.
-     *
-     * @returns A pointer to the Advertisement data, or NULL if none is set.
-     *
-     */
-    const uint8_t *GetJoinerAdvertisement(uint32_t &aOui, uint8_t &aAdvDataLength);
-
 private:
     enum State
     {

@@ -31,25 +31,13 @@ source "tests/scripts/expect/_common.exp"
 
 set spawn_id [spawn_node 1]
 
-send "advdata\n"
-expect "Done"
 send "advdata 0x0100000000 001122334455\n"
 expect "InvalidArgs"
-send "advdata\n"
-expect "Done"
 send "advdata 0x01000000 001122334455\n"
 expect "InvalidArgs"
-send "advdata\n"
-expect "Done"
 send "advdata 0xffffff 001122334455001122334455001122334455001122334455001122334455001122334455001122334455001122334455001122334455001122334455001122334455\n"
 expect "InvalidArgs"
-send "advdata\n"
-expect "Done"
 send "advdata 0xbbccdd 001122334455\n"
-expect "Done"
-send "advdata\n"
-expect "OUI: 0xbbccdd"
-expect "AdvData: 001122334455"
 expect "Done"
 
 dispose

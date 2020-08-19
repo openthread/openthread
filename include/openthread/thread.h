@@ -286,18 +286,6 @@ otError otThreadSetJoinerAdvertisement(otInstance *   aInstance,
                                        const uint8_t *aAdvData,
                                        uint8_t        aAdvDataLength);
 
-/**
- * This method returns the Thread Joiner Advertisement data set by otThreadSetJoinerAdvertisement.
- *
- * @param[in]   aInstance       A pointer to an OpenThread instance.
- * @param[out]  aOui            The Vendor IEEE OUI value that will be included in the Joiner Advertisement.
- * @param[out]  aAdvDataLength  The length of Advertisement data in bytes.
- *
- * @retval A pointer to the Advertisement data, or NULL if none is set.
- *
- */
-const uint8_t *otThreadGetJoinerAdvertisement(otInstance *aInstance, uint32_t *aOui, uint8_t *aAdvDataLength);
-
 #define OT_JOINER_ADVDATA_MAX_LENGTH 64 ///< Maximum AdvData Length of Joiner Advertisement
 
 /**

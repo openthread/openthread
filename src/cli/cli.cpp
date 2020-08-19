@@ -719,40 +719,21 @@ exit:
 
 void Interpreter::ProcessAdvData(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error = OT_ERROR_NONE;
+    otError       error = OT_ERROR_NONE;
+    unsigned long oui;
+    uint8_t       advData[OT_JOINER_ADVDATA_MAX_LENGTH];
+    int           advDataLength;
 
-    if (aArgsLength == 0)
-    {
-        uint32_t       oui;
-        uint8_t        advDatalength;
-        const uint8_t *advData;
+    VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
 
-        advData = otThreadGetJoinerAdvertisement(mInstance, &oui, &advDatalength);
-        if (advData != nullptr)
-        {
-            OutputFormat("OUI: 0x%06x\r\n", oui);
-            OutputFormat("AdvData: ");
-            OutputBytes(advData, advDatalength);
-            OutputFormat("\r\n");
-        }
-    }
-    else
-    {
-        unsigned long oui;
-        uint8_t       advData[OT_JOINER_ADVDATA_MAX_LENGTH];
-        int           advDataLength;
+    SuccessOrExit(error = ParseUnsignedLong(aArgs[1], oui));
+    VerifyOrExit(oui <= std::numeric_limits<uint32_t>::max(), error = OT_ERROR_INVALID_ARGS);
 
-        VerifyOrExit(aArgsLength == 3, error = OT_ERROR_INVALID_ARGS);
+    advDataLength = Hex2Bin(aArgs[2], advData, sizeof(advData));
+    VerifyOrExit(advDataLength != -1, error = OT_ERROR_INVALID_ARGS);
 
-        SuccessOrExit(error = ParseUnsignedLong(aArgs[1], oui));
-        VerifyOrExit(oui <= std::numeric_limits<uint32_t>::max(), error = OT_ERROR_INVALID_ARGS);
-
-        advDataLength = Hex2Bin(aArgs[2], advData, sizeof(advData));
-        VerifyOrExit(advDataLength != -1, error = OT_ERROR_INVALID_ARGS);
-
-        SuccessOrExit(error = otThreadSetJoinerAdvertisement(mInstance, static_cast<uint32_t>(oui), advData,
-                                                             static_cast<uint8_t>(advDataLength)));
-    }
+    SuccessOrExit(error = otThreadSetJoinerAdvertisement(mInstance, static_cast<uint32_t>(oui), advData,
+                                                         static_cast<uint8_t>(advDataLength)));
 
 exit:
     AppendResult(error);

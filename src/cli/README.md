@@ -103,16 +103,12 @@ Done
 
 ### advdata
 
-Usage: `advdata [oui] [adv-data]`
+Usage: `advdata <oui> <adv-data>`
 
-Print or set the Joiner Advertisement data.
+Set the Joiner Advertisement data.
 
 ```bash
 > advdata 0xbbccdd 001122334455
-Done
-> advdata
-OUI: 0xbbccdd
-AdvData: 001122334455
 Done
 ```
 
