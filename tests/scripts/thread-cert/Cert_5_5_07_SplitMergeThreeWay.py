@@ -149,21 +149,20 @@ class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
             lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
                 p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 1)
 
-        # Step 7:Router_1 MUST attempt to attach to any other Partition
+        # Step 7: Router_1 MUST attempt to attach to any other Partition
         # within range by sending a MLE Parent Request.
         router1_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
             lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
         lreset_stop = router1_pkts.index
 
         # Step 3: The Leader MUST stop sending MLE advertisements.
-        p = leader_pkts.range(lreset_start, lreset_stop)
-        p.filter_mle_cmd(MLE_ADVERTISEMENT).must_not_next()
+        leader_pkts.range(lreset_start, lreset_stop).filter_mle_cmd(MLE_ADVERTISEMENT).must_not_next()
 
         # Step 6: The Leader does not respond to the Parent Requests
-        p = leader_pkts.range(lreset_start, lreset_stop)
-        p.filter_mle_cmd(MLE_PARENT_RESPONSE).must_not_next()
+        leader_pkts.range(lreset_start, lreset_stop).filter_mle_cmd(MLE_PARENT_RESPONSE).must_not_next()
 
-        # Step 8: Router_1 take over leader role of a new Partition and begin transmitting MLE Advertisements
+        # Step 8: Router_1 take over leader role of a new Partition and begin transmitting
+        # MLE Advertisements
         router1_pkts.copy().filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
             lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
 
@@ -186,7 +185,7 @@ class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
                 ADDRESS16_TLV, NETWORK_DATA_TLV, ROUTE64_TLV, ACTIVE_TIMESTAMP_TLV
             } <= set(p.mle.tlv.type))
 
-        #Step 12: DUT (Router or Leader) MUST respond with a ICMPv6 Echo Reply
+        # Step 12: DUT (Router or Leader) MUST respond with a ICMPv6 Echo Reply
         _lpkts.filter_ping_reply().must_next()
         router2_pkts.filter_ping_reply().must_next()
         router3_pkts.filter_ping_reply().must_next()
