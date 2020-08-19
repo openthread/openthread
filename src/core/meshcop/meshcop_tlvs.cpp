@@ -129,7 +129,7 @@ void NetworkNameTlv::SetNetworkName(const Mac::NameData &aNameData)
     SetLength(len);
 }
 
-void SteeringDataTlv::CopyTo(SteeringData &aSteeringData)
+void SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
 {
     aSteeringData.Init(GetSteeringDataLength());
     memcpy(aSteeringData.GetData(), mSteeringData, GetSteeringDataLength());

@@ -89,6 +89,9 @@ public:
     class ChildInfo
     {
         friend class DataPollHandler;
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        friend class CslTxScheduler;
+#endif
 
     private:
         bool IsDataPollPending(void) const { return mDataPollPending; }

@@ -144,6 +144,17 @@ typedef uint16_t otShortAddress;
 #define OT_EXT_ADDRESS_SIZE 8 ///< Size of an IEEE 802.15.4 Extended Address (bytes)
 
 /**
+ * This enumeration defines constants about size of header IE in ACK.
+ *
+ */
+enum
+{
+    OT_IE_HEADER_IE_SIZE = 2,  ///< Size of IE header in bytes.
+    OT_CSL_IE_SIZE       = 4,  ///< Size of CSL IE content in bytes.
+    OT_ACK_IE_MAX_SIZE   = 16, ///< Max length for header IE in ACK.
+};
+
+/**
  * @struct otExtAddress
  *
  * This structure represents the IEEE 802.15.4 Extended Address.
@@ -213,10 +224,13 @@ typedef struct otRadioFrame
         {
             const otMacKey *mAesKey;            ///< The key used for AES-CCM frame security.
             otRadioIeInfo * mIeInfo;            ///< The pointer to the Header IE(s) related information.
+            uint16_t        mPeriod;            ///< The transmit time period.
+            uint16_t        mPhase;             ///< The transmit time phase.
             uint8_t         mMaxCsmaBackoffs;   ///< Maximum number of backoffs attempts before declaring CCA failure.
             uint8_t         mMaxFrameRetries;   ///< Maximum number of retries allowed after a transmission failure.
             bool            mIsARetx : 1;       ///< True if this frame is a retransmission (ignored by radio driver).
             bool            mCsmaCaEnabled : 1; ///< Set to true to enable CSMA-CA for this packet, false otherwise.
+            bool            mCslPresent : 1;    ///< Set to true if CSL header ie is present.
             bool            mIsSecurityProcessed : 1; ///< True if SubMac should skip the AES processing of this frame.
         } mTxInfo;
 
@@ -865,6 +879,32 @@ bool otPlatRadioIsCoexEnabled(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS  @p aCoexMetrics was NULL.
  */
 otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics);
+
+/**
+ * Enable or disable CSL receiver.
+ *
+ * @param[in]  aInstance     The OpenThread instance structure.
+ * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
+ * @param[in]  aExtAddr      The extended source address of CSL receiver's parent device (when the platforms generate
+ *                           enhanced ack, platforms may need to know acks to which address should include CSL IE).
+ *
+ * @retval  OT_ERROR_NOT_SUPPORTED  Radio driver doesn't support CSL.
+ * @retval  OT_ERROR_FAILED         Other platform specific errors.
+ * @retval  OT_ERROR_NONE           Successfully enabled or disabled CSL.
+ *
+ */
+otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr);
+
+/**
+ * Update CSL sample time in radio driver.
+ *
+ * Sample time is stored in radio driver as a copy to calculate phase when sending ACK with CSL IE.
+ *
+ * @param[in]  aInstance         The OpenThread instance structure.
+ * @param[in]  aCslSampleTime    The latest sample time.
+ *
+ */
+void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime);
 
 /**
  * @}

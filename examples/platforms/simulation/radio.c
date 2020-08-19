@@ -31,6 +31,7 @@
 #include <errno.h>
 
 #include <openthread/dataset.h>
+#include <openthread/link.h>
 #include <openthread/random_noncrypto.h>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
@@ -113,6 +114,17 @@ static int8_t         sCcaEdThresh = -74;
 
 static bool sSrcMatchEnabled = false;
 
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+static uint8_t sAckIeData[OT_ACK_IE_MAX_SIZE];
+static uint8_t sAckIeDataLength = 0;
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+static const uint8_t sCslIeHeader[OT_IE_HEADER_IE_SIZE] = {0x04, 0x0d};
+static uint32_t      sCslSampleTime;
+static uint32_t      sCslPeriod;
+#endif
+
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 static bool sRadioCoexEnabled = true;
 #endif
@@ -138,7 +150,7 @@ static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrig
     }
 }
 
-static bool HasFramePending(const otRadioFrame *aFrame)
+static bool hasFramePending(const otRadioFrame *aFrame)
 {
     bool         rval = false;
     otMacAddress src;
@@ -347,6 +359,17 @@ void platformRadioInit(void)
     sTransmitFrame.mInfo.mTxInfo.mIeInfo = NULL;
 #endif
 }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+static uint16_t getCslPhase(void)
+{
+    uint32_t curTime       = otPlatAlarmMicroGetNow();
+    uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
+    uint32_t diff = ((sCslSampleTime % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
+
+    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
+}
+#endif
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
@@ -630,6 +653,13 @@ void radioSendMessage(otInstance *aInstance)
     }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (sCslPeriod > 0)
+    {
+        otMacFrameSetCslIe(&sTransmitFrame, (uint16_t)sCslPeriod, getCslPhase());
+    }
+#endif
+
     sTransmitMessage.mChannel = sTransmitFrame.mChannel;
 
     otEXPECT(radioProcessTransmitSecurity(&sTransmitFrame) == OT_ERROR_NONE);
@@ -803,7 +833,7 @@ void radioSendAck(void)
 #else
         otMacFrameIsDataRequest(&sReceiveFrame)
 #endif
-        && HasFramePending(&sReceiveFrame))
+        && hasFramePending(&sReceiveFrame))
     {
         sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
     }
@@ -812,9 +842,18 @@ void radioSendAck(void)
     // Use enh-ack for 802.15.4-2015 frames
     if (otMacFrameIsVersion2015(&sReceiveFrame))
     {
-        otEXPECT(otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, NULL, 0,
-                                          &sAckFrame) == OT_ERROR_NONE);
-        otEXPECT(radioProcessTransmitSecurity(&sAckFrame) == OT_ERROR_NONE);
+        otEXPECT(otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending,
+                                          sAckIeData, sAckIeDataLength, &sAckFrame) == OT_ERROR_NONE);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        if (sCslPeriod > 0)
+        {
+            otMacFrameSetCslIe(&sAckFrame, (uint16_t)sCslPeriod, getCslPhase());
+        }
+#endif
+        if (otMacFrameIsSecurityEnabled(&sAckFrame))
+        {
+            otEXPECT(radioProcessTransmitSecurity(&sAckFrame) == OT_ERROR_NONE);
+        }
     }
     else
 #endif
@@ -1015,6 +1054,55 @@ exit:
     return error;
 }
 #endif
+
+uint64_t otPlatRadioGetNow(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return otPlatTimeGet();
+}
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+static otError updateIeData(otInstance *aInstance)
+
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError error  = OT_ERROR_NONE;
+    uint8_t offset = 0;
+
+    if (sCslPeriod > 0)
+    {
+        memcpy(sAckIeData, sCslIeHeader, OT_IE_HEADER_IE_SIZE);
+        offset += OT_IE_HEADER_IE_SIZE + OT_CSL_IE_SIZE; // reserve space for CSL IE
+    }
+
+    sAckIeDataLength = offset;
+
+    return error;
+}
+
+otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aExtAddr);
+
+    otError error = OT_ERROR_NONE;
+
+    sCslPeriod = aCslPeriod;
+
+    error = updateIeData(aInstance);
+
+    return error;
+}
+
+void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sCslSampleTime = aCslSampleTime;
+}
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 void otPlatRadioSetMacKey(otInstance *    aInstance,
                           uint8_t         aKeyIdMode,

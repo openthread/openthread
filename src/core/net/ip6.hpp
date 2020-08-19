@@ -102,17 +102,31 @@ using ot::Encoding::BigEndian::HostSwap32;
 class Ip6 : public InstanceLocator, private NonCopyable
 {
     friend class ot::Instance;
+    friend class Mpl;
 
 public:
-    enum
+    enum : uint16_t
     {
-        kDefaultHopLimit            = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT,
-        kMaxDatagramLength          = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH,
+        /**
+         * The max datagram length (in bytes) of an IPv6 message.
+         *
+         */
+        kMaxDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH,
+
+        /**
+         * The max datagram length (in bytes) of an unfragmented IPv6 message.
+         *
+         */
         kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM,
-        kIp6ReassemblyTimeout       = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT,
-        kMinimalMtu                 = 1280,
-        kStateUpdatePeriod          = 1000,
     };
+
+    /**
+     * This constructor initializes the object.
+     *
+     * @param[in]  aInstance   A reference to the otInstance object.
+     *
+     */
+    explicit Ip6(Instance &aInstance);
 
     /**
      * This method allocates a new message buffer from the buffer pool.
@@ -153,16 +167,6 @@ public:
     Message *NewMessage(const uint8_t *aData, uint16_t aDataLength);
 
     /**
-     * This method converts the message priority level to IPv6 DSCP value.
-     *
-     * @param[in]  aPriority  The message priority level.
-     *
-     * @returns The IPv6 DSCP value.
-     *
-     */
-    static uint8_t PriorityToDscp(Message::Priority aPriority);
-
-    /**
      * This method converts the IPv6 DSCP value to message priority level.
      *
      * @param[in]  aDscp  The IPv6 DSCP value.
@@ -171,14 +175,6 @@ public:
      *
      */
     static Message::Priority DscpToPriority(uint8_t aDscp);
-
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aInstance   A reference to the otInstance object.
-     *
-     */
-    explicit Ip6(Instance &aInstance);
 
     /**
      * This method sends an IPv6 datagram.
@@ -226,24 +222,6 @@ public:
      *
      */
     otError HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost);
-
-    /**
-     * This methods adds a full IPv6 packet to the transmit queue.
-     *
-     * @param aMessage A reference to the message.
-     */
-    void EnqueueDatagram(Message &aMessage);
-
-    /**
-     * This static method updates a checksum.
-     *
-     * @param[in]  aChecksum  The checksum value to update.
-     * @param[in]  aAddress   A reference to an IPv6 address.
-     *
-     * @returns The updated checksum.
-     *
-     */
-    static uint16_t UpdateChecksum(uint16_t aChecksum, const Address &aAddress);
 
     /**
      * This static method computes the pseudoheader checksum.
@@ -344,16 +322,30 @@ public:
     static const char *IpProtoToString(uint8_t aIpProto);
 
 private:
-    enum
+    enum : uint8_t
     {
-        kDefaultIp6MessagePriority = Message::kPriorityNormal,
+        kDefaultHopLimit      = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT,
+        kIp6ReassemblyTimeout = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT,
+    };
+
+    enum : uint16_t
+    {
+        kMinimalMtu = 1280,
+    };
+
+    enum : uint32_t
+    {
+        kStateUpdatePeriod = 1000,
     };
 
     static void HandleSendQueue(Tasklet &aTasklet);
     void        HandleSendQueue(void);
 
-    static otError GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message::Priority &aPriority);
+    static uint8_t  PriorityToDscp(Message::Priority aPriority);
+    static otError  GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message::Priority &aPriority);
+    static uint16_t UpdateChecksum(uint16_t aChecksum, const Address &aAddress);
 
+    void    EnqueueDatagram(Message &aMessage);
     otError ProcessReceiveCallback(const Message &    aMessage,
                                    const MessageInfo &aMessageInfo,
                                    uint8_t            aIpProto,

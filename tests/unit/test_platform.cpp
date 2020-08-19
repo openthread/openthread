@@ -592,20 +592,28 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-uint64_t otPlatTimeGet(void)
-{
-    struct timeval tv;
-
-    gettimeofday(&tv, nullptr);
-
-    return (uint64_t)tv.tv_sec * 1000000 + (uint64_t)tv.tv_usec;
-}
-
 uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return 0;
 }
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aCslPeriod);
+    OT_UNUSED_VARIABLE(aExtAddr);
+
+    return OT_ERROR_NONE;
+}
+
+void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aCslSampleTime);
+}
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
 void otPlatOtnsStatus(const char *aStatus)

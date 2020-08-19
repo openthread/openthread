@@ -43,8 +43,9 @@ import binascii
 
 class Node:
 
-    def __init__(self, nodeid, is_mtd=False, simulator=None, version=None, is_bbr=False):
+    def __init__(self, nodeid, is_mtd=False, simulator=None, name=None, version=None, is_bbr=False):
         self.nodeid = nodeid
+        self.name = name or ('Node%d' % nodeid)
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
         self.env_version = os.getenv('THREAD_VERSION', '1.1')
@@ -657,6 +658,22 @@ class Node:
 
     def set_pollperiod(self, pollperiod):
         self.send_command('pollperiod %d' % pollperiod)
+        self._expect('Done')
+
+    def get_csl_info(self):
+        self.send_command('csl')
+        self._expect('Done')
+
+    def set_csl_channel(self, csl_channel):
+        self.send_command('csl channel %d' % csl_channel)
+        self._expect('Done')
+
+    def set_csl_period(self, csl_period):
+        self.send_command('csl period %d' % csl_period)
+        self._expect('Done')
+
+    def set_csl_timeout(self, csl_timeout):
+        self.send_command('csl timeout %d' % csl_timeout)
         self._expect('Done')
 
     def set_router_upgrade_threshold(self, threshold):

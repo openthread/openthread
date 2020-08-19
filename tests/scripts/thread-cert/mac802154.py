@@ -217,9 +217,25 @@ class MacFrame:
             self.payload = None
             return
 
-        # Presence of PAN Ids is not fully implemented yet but should be enough
-        # for Thread.
-        dest_pan_id = struct.unpack("<H", data.read(2))[0]
+        dest_addr_present = dest_addr_mode != MacHeader.AddressMode.NOT_PRESENT
+        src_addr_present = source_addr_mode != MacHeader.AddressMode.NOT_PRESENT
+
+        if frame_version < 2:
+            dest_pan_present = dest_addr_present
+        else:
+            dest_pan_present = True
+            if not src_addr_present:
+                dest_pan_present = src_pan_present != panid_compression
+            elif not dest_addr_present:
+                dest_pan_present = False
+            else:
+                if dest_addr_mode == MacHeader.AddressMode.EXTENDED and source_addr_mode == MacHeader.AddressMode.EXTENDED and panid_compression:
+                    dest_pan_present = False
+
+        if dest_pan_present:
+            dest_pan_id = struct.unpack("<H", data.read(2))[0]
+        else:
+            dest_pan_id = None
 
         dest_address = self._parse_address(data, dest_addr_mode)
 

@@ -87,6 +87,7 @@ class TlvType(IntEnum):
     ACTIVE_OPERATIONAL_DATASET = 24
     PENDING_OPERATIONAL_DATASET = 25
     THREAD_DISCOVERY = 26
+    CSL_SYNCHRONIZED_TIMEOUT = 85
     TIME_REQUEST = 252
     TIME_PARAMETER = 253
 
@@ -1045,6 +1046,19 @@ class ThreadDiscoveryFactory:
     def parse(self, data, message_info):
         tlvs = self._tlvs_factory.parse(data, message_info)
         return ThreadDiscovery(tlvs)
+
+
+class CslSynchronizedTimeout:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("CslSynchronizedTimeout is not implemented yet.")
+
+
+class CslSynchronizedTimeoutFactory:
+
+    def parse(self, data, message_info):
+        return CslSynchronizedTimeout()
 
 
 class TimeRequest:

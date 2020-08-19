@@ -77,7 +77,6 @@ namespace ot {
 namespace Cli {
 
 class Interpreter;
-class Server;
 
 /**
  * This structure represents a CLI command.
@@ -111,14 +110,34 @@ public:
     explicit Interpreter(Instance *aInstance);
 
     /**
+     * This method returns a reference to the interpreter object.
+     *
+     * @returns A reference to the interpreter object.
+     *
+     */
+    static Interpreter &GetInterpreter(void)
+    {
+        OT_ASSERT(sInterpreter != nullptr);
+
+        return *sInterpreter;
+    }
+
+    /**
+     * This method returns whether the interpreter is initialized.
+     *
+     * @returns  Whether the interpreter is initialized.
+     *
+     */
+    static bool IsInitialized(void) { return sInterpreter != nullptr; }
+
+    /**
      * This method interprets a CLI command.
      *
      * @param[in]  aBuf        A pointer to a string.
      * @param[in]  aBufLength  The length of the string in bytes.
-     * @param[in]  aServer     A reference to the CLI server.
      *
      */
-    void ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer);
+    void ProcessLine(char *aBuf, uint16_t aBufLength);
 
     /**
      * This method parses an ASCII string as a long.
@@ -163,7 +182,20 @@ public:
      *
      * @param[in]  aError Error code value.
      */
-    void AppendResult(otError aError) const;
+    void AppendResult(otError aError);
+
+    /**
+     * This method delivers raw characters to the client.
+     *
+     * @param[in]  aBuf        A pointer to a buffer.
+     * @param[in]  aBufLength  Number of bytes in the buffer.
+     *
+     * @returns The number of bytes placed in the output queue.
+     *
+     * @retval  -1  Driver is broken.
+     *
+     */
+    int Output(const char *aBuf, uint16_t aBufLength);
 
     /**
      * Write a number of bytes to the CLI console as a hex string.
@@ -171,7 +203,31 @@ public:
      * @param[in]  aBytes   A pointer to data which should be printed.
      * @param[in]  aLength  @p aBytes length.
      */
-    void OutputBytes(const uint8_t *aBytes, uint8_t aLength) const;
+    void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
+
+    /**
+     * This method delivers formatted output to the client.
+     *
+     * @param[in]  aFormat  A pointer to the format string.
+     * @param[in]  ...      A variable list of arguments to format.
+     *
+     * @returns The number of bytes placed in the output queue.
+     *
+     * @retval  -1  Driver is broken.
+     *
+     */
+    int OutputFormat(const char *aFormat, ...);
+
+    /**
+     * This method delivers formatted output to the client.
+     *
+     * @param[in]  aFormat      A pointer to the format string.
+     * @param[in]  aArguments   A variable list of arguments for format.
+     *
+     * @returns The number of bytes placed in the output queue.
+     *
+     */
+    int OutputFormatV(const char *aFormat, va_list aArguments);
 
     /**
      * Write an IPv6 address to the CLI console.
@@ -183,7 +239,7 @@ public:
      * @retval  -1  Driver is broken.
      *
      */
-    int OutputIp6Address(const otIp6Address &aAddress) const;
+    int OutputIp6Address(const otIp6Address &aAddress);
 
     /**
      * Set a user command table.
@@ -192,6 +248,9 @@ public:
      * @param[in]  aLength        @p aUserCommands length.
      */
     void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength);
+
+protected:
+    static Interpreter *sInterpreter;
 
 private:
     enum
@@ -202,6 +261,8 @@ private:
         kDefaultPingInterval = 1000, // (in mses)
         kDefaultPingLength   = 8,    // (in bytes)
         kDefaultPingCount    = 1,
+
+        kMaxLineLength = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
     };
 
     otError        ParsePingInterval(const char *aString, uint32_t &aInterval);
@@ -246,6 +307,7 @@ private:
     void ProcessContextIdReuseDelay(uint8_t aArgsLength, char *aArgs[]);
 #endif
     void ProcessCounters(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessCsl(uint8_t aArgsLength, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessDelayTimerMin(uint8_t aArgsLength, char *aArgs[]);
 #endif
@@ -292,6 +354,7 @@ private:
 #if OPENTHREAD_FTD
     void ProcessNeighbor(uint8_t aArgsLength, char *aArgs[]);
 #endif
+    void ProcessNetworkData(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessNetworkDataRegister(uint8_t aArgsLength, char *aArgs[]);
 #endif
@@ -371,6 +434,7 @@ private:
     void ProcessDataset(uint8_t aArgsLength, char *aArgs[]);
     void ProcessTxPower(uint8_t aArgsLength, char *aArgs[]);
     void ProcessUdp(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[]);
     void ProcessVersion(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     void    ProcessMacFilter(uint8_t aArgsLength, char *aArgs[]);
@@ -428,10 +492,15 @@ private:
 #endif
     static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);
 
+    static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
+    {
+        static_cast<Interpreter *>(aContext)->HandleDiscoveryRequest(*aInfo);
+    }
+    void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
+
     static const struct Command sCommands[];
     const otCliCommand *        mUserCommands;
     uint8_t                     mUserCommandsLength;
-    Server *                    mServer;
     uint16_t                    mPingLength;
     uint16_t                    mPingCount;
     uint32_t                    mPingInterval;

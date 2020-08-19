@@ -26,6 +26,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+target_compile_definitions(ot-config INTERFACE
+    OPENTHREAD_CONFIG_UART_CLI_RAW=1
+)
+
 add_executable(ot-cli
     main.c
     $<$<BOOL:${READLINE}>:console_cli.cpp>
@@ -39,6 +43,10 @@ set_target_properties(
 )
 
 target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
+
+if(OT_READLINE)
+    set(OT_CLI_TRANSPORT "CONSOLE" CACHE STRING "set CLI to use console interpreter" FORCE)
+endif()
 
 target_compile_definitions(ot-cli PRIVATE
     $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>

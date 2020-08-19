@@ -30,6 +30,8 @@
 import unittest
 
 import thread_cert
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_CHILD_ID_RESPONSE
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER = 2
@@ -38,12 +40,14 @@ ROUTER = 2
 class Cert_5_8_2_KeyIncrement(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'key_switch_guardtime': 0,
             'mode': 'rsdn',
             'panid': 0xface,
             'whitelist': [ROUTER]
         },
         ROUTER: {
+            'name': 'ROUTER',
             'key_switch_guardtime': 0,
             'mode': 'rsdn',
             'panid': 0xface,
@@ -61,16 +65,70 @@ class Cert_5_8_2_KeyIncrement(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), "router")
 
+        self.collect_ipaddrs()
         addrs = self.nodes[ROUTER].get_addrs()
         for addr in addrs:
-            self.assertTrue(self.nodes[LEADER].ping(addr))
+            if addr[0:4] != 'fe80':
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
         key_sequence_counter = self.nodes[LEADER].get_key_sequence_counter()
         self.nodes[LEADER].set_key_sequence_counter(key_sequence_counter + 1)
 
         addrs = self.nodes[ROUTER].get_addrs()
         for addr in addrs:
-            self.assertTrue(self.nodes[LEADER].ping(addr))
+            if addr[0:4] != 'fe80':
+                self.assertTrue(self.nodes[LEADER].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        ROUTER = pv.vars['ROUTER']
+        leader_pkts = pkts.filter_wpan_src64(LEADER)
+        router_pkts = pkts.filter_wpan_src64(ROUTER)
+
+        # Step 1: The DUT must start the network using
+        # thrKeySequenceCounter = 0
+        leader_pkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(lambda p: p.wpan.aux_sec.key_source == 0)
+
+        # Step 2: Verify that the topology described above is created.
+        # MLE Auxiliary security header shall contain Key Source = 0,
+        # KeyIndex = 1, KeyID Mode = 2
+        leader_pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+        _lpkts = leader_pkts.copy()
+        _rpkts = router_pkts.range(leader_pkts.index)
+
+        _rpkts.filter_mle_cmd(
+            MLE_ADVERTISEMENT).must_next().must_verify(lambda p: p.wpan.aux_sec.key_index == 1 and p.wpan.aux_sec.
+                                                       key_id_mode == 2 and p.wpan.aux_sec.key_source == 0)
+
+        # Step 3: Leader send an ICMPv6 Echo Request to Router_1.
+        # The MAC Auxiliary security header must contain
+        # KeyIndex = 1, KeyID Mode = 1
+        leader_mleid = pv.vars['LEADER_MLEID']
+        router_mleid = pv.vars['ROUTER_MLEID']
+        _lpkts.filter(lambda p: p.ipv6.dst == router_mleid).filter_ping_request().must_next().must_verify(
+            lambda p: p.wpan.aux_sec.key_index == 1 and p.wpan.aux_sec.key_id_mode == 1)
+
+        # Step 4: Router_1 send an ICMPv6 Echo Reply to Leader.
+        # The MAC Auxiliary security header must contain
+        # KeyIndex = 1, KeyID Mode = 1
+        _rpkts.filter(lambda p: p.ipv6.dst == leader_mleid).filter_ping_reply().must_next().must_verify(
+            lambda p: p.wpan.aux_sec.key_index == 1 and p.wpan.aux_sec.key_id_mode == 1)
+
+        # Step 5: The DUT MUST set incoming frame counters to 0 for all existing devices.
+        # Step 6: Leader Send an ICMPv6 Echo Request to Router_1.
+        # The MAC Auxiliary security header must contain
+        # KeyIndex = 2, KeyID Mode = 1
+        _lpkts.filter(lambda p: p.ipv6.dst == router_mleid).filter_ping_request().must_next().must_verify(
+            lambda p: p.wpan.aux_sec.key_index == 2 and p.wpan.aux_sec.key_id_mode == 1)
+
+        # Step 7: Router_1 send an ICMPv6 Echo Reply to Leader.
+        # The MAC Auxiliary security header must contain
+        # KeyIndex = 2, KeyID Mode = 1
+        _rpkts.filter(lambda p: p.ipv6.dst == leader_mleid).filter_ping_reply().must_next().must_verify(
+            lambda p: p.wpan.aux_sec.key_index == 2 and p.wpan.aux_sec.key_id_mode == 1)
 
 
 if __name__ == '__main__':

@@ -106,3 +106,15 @@ uint8_t otNetDataGetStableVersion(otInstance *aInstance)
 
     return instance.Get<Mle::MleRouter>().GetLeaderData().GetStableDataVersion();
 }
+
+otError otNetDataSteeringDataCheckJoiner(otInstance *aInstance, const otExtAddress *aEui64)
+{
+    return static_cast<Instance *>(aInstance)->Get<NetworkData::Leader>().SteeringDataCheckJoiner(
+        *static_cast<const Mac::ExtAddress *>(aEui64));
+}
+
+otError otNetDataSteeringDataCheckJoinerWithDiscerner(otInstance *aInstance, const otJoinerDiscerner *aDiscerner)
+{
+    return static_cast<Instance *>(aInstance)->Get<NetworkData::Leader>().SteeringDataCheckJoiner(
+        *static_cast<const MeshCoP::JoinerDiscerner *>(aDiscerner));
+}

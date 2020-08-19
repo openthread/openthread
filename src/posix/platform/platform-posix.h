@@ -98,12 +98,6 @@ struct RadioProcessContext
 };
 
 /**
- * Unique node ID.
- *
- */
-extern uint64_t gNodeId;
-
-/**
  * This function initializes the alarm service used by OpenThread.
  *
  * @param[in]  aSpeedUpFactor   The speed up factor.

@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,35 +27,36 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+from functools import wraps
 
-ot_platform_headers                     = \
-    alarm-micro.h                         \
-    alarm-milli.h                         \
-    ble.h                                 \
-    diag.h                                \
-    flash.h                               \
-    entropy.h                             \
-    memory.h                              \
-    misc.h                                \
-    logging.h                             \
-    otns.h                                \
-    radio.h                               \
-    time.h                                \
-    uart.h                                \
-    udp.h                                 \
-    spi-slave.h                           \
-    settings.h                            \
-    messagepool.h                         \
-    toolchain.h                           \
-    $(NULL)
 
-noinst_HEADERS                          = \
-    debug_uart.h
+def cached(f):
+    """
+    Decorator to convert a function to cache its return value when it's called by the first time.
 
-ot_platformdir = $(includedir)/openthread/platform
-dist_ot_platform_HEADERS = $(ot_platform_headers)
+    :param f: The function to decorate.
+    :return: The caching function.
+    """
+    cache_key = '_once_' + f.__name__
 
-install-headers: install-includeHEADERS
+    @wraps(f)
+    def once_f(self):
+        try:
+            v = object.__getattribute__(self, cache_key)  # can not use getattr, will trigger __getattr__ wrongly
+        except AttributeError:
+            v = f(self)
+            setattr(self, cache_key, v)
+        return v
 
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+    return once_f
+
+
+def cached_property(f):
+    """
+    Decorator for declaring a property that caches its value.
+
+    :param f: The property getter function.
+
+    :return: The caching property.
+    """
+    return property(cached(f))

@@ -150,7 +150,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
             continue;
         }
 
-        cur->Read(Ip6::Header::GetDestinationOffset(), sizeof(ip6Dst), &ip6Dst);
+        cur->Read(Ip6::Header::kDestinationFieldOffset, sizeof(ip6Dst), &ip6Dst);
 
         if (ip6Dst == aEid)
         {
@@ -346,12 +346,27 @@ void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
     // initialize MAC header
     fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfPanidCompression | Mac::Frame::kFcfDstAddrShort |
           Mac::Frame::kFcfSrcAddrShort | Mac::Frame::kFcfAckRequest | Mac::Frame::kFcfSecurityEnabled;
-    Get<Mac::Mac>().UpdateFrameControlField(aMessage.IsTimeSync(), fcf);
+    Get<Mac::Mac>().UpdateFrameControlField(nullptr, aMessage.IsTimeSync(), fcf);
 
     aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
     aFrame.SetDstPanId(Get<Mac::Mac>().GetPanId());
     aFrame.SetDstAddr(mMacDest.GetShort());
     aFrame.SetSrcAddr(mMacSource.GetShort());
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (Get<Mac::Mac>().IsCslEnabled())
+    {
+        Mac::HeaderIe ieList[2]; // CSL + Termination
+
+        ieList[0].Init();
+        ieList[0].SetId(Mac::Frame::kHeaderIeCsl);
+        ieList[0].SetLength(sizeof(Mac::CslIe));
+        ieList[1].Init();
+        ieList[1].SetId(Mac::Frame::kHeaderIeTermination2);
+        ieList[1].SetLength(0);
+        IgnoreError(aFrame.AppendHeaderIe(ieList, 2));
+    }
+#endif
 
     // write payload
     OT_ASSERT(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
@@ -599,10 +614,10 @@ void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Messa
                                            Ip6::Icmp::Header::kCodeDstUnreachNoRoute, messageInfo, aMessage));
 }
 
-void MeshForwarder::HandleMesh(uint8_t *               aFrame,
-                               uint16_t                aFrameLength,
-                               const Mac::Address &    aMacSource,
-                               const otThreadLinkInfo &aLinkInfo)
+void MeshForwarder::HandleMesh(uint8_t *             aFrame,
+                               uint16_t              aFrameLength,
+                               const Mac::Address &  aMacSource,
+                               const ThreadLinkInfo &aLinkInfo)
 {
     otError            error   = OT_ERROR_NONE;
     Message *          message = nullptr;
@@ -612,7 +627,7 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
     uint16_t           headerLength;
 
     // Security Check: only process Mesh Header frames that had security enabled.
-    VerifyOrExit(aLinkInfo.mLinkSecurity, error = OT_ERROR_SECURITY);
+    VerifyOrExit(aLinkInfo.IsLinkSecurityEnabled(), error = OT_ERROR_SECURITY);
 
     SuccessOrExit(error = meshHeader.ParseFrom(aFrame, aFrameLength, headerLength));
 
@@ -658,9 +673,7 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
         SuccessOrExit(error = message->SetLength(meshHeader.GetHeaderLength() + aFrameLength));
         offset += meshHeader.WriteTo(*message, offset);
         message->Write(offset, aFrameLength, aFrame);
-        message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
-        message->SetPanId(aLinkInfo.mPanId);
-        message->AddRss(aLinkInfo.mRss);
+        message->SetLinkInfo(aLinkInfo);
 
         LogMessage(kMessageReceive, *message, &aMacSource, OT_ERROR_NONE);
 
@@ -672,7 +685,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         otLogInfoMac("Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s", otThreadErrorToString(error),
-                     aFrameLength, aMacSource.ToString().AsCString(), aLinkInfo.mLinkSecurity ? "yes" : "no");
+                     aFrameLength, aMacSource.ToString().AsCString(), aLinkInfo.IsLinkSecurityEnabled() ? "yes" : "no");
 
         if (message != nullptr)
         {
@@ -726,17 +739,17 @@ exit:
     return;
 }
 
-bool MeshForwarder::UpdateFragmentLifetime(void)
+bool MeshForwarder::FragmentPriorityList::UpdateOnTimeTick(void)
 {
     bool shouldRun = false;
 
-    for (FragmentPriorityEntry &entry : mFragmentEntries)
+    for (Entry &entry : mEntries)
     {
-        if (entry.GetLifetime() != 0)
+        if (!entry.IsExpired())
         {
             entry.DecrementLifetime();
 
-            if (entry.GetLifetime() != 0)
+            if (!entry.IsExpired())
             {
                 shouldRun = true;
             }
@@ -751,46 +764,47 @@ void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHead
                                            uint16_t                aSrcRloc16,
                                            Message::Priority       aPriority)
 {
-    FragmentPriorityEntry *entry;
+    FragmentPriorityList::Entry *entry;
 
-    if (aFragmentHeader.GetDatagramOffset() == 0)
+    entry = mFragmentPriorityList.FindEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag());
+
+    if (entry == nullptr)
     {
-        VerifyOrExit((entry = GetUnusedFragmentPriorityEntry()) != nullptr, OT_NOOP);
+        VerifyOrExit(aFragmentHeader.GetDatagramOffset() == 0, OT_NOOP);
 
-        entry->SetDatagramTag(aFragmentHeader.GetDatagramTag());
-        entry->SetSrcRloc16(aSrcRloc16);
-        entry->SetPriority(aPriority);
-        entry->SetLifetime(kReassemblyTimeout);
+        entry = mFragmentPriorityList.AllocateEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag(), aPriority);
+
+        VerifyOrExit(entry != nullptr, OT_NOOP);
 
         if (!mUpdateTimer.IsRunning())
         {
             mUpdateTimer.Start(kStateUpdatePeriod);
         }
+
+        ExitNow();
+    }
+
+    if (aFragmentHeader.GetDatagramOffset() + aFragmentLength >= aFragmentHeader.GetDatagramSize())
+    {
+        entry->Clear();
     }
     else
     {
-        VerifyOrExit((entry = FindFragmentPriorityEntry(aFragmentHeader.GetDatagramTag(), aSrcRloc16)) != nullptr,
-                     OT_NOOP);
-
-        entry->SetLifetime(kReassemblyTimeout);
-
-        if (aFragmentHeader.GetDatagramOffset() + aFragmentLength >= aFragmentHeader.GetDatagramSize())
-        {
-            entry->SetLifetime(0);
-        }
+        entry->ResetLifetime();
     }
 
 exit:
     return;
 }
 
-FragmentPriorityEntry *MeshForwarder::FindFragmentPriorityEntry(uint16_t aTag, uint16_t aSrcRloc16)
+MeshForwarder::FragmentPriorityList::Entry *MeshForwarder::FragmentPriorityList::FindEntry(uint16_t aSrcRloc16,
+                                                                                           uint16_t aTag)
 {
-    FragmentPriorityEntry *rval = nullptr;
+    Entry *rval = nullptr;
 
-    for (FragmentPriorityEntry &entry : mFragmentEntries)
+    for (Entry &entry : mEntries)
     {
-        if ((entry.GetLifetime() != 0) && (entry.GetDatagramTag() == aTag) && (entry.GetSrcRloc16() == aSrcRloc16))
+        if (!entry.IsExpired() && entry.Matches(aSrcRloc16, aTag))
         {
             rval = &entry;
             break;
@@ -800,30 +814,37 @@ FragmentPriorityEntry *MeshForwarder::FindFragmentPriorityEntry(uint16_t aTag, u
     return rval;
 }
 
-FragmentPriorityEntry *MeshForwarder::GetUnusedFragmentPriorityEntry(void)
+MeshForwarder::FragmentPriorityList::Entry *MeshForwarder::FragmentPriorityList::AllocateEntry(
+    uint16_t          aSrcRloc16,
+    uint16_t          aTag,
+    Message::Priority aPriority)
 {
-    FragmentPriorityEntry *rval = nullptr;
+    Entry *newEntry = nullptr;
 
-    for (FragmentPriorityEntry &entry : mFragmentEntries)
+    for (Entry &entry : mEntries)
     {
-        if (entry.GetLifetime() == 0)
+        if (entry.IsExpired())
         {
-            rval = &entry;
+            entry.mSrcRloc16   = aSrcRloc16;
+            entry.mDatagramTag = aTag;
+            entry.mPriority    = aPriority;
+            entry.ResetLifetime();
+            newEntry = &entry;
             break;
         }
     }
 
-    return rval;
+    return newEntry;
 }
 
 otError MeshForwarder::GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                                            uint16_t                aSrcRloc16,
                                            Message::Priority &     aPriority)
 {
-    otError                error = OT_ERROR_NONE;
-    FragmentPriorityEntry *entry;
+    otError                      error = OT_ERROR_NONE;
+    FragmentPriorityList::Entry *entry;
 
-    entry = FindFragmentPriorityEntry(aFragmentHeader.GetDatagramTag(), aSrcRloc16);
+    entry = mFragmentPriorityList.FindEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag());
     VerifyOrExit(entry != nullptr, error = OT_ERROR_NOT_FOUND);
     aPriority = entry->GetPriority();
 

@@ -63,14 +63,14 @@
 #include <openthread/platform/radio.h>
 #if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
 #include <openthread/ncp.h>
-#define OPENTHREAD_USE_CONSOLE 0
 #elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 #include <openthread/cli.h>
-#if (HAVE_LIBEDIT || HAVE_LIBREADLINE) && !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+
+#include "cli/cli_config.h"
+#if (HAVE_LIBEDIT || HAVE_LIBREADLINE) && !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE && \
+    (OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_CONSOLE)
 #define OPENTHREAD_USE_CONSOLE 1
 #include "console_cli.h"
-#else
-#define OPENTHREAD_USE_CONSOLE 0
 #endif
 #else
 #error "Unknown posix app type!"
@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
 #if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
     otNcpInit(instance);
 #elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
-#if OPENTHREAD_USE_CONSOLE
+#ifdef OPENTHREAD_USE_CONSOLE
     otxConsoleInit(instance);
 #else
     otCliUartInit(instance);
@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
         mainloop.mTimeout.tv_sec  = 10;
         mainloop.mTimeout.tv_usec = 0;
 
-#if OPENTHREAD_USE_CONSOLE
+#ifdef OPENTHREAD_USE_CONSOLE
         otxConsoleUpdate(&mainloop);
 #endif
 
@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
         if (otSysMainloopPoll(&mainloop) >= 0)
         {
             otSysMainloopProcess(instance, &mainloop);
-#if OPENTHREAD_USE_CONSOLE
+#ifdef OPENTHREAD_USE_CONSOLE
             otxConsoleProcess(&mainloop);
 #endif
         }
@@ -344,7 +344,7 @@ int main(int argc, char *argv[])
         }
     }
 
-#if OPENTHREAD_USE_CONSOLE
+#ifdef OPENTHREAD_USE_CONSOLE
     otxConsoleDeinit();
 #endif
     otInstanceFinalize(instance);

@@ -178,6 +178,9 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_ENABLE_VENDOR_EXTENSION
+    Get<Extension::ExtensionBase>().HandleNotifierEvents(events);
+#endif
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {

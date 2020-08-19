@@ -73,6 +73,7 @@ public:
     struct FrameContext
     {
         friend class IndirectSender;
+        friend class CslTxScheduler;
 
     private:
         uint16_t mMessageNextOffset; ///< The next offset into the message associated with the prepared frame.

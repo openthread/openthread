@@ -34,7 +34,6 @@
 #include "cli_commissioner.hpp"
 
 #include "cli/cli.hpp"
-#include "cli/cli_server.hpp"
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
@@ -57,7 +56,7 @@ otError Commissioner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.mServer->OutputFormat("%s\r\n", command.mName);
+        mInterpreter.OutputFormat("%s\r\n", command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -162,7 +161,14 @@ otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
     }
     else if (strcmp(aArgs[1], "remove") == 0)
     {
-        SuccessOrExit(error = otCommissionerRemoveJoiner(mInterpreter.mInstance, addrPtr));
+        if (discerner.mLength)
+        {
+            SuccessOrExit(error = otCommissionerRemoveJoinerWithDiscerner(mInterpreter.mInstance, &discerner));
+        }
+        else
+        {
+            SuccessOrExit(error = otCommissionerRemoveJoiner(mInterpreter.mInstance, addrPtr));
+        }
     }
     else
     {
@@ -323,7 +329,7 @@ otError Commissioner::ProcessSessionId(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    mInterpreter.mServer->OutputFormat("%d\r\n", otCommissionerGetSessionId(mInterpreter.mInstance));
+    mInterpreter.OutputFormat("%d\r\n", otCommissionerGetSessionId(mInterpreter.mInstance));
 
     return OT_ERROR_NONE;
 }
@@ -344,7 +350,7 @@ void Commissioner::HandleStateChanged(otCommissionerState aState, void *aContext
 
 void Commissioner::HandleStateChanged(otCommissionerState aState)
 {
-    mInterpreter.mServer->OutputFormat("Commissioner: %s\r\n", StateToString(aState));
+    mInterpreter.OutputFormat("Commissioner: %s\r\n", StateToString(aState));
 }
 
 const char *Commissioner::StateToString(otCommissionerState aState)
@@ -381,24 +387,24 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
 {
     OT_UNUSED_VARIABLE(aJoinerInfo);
 
-    mInterpreter.mServer->OutputFormat("Commissioner: Joiner ");
+    mInterpreter.OutputFormat("Commissioner: Joiner ");
 
     switch (aEvent)
     {
     case OT_COMMISSIONER_JOINER_START:
-        mInterpreter.mServer->OutputFormat("start ");
+        mInterpreter.OutputFormat("start ");
         break;
     case OT_COMMISSIONER_JOINER_CONNECTED:
-        mInterpreter.mServer->OutputFormat("connect ");
+        mInterpreter.OutputFormat("connect ");
         break;
     case OT_COMMISSIONER_JOINER_FINALIZE:
-        mInterpreter.mServer->OutputFormat("finalize ");
+        mInterpreter.OutputFormat("finalize ");
         break;
     case OT_COMMISSIONER_JOINER_END:
-        mInterpreter.mServer->OutputFormat("end ");
+        mInterpreter.OutputFormat("end ");
         break;
     case OT_COMMISSIONER_JOINER_REMOVED:
-        mInterpreter.mServer->OutputFormat("remove ");
+        mInterpreter.OutputFormat("remove ");
         break;
     }
 
@@ -407,7 +413,7 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
         mInterpreter.OutputBytes(aJoinerId->m8, sizeof(*aJoinerId));
     }
 
-    mInterpreter.mServer->OutputFormat("\r\n");
+    mInterpreter.OutputFormat("\r\n");
 }
 
 otError Commissioner::ProcessStop(uint8_t aArgsLength, char *aArgs[])
@@ -423,7 +429,7 @@ otError Commissioner::ProcessState(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    mInterpreter.mServer->OutputFormat("%s\r\n", StateToString(otCommissionerGetState(mInterpreter.mInstance)));
+    mInterpreter.OutputFormat("%s\r\n", StateToString(otCommissionerGetState(mInterpreter.mInstance)));
 
     return OT_ERROR_NONE;
 }
@@ -461,14 +467,14 @@ void Commissioner::HandleEnergyReport(uint32_t       aChannelMask,
 
 void Commissioner::HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength)
 {
-    mInterpreter.mServer->OutputFormat("Energy: %08x ", aChannelMask);
+    mInterpreter.OutputFormat("Energy: %08x ", aChannelMask);
 
     for (uint8_t i = 0; i < aEnergyListLength; i++)
     {
-        mInterpreter.mServer->OutputFormat("%d ", static_cast<int8_t>(aEnergyList[i]));
+        mInterpreter.OutputFormat("%d ", static_cast<int8_t>(aEnergyList[i]));
     }
 
-    mInterpreter.mServer->OutputFormat("\r\n");
+    mInterpreter.OutputFormat("\r\n");
 }
 
 void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext)
@@ -478,7 +484,7 @@ void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, v
 
 void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
 {
-    mInterpreter.mServer->OutputFormat("Conflict: %04x, %08x\r\n", aPanId, aChannelMask);
+    mInterpreter.OutputFormat("Conflict: %04x, %08x\r\n", aPanId, aChannelMask);
 }
 
 } // namespace Cli

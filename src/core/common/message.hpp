@@ -53,6 +53,8 @@
 
 namespace ot {
 
+class ThreadLinkInfo;
+
 /**
  * @addtogroup core-message
  *
@@ -797,6 +799,14 @@ public:
      *
      */
     const RssAverager &GetRssAverager(void) const { return GetMetadata().mRssAverager; }
+
+    /**
+     * This method sets the message's link info properties (PAN ID, link security, RSS) from a given `ThreadLinkInfo`.
+     *
+     * @param[in] aLinkInfo   The `ThreadLinkInfo` instance from which to set message's related properties.
+     *
+     */
+    void SetLinkInfo(const ThreadLinkInfo &aLinkInfo);
 
     /**
      * This static method updates a checksum.

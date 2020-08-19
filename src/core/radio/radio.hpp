@@ -44,6 +44,16 @@
 
 namespace ot {
 
+enum
+{
+    kUsPerTenSymbols = OT_US_PER_TEN_SYMBOLS, ///< The microseconds per 10 symbols.
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    kMinCslPeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD * 1000 /
+                    kUsPerTenSymbols, ///< Minimum CSL period supported in units of 10 symbols.
+    kMaxCslTimeout = OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT
+#endif
+};
+
 /**
  * @addtogroup core-radio
  *
@@ -402,6 +412,30 @@ public:
      *
      */
     otError Receive(uint8_t aChannel) { return otPlatRadioReceive(GetInstance(), aChannel); }
+
+    /**
+     * This method updates the csl sample time in radio.
+     *
+     * @param[in]  aCslSampleTime  The csl sample time.
+     *
+     */
+    void UpdateCslSampleTime(uint32_t aCslSampleTime) { otPlatRadioUpdateCslSampleTime(GetInstance(), aCslSampleTime); }
+
+    /** This method enables csl sampling in radio.
+     *
+     * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
+     * @param[in]  aExtAddr      The extended source address of CSL receiver's parent device (when the platforms
+     * generate enhanced ack, platforms may need to know acks to which address should include CSL IE).
+     *
+     * @retval  OT_ERROR_NOT_SUPPORTED  Radio driver doesn't support CSL.
+     * @retval  OT_ERROR_FAILED         Other platform specific errors.
+     * @retval  OT_ERROR_NONE           Successfully enabled or disabled CSL.
+     *
+     */
+    otError EnableCsl(uint32_t aCslPeriod, const otExtAddress *aExtAddr)
+    {
+        return otPlatRadioEnableCsl(GetInstance(), aCslPeriod, aExtAddr);
+    }
 
     /**
      * This method gets the radio transmit frame buffer.
