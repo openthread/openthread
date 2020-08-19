@@ -224,11 +224,11 @@ class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
 
         # Step 6: DUT send an Address Solicit Request to Leader,
         # receives short address and becomes a router
-        reed_pkts.range(router1_pkts.index).filter_coap_request(ADDR_SOL_URI).must_next().must_verify(
+        pkts.range(_end_idx).filter_wpan_src64(REED).filter_coap_request(ADDR_SOL_URI).must_next().must_verify(
             lambda p: {NL_MAC_EXTENDED_ADDRESS_TLV, NL_STATUS_TLV} <= set(p.coap.tlv.type))
 
         # Step 7: DUT send a Multicast Link Request
-        reed_pkts.filter_mle_cmd(MLE_LINK_REQUEST).must_next().must_verify(lambda p: {
+        pkts.filter_wpan_src64(REED).filter_mle_cmd(MLE_LINK_REQUEST).must_next().must_verify(lambda p: {
             VERSION_TLV, TLV_REQUEST_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, CHALLENGE_TLV, LINK_MARGIN_TLV
         } <= set(p.mle.tlv.type))
 
