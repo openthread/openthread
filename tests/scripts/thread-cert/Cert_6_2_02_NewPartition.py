@@ -119,7 +119,7 @@ class Cert_6_2_2_NewPartition(thread_cert.TestCase):
             lambda p: {MODE_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV} < set(p.mle.tlv.type))
 
         # Step 8: The DUT MUST respond with ICMPv6 Echo Reply
-        _ed_pkts.filter('ipv6.dst == {ROUTER_1_MLEID}' and 'ipv6.src == {ED_MLEID}',
+        _ed_pkts.filter('ipv6.dst == {ROUTER_1_MLEID} and ipv6.src == {ED_MLEID}',
                         **pv.vars).filter_ping_reply().must_next()
 
 
