@@ -442,7 +442,7 @@ void AddressResolver::RestartAddressQueries(void)
     }
 }
 
-otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
+otError AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16, bool aAllowAddressQuery)
 {
     otError         error = OT_ERROR_NONE;
     CacheEntry *    entry;
@@ -457,6 +457,7 @@ otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
         // allocate a new entry and perform address query. We do not
         // allow first-time address query entries to be evicted till
         // timeout.
+        VerifyOrExit(aAllowAddressQuery, error = OT_ERROR_NOT_FOUND);
 
         entry = NewCacheEntry(/* aSnoopedEntry */ false);
         VerifyOrExit(entry != nullptr, error = OT_ERROR_NO_BUFS);
@@ -484,6 +485,11 @@ otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
         aRloc16 = entry->GetRloc16();
         ExitNow();
     }
+
+    // Note that if `aAllowAddressQuery` is `false` then the `entry` is definitely already in a list, i.e., we cannot
+    // not get here with `aAllowAddressQuery` being `false` and `entry` being a newly allocated one, due to the
+    // `VerifyOrExit` check that `aAllowAddressQuery` is `true` before allocating a new cache entry.
+    VerifyOrExit(aAllowAddressQuery, error = OT_ERROR_NOT_FOUND);
 
     if (list == &mQueryList)
     {

@@ -358,7 +358,7 @@ private:
     otError RemoveMplOption(Message &aMessage);
     otError HandleOptions(Message &aMessage, Header &aHeader, bool &aForward);
     otError HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
-    bool    ShouldForwardToThread(const MessageInfo &aMessageInfo) const;
+    bool    ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromNcpHost) const;
     bool    IsOnLink(const Address &aAddress) const;
 
     bool                 mForwardingEnabled;

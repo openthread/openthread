@@ -60,4 +60,17 @@
 #define OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS 75
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_NDPROXY_TABLE_ENTRY_NUM
+ *
+ * The maximum number of supported DUA that Backbone Router could proxy.
+ *
+ * Note: According to Thread Conformance v1.2.0, a Thread Border Router MUST be able to hold a DUA Devices Table in
+ * memory with at least two hundred and fifty (250) entries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NDPROXY_TABLE_ENTRY_NUM
+#define OPENTHREAD_CONFIG_NDPROXY_TABLE_ENTRY_NUM 250
+#endif
+
 #endif // CONFIG_BACKBONE_ROUTER_H_

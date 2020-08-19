@@ -327,6 +327,8 @@ openthread_core_files = [
   "backbone_router/bbr_manager.hpp",
   "backbone_router/multicast_listeners_table.cpp",
   "backbone_router/multicast_listeners_table.hpp",
+  "backbone_router/ndproxy_table.cpp",
+  "backbone_router/ndproxy_table.hpp",
   "coap/coap.cpp",
   "coap/coap.hpp",
   "coap/coap_message.cpp",

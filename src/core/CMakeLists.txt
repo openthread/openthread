@@ -106,6 +106,7 @@ set(COMMON_SOURCES
     backbone_router/bbr_local.cpp
     backbone_router/bbr_manager.cpp
     backbone_router/multicast_listeners_table.cpp
+    backbone_router/ndproxy_table.cpp
     coap/coap.cpp
     coap/coap_message.cpp
     coap/coap_secure.cpp

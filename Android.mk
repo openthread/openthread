@@ -180,6 +180,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/backbone_router/bbr_local.cpp                  \
     src/core/backbone_router/bbr_manager.cpp                \
     src/core/backbone_router/multicast_listeners_table.cpp  \
+    src/core/backbone_router/ndproxy_table.cpp              \
     src/core/coap/coap.cpp                                  \
     src/core/coap/coap_message.cpp                          \
     src/core/coap/coap_secure.cpp                           \
