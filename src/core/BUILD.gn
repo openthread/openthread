@@ -364,6 +364,8 @@ openthread_core_files = [
   "common/tasklet.cpp",
   "common/tasklet.hpp",
   "common/time.hpp",
+  "common/time_ticker.cpp",
+  "common/time_ticker.hpp",
   "common/timer.cpp",
   "common/timer.hpp",
   "common/tlvs.cpp",

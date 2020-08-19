@@ -42,6 +42,7 @@
 #include "coap/coap_message.hpp"
 #include "common/locator.hpp"
 #include "common/notifier.hpp"
+#include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "net/netif.hpp"
 #include "thread/thread_tlvs.hpp"
@@ -70,6 +71,7 @@ namespace ot {
 class MlrManager : public InstanceLocator
 {
     friend class ot::Notifier;
+    friend class ot::TimeTicker;
 
 public:
     /**
@@ -106,11 +108,6 @@ public:
 #endif
 
 private:
-    enum
-    {
-        kTimerInterval = 1000,
-    };
-
     void HandleNotifierEvents(Events aEvents);
 
     void SendMulticastListenerRegistration(void);
@@ -158,19 +155,16 @@ private:
                                    const Ip6::Address &aAddress);
 
     void ScheduleSend(uint16_t aDelay);
-    void ResetTimer(void);
+    void UpdateTimeTickerRegistration(void);
     void UpdateReregistrationDelay(bool aRereg);
     void Reregister(void);
-
-    static void HandleTimer(Timer &aTimer) { aTimer.GetOwner<MlrManager>().HandleTimer(); }
-    void        HandleTimer(void);
+    void HandleTimeTick(void);
 
     void LogMulticastAddresses(void);
 
-    TimerMilli mTimer;
-    uint32_t   mReregistrationDelay;
-    uint16_t   mSendDelay;
-    bool       mMlrPending : 1;
+    uint32_t mReregistrationDelay;
+    uint16_t mSendDelay;
+    bool     mMlrPending : 1;
 };
 
 } // namespace ot

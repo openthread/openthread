@@ -40,6 +40,7 @@
 
 #include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
+#include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
 #include "mac/mac_types.hpp"
@@ -75,6 +76,7 @@ class MleRouter : public Mle
 {
     friend class Mle;
     friend class ot::Instance;
+    friend class ot::TimeTicker;
 
 public:
     /**
@@ -647,11 +649,9 @@ private:
 
     static bool HandleAdvertiseTimer(TrickleTimer &aTimer);
     bool        HandleAdvertiseTimer(void);
-    static void HandleStateUpdateTimer(Timer &aTimer);
-    void        HandleStateUpdateTimer(void);
+    void        HandleTimeTick(void);
 
     TrickleTimer mAdvertiseTimer;
-    TimerMilli   mStateUpdateTimer;
 
     Coap::Resource mAddressSolicit;
     Coap::Resource mAddressRelease;

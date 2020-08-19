@@ -45,6 +45,7 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
@@ -102,6 +103,7 @@ using ot::Encoding::BigEndian::HostSwap32;
 class Ip6 : public InstanceLocator, private NonCopyable
 {
     friend class ot::Instance;
+    friend class ot::TimeTicker;
     friend class Mpl;
 
 public:
@@ -361,11 +363,10 @@ private:
     otError FragmentDatagram(Message &aMessage, uint8_t aIpProto);
     otError HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
-    void        CleanupFragmentationBuffer(void);
-    void        HandleUpdateTimer(void);
-    void        UpdateReassemblyList(void);
-    void        SendIcmpError(Message &aMessage, Icmp::Header::Type aIcmpType, Icmp::Header::Code aIcmpCode);
-    static void HandleTimer(Timer &aTimer);
+    void CleanupFragmentationBuffer(void);
+    void HandleTimeTick(void);
+    void UpdateReassemblyList(void);
+    void SendIcmpError(Message &aMessage, Icmp::Header::Type aIcmpType, Icmp::Header::Code aIcmpCode);
 #endif
     otError AddMplOption(Message &aMessage, Header &aHeader);
     otError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
@@ -389,7 +390,6 @@ private:
     Mpl  mMpl;
 
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
-    TimerMilli   mTimer;
     MessageQueue mReassemblyList;
 #endif
 };

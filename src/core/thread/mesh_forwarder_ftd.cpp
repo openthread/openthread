@@ -741,7 +741,7 @@ exit:
 
 bool MeshForwarder::FragmentPriorityList::UpdateOnTimeTick(void)
 {
-    bool shouldRun = false;
+    bool contineRxingTicks = false;
 
     for (Entry &entry : mEntries)
     {
@@ -751,12 +751,12 @@ bool MeshForwarder::FragmentPriorityList::UpdateOnTimeTick(void)
 
             if (!entry.IsExpired())
             {
-                shouldRun = true;
+                contineRxingTicks = true;
             }
         }
     }
 
-    return shouldRun;
+    return contineRxingTicks;
 }
 
 void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
@@ -772,15 +772,8 @@ void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHead
     {
         VerifyOrExit(aFragmentHeader.GetDatagramOffset() == 0, OT_NOOP);
 
-        entry = mFragmentPriorityList.AllocateEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag(), aPriority);
-
-        VerifyOrExit(entry != nullptr, OT_NOOP);
-
-        if (!mUpdateTimer.IsRunning())
-        {
-            mUpdateTimer.Start(kStateUpdatePeriod);
-        }
-
+        mFragmentPriorityList.AllocateEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag(), aPriority);
+        Get<TimeTicker>().RegisterReceiver(TimeTicker::kMeshForwarder);
         ExitNow();
     }
 

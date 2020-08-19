@@ -64,7 +64,6 @@ AddressResolver::AddressResolver(Instance &aInstance)
     , mQueryList()
     , mQueryRetryList()
     , mIcmpHandler(&AddressResolver::HandleIcmpReceive, this)
-    , mTimer(aInstance, AddressResolver::HandleTimer, this)
 {
     Get<Coap::Coap>().AddResource(mAddressError);
     Get<Coap::Coap>().AddResource(mAddressQuery);
@@ -396,10 +395,7 @@ void AddressResolver::AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortA
         entry->SetCanEvict(false);
         entry->SetTimeout(kSnoopBlockEvictionTimeout);
 
-        if (!mTimer.IsRunning())
-        {
-            mTimer.Start(kStateUpdatePeriod);
-        }
+        Get<TimeTicker>().RegisterReceiver(TimeTicker::kAddressResolver);
     }
     else
     {
@@ -546,10 +542,7 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 
 exit:
 
-    if (!mTimer.IsRunning())
-    {
-        mTimer.Start(kStateUpdatePeriod);
-    }
+    Get<TimeTicker>().RegisterReceiver(TimeTicker::kAddressResolver);
 
     if (error != OT_ERROR_NONE && message != nullptr)
     {
@@ -835,14 +828,9 @@ exit:
     }
 }
 
-void AddressResolver::HandleTimer(Timer &aTimer)
+void AddressResolver::HandleTimeTick(void)
 {
-    aTimer.GetOwner<AddressResolver>().HandleTimer();
-}
-
-void AddressResolver::HandleTimer(void)
-{
-    bool        continueTimer = false;
+    bool        continueRxingTicks = false;
     CacheEntry *prev;
     CacheEntry *entry;
 
@@ -853,7 +841,7 @@ void AddressResolver::HandleTimer(void)
             continue;
         }
 
-        continueTimer = true;
+        continueRxingTicks = true;
         entry->DecrementTimeout();
 
         if (entry->IsTimeoutZero())
@@ -869,7 +857,7 @@ void AddressResolver::HandleTimer(void)
             continue;
         }
 
-        continueTimer = true;
+        continueRxingTicks = true;
         entry->DecrementTimeout();
     }
 
@@ -879,7 +867,7 @@ void AddressResolver::HandleTimer(void)
     {
         OT_ASSERT(!entry->IsTimeoutZero());
 
-        continueTimer = true;
+        continueRxingTicks = true;
         entry->DecrementTimeout();
 
         if (entry->IsTimeoutZero())
@@ -916,9 +904,9 @@ void AddressResolver::HandleTimer(void)
         }
     }
 
-    if (continueTimer)
+    if (!continueRxingTicks)
     {
-        mTimer.Start(kStateUpdatePeriod);
+        Get<TimeTicker>().UnregisterReceiver(TimeTicker::kAddressResolver);
     }
 }
 

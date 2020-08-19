@@ -42,6 +42,7 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/notifier.hpp"
+#include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/topology.hpp"
@@ -91,6 +92,7 @@ namespace Utils {
 class ChildSupervisor : public InstanceLocator
 {
     friend class ot::Notifier;
+    friend class ot::TimeTicker;
 
 public:
     /**
@@ -159,14 +161,12 @@ private:
         kOneSecond                  = 1000,                                         // One second interval (in ms).
     };
 
-    void        SendMessage(Child &aChild);
-    void        CheckState(void);
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
-    void        HandleNotifierEvents(Events aEvents);
+    void SendMessage(Child &aChild);
+    void CheckState(void);
+    void HandleTimeTick(void);
+    void HandleNotifierEvents(Events aEvents);
 
-    uint16_t   mSupervisionInterval;
-    TimerMilli mTimer;
+    uint16_t mSupervisionInterval;
 };
 
 #else // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE && OPENTHREAD_FTD

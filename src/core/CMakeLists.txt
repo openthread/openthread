@@ -117,6 +117,7 @@ set(COMMON_SOURCES
     common/settings.cpp
     common/string.cpp
     common/tasklet.cpp
+    common/time_ticker.cpp
     common/timer.cpp
     common/tlvs.cpp
     common/trickle_timer.cpp

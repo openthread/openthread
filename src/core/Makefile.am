@@ -159,6 +159,7 @@ SOURCES_COMMON                             = \
     common/settings.cpp                      \
     common/string.cpp                        \
     common/tasklet.cpp                       \
+    common/time_ticker.cpp                   \
     common/timer.cpp                         \
     common/tlvs.cpp                          \
     common/trickle_timer.cpp                 \
@@ -349,6 +350,7 @@ HEADERS_COMMON                             = \
     common/string.hpp                        \
     common/tasklet.hpp                       \
     common/time.hpp                          \
+    common/time_ticker.hpp                   \
     common/timer.hpp                         \
     common/tlvs.hpp                          \
     common/trickle_timer.hpp                 \

@@ -49,6 +49,7 @@
 #include "common/non_copyable.hpp"
 #include "common/random_manager.hpp"
 #include "common/tasklet.hpp"
+#include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "diags/factory_diags.hpp"
 #include "radio/radio.hpp"
@@ -343,10 +344,11 @@ private:
     Radio mRadio;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    // Notifier, Settings, and MessagePool are initialized  before
-    // other member variables since other classes/objects from their
-    // constructor may use them.
+    // Notifier, TimeTicker, Settings, and MessagePool are initialized
+    // before other member variables since other classes/objects from
+    // their constructor may use them.
     Notifier       mNotifier;
+    TimeTicker     mTimeTicker;
     Settings       mSettings;
     SettingsDriver mSettingsDriver;
     MessagePool    mMessagePool;
@@ -411,6 +413,11 @@ template <> inline Radio::Callbacks &Instance::Get(void)
 template <> inline Notifier &Instance::Get(void)
 {
     return mNotifier;
+}
+
+template <> inline TimeTicker &Instance::Get(void)
+{
+    return mTimeTicker;
 }
 
 template <> inline Settings &Instance::Get(void)
