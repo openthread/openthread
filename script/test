@@ -334,7 +334,7 @@ do_package()
 
 do_tar()
 {
-    local target_name="openthread-simulation-$1"
+    local target_name="openthread-$1-$2"
     local build_dir="${OT_BUILDDIR}/cmake"
     tar -cf "${target_name}.tar" -C "${build_dir}" "${target_name}"
     mv "${target_name}.tar" "${build_dir}/"
@@ -343,7 +343,7 @@ do_tar()
 
 do_untar()
 {
-    local target_name="openthread-simulation-$1"
+    local target_name="openthread-$1-$2"
     local build_dir="${OT_BUILDDIR}/cmake"
     tar -xf "${build_dir}/${target_name}.tar" -C "${build_dir}"
     rm "${build_dir:?}/${target_name}.tar"
@@ -437,11 +437,11 @@ main()
                 ;;
             tar)
                 shift
-                do_tar "$1"
+                do_tar "$@"
                 ;;
             untar)
                 shift
-                do_untar "$1"
+                do_untar "$@"
                 ;;
         esac
         shift

@@ -219,6 +219,15 @@ jobs:
     - name: Run RCP Mode
       run: |
         OT_OPTIONS=-DOT_READLINE=OFF VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
+    - name: Keep POSIX Only
+      run: |
+        ./script/test tar simulation 1.1
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+    - name: Keep Simulation Only
+      run: |
+        ./script/test tar posix 1.1
+        ./script/test untar simulation 1.1
     - name: Codecov
       uses: codecov/codecov-action@v1
     - name: Run TUN Mode
@@ -231,6 +240,15 @@ jobs:
         sudo systemctl restart dnsmasq
         host ipv6.google.com ::1
         OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
+    - name: Keep POSIX Only
+      run: |
+        ./script/test tar simulation 1.1
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+    - name: Keep Simulation Only
+      run: |
+        ./script/test tar posix 1.1
+        ./script/test untar simulation 1.1
     - name: Codecov
       uses: codecov/codecov-action@v1
 
