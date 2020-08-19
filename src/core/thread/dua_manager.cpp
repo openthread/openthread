@@ -336,10 +336,10 @@ void DuaManager::HandleTimeTick(void)
 {
     bool attempt = false;
 
+#if OPENTHREAD_CONFIG_DUA_ENABLE
     otLogDebgDua("regdelay %d, reregdelay %d, checkdelay %d", mDelay.mFields.mRegistrationDelay,
                  mDelay.mFields.mReregistrationDelay, mDelay.mFields.mCheckDelay);
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
     if (mDuaState != kNotExist && TimerMilli::GetNow() > mLastRegistrationTime + Mle::kDuaDadPeriod)
     {
         mDomainUnicastAddress.mPreferred = true;
@@ -349,6 +349,8 @@ void DuaManager::HandleTimeTick(void)
     {
         attempt = true;
     }
+#else
+    otLogDebgDua("reregdelay %d, checkdelay %d", mDelay.mFields.mReregistrationDelay, mDelay.mFields.mCheckDelay);
 #endif
 
     if ((mDelay.mFields.mCheckDelay > 0) && (--mDelay.mFields.mCheckDelay == 0))
