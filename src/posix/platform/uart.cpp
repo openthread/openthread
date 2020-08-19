@@ -231,7 +231,7 @@ static void InitializeSessionSocket(void)
     // if we have SO_NOSIGPIPE, then set it. Otherwise, we're going
     // to simply ignore it.
 #if defined(SO_NOSIGPIPE)
-    rval = setsockopt(newSessionSokcet, SOL_SOCKET, SO_NOSIGPIPE, &rval, sizeof(rval));
+    rval = setsockopt(newSessionSocket, SOL_SOCKET, SO_NOSIGPIPE, &rval, sizeof(rval));
     VerifyOrExit(rval != -1, OT_NOOP);
 #else
 #warning "no support for MSG_NOSIGNAL or SO_NOSIGPIPE"
