@@ -214,22 +214,16 @@ exit:
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 static void InitializeSessionSocket(void)
 {
+    int newSessionSocket;
     int rval;
 
-    VerifyOrExit((rval = accept(sUartSocket, nullptr, nullptr)) != -1, OT_NOOP);
+    VerifyOrExit((newSessionSocket = accept(sUartSocket, nullptr, nullptr)) != -1, rval = -1);
 
-    if (sSessionSocket != -1)
-    {
-        close(sSessionSocket);
-    }
-
-    sSessionSocket = rval;
-
-    VerifyOrExit((rval = fcntl(sSessionSocket, F_GETFD, 0)) != -1, OT_NOOP);
+    VerifyOrExit((rval = fcntl(newSessionSocket, F_GETFD, 0)) != -1, OT_NOOP);
 
     rval |= FD_CLOEXEC;
 
-    VerifyOrExit((rval = fcntl(sSessionSocket, F_SETFD, rval)) != -1, OT_NOOP);
+    VerifyOrExit((rval = fcntl(newSessionSocket, F_SETFD, rval)) != -1, OT_NOOP);
 
 #ifndef __linux__
     // some platforms (macOS, Solaris) don't have MSG_NOSIGNAL
@@ -237,18 +231,27 @@ static void InitializeSessionSocket(void)
     // if we have SO_NOSIGPIPE, then set it. Otherwise, we're going
     // to simply ignore it.
 #if defined(SO_NOSIGPIPE)
-    rval = setsockopt(sSessionSocket, SOL_SOCKET, SO_NOSIGPIPE, &rval, sizeof(rval));
+    rval = setsockopt(newSessionSocket, SOL_SOCKET, SO_NOSIGPIPE, &rval, sizeof(rval));
     VerifyOrExit(rval != -1, OT_NOOP);
 #else
 #warning "no support for MSG_NOSIGNAL or SO_NOSIGPIPE"
 #endif
 #endif // __linux__
 
+    if (sSessionSocket != -1)
+    {
+        close(sSessionSocket);
+    }
+    sSessionSocket = newSessionSocket;
+
 exit:
     if (rval == -1)
     {
         otLogWarnPlat("Failed to initialize session socket: %s", strerror(errno));
-        sSessionSocket = -1;
+        if (newSessionSocket != -1)
+        {
+            close(newSessionSocket);
+        }
     }
     else
     {
