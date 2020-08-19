@@ -30,6 +30,8 @@
 import unittest
 
 import thread_cert
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV, MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV, LINK_LAYER_FRAME_COUNTER_TLV, RESPONSE_TLV, LINK_MARGIN_TLV, CONNECTIVITY_TLV, TIMEOUT_TLV, TLV_REQUEST_TLV, ADDRESS16_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER1 = 1
 ROUTER1 = 2
@@ -40,24 +42,28 @@ ROUTER3 = 4
 class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER1: {
+            'name': 'LEADER_1',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'whitelist': [ROUTER1, ROUTER2, ROUTER3]
         },
         ROUTER1: {
+            'name': 'ROUTER_1',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'whitelist': [LEADER1]
         },
         ROUTER2: {
+            'name': 'ROUTER_2',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'whitelist': [LEADER1]
         },
         ROUTER3: {
+            'name': 'ROUTER_3',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
@@ -110,6 +116,79 @@ class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
         for addr in addrs:
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[ROUTER1].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER_1']
+        ROUTER_1 = pv.vars['ROUTER_1']
+        ROUTER_2 = pv.vars['ROUTER_2']
+        ROUTER_3 = pv.vars['ROUTER_3']
+        leader_pkts = pkts.filter_wpan_src64(LEADER)
+        router1_pkts = pkts.filter_wpan_src64(ROUTER_1)
+        router2_pkts = pkts.filter_wpan_src64(ROUTER_2)
+        router3_pkts = pkts.filter_wpan_src64(ROUTER_3)
+
+        # Step 2: The Leader and Router_1 MUST send properly formatted MLE Advertisements
+        leader_pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+        _lpkts = leader_pkts.copy()
+        _lpkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+
+        router1_pkts.range(leader_pkts.index).filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+
+        # Step 4: Each router forms a partition with the lowest possible partition ID
+        # Step 5: Router_1 MUST send MLE Parent Requests and MUST make two separate attempts
+        router1_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+                p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 1)
+        lreset_start = router1_pkts.index
+        router1_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+                p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 1)
+
+        # Step 7: Router_1 MUST attempt to attach to any other Partition
+        # within range by sending a MLE Parent Request.
+        router1_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
+        lreset_stop = router1_pkts.index
+
+        # Step 3: The Leader MUST stop sending MLE advertisements.
+        leader_pkts.range(lreset_start, lreset_stop).filter_mle_cmd(MLE_ADVERTISEMENT).must_not_next()
+
+        # Step 6: The Leader does not respond to the Parent Requests
+        leader_pkts.range(lreset_start, lreset_stop).filter_mle_cmd(MLE_PARENT_RESPONSE).must_not_next()
+
+        # Step 8: Router_1 take over leader role of a new Partition and begin transmitting
+        # MLE Advertisements
+        router1_pkts.copy().filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+
+        # Step 9: The Leader MUST send properly formatted MLE Parent Requests to the
+        # All-Routers multicast address
+        _lpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
+
+        # Step 10: Router_1 MUST send an MLE Parent Response
+        router1_pkts.filter_mle_cmd(MLE_PARENT_RESPONSE).must_next().must_verify(
+            lambda p: {
+                SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, LINK_LAYER_FRAME_COUNTER_TLV, RESPONSE_TLV, CHALLENGE_TLV,
+                LINK_MARGIN_TLV, CONNECTIVITY_TLV, VERSION_TLV
+            } <= set(p.mle.tlv.type))
+
+        # Step 11: Leader send MLE Child ID Request
+        _lpkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(
+            lambda p: {
+                RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV,
+                ADDRESS16_TLV, NETWORK_DATA_TLV, ROUTE64_TLV, ACTIVE_TIMESTAMP_TLV
+            } <= set(p.mle.tlv.type))
+
+        # Step 12: DUT (Router or Leader) MUST respond with a ICMPv6 Echo Reply
+        _lpkts.filter_ping_reply().must_next()
+        router2_pkts.filter_ping_reply().must_next()
+        router3_pkts.filter_ping_reply().must_next()
 
 
 if __name__ == '__main__':
