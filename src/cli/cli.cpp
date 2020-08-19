@@ -726,10 +726,10 @@ void Interpreter::ProcessAdvData(uint8_t aArgsLength, char *aArgs[])
 
     VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
 
-    SuccessOrExit(error = ParseUnsignedLong(aArgs[1], oui));
+    SuccessOrExit(error = ParseUnsignedLong(aArgs[0], oui));
     VerifyOrExit(oui <= std::numeric_limits<uint32_t>::max(), error = OT_ERROR_INVALID_ARGS);
 
-    advDataLength = Hex2Bin(aArgs[2], advData, sizeof(advData));
+    advDataLength = Hex2Bin(aArgs[1], advData, sizeof(advData));
     VerifyOrExit(advDataLength != -1, error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = otThreadSetJoinerAdvertisement(mInstance, static_cast<uint32_t>(oui), advData,
