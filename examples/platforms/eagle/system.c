@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -53,38 +53,13 @@ otInstance *sInstance;
  */
 void otSysInit(int argc, char *argv[])
 {
-	//(void)argc;
-	//(void)argv;
 	OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-    //cpu_wakeup_init();
-    //sys_init(LDO_MODE);
-	//clock_init(PLL_192M, PLL_DIV_TO_CCLK, CCLK_24M,
-	//		HCLK_24M, PCLK_24M, MSPI_CLK_24M);
-
-    //test tlprintf
-    //tlprintf(" \n");
-    //tlprintf("\n Telink semiconductor (%s)Ltd, Co \n","shanghai");
-
-    //while(1)
-    //{
-    //    tlprintf(" Hello openthread! \n");
-	//    delay_ms(500);
-    //}
-    //end
-
-    //intcntl_init();
     core_enable_interrupt();
 	
     EagleRandomInit();
-    //EagleAlarmInit();
     eagleRadioInit();
-    
-
-    #if debug_rf_tx
-    debug_rf_tx_data();
-    #endif
 }
 
 /**

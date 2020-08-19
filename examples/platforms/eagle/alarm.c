@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -46,16 +46,6 @@ static volatile uint32_t sTime      = 0;
 static uint32_t          sAlarmTime = 0;
 static uint32_t last_tick = 0;
 
-//tianyy
-#if 0
-void EagleAlarmInit(void)
-{
-    //config a timer(1 ms)
-    timer_set_mode(TIMER0,TIMER_MODE_SYSCLK,0,sys_clk.pclk*1000);
-	timer_start(TIMER0);
-    plic_interrupt_enable(IRQ4_TIMER0);
-}
-#endif
 
 static inline uint32_t GetCurrentMs(uint32_t t_ms,uint32_t tick)
 {
@@ -64,15 +54,14 @@ static inline uint32_t GetCurrentMs(uint32_t t_ms,uint32_t tick)
 
 void EagleAlarmProcess(otInstance *aInstance)
 {
-    //begin
     uint32_t t = sys_get_stimer_tick();
     if(t < last_tick)
     {
-        sTime += (0xffffffff/16000);//(0xffffffff)/16/1000
+        sTime += (0xffffffff / 16000);
     }
 
     last_tick = t;
-    //end
+    
     if ((sAlarmTime != 0) && ((GetCurrentMs(sTime,t)) >= sAlarmTime))
     {
         sAlarmTime = 0;
@@ -110,24 +99,3 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
 
     sAlarmTime = 0;
 }
-
-#if 0
-void irq_timer0_handler(void)
-{
-    
-	if(reg_tmr_sta & FLD_TMR_STA_TMR0)
-	{
-	    reg_tmr_sta=FLD_TMR_STA_TMR0;
-	    
-	    sTime++;
-        #if 1
-        if((sTime%10000) == 0)
-        {
-            //Tl_printf("sTime = %d\n",sTime);
-            otPlatLog(OT_LOG_LEVEL_DEBG, OT_LOG_REGION_PLATFORM, "time : %d s",sTime/1000);
-        }
-        #endif
-        plic_interrupt_complete(IRQ4_TIMER0);
-	}
-}
-#endif

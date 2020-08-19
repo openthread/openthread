@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -66,13 +66,13 @@ typedef enum {
 unsigned char  rx_buffer_pool[RX_BUFFER_NUM][160]  __attribute__ ((aligned (4)));
 unsigned char  tx_buffer[256] __attribute__ ((aligned (4)));
 
-//
+
 unsigned char  *rx_buffer = NULL;
 unsigned int r_ptr = 0;
 unsigned int w_ptr = 0;
 
 otRadioFrame *current_receive_frame_ptr;
-//
+
 
 static otExtAddress   sExtAddress;
 static otShortAddress sShortAddress;
@@ -85,7 +85,6 @@ static otRadioFrame sReceiveFrame[RX_BUFFER_NUM];
 static otError      sTransmitError;
 static otError      sReceiveError;
 static uint8_t sTransmitPsdu[IEEE802154_MAX_LENGTH];
-//static uint8_t sReceivePsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sAckPsdu[8];
 static otRadioState sState             = OT_RADIO_STATE_DISABLED;
 static bool sSrcMatchEnabled = false;
@@ -107,24 +106,7 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 	return OT_RADIO_CAPS_NONE;
 }
 
-#if 0
-/**
- * Get the radio version string.
- *
- * This is an optional radio driver platform function. If not provided by platform radio driver, OpenThread uses
- * the OpenThread version instead (@sa otGetVersionString()).
- *
- * @param[in]  aInstance   The OpenThread instance structure.
- *
- * @returns A pointer to the OpenThread radio version.
- *
- */
-const char *otPlatRadioGetVersionString(otInstance *aInstance)
-{
-	OT_UNUSED_VARIABLE(aInstance);
-	return NULL;
-}
-#endif
+
 
 /**
  * Get the radio receive sensitivity value.
@@ -150,7 +132,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
 	OT_UNUSED_VARIABLE(aInstance);
-	//OT_UNUSED_VARIABLE(aIeeeEui64);
+	
 	uint8_t *    eui64;
     unsigned int i;
 
@@ -324,25 +306,6 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 	OT_UNUSED_VARIABLE(aEnable);
 }
 
-#if 0
-/**
- * Get current state of the radio.
- *
- * This function is not required by OpenThread. It may be used for debugging and/or application-specific purposes.
- *
- * @note This function may be not implemented. It does not affect OpenThread.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- *
- * @return  Current state of the radio.
- *
- */
-otRadioState otPlatRadioGetState(otInstance *aInstance)
-{
-	OT_UNUSED_VARIABLE(aInstance);
-	return OT_RADIO_STATE_DISABLED;
-}
-#endif
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
@@ -384,8 +347,6 @@ otError otPlatRadioSleep(otInstance *aInstance)
         otLogDebgPlat("State=OT_RADIO_STATE_SLEEP", NULL);
         error  = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_SLEEP;
-        //disableReceiver();
-        //rf_trx_state_set(RF_MODE_TX, 15);
         rf_set_txmode();
     }
 
@@ -404,11 +365,6 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
         error  = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_RECEIVE;
-        //setChannel(aChannel);
-        //sReceiveFrame.mChannel = aChannel;
-        //enableReceiver();
-        //Tl_printf("turn to rx mode,channel:%d\n",aChannel);
-        //rf_trx_state_set(RF_MODE_RX, aChannel);
         rf_set_channel(aChannel);
         rf_set_rxmode();
     }
@@ -482,45 +438,7 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 
     sSrcMatchEnabled = aEnable;
 }
-#if 0
-otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aShortAddress);
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
 
-otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aExtAddress);
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-
-otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aShortAddress);
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-
-otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aExtAddress);
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-
-void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-}
-#endif
 
 static void init_queue()
 {
@@ -591,13 +509,11 @@ static otRadioFrame *get_receive_frame()
     return current_receive_frame_ptr;
 }
 
-//
-#if 1
+
 static uint32_t m_in_critical_region = 0;
 
 static inline void util_disable_rf_irq(void)
 {
-    //plic_interrupt_disable(IRQ15_ZB_RT);
     rf_clr_irq_mask(FLD_ZB_RX_IRQ);
     m_in_critical_region++;
 }
@@ -607,75 +523,36 @@ static inline void util_enable_rf_irq(void)
     m_in_critical_region--;
     if (m_in_critical_region == 0)
     {
-        //plic_interrupt_enable(IRQ15_ZB_RT);
         rf_set_irq_mask(FLD_ZB_RX_IRQ);
     }
 }
 
-//void util_critical_region_enter()
-//{
-//    util_disable_irq();
-//}
-
-//void util_critical_region_exit()
-//{
-//    util_enable_irq();
-//}
-#endif
-//
-#if 0
-void disable_rf_rx_interrupt()
-{
-    //Tl_printf("disable_rf_rx_interrupt\n");
-    plic_interrupt_disable(IRQ15_ZB_RT);
-}
-
-void enable_rf_rx_interrupt()
-{
-    //Tl_printf("enable_rf_rx_interrupt\n");
-    plic_interrupt_enable(IRQ15_ZB_RT);
-}
-#endif
-#define debug_send_receive 0
 
 void eagleRadioInit(void)
 {
     int i;
     
-    //Tl_printf("rf init\n");
+    
     sTransmitFrame.mLength = 0;
     sTransmitFrame.mPsdu   = sTransmitPsdu;
-    //
-    //sReceiveFrame.mLength  = 0;
-    //sReceiveFrame.mPsdu    = sReceivePsdu;
+    
     for(i = 0;i<RX_BUFFER_NUM;i++)
     {
         sReceiveFrame[i].mLength = 0;
         sReceiveFrame[i].mPsdu = &(rx_buffer_pool[i][5]);
     }
     init_queue();
-    //
+    
     sAckFrame.mLength = 0;
     sAckFrame.mPsdu = sAckPsdu;
 
-    //rf_init();
+    
     rf_drv_init(RF_MODE_ZIGBEE_250K);
-    //rf_set_zigbee_250K_mode();
-
     rf_set_tx_dma(2,16);
-    //rf_set_rx_dma(rx_buffer);
     get_receive_frame();
     rf_set_rx_dma(rx_buffer,3,16);
-
-    //intcntl_enable_irq(FLD_IRQ15_ZB_RT);
     plic_interrupt_enable(IRQ15_ZB_RT);
     rf_set_irq_mask(FLD_ZB_RX_IRQ|FLD_ZB_TX_IRQ);
-    //rf_set_rxmode();
-    #if debug_rf_rx
-    rf_set_channel(20);
-    rf_set_rxmode();
-    while(1){;}
-    #endif
 }
 
 static void setupTransmit(otRadioFrame *aFrame)
@@ -698,17 +575,6 @@ static void setupTransmit(otRadioFrame *aFrame)
         tx_buffer[5+i] = aFrame->mPsdu[i];
     }
     
-    //Tl_printf("setup tx , channel:%d\n",aFrame->mChannel);
-    #if debug_send_receive
-    {
-        int j;
-        //Tl_printf("data:\n");
-        for(j=0;j<aFrame->mLength;j++)
-        {
-            //Tl_printf("%d ",aFrame->mPsdu[j]);
-        }
-    }
-    #endif
     rf_set_channel(aFrame->mChannel);
 }
 
@@ -725,12 +591,10 @@ phy_ccaSts_t rf_performCCA(void)
 		}
 	}
 
-	if (rssi_peak > -60 ) {//Return if currently in TX state
-	    //Tl_printf("cca busy\n");
+	if (rssi_peak > -60 ) {
 		//return PHY_CCA_BUSY;
 		return PHY_CCA_IDLE;
 	} else {
-	    //Tl_printf("cca idle\n");
 		return PHY_CCA_IDLE;
 	}
 }
@@ -751,19 +615,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         sTransmitError = OT_ERROR_NONE;
 
         setupTransmit(aFrame);
-
-        //
-        #if 0
-    {
-        int j;
-        Tl_printf("send data:\n");
-        for(j=0;j<aFrame->mLength;j++)
-        {
-            Tl_printf("%d ",aFrame->mPsdu[j]);
-        }
-    }
-    #endif
-        //
         
         // wait for valid rssi
         cca_result = rf_performCCA();
@@ -773,45 +624,15 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
         // begin transmit
         tx_busy = 1;
-        //rf_trx_state_set(RF_MODE_TX,aFrame->mChannel);
         rf_set_txmode();
         rf_tx_pkt(tx_buffer);
-        //Tl_printf("tx started\n");
         otPlatRadioTxStarted(aInstance, aFrame);
-
-        //waiting for tx to be done? fix me
-        //while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE)
-        //    ;
-
-        
     }
 
 exit:
     return error;
 }
 
-#if debug_rf_tx
-
-otRadioFrame debug_rf_tx_frame;
-unsigned char debug_rf_tx_psdu[6] = {0xaa,0xbb,0xcc,0xdd,0xee,0xff};
-
-void debug_rf_tx_data(void)
-{
-    debug_rf_tx_frame.mPsdu = debug_rf_tx_psdu;
-    debug_rf_tx_frame.mLength = 8;
-    debug_rf_tx_frame.mChannel = 20;
-    
-    while(1)
-    {
-        setupTransmit(&debug_rf_tx_frame);
-        //rf_trx_state_set(RF_MODE_TX,debug_rf_tx_frame.mChannel);
-        rf_set_txmode();
-        rf_tx_pkt(tx_buffer);
-        //Tl_printf("tx started\n");
-        delay_ms(1000);
-    }
-}
-#endif
 
  bool isDataRequestAndHasFramePending(const otRadioFrame *aFrame)
 {
@@ -843,8 +664,8 @@ exit:
     return rval;
 }
 
-//#if (!(debug_rf_rx))
- void radioSendAck(void)
+
+void radioSendAck(void)
 {
     sAckFrame.mLength    = IEEE802154_ACK_LENGTH;
     sAckFrame.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
@@ -860,17 +681,14 @@ exit:
 
     sAckFrame.mChannel = current_receive_frame_ptr->mChannel;
 
-    //Tl_printf("send ack,channel:%d\n",sAckFrame.mChannel);
+    
     //Transmit
     setupTransmit(&sAckFrame);
-    //rf_trx_state_set(RF_MODE_TX,sAckFrame.mChannel);
     rf_set_txmode();
-    rf_tx_pkt(tx_buffer);//
+    rf_tx_pkt(tx_buffer);
     //rf_start_stx(tx_buffer,0,0);
-   // while(!(rf_get_irq_status(FLD_ZB_TX_IRQ))){;}
-   // Tl_printf("send ack done(1)\n");
 }
-//#endif
+
 
 uint8_t rf_rssi_to_lqi(int8_t aRss)
 {
@@ -908,21 +726,15 @@ uint8_t rf_rssi_to_lqi(int8_t aRss)
     return linkQuality;
 }
 
-//#if (!(debug_rf_rx))
 
 extern unsigned char current_channel;
 
  void radioProcessFrame(void)
 {
     uint8_t length;
-    //int     i;
     signed char rssi;
     
 
-    //Tl_printf("radioProcessFrame\n");
-    //Tl_printf("sReceiveFrame.mLength:%d\n",sReceiveFrame.mLength);
-    //otEXPECT(sReceiveFrame.mLength == 0);
-    //Tl_printf("sState:%d\n",sState);
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
     
     rssi = ((signed char)(rx_buffer[rx_buffer[0]+2])) - 110;
@@ -930,29 +742,13 @@ extern unsigned char current_channel;
     length = rx_buffer[4];
     otEXPECT(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH);
 
-    //for (i = 0; i < length - 2; i++)
-    //{
-    //    current_receive_frame_ptr->mPsdu[i] = rx_buffer[5+i];
-    //}
+    
     current_receive_frame_ptr->mLength            = length;
-
-    //channel
     current_receive_frame_ptr->mChannel = current_channel;
-    //end
+    
 
     if(length == IEEE802154_ACK_LENGTH)
     {
-        #if debug_send_receive
-        {
-            int j;
-            //Tl_printf("receive data:\n");
-            for(j=0;j<current_receive_frame_ptr->mLength;j++)
-            {
-                //Tl_printf("%d ",current_receive_frame_ptr->mPsdu[j]);
-            }
-        }
-        #endif
-        //ack frame
         //push the frame
         queue_push();
         if(!queue_is_full())
@@ -962,38 +758,22 @@ extern unsigned char current_channel;
         }
         else
         {
-           // disable_rf_rx_interrupt();
-           //util_disable_rf_irq();
            queue_push_undo();
         }
-        //end
     }
     else if(length > IEEE802154_ACK_LENGTH)
     {
-        //otEXPECT_ACTION(otMacFrameDoesAddrMatch(&sReceiveFrame, sPanid, sShortAddress, &sExtAddress),
-        //            sReceiveFrame.mLength = 0);
         if(!otMacFrameDoesAddrMatch(current_receive_frame_ptr, sPanid, sShortAddress, &sExtAddress))
         {
             //drop the frame
             //do nothing
             goto exit;
         }
-        current_receive_frame_ptr->mInfo.mRxInfo.mRssi = rssi;//((signed char)(rx_buffer[rx_buffer[0]+2])) - 110;
+        current_receive_frame_ptr->mInfo.mRxInfo.mRssi = rssi;
         current_receive_frame_ptr->mInfo.mRxInfo.mLqi = rf_rssi_to_lqi(current_receive_frame_ptr->mInfo.mRxInfo.mRssi);
         current_receive_frame_ptr->mInfo.mRxInfo.mAckedWithFramePending = false;
 
-        //
-        #if debug_send_receive
-        {
-            int j;
-            //Tl_printf("receive data:\n");
-            for(j=0;j<current_receive_frame_ptr->mLength;j++)
-            {
-                //Tl_printf("%d ",current_receive_frame_ptr->mPsdu[j]);
-            }
-        }
-        #endif
-        //
+        
         
         // generate acknowledgment
         if (otMacFrameIsAckRequested(current_receive_frame_ptr))
@@ -1001,18 +781,6 @@ extern unsigned char current_channel;
             radioSendAck();
         }
 
-//
-        #if 0
-        {
-            int j;
-            Tl_printf("receive data:\n");
-            for(j=0;j<current_receive_frame_ptr->mLength;j++)
-            {
-                Tl_printf("%d ",current_receive_frame_ptr->mPsdu[j]);
-            }
-        }
-        #endif
-//
         //push the frame
         queue_push();
         if(!queue_is_full())
@@ -1022,92 +790,42 @@ extern unsigned char current_channel;
         }
         else
         {
-            //disable_rf_rx_interrupt();
-            //util_disable_rf_irq();
             queue_push_undo();
         }
-        //end
     }
 
 exit:
     return;
 }
 
-//#endif
+
 
 void EagleRxTxIntHandler()
 {
 	if(rf_get_irq_status(FLD_ZB_RX_IRQ))
 	{
-        //
         dma_chn_dis(DMA1);
         rf_clr_irq_status(FLD_ZB_RX_IRQ);
-        //
-        //Tl_printf("rx interrupt\n");
+        
 		if(RF_ZIGBEE_PACKET_CRC_OK(rx_buffer)&&RF_ZIGBEE_PACKET_LENGTH_OK(rx_buffer))
 		{
-            //Tl_printf("crc and length ok\n");
-            #if debug_rf_rx
-            {
-                uint8_t length;
-                int     i;
-
-                length = rx_buffer[4];
-                for (i = 0; i < length - 2; i++)
-                {
-                    //Tl_printf("%x ",rx_buffer[5+i]);
-                }
-                //Tl_printf("\n");
-            }
-            #else
 			radioProcessFrame();
-
-            //if (sReceiveFrame.mLength > 0)
-            //{
-                // A frame has been received, disable the interrupt handler
-                // until the main loop has dealt with this previous frame,
-                // otherwise we might overwrite it whilst it is being read.
-            //    Tl_printf("EagleRxTxIntHandler : clear rx irq mask\n");
-                //rf_clr_irq_mask(FLD_ZB_RX_IRQ);
-            //}
-
-            #endif
-			
 		}
 		
         dma_chn_en(DMA1);
 	}
     else if(rf_get_irq_status(FLD_ZB_TX_IRQ))
     {
-        //
+        
         rf_clr_irq_status(FLD_ZB_TX_IRQ);
-        //
-        //add code
-        //rf_trx_state_set(RF_MODE_RX,sReceiveFrame.mChannel);
-        #if debug_rf_tx
-        {
-            //Tl_printf("tx interrupt\n");
-        }
-        #else
+        
+        
         if((tx_busy == 1)&&(sState == OT_RADIO_STATE_TRANSMIT))
         {
-            //Tl_printf("send packet done!\n");
             tx_busy = 0;
-        }else if((tx_busy == 0)&&(sState != OT_RADIO_STATE_TRANSMIT))
-        {
-            //Tl_printf("send ack done!\n");
-        }else
-        {
-            //Tl_printf("state error!\n");
-            
         }
         //set to rx mode
-        //rf_set_channel(sReceiveFrame.mChannel);
         rf_set_rxmode();
-        //end
-        #endif
-        //end
-        
     }
 	
 	plic_interrupt_complete(IRQ15_ZB_RT);
@@ -1118,49 +836,17 @@ void EagleRxTxIntHandler()
 
 void eagleRadioProcess(otInstance *aInstance)
 {
-
-    // Disable the receive interrupt so that sReceiveFrame doesn't get
-    // blatted by the interrupt handler while we're polling.
-    //Tl_printf("eagleRadioProcess : clear rx irq mask\n");
-    //rf_clr_irq_mask(FLD_ZB_RX_IRQ);
-
-    //
     otRadioFrame *ptr;
-    //int is_full = 0;
 
     util_disable_rf_irq();
     ptr = get_top_frame();
-    //if(queue_is_full())
-    //{
-    //    is_full = 1;
-    //}
     util_enable_rf_irq();
-    //
 
     if ((sState == OT_RADIO_STATE_RECEIVE ) || (sState == OT_RADIO_STATE_TRANSMIT ))
     {
         if ((ptr != NULL)&&(ptr->mLength > IEEE802154_ACK_LENGTH))
         {
-            //Tl_printf("call : otPlatRadioReceiveDone\n");
-            //
-        #if 0
-        {
-            int j;
-            Tl_printf("process data:\n");
-            for(j=0;j<ptr->mLength;j++)
-            {
-                Tl_printf("%d ",ptr->mPsdu[j]);
-            }
-        }
-        #endif
-            //
             otPlatRadioReceiveDone(aInstance, ptr, sReceiveError);
-            //queue_pop();
-            //ptr = NULL;
-            //if(is_full)
-            //{
-            //    enable_rf_rx_interrupt();
-            //}
         }
         
     }
@@ -1175,7 +861,6 @@ void eagleRadioProcess(otInstance *aInstance)
            )
         {
             sState = OT_RADIO_STATE_RECEIVE;
-            //Tl_printf("call : otPlatRadioTxDone(1)\n");
             otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitError);
             
         }
@@ -1184,34 +869,14 @@ void eagleRadioProcess(otInstance *aInstance)
                  (ptr->mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
         {
             sState = OT_RADIO_STATE_RECEIVE;
-            //Tl_printf("call : otPlatRadioTxDone(2)\n");
             otPlatRadioTxDone(aInstance, &sTransmitFrame, ptr, sTransmitError);
-            //queue_pop();
-            //ptr = NULL;
-            //if(is_full)
-            //{
-            //    enable_rf_rx_interrupt();
-            //}
         }
     }
 
-    //sReceiveFrame.mLength = 0;
     util_disable_rf_irq();
     if(ptr != NULL)
     {
     queue_pop();
     }
     util_enable_rf_irq();
-    //ptr = NULL;
-    //if(is_full)
-    //{
-       // enable_rf_rx_interrupt();
-    //   util_enable_rf_irq();
-    //}
-
-
-    // Turn the receive interrupt handler back on now the buffer is clear.
-    //Tl_printf("eagleRadioProcess : set rx irq mask\n");
-    //rf_set_irq_mask(FLD_ZB_RX_IRQ);
-
 }

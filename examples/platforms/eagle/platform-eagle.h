@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -45,20 +45,10 @@
 // Global OpenThread instance structure
 extern otInstance *sInstance;
 
-#define debug_rf_rx 0
-#define debug_rf_tx 0
-
-#if debug_rf_tx
-void debug_rf_tx_data(void);
-#endif
 
 void cpu_wakeup_init(void);
 
-/**
- * This function initializes the alarm service used by OpenThread.
- *
- */
-//void EagleAlarmInit(void);
+
 
 /**
  * This function performs alarm driver processing.
@@ -68,8 +58,6 @@ void cpu_wakeup_init(void);
  */
 void EagleAlarmProcess(otInstance *aInstance);
 
-
-//void irq_timer0_handler(void);
 
 void irq_uart0_handler(void);
 

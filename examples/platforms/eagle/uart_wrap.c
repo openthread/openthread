@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,6 @@
 
 enum
 {
-    //kPlatformClock     = 32000000,
     kBaudRate          = 115200,
     kReceiveBufferSize = 128,
 };
@@ -59,7 +58,6 @@ enum
 static const unsigned char *sTransmitBuffer = NULL;
 static unsigned short       sTransmitLength = 0;
 
-//volatile unsigned char uart0_data_index = 0;
 
 
 typedef struct RecvBuffer
@@ -93,21 +91,12 @@ otError otPlatUartEnable(void)
 	unsigned char bwpc;
     
     init_recv_buffer();
-    //uart0_reset();
-	//uart0_gpio_set(UART0_TX_PA3  , UART0_RX_PA4 );// uart tx/rx pin set
-	//uart0_init_baudrate(kBaudRate,CLOCK_SYS_CLOCK_HZ,UART0_PARITY_NONE, UART0_STOP_BIT_ONE);
-
-	
-	//intcntl_enable_irq(FLD_IRQ19_UART0);
-	//uart0_ndma_irq_triglevel(1,0);
-	//uart0_irq_enable(1,0);
 	uart_reset(UART0);
 	uart_set_pin(UART0_TX_PB2, UART0_RX_PB3 );// uart tx/rx pin set
 	uart_cal_div_and_bwpc(115200, sys_clk.pclk*1000*1000, &div, &bwpc);
 	uart_set_dma_rx_timeout(UART0, bwpc, 12, UART_BW_MUL1);
 	uart_init(UART0, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
 
-	//core_enable_interrupt();
 	plic_interrupt_enable(IRQ19_UART0);
 	uart_tx_irq_trig_level_ndma(UART0, 0);
 	uart_rx_irq_trig_level_ndma(UART0, 1);
@@ -223,16 +212,9 @@ void irq_uart0_handler(void)
 {
     uint8_t  byte;
 
-    //tlprintf("Enter irq_uart0_handler\n");
     if (uart_get_irq_status(UART0, UART_RXBUF_IRQ_STATUS))
     {
-            //uint8_t temp[2];
             byte = uart_read_byte(UART0);
-            //temp[0] = byte;
-            //temp[1] = 0;
-            //tlprintf("uart0 receive:%s\n",temp);
-            //uart0_data_index++;
-            //uart0_data_index&=0x03;
 
             // We can only write if incrementing mTail doesn't equal mHead
             if (sReceive.mHead != (sReceive.mTail + 1) % kReceiveBufferSize)

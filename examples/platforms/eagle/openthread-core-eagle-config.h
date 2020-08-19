@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016-2017, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@
  */
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "EAGLE"
 
-#define FLASH_SIMU 0
+
 
 /* Define system clock */
 #define CLOCK_SYS_CLOCK_HZ  	48000000		// define system clock
@@ -65,20 +65,6 @@ enum{
 #define MSPI_CLK_24M		CCLK_TO_MSPI_CLK
 
 
-/**
- * @def SETTINGS_CONFIG_PAGE_NUM
- */
-#define SETTINGS_CONFIG_PAGE_NUM 2
-
-/**
- * @def SETTINGS_CONFIG_PAGE_SIZE
- *
- * The page size of settings, 2K bytes
- *
- */
-#define SETTINGS_CONFIG_PAGE_SIZE 4096
-
-#define SETTINGS_CONFIG_BASE_ADDRESS 0x60000
 
 #define SETTINGS_CONFIG_IEEE_EUI64_ADDRESS 0x76000
 

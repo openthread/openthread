@@ -1,28 +1,3 @@
-/**
- ****************************************************************************************
- *
- * @file interrupt.c
- *
- * @brief Interrupt vectors definition.
- *
- * Copyright (C) RivieraWaves 2009-2015
- *
- *
- ****************************************************************************************
- */
-/**
- *****************************************************************************************
- * @addtogroup DRIVERS
- * @{
- *
- *****************************************************************************************
- */
-
-/*
- * INCLUDE FILES
- ****************************************************************************************
- */
-
 #include "platform-eagle.h"
 /*
  * FUNCTION DEFINITIONS
@@ -89,7 +64,6 @@ void interrupt_handler3(void) {
 
 void interrupt_handler4(void) __attribute__ ((interrupt ("machine"), aligned(4)));
 void interrupt_handler4(void) {
-	//irq_timer0_handler();
 
 }
 

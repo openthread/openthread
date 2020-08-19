@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -33,12 +33,8 @@
  */
 
 #include <openthread/platform/entropy.h>
-
 #include <openthread/platform/radio.h>
-
-
 #include "utils/code_utils.h"
-
 #include "platform-eagle.h"
 
 void EagleRandomInit(void)
@@ -48,19 +44,6 @@ void EagleRandomInit(void)
 
 otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    //OT_UNUSED_VARIABLE(aOutput);
-	//OT_UNUSED_VARIABLE(aOutputLength);
-	#if 0
-    unsigned char s = (unsigned char)get_sys_clock_tick();
-    unsigned short i;
-
-    for(i=0;i<aOutputLength;i++)
-    {
-        *aOutput = s;
-        aOutput++;
-        s++;
-    }
-    #else
     unsigned short i;
     unsigned short temp;
     unsigned int rn;
@@ -84,6 +67,6 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
             rn >>= 8;
         }
     }
-    #endif
+    
     return OT_ERROR_NONE;
 }
