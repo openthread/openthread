@@ -183,6 +183,20 @@ exit:
     return error;
 }
 
+const uint8_t *DiscoverScanner::GetJoinerAdvertisement(uint32_t &aOui, uint8_t &aAdvDataLength)
+{
+    const uint8_t *advData = nullptr;
+
+    if (mAdvDataLength != 0)
+    {
+        aOui           = mOui;
+        aAdvDataLength = mAdvDataLength;
+        advData        = mAdvData;
+    }
+
+    return advData;
+}
+
 otError DiscoverScanner::PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame)
 {
     otError error = OT_ERROR_NONE;

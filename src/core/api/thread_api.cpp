@@ -472,6 +472,13 @@ otError otThreadSetJoinerAdvertisement(otInstance *   aInstance,
     return instance.Get<Mle::DiscoverScanner>().SetJoinerAdvertisement(aOui, aAdvData, aAdvDataLength);
 }
 
+const uint8_t *otThreadGetJoinerAdvertisement(otInstance *aInstance, uint32_t *aOui, uint8_t *aAdvDataLength)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mle::DiscoverScanner>().GetJoinerAdvertisement(*aOui, *aAdvDataLength);
+}
+
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

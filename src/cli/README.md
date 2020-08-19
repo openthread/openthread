@@ -21,6 +21,7 @@ Done
 
 ## OpenThread Command List
 
+- [advdata](#advdata)
 - [bbr](#bbr)
 - [bufferinfo](#bufferinfo)
 - [channel](#channel)
@@ -99,6 +100,21 @@ Done
 - [version](#version)
 
 ## OpenThread Command Details
+
+### advdata
+
+Usage: `advdata [oui] [adv-data]`
+
+Print or set the Joiner Advertisement data.
+
+```bash
+> advdata 0xbbccdd 001122334455
+Done
+> advdata
+OUI: 0xbbccdd
+AdvData: 001122334455
+Done
+```
 
 ### bbr
 
