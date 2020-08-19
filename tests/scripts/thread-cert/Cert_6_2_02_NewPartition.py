@@ -30,6 +30,8 @@
 import unittest
 
 import thread_cert
+from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_ADVERTISEMENT, MLE_CHILD_UPDATE_REQUEST, SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER1 = 2
@@ -40,17 +42,20 @@ ED = 4
 class Cert_6_2_2_NewPartition(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
             'whitelist': [ROUTER1, ROUTER2]
         },
         ROUTER1: {
+            'name': 'ROUTER_1',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'whitelist': [LEADER, ROUTER2, ED]
         },
         ROUTER2: {
+            'name': 'ROUTER_2',
             'mode': 'rsdn',
             'network_id_timeout': 110,
             'panid': 0xface,
@@ -58,6 +63,7 @@ class Cert_6_2_2_NewPartition(thread_cert.TestCase):
             'whitelist': [LEADER, ROUTER1]
         },
         ED: {
+            'name': 'ED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
@@ -88,9 +94,33 @@ class Cert_6_2_2_NewPartition(thread_cert.TestCase):
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
+        self.collect_ipaddrs()
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             self.assertTrue(self.nodes[ROUTER1].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        ROUTER_1 = pv.vars['ROUTER_1']
+        ED = pv.vars['ED']
+        _router1_pkts = pkts.filter_wpan_src64(ROUTER_1)
+        _ed_pkts = pkts.filter_wpan_src64(ED)
+
+        # Step 1: Ensure that the DUT successfully attached to Router_1
+        _ed_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).filter_wpan_dst64(ROUTER_1).must_next()
+
+        # Step 2-6 : remove Leader and make ROUTER_2 as new Leader
+        # Step 7: The DUT MUST send a MLE Child Update Request to Router_1
+        _ed_pkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_not_next()
+        _ed_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_not_next()
+        _ed_pkts.filter_wpan_dst64(ROUTER_1).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
+            lambda p: {MODE_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV} < set(p.mle.tlv.type))
+
+        # Step 8: The DUT MUST respond with ICMPv6 Echo Reply
+        _ed_pkts.filter('ipv6.dst == {ROUTER_1_MLEID} and ipv6.src == {ED_MLEID}',
+                        **pv.vars).filter_ping_reply().must_next()
 
 
 if __name__ == '__main__':
