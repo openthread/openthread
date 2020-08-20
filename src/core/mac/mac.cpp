@@ -1372,9 +1372,10 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         // Verify Enh-ACK integrity by checking its MIC
-        if ((aError == OT_ERROR_NONE) && (aAckFrame != nullptr))
+        if ((aError == OT_ERROR_NONE) && (aAckFrame != nullptr) &&
+            (ProcessEnhAckSecurity(aFrame, *aAckFrame) != OT_ERROR_NONE))
         {
-            aError = (ProcessEnhAckSecurity(aFrame, *aAckFrame) == OT_ERROR_NONE) ? OT_ERROR_NONE : OT_ERROR_NO_ACK;
+            aError = OT_ERROR_NO_ACK;
         }
 #endif
     }
@@ -1678,7 +1679,7 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 
     IgnoreError(aAckFrame.GetSrcAddr(srcAddr));
 
-    if (srcAddr.GetType() == Address::kTypeShort)
+    if (srcAddr.IsShort())
     {
         neighbor = Get<NeighborTable>().FindNeighbor(srcAddr);
 
@@ -1688,12 +1689,12 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
         }
     }
 
-    if (srcAddr.GetType() != Address::kTypeExtended)
+    if (!srcAddr.IsExtended())
     {
         // Get Enh-ACK source address from transmitted frame destination address
         IgnoreError(aTxFrame.GetDstAddr(srcAddr));
 
-        if (srcAddr.GetType() == Address::kTypeShort)
+        if (srcAddr.IsShort())
         {
             neighbor = Get<NeighborTable>().FindNeighbor(srcAddr);
 
@@ -1704,7 +1705,7 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
         }
     }
 
-    VerifyOrExit(srcAddr.GetType() == Address::kTypeExtended, OT_NOOP);
+    VerifyOrExit(srcAddr.IsExtended(), OT_NOOP);
 
     ackKeyId--;
 
