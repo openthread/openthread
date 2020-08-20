@@ -2540,7 +2540,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         {
             child->SetCslChannel(static_cast<uint8_t>(cslChannel.GetChannel()));
         }
-        else
+        else if (child->GetCslChannel() == 0)
         {
             child->SetCslChannel(Get<Mac::Mac>().GetPanChannel());
         }
