@@ -313,7 +313,7 @@ EXAMPLES:
 do_package()
 {
     local builddir
-    local options=("-DCMAKE_BUILD_TYPE=Release")
+    local options=("-DCMAKE_BUILD_TYPE=Release" "-DOT_LOG_LEVEL=INFO")
 
     if [[ ${ot_extra_options[*]+x} ]]; then
         options+=("${ot_extra_options[@]}")
