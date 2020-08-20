@@ -44,14 +44,13 @@
 #include "gpio.h"
 #include "reg_include/register_9518.h"
 
-
 /**********************************************************************************************************************
  *                                         global constants                                                           *
  *********************************************************************************************************************/
 /**
  *  @brief  Define system tick
  */
-#define	    tl_sys_tick_per_us   				16
+#define tl_sys_tick_per_us 16
 
 /**********************************************************************************************************************
  *                                         global data type                                                           *
@@ -59,22 +58,22 @@
 /**
  * @brief   Type of Timer
  */
-typedef enum{
-	TIMER0		=0,
-	TIMER1		=1,
-}timer_type_e;
-
+typedef enum
+{
+    TIMER0 = 0,
+    TIMER1 = 1,
+} timer_type_e;
 
 /**
  * @brief   Mode of Timer
  */
-typedef enum{
-	TIMER_MODE_SYSCLK		=0,
-	TIMER_MODE_GPIO_TRIGGER	=1,
-	TIMER_MODE_GPIO_WIDTH	=2,
-	TIMER_MODE_TICK			=3,
-}timer_mode_e;
-
+typedef enum
+{
+    TIMER_MODE_SYSCLK       = 0,
+    TIMER_MODE_GPIO_TRIGGER = 1,
+    TIMER_MODE_GPIO_WIDTH   = 2,
+    TIMER_MODE_TICK         = 3,
+} timer_mode_e;
 
 /**********************************************************************************************************************
  *                                      global function prototype                                                     *
@@ -95,7 +94,7 @@ void timer_start(timer_type_e type);
  * @param[in] cap_tick  - tick of capture.
  * @return    none
  */
-void timer_set_mode(timer_type_e type, timer_mode_e mode,unsigned int init_tick, unsigned int cap_tick);
+void timer_set_mode(timer_type_e type, timer_mode_e mode, unsigned int init_tick, unsigned int cap_tick);
 
 /**
  * @brief     initiate GPIO for gpio trigger and gpio width mode of timer.
@@ -105,7 +104,6 @@ void timer_set_mode(timer_type_e type, timer_mode_e mode,unsigned int init_tick,
  * @param[in] lev_en
  * @return    none
  */
-void timer_gpio_init(timer_type_e type, gpio_pin_e pin, gpio_pol_e pol );
-
+void timer_gpio_init(timer_type_e type, gpio_pin_e pin, gpio_pol_e pol);
 
 #endif /* TIMER_H_ */

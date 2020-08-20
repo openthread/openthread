@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/platform/misc.h>
 #include "platform-eagle.h"
+#include <openthread/platform/misc.h>
 
 void otPlatReset(otInstance *aInstance)
 {
@@ -37,11 +37,12 @@ void otPlatReset(otInstance *aInstance)
     // Disable CPU interrupts
     core_disable_interrupt();
     // Write reset register
-    write_reg8 (0x1401ef, 0x20);
-   // Finally, wait until the above write propagates
-   while ( 1 ) {
-      // Do nothing, just wait for the reset (and never return from here)
-   }
+    write_reg8(0x1401ef, 0x20);
+    // Finally, wait until the above write propagates
+    while (1)
+    {
+        // Do nothing, just wait for the reset (and never return from here)
+    }
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
@@ -56,5 +57,3 @@ void otPlatAssertFail(const char *aFilename, int aLineNumber)
     OT_UNUSED_VARIABLE(aFilename);
     OT_UNUSED_VARIABLE(aLineNumber);
 }
-
-

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     driver_8258.h 
+ * @file     driver_8258.h
  *
  * @brief    This is the header file for TLSR8258
  *
@@ -17,22 +17,20 @@
  *
  *           Licensees are granted free, non-transferable use of the information in this
  *           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
- *         
+ *
  *******************************************************************************************************/
 #pragma once
-
-
 
 #include "analog.h"
 #include "dma.h"
 #include "gpio.h"
 #include "i2c.h"
-#include "spi.h"
 #include "pwm.h"
+#include "spi.h"
 
-#include "timer.h"
 #include "compiler.h"
 #include "flash.h"
+#include "timer.h"
 
 #include "watchdog.h"
 
@@ -44,7 +42,7 @@
 #include "sys.h"
 
 #include "plic.h"
-#include "uart.h"
 #include "stimer.h"
+#include "uart.h"
 
 #include "rf.h"

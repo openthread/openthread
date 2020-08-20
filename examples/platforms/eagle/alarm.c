@@ -41,28 +41,26 @@
 
 #include "platform-eagle.h"
 
-
 static volatile uint32_t sTime      = 0;
 static uint32_t          sAlarmTime = 0;
-static uint32_t last_tick = 0;
+static uint32_t          last_tick  = 0;
 
-
-static inline uint32_t GetCurrentMs(uint32_t t_ms,uint32_t tick)
+static inline uint32_t GetCurrentMs(uint32_t t_ms, uint32_t tick)
 {
-    return t_ms + tick/16000;
+    return t_ms + tick / 16000;
 }
 
 void EagleAlarmProcess(otInstance *aInstance)
 {
     uint32_t t = sys_get_stimer_tick();
-    if(t < last_tick)
+    if (t < last_tick)
     {
         sTime += (0xffffffff / 16000);
     }
 
     last_tick = t;
-    
-    if ((sAlarmTime != 0) && ((GetCurrentMs(sTime,t)) >= sAlarmTime))
+
+    if ((sAlarmTime != 0) && ((GetCurrentMs(sTime, t)) >= sAlarmTime))
     {
         sAlarmTime = 0;
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
@@ -79,11 +77,10 @@ void EagleAlarmProcess(otInstance *aInstance)
     }
 }
 
-
 uint32_t otPlatAlarmMilliGetNow(void)
 {
     uint32_t t = sys_get_stimer_tick();
-    return GetCurrentMs(sTime,t);
+    return GetCurrentMs(sTime, t);
 }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)

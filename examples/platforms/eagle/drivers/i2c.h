@@ -27,13 +27,11 @@
 #ifndef I2C_H
 #define I2C_H
 
-
-
+#include "analog.h"
+#include "dma.h"
 #include "gpio.h"
 #include "../common/bit.h"
-#include "analog.h"
 #include "reg_include/register_9518.h"
-#include "dma.h"
 
 /**********************************************************************************************************************
  *                                         global constants                                                           *
@@ -45,26 +43,22 @@
 /**
  * The default is 4, we recommend setting it to 1 or 4.
  */
-#define     SLAVE_RX_IRQ_TRIG_LEVEL     4
-
-
-
-
+#define SLAVE_RX_IRQ_TRIG_LEVEL 4
 
 /**
  *  @brief  select pin as SDA and SCL of i2c
  */
-typedef enum{
-	I2C_GPIO_SDA_B3		= GPIO_PB3,
-	I2C_GPIO_SDA_C2		= GPIO_PC2,
-}i2c_sda_pin_e;
+typedef enum
+{
+    I2C_GPIO_SDA_B3 = GPIO_PB3,
+    I2C_GPIO_SDA_C2 = GPIO_PC2,
+} i2c_sda_pin_e;
 
-
-typedef enum{
-	I2C_GPIO_SCL_B2		= GPIO_PB2,
-	I2C_GPIO_SCL_C1		= GPIO_PC1,
-}i2c_scl_pin_e;
-
+typedef enum
+{
+    I2C_GPIO_SCL_B2 = GPIO_PB2,
+    I2C_GPIO_SCL_C1 = GPIO_PC1,
+} i2c_scl_pin_e;
 
 /**
  * @brief      The function of this API is to determine whether the bus is busy.
@@ -83,9 +77,8 @@ static inline BOOL i2c_master_busy(void)
  */
 static inline unsigned char i2c_get_tx_buf_cnt(void)
 {
-   return (reg_i2c_buf_cnt & FLD_I2C_TX_BUFCNT)>>4;
+    return (reg_i2c_buf_cnt & FLD_I2C_TX_BUFCNT) >> 4;
 }
-
 
 /**
  * @brief      The function of this API is to Get the number of bytes in rx_buffer.
@@ -94,9 +87,8 @@ static inline unsigned char i2c_get_tx_buf_cnt(void)
  */
 static inline unsigned char i2c_get_rx_buf_cnt(void)
 {
-   return (reg_i2c_buf_cnt & FLD_I2C_RX_BUFCNT);
+    return (reg_i2c_buf_cnt & FLD_I2C_RX_BUFCNT);
 }
-
 
 /**
  * @brief      The function of this API is to set the number of bytes to triggered the receive interrupt.
@@ -106,8 +98,8 @@ static inline unsigned char i2c_get_rx_buf_cnt(void)
  */
 static inline void i2c_rx_irq_trig_cnt(unsigned char cnt)
 {
-	reg_i2c_trig &= (~FLD_I2C_RX_IRQ_TRIG_LEV);
-	reg_i2c_trig |= cnt;
+    reg_i2c_trig &= (~FLD_I2C_RX_IRQ_TRIG_LEV);
+    reg_i2c_trig |= cnt;
 }
 
 /**
@@ -116,8 +108,7 @@ static inline void i2c_rx_irq_trig_cnt(unsigned char cnt)
  * @param[in]  scl_pin - the pin port selected as I2C scl pin port.
  * @return     none
  */
-void i2c_set_pin(i2c_sda_pin_e sda_pin,i2c_scl_pin_e scl_pin);
-
+void i2c_set_pin(i2c_sda_pin_e sda_pin, i2c_scl_pin_e scl_pin);
 
 /**
  * @brief      This function serves to enable i2c master function.
@@ -126,7 +117,6 @@ void i2c_set_pin(i2c_sda_pin_e sda_pin,i2c_scl_pin_e scl_pin);
  */
 void i2c_master_init(void);
 
-
 /**
  * @brief      This function serves to enable i2c RX/TX/MASK_RX/MASK_TX  interrupt function.
  * @param[in]  mask - to select Interrupt type.
@@ -134,9 +124,8 @@ void i2c_master_init(void);
  */
 static inline void i2c_set_irq_mask(i2c_mask_irq_type_e mask)
 {
-	reg_i2c_sct0  |=  mask;
+    reg_i2c_sct0 |= mask;
 }
-
 
 /**
  * @brief      This function serves to disable i2c RX/TX/MASK_RX/MASK_TX  interrupt function.
@@ -145,9 +134,8 @@ static inline void i2c_set_irq_mask(i2c_mask_irq_type_e mask)
  */
 static inline void i2c_clr_irq_mask(i2c_mask_irq_type_e mask)
 {
-	reg_i2c_sct0  |=  ~mask;
+    reg_i2c_sct0 |= ~mask;
 }
-
 
 /**
  * @brief      This function serves to get i2c interrupt status.
@@ -156,9 +144,8 @@ static inline void i2c_clr_irq_mask(i2c_mask_irq_type_e mask)
  */
 static inline unsigned char i2c_get_irq_status(i2c_irq_status_type_e irq_type)
 {
-	return (reg_i2c_irq_status & irq_type);
+    return (reg_i2c_irq_status & irq_type);
 }
-
 
 /**
  * @brief      This function serves to clear i2c interrupt status.
@@ -167,9 +154,8 @@ static inline unsigned char i2c_get_irq_status(i2c_irq_status_type_e irq_type)
  */
 static inline unsigned char i2c_clr_irq_status(i2c_irq_clr_type_e irq_clr_type)
 {
-	return (reg_i2c_status |= irq_clr_type);
+    return (reg_i2c_status |= irq_clr_type);
 }
-
 
 /**
  * @brief      This function serves to enable slave mode.
@@ -179,16 +165,15 @@ static inline unsigned char i2c_clr_irq_status(i2c_irq_clr_type_e irq_clr_type)
  */
 void i2c_slave_init(unsigned char id);
 
-
 /**
  *  @brief      The function of this API is to ensure that the data can be successfully sent out.
  *  @param[in]  id - to set the slave ID.for kite slave ID=0x5c,for eagle slave ID=0x5a.
  *  @param[in]  data - The data to be sent, The first three bytes can be set as the RAM address of the slave.
- *  @param[in]  len - This length is the total length, including both the length of the slave RAM address and the length of the data to be sent.
+ *  @param[in]  len - This length is the total length, including both the length of the slave RAM address and the length
+ * of the data to be sent.
  *  @return     none
  */
 void i2c_master_write(unsigned char id, unsigned char *data, unsigned char len);
-
 
 /**
  * @brief      This function serves to read a packet of data from the specified address of slave device
@@ -199,18 +184,15 @@ void i2c_master_write(unsigned char id, unsigned char *data, unsigned char len);
  */
 void i2c_master_read(unsigned char id, unsigned char *data, unsigned char len);
 
-
-
 /**
  * @brief      The function of this API is just to write data to the i2c tx_fifo by DMA.
  * @param[in]  id - to set the slave ID.for kite slave ID=0x5c,for eagle slave ID=0x5a.
  * @param[in]  data - The data to be sent, The first three bytes represent the RAM address of the slave.
- * @param[in]  len - This length is the total length, including both the length of the slave RAM address and the length of the data to be sent.
+ * @param[in]  len - This length is the total length, including both the length of the slave RAM address and the length
+ * of the data to be sent.
  * @return     none.
  */
 void i2c_master_write_dma(unsigned char id, unsigned char *data, unsigned char len);
-
-
 
 /**
  * @brief      This function serves to read a packet of data from the specified address of slave device.
@@ -245,13 +227,3 @@ void i2c_set_tx_dma_config(dma_chn_e chn);
 void i2c_set_rx_dma_config(dma_chn_e chn);
 
 #endif
-
-
-
-
-
-
-
-
-
-

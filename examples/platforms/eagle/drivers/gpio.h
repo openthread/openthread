@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     gpio_8258.h 
+ * @file     gpio_8258.h
  *
  * @brief    This is the header file for TLSR8258
  *
@@ -36,10 +36,10 @@
 #ifndef GPIO_H_
 #define GPIO_H_
 
-#include "../common/bit.h"
-#include "../common/types.h"
 #include "analog.h"
 #include "plic.h"
+#include "../common/bit.h"
+#include "../common/types.h"
 #include "reg_include/register_9518.h"
 /**********************************************************************************************************************
  *                                         global constants                                                           *
@@ -55,189 +55,196 @@
 /**
  *  @brief  Define GPIO types
  */
-typedef enum{
-		GPIO_GROUPA    = 0x000,
-		GPIO_GROUPB    = 0x100,
-		GPIO_GROUPC    = 0x200,
-		GPIO_GROUPD    = 0x300,
-		GPIO_GROUPE    = 0x400,
-		GPIO_GROUPF    = 0x500,
-		GPIO_ALL       = 0x600,
-	    GPIO_PA0 = GPIO_GROUPA | BIT(0),
-		GPIO_PA1 = GPIO_GROUPA | BIT(1),
-		GPIO_PA2 = GPIO_GROUPA | BIT(2),
-		GPIO_PA3 = GPIO_GROUPA | BIT(3),
-		GPIO_PA4 = GPIO_GROUPA | BIT(4),
-		GPIO_PA5 = GPIO_GROUPA | BIT(5),GPIO_DM=GPIO_PA5,
-		GPIO_PA6 = GPIO_GROUPA | BIT(6),GPIO_DP=GPIO_PA6,
-		GPIO_PA7 = GPIO_GROUPA | BIT(7),GPIO_SWS=GPIO_PA7,
-		GPIOA_ALL = GPIO_GROUPA | 0x00ff,
+typedef enum
+{
+    GPIO_GROUPA = 0x000,
+    GPIO_GROUPB = 0x100,
+    GPIO_GROUPC = 0x200,
+    GPIO_GROUPD = 0x300,
+    GPIO_GROUPE = 0x400,
+    GPIO_GROUPF = 0x500,
+    GPIO_ALL    = 0x600,
+    GPIO_PA0    = GPIO_GROUPA | BIT(0),
+    GPIO_PA1    = GPIO_GROUPA | BIT(1),
+    GPIO_PA2    = GPIO_GROUPA | BIT(2),
+    GPIO_PA3    = GPIO_GROUPA | BIT(3),
+    GPIO_PA4    = GPIO_GROUPA | BIT(4),
+    GPIO_PA5    = GPIO_GROUPA | BIT(5),
+    GPIO_DM     = GPIO_PA5,
+    GPIO_PA6    = GPIO_GROUPA | BIT(6),
+    GPIO_DP     = GPIO_PA6,
+    GPIO_PA7    = GPIO_GROUPA | BIT(7),
+    GPIO_SWS    = GPIO_PA7,
+    GPIOA_ALL   = GPIO_GROUPA | 0x00ff,
 
-		GPIO_PB0 = GPIO_GROUPB | BIT(0),
-		GPIO_PB1 = GPIO_GROUPB | BIT(1),
-		GPIO_PB2 = GPIO_GROUPB | BIT(2),
-		GPIO_PB3 = GPIO_GROUPB | BIT(3),
-		GPIO_PB4 = GPIO_GROUPB | BIT(4),
-		GPIO_PB5 = GPIO_GROUPB | BIT(5),
-		GPIO_PB6 = GPIO_GROUPB | BIT(6),
-		GPIO_PB7 = GPIO_GROUPB | BIT(7),
+    GPIO_PB0 = GPIO_GROUPB | BIT(0),
+    GPIO_PB1 = GPIO_GROUPB | BIT(1),
+    GPIO_PB2 = GPIO_GROUPB | BIT(2),
+    GPIO_PB3 = GPIO_GROUPB | BIT(3),
+    GPIO_PB4 = GPIO_GROUPB | BIT(4),
+    GPIO_PB5 = GPIO_GROUPB | BIT(5),
+    GPIO_PB6 = GPIO_GROUPB | BIT(6),
+    GPIO_PB7 = GPIO_GROUPB | BIT(7),
 
-		GPIO_PC0 = GPIO_GROUPC | BIT(0),
-		GPIO_PC1 = GPIO_GROUPC | BIT(1),
-		GPIO_PC2 = GPIO_GROUPC | BIT(2),
-		GPIO_PC3 = GPIO_GROUPC | BIT(3),
-		GPIO_PC4 = GPIO_GROUPC | BIT(4),
-		GPIO_PC5 = GPIO_GROUPC | BIT(5),
-		GPIO_PC6 = GPIO_GROUPC | BIT(6),
-		GPIO_PC7 = GPIO_GROUPC | BIT(7),
+    GPIO_PC0 = GPIO_GROUPC | BIT(0),
+    GPIO_PC1 = GPIO_GROUPC | BIT(1),
+    GPIO_PC2 = GPIO_GROUPC | BIT(2),
+    GPIO_PC3 = GPIO_GROUPC | BIT(3),
+    GPIO_PC4 = GPIO_GROUPC | BIT(4),
+    GPIO_PC5 = GPIO_GROUPC | BIT(5),
+    GPIO_PC6 = GPIO_GROUPC | BIT(6),
+    GPIO_PC7 = GPIO_GROUPC | BIT(7),
 
-		GPIO_PD0 = GPIO_GROUPD | BIT(0),
-		GPIO_PD1 = GPIO_GROUPD | BIT(1),
-		GPIO_PD2 = GPIO_GROUPD | BIT(2),
-		GPIO_PD3 = GPIO_GROUPD | BIT(3),
-		GPIO_PD4 = GPIO_GROUPD | BIT(4),
-		GPIO_PD5 = GPIO_GROUPD | BIT(5),
-		GPIO_PD6 = GPIO_GROUPD | BIT(6),
-		GPIO_PD7 = GPIO_GROUPD | BIT(7),
+    GPIO_PD0 = GPIO_GROUPD | BIT(0),
+    GPIO_PD1 = GPIO_GROUPD | BIT(1),
+    GPIO_PD2 = GPIO_GROUPD | BIT(2),
+    GPIO_PD3 = GPIO_GROUPD | BIT(3),
+    GPIO_PD4 = GPIO_GROUPD | BIT(4),
+    GPIO_PD5 = GPIO_GROUPD | BIT(5),
+    GPIO_PD6 = GPIO_GROUPD | BIT(6),
+    GPIO_PD7 = GPIO_GROUPD | BIT(7),
 
-		GPIO_PE0 = GPIO_GROUPE | BIT(0),
-		GPIO_PE1 = GPIO_GROUPE | BIT(1),
-		GPIO_PE2 = GPIO_GROUPE | BIT(2),
-		GPIO_PE3 = GPIO_GROUPE | BIT(3),
-		GPIO_PE4 = GPIO_GROUPE | BIT(4),
-		GPIO_PE5 = GPIO_GROUPE | BIT(5),
-		GPIO_PE6 = GPIO_GROUPE | BIT(6),
-		GPIO_PE7 = GPIO_GROUPE | BIT(7),
+    GPIO_PE0 = GPIO_GROUPE | BIT(0),
+    GPIO_PE1 = GPIO_GROUPE | BIT(1),
+    GPIO_PE2 = GPIO_GROUPE | BIT(2),
+    GPIO_PE3 = GPIO_GROUPE | BIT(3),
+    GPIO_PE4 = GPIO_GROUPE | BIT(4),
+    GPIO_PE5 = GPIO_GROUPE | BIT(5),
+    GPIO_PE6 = GPIO_GROUPE | BIT(6),
+    GPIO_PE7 = GPIO_GROUPE | BIT(7),
 
-		GPIO_PF0 = GPIO_GROUPF | BIT(0),
-		GPIO_PF1 = GPIO_GROUPF | BIT(1),
-		GPIO_PF2 = GPIO_GROUPF | BIT(2),
-		GPIO_PF3 = GPIO_GROUPF | BIT(3),
+    GPIO_PF0 = GPIO_GROUPF | BIT(0),
+    GPIO_PF1 = GPIO_GROUPF | BIT(1),
+    GPIO_PF2 = GPIO_GROUPF | BIT(2),
+    GPIO_PF3 = GPIO_GROUPF | BIT(3),
 
-}gpio_pin_e;
+} gpio_pin_e;
 
 /**
  *  @brief  Define GPIO mux func
  */
-typedef enum{
-	    AS_GPIO,
-		AS_NGPIO,
-		AS_MSPI,
-		AS_SWS,
-		AS_SWM,
+typedef enum
+{
+    AS_GPIO,
+    AS_NGPIO,
+    AS_MSPI,
+    AS_SWS,
+    AS_SWM,
 
-		AS_UART0_TX,
-		AS_UART0_RX,
-		AS_UART0_RTS,
-		AS_UART0_CTS,
+    AS_UART0_TX,
+    AS_UART0_RX,
+    AS_UART0_RTS,
+    AS_UART0_CTS,
 
-		AS_UART1_TX,
-		AS_UART1_RX,
-		AS_UART1_RTS,
-		AS_UART1_CTS,
+    AS_UART1_TX,
+    AS_UART1_RX,
+    AS_UART1_RTS,
+    AS_UART1_CTS,
 
-		AS_I2C_SCK,
-		AS_I2C_SDA,
+    AS_I2C_SCK,
+    AS_I2C_SDA,
 
-		AS_SSPI_CN,
-		AS_SSPI_CK,
-		AS_SSPI_DO,
-		AS_SSPI_DI,
+    AS_SSPI_CN,
+    AS_SSPI_CK,
+    AS_SSPI_DO,
+    AS_SSPI_DI,
 
-		AS_HSPI_HD,
-		AS_HSPI_WP,
-		AS_HSPI_CN,
-		AS_HSPI_CK,
-		AS_HSPI_DO,
-		AS_HSPI_DI,
+    AS_HSPI_HD,
+    AS_HSPI_WP,
+    AS_HSPI_CN,
+    AS_HSPI_CK,
+    AS_HSPI_DO,
+    AS_HSPI_DI,
 
-		AS_LSPI_CN,
-		AS_LSPI_CK,
-		AS_LSPI_DO,
-		AS_LSPI_DI,
+    AS_LSPI_CN,
+    AS_LSPI_CK,
+    AS_LSPI_DO,
+    AS_LSPI_DI,
 
-		AS_I2S_SCK,
-		AS_I2S_IO,
-		AS_BCK_IO,
+    AS_I2S_SCK,
+    AS_I2S_IO,
+    AS_BCK_IO,
 
-		AS_AMIC,
-		AS_DMIC_SCK,
-		AS_DMIC_DI,
-		AS_SDM,
+    AS_AMIC,
+    AS_DMIC_SCK,
+    AS_DMIC_DI,
+    AS_SDM,
 
-		AS_USB_DP,
-		AS_USB_DM,
+    AS_USB_DP,
+    AS_USB_DM,
 
-		AS_ADC_LR_IO,
-		AS_ADC_DAT,
+    AS_ADC_LR_IO,
+    AS_ADC_DAT,
 
-		AS_DAC_LR_IO,
-		AS_DAC_DAT,
-		AS_CMP,
-		AS_ATS,
+    AS_DAC_LR_IO,
+    AS_DAC_DAT,
+    AS_CMP,
+    AS_ATS,
 
-		AS_PWM0,
-		AS_PWM1,
-		AS_PWM2,
-		AS_PWM3,
-		AS_PWM4,
-		AS_PWM5,
-		AS_PWM0_N,
-		AS_PWM1_N,
-		AS_PWM2_N,
-		AS_PWM3_N,
-		AS_PWM4_N,
-		AS_PWM5_N,
+    AS_PWM0,
+    AS_PWM1,
+    AS_PWM2,
+    AS_PWM3,
+    AS_PWM4,
+    AS_PWM5,
+    AS_PWM0_N,
+    AS_PWM1_N,
+    AS_PWM2_N,
+    AS_PWM3_N,
+    AS_PWM4_N,
+    AS_PWM5_N,
 
-		AS_7816_CLK,
-		AS_32K_CLK,
-		AS_ATSEL0,
-		AS_ATSEL1,
-		AS_ATSEL2,
+    AS_7816_CLK,
+    AS_32K_CLK,
+    AS_ATSEL0,
+    AS_ATSEL1,
+    AS_ATSEL2,
 
-		AS_TX_CYC2PA,
-		AS_RX_CYC2LNA,
+    AS_TX_CYC2PA,
+    AS_RX_CYC2LNA,
 
-		AS_BT_INBAND,
+    AS_BT_INBAND,
 
-		AS_TDI,
-		AS_TDO,
-		AS_TMS,
-		AS_TCK,
+    AS_TDI,
+    AS_TDO,
+    AS_TMS,
+    AS_TCK,
 
-		AS_ADC_Q_DATX,
-		AS_DAC_Q_DATX,
+    AS_ADC_Q_DATX,
+    AS_DAC_Q_DATX,
 
-}gpio_fuc_e;
+} gpio_fuc_e;
 
 /**
  *  @brief  Define rising/falling types
  */
-typedef enum{
-	POL_RISING   = 0,
-	POL_FALLING  = 1,
-}gpio_pol_e;
-
+typedef enum
+{
+    POL_RISING  = 0,
+    POL_FALLING = 1,
+} gpio_pol_e;
 
 /**
  *  @brief  Define interrupt types
  */
-typedef enum{
-	 INTR_RISING_EDGE=0,
-	 INTR_FALLING_EDGE ,
-	 INTR_HIGH_LEVEL,
-	 INTR_LOW_LEVEL,
+typedef enum
+{
+    INTR_RISING_EDGE = 0,
+    INTR_FALLING_EDGE,
+    INTR_HIGH_LEVEL,
+    INTR_LOW_LEVEL,
 } gpio_irq_trigger_type_e;
 
 /**
  *  @brief  Define pull up or down types
  */
-typedef enum {
-	PM_PIN_UP_DOWN_FLOAT    = 0,
-	PM_PIN_PULLUP_1M     	= 1,
-	PM_PIN_PULLDOWN_100K  	= 2,
-	PM_PIN_PULLUP_10K 		= 3,
-}gpio_pull_type_e;
+typedef enum
+{
+    PM_PIN_UP_DOWN_FLOAT = 0,
+    PM_PIN_PULLUP_1M     = 1,
+    PM_PIN_PULLDOWN_100K = 2,
+    PM_PIN_PULLUP_10K    = 3,
+} gpio_pull_type_e;
 
 /**********************************************************************************************************************
  *                                     global variable declaration                                                    *
@@ -253,11 +260,9 @@ typedef enum {
  */
 static inline void gpio_set_high_level(gpio_pin_e pin)
 {
-	unsigned char	bit = pin & 0xff;
-	BM_SET(reg_gpio_out(pin), bit);
-
+    unsigned char bit = pin & 0xff;
+    BM_SET(reg_gpio_out(pin), bit);
 }
-
 
 /**
  * @brief     This function set the pin's output low level.
@@ -266,9 +271,8 @@ static inline void gpio_set_high_level(gpio_pin_e pin)
  */
 static inline void gpio_set_low_level(gpio_pin_e pin)
 {
-	unsigned char	bit = pin & 0xff;
-	BM_CLR(reg_gpio_out(pin), bit);
-
+    unsigned char bit = pin & 0xff;
+    BM_CLR(reg_gpio_out(pin), bit);
 }
 
 /**
@@ -279,12 +283,15 @@ static inline void gpio_set_low_level(gpio_pin_e pin)
  */
 static inline void gpio_write(gpio_pin_e pin, unsigned int value)
 {
-	unsigned char	bit = pin & 0xff;
-	if(value){
-		BM_SET(reg_gpio_out(pin), bit);
-	}else{
-		BM_CLR(reg_gpio_out(pin), bit);
-	}
+    unsigned char bit = pin & 0xff;
+    if (value)
+    {
+        BM_SET(reg_gpio_out(pin), bit);
+    }
+    else
+    {
+        BM_CLR(reg_gpio_out(pin), bit);
+    }
 }
 
 /**
@@ -294,7 +301,7 @@ static inline void gpio_write(gpio_pin_e pin, unsigned int value)
  */
 static inline _Bool gpio_get_level(gpio_pin_e pin)
 {
-	return BM_IS_SET(reg_gpio_in(pin), pin & 0xff);
+    return BM_IS_SET(reg_gpio_in(pin), pin & 0xff);
 }
 
 /**
@@ -304,7 +311,7 @@ static inline _Bool gpio_get_level(gpio_pin_e pin)
  */
 static inline unsigned int gpio_read(gpio_pin_e pin)
 {
-	return gpio_get_level(pin);
+    return gpio_get_level(pin);
 }
 
 /**
@@ -314,10 +321,8 @@ static inline unsigned int gpio_read(gpio_pin_e pin)
  */
 static inline void gpio_toggle(gpio_pin_e pin)
 {
-	reg_gpio_out(pin) ^= (pin & 0xFF);
+    reg_gpio_out(pin) ^= (pin & 0xFF);
 }
-
-
 
 /**
  * @brief      This function enable the output function of a pin.
@@ -326,8 +331,8 @@ static inline void gpio_toggle(gpio_pin_e pin)
  */
 static inline void gpio_set_output_en(gpio_pin_e pin)
 {
-	unsigned char	bit = pin & 0xff;
-		BM_CLR(reg_gpio_oen(pin), bit);
+    unsigned char bit = pin & 0xff;
+    BM_CLR(reg_gpio_oen(pin), bit);
 }
 
 /**
@@ -337,8 +342,8 @@ static inline void gpio_set_output_en(gpio_pin_e pin)
  */
 static inline void gpio_set_output_dis(gpio_pin_e pin)
 {
-	unsigned char	bit = pin & 0xff;
-		BM_SET(reg_gpio_oen(pin), bit);
+    unsigned char bit = pin & 0xff;
+    BM_SET(reg_gpio_oen(pin), bit);
 }
 
 /**
@@ -347,11 +352,10 @@ static inline void gpio_set_output_dis(gpio_pin_e pin)
  * @return     1: the pin's output function is enabled ;
  *             0: the pin's output function is disabled
  */
-static inline _Bool  gpio_is_output_en(gpio_pin_e pin)
+static inline _Bool gpio_is_output_en(gpio_pin_e pin)
 {
-	return !BM_IS_SET(reg_gpio_oen(pin), pin & 0xff);
+    return !BM_IS_SET(reg_gpio_oen(pin), pin & 0xff);
 }
-
 
 /**
  * @brief     This function determines whether the input function of a pin is enabled.
@@ -361,7 +365,7 @@ static inline _Bool  gpio_is_output_en(gpio_pin_e pin)
  */
 static inline _Bool gpio_is_input_en(gpio_pin_e pin)
 {
-	return BM_IS_SET(reg_gpio_ie(pin), pin & 0xff);
+    return BM_IS_SET(reg_gpio_ie(pin), pin & 0xff);
 }
 /**
  * @brief      This function set the pin's driving strength at strong.
@@ -370,12 +374,16 @@ static inline _Bool gpio_is_input_en(gpio_pin_e pin)
  */
 static inline void gpio_set_ds_en(gpio_pin_e pin)
 {
-	unsigned char	bit = pin & 0xff;
-	unsigned short group = pin & 0xf00;
-	if(group == GPIO_GROUPC)
-	{analog_write_reg8(areg_gpio_pc_ds, analog_read_reg8(areg_gpio_pc_ds)|bit);}
-	else
-	{BM_SET(reg_gpio_ds(pin), bit);}
+    unsigned char  bit   = pin & 0xff;
+    unsigned short group = pin & 0xf00;
+    if (group == GPIO_GROUPC)
+    {
+        analog_write_reg8(areg_gpio_pc_ds, analog_read_reg8(areg_gpio_pc_ds) | bit);
+    }
+    else
+    {
+        BM_SET(reg_gpio_ds(pin), bit);
+    }
 }
 
 /**
@@ -385,24 +393,16 @@ static inline void gpio_set_ds_en(gpio_pin_e pin)
  */
 static inline void gpio_set_ds_dis(gpio_pin_e pin)
 {
-	unsigned char	bit = pin & 0xff;
-	unsigned short group = pin & 0xf00;
-	if(group == GPIO_GROUPC)
-	{analog_write_reg8(areg_gpio_pc_ds, analog_read_reg8(areg_gpio_pc_ds)&(~bit));}
-	else
-	{BM_CLR(reg_gpio_ds(pin), bit);}
-}
-
-
-/**
- * @brief     This function enables a pin's IRQ function.
- * @param[in] pin - the pin needs to enables its IRQ function.
- * @return    none
- */
-static inline  void gpio_set_intr_en(gpio_pin_e pin)
-{
-	unsigned char	bit = pin & 0xff;
-	BM_SET(reg_gpio_irq_en(pin), bit);
+    unsigned char  bit   = pin & 0xff;
+    unsigned short group = pin & 0xf00;
+    if (group == GPIO_GROUPC)
+    {
+        analog_write_reg8(areg_gpio_pc_ds, analog_read_reg8(areg_gpio_pc_ds) & (~bit));
+    }
+    else
+    {
+        BM_CLR(reg_gpio_ds(pin), bit);
+    }
 }
 
 /**
@@ -410,12 +410,22 @@ static inline  void gpio_set_intr_en(gpio_pin_e pin)
  * @param[in] pin - the pin needs to enables its IRQ function.
  * @return    none
  */
-static inline  void gpio_set_intr_dis(gpio_pin_e pin)
+static inline void gpio_set_intr_en(gpio_pin_e pin)
 {
-	unsigned char	bit = pin & 0xff;
-	BM_CLR(reg_gpio_irq_en(pin), bit);
+    unsigned char bit = pin & 0xff;
+    BM_SET(reg_gpio_irq_en(pin), bit);
 }
 
+/**
+ * @brief     This function enables a pin's IRQ function.
+ * @param[in] pin - the pin needs to enables its IRQ function.
+ * @return    none
+ */
+static inline void gpio_set_intr_dis(gpio_pin_e pin)
+{
+    unsigned char bit = pin & 0xff;
+    BM_CLR(reg_gpio_irq_en(pin), bit);
+}
 
 /**
  * @brief     This function set a pin's IRQ.
@@ -425,16 +435,18 @@ static inline  void gpio_set_intr_dis(gpio_pin_e pin)
  */
 static inline void gpio_set_interrupt(gpio_pin_e pin, gpio_pol_e falling)
 {
-	unsigned char	bit = pin & 0xff;
-	BM_SET(reg_gpio_irq_en(pin), bit);
-	if(falling){
-		BM_SET(reg_gpio_pol(pin), bit);
-	}else{
-		BM_CLR(reg_gpio_pol(pin), bit);
-	}
-	reg_gpio_irq_ctrl |= FLD_GPIO_CORE_INTERRUPT_EN;
-	reg_gpio_irq_risc_mask|=FLD_GPIO_IRQ_MASK_GPIO;
-
+    unsigned char bit = pin & 0xff;
+    BM_SET(reg_gpio_irq_en(pin), bit);
+    if (falling)
+    {
+        BM_SET(reg_gpio_pol(pin), bit);
+    }
+    else
+    {
+        BM_CLR(reg_gpio_pol(pin), bit);
+    }
+    reg_gpio_irq_ctrl |= FLD_GPIO_CORE_INTERRUPT_EN;
+    reg_gpio_irq_risc_mask |= FLD_GPIO_IRQ_MASK_GPIO;
 }
 /**
  * @brief     This function set a pin's pull-up/down resistor.

@@ -32,21 +32,20 @@
  * @param[in] none
  * @return    none
  */
-static inline void wd_start(void){
-
-	BM_SET(reg_tmr_ctrl2, FLD_TMR_WD_EN);
+static inline void wd_start(void)
+{
+    BM_SET(reg_tmr_ctrl2, FLD_TMR_WD_EN);
 }
-
 
 /**
  * @brief     stop watchdog. ie disable watchdog
  * @param[in] none
  * @return    none
  */
-static inline void wd_stop(void){
-	BM_CLR(reg_tmr_ctrl2, FLD_TMR_WD_EN);
+static inline void wd_stop(void)
+{
+    BM_CLR(reg_tmr_ctrl2, FLD_TMR_WD_EN);
 }
-
 
 /**
  * @brief     clear watchdog.
@@ -55,8 +54,7 @@ static inline void wd_stop(void){
  */
 static inline void wd_clear(void)
 {
-	reg_tmr_sta = FLD_TMR_STA_WD|FLD_TMR_WD_CNT_CLR;
-
+    reg_tmr_sta = FLD_TMR_STA_WD | FLD_TMR_WD_CNT_CLR;
 }
 
 /**
@@ -66,8 +64,7 @@ static inline void wd_clear(void)
  */
 static inline void wd_clear_cnt(void)
 {
-	reg_tmr_sta = FLD_TMR_WD_CNT_CLR;
-
+    reg_tmr_sta = FLD_TMR_WD_CNT_CLR;
 }
 
 /**
@@ -77,10 +74,10 @@ static inline void wd_clear_cnt(void)
  * @return    none
  * notice: cause 0x14014c constant equals 0x00, period eror=(0x00~0xff)/(APB clock),unit is s.
  */
-static inline void wd_set_interval_ms(unsigned int period_ms,unsigned long int tick_per_ms)
+static inline void wd_set_interval_ms(unsigned int period_ms, unsigned long int tick_per_ms)
 {
-	static unsigned int tmp_period_ms = 0;
-	tmp_period_ms=period_ms*tick_per_ms;
-	reg_wt_target=tmp_period_ms;
+    static unsigned int tmp_period_ms = 0;
+    tmp_period_ms                     = period_ms * tick_per_ms;
+    reg_wt_target                     = tmp_period_ms;
 }
 #endif

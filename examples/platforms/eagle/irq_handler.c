@@ -11,8 +11,9 @@
  * exceptions.
  ****************************************************************************************
  */
-void except_handler0(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void except_handler0(void) {
+void except_handler0(void) __attribute__((interrupt("machine"), aligned(4)));
+void except_handler0(void)
+{
 }
 
 /**
@@ -23,8 +24,9 @@ void except_handler0(void) {
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler1(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler1(void) {
+void interrupt_handler1(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler1(void)
+{
 }
 
 /**
@@ -35,8 +37,9 @@ void interrupt_handler1(void) {
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler2(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler2(void) {
+void interrupt_handler2(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler2(void)
+{
 }
 
 /**
@@ -48,9 +51,9 @@ void interrupt_handler2(void) {
  ****************************************************************************************
  */
 
-void interrupt_handler3(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler3(void) {
-
+void interrupt_handler3(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler3(void)
+{
 }
 
 /**
@@ -62,9 +65,9 @@ void interrupt_handler3(void) {
  ****************************************************************************************
  */
 
-void interrupt_handler4(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler4(void) {
-
+void interrupt_handler4(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler4(void)
+{
 }
 
 /**
@@ -75,8 +78,10 @@ void interrupt_handler4(void) {
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler5(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler5(void) {}
+void interrupt_handler5(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler5(void)
+{
+}
 
 /**
  ****************************************************************************************
@@ -86,8 +91,9 @@ void interrupt_handler5(void) {}
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler6(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler6(void) {
+void interrupt_handler6(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler6(void)
+{
 }
 
 /**
@@ -98,8 +104,9 @@ void interrupt_handler6(void) {
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler7(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler7(void) {
+void interrupt_handler7(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler7(void)
+{
 }
 
 /**
@@ -110,8 +117,9 @@ void interrupt_handler7(void) {
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler8(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler8(void) {
+void interrupt_handler8(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler8(void)
+{
 }
 
 /**
@@ -122,8 +130,9 @@ void interrupt_handler8(void) {
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler9(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler9(void) {
+void interrupt_handler9(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler9(void)
+{
 }
 
 /**
@@ -134,8 +143,9 @@ void interrupt_handler9(void) {
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler10(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler10(void) {
+void interrupt_handler10(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler10(void)
+{
 }
 
 /**
@@ -146,8 +156,9 @@ void interrupt_handler10(void) {
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler11(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler11(void) {
+void interrupt_handler11(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler11(void)
+{
 }
 
 /**
@@ -158,8 +169,10 @@ void interrupt_handler11(void) {
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler12(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler12(void) {}
+void interrupt_handler12(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler12(void)
+{
+}
 
 /**
  ****************************************************************************************
@@ -169,8 +182,10 @@ void interrupt_handler12(void) {}
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler13(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler13(void) {}
+void interrupt_handler13(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler13(void)
+{
+}
 
 /**
  ****************************************************************************************
@@ -180,8 +195,10 @@ void interrupt_handler13(void) {}
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler14(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler14(void) {}
+void interrupt_handler14(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler14(void)
+{
+}
 
 /**
  ****************************************************************************************
@@ -191,8 +208,9 @@ void interrupt_handler14(void) {}
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler15(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler15(void) {
+void interrupt_handler15(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler15(void)
+{
     EagleRxTxIntHandler();
 }
 
@@ -204,8 +222,9 @@ void interrupt_handler15(void) {
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler16(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler16(void) {
+void interrupt_handler16(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler16(void)
+{
 }
 
 /**
@@ -216,8 +235,9 @@ void interrupt_handler16(void) {
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler17(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler17(void) {
+void interrupt_handler17(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler17(void)
+{
 }
 
 /**
@@ -228,49 +248,60 @@ void interrupt_handler17(void) {
  *  by the INTCNTL_BT macro.
  ****************************************************************************************
  */
-void interrupt_handler18(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler18(void) {
+void interrupt_handler18(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler18(void)
+{
 }
 
-void interrupt_handler19(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler19(void) {
+void interrupt_handler19(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler19(void)
+{
     irq_uart0_handler();
 }
 
-void interrupt_handler20(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler20(void) {
+void interrupt_handler20(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler20(void)
+{
 }
 
-void interrupt_handler21(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler21(void) {
+void interrupt_handler21(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler21(void)
+{
 }
 
-void interrupt_handler22(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler22(void) {}
-
-void interrupt_handler23(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler23(void) {}
-
-void interrupt_handler24(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler24(void) {}
-
-void interrupt_handler25(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler25(void) {}
-
-void interrupt_handler26(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler26(void) {
-
-
+void interrupt_handler22(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler22(void)
+{
 }
 
-void interrupt_handler27(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler27(void) {
-
-
-
+void interrupt_handler23(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler23(void)
+{
 }
 
-void interrupt_handler28(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void interrupt_handler28(void) {}
+void interrupt_handler24(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler24(void)
+{
+}
+
+void interrupt_handler25(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler25(void)
+{
+}
+
+void interrupt_handler26(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler26(void)
+{
+}
+
+void interrupt_handler27(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler27(void)
+{
+}
+
+void interrupt_handler28(void) __attribute__((interrupt("machine"), aligned(4)));
+void interrupt_handler28(void)
+{
+}
 
 /// @} DRIVERS

@@ -25,50 +25,52 @@
  *******************************************************************************************************/
 #ifndef TIMER_REG_H
 #define TIMER_REG_H
-#include "../sys.h"
 #include "../../common/bit.h"
+#include "../sys.h"
 /*******************************      timer registers: 0x140140     ******************************/
-#define reg_tmr_ctrl0			REG_ADDR8(0x140140)
-#define reg_tmr_ctrl16			REG_ADDR16(0x140140)
-#define reg_tmr_ctrl32			REG_ADDR32(0x140140)
-enum{
-	FLD_TMR0_MODE =				BIT_RNG(0,1),
-	FLD_TMR0_EN =				BIT(2),
-	FLD_TMR0_NOWRAP = 			BIT(3),
-	FLD_TMR1_MODE =				BIT_RNG(4,5),
-	FLD_TMR1_EN =				BIT(6),
-	FLD_TMR1_NOWRAP  = 			BIT(7),
+#define reg_tmr_ctrl0 REG_ADDR8(0x140140)
+#define reg_tmr_ctrl16 REG_ADDR16(0x140140)
+#define reg_tmr_ctrl32 REG_ADDR32(0x140140)
+enum
+{
+    FLD_TMR0_MODE   = BIT_RNG(0, 1),
+    FLD_TMR0_EN     = BIT(2),
+    FLD_TMR0_NOWRAP = BIT(3),
+    FLD_TMR1_MODE   = BIT_RNG(4, 5),
+    FLD_TMR1_EN     = BIT(6),
+    FLD_TMR1_NOWRAP = BIT(7),
 };
 
-#define reg_tmr_ctrl2			REG_ADDR8(0x140142)
+#define reg_tmr_ctrl2 REG_ADDR8(0x140142)
 
-enum{
-	FLD_TMR_WD_EN =				BIT(7),
+enum
+{
+    FLD_TMR_WD_EN = BIT(7),
 };
 
-#define reg_tmr_sta				REG_ADDR8(0x140143)
-enum{
-	FLD_TMR_STA_TMR0   =		BIT(0),
-	FLD_TMR_STA_TMR1   =		BIT(1),
-	FLD_TMR_STA_WD     =		BIT(2),
-	FLD_TMR_WD_CNT_CLR =		BIT(3),
+#define reg_tmr_sta REG_ADDR8(0x140143)
+enum
+{
+    FLD_TMR_STA_TMR0   = BIT(0),
+    FLD_TMR_STA_TMR1   = BIT(1),
+    FLD_TMR_STA_WD     = BIT(2),
+    FLD_TMR_WD_CNT_CLR = BIT(3),
 
-	FLD_TMR_SW_IRQ     =		BIT(7),
+    FLD_TMR_SW_IRQ = BIT(7),
 };
 
-#define  reg_tmr0_capt          REG_ADDR32(0x140144)
-#define  reg_tmr1_capt          REG_ADDR32(0x140148)
-#define  reg_tmr_capt(i)		REG_ADDR32(0x140144 + ((i) << 2))
+#define reg_tmr0_capt REG_ADDR32(0x140144)
+#define reg_tmr1_capt REG_ADDR32(0x140148)
+#define reg_tmr_capt(i) REG_ADDR32(0x140144 + ((i) << 2))
 
-#define  reg_wt_target0         REG_ADDR8(0x14014c)// always is 0x00
-#define  reg_wt_target1         REG_ADDR8(0x14014d)
-#define  reg_wt_target2         REG_ADDR8(0x14014e)
-#define  reg_wt_target3         REG_ADDR8(0x14014f)
-#define  reg_wt_target          REG_ADDR32(0x14014c)
+#define reg_wt_target0 REG_ADDR8(0x14014c) // always is 0x00
+#define reg_wt_target1 REG_ADDR8(0x14014d)
+#define reg_wt_target2 REG_ADDR8(0x14014e)
+#define reg_wt_target3 REG_ADDR8(0x14014f)
+#define reg_wt_target REG_ADDR32(0x14014c)
 
-
-#define reg_tmr0_tick			REG_ADDR32(0X140150)
-#define reg_tmr1_tick			REG_ADDR32(0X140154)
-#define reg_tmr_tick(i)			REG_ADDR32(0X140150 + ((i) << 2))
+#define reg_tmr0_tick REG_ADDR32(0X140150)
+#define reg_tmr1_tick REG_ADDR32(0X140154)
+#define reg_tmr_tick(i) REG_ADDR32(0X140150 + ((i) << 2))
 
 #endif

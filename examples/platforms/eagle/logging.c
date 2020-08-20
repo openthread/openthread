@@ -33,11 +33,10 @@
  */
 
 #include <openthread-core-config.h>
+#include <openthread/cli.h>
 #include <openthread/config.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/toolchain.h>
-#include <openthread/cli.h>
-
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
@@ -46,4 +45,3 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     otCliPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
     va_end(ap);
 }
-

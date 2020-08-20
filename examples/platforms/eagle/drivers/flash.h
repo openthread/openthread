@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     flash.h 
+ * @file     flash.h
  *
  * @brief    This is the header file for TLSR8258
  *
@@ -21,7 +21,7 @@
  * 			 1.initial release(DEC. 26 2018)
  *
  * @version  A001
- *         
+ *
  *******************************************************************************************************/
 
 #pragma once
@@ -29,73 +29,75 @@
 #include "compiler.h"
 #include "../common/types.h"
 
-#define  S25FL512S          1    //for eagle fpga
+#define S25FL512S 1 // for eagle fpga
 
-#define  FLASH_TYPE    		0
+#define FLASH_TYPE 0
 
 /**
  * @brief     flash command definition
  */
-enum{
-	FLASH_WRITE_STATUS_CMD		=	0x01,
-	FLASH_WRITE_CMD				=	0x02,
-	FLASH_READ_CMD				=	0x03,
+enum
+{
+    FLASH_WRITE_STATUS_CMD = 0x01,
+    FLASH_WRITE_CMD        = 0x02,
+    FLASH_READ_CMD         = 0x03,
 
-	FLASH_WRITE_DISABLE_CMD 	= 	0x04,
-	FLASH_READ_STATUS_CMD		=	0x05,
-	FLASH_WRITE_ENABLE_CMD 		= 	0x06,
+    FLASH_WRITE_DISABLE_CMD = 0x04,
+    FLASH_READ_STATUS_CMD   = 0x05,
+    FLASH_WRITE_ENABLE_CMD  = 0x06,
 
-	FLASH_CHIP_ERASE_CMD		=	0x60,   //or 0xc7
+    FLASH_CHIP_ERASE_CMD = 0x60, // or 0xc7
 
-	FLASH_PES_CMD				=	0x75,
-	FLASH_PER_CMD				=	0x7A,
-	FLASH_QUAD_PAGE_PROGRAM_CMD	=	0x32,
-	FLASH_READ_DEVICE_ID_CMD	=	0x90,
+    FLASH_PES_CMD               = 0x75,
+    FLASH_PER_CMD               = 0x7A,
+    FLASH_QUAD_PAGE_PROGRAM_CMD = 0x32,
+    FLASH_READ_DEVICE_ID_CMD    = 0x90,
 
-	FLASH_FAST_READ_CMD			=	0x0B,
-	FLASH_X2READ_CMD			=	0xBB,
-	FLASH_DREAD_CMD				=	0x3B,
-	FLASH_X4READ_CMD			=	0xEB,
-	FLASH_QREAD_CMD				=	0x6B,
-#if(FLASH_TYPE==S25FL512S)
-	FLASH_SECT_ERASE_CMD		=	0xD8,   //sector size = 256kBytes
-	FLASH_READ_STATUS_1_CMD		=	0x07,
+    FLASH_FAST_READ_CMD = 0x0B,
+    FLASH_X2READ_CMD    = 0xBB,
+    FLASH_DREAD_CMD     = 0x3B,
+    FLASH_X4READ_CMD    = 0xEB,
+    FLASH_QREAD_CMD     = 0x6B,
+#if (FLASH_TYPE == S25FL512S)
+    FLASH_SECT_ERASE_CMD    = 0xD8, // sector size = 256kBytes
+    FLASH_READ_STATUS_1_CMD = 0x07,
 #else
-	FLASH_SECT_ERASE_CMD		=	0x20,   //sector size = 4KBytes
-	FLASH_32KBLK_ERASE_CMD		=	0x52,
-	FLASH_64KBLK_ERASE_CMD		=	0xD8,
-	FLASH_GD_PUYA_READ_UID_CMD	=	0x4B,	//Flash Type = GD/PUYA
-	FLASH_XTX_READ_UID_CMD		=	0x5A,	//Flash Type = XTX
-	FLASH_PAGE_ERASE_CMD		=	0x81,   //caution: only P25Q40L support this function
+    FLASH_SECT_ERASE_CMD       = 0x20, // sector size = 4KBytes
+    FLASH_32KBLK_ERASE_CMD     = 0x52,
+    FLASH_64KBLK_ERASE_CMD     = 0xD8,
+    FLASH_GD_PUYA_READ_UID_CMD = 0x4B, // Flash Type = GD/PUYA
+    FLASH_XTX_READ_UID_CMD     = 0x5A, // Flash Type = XTX
+    FLASH_PAGE_ERASE_CMD = 0x81,       // caution: only P25Q40L support this function
 
-	FLASH_POWER_DOWN			=	0xB9,
-	FLASH_POWER_DOWN_RELEASE	=	0xAB,
-	FLASH_GET_JEDEC_ID			=	0x9F,
-	FLASH_READ_STATUS_1_CMD		=	0x35,
+    FLASH_POWER_DOWN         = 0xB9,
+    FLASH_POWER_DOWN_RELEASE = 0xAB,
+    FLASH_GET_JEDEC_ID       = 0x9F,
+    FLASH_READ_STATUS_1_CMD  = 0x35,
 #endif
-	FLASH_VOLATILE_SR_WRITE_CMD	=	0x50,
-	FLASH_SET_BURST_WITH_WRAP_CMD	=	0x77,
-	FLASH_ENABLE_SO_TO_OUTPUT_CMD	=	0x70,
-	FLASH_READ_DEVICE_ID_DUAL_CME	=	0x92,
-	RLASH_READ_DEVICE_ID_QUAD_CMD	=	0x94,
-	FLASH_ERASE_SECURITY_REGISTERS_CMD	=	0x44,
-	FLASH_PROGRAM_SECURITY_REGISTERS_CMD	=	0x42,
-	FLASH_READ_SECURITY_REGISTERS_CMD	=	0x48,
-	FLASH_ENABLE_RESET_CMD	=	0x99,
+    FLASH_VOLATILE_SR_WRITE_CMD          = 0x50,
+    FLASH_SET_BURST_WITH_WRAP_CMD        = 0x77,
+    FLASH_ENABLE_SO_TO_OUTPUT_CMD        = 0x70,
+    FLASH_READ_DEVICE_ID_DUAL_CME        = 0x92,
+    RLASH_READ_DEVICE_ID_QUAD_CMD        = 0x94,
+    FLASH_ERASE_SECURITY_REGISTERS_CMD   = 0x44,
+    FLASH_PROGRAM_SECURITY_REGISTERS_CMD = 0x42,
+    FLASH_READ_SECURITY_REGISTERS_CMD    = 0x48,
+    FLASH_ENABLE_RESET_CMD               = 0x99,
 
-	FLASH_ENABLE_RESET	=	0x66,
-	FLASH_DISABLE_SO_TO_OUTPUT	=	0x80,
+    FLASH_ENABLE_RESET         = 0x66,
+    FLASH_DISABLE_SO_TO_OUTPUT = 0x80,
 };
 
 /**
  * @brief     flash type definition
  */
- 
-typedef enum{
-	FLASH_TYPE_GD = 0 ,
-	FLASH_TYPE_XTX,
-	FLASH_TYPE_PUYA
-}Flash_TypeDef;
+
+typedef enum
+{
+    FLASH_TYPE_GD = 0,
+    FLASH_TYPE_XTX,
+    FLASH_TYPE_PUYA
+} Flash_TypeDef;
 /**
  * @brief     This function serves to Stop XIP operation before flash.
  * @param[in] none.
@@ -207,7 +209,7 @@ _attribute_ram_code_ void flash_read_mid(unsigned char *buf);
  * @param[in] buf   - store UID of flash
  * @return    none.
  */
-_attribute_ram_code_ void flash_read_uid(unsigned char idcmd,unsigned char *buf);
+_attribute_ram_code_ void flash_read_uid(unsigned char idcmd, unsigned char *buf);
 
 /**
  * @brief This function serves to protect data for flash.
@@ -215,7 +217,7 @@ _attribute_ram_code_ void flash_read_uid(unsigned char idcmd,unsigned char *buf)
  * @param[in]   data - refer to Driver API Doc.
  * @return none
  */
-_attribute_ram_code_ void flash_lock(Flash_TypeDef type , unsigned short data);
+_attribute_ram_code_ void flash_lock(Flash_TypeDef type, unsigned short data);
 
 /**
  * @brief This function serves to protect data for flash.
@@ -224,20 +226,19 @@ _attribute_ram_code_ void flash_lock(Flash_TypeDef type , unsigned short data);
  */
 _attribute_ram_code_ void flash_unlock(Flash_TypeDef type);
 
-
 /** \defgroup GP4  Flash Examples
  *
  * 	@{
  */
 
 /*! \page flash Table of Contents
-	- [API-FLASH-CASE1:FLASH READ/WRITE PAGE](#FLASH_RW)
-	- [API-FLASH-CASE2:FLASH ERASE SECTOR](#FLASH_ERASE)
-	- [API-FLASH-CASE3:FLASH READ/WRITE STATUS](#FLASH_STATUS)
-	- [API-FLASH-CASE4:FLASH DEEP POWER DOWN/RELEASE](#FLASH_POWERDOWN)
-	- [API-FLASH-CASE5:FLASH READ MID/UID](#FLASH_MUID)
-	- [API-FLASH-CASE6:FLASH LOCK](#FLASH_LOCK)
-	- [API-FLASH-CASE7:FLASH UNLOCK](#FLASH_UNLOCK)
+    - [API-FLASH-CASE1:FLASH READ/WRITE PAGE](#FLASH_RW)
+    - [API-FLASH-CASE2:FLASH ERASE SECTOR](#FLASH_ERASE)
+    - [API-FLASH-CASE3:FLASH READ/WRITE STATUS](#FLASH_STATUS)
+    - [API-FLASH-CASE4:FLASH DEEP POWER DOWN/RELEASE](#FLASH_POWERDOWN)
+    - [API-FLASH-CASE5:FLASH READ MID/UID](#FLASH_MUID)
+    - [API-FLASH-CASE6:FLASH LOCK](#FLASH_LOCK)
+    - [API-FLASH-CASE7:FLASH UNLOCK](#FLASH_UNLOCK)
 
 \n
 Variables used in the following cases are defined as below
@@ -248,41 +249,41 @@ Variables used in the following cases are defined as below
 volatile unsigned char Flash_Read_Buff[FLASH_BUFF_LEN]={0};
 volatile unsigned char Flash_Write_Buff[FLASH_BUFF_LEN]=
 {		0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,
-		0x90,0x91,0x92,0x93,0x94,0x95,0x96,0x97,
-		0xa0,0xa1,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,
-		0xb0,0xb1,0xb2,0xb3,0xb4,0xb5,0xb6,0xb7,
-		0xc0,0xc1,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,
-		0xd0,0xd1,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,
-		0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,
-		0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,
+        0x90,0x91,0x92,0x93,0x94,0x95,0x96,0x97,
+        0xa0,0xa1,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,
+        0xb0,0xb1,0xb2,0xb3,0xb4,0xb5,0xb6,0xb7,
+        0xc0,0xc1,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,
+        0xd0,0xd1,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,
+        0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,
+        0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,
 
 
-		0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,
-		0x90,0x91,0x92,0x93,0x94,0x95,0x96,0x97,
-		0xa0,0xa1,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,
-		0xb0,0xb1,0xb2,0xb3,0xb4,0xb5,0xb6,0xb7,
-		0xc0,0xc1,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,
-		0xd0,0xd1,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,
-		0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,
-		0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,
+        0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,
+        0x90,0x91,0x92,0x93,0x94,0x95,0x96,0x97,
+        0xa0,0xa1,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,
+        0xb0,0xb1,0xb2,0xb3,0xb4,0xb5,0xb6,0xb7,
+        0xc0,0xc1,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,
+        0xd0,0xd1,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,
+        0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,
+        0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,
 
-		0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,
-		0x90,0x91,0x92,0x93,0x94,0x95,0x96,0x97,
-		0xa0,0xa1,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,
-		0xb0,0xb1,0xb2,0xb3,0xb4,0xb5,0xb6,0xb7,
-		0xc0,0xc1,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,
-		0xd0,0xd1,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,
-		0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,
-		0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,
+        0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,
+        0x90,0x91,0x92,0x93,0x94,0x95,0x96,0x97,
+        0xa0,0xa1,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,
+        0xb0,0xb1,0xb2,0xb3,0xb4,0xb5,0xb6,0xb7,
+        0xc0,0xc1,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,
+        0xd0,0xd1,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,
+        0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,
+        0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,
 
-		0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,
-		0x90,0x91,0x92,0x93,0x94,0x95,0x96,0x97,
-		0xa0,0xa1,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,
-		0xb0,0xb1,0xb2,0xb3,0xb4,0xb5,0xb6,0xb7,
-		0xc0,0xc1,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,
-		0xd0,0xd1,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,
-		0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,
-		0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,
+        0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,
+        0x90,0x91,0x92,0x93,0x94,0x95,0x96,0x97,
+        0xa0,0xa1,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,
+        0xb0,0xb1,0xb2,0xb3,0xb4,0xb5,0xb6,0xb7,
+        0xc0,0xc1,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,
+        0xd0,0xd1,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,
+        0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,
+        0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,
 };
 
 volatile unsigned char status;
@@ -296,12 +297,13 @@ unsigned char uid_buf[16]={0};
 | :------- | :----------- | :---------- | :---------- |:---------- | :------------ |
 | irq_handler() | None ||| Interrupt handler function [**Mandatory**] | 2019-1-10 |
 | main() | system_init() ||| CPU initialization function [**Mandatory**] | ^ |
-| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default [**optional**] | ^ |
-| ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
+| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default
+[**optional**] | ^ | | ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
 | ^ | gpio_init() ||| GPIO initialization: set the initialization status of all GPIOs [**optional**] | ^ |
-| ^ | user_init() | flash_write_page() | flash_write_page(FLASH_ADDR,FLASH_BUFF_LEN,(unsigned char *)Flash_Write_Buff) | write 256 bytes to the specified address of flash | ^ |
-| ^ | ^ | flash_read_page() | flash_read_page(FLASH_ADDR,FLASH_BUFF_LEN,(unsigned char *)Flash_Read_Buff) | read 256 bytes from the specified address of flash to check whether the written data is right | ^ |
-| ^ | main_loop() | None || Main program loop | ^ |
+| ^ | user_init() | flash_write_page() | flash_write_page(FLASH_ADDR,FLASH_BUFF_LEN,(unsigned char *)Flash_Write_Buff) |
+write 256 bytes to the specified address of flash | ^ | | ^ | ^ | flash_read_page() |
+flash_read_page(FLASH_ADDR,FLASH_BUFF_LEN,(unsigned char *)Flash_Read_Buff) | read 256 bytes from the specified address
+of flash to check whether the written data is right | ^ | | ^ | main_loop() | None || Main program loop | ^ |
 
 <h1 id=FLASH_ERASE> API-FLASH-CASE2:FLASH ERASE SECTOR </h1>
 
@@ -309,11 +311,11 @@ unsigned char uid_buf[16]={0};
 | :------- | :----------- | :---------- | :---------- |:---------- | :------------ |
 | irq_handler() | None ||| Interrupt handler function [**Mandatory**] | 2019-1-10 |
 | main() | system_init() ||| CPU initialization function [**Mandatory**] | ^ |
-| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default [**optional**] | ^ |
-| ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
+| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default
+[**optional**] | ^ | | ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
 | ^ | gpio_init() ||| GPIO initialization: set the initialization status of all GPIOs [**optional**] | ^ |
-| ^ | user_init() | flash_erase_sector() |  flash_erase_sector(FLASH_ADDR) | erase a sector from the specified address of flash | ^ |
-| ^ | main_loop() | None || Main program loop | ^ |
+| ^ | user_init() | flash_erase_sector() |  flash_erase_sector(FLASH_ADDR) | erase a sector from the specified address
+of flash | ^ | | ^ | main_loop() | None || Main program loop | ^ |
 
 <h1 id=FLASH_STATUS> API-FLASH-CASE3:FLASH READ/WRITE STATUS </h1>
 
@@ -321,8 +323,8 @@ unsigned char uid_buf[16]={0};
 | :------- | :----------- | :---------- | :---------- |:---------- | :------------ |
 | irq_handler() | None ||| Interrupt handler function [**Mandatory**] | 2019-1-10 |
 | main() | system_init() ||| CPU initialization function [**Mandatory**] | ^ |
-| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default [**optional**] | ^ |
-| ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
+| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default
+[**optional**] | ^ | | ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
 | ^ | gpio_init() ||| GPIO initialization: set the initialization status of all GPIOs [**optional**] | ^ |
 | ^ | user_init() | status = flash_read_status() || read the status of flash | ^ |
 | ^ | ^ | flash_write_status() | status = flash_write_status(0x04) | write the status of flash | ^ |
@@ -334,8 +336,8 @@ unsigned char uid_buf[16]={0};
 | :------- | :----------- | :---------- | :---------- |:---------- | :------------ |
 | irq_handler() | None ||| Interrupt handler function [**Mandatory**] | 2019-1-10 |
 | main() | system_init() ||| CPU initialization function [**Mandatory**] | ^ |
-| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default [**optional**] | ^ |
-| ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
+| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default
+[**optional**] | ^ | | ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
 | ^ | gpio_init() ||| GPIO initialization: set the initialization status of all GPIOs [**optional**] | ^ |
 | ^ | user_init() | flash_deep_powerdown() || put the device in the lowest consumption mode | ^ |
 | ^ | ^ | flash_release_deep_powerdown() || wake up the device from the lowest consumption mode | ^ |
@@ -347,8 +349,8 @@ unsigned char uid_buf[16]={0};
 | :------- | :----------- | :---------- | :---------- |:---------- | :------------ |
 | irq_handler() | None ||| Interrupt handler function [**Mandatory**] | 2019-1-10 |
 | main() | system_init() ||| CPU initialization function [**Mandatory**] | ^ |
-| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default [**optional**] | ^ |
-| ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
+| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default
+[**optional**] | ^ | | ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
 | ^ | gpio_init() ||| GPIO initialization: set the initialization status of all GPIOs [**optional**] | ^ |
 | ^ | user_init() | flash_read_mid() | flash_read_mid(mid_buf) | read MID of flash | ^ |
 | ^ | ^ | flash_read_uid() | flash_read_uid(FLASH_READ_UID_CMD,uid_buf) | read UID of flash | ^ |
@@ -360,8 +362,8 @@ unsigned char uid_buf[16]={0};
 | :------- | :----------- | :---------- | :---------- |:---------- | :------------ |
 | irq_handler() | None ||| Interrupt handler function [**Mandatory**] | 2019-1-10 |
 | main() | system_init() ||| CPU initialization function [**Mandatory**] | ^ |
-| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default [**optional**] | ^ |
-| ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
+| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default
+[**optional**] | ^ | | ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
 | ^ | gpio_init() ||| GPIO initialization: set the initialization status of all GPIOs [**optional**] | ^ |
 | ^ | user_init() | flash_lock() | flash_lock(FLASH_TYPE_GD, 0x1c) | lock first 512k bytes of flash | ^ |
 | ^ | main_loop() | None || Main program loop | ^ |
@@ -372,8 +374,8 @@ unsigned char uid_buf[16]={0};
 | :------- | :----------- | :---------- | :---------- |:---------- | :------------ |
 | irq_handler() | None ||| Interrupt handler function [**Mandatory**] | 2019-1-10 |
 | main() | system_init() ||| CPU initialization function [**Mandatory**] | ^ |
-| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default [**optional**] | ^ |
-| ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
+| ^ | clock_init() | clock_init(SYS_CLK_24M_XTAL) || Clock initialization function, System Clock is 24M RC by default
+[**optional**] | ^ | | ^ | rf_mode_init() | rf_mode_init(RF_MODE_BLE_1M) || RF mode initialization [**optional**] | ^ |
 | ^ | gpio_init() ||| GPIO initialization: set the initialization status of all GPIOs [**optional**] | ^ |
 | ^ | user_init() | flash_unlock() | flash_unlock(FLASH_TYPE_GD) | unlock the whole flash | ^ |
 | ^ | main_loop() | None || Main program loop | ^ |
@@ -388,4 +390,4 @@ unsigned char uid_buf[16]={0};
 
 */
 
- /** @}*/ //end of GP4
+/** @}*/ // end of GP4

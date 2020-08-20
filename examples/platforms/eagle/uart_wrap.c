@@ -43,10 +43,8 @@
 #include <openthread/platform/logging.h>
 #include <openthread/platform/uart.h>
 
-
-#include "utils/code_utils.h"
 #include "platform-eagle.h"
-
+#include "utils/code_utils.h"
 
 enum
 {
@@ -54,11 +52,8 @@ enum
     kReceiveBufferSize = 128,
 };
 
-
 static const unsigned char *sTransmitBuffer = NULL;
 static unsigned short       sTransmitLength = 0;
-
-
 
 typedef struct RecvBuffer
 {
@@ -88,21 +83,21 @@ static void init_recv_buffer()
 otError otPlatUartEnable(void)
 {
     unsigned short div;
-	unsigned char bwpc;
-    
+    unsigned char  bwpc;
+
     init_recv_buffer();
-	uart_reset(UART0);
-	uart_set_pin(UART0_TX_PB2, UART0_RX_PB3 );// uart tx/rx pin set
-	uart_cal_div_and_bwpc(115200, sys_clk.pclk*1000*1000, &div, &bwpc);
-	uart_set_dma_rx_timeout(UART0, bwpc, 12, UART_BW_MUL1);
-	uart_init(UART0, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
+    uart_reset(UART0);
+    uart_set_pin(UART0_TX_PB2, UART0_RX_PB3); // uart tx/rx pin set
+    uart_cal_div_and_bwpc(115200, sys_clk.pclk * 1000 * 1000, &div, &bwpc);
+    uart_set_dma_rx_timeout(UART0, bwpc, 12, UART_BW_MUL1);
+    uart_init(UART0, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
 
-	plic_interrupt_enable(IRQ19_UART0);
-	uart_tx_irq_trig_level_ndma(UART0, 0);
-	uart_rx_irq_trig_level_ndma(UART0, 1);
+    plic_interrupt_enable(IRQ19_UART0);
+    uart_tx_irq_trig_level_ndma(UART0, 0);
+    uart_rx_irq_trig_level_ndma(UART0, 1);
 
-	uart_set_irq_mask(UART0, UART_RX_IRQ_MASK);
-	return OT_ERROR_NONE;
+    uart_set_irq_mask(UART0, UART_RX_IRQ_MASK);
+    return OT_ERROR_NONE;
 }
 
 /**
@@ -114,7 +109,7 @@ otError otPlatUartEnable(void)
  */
 otError otPlatUartDisable(void)
 {
-	return OT_ERROR_NONE;
+    return OT_ERROR_NONE;
 }
 
 /**
@@ -129,7 +124,7 @@ otError otPlatUartDisable(void)
  */
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
-	otError error = OT_ERROR_NONE;
+    otError error = OT_ERROR_NONE;
 
     otEXPECT_ACTION(sTransmitBuffer == NULL, error = OT_ERROR_BUSY);
 
@@ -139,9 +134,6 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 exit:
     return error;
 }
-
-
-
 
 void processReceive(void)
 {
@@ -167,7 +159,6 @@ void processReceive(void)
     }
 }
 
-
 /**
  * Flush the outgoing transmit buffer and wait for the data to be sent.
  * This is called when the CLI UART interface has a full buffer but still
@@ -181,11 +172,11 @@ void processReceive(void)
  */
 otError otPlatUartFlush(void)
 {
-	otEXPECT(sTransmitBuffer != NULL);
+    otEXPECT(sTransmitBuffer != NULL);
 
     for (; sTransmitLength > 0; sTransmitLength--)
     {
-        uart_send_byte(UART0,*sTransmitBuffer++);
+        uart_send_byte(UART0, *sTransmitBuffer++);
     }
 
     sTransmitBuffer = NULL;
@@ -194,7 +185,6 @@ otError otPlatUartFlush(void)
 exit:
     return OT_ERROR_INVALID_STATE;
 }
-
 
 void processTransmit(void)
 {
@@ -210,21 +200,19 @@ void eagleUartProcess(void)
 
 void irq_uart0_handler(void)
 {
-    uint8_t  byte;
+    uint8_t byte;
 
     if (uart_get_irq_status(UART0, UART_RXBUF_IRQ_STATUS))
     {
-            byte = uart_read_byte(UART0);
+        byte = uart_read_byte(UART0);
 
-            // We can only write if incrementing mTail doesn't equal mHead
-            if (sReceive.mHead != (sReceive.mTail + 1) % kReceiveBufferSize)
-            {
-                sReceive.mBuffer[sReceive.mTail] = byte;
-                sReceive.mTail                   = (sReceive.mTail + 1) % kReceiveBufferSize;
-            }
-        
+        // We can only write if incrementing mTail doesn't equal mHead
+        if (sReceive.mHead != (sReceive.mTail + 1) % kReceiveBufferSize)
+        {
+            sReceive.mBuffer[sReceive.mTail] = byte;
+            sReceive.mTail                   = (sReceive.mTail + 1) % kReceiveBufferSize;
+        }
     }
 
-	plic_interrupt_complete(IRQ19_UART0);
+    plic_interrupt_complete(IRQ19_UART0);
 }
-

@@ -32,10 +32,10 @@
  *
  */
 
+#include "platform-eagle.h"
 #include <openthread/platform/entropy.h>
 #include <openthread/platform/radio.h>
 #include "utils/code_utils.h"
-#include "platform-eagle.h"
 
 void EagleRandomInit(void)
 {
@@ -46,27 +46,27 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     unsigned short i;
     unsigned short temp;
-    unsigned int rn;
+    unsigned int   rn;
 
-    temp = aOutputLength/4;
-    for(i=0;i<(temp);i++)
+    temp = aOutputLength / 4;
+    for (i = 0; i < (temp); i++)
     {
-        rn = trng_rand();
+        rn                         = trng_rand();
         *((unsigned int *)aOutput) = rn;
         aOutput += 4;
     }
 
-    aOutputLength -= temp*4;
-    if(aOutputLength > 0)
+    aOutputLength -= temp * 4;
+    if (aOutputLength > 0)
     {
         rn = trng_rand();
-        for(i=0;i<aOutputLength;i++)
+        for (i = 0; i < aOutputLength; i++)
         {
             *aOutput = rn;
             aOutput++;
             rn >>= 8;
         }
     }
-    
+
     return OT_ERROR_NONE;
 }

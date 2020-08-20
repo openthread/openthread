@@ -31,13 +31,13 @@
  * @brief
  *   This file includes the platform-specific initializers.
  */
-#include <openthread-core-config.h>
-#include <openthread/config.h>
+#include "platform-eagle.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include <openthread-core-config.h>
+#include <openthread/config.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/uart.h>
-#include "platform-eagle.h"
 
 otInstance *sInstance;
 
@@ -53,11 +53,11 @@ otInstance *sInstance;
  */
 void otSysInit(int argc, char *argv[])
 {
-	OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
     core_enable_interrupt();
-	
+
     EagleRandomInit();
     eagleRadioInit();
 }
@@ -71,7 +71,6 @@ void otSysInit(int argc, char *argv[])
  */
 void otSysDeinit(void)
 {
-	
 }
 
 /**
@@ -85,7 +84,7 @@ void otSysDeinit(void)
  */
 int otSysPseudoResetWasRequested(void)
 {
-	return 0;
+    return 0;
 }
 
 /**
@@ -99,8 +98,8 @@ int otSysPseudoResetWasRequested(void)
  */
 void otSysProcessDrivers(otInstance *aInstance)
 {
-	sInstance = aInstance;
-    
+    sInstance = aInstance;
+
     eagleUartProcess();
     eagleRadioProcess(aInstance);
     EagleAlarmProcess(aInstance);

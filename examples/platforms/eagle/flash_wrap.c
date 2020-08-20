@@ -30,25 +30,21 @@
 #include <openthread/config.h>
 
 #include <fcntl.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <stdint.h>
 
 #include <openthread/instance.h>
 #include <openthread/platform/alarm-milli.h>
 
-#include "utils/code_utils.h"
 #include "platform-eagle.h"
-
-
+#include "utils/code_utils.h"
 
 #define FLASH_BASE_ADDRESS 0x60000
 #define FLASH_PAGE_SIZE 4096
 #define FLASH_PAGE_NUM 2
 #define FLASH_SWAP_SIZE (FLASH_PAGE_SIZE * (FLASH_PAGE_NUM / 2))
-
-
 
 static uint32_t mapAddress(uint8_t aSwapIndex, uint32_t aOffset)
 {
@@ -65,7 +61,6 @@ static uint32_t mapAddress(uint8_t aSwapIndex, uint32_t aOffset)
 void otPlatFlashInit(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-
 }
 
 uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
@@ -79,7 +74,7 @@ void otPlatFlashErase(otInstance *aInstance, uint32_t aSwapIndex)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    Tl_printf("flash_erase_sector(%d)\n",(unsigned long)mapAddress(aSwapIndex, 0));
+    Tl_printf("flash_erase_sector(%d)\n", (unsigned long)mapAddress(aSwapIndex, 0));
     flash_erase_sector((unsigned long)mapAddress(aSwapIndex, 0));
 }
 
@@ -87,14 +82,16 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    Tl_printf("flash_write_page(%d,%d,%d)\n",(unsigned long)mapAddress(aSwapIndex, aOffset), aSize , (unsigned char *)aData);
-    flash_write_page((unsigned long)mapAddress(aSwapIndex, aOffset), aSize , (unsigned char *)aData );
+    Tl_printf("flash_write_page(%d,%d,%d)\n", (unsigned long)mapAddress(aSwapIndex, aOffset), aSize,
+              (unsigned char *)aData);
+    flash_write_page((unsigned long)mapAddress(aSwapIndex, aOffset), aSize, (unsigned char *)aData);
 }
 
 void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    Tl_printf("flash_read_page(%d,%d,%d)\n",(unsigned long) mapAddress(aSwapIndex, aOffset), (unsigned long) aSize, (unsigned char *)aData);
-    flash_read_page((unsigned long) mapAddress(aSwapIndex, aOffset), (unsigned long) aSize, (unsigned char *)aData);
+    Tl_printf("flash_read_page(%d,%d,%d)\n", (unsigned long)mapAddress(aSwapIndex, aOffset), (unsigned long)aSize,
+              (unsigned char *)aData);
+    flash_read_page((unsigned long)mapAddress(aSwapIndex, aOffset), (unsigned long)aSize, (unsigned char *)aData);
 }

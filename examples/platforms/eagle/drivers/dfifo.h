@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     dfifo.h 
+ * @file     dfifo.h
  *
  * @brief    This is the source file for TLSR8278
  *
@@ -23,8 +23,8 @@
  * @version  A001
  *
  *******************************************************************************************************/
-#ifndef 	DFIFO_H
-#define 	DFIFO_H
+#ifndef DFIFO_H
+#define DFIFO_H
 
 //#include "register.h"
 #include "reg_include/register_9518.h"
@@ -34,7 +34,7 @@
 // * @param[in]  none.
 // * @return     none.
 // */
-//static inline void dfifo_enable_dfifo2(void)
+// static inline void dfifo_enable_dfifo2(void)
 //{
 //	reg_dfifo_mode |= FLD_AUD_DFIFO2_IN;
 //}
@@ -44,7 +44,7 @@
 // * @param[in]  none.
 // * @return     none.
 // */
-//static inline void dfifo_disable_dfifo2(void)
+// static inline void dfifo_disable_dfifo2(void)
 //{
 //	reg_dfifo_mode &= ~FLD_AUD_DFIFO2_IN;
 //}
@@ -55,7 +55,7 @@
 // * @param[in]  size_buff - depth of DFIFO0.
 // * @return     none.
 // */
-//static inline void dfifo_set_dfifo0(unsigned short* pbuff,unsigned int size_buff)
+// static inline void dfifo_set_dfifo0(unsigned short* pbuff,unsigned int size_buff)
 //{
 //	reg_dfifo0_addr = (unsigned short)((unsigned int)pbuff);
 //	reg_dfifo0_size = (size_buff>>4)-1;
@@ -67,7 +67,7 @@
 // * @param[in]  size_buff - depth of DFIFO1.
 // * @return     none.
 // */
-//static inline void dfifo_set_dfifo1(unsigned short* pbuff,unsigned int size_buff)
+// static inline void dfifo_set_dfifo1(unsigned short* pbuff,unsigned int size_buff)
 //{
 //	reg_dfifo1_addr = (unsigned short)((unsigned int)pbuff);
 //	reg_dfifo1_size = (size_buff>>4)-1;
@@ -79,7 +79,7 @@
 // * @param[in]  size_buff - depth of DFIFO2.
 // * @return     none.
 // */
-//static inline void dfifo_set_dfifo2(unsigned short* pbuff,unsigned int size_buff)
+// static inline void dfifo_set_dfifo2(unsigned short* pbuff,unsigned int size_buff)
 //{
 //	reg_dfifo2_addr = (unsigned short)((unsigned int)pbuff);
 //	reg_dfifo2_size = (size_buff>>4)-1;
@@ -91,7 +91,7 @@
 // * @param[in]  size_buff - depth of FIFO2.
 // * @return     none.
 // */
-//static inline void adc_config_misc_channel_buf(unsigned short* pbuff,unsigned int size_buff)
+// static inline void adc_config_misc_channel_buf(unsigned short* pbuff,unsigned int size_buff)
 //
 //{
 //	reg_dfifo_misc_chn_addr = (unsigned short)((unsigned int)pbuff);
@@ -107,12 +107,10 @@
  * @return    none
  */
 
-static inline void audio_config_mic_buf(unsigned short* pbuff,unsigned int size_buff)
+static inline void audio_config_mic_buf(unsigned short *pbuff, unsigned int size_buff)
 {
-	reg_dfifo_audio_addr = (unsigned short)((unsigned int)pbuff);
-	reg_dfifo_audio_size = (size_buff>>4)-1;
+    reg_dfifo_audio_addr = (unsigned short)((unsigned int)pbuff);
+    reg_dfifo_audio_size = (size_buff >> 4) - 1;
 }
 
 #endif
-
-

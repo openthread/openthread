@@ -25,22 +25,22 @@
  *******************************************************************************************************/
 #ifndef INTERRUPT_REG_H
 #define INTERRUPT_REG_H
-#include "../sys.h"
 #include "../../common/bit.h"
+#include "../sys.h"
 
 /*******************************     interrupt registers:     ******************************/
-#define reg_irq_feature		         (*(volatile unsigned long*)(0 + (0xe4000000)))
+#define reg_irq_feature (*(volatile unsigned long *)(0 + (0xe4000000)))
 
-#define reg_irq_pending(i)             	  (*(volatile unsigned long*)(0 + (0xe4001000+((i>31) ? 4 : 0))))
+#define reg_irq_pending(i) (*(volatile unsigned long *)(0 + (0xe4001000 + ((i > 31) ? 4 : 0))))
 
-#define reg_irq_src0             	  (*(volatile unsigned long*)(0 + (0xe4002000)))
-#define reg_irq_src1             	  (*(volatile unsigned long*)(0 + (0xe4002004)))
+#define reg_irq_src0 (*(volatile unsigned long *)(0 + (0xe4002000)))
+#define reg_irq_src1 (*(volatile unsigned long *)(0 + (0xe4002004)))
 
-#define reg_irq_src(i)             	  (*(volatile unsigned long*)(0 + (0xe4002000+((i>31) ? 4 : 0) )))
+#define reg_irq_src(i) (*(volatile unsigned long *)(0 + (0xe4002000 + ((i > 31) ? 4 : 0))))
 
-#define reg_irq_threshold             (*(volatile unsigned long*)(0 + (0xe4200000)))
-#define reg_irq_done          	  	   (*(volatile unsigned long*)(0 + (0xe4200004)))
+#define reg_irq_threshold (*(volatile unsigned long *)(0 + (0xe4200000)))
+#define reg_irq_done (*(volatile unsigned long *)(0 + (0xe4200004)))
 
-#define reg_irq_src_priority(i)       (*(volatile unsigned long*)(0 + 0xe4000000+((i)<<2)))
+#define reg_irq_src_priority(i) (*(volatile unsigned long *)(0 + 0xe4000000 + ((i) << 2)))
 
 #endif

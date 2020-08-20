@@ -37,11 +37,10 @@
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
-
 #include "common/logging.hpp"
 #include "utils/code_utils.h"
-#include "utils/soft_source_match_table.h"
 #include "utils/mac_frame.h"
+#include "utils/soft_source_match_table.h"
 
 #include "platform-eagle.h"
 
@@ -57,40 +56,37 @@ enum
     IEEE802154_DSN_OFFSET      = 2,
 };
 
-typedef enum {
-    PHY_CCA_IDLE       = 0x04,
-    PHY_CCA_TRX_OFF    = 0x03,
-    PHY_CCA_BUSY       = 0x00,
+typedef enum
+{
+    PHY_CCA_IDLE    = 0x04,
+    PHY_CCA_TRX_OFF = 0x03,
+    PHY_CCA_BUSY    = 0x00,
 } phy_ccaSts_t;
 #define RX_BUFFER_NUM 3
-unsigned char  rx_buffer_pool[RX_BUFFER_NUM][160]  __attribute__ ((aligned (4)));
-unsigned char  tx_buffer[256] __attribute__ ((aligned (4)));
+unsigned char rx_buffer_pool[RX_BUFFER_NUM][160] __attribute__((aligned(4)));
+unsigned char tx_buffer[256] __attribute__((aligned(4)));
 
-
-unsigned char  *rx_buffer = NULL;
-unsigned int r_ptr = 0;
-unsigned int w_ptr = 0;
+unsigned char *rx_buffer = NULL;
+unsigned int   r_ptr     = 0;
+unsigned int   w_ptr     = 0;
 
 otRadioFrame *current_receive_frame_ptr;
-
 
 static otExtAddress   sExtAddress;
 static otShortAddress sShortAddress;
 static otPanId        sPanid;
-static int8_t  sTxPower = 0;
+static int8_t         sTxPower = 0;
 
 static otRadioFrame sTransmitFrame;
 static otRadioFrame sReceiveFrame[RX_BUFFER_NUM];
- otRadioFrame        sAckFrame;
+otRadioFrame        sAckFrame;
 static otError      sTransmitError;
 static otError      sReceiveError;
-static uint8_t sTransmitPsdu[IEEE802154_MAX_LENGTH];
-static uint8_t sAckPsdu[8];
-static otRadioState sState             = OT_RADIO_STATE_DISABLED;
-static bool sSrcMatchEnabled = false;
-volatile int tx_busy = 0;
-
-
+static uint8_t      sTransmitPsdu[IEEE802154_MAX_LENGTH];
+static uint8_t      sAckPsdu[8];
+static otRadioState sState           = OT_RADIO_STATE_DISABLED;
+static bool         sSrcMatchEnabled = false;
+volatile int        tx_busy          = 0;
 
 /**
  * Get the radio capabilities.
@@ -102,11 +98,9 @@ volatile int tx_busy = 0;
  */
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
-	OT_UNUSED_VARIABLE(aInstance);
-	return OT_RADIO_CAPS_NONE;
+    OT_UNUSED_VARIABLE(aInstance);
+    return OT_RADIO_CAPS_NONE;
 }
-
-
 
 /**
  * Get the radio receive sensitivity value.
@@ -118,8 +112,8 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
  */
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
-	OT_UNUSED_VARIABLE(aInstance);
-	return -99;
+    OT_UNUSED_VARIABLE(aInstance);
+    return -99;
 }
 
 /**
@@ -131,12 +125,11 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
  */
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
-	OT_UNUSED_VARIABLE(aInstance);
-	
-	uint8_t *    eui64;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    uint8_t *    eui64;
     unsigned int i;
 
-    
     eui64 = (uint8_t *)(SETTINGS_CONFIG_IEEE_EUI64_ADDRESS);
 
     for (i = 0; i < OT_EXT_ADDRESS_SIZE; i++)
@@ -154,7 +147,7 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
  */
 void otPlatRadioSetPanId(otInstance *aInstance, otPanId aPanId)
 {
-	OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInstance);
 
     sPanid = aPanId;
     utilsSoftSrcMatchSetPanId(aPanId);
@@ -178,8 +171,8 @@ static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrig
  */
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-	OT_UNUSED_VARIABLE(aInstance);
-	ReverseExtAddress(&sExtAddress, aExtAddress);
+    OT_UNUSED_VARIABLE(aInstance);
+    ReverseExtAddress(&sExtAddress, aExtAddress);
 }
 
 /**
@@ -191,8 +184,8 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
  */
 void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
 {
-	OT_UNUSED_VARIABLE(aInstance);
-	sShortAddress = aShortAddress;
+    OT_UNUSED_VARIABLE(aInstance);
+    sShortAddress = aShortAddress;
 }
 
 /**
@@ -208,7 +201,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddr
  */
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
-	OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInstance);
 
     otError error = OT_ERROR_NONE;
 
@@ -231,7 +224,7 @@ exit:
  */
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
-	OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInstance);
 
     rf_set_tx_power(aPower);
 
@@ -253,7 +246,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
  */
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {
-	OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aThreshold);
 
     return OT_ERROR_NOT_IMPLEMENTED;
@@ -272,7 +265,7 @@ otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aT
  */
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {
-	OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aThreshold);
 
     return OT_ERROR_NOT_IMPLEMENTED;
@@ -289,8 +282,8 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
  */
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
-	OT_UNUSED_VARIABLE(aInstance);
-	return false;
+    OT_UNUSED_VARIABLE(aInstance);
+    return false;
 }
 
 /**
@@ -302,10 +295,9 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
  */
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
-	OT_UNUSED_VARIABLE(aInstance);
-	OT_UNUSED_VARIABLE(aEnable);
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
 }
-
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
@@ -372,7 +364,6 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     return error;
 }
 
-
 /**
  * Get the radio transmit frame buffer.
  *
@@ -385,13 +376,10 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
  */
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
-	OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInstance);
 
     return &sTransmitFrame;
 }
-
-
-
 
 /**
  * Get the most recent RSSI measurement.
@@ -403,9 +391,9 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
  */
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
-	OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInstance);
     signed char rssi_cur = -110;
-    rssi_cur = rf_rssi_get_154();
+    rssi_cur             = rf_rssi_get_154();
     return rssi_cur;
 }
 
@@ -424,13 +412,12 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
  */
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-	OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aScanChannel);
     OT_UNUSED_VARIABLE(aScanDuration);
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }
-
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
@@ -438,7 +425,6 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 
     sSrcMatchEnabled = aEnable;
 }
-
 
 static void init_queue()
 {
@@ -448,7 +434,7 @@ static void init_queue()
 
 static int queue_is_empty()
 {
-    if(r_ptr == w_ptr)
+    if (r_ptr == w_ptr)
     {
         return 1;
     }
@@ -460,7 +446,7 @@ static int queue_is_empty()
 
 static int queue_is_full()
 {
-    if(((w_ptr + 1)%RX_BUFFER_NUM) == r_ptr)
+    if (((w_ptr + 1) % RX_BUFFER_NUM) == r_ptr)
     {
         return 1;
     }
@@ -472,29 +458,29 @@ static int queue_is_full()
 
 static void queue_push()
 {
-    w_ptr = (w_ptr + 1)%RX_BUFFER_NUM;
+    w_ptr = (w_ptr + 1) % RX_BUFFER_NUM;
 }
 
 static void queue_push_undo()
 {
-    if(w_ptr == 0)
+    if (w_ptr == 0)
     {
         w_ptr = RX_BUFFER_NUM - 1;
     }
     else
     {
-        w_ptr --;
+        w_ptr--;
     }
 }
 
 static void queue_pop()
 {
-    r_ptr = (r_ptr + 1)%RX_BUFFER_NUM;
+    r_ptr = (r_ptr + 1) % RX_BUFFER_NUM;
 }
 
 static otRadioFrame *get_top_frame()
 {
-    if(queue_is_empty())
+    if (queue_is_empty())
     {
         return NULL;
     }
@@ -505,10 +491,9 @@ static otRadioFrame *get_top_frame()
 static otRadioFrame *get_receive_frame()
 {
     current_receive_frame_ptr = &(sReceiveFrame[w_ptr]);
-    rx_buffer = current_receive_frame_ptr->mPsdu - 5;
+    rx_buffer                 = current_receive_frame_ptr->mPsdu - 5;
     return current_receive_frame_ptr;
 }
-
 
 static uint32_t m_in_critical_region = 0;
 
@@ -527,76 +512,77 @@ static inline void util_enable_rf_irq(void)
     }
 }
 
-
 void eagleRadioInit(void)
 {
     int i;
-    
-    
+
     sTransmitFrame.mLength = 0;
     sTransmitFrame.mPsdu   = sTransmitPsdu;
-    
-    for(i = 0;i<RX_BUFFER_NUM;i++)
+
+    for (i = 0; i < RX_BUFFER_NUM; i++)
     {
         sReceiveFrame[i].mLength = 0;
-        sReceiveFrame[i].mPsdu = &(rx_buffer_pool[i][5]);
+        sReceiveFrame[i].mPsdu   = &(rx_buffer_pool[i][5]);
     }
     init_queue();
-    
-    sAckFrame.mLength = 0;
-    sAckFrame.mPsdu = sAckPsdu;
 
-    
+    sAckFrame.mLength = 0;
+    sAckFrame.mPsdu   = sAckPsdu;
+
     rf_drv_init(RF_MODE_ZIGBEE_250K);
-    rf_set_tx_dma(2,16);
+    rf_set_tx_dma(2, 16);
     get_receive_frame();
-    rf_set_rx_dma(rx_buffer,3,16);
+    rf_set_rx_dma(rx_buffer, 3, 16);
     plic_interrupt_enable(IRQ15_ZB_RT);
-    rf_set_irq_mask(FLD_ZB_RX_IRQ|FLD_ZB_TX_IRQ);
+    rf_set_irq_mask(FLD_ZB_RX_IRQ | FLD_ZB_TX_IRQ);
 }
 
 static void setupTransmit(otRadioFrame *aFrame)
 {
-    int i;
+    int           i;
     unsigned char rf_data_len;
-    unsigned int rf_tx_dma_len;
+    unsigned int  rf_tx_dma_len;
 
-    
-    rf_data_len = aFrame->mLength - 1;
-	tx_buffer[4] = aFrame->mLength ;
-	rf_tx_dma_len = RF_TX_PAKET_DMA_LEN(rf_data_len);
-	tx_buffer[3] = (rf_tx_dma_len >> 24)&0xff;
-	tx_buffer[2] = (rf_tx_dma_len >> 16)&0xff;
-	tx_buffer[1] = (rf_tx_dma_len >> 8)&0xff;
-	tx_buffer[0] = rf_tx_dma_len&0xff;
+    rf_data_len   = aFrame->mLength - 1;
+    tx_buffer[4]  = aFrame->mLength;
+    rf_tx_dma_len = RF_TX_PAKET_DMA_LEN(rf_data_len);
+    tx_buffer[3]  = (rf_tx_dma_len >> 24) & 0xff;
+    tx_buffer[2]  = (rf_tx_dma_len >> 16) & 0xff;
+    tx_buffer[1]  = (rf_tx_dma_len >> 8) & 0xff;
+    tx_buffer[0]  = rf_tx_dma_len & 0xff;
 
-    for(i=0;i<aFrame->mLength - 2;i++)
+    for (i = 0; i < aFrame->mLength - 2; i++)
     {
-        tx_buffer[5+i] = aFrame->mPsdu[i];
+        tx_buffer[5 + i] = aFrame->mPsdu[i];
     }
-    
+
     rf_set_channel(aFrame->mChannel);
 }
 
 phy_ccaSts_t rf_performCCA(void)
 {
-	unsigned int t1 = clock_time();
-	signed char rssi_peak = -110;
-	signed char rssi_cur = -110;
+    unsigned int t1        = clock_time();
+    signed char  rssi_peak = -110;
+    signed char  rssi_cur  = -110;
 
-	while(!clock_time_exceed(t1,128)){
-		rssi_cur = rf_rssi_get_154();
-		if (rssi_cur > rssi_peak) {
-			rssi_peak = rssi_cur;
-		}
-	}
+    while (!clock_time_exceed(t1, 128))
+    {
+        rssi_cur = rf_rssi_get_154();
+        if (rssi_cur > rssi_peak)
+        {
+            rssi_peak = rssi_cur;
+        }
+    }
 
-	if (rssi_peak > -60 ) {
-		//return PHY_CCA_BUSY;
-		return PHY_CCA_IDLE;
-	} else {
-		return PHY_CCA_IDLE;
-	}
+    if (rssi_peak > -60)
+    {
+        // return PHY_CCA_BUSY;
+        return PHY_CCA_IDLE;
+    }
+    else
+    {
+        return PHY_CCA_IDLE;
+    }
 }
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
@@ -607,7 +593,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     if (sState == OT_RADIO_STATE_RECEIVE)
     {
-        
         phy_ccaSts_t cca_result;
 
         error          = OT_ERROR_NONE;
@@ -615,12 +600,11 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         sTransmitError = OT_ERROR_NONE;
 
         setupTransmit(aFrame);
-        
+
         // wait for valid rssi
         cca_result = rf_performCCA();
 
-        otEXPECT_ACTION((cca_result == PHY_CCA_IDLE),
-                        sTransmitError = OT_ERROR_CHANNEL_ACCESS_FAILURE);
+        otEXPECT_ACTION((cca_result == PHY_CCA_IDLE), sTransmitError = OT_ERROR_CHANNEL_ACCESS_FAILURE);
 
         // begin transmit
         tx_busy = 1;
@@ -633,8 +617,7 @@ exit:
     return error;
 }
 
-
- bool isDataRequestAndHasFramePending(const otRadioFrame *aFrame)
+bool isDataRequestAndHasFramePending(const otRadioFrame *aFrame)
 {
     bool         rval = false;
     otMacAddress src;
@@ -664,10 +647,9 @@ exit:
     return rval;
 }
 
-
 void radioSendAck(void)
 {
-    sAckFrame.mLength    = IEEE802154_ACK_LENGTH;
+    sAckFrame.mLength  = IEEE802154_ACK_LENGTH;
     sAckFrame.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
 
     if (isDataRequestAndHasFramePending(current_receive_frame_ptr))
@@ -681,20 +663,17 @@ void radioSendAck(void)
 
     sAckFrame.mChannel = current_receive_frame_ptr->mChannel;
 
-    
-    //Transmit
+    // Transmit
     setupTransmit(&sAckFrame);
     rf_set_txmode();
     rf_tx_pkt(tx_buffer);
-    //rf_start_stx(tx_buffer,0,0);
+    // rf_start_stx(tx_buffer,0,0);
 }
-
 
 uint8_t rf_rssi_to_lqi(int8_t aRss)
 {
-    
-    int8_t aNoiseFloor = -99;
-    int8_t linkMargin = aRss - aNoiseFloor;
+    int8_t  aNoiseFloor = -99;
+    int8_t  linkMargin  = aRss - aNoiseFloor;
     uint8_t aLinkMargin;
     uint8_t threshold1, threshold2, threshold3;
     uint8_t linkQuality = 0;
@@ -726,67 +705,61 @@ uint8_t rf_rssi_to_lqi(int8_t aRss)
     return linkQuality;
 }
 
-
 extern unsigned char current_channel;
 
- void radioProcessFrame(void)
+void radioProcessFrame(void)
 {
-    uint8_t length;
+    uint8_t     length;
     signed char rssi;
-    
 
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
-    
-    rssi = ((signed char)(rx_buffer[rx_buffer[0]+2])) - 110;
+
+    rssi = ((signed char)(rx_buffer[rx_buffer[0] + 2])) - 110;
     // read length
     length = rx_buffer[4];
     otEXPECT(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH);
 
-    
-    current_receive_frame_ptr->mLength            = length;
+    current_receive_frame_ptr->mLength  = length;
     current_receive_frame_ptr->mChannel = current_channel;
-    
 
-    if(length == IEEE802154_ACK_LENGTH)
+    if (length == IEEE802154_ACK_LENGTH)
     {
-        //push the frame
+        // push the frame
         queue_push();
-        if(!queue_is_full())
+        if (!queue_is_full())
         {
             get_receive_frame();
-            rf_set_rx_dma(rx_buffer,3,16);
+            rf_set_rx_dma(rx_buffer, 3, 16);
         }
         else
         {
-           queue_push_undo();
+            queue_push_undo();
         }
     }
-    else if(length > IEEE802154_ACK_LENGTH)
+    else if (length > IEEE802154_ACK_LENGTH)
     {
-        if(!otMacFrameDoesAddrMatch(current_receive_frame_ptr, sPanid, sShortAddress, &sExtAddress))
+        if (!otMacFrameDoesAddrMatch(current_receive_frame_ptr, sPanid, sShortAddress, &sExtAddress))
         {
-            //drop the frame
-            //do nothing
+            // drop the frame
+            // do nothing
             goto exit;
         }
         current_receive_frame_ptr->mInfo.mRxInfo.mRssi = rssi;
-        current_receive_frame_ptr->mInfo.mRxInfo.mLqi = rf_rssi_to_lqi(current_receive_frame_ptr->mInfo.mRxInfo.mRssi);
+        current_receive_frame_ptr->mInfo.mRxInfo.mLqi  = rf_rssi_to_lqi(current_receive_frame_ptr->mInfo.mRxInfo.mRssi);
         current_receive_frame_ptr->mInfo.mRxInfo.mAckedWithFramePending = false;
 
-        
-        
         // generate acknowledgment
         if (otMacFrameIsAckRequested(current_receive_frame_ptr))
         {
             radioSendAck();
         }
 
-        //push the frame
+        // push the frame
         queue_push();
-        if(!queue_is_full())
+        if (!queue_is_full())
         {
             get_receive_frame();
-            rf_set_rx_dma(rx_buffer,3,16);
+            rf_set_rx_dma(rx_buffer, 3, 16);
         }
         else
         {
@@ -798,41 +771,34 @@ exit:
     return;
 }
 
-
-
 void EagleRxTxIntHandler()
 {
-	if(rf_get_irq_status(FLD_ZB_RX_IRQ))
-	{
+    if (rf_get_irq_status(FLD_ZB_RX_IRQ))
+    {
         dma_chn_dis(DMA1);
         rf_clr_irq_status(FLD_ZB_RX_IRQ);
-        
-		if(RF_ZIGBEE_PACKET_CRC_OK(rx_buffer)&&RF_ZIGBEE_PACKET_LENGTH_OK(rx_buffer))
-		{
-			radioProcessFrame();
-		}
-		
+
+        if (RF_ZIGBEE_PACKET_CRC_OK(rx_buffer) && RF_ZIGBEE_PACKET_LENGTH_OK(rx_buffer))
+        {
+            radioProcessFrame();
+        }
+
         dma_chn_en(DMA1);
-	}
-    else if(rf_get_irq_status(FLD_ZB_TX_IRQ))
+    }
+    else if (rf_get_irq_status(FLD_ZB_TX_IRQ))
     {
-        
         rf_clr_irq_status(FLD_ZB_TX_IRQ);
-        
-        
-        if((tx_busy == 1)&&(sState == OT_RADIO_STATE_TRANSMIT))
+
+        if ((tx_busy == 1) && (sState == OT_RADIO_STATE_TRANSMIT))
         {
             tx_busy = 0;
         }
-        //set to rx mode
+        // set to rx mode
         rf_set_rxmode();
     }
-	
-	plic_interrupt_complete(IRQ15_ZB_RT);
-	
 
+    plic_interrupt_complete(IRQ15_ZB_RT);
 }
-
 
 void eagleRadioProcess(otInstance *aInstance)
 {
@@ -842,29 +808,23 @@ void eagleRadioProcess(otInstance *aInstance)
     ptr = get_top_frame();
     util_enable_rf_irq();
 
-    if ((sState == OT_RADIO_STATE_RECEIVE ) || (sState == OT_RADIO_STATE_TRANSMIT ))
+    if ((sState == OT_RADIO_STATE_RECEIVE) || (sState == OT_RADIO_STATE_TRANSMIT))
     {
-        if ((ptr != NULL)&&(ptr->mLength > IEEE802154_ACK_LENGTH))
+        if ((ptr != NULL) && (ptr->mLength > IEEE802154_ACK_LENGTH))
         {
             otPlatRadioReceiveDone(aInstance, ptr, sReceiveError);
         }
-        
     }
 
     if (sState == OT_RADIO_STATE_TRANSMIT)
     {
-        if (sTransmitError != OT_ERROR_NONE || 
-              (
-                  ((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
-                  &&(tx_busy == 0)
-              )
-           )
+        if (sTransmitError != OT_ERROR_NONE ||
+            (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) && (tx_busy == 0)))
         {
             sState = OT_RADIO_STATE_RECEIVE;
             otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitError);
-            
         }
-        else if ((ptr != NULL)&&ptr->mLength == IEEE802154_ACK_LENGTH &&
+        else if ((ptr != NULL) && ptr->mLength == IEEE802154_ACK_LENGTH &&
                  (ptr->mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&
                  (ptr->mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
         {
@@ -874,9 +834,9 @@ void eagleRadioProcess(otInstance *aInstance)
     }
 
     util_disable_rf_irq();
-    if(ptr != NULL)
+    if (ptr != NULL)
     {
-    queue_pop();
+        queue_pop();
     }
     util_enable_rf_irq();
 }

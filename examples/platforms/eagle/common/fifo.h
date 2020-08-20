@@ -10,13 +10,13 @@
 
 #include "types.h"
 
-typedef	struct {
-	u32		size;
-	u16		num;
-	u8		wptr;
-	u8		rptr;
-	u8*		p;
-}	my_fifo_t;
-
+typedef struct
+{
+    u32 size;
+    u16 num;
+    u8  wptr;
+    u8  rptr;
+    u8 *p;
+} my_fifo_t;
 
 #endif /* FIFO_H_ */

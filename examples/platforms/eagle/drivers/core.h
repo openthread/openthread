@@ -26,32 +26,31 @@
 #ifndef CORE_H
 #define CORE_H
 #include "nds_intrinsic.h"
-#include "../common/types.h"
 #include "../common/bit.h"
-#define  read_csr(reg)		         __nds__csrr(reg)
-#define  write_csr(reg, val)	      __nds__csrw(val, reg)
-#define  swap_csr(reg, val)	          __nds__csrrw(val, reg)
-#define set_csr(reg, bit)	         __nds__csrrs(bit, reg)
-#define clear_csr(reg, bit)	         __nds__csrrc(bit, reg)
+#include "../common/types.h"
+#define read_csr(reg) __nds__csrr(reg)
+#define write_csr(reg, val) __nds__csrw(val, reg)
+#define swap_csr(reg, val) __nds__csrrw(val, reg)
+#define set_csr(reg, bit) __nds__csrrs(bit, reg)
+#define clear_csr(reg, bit) __nds__csrrc(bit, reg)
 
-typedef enum{
-	FLD_FEATURE_PREEMPT_PRIORITY_INT_EN = BIT(0),
-	FLD_FEATURE_VECTOR_MODE_EN 			= BIT(1),
-}
-feature_e;
+typedef enum
+{
+    FLD_FEATURE_PREEMPT_PRIORITY_INT_EN = BIT(0),
+    FLD_FEATURE_VECTOR_MODE_EN          = BIT(1),
+} feature_e;
 /** @brief Enable interrupts globally in the system.
  * This macro must be used when the initialization phase is over and the interrupts
  * can start being handled by the system.
  */
- void core_enable_interrupt(void);
+void core_enable_interrupt(void);
 
+/* Disable the Machine external, timer and software interrupts until setup is done */
+/** @brief Disable interrupts globally in the system.
+ * This function must be used when the system wants to disable all the interrupt
+ * it could handle.
+ */
+u32 core_disable_interrupt(void);
 
- /* Disable the Machine external, timer and software interrupts until setup is done */
- /** @brief Disable interrupts globally in the system.
-  * This function must be used when the system wants to disable all the interrupt
-  * it could handle.
-  */
- u32 core_disable_interrupt(void);
-
- u32 core_restore_interrupt(u32 en);
+u32 core_restore_interrupt(u32 en);
 #endif

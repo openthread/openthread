@@ -24,14 +24,13 @@
  *
  *******************************************************************************************************/
 
-
 #ifndef COMPILER_H_
 #define COMPILER_H_
 
-#define _attribute_ram_code_      __attribute__((section(".ram_code"))) __attribute__((noinline))
-#define _attribute_ram_code_without_oninline      __attribute__((section(".ram_code")))
+#define _attribute_ram_code_ __attribute__((section(".ram_code"))) __attribute__((noinline))
+#define _attribute_ram_code_without_oninline __attribute__((section(".ram_code")))
 
-#define _attribute_data_retention_   	__attribute__((section(".retention_data")))
+#define _attribute_data_retention_ __attribute__((section(".retention_data")))
 /// define the static keyword for this compiler
 #define __STATIC static
 
@@ -39,7 +38,7 @@
 #define __INLINE static __attribute__((__always_inline__)) inline
 
 /// define the IRQ handler attribute for this compiler
-#define __IRQ 	__attribute__ ((interrupt ("machine"), aligned(4)))
+#define __IRQ __attribute__((interrupt("machine"), aligned(4)))
 
 /// define the BLE IRQ handler attribute for this compiler
 #define __BTIRQ
@@ -69,7 +68,7 @@
 #define __MODULE__ __BASE_FILE__
 
 /// Pack a structure field
-#define __PACKED __attribute__ ((__packed__))
+#define __PACKED __attribute__((__packed__))
 
 /// Put a variable in a memory maintained during deep sleep
 #define __LOWPOWER_SAVED

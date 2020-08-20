@@ -45,10 +45,7 @@
 // Global OpenThread instance structure
 extern otInstance *sInstance;
 
-
 void cpu_wakeup_init(void);
-
-
 
 /**
  * This function performs alarm driver processing.
@@ -57,7 +54,6 @@ void cpu_wakeup_init(void);
  *
  */
 void EagleAlarmProcess(otInstance *aInstance);
-
 
 void irq_uart0_handler(void);
 
@@ -77,8 +73,6 @@ void eagleRadioInit(void);
  */
 void eagleRadioProcess(otInstance *aInstance);
 
-
-
 void EagleRandomInit(void);
 
 /**
@@ -87,7 +81,4 @@ void EagleRandomInit(void);
  */
 void eagleUartProcess(void);
 
-
-
-
-#endif 
+#endif
