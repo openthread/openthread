@@ -483,6 +483,7 @@ _LAYER_FIELDS = {
     'dtls.handshake.type': _list(_auto),
     'dtls.handshake.cookie': _auto,
     'dtls.record.content_type': _list(_auto),
+    'dtls.alert_message.desc': _auto,
 
     # thread_address
     'thread_address.tlv.type': _list(_auto),

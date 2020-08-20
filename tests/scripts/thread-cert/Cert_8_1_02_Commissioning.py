@@ -65,7 +65,7 @@ class Cert_8_1_02_Commissioning(thread_cert.TestCase):
         self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER].get_eui64(), 'PSKD01')
 
         self.nodes[JOINER].interface_up()
-        self.nodes[JOINER].joiner_start('PSKD01')
+        self.nodes[JOINER].joiner_start('10DKSP')
         self.simulator.go(10)
 
     def verify(self, pv):
@@ -91,6 +91,7 @@ class Cert_8_1_02_Commissioning(thread_cert.TestCase):
         # 3. The Commissioner must correctly receive the initial DTLS-ClientHello handshake record and send a DTLS-HelloVerifyRequest handshake record to Joiner_1
         _pkt = _cpkts.range(
             _cpkts2.index).filter(lambda p: p.dtls.handshake.type == [HANDSHAKE_HELLO_VERIFY_REQUEST]).must_next()
+        _pkt.must_verify(lambda p: p.dtls.handshake.cookie is not None)
 
         # 4. Joiner_1 receives the DTLS-HelloVerifyRequest handshake record and sends a subsequent DTLS-ClientHello handshake record in one UDP datagram to the Commissioner
         # 5. Verify that both DTLS-HelloVerifyRequest and subsequent DTLS-ClientHello contain the same cookie
@@ -108,7 +109,8 @@ class Cert_8_1_02_Commissioning(thread_cert.TestCase):
                 p.dtls.record.content_type) == {CONTENT_CHANGE_CIPHER_SPEC, CONTENT_HANDSHAKE})
 
         # 8. The Commissioner must receive the DTLS-ClientKeyExchange handshake record, the DTLS-ChangeCipherSpec and the encrypted DTLS-Finished handshake record, and then send a DTLS-Alert record with error code 20 (bad record MAC) - in one UDP datagram - to Joiner_1
-        _cpkts.filter(lambda p: p.dtls.record.content_type == [CONTENT_ALERT]).must_next()
+        _cpkts.filter(
+            lambda p: p.dtls.record.content_type == [CONTENT_ALERT] and p.dtls.alert_message.desc == 20).must_next()
 
 
 if __name__ == '__main__':
