@@ -103,6 +103,20 @@ if(NOT OT_PLATFORM IN_LIST OT_PLATFORMS)
     message(FATAL_ERROR "Platform unknown: ${OT_PLATFORM}")
 endif()
 
+set(OT_LOG_LEVEL "" CACHE STRING "set OpenThread log level")
+set(OT_LOG_LEVEL_VALUES
+    "NONE"
+    "CRIT"
+    "WARN"
+    "NOTE"
+    "INFO"
+    "DEBG"
+)
+set_property(CACHE OT_LOG_LEVEL PROPERTY STRINGS ${OT_LOG_LEVEL_VALUES})
+if(OT_LOG_LEVEL)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_${OT_LOG_LEVEL}")
+endif()
+
 set(OT_LOG_OUTPUT_VALUES
     "APP"
     "DEBUG_UART"
