@@ -67,6 +67,7 @@ LIB_FLAGS                                                                       
     -I$(top_srcdir)/third_party/nxp/K32W061DK6/middleware/wireless/framework/XCVR/DK6/Build/Include                    \
     -I$(top_srcdir)/third_party/nxp/K32W061DK6/middleware/wireless/framework/XCVR/DK6                                  \
     -I$(top_srcdir)/third_party/nxp/K32W061DK6/middleware/wireless/framework/Common/                                   \
+    -I$(top_srcdir)/third_party/nxp/K32W061DK6/middleware/wireless/framework/TimersManager/Source                      \
     -I$(top_srcdir)/third_party/nxp/K32W061DK6/boards/k32w061dk6/wireless_examples/openthread/enablement               \
     -Wno-unknown-pragmas                                                                                               \
     -Wno-sign-compare                                                                                                  \

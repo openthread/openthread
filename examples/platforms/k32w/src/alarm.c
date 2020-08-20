@@ -38,13 +38,11 @@
 #include "fsl_clock.h"
 #include "fsl_ctimer.h"
 #include "fsl_device_registers.h"
+#include "TMR_Adapter.h"
 #include "fsl_wtimer.h"
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-
-#if USE_RTOS
 #include "openthread-system.h"
-#endif
 
 #define ALARM_USE_CTIMER 0
 #define ALARM_USE_WTIMER 1
@@ -99,6 +97,9 @@ void K32WAlarmInit(void)
     /* Wake timer 1 is 28 bits long and is used for alarm events, including waking up the MCU
        from sleep */
     WTIMER_EnableInterrupts(WTIMER_TIMER1_ID);
+
+    NVIC_SetPriority(WAKE_UP_TIMER0_IRQn, gStackTimer_IsrPrio_c >> (8 - __NVIC_PRIO_BITS));
+    NVIC_SetPriority(WAKE_UP_TIMER1_IRQn, gStackTimer_IsrPrio_c >> (8 - __NVIC_PRIO_BITS));
 
     /* Start wake timer 0 counter for timestamp - the counter counts down to 0 so a simple
        substracion from TIMER0_MAX_COUNT_VALUE will give us the timestamp */
