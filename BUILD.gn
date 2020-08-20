@@ -28,6 +28,7 @@
 import("etc/gn/openthread.gni")
 
 config("openthread_config") {
+  defines = []
   if (openthread_config_file != "") {
     defines += [ "OPENTHREAD_CONFIG_FILE=${openthread_config_file}" ]
   }
@@ -41,15 +42,27 @@ config("openthread_config") {
 }
 
 config("openthread_ftd_config") {
-  defines = [ "OPENTHREAD_FTD=1" ]
+  defines = [
+    "OPENTHREAD_FTD=1",
+    "OPENTHREAD_MTD=0",
+    "OPENTHREAD_RADIO=0",
+  ]
 }
 
 config("openthread_mtd_config") {
-  defines = [ "OPENTHREAD_MTD=1" ]
+  defines = [
+    "OPENTHREAD_MTD=1",
+    "OPENTHREAD_FTD=0",
+    "OPENTHREAD_RADIO=0",
+  ]
 }
 
 config("openthread_radio_config") {
-  defines = [ "OPENTHREAD_RADIO=1" ]
+  defines = [
+    "OPENTHREAD_RADIO=1",
+    "OPENTHREAD_FTD=0",
+    "OPENTHREAD_MTD=0",
+  ]
 }
 
 group("libopenthread-ftd") {
