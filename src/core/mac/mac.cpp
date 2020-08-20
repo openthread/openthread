@@ -2270,7 +2270,7 @@ otError Mac::AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame) const
 {
     OT_UNUSED_VARIABLE(aIsTimeSync);
 
-    const size_t kMaxNumHeaderIe = 3; // TimeSync + Csl + Termination2
+    const size_t kMaxNumHeaderIe = 3; // TimeSync + CSL + Termination2
     HeaderIe     ieList[kMaxNumHeaderIe];
     otError      error   = OT_ERROR_NONE;
     uint8_t      ieCount = 0;

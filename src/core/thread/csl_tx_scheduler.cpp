@@ -58,7 +58,7 @@ inline void CslTxScheduler::Callbacks::HandleSentFrameToChild(const Mac::TxFrame
 }
 
 //---------------------------------------------------------
-//
+
 CslTxScheduler::CslTxScheduler(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mCslTxChild(nullptr)
@@ -102,9 +102,9 @@ void CslTxScheduler::Clear(void)
 }
 
 /**
- * This method always finds the most recent csl tx among all children,
- * and request `Mac` to do csl tx at specific time. It shouldn't be called
- * when `Mac` is already starting to do the csl tx (indicated by `mCslTxMessage`).
+ * This method always finds the most recent CSL tx among all children,
+ * and requests `Mac` to do CSL tx at specific time. It shouldn't be called
+ * when `Mac` is already starting to do the CSL tx (indicated by `mCslTxMessage`).
  *
  */
 void CslTxScheduler::RescheduleCslTx(void)
@@ -222,16 +222,16 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError,
     case OT_ERROR_NO_ACK:
         aChild.IncrementCslTxAttempts();
 
-        otLogInfoMac("Csl tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(), aChild.GetCslTxAttempts(),
+        otLogInfoMac("CSL tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(), aChild.GetCslTxAttempts(),
                      kMaxCslTriggeredTxAttempts);
 
         // Fall through
     case OT_ERROR_CHANNEL_ACCESS_FAILURE:
     case OT_ERROR_ABORT:
 
-        // Even if Csl Tx attempts count reaches max, the message won't be
+        // Even if CSL tx attempts count reaches max, the message won't be
         // dropped until indirect tx attempts count reaches max. So here it
-        // would set sequence number and schedule next csl tx.
+        // would set sequence number and schedule next CSL tx.
 
         if (!aFrame.IsEmpty())
         {
