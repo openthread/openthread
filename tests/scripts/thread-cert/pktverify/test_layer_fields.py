@@ -310,7 +310,7 @@ class TestLayerFields(unittest.TestCase):
 
             logging.info('_check_missing_fields in layer %s: %s = %r' % (layer_name, f, _layer._all_fields[f]))
             if f in {
-                '', 'icmpv6.checksum.status', 'ip.ttl.lncb', 'wpan.aux_sec.key_source.bytes', 'wpan.src64.origin'
+                    '', 'icmpv6.checksum.status', 'ip.ttl.lncb', 'wpan.aux_sec.key_source.bytes', 'wpan.src64.origin'
             }:
                 # TODO: handle these fields
                 continue
