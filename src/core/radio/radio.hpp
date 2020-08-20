@@ -413,6 +413,7 @@ public:
      */
     otError Receive(uint8_t aChannel) { return otPlatRadioReceive(GetInstance(), aChannel); }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * This method updates the csl sample time in radio.
      *
@@ -436,6 +437,7 @@ public:
     {
         return otPlatRadioEnableCsl(GetInstance(), aCslPeriod, aExtAddr);
     }
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
      * This method gets the radio transmit frame buffer.
