@@ -102,13 +102,13 @@ public:
         void      SetCslLastHeard(TimeMilli aCslLastHeard) { mCslLastHeard = aCslLastHeard; }
 
     private:
-        uint8_t   mCslTxAttempts : 7;   ///< Number of csl triggered tx attempts.
+        uint8_t   mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.
         bool      mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
         uint8_t   mCslChannel;          ///< The channel the device will listen on.
         uint32_t  mCslTimeout;          ///< The sync timeout, in seconds.
         uint16_t  mCslPeriod;           ///< CSL sampled listening period in units of 10 symbols (160 microseconds).
         uint16_t  mCslPhase;            ///< The time when the next CSL sample will start.
-        TimeMilli mCslLastHeard;        ///< Time when last frame containing CSL IE heard.
+        TimeMilli mCslLastHeard;        ///< Time when last frame containing CSL IE was heard.
 
         static_assert(kMaxCslTriggeredTxAttempts < (1 << 7), "mCslTxAttempts cannot fit max!");
     };
@@ -163,7 +163,7 @@ public:
                                     Child &             aChild);
     };
     /**
-     * This constructor initializes the csl tx scheduler object.
+     * This constructor initializes the CSL tx scheduler object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      *
