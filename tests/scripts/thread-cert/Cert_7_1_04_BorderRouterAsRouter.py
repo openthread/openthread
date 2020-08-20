@@ -149,9 +149,8 @@ class Cert_7_1_4_BorderRouterAsRouter(thread_cert.TestCase):
 
         # Step 8: SED_1 send its configured global address to the DUT
         # Step 9: The DUT MUST send a Child Update Response to SED_1
-        _rpkts_sed.filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
-            lambda p: p.wpan.dst64 == SED and {SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv
-                                                                                                              .type))
+        _rpkts_sed.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type))
 
 
 if __name__ == '__main__':
