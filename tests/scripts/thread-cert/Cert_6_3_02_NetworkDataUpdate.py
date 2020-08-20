@@ -30,7 +30,7 @@
 import unittest
 
 import thread_cert
-from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_DATA_REQUEST, MLE_CHILD_UPDATE_REQUEST, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV, MODE_TLV, TIMEOUT_TLV, TLV_REQUEST_TLV, NETWORK_DATA_TLV
+from pktverify.consts import MLE_CHILD_ID_RESPONSE, MLE_DATA_REQUEST, MLE_CHILD_UPDATE_REQUEST, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV, MODE_TLV, TIMEOUT_TLV, TLV_REQUEST_TLV, NETWORK_DATA_TLV
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -109,10 +109,10 @@ class Cert_6_3_2_NetworkDataUpdate(thread_cert.TestCase):
         _epkts = pkts.filter_wpan_src64(MED)
 
         # Step 1: Ensure the topology is formed correctly
-        _epkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).filter_wpan_dst64(LEADER).must_next()
+        pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).filter_wpan_src64(LEADER).must_next()
 
         # Step 3: The DUT MUST send a MLE Child Update Request to the Leader
-        _epkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
+        _epkts.range(pkts.index).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
             lambda p: p.wpan.dst64 == LEADER and {LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV, MODE_TLV, TIMEOUT_TLV
                                                  } < set(p.mle.tlv.type))
 

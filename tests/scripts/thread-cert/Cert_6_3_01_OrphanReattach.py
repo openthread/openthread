@@ -107,7 +107,7 @@ class Cert_6_3_1_OrphanReattach(thread_cert.TestCase):
 
         # Step 5: The DUT MUST perform the attach procedure with the Leader
         _epkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next()
-        _epkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()
+        _epkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).filter_wpan_dst64(LEADER).must_next()
 
         # Step 6: The DUT MUST respond with ICMPv6 Echo Reply
         _epkts.filter('ipv6.src == {ED_MLEID} and ipv6.dst == {LEADER_MLEID}',
