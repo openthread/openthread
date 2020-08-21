@@ -56,7 +56,7 @@ declare_args() {
   openthread_external_mbedtls = ""
 
   # Enable building for POSIX platforms.
-  openthread_posix = (current_os == "linux" || current_os == "fuchsia")
+  openthread_posix = current_os == "linux"
 
   # Package name for OpenThread.
   openthread_package_name = "OPENTHREAD"
