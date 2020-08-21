@@ -121,7 +121,7 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
     """All nodes are created with default configurations"""
 
     def _bootstrap(self, bbr_1_enable_backbone_router=True, turn_on_bbr_2=True, turn_on_router_1_1=True):
-        assert (turn_on_bbr_2 or not turn_on_router_1_1)  # ROTER_1_1 needs BBR_2
+        assert (turn_on_bbr_2 or not turn_on_router_1_1)  # ROUTER_1_1 needs BBR_2
 
         # starting context id
         context_id = 1
