@@ -120,37 +120,43 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
     }
     """All nodes are created with default configurations"""
 
-    def _bootstrap(self):
+    def _bootstrap(self, bbr_1_enable_backbone_router=True, turn_on_bbr_2=True, turn_on_router_1_1=True):
+        assert (turn_on_bbr_2 or not turn_on_router_1_1)  # ROUTER_1_1 needs BBR_2
+
         # starting context id
         context_id = 1
 
         # Bring up BBR_1, BBR_1 becomes Leader and Primary Backbone Router
         self.nodes[BBR_1].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         self.nodes[BBR_1].set_bbr_registration_jitter(BBR_REGISTRATION_JITTER)
+
         self.nodes[BBR_1].set_backbone_router(seqno=1, reg_delay=REREG_DELAY, mlr_timeout=MLR_TIMEOUT)
         self.nodes[BBR_1].start()
         WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_1].get_state(), 'leader')
-        self.nodes[BBR_1].enable_backbone_router()
-        WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
-        self.simulator.go(WAIT_TIME)
-        self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(), 'Primary')
 
-        self.pbbr_seq = 1
+        if bbr_1_enable_backbone_router:
+            self.nodes[BBR_1].enable_backbone_router()
+            WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
+            self.simulator.go(WAIT_TIME)
+            self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(), 'Primary')
 
-        # Bring up BBR_2, BBR_2 becomes Router and Secondary Backbone Router
-        self.nodes[BBR_2].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
-        self.nodes[BBR_2].set_bbr_registration_jitter(BBR_REGISTRATION_JITTER)
-        self.nodes[BBR_2].set_backbone_router(seqno=2, reg_delay=REREG_DELAY, mlr_timeout=MLR_TIMEOUT)
-        self.nodes[BBR_2].start()
-        WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
-        self.simulator.go(WAIT_TIME)
-        self.assertEqual(self.nodes[BBR_2].get_state(), 'router')
-        self.nodes[BBR_2].enable_backbone_router()
-        WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
-        self.simulator.go(WAIT_TIME)
-        self.assertEqual(self.nodes[BBR_2].get_backbone_router_state(), 'Secondary')
+            self.pbbr_seq = 1
+
+        if turn_on_bbr_2:
+            # Bring up BBR_2, BBR_2 becomes Router and Secondary Backbone Router
+            self.nodes[BBR_2].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
+            self.nodes[BBR_2].set_bbr_registration_jitter(BBR_REGISTRATION_JITTER)
+            self.nodes[BBR_2].set_backbone_router(seqno=2, reg_delay=REREG_DELAY, mlr_timeout=MLR_TIMEOUT)
+            self.nodes[BBR_2].start()
+            WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
+            self.simulator.go(WAIT_TIME)
+            self.assertEqual(self.nodes[BBR_2].get_state(), 'router')
+            self.nodes[BBR_2].enable_backbone_router()
+            WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
+            self.simulator.go(WAIT_TIME)
+            self.assertEqual(self.nodes[BBR_2].get_backbone_router_state(), 'Secondary')
 
         self.simulator.set_lowpan_context(context_id, config.DOMAIN_PREFIX)
         domain_prefix_cid = context_id
@@ -162,12 +168,13 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[ROUTER_1_2].get_state(), 'router')
 
-        # Bring up ROUTER_1_1
-        self.nodes[ROUTER_1_1].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
-        self.nodes[ROUTER_1_1].start()
-        WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
-        self.simulator.go(WAIT_TIME)
-        self.assertEqual(self.nodes[ROUTER_1_1].get_state(), 'router')
+        if turn_on_router_1_1:
+            # Bring up ROUTER_1_1
+            self.nodes[ROUTER_1_1].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
+            self.nodes[ROUTER_1_1].start()
+            WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
+            self.simulator.go(WAIT_TIME)
+            self.assertEqual(self.nodes[ROUTER_1_1].get_state(), 'router')
 
         # Bring up FED_1
         self.nodes[FED_1].start()
@@ -221,6 +228,34 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
 
         # Make sure Parent does not send MLR.req of Child if it's already subscribed by Netif or other Children
         self.__check_not_send_mlr_req_if_subscribed([MED_1, MED_2], ROUTER_1_2)
+
+    def testIpmaddrAddBeforeBBREnable(self):
+        self._bootstrap(bbr_1_enable_backbone_router=False, turn_on_bbr_2=False, turn_on_router_1_1=False)
+
+        self.flush_all()
+
+        # Subscribing to MAs when there is no PBBR should not send MLR.req
+        self.nodes[ROUTER_1_2].add_ipmaddr("ff04::1")
+        self.nodes[FED_1].add_ipmaddr("ff04::2")
+        self.nodes[MED_1].add_ipmaddr("ff04::3")
+        self.nodes[SED_1].add_ipmaddr("ff04::4")
+
+        self.simulator.go(PARENT_AGGREGATE_DELAY + WAIT_REDUNDANCE)
+        router_reg = ["ff04::1", "ff04::2", "ff04::3", "ff04::4"]
+        self.__check_send_mlr_req(ROUTER_1_2, router_reg, should_send=False)
+
+        self.flush_all()
+
+        # Turn on PBBR
+        self.nodes[BBR_1].enable_backbone_router()
+
+        WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
+        self.simulator.go(WAIT_TIME)
+        self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(), 'Primary')
+
+        self.simulator.go(REREG_DELAY)
+        # Expect MLR.req sent by ROUTER_1_2 and FED_1
+        self.__check_send_mlr_req(ROUTER_1_2, router_reg, should_send=True, expect_mlr_rsp=True)
 
     def __check_mlr_ok(self, id, is_ftd, is_parent_1p1=False):
         """Check if MLR works for the node"""
