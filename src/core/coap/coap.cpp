@@ -780,9 +780,9 @@ void CoapBase::Metadata::ReadFrom(const Message &aMessage)
     aMessage.Read(length - sizeof(*this), sizeof(*this), this);
 }
 
-int CoapBase::Metadata::UpdateIn(Message &aMessage) const
+void CoapBase::Metadata::UpdateIn(Message &aMessage) const
 {
-    return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
 }
 
 ResponsesQueue::ResponsesQueue(Instance &aInstance)

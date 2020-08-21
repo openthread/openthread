@@ -61,7 +61,7 @@ void TestMessage(void)
 
     VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
     SuccessOrQuit(message->SetLength(kMaxSize), "Message::SetLength failed");
-    VerifyOrQuit(message->Write(0, kMaxSize, writeBuffer) == kMaxSize, "Message::Write failed");
+    message->Write(0, kMaxSize, writeBuffer);
     VerifyOrQuit(message->Read(0, kMaxSize, readBuffer) == kMaxSize, "Message::Read failed");
     VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0, "Message compare failed");
     VerifyOrQuit(message->GetLength() == kMaxSize, "Message::GetLength failed");
@@ -75,7 +75,7 @@ void TestMessage(void)
                 writeBuffer[offset + i]++;
             }
 
-            VerifyOrQuit(message->Write(offset, length, &writeBuffer[offset]) == length, "Message::Write failed");
+            message->Write(offset, length, &writeBuffer[offset]);
 
             VerifyOrQuit(message->Read(0, kMaxSize, readBuffer) == kMaxSize, "Message::Read failed");
             VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0, "Message compare failed");
