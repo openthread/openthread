@@ -111,6 +111,15 @@ otError otBackboneRouterGetDomainPrefix(otInstance *aInstance, otBorderRouterCon
         *static_cast<NetworkData::OnMeshPrefixConfig *>(aConfig));
 }
 
+void otBackboneRouterSetMulticastListenerCallback(otInstance *                              aInstance,
+                                                  otBackboneRouterMulticastListenerCallback aCallback,
+                                                  void *                                    aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<BackboneRouter::MulticastListenersTable>().SetCallback(aCallback, aContext);
+}
+
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance *                    aInstance,
                                                        const otIp6InterfaceIdentifier *aMlIid,
@@ -121,6 +130,46 @@ void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance *             
     instance.Get<BackboneRouter::Manager>().ConfigNextDuaRegistrationResponse(
         static_cast<const Ip6::InterfaceIdentifier *>(aMlIid), aStatus);
 }
-#endif
+
+void otBackboneRouterMulticastListenerClear(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<BackboneRouter::MulticastListenersTable>().Clear();
+}
+
+otError otBackboneRouterMulticastListenerAdd(otInstance *aInstance, const otIp6Address *aAddress, uint32_t aTimeout)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    OT_ASSERT(aAddress != nullptr);
+
+    if (aTimeout == 0)
+    {
+        BackboneRouter::BackboneRouterConfig config;
+        instance.Get<BackboneRouter::Local>().GetConfig(config);
+        aTimeout = config.mMlrTimeout;
+    }
+
+    aTimeout =
+        aTimeout > static_cast<uint32_t>(Mle::kMlrTimeoutMax) ? static_cast<uint32_t>(Mle::kMlrTimeoutMax) : aTimeout;
+    aTimeout = Time::SecToMsec(aTimeout);
+
+    return instance.Get<BackboneRouter::MulticastListenersTable>().Add(static_cast<const Ip6::Address &>(*aAddress),
+                                                                       TimerMilli::GetNow() + aTimeout);
+}
+
+otError otBackboneRouterMulticastListenerGetNext(otInstance *                           aInstance,
+                                                 otChildIp6AddressIterator *            aIterator,
+                                                 otBackboneRouterMulticastListenerInfo *aListenerInfo)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    OT_ASSERT(aIterator != nullptr);
+    OT_ASSERT(aListenerInfo != nullptr);
+
+    return instance.Get<BackboneRouter::MulticastListenersTable>().GetNext(*aIterator, *aListenerInfo);
+}
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

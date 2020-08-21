@@ -119,6 +119,7 @@ check_PROGRAMS                                                     += \
     test-mac-frame                                                    \
     test-message                                                      \
     test-message-queue                                                \
+    test-multicast-listeners-table                                    \
     test-netif                                                        \
     test-network-data                                                 \
     test-pool                                                         \
@@ -208,6 +209,9 @@ test_message_SOURCES         = $(COMMON_SOURCES) test_message.cpp
 
 test_message_queue_LDADD     = $(COMMON_LDADD)
 test_message_queue_SOURCES   = $(COMMON_SOURCES) test_message_queue.cpp
+
+test_multicast_listeners_table_LDADD   = $(COMMON_LDADD)
+test_multicast_listeners_table_SOURCES = $(COMMON_SOURCES) test_multicast_listeners_table.cpp
 
 test_spinel_buffer_LDADD        = $(COMMON_LDADD)
 test_spinel_buffer_SOURCES      = $(COMMON_SOURCES) test_spinel_buffer.cpp

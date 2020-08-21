@@ -259,7 +259,7 @@ private:
     uint8_t mTlvs[kMaxSize];
 } OT_TOOL_PACKED_END;
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
  * This class implements IPv6 Addresses TLV generation and parsing.
@@ -302,7 +302,7 @@ public:
     }
 } OT_TOOL_PACKED_END;
 
-#endif // OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 } // namespace ot
 

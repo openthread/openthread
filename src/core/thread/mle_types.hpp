@@ -257,22 +257,24 @@ enum
  */
 enum
 {
-    kRegistrationDelayDefault         = 1200, ///< In seconds.
-    kMlrTimeoutDefault                = 3600, ///< In seconds.
-    kMlrTimeoutMin                    = 300,  ///< In seconds.
-    kBackboneRouterRegistrationJitter = 5,    ///< In seconds.
-    kParentAggregateDelay             = 5,    ///< In seconds.
-    kNoBufDelay                       = 5,    ///< In seconds.
-    kImmediateReRegisterDelay         = 1,    ///< In seconds.
-    KResponseTimeoutDelay             = 30,   ///< In seconds.
-    kDuaDadPeriod                     = 100,  ///< In seconds. Time period after which the address
-                                              ///< becomes "Preferred" if no duplicate address error.
+    kRegistrationDelayDefault         = 1200,              ///< In seconds.
+    kMlrTimeoutDefault                = 3600,              ///< In seconds.
+    kMlrTimeoutMin                    = 300,               ///< In seconds.
+    kMlrTimeoutMax                    = 0x7fffffff / 1000, ///< In seconds (about 24 days).
+    kBackboneRouterRegistrationJitter = 5,                 ///< In seconds.
+    kParentAggregateDelay             = 5,                 ///< In seconds.
+    kNoBufDelay                       = 5,                 ///< In seconds.
+    kImmediateReRegisterDelay         = 1,                 ///< In seconds.
+    KResponseTimeoutDelay             = 30,                ///< In seconds.
+    kDuaDadPeriod                     = 100,               ///< In seconds. Time period after which the address
+                                                           ///< becomes "Preferred" if no duplicate address error.
 };
 
-static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin,
+static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin && kMlrTimeoutDefault <= kMlrTimeoutMax,
               "kMlrTimeoutDefault must be larger than or equal to kMlrTimeoutMin");
 
 static_assert(Mle::kParentAggregateDelay > 1, "kParentAggregateDelay should be larger than 1 second");
+static_assert(kMlrTimeoutMax * 1000 > kMlrTimeoutMax, "SecToMsec(kMlrTimeoutMax) will overflow");
 
 /**
  * State change of Child's DUA

@@ -127,12 +127,10 @@ private:
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
     void UpdateLocalSubscriptions(void);
-    void SetNetifMulticastAddressMlrState(MlrState aFromState, MlrState aToState);
     bool IsAddressMlrRegisteredByNetif(const Ip6::Address &aAddress) const;
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    void SetChildMulticastAddressMlrState(MlrState aFromState, MlrState aToState);
     bool IsAddressMlrRegisteredByAnyChild(const Ip6::Address &aAddress) const
     {
         return IsAddressMlrRegisteredByAnyChildExcept(aAddress, nullptr);
@@ -140,19 +138,17 @@ private:
     bool IsAddressMlrRegisteredByAnyChildExcept(const Ip6::Address &aAddress, const Child *aExceptChild) const;
 #endif
 
-    void SetMulticastAddressMlrState(MlrState aFromState, MlrState aToState)
-    {
-#if OPENTHREAD_CONFIG_MLR_ENABLE
-        SetNetifMulticastAddressMlrState(aFromState, aToState);
-#endif
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-        SetChildMulticastAddressMlrState(aFromState, aToState);
-#endif
-    }
+    void SetMulticastAddressMlrState(MlrState aFromState, MlrState aToState);
+    void FinishMulticastListenerRegistration(bool                aSuccess,
+                                             const Ip6::Address *aFailedAddresses,
+                                             uint8_t             aFailedAddressNum);
 
-    void AppendToUniqueAddressList(Ip6::Address (&aAddresses)[kIPv6AddressesNumMax],
-                                   uint8_t &           aAddressNum,
-                                   const Ip6::Address &aAddress);
+    void        AppendToUniqueAddressList(Ip6::Address (&aAddresses)[kIPv6AddressesNumMax],
+                                          uint8_t &           aAddressNum,
+                                          const Ip6::Address &aAddress);
+    static bool AddressListContains(const Ip6::Address *aAddressList,
+                                    uint8_t             aAddressListSize,
+                                    const Ip6::Address &aAddress);
 
     void ScheduleSend(uint16_t aDelay);
     void UpdateTimeTickerRegistration(void);
@@ -161,6 +157,12 @@ private:
     void HandleTimeTick(void);
 
     void LogMulticastAddresses(void);
+    void CheckInvariants(void) const;
+    void LogMlrResponse(otError             aResult,
+                        otError             aError,
+                        uint8_t             aStatus,
+                        const Ip6::Address *aFailedAddresses,
+                        uint8_t             aFailedAddressNum);
 
     uint32_t mReregistrationDelay;
     uint16_t mSendDelay;
