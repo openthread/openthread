@@ -388,6 +388,5 @@ jobs:
         run: |
           VERBOSE=1 make -f examples/Makefile-simulation check
       - name: Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          fail_ci_if_error: true
+        run: |
+          bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}"
