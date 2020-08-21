@@ -147,8 +147,8 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
             self.simulator.go(WAIT_TIME)
             self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(), 'Primary')
 
-            self.pbbr_seq = 1
-            self.pbbr_id = BBR_1
+        self.pbbr_seq = 1
+        self.pbbr_id = BBR_1
 
         if turn_on_bbr_2:
             # Bring up BBR_2, BBR_2 becomes Router and Secondary Backbone Router
