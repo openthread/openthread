@@ -162,20 +162,6 @@ uint8_t otMacFrameGetSequence(const otRadioFrame *aFrame);
 void otMacFrameProcessTransmitAesCcm(otRadioFrame *aFrame, const otExtAddress *aExtAddress);
 
 /**
- * This function performs AES CCM on the frame which is received.
- *
- * @param[in]  aFrame       A pointer to the MAC frame buffer that is received.
- * @param[in]  aExtAddress  A pointer to the extended address, which will be used to generate nonce
- *                          for AES CCM computation.
- * @param[in]  aMacKey      A pointer to the MAC key to decrypt the received frame.
- *
- * @retval OT_ERROR_NONE      Process of received frame AES CCM succeeded.
- * @retval OT_ERROR_SECURITY  Received frame MIC check failed.
- *
- */
-otError otMacFrameProcessReceiveAesCcm(otRadioFrame *aFrame, const otExtAddress *aExtAddress, const otMacKey *aMacKey);
-
-/**
  * Tell if the version of @p aFrame is 2015.
  *
  * @param[in]   aFrame          A pointer to the frame.

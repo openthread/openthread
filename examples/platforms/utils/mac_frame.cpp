@@ -125,12 +125,6 @@ void otMacFrameProcessTransmitAesCcm(otRadioFrame *aFrame, const otExtAddress *a
     static_cast<Mac::TxFrame *>(aFrame)->ProcessTransmitAesCcm(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
 
-otError otMacFrameProcessReceiveAesCcm(otRadioFrame *aFrame, const otExtAddress *aExtAddress, const otMacKey *aMacKey)
-{
-    return static_cast<Mac::RxFrame *>(aFrame)->ProcessReceiveAesCcm(*static_cast<const Mac::ExtAddress *>(aExtAddress),
-                                                                     *static_cast<const Mac::Key *>(aMacKey));
-}
-
 bool otMacFrameIsVersion2015(const otRadioFrame *aFrame)
 {
     return static_cast<const Mac::Frame *>(aFrame)->IsVersion2015();
