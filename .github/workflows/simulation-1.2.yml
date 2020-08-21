@@ -77,18 +77,18 @@ jobs:
         ./script/test tar simulation 1.2-bbr
     - name: Codecov
       run: |
-        bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}"
+        bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}" -Z
     - name: Keep-1-2-bbr-only
       run: |
         ./script/test tar simulation 1.2
         ./script/test untar simulation 1.2-bbr
     - name: Codecov
       run: |
-        bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}"
+        bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}" -Z
     - name: Keep-1-1-only
       run: |
         ./script/test tar simulation 1.2-bbr
         ./script/test untar simulation 1.1
     - name: Codecov
       run: |
-        bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}"
+        bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}" -Z

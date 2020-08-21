@@ -389,4 +389,4 @@ jobs:
           VERBOSE=1 make -f examples/Makefile-simulation check
       - name: Codecov
         run: |
-          bash <(curl -s https://codecov.io/bash) -x "llvm-cov gcov"
+          bash <(curl -s https://codecov.io/bash) -x "llvm-cov gcov" -Z
