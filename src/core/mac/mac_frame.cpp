@@ -1154,6 +1154,54 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
+otError RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &aMacKey)
+{
+#if OPENTHREAD_RADIO
+    OT_UNUSED_VARIABLE(aExtAddress);
+    OT_UNUSED_VARIABLE(aMacKey);
+
+    return OT_ERROR_NONE;
+#else
+    otError error = OT_ERROR_SECURITY;
+    uint32_t frameCounter = 0;
+    uint8_t securityLevel;
+    uint8_t nonce[Crypto::AesCcm::kNonceSize];
+    uint8_t tag[kMaxMicSize];
+    uint8_t tagLength;
+    Crypto::AesCcm aesCcm;
+
+    VerifyOrExit(GetSecurityEnabled(), error = OT_ERROR_NONE);
+
+    SuccessOrExit(GetSecurityLevel(securityLevel));
+    SuccessOrExit(GetFrameCounter(frameCounter));
+
+    Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
+
+    aesCcm.SetKey(aMacKey);
+    tagLength = GetFooterLength() - Frame::kFcsSize;
+
+    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+    aesCcm.Header(GetHeader(), GetHeaderLength());
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
+#else
+    // For fuzz tests, execute AES but do not alter the payload
+    uint8_t fuzz[OT_RADIO_FRAME_MAX_SIZE];
+    aesCcm.Payload(fuzz, GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
+#endif
+    aesCcm.Finalize(tag);
+
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    VerifyOrExit(memcmp(tag, GetFooter(), tagLength) == 0, OT_NOOP);
+#endif
+
+    error = OT_ERROR_NONE;
+
+exit:
+    return error;
+#endif // OPENTHREAD_RADIO
+}
+
 // LCOV_EXCL_START
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)

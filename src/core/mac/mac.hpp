@@ -815,6 +815,9 @@ private:
 
     otError ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void    ProcessTransmitSecurity(TxFrame &aFrame);
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    otError ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame);
+#endif
     void    UpdateIdleMode(void);
     void    StartOperation(Operation aOperation);
     void    FinishOperation(void);
