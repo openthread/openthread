@@ -67,6 +67,8 @@ jobs:
         top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
   toranj-rcp:
     runs-on: ubuntu-18.04
@@ -96,3 +98,5 @@ jobs:
         top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true

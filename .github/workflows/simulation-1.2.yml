@@ -77,15 +77,21 @@ jobs:
         ./script/test tar simulation 1.2-bbr
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
     - name: Keep-1-2-bbr-only
       run: |
         ./script/test tar simulation 1.2
         ./script/test untar simulation 1.2-bbr
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
     - name: Keep-1-1-only
       run: |
         ./script/test tar simulation 1.2-bbr
         ./script/test untar simulation 1.1
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
