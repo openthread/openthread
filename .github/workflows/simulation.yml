@@ -93,6 +93,8 @@ jobs:
         ./script/test py-unittests py-examples
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
 
   packet-verification:
@@ -119,6 +121,8 @@ jobs:
           done
       - name: Codecov
         uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
 
 
   cli-ftd:
@@ -146,6 +150,8 @@ jobs:
         VERBOSE=1 make -f examples/Makefile-simulation check
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
   cli-mtd:
     runs-on: ubuntu-18.04
@@ -173,6 +179,8 @@ jobs:
         VERBOSE=1 make -f examples/Makefile-simulation check
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
   cli-time-sync:
     runs-on: ubuntu-18.04
@@ -200,6 +208,8 @@ jobs:
         VERBOSE=1 make -f examples/Makefile-simulation check
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
   expects:
     runs-on: ubuntu-18.04
@@ -216,6 +226,8 @@ jobs:
         OT_OPTIONS=-DOT_TIME_SYNC=ON VIRTUAL_TIME=0 ./script/test build expect
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
     - name: Run RCP Mode
       run: |
         OT_OPTIONS=-DOT_READLINE=OFF VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
@@ -224,12 +236,16 @@ jobs:
         ./script/test tar simulation 1.1
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
     - name: Keep Simulation Only
       run: |
         ./script/test tar posix 1.1
         ./script/test untar simulation 1.1
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
     - name: Run TUN Mode
       run: |
         sudo apt-get install --no-install-recommends -y dnsmasq bind9-host ntp
@@ -245,12 +261,16 @@ jobs:
         ./script/test tar simulation 1.1
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
     - name: Keep Simulation Only
       run: |
         ./script/test tar posix 1.1
         ./script/test untar simulation 1.1
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
   external-commissioner:
     runs-on: ubuntu-18.04
@@ -283,6 +303,8 @@ jobs:
         ./run_tests.sh
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
   multiple-instance:
     runs-on: ubuntu-18.04
@@ -306,6 +328,8 @@ jobs:
         VERBOSE=1 make -f examples/Makefile-simulation check
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
   ncp-gcc-m32:
     runs-on: ubuntu-18.04
@@ -335,6 +359,8 @@ jobs:
         VERBOSE=1 make -f examples/Makefile-simulation check
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
   ncp-clang:
     runs-on: ubuntu-18.04
@@ -351,7 +377,7 @@ jobs:
       - name: Bootstrap
         run: |
           sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-          sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel
+          sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel llvm
           python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
           sudo python3 -m pip install git+https://github.com/openthread/pyspinel
       - name: Build
@@ -362,4 +388,5 @@ jobs:
         run: |
           VERBOSE=1 make -f examples/Makefile-simulation check
       - name: Codecov
-        uses: codecov/codecov-action@v1
+        run: |
+          bash <(curl -s https://codecov.io/bash) -x "llvm-cov gcov" -Z
