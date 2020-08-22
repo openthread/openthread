@@ -88,6 +88,7 @@ RLY_RX_URI = '/c/rx'
 RLY_TX_URI = '/c/tx'
 MGMT_ACTIVE_SET_URI = '/c/as'
 MGMT_ACTIVE_GET_URI = '/c/ag'
+MGMT_PENDING_SET_URI = '/c/ps'
 
 # MLE TLVs
 SOURCE_ADDRESS_TLV = 0

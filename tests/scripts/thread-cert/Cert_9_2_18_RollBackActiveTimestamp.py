@@ -31,6 +31,8 @@ import unittest
 
 import config
 import thread_cert
+from pktverify.consts import MLE_CHILD_ID_RESPONSE, MGMT_ACTIVE_SET_URI, MGMT_PENDING_SET_URI
+from pktverify.packet_verifier import PacketVerifier
 
 KEY1 = '00112233445566778899aabbccddeeff'
 KEY2 = 'ffeeddccbbaa99887766554433221100'
@@ -53,6 +55,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
 
     TOPOLOGY = {
         COMMISSIONER: {
+            'name': 'COMMISSIONER',
             'active_dataset': {
                 'timestamp': 1,
                 'panid': PANID_INIT,
@@ -64,6 +67,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             'whitelist': [LEADER]
         },
         LEADER: {
+            'name': 'LEADER',
             'active_dataset': {
                 'timestamp': 1,
                 'panid': PANID_INIT,
@@ -76,6 +80,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             'whitelist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
+            'name': 'ROUTER_1',
             'active_dataset': {
                 'timestamp': 1,
                 'panid': PANID_INIT,
@@ -87,6 +92,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             'whitelist': [LEADER, ROUTER2, ED1, SED1]
         },
         ROUTER2: {
+            'name': 'ROUTER_2',
             'active_dataset': {
                 'timestamp': 1,
                 'panid': PANID_INIT,
@@ -98,6 +104,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             'whitelist': [ROUTER1]
         },
         ED1: {
+            'name': 'ED',
             'channel': CHANNEL_INIT,
             'is_mtd': True,
             'masterkey': '00112233445566778899aabbccddeeff',
@@ -106,6 +113,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             'whitelist': [ROUTER1]
         },
         SED1: {
+            'name': 'SED',
             'channel': CHANNEL_INIT,
             'is_mtd': True,
             'masterkey': '00112233445566778899aabbccddeeff',
@@ -169,6 +177,28 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
         self.nodes[ROUTER2].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'leader')
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        COMMISSIONER = pv.vars['COMMISSIONER']
+        ROUTER_1 = pv.vars['ROUTER_1']
+        SED = pv.vars['SED']
+
+        # Step 1: Ensure the topology is formed correctly
+        pkts.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+
+        # Step 3: Leader MUST send MGMT_ACTIVE_SET.rsp (Accept) to the Commissioner
+        pkts.filter_wpan_src64(LEADER).filter_coap_ack(MGMT_ACTIVE_SET_URI).must_next().must_verify(
+            lambda p: bytes.fromhex('01') in p.coap.payload)
+
+        # Step 5: The Leader MUST send MGMT_PENDING_SET.rsp (Reject) to the Commissioner
+        pkts.filter_wpan_src64(LEADER).filter_coap_ack(MGMT_PENDING_SET_URI).must_next().must_verify(
+            lambda p: bytes.fromhex('ff') in p.coap.payload)
+
+        # Todo: parse packets with non-default masterkey
 
 
 if __name__ == '__main__':
