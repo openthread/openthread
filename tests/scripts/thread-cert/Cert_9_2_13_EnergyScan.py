@@ -30,6 +30,8 @@
 import unittest
 
 import thread_cert
+from pktverify.consts import MLE_CHILD_ID_RESPONSE, MGMT_ED_SCAN, MGMT_ED_REPORT
+from pktverify.packet_verifier import PacketVerifier
 
 COMMISSIONER = 1
 LEADER = 2
@@ -42,23 +44,27 @@ class Cert_9_2_13_EnergyScan(thread_cert.TestCase):
 
     TOPOLOGY = {
         COMMISSIONER: {
+            'name': 'COMMISSIONER',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
+            'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ED1]
         },
         ED1: {
+            'name': 'ED',
             'is_mtd': True,
             'mode': 'r',
             'panid': 0xface,
@@ -84,6 +90,7 @@ class Cert_9_2_13_EnergyScan(thread_cert.TestCase):
         self.nodes[ED1].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
+        self.collect_rloc16s()
 
         ipaddrs = self.nodes[ROUTER1].get_addrs()
         for ipaddr in ipaddrs:
@@ -104,6 +111,24 @@ class Cert_9_2_13_EnergyScan(thread_cert.TestCase):
         self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3E8, 'ff33:0040:fd00:db8:0:0:0:1')
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        ED = pv.vars['ED']
+        COMMISSIONER = pv.vars['COMMISSIONER']
+        _ed_pkts = pkts.filter_wpan_src64(ED)
+
+        # Step 3: ED MUST send MGMT_ED_REPORT.ans to the Commissioner and report energy measurements
+        _ed_pkts.filter_coap_request(MGMT_ED_REPORT).must_next()
+
+        # Step 5: ED MUST send MGMT_ED_REPORT.ans to the Commissioner and report energy measurements
+        _ed_pkts.filter_coap_request(MGMT_ED_REPORT).must_next()
+
+        # Step 6: The DUT MUST respond with ICMPv6 Echo Reply
+        _ed_pkts.filter_ping_reply().filter('wpan.dst16 == {ROUTER_RLOC16} and wpan.src16 == {ED_RLOC16}',
+                                            **pv.vars).must_next()
 
 
 if __name__ == '__main__':
