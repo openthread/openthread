@@ -30,61 +30,62 @@
 import unittest
 
 import thread_cert
+import config
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_UPDATE_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, MLE_LINK_REQUEST, MLE_LINK_ACCEPT_AND_REQUEST, ADDR_SOL_URI, SOURCE_ADDRESS_TLV, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, TLV_REQUEST_TLV, SCAN_MASK_TLV, CONNECTIVITY_TLV, LINK_MARGIN_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, ACTIVE_TIMESTAMP_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER1 = 2
 ROUTER2 = 3
-ED1 = 4
-ED2 = 5
-ED3 = 6
+ED2 = 4
+ED3 = 5
 
-MTDS = [ED1, ED2, ED3]
+MTDS = [ED2, ED3]
 
 
 class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'allowlist': [ROUTER1, ROUTER2, ED1]
+            'allowlist': [ROUTER1, ROUTER2]
         },
         ROUTER1: {
+            'name': 'ROUTER_1',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'allowlist': [LEADER, ED2, ED3]
+            'allowlist': [LEADER, ED2]
         },
         ROUTER2: {
+            'name': 'ROUTER_2',
             'mode': 'rdn',
             'panid': 0xface,
+            'partition_id': 0xffffffff,
             'router_selection_jitter': 1,
-            'allowlist': [LEADER]
-        },
-        ED1: {
-            'is_mtd': True,
-            'mode': 'rn',
-            'panid': 0xface,
-            'allowlist': [LEADER]
+            'allowlist': [LEADER, ED3]
         },
         ED2: {
+            'name': 'MED_2',
             'is_mtd': True,
             'mode': 'rn',
             'panid': 0xface,
             'allowlist': [ROUTER1]
         },
         ED3: {
+            'name': 'MED_3',
             'is_mtd': True,
             'mode': 'rn',
             'panid': 0xface,
-            'allowlist': [ROUTER1]
+            'allowlist': [ROUTER2]
         },
     }
 
     def _setUpLeader(self):
         self.nodes[LEADER].add_allowlist(self.nodes[ROUTER1].get_addr64())
         self.nodes[LEADER].add_allowlist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[LEADER].add_allowlist(self.nodes[ED1].get_addr64())
         self.nodes[LEADER].enable_allowlist()
         self.nodes[LEADER].set_router_selection_jitter(1)
 
@@ -97,42 +98,111 @@ class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
-        self.nodes[ROUTER2].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
-
-        self.nodes[ED1].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[ED1].get_state(), 'child')
-
         self.nodes[ED2].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED2].get_state(), 'child')
+
+        self.nodes[LEADER].reset()
+        self._setUpLeader()
+
+        self.simulator.go(140)
+
+        self.nodes[ROUTER2].start()
+        self.simulator.go(5)
+        self.assertEqual(self.nodes[ROUTER2].get_state(), 'leader')
 
         self.nodes[ED3].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED3].get_state(), 'child')
 
-        self.nodes[LEADER].reset()
-        self._setUpLeader()
-
-        self.nodes[ED1].add_allowlist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER1].add_allowlist(self.nodes[ED1].get_addr64())
-
-        self.simulator.go(140)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'leader')
-        self.assertEqual(self.nodes[ROUTER2].get_state(), 'leader')
 
         self.nodes[LEADER].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'router')
 
         self.simulator.go(30)
+        self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
+        self.assertEqual(self.nodes[ROUTER2].get_state(), 'leader')
 
-        addrs = self.nodes[ED1].get_addrs()
+        addrs = self.nodes[ED3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.assertTrue(self.nodes[ROUTER2].ping(addr))
+                self.assertTrue(self.nodes[ED2].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        ROUTER_1 = pv.vars['ROUTER_1']
+        ROUTER_2 = pv.vars['ROUTER_2']
+        MED_2 = pv.vars['MED_2']
+        MED_3 = pv.vars['MED_3']
+        _lpkts = pkts.filter_wpan_src64(LEADER)
+        _router1_pkts = pkts.filter_wpan_src64(ROUTER_1)
+
+        # Step 2: The Leader and Router_1 MUST send properly formatted MLE Advertisements
+        pkts.filter_wpan_src64(LEADER).filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+        pkts.filter_wpan_src64(ROUTER_1).filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+
+        # Step 4: Router_1 MUST attempt to reattach to its original partition by
+        # sending MLE Parent Requests to the All-Routers multicast
+        # address (FFxx::xx) with a hop limit of 255.
+        _router1_pkts.range(pkts.index).filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+                p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 1)
+        lreset_start = _router1_pkts.index
+
+        # Step 6: Router_1 MUST attempt to attach to any other Partition
+        # within range by sending a MLE Parent Request.
+        _router1_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).filter(
+            lambda p: p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 0).must_next().must_verify(
+                lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
+        lreset_stop = _router1_pkts.index
+
+        # Step3: The Leader MUST stop sending MLE advertisements.
+        _lpkts.range(lreset_start, lreset_stop).filter_mle_cmd(MLE_ADVERTISEMENT).must_not_next()
+
+        # Step 5: Leader MUST NOT respond to the MLE Parent Requests
+        _lpkts.range(lreset_start, lreset_stop).filter_mle_cmd(MLE_PARENT_RESPONSE).must_not_next()
+
+        # Step 7: Take over leader role of a new Partition and
+        # begin transmitting MLE Advertisements
+        with _router1_pkts.save_index():
+            _router1_pkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
+                lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+
+        # Step 9: Router_1 MUST respond with an MLE Child Update Response,
+        # with the updated TLVs of the new partition
+        _router1_pkts.filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} < set(p.mle.tlv.type))
+
+        # Step 10: The Leader MUST send properly formatted MLE Parent
+        # Requests to the All-Routers multicast address
+        _lpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
+
+        # Step 11: Leader send MLE Child ID Request to Router_2
+        _lpkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(
+            lambda p: {
+                RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV,
+                ADDRESS16_TLV, NETWORK_DATA_TLV, ROUTE64_TLV, ACTIVE_TIMESTAMP_TLV
+            } < set(p.mle.tlv.type))
+
+        # Step 12: Leader send MLE ADVERTISEMENT
+        _lpkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+
+        #Step 13: Router_1 send an Address Solicit Request
+        _router1_pkts.filter_coap_request(ADDR_SOL_URI).must_next().must_verify(
+            lambda p: p.coap.tlv.ext_mac_addr and p.coap.tlv.status != 0)
+
+        #Step 14: MED_2 MUST receive an ICMPv6 Echo Reply from MED_3
+        p = pkts.filter_ping_request().filter_wpan_src64(MED_2).must_next()
+        pkts.filter_ping_reply(identifier=p.icmpv6.echo.identifier).filter_wpan_src64(MED_3).must_next()
 
 
 if __name__ == '__main__':
