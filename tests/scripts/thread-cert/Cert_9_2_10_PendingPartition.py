@@ -31,6 +31,8 @@ import unittest
 
 import config
 import thread_cert
+from pktverify.consts import MLE_PARENT_REQUEST, MLE_DATA_REQUEST, MLE_DATA_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, VERSION_TLV, TLV_REQUEST_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, CHALLENGE_TLV, LINK_MARGIN_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, PENDING_OPERATION_DATASET_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 CHANNEL_INIT = 19
 PANID_INIT = 0xface
@@ -52,6 +54,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
 
     TOPOLOGY = {
         COMMISSIONER: {
+            'name': 'COMMISSIONER',
             'active_dataset': {
                 'timestamp': 15,
                 'panid': 0xface,
@@ -62,6 +65,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'allowlist': [LEADER]
         },
         LEADER: {
+            'name': 'LEADER',
             'active_dataset': {
                 'timestamp': 15,
                 'panid': 0xface,
@@ -73,6 +77,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
+            'name': 'ROUTER',
             'active_dataset': {
                 'timestamp': 15,
                 'panid': 0xface,
@@ -83,6 +88,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'allowlist': [LEADER, ED1, SED1]
         },
         ED1: {
+            'name': 'MED',
             'channel': 19,
             'is_mtd': True,
             'mode': 'rsn',
@@ -90,6 +96,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'allowlist': [ROUTER1]
         },
         SED1: {
+            'name': 'SED',
             'channel': 19,
             'is_mtd': True,
             'mode': 's',
@@ -175,6 +182,67 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
                 break
 
         self.assertTrue(self.nodes[LEADER].ping(ipaddr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        ROUTER = pv.vars['ROUTER']
+        MED = pv.vars['MED']
+        SED = pv.vars['SED']
+        COMMISSIONER = pv.vars['COMMISSIONER']
+        _rpkts = pkts.filter_wpan_src64(ROUTER)
+
+        # Step 1: Ensure the topology is formed correctly
+        _rpkts.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+
+        # Step 5: Router MUST send a unicast MLE Data Request to the Leader
+        _rpkts.filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
+            lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
+
+        # Step 7: Router MUST multicast a MLE Data Response
+        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
+            SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV
+        } <= set(p.mle.tlv.type))
+
+        # Step 8: MED MUST send a unicast MLE Data Request to Router_1,
+        pkts.range(_rpkts.index).filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
+            lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
+
+        # Step 9: Router MUST send a unicast MLE Data Response to MED_1
+        _rpkts.filter_wpan_dst64(MED).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
+            SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_OPERATION_DATASET_TLV
+        } <= set(p.mle.tlv.type))
+
+        # Step 10: Router MUST send MLE Child Update Request to SED_1
+        _rpkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(lambda p: {
+            SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV
+        } <= set(p.mle.tlv.type))
+
+        # Step 11: SED MUST send a unicast MLE Data Request to Router_1
+        pkts.range(_rpkts.index).filter_wpan_src64(SED).filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
+            lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
+
+        # Step 12: Router MUST send a unicast MLE Data Response to SED_1
+        _rpkts.filter_wpan_dst64(SED).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
+            SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_OPERATION_DATASET_TLV
+        } <= set(p.mle.tlv.type))
+
+        # Step 14: After NETWORK_ID_TIMEOUT, Router MUST start a new partition
+        _rpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next()
+        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter(lambda p: p.wpan.dst_pan == PANID_FINAL).must_next()
+
+        # Step 16: After the Delay Timer expires, Router MUST move to the Secondary channel
+        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter(lambda p: p.wpan.dst_pan == PANID_FINAL).must_next()
+
+        # Step 19: Router MUST reattach to the Leader and the partitions MUST merge
+        pkts.filter_wpan_src64(LEADER).filter_wpan_dst64(ROUTER).filter_mle_cmd(
+            MLE_CHILD_ID_RESPONSE).must_next().must_verify(lambda p: p.mle.tlv.leader_data.partition_id == 0xffffffff)
+
+        # Step 20: MED MUST respond with an ICMPv6 Echo Reply
+        p = pkts.filter_ping_request().filter_wpan_src64(LEADER).must_next()
+        pkts.filter_ping_reply(identifier=p.icmpv6.echo.identifier).filter_wpan_src64(MED).must_next()
 
 
 if __name__ == '__main__':
