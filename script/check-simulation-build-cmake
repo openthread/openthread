@@ -38,14 +38,25 @@ reset_source()
 
 build_all_features()
 {
+    # Build Thread 1.1 with full features
     reset_source
     "$(dirname "$0")"/cmake-build simulation
+
+    # Build Thread 1.2 with full features
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON
-    reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_ASSERT=OFF
+    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_DUA=ON -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON
+
+    # Build with Vendor Extension
     reset_source
     "$(dirname "$0")"/cmake-build simulation -DOT_VENDOR_EXTENSION=../../src/core/common/extension_example.cpp
+
+    # Build Thread 1.2 with no additional features
+    reset_source
+    "$(dirname "$0")"/cmake-build simulation -DOT_THREAD_VERSION=1.2
+
+    # Build Thread 1.2 with full features and OT_ASSERT=OFF
+    reset_source
+    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_DUA=ON -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON -DOT_ASSERT=OFF
 }
 
 build_toranj()
