@@ -636,9 +636,6 @@ otError Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
     uint16_t       fragmentCnt     = 0;
     uint16_t       payloadFragment = 0;
     uint16_t       offset          = 0;
-    int            assertValue     = 0;
-
-    OT_UNUSED_VARIABLE(assertValue);
 
     uint16_t maxPayloadFragment =
         FragmentHeader::MakeDivisibleByEight(kMinimalMtu - aMessage.GetOffset() - sizeof(fragmentHeader));
@@ -676,12 +673,10 @@ otError Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
         SuccessOrExit(error = fragment->SetLength(aMessage.GetOffset() + sizeof(fragmentHeader) + payloadFragment));
 
         header.SetPayloadLength(payloadFragment + sizeof(fragmentHeader));
-        assertValue = fragment->Write(0, sizeof(header), &header);
-        OT_ASSERT(assertValue == sizeof(header));
+        fragment->Write(0, sizeof(header), &header);
 
         fragment->SetOffset(aMessage.GetOffset());
-        assertValue = fragment->Write(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader);
-        OT_ASSERT(assertValue == sizeof(fragmentHeader));
+        fragment->Write(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader);
 
         VerifyOrExit(aMessage.CopyTo(aMessage.GetOffset() + FragmentHeader::FragmentOffsetToBytes(offset),
                                      aMessage.GetOffset() + sizeof(fragmentHeader), payloadFragment,
@@ -803,8 +798,7 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
         VerifyOrExit(aMessage.Read(0, sizeof(header), &header) == sizeof(header), error = OT_ERROR_PARSE);
         header.SetPayloadLength(message->GetLength() - sizeof(header));
         header.SetNextHeader(fragmentHeader.GetNextHeader());
-        assertValue = message->Write(0, sizeof(header), &header);
-        OT_ASSERT(assertValue == sizeof(header));
+        message->Write(0, sizeof(header), &header);
 
         otLogDebgIp6("Reassembly complete.");
 

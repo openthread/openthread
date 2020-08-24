@@ -365,13 +365,9 @@ otError Message::Append(const void *aBuf, uint16_t aLength)
 {
     otError  error     = OT_ERROR_NONE;
     uint16_t oldLength = GetLength();
-    int      bytesWritten;
 
     SuccessOrExit(error = SetLength(GetLength() + aLength));
-    bytesWritten = Write(oldLength, aLength, aBuf);
-
-    OT_ASSERT(bytesWritten == (int)aLength);
-    OT_UNUSED_VARIABLE(bytesWritten);
+    Write(oldLength, aLength, aBuf);
 
 exit:
     return error;
@@ -531,7 +527,7 @@ exit:
     return static_cast<uint16_t>(bufPtr - reinterpret_cast<uint8_t *>(aBuf));
 }
 
-int Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
+void Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
 {
     const uint8_t *bufPtr = reinterpret_cast<const uint8_t *>(aBuf);
     WritableChunk  chunk;
@@ -546,8 +542,6 @@ int Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
         bufPtr += chunk.GetLength();
         GetNextChunk(aLength, chunk);
     }
-
-    return static_cast<int>(bufPtr - reinterpret_cast<const uint8_t *>(aBuf));
 }
 
 int Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const
