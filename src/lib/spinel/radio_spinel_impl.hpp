@@ -304,6 +304,9 @@ template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(void)
 {
     const otRadioCaps kRequiredRadioCaps =
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING |
+#endif
         OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF;
 
     otError        error = OT_ERROR_NONE;
@@ -317,10 +320,15 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(v
 
     if ((mRadioCaps & kRequiredRadioCaps) != kRequiredRadioCaps)
     {
-        otLogCritPlat("RCP does not support required capabilities: ack-timeout:%s, tx-retries:%s, CSMA-backoff:%s",
-                      (mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) ? "yes" : "no",
-                      (mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) ? "yes" : "no",
-                      (mRadioCaps & OT_RADIO_CAPS_CSMA_BACKOFF) ? "yes" : "no");
+        otRadioCaps missingCaps = (mRadioCaps & kRequiredRadioCaps) ^ kRequiredRadioCaps;
+
+        otLogCritPlat("RCP capabilities check failed: ack-timeout:%s, tx-retries:%s, CSMA-backoff:%s, tx-security:%s, "
+                      "tx-timing:%s",
+                      (missingCaps & OT_RADIO_CAPS_ACK_TIMEOUT) ? "failed" : "pass",
+                      (missingCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) ? "failed" : "pass",
+                      (missingCaps & OT_RADIO_CAPS_CSMA_BACKOFF) ? "failed" : "pass",
+                      (missingCaps & OT_RADIO_CAPS_TRANSMIT_SEC) ? "failed" : "pass",
+                      (missingCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) ? "failed" : "pass");
 
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }

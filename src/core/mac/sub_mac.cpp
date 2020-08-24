@@ -336,7 +336,8 @@ void SubMac::StartCsmaBackoff(void)
 
         if (ShouldHandleTransmitDelay())
         {
-            uint32_t phaseNow     = (otPlatRadioGetNow(&GetInstance()) / kUsPerTenSymbols) % mTransmitFrame.mInfo.mTxInfo.mPeriod;
+            uint32_t phaseNow =
+                (otPlatRadioGetNow(&GetInstance()) / kUsPerTenSymbols) % mTransmitFrame.mInfo.mTxInfo.mPeriod;
             uint32_t phaseDesired = mTransmitFrame.mInfo.mTxInfo.mPhase;
 
             if (phaseNow < phaseDesired)
