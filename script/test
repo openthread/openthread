@@ -138,16 +138,30 @@ do_clean()
     rm -rfv "${OT_BUILDDIR}" || sudo rm -rfv "${OT_BUILDDIR}"
 }
 
-do_unit()
+do_unit_version()
 {
-    local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
+    local version=$1
+    local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${version}"
+
     if [[ ! -d ${builddir} ]]; then
-        echo "Cannot find build directory!"
+        echo "Cannot find build directory: ${builddir}"
         exit 1
     fi
 
-    cd "${builddir}"
-    ninja test
+    (
+        cd "${builddir}"
+        ninja test
+    )
+}
+
+do_unit()
+{
+    do_unit_version "${THREAD_VERSION}"
+
+    if [[ ${THREAD_VERSION} == "1.2" ]]; then
+        do_unit_version "1.2-bbr"
+        do_unit_version "1.1"
+    fi
 }
 
 do_cert()
@@ -313,7 +327,7 @@ EXAMPLES:
 do_package()
 {
     local builddir
-    local options=("-DCMAKE_BUILD_TYPE=Release")
+    local options=("-DCMAKE_BUILD_TYPE=Release" "-DOT_LOG_LEVEL=INFO")
 
     if [[ ${ot_extra_options[*]+x} ]]; then
         options+=("${ot_extra_options[@]}")

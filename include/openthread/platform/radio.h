@@ -230,7 +230,7 @@ typedef struct otRadioFrame
             uint8_t         mMaxFrameRetries;   ///< Maximum number of retries allowed after a transmission failure.
             bool            mIsARetx : 1;       ///< True if this frame is a retransmission (ignored by radio driver).
             bool            mCsmaCaEnabled : 1; ///< Set to true to enable CSMA-CA for this packet, false otherwise.
-            bool            mCslPresent : 1;    ///< Set to true if CSL header ie is present.
+            bool            mCslPresent : 1;    ///< Set to true if CSL header IE is present.
             bool            mIsSecurityProcessed : 1; ///< True if SubMac should skip the AES processing of this frame.
         } mTxInfo;
 

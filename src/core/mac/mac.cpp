@@ -1369,6 +1369,15 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
 
             mBroadcastTransmitCount = 0;
         }
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        // Verify Enh-ACK integrity by checking its MIC
+        if ((aError == OT_ERROR_NONE) && (aAckFrame != nullptr) &&
+            (ProcessEnhAckSecurity(aFrame, *aAckFrame) != OT_ERROR_NONE))
+        {
+            aError = OT_ERROR_NO_ACK;
+        }
+#endif
     }
 
     // Determine next action based on current operation.
@@ -1537,14 +1546,10 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     uint8_t           securityLevel;
     uint8_t           keyIdMode;
     uint32_t          frameCounter;
-    uint8_t           nonce[Crypto::AesCcm::kNonceSize];
-    uint8_t           tag[Frame::kMaxMicSize];
-    uint8_t           tagLength;
     uint8_t           keyid;
     uint32_t          keySequence = 0;
     const Key *       macKey;
     const ExtAddress *extAddress;
-    Crypto::AesCcm    aesCcm;
 
     VerifyOrExit(aFrame.GetSecurityEnabled(), error = OT_ERROR_NONE);
 
@@ -1621,26 +1626,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         OT_UNREACHABLE_CODE(break);
     }
 
-    Crypto::AesCcm::GenerateNonce(*extAddress, frameCounter, securityLevel, nonce);
-    tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
-
-    aesCcm.SetKey(*macKey);
-
-    aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
-    aesCcm.Header(aFrame.GetHeader(), aFrame.GetHeaderLength());
-
-#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), Crypto::AesCcm::kDecrypt);
-#else
-    // For fuzz tests, execute AES but do not alter the payload
-    uint8_t fuzz[OT_RADIO_FRAME_MAX_SIZE];
-    aesCcm.Payload(fuzz, aFrame.GetPayload(), aFrame.GetPayloadLength(), Crypto::AesCcm::kDecrypt);
-#endif
-    aesCcm.Finalize(tag);
-
-#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, OT_NOOP);
-#endif
+    SuccessOrExit(aFrame.ProcessReceiveAesCcm(*extAddress, *macKey));
 
     if ((keyIdMode == Frame::kKeyIdMode1) && aNeighbor->IsStateValid())
     {
@@ -1663,6 +1649,97 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
+{
+    otError     error = OT_ERROR_SECURITY;
+    uint8_t     securityLevel;
+    uint8_t     txKeyId;
+    uint8_t     ackKeyId;
+    uint8_t     keyIdMode;
+    Address     srcAddr;
+    Neighbor *  neighbor;
+    KeyManager &keyManager = Get<KeyManager>();
+    const Key * macKey;
+
+    VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = OT_ERROR_NONE);
+    VerifyOrExit(aAckFrame.IsVersion2015(), OT_NOOP);
+
+    IgnoreError(aAckFrame.GetSecurityLevel(securityLevel));
+    VerifyOrExit(securityLevel == Frame::kSecEncMic32, OT_NOOP);
+
+    IgnoreError(aAckFrame.GetKeyIdMode(keyIdMode));
+    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1, error = OT_ERROR_NONE);
+
+    IgnoreError(aTxFrame.GetKeyId(txKeyId));
+    IgnoreError(aAckFrame.GetKeyId(ackKeyId));
+
+    VerifyOrExit(txKeyId == ackKeyId, OT_NOOP);
+
+    IgnoreError(aAckFrame.GetSrcAddr(srcAddr));
+
+    if (srcAddr.IsShort())
+    {
+        neighbor = Get<NeighborTable>().FindNeighbor(srcAddr);
+
+        if (neighbor != nullptr)
+        {
+            srcAddr.SetExtended(neighbor->GetExtAddress());
+        }
+    }
+
+    if (!srcAddr.IsExtended())
+    {
+        // Get Enh-ACK source address from transmitted frame destination address
+        IgnoreError(aTxFrame.GetDstAddr(srcAddr));
+
+        if (srcAddr.IsShort())
+        {
+            neighbor = Get<NeighborTable>().FindNeighbor(srcAddr);
+
+            if (neighbor != nullptr)
+            {
+                srcAddr.SetExtended(neighbor->GetExtAddress());
+            }
+        }
+    }
+
+    VerifyOrExit(srcAddr.IsExtended(), OT_NOOP);
+
+    ackKeyId--;
+
+    if (ackKeyId == (keyManager.GetCurrentKeySequence() & 0x7f))
+    {
+        macKey = &mSubMac.GetCurrentMacKey();
+    }
+    else if (ackKeyId == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
+    {
+        macKey = &mSubMac.GetPreviousMacKey();
+    }
+    else if (ackKeyId == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
+    {
+        macKey = &mSubMac.GetNextMacKey();
+    }
+    else
+    {
+        ExitNow();
+    }
+
+    if (aAckFrame.ProcessReceiveAesCcm(srcAddr.GetExtended(), *macKey) == OT_ERROR_NONE)
+    {
+        error = OT_ERROR_NONE;
+    }
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogInfoMac("Frame tx attempt failed, error: Enh-ACK security check fail");
+    }
+
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 {
@@ -2270,7 +2347,7 @@ otError Mac::AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame) const
 {
     OT_UNUSED_VARIABLE(aIsTimeSync);
 
-    const size_t kMaxNumHeaderIe = 3; // TimeSync + Csl + Termination2
+    const size_t kMaxNumHeaderIe = 3; // TimeSync + CSL + Termination2
     HeaderIe     ieList[kMaxNumHeaderIe];
     otError      error   = OT_ERROR_NONE;
     uint8_t      ieCount = 0;

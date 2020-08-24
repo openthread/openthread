@@ -862,7 +862,7 @@ void SubMac::SetCslPeriod(uint16_t aPeriod)
         }
     }
 
-    otLogDebgMac("Csl Period: %u", mCslPeriod);
+    otLogDebgMac("CSL Period: %u", mCslPeriod);
 
 exit:
     return;

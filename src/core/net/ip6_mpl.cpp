@@ -436,9 +436,9 @@ void Mpl::Metadata::RemoveFrom(Message &aMessage) const
     OT_UNUSED_VARIABLE(error);
 }
 
-int Mpl::Metadata::UpdateIn(Message &aMessage) const
+void Mpl::Metadata::UpdateIn(Message &aMessage) const
 {
-    return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
 }
 
 void Mpl::Metadata::GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval)

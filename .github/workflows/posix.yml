@@ -67,6 +67,8 @@ jobs:
         VERBOSE=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli) -v" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
   posix-ncp:
     runs-on: ubuntu-18.04
@@ -96,6 +98,8 @@ jobs:
         VERBOSE=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
   posix-ncp-rcp-migrate:
     runs-on: ubuntu-18.04
@@ -116,6 +120,8 @@ jobs:
         script/check-ncp-rcp-migrate check
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
   posix-pty:
     runs-on: ubuntu-18.04
@@ -144,6 +150,8 @@ jobs:
         script/check-posix-pty check
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
   posix-pty-daemon:
     runs-on: ubuntu-18.04
@@ -173,3 +181,5 @@ jobs:
         script/check-posix-pty check
     - name: Codecov
       uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true

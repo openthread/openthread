@@ -587,7 +587,7 @@ private:
     };
 
     /**
-     * Csl state, always updated by `mCslTimer`.
+     * CSL state, always updated by `mCslTimer`.
      *
      */
     enum CslState : uint8_t{

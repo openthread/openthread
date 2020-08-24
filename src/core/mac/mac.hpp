@@ -220,9 +220,9 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     /**
-     * This method requests `Mac` to start a Csl Tx operation after a delay of @p aDelay time.
+     * This method requests `Mac` to start a CSL tx operation after a delay of @p aDelay time.
      *
-     * @param[in]  aDelay  Delay time for `Mac` to start a Csl Tx, in units of milliseconds.
+     * @param[in]  aDelay  Delay time for `Mac` to start a CSL tx, in units of milliseconds.
      *
      */
     void RequestCslFrameTransmission(uint32_t aDelay);
@@ -754,7 +754,7 @@ public:
      * This method updates frame control field.
      *
      * If the frame would contain header IEs, IE present field would be set.
-     * If this is a csl transmission frame or header IE is present in this frame,
+     * If this is a CSL transmission frame or header IE is present in this frame,
      * the version should be set to 2015. Otherwise, the version would be set to 2006.
      *
      * @param[in]   aNeighbor    A pointer to the destination device, could be `nullptr`.
@@ -815,6 +815,9 @@ private:
 
     otError ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void    ProcessTransmitSecurity(TxFrame &aFrame);
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    otError ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame);
+#endif
     void    UpdateIdleMode(void);
     void    StartOperation(Operation aOperation);
     void    FinishOperation(void);

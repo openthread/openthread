@@ -413,15 +413,16 @@ public:
      */
     otError Receive(uint8_t aChannel) { return otPlatRadioReceive(GetInstance(), aChannel); }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
-     * This method updates the csl sample time in radio.
+     * This method updates the CSL sample time in radio.
      *
-     * @param[in]  aCslSampleTime  The csl sample time.
+     * @param[in]  aCslSampleTime  The CSL sample time.
      *
      */
     void UpdateCslSampleTime(uint32_t aCslSampleTime) { otPlatRadioUpdateCslSampleTime(GetInstance(), aCslSampleTime); }
 
-    /** This method enables csl sampling in radio.
+    /** This method enables CSL sampling in radio.
      *
      * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
      * @param[in]  aExtAddr      The extended source address of CSL receiver's parent device (when the platforms
@@ -436,6 +437,7 @@ public:
     {
         return otPlatRadioEnableCsl(GetInstance(), aCslPeriod, aExtAddr);
     }
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
      * This method gets the radio transmit frame buffer.

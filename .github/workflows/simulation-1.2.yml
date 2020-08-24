@@ -54,14 +54,14 @@ jobs:
       CXX: ${{ matrix.compiler.cxx }}
     strategy:
       matrix:
-        compiler: [{c: "gcc", cxx: "g++"}, { c: "clang", cxx: "clang++"}]
+        compiler: [{c: "gcc", cxx: "g++", gcov: "gcov"}, { c: "clang", cxx: "clang++", gcov: "llvm-cov gcov"}]
         arch: ["m32", "m64"]
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build python3-setuptools python3-wheel
+        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build python3-setuptools python3-wheel llvm
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -76,16 +76,19 @@ jobs:
         ./script/test tar simulation 1.1
         ./script/test tar simulation 1.2-bbr
     - name: Codecov
-      uses: codecov/codecov-action@v1
+      run: |
+        bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}" -Z
     - name: Keep-1-2-bbr-only
       run: |
         ./script/test tar simulation 1.2
         ./script/test untar simulation 1.2-bbr
     - name: Codecov
-      uses: codecov/codecov-action@v1
+      run: |
+        bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}" -Z
     - name: Keep-1-1-only
       run: |
         ./script/test tar simulation 1.2-bbr
         ./script/test untar simulation 1.1
     - name: Codecov
-      uses: codecov/codecov-action@v1
+      run: |
+        bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}" -Z

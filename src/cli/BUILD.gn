@@ -25,6 +25,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import("../../etc/gn/openthread.gni")
+
 openthread_cli_sources = [
   "cli.cpp",
   "cli.hpp",
@@ -48,14 +50,25 @@ openthread_cli_sources = [
   "x509_cert_key.hpp",
 ]
 
+config("cli_config") {
+  defines = []
+  if (openthread_posix) {
+    defines += ["OPENTHREAD_POSIX=1"]
+  } else {
+    defines += ["OPENTHREAD_POSIX=0"]
+  }
+}
+
 static_library("libopenthread-cli-ftd") {
   sources = openthread_cli_sources
   public_deps = [ "../core:libopenthread-ftd" ]
+  public_configs = [":cli_config"]
   visibility = [ "../../*" ]
 }
 
 static_library("libopenthread-cli-mtd") {
   sources = openthread_cli_sources
   public_deps = [ "../core:libopenthread-mtd" ]
+  public_configs = [":cli_config"]
   visibility = [ "../../*" ]
 }

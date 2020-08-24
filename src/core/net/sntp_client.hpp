@@ -464,12 +464,10 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @returns The number of bytes updated.
-     *
      */
-    int UpdateIn(Message &aMessage) const
+    void UpdateIn(Message &aMessage) const
     {
-        return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+        aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
     }
 
 private:
