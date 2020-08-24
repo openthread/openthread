@@ -41,6 +41,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <openthread/link.h>
+
 #include "utils/code_utils.h"
 #include "utils/mac_frame.h"
 
@@ -108,6 +110,13 @@ static int8_t sDefaultTxPower;
 static uint32_t sEnergyDetectionTime;
 static uint8_t  sEnergyDetectionChannel;
 static int8_t   sEnergyDetected;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+static uint32_t      sCslPeriod;
+static uint32_t      sCslSampleTime;
+static const uint8_t sCslIeHeader[OT_IE_HEADER_SIZE] = {0x04, 0x0d};
+static uint8_t       sParentShortAddress[SHORT_ADDRESS_SIZE];
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 typedef enum
 {
@@ -303,6 +312,9 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 
     uint8_t address[SHORT_ADDRESS_SIZE];
     convertShortAddress(address, aShortAddress);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    convertShortAddress(sParentShortAddress, aShortAddress & 0xfc00);
+#endif
 
     nrf_802154_short_address_set(address);
 }
@@ -943,6 +955,17 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
     setPendingEvent(kPendingEventReceiveFailed);
 }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+uint16_t getCslPhase()
+{
+    uint32_t curTime       = otPlatAlarmMicroGetNow();
+    uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
+    uint32_t diff = ((sCslSampleTime % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
+
+    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
+}
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
 void nrf_802154_tx_ack_started(uint8_t *p_data)
 {
     // Check if the frame pending bit is set in ACK frame.
@@ -950,6 +973,16 @@ void nrf_802154_tx_ack_started(uint8_t *p_data)
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     // Update IE and secure Enh-ACK.
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (sCslPeriod > 0)
+    {
+        otRadioFrame ackFrame;
+        ackFrame.mPsdu   = (uint8_t *)(p_data + 1);
+        ackFrame.mLength = p_data[0];
+        otMacFrameSetCslIe(&ackFrame, sCslPeriod, getCslPhase());
+    }
+#endif
+
     txAckProcessSecurity(p_data);
 #endif
 }
@@ -1038,6 +1071,13 @@ void nrf_802154_tx_started(const uint8_t *aFrame)
     }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (sCslPeriod > 0)
+    {
+        otMacFrameSetCslIe(&sTransmitFrame, (uint16_t)sCslPeriod, getCslPhase());
+    }
+#endif
+
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     otEXPECT(otMacFrameIsSecurityEnabled(&sTransmitFrame) && otMacFrameIsKeyIdMode1(&sTransmitFrame) &&
              !sTransmitFrame.mInfo.mTxInfo.mIsSecurityProcessed);
@@ -1110,3 +1150,52 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
     CRITICAL_REGION_EXIT();
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+static void updateIeData(otInstance *aInstance, const uint8_t *aShortAddr, const uint8_t *aExtAddr)
+{
+    int8_t  offset = 0;
+    uint8_t ackIeData[OT_ACK_IE_MAX_SIZE];
+
+    if (sCslPeriod > 0)
+    {
+        memcpy(ackIeData, sCslIeHeader, OT_IE_HEADER_SIZE);
+        offset += OT_IE_HEADER_SIZE + OT_CSL_IE_SIZE; // reserve space for CSL IE
+    }
+
+    if (offset > 0)
+    {
+        nrf_802154_ack_data_set(aShortAddr, false, ackIeData, offset, NRF_802154_ACK_DATA_IE);
+        nrf_802154_ack_data_set(aExtAddr, true, ackIeData, offset, NRF_802154_ACK_DATA_IE);
+    }
+    else
+    {
+        nrf_802154_ack_data_clear(aShortAddr, false, NRF_802154_ACK_DATA_IE);
+        nrf_802154_ack_data_clear(aExtAddr, true, NRF_802154_ACK_DATA_IE);
+    }
+}
+
+otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t parentExtAddr[OT_EXT_ADDRESS_SIZE];
+
+    sCslPeriod = aCslPeriod;
+
+    for (uint32_t i = 0; i < sizeof(parentExtAddr); i++)
+    {
+        parentExtAddr[i] = aExtAddr->m8[sizeof(parentExtAddr) - i - 1];
+    }
+
+    updateIeData(aInstance, sParentShortAddress, parentExtAddr);
+
+    return error;
+}
+
+void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sCslSampleTime = aCslSampleTime;
+}
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE

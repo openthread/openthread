@@ -686,6 +686,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (Get<Mac::Mac>().IsCslEnabled())
     {
+        IgnoreError(Get<Radio>().EnableCsl(Get<Mac::Mac>().GetCslPeriod(), &GetParent().GetExtAddress()));
         ScheduleChildUpdateRequest();
     }
 #endif

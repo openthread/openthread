@@ -2204,10 +2204,10 @@ exit:
 void Mac::SetCslPeriod(uint16_t aPeriod)
 {
     mSubMac.SetCslPeriod(aPeriod);
-    IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), &Get<Mle::Mle>().GetParent().GetExtAddress()));
 
     if (IsCslEnabled())
     {
+        IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), &Get<Mle::Mle>().GetParent().GetExtAddress()));
         Get<Mle::Mle>().ScheduleChildUpdateRequest();
     }
 
