@@ -459,21 +459,22 @@ exit:
 
 uint16_t Client::FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Dhcp6::Code aCode)
 {
-    uint16_t end  = aOffset + aLength;
-    uint16_t rval = 0;
+    uint32_t offset = aOffset;
+    uint16_t end    = aOffset + aLength;
+    uint16_t rval   = 0;
 
-    while (aOffset <= end)
+    while (offset <= end)
     {
         Option option;
 
-        VerifyOrExit(aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option), OT_NOOP);
+        VerifyOrExit(aMessage.Read(static_cast<uint16_t>(offset), sizeof(option), &option) == sizeof(option), OT_NOOP);
 
         if (option.GetCode() == aCode)
         {
-            ExitNow(rval = aOffset);
+            ExitNow(rval = static_cast<uint16_t>(offset));
         }
 
-        aOffset += sizeof(option) + option.GetLength();
+        offset += sizeof(option) + option.GetLength();
     }
 
 exit:
