@@ -140,6 +140,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_THRESHOLD_US
+ *
+ * Define how many microseconds ahead should MAC deliver CSL frame to SubMac.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_THRESHOLD_US
+#define OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_THRESHOLD_US 2000
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
  *
  * Define to 1 to enable MAC filter support.

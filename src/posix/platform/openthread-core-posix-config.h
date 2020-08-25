@@ -114,6 +114,50 @@
 #define OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 #endif
 
+/**
+ * RCP bus UART.
+ *
+ * @note This value is also for simulated UART bus.
+ *
+ */
+#define OT_POSIX_RCP_BUS_UART 1
+
+/**
+ * RCP bus SPI.
+ *
+ */
+#define OT_POSIX_RCP_BUS_SPI 2
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_RCP_BUS
+ *
+ * This setting configures what type of RCP bus to use.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_RCP_BUS
+#define OPENTHREAD_POSIX_CONFIG_RCP_BUS OT_POSIX_RCP_BUS_UART
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_THRESHOLD_US
+ *
+ * Define how many microseconds ahead should MAC deliver CSL frame to SubMac.
+ *
+ * For POSIX host, This should be,
+ * Threshold = longest frame bus transmission time(150 byte / baud rate) + host/RCP timer sync tolerance(500us) +
+ *             processing headroom(2000us)
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_THRESHOLD_US
+#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
+// default uses 1000000 Hz for SPI
+#define OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_THRESHOLD_US 4000
+#elif OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
+// default uses 115200 baud rate for UART
+#define OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_THRESHOLD_US 13000
+#endif
+#endif
+
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 
 #ifndef OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE

@@ -66,7 +66,7 @@ public:
     enum
     {
         kMaxCslTriggeredTxAttempts     = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
-        kCslFrameRequestAheadThreshold = 2000 / kUsPerTenSymbols,
+        kCslFrameRequestAheadThreshold = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_THRESHOLD_US / kUsPerTenSymbols,
     };
 
     /**
