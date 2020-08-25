@@ -175,7 +175,6 @@ otError otPlatUartFlush(void)
  * @param[in] aBuf             Pointer to the character buffer
  * @param[in] len              Length of the character buffer
  */
-
 void K32WWriteBlocking(const uint8_t *aBuf, uint32_t len)
 {
     otEXPECT(sIsUartInitialized && sUartHandle.txState != UART_BUSY);
