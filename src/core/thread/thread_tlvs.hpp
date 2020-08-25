@@ -50,8 +50,6 @@ using ot::Encoding::BigEndian::HostSwap32;
 
 enum
 {
-    kCoapUdpPort = 61631,
-
     // Thread 1.2.0 5.19.13 limits the number of IPv6 addresses should be [1, 15].
     kIPv6AddressesNumMin = 1,
     kIPv6AddressesNumMax = 15,

@@ -100,6 +100,13 @@ otError Udp::Socket::Bind(uint16_t aPort)
     return Bind(SockAddr(aPort));
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+otError Udp::Socket::BindToNetif(otNetifIdentifier aNetifIdentifier)
+{
+    return otPlatUdpBindToNetif(this, aNetifIdentifier);
+}
+#endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+
 otError Udp::Socket::Connect(const SockAddr &aSockAddr)
 {
     return Get<Udp>().Connect(*this, aSockAddr);
@@ -172,6 +179,9 @@ otError Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(aSockAddr.GetAddress().IsUnspecified() || Get<ThreadNetif>().HasUnicastAddress(aSockAddr.GetAddress()),
+                 error = OT_ERROR_INVALID_ARGS);
+
     aSocket.mSockName = aSockAddr;
 
     if (!aSocket.IsBound())
@@ -191,6 +201,7 @@ otError Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
     }
 #endif
 
+exit:
     return error;
 }
 
@@ -270,7 +281,7 @@ otError Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo 
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     if (!IsMlePort(aSocket.mSockName.mPort) &&
-        !(aSocket.mSockName.mPort == ot::kCoapUdpPort && aMessage.GetSubType() == Message::kSubTypeJoinerEntrust))
+        !(aSocket.mSockName.mPort == ot::Tmf::kUdpPort && aMessage.GetSubType() == Message::kSubTypeJoinerEntrust))
     {
         SuccessOrExit(error = otPlatUdpSend(&aSocket, &aMessage, &messageInfoLocal));
     }

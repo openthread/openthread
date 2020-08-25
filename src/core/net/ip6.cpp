@@ -1053,7 +1053,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
                 ExitNow(error = OT_ERROR_NO_ROUTE);
             }
 #if !OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-            else if ((destPort == kCoapUdpPort) && Get<ThreadNetif>().IsTmfMessage(aMessageInfo))
+            else if ((destPort == Tmf::kUdpPort) && Get<Tmf::TmfAgent>().IsTmfMessage(aMessageInfo))
             {
                 // do not pass TMF messages
                 ExitNow(error = OT_ERROR_NO_ROUTE);

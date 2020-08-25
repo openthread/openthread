@@ -70,7 +70,7 @@ Joiner::Joiner(Instance &aInstance)
     SetIdFromIeeeEui64();
     mDiscerner.Clear();
     memset(mJoinerRouters, 0, sizeof(mJoinerRouters));
-    Get<Coap::Coap>().AddResource(mJoinerEntrust);
+    Get<Tmf::TmfAgent>().AddResource(mJoinerEntrust);
 }
 
 void Joiner::SetIdFromIeeeEui64(void)
@@ -611,12 +611,12 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6:
     Coap::Message *  message;
     Ip6::MessageInfo responseInfo(aRequestInfo);
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     responseInfo.GetSockAddr().Clear();
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, responseInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, responseInfo));
 
     SetState(OT_JOINER_STATE_JOINED);
 

@@ -281,7 +281,7 @@ void MlrManager::SendMulticastListenerRegistration(void)
 
     VerifyOrExit(addressesNum > 0, error = OT_ERROR_NOT_FOUND);
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     SuccessOrExit(message->SetToken(Coap::Message::kDefaultTokenLength));
@@ -306,10 +306,10 @@ void MlrManager::SendMulticastListenerRegistration(void)
                                                       Get<BackboneRouter::Leader>().GetServer16());
     }
 
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
     messageInfo.SetSockAddr(mle.GetMeshLocal16());
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(
                       *message, messageInfo, &MlrManager::HandleMulticastListenerRegistrationResponse, this));
 
     mMlrPending = true;

@@ -68,15 +68,15 @@ void Manager::HandleNotifierEvents(Events aEvents)
     {
         if (Get<BackboneRouter::Local>().GetState() == OT_BACKBONE_ROUTER_STATE_DISABLED)
         {
-            Get<Coap::Coap>().RemoveResource(mMulticastListenerRegistration);
-            Get<Coap::Coap>().RemoveResource(mDuaRegistration);
+            Get<Tmf::TmfAgent>().RemoveResource(mMulticastListenerRegistration);
+            Get<Tmf::TmfAgent>().RemoveResource(mDuaRegistration);
             mTimer.Stop();
             mMulticastListenersTable.Clear();
         }
         else
         {
-            Get<Coap::Coap>().AddResource(mMulticastListenerRegistration);
-            Get<Coap::Coap>().AddResource(mDuaRegistration);
+            Get<Tmf::TmfAgent>().AddResource(mMulticastListenerRegistration);
+            Get<Tmf::TmfAgent>().AddResource(mDuaRegistration);
             if (!mTimer.IsRunning())
             {
                 mTimer.Start(kTimerInterval);
@@ -172,7 +172,7 @@ void Manager::SendMulticastListenerRegistrationResponse(const Coap::Message &   
     otError        error   = OT_ERROR_NONE;
     Coap::Message *message = nullptr;
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(message->SetDefaultResponseHeader(aMessage));
     SuccessOrExit(message->SetPayloadMarker());
@@ -193,7 +193,7 @@ void Manager::SendMulticastListenerRegistrationResponse(const Coap::Message &   
         }
     }
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 
 exit:
     if (error != OT_ERROR_NONE && message != nullptr)
@@ -256,7 +256,7 @@ void Manager::SendDuaRegistrationResponse(const Coap::Message &      aMessage,
     otError        error   = OT_ERROR_NONE;
     Coap::Message *message = nullptr;
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(message->SetDefaultResponseHeader(aMessage));
     SuccessOrExit(message->SetPayloadMarker());
@@ -264,7 +264,7 @@ void Manager::SendDuaRegistrationResponse(const Coap::Message &      aMessage,
     SuccessOrExit(Tlv::AppendUint8Tlv(*message, ThreadTlv::kStatus, aStatus));
     SuccessOrExit(Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aTarget, sizeof(aTarget)));
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 
 exit:
     if (error != OT_ERROR_NONE && message != nullptr)
