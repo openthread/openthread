@@ -138,6 +138,14 @@ public:
      */
     void Process(const RadioProcessContext &aContext);
 
+    /**
+     * This method get bus speed between the host and the radio.
+     *
+     * @returns   bus speed in Hz.
+     *
+     */
+    uint32_t GetBusSpeed(void) { return ((mSpiDevFd >= 0) ? mSpiSpeedHz : 0); }
+
 private:
     int     SetupGpioHandle(int aFd, uint8_t aLine, uint32_t aHandleFlags, const char *aLabel);
     int     SetupGpioEvent(int aFd, uint8_t aLine, uint32_t aHandleFlags, uint32_t aEventFlags, const char *aLabel);

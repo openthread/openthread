@@ -68,6 +68,30 @@
 #endif
 
 /**
+ * RCP bus UART.
+ *
+ * @note This value is also for simulated UART bus.
+ *
+ */
+#define OT_POSIX_RCP_BUS_UART 1
+
+/**
+ * RCP bus SPI.
+ *
+ */
+#define OT_POSIX_RCP_BUS_SPI 2
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_RCP_BUS
+ *
+ * This setting configures what type of RCP bus to use.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_RCP_BUS
+#define OPENTHREAD_POSIX_CONFIG_RCP_BUS OT_POSIX_RCP_BUS_UART
+#endif
+
+/**
  * @def OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
  *
  * Define as 1 to enable max power table support.

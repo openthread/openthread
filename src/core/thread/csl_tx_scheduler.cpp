@@ -66,6 +66,13 @@ CslTxScheduler::CslTxScheduler(Instance &aInstance)
     , mFrameContext()
     , mCallbacks(aInstance)
 {
+    uint32_t busSpeedHz = otPlatRadioGetBusSpeed(&GetInstance());
+    // longest frame on bus is 127 bytes with some metadata
+    uint32_t busTxTimeUs = ((busSpeedHz == 0) ? 0 : (150 * 8 * 1000000 + busSpeedHz - 1) / busSpeedHz);
+
+    // Use ceiling to get next closest integer
+    mCslFrameRequestAhead =
+        (OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_THRESHOLD_US + busTxTimeUs + kUsPerTenSymbols - 1) / kUsPerTenSymbols;
 }
 
 void CslTxScheduler::Update(void)
@@ -144,15 +151,14 @@ uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild, uint64
     uint32_t delay;
     uint16_t period_offset = (aRadioNow / kUsPerTenSymbols) % aChild.GetCslPeriod();
 
-    if (aChild.GetCslPhase() > period_offset + kCslFrameRequestAheadThreshold)
+    if (aChild.GetCslPhase() > period_offset + mCslFrameRequestAhead)
     {
-        delay = static_cast<uint16_t>(aChild.GetCslPhase() - period_offset - kCslFrameRequestAheadThreshold) *
-                kUsPerTenSymbols;
+        delay = static_cast<uint16_t>(aChild.GetCslPhase() - period_offset - mCslFrameRequestAhead) * kUsPerTenSymbols;
     }
     else
     {
         delay = static_cast<uint16_t>(aChild.GetCslPeriod() + aChild.GetCslPhase() - period_offset -
-                                      kCslFrameRequestAheadThreshold) *
+                                      mCslFrameRequestAhead) *
                 kUsPerTenSymbols;
     }
 

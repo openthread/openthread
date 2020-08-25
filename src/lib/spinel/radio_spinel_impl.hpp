@@ -1817,5 +1817,11 @@ uint64_t RadioSpinel<InterfaceType, ProcessContextType>::GetNow(void)
     return mIsTimeSynced ? (otPlatTimeGet() + static_cast<uint64_t>(mRadioTimeOffset)) : UINT64_MAX;
 }
 
+template <typename InterfaceType, typename ProcessContextType>
+uint32_t RadioSpinel<InterfaceType, ProcessContextType>::GetBusSpeed(void)
+{
+    return mSpinelInterface.GetBusSpeed();
+}
+
 } // namespace Spinel
 } // namespace ot
