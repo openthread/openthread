@@ -186,8 +186,8 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             _pkts.filter_mle_cmd(MLE_PARENT_RESPONSE).must_next()
             _pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
 
-        # Step 2:The DUT MUST properly forward ICMPv6 Echo Requests to all MED children
-        #        The DUT MUST properly forward ICMPv6 Echo Replies to the Leader
+        # Step 2: The DUT MUST properly forward ICMPv6 Echo Requests to all MED children
+        #         The DUT MUST properly forward ICMPv6 Echo Replies to the Leader
         leader_rloc16 = pv.vars['LEADER_RLOC16']
         for i in range(1, 5):
             rloc16 = pv.vars['MED%d_RLOC16' % i]
