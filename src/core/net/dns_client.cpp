@@ -443,7 +443,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     // which it sent the corresponding query to.
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otError            error = OT_ERROR_NONE;
+    otError            error = OT_ERROR_NOT_FOUND;
     Header             responseHeader;
     QueryMetadata      queryMetadata;
     ResourceRecordAaaa record;
@@ -469,28 +469,23 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     // Parse and check the answer section.
     for (uint32_t index = 0; index < responseHeader.GetAnswerCount(); index++)
     {
+        uint32_t newOffset;
+
         SuccessOrExit(error = SkipHostname(aMessage, offset));
 
-        if (offset + sizeof(ResourceRecord) > aMessage.GetLength())
+        VerifyOrExit(aMessage.Read(offset, sizeof(record), &record) == sizeof(record), error = OT_ERROR_PARSE);
+
+        if ((record.GetType() == ResourceRecordAaaa::kType) && (record.GetClass() == ResourceRecordAaaa::kClass))
         {
-            ExitNow(error = OT_ERROR_PARSE);
+            // Return the first found IPv6 address.
+            FinalizeDnsTransaction(*message, queryMetadata, &record.GetAddress(), record.GetTtl(), OT_ERROR_NONE);
+            ExitNow(error = OT_ERROR_NONE);
         }
 
-        if (aMessage.Read(offset, sizeof(record), &record) != sizeof(record) ||
-            record.GetType() != ResourceRecordAaaa::kType || record.GetClass() != ResourceRecordAaaa::kClass)
-        {
-            offset += sizeof(ResourceRecord) + record.GetLength();
-
-            continue;
-        }
-
-        // Return the first found IPv6 address.
-        FinalizeDnsTransaction(*message, queryMetadata, &record.GetAddress(), record.GetTtl(), OT_ERROR_NONE);
-
-        ExitNow();
+        newOffset = offset + sizeof(ResourceRecord) + record.GetLength();
+        VerifyOrExit(newOffset <= aMessage.GetLength(), error = OT_ERROR_PARSE);
+        offset = static_cast<uint16_t>(newOffset);
     }
-
-    ExitNow(error = OT_ERROR_NOT_FOUND);
 
 exit:
 
