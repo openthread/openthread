@@ -86,12 +86,13 @@ SVR_DATA_URI = '/a/sd'
 ND_DATA_URI = '/a/nd'
 RLY_RX_URI = '/c/rx'
 RLY_TX_URI = '/c/tx'
-MGMT_ACTIVE_SET_URI = '/c/as'
-MGMT_ACTIVE_GET_URI = '/c/ag'
-MGMT_PENDING_SET_URI = '/c/ps'
 MGMT_PANID_QUERY = '/c/pq'
 MGMT_PANID_CONFLICT = '/c/pc'
 MGMT_ED_REPORT = '/c/er'
+MGMT_ACTIVE_GET_URI = '/c/ag'
+MGMT_ACTIVE_SET_URI = '/c/as'
+MGMT_PENDING_SET_URI = '/c/ps'
+MGMT_DATASET_CHANGED_URI = '/c/dc'
 
 # MLE TLVs
 SOURCE_ADDRESS_TLV = 0
