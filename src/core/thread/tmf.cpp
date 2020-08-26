@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements TMF functionality.
+ *   This file implements Thread Management Framework (TMF) functionalities.
  */
 
 #include "thread/tmf.hpp"

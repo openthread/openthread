@@ -105,7 +105,7 @@ otError Udp::Socket::BindToNetif(otNetifIdentifier aNetifIdentifier)
 {
     return otPlatUdpBindToNetif(this, aNetifIdentifier);
 }
-#endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+#endif 
 
 otError Udp::Socket::Connect(const SockAddr &aSockAddr)
 {

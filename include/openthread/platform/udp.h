@@ -81,6 +81,8 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket);
 /**
  * This function binds the UDP socket to a platform network interface.
  *
+ * Note: only available when `OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE` is used.
+ *
  * @param[in]   aUdpSocket          A pointer to the UDP socket.
  * @param[in]   aNetifIdentifier    The network interface identifier.
  *

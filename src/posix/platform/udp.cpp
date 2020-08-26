@@ -284,7 +284,7 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
 exit:
     if (error == OT_ERROR_FAILED)
     {
-        otLogWarnPlat("Failed to bind UDP socket: %s", otThreadErrorToString(error));
+        otLogCritPlat("Failed to bind UDP socket: %s", strerror(errno));
     }
 
     return error;
@@ -440,12 +440,11 @@ void platformUdpInit(const char *aIfName)
     {
         VerifyOrDie(strlen(aIfName) < sizeof(gNetifName) - 1, OT_EXIT_INVALID_ARGUMENTS);
         strcpy(gNetifName, aIfName);
+        gNetifIndex = if_nametoindex(gNetifName);
+        VerifyOrDie(gNetifIndex != 0, OT_EXIT_ERROR_ERRNO);
     }
 
-    if (gNetifIndex == 0)
-    {
-        perror("if_nametoindex");
-    }
+    assert(gNetifIndex != 0);
 }
 
 void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
