@@ -532,6 +532,10 @@ public:
     /**
      * This method copies bytes from one message to another.
      *
+     * If source and destination messages are the same, `CopyTo()` can be used to perform a backward copy, but
+     * it MUST not be used to forward copy within the same message (i.e., when source and destination messages are the
+     * same and source offset is smaller than the destination offset).
+     *
      * @param[in] aSourceOffset       Byte offset within the source message to begin reading.
      * @param[in] aDestinationOffset  Byte offset within the destination message to begin writing.
      * @param[in] aLength             Number of bytes to copy.

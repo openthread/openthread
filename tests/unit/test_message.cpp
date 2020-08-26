@@ -144,7 +144,27 @@ void TestMessage(void)
         }
     }
 
+    // Verify `CopyTo()` with same source and destination message and a backward copy.
+
+    for (uint16_t srcOffset = 0; srcOffset < kMaxSize; srcOffset++)
+    {
+        uint16_t bytesCopied;
+
+        message->Write(0, kMaxSize, writeBuffer);
+
+        bytesCopied = message->CopyTo(srcOffset, 0, kMaxSize, *message);
+        VerifyOrQuit(bytesCopied == kMaxSize - srcOffset, "CopyTo() failed");
+
+        VerifyOrQuit(message->Read(0, kMaxSize, readBuffer) == kMaxSize, "Message::Read failed");
+
+        VerifyOrQuit(memcmp(&readBuffer[0], &writeBuffer[srcOffset], bytesCopied) == 0,
+                     "CopyTo() changed before srcOffset");
+        VerifyOrQuit(memcmp(&readBuffer[bytesCopied], &writeBuffer[bytesCopied], kMaxSize - bytesCopied) == 0,
+                     "CopyTo() write error");
+    }
+
     message->Free();
+    message2->Free();
 
     testFreeInstance(instance);
 }

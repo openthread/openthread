@@ -537,7 +537,7 @@ void Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
 
     while (chunk.GetLength() > 0)
     {
-        memcpy(chunk.GetData(), bufPtr, chunk.GetLength());
+        memmove(chunk.GetData(), bufPtr, chunk.GetLength());
         bufPtr += chunk.GetLength();
         GetNextChunk(aLength, chunk);
     }
@@ -547,6 +547,13 @@ uint16_t Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, ui
 {
     uint16_t bytesCopied = 0;
     Chunk    chunk;
+
+    // This implementing can potentially overwrite the data when bytes are
+    // being copied forward within the same message, i.e., source and
+    // destination messages are the same, and source offset is smaller than
+    // the destination offset. We assert not allowing such a use.
+
+    OT_ASSERT((&aMessage != this) || (aSourceOffset >= aDestinationOffset));
 
     GetFirstChunk(aSourceOffset, aLength, chunk);
 
