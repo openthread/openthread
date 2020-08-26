@@ -250,7 +250,11 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
         UpdateFrameCounter(aFrame->mInfo.mRxInfo.mAckFrameCounter);
     }
 
-    otLogDebgMac("Received frame, time:%u", mTimer.GetNow().GetValue());
+#if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+    otLogDebgMac("Received frame in CSL state %d, timestamp %u, target sample start time %u, time drift %d", mCslState,
+                 aFrame->mInfo.mRxInfo.mTimestamp, mCslSampleTime.GetValue(),
+                 aFrame->mInfo.mRxInfo.mTimestamp - mCslSampleTime.GetValue());
+#endif
 
     mCallbacks.ReceiveDone(aFrame, aError);
 }
