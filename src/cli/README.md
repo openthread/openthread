@@ -1138,12 +1138,12 @@ Check whether the steering data includes a joiner.
 - discerner: The Joiner discerner in format `number/length`.
 
 ```bash
-> netdata steeeringdata check d45e64fa83f81cf7
+> netdata steeringdata check d45e64fa83f81cf7
 Done
-> netdata steeeringdata check 0xabc/12
+> netdata steeringdata check 0xabc/12
 Done
-> netdata steeeringdata check 0xdef/12
-Error: NotFound
+> netdata steeringdata check 0xdef/12
+Error 23: NotFound
 ```
 
 ### netdataregister
