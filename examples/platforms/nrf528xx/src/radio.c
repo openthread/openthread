@@ -425,7 +425,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    if (nrf_802154_sleep())
+    if (nrf_802154_sleep_if_idle())
     {
         clearPendingEvents();
     }
@@ -830,7 +830,7 @@ void nrf5RadioProcess(otInstance *aInstance)
 
     if (isPendingEventSet(kPendingEventSleep))
     {
-        if (nrf_802154_sleep())
+        if (nrf_802154_sleep_if_idle())
         {
             resetPendingEvent(kPendingEventSleep);
         }
@@ -1122,6 +1122,13 @@ void nrf_802154_random_deinit(void)
 uint32_t nrf_802154_random_get(void)
 {
     return otRandomNonCryptoGetUint32();
+}
+
+uint64_t otPlatRadioGetNow(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return otPlatTimeGet();
 }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
