@@ -31,19 +31,23 @@ import unittest
 
 import config
 import thread_cert
+from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MODE_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ED = 2
 
 
-class Cert_6_5_1_ChildResetSynchronize(thread_cert.TestCase):
+class Cert_6_5_3_ChildResetSynchronize(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
             'whitelist': [ED]
         },
         ED: {
+            'name': 'ED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
@@ -67,25 +71,40 @@ class Cert_6_5_1_ChildResetSynchronize(thread_cert.TestCase):
 
         self.nodes[ED].reset()
         self._setUpEd()
-        self.simulator.go(5)
+        self.simulator.go(1)
 
-        self.nodes[ED].set_timeout(100)
         self.nodes[ED].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[ED].get_state(), 'child')
-
-        self.nodes[ED].reset()
-        self._setUpEd()
-        self.simulator.go(5)
-        self.nodes[ED].set_timeout(100)
-        self.nodes[ED].start()
-        self.simulator.go(5)
+        self.simulator.go(1)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             if addr[0:4] == 'fe80':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        ED = pv.vars['ED']
+        _leader_pkts = pkts.filter_wpan_src64(LEADER)
+        _ed_pkts = pkts.filter_wpan_src64(ED)
+
+        # Step 2: Reset the DUT for a time shorter than
+        # the Child Timeout Duration.
+        # Step 3: Send MLE Child Update Request to Leader
+        _ed_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()
+        _leader_pkts.range(_ed_pkts.index).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+        _ed_pkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
+            lambda p: {MODE_TLV} < set(p.mle.tlv.type))
+
+        # Step 4: Leader send an MLE Child Update Response
+        _leader_pkts.range(_ed_pkts.index).filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next()
+        _ed_pkts.range(_leader_pkts.index).filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_not_next()
+
+        # Step 5: The DUT MUST respond with ICMPv6 Echo Reply
+        _ed_pkts.filter_ping_reply().filter(lambda p: p.wpan.src64 == ED and p.wpan.dst64 == LEADER).must_next()
 
 
 if __name__ == '__main__':

@@ -94,8 +94,9 @@ EXTRA_DIST                                                         = \
     Cert_6_3_02_NetworkDataUpdate.py                                 \
     Cert_6_4_01_LinkLocal.py                                         \
     Cert_6_4_02_RealmLocal.py                                        \
-    Cert_6_5_01_ChildResetSynchronize.py                             \
+    Cert_6_5_01_ChildResetReattach.py                                \
     Cert_6_5_02_ChildResetReattach.py                                \
+    Cert_6_5_03_ChildResetSynchronize.py                             \
     Cert_6_6_01_KeyIncrement.py                                      \
     Cert_6_6_02_KeyIncrementRollOver.py                              \
     Cert_7_1_01_BorderRouterAsLeader.py                              \
@@ -268,8 +269,9 @@ check_SCRIPTS                                                      = \
     Cert_6_3_02_NetworkDataUpdate.py                                 \
     Cert_6_4_01_LinkLocal.py                                         \
     Cert_6_4_02_RealmLocal.py                                        \
-    Cert_6_5_01_ChildResetSynchronize.py                             \
+    Cert_6_5_01_ChildResetReattach.py                                \
     Cert_6_5_02_ChildResetReattach.py                                \
+    Cert_6_5_03_ChildResetSynchronize.py                             \
     Cert_6_6_01_KeyIncrement.py                                      \
     Cert_6_6_02_KeyIncrementRollOver.py                              \
     Cert_5_2_03_LeaderReject2Hops.py                                 \
