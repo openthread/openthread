@@ -31,7 +31,7 @@ import unittest
 
 import config
 import thread_cert
-from pktverify.consts import MLE_ADVERTISEMENT, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, ADDRESS_REGISTRATION_TLV, NWD_SERVICE_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_HAS_ROUTER_TLV
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -152,13 +152,18 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
         # Step 4: The DUT MUST send a multicast MLE Data Response with
         # the new network information
         _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst('ff02::1').must_next()
-        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst('ff02::1').must_next().must_verify(
-            lambda p: {4, 1, 2, 3, 1, 0} == set(p.thread_nwd.tlv.type))
+        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst('ff02::1').must_next().must_verify(lambda p: {
+            NWD_SERVICE_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV,
+            NWD_HAS_ROUTER_TLV
+        } == set(p.thread_nwd.tlv.type))
 
         # Step 5: The DUT MUST send a unicast MLE Child Update
         # Request to SED_1
-        _rpkts.filter_mle_cmd(13).filter_wpan_dst64(SED).must_next().must_verify(
-            lambda p: {0, 11, 12, 22} == set(p.mle.tlv.type) and {1, 2, 3, 1, 0} == set(p.thread_nwd.tlv.type))
+        _rpkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).filter_wpan_dst64(SED).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} == set(
+                p.mle.tlv.type) and {
+                    NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV, NWD_HAS_ROUTER_TLV
+                } == set(p.thread_nwd.tlv.type))
 
         # Step 6: The DUT MUST forward the SED_1 ICMPv6 Echo Request to Router_2
         # due to higher preference
@@ -174,13 +179,18 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
 
         # Step 9: The DUT MUST send a multicast MLE Data Response with
         # the new network information
-        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst('ff02::1').must_next().must_verify(
-            lambda p: {4, 1, 2, 3, 1, 0} == set(p.thread_nwd.tlv.type))
+        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst('ff02::1').must_next().must_verify(lambda p: {
+            NWD_SERVICE_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV,
+            NWD_HAS_ROUTER_TLV
+        } == set(p.thread_nwd.tlv.type))
 
         # Step 10: The DUT MUST send a unicast MLE Child Update
         # Request to SED_1
-        _rpkts.filter_mle_cmd(13).filter_wpan_dst64(SED).must_next().must_verify(
-            lambda p: {0, 11, 12, 22} == set(p.mle.tlv.type) and {1, 2, 3, 1, 0} == set(p.thread_nwd.tlv.type))
+        _rpkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).filter_wpan_dst64(SED).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} == set(
+                p.mle.tlv.type) and {
+                    NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV, NWD_HAS_ROUTER_TLV
+                } == set(p.thread_nwd.tlv.type))
 
         # Step 11: The DUT MUST forward the SED_1 ICMPv6 Echo Request to Router_2
         # due to higher preference
@@ -189,13 +199,18 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
 
         # Step 13: The DUT MUST send a multicast MLE Data Response with
         # the new network information
-        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst('ff02::1').must_next().must_verify(
-            lambda p: {4, 1, 2, 3, 1, 0} == set(p.thread_nwd.tlv.type))
+        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst('ff02::1').must_next().must_verify(lambda p: {
+            NWD_SERVICE_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV,
+            NWD_HAS_ROUTER_TLV
+        } == set(p.thread_nwd.tlv.type))
 
         # Step 14: The DUT MUST send a unicast MLE Child Update
         # Request to SED_1
-        _rpkts.filter_mle_cmd(13).filter_wpan_dst64(SED).must_next().must_verify(
-            lambda p: {0, 11, 12, 22} == set(p.mle.tlv.type) and {1, 2, 3, 1, 0} == set(p.thread_nwd.tlv.type))
+        _rpkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).filter_wpan_dst64(SED).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} == set(
+                p.mle.tlv.type) and {
+                    NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV, NWD_HAS_ROUTER_TLV
+                } == set(p.thread_nwd.tlv.type))
 
         # Step 15: The DUT MUST forward the SED_1 ICMPv6 Echo Request to Router_2
         # due to higher preference
