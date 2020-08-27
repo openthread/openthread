@@ -72,7 +72,7 @@ public:
         kDuaManager,             ///< `DuaManager`
         kMlrManager,             ///< `MlrManager`
 
-        kNumReceievrs, ///< Number of receivers.
+        kNumReceivers, ///< Number of receivers.
     };
 
     /**
@@ -123,7 +123,7 @@ private:
     uint32_t   mReceivers;
     TimerMilli mTimer;
 
-    static_assert(kNumReceievrs < sizeof(mReceivers) * CHAR_BIT, "Too many `Receiver`s - does not fit in a bit mask");
+    static_assert(kNumReceivers < sizeof(mReceivers) * CHAR_BIT, "Too many `Receiver`s - does not fit in a bit mask");
 };
 
 } // namespace ot
