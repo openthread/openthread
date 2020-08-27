@@ -750,20 +750,20 @@ exit:
 
 bool SubMac::ShouldHandleTransmitDelay(void) const
 {
-    bool swTxSecurity = true;
+    bool swTxDelay = true;
 
-    VerifyOrExit(!RadioSupportsTransmitTiming(), swTxSecurity = false);
+    VerifyOrExit(!RadioSupportsTransmitTiming(), swTxDelay = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NOOP);
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
-    swTxSecurity = OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE;
+    swTxDelay = OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE;
 #endif
 
 exit:
-    return swTxSecurity;
+    return swTxDelay;
 }
 
 void SubMac::SetState(State aState)

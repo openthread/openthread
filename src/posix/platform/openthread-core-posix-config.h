@@ -107,7 +107,7 @@
 /**
  * @def OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
  *
- * Define to 1 if you want to enable microsecond backoff timer implemented in platform.
+ * Define to 1 to enable microsecond backoff timer implemented in platform.
  *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE

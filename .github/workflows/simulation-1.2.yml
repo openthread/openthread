@@ -104,13 +104,9 @@ jobs:
     - name: Bootstrap
       run: |
         OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build
-    - name: build
-      run: |
-        OT_OPTIONS=-DOT_READLINE=OFF THREAD_VERSION=1.2 NODE_MODE=rcp ./script/test clean build
-        ./script/test clean build
     - name: Run RCP Mode
       run: |
-        OT_OPTIONS=-DOT_READLINE=OFF THREAD_VERSION=1.2 NODE_MODE=rcp ./script/test expect
+        OT_OPTIONS=-DOT_READLINE=OFF NODE_MODE=rcp ./script/test clean build expect
     - name: Keep-1-2-only
       run: |
         ./script/test tar posix 1.1
