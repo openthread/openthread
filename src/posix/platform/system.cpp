@@ -37,6 +37,7 @@
 
 #include <assert.h>
 
+#include <openthread-core-config.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/otns.h>

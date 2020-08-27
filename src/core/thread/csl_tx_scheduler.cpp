@@ -66,8 +66,13 @@ CslTxScheduler::CslTxScheduler(Instance &aInstance)
     , mFrameContext()
     , mCallbacks(aInstance)
 {
+    InitFrameRequestAhead();
+}
+
+void CslTxScheduler::InitFrameRequestAhead(void)
+{
     uint32_t busSpeedHz = otPlatRadioGetBusSpeed(&GetInstance());
-    // longest frame on bus is 127 bytes with some metadata
+    // longest frame on bus is 127 bytes with some metadata, use 150 bytes for bus Tx time estimation
     uint32_t busTxTimeUs = ((busSpeedHz == 0) ? 0 : (150 * 8 * 1000000 + busSpeedHz - 1) / busSpeedHz);
 
     // Use ceiling to get next closest integer
