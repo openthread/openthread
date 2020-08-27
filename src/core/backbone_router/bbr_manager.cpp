@@ -56,6 +56,7 @@ Manager::Manager(Instance &aInstance)
     , mNdProxyTable(aInstance)
     , mMulticastListenersTable(aInstance)
     , mTimer(aInstance, Manager::HandleTimer, this)
+    , mBackboneTmfAgent(aInstance)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mDuaResponseStatus(ThreadStatusTlv::kDuaSuccess)
     , mMlrResponseStatus(ThreadStatusTlv::kMlrSuccess)
@@ -67,6 +68,8 @@ Manager::Manager(Instance &aInstance)
 
 void Manager::HandleNotifierEvents(Events aEvents)
 {
+    otError error;
+
     if (aEvents.Contains(kEventThreadBackboneRouterStateChanged))
     {
         if (Get<BackboneRouter::Local>().GetState() == OT_BACKBONE_ROUTER_STATE_DISABLED)
@@ -83,6 +86,33 @@ void Manager::HandleNotifierEvents(Events aEvents)
             if (!mTimer.IsRunning())
             {
                 mTimer.Start(kTimerInterval);
+            }
+        }
+
+        if (Get<BackboneRouter::Local>().GetState() == OT_BACKBONE_ROUTER_STATE_PRIMARY)
+        {
+            error = mBackboneTmfAgent.Start();
+
+            if (error != OT_ERROR_NONE)
+            {
+                otLogCritBbr("Start Backbone TMF agent: %s", otThreadErrorToString(error));
+            }
+            else
+            {
+                otLogInfoBbr("Start Backbone TMF agent: %s", otThreadErrorToString(error));
+            }
+        }
+        else
+        {
+            error = mBackboneTmfAgent.Stop();
+
+            if (error != OT_ERROR_NONE)
+            {
+                otLogWarnBbr("Stop Backbone TMF agent: %s", otThreadErrorToString(error));
+            }
+            else
+            {
+                otLogInfoBbr("Stop Backbone TMF agent: %s", otThreadErrorToString(error));
             }
         }
     }

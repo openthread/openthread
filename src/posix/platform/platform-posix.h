@@ -396,6 +396,15 @@ enum SocketBlockOption
 int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption aBlockOption);
 
 /**
+ * This function initializes platform Backbone network.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aInterfaceName  A pointer to Thread network interface name.
+ *
+ */
+void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName);
+
+/**
  * The name of Thread network interface.
  *
  */
@@ -406,6 +415,18 @@ extern char gNetifName[IFNAMSIZ];
  *
  */
 extern unsigned int gNetifIndex;
+
+/**
+ * The name of Backbone network interface.
+ *
+ */
+extern char gBackboneNetifName[IFNAMSIZ];
+
+/**
+ * The index of Backbone network interface.
+ *
+ */
+extern unsigned int gBackboneNetifIndex;
 
 #ifdef __cplusplus
 }
