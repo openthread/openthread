@@ -1,4 +1,4 @@
-#o!/usr/bin/env python3
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
@@ -547,7 +547,8 @@ _LAYER_FIELDS = {
     'thread_nwd.tlv.server.16': _auto,
     'thread_nwd.tlv.border_router.16': _auto,
     'thread_nwd.tlv.sub_tlvs': _list(_str),
-    'thread_nwd.tlv.prefix': _list(_str),
+    #TODO: support thread_nwd.tlv.prefix.length and thread_nwd.tlv.prefix.domain_id
+    'thread_nwd.tlv.prefix': _list(_ipv6_addr),
     'thread_nwd.tlv.border_router.pref': _auto,
     'thread_nwd.tlv.border_router.flag.s': _auto,
     'thread_nwd.tlv.border_router.flag.r': _auto,

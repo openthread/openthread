@@ -33,6 +33,7 @@ import config
 import thread_cert
 from pktverify.consts import MLE_ADVERTISEMENT, MLE_CHILD_ID_REQUEST, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_RESPONSE, SVR_DATA_URI, SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, ROUTE64_TLV
 from pktverify.packet_verifier import PacketVerifier
+from pktverify.addrs import Ipv6Addr
 
 LEADER = 1
 ROUTER = 2
@@ -141,14 +142,14 @@ class Cert_7_1_2_BorderRouterAsRouter(thread_cert.TestCase):
         # Step 5: MED_1 to attach to DUT and request complete network data
         # Step 6: The DUT MUST send an MLE Child ID Response to MED_1
         p = _rpkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
-        p.must_verify(
-            lambda p: p.wpan.dst64 == MED and {'2001:2:0:1::', '2001:2:0:2::'} == set(p.thread_nwd.tlv.prefix))
+        p.must_verify(lambda p: p.wpan.dst64 == MED and {Ipv6Addr('2001:2:0:1::'),
+                                                         Ipv6Addr('2001:2:0:2::')} == set(p.thread_nwd.tlv.prefix))
         _rpkts_med = _rpkts.copy()
 
         # Step 7: SED_1 to attach to DUT and request only stable data
         # Step 8: The DUT MUST send an MLE Child Response to SED_1
         _rpkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next().must_verify(
-            lambda p: p.wpan.dst64 == SED and {'2001:2:0:1::'} == set(p.thread_nwd.tlv.prefix))
+            lambda p: p.wpan.dst64 == SED and {Ipv6Addr('2001:2:0:1::')} == set(p.thread_nwd.tlv.prefix))
         _rpkts_sed = _rpkts.copy()
 
         # Step 9: SED_1 and MED_1 send its configured global address to the DUT

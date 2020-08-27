@@ -33,6 +33,7 @@ import config
 import thread_cert
 from pktverify.consts import MLE_ADVERTISEMENT, MLE_CHILD_ID_REQUEST, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_RESPONSE, MLE_CHILD_UPDATE_REQUEST, SVR_DATA_URI, SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, ROUTE64_TLV
 from pktverify.packet_verifier import PacketVerifier
+from pktverify.addrs import Ipv6Addr
 
 LEADER = 1
 ROUTER = 2
@@ -145,7 +146,7 @@ class Cert_7_1_4_BorderRouterAsRouter(thread_cert.TestCase):
 
         # Step 7: The DUT MUST send an MLE Child Update Request to SED_1
         _rpkts_sed.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
-            lambda p: {'2001:2:0:1::'} == set(p.thread_nwd.tlv.prefix))
+            lambda p: {Ipv6Addr('2001:2:0:1::')} == set(p.thread_nwd.tlv.prefix))
 
         # Step 8: SED_1 send its configured global address to the DUT
         # Step 9: The DUT MUST send a Child Update Response to SED_1
