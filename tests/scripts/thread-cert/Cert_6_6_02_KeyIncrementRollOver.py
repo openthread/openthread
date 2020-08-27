@@ -66,6 +66,7 @@ class Cert_6_6_2_KeyIncrement1(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
+        self.collect_rloc16s()
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             self.assertTrue(self.nodes[LEADER].ping(addr))
@@ -102,7 +103,8 @@ class Cert_6_6_2_KeyIncrement1(thread_cert.TestCase):
         # The MAC Auxiliary security header must contain
         # KeyIndex = 128, KeyID Mode = 1
         lp = _leader_pkts.filter_ping_request().filter(
-            lambda p: p.wpan.aux_sec.key_index == 128 and p.wpan.aux_sec.key_id_mode == 1).must_next()
+            lambda p: p.wpan.aux_sec.key_index == 128 and p.wpan.aux_sec.key_id_mode == 1 and p.wpan.dst16 == pv.vars[
+                'ED_RLOC16']).must_next()
 
         # Step 4: DUT send an ICMPv6 Echo Reply to Leader.
         # The MAC Auxiliary security header must contain
@@ -111,13 +113,12 @@ class Cert_6_6_2_KeyIncrement1(thread_cert.TestCase):
             lambda p: p.wpan.aux_sec.key_index == 128 and p.wpan.aux_sec.key_id_mode == 1)
 
         # Step 5: Leader increment thrKeySequenceCounter by 1 to force a key switch.
-        _leader_pkts.range(_ed_pkts.index).filter_mle_cmd(MLE_ADVERTISEMENT).must_next()
-
         # Step 6: Leader Send an ICMPv6 Echo Request to DUT.
         # The MAC Auxiliary security header must contain
         # KeyIndex = 1, KeyID Mode = 1
         lp = _leader_pkts.filter_ping_request().filter(
-            lambda p: p.wpan.aux_sec.key_index == 1 and p.wpan.aux_sec.key_id_mode == 1).must_next()
+            lambda p: p.wpan.aux_sec.key_index == 1 and p.wpan.aux_sec.key_id_mode == 1 and p.wpan.dst16 == pv.vars[
+                'ED_RLOC16']).must_next()
 
         # Step 7: DUT send an ICMPv6 Echo Reply to Leader.
         # The MAC Auxiliary security header must contain
