@@ -100,8 +100,8 @@ class Cert_6_6_1_KeyIncrement(thread_cert.TestCase):
         # Step 3: Leader send an ICMPv6 Echo Request to DUT.
         # The MAC Auxiliary security header must contain
         # KeyIndex = 1, KeyID Mode = 1
-        lp = _leader_pkts.filter_ping_request().must_next()
-        lp.must_verify(lambda p: p.wpan.aux_sec.key_index == 1 and p.wpan.aux_sec.key_id_mode == 1)
+        lp = _leader_pkts.filter_ping_request().filter(
+            lambda p: p.wpan.aux_sec.key_index == 1 and p.wpan.aux_sec.key_id_mode == 1).must_next()
 
         # Step 4: DUT send an ICMPv6 Echo Reply to Leader.
         # The MAC Auxiliary security header must contain
@@ -115,8 +115,8 @@ class Cert_6_6_1_KeyIncrement(thread_cert.TestCase):
         # Step 6: Leader Send an ICMPv6 Echo Request to DUT.
         # The MAC Auxiliary security header must contain
         # KeyIndex = 2, KeyID Mode = 1
-        lp = _leader_pkts.filter_ping_request().must_next()
-        lp.must_verify(lambda p: p.wpan.aux_sec.key_index == 2 and p.wpan.aux_sec.key_id_mode == 1)
+        lp = _leader_pkts.filter_ping_request().filter(
+            lambda p: p.wpan.aux_sec.key_index == 2 and p.wpan.aux_sec.key_id_mode == 1).must_next()
 
         # Step 7: DUT send an ICMPv6 Echo Reply to Leader.
         # The MAC Auxiliary security header must contain
