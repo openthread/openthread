@@ -519,17 +519,22 @@ public:
     /**
      * This method writes bytes to the message.
      *
+     * This method will not resize the message. The given data to write (with @p aLength bytes) MUST fit within the
+     * existing message buffer (from the given offset @p aOffset up to the message's length).
+     *
      * @param[in]  aOffset  Byte offset within the message to begin writing.
      * @param[in]  aLength  Number of bytes to write.
      * @param[in]  aBuf     A pointer to a data buffer.
      *
-     * @returns The number of bytes written.
-     *
      */
-    int Write(uint16_t aOffset, uint16_t aLength, const void *aBuf);
+    void Write(uint16_t aOffset, uint16_t aLength, const void *aBuf);
 
     /**
      * This method copies bytes from one message to another.
+     *
+     * If source and destination messages are the same, `CopyTo()` can be used to perform a backward copy, but
+     * it MUST not be used to forward copy within the same message (i.e., when source and destination messages are the
+     * same and source offset is smaller than the destination offset).
      *
      * @param[in] aSourceOffset       Byte offset within the source message to begin reading.
      * @param[in] aDestinationOffset  Byte offset within the destination message to begin writing.
@@ -539,7 +544,7 @@ public:
      * @returns The number of bytes copied.
      *
      */
-    int CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const;
+    uint16_t CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const;
 
     /**
      * This method creates a copy of the message.

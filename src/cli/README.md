@@ -142,6 +142,49 @@ known status value:
 Done
 ```
 
+### bbr mgmt mlr listener
+
+Show the Multicast Listeners.
+
+Only for testing/reference Backbone Router device.
+
+```bash
+> bbr mgmt mlr listener
+ff04:0:0:0:0:0:0:abcd 3534000
+ff04:0:0:0:0:0:0:eeee 3537610
+Done
+```
+
+### bbr mgmt mlr listener add \<ipaddr\> \[\<timeout\>\]
+
+Add a Multicast Listener with a given Ip6 multicast address and timeout (in seconds).
+
+Only for testing/reference Backbone Router device.
+
+```bash
+> bbr mgmt mlr listener add ff04::1
+Done
+> bbr mgmt mlr listener add ff04::2 300
+Done
+> bbr mgmt mlr listener
+ff04:0:0:0:0:0:0:2 261
+ff04:0:0:0:0:0:0:1 3522
+Done
+```
+
+### bbr mgmt mlr listener clear
+
+Removes all the Multicast Listeners.
+
+Only for testing/reference Backbone Router device.
+
+```bash
+> bbr mgmt mlr listener clear
+Done
+> bbr mgmt mlr listener
+Done
+```
+
 ### bbr state
 
 Show local Backbone state ([`Disabled`,`Primary`, `Secondary`]) for Thread 1.2 FTD.
@@ -1095,12 +1138,12 @@ Check whether the steering data includes a joiner.
 - discerner: The Joiner discerner in format `number/length`.
 
 ```bash
-> netdata steeeringdata check d45e64fa83f81cf7
+> netdata steeringdata check d45e64fa83f81cf7
 Done
-> netdata steeeringdata check 0xabc/12
+> netdata steeringdata check 0xabc/12
 Done
-> netdata steeeringdata check 0xdef/12
-Error: NotFound
+> netdata steeringdata check 0xdef/12
+Error 23: NotFound
 ```
 
 ### netdataregister

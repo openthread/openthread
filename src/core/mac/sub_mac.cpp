@@ -221,7 +221,9 @@ otError SubMac::CslSample(void)
         error = Get<Radio>().Receive(mCslChannel);
         break;
     case kCslSleep:
-        error = Get<Radio>().Sleep();
+#if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+        error = Get<Radio>().Sleep(); // Don't actually sleep for debugging
+#endif
         break;
     case kCslIdle:
         ExitNow(error = OT_ERROR_INVALID_STATE);
@@ -251,6 +253,16 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
     {
         UpdateFrameCounter(aFrame->mInfo.mRxInfo.mAckFrameCounter);
     }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+    if (aFrame != nullptr && aError == OT_ERROR_NONE)
+    {
+        otLogDebgMac(
+            "Received frame in state (SubMac %s, CSL %d), timestamp %lu, target sample start time %u, time drift %d",
+            StateToString(mState), mCslState, aFrame->mInfo.mRxInfo.mTimestamp, mCslSampleTime.GetValue(),
+            static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp) - mCslSampleTime.GetValue());
+    }
+#endif
 
     mCallbacks.ReceiveDone(aFrame, aError);
 }
@@ -935,7 +947,9 @@ void SubMac::HandleCslTimer(void)
         mCslTimer.StartAt(mCslSampleTime, mCslPeriod * kUsPerTenSymbols - kUsPerTenSymbols);
         if (mState == kStateCslSample)
         {
-            IgnoreError(Get<Radio>().Sleep());
+#if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+            IgnoreError(Get<Radio>().Sleep()); // Don't actually sleep for debugging
+#endif
             otLogDebgMac("CSL sleep %u", mCslTimer.GetNow().GetValue());
         }
         break;
@@ -951,7 +965,7 @@ void SubMac::HandleCslTimer(void)
         if (mState == kStateCslSample)
         {
             IgnoreError(Get<Radio>().Receive(mCslChannel));
-            otLogDebgMac("CSL Sample %u", mCslTimer.GetNow().GetValue());
+            otLogDebgMac("CSL sample %u", mCslTimer.GetNow().GetValue());
         }
         break;
 

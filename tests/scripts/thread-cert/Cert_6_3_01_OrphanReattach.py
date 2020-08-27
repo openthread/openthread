@@ -30,6 +30,8 @@
 import unittest
 
 import thread_cert
+from pktverify.consts import MLE_PARENT_REQUEST, MLE_CHILD_ID_REQUEST, MLE_CHILD_UPDATE_REQUEST, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, MODE_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER = 2
@@ -39,17 +41,20 @@ ED = 3
 class Cert_6_3_1_OrphanReattach(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
             'whitelist': [ROUTER]
         },
         ROUTER: {
+            'name': 'ROUTER',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'whitelist': [LEADER, ED]
         },
         ED: {
+            'name': 'ED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
@@ -71,6 +76,7 @@ class Cert_6_3_1_OrphanReattach(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
+        self.collect_ipaddrs()
         self.nodes[ROUTER].stop()
         self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
         self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
@@ -81,6 +87,31 @@ class Cert_6_3_1_OrphanReattach(thread_cert.TestCase):
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             self.assertTrue(self.nodes[LEADER].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        ROUTER = pv.vars['ROUTER']
+        ED = pv.vars['ED']
+        _epkts = pkts.filter_wpan_src64(ED)
+
+        _epkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()
+
+        # Step 2: Remove Router from the network
+        # Step 3: The DUT MUST send three MLE Child Update Requests to its parent
+        for i in range(1, 3):
+            _epkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).filter_wpan_dst64(ROUTER).must_next().must_verify(
+                lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, MODE_TLV} <= set(p.mle.tlv.type))
+
+        # Step 5: The DUT MUST perform the attach procedure with the Leader
+        _epkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next()
+        _epkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).filter_wpan_dst64(LEADER).must_next()
+
+        # Step 6: The DUT MUST respond with ICMPv6 Echo Reply
+        _epkts.filter('ipv6.src == {ED_MLEID} and ipv6.dst == {LEADER_MLEID}',
+                      **pv.vars).filter_ping_reply().must_next()
 
 
 if __name__ == '__main__':

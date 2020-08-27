@@ -365,13 +365,9 @@ otError Message::Append(const void *aBuf, uint16_t aLength)
 {
     otError  error     = OT_ERROR_NONE;
     uint16_t oldLength = GetLength();
-    int      bytesWritten;
 
     SuccessOrExit(error = SetLength(GetLength() + aLength));
-    bytesWritten = Write(oldLength, aLength, aBuf);
-
-    OT_ASSERT(bytesWritten == (int)aLength);
-    OT_UNUSED_VARIABLE(bytesWritten);
+    Write(oldLength, aLength, aBuf);
 
 exit:
     return error;
@@ -437,6 +433,8 @@ void Message::GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &aChunk) 
     // pointer to the start of chunk and `aChunk.GetLength()` gives
     // its length. The `aLength` is also decreased by the chunk
     // length.
+
+    VerifyOrExit(aOffset < GetLength(), aChunk.mLength = 0);
 
     if (aOffset + aLength >= GetLength())
     {
@@ -516,8 +514,6 @@ uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
     uint8_t *bufPtr = reinterpret_cast<uint8_t *>(aBuf);
     Chunk    chunk;
 
-    VerifyOrExit(aOffset < GetLength(), OT_NOOP);
-
     GetFirstChunk(aOffset, aLength, chunk);
 
     while (chunk.GetLength() > 0)
@@ -527,11 +523,10 @@ uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
         GetNextChunk(aLength, chunk);
     }
 
-exit:
     return static_cast<uint16_t>(bufPtr - reinterpret_cast<uint8_t *>(aBuf));
 }
 
-int Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
+void Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
 {
     const uint8_t *bufPtr = reinterpret_cast<const uint8_t *>(aBuf);
     WritableChunk  chunk;
@@ -542,31 +537,32 @@ int Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
 
     while (chunk.GetLength() > 0)
     {
-        memcpy(chunk.GetData(), bufPtr, chunk.GetLength());
+        memmove(chunk.GetData(), bufPtr, chunk.GetLength());
         bufPtr += chunk.GetLength();
         GetNextChunk(aLength, chunk);
     }
-
-    return static_cast<int>(bufPtr - reinterpret_cast<const uint8_t *>(aBuf));
 }
 
-int Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const
+uint16_t Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const
 {
     uint16_t bytesCopied = 0;
-    uint16_t bytesToCopy;
-    uint8_t  buf[16];
+    Chunk    chunk;
 
-    while (aLength > 0)
+    // This implementing can potentially overwrite the data when bytes are
+    // being copied forward within the same message, i.e., source and
+    // destination messages are the same, and source offset is smaller than
+    // the destination offset. We assert not allowing such a use.
+
+    OT_ASSERT((&aMessage != this) || (aSourceOffset >= aDestinationOffset));
+
+    GetFirstChunk(aSourceOffset, aLength, chunk);
+
+    while (chunk.GetLength() > 0)
     {
-        bytesToCopy = (aLength < sizeof(buf)) ? aLength : sizeof(buf);
-
-        Read(aSourceOffset, bytesToCopy, buf);
-        aMessage.Write(aDestinationOffset, bytesToCopy, buf);
-
-        aSourceOffset += bytesToCopy;
-        aDestinationOffset += bytesToCopy;
-        aLength -= bytesToCopy;
-        bytesCopied += bytesToCopy;
+        aMessage.Write(aDestinationOffset, chunk.GetLength(), chunk.GetData());
+        aDestinationOffset += chunk.GetLength();
+        bytesCopied += chunk.GetLength();
+        GetNextChunk(aLength, chunk);
     }
 
     return bytesCopied;

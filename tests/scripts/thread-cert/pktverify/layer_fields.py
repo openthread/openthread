@@ -281,6 +281,7 @@ _LAYER_FIELDS = {
     'mle.tlv.conn.active_rtrs': _auto,
     'mle.tlv.timeout': _auto,
     'mle.tlv.addr16': _auto,
+    'mle.tlv.channel': _auto,
 
     # IP
     'ip.version': _auto,
@@ -477,6 +478,12 @@ _LAYER_FIELDS = {
     'coap.tlv.ext_mac_addr': _ext_addr,
     'coap.tlv.router_mask_assigned': _auto,
     'coap.tlv.router_mask_id_seq': _auto,
+
+    # dtls
+    'dtls.handshake.type': _list(_auto),
+    'dtls.handshake.cookie': _auto,
+    'dtls.record.content_type': _list(_auto),
+    'dtls.alert_message.desc': _auto,
 
     # thread_address
     'thread_address.tlv.type': _list(_auto),

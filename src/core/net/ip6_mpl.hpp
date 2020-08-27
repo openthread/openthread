@@ -307,7 +307,7 @@ private:
         otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
         void    ReadFrom(const Message &aMessage);
         void    RemoveFrom(Message &aMessage) const;
-        int     UpdateIn(Message &aMessage) const;
+        void    UpdateIn(Message &aMessage) const;
         void    GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval);
 
         TimeMilli mTransmissionTime;

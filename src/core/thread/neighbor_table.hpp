@@ -85,63 +85,75 @@ public:
      * address.
      *
      * @param[in]  aShortAddress  A short address.
+     * @param[in]  aFilter        A neighbor state filter
      *
      * @returns A pointer to the `Neighbor` corresponding to @p aShortAddress, nullptr otherwise.
      *
      */
-    Neighbor *FindParent(Mac::ShortAddress aShortAddress);
+    Neighbor *FindParent(Mac::ShortAddress     aShortAddress,
+                         Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
      * This method searches in parent and parent candidate to find a `Neighbor` corresponding to a given MAC Extended
      * Address.
      *
      * @param[in]  aExtAddress   A MAC Extended Address.
+     * @param[in]  aFilter       A neighbor state filter
      *
      * @returns A pointer to the `Neighbor` corresponding to @p aExtAddress, nullptr otherwise.
      *
      */
-    Neighbor *FindParent(const Mac::ExtAddress &aExtAddress);
+    Neighbor *FindParent(const Mac::ExtAddress &aExtAddress,
+                         Neighbor::StateFilter  aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
      * This method searches among parent and parent candidate to find a `Neighbor` object corresponding to a given MAC
      * address.
      *
      * @param[in]  aMacAddress  A MAC address.
+     * @param[in]  aFilter      A neighbor state filter
      *
      * @returns A pointer to the `Neighbor` corresponding to @p aMacAddress, nullptr otherwise.
      *
      */
-    Neighbor *FindParent(const Mac::Address &aMacAddress);
+    Neighbor *FindParent(const Mac::Address &  aMacAddress,
+                         Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
      * This method searches in the neighbor table to find a `Neighbor` corresponding to a given short address.
      *
      * @param[in]  aShortAddress  A short address.
+     * @param[in]  aFilter        A neighbor state filter.
      *
      * @returns A pointer to the `Neighbor` corresponding to @p aShortAddress, nullptr otherwise.
      *
      */
-    Neighbor *FindNeighbor(Mac::ShortAddress aShortAddress);
+    Neighbor *FindNeighbor(Mac::ShortAddress     aShortAddress,
+                           Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
      * This method searches in the neighbor table to find a `Neighbor` corresponding to a given MAC Extended Address.
      *
      * @param[in]  aExtAddress   A MAC Extended Address.
+     * @param[in]  aFilter       A neighbor state filter.
      *
      * @returns A pointer to the `Neighbor` corresponding to @p aExtAddress, nullptr otherwise.
      *
      */
-    Neighbor *FindNeighbor(const Mac::ExtAddress &aExtAddress);
+    Neighbor *FindNeighbor(const Mac::ExtAddress &aExtAddress,
+                           Neighbor::StateFilter  aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
      * This method searches in the neighbor table to find a `Neighbor` object corresponding to a given MAC address.
      *
      * @param[in]  aMacAddress  A MAC address.
+     * @param[in]  aFilter      A neighbor state filter.
      *
      * @returns A pointer to the `Neighbor` corresponding to @p aMacAddress, nullptr otherwise.
      *
      */
-    Neighbor *FindNeighbor(const Mac::Address &aMacAddress);
+    Neighbor *FindNeighbor(const Mac::Address &  aMacAddress,
+                           Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
 #if OPENTHREAD_FTD
 
@@ -149,11 +161,13 @@ public:
      * This method searches in the neighbor table to find a `Neighbor` object corresponding to a given IPv6 address.
      *
      * @param[in]  aIp6Address  An IPv6 address.
+     * @pram[in]   aFilter      A neighbor state filter.
      *
      * @returns A pointer to the `Neighbor` corresponding to @p aIp6Address, nullptr otherwise.
      *
      */
-    Neighbor *FindNeighbor(const Ip6::Address &aIp6Address);
+    Neighbor *FindNeighbor(const Ip6::Address &  aIp6Address,
+                           Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
      * This method searches in the neighbor table to find a `Neighbor` for which a one-way link is maintained (as in the

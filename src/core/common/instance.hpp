@@ -759,7 +759,10 @@ template <> inline BackboneRouter::Manager &Instance::Get(void)
 {
     return mThreadNetif.mBackboneRouterManager;
 }
-
+template <> inline BackboneRouter::MulticastListenersTable &Instance::Get(void)
+{
+    return mThreadNetif.mBackboneRouterManager.GetMulticastListenersTable();
+}
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
