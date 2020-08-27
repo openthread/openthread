@@ -251,9 +251,13 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
     }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
-    otLogDebgMac("Received frame in CSL state %d, timestamp %u, target sample start time %u, time drift %d", mCslState,
-                 aFrame->mInfo.mRxInfo.mTimestamp, mCslSampleTime.GetValue(),
-                 aFrame->mInfo.mRxInfo.mTimestamp - mCslSampleTime.GetValue());
+    if (aFrame != nullptr && aError == OT_ERROR_NONE)
+    {
+        otLogDebgMac(
+            "Received frame in state (SubMac %s, CSL %d), timestamp %lu, target sample start time %u, time drift %d",
+            StateToString(mState), mCslState, aFrame->mInfo.mRxInfo.mTimestamp, mCslSampleTime.GetValue(),
+            static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp) - mCslSampleTime.GetValue());
+    }
 #endif
 
     mCallbacks.ReceiveDone(aFrame, aError);
