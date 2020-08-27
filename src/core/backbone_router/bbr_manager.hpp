@@ -124,9 +124,6 @@ private:
                                                    ThreadStatusTlv::MlrStatus aStatus,
                                                    Ip6::Address *             aFailedAddresses,
                                                    uint8_t                    aFailedAddressNum);
-    void SendBackboneMulticastListenerRegistration(const Ip6::Address *aAddresses,
-                                                   uint8_t             aAddressNum,
-                                                   uint32_t            aTimeout);
 
     static void HandleDuaRegistration(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
@@ -143,7 +140,6 @@ private:
 
     static void HandleTimer(Timer &aTimer) { aTimer.GetOwner<Manager>().HandleTimer(); }
     void        HandleTimer(void);
-    Coap::Coap &GetBackboneCoap(void);
 
     Coap::Resource mMulticastListenerRegistration;
     Coap::Resource mDuaRegistration;

@@ -96,7 +96,6 @@
 #include <net/if.h>
 #endif
 
-#include "cli_server.hpp"
 #include "common/encoding.hpp"
 #include "common/string.hpp"
 
@@ -742,7 +741,7 @@ otError Interpreter::ProcessBackboneRouterNetif(uint8_t aArgsLength, char **aArg
 
     if (aArgsLength == 0)
     {
-        mServer->OutputFormat("%lu\r\n", otBackboneRouterGetBackboneNetifIndex(mInstance));
+        OutputFormat("%lu\r\n", otBackboneRouterGetBackboneNetifIndex(mInstance));
         ExitNow();
     }
 

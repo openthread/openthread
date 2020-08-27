@@ -291,16 +291,6 @@ public:
     Coap::CoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
 #endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    /**
-     * This method returns a reference to the Backbone COAP object.
-     *
-     * @returns A reference to the Backbone COAP object.
-     *
-     */
-    Coap::Coap &GetBackboneCoap(void) { return mThreadNetif.mBackboneCoap; }
-#endif
-
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     /**
