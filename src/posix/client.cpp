@@ -28,6 +28,8 @@
 
 #include "platform/openthread-posix-config.h"
 
+#include <chrono>
+
 #include <openthread/platform/toolchain.h>
 
 #ifndef HAVE_LIBEDIT
@@ -46,6 +48,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <time.h>
 #include <unistd.h>
 
 #if HAVE_LIBEDIT
@@ -108,17 +111,17 @@ exit:
     return ret;
 }
 
-int main(int argc, char *argv[])
+static int ConnectSession(void)
 {
-    int    ret;
-    bool   isInteractive = true;
-    bool   isFinished    = false;
-    char   lineBuffer[kLineBufferSize];
-    size_t lineBufferWritePos = 0;
-    bool   isBeginOfLine      = true;
+    int ret = 0;
+
+    if (sSessionFd != -1)
+    {
+        close(sSessionFd);
+    }
 
     sSessionFd = socket(AF_UNIX, SOCK_STREAM, 0);
-    VerifyOrExit(sSessionFd != -1, perror("socket"); ret = OT_EXIT_FAILURE);
+    VerifyOrExit(sSessionFd != -1, ret = -1);
 
     {
         struct sockaddr_un sockname;
@@ -128,13 +131,45 @@ int main(int argc, char *argv[])
         strncpy(sockname.sun_path, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
 
         ret = connect(sSessionFd, reinterpret_cast<const struct sockaddr *>(&sockname), sizeof(struct sockaddr_un));
-
-        if (ret == -1)
-        {
-            fprintf(stderr, "OpenThread daemon is not running.\n");
-            ExitNow(ret = OT_EXIT_FAILURE);
-        }
     }
+
+exit:
+    if (ret == -1 && sSessionFd != -1)
+    {
+        close(sSessionFd);
+        sSessionFd = -1;
+    }
+    return ret;
+}
+
+static bool ReconnectSession(void)
+{
+    bool     ok    = false;
+    uint32_t delay = 100000; // 100ms
+
+    for (int i = 0; i < 5; i++) // delay for 3.1s in total
+    {
+        usleep(delay);
+
+        VerifyOrExit(ConnectSession() == -1, ok = true);
+
+        delay *= 2;
+    }
+
+exit:
+    return ok;
+}
+
+int main(int argc, char *argv[])
+{
+    int    ret;
+    bool   isInteractive = true;
+    bool   isFinished    = false;
+    char   lineBuffer[kLineBufferSize];
+    size_t lineBufferWritePos = 0;
+    bool   isBeginOfLine      = true;
+
+    VerifyOrExit(ConnectSession() != -1, perror("connect session failed"); ret = OT_EXIT_FAILURE);
 
     if (argc > 1)
     {
@@ -205,6 +240,11 @@ int main(int argc, char *argv[])
             if (rval == 0)
             {
                 // daemon closed sSessionFd
+                if (isInteractive && ReconnectSession())
+                {
+                    continue;
+                }
+
                 ExitNow(ret = isInteractive ? OT_EXIT_FAILURE : OT_EXIT_SUCCESS);
             }
 
