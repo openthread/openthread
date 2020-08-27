@@ -30,7 +30,7 @@
 import unittest
 
 import thread_cert
-from pktverify.consts import MLE_CHILD_ID_RESPONSE, MLE_DISCOVERY_RESPONSE, HANDSHAKE_CLIENT_HELLO, EXTENDED_PAN_ID_TLV, NETWORK_NAME_TLV, STEERING_DATA_TLV, COMMISSIONER_UDP_PORT_TLV, JOINER_UDP_PORT_TLV, DISCOVERY_RESPONSE_TLV, RLY_RX_URI, RLY_TX_URI
+from pktverify.consts import MLE_CHILD_ID_RESPONSE, MLE_DISCOVERY_RESPONSE, HANDSHAKE_CLIENT_HELLO, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV, NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_RESPONSE_TLV, RLY_RX_URI, RLY_TX_URI
 from pktverify.packet_verifier import PacketVerifier
 
 COMMISSIONER = 1
@@ -120,8 +120,8 @@ class Cert_8_2_01_JoinerRouter(thread_cert.TestCase):
         # for UDP datagrams from Joiner_1 to the Commissioner.
         pkts.range(_cpkts.index).filter_mle_cmd(MLE_DISCOVERY_RESPONSE).must_next().must_verify(
             lambda p: {
-                EXTENDED_PAN_ID_TLV, NETWORK_NAME_TLV, STEERING_DATA_TLV, COMMISSIONER_UDP_PORT_TLV,
-                JOINER_UDP_PORT_TLV, DISCOVERY_RESPONSE_TLV
+                NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV,
+                NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_RESPONSE_TLV
             } == set(p.thread_meshcop.tlv.type))
 
         # 2. Joiner_1 sends an initial DTLS-ClientHello handshake record to the Commissioner
