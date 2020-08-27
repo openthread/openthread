@@ -151,7 +151,6 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
 
         # Step 4: The DUT MUST send a multicast MLE Data Response with
         # the new network information
-        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst('ff02::1').must_next()
         _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst('ff02::1').must_next().must_verify(lambda p: {
             NWD_SERVICE_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV,
             NWD_HAS_ROUTER_TLV
