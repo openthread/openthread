@@ -90,7 +90,7 @@ public:
      * @param[in] aStatus  The status to respond.
      *
      */
-    void ConfigNextMulticastListenerRegistratioinResponse(ThreadStatusTlv::MlrStatus aStatus);
+    void ConfigNextMulticastListenerRegistrationResponse(ThreadStatusTlv::MlrStatus aStatus);
 
 #endif
 

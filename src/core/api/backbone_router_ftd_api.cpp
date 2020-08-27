@@ -137,7 +137,7 @@ void otBackboneRouterConfigNextMulticastListenerRegistrationResponse(otInstance 
 
     OT_ASSERT(aStatus <= ThreadStatusTlv::kMlrStatusMax);
 
-    instance.Get<BackboneRouter::Manager>().ConfigNextMulticastListenerRegistratioinResponse(
+    instance.Get<BackboneRouter::Manager>().ConfigNextMulticastListenerRegistrationResponse(
         static_cast<ThreadStatusTlv::MlrStatus>(aStatus));
 }
 

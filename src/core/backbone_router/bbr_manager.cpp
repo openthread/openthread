@@ -303,7 +303,7 @@ void Manager::ConfigNextDuaRegistrationResponse(const Ip6::InterfaceIdentifier *
     mDuaResponseStatus = static_cast<ThreadStatusTlv::DuaStatus>(aStatus);
 }
 
-void Manager::ConfigNextMulticastListenerRegistratioinResponse(ThreadStatusTlv::MlrStatus aStatus)
+void Manager::ConfigNextMulticastListenerRegistrationResponse(ThreadStatusTlv::MlrStatus aStatus)
 {
     mMlrResponseIsSpecified = true;
     mMlrResponseStatus      = aStatus;
