@@ -71,7 +71,7 @@ enum
     // Extra one for core Backbone Router Service.
     kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS + 1,
 #else
-    kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS,
+    kMaxServiceAlocs      = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS,
 #endif
 };
 
@@ -144,7 +144,7 @@ enum
 #if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
     kMaxRouteCost = 127, ///< MAX_ROUTE_COST proposal
 #else
-    kMaxRouteCost = 16, ///< MAX_ROUTE_COST
+    kMaxRouteCost         = 16, ///< MAX_ROUTE_COST
 #endif
     kMaxRouterId                = OT_NETWORK_MAX_ROUTER_ID,                    ///< MAX_ROUTER_ID
     kInvalidRouterId            = kMaxRouterId + 1,                            ///< Value indicating incorrect Router Id
