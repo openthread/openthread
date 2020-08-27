@@ -48,7 +48,6 @@
 #include <sys/select.h>
 #include <unistd.h>
 
-#include <openthread/backbone_router_ftd.h>
 #include <openthread/udp.h>
 #include <openthread/platform/udp.h>
 
@@ -56,9 +55,7 @@
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
-static uint32_t sPlatNetifIndex         = 0; ///< The Thread network interface index.
-static uint32_t sPlatBackboneNetifIndex = 0; ///< The Backbone network interface index.
-static uint32_t sMulticastNetifIndex    = 0; ///< The current multicast network interface index.
+static uint32_t sPlatNetifIndex = 0;
 
 static const size_t kMaxUdpSize = 1280;
 
@@ -80,21 +77,6 @@ static bool IsLinkLocal(const struct in6_addr &aAddress)
 static bool IsMulticast(const struct in6_addr &aAddress)
 {
     return aAddress.s6_addr[0] == 0xff;
-}
-
-static otError setTransmitMulticastNetifIndex(int aFd, uint32_t aNetifIndex)
-{
-    otError error = OT_ERROR_NONE;
-
-    if (aNetifIndex != sMulticastNetifIndex)
-    {
-        VerifyOrExit(0 == setsockopt(aFd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &aNetifIndex, sizeof(aNetifIndex)),
-                     error = OT_ERROR_FAILED);
-        sMulticastNetifIndex = aNetifIndex;
-    }
-
-exit:
-    return error;
 }
 
 static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMessageInfo &aMessageInfo)
@@ -152,22 +134,18 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
         memcmp(&aMessageInfo.mSockAddr, &in6addr_any, sizeof(aMessageInfo.mSockAddr)))
     {
         struct in6_pktinfo pktinfo;
-        uint32_t           transmitNetifIndex;
 
         cmsg->cmsg_level = IPPROTO_IPV6;
         cmsg->cmsg_type  = IPV6_PKTINFO;
         cmsg->cmsg_len   = CMSG_LEN(sizeof(pktinfo));
 
-        transmitNetifIndex   = aMessageInfo.mIsHostInterface ? sPlatBackboneNetifIndex : sPlatNetifIndex;
-        pktinfo.ipi6_ifindex = transmitNetifIndex;
+        pktinfo.ipi6_ifindex = aMessageInfo.mIsHostInterface ? 0 : sPlatNetifIndex;
 
         memcpy(&pktinfo.ipi6_addr, &aMessageInfo.mSockAddr, sizeof(pktinfo.ipi6_addr));
         memcpy(CMSG_DATA(cmsg), &pktinfo, sizeof(pktinfo));
 
         controlLength += CMSG_SPACE(sizeof(pktinfo));
         cmsg = CMSG_NXTHDR(&msg, cmsg);
-
-        SuccessOrExit(error = setTransmitMulticastNetifIndex(aFd, transmitNetifIndex));
     }
 
 #ifdef __APPLE__
@@ -302,7 +280,8 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
         VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on)), error = OT_ERROR_FAILED);
     }
 
-    SuccessOrExit(error = setTransmitMulticastNetifIndex(fd, sPlatNetifIndex));
+    VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &sPlatNetifIndex, sizeof(sPlatNetifIndex)),
+                 error = OT_ERROR_FAILED);
 
 exit:
     if (error == OT_ERROR_FAILED)
@@ -393,8 +372,6 @@ exit:
 void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd)
 {
     VerifyOrExit(sPlatNetifIndex != 0, OT_NOOP);
-
-    sPlatBackboneNetifIndex = otBackboneRouterGetBackboneNetifIndex(aInstance);
 
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != nullptr; socket = socket->mNext)
     {
