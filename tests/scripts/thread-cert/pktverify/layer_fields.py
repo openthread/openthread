@@ -281,6 +281,7 @@ _LAYER_FIELDS = {
     'mle.tlv.conn.active_rtrs': _auto,
     'mle.tlv.timeout': _auto,
     'mle.tlv.addr16': _auto,
+    'mle.tlv.channel': _auto,
 
     # IP
     'ip.version': _auto,
