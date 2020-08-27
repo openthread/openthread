@@ -605,6 +605,19 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char **aA
             error = otBackboneRouterMulticastListenerAdd(mInstance, &address, timeout);
         }
     }
+    else if (!strcmp(aArgs[0], "response"))
+    {
+        unsigned long value;
+
+        VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = ParseUnsignedLong(aArgs[1], value));
+
+        otBackboneRouterConfigNextMulticastListenerRegistrationResponse(mInstance, static_cast<uint8_t>(value));
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
 
 exit:
     return error;
