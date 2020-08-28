@@ -1853,7 +1853,7 @@ void Mle::HandleDelayedResponseTimer(void)
 
             if (SendMessage(*message, metadata.mDestination) == OT_ERROR_NONE)
             {
-                LogMleMessage("Send delayed message", metadata.mDestination);
+                Log("Send delayed message", metadata.mDestination);
 
                 // Here enters fast poll mode, as for Rx-Off-when-idle device, the enqueued msg should
                 // be Mle Data Request.
@@ -1891,7 +1891,7 @@ void Mle::RemoveDelayedDataResponseMessage(void)
         {
             mDelayedResponses.Dequeue(*message);
             message->Free();
-            LogMleMessage("Remove Delayed Data Response", metadata.mDestination);
+            Log("Remove Delayed Data Response", metadata.mDestination);
 
             // no more than one multicast MLE Data Response in Delayed Message Queue.
             break;
@@ -1937,11 +1937,11 @@ otError Mle::SendParentRequest(ParentRequestType aType)
     switch (aType)
     {
     case kParentRequestTypeRouters:
-        LogMleMessage("Send Parent Request to routers", destination);
+        Log("Send Parent Request to routers", destination);
         break;
 
     case kParentRequestTypeRoutersAndReeds:
-        LogMleMessage("Send Parent Request to routers and REEDs", destination);
+        Log("Send Parent Request to routers and REEDs", destination);
         break;
     }
 
@@ -2019,11 +2019,11 @@ otError Mle::SendChildIdRequest(void)
 
     if (mAddressRegistrationMode == kAppendMeshLocalOnly)
     {
-        LogMleMessage("Send Child ID Request - short", destination);
+        Log("Send Child ID Request - short", destination);
     }
     else
     {
-        LogMleMessage("Send Child ID Request", destination);
+        Log("Send Child ID Request", destination);
     }
 
     if (!IsRxOnWhenIdle())
@@ -2059,12 +2059,12 @@ otError Mle::SendDataRequest(const Ip6::Address &aDestination,
     if (aDelay)
     {
         SuccessOrExit(error = AddDelayedResponse(*message, aDestination, aDelay));
-        LogMleMessage("Delay Data Request", aDestination);
+        Log("Delay Data Request", aDestination);
     }
     else
     {
         SuccessOrExit(error = SendMessage(*message, aDestination));
-        LogMleMessage("Send Data Request", aDestination);
+        Log("Send Data Request", aDestination);
 
         if (!IsRxOnWhenIdle())
         {
@@ -2269,7 +2269,7 @@ otError Mle::SendChildUpdateRequest(void)
     destination.SetToLinkLocalAddress(mParent.GetExtAddress());
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    LogMleMessage("Send Child Update Request to parent", destination);
+    Log("Send Child Update Request to parent", destination);
 
     if (!IsRxOnWhenIdle())
     {
@@ -2350,7 +2350,7 @@ otError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, con
     destination.SetToLinkLocalAddress(mParent.GetExtAddress());
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    LogMleMessage("Send Child Update Response to parent", destination);
+    Log("Send Child Update Response to parent", destination);
 
     if (checkAddress && HasUnregisteredAddress())
     {
@@ -2740,13 +2740,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogNoteMle("Failed to process UDP: %s", otThreadErrorToString(error));
-    }
-
-    return;
+    LogProcessError("UDP", error);
 }
 
 void Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
@@ -2760,7 +2754,7 @@ void Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &a
     // Source Address
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kSourceAddress, sourceAddress));
 
-    LogMleMessage("Receive Advertisement", aMessageInfo.GetPeerAddr(), sourceAddress);
+    Log("Receive Advertisement", aMessageInfo.GetPeerAddr(), sourceAddress);
 
     // Leader Data
     SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
@@ -2829,18 +2823,14 @@ void Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &a
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMle("Failed to process Advertisement: %s", otThreadErrorToString(error));
-    }
+    LogProcessError("Advertisement", error);
 }
 
 void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor)
 {
     otError error;
 
-    LogMleMessage("Receive Data Response", aMessageInfo.GetPeerAddr());
+    Log("Receive Data Response", aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = OT_ERROR_SECURITY);
 
@@ -2857,11 +2847,7 @@ void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aM
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMle("Failed to process Data Response: %s", otThreadErrorToString(error));
-    }
+    LogProcessError("Data Response", error);
 }
 
 bool Mle::IsNetworkDataNewer(const LeaderData &aLeaderData)
@@ -3127,7 +3113,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
     // Source Address
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kSourceAddress, sourceAddress));
 
-    LogMleMessage("Receive Parent Response", aMessageInfo.GetPeerAddr(), sourceAddress);
+    Log("Receive Parent Response", aMessageInfo.GetPeerAddr(), sourceAddress);
 
     // Version
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kVersion, version));
@@ -3304,11 +3290,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
     mParentLinkMargin       = linkMargin;
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMle("Failed to process Parent Response: %s", otThreadErrorToString(error));
-    }
+    LogProcessError("Parent Response", error);
 }
 
 void Mle::HandleChildIdResponse(const Message &         aMessage,
@@ -3330,7 +3312,7 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
     // Source Address
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kSourceAddress, sourceAddress));
 
-    LogMleMessage("Receive Child ID Response", aMessageInfo.GetPeerAddr(), sourceAddress);
+    Log("Receive Child ID Response", aMessageInfo.GetPeerAddr(), sourceAddress);
 
     VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = OT_ERROR_SECURITY);
 
@@ -3432,11 +3414,7 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
     SetStateChild(shortAddress);
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMle("Failed to process Child ID Response: %s", otThreadErrorToString(error));
-    }
+    LogProcessError("Child ID Response", error);
 }
 
 void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
@@ -3453,7 +3431,7 @@ void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageIn
     // Source Address
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kSourceAddress, sourceAddress));
 
-    LogMleMessage("Receive Child Update Request from parent", aMessageInfo.GetPeerAddr(), sourceAddress);
+    Log("Receive Child Update Request from parent", aMessageInfo.GetPeerAddr(), sourceAddress);
 
     // Challenge
     switch (ReadChallenge(aMessage, challenge))
@@ -3523,11 +3501,7 @@ void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageIn
     SuccessOrExit(error = SendChildUpdateResponse(tlvs, numTlvs, challenge));
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMle("Failed to process Child Update Request from parent: %s", otThreadErrorToString(error));
-    }
+    LogProcessError("Child Update Request from parent", error);
 }
 
 void Mle::HandleChildUpdateResponse(const Message &         aMessage,
@@ -3543,7 +3517,7 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
     uint16_t  sourceAddress;
     uint32_t  timeout;
 
-    LogMleMessage("Receive Child Update Response from parent", aMessageInfo.GetPeerAddr());
+    Log("Receive Child Update Response from parent", aMessageInfo.GetPeerAddr());
 
     switch (mRole)
     {
@@ -3651,10 +3625,8 @@ exit:
             ScheduleMessageTransmissionTimer();
         }
     }
-    else
-    {
-        otLogWarnMle("Failed to process Child Update Response: %s", otThreadErrorToString(error));
-    }
+
+    LogProcessError("Child Update Response", error);
 }
 
 void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -3668,7 +3640,7 @@ void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessa
     uint8_t                   channel;
     uint16_t                  panId;
 
-    LogMleMessage("Receive Announce", aMessageInfo.GetPeerAddr());
+    Log("Receive Announce", aMessageInfo.GetPeerAddr());
 
     SuccessOrExit(error = Tlv::FindTlv(aMessage, Tlv::kChannel, sizeof(channelTlv), channelTlv));
     VerifyOrExit(channelTlv.IsValid(), error = OT_ERROR_PARSE);
@@ -3722,11 +3694,7 @@ void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessa
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMle("Failed to process Announce: %s", otThreadErrorToString(error));
-    }
+    LogProcessError("Announce", error);
 }
 
 void Mle::ProcessAnnounce(void)
@@ -3932,22 +3900,35 @@ void Mle::UpdateParentSearchState(void)
 }
 #endif // OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
 
-void Mle::LogMleMessage(const char *aLogString, const Ip6::Address &aAddress) const
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+void Mle::Log(const char *aLogString, const Ip6::Address &aAddress)
 {
-    OT_UNUSED_VARIABLE(aLogString);
-    OT_UNUSED_VARIABLE(aAddress);
-
     otLogInfoMle("%s (%s)", aLogString, aAddress.ToString().AsCString());
 }
 
-void Mle::LogMleMessage(const char *aLogString, const Ip6::Address &aAddress, uint16_t aRloc) const
+void Mle::Log(const char *aLogString, const Ip6::Address &aAddress, uint16_t aRloc)
 {
-    OT_UNUSED_VARIABLE(aLogString);
-    OT_UNUSED_VARIABLE(aAddress);
-    OT_UNUSED_VARIABLE(aRloc);
-
     otLogInfoMle("%s (%s,0x%04x)", aLogString, aAddress.ToString().AsCString(), aRloc);
 }
+#endif
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+void Mle::LogProcessError(const char *aMessageString, otError aError)
+{
+    if (aError != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process %s: %s", aMessageString, otThreadErrorToString(aError));
+    }
+}
+
+void Mle::LogSendError(const char *aMessageString, otError aError)
+{
+    if (aError != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to send %s: %s", aMessageString, otThreadErrorToString(aError));
+    }
+}
+#endif
 
 const char *Mle::RoleToString(DeviceRole aRole)
 {
