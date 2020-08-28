@@ -269,6 +269,7 @@ enum
     kDuaDadPeriod                     = 100,               ///< In seconds. Time period after which the address
                                                            ///< becomes "Preferred" if no duplicate address error.
     kTimeSinceLastTransactionMax = 10 * 86400,             ///< In seconds (10 days).
+    kDefaultBackboneHoplimit     = 1, ///< default hoplimit for Thread Backbone Link Protocol messages
 };
 
 static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin && kMlrTimeoutDefault <= kMlrTimeoutMax,

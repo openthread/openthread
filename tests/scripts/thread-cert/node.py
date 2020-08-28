@@ -106,6 +106,8 @@ class OtbrDocker:
             '--volume',
             f'{self._rcp_device}:/dev/ttyUSB0',
             config.OTBR_DOCKER_IMAGE,
+            '-B',
+            'eth0',
         ],
                                              stdin=subprocess.DEVNULL,
                                              stdout=sys.stdout,
@@ -380,9 +382,6 @@ class OtCli:
 
         serialPort = '/dev/ttyUSB%d' % ((nodeid - 1) * 2)
         self.pexpect = fdpexpect.fdspawn(os.open(serialPort, os.O_RDWR | os.O_NONBLOCK | os.O_NOCTTY))
-
-    def __del__(self):
-        self.destroy()
 
     def destroy(self):
         if not self._initialized:

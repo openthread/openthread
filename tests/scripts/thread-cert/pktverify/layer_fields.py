@@ -510,6 +510,7 @@ _LAYER_FIELDS = {
     'thread_bl.tlv.target_eid': _ipv6_addr,
     'thread_bl.tlv.ml_eid': _ext_addr,
     'thread_bl.tlv.last_transaction_time': _auto,
+    'thread_bl.tlv.timeout': _auto,
     # THEAD NM
     'thread_nm.tlv.type': _list(_auto),
     'thread_nm.tlv.ml_eid': _ext_addr,
@@ -544,6 +545,7 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.unknown': _bytes,
     'thread_meshcop.tlv.ba_locator': _auto,
     'thread_meshcop.tlv.active_tstamp': _auto,
+    'thread_meshcop.tlv.ipv6_addr': _ipv6_addr,
 
     # THREAD NWD
     'thread_nwd.tlv.type': _list(_auto),

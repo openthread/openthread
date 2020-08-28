@@ -86,7 +86,6 @@ def cleanup_env():
 
 def setup_env():
     bash(f'docker image inspect {config.OTBR_DOCKER_IMAGE} >/dev/null')
-    bash('mkdir build || true')
 
 
 def parse_args():
