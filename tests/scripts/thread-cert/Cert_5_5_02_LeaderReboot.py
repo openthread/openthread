@@ -171,12 +171,12 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
 
         #Step 13: Leader send an Address Solicit Request
         _lpkts.filter_coap_request(ADDR_SOL_URI).must_next().must_verify(
-            lambda p: p.coap.tlv.ext_mac_addr and p.coap.tlv.rloc16 is not nullField and p.coap.tlv.status != 0)
+            lambda p: p.thread_address.tlv.ext_mac_addr and p.thread_address.tlv.status != 0)
 
         #Step 14: Router_1 send an Address Solicit Response
-        _rpkts.filter_coap_ack(
-            ADDR_SOL_URI).must_next().must_verify(lambda p: p.coap.tlv.router_mask_assigned and p.coap.tlv.rloc16 is
-                                                  not nullField and p.coap.tlv.status == 0)
+        _rpkts.filter_coap_ack(ADDR_SOL_URI).must_next().must_verify(
+            lambda p: p.thread_address.tlv.router_mask_assigned and p.thread_address.tlv.rloc16 is not nullField and p.
+            thread_address.tlv.status == 0)
 
         #Step 15: Leader Send a Multicast Link Request
         _lpkts.filter_mle_cmd(MLE_LINK_REQUEST).must_next().must_verify(
