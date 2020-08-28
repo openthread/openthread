@@ -964,7 +964,7 @@ static uint16_t getCslPhase()
 
     return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
 }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#endif
 
 void nrf_802154_tx_ack_started(uint8_t *p_data)
 {
