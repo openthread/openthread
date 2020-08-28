@@ -194,6 +194,18 @@ void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance *             
                                                        uint8_t                         aStatus);
 
 /**
+ * This method configures response status for next Multicast Listener Registration.
+ *
+ * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+ *       Only used for test and certification.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aStatus    The status to respond.
+ *
+ */
+void otBackboneRouterConfigNextMulticastListenerRegistrationResponse(otInstance *aInstance, uint8_t aStatus);
+
+/**
  * Represents the Multicast Listener events.
  *
  */

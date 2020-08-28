@@ -80,6 +80,18 @@ public:
      *
      */
     void ConfigNextDuaRegistrationResponse(const Ip6::InterfaceIdentifier *aMlIid, uint8_t aStatus);
+
+    /**
+     * This method configures response status for next Multicast Listener Registration.
+     *
+     * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+     *       Only used for test and certification.
+     *
+     * @param[in] aStatus  The status to respond.
+     *
+     */
+    void ConfigNextMulticastListenerRegistrationResponse(ThreadStatusTlv::MlrStatus aStatus);
+
 #endif
 
     /**
@@ -135,7 +147,9 @@ private:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     Ip6::InterfaceIdentifier   mDuaResponseTargetMlIid;
     ThreadStatusTlv::DuaStatus mDuaResponseStatus;
+    ThreadStatusTlv::MlrStatus mMlrResponseStatus;
     bool                       mDuaResponseIsSpecified : 1;
+    bool                       mMlrResponseIsSpecified : 1;
 #endif
 };
 
