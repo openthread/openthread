@@ -310,10 +310,8 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
     case OT_NETIF_THREAD:
     {
 #if __linux__
-        struct ifreq req;
-
-        strncpy(req.ifr_ifrn.ifrn_name, gNetifName, IFNAMSIZ);
-        VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &req, sizeof(req)) == 0, error = OT_ERROR_FAILED);
+        VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &gNetifName, strlen(gNetifName)) == 0,
+                     error = OT_ERROR_FAILED);
 #else  // __NetBSD__ || __FreeBSD__ || __APPLE__
         VerifyOrExit(setsockopt(fd, IPPROTO_IP, IP_BOUND_IF, &gNetifIndex, sizeof(gNetifIndex)),
                      error = OT_ERROR_FAILED);
@@ -350,11 +348,27 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
 #ifdef __APPLE__
         sin6.sin6_family = AF_UNSPEC;
 #else
+        char      netifName[IFNAMSIZ];
+        socklen_t len = sizeof(netifName);
+
+        if (getsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, &len) != 0)
+        {
+            otLogWarnPlat("Failed to read socket bound device: %s", strerror(errno));
+            len = 0;
+        }
+
         // There is a bug in linux that connecting to AF_UNSPEC does not disconnect.
         // We create new socket to disconnect.
         SuccessOrExit(error = otPlatUdpClose(aUdpSocket));
         SuccessOrExit(error = otPlatUdpSocket(aUdpSocket));
         SuccessOrExit(error = otPlatUdpBind(aUdpSocket));
+
+        if (len > 0 && netifName[0] != '\0')
+        {
+            fd = FdFromHandle(aUdpSocket->mHandle);
+            VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, len) == 0, error = OT_ERROR_FAILED);
+        }
+
         ExitNow();
 #endif
     }
@@ -452,7 +466,6 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 {
     otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
 
-
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != nullptr; socket = socket->mNext)
     {
         int fd = FdFromHandle(socket->mHandle);
@@ -492,7 +505,6 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
         }
     }
 
-exit:
     return;
 }
 
