@@ -79,7 +79,7 @@ public:
      * @retval FALSE  if Thread Management Framework Addressing Rules are not met.
      *
      */
-    bool IsTmfMessage(const Ip6::MessageInfo &aMessageInfo);
+    bool IsTmfMessage(const Ip6::MessageInfo &aMessageInfo) const;
 
 private:
     otError        Start(uint16_t aPort);

@@ -257,8 +257,6 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
 
     assert(gNetifIndex != 0);
     assert(aUdpSocket->mHandle != nullptr);
-    VerifyOrExit(gNetifIndex != 0, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aUdpSocket->mSockName.mPort != 0, error = OT_ERROR_INVALID_ARGS);
     fd = FdFromHandle(aUdpSocket->mHandle);
 

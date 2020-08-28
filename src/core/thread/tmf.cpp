@@ -59,7 +59,7 @@ otError TmfAgent::Filter(const ot::Coap::Message &aMessage, const Ip6::MessageIn
     return static_cast<TmfAgent *>(aContext)->IsTmfMessage(aMessageInfo) ? OT_ERROR_NONE : OT_ERROR_NOT_TMF;
 }
 
-bool TmfAgent::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo)
+bool TmfAgent::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo) const
 {
     bool rval = true;
 
