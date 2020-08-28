@@ -40,12 +40,15 @@ void TestMessage(void)
 {
     enum : uint16_t
     {
-        kMaxSize = (kBufferSize * 3 + 24),
+        kMaxSize    = (kBufferSize * 3 + 24),
+        kOffsetStep = 101,
+        kLengthStep = 21,
     };
 
     Instance *   instance;
     MessagePool *messagePool;
     Message *    message;
+    Message *    message2;
     uint8_t      writeBuffer[kMaxSize];
     uint8_t      readBuffer[kMaxSize];
     uint8_t      zeroBuffer[kMaxSize];
@@ -68,7 +71,7 @@ void TestMessage(void)
 
     for (uint16_t offset = 0; offset < kMaxSize; offset++)
     {
-        for (uint16_t length = 0; length < kMaxSize - offset; length++)
+        for (uint16_t length = 0; length <= kMaxSize - offset; length++)
         {
             for (uint16_t i = 0; i < length; i++)
             {
@@ -85,10 +88,83 @@ void TestMessage(void)
             VerifyOrQuit(memcmp(readBuffer, &writeBuffer[offset], length) == 0, "Message compare failed");
             VerifyOrQuit(memcmp(&readBuffer[length], zeroBuffer, kMaxSize - length) == 0, "Message read after length");
         }
+
+        // Verify `Read()` behavior when requested read length goes beyond available bytes in the message.
+
+        for (uint16_t length = kMaxSize - offset + 1; length <= kMaxSize + 1; length++)
+        {
+            uint16_t readLength;
+
+            memset(readBuffer, 0, sizeof(readBuffer));
+            readLength = message->Read(offset, length, readBuffer);
+            VerifyOrQuit(readLength <= length, "Message::Read() returned longer length");
+            VerifyOrQuit(readLength == kMaxSize - offset, "Message::Read failed");
+            VerifyOrQuit(memcmp(readBuffer, &writeBuffer[offset], readLength) == 0, "Message compare failed");
+            VerifyOrQuit(memcmp(&readBuffer[readLength], zeroBuffer, kMaxSize - readLength) == 0, "read after length");
+        }
     }
 
     VerifyOrQuit(message->GetLength() == kMaxSize, "Message::GetLength failed");
+
+    // Test `Message::CopyTo()` behavior.
+
+    VerifyOrQuit((message2 = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
+    SuccessOrQuit(message2->SetLength(kMaxSize), "Message::SetLength failed");
+
+    for (uint16_t srcOffset = 0; srcOffset < kMaxSize; srcOffset += kOffsetStep)
+    {
+        for (uint16_t dstOffset = 0; dstOffset < kMaxSize; dstOffset += kOffsetStep)
+        {
+            for (uint16_t length = 0; length <= kMaxSize - dstOffset; length += kLengthStep)
+            {
+                uint16_t bytesCopied;
+
+                message2->Write(0, kMaxSize, zeroBuffer);
+
+                bytesCopied = message->CopyTo(srcOffset, dstOffset, length, *message2);
+
+                if (srcOffset + length <= kMaxSize)
+                {
+                    VerifyOrQuit(bytesCopied == length, "CopyTo() failed");
+                }
+                else
+                {
+                    VerifyOrQuit(bytesCopied == kMaxSize - srcOffset, "CopyTo() failed");
+                }
+
+                VerifyOrQuit(message2->Read(0, kMaxSize, readBuffer) == kMaxSize, "Message::Read failed");
+
+                VerifyOrQuit(memcmp(&readBuffer[0], zeroBuffer, dstOffset) == 0, "read before length");
+                VerifyOrQuit(memcmp(&readBuffer[dstOffset], &writeBuffer[srcOffset], bytesCopied) == 0,
+                             "Compare failed");
+                VerifyOrQuit(
+                    memcmp(&readBuffer[dstOffset + bytesCopied], zeroBuffer, kMaxSize - bytesCopied - dstOffset) == 0,
+                    "read after length");
+            }
+        }
+    }
+
+    // Verify `CopyTo()` with same source and destination message and a backward copy.
+
+    for (uint16_t srcOffset = 0; srcOffset < kMaxSize; srcOffset++)
+    {
+        uint16_t bytesCopied;
+
+        message->Write(0, kMaxSize, writeBuffer);
+
+        bytesCopied = message->CopyTo(srcOffset, 0, kMaxSize, *message);
+        VerifyOrQuit(bytesCopied == kMaxSize - srcOffset, "CopyTo() failed");
+
+        VerifyOrQuit(message->Read(0, kMaxSize, readBuffer) == kMaxSize, "Message::Read failed");
+
+        VerifyOrQuit(memcmp(&readBuffer[0], &writeBuffer[srcOffset], bytesCopied) == 0,
+                     "CopyTo() changed before srcOffset");
+        VerifyOrQuit(memcmp(&readBuffer[bytesCopied], &writeBuffer[bytesCopied], kMaxSize - bytesCopied) == 0,
+                     "CopyTo() write error");
+    }
+
     message->Free();
+    message2->Free();
 
     testFreeInstance(instance);
 }

@@ -67,7 +67,7 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
     if dv.endswith(' CST'):
         # e.x. 'Jan  1, 1970 08:00:00.000000000 CST', '0000000000000000'
         # todo: check if the time is valid
-        return int(rv)
+        return int(rv, 16)
 
     try:
         int(rv, 16)
@@ -281,6 +281,7 @@ _LAYER_FIELDS = {
     'mle.tlv.conn.active_rtrs': _auto,
     'mle.tlv.timeout': _auto,
     'mle.tlv.addr16': _auto,
+    'mle.tlv.channel': _auto,
 
     # IP
     'ip.version': _auto,
@@ -478,9 +479,20 @@ _LAYER_FIELDS = {
     'coap.tlv.router_mask_assigned': _auto,
     'coap.tlv.router_mask_id_seq': _auto,
 
+    # dtls
+    'dtls.handshake.type': _list(_auto),
+    'dtls.handshake.cookie': _auto,
+    'dtls.record.content_type': _list(_auto),
+    'dtls.alert_message.desc': _auto,
+
     # thread_address
+    'thread_address.tlv.len': _list(_auto),
     'thread_address.tlv.type': _list(_auto),
     'thread_address.tlv.status': _auto,
+    'thread_address.tlv.ext_mac_addr': _ext_addr,
+    'thread_address.tlv.router_mask_id_seq': _auto,
+    'thread_address.tlv.router_mask_assigned': _bytes,
+    'thread_address.tlv.rloc16': _hex,
 
     # thread bl
     'thread_bl.tlv.type': _list(_auto),
@@ -497,6 +509,7 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.type': _list(_auto),
     'thread_meshcop.tlv.len8': _list(_auto),
     'thread_meshcop.tlv.net_name': _str,  # from thread_bl
+    'thread_meshcop.tlv.commissioner_id': _str,
     'thread_meshcop.tlv.commissioner_sess_id': _auto,  # from mle
     "thread_meshcop.tlv.channel_page": _auto,  # from ble
     "thread_meshcop.tlv.channel": _auto,  # from ble
@@ -515,7 +528,11 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.sec_policy_r': _auto,
     'thread_meshcop.tlv.sec_policy_c': _auto,
     'thread_meshcop.tlv.sec_policy_b': _auto,
+    'thread_meshcop.tlv.state': _auto,
+    'thread_meshcop.tlv.steering_data': _list(_auto),
     'thread_meshcop.tlv.unknown': _bytes,
+    'thread_meshcop.tlv.ba_locator': _auto,
+    'thread_meshcop.tlv.active_tstamp': _auto,
 
     # THREAD NWD
     'thread_nwd.tlv.type': _list(_auto),
@@ -640,7 +657,7 @@ def check_layer_field_exists(packet, field_uri):
 
 def _get_candidate_layers(packet, layer_name):
     if layer_name == 'thread_meshcop':
-        candidate_layer_names = ['mle', 'coap', 'thread_bl']
+        candidate_layer_names = ['thread_meshcop', 'mle', 'coap', 'thread_bl']
     elif layer_name == 'thread_nwd':
         candidate_layer_names = ['mle', 'thread_address']
     elif layer_name == 'wpan':

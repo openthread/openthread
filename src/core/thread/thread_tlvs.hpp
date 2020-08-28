@@ -132,6 +132,7 @@ public:
         kMlrNoResources    = 4, ///< BBR resource shortage.
         kMlrBbrNotPrimary  = 5, ///< BBR is not Primary at this moment.
         kMlrGeneralFailure = 6, ///< Reason(s) for failure are not further specified.
+        kMlrStatusMax      = 6, ///< Max MLR status.
     };
 
     /**

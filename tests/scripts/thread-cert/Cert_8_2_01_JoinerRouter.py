@@ -30,6 +30,8 @@
 import unittest
 
 import thread_cert
+from pktverify.consts import MLE_CHILD_ID_RESPONSE, MLE_DISCOVERY_RESPONSE, HANDSHAKE_CLIENT_HELLO, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV, NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_RESPONSE_TLV, RLY_RX_URI, RLY_TX_URI
+from pktverify.packet_verifier import PacketVerifier
 
 COMMISSIONER = 1
 JOINER_ROUTER = 2
@@ -41,17 +43,20 @@ class Cert_8_2_01_JoinerRouter(thread_cert.TestCase):
 
     TOPOLOGY = {
         COMMISSIONER: {
-            'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
+            'name': 'COMMISSIONER',
+            'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         JOINER_ROUTER: {
+            'name': 'JOINER_ROUTER',
             'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rsdn',
             'router_selection_jitter': 1
         },
         JOINER: {
+            'name': 'JOINER',
             'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rsdn',
             'router_selection_jitter': 1
@@ -99,6 +104,40 @@ class Cert_8_2_01_JoinerRouter(thread_cert.TestCase):
         self.nodes[JOINER].thread_start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[JOINER].get_state(), 'router')
+        self.collect_rloc16s()
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        COMMISSIONER = pv.vars['COMMISSIONER']
+        _cpkts = pkts.filter_wpan_src64(COMMISSIONER)
+        _cpkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+
+        # Step 3: Verify that the following details occur in the exchange between the Joiner,
+        # the Joiner_Router and the Commissioner
+        # 1. UDP port (Specified by the Commissioner: in Discovery Response) is used as destination port
+        # for UDP datagrams from Joiner_1 to the Commissioner.
+        pkts.range(_cpkts.index).filter_mle_cmd(MLE_DISCOVERY_RESPONSE).must_next().must_verify(
+            lambda p: {
+                NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV,
+                NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_RESPONSE_TLV
+            } == set(p.thread_meshcop.tlv.type))
+
+        # 2. Joiner_1 sends an initial DTLS-ClientHello handshake record to the Commissioner
+        pkts.filter(lambda p: p.dtls.handshake.type == [HANDSHAKE_CLIENT_HELLO]).must_next()
+
+        # 3. The Joiner_Router receives the initial DTLS-ClientHello handshake record and sends a RLY_RX.ntf
+        # message to the Commissioner
+        # Todo: verify coap payload
+        jr_rloc16 = pv.vars["JOINER_ROUTER_RLOC16"]
+        c_rloc16 = pv.vars["COMMISSIONER_RLOC16"]
+        pkts.filter_coap_request(RLY_RX_URI).must_next().must_verify(
+            lambda p: p.wpan.src16 == jr_rloc16 and p.wpan.dst16 == c_rloc16)
+
+        # 4. The Commissioner receives the RLY_RX.ntf message and sends a RLY_TX.ntf message to the Joiner_Router
+        pkts.filter_coap_request(RLY_TX_URI).must_next().must_verify(
+            lambda p: p.wpan.src16 == c_rloc16 and p.wpan.dst16 == jr_rloc16)
 
 
 if __name__ == '__main__':

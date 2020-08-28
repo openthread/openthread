@@ -57,7 +57,9 @@ Manager::Manager(Instance &aInstance)
     , mTimer(aInstance, Manager::HandleTimer, this)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mDuaResponseStatus(ThreadStatusTlv::kDuaSuccess)
+    , mMlrResponseStatus(ThreadStatusTlv::kMlrSuccess)
     , mDuaResponseIsSpecified(false)
+    , mMlrResponseIsSpecified(false)
 #endif
 {
 }
@@ -106,9 +108,17 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
     VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_PARSE);
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    // Required by Test Specification 5.10.22 DUA-TC-26, only for certification purpose
+    if (mMlrResponseIsSpecified)
+    {
+        mMlrResponseIsSpecified = false;
+        ExitNow(status = mMlrResponseStatus);
+    }
+#endif
+
     VerifyOrExit(isPrimary, status = ThreadStatusTlv::kMlrBbrNotPrimary);
 
-    // TODO: (MLR) send configured MLR response for Reference Device
     // TODO: (MLR) handle Commissioner Session TLV
     // TODO: (MLR) handle Timeout TLV
 
@@ -291,6 +301,12 @@ void Manager::ConfigNextDuaRegistrationResponse(const Ip6::InterfaceIdentifier *
     }
 
     mDuaResponseStatus = static_cast<ThreadStatusTlv::DuaStatus>(aStatus);
+}
+
+void Manager::ConfigNextMulticastListenerRegistrationResponse(ThreadStatusTlv::MlrStatus aStatus)
+{
+    mMlrResponseIsSpecified = true;
+    mMlrResponseStatus      = aStatus;
 }
 #endif
 

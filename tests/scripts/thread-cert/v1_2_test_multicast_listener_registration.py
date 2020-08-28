@@ -285,6 +285,60 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         self._bootstrap()
         self.__test_multicast_listeners_table_api()
 
+    def testMlrConfigResponse(self):
+        self._bootstrap()
+        self.__test_mlr_config_response()
+
+    def __test_mlr_config_response(self):
+        bbr = self.nodes[BBR_1]
+        router = self.nodes[ROUTER_1_2]
+
+        self.flush_all()
+
+        # Configure next response to 0
+        bbr.set_next_mlr_response(0)
+        router.add_ipmaddr("ff04::1")
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.__check_send_mlr_req(ROUTER_1_2, ["ff04::1"],
+                                  should_send=True,
+                                  expect_mlr_rsp=True,
+                                  expect_mlr_rsp_status=0)
+        self.assertNotIn(ipaddress.IPv6Address("ff04::1"), bbr.multicast_listener_list())
+
+        router.del_ipmaddr("ff04::1")
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.flush_all()
+
+        # Configure next response to 2
+        bbr.set_next_mlr_response(2)
+        router.add_ipmaddr("ff04::2")
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.__check_send_mlr_req(ROUTER_1_2, ["ff04::2"],
+                                  should_send=True,
+                                  expect_mlr_rsp=True,
+                                  expect_mlr_rsp_status=2)
+
+        router.del_ipmaddr("ff04::2")
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.flush_all()
+
+        # Configure next response to 4
+        bbr.set_next_mlr_response(4)
+        router.add_ipmaddr("ff04::4")
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.__check_send_mlr_req(ROUTER_1_2, ["ff04::4"],
+                                  should_send=True,
+                                  expect_mlr_rsp=True,
+                                  expect_mlr_rsp_status=4)
+
+        # The MA should be eventually registered after reregistration
+        self.simulator.go(REREG_DELAY + WAIT_REDUNDANCE)
+        self.assertIn(ipaddress.IPv6Address("ff04::4"), bbr.multicast_listener_list())
+
+        router.del_ipmaddr("ff04::4")
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.flush_all()
+
     def __test_multicast_listeners_table_api(self):
         self.assertTrue(self.nodes[BBR_1].multicast_listener_list() == {})
 

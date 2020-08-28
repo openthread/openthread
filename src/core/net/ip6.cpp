@@ -1123,18 +1123,22 @@ exit:
 
 otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost)
 {
-    otError     error = OT_ERROR_NONE;
+    otError     error;
     MessageInfo messageInfo;
     Header      header;
-    bool        receive              = false;
-    bool        forward              = false;
-    bool        tunnel               = false;
-    bool        multicastPromiscuous = false;
+    bool        receive;
+    bool        forward;
+    bool        multicastPromiscuous;
     uint8_t     nextHeader;
-    uint8_t     hopLimit;
+
+start:
+    receive              = false;
+    forward              = false;
+    multicastPromiscuous = false;
 
     SuccessOrExit(error = header.Init(aMessage));
 
+    messageInfo.Clear();
     messageInfo.SetPeerAddr(header.GetSource());
     messageInfo.SetSockAddr(header.GetDestination());
     messageInfo.SetHopLimit(header.GetHopLimit());
@@ -1195,11 +1199,9 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
     {
         if (nextHeader == kProtoIp6)
         {
-            // Remove encapsulating header.
+            // Remove encapsulating header and start over.
             aMessage.RemoveHeader(aMessage.GetOffset());
-
-            IgnoreError(HandleDatagram(aMessage, aNetif, aLinkMessageInfo, aFromNcpHost));
-            ExitNow(tunnel = true);
+            goto start;
         }
 
 #if OPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE
@@ -1230,6 +1232,8 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
 
     if (forward)
     {
+        uint8_t hopLimit;
+
         if (!ShouldForwardToThread(messageInfo))
         {
             // try passing to host
@@ -1247,42 +1251,34 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
             header.SetHopLimit(header.GetHopLimit() - 1);
         }
 
-        if (header.GetHopLimit() == 0)
-        {
-            // send time exceeded
-            ExitNow(error = OT_ERROR_DROP);
-        }
-        else
-        {
-            hopLimit = header.GetHopLimit();
-            aMessage.Write(Header::kHopLimitFieldOffset, sizeof(hopLimit), &hopLimit);
+        VerifyOrExit(header.GetHopLimit() > 0, error = OT_ERROR_DROP);
+
+        hopLimit = header.GetHopLimit();
+        aMessage.Write(Header::kHopLimitFieldOffset, sizeof(hopLimit), &hopLimit);
 
 #if OPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE
-            // check whether source port is an unsecure port
-            if (aFromNcpHost && (nextHeader == kProtoTcp || nextHeader == kProtoUdp))
-            {
-                uint16_t sourcePort;
+        // check whether source port is an unsecure port
+        if (aFromNcpHost && (nextHeader == kProtoTcp || nextHeader == kProtoUdp))
+        {
+            uint16_t sourcePort;
 
-                VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(sourcePort), &sourcePort) == sizeof(sourcePort),
-                             error = OT_ERROR_PARSE);
-                sourcePort = HostSwap16(sourcePort);
-                if (Get<ot::Ip6::Filter>().IsUnsecurePort(sourcePort))
-                {
-                    aMessage.SetLinkSecurityEnabled(false);
-                    otLogInfoIp6("Disabled link security for packet to %s",
-                                 header.GetDestination().ToString().AsCString());
-                }
+            VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(sourcePort), &sourcePort) == sizeof(sourcePort),
+                         error = OT_ERROR_PARSE);
+            sourcePort = HostSwap16(sourcePort);
+            if (Get<ot::Ip6::Filter>().IsUnsecurePort(sourcePort))
+            {
+                aMessage.SetLinkSecurityEnabled(false);
+                otLogInfoIp6("Disabled link security for packet to %s", header.GetDestination().ToString().AsCString());
             }
+        }
 #endif
 
-            // submit aMessage to interface
-            SuccessOrExit(error = Get<ThreadNetif>().SendMessage(aMessage));
-        }
+        SuccessOrExit(error = Get<ThreadNetif>().SendMessage(aMessage));
     }
 
 exit:
 
-    if (!tunnel && (error != OT_ERROR_NONE || !forward))
+    if (error != OT_ERROR_NONE || !forward)
     {
         aMessage.Free();
     }

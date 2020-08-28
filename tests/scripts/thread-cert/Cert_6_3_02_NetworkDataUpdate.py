@@ -30,6 +30,8 @@
 import unittest
 
 import thread_cert
+from pktverify.consts import MLE_CHILD_ID_RESPONSE, MLE_DATA_REQUEST, MLE_CHILD_UPDATE_REQUEST, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV, MODE_TLV, TIMEOUT_TLV, TLV_REQUEST_TLV, NETWORK_DATA_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ED = 2
@@ -38,11 +40,13 @@ ED = 2
 class Cert_6_3_2_NetworkDataUpdate(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
             'whitelist': [ED]
         },
         ED: {
+            'name': 'MED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
@@ -95,6 +99,31 @@ class Cert_6_3_2_NetworkDataUpdate(thread_cert.TestCase):
         for addr in addrs:
             if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        MED = pv.vars['MED']
+        _epkts = pkts.filter_wpan_src64(MED)
+
+        # Step 1: Ensure the topology is formed correctly
+        pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).filter_wpan_src64(LEADER).must_next()
+
+        # Step 3: The DUT MUST send a MLE Child Update Request to the Leader
+        _epkts.range(pkts.index).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
+            lambda p: p.wpan.dst64 == LEADER and {LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV, MODE_TLV, TIMEOUT_TLV
+                                                 } < set(p.mle.tlv.type))
+
+        # Step 10: The DUT MUST send a MLE Data Request frame to
+        # request the updated Network Data
+        _epkts.filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
+            lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV} < set(p.mle.tlv.type))
+
+        # Step 12: The DUT MUST send a MLE Child Update Request to the Leader
+        _epkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).filter_wpan_dst64(LEADER).must_next().must_verify(
+            lambda p: {ADDRESS_REGISTRATION_TLV, MODE_TLV, TIMEOUT_TLV} < set(p.mle.tlv.type))
 
 
 if __name__ == '__main__':
