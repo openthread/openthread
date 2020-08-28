@@ -439,6 +439,7 @@ void platformUdpInit(const char *aIfName)
     if (aIfName != gNetifName)
     {
         VerifyOrDie(strlen(aIfName) < sizeof(gNetifName) - 1, OT_EXIT_INVALID_ARGUMENTS);
+        assert(gNetifIndex == 0);
         strcpy(gNetifName, aIfName);
         gNetifIndex = if_nametoindex(gNetifName);
         VerifyOrDie(gNetifIndex != 0, OT_EXIT_ERROR_ERRNO);
@@ -451,7 +452,6 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 {
     otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
 
-    VerifyOrExit(gNetifIndex != 0, OT_NOOP);
 
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != nullptr; socket = socket->mNext)
     {
