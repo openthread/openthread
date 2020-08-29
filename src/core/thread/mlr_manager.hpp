@@ -216,7 +216,11 @@ private:
 
     uint32_t mReregistrationDelay;
     uint16_t mSendDelay;
-    bool     mMlrPending : 1;
+
+    bool mMlrPending : 1;
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+    bool mRegisterMulticastListenersPending : 1;
+#endif
 };
 
 } // namespace ot

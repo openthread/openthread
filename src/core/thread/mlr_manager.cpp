@@ -55,6 +55,9 @@ MlrManager::MlrManager(Instance &aInstance)
     , mReregistrationDelay(0)
     , mSendDelay(0)
     , mMlrPending(false)
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+    , mRegisterMulticastListenersPending(false)
+#endif
 {
 }
 
@@ -323,22 +326,14 @@ otError MlrManager::RegisterMulticastListeners(const otIp6Address *             
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
 
     // Only allow one outstanding registration if callback is specified.
-    VerifyOrExit(aCallback == nullptr || mRegisterMulticastListenersCallback == nullptr, error = OT_ERROR_BUSY);
+    VerifyOrExit(!mRegisterMulticastListenersPending, error = OT_ERROR_BUSY);
 
-    if (aCallback != nullptr)
-    {
-        SuccessOrExit(
-            error = SendMulticastListenerRegistrationMessage(
-                aAddresses, aAddressNum, aTimeout, &MlrManager::HandleRegisterMulticastListenersResponse, this));
+    SuccessOrExit(error = SendMulticastListenerRegistrationMessage(
+                      aAddresses, aAddressNum, aTimeout, &MlrManager::HandleRegisterMulticastListenersResponse, this));
 
-        mRegisterMulticastListenersCallback = aCallback;
-        mRegisterMulticastListenersContext  = aContext;
-    }
-    else
-    {
-        SuccessOrExit(
-            error = SendMulticastListenerRegistrationMessage(aAddresses, aAddressNum, aTimeout, nullptr, nullptr));
-    }
+    mRegisterMulticastListenersPending  = true;
+    mRegisterMulticastListenersCallback = aCallback;
+    mRegisterMulticastListenersContext  = aContext;
 
 exit:
     return error;
@@ -366,13 +361,17 @@ void MlrManager::HandleRegisterMulticastListenersResponse(otMessage *          a
     otIp6RegisterMulticastListenersCallback callback         = mRegisterMulticastListenersCallback;
     void *                                  context          = mRegisterMulticastListenersContext;
 
+    mRegisterMulticastListenersPending  = false;
     mRegisterMulticastListenersCallback = nullptr;
     mRegisterMulticastListenersContext  = nullptr;
 
     error = ParseMulticastListenerRegistrationResponse(aResult, static_cast<Coap::Message *>(aMessage), status,
                                                        failedAddresses, failedAddressNum);
 
-    callback(context, error, status, failedAddresses, failedAddressNum);
+    if (callback != nullptr)
+    {
+        callback(context, error, status, failedAddresses, failedAddressNum);
+    }
 }
 
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
