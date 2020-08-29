@@ -184,6 +184,9 @@ const struct Command Interpreter::sCommands[] = {
     {"macfilter", &Interpreter::ProcessMacFilter},
 #endif
     {"masterkey", &Interpreter::ProcessMasterKey},
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+    {"mlr", &Interpreter::ProcessMlr},
+#endif
     {"mode", &Interpreter::ProcessMode},
 #if OPENTHREAD_FTD
     {"neighbor", &Interpreter::ProcessNeighbor},
@@ -2069,6 +2072,94 @@ void Interpreter::ProcessMasterKey(uint8_t aArgsLength, char *aArgs[])
 exit:
     AppendResult(error);
 }
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+
+void Interpreter::ProcessMlr(uint8_t aArgsLength, char **aArgs)
+{
+    if (aArgsLength == 0)
+    {
+        AppendResult(OT_ERROR_INVALID_COMMAND);
+    }
+    else if (!strcmp(aArgs[0], "reg"))
+    {
+        ProcessMlrReg(aArgsLength - 1, aArgs + 1);
+    }
+    else
+    {
+        AppendResult(OT_ERROR_INVALID_COMMAND);
+    }
+}
+
+void Interpreter::ProcessMlrReg(uint8_t aArgsLength, char *aArgs[])
+{
+    otError      error = OT_ERROR_NONE;
+    otIp6Address addresses[kIPv6AddressesNumMax];
+    uint32_t     timeout;
+    uint8_t      i;
+
+    VerifyOrExit(aArgsLength >= 1, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength <= kIPv6AddressesNumMax + 1, error = OT_ERROR_INVALID_ARGS);
+
+    for (i = 0; i < aArgsLength && i < kIPv6AddressesNumMax; i++)
+    {
+        if (otIp6AddressFromString(aArgs[i], &addresses[i]) != OT_ERROR_NONE)
+        {
+            break;
+        }
+    }
+
+    VerifyOrExit(i > 0 && (i == aArgsLength || i == aArgsLength - 1), error = OT_ERROR_INVALID_ARGS);
+
+    if (i == aArgsLength - 1)
+    {
+        // Parse the last argument as a timeout in seconds
+        unsigned long value;
+
+        SuccessOrExit(error = ParseUnsignedLong(aArgs[i], value));
+
+        timeout = static_cast<uint32_t>(value);
+    }
+
+    error = otIp6RegisterMulticastListeners(mInstance, addresses, i, i == aArgsLength - 1 ? &timeout : nullptr,
+                                            Interpreter::HandleMlrRegResult, this);
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        AppendResult(error);
+    }
+}
+
+void Interpreter::HandleMlrRegResult(void *              aContext,
+                                     otError             aError,
+                                     uint8_t             aMlrStatus,
+                                     const otIp6Address *aFailedAddresses,
+                                     uint8_t             aFailedAddressNum)
+{
+    static_cast<Interpreter *>(aContext)->HandleMlrRegResult(aError, aMlrStatus, aFailedAddresses, aFailedAddressNum);
+}
+
+void Interpreter::HandleMlrRegResult(otError             aError,
+                                     uint8_t             aMlrStatus,
+                                     const otIp6Address *aFailedAddresses,
+                                     uint8_t             aFailedAddressNum)
+{
+    if (aError == OT_ERROR_NONE)
+    {
+        OutputFormat("status %d, %d failed\r\n", aMlrStatus, aFailedAddressNum);
+
+        for (uint8_t i = 0; i < aFailedAddressNum; i++)
+        {
+            OutputIp6Address(aFailedAddresses[i]);
+            OutputFormat("\r\n");
+        }
+    }
+
+    AppendResult(aError);
+}
+
+#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 void Interpreter::ProcessMode(uint8_t aArgsLength, char *aArgs[])
 {
