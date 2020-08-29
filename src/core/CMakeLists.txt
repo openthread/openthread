@@ -202,6 +202,7 @@ set(COMMON_SOURCES
     thread/src_match_controller.cpp
     thread/thread_netif.cpp
     thread/time_sync_service.cpp
+    thread/tmf.cpp
     thread/topology.cpp
     utils/channel_manager.cpp
     utils/channel_monitor.cpp

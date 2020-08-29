@@ -54,7 +54,7 @@ PanIdQueryClient::PanIdQueryClient(Instance &aInstance)
     , mContext(nullptr)
     , mPanIdQuery(OT_URI_PATH_PANID_CONFLICT, &PanIdQueryClient::HandleConflict, this)
 {
-    Get<Coap::Coap>().AddResource(mPanIdQuery);
+    Get<Tmf::TmfAgent>().AddResource(mPanIdQuery);
 }
 
 otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,
@@ -69,7 +69,7 @@ otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,
     Coap::Message *         message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error =
                       message->Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE,
@@ -87,8 +87,8 @@ otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent panid query");
 
@@ -130,7 +130,7 @@ void PanIdQueryClient::HandleConflict(Coap::Message &aMessage, const Ip6::Messag
         mCallback(panId, mask, mContext);
     }
 
-    SuccessOrExit(Get<Coap::Coap>().SendEmptyAck(aMessage, responseInfo));
+    SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, responseInfo));
 
     otLogInfoMeshCoP("sent panid query conflict response");
 

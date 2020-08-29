@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <openthread/udp.h>
+#include <openthread/platform/udp.h>
 
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -167,21 +168,35 @@ public:
         /**
          * This method binds the UDP socket.
          *
-         * @param[in]  aSockAddr  A reference to the socket address.
+         * @param[in]  aSockAddr    A reference to the socket address.
          *
-         * @retval OT_ERROR_NONE    Successfully bound the socket.
-         * @retval OT_ERROR_FAILED  Failed to bind UDP Socket.
+         * @retval OT_ERROR_NONE            Successfully bound the socket.
+         * @retval OT_ERROR_INVALID_ARGS    Unable to bind to Thread network interface with the given address.
+         * @retval OT_ERROR_FAILED          Failed to bind UDP Socket.
          *
          */
         otError Bind(const SockAddr &aSockAddr);
 
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+        /**
+         * This method binds the UDP socket to a specified network interface.
+         *
+         * @param[in]  aNetifIdentifier     The network interface identifier.
+         *
+         * @retval OT_ERROR_NONE    Successfully bound to the network interface.
+         * @retval OT_ERROR_FAILED  Failed to bind to the network interface.
+         *
+         */
+        otError BindToNetif(otNetifIdentifier aNetifIdentifier);
+#endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+
         /**
          * This method binds the UDP socket.
          *
-         * @param[in] aPort  A port number.
+         * @param[in]  aPort        A port number.
          *
-         * @retval OT_ERROR_NONE    Successfully bound the socket.
-         * @retval OT_ERROR_FAILED  Failed to bind UDP Socket.
+         * @retval OT_ERROR_NONE            Successfully bound the socket.
+         * @retval OT_ERROR_FAILED          Failed to bind UDP Socket.
          *
          */
         otError Bind(uint16_t aPort);
@@ -413,11 +428,12 @@ public:
     /**
      * This method binds a UDP socket.
      *
-     * @param[in]  aSocket    A reference to the socket.
-     * @param[in]  aSockAddr  A reference to the socket address.
+     * @param[in]  aSocket          A reference to the socket.
+     * @param[in]  aSockAddr        A reference to the socket address.
      *
-     * @retval OT_ERROR_NONE    Successfully bound the socket.
-     * @retval OT_ERROR_FAILED  Failed to bind UDP Socket.
+     * @retval OT_ERROR_NONE            Successfully bound the socket.
+     * @retval OT_ERROR_INVALID_ARGS    Unable to bind to Thread network interface with the given address.
+     * @retval OT_ERROR_FAILED          Failed to bind UDP Socket.
      *
      */
     otError Bind(SocketHandle &aSocket, const SockAddr &aSockAddr);

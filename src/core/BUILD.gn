@@ -538,6 +538,8 @@ openthread_core_files = [
   "thread/thread_uri_paths.hpp",
   "thread/time_sync_service.cpp",
   "thread/time_sync_service.hpp",
+  "thread/tmf.cpp",
+  "thread/tmf.hpp",
   "thread/topology.cpp",
   "thread/topology.hpp",
   "utils/channel_manager.cpp",
