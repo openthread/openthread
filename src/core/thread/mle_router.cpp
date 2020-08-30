@@ -918,7 +918,8 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         }
 
         mRetrieveNewNetworkData = true;
-        IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0));
+        IgnoreError(
+            SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0, nullptr, 0));
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         Get<TimeSync>().HandleTimeSyncMessage(aMessage);
@@ -940,7 +941,8 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         if (mRetrieveNewNetworkData ||
             (static_cast<int8_t>(leaderData.GetDataVersion() - Get<NetworkData::Leader>().GetVersion()) > 0))
         {
-            IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0));
+            IgnoreError(
+                SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0, nullptr, 0));
         }
 
         // Route (optional)
@@ -2743,7 +2745,7 @@ void MleRouter::HandleDataRequest(const Message &         aMessage,
         tlvs[numTlvs++] = Tlv::kPendingDataset;
     }
 
-    SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0);
+    SendDataResponse(&aMessage, aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0);
 
 exit:
     LogProcessError(kTypeDataRequest, error);
@@ -2760,7 +2762,7 @@ void MleRouter::HandleNetworkDataUpdateRouter(void)
     destination.SetToLinkLocalAllNodesMulticast();
 
     delay = IsLeader() ? 0 : Random::NonCrypto::GetUint16InRange(0, kUnsolicitedDataResponseJitter);
-    SendDataResponse(destination, tlvs, sizeof(tlvs), delay);
+    SendDataResponse(nullptr, destination, tlvs, sizeof(tlvs), delay);
 
     SynchronizeChildNetworkData();
 
@@ -3246,11 +3248,14 @@ exit:
     }
 }
 
-void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
+void MleRouter::SendDataResponse(const Message *     aMessage,
+                                 const Ip6::Address &aDestination,
                                  const uint8_t *     aTlvs,
                                  uint8_t             aTlvsLength,
                                  uint16_t            aDelay)
 {
+    OT_UNUSED_VARIABLE(aMessage);
+
     otError   error   = OT_ERROR_NONE;
     Message * message = nullptr;
     Neighbor *neighbor;
@@ -3287,6 +3292,17 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
         case Tlv::kPendingDataset:
             SuccessOrExit(error = AppendPendingDataset(*message));
             break;
+
+#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+        case Tlv::kLinkMetricsReport:
+            OT_ASSERT(aMessage != nullptr);
+            LinkMetricsQueryTlv linkMetricsQueryTlv;
+            SuccessOrExit(error = ThreadTlv::FindTlv(*aMessage, Tlv::kLinkMetricsQuery, sizeof(linkMetricsQueryTlv),
+                                                     linkMetricsQueryTlv));
+            SuccessOrExit(error =
+                              Get<LinkMetrics>().AppendLinkMetricsReport(*aMessage, &linkMetricsQueryTlv, *message));
+            break;
+#endif
         }
     }
 

@@ -626,6 +626,7 @@ void Message::SetLinkInfo(const ThreadLinkInfo &aLinkInfo)
     SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
     SetPanId(aLinkInfo.mPanId);
     AddRss(aLinkInfo.mRss);
+    AddLqi(aLinkInfo.mLqi);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     SetTimeSyncSeq(aLinkInfo.mTimeSyncSeq);
     SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);

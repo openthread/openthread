@@ -55,6 +55,7 @@ Done
 - [leaderdata](#leaderdata)
 - [leaderpartitionid](#leaderpartitionid)
 - [leaderweight](#leaderweight)
+- [linkmetrics](#linkmetrics)
 - [linkquality](#linkquality-extaddr)
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
@@ -1032,6 +1033,24 @@ Set the Thread Leader Weight.
 ```bash
 > leaderweight 128
 Done
+```
+
+### linkmetrics query \<ipaddr\> single [typeidflags]
+
+Perform a link metrics query(single probe).
+
+- ipaddr: Peer address.
+- typeidflags: A hex string containing Type Id Flags values to request.
+
+```bash
+> linkmetricsquery fe80:0:0:0:3092:f334:1455:1ad2 single 090A0B
+Done
+> Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
+
+ Link Metrics details:
+ - LQI: 76
+ - RSSI: -18 dBm
+ - Margin: 82 dBm
 ```
 
 ### linkquality \<extaddr\>

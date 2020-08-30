@@ -1042,6 +1042,7 @@ void MeshForwarder::HandleFragment(const uint8_t *       aFrame,
         message->Write(message->GetOffset(), aFrameLength, aFrame);
         message->MoveOffset(aFrameLength);
         message->AddRss(aLinkInfo.GetRss());
+        message->AddLqi(aLinkInfo.GetLqi());
         message->SetTimeout(kReassemblyTimeout);
     }
 

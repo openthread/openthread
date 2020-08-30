@@ -1630,6 +1630,12 @@ class Node:
 
         return router_table
 
+    def link_metrics_query_single_probe(self, dst_addr, typeid_flags):
+        cmd = 'linkmetrics query %s single %x' % (dst_addr, typeid_flags)
+        print(cmd)
+        self.send_command(cmd)
+        self._expect('Done')
+
 
 if __name__ == '__main__':
     unittest.main()

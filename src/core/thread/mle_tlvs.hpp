@@ -41,6 +41,7 @@
 #include "common/tlvs.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/link_metrics_tlvs.hpp"
 #include "thread/mle_types.hpp"
 
 namespace ot {
@@ -103,6 +104,8 @@ public:
         kDiscovery           = 26, ///< Thread Discovery TLV
         kCslChannel          = 80, ///< CSL Channel TLV
         kCslTimeout          = 85, ///< CSL Timeout TLV
+        kLinkMetricsQuery    = 87, ///< Link Metrics Query TLV
+        kLinkMetricsReport   = 89, ///< Link Metrics Report TLV
 
         /**
          * Applicable/Required only when time synchronization service
@@ -1264,6 +1267,78 @@ private:
 } OT_TOOL_PACKED_END;
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
+#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+
+/**
+ * This class implements Link Metrics Query TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class LinkMetricsQueryTlv : public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kLinkMetricsQuery);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the link metrics query Id tlv.
+     *
+     * @returns The link metrics query Id tlv.
+     *
+     */
+    const LinkMetricsQueryId *GetQueryId(void) const { return &mQueryId; }
+
+    /**
+     * This method sets link metrics query Id tlv.
+     *
+     * @param[in]  aQueryId  The link metrics query Id tlv.
+     *
+     */
+    void SetQueryId(LinkMetricsQueryId &aQueryId) { mQueryId = aQueryId; }
+
+    /**
+     * This method returns the link metrics query options tlv.
+     *
+     * @returns The link metrics query options tlv.
+     *
+     */
+    const LinkMetricsQueryOptions *GetQueryOptions(void) const { return &mQueryOptions; }
+
+    /**
+     * This method sets link metrics query options tlv.
+     *
+     * @param[in]  aQueryOptions  The link metrics query options tlv.
+     *
+     */
+    void SetQueryOptions(LinkMetricsQueryOptions &aQueryOptions)
+    {
+        mQueryOptions = aQueryOptions;
+        SetLength(sizeof(LinkMetricsQueryId) + sizeof(Tlv) + aQueryOptions.GetLength());
+    }
+
+private:
+    LinkMetricsQueryId      mQueryId;
+    LinkMetricsQueryOptions mQueryOptions;
+} OT_TOOL_PACKED_END;
+
+#endif // OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
 
 /**
  * @}

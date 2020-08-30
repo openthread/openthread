@@ -2045,8 +2045,13 @@ exit:
 otError Mle::SendDataRequest(const Ip6::Address &aDestination,
                              const uint8_t *     aTlvs,
                              uint8_t             aTlvsLength,
-                             uint16_t            aDelay)
+                             uint16_t            aDelay,
+                             const uint8_t *     aExtraTlvs,
+                             uint8_t             aExtraTlvsLength)
 {
+    OT_UNUSED_VARIABLE(aExtraTlvs);
+    OT_UNUSED_VARIABLE(aExtraTlvsLength);
+
     otError  error = OT_ERROR_NONE;
     Message *message;
 
@@ -2055,6 +2060,13 @@ otError Mle::SendDataRequest(const Ip6::Address &aDestination,
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
     SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
+
+#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+    if (aExtraTlvs != nullptr && aExtraTlvsLength > 0)
+    {
+        SuccessOrExit(error = message->Append(aExtraTlvs, aExtraTlvsLength));
+    }
+#endif
 
     if (aDelay)
     {
@@ -2171,7 +2183,7 @@ void Mle::HandleMessageTransmissionTimer(void)
 
             destination.SetToLinkLocalAddress(mParent.GetExtAddress());
 
-            if (SendDataRequest(destination, tlvs, sizeof(tlvs), 0) == OT_ERROR_NONE)
+            if (SendDataRequest(destination, tlvs, sizeof(tlvs), 0, nullptr, 0) == OT_ERROR_NONE)
             {
                 mDataRequestAttempts++;
             }
@@ -2819,7 +2831,7 @@ void Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &a
     if (mRetrieveNewNetworkData || IsNetworkDataNewer(leaderData))
     {
         delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
-        IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
+        IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay, nullptr, 0));
     }
 
 exit:
@@ -2829,10 +2841,23 @@ exit:
 void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor)
 {
     otError error;
+#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+    Tlv      tlv;
+    uint16_t metricsReportOffset;
+#endif
 
     Log(kMessageReceive, kTypeDataResponse, aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = OT_ERROR_SECURITY);
+
+#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+    if (Tlv::FindTlvOffset(aMessage, Tlv::kLinkMetricsReport, metricsReportOffset) == OT_ERROR_NONE)
+    {
+        aMessage.Read(metricsReportOffset, sizeof(tlv), &tlv);
+        Get<LinkMetrics>().HandleLinkMetricsReport(aMessage, metricsReportOffset + sizeof(tlv), tlv.GetLength(),
+                                                   aMessageInfo.GetPeerAddr());
+    }
+#endif
 
     error = HandleLeaderData(aMessage, aMessageInfo);
 
@@ -3005,7 +3030,7 @@ exit:
             delay = 10;
         }
 
-        IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
+        IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay, nullptr, 0));
     }
     else if (error == OT_ERROR_NONE)
     {

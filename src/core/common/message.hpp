@@ -97,6 +97,7 @@ struct MessageMetadata
     uint16_t    mLength;      ///< Number of bytes within the message.
     uint16_t    mOffset;      ///< A byte offset within the message.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
+    LqiAverager mLqiAverager; ///< The averager maintaining the Link quality indicator (LQI) average.
 
     ChildMask mChildMask; ///< A ChildMask to indicate which sleepy children need to receive this.
     uint16_t  mMeshDest;  ///< Used for unicast non-link-local messages.
@@ -828,6 +829,33 @@ public:
      *
      */
     const RssAverager &GetRssAverager(void) const { return GetMetadata().mRssAverager; }
+
+    /**
+     * This method updates the average LQI (Link Quality Indicator) associated with the message.
+     *
+     * The given LQI value would be added to the average. Note that a message can be composed of multiple 802.15.4 data
+     * frame fragments each received with a different signal strength.
+     *
+     * @param[in] aLQI A new LQI value (has no unit) to be added to average.
+     *
+     */
+    void AddLqi(uint8_t aLqi) { GetMetadata().mLqiAverager.Add(aLqi); }
+
+    /**
+     * This method returns the average LQI (Link Quality Indicator) associated with the message.
+     *
+     * @returns The current average LQI value (in dBm) or OT_RADIO_LQI_NONE if no average is available.
+     *
+     */
+    uint8_t GetAverageLqi(void) const { return GetMetadata().mLqiAverager.GetAverage(); }
+
+    /**
+     * This mehod returns the count of frames counted so far.
+     *
+     * @retruns The count of frames that have been counted.
+     *
+     */
+    uint8_t GetPsduCount(void) const { return GetMetadata().mLqiAverager.GetCount(); }
 
     /**
      * This method sets the message's link info properties (PAN ID, link security, RSS) from a given `ThreadLinkInfo`.

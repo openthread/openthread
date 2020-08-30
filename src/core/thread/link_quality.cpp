@@ -121,6 +121,32 @@ exit:
     return string;
 }
 
+void LqiAverager::Reset(void)
+{
+    mCount   = 0;
+    mAverage = 0;
+}
+
+void LqiAverager::Add(uint8_t aLqi)
+{
+    uint16_t oldAverage = mAverage;
+
+    mCount++;
+    if (mCount == 1)
+    {
+        mAverage = aLqi;
+    }
+    else if (mCount < (1 << kCoeffBitShift))
+    {
+        mAverage = static_cast<uint8_t>(((oldAverage * (mCount - 1)) + aLqi) / mCount);
+    }
+    else
+    {
+        mAverage =
+            static_cast<uint8_t>(((oldAverage << 3) - oldAverage + aLqi) >> 3); // 7/8 * old value + 1/8 * new value
+    }
+}
+
 void LinkQualityInfo::Clear(void)
 {
     mRssAverager.Reset();
