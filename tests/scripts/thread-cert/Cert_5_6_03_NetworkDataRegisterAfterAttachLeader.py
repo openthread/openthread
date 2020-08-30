@@ -31,8 +31,9 @@ import unittest
 
 import config
 import thread_cert
-from pktverify.consts import MLE_DATA_RESPONSE
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_REQUEST, ADDR_SOL_URI, MLE_CHILD_UPDATE_RESPONSE, MODE_TLV, LEADER_DATA_TLV, ROUTE64_TLV, SOURCE_ADDRESS_TLV, ACTIVE_TIMESTAMP_TLV, ADDRESS16_TLV, NETWORK_DATA_TLV, ADDRESS_REGISTRATION_TLV
 from pktverify.packet_verifier import PacketVerifier
+from pktverify.addrs import Ipv6Addr
 
 LEADER = 1
 ROUTER = 2
@@ -127,24 +128,32 @@ class Cert_5_6_3_NetworkDataRegisterAfterAttachLeader(thread_cert.TestCase):
         # Step 3: The DUT MUST multicast a MLE Data Response for each
         # prefix sent by the Leader (Prefix 1 and Prefix 2)
         _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
-            lambda p: {4, 1, 2, 3, 1, 2, 3} == set(p.thread_nwd.tlv.type))
+            lambda p: {Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')} == set(
+                p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.border_router.flag.p == [1, 1] and p.thread_nwd.tlv.
+            border_router.flag.s == [1, 1] and p.thread_nwd.tlv.border_router.flag.r == [1, 1] and p.thread_nwd.tlv.
+            border_router.flag.o == [1, 1] and p.thread_nwd.tlv.stable == [0, 1, 1, 1, 0, 0, 0])
         _rpkts_med = _rpkts.copy()
         _rpkts_sed = _rpkts.copy()
 
         # Step 5: The DUT MUST send a unicast MLE Child Update
         # Response to MED_1
-        _rpkts_med.filter_mle_cmd(14).must_next().must_verify(
-            lambda p: p.wpan.dst64 == MED and {0, 1, 11, 19} < set(p.mle.tlv.type))
+        _rpkts_med.filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
+            lambda p: p.wpan.dst64 == MED and
+            {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} < set(p.mle.tlv.type))
 
         # Step 6: The DUT MUST send a unicast MLE Child Update
         # Request to SED_1
-        _rpkts_sed.filter_mle_cmd(13).must_next().must_verify(lambda p: p.wpan.dst64 == SED and {0, 11, 12, 22} == set(
-            p.mle.tlv.type) and {1, 2, 3} == set(p.thread_nwd.tlv.type))
-
+        _rpkts_sed.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
+            lambda p: p.wpan.dst64 == SED and
+            {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} == set(p.mle.tlv.type) and
+            {Ipv6Addr('2001:2:0:1::')} == set(p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.border_router.flag.p ==
+            [1] and p.thread_nwd.tlv.border_router.flag.s == [1] and p.thread_nwd.tlv.border_router.flag.r == [1] and p
+            .thread_nwd.tlv.border_router.flag.o == [1] and p.thread_nwd.tlv.stable == [1, 1, 1])
         # Step 8: The DUT MUST send a unicast MLE Child Update
         # Response to SED_1
-        _rpkts_sed.filter_mle_cmd(14).must_next().must_verify(
-            lambda p: p.wpan.dst64 == SED and {0, 1, 11, 19} < set(p.mle.tlv.type))
+        _rpkts_sed.filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
+            lambda p: p.wpan.dst64 == SED and
+            {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} < set(p.mle.tlv.type))
 
 
 if __name__ == '__main__':
