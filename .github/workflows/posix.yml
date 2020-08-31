@@ -65,6 +65,11 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli) -v" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check
+    - uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: posix-cli-thread-cert
+        path: build/posix/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
     - name: Keep Simulation Only
       run: |
         tar -cf build/posix.tar -C build/ posix/
@@ -108,6 +113,11 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check
+    - uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: posix-ncp-thread-cert
+        path: build/posix/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
     - name: Keep Simulation Only
       run: |
         tar -cf build/posix.tar -C build/ posix/

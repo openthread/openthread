@@ -200,7 +200,7 @@ do_cert_suite()
 
     for test_case in "$@"; do
         rm -rf tmp || sudo rm -rf tmp
-        if "${test_case}" &>test.log; then
+        if TEST_NAME="$(basename "${test_case}" .py)" "${test_case}" &>test.log; then
             echo -e "${COLOR_PASS}PASS${COLOR_NONE} ${test_case}"
             pass_count=$((pass_count + 1))
         else

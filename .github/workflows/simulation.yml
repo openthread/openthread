@@ -119,6 +119,13 @@ jobs:
           do
             ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
           done
+      - uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: packet-verification-pcaps
+          path: |
+            *.pcap
+            *.json
       - name: Codecov
         uses: codecov/codecov-action@v1
         with:
@@ -148,6 +155,11 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: cli-ftd-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -177,6 +189,11 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: cli-mtd-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -206,6 +223,11 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: cli-time-sync-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -326,6 +348,11 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: multiple-instance-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -357,6 +384,11 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: ncp-gcc-m32-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -387,6 +419,11 @@ jobs:
       - name: Run
         run: |
           VERBOSE=1 make -f examples/Makefile-simulation check
+      - uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: cli-clang-thread-cert
+          path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
       - name: Codecov
         run: |
           bash <(curl -s https://codecov.io/bash) -x "llvm-cov gcov" -Z
