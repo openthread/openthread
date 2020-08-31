@@ -906,7 +906,7 @@ void Interpreter::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
                 Mac::ChannelMask favoredMask(otChannelManagerGetFavoredChannels(mInstance));
 
                 OutputFormat("delay: %d\r\n", otChannelManagerGetDelay(mInstance));
-                OutputFormat("interval: %lu\r\n", otChannelManagerGetAutoChannelSelectionInterval(mInstance));
+                OutputFormat("interval: %u\r\n", otChannelManagerGetAutoChannelSelectionInterval(mInstance));
                 OutputFormat("supported: %s\r\n", supportedMask.ToString().AsCString());
                 OutputFormat("favored: %s\r\n", supportedMask.ToString().AsCString());
             }
