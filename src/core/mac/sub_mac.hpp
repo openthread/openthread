@@ -545,6 +545,7 @@ private:
     void HandleReceiveDone(RxFrame *aFrame, otError aError);
     void HandleTransmitStarted(TxFrame &aFrame);
     void HandleTransmitDone(TxFrame &aTxFrame, RxFrame *aAckFrame, otError aError);
+    void UpdateFrameCounterOnTxDone(const TxFrame &aFrame);
     void HandleEnergyScanDone(int8_t aMaxRssi);
 
     static void HandleTimer(Timer &aTimer);
