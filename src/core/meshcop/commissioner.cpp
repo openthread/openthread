@@ -48,7 +48,7 @@
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
@@ -64,9 +64,9 @@ Commissioner::Commissioner(Instance &aInstance)
     , mTransmitAttempts(0)
     , mJoinerExpirationTimer(aInstance, HandleJoinerExpirationTimer, this)
     , mTimer(aInstance, HandleTimer, this)
-    , mRelayReceive(OT_URI_PATH_RELAY_RX, &Commissioner::HandleRelayReceive, this)
-    , mDatasetChanged(OT_URI_PATH_DATASET_CHANGED, &Commissioner::HandleDatasetChanged, this)
-    , mJoinerFinalize(OT_URI_PATH_JOINER_FINALIZE, &Commissioner::HandleJoinerFinalize, this)
+    , mRelayReceive(UriPath::kRelayRx, &Commissioner::HandleRelayReceive, this)
+    , mDatasetChanged(UriPath::kDatasetChanged, &Commissioner::HandleDatasetChanged, this)
+    , mJoinerFinalize(UriPath::kJoinerFinalize, &Commissioner::HandleJoinerFinalize, this)
     , mAnnounceBegin(aInstance)
     , mEnergyScan(aInstance)
     , mPanIdQuery(aInstance)
@@ -698,7 +698,7 @@ otError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_COMMISSIONER_GET));
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kCommissionerGet));
 
     if (aLength > 0)
     {
@@ -746,7 +746,7 @@ void Commissioner::HandleMgmtCommissionerGetResponse(Coap::Message *         aMe
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED, OT_NOOP);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == Coap::kCodeChanged, OT_NOOP);
     otLogInfoMeshCoP("received MGMT_COMMISSIONER_GET response");
 
 exit:
@@ -763,7 +763,7 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_COMMISSIONER_SET));
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kCommissionerSet));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     if (aDataset.mIsLocatorSet)
@@ -832,7 +832,7 @@ void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message *         aMe
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED, OT_NOOP);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == Coap::kCodeChanged, OT_NOOP);
     otLogInfoMeshCoP("received MGMT_COMMISSIONER_SET response");
 
 exit:
@@ -850,7 +850,7 @@ otError Commissioner::SendPetition(void)
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_LEADER_PETITION));
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kLeaderPetition));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     commissionerId.Init();
@@ -895,7 +895,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     bool    retransmit = false;
 
     VerifyOrExit(mState != OT_COMMISSIONER_STATE_ACTIVE, OT_NOOP);
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED,
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == Coap::kCodeChanged,
                  retransmit = (mState == OT_COMMISSIONER_STATE_PETITION));
 
     otLogInfoMeshCoP("received Leader Petition response");
@@ -950,7 +950,7 @@ void Commissioner::SendKeepAlive(uint16_t aSessionId)
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_LEADER_KEEP_ALIVE));
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kLeaderKeepAlive));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(
@@ -998,7 +998,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessag
     uint8_t state;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, OT_NOOP);
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED,
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == Coap::kCodeChanged,
                  IgnoreError(Stop(/* aResign */ false)));
 
     otLogInfoMeshCoP("received Leader keep-alive response");
@@ -1032,7 +1032,7 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
+    VerifyOrExit(aMessage.IsNonConfirmablePostRequest(), OT_NOOP);
 
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kJoinerUdpPort, joinerPort));
     SuccessOrExit(error = Tlv::FindTlv(aMessage, Tlv::kJoinerIid, &joinerIid, sizeof(joinerIid)));
@@ -1089,7 +1089,7 @@ void Commissioner::HandleDatasetChanged(void *aContext, otMessage *aMessage, con
 
 void Commissioner::HandleDatasetChanged(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest(), OT_NOOP);
 
     otLogInfoMeshCoP("received dataset changed");
 
@@ -1205,8 +1205,8 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
-    SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_RELAY_TX));
+    message->InitAsNonConfirmablePost();
+    SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kRelayTx));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kJoinerUdpPort, mJoinerPort));

@@ -50,7 +50,7 @@
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 namespace NetworkData {
@@ -58,9 +58,9 @@ namespace NetworkData {
 Leader::Leader(Instance &aInstance)
     : LeaderBase(aInstance)
     , mTimer(aInstance, Leader::HandleTimer, this)
-    , mServerData(OT_URI_PATH_SERVER_DATA, &Leader::HandleServerData, this)
-    , mCommissioningDataGet(OT_URI_PATH_COMMISSIONER_GET, &Leader::HandleCommissioningGet, this)
-    , mCommissioningDataSet(OT_URI_PATH_COMMISSIONER_SET, &Leader::HandleCommissioningSet, this)
+    , mServerData(UriPath::kServerData, &Leader::HandleServerData, this)
+    , mCommissioningDataGet(UriPath::kCommissionerGet, &Leader::HandleCommissioningGet, this)
+    , mCommissioningDataSet(UriPath::kCommissionerSet, &Leader::HandleCommissioningSet, this)
 {
     Reset();
 }

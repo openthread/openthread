@@ -45,7 +45,7 @@
 #include "meshcop/meshcop.hpp"
 #include "radio/radio.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 #include "utils/otns.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
@@ -65,7 +65,7 @@ Joiner::Joiner(Instance &aInstance)
     , mJoinerRouterIndex(0)
     , mFinalizeMessage(nullptr)
     , mTimer(aInstance, Joiner::HandleTimer, this)
-    , mJoinerEntrust(OT_URI_PATH_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this)
+    , mJoinerEntrust(UriPath::kJoinerEntrust, &Joiner::HandleJoinerEntrust, this)
 {
     SetIdFromIeeeEui64();
     mDiscerner.Clear();
@@ -443,8 +443,8 @@ otError Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
 
     VerifyOrExit((mFinalizeMessage = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    mFinalizeMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    SuccessOrExit(error = mFinalizeMessage->AppendUriPathOptions(OT_URI_PATH_JOINER_FINALIZE));
+    mFinalizeMessage->InitAsConfirmablePost();
+    SuccessOrExit(error = mFinalizeMessage->AppendUriPathOptions(UriPath::kJoinerFinalize));
     SuccessOrExit(error = mFinalizeMessage->SetPayloadMarker());
     mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
 
@@ -540,7 +540,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message &         aMessage,
     uint8_t state;
 
     VerifyOrExit(mState == OT_JOINER_STATE_CONNECTED && aResult == OT_ERROR_NONE && aMessage.IsAck() &&
-                     aMessage.GetCode() == OT_COAP_CODE_CHANGED,
+                     aMessage.GetCode() == Coap::kCodeChanged,
                  OT_NOOP);
 
     SuccessOrExit(Tlv::FindUint8Tlv(aMessage, Tlv::kState, state));
@@ -570,9 +570,7 @@ void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo
     otError              error;
     otOperationalDataset dataset;
 
-    VerifyOrExit(mState == OT_JOINER_STATE_ENTRUST && aMessage.IsConfirmable() &&
-                     aMessage.GetCode() == OT_COAP_CODE_POST,
-                 error = OT_ERROR_DROP);
+    VerifyOrExit(mState == OT_JOINER_STATE_ENTRUST && aMessage.IsConfirmablePostRequest(), error = OT_ERROR_DROP);
 
     otLogInfoMeshCoP("Joiner received entrust");
     otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.ntf");

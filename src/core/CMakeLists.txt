@@ -205,6 +205,7 @@ set(COMMON_SOURCES
     thread/time_sync_service.cpp
     thread/tmf.cpp
     thread/topology.cpp
+    thread/uri_paths.cpp
     utils/channel_manager.cpp
     utils/channel_monitor.cpp
     utils/child_supervision.cpp

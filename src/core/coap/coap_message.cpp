@@ -72,6 +72,41 @@ exit:
     return error;
 }
 
+void Message::InitAsConfirmablePost(void)
+{
+    Init(kTypeConfirmable, kCodePost);
+}
+
+void Message::InitAsNonConfirmablePost(void)
+{
+    Init(kTypeNonConfirmable, kCodePost);
+}
+
+otError Message::InitAsConfirmablePost(const char *aUriPath)
+{
+    return Init(kTypeConfirmable, kCodePost, aUriPath);
+}
+
+otError Message::InitAsNonConfirmablePost(const char *aUriPath)
+{
+    return Init(kTypeNonConfirmable, kCodePost, aUriPath);
+}
+
+otError Message::InitAsPost(const Ip6::Address &aDestination, const char *aUriPath)
+{
+    return Init(aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable, kCodePost, aUriPath);
+}
+
+bool Message::IsConfirmablePostRequest(void) const
+{
+    return IsConfirmable() && IsPostRequest();
+}
+
+bool Message::IsNonConfirmablePostRequest(void) const
+{
+    return IsNonConfirmable() && IsPostRequest();
+}
+
 void Message::Finish(void)
 {
     Write(0, GetOptionStart(), &GetHelpData().mHeader);
@@ -166,7 +201,7 @@ otError Message::AppendStringOption(uint16_t aNumber, const char *aValue)
 
 otError Message::AppendObserveOption(uint32_t aObserve)
 {
-    return AppendUintOption(OT_COAP_OPTION_OBSERVE, aObserve & 0xFFFFFF);
+    return AppendUintOption(kOptionObserve, aObserve & 0xFFFFFF);
 }
 
 otError Message::AppendUriPathOptions(const char *aUriPath)
@@ -177,11 +212,11 @@ otError Message::AppendUriPathOptions(const char *aUriPath)
 
     while ((end = strchr(cur, '/')) != nullptr)
     {
-        SuccessOrExit(error = AppendOption(OT_COAP_OPTION_URI_PATH, static_cast<uint16_t>(end - cur), cur));
+        SuccessOrExit(error = AppendOption(kOptionUriPath, static_cast<uint16_t>(end - cur), cur));
         cur = end + 1;
     }
 
-    SuccessOrExit(error = AppendStringOption(OT_COAP_OPTION_URI_PATH, cur));
+    SuccessOrExit(error = AppendStringOption(kOptionUriPath, cur));
 
 exit:
     return error;
@@ -199,7 +234,7 @@ otError Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool
     encoded |= static_cast<uint32_t>(aMore << kBlockMOffset);
     encoded |= aNum << kBlockNumOffset;
 
-    error = AppendUintOption((aType == kBlockType1) ? OT_COAP_OPTION_BLOCK1 : OT_COAP_OPTION_BLOCK2, encoded);
+    error = AppendUintOption((aType == kBlockType1) ? kOptionBlock1 : kOptionBlock2, encoded);
 
 exit:
     return error;
@@ -207,22 +242,22 @@ exit:
 
 otError Message::AppendProxyUriOption(const char *aProxyUri)
 {
-    return AppendStringOption(OT_COAP_OPTION_PROXY_URI, aProxyUri);
+    return AppendStringOption(kOptionProxyUri, aProxyUri);
 }
 
 otError Message::AppendContentFormatOption(otCoapOptionContentFormat aContentFormat)
 {
-    return AppendUintOption(OT_COAP_OPTION_CONTENT_FORMAT, static_cast<uint32_t>(aContentFormat));
+    return AppendUintOption(kOptionContentFormat, static_cast<uint32_t>(aContentFormat));
 }
 
 otError Message::AppendMaxAgeOption(uint32_t aMaxAge)
 {
-    return AppendUintOption(OT_COAP_OPTION_MAX_AGE, aMaxAge);
+    return AppendUintOption(kOptionMaxAge, aMaxAge);
 }
 
 otError Message::AppendUriQueryOption(const char *aUriQuery)
 {
-    return AppendStringOption(OT_COAP_OPTION_URI_QUERY, aUriQuery);
+    return AppendStringOption(kOptionUriQuery, aUriQuery);
 }
 
 otError Message::SetPayloadMarker(void)
@@ -272,9 +307,10 @@ exit:
 
 otError Message::SetToken(const uint8_t *aToken, uint8_t aTokenLength)
 {
-    GetHelpData().mHeader.mVersionTypeToken = (GetHelpData().mHeader.mVersionTypeToken & ~kTokenLengthMask) |
-                                              ((aTokenLength << kTokenLengthOffset) & kTokenLengthMask);
-    memcpy(GetHelpData().mHeader.mToken, aToken, aTokenLength);
+    OT_ASSERT(aTokenLength <= kMaxTokenLength);
+
+    SetTokenLength(aTokenLength);
+    memcpy(GetToken(), aToken, aTokenLength);
     GetHelpData().mHeaderLength += aTokenLength;
 
     return SetLength(GetHelpData().mHeaderLength);
@@ -282,7 +318,7 @@ otError Message::SetToken(const uint8_t *aToken, uint8_t aTokenLength)
 
 otError Message::SetToken(uint8_t aTokenLength)
 {
-    uint8_t token[kMaxTokenLength] = {0};
+    uint8_t token[kMaxTokenLength];
 
     OT_ASSERT(aTokenLength <= sizeof(token));
 
@@ -293,7 +329,7 @@ otError Message::SetToken(uint8_t aTokenLength)
 
 otError Message::SetDefaultResponseHeader(const Message &aRequest)
 {
-    Init(OT_COAP_TYPE_ACKNOWLEDGMENT, OT_COAP_CODE_CHANGED);
+    Init(kTypeAck, kCodeChanged);
 
     SetMessageId(aRequest.GetMessageId());
 
@@ -315,97 +351,100 @@ exit:
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
 const char *Message::CodeToString(void) const
 {
-    const char *codeString;
+    const char *string;
 
     switch (GetCode())
     {
-    case OT_COAP_CODE_INTERNAL_ERROR:
-        codeString = "InternalError";
+    case kCodeEmpty:
+        string = "Empty";
         break;
-    case OT_COAP_CODE_METHOD_NOT_ALLOWED:
-        codeString = "MethodNotAllowed";
+    case kCodeGet:
+        string = "Get";
         break;
-    case OT_COAP_CODE_CONTENT:
-        codeString = "Content";
+    case kCodePost:
+        string = "Post";
         break;
-    case OT_COAP_CODE_EMPTY:
-        codeString = "Empty";
+    case kCodePut:
+        string = "Put";
         break;
-    case OT_COAP_CODE_GET:
-        codeString = "Get";
+    case kCodeDelete:
+        string = "Delete";
         break;
-    case OT_COAP_CODE_POST:
-        codeString = "Post";
+    case kCodeCreated:
+        string = "Created";
         break;
-    case OT_COAP_CODE_PUT:
-        codeString = "Put";
+    case kCodeDeleted:
+        string = "Deleted";
         break;
-    case OT_COAP_CODE_DELETE:
-        codeString = "Delete";
+    case kCodeValid:
+        string = "Valid";
         break;
-    case OT_COAP_CODE_NOT_FOUND:
-        codeString = "NotFound";
+    case kCodeChanged:
+        string = "Changed";
         break;
-    case OT_COAP_CODE_UNSUPPORTED_FORMAT:
-        codeString = "UnsupportedFormat";
+    case kCodeContent:
+        string = "Content";
         break;
-    case OT_COAP_CODE_RESPONSE_MIN:
-        codeString = "ResponseMin";
+    case kCodeContinue:
+        string = "Continue";
         break;
-    case OT_COAP_CODE_CREATED:
-        codeString = "Created";
+    case kCodeBadRequest:
+        string = "BadRequest";
         break;
-    case OT_COAP_CODE_DELETED:
-        codeString = "Deleted";
+    case kCodeUnauthorized:
+        string = "Unauthorized";
         break;
-    case OT_COAP_CODE_VALID:
-        codeString = "Valid";
+    case kCodeBadOption:
+        string = "BadOption";
         break;
-    case OT_COAP_CODE_CHANGED:
-        codeString = "Changed";
+    case kCodeForbidden:
+        string = "Forbidden";
         break;
-    case OT_COAP_CODE_BAD_REQUEST:
-        codeString = "BadRequest";
+    case kCodeNotFound:
+        string = "NotFound";
         break;
-    case OT_COAP_CODE_UNAUTHORIZED:
-        codeString = "Unauthorized";
+    case kCodeMethodNotAllowed:
+        string = "MethodNotAllowed";
         break;
-    case OT_COAP_CODE_BAD_OPTION:
-        codeString = "BadOption";
+    case kCodeNotAcceptable:
+        string = "NotAcceptable";
         break;
-    case OT_COAP_CODE_FORBIDDEN:
-        codeString = "Forbidden";
+    case kCodeRequestIncomplete:
+        string = "RequestIncomplete";
         break;
-    case OT_COAP_CODE_NOT_ACCEPTABLE:
-        codeString = "NotAcceptable";
+    case kCodePreconditionFailed:
+        string = "PreconditionFailed";
         break;
-    case OT_COAP_CODE_PRECONDITION_FAILED:
-        codeString = "PreconditionFailed";
+    case kCodeRequestTooLarge:
+        string = "RequestTooLarge";
         break;
-    case OT_COAP_CODE_REQUEST_TOO_LARGE:
-        codeString = "RequestTooLarge";
+    case kCodeUnsupportedFormat:
+        string = "UnsupportedFormat";
         break;
-    case OT_COAP_CODE_NOT_IMPLEMENTED:
-        codeString = "NotImplemented";
+    case kCodeInternalError:
+        string = "InternalError";
         break;
-    case OT_COAP_CODE_BAD_GATEWAY:
-        codeString = "BadGateway";
+    case kCodeNotImplemented:
+        string = "NotImplemented";
         break;
-    case OT_COAP_CODE_SERVICE_UNAVAILABLE:
-        codeString = "ServiceUnavailable";
+    case kCodeBadGateway:
+        string = "BadGateway";
         break;
-    case OT_COAP_CODE_GATEWAY_TIMEOUT:
-        codeString = "GatewayTimeout";
+    case kCodeServiceUnavailable:
+        string = "ServiceUnavailable";
         break;
-    case OT_COAP_CODE_PROXY_NOT_SUPPORTED:
-        codeString = "ProxyNotSupported";
+    case kCodeGatewayTimeout:
+        string = "GatewayTimeout";
+        break;
+    case kCodeProxyNotSupported:
+        string = "ProxyNotSupported";
         break;
     default:
-        codeString = "Unknown";
+        string = "Unknown";
         break;
     }
 
-    return codeString;
+    return string;
 }
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
