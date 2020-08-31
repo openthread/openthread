@@ -30,37 +30,49 @@
 import unittest
 
 import thread_cert
+from pktverify.consts import MLE_LINK_REQUEST, MLE_LINK_ACCEPT, CHALLENGE_TLV, LEADER_DATA_TLV, SOURCE_ADDRESS_TLV, VERSION_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER1 = 2
-ROUTER2 = 3
-ED = 4
+ED = 3
+ROUTER2 = 4
+ROUTER3 = 5
 
 
-class Cert_6_1_5_RouterAttachLinkQuality(thread_cert.TestCase):
+class Cert_6_1_9_EDSynchronization(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1, ROUTER2]
+            'whitelist': [ROUTER1, ED, ROUTER2]
         },
         ROUTER1: {
+            'name': 'ROUTER_1',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED]
-        },
-        ROUTER2: {
-            'mode': 'rsdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
-            'whitelist': [LEADER, (ED, -85)]
+            'whitelist': [LEADER, ED, ROUTER3]
         },
         ED: {
-            'is_mtd': True,
-            'mode': 'rsn',
+            'name': 'ED',
             'panid': 0xface,
-            'whitelist': [ROUTER1, ROUTER2]
+            'whitelist': [LEADER, ROUTER1, ROUTER2, ROUTER3]
+        },
+        ROUTER2: {
+            'name': 'ROUTER_2',
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, ED, ROUTER3]
+        },
+        ROUTER3: {
+            'name': 'ROUTER_3',
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [ED, ROUTER1, ROUTER2]
         },
     }
 
@@ -68,6 +80,10 @@ class Cert_6_1_5_RouterAttachLinkQuality(thread_cert.TestCase):
         self.nodes[LEADER].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
+
+        self.nodes[ED].start()
+        self.simulator.go(5)
+        self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         self.nodes[ROUTER1].start()
         self.simulator.go(5)
@@ -77,9 +93,35 @@ class Cert_6_1_5_RouterAttachLinkQuality(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
-        self.nodes[ED].start()
+        self.nodes[ROUTER3].start()
         self.simulator.go(5)
-        self.assertEqual(self.nodes[ED].get_state(), 'child')
+        self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        ROUTER_1 = pv.vars['ROUTER_1']
+        ROUTER_2 = pv.vars['ROUTER_2']
+        ROUTER_3 = pv.vars['ROUTER_3']
+        ED = pv.vars['ED']
+        _router1_pkts = pkts.filter_wpan_src64(ROUTER_1)
+        _router2_pkts = pkts.filter_wpan_src64(ROUTER_2)
+        _router3_pkts = pkts.filter_wpan_src64(ROUTER_3)
+        _ed_pkts = pkts.filter_wpan_src64(ED)
+
+        # Step 3: The DUT MUST send a unicast Link Request
+        # to Router 1, Router 2 & Router 3
+        for i in range(1, 3):
+            _ed_pkts.filter_mle_cmd(MLE_LINK_REQUEST).filter_wpan_dst64(
+                pv.vars['ROUTER_%d' % i]).must_next().must_verify(
+                    lambda p: {CHALLENGE_TLV, LEADER_DATA_TLV, SOURCE_ADDRESS_TLV, VERSION_TLV} == set(p.mle.tlv.type))
+
+        # Step 4: Router_1, Router_2 & Router_3 MUST all send a
+        # Link Accept message to the DUT
+        _router1_pkts.filter_mle_cmd(MLE_LINK_ACCEPT).filter_wpan_dst64(ED).must_next()
+        _router2_pkts.filter_mle_cmd(MLE_LINK_ACCEPT).filter_wpan_dst64(ED).must_next()
+        _router3_pkts.filter_mle_cmd(MLE_LINK_ACCEPT).filter_wpan_dst64(ED).must_next()
 
 
 if __name__ == '__main__':
