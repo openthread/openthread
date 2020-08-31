@@ -28,8 +28,6 @@
 
 #include "platform/openthread-posix-config.h"
 
-#include <chrono>
-
 #include <openthread/platform/toolchain.h>
 
 #ifndef HAVE_LIBEDIT
