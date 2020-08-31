@@ -136,6 +136,9 @@ class Cert_5_6_5_NetworkDataRegisterAfterAttachRouter(thread_cert.TestCase):
         # MLE Data Response message
         _lpkts.copy().filter_coap_ack(SVR_DATA_URI).must_next()
 
+        _lpkts_med = _lpkts.copy()
+        _lpkts_sed = _lpkts.copy()
+
         # Step 4: The DUT MUST send a multicast MLE Data Response with
         # the new network information collected from Router_1
         _lpkts.filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
@@ -145,8 +148,6 @@ class Cert_5_6_5_NetworkDataRegisterAfterAttachRouter(thread_cert.TestCase):
             flag.p == [1, 1, 1] and p.thread_nwd.tlv.border_router.flag.s == [1, 1, 1] and p.thread_nwd.tlv.
             border_router.flag.r == [1, 1, 0] and p.thread_nwd.tlv.border_router.flag.o == [1, 1, 1] and p.thread_nwd.
             tlv.stable == [0, 1, 1, 1, 0, 0, 0, 1, 1, 1])
-        _lpkts_med = _lpkts.copy()
-        _lpkts_sed = _lpkts.copy()
 
         # Step 7: The DUT MUST send a unicast MLE Child Update
         # Response to MED_1
