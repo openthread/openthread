@@ -101,11 +101,7 @@ class Cert_6_1_9_EDSynchronization(thread_cert.TestCase):
         pkts = pv.pkts
         pv.summary.show()
 
-        ROUTER_1 = pv.vars['ROUTER_1']
-        ROUTER_2 = pv.vars['ROUTER_2']
-        ROUTER_3 = pv.vars['ROUTER_3']
         ED = pv.vars['ED']
-        _ed_pkts = pkts.filter_wpan_src64(ED)
 
         # Step 3: The DUT MUST send a unicast Link Request
         # to Router 1, Router 2 & Router 3
