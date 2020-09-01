@@ -120,7 +120,7 @@ static uint8_t sAckIeDataLength = 0;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static const uint8_t sCslIeHeader[OT_IE_HEADER_SIZE] = {0x04, 0x0d};
+static const uint8_t sCslIeHeader[OT_IE_HEADER_SIZE] = {CSL_IE_HEADER_BYTES_LO, CSL_IE_HEADER_BYTES_HI};
 static uint32_t      sCslSampleTime;
 static uint32_t      sCslPeriod;
 #endif

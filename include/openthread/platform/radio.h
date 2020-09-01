@@ -154,6 +154,9 @@ enum
     OT_ACK_IE_MAX_SIZE = 16, ///< Max length for header IE in ACK.
 };
 
+#define CSL_IE_HEADER_BYTES_LO 0x04 ///< Fixed CSL IE header first byte
+#define CSL_IE_HEADER_BYTES_HI 0x0d ///< Fixed CSL IE header second byte
+
 /**
  * @struct otExtAddress
  *

@@ -58,6 +58,7 @@
 
 #include <nrf.h>
 #include <nrf_802154.h>
+#include <nrf_802154_pib.h>
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
@@ -114,8 +115,7 @@ static int8_t   sEnergyDetected;
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 static uint32_t      sCslPeriod;
 static uint32_t      sCslSampleTime;
-static const uint8_t sCslIeHeader[OT_IE_HEADER_SIZE] = {0x04, 0x0d};
-static uint8_t       sParentShortAddress[SHORT_ADDRESS_SIZE];
+static const uint8_t sCslIeHeader[OT_IE_HEADER_SIZE] = {CSL_IE_HEADER_BYTES_LO, CSL_IE_HEADER_BYTES_HI};
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 typedef enum
@@ -312,9 +312,6 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 
     uint8_t address[SHORT_ADDRESS_SIZE];
     convertShortAddress(address, aShortAddress);
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    convertShortAddress(sParentShortAddress, aShortAddress & 0xfc00);
-#endif
 
     nrf_802154_short_address_set(address);
 }
@@ -1192,8 +1189,10 @@ static void updateIeData(otInstance *aInstance, const uint8_t *aShortAddr, const
 
 otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t parentExtAddr[OT_EXT_ADDRESS_SIZE];
+    otError        error = OT_ERROR_NONE;
+    uint8_t        parentExtAddr[OT_EXT_ADDRESS_SIZE];
+    uint8_t        parentShortAddress[SHORT_ADDRESS_SIZE];
+    const uint8_t *shortAddress;
 
     sCslPeriod = aCslPeriod;
 
@@ -1202,7 +1201,11 @@ otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const o
         parentExtAddr[i] = aExtAddr->m8[sizeof(parentExtAddr) - i - 1];
     }
 
-    updateIeData(aInstance, sParentShortAddress, parentExtAddr);
+    shortAddress = nrf_802154_pib_short_address_get();
+    memcpy(parentShortAddress, shortAddress, SHORT_ADDRESS_SIZE);
+    parentShortAddress[0] &= 0xfc;
+
+    updateIeData(aInstance, parentShortAddress, parentExtAddr);
 
     return error;
 }
