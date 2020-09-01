@@ -228,6 +228,7 @@ protected:
  */
 class Message : public Buffer
 {
+    friend class Checksum;
     friend class MessagePool;
     friend class MessageQueue;
     friend class PriorityQueue;
@@ -835,41 +836,6 @@ public:
      *
      */
     void SetLinkInfo(const ThreadLinkInfo &aLinkInfo);
-
-    /**
-     * This static method updates a checksum.
-     *
-     * @param[in]  aChecksum  The checksum value to update.
-     * @param[in]  aValue     The 16-bit value to update @p aChecksum with.
-     *
-     * @returns The updated checksum.
-     *
-     */
-    static uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aValue);
-
-    /**
-     * This static method updates a checksum.
-     *
-     * @param[in]  aChecksum  The checksum value to update.
-     * @param[in]  aBuf       A pointer to a buffer.
-     * @param[in]  aLength    The number of bytes in @p aBuf.
-     *
-     * @returns The updated checksum.
-     *
-     */
-    static uint16_t UpdateChecksum(uint16_t aChecksum, const void *aBuf, uint16_t aLength);
-
-    /**
-     * This method is used to update a checksum value.
-     *
-     * @param[in]  aChecksum  Initial checksum value.
-     * @param[in]  aOffset    Byte offset within the message to begin checksum computation.
-     * @param[in]  aLength    Number of bytes to compute the checksum over.
-     *
-     * @retval The updated checksum value.
-     *
-     */
-    uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const;
 
     /**
      * This method returns a pointer to the message queue (if any) where this message is queued.

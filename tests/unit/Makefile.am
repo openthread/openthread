@@ -107,6 +107,7 @@ check_PROGRAMS                                                      = \
 if OPENTHREAD_ENABLE_FTD
 check_PROGRAMS                                                     += \
     test-aes                                                          \
+    test-checksum                                                     \
     test-child                                                        \
     test-child-table                                                  \
     test-flash                                                        \
@@ -170,6 +171,9 @@ COMMON_SOURCES               = test_platform.cpp test_util.cpp
 
 test_aes_LDADD               = $(COMMON_LDADD)
 test_aes_SOURCES             = $(COMMON_SOURCES) test_aes.cpp
+
+test_checksum_LDADD          = $(COMMON_LDADD)
+test_checksum_SOURCES        = $(COMMON_SOURCES) test_checksum.cpp
 
 test_child_LDADD             = $(COMMON_LDADD)
 test_child_SOURCES           = $(COMMON_SOURCES) test_child.cpp

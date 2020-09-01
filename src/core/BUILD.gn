@@ -440,6 +440,8 @@ openthread_core_files = [
   "meshcop/panid_query_client.hpp",
   "meshcop/timestamp.cpp",
   "meshcop/timestamp.hpp",
+  "net/checksum.cpp",
+  "net/checksum.hpp",
   "net/dhcp6.hpp",
   "net/dhcp6_client.cpp",
   "net/dhcp6_client.hpp",

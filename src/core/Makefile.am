@@ -198,6 +198,7 @@ SOURCES_COMMON                                  = \
     meshcop/meshcop_tlvs.cpp                      \
     meshcop/panid_query_client.cpp                \
     meshcop/timestamp.cpp                         \
+    net/checksum.cpp                              \
     net/dhcp6_client.cpp                          \
     net/dhcp6_server.cpp                          \
     net/dns_client.cpp                            \
@@ -415,6 +416,7 @@ HEADERS_COMMON                                  = \
     meshcop/meshcop_tlvs.hpp                      \
     meshcop/panid_query_client.hpp                \
     meshcop/timestamp.hpp                         \
+    net/checksum.hpp                              \
     net/dhcp6.hpp                                 \
     net/dhcp6_client.hpp                          \
     net/dhcp6_server.hpp                          \
