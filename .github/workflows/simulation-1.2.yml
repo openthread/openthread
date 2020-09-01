@@ -110,9 +110,7 @@ jobs:
         OT_OPTIONS=-DOT_READLINE=OFF NODE_MODE=rcp ./script/test build expect
     - name: Keep-1-2-only
       run: |
-        ./script/test tar posix 1.1
         ./script/test tar posix 1.2-bbr
-        ./script/test tar simulation 1.1
         ./script/test tar simulation 1.2-bbr
     - name: Keep POSIX Only
       run: |
