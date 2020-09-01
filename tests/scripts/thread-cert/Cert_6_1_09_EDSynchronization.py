@@ -105,23 +105,20 @@ class Cert_6_1_9_EDSynchronization(thread_cert.TestCase):
         ROUTER_2 = pv.vars['ROUTER_2']
         ROUTER_3 = pv.vars['ROUTER_3']
         ED = pv.vars['ED']
-        _router1_pkts = pkts.filter_wpan_src64(ROUTER_1)
-        _router2_pkts = pkts.filter_wpan_src64(ROUTER_2)
-        _router3_pkts = pkts.filter_wpan_src64(ROUTER_3)
         _ed_pkts = pkts.filter_wpan_src64(ED)
 
         # Step 3: The DUT MUST send a unicast Link Request
         # to Router 1, Router 2 & Router 3
         for i in range(1, 3):
-            _ed_pkts.filter_mle_cmd(MLE_LINK_REQUEST).filter_wpan_dst64(
-                pv.vars['ROUTER_%d' % i]).must_next().must_verify(
+            _pkts = pkts.copy()
+            _pkts.filter_wpan_src64(ED).filter_wpan_dst64(
+                pv.vars['ROUTER_%d' % i]).filter_mle_cmd(MLE_LINK_REQUEST).must_next().must_verify(
                     lambda p: {CHALLENGE_TLV, LEADER_DATA_TLV, SOURCE_ADDRESS_TLV, VERSION_TLV} == set(p.mle.tlv.type))
 
-        # Step 4: Router_1, Router_2 & Router_3 MUST all send a
-        # Link Accept message to the DUT
-        _router1_pkts.filter_mle_cmd(MLE_LINK_ACCEPT).filter_wpan_dst64(ED).must_next()
-        _router2_pkts.filter_mle_cmd(MLE_LINK_ACCEPT).filter_wpan_dst64(ED).must_next()
-        _router3_pkts.filter_mle_cmd(MLE_LINK_ACCEPT).filter_wpan_dst64(ED).must_next()
+            # Step 4: Router_1, Router_2 & Router_3 MUST all send a
+            # Link Accept message to the DUT
+            _pkts.filter_wpan_src64(pv.vars['ROUTER_%d' %
+                                            i]).filter_wpan_dst64(ED).filter_mle_cmd(MLE_LINK_ACCEPT).must_next()
 
 
 if __name__ == '__main__':

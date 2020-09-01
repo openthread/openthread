@@ -67,7 +67,7 @@ class Cert_6_1_5_REEDAttachConnectivity(thread_cert.TestCase):
             'mode': 'rsdn',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
-            'whitelist': [LEADER, ED]
+            'whitelist': [LEADER, (ED, -85)]
         },
         ED: {
             'name': 'ED',
@@ -94,8 +94,6 @@ class Cert_6_1_5_REEDAttachConnectivity(thread_cert.TestCase):
         self.nodes[REED2].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[REED2].get_state(), 'child')
-
-        self.simulator.go(10)
 
         self.nodes[ED].start()
         self.simulator.go(10)

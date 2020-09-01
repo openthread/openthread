@@ -119,7 +119,7 @@ class Cert_6_1_3_RouterAttachConnectivity(thread_cert.TestCase):
                                                                                   ) and p.mle.tlv.scan_mask.r == 1)
 
         # Step 3: Router_2, Router_3 Respond with MLE Parent Response
-        # Step4: DUT Send a Child ID Request to Router_3 due to better connectivity
+        # Step 4: DUT Send a Child ID Request to Router_3 due to better connectivity
         _ed_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(
             lambda p: {
                 RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV,

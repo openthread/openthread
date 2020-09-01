@@ -116,10 +116,9 @@ class Cert_6_1_7_RouterAttachLinkQuality(thread_cert.TestCase):
         # Step 6: The DUT MUST respond with ICMPv6 Echo Reply
         ed_mleid = pv.vars['ED_MLEID']
         router1_mleid = pv.vars['ROUTER_1_MLEID']
-        _pkt = _router1_pkts.filter(
-            lambda p: p.ipv6.src == router1_mleid and p.ipv6.dst == ed_mleid).filter_ping_request().must_next()
-        _ed_pkts.filter(lambda p: p.ipv6.src == ed_mleid and p.ipv6.dst == router1_mleid).filter_ping_reply(
-            identifier=_pkt.icmpv6.echo.identifier).must_next()
+        _pkt = _router1_pkts.filter_ipv6_src_dst(router1_mleid, ed_mleid).filter_ping_request().must_next()
+        _ed_pkts.filter_ipv6_src_dst(
+            ed_mleid, router1_mleid).filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).must_next()
 
 
 if __name__ == '__main__':
