@@ -154,14 +154,17 @@ class Cert_7_1_4_BorderRouterAsRouter(thread_cert.TestCase):
             lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type))
 
         # Step 7: The DUT MUST send an MLE Child Update Request to SED_1
-        p = _rpkts_sed.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next()
-        p.must_verify(lambda p: {Ipv6Addr('2001:2:0:1::')} == set(p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.
-                      border_router_16 == 0xFFFE)
+        _rpkts_sed.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
+            lambda p: {Ipv6Addr('2001:2:0:1::')} == set(p.thread_nwd.tlv.prefix
+                                                       ) and p.thread_nwd.tlv.border_router_16 == 0xFFFE)
 
         # Step 8: SED_1 send its configured global address to the DUT
         # Step 9: The DUT MUST send a Child Update Response to SED_1
+        _sed_pkt = pkts.range(
+            _rpkts_sed.index).filter_wpan_src64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next()
         _rpkts_sed.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type) and set(
+                p.mle.tlv.addr_reg_iid) < set(_sed_pkt.mle.tlv.addr_reg_iid))
 
 
 if __name__ == '__main__':

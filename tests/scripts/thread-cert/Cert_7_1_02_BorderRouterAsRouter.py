@@ -31,7 +31,7 @@ import unittest
 
 import config
 import thread_cert
-from pktverify.consts import MLE_ADVERTISEMENT, MLE_CHILD_ID_REQUEST, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_RESPONSE, SVR_DATA_URI, SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, ROUTE64_TLV
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_CHILD_ID_REQUEST, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, SVR_DATA_URI, SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, ROUTE64_TLV
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.addrs import Ipv6Addr
 
@@ -160,12 +160,16 @@ class Cert_7_1_2_BorderRouterAsRouter(thread_cert.TestCase):
 
         # Step 9: SED_1 and MED_1 send its configured global address to the DUT
         # Step 10: The DUT MUST send a Child Update Response to MED_1 & SED_1
-        _rpkts_med.filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type
-                                                                                     ) and p.wpan.dst64 == MED)
-        _rpkts_sed.filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type
-                                                                                     ) and p.wpan.dst64 == SED)
+        _med_pkt = pkts.range(
+            _rpkts_med.index).filter_wpan_src64(MED).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next()
+        _sed_pkt = pkts.range(
+            _rpkts_sed.index).filter_wpan_src64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next()
+        _rpkts_med.filter_wpan_dst64(MED).filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type) and p.wpan.dst64
+            == MED and set(p.mle.tlv.addr_reg_iid) < set(_med_pkt.mle.tlv.addr_reg_iid))
+        _rpkts_sed.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type) and set(
+                p.mle.tlv.addr_reg_iid) < set(_sed_pkt.mle.tlv.addr_reg_iid))
 
 
 if __name__ == '__main__':
