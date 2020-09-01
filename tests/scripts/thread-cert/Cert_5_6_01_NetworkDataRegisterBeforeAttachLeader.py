@@ -130,7 +130,6 @@ class Cert_5_6_1_NetworkDataLeaderAsBr(thread_cert.TestCase):
 
         # Step 3: The DUT MUST request the Network Data TLV during the
         # attaching procedure when sending MLE Child ID Request frame
-        # in TLV Request TLV
         _rpkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(
             lambda p: {
                 RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV,
