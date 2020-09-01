@@ -60,6 +60,7 @@ Done
 - [mac](#mac-retries-direct)
 - [macfilter](#macfilter)
 - [masterkey](#masterkey)
+- [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
 - [neighbor](#neighbor-list)
 - [netdata](#netdata-steeringdata-check-eui64discerner)
@@ -182,6 +183,26 @@ Only for testing/reference Backbone Router device.
 > bbr mgmt mlr listener clear
 Done
 > bbr mgmt mlr listener
+Done
+```
+
+### bbr mgmt mlr response \<status\>
+
+Configure the response status for the next MLR.req.
+
+Only for testing/reference device.
+
+Known status values:
+
+- 0: ST_MLR_SUCCESS
+- 2: ST_MLR_INVALID
+- 3: ST_MLR_NO_PERSISTENT
+- 4: ST_MLR_NO_RESOURCES
+- 5: ST_MLR_BBR_NOT_PRIMARY
+- 6: ST_MLR_GENERAL_FAILURE
+
+```bash
+> bbr mgmt mlr response 2
 Done
 ```
 
@@ -1074,6 +1095,32 @@ Set the Thread Master Key value.
 
 ```bash
 > masterkey 00112233445566778899aabbccddeeff
+Done
+```
+
+### mlr reg \<ipaddr\> ... [timeout]
+
+Register Multicast Listeners to Primary Backbone Router, with an optional `timeout` (in seconds).
+
+Omit `timeout` to use the default MLR timeout on the Primary Backbone Router.
+
+Use `timeout = 0` to deregister Multicast Listeners.
+
+NOTE: Only for Thread 1.2 Commissioner FTD device.
+
+```bash
+> mlr reg ff04::1
+status 0, 0 failed
+Done
+> mlr reg ff04::1 ff04::2 ff02::1
+status 2, 1 failed
+ff02:0:0:0:0:0:0:1
+Done
+> mlr reg ff04::1 ff04::2 1000
+status 0, 0 failed
+Done
+> mlr reg ff04::1 ff04::2 0
+status 0, 0 failed
 Done
 ```
 

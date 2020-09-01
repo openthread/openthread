@@ -1271,7 +1271,7 @@ otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
             dstPort = reinterpret_cast<const Ip6::Udp::Header *>(aFrame)->GetDestinationPort();
         }
 
-        if ((dstPort == Mle::kUdpPort) || (dstPort == kCoapUdpPort))
+        if ((dstPort == Mle::kUdpPort) || (dstPort == Tmf::kUdpPort))
         {
             aPriority = Message::kPriorityNet;
         }

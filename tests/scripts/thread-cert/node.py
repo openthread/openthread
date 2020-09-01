@@ -40,7 +40,7 @@ import time
 import unittest
 import binascii
 
-from typing import Union
+from typing import Union, Dict
 
 
 class Node:
@@ -280,6 +280,37 @@ class Node:
             results.append(self.pexpect.match.group(0).decode('utf8'))
 
         return results
+
+    def _expect_command_output(self, cmd: str):
+        lines = []
+        cmd_output_started = False
+
+        while True:
+            self._expect(r"[^\n]+")
+            line = self.pexpect.match.group(0).decode('utf8').strip()
+
+            if line.startswith('> '):
+                line = line[2:]
+
+            if line == '':
+                continue
+
+            if line == cmd:
+                cmd_output_started = True
+                continue
+
+            if not cmd_output_started:
+                continue
+
+            if line == 'Done':
+                break
+            elif line.startswith('Error '):
+                raise Exception(line)
+            else:
+                lines.append(line)
+
+        print(f'_expect_command_output({cmd!r}) returns {lines!r}')
+        return lines
 
     def __init_soc(self, nodeid):
         """ Initialize a System-on-a-chip node connected via UART. """
@@ -530,7 +561,7 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def multicast_listener_list(self):
+    def multicast_listener_list(self) -> Dict[ipaddress.IPv6Address, int]:
         cmd = 'bbr mgmt mlr listener'
         self.send_command(cmd)
 
@@ -558,6 +589,29 @@ class Node:
         cmd = f'bbr mgmt mlr listener add {ip.compressed} {timeout}'
         self.send_command(cmd)
         self._expect(r"(Done|Error .*)")
+
+    def set_next_mlr_response(self, status: int):
+        cmd = 'bbr mgmt mlr response {}'.format(status)
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def register_multicast_listener(self, *ipaddrs: Union[ipaddress.IPv6Address, str], timeout=None):
+        assert len(ipaddrs) > 0, ipaddrs
+
+        cmd = f'mlr reg {" ".join(ipaddrs)}'
+        if timeout is not None:
+            cmd += f' {int(timeout)}'
+        self.send_command(cmd)
+        self.simulator.go(3)
+        lines = self._expect_command_output(cmd)
+        m = re.match(r'status (\d+), (\d+) failed', lines[0])
+        assert m is not None, lines
+        status = int(m.group(1))
+        failed_num = int(m.group(2))
+        assert failed_num == len(lines) - 1
+        failed_ips = list(map(ipaddress.IPv6Address, lines[1:]))
+        print(f"register_multicast_listener {ipaddrs} => status: {status}, failed ips: {failed_ips}")
+        return status, failed_ips
 
     def set_link_quality(self, addr, lqi):
         cmd = 'macfilter rss add-lqi %s %s' % (addr, lqi)

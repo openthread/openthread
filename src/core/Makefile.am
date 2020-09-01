@@ -244,6 +244,7 @@ SOURCES_COMMON                                  = \
     thread/src_match_controller.cpp               \
     thread/thread_netif.cpp                       \
     thread/time_sync_service.cpp                  \
+    thread/tmf.cpp                                \
     thread/topology.cpp                           \
     utils/channel_manager.cpp                     \
     utils/channel_monitor.cpp                     \
@@ -468,6 +469,7 @@ HEADERS_COMMON                                  = \
     thread/thread_tlvs.hpp                        \
     thread/thread_uri_paths.hpp                   \
     thread/time_sync_service.hpp                  \
+    thread/tmf.hpp                                \
     thread/topology.hpp                           \
     utils/channel_manager.hpp                     \
     utils/channel_monitor.hpp                     \

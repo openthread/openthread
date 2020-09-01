@@ -348,10 +348,11 @@ private:
     static uint16_t UpdateChecksum(uint16_t aChecksum, const Address &aAddress);
 
     void    EnqueueDatagram(Message &aMessage);
-    otError ProcessReceiveCallback(const Message &    aMessage,
+    otError ProcessReceiveCallback(Message &          aMessage,
                                    const MessageInfo &aMessageInfo,
                                    uint8_t            aIpProto,
-                                   bool               aFromNcpHost);
+                                   bool               aFromNcpHost,
+                                   Message::Ownership aMessageOwnership);
     otError HandleExtensionHeaders(Message &    aMessage,
                                    Netif *      aNetif,
                                    MessageInfo &aMessageInfo,

@@ -131,6 +131,16 @@ void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance *             
         static_cast<const Ip6::InterfaceIdentifier *>(aMlIid), aStatus);
 }
 
+void otBackboneRouterConfigNextMulticastListenerRegistrationResponse(otInstance *aInstance, uint8_t aStatus)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    OT_ASSERT(aStatus <= ThreadStatusTlv::kMlrStatusMax);
+
+    instance.Get<BackboneRouter::Manager>().ConfigNextMulticastListenerRegistrationResponse(
+        static_cast<ThreadStatusTlv::MlrStatus>(aStatus));
+}
+
 void otBackboneRouterMulticastListenerClear(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

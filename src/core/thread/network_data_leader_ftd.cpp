@@ -76,16 +76,16 @@ void Leader::Reset(void)
 
 void Leader::Start(void)
 {
-    Get<Coap::Coap>().AddResource(mServerData);
-    Get<Coap::Coap>().AddResource(mCommissioningDataGet);
-    Get<Coap::Coap>().AddResource(mCommissioningDataSet);
+    Get<Tmf::TmfAgent>().AddResource(mServerData);
+    Get<Tmf::TmfAgent>().AddResource(mCommissioningDataGet);
+    Get<Tmf::TmfAgent>().AddResource(mCommissioningDataSet);
 }
 
 void Leader::Stop(void)
 {
-    Get<Coap::Coap>().RemoveResource(mServerData);
-    Get<Coap::Coap>().RemoveResource(mCommissioningDataGet);
-    Get<Coap::Coap>().RemoveResource(mCommissioningDataSet);
+    Get<Tmf::TmfAgent>().RemoveResource(mServerData);
+    Get<Tmf::TmfAgent>().RemoveResource(mCommissioningDataGet);
+    Get<Tmf::TmfAgent>().RemoveResource(mCommissioningDataSet);
 }
 
 void Leader::IncrementVersion(void)
@@ -164,7 +164,7 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
                             networkData.GetLength());
     }
 
-    SuccessOrExit(Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo));
 
     otLogInfoNetData("Sent network data registration acknowledgment");
 
@@ -305,7 +305,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
     uint8_t *             data   = nullptr;
     uint8_t               length = 0;
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -350,7 +350,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
         IgnoreError(message->SetLength(message->GetLength() - 1));
     }
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent commissioning dataset get response");
 
@@ -369,14 +369,14 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, MeshCoP::Tlv::kState, static_cast<uint8_t>(aState)));
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent commissioning dataset set response");
 

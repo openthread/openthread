@@ -487,18 +487,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
         OT_UNREACHABLE_CODE(ExitNow());
     }
 
-    if (!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled())
-    {
-        uint8_t  keyIdMode;
-        uint32_t frameCounter = 0;
-
-        IgnoreError(aFrame.GetKeyIdMode(keyIdMode));
-        if (keyIdMode == Frame::kKeyIdMode1)
-        {
-            OT_ASSERT(aFrame.GetFrameCounter(frameCounter) == OT_ERROR_NONE);
-            UpdateFrameCounter(frameCounter);
-        }
-    }
+    UpdateFrameCounterOnTxDone(aFrame);
 
     // Determine whether a CSMA retry is required.
 
@@ -529,6 +518,39 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
     SetState(kStateReceive);
 
     mCallbacks.TransmitDone(aFrame, aAckFrame, aError);
+
+exit:
+    return;
+}
+
+void SubMac::UpdateFrameCounterOnTxDone(const TxFrame &aFrame)
+{
+    uint8_t  keyIdMode;
+    uint32_t frameCounter;
+    bool     allowError = false;
+
+    OT_UNUSED_VARIABLE(allowError);
+
+    VerifyOrExit(!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled(), OT_NOOP);
+
+    // In an FTD/MTD build, if/when link-raw is enabled, the `TxFrame`
+    // is prepared and given by user and may not necessarily follow 15.4
+    // frame format (link raw can be used with vendor-specific format),
+    // so we allow failure when parsing the frame (i.e., do not assert
+    // on an error). In other cases (in an RCP build or in an FTD/MTD
+    // build without link-raw) since the `TxFrame` should be prepared by
+    // OpenThread core, we expect no error and therefore assert if
+    // parsing fails.
+
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    allowError = Get<LinkRaw>().IsEnabled();
+#endif
+
+    VerifyOrExit(aFrame.GetKeyIdMode(keyIdMode) == OT_ERROR_NONE, OT_ASSERT(allowError));
+    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1, OT_NOOP);
+
+    VerifyOrExit(aFrame.GetFrameCounter(frameCounter) == OT_ERROR_NONE, OT_ASSERT(allowError));
+    UpdateFrameCounter(frameCounter);
 
 exit:
     return;

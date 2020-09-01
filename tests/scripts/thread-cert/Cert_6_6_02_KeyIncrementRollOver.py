@@ -30,6 +30,8 @@
 import unittest
 
 import thread_cert
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_CHILD_ID_REQUEST
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ED = 2
@@ -38,6 +40,7 @@ ED = 2
 class Cert_6_6_2_KeyIncrement1(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'key_sequence_counter': 127,
             'key_switch_guardtime': 0,
             'mode': 'rsdn',
@@ -45,6 +48,7 @@ class Cert_6_6_2_KeyIncrement1(thread_cert.TestCase):
             'whitelist': [ED]
         },
         ED: {
+            'name': 'ED',
             'is_mtd': True,
             'key_switch_guardtime': 0,
             'mode': 'rsn',
@@ -62,6 +66,7 @@ class Cert_6_6_2_KeyIncrement1(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
+        self.collect_rloc16s()
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             self.assertTrue(self.nodes[LEADER].ping(addr))
@@ -72,6 +77,54 @@ class Cert_6_6_2_KeyIncrement1(thread_cert.TestCase):
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             self.assertTrue(self.nodes[LEADER].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        ED = pv.vars['ED']
+        _leader_pkts = pkts.filter_wpan_src64(LEADER)
+        _ed_pkts = pkts.filter_wpan_src64(ED)
+
+        # Step 1: The DUT must start the network using
+        # thrKeySequenceCounter = 127
+        _leader_pkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
+            lambda p: p.wpan.aux_sec.key_source == 127)
+
+        # Step 2: Verify that the topology described above is created.
+        # MLE Auxiliary security header shall contain Key Source = 127,
+        # KeyIndex = 128, KeyID Mode = 2
+        _ed_pkts.filter_mle_cmd(
+            MLE_CHILD_ID_REQUEST).must_next().must_verify(lambda p: p.wpan.aux_sec.key_index == 128 and p.wpan.aux_sec.
+                                                          key_id_mode == 2 and p.wpan.aux_sec.key_source == 127)
+
+        # Step 3: Leader send an ICMPv6 Echo Request to DUT.
+        # The MAC Auxiliary security header must contain
+        # KeyIndex = 128, KeyID Mode = 1
+        lp = _leader_pkts.filter_ping_request().filter(
+            lambda p: p.wpan.aux_sec.key_index == 128 and p.wpan.aux_sec.key_id_mode == 1 and p.wpan.dst16 == pv.vars[
+                'ED_RLOC16']).must_next()
+
+        # Step 4: DUT send an ICMPv6 Echo Reply to Leader.
+        # The MAC Auxiliary security header must contain
+        # KeyIndex = 128, KeyID Mode = 1
+        _ed_pkts.filter_ping_reply(identifier=lp.icmpv6.echo.identifier).must_next().must_verify(
+            lambda p: p.wpan.aux_sec.key_index == 128 and p.wpan.aux_sec.key_id_mode == 1)
+
+        # Step 5: Leader increment thrKeySequenceCounter by 1 to force a key switch.
+        # Step 6: Leader Send an ICMPv6 Echo Request to DUT.
+        # The MAC Auxiliary security header must contain
+        # KeyIndex = 1, KeyID Mode = 1
+        lp = _leader_pkts.filter_ping_request().filter(
+            lambda p: p.wpan.aux_sec.key_index == 1 and p.wpan.aux_sec.key_id_mode == 1 and p.wpan.dst16 == pv.vars[
+                'ED_RLOC16']).must_next()
+
+        # Step 7: DUT send an ICMPv6 Echo Reply to Leader.
+        # The MAC Auxiliary security header must contain
+        # KeyIndex = 1, KeyID Mode = 1
+        _ed_pkts.filter_ping_reply(identifier=lp.icmpv6.echo.identifier).must_next().must_verify(
+            lambda p: p.wpan.aux_sec.key_index == 1 and p.wpan.aux_sec.key_id_mode == 1)
 
 
 if __name__ == '__main__':

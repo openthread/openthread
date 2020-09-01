@@ -50,6 +50,7 @@ jobs:
       COVERAGE: 1
       THREAD_VERSION: 1.2
       VIRTUAL_TIME: 1
+      INTER_OP: 1
       CC: ${{ matrix.compiler.c }}
       CXX: ${{ matrix.compiler.cxx }}
     strategy:

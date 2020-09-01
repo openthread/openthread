@@ -278,7 +278,7 @@ void DatasetManager::SendSet(void)
         }
     }
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, mUriSet));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -288,9 +288,9 @@ void DatasetManager::SendSet(void)
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error =
-                      Get<Coap::Coap>().SendMessage(*message, messageInfo, &DatasetManager::HandleCoapResponse, this));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(
+        error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, &DatasetManager::HandleCoapResponse, this));
 
     otLogInfoMeshCoP("Sent %s to leader", mUriSet);
 
@@ -392,7 +392,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 
     IgnoreError(mLocal.Read(dataset));
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -431,7 +431,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
         IgnoreError(message->SetLength(message->GetLength() - 1));
     }
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent dataset get response");
 
@@ -449,7 +449,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, mUriSet));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -578,8 +578,8 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset set request to leader");
 
@@ -667,7 +667,7 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
         datasetTlvs[length++] = Tlv::kChannelMask;
     }
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, mUriGet));
 
@@ -703,8 +703,8 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
     }
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset get request");
 
@@ -729,7 +729,7 @@ ActiveDataset::ActiveDataset(Instance &aInstance)
     , mResourceSet(OT_URI_PATH_ACTIVE_SET, &ActiveDataset::HandleSet, this)
 #endif
 {
-    Get<Coap::Coap>().AddResource(mResourceGet);
+    Get<Tmf::TmfAgent>().AddResource(mResourceGet);
 }
 
 bool ActiveDataset::IsPartiallyComplete(void) const
@@ -778,7 +778,7 @@ PendingDataset::PendingDataset(Instance &aInstance)
     , mResourceSet(OT_URI_PATH_PENDING_SET, &PendingDataset::HandleSet, this)
 #endif
 {
-    Get<Coap::Coap>().AddResource(mResourceGet);
+    Get<Tmf::TmfAgent>().AddResource(mResourceGet);
 }
 
 void PendingDataset::Clear(void)
