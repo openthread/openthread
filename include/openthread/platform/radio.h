@@ -519,7 +519,7 @@ uint64_t otPlatRadioGetNow(otInstance *aInstance);
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  *
- * @returns The bus speed in Hz(bps) between the host and the radio chip.
+ * @returns The bus speed in bps between the host and the radio chip.
  *          Return 0 when platform does not use bus.
  *
  */

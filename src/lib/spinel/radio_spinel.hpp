@@ -672,10 +672,10 @@ public:
     /**
      * This method get bus speed between the host and the radio.
      *
-     * @returns   bus speed in Hz.
+     * @returns   bus speed in bps.
      *
      */
-    uint32_t GetBusSpeed(void);
+    uint32_t GetBusSpeed(void) const;
 
 private:
     enum

@@ -1818,7 +1818,7 @@ uint64_t RadioSpinel<InterfaceType, ProcessContextType>::GetNow(void)
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-uint32_t RadioSpinel<InterfaceType, ProcessContextType>::GetBusSpeed(void)
+uint32_t RadioSpinel<InterfaceType, ProcessContextType>::GetBusSpeed(void) const
 {
     return mSpinelInterface.GetBusSpeed();
 }

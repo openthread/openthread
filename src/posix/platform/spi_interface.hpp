@@ -141,10 +141,10 @@ public:
     /**
      * This method get bus speed between the host and the radio.
      *
-     * @returns   bus speed in Hz.
+     * @returns   bus speed in bps.
      *
      */
-    uint32_t GetBusSpeed(void) { return ((mSpiDevFd >= 0) ? mSpiSpeedHz : 0); }
+    uint32_t GetBusSpeed(void) const { return ((mSpiDevFd >= 0) ? mSpiSpeedHz : 0); }
 
 private:
     int     SetupGpioHandle(int aFd, uint8_t aLine, uint32_t aHandleFlags, const char *aLabel);
