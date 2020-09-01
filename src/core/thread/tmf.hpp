@@ -82,7 +82,6 @@ public:
     bool IsTmfMessage(const Ip6::MessageInfo &aMessageInfo) const;
 
 private:
-    otError        Start(uint16_t aPort);
     static otError Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };
 

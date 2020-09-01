@@ -379,7 +379,7 @@ otError Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void
         mOldRloc = Mac::kShortAddrInvalid;
     }
 
-    SuccessOrExit(error = NetworkData::SendServerDataNotification(mOldRloc, aHandler, aContext));
+    SuccessOrExit(error = SendServerDataNotification(mOldRloc, aHandler, aContext));
     mOldRloc = rloc;
 
 exit:
