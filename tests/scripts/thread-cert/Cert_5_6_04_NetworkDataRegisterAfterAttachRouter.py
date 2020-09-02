@@ -31,7 +31,7 @@ import unittest
 
 import config
 import thread_cert
-from pktverify.consts import MLE_ADVERTISEMENT, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_REQUEST, SVR_DATA_URI, MLE_CHILD_UPDATE_RESPONSE, MODE_TLV, LEADER_DATA_TLV, ROUTE64_TLV, SOURCE_ADDRESS_TLV, ACTIVE_TIMESTAMP_TLV, ADDRESS16_TLV, NETWORK_DATA_TLV, ADDRESS_REGISTRATION_TLV
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_REQUEST, SVR_DATA_URI, MLE_CHILD_UPDATE_RESPONSE, MODE_TLV, LEADER_DATA_TLV, ROUTE64_TLV, SOURCE_ADDRESS_TLV, ACTIVE_TIMESTAMP_TLV, ADDRESS16_TLV, NETWORK_DATA_TLV, ADDRESS_REGISTRATION_TLV, LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.addrs import Ipv6Addr
 
@@ -137,11 +137,11 @@ class Cert_5_6_4_NetworkDataRegisterAfterAttachRouter(thread_cert.TestCase):
 
         # Step 4: The DUT MUST send a multicast MLE Data Response with
         # the new network information collected from Router_1
-        _lpkts.filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
-            lambda p: {Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')} == set(
-                p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.border_router.flag.p == [1, 1] and p.thread_nwd.tlv.
-            border_router.flag.s == [1, 1] and p.thread_nwd.tlv.border_router.flag.r == [1, 1] and p.thread_nwd.tlv.
-            border_router.flag.o == [1, 1] and p.thread_nwd.tlv.stable == [0, 1, 1, 1, 0, 0, 0])
+        _lpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst(LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).must_next(
+        ).must_verify(lambda p: {Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')} == set(p.thread_nwd.tlv.prefix)
+                      and p.thread_nwd.tlv.border_router.flag.p == [1, 1] and p.thread_nwd.tlv.border_router.flag.s ==
+                      [1, 1] and p.thread_nwd.tlv.border_router.flag.r == [1, 1] and p.thread_nwd.tlv.border_router.
+                      flag.o == [1, 1] and p.thread_nwd.tlv.stable == [0, 1, 1, 1, 0, 0, 0])
 
         # Step 7: The DUT MUST send a unicast MLE Child Update
         # Response to MED_1

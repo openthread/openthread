@@ -141,7 +141,10 @@ class Cert_5_6_1_NetworkDataLeaderAsBr(thread_cert.TestCase):
         # Step 6: The DUT MUST send an MLE Child ID Response to SED_1,
         # containing only stable Network Data
         _rpkts_sed.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).filter_wpan_dst64(SED).must_next().must_verify(
-            lambda p: {MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV} == set(p.thread_nwd.tlv.type))
+            lambda p: {MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV} == set(p.thread_nwd.tlv.type) and
+            {Ipv6Addr('2001:2:0:1::')} == set(p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.border_router.flag.p ==
+            [1] and p.thread_nwd.tlv.border_router.flag.s == [1] and p.thread_nwd.tlv.border_router.flag.r == [1] and p
+            .thread_nwd.tlv.border_router.flag.o == [1] and p.thread_nwd.tlv.stable == [1, 1, 1])
 
         # Step 8: The DUT MUST send a MLE Child ID Response to MED_1,
         # containing the full Network Data
