@@ -81,6 +81,18 @@
     align_type name[(((size) + (sizeof(align_type) - 1)) / sizeof(align_type))]
 
 /**
+ * This macro returns the smaller of @p a and @p b.
+ *
+ */
+#define OT_MIN(a, b) ((b) < (a) ? (b) : (a))
+
+/**
+ * This macro returns the greater of @p a and @p b.
+ *
+ */
+#define OT_MAX(a, b) ((a) < (b) ? (b) : (a))
+
+/**
  * This macro checks for the specified status, which is expected to commonly be successful, and branches to the local
  * label 'exit' if the status is unsuccessful.
  *

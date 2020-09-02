@@ -154,7 +154,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     mScanChannel = Mac::ChannelMask::kChannelIteratorFirst;
     mState       = (mScanChannels.GetNextChannel(mScanChannel) == OT_ERROR_NONE) ? kStateScanning : kStateScanDone;
 
-    otLogInfoMle("Send Discovery Request (%s)", destination.ToString().AsCString());
+    Mle::Log("Send Discovery Request", destination);
 
 exit:
 
@@ -302,7 +302,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
     uint16_t                      end;
     bool                          didCheckSteeringData = false;
 
-    otLogInfoMle("Receive Discovery Response (%s)", aMessageInfo.GetPeerAddr().ToString().AsCString());
+    Mle::Log("Receive Discovery Response", aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(mState == kStateScanning, error = OT_ERROR_DROP);
 
@@ -387,11 +387,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMle("Failed to process Discovery Response: %s", otThreadErrorToString(error));
-    }
+    Mle::LogProcessError("Discovery Response", error);
 }
 
 } // namespace Mle

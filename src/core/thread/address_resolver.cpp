@@ -65,9 +65,9 @@ AddressResolver::AddressResolver(Instance &aInstance)
     , mQueryRetryList()
     , mIcmpHandler(&AddressResolver::HandleIcmpReceive, this)
 {
-    Get<Coap::Coap>().AddResource(mAddressError);
-    Get<Coap::Coap>().AddResource(mAddressQuery);
-    Get<Coap::Coap>().AddResource(mAddressNotification);
+    Get<Tmf::TmfAgent>().AddResource(mAddressError);
+    Get<Tmf::TmfAgent>().AddResource(mAddressQuery);
+    Get<Tmf::TmfAgent>().AddResource(mAddressNotification);
 
     IgnoreError(Get<Ip6::Icmp>().RegisterHandler(mIcmpHandler));
 }
@@ -523,7 +523,7 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
     SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_QUERY));
@@ -534,9 +534,9 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     messageInfo.GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoArp("Sending address query for %s", aEid.ToString().AsCString());
 
@@ -615,7 +615,7 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
 
     LogCacheEntryChange(kEntryUpdated, kReasonReceivedNotification, *entry);
 
-    if (Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
+    if (Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
     {
         otLogInfoArp("Sending address notification acknowledgment");
     }
@@ -634,7 +634,7 @@ void AddressResolver::SendAddressError(const Ip6::Address &            aTarget,
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
     message->Init(aDestination == nullptr ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_ERROR));
@@ -653,9 +653,9 @@ void AddressResolver::SendAddressError(const Ip6::Address &            aTarget,
     }
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoArp("Sending address error for target %s", aTarget.ToString().AsCString());
 
@@ -692,7 +692,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
 
     if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
-        if (Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
+        if (Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
         {
             otLogInfoArp("Sent address error notification acknowledgment");
         }
@@ -797,7 +797,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address &            a
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_NOTIFY));
@@ -814,9 +814,9 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address &            a
 
     messageInfo.SetPeerAddr(aDestination);
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoArp("Sending address notification for target %s", aTarget.ToString().AsCString());
 

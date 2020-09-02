@@ -538,7 +538,7 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
 
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kJoinerRouterLocator, joinerRouterRloc));
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_RELAY_TX));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -547,13 +547,13 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
     SuccessOrExit(error = message->SetLength(offset + aMessage.GetLength() - aMessage.GetOffset()));
     aMessage.CopyTo(aMessage.GetOffset(), offset, aMessage.GetLength() - aMessage.GetOffset(), *message);
 
-    messageInfo.SetSockPort(kCoapUdpPort);
+    messageInfo.SetSockPort(Tmf::kUdpPort);
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
     messageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.GetPeerAddr().GetIid().SetLocator(joinerRouterRloc);
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("Sent to joiner router request on %s", OT_URI_PATH_RELAY_TX);
 
@@ -581,7 +581,7 @@ otError BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
     Coap::Message *  message = nullptr;
     uint16_t         offset  = 0;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     if (aSeparate)
     {
@@ -606,11 +606,11 @@ otError BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
     aMessage.CopyTo(aMessage.GetOffset(), offset, aMessage.GetLength() - aMessage.GetOffset(), *message);
 
     SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetSockPort(kCoapUdpPort);
+    messageInfo.SetSockPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo, HandleCoapResponse, forwardContext));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, HandleCoapResponse, forwardContext));
 
     // HandleCoapResponse is responsible to free this forward context.
     forwardContext = nullptr;
@@ -676,7 +676,7 @@ otError BorderAgent::Start(void)
     coaps.AddResource(mProxyTransmit);
     coaps.AddResource(mRelayTransmit);
 
-    Get<Coap::Coap>().AddResource(mRelayReceive);
+    Get<Tmf::TmfAgent>().AddResource(mRelayReceive);
 
     SetState(OT_BORDER_AGENT_STATE_STARTED);
 
@@ -718,7 +718,7 @@ otError BorderAgent::Stop(void)
     coaps.RemoveResource(mProxyTransmit);
     coaps.RemoveResource(mRelayTransmit);
 
-    Get<Coap::Coap>().RemoveResource(mRelayReceive);
+    Get<Tmf::TmfAgent>().RemoveResource(mRelayReceive);
 
     coaps.Stop();
 

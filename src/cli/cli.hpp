@@ -354,6 +354,23 @@ private:
     void ProcessLeaderWeight(uint8_t aArgsLength, char *aArgs[]);
 #endif
     void ProcessMasterKey(uint8_t aArgsLength, char *aArgs[]);
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    void ProcessMlr(uint8_t aArgsLength, char *aArgs[]);
+
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+    void ProcessMlrReg(uint8_t aArgsLength, char *aArgs[]);
+
+    static void HandleMlrRegResult(void *              aContext,
+                                   otError             aError,
+                                   uint8_t             aMlrStatus,
+                                   const otIp6Address *aFailedAddresses,
+                                   uint8_t             aFailedAddressNum);
+    void        HandleMlrRegResult(otError             aError,
+                                   uint8_t             aMlrStatus,
+                                   const otIp6Address *aFailedAddresses,
+                                   uint8_t             aFailedAddressNum);
+#endif
+#endif
     void ProcessMode(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
     void ProcessNeighbor(uint8_t aArgsLength, char *aArgs[]);

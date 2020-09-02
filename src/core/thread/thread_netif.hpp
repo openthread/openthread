@@ -36,9 +36,9 @@
 
 #include "openthread-core-config.h"
 
-#include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
 #include "mac/mac.hpp"
+#include "thread/tmf.hpp"
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 #include "meshcop/border_agent.hpp"
@@ -180,19 +180,8 @@ public:
      */
     bool IsOnMesh(const Ip6::Address &aAddress) const;
 
-    /**
-     * This method returns whether Thread Management Framework Addressing Rules are met.
-     *
-     * @retval TRUE   if Thread Management Framework Addressing Rules are met.
-     * @retval FALSE  if Thread Management Framework Addressing Rules are not met.
-     *
-     */
-    bool IsTmfMessage(const Ip6::MessageInfo &aMessageInfo);
-
 private:
-    static otError TmfFilter(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
-
-    Coap::Coap mCoap;
+    Tmf::TmfAgent mTmfAgent;
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     Dhcp6::Client mDhcp6Client;
 #endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE

@@ -38,6 +38,7 @@
 #include "openthread-posix-config.h"
 
 #include <errno.h>
+#include <net/if.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/select.h>
@@ -393,6 +394,18 @@ enum SocketBlockOption
  *
  */
 int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption aBlockOption);
+
+/**
+ * The name of Thread network interface.
+ *
+ */
+extern char gNetifName[IFNAMSIZ];
+
+/**
+ * The index of Thread network interface.
+ *
+ */
+extern unsigned int gNetifIndex;
 
 #ifdef __cplusplus
 }

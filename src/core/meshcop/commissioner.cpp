@@ -136,15 +136,15 @@ exit:
 
 void Commissioner::AddCoapResources(void)
 {
-    Get<Coap::Coap>().AddResource(mRelayReceive);
-    Get<Coap::Coap>().AddResource(mDatasetChanged);
+    Get<Tmf::TmfAgent>().AddResource(mRelayReceive);
+    Get<Tmf::TmfAgent>().AddResource(mDatasetChanged);
     Get<Coap::CoapSecure>().AddResource(mJoinerFinalize);
 }
 
 void Commissioner::RemoveCoapResources(void)
 {
-    Get<Coap::Coap>().RemoveResource(mRelayReceive);
-    Get<Coap::Coap>().RemoveResource(mDatasetChanged);
+    Get<Tmf::TmfAgent>().RemoveResource(mRelayReceive);
+    Get<Tmf::TmfAgent>().RemoveResource(mDatasetChanged);
     Get<Coap::CoapSecure>().RemoveResource(mJoinerFinalize);
 }
 
@@ -696,7 +696,7 @@ otError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8
     Ip6::MessageInfo messageInfo;
     MeshCoP::Tlv     tlv;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_COMMISSIONER_GET));
 
@@ -715,9 +715,9 @@ otError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo,
-                                                        Commissioner::HandleMgmtCommissionerGetResponse, this));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo,
+                                                           Commissioner::HandleMgmtCommissionerGetResponse, this));
 
     otLogInfoMeshCoP("sent MGMT_COMMISSIONER_GET.req to leader");
 
@@ -761,7 +761,7 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_COMMISSIONER_SET));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -801,9 +801,9 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo,
-                                                        Commissioner::HandleMgmtCommissionerSetResponse, this));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo,
+                                                           Commissioner::HandleMgmtCommissionerSetResponse, this));
 
     otLogInfoMeshCoP("sent MGMT_COMMISSIONER_SET.req to leader");
 
@@ -848,7 +848,7 @@ otError Commissioner::SendPetition(void)
 
     mTransmitAttempts++;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_LEADER_PETITION));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -859,10 +859,10 @@ otError Commissioner::SendPetition(void)
     SuccessOrExit(error = commissionerId.AppendTo(*message));
 
     SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    SuccessOrExit(
-        error = Get<Coap::Coap>().SendMessage(*message, messageInfo, Commissioner::HandleLeaderPetitionResponse, this));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo,
+                                                           Commissioner::HandleLeaderPetitionResponse, this));
 
     otLogInfoMeshCoP("sent petition");
 
@@ -948,7 +948,7 @@ void Commissioner::SendKeepAlive(uint16_t aSessionId)
     Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_LEADER_KEEP_ALIVE));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -961,9 +961,9 @@ void Commissioner::SendKeepAlive(uint16_t aSessionId)
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo,
-                                                        Commissioner::HandleLeaderKeepAliveResponse, this));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo,
+                                                           Commissioner::HandleLeaderKeepAliveResponse, this));
 
     otLogInfoMeshCoP("sent keep alive");
 
@@ -1093,7 +1093,7 @@ void Commissioner::HandleDatasetChanged(Coap::Message &aMessage, const Ip6::Mess
 
     otLogInfoMeshCoP("received dataset changed");
 
-    SuccessOrExit(Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo));
 
     otLogInfoMeshCoP("sent dataset changed acknowledgment");
 
@@ -1203,7 +1203,7 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
     uint16_t         offset;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
     SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_RELAY_TX));
@@ -1228,9 +1228,9 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
 
     messageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.GetPeerAddr().GetIid().SetLocator(mJoinerRloc);
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     aMessage.Free();
 

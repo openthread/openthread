@@ -110,7 +110,7 @@ void CslTxScheduler::Clear(void)
 void CslTxScheduler::RescheduleCslTx(void)
 {
     uint64_t radioNow     = otPlatRadioGetNow(&GetInstance());
-    uint32_t minDelayTime = TimeMicro::kMaxDuration;
+    uint32_t minDelayTime = Time::kMaxDuration;
     Child *  bestChild    = nullptr;
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))

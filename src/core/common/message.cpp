@@ -38,6 +38,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "net/checksum.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
@@ -629,41 +630,6 @@ void Message::SetLinkInfo(const ThreadLinkInfo &aLinkInfo)
     SetTimeSyncSeq(aLinkInfo.mTimeSyncSeq);
     SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);
 #endif
-}
-
-uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aValue)
-{
-    uint16_t result = aChecksum + aValue;
-    return result + (result < aChecksum);
-}
-
-uint16_t Message::UpdateChecksum(uint16_t aChecksum, const void *aBuf, uint16_t aLength)
-{
-    const uint8_t *bytes = reinterpret_cast<const uint8_t *>(aBuf);
-
-    for (int i = 0; i < aLength; i++)
-    {
-        aChecksum = UpdateChecksum(aChecksum, (i & 1) ? bytes[i] : static_cast<uint16_t>(bytes[i] << 8));
-    }
-
-    return aChecksum;
-}
-
-uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const
-{
-    Chunk chunk;
-
-    OT_ASSERT(aOffset + aLength <= GetLength());
-
-    GetFirstChunk(aOffset, aLength, chunk);
-
-    while (chunk.GetLength() > 0)
-    {
-        aChecksum = Message::UpdateChecksum(aChecksum, chunk.GetData(), chunk.GetLength());
-        GetNextChunk(aLength, chunk);
-    }
-
-    return aChecksum;
 }
 
 bool Message::IsTimeSync(void) const

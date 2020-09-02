@@ -654,6 +654,59 @@ typedef bool (*otIp6SlaacPrefixFilter)(otInstance *aInstance, const otIp6Prefix 
 void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFilter);
 
 /**
+ * This function pointer is called with results of `otIp6RegisterMulticastListeners`.
+ *
+ * @param[in]  aContext  A pointer to the user context.
+ * @param[in]  aError    OT_ERROR_NONE when successfully sent MLR.req and received MLR.rsp,
+ *                       OT_ERROR_RESPONSE_TIMEOUT when failed to receive MLR.rsp,
+ *                       OT_ERROR_PARSE when failed to parse MLR.rsp.
+ * @param[in]  aMlrStatus         The Multicast Listener Registration status when @p aError is OT_ERROR_NONE.
+ * @param[in]  aFailedAddresses   A pointer to the failed Ip6 addresses when @p aError is OT_ERROR_NONE.
+ * @param[in]  aFailedAddressNum  The number of failed Ip6 addresses when @p aError is OT_ERROR_NONE.
+ *
+ * @sa otIp6RegisterMulticastListeners
+ *
+ */
+typedef void (*otIp6RegisterMulticastListenersCallback)(void *              aContext,
+                                                        otError             aError,
+                                                        uint8_t             aMlrStatus,
+                                                        const otIp6Address *aFailedAddresses,
+                                                        uint8_t             aFailedAddressNum);
+
+/**
+ * This function registers Multicast Listeners to Primary Backbone Router.
+ *
+ * Note: only available when both `OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE` and
+ * `OPENTHREAD_CONFIG_COMMISSIONER_ENABLE` are enabled)
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aAddresses   A Multicast Address Array to register.
+ * @param[in]  aAddressNum  The number of Multicast Address to register (0 if @p aAddresses is NULL).
+ * @param[in]  aTimeout     A pointer to the timeout value (in seconds) to be included in MLR.req. A timeout value of 0
+ *                          removes the corresponding Multicast Listener. If NULL, MLR.req would have no Timeout Tlv by
+ *                          default.
+ * @param[in]  aCallback    A pointer to the callback function.
+ * @param[in]  aContext     A pointer to the user context.
+ *
+ * @retval OT_ERROR_NONE           Successfully sent MLR.req. The @p aCallback will be called iff this method
+ *                                 returns OT_ERROR_NONE.
+ * @retval OT_ERROR_BUSY           If a previous registration was ongoing.
+ * @retval OT_ERROR_INVALID_ARGS   If one or more arguments are invalid.
+ * @retval OT_ERROR_INVALID_STATE  If the device was not in a valid state to send MLR.req (e.g. Commissioner not
+ *                                 started, Primary Backbone Router not found).
+ * @retval OT_ERROR_NO_BUFS        If insufficient message buffers available.
+ *
+ * @sa otIp6RegisterMulticastListenersCallback
+ *
+ */
+otError otIp6RegisterMulticastListeners(otInstance *                            aInstance,
+                                        const otIp6Address *                    aAddresses,
+                                        uint8_t                                 aAddressNum,
+                                        const uint32_t *                        aTimeout,
+                                        otIp6RegisterMulticastListenersCallback aCallback,
+                                        void *                                  aContext);
+
+/**
  * @}
  *
  */
