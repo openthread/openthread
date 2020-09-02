@@ -98,7 +98,6 @@ class Cert_6_1_7_RouterAttachLinkQuality(thread_cert.TestCase):
 
         ROUTER_1 = pv.vars['ROUTER_1']
         ED = pv.vars['ED']
-        _router1_pkts = pkts.filter_wpan_src64(ROUTER_1)
         _ed_pkts = pkts.filter_wpan_src64(ED)
 
         # Step 3: The DUT MUST send a MLE Parent Request to the
@@ -106,6 +105,7 @@ class Cert_6_1_7_RouterAttachLinkQuality(thread_cert.TestCase):
         _ed_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
             lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
                 p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 0)
+
         # Step 5: The DUT MUST send a MLE Child ID Request to Router_1
         _ed_pkts.filter_wpan_dst64(ROUTER_1).filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(
             lambda p: {
@@ -116,7 +116,8 @@ class Cert_6_1_7_RouterAttachLinkQuality(thread_cert.TestCase):
         # Step 6: The DUT MUST respond with ICMPv6 Echo Reply
         ed_mleid = pv.vars['ED_MLEID']
         router1_mleid = pv.vars['ROUTER_1_MLEID']
-        _pkt = _router1_pkts.filter_ipv6_src_dst(router1_mleid, ed_mleid).filter_ping_request().must_next()
+        _pkt = pkts.range(_ed_pkts.index).filter_ipv6_src_dst(router1_mleid,
+                                                              ed_mleid).filter_ping_request().must_next()
         _ed_pkts.filter_ipv6_src_dst(
             ed_mleid, router1_mleid).filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).must_next()
 
