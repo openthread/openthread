@@ -31,7 +31,7 @@
  *   This file implements the OpenThread cryptographic random number generator API.
  */
 
-#include "openthread/random_crypto.h"
+#include <openthread/random_crypto.h>
 
 #include <mbedtls/ctr_drbg.h>
 

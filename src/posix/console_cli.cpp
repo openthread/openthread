@@ -28,7 +28,7 @@
 
 #include "console_cli.h"
 
-#include "openthread/config.h"
+#include <openthread/config.h>
 
 #include <assert.h>
 #include <stdio.h>

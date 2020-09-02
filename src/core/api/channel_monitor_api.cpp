@@ -32,7 +32,7 @@
  */
 
 #include "openthread-core-config.h"
-#include "openthread/channel_monitor.h"
+#include <openthread/channel_monitor.h>
 
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
