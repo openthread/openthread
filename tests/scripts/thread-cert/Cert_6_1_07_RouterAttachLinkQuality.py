@@ -30,44 +30,43 @@
 import unittest
 
 import thread_cert
+from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_PARENT_REQUEST, MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, TIMEOUT_TLV, ADDRESS_REGISTRATION_TLV, TLV_REQUEST_TLV, LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER1 = 2
-REED0 = 3
-REED1 = 4
-ED = 5
+ROUTER2 = 3
+ED = 4
 
 
-class Cert_6_1_4_REEDAttachConnectivity(thread_cert.TestCase):
+class Cert_6_1_7_RouterAttachLinkQuality(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1, REED0, REED1]
+            'whitelist': [ROUTER1, ROUTER2]
         },
         ROUTER1: {
+            'name': 'ROUTER_1',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, REED1]
-        },
-        REED0: {
-            'mode': 'rsdn',
-            'panid': 0xface,
-            'router_upgrade_threshold': 0,
             'whitelist': [LEADER, ED]
         },
-        REED1: {
+        ROUTER2: {
+            'name': 'ROUTER_2',
             'mode': 'rsdn',
             'panid': 0xface,
-            'router_upgrade_threshold': 0,
-            'whitelist': [LEADER, ROUTER1, ED]
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, (ED, -85)]
         },
         ED: {
+            'name': 'ED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [REED0, REED1]
+            'whitelist': [ROUTER1, ROUTER2]
         },
     }
 
@@ -80,20 +79,48 @@ class Cert_6_1_4_REEDAttachConnectivity(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
-        self.nodes[REED0].start()
+        self.nodes[ROUTER2].start()
         self.simulator.go(5)
-        self.assertEqual(self.nodes[REED0].get_state(), 'child')
-
-        self.nodes[REED1].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[REED1].get_state(), 'child')
-
-        self.simulator.go(10)
+        self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ED].start()
-        self.simulator.go(10)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
-        self.assertEqual(self.nodes[REED1].get_state(), 'router')
+
+        self.collect_ipaddrs()
+        addrs = self.nodes[ED].get_addrs()
+        for addr in addrs:
+            self.assertTrue(self.nodes[ROUTER1].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        ROUTER_1 = pv.vars['ROUTER_1']
+        ED = pv.vars['ED']
+        _ed_pkts = pkts.filter_wpan_src64(ED)
+
+        # Step 3: The DUT MUST send a MLE Parent Request to the
+        # All-Routers multicast address
+        _ed_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).filter_ipv6_dst(
+            LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS).must_next().must_verify(
+                lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+                    p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 0)
+
+        # Step 5: The DUT MUST send a MLE Child ID Request to Router_1
+        _ed_pkts.filter_wpan_dst64(ROUTER_1).filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(
+            lambda p: {
+                RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV,
+                ADDRESS_REGISTRATION_TLV, TLV_REQUEST_TLV
+            } <= set(p.mle.tlv.type))
+
+        # Step 6: The DUT MUST respond with ICMPv6 Echo Reply
+        ed_mleid = pv.vars['ED_MLEID']
+        router1_mleid = pv.vars['ROUTER_1_MLEID']
+        _pkt = pkts.range(_ed_pkts.index).filter_ipv6_src_dst(router1_mleid,
+                                                              ed_mleid).filter_ping_request().must_next()
+        _ed_pkts.filter_ipv6_src_dst(
+            ed_mleid, router1_mleid).filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).must_next()
 
 
 if __name__ == '__main__':
