@@ -30,7 +30,7 @@
 import unittest
 
 import thread_cert
-from pktverify.consts import MLE_LINK_REQUEST, MLE_LINK_ACCEPT, CHALLENGE_TLV, LEADER_DATA_TLV, SOURCE_ADDRESS_TLV, VERSION_TLV
+from pktverify.consts import MLE_CHILD_ID_RESPONSE, MLE_LINK_REQUEST, MLE_LINK_ACCEPT, CHALLENGE_TLV, LEADER_DATA_TLV, SOURCE_ADDRESS_TLV, VERSION_TLV
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -101,15 +101,17 @@ class Cert_6_1_9_EDSynchronization(thread_cert.TestCase):
         pkts = pv.pkts
         pv.summary.show()
 
+        LEADER = pv.vars['LEADER']
         ED = pv.vars['ED']
 
         # Step 3: The DUT MUST send a unicast Link Request
         # to Router 1, Router 2 & Router 3
+        pkts.filter_wpan_src64(LEADER).filter_wpan_dst64(ED).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
         for i in range(1, 3):
             _pkts = pkts.copy()
             _pkts.filter_wpan_src64(ED).filter_wpan_dst64(
                 pv.vars['ROUTER_%d' % i]).filter_mle_cmd(MLE_LINK_REQUEST).must_next().must_verify(
-                    lambda p: {CHALLENGE_TLV, LEADER_DATA_TLV, SOURCE_ADDRESS_TLV, VERSION_TLV} == set(p.mle.tlv.type))
+                    lambda p: {CHALLENGE_TLV, LEADER_DATA_TLV, SOURCE_ADDRESS_TLV, VERSION_TLV} <= set(p.mle.tlv.type))
 
             # Step 4: Router_1, Router_2 & Router_3 MUST all send a
             # Link Accept message to the DUT
