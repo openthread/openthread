@@ -30,7 +30,7 @@
 import unittest
 
 import thread_cert
-from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_PARENT_REQUEST, MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, TIMEOUT_TLV, ADDRESS_REGISTRATION_TLV, TLV_REQUEST_TLV
+from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_PARENT_REQUEST, MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, TIMEOUT_TLV, ADDRESS_REGISTRATION_TLV, TLV_REQUEST_TLV, LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -102,9 +102,10 @@ class Cert_6_1_7_RouterAttachLinkQuality(thread_cert.TestCase):
 
         # Step 3: The DUT MUST send a MLE Parent Request to the
         # All-Routers multicast address
-        _ed_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
-                p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 0)
+        _ed_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).filter_ipv6_dst(
+            LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS).must_next().must_verify(
+                lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+                    p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 0)
 
         # Step 5: The DUT MUST send a MLE Child ID Request to Router_1
         _ed_pkts.filter_wpan_dst64(ROUTER_1).filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(
