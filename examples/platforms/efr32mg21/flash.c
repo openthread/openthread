@@ -119,8 +119,9 @@ static otError          mapNvm3Error(Ecode_t nvm3Res);
 void otPlatSettingsInit(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-
-    if (mapNvm3Error(nvm3_open(nvm3_defaultHandle, nvm3_defaultInit)) != OT_ERROR_NONE)
+    Ecode_t error = nvm3_open(nvm3_defaultHandle, nvm3_defaultInit);
+    otError mappedError = mapNvm3Error(error);
+    if (mappedError != OT_ERROR_NONE)
     {
         otLogDebgPlat("Error initializing nvm3 instance");
     }
@@ -339,24 +340,186 @@ static nvm3_ObjectKey_t makeNvm3ObjKey(uint16_t otSettingsKey, int index)
     return (NVM3KEY_DOMAIN_OPENTHREAD | (otSettingsKey << 8) | (index & 0xFF));
 }
 
+extern uint32_t linker_nvm_end;
+extern uint32_t linker_nvm_begin;
+extern uint32_t linker_nvm_size;
+extern uint32_t __nvm3Base;
+
 static otError mapNvm3Error(Ecode_t nvm3Res)
 {
     otError err;
+
+    const char * str;
 
     switch (nvm3Res)
     {
     case ECODE_NVM3_OK:
         err = OT_ERROR_NONE;
+        str = "ECODE_NVM3_OK";
         break;
 
     case ECODE_NVM3_ERR_KEY_NOT_FOUND:
         err = OT_ERROR_NOT_FOUND;
+        str = "ECODE_NVM3_ERR_KEY_NOT_FOUND";
+        break;
+
+    case ECODE_NVM3_ERR_ALIGNMENT_INVALID:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_ALIGNMENT_INVALID";
+        break;
+    case ECODE_NVM3_ERR_SIZE_TOO_SMALL:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_SIZE_TOO_SMALL";
+        break;
+    case ECODE_NVM3_ERR_NO_VALID_PAGES:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_NO_VALID_PAGES";
+        break;
+    case ECODE_NVM3_ERR_PAGE_SIZE_NOT_SUPPORTED:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_PAGE_SIZE_NOT_SUPPORTED";
+        break;
+    case ECODE_NVM3_ERR_OBJECT_SIZE_NOT_SUPPORTED:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_OBJECT_SIZE_NOT_SUPPORTED";
+        break;
+    case ECODE_NVM3_ERR_STORAGE_FULL:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_STORAGE_FULL";
+        break;
+    case ECODE_NVM3_ERR_NOT_OPENED:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_NOT_OPENED";
+        break;
+    case ECODE_NVM3_ERR_OPENED_WITH_OTHER_PARAMETERS:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_OPENED_WITH_OTHER_PARAMETERS";
+        break;
+    case ECODE_NVM3_ERR_PARAMETER:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_PARAMETER";
+        break;
+    case ECODE_NVM3_ERR_KEY_INVALID:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_KEY_INVALID";
+        break;
+    case ECODE_NVM3_ERR_OBJECT_IS_NOT_DATA:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_OBJECT_IS_NOT_DATA";
+        break;
+    case ECODE_NVM3_ERR_OBJECT_IS_NOT_A_COUNTER:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_OBJECT_IS_NOT_A_COUNTER";
+        break;
+    case ECODE_NVM3_ERR_ERASE_FAILED:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_ERASE_FAILED";
+        break;
+    case ECODE_NVM3_ERR_WRITE_DATA_SIZE:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_WRITE_DATA_SIZE";
+        break;
+    case ECODE_NVM3_ERR_WRITE_FAILED:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_WRITE_FAILED";
+        break;
+    case ECODE_NVM3_ERR_READ_DATA_SIZE:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_READ_DATA_SIZE";
+        break;
+    case ECODE_NVM3_ERR_READ_FAILED:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_READ_FAILED";
+        break;
+    case ECODE_NVM3_ERR_INIT_WITH_FULL_NVM:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_INIT_WITH_FULL_NVM";
+        break;
+    case ECODE_NVM3_ERR_RESIZE_PARAMETER:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_RESIZE_PARAMETER";
+        break;
+    case ECODE_NVM3_ERR_RESIZE_NOT_ENOUGH_SPACE:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_RESIZE_NOT_ENOUGH_SPACE";
+        break;
+    case ECODE_NVM3_ERR_ERASE_COUNT_ERROR:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_ERASE_COUNT_ERROR";
+        break;
+    case ECODE_NVM3_ERR_ADDRESS_RANGE:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_ADDRESS_RANGE";
+        break;
+    case ECODE_NVM3_ERR_NVM_NOT_AVAILABLE:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_NVM_NOT_AVAILABLE";
+        break;
+    case ECODE_NVM3_ERR_NVM_ACCESS:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_NVM_ACCESS";
+        break;
+    case ECODE_NVM3_ERR_ENCRYPTION_INIT:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_ENCRYPTION_INIT";
+        break;
+    case ECODE_NVM3_ERR_ENCRYPTION_ENCODE:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_ENCRYPTION_ENCODE";
+        break;
+    case ECODE_NVM3_ERR_ENCRYPTION_DECODE:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_ENCRYPTION_DECODE";
+        break;
+    case ECODE_NVM3_ERR_ENCRYPTION_NOT_SUPPORTED:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_ENCRYPTION_NOT_SUPPORTED";
+        break;
+    case ECODE_NVM3_ERR_ENCRYPTION_KEY_ERROR:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_ENCRYPTION_KEY_ERROR";
+        break;
+    case ECODE_NVM3_ERR_RANDOM_NUMBER:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_RANDOM_NUMBER";
+        break;
+    case ECODE_NVM3_ERR_INT_WRITE_TO_NOT_ERASED:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_INT_WRITE_TO_NOT_ERASED";
+        break;
+    case ECODE_NVM3_ERR_INT_ADDR_INVALID:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_INT_ADDR_INVALID";
+        break;
+    case ECODE_NVM3_ERR_INT_KEY_MISMATCH:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_INT_KEY_MISMATCH";
+        break;
+    case ECODE_NVM3_ERR_INT_SIZE_ERROR:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_INT_SIZE_ERROR";
+        break;
+    case ECODE_NVM3_ERR_INT_EMULATOR:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_INT_EMULATOR";
+        break;
+    case ECODE_NVM3_ERR_INT_TEST:
+        err = OT_ERROR_FAILED;
+        str = "ECODE_NVM3_ERR_INT_TEST";
         break;
 
     default:
         err = OT_ERROR_FAILED;
+        str = "Unknown NVM3 ECODE";
         break;
     }
+
+    otLogDebgPlat("%s", str);
+    otLogDebgPlat("linker_nvm_end   = 0x%08x ", &linker_nvm_end);
+    otLogDebgPlat("linker_nvm_begin = 0x%08x ", &linker_nvm_begin);
+    otLogDebgPlat("linker_nvm_size  = 0x%08x ", &linker_nvm_size);
+    otLogDebgPlat("__nvm3Base       = 0x%08x ", &__nvm3Base);
+
 
     return err;
 }

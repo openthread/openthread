@@ -232,9 +232,9 @@ SECTIONS
     KEEP(*(.simee*))
   } > FLASH
 
-  linker_nvm_end = ORIGIN(FLASH) + LENGTH(FLASH);
-  linker_nvm_begin = linker_nvm_end - SIZEOF(.nvm);
-  linker_nvm_size = SIZEOF(.nvm);
+  PROVIDE(linker_nvm_end = ORIGIN(FLASH) + LENGTH(FLASH));
+  PROVIDE(linker_nvm_begin = linker_nvm_end - SIZEOF(.nvm));
+  PROVIDE(linker_nvm_size = SIZEOF(.nvm));
   __nvm3Base = linker_nvm_begin;
   /*******************************************************************/
 
