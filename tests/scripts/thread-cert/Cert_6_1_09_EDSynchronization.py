@@ -58,7 +58,7 @@ class Cert_6_1_9_EDSynchronization(thread_cert.TestCase):
         ED: {
             'name': 'ED',
             'panid': 0xface,
-            'whitelist': [LEADER, ROUTER1, ROUTER2, ROUTER3]
+            'whitelist': [LEADER]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
@@ -78,24 +78,30 @@ class Cert_6_1_9_EDSynchronization(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(3)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
-        self.nodes[ED].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[ED].get_state(), 'child')
-
         self.nodes[ROUTER1].start()
-        self.simulator.go(5)
+        self.simulator.go(3)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ROUTER2].start()
-        self.simulator.go(5)
+        self.simulator.go(3)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ROUTER3].start()
-        self.simulator.go(5)
+        self.simulator.go(3)
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
+
+        self.nodes[ED].start()
+        self.simulator.go(3)
+        self.assertEqual(self.nodes[ED].get_state(), 'child')
+
+        self.nodes[ED].add_whitelist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[ED].add_whitelist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[ED].add_whitelist(self.nodes[ROUTER3].get_addr64())
+        self.nodes[ED].enable_whitelist()
+        self.simulator.go(10)
 
     def verify(self, pv):
         pkts = pv.pkts

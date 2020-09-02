@@ -1,0 +1,83 @@
+{
+ "ethaddrs": {},
+ "extaddrs": {
+  "1": "f6:78:26:f1:cd:86:53:18",
+  "2": "32:e5:00:ea:8c:fc:70:cd",
+  "3": "d6:df:46:f0:31:96:47:61",
+  "4": "be:95:fd:5a:56:0b:1f:cc",
+  "5": "86:3e:ec:77:4a:52:69:a9"
+ },
+ "ipaddrs": {},
+ "mleids": {},
+ "pcap": "/usr/local/google/home/mjing/workdir/openthread/current.pcap",
+ "start_time": "Wed Sep  2 22:24:31 2020",
+ "testcase": "Cert_6_1_09_EDSynchronization",
+ "topology": {
+  "1": {
+   "is_bbr": false,
+   "is_mtd": false,
+   "mode": "rsdn",
+   "name": "LEADER",
+   "panid": 64206,
+   "version": "1.1",
+   "whitelist": [
+    2,
+    3,
+    4
+   ]
+  },
+  "2": {
+   "is_bbr": false,
+   "is_mtd": false,
+   "mode": "rsdn",
+   "name": "ROUTER_1",
+   "panid": 64206,
+   "router_selection_jitter": 1,
+   "version": "1.1",
+   "whitelist": [
+    1,
+    3,
+    5
+   ]
+  },
+  "3": {
+   "is_bbr": false,
+   "is_mtd": false,
+   "mode": "rsdn",
+   "name": "ED",
+   "panid": 64206,
+   "version": "1.1",
+   "whitelist": [
+    1
+   ]
+  },
+  "4": {
+   "is_bbr": false,
+   "is_mtd": false,
+   "mode": "rsdn",
+   "name": "ROUTER_2",
+   "panid": 64206,
+   "router_selection_jitter": 1,
+   "version": "1.1",
+   "whitelist": [
+    1,
+    3,
+    5
+   ]
+  },
+  "5": {
+   "is_bbr": false,
+   "is_mtd": false,
+   "mode": "rsdn",
+   "name": "ROUTER_3",
+   "panid": 64206,
+   "router_selection_jitter": 1,
+   "version": "1.1",
+   "whitelist": [
+    3,
+    2,
+    4
+   ]
+  }
+ }
+}
