@@ -988,14 +988,14 @@ exit:
     return message;
 }
 
-otError Mle::AppendHeader(Message &aMessage, Header::Command aCommand)
+otError Mle::AppendHeader(Message &aMessage, Command aCommand)
 {
     otError error = OT_ERROR_NONE;
     Header  header;
 
     header.Init();
 
-    if (aCommand == Header::kCommandDiscoveryRequest || aCommand == Header::kCommandDiscoveryResponse)
+    if (aCommand == kCommandDiscoveryRequest || aCommand == kCommandDiscoveryResponse)
     {
         header.SetSecuritySuite(Header::kNoSecurity);
     }
@@ -1923,7 +1923,7 @@ otError Mle::SendParentRequest(ParentRequestType aType)
     }
 
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentRequest));
+    SuccessOrExit(error = AppendHeader(*message, kCommandParentRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
     SuccessOrExit(error = AppendChallenge(*message, mParentRequestChallenge));
     SuccessOrExit(error = AppendScanMask(*message, scanMask));
@@ -1993,7 +1993,7 @@ otError Mle::SendChildIdRequest(void)
 
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
     message->SetSubType(Message::kSubTypeMleChildIdRequest);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdRequest));
+    SuccessOrExit(error = AppendHeader(*message, kCommandChildIdRequest));
     SuccessOrExit(error = AppendResponse(*message, mParentCandidateChallenge));
     SuccessOrExit(error = AppendLinkFrameCounter(*message));
     SuccessOrExit(error = AppendMleFrameCounter(*message));
@@ -2052,7 +2052,7 @@ otError Mle::SendDataRequest(const Ip6::Address &aDestination,
     Message *message;
 
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataRequest));
+    SuccessOrExit(error = AppendHeader(*message, kCommandDataRequest));
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
     SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
@@ -2231,7 +2231,7 @@ otError Mle::SendChildUpdateRequest(void)
 
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
     message->SetSubType(Message::kSubTypeMleChildUpdateRequest);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
+    SuccessOrExit(error = AppendHeader(*message, kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
 
     switch (mRole)
@@ -2304,7 +2304,7 @@ otError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, con
     bool         checkAddress = false;
 
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateResponse));
+    SuccessOrExit(error = AppendHeader(*message, kCommandChildUpdateResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
 
@@ -2389,7 +2389,7 @@ void Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Addres
     message->SetLinkSecurityEnabled(true);
     message->SetSubType(Message::kSubTypeMleAnnounce);
     message->SetChannel(aChannel);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandAnnounce));
+    SuccessOrExit(error = AppendHeader(*message, kCommandAnnounce));
 
     channel.Init();
     channel.SetChannel(Get<Mac::Mac>().GetPanChannel());
@@ -2558,12 +2558,12 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         switch (header.GetCommand())
         {
 #if OPENTHREAD_FTD
-        case Header::kCommandDiscoveryRequest:
+        case kCommandDiscoveryRequest:
             Get<MleRouter>().HandleDiscoveryRequest(aMessage, aMessageInfo);
             break;
 #endif
 
-        case Header::kCommandDiscoveryResponse:
+        case kCommandDiscoveryResponse:
             Get<DiscoverScanner>().HandleDiscoveryResponse(aMessage, aMessageInfo);
             break;
 
@@ -2635,8 +2635,8 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     aMessage.Read(aMessage.GetOffset(), sizeof(command), &command);
     aMessage.MoveOffset(sizeof(command));
 
-    neighbor = (command == Header::kCommandChildIdResponse) ? mNeighborTable.FindParent(extAddr)
-                                                            : mNeighborTable.FindNeighbor(extAddr);
+    neighbor = (command == kCommandChildIdResponse) ? mNeighborTable.FindParent(extAddr)
+                                                    : mNeighborTable.FindNeighbor(extAddr);
 
     if (neighbor != nullptr && neighbor->IsStateValid())
     {
@@ -2656,27 +2656,27 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     switch (command)
     {
-    case Header::kCommandAdvertisement:
+    case kCommandAdvertisement:
         HandleAdvertisement(aMessage, aMessageInfo, neighbor);
         break;
 
-    case Header::kCommandDataResponse:
+    case kCommandDataResponse:
         HandleDataResponse(aMessage, aMessageInfo, neighbor);
         break;
 
-    case Header::kCommandParentResponse:
+    case kCommandParentResponse:
         HandleParentResponse(aMessage, aMessageInfo, keySequence);
         break;
 
-    case Header::kCommandChildIdResponse:
+    case kCommandChildIdResponse:
         HandleChildIdResponse(aMessage, aMessageInfo, neighbor);
         break;
 
-    case Header::kCommandAnnounce:
+    case kCommandAnnounce:
         HandleAnnounce(aMessage, aMessageInfo);
         break;
 
-    case Header::kCommandChildUpdateRequest:
+    case kCommandChildUpdateRequest:
 #if OPENTHREAD_FTD
         if (IsRouterOrLeader())
         {
@@ -2690,7 +2690,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
         break;
 
-    case Header::kCommandChildUpdateResponse:
+    case kCommandChildUpdateResponse:
 #if OPENTHREAD_FTD
         if (IsRouterOrLeader())
         {
@@ -2705,32 +2705,32 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         break;
 
 #if OPENTHREAD_FTD
-    case Header::kCommandLinkRequest:
+    case kCommandLinkRequest:
         Get<MleRouter>().HandleLinkRequest(aMessage, aMessageInfo, neighbor);
         break;
 
-    case Header::kCommandLinkAccept:
+    case kCommandLinkAccept:
         Get<MleRouter>().HandleLinkAccept(aMessage, aMessageInfo, keySequence, neighbor);
         break;
 
-    case Header::kCommandLinkAcceptAndRequest:
+    case kCommandLinkAcceptAndRequest:
         Get<MleRouter>().HandleLinkAcceptAndRequest(aMessage, aMessageInfo, keySequence, neighbor);
         break;
 
-    case Header::kCommandDataRequest:
+    case kCommandDataRequest:
         Get<MleRouter>().HandleDataRequest(aMessage, aMessageInfo, neighbor);
         break;
 
-    case Header::kCommandParentRequest:
+    case kCommandParentRequest:
         Get<MleRouter>().HandleParentRequest(aMessage, aMessageInfo);
         break;
 
-    case Header::kCommandChildIdRequest:
+    case kCommandChildIdRequest:
         Get<MleRouter>().HandleChildIdRequest(aMessage, aMessageInfo, keySequence);
         break;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    case Header::kCommandTimeSync:
+    case kCommandTimeSync:
         Get<MleRouter>().HandleTimeSync(aMessage, aMessageInfo, neighbor);
         break;
 #endif

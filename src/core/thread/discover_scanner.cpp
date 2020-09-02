@@ -107,7 +107,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     VerifyOrExit((message = Get<Mle>().NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
     message->SetSubType(Message::kSubTypeMleDiscoverRequest);
     message->SetPanId(aPanId);
-    SuccessOrExit(error = Get<Mle>().AppendHeader(*message, Header::kCommandDiscoveryRequest));
+    SuccessOrExit(error = Get<Mle>().AppendHeader(*message, Mle::kCommandDiscoveryRequest));
 
     // Prepare sub-TLV MeshCoP Discovery Request.
     discoveryRequest.Init();
