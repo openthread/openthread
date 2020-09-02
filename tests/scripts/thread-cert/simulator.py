@@ -91,9 +91,9 @@ class BaseSimulator(object):
 
 class RealTime(BaseSimulator):
 
-    def __init__(self):
+    def __init__(self, use_message_factory=True):
         super(RealTime, self).__init__()
-        self._sniffer = config.create_default_thread_sniffer()
+        self._sniffer = config.create_default_thread_sniffer(use_message_factory=use_message_factory)
         self._sniffer.start()
 
     def set_lowpan_context(self, cid, prefix):
@@ -147,7 +147,7 @@ class VirtualTime(BaseSimulator):
     RADIO_ONLY = os.getenv('RADIO_DEVICE') is not None
     NCP_SIM = os.getenv('NODE_TYPE', 'sim') == 'ncp-sim'
 
-    def __init__(self):
+    def __init__(self, use_message_factory=True):
         super(VirtualTime, self).__init__()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -169,7 +169,8 @@ class VirtualTime(BaseSimulator):
         self.current_nodeid = None
         self._pause_time = 0
 
-        self._message_factory = config.create_default_thread_message_factory()
+        if use_message_factory:
+            self._message_factory = config.create_default_thread_message_factory()
 
     def __del__(self):
         if self.sock:
@@ -189,8 +190,9 @@ class VirtualTime(BaseSimulator):
 
         # Ignore any exceptions
         try:
-            messages = self._message_factory.create(io.BytesIO(message_obj))
-            self.devices[addr]['msgs'] += messages
+            if self._message_factory is not None:
+                messages = self._message_factory.create(io.BytesIO(message_obj))
+                self.devices[addr]['msgs'] += messages
 
         except message.DropPacketException:
             print('Drop current packet because it cannot be handled in test scripts')
@@ -200,7 +202,8 @@ class VirtualTime(BaseSimulator):
             traceback.print_exc()
 
     def set_lowpan_context(self, cid, prefix):
-        self._message_factory.set_lowpan_context(cid, prefix)
+        if self._message_factory is not None:
+            self._message_factory.set_lowpan_context(cid, prefix)
 
     def get_messages_sent_by(self, nodeid):
         """ Get sniffed messages.
