@@ -405,7 +405,7 @@ void SubMac::BeginTransmit(void)
     VerifyOrExit(mState == kStateCsmaBackoff, OT_NOOP);
 #endif
 
-    mTransmitFrame.SetCsmaCaEnabled(mTransmitFrame.mInfo.mTxInfo.mPeriod != 0);
+    mTransmitFrame.SetCsmaCaEnabled(mTransmitFrame.mInfo.mTxInfo.mPeriod == 0);
 
     if ((mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX) == 0)
     {
