@@ -156,7 +156,7 @@ class Cert_7_1_4_BorderRouterAsRouter(thread_cert.TestCase):
         # Step 7: The DUT MUST send an MLE Child Update Request to SED_1
         _rpkts_sed.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
             lambda p: {Ipv6Addr('2001:2:0:1::')} == set(p.thread_nwd.tlv.prefix
-                                                       ) and p.thread_nwd.tlv.border_router_16 == 0xFFFE)
+                                                       ) and p.thread_nwd.tlv.border_router_16 == [0xFFFE])
 
         # Step 8: SED_1 send its configured global address to the DUT
         # Step 9: The DUT MUST send a Child Update Response to SED_1

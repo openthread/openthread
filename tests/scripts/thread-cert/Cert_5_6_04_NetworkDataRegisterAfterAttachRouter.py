@@ -155,7 +155,7 @@ class Cert_5_6_4_NetworkDataRegisterAfterAttachRouter(thread_cert.TestCase):
                 p.mle.tlv.type) and {Ipv6Addr('2001:2:0:1::')} == set(p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.
             border_router.flag.p == [1] and p.thread_nwd.tlv.border_router.flag.s == [1] and p.thread_nwd.tlv.
             border_router.flag.r == [1] and p.thread_nwd.tlv.border_router.flag.o == [1] and p.thread_nwd.tlv.stable ==
-            [1, 1, 1] and p.thread_nwd.tlv.border_router_16 == 0xFFFE)
+            [1, 1, 1] and p.thread_nwd.tlv.border_router_16 == [0xFFFE])
 
         # Step 11: The DUT MUST send a unicast MLE Child Update
         # Response to SED_1
