@@ -33,8 +33,6 @@
 
 #include "bbr_manager.hpp"
 
-#include <limits>
-
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 #include "common/code_utils.hpp"
@@ -160,7 +158,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
     }
     else
     {
-        VerifyOrExit(timeout < std::numeric_limits<uint32_t>::max(), status = ThreadStatusTlv::kMlrNoPersistent);
+        VerifyOrExit(timeout < UINT32_MAX, status = ThreadStatusTlv::kMlrNoPersistent);
 
         if (timeout != 0)
         {
