@@ -447,7 +447,7 @@ otError Coap::ProcessRequest(uint8_t aArgsLength, char *aArgs[])
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
     otCoapMessageInit(message, coapType, coapCode);
-    otCoapMessageGenerateToken(message, ot::Coap::Message::kDefaultTokenLength);
+    otCoapMessageGenerateToken(message, OT_COAP_DEFAULT_TOKEN_LENGTH);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     if (coapObserve)

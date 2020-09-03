@@ -47,8 +47,8 @@
 #include "net/icmp6.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uri_paths.hpp"
 #include "thread/time_sync_service.hpp"
+#include "thread/uri_paths.hpp"
 #include "utils/otns.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
@@ -59,8 +59,8 @@ namespace Mle {
 MleRouter::MleRouter(Instance &aInstance)
     : Mle(aInstance)
     , mAdvertiseTimer(aInstance, MleRouter::HandleAdvertiseTimer, nullptr, this)
-    , mAddressSolicit(OT_URI_PATH_ADDRESS_SOLICIT, &MleRouter::HandleAddressSolicit, this)
-    , mAddressRelease(OT_URI_PATH_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this)
+    , mAddressSolicit(UriPath::kAddressSolicit, &MleRouter::HandleAddressSolicit, this)
+    , mAddressRelease(UriPath::kAddressRelease, &MleRouter::HandleAddressRelease, this)
     , mChildTable(aInstance)
     , mRouterTable(aInstance)
     , mChallengeTimeout(0)
@@ -3580,7 +3580,7 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 
     VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_ADDRESS_SOLICIT));
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kAddressSolicit));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kExtMacAddress, Get<Mac::Mac>().GetExtAddress().m8,
@@ -3626,7 +3626,7 @@ void MleRouter::SendAddressRelease(void)
 
     VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_ADDRESS_RELEASE));
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kAddressRelease));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, ThreadTlv::kRloc16, Rloc16FromRouterId(mRouterId)));
@@ -3677,7 +3677,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage != nullptr && aMessage != nullptr, OT_NOOP);
 
-    VerifyOrExit(aMessage->GetCode() == OT_COAP_CODE_CHANGED, OT_NOOP);
+    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, OT_NOOP);
 
     Log("Receive Address Reply", aMessageInfo->GetPeerAddr());
 
@@ -3776,7 +3776,7 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
     uint16_t xtalAccuracy;
 #endif
 
-    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_PARSE);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = OT_ERROR_PARSE);
 
     Log("Receive Address Solicit", aMessageInfo.GetPeerAddr());
 
@@ -3905,7 +3905,7 @@ void MleRouter::HandleAddressRelease(Coap::Message &aMessage, const Ip6::Message
     uint8_t         routerId;
     Router *        router;
 
-    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest(), OT_NOOP);
 
     Log("Receive Address Release", aMessageInfo.GetPeerAddr());
 
