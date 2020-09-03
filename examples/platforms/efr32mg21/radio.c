@@ -55,22 +55,22 @@
 #include "rail_config.h"
 #include "rail_ieee802154.h"
 
-#define IEEE802154_MIN_LENGTH   5
-#define IEEE802154_MAX_LENGTH   127
-#define IEEE802154_ACK_LENGTH   5
+#define IEEE802154_MIN_LENGTH 5
+#define IEEE802154_MAX_LENGTH 127
+#define IEEE802154_ACK_LENGTH 5
 
 // FCF + DSN + dest PANID + dest addr + src PANID + src addr (without security header)
-#define IEEE802154_MAX_MHR_LENGTH           2 + 1 + 2 + 8 + 2 + 8
+#define IEEE802154_MAX_MHR_LENGTH 2 + 1 + 2 + 8 + 2 + 8
 
-#define IEEE802154_FRAME_TYPE_MASK          0x07
-#define IEEE802154_FRAME_TYPE_ACK           0x02
-#define IEEE802154_FRAME_TYPE_MAC_COMMAND   0x03
-#define IEEE802154_ACK_REQUEST              0x20
-#define IEEE802154_DSN_OFFSET               2
-#define IEEE802154_FCF_OFFSET               0
-#define EFR32_RECEIVE_SENSITIVITY           -100 // dBm
-#define EFR32_RSSI_AVERAGING_TIME           16   // us
-#define EFR32_RSSI_AVERAGING_TIMEOUT        300  // us
+#define IEEE802154_FRAME_TYPE_MASK 0x07
+#define IEEE802154_FRAME_TYPE_ACK 0x02
+#define IEEE802154_FRAME_TYPE_MAC_COMMAND 0x03
+#define IEEE802154_ACK_REQUEST 0x20
+#define IEEE802154_DSN_OFFSET 2
+#define IEEE802154_FCF_OFFSET 0
+#define EFR32_RECEIVE_SENSITIVITY -100   // dBm
+#define EFR32_RSSI_AVERAGING_TIME 16     // us
+#define EFR32_RSSI_AVERAGING_TIMEOUT 300 // us
 
 typedef enum
 {
@@ -207,9 +207,9 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
 
 static void efr32RailConfigLoad(efr32BandConfig *aBandConfig)
 {
-    RAIL_Status_t status;
-    RAIL_TxPowerConfig_t txPowerConfig  = {RAIL_TX_POWER_MODE_2P4_HP, 3300, 10};
-     if (aBandConfig->mChannelConfig != NULL)
+    RAIL_Status_t        status;
+    RAIL_TxPowerConfig_t txPowerConfig = {RAIL_TX_POWER_MODE_2P4_HP, 3300, 10};
+    if (aBandConfig->mChannelConfig != NULL)
     {
         uint16_t firstChannel = RAIL_ConfigChannels(gRailHandle, aBandConfig->mChannelConfig, NULL);
         assert(firstChannel == aBandConfig->mChannelMin);
