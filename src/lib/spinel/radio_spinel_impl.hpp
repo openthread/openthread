@@ -322,13 +322,12 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(v
     {
         otRadioCaps missingCaps = (mRadioCaps & kRequiredRadioCaps) ^ kRequiredRadioCaps;
 
-        otLogCritPlat("RCP capabilities check failed: ack-timeout:%s, tx-retries:%s, CSMA-backoff:%s, tx-security:%s, "
-                      "tx-timing:%s",
-                      (missingCaps & OT_RADIO_CAPS_ACK_TIMEOUT) ? "failed" : "pass",
-                      (missingCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) ? "failed" : "pass",
-                      (missingCaps & OT_RADIO_CAPS_CSMA_BACKOFF) ? "failed" : "pass",
-                      (missingCaps & OT_RADIO_CAPS_TRANSMIT_SEC) ? "failed" : "pass",
-                      (missingCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) ? "failed" : "pass");
+        otLogCritPlat("RCP is missing required capabilities: %s%s%s%s%s",
+                      (missingCaps & OT_RADIO_CAPS_ACK_TIMEOUT) ? "ack-timeout " : "",
+                      (missingCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) ? "tx-retries " : "",
+                      (missingCaps & OT_RADIO_CAPS_CSMA_BACKOFF) ? "CSMA-backoff " : "",
+                      (missingCaps & OT_RADIO_CAPS_TRANSMIT_SEC) ? "tx-security " : "",
+                      (missingCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) ? "tx-timing " : "");
 
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
