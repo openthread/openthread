@@ -120,7 +120,7 @@ static uint8_t sAckIeDataLength = 0;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static const uint8_t sCslIeHeader[OT_IE_HEADER_IE_SIZE] = {0x04, 0x0d};
+static const uint8_t sCslIeHeader[OT_IE_HEADER_SIZE] = {CSL_IE_HEADER_BYTES_LO, CSL_IE_HEADER_BYTES_HI};
 static uint32_t      sCslSampleTime;
 static uint32_t      sCslPeriod;
 #endif
@@ -1073,8 +1073,8 @@ static otError updateIeData(otInstance *aInstance)
 
     if (sCslPeriod > 0)
     {
-        memcpy(sAckIeData, sCslIeHeader, OT_IE_HEADER_IE_SIZE);
-        offset += OT_IE_HEADER_IE_SIZE + OT_CSL_IE_SIZE; // reserve space for CSL IE
+        memcpy(sAckIeData, sCslIeHeader, OT_IE_HEADER_SIZE);
+        offset += OT_IE_HEADER_SIZE + OT_CSL_IE_SIZE; // reserve space for CSL IE
     }
 
     sAckIeDataLength = offset;
