@@ -52,7 +52,7 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSet
 
 void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode)
 {
-    static_cast<Coap::Message *>(aMessage)->Init(aType, aCode);
+    static_cast<Coap::Message *>(aMessage)->Init(static_cast<Coap::Type>(aType), static_cast<Coap::Code>(aCode));
 }
 
 otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aRequest, otCoapType aType, otCoapCode aCode)
@@ -60,7 +60,7 @@ otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aReques
     Coap::Message &      response = *static_cast<Coap::Message *>(aResponse);
     const Coap::Message &request  = *static_cast<const Coap::Message *>(aRequest);
 
-    response.Init(aType, aCode);
+    response.Init(static_cast<Coap::Type>(aType), static_cast<Coap::Code>(aCode));
     response.SetMessageId(request.GetMessageId());
 
     return response.SetToken(request.GetToken(), request.GetTokenLength());
@@ -139,12 +139,12 @@ otError otCoapMessageSetPayloadMarker(otMessage *aMessage)
 
 otCoapType otCoapMessageGetType(const otMessage *aMessage)
 {
-    return static_cast<const Coap::Message *>(aMessage)->GetType();
+    return static_cast<otCoapType>(static_cast<const Coap::Message *>(aMessage)->GetType());
 }
 
 otCoapCode otCoapMessageGetCode(const otMessage *aMessage)
 {
-    return static_cast<const Coap::Message *>(aMessage)->GetCode();
+    return static_cast<otCoapCode>(static_cast<const Coap::Message *>(aMessage)->GetCode());
 }
 
 const char *otCoapMessageCodeToString(const otMessage *aMessage)

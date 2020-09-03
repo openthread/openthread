@@ -141,11 +141,11 @@ otError CoapBase::SendMessage(Message &               aMessage,
 
     switch (aMessage.GetType())
     {
-    case OT_COAP_TYPE_ACKNOWLEDGMENT:
+    case kTypeAck:
         mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo, aTxParameters);
         break;
-    case OT_COAP_TYPE_RESET:
-        OT_ASSERT(aMessage.GetCode() == OT_COAP_CODE_EMPTY);
+    case kTypeReset:
+        OT_ASSERT(aMessage.GetCode() == kCodeEmpty);
         break;
     default:
         aMessage.SetMessageId(mMessageId++);
@@ -175,10 +175,10 @@ otError CoapBase::SendMessage(Message &               aMessage,
         bool           observe;
 
         SuccessOrExit(error = iterator.Init(&aMessage));
-        observe = (iterator.GetFirstOptionMatching(OT_COAP_OPTION_OBSERVE) != nullptr);
+        observe = (iterator.GetFirstOptionMatching(kOptionObserve) != nullptr);
 
         // Special case, if we're sending a GET with Observe=1, that is a cancellation.
-        if (observe && (aMessage.GetCode() == OT_COAP_CODE_GET))
+        if (observe && aMessage.IsGetRequest())
         {
             uint64_t observeVal = 0;
 
@@ -244,26 +244,26 @@ otError CoapBase::SendMessage(Message &               aMessage,
 
 otError CoapBase::SendReset(Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
 {
-    return SendEmptyMessage(OT_COAP_TYPE_RESET, aRequest, aMessageInfo);
+    return SendEmptyMessage(kTypeReset, aRequest, aMessageInfo);
 }
 
 otError CoapBase::SendAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
 {
-    return SendEmptyMessage(OT_COAP_TYPE_ACKNOWLEDGMENT, aRequest, aMessageInfo);
+    return SendEmptyMessage(kTypeAck, aRequest, aMessageInfo);
 }
 
 otError CoapBase::SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
 {
-    return (aRequest.IsConfirmable() ? SendHeaderResponse(OT_COAP_CODE_CHANGED, aRequest, aMessageInfo)
+    return (aRequest.IsConfirmable() ? SendHeaderResponse(kCodeChanged, aRequest, aMessageInfo)
                                      : OT_ERROR_INVALID_ARGS);
 }
 
 otError CoapBase::SendNotFound(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
 {
-    return SendHeaderResponse(OT_COAP_CODE_NOT_FOUND, aRequest, aMessageInfo);
+    return SendHeaderResponse(kCodeNotFound, aRequest, aMessageInfo);
 }
 
-otError CoapBase::SendEmptyMessage(Message::Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
+otError CoapBase::SendEmptyMessage(Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
 {
     otError  error   = OT_ERROR_NONE;
     Message *message = nullptr;
@@ -272,7 +272,7 @@ otError CoapBase::SendEmptyMessage(Message::Type aType, const Message &aRequest,
 
     VerifyOrExit((message = NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    message->Init(aType, OT_COAP_CODE_EMPTY);
+    message->Init(aType, kCodeEmpty);
     message->SetMessageId(aRequest.GetMessageId());
 
     message->Finish();
@@ -298,13 +298,13 @@ otError CoapBase::SendHeaderResponse(Message::Code aCode, const Message &aReques
 
     switch (aRequest.GetType())
     {
-    case OT_COAP_TYPE_CONFIRMABLE:
-        message->Init(OT_COAP_TYPE_ACKNOWLEDGMENT, aCode);
+    case kTypeConfirmable:
+        message->Init(kTypeAck, aCode);
         message->SetMessageId(aRequest.GetMessageId());
         break;
 
-    case OT_COAP_TYPE_NON_CONFIRMABLE:
-        message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, aCode);
+    case kTypeNonConfirmable:
+        message->Init(kTypeNonConfirmable, aCode);
         break;
 
     default:
@@ -506,8 +506,8 @@ Message *CoapBase::FindRelatedRequest(const Message &         aResponse,
         {
             switch (aResponse.GetType())
             {
-            case OT_COAP_TYPE_RESET:
-            case OT_COAP_TYPE_ACKNOWLEDGMENT:
+            case kTypeReset:
+            case kTypeAck:
                 if (aResponse.GetMessageId() == message->GetMessageId())
                 {
                     ExitNow();
@@ -515,8 +515,8 @@ Message *CoapBase::FindRelatedRequest(const Message &         aResponse,
 
                 break;
 
-            case OT_COAP_TYPE_CONFIRMABLE:
-            case OT_COAP_TYPE_NON_CONFIRMABLE:
+            case kTypeConfirmable:
+            case kTypeNonConfirmable:
                 if (aResponse.IsTokenEqual(*message))
                 {
                     ExitNow();
@@ -573,13 +573,13 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
         OptionIterator iterator;
 
         SuccessOrExit(error = iterator.Init(&aMessage));
-        responseObserve = (iterator.GetFirstOptionMatching(OT_COAP_OPTION_OBSERVE) != nullptr);
+        responseObserve = (iterator.GetFirstOptionMatching(kOptionObserve) != nullptr);
     }
 #endif
 
     switch (aMessage.GetType())
     {
-    case OT_COAP_TYPE_RESET:
+    case kTypeReset:
         if (aMessage.IsEmpty())
         {
             FinalizeCoapTransaction(*request, metadata, nullptr, nullptr, OT_ERROR_ABORT);
@@ -588,7 +588,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
         // Silently ignore non-empty reset messages (RFC 7252, p. 4.2).
         break;
 
-    case OT_COAP_TYPE_ACKNOWLEDGMENT:
+    case kTypeAck:
         if (aMessage.IsEmpty())
         {
             // Empty acknowledgment.
@@ -646,12 +646,12 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
         // or with no token match (RFC 7252, p. 5.3.2)
         break;
 
-    case OT_COAP_TYPE_CONFIRMABLE:
+    case kTypeConfirmable:
         // Send empty ACK if it is a CON message.
         IgnoreError(SendAck(aMessage, aMessageInfo));
         // Fall through
         // Handling of RFC7641 and multicast is below.
-    case OT_COAP_TYPE_NON_CONFIRMABLE:
+    case kTypeNonConfirmable:
         // Separate response or observation notification.  If the request was to a multicast
         // address, OR both the request and response carry Observe options, then this is NOT
         // the final message, we may see multiples.
@@ -719,7 +719,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
     {
         switch (option->mNumber)
         {
-        case OT_COAP_OPTION_URI_PATH:
+        case kOptionUriPath:
             if (curUriPath != uriPath)
             {
                 *curUriPath++ = '/';

@@ -83,11 +83,11 @@ EXTRA_DIST                                                         = \
     Cert_6_1_02_REEDAttach_MED.py                                    \
     Cert_6_1_02_REEDAttach_SED.py                                    \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
-    Cert_6_1_04_REEDAttachConnectivity.py                            \
-    Cert_6_1_05_RouterAttachLinkQuality.py                           \
+    Cert_6_1_05_REEDAttachConnectivity.py                            \
+    Cert_6_1_07_RouterAttachLinkQuality.py                           \
     Cert_6_1_06_REEDAttachLinkQuality_ED.py                          \
     Cert_6_1_06_REEDAttachLinkQuality_SED.py                         \
-    Cert_6_1_07_EDSynchronization.py                                 \
+    Cert_6_1_09_EDSynchronization.py                                 \
     Cert_6_2_01_NewPartition.py                                      \
     Cert_6_2_02_NewPartition.py                                      \
     Cert_6_3_01_OrphanReattach.py                                    \
@@ -258,11 +258,11 @@ check_SCRIPTS                                                      = \
     Cert_6_1_02_REEDAttach_MED.py                                    \
     Cert_6_1_02_REEDAttach_SED.py                                    \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
-    Cert_6_1_04_REEDAttachConnectivity.py                            \
-    Cert_6_1_05_RouterAttachLinkQuality.py                           \
+    Cert_6_1_05_REEDAttachConnectivity.py                            \
+    Cert_6_1_07_RouterAttachLinkQuality.py                           \
     Cert_6_1_06_REEDAttachLinkQuality_ED.py                          \
     Cert_6_1_06_REEDAttachLinkQuality_SED.py                         \
-    Cert_6_1_07_EDSynchronization.py                                 \
+    Cert_6_1_09_EDSynchronization.py                                 \
     Cert_6_2_01_NewPartition.py                                      \
     Cert_6_2_02_NewPartition.py                                      \
     Cert_6_3_01_OrphanReattach.py                                    \

@@ -529,15 +529,6 @@ public:
     void HandlePayload(Message &aMessage, MessageInfo &aMessageInfo);
 
     /**
-     * This method updates the UDP checksum.
-     *
-     * @param[in]  aMessage   A reference to the UDP message.
-     * @param[in]  aChecksum  The pseudo-header checksum value.
-     *
-     */
-    void UpdateChecksum(Message &aMessage, uint16_t aChecksum);
-
-    /**
      * This method returns the head of UDP Sockets list.
      *
      * @returns A pointer to the head of UDP Socket linked list.

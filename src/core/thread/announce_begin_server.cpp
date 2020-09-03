@@ -43,13 +43,13 @@
 #include "common/logging.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 
 AnnounceBeginServer::AnnounceBeginServer(Instance &aInstance)
     : AnnounceSenderBase(aInstance, AnnounceBeginServer::HandleTimer)
-    , mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this)
+    , mAnnounceBegin(UriPath::kAnnounceBegin, &AnnounceBeginServer::HandleRequest, this)
 {
     Get<Tmf::TmfAgent>().AddResource(mAnnounceBegin);
 }
@@ -72,7 +72,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Message &aMessage, const Ip6::Mess
     uint16_t         period;
     Ip6::MessageInfo responseInfo(aMessageInfo);
 
-    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
+    VerifyOrExit(aMessage.IsPostRequest(), OT_NOOP);
     VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0, OT_NOOP);
 
     SuccessOrExit(Tlv::FindUint8Tlv(aMessage, MeshCoP::Tlv::kCount, count));

@@ -45,7 +45,7 @@
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 
@@ -53,8 +53,8 @@ namespace BackboneRouter {
 
 Manager::Manager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mMulticastListenerRegistration(OT_URI_PATH_MLR, Manager::HandleMulticastListenerRegistration, this)
-    , mDuaRegistration(OT_URI_PATH_DUA_REGISTRATION_REQUEST, Manager::HandleDuaRegistration, this)
+    , mMulticastListenerRegistration(UriPath::kMlr, Manager::HandleMulticastListenerRegistration, this)
+    , mDuaRegistration(UriPath::kDuaRegistrationRequest, Manager::HandleDuaRegistration, this)
     , mMulticastListenersTable(aInstance)
     , mTimer(aInstance, Manager::HandleTimer, this)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -114,7 +114,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
     bool     hasCommissionerSessionIdTlv = false;
     bool     processTimeoutTlv           = false;
 
-    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_PARSE);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = OT_ERROR_PARSE);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     // Required by Test Specification 5.10.22 DUA-TC-26, only for certification purpose
@@ -276,7 +276,7 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
     Ip6::Address               target;
     Ip6::InterfaceIdentifier   meshLocalIid;
 
-    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_PARSE);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
     SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, &meshLocalIid, sizeof(meshLocalIid)));

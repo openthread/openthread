@@ -47,7 +47,7 @@
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -55,9 +55,9 @@ namespace ot {
 
 AddressResolver::AddressResolver(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mAddressError(OT_URI_PATH_ADDRESS_ERROR, &AddressResolver::HandleAddressError, this)
-    , mAddressQuery(OT_URI_PATH_ADDRESS_QUERY, &AddressResolver::HandleAddressQuery, this)
-    , mAddressNotification(OT_URI_PATH_ADDRESS_NOTIFY, &AddressResolver::HandleAddressNotification, this)
+    , mAddressError(UriPath::kAddressError, &AddressResolver::HandleAddressError, this)
+    , mAddressQuery(UriPath::kAddressQuery, &AddressResolver::HandleAddressQuery, this)
+    , mAddressNotification(UriPath::kAddressNotify, &AddressResolver::HandleAddressNotification, this)
     , mCacheEntryPool(aInstance)
     , mCachedList()
     , mSnoopedList()
@@ -525,8 +525,8 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 
     VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
-    SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_QUERY));
+    message->InitAsNonConfirmablePost();
+    SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kAddressQuery));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aEid, sizeof(aEid)));
@@ -568,7 +568,7 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
     CacheEntry *             entry;
     CacheEntry *             prev;
 
-    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest(), OT_NOOP);
 
     SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
     SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, &meshLocalIid, sizeof(meshLocalIid)));
@@ -636,8 +636,8 @@ void AddressResolver::SendAddressError(const Ip6::Address &            aTarget,
 
     VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    message->Init(aDestination == nullptr ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_ERROR));
+    message->Init(aDestination == nullptr ? Coap::kTypeNonConfirmable : Coap::kTypeConfirmable, Coap::kCodePost);
+    SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kAddressError));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aTarget, sizeof(aTarget)));
@@ -686,7 +686,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
     Mac::ExtAddress          extAddr;
     Ip6::Address             destination;
 
-    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
+    VerifyOrExit(aMessage.IsPostRequest(), error = OT_ERROR_DROP);
 
     otLogInfoArp("Received address error notification");
 
@@ -755,7 +755,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
     Ip6::Address target;
     uint32_t     lastTransactionTime;
 
-    VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
+    VerifyOrExit(aMessage.IsNonConfirmablePostRequest(), OT_NOOP);
 
     SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
 
@@ -799,8 +799,8 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address &            a
 
     VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_NOTIFY));
+    message->InitAsConfirmablePost();
+    SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kAddressNotify));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aTarget, sizeof(aTarget)));

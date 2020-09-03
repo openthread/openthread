@@ -198,6 +198,7 @@ SOURCES_COMMON                                  = \
     meshcop/meshcop_tlvs.cpp                      \
     meshcop/panid_query_client.cpp                \
     meshcop/timestamp.cpp                         \
+    net/checksum.cpp                              \
     net/dhcp6_client.cpp                          \
     net/dhcp6_server.cpp                          \
     net/dns_client.cpp                            \
@@ -246,6 +247,7 @@ SOURCES_COMMON                                  = \
     thread/time_sync_service.cpp                  \
     thread/tmf.cpp                                \
     thread/topology.cpp                           \
+    thread/uri_paths.cpp                          \
     utils/channel_manager.cpp                     \
     utils/channel_monitor.cpp                     \
     utils/child_supervision.cpp                   \
@@ -415,6 +417,7 @@ HEADERS_COMMON                                  = \
     meshcop/meshcop_tlvs.hpp                      \
     meshcop/panid_query_client.hpp                \
     meshcop/timestamp.hpp                         \
+    net/checksum.hpp                              \
     net/dhcp6.hpp                                 \
     net/dhcp6_client.hpp                          \
     net/dhcp6_server.hpp                          \
@@ -467,10 +470,10 @@ HEADERS_COMMON                                  = \
     thread/src_match_controller.hpp               \
     thread/thread_netif.hpp                       \
     thread/thread_tlvs.hpp                        \
-    thread/thread_uri_paths.hpp                   \
     thread/time_sync_service.hpp                  \
     thread/tmf.hpp                                \
     thread/topology.hpp                           \
+    thread/uri_paths.hpp                          \
     utils/channel_manager.hpp                     \
     utils/channel_monitor.hpp                     \
     utils/child_supervision.hpp                   \

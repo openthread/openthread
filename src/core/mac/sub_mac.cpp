@@ -257,10 +257,11 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
     if (aFrame != nullptr && aError == OT_ERROR_NONE)
     {
-        otLogDebgMac(
-            "Received frame in state (SubMac %s, CSL %d), timestamp %lu, target sample start time %u, time drift %d",
-            StateToString(mState), mCslState, aFrame->mInfo.mRxInfo.mTimestamp, mCslSampleTime.GetValue(),
-            static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp) - mCslSampleTime.GetValue());
+        // Split the log into two lines for RTT to output
+        otLogDebgMac("Received frame in state (SubMac %s, CSL %s), timestamp %u", StateToString(mState),
+                     CslStateToString(mCslState), static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp));
+        otLogDebgMac("Target sample start time %u, time drift %d", mCslSampleTime.GetValue(),
+                     static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp) - mCslSampleTime.GetValue());
     }
 #endif
 
@@ -416,7 +417,7 @@ void SubMac::BeginTransmit(void)
     VerifyOrExit(mState == kStateCsmaBackoff, OT_NOOP);
 #endif
 
-    mTransmitFrame.SetCsmaCaEnabled(mTransmitFrame.mInfo.mTxInfo.mPeriod != 0);
+    mTransmitFrame.SetCsmaCaEnabled(mTransmitFrame.mInfo.mTxInfo.mPeriod == 0);
 
     if ((mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX) == 0)
     {
@@ -887,6 +888,30 @@ const char *SubMac::StateToString(State aState)
 
     return str;
 }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+const char *SubMac::CslStateToString(CslState aCslState)
+{
+    const char *str = "Unknown";
+
+    switch (aCslState)
+    {
+    case kCslIdle:
+        str = "CslIdle";
+        break;
+    case kCslSample:
+        str = "CslSample";
+        break;
+    case kCslSleep:
+        str = "kCslSleep";
+        break;
+    default:
+        break;
+    }
+
+    return str;
+}
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 // LCOV_EXCL_STOP
 

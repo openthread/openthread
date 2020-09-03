@@ -40,6 +40,7 @@
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "net/checksum.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_filter.hpp"
@@ -168,26 +169,6 @@ otError Ip6::GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Messag
 
 exit:
     return error;
-}
-
-uint16_t Ip6::UpdateChecksum(uint16_t aChecksum, const Address &aAddress)
-{
-    return Message::UpdateChecksum(aChecksum, aAddress.mFields.m8, sizeof(aAddress));
-}
-
-uint16_t Ip6::ComputePseudoheaderChecksum(const Address &aSource,
-                                          const Address &aDestination,
-                                          uint16_t       aLength,
-                                          uint8_t        aProto)
-{
-    uint16_t checksum;
-
-    checksum = Message::UpdateChecksum(0, aLength);
-    checksum = Message::UpdateChecksum(checksum, static_cast<uint16_t>(aProto));
-    checksum = UpdateChecksum(checksum, aSource);
-    checksum = UpdateChecksum(checksum, aDestination);
-
-    return checksum;
 }
 
 void Ip6::SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext)
@@ -458,7 +439,6 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t 
     otError  error = OT_ERROR_NONE;
     Header   header;
     uint16_t payloadLength = aMessage.GetLength();
-    uint16_t checksum;
 
     header.Init();
     header.SetDscp(PriorityToDscp(aMessage.GetPriority()));
@@ -495,21 +475,7 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t 
 
     SuccessOrExit(error = aMessage.Prepend(&header, sizeof(header)));
 
-    checksum = ComputePseudoheaderChecksum(header.GetSource(), header.GetDestination(), payloadLength, aIpProto);
-
-    switch (aIpProto)
-    {
-    case kProtoUdp:
-        mUdp.UpdateChecksum(aMessage, checksum);
-        break;
-
-    case kProtoIcmp6:
-        mIcmp.UpdateChecksum(aMessage, checksum);
-        break;
-
-    default:
-        break;
-    }
+    Checksum::UpdateMessageChecksum(aMessage, header.GetSource(), header.GetDestination(), aIpProto);
 
     if (aMessageInfo.GetPeerAddr().IsMulticastLargerThanRealmLocal())
     {

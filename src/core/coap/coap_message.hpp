@@ -42,6 +42,7 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
+#include "net/ip6_address.hpp"
 
 namespace ot {
 
@@ -68,6 +69,91 @@ using ot::Encoding::BigEndian::HostSwap16;
 class OptionIterator;
 
 /**
+ * CoAP Type values.
+ *
+ */
+enum Type : uint8_t
+{
+    kTypeConfirmable    = OT_COAP_TYPE_CONFIRMABLE,     ///< Confirmable type.
+    kTypeNonConfirmable = OT_COAP_TYPE_NON_CONFIRMABLE, ///< Non-confirmable type.
+    kTypeAck            = OT_COAP_TYPE_ACKNOWLEDGMENT,  ///< Acknowledgment type.
+    kTypeReset          = OT_COAP_TYPE_RESET,           ///< Reset type.
+};
+
+/**
+ * CoAP Code values.
+ *
+ */
+enum Code : uint8_t
+{
+    // Request Codes:
+
+    kCodeEmpty  = OT_COAP_CODE_EMPTY,  ///< Empty message code
+    kCodeGet    = OT_COAP_CODE_GET,    ///< Get
+    kCodePost   = OT_COAP_CODE_POST,   ///< Post
+    kCodePut    = OT_COAP_CODE_PUT,    ///< Put
+    kCodeDelete = OT_COAP_CODE_DELETE, ///< Delete
+
+    // Response Codes:
+
+    kCodeCreated  = OT_COAP_CODE_CREATED,  ///< Created
+    kCodeDeleted  = OT_COAP_CODE_DELETED,  ///< Deleted
+    kCodeValid    = OT_COAP_CODE_VALID,    ///< Valid
+    kCodeChanged  = OT_COAP_CODE_CHANGED,  ///< Changed
+    kCodeContent  = OT_COAP_CODE_CONTENT,  ///< Content
+    kCodeContinue = OT_COAP_CODE_CONTINUE, ///< RFC7959 Continue
+
+    // Client Error Codes:
+
+    kCodeBadRequest         = OT_COAP_CODE_BAD_REQUEST,         ///< Bad Request
+    kCodeUnauthorized       = OT_COAP_CODE_UNAUTHORIZED,        ///< Unauthorized
+    kCodeBadOption          = OT_COAP_CODE_BAD_OPTION,          ///< Bad Option
+    kCodeForbidden          = OT_COAP_CODE_FORBIDDEN,           ///< Forbidden
+    kCodeNotFound           = OT_COAP_CODE_NOT_FOUND,           ///< Not Found
+    kCodeMethodNotAllowed   = OT_COAP_CODE_METHOD_NOT_ALLOWED,  ///< Method Not Allowed
+    kCodeNotAcceptable      = OT_COAP_CODE_NOT_ACCEPTABLE,      ///< Not Acceptable
+    kCodeRequestIncomplete  = OT_COAP_CODE_REQUEST_INCOMPLETE,  ///< RFC7959 Request Entity Incomplete
+    kCodePreconditionFailed = OT_COAP_CODE_PRECONDITION_FAILED, ///< Precondition Failed
+    kCodeRequestTooLarge    = OT_COAP_CODE_REQUEST_TOO_LARGE,   ///< Request Entity Too Large
+    kCodeUnsupportedFormat  = OT_COAP_CODE_UNSUPPORTED_FORMAT,  ///< Unsupported Content-Format
+
+    // Server Error Codes:
+
+    kCodeInternalError      = OT_COAP_CODE_INTERNAL_ERROR,      ///< Internal Server Error
+    kCodeNotImplemented     = OT_COAP_CODE_NOT_IMPLEMENTED,     ///< Not Implemented
+    kCodeBadGateway         = OT_COAP_CODE_BAD_GATEWAY,         ///< Bad Gateway
+    kCodeServiceUnavailable = OT_COAP_CODE_SERVICE_UNAVAILABLE, ///< Service Unavailable
+    kCodeGatewayTimeout     = OT_COAP_CODE_GATEWAY_TIMEOUT,     ///< Gateway Timeout
+    kCodeProxyNotSupported  = OT_COAP_CODE_PROXY_NOT_SUPPORTED, ///< Proxying Not Supported
+};
+
+/**
+ * CoAP Option Numbers.
+ *
+ */
+enum : uint16_t
+{
+    kOptionIfMatch       = OT_COAP_OPTION_IF_MATCH,       ///< If-Match
+    kOptionUriHost       = OT_COAP_OPTION_URI_HOST,       ///< Uri-Host
+    kOptionETag          = OT_COAP_OPTION_E_TAG,          ///< ETag
+    kOptionIfNoneMatch   = OT_COAP_OPTION_IF_NONE_MATCH,  ///< If-None-Match
+    kOptionObserve       = OT_COAP_OPTION_OBSERVE,        ///< Observe [RFC7641]
+    kOptionUriPort       = OT_COAP_OPTION_URI_PORT,       ///< Uri-Port
+    kOptionLocationPath  = OT_COAP_OPTION_LOCATION_PATH,  ///< Location-Path
+    kOptionUriPath       = OT_COAP_OPTION_URI_PATH,       ///< Uri-Path
+    kOptionContentFormat = OT_COAP_OPTION_CONTENT_FORMAT, ///< Content-Format
+    kOptionMaxAge        = OT_COAP_OPTION_MAX_AGE,        ///< Max-Age
+    kOptionUriQuery      = OT_COAP_OPTION_URI_QUERY,      ///< Uri-Query
+    kOptionAccept        = OT_COAP_OPTION_ACCEPT,         ///< Accept
+    kOptionLocationQuery = OT_COAP_OPTION_LOCATION_QUERY, ///< Location-Query
+    kOptionBlock2        = OT_COAP_OPTION_BLOCK2,         ///< Block2 (RFC7959)
+    kOptionBlock1        = OT_COAP_OPTION_BLOCK1,         ///< Block1 (RFC7959)
+    kOptionProxyUri      = OT_COAP_OPTION_PROXY_URI,      ///< Proxy-Uri
+    kOptionProxyScheme   = OT_COAP_OPTION_PROXY_SCHEME,   ///< Proxy-Scheme
+    kOptionSize1         = OT_COAP_OPTION_SIZE1,          ///< Size1
+};
+
+/**
  * This class implements CoAP message generation and parsing.
  *
  */
@@ -76,26 +162,14 @@ class Message : public ot::Message
     friend class OptionIterator;
 
 public:
-    enum
+    enum : uint8_t
     {
-        kVersion1           = 1,   ///< Version 1
-        kMinHeaderLength    = 4,   ///< Minimum header length
-        kMaxHeaderLength    = 512, ///< Maximum header length
-        kDefaultTokenLength = 2,   ///< Default token length
-        kTypeOffset         = 4,   ///< The type offset in the first byte of a CoAP header
+        kDefaultTokenLength = OT_COAP_DEFAULT_TOKEN_LENGTH, ///< Default token length
+        kMaxTokenLength     = OT_COAP_MAX_TOKEN_LENGTH,     ///< Maximum token length.
     };
 
-    /**
-     * CoAP Type values.
-     *
-     */
-    typedef otCoapType Type;
-
-    /**
-     * CoAP Code values.
-     *
-     */
-    typedef otCoapCode Code;
+    typedef ot::Coap::Type Type; ///< CoAP Type.
+    typedef ot::Coap::Code Code; ///< CoAP Code.
 
     /**
      * CoAP Block1/Block2 Types
@@ -128,6 +202,18 @@ public:
     void Init(Type aType, Code aCode);
 
     /**
+     * This method initializes the CoAP header as `kTypeConfirmable` and `kCodePost`.
+     *
+     */
+    void InitAsConfirmablePost(void);
+
+    /**
+     * This method initializes the CoAP header as `kTypeNonConfirmable` and `kCodePost`.
+     *
+     */
+    void InitAsNonConfirmablePost(void);
+
+    /**
      * This method initializes the CoAP header with specific Type and Code.
      *
      * @param[in]  aType              The Type value.
@@ -139,6 +225,42 @@ public:
      *
      */
     otError Init(Type aType, Code aCode, const char *aUriPath);
+
+    /**
+     * This method initializes the CoAP header as `kTypeConfirmable` and `kCodePost` with a given URI Path.
+     *
+     * @param[in]  aUriPath           A pointer to a null-terminated string.
+     *
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     *
+     */
+    otError InitAsConfirmablePost(const char *aUriPath);
+
+    /**
+     * This method initializes the CoAP header as `kTypeNonConfirmable` and `kCodePost` with a given URI Path.
+     *
+     * @param[in]  aUriPath           A pointer to a null-terminated string.
+     *
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     *
+     */
+    otError InitAsNonConfirmablePost(const char *aUriPath);
+
+    /**
+     * This method initializes the CoAP header as `kCodePost` with a given URI Path with its type determined from a
+     * given destination IPv6 address.
+     *
+     * @param[in]  aDestination       The message destination IPv6 address used to determine the CoAP type,
+     *                                `kTypeNonConfirmable` if multicast address, `kTypeConfirmable` otherwise.
+     * @param[in]  aUriPath           A pointer to a null-terminated string.
+     *
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     *
+     */
+    otError InitAsPost(const Ip6::Address &aDestination, const char *aUriPath);
 
     /**
      * This method writes header to the message. This must be called before sending the message.
@@ -175,7 +297,7 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(GetHelpData().mHeader.mVersionTypeToken & kTypeMask); }
+    uint8_t GetType(void) const { return (GetHelpData().mHeader.mVersionTypeToken & kTypeMask) >> kTypeOffset; }
 
     /**
      * This method sets the Type value.
@@ -186,7 +308,7 @@ public:
     void SetType(Type aType)
     {
         GetHelpData().mHeader.mVersionTypeToken &= ~kTypeMask;
-        GetHelpData().mHeader.mVersionTypeToken |= aType;
+        GetHelpData().mHeader.mVersionTypeToken |= (static_cast<uint8_t>(aType) << kTypeOffset);
     }
 
     /**
@@ -195,7 +317,7 @@ public:
      * @returns The Code value.
      *
      */
-    Code GetCode(void) const { return static_cast<Code>(GetHelpData().mHeader.mCode); }
+    uint8_t GetCode(void) const { return static_cast<Code>(GetHelpData().mHeader.mCode); }
 
     /**
      * This method sets the Code value.
@@ -457,7 +579,7 @@ public:
      * @retval FALSE  Message is not an empty message header.
      *
      */
-    bool IsEmpty(void) const { return (GetCode() == 0); }
+    bool IsEmpty(void) const { return (GetCode() == kCodeEmpty); }
 
     /**
      * This method checks if a header is a request header.
@@ -466,7 +588,43 @@ public:
      * @retval FALSE  Message is not a request header.
      *
      */
-    bool IsRequest(void) const { return (GetCode() >= OT_COAP_CODE_GET && GetCode() <= OT_COAP_CODE_DELETE); }
+    bool IsRequest(void) const { return (GetCode() >= kCodeGet) && (GetCode() <= kCodeDelete); }
+
+    /**
+     * This method indicates whether or not the CoAP code in header is "Get" request.
+     *
+     * @retval TRUE   Message is a Get request.
+     * @retval FALSE  Message is not a Get request.
+     *
+     */
+    bool IsGetRequest(void) const { return GetCode() == kCodeGet; }
+
+    /**
+     * This method indicates whether or not the CoAP code in header is "Post" request.
+     *
+     * @retval TRUE   Message is a Post request.
+     * @retval FALSE  Message is not a Post request.
+     *
+     */
+    bool IsPostRequest(void) const { return GetCode() == kCodePost; }
+
+    /**
+     * This method indicates whether or not the CoAP code in header is "Put" request.
+     *
+     * @retval TRUE   Message is a Put request.
+     * @retval FALSE  Message is not a Put request.
+     *
+     */
+    bool IsPutRequest(void) const { return GetCode() == kCodePut; }
+
+    /**
+     * This method indicates whether or not the CoAP code in header is "Delete" request.
+     *
+     * @retval TRUE   Message is a Delete request.
+     * @retval FALSE  Message is not a Delete request.
+     *
+     */
+    bool IsDeleteRequest(void) const { return GetCode() == kCodeDelete; }
 
     /**
      * This method checks if a header is a response header.
@@ -475,7 +633,7 @@ public:
      * @retval FALSE  Message is not a response header.
      *
      */
-    bool IsResponse(void) const { return (GetCode() >= OT_COAP_CODE_RESPONSE_MIN); }
+    bool IsResponse(void) const { return GetCode() >= OT_COAP_CODE_RESPONSE_MIN; }
 
     /**
      * This method checks if a header is a CON message header.
@@ -484,7 +642,7 @@ public:
      * @retval FALSE  Message is not is a CON message header.
      *
      */
-    bool IsConfirmable(void) const { return (GetType() == OT_COAP_TYPE_CONFIRMABLE); }
+    bool IsConfirmable(void) const { return (GetType() == kTypeConfirmable); }
 
     /**
      * This method checks if a header is a NON message header.
@@ -493,7 +651,7 @@ public:
      * @retval FALSE  Message is not is a NON message header.
      *
      */
-    bool IsNonConfirmable(void) const { return (GetType() == OT_COAP_TYPE_NON_CONFIRMABLE); }
+    bool IsNonConfirmable(void) const { return (GetType() == kTypeNonConfirmable); }
 
     /**
      * This method checks if a header is a ACK message header.
@@ -502,7 +660,7 @@ public:
      * @retval FALSE  Message is not is a ACK message header.
      *
      */
-    bool IsAck(void) const { return (GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT); }
+    bool IsAck(void) const { return (GetType() == kTypeAck); }
 
     /**
      * This method checks if a header is a RST message header.
@@ -511,7 +669,27 @@ public:
      * @retval FALSE  Message is not is a RST message header.
      *
      */
-    bool IsReset(void) const { return (GetType() == OT_COAP_TYPE_RESET); }
+    bool IsReset(void) const { return (GetType() == kTypeReset); }
+
+    /**
+     * This method indicates whether or not the header is a confirmable Put request (i.e, `kTypeConfirmable` with
+     *  `kCodePost`).
+     *
+     * @retval TRUE   Message is a confirmable Post request.
+     * @retval FALSE  Message is not a confirmable Post request.
+     *
+     */
+    bool IsConfirmablePostRequest(void) const;
+
+    /**
+     * This method indicates whether or not the header is a non-confirmable Put request (i.e, `kTypeNonConfirmable` with
+     *  `kCodePost`).
+     *
+     * @retval TRUE   Message is a non-confirmable Post request.
+     * @retval FALSE  Message is not a non-confirmable Post request.
+     *
+     */
+    bool IsNonConfirmablePostRequest(void) const;
 
     /**
      * This method creates a copy of this CoAP message.
@@ -568,35 +746,62 @@ public:
     const Message *GetNextCoapMessage(void) const { return static_cast<const Message *>(GetNext()); }
 
 private:
-    /**
-     * Protocol Constants (RFC 7252).
-     *
-     */
-    enum
+    enum : uint8_t
     {
-        kOptionDeltaOffset = 4,                         ///< Delta Offset
-        kOptionDeltaMask   = 0xf << kOptionDeltaOffset, ///< Delta Mask
+        /*
+         * Header field first byte (RFC 7252).
+         *
+         *    7 6 5 4 3 2 1 0
+         *   +-+-+-+-+-+-+-+-+
+         *   |Ver| T |  TKL  |  (Version, Type and Token Length).
+         *   +-+-+-+-+-+-+-+-+
+         */
+        kVersionOffset     = 6,
+        kVersionMask       = 0x3 << kVersionOffset,
+        kVersion1          = 1,
+        kTypeOffset        = 4,
+        kTypeMask          = 0x3 << kTypeOffset,
+        kTokenLengthOffset = 0,
+        kTokenLengthMask   = 0xf << kTokenLengthOffset,
 
-        kMaxTokenLength = OT_COAP_MAX_TOKEN_LENGTH,
+        /*
+         *
+         * Option Format (RFC 7252).
+         *
+         *      7   6   5   4   3   2   1   0
+         *    +---------------+---------------+
+         *    |  Option Delta | Option Length |   1 byte
+         *    +---------------+---------------+
+         *    /         Option Delta          /   0-2 bytes
+         *    \          (extended)           \
+         *    +-------------------------------+
+         *    /         Option Length         /   0-2 bytes
+         *    \          (extended)           \
+         *    +-------------------------------+
+         *    /         Option Value          /   0 or more bytes
+         *    +-------------------------------+
+         *
+         */
 
-        kVersionMask   = 0xc0, ///< Version mask as specified (RFC 7252).
-        kVersionOffset = 6,    ///< Version offset as specified (RFC 7252).
+        kOptionDeltaOffset  = 4,
+        kOptionDeltaMask    = 0xf << kOptionDeltaOffset,
+        kOptionLengthOffset = 0,
+        kOptionLengthMask   = 0xf << kOptionLengthOffset,
 
-        kTypeMask = 0x30, ///< Type mask as specified (RFC 7252).
+        kMaxOptionHeaderSize  = 5,
+        kOption1ByteExtension = 13, // Indicates a 1 byte extension (RFC 7252).
+        kOption2ByteExtension = 14, // Indicates a 2 byte extension (RFC 7252).
 
-        kTokenLengthMask   = 0x0f, ///< Token Length mask as specified (RFC 7252).
-        kTokenLengthOffset = 0,    ///< Token Length offset as specified (RFC 7252).
-        kTokenOffset       = 4,    ///< Token offset as specified (RFC 7252).
+        kHelpDataAlignment = sizeof(uint16_t), ///< Alignment of help data.
+    };
 
-        kMaxOptionHeaderSize = 5, ///< Maximum size of an Option header
-
-        kOption1ByteExtension = 13, ///< Indicates a 1 byte extension (RFC 7252).
-        kOption2ByteExtension = 14, ///< Indicates a 1 byte extension (RFC 7252).
+    enum : uint16_t
+    {
+        kMinHeaderLength = 4,
+        kMaxHeaderLength = 512,
 
         kOption1ByteExtensionOffset = 13,  ///< Delta/Length offset as specified (RFC 7252).
         kOption2ByteExtensionOffset = 269, ///< Delta/Length offset as specified (RFC 7252).
-
-        kHelpDataAlignment = sizeof(uint16_t), ///< Alignment of help data.
     };
 
     enum
@@ -618,10 +823,10 @@ private:
     OT_TOOL_PACKED_BEGIN
     struct Header
     {
-        uint8_t  mVersionTypeToken;                ///< The CoAP Version, Type, and Token Length
-        uint8_t  mCode;                            ///< The CoAP Code
-        uint16_t mMessageId;                       ///< The CoAP Message ID
-        uint8_t  mToken[OT_COAP_MAX_TOKEN_LENGTH]; ///< The CoAP Token
+        uint8_t  mVersionTypeToken;       ///< The CoAP Version, Type, and Token Length
+        uint8_t  mCode;                   ///< The CoAP Code
+        uint16_t mMessageId;              ///< The CoAP Message ID
+        uint8_t  mToken[kMaxTokenLength]; ///< The CoAP Token
     } OT_TOOL_PACKED_END;
 
     /**
@@ -645,6 +850,14 @@ private:
     }
 
     HelpData &GetHelpData(void) { return const_cast<HelpData &>(static_cast<const Message *>(this)->GetHelpData()); }
+
+    uint8_t *GetToken(void) { return GetHelpData().mHeader.mToken; }
+
+    void SetTokenLength(uint8_t aTokenLength)
+    {
+        GetHelpData().mHeader.mVersionTypeToken &= ~kTokenLengthMask;
+        GetHelpData().mHeader.mVersionTypeToken |= ((aTokenLength << kTokenLengthOffset) & kTokenLengthMask);
+    }
 };
 
 /**

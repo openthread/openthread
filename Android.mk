@@ -228,6 +228,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/meshcop/meshcop_tlvs.cpp                       \
     src/core/meshcop/panid_query_client.cpp                 \
     src/core/meshcop/timestamp.cpp                          \
+    src/core/net/checksum.cpp                               \
     src/core/net/dhcp6_client.cpp                           \
     src/core/net/dhcp6_server.cpp                           \
     src/core/net/dns_client.cpp                             \
@@ -274,6 +275,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/thread_netif.cpp                        \
     src/core/thread/tmf.cpp                                 \
     src/core/thread/topology.cpp                            \
+    src/core/thread/uri_paths.cpp                           \
     src/core/utils/channel_manager.cpp                      \
     src/core/utils/channel_monitor.cpp                      \
     src/core/utils/child_supervision.cpp                    \

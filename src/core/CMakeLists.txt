@@ -156,6 +156,7 @@ set(COMMON_SOURCES
     meshcop/meshcop_tlvs.cpp
     meshcop/panid_query_client.cpp
     meshcop/timestamp.cpp
+    net/checksum.cpp
     net/dhcp6_client.cpp
     net/dhcp6_server.cpp
     net/dns_client.cpp
@@ -204,6 +205,7 @@ set(COMMON_SOURCES
     thread/time_sync_service.cpp
     thread/tmf.cpp
     thread/topology.cpp
+    thread/uri_paths.cpp
     utils/channel_manager.cpp
     utils/channel_monitor.cpp
     utils/child_supervision.cpp

@@ -150,10 +150,13 @@ typedef uint16_t otShortAddress;
  */
 enum
 {
-    OT_IE_HEADER_IE_SIZE = 2,  ///< Size of IE header in bytes.
-    OT_CSL_IE_SIZE       = 4,  ///< Size of CSL IE content in bytes.
-    OT_ACK_IE_MAX_SIZE   = 16, ///< Max length for header IE in ACK.
+    OT_IE_HEADER_SIZE  = 2,  ///< Size of IE header in bytes.
+    OT_CSL_IE_SIZE     = 4,  ///< Size of CSL IE content in bytes.
+    OT_ACK_IE_MAX_SIZE = 16, ///< Max length for header IE in ACK.
 };
+
+#define CSL_IE_HEADER_BYTES_LO 0x04 ///< Fixed CSL IE header first byte
+#define CSL_IE_HEADER_BYTES_HI 0x0d ///< Fixed CSL IE header second byte
 
 /**
  * @struct otExtAddress

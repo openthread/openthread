@@ -226,22 +226,6 @@ public:
     otError HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost);
 
     /**
-     * This static method computes the pseudoheader checksum.
-     *
-     * @param[in]  aSource       A reference to the IPv6 source address.
-     * @param[in]  aDestination  A reference to the IPv6 destination address.
-     * @param[in]  aLength       The IPv6 Payload Length value.
-     * @param[in]  aProto        The IPv6 Next Header value.
-     *
-     * @returns The pseudoheader checksum.
-     *
-     */
-    static uint16_t ComputePseudoheaderChecksum(const Address &aSource,
-                                                const Address &aDestination,
-                                                uint16_t       aLength,
-                                                uint8_t        aProto);
-
-    /**
      * This method registers a callback to provide received raw IPv6 datagrams.
      *
      * By default, this callback does not pass Thread control traffic.  See SetReceiveIp6FilterEnabled() to change
@@ -343,9 +327,8 @@ private:
     static void HandleSendQueue(Tasklet &aTasklet);
     void        HandleSendQueue(void);
 
-    static uint8_t  PriorityToDscp(Message::Priority aPriority);
-    static otError  GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message::Priority &aPriority);
-    static uint16_t UpdateChecksum(uint16_t aChecksum, const Address &aAddress);
+    static uint8_t PriorityToDscp(Message::Priority aPriority);
+    static otError GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message::Priority &aPriority);
 
     void    EnqueueDatagram(Message &aMessage);
     otError ProcessReceiveCallback(Message &          aMessage,
