@@ -97,7 +97,7 @@ EFR32MG21_CONFIG_FILE_CPPFLAGS += -I$(CONFIG_FILE_PATH)
 COMMONCFLAGS                       := \
     -fdata-sections                   \
     -ffunction-sections               \
-    -Og                               \
+    -Os                               \
     -g                                \
     -I$(HAL_CONF_DIR)                 \
     -D__START=main                    \
