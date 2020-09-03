@@ -787,6 +787,59 @@ protected:
     };
 
     /**
+     * This enumeration represents the message actions used in `Log()` methods.
+     *
+     */
+    enum MessageAction : uint8_t
+    {
+        kMessageSend,
+        kMessageReceive,
+        kMessageDelay,
+        kMessageRemoveDelayed,
+    };
+
+    /**
+     * This enumeration represents message types used in `Log()` methods.
+     *
+     */
+    enum MessageType : uint8_t
+    {
+        kTypeAdvertisement,
+        kTypeAnnounce,
+        kTypeChildIdRequest,
+        kTypeChildIdRequestShort,
+        kTypeChildIdResponse,
+        kTypeChildUpdateRequestOfParent,
+        kTypeChildUpdateResponseOfParent,
+        kTypeDataRequest,
+        kTypeDataResponse,
+        kTypeDiscoveryRequest,
+        kTypeDiscoveryResponse,
+        kTypeGenericDelayed,
+        kTypeGenericUdp,
+        kTypeParentRequestToRouters,
+        kTypeParentRequestToRoutersReeds,
+        kTypeParentResponse,
+#if OPENTHREAD_FTD
+        kTypeAddressRelease,
+        kTypeAddressReleaseReply,
+        kTypeAddressReply,
+        kTypeAddressSolicit,
+        kTypeChildUpdateRequestOfChild,
+        kTypeChildUpdateResponseOfChild,
+        kTypeChildUpdateResponseOfUnknownChild,
+        kTypeLinkAccept,
+        kTypeLinkAcceptAndRequest,
+        kTypeLinkReject,
+        kTypeLinkRequest,
+        kTypeParentRequest,
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        kTypeTimeSync,
+#endif
+#endif
+    };
+
+    /**
      * This type represents a Challenge (or Response) data.
      *
      */
@@ -1330,53 +1383,55 @@ protected:
     /**
      * This static method emits a log message with an IPv6 address.
      *
-     * @param[in]  aLogString  The log message string.
+     * @param[in]  aAction     The message action (send/receive/delay, etc).
+     * @param[in]  aType       The message type.
      * @param[in]  aAddress    The IPv6 address of the peer.
      *
      */
-    static void Log(const char *aLogString, const Ip6::Address &aAddress);
+    static void Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAddress);
 
     /**
      * This static method emits a log message with an IPv6 address and RLOC16.
      *
-     * @param[in]  aLogString  The log message string.
+     * @param[in]  aAction     The message action (send/receive/delay, etc).
+     * @param[in]  aType       The message type.
      * @param[in]  aAddress    The IPv6 address of the peer.
      * @param[in]  aRloc       The RLOC16.
      *
      */
-    static void Log(const char *aLogString, const Ip6::Address &aAddress, uint16_t aRloc);
+    static void Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAddress, uint16_t aRloc);
 #else
-    static void Log(const char *, const Ip6::Address &) {}
-    static void Log(const char *, const Ip6::Address &, uint16_t) {}
+    static void Log(MessageAction, MessageType, const Ip6::Address &) {}
+    static void Log(MessageAction, MessageType, const Ip6::Address &, uint16_t) {}
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
     /**
-     * This static method emits a log message indicating an error in processing of an MLE message.
+     * This static method emits a log message indicating an error in processing of a message.
      *
      * Note that log message is emitted only if there is an error, i.e., @p aError is not `OT_ERROR_NONE`. The log
      * message will have the format "Failed to process {aMessageString} : {ErrorString}".
      *
-     * @param[in]  aMessageString    A string representing the MLE message type.
-     * @param[in]  aError            The error in processing the MLE message.
+     * @param[in]  aType      The message type.
+     * @param[in]  aError     The error in processing of the message.
      *
      */
-    static void LogProcessError(const char *aMessageString, otError aError);
+    static void LogProcessError(MessageType aType, otError aError);
 
     /**
-     * This static method emits a log message indicating an error when sending an MLE message.
+     * This static method emits a log message indicating an error when sending a message.
      *
      * Note that log message is emitted only if there is an error, i.e. @p aError is not `OT_ERROR_NONE`. The log
-     * message will have the format "Failed to send {aMessageString} : {ErrorString}".
+     * message will have the format "Failed to send {Message Type} : {ErrorString}".
      *
-     * @param[in]  aMessageString    A string representing the MLE message type.
-     * @param[in]  aError            The error in sending the MLE message.
+     * @param[in]  aType    The message type.
+     * @param[in]  aError   The error in sending the message.
      *
      */
-    static void LogSendError(const char *aMessageString, otError aError);
+    static void LogSendError(MessageType aType, otError aError);
 #else
-    static void LogProcessError(const char *, otError) {}
-    static void LogSendError(const char *, otError) {}
+    static void LogProcessError(MessageType, otError) {}
+    static void LogSendError(MessageType, otError) {}
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
 
     /**
@@ -1646,6 +1701,13 @@ private:
     void        HandleParentSearchTimer(void);
     void        StartParentSearchTimer(void);
     void        UpdateParentSearchState(void);
+#endif
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+    static void        LogError(MessageAction aAction, MessageType aType, otError aError);
+    static const char *MessageActionToString(MessageAction aAction);
+    static const char *MessageTypeToString(MessageType aType);
+    static const char *MessageTypeActionToSuffixString(MessageType aType, MessageAction aAction);
 #endif
 
     MessageQueue mDelayedResponses;
