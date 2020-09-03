@@ -32,7 +32,7 @@
  */
 
 #include "openthread-core-config.h"
-#include "openthread/child_supervision.h"
+#include <openthread/child_supervision.h>
 
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
