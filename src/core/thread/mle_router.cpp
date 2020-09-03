@@ -439,7 +439,7 @@ void MleRouter::SendAdvertisement(void)
     VerifyOrExit(!mAddressSolicitPending, OT_NOOP);
 
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandAdvertisement));
+    SuccessOrExit(error = AppendHeader(*message, kCommandAdvertisement));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
 
@@ -486,7 +486,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
     destination.Clear();
 
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandLinkRequest));
+    SuccessOrExit(error = AppendHeader(*message, kCommandLinkRequest));
     SuccessOrExit(error = AppendVersion(*message));
 
     switch (mRole)
@@ -684,11 +684,10 @@ otError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
     otError              error        = OT_ERROR_NONE;
     static const uint8_t routerTlvs[] = {Tlv::kLinkMargin};
     Message *            message;
-    Header::Command      command;
+    Command              command;
     uint8_t              linkMargin;
 
-    command = (aNeighbor == nullptr || aNeighbor->IsStateValid()) ? Header::kCommandLinkAccept
-                                                                  : Header::kCommandLinkAcceptAndRequest;
+    command = (aNeighbor == nullptr || aNeighbor->IsStateValid()) ? kCommandLinkAccept : kCommandLinkAcceptAndRequest;
 
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = AppendHeader(*message, command));
@@ -1937,7 +1936,7 @@ void MleRouter::SendParentResponse(Child *aChild, const Challenge &aChallenge, b
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
     message->SetDirectTransmission();
 
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentResponse));
+    SuccessOrExit(error = AppendHeader(*message, kCommandParentResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
     SuccessOrExit(error = AppendLinkFrameCounter(*message));
@@ -2931,7 +2930,7 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
     message->SetSubType(Message::kSubTypeMleDiscoverResponse);
     message->SetPanId(aPanId);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandDiscoveryResponse));
+    SuccessOrExit(error = AppendHeader(*message, kCommandDiscoveryResponse));
 
     // Discovery TLV
     tlv.SetType(Tlv::kDiscovery);
@@ -3018,7 +3017,7 @@ otError MleRouter::SendChildIdResponse(Child &aChild)
     Message *    message;
 
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdResponse));
+    SuccessOrExit(error = AppendHeader(*message, kCommandChildIdResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
     SuccessOrExit(error = AppendActiveTimestamp(*message));
@@ -3138,7 +3137,7 @@ otError MleRouter::SendChildUpdateRequest(Child &aChild)
 
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
     message->SetSubType(Message::kSubTypeMleChildUpdateRequest);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
+    SuccessOrExit(error = AppendHeader(*message, kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
     SuccessOrExit(error = AppendNetworkData(*message, !aChild.IsFullNetworkData()));
@@ -3183,7 +3182,7 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
     Message *message;
 
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateResponse));
+    SuccessOrExit(error = AppendHeader(*message, kCommandChildUpdateResponse));
 
     for (int i = 0; i < aTlvsLength; i++)
     {
@@ -3270,7 +3269,7 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
 
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
     message->SetSubType(Message::kSubTypeMleDataResponse);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataResponse));
+    SuccessOrExit(error = AppendHeader(*message, kCommandDataResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
     SuccessOrExit(error = AppendActiveTimestamp(*message));
@@ -4428,7 +4427,7 @@ otError MleRouter::SendTimeSync(void)
     Message *    message = nullptr;
 
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandTimeSync));
+    SuccessOrExit(error = AppendHeader(*message, kCommandTimeSync));
 
     message->SetTimeSync(true);
 
