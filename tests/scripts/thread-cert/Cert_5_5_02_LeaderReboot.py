@@ -117,13 +117,11 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
 
         # Step 4: Router_1 MUST attempt to reattach to its original partition by
         # sending MLE Parent Requests to the All-Routers multicast
-        # address (FFxx::xx) with a hop limit of 255.
-        _rpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
+        # address (FFxx::xx) with a hop limit of 255. MUST make two separate attempts
+        for i in range(1, 2):
+            _rpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
+                lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
         lreset_start = _rpkts.index
-
-        # Step 5: Leader MUST NOT respond to the MLE Parent Requests
-        _lpkts.filter_mle_cmd(MLE_PARENT_RESPONSE).must_not_next()
 
         # Step 6:Router_1 MUST attempt to attach to any other Partition
         # within range by sending a MLE Parent Request.
@@ -133,6 +131,9 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
 
         # Step 3: The Leader MUST stop sending MLE advertisements.
         leader_pkts.range(lreset_start, lreset_stop).filter_mle_cmd(MLE_ADVERTISEMENT).must_not_next()
+
+        # Step 5: Leader MUST NOT respond to the MLE Parent Requests
+        leader_pkts.range(lreset_start, lreset_stop).filter_mle_cmd(MLE_PARENT_RESPONSE).must_not_next()
 
         # Step 7: Take over leader role of a new Partition and
         # begin transmitting MLE Advertisements
@@ -147,7 +148,7 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
 
         # Step 9: The Leader MUST send properly formatted MLE Parent
         # Requests to the All-Routers multicast address
-        _lpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
+        _lpkts.range(lreset_stop).filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
             lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
 
         # Step 10: Router_1 MUST send an MLE Parent Response
