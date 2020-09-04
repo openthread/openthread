@@ -171,18 +171,18 @@ otError CoapBase::SendMessage(Message &               aMessage,
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         // Whether or not to turn on special "Observe" handling.
-        OptionIterator iterator;
-        bool           observe;
+        Option::Iterator iterator;
+        bool             observe;
 
-        SuccessOrExit(error = iterator.Init(&aMessage));
-        observe = (iterator.GetFirstOptionMatching(kOptionObserve) != nullptr);
+        SuccessOrExit(error = iterator.Init(aMessage, kOptionObserve));
+        observe = !iterator.IsDone();
 
         // Special case, if we're sending a GET with Observe=1, that is a cancellation.
         if (observe && aMessage.IsGetRequest())
         {
             uint64_t observeVal = 0;
 
-            SuccessOrExit(error = iterator.GetOptionValue(observeVal));
+            SuccessOrExit(error = iterator.ReadOptionValue(observeVal));
 
             if (observeVal == 1)
             {
@@ -570,10 +570,10 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
     if (metadata.mObserve && request->IsRequest())
     {
         // We sent Observe in our request, see if we received Observe in the response too.
-        OptionIterator iterator;
+        Option::Iterator iterator;
 
-        SuccessOrExit(error = iterator.Init(&aMessage));
-        responseObserve = (iterator.GetFirstOptionMatching(kOptionObserve) != nullptr);
+        SuccessOrExit(error = iterator.Init(aMessage, kOptionObserve));
+        responseObserve = !iterator.IsDone();
     }
 #endif
 
@@ -687,11 +687,11 @@ exit:
 
 void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    char           uriPath[Resource::kMaxReceivedUriPath];
-    char *         curUriPath     = uriPath;
-    Message *      cachedResponse = nullptr;
-    otError        error          = OT_ERROR_NOT_FOUND;
-    OptionIterator iterator;
+    char             uriPath[Resource::kMaxReceivedUriPath];
+    char *           curUriPath     = uriPath;
+    Message *        cachedResponse = nullptr;
+    otError          error          = OT_ERROR_NOT_FOUND;
+    Option::Iterator iterator;
 
     if (mInterceptor != nullptr)
     {
@@ -714,29 +714,26 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
         break;
     }
 
-    SuccessOrExit(error = iterator.Init(&aMessage));
-    for (const otCoapOption *option = iterator.GetFirstOption(); option != nullptr; option = iterator.GetNextOption())
+    SuccessOrExit(error = iterator.Init(aMessage, kOptionUriPath));
+
+    while (!iterator.IsDone())
     {
-        switch (option->mNumber)
+        uint16_t optionLength = iterator.GetOption()->GetLength();
+
+        if (curUriPath != uriPath)
         {
-        case kOptionUriPath:
-            if (curUriPath != uriPath)
-            {
-                *curUriPath++ = '/';
-            }
-
-            VerifyOrExit(option->mLength < sizeof(uriPath) - static_cast<size_t>(curUriPath + 1 - uriPath), OT_NOOP);
-
-            IgnoreError(iterator.GetOptionValue(curUriPath));
-            curUriPath += option->mLength;
-            break;
-
-        default:
-            break;
+            *curUriPath++ = '/';
         }
+
+        VerifyOrExit(curUriPath + optionLength < OT_ARRAY_END(uriPath), OT_NOOP);
+
+        IgnoreError(iterator.ReadOptionValue(curUriPath));
+        curUriPath += optionLength;
+
+        SuccessOrExit(error = iterator.Advance(kOptionUriPath));
     }
 
-    curUriPath[0] = '\0';
+    *curUriPath = '\0';
 
     for (const Resource *resource = mResources.GetHead(); resource; resource = resource->GetNext())
     {
