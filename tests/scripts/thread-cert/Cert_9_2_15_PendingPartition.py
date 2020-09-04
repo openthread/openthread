@@ -57,7 +57,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
             },
             'mode': 'rsdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         LEADER: {
             'name': 'LEADER',
@@ -69,7 +69,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
             'mode': 'rsdn',
             'partition_id': 0xffffffff,
             'router_selection_jitter': 1,
-            'whitelist': [COMMISSIONER, ROUTER1]
+            'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
@@ -80,7 +80,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
             },
             'mode': 'rsdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ROUTER2]
+            'allowlist': [LEADER, ROUTER2]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
@@ -91,13 +91,13 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
             },
             'mode': 'rsdn',
             'router_selection_jitter': 1,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
     }
 
     def _setUpRouter2(self):
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
+        self.nodes[ROUTER2].add_allowlist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[ROUTER2].enable_allowlist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
     def test(self):

@@ -16,7 +16,7 @@ Syntax
 
 ::
 
- ./start.sh [-h] [--pattern PATTERN] [--delete-blacklist] [--skip SKIP]
+ ./start.sh [-h] [--pattern PATTERN] [--delete-denylist] [--skip SKIP]
                  [--dry-run] [--result-file RESULT_FILE]
                  [--list-file LIST_FILE] [--continue-from CONTINUE_FROM]
                  [--auto-reboot] [--manual-reset] [--list-devices]

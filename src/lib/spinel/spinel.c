@@ -1495,12 +1495,12 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "MAC_DATA_POLL_PERIOD";
         break;
 
-    case SPINEL_PROP_MAC_WHITELIST:
-        ret = "MAC_WHITELIST";
+    case SPINEL_PROP_MAC_ALLOWLIST:
+        ret = "MAC_ALLOWLIST";
         break;
 
-    case SPINEL_PROP_MAC_WHITELIST_ENABLED:
-        ret = "MAC_WHITELIST_ENABLED";
+    case SPINEL_PROP_MAC_ALLOWLIST_ENABLED:
+        ret = "MAC_ALLOWLIST_ENABLED";
         break;
 
     case SPINEL_PROP_MAC_EXTENDED_ADDR:
@@ -1519,12 +1519,12 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "MAC_SRC_MATCH_EXTENDED_ADDRESSES";
         break;
 
-    case SPINEL_PROP_MAC_BLACKLIST:
-        ret = "MAC_BLACKLIST";
+    case SPINEL_PROP_MAC_DENYLIST:
+        ret = "MAC_DENYLIST";
         break;
 
-    case SPINEL_PROP_MAC_BLACKLIST_ENABLED:
-        ret = "MAC_BLACKLIST_ENABLED";
+    case SPINEL_PROP_MAC_DENYLIST_ENABLED:
+        ret = "MAC_DENYLIST_ENABLED";
         break;
 
     case SPINEL_PROP_MAC_FIXED_RSS:
@@ -2603,8 +2603,8 @@ const char *spinel_capability_to_cstr(spinel_capability_t capability)
         ret = "NET_THREAD_1_1";
         break;
 
-    case SPINEL_CAP_MAC_WHITELIST:
-        ret = "MAC_WHITELIST";
+    case SPINEL_CAP_MAC_ALLOWLIST:
+        ret = "MAC_ALLOWLIST";
         break;
 
     case SPINEL_CAP_MAC_RAW:

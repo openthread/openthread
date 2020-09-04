@@ -88,9 +88,9 @@ wpan.Node.init_all_nodes()
 #            child
 #
 
-parent1.whitelist_node(parent2)
-parent2.whitelist_node(parent1)
-parent2.whitelist_node(child)
+parent1.allowlist_node(parent2)
+parent2.allowlist_node(parent1)
+parent2.allowlist_node(child)
 
 parent1.form("inform-parent")
 parent2.join_node(parent1, wpan.JOIN_TYPE_ROUTER)
@@ -108,10 +108,10 @@ PARENT_SUPERVISION_INTERVAL = 1
 child_table = wpan.parse_list(parent2.get(wpan.WPAN_THREAD_CHILD_TABLE))
 verify(len(child_table) == 1)
 
-# Remove the `child` from whitelist of `parent2` and add it to whitelist
+# Remove the `child` from allowlist of `parent2` and add it to allowlist
 # of `parent1` instead.
-parent1.whitelist_node(child)
-parent2.un_whitelist_node(child)
+parent1.allowlist_node(child)
+parent2.un_allowlist_node(child)
 
 # Enable supervision check on the `child` and also on `parent1`.
 
@@ -122,10 +122,10 @@ child.set(
 parent1.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL))
 
 # Since child supervision is not enabled on `parent2` and the `child` is
-# removed from whitelist on `parent2`, after the supervision check timeout
+# removed from allowlist on `parent2`, after the supervision check timeout
 # the `child` should realize that it can no longer talk to its current
 # parent (`parent2`) and try to reattach. All re-attach attempts to `parent2`
-# should fail (due to whitelist) and cause the `child` to get detached and
+# should fail (due to allowlist) and cause the `child` to get detached and
 # search for a new parent and then attach to `parent1`.
 #
 # To verify that the `child` does get detached and attach to a new parent, we

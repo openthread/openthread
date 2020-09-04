@@ -1080,7 +1080,7 @@ enum
     SPINEL_CAP_NET__END       = 64,
 
     SPINEL_CAP_OPENTHREAD__BEGIN       = 512,
-    SPINEL_CAP_MAC_WHITELIST           = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
+    SPINEL_CAP_MAC_ALLOWLIST           = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
     SPINEL_CAP_MAC_RAW                 = (SPINEL_CAP_OPENTHREAD__BEGIN + 1),
     SPINEL_CAP_OOB_STEERING_DATA       = (SPINEL_CAP_OPENTHREAD__BEGIN + 2),
     SPINEL_CAP_CHANNEL_MONITOR         = (SPINEL_CAP_OPENTHREAD__BEGIN + 3),
@@ -1875,9 +1875,9 @@ enum
 
     SPINEL_PROP_MAC_EXT__BEGIN = 0x1300,
 
-    /// MAC Whitelist
+    /// MAC Allowlist
     /** Format: `A(t(Ec))`
-     * Required capability: `CAP_MAC_WHITELIST`
+     * Required capability: `CAP_MAC_ALLOWLIST`
      *
      * Structure Parameters:
      *
@@ -1888,14 +1888,14 @@ enum
      *       inserting, it is assumed to be 127. This parameter is
      *       ignored when removing.
      */
-    SPINEL_PROP_MAC_WHITELIST = SPINEL_PROP_MAC_EXT__BEGIN + 0,
+    SPINEL_PROP_MAC_ALLOWLIST = SPINEL_PROP_MAC_EXT__BEGIN + 0,
 
-    /// MAC Whitelist Enabled Flag
+    /// MAC Allowlist Enabled Flag
     /** Format: `b`
-     * Required capability: `CAP_MAC_WHITELIST`
+     * Required capability: `CAP_MAC_ALLOWLIST`
      *
      */
-    SPINEL_PROP_MAC_WHITELIST_ENABLED = SPINEL_PROP_MAC_EXT__BEGIN + 1,
+    SPINEL_PROP_MAC_ALLOWLIST_ENABLED = SPINEL_PROP_MAC_EXT__BEGIN + 1,
 
     /// MAC Extended Address
     /** Format: `E`
@@ -1930,26 +1930,26 @@ enum
      */
     SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES = SPINEL_PROP_MAC_EXT__BEGIN + 5,
 
-    /// MAC Blacklist
+    /// MAC Denylist
     /** Format: `A(t(E))`
-     * Required capability: `CAP_MAC_WHITELIST`
+     * Required capability: `CAP_MAC_ALLOWLIST`
      *
      * Structure Parameters:
      *
      *  `E`: EUI64 address of node
      *
      */
-    SPINEL_PROP_MAC_BLACKLIST = SPINEL_PROP_MAC_EXT__BEGIN + 6,
+    SPINEL_PROP_MAC_DENYLIST = SPINEL_PROP_MAC_EXT__BEGIN + 6,
 
-    /// MAC Blacklist Enabled Flag
+    /// MAC Denylist Enabled Flag
     /** Format: `b`
-     *  Required capability: `CAP_MAC_WHITELIST`
+     *  Required capability: `CAP_MAC_ALLOWLIST`
      */
-    SPINEL_PROP_MAC_BLACKLIST_ENABLED = SPINEL_PROP_MAC_EXT__BEGIN + 7,
+    SPINEL_PROP_MAC_DENYLIST_ENABLED = SPINEL_PROP_MAC_EXT__BEGIN + 7,
 
     /// MAC Received Signal Strength Filter
     /** Format: `A(t(Ec))`
-     * Required capability: `CAP_MAC_WHITELIST`
+     * Required capability: `CAP_MAC_ALLOWLIST`
      *
      * Structure Parameters:
      *
@@ -3729,7 +3729,7 @@ enum
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_PKT_OTHER = SPINEL_PROP_CNTR__BEGIN + 105,
 
-    /// The number of received packets filtered by whitelist.
+    /// The number of received packets filtered by allowlist.
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_PKT_FILT_WL = SPINEL_PROP_CNTR__BEGIN + 106,
 
@@ -3888,7 +3888,7 @@ enum
      *   'L': RxBeaconRequest          (The number of received beacon request).
      *   'L': RxOther                  (The number of received other types of frames).
      *   'L': RxAddressFiltered        (The number of received packets filtered by address filter
-     *                                  (whitelist or blacklist)).
+     *                                  (allowlist or denylist)).
      *   'L': RxDestAddrFiltered       (The number of received packets filtered by destination check).
      *   'L': RxDuplicated             (The number of received duplicated packets).
      *   'L': RxErrNoFrame             (The number of received packets with no or malformed content).

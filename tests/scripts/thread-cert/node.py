@@ -444,22 +444,22 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def clear_whitelist(self):
+    def clear_allowlist(self):
         cmd = 'macfilter addr clear'
         self.send_command(cmd)
         self._expect('Done')
 
-    def enable_whitelist(self):
-        cmd = 'macfilter addr whitelist'
+    def enable_allowlist(self):
+        cmd = 'macfilter addr allowlist'
         self.send_command(cmd)
         self._expect('Done')
 
-    def disable_whitelist(self):
+    def disable_allowlist(self):
         cmd = 'macfilter addr disable'
         self.send_command(cmd)
         self._expect('Done')
 
-    def add_whitelist(self, addr, rssi=None):
+    def add_allowlist(self, addr, rssi=None):
         cmd = 'macfilter addr add %s' % addr
 
         if rssi is not None:
@@ -618,7 +618,7 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def remove_whitelist(self, addr):
+    def remove_allowlist(self, addr):
         cmd = 'macfilter addr remove %s' % addr
         self.send_command(cmd)
         self._expect('Done')

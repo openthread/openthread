@@ -146,7 +146,7 @@ class Cert_5_2_7_REEDSynchronization(thread_cert.TestCase):
 
         # 2. DUT_REED: Attach to network. Verify it didn't send an Address Solicit Request.
         # Avoid DUT_REED attach to DUT_ROUTER1.
-        self.nodes[DUT_REED].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64(), config.RSSI['LINK_QULITY_1'])
+        self.nodes[DUT_REED].add_allowlist(self.nodes[DUT_ROUTER1].get_addr64(), config.RSSI['LINK_QULITY_1'])
 
         self.nodes[DUT_REED].start()
         self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)

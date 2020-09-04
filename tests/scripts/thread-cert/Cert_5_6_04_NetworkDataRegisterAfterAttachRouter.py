@@ -49,21 +49,21 @@ class Cert_5_6_4_NetworkDataRegisterAfterAttachRouter(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER, ED1, SED1]
+            'allowlist': [ROUTER, ED1, SED1]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ED1: {
             'name': 'MED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         SED1: {
             'name': 'SED',
@@ -71,7 +71,7 @@ class Cert_5_6_4_NetworkDataRegisterAfterAttachRouter(thread_cert.TestCase):
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 

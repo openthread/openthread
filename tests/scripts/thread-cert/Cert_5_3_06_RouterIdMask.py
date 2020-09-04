@@ -44,25 +44,25 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         DUT_LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
         ROUTER1: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [DUT_LEADER, ROUTER2]
+            'allowlist': [DUT_LEADER, ROUTER2]
         },
         ROUTER2: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
     }
 
     def _setUpRouter2(self):
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
+        self.nodes[ROUTER2].add_allowlist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[ROUTER2].enable_allowlist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
     def test(self):

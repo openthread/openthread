@@ -49,44 +49,44 @@ class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [DUT_ROUTER1, ED1, ED2, ED3, ED4]
+            'allowlist': [DUT_ROUTER1, ED1, ED2, ED3, ED4]
         },
         DUT_ROUTER1: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, SED1]
+            'allowlist': [LEADER, SED1]
         },
         SED1: {
             'is_mtd': True,
             'mode': 's',
             'panid': 0xface,
             'timeout': 5,
-            'whitelist': [DUT_ROUTER1]
+            'allowlist': [DUT_ROUTER1]
         },
         ED1: {
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ED2: {
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ED3: {
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ED4: {
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 

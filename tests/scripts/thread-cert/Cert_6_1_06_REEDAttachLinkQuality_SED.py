@@ -44,26 +44,26 @@ class Cert_6_1_6_REEDAttachLinkQuality_SED(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [REED, ROUTER2]
+            'allowlist': [REED, ROUTER2]
         },
         REED: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
-            'whitelist': [LEADER, SED]
+            'allowlist': [LEADER, SED]
         },
         ROUTER2: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, (SED, -85)]
+            'allowlist': [LEADER, (SED, -85)]
         },
         SED: {
             'is_mtd': True,
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [REED, ROUTER2]
+            'allowlist': [REED, ROUTER2]
         },
     }
 

@@ -46,34 +46,34 @@ class Cert_6_1_9_EDSynchronization(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1, ED, ROUTER2]
+            'allowlist': [ROUTER1, ED, ROUTER2]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED, ROUTER3]
+            'allowlist': [LEADER, ED, ROUTER3]
         },
         ED: {
             'name': 'ED',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED, ROUTER3]
+            'allowlist': [LEADER, ED, ROUTER3]
         },
         ROUTER3: {
             'name': 'ROUTER_3',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [ED, ROUTER1, ROUTER2]
+            'allowlist': [ED, ROUTER1, ROUTER2]
         },
     }
 
@@ -98,10 +98,10 @@ class Cert_6_1_9_EDSynchronization(thread_cert.TestCase):
         self.simulator.go(3)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
-        self.nodes[ED].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ED].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[ED].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[ED].enable_whitelist()
+        self.nodes[ED].add_allowlist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[ED].add_allowlist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[ED].add_allowlist(self.nodes[ROUTER3].get_addr64())
+        self.nodes[ED].enable_allowlist()
         self.simulator.go(10)
 
     def verify(self, pv):

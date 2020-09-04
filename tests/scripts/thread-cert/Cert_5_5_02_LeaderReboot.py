@@ -47,27 +47,27 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED]
+            'allowlist': [LEADER, ED]
         },
         ED: {
             'name': 'MED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
     }
 
     def _setUpLeader(self):
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
+        self.nodes[LEADER].add_allowlist(self.nodes[ROUTER].get_addr64())
+        self.nodes[LEADER].enable_allowlist()
         self.nodes[LEADER].set_router_selection_jitter(1)
 
     def test(self):

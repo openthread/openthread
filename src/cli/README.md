@@ -1940,7 +1940,7 @@ List the macfilter status, including address and received signal strength filter
 
 ```bash
 > macfilter
-Address Mode: Whitelist
+Address Mode: Allowlist
 0f6127e33af6b403 : rss -95 (lqi 1)
 0f6127e33af6b402
 RssIn List:
@@ -1955,7 +1955,7 @@ List the address filter status.
 
 ```bash
 > macfilter addr
-Whitelist
+Allowlist
 0f6127e33af6b403 : rss -95 (lqi 1)
 0f6127e33af6b402
 Done
@@ -1970,21 +1970,21 @@ Disable address filter mode.
 Done
 ```
 
-### macfilter addr whitelist
+### macfilter addr allowlist
 
-Enable whitelist address filter mode.
+Enable allowlist address filter mode.
 
 ```bash
-> macfilter addr whitelist
+> macfilter addr allowlist
 Done
 ```
 
-### macfilter addr blacklist
+### macfilter addr denylist
 
-Enable blacklist address filter mode.
+Enable denylist address filter mode.
 
 ```bash
-> macfilter addr blacklist
+> macfilter addr denylist
 Done
 ```
 

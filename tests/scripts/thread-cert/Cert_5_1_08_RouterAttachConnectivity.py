@@ -45,31 +45,31 @@ class Cert_5_1_08_RouterAttachConnectivity(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1, ROUTER2, ROUTER3]
+            'allowlist': [ROUTER1, ROUTER2, ROUTER3]
         },
         ROUTER1: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ROUTER3]
+            'allowlist': [LEADER, ROUTER3]
         },
         ROUTER2: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ROUTER4]
+            'allowlist': [LEADER, ROUTER4]
         },
         ROUTER3: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ROUTER1, ROUTER4]
+            'allowlist': [LEADER, ROUTER1, ROUTER4]
         },
         ROUTER4: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [ROUTER2, ROUTER3]
+            'allowlist': [ROUTER2, ROUTER3]
         },
     }
 

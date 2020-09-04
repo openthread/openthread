@@ -43,26 +43,26 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
         ROUTER1: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, DUT_ROUTER2]
+            'allowlist': [LEADER, DUT_ROUTER2]
         },
         DUT_ROUTER2: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [ROUTER1, SED1]
+            'allowlist': [ROUTER1, SED1]
         },
         SED1: {
             'is_mtd': True,
             'mode': 'sn',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [DUT_ROUTER2]
+            'allowlist': [DUT_ROUTER2]
         },
     }
 

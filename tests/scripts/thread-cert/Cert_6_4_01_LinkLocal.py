@@ -40,13 +40,13 @@ class Cert_6_4_1_LinkLocal(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ED]
+            'allowlist': [ED]
         },
         ED: {
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 

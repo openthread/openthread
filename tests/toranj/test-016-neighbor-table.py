@@ -74,21 +74,21 @@ wpan.Node.init_all_nodes()
 # Build network topology
 #
 
-# whitelist all routers with one another
+# allowlist all routers with one another
 for i in range(NUM_ROUTERS):
     for j in range(NUM_ROUTERS):
         if i != j:
-            routers[i].whitelist_node(routers[j])
+            routers[i].allowlist_node(routers[j])
 
 # All children should attach to routers[0]
 for num in range(NUM_CHILDREN):
-    children[num].whitelist_node(routers[0])
-    routers[0].whitelist_node(children[num])
+    children[num].allowlist_node(routers[0])
+    routers[0].allowlist_node(children[num])
 
-# whitelist the end-device ed with its corresponding router
+# allowlist the end-device ed with its corresponding router
 for num in range(1, NUM_ROUTERS):
-    ed[num].whitelist_node(routers[num])
-    routers[num].whitelist_node(ed[num])
+    ed[num].allowlist_node(routers[num])
+    routers[num].allowlist_node(ed[num])
 
 routers[0].form("neigh-table")
 

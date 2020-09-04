@@ -73,16 +73,16 @@ class TestBackboneRouterService(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER_1_1: {
             'version': '1.1',
-            'whitelist': [BBR_1, BBR_2],
+            'allowlist': [BBR_1, BBR_2],
         },
         BBR_1: {
             'version': '1.2',
-            'whitelist': [LEADER_1_1, BBR_2],
+            'allowlist': [LEADER_1_1, BBR_2],
             'is_bbr': True
         },
         BBR_2: {
             'version': '1.2',
-            'whitelist': [LEADER_1_1, BBR_1],
+            'allowlist': [LEADER_1_1, BBR_1],
             'is_bbr': True
         },
     }

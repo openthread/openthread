@@ -44,19 +44,19 @@ class Cert_5_5_1_LeaderReboot(thread_cert.TestCase):
         DUT_LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [DUT_ROUTER1]
+            'allowlist': [DUT_ROUTER1]
         },
         DUT_ROUTER1: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [DUT_LEADER]
+            'allowlist': [DUT_LEADER]
         },
     }
 
     def _setUpLeader(self):
-        self.nodes[DUT_LEADER].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64())
-        self.nodes[DUT_LEADER].enable_whitelist()
+        self.nodes[DUT_LEADER].add_allowlist(self.nodes[DUT_ROUTER1].get_addr64())
+        self.nodes[DUT_LEADER].enable_allowlist()
 
     def test(self):
         # 1 ALL: Build and verify the topology

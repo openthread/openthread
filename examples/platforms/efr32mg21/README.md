@@ -125,7 +125,6 @@ scan
 start
 state
 stop
-whitelist
 ```
 
 3. Start a Thread network as Leader.
