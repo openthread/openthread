@@ -89,7 +89,7 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
         self.assertEqual(self.nodes[ROUTER].get_state(), 'leader')
 
         self.nodes[LEADER].start()
-        self.simulator.go(10)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'router')
 
         addrs = self.nodes[ED].get_addrs()
@@ -118,9 +118,10 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
         # Step 4: Router_1 MUST attempt to reattach to its original partition by
         # sending MLE Parent Requests to the All-Routers multicast
         # address (FFxx::xx) with a hop limit of 255. MUST make two separate attempts
-        for i in range(1, 2):
+        for i in range(1, 3):
             _rpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
-                lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
+                lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+                    p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 1)
         lreset_start = _rpkts.index
 
         # Step 6:Router_1 MUST attempt to attach to any other Partition
