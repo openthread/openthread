@@ -410,13 +410,19 @@ void TestMacChannelMask(void)
 
 void TestMacFrameApi(void)
 {
-    uint8_t ack_psdu1[] = {0x02, 0x10, 0x5e, 0xd2, 0x9b};
+    uint8_t ack_psdu1[]     = {0x02, 0x10, 0x5e, 0xd2, 0x9b};
+    uint8_t mac_cmd_psdu1[] = {0x6b, 0xdc, 0x85, 0xce, 0xfa, 0x47, 0x36, 0x07, 0xd9, 0x74, 0x45, 0x8d,
+                               0xb2, 0x6e, 0x81, 0x25, 0xc9, 0xdb, 0xac, 0x2b, 0x0a, 0x0d, 0x00, 0x00,
+                               0x00, 0x00, 0x01, 0x04, 0xaf, 0x14, 0xce, 0xaa, 0x5a, 0xe5};
 
     Mac::Frame frame;
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    uint8_t data_psdu1[] = {0x29, 0xee, 0x53, 0xce, 0xfa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x6e, 0x16, 0x05,
+    uint8_t data_psdu1[]    = {0x29, 0xee, 0x53, 0xce, 0xfa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x6e, 0x16, 0x05,
                             0x00, 0x00, 0x00, 0x00, 0x0a, 0x6e, 0x16, 0x0d, 0x01, 0x00, 0x00, 0x00, 0x01};
+    uint8_t mac_cmd_psdu2[] = {0x6b, 0xaa, 0x8d, 0xce, 0xfa, 0x00, 0x68, 0x01, 0x68, 0x0d,
+                               0x08, 0x00, 0x00, 0x00, 0x01, 0x04, 0x0d, 0xed, 0x0b, 0x35,
+                               0x0c, 0x80, 0x3f, 0x04, 0x4b, 0x88, 0x89, 0xd6, 0x59, 0xe1};
     otError error;
     uint8_t scf; // SecurityControlField
 #endif
@@ -470,6 +476,44 @@ void TestMacFrameApi(void)
                  "Mac::Frame::GetSecurityControlField failed\n");
     VerifyOrQuit(scf == 0xff, "Mac::Frame::SetSecurityControlField value failed\n");
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+
+    // IEEE 802.15.4-2006 Mac Command
+    //   Sequence Number: 133
+    //   Command Identifier: Data Request (0x04)
+    uint8_t commandId;
+    frame.mPsdu   = mac_cmd_psdu1;
+    frame.mLength = sizeof(mac_cmd_psdu1);
+    VerifyOrQuit(frame.GetSequence() == 133, "Mac::Frame::GetSequence failed\n");
+    VerifyOrQuit(frame.GetVersion() == Mac::Frame::kFcfFrameVersion2006, "Mac::Frame::GetVersion failed\n");
+    VerifyOrQuit(frame.GetType() == Mac::Frame::kFcfFrameMacCmd, "Mac::Frame::GetType failed\n");
+    VerifyOrQuit(frame.GetCommandId(commandId) == OT_ERROR_NONE, "Mac::Frame::GetCommandId failed\n");
+    VerifyOrQuit(commandId == Mac::Frame::kMacCmdDataRequest, "Mac::Frame::GetCommandId value not correct\n");
+    VerifyOrQuit(frame.SetCommandId(Mac::Frame::kMacCmdBeaconRequest) == OT_ERROR_NONE,
+                 "Mac::Frame::SetCommandId failed\n");
+    VerifyOrQuit(frame.GetCommandId(commandId) == OT_ERROR_NONE, "Mac::Frame::GetCommandId failed\n");
+    VerifyOrQuit(commandId == Mac::Frame::kMacCmdBeaconRequest, "Mac::Frame::SetCommandId value not correct\n");
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    // IEEE 802.15.4-2015 Mac Command
+    //   Sequence Number: 141
+    //   Header IEs
+    //     CSL IE
+    //     Header Termination 2 IE (Payload follows)
+    //   Command Identifier: Data Request (0x04)
+    frame.mPsdu   = mac_cmd_psdu2;
+    frame.mLength = sizeof(mac_cmd_psdu2);
+    VerifyOrQuit(frame.GetSequence() == 141, "Mac::Frame::GetSequence failed\n");
+    VerifyOrQuit(frame.IsVersion2015() == true, "Mac::Frame::IsVersion2015 failed\n");
+    VerifyOrQuit(frame.GetType() == Mac::Frame::kFcfFrameMacCmd, "Mac::Frame::GetVersion failed\n");
+    VerifyOrQuit(frame.GetCommandId(commandId) == OT_ERROR_NONE, "Mac::Frame::GetCommandId failed\n");
+    VerifyOrQuit(commandId == Mac::Frame::kMacCmdDataRequest, "Mac::Frame::GetCommandId value not correct\n");
+    printf("commandId:%d\n", commandId);
+    VerifyOrQuit(frame.SetCommandId(Mac::Frame::kMacCmdOrphanNotification) == OT_ERROR_NONE,
+                 "Mac::Frame::SetCommandId failed\n");
+    VerifyOrQuit(frame.GetCommandId(commandId) == OT_ERROR_NONE, "Mac::Frame::GetCommandId failed\n");
+    VerifyOrQuit(commandId == Mac::Frame::kMacCmdOrphanNotification, "Mac::Frame::SetCommandId value not correct\n");
+
+#endif
 }
 
 void TestMacFrameAckGeneration(void)

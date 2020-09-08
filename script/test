@@ -163,7 +163,6 @@ do_unit()
 
     if [[ ${THREAD_VERSION} == "1.2" ]]; then
         do_unit_version "1.2-bbr"
-        do_unit_version "1.1"
     fi
 }
 
