@@ -148,6 +148,7 @@ SOURCES_COMMON                                  = \
     backbone_router/bbr_local.cpp                 \
     backbone_router/bbr_manager.cpp               \
     backbone_router/multicast_listeners_table.cpp \
+    backbone_router/ndproxy_table.cpp             \
     coap/coap.cpp                                 \
     coap/coap_message.cpp                         \
     coap/coap_secure.cpp                          \
@@ -328,6 +329,7 @@ HEADERS_COMMON                                  = \
     backbone_router/bbr_local.hpp                 \
     backbone_router/bbr_manager.hpp               \
     backbone_router/multicast_listeners_table.hpp \
+    backbone_router/ndproxy_table.hpp             \
     coap/coap.hpp                                 \
     coap/coap_message.hpp                         \
     coap/coap_secure.hpp                          \

@@ -268,6 +268,7 @@ enum
     KResponseTimeoutDelay             = 30,                ///< In seconds.
     kDuaDadPeriod                     = 100,               ///< In seconds. Time period after which the address
                                                            ///< becomes "Preferred" if no duplicate address error.
+    kTimeSinceLastTransactionMax = 10 * 86400,             ///< In seconds (10 days).
 };
 
 static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin && kMlrTimeoutDefault <= kMlrTimeoutMax,
@@ -275,6 +276,9 @@ static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin && kMlrTimeoutDefault <= kMlr
 
 static_assert(Mle::kParentAggregateDelay > 1, "kParentAggregateDelay should be larger than 1 second");
 static_assert(kMlrTimeoutMax * 1000 > kMlrTimeoutMax, "SecToMsec(kMlrTimeoutMax) will overflow");
+
+static_assert(kTimeSinceLastTransactionMax * 1000 > kTimeSinceLastTransactionMax,
+              "SecToMsec(kTimeSinceLastTransactionMax) will overflow");
 
 /**
  * State change of Child's DUA
