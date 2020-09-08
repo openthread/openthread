@@ -68,7 +68,8 @@ SubMac::SubMac(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslTimeout(OPENTHREAD_CONFIG_CSL_TIMEOUT)
     , mCslPeriod(0)
-    , mCslChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
+    , mCslChannel(0)
+    , mIsCslChannelSpecified(false)
     , mCslState(kCslIdle)
     , mCslTimer(aInstance, SubMac::HandleCslTimer, this)
 #endif
@@ -211,9 +212,14 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-otError SubMac::CslSample(void)
+otError SubMac::CslSample(uint8_t aPanChannel)
 {
     otError error = OT_ERROR_NONE;
+
+    if (!IsCslChannelSpecified())
+    {
+        mCslChannel = aPanChannel;
+    }
 
     switch (mCslState)
     {

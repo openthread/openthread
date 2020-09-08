@@ -36,7 +36,9 @@ SSED_1 = 2
 
 CSL_PERIOD = 500 * 6.25  # 500ms
 CSL_TIMEOUT = 30  # 30s
-CSL_CHANNEL = 12
+CSL_CHANNEL = 13
+
+SECOND_CHANNEL = 12
 
 
 class SSED_CslTransmission(thread_cert.TestCase):
@@ -55,7 +57,6 @@ class SSED_CslTransmission(thread_cert.TestCase):
 
         self.nodes[SSED_1].set_csl_period(CSL_PERIOD)
         self.nodes[SSED_1].set_csl_timeout(CSL_TIMEOUT)
-        self.nodes[SSED_1].set_csl_channel(CSL_CHANNEL)
 
         self.nodes[SSED_1].get_csl_info()
 
@@ -68,6 +69,16 @@ class SSED_CslTransmission(thread_cert.TestCase):
         self.assertEqual(self.nodes[SSED_1].get_state(), 'child')
 
         print('SSED rloc:%s' % self.nodes[SSED_1].get_rloc())
+        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
+        self.simulator.go(5)
+
+        self.nodes[SSED_1].set_csl_channel(SECOND_CHANNEL)
+        self.nodes[LEADER].set_csl_channel(SECOND_CHANNEL)
+        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
+        self.simulator.go(5)
+
+        self.nodes[SSED_1].set_csl_channel(CSL_CHANNEL)
+        self.simulator.go(1)
         self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.simulator.go(5)
 

@@ -200,7 +200,8 @@ otError CslTxScheduler::HandleFrameRequest(Mac::TxFrame &aFrame)
         aFrame.SetIsARetransmission(false);
     }
 
-    aFrame.SetChannel(mCslTxChild->GetCslChannel());
+    aFrame.SetChannel(mCslTxChild->GetCslChannel() == 0 ? Get<Mac::Mac>().GetPanChannel()
+                                                        : mCslTxChild->GetCslChannel());
     aFrame.SetTxPhase(mCslTxChild->GetCslPhase());
     aFrame.SetTxPeriod(mCslTxChild->GetCslPeriod());
 

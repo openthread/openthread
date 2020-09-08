@@ -305,12 +305,15 @@ public:
      * started, `mState` will become `kStateCslSample`. But it could be doing `Sleep` or `Receive` at this moment
      * (depending on `mCslState`).
      *
+     * @param[in]  aPanChannel  The current phy channel used by the device. This param is passed for the case when CSL
+     *                          channel hasn't been explicitly specified.
+     *
      * @retval OT_ERROR_NONE          Successfully entered CSL operation (sleep or receive according to CSL timer).
      * @retval OT_ERROR_BUSY          The radio was transmitting.
      * @retval OT_ERROR_INVALID_STATE The radio was disabled.
      *
      */
-    otError CslSample(void);
+    otError CslSample(uint8_t aPanChannel);
 #endif
 
     /**
@@ -388,6 +391,20 @@ public:
      *
      */
     void SetCslChannel(uint8_t aChannel);
+
+    /**
+     * This method indicates if CSL channel has been explicitly specified by the upper layer.
+     *
+     * @returns If CSL channel has been specified.
+     *
+     */
+    bool IsCslChannelSpecified() const { return mIsCslChannelSpecified; }
+
+    /**
+     * This method sets the flag representing if CSL channel has been specified.
+     *
+     */
+    void SetIsCslChannelSpecified(bool aIsSpecified) { mIsCslChannelSpecified = aIsSpecified; }
 
     /**
      * This method gets the CSL period.
@@ -604,10 +621,13 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint32_t  mCslTimeout;    ///< The CSL synchronized timeout in seconds.
-    TimeMicro mCslSampleTime; ///< The CSL sample time of the current period.
-    uint16_t  mCslPeriod;     ///< The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t   mCslChannel;    ///< The CSL sample channel.
+    uint32_t  mCslTimeout;     ///< The CSL synchronized timeout in seconds.
+    TimeMicro mCslSampleTime;  ///< The CSL sample time of the current period.
+    uint16_t  mCslPeriod;      ///< The CSL sample period, in units of 10 symbols (160 microseconds).
+    uint8_t   mCslChannel : 7; ///< The actually CSL sample channel. If `mCslChannelIsSet` is 0, this should be equal to
+                               ///< the Pan channel of `Mac`.
+    uint8_t
+        mIsCslChannelSpecified : 1; ///< Indicates that if CSL channel has been explicitly specified by the upper layer.
 
     CslState mCslState;
 

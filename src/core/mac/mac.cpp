@@ -434,6 +434,13 @@ otError Mac::SetPanChannel(uint8_t aChannel)
 
     mRadioChannel = mPanChannel;
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (!mSubMac.IsCslChannelSpecified())
+    {
+        mSubMac.SetCslChannel(mRadioChannel);
+    }
+#endif
+
     UpdateIdleMode();
 
 exit:
@@ -658,7 +665,7 @@ void Mac::UpdateIdleMode(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (IsCslEnabled())
         {
-            IgnoreError(mSubMac.CslSample());
+            IgnoreError(mSubMac.CslSample(mRadioChannel));
             ExitNow();
         }
 #endif
@@ -2269,6 +2276,7 @@ void Mac::SetCslChannel(uint8_t aChannel)
     VerifyOrExit(GetCslChannel() != aChannel, OT_NOOP);
 
     mSubMac.SetCslChannel(aChannel);
+    mSubMac.SetIsCslChannelSpecified(true);
 
     if (IsCslEnabled())
     {
