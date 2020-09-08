@@ -115,7 +115,7 @@
  * Define to 1 if you want to use JN589 Flash implementation.
  *
  */
-#define OPENTHREAD_SETTINGS_RAM 1
+#define OPENTHREAD_SETTINGS_RAM 0
 
 /**
  * @def OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE

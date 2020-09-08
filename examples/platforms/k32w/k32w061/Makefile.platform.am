@@ -36,6 +36,7 @@ LDADD_COMMON                                                                    
     $(top_builddir)/examples/platforms/k32w/libopenthread-k32w061_sdk.a                           \
     $(top_srcdir)/third_party/nxp/K32W061DK6/middleware/wireless/ieee-802.15.4/lib/libMiniMac.a   \
     $(top_srcdir)/third_party/nxp/K32W061DK6/middleware/wireless/framework/XCVR/lib/libRadio.a    \
+    $(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/PDM/Library/libPDM.a    \
     $(NULL)
 
 LDFLAGS_COMMON                                                                                 += \
