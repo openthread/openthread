@@ -120,7 +120,7 @@ jobs:
             ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
           done
       - uses: actions/upload-artifact@v2
-        if: ${{ always() }}
+        if: ${{ failure() }}
         with:
           name: packet-verification-pcaps
           path: |
@@ -156,7 +156,7 @@ jobs:
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
     - uses: actions/upload-artifact@v2
-      if: ${{ always() }}
+      if: ${{ failure() }}
       with:
         name: cli-ftd-thread-cert
         path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
@@ -190,7 +190,7 @@ jobs:
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
     - uses: actions/upload-artifact@v2
-      if: ${{ always() }}
+      if: ${{ failure() }}
       with:
         name: cli-mtd-thread-cert
         path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
@@ -224,7 +224,7 @@ jobs:
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
     - uses: actions/upload-artifact@v2
-      if: ${{ always() }}
+      if: ${{ failure() }}
       with:
         name: cli-time-sync-thread-cert
         path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
@@ -349,7 +349,7 @@ jobs:
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
     - uses: actions/upload-artifact@v2
-      if: ${{ always() }}
+      if: ${{ failure() }}
       with:
         name: multiple-instance-thread-cert
         path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
@@ -385,7 +385,7 @@ jobs:
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
     - uses: actions/upload-artifact@v2
-      if: ${{ always() }}
+      if: ${{ failure() }}
       with:
         name: ncp-gcc-m32-thread-cert
         path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
@@ -420,7 +420,7 @@ jobs:
         run: |
           VERBOSE=1 make -f examples/Makefile-simulation check
       - uses: actions/upload-artifact@v2
-        if: ${{ always() }}
+        if: ${{ failure() }}
         with:
           name: cli-clang-thread-cert
           path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
