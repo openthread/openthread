@@ -86,6 +86,8 @@ SVR_DATA_URI = '/a/sd'
 ND_DATA_URI = '/a/nd'
 RLY_RX_URI = '/c/rx'
 RLY_TX_URI = '/c/tx'
+MGMT_ACTIVE_SET_URI = '/c/as'
+MGMT_ACTIVE_GET_URI = '/c/ag'
 
 # MLE TLVs
 SOURCE_ADDRESS_TLV = 0
