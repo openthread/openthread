@@ -422,7 +422,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    if (nrf_802154_sleep_if_idle())
+    if (nrf_802154_sleep_if_idle() == NRF_802154_SLEEP_ERROR_NONE)
     {
         clearPendingEvents();
     }
@@ -827,7 +827,7 @@ void nrf5RadioProcess(otInstance *aInstance)
 
     if (isPendingEventSet(kPendingEventSleep))
     {
-        if (nrf_802154_sleep_if_idle())
+        if (nrf_802154_sleep_if_idle() == NRF_802154_SLEEP_ERROR_NONE)
         {
             resetPendingEvent(kPendingEventSleep);
         }
