@@ -111,7 +111,7 @@ exit:
 
 static int ConnectSession(void)
 {
-    int ret = 0;
+    int ret;
 
     if (sSessionFd != -1)
     {
@@ -132,26 +132,27 @@ static int ConnectSession(void)
     }
 
 exit:
-    if (ret == -1 && sSessionFd != -1)
-    {
-        close(sSessionFd);
-        sSessionFd = -1;
-    }
     return ret;
 }
 
 static bool ReconnectSession(void)
 {
     bool     ok    = false;
-    uint32_t delay = 100000; // 100ms
+    uint32_t delay = 0; // 100ms
 
-    for (int i = 0; i < 5; i++) // delay for 3.1s in total
+    for (int i = 0; i < 6; i++) // delay for 3.1s in total
     {
+        int rval;
+
         usleep(delay);
+        delay = delay > 0 ? delay * 2 : 100000;
 
-        VerifyOrExit(ConnectSession() == -1, ok = true);
+        rval = ConnectSession();
 
-        delay *= 2;
+        VerifyOrExit(rval == -1, ok = true);
+
+        // Exit immediately if the sock file is not found
+        VerifyOrExit(errno != ENOENT, OT_NOOP);
     }
 
 exit:
