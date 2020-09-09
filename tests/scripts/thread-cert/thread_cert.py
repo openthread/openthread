@@ -259,6 +259,16 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         for i, node in self.nodes.items():
             test_info['rloc16s'][i] = '0x%04x' % node.get_addr16()
 
+    def collect_rlocs(self):
+        if not self._do_packet_verification:
+            return
+
+        test_info = self._test_info
+        test_info['rlocs'] = {}
+
+        for i, node in self.nodes.items():
+            test_info['rlocs'][i] = node.get_rloc()
+
     def collect_extra_vars(self, **vars):
         if not self._do_packet_verification:
             return
