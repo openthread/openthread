@@ -219,13 +219,19 @@ AUTO_SEEK_BACK_MAX_DURATION = 0.01
 
 # Wireshark configs
 WIRESHARK_OVERRIDE_PREFS = {
-    '6lowpan.context0': 'fd00:db8::/64',
-    '6lowpan.context1': 'fd00:7d03:7d03:7d03::/64',
-    'wpan.802154_fcs_ok': 'FALSE',
-    'wpan.802154_sec_suite': 'AES-128 Encryption, 32-bit Integrity Protection',
-    'thread.thr_seq_ctr': '00000000',
-    'uat:ieee802154_keys': '"00112233445566778899aabbccddeeff","1","Thread hash"',
-    'uat:ieee802154_keys': '"ffeeddccbbaa99887766554433221100","2","Thread hash"',
+    '6lowpan.context0':
+        'fd00:db8::/64',
+    '6lowpan.context1':
+        'fd00:7d03:7d03:7d03::/64',
+    'wpan.802154_fcs_ok':
+        'FALSE',
+    'wpan.802154_sec_suite':
+        'AES-128 Encryption, 32-bit Integrity Protection',
+    'thread.thr_seq_ctr':
+        '00000000',
+    'uat:ieee802154_keys':
+        '''"00112233445566778899aabbccddeeff","1","Thread hash"
+                              "ffeeddccbbaa99887766554433221100","2","Thread hash"''',
 }
 
 WIRESHARK_DECODE_AS_ENTRIES = {

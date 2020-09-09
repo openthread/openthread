@@ -141,15 +141,15 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
             pending_timestamp=20,
             active_timestamp=20,
-            delay_timer=20000,
+            delay_timer=20,
             network_name='Shouldnotbe',
         )
-        self.simulator.go(5)
+        self.simulator.go(30)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
             pending_timestamp=20,
             active_timestamp=20,
-            delay_timer=20000,
+            delay_timer=300,
             network_name='MyHouse',
             master_key=KEY2,
         )
@@ -233,14 +233,21 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
                 SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV
             } == set(p.mle.tlv.type) and p.mle.tlv.leader_data.data_version == _pkt.mle.tlv.leader_data.data_version)
 
-        # TODO: verify Step 13 and Step 14 since the two steps can not be parsed correctly sometimes
         # Step 13: SED MUST send a unicast MLE Data Request to Router_1
-        # pkts.filter_wpan_src64(SED).filter_wpan_dst64(ROUTER_1).filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
-        #    lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
+        pkts.filter_wpan_src64(SED).filter_wpan_dst64(ROUTER_1).filter_mle_cmd(MLE_DATA_REQUEST).must_next(
+        ).must_verify(lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
 
         # Step 14: Router MUST send a unicast MLE Data Response to SED_1
-        # pkts.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(SED).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
-        #    lambda p: {SOURCE_ADDRESS_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, PENDING_OPERATION_DATASET_TLV} <= set(p.mle.tlv.type) and {NM_CHANNEL_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PAN_ID_TLV, NM_DELAY_TIMER_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_NETWORK_NAME_TLV, NM_NETWORK_MASTER_KEY_TLV} <= set(p.thread_meshcop.tlv.type) and p.thread_meshcop.tlv.net_name == "MyHouse" and p.thread_meshcop.tlv.master_key == KEY2)
+        pkts.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(SED).filter_mle_cmd(
+            MLE_DATA_RESPONSE).must_next().must_verify(
+                lambda p: {
+                    SOURCE_ADDRESS_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV,
+                    PENDING_OPERATION_DATASET_TLV
+                } <= set(p.mle.tlv.type) and {
+                    NM_CHANNEL_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PAN_ID_TLV, NM_DELAY_TIMER_TLV,
+                    NM_ACTIVE_TIMESTAMP_TLV, NM_NETWORK_NAME_TLV, NM_NETWORK_MASTER_KEY_TLV
+                } <= set(p.thread_meshcop.tlv.type) and p.thread_meshcop.tlv.net_name == "MyHouse" and p.thread_meshcop
+                .tlv.master_key == KEY2)
 
         # Step 17: MED and SED MUST respond with an ICMPv6 Echo Reply
         pkts.filter_ipv6_src_dst(ED_RLOC, COMMISSIONER_RLOC).filter_ping_reply().must_next()
