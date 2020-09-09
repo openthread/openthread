@@ -99,12 +99,7 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
     mContext  = aContext;
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 

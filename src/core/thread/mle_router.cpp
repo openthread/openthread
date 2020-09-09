@@ -465,12 +465,7 @@ void MleRouter::SendAdvertisement(void)
     Log(kMessageSend, kTypeAdvertisement, destination);
 
 exit:
-
-    if ((error != OT_ERROR_NONE) && (message != nullptr))
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     LogSendError(kTypeAdvertisement, error);
 }
 
@@ -555,12 +550,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
     Log(kMessageSend, kTypeLinkRequest, destination);
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -761,12 +751,7 @@ otError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -1968,12 +1953,7 @@ void MleRouter::SendParentResponse(Child *aChild, const Challenge &aChallenge, b
     Log(kMessageDelay, kTypeParentResponse, destination);
 
 exit:
-
-    if ((error != OT_ERROR_NONE) && (message != nullptr))
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     LogSendError(kTypeParentResponse, error);
 }
 
@@ -2995,12 +2975,7 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
     Log(kMessageDelay, kTypeDiscoveryResponse, aDestination);
 
 exit:
-
-    if ((error != OT_ERROR_NONE) && (message != nullptr))
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     LogProcessError(kTypeDiscoveryResponse, error);
     return error;
 }
@@ -3092,12 +3067,7 @@ otError MleRouter::SendChildIdResponse(Child &aChild)
     Log(kMessageSend, kTypeChildIdResponse, destination, aChild.GetRloc16());
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -3158,12 +3128,7 @@ otError MleRouter::SendChildUpdateRequest(Child &aChild)
     Log(kMessageSend, kTypeChildUpdateRequestOfChild, destination, aChild.GetRloc16());
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -3239,11 +3204,7 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessageOnError(message, error);
 }
 
 void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
@@ -3308,12 +3269,7 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
     }
 
 exit:
-
-    if ((error != OT_ERROR_NONE) && (message != nullptr))
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     LogSendError(kTypeDataResponse, error);
 }
 
@@ -3603,12 +3559,7 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     Log(kMessageSend, kTypeAddressSolicit, messageInfo.GetPeerAddr());
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -3636,12 +3587,7 @@ void MleRouter::SendAddressRelease(void)
     Log(kMessageSend, kTypeAddressRelease, messageInfo.GetPeerAddr());
 
 exit:
-
-    if ((error != OT_ERROR_NONE) && (message != nullptr))
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     LogSendError(kTypeAddressRelease, error);
 }
 
@@ -3879,11 +3825,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
     Log(kMessageSend, kTypeAddressReply, aMessageInfo.GetPeerAddr());
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessageOnError(message, error);
 }
 
 void MleRouter::HandleAddressRelease(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -4432,12 +4374,7 @@ otError MleRouter::SendTimeSync(void)
     Log(kMessageSend, kTypeTimeSync, destination);
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

@@ -127,12 +127,7 @@ otError Icmp::SendError(Header::Type       aType,
     otLogInfoIcmp("Sent ICMPv6 Error");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -227,12 +222,7 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
     otLogInfoIcmp("Sent Echo Reply (seq = %d)", icmp6Header.GetSequence());
 
 exit:
-
-    if (error != OT_ERROR_NONE && replyMessage != nullptr)
-    {
-        replyMessage->Free();
-    }
-
+    FreeMessageOnError(replyMessage, error);
     return error;
 }
 

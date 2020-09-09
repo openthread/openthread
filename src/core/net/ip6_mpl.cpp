@@ -331,11 +331,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     mRetransmissionTimer.FireAtIfEarlier(metadata.mTransmissionTime);
 
 exit:
-
-    if (error != OT_ERROR_NONE && messageCopy != nullptr)
-    {
-        messageCopy->Free();
-    }
+    FreeMessageOnError(messageCopy, error);
 }
 
 void Mpl::HandleRetransmissionTimer(Timer &aTimer)
