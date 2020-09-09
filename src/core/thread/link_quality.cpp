@@ -206,7 +206,7 @@ uint8_t LinkQualityInfo::ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss
 
 int8_t LinkQualityInfo::ConvertLinkQualityToRss(int8_t aNoiseFloor, uint8_t aLinkQuality)
 {
-    uint8_t linkmargin = 0;
+    int8_t linkmargin = 0;
 
     switch (aLinkQuality)
     {
