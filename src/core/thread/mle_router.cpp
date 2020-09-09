@@ -462,7 +462,7 @@ void MleRouter::SendAdvertisement(void)
     destination.SetToLinkLocalAllNodesMulticast();
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    Log("Send Advertisement", destination);
+    Log(kMessageSend, kTypeAdvertisement, destination);
 
 exit:
 
@@ -471,7 +471,7 @@ exit:
         message->Free();
     }
 
-    LogSendError("Advertisement", error);
+    LogSendError(kTypeAdvertisement, error);
 }
 
 otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
@@ -552,7 +552,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
 
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    Log("Send Link Request", destination);
+    Log(kMessageSend, kTypeLinkRequest, destination);
 
 exit:
 
@@ -577,7 +577,7 @@ void MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::MessageInf
     TimeRequestTlv timeRequest;
 #endif
 
-    Log("Receive Link Request", aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeLinkRequest, aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(IsRouterOrLeader(), error = OT_ERROR_INVALID_STATE);
 
@@ -673,7 +673,7 @@ void MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::MessageInf
     SuccessOrExit(error = SendLinkAccept(aMessageInfo, neighbor, requestedTlvs, challenge));
 
 exit:
-    LogProcessError("Link Request", error);
+    LogProcessError(kTypeLinkRequest, error);
 }
 
 otError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
@@ -751,13 +751,13 @@ otError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
         SuccessOrExit(error = AddDelayedResponse(*message, aMessageInfo.GetPeerAddr(),
                                                  1 + Random::NonCrypto::GetUint16InRange(0, kMaxResponseDelay)));
 
-        Log("Delay Link Accept", aMessageInfo.GetPeerAddr());
+        Log(kMessageDelay, kTypeLinkAccept, aMessageInfo.GetPeerAddr());
     }
     else
     {
         SuccessOrExit(error = SendMessage(*message, aMessageInfo.GetPeerAddr()));
 
-        Log("Send Link Accept", aMessageInfo.GetPeerAddr());
+        Log(kMessageSend, kTypeLinkAccept, aMessageInfo.GetPeerAddr());
     }
 
 exit:
@@ -777,7 +777,7 @@ void MleRouter::HandleLinkAccept(const Message &         aMessage,
 {
     otError error = HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, aNeighbor, false);
 
-    LogProcessError("Link Accept", error);
+    LogProcessError(kTypeLinkAccept, error);
 }
 
 void MleRouter::HandleLinkAcceptAndRequest(const Message &         aMessage,
@@ -787,7 +787,7 @@ void MleRouter::HandleLinkAcceptAndRequest(const Message &         aMessage,
 {
     otError error = HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, aNeighbor, true);
 
-    LogProcessError("Link Accept and Request", error);
+    LogProcessError(kTypeLinkAcceptAndRequest, error);
 }
 
 otError MleRouter::HandleLinkAccept(const Message &         aMessage,
@@ -816,14 +816,8 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     // Source Address
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kSourceAddress, sourceAddress));
 
-    if (aRequest)
-    {
-        Log("Receive Link Accept and Request", aMessageInfo.GetPeerAddr(), sourceAddress);
-    }
-    else
-    {
-        Log("Receive Link Accept", aMessageInfo.GetPeerAddr(), sourceAddress);
-    }
+    Log(kMessageReceive, aRequest ? kTypeLinkAcceptAndRequest : kTypeLinkAccept, aMessageInfo.GetPeerAddr(),
+        sourceAddress);
 
     VerifyOrExit(IsActiveRouter(sourceAddress), error = OT_ERROR_PARSE);
 
@@ -1591,7 +1585,7 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
     TimeRequestTlv timeRequest;
 #endif
 
-    Log("Receive Parent Request", aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeParentRequest, aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(IsRouterEligible(), error = OT_ERROR_INVALID_STATE);
 
@@ -1688,7 +1682,7 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
     SendParentResponse(child, challenge, !ScanMaskTlv::IsEndDeviceFlagSet(scanMask));
 
 exit:
-    LogProcessError("Parent Request", error);
+    LogProcessError(kTypeParentRequest, error);
 }
 
 void MleRouter::HandleTimeTick(void)
@@ -1971,7 +1965,7 @@ void MleRouter::SendParentResponse(Child *aChild, const Challenge &aChallenge, b
 
     SuccessOrExit(error = AddDelayedResponse(*message, destination, delay));
 
-    Log("Delay Parent Response", destination);
+    Log(kMessageDelay, kTypeParentResponse, destination);
 
 exit:
 
@@ -1980,7 +1974,7 @@ exit:
         message->Free();
     }
 
-    LogSendError("Parent Response", error);
+    LogSendError(kTypeParentResponse, error);
 }
 
 uint8_t MleRouter::GetMaxChildIpAddresses(void) const
@@ -2220,7 +2214,7 @@ void MleRouter::HandleChildIdRequest(const Message &         aMessage,
     uint8_t             numTlvs;
     uint16_t            addressRegistrationOffset = 0;
 
-    Log("Receive Child ID Request", aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeChildIdRequest, aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(IsRouterEligible(), error = OT_ERROR_INVALID_STATE);
 
@@ -2366,7 +2360,7 @@ void MleRouter::HandleChildIdRequest(const Message &         aMessage,
     }
 
 exit:
-    LogProcessError("Child ID Request", error);
+    LogProcessError(kTypeChildIdRequest, error);
 }
 
 void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
@@ -2390,7 +2384,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     uint16_t        addressRegistrationOffset = 0;
     bool            childDidChange            = false;
 
-    Log("Receive Child Update Request from child", aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeChildUpdateRequestOfChild, aMessageInfo.GetPeerAddr());
 
     // Mode
     SuccessOrExit(error = Tlv::FindUint8Tlv(aMessage, Tlv::kMode, modeBitmask));
@@ -2555,7 +2549,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, challenge);
 
 exit:
-    LogProcessError("Child Update Request from child", error);
+    LogProcessError(kTypeChildUpdateRequestOfChild, error);
 }
 
 void MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
@@ -2576,7 +2570,7 @@ void MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
 
     if ((aNeighbor == nullptr) || IsActiveRouter(aNeighbor->GetRloc16()))
     {
-        Log("Receive Child Update Response from unknown child", aMessageInfo.GetPeerAddr());
+        Log(kMessageReceive, kTypeChildUpdateResponseOfUnknownChild, aMessageInfo.GetPeerAddr());
         ExitNow(error = OT_ERROR_NOT_FOUND);
     }
 
@@ -2595,7 +2589,7 @@ void MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
         ExitNow(error = OT_ERROR_NONE);
     }
 
-    Log("Receive Child Update Response from child", aMessageInfo.GetPeerAddr(), child->GetRloc16());
+    Log(kMessageReceive, kTypeChildUpdateResponseOfChild, aMessageInfo.GetPeerAddr(), child->GetRloc16());
 
     // Source Address
     switch (Tlv::FindUint16Tlv(aMessage, Tlv::kSourceAddress, sourceAddress))
@@ -2696,7 +2690,7 @@ void MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
     child->GetLinkInfo().AddRss(aMessageInfo.GetThreadLinkInfo()->GetRss());
 
 exit:
-    LogProcessError("Child Update Response from child", error);
+    LogProcessError(kTypeChildUpdateResponseOfChild, error);
 }
 
 void MleRouter::HandleDataRequest(const Message &         aMessage,
@@ -2710,7 +2704,7 @@ void MleRouter::HandleDataRequest(const Message &         aMessage,
     uint8_t             tlvs[4];
     uint8_t             numTlvs;
 
-    Log("Receive Data Request", aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeDataRequest, aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = OT_ERROR_SECURITY);
 
@@ -2751,7 +2745,7 @@ void MleRouter::HandleDataRequest(const Message &         aMessage,
     SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0);
 
 exit:
-    LogProcessError("Data Request", error);
+    LogProcessError(kTypeDataRequest, error);
 }
 
 void MleRouter::HandleNetworkDataUpdateRouter(void)
@@ -2845,7 +2839,7 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
     uint16_t                     offset;
     uint16_t                     end;
 
-    Log("Receive Discovery Request", aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeDiscoveryRequest, aMessageInfo.GetPeerAddr());
 
     discoveryRequest.SetLength(0);
 
@@ -2914,7 +2908,7 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
     error = SendDiscoveryResponse(aMessageInfo.GetPeerAddr(), aMessage.GetPanId());
 
 exit:
-    LogProcessError("Discovery Request", error);
+    LogProcessError(kTypeDiscoveryRequest, error);
 }
 
 otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_t aPanId)
@@ -2997,7 +2991,7 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
 
     SuccessOrExit(error = AddDelayedResponse(*message, aDestination, delay));
 
-    Log("Delay Discovery Response", aDestination);
+    Log(kMessageDelay, kTypeDiscoveryResponse, aDestination);
 
 exit:
 
@@ -3006,7 +3000,7 @@ exit:
         message->Free();
     }
 
-    LogProcessError("Discovery Response", error);
+    LogProcessError(kTypeDiscoveryResponse, error);
     return error;
 }
 
@@ -3094,7 +3088,7 @@ otError MleRouter::SendChildIdResponse(Child &aChild)
     destination.SetToLinkLocalAddress(aChild.GetExtAddress());
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    Log("Send Child ID Response", destination, aChild.GetRloc16());
+    Log(kMessageSend, kTypeChildIdResponse, destination, aChild.GetRloc16());
 
 exit:
 
@@ -3160,7 +3154,7 @@ otError MleRouter::SendChildUpdateRequest(Child &aChild)
         aChild.SetState(Child::kStateChildUpdateRequest);
     }
 
-    Log("Send Child Update Request to child", destination, aChild.GetRloc16());
+    Log(kMessageSend, kTypeChildUpdateRequestOfChild, destination, aChild.GetRloc16());
 
 exit:
 
@@ -3236,11 +3230,11 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
 
     if (aChild == nullptr)
     {
-        Log("Send Child Update Response to child", aMessageInfo.GetPeerAddr());
+        Log(kMessageSend, kTypeChildUpdateResponseOfChild, aMessageInfo.GetPeerAddr());
     }
     else
     {
-        Log("Send Child Update Response to child", aMessageInfo.GetPeerAddr(), aChild->GetRloc16());
+        Log(kMessageSend, kTypeChildUpdateResponseOfChild, aMessageInfo.GetPeerAddr(), aChild->GetRloc16());
     }
 
 exit:
@@ -3304,12 +3298,12 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
         RemoveDelayedDataResponseMessage();
 
         SuccessOrExit(error = AddDelayedResponse(*message, aDestination, aDelay));
-        Log("Delay Data Response", aDestination);
+        Log(kMessageDelay, kTypeDataResponse, aDestination);
     }
     else
     {
         SuccessOrExit(error = SendMessage(*message, aDestination));
-        Log("Send Data Response", aDestination);
+        Log(kMessageSend, kTypeDataResponse, aDestination);
     }
 
 exit:
@@ -3319,7 +3313,7 @@ exit:
         message->Free();
     }
 
-    LogSendError("Data Response", error);
+    LogSendError(kTypeDataResponse, error);
 }
 
 bool MleRouter::IsMinimalChild(uint16_t aRloc16)
@@ -3605,7 +3599,7 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
                                                            &MleRouter::HandleAddressSolicitResponse, this));
     mAddressSolicitPending = true;
 
-    Log("Send Address Solicit", messageInfo.GetPeerAddr());
+    Log(kMessageSend, kTypeAddressSolicit, messageInfo.GetPeerAddr());
 
 exit:
 
@@ -3638,7 +3632,7 @@ void MleRouter::SendAddressRelease(void)
     messageInfo.SetPeerPort(Tmf::kUdpPort);
     SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
-    Log("Send Address Release", messageInfo.GetPeerAddr());
+    Log(kMessageSend, kTypeAddressRelease, messageInfo.GetPeerAddr());
 
 exit:
 
@@ -3647,7 +3641,7 @@ exit:
         message->Free();
     }
 
-    LogSendError("Address Release", error);
+    LogSendError(kTypeAddressRelease, error);
 }
 
 void MleRouter::HandleAddressSolicitResponse(void *               aContext,
@@ -3678,7 +3672,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 
     VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, OT_NOOP);
 
-    Log("Receive Address Reply", aMessageInfo->GetPeerAddr());
+    Log(kMessageReceive, kTypeAddressReply, aMessageInfo->GetPeerAddr());
 
     SuccessOrExit(Tlv::FindUint8Tlv(*aMessage, ThreadTlv::kStatus, status));
 
@@ -3777,7 +3771,7 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = OT_ERROR_PARSE);
 
-    Log("Receive Address Solicit", aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeAddressSolicit, aMessageInfo.GetPeerAddr());
 
     SuccessOrExit(error = ThreadTlv::FindTlv(aMessage, ThreadTlv::kExtMacAddress, &extAddress, sizeof(extAddress)));
 
@@ -3881,7 +3875,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
 
     SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 
-    Log("Send Address Reply", aMessageInfo.GetPeerAddr());
+    Log(kMessageSend, kTypeAddressReply, aMessageInfo.GetPeerAddr());
 
 exit:
 
@@ -3906,7 +3900,7 @@ void MleRouter::HandleAddressRelease(Coap::Message &aMessage, const Ip6::Message
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), OT_NOOP);
 
-    Log("Receive Address Release", aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeAddressRelease, aMessageInfo.GetPeerAddr());
 
     SuccessOrExit(Tlv::FindUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16));
 
@@ -3921,7 +3915,7 @@ void MleRouter::HandleAddressRelease(Coap::Message &aMessage, const Ip6::Message
 
     SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo));
 
-    Log("Send Address Release Reply", aMessageInfo.GetPeerAddr());
+    Log(kMessageSend, kTypeAddressReleaseReply, aMessageInfo.GetPeerAddr());
 
 exit:
     return;
@@ -4410,7 +4404,7 @@ exit:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 void MleRouter::HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor)
 {
-    Log("Receive Time Sync", aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeTimeSync, aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), OT_NOOP);
 
@@ -4434,7 +4428,7 @@ otError MleRouter::SendTimeSync(void)
     destination.SetToLinkLocalAllNodesMulticast();
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    Log("Send Time Sync", destination);
+    Log(kMessageSend, kTypeTimeSync, destination);
 
 exit:
 
