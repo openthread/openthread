@@ -66,7 +66,9 @@ bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo
     //     2. All Domain BBRs (Link-Local scope)
     //     3. A Backbone Link-Local address
     // The source must be a Backbone Link-local address.
-    return (dst.IsLinkLocal() || dst.IsLinkLocalMulticast()) && src.IsLinkLocal();
+    return (Get<BackboneRouter::Local>().IsEnabled() && src.IsLinkLocal() &&
+            (dst.IsLinkLocal() || dst == Get<BackboneRouter::Local>().GetAllNetworkBackboneRoutersAddress() ||
+             dst == Get<BackboneRouter::Local>().GetAllDomainBackboneRoutersAddress()));
 }
 
 } // namespace BackboneRouter

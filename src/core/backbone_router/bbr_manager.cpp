@@ -78,32 +78,7 @@ void Manager::HandleNotifierEvents(Events aEvents)
             Get<Tmf::TmfAgent>().RemoveResource(mDuaRegistration);
             mTimer.Stop();
             mMulticastListenersTable.Clear();
-        }
-        else
-        {
-            Get<Tmf::TmfAgent>().AddResource(mMulticastListenerRegistration);
-            Get<Tmf::TmfAgent>().AddResource(mDuaRegistration);
-            if (!mTimer.IsRunning())
-            {
-                mTimer.Start(kTimerInterval);
-            }
-        }
 
-        if (Get<BackboneRouter::Local>().GetState() == OT_BACKBONE_ROUTER_STATE_PRIMARY)
-        {
-            error = mBackboneTmfAgent.Start();
-
-            if (error != OT_ERROR_NONE)
-            {
-                otLogCritBbr("Start Backbone TMF agent: %s", otThreadErrorToString(error));
-            }
-            else
-            {
-                otLogInfoBbr("Start Backbone TMF agent: %s", otThreadErrorToString(error));
-            }
-        }
-        else
-        {
             error = mBackboneTmfAgent.Stop();
 
             if (error != OT_ERROR_NONE)
@@ -113,6 +88,26 @@ void Manager::HandleNotifierEvents(Events aEvents)
             else
             {
                 otLogInfoBbr("Stop Backbone TMF agent: %s", otThreadErrorToString(error));
+            }
+        }
+        else
+        {
+            Get<Tmf::TmfAgent>().AddResource(mMulticastListenerRegistration);
+            Get<Tmf::TmfAgent>().AddResource(mDuaRegistration);
+            if (!mTimer.IsRunning())
+            {
+                mTimer.Start(kTimerInterval);
+            }
+
+            error = mBackboneTmfAgent.Start();
+
+            if (error != OT_ERROR_NONE)
+            {
+                otLogCritBbr("Start Backbone TMF agent: %s", otThreadErrorToString(error));
+            }
+            else
+            {
+                otLogInfoBbr("Start Backbone TMF agent: %s", otThreadErrorToString(error));
             }
         }
     }

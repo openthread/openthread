@@ -75,11 +75,11 @@ public:
     /**
      * This method returns whether Thread Management Framework Addressing Rules are met.
      *
-     * @retval TRUE   if Thread Management Framework Addressing Rules are met.
-     * @retval FALSE  if Thread Management Framework Addressing Rules are not met.
+     * @retval true   Thread Management Framework Addressing Rules are met.
+     * @retval false  Thread Management Framework Addressing Rules are not met.
      *
      */
-    static bool IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo);
+    bool IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo);
 
 private:
     static otError Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
