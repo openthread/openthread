@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 #include <openthread/ip6.h>
 
@@ -78,6 +78,7 @@ public:
      * @param[in]  aTypeIdFlagsCount The number of Type Id Flags entries.
      *
      * @retval OT_ERROR_NONE          Successfully sent a link metrics query message.
+     * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Data Request message.
      * @retval OT_ERROR_INVALID_ARGS  TypeIdFlags are not valid or exceeds the count limit.
      *
      */
@@ -117,7 +118,7 @@ public:
                                  const Ip6::Address &aAddress);
 
     /**
-     * This method registers a app callback to handle received link probing report.
+     * This method registers a callback to handle Link Metrics report received.
      *
      * @param[in]  aCallback         A pointer to a function that is called when link probing report is received
      * @param[in]  aCallbackContext  A pointer to application-specific context.
@@ -127,12 +128,12 @@ public:
 
 private:
     otLinkMetricsReportCallback mLinkMetricsReportCallback;
-    void *                      mContext;
+    void *                      mLinkMetricsReportCallbackContext;
 
-    otError SendLinkMetricsQuery(const Ip6::Address &aDestination,
-                                 uint8_t             aSeriesId,
-                                 LinkMetricsTypeId * aTypeIdFlags,
-                                 uint8_t             aTypeIdFlagsCount);
+    otError SendLinkMetricsQuery(const Ip6::Address &     aDestination,
+                                 uint8_t                  aSeriesId,
+                                 const LinkMetricsTypeId *aTypeIdFlags,
+                                 uint8_t                  aTypeIdFlagsCount);
 
     otError AppendSingleProbeLinkMetricsReport(const Message &                aMessageIn,
                                                const LinkMetricsQueryOptions *aQueryOptions,
@@ -149,6 +150,6 @@ private:
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 #endif // LINK_METRICS_HPP

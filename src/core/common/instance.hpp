@@ -86,7 +86,7 @@
 #include "backbone_router/bbr_local.hpp"
 #endif
 
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 #include "thread/link_metrics.hpp"
 #endif
 
@@ -793,7 +793,7 @@ template <> inline DuaManager &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 template <> inline LinkMetrics &Instance::Get(void)
 {
     return mThreadNetif.mLinkMetrics;

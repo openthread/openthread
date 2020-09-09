@@ -48,24 +48,23 @@ extern "C" {
  * @addtogroup linkmetrics   Link Metrics
  *
  * @brief
- *   This module includes functions that control link metrics protocol.
+ *   This module includes functions that control Link Metrics protocol.
  *
  * @{
  *
  */
 
-#define LINK_METRICS_MAX_TYPE_ID_FLAGS_COUNT 4 ///< Max TypeIdFlags count in a link metrics query
-
 /**
- * This enumeration defines link metric Id.
+ * This enumeration defines link metric ID.
  *
  */
 typedef enum otLinkMetricsId
 {
-    OT_LINK_PDU_COUNT = 0, ///< Layer 2 PDUs Received
-    OT_LINK_LQI       = 1, ///< Layer 2 LQI
-    OT_LINK_MARGIN    = 2, ///< Link Margin - RSSI margin above noise floor
-    OT_LINK_RSSI      = 3, ///< RSSI
+    OT_LINK_METRICS_PDU_COUNT = 0, ///< Layer 2 PDUs Received
+    OT_LINK_METRICS_LQI       = 1, ///< Layer 2 LQI
+    OT_LINK_METRICS_MARGIN    = 2, ///< Link Margin - RSSI margin above noise floor
+    OT_LINK_METRICS_RSSI      = 3, ///< RSSI
+    OT_LINK_METRICS_ID_MAX    = 4, ///< Max TypeIdFlags count in a link metrics query
 } otLinkMetricsId;
 
 /**
@@ -74,8 +73,8 @@ typedef enum otLinkMetricsId
  */
 typedef enum otLinkMetricsType
 {
-    OT_LINK_METRIC_COUNT_SUMMATION            = 0, ///< Count/summation
-    OT_LINK_METRIC_EXPONENTIAL_MOVING_AVERAGE = 1, ///< Exponential moving average
+    OT_LINK_METRICS_METRIC_COUNT_SUMMATION            = 0, ///< Count/summation
+    OT_LINK_METRICS_METRIC_EXPONENTIAL_MOVING_AVERAGE = 1, ///< Exponential moving average
 } otLinkMetricsType;
 
 /**
@@ -107,13 +106,14 @@ typedef struct otLinkMetric
  * to query link metrics data. Single Probe or Forward Tracking Series.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
- * @param[in]  aDestination         A pointer to destination address.
+ * @param[in]  aDestination         A pointer to the destination address.
  * @param[in]  aSeriesId            The id of the series to query about, 0 for single probe.
  * @param[in]  aTypeIdFlags         A pointer to an array of Type Id Flags.
- * @param[in]  aTypeIdFlagsCount    A number of Type Id Flags entries.
+ * @param[in]  aTypeIdFlagsCount    The size of the array @p aTypeIdFlags.
  *
- * @returns OT_ERROR_NONE          Successfully sent a link metrics query message.
- * @returns OT_ERROR_INVALID_ARGS  TypeIdFlags are not valid or exceeds the count limit.
+ * @retval OT_ERROR_NONE          Successfully sent a link metrics query message.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Data Request message.
+ * @retval OT_ERROR_INVALID_ARGS  TypeIdFlags are not valid or exceeds the count limit.
  *
  */
 otError otLinkMetricsQuery(otInstance *        aInstance,
@@ -123,7 +123,7 @@ otError otLinkMetricsQuery(otInstance *        aInstance,
                            uint8_t             aTypeIdFlagsCount);
 
 /**
- * This function pointer is called when a link metrics report is received.
+ * This function pointer is called when a Link Metrics report is received.
  *
  * @param[in]  aSource      A pointer to the source address.
  * @param[in]  aMetrics     A pointer to the link metrics array.
@@ -137,7 +137,7 @@ typedef void (*otLinkMetricsReportCallback)(const otIp6Address *aSource,
                                             void *              aContext);
 
 /**
- * This function registers a app callback to handle received link metrics report.
+ * This function registers a callback to handle Link Metrics report received.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aCallback         A pointer to a function that is called when link metrics report is received.

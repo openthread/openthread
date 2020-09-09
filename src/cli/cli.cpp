@@ -76,7 +76,7 @@
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #include <openthread/backbone_router_ftd.h>
 #endif
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 #include <openthread/link_metrics.h>
 #endif
 #endif
@@ -146,7 +146,7 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_FTD
     otThreadSetDiscoveryRequestCallback(mInstance, &Interpreter::HandleDiscoveryRequest, this);
 #endif
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     otLinkMetricsSetReportCallback(mInstance, &Interpreter::HandleLinkMetricsReport, this);
 #endif
 
@@ -1852,27 +1852,23 @@ exit:
 }
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress,
                                           otLinkMetric *      aMetrics,
                                           uint8_t             aMetricsNum,
                                           void *              aContext)
 {
-    static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(*static_cast<const Ip6::Address *>(aAddress),
-                                                                  aMetrics, aMetricsNum);
+    static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(aAddress, aMetrics, aMetricsNum);
 }
 
-void Interpreter::HandleLinkMetricsReport(const Ip6::Address &aAddress, otLinkMetric *aMetrics, uint8_t aMetricsNum)
+void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress, otLinkMetric *aMetrics, uint8_t aMetricsNum)
 {
     otLinkMetricsTypeId linkMetricsTypeId;
     uint8_t             index = 0;
 
     OutputFormat("Received Link Metrics Report from: ");
-    OutputFormat(
-        "%x:%x:%x:%x:%x:%x:%x:%x\r\n", HostSwap16(aAddress.mFields.m16[0]), HostSwap16(aAddress.mFields.m16[1]),
-        HostSwap16(aAddress.mFields.m16[2]), HostSwap16(aAddress.mFields.m16[3]), HostSwap16(aAddress.mFields.m16[4]),
-        HostSwap16(aAddress.mFields.m16[5]), HostSwap16(aAddress.mFields.m16[6]), HostSwap16(aAddress.mFields.m16[7]));
-    OutputFormat("\r\n Link Metrics details:\r\n");
+    OutputIp6Address(*aAddress);
+    OutputFormat("\r\n");
 
     while (index < aMetricsNum)
     {
@@ -1882,19 +1878,19 @@ void Interpreter::HandleLinkMetricsReport(const Ip6::Address &aAddress, otLinkMe
 
         switch (linkMetricsTypeId.mLinkMetricsId)
         {
-        case OT_LINK_PDU_COUNT:
+        case OT_LINK_METRICS_PDU_COUNT:
             OutputFormat(" - PDU Counter: %d", value);
             break;
 
-        case OT_LINK_LQI:
+        case OT_LINK_METRICS_LQI:
             OutputFormat(" - LQI: %d", value);
             break;
 
-        case OT_LINK_MARGIN:
+        case OT_LINK_METRICS_MARGIN:
             OutputFormat(" - Margin: %d", value);
             break;
 
-        case OT_LINK_RSSI:
+        case OT_LINK_METRICS_RSSI:
             OutputFormat(" - RSSI: %d", value);
             break;
 
@@ -1904,11 +1900,11 @@ void Interpreter::HandleLinkMetricsReport(const Ip6::Address &aAddress, otLinkMe
 
         switch (linkMetricsTypeId.mLinkMetricsType)
         {
-        case OT_LINK_METRIC_COUNT_SUMMATION:
+        case OT_LINK_METRICS_METRIC_COUNT_SUMMATION:
             OutputFormat(" (Count/Summation)\r\n");
             break;
 
-        case OT_LINK_METRIC_EXPONENTIAL_MOVING_AVERAGE:
+        case OT_LINK_METRICS_METRIC_EXPONENTIAL_MOVING_AVERAGE:
             OutputFormat(" (Exponential Moving Average)\r\n");
             break;
 
@@ -1923,16 +1919,13 @@ void Interpreter::HandleLinkMetricsReport(const Ip6::Address &aAddress, otLinkMe
 
 void Interpreter::ProcessLinkMetrics(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    VerifyOrExit(aArgsLength >= 1, error = OT_ERROR_PARSE);
+    otError error = OT_ERROR_INVALID_COMMAND;
+
+    VerifyOrExit(aArgsLength >= 1, OT_NOOP);
 
     if (strcmp(aArgs[0], "query") == 0)
     {
         error = ProcessLinkMetricsQuery(aArgsLength - 1, aArgs + 1);
-    }
-    else
-    {
-        error = OT_ERROR_PARSE;
     }
 
 exit:
@@ -1941,36 +1934,30 @@ exit:
 
 otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
 {
-    otError      error = OT_ERROR_NONE;
+    otError      error = OT_ERROR_INVALID_ARGS;
     otIp6Address address;
-    long         seriesId                                          = 0;
-    uint8_t      typeIdFlags[LINK_METRICS_MAX_TYPE_ID_FLAGS_COUNT] = {0};
-    int          typeIdFlagsCount                                  = 0;
+    long         seriesId                            = 0;
+    uint8_t      typeIdFlags[OT_LINK_METRICS_ID_MAX] = {0};
+    int          typeIdFlagsCount                    = 0;
 
-    VerifyOrExit(aArgsLength >= 2, error = OT_ERROR_PARSE);
+    VerifyOrExit(aArgsLength >= 2, OT_NOOP);
 
     SuccessOrExit(error = otIp6AddressFromString(aArgs[0], &address));
 
     if (strcmp(aArgs[1], "single") == 0)
     {
-        VerifyOrExit(aArgsLength == 3, error = OT_ERROR_PARSE);
-
+        VerifyOrExit(aArgsLength == 3, OT_NOOP);
         typeIdFlagsCount = Hex2Bin(aArgs[2], typeIdFlags, sizeof(typeIdFlags));
-        VerifyOrExit(typeIdFlagsCount > 0, error = OT_ERROR_PARSE);
-
+        VerifyOrExit(typeIdFlagsCount > 0, OT_NOOP);
         error = otLinkMetricsQuery(mInstance, &address, static_cast<uint8_t>(seriesId), typeIdFlags,
                                    static_cast<uint8_t>(typeIdFlagsCount));
-    }
-    else
-    {
-        error = OT_ERROR_PARSE;
     }
 
 exit:
     return error;
 }
 
-#endif // OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessPskc(uint8_t aArgsLength, char *aArgs[])

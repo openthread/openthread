@@ -241,13 +241,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+ * @def OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
  *
- * Define as 1 to enable link metrics feature.
+ * Define as 1 to enable Link Metrics feature.
  *
  */
-#ifndef OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
-#define OPENTHREAD_CONFIG_LINK_METRICS_ENABLE 0
+#ifndef OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#define OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE 0
 #endif
 
 #endif // CONFIG_MLE_H_

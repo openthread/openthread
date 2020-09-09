@@ -33,7 +33,7 @@
 
 #include "link_metrics.hpp"
 
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
@@ -46,7 +46,7 @@ namespace ot {
 LinkMetrics::LinkMetrics(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mLinkMetricsReportCallback(nullptr)
-    , mContext(nullptr)
+    , mLinkMetricsReportCallbackContext(nullptr)
 {
 }
 
@@ -57,18 +57,13 @@ otError LinkMetrics::LinkMetricsQuery(const otIp6Address *aDestination,
 {
     OT_UNUSED_VARIABLE(aDestination);
 
-    otError           error = OT_ERROR_NONE;
-    LinkMetricsTypeId linkMetricsTypeIds[kLinkMetricsMaxTypeIdFlags];
+    otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aTypeIdFlagsCount <= kLinkMetricsMaxTypeIdFlags, error = OT_ERROR_INVALID_ARGS);
 
-    if (aTypeIdFlagsCount > 0)
-    {
-        memcpy(linkMetricsTypeIds, aTypeIdFlags, aTypeIdFlagsCount);
-    }
+    error = SendLinkMetricsQuery(*static_cast<const Ip6::Address *>(aDestination), aSeriesId,
+                                 reinterpret_cast<LinkMetricsTypeId *>(aTypeIdFlags), aTypeIdFlagsCount);
 
-    error = SendLinkMetricsQuery(*static_cast<const Ip6::Address *>(aDestination), aSeriesId, linkMetricsTypeIds,
-                                 aTypeIdFlagsCount);
 exit:
     return error;
 }
@@ -152,7 +147,7 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
 
     if (mLinkMetricsReportCallback != nullptr)
     {
-        mLinkMetricsReportCallback(&aAddress, metrics, metricsCount, mContext);
+        mLinkMetricsReportCallback(&aAddress, metrics, metricsCount, mLinkMetricsReportCallbackContext);
     }
 
 exit:
@@ -161,14 +156,14 @@ exit:
 
 void LinkMetrics::SetLinkMetricsReportCallback(otLinkMetricsReportCallback aCallback, void *aCallbackContext)
 {
-    mLinkMetricsReportCallback = aCallback;
-    mContext                   = aCallbackContext;
+    mLinkMetricsReportCallback        = aCallback;
+    mLinkMetricsReportCallbackContext = aCallbackContext;
 }
 
-otError LinkMetrics::SendLinkMetricsQuery(const Ip6::Address &aDestination,
-                                          uint8_t             aSeriesId,
-                                          LinkMetricsTypeId * aTypeIdFlags,
-                                          uint8_t             aTypeIdFlagsCount)
+otError LinkMetrics::SendLinkMetricsQuery(const Ip6::Address &     aDestination,
+                                          uint8_t                  aSeriesId,
+                                          const LinkMetricsTypeId *aTypeIdFlags,
+                                          uint8_t                  aTypeIdFlagsCount)
 {
     otError                 error = OT_ERROR_NONE;
     Tlv                     tlv;
@@ -231,7 +226,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(const Message &         
 
         switch (linkMetricsTypeIds[i].GetMetricsId())
         {
-        case OT_LINK_PDU_COUNT:
+        case OT_LINK_METRICS_PDU_COUNT:
             if (linkMetricsTypeIds[i].IsLengthFlagSet())
             {
                 metric.SetMetricValue32(aMessageIn.GetPsduCount());
@@ -242,7 +237,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(const Message &         
             }
             break;
 
-        case OT_LINK_LQI:
+        case OT_LINK_METRICS_LQI:
             if (linkMetricsTypeIds[i].IsLengthFlagSet())
             {
                 metric.SetMetricValue32(aMessageIn.GetAverageLqi());
@@ -253,7 +248,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(const Message &         
             }
             break;
 
-        case OT_LINK_RSSI:
+        case OT_LINK_METRICS_RSSI:
             if (linkMetricsTypeIds[i].IsLengthFlagSet())
             {
                 metric.SetMetricValue32((uint16_t)(aMessageIn.GetAverageRss() + 130) * 255 /
@@ -266,7 +261,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(const Message &         
             }
             break;
 
-        case OT_LINK_MARGIN:
+        case OT_LINK_METRICS_MARGIN:
             if (linkMetricsTypeIds[i].IsLengthFlagSet())
             {
                 metric.SetMetricValue32(
@@ -301,4 +296,4 @@ void LinkMetrics::SetLinkMetricsTypeIdFromTlv(otLinkMetricsTypeId &aOtTypeId, Li
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE

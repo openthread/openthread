@@ -39,7 +39,7 @@
 
 using namespace ot;
 
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 otError otLinkMetricsQuery(otInstance *        aInstance,
                            const otIp6Address *aDestination,
@@ -58,4 +58,4 @@ void otLinkMetricsSetReportCallback(otInstance *                aInstance,
     static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SetLinkMetricsReportCallback(aCallback, aCallbackContext);
 }
 
-#endif // OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE

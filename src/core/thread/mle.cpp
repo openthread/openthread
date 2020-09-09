@@ -2061,7 +2061,7 @@ otError Mle::SendDataRequest(const Ip6::Address &aDestination,
     SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
 
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     if (aExtraTlvs != nullptr && aExtraTlvsLength > 0)
     {
         SuccessOrExit(error = message->Append(aExtraTlvs, aExtraTlvsLength));
@@ -2183,7 +2183,7 @@ void Mle::HandleMessageTransmissionTimer(void)
 
             destination.SetToLinkLocalAddress(mParent.GetExtAddress());
 
-            if (SendDataRequest(destination, tlvs, sizeof(tlvs), 0, nullptr, 0) == OT_ERROR_NONE)
+            if (SendDataRequest(destination, tlvs, sizeof(tlvs), 0) == OT_ERROR_NONE)
             {
                 mDataRequestAttempts++;
             }
@@ -2831,7 +2831,7 @@ void Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &a
     if (mRetrieveNewNetworkData || IsNetworkDataNewer(leaderData))
     {
         delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
-        IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay, nullptr, 0));
+        IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
     }
 
 exit:
@@ -2841,7 +2841,7 @@ exit:
 void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor)
 {
     otError error;
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     Tlv      tlv;
     uint16_t metricsReportOffset;
 #endif
@@ -2850,7 +2850,7 @@ void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aM
 
     VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = OT_ERROR_SECURITY);
 
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     if (Tlv::FindTlvOffset(aMessage, Tlv::kLinkMetricsReport, metricsReportOffset) == OT_ERROR_NONE)
     {
         aMessage.Read(metricsReportOffset, sizeof(tlv), &tlv);
@@ -3030,7 +3030,7 @@ exit:
             delay = 10;
         }
 
-        IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay, nullptr, 0));
+        IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
     }
     else if (error == OT_ERROR_NONE)
     {

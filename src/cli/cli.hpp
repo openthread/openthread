@@ -360,7 +360,7 @@ private:
     void ProcessLeaderPartitionId(uint8_t aArgsLength, char *aArgs[]);
     void ProcessLeaderWeight(uint8_t aArgsLength, char *aArgs[]);
 #endif
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     void    ProcessLinkMetrics(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[]);
 #endif
@@ -522,13 +522,13 @@ private:
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     static void HandleLinkMetricsReport(const otIp6Address *aAddress,
                                         otLinkMetric *      aMetrics,
                                         uint8_t             aMetricsNum,
                                         void *              aContext);
 
-    void HandleLinkMetricsReport(const Ip6::Address &aAddress, otLinkMetric *aMetrics, uint8_t aMetricsNum);
+    void HandleLinkMetricsReport(const otIp6Address *aAddress, otLinkMetric *aMetrics, uint8_t aMetricsNum);
 #endif
 
     static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);

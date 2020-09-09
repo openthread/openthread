@@ -1268,7 +1268,7 @@ private:
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 /**
  * This class implements Link Metrics Query TLV generation and parsing.
@@ -1338,7 +1338,7 @@ private:
     LinkMetricsQueryOptions mQueryOptions;
 } OT_TOOL_PACKED_END;
 
-#endif // OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 /**
  * @}

@@ -41,7 +41,7 @@
 #include "common/message.hpp"
 #include "common/tlvs.hpp"
 
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 namespace ot {
 
@@ -51,8 +51,7 @@ namespace ot {
  */
 enum
 {
-    kLinkMetricsMaxTypeIdFlags =
-        LINK_METRICS_MAX_TYPE_ID_FLAGS_COUNT, ///< Max link metrics type id flags count in one query.
+    kLinkMetricsMaxTypeIdFlags = OT_LINK_METRICS_ID_MAX, ///< Max link metrics type id flags count in one query.
 };
 
 enum Type
@@ -358,7 +357,7 @@ public:
      * @param[in]  aCount    The count of link metrics type Id flags in the array.
      *
      */
-    void SetLinkMetricsTypeIdList(LinkMetricsTypeId aTypeId[], uint8_t aCount)
+    void SetLinkMetricsTypeIdList(const LinkMetricsTypeId aTypeId[], uint8_t aCount)
     {
         uint8_t count = kLinkMetricsMaxTypeIdFlags;
 
@@ -375,6 +374,6 @@ private:
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 #endif // LINK_METRICS_TLVS_HPP_

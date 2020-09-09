@@ -97,7 +97,9 @@ struct MessageMetadata
     uint16_t    mLength;      ///< Number of bytes within the message.
     uint16_t    mOffset;      ///< A byte offset within the message.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     LqiAverager mLqiAverager; ///< The averager maintaining the Link quality indicator (LQI) average.
+#endif
 
     ChildMask mChildMask; ///< A ChildMask to indicate which sleepy children need to receive this.
     uint16_t  mMeshDest;  ///< Used for unicast non-link-local messages.
@@ -830,6 +832,7 @@ public:
      */
     const RssAverager &GetRssAverager(void) const { return GetMetadata().mRssAverager; }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     /**
      * This method updates the average LQI (Link Quality Indicator) associated with the message.
      *
@@ -856,6 +859,7 @@ public:
      *
      */
     uint8_t GetPsduCount(void) const { return GetMetadata().mLqiAverager.GetCount(); }
+#endif
 
     /**
      * This method sets the message's link info properties (PAN ID, link security, RSS) from a given `ThreadLinkInfo`.

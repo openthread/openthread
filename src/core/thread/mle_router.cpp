@@ -918,8 +918,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         }
 
         mRetrieveNewNetworkData = true;
-        IgnoreError(
-            SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0, nullptr, 0));
+        IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0));
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         Get<TimeSync>().HandleTimeSyncMessage(aMessage);
@@ -941,8 +940,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         if (mRetrieveNewNetworkData ||
             (static_cast<int8_t>(leaderData.GetDataVersion() - Get<NetworkData::Leader>().GetVersion()) > 0))
         {
-            IgnoreError(
-                SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0, nullptr, 0));
+            IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0));
         }
 
         // Route (optional)
@@ -2762,7 +2760,7 @@ void MleRouter::HandleNetworkDataUpdateRouter(void)
     destination.SetToLinkLocalAllNodesMulticast();
 
     delay = IsLeader() ? 0 : Random::NonCrypto::GetUint16InRange(0, kUnsolicitedDataResponseJitter);
-    SendDataResponse(nullptr, destination, tlvs, sizeof(tlvs), delay);
+    SendDataResponse(/* Message of Data Resquest */ nullptr, destination, tlvs, sizeof(tlvs), delay);
 
     SynchronizeChildNetworkData();
 
@@ -3293,7 +3291,7 @@ void MleRouter::SendDataResponse(const Message *     aMessage,
             SuccessOrExit(error = AppendPendingDataset(*message));
             break;
 
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
         case Tlv::kLinkMetricsReport:
             OT_ASSERT(aMessage != nullptr);
             LinkMetricsQueryTlv linkMetricsQueryTlv;

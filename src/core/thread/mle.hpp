@@ -93,7 +93,7 @@ class Mle : public InstanceLocator
 {
     friend class DiscoverScanner;
     friend class ot::Notifier;
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     friend class ot::LinkMetrics;
 #endif
 
@@ -1307,8 +1307,8 @@ protected:
                             const uint8_t *     aTlvs,
                             uint8_t             aTlvsLength,
                             uint16_t            aDelay,
-                            const uint8_t *     aExtraTlvs,
-                            uint8_t             aExtraTlvsLength);
+                            const uint8_t *     aExtraTlvs       = nullptr,
+                            uint8_t             aExtraTlvsLength = 0);
 
     /**
      * This method generates an MLE Child Update Request message.

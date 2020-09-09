@@ -1037,20 +1037,28 @@ Done
 
 ### linkmetrics query \<ipaddr\> single [typeidflags]
 
-Perform a link metrics query(single probe).
+Perform a Link Metrics query (single probe).
 
 - ipaddr: Peer address.
-- typeidflags: A hex string containing Type Id Flags values to request.
+- typeidflags: A hex string containing [1-4] Type Id Flags value(s) to request.
+
+Type ID Flags format:
+
+| E(0) | L(1) | Type/Average(2-4) | Metric(5-7) |
+
+- E: Extended Flags. Currently only `0` is supported.
+- L: Length of metric value field following the Metric Type ID Flags. `0` - metric value is 1 byte in length; `1` - metric value is 4 bytes in length;
+- Type/Average Enum: `0` - Count/summation; `1` - Exponential Moving Average; `2-7` - Reserved;
+- Metric Enum: `0` - Layer 2 Number of PDUs; `1` - Layer 2 LQI; `2` - Link Margin; `3` - RSSI in absolute dBm; `4-7` - Reserved;
 
 ```bash
-> linkmetricsquery fe80:0:0:0:3092:f334:1455:1ad2 single 090A0B
+> linkmetrics query fe80:0:0:0:3092:f334:1455:1ad2 single 090A0B
 Done
 > Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
 
- Link Metrics details:
- - LQI: 76
- - RSSI: -18 dBm
- - Margin: 82 dBm
+ - LQI: 76 (Exponential Moving Average)
+ - RSSI: -18 dBm (Exponential Moving Average)
+ - Margin: 82 dBm (Exponential Moving Average)
 ```
 
 ### linkquality \<extaddr\>
