@@ -231,7 +231,7 @@ WIRESHARK_OVERRIDE_PREFS = {
         '00000000',
     'uat:ieee802154_keys':
         '''"00112233445566778899aabbccddeeff","1","Thread hash"
-                              "ffeeddccbbaa99887766554433221100","2","Thread hash"''',
+                              "ffeeddccbbaa99887766554433221100","1","Thread hash"''',
 }
 
 WIRESHARK_DECODE_AS_ENTRIES = {
