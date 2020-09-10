@@ -30,7 +30,7 @@
 import unittest
 
 import thread_cert
-from pktverify.consts import MLE_CHILD_ID_REQUEST, MGMT_PANID_QUERY, MGMT_PANID_CONFLICT, MGMT_ED_REPORT
+from pktverify.consts import MLE_CHILD_ID_REQUEST, MGMT_PANID_QUERY, MGMT_PANID_CONFLICT, MGMT_ED_REPORT, NM_COMMISSIONER_SESSION_ID_TLV, NM_CHANNEL_MASK_TLV, NM_PAN_ID_TLV, REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS
 from pktverify.packet_verifier import PacketVerifier
 
 COMMISSIONER = 1
@@ -90,7 +90,7 @@ class Cert_9_2_14_PanIdQuery(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER2].get_state(), 'leader')
 
-        self.collect_ipaddrs()
+        self.collect_rlocs()
         ipaddrs = self.nodes[ROUTER1].get_addrs()
         for ipaddr in ipaddrs:
             if ipaddr[0:4] != 'fe80':
@@ -108,6 +108,8 @@ class Cert_9_2_14_PanIdQuery(thread_cert.TestCase):
 
         ROUTER = pv.vars['ROUTER']
         COMMISSIONER = pv.vars['COMMISSIONER']
+        ROUTER_RLOC = pv.vars['ROUTER_RLOC']
+        COMMISSIONER_RLOC = pv.vars['COMMISSIONER_RLOC']
         _rpkts = pkts.filter_wpan_src64(ROUTER)
         _cpkts = pkts.filter_wpan_src64(COMMISSIONER)
 
@@ -115,23 +117,28 @@ class Cert_9_2_14_PanIdQuery(thread_cert.TestCase):
         _rpkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()
 
         # Step 2: Commissioner MUST send a unicast MGMT_PANID_QUERY.qry unicast to Router_1
-        _cpkts.filter_coap_request(MGMT_PANID_QUERY).must_next().must_verify(
-            lambda p: bytes.fromhex('dead') in p.coap.payload)
+        _cpkts.filter_ipv6_dst(ROUTER_RLOC).filter_coap_request(MGMT_PANID_QUERY).must_next().must_verify(
+            lambda p: {NM_COMMISSIONER_SESSION_ID_TLV, NM_CHANNEL_MASK_TLV, NM_PAN_ID_TLV} <= set(p.thread_meshcop.tlv.
+                                                                                                  type))
 
         # Step 3: Router MUST send MGMT_ED_REPORT.ans to the Commissioner
-        _rpkts.range(_cpkts.index).filter_coap_request(MGMT_PANID_QUERY).must_next().must_verify(
-            lambda p: bytes.fromhex('dead') in p.coap.payload)
+        _rpkts.range(
+            _cpkts.index).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_request(MGMT_PANID_CONFLICT).must_next(
+            ).must_verify(lambda p: {NM_CHANNEL_MASK_TLV, NM_PAN_ID_TLV} <= set(p.thread_meshcop.tlv.type))
 
         # Step 4: Commissioner MUST send a multicast MGMT_PANID_QUERY.qry
-        _cpkts.filter_coap_request(MGMT_PANID_QUERY).must_next().must_verify(
-            lambda p: bytes.fromhex('dead') in p.coap.payload)
+        _cpkts.filter_ipv6_dst(REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS).filter_coap_request(
+            MGMT_PANID_QUERY).must_next().must_verify(
+                lambda p: {NM_COMMISSIONER_SESSION_ID_TLV, NM_CHANNEL_MASK_TLV, NM_PAN_ID_TLV} <= set(p.thread_meshcop.
+                                                                                                      tlv.type))
 
         # Step 5: Router MUST send MGMT_PANID_CONFLICT.ans to the Commissioner
-        _rpkts.range(_cpkts.index).filter_coap_request(MGMT_PANID_CONFLICT).must_next().must_verify(
-            lambda p: bytes.fromhex('dead') in p.coap.payload)
+        _rpkts.range(
+            _cpkts.index).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_request(MGMT_PANID_CONFLICT).must_next(
+            ).must_verify(lambda p: {NM_CHANNEL_MASK_TLV, NM_PAN_ID_TLV} <= set(p.thread_meshcop.tlv.type))
 
         # Step 6: Router MUST respond with an ICMPv6 Echo Reply
-        _rpkts.filter_ping_reply().must_next()
+        _rpkts.filter_ipv6_dst(COMMISSIONER_RLOC).filter_ping_reply().must_next()
 
 
 if __name__ == '__main__':
