@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for Thread link metrics query and management.
+ *   This file includes definitions for Thread Link Metrics query and management.
  */
 
 #ifndef LINK_METRICS_HPP_
@@ -52,7 +52,7 @@ namespace ot {
  * @addtogroup core-link-metrics
  *
  * @brief
- *   This module includes definitions for Thread link metrics query and management.
+ *   This module includes definitions for Thread Link Metrics query and management.
  *
  * @{
  */
@@ -69,7 +69,7 @@ public:
     explicit LinkMetrics(Instance &aInstance);
 
     /**
-     * This function sends an MLE Data Request containing Link Metrics Query TLV to query link metrics data. It could
+     * This function sends an MLE Data Request containing Link Metrics Query TLV to query Link Metrics data. It could
      * be either a Single Probe or a Forward Tracking Series.
      *
      * @param[in]  aDestination      A pointer to the IPv6 address of the destination.
@@ -77,7 +77,7 @@ public:
      * @param[in]  aTypeIdFlags      A pointer to an array of Type Id Flags.
      * @param[in]  aTypeIdFlagsCount The number of Type Id Flags entries.
      *
-     * @retval OT_ERROR_NONE          Successfully sent a link metrics query message.
+     * @retval OT_ERROR_NONE          Successfully sent a Link Metrics query message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Data Request message.
      * @retval OT_ERROR_INVALID_ARGS  TypeIdFlags are not valid or exceeds the count limit.
      *
@@ -88,7 +88,7 @@ public:
                              uint8_t             aTypeIdFlagsCount);
 
     /**
-     * This method appends a Link Metrics Report to a message according to the link metrics query.
+     * This method appends a Link Metrics Report to a message according to the Link Metrics query.
      *
      * @param[out]  aMessage           A reference to the message to append report.
      * @param[in]   aLinkMetricsQuery  A pointer to the Link Metrics Query Tlv
@@ -104,7 +104,7 @@ public:
                                     const Message &                 aRequestMessage);
 
     /**
-     * This method handles the received link metrics report contained in @p aMessage.
+     * This method handles the received Link Metrics report contained in @p aMessage.
      *
      * @param[in]  aMessage      A reference to the message.
      * @param[in]  aOffset       The offset in bytes where the metrics report sub-TLVs start.

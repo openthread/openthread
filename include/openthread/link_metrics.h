@@ -93,7 +93,7 @@ typedef struct otLinkMetricsTypeId
 } otLinkMetricsTypeId;
 
 /**
- * This structure represents one link metrics item including its type id and value.
+ * This structure represents one Link Metrics item including its type id and value.
  */
 typedef struct otLinkMetrics
 {
@@ -107,7 +107,7 @@ typedef struct otLinkMetrics
 
 /**
  * This function sends an MLE Data Request containing Link Metrics Query TLV
- * to query link metrics data. Single Probe or Forward Tracking Series.
+ * to query Link Metrics data. Single Probe or Forward Tracking Series.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  * @param[in]  aDestination         A pointer to the destination address.
@@ -115,7 +115,7 @@ typedef struct otLinkMetrics
  * @param[in]  aTypeIdFlags         A pointer to an array of Type Id Flags.
  * @param[in]  aTypeIdFlagsCount    The size of the array @p aTypeIdFlags.
  *
- * @retval OT_ERROR_NONE          Successfully sent a link metrics query message.
+ * @retval OT_ERROR_NONE          Successfully sent a Link Metrics query message.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Data Request message.
  * @retval OT_ERROR_INVALID_ARGS  TypeIdFlags are not valid or exceeds the count limit.
  *
@@ -130,8 +130,8 @@ otError otLinkMetricsQuery(otInstance *        aInstance,
  * This function pointer is called when a Link Metrics report is received.
  *
  * @param[in]  aSource      A pointer to the source address.
- * @param[in]  aMetrics     A pointer to the link metrics array.
- * @param[in]  aMetricsNum  The number of link metrics.
+ * @param[in]  aMetrics     A pointer to the Link Metrics array.
+ * @param[in]  aMetricsNum  The number of Link Metrics items.
  * @param[in]  aContext     A pointer to application-specific context.
  *
  */
@@ -144,7 +144,7 @@ typedef void (*otLinkMetricsReportCallback)(const otIp6Address * aSource,
  * This function registers a callback to handle Link Metrics report received.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aCallback         A pointer to a function that is called when link metrics report is received.
+ * @param[in]  aCallback         A pointer to a function that is called when Link Metrics report is received.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  */

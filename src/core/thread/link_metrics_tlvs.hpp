@@ -52,7 +52,7 @@ namespace ot {
 enum
 {
     kLinkMetricsMaxTypeIdFlags =
-        OT_LINK_METRICS_TYPE_ID_MAX_COUNT, ///< Max link metrics type id flags count in one query.
+        OT_LINK_METRICS_TYPE_ID_MAX_COUNT, ///< Max Link Metrics type id flags count in one query.
 };
 
 enum Type
@@ -351,10 +351,10 @@ public:
     }
 
     /**
-     * This method sets the the link metrics type Id flags.
+     * This method sets the the Link Metrics type Id flags.
      *
-     * @param[in]  aTypeId   The pointer to the array of link metrics type Id flags.
-     * @param[in]  aCount    The count of link metrics type Id flags in the array.
+     * @param[in]  aTypeId   The pointer to the array of Link Metrics type Id flags.
+     * @param[in]  aCount    The count of Link Metrics type Id flags in the array.
      *
      */
     void SetLinkMetricsTypeIdList(const LinkMetricsTypeId aTypeId[], uint8_t aCount)

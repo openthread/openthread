@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for Thread link metrics.
+ *   This file includes definitions for Thread Link Metrics.
  */
 
 #include "link_metrics.hpp"

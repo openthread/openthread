@@ -1298,33 +1298,33 @@ public:
     bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the link metrics query Id tlv.
+     * This method returns the Link Metrics query Id tlv.
      *
-     * @returns The link metrics query Id tlv.
+     * @returns The Link Metrics query Id tlv.
      *
      */
     const LinkMetricsQueryId *GetQueryId(void) const { return &mQueryId; }
 
     /**
-     * This method sets link metrics query Id tlv.
+     * This method sets Link Metrics query Id tlv.
      *
-     * @param[in]  aQueryId  The link metrics query Id tlv.
+     * @param[in]  aQueryId  The Link Metrics query Id tlv.
      *
      */
     void SetQueryId(LinkMetricsQueryId &aQueryId) { mQueryId = aQueryId; }
 
     /**
-     * This method returns the link metrics query options tlv.
+     * This method returns the Link Metrics query options tlv.
      *
-     * @returns The link metrics query options tlv.
+     * @returns The Link Metrics query options tlv.
      *
      */
     const LinkMetricsQueryOptions *GetQueryOptions(void) const { return &mQueryOptions; }
 
     /**
-     * This method sets link metrics query options tlv.
+     * This method sets Link Metrics query options tlv.
      *
-     * @param[in]  aQueryOptions  The link metrics query options tlv.
+     * @param[in]  aQueryOptions  The Link Metrics query options tlv.
      *
      */
     void SetQueryOptions(LinkMetricsQueryOptions &aQueryOptions)
