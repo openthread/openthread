@@ -40,7 +40,7 @@ namespace Tmf {
 
 otError TmfAgent::Start(void)
 {
-    return Coap::Start(kUdpPort);
+    return Coap::Start(kUdpPort, OT_NETIF_THREAD);
 }
 
 otError TmfAgent::Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
