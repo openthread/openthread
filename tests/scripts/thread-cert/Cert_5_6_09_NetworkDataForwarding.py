@@ -107,7 +107,7 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
         self.collect_rloc16s()
         self.collect_ipaddrs()
         self.nodes[LEADER].add_prefix('2001:2:0:1::/64', 'aros', 'med')
-        self.nodes[LEADER].add_route('2001:2:0:2::/64', 's', 'med')
+        self.nodes[LEADER].add_route('2001:2:0:2::/64', stable=True, prf='med')
         self.nodes[LEADER].register_netdata()
 
         # Set lowpan context of sniffer
@@ -116,7 +116,7 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
         self.simulator.go(10)
 
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'aos', 'med')
-        self.nodes[ROUTER2].add_route('2001:2:0:2::/64', 's', 'high')
+        self.nodes[ROUTER2].add_route('2001:2:0:2::/64', stable=True, prf='high')
         self.nodes[ROUTER2].register_netdata()
         self.simulator.go(15)
 
