@@ -182,10 +182,10 @@ otError Joiner::Start(const char *     aPskd,
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMeshCoP("Failed to start joiner: %s", otThreadErrorToString(error));
         FreeJoinerFinalizeMessage();
     }
 
+    LogError("start joiner", error);
     return error;
 }
 
@@ -393,12 +393,7 @@ otError Joiner::Connect(JoinerRouter &aRouter)
     SetState(kStateConnect);
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMeshCoP("Failed to start secure joiner connection: %s", otThreadErrorToString(error));
-    }
-
+    LogError("start secure joiner connection", error);
     return error;
 }
 
@@ -594,11 +589,7 @@ void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo
     mTimer.Start(kConfigExtAddressDelay);
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMeshCoP("Failed to process joiner entrust: %s", otThreadErrorToString(error));
-    }
+    LogError("process joiner entrust", error);
 }
 
 void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo)

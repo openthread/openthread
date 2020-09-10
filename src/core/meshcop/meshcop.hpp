@@ -493,6 +493,24 @@ void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
  */
 otError GetBorderAgentRloc(ThreadNetif &aNetIf, uint16_t &aRloc);
 
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MESHCOP == 1)
+/**
+ * This function emits a log message indicating an error during a MeshCoP action.
+ *
+ * Note that log message is emitted only if there is an error, i.e. @p aError is not `OT_ERROR_NONE`. The log
+ * message will have the format "Failed to {aActionText} : {ErrorString}".
+ *
+ * @param[in] aActionText   A string representing the failed action.
+ * @param[in] aError        The error in sending the message.
+ *
+ */
+void LogError(const char *aActionText, otError aError);
+#else
+inline void LogError(const char *, otError)
+{
+}
+#endif
+
 } // namespace MeshCoP
 
 } // namespace ot
