@@ -1854,14 +1854,16 @@ exit:
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress,
-                                          otLinkMetric *      aMetrics,
+                                          const otLinkMetric *aMetrics,
                                           uint8_t             aMetricsNum,
                                           void *              aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(aAddress, aMetrics, aMetricsNum);
 }
 
-void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress, otLinkMetric *aMetrics, uint8_t aMetricsNum)
+void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress,
+                                          const otLinkMetric *aMetrics,
+                                          uint8_t             aMetricsNum)
 {
     otLinkMetricsTypeId linkMetricsTypeId;
     uint8_t             index = 0;
@@ -1936,9 +1938,9 @@ otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
 {
     otError      error = OT_ERROR_INVALID_ARGS;
     otIp6Address address;
-    long         seriesId                            = 0;
-    uint8_t      typeIdFlags[OT_LINK_METRICS_ID_MAX] = {0};
-    int          typeIdFlagsCount                    = 0;
+    long         seriesId                                       = 0;
+    uint8_t      typeIdFlags[OT_LINK_METRICS_TYPE_ID_MAX_COUNT] = {0};
+    int          typeIdFlagsCount                               = 0;
 
     VerifyOrExit(aArgsLength >= 2, OT_NOOP);
 

@@ -52,7 +52,7 @@ LinkMetrics::LinkMetrics(Instance &aInstance)
 
 otError LinkMetrics::LinkMetricsQuery(const otIp6Address *aDestination,
                                       uint8_t             aSeriesId,
-                                      uint8_t *           aTypeIdFlags,
+                                      const uint8_t *     aTypeIdFlags,
                                       uint8_t             aTypeIdFlagsCount)
 {
     OT_UNUSED_VARIABLE(aDestination);
@@ -62,7 +62,7 @@ otError LinkMetrics::LinkMetricsQuery(const otIp6Address *aDestination,
     VerifyOrExit(aTypeIdFlagsCount <= kLinkMetricsMaxTypeIdFlags, error = OT_ERROR_INVALID_ARGS);
 
     error = SendLinkMetricsQuery(*static_cast<const Ip6::Address *>(aDestination), aSeriesId,
-                                 reinterpret_cast<LinkMetricsTypeId *>(aTypeIdFlags), aTypeIdFlagsCount);
+                                 reinterpret_cast<const LinkMetricsTypeId *>(aTypeIdFlags), aTypeIdFlagsCount);
 
 exit:
     return error;
@@ -209,14 +209,14 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &               
                                                         const int8_t                   aNoiseFloor,
                                                         const Message &                aRequestMessage)
 {
-    otError                 error = OT_ERROR_NONE;
-    LinkMetricsReportSubTlv metric;
-    LinkMetricsTypeId       linkMetricsTypeIds[kLinkMetricsMaxTypeIdFlags];
-    uint8_t                 metricsCount = 0;
+    otError                  error = OT_ERROR_NONE;
+    LinkMetricsReportSubTlv  metric;
+    const LinkMetricsTypeId *linkMetricsTypeIds;
+    uint8_t                  metricsCount = 0;
 
     OT_ASSERT(aQueryOptions != nullptr);
-    metricsCount = kLinkMetricsMaxTypeIdFlags;
-    aQueryOptions->GetLinkMetricsTypeIdList(linkMetricsTypeIds, &metricsCount);
+    metricsCount       = kLinkMetricsMaxTypeIdFlags;
+    linkMetricsTypeIds = aQueryOptions->GetLinkMetricsTypeIdList(metricsCount);
 
     for (uint8_t i = 0; i < metricsCount; i++)
     {

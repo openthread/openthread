@@ -44,7 +44,7 @@ using namespace ot;
 otError otLinkMetricsQuery(otInstance *        aInstance,
                            const otIp6Address *aDestination,
                            uint8_t             aSeriesId,
-                           uint8_t *           aTypeIdFlags,
+                           const uint8_t *     aTypeIdFlags,
                            uint8_t             aTypeIdFlagsCount)
 {
     return static_cast<Instance *>(aInstance)->Get<LinkMetrics>().LinkMetricsQuery(aDestination, aSeriesId,

@@ -54,6 +54,11 @@ extern "C" {
  *
  */
 
+enum
+{
+    OT_LINK_METRICS_TYPE_ID_MAX_COUNT = 4, ///< Max TypeIdFlags count in a link metrics query
+};
+
 /**
  * This enumeration defines link metric ID.
  *
@@ -64,7 +69,6 @@ typedef enum otLinkMetricsId
     OT_LINK_METRICS_LQI       = 1, ///< Layer 2 LQI
     OT_LINK_METRICS_MARGIN    = 2, ///< Link Margin - RSSI margin above noise floor
     OT_LINK_METRICS_RSSI      = 3, ///< RSSI
-    OT_LINK_METRICS_ID_MAX    = 4, ///< Max TypeIdFlags count in a link metrics query
 } otLinkMetricsId;
 
 /**
@@ -119,7 +123,7 @@ typedef struct otLinkMetric
 otError otLinkMetricsQuery(otInstance *        aInstance,
                            const otIp6Address *aDestination,
                            uint8_t             aSeriesId,
-                           uint8_t *           aTypeIdFlags,
+                           const uint8_t *     aTypeIdFlags,
                            uint8_t             aTypeIdFlagsCount);
 
 /**
@@ -132,7 +136,7 @@ otError otLinkMetricsQuery(otInstance *        aInstance,
  *
  */
 typedef void (*otLinkMetricsReportCallback)(const otIp6Address *aSource,
-                                            otLinkMetric *      aMetrics,
+                                            const otLinkMetric *aMetrics,
                                             uint8_t             aMetricsNum,
                                             void *              aContext);
 

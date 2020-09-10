@@ -524,11 +524,11 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     static void HandleLinkMetricsReport(const otIp6Address *aAddress,
-                                        otLinkMetric *      aMetrics,
+                                        const otLinkMetric *aMetrics,
                                         uint8_t             aMetricsNum,
                                         void *              aContext);
 
-    void HandleLinkMetricsReport(const otIp6Address *aAddress, otLinkMetric *aMetrics, uint8_t aMetricsNum);
+    void HandleLinkMetricsReport(const otIp6Address *aAddress, const otLinkMetric *aMetrics, uint8_t aMetricsNum);
 #endif
 
     static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);

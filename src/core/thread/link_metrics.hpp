@@ -84,7 +84,7 @@ public:
      */
     otError LinkMetricsQuery(const otIp6Address *aDestination,
                              uint8_t             aSeriesId,
-                             uint8_t *           aTypeIdFlags,
+                             const uint8_t *     aTypeIdFlags,
                              uint8_t             aTypeIdFlagsCount);
 
     /**

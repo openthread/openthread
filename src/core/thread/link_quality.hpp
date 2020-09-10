@@ -253,11 +253,11 @@ public:
 private:
     enum
     {
-        kCoeffBitShift = 3, // Coefficient used for exponentially weighted filter (1 << kCoeffBitShift).
+        kCoeffBitShift = 3, ///< Coefficient used for exponentially weighted filter (1 << kCoeffBitShift).
     };
 
-    uint8_t mAverage; // The average link quality indicator value.
-    uint8_t mCount;   // Number of LQI values added to averager so far.
+    uint8_t mAverage; ///< The average link quality indicator value.
+    uint8_t mCount;   ///< Number of LQI values added to averager so far.
 };
 
 /**

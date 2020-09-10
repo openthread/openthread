@@ -51,7 +51,8 @@ namespace ot {
  */
 enum
 {
-    kLinkMetricsMaxTypeIdFlags = OT_LINK_METRICS_ID_MAX, ///< Max link metrics type id flags count in one query.
+    kLinkMetricsMaxTypeIdFlags =
+        OT_LINK_METRICS_TYPE_ID_MAX_COUNT, ///< Max link metrics type id flags count in one query.
 };
 
 enum Type
@@ -98,7 +99,7 @@ public:
      * @retval TRUE   If the value follow flag is set, value follows after current 1 byte flags
      * @retval FALSE  If the value follow flag is not set, escape flags byte follows
      */
-    bool IsFollowFlagSet(void) { return (mTypeId & kFollowFlag) != 0; }
+    bool IsFollowFlagSet(void) const { return (mTypeId & kFollowFlag) != 0; }
 
     /**
      * This method clears value length flag.
@@ -118,7 +119,7 @@ public:
      * @retval TRUE   If the value length flag is set, extended value length (4 bytes)
      * @retval FALSE  If the value length flag is not set, short value length (1 byte)
      */
-    bool IsLengthFlagSet(void) { return (mTypeId & kLengthFlag) != 0; }
+    bool IsLengthFlagSet(void) const { return (mTypeId & kLengthFlag) != 0; }
 
     /**
      * This method sets the link metric type.
@@ -335,19 +336,18 @@ public:
     bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the link metrics type Id flags.
+     * This method returns the Link Metrics Type Id flags.
      *
-     * @param[out]  aTypeId   The pointer to the array of link metrics type Id flags.
-     * @param[out]  aCount    The count of link metrics type Id flags in the array.
+     * @param[out]  aTypeId   The pointer to the array of Link Metrics Type Id flags.
+     *
+     * @retval  The pointer to the array of Link Metrics Type Id flags.
      *
      */
-    void GetLinkMetricsTypeIdList(LinkMetricsTypeId aTypeId[], uint8_t *aCount) const
+    const LinkMetricsTypeId *GetLinkMetricsTypeIdList(uint8_t &aCount) const
     {
-        uint8_t count = GetLength() / sizeof(LinkMetricsTypeId);
+        aCount = GetLength() / sizeof(LinkMetricsTypeId);
 
-        *aCount = count > *aCount ? *aCount : count;
-
-        memcpy(aTypeId, mMetricsTypeIds, *aCount * sizeof(LinkMetricsTypeId));
+        return mMetricsTypeIds;
     }
 
     /**
@@ -369,7 +369,7 @@ public:
     }
 
 private:
-    uint8_t mMetricsTypeIds[kLinkMetricsMaxTypeIdFlags];
+    LinkMetricsTypeId mMetricsTypeIds[kLinkMetricsMaxTypeIdFlags];
 } OT_TOOL_PACKED_END;
 
 } // namespace ot
