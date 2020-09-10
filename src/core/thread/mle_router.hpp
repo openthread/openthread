@@ -615,11 +615,11 @@ private:
                                     const uint8_t *         aTlvs,
                                     uint8_t                 aTlvsLength,
                                     const Challenge &       aChallenge);
-    void    SendDataResponse(const Message *     aMessage,
-                             const Ip6::Address &aDestination,
+    void    SendDataResponse(const Ip6::Address &aDestination,
                              const uint8_t *     aTlvs,
                              uint8_t             aTlvsLength,
-                             uint16_t            aDelay);
+                             uint16_t            aDelay,
+                             const Message *     aRequestMessage = nullptr);
     otError SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_t aPanId);
 
     void    SetStateRouter(uint16_t aRloc16);

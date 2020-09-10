@@ -69,7 +69,7 @@ class SSED_SingleProbe(thread_cert.TestCase):
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
 
         # SSED_1 sends a Single Probe Link Metrics for L2 LQI using MLE Data Request
-        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, [0x09])
+        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, '09')
         self.simulator.go(5)
 
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
@@ -77,7 +77,7 @@ class SSED_SingleProbe(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.LinkMetricsReport)
 
         # SSED_1 sends a Single Probe Link Metrics for Link Margin using MLE Data Request
-        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, [0x0a])
+        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, '0a')
         self.simulator.go(5)
 
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
@@ -85,11 +85,11 @@ class SSED_SingleProbe(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.LinkMetricsReport)
 
         # SSED_1 sends a Single Probe Link Metrics for all metrics using MLE Data Request
-        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, [0x00, 0x09, 0x0a, 0x0b])
+        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, '00090a0b')
         self.simulator.go(5)
 
         # SSED_1 sends a Single Probe Link Metrics for all metrics using MLE Data Request (Length Flag set)
-        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, [0x40, 0x49, 0x4a, 0x4b])
+        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, '40494a4b')
         self.simulator.go(5)
 
         leader_messages = self.simulator.get_messages_sent_by(LEADER)

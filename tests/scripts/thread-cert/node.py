@@ -1630,8 +1630,8 @@ class Node:
 
         return router_table
 
-    def link_metrics_query_single_probe(self, dst_addr: str, typeid_flags: bytes):
-        cmd = 'linkmetrics query %s single %s' % (dst_addr, binascii.hexlify(bytearray(typeid_flags)).decode('ascii'))
+    def link_metrics_query_single_probe(self, dst_addr: str, typeid_flags: str):
+        cmd = 'linkmetrics query %s single %s' % (dst_addr, typeid_flags)
         self.send_command(cmd)
         self._expect('Done')
 

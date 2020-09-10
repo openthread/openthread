@@ -68,16 +68,16 @@ exit:
     return error;
 }
 
-otError LinkMetrics::AppendLinkMetricsReport(const Message &                 aMessageIn,
+otError LinkMetrics::AppendLinkMetricsReport(Message &                       aMessage,
                                              const Mle::LinkMetricsQueryTlv *aLinkMetricsQuery,
-                                             Message &                       aMessageOut)
+                                             const Message &                 aRequestMessage)
 {
     otError                        error = OT_ERROR_NONE;
     Tlv                            tlv;
     const LinkMetricsQueryId *     queryId      = nullptr;
     const LinkMetricsQueryOptions *queryOptions = nullptr;
     uint8_t                        length       = 0;
-    uint16_t                       startOffset  = aMessageOut.GetLength();
+    uint16_t                       startOffset  = aMessage.GetLength();
 
     VerifyOrExit(aLinkMetricsQuery != nullptr && aLinkMetricsQuery->GetLength() > 0 && aLinkMetricsQuery->IsValid(),
                  error = OT_ERROR_PARSE);
@@ -87,14 +87,14 @@ otError LinkMetrics::AppendLinkMetricsReport(const Message &                 aMe
 
     // Link Metrics Report TLV
     tlv.SetType(Mle::Tlv::kLinkMetricsReport);
-    SuccessOrExit(error = aMessageOut.Append(&tlv, sizeof(tlv)));
+    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
     if (queryId->GetSeriesId() == 0)
     {
         queryOptions = aLinkMetricsQuery->GetQueryOptions();
         VerifyOrExit(queryOptions->IsValid(), error = OT_ERROR_PARSE);
-        SuccessOrExit(error = AppendSingleProbeLinkMetricsReport(aMessageIn, queryOptions,
-                                                                 Get<Mac::Mac>().GetNoiseFloor(), aMessageOut, length));
+        SuccessOrExit(error = AppendSingleProbeLinkMetricsReport(aMessage, length, queryOptions,
+                                                                 Get<Mac::Mac>().GetNoiseFloor(), aRequestMessage));
     }
     else
     {
@@ -102,7 +102,7 @@ otError LinkMetrics::AppendLinkMetricsReport(const Message &                 aMe
     }
 
     tlv.SetLength(length);
-    aMessageOut.Write(startOffset, sizeof(tlv), &tlv);
+    aMessage.Write(startOffset, sizeof(tlv), &tlv);
 
 exit:
     return error;
@@ -203,11 +203,11 @@ exit:
     return error;
 }
 
-otError LinkMetrics::AppendSingleProbeLinkMetricsReport(const Message &                aMessageIn,
+otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &                      aMessage,
+                                                        uint8_t &                      aLength,
                                                         const LinkMetricsQueryOptions *aQueryOptions,
                                                         const int8_t                   aNoiseFloor,
-                                                        Message &                      aMessageOut,
-                                                        uint8_t &                      aLength)
+                                                        const Message &                aRequestMessage)
 {
     otError                 error = OT_ERROR_NONE;
     LinkMetricsReportSubTlv metric;
@@ -229,35 +229,35 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(const Message &         
         case OT_LINK_METRICS_PDU_COUNT:
             if (linkMetricsTypeIds[i].IsLengthFlagSet())
             {
-                metric.SetMetricValue32(aMessageIn.GetPsduCount());
+                metric.SetMetricValue32(aRequestMessage.GetPsduCount());
             }
             else
             {
-                metric.SetMetricValue8(aMessageIn.GetPsduCount());
+                metric.SetMetricValue8(aRequestMessage.GetPsduCount());
             }
             break;
 
         case OT_LINK_METRICS_LQI:
             if (linkMetricsTypeIds[i].IsLengthFlagSet())
             {
-                metric.SetMetricValue32(aMessageIn.GetAverageLqi());
+                metric.SetMetricValue32(aRequestMessage.GetAverageLqi());
             }
             else
             {
-                metric.SetMetricValue8(aMessageIn.GetAverageLqi());
+                metric.SetMetricValue8(aRequestMessage.GetAverageLqi());
             }
             break;
 
         case OT_LINK_METRICS_RSSI:
             if (linkMetricsTypeIds[i].IsLengthFlagSet())
             {
-                metric.SetMetricValue32((uint16_t)(aMessageIn.GetAverageRss() + 130) * 255 /
+                metric.SetMetricValue32((uint16_t)(aRequestMessage.GetAverageRss() + 130) * 255 /
                                         130); // Linear scale rss from 0 to 255
             }
             else
             {
                 metric.SetMetricValue8(
-                    (uint8_t)(aMessageIn.GetAverageRss() + 130 * 255 / 130)); // Linear scale rss from 0 to 255
+                    (uint8_t)(aRequestMessage.GetAverageRss() + 130 * 255 / 130)); // Linear scale rss from 0 to 255
             }
             break;
 
@@ -265,12 +265,12 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(const Message &         
             if (linkMetricsTypeIds[i].IsLengthFlagSet())
             {
                 metric.SetMetricValue32(
-                    LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aMessageIn.GetAverageRss()));
+                    LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aRequestMessage.GetAverageRss()));
             }
             else
             {
                 metric.SetMetricValue8(
-                    LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aMessageIn.GetAverageRss()));
+                    LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aRequestMessage.GetAverageRss()));
             }
             break;
 
@@ -278,7 +278,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(const Message &         
             break;
         }
 
-        SuccessOrExit(error = aMessageOut.Append(&metric, sizeof(Tlv) + metric.GetLength()));
+        SuccessOrExit(error = aMessage.Append(&metric, sizeof(Tlv) + metric.GetLength()));
         aLength += sizeof(Tlv) + metric.GetLength();
     }
 

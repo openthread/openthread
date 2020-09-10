@@ -90,18 +90,18 @@ public:
     /**
      * This method appends a Link Metrics Report to a message according to the link metrics query.
      *
-     * @param[in]   aMessageIn         A reference to the message of link metrics query.
+     * @param[out]  aMessage           A reference to the message to append report.
      * @param[in]   aLinkMetricsQuery  A pointer to the Link Metrics Query Tlv
-     * @param[out]  aMessageOut        A reference to the message to append report.
+     * @param[in]   aRequestMessage    A reference to the message of the Data Request.
      *
      * @retval OT_ERROR_NONE          Successfully appended the Thread Discovery TLV.
      * @retval OT_ERROR_PARSE         Cannot parse query sub TLV successfully.
      * @retval OT_ERROR_INVALID_ARGS  QueryId is invalid.
      *
      */
-    otError AppendLinkMetricsReport(const Message &                 aMessageIn,
+    otError AppendLinkMetricsReport(Message &                       aMessage,
                                     const Mle::LinkMetricsQueryTlv *aLinkMetricsQuery,
-                                    Message &                       aMessageOut);
+                                    const Message &                 aRequestMessage);
 
     /**
      * This method handles the received link metrics report contained in @p aMessage.
@@ -135,11 +135,11 @@ private:
                                  const LinkMetricsTypeId *aTypeIdFlags,
                                  uint8_t                  aTypeIdFlagsCount);
 
-    otError AppendSingleProbeLinkMetricsReport(const Message &                aMessageIn,
+    otError AppendSingleProbeLinkMetricsReport(Message &                      aMessage,
+                                               uint8_t &                      aLength,
                                                const LinkMetricsQueryOptions *aQueryOptions,
                                                const int8_t                   aNoiseFloor,
-                                               Message &                      aMessageOut,
-                                               uint8_t &                      aLength);
+                                               const Message &                aRequestMessage);
 
     void SetLinkMetricsTypeIdFromTlv(otLinkMetricsTypeId &aOtTypeId, LinkMetricsTypeId &aTlvTypeId);
 };

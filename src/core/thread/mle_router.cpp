@@ -2743,7 +2743,7 @@ void MleRouter::HandleDataRequest(const Message &         aMessage,
         tlvs[numTlvs++] = Tlv::kPendingDataset;
     }
 
-    SendDataResponse(&aMessage, aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0);
+    SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0, &aMessage);
 
 exit:
     LogProcessError(kTypeDataRequest, error);
@@ -2760,7 +2760,7 @@ void MleRouter::HandleNetworkDataUpdateRouter(void)
     destination.SetToLinkLocalAllNodesMulticast();
 
     delay = IsLeader() ? 0 : Random::NonCrypto::GetUint16InRange(0, kUnsolicitedDataResponseJitter);
-    SendDataResponse(/* Message of Data Resquest */ nullptr, destination, tlvs, sizeof(tlvs), delay);
+    SendDataResponse(destination, tlvs, sizeof(tlvs), delay);
 
     SynchronizeChildNetworkData();
 
@@ -3246,13 +3246,13 @@ exit:
     }
 }
 
-void MleRouter::SendDataResponse(const Message *     aMessage,
-                                 const Ip6::Address &aDestination,
+void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
                                  const uint8_t *     aTlvs,
                                  uint8_t             aTlvsLength,
-                                 uint16_t            aDelay)
+                                 uint16_t            aDelay,
+                                 const Message *     aRequestMessage)
 {
-    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aRequestMessage);
 
     otError   error   = OT_ERROR_NONE;
     Message * message = nullptr;
@@ -3293,12 +3293,12 @@ void MleRouter::SendDataResponse(const Message *     aMessage,
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
         case Tlv::kLinkMetricsReport:
-            OT_ASSERT(aMessage != nullptr);
+            OT_ASSERT(aRequestMessage != nullptr);
             LinkMetricsQueryTlv linkMetricsQueryTlv;
-            SuccessOrExit(error = ThreadTlv::FindTlv(*aMessage, Tlv::kLinkMetricsQuery, sizeof(linkMetricsQueryTlv),
-                                                     linkMetricsQueryTlv));
-            SuccessOrExit(error =
-                              Get<LinkMetrics>().AppendLinkMetricsReport(*aMessage, &linkMetricsQueryTlv, *message));
+            SuccessOrExit(error = ThreadTlv::FindTlv(*aRequestMessage, Tlv::kLinkMetricsQuery,
+                                                     sizeof(linkMetricsQueryTlv), linkMetricsQueryTlv));
+            SuccessOrExit(
+                error = Get<LinkMetrics>().AppendLinkMetricsReport(*message, &linkMetricsQueryTlv, *aRequestMessage));
             break;
 #endif
         }
