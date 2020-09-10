@@ -133,7 +133,10 @@ void LqiAverager::Add(uint8_t aLqi)
     uint8_t  count      = OT_MIN((1 << kCoeffBitShift), mCount + 1);
 
     mAverage = static_cast<uint8_t>(((oldAverage * (count - 1)) + aLqi) / count);
-    mCount++;
+    if (mCount < UINT8_MAX)
+    {
+        mCount++;
+    }
 }
 
 void LinkQualityInfo::Clear(void)
