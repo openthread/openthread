@@ -113,7 +113,7 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
                                           uint16_t            aLength,
                                           const Ip6::Address &aAddress)
 {
-    otLinkMetric      metrics[kLinkMetricsMaxTypeIdFlags];
+    otLinkMetrics     metrics[kLinkMetricsMaxTypeIdFlags];
     uint8_t           metricsCount = 0;
     uint16_t          pos          = aOffset;
     uint16_t          end_pos      = aOffset + aLength;
@@ -133,12 +133,12 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
 
         if (metrics[metricsCount].mLinkMetricsTypeId.mLinkMetricsFlagL)
         {
-            aMessage.Read(pos, sizeof(uint32_t), &metrics[metricsCount].mLinkMetricValue.m32);
+            aMessage.Read(pos, sizeof(uint32_t), &metrics[metricsCount].mLinkMetricsValue.m32);
             pos += sizeof(uint32_t);
         }
         else
         {
-            aMessage.Read(pos, sizeof(uint8_t), &metrics[metricsCount].mLinkMetricValue.m8);
+            aMessage.Read(pos, sizeof(uint8_t), &metrics[metricsCount].mLinkMetricsValue.m8);
             pos += sizeof(uint8_t);
         }
 
@@ -229,34 +229,34 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &               
         case OT_LINK_METRICS_PDU_COUNT:
             if (linkMetricsTypeIds[i].IsLengthFlagSet())
             {
-                metric.SetMetricValue32(aRequestMessage.GetPsduCount());
+                metric.SetMetricsValue32(aRequestMessage.GetPsduCount());
             }
             else
             {
-                metric.SetMetricValue8(aRequestMessage.GetPsduCount());
+                metric.SetMetricsValue8(aRequestMessage.GetPsduCount());
             }
             break;
 
         case OT_LINK_METRICS_LQI:
             if (linkMetricsTypeIds[i].IsLengthFlagSet())
             {
-                metric.SetMetricValue32(aRequestMessage.GetAverageLqi());
+                metric.SetMetricsValue32(aRequestMessage.GetAverageLqi());
             }
             else
             {
-                metric.SetMetricValue8(aRequestMessage.GetAverageLqi());
+                metric.SetMetricsValue8(aRequestMessage.GetAverageLqi());
             }
             break;
 
         case OT_LINK_METRICS_RSSI:
             if (linkMetricsTypeIds[i].IsLengthFlagSet())
             {
-                metric.SetMetricValue32((uint16_t)(aRequestMessage.GetAverageRss() + 130) * 255 /
-                                        130); // Linear scale rss from 0 to 255
+                metric.SetMetricsValue32((uint16_t)(aRequestMessage.GetAverageRss() + 130) * 255 /
+                                         130); // Linear scale rss from 0 to 255
             }
             else
             {
-                metric.SetMetricValue8(
+                metric.SetMetricsValue8(
                     (uint8_t)(aRequestMessage.GetAverageRss() + 130 * 255 / 130)); // Linear scale rss from 0 to 255
             }
             break;
@@ -264,12 +264,12 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &               
         case OT_LINK_METRICS_MARGIN:
             if (linkMetricsTypeIds[i].IsLengthFlagSet())
             {
-                metric.SetMetricValue32(
+                metric.SetMetricsValue32(
                     LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aRequestMessage.GetAverageRss()));
             }
             else
             {
-                metric.SetMetricValue8(
+                metric.SetMetricsValue8(
                     LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aRequestMessage.GetAverageRss()));
             }
             break;

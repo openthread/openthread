@@ -1853,17 +1853,17 @@ exit:
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress,
-                                          const otLinkMetric *aMetrics,
-                                          uint8_t             aMetricsNum,
-                                          void *              aContext)
+void Interpreter::HandleLinkMetricsReport(const otIp6Address * aAddress,
+                                          const otLinkMetrics *aMetrics,
+                                          uint8_t              aMetricsNum,
+                                          void *               aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(aAddress, aMetrics, aMetricsNum);
 }
 
-void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress,
-                                          const otLinkMetric *aMetrics,
-                                          uint8_t             aMetricsNum)
+void Interpreter::HandleLinkMetricsReport(const otIp6Address * aAddress,
+                                          const otLinkMetrics *aMetrics,
+                                          uint8_t              aMetricsNum)
 {
     otLinkMetricsTypeId linkMetricsTypeId;
     uint8_t             index = 0;
@@ -1875,8 +1875,8 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress,
     while (index < aMetricsNum)
     {
         linkMetricsTypeId = aMetrics[index].mLinkMetricsTypeId;
-        int32_t value     = linkMetricsTypeId.mLinkMetricsFlagL ? (int32_t)aMetrics[index].mLinkMetricValue.m32
-                                                            : aMetrics[index].mLinkMetricValue.m8;
+        int32_t value     = linkMetricsTypeId.mLinkMetricsFlagL ? (int32_t)aMetrics[index].mLinkMetricsValue.m32
+                                                            : aMetrics[index].mLinkMetricsValue.m8;
 
         switch (linkMetricsTypeId.mLinkMetricsId)
         {

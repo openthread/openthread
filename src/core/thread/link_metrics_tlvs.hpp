@@ -57,7 +57,7 @@ enum
 
 enum Type
 {
-    kLinkMetricsReportSub       = 0, ///< Link Metric Report Sub-TLV
+    kLinkMetricsReportSub       = 0, ///< Link Metrics Report Sub-TLV
     kLinkMetricsQueryId         = 1, ///< Link Metrics Query ID Sub-TLV
     kLinkMetricsQueryOptions    = 2, ///< Link Metrics Query Options Sub-TLV
     kForwardProbingRegistration = 3, ///< Forward Probing Registration Sub-TLV
@@ -68,7 +68,7 @@ enum Type
 };
 
 /**
- * This class implements Link Metric Type Id Flags generation and parsing.
+ * This class implements Link Metrics Type Id Flags generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -208,7 +208,7 @@ public:
     /**
      * This method sets the metric type ID.
      *
-     * @param[in]  aMetricsTypeID  Metric type ID.
+     * @param[in]  aMetricsTypeID  Metrics type ID.
      *
      */
     void SetMetricsTypeId(LinkMetricsTypeId aMetricsTypeId)
@@ -226,7 +226,7 @@ public:
      * @returns The metric value.
      *
      */
-    uint8_t GetMetricValue8(void) const { return mMetricValue.m8; }
+    uint8_t GetMetricsValue8(void) const { return mMetricsValue.m8; }
 
     /**
      * This method returns the metric value in 32 bits.
@@ -234,23 +234,23 @@ public:
      * @returns The metric value.
      *
      */
-    uint32_t GetMetricValue32(void) const { return mMetricValue.m32; }
+    uint32_t GetMetricsValue32(void) const { return mMetricsValue.m32; }
 
     /**
      * This method sets the metric value(8 bits).
      *
-     * @param[in]  aMetricValue  Metric value.
+     * @param[in]  aMetricsValue  Metrics value.
      *
      */
-    void SetMetricValue8(uint8_t aMetricValue) { mMetricValue.m8 = aMetricValue; }
+    void SetMetricsValue8(uint8_t aMetricsValue) { mMetricsValue.m8 = aMetricsValue; }
 
     /**
      * This method sets the metric value(32 bits).
      *
-     * @param[in]  aMetricValue  Metric value.
+     * @param[in]  aMetricsValue  Metrics value.
      *
      */
-    void SetMetricValue32(uint32_t aMetricValue) { mMetricValue.m32 = aMetricValue; }
+    void SetMetricsValue32(uint32_t aMetricsValue) { mMetricsValue.m32 = aMetricsValue; }
 
 private:
     LinkMetricsTypeId mMetricsTypeId;
@@ -258,7 +258,7 @@ private:
     {
         uint8_t  m8;
         uint32_t m32;
-    } mMetricValue;
+    } mMetricsValue;
 } OT_TOOL_PACKED_END;
 
 /**

@@ -56,11 +56,11 @@ extern "C" {
 
 enum
 {
-    OT_LINK_METRICS_TYPE_ID_MAX_COUNT = 4, ///< Max TypeIdFlags count in a link metrics query
+    OT_LINK_METRICS_TYPE_ID_MAX_COUNT = 4, ///< Max TypeIdFlags count in a Link Metrics query
 };
 
 /**
- * This enumeration defines link metric ID.
+ * This enumeration defines Link Metrics ID.
  *
  */
 typedef enum otLinkMetricsId
@@ -72,7 +72,7 @@ typedef enum otLinkMetricsId
 } otLinkMetricsId;
 
 /**
- * This enumeration defines link metric type.
+ * This enumeration defines Link Metrics type.
  *
  */
 typedef enum otLinkMetricsType
@@ -82,7 +82,7 @@ typedef enum otLinkMetricsType
 } otLinkMetricsType;
 
 /**
- * This structure represents link metric type Id flags.
+ * This structure represents Link Metrics type Id flags.
  */
 typedef struct otLinkMetricsTypeId
 {
@@ -95,15 +95,15 @@ typedef struct otLinkMetricsTypeId
 /**
  * This structure represents one link metrics item including its type id and value.
  */
-typedef struct otLinkMetric
+typedef struct otLinkMetrics
 {
     otLinkMetricsTypeId mLinkMetricsTypeId;
     union
     {
         uint8_t  m8;
         uint32_t m32;
-    } mLinkMetricValue;
-} otLinkMetric;
+    } mLinkMetricsValue;
+} otLinkMetrics;
 
 /**
  * This function sends an MLE Data Request containing Link Metrics Query TLV
@@ -135,10 +135,10 @@ otError otLinkMetricsQuery(otInstance *        aInstance,
  * @param[in]  aContext     A pointer to application-specific context.
  *
  */
-typedef void (*otLinkMetricsReportCallback)(const otIp6Address *aSource,
-                                            const otLinkMetric *aMetrics,
-                                            uint8_t             aMetricsNum,
-                                            void *              aContext);
+typedef void (*otLinkMetricsReportCallback)(const otIp6Address * aSource,
+                                            const otLinkMetrics *aMetrics,
+                                            uint8_t              aMetricsNum,
+                                            void *               aContext);
 
 /**
  * This function registers a callback to handle Link Metrics report received.
