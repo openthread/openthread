@@ -1020,8 +1020,10 @@ Coap::Coap(Instance &aInstance)
 
 otError Coap::Start(uint16_t aPort, otNetifIdentifier aNetifIdentifier)
 {
-    otError error;
+    otError error        = OT_ERROR_NONE;
     bool    socketOpened = false;
+
+    VerifyOrExit(!mSocket.IsBound(), OT_NOOP);
 
     SuccessOrExit(error = mSocket.Open(&Coap::HandleUdpReceive, this));
     socketOpened = true;
