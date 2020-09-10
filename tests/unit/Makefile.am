@@ -121,6 +121,7 @@ check_PROGRAMS                                                     += \
     test-message                                                      \
     test-message-queue                                                \
     test-multicast-listeners-table                                    \
+    test-ndproxy-table                                                \
     test-netif                                                        \
     test-network-data                                                 \
     test-pool                                                         \
@@ -219,6 +220,9 @@ test_multicast_listeners_table_SOURCES = $(COMMON_SOURCES) test_multicast_listen
 
 test_spinel_buffer_LDADD        = $(COMMON_LDADD)
 test_spinel_buffer_SOURCES      = $(COMMON_SOURCES) test_spinel_buffer.cpp
+
+test_ndproxy_table_LDADD     = $(COMMON_LDADD)
+test_ndproxy_table_SOURCES   = $(COMMON_SOURCES) test_ndproxy_table.cpp
 
 test_netif_LDADD             = $(COMMON_LDADD)
 test_netif_SOURCES           = $(COMMON_SOURCES) test_netif.cpp

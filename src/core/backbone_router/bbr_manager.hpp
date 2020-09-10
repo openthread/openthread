@@ -42,6 +42,7 @@
 
 #include "backbone_router/bbr_leader.hpp"
 #include "backbone_router/multicast_listeners_table.hpp"
+#include "backbone_router/ndproxy_table.hpp"
 #include "common/locator.hpp"
 #include "net/netif.hpp"
 #include "thread/network_data.hpp"
@@ -66,6 +67,14 @@ public:
      *
      */
     explicit Manager(Instance &aInstance);
+
+    /**
+     * This method returns the NdProxy Table.
+     *
+     * @returns The NdProxy Table.
+     *
+     */
+    NdProxyTable &GetNdProxyTable(void);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
@@ -101,6 +110,18 @@ public:
      *
      */
     MulticastListenersTable &GetMulticastListenersTable(void) { return mMulticastListenersTable; }
+
+    /**
+     * This method returns if messages destined to a given Domain Unicast Address should be forwarded to the Backbone
+     * link.
+     *
+     * @param aAddress The Domain Unicast Address.
+     *
+     * @retval TRUE   If messages destined to the Domain Unicast Address should be forwarded to the Backbone link.
+     * @retval FALSE  If messages destined to the Domain Unicast Address should not be forwarded to the Backbone link.
+     *
+     */
+    bool ShouldForwardDuaToBackbone(const Ip6::Address &aAddress);
 
 private:
     enum
@@ -140,6 +161,7 @@ private:
 
     Coap::Resource mMulticastListenerRegistration;
     Coap::Resource mDuaRegistration;
+    NdProxyTable   mNdProxyTable;
 
     MulticastListenersTable mMulticastListenersTable;
     TimerMilli              mTimer;

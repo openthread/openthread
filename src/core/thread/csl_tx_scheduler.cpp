@@ -178,6 +178,7 @@ otError CslTxScheduler::HandleFrameRequest(Mac::TxFrame &aFrame)
 
     SuccessOrExit(error = mCallbacks.PrepareFrameForChild(aFrame, mFrameContext, *mCslTxChild));
     mCslTxMessage = mCslTxChild->GetIndirectMessage();
+    VerifyOrExit(mCslTxMessage != nullptr, error = OT_ERROR_ABORT);
 
     if (mCslTxChild->GetIndirectTxAttempts() > 0 || mCslTxChild->GetCslTxAttempts() > 0)
     {

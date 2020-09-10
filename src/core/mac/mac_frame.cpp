@@ -582,10 +582,9 @@ otError Frame::GetCommandId(uint8_t &aCommandId) const
 {
     otError error = OT_ERROR_NONE;
     uint8_t index = FindPayloadIndex();
-
     VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
 
-    aCommandId = mPsdu[index - 1];
+    aCommandId = mPsdu[IsVersion2015() ? index : (index - 1)];
 
 exit:
     return error;
@@ -598,7 +597,7 @@ otError Frame::SetCommandId(uint8_t aCommandId)
 
     VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
 
-    mPsdu[index - 1] = aCommandId;
+    mPsdu[IsVersion2015() ? index : (index - 1)] = aCommandId;
 
 exit:
     return error;
@@ -848,7 +847,7 @@ uint8_t Frame::FindPayloadIndex(void) const
     }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-    if ((GetFrameControlField() & kFcfFrameTypeMask) == kFcfFrameMacCmd)
+    if (!IsVersion2015() && (GetFrameControlField() & kFcfFrameTypeMask) == kFcfFrameMacCmd)
     {
         index += kCommandIdSize;
     }

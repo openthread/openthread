@@ -83,19 +83,19 @@ CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-k32w06
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/k32w/k32w061/
 SIGN_IMAGE_PATH = $(AbsTopSourceDir)/third_party/nxp/K32W061DK6/tools/imagetool/
 
-COMMONCFLAGS                          := \
-    -fdata-sections                      \
-    -ffunction-sections                  \
-    -Os                                  \
-    -g                                   \
-    -DCPU_K32W061HN                      \
-    -DCPU_JN518X                         \
-    -DCPU_JN518X_REV=2                   \
-    -DJENNIC_CHIP_FAMILY_JN518x          \
-    -DJENNIC_CHIP_FAMILY_NAME=_JN518x    \
-    -DSDK_DEBUGCONSOLE=0                 \
-    -D$(CONFIG_FILE)                     \
-    -DUSE_RTOS=0                         \
+COMMONCFLAGS                                                                        := \
+    -fdata-sections                                                                    \
+    -ffunction-sections                                                                \
+    -Os                                                                                \
+    -g                                                                                 \
+    -DCPU_K32W061HN                                                                    \
+    -DCPU_JN518X                                                                       \
+    -DCPU_JN518X_REV=2                                                                 \
+    -DJENNIC_CHIP_FAMILY_JN518x                                                        \
+    -DJENNIC_CHIP_FAMILY_NAME=_JN518x                                                  \
+    -DSDK_DEBUGCONSOLE=0                                                               \
+    -D$(CONFIG_FILE)                                                                   \
+    -imacros "$(AbsTopSourceDir)/examples/platforms/k32w/k32w061/k32w061-sdk-config.h" \
     -I$(CONFIG_FILE_PATH)                \
     $(NULL)
 

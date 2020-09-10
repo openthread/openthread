@@ -86,6 +86,9 @@ SVR_DATA_URI = '/a/sd'
 ND_DATA_URI = '/a/nd'
 RLY_RX_URI = '/c/rx'
 RLY_TX_URI = '/c/tx'
+MGMT_ACTIVE_SET_URI = '/c/as'
+MGMT_ACTIVE_GET_URI = '/c/ag'
+MGMT_PENDING_SET_URI = '/c/ps'
 
 # MLE TLVs
 SOURCE_ADDRESS_TLV = 0
@@ -138,9 +141,14 @@ NM_NETWORK_MASTER_KEY_TLV = 5
 NM_NETWORK_KEY_SEQUENCE_COUNTER_TLV = 6
 NM_NETWORK_MESH_LOCAL_PREFIX_TLV = 7
 NM_STEERING_DATA_TLV = 8
+NM_BORDER_AGENT_LOCATOR_TLV = 9
+NM_COMMISSIONER_ID_TLV = 10
+NM_COMMISSIONER_SESSION_ID_TLV = 11
 NM_SECURITY_POLICY_TLV = 12
+NM_ACTIVE_TIMESTAMP_TLV = 14
 NM_COMMISSIONER_UDP_PORT_TLV = 15
 NM_JOINER_UDP_PORT_TLV = 18
+NM_DELAY_TIMER_TLV = 52
 NM_CHANNEL_MASK_TLV = 53
 NM_DISCOVERY_RESPONSE_TLV = 129
 
@@ -211,12 +219,19 @@ AUTO_SEEK_BACK_MAX_DURATION = 0.01
 
 # Wireshark configs
 WIRESHARK_OVERRIDE_PREFS = {
-    '6lowpan.context0': 'fd00:db8::/64',
-    '6lowpan.context1': 'fd00:7d03:7d03:7d03::/64',
-    'wpan.802154_fcs_ok': 'FALSE',
-    'wpan.802154_sec_suite': 'AES-128 Encryption, 32-bit Integrity Protection',
-    'thread.thr_seq_ctr': '00000000',
-    'uat:ieee802154_keys': '"00112233445566778899aabbccddeeff","1","Thread hash"',
+    '6lowpan.context0':
+        'fd00:db8::/64',
+    '6lowpan.context1':
+        'fd00:7d03:7d03:7d03::/64',
+    'wpan.802154_fcs_ok':
+        'FALSE',
+    'wpan.802154_sec_suite':
+        'AES-128 Encryption, 32-bit Integrity Protection',
+    'thread.thr_seq_ctr':
+        '00000000',
+    'uat:ieee802154_keys':
+        '''"00112233445566778899aabbccddeeff","1","Thread hash"
+                              "ffeeddccbbaa99887766554433221100","1","Thread hash"''',
 }
 
 WIRESHARK_DECODE_AS_ENTRIES = {

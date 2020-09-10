@@ -33,8 +33,6 @@
 
 #include "bbr_manager.hpp"
 
-#include <limits>
-
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 #include "common/code_utils.hpp"
@@ -55,6 +53,7 @@ Manager::Manager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mMulticastListenerRegistration(UriPath::kMlr, Manager::HandleMulticastListenerRegistration, this)
     , mDuaRegistration(UriPath::kDuaRegistrationRequest, Manager::HandleDuaRegistration, this)
+    , mNdProxyTable(aInstance)
     , mMulticastListenersTable(aInstance)
     , mTimer(aInstance, Manager::HandleTimer, this)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -160,7 +159,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
     }
     else
     {
-        VerifyOrExit(timeout < std::numeric_limits<uint32_t>::max(), status = ThreadStatusTlv::kMlrNoPersistent);
+        VerifyOrExit(timeout < UINT32_MAX, status = ThreadStatusTlv::kMlrNoPersistent);
 
         if (timeout != 0)
         {
@@ -269,13 +268,15 @@ exit:
 
 void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError                    error               = OT_ERROR_NONE;
-    ThreadStatusTlv::DuaStatus status              = ThreadStatusTlv::kDuaSuccess;
-    bool                       isPrimary           = Get<BackboneRouter::Local>().IsPrimary();
-    uint32_t                   lastTransactionTime = 0;
+    otError                    error     = OT_ERROR_NONE;
+    ThreadStatusTlv::DuaStatus status    = ThreadStatusTlv::kDuaSuccess;
+    bool                       isPrimary = Get<BackboneRouter::Local>().IsPrimary();
+    uint32_t                   lastTransactionTime;
+    bool                       hasLastTransactionTime;
     Ip6::Address               target;
     Ip6::InterfaceIdentifier   meshLocalIid;
 
+    VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator(), error = OT_ERROR_DROP);
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
@@ -292,17 +293,31 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
     VerifyOrExit(isPrimary, status = ThreadStatusTlv::kDuaNotPrimary);
     VerifyOrExit(Get<BackboneRouter::Leader>().IsDomainUnicast(target), status = ThreadStatusTlv::kDuaInvalid);
 
-    if (Tlv::FindUint32Tlv(aMessage, ThreadTlv::kLastTransactionTime, lastTransactionTime) == OT_ERROR_NONE)
+    hasLastTransactionTime =
+        (Tlv::FindUint32Tlv(aMessage, ThreadTlv::kLastTransactionTime, lastTransactionTime) == OT_ERROR_NONE);
+
+    switch (mNdProxyTable.Register(target.GetIid(), meshLocalIid, aMessageInfo.GetPeerAddr().GetIid().GetLocator(),
+                                   hasLastTransactionTime ? &lastTransactionTime : nullptr))
     {
-        // TODO: (DUA) hasLastTransactionTime = true;
+    case OT_ERROR_NONE:
+        // TODO: update its EID-to-RLOC Map Cache based on the pair {DUA, RLOC16-source} which is gleaned from the
+        // DUA.req packet according to Thread Spec. 5.23.3.6.2
+        break;
+    case OT_ERROR_DUPLICATED:
+        status = ThreadStatusTlv::kDuaDuplicate;
+        break;
+    case OT_ERROR_NO_BUFS:
+        status = ThreadStatusTlv::kDuaNoResources;
+        break;
+    default:
+        status = ThreadStatusTlv::kDuaGeneralFailure;
+        break;
     }
 
-    // TODO: (DUA) Add ND-PROXY table management
     // TODO: (DUA) Add DAD process
     // TODO: (DUA) Extended Address Query
 
 exit:
-
     otLogInfoBbr("Received DUA.req on %s: %s", (isPrimary ? "PBBR" : "SBBR"), otThreadErrorToString(error));
 
     if (error == OT_ERROR_NONE)
@@ -362,6 +377,32 @@ void Manager::ConfigNextMulticastListenerRegistrationResponse(ThreadStatusTlv::M
     mMlrResponseStatus      = aStatus;
 }
 #endif
+
+NdProxyTable &Manager::GetNdProxyTable(void)
+{
+    return mNdProxyTable;
+}
+
+bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &aAddress)
+{
+    bool              forwardToBackbone = false;
+    Mac::ShortAddress rloc16;
+    otError           error;
+
+    VerifyOrExit(Get<Local>().IsPrimary(), OT_NOOP);
+    VerifyOrExit(Get<Leader>().IsDomainUnicast(aAddress), OT_NOOP);
+
+    VerifyOrExit(!mNdProxyTable.IsRegistered(aAddress.GetIid()), OT_NOOP);
+
+    error = Get<AddressResolver>().Resolve(aAddress, rloc16, /* aAllowAddressQuery */ false);
+    VerifyOrExit(error != OT_ERROR_NONE || rloc16 == Get<Mle::MleRouter>().GetRloc16(), OT_NOOP);
+
+    // TODO: check if the DUA is an address of any Child?
+    forwardToBackbone = true;
+
+exit:
+    return forwardToBackbone;
+}
 
 } // namespace BackboneRouter
 
