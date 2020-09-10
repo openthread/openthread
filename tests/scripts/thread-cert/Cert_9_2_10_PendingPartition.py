@@ -31,7 +31,7 @@ import unittest
 
 import config
 import thread_cert
-from pktverify.consts import MLE_PARENT_REQUEST, MLE_DATA_REQUEST, MLE_DATA_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, VERSION_TLV, TLV_REQUEST_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, CHALLENGE_TLV, LINK_MARGIN_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, PENDING_OPERATION_DATASET_TLV
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_REQUEST, MLE_DATA_REQUEST, MLE_DATA_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, VERSION_TLV, TLV_REQUEST_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, CHALLENGE_TLV, LINK_MARGIN_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, ACTIVE_OPERATION_DATASET_TLV, PENDING_OPERATION_DATASET_TLV, LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS, LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS, NM_COMMISSIONER_SESSION_ID_TLV, NM_BORDER_AGENT_LOCATOR_TLV, NM_CHANNEL_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PAN_ID_TLV, NM_DELAY_TIMER_TLV, NM_ACTIVE_TIMESTAMP_TLV
 from pktverify.packet_verifier import PacketVerifier
 
 CHANNEL_INIT = 19
@@ -132,11 +132,11 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
             pending_timestamp=30,
             active_timestamp=165,
-            delay_timer=150000,
+            delay_timer=250,
             channel=CHANNEL_FINAL,
             panid=PANID_FINAL,
         )
-        self.simulator.go(5)
+        self.simulator.go(260)
 
         print(self.nodes[COMMISSIONER].get_channel())
         print(self.nodes[LEADER].get_channel())
@@ -146,7 +146,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
 
         self.nodes[LEADER].remove_allowlist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER1].remove_allowlist(self.nodes[LEADER].get_addr64())
-        self.simulator.go(160)
+        self.simulator.go(300)
 
         print(self.nodes[COMMISSIONER].get_channel())
         print(self.nodes[LEADER].get_channel())
@@ -198,43 +198,52 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         _rpkts.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
 
         # Step 5: Router MUST send a unicast MLE Data Request to the Leader
-        _rpkts.filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
+        _rpkts.filter_wpan_dst64(LEADER).filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
             lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
 
         # Step 7: Router MUST multicast a MLE Data Response
-        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
-            SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV
-        } <= set(p.mle.tlv.type))
+        _rpkts.filter_ipv6_dst(LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).filter_mle_cmd(
+            MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
+                SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV
+            } <= set(p.mle.tlv.type) and {NM_COMMISSIONER_SESSION_ID_TLV, NM_BORDER_AGENT_LOCATOR_TLV} <= set(
+                p.thread_meshcop.tlv.type) and p.thread_nwd.tlv.stable == [0])
 
         # Step 8: MED MUST send a unicast MLE Data Request to Router_1,
-        pkts.range(_rpkts.index).filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
-            lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
+        pkts.range(_rpkts.index).copy().filter_wpan_src64(MED).filter_wpan_dst64(ROUTER).filter_mle_cmd(
+            MLE_DATA_REQUEST).must_next().must_verify(
+                lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
 
         # Step 9: Router MUST send a unicast MLE Data Response to MED_1
         _rpkts.filter_wpan_dst64(MED).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
             SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_OPERATION_DATASET_TLV
-        } <= set(p.mle.tlv.type))
+        } <= set(p.mle.tlv.type) and {
+            NM_CHANNEL_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PAN_ID_TLV, NM_DELAY_TIMER_TLV,
+            NM_ACTIVE_TIMESTAMP_TLV
+        } <= set(p.thread_meshcop.tlv.type) and p.thread_nwd.tlv.stable == [0])
 
         # Step 10: Router MUST send MLE Child Update Request to SED_1
-        _rpkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(lambda p: {
+        _rpkts.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(lambda p: {
             SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV
         } <= set(p.mle.tlv.type))
 
         # Step 11: SED MUST send a unicast MLE Data Request to Router_1
-        pkts.range(_rpkts.index).filter_wpan_src64(SED).filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
+        pkts.filter_wpan_src64(SED).filter_wpan_dst64(ROUTER).filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
             lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
 
         # Step 12: Router MUST send a unicast MLE Data Response to SED_1
         _rpkts.filter_wpan_dst64(SED).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
             SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_OPERATION_DATASET_TLV
-        } <= set(p.mle.tlv.type))
+        } <= set(p.mle.tlv.type) and {
+            NM_CHANNEL_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PAN_ID_TLV, NM_DELAY_TIMER_TLV,
+            NM_ACTIVE_TIMESTAMP_TLV
+        } <= set(p.thread_meshcop.tlv.type))
 
         # Step 14: After NETWORK_ID_TIMEOUT, Router MUST start a new partition
-        _rpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next()
+        _rpkts.filter_ipv6_dst(LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS).filter_mle_cmd(MLE_PARENT_REQUEST).must_next()
         _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter(lambda p: p.wpan.dst_pan == PANID_FINAL).must_next()
 
         # Step 16: After the Delay Timer expires, Router MUST move to the Secondary channel
-        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter(lambda p: p.wpan.dst_pan == PANID_FINAL).must_next()
+        _rpkts.filter_mle_cmd(MLE_ADVERTISEMENT).filter(lambda p: p.wpan.dst_pan == PANID_FINAL).must_next()
 
         # Step 19: Router MUST reattach to the Leader and the partitions MUST merge
         pkts.filter_wpan_src64(LEADER).filter_wpan_dst64(ROUTER).filter_mle_cmd(
