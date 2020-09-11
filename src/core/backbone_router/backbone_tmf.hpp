@@ -73,7 +73,7 @@ public:
     otError Start(void);
 
     /**
-     * This method returns whether Thread Management Framework Addressing Rules are met.
+     * This method returns whether @p aMessageInfo meets Backbone Thread Management Framework Addressing Rules.
      *
      * @retval true   Thread Management Framework Addressing Rules are met.
      * @retval false  Thread Management Framework Addressing Rules are not met.
