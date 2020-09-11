@@ -272,7 +272,16 @@ class test_router_reattach(thread_cert.TestCase):
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         self.nodes[2].reset()
+        self.nodes[2].set_router_selection_jitter(3)
+        self.nodes[2].set_router_upgrade_threshold(32)
+        self.nodes[2].set_router_downgrade_threshold(32)
+
         self.nodes[2].start()
+        self.assertEqual(self.nodes[2].get_router_downgrade_threshold(), 32)
+        # Verify that the node restored as Router.
+        self.simulator.go(1)
+        self.assertEqual(self.nodes[2].get_state(), 'router')
+        # Verify that the node does not downgrade after Router Selection Jitter.
         self.simulator.go(5)
         self.assertEqual(self.nodes[2].get_state(), 'router')
 
