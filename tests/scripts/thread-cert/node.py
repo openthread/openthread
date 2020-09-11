@@ -771,6 +771,10 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def get_router_downgrade_threshold(self) -> int:
+        self.send_command('routerdowngradethreshold')
+        return int(self._expect_result(r'\d+'))
+
     def prefer_router_id(self, router_id):
         cmd = 'preferrouterid %d' % router_id
         self.send_command(cmd)
