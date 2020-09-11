@@ -2007,11 +2007,10 @@ class HostNode(LinuxHost, OtbrDocker):
         super().__init__(nodeid, **kwargs)
 
     def start(self):
-        # TODO: Use radvd to advertise the Domain Prefix on the Backbone link.
-        pass
+        self._service_radvd_start()
 
     def stop(self):
-        pass
+        self._service_radvd_stop()
 
     def get_addrs(self) -> List[str]:
         return self.get_ether_addrs()
@@ -2034,6 +2033,31 @@ class HostNode(LinuxHost, OtbrDocker):
             return self._getBackboneGua()
         else:
             return None
+
+    def _service_radvd_start(self):
+        self.bash("""cat >/etc/radvd.conf <<EOF
+interface eth0
+{
+	AdvSendAdvert on;
+
+	MinRtrAdvInterval 3;
+	MaxRtrAdvInterval 30;
+	AdvDefaultPreference low;
+
+	prefix %s
+	{
+		AdvOnLink on;
+		AdvAutonomous off;
+		AdvRouterAddr off;
+	};
+};
+EOF
+""" % config.DOMAIN_PREFIX)
+        self.bash('service radvd start')
+        self.bash('service radvd status')  # Make sure radvd service is running
+
+    def _service_radvd_stop(self):
+        self.bash('service radvd stop')
 
 
 if __name__ == '__main__':
