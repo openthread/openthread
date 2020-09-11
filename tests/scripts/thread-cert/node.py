@@ -1003,8 +1003,11 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def add_route(self, prefix, prf='med'):
-        cmd = 'route add %s %s' % (prefix, prf)
+    def add_route(self, prefix, stable=False, prf='med'):
+        cmd = 'route add %s ' % prefix
+        if stable:
+            cmd += 's'
+        cmd += ' %s' % prf
         self.send_command(cmd)
         self._expect('Done')
 
