@@ -1018,14 +1018,25 @@ Coap::Coap(Instance &aInstance)
 {
 }
 
-otError Coap::Start(uint16_t aPort)
+otError Coap::Start(uint16_t aPort, otNetifIdentifier aNetifIdentifier)
 {
     otError error;
+    bool    socketOpened = false;
+
+    VerifyOrExit(!mSocket.IsBound(), error = OT_ERROR_ALREADY);
 
     SuccessOrExit(error = mSocket.Open(&Coap::HandleUdpReceive, this));
-    VerifyOrExit((error = mSocket.Bind(aPort)) == OT_ERROR_NONE, IgnoreError(mSocket.Close()));
+    socketOpened = true;
+
+    SuccessOrExit(error = mSocket.BindToNetif(aNetifIdentifier));
+    SuccessOrExit(error = mSocket.Bind(aPort));
 
 exit:
+    if (error != OT_ERROR_NONE && socketOpened)
+    {
+        IgnoreError(mSocket.Close());
+    }
+
     return error;
 }
 

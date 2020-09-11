@@ -276,9 +276,6 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
         VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on)), error = OT_ERROR_FAILED);
     }
 
-    VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &gNetifIndex, sizeof(gNetifIndex)),
-                 error = OT_ERROR_FAILED);
-
 exit:
     if (error == OT_ERROR_FAILED)
     {
@@ -314,6 +311,21 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
         VerifyOrExit(setsockopt(fd, IPPROTO_IP, IP_BOUND_IF, &gNetifIndex, sizeof(gNetifIndex)),
                      error = OT_ERROR_FAILED);
 #endif // __linux__
+        break;
+    }
+    case OT_NETIF_BACKBONE:
+    {
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if __linux__
+        VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, gBackboneNetifName, strlen(gBackboneNetifName)) == 0,
+                     error = OT_ERROR_FAILED);
+#else  // __NetBSD__ || __FreeBSD__ || __APPLE__
+        VerifyOrExit(setsockopt(fd, IPPROTO_IP, IP_BOUND_IF, &gBackboneNetifIndex, sizeof(gBackboneNetifIndex)),
+                     error = OT_ERROR_FAILED);
+#endif // __linux__
+#else
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
         break;
     }
     }

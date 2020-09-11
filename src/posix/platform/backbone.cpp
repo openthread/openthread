@@ -28,46 +28,32 @@
 
 /**
  * @file
- *   This file implements Thread Management Framework (TMF) functionalities.
+ *   This file implements the platform Backbone interface management on Linux.
  */
 
-#include "thread/tmf.hpp"
+#include "openthread-posix-config.h"
 
-#include "common/locator-getters.hpp"
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
-namespace ot {
-namespace Tmf {
+#include "platform-posix.h"
+#include "common/code_utils.hpp"
 
-otError TmfAgent::Start(void)
+char         gBackboneNetifName[IFNAMSIZ] = "";
+unsigned int gBackboneNetifIndex          = 0;
+
+void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName)
 {
-    return Coap::Start(kUdpPort, OT_NETIF_THREAD);
-}
+    OT_UNUSED_VARIABLE(aInstance);
 
-otError TmfAgent::Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
-{
-    OT_UNUSED_VARIABLE(aMessage);
+    VerifyOrExit(aInterfaceName != nullptr, OT_NOOP);
 
-    return static_cast<TmfAgent *>(aContext)->IsTmfMessage(aMessageInfo) ? OT_ERROR_NONE : OT_ERROR_NOT_TMF;
-}
+    VerifyOrDie(strnlen(aInterfaceName, IFNAMSIZ) <= IFNAMSIZ - 1, OT_EXIT_INVALID_ARGUMENTS);
+    strcpy(gBackboneNetifName, aInterfaceName);
 
-bool TmfAgent::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo) const
-{
-    bool rval = true;
-
-    // A TMF message must comply with following rules:
-    // 1. The destination is a Mesh Local Address or a Link-Local Multicast Address or a Realm-Local Multicast Address,
-    //    and the source is a Mesh Local Address. Or
-    // 2. Both the destination and the source are Link-Local Addresses.
-    VerifyOrExit(
-        ((Get<Mle::MleRouter>().IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
-          aMessageInfo.GetSockAddr().IsLinkLocalMulticast() || aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
-         Get<Mle::MleRouter>().IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
-            ((aMessageInfo.GetSockAddr().IsLinkLocal() || aMessageInfo.GetSockAddr().IsLinkLocalMulticast()) &&
-             aMessageInfo.GetPeerAddr().IsLinkLocal()),
-        rval = false);
+    gBackboneNetifIndex = if_nametoindex(gBackboneNetifName);
+    VerifyOrDie(gBackboneNetifIndex > 0, OT_EXIT_FAILURE);
 exit:
-    return rval;
+    return;
 }
 
-} // namespace Tmf
-} // namespace ot
+#endif

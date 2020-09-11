@@ -61,6 +61,7 @@ list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONF
 
 add_library(openthread-posix
     alarm.cpp
+    backbone.cpp
     entropy.cpp
     hdlc_interface.cpp
     logging.cpp

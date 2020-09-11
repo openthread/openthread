@@ -407,6 +407,29 @@ extern char gNetifName[IFNAMSIZ];
  */
 extern unsigned int gNetifIndex;
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+/**
+ * This function initializes platform Backbone network.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aInterfaceName  A pointer to Thread network interface name.
+ *
+ */
+void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName);
+
+/**
+ * The name of Backbone network interface.
+ *
+ */
+extern char gBackboneNetifName[IFNAMSIZ];
+
+/**
+ * The index of Backbone network interface.
+ *
+ */
+extern unsigned int gBackboneNetifIndex;
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -28,46 +28,64 @@
 
 /**
  * @file
- *   This file implements Thread Management Framework (TMF) functionalities.
+ *   This file includes definitions for Backbone TMF functionality.
  */
 
-#include "thread/tmf.hpp"
+#ifndef OT_CORE_THREAD_BACKBONE_TMF_HPP_
+#define OT_CORE_THREAD_BACKBONE_TMF_HPP_
 
-#include "common/locator-getters.hpp"
+#include "coap/coap.hpp"
 
 namespace ot {
-namespace Tmf {
+namespace BackboneRouter {
 
-otError TmfAgent::Start(void)
+enum
 {
-    return Coap::Start(kUdpPort, OT_NETIF_THREAD);
-}
+    kBackboneUdpPort = 61631, ///< Backbone TMF UDP Port
+};
 
-otError TmfAgent::Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
+/**
+ * This class implements functionality of the Backbone TMF agent.
+ *
+ */
+class BackboneTmfAgent : public Coap::Coap
 {
-    OT_UNUSED_VARIABLE(aMessage);
+public:
+    /**
+     * This constructor initializes the object.
+     *
+     * @param[in] aInstance      A reference to the OpenThread instance.
+     *
+     */
+    explicit BackboneTmfAgent(Instance &aInstance)
+        : Coap::Coap(aInstance)
+    {
+        SetInterceptor(&Filter, this);
+    }
 
-    return static_cast<TmfAgent *>(aContext)->IsTmfMessage(aMessageInfo) ? OT_ERROR_NONE : OT_ERROR_NOT_TMF;
-}
+    /**
+     * This method starts the TMF agent.
+     *
+     * @retval OT_ERROR_NONE    Successfully started the CoAP service.
+     * @retval OT_ERROR_ALREADY Already started.
+     *
+     */
+    otError Start(void);
 
-bool TmfAgent::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo) const
-{
-    bool rval = true;
+    /**
+     * This method returns whether @p aMessageInfo meets Backbone Thread Management Framework Addressing Rules.
+     *
+     * @retval true   Thread Management Framework Addressing Rules are met.
+     * @retval false  Thread Management Framework Addressing Rules are not met.
+     *
+     */
+    bool IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo) const;
 
-    // A TMF message must comply with following rules:
-    // 1. The destination is a Mesh Local Address or a Link-Local Multicast Address or a Realm-Local Multicast Address,
-    //    and the source is a Mesh Local Address. Or
-    // 2. Both the destination and the source are Link-Local Addresses.
-    VerifyOrExit(
-        ((Get<Mle::MleRouter>().IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
-          aMessageInfo.GetSockAddr().IsLinkLocalMulticast() || aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
-         Get<Mle::MleRouter>().IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
-            ((aMessageInfo.GetSockAddr().IsLinkLocal() || aMessageInfo.GetSockAddr().IsLinkLocalMulticast()) &&
-             aMessageInfo.GetPeerAddr().IsLinkLocal()),
-        rval = false);
-exit:
-    return rval;
-}
+private:
+    static otError Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
+};
 
-} // namespace Tmf
+} // namespace BackboneRouter
 } // namespace ot
+
+#endif //  OT_CORE_THREAD_BACKBONE_TMF_HPP_

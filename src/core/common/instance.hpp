@@ -763,9 +763,15 @@ template <> inline BackboneRouter::MulticastListenersTable &Instance::Get(void)
 {
     return mThreadNetif.mBackboneRouterManager.GetMulticastListenersTable();
 }
+
 template <> inline BackboneRouter::NdProxyTable &Instance::Get(void)
 {
     return mThreadNetif.mBackboneRouterManager.GetNdProxyTable();
+}
+
+template <> inline BackboneRouter::BackboneTmfAgent &Instance::Get(void)
+{
+    return mThreadNetif.mBackboneRouterManager.GetBackboneTmfAgent();
 }
 #endif
 

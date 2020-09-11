@@ -51,6 +51,7 @@
 #include "backbone_router/bbr_leader.hpp"
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#include "backbone_router/backbone_tmf.hpp"
 #include "backbone_router/bbr_local.hpp"
 #include "backbone_router/bbr_manager.hpp"
 #endif

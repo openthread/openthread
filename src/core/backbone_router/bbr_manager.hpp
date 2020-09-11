@@ -40,6 +40,7 @@
 #include <openthread/backbone_router.h>
 #include <openthread/backbone_router_ftd.h>
 
+#include "backbone_router/backbone_tmf.hpp"
 #include "backbone_router/bbr_leader.hpp"
 #include "backbone_router/multicast_listeners_table.hpp"
 #include "backbone_router/ndproxy_table.hpp"
@@ -123,6 +124,14 @@ public:
      */
     bool ShouldForwardDuaToBackbone(const Ip6::Address &aAddress);
 
+    /**
+     * This method returns a reference to the Backbone TMF agent.
+     *
+     * @returns A reference to the Backbone TMF agent.
+     *
+     */
+    BackboneTmfAgent &GetBackboneTmfAgent(void) { return mBackboneTmfAgent; }
+
 private:
     enum
     {
@@ -165,6 +174,8 @@ private:
 
     MulticastListenersTable mMulticastListenersTable;
     TimerMilli              mTimer;
+
+    BackboneTmfAgent mBackboneTmfAgent;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     Ip6::InterfaceIdentifier   mDuaResponseTargetMlIid;
