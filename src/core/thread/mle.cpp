@@ -1396,8 +1396,6 @@ otError Mle::AppendCslChannel(Message &aMessage)
     otError       error = OT_ERROR_NONE;
     CslChannelTlv cslChannel;
 
-    VerifyOrExit(Get<Mac::Mac>().IsCslChannelSpecified(), OT_NOOP);
-
     cslChannel.Init();
     cslChannel.SetChannelPage(0);
     cslChannel.SetChannel(Get<Mac::Mac>().GetCslChannel());

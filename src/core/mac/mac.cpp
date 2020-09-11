@@ -2276,7 +2276,7 @@ void Mac::SetCslChannel(uint8_t aChannel)
     VerifyOrExit(GetCslChannel() != aChannel, OT_NOOP);
 
     mSubMac.SetCslChannel(aChannel);
-    mSubMac.SetIsCslChannelSpecified(true);
+    mSubMac.SetCslChannelSpecified(aChannel != 0 ? true : false);
 
     if (IsCslEnabled())
     {

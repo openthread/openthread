@@ -404,7 +404,7 @@ public:
      * This method sets the flag representing if CSL channel has been specified.
      *
      */
-    void SetIsCslChannelSpecified(bool aIsSpecified) { mIsCslChannelSpecified = aIsSpecified; }
+    void SetCslChannelSpecified(bool aIsSpecified) { mIsCslChannelSpecified = aIsSpecified; }
 
     /**
      * This method gets the CSL period.
@@ -624,10 +624,10 @@ private:
     uint32_t  mCslTimeout;     ///< The CSL synchronized timeout in seconds.
     TimeMicro mCslSampleTime;  ///< The CSL sample time of the current period.
     uint16_t  mCslPeriod;      ///< The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t   mCslChannel : 7; ///< The actually CSL sample channel. If `mCslChannelIsSet` is 0, this should be equal to
-                               ///< the Pan channel of `Mac`.
+    uint8_t   mCslChannel : 7; ///< The actually CSL sample channel. If `mIsCslChannelSpecified` is 0, this should be
+                               ///< equal to the Pan channel of `Mac`.
     uint8_t
-        mIsCslChannelSpecified : 1; ///< Indicates that if CSL channel has been explicitly specified by the upper layer.
+        mIsCslChannelSpecified : 1; ///< Indicates whether or not the CSL channel was explicitly specified by the user.
 
     CslState mCslState;
 

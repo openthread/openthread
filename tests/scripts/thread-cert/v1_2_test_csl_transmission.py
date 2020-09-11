@@ -29,13 +29,14 @@
 
 import unittest
 
+import mle
 import thread_cert
 
 LEADER = 1
 SSED_1 = 2
 
 CSL_PERIOD = 500 * 6.25  # 500ms
-CSL_TIMEOUT = 30  # 30s
+CSL_TIMEOUT = 305  # 305s
 CSL_CHANNEL = 13
 
 SECOND_CHANNEL = 12
@@ -72,8 +73,14 @@ class SSED_CslTransmission(thread_cert.TestCase):
         self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.simulator.go(5)
 
-        self.nodes[SSED_1].set_csl_channel(SECOND_CHANNEL)
-        self.nodes[LEADER].set_csl_channel(SECOND_CHANNEL)
+        ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
+        msg = ssed_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        msg.assertMleMessageContainsTlv(mle.CslChannel)
+
+        # Change channel
+        self.nodes[LEADER].send_mgmt_pending_set(channel=SECOND_CHANNEL)
+        self.simulator.go(301)
+
         self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.simulator.go(5)
 
@@ -81,6 +88,10 @@ class SSED_CslTransmission(thread_cert.TestCase):
         self.simulator.go(1)
         self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.simulator.go(5)
+
+        ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
+        msg = ssed_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        msg.assertMleMessageContainsTlv(mle.CslChannel)
 
         self.nodes[SSED_1].set_csl_period(0)
         self.assertFalse(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
