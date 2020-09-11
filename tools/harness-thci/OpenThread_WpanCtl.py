@@ -2048,7 +2048,7 @@ class OpenThread_WpanCtl(IThci):
         # long timeout value to avoid automatic joiner removal (in seconds)
         timeout = 500
 
-        cmd = self.wpan_cmd_prefix + 'commissioner joiner-add %s %s %s' % (eui64, str(timeout), strPSKd)
+        cmd = self.wpan_cmd_prefix + 'commissioner joiner-add "%s" %s %s' % (eui64, str(timeout), strPSKd)
         print(cmd)
         if not self.isActiveCommissioner:
             self.startCollapsedCommissioner()
