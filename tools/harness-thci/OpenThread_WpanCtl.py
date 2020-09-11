@@ -454,14 +454,14 @@ class OpenThread_WpanCtl(IThci):
                 self.__setRouterSelectionJitter(1)
 
             if startType == 'form':
-                startCmd = self.wpan_cmd_prefix + '%s %s -c %s -T %s ' % (
+                startCmd = self.wpan_cmd_prefix + '%s "%s" -c %s -T %s ' % (
                     startType,
                     self.networkName,
                     str(self.channel),
                     nodeType,
                 )
             else:
-                startCmd = self.wpan_cmd_prefix + '%s %s -p %s -c %s -T %s ' % (
+                startCmd = self.wpan_cmd_prefix + '%s "%s" -p %s -c %s -T %s ' % (
                     startType,
                     self.networkName,
                     str(hex(self.panId)),
@@ -828,10 +828,11 @@ class OpenThread_WpanCtl(IThci):
             False: fail to set the Thread Networkname
         """
         print('%s call setNetworkName' % self.port)
+        assert '"' not in networkName
 
         try:
-            cmd = self.wpan_cmd_prefix + 'setprop -s Network:Name %s' % networkName
-            datasetCmd = self.wpan_cmd_prefix + 'setprop Dataset:NetworkName %s' % networkName
+            cmd = self.wpan_cmd_prefix + 'setprop -s Network:Name "%s"' % networkName
+            datasetCmd = self.wpan_cmd_prefix + 'setprop Dataset:NetworkName "%s"' % networkName
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] != 'Fail' and self.__sendCommand(datasetCmd)[0] != 'Fail'
         except Exception as e:
@@ -1431,6 +1432,7 @@ class OpenThread_WpanCtl(IThci):
 
         # initialize variables
         self.networkName = ModuleHelper.Default_NwkName
+        assert '"' not in self.networkName
         self.networkKey = ModuleHelper.Default_NwkKey
         self.channel = ModuleHelper.Default_Channel
         self.channelMask = '0x7fff800'  # (0xffff << 11)
@@ -2014,7 +2016,7 @@ class OpenThread_WpanCtl(IThci):
             False: fail to start Commissioner
         """
         print('%s call startCollapsedCommissioner' % self.port)
-        startCmd = self.wpan_cmd_prefix + 'form %s -c %s -T router' % (self.networkName, str(self.channel))
+        startCmd = self.wpan_cmd_prefix + 'form "%s" -c %s -T router' % (self.networkName, str(self.channel))
         if self.__sendCommand(startCmd) != 'Fail':
             time.sleep(2)
             cmd = self.wpan_cmd_prefix + 'commissioner start'
