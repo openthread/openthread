@@ -44,7 +44,7 @@ class Cert_5_8_2_KeyIncrement(thread_cert.TestCase):
             'key_switch_guardtime': 0,
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
@@ -52,7 +52,7 @@ class Cert_5_8_2_KeyIncrement(thread_cert.TestCase):
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 

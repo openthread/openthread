@@ -80,15 +80,15 @@ wpan.Node.init_all_nodes()
 for node in all_nodes:
     node.set(wpan.WPAN_OT_LOG_LEVEL, '0')
 
-r1.whitelist_node(r2)
-r2.whitelist_node(r1)
-r1.whitelist_node(r3)
-r3.whitelist_node(r1)
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
+r1.allowlist_node(r3)
+r3.allowlist_node(r1)
 
-r1.whitelist_node(sc1)
-r1.whitelist_node(ec1)
-r2.whitelist_node(sc2)
-r3.whitelist_node(sc3)
+r1.allowlist_node(sc1)
+r1.allowlist_node(ec1)
+r2.allowlist_node(sc2)
+r3.allowlist_node(sc3)
 
 r1.form('channel-manager', channel=12)
 r2.join_node(r1, node_type=wpan.JOIN_TYPE_ROUTER)

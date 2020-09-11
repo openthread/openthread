@@ -45,7 +45,7 @@ class Cert_6_6_2_KeyIncrement1(thread_cert.TestCase):
             'key_switch_guardtime': 0,
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ED]
+            'allowlist': [ED]
         },
         ED: {
             'name': 'ED',
@@ -53,7 +53,7 @@ class Cert_6_6_2_KeyIncrement1(thread_cert.TestCase):
             'key_switch_guardtime': 0,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 

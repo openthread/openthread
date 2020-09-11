@@ -44,13 +44,13 @@ class TestIPv6Fragmentation(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xcafe,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         ROUTER: {
             'mode': 'rsdn',
             'panid': 0xcafe,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 

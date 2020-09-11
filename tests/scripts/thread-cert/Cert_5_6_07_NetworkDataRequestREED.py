@@ -47,105 +47,105 @@ class Cert_5_6_7_NetworkDataRequestREED(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1, ROUTER2, ROUTER3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ROUTER15]
+            'allowlist': [ROUTER1, ROUTER2, ROUTER3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ROUTER15]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, REED1]
+            'allowlist': [LEADER, REED1]
         },
         ROUTER3: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         5: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         6: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         7: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         8: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         9: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         10: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         11: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         12: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         13: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         14: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         15: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ROUTER15: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         REED1: {
             'name': 'REED',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER2]
+            'allowlist': [ROUTER2]
         },
     }
 
@@ -163,8 +163,8 @@ class Cert_5_6_7_NetworkDataRequestREED(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[REED1].get_state(), 'child')
 
-        self.nodes[ROUTER2].remove_whitelist(self.nodes[REED1].get_addr64())
-        self.nodes[REED1].remove_whitelist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[ROUTER2].remove_allowlist(self.nodes[REED1].get_addr64())
+        self.nodes[REED1].remove_allowlist(self.nodes[ROUTER2].get_addr64())
 
         self.nodes[LEADER].add_prefix('2001:2:0:3::/64', 'paros')
         self.nodes[LEADER].register_netdata()
@@ -174,8 +174,8 @@ class Cert_5_6_7_NetworkDataRequestREED(thread_cert.TestCase):
 
         self.simulator.go(2)
 
-        self.nodes[ROUTER2].add_whitelist(self.nodes[REED1].get_addr64())
-        self.nodes[REED1].add_whitelist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[ROUTER2].add_allowlist(self.nodes[REED1].get_addr64())
+        self.nodes[REED1].add_allowlist(self.nodes[ROUTER2].get_addr64())
 
         self.simulator.go(30)
         self.simulator.go(600)

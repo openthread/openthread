@@ -41,19 +41,19 @@ class Cert_5_1_13_RouterReset(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         ROUTER: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 
     def _setUpRouter(self):
-        self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER].enable_whitelist()
+        self.nodes[ROUTER].add_allowlist(self.nodes[LEADER].get_addr64())
+        self.nodes[ROUTER].enable_allowlist()
         self.nodes[ROUTER].set_router_selection_jitter(1)
 
     def test(self):

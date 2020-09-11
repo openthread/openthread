@@ -94,7 +94,6 @@ scan
 start
 state
 stop
-whitelist
 ```
 
 ### NCP example

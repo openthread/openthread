@@ -43,7 +43,7 @@ class Cert_6_3_2_NetworkDataUpdate(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ED]
+            'allowlist': [ED]
         },
         ED: {
             'name': 'MED',
@@ -51,7 +51,7 @@ class Cert_6_3_2_NetworkDataUpdate(thread_cert.TestCase):
             'mode': 'rsn',
             'panid': 0xface,
             'timeout': 10,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 
@@ -78,8 +78,8 @@ class Cert_6_3_2_NetworkDataUpdate(thread_cert.TestCase):
             if addr[0:10] == '2001:2:0:1':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
-        self.nodes[LEADER].remove_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[ED].remove_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[LEADER].remove_allowlist(self.nodes[ED].get_addr64())
+        self.nodes[ED].remove_allowlist(self.nodes[LEADER].get_addr64())
 
         self.nodes[LEADER].add_prefix('2001:2:0:2::/64', 'paros')
         self.nodes[LEADER].register_netdata()
@@ -89,8 +89,8 @@ class Cert_6_3_2_NetworkDataUpdate(thread_cert.TestCase):
 
         self.simulator.go(5)
 
-        self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[LEADER].add_allowlist(self.nodes[ED].get_addr64())
+        self.nodes[ED].add_allowlist(self.nodes[LEADER].get_addr64())
         self.simulator.go(10)
 
         addrs = self.nodes[ED].get_addrs()

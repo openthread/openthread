@@ -64,7 +64,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             },
             'mode': 'rsdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         LEADER: {
             'name': 'LEADER',
@@ -77,7 +77,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             'mode': 'rsdn',
             'partition_id': 0xffffffff,
             'router_selection_jitter': 1,
-            'whitelist': [COMMISSIONER, ROUTER1]
+            'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
@@ -89,7 +89,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             },
             'mode': 'rsdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED1, SED1]
+            'allowlist': [LEADER, ED1, SED1]
         },
         ED1: {
             'name': 'ED',
@@ -98,7 +98,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             'masterkey': KEY1,
             'mode': 'rsn',
             'panid': PANID_INIT,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
         SED1: {
             'name': 'SED',
@@ -108,7 +108,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             'mode': 's',
             'panid': PANID_INIT,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
     }
 

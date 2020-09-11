@@ -48,26 +48,26 @@ class Cert_9_2_14_PanIdQuery(thread_cert.TestCase):
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER1]
+            'allowlist': [LEADER1]
         },
         LEADER1: {
             'name': 'LEADER_1',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [COMMISSIONER, ROUTER1]
+            'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
             'name': 'ROUTER',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER1, LEADER2]
+            'allowlist': [LEADER1, LEADER2]
         },
         LEADER2: {
             'name': 'LEADER_2',
             'mode': 'rsdn',
             'panid': 0xdead,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
     }
 

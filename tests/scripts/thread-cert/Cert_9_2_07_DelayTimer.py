@@ -57,14 +57,14 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
             'partition_id': 0xffffffff,
             'router_selection_jitter': 1,
-            'whitelist': [COMMISSIONER]
+            'allowlist': [COMMISSIONER]
         },
         ROUTER: {
             'active_dataset': {
@@ -96,8 +96,8 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
         self.simulator.go(10)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'leader')
 
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[LEADER].add_allowlist(self.nodes[ROUTER].get_addr64())
+        self.nodes[ROUTER].add_allowlist(self.nodes[LEADER].get_addr64())
 
         self.simulator.go(30)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')

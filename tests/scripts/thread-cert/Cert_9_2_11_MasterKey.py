@@ -60,7 +60,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
             },
             'mode': 'rsdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         LEADER: {
             'active_dataset': {
@@ -71,7 +71,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
             },
             'mode': 'rsdn',
             'router_selection_jitter': 1,
-            'whitelist': [COMMISSIONER, ROUTER1]
+            'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
             'active_dataset': {
@@ -82,7 +82,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
             },
             'mode': 'rsdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED1, SED1]
+            'allowlist': [LEADER, ED1, SED1]
         },
         ED1: {
             'channel': CHANNEL_INIT,
@@ -90,7 +90,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
             'masterkey': '000102030405060708090a0b0c0d0e0f',
             'mode': 'rsn',
             'panid': PANID_INIT,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
         SED1: {
             'channel': CHANNEL_INIT,
@@ -99,7 +99,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
             'mode': 's',
             'panid': PANID_INIT,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
     }
 

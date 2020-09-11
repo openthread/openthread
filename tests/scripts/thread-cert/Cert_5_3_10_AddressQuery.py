@@ -49,31 +49,31 @@ class Cert_5_3_10_AddressQuery(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [BR, ROUTER1, DUT_ROUTER2]
+            'allowlist': [BR, ROUTER1, DUT_ROUTER2]
         },
         BR: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ROUTER1: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, DUT_ROUTER2]
+            'allowlist': [LEADER, DUT_ROUTER2]
         },
         DUT_ROUTER2: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ROUTER1, MED1]
+            'allowlist': [LEADER, ROUTER1, MED1]
         },
         MED1: {
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [DUT_ROUTER2]
+            'allowlist': [DUT_ROUTER2]
         },
     }
 

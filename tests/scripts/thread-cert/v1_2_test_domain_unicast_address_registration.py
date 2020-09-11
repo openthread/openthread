@@ -114,44 +114,44 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
     TOPOLOGY = {
         BBR_1: {
             'version': '1.2',
-            'whitelist': [ROUTER_1_1, ROUTER_1_2],
+            'allowlist': [ROUTER_1_1, ROUTER_1_2],
             'is_bbr': True
         },
         ROUTER_1_1: {
             'version': '1.1',
-            'whitelist': [BBR_1, FED_1_2_1, MED_1_2_1, SED_1_2_1]
+            'allowlist': [BBR_1, FED_1_2_1, MED_1_2_1, SED_1_2_1]
         },
         ROUTER_1_2: {
             'version': '1.2',
-            'whitelist': [BBR_1, FED_1_2_2, MED_1_2_2, SED_1_2_2]
+            'allowlist': [BBR_1, FED_1_2_2, MED_1_2_2, SED_1_2_2]
         },
         FED_1_2_1: {
             'version': '1.2',
-            'whitelist': [ROUTER_1_1],
+            'allowlist': [ROUTER_1_1],
         },
         MED_1_2_1: {
             'mode': 'rsn',
             'version': '1.2',
-            'whitelist': [ROUTER_1_1],
+            'allowlist': [ROUTER_1_1],
         },
         SED_1_2_1: {
             'mode': 'sn',
             'version': '1.2',
-            'whitelist': [ROUTER_1_1],
+            'allowlist': [ROUTER_1_1],
         },
         FED_1_2_2: {
             'version': '1.2',
-            'whitelist': [ROUTER_1_2],
+            'allowlist': [ROUTER_1_2],
         },
         MED_1_2_2: {
             'mode': 'rsn',
             'version': '1.2',
-            'whitelist': [ROUTER_1_2],
+            'allowlist': [ROUTER_1_2],
         },
         SED_1_2_2: {
             'mode': 'sn',
             'version': '1.2',
-            'whitelist': [ROUTER_1_2],
+            'allowlist': [ROUTER_1_2],
         },
     }
     """All nodes are created with default configurations"""

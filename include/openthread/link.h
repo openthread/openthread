@@ -88,8 +88,8 @@ typedef uint8_t otMacFilterIterator; ///< Used to iterate through mac filter ent
 typedef enum otMacFilterAddressMode
 {
     OT_MAC_FILTER_ADDRESS_MODE_DISABLED,  ///< Address filter is disabled.
-    OT_MAC_FILTER_ADDRESS_MODE_WHITELIST, ///< Whitelist address filter mode is enabled.
-    OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST, ///< Blacklist address filter mode is enabled.
+    OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST, ///< Allowlist address filter mode is enabled.
+    OT_MAC_FILTER_ADDRESS_MODE_DENYLIST,  ///< Denylist address filter mode is enabled.
 } otMacFilterAddressMode;
 
 /**
@@ -309,7 +309,7 @@ typedef struct otMacCounters
     uint32_t mRxOther;
 
     /**
-     * The total number of frames dropped by MAC Filter module, for example received from blacklisted node.
+     * The total number of frames dropped by MAC Filter module, for example received from denylisted node.
      *
      */
     uint32_t mRxAddressFiltered;

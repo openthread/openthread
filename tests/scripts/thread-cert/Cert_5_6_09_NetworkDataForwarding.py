@@ -50,28 +50,28 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1, ROUTER2]
+            'allowlist': [ROUTER1, ROUTER2]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED, SED]
+            'allowlist': [LEADER, ED, SED]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ED: {
             'name': 'MED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
         SED: {
             'name': 'SED',
@@ -79,7 +79,7 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
     }
 

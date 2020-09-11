@@ -57,7 +57,7 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
                 'channel': DATASET1_CHANNEL
             },
             'mode': 'rsdn',
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
         ROUTER1: {
             'active_dataset': {
@@ -67,7 +67,7 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
             },
             'mode': 'rsdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER1, LEADER2]
+            'allowlist': [LEADER1, LEADER2]
         },
         LEADER2: {
             'active_dataset': {
@@ -77,7 +77,7 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
             },
             'mode': 'rsdn',
             'router_selection_jitter': 1,
-            'whitelist': [ROUTER1, ROUTER2]
+            'allowlist': [ROUTER1, ROUTER2]
         },
         ROUTER2: {
             'active_dataset': {
@@ -87,14 +87,14 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
             },
             'mode': 'rsdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER2, MED]
+            'allowlist': [LEADER2, MED]
         },
         MED: {
             'channel': DATASET2_CHANNEL,
             'is_mtd': True,
             'mode': 'rsn',
             'panid': DATASET2_PANID,
-            'whitelist': [ROUTER2]
+            'allowlist': [ROUTER2]
         },
     }
 

@@ -47,32 +47,32 @@ class Cert_5_3_09_AddressQuery(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1, DUT_ROUTER2, ROUTER3]
+            'allowlist': [ROUTER1, DUT_ROUTER2, ROUTER3]
         },
         ROUTER1: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         DUT_ROUTER2: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, SED1]
+            'allowlist': [LEADER, SED1]
         },
         ROUTER3: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         SED1: {
             'is_mtd': True,
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [DUT_ROUTER2]
+            'allowlist': [DUT_ROUTER2]
         },
     }
 

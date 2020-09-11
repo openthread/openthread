@@ -48,20 +48,20 @@ class Cert_6_1_2_REEDAttach_SED(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [REED]
+            'allowlist': [REED]
         },
         REED: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
-            'whitelist': [LEADER, SED]
+            'allowlist': [LEADER, SED]
         },
         SED: {
             'is_mtd': True,
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [REED]
+            'allowlist': [REED]
         },
     }
 
