@@ -55,7 +55,7 @@ otError BackboneTmfAgent::Filter(const ot::Coap::Message &aMessage,
                                                                                          : OT_ERROR_NOT_TMF;
 }
 
-bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo)
+bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo) const
 {
     const Ip6::Address &dst = aMessageInfo.GetSockAddr();
     const Ip6::Address &src = aMessageInfo.GetPeerAddr();

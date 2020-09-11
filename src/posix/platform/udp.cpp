@@ -315,6 +315,7 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
     }
     case OT_NETIF_BACKBONE:
     {
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #if __linux__
         VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, gBackboneNetifName, strlen(gBackboneNetifName)) == 0,
                      error = OT_ERROR_FAILED);
@@ -322,6 +323,9 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
         VerifyOrExit(setsockopt(fd, IPPROTO_IP, IP_BOUND_IF, &gBackboneNetifIndex, sizeof(gBackboneNetifIndex)),
                      error = OT_ERROR_FAILED);
 #endif // __linux__
+#else
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
         break;
     }
     }

@@ -63,7 +63,9 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     instance = otInstanceInitSingle();
     assert(instance != nullptr);
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneInit(instance, aPlatformConfig->mBackboneInterfaceName);
+#endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifInit(instance, aPlatformConfig->mInterfaceName);

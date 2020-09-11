@@ -32,6 +32,9 @@
  */
 
 #include "openthread-posix-config.h"
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
 #include "platform-posix.h"
 #include "common/code_utils.hpp"
 
@@ -52,3 +55,5 @@ void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName)
 exit:
     return;
 }
+
+#endif

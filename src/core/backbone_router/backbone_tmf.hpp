@@ -79,7 +79,7 @@ public:
      * @retval false  Thread Management Framework Addressing Rules are not met.
      *
      */
-    bool IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo);
+    bool IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo) const;
 
 private:
     static otError Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
