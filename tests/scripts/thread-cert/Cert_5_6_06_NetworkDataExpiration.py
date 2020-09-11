@@ -92,6 +92,7 @@ class Cert_5_6_6_NetworkDataExpiration(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
+        self.collect_rlocs()
         self.nodes[ROUTER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[ROUTER].add_prefix('2001:2:0:2::/64', 'paro')
         self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'paos')
@@ -157,7 +158,7 @@ class Cert_5_6_6_NetworkDataExpiration(thread_cert.TestCase):
         _lpkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).filter_wpan_dst64(SED).must_next()
 
         # Step 4: The DUT Automatically sends a CoAP Response frame to Router_1
-        _lpkts.copy().filter_coap_ack(SVR_DATA_URI).must_next()
+        _lpkts.copy().filter_ipv6_dst(pv.vars['ROUTER_RLOC']).filter_coap_ack(SVR_DATA_URI).must_next()
 
         # Step 5: The DUT MUST send a multicast MLE Data Response with
         # the new network information collected from Router_1
