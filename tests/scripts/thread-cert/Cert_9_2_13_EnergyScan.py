@@ -30,7 +30,7 @@
 import unittest
 
 import thread_cert
-from pktverify.consts import MLE_CHILD_ID_RESPONSE, MGMT_ED_SCAN, MGMT_ED_REPORT
+from pktverify.consts import MLE_CHILD_ID_RESPONSE, MGMT_ED_SCAN, MGMT_ED_REPORT, NM_CHANNEL_MASK_TLV, NM_ENERGY_LIST_TLV
 from pktverify.packet_verifier import PacketVerifier
 
 COMMISSIONER = 1
@@ -90,7 +90,7 @@ class Cert_9_2_13_EnergyScan(thread_cert.TestCase):
         self.nodes[ED1].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
-        self.collect_rloc16s()
+        self.collect_rlocs()
 
         ipaddrs = self.nodes[ROUTER1].get_addrs()
         for ipaddr in ipaddrs:
@@ -117,18 +117,23 @@ class Cert_9_2_13_EnergyScan(thread_cert.TestCase):
         pv.summary.show()
 
         ED = pv.vars['ED']
+        ED_RLOC = pv.vars['ED_RLOC']
         COMMISSIONER = pv.vars['COMMISSIONER']
+        COMMISSIONER_RLOC = pv.vars['COMMISSIONER_RLOC']
         _ed_pkts = pkts.filter_wpan_src64(ED)
 
         # Step 3: ED MUST send MGMT_ED_REPORT.ans to the Commissioner and report energy measurements
-        _ed_pkts.filter_coap_request(MGMT_ED_REPORT).must_next()
+        _ed_pkts.filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_request(MGMT_ED_REPORT).must_next().must_verify(
+            lambda p: {NM_CHANNEL_MASK_TLV, NM_ENERGY_LIST_TLV} == set(p.thread_meshcop.tlv.type) and p.thread_meshcop.
+            tlv.chan_mask_mask == 0x0000a000 and len(p.thread_meshcop.tlv.energy_list) == 2)
 
         # Step 5: ED MUST send MGMT_ED_REPORT.ans to the Commissioner and report energy measurements
-        _ed_pkts.filter_coap_request(MGMT_ED_REPORT).must_next()
+        _ed_pkts.filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_request(MGMT_ED_REPORT).must_next().must_verify(
+            lambda p: {NM_CHANNEL_MASK_TLV, NM_ENERGY_LIST_TLV} == set(p.thread_meshcop.tlv.type) and p.thread_meshcop.
+            tlv.chan_mask_mask == 0x0000a000 and len(p.thread_meshcop.tlv.energy_list) == 2)
 
         # Step 6: The DUT MUST respond with ICMPv6 Echo Reply
-        _ed_pkts.filter_ping_reply().filter('wpan.dst16 == {ROUTER_RLOC16} and wpan.src16 == {ED_RLOC16}',
-                                            **pv.vars).must_next()
+        _ed_pkts.filter_ping_reply().filter_ipv6_src_dst(ED_RLOC, COMMISSIONER_RLOC).must_next()
 
 
 if __name__ == '__main__':
