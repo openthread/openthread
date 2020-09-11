@@ -96,7 +96,7 @@ public:
      *
      * @retval OT_ERROR_NONE          Successfully appended the Thread Discovery TLV.
      * @retval OT_ERROR_PARSE         Cannot parse query sub TLV successfully.
-     * @retval OT_ERROR_INVALID_ARGS  QueryId is invalid.
+     * @retval OT_ERROR_INVALID_ARGS  QueryId is invalid or any Type ID is invalid.
      *
      */
     otError AppendLinkMetricsReport(Message &                       aMessage,
@@ -109,7 +109,7 @@ public:
      * @param[in]  aMessage      A reference to the message.
      * @param[in]  aOffset       The offset in bytes where the metrics report sub-TLVs start.
      * @param[in]  aLength       The length of the metrics report sub-TLVs in bytes.
-     * @param[in]  aAddress      A reference to the  source address of the message.
+     * @param[in]  aAddress      A reference to the source address of the message.
      *
      */
     void HandleLinkMetricsReport(const Message &     aMessage,

@@ -82,7 +82,7 @@ typedef enum otLinkMetricsType
 } otLinkMetricsType;
 
 /**
- * This structure represents Link Metrics type Id flags.
+ * This structure represents Link Metrics type ID Flags.
  */
 typedef struct otLinkMetricsTypeId
 {
@@ -106,18 +106,18 @@ typedef struct otLinkMetrics
 } otLinkMetrics;
 
 /**
- * This function sends an MLE Data Request containing Link Metrics Query TLV
- * to query Link Metrics data. Single Probe or Forward Tracking Series.
+ * This function sends an MLE Data Request to query Link Metrics.
+ * Single Probe or Forward Tracking Series.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  * @param[in]  aDestination         A pointer to the destination address.
- * @param[in]  aSeriesId            The id of the series to query about, 0 for single probe.
+ * @param[in]  aSeriesId            The Series ID to query about, 0 for Single Probe.
  * @param[in]  aTypeIdFlags         A pointer to an array of Type Id Flags.
  * @param[in]  aTypeIdFlagsCount    The size of the array @p aTypeIdFlags.
  *
  * @retval OT_ERROR_NONE          Successfully sent a Link Metrics query message.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Data Request message.
- * @retval OT_ERROR_INVALID_ARGS  TypeIdFlags are not valid or exceeds the count limit.
+ * @retval OT_ERROR_INVALID_ARGS  Type Id Flags are not valid or exceeds the count limit.
  *
  */
 otError otLinkMetricsQuery(otInstance *        aInstance,

@@ -1037,7 +1037,7 @@ Done
 
 ### linkmetrics query \<ipaddr\> single [typeidflags]
 
-Perform a Link Metrics query (single probe).
+Perform a Link Metrics query (Single Probe).
 
 - ipaddr: Peer address.
 - typeidflags: A hex string containing [1-4] Type Id Flags value(s) to request.
@@ -1058,7 +1058,7 @@ Done
 
  - LQI: 76 (Exponential Moving Average)
  - RSSI: -18 dBm (Exponential Moving Average)
- - Margin: 82 dBm (Exponential Moving Average)
+ - Margin: 82 dB (Exponential Moving Average)
 ```
 
 ### linkquality \<extaddr\>

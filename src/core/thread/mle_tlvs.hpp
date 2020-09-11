@@ -1298,25 +1298,25 @@ public:
     bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the Link Metrics query Id tlv.
+     * This method returns the Link Metrics Query ID sub-TLV.
      *
-     * @returns The Link Metrics query Id tlv.
+     * @returns The Link Metrics Query ID sub-TLV.
      *
      */
     const LinkMetricsQueryId *GetQueryId(void) const { return &mQueryId; }
 
     /**
-     * This method sets Link Metrics query Id tlv.
+     * This method sets Link Metrics Query ID sub-TLV.
      *
-     * @param[in]  aQueryId  The Link Metrics query Id tlv.
+     * @param[in]  aQueryId  The Link Metrics Query ID sub-TLV.
      *
      */
     void SetQueryId(LinkMetricsQueryId &aQueryId) { mQueryId = aQueryId; }
 
     /**
-     * This method returns the Link Metrics query options tlv.
+     * This method returns the Link Metrics Query Options sub-TLV.
      *
-     * @returns The Link Metrics query options tlv.
+     * @returns The Link Metrics Query Options sub-TLV.
      *
      */
     const LinkMetricsQueryOptions *GetQueryOptions(void) const { return &mQueryOptions; }
@@ -1327,10 +1327,10 @@ public:
      * @param[in]  aQueryOptions  The Link Metrics query options tlv.
      *
      */
-    void SetQueryOptions(LinkMetricsQueryOptions &aQueryOptions)
+    void SetQueryOptions(const LinkMetricsQueryOptions &aQueryOptions)
     {
         mQueryOptions = aQueryOptions;
-        SetLength(sizeof(LinkMetricsQueryId) + sizeof(Tlv) + aQueryOptions.GetLength());
+        SetLength(mQueryId.GetSize() + mQueryOptions.GetSize());
     }
 
 private:

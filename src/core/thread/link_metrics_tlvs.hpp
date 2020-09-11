@@ -51,8 +51,7 @@ namespace ot {
  */
 enum
 {
-    kLinkMetricsMaxTypeIdFlags =
-        OT_LINK_METRICS_TYPE_ID_MAX_COUNT, ///< Max Link Metrics type id flags count in one query.
+    kLinkMetricsMaxTypeIdFlags = OT_LINK_METRICS_TYPE_ID_MAX_COUNT, ///< Max count of Link Metrics Type ID Flags.
 };
 
 enum Type
@@ -82,24 +81,24 @@ public:
     void Init(void) { mTypeId = 0; }
 
     /**
-     * This method clears value follow flag.
+     * This method clears the Extended flag.
      *
      */
-    void ClearFollowFlag(void) { mTypeId &= ~kFollowFlag; }
+    void ClearExtendedFlag(void) { mTypeId &= ~kExtendedFlag; }
 
     /**
-     * This method sets the value follow flag.
+     * This method sets the Extended flag.
      *
      */
-    void SetFollowFlag(void) { mTypeId |= kFollowFlag; }
+    void SetExtendedFlag(void) { mTypeId |= kExtendedFlag; }
 
     /**
-     * This method indicates whether or not the value follow flag is set.
+     * This method indicates whether or not the Extended flag is set.
      *
-     * @retval TRUE   If the value follow flag is set, value follows after current 1 byte flags
-     * @retval FALSE  If the value follow flag is not set, escape flags byte follows
+     * @retval TRUE   If the Extended flag is set.
+     * @retval FALSE  If the Extended flag is not set.
      */
-    bool IsFollowFlagSet(void) const { return (mTypeId & kFollowFlag) != 0; }
+    bool IsExtendedFlagSet(void) const { return (mTypeId & kExtendedFlag) != 0; }
 
     /**
      * This method clears value length flag.
@@ -122,9 +121,9 @@ public:
     bool IsLengthFlagSet(void) const { return (mTypeId & kLengthFlag) != 0; }
 
     /**
-     * This method sets the link metric type.
+     * This method sets the Link Metrics type.
      *
-     * @param[in]  aMetricsId  Link metric type.
+     * @param[in]  aMetricsType  Link Metrics type.
      *
      */
     void SetMetricsType(uint8_t aMetricsType)
@@ -133,25 +132,25 @@ public:
     }
 
     /**
-     * This method returns the link metric type.
+     * This method returns the Link Metrics type.
      *
-     * @returns The link metric type.
+     * @returns The Link Metrics type.
      *
      */
     uint8_t GetMetricsType(void) const { return (mTypeId & kTypeMask) >> kTypeOffset; }
 
     /**
-     * This method sets the link metric Id.
+     * This method sets the Link Metrics ID.
      *
-     * @param[in]  aMetricsId  Link metric Id.
+     * @param[in]  aMetricsId  Link Metrics ID.
      *
      */
     void SetMetricsId(uint8_t aMetricsId) { mTypeId = (mTypeId & ~kIdMask) | ((aMetricsId << kIdOffset) & kIdMask); }
 
     /**
-     * This method returns the link metric Id.
+     * This method returns the Link Metrics ID.
      *
-     * @returns The link metric Id.
+     * @returns The Link Metrics ID.
      *
      */
     uint8_t GetMetricsId(void) const { return (mTypeId & kIdMask) >> kIdOffset; }
@@ -159,12 +158,12 @@ public:
 private:
     enum
     {
-        kLengthFlag = 1 << 6,
-        kFollowFlag = 1 << 7,
-        kTypeOffset = 3,
-        kTypeMask   = 7 << kTypeOffset,
-        kIdOffset   = 0,
-        kIdMask     = 7 << kIdOffset,
+        kLengthFlag   = 1 << 6,
+        kExtendedFlag = 1 << 7,
+        kTypeOffset   = 3,
+        kTypeMask     = 7 << kTypeOffset,
+        kIdOffset     = 0,
+        kIdMask       = 7 << kIdOffset,
     };
 
     uint8_t mTypeId;
@@ -191,24 +190,24 @@ public:
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @retval true   The TLV appears to be well-formed.
+     * @retval false  The TLV does not appear to be well-formed.
      *
      */
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the metric type ID.
+     * This method returns the Link Metrics Type ID.
      *
-     * @returns The metric type ID.
+     * @returns The Link Metrics Type ID.
      *
      */
     LinkMetricsTypeId GetMetricsTypeId(void) const { return mMetricsTypeId; }
 
     /**
-     * This method sets the metric type ID.
+     * This method sets the Link Metrics Type ID.
      *
-     * @param[in]  aMetricsTypeID  Metrics type ID.
+     * @param[in]  aMetricsTypeID  The Link Metrics Type ID to set.
      *
      */
     void SetMetricsTypeId(LinkMetricsTypeId aMetricsTypeId)
@@ -289,20 +288,20 @@ public:
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the series Id.
+     * This method returns the Series ID.
      *
-     * @returns The series Id.
+     * @returns The Series ID.
      *
      */
-    uint8_t GetSeriesId(void) const { return static_cast<uint8_t>(mSeriesId); }
+    uint8_t GetSeriesId(void) const { return mSeriesId; }
 
     /**
-     * This method sets the series Id.
+     * This method sets the Series ID.
      *
-     * @param[in]  aSeriesId  The series Id.
+     * @param[in]  aSeriesId  The Series ID.
      *
      */
-    void SetSeriesId(uint8_t aSeriesId) { mSeriesId = static_cast<uint8_t>(aSeriesId); }
+    void SetSeriesId(uint8_t aSeriesId) { mSeriesId = aSeriesId; }
 
 private:
     uint8_t mSeriesId;
@@ -336,11 +335,11 @@ public:
     bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the Link Metrics Type Id flags.
+     * This method returns the Link Metrics Type ID Flags.
      *
-     * @param[out]  aTypeId   The pointer to the array of Link Metrics Type Id flags.
+     * @param[out]  aTypeId   The pointer to the array of Link Metrics Type ID Flags.
      *
-     * @retval  The pointer to the array of Link Metrics Type Id flags.
+     * @retval  The pointer to the array of Link Metrics Type ID Flags.
      *
      */
     const LinkMetricsTypeId *GetLinkMetricsTypeIdList(uint8_t &aCount) const
@@ -351,10 +350,10 @@ public:
     }
 
     /**
-     * This method sets the the Link Metrics type Id flags.
+     * This method sets the the Link Metrics type ID Flags.
      *
-     * @param[in]  aTypeId   The pointer to the array of Link Metrics type Id flags.
-     * @param[in]  aCount    The count of Link Metrics type Id flags in the array.
+     * @param[in]  aTypeId   The pointer to the array of Link Metrics type ID Flags.
+     * @param[in]  aCount    The count of Link Metrics type ID Flags in the array.
      *
      */
     void SetLinkMetricsTypeIdList(const LinkMetricsTypeId aTypeId[], uint8_t aCount)

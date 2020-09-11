@@ -83,7 +83,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &                       aMe
                  error = OT_ERROR_PARSE);
     queryId = aLinkMetricsQuery->GetQueryId();
     VerifyOrExit(queryId->IsValid(), error = OT_ERROR_PARSE);
-    VerifyOrExit(queryId->GetLength() > 0 && queryId->GetSeriesId() < 255, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(queryId->GetSeriesId() < 255, error = OT_ERROR_INVALID_ARGS);
 
     // Link Metrics Report TLV
     tlv.SetType(Mle::Tlv::kLinkMetricsReport);
@@ -105,6 +105,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &                       aMe
     aMessage.Write(startOffset, sizeof(tlv), &tlv);
 
 exit:
+    otLogDebgMle("AppendLinkMetricsReport, error:%d\n", error);
     return error;
 }
 
@@ -120,12 +121,10 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
     Tlv               tlv;
     LinkMetricsTypeId typeId;
 
-    aMessage.Read(pos, sizeof(Tlv), &tlv);
-    VerifyOrExit(tlv.GetType() == kLinkMetricsReportSub, OT_NOOP);
-
     while (pos < end_pos)
     {
         aMessage.Read(pos, sizeof(Tlv), &tlv);
+        VerifyOrExit(tlv.GetType() == kLinkMetricsReportSub, OT_NOOP);
         pos += sizeof(Tlv);
         aMessage.Read(pos, sizeof(LinkMetricsTypeId), &typeId);
         pos += sizeof(otLinkMetricsTypeId);
@@ -177,7 +176,7 @@ otError LinkMetrics::SendLinkMetricsQuery(const Ip6::Address &     aDestination,
     tlv.SetType(Mle::Tlv::kLinkMetricsQuery);
     length += sizeof(Tlv);
 
-    // Link Metrics Query Id sub-TLV
+    // Link Metrics Query ID sub-TLV
     linkMetricsQueryId.Init();
     linkMetricsQueryId.SetSeriesId(aSeriesId);
     memcpy(buf + length, &linkMetricsQueryId, sizeof(Tlv) + linkMetricsQueryId.GetLength());
@@ -238,40 +237,20 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &               
             break;
 
         case OT_LINK_METRICS_LQI:
-            if (linkMetricsTypeIds[i].IsLengthFlagSet())
-            {
-                metric.SetMetricsValue32(aRequestMessage.GetAverageLqi());
-            }
-            else
-            {
-                metric.SetMetricsValue8(aRequestMessage.GetAverageLqi());
-            }
-            break;
-
-        case OT_LINK_METRICS_RSSI:
-            if (linkMetricsTypeIds[i].IsLengthFlagSet())
-            {
-                metric.SetMetricsValue32((uint16_t)(aRequestMessage.GetAverageRss() + 130) * 255 /
-                                         130); // Linear scale rss from 0 to 255
-            }
-            else
-            {
-                metric.SetMetricsValue8(
-                    (uint8_t)(aRequestMessage.GetAverageRss() + 130 * 255 / 130)); // Linear scale rss from 0 to 255
-            }
+            VerifyOrExit(!linkMetricsTypeIds[i].IsLengthFlagSet(), error = OT_ERROR_INVALID_ARGS);
+            metric.SetMetricsValue8(aRequestMessage.GetAverageLqi()); // IEEE 802.15.4 LQI is in scale 0-255
             break;
 
         case OT_LINK_METRICS_MARGIN:
-            if (linkMetricsTypeIds[i].IsLengthFlagSet())
-            {
-                metric.SetMetricsValue32(
-                    LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aRequestMessage.GetAverageRss()));
-            }
-            else
-            {
-                metric.SetMetricsValue8(
-                    LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aRequestMessage.GetAverageRss()));
-            }
+            VerifyOrExit(!linkMetricsTypeIds[i].IsLengthFlagSet(), error = OT_ERROR_INVALID_ARGS);
+            metric.SetMetricsValue8(
+                LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aRequestMessage.GetAverageRss()) * 255 / 130);
+            break;
+
+        case OT_LINK_METRICS_RSSI:
+            VerifyOrExit(!linkMetricsTypeIds[i].IsLengthFlagSet(), error = OT_ERROR_INVALID_ARGS);
+            metric.SetMetricsValue8((aRequestMessage.GetAverageRss() + 130) * 255 /
+                                    130); // Linear scale rss from 0 to 255
             break;
 
         default:
@@ -290,7 +269,7 @@ void LinkMetrics::SetLinkMetricsTypeIdFromTlv(otLinkMetricsTypeId &aOtTypeId, Li
 {
     aOtTypeId.mLinkMetricsId    = aTlvTypeId.GetMetricsId();
     aOtTypeId.mLinkMetricsType  = aTlvTypeId.GetMetricsType();
-    aOtTypeId.mLinkMetricsFlagE = aTlvTypeId.IsFollowFlagSet();
+    aOtTypeId.mLinkMetricsFlagE = aTlvTypeId.IsExtendedFlagSet();
     aOtTypeId.mLinkMetricsFlagL = aTlvTypeId.IsLengthFlagSet();
 }
 

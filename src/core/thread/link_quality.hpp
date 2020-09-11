@@ -221,7 +221,7 @@ class LqiAverager
 {
 public:
     /**
-     * This method reset the averager and clears the average value.
+     * This method resets the averager and clears the average value.
      *
      */
     void Reset(void);

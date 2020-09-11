@@ -68,6 +68,10 @@ class SSED_SingleProbe(thread_cert.TestCase):
 
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
 
+        # SSED_1 sends a Single Probe Link Metrics for L2 PSDU count using MLE Data Request
+        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, '40')
+        self.simulator.go(5)
+
         # SSED_1 sends a Single Probe Link Metrics for L2 LQI using MLE Data Request
         self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, '09')
         self.simulator.go(5)
@@ -86,10 +90,6 @@ class SSED_SingleProbe(thread_cert.TestCase):
 
         # SSED_1 sends a Single Probe Link Metrics for all metrics using MLE Data Request
         self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, '00090a0b')
-        self.simulator.go(5)
-
-        # SSED_1 sends a Single Probe Link Metrics for all metrics using MLE Data Request (Length Flag set)
-        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, '40494a4b')
         self.simulator.go(5)
 
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
