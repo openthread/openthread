@@ -4423,7 +4423,6 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength)
     char *  aArgs[kMaxArgs] = {nullptr};
     char *  cmd;
     uint8_t aArgsLength = 0;
-    size_t  i           = 0;
 
     VerifyOrExit(aBuf != nullptr && StringLength(aBuf, aBufLength + 1) <= aBufLength, OT_NOOP);
 
@@ -4438,33 +4437,26 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength)
                  OutputFormat("under diagnostics mode, execute 'diag stop' before running any other commands.\r\n"));
 #endif
 
-    for (i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
+    for (const Command &command : sCommands)
     {
-        if (strcmp(cmd, sCommands[i].mName) == 0)
+        if (strcmp(cmd, command.mName) == 0)
         {
-            (this->*sCommands[i].mCommand)(aArgsLength - 1, &aArgs[1]);
-            break;
+            (this->*command.mCommand)(aArgsLength - 1, &aArgs[1]);
+            ExitNow();
         }
     }
 
-    // Check user defined commands if built-in command
-    // has not been found
-    if (i == OT_ARRAY_LENGTH(sCommands))
+    // Check user defined commands if built-in command has not been found
+    for (uint8_t i = 0; i < mUserCommandsLength; i++)
     {
-        for (i = 0; i < mUserCommandsLength; i++)
+        if (strcmp(cmd, mUserCommands[i].mName) == 0)
         {
-            if (strcmp(cmd, mUserCommands[i].mName) == 0)
-            {
-                mUserCommands[i].mCommand(aArgsLength - 1, &aArgs[1]);
-                break;
-            }
-        }
-
-        if (i == mUserCommandsLength)
-        {
-            AppendResult(OT_ERROR_INVALID_COMMAND);
+            mUserCommands[i].mCommand(aArgsLength - 1, &aArgs[1]);
+            ExitNow();
         }
     }
+
+    AppendResult(OT_ERROR_INVALID_COMMAND);
 
 exit:
     return;
