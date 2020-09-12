@@ -138,21 +138,9 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         )
         self.simulator.go(260)
 
-        print(self.nodes[COMMISSIONER].get_channel())
-        print(self.nodes[LEADER].get_channel())
-        print(self.nodes[ROUTER1].get_channel())
-        print(self.nodes[ED1].get_channel())
-        print(self.nodes[SED1].get_channel())
-
         self.nodes[LEADER].remove_allowlist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER1].remove_allowlist(self.nodes[LEADER].get_addr64())
         self.simulator.go(300)
-
-        print(self.nodes[COMMISSIONER].get_channel())
-        print(self.nodes[LEADER].get_channel())
-        print(self.nodes[ROUTER1].get_channel())
-        print(self.nodes[ED1].get_channel())
-        print(self.nodes[SED1].get_channel())
 
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'leader')
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
@@ -192,7 +180,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         MED = pv.vars['MED']
         SED = pv.vars['SED']
         COMMISSIONER = pv.vars['COMMISSIONER']
-        _rpkts = pkts.filter_wpan_src64(ROUTER)
+        _rpkts = pkts.filter_wpan_src64(ROUTER, cascade=False)
 
         # Step 1: Ensure the topology is formed correctly
         _rpkts.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
@@ -209,12 +197,12 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
                 p.thread_meshcop.tlv.type) and p.thread_nwd.tlv.stable == [0])
 
         # Step 8: MED MUST send a unicast MLE Data Request to Router_1,
-        pkts.range(_rpkts.index).copy().filter_wpan_src64(MED).filter_wpan_dst64(ROUTER).filter_mle_cmd(
-            MLE_DATA_REQUEST).must_next().must_verify(
-                lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
+        with pkts.save_index():
+            pkts.filter_wpan_src64(MED).filter_wpan_dst64(ROUTER).filter_mle_cmd(MLE_DATA_REQUEST).must_next(
+            ).must_verify(lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
 
         # Step 9: Router MUST send a unicast MLE Data Response to MED_1
-        _rpkts.filter_wpan_dst64(MED).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
+        _rpkts.copy().filter_wpan_dst64(MED).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
             SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_OPERATION_DATASET_TLV
         } <= set(p.mle.tlv.type) and {
             NM_CHANNEL_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PAN_ID_TLV, NM_DELAY_TIMER_TLV,
@@ -222,9 +210,10 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         } <= set(p.thread_meshcop.tlv.type) and p.thread_nwd.tlv.stable == [0])
 
         # Step 10: Router MUST send MLE Child Update Request to SED_1
-        _rpkts.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(lambda p: {
-            SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV
-        } <= set(p.mle.tlv.type))
+        _rpkts.range(pkts.index).filter_wpan_dst64(SED).filter_mle_cmd(
+            MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(lambda p: {
+                SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV
+            } <= set(p.mle.tlv.type))
 
         # Step 11: SED MUST send a unicast MLE Data Request to Router_1
         pkts.filter_wpan_src64(SED).filter_wpan_dst64(ROUTER).filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
