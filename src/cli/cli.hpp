@@ -76,18 +76,6 @@ namespace ot {
  */
 namespace Cli {
 
-class Interpreter;
-
-/**
- * This structure represents a CLI command.
- *
- */
-struct Command
-{
-    const char *mName;                                                 ///< A pointer to the command string.
-    void (Interpreter::*mCommand)(uint8_t aArgsLength, char *aArgs[]); ///< A function pointer to process the command.
-};
-
 /**
  * This class implements the CLI interpreter.
  *
@@ -263,6 +251,12 @@ private:
         kDefaultPingCount    = 1,
 
         kMaxLineLength = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
+    };
+
+    struct Command
+    {
+        const char *mName;
+        void (Interpreter::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
     };
 
     otError        ParsePingInterval(const char *aString, uint32_t &aInterval);

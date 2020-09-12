@@ -151,7 +151,7 @@ case ${build_config} in
         echo "Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with simulation platform using cmake"
         echo "===================================================================================================="
         cd "${top_builddir}" || die "cd failed"
-        cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=on -DOT_APP_CLI=off \
+        cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=on -DOT_APP_CLI=on \
             -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
         ninja || die

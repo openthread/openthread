@@ -104,7 +104,7 @@ namespace ot {
 
 namespace Cli {
 
-const struct Command Interpreter::sCommands[] = {
+const Interpreter::Command Interpreter::sCommands[] = {
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     {"bbr", &Interpreter::ProcessBackboneRouter},
 #endif
