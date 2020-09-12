@@ -98,8 +98,6 @@
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
-#define INDENT_SIZE (4)
-
 namespace ot {
 
 namespace Cli {
@@ -4564,22 +4562,22 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_MODE:
             OutputFormat("Mode:\r\n");
-            OutputMode(diagTlv.mData.mMode, column + INDENT_SIZE);
+            OutputMode(diagTlv.mData.mMode, column + kIndentationSize);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT:
             OutputFormat("Timeout: %u\r\n", diagTlv.mData.mTimeout);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY:
             OutputFormat("Connectivity:\r\n");
-            OutputConnectivity(diagTlv.mData.mConnectivity, column + INDENT_SIZE);
+            OutputConnectivity(diagTlv.mData.mConnectivity, column + kIndentationSize);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_ROUTE:
             OutputFormat("Route:\r\n");
-            OutputRoute(diagTlv.mData.mRoute, column + INDENT_SIZE);
+            OutputRoute(diagTlv.mData.mRoute, column + kIndentationSize);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA:
             OutputFormat("Leader Data:\r\n");
-            OutputLeaderData(diagTlv.mData.mLeaderData, column + INDENT_SIZE);
+            OutputLeaderData(diagTlv.mData.mLeaderData, column + kIndentationSize);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA:
             OutputFormat("Network Data: '");
@@ -4590,7 +4588,7 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
             OutputFormat("IP6 Address List:\r\n");
             for (uint16_t i = 0; i < diagTlv.mData.mIp6AddrList.mCount; ++i)
             {
-                OutputSpaces(column + INDENT_SIZE);
+                OutputSpaces(column + kIndentationSize);
                 OutputFormat("- ");
                 OutputIp6Address(diagTlv.mData.mIp6AddrList.mList[i]);
                 OutputFormat("\r\n");
@@ -4598,7 +4596,7 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS:
             OutputFormat("MAC Counters:\r\n");
-            OutputNetworkDiagMacCounters(diagTlv.mData.mMacCounters, column + INDENT_SIZE);
+            OutputNetworkDiagMacCounters(diagTlv.mData.mMacCounters, column + kIndentationSize);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL:
             OutputFormat("Battery Level: %u%%\r\n", diagTlv.mData.mBatteryLevel);
@@ -4610,9 +4608,9 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
             OutputFormat("Child Table:\r\n");
             for (uint16_t i = 0; i < diagTlv.mData.mChildTable.mCount; ++i)
             {
-                OutputSpaces(column + INDENT_SIZE);
+                OutputSpaces(column + kIndentationSize);
                 OutputFormat("- ");
-                OutputChildTableEntry(diagTlv.mData.mChildTable.mTable[i], column + INDENT_SIZE + 2);
+                OutputChildTableEntry(diagTlv.mData.mChildTable.mTable[i], column + kIndentationSize + 2);
             }
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES:
@@ -4697,7 +4695,7 @@ void Interpreter::OutputRoute(const otNetworkDiagRoute &aRoute, uint16_t aColumn
     OutputSpaces(aColumn);
     OutputFormat("RouteData:\r\n");
 
-    aColumn += INDENT_SIZE;
+    aColumn += kIndentationSize;
     for (uint16_t i = 0; i < aRoute.mRouteCount; ++i)
     {
         OutputSpaces(aColumn);
@@ -4779,7 +4777,7 @@ void Interpreter::OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEnt
     OutputSpaces(aColumn);
     OutputFormat("Mode:\r\n");
 
-    OutputMode(aChildEntry.mMode, aColumn + INDENT_SIZE);
+    OutputMode(aChildEntry.mMode, aColumn + kIndentationSize);
 }
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 

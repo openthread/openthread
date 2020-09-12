@@ -243,6 +243,7 @@ protected:
 private:
     enum
     {
+        kIndentationSize  = 4,
         kMaxArgs          = 32,
         kMaxAutoAddresses = 8,
 
