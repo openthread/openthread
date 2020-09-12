@@ -200,7 +200,7 @@ const Interpreter::Command Interpreter::sCommands[] = {
     {"netstat", &Interpreter::ProcessNetstat},
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     {"networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic},
-#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+#endif
 #if OPENTHREAD_FTD
     {"networkidtimeout", &Interpreter::ProcessNetworkIdTimeout},
 #endif
@@ -302,7 +302,7 @@ Interpreter::Interpreter(Instance *aInstance)
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     memset(mResolvingHostname, 0, sizeof(mResolvingHostname));
-#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+#endif
 }
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength, bool aAllowTruncate)
@@ -1179,26 +1179,22 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
-
 void Interpreter::ProcessCoap(uint8_t aArgsLength, char *aArgs[])
 {
     otError error;
     error = mCoap.Process(aArgsLength, aArgs);
     OutputResult(error);
 }
-
-#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+#endif
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-
 void Interpreter::ProcessCoapSecure(uint8_t aArgsLength, char *aArgs[])
 {
     otError error;
     error = mCoapSecure.Process(aArgsLength, aArgs);
     OutputResult(error);
 }
-
-#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+#endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 void Interpreter::ProcessCoexMetrics(uint8_t aArgsLength, char *aArgs[])
@@ -1274,7 +1270,7 @@ void Interpreter::ProcessContextIdReuseDelay(uint8_t aArgsLength, char *aArgs[])
 exit:
     OutputResult(error);
 }
-#endif // OPENTHREAD_FTD
+#endif
 
 void Interpreter::ProcessCounters(uint8_t aArgsLength, char *aArgs[])
 {
@@ -1561,7 +1557,7 @@ void Interpreter::ProcessEidCache(uint8_t aArgsLength, char *aArgs[])
 exit:
     OutputResult(OT_ERROR_NONE);
 }
-#endif // OPENTHREAD_FTD
+#endif
 
 void Interpreter::ProcessEui64(uint8_t aArgsLength, char *aArgs[])
 {
@@ -2497,7 +2493,7 @@ void Interpreter::ProcessNetworkDataRegister(uint8_t aArgsLength, char *aArgs[])
 exit:
     OutputResult(error);
 }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+#endif
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessNetworkIdTimeout(uint8_t aArgsLength, char *aArgs[])
@@ -2518,7 +2514,7 @@ void Interpreter::ProcessNetworkIdTimeout(uint8_t aArgsLength, char *aArgs[])
 exit:
     OutputResult(error);
 }
-#endif // OPENTHREAD_FTD
+#endif
 
 void Interpreter::ProcessNetworkName(uint8_t aArgsLength, char *aArgs[])
 {
@@ -3817,7 +3813,6 @@ void Interpreter::ProcessState(uint8_t aArgsLength, char *aArgs[])
             break;
 
 #if OPENTHREAD_FTD
-
         case OT_DEVICE_ROLE_ROUTER:
             OutputFormat("router\r\n");
             break;
@@ -3825,7 +3820,7 @@ void Interpreter::ProcessState(uint8_t aArgsLength, char *aArgs[])
         case OT_DEVICE_ROLE_LEADER:
             OutputFormat("leader\r\n");
             break;
-#endif // OPENTHREAD_FTD
+#endif
 
         default:
             OutputFormat("invalid state\r\n");
@@ -3852,8 +3847,7 @@ void Interpreter::ProcessState(uint8_t aArgsLength, char *aArgs[])
         {
             SuccessOrExit(error = otThreadBecomeLeader(mInstance));
         }
-
-#endif // OPENTHREAD_FTD
+#endif
         else
         {
             ExitNow(error = OT_ERROR_INVALID_ARGS);
@@ -4908,4 +4902,4 @@ OT_TOOL_WEAK void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
 {
     OT_UNUSED_VARIABLE(aExtAddr);
 }
-#endif // OPENTHREAD_CONFIG_LEGACY_ENABLE
+#endif

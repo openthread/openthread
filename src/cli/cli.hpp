@@ -294,10 +294,10 @@ private:
     void ProcessChildTimeout(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     void ProcessCoap(uint8_t aArgsLength, char *aArgs[]);
-#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+#endif
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     void ProcessCoapSecure(uint8_t aArgsLength, char *aArgs[]);
-#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+#endif
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
     void ProcessCoexMetrics(uint8_t aArgsLength, char *aArgs[]);
 #endif
@@ -314,7 +314,7 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     void ProcessDiag(uint8_t aArgsLength, char *aArgs[]);
-#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
+#endif
     void ProcessDiscover(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     void ProcessDns(uint8_t aArgsLength, char *aArgs[]);
@@ -387,7 +387,7 @@ private:
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     void ProcessNetworkDiagnostic(uint8_t aArgsLength, char *aArgs[]);
-#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+#endif
 #if OPENTHREAD_FTD
     void ProcessNetworkIdTimeout(uint8_t aArgsLength, char *aArgs[]);
 #endif
@@ -459,7 +459,7 @@ private:
     void    PrintMacFilter(void);
     otError ProcessMacFilterAddress(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessMacFilterRss(uint8_t aArgsLength, char *aArgs[]);
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+#endif
     void    ProcessMac(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessMacRetries(uint8_t aArgsLength, char *aArgs[]);
 
@@ -483,7 +483,7 @@ private:
     void        OutputLeaderData(const otLeaderData &aLeaderData, uint16_t aColumn);
     void        OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters, uint16_t aColumn);
     void        OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry, uint16_t aColumn);
-#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+#endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     static void HandleDnsResponse(void *              aContext,
