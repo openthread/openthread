@@ -11,6 +11,7 @@
 *.ninja*
 *.opendb
 *.orig
+*.pcap
 *.pyc
 *.suo
 *.swn
@@ -58,3 +59,10 @@ third_party/nlbuild-autotools/repo/third_party/autoconf/m4/ltversion.m4
 third_party/nlbuild-autotools/repo/third_party/autoconf/m4/lt~obsolete.m4
 third_party/nlbuild-autotools/repo/third_party/autoconf/missing
 /tmp/
+
+# C-Lion / IDEA files
+.idea/**
+cmake-build-*/**
+
+# Python bytecodes
+__pycache__
