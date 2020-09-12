@@ -166,13 +166,6 @@ public:
     static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength, bool aAllowTruncate = false);
 
     /**
-     * Write error code the CLI console
-     *
-     * @param[in]  aError Error code value.
-     */
-    void AppendResult(otError aError);
-
-    /**
      * This method delivers raw characters to the client.
      *
      * @param[in]  aBuf        A pointer to a buffer.
@@ -230,10 +223,19 @@ public:
     int OutputIp6Address(const otIp6Address &aAddress);
 
     /**
-     * Set a user command table.
+     * This method delivers a success or error message the client.
+     *
+     * @param[in]  aError  The error code.
+     *
+     */
+    void OutputResult(otError aError);
+
+    /**
+     * This method sets the user command table.
      *
      * @param[in]  aUserCommands  A pointer to an array with user commands.
      * @param[in]  aLength        @p aUserCommands length.
+     *
      */
     void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength);
 
