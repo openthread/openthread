@@ -211,6 +211,15 @@ public:
     int OutputFormatV(const char *aFormat, va_list aArguments);
 
     /**
+     * This method delivers formatted output (to which it also appends newline `\r\n`) to the client.
+     *
+     * @param[in]  aFormat  A pointer to the format string.
+     * @param[in]  ...      A variable list of arguments to format.
+     *
+     */
+    void OutputLine(const char *aFormat, ...);
+
+    /**
      * Write an IPv6 address to the CLI console.
      *
      * @param[in]  aAddress  A reference to the IPv6 address.

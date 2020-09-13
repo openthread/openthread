@@ -56,7 +56,7 @@ otError Commissioner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputFormat("%s\r\n", command.mName);
+        mInterpreter.OutputLine("%s", command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -329,7 +329,7 @@ otError Commissioner::ProcessSessionId(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    mInterpreter.OutputFormat("%d\r\n", otCommissionerGetSessionId(mInterpreter.mInstance));
+    mInterpreter.OutputLine("%d", otCommissionerGetSessionId(mInterpreter.mInstance));
 
     return OT_ERROR_NONE;
 }
@@ -350,7 +350,7 @@ void Commissioner::HandleStateChanged(otCommissionerState aState, void *aContext
 
 void Commissioner::HandleStateChanged(otCommissionerState aState)
 {
-    mInterpreter.OutputFormat("Commissioner: %s\r\n", StateToString(aState));
+    mInterpreter.OutputLine("Commissioner: %s", StateToString(aState));
 }
 
 const char *Commissioner::StateToString(otCommissionerState aState)
@@ -413,7 +413,7 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
         mInterpreter.OutputBytes(aJoinerId->m8, sizeof(*aJoinerId));
     }
 
-    mInterpreter.OutputFormat("\r\n");
+    mInterpreter.OutputLine("");
 }
 
 otError Commissioner::ProcessStop(uint8_t aArgsLength, char *aArgs[])
@@ -429,7 +429,7 @@ otError Commissioner::ProcessState(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    mInterpreter.OutputFormat("%s\r\n", StateToString(otCommissionerGetState(mInterpreter.mInstance)));
+    mInterpreter.OutputLine("%s", StateToString(otCommissionerGetState(mInterpreter.mInstance)));
 
     return OT_ERROR_NONE;
 }
@@ -474,7 +474,7 @@ void Commissioner::HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEne
         mInterpreter.OutputFormat("%d ", static_cast<int8_t>(aEnergyList[i]));
     }
 
-    mInterpreter.OutputFormat("\r\n");
+    mInterpreter.OutputLine("");
 }
 
 void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext)
@@ -484,7 +484,7 @@ void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, v
 
 void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
 {
-    mInterpreter.OutputFormat("Conflict: %04x, %08x\r\n", aPanId, aChannelMask);
+    mInterpreter.OutputLine("Conflict: %04x, %08x", aPanId, aChannelMask);
 }
 
 } // namespace Cli
