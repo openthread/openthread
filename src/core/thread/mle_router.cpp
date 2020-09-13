@@ -2509,6 +2509,11 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         {
             child->SetCslChannel(static_cast<uint8_t>(cslChannel.GetChannel()));
         }
+        else
+        {
+            // Set CSL Channel unspecified.
+            child->SetCslChannel(0);
+        }
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 

@@ -305,7 +305,7 @@ public:
      * started, `mState` will become `kStateCslSample`. But it could be doing `Sleep` or `Receive` at this moment
      * (depending on `mCslState`).
      *
-     * @param[in]  aPanChannel  The current phy channel used by the device. This param is passed for the case when CSL
+     * @param[in]  aPanChannel  The current phy channel used by the device. This param will only take effect when CSL
      *                          channel hasn't been explicitly specified.
      *
      * @retval OT_ERROR_NONE          Successfully entered CSL operation (sleep or receive according to CSL timer).
@@ -387,7 +387,7 @@ public:
     /**
      * This method sets the CSL channel.
      *
-     * @param[in]  aChannel  The CSL channel.
+     * @param[in]  aChannel  The CSL channel. `0` to set CSL Channel unspecified.
      *
      */
     void SetCslChannel(uint8_t aChannel);

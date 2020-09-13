@@ -1396,6 +1396,12 @@ otError Mle::AppendCslChannel(Message &aMessage)
     otError       error = OT_ERROR_NONE;
     CslChannelTlv cslChannel;
 
+    // In current implementation, it's allowed to set CSL Channel unspecified again. As `0` is not valid for
+    // Channel value in CSL Channel TLV, if CSL channel is not specified, we don't append CSL Channel TLV.
+    // And on transmitter side, it would also set CSL Channel for the child to `0` if it doesn't find a CSL Channel
+    // TLV.
+    VerifyOrExit(Get<Mac::Mac>().IsCslChannelSpecified(), OT_NOOP);
+
     cslChannel.Init();
     cslChannel.SetChannelPage(0);
     cslChannel.SetChannel(Get<Mac::Mac>().GetCslChannel());

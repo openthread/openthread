@@ -36,10 +36,8 @@ LEADER = 1
 SSED_1 = 2
 
 CSL_PERIOD = 500 * 6.25  # 500ms
-CSL_TIMEOUT = 305  # 305s
-CSL_CHANNEL = 13
-
-SECOND_CHANNEL = 12
+CSL_TIMEOUT = 30  # 30s
+CSL_CHANNEL = 12
 
 
 class SSED_CslTransmission(thread_cert.TestCase):
@@ -75,23 +73,24 @@ class SSED_CslTransmission(thread_cert.TestCase):
 
         ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
         msg = ssed_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        msg.assertMleMessageDoesNotContainTlv(mle.CslChannel)
+
+        self.nodes[SSED_1].set_csl_channel(CSL_CHANNEL)
+        self.simulator.go(1)
+        ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
+        msg = ssed_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
         msg.assertMleMessageContainsTlv(mle.CslChannel)
-
-        # Change channel
-        self.nodes[LEADER].send_mgmt_pending_set(channel=SECOND_CHANNEL)
-        self.simulator.go(301)
-
         self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.simulator.go(5)
 
-        self.nodes[SSED_1].set_csl_channel(CSL_CHANNEL)
+        self.nodes[SSED_1].set_csl_channel(0)
         self.simulator.go(1)
         self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.simulator.go(5)
 
         ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
         msg = ssed_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        msg.assertMleMessageContainsTlv(mle.CslChannel)
+        msg.assertMleMessageDoesNotContainTlv(mle.CslChannel)
 
         self.nodes[SSED_1].set_csl_period(0)
         self.assertFalse(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))

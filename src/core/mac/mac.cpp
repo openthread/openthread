@@ -434,13 +434,6 @@ otError Mac::SetPanChannel(uint8_t aChannel)
 
     mRadioChannel = mPanChannel;
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (!mSubMac.IsCslChannelSpecified())
-    {
-        mSubMac.SetCslChannel(mRadioChannel);
-    }
-#endif
-
     UpdateIdleMode();
 
 exit:
