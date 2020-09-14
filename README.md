@@ -1,4 +1,20 @@
-[![OpenThread][ot-logo]][ot-repo] [![Build][ot-gh-action-build-svg]][ot-gh-action-build] [![Simulation][ot-gh-action-simulation-svg]][ot-gh-action-simulation] [![Docker][ot-gh-action-docker-svg]][ot-gh-action-docker] [![Language grade: C/C++][ot-lgtm-svg]][ot-lgtm] [![Coverage Status][ot-codecov-svg]][ot-codecov]
+[![OpenThread][ot-logo]][ot-repo]
+
+[![Build-gcc][ot-build-gcc-svg]][ot-build-gcc]
+[![Build-arm-gcc][ot-build-arm-gcc-svg]][ot-build-arm-gcc]
+[![Build-clang][ot-build-clang-svg]][ot-build-clang]
+[![Build-macos][ot-build-macos-svg]][ot-build-macos]
+[![Build-misc][ot-build-svg]][ot-build]
+[![Simulation-cli][ot-simulation-cli-svg]][ot-simulation-cli]
+[![Simulation-ncp][ot-simulation-ncp-svg]][ot-simulation-ncp]
+[![Simulation-distcheck][ot-simulation-distcheck-svg]][ot-simulation-distcheck]
+[![Simulation-otns][ot-simulation-otns-svg]][ot-simulation-otns]
+[![Simulation 1.2][ot-simulation-1p2-svg]][ot-simulation-1p2]
+[![POSIX][ot-posix-svg]][ot-posix]
+[![Toranj][ot-toranj-svg]][ot-toranj]
+[![Docker][ot-docker-svg]][ot-docker]
+[![Language grade: C/C++][ot-lgtm-svg]][ot-lgtm]
+[![Coverage Status][ot-codecov-svg]][ot-codecov]
 
 ---
 
@@ -17,12 +33,32 @@ More information about Thread can be found at [threadgroup.org](http://threadgro
 [thread]: http://threadgroup.org/technology/ourtechnology
 [ot-repo]: https://github.com/openthread/openthread
 [ot-logo]: doc/images/openthread_logo.png
-[ot-gh-action-build]: https://github.com/openthread/openthread/actions?query=workflow%3ABuild+branch%3Amaster+event%3Apush
-[ot-gh-action-build-svg]: https://github.com/openthread/openthread/workflows/Build/badge.svg?branch=master&event=push
-[ot-gh-action-simulation]: https://github.com/openthread/openthread/actions?query=workflow%3ASimulation+branch%3Amaster+event%3Apush
-[ot-gh-action-simulation-svg]: https://github.com/openthread/openthread/workflows/Simulation/badge.svg?branch=master&event=push
-[ot-gh-action-docker]: https://github.com/openthread/openthread/actions?query=workflow%3ADocker+branch%3Amaster+event%3Apush
-[ot-gh-action-docker-svg]: https://github.com/openthread/openthread/workflows/Docker/badge.svg?branch=master&event=push
+[ot-build-gcc]: https://github.com/openthread/openthread/actions?query=branch%3Amaster+event%3Apush+workflow%3A%22Build+%28gcc%29%22
+[ot-build-gcc-svg]: https://github.com/openthread/openthread/workflows/Build%20(gcc)/badge.svg?branch=master&event=push
+[ot-build-arm-gcc]: https://github.com/openthread/openthread/actions?query=branch%3Amaster+event%3Apush+workflow%3A%22Build+%28arm-gcc%29%22
+[ot-build-arm-gcc-svg]: https://github.com/openthread/openthread/workflows/Build%20(arm-gcc)/badge.svg?branch=master&event=push
+[ot-build-clang]: https://github.com/openthread/openthread/actions?query=branch%3Amaster+event%3Apush+workflow%3A%22Build+%28clang%29%22
+[ot-build-clang-svg]: https://github.com/openthread/openthread/workflows/Build%20(clang)/badge.svg?branch=master&event=push
+[ot-build-macos]: https://github.com/openthread/openthread/actions?query=branch%3Amaster+event%3Apush+workflow%3A%22Build+%28macos%29%22
+[ot-build-macos-svg]: https://github.com/openthread/openthread/workflows/Build%20(macos)/badge.svg?branch=master&event=push
+[ot-build]: https://github.com/openthread/openthread/actions?query=workflow%3ABuild+branch%3Amaster+event%3Apush
+[ot-build-svg]: https://github.com/openthread/openthread/workflows/Build/badge.svg?branch=master&event=push
+[ot-simulation-cli]: https://github.com/openthread/openthread/actions?query=workflow%3A%22Simulation+%28cli%29%22+branch%3Amaster+event%3Apush
+[ot-simulation-cli-svg]: https://github.com/openthread/openthread/workflows/Simulation%20(cli)/badge.svg?branch=master&event=push
+[ot-simulation-ncp]: https://github.com/openthread/openthread/actions?query=workflow%3A%22Simulation+%28ncp%29%22+branch%3Amaster+event%3Apush
+[ot-simulation-ncp-svg]: https://github.com/openthread/openthread/workflows/Simulation%20(ncp)/badge.svg?branch=master&event=push
+[ot-simulation-distcheck]: https://github.com/openthread/openthread/actions?query=workflow%3A%22Simulation+%28distcheck%29%22+branch%3Amaster+event%3Apush
+[ot-simulation-distcheck-svg]: https://github.com/openthread/openthread/workflows/Simulation%20(distcheck)/badge.svg?branch=master&event=push
+[ot-simulation-otns]: https://github.com/openthread/openthread/actions?query=workflow%3A%22Simulation+%28otns%29%22+branch%3Amaster+event%3Apush
+[ot-simulation-otns-svg]: https://github.com/openthread/openthread/workflows/Simulation%20(otns)/badge.svg?branch=master&event=push
+[ot-simulation-1p2]: https://github.com/openthread/openthread/actions?query=workflow%3A%22Simulation+1.2%22+branch%3Amaster+event%3Apush
+[ot-simulation-1p2-svg]: https://github.com/openthread/openthread/workflows/Simulation%201.2/badge.svg?branch=master&event=push
+[ot-posix]: https://github.com/openthread/openthread/actions?query=workflow%3APOSIX+branch%3Amaster+event%3Apush
+[ot-posix-svg]: https://github.com/openthread/openthread/workflows/POSIX/badge.svg?branch=master&event=push
+[ot-toranj]: https://github.com/openthread/openthread/actions?query=workflow%3AToranj+branch%3Amaster+event%3Apush
+[ot-toranj-svg]: https://github.com/openthread/openthread/workflows/Toranj/badge.svg?branch=master&event=push
+[ot-docker]: https://github.com/openthread/openthread/actions?query=workflow%3ADocker+branch%3Amaster+event%3Apush
+[ot-docker-svg]: https://github.com/openthread/openthread/workflows/Docker/badge.svg?branch=master&event=push
 [ot-lgtm]: https://lgtm.com/projects/g/openthread/openthread/context:cpp
 [ot-lgtm-svg]: https://img.shields.io/lgtm/grade/cpp/g/openthread/openthread.svg?logo=lgtm&logoWidth=18
 [ot-codecov]: https://codecov.io/gh/openthread/openthread

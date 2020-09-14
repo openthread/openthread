@@ -26,7 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-name: Build (misc)
+name: Simulation (cli)
 
 on: [push, pull_request]
 
@@ -40,95 +40,103 @@ jobs:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       if: "github.ref != 'refs/heads/master'"
 
-  pretty:
+  cli-ftd:
     runs-on: ubuntu-18.04
+    env:
+      CFLAGS: -m32
+      CXXFLAGS: -m32
+      LDFLAGS: -m32
+      COVERAGE: 1
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 1
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
-        sudo apt-get autoremove
-        sudo apt-get --no-install-recommends install -y clang-tools clang-format-6.0 shellcheck
-        python3 -m pip install yapf==0.29.0
-        sudo snap install shfmt
-    - name: Check
-      run: |
-        script/make-pretty check
-
-  cmake-version:
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo pip3 install --system -U cmake==3.10.3
-        cmake --version | grep 3.10.3
-        sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
+        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        NODE_MODE=rcp ./script/test build
-
-  package:
-    name: package-${{ matrix.compiler }}
-    runs-on: ubuntu-18.04
-    strategy:
-      matrix:
-        include:
-          - compiler: gcc
-            compiler_c: gcc
-            compiler_cpp: g++
-          - compiler: clang
-            compiler_c: clang
-            compiler_cpp: clang++
-    env:
-      CC: ${{ matrix.compiler_c }}
-      CXX: ${{ matrix.compiler_cpp }}
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
-    - name: Package
-      run: |
-        script/test package
-
-  scan-build:
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
-        sudo apt-get autoremove
-        sudo apt-get --no-install-recommends install -y clang-tools
+        ./bootstrap
+        make -f examples/Makefile-simulation
     - name: Run
       run: |
-        script/check-scan-build
+        VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: cli-ftd-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
-  gn:
+  cli-mtd:
     runs-on: ubuntu-18.04
+    env:
+      CFLAGS: -m32
+      CXXFLAGS: -m32
+      LDFLAGS: -m32
+      COVERAGE: 1
+      REFERENCE_DEVICE: 1
+      USE_MTD: 1
+      VIRTUAL_TIME: 1
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y ninja-build
-        cd /tmp
-        wget -O gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
-        unzip -o gn.zip
-        chmod a+x gn && mkdir -p bin && mv -f gn bin/
+        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        export PATH=/tmp/bin:$PATH
-        script/check-gn-build
+        ./bootstrap
+        make -f examples/Makefile-simulation
+    - name: Run
+      run: |
+        VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: cli-mtd-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
 
-  android:
+  cli-time-sync:
     runs-on: ubuntu-18.04
+    env:
+      CFLAGS: -m32
+      CXXFLAGS: -m32
+      LDFLAGS: -m32
+      COVERAGE: 1
+      REFERENCE_DEVICE: 1
+      TIME_SYNC: 1
+      VIRTUAL_TIME: 1
     steps:
     - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        docker run --rm -v $PWD:/build/openthread openthread/android-trusty /build/openthread/script/check-android-build
+        ./bootstrap
+        make -f examples/Makefile-simulation
+    - name: Run
+      run: |
+        VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: cli-time-sync-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
