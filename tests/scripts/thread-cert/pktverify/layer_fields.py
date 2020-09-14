@@ -65,12 +65,12 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
     if ':' in dv and '::' not in dv and dv.replace(':', '') == rv:  # '88:00', '8800'
         return int(rv, 16)
 
-    if dv.endswith(' CST'):
+    if dv.startswith('Jan  '):
         # e.x. 'Jan  1, 1970 08:00:00.000000000 CST', '0000000000000000'
         # convert to seconds from 1970, ignore the nanosecond for now since
         # there are integer second applied in the test cases
         time_strp = datetime.datetime.strptime(dv, "%b  %d, %Y %H:%M:%S.%f000 %Z")
-        time_in_sec = time.mktime(time_strp.timetuple())
+        time_in_sec = time.mktime(time_strp.utctimetuple())
         return int(time_in_sec)
 
     try:
