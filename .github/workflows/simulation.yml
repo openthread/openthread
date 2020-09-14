@@ -71,11 +71,12 @@ jobs:
       COVERAGE: 1
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 1
+      VIRTUAL_TIME_UART: 1
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-go@v1
       with:
-        go-version: '1.13'
+        go-version: '1.14'
     - name: Set up Python 3.6
       uses: actions/setup-python@v1
       with:
@@ -89,8 +90,14 @@ jobs:
       run: |
         git clone https://github.com/openthread/ot-ns.git --depth 1 --branch master ~/otns
         export OT_DIR=$PWD
-        cd ~/otns
-        ./script/test py-unittests py-examples
+        (cd ~/otns && ./script/test py-unittests py-examples)
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: cli-ftd-otns-pcaps
+        path: |
+          ./output/*/bin/*.pcap
+          ./output/*/bin/*.replay
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
