@@ -49,7 +49,8 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
                 'master_key': '00112233445566778899aabbccddeeff'
             },
             'mode': 'rsdn',
-            'router_selection_jitter': 1
+            'router_selection_jitter': 1,
+            'allowlist': [LEADER]
         },
         LEADER: {
             'name': 'LEADER',
@@ -59,7 +60,8 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
                 'master_key': '00112233445566778899aabbccddeeff'
             },
             'mode': 'rsdn',
-            'router_selection_jitter': 1
+            'router_selection_jitter': 1,
+            'allowlist': [COMMISSIONER]
         },
     }
 
@@ -71,6 +73,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
         self.nodes[COMMISSIONER].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
+        self.collect_rlocs()
 
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(3)
@@ -193,90 +196,104 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
         pv.summary.show()
 
         LEADER = pv.vars['LEADER']
+        LEADER_RLOC = pv.vars['LEADER_RLOC']
         COMMISSIONER = pv.vars['COMMISSIONER']
+        COMMISSIONER_RLOC = pv.vars['COMMISSIONER_RLOC']
 
         # Step 1: Ensure the topology is formed correctly
-        pkts.filter_wpan_src64(LEADER).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+        pkts.filter_wpan_src64(LEADER).filter_wpan_dst64(COMMISSIONER).filter_mle_cmd(
+            MLE_CHILD_ID_RESPONSE).must_next()
 
         # Step 2: Commissioner sends MGMT_ACTIVE_SET.req to Leader RLOC
         pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request(MGMT_ACTIVE_SET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex(str(format(101, 'x'))) in p.coap.payload and 'GRL'.encode() in p.coap.payload)
+            lambda p: p.thread_meshcop.tlv.xpan_id == '000db70000000000' and p.thread_meshcop.tlv.net_name == 'GRL')
 
         # Step 3: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
-        pkts.filter_wpan_src64(LEADER).filter_coap_ack(MGMT_ACTIVE_SET_URI).must_next()
+        pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
+            MGMT_ACTIVE_SET_URI).must_next()
 
         # Step 4: Commissioner sends MGMT_ACTIVE_GET.req to Leader
         pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request(MGMT_ACTIVE_GET_URI).must_next()
 
         # Step 5: The Leader MUST send MGMT_ACTIVE_GET.rsp to the Commissioner
-        pkts.filter_wpan_src64(LEADER).filter_coap_ack(MGMT_ACTIVE_GET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex(str(format(101, 'x'))) in p.coap.payload and 'GRL'.encode() in p.coap.payload)
+        pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
+            MGMT_ACTIVE_GET_URI).must_next().must_verify(
+                lambda p: p.thread_meshcop.tlv.active_tstamp == 101 and p.thread_meshcop.tlv.xpan_id ==
+                '000db70000000000' and p.thread_meshcop.tlv.net_name == 'GRL')
 
         # Step 6: Commissioner sends MGMT_ACTIVE_SET.req to Leader RLOC or Anycast Locator
-        pkts.filter_wpan_src64(
-            COMMISSIONER).filter_coap_request(MGMT_ACTIVE_SET_URI).must_next().must_verify(lambda p: bytes.fromhex(
-                str(format(102, 'x'))) in p.coap.payload and 'threadcert'.encode() in p.coap.payload)
+        pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request(MGMT_ACTIVE_SET_URI).must_next().must_verify(
+            lambda p: p.thread_meshcop.tlv.active_tstamp == 102 and p.thread_meshcop.tlv.xpan_id == '000db70000000001'
+            and p.thread_meshcop.tlv.net_name == 'threadcert')
 
         # Step 7: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
-        pkts.filter_wpan_src64(LEADER).filter_coap_ack(MGMT_ACTIVE_SET_URI).must_next()
+        pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
+            MGMT_ACTIVE_SET_URI).must_next()
 
         # Step 8: Commissioner sends MGMT_ACTIVE_SET.req to Leader RLOC or Leader Anycast Locator
         pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request(MGMT_ACTIVE_SET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex(str(format(103, 'x'))) in p.coap.payload and 'UL'.encode() in p.coap.payload)
+            lambda p: p.thread_meshcop.tlv.active_tstamp == 103 and p.thread_meshcop.tlv.xpan_id == '000db70000000000'
+            and p.thread_meshcop.tlv.net_name == 'UL')
 
         # Step 9: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
-        pkts.filter_wpan_src64(LEADER).filter_coap_ack(MGMT_ACTIVE_SET_URI).must_next()
+        pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
+            MGMT_ACTIVE_SET_URI).must_next()
 
         # Step 10: Commissioner sends MGMT_ACTIVE_SET.req to Leader RLOC or Leader Anycast Locator
         pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request(MGMT_ACTIVE_SET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex(str(format(104, 'x'))) in p.coap.payload and 'GRL'.encode(
-            ) in p.coap.payload and bytes.fromhex('00112233445566778899aabbccddeeff') in p.coap.payload)
+            lambda p: p.thread_meshcop.tlv.active_tstamp == 104 and p.thread_meshcop.tlv.xpan_id == '000db70000000000'
+            and p.thread_meshcop.tlv.net_name == 'GRL' and p.thread_meshcop.tlv.master_key ==
+            '00112233445566778899aabbccddeeff')
 
         # Step 11: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
-        pkts.filter_wpan_src64(LEADER).filter_coap_ack(MGMT_ACTIVE_SET_URI).must_next()
+        pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
+            MGMT_ACTIVE_SET_URI).must_next()
 
         # Step 12: Commissioner sends MGMT_ACTIVE_SET.req to Leader RLOC or Leader Anycast Locator
         pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request(MGMT_ACTIVE_SET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex(str(format(105, 'x'))) in p.coap.payload and 'UL'.encode(
-            ) in p.coap.payload and bytes.fromhex('afce') in p.coap.payload)
+            lambda p: p.thread_meshcop.tlv.active_tstamp == 105 and p.thread_meshcop.tlv.xpan_id == '000db70000000000'
+            and p.thread_meshcop.tlv.net_name == 'UL' and p.thread_meshcop.tlv.master_key ==
+            '00112233445566778899aabbccddeeff' and p.thread_meshcop.tlv.pan_id == 0xafce)
 
         # Step 13: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
-        pkts.filter_wpan_src64(LEADER).filter_coap_ack(MGMT_ACTIVE_SET_URI).must_next()
+        pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
+            MGMT_ACTIVE_SET_URI).must_next()
 
         # Step 14: Commissioner sends MGMT_ACTIVE_SET.req to Leader RLOC or Leader Anycast Locator
         pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request(MGMT_ACTIVE_SET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex(str(format(106, 'x'))) in p.coap.payload and 'UL'.encode(
-            ) in p.coap.payload and bytes.fromhex('abcd') in p.coap.payload)
+            lambda p: p.thread_meshcop.tlv.active_tstamp == 106 and p.thread_meshcop.tlv.xpan_id == '000db70000000000'
+            and p.thread_meshcop.tlv.net_name == 'UL' and p.thread_meshcop.tlv.commissioner_sess_id == 0xabcd)
 
         # Step 15: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
-        pkts.filter_wpan_src64(LEADER).filter_coap_ack(MGMT_ACTIVE_SET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex('01ff') in p.coap.payload)
+        pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
+            MGMT_ACTIVE_SET_URI).must_next().must_verify(lambda p: p.thread_meshcop.tlv.state == -1)
 
         # Step 16: Commissioner sends MGMT_ACTIVE_SET.req to Leader RLOC or Leader Anycast Locator
         pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request(MGMT_ACTIVE_SET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex(str(format(101, 'x'))) in p.coap.payload and 'UL'.encode() in p.coap.payload)
+            lambda p: p.thread_meshcop.tlv.active_tstamp == 101 and p.thread_meshcop.tlv.xpan_id == '000db70000000000'
+            and p.thread_meshcop.tlv.net_name == 'UL')
 
         # Step 17: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
-        pkts.filter_wpan_src64(LEADER).filter_coap_ack(MGMT_ACTIVE_SET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex('01ff') in p.coap.payload)
+        pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
+            MGMT_ACTIVE_SET_URI).must_next().must_verify(lambda p: p.thread_meshcop.tlv.state == -1)
 
         # Step 18: Commissioner sends MGMT_ACTIVE_SET.req to Leader RLOC or Leader Anycast Locator
         pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request(MGMT_ACTIVE_SET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex(str(format(107, 'x'))) in p.coap.payload and 'UL'.encode(
-            ) in p.coap.payload and bytes.fromhex('113320440000') in p.coap.payload)
+            lambda p: p.thread_meshcop.tlv.active_tstamp == 107 and p.thread_meshcop.tlv.xpan_id == '000db70000000000'
+            and p.thread_meshcop.tlv.net_name == 'UL' and p.thread_meshcop.tlv.steering_data == [0x113320440000])
 
         # Step 19: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
-        pkts.filter_wpan_src64(LEADER).filter_coap_ack(MGMT_ACTIVE_SET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex('0101') in p.coap.payload)
+        pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
+            MGMT_ACTIVE_SET_URI).must_next().must_verify(lambda p: p.thread_meshcop.tlv.state == 1)
 
         # Step 20: Commissioner sends MGMT_ACTIVE_SET.req to Leader RLOC or Leader Anycast Locator
         pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request(MGMT_ACTIVE_SET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex(str(format(108, 'x'))) in p.coap.payload and 'GRL'.encode(
-            ) in p.coap.payload and bytes.fromhex('aa55') in p.coap.payload)
+            lambda p: p.thread_meshcop.tlv.active_tstamp == 108 and p.thread_meshcop.tlv.xpan_id == '000db70000000000'
+            and p.thread_meshcop.tlv.net_name == 'GRL' and p.thread_meshcop.tlv.unknown == 'aa55')
 
         # Step 21: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
-        pkts.filter_wpan_src64(LEADER).filter_coap_ack(MGMT_ACTIVE_SET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex('0101') in p.coap.payload)
+        pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
+            MGMT_ACTIVE_SET_URI).must_next().must_verify(lambda p: p.thread_meshcop.tlv.state == 1)
 
 
 if __name__ == '__main__':

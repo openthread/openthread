@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 import sys
+import time, datetime
 from typing import Any, Union
 
 from pyshark.packet.fields import LayerFieldsContainer, LayerField
@@ -66,8 +67,11 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
 
     if dv.endswith(' CST'):
         # e.x. 'Jan  1, 1970 08:00:00.000000000 CST', '0000000000000000'
-        # todo: check if the time is valid
-        return int(rv, 16)
+        # convert to seconds from 1970, ignore the nanosecond for now since
+        # there are integer second applied in the test cases
+        time_strp = datetime.datetime.strptime(dv, "%b  %d, %Y %H:%M:%S.%f000 %Z")
+        time_in_sec = time.mktime(time_strp.timetuple())
+        return int(time_in_sec)
 
     try:
         int(rv, 16)
@@ -517,7 +521,7 @@ _LAYER_FIELDS = {
     "thread_meshcop.tlv.chan_mask": _str,  # from ble
     'thread_meshcop.tlv.chan_mask_page': _auto,
     'thread_meshcop.tlv.chan_mask_len': _auto,
-    'thread_meshcop.tlv.chan_mask_mask': _auto,
+    'thread_meshcop.tlv.chan_mask_mask': _bytes,
     'thread_meshcop.tlv.pan_id': _auto,
     'thread_meshcop.tlv.xpan_id': _bytes,
     'thread_meshcop.tlv.ml_prefix': _bytes,
