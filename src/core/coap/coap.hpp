@@ -437,13 +437,14 @@ public:
      *
      * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
      * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     * @param[in]  aCode           The CoAP code of the dummy CoAP response.
      *
      * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
      * @retval OT_ERROR_INVALID_ARGS  The @p aRequest header is not of confirmable type.
      *
      */
-    otError SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
+    otError SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo, Code aCode = kCodeChanged);
 
     /**
      * This method sends a header-only CoAP message to indicate no resource matched for the request.

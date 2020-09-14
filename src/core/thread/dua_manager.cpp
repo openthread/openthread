@@ -493,7 +493,8 @@ void DuaManager::PerformNextRegistration(void)
     SuccessOrExit(error =
                       Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, &DuaManager::HandleDuaResponse, this));
 
-    mIsDuaPending = true;
+    mIsDuaPending   = true;
+    mRegisteringDua = dua;
 
     // TODO: (DUA) need update when CSL is enabled.
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
@@ -524,9 +525,11 @@ void DuaManager::HandleDuaResponse(Coap::Message &aMessage, const Ip6::MessageIn
         ExitNow(error = aResult);
     }
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage.GetCode() == Coap::kCodeChanged, error = OT_ERROR_PARSE);
+    VerifyOrExit(aResult == OT_ERROR_NONE, error = OT_ERROR_PARSE);
+    VerifyOrExit(aMessage.GetCode() == Coap::kCodeChanged || aMessage.GetCode() >= Coap::kCodeBadRequest,
+                 error = OT_ERROR_PARSE);
 
-    error = ProcessDuaResponse(aMessage);
+    error = ProcessDuaResponse(aMessage, &mRegisteringDua);
 
 exit:
     if (error != OT_ERROR_RESPONSE_TIMEOUT)
@@ -557,14 +560,24 @@ exit:
     otLogInfoDua("Received DUA.ntf: %d", otThreadErrorToString(error));
 }
 
-otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
+otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage, const Ip6::Address *aTarget)
 {
     otError      error = OT_ERROR_NONE;
     Ip6::Address target;
     uint8_t      status;
 
-    SuccessOrExit(error = Tlv::FindUint8Tlv(aMessage, ThreadTlv::kStatus, status));
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+    if (aMessage.GetCode() == Coap::kCodeChanged)
+    {
+        SuccessOrExit(error = Tlv::FindUint8Tlv(aMessage, ThreadTlv::kStatus, status));
+        SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+    }
+    else
+    {
+        VerifyOrExit(aTarget != nullptr, error = OT_ERROR_PARSE);
+
+        status = ThreadStatusTlv::kDuaGeneralFailure;
+        target = *aTarget;
+    }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     if (Get<ThreadNetif>().HasUnicastAddress(target))

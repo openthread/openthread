@@ -204,7 +204,7 @@ private:
     }
 
     void    HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError ProcessDuaResponse(Coap::Message &aMessage);
+    otError ProcessDuaResponse(Coap::Message &aMessage, const Ip6::Address *aTarget = nullptr);
 
     void PerformNextRegistration(void);
     void UpdateReregistrationDelay(void);
@@ -212,8 +212,8 @@ private:
 
     Tasklet        mRegistrationTask;
     Coap::Resource mDuaNotification;
-
-    bool mIsDuaPending : 1;
+    Ip6::Address   mRegisteringDua;
+    bool           mIsDuaPending : 1;
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     enum DuaState
