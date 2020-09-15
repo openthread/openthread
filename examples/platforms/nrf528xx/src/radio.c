@@ -452,19 +452,35 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    bool result = true;
+    bool    result = true;
+    otError error  = OT_ERROR_NONE;
 
     aFrame->mPsdu[-1] = aFrame->mLength;
 
     nrf_802154_channel_set(aFrame->mChannel);
 
-    if (aFrame->mInfo.mTxInfo.mCsmaCaEnabled)
+#if OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT
+    if (aFrame->mInfo.mTxInfo.mTxDelay != 0)
     {
-        nrf_802154_transmit_csma_ca_raw(&aFrame->mPsdu[-1]);
+        if (!nrf_802154_transmit_raw_at(&aFrame->mPsdu[-1], aFrame->mInfo.mTxInfo.mCsmaCaEnabled,
+                                        aFrame->mInfo.mTxInfo.mTxDelayBaseTime, aFrame->mInfo.mTxInfo.mTxDelay,
+                                        aFrame->mChannel))
+        {
+            error = OT_ERROR_INVALID_STATE;
+        }
+        goto exit;
     }
     else
+#endif
     {
-        result = nrf_802154_transmit_raw(&aFrame->mPsdu[-1], false);
+        if (aFrame->mInfo.mTxInfo.mCsmaCaEnabled)
+        {
+            nrf_802154_transmit_csma_ca_raw(&aFrame->mPsdu[-1]);
+        }
+        else
+        {
+            result = nrf_802154_transmit_raw(&aFrame->mPsdu[-1], false);
+        }
     }
 
     clearPendingEvents();
@@ -475,7 +491,10 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         setPendingEvent(kPendingEventChannelAccessFailure);
     }
 
-    return OT_ERROR_NONE;
+#if OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT
+exit:
+#endif
+    return error;
 }
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
@@ -997,9 +1016,9 @@ static uint16_t getCslPhase()
 {
     uint32_t curTime       = otPlatAlarmMicroGetNow();
     uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
-    uint32_t diff = ((sCslSampleTime % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
+    uint32_t diff = (cslPeriodInUs - (curTime % cslPeriodInUs) + (sCslSampleTime % cslPeriodInUs)) % cslPeriodInUs;
 
-    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
+    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS + 1);
 }
 #endif
 
@@ -1096,6 +1115,13 @@ void nrf_802154_tx_started(const uint8_t *aFrame)
     bool processSecurity = false;
     assert(aFrame == sTransmitPsdu);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (sCslPeriod > 0)
+    {
+        otMacFrameSetCslIe(&sTransmitFrame, (uint16_t)sCslPeriod, getCslPhase());
+    }
+#endif
+
     // Update IE and secure transmit frame
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
@@ -1115,13 +1141,6 @@ void nrf_802154_tx_started(const uint8_t *aFrame)
         processSecurity = true;
     }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (sCslPeriod > 0)
-    {
-        otMacFrameSetCslIe(&sTransmitFrame, (uint16_t)sCslPeriod, getCslPhase());
-    }
-#endif
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     otEXPECT(otMacFrameIsSecurityEnabled(&sTransmitFrame) && otMacFrameIsKeyIdMode1(&sTransmitFrame) &&

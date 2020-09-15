@@ -98,8 +98,14 @@ public:
         uint16_t GetCslPhase(void) const { return mCslPhase; }
         void     SetCslPhase(uint16_t aPhase) { mCslPhase = aPhase; }
 
+        uint32_t GetCslTxDelay(void) const { return mCslTxDelay; }
+        void     SetCslTxDelay(uint32_t aCslTxDelay) { mCslTxDelay = aCslTxDelay; }
+
         TimeMilli GetCslLastHeard(void) const { return mCslLastHeard; }
         void      SetCslLastHeard(TimeMilli aCslLastHeard) { mCslLastHeard = aCslLastHeard; }
+
+        uint64_t GetLastRxTimestamp(void) const { return mLastRxTimstamp; }
+        void     SetLastRxTimestamp(uint64_t aLastRxTimestamp) { mLastRxTimstamp = aLastRxTimestamp; }
 
     private:
         uint8_t   mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.
@@ -108,7 +114,9 @@ public:
         uint32_t  mCslTimeout;          ///< The sync timeout, in seconds.
         uint16_t  mCslPeriod;           ///< CSL sampled listening period in units of 10 symbols (160 microseconds).
         uint16_t  mCslPhase;            ///< The time when the next CSL sample will start.
+        uint32_t  mCslTxDelay;          ///< The delay time for Tx since last Rx time, in microseconds.
         TimeMilli mCslLastHeard;        ///< Time when last frame containing CSL IE was heard.
+        uint64_t  mLastRxTimstamp;      ///< Time when last frame containing CSL IE was received, in microseconds.
 
         static_assert(kMaxCslTriggeredTxAttempts < (1 << 7), "mCslTxAttempts cannot fit max!");
     };
@@ -190,7 +198,7 @@ private:
     void InitFrameRequestAhead(void);
     void RescheduleCslTx(void);
 
-    uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint64_t aRadioNow) const;
+    uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint64_t aRadioNow, uint32_t &aDelayFromLastRx) const;
 
     // Callbacks from `Mac`
     otError HandleFrameRequest(Mac::TxFrame &aFrame);

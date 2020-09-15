@@ -285,7 +285,34 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW
-#define OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW 30
+#define OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW 10
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_DELAY_TRANSMIT_SUPPORTED
+ *
+ * The platform radio has the ability to transmit after a specified delay time.
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_DELAY_TRANSMIT_SUPPORTED 1
+
+/**
+ * @def OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT
+#define OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD
+ *
+ * For some reasons, CSL receivers wake up a little later than expected. This variable specifies how much time that
+ * CSL receiver would wake up earlier than the expected sample window. The time is in unit of 10 symbols.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD
+#define OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD 3
 #endif
 
 /*

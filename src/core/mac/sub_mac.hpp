@@ -548,6 +548,15 @@ private:
     };
 
     /**
+     * CSL receivers would wake up `kCslReceiveTimeAhead` earlier than expected sample window. The time is in unit of 10
+     * symbols.
+     *
+     */
+    enum {
+        kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD,
+    };
+
+    /**
      * CSL state, always updated by `mCslTimer`.
      *
      */

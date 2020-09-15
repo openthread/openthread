@@ -1585,13 +1585,13 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
                                     SPINEL_DATATYPE_BOOL_S                    // CsmaCaEnabled
                                         SPINEL_DATATYPE_BOOL_S                // IsARetx
                                             SPINEL_DATATYPE_BOOL_S            // SkipAes
-                                                SPINEL_DATATYPE_UINT16_S      // Period
-                                                    SPINEL_DATATYPE_UINT16_S, // Phase
+                                                SPINEL_DATATYPE_UINT32_S      // TxDelay
+                                                    SPINEL_DATATYPE_UINT32_S, // TxDelayBaseTime
                     mTransmitFrame->mPsdu, mTransmitFrame->mLength, mTransmitFrame->mChannel,
                     mTransmitFrame->mInfo.mTxInfo.mMaxCsmaBackoffs, mTransmitFrame->mInfo.mTxInfo.mMaxFrameRetries,
                     mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled, mTransmitFrame->mInfo.mTxInfo.mIsARetx,
-                    mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed, mTransmitFrame->mInfo.mTxInfo.mPeriod,
-                    mTransmitFrame->mInfo.mTxInfo.mPhase);
+                    mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed, mTransmitFrame->mInfo.mTxInfo.mTxDelay,
+                    mTransmitFrame->mInfo.mTxInfo.mTxDelayBaseTime);
 
     if (error == OT_ERROR_NONE)
     {
