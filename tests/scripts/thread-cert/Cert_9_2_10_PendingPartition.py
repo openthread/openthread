@@ -220,7 +220,8 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
 
         # Step 12: Router MUST send a unicast MLE Data Response to SED_1
-        _rpkts.filter_wpan_dst64(SED).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
+        _pkt = _rpkts.filter_wpan_dst64(SED).filter_mle_cmd(MLE_DATA_RESPONSE).must_next()
+        _pkt.must_verify(lambda p: {
             SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_OPERATION_DATASET_TLV
         } <= set(p.mle.tlv.type) and {
             NM_CHANNEL_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PAN_ID_TLV, NM_DELAY_TIMER_TLV,
@@ -228,7 +229,8 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         } <= set(p.thread_meshcop.tlv.type))
 
         # Step 14: After NETWORK_ID_TIMEOUT, Router MUST start a new partition
-        _rpkts.filter_ipv6_dst(LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS).filter_mle_cmd(MLE_PARENT_REQUEST).must_next()
+        _rpkts.filter_ipv6_dst(LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS).filter_mle_cmd(
+            MLE_PARENT_REQUEST).must_next().must_verify(lambda p: p.sniff_timestamp - _pkt.sniff_timestamp > 300)
         _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter(lambda p: p.wpan.dst_pan == PANID_FINAL).must_next()
 
         # Step 16: After the Delay Timer expires, Router MUST move to the Secondary channel
