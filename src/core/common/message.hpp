@@ -836,7 +836,7 @@ public:
     /**
      * This method updates the average LQI (Link Quality Indicator) associated with the message.
      *
-     * The given LQI value would be added to the average. Note that a message can be composed of multiple 802.15.4 data
+     * The given LQI value would be added to the average. Note that a message can be composed of multiple 802.15.4
      * frame fragments each received with a different signal strength.
      *
      * @param[in] aLQI A new LQI value (has no unit) to be added to average.

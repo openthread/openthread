@@ -106,6 +106,7 @@ namespace ot {
 namespace Cli {
 
 constexpr Interpreter::Command Interpreter::sCommands[];
+
 Interpreter *Interpreter::sInterpreter = nullptr;
 
 Interpreter::Interpreter(Instance *aInstance)
@@ -1853,68 +1854,41 @@ exit:
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-void Interpreter::HandleLinkMetricsReport(const otIp6Address * aAddress,
-                                          const otLinkMetrics *aMetrics,
-                                          uint8_t              aMetricsNum,
-                                          void *               aContext)
+void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
+                                          const otLinkMetricsValues *aMetricsValues,
+                                          void *                     aContext)
 {
-    static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(aAddress, aMetrics, aMetricsNum);
+    static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(aAddress, aMetricsValues);
 }
 
-void Interpreter::HandleLinkMetricsReport(const otIp6Address * aAddress,
-                                          const otLinkMetrics *aMetrics,
-                                          uint8_t              aMetricsNum)
+void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress, const otLinkMetricsValues *aMetricsValues)
 {
-    otLinkMetricsTypeIdFlags linkMetricsTypeId;
-    uint8_t                  index = 0;
-
     OutputFormat("Received Link Metrics Report from: ");
     OutputIp6Address(*aAddress);
     OutputFormat("\r\n");
 
-    while (index < aMetricsNum)
+    if (aMetricsValues->mMetrics.mPduCount)
     {
-        linkMetricsTypeId = aMetrics[index].mTypeIdFlags;
-        int32_t value     = linkMetricsTypeId.mFlagL ? (int32_t)aMetrics[index].mValue.m32 : aMetrics[index].mValue.m8;
+        OutputFormat(" - PDU Counter: %d %s\r\n", aMetricsValues->mPduCountValue,
+                     otLinkMetricsTypeEnumToString(OT_LINK_METRICS_TYPE_COUNT));
+    }
 
-        switch (linkMetricsTypeId.mMetricEnum)
-        {
-        case OT_LINK_METRICS_PDU_COUNT:
-            OutputFormat(" - PDU Counter: %d", value);
-            break;
+    if (aMetricsValues->mMetrics.mLqi)
+    {
+        OutputFormat(" - LQI: %d %s\r\n", aMetricsValues->mLqiValue,
+                     otLinkMetricsTypeEnumToString(OT_LINK_METRICS_TYPE_EXPONENTIAL));
+    }
 
-        case OT_LINK_METRICS_LQI:
-            OutputFormat(" - LQI: %d", value);
-            break;
+    if (aMetricsValues->mMetrics.mLinkMargin)
+    {
+        OutputFormat(" - Margin: %d %s\r\n", aMetricsValues->mLinkMarginValue,
+                     otLinkMetricsTypeEnumToString(OT_LINK_METRICS_TYPE_EXPONENTIAL));
+    }
 
-        case OT_LINK_METRICS_MARGIN:
-            OutputFormat(" - Margin: %d", value);
-            break;
-
-        case OT_LINK_METRICS_RSSI:
-            OutputFormat(" - RSSI: %d", value);
-            break;
-
-        default:
-            break;
-        }
-
-        switch (linkMetricsTypeId.mTypeEnum)
-        {
-        case OT_LINK_METRICS_METRIC_COUNT_SUMMATION:
-            OutputFormat(" (Count/Summation)\r\n");
-            break;
-
-        case OT_LINK_METRICS_METRIC_EXPONENTIAL_MOVING_AVERAGE:
-            OutputFormat(" (Exponential Moving Average)\r\n");
-            break;
-
-        default:
-            OutputFormat("\r\n");
-            break;
-        }
-
-        index++;
+    if (aMetricsValues->mMetrics.mRssi)
+    {
+        OutputFormat(" - RSSI: %d %s\r\n", aMetricsValues->mRssiValue,
+                     otLinkMetricsTypeEnumToString(OT_LINK_METRICS_TYPE_EXPONENTIAL));
     }
 }
 
@@ -1935,23 +1909,45 @@ exit:
 
 otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
 {
-    otError      error = OT_ERROR_INVALID_ARGS;
-    otIp6Address address;
-    long         seriesId                                       = 0;
-    uint8_t      typeIdFlags[OT_LINK_METRICS_TYPE_ID_MAX_COUNT] = {0};
-    int          typeIdFlagsCount                               = 0;
+    otError       error = OT_ERROR_INVALID_ARGS;
+    otIp6Address  address;
+    otLinkMetrics linkMetrics;
+    long          seriesId = 0;
 
     VerifyOrExit(aArgsLength >= 2, OT_NOOP);
 
     SuccessOrExit(error = otIp6AddressFromString(aArgs[0], &address));
 
+    memset(&linkMetrics, 0, sizeof(otLinkMetrics));
+
     if (strcmp(aArgs[1], "single") == 0)
     {
         VerifyOrExit(aArgsLength == 3, OT_NOOP);
-        typeIdFlagsCount = Hex2Bin(aArgs[2], typeIdFlags, sizeof(typeIdFlags));
-        VerifyOrExit(typeIdFlagsCount > 0, OT_NOOP);
-        error = otLinkMetricsQuery(mInstance, &address, static_cast<uint8_t>(seriesId), typeIdFlags,
-                                   static_cast<uint8_t>(typeIdFlagsCount));
+        for (char *arg = aArgs[2]; *arg != '\0'; arg++)
+        {
+            switch (*arg)
+            {
+            case 'p':
+                linkMetrics.mPduCount = 1;
+                break;
+
+            case 'q':
+                linkMetrics.mLqi = 1;
+                break;
+
+            case 'm':
+                linkMetrics.mLinkMargin = 1;
+                break;
+
+            case 'r':
+                linkMetrics.mRssi = 1;
+                break;
+
+            default:
+                ExitNow(error = OT_ERROR_INVALID_ARGS);
+            }
+        }
+        error = otLinkMetricsQuery(mInstance, address, static_cast<uint8_t>(seriesId), linkMetrics);
     }
 
 exit:

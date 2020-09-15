@@ -51,7 +51,7 @@ namespace ot {
  */
 enum
 {
-    kLinkMetricsMaxTypeIdFlags = OT_LINK_METRICS_TYPE_ID_MAX_COUNT, ///< Max count of Link Metrics Type ID Flags.
+    kLinkMetricsMaxTypeIdFlags = 4, ///< Max count of Link Metrics Type ID Flags.
 };
 
 enum Type
@@ -240,7 +240,7 @@ public:
     uint32_t GetMetricsValue32(void) const { return mMetricsValue.m32; }
 
     /**
-     * This method sets the metric value(8 bits).
+     * This method sets the metric value (8 bits).
      *
      * @param[in]  aMetricsValue  Metrics value.
      *
@@ -248,7 +248,7 @@ public:
     void SetMetricsValue8(uint8_t aMetricsValue) { mMetricsValue.m8 = aMetricsValue; }
 
     /**
-     * This method sets the metric value(32 bits).
+     * This method sets the metric value (32 bits).
      *
      * @param[in]  aMetricsValue  Metrics value.
      *
@@ -336,7 +336,10 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const
+    {
+        return GetLength() <= sizeof(*this) - sizeof(Tlv) && GetLength() >= sizeof(LinkMetricsTypeIdFlags);
+    }
 
     /**
      * This method returns the Link Metrics Type ID Flags and its count.

@@ -54,11 +54,6 @@ extern "C" {
  *
  */
 
-enum
-{
-    OT_LINK_METRICS_TYPE_ID_MAX_COUNT = 4, ///< Max TypeIdFlags count in a Link Metrics query
-};
-
 /**
  * This enumeration defines Link Metrics ID.
  *
@@ -72,73 +67,81 @@ typedef enum otLinkMetricsId
 } otLinkMetricsId;
 
 /**
- * This enumeration defines Link Metrics type.
+ * This enumeration defines Link Metrics Type/Average Enum.
  *
  */
-typedef enum otLinkMetricsType
+typedef enum otLinkMetricsTypeEnum
 {
-    OT_LINK_METRICS_METRIC_COUNT_SUMMATION            = 0, ///< Count/summation
-    OT_LINK_METRICS_METRIC_EXPONENTIAL_MOVING_AVERAGE = 1, ///< Exponential moving average
-} otLinkMetricsType;
+    OT_LINK_METRICS_TYPE_COUNT       = 0, ///< Count/summation
+    OT_LINK_METRICS_TYPE_EXPONENTIAL = 1, ///< Exponential Moving Average
+    OT_LINK_METRICS_TYPE_RESERVED    = 7, ///< 2 - 7 are reserved
+} otLinkMetricsTypeEnum;
 
-/**
- * This structure represents Link Metrics Type ID Flags.
- */
-typedef struct otLinkMetricsTypeIdFlags
-{
-    uint8_t mMetricEnum : 3;
-    uint8_t mTypeEnum : 3;
-    uint8_t mFlagL : 1;
-    uint8_t mFlagE : 1;
-} otLinkMetricsTypeIdFlags;
-
-/**
- * This structure represents one Link Metrics item including its type id and value.
+/*
+ * This structure represents what metrics are specified to query.
+ *
  */
 typedef struct otLinkMetrics
 {
-    otLinkMetricsTypeIdFlags mTypeIdFlags;
-    union
-    {
-        uint8_t  m8;
-        uint32_t m32;
-    } mValue;
+    bool mPduCount : 1;
+    bool mLqi : 1;
+    bool mLinkMargin : 1;
+    bool mRssi : 1;
 } otLinkMetrics;
+
+/*
+ * This structure represents the result (value) for a Link Metrics query.
+ *
+ */
+typedef struct otLinkMetricsValues
+{
+    otLinkMetrics mMetrics; ///< Specifies which metrcis values are present/included.
+
+    uint32_t mPduCountValue;
+    uint8_t  mLqiValue;
+    int8_t   mLinkMarginValue;
+    int8_t   mRssiValue;
+} otLinkMetricsValues;
+
+/**
+ * This function converts an otLinkMetricsTypeEnum into a string.
+ *
+ * @param[in]  aError     An otLinkMetricsTypeEnum.
+ *
+ * @returns  A string representation of an otLinkMetricsTypeEnum.
+ *
+ */
+const char *otLinkMetricsTypeEnumToString(otLinkMetricsTypeEnum aEnum);
 
 /**
  * This function sends an MLE Data Request to query Link Metrics.
  * Single Probe or Forward Tracking Series.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
- * @param[in]  aDestination         A pointer to the destination address.
+ * @param[in]  aDestination         A reference to the destination address.
  * @param[in]  aSeriesId            The Series ID to query about, 0 for Single Probe.
- * @param[in]  aTypeIdFlags         A pointer to an array of Type Id Flags.
- * @param[in]  aTypeIdFlagsCount    The size of the array @p aTypeIdFlags.
+ * @param[in]  aLinkMetricsFlags    Flags to specify what metrics to query.
  *
  * @retval OT_ERROR_NONE          Successfully sent a Link Metrics query message.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Data Request message.
- * @retval OT_ERROR_INVALID_ARGS  Type Id Flags are not valid or exceed the count limit.
  *
  */
-otError otLinkMetricsQuery(otInstance *        aInstance,
-                           const otIp6Address *aDestination,
-                           uint8_t             aSeriesId,
-                           const uint8_t *     aTypeIdFlags,
-                           uint8_t             aTypeIdFlagsCount);
+otError otLinkMetricsQuery(otInstance *         aInstance,
+                           const otIp6Address & aDestination,
+                           uint8_t              aSeriesId,
+                           const otLinkMetrics &aLinkMetricsFlags);
 
 /**
  * This function pointer is called when a Link Metrics report is received.
  *
- * @param[in]  aSource      A pointer to the source address.
- * @param[in]  aMetrics     A pointer to the Link Metrics array.
- * @param[in]  aMetricsNum  The number of Link Metrics items.
- * @param[in]  aContext     A pointer to application-specific context.
+ * @param[in]  aSource         A pointer to the source address.
+ * @param[in]  aMetricsValues  A pointer to the Link Metrics values (the query result).
+ * @param[in]  aContext        A pointer to application-specific context.
  *
  */
-typedef void (*otLinkMetricsReportCallback)(const otIp6Address * aSource,
-                                            const otLinkMetrics *aMetrics,
-                                            uint8_t              aMetricsNum,
-                                            void *               aContext);
+typedef void (*otLinkMetricsReportCallback)(const otIp6Address *       aSource,
+                                            const otLinkMetricsValues *aMetricsValues,
+                                            void *                     aContext);
 
 /**
  * This function registers a callback to handle Link Metrics report received.

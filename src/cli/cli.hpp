@@ -523,12 +523,11 @@ private:
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-    static void HandleLinkMetricsReport(const otIp6Address * aAddress,
-                                        const otLinkMetrics *aMetrics,
-                                        uint8_t              aMetricsNum,
-                                        void *               aContext);
+    static void HandleLinkMetricsReport(const otIp6Address *       aAddress,
+                                        const otLinkMetricsValues *aMetricsValues,
+                                        void *                     aContext);
 
-    void HandleLinkMetricsReport(const otIp6Address *aAddress, const otLinkMetrics *aMetrics, uint8_t aMetricsNum);
+    void HandleLinkMetricsReport(const otIp6Address *aAddress, const otLinkMetricsValues *aMetricsValues);
 #endif
 
     static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);
@@ -624,7 +623,7 @@ private:
         {"leaderpartitionid", &Interpreter::ProcessLeaderPartitionId},
         {"leaderweight", &Interpreter::ProcessLeaderWeight},
 #endif
-#if OPENTHREAD_CONFIG_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
         {"linkmetrics", &Interpreter::ProcessLinkMetrics},
 #endif
         {"log", &Interpreter::ProcessLog},

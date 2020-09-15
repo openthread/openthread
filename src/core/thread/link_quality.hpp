@@ -229,7 +229,7 @@ public:
     /**
      * This method adds a link quality indicator (LQI) value to the average.
      *
-     * @param[in] aLqi                Link Quality Indicator value to be added to the average.
+     * @param[in] aLqi  Link Quality Indicator value to be added to the average.
      *
      */
     void Add(uint8_t aLqi);

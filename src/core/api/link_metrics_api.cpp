@@ -36,19 +36,39 @@
 #include <openthread/link_metrics.h>
 
 #include "common/instance.hpp"
+#include "net/ip6_address.hpp"
 
 using namespace ot;
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
-otError otLinkMetricsQuery(otInstance *        aInstance,
-                           const otIp6Address *aDestination,
-                           uint8_t             aSeriesId,
-                           const uint8_t *     aTypeIdFlags,
-                           uint8_t             aTypeIdFlagsCount)
+static const char *const sTypeEnumStrings[2] = {
+    "(Count/Summation)",
+    "(Exponential Moving Average)",
+};
+
+const char *otLinkMetricsTypeEnumToString(otLinkMetricsTypeEnum aEnum)
 {
-    return static_cast<Instance *>(aInstance)->Get<LinkMetrics>().LinkMetricsQuery(aDestination, aSeriesId,
-                                                                                   aTypeIdFlags, aTypeIdFlagsCount);
+    const char *retval;
+
+    if (aEnum < OT_ARRAY_LENGTH(sTypeEnumStrings))
+    {
+        retval = sTypeEnumStrings[aEnum];
+    }
+    else
+    {
+        retval = "(Unknown Type Enum)";
+    }
+    return retval;
+}
+
+otError otLinkMetricsQuery(otInstance *         aInstance,
+                           const otIp6Address & aDestination,
+                           uint8_t              aSeriesId,
+                           const otLinkMetrics &aLinkMetricsFlags)
+{
+    return static_cast<Instance *>(aInstance)->Get<LinkMetrics>().LinkMetricsQuery(
+        static_cast<const Ip6::Address &>(aDestination), aSeriesId, aLinkMetricsFlags);
 }
 
 void otLinkMetricsSetReportCallback(otInstance *                aInstance,

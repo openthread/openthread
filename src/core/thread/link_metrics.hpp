@@ -72,20 +72,18 @@ public:
      * This function sends an MLE Data Request containing Link Metrics Query TLV to query Link Metrics data. It could
      * be either a Single Probe or a Forward Tracking Series.
      *
-     * @param[in]  aDestination      A pointer to the IPv6 address of the destination.
-     * @param[in]  aSeriesId         The Series ID to query, 0 for single probe.
-     * @param[in]  aTypeIdFlags      A pointer to an array of Type Id Flags.
-     * @param[in]  aTypeIdFlagsCount The number of Type Id Flags entries.
+     * @param[in]  aDestination       A reference to the IPv6 address of the destination.
+     * @param[in]  aSeriesId          The Series ID to query, 0 for single probe.
+     * @param[in]  aLinkMetricsFlags  Flags to specify what metrics to query.
      *
      * @retval OT_ERROR_NONE          Successfully sent a Link Metrics query message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Data Request message.
      * @retval OT_ERROR_INVALID_ARGS  TypeIdFlags are not valid or exceed the count limit.
      *
      */
-    otError LinkMetricsQuery(const otIp6Address *aDestination,
-                             uint8_t             aSeriesId,
-                             const uint8_t *     aTypeIdFlags,
-                             uint8_t             aTypeIdFlagsCount);
+    otError LinkMetricsQuery(const Ip6::Address & aDestination,
+                             uint8_t              aSeriesId,
+                             const otLinkMetrics &aLinkMetricsFlags);
 
     /**
      * This method appends a Link Metrics Report to a message according to the Link Metrics query.
@@ -127,6 +125,16 @@ public:
     void SetLinkMetricsReportCallback(otLinkMetricsReportCallback aCallback, void *aCallbackContext);
 
 private:
+    enum
+    {
+        kMaxTypeIdFlags = 4,
+
+        kTypeIdFlagPdu        = 0x40, ///< Type ID Flag for PDU count.
+        kTypeIdFlagLqi        = 0x09, ///< Type ID Flag for LQI.
+        kTypeIdFlagLinkMargin = 0x0a, ///< Type ID Flag for Link Margin.
+        kTypeIdFlagRssi       = 0x0b, ///< Type ID Flag for RSSI.
+    };
+
     otLinkMetricsReportCallback mLinkMetricsReportCallback;
     void *                      mLinkMetricsReportCallbackContext;
 
@@ -141,7 +149,8 @@ private:
                                                const int8_t                   aNoiseFloor,
                                                const Message &                aRequestMessage);
 
-    void SetLinkMetricsTypeIdFlagsFromTlv(otLinkMetricsTypeIdFlags &aOtTypeId, LinkMetricsTypeIdFlags &aTlvTypeId);
+    uint8_t GetTypeIdFlagsFromOtLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
+                                                 const otLinkMetrics &   aLinkMetricsFlags);
 };
 
 /**

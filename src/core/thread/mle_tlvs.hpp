@@ -1298,44 +1298,22 @@ public:
     bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the Link Metrics Query ID sub-TLV.
+     * This methods returns a pointer to the Sub-TLVs.
      *
-     * @returns The Link Metrics Query ID sub-TLV.
-     *
-     */
-    const LinkMetricsQueryId *GetQueryId(void) const { return &mQueryId; }
-
-    /**
-     * This method sets Link Metrics Query ID sub-TLV.
-     *
-     * @param[in]  aQueryId  The Link Metrics Query ID sub-TLV.
+     * @retval A pointer to the Sub-TLVs.
      *
      */
-    void SetQueryId(LinkMetricsQueryId &aQueryId) { mQueryId = aQueryId; }
-
-    /**
-     * This method returns the Link Metrics Query Options sub-TLV.
-     *
-     * @returns The Link Metrics Query Options sub-TLV.
-     *
-     */
-    const LinkMetricsQueryOptions *GetQueryOptions(void) const { return &mQueryOptions; }
-
-    /**
-     * This method sets Link Metrics query options tlv.
-     *
-     * @param[in]  aQueryOptions  The Link Metrics query options tlv.
-     *
-     */
-    void SetQueryOptions(const LinkMetricsQueryOptions &aQueryOptions)
-    {
-        mQueryOptions = aQueryOptions;
-        SetLength(mQueryId.GetSize() + mQueryOptions.GetSize());
-    }
+    const Tlv *GetSubTlvs(void) const { return reinterpret_cast<const Tlv *>(mSubTlvs); }
 
 private:
-    LinkMetricsQueryId      mQueryId;
-    LinkMetricsQueryOptions mQueryOptions;
+    enum
+    {
+        kMaxSize = sizeof(LinkMetricsQueryId) +
+                   sizeof(LinkMetricsQueryOptions), ///< Maximum size of Link Metrics Query in bytes.
+    };
+
+    uint8_t mSubTlvs[kMaxSize]; ///< The sub TLVs
+
 } OT_TOOL_PACKED_END;
 
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
