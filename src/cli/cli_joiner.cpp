@@ -73,7 +73,7 @@ otError Joiner::ProcessDiscerner(uint8_t aArgsLength, char *aArgs[])
 
         VerifyOrExit(discerner != nullptr, error = OT_ERROR_NOT_FOUND);
 
-        mInterpreter.OutputFormat("0x%" PRIx64 "/%u\r\n", discerner->mValue, discerner->mLength);
+        mInterpreter.OutputLine("0x%" PRIx64 "/%u", discerner->mValue, discerner->mLength);
     }
     else
     {
@@ -91,7 +91,7 @@ otError Joiner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputFormat("%s\r\n", command.mName);
+        mInterpreter.OutputLine("%s", command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -107,7 +107,7 @@ otError Joiner::ProcessId(uint8_t aArgsLength, char *aArgs[])
     joinerId = otJoinerGetId(mInterpreter.mInstance);
 
     mInterpreter.OutputBytes(joinerId->m8, sizeof(otExtAddress));
-    mInterpreter.OutputFormat("\r\n");
+    mInterpreter.OutputLine("");
 
     return OT_ERROR_NONE;
 }
@@ -174,11 +174,11 @@ void Joiner::HandleCallback(otError aError)
     switch (aError)
     {
     case OT_ERROR_NONE:
-        mInterpreter.OutputFormat("Join success\r\n");
+        mInterpreter.OutputLine("Join success");
         break;
 
     default:
-        mInterpreter.OutputFormat("Join failed [%s]\r\n", otThreadErrorToString(aError));
+        mInterpreter.OutputLine("Join failed [%s]", otThreadErrorToString(aError));
         break;
     }
 }
