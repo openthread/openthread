@@ -304,6 +304,9 @@ template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(void)
 {
     const otRadioCaps kRequiredRadioCaps =
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING |
+#endif
         OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF;
 
     otError        error = OT_ERROR_NONE;
@@ -317,10 +320,14 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(v
 
     if ((mRadioCaps & kRequiredRadioCaps) != kRequiredRadioCaps)
     {
-        otLogCritPlat("RCP does not support required capabilities: ack-timeout:%s, tx-retries:%s, CSMA-backoff:%s",
-                      (mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) ? "yes" : "no",
-                      (mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) ? "yes" : "no",
-                      (mRadioCaps & OT_RADIO_CAPS_CSMA_BACKOFF) ? "yes" : "no");
+        otRadioCaps missingCaps = (mRadioCaps & kRequiredRadioCaps) ^ kRequiredRadioCaps;
+
+        otLogCritPlat("RCP is missing required capabilities: %s%s%s%s%s",
+                      (missingCaps & OT_RADIO_CAPS_ACK_TIMEOUT) ? "ack-timeout " : "",
+                      (missingCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) ? "tx-retries " : "",
+                      (missingCaps & OT_RADIO_CAPS_CSMA_BACKOFF) ? "CSMA-backoff " : "",
+                      (missingCaps & OT_RADIO_CAPS_TRANSMIT_SEC) ? "tx-security " : "",
+                      (missingCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) ? "tx-timing " : "");
 
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
@@ -1555,17 +1562,20 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
     otPlatRadioTxStarted(mInstance, mTransmitFrame);
 
     error = Request(true, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
-                    SPINEL_DATATYPE_DATA_WLEN_S                     // Frame data
-                                            SPINEL_DATATYPE_UINT8_S // Channel
-                                            SPINEL_DATATYPE_UINT8_S // MaxCsmaBackoffs
-                                            SPINEL_DATATYPE_UINT8_S // MaxFrameRetries
-                                            SPINEL_DATATYPE_BOOL_S  // CsmaCaEnabled
-                                            SPINEL_DATATYPE_BOOL_S  // IsARetx
-                                            SPINEL_DATATYPE_BOOL_S, // SkipAes
+                    SPINEL_DATATYPE_DATA_WLEN_S                               // Frame data
+                                                    SPINEL_DATATYPE_UINT8_S   // Channel
+                                                    SPINEL_DATATYPE_UINT8_S   // MaxCsmaBackoffs
+                                                    SPINEL_DATATYPE_UINT8_S   // MaxFrameRetries
+                                                    SPINEL_DATATYPE_BOOL_S    // CsmaCaEnabled
+                                                    SPINEL_DATATYPE_BOOL_S    // IsARetx
+                                                    SPINEL_DATATYPE_BOOL_S    // SkipAes
+                                                    SPINEL_DATATYPE_UINT16_S  // Period
+                                                    SPINEL_DATATYPE_UINT16_S, // Phase
                     mTransmitFrame->mPsdu, mTransmitFrame->mLength, mTransmitFrame->mChannel,
                     mTransmitFrame->mInfo.mTxInfo.mMaxCsmaBackoffs, mTransmitFrame->mInfo.mTxInfo.mMaxFrameRetries,
                     mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled, mTransmitFrame->mInfo.mTxInfo.mIsARetx,
-                    mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed);
+                    mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed, mTransmitFrame->mInfo.mTxInfo.mPeriod,
+                    mTransmitFrame->mInfo.mTxInfo.mPhase);
 
     if (error == OT_ERROR_NONE)
     {
@@ -1804,6 +1814,12 @@ template <typename InterfaceType, typename ProcessContextType>
 uint64_t RadioSpinel<InterfaceType, ProcessContextType>::GetNow(void)
 {
     return mIsTimeSynced ? (otPlatTimeGet() + static_cast<uint64_t>(mRadioTimeOffset)) : UINT64_MAX;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+uint32_t RadioSpinel<InterfaceType, ProcessContextType>::GetBusSpeed(void) const
+{
+    return mSpinelInterface.GetBusSpeed();
 }
 
 } // namespace Spinel
