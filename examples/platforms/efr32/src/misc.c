@@ -57,8 +57,37 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otPlatResetReason reason;
+    otPlatResetReason reason = OT_PLAT_RESET_REASON_UNKNOWN;
 
+    #if defined(_EMU_RSTCAUSE_MASK)
+    if (sResetCause & EMU_RSTCAUSE_POR)
+    {
+        reason = OT_PLAT_RESET_REASON_POWER_ON;
+    }
+    else if (sResetCause & EMU_RSTCAUSE_SYSREQ)
+    {
+        reason = OT_PLAT_RESET_REASON_SOFTWARE;
+    }
+    else if ((sResetCause & EMU_RSTCAUSE_WDOG0) || (sResetCause & EMU_RSTCAUSE_WDOG1))
+    {
+        reason = OT_PLAT_RESET_REASON_WATCHDOG;
+    }
+    else if (sResetCause & EMU_RSTCAUSE_PIN)
+    {
+        reason = OT_PLAT_RESET_REASON_EXTERNAL;
+    }
+    else if (sResetCause & EMU_RSTCAUSE_LOCKUP)
+    {
+        reason = OT_PLAT_RESET_REASON_FAULT;
+    }
+    else if ((sResetCause & EMU_RSTCAUSE_AVDDBOD) || (sResetCause & EMU_RSTCAUSE_DECBOD) ||
+             (sResetCause & EMU_RSTCAUSE_DVDDBOD) || (sResetCause & EMU_RSTCAUSE_DVDDLEBOD) ||
+             (sResetCause & EMU_RSTCAUSE_EM4))
+    {
+        reason = OT_PLAT_RESET_REASON_ASSERT;
+    }
+    #endif
+    #if defined(_RMU_RSTCAUSE_MASK)
     if (sResetCause & RMU_RSTCAUSE_PORST)
     {
         reason = OT_PLAT_RESET_REASON_POWER_ON;
@@ -84,11 +113,7 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     {
         reason = OT_PLAT_RESET_REASON_ASSERT;
     }
-    else
-    {
-        reason = OT_PLAT_RESET_REASON_UNKNOWN;
-    }
-
+    #endif
     return reason;
 }
 

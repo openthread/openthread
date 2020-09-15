@@ -99,6 +99,7 @@ void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset
 }
 
 #else // Defaults to Silabs nvm3 system
+// TODO: Add a compile-time check for NVM3_DEFAULT_NVM_SIZE that uses FLASH_PAGE_SIZE (defined in `platform/Device/SiliconLabs/{PLATFORM}/Include/*.h`
 
 #include "nvm3.h"
 #include "nvm3_default.h"

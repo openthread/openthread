@@ -26,19 +26,38 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_CORE_EFR32_CONFIG_CHECK_H_
-#define OPENTHREAD_CORE_EFR32_CONFIG_CHECK_H_
+/**
+ * @file logging.c
+ * Platform abstraction for the logging
+ *
+ */
 
-#include "board_config.h"
+#include <openthread-core-config.h>
+#include <openthread/config.h>
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/logging.h>
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-#error "Platform efr32mg12 doesn't support configuration option: OPENTHREAD_CONFIG_TIME_SYNC_ENABLE"
+#include <utils/logging_rtt.h>
+
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
+void efr32LogInit(void)
+{
+    utilsLogRttInit();
+}
+
+void efr32LogDeinit(void)
+{
+    utilsLogRttDeinit();
+}
+
+OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    va_list ap;
+
+    va_start(ap, aFormat);
+
+    utilsLogRttOutput(aLogLevel, aLogRegion, aFormat, ap);
+
+    va_end(ap);
+}
 #endif
-
-#ifndef RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
-#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
-#error "Platform efr32mg12 not configured to support configuration option: OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT"
-#endif
-#endif
-
-#endif /* OPENTHREAD_CORE_EFR32_CONFIG_CHECK_H_ */

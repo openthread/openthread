@@ -26,30 +26,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file implements gcc-specific startup code for the efr32.
- */
+#ifndef OPENTHREAD_CORE_EFR32_CONFIG_CHECK_H_
+#define OPENTHREAD_CORE_EFR32_CONFIG_CHECK_H_
 
-__extension__ typedef int __guard __attribute__((mode(__DI__)));
+#include "board_config.h"
 
-int __cxa_guard_acquire(__guard *g)
-{
-    return !*(char *)(g);
-}
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#error "Platform doesn't support configuration option: OPENTHREAD_CONFIG_TIME_SYNC_ENABLE"
+#endif
 
-void __cxa_guard_release(__guard *g)
-{
-    *(char *)g = 1;
-}
+#ifndef RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
+#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+#error "Platform not configured to support configuration option: OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT"
+#endif
+#endif
 
-void __cxa_guard_abort(__guard *g)
-{
-    (void)g;
-}
-
-void __cxa_pure_virtual(void)
-{
-    while (1)
-        ;
-}
+#endif /* OPENTHREAD_CORE_EFR32_CONFIG_CHECK_H_ */

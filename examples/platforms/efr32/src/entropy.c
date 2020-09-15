@@ -28,67 +28,21 @@
 
 /**
  * @file
- *   This file implements an entropy source based on ADC.
+ *   This file implements the OpenThread platform abstraction for random number generator.
  *
  */
 
 #include <openthread/platform/entropy.h>
 
+#include "mbedtls/entropy_poll.h"
 #include "utils/code_utils.h"
-
-#include "em_adc.h"
-#include "em_cmu.h"
-
-enum
-{
-    EFR32_ADC_REF_CLOCK = 7000000,
-};
-
-void efr32RandomInit(void)
-{
-    /* Enable ADC Clock */
-    CMU_ClockEnable(cmuClock_ADC0, true);
-    ADC_Init_TypeDef       init       = ADC_INIT_DEFAULT;
-    ADC_InitSingle_TypeDef singleInit = ADC_INITSINGLE_DEFAULT;
-
-    /* Initialize the ADC with the required values */
-    init.timebase = ADC_TimebaseCalc(0);
-    init.prescale = ADC_PrescaleCalc(EFR32_ADC_REF_CLOCK, 0);
-    ADC_Init(ADC0, &init);
-
-    /* Initialize for single conversion specific to RNG */
-    singleInit.reference = adcRefVEntropy;
-    singleInit.diff      = true;
-    singleInit.posSel    = adcPosSelVSS;
-    singleInit.negSel    = adcNegSelVSS;
-    ADC_InitSingle(ADC0, &singleInit);
-
-    /* Set VINATT to maximum value and clear FIFO */
-    ADC0->SINGLECTRLX |= _ADC_SINGLECTRLX_VINATT_MASK;
-    ADC0->SINGLEFIFOCLEAR = ADC_SINGLEFIFOCLEAR_SINGLEFIFOCLEAR;
-}
 
 static uint32_t randomUint32Get(void)
 {
-    uint8_t  tmp;
-    uint32_t random = 0;
+    uint32_t random   = 0;
+    size_t   ouputLen = 0;
 
-    for (int i = 0; i < 4; i++)
-    {
-        tmp = 0;
-
-        for (int j = 0; j < 3; j++)
-        {
-            ADC_Start(ADC0, adcStartSingle);
-
-            while ((ADC0->IF & ADC_IF_SINGLE) == 0)
-                ;
-
-            tmp |= ((ADC_DataSingleGet(ADC0) & 0x07) << (j * 3));
-        }
-
-        random |= (tmp & 0xff) << (i * 8);
-    }
+    mbedtls_hardware_poll(NULL, (unsigned char *)&random, sizeof(random), &ouputLen);
 
     return random;
 }

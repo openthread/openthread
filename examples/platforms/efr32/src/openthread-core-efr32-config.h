@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -50,11 +50,14 @@
 /*
  * @def OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
  *
- * We dont support sub-gig frequencies on MG21.
+ * Define to 1 if you want to enable physical layer to support OQPSK modulation in 915MHz band.
  *
  */
-
+#if RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
+#define OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT 1
+#else
 #define OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT 0
+#endif
 
 /*
  * @def OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
@@ -117,22 +120,6 @@
  *
  */
 #define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 0
-
-/**
- * @def RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
- *
- * The number of short source address table entries.
- *
- */
-#define RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM 6
-
-/**
- * @def RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
- *
- * The number of extended source address table entries.
- *
- */
-#define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM 6
 
 /**
  * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
