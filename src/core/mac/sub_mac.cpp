@@ -347,7 +347,7 @@ void SubMac::StartCsmaBackoff(void)
     {
         SetState(kStateCslTransmit);
 
-        if (ShouldHandleTransmitDelay())
+        if (ShouldHandleTransmitTargetTime())
         {
             uint32_t phaseNow =
                 (otPlatRadioGetNow(&GetInstance()) / kUsPerTenSymbols) % mTransmitFrame.mInfo.mTxInfo.mPeriod;
@@ -771,7 +771,7 @@ exit:
     return swEnergyScan;
 }
 
-bool SubMac::ShouldHandleTransmitDelay(void) const
+bool SubMac::ShouldHandleTransmitTargetTime(void) const
 {
     bool swTxDelay = true;
 

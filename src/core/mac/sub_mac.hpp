@@ -556,7 +556,7 @@ private:
     bool ShouldHandleAckTimeout(void) const;
     bool ShouldHandleRetries(void) const;
     bool ShouldHandleEnergyScan(void) const;
-    bool ShouldHandleTransmitDelay(void) const;
+    bool ShouldHandleTransmitTargetTime(void) const;
 
     void ProcessTransmitSecurity(void);
     void UpdateFrameCounter(uint32_t aFrameCounter);

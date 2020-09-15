@@ -139,9 +139,9 @@ public:
     void Process(const RadioProcessContext &aContext);
 
     /**
-     * This method get bus speed between the host and the radio.
+     * This method returns the bus speed between the host and the radio.
      *
-     * @returns   bus speed in bps.
+     * @returns   Bus speed in bits/second.
      *
      */
     uint32_t GetBusSpeed(void) const { return ((mSpiDevFd >= 0) ? mSpiSpeedHz : 0); }

@@ -175,7 +175,7 @@
 /**
  * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE
  *
- * Define to 1 to enable software transmission delay logic.
+ * Define to 1 to enable software transmission target time logic.
  *
  */
 #ifndef OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE

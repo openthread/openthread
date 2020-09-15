@@ -77,7 +77,7 @@ void CslTxScheduler::InitFrameRequestAhead(void)
 
     // Use ceiling to get next closest integer
     mCslFrameRequestAhead =
-        (OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_THRESHOLD_US + busTxTimeUs + kUsPerTenSymbols - 1) / kUsPerTenSymbols;
+        (OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US + busTxTimeUs + kUsPerTenSymbols - 1) / kUsPerTenSymbols;
 }
 
 void CslTxScheduler::Update(void)

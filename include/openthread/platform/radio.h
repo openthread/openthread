@@ -518,12 +518,12 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
 uint64_t otPlatRadioGetNow(otInstance *aInstance);
 
 /**
- * Get the bus speed in Hz(bps) between the host and the radio chip.
+ * Get the bus speed in bits/second between the host and the radio chip.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  *
- * @returns The bus speed in bps between the host and the radio chip.
- *          Return 0 when platform does not use bus.
+ * @returns The bus speed in bits/second between the host and the radio chip.
+ *          Return 0 when the MAC and above layer and Radio layer resides on the same chip.
  *
  */
 uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance);
