@@ -61,7 +61,7 @@ TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
 # Needed for EFR32_MBEDTLS_CPPFLAGS
-EFR32_PLATFORM = efr32mg12
+EFR32_PLATFORM = efr32mg21
 BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
 
 #
