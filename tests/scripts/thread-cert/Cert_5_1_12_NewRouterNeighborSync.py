@@ -42,19 +42,19 @@ class Cert_5_1_12_NewRouterSync(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1, ROUTER2]
+            'allowlist': [ROUTER1, ROUTER2]
         },
         ROUTER1: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ROUTER2: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 
@@ -122,8 +122,8 @@ class Cert_5_1_12_NewRouterSync(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.LeaderData)
         msg.assertMleMessageContainsTlv(mle.Route64)
 
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[ROUTER1].add_allowlist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[ROUTER2].add_allowlist(self.nodes[ROUTER1].get_addr64())
 
         self.simulator.go(35)
 

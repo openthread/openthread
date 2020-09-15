@@ -113,16 +113,16 @@ wpan.Node.init_all_nodes()
 
 r1.form("partition")
 
-r1.whitelist_node(r2)
-r2.whitelist_node(r1)
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
 r2.join_node(r1, wpan.JOIN_TYPE_ROUTER)
 
-c1.whitelist_node(r1)
-r1.whitelist_node(c1)
+c1.allowlist_node(r1)
+r1.allowlist_node(c1)
 c1.join_node(r1, wpan.JOIN_TYPE_END_DEVICE)
 
-c2.whitelist_node(r2)
-r2.whitelist_node(c2)
+c2.allowlist_node(r2)
+r2.allowlist_node(c2)
 c2.join_node(r2, wpan.JOIN_TYPE_END_DEVICE)
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -140,9 +140,9 @@ verify(r1.get(wpan.WPAN_NODE_TYPE) == wpan.NODE_TYPE_LEADER)
 verify(r2.get(wpan.WPAN_NODE_TYPE) == wpan.NODE_TYPE_ROUTER)
 
 # Now force the two routers to form their own partition
-# by removing them from each other's whitelist table
-r1.un_whitelist_node(r2)
-r2.un_whitelist_node(r1)
+# by removing them from each other's allowlist table
+r1.un_allowlist_node(r2)
+r2.un_allowlist_node(r1)
 
 # Add a prefix before r2 realizes it can not longer talk
 # to leader (r1).
@@ -160,9 +160,9 @@ wpan.verify_within(check_r2_become_leader, long_wait)
 # While we have two partition, add a prefix on r1
 r1.add_prefix(prefix1)
 
-# Update white list and wait for partitions to merge.
-r1.whitelist_node(r2)
-r2.whitelist_node(r1)
+# Update allowlist and wait for partitions to merge.
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
 
 
 def check_partition_id_match():

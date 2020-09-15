@@ -49,21 +49,21 @@ class Cert_5_6_4_NetworkDataRegisterAfterAttachRouter(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER, ED1, SED1]
+            'allowlist': [ROUTER, ED1, SED1]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ED1: {
             'name': 'MED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         SED1: {
             'name': 'SED',
@@ -71,7 +71,7 @@ class Cert_5_6_4_NetworkDataRegisterAfterAttachRouter(thread_cert.TestCase):
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 
@@ -155,7 +155,7 @@ class Cert_5_6_4_NetworkDataRegisterAfterAttachRouter(thread_cert.TestCase):
                 p.mle.tlv.type) and {Ipv6Addr('2001:2:0:1::')} == set(p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.
             border_router.flag.p == [1] and p.thread_nwd.tlv.border_router.flag.s == [1] and p.thread_nwd.tlv.
             border_router.flag.r == [1] and p.thread_nwd.tlv.border_router.flag.o == [1] and p.thread_nwd.tlv.stable ==
-            [1, 1, 1] and p.thread_nwd.tlv.border_router_16 == 0xFFFE)
+            [1, 1, 1] and p.thread_nwd.tlv.border_router_16 == [0xFFFE])
 
         # Step 11: The DUT MUST send a unicast MLE Child Update
         # Response to SED_1

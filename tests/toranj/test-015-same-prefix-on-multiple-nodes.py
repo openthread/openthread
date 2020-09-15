@@ -60,11 +60,11 @@ wpan.Node.init_all_nodes()
 # Two routers r1 and r2 (sed2 is used for quick promotion of r2 to router
 # status).
 
-r1.whitelist_node(r2)
-r2.whitelist_node(r1)
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
 
-r2.whitelist_node(sed2)
-sed2.whitelist_node(r2)
+r2.allowlist_node(sed2)
+sed2.allowlist_node(r2)
 
 r1.form("same-prefix")
 

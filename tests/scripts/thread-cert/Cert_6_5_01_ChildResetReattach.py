@@ -43,20 +43,20 @@ class Cert_6_5_1_ChildResetReattach(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ED]
+            'allowlist': [ED]
         },
         ED: {
             'name': 'ED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 
     def _setUpEd(self):
-        self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED].enable_whitelist()
+        self.nodes[ED].add_allowlist(self.nodes[LEADER].get_addr64())
+        self.nodes[ED].enable_allowlist()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -67,8 +67,8 @@ class Cert_6_5_1_ChildResetReattach(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
-        self.nodes[LEADER].remove_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[ED].remove_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[LEADER].remove_allowlist(self.nodes[ED].get_addr64())
+        self.nodes[ED].remove_allowlist(self.nodes[LEADER].get_addr64())
 
         self.nodes[ED].reset()
         self._setUpEd()
@@ -76,7 +76,7 @@ class Cert_6_5_1_ChildResetReattach(thread_cert.TestCase):
         self.nodes[ED].start()
 
         self.simulator.go(5)
-        self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
+        self.nodes[LEADER].add_allowlist(self.nodes[ED].get_addr64())
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 

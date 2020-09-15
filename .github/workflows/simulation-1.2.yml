@@ -72,6 +72,11 @@ jobs:
       run: |
         ./script/test unit
         ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-pcaps
+        path: "*.pcap"
     - name: Keep-1-2-only
       run: |
         ./script/test tar simulation 1.1

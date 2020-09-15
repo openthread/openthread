@@ -444,22 +444,22 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def clear_whitelist(self):
+    def clear_allowlist(self):
         cmd = 'macfilter addr clear'
         self.send_command(cmd)
         self._expect('Done')
 
-    def enable_whitelist(self):
-        cmd = 'macfilter addr whitelist'
+    def enable_allowlist(self):
+        cmd = 'macfilter addr allowlist'
         self.send_command(cmd)
         self._expect('Done')
 
-    def disable_whitelist(self):
+    def disable_allowlist(self):
         cmd = 'macfilter addr disable'
         self.send_command(cmd)
         self._expect('Done')
 
-    def add_whitelist(self, addr, rssi=None):
+    def add_allowlist(self, addr, rssi=None):
         cmd = 'macfilter addr add %s' % addr
 
         if rssi is not None:
@@ -618,7 +618,7 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def remove_whitelist(self, addr):
+    def remove_allowlist(self, addr):
         cmd = 'macfilter addr remove %s' % addr
         self.send_command(cmd)
         self._expect('Done')
@@ -770,6 +770,10 @@ class Node:
         cmd = 'routerdowngradethreshold %d' % threshold
         self.send_command(cmd)
         self._expect('Done')
+
+    def get_router_downgrade_threshold(self) -> int:
+        self.send_command('routerdowngradethreshold')
+        return int(self._expect_result(r'\d+'))
 
     def prefer_router_id(self, router_id):
         cmd = 'preferrouterid %d' % router_id
@@ -1003,8 +1007,11 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def add_route(self, prefix, prf='med'):
-        cmd = 'route add %s %s' % (prefix, prf)
+    def add_route(self, prefix, stable=False, prf='med'):
+        cmd = 'route add %s ' % prefix
+        if stable:
+            cmd += 's'
+        cmd += ' %s' % prf
         self.send_command(cmd)
         self._expect('Done')
 

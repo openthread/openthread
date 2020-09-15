@@ -38,8 +38,8 @@ class Router_5_3_3(HarnessCase):
 
     def on_dialog(self, dialog, title):
         if title.startswith('Start DUT'):
-            self.dut.enable_blacklist()
-            self.dut.add_blacklist('166e0a000000005')
+            self.dut.enable_denylist()
+            self.dut.add_denylist('166e0a000000005')
 
 
 if __name__ == '__main__':

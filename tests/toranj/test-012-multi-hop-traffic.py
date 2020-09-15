@@ -88,25 +88,25 @@ wpan.Node.init_all_nodes()
 #      /  \      |       |       /  \
 #    fed1 sed1  sed2    sed3   sed4 fed4
 
-# Whitelist routers with their corresponding sleepy children
+# Allowlist routers with their corresponding sleepy children
 
 for index in range(0, NUM_ROUTERS):
-    routers[index].whitelist_node(sed_children[index])
-    sed_children[index].whitelist_node(routers[index])
+    routers[index].allowlist_node(sed_children[index])
+    sed_children[index].allowlist_node(routers[index])
 
-# Whitelist a FED child for the first and last routers
+# Allowlist a FED child for the first and last routers
 
-routers[0].whitelist_node(fed_children[0])
-fed_children[0].whitelist_node(routers[0])
+routers[0].allowlist_node(fed_children[0])
+fed_children[0].allowlist_node(routers[0])
 
-routers[-1].whitelist_node(fed_children[-1])
-fed_children[-1].whitelist_node(routers[-1])
+routers[-1].allowlist_node(fed_children[-1])
+fed_children[-1].allowlist_node(routers[-1])
 
 # While list routers at [index-1] and [index]
 
 for index in range(1, NUM_ROUTERS):
-    routers[index - 1].whitelist_node(routers[index])
-    routers[index].whitelist_node(routers[index - 1])
+    routers[index - 1].allowlist_node(routers[index])
+    routers[index].allowlist_node(routers[index - 1])
 
 routers[0].form("multi-hop")
 sed_children[0].join_node(routers[0], wpan.JOIN_TYPE_SLEEPY_END_DEVICE)

@@ -99,12 +99,25 @@ otError Udp::Socket::Bind(uint16_t aPort)
     return Bind(SockAddr(aPort));
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 otError Udp::Socket::BindToNetif(otNetifIdentifier aNetifIdentifier)
 {
-    return otPlatUdpBindToNetif(this, aNetifIdentifier);
-}
+    OT_UNUSED_VARIABLE(aNetifIdentifier);
+
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    SuccessOrExit(error = otPlatUdpBindToNetif(this, aNetifIdentifier));
 #endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    Get<Udp>().BindToNetif(*this, aNetifIdentifier);
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+exit:
+#endif
+    return error;
+}
 
 otError Udp::Socket::Connect(const SockAddr &aSockAddr)
 {
@@ -131,6 +144,9 @@ Udp::Udp(Instance &aInstance)
     , mEphemeralPort(kDynamicPortMin)
     , mReceivers()
     , mSockets()
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    , mPrevBackboneSockets(nullptr)
+#endif
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     , mUdpForwarderContext(nullptr)
     , mUdpForwarder(nullptr)
@@ -203,6 +219,35 @@ otError Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
 exit:
     return error;
 }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+void Udp::BindToNetif(SocketHandle &aSocket, otNetifIdentifier aNetifIdentifier)
+{
+    if (aNetifIdentifier == OT_NETIF_BACKBONE)
+    {
+        SetBackboneSocket(aSocket);
+    }
+}
+
+void Udp::SetBackboneSocket(SocketHandle &aSocket)
+{
+    RemoveSocket(aSocket);
+
+    if (mPrevBackboneSockets != nullptr)
+    {
+        mSockets.PushAfter(aSocket, *mPrevBackboneSockets);
+    }
+    else
+    {
+        mSockets.Push(aSocket);
+    }
+}
+
+const Udp::SocketHandle *Udp::GetBackboneSockets(void)
+{
+    return mPrevBackboneSockets != nullptr ? mPrevBackboneSockets->GetNext() : mSockets.GetHead();
+}
+#endif
 
 otError Udp::Connect(SocketHandle &aSocket, const SockAddr &aSockAddr)
 {
@@ -296,13 +341,33 @@ exit:
 
 void Udp::AddSocket(SocketHandle &aSocket)
 {
-    IgnoreError(mSockets.Add(aSocket));
+    SuccessOrExit(mSockets.Add(aSocket));
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (mPrevBackboneSockets == nullptr)
+    {
+        mPrevBackboneSockets = &aSocket;
+    }
+#endif
+exit:
+    return;
 }
 
 void Udp::RemoveSocket(SocketHandle &aSocket)
 {
-    SuccessOrExit(mSockets.Remove(aSocket));
+    SocketHandle *prev;
+
+    SuccessOrExit(mSockets.Find(aSocket, prev));
+
+    mSockets.PopAfter(prev);
     aSocket.SetNext(nullptr);
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (&aSocket == mPrevBackboneSockets)
+    {
+        mPrevBackboneSockets = prev;
+    }
+#endif
 
 exit:
     return;
@@ -397,7 +462,27 @@ void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
     SocketHandle *socket;
     SocketHandle *prev;
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    {
+        const SocketHandle *socketsBegin, *socketsEnd;
+
+        if (!aMessageInfo.IsHostInterface())
+        {
+            socketsBegin = mSockets.GetHead();
+            socketsEnd   = GetBackboneSockets();
+        }
+        else
+        {
+            socketsBegin = GetBackboneSockets();
+            socketsEnd   = nullptr;
+        }
+
+        socket = mSockets.FindMatching(socketsBegin, socketsEnd, aMessageInfo, prev);
+    }
+#else
     socket = mSockets.FindMatching(aMessageInfo, prev);
+#endif
+
     VerifyOrExit(socket != nullptr, OT_NOOP);
 
     aMessage.RemoveHeader(aMessage.GetOffset());

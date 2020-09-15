@@ -47,45 +47,45 @@ class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [ROUTER1, ROUTER2, ED1]
+            'allowlist': [ROUTER1, ROUTER2, ED1]
         },
         ROUTER1: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED2, ED3]
+            'allowlist': [LEADER, ED2, ED3]
         },
         ROUTER2: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ED1: {
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ED2: {
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
         ED3: {
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
     }
 
     def _setUpLeader(self):
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED1].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
+        self.nodes[LEADER].add_allowlist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[LEADER].add_allowlist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[LEADER].add_allowlist(self.nodes[ED1].get_addr64())
+        self.nodes[LEADER].enable_allowlist()
         self.nodes[LEADER].set_router_selection_jitter(1)
 
     def test(self):
@@ -116,8 +116,8 @@ class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
         self.nodes[LEADER].reset()
         self._setUpLeader()
 
-        self.nodes[ED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ED1].get_addr64())
+        self.nodes[ED1].add_allowlist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[ROUTER1].add_allowlist(self.nodes[ED1].get_addr64())
 
         self.simulator.go(140)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'leader')

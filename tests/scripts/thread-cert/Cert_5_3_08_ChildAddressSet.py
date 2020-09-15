@@ -48,25 +48,25 @@ class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
         DUT_LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [BR, MED1, MED2]
+            'allowlist': [BR, MED1, MED2]
         },
         BR: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [DUT_LEADER]
+            'allowlist': [DUT_LEADER]
         },
         MED1: {
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [DUT_LEADER]
+            'allowlist': [DUT_LEADER]
         },
         MED2: {
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [DUT_LEADER]
+            'allowlist': [DUT_LEADER]
         },
     }
 

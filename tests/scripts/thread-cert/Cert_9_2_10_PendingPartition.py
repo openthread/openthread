@@ -59,7 +59,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             },
             'mode': 'rsdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         LEADER: {
             'active_dataset': {
@@ -70,7 +70,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'mode': 'rsdn',
             'partition_id': 0xffffffff,
             'router_selection_jitter': 1,
-            'whitelist': [COMMISSIONER, ROUTER1]
+            'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
             'active_dataset': {
@@ -80,14 +80,14 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             },
             'mode': 'rsdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED1, SED1]
+            'allowlist': [LEADER, ED1, SED1]
         },
         ED1: {
             'channel': 19,
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
         SED1: {
             'channel': 19,
@@ -95,7 +95,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
     }
 
@@ -137,8 +137,8 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         print(self.nodes[ED1].get_channel())
         print(self.nodes[SED1].get_channel())
 
-        self.nodes[LEADER].remove_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER1].remove_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[LEADER].remove_allowlist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[ROUTER1].remove_allowlist(self.nodes[LEADER].get_addr64())
         self.simulator.go(160)
 
         print(self.nodes[COMMISSIONER].get_channel())
@@ -159,8 +159,8 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         self.assertEqual(self.nodes[ED1].get_channel(), CHANNEL_FINAL)
         self.assertEqual(self.nodes[SED1].get_channel(), CHANNEL_FINAL)
 
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[LEADER].add_allowlist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[ROUTER1].add_allowlist(self.nodes[LEADER].get_addr64())
         self.simulator.go(60)
 
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')

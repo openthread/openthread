@@ -177,7 +177,6 @@ public:
          */
         otError Bind(const SockAddr &aSockAddr);
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
         /**
          * This method binds the UDP socket to a specified network interface.
          *
@@ -188,7 +187,6 @@ public:
          *
          */
         otError BindToNetif(otNetifIdentifier aNetifIdentifier);
-#endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
         /**
          * This method binds the UDP socket.
@@ -439,6 +437,15 @@ public:
     otError Bind(SocketHandle &aSocket, const SockAddr &aSockAddr);
 
     /**
+     * This method binds a UDP socket to the Network interface.
+     *
+     * @param[in]  aSocket           A reference to the socket.
+     * @param[in]  aNetifIdentifier  The network interface identifier.
+     *
+     */
+    void BindToNetif(SocketHandle &aSocket, otNetifIdentifier aNetifIdentifier);
+
+    /**
      * This method connects a UDP socket.
      *
      * @param[in]  aSocket    A reference to the socket.
@@ -562,9 +569,17 @@ private:
     void RemoveSocket(SocketHandle &aSocket);
     bool IsMlePort(uint16_t aPort) const;
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    void                SetBackboneSocket(SocketHandle &aSocket);
+    const SocketHandle *GetBackboneSockets(void);
+#endif
+
     uint16_t                 mEphemeralPort;
     LinkedList<Receiver>     mReceivers;
     LinkedList<SocketHandle> mSockets;
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    SocketHandle *mPrevBackboneSockets;
+#endif
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     void *         mUdpForwarderContext;
     otUdpForwarder mUdpForwarder;

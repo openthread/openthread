@@ -80,8 +80,8 @@ public:
     enum Mode : uint8_t
     {
         kModeRssInOnly = OT_MAC_FILTER_ADDRESS_MODE_DISABLED,  ///< No address filtering. RSS-In update only.
-        kModeWhitelist = OT_MAC_FILTER_ADDRESS_MODE_WHITELIST, ///< Enable whitelist address filter mode.
-        kModeBlacklist = OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST, ///< Enable blacklist address filter mode.
+        kModeAllowlist = OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST, ///< Enable allowlist address filter mode.
+        kModeDenylist  = OT_MAC_FILTER_ADDRESS_MODE_DENYLIST,  ///< Enable denylist address filter mode.
     };
 
     enum : int8_t
@@ -218,7 +218,7 @@ public:
      * @param[out] aRss         A reference to where the received signal strength to be placed.
      *
      * @retval OT_ERROR_NONE                Successfully applied the filter rules on @p aExtAddress.
-     * @retval OT_ERROR_ADDRESS_FILTERED    Address filter (whitelist or blacklist) is enabled and @p aExtAddress is
+     * @retval OT_ERROR_ADDRESS_FILTERED    Address filter (allowlist or denylist) is enabled and @p aExtAddress is
      *                                      filtered.
      *
      */
@@ -232,7 +232,7 @@ private:
 
     struct FilterEntry
     {
-        bool       mFiltered;   // Indicates whether or not this entry is filtered (whitelist/blacklist modes).
+        bool       mFiltered;   // Indicates whether or not this entry is filtered (allowlist/denylist modes).
         int8_t     mRssIn;      // The RssIn value for this entry or `kFixedRssDisabled`.
         ExtAddress mExtAddress; // IEEE 802.15.4 Extended Address.
 

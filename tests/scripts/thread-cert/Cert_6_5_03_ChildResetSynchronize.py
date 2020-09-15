@@ -44,7 +44,7 @@ class Cert_6_5_3_ChildResetSynchronize(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ED]
+            'allowlist': [ED]
         },
         ED: {
             'name': 'ED',
@@ -52,13 +52,13 @@ class Cert_6_5_3_ChildResetSynchronize(thread_cert.TestCase):
             'mode': 'rsn',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 
     def _setUpEd(self):
-        self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED].enable_whitelist()
+        self.nodes[ED].add_allowlist(self.nodes[LEADER].get_addr64())
+        self.nodes[ED].enable_allowlist()
 
     def test(self):
         self.nodes[LEADER].start()

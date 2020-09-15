@@ -28,46 +28,50 @@
 
 /**
  * @file
- *   This file implements Thread Management Framework (TMF) functionalities.
+ *   This file implements Backbone Thread Management Framework (TMF) functionalities.
  */
 
-#include "thread/tmf.hpp"
+#include "backbone_tmf.hpp"
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 #include "common/locator-getters.hpp"
 
 namespace ot {
-namespace Tmf {
+namespace BackboneRouter {
 
-otError TmfAgent::Start(void)
+otError BackboneTmfAgent::Start(void)
 {
-    return Coap::Start(kUdpPort, OT_NETIF_THREAD);
+    return Coap::Start(kBackboneUdpPort, OT_NETIF_BACKBONE);
 }
 
-otError TmfAgent::Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
+otError BackboneTmfAgent::Filter(const ot::Coap::Message &aMessage,
+                                 const Ip6::MessageInfo & aMessageInfo,
+                                 void *                   aContext)
 {
     OT_UNUSED_VARIABLE(aMessage);
 
-    return static_cast<TmfAgent *>(aContext)->IsTmfMessage(aMessageInfo) ? OT_ERROR_NONE : OT_ERROR_NOT_TMF;
+    return static_cast<BackboneTmfAgent *>(aContext)->IsBackboneTmfMessage(aMessageInfo) ? OT_ERROR_NONE
+                                                                                         : OT_ERROR_NOT_TMF;
 }
 
-bool TmfAgent::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo) const
+bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo) const
 {
-    bool rval = true;
+    const Ip6::Address &dst = aMessageInfo.GetSockAddr();
+    const Ip6::Address &src = aMessageInfo.GetPeerAddr();
 
-    // A TMF message must comply with following rules:
-    // 1. The destination is a Mesh Local Address or a Link-Local Multicast Address or a Realm-Local Multicast Address,
-    //    and the source is a Mesh Local Address. Or
-    // 2. Both the destination and the source are Link-Local Addresses.
-    VerifyOrExit(
-        ((Get<Mle::MleRouter>().IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
-          aMessageInfo.GetSockAddr().IsLinkLocalMulticast() || aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
-         Get<Mle::MleRouter>().IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
-            ((aMessageInfo.GetSockAddr().IsLinkLocal() || aMessageInfo.GetSockAddr().IsLinkLocalMulticast()) &&
-             aMessageInfo.GetPeerAddr().IsLinkLocal()),
-        rval = false);
-exit:
-    return rval;
+    // A Backbone TMF message must comply with following rules:
+    // The destination must be one of:
+    //     1. All Network BBRs (Link-Local scope)
+    //     2. All Domain BBRs (Link-Local scope)
+    //     3. A Backbone Link-Local address
+    // The source must be a Backbone Link-local address.
+    return (Get<BackboneRouter::Local>().IsEnabled() && src.IsLinkLocal() &&
+            (dst.IsLinkLocal() || dst == Get<BackboneRouter::Local>().GetAllNetworkBackboneRoutersAddress() ||
+             dst == Get<BackboneRouter::Local>().GetAllDomainBackboneRoutersAddress()));
 }
 
-} // namespace Tmf
+} // namespace BackboneRouter
 } // namespace ot
+
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

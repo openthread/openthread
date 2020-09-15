@@ -82,14 +82,14 @@ wpan.Node.init_all_nodes()
 #   |       |
 #  fed1    sed2
 
-r1.whitelist_node(r2)
-r2.whitelist_node(r1)
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
 
-r1.whitelist_node(fed1)
-fed1.whitelist_node(r1)
+r1.allowlist_node(fed1)
+fed1.allowlist_node(r1)
 
-r2.whitelist_node(sed2)
-sed2.whitelist_node(r2)
+r2.allowlist_node(sed2)
+sed2.allowlist_node(r2)
 
 r1.form("ip-addr")
 r2.join_node(r1, wpan.JOIN_TYPE_ROUTER)

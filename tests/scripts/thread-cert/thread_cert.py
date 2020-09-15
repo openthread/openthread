@@ -51,7 +51,7 @@ DEFAULT_PARAMS = {
     'is_bbr': False,
     'mode': 'rsdn',
     'panid': 0xface,
-    'whitelist': None,
+    'allowlist': None,
     'version': '1.1',
 }
 """Default configurations when creating nodes."""
@@ -162,18 +162,18 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             if 'max_children' in params:
                 self.nodes[i].set_max_children(params['max_children'])
 
-        # we have to add whitelist after nodes are all created
+        # we have to add allowlist after nodes are all created
         for i, params in initial_topology.items():
-            whitelist = params['whitelist']
-            if not whitelist:
+            allowlist = params['allowlist']
+            if not allowlist:
                 continue
 
-            for j in whitelist:
+            for j in allowlist:
                 rssi = None
                 if isinstance(j, tuple):
                     j, rssi = j
-                self.nodes[i].add_whitelist(self.nodes[j].get_addr64(), rssi=rssi)
-            self.nodes[i].enable_whitelist()
+                self.nodes[i].add_allowlist(self.nodes[j].get_addr64(), rssi=rssi)
+            self.nodes[i].enable_allowlist()
 
         self._inspector = debug.Inspector(self)
         self._collect_test_info_after_setup()

@@ -49,21 +49,21 @@ class Cert_7_1_2_BorderRouterAsRouter(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED2, SED2]
+            'allowlist': [LEADER, ED2, SED2]
         },
         ED2: {
             'name': 'MED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         SED2: {
             'name': 'SED',
@@ -71,7 +71,7 @@ class Cert_7_1_2_BorderRouterAsRouter(thread_cert.TestCase):
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
     }
 
@@ -155,7 +155,7 @@ class Cert_7_1_2_BorderRouterAsRouter(thread_cert.TestCase):
         # Step 8: The DUT MUST send an MLE Child Response to SED_1
         _rpkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next().must_verify(
             lambda p: p.wpan.dst64 == SED and {Ipv6Addr('2001:2:0:1::')} == set(
-                p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.border_router_16 == 0xFFFE)
+                p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.border_router_16 == [0xFFFE])
         _rpkts_sed = _rpkts.copy()
 
         # Step 9: SED_1 and MED_1 send its configured global address to the DUT

@@ -129,12 +129,12 @@ wpan.Node.init_all_nodes()
 
 r1.form("net-data")
 
-r1.whitelist_node(r2)
-r2.whitelist_node(r1)
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
 r2.join_node(r1, wpan.JOIN_TYPE_ROUTER)
 
-r2.whitelist_node(c2)
-c2.whitelist_node(r2)
+r2.allowlist_node(c2)
+c2.allowlist_node(r2)
 c2.join_node(r2, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 c2.set(wpan.WPAN_POLL_INTERVAL, '400')
 

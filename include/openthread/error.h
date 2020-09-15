@@ -164,7 +164,7 @@ typedef enum OT_MUST_USE_RESULT otError
     OT_ERROR_INVALID_SOURCE_ADDRESS = 20,
 
     /**
-     * Received a frame filtered by the address filter (whitelisted or blacklisted).
+     * Received a frame filtered by the address filter (allowlisted or denylisted).
      */
     OT_ERROR_ADDRESS_FILTERED = 21,
 

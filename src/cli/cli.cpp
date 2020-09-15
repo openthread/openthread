@@ -4082,13 +4082,13 @@ void Interpreter::PrintMacFilter(void)
     {
         OutputFormat("Address Mode: Disabled\r\n");
     }
-    else if (mode == OT_MAC_FILTER_ADDRESS_MODE_WHITELIST)
+    else if (mode == OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST)
     {
-        OutputFormat("Address Mode: Whitelist\r\n");
+        OutputFormat("Address Mode: Allowlist\r\n");
     }
-    else if (mode == OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST)
+    else if (mode == OT_MAC_FILTER_ADDRESS_MODE_DENYLIST)
     {
-        OutputFormat("Address Mode: Blacklist\r\n");
+        OutputFormat("Address Mode: Denylist\r\n");
     }
 
     while (otLinkFilterGetNextAddress(mInstance, &iterator, &entry) == OT_ERROR_NONE)
@@ -4147,13 +4147,13 @@ otError Interpreter::ProcessMacFilterAddress(uint8_t aArgsLength, char *aArgs[])
         {
             OutputFormat("Disabled\r\n");
         }
-        else if (mode == OT_MAC_FILTER_ADDRESS_MODE_WHITELIST)
+        else if (mode == OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST)
         {
-            OutputFormat("Whitelist\r\n");
+            OutputFormat("Allowlist\r\n");
         }
-        else if (mode == OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST)
+        else if (mode == OT_MAC_FILTER_ADDRESS_MODE_DENYLIST)
         {
-            OutputFormat("Blacklist\r\n");
+            OutputFormat("Denylist\r\n");
         }
 
         while (otLinkFilterGetNextAddress(mInstance, &iterator, &entry) == OT_ERROR_NONE)
@@ -4176,15 +4176,15 @@ otError Interpreter::ProcessMacFilterAddress(uint8_t aArgsLength, char *aArgs[])
             VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
             otLinkFilterSetAddressMode(mInstance, OT_MAC_FILTER_ADDRESS_MODE_DISABLED);
         }
-        else if (strcmp(aArgs[0], "whitelist") == 0)
+        else if (strcmp(aArgs[0], "allowlist") == 0)
         {
             VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
-            otLinkFilterSetAddressMode(mInstance, OT_MAC_FILTER_ADDRESS_MODE_WHITELIST);
+            otLinkFilterSetAddressMode(mInstance, OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST);
         }
-        else if (strcmp(aArgs[0], "blacklist") == 0)
+        else if (strcmp(aArgs[0], "denylist") == 0)
         {
             VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
-            otLinkFilterSetAddressMode(mInstance, OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST);
+            otLinkFilterSetAddressMode(mInstance, OT_MAC_FILTER_ADDRESS_MODE_DENYLIST);
         }
         else if (strcmp(aArgs[0], "add") == 0)
         {

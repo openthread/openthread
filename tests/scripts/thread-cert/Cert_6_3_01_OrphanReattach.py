@@ -44,14 +44,14 @@ class Cert_6_3_1_OrphanReattach(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED]
+            'allowlist': [LEADER, ED]
         },
         ED: {
             'name': 'ED',
@@ -59,7 +59,7 @@ class Cert_6_3_1_OrphanReattach(thread_cert.TestCase):
             'mode': 'rsn',
             'panid': 0xface,
             'timeout': 10,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
     }
 
@@ -78,8 +78,8 @@ class Cert_6_3_1_OrphanReattach(thread_cert.TestCase):
 
         self.collect_ipaddrs()
         self.nodes[ROUTER].stop()
-        self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[LEADER].add_allowlist(self.nodes[ED].get_addr64())
+        self.nodes[ED].add_allowlist(self.nodes[LEADER].get_addr64())
         self.simulator.go(20)
 
         self.assertEqual(self.nodes[ED].get_state(), 'child')
