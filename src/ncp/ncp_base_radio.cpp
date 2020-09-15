@@ -398,6 +398,8 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = true;
     aFrame.mInfo.mTxInfo.mIsARetx             = false;
     aFrame.mInfo.mTxInfo.mIsSecurityProcessed = false;
+    aFrame.mInfo.mTxInfo.mPeriod              = 0;
+    aFrame.mInfo.mTxInfo.mPhase               = 0;
 
     // All the next parameters are optional. Note that even if the
     // decoder fails to parse any of optional parameters we still want to
@@ -409,6 +411,8 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(mDecoder.ReadBool(csmaEnable));
     SuccessOrExit(mDecoder.ReadBool(isARetx));
     SuccessOrExit(mDecoder.ReadBool(isSecurityProcessed));
+    SuccessOrExit(mDecoder.ReadUint16(aFrame.mInfo.mTxInfo.mPeriod));
+    SuccessOrExit(mDecoder.ReadUint16(aFrame.mInfo.mTxInfo.mPhase));
     aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = csmaEnable;
     aFrame.mInfo.mTxInfo.mIsARetx             = isARetx;
     aFrame.mInfo.mTxInfo.mIsSecurityProcessed = isSecurityProcessed;

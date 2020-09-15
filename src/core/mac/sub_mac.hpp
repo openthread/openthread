@@ -549,12 +549,14 @@ private:
     bool RadioSupportsRetries(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) != 0); }
     bool RadioSupportsAckTimeout(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) != 0); }
     bool RadioSupportsEnergyScan(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) != 0); }
+    bool RadioSupportsTransmitTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) != 0); }
 
     bool ShouldHandleTransmitSecurity(void) const;
     bool ShouldHandleCsmaBackOff(void) const;
     bool ShouldHandleAckTimeout(void) const;
     bool ShouldHandleRetries(void) const;
     bool ShouldHandleEnergyScan(void) const;
+    bool ShouldHandleTransmitTargetTime(void) const;
 
     void ProcessTransmitSecurity(void);
     void UpdateFrameCounter(uint32_t aFrameCounter);

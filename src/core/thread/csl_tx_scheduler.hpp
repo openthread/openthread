@@ -65,8 +65,7 @@ class CslTxScheduler : public InstanceLocator
 public:
     enum
     {
-        kMaxCslTriggeredTxAttempts     = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
-        kCslFrameRequestAheadThreshold = 2000 / kUsPerTenSymbols,
+        kMaxCslTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
     };
 
     /**
@@ -187,6 +186,7 @@ public:
     void Clear(void);
 
 private:
+    void InitFrameRequestAhead(void);
     void RescheduleCslTx(void);
 
     uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint64_t aRadioNow);
@@ -197,6 +197,7 @@ private:
 
     void HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, Child &aChild);
 
+    uint32_t                mCslFrameRequestAhead;
     Child *                 mCslTxChild;
     Message *               mCslTxMessage;
     Callbacks::FrameContext mFrameContext;

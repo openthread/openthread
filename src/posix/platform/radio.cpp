@@ -508,3 +508,9 @@ uint64_t otPlatRadioGetNow(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.GetNow();
 }
+
+uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetBusSpeed();
+}

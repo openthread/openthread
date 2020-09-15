@@ -233,12 +233,16 @@ do_expect()
 {
     local ot_command
     local rcp_command=
+    local mtd_command=
     local test_patterns
 
     if [[ ${NODE_MODE} == rcp ]]; then
         ot_command="${OT_CLI_PATH}"
         rcp_command="${RADIO_DEVICE}"
-        if [[ ${OT_NATIVE_IP} == 1 ]]; then
+        if [[ ${THREAD_VERSION} == "1.2" ]]; then
+            mtd_command="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/cli/ot-cli-mtd"
+            test_patterns=(-name 'v1_2-*.exp')
+        elif [[ ${OT_NATIVE_IP} == 1 ]]; then
             test_patterns=(-name 'tun-*.exp')
         else
             test_patterns=(-name 'posix-*.exp' -o -name 'cli-*.exp')
@@ -254,9 +258,9 @@ do_expect()
         mkdir tmp
         {
             if [[ ${OT_NATIVE_IP} == 1 ]]; then
-                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" sudo -E expect -df "${script}" 2>"${log_file}"
+                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" MTD_COMMAND="${mtd_command}" sudo -E expect -df "${script}" 2>"${log_file}"
             else
-                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" expect -df "${script}" 2>"${log_file}"
+                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" MTD_COMMAND="${mtd_command}" expect -df "${script}" 2>"${log_file}"
             fi
         } || {
             local exit_code=$?

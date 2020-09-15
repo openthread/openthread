@@ -125,6 +125,7 @@ enum
     OT_RADIO_CAPS_CSMA_BACKOFF     = 1 << 3, ///< Radio supports CSMA backoff for frame transmission (but no retry).
     OT_RADIO_CAPS_SLEEP_TO_TX      = 1 << 4, ///< Radio supports direct transition from sleep to TX with CSMA.
     OT_RADIO_CAPS_TRANSMIT_SEC     = 1 << 5, ///< Radio supports tx security.
+    OT_RADIO_CAPS_TRANSMIT_TIMING  = 1 << 6, ///< Radio supports tx at specific time.
 };
 
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
@@ -515,6 +516,17 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
  *
  */
 uint64_t otPlatRadioGetNow(otInstance *aInstance);
+
+/**
+ * Get the bus speed in bits/second between the host and the radio chip.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns The bus speed in bits/second between the host and the radio chip.
+ *          Return 0 when the MAC and above layer and Radio layer resides on the same chip.
+ *
+ */
+uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance);
 
 /**
  * @}

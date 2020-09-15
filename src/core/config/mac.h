@@ -140,6 +140,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US
+ *
+ * Define how many microseconds ahead should MAC deliver CSL frame to SubMac.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US
+#define OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US 2000
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
  *
  * Define to 1 to enable MAC filter support.
@@ -296,6 +306,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE
+ *
+ * Define to 1 to enable software transmission target time logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE
+#define OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_ENERGY_SCAN_ENABLE
  *
  * Define to 1 to enable software energy scanning logic.
@@ -312,7 +332,7 @@
  *
  */
 #define OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE \
-    (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2) && OPENTHREAD_FTD
+    (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2) && (OPENTHREAD_FTD || OPENTHREAD_RADIO)
 
 /**
  * @def OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE

@@ -145,3 +145,29 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           fail_ci_if_error: true
+
+  expects:
+    runs-on: ubuntu-18.04
+    env:
+      COVERAGE: 1
+      THREAD_VERSION: 1.2
+      VIRTUAL_TIME: 0
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y expect ninja-build
+    - name: Run RCP Mode
+      run: |
+        OT_OPTIONS=-DOT_READLINE=OFF NODE_MODE=rcp ./script/test build expect
+    - name: Keep-1-2-only
+      run: |
+        ./script/test tar posix 1.2-bbr
+        ./script/test tar simulation 1.2-bbr
+    - name: Keep POSIX Only
+      run: |
+        ./script/test tar simulation 1.2
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true

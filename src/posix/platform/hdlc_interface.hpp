@@ -148,6 +148,14 @@ public:
     void Process(const VirtualTimeEvent &aEvent) { Decode(aEvent.mData, aEvent.mDataLength); }
 #endif
 
+    /**
+     * This method returns the bus speed between the host and the radio.
+     *
+     * @returns   Bus speed in bits/second.
+     *
+     */
+    uint32_t GetBusSpeed(void) const { return mBaudRate; }
+
 private:
     /**
      * This method instructs `HdlcInterface` to read and decode data from radio over the socket.
@@ -198,7 +206,7 @@ private:
     static void HandleHdlcFrame(void *aContext, otError aError);
     void        HandleHdlcFrame(otError aError);
 
-    static int OpenFile(const RadioUrl &aRadioUrl);
+    int OpenFile(const RadioUrl &aRadioUrl);
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     static int ForkPty(const char *aCommand, const char *aRadioUrl);
 #endif
@@ -214,6 +222,7 @@ private:
     Spinel::SpinelInterface::RxFrameBuffer &      mReceiveFrameBuffer;
 
     int           mSockFd;
+    uint32_t      mBaudRate;
     Hdlc::Decoder mHdlcDecoder;
 
     // Non-copyable, intentionally not implemented.

@@ -105,9 +105,13 @@ otRadioCaps SubMac::GetCaps(void) const
     caps |= OT_RADIO_CAPS_TRANSMIT_SEC;
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE
+    caps |= OT_RADIO_CAPS_TRANSMIT_TIMING;
+#endif
+
 #else
     caps = OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES |
-           OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_SEC;
+           OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING;
 #endif
 
     return caps;
@@ -341,18 +345,26 @@ void SubMac::StartCsmaBackoff(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     if (mTransmitFrame.mInfo.mTxInfo.mPeriod != 0)
     {
-        uint32_t phaseNow     = (otPlatTimeGet() / kUsPerTenSymbols) % mTransmitFrame.mInfo.mTxInfo.mPeriod;
-        uint32_t phaseDesired = mTransmitFrame.mInfo.mTxInfo.mPhase;
-
         SetState(kStateCslTransmit);
 
-        if (phaseNow < phaseDesired)
+        if (ShouldHandleTransmitTargetTime())
         {
-            mTimer.Start((phaseDesired - phaseNow) * kUsPerTenSymbols);
-        }
-        else if (phaseNow > phaseDesired)
-        {
-            mTimer.Start((phaseDesired + mTransmitFrame.mInfo.mTxInfo.mPeriod - phaseNow) * kUsPerTenSymbols);
+            uint32_t phaseNow =
+                (otPlatRadioGetNow(&GetInstance()) / kUsPerTenSymbols) % mTransmitFrame.mInfo.mTxInfo.mPeriod;
+            uint32_t phaseDesired = mTransmitFrame.mInfo.mTxInfo.mPhase;
+
+            if (phaseNow < phaseDesired)
+            {
+                mTimer.Start((phaseDesired - phaseNow) * kUsPerTenSymbols);
+            }
+            else if (phaseNow > phaseDesired)
+            {
+                mTimer.Start((phaseDesired + mTransmitFrame.mInfo.mTxInfo.mPeriod - phaseNow) * kUsPerTenSymbols);
+            }
+            else
+            {
+                BeginTransmit();
+            }
         }
         else
         {
@@ -757,6 +769,24 @@ bool SubMac::ShouldHandleEnergyScan(void) const
 
 exit:
     return swEnergyScan;
+}
+
+bool SubMac::ShouldHandleTransmitTargetTime(void) const
+{
+    bool swTxDelay = true;
+
+    VerifyOrExit(!RadioSupportsTransmitTiming(), swTxDelay = false);
+
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NOOP);
+#endif
+
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
+    swTxDelay = OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE;
+#endif
+
+exit:
+    return swTxDelay;
 }
 
 void SubMac::SetState(State aState)
