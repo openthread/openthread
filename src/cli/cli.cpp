@@ -674,6 +674,29 @@ void Interpreter::ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[])
     OutputResult(OT_ERROR_NONE);
 }
 
+void Interpreter::ProcessCcaThreshold(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        int8_t cca;
+
+        SuccessOrExit(error = otPlatRadioGetCcaEnergyDetectThreshold(mInstance, &cca));
+        OutputLine("%d dBm", cca);
+    }
+    else
+    {
+        long value;
+
+        SuccessOrExit(error = ParseLong(aArgs[0], value));
+        SuccessOrExit(error = otPlatRadioSetCcaEnergyDetectThreshold(mInstance, static_cast<int8_t>(value)));
+    }
+
+exit:
+    OutputResult(error);
+}
+
 void Interpreter::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;

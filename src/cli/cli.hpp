@@ -296,6 +296,7 @@ private:
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
+    void ProcessCcaThreshold(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
     void ProcessChild(uint8_t aArgsLength, char *aArgs[]);
     void ProcessChildIp(uint8_t aArgsLength, char *aArgs[]);
@@ -542,6 +543,7 @@ private:
         {"bbr", &Interpreter::ProcessBackboneRouter},
 #endif
         {"bufferinfo", &Interpreter::ProcessBufferInfo},
+        {"ccathreshold", &Interpreter::ProcessCcaThreshold},
         {"channel", &Interpreter::ProcessChannel},
 #if OPENTHREAD_FTD
         {"child", &Interpreter::ProcessChild},
