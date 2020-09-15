@@ -1865,8 +1865,8 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address * aAddress,
                                           const otLinkMetrics *aMetrics,
                                           uint8_t              aMetricsNum)
 {
-    otLinkMetricsTypeId linkMetricsTypeId;
-    uint8_t             index = 0;
+    otLinkMetricsTypeIdFlags linkMetricsTypeId;
+    uint8_t                  index = 0;
 
     OutputFormat("Received Link Metrics Report from: ");
     OutputIp6Address(*aAddress);
@@ -1874,7 +1874,7 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address * aAddress,
 
     while (index < aMetricsNum)
     {
-        linkMetricsTypeId = aMetrics[index].mLinkMetricsTypeId;
+        linkMetricsTypeId = aMetrics[index].mLinkMetricsTypeIdFlags;
         int32_t value     = linkMetricsTypeId.mLinkMetricsFlagL ? (int32_t)aMetrics[index].mLinkMetricsValue.m32
                                                             : aMetrics[index].mLinkMetricsValue.m8;
 

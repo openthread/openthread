@@ -1291,8 +1291,8 @@ public:
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @retval true   The TLV appears to be well-formed.
+     * @retval false  The TLV does not appear to be well-formed.
      *
      */
     bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }

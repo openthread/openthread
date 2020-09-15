@@ -1042,14 +1042,14 @@ Perform a Link Metrics query (Single Probe).
 - ipaddr: Peer address.
 - typeidflags: A hex string containing [1-4] Type Id Flags value(s) to request.
 
-Type ID Flags format:
+Metric Type ID Flags format:
 
 | E(0) | L(1) | Type/Average(2-4) | Metric(5-7) |
 
 - E: Extended Flags. Currently only `0` is supported.
 - L: Length of metric value field following the Metrics Type ID Flags. `0` - metric value is 1 byte in length; `1` - metric value is 4 bytes in length;
 - Type/Average Enum: `0` - Count/summation; `1` - Exponential Moving Average; `2-7` - Reserved;
-- Metrics Enum: `0` - Layer 2 Number of PDUs; `1` - Layer 2 LQI; `2` - Link Margin; `3` - RSSI in absolute dBm; `4-7` - Reserved;
+- Metric Enum: `0` - Layer 2 Number of PDUs; `1` - Layer 2 LQI; `2` - Link Margin; `3` - RSSI in absolute dBm; `4-7` - Reserved;
 
 ```bash
 > linkmetrics query fe80:0:0:0:3092:f334:1455:1ad2 single 090A0B

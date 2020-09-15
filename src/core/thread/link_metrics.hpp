@@ -73,13 +73,13 @@ public:
      * be either a Single Probe or a Forward Tracking Series.
      *
      * @param[in]  aDestination      A pointer to the IPv6 address of the destination.
-     * @param[in]  aSeriesId         The id of the series to query, 0 for single probe.
+     * @param[in]  aSeriesId         The Series ID to query, 0 for single probe.
      * @param[in]  aTypeIdFlags      A pointer to an array of Type Id Flags.
      * @param[in]  aTypeIdFlagsCount The number of Type Id Flags entries.
      *
      * @retval OT_ERROR_NONE          Successfully sent a Link Metrics query message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Data Request message.
-     * @retval OT_ERROR_INVALID_ARGS  TypeIdFlags are not valid or exceeds the count limit.
+     * @retval OT_ERROR_INVALID_ARGS  TypeIdFlags are not valid or exceed the count limit.
      *
      */
     otError LinkMetricsQuery(const otIp6Address *aDestination,
@@ -130,10 +130,10 @@ private:
     otLinkMetricsReportCallback mLinkMetricsReportCallback;
     void *                      mLinkMetricsReportCallbackContext;
 
-    otError SendLinkMetricsQuery(const Ip6::Address &     aDestination,
-                                 uint8_t                  aSeriesId,
-                                 const LinkMetricsTypeId *aTypeIdFlags,
-                                 uint8_t                  aTypeIdFlagsCount);
+    otError SendLinkMetricsQuery(const Ip6::Address &          aDestination,
+                                 uint8_t                       aSeriesId,
+                                 const LinkMetricsTypeIdFlags *aTypeIdFlags,
+                                 uint8_t                       aTypeIdFlagsCount);
 
     otError AppendSingleProbeLinkMetricsReport(Message &                      aMessage,
                                                uint8_t &                      aLength,
@@ -141,7 +141,7 @@ private:
                                                const int8_t                   aNoiseFloor,
                                                const Message &                aRequestMessage);
 
-    void SetLinkMetricsTypeIdFromTlv(otLinkMetricsTypeId &aOtTypeId, LinkMetricsTypeId &aTlvTypeId);
+    void SetLinkMetricsTypeIdFlagsFromTlv(otLinkMetricsTypeIdFlags &aOtTypeId, LinkMetricsTypeIdFlags &aTlvTypeId);
 };
 
 /**

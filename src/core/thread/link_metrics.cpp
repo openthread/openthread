@@ -62,7 +62,7 @@ otError LinkMetrics::LinkMetricsQuery(const otIp6Address *aDestination,
     VerifyOrExit(aTypeIdFlagsCount <= kLinkMetricsMaxTypeIdFlags, error = OT_ERROR_INVALID_ARGS);
 
     error = SendLinkMetricsQuery(*static_cast<const Ip6::Address *>(aDestination), aSeriesId,
-                                 reinterpret_cast<const LinkMetricsTypeId *>(aTypeIdFlags), aTypeIdFlagsCount);
+                                 reinterpret_cast<const LinkMetricsTypeIdFlags *>(aTypeIdFlags), aTypeIdFlagsCount);
 
 exit:
     return error;
@@ -79,8 +79,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &                       aMe
     uint8_t                        length       = 0;
     uint16_t                       startOffset  = aMessage.GetLength();
 
-    VerifyOrExit(aLinkMetricsQuery != nullptr && aLinkMetricsQuery->GetLength() > 0 && aLinkMetricsQuery->IsValid(),
-                 error = OT_ERROR_PARSE);
+    VerifyOrExit(aLinkMetricsQuery != nullptr && aLinkMetricsQuery->IsValid(), error = OT_ERROR_PARSE);
     queryId = aLinkMetricsQuery->GetQueryId();
     VerifyOrExit(queryId->IsValid(), error = OT_ERROR_PARSE);
     VerifyOrExit(queryId->GetSeriesId() < 255, error = OT_ERROR_INVALID_ARGS);
@@ -114,23 +113,23 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
                                           uint16_t            aLength,
                                           const Ip6::Address &aAddress)
 {
-    otLinkMetrics     metrics[kLinkMetricsMaxTypeIdFlags];
-    uint8_t           metricsCount = 0;
-    uint16_t          pos          = aOffset;
-    uint16_t          end_pos      = aOffset + aLength;
-    Tlv               tlv;
-    LinkMetricsTypeId typeId;
+    otLinkMetrics          metrics[kLinkMetricsMaxTypeIdFlags];
+    uint8_t                metricsCount = 0;
+    uint16_t               pos          = aOffset;
+    uint16_t               end_pos      = aOffset + aLength;
+    Tlv                    tlv;
+    LinkMetricsTypeIdFlags typeId;
 
     while (pos < end_pos)
     {
         aMessage.Read(pos, sizeof(Tlv), &tlv);
         VerifyOrExit(tlv.GetType() == kLinkMetricsReportSub, OT_NOOP);
         pos += sizeof(Tlv);
-        aMessage.Read(pos, sizeof(LinkMetricsTypeId), &typeId);
-        pos += sizeof(otLinkMetricsTypeId);
-        SetLinkMetricsTypeIdFromTlv(metrics[metricsCount].mLinkMetricsTypeId, typeId);
+        aMessage.Read(pos, sizeof(LinkMetricsTypeIdFlags), &typeId);
+        pos += sizeof(otLinkMetricsTypeIdFlags);
+        SetLinkMetricsTypeIdFlagsFromTlv(metrics[metricsCount].mLinkMetricsTypeIdFlags, typeId);
 
-        if (metrics[metricsCount].mLinkMetricsTypeId.mLinkMetricsFlagL)
+        if (metrics[metricsCount].mLinkMetricsTypeIdFlags.mLinkMetricsFlagL)
         {
             aMessage.Read(pos, sizeof(uint32_t), &metrics[metricsCount].mLinkMetricsValue.m32);
             pos += sizeof(uint32_t);
@@ -159,42 +158,41 @@ void LinkMetrics::SetLinkMetricsReportCallback(otLinkMetricsReportCallback aCall
     mLinkMetricsReportCallbackContext = aCallbackContext;
 }
 
-otError LinkMetrics::SendLinkMetricsQuery(const Ip6::Address &     aDestination,
-                                          uint8_t                  aSeriesId,
-                                          const LinkMetricsTypeId *aTypeIdFlags,
-                                          uint8_t                  aTypeIdFlagsCount)
+otError LinkMetrics::SendLinkMetricsQuery(const Ip6::Address &          aDestination,
+                                          uint8_t                       aSeriesId,
+                                          const LinkMetricsTypeIdFlags *aTypeIdFlags,
+                                          uint8_t                       aTypeIdFlagsCount)
 {
     otError                 error = OT_ERROR_NONE;
-    Tlv                     tlv;
     LinkMetricsQueryId      linkMetricsQueryId;
     LinkMetricsQueryOptions linkMetricsQueryOptions;
     uint8_t                 length = 0;
     static const uint8_t    tlvs[] = {Mle::Tlv::kLinkMetricsReport};
     uint8_t                 buf[sizeof(Tlv) * 3 + sizeof(LinkMetricsQueryId) + sizeof(LinkMetricsQueryOptions)];
+    Tlv *                   tlv = reinterpret_cast<Tlv *>(buf);
 
     // Link Metrics Query TLV
-    tlv.SetType(Mle::Tlv::kLinkMetricsQuery);
+    tlv->SetType(Mle::Tlv::kLinkMetricsQuery);
     length += sizeof(Tlv);
 
     // Link Metrics Query ID sub-TLV
     linkMetricsQueryId.Init();
     linkMetricsQueryId.SetSeriesId(aSeriesId);
-    memcpy(buf + length, &linkMetricsQueryId, sizeof(Tlv) + linkMetricsQueryId.GetLength());
-    length += sizeof(Tlv) + linkMetricsQueryId.GetLength();
+    memcpy(buf + length, &linkMetricsQueryId, linkMetricsQueryId.GetSize());
+    length += linkMetricsQueryId.GetSize();
 
     // Link Metrics Query Options sub-TLV
     if (aTypeIdFlagsCount > 0)
     {
         linkMetricsQueryOptions.Init();
-        linkMetricsQueryOptions.SetLinkMetricsTypeIdList(aTypeIdFlags, aTypeIdFlagsCount);
+        linkMetricsQueryOptions.SetLinkMetricsTypeIdFlagsList(aTypeIdFlags, aTypeIdFlagsCount);
 
-        memcpy(buf + length, &linkMetricsQueryOptions, sizeof(Tlv) + linkMetricsQueryOptions.GetLength());
-        length += sizeof(Tlv) + linkMetricsQueryOptions.GetLength();
+        memcpy(buf + length, &linkMetricsQueryOptions, linkMetricsQueryOptions.GetSize());
+        length += linkMetricsQueryOptions.GetSize();
     }
 
     // Set Length for Link Metrics Report Tlv
-    tlv.SetLength(length - sizeof(Tlv));
-    memcpy(buf, &tlv, sizeof(Tlv));
+    tlv->SetLength(length - sizeof(Tlv));
 
     SuccessOrExit(error = Get<Mle::MleRouter>().SendDataRequest(aDestination, tlvs, sizeof(tlvs), 0, buf, length));
 
@@ -208,14 +206,14 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &               
                                                         const int8_t                   aNoiseFloor,
                                                         const Message &                aRequestMessage)
 {
-    otError                  error = OT_ERROR_NONE;
-    LinkMetricsReportSubTlv  metric;
-    const LinkMetricsTypeId *linkMetricsTypeIds;
-    uint8_t                  metricsCount = 0;
+    otError                       error = OT_ERROR_NONE;
+    LinkMetricsReportSubTlv       metric;
+    const LinkMetricsTypeIdFlags *linkMetricsTypeIds;
+    uint8_t                       metricsCount = 0;
 
     OT_ASSERT(aQueryOptions != nullptr);
     metricsCount       = kLinkMetricsMaxTypeIdFlags;
-    linkMetricsTypeIds = aQueryOptions->GetLinkMetricsTypeIdList(metricsCount);
+    linkMetricsTypeIds = aQueryOptions->GetLinkMetricsTypeIdFlagsList(metricsCount);
 
     for (uint8_t i = 0; i < metricsCount; i++)
     {
@@ -244,13 +242,14 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &               
         case OT_LINK_METRICS_MARGIN:
             VerifyOrExit(!linkMetricsTypeIds[i].IsLengthFlagSet(), error = OT_ERROR_INVALID_ARGS);
             metric.SetMetricsValue8(
-                LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aRequestMessage.GetAverageRss()) * 255 / 130);
+                LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aRequestMessage.GetAverageRss()) * 255 /
+                130); // Linear scale Link Margin from [0, 130] to [0, 255]
             break;
 
         case OT_LINK_METRICS_RSSI:
             VerifyOrExit(!linkMetricsTypeIds[i].IsLengthFlagSet(), error = OT_ERROR_INVALID_ARGS);
             metric.SetMetricsValue8((aRequestMessage.GetAverageRss() + 130) * 255 /
-                                    130); // Linear scale rss from 0 to 255
+                                    130); // Linear scale rss from [-130, 0] to [0 to 255]
             break;
 
         default:
@@ -265,7 +264,8 @@ exit:
     return error;
 }
 
-void LinkMetrics::SetLinkMetricsTypeIdFromTlv(otLinkMetricsTypeId &aOtTypeId, LinkMetricsTypeId &aTlvTypeId)
+void LinkMetrics::SetLinkMetricsTypeIdFlagsFromTlv(otLinkMetricsTypeIdFlags &aOtTypeId,
+                                                   LinkMetricsTypeIdFlags &  aTlvTypeId)
 {
     aOtTypeId.mLinkMetricsId    = aTlvTypeId.GetMetricsId();
     aOtTypeId.mLinkMetricsType  = aTlvTypeId.GetMetricsType();

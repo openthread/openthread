@@ -82,22 +82,22 @@ typedef enum otLinkMetricsType
 } otLinkMetricsType;
 
 /**
- * This structure represents Link Metrics type ID Flags.
+ * This structure represents Link Metrics Type ID Flags.
  */
-typedef struct otLinkMetricsTypeId
+typedef struct otLinkMetricsTypeIdFlags
 {
     uint8_t mLinkMetricsId : 3;
     uint8_t mLinkMetricsType : 3;
     uint8_t mLinkMetricsFlagL : 1;
     uint8_t mLinkMetricsFlagE : 1;
-} otLinkMetricsTypeId;
+} otLinkMetricsTypeIdFlags;
 
 /**
  * This structure represents one Link Metrics item including its type id and value.
  */
 typedef struct otLinkMetrics
 {
-    otLinkMetricsTypeId mLinkMetricsTypeId;
+    otLinkMetricsTypeIdFlags mLinkMetricsTypeIdFlags;
     union
     {
         uint8_t  m8;
@@ -117,7 +117,7 @@ typedef struct otLinkMetrics
  *
  * @retval OT_ERROR_NONE          Successfully sent a Link Metrics query message.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Data Request message.
- * @retval OT_ERROR_INVALID_ARGS  Type Id Flags are not valid or exceeds the count limit.
+ * @retval OT_ERROR_INVALID_ARGS  Type Id Flags are not valid or exceed the count limit.
  *
  */
 otError otLinkMetricsQuery(otInstance *        aInstance,

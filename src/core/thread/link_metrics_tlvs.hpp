@@ -71,54 +71,55 @@ enum Type
  *
  */
 OT_TOOL_PACKED_BEGIN
-class LinkMetricsTypeId
+class LinkMetricsTypeIdFlags
 {
 public:
     /**
      * This method init the Type Id value
      *
      */
-    void Init(void) { mTypeId = 0; }
+    void Init(void) { mTypeIdFlags = 0; }
 
     /**
      * This method clears the Extended flag.
      *
      */
-    void ClearExtendedFlag(void) { mTypeId &= ~kExtendedFlag; }
+    void ClearExtendedFlag(void) { mTypeIdFlags &= ~kExtendedFlag; }
 
     /**
-     * This method sets the Extended flag.
+     * This method sets the Extended flag, indicating an additional second flags byte after the current 1-byte flags.
+     * MUST NOT set in Thread 1.2.1.
      *
      */
-    void SetExtendedFlag(void) { mTypeId |= kExtendedFlag; }
+    void SetExtendedFlag(void) { mTypeIdFlags |= kExtendedFlag; }
 
     /**
      * This method indicates whether or not the Extended flag is set.
      *
-     * @retval TRUE   If the Extended flag is set.
-     * @retval FALSE  If the Extended flag is not set.
+     * @retval true   The Extended flag is set.
+     * @retval false  The Extended flag is not set.
      */
-    bool IsExtendedFlagSet(void) const { return (mTypeId & kExtendedFlag) != 0; }
+    bool IsExtendedFlagSet(void) const { return (mTypeIdFlags & kExtendedFlag) != 0; }
 
     /**
      * This method clears value length flag.
      *
      */
-    void ClearLengthFlag(void) { mTypeId &= ~kLengthFlag; }
+    void ClearLengthFlag(void) { mTypeIdFlags &= ~kLengthFlag; }
 
     /**
      * This method sets the value length flag.
      *
      */
-    void SetLengthFlag(void) { mTypeId |= kLengthFlag; }
+    void SetLengthFlag(void) { mTypeIdFlags |= kLengthFlag; }
 
     /**
      * This method indicates whether or not the value length flag is set.
      *
-     * @retval TRUE   If the value length flag is set, extended value length (4 bytes)
-     * @retval FALSE  If the value length flag is not set, short value length (1 byte)
+     * @retval true   The value length flag is set, extended value length (4 bytes)
+     * @retval false  The value length flag is not set, short value length (1 byte)
      */
-    bool IsLengthFlagSet(void) const { return (mTypeId & kLengthFlag) != 0; }
+    bool IsLengthFlagSet(void) const { return (mTypeIdFlags & kLengthFlag) != 0; }
 
     /**
      * This method sets the Link Metrics type.
@@ -128,7 +129,7 @@ public:
      */
     void SetMetricsType(uint8_t aMetricsType)
     {
-        mTypeId = (mTypeId & ~kTypeMask) | ((aMetricsType << kTypeOffset) & kTypeMask);
+        mTypeIdFlags = (mTypeIdFlags & ~kTypeMask) | ((aMetricsType << kTypeOffset) & kTypeMask);
     }
 
     /**
@@ -137,7 +138,7 @@ public:
      * @returns The Link Metrics type.
      *
      */
-    uint8_t GetMetricsType(void) const { return (mTypeId & kTypeMask) >> kTypeOffset; }
+    uint8_t GetMetricsType(void) const { return (mTypeIdFlags & kTypeMask) >> kTypeOffset; }
 
     /**
      * This method sets the Link Metrics ID.
@@ -145,7 +146,10 @@ public:
      * @param[in]  aMetricsId  Link Metrics ID.
      *
      */
-    void SetMetricsId(uint8_t aMetricsId) { mTypeId = (mTypeId & ~kIdMask) | ((aMetricsId << kIdOffset) & kIdMask); }
+    void SetMetricsId(uint8_t aMetricsId)
+    {
+        mTypeIdFlags = (mTypeIdFlags & ~kIdMask) | ((aMetricsId << kIdOffset) & kIdMask);
+    }
 
     /**
      * This method returns the Link Metrics ID.
@@ -153,7 +157,7 @@ public:
      * @returns The Link Metrics ID.
      *
      */
-    uint8_t GetMetricsId(void) const { return (mTypeId & kIdMask) >> kIdOffset; }
+    uint8_t GetMetricsId(void) const { return (mTypeIdFlags & kIdMask) >> kIdOffset; }
 
 private:
     enum
@@ -166,7 +170,7 @@ private:
         kIdMask       = 7 << kIdOffset,
     };
 
-    uint8_t mTypeId;
+    uint8_t mTypeIdFlags;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -202,7 +206,7 @@ public:
      * @returns The Link Metrics Type ID.
      *
      */
-    LinkMetricsTypeId GetMetricsTypeId(void) const { return mMetricsTypeId; }
+    LinkMetricsTypeIdFlags GetMetricsTypeId(void) const { return mMetricsTypeId; }
 
     /**
      * This method sets the Link Metrics Type ID.
@@ -210,7 +214,7 @@ public:
      * @param[in]  aMetricsTypeID  The Link Metrics Type ID to set.
      *
      */
-    void SetMetricsTypeId(LinkMetricsTypeId aMetricsTypeId)
+    void SetMetricsTypeId(LinkMetricsTypeIdFlags aMetricsTypeId)
     {
         mMetricsTypeId = aMetricsTypeId;
         if (!aMetricsTypeId.IsLengthFlagSet())
@@ -252,7 +256,7 @@ public:
     void SetMetricsValue32(uint32_t aMetricsValue) { mMetricsValue.m32 = aMetricsValue; }
 
 private:
-    LinkMetricsTypeId mMetricsTypeId;
+    LinkMetricsTypeIdFlags mMetricsTypeId;
     union
     {
         uint8_t  m8;
@@ -261,7 +265,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Link Metrics Query Id Sub-TLV generation and parsing.
+ * This class implements Link Metrics Query ID Sub-TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -335,40 +339,40 @@ public:
     bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the Link Metrics Type ID Flags.
+     * This method returns the Link Metrics Type ID Flags and its count.
      *
-     * @param[out]  aTypeId   The pointer to the array of Link Metrics Type ID Flags.
+     * @param[out]  aCount   The count of Link Metrics Type ID Flags in the returned array.
      *
      * @retval  The pointer to the array of Link Metrics Type ID Flags.
      *
      */
-    const LinkMetricsTypeId *GetLinkMetricsTypeIdList(uint8_t &aCount) const
+    const LinkMetricsTypeIdFlags *GetLinkMetricsTypeIdFlagsList(uint8_t &aCount) const
     {
-        aCount = GetLength() / sizeof(LinkMetricsTypeId);
+        aCount = GetLength() / sizeof(LinkMetricsTypeIdFlags);
 
         return mMetricsTypeIds;
     }
 
     /**
-     * This method sets the the Link Metrics type ID Flags.
+     * This method sets the the Link Metrics Type ID Flags.
      *
-     * @param[in]  aTypeId   The pointer to the array of Link Metrics type ID Flags.
-     * @param[in]  aCount    The count of Link Metrics type ID Flags in the array.
+     * @param[in]  aTypeId   The pointer to the array of Link Metrics Type ID Flags.
+     * @param[in]  aCount    The count of Link Metrics Type ID Flags in the array.
      *
      */
-    void SetLinkMetricsTypeIdList(const LinkMetricsTypeId aTypeId[], uint8_t aCount)
+    void SetLinkMetricsTypeIdFlagsList(const LinkMetricsTypeIdFlags aTypeId[], uint8_t aCount)
     {
         uint8_t count = kLinkMetricsMaxTypeIdFlags;
 
         count = aCount < count ? aCount : count;
 
-        memcpy(mMetricsTypeIds, aTypeId, count * sizeof(LinkMetricsTypeId));
+        memcpy(mMetricsTypeIds, aTypeId, count * sizeof(LinkMetricsTypeIdFlags));
 
-        SetLength(count * sizeof(LinkMetricsTypeId));
+        SetLength(count * sizeof(LinkMetricsTypeIdFlags));
     }
 
 private:
-    LinkMetricsTypeId mMetricsTypeIds[kLinkMetricsMaxTypeIdFlags];
+    LinkMetricsTypeIdFlags mMetricsTypeIds[kLinkMetricsMaxTypeIdFlags];
 } OT_TOOL_PACKED_END;
 
 } // namespace ot
