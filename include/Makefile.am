@@ -83,7 +83,6 @@ dist_openthread_HEADERS = $(openthread_headers)
 ot_platform_headers                     = \
     openthread/platform/alarm-micro.h     \
     openthread/platform/alarm-milli.h     \
-    openthread/platform/ble.h             \
     openthread/platform/diag.h            \
     openthread/platform/flash.h           \
     openthread/platform/entropy.h         \

@@ -90,7 +90,6 @@ source_set("openthread") {
     "network_time.h",
     "platform/alarm-micro.h",
     "platform/alarm-milli.h",
-    "platform/ble.h",
     "platform/debug_uart.h",
     "platform/diag.h",
     "platform/entropy.h",
