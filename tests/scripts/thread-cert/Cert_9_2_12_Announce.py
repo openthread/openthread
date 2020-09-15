@@ -135,7 +135,7 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
         LEADER_1 = pv.vars['LEADER_1']
         ROUTER_1 = pv.vars['ROUTER_1']
         LEADER_2 = pv.vars['LEADER_2']
-        LEADER_2_RLOC = pv.vars['LEADER_2_RLOC']
+        LEADER_1_RLOC = pv.vars['LEADER_1_RLOC']
         MED = pv.vars['MED']
         MED_RLOC = pv.vars['MED_RLOC']
 
@@ -168,7 +168,7 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
                 0xffff and p.wpan.aux_sec.key_id_mode == 0x2 and p.wpan.aux_sec.key_source == 0x00000000ffffffff)
 
         # Step 6: MED MUST respond with an ICMPv6 Echo Reply
-        pkts.filter_ping_reply().filter_ipv6_src_dst(MED_RLOC, LEADER_2_RLOC)
+        pkts.filter_ping_reply().filter_ipv6_src_dst(MED_RLOC, LEADER_1_RLOC).must_next()
 
 
 if __name__ == '__main__':
