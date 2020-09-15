@@ -59,7 +59,7 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 
     otPlatResetReason reason = OT_PLAT_RESET_REASON_UNKNOWN;
 
-    #if defined(_EMU_RSTCAUSE_MASK)
+#if defined(_EMU_RSTCAUSE_MASK)
     if (sResetCause & EMU_RSTCAUSE_POR)
     {
         reason = OT_PLAT_RESET_REASON_POWER_ON;
@@ -86,8 +86,8 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     {
         reason = OT_PLAT_RESET_REASON_ASSERT;
     }
-    #endif
-    #if defined(_RMU_RSTCAUSE_MASK)
+#endif
+#if defined(_RMU_RSTCAUSE_MASK)
     if (sResetCause & RMU_RSTCAUSE_PORST)
     {
         reason = OT_PLAT_RESET_REASON_POWER_ON;
@@ -113,7 +113,7 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     {
         reason = OT_PLAT_RESET_REASON_ASSERT;
     }
-    #endif
+#endif
     return reason;
 }
 
