@@ -96,12 +96,6 @@ void efr32UartProcess(void);
 void efr32MiscInit(void);
 
 /**
- * Initialization of ADC module for random number generator.
- *
- */
-void efr32RandomInit(void);
-
-/**
  * Initialization of Logger driver.
  *
  */
