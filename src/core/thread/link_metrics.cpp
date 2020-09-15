@@ -118,26 +118,65 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
     uint16_t               pos          = aOffset;
     uint16_t               end_pos      = aOffset + aLength;
     Tlv                    tlv;
-    LinkMetricsTypeIdFlags typeId;
+    LinkMetricsTypeIdFlags typeIdFlags;
+
+    otLogDebgMle("Received Link Metrics Report\r\n");
 
     while (pos < end_pos)
     {
         aMessage.Read(pos, sizeof(Tlv), &tlv);
         VerifyOrExit(tlv.GetType() == kLinkMetricsReportSub, OT_NOOP);
         pos += sizeof(Tlv);
-        aMessage.Read(pos, sizeof(LinkMetricsTypeIdFlags), &typeId);
+        aMessage.Read(pos, sizeof(LinkMetricsTypeIdFlags), &typeIdFlags);
         pos += sizeof(otLinkMetricsTypeIdFlags);
-        SetLinkMetricsTypeIdFlagsFromTlv(metrics[metricsCount].mLinkMetricsTypeIdFlags, typeId);
+        SetLinkMetricsTypeIdFlagsFromTlv(metrics[metricsCount].mTypeIdFlags, typeIdFlags);
 
-        if (metrics[metricsCount].mLinkMetricsTypeIdFlags.mLinkMetricsFlagL)
+        if (metrics[metricsCount].mTypeIdFlags.mFlagL)
         {
-            aMessage.Read(pos, sizeof(uint32_t), &metrics[metricsCount].mLinkMetricsValue.m32);
+            aMessage.Read(pos, sizeof(uint32_t), &metrics[metricsCount].mValue.m32);
             pos += sizeof(uint32_t);
         }
         else
         {
-            aMessage.Read(pos, sizeof(uint8_t), &metrics[metricsCount].mLinkMetricsValue.m8);
+            aMessage.Read(pos, sizeof(uint8_t), &metrics[metricsCount].mValue.m8);
             pos += sizeof(uint8_t);
+        }
+
+        switch (metrics[metricsCount].mTypeIdFlags.mMetricEnum)
+        {
+        case OT_LINK_METRICS_PDU_COUNT:
+            otLogDebgMle(" - PDU Counter: %d", value);
+            break;
+
+        case OT_LINK_METRICS_LQI:
+            otLogDebgMle(" - LQI: %d", value);
+            break;
+
+        case OT_LINK_METRICS_MARGIN:
+            otLogDebgMle(" - Margin: %d", value);
+            break;
+
+        case OT_LINK_METRICS_RSSI:
+            otLogDebgMle(" - RSSI: %d", value);
+            break;
+
+        default:
+            break;
+        }
+
+        switch (metrics[metricsCount].mTypeIdFlags.mTypeEnum)
+        {
+        case OT_LINK_METRICS_METRIC_COUNT_SUMMATION:
+            otLogDebgMle(" (Count/Summation)\r\n");
+            break;
+
+        case OT_LINK_METRICS_METRIC_EXPONENTIAL_MOVING_AVERAGE:
+            otLogDebgMle(" (Exponential Moving Average)\r\n");
+            break;
+
+        default:
+            otLogDebgMle("\r\n");
+            break;
         }
 
         metricsCount++;
@@ -221,7 +260,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &               
         metric.Init();
         metric.SetMetricsTypeId(linkMetricsTypeIds[i]);
 
-        switch (linkMetricsTypeIds[i].GetMetricsId())
+        switch (linkMetricsTypeIds[i].GetMetricEnum())
         {
         case OT_LINK_METRICS_PDU_COUNT:
             if (linkMetricsTypeIds[i].IsLengthFlagSet())
@@ -267,10 +306,10 @@ exit:
 void LinkMetrics::SetLinkMetricsTypeIdFlagsFromTlv(otLinkMetricsTypeIdFlags &aOtTypeId,
                                                    LinkMetricsTypeIdFlags &  aTlvTypeId)
 {
-    aOtTypeId.mLinkMetricsId    = aTlvTypeId.GetMetricsId();
-    aOtTypeId.mLinkMetricsType  = aTlvTypeId.GetMetricsType();
-    aOtTypeId.mLinkMetricsFlagE = aTlvTypeId.IsExtendedFlagSet();
-    aOtTypeId.mLinkMetricsFlagL = aTlvTypeId.IsLengthFlagSet();
+    aOtTypeId.mMetricEnum = aTlvTypeId.GetMetricEnum();
+    aOtTypeId.mTypeEnum   = aTlvTypeId.GetTypeEnum();
+    aOtTypeId.mFlagE      = aTlvTypeId.IsExtendedFlagSet();
+    aOtTypeId.mFlagL      = aTlvTypeId.IsLengthFlagSet();
 }
 
 } // namespace ot

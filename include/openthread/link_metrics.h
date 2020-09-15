@@ -86,10 +86,10 @@ typedef enum otLinkMetricsType
  */
 typedef struct otLinkMetricsTypeIdFlags
 {
-    uint8_t mLinkMetricsId : 3;
-    uint8_t mLinkMetricsType : 3;
-    uint8_t mLinkMetricsFlagL : 1;
-    uint8_t mLinkMetricsFlagE : 1;
+    uint8_t mMetricEnum : 3;
+    uint8_t mTypeEnum : 3;
+    uint8_t mFlagL : 1;
+    uint8_t mFlagE : 1;
 } otLinkMetricsTypeIdFlags;
 
 /**
@@ -97,12 +97,12 @@ typedef struct otLinkMetricsTypeIdFlags
  */
 typedef struct otLinkMetrics
 {
-    otLinkMetricsTypeIdFlags mLinkMetricsTypeIdFlags;
+    otLinkMetricsTypeIdFlags mTypeIdFlags;
     union
     {
         uint8_t  m8;
         uint32_t m32;
-    } mLinkMetricsValue;
+    } mValue;
 } otLinkMetrics;
 
 /**

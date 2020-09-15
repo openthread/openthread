@@ -1874,11 +1874,10 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address * aAddress,
 
     while (index < aMetricsNum)
     {
-        linkMetricsTypeId = aMetrics[index].mLinkMetricsTypeIdFlags;
-        int32_t value     = linkMetricsTypeId.mLinkMetricsFlagL ? (int32_t)aMetrics[index].mLinkMetricsValue.m32
-                                                            : aMetrics[index].mLinkMetricsValue.m8;
+        linkMetricsTypeId = aMetrics[index].mTypeIdFlags;
+        int32_t value     = linkMetricsTypeId.mFlagL ? (int32_t)aMetrics[index].mValue.m32 : aMetrics[index].mValue.m8;
 
-        switch (linkMetricsTypeId.mLinkMetricsId)
+        switch (linkMetricsTypeId.mMetricEnum)
         {
         case OT_LINK_METRICS_PDU_COUNT:
             OutputFormat(" - PDU Counter: %d", value);
@@ -1900,7 +1899,7 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address * aAddress,
             break;
         }
 
-        switch (linkMetricsTypeId.mLinkMetricsType)
+        switch (linkMetricsTypeId.mTypeEnum)
         {
         case OT_LINK_METRICS_METRIC_COUNT_SUMMATION:
             OutputFormat(" (Count/Summation)\r\n");

@@ -122,52 +122,52 @@ public:
     bool IsLengthFlagSet(void) const { return (mTypeIdFlags & kLengthFlag) != 0; }
 
     /**
-     * This method sets the Link Metrics type.
+     * This method sets the Type/Average Enum.
      *
-     * @param[in]  aMetricsType  Link Metrics type.
+     * @param[in]  aTypeEnum  Type/Average Enum.
      *
      */
-    void SetMetricsType(uint8_t aMetricsType)
+    void SetTypeEnum(uint8_t aTypeEnum)
     {
-        mTypeIdFlags = (mTypeIdFlags & ~kTypeMask) | ((aMetricsType << kTypeOffset) & kTypeMask);
+        mTypeIdFlags = (mTypeIdFlags & ~kTypeEnumMask) | ((aTypeEnum << kTypeEnumOffset) & kTypeEnumMask);
     }
 
     /**
-     * This method returns the Link Metrics type.
+     * This method returns the Type/Average Enum.
      *
-     * @returns The Link Metrics type.
+     * @returns The Type/Average Enum.
      *
      */
-    uint8_t GetMetricsType(void) const { return (mTypeIdFlags & kTypeMask) >> kTypeOffset; }
+    uint8_t GetTypeEnum(void) const { return (mTypeIdFlags & kTypeEnumMask) >> kTypeEnumOffset; }
 
     /**
-     * This method sets the Link Metrics ID.
+     * This method sets the Metric Enum.
      *
-     * @param[in]  aMetricsId  Link Metrics ID.
+     * @param[in]  aMetricEnum  Metric Enum.
      *
      */
-    void SetMetricsId(uint8_t aMetricsId)
+    void SetMetricEnum(uint8_t aMetricEnum)
     {
-        mTypeIdFlags = (mTypeIdFlags & ~kIdMask) | ((aMetricsId << kIdOffset) & kIdMask);
+        mTypeIdFlags = (mTypeIdFlags & ~kMetricEnumMask) | ((aMetricEnum << kMetricEnumOffset) & kMetricEnumMask);
     }
 
     /**
-     * This method returns the Link Metrics ID.
+     * This method returns the Metric Enum.
      *
-     * @returns The Link Metrics ID.
+     * @returns The Metric Enum.
      *
      */
-    uint8_t GetMetricsId(void) const { return (mTypeIdFlags & kIdMask) >> kIdOffset; }
+    uint8_t GetMetricEnum(void) const { return (mTypeIdFlags & kMetricEnumMask) >> kMetricEnumOffset; }
 
 private:
     enum
     {
-        kLengthFlag   = 1 << 6,
-        kExtendedFlag = 1 << 7,
-        kTypeOffset   = 3,
-        kTypeMask     = 7 << kTypeOffset,
-        kIdOffset     = 0,
-        kIdMask       = 7 << kIdOffset,
+        kLengthFlag       = 1 << 6,
+        kExtendedFlag     = 1 << 7,
+        kTypeEnumOffset   = 3,
+        kTypeEnumMask     = 7 << kTypeEnumOffset,
+        kMetricEnumOffset = 0,
+        kMetricEnumMask   = 7 << kMetricEnumOffset,
     };
 
     uint8_t mTypeIdFlags;
