@@ -42,6 +42,7 @@ override CXXFLAGS := $(filter-out -pedantic-errors,$(CXXFLAGS))
 override CFLAGS   := $(filter-out -Wundef,$(CFLAGS))
 override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
 
+EFR32_PLATFORM = efr32mg12
 BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
 BOARD_UPPERCASE = $(shell echo $(BOARD) | tr a-z A-Z)
 
@@ -57,7 +58,9 @@ libopenthread_efr32mg12_a_CPPFLAGS                                            = 
     -DCORTEXM3_EFM32_MICRO                                                      \
     -DPLAT=EMBER_PLATFORM_CORTEXM3                                              \
     -I$(top_srcdir)/examples/platforms                                          \
-    -I$(top_srcdir)/examples/platforms/efr32mg12/$(BOARD_LOWERCASE)             \
+    -I$(top_srcdir)/examples/platforms/efr32/$(EFR32_PLATFORM)/$(BOARD_LOWERCASE) \
+    -I$(top_srcdir)/examples/platforms/efr32/$(EFR32_PLATFORM)                  \
+    -I$(top_srcdir)/examples/platforms/efr32/src                                \
     -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/src/core                                                    \
     -I$(top_srcdir)/third_party/silabs/rail_config                              \
@@ -98,31 +101,36 @@ libopenthread_efr32mg12_a_CPPFLAGS                                            = 
     -Wno-missing-field-initializers                                             \
     $(NULL)
 
+PLATFORM_COMMON_SOURCES                                                       = \
+    src/alarm.c                                                                 \
+    src/diag.c                                                                  \
+    src/entropy.c                                                               \
+    src/fem-control.c                                                           \
+    src/flash.c                                                                 \
+    src/logging.c                                                               \
+    src/misc.c                                                                  \
+    src/openthread-core-efr32-config.h                                          \
+    src/openthread-core-efr32-config-check.h                                    \
+    src/rail_config.h                                                           \
+    src/startup-gcc.c                                                           \
+    src/uart.c                                                                  \
+    $(NULL)
+
 PLATFORM_SOURCES                                                              = \
-    alarm.c                                                                     \
-    diag.c                                                                      \
-    entropy.c                                                                   \
-    fem-control.c                                                               \
-    flash.c                                                                     \
-    logging.c                                                                   \
-    misc.c                                                                      \
-    openthread-core-efr32-config.h                                              \
-    openthread-core-efr32-config-check.h                                        \
-    platform-efr32.h                                                            \
-    platform-band.h                                                             \
-    radio.c                                                                     \
-    rail_config.h                                                               \
-    startup-gcc.c                                                               \
-    system.c                                                                    \
-    uart.c                                                                      \
+    efr32mg12/platform-efr32.h                                                  \
+    efr32mg12/platform-band.h                                                   \
+    efr32mg12/radio.c                                                           \
+    efr32mg12/system.c                                                          \
+    efr32mg12/uart-init.h                                                       \
     $(NULL)
 
 noinst_HEADERS                                                                = \
-    platform-efr32.h                                                            \
-    platform-band.h                                                             \
+    efr32mg12/platform-efr32.h                                                  \
+    efr32mg12/platform-band.h                                                   \
     $(NULL)
 
 libopenthread_efr32mg12_a_SOURCES                                             = \
+    $(PLATFORM_COMMON_SOURCES)                                                  \
     $(PLATFORM_SOURCES)                                                         \
     $(NULL)
 
@@ -132,11 +140,11 @@ libopenthread_efr32mg12_a_LIBADD                                                
     $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
 
 DIST_SUBDIRS                                                                  = \
-    sleepy-demo                                                                 \
+    efr32mg12/sleepy-demo                                                       \
     $(NULL)
 
 SUBDIRS                                                                       = \
-    sleepy-demo                                                                 \
+    efr32mg12/sleepy-demo                                                       \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
