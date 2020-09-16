@@ -1678,6 +1678,11 @@ class Node:
 
         return router_table
 
+    def send_address_notification(self, dst: str, target: str, mliid: str):
+        cmd = f'fake /a/an {dst} {target} {mliid}'
+        self.send_command(cmd)
+        self._expect("Done")
+
 
 if __name__ == '__main__':
     unittest.main()

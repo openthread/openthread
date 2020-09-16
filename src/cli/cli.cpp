@@ -1560,6 +1560,30 @@ otError Interpreter::ProcessFactoryReset(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError Interpreter::ProcessFake(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_INVALID_COMMAND;
+
+    VerifyOrExit(aArgsLength >= 1, OT_NOOP);
+
+    if (strcmp(aArgs[0], "/a/an") == 0)
+    {
+        otIp6Address destination, target, mlIid;
+
+        VerifyOrExit(aArgsLength == 4, error = OT_ERROR_INVALID_ARGS);
+
+        SuccessOrExit(error = otIp6AddressFromString(aArgs[1], &destination));
+        SuccessOrExit(error = otIp6AddressFromString(aArgs[2], &target));
+        SuccessOrExit(error = otIp6AddressFromString(aArgs[3], &mlIid));
+
+        otThreadSendAddressNotification(mInstance, &destination, &target, &mlIid.mFields.mComponents.mIid);
+    }
+exit:
+    return error;
+}
+#endif
+
 otError Interpreter::ProcessIfconfig(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
