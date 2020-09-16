@@ -52,7 +52,7 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSet
 
 void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode)
 {
-    static_cast<Coap::Message *>(aMessage)->Init(aType, aCode);
+    static_cast<Coap::Message *>(aMessage)->Init(static_cast<Coap::Type>(aType), static_cast<Coap::Code>(aCode));
 }
 
 otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aRequest, otCoapType aType, otCoapCode aCode)
@@ -60,7 +60,7 @@ otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aReques
     Coap::Message &      response = *static_cast<Coap::Message *>(aResponse);
     const Coap::Message &request  = *static_cast<const Coap::Message *>(aRequest);
 
-    response.Init(aType, aCode);
+    response.Init(static_cast<Coap::Type>(aType), static_cast<Coap::Code>(aCode));
     response.SetMessageId(request.GetMessageId());
 
     return response.SetToken(request.GetToken(), request.GetTokenLength());
@@ -139,12 +139,12 @@ otError otCoapMessageSetPayloadMarker(otMessage *aMessage)
 
 otCoapType otCoapMessageGetType(const otMessage *aMessage)
 {
-    return static_cast<const Coap::Message *>(aMessage)->GetType();
+    return static_cast<otCoapType>(static_cast<const Coap::Message *>(aMessage)->GetType());
 }
 
 otCoapCode otCoapMessageGetCode(const otMessage *aMessage)
 {
-    return static_cast<const Coap::Message *>(aMessage)->GetCode();
+    return static_cast<otCoapCode>(static_cast<const Coap::Message *>(aMessage)->GetCode());
 }
 
 const char *otCoapMessageCodeToString(const otMessage *aMessage)
@@ -169,37 +169,49 @@ const uint8_t *otCoapMessageGetToken(const otMessage *aMessage)
 
 otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessage *aMessage)
 {
-    return static_cast<Coap::OptionIterator *>(aIterator)->Init(static_cast<const Coap::Message *>(aMessage));
+    return static_cast<Coap::Option::Iterator *>(aIterator)->Init(*static_cast<const Coap::Message *>(aMessage));
 }
 
 const otCoapOption *otCoapOptionIteratorGetFirstOptionMatching(otCoapOptionIterator *aIterator, uint16_t aOption)
 {
-    return static_cast<Coap::OptionIterator *>(aIterator)->GetFirstOptionMatching(aOption);
+    Coap::Option::Iterator &iterator = *static_cast<Coap::Option::Iterator *>(aIterator);
+
+    IgnoreError(iterator.Init(iterator.GetMessage(), aOption));
+    return iterator.GetOption();
 }
 
 const otCoapOption *otCoapOptionIteratorGetFirstOption(otCoapOptionIterator *aIterator)
 {
-    return static_cast<Coap::OptionIterator *>(aIterator)->GetFirstOption();
+    Coap::Option::Iterator &iterator = *static_cast<Coap::Option::Iterator *>(aIterator);
+
+    IgnoreError(iterator.Init(iterator.GetMessage()));
+    return iterator.GetOption();
 }
 
 const otCoapOption *otCoapOptionIteratorGetNextOptionMatching(otCoapOptionIterator *aIterator, uint16_t aOption)
 {
-    return static_cast<Coap::OptionIterator *>(aIterator)->GetNextOptionMatching(aOption);
+    Coap::Option::Iterator &iterator = *static_cast<Coap::Option::Iterator *>(aIterator);
+
+    IgnoreError(iterator.Advance(aOption));
+    return iterator.GetOption();
 }
 
 const otCoapOption *otCoapOptionIteratorGetNextOption(otCoapOptionIterator *aIterator)
 {
-    return static_cast<Coap::OptionIterator *>(aIterator)->GetNextOption();
+    Coap::Option::Iterator &iterator = *static_cast<Coap::Option::Iterator *>(aIterator);
+
+    IgnoreError(iterator.Advance());
+    return iterator.GetOption();
 }
 
 otError otCoapOptionIteratorGetOptionUintValue(otCoapOptionIterator *aIterator, uint64_t *const aValue)
 {
-    return static_cast<Coap::OptionIterator *>(aIterator)->GetOptionValue(*aValue);
+    return static_cast<Coap::Option::Iterator *>(aIterator)->ReadOptionValue(*aValue);
 }
 
 otError otCoapOptionIteratorGetOptionValue(otCoapOptionIterator *aIterator, void *aValue)
 {
-    return static_cast<Coap::OptionIterator *>(aIterator)->GetOptionValue(aValue);
+    return static_cast<Coap::Option::Iterator *>(aIterator)->ReadOptionValue(aValue);
 }
 
 otError otCoapSendRequestWithParameters(otInstance *              aInstance,

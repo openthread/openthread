@@ -66,13 +66,22 @@ LIB_FLAGS                                                                       
     -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/XCVR/DK6/Build/Include                   \
     -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/XCVR/DK6                                 \
     -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/Common                                   \
+    -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/FunctionLib/                             \
+    -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/Panic/Interface/                         \
+    -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/MemManager/Interface                     \
     -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/SerialManager/Source                     \
     -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/TimersManager/Source                     \
+    -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/PDM/Include                              \
+    -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/Lists                                    \
+    -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/OSAbstraction/Interface                  \
+    -I$(top_srcdir)/third_party/nxp/JN5189DK6/middleware/wireless/framework/Flash/Internal                           \
     -Wno-unknown-pragmas                                                                                             \
     -Wno-sign-compare                                                                                                \
     -Wno-unused-function                                                                                             \
     -Wno-unused-parameter                                                                                            \
     -Wno-empty-body                                                                                                  \
+    -Wno-missing-field-initializers                                                                                  \
+    -Wno-clobbered                                                                                                   \
     -fno-strict-aliasing                                                                                             \
     $(NULL)
 
@@ -87,7 +96,6 @@ libopenthread_jn5189_plat_a_CPPFLAGS                                            
 PLATFORM_SOURCES                                                                                                   = \
     src/alarm.c                                                                                                      \
     src/diag.c                                                                                                       \
-    src/flash.c                                                                                                      \
     src/logging.c                                                                                                    \
     src/misc.c                                                                                                       \
     src/radio.c                                                                                                      \
@@ -123,6 +131,12 @@ libopenthread_jn5189_sdk_a_SOURCES                                              
     @top_builddir@/third_party/nxp/JN5189DK6/devices/JN5189/utilities/debug_console/fsl_debug_console.c              \
     @top_builddir@/third_party/nxp/JN5189DK6/devices/JN5189/utilities/str/fsl_str.c                                  \
     @top_builddir@/third_party/nxp/JN5189DK6/middleware/wireless/framework/Common/MicroInt_arm_sdk2.c                \
+    @top_builddir@/third_party/nxp/JN5189DK6/middleware/wireless/framework/FunctionLib/FunctionLib.c                 \
+    @top_builddir@/third_party/nxp/JN5189DK6/middleware/wireless/framework/Reset/Reset.c                             \
+    @top_builddir@/third_party/nxp/JN5189DK6/middleware/wireless/framework/MemManager/Source/MemManager.c            \
+    @top_builddir@/third_party/nxp/JN5189DK6/middleware/wireless/framework/PDM/pdm_port.c                            \
+    @top_builddir@/third_party/nxp/JN5189DK6/middleware/wireless/framework/Lists/GenericList.c                       \
+    @top_builddir@/third_party/nxp/JN5189DK6/middleware/wireless/framework/Flash/Internal/Flash_Adapter.c            \
     $(NULL)
 
 libopenthread_jn5189_plat_a_SOURCES                                                                                = \

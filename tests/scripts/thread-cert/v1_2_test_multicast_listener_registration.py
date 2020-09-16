@@ -76,48 +76,48 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
     TOPOLOGY = {
         BBR_1: {
             'version': '1.2',
-            'whitelist': [BBR_2, ROUTER_1_2],
+            'allowlist': [BBR_2, ROUTER_1_2],
             'is_bbr': True,
             'router_selection_jitter': 1,
         },
         BBR_2: {
             'version': '1.2',
-            'whitelist': [BBR_1, ROUTER_1_2, ROUTER_1_1],
+            'allowlist': [BBR_1, ROUTER_1_2, ROUTER_1_1],
             'is_bbr': True,
             'router_selection_jitter': 1,
         },
         ROUTER_1_2: {
             'version': '1.2',
-            'whitelist': [BBR_1, BBR_2, SED_1, MED_1, MED_2, FED_1],
+            'allowlist': [BBR_1, BBR_2, SED_1, MED_1, MED_2, FED_1],
             'router_selection_jitter': 1,
         },
         ROUTER_1_1: {
             'version': '1.1',
-            'whitelist': [BBR_2],
+            'allowlist': [BBR_2],
             'router_selection_jitter': 1,
         },
         MED_1: {
             'mode': 'rsn',
             'version': '1.2',
-            'whitelist': [ROUTER_1_2],
+            'allowlist': [ROUTER_1_2],
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
         },
         MED_2: {
             'mode': 'rsn',
             'version': '1.2',
-            'whitelist': [ROUTER_1_2],
+            'allowlist': [ROUTER_1_2],
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
         },
         SED_1: {
             'mode': 'sn',
             'version': '1.2',
-            'whitelist': [ROUTER_1_2],
+            'allowlist': [ROUTER_1_2],
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
         },
         FED_1: {
             'mode': 'rsdn',
             'version': '1.2',
-            'whitelist': [ROUTER_1_2],
+            'allowlist': [ROUTER_1_2],
             'router_upgrade_threshold': 0,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
         },
@@ -284,6 +284,158 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
     def testMulticastListenerTableAPI(self):
         self._bootstrap()
         self.__test_multicast_listeners_table_api()
+
+    def testMlrConfigResponse(self):
+        self._bootstrap()
+        self.__test_mlr_config_response()
+
+    def __test_mlr_config_response(self):
+        bbr = self.nodes[BBR_1]
+        router = self.nodes[ROUTER_1_2]
+
+        self.flush_all()
+
+        # Configure next response to 0
+        bbr.set_next_mlr_response(0)
+        router.add_ipmaddr("ff04::1")
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.__check_send_mlr_req(ROUTER_1_2, ["ff04::1"],
+                                  should_send=True,
+                                  expect_mlr_rsp=True,
+                                  expect_mlr_rsp_status=0)
+        self.assertNotIn(ipaddress.IPv6Address("ff04::1"), bbr.multicast_listener_list())
+
+        router.del_ipmaddr("ff04::1")
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.flush_all()
+
+        # Configure next response to 2
+        bbr.set_next_mlr_response(2)
+        router.add_ipmaddr("ff04::2")
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.__check_send_mlr_req(ROUTER_1_2, ["ff04::2"],
+                                  should_send=True,
+                                  expect_mlr_rsp=True,
+                                  expect_mlr_rsp_status=2)
+
+        router.del_ipmaddr("ff04::2")
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.flush_all()
+
+        # Configure next response to 4
+        bbr.set_next_mlr_response(4)
+        router.add_ipmaddr("ff04::4")
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.__check_send_mlr_req(ROUTER_1_2, ["ff04::4"],
+                                  should_send=True,
+                                  expect_mlr_rsp=True,
+                                  expect_mlr_rsp_status=4)
+
+        # The MA should be eventually registered after reregistration
+        self.simulator.go(REREG_DELAY + WAIT_REDUNDANCE)
+        self.assertIn(ipaddress.IPv6Address("ff04::4"), bbr.multicast_listener_list())
+
+        router.del_ipmaddr("ff04::4")
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.flush_all()
+
+    def testCommissionerRegisterMulticastListeners(self):
+        self._bootstrap()
+
+        # Use ROUTER_1_2 as the Commissioner
+        commissioiner = self.nodes[ROUTER_1_2]
+
+        self.assertRaisesRegex(Exception, "InvalidState", lambda: commissioiner.register_multicast_listener("ff04::1"))
+
+        commissioiner.commissioner_start()
+        self.simulator.go(10)
+
+        # Now the Commissioner should be able to register MAs
+        for ip in ["ff04::1", "ff04::2"]:
+            status, failed_ips = commissioiner.register_multicast_listener(ip)
+            self.assertTrue(status == 0 and not failed_ips)
+            self.__check_multicast_listener(ip, expect_mlr_timeout_range=[290, 300])
+
+        # Register existing MA with a new timeout should be able to update the timeout
+        for ip in ["ff04::1", "ff04::2"]:
+            status, failed_ips = commissioiner.register_multicast_listener(ip, timeout=1000)
+            self.assertTrue(status == 0 and not failed_ips)
+            self.__check_multicast_listener(ip, expect_mlr_timeout_range=[990, 1000])
+
+        # Register MAs with given timeouts
+        for ip, timeout in [("ff05::1", 400), ("ff05::2", 500), ("ff05::3", 600)]:
+            status, failed_ips = commissioiner.register_multicast_listener(ip, timeout=timeout)
+            self.assertTrue(status == 0 and not failed_ips)
+            self.__check_multicast_listener(ip, expect_mlr_timeout_range=[timeout - 10, timeout])
+
+        # Register multiple MAs with one call
+        ips = ["ff05::4", "ff05::5", "ff05::6"]
+        status, failed_ips = commissioiner.register_multicast_listener(*ips, timeout=700)
+        self.assertTrue(status == 0 and not failed_ips)
+        for ip in ips:
+            self.__check_multicast_listener(ip, expect_mlr_timeout_range=[690, 700])
+
+        # Register multiple MAs with one call (without timeout)
+        ips = ["ff05::7", "ff05::8", "ff05::9"]
+        status, failed_ips = commissioiner.register_multicast_listener(*ips)
+        self.assertTrue(status == 0 and not failed_ips)
+        for ip in ips:
+            self.__check_multicast_listener(ip, expect_mlr_timeout_range=[290, 300])
+
+        # Unregister MAs using timeout=0
+        for ip in ["ff05::1", "ff05::2", "ff05::3"]:
+            status, failed_ips = commissioiner.register_multicast_listener(ip, timeout=0)
+            self.assertTrue(status == 0 and not failed_ips)
+            self.__check_multicast_listener(ip, expect_not_present=True)
+
+        # Unregister multiple MAs
+        ips = ["ff05::4", "ff05::5", "ff05::6"]
+        status, failed_ips = commissioiner.register_multicast_listener(*ips, timeout=0)
+        self.assertTrue(status == 0 and not failed_ips)
+        self.__check_multicast_listener(ip, expect_not_present=True)
+
+        # Remove MAs that are not subscribed should not fail
+        ips = ["ff06::1", "ff02::1", "2001::1"]
+        status, failed_ips = commissioiner.register_multicast_listener(*ips, timeout=0)
+        self.assertTrue(status == 0 and not failed_ips)
+        self.__check_multicast_listener(ip, expect_not_present=True)
+
+        # Register invalid MAs should fail
+        for ip in ["ff02::1", "ff03::1", "2001::1"]:
+            status, failed_ips = commissioiner.register_multicast_listener(ip)
+            self.assertEqual(status, 2)
+            self.assertEqual(set(failed_ips), {ipaddress.IPv6Address(ip)})
+            self.__check_multicast_listener(ip, expect_not_present=True)
+
+        # Register valid MAs with invalid MAs should succeed partially
+        ips = ["ff05::1", "ff05::2", "ff02::1", "2001::1"]
+        status, failed_ips = commissioiner.register_multicast_listener(*ips)
+        self.assertEqual(status, 2)
+        self.assertEqual(set(failed_ips), {ipaddress.IPv6Address("ff02::1"), ipaddress.IPv6Address("2001::1")})
+        self.__check_multicast_listener("ff05::1")
+        self.__check_multicast_listener("ff05::2")
+        self.__check_multicast_listener("ff02::1", expect_not_present=True)
+        self.__check_multicast_listener("2001::1", expect_not_present=True)
+
+        # Registering persistent MAs should fail for now
+        status, failed_ips = commissioiner.register_multicast_listener("ff06::1", timeout=0xffffffff)
+        self.assertEqual(status, 3)
+        # "ff06::1" should not be included in failed IPs because all IPs failed
+        self.assertTrue(not failed_ips == 0)
+
+    def __check_multicast_listener(self, *addrs, expect_mlr_timeout_range=None, expect_not_present=False):
+        addrs = map(ipaddress.IPv6Address, addrs)
+        listeners = self.nodes[BBR_1].multicast_listener_list()
+        logging.info("__check_multicast_listener get listeners: %s", listeners)
+
+        for addr in addrs:
+            if not expect_not_present:
+                self.assertIn(addr, listeners)
+                if expect_mlr_timeout_range is not None:
+                    self.assertGreaterEqual(listeners[addr], expect_mlr_timeout_range[0])
+                    self.assertLessEqual(listeners[addr], expect_mlr_timeout_range[1])
+            else:
+                self.assertNotIn(addr, listeners)
 
     def __test_multicast_listeners_table_api(self):
         self.assertTrue(self.nodes[BBR_1].multicast_listener_list() == {})
@@ -649,8 +801,8 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         # Turn off Router 1.2 and turn on Router 1.1
         self.nodes[ROUTER_1_2].stop()
         for id in [FED_1, MED_1, SED_1]:
-            self.nodes[ROUTER_1_1].add_whitelist(self.nodes[id].get_addr64())
-            self.nodes[id].add_whitelist(self.nodes[ROUTER_1_1].get_addr64())
+            self.nodes[ROUTER_1_1].add_allowlist(self.nodes[id].get_addr64())
+            self.nodes[id].add_allowlist(self.nodes[ROUTER_1_1].get_addr64())
             self.simulator.go(config.DEFAULT_CHILD_TIMEOUT + WAIT_REDUNDANCE)
 
             self.assertEqual(self.nodes[id].get_state(), 'child')

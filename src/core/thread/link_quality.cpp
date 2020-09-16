@@ -68,7 +68,6 @@ otError RssAverager::Add(int8_t aRss)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t newValue;
-    uint16_t oldAverage;
 
     VerifyOrExit(aRss != OT_RADIO_RSSI_INVALID, error = OT_ERROR_INVALID_ARGS);
 
@@ -83,28 +82,10 @@ otError RssAverager::Add(int8_t aRss)
     newValue = static_cast<uint16_t>(-aRss);
     newValue <<= kPrecisionBitShift;
 
-    oldAverage = mAverage;
-
-    if (mCount == 0)
-    {
-        mCount++;
-        mAverage = newValue;
-    }
-    else if (mCount < (1 << kCoeffBitShift) - 1)
-    {
-        mCount++;
-
-        // Maintain arithmetic mean.
-        // newAverage = newValue * (1/mCount) + oldAverage * ((mCount -1)/mCount)
-        mAverage = static_cast<uint16_t>(((oldAverage * (mCount - 1)) + newValue) / mCount);
-    }
-    else
-    {
-        // Maintain exponentially weighted moving average using coefficient of (1/2^kCoeffBitShift).
-        // newAverage = + newValue * 1/2^j + oldAverage * (1 - 1/2^j), for j = kCoeffBitShift.
-
-        mAverage = static_cast<uint16_t>(((oldAverage << kCoeffBitShift) - oldAverage + newValue) >> kCoeffBitShift);
-    }
+    mCount += (mCount < (1 << kCoeffBitShift));
+    // Maintain arithmetic mean.
+    // newAverage = newValue * (1/mCount) + oldAverage * ((mCount -1)/mCount)
+    mAverage = static_cast<uint16_t>(((mAverage * (mCount - 1)) + newValue) / mCount);
 
 exit:
     return error;
@@ -206,7 +187,7 @@ uint8_t LinkQualityInfo::ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss
 
 int8_t LinkQualityInfo::ConvertLinkQualityToRss(int8_t aNoiseFloor, uint8_t aLinkQuality)
 {
-    uint8_t linkmargin = 0;
+    int8_t linkmargin = 0;
 
     switch (aLinkQuality)
     {

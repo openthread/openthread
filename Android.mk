@@ -176,10 +176,12 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/thread_api.cpp                             \
     src/core/api/thread_ftd_api.cpp                         \
     src/core/api/udp_api.cpp                                \
+    src/core/backbone_router/backbone_tmf.cpp               \
     src/core/backbone_router/bbr_leader.cpp                 \
     src/core/backbone_router/bbr_local.cpp                  \
     src/core/backbone_router/bbr_manager.cpp                \
     src/core/backbone_router/multicast_listeners_table.cpp  \
+    src/core/backbone_router/ndproxy_table.cpp              \
     src/core/coap/coap.cpp                                  \
     src/core/coap/coap_message.cpp                          \
     src/core/coap/coap_secure.cpp                           \
@@ -228,6 +230,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/meshcop/meshcop_tlvs.cpp                       \
     src/core/meshcop/panid_query_client.cpp                 \
     src/core/meshcop/timestamp.cpp                          \
+    src/core/net/checksum.cpp                               \
     src/core/net/dhcp6_client.cpp                           \
     src/core/net/dhcp6_server.cpp                           \
     src/core/net/dns_client.cpp                             \
@@ -272,7 +275,9 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/router_table.cpp                        \
     src/core/thread/src_match_controller.cpp                \
     src/core/thread/thread_netif.cpp                        \
+    src/core/thread/tmf.cpp                                 \
     src/core/thread/topology.cpp                            \
+    src/core/thread/uri_paths.cpp                           \
     src/core/utils/channel_manager.cpp                      \
     src/core/utils/channel_monitor.cpp                      \
     src/core/utils/child_supervision.cpp                    \
@@ -287,6 +292,7 @@ LOCAL_SRC_FILES                                          := \
     src/lib/spinel/spinel_encoder.cpp                       \
     src/lib/url/url.cpp                                     \
     src/posix/platform/alarm.cpp                            \
+    src/posix/platform/backbone.cpp                         \
     src/posix/platform/entropy.cpp                          \
     src/posix/platform/hdlc_interface.cpp                   \
     src/posix/platform/logging.cpp                          \

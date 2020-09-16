@@ -43,6 +43,7 @@ readonly NODE_MODE="${NODE_MODE:-standalone}"
 readonly NODE_TYPE="${NODE_TYPE:-sim}"
 readonly OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
 readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
+readonly INTER_OP="${INTER_OP:-0}"
 readonly VERBOSE="${VERBOSE:-0}"
 
 build_simulation()
@@ -115,21 +116,23 @@ build_posix()
     fi
 }
 
-do_build()
+build_for_one_version()
 {
-    build_simulation "${THREAD_VERSION}"
+    local version="$1"
+
+    build_simulation "${version}"
 
     if [[ ${NODE_MODE} == "rcp" ]]; then
-        build_posix "${THREAD_VERSION}"
+        build_posix "${version}"
     fi
+}
 
-    # Extra 1.1 build for 1.2 tests
-    if [[ ${THREAD_VERSION} == "1.2" ]]; then
-        build_simulation 1.1
+do_build()
+{
+    build_for_one_version "${THREAD_VERSION}"
 
-        if [[ ${NODE_MODE} == "rcp" ]]; then
-            build_posix 1.1
-        fi
+    if [[ ${THREAD_VERSION} == "1.2" && ${INTER_OP} == "1" ]]; then
+        build_for_one_version 1.1
     fi
 }
 
@@ -160,7 +163,6 @@ do_unit()
 
     if [[ ${THREAD_VERSION} == "1.2" ]]; then
         do_unit_version "1.2-bbr"
-        do_unit_version "1.1"
     fi
 }
 
@@ -169,8 +171,10 @@ do_cert()
     export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
 
     if [[ ${THREAD_VERSION} == "1.2" ]]; then
-        export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
         export top_builddir_1_2_bbr="${OT_BUILDDIR}/cmake/openthread-simulation-1.2-bbr"
+        if [[ ${INTER_OP} == "1" ]]; then
+            export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
+        fi
     fi
 
     [[ ! -d tmp ]] || rm -rvf tmp
@@ -182,8 +186,10 @@ do_cert_suite()
     export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
 
     if [[ ${THREAD_VERSION} == "1.2" ]]; then
-        export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
         export top_builddir_1_2_bbr="${OT_BUILDDIR}/cmake/openthread-simulation-1.2-bbr"
+        if [[ ${INTER_OP} == "1" ]]; then
+            export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
+        fi
     fi
 
     local pass_count=0
@@ -193,7 +199,7 @@ do_cert_suite()
 
     for test_case in "$@"; do
         rm -rf tmp || sudo rm -rf tmp
-        if "${test_case}" &>test.log; then
+        if TEST_NAME="$(basename "${test_case}" .py)" "${test_case}" &>test.log; then
             echo -e "${COLOR_PASS}PASS${COLOR_NONE} ${test_case}"
             pass_count=$((pass_count + 1))
         else
@@ -227,12 +233,16 @@ do_expect()
 {
     local ot_command
     local rcp_command=
+    local mtd_command=
     local test_patterns
 
     if [[ ${NODE_MODE} == rcp ]]; then
         ot_command="${OT_CLI_PATH}"
         rcp_command="${RADIO_DEVICE}"
-        if [[ ${OT_NATIVE_IP} == 1 ]]; then
+        if [[ ${THREAD_VERSION} == "1.2" ]]; then
+            mtd_command="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/cli/ot-cli-mtd"
+            test_patterns=(-name 'v1_2-*.exp')
+        elif [[ ${OT_NATIVE_IP} == 1 ]]; then
             test_patterns=(-name 'tun-*.exp')
         else
             test_patterns=(-name 'posix-*.exp' -o -name 'cli-*.exp')
@@ -248,9 +258,9 @@ do_expect()
         mkdir tmp
         {
             if [[ ${OT_NATIVE_IP} == 1 ]]; then
-                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" sudo -E expect -df "${script}" 2>"${log_file}"
+                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" MTD_COMMAND="${mtd_command}" sudo -E expect -df "${script}" 2>"${log_file}"
             else
-                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" expect -df "${script}" 2>"${log_file}"
+                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" MTD_COMMAND="${mtd_command}" expect -df "${script}" 2>"${log_file}"
             fi
         } || {
             local exit_code=$?
@@ -283,6 +293,7 @@ ENVIRONMENTS:
     VERBOSE         1 to build or test verbosely. The default is 0.
     VIRTUAL_TIME    1 for virtual time, otherwise real time. The default is 1.
     THREAD_VERSION  1.1 for Thread 1.1 stack, 1.2 for Thread 1.2 stack. The default is 1.1.
+    INTER_OP        1 to build 1.1 together. Only works when THREAD_VERSION is 1.2. The default is 0.
 
 COMMANDS:
     clean           Clean built files to prepare for new build.
@@ -310,9 +321,10 @@ EXAMPLES:
     VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
     VIRTUAL_TIME=0 $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
 
-    # Test Thread 1.2 with real time
-    THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_router_5_1_1.py
-    THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert_suite tests/scripts/thread-cert/v1_2_*
+    # Test Thread 1.2 with real time, use 'INTER_OP=1' when the case needs both versions.
+    THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_test_enhanced_keep_alive.py
+    THREAD_VERSION=1.2 INTER_OP=1 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_router_5_1_1.py
+    THREAD_VERSION=1.2 INTER_OP=1 VIRTUAL_TIME=0 $0 clean build cert_suite tests/scripts/thread-cert/v1_2_*
 
     # Run a single expect test
     $0 clean build expect tests/scripts/expect/cli-log-level.exp

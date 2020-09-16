@@ -144,10 +144,12 @@ SOURCES_COMMON                                  = \
     api/thread_api.cpp                            \
     api/thread_ftd_api.cpp                        \
     api/udp_api.cpp                               \
+    backbone_router/backbone_tmf.cpp              \
     backbone_router/bbr_leader.cpp                \
     backbone_router/bbr_local.cpp                 \
     backbone_router/bbr_manager.cpp               \
     backbone_router/multicast_listeners_table.cpp \
+    backbone_router/ndproxy_table.cpp             \
     coap/coap.cpp                                 \
     coap/coap_message.cpp                         \
     coap/coap_secure.cpp                          \
@@ -198,6 +200,7 @@ SOURCES_COMMON                                  = \
     meshcop/meshcop_tlvs.cpp                      \
     meshcop/panid_query_client.cpp                \
     meshcop/timestamp.cpp                         \
+    net/checksum.cpp                              \
     net/dhcp6_client.cpp                          \
     net/dhcp6_server.cpp                          \
     net/dns_client.cpp                            \
@@ -244,7 +247,9 @@ SOURCES_COMMON                                  = \
     thread/src_match_controller.cpp               \
     thread/thread_netif.cpp                       \
     thread/time_sync_service.cpp                  \
+    thread/tmf.cpp                                \
     thread/topology.cpp                           \
+    thread/uri_paths.cpp                          \
     utils/channel_manager.cpp                     \
     utils/channel_monitor.cpp                     \
     utils/child_supervision.cpp                   \
@@ -321,10 +326,12 @@ endif # OPENTHREAD_ENABLE_VENDOR_EXTENSION
 
 HEADERS_COMMON                                  = \
     openthread-core-config.h                      \
+    backbone_router/backbone_tmf.hpp              \
     backbone_router/bbr_leader.hpp                \
     backbone_router/bbr_local.hpp                 \
     backbone_router/bbr_manager.hpp               \
     backbone_router/multicast_listeners_table.hpp \
+    backbone_router/ndproxy_table.hpp             \
     coap/coap.hpp                                 \
     coap/coap_message.hpp                         \
     coap/coap_secure.hpp                          \
@@ -414,6 +421,7 @@ HEADERS_COMMON                                  = \
     meshcop/meshcop_tlvs.hpp                      \
     meshcop/panid_query_client.hpp                \
     meshcop/timestamp.hpp                         \
+    net/checksum.hpp                              \
     net/dhcp6.hpp                                 \
     net/dhcp6_client.hpp                          \
     net/dhcp6_server.hpp                          \
@@ -466,9 +474,10 @@ HEADERS_COMMON                                  = \
     thread/src_match_controller.hpp               \
     thread/thread_netif.hpp                       \
     thread/thread_tlvs.hpp                        \
-    thread/thread_uri_paths.hpp                   \
     thread/time_sync_service.hpp                  \
+    thread/tmf.hpp                                \
     thread/topology.hpp                           \
+    thread/uri_paths.hpp                          \
     utils/channel_manager.hpp                     \
     utils/channel_monitor.hpp                     \
     utils/child_supervision.hpp                   \

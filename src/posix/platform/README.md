@@ -54,5 +54,5 @@ scan
 start
 state
 stop
-whitelist
+allowlist
 ```

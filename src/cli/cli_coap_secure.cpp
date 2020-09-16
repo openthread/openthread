@@ -97,7 +97,7 @@ void CoapSecure::PrintPayload(otMessage *aMessage) const
         }
     }
 
-    mInterpreter.OutputFormat("\r\n");
+    mInterpreter.OutputLine("");
 }
 
 otError CoapSecure::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
@@ -107,7 +107,7 @@ otError CoapSecure::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputFormat("%s\r\n", command.mName);
+        mInterpreter.OutputLine("%s", command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -130,7 +130,7 @@ otError CoapSecure::ProcessResource(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        mInterpreter.OutputFormat("%s\r\n", mResource.mUriPath);
+        mInterpreter.OutputLine("%s", mResource.mUriPath);
     }
 
 exit:
@@ -149,7 +149,7 @@ otError CoapSecure::ProcessSet(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        mInterpreter.OutputFormat("%s\r\n", mResourceContent);
+        mInterpreter.OutputLine("%s", mResourceContent);
     }
 
 exit:
@@ -284,7 +284,7 @@ otError CoapSecure::ProcessRequest(uint8_t aArgsLength, char *aArgs[])
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
     otCoapMessageInit(message, coapType, coapCode);
-    otCoapMessageGenerateToken(message, ot::Coap::Message::kDefaultTokenLength);
+    otCoapMessageGenerateToken(message, OT_COAP_DEFAULT_TOKEN_LENGTH);
     SuccessOrExit(error = otCoapMessageAppendUriPathOptions(message, coapUri));
 
     if (aArgsLength > (4 - indexShifter))
@@ -447,11 +447,11 @@ void CoapSecure::HandleConnected(bool aConnected)
 {
     if (aConnected)
     {
-        mInterpreter.OutputFormat("coaps connected\r\n");
+        mInterpreter.OutputLine("coaps connected");
     }
     else
     {
-        mInterpreter.OutputFormat("coaps disconnected\r\n");
+        mInterpreter.OutputLine("coaps disconnected");
 
         if (mShutdownFlag)
         {
@@ -495,7 +495,7 @@ void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessag
         break;
 
     default:
-        mInterpreter.OutputFormat("Undefined\r\n");
+        mInterpreter.OutputLine("Undefined");
         return;
     }
 
@@ -539,13 +539,13 @@ exit:
     {
         if (responseMessage != nullptr)
         {
-            mInterpreter.OutputFormat("coaps send response error %d: %s\r\n", error, otThreadErrorToString(error));
+            mInterpreter.OutputLine("coaps send response error %d: %s", error, otThreadErrorToString(error));
             otMessageFree(responseMessage);
         }
     }
     else if (responseCode >= OT_COAP_CODE_RESPONSE_MIN)
     {
-        mInterpreter.OutputFormat("coaps response sent\r\n");
+        mInterpreter.OutputLine("coaps response sent");
     }
 }
 
@@ -560,7 +560,7 @@ void CoapSecure::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessa
 
     if (aError != OT_ERROR_NONE)
     {
-        mInterpreter.OutputFormat("coaps receive response error %d: %s\r\n", aError, otThreadErrorToString(aError));
+        mInterpreter.OutputLine("coaps receive response error %d: %s", aError, otThreadErrorToString(aError));
     }
     else
     {

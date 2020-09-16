@@ -85,224 +85,6 @@ namespace Mle {
  */
 
 /**
- * This class implements MLE Header generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class Header
-{
-public:
-    /**
-     * MLE Command Types.
-     *
-     */
-    enum Command
-    {
-        kCommandLinkRequest          = 0,  ///< Link Request
-        kCommandLinkAccept           = 1,  ///< Link Accept
-        kCommandLinkAcceptAndRequest = 2,  ///< Link Accept and Reject
-        kCommandLinkReject           = 3,  ///< Link Reject
-        kCommandAdvertisement        = 4,  ///< Advertisement
-        kCommandUpdate               = 5,  ///< Update
-        kCommandUpdateRequest        = 6,  ///< Update Request
-        kCommandDataRequest          = 7,  ///< Data Request
-        kCommandDataResponse         = 8,  ///< Data Response
-        kCommandParentRequest        = 9,  ///< Parent Request
-        kCommandParentResponse       = 10, ///< Parent Response
-        kCommandChildIdRequest       = 11, ///< Child ID Request
-        kCommandChildIdResponse      = 12, ///< Child ID Response
-        kCommandChildUpdateRequest   = 13, ///< Child Update Request
-        kCommandChildUpdateResponse  = 14, ///< Child Update Response
-        kCommandAnnounce             = 15, ///< Announce
-        kCommandDiscoveryRequest     = 16, ///< Discovery Request
-        kCommandDiscoveryResponse    = 17, ///< Discovery Response
-        kCommandTimeSync             = 99, ///< Time Sync (applicable when OPENTHREAD_CONFIG_TIME_SYNC_ENABLE enabled)
-    };
-
-    /**
-     * MLE Security Suite
-     *
-     */
-    enum SecuritySuite
-    {
-        k154Security = 0,   ///< IEEE 802.15.4-2006 security.
-        kNoSecurity  = 255, ///< No security enabled.
-    };
-
-    /**
-     * This method initializes the MLE header.
-     *
-     */
-    void Init(void)
-    {
-        mSecuritySuite   = k154Security;
-        mSecurityControl = Mac::Frame::kSecEncMic32;
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const
-    {
-        return (mSecuritySuite == kNoSecurity) ||
-               (mSecuritySuite == k154Security &&
-                mSecurityControl == (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32));
-    }
-
-    /**
-     * This method returns the MLE header and Command Type length.
-     *
-     * @returns The MLE header and Command Type length.
-     *
-     */
-    uint8_t GetLength(void) const
-    {
-        return sizeof(mSecuritySuite) + sizeof(mCommand) +
-               ((mSecuritySuite == k154Security)
-                    ? sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex)
-                    : 0);
-    }
-
-    /**
-     * This method returns the Security Suite value.
-     *
-     * @returns The Security Suite value.
-     *
-     */
-    SecuritySuite GetSecuritySuite(void) const { return static_cast<SecuritySuite>(mSecuritySuite); }
-
-    /**
-     * This method sets the Security Suite value.
-     *
-     * @param[in]  aSecuritySuite  The Security Suite value.
-     *
-     */
-    void SetSecuritySuite(SecuritySuite aSecuritySuite) { mSecuritySuite = static_cast<uint8_t>(aSecuritySuite); }
-
-    /**
-     * This method returns the MLE header length (excluding the Command Type).
-     *
-     * @returns The MLE header length (excluding the Command Type).
-     *
-     */
-    uint8_t GetHeaderLength(void) const
-    {
-        return sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex);
-    }
-
-    /**
-     * This method returns a pointer to first byte of the MLE header.
-     *
-     * @returns A pointer to the first byte of the MLE header.
-     *
-     */
-    const uint8_t *GetBytes(void) const { return reinterpret_cast<const uint8_t *>(&mSecuritySuite); }
-
-    /**
-     * This method returns the Security Control value.
-     *
-     * @returns The Security Control value.
-     *
-     */
-    uint8_t GetSecurityControl(void) const { return mSecurityControl; }
-
-    /**
-     * This method indicates whether or not the Key ID Mode is set to 2.
-     *
-     * @retval TRUE   If the Key ID Mode is set to 2.
-     * @retval FALSE  If the Key ID Mode is not set to 2.
-     *
-     */
-    bool IsKeyIdMode2(void) const { return (mSecurityControl & Mac::Frame::kKeyIdModeMask) == Mac::Frame::kKeyIdMode2; }
-
-    /**
-     * This method sets the Key ID Mode to 2.
-     *
-     */
-    void SetKeyIdMode2(void)
-    {
-        mSecurityControl = (mSecurityControl & ~Mac::Frame::kKeyIdModeMask) | Mac::Frame::kKeyIdMode2;
-    }
-
-    /**
-     * This method returns the Key ID value.
-     *
-     * @returns The Key ID value.
-     *
-     */
-    uint32_t GetKeyId(void) const { return Encoding::BigEndian::HostSwap32(mKeySource); }
-
-    /**
-     * This method sets the Key ID value.
-     *
-     * @param[in]  aKeySequence  The Key ID value.
-     *
-     */
-    void SetKeyId(uint32_t aKeySequence)
-    {
-        mKeySource = Encoding::BigEndian::HostSwap32(aKeySequence);
-        mKeyIndex  = (aKeySequence & 0x7f) + 1;
-    }
-
-    /**
-     * This method returns the Frame Counter value.
-     *
-     * @returns The Frame Counter value.
-     *
-     */
-    uint32_t GetFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mFrameCounter); }
-
-    /**
-     * This method sets the Frame Counter value.
-     *
-     * @param[in]  aFrameCounter  The Frame Counter value.
-     *
-     */
-    void SetFrameCounter(uint32_t aFrameCounter) { mFrameCounter = Encoding::LittleEndian::HostSwap32(aFrameCounter); }
-
-    /**
-     * This method returns the Command Type value.
-     *
-     * @returns The Command Type value.
-     *
-     */
-    Command GetCommand(void) const
-    {
-        return static_cast<Command>((mSecuritySuite == kNoSecurity) ? mSecurityControl : mCommand);
-    }
-
-    /**
-     * This method sets the Command Type value.
-     *
-     * @param[in]  aCommand  The Command Type value.
-     *
-     */
-    void SetCommand(Command aCommand)
-    {
-        if (mSecuritySuite == kNoSecurity)
-        {
-            mSecurityControl = static_cast<uint8_t>(aCommand);
-        }
-        else
-        {
-            mCommand = static_cast<uint8_t>(aCommand);
-        }
-    }
-
-private:
-    uint8_t  mSecuritySuite;
-    uint8_t  mSecurityControl;
-    uint32_t mFrameCounter;
-    uint32_t mKeySource;
-    uint8_t  mKeyIndex;
-    uint8_t  mCommand;
-} OT_TOOL_PACKED_END;
-
-/**
  * This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
  *
  */
@@ -935,6 +717,33 @@ public:
 
 protected:
     /**
+     * MLE Command Types.
+     *
+     */
+    enum Command : uint8_t
+    {
+        kCommandLinkRequest          = 0,  ///< Link Request
+        kCommandLinkAccept           = 1,  ///< Link Accept
+        kCommandLinkAcceptAndRequest = 2,  ///< Link Accept and Reject
+        kCommandLinkReject           = 3,  ///< Link Reject
+        kCommandAdvertisement        = 4,  ///< Advertisement
+        kCommandUpdate               = 5,  ///< Update
+        kCommandUpdateRequest        = 6,  ///< Update Request
+        kCommandDataRequest          = 7,  ///< Data Request
+        kCommandDataResponse         = 8,  ///< Data Response
+        kCommandParentRequest        = 9,  ///< Parent Request
+        kCommandParentResponse       = 10, ///< Parent Response
+        kCommandChildIdRequest       = 11, ///< Child ID Request
+        kCommandChildIdResponse      = 12, ///< Child ID Response
+        kCommandChildUpdateRequest   = 13, ///< Child Update Request
+        kCommandChildUpdateResponse  = 14, ///< Child Update Response
+        kCommandAnnounce             = 15, ///< Announce
+        kCommandDiscoveryRequest     = 16, ///< Discovery Request
+        kCommandDiscoveryResponse    = 17, ///< Discovery Response
+        kCommandTimeSync             = 99, ///< Time Sync (applicable when OPENTHREAD_CONFIG_TIME_SYNC_ENABLE enabled)
+    };
+
+    /**
      * States during attach (when searching for a parent).
      *
      */
@@ -975,6 +784,59 @@ protected:
     {
         kAppendAllAddresses,  ///< Append all addresses (unicast/multicast) in Address Registration TLV.
         kAppendMeshLocalOnly, ///< Only append the Mesh Local (ML-EID) address in Address Registration TLV.
+    };
+
+    /**
+     * This enumeration represents the message actions used in `Log()` methods.
+     *
+     */
+    enum MessageAction : uint8_t
+    {
+        kMessageSend,
+        kMessageReceive,
+        kMessageDelay,
+        kMessageRemoveDelayed,
+    };
+
+    /**
+     * This enumeration represents message types used in `Log()` methods.
+     *
+     */
+    enum MessageType : uint8_t
+    {
+        kTypeAdvertisement,
+        kTypeAnnounce,
+        kTypeChildIdRequest,
+        kTypeChildIdRequestShort,
+        kTypeChildIdResponse,
+        kTypeChildUpdateRequestOfParent,
+        kTypeChildUpdateResponseOfParent,
+        kTypeDataRequest,
+        kTypeDataResponse,
+        kTypeDiscoveryRequest,
+        kTypeDiscoveryResponse,
+        kTypeGenericDelayed,
+        kTypeGenericUdp,
+        kTypeParentRequestToRouters,
+        kTypeParentRequestToRoutersReeds,
+        kTypeParentResponse,
+#if OPENTHREAD_FTD
+        kTypeAddressRelease,
+        kTypeAddressReleaseReply,
+        kTypeAddressReply,
+        kTypeAddressSolicit,
+        kTypeChildUpdateRequestOfChild,
+        kTypeChildUpdateResponseOfChild,
+        kTypeChildUpdateResponseOfUnknownChild,
+        kTypeLinkAccept,
+        kTypeLinkAcceptAndRequest,
+        kTypeLinkReject,
+        kTypeLinkRequest,
+        kTypeParentRequest,
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        kTypeTimeSync,
+#endif
+#endif
     };
 
     /**
@@ -1065,7 +927,7 @@ protected:
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the header.
      *
      */
-    otError AppendHeader(Message &aMessage, Header::Command aCommand);
+    otError AppendHeader(Message &aMessage, Command aCommand);
 
     /**
      * This method appends a Source Address TLV to a message.
@@ -1517,24 +1379,60 @@ protected:
      */
     otError AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
 
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
     /**
-     * This method prints an MLE log message with an IPv6 address.
+     * This static method emits a log message with an IPv6 address.
      *
-     * @param[in]  aLogString  The log message string.
+     * @param[in]  aAction     The message action (send/receive/delay, etc).
+     * @param[in]  aType       The message type.
      * @param[in]  aAddress    The IPv6 address of the peer.
      *
      */
-    void LogMleMessage(const char *aLogString, const Ip6::Address &aAddress) const;
+    static void Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAddress);
 
     /**
-     * This method prints an MLE log message with an IPv6 address and RLOC16.
+     * This static method emits a log message with an IPv6 address and RLOC16.
      *
-     * @param[in]  aLogString  The log message string.
+     * @param[in]  aAction     The message action (send/receive/delay, etc).
+     * @param[in]  aType       The message type.
      * @param[in]  aAddress    The IPv6 address of the peer.
      * @param[in]  aRloc       The RLOC16.
      *
      */
-    void LogMleMessage(const char *aLogString, const Ip6::Address &aAddress, uint16_t aRloc) const;
+    static void Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAddress, uint16_t aRloc);
+#else
+    static void Log(MessageAction, MessageType, const Ip6::Address &) {}
+    static void Log(MessageAction, MessageType, const Ip6::Address &, uint16_t) {}
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+    /**
+     * This static method emits a log message indicating an error in processing of a message.
+     *
+     * Note that log message is emitted only if there is an error, i.e., @p aError is not `OT_ERROR_NONE`. The log
+     * message will have the format "Failed to process {aMessageString} : {ErrorString}".
+     *
+     * @param[in]  aType      The message type.
+     * @param[in]  aError     The error in processing of the message.
+     *
+     */
+    static void LogProcessError(MessageType aType, otError aError);
+
+    /**
+     * This static method emits a log message indicating an error when sending a message.
+     *
+     * Note that log message is emitted only if there is an error, i.e. @p aError is not `OT_ERROR_NONE`. The log
+     * message will have the format "Failed to send {Message Type} : {ErrorString}".
+     *
+     * @param[in]  aType    The message type.
+     * @param[in]  aError   The error in sending the message.
+     *
+     */
+    static void LogSendError(MessageType aType, otError aError);
+#else
+    static void LogProcessError(MessageType, otError) {}
+    static void LogSendError(MessageType, otError) {}
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
 
     /**
      * This method triggers MLE Announce on previous channel after the Thread device successfully
@@ -1652,6 +1550,98 @@ private:
         TimeMilli    mSendTime;    // Time when the message shall be sent.
     };
 
+    OT_TOOL_PACKED_BEGIN
+    class Header
+    {
+    public:
+        enum SecuritySuite
+        {
+            k154Security = 0,
+            kNoSecurity  = 255,
+        };
+
+        void Init(void)
+        {
+            mSecuritySuite   = k154Security;
+            mSecurityControl = Mac::Frame::kSecEncMic32;
+        }
+
+        bool IsValid(void) const
+        {
+            return (mSecuritySuite == kNoSecurity) ||
+                   (mSecuritySuite == k154Security &&
+                    mSecurityControl == (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32));
+        }
+
+        uint8_t GetLength(void) const
+        {
+            return sizeof(mSecuritySuite) + sizeof(mCommand) +
+                   ((mSecuritySuite == k154Security)
+                        ? sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex)
+                        : 0);
+        }
+
+        SecuritySuite GetSecuritySuite(void) const { return static_cast<SecuritySuite>(mSecuritySuite); }
+        void SetSecuritySuite(SecuritySuite aSecuritySuite) { mSecuritySuite = static_cast<uint8_t>(aSecuritySuite); }
+
+        uint8_t GetHeaderLength(void) const
+        {
+            return sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex);
+        }
+
+        const uint8_t *GetBytes(void) const { return reinterpret_cast<const uint8_t *>(&mSecuritySuite); }
+        uint8_t        GetSecurityControl(void) const { return mSecurityControl; }
+
+        bool IsKeyIdMode2(void) const
+        {
+            return (mSecurityControl & Mac::Frame::kKeyIdModeMask) == Mac::Frame::kKeyIdMode2;
+        }
+
+        void SetKeyIdMode2(void)
+        {
+            mSecurityControl = (mSecurityControl & ~Mac::Frame::kKeyIdModeMask) | Mac::Frame::kKeyIdMode2;
+        }
+
+        uint32_t GetKeyId(void) const { return Encoding::BigEndian::HostSwap32(mKeySource); }
+
+        void SetKeyId(uint32_t aKeySequence)
+        {
+            mKeySource = Encoding::BigEndian::HostSwap32(aKeySequence);
+            mKeyIndex  = (aKeySequence & 0x7f) + 1;
+        }
+
+        uint32_t GetFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mFrameCounter); }
+        void     SetFrameCounter(uint32_t aFrameCounter)
+        {
+            mFrameCounter = Encoding::LittleEndian::HostSwap32(aFrameCounter);
+        }
+
+        Command GetCommand(void) const
+        {
+            return static_cast<Command>((mSecuritySuite == kNoSecurity) ? mSecurityControl : mCommand);
+        }
+
+        void SetCommand(Command aCommand)
+        {
+            if (mSecuritySuite == kNoSecurity)
+            {
+                mSecurityControl = static_cast<uint8_t>(aCommand);
+            }
+            else
+            {
+                mCommand = static_cast<uint8_t>(aCommand);
+            }
+        }
+
+    private:
+        uint8_t  mSecuritySuite;
+        uint8_t  mSecurityControl;
+        uint32_t mFrameCounter;
+        uint32_t mKeySource;
+        uint8_t  mKeyIndex;
+        uint8_t  mCommand;
+    } OT_TOOL_PACKED_END;
+
     void        HandleNotifierEvents(Events aEvents);
     static void HandleAttachTimer(Timer &aTimer);
     void        HandleAttachTimer(void);
@@ -1711,6 +1701,13 @@ private:
     void        HandleParentSearchTimer(void);
     void        StartParentSearchTimer(void);
     void        UpdateParentSearchState(void);
+#endif
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+    static void        LogError(MessageAction aAction, MessageType aType, otError aError);
+    static const char *MessageActionToString(MessageAction aAction);
+    static const char *MessageTypeToString(MessageType aType);
+    static const char *MessageTypeActionToSuffixString(MessageType aType, MessageAction aAction);
 #endif
 
     MessageQueue mDelayedResponses;

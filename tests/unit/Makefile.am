@@ -107,6 +107,7 @@ check_PROGRAMS                                                      = \
 if OPENTHREAD_ENABLE_FTD
 check_PROGRAMS                                                     += \
     test-aes                                                          \
+    test-checksum                                                     \
     test-child                                                        \
     test-child-table                                                  \
     test-flash                                                        \
@@ -120,6 +121,7 @@ check_PROGRAMS                                                     += \
     test-message                                                      \
     test-message-queue                                                \
     test-multicast-listeners-table                                    \
+    test-ndproxy-table                                                \
     test-netif                                                        \
     test-network-data                                                 \
     test-pool                                                         \
@@ -171,6 +173,9 @@ COMMON_SOURCES               = test_platform.cpp test_util.cpp
 test_aes_LDADD               = $(COMMON_LDADD)
 test_aes_SOURCES             = $(COMMON_SOURCES) test_aes.cpp
 
+test_checksum_LDADD          = $(COMMON_LDADD)
+test_checksum_SOURCES        = $(COMMON_SOURCES) test_checksum.cpp
+
 test_child_LDADD             = $(COMMON_LDADD)
 test_child_SOURCES           = $(COMMON_SOURCES) test_child.cpp
 
@@ -215,6 +220,9 @@ test_multicast_listeners_table_SOURCES = $(COMMON_SOURCES) test_multicast_listen
 
 test_spinel_buffer_LDADD        = $(COMMON_LDADD)
 test_spinel_buffer_SOURCES      = $(COMMON_SOURCES) test_spinel_buffer.cpp
+
+test_ndproxy_table_LDADD     = $(COMMON_LDADD)
+test_ndproxy_table_SOURCES   = $(COMMON_SOURCES) test_ndproxy_table.cpp
 
 test_netif_LDADD             = $(COMMON_LDADD)
 test_netif_SOURCES           = $(COMMON_SOURCES) test_netif.cpp

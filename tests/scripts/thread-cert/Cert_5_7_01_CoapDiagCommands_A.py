@@ -52,29 +52,29 @@ class Cert_5_7_01_CoapDiagCommands_A(thread_cert.TestCase):
 
     TOPOLOGY = {
         LEADER: {
-            'whitelist': [ROUTER1],
+            'allowlist': [ROUTER1],
         },
         ROUTER1: {
-            'whitelist': [LEADER, REED1, SED1, MED1, FED1],
+            'allowlist': [LEADER, REED1, SED1, MED1, FED1],
             'router_selection_jitter': 1
         },
         REED1: {
-            'whitelist': [ROUTER1],
+            'allowlist': [ROUTER1],
             'router_upgrade_threshold': 0
         },
         SED1: {
             'is_mtd': True,
             'mode': 's',
-            'whitelist': [ROUTER1],
+            'allowlist': [ROUTER1],
             'timeout': config.DEFAULT_CHILD_TIMEOUT
         },
         MED1: {
             'is_mtd': True,
             'mode': 'rsn',
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
         FED1: {
-            'whitelist': [ROUTER1],
+            'allowlist': [ROUTER1],
             'router_upgrade_threshold': 0
         },
     }

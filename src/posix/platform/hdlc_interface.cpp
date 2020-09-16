@@ -134,6 +134,7 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
     , mReceiveFrameContext(aCallbackContext)
     , mReceiveFrameBuffer(aFrameBuffer)
     , mSockFd(-1)
+    , mBaudRate(0)
     , mHdlcDecoder(aFrameBuffer, HandleHdlcFrame, this)
 {
 }
@@ -562,6 +563,8 @@ int HdlcInterface::OpenFile(const RadioUrl &aRadioUrl)
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
+
+        mBaudRate = baudrate;
 
         if (aRadioUrl.GetValue("uart-flow-control") != nullptr)
         {

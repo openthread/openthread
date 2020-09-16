@@ -43,25 +43,25 @@ class Cert_5_1_11_REEDAttachLinkQuality(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [REED, ROUTER2]
+            'allowlist': [REED, ROUTER2]
         },
         REED: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
-            'whitelist': [LEADER, ROUTER1]
+            'allowlist': [LEADER, ROUTER1]
         },
         ROUTER2: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, (ROUTER1, -85)]
+            'allowlist': [LEADER, (ROUTER1, -85)]
         },
         ROUTER1: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [REED, ROUTER2]
+            'allowlist': [REED, ROUTER2]
         },
     }
 

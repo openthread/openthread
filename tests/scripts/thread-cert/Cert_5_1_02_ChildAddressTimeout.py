@@ -46,27 +46,27 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         ROUTER: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED, SED]
+            'allowlist': [LEADER, ED, SED]
         },
         ED: {
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         SED: {
             'is_mtd': True,
             'mode': 'sn',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
     }
 

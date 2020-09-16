@@ -76,18 +76,6 @@ namespace ot {
  */
 namespace Cli {
 
-class Interpreter;
-
-/**
- * This structure represents a CLI command.
- *
- */
-struct Command
-{
-    const char *mName;                                                 ///< A pointer to the command string.
-    void (Interpreter::*mCommand)(uint8_t aArgsLength, char *aArgs[]); ///< A function pointer to process the command.
-};
-
 /**
  * This class implements the CLI interpreter.
  *
@@ -178,13 +166,6 @@ public:
     static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength, bool aAllowTruncate = false);
 
     /**
-     * Write error code the CLI console
-     *
-     * @param[in]  aError Error code value.
-     */
-    void AppendResult(otError aError);
-
-    /**
      * This method delivers raw characters to the client.
      *
      * @param[in]  aBuf        A pointer to a buffer.
@@ -230,6 +211,15 @@ public:
     int OutputFormatV(const char *aFormat, va_list aArguments);
 
     /**
+     * This method delivers formatted output (to which it also appends newline `\r\n`) to the client.
+     *
+     * @param[in]  aFormat  A pointer to the format string.
+     * @param[in]  ...      A variable list of arguments to format.
+     *
+     */
+    void OutputLine(const char *aFormat, ...);
+
+    /**
      * Write an IPv6 address to the CLI console.
      *
      * @param[in]  aAddress  A reference to the IPv6 address.
@@ -242,10 +232,19 @@ public:
     int OutputIp6Address(const otIp6Address &aAddress);
 
     /**
-     * Set a user command table.
+     * This method delivers a success or error message the client.
+     *
+     * @param[in]  aError  The error code.
+     *
+     */
+    void OutputResult(otError aError);
+
+    /**
+     * This method sets the user command table.
      *
      * @param[in]  aUserCommands  A pointer to an array with user commands.
      * @param[in]  aLength        @p aUserCommands length.
+     *
      */
     void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength);
 
@@ -255,6 +254,7 @@ protected:
 private:
     enum
     {
+        kIndentationSize  = 4,
         kMaxArgs          = 32,
         kMaxAutoAddresses = 8,
 
@@ -265,6 +265,13 @@ private:
         kMaxLineLength = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
     };
 
+    struct Command
+    {
+        const char *mName;
+        void (Interpreter::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
+    };
+
+    const Command *FindCommand(const char *aName) const;
     otError        ParsePingInterval(const char *aString, uint32_t &aInterval);
     static otError ParseJoinerDiscerner(char *aString, otJoinerDiscerner &aJoinerDiscerner);
     void           ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
@@ -297,10 +304,10 @@ private:
     void ProcessChildTimeout(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     void ProcessCoap(uint8_t aArgsLength, char *aArgs[]);
-#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+#endif
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     void ProcessCoapSecure(uint8_t aArgsLength, char *aArgs[]);
-#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+#endif
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
     void ProcessCoexMetrics(uint8_t aArgsLength, char *aArgs[]);
 #endif
@@ -317,7 +324,7 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     void ProcessDiag(uint8_t aArgsLength, char *aArgs[]);
-#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
+#endif
     void ProcessDiscover(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     void ProcessDns(uint8_t aArgsLength, char *aArgs[]);
@@ -354,6 +361,23 @@ private:
     void ProcessLeaderWeight(uint8_t aArgsLength, char *aArgs[]);
 #endif
     void ProcessMasterKey(uint8_t aArgsLength, char *aArgs[]);
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    void ProcessMlr(uint8_t aArgsLength, char *aArgs[]);
+
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+    void ProcessMlrReg(uint8_t aArgsLength, char *aArgs[]);
+
+    static void HandleMlrRegResult(void *              aContext,
+                                   otError             aError,
+                                   uint8_t             aMlrStatus,
+                                   const otIp6Address *aFailedAddresses,
+                                   uint8_t             aFailedAddressNum);
+    void        HandleMlrRegResult(otError             aError,
+                                   uint8_t             aMlrStatus,
+                                   const otIp6Address *aFailedAddresses,
+                                   uint8_t             aFailedAddressNum);
+#endif
+#endif
     void ProcessMode(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
     void ProcessNeighbor(uint8_t aArgsLength, char *aArgs[]);
@@ -373,7 +397,7 @@ private:
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     void ProcessNetworkDiagnostic(uint8_t aArgsLength, char *aArgs[]);
-#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+#endif
 #if OPENTHREAD_FTD
     void ProcessNetworkIdTimeout(uint8_t aArgsLength, char *aArgs[]);
 #endif
@@ -445,7 +469,7 @@ private:
     void    PrintMacFilter(void);
     otError ProcessMacFilterAddress(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessMacFilterRss(uint8_t aArgsLength, char *aArgs[]);
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+#endif
     void    ProcessMac(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessMacRetries(uint8_t aArgsLength, char *aArgs[]);
 
@@ -469,7 +493,7 @@ private:
     void        OutputLeaderData(const otLeaderData &aLeaderData, uint16_t aColumn);
     void        OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters, uint16_t aColumn);
     void        OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry, uint16_t aColumn);
-#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+#endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     static void HandleDnsResponse(void *              aContext,
@@ -502,18 +526,183 @@ private:
     }
     void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
 
-    static const struct Command sCommands[];
-    const otCliCommand *        mUserCommands;
-    uint8_t                     mUserCommandsLength;
-    uint16_t                    mPingLength;
-    uint16_t                    mPingCount;
-    uint32_t                    mPingInterval;
-    uint8_t                     mPingHopLimit;
-    bool                        mPingAllowZeroHopLimit;
-    uint16_t                    mPingIdentifier;
-    otIp6Address                mPingDestAddress;
-    TimerMilli                  mPingTimer;
-    otIcmp6Handler              mIcmpHandler;
+    constexpr static bool AreSorted(const char *aFirst, const char *aSecond)
+    {
+        return (*aFirst < *aSecond) ? true : ((*aFirst > *aSecond) ? false : AreSorted(aFirst + 1, aSecond + 1));
+    }
+
+    constexpr static bool IsArraySorted(const Interpreter::Command *aList, uint16_t aLength)
+    {
+        return (aLength <= 1) ? true
+                              : AreSorted(aList[0].mName, aList[1].mName) && IsArraySorted(aList + 1, aLength - 1);
+    }
+
+    static constexpr Command sCommands[] = {
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+        {"bbr", &Interpreter::ProcessBackboneRouter},
+#endif
+        {"bufferinfo", &Interpreter::ProcessBufferInfo},
+        {"channel", &Interpreter::ProcessChannel},
+#if OPENTHREAD_FTD
+        {"child", &Interpreter::ProcessChild},
+        {"childip", &Interpreter::ProcessChildIp},
+        {"childmax", &Interpreter::ProcessChildMax},
+#endif
+        {"childtimeout", &Interpreter::ProcessChildTimeout},
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
+        {"coap", &Interpreter::ProcessCoap},
+#endif
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+        {"coaps", &Interpreter::ProcessCoapSecure},
+#endif
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+        {"coex", &Interpreter::ProcessCoexMetrics},
+#endif
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+        {"commissioner", &Interpreter::ProcessCommissioner},
+#endif
+#if OPENTHREAD_FTD
+        {"contextreusedelay", &Interpreter::ProcessContextIdReuseDelay},
+#endif
+        {"counters", &Interpreter::ProcessCounters},
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        {"csl", &Interpreter::ProcessCsl},
+#endif
+        {"dataset", &Interpreter::ProcessDataset},
+#if OPENTHREAD_FTD
+        {"delaytimermin", &Interpreter::ProcessDelayTimerMin},
+#endif
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+        {"diag", &Interpreter::ProcessDiag},
+#endif
+        {"discover", &Interpreter::ProcessDiscover},
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+        {"dns", &Interpreter::ProcessDns},
+#endif
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+        {"domainname", &Interpreter::ProcessDomainName},
+#endif
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+        {"dua", &Interpreter::ProcessDua},
+#endif
+#if OPENTHREAD_FTD
+        {"eidcache", &Interpreter::ProcessEidCache},
+#endif
+        {"eui64", &Interpreter::ProcessEui64},
+#if OPENTHREAD_POSIX
+        {"exit", &Interpreter::ProcessExit},
+#endif
+        {"extaddr", &Interpreter::ProcessExtAddress},
+        {"extpanid", &Interpreter::ProcessExtPanId},
+        {"factoryreset", &Interpreter::ProcessFactoryReset},
+        {"help", &Interpreter::ProcessHelp},
+        {"ifconfig", &Interpreter::ProcessIfconfig},
+        {"ipaddr", &Interpreter::ProcessIpAddr},
+        {"ipmaddr", &Interpreter::ProcessIpMulticastAddr},
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
+        {"joiner", &Interpreter::ProcessJoiner},
+#endif
+#if OPENTHREAD_FTD
+        {"joinerport", &Interpreter::ProcessJoinerPort},
+#endif
+        {"keysequence", &Interpreter::ProcessKeySequence},
+        {"leaderdata", &Interpreter::ProcessLeaderData},
+#if OPENTHREAD_FTD
+        {"leaderpartitionid", &Interpreter::ProcessLeaderPartitionId},
+        {"leaderweight", &Interpreter::ProcessLeaderWeight},
+#endif
+        {"log", &Interpreter::ProcessLog},
+        {"mac", &Interpreter::ProcessMac},
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+        {"macfilter", &Interpreter::ProcessMacFilter},
+#endif
+        {"masterkey", &Interpreter::ProcessMasterKey},
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+        {"mlr", &Interpreter::ProcessMlr},
+#endif
+        {"mode", &Interpreter::ProcessMode},
+#if OPENTHREAD_FTD
+        {"neighbor", &Interpreter::ProcessNeighbor},
+#endif
+        {"netdata", &Interpreter::ProcessNetworkData},
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+        {"netdataregister", &Interpreter::ProcessNetworkDataRegister},
+#endif
+        {"netdatashow", &Interpreter::ProcessNetworkDataShow},
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+        {"netif", &Interpreter::ProcessNetif},
+#endif
+        {"netstat", &Interpreter::ProcessNetstat},
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+        {"networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic},
+#endif
+#if OPENTHREAD_FTD
+        {"networkidtimeout", &Interpreter::ProcessNetworkIdTimeout},
+#endif
+        {"networkname", &Interpreter::ProcessNetworkName},
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        {"networktime", &Interpreter::ProcessNetworkTime},
+#endif
+        {"panid", &Interpreter::ProcessPanId},
+        {"parent", &Interpreter::ProcessParent},
+#if OPENTHREAD_FTD
+        {"parentpriority", &Interpreter::ProcessParentPriority},
+#endif
+        {"ping", &Interpreter::ProcessPing},
+        {"pollperiod", &Interpreter::ProcessPollPeriod},
+#if OPENTHREAD_FTD
+        {"preferrouterid", &Interpreter::ProcessPreferRouterId},
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+        {"prefix", &Interpreter::ProcessPrefix},
+#endif
+        {"promiscuous", &Interpreter::ProcessPromiscuous},
+#if OPENTHREAD_FTD
+        {"pskc", &Interpreter::ProcessPskc},
+#endif
+        {"rcp", &Interpreter::ProcessRcp},
+#if OPENTHREAD_FTD
+        {"releaserouterid", &Interpreter::ProcessReleaseRouterId},
+#endif
+        {"reset", &Interpreter::ProcessReset},
+        {"rloc16", &Interpreter::ProcessRloc16},
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+        {"route", &Interpreter::ProcessRoute},
+#endif
+#if OPENTHREAD_FTD
+        {"router", &Interpreter::ProcessRouter},
+        {"routerdowngradethreshold", &Interpreter::ProcessRouterDowngradeThreshold},
+        {"routereligible", &Interpreter::ProcessRouterEligible},
+        {"routerselectionjitter", &Interpreter::ProcessRouterSelectionJitter},
+        {"routerupgradethreshold", &Interpreter::ProcessRouterUpgradeThreshold},
+#endif
+        {"scan", &Interpreter::ProcessScan},
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+        {"service", &Interpreter::ProcessService},
+#endif
+        {"singleton", &Interpreter::ProcessSingleton},
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+        {"sntp", &Interpreter::ProcessSntp},
+#endif
+        {"state", &Interpreter::ProcessState},
+        {"thread", &Interpreter::ProcessThread},
+        {"txpower", &Interpreter::ProcessTxPower},
+        {"udp", &Interpreter::ProcessUdp},
+        {"unsecureport", &Interpreter::ProcessUnsecurePort},
+        {"version", &Interpreter::ProcessVersion},
+    };
+
+    const otCliCommand *mUserCommands;
+    uint8_t             mUserCommandsLength;
+    uint16_t            mPingLength;
+    uint16_t            mPingCount;
+    uint32_t            mPingInterval;
+    uint8_t             mPingHopLimit;
+    bool                mPingAllowZeroHopLimit;
+    uint16_t            mPingIdentifier;
+    otIp6Address        mPingDestAddress;
+    TimerMilli          mPingTimer;
+    otIcmp6Handler      mIcmpHandler;
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     bool mResolvingInProgress;
     char mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];

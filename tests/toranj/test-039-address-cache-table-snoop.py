@@ -79,20 +79,20 @@ r1.form("sekiro")  # shadows die twice!
 
 r1.add_prefix(PREFIX, stable=True, on_mesh=True, slaac=False, preferred=True)
 
-r1.whitelist_node(r2)
-r2.whitelist_node(r1)
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
 r2.join_node(r1, wpan.JOIN_TYPE_ROUTER)
 
-c2.whitelist_node(r2)
-r2.whitelist_node(c2)
+c2.allowlist_node(r2)
+r2.allowlist_node(c2)
 c2.join_node(r2, wpan.JOIN_TYPE_END_DEVICE)
 
-r1.whitelist_node(r3)
-r3.whitelist_node(r1)
+r1.allowlist_node(r3)
+r3.allowlist_node(r1)
 r3.join_node(r1, wpan.JOIN_TYPE_ROUTER)
 
-c3.whitelist_node(r3)
-r3.whitelist_node(c3)
+c3.allowlist_node(r3)
+r3.allowlist_node(c3)
 c3.join_node(r3, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 c3.set(wpan.WPAN_POLL_INTERVAL, str(POLL_INTERVAL))
 

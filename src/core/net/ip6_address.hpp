@@ -526,6 +526,14 @@ public:
     typedef String<kIp6AddressStringSize> InfoString;
 
     /**
+     * This method gets the IPv6 address as a pointer to a byte array.
+     *
+     * @returns A pointer to a byte array containing the IPv6 address.
+     *
+     */
+    const uint8_t *GetBytes(void) const { return mFields.m8; }
+
+    /**
      * This method indicates whether or not the IPv6 address is the Unspecified Address.
      *
      * @retval TRUE   If the IPv6 address is the Unspecified Address.

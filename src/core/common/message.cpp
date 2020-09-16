@@ -38,6 +38,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "net/checksum.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
@@ -537,7 +538,7 @@ void Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
 
     while (chunk.GetLength() > 0)
     {
-        memcpy(chunk.GetData(), bufPtr, chunk.GetLength());
+        memmove(chunk.GetData(), bufPtr, chunk.GetLength());
         bufPtr += chunk.GetLength();
         GetNextChunk(aLength, chunk);
     }
@@ -547,6 +548,13 @@ uint16_t Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, ui
 {
     uint16_t bytesCopied = 0;
     Chunk    chunk;
+
+    // This implementing can potentially overwrite the data when bytes are
+    // being copied forward within the same message, i.e., source and
+    // destination messages are the same, and source offset is smaller than
+    // the destination offset. We assert not allowing such a use.
+
+    OT_ASSERT((&aMessage != this) || (aSourceOffset >= aDestinationOffset));
 
     GetFirstChunk(aSourceOffset, aLength, chunk);
 
@@ -622,41 +630,6 @@ void Message::SetLinkInfo(const ThreadLinkInfo &aLinkInfo)
     SetTimeSyncSeq(aLinkInfo.mTimeSyncSeq);
     SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);
 #endif
-}
-
-uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aValue)
-{
-    uint16_t result = aChecksum + aValue;
-    return result + (result < aChecksum);
-}
-
-uint16_t Message::UpdateChecksum(uint16_t aChecksum, const void *aBuf, uint16_t aLength)
-{
-    const uint8_t *bytes = reinterpret_cast<const uint8_t *>(aBuf);
-
-    for (int i = 0; i < aLength; i++)
-    {
-        aChecksum = UpdateChecksum(aChecksum, (i & 1) ? bytes[i] : static_cast<uint16_t>(bytes[i] << 8));
-    }
-
-    return aChecksum;
-}
-
-uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const
-{
-    Chunk chunk;
-
-    OT_ASSERT(aOffset + aLength <= GetLength());
-
-    GetFirstChunk(aOffset, aLength, chunk);
-
-    while (chunk.GetLength() > 0)
-    {
-        aChecksum = Message::UpdateChecksum(aChecksum, chunk.GetData(), chunk.GetLength());
-        GetNextChunk(aLength, chunk);
-    }
-
-    return aChecksum;
 }
 
 bool Message::IsTimeSync(void) const

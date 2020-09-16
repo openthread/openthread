@@ -31,7 +31,7 @@
  *   This file implements the OpenThread entropy source management API.
  */
 
-#include "openthread/entropy.h"
+#include <openthread/entropy.h>
 
 #include "common/random_manager.hpp"
 

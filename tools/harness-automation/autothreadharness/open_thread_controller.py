@@ -377,10 +377,10 @@ class OpenThreadController(threading.Thread):
         time.sleep(1)
         self._req('netdataregister')
 
-    def enable_blacklist(self):
-        """Enable blacklist feature"""
-        self._req('blacklist enable')
+    def enable_denylist(self):
+        """Enable denylist feature"""
+        self._req('denylist enable')
 
-    def add_blacklist(self, mac):
-        """Add a mac address to blacklist"""
-        self._req('blacklist add %s' % mac)
+    def add_denylist(self, mac):
+        """Add a mac address to denylist"""
+        self._req('denylist add %s' % mac)

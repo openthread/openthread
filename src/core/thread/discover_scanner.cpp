@@ -107,7 +107,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     VerifyOrExit((message = Get<Mle>().NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
     message->SetSubType(Message::kSubTypeMleDiscoverRequest);
     message->SetPanId(aPanId);
-    SuccessOrExit(error = Get<Mle>().AppendHeader(*message, Header::kCommandDiscoveryRequest));
+    SuccessOrExit(error = Get<Mle>().AppendHeader(*message, Mle::kCommandDiscoveryRequest));
 
     // Prepare sub-TLV MeshCoP Discovery Request.
     discoveryRequest.Init();
@@ -154,7 +154,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     mScanChannel = Mac::ChannelMask::kChannelIteratorFirst;
     mState       = (mScanChannels.GetNextChannel(mScanChannel) == OT_ERROR_NONE) ? kStateScanning : kStateScanDone;
 
-    otLogInfoMle("Send Discovery Request (%s)", destination.ToString().AsCString());
+    Mle::Log(Mle::kMessageSend, Mle::kTypeDiscoveryRequest, destination);
 
 exit:
 
@@ -302,7 +302,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
     uint16_t                      end;
     bool                          didCheckSteeringData = false;
 
-    otLogInfoMle("Receive Discovery Response (%s)", aMessageInfo.GetPeerAddr().ToString().AsCString());
+    Mle::Log(Mle::kMessageReceive, Mle::kTypeDiscoveryResponse, aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(mState == kStateScanning, error = OT_ERROR_DROP);
 
@@ -387,11 +387,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMle("Failed to process Discovery Response: %s", otThreadErrorToString(error));
-    }
+    Mle::LogProcessError(Mle::kTypeDiscoveryResponse, error);
 }
 
 } // namespace Mle

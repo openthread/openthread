@@ -83,19 +83,20 @@ EXTRA_DIST                                                         = \
     Cert_6_1_02_REEDAttach_MED.py                                    \
     Cert_6_1_02_REEDAttach_SED.py                                    \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
-    Cert_6_1_04_REEDAttachConnectivity.py                            \
-    Cert_6_1_05_RouterAttachLinkQuality.py                           \
+    Cert_6_1_05_REEDAttachConnectivity.py                            \
+    Cert_6_1_07_RouterAttachLinkQuality.py                           \
     Cert_6_1_06_REEDAttachLinkQuality_ED.py                          \
     Cert_6_1_06_REEDAttachLinkQuality_SED.py                         \
-    Cert_6_1_07_EDSynchronization.py                                 \
+    Cert_6_1_09_EDSynchronization.py                                 \
     Cert_6_2_01_NewPartition.py                                      \
     Cert_6_2_02_NewPartition.py                                      \
     Cert_6_3_01_OrphanReattach.py                                    \
     Cert_6_3_02_NetworkDataUpdate.py                                 \
     Cert_6_4_01_LinkLocal.py                                         \
     Cert_6_4_02_RealmLocal.py                                        \
-    Cert_6_5_01_ChildResetSynchronize.py                             \
+    Cert_6_5_01_ChildResetReattach.py                                \
     Cert_6_5_02_ChildResetReattach.py                                \
+    Cert_6_5_03_ChildResetSynchronize.py                             \
     Cert_6_6_01_KeyIncrement.py                                      \
     Cert_6_6_02_KeyIncrementRollOver.py                              \
     Cert_7_1_01_BorderRouterAsLeader.py                              \
@@ -257,19 +258,20 @@ check_SCRIPTS                                                      = \
     Cert_6_1_02_REEDAttach_MED.py                                    \
     Cert_6_1_02_REEDAttach_SED.py                                    \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
-    Cert_6_1_04_REEDAttachConnectivity.py                            \
-    Cert_6_1_05_RouterAttachLinkQuality.py                           \
+    Cert_6_1_05_REEDAttachConnectivity.py                            \
+    Cert_6_1_07_RouterAttachLinkQuality.py                           \
     Cert_6_1_06_REEDAttachLinkQuality_ED.py                          \
     Cert_6_1_06_REEDAttachLinkQuality_SED.py                         \
-    Cert_6_1_07_EDSynchronization.py                                 \
+    Cert_6_1_09_EDSynchronization.py                                 \
     Cert_6_2_01_NewPartition.py                                      \
     Cert_6_2_02_NewPartition.py                                      \
     Cert_6_3_01_OrphanReattach.py                                    \
     Cert_6_3_02_NetworkDataUpdate.py                                 \
     Cert_6_4_01_LinkLocal.py                                         \
     Cert_6_4_02_RealmLocal.py                                        \
-    Cert_6_5_01_ChildResetSynchronize.py                             \
+    Cert_6_5_01_ChildResetReattach.py                                \
     Cert_6_5_02_ChildResetReattach.py                                \
+    Cert_6_5_03_ChildResetSynchronize.py                             \
     Cert_6_6_01_KeyIncrement.py                                      \
     Cert_6_6_02_KeyIncrementRollOver.py                              \
     Cert_5_2_03_LeaderReject2Hops.py                                 \

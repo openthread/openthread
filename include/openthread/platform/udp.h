@@ -40,6 +40,17 @@ extern "C" {
 #endif
 
 /**
+ * This enumeration defines the OpenThread network interface identifiers.
+ *
+ */
+typedef enum otNetifIdentifier
+{
+    OT_NETIF_UNSPECIFIED = 0, ///< Unspecified network interface.
+    OT_NETIF_THREAD,          ///< The Thread interface.
+    OT_NETIF_BACKBONE,        ///< The Backbone interface.
+} otNetifIdentifier;
+
+/**
  * This function initializes the UDP socket by platform.
  *
  * @param[in]   aUdpSocket  A pointer to the UDP socket.
@@ -71,6 +82,20 @@ otError otPlatUdpClose(otUdpSocket *aUdpSocket);
  *
  */
 otError otPlatUdpBind(otUdpSocket *aUdpSocket);
+
+/**
+ * This function binds the UDP socket to a platform network interface.
+ *
+ * Note: only available when `OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE` is used.
+ *
+ * @param[in]   aUdpSocket          A pointer to the UDP socket.
+ * @param[in]   aNetifIdentifier    The network interface identifier.
+ *
+ * @retval  OT_ERROR_NONE   Successfully bound UDP socket.
+ * @retval  OT_ERROR_FAILED Failed to bind UDP.
+ *
+ */
+otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifIdentifier);
 
 /**
  * This function connects UDP socket by platform.

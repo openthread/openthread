@@ -520,6 +520,26 @@ private:
 #endif
     };
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    /**
+     * The SSED sample window in units of 10 symbols.
+     *
+     */
+    enum : uint32_t{
+        kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols,
+    };
+
+    /**
+     * CSL state, always updated by `mCslTimer`.
+     *
+     */
+    enum CslState : uint8_t{
+        kCslIdle = 0, ///< CSL receiver is not started.
+        kCslSample,   ///< Sampling CSL channel.
+        kCslSleep,    ///< Radio in sleep.
+    };
+#endif
+
     bool RadioSupportsCsmaBackoff(void) const
     {
         return ((mRadioCaps & (OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES)) != 0);
@@ -529,12 +549,14 @@ private:
     bool RadioSupportsRetries(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) != 0); }
     bool RadioSupportsAckTimeout(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) != 0); }
     bool RadioSupportsEnergyScan(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) != 0); }
+    bool RadioSupportsTransmitTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) != 0); }
 
     bool ShouldHandleTransmitSecurity(void) const;
     bool ShouldHandleCsmaBackOff(void) const;
     bool ShouldHandleAckTimeout(void) const;
     bool ShouldHandleRetries(void) const;
     bool ShouldHandleEnergyScan(void) const;
+    bool ShouldHandleTransmitTargetTime(void) const;
 
     void ProcessTransmitSecurity(void);
     void UpdateFrameCounter(uint32_t aFrameCounter);
@@ -545,6 +567,7 @@ private:
     void HandleReceiveDone(RxFrame *aFrame, otError aError);
     void HandleTransmitStarted(TxFrame &aFrame);
     void HandleTransmitDone(TxFrame &aTxFrame, RxFrame *aAckFrame, otError aError);
+    void UpdateFrameCounterOnTxDone(const TxFrame &aFrame);
     void HandleEnergyScanDone(int8_t aMaxRssi);
 
     static void HandleTimer(Timer &aTimer);
@@ -552,6 +575,9 @@ private:
 
     void               SetState(State aState);
     static const char *StateToString(State aState);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    static const char *CslStateToString(CslState aCslState);
+#endif
 
     otRadioCaps        mRadioCaps;
     State              mState;
@@ -578,24 +604,6 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    /**
-     * The SSED sample window in units of 10 symbols.
-     *
-     */
-    enum : uint32_t{
-        kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols,
-    };
-
-    /**
-     * CSL state, always updated by `mCslTimer`.
-     *
-     */
-    enum CslState : uint8_t{
-        kCslIdle = 0, ///< CSL receiver is not started.
-        kCslSample,   ///< Sampling CSL channel.
-        kCslSleep,    ///< Radio in sleep.
-    };
-
     uint32_t  mCslTimeout;    ///< The CSL synchronized timeout in seconds.
     TimeMicro mCslSampleTime; ///< The CSL sample time of the current period.
     uint16_t  mCslPeriod;     ///< The CSL sample period, in units of 10 symbols (160 microseconds).

@@ -102,10 +102,12 @@ set(COMMON_SOURCES
     api/thread_api.cpp
     api/thread_ftd_api.cpp
     api/udp_api.cpp
+    backbone_router/backbone_tmf.cpp
     backbone_router/bbr_leader.cpp
     backbone_router/bbr_local.cpp
     backbone_router/bbr_manager.cpp
     backbone_router/multicast_listeners_table.cpp
+    backbone_router/ndproxy_table.cpp
     coap/coap.cpp
     coap/coap_message.cpp
     coap/coap_secure.cpp
@@ -156,6 +158,7 @@ set(COMMON_SOURCES
     meshcop/meshcop_tlvs.cpp
     meshcop/panid_query_client.cpp
     meshcop/timestamp.cpp
+    net/checksum.cpp
     net/dhcp6_client.cpp
     net/dhcp6_server.cpp
     net/dns_client.cpp
@@ -202,7 +205,9 @@ set(COMMON_SOURCES
     thread/src_match_controller.cpp
     thread/thread_netif.cpp
     thread/time_sync_service.cpp
+    thread/tmf.cpp
     thread/topology.cpp
+    thread/uri_paths.cpp
     utils/channel_manager.cpp
     utils/channel_monitor.cpp
     utils/child_supervision.cpp

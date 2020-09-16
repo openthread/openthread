@@ -60,6 +60,7 @@ Done
 - [mac](#mac-retries-direct)
 - [macfilter](#macfilter)
 - [masterkey](#masterkey)
+- [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
 - [neighbor](#neighbor-list)
 - [netdata](#netdata-steeringdata-check-eui64discerner)
@@ -182,6 +183,26 @@ Only for testing/reference Backbone Router device.
 > bbr mgmt mlr listener clear
 Done
 > bbr mgmt mlr listener
+Done
+```
+
+### bbr mgmt mlr response \<status\>
+
+Configure the response status for the next MLR.req.
+
+Only for testing/reference device.
+
+Known status values:
+
+- 0: ST_MLR_SUCCESS
+- 2: ST_MLR_INVALID
+- 3: ST_MLR_NO_PERSISTENT
+- 4: ST_MLR_NO_RESOURCES
+- 5: ST_MLR_BBR_NOT_PRIMARY
+- 6: ST_MLR_GENERAL_FAILURE
+
+```bash
+> bbr mgmt mlr response 2
 Done
 ```
 
@@ -1077,6 +1098,32 @@ Set the Thread Master Key value.
 Done
 ```
 
+### mlr reg \<ipaddr\> ... [timeout]
+
+Register Multicast Listeners to Primary Backbone Router, with an optional `timeout` (in seconds).
+
+Omit `timeout` to use the default MLR timeout on the Primary Backbone Router.
+
+Use `timeout = 0` to deregister Multicast Listeners.
+
+NOTE: Only for Thread 1.2 Commissioner FTD device.
+
+```bash
+> mlr reg ff04::1
+status 0, 0 failed
+Done
+> mlr reg ff04::1 ff04::2 ff02::1
+status 2, 1 failed
+ff02:0:0:0:0:0:0:1
+Done
+> mlr reg ff04::1 ff04::2 1000
+status 0, 0 failed
+Done
+> mlr reg ff04::1 ff04::2 0
+status 0, 0 failed
+Done
+```
+
 ### mode
 
 Get the Thread Device Mode value.
@@ -1138,12 +1185,12 @@ Check whether the steering data includes a joiner.
 - discerner: The Joiner discerner in format `number/length`.
 
 ```bash
-> netdata steeeringdata check d45e64fa83f81cf7
+> netdata steeringdata check d45e64fa83f81cf7
 Done
-> netdata steeeringdata check 0xabc/12
+> netdata steeringdata check 0xabc/12
 Done
-> netdata steeeringdata check 0xdef/12
-Error: NotFound
+> netdata steeringdata check 0xdef/12
+Error 23: NotFound
 ```
 
 ### netdataregister
@@ -1893,7 +1940,7 @@ List the macfilter status, including address and received signal strength filter
 
 ```bash
 > macfilter
-Address Mode: Whitelist
+Address Mode: Allowlist
 0f6127e33af6b403 : rss -95 (lqi 1)
 0f6127e33af6b402
 RssIn List:
@@ -1908,7 +1955,7 @@ List the address filter status.
 
 ```bash
 > macfilter addr
-Whitelist
+Allowlist
 0f6127e33af6b403 : rss -95 (lqi 1)
 0f6127e33af6b402
 Done
@@ -1923,21 +1970,21 @@ Disable address filter mode.
 Done
 ```
 
-### macfilter addr whitelist
+### macfilter addr allowlist
 
-Enable whitelist address filter mode.
+Enable allowlist address filter mode.
 
 ```bash
-> macfilter addr whitelist
+> macfilter addr allowlist
 Done
 ```
 
-### macfilter addr blacklist
+### macfilter addr denylist
 
-Enable blacklist address filter mode.
+Enable denylist address filter mode.
 
 ```bash
-> macfilter addr blacklist
+> macfilter addr denylist
 Done
 ```
 

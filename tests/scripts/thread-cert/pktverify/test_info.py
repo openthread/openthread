@@ -51,6 +51,7 @@ class TestInfo(object):
             self.ethaddrs = {int(k): EthAddr(v) for k, v in test_info.get('ethaddrs', {}).items()}
             self.ipaddrs = {int(k): [Ipv6Addr(x) for x in l] for k, l in test_info.get('ipaddrs', {}).items()}
             self.mleids = {int(k): Ipv6Addr(v) for k, v in test_info.get('mleids', {}).items()}
+            self.rlocs = {int(k): Ipv6Addr(v) for k, v in test_info.get('rlocs', {}).items()}
             self.rloc16s = self._convert_hex_values(self._convert_keys_to_ints(test_info.get('rloc16s', {})))
             self.extra_vars = test_info.get('extra_vars', {})
 

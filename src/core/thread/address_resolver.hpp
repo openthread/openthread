@@ -153,18 +153,21 @@ public:
     void AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
 
     /**
-     * This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not known.
+     * This method returns the RLOC16 for a given EID, initiates an Address Query if allowed and the mapping is not
+     * known.
      *
-     * @param[in]   aEid     A reference to the EID.
-     * @param[out]  aRloc16  The RLOC16 corresponding to @p aEid.
+     * @param[in]   aEid                A reference to the EID.
+     * @param[out]  aRloc16             The RLOC16 corresponding to @p aEid.
+     * @param[in]   aAllowAddressQuery  Allow to initiate Address Query if the mapping is not known.
      *
      * @retval OT_ERROR_NONE           Successfully provided the RLOC16.
-     * @retval OT_ERROR_ADDRESS_QUERY  Initiated an Address Query.
+     * @retval OT_ERROR_ADDRESS_QUERY  Initiated an Address Query if allowed.
      * @retval OT_ERROR_DROP           Earlier Address Query for the EID timed out. In retry timeout interval.
      * @retval OT_ERROR_NO_BUFS        Insufficient buffer space available to send Address Query.
+     * @retval OT_ERROR_NOT_FOUND      The mapping was not found and Address Query was not allowed.
      *
      */
-    otError Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16);
+    otError Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16, bool aAllowAddressQuery = true);
 
     /**
      * This method restarts any ongoing address queries.

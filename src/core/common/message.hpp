@@ -228,6 +228,7 @@ protected:
  */
 class Message : public Buffer
 {
+    friend class Checksum;
     friend class MessagePool;
     friend class MessageQueue;
     friend class PriorityQueue;
@@ -285,6 +286,28 @@ public:
     {
         kNoLinkSecurity,   ///< Link security disabled (no link security).
         kWithLinkSecurity, ///< Link security enabled.
+    };
+
+    /**
+     * This enumeration represents the message ownership model when a `Message` instance is passed to a method/function.
+     *
+     */
+    enum Ownership : uint8_t
+    {
+        /**
+         * This value indicates that the method/function receiving a `Message` instance should take custody of the
+         * message (e.g., the method should `Free()` the message if no longer needed).
+         *
+         */
+        kTakeCustody,
+
+        /**
+         * This value indicates that the method/function receiving a `Message` instance does not own the message (e.g.,
+         * it should not `Free()` or `Enqueue()` it in a queue). The receiving method/function should create a
+         * copy/clone of the message to keep (if/when needed).
+         *
+         */
+        kCopyToUse,
     };
 
     /**
@@ -531,6 +554,10 @@ public:
 
     /**
      * This method copies bytes from one message to another.
+     *
+     * If source and destination messages are the same, `CopyTo()` can be used to perform a backward copy, but
+     * it MUST not be used to forward copy within the same message (i.e., when source and destination messages are the
+     * same and source offset is smaller than the destination offset).
      *
      * @param[in] aSourceOffset       Byte offset within the source message to begin reading.
      * @param[in] aDestinationOffset  Byte offset within the destination message to begin writing.
@@ -809,41 +836,6 @@ public:
      *
      */
     void SetLinkInfo(const ThreadLinkInfo &aLinkInfo);
-
-    /**
-     * This static method updates a checksum.
-     *
-     * @param[in]  aChecksum  The checksum value to update.
-     * @param[in]  aValue     The 16-bit value to update @p aChecksum with.
-     *
-     * @returns The updated checksum.
-     *
-     */
-    static uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aValue);
-
-    /**
-     * This static method updates a checksum.
-     *
-     * @param[in]  aChecksum  The checksum value to update.
-     * @param[in]  aBuf       A pointer to a buffer.
-     * @param[in]  aLength    The number of bytes in @p aBuf.
-     *
-     * @returns The updated checksum.
-     *
-     */
-    static uint16_t UpdateChecksum(uint16_t aChecksum, const void *aBuf, uint16_t aLength);
-
-    /**
-     * This method is used to update a checksum value.
-     *
-     * @param[in]  aChecksum  Initial checksum value.
-     * @param[in]  aOffset    Byte offset within the message to begin checksum computation.
-     * @param[in]  aLength    Number of bytes to compute the checksum over.
-     *
-     * @retval The updated checksum value.
-     *
-     */
-    uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const;
 
     /**
      * This method returns a pointer to the message queue (if any) where this message is queued.

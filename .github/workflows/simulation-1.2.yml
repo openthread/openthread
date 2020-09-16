@@ -50,6 +50,7 @@ jobs:
       COVERAGE: 1
       THREAD_VERSION: 1.2
       VIRTUAL_TIME: 1
+      INTER_OP: 1
       CC: ${{ matrix.compiler.c }}
       CXX: ${{ matrix.compiler.cxx }}
     strategy:
@@ -71,6 +72,11 @@ jobs:
       run: |
         ./script/test unit
         ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-pcaps
+        path: "*.pcap"
     - name: Keep-1-2-only
       run: |
         ./script/test tar simulation 1.1
@@ -92,3 +98,76 @@ jobs:
     - name: Codecov
       run: |
         bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}" -Z
+
+  packet-verification-low-power:
+    runs-on: ubuntu-18.04
+    env:
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 1
+      COVERAGE: 1
+      PACKET_VERIFICATION: 1
+      THREAD_VERSION: 1.2
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bootstrap
+        run: |
+          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+          sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel ninja-build
+          python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+      - name: Build
+        run: |
+          ./script/test build
+      - name: Run
+        run: |
+          for i in {1..10}
+          do
+            ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
+          done
+      - uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: packet-verification-low-power-pcaps
+          path: |
+            *.pcap
+            *.json
+      - name: Keep-1-2-only
+        run: |
+          ./script/test tar simulation 1.2-bbr
+      - name: Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
+      - name: Keep-1-2-bbr-only
+        run: |
+          ./script/test tar simulation 1.2
+          ./script/test untar simulation 1.2-bbr
+      - name: Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
+
+  expects:
+    runs-on: ubuntu-18.04
+    env:
+      COVERAGE: 1
+      THREAD_VERSION: 1.2
+      VIRTUAL_TIME: 0
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y expect ninja-build
+    - name: Run RCP Mode
+      run: |
+        OT_OPTIONS=-DOT_READLINE=OFF NODE_MODE=rcp ./script/test build expect
+    - name: Keep-1-2-only
+      run: |
+        ./script/test tar posix 1.2-bbr
+        ./script/test tar simulation 1.2-bbr
+    - name: Keep POSIX Only
+      run: |
+        ./script/test tar simulation 1.2
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true

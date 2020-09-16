@@ -98,41 +98,41 @@ class TestMulticastRegistration(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER_1_2: {
             'version': '1.2',
-            'whitelist': [MED_1_2, SED_1_2, MED_1_1, SED_1_1, ROUTER_1_1],
+            'allowlist': [MED_1_2, SED_1_2, MED_1_1, SED_1_1, ROUTER_1_1],
         },
         MED_1_2: {
             'mode': 'rsn',
             'version': '1.2',
-            'whitelist': [LEADER_1_2],
+            'allowlist': [LEADER_1_2],
         },
         SED_1_2: {
             'mode': 'sn',
             'version': '1.2',
-            'whitelist': [LEADER_1_2],
+            'allowlist': [LEADER_1_2],
         },
         MED_1_1: {
             'mode': 'rsn',
             'version': '1.1',
-            'whitelist': [LEADER_1_2],
+            'allowlist': [LEADER_1_2],
         },
         SED_1_1: {
             'mode': 'sn',
             'version': '1.1',
-            'whitelist': [LEADER_1_2],
+            'allowlist': [LEADER_1_2],
         },
         ROUTER_1_1: {
             'version': '1.1',
-            'whitelist': [LEADER_1_2, MED_1_2_2, SED_1_2_2],
+            'allowlist': [LEADER_1_2, MED_1_2_2, SED_1_2_2],
         },
         MED_1_2_2: {
             'mode': 'rsn',
             'version': '1.2',
-            'whitelist': [ROUTER_1_1],
+            'allowlist': [ROUTER_1_1],
         },
         SED_1_2_2: {
             'mode': 'sn',
             'version': '1.2',
-            'whitelist': [ROUTER_1_1],
+            'allowlist': [ROUTER_1_1],
         },
     }
     """All nodes are created with default configurations"""

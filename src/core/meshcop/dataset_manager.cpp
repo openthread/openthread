@@ -44,7 +44,7 @@
 #include "radio/radio.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -278,9 +278,9 @@ void DatasetManager::SendSet(void)
         }
     }
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, mUriSet));
+    SuccessOrExit(error = message->InitAsConfirmablePost(mUriSet));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     IgnoreError(mLocal.Read(dataset));
@@ -288,9 +288,9 @@ void DatasetManager::SendSet(void)
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error =
-                      Get<Coap::Coap>().SendMessage(*message, messageInfo, &DatasetManager::HandleCoapResponse, this));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(
+        error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, &DatasetManager::HandleCoapResponse, this));
 
     otLogInfoMeshCoP("Sent %s to leader", mUriSet);
 
@@ -365,7 +365,7 @@ void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::Message
     }
 
     // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1 Section 8.7.5.4)
-    VerifyOrExit(length > 0 && strcmp(mUriGet, OT_URI_PATH_PENDING_GET) == 0, OT_NOOP);
+    VerifyOrExit(length > 0 && strcmp(mUriGet, UriPath::kPendingGet) == 0, OT_NOOP);
 
     for (uint8_t i = 0; i < length; i++)
     {
@@ -392,7 +392,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 
     IgnoreError(mLocal.Read(dataset));
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -431,7 +431,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
         IgnoreError(message->SetLength(message->GetLength() - 1));
     }
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent dataset get response");
 
@@ -449,9 +449,9 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, mUriSet));
+    SuccessOrExit(error = message->InitAsConfirmablePost(mUriSet));
     SuccessOrExit(error = message->SetPayloadMarker());
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
@@ -578,8 +578,8 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset set request to leader");
 
@@ -667,9 +667,9 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
         datasetTlvs[length++] = Tlv::kChannelMask;
     }
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, mUriGet));
+    SuccessOrExit(error = message->InitAsConfirmablePost(mUriGet));
 
     if (aLength + length > 0)
     {
@@ -703,8 +703,8 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
     }
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset get request");
 
@@ -719,17 +719,13 @@ exit:
 }
 
 ActiveDataset::ActiveDataset(Instance &aInstance)
-    : DatasetManager(aInstance,
-                     Dataset::kActive,
-                     OT_URI_PATH_ACTIVE_GET,
-                     OT_URI_PATH_ACTIVE_SET,
-                     ActiveDataset::HandleTimer)
-    , mResourceGet(OT_URI_PATH_ACTIVE_GET, &ActiveDataset::HandleGet, this)
+    : DatasetManager(aInstance, Dataset::kActive, UriPath::kActiveGet, UriPath::kActiveSet, ActiveDataset::HandleTimer)
+    , mResourceGet(UriPath::kActiveGet, &ActiveDataset::HandleGet, this)
 #if OPENTHREAD_FTD
-    , mResourceSet(OT_URI_PATH_ACTIVE_SET, &ActiveDataset::HandleSet, this)
+    , mResourceSet(UriPath::kActiveSet, &ActiveDataset::HandleSet, this)
 #endif
 {
-    Get<Coap::Coap>().AddResource(mResourceGet);
+    Get<Tmf::TmfAgent>().AddResource(mResourceGet);
 }
 
 bool ActiveDataset::IsPartiallyComplete(void) const
@@ -769,16 +765,16 @@ void ActiveDataset::HandleTimer(Timer &aTimer)
 PendingDataset::PendingDataset(Instance &aInstance)
     : DatasetManager(aInstance,
                      Dataset::kPending,
-                     OT_URI_PATH_PENDING_GET,
-                     OT_URI_PATH_PENDING_SET,
+                     UriPath::kPendingGet,
+                     UriPath::kPendingSet,
                      PendingDataset::HandleTimer)
     , mDelayTimer(aInstance, PendingDataset::HandleDelayTimer, this)
-    , mResourceGet(OT_URI_PATH_PENDING_GET, &PendingDataset::HandleGet, this)
+    , mResourceGet(UriPath::kPendingGet, &PendingDataset::HandleGet, this)
 #if OPENTHREAD_FTD
-    , mResourceSet(OT_URI_PATH_PENDING_SET, &PendingDataset::HandleSet, this)
+    , mResourceSet(UriPath::kPendingSet, &PendingDataset::HandleSet, this)
 #endif
 {
-    Get<Coap::Coap>().AddResource(mResourceGet);
+    Get<Tmf::TmfAgent>().AddResource(mResourceGet);
 }
 
 void PendingDataset::Clear(void)

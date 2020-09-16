@@ -66,7 +66,7 @@ otError UdpExample::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputFormat("%s\r\n", command.mName);
+        mInterpreter.OutputLine("%s", command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -241,7 +241,7 @@ otError UdpExample::ProcessLinkSecurity(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        mInterpreter.OutputFormat("%s\r\n", mLinkSecurityEnabled ? "Enabled" : "Disabled");
+        mInterpreter.OutputLine("%s", mLinkSecurityEnabled ? "Enabled" : "Disabled");
     }
     else if (strcmp(aArgs[0], "enable") == 0)
     {
@@ -327,7 +327,7 @@ void UdpExample::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMes
     length      = otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, sizeof(buf) - 1);
     buf[length] = '\0';
 
-    mInterpreter.OutputFormat("%s\r\n", buf);
+    mInterpreter.OutputLine("%s", buf);
 }
 
 } // namespace Cli

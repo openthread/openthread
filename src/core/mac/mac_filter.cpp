@@ -220,8 +220,8 @@ otError Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss)
     // Use the default RssIn setting for all receiving messages first.
     aRss = mDefaultRssIn;
 
-    // In whitelist mode, entry must be present in the list, in
-    // blacklist mode it must not be present.
+    // In allowlist mode, entry must be present in the list, in
+    // denylist mode it must not be present.
 
     isInFilterList = (entry != nullptr) && entry->mFiltered;
 
@@ -230,11 +230,11 @@ otError Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss)
     case kModeRssInOnly:
         break;
 
-    case kModeWhitelist:
+    case kModeAllowlist:
         VerifyOrExit(isInFilterList, error = OT_ERROR_ADDRESS_FILTERED);
         break;
 
-    case kModeBlacklist:
+    case kModeDenylist:
         VerifyOrExit(!isInFilterList, error = OT_ERROR_ADDRESS_FILTERED);
         break;
     }

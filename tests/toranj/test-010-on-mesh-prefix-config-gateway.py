@@ -112,11 +112,11 @@ wpan.Node.init_all_nodes()
 # -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 
-r1.whitelist_node(r2)
-r2.whitelist_node(r1)
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
 
-r1.whitelist_node(sc1)
-r2.whitelist_node(sc2)
+r1.allowlist_node(sc1)
+r2.allowlist_node(sc2)
 
 r1.form('config-gtway')
 r2.join_node(r1, node_type=wpan.JOIN_TYPE_ROUTER)

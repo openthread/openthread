@@ -41,9 +41,8 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
+#include "net/checksum.hpp"
 #include "net/ip6.hpp"
-
-using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 namespace Ip6 {
@@ -100,6 +99,26 @@ otError Udp::Socket::Bind(uint16_t aPort)
     return Bind(SockAddr(aPort));
 }
 
+otError Udp::Socket::BindToNetif(otNetifIdentifier aNetifIdentifier)
+{
+    OT_UNUSED_VARIABLE(aNetifIdentifier);
+
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    SuccessOrExit(error = otPlatUdpBindToNetif(this, aNetifIdentifier));
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    Get<Udp>().BindToNetif(*this, aNetifIdentifier);
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+exit:
+#endif
+    return error;
+}
+
 otError Udp::Socket::Connect(const SockAddr &aSockAddr)
 {
     return Get<Udp>().Connect(*this, aSockAddr);
@@ -125,6 +144,9 @@ Udp::Udp(Instance &aInstance)
     , mEphemeralPort(kDynamicPortMin)
     , mReceivers()
     , mSockets()
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    , mPrevBackboneSockets(nullptr)
+#endif
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     , mUdpForwarderContext(nullptr)
     , mUdpForwarder(nullptr)
@@ -172,6 +194,9 @@ otError Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(aSockAddr.GetAddress().IsUnspecified() || Get<ThreadNetif>().HasUnicastAddress(aSockAddr.GetAddress()),
+                 error = OT_ERROR_INVALID_ARGS);
+
     aSocket.mSockName = aSockAddr;
 
     if (!aSocket.IsBound())
@@ -191,8 +216,38 @@ otError Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
     }
 #endif
 
+exit:
     return error;
 }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+void Udp::BindToNetif(SocketHandle &aSocket, otNetifIdentifier aNetifIdentifier)
+{
+    if (aNetifIdentifier == OT_NETIF_BACKBONE)
+    {
+        SetBackboneSocket(aSocket);
+    }
+}
+
+void Udp::SetBackboneSocket(SocketHandle &aSocket)
+{
+    RemoveSocket(aSocket);
+
+    if (mPrevBackboneSockets != nullptr)
+    {
+        mSockets.PushAfter(aSocket, *mPrevBackboneSockets);
+    }
+    else
+    {
+        mSockets.Push(aSocket);
+    }
+}
+
+const Udp::SocketHandle *Udp::GetBackboneSockets(void)
+{
+    return mPrevBackboneSockets != nullptr ? mPrevBackboneSockets->GetNext() : mSockets.GetHead();
+}
+#endif
 
 otError Udp::Connect(SocketHandle &aSocket, const SockAddr &aSockAddr)
 {
@@ -270,7 +325,7 @@ otError Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo 
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     if (!IsMlePort(aSocket.mSockName.mPort) &&
-        !(aSocket.mSockName.mPort == ot::kCoapUdpPort && aMessage.GetSubType() == Message::kSubTypeJoinerEntrust))
+        !(aSocket.mSockName.mPort == ot::Tmf::kUdpPort && aMessage.GetSubType() == Message::kSubTypeJoinerEntrust))
     {
         SuccessOrExit(error = otPlatUdpSend(&aSocket, &aMessage, &messageInfoLocal));
     }
@@ -286,13 +341,33 @@ exit:
 
 void Udp::AddSocket(SocketHandle &aSocket)
 {
-    IgnoreError(mSockets.Add(aSocket));
+    SuccessOrExit(mSockets.Add(aSocket));
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (mPrevBackboneSockets == nullptr)
+    {
+        mPrevBackboneSockets = &aSocket;
+    }
+#endif
+exit:
+    return;
 }
 
 void Udp::RemoveSocket(SocketHandle &aSocket)
 {
-    SuccessOrExit(mSockets.Remove(aSocket));
+    SocketHandle *prev;
+
+    SuccessOrExit(mSockets.Find(aSocket, prev));
+
+    mSockets.PopAfter(prev);
     aSocket.SetNext(nullptr);
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (&aSocket == mPrevBackboneSockets)
+    {
+        mPrevBackboneSockets = prev;
+    }
+#endif
 
 exit:
     return;
@@ -353,27 +428,16 @@ exit:
 
 otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 {
-    otError  error = OT_ERROR_NONE;
-    Header   udpHeader;
-    uint16_t payloadLength;
-    uint16_t checksum;
-
-    payloadLength = aMessage.GetLength() - aMessage.GetOffset();
-
-    // check length
-    VerifyOrExit(payloadLength >= sizeof(Header), error = OT_ERROR_PARSE);
-
-    // verify checksum
-    checksum = Ip6::ComputePseudoheaderChecksum(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(), payloadLength,
-                                                kProtoUdp);
-    checksum = aMessage.UpdateChecksum(checksum, aMessage.GetOffset(), payloadLength);
-
-#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(checksum == 0xffff, error = OT_ERROR_DROP);
-#endif
+    otError error = OT_ERROR_NONE;
+    Header  udpHeader;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(udpHeader), &udpHeader) == sizeof(udpHeader),
                  error = OT_ERROR_PARSE);
+
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessageInfo, kProtoUdp));
+#endif
+
     aMessage.MoveOffset(sizeof(udpHeader));
     aMessageInfo.mPeerPort = udpHeader.GetSourcePort();
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
@@ -398,7 +462,27 @@ void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
     SocketHandle *socket;
     SocketHandle *prev;
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    {
+        const SocketHandle *socketsBegin, *socketsEnd;
+
+        if (!aMessageInfo.IsHostInterface())
+        {
+            socketsBegin = mSockets.GetHead();
+            socketsEnd   = GetBackboneSockets();
+        }
+        else
+        {
+            socketsBegin = GetBackboneSockets();
+            socketsEnd   = nullptr;
+        }
+
+        socket = mSockets.FindMatching(socketsBegin, socketsEnd, aMessageInfo, prev);
+    }
+#else
     socket = mSockets.FindMatching(aMessageInfo, prev);
+#endif
+
     VerifyOrExit(socket != nullptr, OT_NOOP);
 
     aMessage.RemoveHeader(aMessage.GetOffset());
@@ -407,19 +491,6 @@ void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
 
 exit:
     return;
-}
-
-void Udp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
-{
-    aChecksum = aMessage.UpdateChecksum(aChecksum, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
-
-    if (aChecksum != 0xffff)
-    {
-        aChecksum = ~aChecksum;
-    }
-
-    aChecksum = HostSwap16(aChecksum);
-    aMessage.Write(aMessage.GetOffset() + Header::kChecksumFieldOffset, sizeof(aChecksum), &aChecksum);
 }
 
 bool Udp::IsMlePort(uint16_t aPort) const

@@ -44,7 +44,7 @@
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 #include "utils/slaac_address.hpp"
 
 namespace ot {
@@ -52,7 +52,7 @@ namespace ot {
 DuaManager::DuaManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRegistrationTask(aInstance, DuaManager::HandleRegistrationTask, this)
-    , mDuaNotification(OT_URI_PATH_DUA_REGISTRATION_NOTIFY, &DuaManager::HandleDuaNotification, this)
+    , mDuaNotification(UriPath::kDuaRegistrationNotify, &DuaManager::HandleDuaNotification, this)
     , mIsDuaPending(false)
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     , mDuaState(kNotExist)
@@ -76,7 +76,7 @@ DuaManager::DuaManager(Instance &aInstance)
     mChildDuaRegisteredMask.Clear();
 #endif
 
-    Get<Coap::Coap>().AddResource(mDuaNotification);
+    Get<Tmf::TmfAgent>().AddResource(mDuaNotification);
 }
 
 void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixState aState)
@@ -86,7 +86,7 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
     {
         if (mIsDuaPending)
         {
-            IgnoreError(Get<Coap::Coap>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
+            IgnoreError(Get<Tmf::TmfAgent>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
         }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
@@ -240,7 +240,7 @@ void DuaManager::RemoveDomainUnicastAddress(void)
 {
     if (mDuaState == kRegistering && mIsDuaPending)
     {
-        IgnoreError(Get<Coap::Coap>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
+        IgnoreError(Get<Tmf::TmfAgent>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
     }
 
     mDuaState                        = kNotExist;
@@ -422,10 +422,9 @@ void DuaManager::PerformNextRegistration(void)
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
     // Prepare DUA.req
-    VerifyOrExit((message = Get<Coap::Coap>().NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error =
-                      message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_DUA_REGISTRATION_REQUEST));
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDuaRegistrationRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
@@ -488,10 +487,11 @@ void DuaManager::PerformNextRegistration(void)
                                                       Get<BackboneRouter::Leader>().GetServer16());
     }
 
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo, &DuaManager::HandleDuaResponse, this));
+    SuccessOrExit(error =
+                      Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, &DuaManager::HandleDuaResponse, this));
 
     mIsDuaPending = true;
 
@@ -528,7 +528,7 @@ void DuaManager::HandleDuaResponse(Coap::Message &aMessage, const Ip6::MessageIn
         ExitNow(error = aResult);
     }
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage.GetCode() == OT_COAP_CODE_CHANGED, error = OT_ERROR_PARSE);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage.GetCode() == Coap::kCodeChanged, error = OT_ERROR_PARSE);
 
     error = ProcessDuaResponse(aMessage);
 
@@ -548,9 +548,9 @@ void DuaManager::HandleDuaNotification(Coap::Message &aMessage, const Ip6::Messa
 
     OT_UNUSED_VARIABLE(error);
 
-    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_PARSE);
+    VerifyOrExit(aMessage.IsPostRequest(), error = OT_ERROR_PARSE);
 
-    if (aMessage.IsConfirmable() && Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
+    if (aMessage.IsConfirmable() && Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
     {
         otLogInfoDua("Sent DUA.ntf acknowledgment");
     }
@@ -655,20 +655,19 @@ void DuaManager::SendAddressNotification(Ip6::Address &             aAddress,
     Ip6::MessageInfo messageInfo;
     otError          error;
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error =
-                      message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_DUA_REGISTRATION_NOTIFY));
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDuaRegistrationNotify));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, ThreadTlv::kStatus, static_cast<uint8_t>(aStatus)));
     SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aAddress, sizeof(aAddress)));
 
     messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), aChild.GetRloc16());
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoDua("Sent ADDR_NTF for child %04x DUA %s", aChild.GetRloc16(), aAddress.ToString().AsCString());
 
@@ -700,7 +699,7 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
         if (mIsDuaPending && mChildIndexDuaRegistering == childIndex)
 #endif
         {
-            IgnoreError(Get<Coap::Coap>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
+            IgnoreError(Get<Tmf::TmfAgent>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
 
             // Reset mRegisterCurrentChildIndex properly
             mRegisterCurrentChildIndex = mRegisterCurrentChildIndex && (aState == Mle::ChildDuaState::kRemoved);

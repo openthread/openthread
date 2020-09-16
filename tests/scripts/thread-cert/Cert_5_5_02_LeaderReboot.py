@@ -47,27 +47,27 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED]
+            'allowlist': [LEADER, ED]
         },
         ED: {
             'name': 'MED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
     }
 
     def _setUpLeader(self):
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
+        self.nodes[LEADER].add_allowlist(self.nodes[ROUTER].get_addr64())
+        self.nodes[LEADER].enable_allowlist()
         self.nodes[LEADER].set_router_selection_jitter(1)
 
     def test(self):
@@ -117,13 +117,12 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
 
         # Step 4: Router_1 MUST attempt to reattach to its original partition by
         # sending MLE Parent Requests to the All-Routers multicast
-        # address (FFxx::xx) with a hop limit of 255.
-        _rpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
+        # address (FFxx::xx) with a hop limit of 255. MUST make two separate attempts
+        for i in range(1, 3):
+            _rpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
+                lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+                    p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 1)
         lreset_start = _rpkts.index
-
-        # Step 5: Leader MUST NOT respond to the MLE Parent Requests
-        _lpkts.filter_mle_cmd(MLE_PARENT_RESPONSE).must_not_next()
 
         # Step 6:Router_1 MUST attempt to attach to any other Partition
         # within range by sending a MLE Parent Request.
@@ -133,6 +132,9 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
 
         # Step 3: The Leader MUST stop sending MLE advertisements.
         leader_pkts.range(lreset_start, lreset_stop).filter_mle_cmd(MLE_ADVERTISEMENT).must_not_next()
+
+        # Step 5: Leader MUST NOT respond to the MLE Parent Requests
+        leader_pkts.range(lreset_start, lreset_stop).filter_mle_cmd(MLE_PARENT_RESPONSE).must_not_next()
 
         # Step 7: Take over leader role of a new Partition and
         # begin transmitting MLE Advertisements
@@ -147,7 +149,7 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
 
         # Step 9: The Leader MUST send properly formatted MLE Parent
         # Requests to the All-Routers multicast address
-        _lpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
+        _lpkts.range(lreset_stop).filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
             lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
 
         # Step 10: Router_1 MUST send an MLE Parent Response
@@ -171,12 +173,12 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
 
         #Step 13: Leader send an Address Solicit Request
         _lpkts.filter_coap_request(ADDR_SOL_URI).must_next().must_verify(
-            lambda p: p.coap.tlv.ext_mac_addr and p.coap.tlv.rloc16 is not nullField and p.coap.tlv.status != 0)
+            lambda p: p.thread_address.tlv.ext_mac_addr and p.thread_address.tlv.status != 0)
 
         #Step 14: Router_1 send an Address Solicit Response
-        _rpkts.filter_coap_ack(
-            ADDR_SOL_URI).must_next().must_verify(lambda p: p.coap.tlv.router_mask_assigned and p.coap.tlv.rloc16 is
-                                                  not nullField and p.coap.tlv.status == 0)
+        _rpkts.filter_coap_ack(ADDR_SOL_URI).must_next().must_verify(
+            lambda p: p.thread_address.tlv.router_mask_assigned and p.thread_address.tlv.rloc16 is not nullField and p.
+            thread_address.tlv.status == 0)
 
         #Step 15: Leader Send a Multicast Link Request
         _lpkts.filter_mle_cmd(MLE_LINK_REQUEST).must_next().must_verify(

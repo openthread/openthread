@@ -109,5 +109,4 @@ scan
 start
 state
 stop
-whitelist
 ```

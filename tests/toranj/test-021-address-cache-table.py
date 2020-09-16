@@ -80,25 +80,25 @@ r1.form("addr-cache-tbl")
 
 r1.add_prefix(PREFIX, stable=True, on_mesh=True, slaac=True, preferred=True)
 
-r1.whitelist_node(c1)
-c1.whitelist_node(r1)
+r1.allowlist_node(c1)
+c1.allowlist_node(r1)
 c1.join_node(r1, wpan.JOIN_TYPE_END_DEVICE)
 
-r1.whitelist_node(r2)
-r2.whitelist_node(r1)
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
 r2.join_node(r1, wpan.JOIN_TYPE_ROUTER)
 
-c2.whitelist_node(r2)
-r2.whitelist_node(c2)
+c2.allowlist_node(r2)
+r2.allowlist_node(c2)
 c2.join_node(r2, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 c2.set(wpan.WPAN_POLL_INTERVAL, str(POLL_INTERVAL))
 
-r2.whitelist_node(r3)
-r3.whitelist_node(r2)
+r2.allowlist_node(r3)
+r3.allowlist_node(r2)
 r3.join_node(r2, wpan.JOIN_TYPE_ROUTER)
 
-c3.whitelist_node(r3)
-r3.whitelist_node(c3)
+c3.allowlist_node(r3)
+r3.allowlist_node(c3)
 c3.join_node(r3, wpan.JOIN_TYPE_END_DEVICE)
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -183,9 +183,9 @@ c2.set(
 )
 r3.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL))
 
-r2.un_whitelist_node(c2)
-r3.whitelist_node(c2)
-c2.whitelist_node(r3)
+r2.un_allowlist_node(c2)
+r3.allowlist_node(c2)
+c2.allowlist_node(r3)
 
 # Wait for c2 to detach from r2 and attach to r3.
 #
@@ -266,9 +266,9 @@ c2.set(
 )
 r2.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL))
 
-r3.un_whitelist_node(c2)
-r2.whitelist_node(c2)
-c2.whitelist_node(r2)
+r3.un_allowlist_node(c2)
+r2.allowlist_node(c2)
+c2.allowlist_node(r2)
 
 # Wait for c2 to detach from r3 and attach to r2.
 #
@@ -334,9 +334,9 @@ c2.set(
 )
 r3.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL))
 
-r2.un_whitelist_node(c2)
-r3.whitelist_node(c2)
-c2.whitelist_node(r3)
+r2.un_allowlist_node(c2)
+r3.allowlist_node(c2)
+c2.allowlist_node(r3)
 
 # Wait for c2 to detach from r2 and attach to r3.
 #

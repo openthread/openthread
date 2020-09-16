@@ -65,6 +65,23 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli) -v" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: posix-cli-thread-cert
+        path: build/posix/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+    - name: Keep Simulation Only
+      run: |
+        tar -cf build/posix.tar -C build/ posix/
+        rm -rf build/posix/
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
+    - name: Keep POSIX Only
+      run: |
+        rm -rf build/x86_64-unknown-linux-gnu/
+        tar -xf build/posix.tar -C build/
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -96,6 +113,23 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: posix-ncp-thread-cert
+        path: build/posix/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+    - name: Keep Simulation Only
+      run: |
+        tar -cf build/posix.tar -C build/ posix/
+        rm -rf build/posix/
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
+    - name: Keep POSIX Only
+      run: |
+        rm -rf build/x86_64-unknown-linux-gnu/
+        tar -xf build/posix.tar -C build/
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -118,6 +152,18 @@ jobs:
     - name: Run
       run: |
         script/check-ncp-rcp-migrate check
+    - name: Keep Simulation Only
+      run: |
+        tar -cf build/posix.tar -C build/ posix/
+        rm -rf build/posix/
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
+    - name: Keep POSIX Only
+      run: |
+        rm -rf build/x86_64-unknown-linux-gnu/
+        tar -xf build/posix.tar -C build/
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -148,6 +194,18 @@ jobs:
     - name: Run
       run: |
         script/check-posix-pty check
+    - name: Keep Simulation Only
+      run: |
+        tar -cf build/posix.tar -C build/ posix/
+        rm -rf build/posix/
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
+    - name: Keep POSIX Only
+      run: |
+        rm -rf build/x86_64-unknown-linux-gnu/
+        tar -xf build/posix.tar -C build/
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -179,6 +237,18 @@ jobs:
     - name: Run
       run: |
         script/check-posix-pty check
+    - name: Keep Simulation Only
+      run: |
+        tar -cf build/posix.tar -C build/ posix/
+        rm -rf build/posix/
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
+    - name: Keep POSIX Only
+      run: |
+        rm -rf build/x86_64-unknown-linux-gnu/
+        tar -xf build/posix.tar -C build/
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:

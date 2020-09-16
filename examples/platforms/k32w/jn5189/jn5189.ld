@@ -69,10 +69,10 @@ m_fsl_prodInfo_size = m_sector_size;
 m_fsl_prodInfo_end                             = m_flash_size - 17 * m_sector_size - 1;
 m_fsl_prodInfo_start                           = m_fsl_prodInfo_end - m_fsl_prodInfo_size + 1;
 
-NV_STORAGE_MAX_SECTORS                         = 64;
+NV_STORAGE_MAX_SECTORS                         = 63;
 NV_STORAGE_SIZE                                = NV_STORAGE_MAX_SECTORS * m_sector_size;
-NV_STORAGE_END_ADDRESS                         = m_fsl_prodInfo_start - 1;
-NV_STORAGE_START_ADDRESS                       = NV_STORAGE_END_ADDRESS - NV_STORAGE_SIZE + 1;
+NV_STORAGE_START_ADDRESS                       = m_flash_size - 17 * m_sector_size - 1;
+NV_STORAGE_END_ADDRESS                         = NV_STORAGE_START_ADDRESS - NV_STORAGE_SIZE + 1;
 
 INT_STORAGE_END                                = NV_STORAGE_START_ADDRESS - 1;
 INT_STORAGE_START                              = 0x48000;
@@ -288,8 +288,8 @@ SECTIONS
         _end_boot_resume_stack = .;
     } > RAM0
 
-    __nv_storage_end_address = NV_STORAGE_END_ADDRESS;
-    __nv_storage_start_address = NV_STORAGE_START_ADDRESS;
+    __nv_storage_end_address = NV_STORAGE_START_ADDRESS;
+    __nv_storage_start_address = NV_STORAGE_END_ADDRESS;
 
     PROVIDE(_vStackTop = __top_RAM0 - 32);
     PROVIDE(__mac_buffer_base = (__mac_buffer_start & 0xfffe0000));

@@ -26,10 +26,8 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-import struct
 from typing import Tuple, List
 
-from pktverify.addrs import ExtAddr, Ipv6Addr
 from pktverify.consts import COAP_CODE_POST, COAP_CODE_ACK
 from pktverify.layers import Layer
 
@@ -37,95 +35,9 @@ from pktverify.layers import Layer
 class CoapTlvParser(object):
 
     @staticmethod
-    def _parse_0(v: bytearray) -> List[Tuple[str, str]]:
-        """parse Target EID TLV"""
-        return [('target_eid', CoapTlvParser._parse_ipv6_address(v))]
-
-    @staticmethod
-    def _parse_1(v: bytearray) -> List[Tuple[str, str]]:
-        """parse MAC Extended Address TLV"""
-        return [('ext_mac_addr', CoapTlvParser._parse_ext_mac_addr(v))]
-
-    @staticmethod
-    def _parse_2(v: bytearray) -> List[Tuple[str, str]]:
-        """parse RLOC16 TLV"""
-        return [('rloc16', CoapTlvParser._parse_uint16(v))]
-
-    @staticmethod
-    def _parse_3(v: bytearray) -> List[Tuple[str, str]]:
-        """parse ML-EID TLV"""
-        return [('ml_eid', CoapTlvParser._parse_ext_mac_addr(v))]
-
-    @staticmethod
-    def _parse_4(v: bytearray) -> List[Tuple[str, str]]:
-        """parse Status TLV"""
-        assert len(v) == 1
-        return [('status', hex(v[0]))]
-
-    @staticmethod
-    def _parse_6(v: bytearray) -> List[Tuple[str, str]]:
-        """parse Time Since Last Transaction TLV"""
-        return [('last_transaction_time', CoapTlvParser._parse_uint32(v))]
-
-    @staticmethod
-    def _parse_7(v: bytearray) -> List[Tuple[str, str]]:
-        """parse Router Mask TLV"""
-        assert len(v) == 9
-        return [
-            ('router_mask_id_seq', hex(v[0])),
-            ('router_mask_assigned', CoapTlvParser._parse_uint64(v[1:])),
-        ]
-
-    @staticmethod
-    def _parse_10(v: bytearray) -> List[Tuple[str, str]]:
-        """parse Thread Network Data TLV"""
-        # TODO: Thread Network Data can not be parsed by COAP TLVs yet
-        return []
-
-    @staticmethod
-    def _parse_12(v: bytearray) -> List[Tuple[str, str]]:
-        """parse Network Name TLV"""
-        return [('net_name', CoapTlvParser._parse_utf8_str(v))]
-
-    @staticmethod
-    def _parse_uint16(v: bytearray) -> str:
-        assert len(v) == 2
-        return hex(v[0] * 256 + v[1])
-
-    @staticmethod
-    def _parse_uint32(v: bytearray) -> str:
-        assert len(v) == 4
-        return hex(struct.unpack(">I", v)[0])
-
-    @staticmethod
-    def _parse_uint64(v: bytearray) -> str:
-        assert len(v) == 8
-        return hex(struct.unpack(">Q", v)[0])
-
-    @staticmethod
-    def _parse_ipv6_address(s: bytearray):
-        assert len(s) == 16
-        a = Ipv6Addr(s)
-        return a.format_hextets()
-
-    @staticmethod
-    def _parse_utf8_str(v: bytearray) -> str:
-        return v.decode('utf-8')
-
-    @staticmethod
-    def parse(t, v: bytearray) -> str:
+    def parse(t, v: bytearray) -> List[Tuple[str, str]]:
         assert isinstance(v, bytearray)
-        try:
-            parse_func = getattr(CoapTlvParser, f'_parse_{t}')
-        except AttributeError:
-            raise NotImplementedError(f"Please implement _parse_{t} for COAP TLV: type={t}")
-
-        return parse_func(v)
-
-    @staticmethod
-    def _parse_ext_mac_addr(v: bytearray) -> str:
-        assert len(v) == 8
-        return ExtAddr(v).format_octets()
+        return []
 
 
 class CoapLayer(Layer):

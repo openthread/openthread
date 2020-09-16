@@ -393,6 +393,73 @@ public:
     }
 
     /**
+     * This template method searches within a given range of the linked list to find an entry matching a given
+     * indicator.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
+     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in]  aBegin      A pointer to the begin of the range.
+     * @param[in]  aEnd        A pointer to the end of the range, or nullptr to search all entries after @p aBegin.
+     * @param[in]  aIndicator  An indicator to match with entries in the list.
+     * @param[out] aPrevEntry  A pointer to output the previous entry on success (when a match is found in the list).
+     *                         @p aPrevEntry is set to nullptr if the matching entry is the head of the list. Otherwise
+     *                         it is updated to point to the previous entry before the matching entry in the list.
+     *
+     * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
+     *
+     */
+    template <typename Inidcator>
+    const Type *FindMatching(const Type *     aBegin,
+                             const Type *     aEnd,
+                             const Inidcator &aIndicator,
+                             const Type *&    aPrevEntry) const
+    {
+        const Type *entry;
+
+        aPrevEntry = nullptr;
+
+        for (entry = aBegin; entry != aEnd; aPrevEntry = entry, entry = entry->GetNext())
+        {
+            if (entry->Matches(aIndicator))
+            {
+                break;
+            }
+        }
+
+        return entry;
+    }
+
+    /**
+     * This template method searches within a given range of the linked list to find an entry matching a given
+     * indicator.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
+     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in]  aBegin      A pointer to the begin of the range.
+     * @param[in]  aEnd        A pointer to the end of the range, or nullptr to search all entries after @p aBegin.
+     * @param[in]  aIndicator  An indicator to match with entries in the list.
+     * @param[out] aPrevEntry  A pointer to output the previous entry on success (when a match is found in the list).
+     *                         @p aPrevEntry is set to nullptr if the matching entry is the head of the list. Otherwise
+     *                         it is updated to point to the previous entry before the matching entry in the list.
+     *
+     * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
+     *
+     */
+    template <typename Inidcator>
+    Type *FindMatching(const Type *aBegin, const Type *aEnd, const Inidcator &aIndicator, Type *&aPrevEntry)
+    {
+        return const_cast<Type *>(FindMatching(aBegin, aEnd, aIndicator, const_cast<const Type *&>(aPrevEntry)));
+    }
+
+    /**
      * This template method searches within the linked list to find an entry matching a given indicator.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
@@ -401,7 +468,7 @@ public:
      *
      *     bool Type::Matches(const Indicator &aIndicator) const
      *
-     * @param[in]  aIndicator  An indicator to match with entries in the list..
+     * @param[in]  aIndicator  An indicator to match with entries in the list.
      * @param[out] aPrevEntry  A pointer to output the previous entry on success (when a match is found in the list).
      *                         @p aPrevEntry is set to nullptr if the matching entry is the head of the list. Otherwise
      *                         it is updated to point to the previous entry before the matching entry in the list.
@@ -411,19 +478,7 @@ public:
      */
     template <typename Inidcator> const Type *FindMatching(const Inidcator &aIndicator, const Type *&aPrevEntry) const
     {
-        const Type *entry;
-
-        aPrevEntry = nullptr;
-
-        for (entry = mHead; entry != nullptr; aPrevEntry = entry, entry = entry->GetNext())
-        {
-            if (entry->Matches(aIndicator))
-            {
-                break;
-            }
-        }
-
-        return entry;
+        return FindMatching(mHead, nullptr, aIndicator, aPrevEntry);
     }
 
     /**
@@ -436,7 +491,7 @@ public:
      *
      *     bool Type::Matches(const Indicator &aIndicator) const
      *
-     * @param[in]  aIndicator  An indicator to match with entries in the list..
+     * @param[in]  aIndicator  An indicator to match with entries in the list.
      * @param[out] aPrevEntry  A pointer to output the previous entry on success (when a match is found in the list).
      *                         @p aPrevEntry is set to nullptr if the matching entry is the head of the list. Otherwise
      *                         it is updated to point to the previous entry before the matching entry in the list.
