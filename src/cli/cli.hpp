@@ -276,6 +276,7 @@ private:
     static otError ParseJoinerDiscerner(char *aString, otJoinerDiscerner &aJoinerDiscerner);
     void           ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
     void           ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[]);
+    void           ProcessCcaThreshold(uint8_t aArgsLength, char *aArgs[]);
     void           ProcessChannel(uint8_t aArgsLength, char *aArgs[]);
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     void ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[]);
@@ -296,7 +297,6 @@ private:
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-    void ProcessCcaThreshold(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
     void ProcessChild(uint8_t aArgsLength, char *aArgs[]);
     void ProcessChildIp(uint8_t aArgsLength, char *aArgs[]);
