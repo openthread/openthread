@@ -398,7 +398,7 @@ public:
      * @returns If CSL channel has been specified.
      *
      */
-    bool IsCslChannelSpecified() const { return mIsCslChannelSpecified; }
+    bool IsCslChannelSpecified(void) const { return mIsCslChannelSpecified; }
 
     /**
      * This method sets the flag representing if CSL channel has been specified.
@@ -626,8 +626,8 @@ private:
     uint16_t  mCslPeriod;      ///< The CSL sample period, in units of 10 symbols (160 microseconds).
     uint8_t   mCslChannel : 7; ///< The actually CSL sample channel. If `mIsCslChannelSpecified` is 0, this should be
                                ///< equal to the Pan channel of `Mac`.
-    uint8_t
-        mIsCslChannelSpecified : 1; ///< Indicates whether or not the CSL channel was explicitly specified by the user.
+    uint8_t mIsCslChannelSpecified : 1; ///< Indicates whether or not the CSL channel was explicitly specified by
+                                        ///< the user.
 
     CslState mCslState;
 
