@@ -23,6 +23,7 @@ Done
 
 - [bbr](#bbr)
 - [bufferinfo](#bufferinfo)
+- [ccathreshold](#ccathreshold)
 - [channel](#channel)
 - [child](#child-list)
 - [childip](#childip)
@@ -320,6 +321,25 @@ mpl: 0 0
 mle: 0 0
 arp: 0 0
 coap: 0 0
+Done
+```
+
+### ccathreshold
+
+Get the CCA threshold in dBm.
+
+```bash
+> ccathreshold
+-75 dBm
+Done
+```
+
+### ccathreshold \<ccathreshold\>
+
+Set the CCA threshold.
+
+```bash
+> ccathreshold -62
 Done
 ```
 
