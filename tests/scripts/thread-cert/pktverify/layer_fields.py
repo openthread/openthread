@@ -207,6 +207,7 @@ class _list(object):
 _LAYER_FIELDS = {
     # WPAN
     'wpan.fcf': _raw_hex_rev,
+    'wpan.cmd': _auto,
     'wpan.security': _auto,
     'wpan.frame_type': _auto,
     'wpan.pending': _auto,
@@ -240,6 +241,8 @@ _LAYER_FIELDS = {
     'wpan.aux_sec.hdr': _str,
     'wpan.mic': _auto,
     'wpan.channel': _auto,
+    'wpan.header_ie.id': _list(_auto),
+    'wpan.header_ie.csl.period': _auto,
 
     # MLE
     'mle.cmd': _auto,
