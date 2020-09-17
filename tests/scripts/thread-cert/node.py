@@ -1021,7 +1021,7 @@ class Node:
         self._expect('Done')
 
     def register_netdata(self):
-        self.send_command('netdataregister')
+        self.send_command('netdata register')
         self._expect('Done')
 
     def send_network_diag_get(self, addr, tlv_types):

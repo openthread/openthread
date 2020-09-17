@@ -47,6 +47,7 @@
 #include "cli/cli_commissioner.hpp"
 #include "cli/cli_dataset.hpp"
 #include "cli/cli_joiner.hpp"
+#include "cli/cli_network_data.hpp"
 #include "cli/cli_udp.hpp"
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
@@ -87,6 +88,7 @@ class Interpreter
     friend class Commissioner;
     friend class Dataset;
     friend class Joiner;
+    friend class NetworkData;
     friend class UdpExample;
 
 public:
@@ -383,17 +385,21 @@ private:
     void ProcessNeighbor(uint8_t aArgsLength, char *aArgs[]);
 #endif
     void ProcessNetworkData(uint8_t aArgsLength, char *aArgs[]);
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    void ProcessNetworkDataRegister(uint8_t aArgsLength, char *aArgs[]);
-#endif
-    void ProcessNetworkDataShow(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessNetworkDataPrefix(void);
+    void ProcessNetworkDataRoute(void);
+    void ProcessNetworkDataService(void);
+    void OutputPrefix(const otBorderRouterConfig &aConfig);
+    void OutputRoute(const otExternalRouteConfig &aConfig);
+    void OutputService(const otServiceConfig &aConfig);
+
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     void ProcessNetif(uint8_t aArgsLength, char *aArgs[]);
 #endif
     void ProcessNetstat(uint8_t aArgsLength, char *aArgs[]);
     int  OutputSocketAddress(const otSockAddr &aAddress);
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    void ProcessService(uint8_t aArgsLength, char *aArgs[]);
+    void    ProcessService(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessServiceList(void);
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     void ProcessNetworkDiagnostic(uint8_t aArgsLength, char *aArgs[]);
@@ -426,7 +432,6 @@ private:
     otError ProcessPrefixAdd(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessPrefixRemove(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessPrefixList(void);
-    void    OutputPrefix(otBorderRouterConfig &aConfig);
 #endif
     void ProcessPromiscuous(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
@@ -625,10 +630,6 @@ private:
         {"neighbor", &Interpreter::ProcessNeighbor},
 #endif
         {"netdata", &Interpreter::ProcessNetworkData},
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-        {"netdataregister", &Interpreter::ProcessNetworkDataRegister},
-#endif
-        {"netdatashow", &Interpreter::ProcessNetworkDataShow},
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
         {"netif", &Interpreter::ProcessNetif},
 #endif
@@ -712,8 +713,9 @@ private:
     bool mSntpQueryingInProgress;
 #endif
 
-    UdpExample mUdp;
-    Dataset    mDataset;
+    Dataset     mDataset;
+    NetworkData mNetworkData;
+    UdpExample  mUdp;
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     Coap mCoap;

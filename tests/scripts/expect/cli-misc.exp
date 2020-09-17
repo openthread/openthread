@@ -47,9 +47,6 @@ expect "Done"
 send "bufferinfo\n"
 expect "Done"
 
-send "netdatashow\n"
-expect "Done"
-
 send "parent\n"
 expect "Done"
 

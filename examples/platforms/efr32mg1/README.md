@@ -138,7 +138,7 @@ In the J-Link Device drop-down list select the serial number of the device to fl
    leaderweight
    masterkey
    mode
-   netdataregister
+   netdata register
    networkidtimeout
    networkname
    panid

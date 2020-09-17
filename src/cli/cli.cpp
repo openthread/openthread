@@ -41,7 +41,6 @@
 #include <openthread/icmp6.h>
 #include <openthread/link.h>
 #include <openthread/ncp.h>
-#include <openthread/netdata.h>
 #include <openthread/thread.h>
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #include <openthread/network_time.h>
@@ -122,8 +121,9 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpQueryingInProgress(false)
 #endif
-    , mUdp(*this)
     , mDataset(*this)
+    , mNetworkData(*this)
+    , mUdp(*this)
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     , mCoap(*this)
 #endif
@@ -2132,24 +2132,6 @@ exit:
 }
 #endif
 
-void Interpreter::ProcessNetworkDataShow(uint8_t aArgsLength, char *aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
-
-    otError error = OT_ERROR_NONE;
-    uint8_t data[255];
-    uint8_t len = sizeof(data);
-
-    SuccessOrExit(error = otNetDataGet(mInstance, false, data, &len));
-
-    OutputBytes(data, static_cast<uint8_t>(len));
-    OutputLine("");
-
-exit:
-    OutputResult(error);
-}
-
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 void Interpreter::ProcessNetif(uint8_t aArgsLength, char *aArgs[])
 {
@@ -2232,13 +2214,28 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+otError Interpreter::ProcessServiceList(void)
+{
+    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otServiceConfig       config;
+
+    while (otServerGetNextService(mInstance, &iterator, &config) == OT_ERROR_NONE)
+    {
+        mNetworkData.OutputService(config);
+    }
+
+    return OT_ERROR_NONE;
+}
+
 void Interpreter::ProcessService(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
-
-    if (strcmp(aArgs[0], "add") == 0)
+    if (aArgsLength == 0)
+    {
+        SuccessOrExit(error = ProcessServiceList());
+    }
+    else if (strcmp(aArgs[0], "add") == 0)
     {
         otServiceConfig cfg;
         long            enterpriseNumber;
@@ -2288,62 +2285,9 @@ exit:
 void Interpreter::ProcessNetworkData(uint8_t aArgsLength, char *aArgs[])
 {
     otError error;
-
-    if (aArgsLength > 2 && strcmp(aArgs[0], "steeringdata") == 0)
-    {
-        if (strcmp(aArgs[1], "check") == 0)
-        {
-            otExtAddress      addr;
-            otJoinerDiscerner discerner;
-
-            discerner.mLength = 0;
-
-            error = Interpreter::ParseJoinerDiscerner(aArgs[2], discerner);
-
-            if (error == OT_ERROR_NOT_FOUND)
-            {
-                VerifyOrExit(Interpreter::Hex2Bin(aArgs[2], addr.m8, sizeof(addr)) == sizeof(addr),
-                             error = OT_ERROR_INVALID_ARGS);
-            }
-            else if (error != OT_ERROR_NONE)
-            {
-                ExitNow();
-            }
-
-            if (discerner.mLength)
-            {
-                ExitNow(error = otNetDataSteeringDataCheckJoinerWithDiscerner(mInstance, &discerner));
-            }
-            else
-            {
-                ExitNow(error = otNetDataSteeringDataCheckJoiner(mInstance, &addr));
-            }
-        }
-    }
-
-    error = OT_ERROR_INVALID_COMMAND;
-
-exit:
+    error = mNetworkData.Process(aArgsLength, aArgs);
     OutputResult(error);
 }
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-void Interpreter::ProcessNetworkDataRegister(uint8_t aArgsLength, char *aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
-
-    otError error = OT_ERROR_NONE;
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    SuccessOrExit(error = otBorderRouterRegister(mInstance));
-#else
-    SuccessOrExit(error = otServerRegister(mInstance));
-#endif
-
-exit:
-    OutputResult(error);
-}
-#endif
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessNetworkIdTimeout(uint8_t aArgsLength, char *aArgs[])
@@ -2922,75 +2866,6 @@ exit:
     return error;
 }
 
-void Interpreter::OutputPrefix(otBorderRouterConfig &aConfig)
-{
-    OutputFormat("%x:%x:%x:%x::/%d ", HostSwap16(aConfig.mPrefix.mPrefix.mFields.m16[0]),
-                 HostSwap16(aConfig.mPrefix.mPrefix.mFields.m16[1]), HostSwap16(aConfig.mPrefix.mPrefix.mFields.m16[2]),
-                 HostSwap16(aConfig.mPrefix.mPrefix.mFields.m16[3]), aConfig.mPrefix.mLength);
-
-    if (aConfig.mPreferred)
-    {
-        OutputFormat("p");
-    }
-
-    if (aConfig.mSlaac)
-    {
-        OutputFormat("a");
-    }
-
-    if (aConfig.mDhcp)
-    {
-        OutputFormat("d");
-    }
-
-    if (aConfig.mConfigure)
-    {
-        OutputFormat("c");
-    }
-
-    if (aConfig.mDefaultRoute)
-    {
-        OutputFormat("r");
-    }
-
-    if (aConfig.mOnMesh)
-    {
-        OutputFormat("o");
-    }
-
-    if (aConfig.mStable)
-    {
-        OutputFormat("s");
-    }
-
-    if (aConfig.mNdDns)
-    {
-        OutputFormat("n");
-    }
-
-    if (aConfig.mDp)
-    {
-        OutputFormat("D");
-    }
-
-    switch (aConfig.mPreference)
-    {
-    case OT_ROUTE_PREFERENCE_LOW:
-        OutputFormat(" low");
-        break;
-
-    case OT_ROUTE_PREFERENCE_MED:
-        OutputFormat(" med");
-        break;
-
-    case OT_ROUTE_PREFERENCE_HIGH:
-        OutputFormat(" high");
-        break;
-    }
-
-    OutputLine("");
-}
-
 otError Interpreter::ProcessPrefixList(void)
 {
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
@@ -2998,7 +2873,7 @@ otError Interpreter::ProcessPrefixList(void)
 
     while (otBorderRouterGetNextOnMeshPrefix(mInstance, &iterator, &config) == OT_ERROR_NONE)
     {
-        OutputPrefix(config);
+        mNetworkData.OutputPrefix(config);
     }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
@@ -3006,7 +2881,7 @@ otError Interpreter::ProcessPrefixList(void)
     {
         SuccessOrExit(otBackboneRouterGetDomainPrefix(mInstance, &config));
         OutputFormat("- ");
-        OutputPrefix(config);
+        mNetworkData.OutputPrefix(config);
     }
     // Else already printed via above while loop.
 exit:
@@ -3210,30 +3085,7 @@ otError Interpreter::ProcessRouteList(void)
 
     while (otBorderRouterGetNextRoute(mInstance, &iterator, &config) == OT_ERROR_NONE)
     {
-        OutputFormat("%x:%x:%x:%x::/%d ", HostSwap16(config.mPrefix.mPrefix.mFields.m16[0]),
-                     HostSwap16(config.mPrefix.mPrefix.mFields.m16[1]),
-                     HostSwap16(config.mPrefix.mPrefix.mFields.m16[2]),
-                     HostSwap16(config.mPrefix.mPrefix.mFields.m16[3]), config.mPrefix.mLength);
-
-        if (config.mStable)
-        {
-            OutputFormat("s");
-        }
-
-        switch (config.mPreference)
-        {
-        case OT_ROUTE_PREFERENCE_LOW:
-            OutputLine(" low");
-            break;
-
-        case OT_ROUTE_PREFERENCE_MED:
-            OutputLine(" med");
-            break;
-
-        case OT_ROUTE_PREFERENCE_HIGH:
-            OutputLine(" high");
-            break;
-        }
+        mNetworkData.OutputRoute(config);
     }
 
     return OT_ERROR_NONE;

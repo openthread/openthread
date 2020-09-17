@@ -1473,7 +1473,7 @@ class OpenThreadTHCI(object):
             print(cmd)
             if self.__executeCommand(cmd)[-1] == 'Done':
                 # send server data ntf to leader
-                return self.__executeCommand('netdataregister')[-1] == 'Done'
+                return self.__executeCommand('netdata register')[-1] == 'Done'
             else:
                 return False
         except Exception as e:
@@ -1579,7 +1579,7 @@ class OpenThreadTHCI(object):
                     return True
                 else:
                     # send server data ntf to leader
-                    return self.__executeCommand('netdataregister')[-1] == 'Done'
+                    return self.__executeCommand('netdata register')[-1] == 'Done'
             else:
                 return False
         except Exception as e:
@@ -1743,7 +1743,7 @@ class OpenThreadTHCI(object):
 
             if self.__executeCommand(cmd)[-1] == 'Done':
                 # send server data ntf to leader
-                return self.__executeCommand('netdataregister')[-1] == 'Done'
+                return self.__executeCommand('netdata register')[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('configExternalRouter() Error: ' + str(e))
 
