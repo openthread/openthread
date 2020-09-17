@@ -44,6 +44,9 @@
 #include "common/logging.hpp"
 
 #include "bsp.h"
+#include "bsp_init.h"
+#include "dmadrv.h"
+#include "ecode.h"
 #include "em_chip.h"
 #include "em_cmu.h"
 #include "em_core.h"
@@ -63,7 +66,93 @@
 
 #define USE_EFR32_LOG (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 
-void halInitChipSpecific(void);
+void initAntenna(void);
+
+static void boardDisableSpiFlash(void)
+{
+#if defined(BSP_EXTFLASH_USART) && !defined(HAL_DISABLE_EXTFLASH)
+#include "mx25flash_spi.h"
+    MX25_init();
+    MX25_DP();
+#endif
+}
+
+static void boardLowPowerInit(void)
+{
+    boardDisableSpiFlash();
+}
+
+static void halInitChipSpecific(void)
+{
+#if defined(BSP_DK) && !defined(RAIL_IC_SIM_BUILD)
+    BSP_Init(BSP_INIT_DK_SPI);
+#endif
+    BSP_initDevice();
+
+#if !defined(RAIL_IC_SIM_BUILD)
+    BSP_initBoard();
+#endif
+
+#if HAL_PTI_ENABLE
+    RAIL_PtiConfig_t railPtiConfig = {
+#if HAL_PTI_MODE == HAL_PTI_MODE_SPI
+        .mode = RAIL_PTI_MODE_SPI,
+#elif HAL_PTI_MODE == HAL_PTI_MODE_UART
+        .mode = RAIL_PTI_MODE_UART,
+#elif HAL_PTI_MODE == HAL_PTI_MODE_UART_ONEWIRE
+        .mode = RAIL_PTI_MODE_UART_ONEWIRE,
+#else
+        .mode = RAIL_PTI_MODE_DISABLED,
+#endif
+        .baud = HAL_PTI_BAUD_RATE,
+#ifdef BSP_PTI_DOUT_LOC
+        .doutLoc = BSP_PTI_DOUT_LOC,
+#endif
+        .doutPort = (uint8_t)BSP_PTI_DOUT_PORT,
+        .doutPin  = BSP_PTI_DOUT_PIN,
+#if HAL_PTI_MODE == HAL_PTI_MODE_SPI
+#ifdef BSP_PTI_DCLK_LOC
+        .dclkLoc = BSP_PTI_DCLK_LOC,
+#endif
+        .dclkPort = (uint8_t)BSP_PTI_DCLK_PORT,
+        .dclkPin  = BSP_PTI_DCLK_PIN,
+#endif
+#if HAL_PTI_MODE != HAL_PTI_MODE_UART_ONEWIRE
+#ifdef BSP_PTI_DFRAME_LOC
+        .dframeLoc = BSP_PTI_DFRAME_LOC,
+#endif
+        .dframePort = (uint8_t)BSP_PTI_DFRAME_PORT,
+        .dframePin  = BSP_PTI_DFRAME_PIN
+#endif
+    };
+
+    RAIL_ConfigPti(RAIL_EFR32_HANDLE, &railPtiConfig);
+#endif // HAL_PTI_ENABLE
+
+#if !defined(RAIL_IC_SIM_BUILD)
+    initAntenna();
+
+    // Disable any unused peripherals to ensure we enter a low power mode
+    boardLowPowerInit();
+#endif
+
+#if RAIL_DMA_CHANNEL == DMA_CHANNEL_DMADRV
+    Ecode_t dmaError = DMADRV_Init();
+    if ((dmaError == ECODE_EMDRV_DMADRV_ALREADY_INITIALIZED) || (dmaError == ECODE_EMDRV_DMADRV_OK))
+    {
+        unsigned int channel;
+        dmaError = DMADRV_AllocateChannel(&channel, NULL);
+        if (dmaError == ECODE_EMDRV_DMADRV_OK)
+        {
+            RAIL_UseDma(channel);
+        }
+    }
+#elif defined(RAIL_DMA_CHANNEL) && (RAIL_DMA_CHANNEL != DMA_CHANNEL_INVALID)
+    LDMA_Init_t ldmaInit = LDMA_INIT_DEFAULT;
+    LDMA_Init(&ldmaInit);
+    RAIL_UseDma(RAIL_DMA_CHANNEL);
+#endif
+}
 
 otInstance *sInstance;
 static bool (*sCanSleepCallback)(void);
