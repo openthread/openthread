@@ -75,13 +75,19 @@ typedef struct efr32RadioCounters
     uint32_t mRailEventsSchedulerStatusLastStatus;
 } efr32RadioCounters;
 
+typedef struct efr32CommonConfig
+{
+    RAIL_Config_t mRailConfig;
+#if RADIO_CONFIG_DMP_SUPPORT
+    RAILSched_Config_t mRailSchedState;
+#endif
+    uint8_t
+        mRailTxFifo[RAIL_TX_FIFO_SIZE]; // must be 2 power between 64 and 4096, and bigger than OT_RADIO_FRAME_MAX_SIZE
+} efr32CommonConfig;
+
 typedef struct efr32BandConfig
 {
-    RAIL_Handle_t               mRailHandle;
-    RAIL_Config_t               mRailConfig;
-    RAILSched_Config_t          mmRailSchedState;
     const RAIL_ChannelConfig_t *mChannelConfig;
-    uint8_t                     mRailTxFifo[OT_RADIO_FRAME_MAX_SIZE + 1];
     uint8_t                     mChannelMin;
     uint8_t                     mChannelMax;
 } efr32BandConfig;

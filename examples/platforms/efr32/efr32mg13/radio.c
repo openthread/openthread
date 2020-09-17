@@ -38,7 +38,6 @@
 #include <assert.h>
 
 #include "openthread-system.h"
-#include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
@@ -58,6 +57,10 @@
 #include "rail.h"
 #include "rail_config.h"
 #include "rail_ieee802154.h"
+
+#ifdef SL_COMPONENT_CATALOG_PRESENT
+#include "sl_component_catalog.h"
+#endif // SL_COMPONENT_CATALOG_PRESENT
 
 enum
 {
@@ -209,6 +212,11 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
     handle = RAIL_Init(&aCommonConfig->mRailConfig, NULL);
     assert(handle != NULL);
 
+#if defined(SL_CATALOG_POWER_MANAGER_PRESENT)
+    status = RAIL_InitPowerManager();
+    assert(status == RAIL_STATUS_NO_ERROR);
+#endif // SL_CATALOG_POWER_MANAGER_PRESENT
+
     status = RAIL_ConfigCal(handle, RAIL_CAL_ALL);
     assert(status == RAIL_STATUS_NO_ERROR);
 
@@ -222,7 +230,7 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
                                    RAIL_EVENT_RSSI_AVERAGE_DONE |               //
                                    RAIL_EVENT_IEEE802154_DATA_REQUEST_COMMAND | //
                                    RAIL_EVENT_CAL_NEEDED |                      //
-#if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
+#if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT || RADIO_CONFIG_DMP_SUPPORT
                                    RAIL_EVENT_CONFIG_SCHEDULED |   //
                                    RAIL_EVENT_CONFIG_UNSCHEDULED | //
 #endif
@@ -230,8 +238,8 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
     );
     assert(status == RAIL_STATUS_NO_ERROR);
 
-    uint16_t actualLenth = RAIL_SetTxFifo(handle, aCommonConfig->mRailTxFifo, 0, sizeof(aCommonConfig->mRailTxFifo));
-    assert(actualLenth == sizeof(aCommonConfig->mRailTxFifo));
+    uint16_t actualLength = RAIL_SetTxFifo(handle, aCommonConfig->mRailTxFifo, 0, sizeof(aCommonConfig->mRailTxFifo));
+    assert(actualLength == sizeof(aCommonConfig->mRailTxFifo));
 
     return handle;
 }
@@ -240,9 +248,9 @@ static void efr32RailConfigLoad(efr32BandConfig *aBandConfig)
 {
     RAIL_Status_t status;
 #if HAL_PA_2P4_LOWPOWER == 1
-    RAIL_TxPowerConfig_t txPowerConfig = {RAIL_TX_POWER_MODE_2P4_LP, BSP_PA_VOLTAGE, 10};
+    RAIL_TxPowerConfig_t txPowerConfig = {RAIL_TX_POWER_MODE_2P4_LP, HAL_PA_VOLTAGE, 10};
 #else
-    RAIL_TxPowerConfig_t txPowerConfig = {RAIL_TX_POWER_MODE_2P4_HP, BSP_PA_VOLTAGE, 10};
+    RAIL_TxPowerConfig_t txPowerConfig = {RAIL_TX_POWER_MODE_2P4_HP, HAL_PA_VOLTAGE, 10};
 #endif
     if (aBandConfig->mChannelConfig != NULL)
     {
@@ -500,7 +508,8 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     otLogInfoPlat("State=OT_RADIO_STATE_SLEEP", NULL);
 
-    RAIL_Idle(gRailHandle, RAIL_IDLE, true);
+    RAIL_Idle(gRailHandle, RAIL_IDLE, true); // abort packages under reception
+    RAIL_YieldRadio(gRailHandle);
     sState = OT_RADIO_STATE_SLEEP;
 
 exit:
@@ -606,11 +615,11 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     // 4B preamble, 1B SFD, 1B PHR is not counted in frameLength
     if (RAIL_GetBitRate(gRailHandle) > 0)
     {
-        txSchedulerInfo.transactionTime = (frameLength + 4 + 1 + 1) * 8 * 1e6 / RAIL_GetBitRate(gRailHandle);
+        txSchedulerInfo.transactionTime += (frameLength + 4 + 1 + 1) * 8 * 1e6 / RAIL_GetBitRate(gRailHandle);
     }
     else
     { // assume 250kbps
-        txSchedulerInfo.transactionTime = (frameLength + 4 + 1 + 1) * RADIO_TIMING_DEFAULT_BYTETIME_US;
+        txSchedulerInfo.transactionTime += (frameLength + 4 + 1 + 1) * RADIO_TIMING_DEFAULT_BYTETIME_US;
     }
 #endif
 
@@ -642,6 +651,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 #if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
         sRailDebugCounters.mRailTxStartFailed++;
 #endif
+        // Tx started at an invalid time or an invalid paramter has been passed.
         sTransmitError = OT_ERROR_CHANNEL_ACCESS_FAILURE;
         sTransmitBusy  = false;
         otSysEventSignalPending();
@@ -795,6 +805,7 @@ static void processNextRxPacket(otInstance *aInstance)
     RAIL_RxPacketDetails_t packetDetails;
     RAIL_Status_t          status;
     uint16_t               length;
+    bool                   framePending = false;
 
     packetHandle = RAIL_GetRxPacketInfo(gRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST, &packetInfo);
 
@@ -869,8 +880,8 @@ static void processNextRxPacket(otInstance *aInstance)
         sReceiveFrame.mInfo.mRxInfo.mTimestamp = packetDetails.timeReceived.packetTime;
 
         // Set this flag only when the packet is really acknowledged with frame pending set.
-        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending =
-            wasAckedWithFramePending(sReceiveFrame.mPsdu, sReceiveFrame.mLength);
+        framePending = wasAckedWithFramePending(sReceiveFrame.mPsdu, sReceiveFrame.mLength);
+        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = framePending;
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
@@ -887,8 +898,11 @@ static void processNextRxPacket(otInstance *aInstance)
             sRailDebugCounters.mRailPlatRadioReceiveDoneCbCount++;
 #endif
         }
+        if (!framePending)
+        {
+            RAIL_YieldRadio(gRailHandle);
+        }
     }
-
     otSysEventSignalPending();
 
 exit:
@@ -1002,7 +1016,10 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
         RAIL_Status_t status;
 
         status = RAIL_Calibrate(aRailHandle, NULL, RAIL_CAL_ALL_PENDING);
+        // TODO: Non-RTOS DMP case fails
+#if (!defined(SL_CATALOG_BLUETOOTH_PRESENT) || defined(SL_CATALOG_KERNEL_PRESENT))
         assert(status == RAIL_STATUS_NO_ERROR);
+#endif
 
 #if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
         sRailDebugCounters.mRailEventCalNeeded++;
