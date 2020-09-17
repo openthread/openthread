@@ -117,7 +117,7 @@ PLATFORM_COMMON_SOURCES                                                       = 
     $(NULL)
 
 PLATFORM_SOURCES                                                              = \
-    efr32mg12/platform-efr32.h                                                  \
+    src/platform-efr32.h                                                        \
     efr32mg12/platform-band.h                                                   \
     efr32mg12/radio.c                                                           \
     efr32mg12/system.c                                                          \
@@ -125,7 +125,7 @@ PLATFORM_SOURCES                                                              = 
     $(NULL)
 
 noinst_HEADERS                                                                = \
-    efr32mg12/platform-efr32.h                                                  \
+    src/platform-efr32.h                                                        \
     efr32mg12/platform-band.h                                                   \
     $(NULL)
 
