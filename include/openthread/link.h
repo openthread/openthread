@@ -1019,7 +1019,8 @@ uint8_t otLinkCslGetChannel(otInstance *aInstance);
  * This function sets the CSL channel.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
- * @param[in]  aChannel       The CSL sample channel.
+ * @param[in]  aChannel       The CSL sample channel. Channel value should be `0` (Set CSL Channel unspecified) or
+ *                            within the range [1, 10] (if 915-MHz supported) and [11, 26] (if 2.4 GHz supported).
  *
  * @retval OT_ERROR_NONE           Successfully set the CSL parameters.
  * @retval OT_ERROR_INVALID_ARGS   Invalid @p aChannel.
