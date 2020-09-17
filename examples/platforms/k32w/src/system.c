@@ -39,7 +39,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-otInstance *sInstance;
+#include "MemManager.h"
+
+otInstance * sInstance;
+OT_TOOL_WEAK uint32_t gInterruptDisableCount = 0;
 
 void otSysInit(int argc, char *argv[])
 {
@@ -57,6 +60,7 @@ void otSysInit(int argc, char *argv[])
 
         BOARD_BootClockRUN();
         BOARD_InitPins();
+        MEM_Init();
     }
 
     K32WAlarmInit();
@@ -85,4 +89,39 @@ void otSysProcessDrivers(otInstance *aInstance)
 WEAK void otSysEventSignalPending(void)
 {
     /* Intentionally left empty */
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : OSA_InterruptEnable
+ * Description   : self explanatory.
+ *
+ *END**************************************************************************/
+OT_TOOL_WEAK void OSA_InterruptEnable(void)
+{
+    if (gInterruptDisableCount > 0)
+    {
+        gInterruptDisableCount--;
+
+        if (gInterruptDisableCount == 0)
+        {
+            __enable_irq();
+        }
+        /* call core API to enable the global interrupt*/
+    }
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : OSA_InterruptDisable
+ * Description   : self explanatory.
+ *
+ *END**************************************************************************/
+OT_TOOL_WEAK void OSA_InterruptDisable(void)
+{
+    /* call core API to disable the global interrupt*/
+    __disable_irq();
+
+    /* update counter*/
+    gInterruptDisableCount++;
 }

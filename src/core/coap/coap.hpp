@@ -568,7 +568,7 @@ private:
     void ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void    SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError SendEmptyMessage(Message::Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
+    otError SendEmptyMessage(Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
 
     otError Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -606,13 +606,14 @@ public:
     /**
      * This method starts the CoAP service.
      *
-     * @param[in]  aPort  The local UDP port to bind to.
+     * @param[in]  aPort             The local UDP port to bind to.
+     * @param[in]  aNetifIdentifier  The network interface identifier to bind.
      *
      * @retval OT_ERROR_NONE    Successfully started the CoAP service.
-     * @retval OT_ERROR_ALREADY Already started.
+     * @retval OT_ERROR_FAILED  Failed to start CoAP agent.
      *
      */
-    otError Start(uint16_t aPort);
+    otError Start(uint16_t aPort, otNetifIdentifier aNetifIdentifier = OT_NETIF_UNSPECIFIED);
 
     /**
      * This method stops the CoAP service.
@@ -623,12 +624,13 @@ public:
      */
     otError Stop(void);
 
+protected:
+    Ip6::Udp::Socket mSocket;
+
 private:
     static otError Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void    HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     otError        Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    Ip6::Udp::Socket mSocket;
 };
 
 } // namespace Coap

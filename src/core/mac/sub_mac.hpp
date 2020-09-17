@@ -305,12 +305,15 @@ public:
      * started, `mState` will become `kStateCslSample`. But it could be doing `Sleep` or `Receive` at this moment
      * (depending on `mCslState`).
      *
+     * @param[in]  aPanChannel  The current phy channel used by the device. This param will only take effect when CSL
+     *                          channel hasn't been explicitly specified.
+     *
      * @retval OT_ERROR_NONE          Successfully entered CSL operation (sleep or receive according to CSL timer).
      * @retval OT_ERROR_BUSY          The radio was transmitting.
      * @retval OT_ERROR_INVALID_STATE The radio was disabled.
      *
      */
-    otError CslSample(void);
+    otError CslSample(uint8_t aPanChannel);
 #endif
 
     /**
@@ -384,10 +387,24 @@ public:
     /**
      * This method sets the CSL channel.
      *
-     * @param[in]  aChannel  The CSL channel.
+     * @param[in]  aChannel  The CSL channel. `0` to set CSL Channel unspecified.
      *
      */
     void SetCslChannel(uint8_t aChannel);
+
+    /**
+     * This method indicates if CSL channel has been explicitly specified by the upper layer.
+     *
+     * @returns If CSL channel has been specified.
+     *
+     */
+    bool IsCslChannelSpecified(void) const { return mIsCslChannelSpecified; }
+
+    /**
+     * This method sets the flag representing if CSL channel has been specified.
+     *
+     */
+    void SetCslChannelSpecified(bool aIsSpecified) { mIsCslChannelSpecified = aIsSpecified; }
 
     /**
      * This method gets the CSL period.
@@ -520,6 +537,26 @@ private:
 #endif
     };
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    /**
+     * The SSED sample window in units of 10 symbols.
+     *
+     */
+    enum : uint32_t{
+        kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols,
+    };
+
+    /**
+     * CSL state, always updated by `mCslTimer`.
+     *
+     */
+    enum CslState : uint8_t{
+        kCslIdle = 0, ///< CSL receiver is not started.
+        kCslSample,   ///< Sampling CSL channel.
+        kCslSleep,    ///< Radio in sleep.
+    };
+#endif
+
     bool RadioSupportsCsmaBackoff(void) const
     {
         return ((mRadioCaps & (OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES)) != 0);
@@ -529,12 +566,14 @@ private:
     bool RadioSupportsRetries(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) != 0); }
     bool RadioSupportsAckTimeout(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) != 0); }
     bool RadioSupportsEnergyScan(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) != 0); }
+    bool RadioSupportsTransmitTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) != 0); }
 
     bool ShouldHandleTransmitSecurity(void) const;
     bool ShouldHandleCsmaBackOff(void) const;
     bool ShouldHandleAckTimeout(void) const;
     bool ShouldHandleRetries(void) const;
     bool ShouldHandleEnergyScan(void) const;
+    bool ShouldHandleTransmitTargetTime(void) const;
 
     void ProcessTransmitSecurity(void);
     void UpdateFrameCounter(uint32_t aFrameCounter);
@@ -545,6 +584,7 @@ private:
     void HandleReceiveDone(RxFrame *aFrame, otError aError);
     void HandleTransmitStarted(TxFrame &aFrame);
     void HandleTransmitDone(TxFrame &aTxFrame, RxFrame *aAckFrame, otError aError);
+    void UpdateFrameCounterOnTxDone(const TxFrame &aFrame);
     void HandleEnergyScanDone(int8_t aMaxRssi);
 
     static void HandleTimer(Timer &aTimer);
@@ -552,6 +592,9 @@ private:
 
     void               SetState(State aState);
     static const char *StateToString(State aState);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    static const char *CslStateToString(CslState aCslState);
+#endif
 
     otRadioCaps        mRadioCaps;
     State              mState;
@@ -578,28 +621,13 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    /**
-     * The SSED sample window in units of 10 symbols.
-     *
-     */
-    enum : uint32_t{
-        kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols,
-    };
-
-    /**
-     * CSL state, always updated by `mCslTimer`.
-     *
-     */
-    enum CslState : uint8_t{
-        kCslIdle = 0, ///< CSL receiver is not started.
-        kCslSample,   ///< Sampling CSL channel.
-        kCslSleep,    ///< Radio in sleep.
-    };
-
-    uint32_t  mCslTimeout;    ///< The CSL synchronized timeout in seconds.
-    TimeMicro mCslSampleTime; ///< The CSL sample time of the current period.
-    uint16_t  mCslPeriod;     ///< The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t   mCslChannel;    ///< The CSL sample channel.
+    uint32_t  mCslTimeout;     ///< The CSL synchronized timeout in seconds.
+    TimeMicro mCslSampleTime;  ///< The CSL sample time of the current period.
+    uint16_t  mCslPeriod;      ///< The CSL sample period, in units of 10 symbols (160 microseconds).
+    uint8_t   mCslChannel : 7; ///< The actually CSL sample channel. If `mIsCslChannelSpecified` is 0, this should be
+                               ///< equal to the Pan channel of `Mac`.
+    uint8_t mIsCslChannelSpecified : 1; ///< Indicates whether or not the CSL channel was explicitly specified by
+                                        ///< the user.
 
     CslState mCslState;
 

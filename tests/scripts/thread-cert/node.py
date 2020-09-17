@@ -40,7 +40,7 @@ import time
 import unittest
 import binascii
 
-from typing import Union
+from typing import Union, Dict
 
 
 class Node:
@@ -281,6 +281,37 @@ class Node:
 
         return results
 
+    def _expect_command_output(self, cmd: str):
+        lines = []
+        cmd_output_started = False
+
+        while True:
+            self._expect(r"[^\n]+")
+            line = self.pexpect.match.group(0).decode('utf8').strip()
+
+            if line.startswith('> '):
+                line = line[2:]
+
+            if line == '':
+                continue
+
+            if line == cmd:
+                cmd_output_started = True
+                continue
+
+            if not cmd_output_started:
+                continue
+
+            if line == 'Done':
+                break
+            elif line.startswith('Error '):
+                raise Exception(line)
+            else:
+                lines.append(line)
+
+        print(f'_expect_command_output({cmd!r}) returns {lines!r}')
+        return lines
+
     def __init_soc(self, nodeid):
         """ Initialize a System-on-a-chip node connected via UART. """
         import fdpexpect
@@ -413,22 +444,22 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def clear_whitelist(self):
+    def clear_allowlist(self):
         cmd = 'macfilter addr clear'
         self.send_command(cmd)
         self._expect('Done')
 
-    def enable_whitelist(self):
-        cmd = 'macfilter addr whitelist'
+    def enable_allowlist(self):
+        cmd = 'macfilter addr allowlist'
         self.send_command(cmd)
         self._expect('Done')
 
-    def disable_whitelist(self):
+    def disable_allowlist(self):
         cmd = 'macfilter addr disable'
         self.send_command(cmd)
         self._expect('Done')
 
-    def add_whitelist(self, addr, rssi=None):
+    def add_allowlist(self, addr, rssi=None):
         cmd = 'macfilter addr add %s' % addr
 
         if rssi is not None:
@@ -530,7 +561,7 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def multicast_listener_list(self):
+    def multicast_listener_list(self) -> Dict[ipaddress.IPv6Address, int]:
         cmd = 'bbr mgmt mlr listener'
         self.send_command(cmd)
 
@@ -559,12 +590,35 @@ class Node:
         self.send_command(cmd)
         self._expect(r"(Done|Error .*)")
 
+    def set_next_mlr_response(self, status: int):
+        cmd = 'bbr mgmt mlr response {}'.format(status)
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def register_multicast_listener(self, *ipaddrs: Union[ipaddress.IPv6Address, str], timeout=None):
+        assert len(ipaddrs) > 0, ipaddrs
+
+        cmd = f'mlr reg {" ".join(ipaddrs)}'
+        if timeout is not None:
+            cmd += f' {int(timeout)}'
+        self.send_command(cmd)
+        self.simulator.go(3)
+        lines = self._expect_command_output(cmd)
+        m = re.match(r'status (\d+), (\d+) failed', lines[0])
+        assert m is not None, lines
+        status = int(m.group(1))
+        failed_num = int(m.group(2))
+        assert failed_num == len(lines) - 1
+        failed_ips = list(map(ipaddress.IPv6Address, lines[1:]))
+        print(f"register_multicast_listener {ipaddrs} => status: {status}, failed ips: {failed_ips}")
+        return status, failed_ips
+
     def set_link_quality(self, addr, lqi):
         cmd = 'macfilter rss add-lqi %s %s' % (addr, lqi)
         self.send_command(cmd)
         self._expect('Done')
 
-    def remove_whitelist(self, addr):
+    def remove_allowlist(self, addr):
         cmd = 'macfilter addr remove %s' % addr
         self.send_command(cmd)
         self._expect('Done')
@@ -716,6 +770,10 @@ class Node:
         cmd = 'routerdowngradethreshold %d' % threshold
         self.send_command(cmd)
         self._expect('Done')
+
+    def get_router_downgrade_threshold(self) -> int:
+        self.send_command('routerdowngradethreshold')
+        return int(self._expect_result(r'\d+'))
 
     def prefer_router_id(self, router_id):
         cmd = 'preferrouterid %d' % router_id
@@ -949,8 +1007,11 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def add_route(self, prefix, prf='med'):
-        cmd = 'route add %s %s' % (prefix, prf)
+    def add_route(self, prefix, stable=False, prf='med'):
+        cmd = 'route add %s ' % prefix
+        if stable:
+            cmd += 's'
+        cmd += ' %s' % prf
         self.send_command(cmd)
         self._expect('Done')
 

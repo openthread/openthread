@@ -658,7 +658,7 @@ void Mac::UpdateIdleMode(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (IsCslEnabled())
         {
-            IgnoreError(mSubMac.CslSample());
+            IgnoreError(mSubMac.CslSample(mRadioChannel));
             ExitNow();
         }
 #endif
@@ -2269,6 +2269,7 @@ void Mac::SetCslChannel(uint8_t aChannel)
     VerifyOrExit(GetCslChannel() != aChannel, OT_NOOP);
 
     mSubMac.SetCslChannel(aChannel);
+    mSubMac.SetCslChannelSpecified(aChannel != 0 ? true : false);
 
     if (IsCslEnabled())
     {
@@ -2281,10 +2282,10 @@ exit:
 void Mac::SetCslPeriod(uint16_t aPeriod)
 {
     mSubMac.SetCslPeriod(aPeriod);
-    IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), &Get<Mle::Mle>().GetParent().GetExtAddress()));
 
     if (IsCslEnabled())
     {
+        IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), &Get<Mle::Mle>().GetParent().GetExtAddress()));
         Get<Mle::Mle>().ScheduleChildUpdateRequest();
     }
 

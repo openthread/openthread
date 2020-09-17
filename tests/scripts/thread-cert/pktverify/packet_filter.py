@@ -395,6 +395,16 @@ class PacketFilter(object):
         """
         return self.filter(attrgetter('wpan'), **kwargs)
 
+    def filter_wpan_version(self, version: int, **kwargs):
+        """
+        Create a new PacketFilter for filter WPAN packets of a given version.
+
+        :param version: The version to filter.
+        :param kwargs: Extra arguments for `filter`.
+        :return: The new PacketFilter to filter WPAN packets.
+        """
+        return self.filter(lambda p: p.wpan.version == version, **kwargs)
+
     def filter_wpan_channel(self, channel: int, **kwargs):
         """
         Create a new PacketFilter for filter WPAN packets of a given channel.

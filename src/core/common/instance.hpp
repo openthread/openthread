@@ -59,9 +59,9 @@
 #include "mac/link_raw.hpp"
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
-#include "coap/coap.hpp"
 #include "common/code_utils.hpp"
 #include "crypto/mbedtls.hpp"
+#include "thread/tmf.hpp"
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 #include "utils/heap.hpp"
 #endif
@@ -608,9 +608,9 @@ template <> inline Ip6::Mpl &Instance::Get(void)
     return mIp6.mMpl;
 }
 
-template <> inline Coap::Coap &Instance::Get(void)
+template <> inline Tmf::TmfAgent &Instance::Get(void)
 {
-    return mThreadNetif.mCoap;
+    return mThreadNetif.mTmfAgent;
 }
 
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
@@ -762,6 +762,16 @@ template <> inline BackboneRouter::Manager &Instance::Get(void)
 template <> inline BackboneRouter::MulticastListenersTable &Instance::Get(void)
 {
     return mThreadNetif.mBackboneRouterManager.GetMulticastListenersTable();
+}
+
+template <> inline BackboneRouter::NdProxyTable &Instance::Get(void)
+{
+    return mThreadNetif.mBackboneRouterManager.GetNdProxyTable();
+}
+
+template <> inline BackboneRouter::BackboneTmfAgent &Instance::Get(void)
+{
+    return mThreadNetif.mBackboneRouterManager.GetBackboneTmfAgent();
 }
 #endif
 

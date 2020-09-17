@@ -173,6 +173,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE
+ *
+ * Define to 1 to enable software transmission target time logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE
+#define OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
  *
  * Define to 1 if you want to support microsecond timer in platform.

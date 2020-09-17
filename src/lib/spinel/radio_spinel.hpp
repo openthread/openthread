@@ -669,6 +669,14 @@ public:
      */
     uint64_t GetNow(void);
 
+    /**
+     * This method returns the bus speed between the host and the radio.
+     *
+     * @returns   bus speed in bits/second.
+     *
+     */
+    uint32_t GetBusSpeed(void) const;
+
 private:
     enum
     {

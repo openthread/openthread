@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -29,32 +29,34 @@
 
 import unittest
 
-import config
 import thread_cert
+from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_CHILD_UPDATE_REQUEST, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, TLV_REQUEST_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ED = 2
 
 
-class Cert_6_5_1_ChildResetSynchronize(thread_cert.TestCase):
+class Cert_6_5_1_ChildResetReattach(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ED]
+            'allowlist': [ED]
         },
         ED: {
+            'name': 'ED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 
     def _setUpEd(self):
-        self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED].enable_whitelist()
+        self.nodes[ED].add_allowlist(self.nodes[LEADER].get_addr64())
+        self.nodes[ED].enable_allowlist()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -65,20 +67,16 @@ class Cert_6_5_1_ChildResetSynchronize(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
-        self.nodes[ED].reset()
-        self._setUpEd()
-        self.simulator.go(5)
-
-        self.nodes[ED].set_timeout(100)
-        self.nodes[ED].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[ED].get_state(), 'child')
+        self.nodes[LEADER].remove_allowlist(self.nodes[ED].get_addr64())
+        self.nodes[ED].remove_allowlist(self.nodes[LEADER].get_addr64())
 
         self.nodes[ED].reset()
         self._setUpEd()
         self.simulator.go(5)
-        self.nodes[ED].set_timeout(100)
         self.nodes[ED].start()
+
+        self.simulator.go(5)
+        self.nodes[LEADER].add_allowlist(self.nodes[ED].get_addr64())
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
@@ -86,6 +84,31 @@ class Cert_6_5_1_ChildResetSynchronize(thread_cert.TestCase):
         for addr in addrs:
             if addr[0:4] == 'fe80':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        ED = pv.vars['ED']
+        _ed_pkts = pkts.filter_wpan_src64(ED)
+
+        # Step 2: Reset the DUT for a time greater than
+        # the Child Timeout Duration.
+        # Step 3: Send MLE Child Update Request to Leader
+        _ed_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()
+        _ed_pkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
+            lambda p: {MODE_TLV} < set(p.mle.tlv.type))
+
+        # Step 5: DUT reattaches to Leader
+        _ed_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(
+            lambda p: {
+                RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV,
+                ADDRESS_REGISTRATION_TLV, TLV_REQUEST_TLV
+            } <= set(p.mle.tlv.type))
+
+        # Step 6: The DUT MUST respond with ICMPv6 Echo Reply
+        _ed_pkts.filter_ping_reply().filter(lambda p: p.wpan.src64 == ED and p.wpan.dst64 == LEADER).must_next()
 
 
 if __name__ == '__main__':

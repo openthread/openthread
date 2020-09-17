@@ -403,7 +403,7 @@ otError otPlatDiagProcess(otInstance *aInstance,
     char *cur                                              = cmd;
     char *end                                              = cmd + sizeof(cmd);
 
-    for (uint8_t index = 0; index < aArgsLength; index++)
+    for (uint8_t index = 0; (index < aArgsLength) && (cur < end); index++)
     {
         cur += snprintf(cur, static_cast<size_t>(end - cur), "%s ", aArgs[index]);
     }
@@ -507,4 +507,10 @@ uint64_t otPlatRadioGetNow(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.GetNow();
+}
+
+uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetBusSpeed();
 }

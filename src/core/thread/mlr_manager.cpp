@@ -41,16 +41,23 @@
 #include "common/logging.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 #include "utils/slaac_address.hpp"
 
 namespace ot {
 
 MlrManager::MlrManager(Instance &aInstance)
     : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+    , mRegisterMulticastListenersCallback(nullptr)
+    , mRegisterMulticastListenersContext(nullptr)
+#endif
     , mReregistrationDelay(0)
     , mSendDelay(0)
     , mMlrPending(false)
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+    , mRegisterMulticastListenersPending(false)
+#endif
 {
 }
 
@@ -218,13 +225,10 @@ void MlrManager::UpdateTimeTickerRegistration(void)
 
 void MlrManager::SendMulticastListenerRegistration(void)
 {
-    otError          error   = OT_ERROR_NONE;
-    Mle::MleRouter & mle     = Get<Mle::MleRouter>();
-    Coap::Message *  message = nullptr;
-    Ip6::MessageInfo messageInfo;
-    IPv6AddressesTlv addressesTlv;
-    Ip6::Address     addresses[kIPv6AddressesNumMax];
-    uint8_t          addressesNum = 0;
+    otError         error;
+    Mle::MleRouter &mle = Get<Mle::MleRouter>();
+    Ip6::Address    addresses[kIPv6AddressesNumMax];
+    uint8_t         addressesNum = 0;
 
     VerifyOrExit(!mMlrPending, error = OT_ERROR_BUSY);
     VerifyOrExit(mle.IsAttached(), error = OT_ERROR_INVALID_STATE);
@@ -280,18 +284,140 @@ void MlrManager::SendMulticastListenerRegistration(void)
 #endif
 
     VerifyOrExit(addressesNum > 0, error = OT_ERROR_NOT_FOUND);
+    SuccessOrExit(
+        error = SendMulticastListenerRegistrationMessage(
+            addresses, addressesNum, nullptr, &MlrManager::HandleMulticastListenerRegistrationResponse, this));
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    mMlrPending = true;
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
+    // TODO: not enable fast polls for SSED
+    if (!Get<Mle::Mle>().IsRxOnWhenIdle())
+    {
+        Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
+    }
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        SetMulticastAddressMlrState(kMlrStateRegistering, kMlrStateToRegister);
+
+        if (error == OT_ERROR_NO_BUFS)
+        {
+            ScheduleSend(1);
+        }
+    }
+
+    LogMulticastAddresses();
+    CheckInvariants();
+}
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+otError MlrManager::RegisterMulticastListeners(const otIp6Address *                    aAddresses,
+                                               uint8_t                                 aAddressNum,
+                                               const uint32_t *                        aTimeout,
+                                               otIp6RegisterMulticastListenersCallback aCallback,
+                                               void *                                  aContext)
+{
+    otError error;
+
+    VerifyOrExit(aAddresses != nullptr, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aAddressNum > 0 && aAddressNum <= kIPv6AddressesNumMax, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aContext == nullptr || aCallback != nullptr, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
+
+    // Only allow one outstanding registration if callback is specified.
+    VerifyOrExit(!mRegisterMulticastListenersPending, error = OT_ERROR_BUSY);
+
+    SuccessOrExit(error = SendMulticastListenerRegistrationMessage(
+                      aAddresses, aAddressNum, aTimeout, &MlrManager::HandleRegisterMulticastListenersResponse, this));
+
+    mRegisterMulticastListenersPending  = true;
+    mRegisterMulticastListenersCallback = aCallback;
+    mRegisterMulticastListenersContext  = aContext;
+
+exit:
+    return error;
+}
+
+void MlrManager::HandleRegisterMulticastListenersResponse(void *               aContext,
+                                                          otMessage *          aMessage,
+                                                          const otMessageInfo *aMessageInfo,
+                                                          otError              aResult)
+{
+    static_cast<MlrManager *>(aContext)->HandleRegisterMulticastListenersResponse(
+        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+}
+
+void MlrManager::HandleRegisterMulticastListenersResponse(otMessage *          aMessage,
+                                                          const otMessageInfo *aMessageInfo,
+                                                          otError              aResult)
+{
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    uint8_t                                 status;
+    otError                                 error;
+    Ip6::Address                            failedAddresses[kIPv6AddressesNumMax];
+    uint8_t                                 failedAddressNum = 0;
+    otIp6RegisterMulticastListenersCallback callback         = mRegisterMulticastListenersCallback;
+    void *                                  context          = mRegisterMulticastListenersContext;
+
+    mRegisterMulticastListenersPending  = false;
+    mRegisterMulticastListenersCallback = nullptr;
+    mRegisterMulticastListenersContext  = nullptr;
+
+    error = ParseMulticastListenerRegistrationResponse(aResult, static_cast<Coap::Message *>(aMessage), status,
+                                                       failedAddresses, failedAddressNum);
+
+    if (callback != nullptr)
+    {
+        callback(context, error, status, failedAddresses, failedAddressNum);
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+
+otError MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address *  aAddresses,
+                                                             uint8_t               aAddressNum,
+                                                             const uint32_t *      aTimeout,
+                                                             Coap::ResponseHandler aResponseHandler,
+                                                             void *                aResponseContext)
+{
+    OT_UNUSED_VARIABLE(aTimeout);
+
+    otError          error   = OT_ERROR_NONE;
+    Mle::MleRouter & mle     = Get<Mle::MleRouter>();
+    Coap::Message *  message = nullptr;
+    Ip6::MessageInfo messageInfo;
+    IPv6AddressesTlv addressesTlv;
+
+    VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = OT_ERROR_INVALID_STATE);
+
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+
+    message->InitAsConfirmablePost();
     SuccessOrExit(message->SetToken(Coap::Message::kDefaultTokenLength));
-    SuccessOrExit(message->AppendUriPathOptions(OT_URI_PATH_MLR));
+    SuccessOrExit(message->AppendUriPathOptions(UriPath::kMlr));
     SuccessOrExit(message->SetPayloadMarker());
 
     addressesTlv.Init();
-    addressesTlv.SetLength(sizeof(Ip6::Address) * addressesNum);
+    addressesTlv.SetLength(sizeof(Ip6::Address) * aAddressNum);
     SuccessOrExit(error = message->Append(&addressesTlv, sizeof(addressesTlv)));
-    SuccessOrExit(error = message->Append(&addresses, sizeof(Ip6::Address) * addressesNum));
+    SuccessOrExit(error = message->Append(aAddresses, sizeof(Ip6::Address) * aAddressNum));
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+    if (Get<MeshCoP::Commissioner>().IsActive())
+    {
+        SuccessOrExit(error = ThreadTlv::AppendUint16Tlv(*message, ThreadTlv::kCommissionerSessionId,
+                                                         Get<MeshCoP::Commissioner>().GetSessionId()));
+    }
+
+    if (aTimeout != nullptr)
+    {
+        SuccessOrExit(error = Tlv::AppendUint32Tlv(*message, ThreadTlv::kTimeout, *aTimeout));
+    }
+#else
+    OT_ASSERT(aTimeout == nullptr);
+#endif
 
     if (!mle.IsFullThreadDevice() && mle.GetParent().IsThreadVersion1p1())
     {
@@ -306,39 +432,29 @@ void MlrManager::SendMulticastListenerRegistration(void)
                                                       Get<BackboneRouter::Leader>().GetServer16());
     }
 
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
     messageInfo.SetSockAddr(mle.GetMeshLocal16());
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(
-                      *message, messageInfo, &MlrManager::HandleMulticastListenerRegistrationResponse, this));
-
-    mMlrPending = true;
-
-    // TODO: not enable fast polls for SSED
-    if (!Get<Mle::Mle>().IsRxOnWhenIdle())
-    {
-        Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
-    }
+    error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, aResponseHandler, aResponseContext);
 
 exit:
-    if (error != OT_ERROR_NONE)
+    otLogInfoMlr("Send MLR.req: %s, addressNum=%d", otThreadErrorToString(error), aAddressNum);
+
+    if (error != OT_ERROR_NONE && message != nullptr)
     {
-        if (message != nullptr)
-        {
-            message->Free();
-        }
-
-        SetMulticastAddressMlrState(kMlrStateRegistering, kMlrStateToRegister);
-
-        if (error == OT_ERROR_NO_BUFS)
-        {
-            ScheduleSend(1);
-        }
+        message->Free();
     }
 
-    otLogInfoMlr("Send MLR.req: %s", otThreadErrorToString(error));
-    LogMulticastAddresses();
-    CheckInvariants();
+    return error;
+}
+
+void MlrManager::HandleMulticastListenerRegistrationResponse(void *               aContext,
+                                                             otMessage *          aMessage,
+                                                             const otMessageInfo *aMessageInfo,
+                                                             otError              aResult)
+{
+    static_cast<MlrManager *>(aContext)->HandleMulticastListenerRegistrationResponse(
+        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
 void MlrManager::HandleMulticastListenerRegistrationResponse(Coap::Message *         aMessage,
@@ -347,35 +463,12 @@ void MlrManager::HandleMulticastListenerRegistrationResponse(Coap::Message *    
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    uint8_t      status = ThreadStatusTlv::MlrStatus::kMlrGeneralFailure;
-    otError      error  = OT_ERROR_NONE;
-    uint16_t     addressesOffset, addressesLength;
+    uint8_t      status;
+    otError      error;
     Ip6::Address failedAddresses[kIPv6AddressesNumMax];
     uint8_t      failedAddressNum = 0;
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage != nullptr, error = OT_ERROR_PARSE);
-    VerifyOrExit(aMessage->GetCode() == OT_COAP_CODE_CHANGED, error = OT_ERROR_PARSE);
-
-    SuccessOrExit(error = Tlv::FindUint8Tlv(*aMessage, ThreadTlv::kStatus, status));
-
-    if (ThreadTlv::FindTlvValueOffset(*aMessage, IPv6AddressesTlv::kIPv6Addresses, addressesOffset, addressesLength) ==
-        OT_ERROR_NONE)
-    {
-        VerifyOrExit(addressesLength % sizeof(Ip6::Address) == 0, error = OT_ERROR_PARSE);
-        VerifyOrExit(addressesLength / sizeof(Ip6::Address) <= kIPv6AddressesNumMax, error = OT_ERROR_PARSE);
-
-        for (uint16_t offset = 0; offset < addressesLength; offset += sizeof(Ip6::Address))
-        {
-            IgnoreReturnValue(
-                aMessage->Read(addressesOffset + offset, sizeof(Ip6::Address), &failedAddresses[failedAddressNum]));
-            failedAddressNum++;
-        }
-    }
-
-    VerifyOrExit(failedAddressNum == 0 || status != ThreadStatusTlv::MlrStatus::kMlrSuccess, error = OT_ERROR_PARSE);
-
-exit:
-    LogMlrResponse(aResult, error, status, failedAddresses, failedAddressNum);
+    error = ParseMulticastListenerRegistrationResponse(aResult, aMessage, status, failedAddresses, failedAddressNum);
 
     FinishMulticastListenerRegistration(error == OT_ERROR_NONE && status == ThreadStatusTlv::MlrStatus::kMlrSuccess,
                                         failedAddresses, failedAddressNum);
@@ -401,6 +494,43 @@ exit:
             ScheduleSend(reregDelay);
         }
     }
+}
+
+otError MlrManager::ParseMulticastListenerRegistrationResponse(otError        aResult,
+                                                               Coap::Message *aMessage,
+                                                               uint8_t &      aStatus,
+                                                               Ip6::Address * aFailedAddresses,
+                                                               uint8_t &      aFailedAddressNum)
+{
+    otError  error;
+    uint16_t addressesOffset, addressesLength;
+
+    aStatus = ThreadStatusTlv::MlrStatus::kMlrGeneralFailure;
+
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage != nullptr, error = OT_ERROR_PARSE);
+    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, error = OT_ERROR_PARSE);
+
+    SuccessOrExit(error = Tlv::FindUint8Tlv(*aMessage, ThreadTlv::kStatus, aStatus));
+
+    if (ThreadTlv::FindTlvValueOffset(*aMessage, IPv6AddressesTlv::kIPv6Addresses, addressesOffset, addressesLength) ==
+        OT_ERROR_NONE)
+    {
+        VerifyOrExit(addressesLength % sizeof(Ip6::Address) == 0, error = OT_ERROR_PARSE);
+        VerifyOrExit(addressesLength / sizeof(Ip6::Address) <= kIPv6AddressesNumMax, error = OT_ERROR_PARSE);
+
+        for (uint16_t offset = 0; offset < addressesLength; offset += sizeof(Ip6::Address))
+        {
+            IgnoreReturnValue(
+                aMessage->Read(addressesOffset + offset, sizeof(Ip6::Address), &aFailedAddresses[aFailedAddressNum]));
+            aFailedAddressNum++;
+        }
+    }
+
+    VerifyOrExit(aFailedAddressNum == 0 || aStatus != ThreadStatusTlv::MlrStatus::kMlrSuccess, error = OT_ERROR_PARSE);
+
+exit:
+    LogMlrResponse(aResult, error, aStatus, aFailedAddresses, aFailedAddressNum);
+    return aResult != OT_ERROR_NONE ? aResult : error;
 }
 
 void MlrManager::SetMulticastAddressMlrState(MlrState aFromState, MlrState aToState)
@@ -485,6 +615,8 @@ void MlrManager::HandleTimeTick(void)
 
 void MlrManager::Reregister(void)
 {
+    otLogInfoMlr("MLR Reregister!");
+
     SetMulticastAddressMlrState(kMlrStateRegistered, kMlrStateToRegister);
     CheckInvariants();
 

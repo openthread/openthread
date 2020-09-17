@@ -57,7 +57,7 @@ class Test_Service(thread_cert.TestCase):
             'mode': 'rsdn',
             'network_name': 'OpenThread',
             'panid': 0xface,
-            'whitelist': [ROUTER1, ROUTER2]
+            'allowlist': [ROUTER1, ROUTER2]
         },
         ROUTER1: {
             'channel': 12,
@@ -65,7 +65,7 @@ class Test_Service(thread_cert.TestCase):
             'network_name': 'OpenThread',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ROUTER2]
+            'allowlist': [LEADER, ROUTER2]
         },
         ROUTER2: {
             'channel': 12,
@@ -73,7 +73,7 @@ class Test_Service(thread_cert.TestCase):
             'network_name': 'OpenThread',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ROUTER1]
+            'allowlist': [LEADER, ROUTER1]
         },
     }
 

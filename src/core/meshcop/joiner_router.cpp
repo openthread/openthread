@@ -46,7 +46,7 @@
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/mle.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -56,12 +56,12 @@ namespace MeshCoP {
 JoinerRouter::JoinerRouter(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance)
-    , mRelayTransmit(OT_URI_PATH_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this)
+    , mRelayTransmit(UriPath::kRelayTx, &JoinerRouter::HandleRelayTransmit, this)
     , mTimer(aInstance, JoinerRouter::HandleTimer, this)
     , mJoinerUdpPort(0)
     , mIsJoinerPortConfigured(false)
 {
-    Get<Coap::Coap>().AddResource(mRelayTransmit);
+    Get<Tmf::TmfAgent>().AddResource(mRelayTransmit);
 }
 
 void JoinerRouter::HandleNotifierEvents(Events aEvents)
@@ -143,9 +143,9 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     SuccessOrExit(error = GetBorderAgentRloc(Get<ThreadNetif>(), borderAgentRloc));
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_RELAY_RX));
+    SuccessOrExit(error = message->InitAsNonConfirmablePost(UriPath::kRelayRx));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kJoinerUdpPort, aMessageInfo.GetPeerPort()));
@@ -163,9 +163,9 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.GetPeerAddr().GetIid().SetLocator(borderAgentRloc);
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("Sent relay rx");
 
@@ -197,7 +197,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
     Message::Settings        settings(Message::kNoLinkSecurity, Message::kPriorityNet);
     Ip6::MessageInfo         messageInfo;
 
-    VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
+    VerifyOrExit(aMessage.IsNonConfirmablePostRequest(), error = OT_ERROR_DROP);
 
     otLogInfoMeshCoP("Received relay transmit");
 
@@ -239,7 +239,7 @@ void JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInf
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
     metadata.mMessageInfo = aMessageInfo;
-    metadata.mMessageInfo.SetPeerPort(kCoapUdpPort);
+    metadata.mMessageInfo.SetPeerPort(Tmf::kUdpPort);
     metadata.mSendTime = TimerMilli::GetNow() + kJoinerEntrustTxDelay;
     metadata.mKek      = aKek;
 
@@ -314,11 +314,11 @@ otError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo)
     message = PrepareJoinerEntrustMessage();
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
-    IgnoreError(Get<Coap::Coap>().AbortTransaction(&JoinerRouter::HandleJoinerEntrustResponse, this));
+    IgnoreError(Get<Tmf::TmfAgent>().AbortTransaction(&JoinerRouter::HandleJoinerEntrustResponse, this));
 
     otLogInfoMeshCoP("Sending JOIN_ENT.ntf");
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo,
-                                                        &JoinerRouter::HandleJoinerEntrustResponse, this));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo,
+                                                           &JoinerRouter::HandleJoinerEntrustResponse, this));
 
     otLogInfoMeshCoP("Sent joiner entrust length = %d", message->GetLength());
     otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.ntf");
@@ -341,10 +341,10 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     NetworkNameTlv networkName;
     const Tlv *    tlv;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_JOINER_ENTRUST));
+    message->InitAsConfirmablePost();
+    SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kJoinerEntrust));
     SuccessOrExit(error = message->SetPayloadMarker());
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
@@ -440,7 +440,7 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message *         aMessage,
 
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage != nullptr, OT_NOOP);
 
-    VerifyOrExit(aMessage->GetCode() == OT_COAP_CODE_CHANGED, OT_NOOP);
+    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, OT_NOOP);
 
     otLogInfoMeshCoP("Receive joiner entrust response");
     otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.rsp");

@@ -388,11 +388,11 @@ class OpenThread_WpanCtl(IThci):
         """
         print('call setAddressFilterMode() %s' % mode)
         try:
-            if mode in ('whitelist', 'blacklist'):
+            if mode in ('allowlist', 'denylist'):
                 cmd = self.wpan_cmd_prefix + 'setprop MAC:' + mode.capitalize() + ':Enabled 1'
             elif mode == 'disable':
                 if self._addressfilterMode != 'disable':
-                    assert self._addressfilterMode in ('whitelist', 'blacklist'), self._addressfilterMode
+                    assert self._addressfilterMode in ('allowlist', 'denylist'), self._addressfilterMode
                     cmd = self.wpan_cmd_prefix + 'setprop MAC:' + self._addressfilterMode.capitalize() + ':Enabled 0'
                 else:
                     return True
@@ -416,15 +416,15 @@ class OpenThread_WpanCtl(IThci):
         print('call startOpenThreadWpan')
         try:
 
-            # restore whitelist/blacklist address filter mode if rejoin after
+            # restore allowlist/denylist address filter mode if rejoin after
             # reset
             if self.isPowerDown:
-                if self._addressfilterMode == 'whitelist':
-                    if self.__setAddressfilterMode('whitelist'):
+                if self._addressfilterMode == 'allowlist':
+                    if self.__setAddressfilterMode('allowlist'):
                         for addr in self._addressfilterSet:
                             self.addAllowMAC(addr)
-                elif self._addressfilterMode == 'blacklist':
-                    if self.__setAddressfilterMode('blacklist'):
+                elif self._addressfilterMode == 'denylist':
+                    if self.__setAddressfilterMode('denylist'):
                         for addr in self._addressfilterSet:
                             self.addBlockedMAC(addr)
             time.sleep(1)
@@ -1021,14 +1021,14 @@ class OpenThread_WpanCtl(IThci):
             ModuleHelper.WriteIntoDebugLogger('setNetworkkey() Error: ' + str(e))
 
     def addBlockedMAC(self, xEUI):
-        """add a given extended address to the blacklist entry
+        """add a given extended address to the denylist entry
 
         Args:
             xEUI: extended address in hex format
 
         Returns:
-            True: successful to add a given extended address to the blacklist entry
-            False: fail to add a given extended address to the blacklist entry
+            True: successful to add a given extended address to the denylist entry
+            False: fail to add a given extended address to the denylist entry
         """
         print('%s call addBlockedMAC' % self.port)
         print(xEUI)
@@ -1043,14 +1043,14 @@ class OpenThread_WpanCtl(IThci):
                 print('block device itself')
                 return True
 
-            if self._addressfilterMode != 'blacklist':
-                self.__setAddressfilterMode('blacklist')
+            if self._addressfilterMode != 'denylist':
+                self.__setAddressfilterMode('denylist')
 
-            cmd = self.wpan_cmd_prefix + 'insert MAC:Blacklist:Entries %s' % macAddr
+            cmd = self.wpan_cmd_prefix + 'insert MAC:Denylist:Entries %s' % macAddr
             ret = self.__sendCommand(cmd)[0] != 'Fail'
 
             self._addressfilterSet.add(macAddr)
-            print('current blacklist entries:')
+            print('current denylist entries:')
             for addr in self._addressfilterSet:
                 print(addr)
 
@@ -1059,14 +1059,14 @@ class OpenThread_WpanCtl(IThci):
             ModuleHelper.WriteIntoDebugLogger('addBlockedMAC() Error: ' + str(e))
 
     def addAllowMAC(self, xEUI):
-        """add a given extended address to the whitelist addressfilter
+        """add a given extended address to the allowlist addressfilter
 
         Args:
             xEUI: a given extended address in hex format
 
         Returns:
-            True: successful to add a given extended address to the whitelist entry
-            False: fail to add a given extended address to the whitelist entry
+            True: successful to add a given extended address to the allowlist entry
+            False: fail to add a given extended address to the allowlist entry
         """
         print('%s call addAllowMAC' % self.port)
         print(xEUI)
@@ -1076,14 +1076,14 @@ class OpenThread_WpanCtl(IThci):
             macAddr = self.__convertLongToHex(xEUI)
 
         try:
-            if self._addressfilterMode != 'whitelist':
-                self.__setAddressfilterMode('whitelist')
+            if self._addressfilterMode != 'allowlist':
+                self.__setAddressfilterMode('allowlist')
 
-            cmd = self.wpan_cmd_prefix + 'insert MAC:Whitelist:Entries %s' % macAddr
+            cmd = self.wpan_cmd_prefix + 'insert MAC:Allowlist:Entries %s' % macAddr
             ret = self.__sendCommand(cmd)[0] != 'Fail'
 
             self._addressfilterSet.add(macAddr)
-            print('current whitelist entries:')
+            print('current allowlist entries:')
             for addr in self._addressfilterSet:
                 print(addr)
             return ret
@@ -1092,25 +1092,25 @@ class OpenThread_WpanCtl(IThci):
             ModuleHelper.WriteIntoDebugLogger('addAllowMAC() Error: ' + str(e))
 
     def clearBlockList(self):
-        """clear all entries in blacklist table
+        """clear all entries in denylist table
 
         Returns:
-            True: successful to clear the blacklist
-            False: fail to clear the blacklist
+            True: successful to clear the denylist
+            False: fail to clear the denylist
         """
         print('%s call clearBlockList' % self.port)
 
-        # remove all entries in blacklist
+        # remove all entries in denylist
         try:
-            print('clearing blacklist entries:')
+            print('clearing denylist entries:')
             for addr in self._addressfilterSet:
                 print(addr)
 
-            # disable blacklist
+            # disable denylist
             if self.__setAddressfilterMode('disable'):
                 # clear ops
                 for addr in self._addressfilterSet:
-                    cmd = self.wpan_cmd_prefix + 'remove MAC:Blacklist:Entries ' + addr
+                    cmd = self.wpan_cmd_prefix + 'remove MAC:Denylist:Entries ' + addr
                     self.__sendCommand(cmd)
 
                 self._addressfilterSet.clear()
@@ -1121,25 +1121,25 @@ class OpenThread_WpanCtl(IThci):
             ModuleHelper.WriteIntoDebugLogger('clearBlockList() Error: ' + str(e))
 
     def clearAllowList(self):
-        """clear all entries in whitelist table
+        """clear all entries in allowlist table
 
         Returns:
-            True: successful to clear the whitelist
-            False: fail to clear the whitelist
+            True: successful to clear the allowlist
+            False: fail to clear the allowlist
         """
         print('%s call clearAllowList' % self.port)
 
-        # remove all entries in whitelist
+        # remove all entries in allowlist
         try:
-            print('clearing whitelist entries:')
+            print('clearing allowlist entries:')
             for addr in self._addressfilterSet:
                 print(addr)
 
-            # disable whitelist
+            # disable allowlist
             if self.__setAddressfilterMode('disable'):
                 # clear ops
                 for addr in self._addressfilterSet:
-                    cmd = self.wpan_cmd_prefix + 'remove MAC:Whitelist:Entries ' + addr
+                    cmd = self.wpan_cmd_prefix + 'remove MAC:Allowlist:Entries ' + addr
                     self.__sendCommand(cmd)
 
                 self._addressfilterSet.clear()
@@ -1453,7 +1453,7 @@ class OpenThread_WpanCtl(IThci):
         self.networkDataRequirement = ''
         # indicate if Thread device experiences a power down event
         self.isPowerDown = False
-        # indicate AddressFilter mode ['disable', 'whitelist', 'blacklist']
+        # indicate AddressFilter mode ['disable', 'allowlist', 'denylist']
         self._addressfilterMode = 'disable'
         self._addressfilterSet = set()  # cache filter entries
         # indicate if Thread device is an active commissioner
@@ -2048,7 +2048,7 @@ class OpenThread_WpanCtl(IThci):
         # long timeout value to avoid automatic joiner removal (in seconds)
         timeout = 500
 
-        cmd = self.wpan_cmd_prefix + 'commissioner joiner-add %s %s %s' % (eui64, str(timeout), strPSKd)
+        cmd = self.wpan_cmd_prefix + 'commissioner joiner-add "%s" %s %s' % (eui64, str(timeout), strPSKd)
         print(cmd)
         if not self.isActiveCommissioner:
             self.startCollapsedCommissioner()

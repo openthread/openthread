@@ -125,6 +125,7 @@ enum
     OT_RADIO_CAPS_CSMA_BACKOFF     = 1 << 3, ///< Radio supports CSMA backoff for frame transmission (but no retry).
     OT_RADIO_CAPS_SLEEP_TO_TX      = 1 << 4, ///< Radio supports direct transition from sleep to TX with CSMA.
     OT_RADIO_CAPS_TRANSMIT_SEC     = 1 << 5, ///< Radio supports tx security.
+    OT_RADIO_CAPS_TRANSMIT_TIMING  = 1 << 6, ///< Radio supports tx at specific time.
 };
 
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
@@ -149,10 +150,13 @@ typedef uint16_t otShortAddress;
  */
 enum
 {
-    OT_IE_HEADER_IE_SIZE = 2,  ///< Size of IE header in bytes.
-    OT_CSL_IE_SIZE       = 4,  ///< Size of CSL IE content in bytes.
-    OT_ACK_IE_MAX_SIZE   = 16, ///< Max length for header IE in ACK.
+    OT_IE_HEADER_SIZE  = 2,  ///< Size of IE header in bytes.
+    OT_CSL_IE_SIZE     = 4,  ///< Size of CSL IE content in bytes.
+    OT_ACK_IE_MAX_SIZE = 16, ///< Max length for header IE in ACK.
 };
+
+#define CSL_IE_HEADER_BYTES_LO 0x04 ///< Fixed CSL IE header first byte
+#define CSL_IE_HEADER_BYTES_HI 0x0d ///< Fixed CSL IE header second byte
 
 /**
  * @struct otExtAddress
@@ -512,6 +516,17 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
  *
  */
 uint64_t otPlatRadioGetNow(otInstance *aInstance);
+
+/**
+ * Get the bus speed in bits/second between the host and the radio chip.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns The bus speed in bits/second between the host and the radio chip.
+ *          Return 0 when the MAC and above layer and Radio layer resides on the same chip.
+ *
+ */
+uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance);
 
 /**
  * @}

@@ -45,7 +45,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
@@ -53,7 +53,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, 3, 4, 5, 6, SED1, 8, 9, 10, 11, 12]
+            'allowlist': [LEADER, 3, 4, 5, 6, SED1, 8, 9, 10, 11, 12]
         },
         3: {
             'name': 'MED1',
@@ -61,7 +61,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'mode': 'rsn',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         4: {
             'name': 'MED2',
@@ -69,7 +69,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'mode': 'rsn',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         5: {
             'name': 'MED3',
@@ -77,7 +77,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'mode': 'rsn',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         6: {
             'name': 'MED4',
@@ -85,7 +85,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'mode': 'rsn',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         SED1: {
             'name': 'SED1',
@@ -93,7 +93,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         8: {
             'name': 'SED2',
@@ -101,7 +101,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         9: {
             'name': 'SED3',
@@ -109,7 +109,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         10: {
             'name': 'SED4',
@@ -117,7 +117,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         11: {
             'name': 'SED5',
@@ -125,7 +125,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         12: {
             'name': 'SED6',
@@ -133,7 +133,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
     }
 
@@ -186,8 +186,8 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             _pkts.filter_mle_cmd(MLE_PARENT_RESPONSE).must_next()
             _pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
 
-        # Step 2:The DUT MUST properly forward ICMPv6 Echo Requests to all MED children
-        #        The DUT MUST properly forward ICMPv6 Echo Replies to the Leader
+        # Step 2: The DUT MUST properly forward ICMPv6 Echo Requests to all MED children
+        #         The DUT MUST properly forward ICMPv6 Echo Replies to the Leader
         leader_rloc16 = pv.vars['LEADER_RLOC16']
         for i in range(1, 5):
             rloc16 = pv.vars['MED%d_RLOC16' % i]

@@ -42,7 +42,7 @@
 #include "mac/mac_types.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 namespace NetworkData {
@@ -806,9 +806,9 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::Response
     Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_SERVER_DATA));
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kServerData));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     if (mType == kTypeLocal)
@@ -827,8 +827,8 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::Response
 
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo, aHandler, aContext));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, aHandler, aContext));
 
     otLogInfoNetData("Sent server data notification");
 

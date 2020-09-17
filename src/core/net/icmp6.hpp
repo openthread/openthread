@@ -298,15 +298,6 @@ public:
     otError HandleMessage(Message &aMessage, MessageInfo &aMessageInfo);
 
     /**
-     * This method updates the ICMPv6 checksum.
-     *
-     * @param[in]  aMessage   A reference to the ICMPv6 message.
-     * @param[in]  aChecksum  The pseudo-header checksum value.
-     *
-     */
-    void UpdateChecksum(Message &aMessage, uint16_t aChecksum);
-
-    /**
      * This method indicates whether or not ICMPv6 Echo processing is enabled.
      *
      * @retval TRUE   ICMPv6 Echo processing is enabled.

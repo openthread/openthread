@@ -286,4 +286,19 @@ void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFi
     instance.Get<Utils::Slaac>().SetFilter(aFilter);
 }
 
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+otError otIp6RegisterMulticastListeners(otInstance *                            aInstance,
+                                        const otIp6Address *                    aAddresses,
+                                        uint8_t                                 aAddressNum,
+                                        const uint32_t *                        aTimeout,
+                                        otIp6RegisterMulticastListenersCallback aCallback,
+                                        void *                                  aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<MlrManager>().RegisterMulticastListeners(aAddresses, aAddressNum, aTimeout, aCallback,
+                                                                 aContext);
+}
+#endif
+
 #endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE

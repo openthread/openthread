@@ -442,15 +442,15 @@ class OpenThreadTHCI(object):
                 else:
                     self.hasActiveDatasetToCommit = False
 
-            # restore whitelist/blacklist address filter mode if rejoin after
+            # restore allowlist/denylist address filter mode if rejoin after
             # reset
             if self.isPowerDown:
-                if self._addressfilterMode == 'whitelist':
-                    if self.__setAddressfilterMode('whitelist'):
+                if self._addressfilterMode == 'allowlist':
+                    if self.__setAddressfilterMode('allowlist'):
                         for addr in self._addressfilterSet:
                             self.addAllowMAC(addr)
-                elif self._addressfilterMode == 'blacklist':
-                    if self.__setAddressfilterMode('blacklist'):
+                elif self._addressfilterMode == 'denylist':
+                    if self.__setAddressfilterMode('denylist'):
                         for addr in self._addressfilterSet:
                             self.addBlockedMAC(addr)
 
@@ -898,14 +898,14 @@ class OpenThreadTHCI(object):
 
     @API
     def addBlockedMAC(self, xEUI):
-        """add a given extended address to the blacklist entry
+        """add a given extended address to the denylist entry
 
         Args:
             xEUI: extended address in hex format
 
         Returns:
-            True: successful to add a given extended address to the blacklist entry
-            False: fail to add a given extended address to the blacklist entry
+            True: successful to add a given extended address to the denylist entry
+            False: fail to add a given extended address to the denylist entry
         """
         print('%s call addBlockedMAC' % self.port)
         print(xEUI)
@@ -920,16 +920,16 @@ class OpenThreadTHCI(object):
                 print('block device itself')
                 return True
 
-            if self._addressfilterMode != 'blacklist':
-                if self.__setAddressfilterMode('blacklist'):
-                    self._addressfilterMode = 'blacklist'
+            if self._addressfilterMode != 'denylist':
+                if self.__setAddressfilterMode('denylist'):
+                    self._addressfilterMode = 'denylist'
 
             cmd = 'macfilter addr add %s' % macAddr
             print(cmd)
             ret = self.__executeCommand(cmd)[-1] == 'Done'
 
             self._addressfilterSet.add(macAddr)
-            print('current blacklist entries:')
+            print('current denylist entries:')
             for addr in self._addressfilterSet:
                 print(addr)
 
@@ -939,14 +939,14 @@ class OpenThreadTHCI(object):
 
     @API
     def addAllowMAC(self, xEUI):
-        """add a given extended address to the whitelist addressfilter
+        """add a given extended address to the allowlist addressfilter
 
         Args:
             xEUI: a given extended address in hex format
 
         Returns:
-            True: successful to add a given extended address to the whitelist entry
-            False: fail to add a given extended address to the whitelist entry
+            True: successful to add a given extended address to the allowlist entry
+            False: fail to add a given extended address to the allowlist entry
         """
         print('%s call addAllowMAC' % self.port)
         print(xEUI)
@@ -956,16 +956,16 @@ class OpenThreadTHCI(object):
             macAddr = self.__convertLongToHex(xEUI)
 
         try:
-            if self._addressfilterMode != 'whitelist':
-                if self.__setAddressfilterMode('whitelist'):
-                    self._addressfilterMode = 'whitelist'
+            if self._addressfilterMode != 'allowlist':
+                if self.__setAddressfilterMode('allowlist'):
+                    self._addressfilterMode = 'allowlist'
 
             cmd = 'macfilter addr add %s' % macAddr
             print(cmd)
             ret = self.__executeCommand(cmd)[-1] == 'Done'
 
             self._addressfilterSet.add(macAddr)
-            print('current whitelist entries:')
+            print('current allowlist entries:')
             for addr in self._addressfilterSet:
                 print(addr)
             return ret
@@ -975,21 +975,21 @@ class OpenThreadTHCI(object):
 
     @API
     def clearBlockList(self):
-        """clear all entries in blacklist table
+        """clear all entries in denylist table
 
         Returns:
-            True: successful to clear the blacklist
-            False: fail to clear the blacklist
+            True: successful to clear the denylist
+            False: fail to clear the denylist
         """
         print('%s call clearBlockList' % self.port)
 
-        # remove all entries in blacklist
+        # remove all entries in denylist
         try:
-            print('clearing blacklist entries:')
+            print('clearing denylist entries:')
             for addr in self._addressfilterSet:
                 print(addr)
 
-            # disable blacklist
+            # disable denylist
             if self.__setAddressfilterMode('disable'):
                 self._addressfilterMode = 'disable'
                 # clear ops
@@ -1003,21 +1003,21 @@ class OpenThreadTHCI(object):
 
     @API
     def clearAllowList(self):
-        """clear all entries in whitelist table
+        """clear all entries in allowlist table
 
         Returns:
-            True: successful to clear the whitelist
-            False: fail to clear the whitelist
+            True: successful to clear the allowlist
+            False: fail to clear the allowlist
         """
         print('%s call clearAllowList' % self.port)
 
-        # remove all entries in whitelist
+        # remove all entries in allowlist
         try:
-            print('clearing whitelist entries:')
+            print('clearing allowlist entries:')
             for addr in self._addressfilterSet:
                 print(addr)
 
-            # disable whitelist
+            # disable allowlist
             if self.__setAddressfilterMode('disable'):
                 self._addressfilterMode = 'disable'
                 # clear ops
@@ -1319,7 +1319,7 @@ class OpenThreadTHCI(object):
         self.networkDataRequirement = ''
         # indicate if Thread device experiences a power down event
         self.isPowerDown = False
-        # indicate AddressFilter mode ['disable', 'whitelist', 'blacklist']
+        # indicate AddressFilter mode ['disable', 'allowlist', 'denylist']
         self._addressfilterMode = 'disable'
         self._addressfilterSet = set()  # cache filter entries
         # indicate if Thread device is an active commissioner

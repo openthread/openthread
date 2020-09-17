@@ -46,7 +46,7 @@
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
@@ -56,17 +56,17 @@ namespace NetworkDiagnostic {
 
 NetworkDiagnostic::NetworkDiagnostic(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mDiagnosticGetRequest(OT_URI_PATH_DIAGNOSTIC_GET_REQUEST, &NetworkDiagnostic::HandleDiagnosticGetRequest, this)
-    , mDiagnosticGetQuery(OT_URI_PATH_DIAGNOSTIC_GET_QUERY, &NetworkDiagnostic::HandleDiagnosticGetQuery, this)
-    , mDiagnosticGetAnswer(OT_URI_PATH_DIAGNOSTIC_GET_ANSWER, &NetworkDiagnostic::HandleDiagnosticGetAnswer, this)
-    , mDiagnosticReset(OT_URI_PATH_DIAGNOSTIC_RESET, &NetworkDiagnostic::HandleDiagnosticReset, this)
+    , mDiagnosticGetRequest(UriPath::kDiagnosticGetRequest, &NetworkDiagnostic::HandleDiagnosticGetRequest, this)
+    , mDiagnosticGetQuery(UriPath::kDiagnosticGetQuery, &NetworkDiagnostic::HandleDiagnosticGetQuery, this)
+    , mDiagnosticGetAnswer(UriPath::kDiagnosticGetAnswer, &NetworkDiagnostic::HandleDiagnosticGetAnswer, this)
+    , mDiagnosticReset(UriPath::kDiagnosticReset, &NetworkDiagnostic::HandleDiagnosticReset, this)
     , mReceiveDiagnosticGetCallback(nullptr)
     , mReceiveDiagnosticGetCallbackContext(nullptr)
 {
-    Get<Coap::Coap>().AddResource(mDiagnosticGetRequest);
-    Get<Coap::Coap>().AddResource(mDiagnosticGetQuery);
-    Get<Coap::Coap>().AddResource(mDiagnosticGetAnswer);
-    Get<Coap::Coap>().AddResource(mDiagnosticReset);
+    Get<Tmf::TmfAgent>().AddResource(mDiagnosticGetRequest);
+    Get<Tmf::TmfAgent>().AddResource(mDiagnosticGetQuery);
+    Get<Tmf::TmfAgent>().AddResource(mDiagnosticGetAnswer);
+    Get<Tmf::TmfAgent>().AddResource(mDiagnosticReset);
 }
 
 void NetworkDiagnostic::SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCallback aCallback,
@@ -85,18 +85,16 @@ otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination,
     Ip6::MessageInfo      messageInfo;
     otCoapResponseHandler handler = nullptr;
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
     if (aDestination.IsMulticast())
     {
-        SuccessOrExit(
-            error = message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_DIAGNOSTIC_GET_QUERY));
+        SuccessOrExit(error = message->InitAsNonConfirmablePost(UriPath::kDiagnosticGetQuery));
     }
     else
     {
         handler = &NetworkDiagnostic::HandleDiagnosticGetResponse;
-        SuccessOrExit(
-            error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_DIAGNOSTIC_GET_REQUEST));
+        SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDiagnosticGetRequest));
     }
 
     if (aCount > 0)
@@ -119,9 +117,9 @@ otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination,
     }
 
     messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo, handler, this));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, handler, this));
 
     otLogInfoNetDiag("Sent diagnostic get");
 
@@ -149,7 +147,7 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Message *         aMes
                                                     otError                 aResult)
 {
     VerifyOrExit(aResult == OT_ERROR_NONE, OT_NOOP);
-    VerifyOrExit(aMessage && aMessage->GetCode() == OT_COAP_CODE_CHANGED, OT_NOOP);
+    VerifyOrExit(aMessage && aMessage->GetCode() == Coap::kCodeChanged, OT_NOOP);
 
     otLogInfoNetDiag("Received diagnostic get response");
 
@@ -172,7 +170,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *               aContext,
 
 void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest(), OT_NOOP);
 
     otLogInfoNetDiag("Diagnostic get answer received");
 
@@ -181,7 +179,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Message &aMessage, const
         mReceiveDiagnosticGetCallback(&aMessage, &aMessageInfo, mReceiveDiagnosticGetCallbackContext);
     }
 
-    SuccessOrExit(Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo));
 
     otLogInfoNetDiag("Sent diagnostic answer acknowledgment");
 
@@ -474,7 +472,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
     NetworkDiagnosticTlv networkDiagnosticTlv;
     Ip6::MessageInfo     messageInfo;
 
-    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
+    VerifyOrExit(aMessage.IsPostRequest(), error = OT_ERROR_DROP);
 
     otLogInfoNetDiag("Received diagnostic get query");
 
@@ -487,16 +485,15 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
     // DIAG_GET.qry may be sent as a confirmable message.
     if (aMessage.IsConfirmable())
     {
-        if (Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
+        if (Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
         {
             otLogInfoNetDiag("Sent diagnostic get query acknowledgment");
         }
     }
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error =
-                      message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_DIAGNOSTIC_GET_ANSWER));
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDiagnosticGetAnswer));
 
     if (networkDiagnosticTlv.GetLength() > 0)
     {
@@ -513,7 +510,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
     }
 
     messageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 
@@ -523,7 +520,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
         IgnoreError(message->SetLength(message->GetLength() - 1));
     }
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo, nullptr, this));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, nullptr, this));
 
     otLogInfoNetDiag("Sent diagnostic get answer");
 
@@ -550,7 +547,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
     NetworkDiagnosticTlv networkDiagnosticTlv;
     Ip6::MessageInfo     messageInfo(aMessageInfo);
 
-    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = OT_ERROR_DROP);
 
     otLogInfoNetDiag("Received diagnostic get request");
 
@@ -560,7 +557,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
 
     VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = OT_ERROR_PARSE);
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aMessage));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -573,7 +570,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
         IgnoreError(message->SetLength(message->GetOffset() - 1));
     }
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoNetDiag("Sent diagnostic get response");
 
@@ -593,9 +590,9 @@ otError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
     Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_DIAGNOSTIC_RESET));
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDiagnosticReset));
 
     if (aCount > 0)
     {
@@ -617,9 +614,9 @@ otError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
     }
 
     messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoNetDiag("Sent network diagnostic reset");
 
@@ -647,7 +644,7 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Message &aMessage, const Ip6
 
     otLogInfoNetDiag("Received diagnostic reset request");
 
-    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest(), OT_NOOP);
 
     VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(tlv), &tlv) == sizeof(tlv)), OT_NOOP);
 
@@ -672,7 +669,7 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Message &aMessage, const Ip6
         }
     }
 
-    SuccessOrExit(Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo));
 
     otLogInfoNetDiag("Sent diagnostic reset acknowledgment");
 

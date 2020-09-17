@@ -45,26 +45,26 @@ class Test_OnMeshPrefix(thread_cert.TestCase):
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         ROUTER: {
             'mode': 'rsdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED1, SED1]
+            'allowlist': [LEADER, ED1, SED1]
         },
         ED1: {
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         SED1: {
             'is_mtd': True,
             'mode': 's',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
     }
 

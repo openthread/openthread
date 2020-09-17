@@ -158,3 +158,10 @@ OT_TOOL_WEAK uint64_t otPlatRadioGetNow(otInstance *aInstance)
 
     return UINT64_MAX;
 }
+
+OT_TOOL_WEAK uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return 0;
+}

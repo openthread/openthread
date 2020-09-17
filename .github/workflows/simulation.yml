@@ -71,11 +71,12 @@ jobs:
       COVERAGE: 1
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 1
+      VIRTUAL_TIME_UART: 1
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-go@v1
       with:
-        go-version: '1.13'
+        go-version: '1.14'
     - name: Set up Python 3.6
       uses: actions/setup-python@v1
       with:
@@ -89,8 +90,14 @@ jobs:
       run: |
         git clone https://github.com/openthread/ot-ns.git --depth 1 --branch master ~/otns
         export OT_DIR=$PWD
-        cd ~/otns
-        ./script/test py-unittests py-examples
+        (cd ~/otns && ./script/test py-unittests py-examples)
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: cli-ftd-otns-pcaps
+        path: |
+          ./output/*/bin/*.pcap
+          ./output/*/bin/*.replay
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -119,6 +126,13 @@ jobs:
           do
             ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
           done
+      - uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: packet-verification-pcaps
+          path: |
+            *.pcap
+            *.json
       - name: Codecov
         uses: codecov/codecov-action@v1
         with:
@@ -148,6 +162,11 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: cli-ftd-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -177,6 +196,11 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: cli-mtd-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -206,6 +230,11 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: cli-time-sync-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -326,6 +355,11 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: multiple-instance-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -357,6 +391,11 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: ncp-gcc-m32-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -387,6 +426,11 @@ jobs:
       - name: Run
         run: |
           VERBOSE=1 make -f examples/Makefile-simulation check
+      - uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: cli-clang-thread-cert
+          path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
       - name: Codecov
         run: |
           bash <(curl -s https://codecov.io/bash) -x "llvm-cov gcov" -Z

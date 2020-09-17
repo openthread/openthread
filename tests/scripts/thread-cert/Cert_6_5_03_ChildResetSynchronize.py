@@ -29,71 +29,82 @@
 
 import unittest
 
+import config
 import thread_cert
+from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MODE_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
-ROUTER1 = 2
-REED0 = 3
-REED1 = 4
-ED = 5
+ED = 2
 
 
-class Cert_6_1_4_REEDAttachConnectivity(thread_cert.TestCase):
+class Cert_6_5_3_ChildResetSynchronize(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rsdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1, REED0, REED1]
-        },
-        ROUTER1: {
-            'mode': 'rsdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
-            'whitelist': [LEADER, REED1]
-        },
-        REED0: {
-            'mode': 'rsdn',
-            'panid': 0xface,
-            'router_upgrade_threshold': 0,
-            'whitelist': [LEADER, ED]
-        },
-        REED1: {
-            'mode': 'rsdn',
-            'panid': 0xface,
-            'router_upgrade_threshold': 0,
-            'whitelist': [LEADER, ROUTER1, ED]
+            'allowlist': [ED]
         },
         ED: {
+            'name': 'ED',
             'is_mtd': True,
             'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [REED0, REED1]
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'allowlist': [LEADER]
         },
     }
+
+    def _setUpEd(self):
+        self.nodes[ED].add_allowlist(self.nodes[LEADER].get_addr64())
+        self.nodes[ED].enable_allowlist()
 
     def test(self):
         self.nodes[LEADER].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
-        self.nodes[ROUTER1].start()
+        self.nodes[ED].start()
         self.simulator.go(5)
-        self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
+        self.assertEqual(self.nodes[ED].get_state(), 'child')
 
-        self.nodes[REED0].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[REED0].get_state(), 'child')
-
-        self.nodes[REED1].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[REED1].get_state(), 'child')
-
-        self.simulator.go(10)
+        self.nodes[ED].reset()
+        self._setUpEd()
+        self.simulator.go(1)
 
         self.nodes[ED].start()
-        self.simulator.go(10)
+        self.simulator.go(1)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
-        self.assertEqual(self.nodes[REED1].get_state(), 'router')
+
+        addrs = self.nodes[ED].get_addrs()
+        for addr in addrs:
+            if addr[0:4] == 'fe80':
+                self.assertTrue(self.nodes[LEADER].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        ED = pv.vars['ED']
+        _leader_pkts = pkts.filter_wpan_src64(LEADER)
+        _ed_pkts = pkts.filter_wpan_src64(ED)
+
+        # Step 2: Reset the DUT for a time shorter than
+        # the Child Timeout Duration.
+        # Step 3: Send MLE Child Update Request to Leader
+        _ed_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()
+        _leader_pkts.range(_ed_pkts.index).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+        _ed_pkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
+            lambda p: {MODE_TLV} < set(p.mle.tlv.type))
+
+        # Step 4: Leader send an MLE Child Update Response
+        _leader_pkts.range(_ed_pkts.index).filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next()
+        _ed_pkts.range(_leader_pkts.index).filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_not_next()
+
+        # Step 5: The DUT MUST respond with ICMPv6 Echo Reply
+        _ed_pkts.filter_ping_reply().filter(lambda p: p.wpan.src64 == ED and p.wpan.dst64 == LEADER).must_next()
 
 
 if __name__ == '__main__':

@@ -228,24 +228,28 @@ COMMONCPPFLAGS                                                                = 
 SILABS_EFR32MG1_CPPFLAGS                                                      = \
     -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG1_$(BOARD_UPPERCASE)/config            \
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG1P/Include              \
+    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
     $(NULL)
 
 SILABS_EFR32MG12_CPPFLAGS                                                     = \
     -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG12_$(BOARD_UPPERCASE)/config           \
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG12P/Include             \
+    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
     $(NULL)
 
 SILABS_EFR32MG13_CPPFLAGS                                                     = \
     -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG13_$(BOARD_UPPERCASE)/config           \
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG13P/Include             \
+    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
     $(NULL)
 
 SILABS_EFR32MG21_CPPFLAGS                                                     = \
     -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG21_$(BOARD_UPPERCASE)/config           \
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG21/Include              \
+    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s2                              \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg2x               \
     $(NULL)
 
@@ -257,7 +261,7 @@ SILABS_COMMON_SOURCES                                                           
     gecko_sdk_suite/v3.0/hardware/kit/common/bsp/bsp_stk_leds.c                           \
     gecko_sdk_suite/v3.0/platform/emdrv/dmadrv/src/dmadrv.c                               \
     gecko_sdk_suite/v3.0/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c                 \
-    gecko_sdk_suite/v3.0/platform/emdrv/nvm3/src/nvm3_default.c                           \
+    gecko_sdk_suite/v3.0/platform/emdrv/nvm3/src/nvm3_default_common_linker.c             \
     gecko_sdk_suite/v3.0/platform/emdrv/nvm3/src/nvm3_hal_flash.c                         \
     gecko_sdk_suite/v3.0/platform/emdrv/nvm3/src/nvm3_lock.c                              \
     gecko_sdk_suite/v3.0/platform/emdrv/uartdrv/src/uartdrv.c                             \

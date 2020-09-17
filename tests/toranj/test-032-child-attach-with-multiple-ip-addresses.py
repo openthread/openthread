@@ -81,12 +81,12 @@ wpan.Node.init_all_nodes()
 
 leader.form('multi-addr-test')
 
-leader.whitelist_node(parent)
-parent.whitelist_node(leader)
+leader.allowlist_node(parent)
+parent.allowlist_node(leader)
 parent.join_node(leader, wpan.JOIN_TYPE_ROUTER)
 
-parent.whitelist_node(child)
-child.whitelist_node(parent)
+parent.allowlist_node(child)
+child.allowlist_node(parent)
 
 child.join_node(parent, node_type=wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 child.set(wpan.WPAN_POLL_INTERVAL, '400')
@@ -120,8 +120,8 @@ def check_addresses_on_child():
 
 wpan.verify_within(check_addresses_on_child, WAIT_TIME)
 
-# Remove child from parent's white-list
-parent.remove(wpan.WPAN_MAC_WHITELIST_ENTRIES, child.get(wpan.WPAN_EXT_ADDRESS)[1:-1])
+# Remove child from parent's allowlist
+parent.remove(wpan.WPAN_MAC_ALLOWLIST_ENTRIES, child.get(wpan.WPAN_EXT_ADDRESS)[1:-1])
 
 # Enable supervision check on child, this ensures that child is detached soon.
 child.set(

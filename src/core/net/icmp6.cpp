@@ -39,9 +39,8 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
+#include "net/checksum.hpp"
 #include "net/ip6.hpp"
-
-using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 namespace Ip6 {
@@ -139,20 +138,13 @@ exit:
 
 otError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 {
-    otError  error = OT_ERROR_NONE;
-    uint16_t payloadLength;
-    Header   icmp6Header;
-    uint16_t checksum;
+    otError error = OT_ERROR_NONE;
+    Header  icmp6Header;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(icmp6Header), &icmp6Header) == sizeof(icmp6Header),
                  error = OT_ERROR_PARSE);
-    payloadLength = aMessage.GetLength() - aMessage.GetOffset();
 
-    // verify checksum
-    checksum = Ip6::ComputePseudoheaderChecksum(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(), payloadLength,
-                                                kProtoIcmp6);
-    checksum = aMessage.UpdateChecksum(checksum, aMessage.GetOffset(), payloadLength);
-    VerifyOrExit(checksum == 0xffff, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessageInfo, kProtoIcmp6));
 
     if (icmp6Header.GetType() == Header::kTypeEchoRequest)
     {
@@ -242,19 +234,6 @@ exit:
     }
 
     return error;
-}
-
-void Icmp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
-{
-    aChecksum = aMessage.UpdateChecksum(aChecksum, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
-
-    if (aChecksum != 0xffff)
-    {
-        aChecksum = ~aChecksum;
-    }
-
-    aChecksum = HostSwap16(aChecksum);
-    aMessage.Write(aMessage.GetOffset() + Header::kChecksumFieldOffset, sizeof(aChecksum), &aChecksum);
 }
 
 } // namespace Ip6

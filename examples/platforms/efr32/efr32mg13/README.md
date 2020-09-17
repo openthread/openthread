@@ -33,7 +33,13 @@ $ ./script/bootstrap
 2. Install Flex (Gecko) SDK including RAIL Library from Simplicity Studio.
    - Connect EFR32MG13P Wireless Starter Kit to Simplicity Studio.
    - Find Flex SDK v3.0 in the Software Update page and click Install.
-   - Flex SDK v3.0 will be installed in the path: `/SimplicityStudio_v4/developer/sdks/gecko_sdk_suite`.
+   - Flex SDK v3.0 will be installed in the path:
+     - Mac
+       - `/Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/gecko_sdk_suite`
+     - Windows
+       - `C:\SiliconLabs\SimplicityStudio\v5\developer\sdks\gecko_sdk_suite`
+     - Linux
+       - `./SimplicityStudio_v5/developer/sdks/gecko_sdk_suite`
 
 For more information on configuring, building, and installing applications for the Wireless Gecko (EFR32) portfolio using FLEX, see [Getting Started with the Silicon Labs Flex Software Development Kit for the Wireless Gecko (EFR32™) Portfolio][qsg138]. For more information on RAIL, see [Radio Abstraction Interface Layer][rail].
 
@@ -152,7 +158,6 @@ In the J-Link Device drop-down list select the serial number of the device to fl
    start
    state
    stop
-   whitelist
    ```
 
 3. Start a Thread network as Leader.
@@ -245,4 +250,4 @@ The following toolchain has been used for testing and verification:
 
 The EFR32 example has been verified with following Flex SDK/RAIL Library version:
 
-- Flex SDK version 2.7.0.0
+- Flex SDK version 3.0.x

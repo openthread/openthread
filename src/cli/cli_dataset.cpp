@@ -82,41 +82,41 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 {
     if (aDataset.mComponents.mIsPendingTimestampPresent)
     {
-        mInterpreter.OutputFormat("Pending Timestamp: %lu\r\n", aDataset.mPendingTimestamp);
+        mInterpreter.OutputLine("Pending Timestamp: %lu", aDataset.mPendingTimestamp);
     }
 
     if (aDataset.mComponents.mIsActiveTimestampPresent)
     {
-        mInterpreter.OutputFormat("Active Timestamp: %lu\r\n", aDataset.mActiveTimestamp);
+        mInterpreter.OutputLine("Active Timestamp: %lu", aDataset.mActiveTimestamp);
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
     {
-        mInterpreter.OutputFormat("Channel: %d\r\n", aDataset.mChannel);
+        mInterpreter.OutputLine("Channel: %d", aDataset.mChannel);
     }
 
     if (aDataset.mComponents.mIsChannelMaskPresent)
     {
-        mInterpreter.OutputFormat("Channel Mask: 0x%08x\r\n", aDataset.mChannelMask);
+        mInterpreter.OutputLine("Channel Mask: 0x%08x", aDataset.mChannelMask);
     }
 
     if (aDataset.mComponents.mIsDelayPresent)
     {
-        mInterpreter.OutputFormat("Delay: %d\r\n", aDataset.mDelay);
+        mInterpreter.OutputLine("Delay: %d", aDataset.mDelay);
     }
 
     if (aDataset.mComponents.mIsExtendedPanIdPresent)
     {
         mInterpreter.OutputFormat("Ext PAN ID: ");
         OutputBytes(aDataset.mExtendedPanId.m8, sizeof(aDataset.mExtendedPanId));
-        mInterpreter.OutputFormat("\r\n");
+        mInterpreter.OutputLine("");
     }
 
     if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
     {
         const uint8_t *prefix = aDataset.mMeshLocalPrefix.m8;
-        mInterpreter.OutputFormat(
-            "Mesh Local Prefix: %x:%x:%x:%x::/64\r\n", (static_cast<uint16_t>(prefix[0]) << 8) | prefix[1],
+        mInterpreter.OutputLine(
+            "Mesh Local Prefix: %x:%x:%x:%x::/64", (static_cast<uint16_t>(prefix[0]) << 8) | prefix[1],
             (static_cast<uint16_t>(prefix[2]) << 8) | prefix[3], (static_cast<uint16_t>(prefix[4]) << 8) | prefix[5],
             (static_cast<uint16_t>(prefix[6]) << 8) | prefix[7]);
     }
@@ -125,26 +125,25 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     {
         mInterpreter.OutputFormat("Master Key: ");
         OutputBytes(aDataset.mMasterKey.m8, sizeof(aDataset.mMasterKey));
-        mInterpreter.OutputFormat("\r\n");
+        mInterpreter.OutputLine("");
     }
 
     if (aDataset.mComponents.mIsNetworkNamePresent)
     {
         mInterpreter.OutputFormat("Network Name: ");
-        mInterpreter.OutputFormat("%.*s\r\n", static_cast<uint16_t>(sizeof(aDataset.mNetworkName)),
-                                  aDataset.mNetworkName.m8);
+        mInterpreter.OutputLine("%.*s", static_cast<uint16_t>(sizeof(aDataset.mNetworkName)), aDataset.mNetworkName.m8);
     }
 
     if (aDataset.mComponents.mIsPanIdPresent)
     {
-        mInterpreter.OutputFormat("PAN ID: 0x%04x\r\n", aDataset.mPanId);
+        mInterpreter.OutputLine("PAN ID: 0x%04x", aDataset.mPanId);
     }
 
     if (aDataset.mComponents.mIsPskcPresent)
     {
         mInterpreter.OutputFormat("PSKc: ");
         OutputBytes(aDataset.mPskc.m8, sizeof(aDataset.mPskc.m8));
-        mInterpreter.OutputFormat("\r\n");
+        mInterpreter.OutputLine("");
     }
 
     if (aDataset.mComponents.mIsSecurityPolicyPresent)
@@ -176,7 +175,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
             mInterpreter.OutputFormat("b");
         }
 
-        mInterpreter.OutputFormat("\r\n");
+        mInterpreter.OutputLine("");
     }
 
     return OT_ERROR_NONE;
@@ -211,7 +210,7 @@ otError Dataset::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputFormat("%s\r\n", command.mName);
+        mInterpreter.OutputLine("%s", command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -265,7 +264,7 @@ otError Dataset::ProcessActive(uint8_t aArgsLength, char *aArgs[])
 
         SuccessOrExit(error = otDatasetGetActiveTlvs(mInterpreter.mInstance, &dataset));
         mInterpreter.OutputBytes(dataset.mTlvs, dataset.mLength);
-        mInterpreter.OutputFormat("\r\n");
+        mInterpreter.OutputLine("");
     }
     else
     {
@@ -295,7 +294,7 @@ otError Dataset::ProcessPending(uint8_t aArgsLength, char *aArgs[])
 
         SuccessOrExit(error = otDatasetGetPendingTlvs(mInterpreter.mInstance, &dataset));
         mInterpreter.OutputBytes(dataset.mTlvs, dataset.mLength);
-        mInterpreter.OutputFormat("\r\n");
+        mInterpreter.OutputLine("");
     }
     else
     {
@@ -314,7 +313,7 @@ otError Dataset::ProcessActiveTimestamp(uint8_t aArgsLength, char *aArgs[])
     {
         if (sDataset.mComponents.mIsActiveTimestampPresent)
         {
-            mInterpreter.OutputFormat("%lu\r\n", sDataset.mActiveTimestamp);
+            mInterpreter.OutputLine("%lu", sDataset.mActiveTimestamp);
         }
     }
     else
@@ -338,7 +337,7 @@ otError Dataset::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
     {
         if (sDataset.mComponents.mIsChannelPresent)
         {
-            mInterpreter.OutputFormat("%d\r\n", sDataset.mChannel);
+            mInterpreter.OutputLine("%d", sDataset.mChannel);
         }
     }
     else
@@ -362,7 +361,7 @@ otError Dataset::ProcessChannelMask(uint8_t aArgsLength, char *aArgs[])
     {
         if (sDataset.mComponents.mIsChannelMaskPresent)
         {
-            mInterpreter.OutputFormat("0x%08x\r\n", sDataset.mChannelMask);
+            mInterpreter.OutputLine("0x%08x", sDataset.mChannelMask);
         }
     }
     else
@@ -418,7 +417,7 @@ otError Dataset::ProcessDelay(uint8_t aArgsLength, char *aArgs[])
     {
         if (sDataset.mComponents.mIsDelayPresent)
         {
-            mInterpreter.OutputFormat("%d\r\n", sDataset.mDelay);
+            mInterpreter.OutputLine("%d", sDataset.mDelay);
         }
     }
     else
@@ -443,7 +442,7 @@ otError Dataset::ProcessExtPanId(uint8_t aArgsLength, char *aArgs[])
         if (sDataset.mComponents.mIsExtendedPanIdPresent)
         {
             OutputBytes(sDataset.mExtendedPanId.m8, sizeof(sDataset.mExtendedPanId));
-            mInterpreter.OutputFormat("\r\n");
+            mInterpreter.OutputLine("");
         }
     }
     else
@@ -470,7 +469,7 @@ otError Dataset::ProcessMasterKey(uint8_t aArgsLength, char *aArgs[])
         if (sDataset.mComponents.mIsMasterKeyPresent)
         {
             OutputBytes(sDataset.mMasterKey.m8, sizeof(sDataset.mMasterKey));
-            mInterpreter.OutputFormat("\r\n");
+            mInterpreter.OutputLine("");
         }
     }
     else
@@ -497,11 +496,11 @@ otError Dataset::ProcessMeshLocalPrefix(uint8_t aArgsLength, char *aArgs[])
         if (sDataset.mComponents.mIsMeshLocalPrefixPresent)
         {
             const uint8_t *prefix = sDataset.mMeshLocalPrefix.m8;
-            mInterpreter.OutputFormat("Mesh Local Prefix: %x:%x:%x:%x::/64\r\n",
-                                      (static_cast<uint16_t>(prefix[0]) << 8) | prefix[1],
-                                      (static_cast<uint16_t>(prefix[2]) << 8) | prefix[3],
-                                      (static_cast<uint16_t>(prefix[4]) << 8) | prefix[5],
-                                      (static_cast<uint16_t>(prefix[6]) << 8) | prefix[7]);
+            mInterpreter.OutputLine("Mesh Local Prefix: %x:%x:%x:%x::/64",
+                                    (static_cast<uint16_t>(prefix[0]) << 8) | prefix[1],
+                                    (static_cast<uint16_t>(prefix[2]) << 8) | prefix[3],
+                                    (static_cast<uint16_t>(prefix[4]) << 8) | prefix[5],
+                                    (static_cast<uint16_t>(prefix[6]) << 8) | prefix[7]);
         }
     }
     else
@@ -526,8 +525,8 @@ otError Dataset::ProcessNetworkName(uint8_t aArgsLength, char *aArgs[])
     {
         if (sDataset.mComponents.mIsNetworkNamePresent)
         {
-            mInterpreter.OutputFormat("%.*s\r\n", static_cast<uint16_t>(sizeof(sDataset.mNetworkName)),
-                                      sDataset.mNetworkName.m8);
+            mInterpreter.OutputLine("%.*s", static_cast<uint16_t>(sizeof(sDataset.mNetworkName)),
+                                    sDataset.mNetworkName.m8);
         }
     }
     else
@@ -553,7 +552,7 @@ otError Dataset::ProcessPanId(uint8_t aArgsLength, char *aArgs[])
     {
         if (sDataset.mComponents.mIsPanIdPresent)
         {
-            mInterpreter.OutputFormat("0x%04x\r\n", sDataset.mPanId);
+            mInterpreter.OutputLine("0x%04x", sDataset.mPanId);
         }
     }
     else
@@ -577,7 +576,7 @@ otError Dataset::ProcessPendingTimestamp(uint8_t aArgsLength, char *aArgs[])
     {
         if (sDataset.mComponents.mIsPendingTimestampPresent)
         {
-            mInterpreter.OutputFormat("%lu\r\n", sDataset.mPendingTimestamp);
+            mInterpreter.OutputLine("%lu", sDataset.mPendingTimestamp);
         }
     }
     else
@@ -823,7 +822,7 @@ otError Dataset::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
         if (sDataset.mComponents.mIsPskcPresent)
         {
             OutputBytes(sDataset.mPskc.m8, sizeof(sDataset.mPskc.m8));
-            mInterpreter.OutputFormat("\r\n");
+            mInterpreter.OutputLine("");
         }
     }
     else if (aArgsLength == 1)
@@ -892,7 +891,7 @@ otError Dataset::ProcessSecurityPolicy(uint8_t aArgsLength, char *aArgs[])
                 mInterpreter.OutputFormat("b");
             }
 
-            mInterpreter.OutputFormat("\r\n");
+            mInterpreter.OutputLine("");
         }
     }
     else

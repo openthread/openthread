@@ -67,7 +67,7 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
     if dv.endswith(' CST'):
         # e.x. 'Jan  1, 1970 08:00:00.000000000 CST', '0000000000000000'
         # todo: check if the time is valid
-        return int(rv)
+        return int(rv, 16)
 
     try:
         int(rv, 16)
@@ -207,6 +207,7 @@ class _list(object):
 _LAYER_FIELDS = {
     # WPAN
     'wpan.fcf': _raw_hex_rev,
+    'wpan.cmd': _auto,
     'wpan.security': _auto,
     'wpan.frame_type': _auto,
     'wpan.pending': _auto,
@@ -240,6 +241,8 @@ _LAYER_FIELDS = {
     'wpan.aux_sec.hdr': _str,
     'wpan.mic': _auto,
     'wpan.channel': _auto,
+    'wpan.header_ie.id': _list(_auto),
+    'wpan.header_ie.csl.period': _auto,
 
     # MLE
     'mle.cmd': _auto,
@@ -281,6 +284,8 @@ _LAYER_FIELDS = {
     'mle.tlv.conn.active_rtrs': _auto,
     'mle.tlv.timeout': _auto,
     'mle.tlv.addr16': _auto,
+    'mle.tlv.channel': _auto,
+    'mle.tlv.addr_reg_iid': _list(_auto),
 
     # IP
     'ip.version': _auto,
@@ -478,9 +483,20 @@ _LAYER_FIELDS = {
     'coap.tlv.router_mask_assigned': _auto,
     'coap.tlv.router_mask_id_seq': _auto,
 
+    # dtls
+    'dtls.handshake.type': _list(_auto),
+    'dtls.handshake.cookie': _auto,
+    'dtls.record.content_type': _list(_auto),
+    'dtls.alert_message.desc': _auto,
+
     # thread_address
+    'thread_address.tlv.len': _list(_auto),
     'thread_address.tlv.type': _list(_auto),
     'thread_address.tlv.status': _auto,
+    'thread_address.tlv.ext_mac_addr': _ext_addr,
+    'thread_address.tlv.router_mask_id_seq': _auto,
+    'thread_address.tlv.router_mask_assigned': _bytes,
+    'thread_address.tlv.rloc16': _hex,
 
     # thread bl
     'thread_bl.tlv.type': _list(_auto),
@@ -497,6 +513,7 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.type': _list(_auto),
     'thread_meshcop.tlv.len8': _list(_auto),
     'thread_meshcop.tlv.net_name': _str,  # from thread_bl
+    'thread_meshcop.tlv.commissioner_id': _str,
     'thread_meshcop.tlv.commissioner_sess_id': _auto,  # from mle
     "thread_meshcop.tlv.channel_page": _auto,  # from ble
     "thread_meshcop.tlv.channel": _auto,  # from ble
@@ -515,7 +532,11 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.sec_policy_r': _auto,
     'thread_meshcop.tlv.sec_policy_c': _auto,
     'thread_meshcop.tlv.sec_policy_b': _auto,
+    'thread_meshcop.tlv.state': _auto,
+    'thread_meshcop.tlv.steering_data': _list(_auto),
     'thread_meshcop.tlv.unknown': _bytes,
+    'thread_meshcop.tlv.ba_locator': _auto,
+    'thread_meshcop.tlv.active_tstamp': _auto,
 
     # THREAD NWD
     'thread_nwd.tlv.type': _list(_auto),
@@ -527,20 +548,20 @@ _LAYER_FIELDS = {
     'thread_nwd.tlv.service.s_data.seqno': _auto,
     'thread_nwd.tlv.service.s_data.rrdelay': _auto,
     'thread_nwd.tlv.service.s_data.mlrtimeout': _auto,
-    'thread_nwd.tlv.server.16': _auto,
-    'thread_nwd.tlv.border_router.16': _auto,
+    'thread_nwd.tlv.server_16': _auto,
+    'thread_nwd.tlv.border_router_16': _list(_auto),
     'thread_nwd.tlv.sub_tlvs': _list(_str),
-    'thread_nwd.tlv.prefix.length': _auto,
-    'thread_nwd.tlv.prefix.domain_id': _auto,
+    #TODO: support thread_nwd.tlv.prefix.length and thread_nwd.tlv.prefix.domain_id
+    'thread_nwd.tlv.prefix': _list(_ipv6_addr),
     'thread_nwd.tlv.border_router.pref': _auto,
-    'thread_nwd.tlv.border_router.flag.s': _auto,
-    'thread_nwd.tlv.border_router.flag.r': _auto,
-    'thread_nwd.tlv.border_router.flag.p': _auto,
-    'thread_nwd.tlv.border_router.flag.o': _auto,
-    'thread_nwd.tlv.border_router.flag.n': _auto,
-    'thread_nwd.tlv.border_router.flag.dp': _auto,
-    'thread_nwd.tlv.border_router.flag.d': _auto,
-    'thread_nwd.tlv.border_router.flag.c': _auto,
+    'thread_nwd.tlv.border_router.flag.s': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.r': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.p': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.o': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.n': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.dp': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.d': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.c': _list(_auto),
     'thread_nwd.tlv.6co.flag.reserved': _auto,
     'thread_nwd.tlv.6co.flag.cid': _auto,
     'thread_nwd.tlv.6co.flag.c': _auto,
@@ -640,7 +661,7 @@ def check_layer_field_exists(packet, field_uri):
 
 def _get_candidate_layers(packet, layer_name):
     if layer_name == 'thread_meshcop':
-        candidate_layer_names = ['mle', 'coap', 'thread_bl']
+        candidate_layer_names = ['thread_meshcop', 'mle', 'coap', 'thread_bl']
     elif layer_name == 'thread_nwd':
         candidate_layer_names = ['mle', 'thread_address']
     elif layer_name == 'wpan':

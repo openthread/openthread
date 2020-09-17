@@ -535,7 +535,7 @@ exit:
     switch (error)
     {
     case OT_ERROR_NONE:
-
+        aOutput[0] = '\0'; // In case there is no output.
         IgnoreError(ProcessCmd(argCount, &aArgsector[0], aOutput, aOutputMaxLen));
         break;
 

@@ -70,10 +70,11 @@ enum
  */
 typedef struct otPlatformConfig
 {
-    const char *mInterfaceName;  ///< Thread network interface name.
-    const char *mRadioUrl;       ///< Radio url.
-    int         mRealTimeSignal; ///< The real-time signal for microsecond timer.
-    uint32_t    mSpeedUpFactor;  ///< Speed up factor.
+    const char *mBackboneInterfaceName; ///< Backbone network interface name.
+    const char *mInterfaceName;         ///< Thread network interface name.
+    const char *mRadioUrl;              ///< Radio url.
+    int         mRealTimeSignal;        ///< The real-time signal for microsecond timer.
+    uint32_t    mSpeedUpFactor;         ///< Speed up factor.
 } otPlatformConfig;
 
 /**

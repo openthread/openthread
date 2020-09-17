@@ -2599,7 +2599,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_ALL_IP_COUNTERS>
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_WHITELIST>(void)
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_ALLOWLIST>(void)
 {
     otMacFilterEntry    entry;
     otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
@@ -2619,12 +2619,12 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_WHITELIST_ENABLED>(void)
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_ALLOWLIST_ENABLED>(void)
 {
-    return mEncoder.WriteBool(otLinkFilterGetAddressMode(mInstance) == OT_MAC_FILTER_ADDRESS_MODE_WHITELIST);
+    return mEncoder.WriteBool(otLinkFilterGetAddressMode(mInstance) == OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST);
 }
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_BLACKLIST>(void)
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_DENYLIST>(void)
 {
     otMacFilterEntry    entry;
     otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
@@ -2641,9 +2641,9 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_BLACKLIST_ENABLED>(void)
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_DENYLIST_ENABLED>(void)
 {
-    return mEncoder.WriteBool(otLinkFilterGetAddressMode(mInstance) == OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST);
+    return mEncoder.WriteBool(otLinkFilterGetAddressMode(mInstance) == OT_MAC_FILTER_ADDRESS_MODE_DENYLIST);
 }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_FIXED_RSS>(void)
@@ -2666,7 +2666,7 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_WHITELIST>(void)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_ALLOWLIST>(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -2709,19 +2709,19 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_WHITELIST>(void)
 
 exit:
     // If we had an error, we may have actually changed
-    // the state of the whitelist, so we need to report
+    // the state of the allowlist, so we need to report
     // those incomplete changes via an asynchronous
     // change event.
 
     if (error != OT_ERROR_NONE)
     {
-        IgnoreError(WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_WHITELIST));
+        IgnoreError(WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_ALLOWLIST));
     }
 
     return error;
 }
 
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_WHITELIST_ENABLED>(void)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_ALLOWLIST_ENABLED>(void)
 {
     bool                   enabled;
     otError                error = OT_ERROR_NONE;
@@ -2731,7 +2731,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_WHITELIST_ENABLED
 
     if (enabled)
     {
-        mode = OT_MAC_FILTER_ADDRESS_MODE_WHITELIST;
+        mode = OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST;
     }
 
     otLinkFilterSetAddressMode(mInstance, mode);
@@ -2740,7 +2740,7 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_BLACKLIST>(void)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_DENYLIST>(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -2760,19 +2760,19 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_BLACKLIST>(void)
 
 exit:
     // If we had an error, we may have actually changed
-    // the state of the blacklist, so we need to report
+    // the state of the denylist, so we need to report
     // those incomplete changes via an asynchronous
     // change event.
 
     if (error != OT_ERROR_NONE)
     {
-        IgnoreError(WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_BLACKLIST));
+        IgnoreError(WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_DENYLIST));
     }
 
     return error;
 }
 
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_BLACKLIST_ENABLED>(void)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_DENYLIST_ENABLED>(void)
 {
     bool                   enabled;
     otError                error = OT_ERROR_NONE;
@@ -2782,7 +2782,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_BLACKLIST_ENABLED
 
     if (enabled)
     {
-        mode = OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST;
+        mode = OT_MAC_FILTER_ADDRESS_MODE_DENYLIST;
     }
 
     otLinkFilterSetAddressMode(mInstance, mode);
@@ -2974,7 +2974,7 @@ exit:
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
-template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_WHITELIST>(void)
+template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_ALLOWLIST>(void)
 {
     otError             error = OT_ERROR_NONE;
     const otExtAddress *extAddress;
@@ -3005,7 +3005,7 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_BLACKLIST>(void)
+template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_DENYLIST>(void)
 {
     otError             error = OT_ERROR_NONE;
     const otExtAddress *extAddress;
@@ -3072,7 +3072,7 @@ exit:
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
-template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_WHITELIST>(void)
+template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_ALLOWLIST>(void)
 {
     otError             error      = OT_ERROR_NONE;
     const otExtAddress *extAddress = nullptr;
@@ -3085,7 +3085,7 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_BLACKLIST>(void)
+template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_DENYLIST>(void)
 {
     otError             error      = OT_ERROR_NONE;
     const otExtAddress *extAddress = nullptr;

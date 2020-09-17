@@ -40,7 +40,7 @@ class HistoryHelper(object):
             self.data = json.load(open(filename, 'r'))
         except Exception:
             self.logger.exception('file may not exists')
-            self.data = {'golden_device_black_list': []}
+            self.data = {'golden_device_denylist': []}
             self.save()
 
     def save(self):
@@ -48,11 +48,11 @@ class HistoryHelper(object):
 
     def mark_bad_golden_device(self, port):
         self.logger.warning('mark serial port[%s] as bad', port)
-        self.data['golden_device_black_list'].append(port)
+        self.data['golden_device_denylist'].append(port)
         self.save()
 
     def is_bad_golden_device(self, port):
-        return port in self.data['golden_device_black_list']
+        return port in self.data['golden_device_denylist']
 
     def __str__(self):
         return json.dumps(self.data, indent=2)

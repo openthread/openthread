@@ -31,7 +31,7 @@
  *   This file implements the OpenThread software random number generator API.
  */
 
-#include "openthread/random_noncrypto.h"
+#include <openthread/random_noncrypto.h>
 
 #include "common/random.hpp"
 

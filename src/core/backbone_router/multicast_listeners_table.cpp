@@ -42,7 +42,7 @@
 #include "common/random.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 

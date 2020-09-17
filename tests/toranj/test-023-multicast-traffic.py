@@ -124,24 +124,24 @@ wpan.Node.init_all_nodes()
 
 r1.form("mcast-traffic")
 
-r1.whitelist_node(r2)
-r2.whitelist_node(r1)
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
 r2.join_node(r1, wpan.JOIN_TYPE_ROUTER)
 
-r2.whitelist_node(fed)
-fed.whitelist_node(r2)
+r2.allowlist_node(fed)
+fed.allowlist_node(r2)
 fed.join_node(r2, wpan.JOIN_TYPE_END_DEVICE)
 
-r2.whitelist_node(r3)
-r3.whitelist_node(r2)
+r2.allowlist_node(r3)
+r3.allowlist_node(r2)
 r3.join_node(r2, wpan.JOIN_TYPE_ROUTER)
 
-r3.whitelist_node(r4)
-r4.whitelist_node(r3)
+r3.allowlist_node(r4)
+r4.allowlist_node(r3)
 r4.join_node(r3, wpan.JOIN_TYPE_ROUTER)
 
-r4.whitelist_node(sed)
-sed.whitelist_node(r4)
+r4.allowlist_node(sed)
+sed.allowlist_node(r4)
 sed.join_node(r4, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 sed.set(wpan.WPAN_POLL_INTERVAL, '600')
 
