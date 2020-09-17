@@ -101,7 +101,6 @@ COMMONCFLAGS                       := \
     -Os                               \
     -g                                \
     -I$(HAL_CONF_DIR)                 \
-    -DNVM3_DEFAULT_NVM_SIZE=40960     \
     -D__START=main                    \
     -D$(MCU)                          \
     $(EFR32MG21_CONFIG_FILE_CPPFLAGS) \
