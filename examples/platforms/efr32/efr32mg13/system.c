@@ -57,6 +57,10 @@
 #include "rail.h"
 #include "sl_mpu.h"
 #include "sl_sleeptimer.h"
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+#include "sl_malloc.h"
+#include "openthread/heap.h"
+#endif
 
 #include "platform-efr32.h"
 
@@ -155,7 +159,6 @@ static void halInitChipSpecific(void)
 }
 
 otInstance *sInstance;
-static bool (*sCanSleepCallback)(void);
 
 void otSysInit(int argc, char *argv[])
 {
@@ -165,14 +168,17 @@ void otSysInit(int argc, char *argv[])
 
     __disable_irq();
 
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    otHeapSetCAllocFree(sl_calloc, sl_free);
+#endif
 #undef FIXED_EXCEPTION
 #define FIXED_EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler)
 #define EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler, priorityLevel, subpriority) \
-    NVIC_SetPriority(deviceIrqn, NVIC_EncodePriority(PRIGROUP_POSITION, priorityLevel, subpriority));
+    NVIC_SetPriority(deviceIrqn, NVIC_EncodePriority(PRIGROUP_POSITION - 1, priorityLevel, subpriority));
 #include NVIC_CONFIG
 #undef EXCEPTION
 
-    NVIC_SetPriorityGrouping(PRIGROUP_POSITION);
+    NVIC_SetPriorityGrouping(PRIGROUP_POSITION - 1);
     CHIP_Init();
     halInitChipSpecific();
     BSP_Init(BSP_INIT_BCC);
@@ -210,45 +216,6 @@ void otSysDeinit(void)
 #if USE_EFR32_LOG
     efr32LogDeinit();
 #endif
-}
-
-void efr32SetSleepCallback(bool (*aCallback)(void))
-{
-    sCanSleepCallback = aCallback;
-}
-
-void efr32Sleep(void)
-{
-    bool canDeepSleep      = false;
-    int  wakeupProcessTime = 1000;
-    CORE_DECLARE_IRQ_STATE;
-
-    if (RAIL_Sleep(wakeupProcessTime, &canDeepSleep) == RAIL_STATUS_NO_ERROR)
-    {
-        if (canDeepSleep)
-        {
-            CORE_ENTER_ATOMIC();
-            if (sCanSleepCallback != NULL && sCanSleepCallback())
-            {
-                EMU_EnterEM2(true);
-            }
-            CORE_EXIT_ATOMIC();
-            // TODO OT will handle an interrupt here and it mustn't call any RAIL APIs
-
-            while (RAIL_Wake(0) != RAIL_STATUS_NO_ERROR)
-            {
-            }
-        }
-        else
-        {
-            CORE_ENTER_ATOMIC();
-            if (sCanSleepCallback != NULL && sCanSleepCallback())
-            {
-                EMU_EnterEM1();
-            }
-            CORE_EXIT_ATOMIC();
-        }
-    }
 }
 
 void otSysProcessDrivers(otInstance *aInstance)
