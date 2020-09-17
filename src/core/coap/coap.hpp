@@ -610,7 +610,7 @@ public:
      * @param[in]  aNetifIdentifier  The network interface identifier to bind.
      *
      * @retval OT_ERROR_NONE    Successfully started the CoAP service.
-     * @retval OT_ERROR_ALREADY Already started.
+     * @retval OT_ERROR_FAILED  Failed to start CoAP agent.
      *
      */
     otError Start(uint16_t aPort, otNetifIdentifier aNetifIdentifier = OT_NETIF_UNSPECIFIED);

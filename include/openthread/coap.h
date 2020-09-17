@@ -835,7 +835,8 @@ static inline otError otCoapSendRequest(otInstance *          aInstance,
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aPort      The local UDP port to bind to.
  *
- * @retval OT_ERROR_NONE  Successfully started the CoAP server.
+ * @retval OT_ERROR_NONE    Successfully started the CoAP server.
+ * @retval OT_ERROR_FAILED  Failed to start the CoAP server.
  *
  */
 otError otCoapStart(otInstance *aInstance, uint16_t aPort);

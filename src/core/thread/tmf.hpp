@@ -67,7 +67,7 @@ public:
      * This method starts the TMF agent.
      *
      * @retval OT_ERROR_NONE    Successfully started the CoAP service.
-     * @retval OT_ERROR_ALREADY Already started.
+     * @retval OT_ERROR_FAILED  Failed to start the TMF agent.
      *
      */
     otError Start(void);
