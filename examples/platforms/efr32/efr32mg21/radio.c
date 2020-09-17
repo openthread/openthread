@@ -267,7 +267,7 @@ static void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle,
 #if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
     sBandConfigs[index].mRailConfig.eventsCallback = aEventCallback;
     sBandConfigs[index].mRailConfig.protocol       = NULL;
-    sBandConfigs[index].mRailConfig.scheduler      = &sBandConfigs[index].mRailSchedState;
+    sBandConfigs[index].mRailConfig.scheduler      = &sBandConfigs[index].mmRailSchedState;
     sBandConfigs[index].mChannelConfig             = NULL;
     sBandConfigs[index].mChannelMin                = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN;
     sBandConfigs[index].mChannelMax                = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX;

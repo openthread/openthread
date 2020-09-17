@@ -293,7 +293,7 @@ static void efr32ConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAI
     sCommonConfig.mRailConfig.eventsCallback = aEventCallback;
     sCommonConfig.mRailConfig.protocol       = NULL; // only used by Bluetooth stack
 #if RADIO_CONFIG_DMP_SUPPORT
-    sCommonConfig.mRailConfig.scheduler = &(sCommonConfig.railSchedState);
+    sCommonConfig.mRailConfig.scheduler = &(sCommonConfig.mRailSchedState);
 #else
     sCommonConfig.mRailConfig.scheduler = NULL; // only needed for DMP
 #endif

@@ -79,7 +79,7 @@ typedef struct efr32CommonConfig
 {
     RAIL_Config_t mRailConfig;
 #if RADIO_CONFIG_DMP_SUPPORT
-    RAILSched_Config_t railSchedState;
+    RAILSched_Config_t mRailSchedState;
 #endif
     uint8_t
         mRailTxFifo[RAIL_TX_FIFO_SIZE]; // must be 2 power between 64 and 4096, and bigger than OT_RADIO_FRAME_MAX_SIZE

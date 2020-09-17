@@ -79,7 +79,7 @@ typedef struct efr32BandConfig
 {
     RAIL_Handle_t               mRailHandle;
     RAIL_Config_t               mRailConfig;
-    RAILSched_Config_t          mRailSchedState;
+    RAILSched_Config_t          mmRailSchedState;
     const RAIL_ChannelConfig_t *mChannelConfig;
     uint8_t                     mRailTxFifo[OT_RADIO_FRAME_MAX_SIZE + 1];
     uint8_t                     mChannelMin;
