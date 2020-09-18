@@ -133,6 +133,7 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
                                           const Ip6::Address &aAddress)
 {
     otLinkMetricsValues    metricsValues;
+    uint8_t                metricsRawValue;
     uint16_t               pos    = aOffset;
     uint16_t               endPos = aOffset + aLength;
     Tlv                    tlv;
@@ -178,18 +179,22 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
         case OT_LINK_METRICS_MARGIN:
             VerifyOrExit(!typeIdFlags.IsLengthFlagSet(), OT_NOOP);
             metricsValues.mMetrics.mLinkMargin = true;
-            aMessage.Read(pos, sizeof(uint8_t), &metricsValues.mLinkMarginValue);
+            aMessage.Read(pos, sizeof(uint8_t), &metricsRawValue);
+            metricsValues.mLinkMarginValue =
+                metricsRawValue * 130 / 255; // Reverse operation for linear scale, map from [0, 255] to [0, 130]
             pos += sizeof(uint8_t);
-            otLogDebgMle(" - Margin: %d %s", metricsValues.mLinkMarginValue,
+            otLogDebgMle(" - Margin: %d (dB) %s", metricsValues.mLinkMarginValue,
                          otLinkMetricsTypeEnumToString(OT_LINK_METRICS_TYPE_EXPONENTIAL));
             break;
 
         case OT_LINK_METRICS_RSSI:
             VerifyOrExit(!typeIdFlags.IsLengthFlagSet(), OT_NOOP);
             metricsValues.mMetrics.mRssi = true;
-            aMessage.Read(pos, sizeof(uint8_t), &metricsValues.mRssiValue);
+            aMessage.Read(pos, sizeof(uint8_t), &metricsRawValue);
+            metricsValues.mRssiValue =
+                metricsRawValue * 130 / 255 - 130; // Reverse operation for linear scale, map from [0, 255] to [-130, 0]
             pos += sizeof(uint8_t);
-            otLogDebgMle(" - RSSI: %d %s", metricsValues.mRssiValue,
+            otLogDebgMle(" - RSSI: %d (dBm) %s", metricsValues.mRssiValue,
                          otLinkMetricsTypeEnumToString(OT_LINK_METRICS_TYPE_EXPONENTIAL));
             break;
 
@@ -295,7 +300,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &               
         case OT_LINK_METRICS_RSSI:
             VerifyOrExit(!linkMetricsTypeIds[i].IsLengthFlagSet(), error = OT_ERROR_INVALID_ARGS);
             metric.SetMetricsValue8((aRequestMessage.GetAverageRss() + 130) * 255 /
-                                    130); // Linear scale rss from [-130, 0] to [0 to 255]
+                                    130); // Linear scale rss from [-130, 0] to [0, 255]
             break;
 
         default:

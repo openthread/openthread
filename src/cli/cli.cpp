@@ -1881,13 +1881,13 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress, const ot
 
     if (aMetricsValues->mMetrics.mLinkMargin)
     {
-        OutputFormat(" - Margin: %d %s\r\n", aMetricsValues->mLinkMarginValue,
+        OutputFormat(" - Margin: %d (dB) %s\r\n", aMetricsValues->mLinkMarginValue,
                      otLinkMetricsTypeEnumToString(OT_LINK_METRICS_TYPE_EXPONENTIAL));
     }
 
     if (aMetricsValues->mMetrics.mRssi)
     {
-        OutputFormat(" - RSSI: %d %s\r\n", aMetricsValues->mRssiValue,
+        OutputFormat(" - RSSI: %d (dBm) %s\r\n", aMetricsValues->mRssiValue,
                      otLinkMetricsTypeEnumToString(OT_LINK_METRICS_TYPE_EXPONENTIAL));
     }
 }

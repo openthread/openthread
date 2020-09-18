@@ -95,11 +95,11 @@ typedef struct otLinkMetrics
  */
 typedef struct otLinkMetricsValues
 {
-    otLinkMetrics mMetrics; ///< Specifies which metrcis values are present/included.
+    otLinkMetrics mMetrics; ///< Specifies which metrics values are present/included.
 
     uint32_t mPduCountValue;
     uint8_t  mLqiValue;
-    int8_t   mLinkMarginValue;
+    uint8_t  mLinkMarginValue;
     int8_t   mRssiValue;
 } otLinkMetricsValues;
 

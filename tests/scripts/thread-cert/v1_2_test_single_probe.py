@@ -92,6 +92,14 @@ class SSED_SingleProbe(thread_cert.TestCase):
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
         msg.assertMleMessageContainsTlv(mle.LinkMetricsReport)
 
+        # SSED_1 sends a Single Probe Link Metrics for Link Margin using MLE Data Request
+        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, 'r')
+        self.simulator.go(5)
+
+        leader_messages = self.simulator.get_messages_sent_by(LEADER)
+        msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
+        msg.assertMleMessageContainsTlv(mle.LinkMetricsReport)
+
         # SSED_1 sends a Single Probe Link Metrics for all metrics using MLE Data Request
         self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, 'pqmr')
         self.simulator.go(5)
