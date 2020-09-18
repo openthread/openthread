@@ -63,6 +63,7 @@
 #endif
 
 #include "platform-efr32.h"
+#include "sl_system_init.h"
 
 #if (HAL_FEM_ENABLE)
 #include "fem-control.h"
@@ -160,6 +161,13 @@ static void halInitChipSpecific(void)
 
 otInstance *sInstance;
 
+#ifndef SL_COMPONENT_CATALOG_PRESENT
+__WEAK void sl_openthread_init(void)
+{
+    // Place holder for enabling Silabs specific features available only through Simplicity Studio
+}
+#endif // SL_COMPONENT_CATALOG_PRESENT
+
 void otSysInit(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
@@ -179,13 +187,10 @@ void otSysInit(int argc, char *argv[])
 #undef EXCEPTION
 
     NVIC_SetPriorityGrouping(PRIGROUP_POSITION - 1);
-    CHIP_Init();
+    sl_system_init();
     halInitChipSpecific();
     BSP_Init(BSP_INIT_BCC);
 
-    CMU_ClockSelectSet(cmuClock_LFE, cmuSelect_LFRCO);
-    CMU_ClockEnable(cmuClock_CORELE, true);
-    CMU_ClockEnable(cmuClock_RTCC, true);
     status = sl_sleeptimer_init();
     assert(status == SL_STATUS_OK);
 
