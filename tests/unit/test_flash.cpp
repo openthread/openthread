@@ -68,6 +68,7 @@ public:
     otError Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const
     {
         otError error;
+
         if (mReadNew)
         {
             testFlashSet(1);
@@ -78,12 +79,14 @@ public:
             testFlashSet(0);
             error = mFlashV1.Get(aKey, aIndex, aValue, aValueLength);
         }
+
         return error;
     }
 
     otError Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
     {
         otError error;
+
         if (mWriteNew)
         {
             testFlashSet(1);
@@ -95,12 +98,14 @@ public:
             error = mFlashV1.Set(aKey, aValue, aValueLength);
             LegacyPrepare();
         }
+
         return error;
     }
 
     otError Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
     {
         otError error;
+
         if (mWriteNew)
         {
             testFlashSet(1);
@@ -112,12 +117,14 @@ public:
             error = mFlashV1.Add(aKey, aValue, aValueLength);
             LegacyPrepare();
         }
+
         return error;
     }
 
     otError Delete(uint16_t aKey, int aIndex)
     {
         otError error;
+
         if (mWriteNew)
         {
             testFlashSet(1);
@@ -129,6 +136,7 @@ public:
             error = mFlashV1.Delete(aKey, aIndex);
             LegacyPrepare();
         }
+
         return error;
     }
 
@@ -148,7 +156,7 @@ public:
     }
 
 private:
-    void LegacyPrepare()
+    void LegacyPrepare(void)
     {
         if (!mWriteNew && mReadNew)
         {

@@ -55,7 +55,7 @@ OT_TOOL_PACKED_BEGIN
 class SwapHeader
 {
 public:
-    inline void Init()
+    inline void Init(void)
     {
         mMarker   = kMarkerInit;
         mReserved = 0xffffffff;
@@ -71,17 +71,17 @@ public:
         otPlatFlashWrite(aInstance, aSwapIndex, 0, this, sizeof(*this));
     }
 
-    bool IsActive() const { return (mMarker & kActiveMask) == kActive; }
+    bool IsActive(void) const { return (mMarker & kActiveMask) == kActive; }
 
-    void SetInactive()
+    void SetInactive(void)
     {
         mMarker   = ~mMarker;
         mReserved = 0xffffffff;
     }
 
-    uint8_t GetSize() const { return GetFormat() == kFormatV1 ? sizeof(mMarker) : sizeof(*this); }
+    uint8_t GetSize(void) const { return GetFormat() == kFormatV1 ? sizeof(mMarker) : sizeof(*this); }
 
-    uint8_t GetFormat() const { return kFormatTop - (mMarker >> kFormatShift); }
+    uint8_t GetFormat(void) const { return kFormatTop - (mMarker >> kFormatShift); }
 
 private:
     enum : uint32_t
@@ -176,7 +176,7 @@ protected:
         // TODO: validate GetFormat() == 0 && mReserved == 0xffff;
     }
 
-    uint8_t GetFormat() const { return kFormatTop - (mFlags >> kFormatShift); }
+    uint8_t GetFormat(void) const { return kFormatTop - (mFlags >> kFormatShift); }
 
 private:
     uint16_t GetAlignmentMask(void) const { return GetAlignmentMask(GetFormat()); }
@@ -253,7 +253,7 @@ public:
         otPlatFlashWrite(aInstance, aSwapIndex, aOffset, this, GetSize());
     }
 
-    void Fixup()
+    void Fixup(void)
     {
         uint16_t dataLength = GetLength();
         RecordHeader::Init(GetKey(), dataLength);
@@ -394,7 +394,7 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
 
 otError Flash::Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
-    Delete(aKey, -1);
+    IgnoreError(Delete(aKey, -1));
     return Add(aKey, aValue, aValueLength);
 }
 
