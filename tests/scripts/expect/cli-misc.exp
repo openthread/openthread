@@ -47,6 +47,12 @@ expect "Done"
 send "bufferinfo\n"
 expect "Done"
 
+send "ccathreshold -62\n"
+expect "Done"
+send "ccathreshold\n"
+expect -- "-62 dBm"
+expect "Done"
+
 send "netdatashow\n"
 expect "Done"
 
