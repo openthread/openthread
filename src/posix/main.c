@@ -66,12 +66,8 @@
 #elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 #include <openthread/cli.h>
 
-#include "cli/cli_config.h"
-#if (HAVE_LIBEDIT || HAVE_LIBREADLINE) && !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE && \
-    (OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_CONSOLE)
-#define OPENTHREAD_USE_CONSOLE 1
 #include "console_cli.h"
-#endif
+#include "cli/cli_config.h"
 #else
 #error "Unknown posix app type!"
 #endif
