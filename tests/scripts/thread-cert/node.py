@@ -45,6 +45,9 @@ from typing import Union, Dict
 
 class Node:
 
+    extaddr = None
+    rloc16 = None
+
     def __init__(self, nodeid, is_mtd=False, simulator=None, name=None, version=None, is_bbr=False):
         self.nodeid = nodeid
         self.name = name or ('Node%d' % nodeid)
@@ -474,7 +477,7 @@ class Node:
         self._expect('Done')
         self._allow_list.add(addr)
 
-    def mac_filter_allows(self, extaddr) -> bool:
+    def check_allow_list(self, extaddr) -> bool:
         if not self._allow_list_enabled or extaddr is None:
             return True
 

@@ -32,11 +32,10 @@ import bisect
 import os
 import socket
 import struct
-import sys
 import traceback
 import time
-
 import io
+
 import config
 import mesh_cop
 import message
@@ -185,6 +184,9 @@ class VirtualTime(BaseSimulator):
     def is_running(self):
         return self.sock is not None
 
+    def get_node_by_addr(self, addr):
+        return self._nodes[addr[1] - self.port]
+
     def _add_message(self, nodeid, message_obj):
         addr = ('127.0.0.1', self.port + nodeid)
 
@@ -323,12 +325,24 @@ class VirtualTime(BaseSimulator):
             elif type == self.OT_SIM_EVENT_RADIO_RECEIVED:
                 assert self._is_radio(addr)
                 # add radio receive events event queue
-                src_node = self._nodes[addr[1] - self.BASE_PORT]
+                src_node = self.get_node_by_addr(addr)
+
+                dst_extaddr, dst_short = self._parse_mac_frame_dst(data)
+
                 for device in self.devices:
                     if device != addr and self._is_radio(device):
-                        dst_node = self._nodes[device[1] - self.BASE_PORT]
-                        if not dst_node.mac_filter_allows(src_node.extaddr):
+                        dst_node = self.get_node_by_addr(device)
+
+                        if not dst_node.check_allow_list(src_node.extaddr):
                             continue
+
+                        if dst_extaddr is not None:
+                            if dst_node.extaddr is not None and dst_extaddr != dst_node.extaddr:
+                                continue
+
+                        elif dst_short is not None and dst_short != 0xffff:
+                            if dst_node.rloc16 is not None and dst_node.rloc16 != dst_short:
+                                continue
 
                         event = (
                             event_time,
@@ -360,11 +374,11 @@ class VirtualTime(BaseSimulator):
                 self.awake_devices.add(addr)
             elif type == self.OT_SIM_EVENT_OTNS_STATUS_PUSH:
                 for status in data.decode('ascii').split(';'):
-                    # print(f'OTNS status <<< {status}')
                     name, val = status.split('=')
                     if name == 'extaddr':
-                        print(f'OTNS status: {addr} <<< {status}', file=sys.stderr)
-                        self._nodes[addr[1] - self.BASE_PORT].extaddr = val
+                        self.get_node_by_addr(addr).extaddr = val
+                    elif name == 'rloc16':
+                        self.get_node_by_addr(addr).rloc16 = int(val)
 
                 self.awake_devices.add(addr)
 
@@ -411,6 +425,20 @@ class VirtualTime(BaseSimulator):
                 nodeid = struct.unpack('=B', data)[0]
                 if self.current_nodeid == nodeid:
                     self.current_nodeid = None
+
+    def _parse_mac_frame_dst(self, frame):
+        fcf = struct.unpack("<H", frame[1:3])[0]
+
+        dst_addr_mode = (fcf & 0x0c00) >> 10
+
+        dst_extaddr, dst_short = None, None
+
+        if dst_addr_mode == 2:
+            dst_short = struct.unpack('<H', frame[6:8])[0]
+        elif dst_addr_mode == 3:
+            dst_extaddr = '%016x' % struct.unpack('<Q', frame[6:14])[0]
+
+        return dst_extaddr, dst_short
 
     def _send_message(self, message, addr):
         while True:
