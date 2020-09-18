@@ -21,7 +21,6 @@ Done
 
 ## OpenThread Command List
 
-- [api](#api)
 - [bbr](#bbr)
 - [bufferinfo](#bufferinfo)
 - [channel](#channel)
