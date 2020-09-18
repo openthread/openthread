@@ -46,13 +46,15 @@ if PACKET_VERIFICATION:
 
 PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
+ENV_THREAD_VERSION = os.getenv('THREAD_VERSION', '1.1')
+
 DEFAULT_PARAMS = {
     'is_mtd': False,
     'is_bbr': False,
     'mode': 'rsdn',
     'panid': 0xface,
     'allowlist': None,
-    'version': '1.1',
+    'version': ENV_THREAD_VERSION,
 }
 """Default configurations when creating nodes."""
 
