@@ -122,7 +122,7 @@ Done
 
 ### mgmtget
 
-Usage: `commissioner mgmtget [locator] [sessionid] [steeringdata] [joinerudpport] [binary <TLV Types>]`
+Usage: `commissioner mgmtget [locator] [sessionid] [steeringdata] [joinerudpport] [-x <TLV Types>]`
 
 Send a `MGMT_GET` message to the Leader.
 
@@ -133,7 +133,7 @@ Done
 
 ### mgmtset
 
-Usage: `commissioner mgmtset [locator <locator>] [sessionid <sessionid>] [steeringdata <steeringdata>] [joinerudpport <joinerudpport>] [binary <TLVs>]`
+Usage: `commissioner mgmtset [locator <locator>] [sessionid <sessionid>] [steeringdata <steeringdata>] [joinerudpport <joinerudpport>] [-x <TLVs>]`
 
 Send a `MGMT_SET` message to the Leader.
 

@@ -256,7 +256,7 @@ otError Dataset::ProcessActive(uint8_t aArgsLength, char *aArgs[])
         SuccessOrExit(error = otDatasetGetActive(mInterpreter.mInstance, &dataset));
         error = Print(dataset);
     }
-    else if ((aArgsLength == 1) && (strcmp(aArgs[0], "binary") == 0))
+    else if ((aArgsLength == 1) && (strcmp(aArgs[0], "-x") == 0))
     {
         otOperationalDatasetTlvs dataset;
 
@@ -286,7 +286,7 @@ otError Dataset::ProcessPending(uint8_t aArgsLength, char *aArgs[])
         SuccessOrExit(error = otDatasetGetPending(mInterpreter.mInstance, &dataset));
         error = Print(dataset);
     }
-    else if ((aArgsLength == 1) && (strcmp(aArgs[0], "binary") == 0))
+    else if ((aArgsLength == 1) && (strcmp(aArgs[0], "-x") == 0))
     {
         otOperationalDatasetTlvs dataset;
 
@@ -683,7 +683,7 @@ otError Dataset::ProcessMgmtSetCommand(uint8_t aArgsLength, char *aArgs[])
             SuccessOrExit(error = Interpreter::ParseLong(aArgs[index], value));
             dataset.mChannelMask = static_cast<uint32_t>(value);
         }
-        else if (strcmp(aArgs[index], "binary") == 0)
+        else if (strcmp(aArgs[index], "-x") == 0)
         {
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             length = static_cast<int>((strlen(aArgs[index]) + 1) / 2);
@@ -770,7 +770,7 @@ otError Dataset::ProcessMgmtGetCommand(uint8_t aArgsLength, char *aArgs[])
         {
             datasetComponents.mIsChannelPresent = true;
         }
-        else if (strcmp(aArgs[index], "binary") == 0)
+        else if (strcmp(aArgs[index], "-x") == 0)
         {
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             value = static_cast<long>(strlen(aArgs[index]) + 1) / 2;

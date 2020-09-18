@@ -1243,7 +1243,7 @@ class Node:
             cmd += 'networkname %s ' % self._escape_escapable(network_name)
 
         if binary is not None:
-            cmd += 'binary %s ' % binary
+            cmd += '-x %s ' % binary
 
         self.send_command(cmd)
         self._expect('Done')
@@ -1524,7 +1524,7 @@ class Node:
         self._expect('coaps response', timeout=timeout)
 
     def commissioner_mgmtset(self, tlvs_binary):
-        cmd = 'commissioner mgmtset binary %s' % tlvs_binary
+        cmd = 'commissioner mgmtset -x %s' % tlvs_binary
         self.send_command(cmd)
         self._expect('Done')
 
