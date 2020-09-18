@@ -1891,30 +1891,37 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
         if (aFrame->GetSecurityEnabled())
         {
-            switch (neighbor->GetState())
+            uint8_t keyIdMode;
+
+            IgnoreError(aFrame->GetKeyIdMode(keyIdMode));
+
+            if (keyIdMode == Frame::kKeyIdMode1)
             {
-            case Neighbor::kStateValid:
-                break;
+                switch (neighbor->GetState())
+                {
+                case Neighbor::kStateValid:
+                    break;
 
-            case Neighbor::kStateRestored:
-            case Neighbor::kStateChildUpdateRequest:
+                case Neighbor::kStateRestored:
+                case Neighbor::kStateChildUpdateRequest:
 
-                // Only accept a "MAC Data Request" frame from a child being restored.
-                VerifyOrExit(aFrame->IsDataRequestCommand(), error = OT_ERROR_DROP);
-                break;
+                    // Only accept a "MAC Data Request" frame from a child being restored.
+                    VerifyOrExit(aFrame->IsDataRequestCommand(), error = OT_ERROR_DROP);
+                    break;
 
-            default:
-                ExitNow(error = OT_ERROR_UNKNOWN_NEIGHBOR);
-            }
+                default:
+                    ExitNow(error = OT_ERROR_UNKNOWN_NEIGHBOR);
+                }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2 && OPENTHREAD_FTD
-            // From Thread 1.2, MAC Data Frame can also act as keep-alive message if child supports
-            if (aFrame->GetType() == Frame::kFcfFrameData && !neighbor->IsRxOnWhenIdle() &&
-                neighbor->IsEnhancedKeepAliveSupported())
-            {
-                neighbor->SetLastHeard(TimerMilli::GetNow());
-            }
+                // From Thread 1.2, MAC Data Frame can also act as keep-alive message if child supports
+                if (aFrame->GetType() == Frame::kFcfFrameData && !neighbor->IsRxOnWhenIdle() &&
+                    neighbor->IsEnhancedKeepAliveSupported())
+                {
+                    neighbor->SetLastHeard(TimerMilli::GetNow());
+                }
 #endif
+            }
         }
     }
 
