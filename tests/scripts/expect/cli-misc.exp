@@ -111,6 +111,11 @@ expect "Done"
 
 send "version\n"
 expect "Done"
+send "version api\n"
+expect "28"
+expect "Done"
+send "version something_invalid\n"
+expect "Error 7: InvalidArgs"
 
 send "joinerport 10001\n"
 expect "Done"
@@ -145,11 +150,5 @@ send "route\n"
 expect "0:0:0:0::/64 s low"
 send "route remove ::/64\n"
 expect "Done"
-
-send "api version\n"
-expect "28"
-expect "Done"
-send "api something_invalid\n"
-expect "Error 7: InvalidArgs"
 
 dispose_nodes

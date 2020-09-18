@@ -103,20 +103,6 @@ Done
 
 ## OpenThread Command Details
 
-### api
-
-API-related commands.
-
-### api version
-
-Print API version number.
-
-```bash
-> api version
-28
-Done
-```
-
 ### bbr
 
 Show current Primary Backbone Router information for Thread 1.2 device.
@@ -1908,6 +1894,16 @@ Print the build version information.
 ```bash
 > version
 OPENTHREAD/gf4f2f04; Jul  1 2016 17:00:09
+Done
+```
+
+### version api
+
+Print API version number.
+
+```bash
+> version api
+28
 Done
 ```
 
