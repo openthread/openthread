@@ -53,6 +53,8 @@ class Node:
         self.env_version = os.getenv('THREAD_VERSION', '1.1')
         self.is_bbr = is_bbr
         self._initialized = False
+        self._allow_list = set()
+        self._allow_list_enabled = False
 
         if version is not None:
             self.version = version
@@ -448,16 +450,19 @@ class Node:
         cmd = 'macfilter addr clear'
         self.send_command(cmd)
         self._expect('Done')
+        self._allow_list.clear()
 
     def enable_allowlist(self):
         cmd = 'macfilter addr allowlist'
         self.send_command(cmd)
         self._expect('Done')
+        self._allow_list_enabled = True
 
     def disable_allowlist(self):
         cmd = 'macfilter addr disable'
         self.send_command(cmd)
         self._expect('Done')
+        self._allow_list_enabled = False
 
     def add_allowlist(self, addr, rssi=None):
         cmd = 'macfilter addr add %s' % addr
@@ -467,6 +472,13 @@ class Node:
 
         self.send_command(cmd)
         self._expect('Done')
+        self._allow_list.add(addr)
+
+    def mac_filter_allows(self, extaddr) -> bool:
+        if not self._allow_list_enabled or extaddr is None:
+            return True
+
+        return extaddr in self._allow_list
 
     def get_bbr_registration_jitter(self):
         self.send_command('bbr jitter')

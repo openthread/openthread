@@ -32,6 +32,7 @@ import bisect
 import os
 import socket
 import struct
+import sys
 import traceback
 import time
 
@@ -122,12 +123,12 @@ class RealTime(BaseSimulator):
 
 
 class VirtualTime(BaseSimulator):
-
     OT_SIM_EVENT_ALARM_FIRED = 0
     OT_SIM_EVENT_RADIO_RECEIVED = 1
     OT_SIM_EVENT_UART_WRITE = 2
     OT_SIM_EVENT_RADIO_SPINEL_WRITE = 3
     OT_SIM_EVENT_POSTCMD = 4
+    OT_SIM_EVENT_OTNS_STATUS_PUSH = 5
 
     EVENT_TIME = 0
     EVENT_SEQUENCE = 1
@@ -322,8 +323,13 @@ class VirtualTime(BaseSimulator):
             elif type == self.OT_SIM_EVENT_RADIO_RECEIVED:
                 assert self._is_radio(addr)
                 # add radio receive events event queue
+                src_node = self._nodes[addr[1] - self.BASE_PORT]
                 for device in self.devices:
                     if device != addr and self._is_radio(device):
+                        dst_node = self._nodes[device[1] - self.BASE_PORT]
+                        if not dst_node.mac_filter_allows(src_node.extaddr):
+                            continue
+
                         event = (
                             event_time,
                             self.event_sequence,
@@ -350,6 +356,15 @@ class VirtualTime(BaseSimulator):
                 )
                 self.event_sequence += 1
                 bisect.insort(self.event_queue, event)
+
+                self.awake_devices.add(addr)
+            elif type == self.OT_SIM_EVENT_OTNS_STATUS_PUSH:
+                for status in data.decode('ascii').split(';'):
+                    # print(f'OTNS status <<< {status}')
+                    name, val = status.split('=')
+                    if name == 'extaddr':
+                        print(f'OTNS status: {addr} <<< {status}', file=sys.stderr)
+                        self._nodes[addr[1] - self.BASE_PORT].extaddr = val
 
                 self.awake_devices.add(addr)
 

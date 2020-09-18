@@ -45,6 +45,7 @@ readonly OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
 readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
 readonly INTER_OP="${INTER_OP:-0}"
 readonly VERBOSE="${VERBOSE:-0}"
+readonly OTNS="${OTNS:-0}"
 
 build_simulation()
 {
@@ -56,13 +57,16 @@ build_simulation()
         options+=("-DOT_MLR=ON")
     fi
 
+    if [[ ${OTNS} == 1 ]]; then
+        options+=("-DOT_OTNS=ON")
+    fi
+
     if [[ ${VIRTUAL_TIME} == 1 ]]; then
         options+=("-DOT_SIMULATION_VIRTUAL_TIME=ON")
 
         if [[ ${NODE_MODE} == "rcp" ]]; then
             options+=("-DOT_SIMULATION_VIRTUAL_TIME_UART=ON")
         fi
-
     fi
 
     if [[ ${version} == "1.2" ]]; then
