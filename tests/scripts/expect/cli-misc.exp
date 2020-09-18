@@ -112,7 +112,7 @@ expect "Done"
 send "version\n"
 expect "Done"
 send "version api\n"
-expect "28"
+expect -re {\d+}
 expect "Done"
 send "version something_invalid\n"
 expect "Error 7: InvalidArgs"
