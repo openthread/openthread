@@ -38,6 +38,7 @@
 #include <assert.h>
 
 #include "openthread-system.h"
+#include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
@@ -166,7 +167,7 @@ static const RAIL_IEEE802154_Config_t sRailIeee802154Config = {
     .ackConfig =
         {
             .enable     = true,
-            .ackTimeout = 864,
+            .ackTimeout = 864, //TODO-466: FIND THE RIGHT VALUE 
             .rxTransitions =
                 {
                     .success = RAIL_RF_STATE_RX,
@@ -190,6 +191,7 @@ static const RAIL_IEEE802154_Config_t sRailIeee802154Config = {
     .framesMask       = RAIL_IEEE802154_ACCEPT_STANDARD_FRAMES,
     .promiscuousMode  = false,
     .isPanCoordinator = false,
+	.defaultFramePendingInOutgoingAcks = false,
 };
 
 #if RADIO_CONFIG_PA_USES_DCDC
@@ -264,6 +266,7 @@ static void efr32RailConfigLoad(efr32BandConfig *aBandConfig)
         status = RAIL_IEEE802154_Config2p4GHzRadio(gRailHandle);
         assert(status == RAIL_STATUS_NO_ERROR);
     }
+
     status = RAIL_ConfigTxPower(gRailHandle, &txPowerConfig);
     assert(status == RAIL_STATUS_NO_ERROR);
 }
@@ -342,8 +345,6 @@ void efr32RadioInit(void)
     assert((RAIL_TX_FIFO_SIZE >= 64) || (RAIL_TX_FIFO_SIZE <= 4096));
 
     efr32ConfigInit(RAILCb_Generic);
-
-    CMU_ClockEnable(cmuClock_PRS, true);
 
     status = RAIL_ConfigSleep(gRailHandle, RAIL_SLEEP_CONFIG_TIMERSYNC_ENABLED);
     assert(status == RAIL_STATUS_NO_ERROR);

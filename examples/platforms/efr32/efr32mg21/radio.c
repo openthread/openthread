@@ -38,6 +38,7 @@
 #include <assert.h>
 
 #include "openthread-system.h"
+#include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
@@ -47,16 +48,20 @@
 
 #include "utils/soft_source_match_table.h"
 
-#include "antenna.h"
 #include "board_config.h"
 #include "em_cmu.h"
 #include "em_core.h"
 #include "em_system.h"
+#include "hal-config.h"
 #include "pa_conversions_efr32.h"
 #include "platform-band.h"
 #include "rail.h"
 #include "rail_config.h"
 #include "rail_ieee802154.h"
+
+#ifdef SL_COMPONENT_CATALOG_PRESENT
+#include "sl_component_catalog.h"
+#endif // SL_COMPONENT_CATALOG_PRESENT
 
 enum
 {
@@ -158,34 +163,35 @@ static energyScanMode            sEnergyScanMode;
 static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents);
 
 static const RAIL_IEEE802154_Config_t sRailIeee802154Config = {
-    NULL, // addresses
-    {
-        // ackConfig
-        true, // ackConfig.enable
-        894,  // ackConfig.ackTimeout
+    .addresses = NULL,
+    .ackConfig =
         {
-            // ackConfig.rxTransitions
-            RAIL_RF_STATE_RX, // ackConfig.rxTransitions.success
-            RAIL_RF_STATE_RX, // ackConfig.rxTransitions.error
+            .enable     = true,
+            .ackTimeout = 894, //TODO-466: FIND THE RIGHT VALUE 
+            .rxTransitions =
+                {
+                    .success = RAIL_RF_STATE_RX,
+                    .error   = RAIL_RF_STATE_RX,
+                },
+            .txTransitions =
+                {
+                    .success = RAIL_RF_STATE_RX,
+                    .error   = RAIL_RF_STATE_RX,
+                },
         },
+    .timings =
         {
-            // ackConfig.txTransitions
-            RAIL_RF_STATE_RX, // ackConfig.txTransitions.success
-            RAIL_RF_STATE_RX, // ackConfig.txTransitions.error
+            .idleToRx            = 100,
+            .txToRx              = 192 - 10,
+            .idleToTx            = 100,
+            .rxToTx              = 192,
+            .rxSearchTimeout     = 0,
+            .txToRxSearchTimeout = 0,
         },
-    },
-    {
-        // timings
-        100,      // timings.idleToRx
-        192 - 10, // timings.txToRx
-        100,      // timings.idleToTx
-        192,      // timings.rxToTx
-        0,        // timings.rxSearchTimeout
-        0,        // timings.txToRxSearchTimeout
-    },
-    RAIL_IEEE802154_ACCEPT_STANDARD_FRAMES, // framesMask
-    false,                                  // promiscuousMode
-    false,                                  // isPanCoordinator
+    .framesMask       = RAIL_IEEE802154_ACCEPT_STANDARD_FRAMES,
+    .promiscuousMode  = false,
+    .isPanCoordinator = false,
+	.defaultFramePendingInOutgoingAcks = false,
 };
 
 RAIL_DECLARE_TX_POWER_VBAT_CURVES_ALT;
@@ -204,6 +210,11 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
     handle = RAIL_Init(&aCommonConfig->mRailConfig, NULL);
     assert(handle != NULL);
 
+#if defined(SL_CATALOG_POWER_MANAGER_PRESENT)
+    status = RAIL_InitPowerManager();
+    assert(status == RAIL_STATUS_NO_ERROR);
+#endif // SL_CATALOG_POWER_MANAGER_PRESENT
+
     status = RAIL_ConfigCal(handle, RAIL_CAL_ALL);
     assert(status == RAIL_STATUS_NO_ERROR);
 
@@ -217,7 +228,7 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
                                    RAIL_EVENT_RSSI_AVERAGE_DONE |               //
                                    RAIL_EVENT_IEEE802154_DATA_REQUEST_COMMAND | //
                                    RAIL_EVENT_CAL_NEEDED |                      //
-#if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
+#if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT || RADIO_CONFIG_DMP_SUPPORT
                                    RAIL_EVENT_CONFIG_SCHEDULED |   //
                                    RAIL_EVENT_CONFIG_UNSCHEDULED | //
 #endif
@@ -251,6 +262,7 @@ static void efr32RailConfigLoad(efr32BandConfig *aBandConfig)
         status = RAIL_IEEE802154_Config2p4GHzRadio(gRailHandle);
         assert(status == RAIL_STATUS_NO_ERROR);
     }
+
     status = RAIL_ConfigTxPower(gRailHandle, &txPowerConfig);
     assert(status == RAIL_STATUS_NO_ERROR);
 }
@@ -329,6 +341,9 @@ void efr32RadioInit(void)
     assert((RAIL_TX_FIFO_SIZE >= 64) || (RAIL_TX_FIFO_SIZE <= 4096));
 
     efr32ConfigInit(RAILCb_Generic);
+
+    status = RAIL_ConfigSleep(gRailHandle, RAIL_SLEEP_CONFIG_TIMERSYNC_ENABLED);
+    assert(status == RAIL_STATUS_NO_ERROR);
 
     sReceiveFrame.mLength  = 0;
     sReceiveFrame.mPsdu    = sReceivePsdu;
@@ -537,7 +552,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     otError           error      = OT_ERROR_NONE;
     RAIL_CsmaConfig_t csmaConfig = RAIL_CSMA_CONFIG_802_15_4_2003_2p4_GHz_OQPSK_CSMA;
-    RAIL_TxOptions_t  txOptions  = RAIL_TX_OPTIONS_NONE;
+    RAIL_TxOptions_t  txOptions  = RAIL_TX_OPTIONS_DEFAULT;
     efr32BandConfig * config;
     RAIL_Status_t     status;
     uint8_t           frameLength;
