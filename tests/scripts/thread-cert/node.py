@@ -128,7 +128,7 @@ class Node:
 
         print("%s" % cmd)
 
-        self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=10)
+        self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=10, logfile=sys.stderr, encoding='utf-8')
 
         # Add delay to ensure that the process is ready to receive commands.
         timeout = 0.4
@@ -209,7 +209,7 @@ class Node:
         cmd += ' %d' % nodeid
         print("%s" % cmd)
 
-        self.pexpect = pexpect.spawn(cmd, timeout=10)
+        self.pexpect = pexpect.spawn(cmd, timeout=10, logfile=sys.stderr, encoding='utf-8')
 
         # Add delay to ensure that the process is ready to receive commands.
         time.sleep(0.2)
@@ -277,7 +277,7 @@ class Node:
         pattern = self._prepare_pattern(pattern)
 
         while self._expect(pattern, *args, **kwargs):
-            results.append(self.pexpect.match.group(0).decode('utf8'))
+            results.append(self.pexpect.match.group(0))
 
         return results
 
@@ -287,7 +287,7 @@ class Node:
 
         while True:
             self._expect(r"[^\n]+")
-            line = self.pexpect.match.group(0).decode('utf8').strip()
+            line = self.pexpect.match.group(0).strip()
 
             if line.startswith('> '):
                 line = line[2:]
@@ -317,7 +317,9 @@ class Node:
         import fdpexpect
 
         serialPort = '/dev/ttyUSB%d' % ((nodeid - 1) * 2)
-        self.pexpect = fdpexpect.fdspawn(os.open(serialPort, os.O_RDWR | os.O_NONBLOCK | os.O_NOCTTY))
+        self.pexpect = fdpexpect.fdspawn(os.open(serialPort, os.O_RDWR | os.O_NONBLOCK | os.O_NOCTTY),
+                                         logfile=sys.stderr,
+                                         encoding='utf-8')
 
     def __del__(self):
         self.destroy()
@@ -337,13 +339,13 @@ class Node:
     def read_cert_messages_in_commissioning_log(self, timeout=-1):
         """Get the log of the traffic after DTLS handshake.
         """
-        format_str = br"=+?\[\[THCI\].*?type=%s.*?\].*?=+?[\s\S]+?-{40,}"
-        join_fin_req = format_str % br"JOIN_FIN\.req"
-        join_fin_rsp = format_str % br"JOIN_FIN\.rsp"
-        dummy_format_str = br"\[THCI\].*?type=%s.*?"
-        join_ent_ntf = dummy_format_str % br"JOIN_ENT\.ntf"
-        join_ent_rsp = dummy_format_str % br"JOIN_ENT\.rsp"
-        pattern = (b"(" + join_fin_req + b")|(" + join_fin_rsp + b")|(" + join_ent_ntf + b")|(" + join_ent_rsp + b")")
+        format_str = r"=+?\[\[THCI\].*?type=%s.*?\].*?=+?[\s\S]+?-{40,}"
+        join_fin_req = format_str % r"JOIN_FIN\.req"
+        join_fin_rsp = format_str % r"JOIN_FIN\.rsp"
+        dummy_format_str = r"\[THCI\].*?type=%s.*?"
+        join_ent_ntf = dummy_format_str % r"JOIN_ENT\.ntf"
+        join_ent_rsp = dummy_format_str % r"JOIN_ENT\.rsp"
+        pattern = ("(" + join_fin_req + ")|(" + join_fin_rsp + ")|(" + join_ent_ntf + ")|(" + join_ent_rsp + ")")
 
         messages = []
         # There are at most 4 cert messages both for joiner and commissioner
@@ -357,27 +359,27 @@ class Node:
         return messages
 
     def _extract_cert_message(self, log):
-        res = re.search(br"direction=\w+", log)
+        res = re.search(r"direction=\w+", log)
         assert res
-        direction = res.group(0).split(b'=')[1].strip()
+        direction = res.group(0).split('=')[1].strip()
 
-        res = re.search(br"type=\S+", log)
+        res = re.search(r"type=\S+", log)
         assert res
-        type = res.group(0).split(b'=')[1].strip()
+        type = res.group(0).split('=')[1].strip()
 
         payload = bytearray([])
         payload_len = 0
-        if type in [b"JOIN_FIN.req", b"JOIN_FIN.rsp"]:
-            res = re.search(br"len=\d+", log)
+        if type in ["JOIN_FIN.req", "JOIN_FIN.rsp"]:
+            res = re.search(r"len=\d+", log)
             assert res
-            payload_len = int(res.group(0).split(b'=')[1].strip())
+            payload_len = int(res.group(0).split('=')[1].strip())
 
-            hex_pattern = br"\|(\s([0-9a-fA-F]{2}|\.\.))+?\s+?\|"
+            hex_pattern = r"\|(\s([0-9a-fA-F]{2}|\.\.))+?\s+?\|"
             while True:
                 res = re.search(hex_pattern, log)
                 if not res:
                     break
-                data = [int(hex, 16) for hex in res.group(0)[1:-1].split(b' ') if hex and hex != b'..']
+                data = [int(hex, 16) for hex in res.group(0)[1:-1].split(' ') if hex and hex != '..']
                 payload += bytearray(data)
                 log = log[res.end() - 1:]
 
@@ -502,7 +504,7 @@ class Node:
         self.send_command(cmd)
         self._expect(r'(.*)Done')
         g = self.pexpect.match.groups()
-        output = g[0].decode("utf-8")
+        output = g[0]
         lines = output.strip().split('\n')
         lines = [l.strip() for l in lines]
         ret = {}
@@ -901,8 +903,8 @@ class Node:
 
         pattern = self._prepare_pattern(r'([a-fA-F0-9\:]+) ([a-fA-F0-9]+)')
         while self._expect(pattern):
-            eid = self.pexpect.match.groups()[0].decode("utf-8")
-            rloc = self.pexpect.match.groups()[1].decode("utf-8")
+            eid = self.pexpect.match.groups()[0]
+            rloc = self.pexpect.match.groups()[1]
             eidcaches.append((eid, rloc))
 
         return eidcaches
