@@ -21,6 +21,7 @@ Done
 
 ## OpenThread Command List
 
+- [api](#api)
 - [bbr](#bbr)
 - [bufferinfo](#bufferinfo)
 - [channel](#channel)
@@ -101,6 +102,20 @@ Done
 - [version](#version)
 
 ## OpenThread Command Details
+
+### api
+
+API-related commands.
+
+### api version
+
+Print API version number.
+
+```bash
+> api version
+28
+Done
+```
 
 ### bbr
 

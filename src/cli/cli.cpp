@@ -347,6 +347,25 @@ void Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
     OutputResult(OT_ERROR_NONE);
 }
 
+void Interpreter::ProcessApi(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(aArgs[0], "version") == 0)
+    {
+        OutputLine("%d", OPENTHREAD_API_VERSION);
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    OutputResult(error);
+}
+
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 void Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
 {
