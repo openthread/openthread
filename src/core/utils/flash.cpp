@@ -33,6 +33,7 @@
 #include <openthread/platform/flash.h>
 
 #include "common/code_utils.hpp"
+#include "common/crc16.hpp"
 #include "common/instance.hpp"
 
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
@@ -86,15 +87,17 @@ public:
 private:
     enum : uint32_t
     {
-        kActive = 0x0e5cc5ee,
+        kActive = 0x0e5cc5ee, // This matches the last 28 bits of the swap header format v1.
 
-        kActiveMask = 0xfffffff,
+        kActiveMask = 0x0fffffff,
 
-        kFormatTop   = 0xb,
+        kFormatTop   = 0xb, // This matches the first nibble of the swap header format v1.
         kFormatShift = 28,
 
         kMarkerInit = ((uint32_t)(kFormatTop - kFormatV2) << kFormatShift) | kActive,
     };
+    static_assert(kActive >> kFormatShift == 0, "wrong kActive");
+    static_assert(kActiveMask == (uint32_t)((1 << kFormatShift) - 1), "wrong kActiveMask");
 
     uint32_t mMarker;
     uint32_t mReserved;
@@ -107,10 +110,10 @@ class RecordHeader
 protected:
     void Init(uint16_t aKey, bool aInvalidatePrevious, uint16_t aLength)
     {
-        mKey      = aKey;
-        mFlags    = kFlagsInit;
-        mLength   = aLength;
-        mReserved = 0xffff;
+        mKey    = aKey;
+        mFlags  = kFlagsInit;
+        mLength = aLength;
+        mCrc    = 0xffff;
 
         if (aInvalidatePrevious)
         {
@@ -173,21 +176,37 @@ public:
 
     bool IsFree(void) const { return !IsAddBeginSet(); }
 
+    void AddCrc(Crc16 &aCrc) const
+    {
+        AddCrc(aCrc, mKey);
+        AddCrc(aCrc, mFlags & ~((1 << kFormatShift) - 1)); // only add crc to record format
+        AddCrc(aCrc, mLength);
+    }
+
+    uint16_t GetCrc(void) const { return mCrc; }
+
+    void SetCrc(uint16_t aCrc) { mCrc = aCrc; }
+
+    uint8_t GetFormat(void) const { return kFormatTop - (mFlags >> kFormatShift); }
+
 protected:
     bool IsIntegrityOk(void) const
     {
         OT_ASSERT(IsAddBeginSet());
-        return IsAddCompleteSet();
-        // TODO: validate GetFormat() == 0 && mReserved == 0xffff;
+        return IsAddCompleteSet() && (mCrc == 0xffff || GetFormat() >= kFormatV2);
     }
-
-    uint8_t GetFormat(void) const { return kFormatTop - (mFlags >> kFormatShift); }
 
 private:
     uint16_t GetAlignmentMask(void) const { return GetAlignmentMask(GetFormat()); }
 
     bool IsAddBeginSet(void) const { return (mFlags & kFlagAddBegin) == 0; }
     bool IsAddCompleteSet(void) const { return (mFlags & kFlagAddComplete) == 0; }
+
+    void AddCrc(Crc16 &aCrc, uint16_t aWord) const
+    {
+        aCrc.Update(aWord & 0xff);
+        aCrc.Update((aWord >> 8) & 0xff);
+    }
 
     enum
     {
@@ -201,13 +220,14 @@ private:
         kFormatShift = 12,
 
         /* Initial value of flags: kFlagAddBegin, kFlagAddComplete and format version */
-        kFlagsInit = ((kFormatTop - kFormatV2) << kFormatShift) | (0xfff & ~(kFlagAddBegin | kFlagAddComplete)),
+        kFlagsInit = ((kFormatTop - kFormatV2) << kFormatShift) |
+                     (((1 << kFormatShift) - 1) & ~(kFlagAddBegin | kFlagAddComplete)),
     };
 
     uint16_t mKey;
     uint16_t mFlags;
     uint16_t mLength;
-    uint16_t mReserved;
+    uint16_t mCrc; // was reserved (= 0xffff) in record header format v1.
 } OT_TOOL_PACKED_END;
 static_assert(sizeof(RecordHeader) % kFlashWordSizeV2 == 0, "wrong RecordHeader size");
 
@@ -225,7 +245,21 @@ public:
         /* fill slack space with 0xff to avoid writing 0 more than once to each bit */
         memset(mData + aDataLength, 0xff, GetDataSize() - aDataLength);
 
-        // TODO: calculate CRC
+        SetCrc(CalculateCrc());
+    }
+
+    uint16_t CalculateCrc(void) const
+    {
+        Crc16 crc(Crc16::kCcitt);
+
+        RecordHeader::AddCrc(crc);
+
+        for (uint16_t i = 0; i < GetLength(); i++)
+        {
+            crc.Update(mData[i]);
+        }
+
+        return crc.Get();
     }
 
     bool IsIntegrityOk(void) const
@@ -235,9 +269,9 @@ public:
             return false;
         }
 
-        if (GetFormat() >= kFormatV2)
+        if (GetFormat() >= kFormatV2 && CalculateCrc() != GetCrc())
         {
-            // TODO: check CRC
+            return false;
         }
 
         return true;
@@ -266,7 +300,7 @@ public:
         /* fill slack space with 0xff to avoid writing 0 more than once to each bit */
         memset(mData + dataLength, 0xff, GetDataSize() - dataLength);
 
-        // TODO: calculate CRC
+        SetCrc(CalculateCrc());
     }
 
 private:
@@ -318,7 +352,7 @@ void Flash::Init(void)
 
         record.LoadData(&GetInstance(), mSwapIndex, mSwapUsed);
 
-        if (!record.IsIntegrityOk(/* TODO expect format == mFormat */))
+        if (!record.IsIntegrityOk() || record.GetFormat() != mFormat)
         {
             break;
         }
