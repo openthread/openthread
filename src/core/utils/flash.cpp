@@ -59,10 +59,11 @@ OT_TOOL_PACKED_BEGIN
 class SwapHeader
 {
 public:
-    inline void Init(void)
+    inline void Init(uint16_t aEraseCounter)
     {
-        mMarker   = kMarkerInit;
-        mReserved = 0xffffffff;
+        mMarker       = kMarkerInit;
+        mEraseCounter = aEraseCounter;
+        mReserved     = 0xffff;
     }
 
     inline void Load(otInstance *aInstance, uint8_t aSwapIndex)
@@ -79,8 +80,9 @@ public:
 
     void SetInactive(void)
     {
-        mMarker   = ~mMarker;
-        mReserved = 0xffffffff;
+        mMarker       = ~mMarker;
+        mEraseCounter = 0xffff;
+        mReserved     = 0xffff;
     }
 
     uint8_t GetSize(void) const
@@ -93,6 +95,8 @@ public:
     }
 
     uint8_t GetFormat(void) const { return kFormatTop - (mMarker >> kFormatShift); }
+
+    uint16_t GetEraseCounter(void) const { return mEraseCounter; }
 
 private:
     enum : uint32_t
@@ -110,7 +114,8 @@ private:
     static_assert(kActiveMask == (uint32_t)((1 << kFormatShift) - 1), "wrong kActiveMask");
 
     uint32_t mMarker;
-    uint32_t mReserved;
+    uint16_t mEraseCounter;
+    uint16_t mReserved;
 } OT_TOOL_PACKED_END;
 static_assert(sizeof(SwapHeader) % kFlashWordSizeV2 == 0, "wrong SwapHeader size");
 
@@ -522,8 +527,14 @@ void Flash::Swap(void)
     uint32_t   dstOffset = sizeof(swapHeader);
     Record     record;
     uint16_t   size;
+    uint16_t   eraseCounter = GetEraseCounter();
 
     otPlatFlashErase(&GetInstance(), dstIndex);
+
+    if (dstIndex == 0 && eraseCounter < 0xffff)
+    {
+        eraseCounter++;
+    }
 
     for (uint32_t srcOffset = mSwapHeaderSize; srcOffset < mSwapUsed; srcOffset += size)
     {
@@ -547,7 +558,7 @@ void Flash::Swap(void)
     }
 
 exit:
-    swapHeader.Init();
+    swapHeader.Init(eraseCounter);
     swapHeader.Save(&GetInstance(), dstIndex);
 
     swapHeader.Load(&GetInstance(), mSwapIndex);
@@ -613,15 +624,39 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
 void Flash::Wipe(void)
 {
     SwapHeader swapHeader;
+    uint16_t   eraseCounter = GetEraseCounter();
 
     otPlatFlashErase(&GetInstance(), 0);
 
-    swapHeader.Init();
+    swapHeader.Init(eraseCounter + 1);
     swapHeader.Save(&GetInstance(), 0);
 
     mSwapIndex      = 0;
     mSwapHeaderSize = swapHeader.GetSize();
     mSwapUsed       = sizeof(swapHeader);
+}
+
+uint16_t Flash::GetEraseCounter(void) const
+{
+    uint16_t counter = 0;
+
+    for (uint8_t swapIndex = 0; swapIndex < 2; swapIndex++)
+    {
+        SwapHeader swapHeader;
+
+        swapHeader.Load(&GetInstance(), swapIndex);
+        if (swapHeader.IsActive()
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+            && swapHeader.GetFormat() >= kFormatV2
+#endif
+        )
+        {
+            counter = swapHeader.GetEraseCounter();
+            break;
+        }
+    }
+
+    return counter;
 }
 
 } // namespace ot

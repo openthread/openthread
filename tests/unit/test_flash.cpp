@@ -102,6 +102,12 @@ public:
         }
     }
 
+    uint16_t GetEraseCounter(void)
+    {
+        Switch(mWriter);
+        return (mWriter == 0) ? 0 : mFlashV2.GetEraseCounter();
+    }
+
 private:
     void Switch(uint8_t aArea, bool aReinit)
     {
@@ -284,6 +290,53 @@ void TestFlash(FlashTest &flash)
     }
 }
 
+void TestFlashEraseCounter(FlashTest &flash, uint32_t aSwapSize)
+{
+    static constexpr uint8_t  flashWordSize    = 8;
+    static constexpr uint8_t  swapHeaderSize   = 8;
+    static constexpr uint8_t  recordHeaderSize = 8;
+    static constexpr uint8_t  testDataSize     = 17;
+    static constexpr uint32_t recordSize =
+        (testDataSize + recordHeaderSize + (flashWordSize - 1)) & ~(flashWordSize - 1);
+
+    uint8_t  writeBuffer[256];
+    uint32_t recordsPerSwap = (aSwapSize - swapHeaderSize) / recordSize;
+    uint32_t counter        = 1;
+    uint32_t recordsInSwap  = 0;
+
+    memset(writeBuffer, 0, sizeof(writeBuffer));
+
+    flash.Init();
+
+    VerifyOrQuit(flash.GetEraseCounter() == counter, "GetEraseCounter() did not return expected value");
+
+    for (uint32_t j = 0; j < 100; j++)
+    {
+        // force swap. swap[1] will be the valid swap area.
+        for (uint32_t i = recordsInSwap; i < recordsPerSwap + 1; i++)
+        {
+            SuccessOrQuit(flash.Set(0, writeBuffer, testDataSize), "Set() failed");
+        }
+        recordsInSwap = 2; // now the active swap contains 2 records, one invalidated and the other valid
+
+        VerifyOrQuit(flash.GetEraseCounter() == counter, "GetEraseCounter() did not return expected value");
+
+        // force swap. swap[0] will be the valid swap area, and the erase counter should increment.
+        for (uint32_t i = recordsInSwap; i < recordsPerSwap + 1; i++)
+        {
+            SuccessOrQuit(flash.Set(0, writeBuffer, testDataSize), "Set() failed");
+        }
+        recordsInSwap = 2; // now the active swap contains 2 records, one invalidated and the other valid
+
+        if (counter < 0xffff)
+        {
+            counter++;
+        }
+
+        VerifyOrQuit(flash.GetEraseCounter() == counter, "GetEraseCounter() did not return expected value");
+    }
+}
+
 void TestFlash(void)
 {
     Instance *instance = testInitInstance();
@@ -315,6 +368,16 @@ void TestFlash(void)
     testFlashReset();
     flashTest.SetReaderWriter(1, 1, true);
     TestFlash(flashTest);
+
+    printf("Testing new driver #3\n");
+    testFlashReset();
+    flashTest.SetReaderWriter(1, 1, false);
+    TestFlashEraseCounter(flashTest, otPlatFlashGetSwapSize(instance));
+
+    printf("Testing new driver #4\n");
+    testFlashReset();
+    flashTest.SetReaderWriter(1, 1, true);
+    TestFlashEraseCounter(flashTest, otPlatFlashGetSwapSize(instance));
 
 #if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
     // new read vs old write

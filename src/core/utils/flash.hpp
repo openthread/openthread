@@ -139,6 +139,16 @@ public:
      */
     void Wipe(void);
 
+    /**
+     * This method gets the erase counter for the flash swap areas.
+     *
+     * The counter is incremented only when erasing swap area 0.
+     *
+     * @returns The erase counter, clamped to 65535.
+     *
+     */
+    uint16_t GetEraseCounter(void) const;
+
 private:
     otError Add(uint16_t aKey, bool aInvalidatePrevious, const uint8_t *aValue, uint16_t aValueLength);
     bool    IsInvalidated(uint32_t aOffset, uint16_t aKey) const;
