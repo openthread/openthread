@@ -105,7 +105,6 @@ public:
 private:
     void Switch(uint8_t aArea, bool aReinit)
     {
-        assert(aArea <= 1);
         testFlashSet(aArea);
         if (aReinit)
         {
@@ -291,35 +290,45 @@ void TestFlash(void)
 
     FlashTest flashTest(instance);
 
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
     // old read vs old write
+    printf("Testing old driver #1\n");
     testFlashReset();
     flashTest.SetReaderWriter(0, 0, false);
     TestFlash(flashTest);
 
     // old read vs old write - reinit before each operation
+    printf("Testing old driver #2\n");
     testFlashReset();
     flashTest.SetReaderWriter(0, 0, true);
     TestFlash(flashTest);
+#endif
 
     // new read vs new write
+    printf("Testing new driver #1\n");
     testFlashReset();
     flashTest.SetReaderWriter(1, 1, false);
     TestFlash(flashTest);
 
     // new read vs new write - reinit before each operation
+    printf("Testing new driver #2\n");
     testFlashReset();
     flashTest.SetReaderWriter(1, 1, true);
     TestFlash(flashTest);
 
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
     // new read vs old write
+    printf("Testing old+new driver #1\n");
     testFlashReset();
     flashTest.SetReaderWriter(1, 0, false);
     TestFlash(flashTest);
 
     // new read vs old write - reinit before each operation
+    printf("Testing old+new driver #2\n");
     testFlashReset();
     flashTest.SetReaderWriter(1, 0, true);
     TestFlash(flashTest);
+#endif
 }
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE

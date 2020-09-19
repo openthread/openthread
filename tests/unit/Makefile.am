@@ -37,6 +37,7 @@ noinst_HEADERS                                                      = \
     test_platform.h                                                   \
     test_util.h                                                       \
     test_util.hpp                                                     \
+    test_flash/flash_v1.hpp                                           \
     $(NULL)
 
 #

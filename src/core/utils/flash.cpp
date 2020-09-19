@@ -29,6 +29,7 @@
 #include "flash.hpp"
 
 #include <stdio.h>
+#include <string.h>
 
 #include <openthread/platform/flash.h>
 
@@ -40,16 +41,18 @@
 
 namespace ot {
 
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
 enum
 {
+    kFormatV1        = 0,
     kFlashWordSizeV1 = 4, // in bytes
-    kFlashWordSizeV2 = 8, // in bytes
 };
+#endif
 
 enum
 {
-    kFormatV1 = 0,
-    kFormatV2 = 1,
+    kFormatV2        = 1,
+    kFlashWordSizeV2 = 8, // in bytes
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -80,7 +83,14 @@ public:
         mReserved = 0xffffffff;
     }
 
-    uint8_t GetSize(void) const { return GetFormat() == kFormatV1 ? sizeof(mMarker) : sizeof(*this); }
+    uint8_t GetSize(void) const
+    {
+        return
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+            GetFormat() == kFormatV1 ? sizeof(mMarker) :
+#endif
+                                     sizeof(*this);
+    }
 
     uint8_t GetFormat(void) const { return kFormatTop - (mMarker >> kFormatShift); }
 
@@ -138,9 +148,9 @@ public:
                              uint8_t *   aValue,
                              uint16_t    aLength)
     {
-        if (aLength > GetLength())
+        if (aLength > mLength)
         {
-            aLength = GetLength();
+            aLength = mLength;
         }
 
         otPlatFlashRead(aInstance, aSwapIndex, aOffset + sizeof(*this), aValue, aLength);
@@ -159,7 +169,12 @@ public:
 
     static uint16_t GetAlignmentMask(uint8_t aFormat)
     {
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
         return (aFormat == kFormatV1) ? (kFlashWordSizeV1 - 1) : (kFlashWordSizeV2 - 1);
+#else
+        OT_UNUSED_VARIABLE(aFormat);
+        return (kFlashWordSizeV2 - 1);
+#endif
     }
 
     uint16_t GetSize(void) const { return sizeof(*this) + GetDataSize(); }
@@ -193,7 +208,11 @@ protected:
     bool IsIntegrityOk(void) const
     {
         OT_ASSERT(IsAddBeginSet());
-        return IsAddCompleteSet() && (mCrc == 0xffff || GetFormat() >= kFormatV2);
+        return IsAddCompleteSet()
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+               && (mCrc == 0xffff || GetFormat() >= kFormatV2)
+#endif
+            ;
     }
 
 private:
@@ -269,7 +288,11 @@ public:
             return false;
         }
 
-        if (GetFormat() >= kFormatV2 && CalculateCrc() != GetCrc())
+        if (
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+            GetFormat() >= kFormatV2 &&
+#endif
+            CalculateCrc() != GetCrc())
         {
             return false;
         }
@@ -292,6 +315,7 @@ public:
         otPlatFlashWrite(aInstance, aSwapIndex, aOffset, this, GetSize());
     }
 
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
     void Fixup(void)
     {
         uint16_t dataLength = GetLength();
@@ -302,6 +326,7 @@ public:
 
         SetCrc(CalculateCrc());
     }
+#endif
 
 private:
     enum
@@ -370,7 +395,11 @@ void Flash::SanitizeFreeSpace(void)
     bool     sanitizeNeeded = false;
     uint16_t wordMask       = RecordHeader::GetAlignmentMask(mFormat);
 
-    if ((mFormat == kFormatV1) || (mSwapUsed & wordMask))
+    if (
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+        (mFormat == kFormatV1) ||
+#endif
+        (mSwapUsed & wordMask))
     {
         ExitNow(sanitizeNeeded = true);
     }
@@ -510,7 +539,9 @@ void Flash::Swap(void)
         }
 
         record.LoadData(&GetInstance(), mSwapIndex, srcOffset);
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
         record.Fixup();
+#endif
         record.Save(&GetInstance(), dstIndex, dstOffset);
         dstOffset += record.GetSize();
     }
@@ -520,11 +551,13 @@ exit:
     swapHeader.Save(&GetInstance(), dstIndex);
 
     swapHeader.Load(&GetInstance(), mSwapIndex);
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
     if (swapHeader.GetFormat() == kFormatV1)
     {
         otPlatFlashErase(&GetInstance(), mSwapIndex);
     }
     else
+#endif
     {
         swapHeader.SetInactive();
         swapHeader.Save(&GetInstance(), mSwapIndex);

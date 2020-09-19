@@ -375,6 +375,7 @@ HEADERS_COMMON                                  = \
     config/dhcp6_server.h                         \
     config/diag.h                                 \
     config/dns_client.h                           \
+    config/flash.h                                \
     config/ip6.h                                  \
     config/joiner.h                               \
     config/link_quality.h                         \
