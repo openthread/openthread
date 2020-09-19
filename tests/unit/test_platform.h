@@ -83,6 +83,14 @@ extern testPlatRadioReceive            g_testPlatRadioReceive;
 extern testPlatRadioTransmit           g_testPlatRadioTransmit;
 extern testPlatRadioGetTransmitBuffer  g_testPlatRadioGetTransmitBuffer;
 
+//
+// Flash Platform
+//
+void testFlashReset(void);
+void testFlashSet(uint8_t aArea);
+void testFlashCopy(void);
+void testFlashDump(void);
+
 ot::Instance *testInitInstance(void);
 void          testFreeInstance(otInstance *aInstance);
 

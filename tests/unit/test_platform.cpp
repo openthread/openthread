@@ -51,13 +51,26 @@ enum
 {
     FLASH_SWAP_SIZE = 2048,
     FLASH_SWAP_NUM  = 2,
+
+    FLASH_WORD_SIZE_V1    = 4,
+    FLASH_WORD_SIZE       = 8,
+    FLASH_WORD_MAX_WRITES = 2,
+    FLASH_WORD_NUM        = FLASH_SWAP_SIZE * FLASH_SWAP_NUM / FLASH_WORD_SIZE,
 };
 
-uint8_t g_flash[FLASH_SWAP_SIZE * FLASH_SWAP_NUM];
+static uint8_t sFlashWriteCount1[FLASH_WORD_NUM];
+static uint8_t sFlashWriteCount2[FLASH_WORD_NUM];
+static uint8_t sFlash1[FLASH_WORD_NUM * FLASH_WORD_SIZE];
+static uint8_t sFlash2[FLASH_WORD_NUM * FLASH_WORD_SIZE];
+
+static uint8_t *sFlash;
+static uint8_t *sFlashWriteCount;
 
 ot::Instance *testInitInstance(void)
 {
     otInstance *instance = nullptr;
+
+    testFlashReset();
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     size_t   instanceBufferLength = 0;
@@ -87,6 +100,55 @@ void testFreeInstance(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     free(aInstance);
 #endif
+}
+
+void testFlashReset(void)
+{
+    testFlashSet(0);
+
+    memset(sFlash1, 0xff, sizeof(sFlash1));
+    memset(sFlash2, 0xff, sizeof(sFlash2));
+    memset(sFlashWriteCount1, 0, sizeof(sFlashWriteCount1));
+    memset(sFlashWriteCount2, 0, sizeof(sFlashWriteCount2));
+}
+
+void testFlashSet(uint8_t aArea)
+{
+    if (aArea == 0)
+    {
+        sFlash           = sFlash1;
+        sFlashWriteCount = sFlashWriteCount1;
+    }
+    else
+    {
+        sFlash           = sFlash2;
+        sFlashWriteCount = sFlashWriteCount2;
+    }
+}
+
+void testFlashCopy(void)
+{
+    memcpy(sFlash2, sFlash1, sizeof(sFlash2));
+    memcpy(sFlashWriteCount2, sFlashWriteCount1, sizeof(sFlashWriteCount2));
+}
+
+void testFlashDump(void)
+{
+    const uint8_t *src = sFlash;
+    for (uint32_t i = 0; i < FLASH_WORD_NUM; i++)
+    {
+        printf("%04x:", (uint32_t)(src - sFlash));
+        for (uint32_t j = 0; j < FLASH_WORD_SIZE; j++)
+        {
+            printf(" %02x", *src++);
+        }
+        printf("\n");
+
+        if (src - sFlash == FLASH_SWAP_SIZE)
+        {
+            printf("-------------------------------------------\n");
+        }
+    }
 }
 
 bool sDiagMode = false;
@@ -534,8 +596,6 @@ void otPlatSettingsWipe(otInstance *aInstance)
 void otPlatFlashInit(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-
-    memset(g_flash, 0xff, sizeof(g_flash));
 }
 
 uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
@@ -550,12 +610,15 @@ void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
     OT_UNUSED_VARIABLE(aInstance);
 
     uint32_t address;
+    uint32_t wordAddress;
 
     VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
 
-    address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+    address     = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+    wordAddress = address / FLASH_WORD_SIZE;
 
-    memset(g_flash + address, 0xff, FLASH_SWAP_SIZE);
+    memset(sFlash + address, 0xff, FLASH_SWAP_SIZE);
+    memset(sFlashWriteCount + wordAddress, 0, FLASH_SWAP_SIZE / FLASH_WORD_SIZE);
 }
 
 void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
@@ -570,7 +633,7 @@ void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset
 
     address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
 
-    memcpy(aData, g_flash + address + aOffset, aSize);
+    memcpy(aData, sFlash + address + aOffset, aSize);
 }
 
 void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
@@ -578,16 +641,46 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
     OT_UNUSED_VARIABLE(aInstance);
 
     uint32_t address;
+    uint32_t wordAddress;
 
     VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
     VerifyOrQuit(aSize <= FLASH_SWAP_SIZE, "aSize invalid");
     VerifyOrQuit(aOffset <= (FLASH_SWAP_SIZE - aSize), "aOffset + aSize invalid");
 
+    if (sFlash == sFlash1)
+    {
+        VerifyOrQuit((aOffset % FLASH_WORD_SIZE_V1) == 0, "aOffset invalid");
+        VerifyOrQuit((aSize % FLASH_WORD_SIZE_V1) == 0, "aSize invalid");
+    }
+    else
+    {
+        VerifyOrQuit((aOffset % FLASH_WORD_SIZE) == 0, "aOffset invalid");
+        VerifyOrQuit((aSize % FLASH_WORD_SIZE) == 0, "aSize invalid");
+    }
+
     address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+    address += aOffset;
 
     for (uint32_t index = 0; index < aSize; index++)
     {
-        g_flash[address + aOffset + index] &= ((uint8_t *)aData)[index];
+        if (sFlash == sFlash2)
+        {
+            VerifyOrQuit((sFlash[address + index] | ((uint8_t *)aData)[index]) == 0xff, "Bits zeroed multiple times");
+        }
+        sFlash[address + index] &= ((uint8_t *)aData)[index];
+    }
+
+    wordAddress = address / FLASH_WORD_SIZE;
+    aSize /= FLASH_WORD_SIZE;
+
+    for (uint32_t index = 0; index < aSize; index++)
+    {
+        sFlashWriteCount[wordAddress + index]++;
+        if (sFlash == sFlash2)
+        {
+            VerifyOrQuit(sFlashWriteCount[wordAddress + index] <= FLASH_WORD_MAX_WRITES,
+                         "Too many writes to the same word");
+        }
     }
 }
 

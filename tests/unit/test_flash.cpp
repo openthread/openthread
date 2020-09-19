@@ -36,21 +36,126 @@
 
 #include "test_platform.h"
 #include "test_util.h"
+#include "test_util.hpp"
+
+#include "test_flash/flash_v1.hpp"
 
 namespace ot {
 
-void TestFlash(void)
-{
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+class FlashTest
+{
+public:
+    FlashTest(Instance *aInstance)
+        : mFlashV2(*aInstance)
+    {
+    }
+
+    void SetReaderWriter(uint8_t aReader, uint8_t aWriter, bool aAlwaysReinit)
+    {
+        mReader       = aReader;
+        mWriter       = aWriter;
+        mAlwaysReinit = aAlwaysReinit;
+    }
+
+    void Init(void)
+    {
+        Switch(0, true);
+        Switch(1, true);
+    }
+
+    otError Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
+    {
+        Switch(mReader);
+        return (mReader == 0) ? mFlashV1.Get(aKey, aIndex, aValue, aValueLength)
+                              : mFlashV2.Get(aKey, aIndex, aValue, aValueLength);
+    }
+
+    otError Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        Switch(mWriter);
+        return (mWriter == 0) ? mFlashV1.Set(aKey, aValue, aValueLength) : mFlashV2.Set(aKey, aValue, aValueLength);
+    }
+
+    otError Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        Switch(mWriter);
+        return (mWriter == 0) ? mFlashV1.Add(aKey, aValue, aValueLength) : mFlashV2.Add(aKey, aValue, aValueLength);
+    }
+
+    otError Delete(uint16_t aKey, int aIndex)
+    {
+        Switch(mWriter);
+        return (mWriter == 0) ? mFlashV1.Delete(aKey, aIndex) : mFlashV2.Delete(aKey, aIndex);
+    }
+
+    void Wipe(void)
+    {
+        Switch(mWriter);
+        if (mWriter == 0)
+        {
+            mFlashV1.Wipe();
+        }
+        else
+        {
+            mFlashV2.Wipe();
+        }
+    }
+
+    uint16_t GetEraseCounter(void)
+    {
+        Switch(mWriter);
+        return (mWriter == 0) ? 0 : mFlashV2.GetEraseCounter();
+    }
+
+private:
+    void Switch(uint8_t aArea, bool aReinit)
+    {
+        testFlashSet(aArea);
+        if (aReinit)
+        {
+            if (aArea == 0)
+            {
+                mFlashV1.Init();
+            }
+            else
+            {
+                mFlashV2.Init();
+            }
+        }
+    }
+
+    void Switch(uint8_t aArea)
+    {
+        bool reinit = mAlwaysReinit;
+
+        if (mWriter == 0 && mReader == 1 && aArea == 1)
+        {
+            // always reinit if we need to read with new format and the write operations have the old format
+            testFlashCopy();
+            reinit = true;
+        }
+
+        Switch(aArea, reinit);
+    }
+
+    FlashV1 mFlashV1;
+    Flash   mFlashV2;
+
+    uint8_t mReader;
+    uint8_t mWriter;
+    bool    mAlwaysReinit;
+};
+
+void TestFlash(FlashTest &flash)
+{
     uint8_t readBuffer[256];
     uint8_t writeBuffer[256];
 
-    Instance *instance = testInitInstance();
-    Flash     flash(*instance);
-
     for (uint32_t i = 0; i < sizeof(readBuffer); i++)
     {
-        readBuffer[i] = i & 0xff;
+        readBuffer[i]  = i & 0xff;
+        writeBuffer[i] = 0x55;
     }
 
     flash.Init();
@@ -123,7 +228,7 @@ void TestFlash(void)
 
         if ((index % 4) == 0)
         {
-            SuccessOrQuit(flash.Set(0, writeBuffer, length), "Add() failed");
+            SuccessOrQuit(flash.Set(0, writeBuffer, length), "Set() failed");
         }
         else
         {
@@ -183,14 +288,121 @@ void TestFlash(void)
         VerifyOrQuit(length == key, "Get() did not return expected length");
         VerifyOrQuit(memcmp(readBuffer, writeBuffer, length) == 0, "Get() did not return expected value");
     }
-#endif // OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
 }
+
+void TestFlashEraseCounter(FlashTest &flash, uint32_t aSwapSize)
+{
+    static constexpr uint8_t  flashWordSize    = 8;
+    static constexpr uint8_t  swapHeaderSize   = 8;
+    static constexpr uint8_t  recordHeaderSize = 8;
+    static constexpr uint8_t  testDataSize     = 17;
+    static constexpr uint32_t recordSize =
+        (testDataSize + recordHeaderSize + (flashWordSize - 1)) & ~(flashWordSize - 1);
+
+    uint8_t  writeBuffer[256];
+    uint32_t recordsPerSwap = (aSwapSize - swapHeaderSize) / recordSize;
+    uint32_t counter        = 1;
+    uint32_t recordsInSwap  = 0;
+
+    memset(writeBuffer, 0, sizeof(writeBuffer));
+
+    flash.Init();
+
+    VerifyOrQuit(flash.GetEraseCounter() == counter, "GetEraseCounter() did not return expected value");
+
+    for (uint32_t j = 0; j < 100; j++)
+    {
+        // force swap. swap[1] will be the valid swap area.
+        for (uint32_t i = recordsInSwap; i < recordsPerSwap + 1; i++)
+        {
+            SuccessOrQuit(flash.Set(0, writeBuffer, testDataSize), "Set() failed");
+        }
+        recordsInSwap = 2; // now the active swap contains 2 records, one invalidated and the other valid
+
+        VerifyOrQuit(flash.GetEraseCounter() == counter, "GetEraseCounter() did not return expected value");
+
+        // force swap. swap[0] will be the valid swap area, and the erase counter should increment.
+        for (uint32_t i = recordsInSwap; i < recordsPerSwap + 1; i++)
+        {
+            SuccessOrQuit(flash.Set(0, writeBuffer, testDataSize), "Set() failed");
+        }
+        recordsInSwap = 2; // now the active swap contains 2 records, one invalidated and the other valid
+
+        if (counter < 0xffff)
+        {
+            counter++;
+        }
+
+        VerifyOrQuit(flash.GetEraseCounter() == counter, "GetEraseCounter() did not return expected value");
+    }
+}
+
+void TestFlash(void)
+{
+    Instance *instance = testInitInstance();
+
+    FlashTest flashTest(instance);
+
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+    // old read vs old write
+    printf("Testing old driver #1\n");
+    testFlashReset();
+    flashTest.SetReaderWriter(0, 0, false);
+    TestFlash(flashTest);
+
+    // old read vs old write - reinit before each operation
+    printf("Testing old driver #2\n");
+    testFlashReset();
+    flashTest.SetReaderWriter(0, 0, true);
+    TestFlash(flashTest);
+#endif
+
+    // new read vs new write
+    printf("Testing new driver #1\n");
+    testFlashReset();
+    flashTest.SetReaderWriter(1, 1, false);
+    TestFlash(flashTest);
+
+    // new read vs new write - reinit before each operation
+    printf("Testing new driver #2\n");
+    testFlashReset();
+    flashTest.SetReaderWriter(1, 1, true);
+    TestFlash(flashTest);
+
+    printf("Testing new driver #3\n");
+    testFlashReset();
+    flashTest.SetReaderWriter(1, 1, false);
+    TestFlashEraseCounter(flashTest, otPlatFlashGetSwapSize(instance));
+
+    printf("Testing new driver #4\n");
+    testFlashReset();
+    flashTest.SetReaderWriter(1, 1, true);
+    TestFlashEraseCounter(flashTest, otPlatFlashGetSwapSize(instance));
+
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+    // new read vs old write
+    printf("Testing old+new driver #1\n");
+    testFlashReset();
+    flashTest.SetReaderWriter(1, 0, false);
+    TestFlash(flashTest);
+
+    // new read vs old write - reinit before each operation
+    printf("Testing old+new driver #2\n");
+    testFlashReset();
+    flashTest.SetReaderWriter(1, 0, true);
+    TestFlash(flashTest);
+#endif
+}
+
+#endif // OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
 
 } // namespace ot
 
 int main(void)
 {
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
     ot::TestFlash();
+#endif
     printf("All tests passed\n");
     return 0;
 }

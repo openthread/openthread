@@ -26,18 +26,18 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FLASH_HPP_
-#define FLASH_HPP_
+#ifndef FLASHV1_HPP_
+#define FLASHV1_HPP_
 
 #include "openthread-core-config.h"
 
 #include <stdint.h>
+#include <string.h>
 
 #include <openthread/error.h>
 #include <openthread/platform/toolchain.h>
 
 #include "common/debug.hpp"
-#include "common/locator.hpp"
 
 namespace ot {
 
@@ -45,17 +45,14 @@ namespace ot {
  * This class implements the flash storage driver.
  *
  */
-class Flash : public InstanceLocator
+class FlashV1
 {
 public:
     /**
      * Constructor.
      *
      */
-    Flash(Instance &aInstance)
-        : InstanceLocator(aInstance)
-    {
-    }
+    FlashV1(void) {}
 
     /**
      * This method initializes the flash storage driver.
@@ -97,10 +94,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Not enough space to store the value.
      *
      */
-    inline otError Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
-    {
-        return Add(aKey, true, aValue, aValueLength);
-    }
+    otError Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
     /**
      * This method adds a value to @p aKey.
@@ -114,10 +108,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Not enough space to store the value.
      *
      */
-    inline otError Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
-    {
-        return Add(aKey, false, aValue, aValueLength);
-    }
+    otError Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
     /**
      * This method removes a value from @p aKey.
@@ -139,29 +130,102 @@ public:
      */
     void Wipe(void);
 
-    /**
-     * This method gets the erase counter for the flash swap areas.
-     *
-     * The counter is incremented only when erasing swap area 0.
-     *
-     * @returns The erase counter, clamped to 65535.
-     *
-     */
-    uint16_t GetEraseCounter(void) const;
-
 private:
-    otError Add(uint16_t aKey, bool aInvalidatePrevious, const uint8_t *aValue, uint16_t aValueLength);
-    bool    IsInvalidated(uint32_t aOffset, uint16_t aKey) const;
+    enum
+    {
+        kSwapMarkerSize = 4, // in bytes
+    };
+
+    static const uint32_t sSwapActive   = 0xbe5cc5ee;
+    static const uint32_t sSwapInactive = 0xbe5cc5ec;
+
+    OT_TOOL_PACKED_BEGIN
+    class RecordHeader
+    {
+    public:
+        void Init(uint16_t aKey, bool aFirst)
+        {
+            mKey   = aKey;
+            mFlags = kFlagsInit & ~kFlagAddBegin;
+
+            if (aFirst)
+            {
+                mFlags &= ~kFlagFirst;
+            }
+
+            mLength   = 0;
+            mReserved = 0xffff;
+        };
+
+        uint16_t GetKey(void) const { return mKey; }
+        void     SetKey(uint16_t aKey) { mKey = aKey; }
+
+        uint16_t GetLength(void) const { return mLength; }
+        void     SetLength(uint16_t aLength) { mLength = aLength; }
+
+        uint16_t GetSize(void) const { return sizeof(*this) + ((mLength + 3) & 0xfffc); }
+
+        bool IsValid(void) const { return ((mFlags & (kFlagAddComplete | kFlagDelete)) == kFlagDelete); }
+
+        bool IsAddBeginSet(void) const { return (mFlags & kFlagAddBegin) == 0; }
+        void SetAddBeginFlag(void) { mFlags &= ~kFlagAddBegin; }
+
+        bool IsAddCompleteSet(void) const { return (mFlags & kFlagAddComplete) == 0; }
+        void SetAddCompleteFlag(void) { mFlags &= ~kFlagAddComplete; }
+
+        bool IsDeleted(void) const { return (mFlags & kFlagDelete) == 0; }
+        void SetDeleted(void) { mFlags &= ~kFlagDelete; }
+
+        bool IsFirst(void) const { return (mFlags & kFlagFirst) == 0; }
+        void SetFirst(void) { mFlags &= ~kFlagFirst; }
+
+    private:
+        enum
+        {
+            kFlagsInit       = 0xffff, ///< Flags initialize to all-ones.
+            kFlagAddBegin    = 1 << 0, ///< 0 indicates record write has started, 1 otherwise.
+            kFlagAddComplete = 1 << 1, ///< 0 indicates record write has completed, 1 otherwise.
+            kFlagDelete      = 1 << 2, ///< 0 indicates record was deleted, 1 otherwise.
+            kFlagFirst       = 1 << 3, ///< 0 indicates first record for key, 1 otherwise.
+        };
+
+        uint16_t mKey;
+        uint16_t mFlags;
+        uint16_t mLength;
+        uint16_t mReserved;
+    } OT_TOOL_PACKED_END;
+
+    OT_TOOL_PACKED_BEGIN
+    class Record : public RecordHeader
+    {
+    public:
+        const uint8_t *GetData(void) const { return mData; }
+        void           SetData(const uint8_t *aData, uint16_t aDataLength)
+        {
+            OT_ASSERT(aDataLength <= kMaxDataSize);
+            memcpy(mData, aData, aDataLength);
+            SetLength(aDataLength);
+        }
+
+    private:
+        enum
+        {
+            kMaxDataSize = 255,
+        };
+
+        uint8_t mData[kMaxDataSize];
+    } OT_TOOL_PACKED_END;
+
+    otError Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t aValueLength);
+    bool    DoesValidRecordExist(uint32_t aOffset, uint16_t aKey) const;
     void    SanitizeFreeSpace(void);
     void    Swap(void);
 
     uint32_t mSwapSize;
     uint32_t mSwapUsed;
     uint8_t  mSwapIndex;
-    uint8_t  mSwapHeaderSize;
-    uint8_t  mFormat;
 };
 
 } // namespace ot
 
-#endif // FLASH_HPP_
+#endif // FLASHV1_HPP_

@@ -29,22 +29,324 @@
 #include "flash.hpp"
 
 #include <stdio.h>
+#include <string.h>
 
 #include <openthread/platform/flash.h>
 
 #include "common/code_utils.hpp"
+#include "common/crc16.hpp"
 #include "common/instance.hpp"
 
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
 
 namespace ot {
 
-const uint32_t ot::Flash::sSwapActive;
-const uint32_t ot::Flash::sSwapInactive;
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+enum
+{
+    kFormatV1        = 0,
+    kFlashWordSizeV1 = 4, // in bytes
+};
+#endif
+
+enum
+{
+    kFormatV2        = 1,
+    kFlashWordSizeV2 = 8, // in bytes
+};
+
+OT_TOOL_PACKED_BEGIN
+class SwapHeader
+{
+public:
+    inline void Init(uint16_t aEraseCounter)
+    {
+        mMarker       = kMarkerInit;
+        mEraseCounter = aEraseCounter;
+        mReserved     = 0xffff;
+    }
+
+    inline void Load(otInstance *aInstance, uint8_t aSwapIndex)
+    {
+        otPlatFlashRead(aInstance, aSwapIndex, 0, this, sizeof(*this));
+    }
+
+    inline void Save(otInstance *aInstance, uint8_t aSwapIndex) const
+    {
+        otPlatFlashWrite(aInstance, aSwapIndex, 0, this, sizeof(*this));
+    }
+
+    bool IsActive(void) const { return (mMarker & kActiveMask) == kActive; }
+
+    void SetInactive(void)
+    {
+        mMarker       = ~mMarker;
+        mEraseCounter = 0xffff;
+        mReserved     = 0xffff;
+    }
+
+    uint8_t GetSize(void) const
+    {
+        return
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+            GetFormat() == kFormatV1 ? sizeof(mMarker) :
+#endif
+                                     sizeof(*this);
+    }
+
+    uint8_t GetFormat(void) const { return kFormatTop - (mMarker >> kFormatShift); }
+
+    uint16_t GetEraseCounter(void) const { return mEraseCounter; }
+
+private:
+    enum : uint32_t
+    {
+        kActive = 0x0e5cc5ee, // This matches the last 28 bits of the swap header format v1.
+
+        kActiveMask = 0x0fffffff,
+
+        kFormatTop   = 0xb, // This matches the first nibble of the swap header format v1.
+        kFormatShift = 28,
+
+        kMarkerInit = ((uint32_t)(kFormatTop - kFormatV2) << kFormatShift) | kActive,
+    };
+    static_assert(kActive >> kFormatShift == 0, "wrong kActive");
+    static_assert(kActiveMask == (uint32_t)((1 << kFormatShift) - 1), "wrong kActiveMask");
+
+    uint32_t mMarker;
+    uint16_t mEraseCounter;
+    uint16_t mReserved;
+} OT_TOOL_PACKED_END;
+static_assert(sizeof(SwapHeader) % kFlashWordSizeV2 == 0, "wrong SwapHeader size");
+
+OT_TOOL_PACKED_BEGIN
+class RecordHeader
+{
+protected:
+    void Init(uint16_t aKey, bool aInvalidatePrevious, uint16_t aLength)
+    {
+        mKey    = aKey;
+        mFlags  = kFlagsInit;
+        mLength = aLength;
+        mCrc    = 0xffff;
+
+        if (aInvalidatePrevious)
+        {
+            mFlags &= ~kFlagInvalidatePrevious;
+        }
+    };
+
+public:
+    inline void Load(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset)
+    {
+        otPlatFlashRead(aInstance, aSwapIndex, aOffset, this, sizeof(*this));
+    }
+
+    inline void Save(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset) const
+    {
+        otPlatFlashWrite(aInstance, aSwapIndex, aOffset, this, sizeof(*this));
+    }
+
+    inline uint16_t ReadData(otInstance *aInstance,
+                             uint8_t     aSwapIndex,
+                             uint32_t    aOffset,
+                             uint8_t *   aValue,
+                             uint16_t    aLength)
+    {
+        if (aLength > mLength)
+        {
+            aLength = mLength;
+        }
+
+        otPlatFlashRead(aInstance, aSwapIndex, aOffset + sizeof(*this), aValue, aLength);
+        return aLength;
+    }
+
+    uint16_t GetKey(void) const { return mKey; }
+
+    uint16_t GetLength(void) const { return mLength; }
+
+    uint16_t GetDataSize(void) const
+    {
+        uint16_t wordMask = GetAlignmentMask();
+        return (mLength + wordMask) & ~wordMask;
+    }
+
+    static uint16_t GetAlignmentMask(uint8_t aFormat)
+    {
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+        return (aFormat == kFormatV1) ? (kFlashWordSizeV1 - 1) : (kFlashWordSizeV2 - 1);
+#else
+        OT_UNUSED_VARIABLE(aFormat);
+        return (kFlashWordSizeV2 - 1);
+#endif
+    }
+
+    uint16_t GetSize(void) const { return sizeof(*this) + GetDataSize(); }
+
+    bool IsValid(void) const { return ((mFlags & (kFlagAddComplete | kFlagDelete)) == kFlagDelete); }
+
+    void SetDeleted(void)
+    {
+        memset(this, 0xff, sizeof(*this));
+        mFlags &= ~kFlagDelete;
+    }
+
+    bool InvalidatesPrevious(void) const { return (mFlags & kFlagInvalidatePrevious) == 0; }
+
+    bool IsFree(void) const { return !IsAddBeginSet(); }
+
+    void AddCrc(Crc16 &aCrc) const
+    {
+        AddCrc(aCrc, mKey);
+        AddCrc(aCrc, mFlags & ~((1 << kFormatShift) - 1)); // only add crc to record format
+        AddCrc(aCrc, mLength);
+    }
+
+    uint16_t GetCrc(void) const { return mCrc; }
+
+    void SetCrc(uint16_t aCrc) { mCrc = aCrc; }
+
+    uint8_t GetFormat(void) const { return kFormatTop - (mFlags >> kFormatShift); }
+
+protected:
+    bool IsIntegrityOk(void) const
+    {
+        OT_ASSERT(IsAddBeginSet());
+        return IsAddCompleteSet()
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+               && (mCrc == 0xffff || GetFormat() >= kFormatV2)
+#endif
+            ;
+    }
+
+private:
+    uint16_t GetAlignmentMask(void) const { return GetAlignmentMask(GetFormat()); }
+
+    bool IsAddBeginSet(void) const { return (mFlags & kFlagAddBegin) == 0; }
+    bool IsAddCompleteSet(void) const { return (mFlags & kFlagAddComplete) == 0; }
+
+    void AddCrc(Crc16 &aCrc, uint16_t aWord) const
+    {
+        aCrc.Update(aWord & 0xff);
+        aCrc.Update((aWord >> 8) & 0xff);
+    }
+
+    enum
+    {
+        kFlagAddBegin           = 1 << 0, ///< 0 indicates record write has started, 1 otherwise.
+        kFlagAddComplete        = 1 << 1, ///< 0 indicates record write has completed, 1 otherwise.
+        kFlagDelete             = 1 << 2, ///< 0 indicates record was deleted, 1 otherwise.
+        kFlagInvalidatePrevious = 1 << 3, ///< 0 invalidates the previous records for key, 1 otherwise.
+
+        /* The record's format version is in the upper nibble of mFlags */
+        kFormatTop   = 0xf,
+        kFormatShift = 12,
+
+        /* Initial value of flags: kFlagAddBegin, kFlagAddComplete and format version */
+        kFlagsInit = ((kFormatTop - kFormatV2) << kFormatShift) |
+                     (((1 << kFormatShift) - 1) & ~(kFlagAddBegin | kFlagAddComplete)),
+    };
+
+    uint16_t mKey;
+    uint16_t mFlags;
+    uint16_t mLength;
+    uint16_t mCrc; // was reserved (= 0xffff) in record header format v1.
+} OT_TOOL_PACKED_END;
+static_assert(sizeof(RecordHeader) % kFlashWordSizeV2 == 0, "wrong RecordHeader size");
+
+OT_TOOL_PACKED_BEGIN
+class Record : public RecordHeader
+{
+public:
+    void Init(uint16_t aKey, bool aInvalidatePrevious, const uint8_t *aData, uint16_t aDataLength)
+    {
+        OT_ASSERT(aDataLength <= kMaxDataSize);
+        RecordHeader::Init(aKey, aInvalidatePrevious, aDataLength);
+
+        memcpy(mData, aData, aDataLength);
+
+        /* fill slack space with 0xff to avoid writing 0 more than once to each bit */
+        memset(mData + aDataLength, 0xff, GetDataSize() - aDataLength);
+
+        SetCrc(CalculateCrc());
+    }
+
+    uint16_t CalculateCrc(void) const
+    {
+        Crc16 crc(Crc16::kCcitt);
+
+        RecordHeader::AddCrc(crc);
+
+        for (uint16_t i = 0; i < GetLength(); i++)
+        {
+            crc.Update(mData[i]);
+        }
+
+        return crc.Get();
+    }
+
+    bool IsIntegrityOk(void) const
+    {
+        if (!RecordHeader::IsIntegrityOk())
+        {
+            return false;
+        }
+
+        if (
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+            GetFormat() >= kFormatV2 &&
+#endif
+            CalculateCrc() != GetCrc())
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    inline void LoadHeader(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset)
+    {
+        RecordHeader::Load(aInstance, aSwapIndex, aOffset);
+    }
+
+    inline void LoadData(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset)
+    {
+        RecordHeader::ReadData(aInstance, aSwapIndex, aOffset, mData, GetDataSize());
+    }
+
+    inline void Save(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset) const
+    {
+        otPlatFlashWrite(aInstance, aSwapIndex, aOffset, this, GetSize());
+    }
+
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+    void Fixup(void)
+    {
+        uint16_t dataLength = GetLength();
+        RecordHeader::Init(GetKey(), false, dataLength);
+
+        /* fill slack space with 0xff to avoid writing 0 more than once to each bit */
+        memset(mData + dataLength, 0xff, GetDataSize() - dataLength);
+
+        SetCrc(CalculateCrc());
+    }
+#endif
+
+private:
+    enum
+    {
+        kMaxDataSize = 256,
+    };
+
+    uint8_t mData[kMaxDataSize];
+} OT_TOOL_PACKED_END;
+static_assert(sizeof(Record) % kFlashWordSizeV2 == 0, "wrong Record size");
 
 void Flash::Init(void)
 {
-    RecordHeader record;
+    Record     record;
+    SwapHeader swapHeader;
 
     otPlatFlashInit(&GetInstance());
 
@@ -52,31 +354,35 @@ void Flash::Init(void)
 
     for (mSwapIndex = 0;; mSwapIndex++)
     {
-        uint32_t swapMarker;
-
         if (mSwapIndex >= 2)
         {
             Wipe();
             ExitNow();
         }
 
-        otPlatFlashRead(&GetInstance(), mSwapIndex, 0, &swapMarker, sizeof(swapMarker));
+        swapHeader.Load(&GetInstance(), mSwapIndex);
 
-        if (swapMarker == sSwapActive)
+        if (swapHeader.IsActive())
         {
+            mSwapHeaderSize = swapHeader.GetSize();
             break;
         }
     }
 
-    for (mSwapUsed = kSwapMarkerSize; mSwapUsed <= mSwapSize - sizeof(record); mSwapUsed += record.GetSize())
+    mFormat = swapHeader.GetFormat();
+
+    for (mSwapUsed = mSwapHeaderSize; mSwapUsed <= mSwapSize - sizeof(RecordHeader); mSwapUsed += record.GetSize())
     {
-        otPlatFlashRead(&GetInstance(), mSwapIndex, mSwapUsed, &record, sizeof(record));
-        if (!record.IsAddBeginSet())
+        record.LoadHeader(&GetInstance(), mSwapIndex, mSwapUsed);
+
+        if (record.IsFree())
         {
             break;
         }
 
-        if (!record.IsAddCompleteSet())
+        record.LoadData(&GetInstance(), mSwapIndex, mSwapUsed);
+
+        if (!record.IsIntegrityOk() || record.GetFormat() != mFormat)
         {
             break;
         }
@@ -92,8 +398,13 @@ void Flash::SanitizeFreeSpace(void)
 {
     uint32_t temp;
     bool     sanitizeNeeded = false;
+    uint16_t wordMask       = RecordHeader::GetAlignmentMask(mFormat);
 
-    if (mSwapUsed & 3)
+    if (
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+        (mFormat == kFormatV1) ||
+#endif
+        (mSwapUsed & wordMask))
     {
         ExitNow(sanitizeNeeded = true);
     }
@@ -118,39 +429,39 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
 {
     otError      error       = OT_ERROR_NOT_FOUND;
     uint16_t     valueLength = 0;
-    int          index       = 0; // This must be initalized to 0. See [Note] in Delete().
+    int          index       = 0;
     uint32_t     offset;
-    RecordHeader record;
+    RecordHeader recordHeader;
 
-    for (offset = kSwapMarkerSize; offset < mSwapUsed; offset += record.GetSize())
+    for (offset = mSwapHeaderSize; offset < mSwapUsed; offset += recordHeader.GetSize())
     {
-        otPlatFlashRead(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
+        recordHeader.Load(&GetInstance(), mSwapIndex, offset);
 
-        if ((record.GetKey() != aKey) || !record.IsValid())
+        if (recordHeader.GetKey() != aKey)
         {
             continue;
         }
 
-        if (record.IsFirst())
+        if (recordHeader.InvalidatesPrevious())
         {
-            index = 0;
+            error       = OT_ERROR_NOT_FOUND;
+            valueLength = 0;
+            index       = 0;
+        }
+
+        if (!recordHeader.IsValid())
+        {
+            continue;
         }
 
         if (index == aIndex)
         {
             if (aValue && aValueLength)
             {
-                uint16_t readLength = *aValueLength;
-
-                if (readLength > record.GetLength())
-                {
-                    readLength = record.GetLength();
-                }
-
-                otPlatFlashRead(&GetInstance(), mSwapIndex, offset + sizeof(record), aValue, readLength);
+                recordHeader.ReadData(&GetInstance(), mSwapIndex, offset, aValue, *aValueLength);
             }
 
-            valueLength = record.GetLength();
+            valueLength = recordHeader.GetLength();
             error       = OT_ERROR_NONE;
         }
 
@@ -165,55 +476,41 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
     return error;
 }
 
-otError Flash::Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+otError Flash::Add(uint16_t aKey, bool aInvalidatePrevious, const uint8_t *aValue, uint16_t aValueLength)
 {
-    return Add(aKey, true, aValue, aValueLength);
-}
+    otError  error = OT_ERROR_NONE;
+    Record   record;
+    uint16_t size;
 
-otError Flash::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
-{
-    bool first = (Get(aKey, 0, nullptr, nullptr) == OT_ERROR_NOT_FOUND);
+    record.Init(aKey, aInvalidatePrevious, aValue, aValueLength);
+    size = record.GetSize();
 
-    return Add(aKey, first, aValue, aValueLength);
-}
+    OT_ASSERT((mSwapSize - size) >= mSwapHeaderSize);
 
-otError Flash::Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t aValueLength)
-{
-    otError error = OT_ERROR_NONE;
-    Record  record;
-
-    record.Init(aKey, aFirst);
-    record.SetData(aValue, aValueLength);
-
-    OT_ASSERT((mSwapSize - record.GetSize()) >= kSwapMarkerSize);
-
-    if ((mSwapSize - record.GetSize()) < mSwapUsed)
+    if ((mSwapSize - size) < mSwapUsed)
     {
         Swap();
-        VerifyOrExit((mSwapSize - record.GetSize()) >= mSwapUsed, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit((mSwapSize - size) >= mSwapUsed, error = OT_ERROR_NO_BUFS);
     }
 
-    otPlatFlashWrite(&GetInstance(), mSwapIndex, mSwapUsed, &record, record.GetSize());
+    record.Save(&GetInstance(), mSwapIndex, mSwapUsed);
 
-    record.SetAddCompleteFlag();
-    otPlatFlashWrite(&GetInstance(), mSwapIndex, mSwapUsed, &record, sizeof(RecordHeader));
-
-    mSwapUsed += record.GetSize();
+    mSwapUsed += size;
 
 exit:
     return error;
 }
 
-bool Flash::DoesValidRecordExist(uint32_t aOffset, uint16_t aKey) const
+bool Flash::IsInvalidated(uint32_t aOffset, uint16_t aKey) const
 {
-    RecordHeader record;
+    RecordHeader recordHeader;
     bool         rval = false;
 
-    for (; aOffset < mSwapUsed; aOffset += record.GetSize())
+    for (; aOffset < mSwapUsed; aOffset += recordHeader.GetSize())
     {
-        otPlatFlashRead(&GetInstance(), mSwapIndex, aOffset, &record, sizeof(record));
+        recordHeader.Load(&GetInstance(), mSwapIndex, aOffset);
 
-        if (record.IsValid() && record.IsFirst() && (record.GetKey() == aKey))
+        if (recordHeader.IsValid() && recordHeader.InvalidatesPrevious() && (recordHeader.GetKey() == aKey))
         {
             ExitNow(rval = true);
         }
@@ -225,71 +522,97 @@ exit:
 
 void Flash::Swap(void)
 {
-    uint8_t  dstIndex  = !mSwapIndex;
-    uint32_t dstOffset = kSwapMarkerSize;
-    Record   record;
+    SwapHeader swapHeader;
+    uint8_t    dstIndex  = !mSwapIndex;
+    uint32_t   dstOffset = sizeof(swapHeader);
+    Record     record;
+    uint16_t   size;
+    uint16_t   eraseCounter = GetEraseCounter();
 
     otPlatFlashErase(&GetInstance(), dstIndex);
 
-    for (uint32_t srcOffset = kSwapMarkerSize; srcOffset < mSwapUsed; srcOffset += record.GetSize())
+    if (dstIndex == 0 && eraseCounter < 0xffff)
     {
-        otPlatFlashRead(&GetInstance(), mSwapIndex, srcOffset, &record, sizeof(RecordHeader));
+        eraseCounter++;
+    }
 
-        VerifyOrExit(record.IsAddBeginSet(), OT_NOOP);
+    for (uint32_t srcOffset = mSwapHeaderSize; srcOffset < mSwapUsed; srcOffset += size)
+    {
+        record.LoadHeader(&GetInstance(), mSwapIndex, srcOffset);
 
-        if (!record.IsValid() || DoesValidRecordExist(srcOffset + record.GetSize(), record.GetKey()))
+        VerifyOrExit(!record.IsFree(), OT_NOOP);
+
+        size = record.GetSize();
+
+        if (!record.IsValid() || IsInvalidated(srcOffset + record.GetSize(), record.GetKey()))
         {
             continue;
         }
 
-        otPlatFlashRead(&GetInstance(), mSwapIndex, srcOffset, &record, record.GetSize());
-        otPlatFlashWrite(&GetInstance(), dstIndex, dstOffset, &record, record.GetSize());
+        record.LoadData(&GetInstance(), mSwapIndex, srcOffset);
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+        record.Fixup();
+#endif
+        record.Save(&GetInstance(), dstIndex, dstOffset);
         dstOffset += record.GetSize();
     }
 
 exit:
-    otPlatFlashWrite(&GetInstance(), dstIndex, 0, &sSwapActive, sizeof(sSwapActive));
-    otPlatFlashWrite(&GetInstance(), mSwapIndex, 0, &sSwapInactive, sizeof(sSwapInactive));
+    swapHeader.Init(eraseCounter);
+    swapHeader.Save(&GetInstance(), dstIndex);
 
-    mSwapIndex = dstIndex;
-    mSwapUsed  = dstOffset;
+    swapHeader.Load(&GetInstance(), mSwapIndex);
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+    if (swapHeader.GetFormat() == kFormatV1)
+    {
+        otPlatFlashErase(&GetInstance(), mSwapIndex);
+    }
+    else
+#endif
+    {
+        swapHeader.SetInactive();
+        swapHeader.Save(&GetInstance(), mSwapIndex);
+    }
+
+    mSwapIndex      = dstIndex;
+    mSwapUsed       = dstOffset;
+    mSwapHeaderSize = sizeof(swapHeader);
 }
 
 otError Flash::Delete(uint16_t aKey, int aIndex)
 {
     otError      error = OT_ERROR_NOT_FOUND;
-    int          index = 0; // This must be initalized to 0. See [Note] below.
-    RecordHeader record;
+    int          index = 0;
+    RecordHeader recordHeader;
+    uint16_t     size;
 
-    for (uint32_t offset = kSwapMarkerSize; offset < mSwapUsed; offset += record.GetSize())
+    for (uint32_t offset = mSwapHeaderSize; offset < mSwapUsed; offset += size)
     {
-        otPlatFlashRead(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
+        recordHeader.Load(&GetInstance(), mSwapIndex, offset);
 
-        if ((record.GetKey() != aKey) || !record.IsValid())
+        size = recordHeader.GetSize();
+
+        if (recordHeader.GetKey() != aKey)
         {
             continue;
         }
 
-        if (record.IsFirst())
+        if (recordHeader.InvalidatesPrevious())
         {
             index = 0;
+            error = OT_ERROR_NOT_FOUND;
+        }
+
+        if (!recordHeader.IsValid())
+        {
+            continue;
         }
 
         if ((aIndex == index) || (aIndex == -1))
         {
-            record.SetDeleted();
-            otPlatFlashWrite(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
+            recordHeader.SetDeleted();
+            recordHeader.Save(&GetInstance(), mSwapIndex, offset);
             error = OT_ERROR_NONE;
-        }
-
-        /* [Note] If the operation gets interrupted here and aIndex is 0, the next record (index == 1) will never get
-         * marked as first. However, this is not actually an issue because all the methods that iterate over the
-         * settings area initialize the index to 0, without expecting any record to be effectively marked as first. */
-
-        if ((index == 1) && (aIndex == 0))
-        {
-            record.SetFirst();
-            otPlatFlashWrite(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
         }
 
         index++;
@@ -300,11 +623,40 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
 
 void Flash::Wipe(void)
 {
-    otPlatFlashErase(&GetInstance(), 0);
-    otPlatFlashWrite(&GetInstance(), 0, 0, &sSwapActive, sizeof(sSwapActive));
+    SwapHeader swapHeader;
+    uint16_t   eraseCounter = GetEraseCounter();
 
-    mSwapIndex = 0;
-    mSwapUsed  = sizeof(sSwapActive);
+    otPlatFlashErase(&GetInstance(), 0);
+
+    swapHeader.Init(eraseCounter + 1);
+    swapHeader.Save(&GetInstance(), 0);
+
+    mSwapIndex      = 0;
+    mSwapHeaderSize = swapHeader.GetSize();
+    mSwapUsed       = sizeof(swapHeader);
+}
+
+uint16_t Flash::GetEraseCounter(void) const
+{
+    uint16_t counter = 0;
+
+    for (uint8_t swapIndex = 0; swapIndex < 2; swapIndex++)
+    {
+        SwapHeader swapHeader;
+
+        swapHeader.Load(&GetInstance(), swapIndex);
+        if (swapHeader.IsActive()
+#if OPENTHREAD_CONFIG_FLASH_LEGACY_COMPATIBILITY
+            && swapHeader.GetFormat() >= kFormatV2
+#endif
+        )
+        {
+            counter = swapHeader.GetEraseCounter();
+            break;
+        }
+    }
+
+    return counter;
 }
 
 } // namespace ot

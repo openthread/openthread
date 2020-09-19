@@ -64,6 +64,7 @@
 #include "config/dhcp6_server.h"
 #include "config/diag.h"
 #include "config/dns_client.h"
+#include "config/flash.h"
 #include "config/ip6.h"
 #include "config/joiner.h"
 #include "config/link_quality.h"
