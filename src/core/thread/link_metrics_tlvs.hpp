@@ -265,58 +265,11 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Link Metrics Query ID Sub-TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class LinkMetricsQueryId : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kLinkMetricsQueryId);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Series ID.
-     *
-     * @returns The Series ID.
-     *
-     */
-    uint8_t GetSeriesId(void) const { return mSeriesId; }
-
-    /**
-     * This method sets the Series ID.
-     *
-     * @param[in]  aSeriesId  The Series ID.
-     *
-     */
-    void SetSeriesId(uint8_t aSeriesId) { mSeriesId = aSeriesId; }
-
-private:
-    uint8_t mSeriesId;
-} OT_TOOL_PACKED_END;
-
-/**
  * This class implements Link Metrics Query Options Sub-TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class LinkMetricsQueryOptions : public Tlv
+class LinkMetricsQueryOptionsTlv : public Tlv
 {
 public:
     /**
@@ -326,7 +279,7 @@ public:
     void Init(void)
     {
         SetType(kLinkMetricsQueryOptions);
-        SetLength(sizeof(*this) - sizeof(Tlv) - sizeof(mMetricsTypeIds));
+        SetLength(0);
     }
 
     /**
@@ -338,44 +291,15 @@ public:
      */
     bool IsValid(void) const
     {
-        return GetLength() <= sizeof(*this) - sizeof(Tlv) && GetLength() >= sizeof(LinkMetricsTypeIdFlags);
-    }
-
-    /**
-     * This method returns the Link Metrics Type ID Flags and its count.
-     *
-     * @param[out]  aCount   The count of Link Metrics Type ID Flags in the returned array.
-     *
-     * @retval  The pointer to the array of Link Metrics Type ID Flags.
-     *
-     */
-    const LinkMetricsTypeIdFlags *GetLinkMetricsTypeIdFlagsList(uint8_t &aCount) const
-    {
-        aCount = GetLength() / sizeof(LinkMetricsTypeIdFlags);
-
-        return mMetricsTypeIds;
-    }
-
-    /**
-     * This method sets the the Link Metrics Type ID Flags.
-     *
-     * @param[in]  aTypeId   The pointer to the array of Link Metrics Type ID Flags.
-     * @param[in]  aCount    The count of Link Metrics Type ID Flags in the array.
-     *
-     */
-    void SetLinkMetricsTypeIdFlagsList(const LinkMetricsTypeIdFlags aTypeId[], uint8_t aCount)
-    {
-        uint8_t count = kLinkMetricsMaxTypeIdFlags;
-
-        count = aCount < count ? aCount : count;
-
-        memcpy(mMetricsTypeIds, aTypeId, count * sizeof(LinkMetricsTypeIdFlags));
-
-        SetLength(count * sizeof(LinkMetricsTypeIdFlags));
+        return GetLength() >= sizeof(LinkMetricsTypeIdFlags) &&
+               GetLength() <= sizeof(LinkMetricsTypeIdFlags) * kMaxTypeIdFlagsCount;
     }
 
 private:
-    LinkMetricsTypeIdFlags mMetricsTypeIds[kLinkMetricsMaxTypeIdFlags];
+    enum
+    {
+        kMaxTypeIdFlagsCount = 4,
+    };
 } OT_TOOL_PACKED_END;
 
 } // namespace ot

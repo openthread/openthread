@@ -1268,56 +1268,6 @@ private:
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-
-/**
- * This class implements Link Metrics Query TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class LinkMetricsQueryTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kLinkMetricsQuery);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval true   The TLV appears to be well-formed.
-     * @retval false  The TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This methods returns a pointer to the Sub-TLVs.
-     *
-     * @retval A pointer to the Sub-TLVs.
-     *
-     */
-    const Tlv *GetSubTlvs(void) const { return reinterpret_cast<const Tlv *>(mSubTlvs); }
-
-private:
-    enum
-    {
-        kMaxSize = sizeof(LinkMetricsQueryId) +
-                   sizeof(LinkMetricsQueryOptions), ///< Maximum size of Link Metrics Query in bytes.
-    };
-
-    uint8_t mSubTlvs[kMaxSize]; ///< The sub TLVs
-
-} OT_TOOL_PACKED_END;
-
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-
 /**
  * @}
  *

@@ -1863,32 +1863,31 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
 
 void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress, const otLinkMetricsValues *aMetricsValues)
 {
+    const char kLinkMetricsTypeCount[]   = "(Count/Summation)";
+    const char kLinkMetricsTypeAverage[] = "(Exponential Moving Average)";
+
     OutputFormat("Received Link Metrics Report from: ");
     OutputIp6Address(*aAddress);
-    OutputFormat("\r\n");
+    OutputLine("");
 
     if (aMetricsValues->mMetrics.mPduCount)
     {
-        OutputFormat(" - PDU Counter: %d %s\r\n", aMetricsValues->mPduCountValue,
-                     otLinkMetricsTypeEnumToString(OT_LINK_METRICS_TYPE_COUNT));
+        OutputLine(" - PDU Counter: %d %s", aMetricsValues->mPduCountValue, kLinkMetricsTypeCount);
     }
 
     if (aMetricsValues->mMetrics.mLqi)
     {
-        OutputFormat(" - LQI: %d %s\r\n", aMetricsValues->mLqiValue,
-                     otLinkMetricsTypeEnumToString(OT_LINK_METRICS_TYPE_EXPONENTIAL));
+        OutputLine(" - LQI: %d %s", aMetricsValues->mLqiValue, kLinkMetricsTypeAverage);
     }
 
     if (aMetricsValues->mMetrics.mLinkMargin)
     {
-        OutputFormat(" - Margin: %d (dB) %s\r\n", aMetricsValues->mLinkMarginValue,
-                     otLinkMetricsTypeEnumToString(OT_LINK_METRICS_TYPE_EXPONENTIAL));
+        OutputLine(" - Margin: %d (dB) %s", aMetricsValues->mLinkMarginValue, kLinkMetricsTypeAverage);
     }
 
     if (aMetricsValues->mMetrics.mRssi)
     {
-        OutputFormat(" - RSSI: %d (dBm) %s\r\n", aMetricsValues->mRssiValue,
-                     otLinkMetricsTypeEnumToString(OT_LINK_METRICS_TYPE_EXPONENTIAL));
+        OutputLine(" - RSSI: %d (dBm) %s", aMetricsValues->mRssiValue, kLinkMetricsTypeAverage);
     }
 }
 

@@ -89,7 +89,6 @@ public:
      * This method appends a Link Metrics Report to a message according to the Link Metrics query.
      *
      * @param[out]  aMessage           A reference to the message to append report.
-     * @param[in]   aLinkMetricsQuery  A pointer to the Link Metrics Query Tlv
      * @param[in]   aRequestMessage    A reference to the message of the Data Request.
      *
      * @retval OT_ERROR_NONE          Successfully appended the Thread Discovery TLV.
@@ -97,9 +96,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  QueryId is invalid or any Type ID is invalid.
      *
      */
-    otError AppendLinkMetricsReport(Message &                       aMessage,
-                                    const Mle::LinkMetricsQueryTlv *aLinkMetricsQuery,
-                                    const Message &                 aRequestMessage);
+    otError AppendLinkMetricsReport(Message &aMessage, const Message &aRequestMessage);
 
     /**
      * This method handles the received Link Metrics report contained in @p aMessage.
@@ -143,11 +140,12 @@ private:
                                  const LinkMetricsTypeIdFlags *aTypeIdFlags,
                                  uint8_t                       aTypeIdFlagsCount);
 
-    otError AppendSingleProbeLinkMetricsReport(Message &                      aMessage,
-                                               uint8_t &                      aLength,
-                                               const LinkMetricsQueryOptions *aQueryOptions,
-                                               const int8_t                   aNoiseFloor,
-                                               const Message &                aRequestMessage);
+    otError AppendSingleProbeLinkMetricsReport(Message &                     aMessage,
+                                               uint8_t &                     aLength,
+                                               const LinkMetricsTypeIdFlags *aTypeIdFlags,
+                                               uint8_t                       aTypeIdFlagsCount,
+                                               const int8_t                  aNoiseFloor,
+                                               const Message &               aRequestMessage);
 
     uint8_t GetTypeIdFlagsFromOtLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
                                                  const otLinkMetrics &   aLinkMetricsFlags);

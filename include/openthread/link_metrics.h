@@ -66,17 +66,6 @@ typedef enum otLinkMetricsId
     OT_LINK_METRICS_RSSI      = 3, ///< RSSI
 } otLinkMetricsId;
 
-/**
- * This enumeration defines Link Metrics Type/Average Enum.
- *
- */
-typedef enum otLinkMetricsTypeEnum
-{
-    OT_LINK_METRICS_TYPE_COUNT       = 0, ///< Count/summation
-    OT_LINK_METRICS_TYPE_EXPONENTIAL = 1, ///< Exponential Moving Average
-    OT_LINK_METRICS_TYPE_RESERVED    = 7, ///< 2 - 7 are reserved
-} otLinkMetricsTypeEnum;
-
 /*
  * This structure represents what metrics are specified to query.
  *
@@ -102,16 +91,6 @@ typedef struct otLinkMetricsValues
     uint8_t  mLinkMarginValue;
     int8_t   mRssiValue;
 } otLinkMetricsValues;
-
-/**
- * This function converts an otLinkMetricsTypeEnum into a string.
- *
- * @param[in]  aError     An otLinkMetricsTypeEnum.
- *
- * @returns  A string representation of an otLinkMetricsTypeEnum.
- *
- */
-const char *otLinkMetricsTypeEnumToString(otLinkMetricsTypeEnum aEnum);
 
 /**
  * This function sends an MLE Data Request to query Link Metrics.

@@ -3294,11 +3294,7 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
         case Tlv::kLinkMetricsReport:
             OT_ASSERT(aRequestMessage != nullptr);
-            LinkMetricsQueryTlv linkMetricsQueryTlv;
-            SuccessOrExit(error = Tlv::FindTlv(*aRequestMessage, Tlv::kLinkMetricsQuery, sizeof(linkMetricsQueryTlv),
-                                               linkMetricsQueryTlv));
-            SuccessOrExit(
-                error = Get<LinkMetrics>().AppendLinkMetricsReport(*message, &linkMetricsQueryTlv, *aRequestMessage));
+            SuccessOrExit(error = Get<LinkMetrics>().AppendLinkMetricsReport(*message, *aRequestMessage));
             break;
 #endif
         }

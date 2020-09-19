@@ -42,26 +42,6 @@ using namespace ot;
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
-static const char *const sTypeEnumStrings[2] = {
-    "(Count/Summation)",
-    "(Exponential Moving Average)",
-};
-
-const char *otLinkMetricsTypeEnumToString(otLinkMetricsTypeEnum aEnum)
-{
-    const char *retval;
-
-    if (aEnum < OT_ARRAY_LENGTH(sTypeEnumStrings))
-    {
-        retval = sTypeEnumStrings[aEnum];
-    }
-    else
-    {
-        retval = "(Unknown Type Enum)";
-    }
-    return retval;
-}
-
 otError otLinkMetricsQuery(otInstance *         aInstance,
                            const otIp6Address & aDestination,
                            uint8_t              aSeriesId,
