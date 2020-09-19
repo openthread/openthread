@@ -35,11 +35,13 @@ import struct
 import traceback
 import time
 import io
+from collections import Counter
 
 import config
 import mesh_cop
 import message
 import pcap
+import wpan
 
 
 def dbg_print(*args):
@@ -162,6 +164,10 @@ class VirtualTime(BaseSimulator):
         self.current_time = 0
         self.current_event = None
         self.awake_devices = set()
+        self._counter = Counter()
+        self._nodes_by_extaddr = {}
+        self._nodes_by_rloc16 = {}
+        self._nodes_by_ack_seq = {}
 
         self._pcap = pcap.PcapCodec(os.getenv('TEST_NAME', 'current'))
         # the addr for spinel-cli sending OT_SIM_EVENT_POSTCMD
@@ -179,6 +185,10 @@ class VirtualTime(BaseSimulator):
         if self.sock:
             self.sock.close()
             self.sock = None
+
+            print('=' * 32, "COUNTERS", '=' * 32)
+            for k, v in sorted(self._counter.items()):
+                print(' - %s = %d' % (k, v))
 
     @property
     def is_running(self):
@@ -229,6 +239,12 @@ class VirtualTime(BaseSimulator):
     def _is_radio(self, addr):
         return addr[1] < self.BASE_PORT * 2
 
+    def _addr_to_nodeid(self, addr: tuple) -> int:
+        return addr[1] - self.port
+
+    def _nodeid_to_addr(self, nodeid: int) -> tuple:
+        return ('127.0.0.1', self.port + nodeid)
+
     def _to_core_addr(self, addr):
         assert self._is_radio(addr)
         return (addr[0], addr[1] + self.BASE_PORT)
@@ -253,7 +269,7 @@ class VirtualTime(BaseSimulator):
         """ Receive events until all devices are asleep. """
         while True:
             if (self.current_event or len(self.awake_devices) or
-                (self._next_event_time() > self._pause_time and self.current_nodeid)):
+                    (self._next_event_time() > self._pause_time and self.current_nodeid)):
                 self.sock.settimeout(self.BLOCK_TIMEOUT)
                 try:
                     msg, addr = self.sock.recvfrom(self.MAX_MESSAGE)
@@ -327,23 +343,31 @@ class VirtualTime(BaseSimulator):
                 # add radio receive events event queue
                 src_node = self.get_node_by_addr(addr)
 
-                dst_extaddr, dst_short = self._parse_mac_frame_dst(data)
+                frame_info = wpan.dissect(data)
+                if frame_info.frame_type == wpan.FrameType.ACK:
+                    recv_devices = [self._nodeid_to_addr(node.nodeid) for node in
+                                    self._nodes_by_ack_seq.get(frame_info.seq_no)]
+                elif frame_info.dst_extaddr is not None:
+                    recv_devices = [self._nodeid_to_addr(node.nodeid) for node in
+                                    self._nodes_by_extaddr.get(frame_info.dst_extaddr)]
+                elif frame_info.dst_short not in (None, 0xffff):
+                    recv_devices = [self._nodeid_to_addr(node.nodeid) for node in
+                                    self._nodes_by_rloc16.get(frame_info.dst_short)]
+                else:
+                    recv_devices = None
 
-                for device in self.devices:
+                recv_devices = recv_devices or self.devices.keys()
+
+                for device in recv_devices:
                     if device != addr and self._is_radio(device):
                         dst_node = self.get_node_by_addr(device)
 
                         if not dst_node.check_allow_list(src_node.extaddr):
+                            self._counter['drop-by-allowlist'] += 1
                             continue
 
-                        if dst_extaddr is not None:
-                            if dst_node.extaddr is not None and dst_extaddr != dst_node.extaddr:
-                                continue
-
-                        elif dst_short is not None and dst_short != 0xffff:
-                            if dst_node.rloc16 is not None and dst_node.rloc16 != dst_short:
-                                continue
-
+                        self._counter['radio_event'] += 1
+                        self._counter[frame_info.frame_type.name] += 1
                         event = (
                             event_time,
                             self.event_sequence,
@@ -355,13 +379,6 @@ class VirtualTime(BaseSimulator):
                         self.event_sequence += 1
                         # print "-- Enqueue\t", event
                         bisect.insort(self.event_queue, event)
-
-                        is_unicast_dst = ((dst_extaddr is not None and dst_node.extaddr is not None and
-                                           dst_extaddr == dst_node.extaddr) or
-                                          (dst_short not in [None, 0xffff] and dst_node.rloc16 is not None and
-                                           dst_short == dst_node.rloc16))
-                        if is_unicast_dst:
-                            break
 
                 self._pcap.append(data, (event_time // 1000000, event_time % 1000000))
                 self._add_message(addr[1] - self.port, data)
@@ -378,14 +395,18 @@ class VirtualTime(BaseSimulator):
                 self.event_sequence += 1
                 bisect.insort(self.event_queue, event)
 
+                if frame_info.frame_type != wpan.FrameType.ACK and not frame_info.is_broadcast:
+                    self._on_ack_seq_change(src_node, frame_info.seq_no)
+
                 self.awake_devices.add(addr)
             elif type == self.OT_SIM_EVENT_OTNS_STATUS_PUSH:
                 for status in data.decode('ascii').split(';'):
                     name, val = status.split('=')
+                    node = self.get_node_by_addr(addr)
                     if name == 'extaddr':
-                        self.get_node_by_addr(addr).extaddr = val
+                        self._on_extaddr_change(node, val)
                     elif name == 'rloc16':
-                        self.get_node_by_addr(addr).rloc16 = int(val)
+                        self._on_rloc16_change(node, int(val))
 
                 self.awake_devices.add(addr)
 
@@ -433,19 +454,26 @@ class VirtualTime(BaseSimulator):
                 if self.current_nodeid == nodeid:
                     self.current_nodeid = None
 
-    def _parse_mac_frame_dst(self, frame):
-        fcf = struct.unpack("<H", frame[1:3])[0]
+    def _on_extaddr_change(self, node, extaddr: str):
+        if node.extaddr is not None:
+            self._nodes_by_extaddr[node.extaddr].remove(node)
 
-        dst_addr_mode = (fcf & 0x0c00) >> 10
+        node.extaddr = extaddr
+        self._nodes_by_extaddr.setdefault(extaddr, set()).add(node)
 
-        dst_extaddr, dst_short = None, None
+    def _on_rloc16_change(self, node, rloc16: int):
+        if node.rloc16 is not None:
+            self._nodes_by_rloc16[node.rloc16].remove(node)
 
-        if dst_addr_mode == 2:
-            dst_short = struct.unpack('<H', frame[6:8])[0]
-        elif dst_addr_mode == 3:
-            dst_extaddr = '%016x' % struct.unpack('<Q', frame[6:14])[0]
+        node.rloc16 = rloc16
+        self._nodes_by_rloc16.setdefault(rloc16, set()).add(node)
 
-        return dst_extaddr, dst_short
+    def _on_ack_seq_change(self, node, seq_no: int):
+        if node.ack_seq is not None:
+            self._nodes_by_ack_seq[node.ack_seq].remove(node)
+
+        node.ack_seq = seq_no
+        self._nodes_by_ack_seq.setdefault(seq_no, set()).add(node)
 
     def _send_message(self, message, addr):
         while True:

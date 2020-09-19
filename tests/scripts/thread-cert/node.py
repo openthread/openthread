@@ -27,26 +27,27 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import config
 import ipaddress
 import os
 import sys
-import pexpect
-import pexpect.popen_spawn
 import re
-import simulator
 import socket
 import time
 import unittest
 import binascii
-
 from typing import Union, Dict
+
+import pexpect
+import pexpect.popen_spawn
+
+import config
+import simulator
 
 
 class Node:
-
     extaddr = None
     rloc16 = None
+    ack_seq = None
 
     def __init__(self, nodeid, is_mtd=False, simulator=None, name=None, version=None, is_bbr=False):
         self.nodeid = nodeid
@@ -947,8 +948,8 @@ class Node:
         global_address = []
         for ip6Addr in self.get_addrs():
             if ((not re.match(config.LINK_LOCAL_REGEX_PATTERN, ip6Addr, re.I)) and
-                (not re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I)) and
-                (not re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I))):
+                    (not re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I)) and
+                    (not re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I))):
                 global_address.append(ip6Addr)
 
         return global_address
@@ -1139,12 +1140,12 @@ class Node:
         self._expect('Done')
 
     def set_active_dataset(
-        self,
-        timestamp,
-        panid=None,
-        channel=None,
-        channel_mask=None,
-        master_key=None,
+            self,
+            timestamp,
+            panid=None,
+            channel=None,
+            channel_mask=None,
+            master_key=None,
     ):
         self.send_command('dataset clear')
         self._expect('Done')
@@ -1220,16 +1221,16 @@ class Node:
         self._expect('Done')
 
     def send_mgmt_active_set(
-        self,
-        active_timestamp=None,
-        channel=None,
-        channel_mask=None,
-        extended_panid=None,
-        panid=None,
-        master_key=None,
-        mesh_local=None,
-        network_name=None,
-        binary=None,
+            self,
+            active_timestamp=None,
+            channel=None,
+            channel_mask=None,
+            extended_panid=None,
+            panid=None,
+            master_key=None,
+            mesh_local=None,
+            network_name=None,
+            binary=None,
     ):
         cmd = 'dataset mgmtsetcommand active '
 
@@ -1264,15 +1265,15 @@ class Node:
         self._expect('Done')
 
     def send_mgmt_pending_set(
-        self,
-        pending_timestamp=None,
-        active_timestamp=None,
-        delay_timer=None,
-        channel=None,
-        panid=None,
-        master_key=None,
-        mesh_local=None,
-        network_name=None,
+            self,
+            pending_timestamp=None,
+            active_timestamp=None,
+            delay_timer=None,
+            channel=None,
+            panid=None,
+            master_key=None,
+            mesh_local=None,
+            network_name=None,
     ):
         cmd = 'dataset mgmtsetcommand pending '
         if pending_timestamp is not None:
