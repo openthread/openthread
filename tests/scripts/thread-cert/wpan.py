@@ -32,6 +32,28 @@ import struct
 from collections import namedtuple
 from enum import Enum
 
+FCF_FRAME_BEACON = 0 << 0
+FCF_FRAME_DATA = 1 << 0
+FCF_FRAME_ACK = 2 << 0
+FCF_FRAME_MAC_CMD = 3 << 0
+FCF_FRAME_TYPE_MASK = 7 << 0
+FCF_SECURITY_ENABLED = 1 << 3
+FCF_FRAME_PENDING = 1 << 4
+FCF_ACK_REQUEST = 1 << 5
+FCF_PANID_COMPRESSION = 1 << 6
+FCF_IE_PRESENT = 1 << 9
+FCF_DST_ADDR_NONE = 0 << 10
+FCF_DST_ADDR_SHORT = 2 << 10
+FCF_DST_ADDR_EXT = 3 << 10
+FCF_DST_ADDR_MASK = 3 << 10
+FCF_FRAME_VERSION_2006 = 1 << 12
+FCF_FRAME_VERSION_2015 = 2 << 12
+FCF_FRAME_VERSION_MASK = 3 << 12
+FCF_SRC_ADDR_NONE = 0 << 14
+FCF_SRC_ADDR_SHORT = 2 << 14
+FCF_SRC_ADDR_EXT = 3 << 14
+FCD_SRC_ADDR_MASK = 3 << 14
+
 
 class DstAddrMode(Enum):
     NONE = 0
@@ -62,6 +84,37 @@ class WpanFrameInfo(namedtuple('WpanFrameInfo', ['fcf', 'seq_no', 'dst_extaddr',
         return self.dst_addr_mode == DstAddrMode.SHORT and self.dst_short == 0xffff
 
 
+def _is_version_2015(fcf: int) -> bool:
+    return (fcf & FCF_FRAME_VERSION_MASK) == FCF_FRAME_VERSION_2015
+
+
+def _is_dst_addr_present(fcf: int) -> bool:
+    dst_addr_mode = DstAddrMode((fcf & 0x0c00) >> 10)
+    return dst_addr_mode != DstAddrMode.NONE
+
+
+_DST_PAN_ID_NOT_PRESENT_SET = {
+    FCF_DST_ADDR_NONE | FCF_SRC_ADDR_NONE,
+    FCF_DST_ADDR_EXT | FCF_SRC_ADDR_NONE | FCF_PANID_COMPRESSION,
+    FCF_DST_ADDR_SHORT | FCF_SRC_ADDR_NONE | FCF_PANID_COMPRESSION,
+    FCF_DST_ADDR_NONE | FCF_SRC_ADDR_EXT,
+    FCF_DST_ADDR_NONE | FCF_SRC_ADDR_SHORT,
+    FCF_DST_ADDR_NONE | FCF_SRC_ADDR_EXT | FCF_PANID_COMPRESSION,
+    FCF_DST_ADDR_NONE | FCF_SRC_ADDR_SHORT | FCF_PANID_COMPRESSION,
+    FCF_DST_ADDR_EXT | FCF_SRC_ADDR_EXT | FCF_PANID_COMPRESSION,
+}
+
+
+def _is_dst_pan_id_present(fcf: int) -> bool:
+    if _is_version_2015(fcf):
+        v = fcf & (FCF_DST_ADDR_MASK | FCD_SRC_ADDR_MASK | FCF_PANID_COMPRESSION)
+        present = v not in _DST_PAN_ID_NOT_PRESENT_SET
+    else:
+        present = _is_dst_addr_present(fcf)
+
+    return present
+
+
 def dissect(frame: bytes) -> WpanFrameInfo:
     fcf = struct.unpack("<H", frame[1:3])[0]
 
@@ -71,9 +124,15 @@ def dissect(frame: bytes) -> WpanFrameInfo:
 
     dst_extaddr, dst_short = None, None
 
-    if dst_addr_mode == DstAddrMode.SHORT.value:
-        dst_short = struct.unpack('<H', frame[6:8])[0]
-    elif dst_addr_mode == DstAddrMode.EXTENDED.value:
-        dst_extaddr = '%016x' % struct.unpack('<Q', frame[6:14])[0]
+    if dst_addr_mode in [DstAddrMode.SHORT.value, DstAddrMode.EXTENDED.value]:
+        offset = 4
+
+        if _is_dst_pan_id_present(fcf):
+            offset += 2
+
+        if dst_addr_mode == DstAddrMode.SHORT.value:
+            dst_short = struct.unpack('<H', frame[offset:offset + 2])[0]
+        else:
+            dst_extaddr = '%016x' % struct.unpack('<Q', frame[offset:offset + 8])[0]
 
     return WpanFrameInfo(fcf=fcf, seq_no=seq_no, dst_extaddr=dst_extaddr, dst_short=dst_short)
