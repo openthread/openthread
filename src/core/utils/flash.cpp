@@ -105,12 +105,17 @@ OT_TOOL_PACKED_BEGIN
 class RecordHeader
 {
 protected:
-    void Init(uint16_t aKey, uint16_t aLength)
+    void Init(uint16_t aKey, bool aInvalidatePrevious, uint16_t aLength)
     {
         mKey      = aKey;
         mFlags    = kFlagsInit;
         mLength   = aLength;
         mReserved = 0xffff;
+
+        if (aInvalidatePrevious)
+        {
+            mFlags &= ~kFlagInvalidatePrevious;
+        }
     };
 
 public:
@@ -164,7 +169,7 @@ public:
         mFlags &= ~kFlagDelete;
     }
 
-    bool IsFirst(void) const { return (mFlags & kFlagFirst) == 0; }
+    bool InvalidatesPrevious(void) const { return (mFlags & kFlagInvalidatePrevious) == 0; }
 
     bool IsFree(void) const { return !IsAddBeginSet(); }
 
@@ -186,10 +191,10 @@ private:
 
     enum
     {
-        kFlagAddBegin    = 1 << 0, ///< 0 indicates record write has started, 1 otherwise.
-        kFlagAddComplete = 1 << 1, ///< 0 indicates record write has completed, 1 otherwise.
-        kFlagDelete      = 1 << 2, ///< 0 indicates record was deleted, 1 otherwise.
-        kFlagFirst       = 1 << 3, ///< 0 indicates first record for key, 1 otherwise.
+        kFlagAddBegin           = 1 << 0, ///< 0 indicates record write has started, 1 otherwise.
+        kFlagAddComplete        = 1 << 1, ///< 0 indicates record write has completed, 1 otherwise.
+        kFlagDelete             = 1 << 2, ///< 0 indicates record was deleted, 1 otherwise.
+        kFlagInvalidatePrevious = 1 << 3, ///< 0 invalidates the previous records for key, 1 otherwise.
 
         /* The record's format version is in the upper nibble of mFlags */
         kFormatTop   = 0xf,
@@ -210,10 +215,10 @@ OT_TOOL_PACKED_BEGIN
 class Record : public RecordHeader
 {
 public:
-    void Init(uint16_t aKey, const uint8_t *aData, uint16_t aDataLength)
+    void Init(uint16_t aKey, bool aInvalidatePrevious, const uint8_t *aData, uint16_t aDataLength)
     {
         OT_ASSERT(aDataLength <= kMaxDataSize);
-        RecordHeader::Init(aKey, aDataLength);
+        RecordHeader::Init(aKey, aInvalidatePrevious, aDataLength);
 
         memcpy(mData, aData, aDataLength);
 
@@ -256,7 +261,7 @@ public:
     void Fixup(void)
     {
         uint16_t dataLength = GetLength();
-        RecordHeader::Init(GetKey(), dataLength);
+        RecordHeader::Init(GetKey(), false, dataLength);
 
         /* fill slack space with 0xff to avoid writing 0 more than once to each bit */
         memset(mData + dataLength, 0xff, GetDataSize() - dataLength);
@@ -325,7 +330,7 @@ exit:
     return;
 }
 
-void Flash::SanitizeFreeSpace()
+void Flash::SanitizeFreeSpace(void)
 {
     uint32_t temp;
     bool     sanitizeNeeded = false;
@@ -364,7 +369,19 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
     {
         recordHeader.Load(&GetInstance(), mSwapIndex, offset);
 
-        if ((recordHeader.GetKey() != aKey) || !recordHeader.IsValid())
+        if (recordHeader.GetKey() != aKey)
+        {
+            continue;
+        }
+
+        if (recordHeader.InvalidatesPrevious())
+        {
+            error       = OT_ERROR_NOT_FOUND;
+            valueLength = 0;
+            index       = 0;
+        }
+
+        if (!recordHeader.IsValid())
         {
             continue;
         }
@@ -378,7 +395,6 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
 
             valueLength = recordHeader.GetLength();
             error       = OT_ERROR_NONE;
-            break;
         }
 
         index++;
@@ -392,19 +408,13 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
     return error;
 }
 
-otError Flash::Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
-{
-    IgnoreError(Delete(aKey, -1));
-    return Add(aKey, aValue, aValueLength);
-}
-
-otError Flash::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+otError Flash::Add(uint16_t aKey, bool aInvalidatePrevious, const uint8_t *aValue, uint16_t aValueLength)
 {
     otError  error = OT_ERROR_NONE;
     Record   record;
     uint16_t size;
 
-    record.Init(aKey, aValue, aValueLength);
+    record.Init(aKey, aInvalidatePrevious, aValue, aValueLength);
     size = record.GetSize();
 
     OT_ASSERT((mSwapSize - size) >= mSwapHeaderSize);
@@ -423,7 +433,7 @@ exit:
     return error;
 }
 
-bool Flash::DoesValidRecordExist(uint32_t aOffset, uint16_t aKey) const
+bool Flash::IsInvalidated(uint32_t aOffset, uint16_t aKey) const
 {
     RecordHeader recordHeader;
     bool         rval = false;
@@ -432,7 +442,7 @@ bool Flash::DoesValidRecordExist(uint32_t aOffset, uint16_t aKey) const
     {
         recordHeader.Load(&GetInstance(), mSwapIndex, aOffset);
 
-        if (recordHeader.IsValid() && recordHeader.IsFirst() && (recordHeader.GetKey() == aKey))
+        if (recordHeader.IsValid() && recordHeader.InvalidatesPrevious() && (recordHeader.GetKey() == aKey))
         {
             ExitNow(rval = true);
         }
@@ -460,7 +470,7 @@ void Flash::Swap(void)
 
         size = record.GetSize();
 
-        if (!record.IsValid() || DoesValidRecordExist(srcOffset + record.GetSize(), record.GetKey()))
+        if (!record.IsValid() || IsInvalidated(srcOffset + record.GetSize(), record.GetKey()))
         {
             continue;
         }
@@ -504,7 +514,18 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
 
         size = recordHeader.GetSize();
 
-        if ((recordHeader.GetKey() != aKey) || !recordHeader.IsValid())
+        if (recordHeader.GetKey() != aKey)
+        {
+            continue;
+        }
+
+        if (recordHeader.InvalidatesPrevious())
+        {
+            index = 0;
+            error = OT_ERROR_NOT_FOUND;
+        }
+
+        if (!recordHeader.IsValid())
         {
             continue;
         }
@@ -514,11 +535,6 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
             recordHeader.SetDeleted();
             recordHeader.Save(&GetInstance(), mSwapIndex, offset);
             error = OT_ERROR_NONE;
-
-            if (aIndex != -1)
-            {
-                break;
-            }
         }
 
         index++;

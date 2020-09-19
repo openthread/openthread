@@ -97,7 +97,10 @@ public:
      * @retval OT_ERROR_NO_BUFS  Not enough space to store the value.
      *
      */
-    otError Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+    inline otError Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        return Add(aKey, true, aValue, aValueLength);
+    }
 
     /**
      * This method adds a value to @p aKey.
@@ -111,7 +114,10 @@ public:
      * @retval OT_ERROR_NO_BUFS  Not enough space to store the value.
      *
      */
-    otError Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+    inline otError Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        return Add(aKey, false, aValue, aValueLength);
+    }
 
     /**
      * This method removes a value from @p aKey.
@@ -134,9 +140,10 @@ public:
     void Wipe(void);
 
 private:
-    bool DoesValidRecordExist(uint32_t aOffset, uint16_t aKey) const;
-    void SanitizeFreeSpace(void);
-    void Swap(void);
+    otError Add(uint16_t aKey, bool aInvalidatePrevious, const uint8_t *aValue, uint16_t aValueLength);
+    bool    IsInvalidated(uint32_t aOffset, uint16_t aKey) const;
+    void    SanitizeFreeSpace(void);
+    void    Swap(void);
 
     uint32_t mSwapSize;
     uint32_t mSwapUsed;
