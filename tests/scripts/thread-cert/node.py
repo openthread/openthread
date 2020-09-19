@@ -456,11 +456,12 @@ class Node:
         self._expect('Done')
         self._allow_list.clear()
 
-    def enable_allowlist(self):
+    def enable_allowlist(self, inform_simulator=True):
         cmd = 'macfilter addr allowlist'
         self.send_command(cmd)
         self._expect('Done')
-        self._allow_list_enabled = True
+        if inform_simulator:
+            self._allow_list_enabled = True
 
     def disable_allowlist(self):
         cmd = 'macfilter addr disable'

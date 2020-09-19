@@ -133,8 +133,8 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         self.assertTrue(self.nodes[SED_1].ping(leader_aloc, timeout=USER_POLL_PERIOD * 2))
 
         # 6 - Timeout Child
-        self.nodes[LEADER].enable_allowlist()
-        self.nodes[SED_1].enable_allowlist()
+        self.nodes[LEADER].enable_allowlist(inform_simulator=False)
+        self.nodes[SED_1].enable_allowlist(inform_simulator=False)
         self.nodes[SED_1].set_pollperiod(CHILD_TIMEOUT * 1000 * 2)
         self.simulator.go(CHILD_TIMEOUT + 1)
         self.assertEqual(self.nodes[SED_1].get_state(), 'child')
@@ -159,8 +159,8 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         self.flush_all()
 
         # 8 - Verify enhanced keep-alive works
-        self.nodes[LEADER].enable_allowlist()
-        self.nodes[SED_1].enable_allowlist()
+        self.nodes[LEADER].enable_allowlist(inform_simulator=False)
+        self.nodes[SED_1].enable_allowlist(inform_simulator=False)
         self.nodes[SED_1].set_pollperiod(CHILD_TIMEOUT * 1000 * 2)
         self.simulator.go(CHILD_TIMEOUT // 2)
         self.assertEqual(self.nodes[SED_1].get_state(), 'child')
@@ -168,8 +168,8 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         self.nodes[SED_1].disable_allowlist()
         non_exist_addr = leader_aloc.replace('fc00', 'fc12')
         self.assertFalse(self.nodes[SED_1].ping(non_exist_addr))
-        self.nodes[LEADER].enable_allowlist()
-        self.nodes[SED_1].enable_allowlist()
+        self.nodes[LEADER].enable_allowlist(inform_simulator=False)
+        self.nodes[SED_1].enable_allowlist(inform_simulator=False)
         self.simulator.go(CHILD_TIMEOUT // 2)
         self.nodes[LEADER].disable_allowlist()
         self.nodes[SED_1].disable_allowlist()
