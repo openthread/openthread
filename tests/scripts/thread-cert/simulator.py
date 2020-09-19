@@ -356,6 +356,13 @@ class VirtualTime(BaseSimulator):
                         # print "-- Enqueue\t", event
                         bisect.insort(self.event_queue, event)
 
+                        is_unicast_dst = ((dst_extaddr is not None and dst_node.extaddr is not None and
+                                           dst_extaddr == dst_node.extaddr) or
+                                          (dst_short not in [None, 0xffff] and dst_node.rloc16 is not None and
+                                           dst_short == dst_node.rloc16))
+                        if is_unicast_dst:
+                            break
+
                 self._pcap.append(data, (event_time // 1000000, event_time % 1000000))
                 self._add_message(addr[1] - self.port, data)
 
