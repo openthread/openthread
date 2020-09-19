@@ -36,6 +36,7 @@
 
 #include "test_platform.h"
 #include "test_util.h"
+#include "test_util.hpp"
 
 #include "test_flash/flash_v1.hpp"
 
@@ -50,127 +51,95 @@ public:
     {
     }
 
-    void SetReaderWriter(bool aReadNew, bool aWriteNew)
+    void SetReaderWriter(uint8_t aReader, uint8_t aWriter, bool aAlwaysReinit)
     {
-        mReadNew  = aReadNew;
-        mWriteNew = aWriteNew;
+        mReader       = aReader;
+        mWriter       = aWriter;
+        mAlwaysReinit = aAlwaysReinit;
     }
 
     void Init(void)
     {
-        testFlashSet(0);
-        mFlashV1.Init();
-
-        testFlashSet(1);
-        mFlashV2.Init();
+        Switch(0, true);
+        Switch(1, true);
     }
 
-    otError Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const
+    otError Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
     {
-        otError error;
-
-        if (mReadNew)
-        {
-            testFlashSet(1);
-            error = mFlashV2.Get(aKey, aIndex, aValue, aValueLength);
-        }
-        else
-        {
-            testFlashSet(0);
-            error = mFlashV1.Get(aKey, aIndex, aValue, aValueLength);
-        }
-
-        return error;
+        Switch(mReader);
+        return (mReader == 0) ? mFlashV1.Get(aKey, aIndex, aValue, aValueLength)
+                              : mFlashV2.Get(aKey, aIndex, aValue, aValueLength);
     }
 
     otError Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
     {
-        otError error;
-
-        if (mWriteNew)
-        {
-            testFlashSet(1);
-            error = mFlashV2.Set(aKey, aValue, aValueLength);
-        }
-        else
-        {
-            testFlashSet(0);
-            error = mFlashV1.Set(aKey, aValue, aValueLength);
-            LegacyPrepare();
-        }
-
-        return error;
+        Switch(mWriter);
+        return (mWriter == 0) ? mFlashV1.Set(aKey, aValue, aValueLength) : mFlashV2.Set(aKey, aValue, aValueLength);
     }
 
     otError Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
     {
-        otError error;
-
-        if (mWriteNew)
-        {
-            testFlashSet(1);
-            error = mFlashV2.Add(aKey, aValue, aValueLength);
-        }
-        else
-        {
-            testFlashSet(0);
-            error = mFlashV1.Add(aKey, aValue, aValueLength);
-            LegacyPrepare();
-        }
-
-        return error;
+        Switch(mWriter);
+        return (mWriter == 0) ? mFlashV1.Add(aKey, aValue, aValueLength) : mFlashV2.Add(aKey, aValue, aValueLength);
     }
 
     otError Delete(uint16_t aKey, int aIndex)
     {
-        otError error;
-
-        if (mWriteNew)
-        {
-            testFlashSet(1);
-            error = mFlashV2.Delete(aKey, aIndex);
-        }
-        else
-        {
-            testFlashSet(0);
-            error = mFlashV1.Delete(aKey, aIndex);
-            LegacyPrepare();
-        }
-
-        return error;
+        Switch(mWriter);
+        return (mWriter == 0) ? mFlashV1.Delete(aKey, aIndex) : mFlashV2.Delete(aKey, aIndex);
     }
 
     void Wipe(void)
     {
-        if (mWriteNew)
+        Switch(mWriter);
+        if (mWriter == 0)
         {
-            testFlashSet(1);
-            mFlashV2.Wipe();
+            mFlashV1.Wipe();
         }
         else
         {
-            testFlashSet(0);
-            mFlashV1.Wipe();
-            LegacyPrepare();
+            mFlashV2.Wipe();
         }
     }
 
 private:
-    void LegacyPrepare(void)
+    void Switch(uint8_t aArea, bool aReinit)
     {
-        if (!mWriteNew && mReadNew)
+        assert(aArea <= 1);
+        testFlashSet(aArea);
+        if (aReinit)
         {
-            testFlashCopy();
-            testFlashSet(1);
-            mFlashV2.Init();
+            if (aArea == 0)
+            {
+                mFlashV1.Init();
+            }
+            else
+            {
+                mFlashV2.Init();
+            }
         }
+    }
+
+    void Switch(uint8_t aArea)
+    {
+        bool reinit = mAlwaysReinit;
+
+        if (mWriter == 0 && mReader == 1 && aArea == 1)
+        {
+            // always reinit if we need to read with new format and the write operations have the old format
+            testFlashCopy();
+            reinit = true;
+        }
+
+        Switch(aArea, reinit);
     }
 
     FlashV1 mFlashV1;
     Flash   mFlashV2;
 
-    bool mReadNew;
-    bool mWriteNew;
+    uint8_t mReader;
+    uint8_t mWriter;
+    bool    mAlwaysReinit;
 };
 
 void TestFlash(FlashTest &flash)
@@ -324,17 +293,32 @@ void TestFlash(void)
 
     // old read vs old write
     testFlashReset();
-    flashTest.SetReaderWriter(false, false);
+    flashTest.SetReaderWriter(0, 0, false);
+    TestFlash(flashTest);
+
+    // old read vs old write - reinit before each operation
+    testFlashReset();
+    flashTest.SetReaderWriter(0, 0, true);
     TestFlash(flashTest);
 
     // new read vs new write
     testFlashReset();
-    flashTest.SetReaderWriter(true, true);
+    flashTest.SetReaderWriter(1, 1, false);
+    TestFlash(flashTest);
+
+    // new read vs new write - reinit before each operation
+    testFlashReset();
+    flashTest.SetReaderWriter(1, 1, true);
     TestFlash(flashTest);
 
     // new read vs old write
     testFlashReset();
-    flashTest.SetReaderWriter(true, false);
+    flashTest.SetReaderWriter(1, 0, false);
+    TestFlash(flashTest);
+
+    // new read vs old write - reinit before each operation
+    testFlashReset();
+    flashTest.SetReaderWriter(1, 0, true);
     TestFlash(flashTest);
 }
 
