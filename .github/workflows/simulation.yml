@@ -87,10 +87,19 @@ jobs:
         sudo apt-get --no-install-recommends install -y g++-multilib
         ./bootstrap
     - name: Run OTNS Tests
+      env:
+        OTNS_COMMIT: "8e9b4ba5825dd37e6e84f7801dd72101fde3d191" # Sep 17, 2020
       run: |
-        git clone https://github.com/openthread/ot-ns.git --depth 1 --branch master ~/otns
         export OT_DIR=$PWD
-        (cd ~/otns && ./script/test py-unittests py-examples)
+        mkdir -p /tmp/otns
+        (
+          cd /tmp/otns
+          git init
+          git remote add origin https://github.com/openthread/ot-ns.git
+          git fetch origin "${OTNS_COMMIT:-master}" --depth 1
+          git reset --hard FETCH_HEAD
+          ./script/test py-unittests py-examples
+        )
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
