@@ -41,6 +41,8 @@ ROUTER2 = 3
 
 
 class TestRouteTable(thread_cert.TestCase):
+    SUPPORT_NCP = False
+
     TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
