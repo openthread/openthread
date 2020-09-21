@@ -110,6 +110,7 @@ PLATFORM_COMMON_SOURCES                                                       = 
     src/openthread-core-efr32-config.h                                          \
     src/openthread-core-efr32-config-check.h                                    \
     src/platform-efr32.h                                                        \
+    src/radio.c                                                                 \
     src/rail_config.h                                                           \
     src/startup-gcc.c                                                           \
     src/system.c                                                                \
@@ -118,7 +119,6 @@ PLATFORM_COMMON_SOURCES                                                       = 
 
 PLATFORM_SOURCES                                                              = \
     efr32mg21/platform-band.h                                                   \
-    efr32mg21/radio.c                                                           \
     efr32mg21/sl_device_init_clocks.c                                           \
     efr32mg21/uart-init.h                                                       \
     $(NULL)
