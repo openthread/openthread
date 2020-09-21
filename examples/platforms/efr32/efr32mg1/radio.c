@@ -48,6 +48,7 @@
 
 #include "utils/soft_source_match_table.h"
 
+#include "antenna.h"
 #include "board_config.h"
 #include "em_cmu.h"
 #include "em_core.h"
@@ -194,12 +195,6 @@ static const RAIL_IEEE802154_Config_t sRailIeee802154Config = {
 	.defaultFramePendingInOutgoingAcks = false,
 };
 
-#if RADIO_CONFIG_PA_USES_DCDC
-RAIL_DECLARE_TX_POWER_DCDC_CURVES(piecewiseSegments, curvesSg, curves24Hp, curves24Lp);
-#else
-RAIL_DECLARE_TX_POWER_VBAT_CURVES(piecewiseSegments, curvesSg, curves24Hp, curves24Lp);
-#endif
-
 static int8_t sTxPowerDbm = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 
 static int8_t sCcaThresholdDbm = -75; // default -75dBm energy detect threshold
@@ -249,11 +244,9 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
 static void efr32RailConfigLoad(efr32BandConfig *aBandConfig)
 {
     RAIL_Status_t status;
-#if HAL_PA_2P4_LOWPOWER == 1
-    RAIL_TxPowerConfig_t txPowerConfig = {RAIL_TX_POWER_MODE_2P4_LP, HAL_PA_VOLTAGE, 10};
-#else
-    RAIL_TxPowerConfig_t txPowerConfig = {RAIL_TX_POWER_MODE_2P4_HP, HAL_PA_VOLTAGE, 10};
-#endif
+    RAIL_TxPowerConfig_t txPowerConfig = {SL_RAIL_UTIL_PA_SELECTION_2P4GHZ, SL_RAIL_UTIL_PA_VOLTAGE_MV, 10};
+
+#if RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
     if (aBandConfig->mChannelConfig != NULL)
     {
         uint16_t firstChannel = RAIL_ConfigChannels(gRailHandle, aBandConfig->mChannelConfig, NULL);
@@ -262,6 +255,7 @@ static void efr32RailConfigLoad(efr32BandConfig *aBandConfig)
         txPowerConfig.mode = RAIL_TX_POWER_MODE_SUBGIG;
     }
     else
+#endif // RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
     {
         status = RAIL_IEEE802154_Config2p4GHzRadio(gRailHandle);
         assert(status == RAIL_STATUS_NO_ERROR);
@@ -273,11 +267,8 @@ static void efr32RailConfigLoad(efr32BandConfig *aBandConfig)
 
 static void efr32RadioSetTxPower(int8_t aPowerDbm)
 {
-    RAIL_Status_t              status;
-    RAIL_TxPowerCurvesConfig_t txPowerCurvesConfig = {curves24Hp, curvesSg, curves24Lp, piecewiseSegments};
-
-    status = RAIL_InitTxPowerCurves(&txPowerCurvesConfig);
-    assert(status == RAIL_STATUS_NO_ERROR);
+    RAIL_Status_t status;
+    sl_rail_util_pa_init();
 
     status = RAIL_SetTxPowerDbm(gRailHandle, ((RAIL_TxPower_t)aPowerDbm) * 10);
     assert(status == RAIL_STATUS_NO_ERROR);

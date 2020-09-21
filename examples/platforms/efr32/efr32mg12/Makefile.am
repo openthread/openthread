@@ -70,6 +70,7 @@ libopenthread_efr32mg12_a_CPPFLAGS                                            = 
     -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG12_$(BOARD_UPPERCASE)/config           \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32                     \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32/config              \
+    -I$(SDK_SRC_DIR)/platform/base/hal/plugin/antenna/                          \
     -I$(SDK_SRC_DIR)/platform/common/inc                                        \
     -I$(SDK_SRC_DIR)/platform/CMSIS/Include                                     \
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG12P/Include             \
@@ -92,6 +93,7 @@ libopenthread_efr32mg12_a_CPPFLAGS                                            = 
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal/efr32                          \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/protocol/ieee802154                \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions              \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg1x/config \
     -I$(SDK_SRC_DIR)/platform/service/device_init/inc                           \
     -I$(SDK_SRC_DIR)/platform/service/mpu/inc                                   \
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/config                         \

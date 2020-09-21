@@ -68,7 +68,7 @@ typedef struct ButtonArray
 } ButtonArray_t;
 
 static bool (*sCanSleepCallback)(void);
-
+static void (*sDeviceOutOfSleepCb)(void);
 /**
  * Registers the sleep callback handler.  The callback is used to check that
  * the application has no work pending and that it is safe to put the EFR32
@@ -82,9 +82,10 @@ static bool (*sCanSleepCallback)(void);
  * @param[in]  aCallback  Callback function.
  *
  */
-static void efr32SetSleepCallback(bool (*aCallback)(void))
+static void efr32SetSleepCallback(bool (*aCallback)(void), void (*aCallbackWake)(void))
 {
-    sCanSleepCallback = aCallback;
+    sCanSleepCallback   = aCallback;
+    sDeviceOutOfSleepCb = aCallbackWake;
 }
 
 /**
@@ -112,6 +113,11 @@ static void efr32Sleep(void)
 
             while (RAIL_Wake(0) != RAIL_STATUS_NO_ERROR)
             {
+            }
+
+            if (sDeviceOutOfSleepCb != NULL)
+            {
+                sDeviceOutOfSleepCb();
             }
         }
         else
