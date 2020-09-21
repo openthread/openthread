@@ -3839,8 +3839,7 @@ void Interpreter::ProcessVersion(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        const char *version = otGetVersionString();
-        OutputLine("%s", static_cast<const char *>(version));
+        OutputLine("%s", otGetVersionString());
         ExitNow();
     }
 
