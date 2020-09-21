@@ -109,6 +109,7 @@ void otCliUartInit(otInstance *aInstance);
  *
  * @param[in]  aUserCommands  A pointer to an array with user commands.
  * @param[in]  aLength        @p aUserCommands length.
+ *
  */
 void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength);
 
@@ -117,6 +118,7 @@ void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength);
  *
  * @param[in]  aBytes   A pointer to data which should be printed.
  * @param[in]  aLength  @p aBytes length.
+ *
  */
 void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
@@ -125,6 +127,7 @@ void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
  *
  * @param[in]  aFmt   A pointer to the format string.
  * @param[in]  ...    A matching list of arguments.
+ *
  */
 void otCliOutputFormat(const char *aFmt, ...);
 
@@ -133,13 +136,17 @@ void otCliOutputFormat(const char *aFmt, ...);
  *
  * @param[in]  aString  A pointer to the string, which may not be null-terminated.
  * @param[in]  aLength  Number of bytes.
+ *
  */
 void otCliOutput(const char *aString, uint16_t aLength);
 
 /**
  * Write error code to the CLI console
  *
+ * If the @p aError is `OT_ERROR_PENDING` nothing will be outputted.
+ *
  * @param[in]  aError Error code value.
+ *
  */
 void otCliAppendResult(otError aError);
 
@@ -150,6 +157,7 @@ void otCliAppendResult(otError aError);
  * @param[in]  aLogRegion  The log region.
  * @param[in]  aFormat     A pointer to the format string.
  * @param[in]  aArgs       va_list matching aFormat.
+ *
  */
 void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs);
 
