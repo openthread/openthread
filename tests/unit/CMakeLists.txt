@@ -582,7 +582,30 @@ target_link_libraries(test-timer
 add_test(NAME test-timer COMMAND test-timer)
 
 set_target_properties(
-    test-aes test-checksum test-child test-child-table test-flash test-heap test-hmac-sha256 test-ip6-address test-link-quality test-linked-list test-lowpan test-mac-frame test-message test-message-queue test-multicast-listeners-table test-ndproxy-table test-netif test-network-data test-pool test-priority-queue test-pskc test-steering-data test-string test-timer
+    test-aes
+    test-checksum
+    test-child
+    test-child-table
+    test-flash
+    test-heap
+    test-hmac-sha256
+    test-ip6-address
+    test-link-quality
+    test-linked-list
+    test-lowpan
+    test-mac-frame
+    test-message
+    test-message-queue
+    test-multicast-listeners-table
+    test-ndproxy-table
+    test-netif
+    test-network-data
+    test-pool
+    test-priority-queue
+    test-pskc
+    test-steering-data
+    test-string
+    test-timer
     PROPERTIES
         C_STANDARD 99
         CXX_STANDARD 11

@@ -1473,7 +1473,7 @@ class OpenThreadTHCI(object):
             print(cmd)
             if self.__executeCommand(cmd)[-1] == 'Done':
                 # send server data ntf to leader
-                return self.__executeCommand('netdataregister')[-1] == 'Done'
+                return self.__executeCommand('netdata register')[-1] == 'Done'
             else:
                 return False
         except Exception as e:
@@ -1579,7 +1579,7 @@ class OpenThreadTHCI(object):
                     return True
                 else:
                     # send server data ntf to leader
-                    return self.__executeCommand('netdataregister')[-1] == 'Done'
+                    return self.__executeCommand('netdata register')[-1] == 'Done'
             else:
                 return False
         except Exception as e:
@@ -1743,7 +1743,7 @@ class OpenThreadTHCI(object):
 
             if self.__executeCommand(cmd)[-1] == 'Done':
                 # send server data ntf to leader
-                return self.__executeCommand('netdataregister')[-1] == 'Done'
+                return self.__executeCommand('netdata register')[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('configExternalRouter() Error: ' + str(e))
 
@@ -2373,7 +2373,7 @@ class OpenThreadTHCI(object):
 
             if len(TLVs) != 0:
                 tlvs = ''.join('%02x' % tlv for tlv in TLVs)
-                cmd += ' binary '
+                cmd += ' -x '
                 cmd += tlvs
 
             print(cmd)
@@ -2453,7 +2453,7 @@ class OpenThreadTHCI(object):
             if (sPSKc is not None or listSecurityPolicy is not None or xCommissioningSessionId is not None or
                     xTmfPort is not None or xSteeringData is not None or xBorderRouterLocator is not None or
                     BogusTLV is not None):
-                cmd += ' binary '
+                cmd += ' -x '
 
             if sPSKc is not None:
                 cmd += '0410'
@@ -2558,7 +2558,7 @@ class OpenThreadTHCI(object):
 
             if len(TLVs) != 0:
                 tlvs = ''.join('%02x' % tlv for tlv in TLVs)
-                cmd += ' binary '
+                cmd += ' -x '
                 cmd += tlvs
 
             print(cmd)
@@ -2628,7 +2628,7 @@ class OpenThreadTHCI(object):
                 cmd += self.__escapeEscapable(str(sNetworkName))
 
             if xCommissionerSessionId is not None:
-                cmd += ' binary '
+                cmd += ' -x '
                 cmd += '0b02'
                 sessionid = str(hex(xCommissionerSessionId))[2:]
 
@@ -2658,7 +2658,7 @@ class OpenThreadTHCI(object):
 
             if len(TLVs) != 0:
                 tlvs = ''.join('%02x' % tlv for tlv in TLVs)
-                cmd += ' binary '
+                cmd += ' -x '
                 cmd += tlvs
 
             print(cmd)
@@ -2709,7 +2709,7 @@ class OpenThreadTHCI(object):
                 cmd += str(hex(xBorderRouterLocator))
 
             if xChannelTlv is not None:
-                cmd += ' binary '
+                cmd += ' -x '
                 cmd += '000300' + '%04x' % xChannelTlv
 
             print(cmd)
