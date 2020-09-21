@@ -30,6 +30,11 @@
 # efr32mg13 platform-specific Makefile
 #
 
+
+# Do not enable -Wundef for rail
+override CFLAGS   := $(filter-out -Wundef,$(CFLAGS))
+override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
+
 LIBRAIL = $(shell                                                                \
 if [ "$(DMP)" = "1" ]; then                                                      \
     echo "librail_multiprotocol_efr32xg13_gcc_release.a";                        \
@@ -40,9 +45,19 @@ fi )
 LDADD_COMMON                                                                  += \
     $(top_builddir)/examples/platforms/efr32mg13/libopenthread-efr32mg13.a       \
     $(top_builddir)/third_party/silabs/libsilabs-efr32mg13-sdk.a                 \
-    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7/platform/radio/rail_lib/autogen/librail_release/$(LIBRAIL) \
-    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7/platform/emdrv/nvm3/lib/libnvm3_CM4_gcc.a \
+    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0/platform/radio/rail_lib/autogen/librail_release/$(LIBRAIL) \
+    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0/platform/emdrv/nvm3/lib/libnvm3_CM4_gcc.a \
     $(NULL)
+
+if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
+LDADD_COMMON                                                                 += \
+    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                         \
+    $(NULL)
+else
+LDADD_COMMON                                                                 += \
+    $(top_builddir)/third_party/silabs/libsilabs-mbedtls.a                      \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
 LDFLAGS_COMMON                                                                += \
     -T $(top_srcdir)/examples/platforms/efr32mg13/efr32mg13.ld                   \

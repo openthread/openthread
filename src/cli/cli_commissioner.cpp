@@ -206,7 +206,7 @@ otError Commissioner::ProcessMgmtGet(uint8_t aArgsLength, char *aArgs[])
         {
             tlvs[length++] = OT_MESHCOP_TLV_JOINER_UDP_PORT;
         }
-        else if (strcmp(aArgs[index], "binary") == 0)
+        else if (strcmp(aArgs[index], "-x") == 0)
         {
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             value = static_cast<long>(strlen(aArgs[index]) + 1) / 2;
@@ -277,7 +277,7 @@ otError Commissioner::ProcessMgmtSet(uint8_t aArgsLength, char *aArgs[])
             SuccessOrExit(error = Interpreter::Interpreter::ParseLong(aArgs[index], value));
             dataset.mJoinerUdpPort = static_cast<uint16_t>(value);
         }
-        else if (strcmp(aArgs[index], "binary") == 0)
+        else if (strcmp(aArgs[index], "-x") == 0)
         {
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             length = static_cast<int>((strlen(aArgs[index]) + 1) / 2);

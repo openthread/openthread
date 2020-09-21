@@ -64,9 +64,7 @@ Done
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
 - [neighbor](#neighbor-list)
-- [netdata](#netdata-steeringdata-check-eui64discerner)
-- [netdataregister](#netdataregister)
-- [netdatashow](#netdatashow)
+- [netdata](README_NETDATA.md)
 - [netstat](#netstat)
 - [networkdiagnostic](#networkdiagnostic-get-addr-type-)
 - [networkidtimeout](#networkidtimeout)
@@ -75,10 +73,10 @@ Done
 - [panid](#panid)
 - [parent](#parent)
 - [parentpriority](#parentpriority)
-- [ping](#ping-ipaddr-size-count-interval-hoplimit)
+- [ping](#ping-ipaddr-sizecount-intervalhoplimit)
 - [pollperiod](#pollperiod-pollperiod)
 - [preferrouterid](#preferrouterid-routerid)
-- [prefix](#prefix-add-prefix-padcrosnD-prf)
+- [prefix](#prefix)
 - [promiscuous](#promiscuous)
 - [pskc](#pskc--p-keypassphrase)
 - [rcp](#rcp)
@@ -1197,41 +1195,6 @@ Print table of neighbors.
 Done
 ```
 
-### netdata steeringdata check \<eui64\>|\<discerner\>
-
-Check whether the steering data includes a joiner.
-
-- eui64: The IEEE EUI-64 of the Joiner.
-- discerner: The Joiner discerner in format `number/length`.
-
-```bash
-> netdata steeringdata check d45e64fa83f81cf7
-Done
-> netdata steeringdata check 0xabc/12
-Done
-> netdata steeringdata check 0xdef/12
-Error 23: NotFound
-```
-
-### netdataregister
-
-Register local network data with Thread Leader.
-
-```bash
-> netdataregister
-Done
-```
-
-### netdatashow
-
-Show Thread Leader network data.
-
-```bash
-> netdatashow
-08040b020000
-Done
-```
-
 ### netstat
 
 List all UDP sockets.
@@ -2108,7 +2071,7 @@ Factory Diagnostics module is enabled only when building OpenThread with `OPENTH
 
 ### service
 
-Module for controlling service registration in Network Data. Each change in service registration must be sent to leader by `netdataregister` command before taking effect.
+Module for controlling service registration in Network Data. Each change in service registration must be sent to leader by `netdata register` command before taking effect.
 
 ### service add \<enterpriseNumber\> \<serviceData\> \<serverData\>
 
@@ -2117,7 +2080,7 @@ Add service to the Network Data.
 ```bash
 > service add 44970 foo bar
 Done
-> netdataregister
+> netdata register
 Done
 > ipaddr
 fdde:ad00:beef:0:0:ff:fe00:fc10
@@ -2135,7 +2098,7 @@ Remove service from Network Data.
 ```bash
 > service remove 44970 foo
 Done
-> netdataregister
+> netdata register
 Done
 > ipaddr
 fdde:ad00:beef:0:0:ff:fe00:fc00

@@ -63,11 +63,7 @@ send "router $router_id\n"
 expect "Router ID: $router_id"
 expect "Rloc: $rloc"
 expect "Next Hop: fc00"
-expect "Link: 1"
-expect "Ext Addr: $extaddr"
-expect -re {Cost: \d+}
-expect -re {Link Quality In: \d+}
-expect -re {Link Quality Out: \d+}
-expect -re {Age: \d+}
+expect -re {Link: [01]}
+expect "Done"
 
 dispose_nodes

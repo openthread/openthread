@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -42,29 +42,30 @@ override CXXFLAGS := $(filter-out -pedantic-errors,$(CXXFLAGS))
 override CFLAGS   := $(filter-out -Wundef,$(CFLAGS))
 override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
 
-EFR32_BOARD_DIR = $(shell echo $(BOARD) | tr A-Z a-z)
+BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
+BOARD_UPPERCASE = $(shell echo $(BOARD) | tr a-z A-Z)
 
-SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7
+SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0
 
 libopenthread_efr32mg21_a_CPPFLAGS                                            = \
-    -DEFR32_SERIES2_CONFIG1_MICRO                                               \
     -DNVIC_CONFIG=\"platform/base/hal/micro/cortexm3/efm32/nvic-config.h\"      \
     -DPLATFORM_HEADER=\"platform/base/hal/micro/cortexm3/compiler/gcc.h\"       \
     -Wno-sign-compare                                                           \
     -I$(top_srcdir)/examples/platforms                                          \
-    -I$(top_srcdir)/examples/platforms/efr32mg21/$(EFR32_BOARD_DIR)             \
+    -I$(top_srcdir)/examples/platforms/efr32mg21/$(BOARD_LOWERCASE)             \
     -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/src/core                                                    \
     -I$(top_srcdir)/third_party/silabs/rail_config                              \
     -I$(SDK_SRC_DIR)                                                            \
     -I$(SDK_SRC_DIR)/hardware/kit/common/bsp                                    \
     -I$(SDK_SRC_DIR)/hardware/kit/common/drivers                                \
-    -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG21_$(BOARD)/config                     \
+    -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG21_$(BOARD_UPPERCASE)/config           \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32                     \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32/config              \
+    -I$(SDK_SRC_DIR)/platform/base/hal/plugin/antenna/                          \
     -I$(SDK_SRC_DIR)/platform/common/inc                                        \
     -I$(SDK_SRC_DIR)/platform/CMSIS/Include                                     \
-    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG21P/Include             \
+    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG21/Include              \
     -I$(SDK_SRC_DIR)/platform/emdrv/common/inc                                  \
     -I$(SDK_SRC_DIR)/platform/emdrv/gpiointerrupt/inc                           \
     -I$(SDK_SRC_DIR)/platform/emdrv/uartdrv/inc                                 \

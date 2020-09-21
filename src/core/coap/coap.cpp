@@ -1017,10 +1017,10 @@ Coap::Coap(Instance &aInstance)
 
 otError Coap::Start(uint16_t aPort, otNetifIdentifier aNetifIdentifier)
 {
-    otError error;
+    otError error        = OT_ERROR_NONE;
     bool    socketOpened = false;
 
-    VerifyOrExit(!mSocket.IsBound(), error = OT_ERROR_ALREADY);
+    VerifyOrExit(!mSocket.IsBound(), OT_NOOP);
 
     SuccessOrExit(error = mSocket.Open(&Coap::HandleUdpReceive, this));
     socketOpened = true;
@@ -1039,7 +1039,9 @@ exit:
 
 otError Coap::Stop(void)
 {
-    otError error;
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mSocket.IsBound(), OT_NOOP);
 
     SuccessOrExit(error = mSocket.Close());
     ClearRequestsAndResponses();

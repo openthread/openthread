@@ -165,7 +165,7 @@ Done
 
 ### active
 
-Usage: `dataset active [binary]`
+Usage: `dataset active [-x]`
 
 Print Active Operational Dataset in human-readable form.
 
@@ -187,7 +187,7 @@ Done
 Print Active Operational Dataset as hex-encoded TLVs.
 
 ```bash
-> dataset active binary
+> dataset active -x
 0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
 Done
 ```
@@ -361,23 +361,23 @@ Done
 
 ### mgmtgetcommand
 
-Usage: `dataset mgmtgetcommand <active|pending> [address <destination>] [TLV list] [binary]`
+Usage: `dataset mgmtgetcommand <active|pending> [address <destination>] [TLV list] [-x]`
 
 Send MGMT_ACTIVE_GET or MGMT_PENDING_GET.
 
 ```bash
-> dataset mgmtgetcommand active address fdde:ad00:beef:0:558:f56b:d688:799 activetimestamp binary 0c030001ff
+> dataset mgmtgetcommand active address fdde:ad00:beef:0:558:f56b:d688:799 activetimestamp -x 0c030001ff
 Done
 ```
 
 ### mgmtsetcommand
 
-Usage: `dataset mgmtsetcommand <active|pending> [TLV Type list] [binary]`
+Usage: `dataset mgmtsetcommand <active|pending> [TLV Type list] [-x]`
 
 Send MGMT_ACTIVE_SET or MGMT_PENDING_SET.
 
 ```bash
-> dataset mgmtsetcommand active activetimestamp 123 binary 0c030001ff
+> dataset mgmtsetcommand active activetimestamp 123 -x 0c030001ff
 Done
 ```
 
@@ -423,7 +423,7 @@ Done
 
 ### pending
 
-Usage: `dataset pending [binary]`
+Usage: `dataset pending [-x]`
 
 Print Pending Operational Dataset in human-readable form.
 
@@ -447,7 +447,7 @@ Done
 Print Pending Operational Dataset as hex-encoded TLVs.
 
 ```bash
-> dataset pending binary
+> dataset pending -x
 0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
 Done
 ```

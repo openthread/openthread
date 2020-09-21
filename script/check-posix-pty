@@ -41,9 +41,9 @@ at_exit()
     EXIT_CODE=$?
 
     sudo killall expect || true
-    killall ot-ctl || true
-    killall ot-daemon || true
-    killall socat || true
+    sudo killall ot-ctl || true
+    sudo killall ot-daemon || true
+    sudo killall socat || true
 
     exit $EXIT_CODE
 }

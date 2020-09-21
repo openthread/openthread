@@ -694,6 +694,14 @@ public:
     void SetCslChannel(uint8_t aChannel);
 
     /**
+     * This method indicates if CSL channel has been explicitly specified by the upper layer.
+     *
+     * @returns If CSL channel has been specified.
+     *
+     */
+    bool IsCslChannelSpecified(void) const { return mSubMac.IsCslChannelSpecified(); }
+
+    /**
      * This method gets the CSL period.
      *
      * @returns CSL period in units of 10 symbols.

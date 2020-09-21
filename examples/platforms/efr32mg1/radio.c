@@ -1173,3 +1173,27 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 
     return EFR32_RECEIVE_SENSITIVITY;
 }
+
+RAIL_AntennaConfig_t halAntennaConfig;
+
+void initAntenna(void)
+{
+#if (HAL_ANTDIV_ENABLE && defined(BSP_ANTDIV_SEL_PORT) && defined(BSP_ANTDIV_SEL_PIN) && defined(BSP_ANTDIV_SEL_LOC))
+    halAntennaConfig.ant0PinEn = true;
+    halAntennaConfig.ant0Port  = (uint8_t)BSP_ANTDIV_SEL_PORT;
+    halAntennaConfig.ant0Pin   = BSP_ANTDIV_SEL_PIN;
+    halAntennaConfig.ant0Loc   = BSP_ANTDIV_SEL_LOC;
+#endif
+#ifdef _SILICON_LABS_32B_SERIES_2
+    halAntennaConfig.defaultPath = BSP_ANTDIV_SEL_LOC;
+#endif
+#if (HAL_ANTDIV_ENABLE && defined(BSP_ANTDIV_NSEL_PORT) && defined(BSP_ANTDIV_NSEL_PIN) && defined(BSP_ANTDIV_NSEL_LOC))
+    halAntennaConfig.ant1PinEn = true;
+    halAntennaConfig.ant1Port  = (uint8_t)BSP_ANTDIV_NSEL_PORT;
+    halAntennaConfig.ant1Pin   = BSP_ANTDIV_NSEL_PIN;
+    halAntennaConfig.ant1Loc   = BSP_ANTDIV_NSEL_LOC;
+#endif
+#if (HAL_ANTDIV_ENABLE || defined(_SILICON_LABS_32B_SERIES_2))
+    (void)RAIL_ConfigAntenna(RAIL_EFR32_HANDLE, &halAntennaConfig);
+#endif
+}
