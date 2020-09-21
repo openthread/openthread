@@ -3703,7 +3703,7 @@ otError Interpreter::ProcessVersion(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
