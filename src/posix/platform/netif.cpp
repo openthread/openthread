@@ -1353,11 +1353,6 @@ static void platformConfigureNetLink(void)
 
 void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
 {
-    if (system("ls /app/third_party/openthread/repo") == 0)
-    {
-        otLogCritPlat("I am in Docker!!!");
-    }
-
     sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
     VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
 
