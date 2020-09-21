@@ -219,7 +219,6 @@ COMMONCPPFLAGS                                                                = 
     -I$(SDK_SRC_DIR)/platform/service/mpu/inc                                   \
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/config                         \
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/inc                            \
-    -I$(SDK_SRC_DIR)/platform/service/system/inc                                \
     -I$(SDK_SRC_DIR)/util/plugin/plugin-common/fem-control                      \
     -I$(SDK_SRC_DIR)/util/third_party/mbedtls/configs                           \
     -I$(SDK_SRC_DIR)/util/third_party/mbedtls/include                           \
@@ -233,6 +232,7 @@ SILABS_EFR32MG1_CPPFLAGS                                                      = 
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG1P/Include              \
     -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg1x/config \
     $(NULL)
 
 SILABS_EFR32MG12_CPPFLAGS                                                     = \
@@ -240,6 +240,7 @@ SILABS_EFR32MG12_CPPFLAGS                                                     = 
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG12P/Include             \
     -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg1x/config \
     $(NULL)
 
 SILABS_EFR32MG13_CPPFLAGS                                                     = \
@@ -247,6 +248,7 @@ SILABS_EFR32MG13_CPPFLAGS                                                     = 
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG13P/Include             \
     -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg1x/config \
     $(NULL)
 
 SILABS_EFR32MG21_CPPFLAGS                                                     = \
@@ -254,6 +256,7 @@ SILABS_EFR32MG21_CPPFLAGS                                                     = 
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG21/Include              \
     -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s2                              \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg2x               \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg21/config \
     $(NULL)
 
 SILABS_COMMON_SOURCES                                                                   = \
@@ -284,10 +287,10 @@ SILABS_COMMON_SOURCES                                                           
     gecko_sdk_suite/v3.0/platform/emlib/src/em_usart.c                                    \
     gecko_sdk_suite/v3.0/platform/radio/rail_lib/hal/efr32/hal_efr.c                      \
     gecko_sdk_suite/v3.0/platform/radio/rail_lib/hal/hal_common.c                         \
+    gecko_sdk_suite/v3.0/platform/radio/rail_lib/plugin/pa-conversions/pa_conversions_efr32.c \
     gecko_sdk_suite/v3.0/platform/service/mpu/src/sl_mpu.c                                \
     gecko_sdk_suite/v3.0/platform/service/sleeptimer/src/sl_sleeptimer.c                  \
     gecko_sdk_suite/v3.0/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c         \
-    gecko_sdk_suite/v3.0/platform/service/system/src/sl_system_init.c                     \
     gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ecp.c                           \
     gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/crypto_aes.c              \
     gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/crypto_ecp.c              \
