@@ -268,6 +268,9 @@ CSL_DEFAULT_PERIOD_IN_SECOND = 0.5
 US_PER_TEN_SYMBOLS = 160
 CSL_IE_ID = 0x1a
 
+# Thread Version TLV value
+THREAD_VERSION_1_2 = 3
+
 if __name__ == '__main__':
     from pktverify.addrs import Ipv6Addr
 
