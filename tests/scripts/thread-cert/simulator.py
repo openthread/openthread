@@ -187,9 +187,6 @@ class VirtualTime(BaseSimulator):
     def is_running(self):
         return self.sock is not None
 
-    def get_node_by_addr(self, addr):
-        return self._nodes[addr[1] - self.port]
-
     def _add_message(self, nodeid, message_obj):
         addr = ('127.0.0.1', self.port + nodeid)
 
@@ -231,12 +228,6 @@ class VirtualTime(BaseSimulator):
 
     def _is_radio(self, addr):
         return addr[1] < self.BASE_PORT * 2
-
-    def _addr_to_nodeid(self, addr: tuple) -> int:
-        return addr[1] - self.port
-
-    def _nodeid_to_addr(self, nodeid: int) -> tuple:
-        return ('127.0.0.1', self.port + nodeid)
 
     def _to_core_addr(self, addr):
         assert self._is_radio(addr)
