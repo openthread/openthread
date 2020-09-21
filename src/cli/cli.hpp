@@ -477,6 +477,7 @@ private:
     otError ProcessThread(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessDataset(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessTxPower(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessUptime(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessUdp(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessVersion(uint8_t aArgsLength, char *aArgs[]);
@@ -716,6 +717,7 @@ private:
         {"txpower", &Interpreter::ProcessTxPower},
         {"udp", &Interpreter::ProcessUdp},
         {"unsecureport", &Interpreter::ProcessUnsecurePort},
+        {"uptime", &Interpreter::ProcessUptime},
         {"version", &Interpreter::ProcessVersion},
     };
 
@@ -758,6 +760,8 @@ private:
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
     Joiner mJoiner;
 #endif
+
+    uint64_t mStartTimeUs;
 
     Instance *mInstance;
 };

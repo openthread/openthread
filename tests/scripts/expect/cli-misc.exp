@@ -154,4 +154,8 @@ expect "0:0:0:0::/64 s low"
 send "route remove ::/64\n"
 expect "Done"
 
+send "uptime\n"
+expect -re {([0-9]{2}):([0-9]{2}):([0-9]{2}) up \d+ days}
+expect "Done"
+
 dispose_nodes

@@ -155,6 +155,8 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     memset(mResolvingHostname, 0, sizeof(mResolvingHostname));
 #endif
+
+    mStartTimeUs = otPlatTimeGet();
 }
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength, bool aAllowTruncate)
@@ -3762,6 +3764,34 @@ otError Interpreter::ProcessTxPower(uint8_t aArgsLength, char *aArgs[])
         SuccessOrExit(error = ParseLong(aArgs[0], value));
         SuccessOrExit(error = otPlatRadioSetTransmitPower(mInstance, static_cast<int8_t>(value)));
     }
+
+exit:
+    return error;
+}
+
+otError Interpreter::ProcessUptime(uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+
+    otError  error = OT_ERROR_NONE;
+    uint32_t now;
+    uint32_t seconds;
+    uint32_t minutes;
+    uint32_t hours;
+    uint32_t days;
+
+    VerifyOrExit(aArgsLength == 0, error = OT_ERROR_INVALID_ARGS);
+
+    now = static_cast<uint32_t>((otPlatTimeGet() - mStartTimeUs) / 1000000);
+
+    seconds = now % 60;
+    now     = now / 60;
+    minutes = now % 60;
+    now     = now / 60;
+    hours   = now % 24;
+    days    = now / 24;
+
+    OutputLine("%02d:%02d:%02d up %d days", hours, minutes, seconds, days);
 
 exit:
     return error;

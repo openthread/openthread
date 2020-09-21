@@ -99,6 +99,7 @@ Done
 - [thread](#thread-start)
 - [txpower](#txpower)
 - [unsecureport](#unsecureport-add-port)
+- [uptime](#uptime)
 - [version](#version)
 
 ## OpenThread Command Details
@@ -1935,6 +1936,16 @@ Print all ports from the allowed unsecured port list.
 ```bash
 > unsecureport get
 1234
+Done
+```
+
+### uptime
+
+Print how long the device has been running.
+
+```bash
+> uptime
+00:00:51 up 0 days
 Done
 ```
 
