@@ -167,7 +167,7 @@ static const RAIL_IEEE802154_Config_t sRailIeee802154Config = {
     .ackConfig =
         {
             .enable     = true,
-            .ackTimeout = 894, //TODO-466: FIND THE RIGHT VALUE 
+            .ackTimeout = 672,
             .rxTransitions =
                 {
                     .success = RAIL_RF_STATE_RX,
