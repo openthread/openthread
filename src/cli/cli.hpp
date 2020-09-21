@@ -278,9 +278,11 @@ private:
     const Command *FindCommand(const char *aName) const;
     otError        ParsePingInterval(const char *aString, uint32_t &aInterval);
     static otError ParseJoinerDiscerner(char *aString, otJoinerDiscerner &aJoinerDiscerner);
-    otError        ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
-    otError        ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[]);
-    otError        ProcessChannel(uint8_t aArgsLength, char *aArgs[]);
+
+    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessCcaThreshold(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessChannel(uint8_t aArgsLength, char *aArgs[]);
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     otError ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[]);
 
@@ -549,6 +551,7 @@ private:
         {"bbr", &Interpreter::ProcessBackboneRouter},
 #endif
         {"bufferinfo", &Interpreter::ProcessBufferInfo},
+        {"ccathreshold", &Interpreter::ProcessCcaThreshold},
         {"channel", &Interpreter::ProcessChannel},
 #if OPENTHREAD_FTD
         {"child", &Interpreter::ProcessChild},
