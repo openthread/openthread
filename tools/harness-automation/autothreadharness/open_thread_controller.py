@@ -368,14 +368,14 @@ class OpenThreadController(threading.Thread):
         """
         self._req('prefix add %s %s %s' % (prefix, flags, prf))
         time.sleep(1)
-        self._req('netdataregister')
+        self._req('netdata register')
 
     def remove_prefix(self, prefix):
         """Remove network prefix.
         """
         self._req('prefix remove %s' % prefix)
         time.sleep(1)
-        self._req('netdataregister')
+        self._req('netdata register')
 
     def enable_denylist(self):
         """Enable denylist feature"""

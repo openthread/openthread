@@ -198,15 +198,12 @@ void EnergyScanServer::SendReport(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE)
+    if ((error != OT_ERROR_NONE) && (message != nullptr))
     {
-        otLogInfoMeshCoP("Failed to send scan results: %s", otThreadErrorToString(error));
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
+        message->Free();
     }
+
+    MeshCoP::LogError("send scan results", error);
 
     mActive = false;
 }

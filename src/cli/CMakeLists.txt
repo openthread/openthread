@@ -78,6 +78,7 @@ set(COMMON_SOURCES
     cli_console.cpp
     cli_dataset.cpp
     cli_joiner.cpp
+    cli_network_data.cpp
     cli_uart.cpp
     cli_udp.cpp
 )

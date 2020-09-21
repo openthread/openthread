@@ -78,9 +78,9 @@ void otPlatFlashInit(otInstance *aInstance)
     }
 
     sFlashFd = open(fileName, O_RDWR | O_CREAT | O_CLOEXEC, 0600);
-    lseek(sFlashFd, 0, SEEK_SET);
-
     VerifyOrDie(sFlashFd >= 0, OT_EXIT_ERROR_ERRNO);
+
+    lseek(sFlashFd, 0, SEEK_SET);
 
     if (create)
     {

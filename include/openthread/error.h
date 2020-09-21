@@ -229,6 +229,12 @@ typedef enum OT_MUST_USE_RESULT otError
     OT_ERROR_INVALID_COMMAND = 35,
 
     /**
+     * Special error code used to indicate success/error status is pending and not yet known.
+     *
+     */
+    OT_ERROR_PENDING = 36,
+
+    /**
      * The number of defined errors.
      */
     OT_NUM_ERRORS,

@@ -135,15 +135,12 @@ void PanIdQueryServer::SendConflict(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE)
+    if ((error != OT_ERROR_NONE) && (message != nullptr))
     {
-        otLogWarnMeshCoP("Failed to send panid conflict: %s", otThreadErrorToString(error));
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
+        message->Free();
     }
+
+    MeshCoP::LogError("send panid conflict", error);
 }
 
 void PanIdQueryServer::HandleTimer(Timer &aTimer)

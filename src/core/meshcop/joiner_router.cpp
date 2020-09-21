@@ -253,16 +253,12 @@ void JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInf
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE)
+    if ((error != OT_ERROR_NONE) && (message != nullptr))
     {
-        otLogNoteMeshCoP("Failed to schedule joiner entrust: %s", otThreadErrorToString(error));
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
+        message->Free();
     }
+
+    LogError("schedule joiner entrust", error);
 }
 
 void JoinerRouter::HandleTimer(Timer &aTimer)

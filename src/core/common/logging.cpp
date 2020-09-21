@@ -192,6 +192,7 @@ static const char *const sThreadErrorStrings[OT_NUM_ERRORS] = {
     "ReservedError33",            // otError 33 is reserved
     "LinkMarginLow",              // OT_ERROR_LINK_MARGIN_LOW = 34
     "InvalidCommand",             // OT_ERROR_INVALID_COMMAND = 35
+    "Pending",                    // OT_ERROR_PENDING = 36
 };
 
 const char *otThreadErrorToString(otError aError)
