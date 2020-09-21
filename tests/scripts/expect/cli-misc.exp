@@ -115,7 +115,7 @@ send "version api\n"
 expect -re {\d+}
 expect "Done"
 send "version something_invalid\n"
-expect "Error 7: InvalidArgs"
+expect "Error 35: InvalidCommand"
 
 send "joinerport 10001\n"
 expect "Done"

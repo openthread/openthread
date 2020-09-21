@@ -3849,7 +3849,7 @@ void Interpreter::ProcessVersion(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
