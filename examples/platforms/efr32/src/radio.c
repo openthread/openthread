@@ -522,6 +522,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     if (sCurrentBandConfig != config)
     {
+		// TODO: Should this be RAIL_IDLE_ABORT?
         RAIL_Idle(gRailHandle, RAIL_IDLE, true);
         efr32RailConfigLoad(config);
         sCurrentBandConfig = config;
@@ -570,6 +571,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     if (sCurrentBandConfig != config)
     {
+		// TODO: Should this be RAIL_IDLE_ABORT?
         RAIL_Idle(gRailHandle, RAIL_IDLE, true);
         efr32RailConfigLoad(config);
         sCurrentBandConfig = config;

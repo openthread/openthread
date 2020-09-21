@@ -89,6 +89,11 @@ static void receiveDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aDat
 
 static void transmitDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
 {
+    OT_UNUSED_VARIABLE(aHandle);
+    OT_UNUSED_VARIABLE(aStatus);
+    OT_UNUSED_VARIABLE(aData);
+    OT_UNUSED_VARIABLE(aCount);
+
     sTransmitLength = 0;
     otSysEventSignalPending();
 }

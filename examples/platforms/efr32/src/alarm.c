@@ -57,6 +57,8 @@ static bool                         sIsRunning = false;
 
 static void AlarmCallback(sl_sleeptimer_timer_handle_t *aHandle, void *aData)
 {
+    OT_UNUSED_VARIABLE(aHandle);
+    OT_UNUSED_VARIABLE(aData);
     otSysEventSignalPending();
 }
 
