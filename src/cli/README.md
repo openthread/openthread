@@ -1859,6 +1859,16 @@ OPENTHREAD/gf4f2f04; Jul  1 2016 17:00:09
 Done
 ```
 
+### version api
+
+Print API version number.
+
+```bash
+> version api
+28
+Done
+```
+
 ### mac retries direct
 
 Get the number of direct TX retries on the MAC layer.

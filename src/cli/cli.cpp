@@ -3685,13 +3685,25 @@ exit:
 
 otError Interpreter::ProcessVersion(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
+    otError error = OT_ERROR_NONE;
 
-    const char *version = otGetVersionString();
-    OutputLine("%s", static_cast<const char *>(version));
+    if (aArgsLength == 0)
+    {
+        OutputLine("%s", otGetVersionString());
+        ExitNow();
+    }
 
-    return OT_ERROR_NONE;
+    if (strcmp(aArgs[0], "api") == 0)
+    {
+        OutputLine("%d", OPENTHREAD_API_VERSION);
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
+
+exit:
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
