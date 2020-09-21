@@ -63,7 +63,7 @@
 #endif
 
 #include "platform-efr32.h"
-#include "sl_system_init.h"
+#include "sl_device_init_clocks.h"
 
 #if (HAL_FEM_ENABLE)
 #include "fem-control.h"
@@ -187,9 +187,11 @@ void otSysInit(int argc, char *argv[])
 #undef EXCEPTION
 
     NVIC_SetPriorityGrouping(PRIGROUP_POSITION - 1);
-    sl_system_init();
+    CHIP_Init();
     halInitChipSpecific();
     BSP_Init(BSP_INIT_BCC);
+
+    sl_device_init_clocks();
 
     status = sl_sleeptimer_init();
     assert(status == SL_STATUS_OK);

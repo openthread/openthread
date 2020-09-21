@@ -85,6 +85,7 @@ CPPFLAGS_COMMON                                                              += 
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal/efr32                          \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/protocol/ieee802154                \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions              \
+    -I$(SDK_SRC_DIR)/platform/service/device_init/inc                           \
     -I$(SDK_SRC_DIR)/platform/service/mpu/inc                                   \
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/config                         \
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/inc                            \

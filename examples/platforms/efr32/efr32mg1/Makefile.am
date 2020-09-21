@@ -93,6 +93,7 @@ libopenthread_efr32mg1_a_CPPFLAGS                                             = 
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal/efr32                          \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/protocol/ieee802154                \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions              \
+    -I$(SDK_SRC_DIR)/platform/service/device_init/inc                           \
     -I$(SDK_SRC_DIR)/platform/service/mpu/inc                                   \
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/config                         \
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/inc                            \
@@ -112,16 +113,17 @@ PLATFORM_COMMON_SOURCES                                                       = 
     src/misc.c                                                                  \
     src/openthread-core-efr32-config.h                                          \
     src/openthread-core-efr32-config-check.h                                    \
+    src/platform-efr32.h                                                        \
     src/rail_config.h                                                           \
     src/startup-gcc.c                                                           \
+    src/system.c                                                                \
     src/uart.c                                                                  \
     $(NULL)
 
 PLATFORM_SOURCES                                                              = \
-    src/platform-efr32.h                                                        \
     efr32mg1/platform-band.h                                                    \
     efr32mg1/radio.c                                                            \
-    efr32mg1/system.c                                                           \
+    efr32mg1/sl_device_init_clocks.c                                            \
     efr32mg1/uart-init.h                                                        \
     $(NULL)
 

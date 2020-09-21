@@ -186,6 +186,7 @@ COMMONCPPFLAGS                                                                = 
     -I$(top_srcdir)/src/core                                                    \
     -I$(top_srcdir)/third_party/silabs/rail_config                              \
     -I$(top_srcdir)/examples/platforms                                          \
+    -I$(top_srcdir)/examples/platforms/efr32/src                                \
     -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/src/core                                                    \
     -I$(top_srcdir)/third_party/silabs/rail_config                              \
@@ -214,9 +215,11 @@ COMMONCPPFLAGS                                                                = 
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal/efr32                          \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/protocol/ieee802154                \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions              \
+    -I$(SDK_SRC_DIR)/platform/service/device_init/inc                           \
     -I$(SDK_SRC_DIR)/platform/service/mpu/inc                                   \
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/config                         \
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/inc                            \
+    -I$(SDK_SRC_DIR)/platform/service/system/inc                                \
     -I$(SDK_SRC_DIR)/util/plugin/plugin-common/fem-control                      \
     -I$(SDK_SRC_DIR)/util/third_party/mbedtls/configs                           \
     -I$(SDK_SRC_DIR)/util/third_party/mbedtls/include                           \
@@ -284,6 +287,7 @@ SILABS_COMMON_SOURCES                                                           
     gecko_sdk_suite/v3.0/platform/service/mpu/src/sl_mpu.c                                \
     gecko_sdk_suite/v3.0/platform/service/sleeptimer/src/sl_sleeptimer.c                  \
     gecko_sdk_suite/v3.0/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c         \
+    gecko_sdk_suite/v3.0/platform/service/system/src/sl_system_init.c                     \
     gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ecp.c                           \
     gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/crypto_aes.c              \
     gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/crypto_ecp.c              \
