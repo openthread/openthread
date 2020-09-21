@@ -2257,52 +2257,43 @@ otError Interpreter::ProcessServiceList(void)
 
 otError Interpreter::ProcessService(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error = OT_ERROR_NONE;
+    otError         error = OT_ERROR_INVALID_COMMAND;
+    otServiceConfig cfg;
 
     if (aArgsLength == 0)
     {
-        SuccessOrExit(error = ProcessServiceList());
+        error = ProcessServiceList();
     }
-    else if (strcmp(aArgs[0], "add") == 0)
+    else
     {
-        otServiceConfig cfg;
-        long            enterpriseNumber;
-        size_t          length;
-
-        VerifyOrExit(aArgsLength > 3, error = OT_ERROR_INVALID_ARGS);
-
-        SuccessOrExit(error = ParseLong(aArgs[1], enterpriseNumber));
-        cfg.mEnterpriseNumber = static_cast<uint32_t>(enterpriseNumber);
-
-        length = strlen(aArgs[2]);
-        VerifyOrExit(length <= sizeof(cfg.mServiceData), error = OT_ERROR_NO_BUFS);
-        cfg.mServiceDataLength = static_cast<uint8_t>(length);
-        memcpy(cfg.mServiceData, aArgs[2], cfg.mServiceDataLength);
-
-        length = strlen(aArgs[3]);
-        VerifyOrExit(length <= sizeof(cfg.mServerConfig.mServerData), error = OT_ERROR_NO_BUFS);
-        cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(length);
-        memcpy(cfg.mServerConfig.mServerData, aArgs[3], cfg.mServerConfig.mServerDataLength);
-
-        cfg.mServerConfig.mStable = true;
-
-        SuccessOrExit(error = otServerAddService(mInstance, &cfg));
-    }
-    else if (strcmp(aArgs[0], "remove") == 0)
-    {
-        long enterpriseNumber = 0;
+        long enterpriseNumber;
+        int  length;
 
         VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);
 
         SuccessOrExit(error = ParseLong(aArgs[1], enterpriseNumber));
+        cfg.mEnterpriseNumber = static_cast<uint32_t>(enterpriseNumber);
 
-        SuccessOrExit(error = otServerRemoveService(mInstance, static_cast<uint32_t>(enterpriseNumber),
-                                                    reinterpret_cast<uint8_t *>(aArgs[2]),
-                                                    static_cast<uint8_t>(strlen(aArgs[2]))));
-    }
-    else
-    {
-        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+        length = Hex2Bin(aArgs[2], cfg.mServiceData, sizeof(cfg.mServiceData));
+        VerifyOrExit(length > 0, error = OT_ERROR_INVALID_ARGS);
+        cfg.mServiceDataLength = static_cast<uint8_t>(length);
+
+        if (strcmp(aArgs[0], "add") == 0)
+        {
+            VerifyOrExit(aArgsLength > 3, error = OT_ERROR_INVALID_ARGS);
+
+            length = Hex2Bin(aArgs[3], cfg.mServerConfig.mServerData, sizeof(cfg.mServerConfig.mServerData));
+            VerifyOrExit(length > 0, error = OT_ERROR_INVALID_ARGS);
+            cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(length);
+
+            cfg.mServerConfig.mStable = true;
+
+            error = otServerAddService(mInstance, &cfg);
+        }
+        else if (strcmp(aArgs[0], "remove") == 0)
+        {
+            error = otServerRemoveService(mInstance, cfg.mEnterpriseNumber, cfg.mServiceData, cfg.mServiceDataLength);
+        }
     }
 
 exit:
