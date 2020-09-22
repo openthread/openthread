@@ -109,15 +109,8 @@ class BBR_5_11_01(thread_cert.TestCase):
 
         self.collect_ipaddrs()
         self.collect_rloc16s()
-        D = self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.DUA)
-        leader = self.nodes[ROUTER1]
-        self.collect_extra_vars(
-            D=D,
-            LEADER_RLOC=leader.get_ip6_address(config.ADDRESS_TYPE.RLOC),
-            LEADER_ALOC=leader.get_ip6_address(config.ADDRESS_TYPE.ALOC)[0],
-            LEADER_DUA=leader.get_ip6_address(config.ADDRESS_TYPE.GLOBAL)[0],
-            LEADER_MLEID=leader.get_ip6_address(config.ADDRESS_TYPE.ML_EID),
-        )
+        Dg = self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.DUA)
+        self.collect_extra_vars(Dg=Dg)
 
         logging.info("BBR addrs: %r", self.nodes[BBR].get_addrs())
         logging.info("Host addrs: %r", self.nodes[HOST].get_addrs())
@@ -144,7 +137,7 @@ class BBR_5_11_01(thread_cert.TestCase):
         Host_ETH = pv.vars['Host_ETH']
         BBR_BGUA = pv.vars['BBR_BGUA']
         Host_BGUA = pv.vars['Host_BGUA']
-        Dg = pv.vars['D']  # DUA of Router_2
+        Dg = pv.vars['Dg']  # DUA of Router_2
 
         # Step 3: BR_1: Checks received Network Data and determines that it needs to send its BBR Dataset to the
         #               leader to become primary BBR.
