@@ -42,7 +42,7 @@ import thread_cert
 #
 from pktverify.packet_verifier import PacketVerifier
 
-BBR = 1
+BR_1 = 1
 ROUTER1 = 2
 ROUTER2 = 3
 HOST = 4
@@ -52,8 +52,8 @@ class BBR_5_11_01(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
-        BBR: {
-            'name': 'BBR',
+        BR_1: {
+            'name': 'BR_1',
             'whitelist': [ROUTER1, ROUTER2],
             'is_otbr': True,
             'version': '1.2',
@@ -61,13 +61,13 @@ class BBR_5_11_01(thread_cert.TestCase):
         },
         ROUTER1: {
             'name': 'Router_1',
-            'whitelist': [ROUTER2, BBR],
+            'whitelist': [ROUTER2, BR_1],
             'version': '1.2',
             'router_selection_jitter': 1,
         },
         ROUTER2: {
             'name': 'Router_2',
-            'whitelist': [ROUTER1, BBR],
+            'whitelist': [ROUTER1, BR_1],
             'version': '1.2',
             'router_selection_jitter': 1,
         },
@@ -81,8 +81,8 @@ class BBR_5_11_01(thread_cert.TestCase):
         self.nodes[HOST].start()
         # P1: Router_1 is configured with leader weight of 72 in case the test is executed on a CCM network
 
-        self.nodes[ROUTER1].start()
         self.nodes[ROUTER1].set_weight(72)
+        self.nodes[ROUTER1].start()
 
         self.simulator.go(5)
         self.assertEqual('leader', self.nodes[ROUTER1].get_state())
@@ -91,14 +91,14 @@ class BBR_5_11_01(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual('router', self.nodes[ROUTER2].get_state())
 
-        self.nodes[BBR].start()
+        self.nodes[BR_1].start()
         self.simulator.go(5)
-        self.assertEqual('router', self.nodes[BBR].get_state())
-        self.nodes[BBR].enable_backbone_router()
+        self.assertEqual('router', self.nodes[BR_1].get_state())
+        self.nodes[BR_1].enable_backbone_router()
         self.simulator.go(3)
-        self.assertTrue(self.nodes[BBR].is_primary_backbone_router)
-        self.nodes[BBR].add_prefix(config.DOMAIN_PREFIX, "parosD")
-        self.nodes[BBR].register_netdata()
+        self.assertTrue(self.nodes[BR_1].is_primary_backbone_router)
+        self.nodes[BR_1].add_prefix(config.DOMAIN_PREFIX, "parosD")
+        self.nodes[BR_1].register_netdata()
 
         self.simulator.go(5)
         self.assertIsNotNone(self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.DUA))
@@ -112,14 +112,14 @@ class BBR_5_11_01(thread_cert.TestCase):
         Dg = self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.DUA)
         self.collect_extra_vars(Dg=Dg)
 
-        logging.info("BBR addrs: %r", self.nodes[BBR].get_addrs())
+        logging.info("BR_1 addrs: %r", self.nodes[BR_1].get_addrs())
         logging.info("Host addrs: %r", self.nodes[HOST].get_addrs())
 
-        # BBR and Host can ping each other on the Backbone link
-        self.assertTrue(self.nodes[HOST].ping(self.nodes[BBR].get_ip6_address(config.ADDRESS_TYPE.BACKBONE_GUA),
+        # BR_1 and Host can ping each other on the Backbone link
+        self.assertTrue(self.nodes[HOST].ping(self.nodes[BR_1].get_ip6_address(config.ADDRESS_TYPE.BACKBONE_GUA),
                                               backbone=True))
-        self.assertTrue(self.nodes[BBR].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.BACKBONE_GUA),
-                                             backbone=True))
+        self.assertTrue(self.nodes[BR_1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.BACKBONE_GUA),
+                                              backbone=True))
 
         # Step 23: Host sends ping packet to destination D
         self.assertFalse(self.nodes[HOST].ping(D, backbone=True))  # Must fail since ND Proxying is not implemented yet
@@ -128,20 +128,20 @@ class BBR_5_11_01(thread_cert.TestCase):
         pkts = pv.pkts
         pv.add_common_vars()
         pv.summary.show()
-        pv.verify_attached('BBR')
+        pv.verify_attached('BR_1')
 
         MM = pv.vars['MM_PORT']
         BB = pv.vars['BB_PORT']
-        BBR = pv.vars['BBR']
-        BBR_ETH = pv.vars['BBR_ETH']
+        BR_1 = pv.vars['BR_1']
+        BR_1_ETH = pv.vars['BR_1_ETH']
         Host_ETH = pv.vars['Host_ETH']
-        BBR_BGUA = pv.vars['BBR_BGUA']
+        BR_1_BGUA = pv.vars['BR_1_BGUA']
         Host_BGUA = pv.vars['Host_BGUA']
         Dg = pv.vars['Dg']  # DUA of Router_2
 
         # Step 3: BR_1: Checks received Network Data and determines that it needs to send its BBR Dataset to the
         #               leader to become primary BBR.
-        pkts.filter_wpan_src64(BBR).filter_coap_request('/a/sd', port=MM).must_next().must_verify("""
+        pkts.filter_wpan_src64(BR_1).filter_coap_request('/a/sd', port=MM).must_next().must_verify("""
             thread_nwd.tlv.server_16 is not null
             and thread_nwd.tlv.service.s_data.seqno is not null
             and thread_nwd.tlv.service.s_data.rrdelay is not null
@@ -149,25 +149,25 @@ class BBR_5_11_01(thread_cert.TestCase):
         """)
 
         # Step 9: BR_1: Responds to the DUA registration.
-        pkts.filter_wpan_src64(BBR).filter_coap_ack('/n/dr',
+        pkts.filter_wpan_src64(BR_1).filter_coap_ack('/n/dr',
                                                     port=MM).must_next().must_verify('thread_nm.tlv.status == 0')
 
         # Step 10: BR_1: Performs DAD on the backbone link.
-        pkts.filter_eth_src(BBR_ETH).filter_coap_request('/b/bq', port=BB).must_not_next()  # TODO: DAD not implemented
+        pkts.filter_eth_src(BR_1_ETH).filter_coap_request('/b/bq', port=BB).must_not_next()  # TODO: DAD not implemented
 
         # Verify Host ping BBR
-        pkts.filter_eth_src(Host_ETH).filter_ipv6_src_dst(Host_BGUA, BBR_BGUA).filter_ping_request().must_next()
-        pkts.filter_eth_src(BBR_ETH).filter_ipv6_src_dst(BBR_BGUA, Host_BGUA).filter_ping_reply().must_next()
+        pkts.filter_eth_src(Host_ETH).filter_ipv6_src_dst(Host_BGUA, BR_1_BGUA).filter_ping_request().must_next()
+        pkts.filter_eth_src(BR_1_ETH).filter_ipv6_src_dst(BR_1_BGUA, Host_BGUA).filter_ping_reply().must_next()
 
-        # Verify BBR ping Host
-        pkts.filter_eth_src(BBR_ETH).filter_ipv6_src_dst(BBR_BGUA, Host_BGUA).filter_ping_request().must_next()
-        pkts.filter_eth_src(Host_ETH).filter_ipv6_src_dst(Host_BGUA, BBR_BGUA).filter_ping_reply().must_next()
+        # Verify BR_1 ping Host
+        pkts.filter_eth_src(BR_1_ETH).filter_ipv6_src_dst(BR_1_BGUA, Host_BGUA).filter_ping_request().must_next()
+        pkts.filter_eth_src(Host_ETH).filter_ipv6_src_dst(Host_BGUA, BR_1_BGUA).filter_ping_reply().must_next()
 
         # Step 16: Host: Queries DUA, Dg, with ND-NS
         pkts.filter_eth_src(Host_ETH).filter_icmpv6_nd_ns(Dg).must_not_next()  # TODO: setup radvd on Host
 
         # Step 17: BR_1: Responds with a neighbor advertisement.
-        pkts.filter_eth_src(BBR_ETH).filter_icmpv6_nd_na(Dg).must_not_next()  # TODO: implement ND proxy on BBR
+        pkts.filter_eth_src(BR_1_ETH).filter_icmpv6_nd_na(Dg).must_not_next()  # TODO: implement ND proxy on PBBR
 
 
 if __name__ == '__main__':
