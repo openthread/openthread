@@ -121,7 +121,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             active_timestamp=104,
             channel_mask=0x7fff800,
             extended_panid='000db70000000000',
-            master_key='00112233445566778899aabbccddeeff',
+            master_key='ffeeddccbbaa99887766554433221100',
             mesh_local='fd00:0db7::',
             network_name='GRL',
         )
@@ -215,7 +215,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
 
         # Step 3: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
         pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
-            MGMT_ACTIVE_SET_URI).must_next()
+            MGMT_ACTIVE_SET_URI).must_next().must_verify(lambda p: p.thread_meshcop.tlv.state == 1)
 
         # Step 4: Commissioner sends MGMT_ACTIVE_GET.req to Leader
         pkts.filter_wpan_src64(COMMISSIONER).filter_ipv6_2dsts(
@@ -237,7 +237,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
 
         # Step 7: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
         pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
-            MGMT_ACTIVE_SET_URI).must_next()
+            MGMT_ACTIVE_SET_URI).must_next().must_verify(lambda p: p.thread_meshcop.tlv.state == -1)
 
         # Step 8: Commissioner sends MGMT_ACTIVE_SET.req to Leader RLOC or Leader Anycast Locator
         pkts.filter_wpan_src64(COMMISSIONER).filter_ipv6_2dsts(
@@ -248,19 +248,19 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
 
         # Step 9: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
         pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
-            MGMT_ACTIVE_SET_URI).must_next()
+            MGMT_ACTIVE_SET_URI).must_next().must_verify(lambda p: p.thread_meshcop.tlv.state == -1)
 
         # Step 10: Commissioner sends MGMT_ACTIVE_SET.req to Leader RLOC or Leader Anycast Locator
         pkts.filter_wpan_src64(COMMISSIONER).filter_ipv6_2dsts(
             LEADER_RLOC, LEADER_ALOC).filter_coap_request(MGMT_ACTIVE_SET_URI).must_next().must_verify(
                 lambda p: p.thread_meshcop.tlv.active_tstamp == 104 and p.thread_meshcop.tlv.xpan_id ==
                 '000db70000000000' and p.thread_meshcop.tlv.net_name == 'GRL' and p.thread_meshcop.tlv.master_key ==
-                '00112233445566778899aabbccddeeff' and p.thread_meshcop.tlv.chan_mask_mask == '001fffe0' and p.
+                'ffeeddccbbaa99887766554433221100' and p.thread_meshcop.tlv.chan_mask_mask == '001fffe0' and p.
                 thread_meshcop.tlv.ml_prefix == 'fd000db700000000')
 
         # Step 11: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
         pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
-            MGMT_ACTIVE_SET_URI).must_next()
+            MGMT_ACTIVE_SET_URI).must_next().must_verify(lambda p: p.thread_meshcop.tlv.state == -1)
 
         # Step 12: Commissioner sends MGMT_ACTIVE_SET.req to Leader RLOC or Leader Anycast Locator
         pkts.filter_wpan_src64(COMMISSIONER).filter_ipv6_2dsts(
@@ -272,7 +272,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
 
         # Step 13: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
         pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(
-            MGMT_ACTIVE_SET_URI).must_next()
+            MGMT_ACTIVE_SET_URI).must_next().must_verify(lambda p: p.thread_meshcop.tlv.state == -1)
 
         # Step 14: Commissioner sends MGMT_ACTIVE_SET.req to Leader RLOC or Leader Anycast Locator
         pkts.filter_wpan_src64(COMMISSIONER).filter_ipv6_2dsts(
