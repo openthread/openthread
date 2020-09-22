@@ -366,7 +366,7 @@ otError otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain)
 otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.SetCcaEnergyDetectThreshold(aGain);
+    return sRadioSpinel.SetFemLnaGain(aGain);
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
