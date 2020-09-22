@@ -269,6 +269,13 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         for i, node in self.nodes.items():
             test_info['rlocs'][i] = node.get_rloc()
 
+    def collect_leader_aloc(self, node):
+        if not self._do_packet_verification:
+            return
+
+        test_info = self._test_info
+        test_info['leader_aloc'] = self.nodes[node].get_addr_leader_aloc()
+
     def collect_extra_vars(self, **vars):
         if not self._do_packet_verification:
             return

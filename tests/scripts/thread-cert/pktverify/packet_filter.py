@@ -433,6 +433,11 @@ class PacketFilter(object):
         assert isinstance(addr, (str, Ipv6Addr))
         return self.filter(lambda p: p.ipv6.dst == addr, **kwargs)
 
+    def filter_ipv6_2dsts(self, addr1, addr2, **kwargs):
+        assert isinstance(addr1, (str, Ipv6Addr))
+        assert isinstance(addr2, (str, Ipv6Addr))
+        return self.filter(lambda p: p.ipv6.dst == addr1 or p.ipv6.dst == addr2, **kwargs)
+
     def filter_ipv6_src_dst(self, src_addr, dst_addr, **kwargs):
         assert isinstance(src_addr, (str, Ipv6Addr))
         assert isinstance(dst_addr, (str, Ipv6Addr))

@@ -148,6 +148,8 @@ class PacketVerifier(object):
             key = self.test_info.get_node_name(i) + '_RLOC'
             self._vars[key] = rloc
 
+        self._vars['LEADER_ALOC'] = self.test_info.leader_aloc
+
         for k, v in self.test_info.extra_vars.items():
             assert k not in self._vars, k
             logging.info("add extra var: %s = %s", k, v)
