@@ -193,7 +193,7 @@ static void socket_init(void)
             exit(EXIT_FAILURE);
         }
 
-        sPortOffset *= WELLKNOWN_NODE_ID;
+        sPortOffset *= (MAX_NETWORK_SIZE + 1);
     }
 
     sockaddr.sin_port        = htons((uint16_t)(9000 + sPortOffset + gNodeId));
@@ -237,7 +237,7 @@ void otSysInit(int argc, char *argv[])
 
     gNodeId = (uint32_t)strtol(argv[1], &endptr, 0);
 
-    if (*endptr != '\0' || gNodeId < 1 || gNodeId >= WELLKNOWN_NODE_ID)
+    if (*endptr != '\0' || gNodeId < 1 || gNodeId > MAX_NETWORK_SIZE)
     {
         fprintf(stderr, "Invalid NodeId: %s\n", argv[1]);
         exit(EXIT_FAILURE);

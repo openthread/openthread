@@ -81,11 +81,7 @@ struct Event
 
 enum
 {
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-    WELLKNOWN_NODE_ID = 1000, ///< Well-known Unique ID used by a simulated radio that supports promiscuous mode.
-#else
-    WELLKNOWN_NODE_ID = 34, ///< Well-known Unique ID used by a simulated radio that supports promiscuous mode.
-#endif
+    MAX_NETWORK_SIZE = OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE,
 };
 
 /**
