@@ -2226,8 +2226,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FEM_LNA_GAIN>(voi
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_FEM_LNA_GAIN>(void)
 {
-    int8_t  gain = 0;
-    otError error     = OT_ERROR_NONE;
+    int8_t  gain  = 0;
+    otError error = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadInt8(gain));
     error = otPlatRadioSetFemLnaGain(mInstance, gain);
