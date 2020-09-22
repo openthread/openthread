@@ -75,6 +75,7 @@
 #include <common/logging.hpp>
 #include <lib/platform/exit_code.h>
 #include <openthread/openthread-system.h>
+#include <openthread/platform/misc.h>
 
 #ifndef OPENTHREAD_ENABLE_COVERAGE
 #define OPENTHREAD_ENABLE_COVERAGE 0
@@ -264,6 +265,8 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
 
     instance = otSysInit(&config.mPlatformConfig);
 
+    atexit(otSysDeinit);
+
     if (config.mPrintRadioVersion)
     {
         printf("%s\n", otPlatRadioGetVersionString(instance));
@@ -288,6 +291,8 @@ void otTaskletsSignalPending(otInstance *aInstance)
 
 void otPlatReset(otInstance *aInstance)
 {
+    gPlatResetReason = OT_PLAT_RESET_REASON_SOFTWARE;
+
     otInstanceFinalize(aInstance);
     otSysDeinit();
 
@@ -298,6 +303,7 @@ void otPlatReset(otInstance *aInstance)
 int main(int argc, char *argv[])
 {
     otInstance *instance;
+    int         rval = 0;
 
 #ifdef __linux__
     // Ensure we terminate this process if the
@@ -356,15 +362,16 @@ int main(int argc, char *argv[])
         else if (errno != EINTR)
         {
             perror("select");
-            exit(OT_EXIT_FAILURE);
+            ExitNow(rval = OT_EXIT_FAILURE);
         }
     }
 
 #ifdef OPENTHREAD_USE_CONSOLE
     otxConsoleDeinit();
 #endif
-    otInstanceFinalize(instance);
-    otSysDeinit();
 
-    return 0;
+exit:
+    otInstanceFinalize(instance);
+
+    return rval;
 }
