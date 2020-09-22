@@ -47,7 +47,10 @@ expect "Done"
 send "bufferinfo\n"
 expect "Done"
 
-send "netdatashow\n"
+send "ccathreshold -62\n"
+expect "Done"
+send "ccathreshold\n"
+expect -- "-62 dBm"
 expect "Done"
 
 send "parent\n"
@@ -111,6 +114,11 @@ expect "Done"
 
 send "version\n"
 expect "Done"
+send "version api\n"
+expect -re {\d+}
+expect "Done"
+send "version something_invalid\n"
+expect "Error 35: InvalidCommand"
 
 send "joinerport 10001\n"
 expect "Done"

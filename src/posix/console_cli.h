@@ -35,6 +35,24 @@
 
 #include <openthread/openthread-system.h>
 
+#include "cli/cli_config.h"
+
+#ifndef HAVE_LIBEDIT
+#define HAVE_LIBEDIT 0
+#endif
+
+#ifndef HAVE_LIBREADLINE
+#define HAVE_LIBREADLINE 0
+#endif
+
+#if OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_CONSOLE
+#define OPENTHREAD_USE_CONSOLE 1
+#if !(HAVE_LIBEDIT || HAVE_LIBREADLINE) || OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+#error \
+    "When OPENTHREAD_CONFIG_CLI_TRANSPORT=OT_CLI_TRANSPORT_CONSOLE, HAVE_LIBEDIT or HAVE_LIBREADLINE MUST be defined and OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE MUST be 0"
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

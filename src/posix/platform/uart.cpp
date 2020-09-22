@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <openthread/platform/misc.h>
 #include <openthread/platform/uart.h>
 
 #include "common/code_utils.hpp"
@@ -135,6 +136,12 @@ otError otPlatUartDisable(void)
     {
         close(sUartSocket);
         sUartSocket = -1;
+    }
+
+    if (gPlatResetReason != OT_PLAT_RESET_REASON_SOFTWARE)
+    {
+        otLogCritPlat("Removing daemon socket: %s", OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
+        (void)unlink(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
     }
 
     if (sUartLock != -1)

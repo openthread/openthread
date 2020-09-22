@@ -23,6 +23,7 @@ Done
 
 - [bbr](#bbr)
 - [bufferinfo](#bufferinfo)
+- [ccathreshold](#ccathreshold)
 - [channel](#channel)
 - [child](#child-list)
 - [childip](#childip)
@@ -64,9 +65,7 @@ Done
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
 - [neighbor](#neighbor-list)
-- [netdata](#netdata-steeringdata-check-eui64discerner)
-- [netdataregister](#netdataregister)
-- [netdatashow](#netdatashow)
+- [netdata](README_NETDATA.md)
 - [netstat](#netstat)
 - [networkdiagnostic](#networkdiagnostic-get-addr-type-)
 - [networkidtimeout](#networkidtimeout)
@@ -321,6 +320,25 @@ mpl: 0 0
 mle: 0 0
 arp: 0 0
 coap: 0 0
+Done
+```
+
+### ccathreshold
+
+Get the CCA threshold in dBm.
+
+```bash
+> ccathreshold
+-75 dBm
+Done
+```
+
+### ccathreshold \<ccathreshold\>
+
+Set the CCA threshold.
+
+```bash
+> ccathreshold -62
 Done
 ```
 
@@ -1199,41 +1217,6 @@ Print table of neighbors.
 Done
 ```
 
-### netdata steeringdata check \<eui64\>|\<discerner\>
-
-Check whether the steering data includes a joiner.
-
-- eui64: The IEEE EUI-64 of the Joiner.
-- discerner: The Joiner discerner in format `number/length`.
-
-```bash
-> netdata steeringdata check d45e64fa83f81cf7
-Done
-> netdata steeringdata check 0xabc/12
-Done
-> netdata steeringdata check 0xdef/12
-Error 23: NotFound
-```
-
-### netdataregister
-
-Register local network data with Thread Leader.
-
-```bash
-> netdataregister
-Done
-```
-
-### netdatashow
-
-Show Thread Leader network data.
-
-```bash
-> netdatashow
-08040b020000
-Done
-```
-
 ### netstat
 
 List all UDP sockets.
@@ -1776,6 +1759,39 @@ Perform an IEEE 802.15.4 Energy Scan.
 Done
 ```
 
+### service
+
+Module for controlling service registration in Network Data. Each change in service registration must be sent to leader by `netdata register` command before taking effect.
+
+### service add \<enterpriseNumber\> \<serviceData\> \<serverData\>
+
+Add service to the Network Data.
+
+- enterpriseNumber: IANA enterprise number
+- serviceData: hex-encoded binary service data
+- serverData: hex-encoded binary server data
+
+```bash
+> service add 44970 112233 aabbcc
+Done
+> netdata register
+Done
+```
+
+### service remove \<enterpriseNumber\> \<serviceData\>
+
+Remove service from Network Data.
+
+- enterpriseNumber: IANA enterprise number
+- serviceData: hext-encoded binary service data
+
+```bash
+> service remove 44970 112233
+Done
+> netdata register
+Done
+```
+
 ### singleton
 
 Return true when there are no other nodes in the network, otherwise return false.
@@ -1915,6 +1931,16 @@ Print the build version information.
 ```bash
 > version
 OPENTHREAD/gf4f2f04; Jul  1 2016 17:00:09
+Done
+```
+
+### version api
+
+Print API version number.
+
+```bash
+> version api
+28
 Done
 ```
 
@@ -2107,44 +2133,5 @@ Done
 ### diag
 
 Factory Diagnostics module is enabled only when building OpenThread with `OPENTHREAD_CONFIG_DIAG_ENABLE=1` option. Go [diagnostics module][diag] for more information.
-
-### service
-
-Module for controlling service registration in Network Data. Each change in service registration must be sent to leader by `netdataregister` command before taking effect.
-
-### service add \<enterpriseNumber\> \<serviceData\> \<serverData\>
-
-Add service to the Network Data.
-
-```bash
-> service add 44970 foo bar
-Done
-> netdataregister
-Done
-> ipaddr
-fdde:ad00:beef:0:0:ff:fe00:fc10
-fdde:ad00:beef:0:0:ff:fe00:fc00
-fdde:ad00:beef:0:0:ff:fe00:7c00
-fe80:0:0:0:1486:2f57:3c:6e10
-fdde:ad00:beef:0:8ca4:19ed:217a:eff9
-Done
-```
-
-### service remove \<enterpriseNumber\> \<serviceData\>
-
-Remove service from Network Data.
-
-```bash
-> service remove 44970 foo
-Done
-> netdataregister
-Done
-> ipaddr
-fdde:ad00:beef:0:0:ff:fe00:fc00
-fdde:ad00:beef:0:0:ff:fe00:7c00
-fe80:0:0:0:1486:2f57:3c:6e10
-fdde:ad00:beef:0:8ca4:19ed:217a:eff9
-Done
-```
 
 [diag]: ../../src/core/diags/README.md

@@ -43,6 +43,7 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/platform/misc.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -150,6 +151,8 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
  *
  */
 const char *otSysGetRadioUrlHelpString(void);
+
+extern otPlatResetReason gPlatResetReason;
 
 #ifdef __cplusplus
 } // end of extern "C"

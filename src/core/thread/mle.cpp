@@ -2842,8 +2842,8 @@ void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aM
 {
     otError error;
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-    Tlv      tlv;
-    uint16_t metricsReportOffset;
+    uint16_t metricsReportValueOffset;
+    uint16_t length;
 #endif
 
     Log(kMessageReceive, kTypeDataResponse, aMessageInfo.GetPeerAddr());
@@ -2851,10 +2851,9 @@ void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aM
     VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = OT_ERROR_SECURITY);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-    if (Tlv::FindTlvOffset(aMessage, Tlv::kLinkMetricsReport, metricsReportOffset) == OT_ERROR_NONE)
+    if (Tlv::FindTlvValueOffset(aMessage, Tlv::kLinkMetricsReport, metricsReportValueOffset, length) == OT_ERROR_NONE)
     {
-        aMessage.Read(metricsReportOffset, sizeof(tlv), &tlv);
-        Get<LinkMetrics>().HandleLinkMetricsReport(aMessage, metricsReportOffset + sizeof(tlv), tlv.GetLength(),
+        Get<LinkMetrics>().HandleLinkMetricsReport(aMessage, metricsReportValueOffset, length,
                                                    aMessageInfo.GetPeerAddr());
     }
 #endif

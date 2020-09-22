@@ -66,81 +66,79 @@ otError LinkMetrics::LinkMetricsQuery(const Ip6::Address & aDestination,
 
 otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &aRequestMessage)
 {
-    otError                error = OT_ERROR_NONE;
-    Tlv                    tlv;
-    uint8_t                queryId;
-    bool                   hasQueryId = false;
-    LinkMetricsTypeIdFlags typeIdFlagsArray[kMaxTypeIdFlags];
-    uint8_t                typeIdFlagsCount = 0;
-    uint8_t                length           = 0;
-    uint16_t               startOffset      = aMessage.GetLength();
-    uint16_t               readOffset;
-    uint16_t               endOffset;
-    otLinkMetrics          linkMetrics;
+    otError       error = OT_ERROR_NONE;
+    Tlv           tlv;
+    uint8_t       queryId;
+    bool          hasQueryId  = false;
+    uint8_t       length      = 0;
+    uint16_t      startOffset = aMessage.GetLength();
+    uint16_t      offset;
+    uint16_t      endOffset;
+    otLinkMetrics linkMetrics;
 
     memset(&linkMetrics, 0, sizeof(linkMetrics));
 
-    SuccessOrExit(error = Tlv::FindTlvOffset(aRequestMessage, Mle::Tlv::Type::kLinkMetricsQuery, readOffset));
-    VerifyOrExit(aRequestMessage.Read(readOffset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = Tlv::FindTlvValueOffset(aRequestMessage, Mle::Tlv::Type::kLinkMetricsQuery, offset,
+                                                  endOffset)); // `endOffset` is used to store tlv length here
 
-    readOffset += sizeof(Tlv);
-    endOffset = readOffset + tlv.GetLength();
+    endOffset = offset + endOffset;
 
-    while (readOffset < endOffset)
+    while (offset < endOffset)
     {
-        VerifyOrExit(aRequestMessage.Read(readOffset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
+        VerifyOrExit(aRequestMessage.Read(offset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
 
         switch (tlv.GetType())
         {
         case kLinkMetricsQueryId:
-            SuccessOrExit(error = Tlv::ReadUint8Tlv(aRequestMessage, readOffset, queryId));
+            SuccessOrExit(error = Tlv::ReadUint8Tlv(aRequestMessage, offset, queryId));
             hasQueryId = true;
             break;
 
         case kLinkMetricsQueryOptions:
-        {
-            for (uint16_t offset = readOffset + sizeof(tlv); offset < readOffset + sizeof(tlv) + tlv.GetLength();
-                 offset += sizeof(LinkMetricsTypeIdFlags))
+            for (uint16_t index = offset + sizeof(tlv); index < offset + sizeof(tlv) + tlv.GetLength();
+                 index += sizeof(LinkMetricsTypeIdFlags))
             {
                 LinkMetricsTypeIdFlags typeIdFlags;
-                VerifyOrExit(aRequestMessage.Read(readOffset + sizeof(tlv), sizeof(typeIdFlags), &typeIdFlags) ==
-                                 sizeof(typeIdFlags),
+                VerifyOrExit(aRequestMessage.Read(index, sizeof(typeIdFlags), &typeIdFlags) == sizeof(typeIdFlags),
                              error = OT_ERROR_PARSE);
-                switch (typeIdFlags.GetMetricEnum())
+
+                switch (typeIdFlags.GetRawValue())
                 {
-                case OT_LINK_METRICS_PDU_COUNT:
-                    VerifyOrExit(typeIdFlags.IsLengthFlagSet() || !linkMetrics.mPduCount, error = OT_ERROR_PARSE);
+                case kTypeIdFlagPdu:
+                    VerifyOrExit(!linkMetrics.mPduCount, error = OT_ERROR_PARSE);
                     linkMetrics.mPduCount = true;
                     break;
 
-                case OT_LINK_METRICS_LQI:
-                    VerifyOrExit(!typeIdFlags.IsLengthFlagSet() || !linkMetrics.mLqi, error = OT_ERROR_PARSE);
+                case kTypeIdFlagLqi:
+                    VerifyOrExit(!linkMetrics.mLqi, error = OT_ERROR_PARSE);
                     linkMetrics.mLqi = true;
                     break;
 
-                case OT_LINK_METRICS_MARGIN:
-                    VerifyOrExit(!typeIdFlags.IsLengthFlagSet() || !linkMetrics.mLinkMargin, error = OT_ERROR_PARSE);
+                case kTypeIdFlagLinkMargin:
+                    VerifyOrExit(!linkMetrics.mLinkMargin, error = OT_ERROR_PARSE);
                     linkMetrics.mLinkMargin = true;
                     break;
 
-                case OT_LINK_METRICS_RSSI:
-                    VerifyOrExit(!typeIdFlags.IsLengthFlagSet() || !linkMetrics.mRssi, error = OT_ERROR_PARSE);
+                case kTypeIdFlagRssi:
+                    VerifyOrExit(!linkMetrics.mRssi, error = OT_ERROR_PARSE);
                     linkMetrics.mRssi = true;
                     break;
 
                 default:
+                    if (typeIdFlags.IsExtendedFlagSet())
+                    {
+                        index += sizeof(uint8_t); // Skip the additional second flags byte.
+                    }
                     break;
                 }
-
-                typeIdFlagsArray[typeIdFlagsCount++] = typeIdFlags;
             }
             break;
-        }
 
         default:
             break;
         }
-        readOffset += sizeof(Tlv) + tlv.GetLength();
+
+        offset += sizeof(Tlv) + tlv.GetLength();
     }
 
     VerifyOrExit(hasQueryId, error = OT_ERROR_PARSE);
@@ -151,8 +149,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
 
     if (queryId == 0)
     {
-        VerifyOrExit(typeIdFlagsCount > 0, error = OT_ERROR_PARSE);
-        SuccessOrExit(error = AppendSingleProbeLinkMetricsReport(aMessage, length, typeIdFlagsArray, typeIdFlagsCount,
+        SuccessOrExit(error = AppendSingleProbeLinkMetricsReport(aMessage, length, linkMetrics,
                                                                  Get<Mac::Mac>().GetNoiseFloor(), aRequestMessage));
     }
     else
@@ -194,29 +191,30 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
         VerifyOrExit(pos + tlv.GetLength() <= endPos, OT_NOOP);
 
         aMessage.Read(pos, sizeof(LinkMetricsTypeIdFlags), &typeIdFlags);
-        VerifyOrExit(!typeIdFlags.IsExtendedFlagSet(), OT_NOOP); ///< Extended Flag is not used in Thread 1.2
+        if (typeIdFlags.IsExtendedFlagSet())
+        {
+            pos += tlv.GetLength(); // Skip the whole sub-TLV if `E` flag is set
+            continue;
+        }
         pos += sizeof(LinkMetricsTypeIdFlags);
 
-        switch (typeIdFlags.GetMetricEnum())
+        switch (typeIdFlags.GetRawValue())
         {
-        case OT_LINK_METRICS_PDU_COUNT:
-            VerifyOrExit(typeIdFlags.IsLengthFlagSet(), OT_NOOP);
+        case kTypeIdFlagPdu:
             metricsValues.mMetrics.mPduCount = true;
             aMessage.Read(pos, sizeof(uint32_t), &metricsValues.mPduCountValue);
             pos += sizeof(uint32_t);
             otLogDebgMle(" - PDU Counter: %d (Count/Summation)", metricsValues.mPduCountValue);
             break;
 
-        case OT_LINK_METRICS_LQI:
-            VerifyOrExit(!typeIdFlags.IsLengthFlagSet(), OT_NOOP);
+        case kTypeIdFlagLqi:
             metricsValues.mMetrics.mLqi = true;
             aMessage.Read(pos, sizeof(uint8_t), &metricsValues.mLqiValue);
             pos += sizeof(uint8_t);
             otLogDebgMle(" - LQI: %d (Exponential Moving Average)", metricsValues.mLqiValue);
             break;
 
-        case OT_LINK_METRICS_MARGIN:
-            VerifyOrExit(!typeIdFlags.IsLengthFlagSet(), OT_NOOP);
+        case kTypeIdFlagLinkMargin:
             metricsValues.mMetrics.mLinkMargin = true;
             aMessage.Read(pos, sizeof(uint8_t), &metricsRawValue);
             metricsValues.mLinkMarginValue =
@@ -225,8 +223,7 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
             otLogDebgMle(" - Margin: %d (dB) (Exponential Moving Average)", metricsValues.mLinkMarginValue);
             break;
 
-        case OT_LINK_METRICS_RSSI:
-            VerifyOrExit(!typeIdFlags.IsLengthFlagSet(), OT_NOOP);
+        case kTypeIdFlagRssi:
             metricsValues.mMetrics.mRssi = true;
             aMessage.Read(pos, sizeof(uint8_t), &metricsRawValue);
             metricsValues.mRssiValue =
@@ -261,9 +258,12 @@ otError LinkMetrics::SendLinkMetricsQuery(const Ip6::Address &          aDestina
     LinkMetricsQueryOptionsTlv linkMetricsQueryOptionsTlv;
     uint8_t                    length = 0;
     static const uint8_t       tlvs[] = {Mle::Tlv::kLinkMetricsReport};
-    uint8_t buf[sizeof(Tlv) * 5 + sizeof(uint8_t) + sizeof(LinkMetricsTypeIdFlags) * kMaxTypeIdFlags];
-    Tlv *   tlv = reinterpret_cast<Tlv *>(buf);
-    Tlv     subTlv;
+    uint8_t                    buf[sizeof(Tlv) * 3 + sizeof(uint8_t) +
+                sizeof(LinkMetricsTypeIdFlags) *
+                    kMaxTypeIdFlags]; // LinkMetricsQuery Tlv + LinkMetricsQueryId sub-TLV (value-length: 1 byte) +
+                                      // LinkMetricsQueryOptions sub-TLV (value-length: `kMaxTypeIdFlags` bytes)
+    Tlv *tlv = reinterpret_cast<Tlv *>(buf);
+    Tlv  subTlv;
 
     // Link Metrics Query TLV
     tlv->SetType(Mle::Tlv::kLinkMetricsQuery);
@@ -289,7 +289,7 @@ otError LinkMetrics::SendLinkMetricsQuery(const Ip6::Address &          aDestina
         length += linkMetricsQueryOptionsTlv.GetLength();
     }
 
-    // Set Length for Link Metrics Report Tlv
+    // Set Length for Link Metrics Report TLV
     tlv->SetLength(length - sizeof(Tlv));
 
     SuccessOrExit(error = Get<Mle::MleRouter>().SendDataRequest(aDestination, tlvs, sizeof(tlvs), 0, buf, length));
@@ -298,53 +298,52 @@ exit:
     return error;
 }
 
-otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &                     aMessage,
-                                                        uint8_t &                     aLength,
-                                                        const LinkMetricsTypeIdFlags *aTypeIdFlags,
-                                                        uint8_t                       aTypeIdFlagsCount,
-                                                        const int8_t                  aNoiseFloor,
-                                                        const Message &               aRequestMessage)
+otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &            aMessage,
+                                                        uint8_t &            aLength,
+                                                        const otLinkMetrics &aLinkMetrics,
+                                                        const int8_t         aNoiseFloor,
+                                                        const Message &      aRequestMessage)
 {
     otError                 error = OT_ERROR_NONE;
     LinkMetricsReportSubTlv metric;
 
-    OT_ASSERT(aTypeIdFlags != nullptr);
+    aLength = 0;
 
-    for (uint8_t i = 0; i < aTypeIdFlagsCount; i++)
+    // Link Metrics Report sub-TLVs
+    if (aLinkMetrics.mPduCount)
     {
-        // Link Metrics Report sub-TLVs
         metric.Init();
-        metric.SetMetricsTypeId(aTypeIdFlags[i]);
+        metric.SetMetricsTypeId(kTypeIdFlagPdu);
+        metric.SetMetricsValue32(aRequestMessage.GetPsduCount());
+        SuccessOrExit(error = aMessage.Append(&metric, sizeof(Tlv) + metric.GetLength()));
+        aLength += sizeof(Tlv) + metric.GetLength();
+    }
 
-        switch (aTypeIdFlags[i].GetMetricEnum())
-        {
-        case OT_LINK_METRICS_PDU_COUNT:
-            VerifyOrExit(aTypeIdFlags[i].IsLengthFlagSet(), error = OT_ERROR_INVALID_ARGS);
-            metric.SetMetricsValue32(aRequestMessage.GetPsduCount());
-            break;
+    if (aLinkMetrics.mLqi)
+    {
+        metric.Init();
+        metric.SetMetricsTypeId(kTypeIdFlagLqi);
+        metric.SetMetricsValue8(aRequestMessage.GetAverageLqi()); // IEEE 802.15.4 LQI is in scale 0-255
+        SuccessOrExit(error = aMessage.Append(&metric, sizeof(Tlv) + metric.GetLength()));
+        aLength += sizeof(Tlv) + metric.GetLength();
+    }
 
-        case OT_LINK_METRICS_LQI:
-            VerifyOrExit(!aTypeIdFlags[i].IsLengthFlagSet(), error = OT_ERROR_INVALID_ARGS);
-            metric.SetMetricsValue8(aRequestMessage.GetAverageLqi()); // IEEE 802.15.4 LQI is in scale 0-255
-            break;
+    if (aLinkMetrics.mLinkMargin)
+    {
+        metric.Init();
+        metric.SetMetricsTypeId(kTypeIdFlagLinkMargin);
+        metric.SetMetricsValue8(LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aRequestMessage.GetAverageRss()) *
+                                255 / 130); // Linear scale Link Margin from [0, 130] to [0, 255]
+        SuccessOrExit(error = aMessage.Append(&metric, sizeof(Tlv) + metric.GetLength()));
+        aLength += sizeof(Tlv) + metric.GetLength();
+    }
 
-        case OT_LINK_METRICS_MARGIN:
-            VerifyOrExit(!aTypeIdFlags[i].IsLengthFlagSet(), error = OT_ERROR_INVALID_ARGS);
-            metric.SetMetricsValue8(
-                LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aRequestMessage.GetAverageRss()) * 255 /
-                130); // Linear scale Link Margin from [0, 130] to [0, 255]
-            break;
-
-        case OT_LINK_METRICS_RSSI:
-            VerifyOrExit(!aTypeIdFlags[i].IsLengthFlagSet(), error = OT_ERROR_INVALID_ARGS);
-            metric.SetMetricsValue8((aRequestMessage.GetAverageRss() + 130) * 255 /
-                                    130); // Linear scale rss from [-130, 0] to [0, 255]
-            break;
-
-        default:
-            break;
-        }
-
+    if (aLinkMetrics.mRssi)
+    {
+        metric.Init();
+        metric.SetMetricsTypeId(kTypeIdFlagRssi);
+        metric.SetMetricsValue8((aRequestMessage.GetAverageRss() + 130) * 255 /
+                                130); // Linear scale rss from [-130, 0] to [0, 255]
         SuccessOrExit(error = aMessage.Append(&metric, sizeof(Tlv) + metric.GetLength()));
         aLength += sizeof(Tlv) + metric.GetLength();
     }

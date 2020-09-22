@@ -97,7 +97,7 @@ $ (gdb) c
    leaderweight
    masterkey
    mode
-   netdataregister
+   netdata register
    networkidtimeout
    networkname
    panid

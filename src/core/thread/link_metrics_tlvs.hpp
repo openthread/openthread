@@ -75,6 +75,21 @@ class LinkMetricsTypeIdFlags
 {
 public:
     /**
+     * Default constructor.
+     *
+     */
+    LinkMetricsTypeIdFlags() {}
+
+    /**
+     * Constructor for implicit cast from `uint8_t` to `LinkMetricsTypeIdFlags`.
+     *
+     */
+    LinkMetricsTypeIdFlags(uint8_t typeIdFlags)
+        : mTypeIdFlags(typeIdFlags)
+    {
+    }
+
+    /**
      * This method init the Type Id value
      *
      */
@@ -158,6 +173,14 @@ public:
      *
      */
     uint8_t GetMetricEnum(void) const { return (mTypeIdFlags & kMetricEnumMask) >> kMetricEnumOffset; }
+
+    /**
+     * This method returns the raw value of the entire TypeIdFlags.
+     *
+     * @returns The raw value of TypeIdFlags.
+     *
+     */
+    uint8_t GetRawValue(void) const { return mTypeIdFlags; }
 
 private:
     enum

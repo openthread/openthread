@@ -41,7 +41,6 @@
 #include <openthread/icmp6.h>
 #include <openthread/link.h>
 #include <openthread/ncp.h>
-#include <openthread/netdata.h>
 #include <openthread/thread.h>
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #include <openthread/network_time.h>
@@ -125,8 +124,9 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpQueryingInProgress(false)
 #endif
-    , mUdp(*this)
     , mDataset(*this)
+    , mNetworkData(*this)
+    , mUdp(*this)
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     , mCoap(*this)
 #endif
@@ -223,12 +223,16 @@ exit:
 
 void Interpreter::OutputResult(otError aError)
 {
-    if (aError == OT_ERROR_NONE)
+    switch (aError)
     {
+    case OT_ERROR_NONE:
         OutputLine("Done");
-    }
-    else
-    {
+        break;
+
+    case OT_ERROR_PENDING:
+        break;
+
+    default:
         OutputLine("Error %d: %s", aError, otThreadErrorToString(aError));
     }
 }
@@ -333,7 +337,7 @@ exit:
     return error;
 }
 
-void Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -350,11 +354,11 @@ void Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
         OutputLine("%s", mUserCommands[i].mName);
     }
 
-    OutputResult(OT_ERROR_NONE);
+    return OT_ERROR_NONE;
 }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-void Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
     otError                error = OT_ERROR_INVALID_COMMAND;
@@ -418,7 +422,7 @@ void Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
 
 exit:
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    OutputResult(error);
+    return error;
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
@@ -591,7 +595,7 @@ exit:
 }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
-void Interpreter::ProcessDomainName(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessDomainName(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -606,11 +610,11 @@ void Interpreter::ProcessDomainName(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-void Interpreter::ProcessDua(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessDua(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -650,13 +654,13 @@ void Interpreter::ProcessDua(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-void Interpreter::ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -677,10 +681,33 @@ void Interpreter::ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[])
     OutputLine("coap secure: %d %d", bufferInfo.mCoapSecureMessages, bufferInfo.mCoapSecureBuffers);
     OutputLine("application coap: %d %d", bufferInfo.mApplicationCoapMessages, bufferInfo.mApplicationCoapBuffers);
 
-    OutputResult(OT_ERROR_NONE);
+    return OT_ERROR_NONE;
 }
 
-void Interpreter::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessCcaThreshold(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        int8_t cca;
+
+        SuccessOrExit(error = otPlatRadioGetCcaEnergyDetectThreshold(mInstance, &cca));
+        OutputLine("%d dBm", cca);
+    }
+    else
+    {
+        long value;
+
+        SuccessOrExit(error = ParseLong(aArgs[0], value));
+        SuccessOrExit(error = otPlatRadioSetCcaEnergyDetectThreshold(mInstance, static_cast<int8_t>(value)));
+    }
+
+exit:
+    return error;
+}
+
+otError Interpreter::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -822,11 +849,11 @@ void Interpreter::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessChild(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessChild(uint8_t aArgsLength, char *aArgs[])
 {
     otError     error = OT_ERROR_NONE;
     otChildInfo childInfo;
@@ -931,10 +958,10 @@ void Interpreter::ProcessChild(uint8_t aArgsLength, char *aArgs[])
     OutputLine("RSSI: %d", childInfo.mAverageRssi);
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessChildIp(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessChildIp(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
     otError error = OT_ERROR_NONE;
@@ -992,10 +1019,10 @@ void Interpreter::ProcessChildIp(uint8_t aArgsLength, char *aArgs[])
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 exit:
 #endif
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessChildMax(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessChildMax(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -1011,11 +1038,11 @@ void Interpreter::ProcessChildMax(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif // OPENTHREAD_FTD
 
-void Interpreter::ProcessChildTimeout(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessChildTimeout(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -1031,29 +1058,25 @@ void Interpreter::ProcessChildTimeout(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
-void Interpreter::ProcessCoap(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessCoap(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error;
-    error = mCoap.Process(aArgsLength, aArgs);
-    OutputResult(error);
+    return mCoap.Process(aArgsLength, aArgs);
 }
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-void Interpreter::ProcessCoapSecure(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessCoapSecure(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error;
-    error = mCoapSecure.Process(aArgsLength, aArgs);
-    OutputResult(error);
+    return mCoapSecure.Process(aArgsLength, aArgs);
 }
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
-void Interpreter::ProcessCoexMetrics(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessCoexMetrics(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -1103,12 +1126,12 @@ void Interpreter::ProcessCoexMetrics(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessContextIdReuseDelay(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessContextIdReuseDelay(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -1124,11 +1147,11 @@ void Interpreter::ProcessContextIdReuseDelay(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif
 
-void Interpreter::ProcessCounters(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessCounters(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -1215,11 +1238,11 @@ void Interpreter::ProcessCounters(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-void Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
+otError Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
@@ -1252,12 +1275,12 @@ void Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessDelayTimerMin(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessDelayTimerMin(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -1277,11 +1300,11 @@ void Interpreter::ProcessDelayTimerMin(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif
 
-void Interpreter::ProcessDiscover(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessDiscover(uint8_t aArgsLength, char *aArgs[])
 {
     otError  error        = OT_ERROR_NONE;
     uint32_t scanChannels = 0;
@@ -1300,15 +1323,14 @@ void Interpreter::ProcessDiscover(uint8_t aArgsLength, char *aArgs[])
     OutputLine("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |");
     OutputLine("+---+------------------+------------------+------+------------------+----+-----+-----+");
 
+    error = OT_ERROR_PENDING;
+
 exit:
-    if (error != OT_ERROR_NONE)
-    {
-        OutputResult(error);
-    }
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-void Interpreter::ProcessDns(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessDns(uint8_t aArgsLength, char *aArgs[])
 {
     otError          error = OT_ERROR_NONE;
     long             port  = OT_DNS_DEFAULT_SERVER_PORT;
@@ -1355,11 +1377,10 @@ void Interpreter::ProcessDns(uint8_t aArgsLength, char *aArgs[])
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
+    error = OT_ERROR_PENDING;
+
 exit:
-    if (error != OT_ERROR_NONE)
-    {
-        OutputResult(error);
-    }
+    return error;
 }
 
 void Interpreter::HandleDnsResponse(void *              aContext,
@@ -1392,7 +1413,7 @@ void Interpreter::HandleDnsResponse(const char *aHostname, const Ip6::Address *a
 #endif
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessEidCache(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessEidCache(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -1411,11 +1432,11 @@ void Interpreter::ProcessEidCache(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(OT_ERROR_NONE);
+    return OT_ERROR_NONE;
 }
 #endif
 
-void Interpreter::ProcessEui64(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessEui64(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -1429,10 +1450,10 @@ void Interpreter::ProcessEui64(uint8_t aArgsLength, char *aArgs[])
     OutputLine("");
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessExtAddress(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessExtAddress(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -1454,20 +1475,22 @@ void Interpreter::ProcessExtAddress(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 #if OPENTHREAD_POSIX
-void Interpreter::ProcessExit(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessExit(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
     exit(EXIT_SUCCESS);
+
+    return OT_ERROR_NONE;
 }
 #endif
 
-void Interpreter::ProcessLog(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessLog(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -1506,10 +1529,10 @@ void Interpreter::ProcessLog(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessExtPanId(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessExtPanId(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -1530,18 +1553,20 @@ void Interpreter::ProcessExtPanId(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessFactoryReset(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessFactoryReset(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
     otInstanceFactoryReset(mInstance);
+
+    return OT_ERROR_NONE;
 }
 
-void Interpreter::ProcessIfconfig(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessIfconfig(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -1570,7 +1595,7 @@ void Interpreter::ProcessIfconfig(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 otError Interpreter::ProcessIpAddrAdd(uint8_t aArgsLength, char *aArgs[])
@@ -1605,7 +1630,7 @@ exit:
     return error;
 }
 
-void Interpreter::ProcessIpAddr(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessIpAddr(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -1651,7 +1676,7 @@ void Interpreter::ProcessIpAddr(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 otError Interpreter::ProcessIpMulticastAddrAdd(uint8_t aArgsLength, char *aArgs[])
@@ -1717,7 +1742,7 @@ exit:
     return error;
 }
 
-void Interpreter::ProcessIpMulticastAddr(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessIpMulticastAddr(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -1750,10 +1775,10 @@ void Interpreter::ProcessIpMulticastAddr(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessKeySequence(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessKeySequence(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -1790,10 +1815,10 @@ void Interpreter::ProcessKeySequence(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessLeaderData(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessLeaderData(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -1810,11 +1835,11 @@ void Interpreter::ProcessLeaderData(uint8_t aArgsLength, char *aArgs[])
     OutputLine("Leader Router ID: %d", leaderData.mLeaderRouterId);
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessLeaderPartitionId(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessLeaderPartitionId(uint8_t aArgsLength, char *aArgs[])
 {
     otError       error = OT_ERROR_NONE;
     unsigned long value;
@@ -1830,10 +1855,10 @@ void Interpreter::ProcessLeaderPartitionId(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessLeaderWeight(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessLeaderWeight(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -1849,7 +1874,7 @@ void Interpreter::ProcessLeaderWeight(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif // OPENTHREAD_FTD
 
@@ -1891,7 +1916,7 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress, const ot
     }
 }
 
-void Interpreter::ProcessLinkMetrics(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessLinkMetrics(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
@@ -1903,7 +1928,7 @@ void Interpreter::ProcessLinkMetrics(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
@@ -1956,7 +1981,7 @@ exit:
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -1994,11 +2019,11 @@ void Interpreter::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif
 
-void Interpreter::ProcessMasterKey(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessMasterKey(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -2022,28 +2047,31 @@ void Interpreter::ProcessMasterKey(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
-void Interpreter::ProcessMlr(uint8_t aArgsLength, char **aArgs)
+otError Interpreter::ProcessMlr(uint8_t aArgsLength, char **aArgs)
 {
-    if (aArgsLength == 0)
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_COMMAND);
+
+    if (!strcmp(aArgs[0], "reg"))
     {
-        OutputResult(OT_ERROR_INVALID_COMMAND);
-    }
-    else if (!strcmp(aArgs[0], "reg"))
-    {
-        ProcessMlrReg(aArgsLength - 1, aArgs + 1);
+        error = ProcessMlrReg(aArgsLength - 1, aArgs + 1);
     }
     else
     {
-        OutputResult(OT_ERROR_INVALID_COMMAND);
+        error = OT_ERROR_INVALID_COMMAND;
     }
+
+exit:
+    return error;
 }
 
-void Interpreter::ProcessMlrReg(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessMlrReg(uint8_t aArgsLength, char *aArgs[])
 {
     otError      error = OT_ERROR_NONE;
     otIp6Address addresses[kIPv6AddressesNumMax];
@@ -2073,14 +2101,14 @@ void Interpreter::ProcessMlrReg(uint8_t aArgsLength, char *aArgs[])
         timeout = static_cast<uint32_t>(value);
     }
 
-    error = otIp6RegisterMulticastListeners(mInstance, addresses, i, i == aArgsLength - 1 ? &timeout : nullptr,
-                                            Interpreter::HandleMlrRegResult, this);
+    SuccessOrExit(error = otIp6RegisterMulticastListeners(mInstance, addresses, i,
+                                                          i == aArgsLength - 1 ? &timeout : nullptr,
+                                                          Interpreter::HandleMlrRegResult, this));
+
+    error = OT_ERROR_PENDING;
 
 exit:
-    if (error != OT_ERROR_NONE)
-    {
-        OutputResult(error);
-    }
+    return error;
 }
 
 void Interpreter::HandleMlrRegResult(void *              aContext,
@@ -2113,7 +2141,7 @@ void Interpreter::HandleMlrRegResult(otError             aError,
 
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
-void Interpreter::ProcessMode(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessMode(uint8_t aArgsLength, char *aArgs[])
 {
     otError          error = OT_ERROR_NONE;
     otLinkModeConfig linkMode;
@@ -2177,11 +2205,11 @@ void Interpreter::ProcessMode(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessNeighbor(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessNeighbor(uint8_t aArgsLength, char *aArgs[])
 {
     otError                error = OT_ERROR_NONE;
     otNeighborInfo         neighborInfo;
@@ -2236,30 +2264,12 @@ void Interpreter::ProcessNeighbor(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif
 
-void Interpreter::ProcessNetworkDataShow(uint8_t aArgsLength, char *aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
-
-    otError error = OT_ERROR_NONE;
-    uint8_t data[255];
-    uint8_t len = sizeof(data);
-
-    SuccessOrExit(error = otNetDataGet(mInstance, false, data, &len));
-
-    OutputBytes(data, static_cast<uint8_t>(len));
-    OutputLine("");
-
-exit:
-    OutputResult(error);
-}
-
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-void Interpreter::ProcessNetif(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessNetif(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -2273,11 +2283,11 @@ void Interpreter::ProcessNetif(uint8_t aArgsLength, char *aArgs[])
     OutputLine("%s:%u", netif ? netif : "(null)", netifidx);
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif
 
-void Interpreter::ProcessNetstat(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessNetstat(uint8_t aArgsLength, char *aArgs[])
 {
     otUdpSocket *socket = otUdpGetSockets(mInstance);
 
@@ -2311,7 +2321,7 @@ void Interpreter::ProcessNetstat(uint8_t aArgsLength, char *aArgs[])
         socket = socket->mNext;
     }
 
-    OutputResult(OT_ERROR_NONE);
+    return OT_ERROR_NONE;
 }
 
 int Interpreter::OutputSocketAddress(const otSockAddr &aAddress)
@@ -2340,121 +2350,72 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-void Interpreter::ProcessService(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessServiceList(void)
 {
-    otError error = OT_ERROR_NONE;
+    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otServiceConfig       config;
 
-    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
-
-    if (strcmp(aArgs[0], "add") == 0)
+    while (otServerGetNextService(mInstance, &iterator, &config) == OT_ERROR_NONE)
     {
-        otServiceConfig cfg;
-        long            enterpriseNumber;
-        size_t          length;
-
-        VerifyOrExit(aArgsLength > 3, error = OT_ERROR_INVALID_ARGS);
-
-        SuccessOrExit(error = ParseLong(aArgs[1], enterpriseNumber));
-        cfg.mEnterpriseNumber = static_cast<uint32_t>(enterpriseNumber);
-
-        length = strlen(aArgs[2]);
-        VerifyOrExit(length <= sizeof(cfg.mServiceData), error = OT_ERROR_NO_BUFS);
-        cfg.mServiceDataLength = static_cast<uint8_t>(length);
-        memcpy(cfg.mServiceData, aArgs[2], cfg.mServiceDataLength);
-
-        length = strlen(aArgs[3]);
-        VerifyOrExit(length <= sizeof(cfg.mServerConfig.mServerData), error = OT_ERROR_NO_BUFS);
-        cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(length);
-        memcpy(cfg.mServerConfig.mServerData, aArgs[3], cfg.mServerConfig.mServerDataLength);
-
-        cfg.mServerConfig.mStable = true;
-
-        SuccessOrExit(error = otServerAddService(mInstance, &cfg));
+        mNetworkData.OutputService(config);
     }
-    else if (strcmp(aArgs[0], "remove") == 0)
+
+    return OT_ERROR_NONE;
+}
+
+otError Interpreter::ProcessService(uint8_t aArgsLength, char *aArgs[])
+{
+    otError         error = OT_ERROR_INVALID_COMMAND;
+    otServiceConfig cfg;
+
+    if (aArgsLength == 0)
     {
-        long enterpriseNumber = 0;
+        error = ProcessServiceList();
+    }
+    else
+    {
+        long enterpriseNumber;
+        int  length;
 
         VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);
 
         SuccessOrExit(error = ParseLong(aArgs[1], enterpriseNumber));
+        cfg.mEnterpriseNumber = static_cast<uint32_t>(enterpriseNumber);
 
-        SuccessOrExit(error = otServerRemoveService(mInstance, static_cast<uint32_t>(enterpriseNumber),
-                                                    reinterpret_cast<uint8_t *>(aArgs[2]),
-                                                    static_cast<uint8_t>(strlen(aArgs[2]))));
-    }
-    else
-    {
-        ExitNow(error = OT_ERROR_INVALID_COMMAND);
-    }
+        length = Hex2Bin(aArgs[2], cfg.mServiceData, sizeof(cfg.mServiceData));
+        VerifyOrExit(length > 0, error = OT_ERROR_INVALID_ARGS);
+        cfg.mServiceDataLength = static_cast<uint8_t>(length);
 
-exit:
-    OutputResult(error);
-}
-#endif
-
-void Interpreter::ProcessNetworkData(uint8_t aArgsLength, char *aArgs[])
-{
-    otError error;
-
-    if (aArgsLength > 2 && strcmp(aArgs[0], "steeringdata") == 0)
-    {
-        if (strcmp(aArgs[1], "check") == 0)
+        if (strcmp(aArgs[0], "add") == 0)
         {
-            otExtAddress      addr;
-            otJoinerDiscerner discerner;
+            VerifyOrExit(aArgsLength > 3, error = OT_ERROR_INVALID_ARGS);
 
-            discerner.mLength = 0;
+            length = Hex2Bin(aArgs[3], cfg.mServerConfig.mServerData, sizeof(cfg.mServerConfig.mServerData));
+            VerifyOrExit(length > 0, error = OT_ERROR_INVALID_ARGS);
+            cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(length);
 
-            error = Interpreter::ParseJoinerDiscerner(aArgs[2], discerner);
+            cfg.mServerConfig.mStable = true;
 
-            if (error == OT_ERROR_NOT_FOUND)
-            {
-                VerifyOrExit(Interpreter::Hex2Bin(aArgs[2], addr.m8, sizeof(addr)) == sizeof(addr),
-                             error = OT_ERROR_INVALID_ARGS);
-            }
-            else if (error != OT_ERROR_NONE)
-            {
-                ExitNow();
-            }
-
-            if (discerner.mLength)
-            {
-                ExitNow(error = otNetDataSteeringDataCheckJoinerWithDiscerner(mInstance, &discerner));
-            }
-            else
-            {
-                ExitNow(error = otNetDataSteeringDataCheckJoiner(mInstance, &addr));
-            }
+            error = otServerAddService(mInstance, &cfg);
+        }
+        else if (strcmp(aArgs[0], "remove") == 0)
+        {
+            error = otServerRemoveService(mInstance, cfg.mEnterpriseNumber, cfg.mServiceData, cfg.mServiceDataLength);
         }
     }
 
-    error = OT_ERROR_INVALID_COMMAND;
-
 exit:
-    OutputResult(error);
+    return error;
 }
+#endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-void Interpreter::ProcessNetworkDataRegister(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessNetworkData(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
-
-    otError error = OT_ERROR_NONE;
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    SuccessOrExit(error = otBorderRouterRegister(mInstance));
-#else
-    SuccessOrExit(error = otServerRegister(mInstance));
-#endif
-
-exit:
-    OutputResult(error);
+    return mNetworkData.Process(aArgsLength, aArgs);
 }
-#endif
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessNetworkIdTimeout(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessNetworkIdTimeout(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -2470,11 +2431,11 @@ void Interpreter::ProcessNetworkIdTimeout(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif
 
-void Interpreter::ProcessNetworkName(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessNetworkName(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -2489,11 +2450,11 @@ void Interpreter::ProcessNetworkName(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-void Interpreter::ProcessNetworkTime(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessNetworkTime(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -2542,11 +2503,11 @@ void Interpreter::ProcessNetworkTime(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-void Interpreter::ProcessPanId(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessPanId(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -2562,10 +2523,10 @@ void Interpreter::ProcessPanId(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessParent(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessParent(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -2589,11 +2550,11 @@ void Interpreter::ProcessParent(uint8_t aArgsLength, char *aArgs[])
     OutputLine("Age: %d", parentInfo.mAge);
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessParentPriority(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessParentPriority(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -2609,7 +2570,7 @@ void Interpreter::ProcessParentPriority(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif
 
@@ -2652,7 +2613,7 @@ exit:
     return;
 }
 
-void Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
 {
     otError  error = OT_ERROR_NONE;
     uint8_t  index = 1;
@@ -2723,7 +2684,7 @@ void Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
     SendPing();
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 void Interpreter::HandlePingTimer(Timer &aTimer)
@@ -2766,7 +2727,7 @@ exit:
     }
 }
 
-void Interpreter::ProcessPollPeriod(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessPollPeriod(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -2782,10 +2743,10 @@ void Interpreter::ProcessPollPeriod(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessPromiscuous(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessPromiscuous(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -2819,7 +2780,7 @@ void Interpreter::ProcessPromiscuous(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext)
@@ -3030,75 +2991,6 @@ exit:
     return error;
 }
 
-void Interpreter::OutputPrefix(otBorderRouterConfig &aConfig)
-{
-    OutputFormat("%x:%x:%x:%x::/%d ", HostSwap16(aConfig.mPrefix.mPrefix.mFields.m16[0]),
-                 HostSwap16(aConfig.mPrefix.mPrefix.mFields.m16[1]), HostSwap16(aConfig.mPrefix.mPrefix.mFields.m16[2]),
-                 HostSwap16(aConfig.mPrefix.mPrefix.mFields.m16[3]), aConfig.mPrefix.mLength);
-
-    if (aConfig.mPreferred)
-    {
-        OutputFormat("p");
-    }
-
-    if (aConfig.mSlaac)
-    {
-        OutputFormat("a");
-    }
-
-    if (aConfig.mDhcp)
-    {
-        OutputFormat("d");
-    }
-
-    if (aConfig.mConfigure)
-    {
-        OutputFormat("c");
-    }
-
-    if (aConfig.mDefaultRoute)
-    {
-        OutputFormat("r");
-    }
-
-    if (aConfig.mOnMesh)
-    {
-        OutputFormat("o");
-    }
-
-    if (aConfig.mStable)
-    {
-        OutputFormat("s");
-    }
-
-    if (aConfig.mNdDns)
-    {
-        OutputFormat("n");
-    }
-
-    if (aConfig.mDp)
-    {
-        OutputFormat("D");
-    }
-
-    switch (aConfig.mPreference)
-    {
-    case OT_ROUTE_PREFERENCE_LOW:
-        OutputFormat(" low");
-        break;
-
-    case OT_ROUTE_PREFERENCE_MED:
-        OutputFormat(" med");
-        break;
-
-    case OT_ROUTE_PREFERENCE_HIGH:
-        OutputFormat(" high");
-        break;
-    }
-
-    OutputLine("");
-}
-
 otError Interpreter::ProcessPrefixList(void)
 {
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
@@ -3106,7 +2998,7 @@ otError Interpreter::ProcessPrefixList(void)
 
     while (otBorderRouterGetNextOnMeshPrefix(mInstance, &iterator, &config) == OT_ERROR_NONE)
     {
-        OutputPrefix(config);
+        mNetworkData.OutputPrefix(config);
     }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
@@ -3114,7 +3006,7 @@ otError Interpreter::ProcessPrefixList(void)
     {
         SuccessOrExit(otBackboneRouterGetDomainPrefix(mInstance, &config));
         OutputFormat("- ");
-        OutputPrefix(config);
+        mNetworkData.OutputPrefix(config);
     }
     // Else already printed via above while loop.
 exit:
@@ -3123,7 +3015,7 @@ exit:
     return OT_ERROR_NONE;
 }
 
-void Interpreter::ProcessPrefix(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessPrefix(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -3145,12 +3037,12 @@ void Interpreter::ProcessPrefix(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessPreferRouterId(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessPreferRouterId(uint8_t aArgsLength, char *aArgs[])
 {
     otError       error = OT_ERROR_NONE;
     unsigned long value;
@@ -3160,11 +3052,11 @@ void Interpreter::ProcessPreferRouterId(uint8_t aArgsLength, char *aArgs[])
     error = otThreadSetPreferredRouterId(mInstance, static_cast<uint8_t>(value));
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif
 
-void Interpreter::ProcessRcp(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessRcp(uint8_t aArgsLength, char *aArgs[])
 {
     otError     error   = OT_ERROR_NONE;
     const char *version = otPlatRadioGetVersionString(mInstance);
@@ -3182,11 +3074,11 @@ void Interpreter::ProcessRcp(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessReleaseRouterId(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessReleaseRouterId(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -3197,25 +3089,28 @@ void Interpreter::ProcessReleaseRouterId(uint8_t aArgsLength, char *aArgs[])
     SuccessOrExit(error = otThreadReleaseRouterId(mInstance, static_cast<uint8_t>(value)));
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif
 
-void Interpreter::ProcessReset(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessReset(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
     otInstanceReset(mInstance);
+
+    return OT_ERROR_NONE;
 }
 
-void Interpreter::ProcessRloc16(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessRloc16(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
     OutputLine("%04x", otThreadGetRloc16(mInstance));
-    OutputResult(OT_ERROR_NONE);
+
+    return OT_ERROR_NONE;
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -3318,36 +3213,13 @@ otError Interpreter::ProcessRouteList(void)
 
     while (otBorderRouterGetNextRoute(mInstance, &iterator, &config) == OT_ERROR_NONE)
     {
-        OutputFormat("%x:%x:%x:%x::/%d ", HostSwap16(config.mPrefix.mPrefix.mFields.m16[0]),
-                     HostSwap16(config.mPrefix.mPrefix.mFields.m16[1]),
-                     HostSwap16(config.mPrefix.mPrefix.mFields.m16[2]),
-                     HostSwap16(config.mPrefix.mPrefix.mFields.m16[3]), config.mPrefix.mLength);
-
-        if (config.mStable)
-        {
-            OutputFormat("s");
-        }
-
-        switch (config.mPreference)
-        {
-        case OT_ROUTE_PREFERENCE_LOW:
-            OutputLine(" low");
-            break;
-
-        case OT_ROUTE_PREFERENCE_MED:
-            OutputLine(" med");
-            break;
-
-        case OT_ROUTE_PREFERENCE_HIGH:
-            OutputLine(" high");
-            break;
-        }
+        mNetworkData.OutputRoute(config);
     }
 
     return OT_ERROR_NONE;
 }
 
-void Interpreter::ProcessRoute(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessRoute(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -3369,12 +3241,12 @@ void Interpreter::ProcessRoute(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessRouter(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessRouter(uint8_t aArgsLength, char *aArgs[])
 {
     otError      error = OT_ERROR_NONE;
     otRouterInfo routerInfo;
@@ -3462,10 +3334,10 @@ void Interpreter::ProcessRouter(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessRouterDowngradeThreshold(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessRouterDowngradeThreshold(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -3481,10 +3353,10 @@ void Interpreter::ProcessRouterDowngradeThreshold(uint8_t aArgsLength, char *aAr
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessRouterEligible(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessRouterEligible(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -3513,10 +3385,10 @@ void Interpreter::ProcessRouterEligible(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessRouterSelectionJitter(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessRouterSelectionJitter(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -3533,10 +3405,10 @@ void Interpreter::ProcessRouterSelectionJitter(uint8_t aArgsLength, char *aArgs[
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessRouterUpgradeThreshold(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessRouterUpgradeThreshold(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -3552,11 +3424,11 @@ void Interpreter::ProcessRouterUpgradeThreshold(uint8_t aArgsLength, char *aArgs
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif // OPENTHREAD_FTD
 
-void Interpreter::ProcessScan(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessScan(uint8_t aArgsLength, char *aArgs[])
 {
     otError  error        = OT_ERROR_NONE;
     uint32_t scanChannels = 0;
@@ -3600,11 +3472,10 @@ void Interpreter::ProcessScan(uint8_t aArgsLength, char *aArgs[])
                                                &Interpreter::HandleActiveScanResult, this));
     }
 
+    error = OT_ERROR_PENDING;
+
 exit:
-    if (error != OT_ERROR_NONE)
-    {
-        OutputResult(error);
-    }
+    return error;
 }
 
 void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
@@ -3657,12 +3528,10 @@ exit:
     return;
 }
 
-void Interpreter::ProcessSingleton(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessSingleton(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
-
-    otError error = OT_ERROR_NONE;
 
     if (otThreadIsSingleton(mInstance))
     {
@@ -3673,11 +3542,11 @@ void Interpreter::ProcessSingleton(uint8_t aArgsLength, char *aArgs[])
         OutputLine("false");
     }
 
-    OutputResult(error);
+    return OT_ERROR_NONE;
 }
 
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
-void Interpreter::ProcessSntp(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessSntp(uint8_t aArgsLength, char *aArgs[])
 {
     otError          error = OT_ERROR_NONE;
     long             port  = OT_SNTP_DEFAULT_SERVER_PORT;
@@ -3718,11 +3587,10 @@ void Interpreter::ProcessSntp(uint8_t aArgsLength, char *aArgs[])
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
+    error = OT_ERROR_PENDING;
+
 exit:
-    if (error != OT_ERROR_NONE)
-    {
-        OutputResult(error);
-    }
+    return error;
 }
 
 void Interpreter::HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult)
@@ -3750,7 +3618,7 @@ void Interpreter::HandleSntpResponse(uint64_t aTime, otError aResult)
 }
 #endif
 
-void Interpreter::ProcessState(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessState(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -3813,10 +3681,10 @@ void Interpreter::ProcessState(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessThread(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessThread(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -3843,17 +3711,15 @@ void Interpreter::ProcessThread(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessDataset(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessDataset(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error;
-    error = mDataset.Process(aArgsLength, aArgs);
-    OutputResult(error);
+    return mDataset.Process(aArgsLength, aArgs);
 }
 
-void Interpreter::ProcessTxPower(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessTxPower(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -3873,17 +3739,15 @@ void Interpreter::ProcessTxPower(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessUdp(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessUdp(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error;
-    error = mUdp.Process(aArgsLength, aArgs);
-    OutputResult(error);
+    return mUdp.Process(aArgsLength, aArgs);
 }
 
-void Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -3938,43 +3802,48 @@ void Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
-void Interpreter::ProcessVersion(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessVersion(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
+    otError error = OT_ERROR_NONE;
 
-    const char *version = otGetVersionString();
-    OutputLine("%s", static_cast<const char *>(version));
-    OutputResult(OT_ERROR_NONE);
+    if (aArgsLength == 0)
+    {
+        OutputLine("%s", otGetVersionString());
+        ExitNow();
+    }
+
+    if (strcmp(aArgs[0], "api") == 0)
+    {
+        OutputLine("%d", OPENTHREAD_API_VERSION);
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
+
+exit:
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-
-void Interpreter::ProcessCommissioner(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessCommissioner(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error;
-    error = mCommissioner.Process(aArgsLength, aArgs);
-    OutputResult(error);
+    return mCommissioner.Process(aArgsLength, aArgs);
 }
-
 #endif
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
-
-void Interpreter::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error;
-    error = mJoiner.Process(aArgsLength, aArgs);
-    OutputResult(error);
+    return mJoiner.Process(aArgsLength, aArgs);
 }
-
 #endif
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessJoinerPort(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessJoinerPort(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -3990,12 +3859,12 @@ void Interpreter::ProcessJoinerPort(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-void Interpreter::ProcessMacFilter(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessMacFilter(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -4019,7 +3888,7 @@ void Interpreter::ProcessMacFilter(uint8_t aArgsLength, char *aArgs[])
         }
     }
 
-    OutputResult(error);
+    return error;
 }
 
 void Interpreter::PrintMacFilter(void)
@@ -4284,7 +4153,7 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
-void Interpreter::ProcessMac(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessMac(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -4300,7 +4169,7 @@ void Interpreter::ProcessMac(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    OutputResult(error);
+    return error;
 }
 
 otError Interpreter::ProcessMacRetries(uint8_t aArgsLength, char *aArgs[])
@@ -4353,7 +4222,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-void Interpreter::ProcessDiag(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessDiag(uint8_t aArgsLength, char *aArgs[])
 {
     otError error;
     char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
@@ -4364,7 +4233,8 @@ void Interpreter::ProcessDiag(uint8_t aArgsLength, char *aArgs[])
 
     error = otDiagProcessCmd(mInstance, aArgsLength, aArgs, output, sizeof(output) - 1);
     Output(output, static_cast<uint16_t>(strlen(output)));
-    OutputResult(error);
+
+    return error;
 }
 #endif
 
@@ -4421,7 +4291,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength)
 
     if (command != nullptr)
     {
-        (this->*command->mCommand)(aArgsLength - 1, &aArgs[1]);
+        OutputResult((this->*command->mCommand)(aArgsLength - 1, &aArgs[1]));
         ExitNow();
     }
 
@@ -4442,7 +4312,7 @@ exit:
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-void Interpreter::ProcessNetworkDiagnostic(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessNetworkDiagnostic(uint8_t aArgsLength, char *aArgs[])
 {
     otError             error = OT_ERROR_NONE;
     struct otIp6Address address;
@@ -4467,23 +4337,19 @@ void Interpreter::ProcessNetworkDiagnostic(uint8_t aArgsLength, char *aArgs[])
     if (strcmp(aArgs[0], "get") == 0)
     {
         IgnoreError(otThreadSendDiagnosticGet(mInstance, &address, tlvTypes, count));
-        ExitNow();
+        ExitNow(error = OT_ERROR_PENDING);
     }
     else if (strcmp(aArgs[0], "reset") == 0)
     {
         IgnoreError(otThreadSendDiagnosticReset(mInstance, &address, tlvTypes, count));
-        OutputResult(OT_ERROR_NONE);
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+        error = OT_ERROR_INVALID_COMMAND;
     }
 
 exit:
-    if (error != OT_ERROR_NONE)
-    {
-        OutputResult(error);
-    }
+    return error;
 }
 
 void Interpreter::HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext)

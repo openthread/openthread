@@ -36,6 +36,7 @@
 #include "common/crc16.hpp"
 #include "common/debug.hpp"
 #include "common/locator-getters.hpp"
+#include "common/logging.hpp"
 #include "crypto/pbkdf2_cmac.h"
 #include "crypto/sha256.hpp"
 #include "mac/mac_types.hpp"
@@ -349,6 +350,16 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_FTD
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MESHCOP == 1)
+void LogError(const char *aActionText, otError aError)
+{
+    if (aError != OT_ERROR_NONE)
+    {
+        otLogWarnMeshCoP("Failed to %s: %s", aActionText, otThreadErrorToString(aError));
+    }
+}
+#endif
 
 } // namespace MeshCoP
 } // namespace ot

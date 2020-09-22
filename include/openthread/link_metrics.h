@@ -54,18 +54,6 @@ extern "C" {
  *
  */
 
-/**
- * This enumeration defines Link Metrics ID.
- *
- */
-typedef enum otLinkMetricsId
-{
-    OT_LINK_METRICS_PDU_COUNT = 0, ///< Layer 2 PDUs Received
-    OT_LINK_METRICS_LQI       = 1, ///< Layer 2 LQI
-    OT_LINK_METRICS_MARGIN    = 2, ///< Link Margin - RSSI margin above noise floor
-    OT_LINK_METRICS_RSSI      = 3, ///< RSSI
-} otLinkMetricsId;
-
 /*
  * This structure represents what metrics are specified to query.
  *

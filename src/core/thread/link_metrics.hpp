@@ -126,10 +126,12 @@ private:
     {
         kMaxTypeIdFlags = 4,
 
-        kTypeIdFlagPdu        = 0x40, ///< Type ID Flag for PDU count.
-        kTypeIdFlagLqi        = 0x09, ///< Type ID Flag for LQI.
-        kTypeIdFlagLinkMargin = 0x0a, ///< Type ID Flag for Link Margin.
-        kTypeIdFlagRssi       = 0x0b, ///< Type ID Flag for RSSI.
+        kTypeIdFlagPdu =
+            0x40, ///< 0x0_1_000_000 -> 0x40 ==> L bit set, type = 0 (count/summation), metric-enum = 0 (PDU rxed)
+        kTypeIdFlagLqi = 0x09, ///< 0x0_0_001_001 -> 0x00 ==> L bit not set, type = 1 (exp ave), metric-enum = 1 (LQI)
+        kTypeIdFlagLinkMargin =
+            0x0a, ///< 0x0_0_001_010 -> 0x00 ==> L bit not set, type = 1 (exp ave), metric-enum = 2 (Link Margin)
+        kTypeIdFlagRssi = 0x0b, ///< 0x0_0_001_011 -> 0x00 ==> L bit not set, type = 1 (exp ave), metric-enum = 3 (RSSI)
     };
 
     otLinkMetricsReportCallback mLinkMetricsReportCallback;
@@ -140,12 +142,11 @@ private:
                                  const LinkMetricsTypeIdFlags *aTypeIdFlags,
                                  uint8_t                       aTypeIdFlagsCount);
 
-    otError AppendSingleProbeLinkMetricsReport(Message &                     aMessage,
-                                               uint8_t &                     aLength,
-                                               const LinkMetricsTypeIdFlags *aTypeIdFlags,
-                                               uint8_t                       aTypeIdFlagsCount,
-                                               const int8_t                  aNoiseFloor,
-                                               const Message &               aRequestMessage);
+    otError AppendSingleProbeLinkMetricsReport(Message &            aMessage,
+                                               uint8_t &            aLength,
+                                               const otLinkMetrics &aLinkMetrics,
+                                               const int8_t         aNoiseFloor,
+                                               const Message &      aRequestMessage);
 
     uint8_t GetTypeIdFlagsFromOtLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
                                                  const otLinkMetrics &   aLinkMetricsFlags);
