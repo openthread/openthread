@@ -244,6 +244,30 @@ public:
     otError SetCcaEnergyDetectThreshold(int8_t aThreshold);
 
     /**
+     * This method gets the FEM's Rx LNA gain in dBm.
+     *
+     * @param[out]  aGain    The FEM's Rx LNA gain in dBm.
+     *
+     * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     *
+     */
+    otError GetFemLnaGain(int8_t &aGain);
+
+    /**
+     * This method sets the FEM's Rx LNA gain in dBm.
+     *
+     * @param[in]   aGain     The FEM's Rx LNA gain in dBm.
+     *
+     * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     *
+     */
+    otError SetFemLnaGain(int8_t aGain);
+
+    /**
      * This method returns the radio sw version string.
      *
      * @returns A pointer to the radio version string.

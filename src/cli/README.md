@@ -47,6 +47,7 @@ Done
 - [extaddr](#extaddr)
 - [extpanid](#extpanid)
 - [factoryreset](#factoryreset)
+- [femparam](#femparam)
 - [ifconfig](#ifconfig)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
@@ -324,7 +325,7 @@ Done
 
 ### ccathreshold
 
-Get the CCA threshold in dBm.
+Get the CCA threshold in dBm measured at antenna connector per IEEE 802.15.4 - 2015 section 10.1.4.
 
 ```bash
 > ccathreshold
@@ -334,7 +335,7 @@ Done
 
 ### ccathreshold \<ccathreshold\>
 
-Set the CCA threshold.
+Set the CCA threshold measured at antenna connector per IEEE 802.15.4 - 2015 section 10.1.4.
 
 ```bash
 > ccathreshold -62
@@ -805,6 +806,27 @@ Delete all stored settings, and signal a platform reset.
 
 ```bash
 > factoryreset
+```
+
+### femparam
+
+Get the external FEM parameters.
+
+```bash
+> femparam
+LNA gain 11 dBm
+Done
+```
+
+### femparam \<LNA gain\>
+
+Set the external FEM parameters.
+
+- LNA gain: The external FEM Rx LNA gain in dBm.
+
+```bash
+> femparam 8
+Done
 ```
 
 ### ifconfig
@@ -1848,7 +1870,7 @@ Done
 
 ### txpower
 
-Get the transmit power in dBm.
+Get the transmit power in dBm measured at antenna connector per IEEE 802.15.4 - 2015 section 10.1.4.
 
 ```bash
 > txpower
@@ -1858,7 +1880,7 @@ Done
 
 ### txpower \<txpower\>
 
-Set the transmit power.
+Set the transmit power measured at antenna connector per IEEE 802.15.4 - 2015 section 10.1.4.
 
 ```bash
 > txpower -10

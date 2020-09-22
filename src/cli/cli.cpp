@@ -1560,6 +1560,29 @@ otError Interpreter::ProcessFactoryReset(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
+otError Interpreter::ProcessFemParam(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        int8_t lna_gain;
+
+        SuccessOrExit(error = otPlatRadioGetFemLnaGain(mInstance, &lna_gain));
+        OutputLine("LNA gain %d dBm", lna_gain);
+    }
+    else
+    {
+        long lna_gain;
+
+        SuccessOrExit(error = ParseLong(aArgs[0], lna_gain));
+        SuccessOrExit(error = otPlatRadioSetFemLnaGain(mInstance, static_cast<int8_t>(lna_gain)));
+    }
+
+exit:
+    return error;
+}
+
 otError Interpreter::ProcessIfconfig(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
