@@ -740,14 +740,17 @@ otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    int8_t threshold;
+    int8_t  threshold;
+    otError error = OT_ERROR_NONE;
 
-    otEXPECT(otPlatRadioGetCcaEnergyDetectThreshold(aInstance, &threshold) == OT_ERROR_NONE);
-    otEXPECT(otPlatRadioSetCcaEnergyDetectThreshold(aInstance, threshold) == OT_ERROR_NONE);
+    error = otPlatRadioGetCcaEnergyDetectThreshold(aInstance, &threshold);
+    otEXPECT(error == OT_ERROR_NONE && (threshold + sLnaGain) < NRF528XX_MIN_CCA_ED_THRESHOLD);
+
     sLnaGain = aGain;
+    error    = otPlatRadioSetCcaEnergyDetectThreshold(aInstance, threshold);
 
 exit:
-    return OT_ERROR_NONE;
+    return error;
 }
 
 void nrf5RadioProcess(otInstance *aInstance)
