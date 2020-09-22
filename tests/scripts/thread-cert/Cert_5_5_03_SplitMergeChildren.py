@@ -45,6 +45,8 @@ MTDS = [ED2, ED3]
 
 
 class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
+    SUPPORT_NCP = False
+
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
