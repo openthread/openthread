@@ -64,7 +64,6 @@ class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
             'name': 'ROUTER_2',
             'mode': 'rdn',
             'panid': 0xface,
-            'partition_id': 0xffffffff,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ED3]
         },
@@ -99,24 +98,26 @@ class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
+        self.nodes[ROUTER2].start()
+        self.simulator.go(5)
+        self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
+
         self.nodes[ED2].start()
+        self.simulator.go(5)
+        self.assertEqual(self.nodes[ED2].get_state(), 'child')
+
+        self.nodes[ED3].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED2].get_state(), 'child')
 
         self.nodes[LEADER].reset()
         self._setUpLeader()
+        self.nodes[ROUTER2].set_partition_id(0xffffffff)
 
         self.simulator.go(140)
 
-        self.nodes[ROUTER2].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[ROUTER2].get_state(), 'leader')
-
-        self.nodes[ED3].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[ED3].get_state(), 'child')
-
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'leader')
+        self.assertEqual(self.nodes[ROUTER2].get_state(), 'leader')
 
         self.nodes[LEADER].start()
         self.simulator.go(5)
