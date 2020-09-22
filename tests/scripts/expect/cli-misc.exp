@@ -53,12 +53,6 @@ send "ccathreshold\n"
 expect -- "-62 dBm"
 expect "Done"
 
-send "femparam 11\n"
-expect "Done"
-send "femparam\n"
-expect -- "LNA gain 11 dBm"
-expect "Done"
-
 send "parent\n"
 expect "Done"
 
@@ -70,6 +64,12 @@ expect "Done"
 send "delaytimermin 1 2\n"
 send "counters mac 1\n"
 expect "Error 7: InvalidArgs"
+
+send "femparam 11\n"
+expect "Done"
+send "femparam\n"
+expect -- "LNA gain 11 dBm"
+expect "Done"
 
 send "ifconfig down\n"
 expect "Done"
