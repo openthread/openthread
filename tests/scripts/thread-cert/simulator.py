@@ -137,7 +137,7 @@ class VirtualTime(BaseSimulator):
     EVENT_DATA = 5
 
     BASE_PORT = 9000
-    MAX_NODES = 34
+    MAX_NODES = 33
     MAX_MESSAGE = 1024
     END_OF_TIME = float('inf')
     PORT_OFFSET = int(os.getenv('PORT_OFFSET', '0'))
@@ -152,7 +152,7 @@ class VirtualTime(BaseSimulator):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
         ip = '127.0.0.1'
-        self.port = self.BASE_PORT + (self.PORT_OFFSET * self.MAX_NODES)
+        self.port = self.BASE_PORT + (self.PORT_OFFSET * (self.MAX_NODES + 1))
         self.sock.bind((ip, self.port))
 
         self.devices = {}
