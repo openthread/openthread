@@ -122,7 +122,8 @@ class BBR_5_11_01(thread_cert.TestCase):
                                               backbone=True))
 
         # Step 23: Host sends ping packet to destination Dg
-        self.assertFalse(self.nodes[HOST].ping(Dg, backbone=True))  # Must fail since ND Proxying is not implemented yet
+        self.assertFalse(self.nodes[HOST].ping(Dg,
+                                               backbone=True))  # Must fail since ND Proxying is not implemented yet
 
     def verify(self, pv: PacketVerifier):
         pkts = pv.pkts
