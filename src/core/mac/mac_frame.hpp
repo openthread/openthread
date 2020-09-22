@@ -557,7 +557,7 @@ public:
      * @retval TRUE if the Source Address is present, FALSE otherwise.
      *
      */
-    bool IsSrcPanIdPresent(void) const { return IsSrcPanIdPresent(GetFrameControlField()); };
+    bool IsSrcPanIdPresent(void) const { return IsSrcPanIdPresent(GetFrameControlField()); }
 
     /**
      * This method gets the Source PAN Identifier.
