@@ -37,8 +37,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/config.h>
-
 /**
  * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
  *
