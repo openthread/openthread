@@ -988,7 +988,7 @@ otError otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    assert(aInstance != NULL);
+    assert(aInstance != NULL && aGain != NULL);
 
     *aGain = sLnaGain;
 

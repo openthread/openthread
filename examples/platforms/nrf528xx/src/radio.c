@@ -744,7 +744,8 @@ otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
     otError error = OT_ERROR_NONE;
 
     error = otPlatRadioGetCcaEnergyDetectThreshold(aInstance, &threshold);
-    otEXPECT(error == OT_ERROR_NONE && (threshold + aGain) < NRF528XX_MIN_CCA_ED_THRESHOLD);
+    otEXPECT(error == OT_ERROR_NONE);
+    otEXPECT_ACTION((threshold + aGain) >= NRF528XX_MIN_CCA_ED_THRESHOLD, error = OT_ERROR_INVALID_ARGS);
 
     sLnaGain = aGain;
     error    = otPlatRadioSetCcaEnergyDetectThreshold(aInstance, threshold);
