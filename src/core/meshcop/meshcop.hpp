@@ -434,7 +434,7 @@ private:
     uint8_t GetNumBits(void) const { return (mLength * CHAR_BIT); }
 
     uint8_t BitIndex(uint8_t aBit) const { return (mLength - 1 - (aBit / CHAR_BIT)); }
-    uint8_t BitFlag(uint8_t aBit) const { return static_cast<uint8_t>(1U << (aBit % CHAR_BIT)); };
+    uint8_t BitFlag(uint8_t aBit) const { return static_cast<uint8_t>(1U << (aBit % CHAR_BIT)); }
 
     bool GetBit(uint8_t aBit) const { return (m8[BitIndex(aBit)] & BitFlag(aBit)) != 0; }
     void SetBit(uint8_t aBit) { m8[BitIndex(aBit)] |= BitFlag(aBit); }

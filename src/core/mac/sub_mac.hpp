@@ -489,7 +489,7 @@ public:
      * @returns The current MAC frame counter value.
      *
      */
-    uint32_t GetFrameCounter(void) const { return mFrameCounter; };
+    uint32_t GetFrameCounter(void) const { return mFrameCounter; }
 
     /**
      * This method sets the current MAC Frame Counter value.
