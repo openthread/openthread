@@ -47,7 +47,7 @@ Done
 - [extaddr](#extaddr)
 - [extpanid](#extpanid)
 - [factoryreset](#factoryreset)
-- [femparam](#femparam)
+- [fem](#fem)
 - [ifconfig](#ifconfig)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
@@ -808,24 +808,22 @@ Delete all stored settings, and signal a platform reset.
 > factoryreset
 ```
 
-### femparam
+### fem
 
 Get the external FEM parameters.
 
 ```bash
-> femparam
+> fem
 LNA gain 11 dBm
 Done
 ```
 
-### femparam \<LNA gain\>
+### fem lnagain \<LNA gain\>
 
 Set the external FEM parameters.
 
-- LNA gain: The external FEM Rx LNA gain in dBm.
-
 ```bash
-> femparam 8
+> fem lnagain 8
 Done
 ```
 

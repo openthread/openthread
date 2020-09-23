@@ -1560,7 +1560,7 @@ otError Interpreter::ProcessFactoryReset(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Interpreter::ProcessFemParam(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessFem(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -1573,10 +1573,13 @@ otError Interpreter::ProcessFemParam(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        long lna_gain;
+        if (strcmp(aArgs[0], "lnagain") == 0)
+        {
+            long lna_gain;
 
-        SuccessOrExit(error = ParseLong(aArgs[0], lna_gain));
-        SuccessOrExit(error = otPlatRadioSetFemLnaGain(mInstance, static_cast<int8_t>(lna_gain)));
+            SuccessOrExit(error = ParseLong(aArgs[1], lna_gain));
+            SuccessOrExit(error = otPlatRadioSetFemLnaGain(mInstance, static_cast<int8_t>(lna_gain)));
+        }
     }
 
 exit:

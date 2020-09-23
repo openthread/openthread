@@ -346,7 +346,7 @@ private:
     otError ProcessExtAddress(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessExtPanId(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessFactoryReset(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessFemParam(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessFem(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIfconfig(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIpAddr(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIpAddrAdd(uint8_t aArgsLength, char *aArgs[]);
@@ -606,7 +606,7 @@ private:
         {"extaddr", &Interpreter::ProcessExtAddress},
         {"extpanid", &Interpreter::ProcessExtPanId},
         {"factoryreset", &Interpreter::ProcessFactoryReset},
-        {"femparam", &Interpreter::ProcessFemParam},
+        {"fem", &Interpreter::ProcessFem},
         {"help", &Interpreter::ProcessHelp},
         {"ifconfig", &Interpreter::ProcessIfconfig},
         {"ipaddr", &Interpreter::ProcessIpAddr},
