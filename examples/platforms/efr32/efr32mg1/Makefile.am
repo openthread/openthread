@@ -115,6 +115,7 @@ PLATFORM_COMMON_SOURCES                                                       = 
     src/misc.c                                                                  \
     src/openthread-core-efr32-config.h                                          \
     src/openthread-core-efr32-config-check.h                                    \
+    src/platform-band.h                                                         \
     src/platform-efr32.h                                                        \
     src/radio.c                                                                 \
     src/rail_config.h                                                           \
@@ -124,14 +125,13 @@ PLATFORM_COMMON_SOURCES                                                       = 
     $(NULL)
 
 PLATFORM_SOURCES                                                              = \
-    efr32mg1/platform-band.h                                                    \
     efr32mg1/sl_device_init_clocks.c                                            \
     efr32mg1/uart-init.h                                                        \
     $(NULL)
 
 noinst_HEADERS                                                                = \
+    src/platform-band.h                                                         \
     src/platform-efr32.h                                                        \
-    efr32mg1/platform-band.h                                                    \
     $(NULL)
 
 libopenthread_efr32mg1_a_SOURCES                                              = \
