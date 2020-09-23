@@ -459,7 +459,7 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
 /**
  * Get the external FEM's Rx LNA gain in dBm.
  *
- * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in]  aInstance  The OpenThread instance structure.
  * @param[out] aGain     The external FEM's Rx LNA gain in dBm.
  *
  * @retval OT_ERROR_NONE             Successfully retrieved the external FEM's LNA gain.
