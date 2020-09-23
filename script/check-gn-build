@@ -46,7 +46,7 @@ main()
     # Check GN build for OT1.2
     rm gn-out -r || true
     mkdir gn-out
-    echo "openthread_config_thread_version = \"1.2\"" > gn-out/args.gn
+    echo 'openthread_config_thread_version = "1.2"' >gn-out/args.gn
     gn gen --check gn-out
     gn args gn-out --list
     ninja -C gn-out
