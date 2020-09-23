@@ -27,8 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import copy
 import unittest
 
+import config
 import thread_cert
 from pktverify.consts import MLE_CHILD_ID_RESPONSE, MGMT_ED_SCAN, MGMT_ED_REPORT, NM_CHANNEL_MASK_TLV, NM_ENERGY_LIST_TLV
 from pktverify.packet_verifier import PacketVerifier
@@ -36,10 +38,10 @@ from pktverify.packet_verifier import PacketVerifier
 COMMISSIONER = 1
 LEADER = 2
 ROUTER1 = 3
-DUT = 4
+ED = 4
 
 
-class Cert_9_2_13_EnergyScan(thread_cert.TestCase):
+class Cert_9_2_13_EnergyScan_Base(thread_cert.TestCase):
     SUPPORT_NCP = False
 
     TOPOLOGY = {
@@ -61,10 +63,9 @@ class Cert_9_2_13_EnergyScan(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'allowlist': [LEADER, DUT]
+            'allowlist': [LEADER, ED]
         },
-        DUT: {
-            'name': 'DUT',
+        ED: {
             'panid': 0xface,
             'allowlist': [ROUTER1]
         },
@@ -85,29 +86,22 @@ class Cert_9_2_13_EnergyScan(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
-        self.nodes[DUT].start()
+        self.nodes[ED].start()
         self.simulator.go(5)
-        self.assertEqual(self.nodes[DUT].get_state(), 'child')
+        self.assertEqual(self.nodes[ED].get_state(), 'child')
         self.collect_rlocs()
 
-        ipaddrs = self.nodes[ROUTER1].get_addrs()
-        for ipaddr in ipaddrs:
-            if ipaddr[0:4] != 'fe80':
-                break
+        if self.TOPOLOGY[ED]['name'] == 'DUT':
+            ipaddrs = self.nodes[ED].get_addrs()
+        else:
+            ipaddrs = self.nodes[ROUTER1].get_addrs()
 
-        self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
-        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3E8, ipaddr)
-
-        ipaddrs = self.nodes[DUT].get_addrs()
         for ipaddr in ipaddrs:
             if ipaddr[0:4] != 'fe80':
                 break
 
         self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3E8, ipaddr)
-        self.simulator.go(5)
-
         self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3E8, 'ff33:0040:fd00:db8:0:0:0:1')
-        self.simulator.go(5)
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
 
@@ -117,23 +111,53 @@ class Cert_9_2_13_EnergyScan(thread_cert.TestCase):
 
         DUT = pv.vars['DUT']
         DUT_RLOC = pv.vars['DUT_RLOC']
-        COMMISSIONER = pv.vars['COMMISSIONER']
         COMMISSIONER_RLOC = pv.vars['COMMISSIONER_RLOC']
-        _ed_pkts = pkts.filter_wpan_src64(DUT)
+        _pkts = pkts.filter_wpan_src64(DUT)
 
-        # Step 3: ED MUST send MGMT_ED_REPORT.ans to the Commissioner and report energy measurements
-        _ed_pkts.filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_request(MGMT_ED_REPORT).must_next().must_verify(
+        # Step 3: The DUT MUST send MGMT_ED_REPORT.ans to the Commissioner and report energy measurements
+        _pkts.filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_request(MGMT_ED_REPORT).must_next().must_verify(
             lambda p: {NM_CHANNEL_MASK_TLV, NM_ENERGY_LIST_TLV} == set(p.thread_meshcop.tlv.type) and p.thread_meshcop.
             tlv.chan_mask_mask == 0x0000a000 and len(p.thread_meshcop.tlv.energy_list) == 2)
 
-        # Step 5: ED MUST send MGMT_ED_REPORT.ans to the Commissioner and report energy measurements
-        _ed_pkts.filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_request(MGMT_ED_REPORT).must_next().must_verify(
+        # Step 5: The DUT MUST send MGMT_ED_REPORT.ans to the Commissioner and report energy measurements
+        _pkts.filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_request(MGMT_ED_REPORT).must_next().must_verify(
             lambda p: {NM_CHANNEL_MASK_TLV, NM_ENERGY_LIST_TLV} == set(p.thread_meshcop.tlv.type) and p.thread_meshcop.
             tlv.chan_mask_mask == 0x0000a000 and len(p.thread_meshcop.tlv.energy_list) == 2)
 
         # Step 6: The DUT MUST respond with ICMPv6 Echo Reply
-        _ed_pkts.filter_ping_reply().filter_ipv6_src_dst(DUT_RLOC, COMMISSIONER_RLOC).must_next()
+        _pkts.filter_ping_reply().filter_ipv6_src_dst(DUT_RLOC, COMMISSIONER_RLOC).must_next()
 
+
+class Cert_9_2_13_EnergyScan_FED(Cert_9_2_13_EnergyScan_Base):
+    TOPOLOGY = copy.deepcopy(Cert_9_2_13_EnergyScan_Base.TOPOLOGY)
+    TOPOLOGY[ED]['name'] = 'DUT'
+    TOPOLOGY[ED]['router_upgrade_threshold'] = 0
+
+
+class Cert_9_2_13_EnergyScan_MED(Cert_9_2_13_EnergyScan_Base):
+    TOPOLOGY = copy.deepcopy(Cert_9_2_13_EnergyScan_Base.TOPOLOGY)
+    TOPOLOGY[ED]['name'] = 'DUT'
+    TOPOLOGY[ED]['mode'] = 'rsn'
+    TOPOLOGY[ED]['is_mtd'] = True
+
+
+class Cert_9_2_13_EnergyScan_SED(Cert_9_2_13_EnergyScan_Base):
+    TOPOLOGY = copy.deepcopy(Cert_9_2_13_EnergyScan_Base.TOPOLOGY)
+    TOPOLOGY[ED]['name'] = 'DUT'
+    TOPOLOGY[ED]['mode'] = 's'
+    TOPOLOGY[ED]['is_mtd'] = True
+    TOPOLOGY[ED]['timeout'] = config.DEFAULT_CHILD_TIMEOUT
+
+
+class Cert_9_2_13_EnergyScan_ROUTER(Cert_9_2_13_EnergyScan_Base):
+    TOPOLOGY = copy.deepcopy(Cert_9_2_13_EnergyScan_Base.TOPOLOGY)
+    TOPOLOGY[ROUTER1]['name'] = 'DUT'
+    TOPOLOGY[ED]['name'] = 'ED'
+    TOPOLOGY[ED]['mode'] = 'rsn'
+    TOPOLOGY[ED]['is_mtd'] = True
+
+
+del (Cert_9_2_13_EnergyScan_Base)
 
 if __name__ == '__main__':
     unittest.main()
