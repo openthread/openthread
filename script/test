@@ -471,8 +471,7 @@ main()
                 ;;
             *)
                 echo
-                echo -e "${COLOR_FAIL}Unknown command${COLOR_NONE}: '$1'"
-                exit 1
+                echo -e "${COLOR_FAIL}Warning:${COLOR_NONE} Ignoring: '$1'"
                 ;;
         esac
         shift
