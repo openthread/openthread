@@ -128,6 +128,7 @@ class Packet(object):
 
     def must_verify(self, func: Union[str, Callable], **vars):
         if not self.verify(func, **vars):
+            self.debug_fields()
             raise errors.VerifyFailed(self)
 
     def must_not_verify(self, func: Union[str, Callable], **vars):

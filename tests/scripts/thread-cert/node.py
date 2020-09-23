@@ -1956,10 +1956,13 @@ class LinuxHost():
 
         assert False, output
 
-    def ping_ether(self, ipaddr, num_responses=1, size=None, timeout=5) -> int:
+    def ping_ether(self, ipaddr, num_responses=1, size=None, timeout=5, ttl=None) -> int:
         cmd = f'ping -6 {ipaddr} -I eth0 -c {num_responses} -W {timeout}'
         if size is not None:
             cmd += f' -s {size}'
+
+        if ttl is not None:
+            cmd += f' -t {ttl}'
 
         resp_count = 0
 
@@ -1990,6 +1993,7 @@ class LinuxHost():
 class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
     is_otbr = True
     is_bbr = True  # OTBR is also BBR
+    node_type = 'otbr-docker'
 
     def __repr__(self):
         return f'Otbr<{self.nodeid}>'
