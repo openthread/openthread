@@ -116,7 +116,9 @@ EXTRA_DIST                                                         = \
     Cert_9_2_10_PendingPartition.py                                  \
     Cert_9_2_11_MasterKey.py                                         \
     Cert_9_2_12_Announce.py                                          \
-    Cert_9_2_13_EnergyScan.py                                        \
+    Cert_9_2_13_EnergyScan_MED.py                                        \
+    Cert_9_2_13_EnergyScan_SED.py                                        \
+    Cert_9_2_13_EnergyScan_FED.py                                        \
     Cert_9_2_14_PanIdQuery.py                                        \
     Cert_9_2_15_PendingPartition.py                                  \
     Cert_9_2_16_ActivePendingPartition.py                            \
@@ -294,7 +296,9 @@ check_SCRIPTS                                                      = \
     Cert_9_2_10_PendingPartition.py                                  \
     Cert_9_2_11_MasterKey.py                                         \
     Cert_9_2_12_Announce.py                                          \
-    Cert_9_2_13_EnergyScan.py                                        \
+    Cert_9_2_13_EnergyScan_MED.py                                        \
+    Cert_9_2_13_EnergyScan_SED.py                                        \
+    Cert_9_2_13_EnergyScan_FED.py                                        \
     Cert_9_2_14_PanIdQuery.py                                        \
     Cert_9_2_15_PendingPartition.py                                  \
     Cert_9_2_16_ActivePendingPartition.py                            \
