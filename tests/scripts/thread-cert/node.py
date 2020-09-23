@@ -618,6 +618,11 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def set_outbound_link_quality(self, lqi):
+        cmd = 'macfilter rss add-lqi * %s' % (lqi)
+        self.send_command(cmd)
+        self._expect('Done')
+
     def remove_allowlist(self, addr):
         cmd = 'macfilter addr remove %s' % addr
         self.send_command(cmd)
