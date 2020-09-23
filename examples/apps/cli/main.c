@@ -27,7 +27,6 @@
  */
 
 #include <assert.h>
-#include <cli/cli_config.h>
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 
@@ -37,6 +36,7 @@
 #include <openthread/platform/logging.h>
 
 #include "openthread-system.h"
+#include "cli/cli_config.h"
 
 #if OPENTHREAD_EXAMPLES_SIMULATION
 #include <setjmp.h>
