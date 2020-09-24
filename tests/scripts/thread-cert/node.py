@@ -956,6 +956,14 @@ class NodeImpl:
         self.send_command('csl timeout %d' % csl_timeout)
         self._expect('Done')
 
+    def send_mac_emptydata(self):
+        self.send_command('mac send emptydata')
+        self._expect('Done')
+
+    def send_mac_datarequest(self):
+        self.send_command('mac send datarequest')
+        self._expect('Done')
+
     def set_router_upgrade_threshold(self, threshold):
         cmd = 'routerupgradethreshold %d' % threshold
         self.send_command(cmd)
