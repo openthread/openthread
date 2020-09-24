@@ -47,6 +47,7 @@ EXTRA_DIST                                      = \
     $(srcdir)/images/ot-contrib-ti.png            \
     $(srcdir)/images/ot-contrib-zephyr.png        \
     $(srcdir)/ot_api_doc.h                        \
+    $(srcdir)/STYLE_GUIDE.md                      \
     $(NULL)
 
 #
