@@ -125,7 +125,7 @@ class PacketVerifier(object):
                     key = name + '_DUA'
                 elif addr.is_backbone_gua:
                     key = name + '_BGUA'
-                elif addr.is_link_local and (name + '_BUA') in self._vars:
+                elif addr.is_link_local and (name + '_BGUA') in self._vars:
                     # FIXME: assume the link-local address after Backbone GUA is the Backbone Link Local address
                     key = name + '_BLLA'
                 elif addr.is_link_local:

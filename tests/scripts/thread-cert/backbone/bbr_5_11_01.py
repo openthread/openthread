@@ -36,7 +36,7 @@ import thread_cert
 # Topology:
 #    -----------(eth)----------------
 #                  |     |
-#     Router_1----BBR---HOST
+#     Router_1----BR_1---HOST
 #        \     /
 #        Router_2
 #
