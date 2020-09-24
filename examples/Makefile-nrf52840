@@ -43,7 +43,14 @@ GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.
 
 # Disable built-in mbedTLS by default allowing for nrf_security implementation with hardware acceleration.
 # When set to 0 built-in, software implementation would be used.
+ifeq ($(THREAD_VERSION), 1.2)
+ifeq ($(DISABLE_BUILTIN_MBEDTLS), 1)
+$(error for THREAD_VERSION>=1.2, cannot use CC310, please use DISABLE_BUILTIN_MBEDTLS=0)
+endif
+DISABLE_BUILTIN_MBEDTLS        = 0
+else
 DISABLE_BUILTIN_MBEDTLS        ?= 1
+endif
 
 ifeq ($(DISABLE_CC310), 1)
 $(error DISABLE_CC310=1 is deprecated, please use DISABLE_BUILTIN_MBEDTLS=0)
