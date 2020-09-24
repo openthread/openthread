@@ -2,8 +2,8 @@
 
 OpenThread documentation lives in two locations:
 
-*   **GitHub** — All guides and tutorials across the complete [OpenThread organization](https://github/openthread).
-*   **openthread.io** - OpenThread news and features, educational material, API reference, and select guides and tutorials found on GitHub.
+- **GitHub** — All guides and tutorials across the complete [OpenThread organization](https://github/openthread).
+- **openthread.io** - OpenThread news and features, educational material, API reference, and select guides and tutorials found on GitHub.
 
 All documentation contributions are done on GitHub and mirrored on [openthread.io](https://openthread.io), and will be reviewed for clarity, accuracy, spelling, and grammar prior to acceptance.
 
@@ -57,6 +57,7 @@ $ git clone https://github.com/openthread/openthread.git
 ### OpenThread CLI prompt
 
 Use the OpenThread CLI prompt for all CLI-related commands. The prompt is `>`:
+
 ```
 > ifconfig up
 ```
@@ -66,6 +67,7 @@ Use the OpenThread CLI prompt for all CLI-related commands. The prompt is `>`:
 If you need use a **full terminal prompt** with username and hostname, use the format of `root@{hostname}{special-characters}#`.
 
 For example, when logged into a Docker container, you might have a prompt like this:
+
 ```
 root@c0f3912a74ff:/#
 ```
@@ -86,7 +88,7 @@ code in backticks
 
 When writing procedures that feature code blocks, indent the content for the code blocks:
 
-1.	Step one:
+1.  Step one:
 
         $ git clone https://github.com/openthread/openthread.git
         $ cd openthread
@@ -95,8 +97,7 @@ When writing procedures that feature code blocks, indent the content for the cod
 
         $ ./configure
 
-For clarity in instructions, avoid putting additional step commands after a code sample
-within a step item. Instead rewrite the instruction so this is not necessary.
+For clarity in instructions, avoid putting additional step commands after a code sample within a step item. Instead rewrite the instruction so this is not necessary.
 
 For example, avoid this:
 
@@ -110,7 +111,7 @@ Instead, do this:
 
 1.  Step three, do this now, and you will see that thing:
 
-		$ ./configure
+        $ ./configure
 
 ### Inline code
 
@@ -121,7 +122,7 @@ Use backticks for `inline code`. This includes file paths and file or binary nam
 In code examples, denote a replaceable variable with curly braces:
 
 ```
-make -f examples/Makefile-{platform}     
+make -f examples/Makefile-{platform}
 ```
 
 ### Step header numbers
@@ -136,9 +137,9 @@ If you want your headers to render with nice-looking step numbers on openthread.
 
 Use a blockquote `>` with one of these callout types:
 
-* 	Note
-*   Caution
-*   Warning
+-     Note
+- Caution
+- Warning
 
 For example:
 
