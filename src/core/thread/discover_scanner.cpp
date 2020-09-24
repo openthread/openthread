@@ -157,12 +157,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     Mle::Log(Mle::kMessageSend, Mle::kTypeDiscoveryRequest, destination);
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 

@@ -507,11 +507,7 @@ exit:
         UpdateCheckDelay(Mle::kNoBufDelay);
     }
 
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     otLogInfoDua("Sent DUA.req for DUA %s: %s", dua.ToString().AsCString(), otThreadErrorToString(error));
 }
 
@@ -672,16 +668,14 @@ void DuaManager::SendAddressNotification(Ip6::Address &             aAddress,
     otLogInfoDua("Sent ADDR_NTF for child %04x DUA %s", aChild.GetRloc16(), aAddress.ToString().AsCString());
 
 exit:
+
     if (error != OT_ERROR_NONE)
     {
+        FreeMessage(message);
+
         // TODO: (DUA) (P4) may enhance to  guarantee the delivery of DUA.ntf
         otLogWarnDua("Sent ADDR_NTF for child %04x DUA %s Error %s", aChild.GetRloc16(),
                      aAddress.ToString().AsCString(), otThreadErrorToString(error));
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
     }
 }
 

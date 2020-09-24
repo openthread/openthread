@@ -197,14 +197,8 @@ void EnergyScanServer::SendReport(void)
     otLogInfoMeshCoP("sent scan results");
 
 exit:
-
-    if ((error != OT_ERROR_NONE) && (message != nullptr))
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     MeshCoP::LogError("send scan results", error);
-
     mActive = false;
 }
 

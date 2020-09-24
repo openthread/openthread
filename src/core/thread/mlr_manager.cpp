@@ -439,12 +439,7 @@ otError MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address 
 
 exit:
     otLogInfoMlr("Send MLR.req: %s, addressNum=%d", otThreadErrorToString(error), aAddressNum);
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 

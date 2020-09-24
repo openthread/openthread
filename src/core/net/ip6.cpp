@@ -669,11 +669,7 @@ exit:
         otLogWarnIp6("No buffer for Ip6 fragmentation");
     }
 
-    if (error != OT_ERROR_NONE && fragment != nullptr)
-    {
-        fragment->Free();
-    }
-
+    FreeMessageOnError(fragment, error);
     return error;
 }
 
