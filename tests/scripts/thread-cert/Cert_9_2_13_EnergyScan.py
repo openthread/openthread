@@ -100,12 +100,12 @@ class Cert_9_2_13_EnergyScan_Base(thread_cert.TestCase):
             if ipaddr[0:4] != 'fe80':
                 break
 
-        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3E8, ipaddr)
-        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3E8, 'ff33:0040:fd00:db8:0:0:0:1')
+        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0xc8, ipaddr)
+        self.simulator.go(3)
+        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0xc8, 'ff33:0040:fd00:db8:0:0:0:1')
         self.simulator.go(3)
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
-        self.simulator.go(3)
 
     def verify(self, pv):
         pkts = pv.pkts
@@ -145,6 +145,14 @@ class Cert_9_2_13_EnergyScan_MED(Cert_9_2_13_EnergyScan_Base):
     TOPOLOGY[ED]['is_mtd'] = True
 
 
+class Cert_9_2_13_EnergyScan_ROUTER(Cert_9_2_13_EnergyScan_Base):
+    TOPOLOGY = copy.deepcopy(Cert_9_2_13_EnergyScan_Base.TOPOLOGY)
+    TOPOLOGY[ROUTER1]['name'] = 'DUT'
+    TOPOLOGY[ED]['name'] = 'ED'
+    TOPOLOGY[ED]['mode'] = 'rsn'
+    TOPOLOGY[ED]['is_mtd'] = True
+
+
 class Cert_9_2_13_EnergyScan_SED(Cert_9_2_13_EnergyScan_Base):
     TOPOLOGY = copy.deepcopy(Cert_9_2_13_EnergyScan_Base.TOPOLOGY)
     TOPOLOGY[ROUTER1]['name'] = 'ROUTER'
@@ -152,14 +160,6 @@ class Cert_9_2_13_EnergyScan_SED(Cert_9_2_13_EnergyScan_Base):
     TOPOLOGY[ED]['mode'] = 's'
     TOPOLOGY[ED]['is_mtd'] = True
     TOPOLOGY[ED]['timeout'] = config.DEFAULT_CHILD_TIMEOUT
-
-
-class Cert_9_2_13_EnergyScan_ROUTER(Cert_9_2_13_EnergyScan_Base):
-    TOPOLOGY = copy.deepcopy(Cert_9_2_13_EnergyScan_Base.TOPOLOGY)
-    TOPOLOGY[ROUTER1]['name'] = 'DUT'
-    TOPOLOGY[ED]['name'] = 'ED'
-    TOPOLOGY[ED]['mode'] = 'rsn'
-    TOPOLOGY[ED]['is_mtd'] = True
 
 
 del (Cert_9_2_13_EnergyScan_Base)
