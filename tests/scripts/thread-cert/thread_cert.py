@@ -174,6 +174,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 self.nodes[i].set_router_upgrade_threshold(params['router_upgrade_threshold'])
             if 'router_downgrade_threshold' in params:
                 self.nodes[i].set_router_downgrade_threshold(params['router_downgrade_threshold'])
+            if 'router_eligible' in params:
+                self.nodes[i].set_router_eligible(params['router_eligible'])
 
             if 'timeout' in params:
                 self.nodes[i].set_timeout(params['timeout'])

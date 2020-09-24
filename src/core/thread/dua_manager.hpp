@@ -153,6 +153,12 @@ public:
      *
      */
     void Restore(void);
+
+    /**
+     * This method notifies duplicated Domain Unicast Address.
+     *
+     */
+    void NotifyDuplicateDomainUnicastAddress(void);
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
