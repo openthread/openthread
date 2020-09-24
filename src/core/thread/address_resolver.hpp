@@ -178,7 +178,7 @@ public:
     void RestartAddressQueries(void);
 
     /**
-     * This method sends a Address Notification (ADDR_NTF.ans) message.
+     * This method sends an Address Notification (ADDR_NTF.ans) message.
      *
      * @param[in]  aTarget                  The target address of the ADDR_NTF.ans message.
      * @param[in]  aMeshLocalIid            The ML-IID of the ADDR_NTF.ans message.

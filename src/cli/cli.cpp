@@ -1569,15 +1569,18 @@ otError Interpreter::ProcessFake(uint8_t aArgsLength, char *aArgs[])
 
     if (strcmp(aArgs[0], "/a/an") == 0)
     {
-        otIp6Address destination, target, mlIid;
+        otIp6Address             destination, target;
+        otIp6InterfaceIdentifier mlIid;
 
         VerifyOrExit(aArgsLength == 4, error = OT_ERROR_INVALID_ARGS);
 
         SuccessOrExit(error = otIp6AddressFromString(aArgs[1], &destination));
         SuccessOrExit(error = otIp6AddressFromString(aArgs[2], &target));
-        SuccessOrExit(error = otIp6AddressFromString(aArgs[3], &mlIid));
+        VerifyOrExit(Hex2Bin(aArgs[3], mlIid.mFields.m8, sizeof(otIp6InterfaceIdentifier)) ==
+                         sizeof(otIp6InterfaceIdentifier),
+                     error = OT_ERROR_INVALID_ARGS);
 
-        otThreadSendAddressNotification(mInstance, &destination, &target, &mlIid.mFields.mComponents.mIid);
+        otThreadSendAddressNotification(mInstance, &destination, &target, &mlIid);
     }
 exit:
     return error;
