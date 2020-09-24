@@ -182,6 +182,14 @@ public:
      */
     uint8_t GetRawValue(void) const { return mTypeIdFlags; }
 
+    /**
+     * This method sets the raw value of the entire TypeIdFlags.
+     *
+     * @param[in]  aTypeIdFlags  The value of entire TypeIdFlags.
+     *
+     */
+    void SetRawValue(uint8_t aTypeIdFlags) { mTypeIdFlags = aTypeIdFlags; }
+
 private:
     enum
     {

@@ -145,7 +145,6 @@ private:
     otError AppendSingleProbeLinkMetricsReport(Message &            aMessage,
                                                uint8_t &            aLength,
                                                const otLinkMetrics &aLinkMetrics,
-                                               const int8_t         aNoiseFloor,
                                                const Message &      aRequestMessage);
 
     uint8_t GetTypeIdFlagsFromOtLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,

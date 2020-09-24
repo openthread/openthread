@@ -95,7 +95,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
             break;
 
         case kLinkMetricsQueryOptions:
-            for (uint16_t index = offset + sizeof(tlv); index < offset + sizeof(tlv) + tlv.GetLength();
+            for (uint16_t index = offset + sizeof(tlv); index < offset + tlv.GetSize();
                  index += sizeof(LinkMetricsTypeIdFlags))
             {
                 LinkMetricsTypeIdFlags typeIdFlags;
@@ -138,7 +138,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
             break;
         }
 
-        offset += sizeof(Tlv) + tlv.GetLength();
+        offset += tlv.GetSize();
     }
 
     VerifyOrExit(hasQueryId, error = OT_ERROR_PARSE);
@@ -149,8 +149,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
 
     if (queryId == 0)
     {
-        SuccessOrExit(error = AppendSingleProbeLinkMetricsReport(aMessage, length, linkMetrics,
-                                                                 Get<Mac::Mac>().GetNoiseFloor(), aRequestMessage));
+        SuccessOrExit(error = AppendSingleProbeLinkMetricsReport(aMessage, length, linkMetrics, aRequestMessage));
     }
     else
     {
@@ -161,7 +160,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
     aMessage.Write(startOffset, sizeof(tlv), &tlv);
 
 exit:
-    otLogDebgMle("AppendLinkMetricsReport, error:%d", error);
+    otLogDebgMle("AppendLinkMetricsReport, error:%s", otThreadErrorToString(error));
     return error;
 }
 
@@ -301,7 +300,6 @@ exit:
 otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &            aMessage,
                                                         uint8_t &            aLength,
                                                         const otLinkMetrics &aLinkMetrics,
-                                                        const int8_t         aNoiseFloor,
                                                         const Message &      aRequestMessage)
 {
     otError                 error = OT_ERROR_NONE;
@@ -315,8 +313,8 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &            aMe
         metric.Init();
         metric.SetMetricsTypeId(kTypeIdFlagPdu);
         metric.SetMetricsValue32(aRequestMessage.GetPsduCount());
-        SuccessOrExit(error = aMessage.Append(&metric, sizeof(Tlv) + metric.GetLength()));
-        aLength += sizeof(Tlv) + metric.GetLength();
+        SuccessOrExit(error = aMessage.Append(&metric, metric.GetSize()));
+        aLength += metric.GetSize();
     }
 
     if (aLinkMetrics.mLqi)
@@ -324,18 +322,19 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &            aMe
         metric.Init();
         metric.SetMetricsTypeId(kTypeIdFlagLqi);
         metric.SetMetricsValue8(aRequestMessage.GetAverageLqi()); // IEEE 802.15.4 LQI is in scale 0-255
-        SuccessOrExit(error = aMessage.Append(&metric, sizeof(Tlv) + metric.GetLength()));
-        aLength += sizeof(Tlv) + metric.GetLength();
+        SuccessOrExit(error = aMessage.Append(&metric, metric.GetSize()));
+        aLength += metric.GetSize();
     }
 
     if (aLinkMetrics.mLinkMargin)
     {
         metric.Init();
         metric.SetMetricsTypeId(kTypeIdFlagLinkMargin);
-        metric.SetMetricsValue8(LinkQualityInfo::ConvertRssToLinkMargin(aNoiseFloor, aRequestMessage.GetAverageRss()) *
-                                255 / 130); // Linear scale Link Margin from [0, 130] to [0, 255]
-        SuccessOrExit(error = aMessage.Append(&metric, sizeof(Tlv) + metric.GetLength()));
-        aLength += sizeof(Tlv) + metric.GetLength();
+        metric.SetMetricsValue8(
+            LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), aRequestMessage.GetAverageRss()) *
+            255 / 130); // Linear scale Link Margin from [0, 130] to [0, 255]
+        SuccessOrExit(error = aMessage.Append(&metric, metric.GetSize()));
+        aLength += metric.GetSize();
     }
 
     if (aLinkMetrics.mRssi)
@@ -344,8 +343,8 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &            aMe
         metric.SetMetricsTypeId(kTypeIdFlagRssi);
         metric.SetMetricsValue8((aRequestMessage.GetAverageRss() + 130) * 255 /
                                 130); // Linear scale rss from [-130, 0] to [0, 255]
-        SuccessOrExit(error = aMessage.Append(&metric, sizeof(Tlv) + metric.GetLength()));
-        aLength += sizeof(Tlv) + metric.GetLength();
+        SuccessOrExit(error = aMessage.Append(&metric, metric.GetSize()));
+        aLength += metric.GetSize();
     }
 
 exit:
@@ -356,30 +355,25 @@ uint8_t LinkMetrics::GetTypeIdFlagsFromOtLinkMetricsFlags(LinkMetricsTypeIdFlags
                                                           const otLinkMetrics &   aLinkMetricsFlags)
 {
     uint8_t count = 0;
-    uint8_t typeIdFlagValue;
 
     if (aLinkMetricsFlags.mPduCount)
     {
-        typeIdFlagValue = kTypeIdFlagPdu;
-        memcpy(&aTypeIdFlags[count++], &typeIdFlagValue, sizeof(uint8_t));
+        aTypeIdFlags[count++].SetRawValue(kTypeIdFlagPdu);
     }
 
     if (aLinkMetricsFlags.mLqi)
     {
-        typeIdFlagValue = kTypeIdFlagLqi;
-        memcpy(&aTypeIdFlags[count++], &typeIdFlagValue, sizeof(uint8_t));
+        aTypeIdFlags[count++].SetRawValue(kTypeIdFlagLqi);
     }
 
     if (aLinkMetricsFlags.mLinkMargin)
     {
-        typeIdFlagValue = kTypeIdFlagLinkMargin;
-        memcpy(&aTypeIdFlags[count++], &typeIdFlagValue, sizeof(uint8_t));
+        aTypeIdFlags[count++].SetRawValue(kTypeIdFlagLinkMargin);
     }
 
     if (aLinkMetricsFlags.mRssi)
     {
-        typeIdFlagValue = kTypeIdFlagRssi;
-        memcpy(&aTypeIdFlags[count++], &typeIdFlagValue, sizeof(uint8_t));
+        aTypeIdFlags[count++].SetRawValue(kTypeIdFlagRssi);
     }
 
     return count;
