@@ -968,6 +968,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     router->SetExtAddress(extAddr);
     router->SetRloc16(sourceAddress);
     router->SetLinkFrameCounter(linkFrameCounter);
+    router->SetLinkAckFrameCounter(linkFrameCounter);
     router->SetMleFrameCounter(mleFrameCounter);
     router->SetLastHeard(TimerMilli::GetNow());
     router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
@@ -2308,6 +2309,7 @@ void MleRouter::HandleChildIdRequest(const Message &         aMessage,
 
     child->SetLastHeard(TimerMilli::GetNow());
     child->SetLinkFrameCounter(linkFrameCounter);
+    child->SetLinkAckFrameCounter(linkFrameCounter);
     child->SetMleFrameCounter(mleFrameCounter);
     child->SetKeySequence(aKeySequence);
     child->SetDeviceMode(mode);
@@ -2629,6 +2631,7 @@ void MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
     {
     case OT_ERROR_NONE:
         child->SetLinkFrameCounter(linkFrameCounter);
+        child->SetLinkAckFrameCounter(linkFrameCounter);
         break;
     case OT_ERROR_NOT_FOUND:
         break;

@@ -94,6 +94,7 @@ typedef struct
     uint32_t     mAge;                   ///< Time last heard
     uint16_t     mRloc16;                ///< RLOC16
     uint32_t     mLinkFrameCounter;      ///< Link Frame Counter
+    uint32_t     mLinkAckFrameCounter;   ///< Link ACK Frame Counter
     uint32_t     mMleFrameCounter;       ///< MLE Frame Counter
     uint8_t      mLinkQualityIn;         ///< Link Quality In
     int8_t       mAverageRssi;           ///< Average RSSI

@@ -424,6 +424,25 @@ public:
     void SetLinkFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mLinkFrameCounter = aFrameCounter; }
 
     /**
+     * This method gets the link ACK frame counter value.
+     *
+     * @returns The link ACK frame counter value.
+     *
+     */
+    uint32_t GetLinkAckFrameCounter(void) const { return mValidPending.mValid.mLinkAckFrameCounter; }
+
+    /**
+     * This method sets the link ACK frame counter value.
+     *
+     * @param[in]  aAckFrameCounter  The link ACK frame counter value.
+     *
+     */
+    void SetLinkAckFrameCounter(uint32_t aAckFrameCounter)
+    {
+        mValidPending.mValid.mLinkAckFrameCounter = aAckFrameCounter;
+    }
+
+    /**
      * This method gets the MLE frame counter value.
      *
      * @returns The MLE frame counter value.
@@ -588,8 +607,9 @@ private:
     {
         struct
         {
-            uint32_t mLinkFrameCounter; ///< The Link Frame Counter
-            uint32_t mMleFrameCounter;  ///< The MLE Frame Counter
+            uint32_t mLinkFrameCounter;    ///< The Link Frame Counter
+            uint32_t mLinkAckFrameCounter; ///< The Link Ack Frame Counter
+            uint32_t mMleFrameCounter;     ///< The MLE Frame Counter
         } mValid;
         struct
         {

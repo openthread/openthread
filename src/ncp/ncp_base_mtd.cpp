@@ -182,6 +182,7 @@ otError NcpBase::EncodeNeighborInfo(const otNeighborInfo &aNeighborInfo)
     SuccessOrExit(error = mEncoder.WriteUint32(aNeighborInfo.mLinkFrameCounter));
     SuccessOrExit(error = mEncoder.WriteUint32(aNeighborInfo.mMleFrameCounter));
     SuccessOrExit(error = mEncoder.WriteInt8(aNeighborInfo.mLastRssi));
+    SuccessOrExit(error = mEncoder.WriteUint32(aNeighborInfo.mLinkAckFrameCounter));
 
     SuccessOrExit(error = mEncoder.CloseStruct());
 
