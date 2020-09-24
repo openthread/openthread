@@ -28,32 +28,20 @@
 
 /**
  * @file
- *   This file implements the OpenThread platform abstraction for UART communication.
+ *   This file defines the settings for the UART instance.
+ *
+ * NOTE: This is only meant to be included by uart.c
  *
  */
-
-#include <stddef.h>
-
-#include "openthread-system.h"
-#include <openthread/platform/uart.h>
-
-#include "utils/code_utils.h"
-
-#include "em_core.h"
-#include "uartdrv.h"
+#ifndef __UART_INIT_H__
+#define __UART_INIT_H__
 
 #include "hal-config.h"
 
-enum
-{
-    kReceiveFifoSize = 128,
-};
+#define USART_PORT USART0
 
-DEFINE_BUF_QUEUE(EMDRV_UARTDRV_MAX_CONCURRENT_RX_BUFS, sUartRxQueue);
-DEFINE_BUF_QUEUE(EMDRV_UARTDRV_MAX_CONCURRENT_TX_BUFS, sUartTxQueue);
-
-static const UARTDRV_InitUart_t USART_INIT = {
-    .port               = USART0,                                           /* USART port */
+const UARTDRV_InitUart_t USART_INIT = {
+    .port               = USART_PORT,                                           /* USART port */
     .baudRate           = HAL_SERIAL_APP_BAUD_RATE,                         /* Baud rate */
 #if defined(_USART_ROUTELOC0_MASK)
     .portLocationTx     = BSP_SERIAL_APP_TX_LOC,                            /* USART Tx pin location number */
@@ -87,127 +75,4 @@ static const UARTDRV_InitUart_t USART_INIT = {
 #endif // _USART_ROUTELOC1_MASK
 };
 
-static UARTDRV_HandleData_t sUartHandleData;
-static UARTDRV_Handle_t     sUartHandle = &sUartHandleData;
-static uint8_t              sReceiveBuffer[2];
-static const uint8_t *      sTransmitBuffer = NULL;
-static volatile uint16_t    sTransmitLength = 0;
-
-typedef struct ReceiveFifo_t
-{
-    // The data buffer
-    uint8_t mBuffer[kReceiveFifoSize];
-    // The offset of the first item written to the list.
-    volatile uint16_t mHead;
-    // The offset of the next item to be written to the list.
-    volatile uint16_t mTail;
-} ReceiveFifo_t;
-
-static ReceiveFifo_t sReceiveFifo;
-
-static void processReceive(void);
-
-static void receiveDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
-{
-    // We can only write if incrementing mTail doesn't equal mHead
-    if (sReceiveFifo.mHead != (sReceiveFifo.mTail + 1) % kReceiveFifoSize)
-    {
-        sReceiveFifo.mBuffer[sReceiveFifo.mTail] = aData[0];
-        sReceiveFifo.mTail                       = (sReceiveFifo.mTail + 1) % kReceiveFifoSize;
-    }
-
-    UARTDRV_Receive(aHandle, aData, 1, receiveDone);
-    otSysEventSignalPending();
-}
-
-static void transmitDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
-{
-    OT_UNUSED_VARIABLE(aHandle);
-    OT_UNUSED_VARIABLE(aStatus);
-    OT_UNUSED_VARIABLE(aData);
-    OT_UNUSED_VARIABLE(aCount);
-
-    sTransmitLength = 0;
-    otSysEventSignalPending();
-}
-
-static void processReceive(void)
-{
-    // Copy tail to prevent multiple reads
-    uint16_t tail = sReceiveFifo.mTail;
-
-    // If the data wraps around, process the first part
-    if (sReceiveFifo.mHead > tail)
-    {
-        otPlatUartReceived(sReceiveFifo.mBuffer + sReceiveFifo.mHead, kReceiveFifoSize - sReceiveFifo.mHead);
-
-        // Reset the buffer mHead back to zero.
-        sReceiveFifo.mHead = 0;
-    }
-
-    // For any data remaining, process it
-    if (sReceiveFifo.mHead != tail)
-    {
-        otPlatUartReceived(sReceiveFifo.mBuffer + sReceiveFifo.mHead, tail - sReceiveFifo.mHead);
-
-        // Set mHead to the local tail we have cached
-        sReceiveFifo.mHead = tail;
-    }
-}
-
-otError otPlatUartFlush(void)
-{
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-
-static void processTransmit(void)
-{
-    if (sTransmitBuffer != NULL && sTransmitLength == 0)
-    {
-        sTransmitBuffer = NULL;
-        otPlatUartSendDone();
-    }
-}
-
-otError otPlatUartEnable(void)
-{
-    UARTDRV_InitUart_t uartInit = USART_INIT;
-
-    sReceiveFifo.mHead = 0;
-    sReceiveFifo.mTail = 0;
-
-    UARTDRV_Init(sUartHandle, &uartInit);
-
-    for (uint8_t i = 0; i < sizeof(sReceiveBuffer); i++)
-    {
-        UARTDRV_Receive(sUartHandle, &sReceiveBuffer[i], sizeof(sReceiveBuffer[i]), receiveDone);
-    }
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatUartDisable(void)
-{
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-
-otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
-{
-    otError error = OT_ERROR_NONE;
-
-    otEXPECT_ACTION(sTransmitBuffer == NULL, error = OT_ERROR_BUSY);
-
-    sTransmitBuffer = aBuf;
-    sTransmitLength = aBufLength;
-
-    UARTDRV_Transmit(sUartHandle, (uint8_t *)sTransmitBuffer, sTransmitLength, transmitDone);
-
-exit:
-    return error;
-}
-
-void efr32UartProcess(void)
-{
-    processReceive();
-    processTransmit();
-}
+#endif // __UART_INIT_H__

@@ -112,8 +112,8 @@ PLATFORM_COMMON_SOURCES                                                       = 
     src/flash.c                                                                 \
     src/logging.c                                                               \
     src/misc.c                                                                  \
-    src/openthread-core-efr32-config.h                                          \
     src/openthread-core-efr32-config-check.h                                    \
+    src/openthread-core-efr32-config.h                                          \
     src/platform-band.h                                                         \
     src/platform-efr32.h                                                        \
     src/radio.c                                                                 \
@@ -125,7 +125,6 @@ PLATFORM_COMMON_SOURCES                                                       = 
 
 PLATFORM_SOURCES                                                              = \
     efr32mg12/sl_device_init_clocks.c                                           \
-    efr32mg12/uart-init.h                                                       \
     $(NULL)
 
 noinst_HEADERS                                                                = \

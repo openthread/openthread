@@ -41,7 +41,7 @@
 #define USART_INIT                                                                               \
     {                                                                                            \
         USART0,                                               /* USART port */                   \
-            115200,                                           /* Baud rate */                    \
+            HAL_SERIAL_APP_BAUD_RATE,                         /* Baud rate */                    \
             BSP_SERIAL_APP_TX_LOC,                            /* USART Tx pin location number */ \
             BSP_SERIAL_APP_RX_LOC,                            /* USART Rx pin location number */ \
             (USART_Stopbits_TypeDef)USART_FRAME_STOPBITS_ONE, /* Stop bits */                    \
