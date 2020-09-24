@@ -2061,12 +2061,10 @@ otError Mle::SendDataRequest(const Ip6::Address &aDestination,
     SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     if (aExtraTlvs != nullptr && aExtraTlvsLength > 0)
     {
         SuccessOrExit(error = message->Append(aExtraTlvs, aExtraTlvsLength));
     }
-#endif
 
     if (aDelay)
     {

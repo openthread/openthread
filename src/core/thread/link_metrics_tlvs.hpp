@@ -221,7 +221,7 @@ public:
      * @retval false  The TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(LinkMetricsTypeIdFlags) + sizeof(uint8_t); }
 
     /**
      * This method returns the Link Metrics Type ID.
@@ -312,17 +312,8 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const
-    {
-        return GetLength() >= sizeof(LinkMetricsTypeIdFlags) &&
-               GetLength() <= sizeof(LinkMetricsTypeIdFlags) * kMaxTypeIdFlagsCount;
-    }
+    bool IsValid(void) const { return GetLength() >= sizeof(LinkMetricsTypeIdFlags); }
 
-private:
-    enum
-    {
-        kMaxTypeIdFlagsCount = 4,
-    };
 } OT_TOOL_PACKED_END;
 
 } // namespace ot
