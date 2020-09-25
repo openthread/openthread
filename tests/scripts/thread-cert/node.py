@@ -105,6 +105,8 @@ class OtbrDocker:
             '--cap-add=NET_ADMIN',
             '--volume',
             f'{self._rcp_device}:/dev/ttyUSB0',
+            '-v',
+            '/tmp/codecov.bash:/tmp/codecov.bash',
             config.OTBR_DOCKER_IMAGE,
             '-B',
             'eth0',
@@ -157,8 +159,7 @@ class OtbrDocker:
             if COVERAGE or OTBR_COVERAGE:
                 self.bash('service otbr-agent stop')
 
-                self.bash('curl https://codecov.io/bash -o codecov_bash --retry 5')
-                codecov_cmd = 'bash codecov_bash -Z'
+                codecov_cmd = 'bash /tmp/codecov.bash -Z'
                 # Upload OTBR code coverage if OTBR_COVERAGE=1, otherwise OpenThread code coverage.
                 if not OTBR_COVERAGE:
                     codecov_cmd += ' -R third_party/openthread/repo'
