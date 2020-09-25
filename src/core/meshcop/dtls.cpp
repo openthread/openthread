@@ -932,12 +932,7 @@ otError Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::Sub
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 

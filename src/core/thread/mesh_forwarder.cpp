@@ -1062,11 +1062,7 @@ exit:
     {
         LogFragmentFrameDrop(error, aFrameLength, aMacSource, aMacDest, fragmentHeader,
                              aLinkInfo.IsLinkSecurityEnabled());
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
+        FreeMessage(message);
     }
 }
 
@@ -1200,11 +1196,7 @@ exit:
     else
     {
         LogLowpanHcFrameDrop(error, aFrameLength, aMacSource, aMacDest, aLinkInfo.IsLinkSecurityEnabled());
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
+        FreeMessage(message);
     }
 }
 
