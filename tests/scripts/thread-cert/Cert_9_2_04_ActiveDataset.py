@@ -75,7 +75,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
 
         self.nodes[COMMISSIONER].commissioner_start()
-        self.simulator.go(3)
+        self.simulator.go(5)
 
         self.collect_rlocs()
         self.collect_leader_aloc(LEADER)
@@ -86,10 +86,10 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             extended_panid='000db70000000000',
             network_name='GRL',
         )
-        self.simulator.go(3)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
         self.nodes[COMMISSIONER].send_mgmt_active_get()
-        self.simulator.go(3)
+        self.simulator.go(5)
 
         # Step 6
         # Attempt to set Channel TLV
@@ -100,7 +100,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             extended_panid='000db70000000001',
             network_name='threadcert',
         )
-        self.simulator.go(3)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 8
@@ -112,7 +112,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             mesh_local='fd00:0db7::',
             network_name='UL',
         )
-        self.simulator.go(3)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 10
@@ -125,7 +125,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             mesh_local='fd00:0db7::',
             network_name='GRL',
         )
-        self.simulator.go(3)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 12
@@ -139,7 +139,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             network_name='UL',
             panid=0xafce,
         )
-        self.simulator.go(3)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 14
@@ -151,7 +151,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             network_name='UL',
             binary='0b02abcd',
         )
-        self.simulator.go(3)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 16
@@ -162,7 +162,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             extended_panid='000db70000000000',
             network_name='UL',
         )
-        self.simulator.go(3)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 18
@@ -174,7 +174,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             network_name='UL',
             binary='0806113320440000',
         )
-        self.simulator.go(3)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'UL')
 
         # Step 20
@@ -186,7 +186,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             network_name='GRL',
             binary='8202aa55',
         )
-        self.simulator.go(3)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         ipaddrs = self.nodes[COMMISSIONER].get_addrs()
