@@ -54,20 +54,20 @@ class BBR_5_11_01(thread_cert.TestCase):
     TOPOLOGY = {
         BR_1: {
             'name': 'BR_1',
-            'whitelist': [ROUTER1, ROUTER2],
+            'allowlist': [ROUTER1, ROUTER2],
             'is_otbr': True,
             'version': '1.2',
             'router_selection_jitter': 1,
         },
         ROUTER1: {
             'name': 'Router_1',
-            'whitelist': [ROUTER2, BR_1],
+            'allowlist': [ROUTER2, BR_1],
             'version': '1.2',
             'router_selection_jitter': 1,
         },
         ROUTER2: {
             'name': 'Router_2',
-            'whitelist': [ROUTER1, BR_1],
+            'allowlist': [ROUTER1, BR_1],
             'version': '1.2',
             'router_selection_jitter': 1,
         },
