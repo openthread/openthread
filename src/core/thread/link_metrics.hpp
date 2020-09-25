@@ -148,8 +148,8 @@ private:
                                                const otLinkMetrics &aLinkMetrics,
                                                const Message &      aRequestMessage);
 
-    static uint8_t TypeIdFlagsFromOtLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
-                                                     const otLinkMetrics &   aLinkMetricsFlags);
+    static uint8_t TypeIdFlagsFromLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
+                                                   const otLinkMetrics &   aLinkMetricsFlags);
 };
 
 /**

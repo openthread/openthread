@@ -57,7 +57,7 @@ otError LinkMetrics::LinkMetricsQuery(const Ip6::Address & aDestination,
 {
     otError                error;
     LinkMetricsTypeIdFlags typeIdFlags[kMaxTypeIdFlags];
-    uint8_t                typeIdFlagsCount = TypeIdFlagsFromOtLinkMetricsFlags(typeIdFlags, aLinkMetricsFlags);
+    uint8_t                typeIdFlagsCount = TypeIdFlagsFromLinkMetricsFlags(typeIdFlags, aLinkMetricsFlags);
 
     error = SendLinkMetricsQuery(aDestination, aSeriesId, typeIdFlags, typeIdFlagsCount);
 
@@ -95,7 +95,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
             break;
 
         case kLinkMetricsQueryOptions:
-            for (uint16_t index = offset + sizeof(tlv); index < offset + tlv.GetSize();
+            for (uint16_t index = offset + sizeof(tlv); index < static_cast<uint16_t>(offset + tlv.GetSize());
                  index += sizeof(LinkMetricsTypeIdFlags))
             {
                 LinkMetricsTypeIdFlags typeIdFlags;
@@ -352,8 +352,8 @@ exit:
     return error;
 }
 
-uint8_t LinkMetrics::TypeIdFlagsFromOtLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
-                                                       const otLinkMetrics &   aLinkMetricsFlags)
+uint8_t LinkMetrics::TypeIdFlagsFromLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
+                                                     const otLinkMetrics &   aLinkMetricsFlags)
 {
     uint8_t count = 0;
 

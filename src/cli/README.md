@@ -56,7 +56,7 @@ Done
 - [leaderdata](#leaderdata)
 - [leaderpartitionid](#leaderpartitionid)
 - [leaderweight](#leaderweight)
-- [linkmetrics](#linkmetrics)
+- [linkmetrics](#linkmetrics-query-ipaddr-single-pqmr)
 - [linkquality](#linkquality-extaddr)
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
