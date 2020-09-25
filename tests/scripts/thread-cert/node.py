@@ -123,7 +123,7 @@ class OtbrDocker:
                 logging.info("OTBR Docker %s Is Ready!", self._docker_name)
                 break
             except subprocess.CalledProcessError:
-                time.sleep(0.2)
+                time.sleep(5)
                 continue
 
         assert launch_ok
