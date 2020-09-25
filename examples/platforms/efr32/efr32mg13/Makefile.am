@@ -124,7 +124,6 @@ PLATFORM_COMMON_SOURCES                                                       = 
     $(NULL)
 
 PLATFORM_SOURCES                                                              = \
-    efr32mg13/sl_device_init_clocks.c                                           \
     $(NULL)
 
 noinst_HEADERS                                                                = \

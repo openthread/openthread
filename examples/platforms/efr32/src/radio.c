@@ -60,10 +60,6 @@
 #include "rail_config.h"
 #include "rail_ieee802154.h"
 
-#ifdef SL_COMPONENT_CATALOG_PRESENT
-#include "sl_component_catalog.h"
-#endif // SL_COMPONENT_CATALOG_PRESENT
-
 enum
 {
     IEEE802154_MIN_LENGTH = 5,
@@ -208,11 +204,6 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
 
     handle = RAIL_Init(&aCommonConfig->mRailConfig, NULL);
     assert(handle != NULL);
-
-#if defined(SL_CATALOG_POWER_MANAGER_PRESENT)
-    status = RAIL_InitPowerManager();
-    assert(status == RAIL_STATUS_NO_ERROR);
-#endif // SL_CATALOG_POWER_MANAGER_PRESENT
 
     status = RAIL_ConfigCal(handle, RAIL_CAL_ALL);
     assert(status == RAIL_STATUS_NO_ERROR);

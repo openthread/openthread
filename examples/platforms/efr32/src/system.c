@@ -161,13 +161,6 @@ static void halInitChipSpecific(void)
 
 otInstance *sInstance;
 
-#ifndef SL_COMPONENT_CATALOG_PRESENT
-__WEAK void sl_openthread_init(void)
-{
-    // Place holder for enabling Silabs specific features available only through Simplicity Studio
-}
-#endif // SL_COMPONENT_CATALOG_PRESENT
-
 void otSysInit(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
@@ -191,7 +184,7 @@ void otSysInit(int argc, char *argv[])
     halInitChipSpecific();
     BSP_Init(BSP_INIT_BCC);
 
-    sl_device_init_clocks();
+    CMU_ClockEnable(cmuClock_CORELE, true);
 
     status = sl_sleeptimer_init();
     assert(status == SL_STATUS_OK);
