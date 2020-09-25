@@ -1868,7 +1868,7 @@ Done
 
 ### txpower
 
-Get the transmit power in dBm measured at antenna connector per IEEE 802.15.4 - 2015 section 10.1.4.
+Get the transmit power in dBm.
 
 ```bash
 > txpower
@@ -1878,7 +1878,7 @@ Done
 
 ### txpower \<txpower\>
 
-Set the transmit power measured at antenna connector per IEEE 802.15.4 - 2015 section 10.1.4.
+Set the transmit power in dBm.
 
 ```bash
 > txpower -10

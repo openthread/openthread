@@ -406,7 +406,7 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
 void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddress);
 
 /**
- * Get the radio's transmit power in dBm measured at antenna connector per IEEE 802.15.4 - 2015 section 10.1.4.
+ * Get the radio's transmit power in dBm.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[out] aPower    The transmit power in dBm.
@@ -419,7 +419,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddr
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower);
 
 /**
- * Set the radio's transmit power in dBm measured at antenna connector per IEEE 802.15.4 - 2015 section 10.1.4.
+ * Set the radio's transmit power in dBm.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aPower     The transmit power in dBm.
