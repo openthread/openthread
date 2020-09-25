@@ -514,6 +514,7 @@ _LAYER_FIELDS = {
     'thread_nm.tlv.type': _list(_auto),
     'thread_nm.tlv.ml_eid': _ext_addr,
     'thread_nm.tlv.target_eid': _ipv6_addr,
+    'thread_nm.tlv.status': _auto,
     # thread_meshcop is not a real layer
     'thread_meshcop.len_size_mismatch': _str,
     'thread_meshcop.tlv.type': _list(_auto),
