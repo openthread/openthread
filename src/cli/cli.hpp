@@ -346,6 +346,9 @@ private:
     otError ProcessExtAddress(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessExtPanId(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessFactoryReset(uint8_t aArgsLength, char *aArgs[]);
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    otError ProcessFake(uint8_t aArgsLength, char *aArgs[]);
+#endif
     otError ProcessIfconfig(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIpAddr(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIpAddrAdd(uint8_t aArgsLength, char *aArgs[]);
@@ -617,6 +620,9 @@ private:
         {"extaddr", &Interpreter::ProcessExtAddress},
         {"extpanid", &Interpreter::ProcessExtPanId},
         {"factoryreset", &Interpreter::ProcessFactoryReset},
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        {"fake", &Interpreter::ProcessFake},
+#endif
         {"help", &Interpreter::ProcessHelp},
         {"ifconfig", &Interpreter::ProcessIfconfig},
         {"ipaddr", &Interpreter::ProcessIpAddr},

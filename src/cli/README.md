@@ -47,6 +47,7 @@ Done
 - [extaddr](#extaddr)
 - [extpanid](#extpanid)
 - [factoryreset](#factoryreset)
+- [fake](#fake)
 - [ifconfig](#ifconfig)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
@@ -806,6 +807,19 @@ Delete all stored settings, and signal a platform reset.
 
 ```bash
 > factoryreset
+```
+
+### fake
+
+Send fake Thread messages.
+
+Note: Only for certification test.
+
+#### fake /a/an \<dst-ipaddr\> \<target\> \<meshLocalIid\>
+
+```bash
+> fake /a/an fdde:ad00:beef:0:0:ff:fe00:a800 fd00:7d03:7d03:7d03:55f2:bb6a:7a43:a03b 1111222233334444
+Done
 ```
 
 ### ifconfig
