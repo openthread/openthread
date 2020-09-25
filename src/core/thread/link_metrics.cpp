@@ -95,8 +95,8 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
             break;
 
         case kLinkMetricsQueryOptions:
-            for (uint16_t index = offset + sizeof(tlv); index < static_cast<uint16_t>(offset + tlv.GetSize());
-                 index += sizeof(LinkMetricsTypeIdFlags))
+            for (uint16_t index = offset + sizeof(tlv), endIndex = static_cast<uint16_t>(offset + tlv.GetSize());
+                 index < endIndex; index += sizeof(LinkMetricsTypeIdFlags))
             {
                 LinkMetricsTypeIdFlags typeIdFlags;
 
