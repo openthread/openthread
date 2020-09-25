@@ -113,7 +113,7 @@ class OtbrDocker:
                                              stdout=sys.stdout,
                                              stderr=sys.stderr)
 
-        launch_docker_deadline = time.time() + 60
+        launch_docker_deadline = time.time() + 300
         launch_ok = False
 
         while time.time() < launch_docker_deadline:
