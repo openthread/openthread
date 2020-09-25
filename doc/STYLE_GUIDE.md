@@ -137,7 +137,7 @@ If you want your headers to render with nice-looking step numbers on openthread.
 
 Use a blockquote `>` with one of these callout types:
 
--     Note
+- Note
 - Caution
 - Warning
 
@@ -148,3 +148,11 @@ For example:
 Or:
 
 > Caution: The user should be careful running the next command.
+
+### Contributors
+
+If you wish have an author byline displayed on openthread.io for the content you've contributed, add a contributor line at the top, after the title. The value should be a link to the author's GitHub profile.
+
+    Contributor: https://github.com/Vyrastas
+
+See the BeagleBone Black guide ([GitHub version](site/en/guides/border-router/beaglebone-black), [openthread.io version](https://openthread.io/guides/border-router/beaglebone-black)) for an example of what this looks like.
