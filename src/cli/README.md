@@ -819,6 +819,7 @@ Note: Only for certification test.
 
 ```bash
 > fake /a/an fdde:ad00:beef:0:0:ff:fe00:a800 fd00:7d03:7d03:7d03:55f2:bb6a:7a43:a03b 1111222233334444
+Done
 ```
 
 ### fem
