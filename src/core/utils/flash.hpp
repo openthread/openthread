@@ -159,7 +159,7 @@ private:
 
             mLength   = 0;
             mReserved = 0xffff;
-        };
+        }
 
         uint16_t GetKey(void) const { return mKey; }
         void     SetKey(uint16_t aKey) { mKey = aKey; }

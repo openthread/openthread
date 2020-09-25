@@ -178,11 +178,7 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
     CoapBase::Receive(*message, mDtls.GetMessageInfo());
 
 exit:
-
-    if (message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessage(message);
 }
 
 void CoapSecure::HandleTransmit(Tasklet &aTasklet)

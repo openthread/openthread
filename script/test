@@ -423,7 +423,7 @@ main()
 {
     envsetup "$@"
 
-    if [[ -z $1 ]]; then
+    if [[ -z ${1:-} ]]; then
         print_usage 1
     fi
 
@@ -468,6 +468,10 @@ main()
             untar)
                 shift
                 do_untar "$@"
+                ;;
+            *)
+                echo
+                echo -e "${COLOR_FAIL}Warning:${COLOR_NONE} Ignoring: '$1'"
                 ;;
         esac
         shift

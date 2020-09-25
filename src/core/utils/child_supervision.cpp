@@ -97,11 +97,7 @@ void ChildSupervisor::SendMessage(Child &aChild)
     otLogInfoUtil("Sending supervision message to child 0x%04x", aChild.GetRloc16());
 
 exit:
-
-    if (message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessage(message);
 }
 
 void ChildSupervisor::UpdateOnSend(Child &aChild)

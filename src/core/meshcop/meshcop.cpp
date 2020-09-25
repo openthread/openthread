@@ -36,6 +36,7 @@
 #include "common/crc16.hpp"
 #include "common/debug.hpp"
 #include "common/locator-getters.hpp"
+#include "common/logging.hpp"
 #include "crypto/pbkdf2_cmac.h"
 #include "crypto/sha256.hpp"
 #include "mac/mac_types.hpp"

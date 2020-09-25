@@ -507,7 +507,7 @@ public:
     {
         SetType(aType);
         SetClass(aClass);
-    };
+    }
 
     /**
      * This method returns the type of the question.

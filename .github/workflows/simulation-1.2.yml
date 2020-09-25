@@ -107,6 +107,8 @@ jobs:
       COVERAGE: 1
       PACKET_VERIFICATION: 1
       THREAD_VERSION: 1.2
+      MAC_FILTER: 1
+      INTER_OP: 1
     steps:
       - uses: actions/checkout@v2
       - name: Bootstrap

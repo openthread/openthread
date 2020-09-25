@@ -288,11 +288,7 @@ void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
     otLogInfoMeshCoP("sent dataset set response");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessageOnError(message, error);
 }
 
 otError DatasetManager::DatasetTlv::ReadFromMessage(const Message &aMessage, uint16_t aOffset)

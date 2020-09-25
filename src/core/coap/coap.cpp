@@ -279,12 +279,7 @@ otError CoapBase::SendEmptyMessage(Type aType, const Message &aRequest, const Ip
     SuccessOrExit(error = Send(*message, aMessageInfo));
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -317,12 +312,7 @@ otError CoapBase::SendHeaderResponse(Message::Code aCode, const Message &aReques
     SuccessOrExit(error = SendMessage(*message, aMessageInfo));
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -440,13 +430,7 @@ Message *CoapBase::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopy
     mPendingRequests.Enqueue(*messageCopy);
 
 exit:
-
-    if (error != OT_ERROR_NONE && messageCopy != nullptr)
-    {
-        messageCopy->Free();
-        messageCopy = nullptr;
-    }
-
+    FreeAndNullMessageOnError(messageCopy, error);
     return messageCopy;
 }
 
@@ -481,11 +465,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         otLogWarnCoap("Failed to send copy: %s", otThreadErrorToString(error));
-
-        if (messageCopy != nullptr)
-        {
-            messageCopy->Free();
-        }
+        FreeMessage(messageCopy);
     }
 }
 
@@ -762,10 +742,7 @@ exit:
             IgnoreError(SendNotFound(aMessage, aMessageInfo));
         }
 
-        if (cachedResponse != nullptr)
-        {
-            cachedResponse->Free();
-        }
+        FreeMessage(cachedResponse);
     }
 }
 

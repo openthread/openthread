@@ -349,12 +349,7 @@ otError Server::SendReply(const Ip6::Address & aDst,
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
 exit:
-
-    if (message != nullptr && error != OT_ERROR_NONE)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 

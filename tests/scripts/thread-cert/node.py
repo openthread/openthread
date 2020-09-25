@@ -618,6 +618,11 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def set_outbound_link_quality(self, lqi):
+        cmd = 'macfilter rss add-lqi * %s' % (lqi)
+        self.send_command(cmd)
+        self._expect('Done')
+
     def remove_allowlist(self, addr):
         cmd = 'macfilter addr remove %s' % addr
         self.send_command(cmd)
@@ -1247,6 +1252,49 @@ class Node:
 
         self.send_command(cmd)
         self._expect('Done')
+
+    def send_mgmt_active_get(
+        self,
+        active_timestamp=None,
+        channel=None,
+        channel_mask=None,
+        extended_panid=None,
+        panid=None,
+        master_key=None,
+        mesh_local=None,
+        network_name=None,
+        binary=None,
+    ):
+        cmd = 'dataset mgmtgetcommand active '
+
+        if active_timestamp is not None:
+            cmd += 'activetimestamp %d ' % active_timestamp
+
+        if channel is not None:
+            cmd += 'channel %d ' % channel
+
+        if channel_mask is not None:
+            cmd += 'channelmask %d ' % channel_mask
+
+        if extended_panid is not None:
+            cmd += 'extpanid %s ' % extended_panid
+
+        if panid is not None:
+            cmd += 'panid %d ' % panid
+
+        if master_key is not None:
+            cmd += 'masterkey %s ' % master_key
+
+        if mesh_local is not None:
+            cmd += 'localprefix %s ' % mesh_local
+
+        if network_name is not None:
+            cmd += 'networkname %s ' % self._escape_escapable(network_name)
+
+        if binary is not None:
+            cmd += 'binary %s ' % binary
+
+        self.send_command(cmd)
 
     def send_mgmt_pending_set(
         self,
