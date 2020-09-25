@@ -177,6 +177,21 @@ public:
      */
     void RestartAddressQueries(void);
 
+    /**
+     * This method sends an Address Notification (ADDR_NTF.ans) message.
+     *
+     * @param[in]  aTarget                  The target address of the ADDR_NTF.ans message.
+     * @param[in]  aMeshLocalIid            The ML-IID of the ADDR_NTF.ans message.
+     * @param[in]  aLastTransactionTimeTlv  A pointer to the Last Transaction Time if the ADDR_NTF.ans message contains
+     *                                      a Last Transaction Time TLV.
+     * @param[in]  aDestination             The destination to send the ADDR_NTF.ans message.
+     *
+     */
+    void SendAddressQueryResponse(const Ip6::Address &            aTarget,
+                                  const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                  const uint32_t *                aLastTransactionTimeTlv,
+                                  const Ip6::Address &            aDestination);
+
 private:
     enum
     {
@@ -288,10 +303,6 @@ private:
     void    SendAddressError(const Ip6::Address &            aTarget,
                              const Ip6::InterfaceIdentifier &aMeshLocalIid,
                              const Ip6::Address *            aDestination);
-    void    SendAddressQueryResponse(const Ip6::Address &            aTarget,
-                                     const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                                     const uint32_t *                aLastTransactionTimeTlv,
-                                     const Ip6::Address &            aDestination);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
