@@ -27,27 +27,191 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import config
+import binascii
 import ipaddress
+import logging
 import os
+import re
+import socket
+import subprocess
 import sys
+import time
+import traceback
+import unittest
+from typing import Union, Dict, Optional, List
+
 import pexpect
 import pexpect.popen_spawn
-import re
+
+import config
 import simulator
-import socket
-import time
-import unittest
-import binascii
 
-from typing import Union, Dict
+PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
 
-class Node:
+class OtbrDocker:
+    _socat_proc = None
+    _ot_rcp_proc = None
+    _docker_proc = None
 
-    def __init__(self, nodeid, is_mtd=False, simulator=None, name=None, version=None, is_bbr=False):
-        self.nodeid = nodeid
-        self.name = name or ('Node%d' % nodeid)
+    def __init__(self, nodeid: int, **kwargs):
+        try:
+            self._docker_name = config.OTBR_DOCKER_NAME_PREFIX + str(nodeid)
+            self._prepare_ot_rcp_sim(nodeid)
+            self._launch_docker()
+        except Exception:
+            traceback.print_exc()
+            self.destroy()
+            raise
+
+    def _prepare_ot_rcp_sim(self, nodeid: int):
+        self._socat_proc = subprocess.Popen(['socat', '-d', '-d', 'pty,raw,echo=0', 'pty,raw,echo=0'],
+                                            stderr=subprocess.PIPE,
+                                            stdin=subprocess.DEVNULL,
+                                            stdout=subprocess.DEVNULL)
+
+        line = self._socat_proc.stderr.readline().decode('ascii').strip()
+        self._rcp_device_pty = rcp_device_pty = line[line.index('PTY is /dev') + 7:]
+        line = self._socat_proc.stderr.readline().decode('ascii').strip()
+        self._rcp_device = rcp_device = line[line.index('PTY is /dev') + 7:]
+        logging.info(f"socat running: device PTY: {rcp_device_pty}, device: {rcp_device}")
+
+        ot_rcp_path = self._get_ot_rcp_path()
+        self._ot_rcp_proc = subprocess.Popen(f"{ot_rcp_path} {nodeid} > {rcp_device_pty} < {rcp_device_pty}",
+                                             shell=True,
+                                             stdin=subprocess.DEVNULL,
+                                             stdout=subprocess.DEVNULL,
+                                             stderr=subprocess.DEVNULL)
+
+    def _get_ot_rcp_path(self) -> str:
+        srcdir = os.environ['top_builddir']
+        path = '%s/examples/apps/ncp/ot-rcp' % srcdir
+        logging.info("ot-rcp path: %s", path)
+        return path
+
+    def _launch_docker(self):
+        subprocess.check_call(f"docker rm -f {self._docker_name} || true", shell=True)
+        CI_ENV = os.getenv('CI_ENV', '').split()
+        self._docker_proc = subprocess.Popen(['docker', 'run'] + CI_ENV + [
+            '--rm',
+            '--name',
+            self._docker_name,
+            '--network',
+            config.BACKBONE_DOCKER_NETWORK_NAME,
+            '-i',
+            '--sysctl',
+            'net.ipv6.conf.all.disable_ipv6=0 net.ipv4.conf.all.forwarding=1 net.ipv6.conf.all.forwarding=1',
+            '--privileged',
+            '--cap-add=NET_ADMIN',
+            '--volume',
+            f'{self._rcp_device}:/dev/ttyUSB0',
+            config.OTBR_DOCKER_IMAGE,
+        ],
+                                             stdin=subprocess.DEVNULL,
+                                             stdout=sys.stdout,
+                                             stderr=sys.stderr)
+
+        launch_docker_deadline = time.time() + 60
+        launch_ok = False
+
+        while time.time() < launch_docker_deadline:
+            try:
+                subprocess.check_call(f'docker exec -i {self._docker_name} ot-ctl state', shell=True)
+                launch_ok = True
+                logging.info("OTBR Docker %s Is Ready!", self._docker_name)
+                break
+            except subprocess.CalledProcessError:
+                time.sleep(0.2)
+                continue
+
+        assert launch_ok
+
+        cmd = f'docker exec -i {self._docker_name} ot-ctl'
+        self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=10)
+
+        # Add delay to ensure that the process is ready to receive commands.
+        timeout = 0.4
+        while timeout > 0:
+            self.pexpect.send('\r\n')
+            try:
+                self.pexpect.expect('> ', timeout=0.1)
+                break
+            except pexpect.TIMEOUT:
+                timeout -= 0.1
+
+    def __repr__(self):
+        return f'OtbrDocker<{self.nodeid}>'
+
+    def destroy(self):
+        logging.info("Destroying %s", self)
+        self._shutdown_docker()
+        self._shutdown_ot_rcp()
+        self._shutdown_socat()
+
+    def _shutdown_docker(self):
+        if self._docker_proc is not None:
+            COVERAGE = int(os.getenv('COVERAGE', '0'))
+            OTBR_COVERAGE = int(os.getenv('OTBR_COVERAGE', '0'))
+            if COVERAGE or OTBR_COVERAGE:
+                self.bash('service otbr-agent stop')
+
+                self.bash('curl https://codecov.io/bash -o codecov_bash --retry 5')
+                codecov_cmd = 'bash codecov_bash -Z'
+                # Upload OTBR code coverage if OTBR_COVERAGE=1, otherwise OpenThread code coverage.
+                if not OTBR_COVERAGE:
+                    codecov_cmd += ' -R third_party/openthread/repo'
+
+                self.bash(codecov_cmd)
+
+            subprocess.check_call(f"docker rm -f {self._docker_name}", shell=True)
+            self._docker_proc.wait()
+            del self._docker_proc
+
+    def _shutdown_ot_rcp(self):
+        if self._ot_rcp_proc is not None:
+            self._ot_rcp_proc.kill()
+            self._ot_rcp_proc.wait()
+            del self._ot_rcp_proc
+
+    def _shutdown_socat(self):
+        if self._socat_proc is not None:
+            self._socat_proc.stderr.close()
+            self._socat_proc.kill()
+            self._socat_proc.wait()
+            del self._socat_proc
+
+    def bash(self, cmd: str) -> List[str]:
+        logging.info("%s $ %s", self, cmd)
+        proc = subprocess.Popen(['docker', 'exec', '-i', self._docker_name, 'bash', '-c', cmd],
+                                stdin=subprocess.DEVNULL,
+                                stdout=subprocess.PIPE,
+                                stderr=sys.stderr,
+                                encoding='ascii')
+
+        with proc:
+
+            lines = []
+
+            while True:
+                line = proc.stdout.readline()
+
+                if not line:
+                    break
+
+                lines.append(line)
+                logging.info("%s $ %s", self, line.rstrip('\r\n'))
+
+            proc.wait()
+
+            if proc.returncode != 0:
+                raise subprocess.CalledProcessError(proc.returncode, cmd, ''.join(lines))
+            else:
+                return lines
+
+
+class OtCli:
+
+    def __init__(self, nodeid, is_mtd=False, version=None, is_bbr=False, **kwargs):
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
         self.env_version = os.getenv('THREAD_VERSION', '1.1')
@@ -58,10 +222,6 @@ class Node:
             self.version = version
         else:
             self.version = self.env_version
-
-        self.simulator = simulator
-        if self.simulator:
-            self.simulator.add_node(self)
 
         mode = os.environ.get('USE_MTD') == '1' and is_mtd and 'mtd' or 'ftd'
 
@@ -77,8 +237,6 @@ class Node:
             self.pexpect.logfile_read = sys.stdout.buffer
 
         self._initialized = True
-
-        self.set_extpanid(config.EXTENDED_PANID)
 
     def __init_sim(self, nodeid, mode):
         """ Initialize a simulation node. """
@@ -216,6 +374,45 @@ class Node:
         self._expect('spinel-cli >')
         self.debug(int(os.getenv('DEBUG', '0')))
 
+    def __init_soc(self, nodeid):
+        """ Initialize a System-on-a-chip node connected via UART. """
+        import fdpexpect
+
+        serialPort = '/dev/ttyUSB%d' % ((nodeid - 1) * 2)
+        self.pexpect = fdpexpect.fdspawn(os.open(serialPort, os.O_RDWR | os.O_NONBLOCK | os.O_NOCTTY))
+
+    def __del__(self):
+        self.destroy()
+
+    def destroy(self):
+        if not self._initialized:
+            return
+
+        if (hasattr(self.pexpect, 'proc') and self.pexpect.proc.poll() is None or
+                not hasattr(self.pexpect, 'proc') and self.pexpect.isalive()):
+            print("%d: exit" % self.nodeid)
+            self.pexpect.send('exit\n')
+            self.pexpect.expect(pexpect.EOF)
+            self.pexpect.wait()
+            self._initialized = False
+
+
+class NodeImpl:
+    is_host = False
+    is_otbr = False
+
+    def __init__(self, nodeid, name=None, simulator=None, **kwargs):
+        self.nodeid = nodeid
+        self.name = name or ('Node%d' % nodeid)
+
+        self.simulator = simulator
+        if self.simulator:
+            self.simulator.add_node(self)
+
+        super().__init__(nodeid, **kwargs)
+
+        self.set_extpanid(config.EXTENDED_PANID)
+
     def _expect(self, pattern, timeout=-1, *args, **kwargs):
         """ Process simulator events until expected the pattern. """
         if timeout == -1:
@@ -262,7 +459,7 @@ class Node:
             The matched line.
         """
         results = self._expect_results(pattern, *args, **kwargs)
-        assert len(results) == 1
+        assert len(results) == 1, results
         return results[0]
 
     def _expect_results(self, pattern, *args, **kwargs):
@@ -311,28 +508,6 @@ class Node:
 
         print(f'_expect_command_output({cmd!r}) returns {lines!r}')
         return lines
-
-    def __init_soc(self, nodeid):
-        """ Initialize a System-on-a-chip node connected via UART. """
-        import fdpexpect
-
-        serialPort = '/dev/ttyUSB%d' % ((nodeid - 1) * 2)
-        self.pexpect = fdpexpect.fdspawn(os.open(serialPort, os.O_RDWR | os.O_NONBLOCK | os.O_NOCTTY))
-
-    def __del__(self):
-        self.destroy()
-
-    def destroy(self):
-        if not self._initialized:
-            return
-
-        if (hasattr(self.pexpect, 'proc') and self.pexpect.proc.poll() is None or
-                not hasattr(self.pexpect, 'proc') and self.pexpect.isalive()):
-            print("%d: exit" % self.nodeid)
-            self.pexpect.send('exit\n')
-            self.pexpect.expect(pexpect.EOF)
-            self.pexpect.wait()
-            self._initialized = False
 
     def read_cert_messages_in_commissioning_log(self, timeout=-1):
         """Get the log of the traffic after DTLS handshake.
@@ -496,6 +671,10 @@ class Node:
         states = [r'Disabled', r'Primary', r'Secondary']
         self.send_command('bbr state')
         return self._expect_result(states)
+
+    @property
+    def is_primary_backbone_router(self) -> bool:
+        return self.get_backbone_router_state() == 'Primary'
 
     def get_backbone_router(self):
         cmd = 'bbr config'
@@ -791,7 +970,7 @@ class Node:
         self._expect('Done')
 
     def get_state(self):
-        states = [r'detached', r'child', r'router', r'leader']
+        states = [r'detached', r'child', r'router', r'leader', r'disabled']
         self.send_command('state')
         return self._expect_result(states)
 
@@ -969,6 +1148,13 @@ class Node:
 
         return None
 
+    def __getDua(self) -> Optional[str]:
+        for ip6Addr in self.get_addrs():
+            if re.match(config.DOMAIN_PREFIX_REGEX_PATTERN, ip6Addr, re.I):
+                return ip6Addr
+
+        return None
+
     def get_ip6_address(self, address_type):
         """Get specific type of IPv6 address configured on thread device.
 
@@ -988,10 +1174,12 @@ class Node:
             return self.__getAloc()
         elif address_type == config.ADDRESS_TYPE.ML_EID:
             return self.__getMleid()
+        elif address_type == config.ADDRESS_TYPE.DUA:
+            return self.__getDua()
+        elif address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
+            return self._getBackboneGua()
         else:
             return None
-
-        return None
 
     def get_context_reuse_delay(self):
         self.send_command('contextreusedelay')
@@ -1677,6 +1865,121 @@ class Node:
             }
 
         return router_table
+
+
+class Node(NodeImpl, OtCli):
+    pass
+
+
+class LinuxHost():
+    PING_RESPONSE_PATTERN = re.compile(r'\d+ bytes from .*:.*')
+    ETH_DEV = 'eth0'
+
+    def get_ether_addrs(self):
+        output = self.bash(f'ip -6 addr list dev {self.ETH_DEV}')
+
+        addrs = []
+        for line in output:
+            # line example: "inet6 fe80::42:c0ff:fea8:903/64 scope link"
+            line = line.strip().split()
+
+            if line and line[0] == 'inet6':
+                addr = line[1]
+                if '/' in addr:
+                    addr = addr.split('/')[0]
+                addrs.append(addr)
+
+        logging.debug('%s: get_ether_addrs: %r', self, addrs)
+        return addrs
+
+    def get_ether_mac(self):
+        output = self.bash(f'ip addr list dev {self.ETH_DEV}')
+        for line in output:
+            # link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+            line = line.strip().split()
+            if line and line[0] == 'link/ether':
+                return line[1]
+
+        assert False, output
+
+    def ping_ether(self, ipaddr, num_responses=1, size=None, timeout=5) -> int:
+        cmd = f'ping -6 {ipaddr} -I eth0 -c {num_responses} -W {timeout}'
+        if size is not None:
+            cmd += f' -s {size}'
+
+        resp_count = 0
+
+        try:
+            for line in self.bash(cmd):
+                if self.PING_RESPONSE_PATTERN.match(line):
+                    resp_count += 1
+        except subprocess.CalledProcessError:
+            pass
+
+        return resp_count
+
+    def _getBackboneGua(self) -> Optional[str]:
+        for ip6Addr in self.get_addrs():
+            if re.match(config.BACKBONE_PREFIX_REGEX_PATTERN, ip6Addr, re.I):
+                return ip6Addr
+
+        return None
+
+    def ping(self, *args, **kwargs):
+        backbone = kwargs.pop('backbone', False)
+        if backbone:
+            return self.ping_ether(*args, **kwargs)
+        else:
+            return super().ping(*args, **kwargs)
+
+
+class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
+    is_otbr = True
+    is_bbr = True  # OTBR is also BBR
+
+    def __repr__(self):
+        return f'Otbr<{self.nodeid}>'
+
+    def get_addrs(self) -> List[str]:
+        return super().get_addrs() + self.get_ether_addrs()
+
+
+class HostNode(LinuxHost, OtbrDocker):
+    is_host = True
+
+    def __init__(self, nodeid, name=None, **kwargs):
+        self.nodeid = nodeid
+        self.name = name or ('Host%d' % nodeid)
+        super().__init__(nodeid, **kwargs)
+
+    def start(self):
+        # TODO: Use radvd to advertise the Domain Prefix on the Backbone link.
+        pass
+
+    def stop(self):
+        pass
+
+    def get_addrs(self) -> List[str]:
+        return self.get_ether_addrs()
+
+    def __repr__(self):
+        return f'Host<{self.nodeid}>'
+
+    def get_ip6_address(self, address_type: config.ADDRESS_TYPE):
+        """Get specific type of IPv6 address configured on thread device.
+
+        Args:
+            address_type: the config.ADDRESS_TYPE type of IPv6 address.
+
+        Returns:
+            IPv6 address string.
+        """
+        assert address_type == config.ADDRESS_TYPE.BACKBONE_GUA
+
+        if address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
+            return self._getBackboneGua()
+        else:
+            return None
 
 
 if __name__ == '__main__':

@@ -118,7 +118,7 @@ class Ipv6Addr(Bytes):
         return self.startswith(consts.DOMAIN_PREFIX)
 
     @property
-    def is_backbone(self) -> bool:
+    def is_backbone_gua(self) -> bool:
         """
         Returns if the Ip6 address is Backbone address.
         """
