@@ -55,21 +55,21 @@ class BBR_5_11_01(thread_cert.TestCase):
     TOPOLOGY = {
         PBBR: {
             'name': 'PBBR',
-            'whitelist': [SBBR, ROUTER1],
+            'allowlist': [SBBR, ROUTER1],
             'is_otbr': True,
             'version': '1.2',
             'router_selection_jitter': 1,
         },
         SBBR: {
             'name': 'SBBR',
-            'whitelist': [PBBR, ROUTER1],
+            'allowlist': [PBBR, ROUTER1],
             'is_otbr': True,
             'version': '1.2',
             'router_selection_jitter': 1,
         },
         ROUTER1: {
             'name': 'ROUTER1',
-            'whitelist': [PBBR, SBBR],
+            'allowlist': [PBBR, SBBR],
             'version': '1.2',
             'router_selection_jitter': 1,
         },
