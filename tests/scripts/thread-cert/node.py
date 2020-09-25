@@ -1866,6 +1866,11 @@ class NodeImpl:
 
         return router_table
 
+    def link_metrics_query_single_probe(self, dst_addr: str, linkmetrics_flags: str):
+        cmd = 'linkmetrics query %s single %s' % (dst_addr, linkmetrics_flags)
+        self.send_command(cmd)
+        self._expect('Done')
+
     def send_address_notification(self, dst: str, target: str, mliid: str):
         cmd = f'fake /a/an {dst} {target} {mliid}'
         self.send_command(cmd)

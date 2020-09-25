@@ -2723,7 +2723,7 @@ void MleRouter::HandleDataRequest(const Message &         aMessage,
         tlvs[numTlvs++] = Tlv::kPendingDataset;
     }
 
-    SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0);
+    SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0, &aMessage);
 
 exit:
     LogProcessError(kTypeDataRequest, error);
@@ -3210,8 +3210,11 @@ exit:
 void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
                                  const uint8_t *     aTlvs,
                                  uint8_t             aTlvsLength,
-                                 uint16_t            aDelay)
+                                 uint16_t            aDelay,
+                                 const Message *     aRequestMessage)
 {
+    OT_UNUSED_VARIABLE(aRequestMessage);
+
     otError   error   = OT_ERROR_NONE;
     Message * message = nullptr;
     Neighbor *neighbor;
@@ -3248,6 +3251,13 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
         case Tlv::kPendingDataset:
             SuccessOrExit(error = AppendPendingDataset(*message));
             break;
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+        case Tlv::kLinkMetricsReport:
+            OT_ASSERT(aRequestMessage != nullptr);
+            SuccessOrExit(error = Get<LinkMetrics>().AppendLinkMetricsReport(*message, *aRequestMessage));
+            break;
+#endif
         }
     }
 

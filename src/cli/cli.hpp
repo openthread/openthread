@@ -370,6 +370,10 @@ private:
     otError ProcessLeaderWeight(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessMasterKey(uint8_t aArgsLength, char *aArgs[]);
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    otError ProcessLinkMetrics(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[]);
+#endif
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     otError ProcessMlr(uint8_t aArgsLength, char *aArgs[]);
 
@@ -530,6 +534,14 @@ private:
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    static void HandleLinkMetricsReport(const otIp6Address *       aAddress,
+                                        const otLinkMetricsValues *aMetricsValues,
+                                        void *                     aContext);
+
+    void HandleLinkMetricsReport(const otIp6Address *aAddress, const otLinkMetricsValues *aMetricsValues);
+#endif
+
     static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);
 
     static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
@@ -626,6 +638,9 @@ private:
 #if OPENTHREAD_FTD
         {"leaderpartitionid", &Interpreter::ProcessLeaderPartitionId},
         {"leaderweight", &Interpreter::ProcessLeaderWeight},
+#endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+        {"linkmetrics", &Interpreter::ProcessLinkMetrics},
 #endif
         {"log", &Interpreter::ProcessLog},
         {"mac", &Interpreter::ProcessMac},

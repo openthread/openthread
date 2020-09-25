@@ -41,6 +41,7 @@
 #include "common/tlvs.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/link_metrics_tlvs.hpp"
 #include "thread/mle_types.hpp"
 
 namespace ot {
@@ -103,6 +104,8 @@ public:
         kDiscovery           = 26, ///< Thread Discovery TLV
         kCslChannel          = 80, ///< CSL Channel TLV
         kCslTimeout          = 85, ///< CSL Timeout TLV
+        kLinkMetricsQuery    = 87, ///< Link Metrics Query TLV
+        kLinkMetricsReport   = 89, ///< Link Metrics Report TLV
 
         /**
          * Applicable/Required only when time synchronization service

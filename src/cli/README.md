@@ -57,6 +57,7 @@ Done
 - [leaderdata](#leaderdata)
 - [leaderpartitionid](#leaderpartitionid)
 - [leaderweight](#leaderweight)
+- [linkmetrics](#linkmetrics-query-ipaddr-single-pqmr)
 - [linkquality](#linkquality-extaddr)
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
@@ -1064,6 +1065,27 @@ Set the Thread Leader Weight.
 ```bash
 > leaderweight 128
 Done
+```
+
+### linkmetrics query \<ipaddr\> single [pqmr]
+
+Perform a Link Metrics query (Single Probe).
+
+- ipaddr: Peer address.
+- pqmr: This specifies what metrics to query.
+- p: Layer 2 Number of PDUs received.
+- q: Layer 2 LQI.
+- m: Link Margin.
+- r: RSSI.
+
+```bash
+> linkmetrics query fe80:0:0:0:3092:f334:1455:1ad2 single qmr
+Done
+> Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
+
+ - LQI: 76 (Exponential Moving Average)
+ - Margin: 82 (dB) (Exponential Moving Average)
+ - RSSI: -18 (dBm) (Exponential Moving Average)
 ```
 
 ### linkquality \<extaddr\>
