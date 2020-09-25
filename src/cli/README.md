@@ -1065,13 +1065,13 @@ Perform a Link Metrics query (Single Probe).
 - r: RSSI.
 
 ```bash
-> linkmetrics query fe80:0:0:0:3092:f334:1455:1ad2 single 090A0B
+> linkmetrics query fe80:0:0:0:3092:f334:1455:1ad2 single qmr
 Done
 > Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
 
  - LQI: 76 (Exponential Moving Average)
- - RSSI: -18 dBm (Exponential Moving Average)
- - Margin: 82 dB (Exponential Moving Average)
+ - Margin: 82 (dB) (Exponential Moving Average)
+ - RSSI: -18 (dBm) (Exponential Moving Average)
 ```
 
 ### linkquality \<extaddr\>

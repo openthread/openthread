@@ -57,7 +57,7 @@ otError LinkMetrics::LinkMetricsQuery(const Ip6::Address & aDestination,
 {
     otError                error;
     LinkMetricsTypeIdFlags typeIdFlags[kMaxTypeIdFlags];
-    uint8_t                typeIdFlagsCount = GetTypeIdFlagsFromOtLinkMetricsFlags(typeIdFlags, aLinkMetricsFlags);
+    uint8_t                typeIdFlagsCount = TypeIdFlagsFromOtLinkMetricsFlags(typeIdFlags, aLinkMetricsFlags);
 
     error = SendLinkMetricsQuery(aDestination, aSeriesId, typeIdFlags, typeIdFlagsCount);
 
@@ -99,6 +99,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
                  index += sizeof(LinkMetricsTypeIdFlags))
             {
                 LinkMetricsTypeIdFlags typeIdFlags;
+
                 VerifyOrExit(aRequestMessage.Read(index, sizeof(typeIdFlags), &typeIdFlags) == sizeof(typeIdFlags),
                              error = OT_ERROR_PARSE);
 
@@ -178,13 +179,13 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
 
     VerifyOrExit(mLinkMetricsReportCallback != nullptr, OT_NOOP);
 
-    memset(&metricsValues, 0, sizeof(otLinkMetricsValues));
+    memset(&metricsValues, 0, sizeof(metricsValues));
 
     otLogDebgMle("Received Link Metrics Report");
 
     while (pos < endPos)
     {
-        aMessage.Read(pos, sizeof(Tlv), &tlv);
+        VerifyOrExit(aMessage.Read(pos, sizeof(Tlv), &tlv) == sizeof(Tlv), OT_NOOP);
         VerifyOrExit(tlv.GetType() == kLinkMetricsReportSub, OT_NOOP);
         pos += sizeof(Tlv);
         VerifyOrExit(pos + tlv.GetLength() <= endPos, OT_NOOP);
@@ -351,8 +352,8 @@ exit:
     return error;
 }
 
-uint8_t LinkMetrics::GetTypeIdFlagsFromOtLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
-                                                          const otLinkMetrics &   aLinkMetricsFlags)
+uint8_t LinkMetrics::TypeIdFlagsFromOtLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
+                                                       const otLinkMetrics &   aLinkMetricsFlags)
 {
     uint8_t count = 0;
 

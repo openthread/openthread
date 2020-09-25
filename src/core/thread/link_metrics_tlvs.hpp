@@ -54,6 +54,10 @@ enum
     kLinkMetricsMaxTypeIdFlags = 4, ///< Max count of Link Metrics Type ID Flags.
 };
 
+/**
+ * Link Metrics Sub-TLV types
+ *
+ */
 enum Type
 {
     kLinkMetricsReportSub       = 0, ///< Link Metrics Report Sub-TLV
@@ -78,7 +82,7 @@ public:
      * Default constructor.
      *
      */
-    LinkMetricsTypeIdFlags() {}
+    LinkMetricsTypeIdFlags(void) {}
 
     /**
      * Constructor for implicit cast from `uint8_t` to `LinkMetricsTypeIdFlags`.
@@ -113,6 +117,7 @@ public:
      *
      * @retval true   The Extended flag is set.
      * @retval false  The Extended flag is not set.
+     *
      */
     bool IsExtendedFlagSet(void) const { return (mTypeIdFlags & kExtendedFlag) != 0; }
 
@@ -133,6 +138,7 @@ public:
      *
      * @retval true   The value length flag is set, extended value length (4 bytes)
      * @retval false  The value length flag is not set, short value length (1 byte)
+     *
      */
     bool IsLengthFlagSet(void) const { return (mTypeIdFlags & kLengthFlag) != 0; }
 

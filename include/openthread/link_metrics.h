@@ -74,29 +74,11 @@ typedef struct otLinkMetricsValues
 {
     otLinkMetrics mMetrics; ///< Specifies which metrics values are present/included.
 
-    uint32_t mPduCountValue;
-    uint8_t  mLqiValue;
-    uint8_t  mLinkMarginValue;
-    int8_t   mRssiValue;
+    uint32_t mPduCountValue;   ///< The value of Pdu Count.
+    uint8_t  mLqiValue;        ///< The value LQI.
+    uint8_t  mLinkMarginValue; ///< The value of Link Margin.
+    int8_t   mRssiValue;       ///< The value of Rssi.
 } otLinkMetricsValues;
-
-/**
- * This function sends an MLE Data Request to query Link Metrics.
- * Single Probe or Forward Tracking Series.
- *
- * @param[in]  aInstance            A pointer to an OpenThread instance.
- * @param[in]  aDestination         A reference to the destination address.
- * @param[in]  aSeriesId            The Series ID to query about, 0 for Single Probe.
- * @param[in]  aLinkMetricsFlags    Flags to specify what metrics to query.
- *
- * @retval OT_ERROR_NONE          Successfully sent a Link Metrics query message.
- * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Data Request message.
- *
- */
-otError otLinkMetricsQuery(otInstance *         aInstance,
-                           const otIp6Address & aDestination,
-                           uint8_t              aSeriesId,
-                           const otLinkMetrics &aLinkMetricsFlags);
 
 /**
  * This function pointer is called when a Link Metrics report is received.
@@ -111,16 +93,27 @@ typedef void (*otLinkMetricsReportCallback)(const otIp6Address *       aSource,
                                             void *                     aContext);
 
 /**
- * This function registers a callback to handle Link Metrics report received.
+ * This function sends an MLE Data Request to query Link Metrics.
  *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aCallback         A pointer to a function that is called when Link Metrics report is received.
- * @param[in]  aCallbackContext  A pointer to application-specific context.
+ * It could be either Single Probe or Forward Tracking Series.
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ * @param[in]  aDestination         A pointer to the destination address.
+ * @param[in]  aSeriesId            The Series ID to query about, 0 for Single Probe.
+ * @param[in]  aLinkMetricsFlags    A pointer to flags specifying what metrics to query.
+ * @param[in]  aCallback            A pointer to a function that is called when Link Metrics report is received.
+ * @param[in]  aCallbackContext     A pointer to application-specific context.
+ *
+ * @retval OT_ERROR_NONE          Successfully sent a Link Metrics query message.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Data Request message.
  *
  */
-void otLinkMetricsSetReportCallback(otInstance *                aInstance,
-                                    otLinkMetricsReportCallback aCallback,
-                                    void *                      aCallbackContext);
+otError otLinkMetricsQuery(otInstance *                aInstance,
+                           const otIp6Address *        aDestination,
+                           uint8_t                     aSeriesId,
+                           const otLinkMetrics *       aLinkMetricsFlags,
+                           otLinkMetricsReportCallback aCallback,
+                           void *                      aCallbackContext);
 
 /**
  * @}

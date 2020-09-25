@@ -69,12 +69,13 @@ public:
     explicit LinkMetrics(Instance &aInstance);
 
     /**
-     * This function sends an MLE Data Request containing Link Metrics Query TLV to query Link Metrics data. It could
-     * be either a Single Probe or a Forward Tracking Series.
+     * This function sends an MLE Data Request containing Link Metrics Query TLV to query Link Metrics data.
+     *
+     * It could be either a Single Probe or a Forward Tracking Series.
      *
      * @param[in]  aDestination       A reference to the IPv6 address of the destination.
      * @param[in]  aSeriesId          The Series ID to query, 0 for single probe.
-     * @param[in]  aLinkMetricsFlags  Flags to specify what metrics to query.
+     * @param[in]  aLinkMetricsFlags  A reference to flags specifying what metrics to query.
      *
      * @retval OT_ERROR_NONE          Successfully sent a Link Metrics query message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Data Request message.
@@ -147,8 +148,8 @@ private:
                                                const otLinkMetrics &aLinkMetrics,
                                                const Message &      aRequestMessage);
 
-    uint8_t GetTypeIdFlagsFromOtLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
-                                                 const otLinkMetrics &   aLinkMetricsFlags);
+    static uint8_t TypeIdFlagsFromOtLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
+                                                     const otLinkMetrics &   aLinkMetricsFlags);
 };
 
 /**

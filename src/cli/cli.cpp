@@ -147,9 +147,6 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_FTD
     otThreadSetDiscoveryRequestCallback(mInstance, &Interpreter::HandleDiscoveryRequest, this);
 #endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-    otLinkMetricsSetReportCallback(mInstance, &Interpreter::HandleLinkMetricsReport, this);
-#endif
 
     mIcmpHandler.mReceiveCallback = Interpreter::HandleIcmpReceive;
     mIcmpHandler.mContext         = this;
@@ -1971,7 +1968,8 @@ otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
                 ExitNow(error = OT_ERROR_INVALID_ARGS);
             }
         }
-        error = otLinkMetricsQuery(mInstance, address, static_cast<uint8_t>(seriesId), linkMetrics);
+        error = otLinkMetricsQuery(mInstance, &address, static_cast<uint8_t>(seriesId), &linkMetrics,
+                                   &Interpreter::HandleLinkMetricsReport, this);
     }
 
 exit:

@@ -212,7 +212,7 @@ private:
 };
 
 /**
- * This class implements a LinkQuality Indicator (LQI) averager.
+ * This class implements a Link Quality Indicator (LQI) averager.
  *
  * It maintains the exponential moving average value of LQI.
  *

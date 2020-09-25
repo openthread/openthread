@@ -1297,7 +1297,7 @@ protected:
      * @param[in]  aTlvsLength       The number of TLV types in @p aTlvs.
      * @param[in]  aDelay            Delay in milliseconds before the Data Request message is sent.
      * @param[in]  aExtraTlvs        A pointer to extra TLVs.
-     * @param[in]  aExtraTlvsLength  Length of extra TLVs contents.
+     * @param[in]  aExtraTlvsLength  Length of extra TLVs.
      *
      * @retval OT_ERROR_NONE     Successfully generated an MLE Data Request message.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate the MLE Data Request message.

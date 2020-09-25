@@ -42,20 +42,19 @@ using namespace ot;
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
-otError otLinkMetricsQuery(otInstance *         aInstance,
-                           const otIp6Address & aDestination,
-                           uint8_t              aSeriesId,
-                           const otLinkMetrics &aLinkMetricsFlags)
+otError otLinkMetricsQuery(otInstance *                aInstance,
+                           const otIp6Address *        aDestination,
+                           uint8_t                     aSeriesId,
+                           const otLinkMetrics *       aLinkMetricsFlags,
+                           otLinkMetricsReportCallback aCallback,
+                           void *                      aCallbackContext)
 {
-    return static_cast<Instance *>(aInstance)->Get<LinkMetrics>().LinkMetricsQuery(
-        static_cast<const Ip6::Address &>(aDestination), aSeriesId, aLinkMetricsFlags);
-}
+    OT_ASSERT(aDestination != nullptr && aLinkMetricsFlags != nullptr);
 
-void otLinkMetricsSetReportCallback(otInstance *                aInstance,
-                                    otLinkMetricsReportCallback aCallback,
-                                    void *                      aCallbackContext)
-{
     static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SetLinkMetricsReportCallback(aCallback, aCallbackContext);
+
+    return static_cast<Instance *>(aInstance)->Get<LinkMetrics>().LinkMetricsQuery(
+        static_cast<const Ip6::Address &>(*aDestination), aSeriesId, *aLinkMetricsFlags);
 }
 
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
