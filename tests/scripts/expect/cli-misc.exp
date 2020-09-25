@@ -67,8 +67,8 @@ expect "Error 7: InvalidArgs"
 
 send "fem lnagain 11\n"
 expect "Done"
-send "fem\n"
-expect -- "LNA gain 11 dBm"
+send "fem lnagain\n"
+expect -- "11"
 expect "Done"
 
 send "ifconfig down\n"

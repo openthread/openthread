@@ -810,17 +810,27 @@ Delete all stored settings, and signal a platform reset.
 
 ### fem
 
-Get the external FEM parameters.
+Get external FEM parameters.
 
 ```bash
-> fem
+> fem lnagain
 LNA gain 11 dBm
+Done
+```
+
+### fem lnagain
+
+Get the Rx LNA gain in dBm of the external FEM.
+
+```bash
+> fem lnagain
+11
 Done
 ```
 
 ### fem lnagain \<LNA gain\>
 
-Set the external FEM parameters.
+Set the Rx LNA gain in dBm of the external FEM.
 
 ```bash
 > fem lnagain 8
