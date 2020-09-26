@@ -132,16 +132,30 @@ jobs:
       - name: Get Thread-Wireshark
         run: |
           ./script/test get_thread_wireshark
-      - name: Run
+      - name: Run Once
         run: |
-          for i in {1..10}
-          do
-            ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
-          done
+          ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
       - uses: actions/upload-artifact@v2
         if: ${{ failure() }}
         with:
           name: packet-verification-pcaps
+          path: |
+            *.pcap
+            *.json
+      - name: Run More Times
+        continue-on-error: true
+        id: run_more_times
+        run: |
+          for i in {1..10}
+          do
+            ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
+            rm -rf *.json *.pcap
+          done
+      - uses: actions/upload-artifact@v2
+        if: steps.run_more_times.outcome == "failure"
+        continue-on-error: true
+        with:
+          name: packet-verification-pcaps-more
           path: |
             *.pcap
             *.json
