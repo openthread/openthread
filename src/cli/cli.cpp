@@ -1593,26 +1593,26 @@ otError Interpreter::ProcessFem(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        int8_t lna_gain;
+        int8_t lnaGain;
 
-        SuccessOrExit(error = otPlatRadioGetFemLnaGain(mInstance, &lna_gain));
-        OutputLine("LNA gain %d dBm", lna_gain);
+        SuccessOrExit(error = otPlatRadioGetFemLnaGain(mInstance, &lnaGain));
+        OutputLine("LNA gain %d dBm", lnaGain);
     }
     else if (strcmp(aArgs[0], "lnagain") == 0)
     {
         if (aArgsLength == 1)
         {
-            int8_t lna_gain;
+            int8_t lnaGain;
 
-            SuccessOrExit(error = otPlatRadioGetFemLnaGain(mInstance, &lna_gain));
-            OutputLine("%d", lna_gain);
+            SuccessOrExit(error = otPlatRadioGetFemLnaGain(mInstance, &lnaGain));
+            OutputLine("%d", lnaGain);
         }
         else
         {
-            long lna_gain;
+            long lnaGain;
 
-            SuccessOrExit(error = ParseLong(aArgs[1], lna_gain));
-            SuccessOrExit(error = otPlatRadioSetFemLnaGain(mInstance, static_cast<int8_t>(lna_gain)));
+            SuccessOrExit(error = ParseLong(aArgs[1], lnaGain));
+            SuccessOrExit(error = otPlatRadioSetFemLnaGain(mInstance, static_cast<int8_t>(lnaGain)));
         }
     }
     else

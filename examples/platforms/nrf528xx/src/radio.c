@@ -495,7 +495,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 
     nrf_802154_rssi_measure_begin();
 
-    return nrf_802154_rssi_last_get();
+    return (nrf_802154_rssi_last_get() - sLnaGain);
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
@@ -701,8 +701,10 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
     otError              error = OT_ERROR_NONE;
     nrf_802154_cca_cfg_t ccaConfig;
 
+    aThreshold += sLnaGain;
+
     // The minimum value of ED threshold for radio driver is -94 dBm
-    if (aThreshold + sLnaGain < NRF528XX_MIN_CCA_ED_THRESHOLD)
+    if (aThreshold < NRF528XX_MIN_CCA_ED_THRESHOLD)
     {
         error = OT_ERROR_INVALID_ARGS;
     }
@@ -710,7 +712,7 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
     {
         memset(&ccaConfig, 0, sizeof(ccaConfig));
         ccaConfig.mode         = NRF_RADIO_CCA_MODE_ED;
-        ccaConfig.ed_threshold = nrf_802154_ccaedthres_from_dbm_calculate(aThreshold + sLnaGain);
+        ccaConfig.ed_threshold = nrf_802154_ccaedthres_from_dbm_calculate(aThreshold);
 
         nrf_802154_cca_cfg_set(&ccaConfig);
     }
@@ -741,14 +743,15 @@ otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
     OT_UNUSED_VARIABLE(aInstance);
 
     int8_t  threshold;
-    otError error = OT_ERROR_NONE;
+    int8_t  oldLnaGain = sLnaGain;
+    otError error      = OT_ERROR_NONE;
 
     error = otPlatRadioGetCcaEnergyDetectThreshold(aInstance, &threshold);
     otEXPECT(error == OT_ERROR_NONE);
-    otEXPECT_ACTION((threshold + aGain) >= NRF528XX_MIN_CCA_ED_THRESHOLD, error = OT_ERROR_INVALID_ARGS);
 
     sLnaGain = aGain;
     error    = otPlatRadioSetCcaEnergyDetectThreshold(aInstance, threshold);
+    otEXPECT_ACTION(error == OT_ERROR_NONE, sLnaGain = oldLnaGain);
 
 exit:
     return error;
@@ -913,7 +916,7 @@ void nrf_802154_received_timestamp_raw(uint8_t *p_data, int8_t power, uint8_t lq
 
     receivedFrame->mPsdu               = &p_data[1];
     receivedFrame->mLength             = p_data[0];
-    receivedFrame->mInfo.mRxInfo.mRssi = power;
+    receivedFrame->mInfo.mRxInfo.mRssi = power - sLnaGain;
     receivedFrame->mInfo.mRxInfo.mLqi  = lqi;
     receivedFrame->mChannel            = nrf_802154_channel_get();
 
@@ -1041,7 +1044,7 @@ void nrf_802154_transmitted_timestamp_raw(const uint8_t *aFrame,
         sAckFrame.mInfo.mRxInfo.mTimestamp = nrf5AlarmGetCurrentTime() - offset;
         sAckFrame.mPsdu                    = &aAckPsdu[1];
         sAckFrame.mLength                  = aAckPsdu[0];
-        sAckFrame.mInfo.mRxInfo.mRssi      = aPower;
+        sAckFrame.mInfo.mRxInfo.mRssi      = aPower - sLnaGain;
         sAckFrame.mInfo.mRxInfo.mLqi       = aLqi;
         sAckFrame.mChannel                 = nrf_802154_channel_get();
     }
@@ -1075,7 +1078,7 @@ void nrf_802154_transmit_failed(const uint8_t *aFrame, nrf_802154_tx_error_t err
 
 void nrf_802154_energy_detected(uint8_t result)
 {
-    sEnergyDetected = nrf_802154_dbm_from_energy_level_calculate(result);
+    sEnergyDetected = nrf_802154_dbm_from_energy_level_calculate(result) - sLnaGain;
 
     setPendingEvent(kPendingEventEnergyDetected);
 }
