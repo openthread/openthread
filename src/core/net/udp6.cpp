@@ -172,10 +172,7 @@ exit:
 
 otError Udp::Open(SocketHandle &aSocket, otUdpReceive aHandler, void *aContext)
 {
-    otError       error = OT_ERROR_NONE;
-    SocketHandle *prev;
-
-    VerifyOrExit(mSockets.Find(aSocket, prev) == OT_ERROR_NOT_FOUND, error = OT_ERROR_ALREADY);
+    otError error = OT_ERROR_NONE;
 
     aSocket.GetSockName().Clear();
     aSocket.GetPeerName().Clear();

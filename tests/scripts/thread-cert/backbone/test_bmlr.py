@@ -83,7 +83,7 @@ class BBR_5_11_01(thread_cert.TestCase):
         },
         COMMISSIONER: {
             'name': 'COMMISSIONER',
-            'allowlist': [PBBR, SBBR, ROUTER1],
+            'allowlist': [ROUTER1],
             'version': '1.2',
             'router_selection_jitter': 1,
         }
