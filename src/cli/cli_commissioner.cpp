@@ -410,7 +410,7 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
 
     if (aJoinerId != nullptr)
     {
-        mInterpreter.OutputBytes(aJoinerId->m8, sizeof(*aJoinerId));
+        mInterpreter.OutputExtAddress(*aJoinerId);
     }
 
     mInterpreter.OutputLine("");

@@ -878,12 +878,7 @@ otError Interpreter::ProcessChild(uint8_t aArgsLength, char *aArgs[])
                 OutputFormat("|%1d", childInfo.mFullThreadDevice);
                 OutputFormat("|%1d", childInfo.mFullNetworkData);
                 OutputFormat("| ");
-
-                for (uint8_t b : childInfo.mExtAddress.m8)
-                {
-                    OutputFormat("%02x", b);
-                }
-
+                OutputExtAddress(childInfo.mExtAddress);
                 OutputLine(" |");
             }
             else
@@ -902,12 +897,7 @@ otError Interpreter::ProcessChild(uint8_t aArgsLength, char *aArgs[])
     OutputLine("Child ID: %d", childInfo.mChildId);
     OutputLine("Rloc: %04x", childInfo.mRloc16);
     OutputFormat("Ext Addr: ");
-
-    for (uint8_t b : childInfo.mExtAddress.m8)
-    {
-        OutputFormat("%02x", b);
-    }
-
+    OutputExtAddress(childInfo.mExtAddress);
     OutputLine("");
     OutputFormat("Mode: ");
 
@@ -1998,11 +1988,7 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
     {
         const otPskc *pskc = otThreadGetPskc(mInstance);
 
-        for (uint8_t b : pskc->m8)
-        {
-            OutputFormat("%02x", b);
-        }
-
+        OutputBytes(pskc->m8);
         OutputLine("");
     }
     else
@@ -2038,13 +2024,7 @@ otError Interpreter::ProcessMasterKey(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        const uint8_t *key = reinterpret_cast<const uint8_t *>(otThreadGetMasterKey(mInstance));
-
-        for (int i = 0; i < OT_MASTER_KEY_SIZE; i++)
-        {
-            OutputFormat("%02x", key[i]);
-        }
-
+        OutputBytes(otThreadGetMasterKey(mInstance)->m8);
         OutputLine("");
     }
     else
@@ -2251,12 +2231,7 @@ otError Interpreter::ProcessNeighbor(uint8_t aArgsLength, char *aArgs[])
                 OutputFormat("|%1d", neighborInfo.mFullThreadDevice);
                 OutputFormat("|%1d", neighborInfo.mFullNetworkData);
                 OutputFormat("| ");
-
-                for (uint8_t b : neighborInfo.mExtAddress.m8)
-                {
-                    OutputFormat("%02x", b);
-                }
-
+                OutputExtAddress(neighborInfo.mExtAddress);
                 OutputLine(" |");
             }
             else
@@ -2544,14 +2519,8 @@ otError Interpreter::ProcessParent(uint8_t aArgsLength, char *aArgs[])
 
     SuccessOrExit(error = otThreadGetParentInfo(mInstance, &parentInfo));
     OutputFormat("Ext Addr: ");
-
-    for (uint8_t b : parentInfo.mExtAddress.m8)
-    {
-        OutputFormat("%02x", b);
-    }
-
+    OutputExtAddress(parentInfo.mExtAddress);
     OutputLine("");
-
     OutputLine("Rloc: %x", parentInfo.mRloc16);
     OutputLine("Link Quality In: %d", parentInfo.mLinkQualityIn);
     OutputLine("Link Quality Out: %d", parentInfo.mLinkQualityOut);
@@ -3292,12 +3261,7 @@ otError Interpreter::ProcessRouter(uint8_t aArgsLength, char *aArgs[])
                 OutputFormat("| %6d ", routerInfo.mLinkQualityOut);
                 OutputFormat("| %3d ", routerInfo.mAge);
                 OutputFormat("| ");
-
-                for (uint8_t b : routerInfo.mExtAddress.m8)
-                {
-                    OutputFormat("%02x", b);
-                }
-
+                OutputExtAddress(routerInfo.mExtAddress);
                 OutputLine(" |");
             }
             else
@@ -3325,12 +3289,7 @@ otError Interpreter::ProcessRouter(uint8_t aArgsLength, char *aArgs[])
         if (routerInfo.mLinkEstablished)
         {
             OutputFormat("Ext Addr: ");
-
-            for (uint8_t b : routerInfo.mExtAddress.m8)
-            {
-                OutputFormat("%02x", b);
-            }
-
+            OutputExtAddress(routerInfo.mExtAddress);
             OutputLine("");
             OutputLine("Cost: %d", routerInfo.mPathCost);
             OutputLine("Link Quality In: %d", routerInfo.mLinkQualityIn);
@@ -3502,11 +3461,11 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
     OutputFormat("| %-16s ", aResult->mNetworkName.m8);
 
     OutputFormat("| ");
-    OutputBytes(aResult->mExtendedPanId.m8, OT_EXT_PAN_ID_SIZE);
+    OutputBytes(aResult->mExtendedPanId.m8);
     OutputFormat(" ");
 
     OutputFormat("| %04x | ", aResult->mPanId);
-    OutputBytes(aResult->mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
+    OutputExtAddress(aResult->mExtAddress);
     OutputFormat(" | %2d ", aResult->mChannel);
     OutputFormat("| %3d ", aResult->mRssi);
     OutputLine("| %3d |", aResult->mLqi);
@@ -3915,7 +3874,7 @@ void Interpreter::PrintMacFilter(void)
 
     while (otLinkFilterGetNextAddress(mInstance, &iterator, &entry) == OT_ERROR_NONE)
     {
-        OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
+        OutputExtAddress(entry.mExtAddress);
 
         if (entry.mRssIn != OT_MAC_FILTER_FIXED_RSS_DISABLED)
         {
@@ -3947,7 +3906,7 @@ void Interpreter::PrintMacFilter(void)
         }
         else
         {
-            OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
+            OutputExtAddress(entry.mExtAddress);
             OutputLine(" : rss %d (lqi %d)", entry.mRssIn, otLinkConvertRssToLinkQuality(mInstance, entry.mRssIn));
         }
     }
@@ -3979,7 +3938,7 @@ otError Interpreter::ProcessMacFilterAddress(uint8_t aArgsLength, char *aArgs[])
 
         while (otLinkFilterGetNextAddress(mInstance, &iterator, &entry) == OT_ERROR_NONE)
         {
-            OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
+            OutputExtAddress(entry.mExtAddress);
 
             if (entry.mRssIn != OT_MAC_FILTER_FIXED_RSS_DISABLED)
             {
@@ -4078,7 +4037,7 @@ otError Interpreter::ProcessMacFilterRss(uint8_t aArgsLength, char *aArgs[])
             }
             else
             {
-                OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
+                OutputExtAddress(entry.mExtAddress);
                 OutputLine(" : rss %d (lqi %d)", entry.mRssIn, otLinkConvertRssToLinkQuality(mInstance, entry.mRssIn));
             }
         }
@@ -4394,7 +4353,7 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
         {
         case OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS:
             OutputFormat("Ext Address: '");
-            OutputBytes(diagTlv.mData.mExtAddress.m8, sizeof(diagTlv.mData.mExtAddress.m8));
+            OutputExtAddress(diagTlv.mData.mExtAddress);
             OutputLine("'");
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS:
@@ -4672,7 +4631,7 @@ void Interpreter::SignalPingReply(const Ip6::Address &aPeerAddress,
 void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo)
 {
     OutputFormat("~ Discovery Request from ");
-    OutputBytes(aInfo.mExtAddress.m8, sizeof(aInfo.mExtAddress.m8));
+    OutputExtAddress(aInfo.mExtAddress);
     OutputLine(": version=%u,joiner=%d", aInfo.mVersion, aInfo.mIsJoiner);
 }
 

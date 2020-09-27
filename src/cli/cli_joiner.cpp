@@ -102,11 +102,7 @@ otError Joiner::ProcessId(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    const otExtAddress *joinerId;
-
-    joinerId = otJoinerGetId(mInterpreter.mInstance);
-
-    mInterpreter.OutputBytes(joinerId->m8, sizeof(otExtAddress));
+    mInterpreter.OutputExtAddress(*otJoinerGetId(mInterpreter.mInstance));
     mInterpreter.OutputLine("");
 
     return OT_ERROR_NONE;
