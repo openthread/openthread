@@ -29,10 +29,10 @@
 # This test verifies that PBBR sends BMLR.ntf correctly when multicast addresses are registered.
 #
 # Topology:
-#    -----------(eth)----------------
-#       |
-#      BBR
-#        \
+#    ---- -(eth)-------
+#       |        |
+#      PBBR----SBBR
+#        \     /
 #        Router1
 #
 
@@ -45,8 +45,11 @@ PBBR = 1
 SBBR = 2
 ROUTER1 = 3
 
-REREG_DELAY = 4
-MLR_TIMEOUT = 300
+REREG_DELAY = 4  # Seconds
+MLR_TIMEOUT = 300  # Seconds
+
+MA1 = 'ff04::1'
+MA2 = 'ff04::2'
 
 
 class BBR_5_11_01(thread_cert.TestCase):
@@ -92,9 +95,9 @@ class BBR_5_11_01(thread_cert.TestCase):
         self.nodes[ROUTER1].start()
         self.wait_node_state(ROUTER1, 'router', 5)
 
-        self.nodes[PBBR].add_ipmaddr("ff04::1")
+        self.nodes[PBBR].add_ipmaddr(MA1)
         self.simulator.go(REREG_DELAY)
-        self.nodes[ROUTER1].add_ipmaddr("ff04::2")
+        self.nodes[ROUTER1].add_ipmaddr(MA2)
         self.simulator.go(REREG_DELAY)
 
         self.collect_ipaddrs()
@@ -114,12 +117,13 @@ class BBR_5_11_01(thread_cert.TestCase):
 
         # Verify PBBR sends `/b/bmr` on the Backbone link for ff04::1 with default timeout.
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
-            thread_meshcop.tlv.ipv6_addr == 'ff04::1'
+            thread_meshcop.tlv.ipv6_addr == '{MA1}'
             and thread_bl.tlv.timeout == {MLR_TIMEOUT}
         """)
+
         # Verify PBBR sends `/b/bmr` on the Backbone link for ff04::2 with default timeout.
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
-            thread_meshcop.tlv.ipv6_addr == 'ff04::2'
+            thread_meshcop.tlv.ipv6_addr == '{MA2}'
             and thread_bl.tlv.timeout == {MLR_TIMEOUT}
         """)
 

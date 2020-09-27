@@ -109,7 +109,7 @@ class OtbrDocker:
             '/tmp/codecov.bash:/tmp/codecov.bash',
             config.OTBR_DOCKER_IMAGE,
             '-B',
-            'eth0',
+            config.BACKBONE_IFNAME,
         ],
                                              stdin=subprocess.DEVNULL,
                                              stdout=sys.stdout,
@@ -1878,7 +1878,7 @@ class Node(NodeImpl, OtCli):
 
 class LinuxHost():
     PING_RESPONSE_PATTERN = re.compile(r'\d+ bytes from .*:.*')
-    ETH_DEV = 'eth0'
+    ETH_DEV = config.BACKBONE_IFNAME
 
     def get_ether_addrs(self):
         output = self.bash(f'ip -6 addr list dev {self.ETH_DEV}')
