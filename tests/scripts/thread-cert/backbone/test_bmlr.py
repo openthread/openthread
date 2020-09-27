@@ -119,11 +119,11 @@ class BBR_5_11_01(thread_cert.TestCase):
         self.simulator.go(REREG_DELAY)
 
         # Commissioner registers MA3 with default timeout
-        self.assertEqual(0, self.nodes[COMMISSIONER].register_multicast_listener(MA3, timeout=None))
+        self.assertEqual((0, []), self.nodes[COMMISSIONER].register_multicast_listener(MA3, timeout=None))
         # Commissioner registers MA4 with a custom timeout
-        self.assertEqual(0, self.nodes[COMMISSIONER].register_multicast_listener(MA4, timeout=CUSTOM_MLR_TIMEOUT))
+        self.assertEqual((0, []), self.nodes[COMMISSIONER].register_multicast_listener(MA4, timeout=CUSTOM_MLR_TIMEOUT))
         # Commissioner unregisters MA1 and MA5
-        self.assertEqual(0, self.nodes[COMMISSIONER].register_multicast_listener(MA1, MA5, timeout=0))
+        self.assertEqual((0, []), self.nodes[COMMISSIONER].register_multicast_listener(MA1, MA5, timeout=0))
 
         self.collect_ipaddrs()
         self.collect_rloc16s()
