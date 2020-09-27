@@ -1809,7 +1809,7 @@ class NodeImpl:
         self._expect([r'(\d+)((\s\d+)*)'])
 
         g = self.pexpect.match.groups()
-        router_list = g[0] + ' ' + g[1]
+        router_list = g[0].decode('utf8') + ' ' + g[1].decode('utf8')
         router_list = [int(x) for x in router_list.split()]
         self._expect('Done')
         return router_list
@@ -1820,7 +1820,7 @@ class NodeImpl:
 
         self._expect(r'(.*)Done')
         g = self.pexpect.match.groups()
-        output = g[0]
+        output = g[0].decode('utf8')
         lines = output.strip().split('\n')
         lines = [l.strip() for l in lines]
         router_table = {}
