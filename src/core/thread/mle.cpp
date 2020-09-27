@@ -2035,8 +2035,13 @@ exit:
 otError Mle::SendDataRequest(const Ip6::Address &aDestination,
                              const uint8_t *     aTlvs,
                              uint8_t             aTlvsLength,
-                             uint16_t            aDelay)
+                             uint16_t            aDelay,
+                             const uint8_t *     aExtraTlvs,
+                             uint8_t             aExtraTlvsLength)
 {
+    OT_UNUSED_VARIABLE(aExtraTlvs);
+    OT_UNUSED_VARIABLE(aExtraTlvsLength);
+
     otError  error = OT_ERROR_NONE;
     Message *message;
 
@@ -2045,6 +2050,11 @@ otError Mle::SendDataRequest(const Ip6::Address &aDestination,
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
     SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
+
+    if (aExtraTlvs != nullptr && aExtraTlvsLength > 0)
+    {
+        SuccessOrExit(error = message->Append(aExtraTlvs, aExtraTlvsLength));
+    }
 
     if (aDelay)
     {
@@ -2801,10 +2811,22 @@ exit:
 void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor)
 {
     otError error;
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    uint16_t metricsReportValueOffset;
+    uint16_t length;
+#endif
 
     Log(kMessageReceive, kTypeDataResponse, aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = OT_ERROR_SECURITY);
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    if (Tlv::FindTlvValueOffset(aMessage, Tlv::kLinkMetricsReport, metricsReportValueOffset, length) == OT_ERROR_NONE)
+    {
+        Get<LinkMetrics>().HandleLinkMetricsReport(aMessage, metricsReportValueOffset, length,
+                                                   aMessageInfo.GetPeerAddr());
+    }
+#endif
 
     error = HandleLeaderData(aMessage, aMessageInfo);
 

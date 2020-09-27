@@ -348,6 +348,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             return
 
         test_info = self._test_info = {
+            'script': os.path.abspath(sys.argv[0]),
             'testcase': self.test_name,
             'start_time': time.ctime(self._start_time),
             'pcap': '',

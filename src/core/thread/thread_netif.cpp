@@ -126,6 +126,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     , mTimeSync(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    , mLinkMetrics(aInstance)
+#endif
 {
 }
 

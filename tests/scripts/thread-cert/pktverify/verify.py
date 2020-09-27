@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,63 +27,57 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import unittest
+import importlib.util
+import inspect
+import json
+import logging
+import os
+import sys
+
+THREAD_CERT_DIR = './tests/scripts/thread-cert'
+sys.path.append(THREAD_CERT_DIR)
 
 import thread_cert
+from pktverify.packet_verifier import PacketVerifier
 
-LEADER = 1
-ROUTER1 = 2
-ROUTER2 = 3
-
-# Topology:
-# LEADER -- ROUTER1 -- ROUTER2
-#
+logging.basicConfig(level=logging.INFO,
+                    format='File "%(pathname)s", line %(lineno)d, in %(funcName)s\n'
+                    '%(asctime)s - %(levelname)s - %(message)s')
 
 
-class TestRouteTable(thread_cert.TestCase):
-    SUPPORT_NCP = False
+def main():
+    json_file = sys.argv[1]
+    with open(json_file, 'rt') as fp:
+        test_info = json.load(fp)
 
-    TOPOLOGY = {
-        LEADER: {
-            'mode': 'rsdn',
-            'panid': 0xface,
-            'allowlist': [ROUTER1]
-        },
-        ROUTER1: {
-            'mode': 'rsdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
-            'allowlist': [LEADER, ROUTER2]
-        },
-        ROUTER2: {
-            'mode': 'rsdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
-            'allowlist': [ROUTER1]
-        },
-    }
+    script = test_info['script']
 
-    def test(self):
-        self.nodes[LEADER].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
+    script = os.path.relpath(script, THREAD_CERT_DIR)
 
-        self.nodes[ROUTER1].start()
-        self.nodes[ROUTER2].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
-        self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
+    module_name = os.path.splitext(script)[0].replace('/', '.')
+    logging.info("Loading %s as module %s ...", script, module_name)
 
-        self.simulator.go(100)
+    spec = importlib.util.spec_from_file_location(module_name, os.path.join(THREAD_CERT_DIR, script))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
 
-        router_ids = set(_node.get_router_id() for _node in self.nodes.values())
-        for _node in self.nodes.values():
-            self.assertEqual(set(_node.router_list()), router_ids)
+    test_class = None
 
-        for _node in self.nodes.values():
-            router_table = _node.router_table()
-            self.assertEqual(set(router_table), router_ids)
+    for name, member in inspect.getmembers(mod):
+        if isinstance(member, type) and issubclass(member, thread_cert.TestCase):
+            assert test_class is None, (test_class, member)
+            test_class = member
+
+    assert test_class is not None, "can not find a test class in %s" % script
+
+    test_instance = test_class()
+
+    pv = PacketVerifier(json_file)
+    pv.add_common_vars()
+    test_instance.verify(pv)
+
+    print("Packet verification passed: %s" % json_file, file=sys.stderr)
 
 
 if __name__ == '__main__':
-    unittest.main()
+    main()
