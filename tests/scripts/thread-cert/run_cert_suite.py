@@ -29,14 +29,23 @@
 import logging
 import multiprocessing
 import os
+import queue
 import subprocess
-import sys
 import traceback
 from collections import Counter
+from typing import List
 
 import config
 
-MULTIPLE_JOBS = 10
+THREAD_VERSION = os.getenv('THREAD_VERSION')
+VIRTUAL_TIME = int(os.getenv('VIRTUAL_TIME', '1'))
+MAX_JOBS = multiprocessing.cpu_count() * 2 if VIRTUAL_TIME else 10
+
+_BACKBONE_TESTS_DIR = 'tests/scripts/thread-cert/backbone'
+
+_COLOR_PASS = '\033[0;32m'
+_COLOR_FAIL = '\033[0;31m'
+_COLOR_NONE = '\033[0m'
 
 logging.basicConfig(level=logging.DEBUG,
                     format='File "%(pathname)s", line %(lineno)d, in %(funcName)s\n'
@@ -47,9 +56,8 @@ def bash(cmd: str, check=True, stdout=None):
     subprocess.run(cmd, shell=True, check=check, stdout=stdout)
 
 
-def run_bbr_test(port_offset: int, script: str):
+def run_cert(port_offset: int, script: str):
     try:
-        logging.info("Running BBR test: %s ...", script)
         test_name = os.path.splitext(os.path.basename(script))[0] + '_' + str(port_offset)
         logfile = test_name + '.log'
         env = os.environ.copy()
@@ -73,10 +81,10 @@ def run_bbr_test(port_offset: int, script: str):
         raise
 
 
-pool = multiprocessing.Pool(processes=MULTIPLE_JOBS)
+pool = multiprocessing.Pool(processes=MAX_JOBS)
 
 
-def cleanup_env():
+def cleanup_backbone_env():
     logging.info("Cleaning up Backbone testing environment ...")
     bash('pkill socat 2>/dev/null || true')
     bash('pkill dumpcap 2>/dev/null || true')
@@ -84,8 +92,15 @@ def cleanup_env():
     bash(f'docker network rm $(docker network ls -q -f "name=backbone") 2>/dev/null || true')
 
 
-def setup_env():
+def setup_backbone_env():
     bash('sudo modprobe ip6table_filter')
+
+    if THREAD_VERSION != '1.2':
+        raise RuntimeError('Backbone tests only work with THREAD_VERSION=1.2')
+
+    if VIRTUAL_TIME:
+        raise RuntimeError('Backbone tests only work with VIRTUAL_TIME=0')
+
     bash(f'docker image inspect {config.OTBR_DOCKER_IMAGE} >/dev/null')
 
 
@@ -96,40 +111,90 @@ def parse_args():
     parser.add_argument("scripts", nargs='+', type=str, help='specify Backbone test scripts')
 
     args = parser.parse_args()
+    logging.info("Max jobs: %d", MAX_JOBS)
     logging.info("Multiply: %d", args.multiply)
-    logging.info("Test scripts: %s", args.scripts)
+    logging.info("Test scripts: %d", len(args.scripts))
     return args
+
+
+def check_has_backbone_tests(scripts):
+    for script in scripts:
+        relpath = os.path.relpath(script, _BACKBONE_TESTS_DIR)
+        if not relpath.startswith('..'):
+            return True
+
+    return False
+
+
+class PortOffsetPool:
+
+    def __init__(self, size: int):
+        self._size = size
+        self._pool = queue.Queue(maxsize=size)
+        for port_offset in range(1, size + 1):
+            self.release(port_offset)
+
+    def allocate(self) -> int:
+        return self._pool.get()
+
+    def release(self, port_offset: int):
+        assert 1 <= port_offset <= self._size, port_offset
+        self._pool.put_nowait(port_offset)
+
+
+def run_tests(scripts: List[str], multiply: int = 1):
+    script_fail_count = Counter()
+    script_succ_count = Counter()
+
+    # Run each script for multiple times
+    scripts = [script for script in scripts for _ in range(multiply)]
+    port_offset_pool = PortOffsetPool(MAX_JOBS)
+
+    def error_callback(port_offset, script, err):
+        port_offset_pool.release(port_offset)
+
+        script_fail_count[script] += 1
+        if script_succ_count[script] + script_fail_count[script] == multiply:
+            color = _COLOR_PASS if script_fail_count[script] == 0 else _COLOR_FAIL
+            print(f'{color}PASS {script_succ_count[script]} FAIL {script_fail_count[script]}{_COLOR_NONE} {script}')
+
+    def succ_callback(port_offset, script):
+        port_offset_pool.release(port_offset)
+
+        script_succ_count[script] += 1
+        if script_succ_count[script] + script_fail_count[script] == multiply:
+            color = _COLOR_PASS if script_fail_count[script] == 0 else _COLOR_FAIL
+            print(f'{color}PASS {script_succ_count[script]} FAIL {script_fail_count[script]}{_COLOR_NONE} {script}')
+
+    for i, script in enumerate(scripts):
+        port_offset = port_offset_pool.allocate()
+        pool.apply_async(
+            run_cert, [port_offset, script],
+            callback=lambda ret, port_offset=port_offset, script=script: succ_callback(port_offset, script),
+            error_callback=lambda err, port_offset=port_offset, script=script: error_callback(
+                port_offset, script, err))
+
+    pool.close()
+    pool.join()
+    return sum(script_fail_count.values())
 
 
 def main():
     args = parse_args()
-    cleanup_env()
-    setup_env()
 
-    script_fail_count = Counter()
+    has_backbone_tests = check_has_backbone_tests(args.scripts)
+    logging.info('Has Backbone tests: %s', has_backbone_tests)
 
-    def error_callback(script, err):
-        logging.error("Test %s failed: %s", script, err)
-        script_fail_count[script] += 1
+    if has_backbone_tests:
+        cleanup_backbone_env()
+        setup_backbone_env()
 
-    # Run each script for multiple times
-    scripts = args.scripts * args.multiply
-
-    for i, script in enumerate(scripts):
-        pool.apply_async(run_bbr_test, [i, script],
-                         error_callback=lambda err, script=script: error_callback(script, err))
-
-    pool.close()
-
-    logging.info("Waiting for tests to complete ...")
-    pool.join()
-
-    cleanup_env()
-
-    for script in args.scripts:
-        logging.info("Test %s: %d PASS/%d TOTAL", script, args.multiply - script_fail_count[script], args.multiply)
-
-    exit(len(script_fail_count))
+    try:
+        fail_count = run_tests(args.scripts, args.multiply)
+        exit(fail_count)
+    finally:
+        if has_backbone_tests:
+            cleanup_backbone_env()
 
 
 if __name__ == '__main__':
