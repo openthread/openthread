@@ -516,6 +516,7 @@ _LAYER_FIELDS = {
     'thread_nm.tlv.ml_eid': _ext_addr,
     'thread_nm.tlv.target_eid': _ipv6_addr,
     'thread_nm.tlv.status': _auto,
+    'thread_nm.tlv.timeout': _auto,
     # thread_meshcop is not a real layer
     'thread_meshcop.len_size_mismatch': _str,
     'thread_meshcop.tlv.type': _list(_auto),
@@ -545,7 +546,7 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.unknown': _bytes,
     'thread_meshcop.tlv.ba_locator': _auto,
     'thread_meshcop.tlv.active_tstamp': _auto,
-    'thread_meshcop.tlv.ipv6_addr': _ipv6_addr,
+    'thread_meshcop.tlv.ipv6_addr': _list(_ipv6_addr),
 
     # THREAD NWD
     'thread_nwd.tlv.type': _list(_auto),
@@ -670,7 +671,7 @@ def check_layer_field_exists(packet, field_uri):
 
 def _get_candidate_layers(packet, layer_name):
     if layer_name == 'thread_meshcop':
-        candidate_layer_names = ['thread_meshcop', 'mle', 'coap', 'thread_bl']
+        candidate_layer_names = ['thread_meshcop', 'mle', 'coap', 'thread_bl', 'thread_nm']
     elif layer_name == 'thread_nwd':
         candidate_layer_names = ['mle', 'thread_address']
     elif layer_name == 'wpan':

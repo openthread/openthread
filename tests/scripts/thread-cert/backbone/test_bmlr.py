@@ -123,8 +123,8 @@ class BBR_5_11_01(thread_cert.TestCase):
         # Commissioner registers MA4 with a custom timeout
         self.assertEqual((0, []), self.nodes[COMMISSIONER].register_multicast_listener(MA4,
                                                                                        timeout=CUSTOM_MLR_TIMEOUT))
-        # Commissioner unregisters MA1 and MA5
-        self.assertEqual((0, []), self.nodes[COMMISSIONER].register_multicast_listener(MA1, MA5, timeout=0))
+        # Commissioner unregisters MA5
+        self.assertEqual((0, []), self.nodes[COMMISSIONER].register_multicast_listener(MA5, timeout=0))
 
         self.collect_ipaddrs()
         self.collect_rloc16s()
@@ -145,51 +145,51 @@ class BBR_5_11_01(thread_cert.TestCase):
 
         # Verify PBBR sends `/b/bmr` on the Backbone link for MA1 with default timeout.
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
-            thread_meshcop.tlv.ipv6_addr == '{MA1}'
+            thread_meshcop.tlv.ipv6_addr == ['{MA1}']
             and thread_bl.tlv.timeout == {MLR_TIMEOUT}
         """)
 
         # Router registers MA2 with default timeout
         pkts.filter_wpan_src64(ROUTER1).filter_coap_request('/n/mr').must_next().must_verify(f"""
-            thread_meshcop.tlv.ipv6_addr == '{MA2}'
+            thread_meshcop.tlv.ipv6_addr == ['{MA2}']
             and thread_bl.tlv.timeout is null
         """)
         # Verify PBBR sends `/b/bmr` on the Backbone link for MA2 with default timeout.
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
-            thread_meshcop.tlv.ipv6_addr == '{MA2}'
+            thread_meshcop.tlv.ipv6_addr == ['{MA2}']
             and thread_bl.tlv.timeout == {MLR_TIMEOUT}
         """)
 
         # Commissioner registers MA3 with deafult timeout
         pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request('/n/mr').must_next().must_verify(f"""
-            thread_meshcop.tlv.ipv6_addr == '{MA3}'
+            thread_meshcop.tlv.ipv6_addr == ['{MA3}']
             and thread_bl.tlv.timeout is null
         """)
         # Verify PBBR sends `/b/bmr` on the Backbone link for MA3 with default timeout.
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
-            thread_meshcop.tlv.ipv6_addr == '{MA3}'
+            thread_meshcop.tlv.ipv6_addr == ['{MA3}']
             and thread_bl.tlv.timeout == {MLR_TIMEOUT}
         """)
 
         # Commissioner registers MA4 with custom timeout
         pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request('/n/mr').must_next().must_verify(f"""
-            thread_meshcop.tlv.ipv6_addr == '{MA4}'
-            and thread_bl.tlv.timeout == {CUSTOM_MLR_TIMEOUT}
+            thread_meshcop.tlv.ipv6_addr == ['{MA4}']
+            and thread_nm.tlv.timeout == {CUSTOM_MLR_TIMEOUT}
         """)
         # Verify PBBR sends `/b/bmr` on the Backbone link for MA4 with custom timeout.
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
-            thread_meshcop.tlv.ipv6_addr == '{MA4}'
+            thread_meshcop.tlv.ipv6_addr == ['{MA4}']
             and thread_bl.tlv.timeout == {CUSTOM_MLR_TIMEOUT}
         """)
 
         # Commissioner unregisters MA5
         pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request('/n/mr').must_next().must_verify(f"""
-            thread_meshcop.tlv.ipv6_addr == '{MA5}'
-            and thread_bl.tlv.timeout == 0
+            thread_meshcop.tlv.ipv6_addr == ['{MA5}']
+            and thread_nm.tlv.timeout == 0
         """)
         # Verify PBBR not sends `/b/bmr` on the Backbone link for MA5.
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').filter(f"""
-            thread_meshcop.tlv.ipv6_addr == '{MA5}'
+            thread_meshcop.tlv.ipv6_addr == ['{MA5}']
         """).must_not_next()
 
 
