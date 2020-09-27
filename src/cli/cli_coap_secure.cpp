@@ -45,7 +45,7 @@
 namespace ot {
 namespace Cli {
 
-const struct CoapSecure::Command CoapSecure::sCommands[] = {
+const CoapSecure::Command CoapSecure::sCommands[] = {
     {"help", &CoapSecure::ProcessHelp},      {"connect", &CoapSecure::ProcessConnect},
     {"delete", &CoapSecure::ProcessRequest}, {"disconnect", &CoapSecure::ProcessDisconnect},
     {"get", &CoapSecure::ProcessRequest},    {"post", &CoapSecure::ProcessRequest},
@@ -107,7 +107,7 @@ otError CoapSecure::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine("%s", command.mName);
+        mInterpreter.OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -130,7 +130,7 @@ otError CoapSecure::ProcessResource(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        mInterpreter.OutputLine("%s", mResource.mUriPath);
+        mInterpreter.OutputLine(mResource.mUriPath != nullptr ? mResource.mUriPath : "");
     }
 
 exit:
@@ -149,7 +149,7 @@ otError CoapSecure::ProcessSet(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        mInterpreter.OutputLine("%s", mResourceContent);
+        mInterpreter.OutputLine(mResourceContent);
     }
 
 exit:

@@ -44,13 +44,13 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Cli {
 
-const struct UdpExample::Command UdpExample::sCommands[] = {{"help", &UdpExample::ProcessHelp},
-                                                            {"bind", &UdpExample::ProcessBind},
-                                                            {"close", &UdpExample::ProcessClose},
-                                                            {"connect", &UdpExample::ProcessConnect},
-                                                            {"linksecurity", &UdpExample::ProcessLinkSecurity},
-                                                            {"open", &UdpExample::ProcessOpen},
-                                                            {"send", &UdpExample::ProcessSend}};
+const UdpExample::Command UdpExample::sCommands[] = {{"help", &UdpExample::ProcessHelp},
+                                                     {"bind", &UdpExample::ProcessBind},
+                                                     {"close", &UdpExample::ProcessClose},
+                                                     {"connect", &UdpExample::ProcessConnect},
+                                                     {"linksecurity", &UdpExample::ProcessLinkSecurity},
+                                                     {"open", &UdpExample::ProcessOpen},
+                                                     {"send", &UdpExample::ProcessSend}};
 
 UdpExample::UdpExample(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
@@ -66,7 +66,7 @@ otError UdpExample::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine("%s", command.mName);
+        mInterpreter.OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -241,7 +241,7 @@ otError UdpExample::ProcessLinkSecurity(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        mInterpreter.OutputLine("%s", mLinkSecurityEnabled ? "Enabled" : "Disabled");
+        mInterpreter.OutputLine(mLinkSecurityEnabled ? "Enabled" : "Disabled");
     }
     else if (strcmp(aArgs[0], "enable") == 0)
     {
@@ -317,8 +317,8 @@ void UdpExample::HandleUdpReceive(void *aContext, otMessage *aMessage, const otM
 
 void UdpExample::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    uint8_t buf[1500];
-    int     length;
+    char buf[1500];
+    int  length;
 
     mInterpreter.OutputFormat("%d bytes from ", otMessageGetLength(aMessage) - otMessageGetOffset(aMessage));
     mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
@@ -327,7 +327,7 @@ void UdpExample::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMes
     length      = otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, sizeof(buf) - 1);
     buf[length] = '\0';
 
-    mInterpreter.OutputLine("%s", buf);
+    mInterpreter.OutputLine(buf);
 }
 
 } // namespace Cli

@@ -46,6 +46,9 @@
 #include <openthread/cli.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/uart.h>
+#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
+#include <openthread/platform/debug_uart.h>
+#endif
 
 #include "cli/cli.hpp"
 #include "common/code_utils.hpp"
@@ -53,10 +56,6 @@
 #include "common/logging.hpp"
 #include "common/new.hpp"
 #include "common/tasklet.hpp"
-
-#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
-#include <openthread/platform/debug_uart.h>
-#endif
 
 #ifdef OT_CLI_UART_LOCK_HDR_FILE
 

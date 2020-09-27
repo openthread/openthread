@@ -35,41 +35,30 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "mac/channel_mask.hpp"
-#include "utils/parse_cmdline.hpp"
 
+#include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #include <openthread/link.h>
+#include <openthread/logging.h>
 #include <openthread/ncp.h>
 #include <openthread/thread.h>
+#include <openthread/platform/uart.h>
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #include <openthread/network_time.h>
 #endif
-
 #if OPENTHREAD_FTD
 #include <openthread/dataset_ftd.h>
 #include <openthread/thread_ftd.h>
 #endif
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 #include <openthread/border_router.h>
 #endif
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 #include <openthread/server.h>
 #endif
-
-#include <openthread/diag.h>
-#include <openthread/icmp6.h>
-#include <openthread/logging.h>
-#include <openthread/platform/uart.h>
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 #include <openthread/platform/misc.h>
 #endif
-
-#include "common/new.hpp"
-#include "net/ip6.hpp"
-#include "utils/otns.hpp"
-
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 #include <openthread/backbone_router.h>
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
@@ -79,23 +68,23 @@
 #include <openthread/link_metrics.h>
 #endif
 #endif
-
-#include "cli_dataset.hpp"
-
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 #include <openthread/channel_manager.h>
 #endif
-
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #include <openthread/channel_monitor.h>
 #endif
-
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
 #include <openthread/platform/debug_uart.h>
 #endif
 
 #include "common/encoding.hpp"
+#include "common/new.hpp"
 #include "common/string.hpp"
+#include "mac/channel_mask.hpp"
+#include "net/ip6.hpp"
+#include "utils/otns.hpp"
+#include "utils/parse_cmdline.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
@@ -343,12 +332,12 @@ otError Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        OutputLine("%s", command.mName);
+        OutputLine(command.mName);
     }
 
     for (uint8_t i = 0; i < mUserCommandsLength; i++)
     {
-        OutputLine("%s", mUserCommands[i].mName);
+        OutputLine(mUserCommands[i].mName);
     }
 
     return OT_ERROR_NONE;
@@ -427,9 +416,6 @@ exit:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 otError Interpreter::ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char **aArgs)
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
-
     otError error = OT_ERROR_INVALID_COMMAND;
 
     VerifyOrExit(aArgsLength >= 1, OT_NOOP);
@@ -448,9 +434,9 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char **aA
         }
         else if (!strcmp(aArgs[1], "add"))
         {
-            struct otIp6Address address;
-            unsigned long       value;
-            uint32_t            timeout = 0;
+            otIp6Address  address;
+            unsigned long value;
+            uint32_t      timeout = 0;
 
             VerifyOrExit(aArgsLength == 3 || aArgsLength == 4, error = OT_ERROR_INVALID_ARGS);
 
@@ -598,8 +584,7 @@ otError Interpreter::ProcessDomainName(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        const char *domainName = otThreadGetDomainName(mInstance);
-        OutputLine("%s", static_cast<const char *>(domainName));
+        OutputLine(otThreadGetDomainName(mInstance));
     }
     else
     {
@@ -769,7 +754,7 @@ otError Interpreter::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
     }
-#endif
+#endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
     else if (strcmp(aArgs[0], "manager") == 0)
     {
@@ -838,7 +823,7 @@ otError Interpreter::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
     }
-#endif
+#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
     else
     {
         SuccessOrExit(error = ParseLong(aArgs[0], value));
@@ -960,7 +945,6 @@ exit:
 
 otError Interpreter::ProcessChildIp(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgs);
     otError error = OT_ERROR_NONE;
 
     if (aArgsLength == 0)
@@ -1079,7 +1063,7 @@ otError Interpreter::ProcessCoexMetrics(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        OutputLine("%s", otPlatRadioIsCoexEnabled(mInstance) ? "Enabled" : "Disabled");
+        OutputLine(otPlatRadioIsCoexEnabled(mInstance) ? "Enabled" : "Disabled");
     }
     else if (strcmp(aArgs[0], "enable") == 0)
     {
@@ -1407,7 +1391,7 @@ void Interpreter::HandleDnsResponse(const char *aHostname, const Ip6::Address *a
 
     mResolvingInProgress = false;
 }
-#endif
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessEidCache(uint8_t aArgsLength, char *aArgs[])
@@ -1642,8 +1626,8 @@ exit:
 
 otError Interpreter::ProcessIpAddrDel(uint8_t aArgsLength, char *aArgs[])
 {
-    otError             error;
-    struct otIp6Address address;
+    otError      error;
+    otIp6Address address;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -1705,8 +1689,8 @@ exit:
 
 otError Interpreter::ProcessIpMulticastAddrAdd(uint8_t aArgsLength, char *aArgs[])
 {
-    otError             error;
-    struct otIp6Address address;
+    otError      error;
+    otIp6Address address;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -1719,8 +1703,8 @@ exit:
 
 otError Interpreter::ProcessIpMulticastAddrDel(uint8_t aArgsLength, char *aArgs[])
 {
-    otError             error;
-    struct otIp6Address address;
+    otError      error;
+    otIp6Address address;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -2046,7 +2030,7 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
 exit:
     return error;
 }
-#endif
+#endif // OPENTHREAD_FTD
 
 otError Interpreter::ProcessMasterKey(uint8_t aArgsLength, char *aArgs[])
 {
@@ -2291,7 +2275,7 @@ otError Interpreter::ProcessNeighbor(uint8_t aArgsLength, char *aArgs[])
 exit:
     return error;
 }
-#endif
+#endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 otError Interpreter::ProcessNetif(uint8_t aArgsLength, char *aArgs[])
@@ -2432,7 +2416,7 @@ otError Interpreter::ProcessService(uint8_t aArgsLength, char *aArgs[])
 exit:
     return error;
 }
-#endif
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 otError Interpreter::ProcessNetworkData(uint8_t aArgsLength, char *aArgs[])
 {
@@ -2466,8 +2450,7 @@ otError Interpreter::ProcessNetworkName(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        const char *networkName = otThreadGetNetworkName(mInstance);
-        OutputLine("%s", static_cast<const char *>(networkName));
+        OutputLine(otThreadGetNetworkName(mInstance));
     }
     else
     {
@@ -2983,12 +2966,10 @@ exit:
 
 otError Interpreter::ProcessPrefixRemove(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
-
-    otError            error = OT_ERROR_NONE;
-    struct otIp6Prefix prefix;
-    uint8_t            argcur = 0;
-    char *             prefixLengthStr;
+    otError     error = OT_ERROR_NONE;
+    otIp6Prefix prefix;
+    uint8_t     argcur = 0;
+    char *      prefixLengthStr;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -3091,7 +3072,7 @@ otError Interpreter::ProcessRcp(uint8_t aArgsLength, char *aArgs[])
 
     if (strcmp(aArgs[0], "version") == 0)
     {
-        OutputLine("%s", version);
+        OutputLine(version);
     }
     else
     {
@@ -3200,12 +3181,12 @@ exit:
 
 otError Interpreter::ProcessRouteRemove(uint8_t aArgsLength, char *aArgs[])
 {
-    otError            error = OT_ERROR_NONE;
-    struct otIp6Prefix prefix;
-    uint8_t            argcur = 0;
-    char *             prefixLengthStr;
+    otError     error = OT_ERROR_NONE;
+    otIp6Prefix prefix;
+    uint8_t     argcur = 0;
+    char *      prefixLengthStr;
 
-    memset(&prefix, 0, sizeof(struct otIp6Prefix));
+    memset(&prefix, 0, sizeof(otIp6Prefix));
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -3641,7 +3622,7 @@ void Interpreter::HandleSntpResponse(uint64_t aTime, otError aResult)
 
     OutputResult(OT_ERROR_NONE);
 }
-#endif
+#endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 
 otError Interpreter::ProcessState(uint8_t aArgsLength, char *aArgs[])
 {
@@ -3711,9 +3692,6 @@ exit:
 
 otError Interpreter::ProcessThread(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
-
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
@@ -3836,7 +3814,7 @@ otError Interpreter::ProcessVersion(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        OutputLine("%s", otGetVersionString());
+        OutputLine(otGetVersionString());
         ExitNow();
     }
 
@@ -4339,11 +4317,11 @@ exit:
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 otError Interpreter::ProcessNetworkDiagnostic(uint8_t aArgsLength, char *aArgs[])
 {
-    otError             error = OT_ERROR_NONE;
-    struct otIp6Address address;
-    uint8_t             tlvTypes[OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES];
-    uint8_t             count     = 0;
-    uint8_t             argsIndex = 0;
+    otError      error = OT_ERROR_NONE;
+    otIp6Address address;
+    uint8_t      tlvTypes[OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES];
+    uint8_t      count     = 0;
+    uint8_t      argsIndex = 0;
 
     // Include operation, address and type tlv list.
     VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);

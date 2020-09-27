@@ -43,7 +43,7 @@
 namespace ot {
 namespace Cli {
 
-const struct Coap::Command Coap::sCommands[] = {
+const Coap::Command Coap::sCommands[] = {
     {"help", &Coap::ProcessHelp},
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     {"cancel", &Coap::ProcessCancel},
@@ -174,7 +174,7 @@ otError Coap::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine("%s", command.mName);
+        mInterpreter.OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -197,7 +197,7 @@ otError Coap::ProcessResource(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        mInterpreter.OutputLine("%s", mResource.mUriPath);
+        mInterpreter.OutputLine(mResource.mUriPath != nullptr ? mResource.mUriPath : "");
     }
 
 exit:
@@ -251,7 +251,7 @@ otError Coap::ProcessSet(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        mInterpreter.OutputLine("%s", mResourceContent);
+        mInterpreter.OutputLine(mResourceContent);
     }
 
 exit:
