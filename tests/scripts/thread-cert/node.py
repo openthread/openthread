@@ -609,6 +609,11 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect('Done')
 
+    def commissioner_state(self):
+        states = [r'disabled', r'petitioning', r'active']
+        self.send_command('commissioner state')
+        return self._expect_result(states)
+
     def commissioner_add_joiner(self, addr, psk):
         cmd = 'commissioner joiner add %s %s' % (addr, psk)
         self.send_command(cmd)
