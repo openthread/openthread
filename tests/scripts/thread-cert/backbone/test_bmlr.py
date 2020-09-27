@@ -110,7 +110,7 @@ class BBR_5_11_01(thread_cert.TestCase):
         self.wait_node_state(COMMISSIONER, 'router', 5)
 
         self.nodes[COMMISSIONER].commissioner_start()
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.assertEqual('active', self.nodes[COMMISSIONER].commissioner_state())
 
         self.nodes[PBBR].add_ipmaddr(MA1)
@@ -121,7 +121,8 @@ class BBR_5_11_01(thread_cert.TestCase):
         # Commissioner registers MA3 with default timeout
         self.assertEqual((0, []), self.nodes[COMMISSIONER].register_multicast_listener(MA3, timeout=None))
         # Commissioner registers MA4 with a custom timeout
-        self.assertEqual((0, []), self.nodes[COMMISSIONER].register_multicast_listener(MA4, timeout=CUSTOM_MLR_TIMEOUT))
+        self.assertEqual((0, []), self.nodes[COMMISSIONER].register_multicast_listener(MA4,
+                                                                                       timeout=CUSTOM_MLR_TIMEOUT))
         # Commissioner unregisters MA1 and MA5
         self.assertEqual((0, []), self.nodes[COMMISSIONER].register_multicast_listener(MA1, MA5, timeout=0))
 
@@ -134,6 +135,8 @@ class BBR_5_11_01(thread_cert.TestCase):
         pv.summary.show()
         pv.verify_attached('ROUTER1')
 
+        ROUTER1 = pv.vars['ROUTER1']
+        COMMISSIONER = pv.vars['COMMISSIONER']
         PBBR_ETH = pv.vars['PBBR_ETH']
         SBBR_ETH = pv.vars['SBBR_ETH']
 
@@ -146,30 +149,44 @@ class BBR_5_11_01(thread_cert.TestCase):
             and thread_bl.tlv.timeout == {MLR_TIMEOUT}
         """)
 
+        # Router registers MA2 with default timeout
+        pkts.filter_wpan_src64(ROUTER1).filter_coap_request('/n/mr').must_next().must_verify(f"""
+            thread_meshcop.tlv.ipv6_addr == '{MA2}'
+            and thread_bl.tlv.timeout is null
+        """)
         # Verify PBBR sends `/b/bmr` on the Backbone link for MA2 with default timeout.
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
             thread_meshcop.tlv.ipv6_addr == '{MA2}'
             and thread_bl.tlv.timeout == {MLR_TIMEOUT}
         """)
 
+        # Commissioner registers MA3 with deafult timeout
+        pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request('/n/mr').must_next().must_verify(f"""
+            thread_meshcop.tlv.ipv6_addr == '{MA3}'
+            and thread_bl.tlv.timeout is null
+        """)
         # Verify PBBR sends `/b/bmr` on the Backbone link for MA3 with default timeout.
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
             thread_meshcop.tlv.ipv6_addr == '{MA3}'
             and thread_bl.tlv.timeout == {MLR_TIMEOUT}
         """)
 
+        # Commissioner registers MA4 with custom timeout
+        pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request('/n/mr').must_next().must_verify(f"""
+            thread_meshcop.tlv.ipv6_addr == '{MA4}'
+            and thread_bl.tlv.timeout == {CUSTOM_MLR_TIMEOUT}
+        """)
         # Verify PBBR sends `/b/bmr` on the Backbone link for MA4 with custom timeout.
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
             thread_meshcop.tlv.ipv6_addr == '{MA4}'
             and thread_bl.tlv.timeout == {CUSTOM_MLR_TIMEOUT}
         """)
 
-        # Verify PBBR sends `/b/bmr` on the Backbone link for MA4 with custom timeout.
-        pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
-            thread_meshcop.tlv.ipv6_addr == '{MA4}'
-            and thread_bl.tlv.timeout == {CUSTOM_MLR_TIMEOUT}
+        # Commissioner unregisters MA5
+        pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request('/n/mr').must_next().must_verify(f"""
+            thread_meshcop.tlv.ipv6_addr == '{MA5}'
+            and thread_bl.tlv.timeout == 0
         """)
-
         # Verify PBBR not sends `/b/bmr` on the Backbone link for MA5.
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').filter(f"""
             thread_meshcop.tlv.ipv6_addr == '{MA5}'
