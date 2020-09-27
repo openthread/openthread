@@ -258,7 +258,18 @@ void DuaManager::UpdateRegistrationDelay(uint8_t aDelay)
         UpdateTimeTickerRegistration();
     }
 }
-#endif
+
+void DuaManager::NotifyDuplicateDomainUnicastAddress(void)
+{
+    RemoveDomainUnicastAddress();
+    mDadCounter++;
+
+    if (GenerateDomainUnicastAddressIid() == OT_ERROR_NONE)
+    {
+        AddDomainUnicastAddress();
+    }
+}
+#endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
 void DuaManager::UpdateReregistrationDelay(void)
 {
@@ -584,14 +595,7 @@ otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
             RemoveDomainUnicastAddress();
             break;
         case ThreadStatusTlv::kDuaDuplicate:
-            RemoveDomainUnicastAddress();
-            mDadCounter++;
-
-            if (GenerateDomainUnicastAddressIid() == OT_ERROR_NONE)
-            {
-                AddDomainUnicastAddress();
-            }
-
+            NotifyDuplicateDomainUnicastAddress();
             break;
         case ThreadStatusTlv::kDuaNoResources:
         case ThreadStatusTlv::kDuaNotPrimary:

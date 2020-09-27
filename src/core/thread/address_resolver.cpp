@@ -704,7 +704,16 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
         if (address->GetAddress() == target && Get<Mle::MleRouter>().GetMeshLocal64().GetIid() != meshLocalIid)
         {
             // Target EID matches address and Mesh Local EID differs
-            Get<ThreadNetif>().RemoveUnicastAddress(*address);
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address->GetAddress()))
+            {
+                Get<DuaManager>().NotifyDuplicateDomainUnicastAddress();
+            }
+            else
+#endif
+            {
+                Get<ThreadNetif>().RemoveUnicastAddress(*address);
+            }
             ExitNow();
         }
     }
