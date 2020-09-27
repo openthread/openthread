@@ -1904,12 +1904,15 @@ exit:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
                                           const otLinkMetricsValues *aMetricsValues,
+                                          uint8_t                    aStatus,
                                           void *                     aContext)
 {
-    static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(aAddress, aMetricsValues);
+    static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(aAddress, aMetricsValues, aStatus);
 }
 
-void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress, const otLinkMetricsValues *aMetricsValues)
+void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
+                                          const otLinkMetricsValues *aMetricsValues,
+                                          uint8_t                    aStatus)
 {
     const char kLinkMetricsTypeCount[]   = "(Count/Summation)";
     const char kLinkMetricsTypeAverage[] = "(Exponential Moving Average)";
@@ -1918,24 +1921,75 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress, const ot
     OutputIp6Address(*aAddress);
     OutputLine("");
 
-    if (aMetricsValues->mMetrics.mPduCount)
+    if (aMetricsValues != nullptr)
     {
-        OutputLine(" - PDU Counter: %d %s", aMetricsValues->mPduCountValue, kLinkMetricsTypeCount);
-    }
+        if (aMetricsValues->mMetrics.mPduCount)
+        {
+            OutputLine(" - PDU Counter: %d %s", aMetricsValues->mPduCountValue, kLinkMetricsTypeCount);
+        }
 
-    if (aMetricsValues->mMetrics.mLqi)
-    {
-        OutputLine(" - LQI: %d %s", aMetricsValues->mLqiValue, kLinkMetricsTypeAverage);
-    }
+        if (aMetricsValues->mMetrics.mLqi)
+        {
+            OutputLine(" - LQI: %d %s", aMetricsValues->mLqiValue, kLinkMetricsTypeAverage);
+        }
 
-    if (aMetricsValues->mMetrics.mLinkMargin)
-    {
-        OutputLine(" - Margin: %d (dB) %s", aMetricsValues->mLinkMarginValue, kLinkMetricsTypeAverage);
-    }
+        if (aMetricsValues->mMetrics.mLinkMargin)
+        {
+            OutputLine(" - Margin: %d (dB) %s", aMetricsValues->mLinkMarginValue, kLinkMetricsTypeAverage);
+        }
 
-    if (aMetricsValues->mMetrics.mRssi)
+        if (aMetricsValues->mMetrics.mRssi)
+        {
+            OutputLine(" - RSSI: %d (dBm) %s", aMetricsValues->mRssiValue, kLinkMetricsTypeAverage);
+        }
+    }
+    else
     {
-        OutputLine(" - RSSI: %d (dBm) %s", aMetricsValues->mRssiValue, kLinkMetricsTypeAverage);
+        OutputFormat("Link Metrics Report, status: ");
+        OutputLinkMetricsStatus(aStatus);
+    }
+}
+
+void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, uint8_t aStatus, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleLinkMetricsMgmtResponse(aAddress, aStatus);
+}
+
+void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, uint8_t aStatus)
+{
+    OutputFormat("Received Link Metrics Management Response from: ");
+    OutputIp6Address(*aAddress);
+    OutputLine("");
+
+    OutputFormat("Status: ");
+    OutputLinkMetricsStatus(aStatus);
+}
+
+void Interpreter::OutputLinkMetricsStatus(uint8_t aStatus)
+{
+    switch (aStatus)
+    {
+    case OT_LINK_METRICS_STATUS_SUCCESS:
+        OutputLine("Success");
+        break;
+    case OT_LINK_METRICS_STATUS_CANNOT_SUPPORT_NEW_SERIES:
+        OutputLine("Cannot support new series");
+        break;
+    case OT_LINK_METRICS_STATUS_SERIESID_ALREADY_REGISTERED:
+        OutputLine("Series ID already registered");
+        break;
+    case OT_LINK_METRICS_STATUS_SERIESID_NOT_RECOGNIZED:
+        OutputLine("Series ID not recognized");
+        break;
+    case OT_LINK_METRICS_STATUS_NO_MATCHING_FRAMES_RECEIVED:
+        OutputLine("No matching series ID");
+        break;
+    case OT_LINK_METRICS_STATUS_OTHER_ERROR:
+        OutputLine("Other error");
+        break;
+    default:
+        OutputLine("Unknown error");
+        break;
     }
 }
 
@@ -1949,6 +2003,14 @@ otError Interpreter::ProcessLinkMetrics(uint8_t aArgsLength, char *aArgs[])
     {
         error = ProcessLinkMetricsQuery(aArgsLength - 1, aArgs + 1);
     }
+    else if (strcmp(aArgs[0], "mgmt") == 0)
+    {
+        error = ProcessLinkMetricsMgmt(aArgsLength - 1, aArgs + 1);
+    }
+    else if (strcmp(aArgs[0], "probe") == 0)
+    {
+        error = ProcessLinkMetricsProbe(aArgsLength - 1, aArgs + 1);
+    }
 
 exit:
     return error;
@@ -1959,49 +2021,153 @@ otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
     otError       error = OT_ERROR_INVALID_ARGS;
     otIp6Address  address;
     otLinkMetrics linkMetrics;
-    long          seriesId = 0;
 
     VerifyOrExit(aArgsLength >= 2);
 
     SuccessOrExit(error = ParseAsIp6Address(aArgs[0], address));
 
-    memset(&linkMetrics, 0, sizeof(otLinkMetrics));
-
     if (strcmp(aArgs[1], "single") == 0)
     {
         VerifyOrExit(aArgsLength == 3);
-        for (char *arg = aArgs[2]; *arg != '\0'; arg++)
-        {
-            switch (*arg)
-            {
-            case 'p':
-                linkMetrics.mPduCount = true;
-                break;
-
-            case 'q':
-                linkMetrics.mLqi = true;
-                break;
-
-            case 'm':
-                linkMetrics.mLinkMargin = true;
-                break;
-
-            case 'r':
-                linkMetrics.mRssi = true;
-                break;
-
-            default:
-                ExitNow(error = OT_ERROR_INVALID_ARGS);
-            }
-        }
-        error = otLinkMetricsQuery(mInstance, &address, static_cast<uint8_t>(seriesId), &linkMetrics,
+        SuccessOrExit(error = ParseLinkMetricsFlags(linkMetrics, aArgs[2]));
+        error = otLinkMetricsQuery(mInstance, &address, /* aSeriesId */ 0, &linkMetrics,
                                    &Interpreter::HandleLinkMetricsReport, this);
+    }
+    else if (strcmp(aArgs[1], "forward") == 0)
+    {
+        uint8_t seriesId;
+        VerifyOrExit(aArgsLength == 3);
+        SuccessOrExit(error = ParseAsUint8(aArgs[2], seriesId));
+        error = otLinkMetricsQuery(mInstance, &address, seriesId, nullptr, &Interpreter::HandleLinkMetricsReport, this);
     }
 
 exit:
     return error;
 }
 
+otError Interpreter::ParseLinkMetricsFlags(otLinkMetrics &aLinkMetrics, char *aFlags)
+{
+    otError error = OT_ERROR_NONE;
+
+    memset(&aLinkMetrics, 0, sizeof(aLinkMetrics));
+
+    for (char *arg = aFlags; *arg != '\0'; arg++)
+    {
+        switch (*arg)
+        {
+        case 'p':
+            aLinkMetrics.mPduCount = 1;
+            break;
+
+        case 'q':
+            aLinkMetrics.mLqi = 1;
+            break;
+
+        case 'm':
+            aLinkMetrics.mLinkMargin = 1;
+            break;
+
+        case 'r':
+            aLinkMetrics.mRssi = 1;
+            break;
+
+        default:
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+
+exit:
+    return error;
+}
+
+otError Interpreter::ProcessLinkMetricsMgmt(uint8_t aArgsLength, char *aArgs[])
+{
+    otError                  error = OT_ERROR_INVALID_ARGS;
+    otIp6Address             address;
+    otLinkMetricsSeriesFlags seriesFlags;
+    otLinkMetrics            linkMetrics;
+    bool                     clear = false;
+
+    VerifyOrExit(aArgsLength >= 2);
+
+    SuccessOrExit(error = ParseAsIp6Address(aArgs[0], address));
+
+    memset(&linkMetrics, 0, sizeof(otLinkMetrics));
+    memset(&seriesFlags, 0, sizeof(otLinkMetricsSeriesFlags));
+
+    if (strcmp(aArgs[1], "forward") == 0)
+    {
+        uint8_t seriesId;
+        VerifyOrExit(aArgsLength >= 4);
+        SuccessOrExit(error = ParseAsUint8(aArgs[2], seriesId));
+        for (char *arg = aArgs[3]; *arg != '\0'; arg++)
+        {
+            switch (*arg)
+            {
+            case 'l':
+                seriesFlags.mLinkProbe = true;
+                break;
+
+            case 'd':
+                seriesFlags.mMacData = true;
+                break;
+
+            case 'r':
+                seriesFlags.mMacDataRequest = true;
+                break;
+
+            case 'a':
+                seriesFlags.mMacAck = true;
+                break;
+
+            case 'X':
+                VerifyOrExit(arg == aArgs[3] && *(arg + 1) == '\0',
+                             error = OT_ERROR_INVALID_ARGS); // Ensure the flags only contain 'X'
+                clear = true;
+                break;
+
+            default:
+                ExitNow(error = OT_ERROR_INVALID_ARGS);
+            }
+        }
+
+        if (!clear)
+        {
+            VerifyOrExit(aArgsLength == 5);
+            SuccessOrExit(error = ParseLinkMetricsFlags(linkMetrics, aArgs[4]));
+        }
+
+        error =
+            otLinkMetricsSendMgmtRequestForwardTrackingSeries(mInstance, &address, seriesId, &seriesFlags, &linkMetrics,
+                                                              &Interpreter::HandleLinkMetricsMgmtResponse, this);
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    return error;
+}
+
+otError Interpreter::ProcessLinkMetricsProbe(uint8_t aArgsLength, char *aArgs[])
+{
+    otError      error = OT_ERROR_INVALID_ARGS;
+    otIp6Address address;
+    uint8_t      seriesId = 0;
+    uint8_t      length   = 0;
+
+    VerifyOrExit(aArgsLength == 3);
+
+    SuccessOrExit(error = ParseAsIp6Address(aArgs[0], address));
+    SuccessOrExit(error = ParseAsUint8(aArgs[1], seriesId));
+    SuccessOrExit(error = ParseAsUint8(aArgs[2], length));
+
+    error = otLinkMetricsSendLinkProbe(mInstance, &address, seriesId, length);
+
+exit:
+    return error;
+}
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 #if OPENTHREAD_FTD

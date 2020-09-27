@@ -259,7 +259,9 @@ def create_default_mle_tlvs_factories():
         mle.TlvType.TIME_PARAMETER: mle.TimeParameterFactory(),
         mle.TlvType.THREAD_DISCOVERY: create_default_mle_tlv_thread_discovery_factory(),
         mle.TlvType.LINK_METRICS_QUERY: mle.LinkMetricsQueryFactory(),
+        mle.TlvType.LINK_METRICS_MANAGEMENT: mle.LinkMetricsManagementFactory(),
         mle.TlvType.LINK_METRICS_REPORT: mle.LinkMetricsReportFactory(),
+        mle.TlvType.LINK_PROBE: mle.LinkProbeFactory(),
     }
 
 

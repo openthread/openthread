@@ -39,6 +39,7 @@
 #include <openthread/thread_ftd.h>
 
 #include "common/clearable.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
@@ -47,11 +48,16 @@
 #include "net/ip6.hpp"
 #include "thread/csl_tx_scheduler.hpp"
 #include "thread/indirect_sender.hpp"
+#include "thread/link_metrics.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 
 namespace ot {
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+class LinkMetricsSeriesInfo; ///< Forward declaration for including each other with `link_metrics.hpp`
+#endif
 
 /**
  * This class represents a Thread neighbor.
@@ -589,6 +595,56 @@ public:
     void SetTimeSyncEnabled(bool aEnabled) { mTimeSyncEnabled = aEnabled; }
 #endif
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    /**
+     * This method aggregates the Link Metrics data into all the series that is running for this neighbor.
+     *
+     * If a series wants to account frames of @p aFrameType, it would add count by 1 and aggregrate @p aLqi and
+     * @p aRss into its averagers.
+     *
+     * @param[in] aFrameType    Type of the frame that carries Link Metrics data.
+     * @param[in] aLqi          The LQI value.
+     * @param[in] aRss          The Rss value.
+     *
+     */
+    void AggregateLinkMetrics(uint8_t aFrameType, uint8_t aLqi, int8_t aRss);
+
+    /**
+     * This method adds a new LinkMetricsSeriesInfo to the neighbor's list.
+     *
+     * @param[in]    A reference to the new LinkMetricsSeriesInfo.
+     *
+     */
+    void AddForwardTrackingSeriesInfo(LinkMetricsSeriesInfo &aLinkMetricsSeriesInfo);
+
+    /**
+     * This method finds a specific LinkMetricsSeriesInfo by Series ID.
+     *
+     * @param[in] aSeriesId    A reference to the Series ID.
+     *
+     * @returns The pointer to the LinkMetricsSeriesInfo. `nullptr` if not found.
+     *
+     */
+    LinkMetricsSeriesInfo *GetForwardTrackingSeriesInfo(const uint8_t &aSeriesId);
+
+    /**
+     * This method removes a specific LinkMetricsSeriesInfo by Series ID.
+     *
+     * @param[in] aSeriesId    A reference to the Series ID.
+     *
+     * @returns The pointer to the LinkMetricsSeriesInfo. `nullptr` if not found.
+     *
+     */
+    LinkMetricsSeriesInfo *RemoveForwardTrackingSeriesInfo(const uint8_t &aSeriesId);
+
+    /**
+     * This method returns the entire list of LinkMetricsSeriesInfo that is maintained for this neighbor.
+     *
+     * @returns A reference th the entire list.
+     *
+     */
+    LinkedList<LinkMetricsSeriesInfo> &GetForwardTrackingSeriesInfoList(void);
+#endif
 protected:
     /**
      * This method initializes the `Neighbor` object.
@@ -629,6 +685,10 @@ private:
 #endif
     uint8_t         mVersion;  ///< The MLE version
     LinkQualityInfo mLinkInfo; ///< Link quality info (contains average RSS, link margin and link quality)
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    LinkedList<LinkMetricsSeriesInfo> mLinkMetricsSeriesInfoList; ///< A list of Link Metrics Forward Tracking Series
+                                                                  ///< that is being tracked for this neighbor.
+#endif
 };
 
 /**

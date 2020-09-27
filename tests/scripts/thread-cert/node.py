@@ -1915,6 +1915,22 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect('Done')
 
+    def link_metrics_query_forward_tracking_series(self, dst_addr: str, series_id: int):
+        cmd = 'linkmetrics query %s forward %d' % (dst_addr, series_id)
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def link_metrics_mgmt_req_forward_tracking_series(self, dst_addr: str, series_id: int, series_flags: str,
+                                                      metrics_flags: str):
+        cmd = "linkmetrics mgmt %s forward %d %s %s" % (dst_addr, series_id, series_flags, metrics_flags)
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def link_metrics_send_link_probe(self, dst_addr: str, series_id: int, length: int):
+        cmd = "linkmetrics probe %s %d %d" % (dst_addr, series_id, length)
+        self.send_command(cmd)
+        self._expect('Done')
+
     def send_address_notification(self, dst: str, target: str, mliid: str):
         cmd = f'fake /a/an {dst} {target} {mliid}'
         self.send_command(cmd)

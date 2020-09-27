@@ -159,6 +159,38 @@ void Neighbor::GenerateChallenge(void)
         Random::Crypto::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge)));
 }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+void Neighbor::AggregateLinkMetrics(uint8_t aFrameType, uint8_t aLqi, int8_t aRss)
+{
+    for (LinkMetricsSeriesInfo *entry = mLinkMetricsSeriesInfoList.GetHead(); entry != nullptr;
+         entry                        = entry->GetNext())
+    {
+        entry->AggregateLinkMetrics(aFrameType, aLqi, aRss);
+    }
+}
+
+LinkMetricsSeriesInfo *Neighbor::GetForwardTrackingSeriesInfo(const uint8_t &aSeriesId)
+{
+    LinkMetricsSeriesInfo *prev;
+    return mLinkMetricsSeriesInfoList.FindMatching(aSeriesId, prev);
+}
+
+LinkedList<LinkMetricsSeriesInfo> &Neighbor::GetForwardTrackingSeriesInfoList(void)
+{
+    return mLinkMetricsSeriesInfoList;
+}
+
+void Neighbor::AddForwardTrackingSeriesInfo(LinkMetricsSeriesInfo &aLinkMetricsSeriesInfo)
+{
+    mLinkMetricsSeriesInfoList.Push(aLinkMetricsSeriesInfo);
+}
+
+LinkMetricsSeriesInfo *Neighbor::RemoveForwardTrackingSeriesInfo(const uint8_t &aSeriesId)
+{
+    return mLinkMetricsSeriesInfoList.RemoveMatching(aSeriesId);
+}
+#endif
+
 void Child::Info::SetFrom(const Child &aChild)
 {
     Clear();
