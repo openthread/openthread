@@ -204,7 +204,7 @@ private:
     }
 
     void    HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError ProcessDuaResponse(Coap::Message &aMessage, const Ip6::Address *aTarget = nullptr);
+    otError ProcessDuaResponse(Coap::Message &aMessage);
 
     void PerformNextRegistration(void);
     void UpdateReregistrationDelay(void);

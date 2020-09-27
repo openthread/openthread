@@ -529,7 +529,7 @@ void DuaManager::HandleDuaResponse(Coap::Message &aMessage, const Ip6::MessageIn
     VerifyOrExit(aMessage.GetCode() == Coap::kCodeChanged || aMessage.GetCode() >= Coap::kCodeBadRequest,
                  error = OT_ERROR_PARSE);
 
-    error = ProcessDuaResponse(aMessage, &mRegisteringDua);
+    error = ProcessDuaResponse(aMessage);
 
 exit:
     if (error != OT_ERROR_RESPONSE_TIMEOUT)
@@ -560,23 +560,21 @@ exit:
     otLogInfoDua("Received DUA.ntf: %d", otThreadErrorToString(error));
 }
 
-otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage, const Ip6::Address *aTarget)
+otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
 {
     otError      error = OT_ERROR_NONE;
     Ip6::Address target;
     uint8_t      status;
 
-    if (aMessage.GetCode() == Coap::kCodeChanged)
+    if (aMessage.GetCode() >= Coap::kCodeBadRequest)
     {
-        SuccessOrExit(error = Tlv::FindUint8Tlv(aMessage, ThreadTlv::kStatus, status));
-        SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+        status = ThreadStatusTlv::kDuaGeneralFailure;
+        target = mRegisteringDua;
     }
     else
     {
-        VerifyOrExit(aTarget != nullptr, error = OT_ERROR_PARSE);
-
-        status = ThreadStatusTlv::kDuaGeneralFailure;
-        target = *aTarget;
+        SuccessOrExit(error = Tlv::FindUint8Tlv(aMessage, ThreadTlv::kStatus, status));
+        SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
     }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
