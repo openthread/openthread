@@ -252,10 +252,9 @@ otError CoapBase::SendAck(const Message &aRequest, const Ip6::MessageInfo &aMess
     return SendEmptyMessage(kTypeAck, aRequest, aMessageInfo);
 }
 
-otError CoapBase::SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
+otError CoapBase::SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo, Code aCode)
 {
-    return (aRequest.IsConfirmable() ? SendHeaderResponse(kCodeChanged, aRequest, aMessageInfo)
-                                     : OT_ERROR_INVALID_ARGS);
+    return (aRequest.IsConfirmable() ? SendHeaderResponse(aCode, aRequest, aMessageInfo) : OT_ERROR_INVALID_ARGS);
 }
 
 otError CoapBase::SendNotFound(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)

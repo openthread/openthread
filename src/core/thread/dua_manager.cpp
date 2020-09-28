@@ -504,7 +504,8 @@ void DuaManager::PerformNextRegistration(void)
     SuccessOrExit(error =
                       Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, &DuaManager::HandleDuaResponse, this));
 
-    mIsDuaPending = true;
+    mIsDuaPending   = true;
+    mRegisteringDua = dua;
 
     // TODO: (DUA) need update when CSL is enabled.
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
@@ -535,7 +536,9 @@ void DuaManager::HandleDuaResponse(Coap::Message &aMessage, const Ip6::MessageIn
         ExitNow(error = aResult);
     }
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage.GetCode() == Coap::kCodeChanged, error = OT_ERROR_PARSE);
+    VerifyOrExit(aResult == OT_ERROR_NONE, error = OT_ERROR_PARSE);
+    VerifyOrExit(aMessage.GetCode() == Coap::kCodeChanged || aMessage.GetCode() >= Coap::kCodeBadRequest,
+                 error = OT_ERROR_PARSE);
 
     error = ProcessDuaResponse(aMessage);
 
@@ -574,8 +577,16 @@ otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
     Ip6::Address target;
     uint8_t      status;
 
-    SuccessOrExit(error = Tlv::FindUint8Tlv(aMessage, ThreadTlv::kStatus, status));
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+    if (aMessage.GetCode() >= Coap::kCodeBadRequest)
+    {
+        status = ThreadStatusTlv::kDuaGeneralFailure;
+        target = mRegisteringDua;
+    }
+    else
+    {
+        SuccessOrExit(error = Tlv::FindUint8Tlv(aMessage, ThreadTlv::kStatus, status));
+        SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+    }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     if (Get<ThreadNetif>().HasUnicastAddress(target))

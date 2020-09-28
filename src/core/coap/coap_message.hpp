@@ -96,12 +96,13 @@ enum Code : uint8_t
 
     // Response Codes:
 
-    kCodeCreated  = OT_COAP_CODE_CREATED,  ///< Created
-    kCodeDeleted  = OT_COAP_CODE_DELETED,  ///< Deleted
-    kCodeValid    = OT_COAP_CODE_VALID,    ///< Valid
-    kCodeChanged  = OT_COAP_CODE_CHANGED,  ///< Changed
-    kCodeContent  = OT_COAP_CODE_CONTENT,  ///< Content
-    kCodeContinue = OT_COAP_CODE_CONTINUE, ///< RFC7959 Continue
+    kCodeResponseMin = OT_COAP_CODE_RESPONSE_MIN, ///< 2.00
+    kCodeCreated     = OT_COAP_CODE_CREATED,      ///< Created
+    kCodeDeleted     = OT_COAP_CODE_DELETED,      ///< Deleted
+    kCodeValid       = OT_COAP_CODE_VALID,        ///< Valid
+    kCodeChanged     = OT_COAP_CODE_CHANGED,      ///< Changed
+    kCodeContent     = OT_COAP_CODE_CONTENT,      ///< Content
+    kCodeContinue    = OT_COAP_CODE_CONTINUE,     ///< RFC7959 Continue
 
     // Client Error Codes:
 

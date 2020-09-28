@@ -179,7 +179,7 @@ private:
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     Ip6::InterfaceIdentifier   mDuaResponseTargetMlIid;
-    ThreadStatusTlv::DuaStatus mDuaResponseStatus;
+    uint8_t                    mDuaResponseStatus;
     ThreadStatusTlv::MlrStatus mMlrResponseStatus;
     bool                       mDuaResponseIsSpecified : 1;
     bool                       mMlrResponseIsSpecified : 1;
