@@ -75,6 +75,9 @@
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #include <openthread/backbone_router_ftd.h>
 #endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#include <openthread/link_metrics.h>
+#endif
 #endif
 
 #include "cli_dataset.hpp"
@@ -1560,6 +1563,33 @@ otError Interpreter::ProcessFactoryReset(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError Interpreter::ProcessFake(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_INVALID_COMMAND;
+
+    VerifyOrExit(aArgsLength >= 1, OT_NOOP);
+
+    if (strcmp(aArgs[0], "/a/an") == 0)
+    {
+        otIp6Address             destination, target;
+        otIp6InterfaceIdentifier mlIid;
+
+        VerifyOrExit(aArgsLength == 4, error = OT_ERROR_INVALID_ARGS);
+
+        SuccessOrExit(error = otIp6AddressFromString(aArgs[1], &destination));
+        SuccessOrExit(error = otIp6AddressFromString(aArgs[2], &target));
+        VerifyOrExit(Hex2Bin(aArgs[3], mlIid.mFields.m8, sizeof(otIp6InterfaceIdentifier)) ==
+                         sizeof(otIp6InterfaceIdentifier),
+                     error = OT_ERROR_INVALID_ARGS);
+
+        otThreadSendAddressNotification(mInstance, &destination, &target, &mlIid);
+    }
+exit:
+    return error;
+}
+#endif
+
 otError Interpreter::ProcessIfconfig(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -1871,6 +1901,109 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
+                                          const otLinkMetricsValues *aMetricsValues,
+                                          void *                     aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(aAddress, aMetricsValues);
+}
+
+void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress, const otLinkMetricsValues *aMetricsValues)
+{
+    const char kLinkMetricsTypeCount[]   = "(Count/Summation)";
+    const char kLinkMetricsTypeAverage[] = "(Exponential Moving Average)";
+
+    OutputFormat("Received Link Metrics Report from: ");
+    OutputIp6Address(*aAddress);
+    OutputLine("");
+
+    if (aMetricsValues->mMetrics.mPduCount)
+    {
+        OutputLine(" - PDU Counter: %d %s", aMetricsValues->mPduCountValue, kLinkMetricsTypeCount);
+    }
+
+    if (aMetricsValues->mMetrics.mLqi)
+    {
+        OutputLine(" - LQI: %d %s", aMetricsValues->mLqiValue, kLinkMetricsTypeAverage);
+    }
+
+    if (aMetricsValues->mMetrics.mLinkMargin)
+    {
+        OutputLine(" - Margin: %d (dB) %s", aMetricsValues->mLinkMarginValue, kLinkMetricsTypeAverage);
+    }
+
+    if (aMetricsValues->mMetrics.mRssi)
+    {
+        OutputLine(" - RSSI: %d (dBm) %s", aMetricsValues->mRssiValue, kLinkMetricsTypeAverage);
+    }
+}
+
+otError Interpreter::ProcessLinkMetrics(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_INVALID_COMMAND;
+
+    VerifyOrExit(aArgsLength >= 1, OT_NOOP);
+
+    if (strcmp(aArgs[0], "query") == 0)
+    {
+        error = ProcessLinkMetricsQuery(aArgsLength - 1, aArgs + 1);
+    }
+
+exit:
+    return error;
+}
+
+otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
+{
+    otError       error = OT_ERROR_INVALID_ARGS;
+    otIp6Address  address;
+    otLinkMetrics linkMetrics;
+    long          seriesId = 0;
+
+    VerifyOrExit(aArgsLength >= 2, OT_NOOP);
+
+    SuccessOrExit(error = otIp6AddressFromString(aArgs[0], &address));
+
+    memset(&linkMetrics, 0, sizeof(otLinkMetrics));
+
+    if (strcmp(aArgs[1], "single") == 0)
+    {
+        VerifyOrExit(aArgsLength == 3, OT_NOOP);
+        for (char *arg = aArgs[2]; *arg != '\0'; arg++)
+        {
+            switch (*arg)
+            {
+            case 'p':
+                linkMetrics.mPduCount = 1;
+                break;
+
+            case 'q':
+                linkMetrics.mLqi = 1;
+                break;
+
+            case 'm':
+                linkMetrics.mLinkMargin = 1;
+                break;
+
+            case 'r':
+                linkMetrics.mRssi = 1;
+                break;
+
+            default:
+                ExitNow(error = OT_ERROR_INVALID_ARGS);
+            }
+        }
+        error = otLinkMetricsQuery(mInstance, &address, static_cast<uint8_t>(seriesId), &linkMetrics,
+                                   &Interpreter::HandleLinkMetricsReport, this);
+    }
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessPskc(uint8_t aArgsLength, char *aArgs[])

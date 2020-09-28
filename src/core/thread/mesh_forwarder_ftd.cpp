@@ -595,10 +595,7 @@ exit:
         SendDestinationUnreachable(aMeshSource.GetShort(), *message);
     }
 
-    if (message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessage(message);
 
     return error;
 }
@@ -686,11 +683,7 @@ exit:
     {
         otLogInfoMac("Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s", otThreadErrorToString(error),
                      aFrameLength, aMacSource.ToString().AsCString(), aLinkInfo.IsLinkSecurityEnabled() ? "yes" : "no");
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
+        FreeMessage(message);
     }
 }
 

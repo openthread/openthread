@@ -258,7 +258,18 @@ void DuaManager::UpdateRegistrationDelay(uint8_t aDelay)
         UpdateTimeTickerRegistration();
     }
 }
-#endif
+
+void DuaManager::NotifyDuplicateDomainUnicastAddress(void)
+{
+    RemoveDomainUnicastAddress();
+    mDadCounter++;
+
+    if (GenerateDomainUnicastAddressIid() == OT_ERROR_NONE)
+    {
+        AddDomainUnicastAddress();
+    }
+}
+#endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
 void DuaManager::UpdateReregistrationDelay(void)
 {
@@ -507,11 +518,7 @@ exit:
         UpdateCheckDelay(Mle::kNoBufDelay);
     }
 
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     otLogInfoDua("Sent DUA.req for DUA %s: %s", dua.ToString().AsCString(), otThreadErrorToString(error));
 }
 
@@ -588,14 +595,7 @@ otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
             RemoveDomainUnicastAddress();
             break;
         case ThreadStatusTlv::kDuaDuplicate:
-            RemoveDomainUnicastAddress();
-            mDadCounter++;
-
-            if (GenerateDomainUnicastAddressIid() == OT_ERROR_NONE)
-            {
-                AddDomainUnicastAddress();
-            }
-
+            NotifyDuplicateDomainUnicastAddress();
             break;
         case ThreadStatusTlv::kDuaNoResources:
         case ThreadStatusTlv::kDuaNotPrimary:
@@ -672,16 +672,14 @@ void DuaManager::SendAddressNotification(Ip6::Address &             aAddress,
     otLogInfoDua("Sent ADDR_NTF for child %04x DUA %s", aChild.GetRloc16(), aAddress.ToString().AsCString());
 
 exit:
+
     if (error != OT_ERROR_NONE)
     {
+        FreeMessage(message);
+
         // TODO: (DUA) (P4) may enhance to  guarantee the delivery of DUA.ntf
         otLogWarnDua("Sent ADDR_NTF for child %04x DUA %s Error %s", aChild.GetRloc16(),
                      aAddress.ToString().AsCString(), otThreadErrorToString(error));
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
     }
 }
 

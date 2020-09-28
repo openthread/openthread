@@ -591,13 +591,7 @@ Message *Message::Clone(uint16_t aLength) const
 #endif
 
 exit:
-
-    if (error != OT_ERROR_NONE && messageCopy != nullptr)
-    {
-        messageCopy->Free();
-        messageCopy = nullptr;
-    }
-
+    FreeAndNullMessageOnError(messageCopy, error);
     return messageCopy;
 }
 
@@ -626,6 +620,9 @@ void Message::SetLinkInfo(const ThreadLinkInfo &aLinkInfo)
     SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
     SetPanId(aLinkInfo.mPanId);
     AddRss(aLinkInfo.mRss);
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    AddLqi(aLinkInfo.mLqi);
+#endif
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     SetTimeSyncSeq(aLinkInfo.mTimeSyncSeq);
     SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);

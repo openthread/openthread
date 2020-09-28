@@ -31,7 +31,7 @@ from pktverify.addrs import Ipv6Addr
 from pktverify.bytes import Bytes
 
 DOMAIN_PREFIX = Bytes('fd00:7d03:7d03:7d03')
-BACKBONE_IPV6_PREFIX = Bytes('2001:0db8:0001:0000')
+BACKBONE_IPV6_PREFIX = Bytes('91')
 
 LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr('ff32:40:fd00:db8::1')
 REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr('ff33:40:fd00:db8::1')
@@ -267,6 +267,9 @@ CSL_DEFAULT_PERIOD = 3125  # 0.5s, 3125 in units of ten symbols
 CSL_DEFAULT_PERIOD_IN_SECOND = 0.5
 US_PER_TEN_SYMBOLS = 160
 CSL_IE_ID = 0x1a
+
+# Thread Version TLV value
+THREAD_VERSION_1_2 = 3
 
 if __name__ == '__main__':
     from pktverify.addrs import Ipv6Addr

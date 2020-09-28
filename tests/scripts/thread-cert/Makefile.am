@@ -159,6 +159,7 @@ EXTRA_DIST                                                         = \
     test_network_layer.py                                            \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
+    test_route_table.py                                              \
     test_router_reattach.py                                          \
     test_service.py                                                  \
     thread_cert.py                                                   \
@@ -205,6 +206,7 @@ check_SCRIPTS                                                      = \
     test_network_layer.py                                            \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
+    test_route_table.py                                              \
     test_router_reattach.py                                          \
     test_service.py                                                  \
     Cert_5_1_01_RouterAttach.py                                      \

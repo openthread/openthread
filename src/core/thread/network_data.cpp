@@ -833,12 +833,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::Response
     otLogInfoNetData("Sent server data notification");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 

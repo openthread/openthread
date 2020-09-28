@@ -355,11 +355,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
     otLogInfoMeshCoP("sent commissioning dataset get response");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessageOnError(message, error);
 }
 
 void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
@@ -381,11 +377,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
     otLogInfoMeshCoP("sent commissioning dataset set response");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessageOnError(message, error);
 }
 
 bool Leader::RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode aMatchMode)

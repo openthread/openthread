@@ -1042,6 +1042,9 @@ void MeshForwarder::HandleFragment(const uint8_t *       aFrame,
         message->Write(message->GetOffset(), aFrameLength, aFrame);
         message->MoveOffset(aFrameLength);
         message->AddRss(aLinkInfo.GetRss());
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+        message->AddLqi(aLinkInfo.GetLqi());
+#endif
         message->SetTimeout(kReassemblyTimeout);
     }
 
@@ -1059,11 +1062,7 @@ exit:
     {
         LogFragmentFrameDrop(error, aFrameLength, aMacSource, aMacDest, fragmentHeader,
                              aLinkInfo.IsLinkSecurityEnabled());
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
+        FreeMessage(message);
     }
 }
 
@@ -1197,11 +1196,7 @@ exit:
     else
     {
         LogLowpanHcFrameDrop(error, aFrameLength, aMacSource, aMacDest, aLinkInfo.IsLinkSecurityEnabled());
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
+        FreeMessage(message);
     }
 }
 

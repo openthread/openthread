@@ -839,6 +839,23 @@ typedef void (*otThreadDiscoveryRequestCallback)(const otThreadDiscoveryRequestI
 void otThreadSetDiscoveryRequestCallback(otInstance *                     aInstnace,
                                          otThreadDiscoveryRequestCallback aCallback,
                                          void *                           aContext);
+
+/**
+ * This function sends a Proactive Address Notification (ADDR_NTF.ntf) message.
+ *
+ * This function is only available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aDestination  The destination to send the ADDR_NTF.ntf message.
+ * @param[in]  aTarget       The target address of the ADDR_NTF.ntf message.
+ * @param[in]  aMlIid        The ML-IID of the ADDR_NTF.ntf message.
+ *
+ */
+void otThreadSendAddressNotification(otInstance *              aInstance,
+                                     otIp6Address *            aDestination,
+                                     otIp6Address *            aTarget,
+                                     otIp6InterfaceIdentifier *aMlIid);
+
 /**
  * @}
  *

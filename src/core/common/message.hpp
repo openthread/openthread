@@ -53,8 +53,6 @@
 
 namespace ot {
 
-class ThreadLinkInfo;
-
 /**
  * @addtogroup core-message
  *
@@ -64,6 +62,61 @@ class ThreadLinkInfo;
  * @{
  *
  */
+
+/**
+ * This macro frees a given message buffer if not nullptr.
+ *
+ * This macro and the ones that follow contain small but common code patterns used in many of the core modules. They
+ * are intentionally defined as macros instead of inline methods/functions to ensure that they are fully inlined.
+ * Note that an `inline` method/function is not necessarily always inlined by the toolchain and not inlining such
+ * small implementations can add a rather large code-size overhead.
+ *
+ * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
+ *
+ */
+#define FreeMessage(aMessage)      \
+    do                             \
+    {                              \
+        if ((aMessage) != nullptr) \
+        {                          \
+            (aMessage)->Free();    \
+        }                          \
+    } while (false)
+
+/**
+ * This macro frees a given message buffer if a given `otError` indicates an error.
+ *
+ * The parameter @p aMessage can be nullptr in which case this macro does nothing.
+ *
+ * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
+ * @param[in] aError      The `otError` to check.
+ *
+ */
+#define FreeMessageOnError(aMessage, aError)                        \
+    do                                                              \
+    {                                                               \
+        if (((aError) != OT_ERROR_NONE) && ((aMessage) != nullptr)) \
+        {                                                           \
+            (aMessage)->Free();                                     \
+        }                                                           \
+    } while (false)
+
+/**
+ * This macro frees a given message buffer if a given `otError` indicates an error and sets the `aMessage` to `nullptr`.
+ *
+ * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
+ * @param[in] aError      The `otError` to check.
+ *
+ */
+#define FreeAndNullMessageOnError(aMessage, aError)                 \
+    do                                                              \
+    {                                                               \
+        if (((aError) != OT_ERROR_NONE) && ((aMessage) != nullptr)) \
+        {                                                           \
+            (aMessage)->Free();                                     \
+            (aMessage) = nullptr;                                   \
+        }                                                           \
+    } while (false)
 
 enum
 {
@@ -75,6 +128,7 @@ class Message;
 class MessagePool;
 class MessageQueue;
 class PriorityQueue;
+class ThreadLinkInfo;
 
 /**
  * This structure contains metadata about a Message.
@@ -97,6 +151,9 @@ struct MessageMetadata
     uint16_t    mLength;      ///< Number of bytes within the message.
     uint16_t    mOffset;      ///< A byte offset within the message.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    LqiAverager mLqiAverager; ///< The averager maintaining the Link quality indicator (LQI) average.
+#endif
 
     ChildMask mChildMask; ///< A ChildMask to indicate which sleepy children need to receive this.
     uint16_t  mMeshDest;  ///< Used for unicast non-link-local messages.
@@ -828,6 +885,35 @@ public:
      *
      */
     const RssAverager &GetRssAverager(void) const { return GetMetadata().mRssAverager; }
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    /**
+     * This method updates the average LQI (Link Quality Indicator) associated with the message.
+     *
+     * The given LQI value would be added to the average. Note that a message can be composed of multiple 802.15.4
+     * frame fragments each received with a different signal strength.
+     *
+     * @param[in] aLQI A new LQI value (has no unit) to be added to average.
+     *
+     */
+    void AddLqi(uint8_t aLqi) { GetMetadata().mLqiAverager.Add(aLqi); }
+
+    /**
+     * This method returns the average LQI (Link Quality Indicator) associated with the message.
+     *
+     * @returns The current average LQI value (in dBm) or OT_RADIO_LQI_NONE if no average is available.
+     *
+     */
+    uint8_t GetAverageLqi(void) const { return GetMetadata().mLqiAverager.GetAverage(); }
+
+    /**
+     * This mehod returns the count of frames counted so far.
+     *
+     * @retruns The count of frames that have been counted.
+     *
+     */
+    uint8_t GetPsduCount(void) const { return GetMetadata().mLqiAverager.GetCount(); }
+#endif
 
     /**
      * This method sets the message's link info properties (PAN ID, link security, RSS) from a given `ThreadLinkInfo`.

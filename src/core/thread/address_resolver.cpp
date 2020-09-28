@@ -549,12 +549,7 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 exit:
 
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kAddressResolver);
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -669,12 +664,8 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
+        FreeMessage(message);
         otLogInfoArp("Failed to send address error: %s", otThreadErrorToString(error));
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
     }
 }
 
@@ -713,7 +704,16 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
         if (address->GetAddress() == target && Get<Mle::MleRouter>().GetMeshLocal64().GetIid() != meshLocalIid)
         {
             // Target EID matches address and Mesh Local EID differs
-            Get<ThreadNetif>().RemoveUnicastAddress(*address);
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address->GetAddress()))
+            {
+                Get<DuaManager>().NotifyDuplicateDomainUnicastAddress();
+            }
+            else
+#endif
+            {
+                Get<ThreadNetif>().RemoveUnicastAddress(*address);
+            }
             ExitNow();
         }
     }
@@ -827,11 +827,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address &            a
     otLogInfoArp("Sending address notification for target %s", aTarget.ToString().AsCString());
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessageOnError(message, error);
 }
 
 void AddressResolver::HandleTimeTick(void)

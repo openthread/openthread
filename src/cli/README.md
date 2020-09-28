@@ -47,6 +47,7 @@ Done
 - [extaddr](#extaddr)
 - [extpanid](#extpanid)
 - [factoryreset](#factoryreset)
+- [fake](#fake)
 - [ifconfig](#ifconfig)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
@@ -56,6 +57,7 @@ Done
 - [leaderdata](#leaderdata)
 - [leaderpartitionid](#leaderpartitionid)
 - [leaderweight](#leaderweight)
+- [linkmetrics](#linkmetrics-query-ipaddr-single-pqmr)
 - [linkquality](#linkquality-extaddr)
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
@@ -807,6 +809,19 @@ Delete all stored settings, and signal a platform reset.
 > factoryreset
 ```
 
+### fake
+
+Send fake Thread messages.
+
+Note: Only for certification test.
+
+#### fake /a/an \<dst-ipaddr\> \<target\> \<meshLocalIid\>
+
+```bash
+> fake /a/an fdde:ad00:beef:0:0:ff:fe00:a800 fd00:7d03:7d03:7d03:55f2:bb6a:7a43:a03b 1111222233334444
+Done
+```
+
 ### ifconfig
 
 Show the status of the IPv6 interface.
@@ -1050,6 +1065,27 @@ Set the Thread Leader Weight.
 ```bash
 > leaderweight 128
 Done
+```
+
+### linkmetrics query \<ipaddr\> single [pqmr]
+
+Perform a Link Metrics query (Single Probe).
+
+- ipaddr: Peer address.
+- pqmr: This specifies what metrics to query.
+- p: Layer 2 Number of PDUs received.
+- q: Layer 2 LQI.
+- m: Link Margin.
+- r: RSSI.
+
+```bash
+> linkmetrics query fe80:0:0:0:3092:f334:1455:1ad2 single qmr
+Done
+> Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
+
+ - LQI: 76 (Exponential Moving Average)
+ - Margin: 82 (dB) (Exponential Moving Average)
+ - RSSI: -18 (dBm) (Exponential Moving Average)
 ```
 
 ### linkquality \<extaddr\>

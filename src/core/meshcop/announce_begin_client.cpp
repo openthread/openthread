@@ -88,12 +88,7 @@ otError AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
     otLogInfoMeshCoP("sent announce begin query");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 

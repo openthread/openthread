@@ -308,12 +308,7 @@ exit:
 
     default:
         otLogWarnMeshCoP("Failed to send %s to leader: %s", mUriSet, otThreadErrorToString(error));
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
-
+        FreeMessage(message);
         break;
     }
 }
@@ -436,11 +431,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
     otLogInfoMeshCoP("sent dataset get response");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessageOnError(message, error);
 }
 
 otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength)
@@ -584,12 +575,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     otLogInfoMeshCoP("sent dataset set request to leader");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -709,12 +695,7 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
     otLogInfoMeshCoP("sent dataset get request");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 

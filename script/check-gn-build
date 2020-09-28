@@ -36,7 +36,19 @@ set -x
 
 main()
 {
+    # Check GN build for OT1.1
+    rm gn-out -r || true
     gn gen --check gn-out
+    gn args gn-out --list
+    ninja -C gn-out
+    test -f gn-out/obj/src/core/libopenthread-ftd.a
+
+    # Check GN build for OT1.2
+    rm gn-out -r || true
+    mkdir gn-out
+    echo 'openthread_config_thread_version = "1.2"' >gn-out/args.gn
+    gn gen --check gn-out
+    gn args gn-out --list
     ninja -C gn-out
     test -f gn-out/obj/src/core/libopenthread-ftd.a
 }

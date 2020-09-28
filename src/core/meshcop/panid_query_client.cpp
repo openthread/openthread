@@ -94,12 +94,7 @@ otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,
     mContext  = aContext;
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
