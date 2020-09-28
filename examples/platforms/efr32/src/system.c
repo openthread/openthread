@@ -50,6 +50,7 @@
 #include "em_chip.h"
 #include "em_cmu.h"
 #include "em_core.h"
+#include "em_device.h"
 #include "em_emu.h"
 #include "em_system.h"
 #include "hal-config.h"
@@ -63,7 +64,6 @@
 #endif
 
 #include "platform-efr32.h"
-#include "sl_device_init_clocks.h"
 
 #if (HAL_FEM_ENABLE)
 #include "fem-control.h"
@@ -184,7 +184,11 @@ void otSysInit(int argc, char *argv[])
     halInitChipSpecific();
     BSP_Init(BSP_INIT_BCC);
 
-    CMU_ClockEnable(cmuClock_CORELE, true);
+    // Enable LE peripheral clock. Needed for RTCC initialization in sl_sleeptimer_init()
+#if !defined(_SILICON_LABS_32B_SERIES_2)
+    CMU_ClockEnable(cmuClock_HFLE, true);
+    CMU_OscillatorEnable(cmuOsc_LFRCO, true, true);
+#endif // !defined(_SILICON_LABS_32B_SERIES_2)
 
     status = sl_sleeptimer_init();
     assert(status == SL_STATUS_OK);
