@@ -226,6 +226,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
                 data_version and p.mle.tlv.leader_data.stable_data_version == _pkt.mle.tlv.leader_data.
                 stable_data_version and {NM_COMMISSIONER_SESSION_ID_TLV, NM_BORDER_AGENT_LOCATOR_TLV} <= set(
                     p.thread_meshcop.tlv.type) and p.thread_nwd.tlv.stable == [0])
+        _pkts_sed = pkts.copy()
 
         # Step 12: Router MUST send MLE Child Update Request to SED_1
         pkts.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(SED).filter_mle_cmd(
@@ -234,11 +235,11 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             } == set(p.mle.tlv.type) and p.mle.tlv.leader_data.data_version == _pkt.mle.tlv.leader_data.data_version)
 
         # Step 13: SED MUST send a unicast MLE Data Request to Router_1
-        pkts.filter_wpan_src64(SED).filter_wpan_dst64(ROUTER_1).filter_mle_cmd(MLE_DATA_REQUEST).must_next(
+        _pkts_sed.filter_wpan_src64(SED).filter_wpan_dst64(ROUTER_1).filter_mle_cmd(MLE_DATA_REQUEST).must_next(
         ).must_verify(lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
 
         # Step 14: Router MUST send a unicast MLE Data Response to SED_1
-        pkts.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(SED).filter_mle_cmd(
+        _pkts_sed.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(SED).filter_mle_cmd(
             MLE_DATA_RESPONSE).must_next().must_verify(
                 lambda p: {
                     SOURCE_ADDRESS_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV,
