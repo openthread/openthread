@@ -1637,10 +1637,12 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         }
 
         aNeighbor->SetLinkFrameCounter(frameCounter + 1);
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         if (aNeighbor->GetLinkFrameCounter() > aNeighbor->GetLinkAckFrameCounter())
         {
             aNeighbor->SetLinkAckFrameCounter(frameCounter + 1);
         }
+#endif
 
         if (keySequence > keyManager.GetCurrentKeySequence())
         {
@@ -1665,7 +1667,7 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     uint32_t    frameCounter;
     Address     srcAddr;
     Address     dstAddr;
-    Neighbor *  neighbor;
+    Neighbor *  neighbor   = nullptr;
     KeyManager &keyManager = Get<KeyManager>();
     const Key * macKey;
 
@@ -1728,7 +1730,7 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 
     if (neighbor->IsStateValid())
     {
-        VerifyOrExit(frameCounter >= neighbor->GetAckLinkFrameCounter(), OT_NOOP);
+        VerifyOrExit(frameCounter >= neighbor->GetLinkAckFrameCounter(), OT_NOOP);
     }
 
     error = aAckFrame.ProcessReceiveAesCcm(srcAddr.GetExtended(), *macKey);

@@ -423,6 +423,7 @@ public:
      */
     void SetLinkFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mLinkFrameCounter = aFrameCounter; }
 
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**
      * This method gets the link ACK frame counter value.
      *
@@ -430,6 +431,7 @@ public:
      *
      */
     uint32_t GetLinkAckFrameCounter(void) const { return mValidPending.mValid.mLinkAckFrameCounter; }
+#endif
 
     /**
      * This method sets the link ACK frame counter value.
@@ -439,7 +441,11 @@ public:
      */
     void SetLinkAckFrameCounter(uint32_t aAckFrameCounter)
     {
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         mValidPending.mValid.mLinkAckFrameCounter = aAckFrameCounter;
+#else
+        OT_UNUSED_VARIABLE(aAckFrameCounter);
+#endif
     }
 
     /**
@@ -607,9 +613,11 @@ private:
     {
         struct
         {
-            uint32_t mLinkFrameCounter;    ///< The Link Frame Counter
+            uint32_t mLinkFrameCounter; ///< The Link Frame Counter
+            uint32_t mMleFrameCounter;  ///< The MLE Frame Counter
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
             uint32_t mLinkAckFrameCounter; ///< The Link Ack Frame Counter
-            uint32_t mMleFrameCounter;     ///< The MLE Frame Counter
+#endif
         } mValid;
         struct
         {
