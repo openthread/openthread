@@ -51,8 +51,10 @@ extern "C" {
  */
 typedef struct otCliCommand
 {
-    const char *mName;                                    ///< A pointer to the command string.
-    void (*mCommand)(uint8_t aArgsLength, char *aArgs[]); ///< A function pointer to process the command.
+    const char *mName; ///< A pointer to the command string.
+    void (*mCommand)(void *  aContext,
+                     uint8_t aArgsLength,
+                     char *  aArgs[]); ///< A function pointer to process the command.
 } otCliCommand;
 
 /**
@@ -109,9 +111,10 @@ void otCliUartInit(otInstance *aInstance);
  *
  * @param[in]  aUserCommands  A pointer to an array with user commands.
  * @param[in]  aLength        @p aUserCommands length.
+ * @param[in]  aContext       @p The context passed to the handler.
  *
  */
-void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength);
+void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext);
 
 /**
  * Write a number of bytes to the CLI console as a hex string.
