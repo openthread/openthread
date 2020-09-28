@@ -217,6 +217,9 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
                     NM_NETWORK_NAME_TLV, NM_NETWORK_MASTER_KEY_TLV
                 } <= set(p.thread_meshcop.tlv.type) and p.thread_nwd.tlv.stable == [0])
 
+        # Copy a pv.pkts here to filter SED related packets for potential sequence packets disorder
+        _pkts_sed = pkts.copy()
+
         # Step 11: Router MUST multicast a MLE Data Response with the new information
         pkts.filter_wpan_src64(ROUTER_1).filter_ipv6_dst(LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).filter_mle_cmd(
             MLE_DATA_RESPONSE).must_next().must_verify(
@@ -226,7 +229,6 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
                 data_version and p.mle.tlv.leader_data.stable_data_version == _pkt.mle.tlv.leader_data.
                 stable_data_version and {NM_COMMISSIONER_SESSION_ID_TLV, NM_BORDER_AGENT_LOCATOR_TLV} <= set(
                     p.thread_meshcop.tlv.type) and p.thread_nwd.tlv.stable == [0])
-        _pkts_sed = pkts.copy()
 
         # Step 12: Router MUST send MLE Child Update Request to SED_1
         pkts.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(SED).filter_mle_cmd(
