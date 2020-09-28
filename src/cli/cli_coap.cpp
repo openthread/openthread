@@ -39,6 +39,11 @@
 
 #include "cli/cli.hpp"
 #include "coap/coap_message.hpp"
+#include "utils/parse_cmdline.hpp"
+
+using ot::Utils::CmdLineParser::ParseAsIp6Address;
+using ot::Utils::CmdLineParser::ParseAsUint32;
+using ot::Utils::CmdLineParser::ParseAsUint8;
 
 namespace ot {
 namespace Cli {
@@ -298,24 +303,12 @@ otError Coap::ProcessParameters(uint8_t aArgsLength, char *aArgs[])
         }
         else
         {
-            unsigned long value;
-
             VerifyOrExit(aArgsLength >= 6, error = OT_ERROR_INVALID_ARGS);
 
-            SuccessOrExit(error = mInterpreter.ParseUnsignedLong(aArgs[2], value));
-            txParameters->mAckTimeout = static_cast<uint32_t>(value);
-
-            SuccessOrExit(error = mInterpreter.ParseUnsignedLong(aArgs[3], value));
-            VerifyOrExit(value <= 255, error = OT_ERROR_INVALID_ARGS);
-            txParameters->mAckRandomFactorNumerator = static_cast<uint8_t>(value);
-
-            SuccessOrExit(error = mInterpreter.ParseUnsignedLong(aArgs[4], value));
-            VerifyOrExit(value <= 255, error = OT_ERROR_INVALID_ARGS);
-            txParameters->mAckRandomFactorDenominator = static_cast<uint8_t>(value);
-
-            SuccessOrExit(error = mInterpreter.ParseUnsignedLong(aArgs[5], value));
-            VerifyOrExit(value <= 255, error = OT_ERROR_INVALID_ARGS);
-            txParameters->mMaxRetransmit = static_cast<uint8_t>(value);
+            SuccessOrExit(error = ParseAsUint32(aArgs[2], txParameters->mAckTimeout));
+            SuccessOrExit(error = ParseAsUint8(aArgs[3], txParameters->mAckRandomFactorNumerator));
+            SuccessOrExit(error = ParseAsUint8(aArgs[4], txParameters->mAckRandomFactorDenominator));
+            SuccessOrExit(error = ParseAsUint8(aArgs[5], txParameters->mMaxRetransmit));
 
             VerifyOrExit(txParameters->mAckRandomFactorNumerator > txParameters->mAckRandomFactorDenominator,
                          error = OT_ERROR_INVALID_ARGS);
@@ -391,7 +384,7 @@ otError Coap::ProcessRequest(uint8_t aArgsLength, char *aArgs[])
     // Destination IPv6 address
     if (aArgsLength > 1)
     {
-        SuccessOrExit(error = otIp6AddressFromString(aArgs[1], &coapDestinationIp));
+        SuccessOrExit(error = ParseAsIp6Address(aArgs[1], coapDestinationIp));
     }
     else
     {

@@ -36,6 +36,7 @@
 #include <inttypes.h>
 
 #include "cli/cli.hpp"
+#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
 

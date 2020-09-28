@@ -38,8 +38,13 @@
 
 #include "cli/cli.hpp"
 #include "common/encoding.hpp"
+#include "utils/parse_cmdline.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
+
+using ot::Utils::CmdLineParser::ParseAsHexString;
+using ot::Utils::CmdLineParser::ParseAsIp6Address;
+using ot::Utils::CmdLineParser::ParseAsUint16;
 
 namespace ot {
 namespace Cli {
@@ -70,19 +75,11 @@ otError UdpExample::ProcessBind(uint8_t aArgsLength, char *aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
-    long       value;
 
     VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
 
-    memset(&sockaddr, 0, sizeof(sockaddr));
-
-    error = otIp6AddressFromString(aArgs[0], &sockaddr.mAddress);
-    SuccessOrExit(error);
-
-    error = Interpreter::ParseLong(aArgs[1], value);
-    SuccessOrExit(error);
-
-    sockaddr.mPort = static_cast<uint16_t>(value);
+    SuccessOrExit(error = ParseAsIp6Address(aArgs[0], sockaddr.mAddress));
+    SuccessOrExit(error = ParseAsUint16(aArgs[1], sockaddr.mPort));
 
     error = otUdpBind(mInterpreter.mInstance, &mSocket, &sockaddr);
 
@@ -94,19 +91,11 @@ otError UdpExample::ProcessConnect(uint8_t aArgsLength, char *aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
-    long       value;
 
     VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
 
-    memset(&sockaddr, 0, sizeof(sockaddr));
-
-    error = otIp6AddressFromString(aArgs[0], &sockaddr.mAddress);
-    SuccessOrExit(error);
-
-    error = Interpreter::ParseLong(aArgs[1], value);
-    SuccessOrExit(error);
-
-    sockaddr.mPort = static_cast<uint16_t>(value);
+    SuccessOrExit(error = ParseAsIp6Address(aArgs[0], sockaddr.mAddress));
+    SuccessOrExit(error = ParseAsUint16(aArgs[1], sockaddr.mPort));
 
     error = otUdpConnect(mInterpreter.mInstance, &mSocket, &sockaddr);
 
@@ -146,14 +135,8 @@ otError UdpExample::ProcessSend(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength > 2)
     {
-        long value;
-        error = otIp6AddressFromString(aArgs[curArg++], &messageInfo.mPeerAddr);
-        SuccessOrExit(error);
-
-        error = Interpreter::ParseLong(aArgs[curArg++], value);
-        SuccessOrExit(error);
-
-        messageInfo.mPeerPort = static_cast<uint16_t>(value);
+        SuccessOrExit(error = ParseAsIp6Address(aArgs[curArg++], messageInfo.mPeerAddr));
+        SuccessOrExit(error = ParseAsUint16(aArgs[curArg++], messageInfo.mPeerPort));
     }
 
     if (aArgsLength == 2 || aArgsLength == 4)
@@ -162,10 +145,8 @@ otError UdpExample::ProcessSend(uint8_t aArgsLength, char *aArgs[])
 
         if (strcmp(aArgs[typePos], "-s") == 0)
         {
-            unsigned long value;
             payloadType = kTypeAutoSize;
-            SuccessOrExit(error = Interpreter::ParseUnsignedLong(aArgs[curArg], value));
-            payloadLength = static_cast<uint16_t>(value);
+            SuccessOrExit(error = ParseAsUint16(aArgs[curArg], payloadLength));
         }
         else if (strcmp(aArgs[typePos], "-x") == 0)
         {
@@ -192,14 +173,14 @@ otError UdpExample::ProcessSend(uint8_t aArgsLength, char *aArgs[])
     case kTypeHexString:
     {
         uint8_t     buf[50];
-        int16_t     bufLen;
+        uint16_t    bufLen;
         uint16_t    conversionLength = 0;
         const char *hexString        = aArgs[curArg];
 
         while (payloadLength > 0)
         {
-            bufLen = static_cast<int16_t>(Interpreter::Hex2Bin(hexString, buf, sizeof(buf), true));
-
+            bufLen = sizeof(buf);
+            SuccessOrExit(error = ParseAsHexString(hexString, bufLen, buf, Utils::CmdLineParser::kAllowTruncate));
             VerifyOrExit(bufLen > 0, error = OT_ERROR_INVALID_ARGS);
 
             conversionLength = static_cast<uint16_t>(bufLen * 2);
@@ -211,7 +192,7 @@ otError UdpExample::ProcessSend(uint8_t aArgsLength, char *aArgs[])
 
             hexString += conversionLength;
             payloadLength -= conversionLength;
-            SuccessOrExit(error = otMessageAppend(message, buf, static_cast<uint16_t>(bufLen)));
+            SuccessOrExit(error = otMessageAppend(message, buf, bufLen));
         }
         break;
     }

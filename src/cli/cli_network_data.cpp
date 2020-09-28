@@ -38,8 +38,10 @@
 
 #include "cli/cli.hpp"
 #include "common/encoding.hpp"
+#include "utils/parse_cmdline.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
+using ot::Utils::CmdLineParser::ParseAsHexString;
 
 namespace ot {
 namespace Cli {
@@ -212,7 +214,7 @@ otError NetworkData::ProcessSteeringData(uint8_t aArgsLength, char *aArgs[])
 
     if (error == OT_ERROR_NOT_FOUND)
     {
-        VerifyOrExit(Interpreter::Hex2Bin(aArgs[1], addr.m8, sizeof(addr)) == sizeof(addr), OT_NOOP);
+        SuccessOrExit(error = ParseAsHexString(aArgs[1], addr.m8));
     }
     else if (error != OT_ERROR_NONE)
     {

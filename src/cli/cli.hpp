@@ -127,44 +127,6 @@ public:
     void ProcessLine(char *aBuf, uint16_t aBufLength);
 
     /**
-     * This method parses an ASCII string as a long.
-     *
-     * @param[in]   aString  A pointer to the ASCII string.
-     * @param[out]  aLong    A reference to where the parsed long is placed.
-     *
-     * @retval OT_ERROR_NONE          Successfully parsed the ASCII string.
-     * @retval OT_ERROR_INVALID_ARGS  @p aString is not a valid long integer.
-     *
-     */
-    static otError ParseLong(char *aString, long &aLong);
-
-    /**
-     * This method parses an ASCII string as an unsigned long.
-     *
-     * @param[in]   aString          A pointer to the ASCII string.
-     * @param[out]  aUnsignedLong    A reference to where the parsed unsigned long is placed.
-     *
-     * @retval OT_ERROR_NONE          Successfully parsed the ASCII string.
-     * @retval OT_ERROR_INVALID_ARGS  @p aString is not a valid unsigned long integer.
-     *
-     */
-    static otError ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong);
-
-    /**
-     * This method converts a hex string to binary.
-     *
-     * @param[in]   aHex            A pointer to the hex string.
-     * @param[out]  aBin            A pointer to where the binary representation is placed.
-     * @param[in]   aBinLength      Maximum length of the binary representation.
-     * @param[in]   aAllowTruncate  TRUE if @p aBinLength may be less than what is required
-     *                              to convert @p aHex to binary representation, FALSE otherwise.
-     *
-     * @returns  The number of bytes in the binary representation, or -1 if @p aHex is not a valid hex string
-     *
-     */
-    static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength, bool aAllowTruncate = false);
-
-    /**
      * This method delivers raw characters to the client.
      *
      * @param[in]  aBuf        A pointer to a buffer.
@@ -296,7 +258,6 @@ private:
 
     otError        ParsePingInterval(const char *aString, uint32_t &aInterval);
     static otError ParseJoinerDiscerner(char *aString, otJoinerDiscerner &aJoinerDiscerner);
-    static otError ParseIp6Prefix(char *aString, otIp6Prefix &aPrefix);
 
     otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessCcaThreshold(uint8_t aArgsLength, char *aArgs[]);
@@ -343,7 +304,7 @@ private:
     otError ProcessContextIdReuseDelay(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessCounters(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessCsl(uint8_t aArgsLength, char *argv[]);
+    otError ProcessCsl(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
     otError ProcessDelayTimerMin(uint8_t aArgsLength, char *aArgs[]);
 #endif
