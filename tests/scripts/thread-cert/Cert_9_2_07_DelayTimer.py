@@ -30,7 +30,7 @@
 import unittest
 
 import thread_cert
-from pktverify.consts import MLE_CHILD_ID_RESPONSE, MLE_DATA_RESPONSE, MGMT_PENDING_SET_URI, MGMT_ACTIVE_SET_URI, MGMT_ACTIVE_GET_URI, MGMT_DATASET_CHANGED_URI, ACTIVE_OPERATION_DATASET_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, NM_CHANNEL_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_MASTER_KEY_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_NETWORK_NAME_TLV, NM_PAN_ID_TLV, NM_PSKC_TLV, NM_SECURITY_POLICY_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ACTIVE_TIMESTAMP_TLV, NETWORK_DATA_TLV
+from pktverify.consts import MLE_CHILD_ID_RESPONSE, MLE_DATA_RESPONSE, MGMT_PENDING_SET_URI, MGMT_ACTIVE_SET_URI, MGMT_ACTIVE_GET_URI, MGMT_DATASET_CHANGED_URI, ACTIVE_OPERATION_DATASET_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, NM_CHANNEL_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_MASTER_KEY_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_NETWORK_NAME_TLV, NM_PAN_ID_TLV, NM_PSKC_TLV, NM_SECURITY_POLICY_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ACTIVE_TIMESTAMP_TLV, NETWORK_DATA_TLV, NM_BORDER_AGENT_LOCATOR_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_DELAY_TIMER_TLV, LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS, PENDING_OPERATION_DATASET_TLV
 from pktverify.packet_verifier import PacketVerifier
 
 PANID_INIT = 0xface
@@ -54,9 +54,6 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
     TOPOLOGY = {
         COMMISSIONER: {
             'name': 'COMMISSIONER',
-            'active_dataset': {
-                'timestamp': LEADER_ACTIVE_TIMESTAMP
-            },
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
@@ -72,16 +69,9 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
         },
         ROUTER: {
             'name': 'ROUTER',
-            'active_dataset': {
-                'timestamp': ROUTER_ACTIVE_TIMESTAMP
-            },
             'mode': 'rdn',
             'panid': 0xface,
             'partition_id': 1,
-            'pending_dataset': {
-                'pendingtimestamp': ROUTER_PENDING_TIMESTAMP,
-                'activetimestamp': ROUTER_PENDING_ACTIVE_TIMESTAMP
-            },
             'router_selection_jitter': 1
         },
     }
@@ -97,27 +87,41 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(3)
 
+        self.nodes[COMMISSIONER].send_mgmt_active_set(active_timestamp=LEADER_ACTIVE_TIMESTAMP,)
+        self.simulator.go(5)
+
         self.nodes[ROUTER].start()
-        self.simulator.go(10)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'leader')
 
         self.nodes[LEADER].add_allowlist(self.nodes[ROUTER].get_addr64())
         self.nodes[ROUTER].add_allowlist(self.nodes[LEADER].get_addr64())
-
-        self.simulator.go(30)
+        self.simulator.go(20)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
-        self.collect_rloc16s()
+        self.nodes[ROUTER].commissioner_start()
+        self.simulator.go(3)
+        self.nodes[ROUTER].send_mgmt_active_set(active_timestamp=ROUTER_ACTIVE_TIMESTAMP,)
+        self.simulator.go(30)
+
+        self.nodes[ROUTER].send_mgmt_pending_set(
+            pending_timestamp=30,
+            active_timestamp=25,
+            delay_timer=3600000,
+        )
+        self.simulator.go(60)
+
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
             pending_timestamp=40,
             active_timestamp=80,
-            delay_timer=10000,
+            delay_timer=60000,
             channel=COMMISSIONER_PENDING_CHANNEL,
             panid=COMMISSIONER_PENDING_PANID,
         )
-        self.simulator.go(40)
+        self.simulator.go(120)
+
         self.assertEqual(self.nodes[LEADER].get_panid(), COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[COMMISSIONER].get_panid(), COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[ROUTER].get_panid(), COMMISSIONER_PENDING_PANID)
@@ -129,6 +133,8 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
         )
         self.assertEqual(self.nodes[ROUTER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
 
+        self.collect_rloc16s()
+        self.collect_rlocs()
         ipaddrs = self.nodes[ROUTER].get_addrs()
         for ipaddr in ipaddrs:
             if ipaddr[0:4] != 'fe80':
@@ -141,47 +147,82 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
 
         LEADER = pv.vars['LEADER']
         COMMISSIONER = pv.vars['COMMISSIONER']
+        COMMISSIONER_RLOC = pv.vars['COMMISSIONER_RLOC']
+        COMMISSIONER_RLOC16 = pv.vars['COMMISSIONER_RLOC16']
         ROUTER = pv.vars['ROUTER']
+        ROUTER_RLOC = pv.vars['ROUTER_RLOC']
+        ROUTER_RLOC16 = pv.vars['ROUTER_RLOC16']
         _lpkts = pkts.filter_wpan_src64(LEADER)
 
         # Step 1: Ensure the topology is formed correctly
-        _lpkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+        _lpkts.filter_wpan_dst64(COMMISSIONER).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+        _lpkts_coap = _lpkts.copy()
 
         # Step 4: Leader MUST send a unicast MLE Child ID Response to the Router
         _lpkts.filter_wpan_dst64(ROUTER).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next(
         ).must_verify(lambda p: {ACTIVE_OPERATION_DATASET_TLV, ACTIVE_TIMESTAMP_TLV} < set(p.mle.tlv.type) and {
             NM_CHANNEL_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_MASTER_KEY_TLV,
             NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_NETWORK_NAME_TLV, NM_PAN_ID_TLV, NM_PSKC_TLV, NM_SECURITY_POLICY_TLV
-        } <= set(p.thread_meshcop.tlv.type))
+        } <= set(p.thread_meshcop.tlv.type) and p.mle.tlv.active_tstamp == LEADER_ACTIVE_TIMESTAMP)
+
+        # Step 6: Leader automatically sends a MGMT_ACTIVE_SET.rsp to the Router
+        _lpkts.filter_ipv6_dst(ROUTER_RLOC).filter_coap_ack(MGMT_ACTIVE_SET_URI).must_next().must_verify(
+            lambda p: p.coap.code == 68 and p.thread_meshcop.tlv.state == 1)
 
         # Step 7: Leader multicasts a MLE Data Response with the new information
-        _lpkts.filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
+        _lpkts.filter_LLANMA().filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
             lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ACTIVE_TIMESTAMP_TLV, NETWORK_DATA_TLV} <= set(
-                p.mle.tlv.type) and p.thread_nwd.tlv.stable == [0])
-
-        # Step 8: Leader MUST send MGMT_DATASET_CHANGED.ntf to the Commissioner
-        _lpkts.filter_coap_request(MGMT_DATASET_CHANGED_URI).must_next()
+                p.mle.tlv.type) and {NM_BORDER_AGENT_LOCATOR_TLV, NM_COMMISSIONER_SESSION_ID_TLV} <= set(
+                    p.thread_meshcop.tlv.type) and p.thread_nwd.tlv.stable == [0] and p.mle.tlv.active_tstamp ==
+            ROUTER_ACTIVE_TIMESTAMP)
 
         # Step 10: Leader MUST send a unicast MLE Data Response to the Router
-        _lpkts.filter_wpan_dst64(ROUTER).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
-            lambda p: {ACTIVE_OPERATION_DATASET_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV} < set(p.mle.tlv.type
-                                                                                                       ))
+        _lpkts.filter_wpan_dst64(ROUTER).filter_mle_cmd(MLE_DATA_RESPONSE).must_next(
+        ).must_verify(lambda p: {ACTIVE_OPERATION_DATASET_TLV, ACTIVE_TIMESTAMP_TLV} < set(p.mle.tlv.type) and {
+            NM_CHANNEL_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_MASTER_KEY_TLV,
+            NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_NETWORK_NAME_TLV, NM_PAN_ID_TLV, NM_PSKC_TLV, NM_SECURITY_POLICY_TLV
+        } <= set(p.thread_meshcop.tlv.type) and p.mle.tlv.active_tstamp == ROUTER_ACTIVE_TIMESTAMP)
 
-        # Step 12: Leader sends a MGMT_PENDING_SET.rsp to the Commissioner with Status = Accept
-        _lpkts.filter_coap_ack(MGMT_PENDING_SET_URI).must_next().must_verify(
-            lambda p: bytes.fromhex('0101') in p.coap.payload)
+        # Step 12: Leader sends a MGMT_PENDING_SET.rsp to the Router with Status = Accept
+        _lpkts_coap.filter_ipv6_dst(ROUTER_RLOC).filter_coap_ack(MGMT_PENDING_SET_URI).must_next().must_verify(
+            lambda p: p.coap.code == 68 and p.thread_meshcop.tlv.state == 1)
 
         # Step 13: Leader sends a multicast MLE Data Response
-        _lpkts.filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ACTIVE_TIMESTAMP_TLV, NETWORK_DATA_TLV} <= set(
-                p.mle.tlv.type) and p.thread_nwd.tlv.stable == [0])
+        _lpkts.filter_LLANMA().filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
+            lambda p: {
+                SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, NETWORK_DATA_TLV
+            } <= set(p.mle.tlv.type) and p.thread_nwd.tlv.stable == [0] and p.mle.tlv.active_tstamp ==
+            ROUTER_ACTIVE_TIMESTAMP and p.mle.tlv.pending_tstamp == ROUTER_PENDING_TIMESTAMP)
 
-        # Step 14: Leader MUST send a unicast MLE Data Response to the Router
+        # Step 14: The DUT MUST send MGMT_DATASET_CHANGED.ntf to the Router
+        _lpkts_coap.filter(lambda p: p.wpan.dst16 == ROUTER_RLOC16).filter_coap_request(
+            MGMT_DATASET_CHANGED_URI).must_next()
+
+        # Step 16: Leader MUST send a unicast MLE Data Response to the Router
         _lpkts.filter_wpan_dst64(ROUTER).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
-            lambda p: {ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV} < set(p.mle.tlv.type) and p.thread_meshcop.tlv.
-            pan_id == COMMISSIONER_PENDING_PANID and p.thread_meshcop.tlv.channel == COMMISSIONER_PENDING_CHANNEL)
+            lambda p: {ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV} < set(p.mle.tlv.type) and p.mle.tlv.active_tstamp
+            == ROUTER_ACTIVE_TIMESTAMP and p.mle.tlv.pending_tstamp == ROUTER_PENDING_TIMESTAMP)
 
-        # Step 16: Router MUST respond with an ICMPv6 Echo Reply
+        # Step 18: The DUT MUST send MGMT_PENDING_SET.rsp to the Commissioner
+        _lpkts_coap.filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(MGMT_PENDING_SET_URI).must_next().must_verify(
+            lambda p: p.coap.code == 68 and p.thread_meshcop.tlv.state == 1)
+
+        # Step 19: Leader MUST send a unicast MLE Data Response to the Router
+        _lpkts.filter_LLANMA().filter_mle_cmd(
+            MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
+                SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV
+            } <= set(p.mle.tlv.type) and p.thread_nwd.tlv.stable == [0] and p.mle.tlv.active_tstamp ==
+                                                       ROUTER_ACTIVE_TIMESTAMP and p.mle.tlv.pending_tstamp == 40)
+
+        # Step 20: Leader MUST send a unicast MLE Data Response to the Router
+        _lpkts.filter_wpan_dst64(ROUTER).filter_mle_cmd(MLE_DATA_RESPONSE).must_next(
+        ).must_verify(lambda p: {ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, PENDING_OPERATION_DATASET_TLV} < set(
+            p.mle.tlv.type) and {NM_CHANNEL_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_PAN_ID_TLV, NM_DELAY_TIMER_TLV
+                                } <= set(p.thread_meshcop.tlv.type) and p.mle.tlv.active_tstamp ==
+                      ROUTER_ACTIVE_TIMESTAMP and p.mle.tlv.pending_tstamp == 40 and p.thread_meshcop.tlv.pan_id ==
+                      COMMISSIONER_PENDING_PANID and p.thread_meshcop.tlv.channel == COMMISSIONER_PENDING_CHANNEL)
+
+        # Step 21: Router MUST respond with an ICMPv6 Echo Reply
         pkts.filter('wpan.src16 == {ROUTER_RLOC16} and wpan.dst16 == {LEADER_RLOC16}',
                     **pv.vars).filter_ping_reply().must_next()
 
