@@ -1728,7 +1728,7 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 
     if (neighbor->IsStateValid())
     {
-        VerifyOrExit(frameCounter >= aNeighbor->GetAckLinkFrameCounter(), OT_NOOP);
+        VerifyOrExit(frameCounter >= neighbor->GetAckLinkFrameCounter(), OT_NOOP);
     }
 
     error = aAckFrame.ProcessReceiveAesCcm(srcAddr.GetExtended(), *macKey);
@@ -1736,7 +1736,7 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 
     if (neighbor->IsStateValid())
     {
-        aNeighbor->SetLinkAckFrameCounter(frameCounter + 1);
+        neighbor->SetLinkAckFrameCounter(frameCounter + 1);
     }
 
 exit:
