@@ -75,7 +75,7 @@ class Cert_5_7_01_CoapDiagCommands_A(thread_cert.TestCase):
         },
         FED1: {
             'allowlist': [ROUTER1],
-            'router_upgrade_threshold': 0
+            'router_eligible': False,
         },
     }
 

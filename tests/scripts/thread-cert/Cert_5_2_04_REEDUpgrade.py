@@ -150,7 +150,8 @@ class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
         ED: {
             'mode': 'rsdn',
             'panid': 0xface,
-            'allowlist': [DUT_REED]
+            'allowlist': [DUT_REED],
+            'router_eligible': False,
         },
     }
 

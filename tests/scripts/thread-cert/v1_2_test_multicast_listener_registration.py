@@ -118,7 +118,7 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
             'mode': 'rsdn',
             'version': '1.2',
             'allowlist': [ROUTER_1_2],
-            'router_upgrade_threshold': 0,
+            'router_eligible': False,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
         },
     }

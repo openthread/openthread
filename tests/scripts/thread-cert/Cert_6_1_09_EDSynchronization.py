@@ -58,7 +58,7 @@ class Cert_6_1_9_EDSynchronization(thread_cert.TestCase):
         ED: {
             'name': 'ED',
             'panid': 0xface,
-            'router_upgrade_threshold': 0,
+            'router_eligible': False,
             'allowlist': [LEADER]
         },
         ROUTER2: {
