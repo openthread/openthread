@@ -978,9 +978,11 @@ otError Ip6::ProcessReceiveCallback(Message &          aMessage,
     if (mIsReceiveIp6FilterEnabled)
     {
         // do not pass messages sent to an RLOC/ALOC, except Service Locator
+#if !OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
         VerifyOrExit(!aMessageInfo.GetSockAddr().GetIid().IsLocator() ||
                          aMessageInfo.GetSockAddr().GetIid().IsAnycastServiceLocator(),
                      error = OT_ERROR_NO_ROUTE);
+#endif
 
         switch (aIpProto)
         {
@@ -1011,13 +1013,13 @@ otError Ip6::ProcessReceiveCallback(Message &          aMessage,
                 // do not pass MLE messages
                 ExitNow(error = OT_ERROR_NO_ROUTE);
             }
-#if !OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
             else if ((destPort == Tmf::kUdpPort) && Get<Tmf::TmfAgent>().IsTmfMessage(aMessageInfo))
             {
-                // do not pass TMF messages
+                // pass TMF messages only if `OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE`
+#if !OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
                 ExitNow(error = OT_ERROR_NO_ROUTE);
-            }
 #endif
+            }
 
 #if OPENTHREAD_FTD
             if (destPort == Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort())

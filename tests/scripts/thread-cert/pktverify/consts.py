@@ -281,6 +281,9 @@ CSL_IE_ID = 0x1a
 # Thread Version TLV value
 THREAD_VERSION_1_2 = 3
 
+# ICMPv6 Types
+ICMPV6_TYPE_DESTINATION_UNREACHABLE = 1
+
 if __name__ == '__main__':
     from pktverify.addrs import Ipv6Addr
 
