@@ -327,7 +327,7 @@ void UdpExample::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMes
     length      = otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, sizeof(buf) - 1);
     buf[length] = '\0';
 
-    mInterpreter.OutputLine(buf);
+    mInterpreter.OutputLine("%s", buf);
 }
 
 } // namespace Cli

@@ -337,7 +337,7 @@ otError Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (uint8_t i = 0; i < mUserCommandsLength; i++)
     {
-        OutputLine(mUserCommands[i].mName);
+        OutputLine("%s", mUserCommands[i].mName);
     }
 
     return OT_ERROR_NONE;
@@ -584,7 +584,7 @@ otError Interpreter::ProcessDomainName(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        OutputLine(otThreadGetDomainName(mInstance));
+        OutputLine("%s", otThreadGetDomainName(mInstance));
     }
     else
     {
@@ -2426,7 +2426,7 @@ otError Interpreter::ProcessNetworkName(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        OutputLine(otThreadGetNetworkName(mInstance));
+        OutputLine("%s", otThreadGetNetworkName(mInstance));
     }
     else
     {
@@ -3042,7 +3042,7 @@ otError Interpreter::ProcessRcp(uint8_t aArgsLength, char *aArgs[])
 
     if (strcmp(aArgs[0], "version") == 0)
     {
-        OutputLine(version);
+        OutputLine("%s", version);
     }
     else
     {
@@ -3774,7 +3774,7 @@ otError Interpreter::ProcessVersion(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        OutputLine(otGetVersionString());
+        OutputLine("%s", otGetVersionString());
         ExitNow();
     }
 
