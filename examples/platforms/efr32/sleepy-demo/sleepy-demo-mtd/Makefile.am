@@ -37,8 +37,8 @@ BOARD_UPPERCASE = $(shell echo $(BOARD) | tr a-z A-Z)
 
 SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0
 
-$(top_builddir)/examples/platforms/efr32/libopenthread-efr32mg21.a:
-	(cd $(top_builddir)/examples/platforms/efr32/ && $(MAKE) $(AM_MAKEFLAGS) libopenthread-efr32mg21.a )
+$(top_builddir)/examples/platforms/efr32/libopenthread-$(EFR32_PLATFORM).a:
+	(cd $(top_builddir)/examples/platforms/efr32/ && $(MAKE) $(AM_MAKEFLAGS) libopenthread-$(EFR32_PLATFORM).a )
 
 bin_PROGRAMS                                                                  = \
     $(NULL)
