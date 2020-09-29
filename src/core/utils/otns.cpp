@@ -151,8 +151,8 @@ void Otns::EmitTransmit(const Mac::TxFrame &aFrame)
 
 void Otns::EmitDeviceMode(Mle::DeviceMode aMode)
 {
-    EmitStatus("mode=%s%s%s%s", aMode.IsRxOnWhenIdle() ? "r" : "", aMode.IsSecureDataRequest() ? "s" : "",
-               aMode.IsFullThreadDevice() ? "d" : "", aMode.IsFullNetworkData() ? "n" : "");
+    EmitStatus("mode=%s%s%s", aMode.IsRxOnWhenIdle() ? "r" : "", aMode.IsFullThreadDevice() ? "d" : "",
+               aMode.IsFullNetworkData() ? "n" : "");
 }
 
 } // namespace Utils

@@ -54,13 +54,13 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
             'active_dataset': {
                 'timestamp': LEADER_ACTIVE_TIMESTAMP
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'partition_id': 0xffffffff,
             'router_selection_jitter': 1,
@@ -70,7 +70,7 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
             'active_dataset': {
                 'timestamp': ROUTER_ACTIVE_TIMESTAMP
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'partition_id': 1,
             'pending_dataset': {

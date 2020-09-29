@@ -51,11 +51,11 @@ class TestREEDAddressSolicitRejected(thread_cert.TestCase):
 
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface
         },
         REED: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },

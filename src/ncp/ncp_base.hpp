@@ -514,10 +514,7 @@ protected:
 protected:
     static NcpBase *       sNcpInstance;
     static spinel_status_t ThreadErrorToSpinelStatus(otError aError);
-    static uint8_t         LinkFlagsToFlagByte(bool aRxOnWhenIdle,
-                                               bool aSecureDataRequests,
-                                               bool aDeviceType,
-                                               bool aNetworkData);
+    static uint8_t         LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aDeviceType, bool aNetworkData);
     Instance *             mInstance;
     Spinel::Buffer         mTxFrameBuffer;
     Spinel::Encoder        mEncoder;

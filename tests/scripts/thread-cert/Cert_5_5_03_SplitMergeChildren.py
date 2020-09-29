@@ -44,38 +44,38 @@ MTDS = [ED1, ED2, ED3]
 class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [ROUTER1, ROUTER2, ED1]
         },
         ROUTER1: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ED2, ED3]
         },
         ROUTER2: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         ED1: {
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [LEADER]
         },
         ED2: {
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [ROUTER1]
         },
         ED3: {
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [ROUTER1]
         },

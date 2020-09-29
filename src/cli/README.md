@@ -1185,28 +1185,33 @@ Done
 
 Get the Thread Device Mode value.
 
+- -: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
 - r: rx-on-when-idle
-- s: Secure IEEE 802.15.4 data requests
 - d: Full Thread Device
 - n: Full Network Data
 
 ```bash
 > mode
-rsdn
+rdn
 Done
 ```
 
-### mode [rsdn]
+### mode [rdn]
 
 Set the Thread Device Mode value.
 
+- -: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
 - r: rx-on-when-idle
-- s: Secure IEEE 802.15.4 data requests
 - d: Full Thread Device
 - n: Full Network Data
 
 ```bash
-> mode rsdn
+> mode rdn
+Done
+```
+
+```bash
+> mode -
 Done
 ```
 

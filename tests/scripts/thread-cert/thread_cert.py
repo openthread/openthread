@@ -58,7 +58,7 @@ DEFAULT_PARAMS = {
     'is_bbr': False,
     'is_otbr': False,
     'is_host': False,
-    'mode': 'rsdn',
+    'mode': 'rdn',
     'panid': 0xface,
     'allowlist': None,
     'version': ENV_THREAD_VERSION,

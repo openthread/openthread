@@ -87,10 +87,10 @@ send "leaderweight\n"
 expect "1"
 expect "Done"
 
-send "mode rsdn\n"
+send "mode rdn\n"
 expect "Done"
 send "mode\n"
-expect -re "(?=.*r)(?=.*s)(?=.*d)(?=.*n)"
+expect -re "(?=.*r)(?=.*d)(?=.*n)"
 
 send "parent\n"
 expect "Done"
