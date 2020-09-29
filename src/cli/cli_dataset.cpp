@@ -70,14 +70,6 @@ const Dataset::Command Dataset::sCommands[] = {
 
 otOperationalDataset Dataset::sDataset;
 
-void Dataset::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
-{
-    for (int i = 0; i < aLength; i++)
-    {
-        mInterpreter.OutputFormat("%02x", aBytes[i]);
-    }
-}
-
 otError Dataset::Print(otOperationalDataset &aDataset)
 {
     if (aDataset.mComponents.mIsPendingTimestampPresent)
@@ -108,7 +100,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mComponents.mIsExtendedPanIdPresent)
     {
         mInterpreter.OutputFormat("Ext PAN ID: ");
-        OutputBytes(aDataset.mExtendedPanId.m8, sizeof(aDataset.mExtendedPanId));
+        mInterpreter.OutputBytes(aDataset.mExtendedPanId.m8);
         mInterpreter.OutputLine("");
     }
 
@@ -124,7 +116,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mComponents.mIsMasterKeyPresent)
     {
         mInterpreter.OutputFormat("Master Key: ");
-        OutputBytes(aDataset.mMasterKey.m8, sizeof(aDataset.mMasterKey));
+        mInterpreter.OutputBytes(aDataset.mMasterKey.m8);
         mInterpreter.OutputLine("");
     }
 
@@ -142,7 +134,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mComponents.mIsPskcPresent)
     {
         mInterpreter.OutputFormat("PSKc: ");
-        OutputBytes(aDataset.mPskc.m8, sizeof(aDataset.mPskc.m8));
+        mInterpreter.OutputBytes(aDataset.mPskc.m8);
         mInterpreter.OutputLine("");
     }
 
@@ -441,7 +433,7 @@ otError Dataset::ProcessExtPanId(uint8_t aArgsLength, char *aArgs[])
     {
         if (sDataset.mComponents.mIsExtendedPanIdPresent)
         {
-            OutputBytes(sDataset.mExtendedPanId.m8, sizeof(sDataset.mExtendedPanId));
+            mInterpreter.OutputBytes(sDataset.mExtendedPanId.m8);
             mInterpreter.OutputLine("");
         }
     }
@@ -468,7 +460,7 @@ otError Dataset::ProcessMasterKey(uint8_t aArgsLength, char *aArgs[])
     {
         if (sDataset.mComponents.mIsMasterKeyPresent)
         {
-            OutputBytes(sDataset.mMasterKey.m8, sizeof(sDataset.mMasterKey));
+            mInterpreter.OutputBytes(sDataset.mMasterKey.m8);
             mInterpreter.OutputLine("");
         }
     }
@@ -821,7 +813,7 @@ otError Dataset::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
     {
         if (sDataset.mComponents.mIsPskcPresent)
         {
-            OutputBytes(sDataset.mPskc.m8, sizeof(sDataset.mPskc.m8));
+            mInterpreter.OutputBytes(sDataset.mPskc.m8);
             mInterpreter.OutputLine("");
         }
     }

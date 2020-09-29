@@ -177,12 +177,26 @@ public:
     int Output(const char *aBuf, uint16_t aBufLength);
 
     /**
-     * Write a number of bytes to the CLI console as a hex string.
+     * This method writes a number of bytes to the CLI console as a hex string.
      *
      * @param[in]  aBytes   A pointer to data which should be printed.
      * @param[in]  aLength  @p aBytes length.
+     *
      */
     void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
+
+    /**
+     * This method writes a number of bytes to the CLI console as a hex string.
+     *
+     * @tparam kBytesLength   The length of @p aBytes array.
+     *
+     * @param[in]  aBytes     A array of @p kBytesLength bytes which should be printed.
+     *
+     */
+    template <uint8_t kBytesLength> void OutputBytes(const uint8_t (&aBytes)[kBytesLength])
+    {
+        OutputBytes(aBytes, kBytesLength);
+    }
 
     /**
      * This method delivers formatted output to the client.
@@ -216,6 +230,14 @@ public:
      *
      */
     void OutputLine(const char *aFormat, ...);
+
+    /**
+     * This method writes an Extended MAC Address to the CLI console.
+     *
+     * param[in] aExtAddress  The Extended MAC Address to output.
+     *
+     */
+    void OutputExtAddress(const otExtAddress &aExtAddress) { OutputBytes(aExtAddress.m8); }
 
     /**
      * Write an IPv6 address to the CLI console.
