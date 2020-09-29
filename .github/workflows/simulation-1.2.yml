@@ -122,16 +122,30 @@ jobs:
       - name: Get Thread-Wireshark
         run: |
           ./script/test get_thread_wireshark
-      - name: Run
+      - name: Run Once
         run: |
-          for i in {1..10}
-          do
-            ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
-          done
+          ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
       - uses: actions/upload-artifact@v2
         if: ${{ failure() }}
         with:
           name: packet-verification-low-power-pcaps
+          path: |
+            *.pcap
+            *.json
+      - name: Run More Times
+        continue-on-error: true
+        id: run_more_times
+        run: |
+          for i in {1..3}
+          do
+            ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
+            rm -rf *.json *.pcap
+          done
+      - uses: actions/upload-artifact@v2
+        if: steps.run_more_times.outcome == 'failure'
+        continue-on-error: true
+        with:
+          name: packet-verification-low-power-pcaps-more
           path: |
             *.pcap
             *.json
@@ -171,16 +185,30 @@ jobs:
       - name: Get Thread-Wireshark
         run: |
           ./script/test get_thread_wireshark
-      - name: Run
+      - name: Run Once
         run: |
-          for i in {1..3}
-          do
-            ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
-          done
+          ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
       - uses: actions/upload-artifact@v2
         if: ${{ failure() }}
         with:
           name: packet-verification-1.1-on-1.2-pcaps
+          path: |
+            *.pcap
+            *.json
+      - name: Run More Times
+        continue-on-error: true
+        id: run_more_times
+        run: |
+          for i in {1..3}
+          do
+            ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
+            rm -rf *.json *.pcap
+          done
+      - uses: actions/upload-artifact@v2
+        if: steps.run_more_times.outcome == 'failure'
+        continue-on-error: true
+        with:
+          name: packet-verification-1.1-on-1.2-pcaps-more
           path: |
             *.pcap
             *.json
@@ -225,7 +253,6 @@ jobs:
       THREAD_VERSION: 1.2
       INTER_OP: 1
       COVERAGE: 1
-      MULTIPLY: 3
       PYTHONUNBUFFERED: 1
       OTBR_COMMIT: "d1671cfa4777d3a1bb565b88856f1ef446fe760f" # Sep 22, 2020
     steps:
@@ -244,10 +271,12 @@ jobs:
       - name: Get Thread-Wireshark
         run: |
           ./script/test get_thread_wireshark
-      - name: Run
+      - name: Prepare ENV
         run: |
           export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
           echo "CI_ENV=${CI_ENV}"
+      - name: Run Once
+        run: |
           sudo -E ./script/test cert_bbr ./tests/scripts/thread-cert/backbone/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
       - uses: actions/upload-artifact@v2
         if: ${{ failure() }}
@@ -257,6 +286,20 @@ jobs:
             *.pcap
             *.json
             *.log
+      - name: Run More Times
+        continue-on-error: true
+        id: run_more_times
+        run: |
+          export MULTIPLY=3
+          sudo -E ./script/test cert_bbr ./tests/scripts/thread-cert/backbone/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
+      - uses: actions/upload-artifact@v2
+        if: steps.run_more_times.outcome == 'failure'
+        continue-on-error: true
+        with:
+          name: thread-1-2-backbone-results-more
+          path: |
+            *.pcap
+            *.json
       - name: Codecov
         uses: codecov/codecov-action@v1
         with:
