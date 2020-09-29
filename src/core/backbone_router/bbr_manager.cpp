@@ -132,13 +132,11 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
     Ip6::Address addresses[kIPv6AddressesNumMax];
     uint8_t      failedAddressNum  = 0;
     uint8_t      successAddressNum = 0;
-
-    TimeMilli expireTime;
-
-    uint32_t timeout;
-    uint16_t commissionerSessionId;
-    bool     hasCommissionerSessionIdTlv = false;
-    bool     processTimeoutTlv           = false;
+    TimeMilli    expireTime;
+    uint32_t     timeout;
+    uint16_t     commissionerSessionId;
+    bool         hasCommissionerSessionIdTlv = false;
+    bool         processTimeoutTlv           = false;
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = OT_ERROR_PARSE);
 
@@ -333,11 +331,7 @@ void Manager::SendBackboneMulticastListenerRegistration(const Ip6::Address *aAdd
     SuccessOrExit(error = backboneTmf.SendMessage(*message, messageInfo, nullptr, nullptr));
 
 exit:
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     otLogInfoBbr("Sent BMLR.ntf: %s", otThreadErrorToString(error));
 }
 
