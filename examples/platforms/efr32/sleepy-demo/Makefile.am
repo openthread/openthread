@@ -26,13 +26,12 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 # Always package (e.g. for 'make dist') these subdirectories.
 
-DIST_SUBDIRS                            = \
-    sleepy-demo-mtd                       \
-    sleepy-demo-ftd                       \
+DIST_SUBDIRS                              = \
+    sleepy-demo-mtd                         \
+    sleepy-demo-ftd                         \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
@@ -41,7 +40,8 @@ SUBDIRS                                 = \
     $(NULL)
 
 if OPENTHREAD_ENABLE_EXECUTABLE
-SUBDIRS                                += sleepy-demo-mtd sleepy-demo-ftd
+SUBDIRS                                 += \
+    sleepy-demo-mtd                        \
+    sleepy-demo-ftd                        \
+    $(NULL)
 endif
-
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am

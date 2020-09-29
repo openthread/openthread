@@ -47,5 +47,7 @@ if OPENTHREAD_EXAMPLES_EFR32MG21
 include efr32mg21/Makefile.am
 endif
 
+SUBDIRS = sleepy-demo
+
 PRETTY_FILES                            = \
     $(NULL)

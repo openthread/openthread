@@ -35,6 +35,9 @@
 override CFLAGS   := $(filter-out -Wundef,$(CFLAGS))
 override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
 
+EFR32_PLATFORM = efr32mg13
+
+
 LIBRAIL = $(shell                                                                \
 if [ "$(DMP)" = "1" ]; then                                                      \
     echo "librail_multiprotocol_efr32xg13_gcc_release.a";                        \

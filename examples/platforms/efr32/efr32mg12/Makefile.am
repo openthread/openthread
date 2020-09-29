@@ -42,7 +42,6 @@ override CXXFLAGS := $(filter-out -pedantic-errors,$(CXXFLAGS))
 override CFLAGS   := $(filter-out -Wundef,$(CFLAGS))
 override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
 
-EFR32_PLATFORM = efr32mg12
 BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
 BOARD_UPPERCASE = $(shell echo $(BOARD) | tr a-z A-Z)
 
@@ -140,13 +139,5 @@ Dash = -
 libopenthread_efr32mg12_a_LIBADD                                                                     = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")             \
     $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
-
-DIST_SUBDIRS                                                                  = \
-    efr32mg12/sleepy-demo                                                       \
-    $(NULL)
-
-SUBDIRS                                                                       = \
-    efr32mg12/sleepy-demo                                                       \
-    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

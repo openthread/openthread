@@ -32,27 +32,21 @@ include $(top_srcdir)/examples/platforms/Makefile.platform.am
 override CFLAGS   := $(filter-out -Wconversion,$(CFLAGS))
 override CXXFLAGS := $(filter-out -Wconversion,$(CXXFLAGS))
 
-EFR32_PLATFORM = efr32mg13
 BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
 BOARD_UPPERCASE = $(shell echo $(BOARD) | tr a-z A-Z)
 
 SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0
 
-$(top_builddir)/examples/platforms/efr32/libopenthread-efr32mg13.a:
-	(cd $(top_builddir)/examples/platforms/efr32/ && $(MAKE) $(AM_MAKEFLAGS) libopenthread-efr32mg13.a )
+$(top_builddir)/examples/platforms/efr32/libopenthread-efr32mg21.a:
+	(cd $(top_builddir)/examples/platforms/efr32/ && $(MAKE) $(AM_MAKEFLAGS) libopenthread-efr32mg21.a )
 
 bin_PROGRAMS                                                                  = \
     $(NULL)
 
 CPPFLAGS_COMMON                                                              += \
-    -DPLATFORM_HEADER=\"platform/base/hal/micro/cortexm3/compiler/gcc.h\"       \
     -DNVIC_CONFIG=\"platform/base/hal/micro/cortexm3/efm32/nvic-config.h\"      \
+    -DPLATFORM_HEADER=\"platform/base/hal/micro/cortexm3/compiler/gcc.h\"       \
     -Wno-sign-compare                                                           \
-    -DCORTEXM3                                                                  \
-    -DPHY=EMBER_PHY_RAIL                                                        \
-    -DMICRO=EMBER_MICRO_CORTEXM3_EFR32                                          \
-    -DCORTEXM3_EFM32_MICRO                                                      \
-    -DPLAT=EMBER_PLATFORM_CORTEXM3                                              \
     -I$(top_srcdir)/examples/platforms                                          \
     -I$(top_srcdir)/examples/platforms/efr32/$(EFR32_PLATFORM)/$(BOARD_LOWERCASE) \
     -I$(top_srcdir)/examples/platforms/efr32/$(EFR32_PLATFORM)                  \
@@ -62,12 +56,12 @@ CPPFLAGS_COMMON                                                              += 
     -I$(top_srcdir)/third_party/silabs/rail_config                              \
     -I$(SDK_SRC_DIR)/hardware/kit/common/bsp                                    \
     -I$(SDK_SRC_DIR)/hardware/kit/common/drivers                                \
-    -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG13_$(BOARD_UPPERCASE)/config           \
+    -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG21_$(BOARD_UPPERCASE)/config           \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32                     \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32/config              \
     -I$(SDK_SRC_DIR)/platform/common/inc                                        \
     -I$(SDK_SRC_DIR)/platform/CMSIS/Include                                     \
-    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG13P/Include             \
+    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG21/Include              \
     -I$(SDK_SRC_DIR)/platform/emdrv/common/inc                                  \
     -I$(SDK_SRC_DIR)/platform/emdrv/gpiointerrupt/inc                           \
     -I$(SDK_SRC_DIR)/platform/emdrv/uartdrv/inc                                 \
@@ -78,14 +72,14 @@ CPPFLAGS_COMMON                                                              += 
     -I$(SDK_SRC_DIR)/platform/emlib/inc                                         \
     -I$(SDK_SRC_DIR)/platform/halconfig/inc/hal-config                          \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32                         \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg2x               \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/rf/common/cortex        \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/common                             \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal                                \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal/efr32                          \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/protocol/ieee802154                \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions              \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg1x/config \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg21/config \
     -I$(SDK_SRC_DIR)/platform/service/device_init/inc                           \
     -I$(SDK_SRC_DIR)/platform/service/mpu/inc                                   \
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/config                         \
@@ -109,12 +103,6 @@ SOURCES_COMMON                                                               += 
     main.c                                                                      \
     $(NULL)
 
-if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-LDADD_COMMON                                                                 += \
-    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                         \
-    $(NULL)
-endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-
 if OPENTHREAD_ENABLE_EXECUTABLE
 bin_PROGRAMS                                                                 += \
     sleepy-demo-mtd                                                             \
@@ -124,6 +112,27 @@ endif
 sleepy_demo_mtd_CPPFLAGS                                                      = \
     $(CPPFLAGS_COMMON)                                                          \
     $(NULL)
+
+if OPENTHREAD_EXAMPLES_EFR32MG1
+sleepy_demo_mtd_CPPFLAGS                                                     += \
+    $(EFR32MG1_CPPFLAGS)
+endif
+
+if OPENTHREAD_EXAMPLES_EFR32MG12
+sleepy_demo_mtd_CPPFLAGS                                                     += \
+    $(EFR32MG12_CPPFLAGS)
+endif
+
+if OPENTHREAD_EXAMPLES_EFR32MG13
+sleepy_demo_mtd_CPPFLAGS                                                     += \
+    $(EFR32MG13_CPPFLAGS)
+endif
+
+if OPENTHREAD_EXAMPLES_EFR32MG21
+sleepy_demo_mtd_CPPFLAGS                                                     += \
+    $(EFR32MG21_CPPFLAGS)
+endif
+
 
 sleepy_demo_mtd_LDADD                                                         = \
     $(top_builddir)/src/cli/libopenthread-cli-mtd.a                             \
