@@ -41,12 +41,12 @@ ROUTER1 = 2
 class Cert_5_1_06_RemoveRouterId(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER1]
         },
         ROUTER1: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER]

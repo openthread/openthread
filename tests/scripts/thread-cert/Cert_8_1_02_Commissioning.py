@@ -44,13 +44,13 @@ class Cert_8_1_02_Commissioning(thread_cert.TestCase):
         COMMISSIONER: {
             'name': 'COMMISSIONER',
             'masterkey': '00112233445566778899aabbccddeeff',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface
         },
         JOINER: {
             'name': 'JOINER',
             'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1
         },
     }

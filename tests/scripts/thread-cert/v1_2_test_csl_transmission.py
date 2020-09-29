@@ -47,7 +47,7 @@ class SSED_CslTransmission(thread_cert.TestCase):
         },
         SSED_1: {
             'version': '1.2',
-            'mode': 's',
+            'mode': '-',
         },
     }
     """All nodes are created with default configurations"""

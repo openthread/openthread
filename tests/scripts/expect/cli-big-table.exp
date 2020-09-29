@@ -50,7 +50,7 @@ for {set i 2} {$i <= $max_node} {incr i} {
     expect_after {
         timeout { exit 1 }
     }
-    send "mode rs\n"
+    send "mode r\n"
     expect "Done"
     send "panid 0xface\n"
     expect "Done"

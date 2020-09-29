@@ -134,7 +134,7 @@ c3.join_node(leader, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 c3.set(wpan.WPAN_POLL_INTERVAL, '400')
 
 # Clear the "full network data" flag on c3.
-c3.set(wpan.WPAN_THREAD_DEVICE_MODE, str(wpan.THREAD_MODE_FLAG_SECURE_DATA_REQUEST))
+c3.set(wpan.WPAN_THREAD_DEVICE_MODE, '-')
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation

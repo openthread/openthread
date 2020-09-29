@@ -47,31 +47,31 @@ class Cert_5_3_10_AddressQuery(thread_cert.TestCase):
 
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [BR, ROUTER1, DUT_ROUTER2]
         },
         BR: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         ROUTER1: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, DUT_ROUTER2]
         },
         DUT_ROUTER2: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER1, MED1]
         },
         MED1: {
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [DUT_ROUTER2]
         },

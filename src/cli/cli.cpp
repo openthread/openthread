@@ -852,8 +852,8 @@ otError Interpreter::ProcessChild(uint8_t aArgsLength, char *aArgs[])
 
         if (isTable)
         {
-            OutputLine("| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|S|D|N| Extended MAC     |");
-            OutputLine("+-----+--------+------------+------------+-------+------+-+-+-+-+------------------+");
+            OutputLine("| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N| Extended MAC     |");
+            OutputLine("+-----+--------+------------+------------+-------+------+-+-+-+------------------+");
         }
 
         maxChildren = otThreadGetMaxAllowedChildren(mInstance);
@@ -874,7 +874,6 @@ otError Interpreter::ProcessChild(uint8_t aArgsLength, char *aArgs[])
                 OutputFormat("| %5d ", childInfo.mLinkQualityIn);
                 OutputFormat("| %4d ", childInfo.mNetworkDataVersion);
                 OutputFormat("|%1d", childInfo.mRxOnWhenIdle);
-                OutputFormat("|%1d", childInfo.mSecureDataRequest);
                 OutputFormat("|%1d", childInfo.mFullThreadDevice);
                 OutputFormat("|%1d", childInfo.mFullNetworkData);
                 OutputFormat("| ");
@@ -901,24 +900,26 @@ otError Interpreter::ProcessChild(uint8_t aArgsLength, char *aArgs[])
     OutputLine("");
     OutputFormat("Mode: ");
 
-    if (childInfo.mRxOnWhenIdle)
+    if (!(childInfo.mRxOnWhenIdle || childInfo.mFullThreadDevice || childInfo.mFullNetworkData))
     {
-        OutputFormat("r");
+        OutputFormat("-");
     }
-
-    if (childInfo.mSecureDataRequest)
+    else
     {
-        OutputFormat("s");
-    }
+        if (childInfo.mRxOnWhenIdle)
+        {
+            OutputFormat("r");
+        }
 
-    if (childInfo.mFullThreadDevice)
-    {
-        OutputFormat("d");
-    }
+        if (childInfo.mFullThreadDevice)
+        {
+            OutputFormat("d");
+        }
 
-    if (childInfo.mFullNetworkData)
-    {
-        OutputFormat("n");
+        if (childInfo.mFullNetworkData)
+        {
+            OutputFormat("n");
+        }
     }
 
     OutputLine("");
@@ -2141,29 +2142,34 @@ otError Interpreter::ProcessMode(uint8_t aArgsLength, char *aArgs[])
     {
         linkMode = otThreadGetLinkMode(mInstance);
 
-        if (linkMode.mRxOnWhenIdle)
+        if (!(linkMode.mRxOnWhenIdle || linkMode.mDeviceType || linkMode.mNetworkData))
         {
-            OutputFormat("r");
+            OutputFormat("-");
         }
-
-        if (linkMode.mSecureDataRequests)
+        else
         {
-            OutputFormat("s");
-        }
+            if (linkMode.mRxOnWhenIdle)
+            {
+                OutputFormat("r");
+            }
 
-        if (linkMode.mDeviceType)
-        {
-            OutputFormat("d");
-        }
+            if (linkMode.mDeviceType)
+            {
+                OutputFormat("d");
+            }
 
-        if (linkMode.mNetworkData)
-        {
-            OutputFormat("n");
+            if (linkMode.mNetworkData)
+            {
+                OutputFormat("n");
+            }
         }
 
         OutputLine("");
+
+        ExitNow();
     }
-    else
+
+    if (strcmp(aArgs[0], "-") != 0)
     {
         for (char *arg = aArgs[0]; *arg != '\0'; arg++)
         {
@@ -2171,10 +2177,6 @@ otError Interpreter::ProcessMode(uint8_t aArgsLength, char *aArgs[])
             {
             case 'r':
                 linkMode.mRxOnWhenIdle = 1;
-                break;
-
-            case 's':
-                linkMode.mSecureDataRequests = 1;
                 break;
 
             case 'd':
@@ -2189,9 +2191,9 @@ otError Interpreter::ProcessMode(uint8_t aArgsLength, char *aArgs[])
                 ExitNow(error = OT_ERROR_INVALID_ARGS);
             }
         }
-
-        SuccessOrExit(error = otThreadSetLinkMode(mInstance, linkMode));
     }
+
+    error = otThreadSetLinkMode(mInstance, linkMode);
 
 exit:
     return error;
@@ -2213,8 +2215,8 @@ otError Interpreter::ProcessNeighbor(uint8_t aArgsLength, char *aArgs[])
     {
         if (isTable)
         {
-            OutputLine("| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|S|D|N| Extended MAC     |");
-            OutputLine("+------+--------+-----+----------+-----------+-+-+-+-+------------------+");
+            OutputLine("| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|D|N| Extended MAC     |");
+            OutputLine("+------+--------+-----+----------+-----------+-+-+-+------------------+");
         }
 
         while (otThreadGetNextNeighborInfo(mInstance, &iterator, &neighborInfo) == OT_ERROR_NONE)
@@ -2227,7 +2229,6 @@ otError Interpreter::ProcessNeighbor(uint8_t aArgsLength, char *aArgs[])
                 OutputFormat("| %8d ", neighborInfo.mAverageRssi);
                 OutputFormat("| %9d ", neighborInfo.mLastRssi);
                 OutputFormat("|%1d", neighborInfo.mRxOnWhenIdle);
-                OutputFormat("|%1d", neighborInfo.mSecureDataRequest);
                 OutputFormat("|%1d", neighborInfo.mFullThreadDevice);
                 OutputFormat("|%1d", neighborInfo.mFullNetworkData);
                 OutputFormat("| ");
@@ -4445,9 +4446,6 @@ void Interpreter::OutputMode(const otLinkModeConfig &aMode, uint16_t aColumn)
 {
     OutputSpaces(aColumn);
     OutputLine("RxOnWhenIdle: %d", aMode.mRxOnWhenIdle);
-
-    OutputSpaces(aColumn);
-    OutputLine("SecureDataRequests: %d", aMode.mSecureDataRequests);
 
     OutputSpaces(aColumn);
     OutputLine("DeviceType: %d", aMode.mDeviceType);

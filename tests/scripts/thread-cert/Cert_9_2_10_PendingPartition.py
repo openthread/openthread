@@ -60,7 +60,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
                 'panid': 0xface,
                 'channel': 19
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
@@ -71,7 +71,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
                 'panid': 0xface,
                 'channel': 19
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'partition_id': 0xffffffff,
             'router_selection_jitter': 1,
             'allowlist': [COMMISSIONER, ROUTER1]
@@ -83,7 +83,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
                 'panid': 0xface,
                 'channel': 19
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ED1, SED1]
         },
@@ -91,7 +91,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'name': 'MED',
             'channel': 19,
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [ROUTER1]
         },
@@ -99,7 +99,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'name': 'SED',
             'channel': 19,
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER1]

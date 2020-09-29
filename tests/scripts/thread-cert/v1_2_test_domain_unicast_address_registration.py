@@ -130,12 +130,12 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
             'allowlist': [ROUTER_1_1],
         },
         MED_1_2_1: {
-            'mode': 'rsn',
+            'mode': 'rn',
             'version': '1.2',
             'allowlist': [ROUTER_1_1],
         },
         SED_1_2_1: {
-            'mode': 'sn',
+            'mode': 'n',
             'version': '1.2',
             'allowlist': [ROUTER_1_1],
         },
@@ -144,12 +144,12 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
             'allowlist': [ROUTER_1_2],
         },
         MED_1_2_2: {
-            'mode': 'rsn',
+            'mode': 'rn',
             'version': '1.2',
             'allowlist': [ROUTER_1_2],
         },
         SED_1_2_2: {
-            'mode': 'sn',
+            'mode': 'n',
             'version': '1.2',
             'allowlist': [ROUTER_1_2],
         },

@@ -48,7 +48,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
                 'panid': 0xface,
                 'master_key': '00112233445566778899aabbccddeeff'
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
@@ -59,7 +59,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
                 'panid': 0xface,
                 'master_key': '00112233445566778899aabbccddeeff'
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [COMMISSIONER]
         },

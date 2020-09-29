@@ -47,13 +47,13 @@ class Cert_7_1_2_BorderRouterAsRouter(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ED2, SED2]
@@ -61,14 +61,14 @@ class Cert_7_1_2_BorderRouterAsRouter(thread_cert.TestCase):
         ED2: {
             'name': 'MED',
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [ROUTER]
         },
         SED2: {
             'name': 'SED',
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]

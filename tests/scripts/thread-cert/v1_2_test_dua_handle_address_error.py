@@ -76,12 +76,12 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
             'version': '1.2',
             'allowlist': [ROUTER],
             'router_eligible': False,
-            'mode': 'rsdn',
+            'mode': 'rdn',
         },
         MED: {
             'version': '1.2',
             'allowlist': [ROUTER],
-            'mode': 'rsn',
+            'mode': 'rn',
         },
     }
 

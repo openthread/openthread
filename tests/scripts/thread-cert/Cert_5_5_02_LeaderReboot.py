@@ -44,14 +44,14 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ED]
@@ -59,7 +59,7 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
         ED: {
             'name': 'MED',
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [ROUTER]
         },

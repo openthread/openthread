@@ -307,7 +307,7 @@ class OpenThread_WpanCtl(IThci):
         """set thread device mode:
 
         Args:
-           mode: thread device mode. 15=rsdn, 13=rsn, 4=s
+           mode: thread device mode. 11=rdn, 9=rn
            r: rx-on-when-idle
            s: secure IEEE 802.15.4 data request
            d: full thread device
@@ -1177,14 +1177,14 @@ class OpenThread_WpanCtl(IThci):
             # only sleep end device requires stable networkdata now
             if eRoleId == Thread_Device_Role.Leader:
                 print('join as leader')
-                # rsdn
+                # rdn
                 mode = 15
                 if self.AutoDUTEnable is False:
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.Router:
                 print('join as router')
-                # rsdn
+                # rdn
                 mode = 15
                 if self.AutoDUTEnable is False:
                     # set ROUTER_DOWNGRADE_THRESHOLD
@@ -1196,24 +1196,24 @@ class OpenThread_WpanCtl(IThci):
                 self.__setPollPeriod(self.__sedPollPeriod)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print('join as end device')
-                # rsn
+                # rn
                 mode = 13
             elif eRoleId == Thread_Device_Role.REED:
                 print('join as REED')
-                # rsdn
+                # rdn
                 mode = 15
                 # set ROUTER_UPGRADE_THRESHOLD
                 self.__setRouterUpgradeThreshold(0)
             elif eRoleId == Thread_Device_Role.EndDevice_FED:
                 # always remain an ED, never request to be a router
                 print('join as FED')
-                # rsdn
+                # rdn
                 mode = 15
                 # set ROUTER_UPGRADE_THRESHOLD
                 self.__setRouterUpgradeThreshold(0)
             elif eRoleId == Thread_Device_Role.EndDevice_MED:
                 print('join as MED')
-                # rsn
+                # rn
                 mode = 13
             else:
                 pass
