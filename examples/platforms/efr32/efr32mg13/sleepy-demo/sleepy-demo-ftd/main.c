@@ -227,7 +227,6 @@ void initUdp(void)
 
     memset(&sockaddr, 0, sizeof(sockaddr));
 
-    otIp6AddressFromString(MULTICAST_ADDR, &sockaddr.mAddress);
     sockaddr.mPort = MULTICAST_PORT;
 
     error = otUdpOpen(instance, &sFtdSocket, sFtdReceiveCallback, NULL);

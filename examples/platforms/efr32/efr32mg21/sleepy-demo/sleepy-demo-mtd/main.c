@@ -49,7 +49,6 @@
 #include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/udp.h>
-#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/logging.h>
 
 // Constants
@@ -57,7 +56,7 @@
 #define MULTICAST_PORT 123
 #define RECV_PORT 234
 #define SLEEPY_POLL_PERIOD_MS 5000
-#define MTD_MESSAGE "mtd is awake"
+#define MTD_MESSAGE "mtd button"
 #define FTD_MESSAGE "ftd button"
 
 // Types
@@ -67,73 +66,7 @@ typedef struct ButtonArray
     unsigned int      pin;
 } ButtonArray_t;
 
-static bool (*sCanSleepCallback)(void);
-static void (*sDeviceOutOfSleepCb)(void);
-/**
- * Registers the sleep callback handler.  The callback is used to check that
- * the application has no work pending and that it is safe to put the EFR32
- * into a low energy sleep mode.
- *
- * The callback should return true if it is ok to enter sleep mode. Note
- * that the callback itself is run with interrupts disabled and so should
- * be kept as short as possible.  Anny interrupt including those from timers
- * will wake the EFR32 out of sleep mode.
- *
- * @param[in]  aCallback  Callback function.
- *
- */
-static void efr32SetSleepCallback(bool (*aCallback)(void), void (*aCallbackWake)(void))
-{
-    sCanSleepCallback   = aCallback;
-    sDeviceOutOfSleepCb = aCallbackWake;
-}
-
-/**
- * Put the EFR32 into a low power mode.  Before sleeping it will call a callback
- * in the application registered with efr32SetSleepCallback to ensure that there
- * is no outstanding work in the application to do.
- */
-static void efr32Sleep(void)
-{
-    bool canDeepSleep      = false;
-    int  wakeupProcessTime = 1000;
-    CORE_DECLARE_IRQ_STATE;
-
-    if (RAIL_Sleep(wakeupProcessTime, &canDeepSleep) == RAIL_STATUS_NO_ERROR)
-    {
-        if (canDeepSleep)
-        {
-            CORE_ENTER_ATOMIC();
-            if (sCanSleepCallback != NULL && sCanSleepCallback())
-            {
-                EMU_EnterEM2(true);
-            }
-            CORE_EXIT_ATOMIC();
-            // TODO OT will handle an interrupt here and it mustn't call any RAIL APIs
-
-            while (RAIL_Wake(0) != RAIL_STATUS_NO_ERROR)
-            {
-            }
-
-            if (sDeviceOutOfSleepCb != NULL)
-            {
-                sDeviceOutOfSleepCb();
-            }
-        }
-        else
-        {
-            CORE_ENTER_ATOMIC();
-            if (sCanSleepCallback != NULL && sCanSleepCallback())
-            {
-                EMU_EnterEM1();
-            }
-            CORE_EXIT_ATOMIC();
-        }
-    }
-}
-
 // Prototypes
-void deviceOutOfSleepCb(void);
 bool sleepCb(void);
 void setNetworkConfiguration(otInstance *aInstance);
 void handleNetifStateChanged(uint32_t aFlags, void *aContext);
@@ -179,7 +112,7 @@ int main(int argc, char *argv[])
     initUdp();
     otIp6SetEnabled(instance, true);
     otThreadSetEnabled(instance, true);
-    efr32SetSleepCallback(sleepCb, deviceOutOfSleepCb);
+    efr32SetSleepCallback(sleepCb);
 
     while (!otSysPseudoResetWasRequested())
     {
@@ -194,22 +127,6 @@ int main(int argc, char *argv[])
 
     otInstanceFinalize(instance);
     return 0;
-}
-
-void deviceOutOfSleepCb(void)
-{
-    static uint32_t udpPacketSendTimer = 0;
-
-    if (udpPacketSendTimer == 0)
-    {
-        udpPacketSendTimer = otPlatAlarmMilliGetNow();
-    }
-
-    if ((otPlatAlarmMilliGetNow() - udpPacketSendTimer) >= 5000)
-    {
-        sButtonPressed     = true;
-        udpPacketSendTimer = 0;
-    }
 }
 
 /*
