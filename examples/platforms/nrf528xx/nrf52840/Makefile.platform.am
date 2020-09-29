@@ -39,11 +39,7 @@ LDADD_COMMON                                                                    
 
 if !OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 LDADD_COMMON                                                                                              += \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue.a            \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue_cc310.a      \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue_vanilla.a    \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_cc310_backend.a   \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_vanilla_backend.a \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_tls_vanilla.a        \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_x509_vanilla.a       \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_base_vanilla.a       \
