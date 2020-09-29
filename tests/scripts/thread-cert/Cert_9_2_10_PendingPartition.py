@@ -188,6 +188,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         # Step 5: Router MUST send a unicast MLE Data Request to the Leader
         _rpkts.filter_wpan_dst64(LEADER).filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
             lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
+        _rpkts_med = _rpkts.copy()
 
         # Step 7: Router MUST multicast a MLE Data Response
         _rpkts.filter_ipv6_dst(LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).filter_mle_cmd(
@@ -202,7 +203,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             ).must_verify(lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
 
         # Step 9: Router MUST send a unicast MLE Data Response to MED_1
-        _rpkts.copy().filter_wpan_dst64(MED).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
+        _rpkts_med.filter_wpan_dst64(MED).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
             SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_OPERATION_DATASET_TLV
         } <= set(p.mle.tlv.type) and {
             NM_CHANNEL_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PAN_ID_TLV, NM_DELAY_TIMER_TLV,
