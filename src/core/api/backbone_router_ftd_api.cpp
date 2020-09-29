@@ -182,4 +182,32 @@ otError otBackboneRouterMulticastListenerGetNext(otInstance *                   
 }
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
+void otBackboneRouterSetNdProxyCallback(otInstance *                    aInstance,
+                                        otBackboneRouterNdProxyCallback aCallback,
+                                        void *                          aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<BackboneRouter::NdProxyTable>().SetCallback(aCallback, aContext);
+}
+
+otError otBackboneRouterGetNdProxyInfo(otInstance *                 aInstance,
+                                       const otIp6Address *         aDua,
+                                       otBackboneRouterNdProxyInfo *aNdProxyInfo)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<BackboneRouter::NdProxyTable>().GetInfo(reinterpret_cast<const Ip6::Address &>(*aDua),
+                                                                *aNdProxyInfo);
+}
+
+void otBackboneRouterSetDomainPrefixCallback(otInstance *                         aInstance,
+                                             otBackboneRouterDomainPrefixCallback aCallback,
+                                             void *                               aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<BackboneRouter::Local>().SetDomainPrefixCallback(aCallback, aContext);
+}
+
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

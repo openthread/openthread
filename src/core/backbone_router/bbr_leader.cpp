@@ -301,7 +301,7 @@ void Leader::UpdateDomainPrefixConfig(void)
     LogDomainPrefix(state, mDomainPrefix);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Get<Local>().UpdateAllDomainBackboneRouters(state);
+    Get<Local>().HandleDomainPrefixUpdate(state);
     Get<NdProxyTable>().HandleDomainPrefixUpdate(state);
 #endif
 

@@ -130,6 +130,8 @@ public:
      */
     explicit NdProxyTable(Instance &aInstance)
         : InstanceLocator(aInstance)
+        , mCallback(nullptr)
+        , mCallbackContext(nullptr)
         , mIsAnyDadInProcess(false)
     {
     }
@@ -204,6 +206,27 @@ public:
      */
     static void Erase(NdProxy &aNdProxy);
 
+    /*
+     * This method sets the ND Proxy callback.
+     *
+     * @param[in] aCallback  The callback function.
+     * @param[in] aContext   A user context pointer.
+     *
+     */
+    void SetCallback(otBackboneRouterNdProxyCallback aCallback, void *aContext);
+
+    /**
+     * This method retrieves the ND Proxy info of the Domain Unicast Address.
+     *
+     * @param[in] aDua          The Domain Unicast Address to get info.
+     * @param[in] aNdProxyInfo  A pointer to the ND Proxy info.
+     *
+     * @retval OT_ERROR_NONE       Successfully retrieve the ND Proxy info.
+     * @retval OT_ERROR_NOT_FOUND  Failed to find the Domain Unicast Address in the ND Proxy table.
+     *
+     */
+    otError GetInfo(const Ip6::Address &aDua, otBackboneRouterNdProxyInfo &aNdProxyInfo);
+
 private:
     enum
     {
@@ -274,9 +297,12 @@ private:
     NdProxy *       FindInvalid(void);
     Ip6::Address    GetDua(NdProxy &aNdProxy);
     void            NotifyDuaRegistrationOnBackboneLink(NdProxy &aNdProxy);
+    void TriggerCallback(otBackboneRouterNdProxyEvent aEvent, const Ip6::InterfaceIdentifier &aAddressIid) const;
 
-    NdProxy mProxies[kMaxNdProxyNum];
-    bool    mIsAnyDadInProcess : 1;
+    NdProxy                         mProxies[kMaxNdProxyNum];
+    otBackboneRouterNdProxyCallback mCallback;
+    void *                          mCallbackContext;
+    bool                            mIsAnyDadInProcess : 1;
 };
 
 } // namespace BackboneRouter
