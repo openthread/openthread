@@ -44,7 +44,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Cli {
 
-const struct NetworkData::Command NetworkData::sCommands[] = {
+const NetworkData::Command NetworkData::sCommands[] = {
     {"help", &NetworkData::ProcessHelp},
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     {"register", &NetworkData::ProcessRegister},
@@ -180,7 +180,7 @@ otError NetworkData::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine("%s", command.mName);
+        mInterpreter.OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;

@@ -41,7 +41,9 @@
 #include <stdarg.h>
 
 #include <openthread/cli.h>
+#include <openthread/dns.h>
 #include <openthread/ip6.h>
+#include <openthread/sntp.h>
 #include <openthread/udp.h>
 
 #include "cli/cli_commissioner.hpp"
@@ -49,20 +51,14 @@
 #include "cli/cli_joiner.hpp"
 #include "cli/cli_network_data.hpp"
 #include "cli/cli_udp.hpp"
-
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
 #include "cli/cli_coap.hpp"
 #endif
-
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #include "cli/cli_coap_secure.hpp"
 #endif
-
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-
-#include <openthread/dns.h>
-#include <openthread/sntp.h>
 #include "common/timer.hpp"
 #include "net/icmp6.hpp"
 
