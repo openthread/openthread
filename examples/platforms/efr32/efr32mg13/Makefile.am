@@ -35,11 +35,6 @@ libopenthread_efr32mg13_a_CPPFLAGS                                            = 
     -DPLATFORM_HEADER=\"platform/base/hal/micro/cortexm3/compiler/gcc.h\"       \
     -DNVIC_CONFIG=\"platform/base/hal/micro/cortexm3/efm32/nvic-config.h\"      \
     -Wno-sign-compare                                                           \
-    -DCORTEXM3                                                                  \
-    -DPHY=EMBER_PHY_RAIL                                                        \
-    -DMICRO=EMBER_MICRO_CORTEXM3_EFR32                                          \
-    -DCORTEXM3_EFM32_MICRO                                                      \
-    -DPLAT=EMBER_PLATFORM_CORTEXM3                                              \
     -I$(top_srcdir)/examples/platforms                                          \
     -I$(top_srcdir)/examples/platforms/efr32/$(PLATFORM_LOWERCASE)/$(BOARD_LOWERCASE) \
     -I$(top_srcdir)/examples/platforms/efr32/$(PLATFORM_LOWERCASE)              \
@@ -62,7 +57,7 @@ noinst_HEADERS                                                                = 
     $(NULL)
 
 libopenthread_efr32mg13_a_SOURCES                                             = \
-    $(PLATFORM_COMMON_SOURCES_LIST)                                                  \
+    $(PLATFORM_COMMON_SOURCES_LIST)                                             \
     $(PLATFORM_SOURCES)                                                         \
     $(NULL)
 
