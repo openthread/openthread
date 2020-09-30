@@ -135,11 +135,7 @@ mbedtls_platform_setup(NULL);
 When building an external application with OpenThread libraries and CryptoCell 310 hardware acceleration, use the following configuration:
 
 - Crypto libraries:
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue.a`
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue_cc310.a`
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue_vanilla.a`
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_cc310_backend.a`
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_vanilla_backend.a`
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_tls_vanilla.a`
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_x509_vanilla.a`
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_base_vanilla.a`
@@ -207,11 +203,7 @@ mbedtls_platform_setup(NULL);
 When building an external application that uses RTOS with OpenThread libraries and the CryptoCell 310 hardware acceleration, use the following configuration:
 
 - Crypto libraries:
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue.a`
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue_cc310.a`
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue_vanilla.a`
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_cc310_backend.a`
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_vanilla_backend.a`
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_tls_vanilla.a`
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_x509_vanilla.a`
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_base_vanilla.a`
