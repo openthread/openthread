@@ -36,7 +36,7 @@ import sys
 import time
 import traceback
 import unittest
-from typing import Optional
+from typing import Optional, Callable
 
 import config
 import debug
@@ -474,3 +474,17 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         mergecap = pvutils.which_mergecap()
         self.assure_run_ok(f'{mergecap} -w {merged_pcap} {thread_pcap} {backbone_pcap}', shell=True)
         return merged_pcap
+
+    def wait_until(self, cond: Callable[[], bool], timeout: int, go_interval: int = 1):
+        while True:
+            self.simulator.go(go_interval)
+
+            if cond():
+                break
+
+            timeout -= go_interval
+            if timeout <= 0:
+                raise RuntimeError(f'wait failed after {timeout} seconds')
+
+    def wait_node_state(self, nodeid: int, state: str, timeout: int):
+        self.wait_until(lambda: self.nodes[nodeid].get_state() == state, timeout)
