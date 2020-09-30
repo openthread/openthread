@@ -217,6 +217,9 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
                     NM_NETWORK_NAME_TLV, NM_NETWORK_MASTER_KEY_TLV
                 } <= set(p.thread_meshcop.tlv.type) and p.thread_nwd.tlv.stable == [0])
 
+        # Copy a pv.pkts here to filter SED related packets for potential sequence packets disorder
+        _pkts_sed = pkts.copy()
+
         # Step 11: Router MUST multicast a MLE Data Response with the new information
         pkts.filter_wpan_src64(ROUTER_1).filter_ipv6_dst(LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).filter_mle_cmd(
             MLE_DATA_RESPONSE).must_next().must_verify(
@@ -234,11 +237,11 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             } == set(p.mle.tlv.type) and p.mle.tlv.leader_data.data_version == _pkt.mle.tlv.leader_data.data_version)
 
         # Step 13: SED MUST send a unicast MLE Data Request to Router_1
-        pkts.filter_wpan_src64(SED).filter_wpan_dst64(ROUTER_1).filter_mle_cmd(MLE_DATA_REQUEST).must_next(
+        _pkts_sed.filter_wpan_src64(SED).filter_wpan_dst64(ROUTER_1).filter_mle_cmd(MLE_DATA_REQUEST).must_next(
         ).must_verify(lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
 
         # Step 14: Router MUST send a unicast MLE Data Response to SED_1
-        pkts.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(SED).filter_mle_cmd(
+        _pkts_sed.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(SED).filter_mle_cmd(
             MLE_DATA_RESPONSE).must_next().must_verify(
                 lambda p: {
                     SOURCE_ADDRESS_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV,
