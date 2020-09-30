@@ -31,8 +31,18 @@
 # created only once which leads to errors when auto-generated Makefile tries
 # to remove .Po files that were already removed
 
+
+
 if OPENTHREAD_EXAMPLES_EFR32MG1
 include efr32mg1/Makefile.am
+# SUBDIRS = sleepy-demo
+# NOTE: The sleepy-demo app currently does not fit on this platform.
+#
+# .../arm-none-eabi/bin/ld: sleepy-demo-mtd section `.bss' will not fit in region `RAM'
+# .../arm-none-eabi/bin/ld: sleepy-demo-mtd section `.nvm' will not fit in region `FLASH'
+# .../arm-none-eabi/bin/ld: region RAM overflowed with stack
+# .../arm-none-eabi/bin/ld: region `FLASH' overflowed by 33428 bytes
+# .../arm-none-eabi/bin/ld: region `RAM' overflowed by 4536 bytes
 endif
 
 if OPENTHREAD_EXAMPLES_EFR32MG12

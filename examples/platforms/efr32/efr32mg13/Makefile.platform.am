@@ -52,16 +52,6 @@ LDADD_COMMON                                                                  +=
     $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0/platform/emdrv/nvm3/lib/libnvm3_CM4_gcc.a \
     $(NULL)
 
-if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-LDADD_COMMON                                                                 += \
-    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                         \
-    $(NULL)
-else
-LDADD_COMMON                                                                 += \
-    $(top_builddir)/third_party/silabs/libsilabs-mbedtls.a                      \
-    $(NULL)
-endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-
 LDFLAGS_COMMON                                                                += \
     -T $(top_srcdir)/examples/platforms/efr32/efr32mg13/efr32mg13.ld             \
     $(NULL)
