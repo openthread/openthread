@@ -197,7 +197,7 @@ otError Coap::ProcessResource(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        mInterpreter.OutputLine(mResource.mUriPath != nullptr ? mResource.mUriPath : "");
+        mInterpreter.OutputLine("%s", mResource.mUriPath != nullptr ? mResource.mUriPath : "");
     }
 
 exit:
@@ -251,7 +251,7 @@ otError Coap::ProcessSet(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        mInterpreter.OutputLine(mResourceContent);
+        mInterpreter.OutputLine("%s", mResourceContent);
     }
 
 exit:
