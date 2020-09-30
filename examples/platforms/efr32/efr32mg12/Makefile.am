@@ -53,25 +53,6 @@ libopenthread_efr32mg12_a_CPPFLAGS                                            = 
     -Wno-missing-field-initializers                                             \
     $(NULL)
 
-PLATFORM_COMMON_SOURCES                                                       = \
-    src/alarm.c                                                                 \
-    src/diag.c                                                                  \
-    src/entropy.c                                                               \
-    src/fem-control.c                                                           \
-    src/flash.c                                                                 \
-    src/logging.c                                                               \
-    src/misc.c                                                                  \
-    src/openthread-core-efr32-config-check.h                                    \
-    src/openthread-core-efr32-config.h                                          \
-    src/platform-band.h                                                         \
-    src/platform-efr32.h                                                        \
-    src/radio.c                                                                 \
-    src/rail_config.h                                                           \
-    src/startup-gcc.c                                                           \
-    src/system.c                                                                \
-    src/uart.c                                                                  \
-    $(NULL)
-
 PLATFORM_SOURCES                                                              = \
     $(NULL)
 
@@ -81,7 +62,7 @@ noinst_HEADERS                                                                = 
     $(NULL)
 
 libopenthread_efr32mg12_a_SOURCES                                             = \
-    $(PLATFORM_COMMON_SOURCES)                                                  \
+    $(PLATFORM_COMMON_SOURCES_LIST)                                                  \
     $(PLATFORM_SOURCES)                                                         \
     $(NULL)
 

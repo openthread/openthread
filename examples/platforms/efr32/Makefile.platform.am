@@ -26,7 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
-# include $(top_srcdir)/examples/platforms/efr32/efr32_platform_defs.am
+include $(top_srcdir)/examples/platforms/efr32/efr32_platform_defs.am
 
 
 # ==============================================================================
@@ -64,36 +64,20 @@ endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 # ==============================================================================
 # Linker flags
 # ==============================================================================
-# if OPENTHREAD_EXAMPLES_EFR32MG1
-# EFR32_PLATFORM_2 = efr32mg1
-# endif
+RAIL_SUFFIX = $(shell echo $(PLATFORM_LOWERCASE)| tr mg xg)_gcc_release.a
+LIBRAIL = $(shell \
+if [ "$(DMP)" = "1" ]; then                     \
+    echo librail_multiprotocol_$(RAIL_SUFFIX);  \
+else                                            \
+    echo librail_$(RAIL_SUFFIX);                \
+fi; )
 
-# if OPENTHREAD_EXAMPLES_EFR32MG12
-# EFR32_PLATFORM_2 = efr32mg12
-# endif
+LDADD_COMMON                                                                  += \
+    $(top_builddir)/examples/platforms/efr32/libopenthread-$(PLATFORM_LOWERCASE).a   \
+    $(top_builddir)/third_party/silabs/libsilabs-$(PLATFORM_LOWERCASE)-sdk.a         \
+    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0/platform/radio/rail_lib/autogen/librail_release/$(LIBRAIL) \
+    $(NULL)
 
-# if OPENTHREAD_EXAMPLES_EFR32MG13
-# EFR32_PLATFORM_2 = efr32mg13
-# endif
-
-# if OPENTHREAD_EXAMPLES_EFR32MG21
-# EFR32_PLATFORM_2 = efr32mg21
-# endif
-
-# RAIL_SUFFIX = $(shell echo $(EFR32_PLATFORM_2)| tr mg xg)_gcc_release.a
-# LIBRAIL = $(shell \
-# if [ "$(DMP)" = "1" ]; then                     \
-#     echo librail_multiprotocol_$(RAIL_SUFFIX);  \
-# else                                            \
-#     echo librail_$(RAIL_SUFFIX);                \
-# fi; )
-
-# LDADD_COMMON                                                                  += \
-#     $(top_builddir)/examples/platforms/efr32/libopenthread-$(EFR32_PLATFORM_2).a   \
-#     $(top_builddir)/third_party/silabs/libsilabs-$(EFR32_PLATFORM_2)-sdk.a         \
-#     $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0/platform/radio/rail_lib/autogen/librail_release/$(LIBRAIL) \
-#     $(NULL)
-
-# LDFLAGS_COMMON                                                                       += \
-#     -T $(top_srcdir)/examples/platforms/efr32/$(EFR32_PLATFORM_2)/$(EFR32_PLATFORM_2).ld    \
-#     $(NULL)
+LDFLAGS_COMMON                                                                       += \
+    -T $(top_srcdir)/examples/platforms/efr32/$(PLATFORM_LOWERCASE)/$(PLATFORM_LOWERCASE).ld    \
+    $(NULL)

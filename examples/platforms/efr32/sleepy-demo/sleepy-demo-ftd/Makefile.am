@@ -28,7 +28,6 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 include $(top_srcdir)/examples/platforms/Makefile.platform.am
-include $(top_srcdir)/examples/platforms/efr32/efr32_platform_defs.am
 
 override CFLAGS   := $(filter-out -Wconversion,$(CFLAGS))
 override CXXFLAGS := $(filter-out -Wconversion,$(CXXFLAGS))
@@ -47,65 +46,9 @@ CPPFLAGS_COMMON                                                              += 
     -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/src/core                                                    \
     -I$(top_srcdir)/third_party/silabs/rail_config                              \
-    -I$(SDK_SRC_DIR)/hardware/kit/common/bsp                                    \
-    -I$(SDK_SRC_DIR)/hardware/kit/common/drivers                                \
-    -I$(SDK_SRC_DIR)/hardware/kit/$(PLATFORM_LOWERCASE)_$(BOARD_UPPERCASE)/config   \
-    -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32                     \
-    -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32/config              \
-    -I$(SDK_SRC_DIR)/platform/common/inc                                        \
-    -I$(SDK_SRC_DIR)/platform/CMSIS/Include                                     \
-    -I$(SDK_SRC_DIR)/platform/emdrv/common/inc                                  \
-    -I$(SDK_SRC_DIR)/platform/emdrv/gpiointerrupt/inc                           \
-    -I$(SDK_SRC_DIR)/platform/emdrv/uartdrv/inc                                 \
-    -I$(SDK_SRC_DIR)/platform/emdrv/uartdrv/config                              \
-    -I$(SDK_SRC_DIR)/platform/emdrv/ustimer/inc                                 \
-    -I$(SDK_SRC_DIR)/platform/emdrv/dmadrv/inc                                  \
-    -I$(SDK_SRC_DIR)/platform/emdrv/dmadrv/config                               \
-    -I$(SDK_SRC_DIR)/platform/emlib/inc                                         \
-    -I$(SDK_SRC_DIR)/platform/halconfig/inc/hal-config                          \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32                         \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/rf/common/cortex        \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/common                             \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal                                \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal/efr32                          \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/protocol/ieee802154                \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions              \
-    -I$(SDK_SRC_DIR)/platform/service/device_init/inc                           \
-    -I$(SDK_SRC_DIR)/platform/service/mpu/inc                                   \
-    -I$(SDK_SRC_DIR)/platform/service/sleeptimer/config                         \
-    -I$(SDK_SRC_DIR)/platform/service/sleeptimer/inc                            \
-    -I$(SDK_SRC_DIR)/util/plugin/plugin-common/fem-control                      \
-    -I$(SDK_SRC_DIR)/util/third_party/mbedtls/sl_crypto/include                 \
+    $(SILABS_GSDK_CPPFLAGS)                                                     \
     -Wno-unused-parameter                                                       \
     -Wno-missing-field-initializers                                             \
-    $(NULL)
-
-EFR32MG1_CPPFLAGS                                                             = \
-    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG1P/Include              \
-    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg1x/config \
-    $(NULL)
-
-EFR32MG12_CPPFLAGS                                                            = \
-    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG12P/Include             \
-    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg1x/config \
-    $(NULL)
-
-EFR32MG13_CPPFLAGS                                                            = \
-    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG13P/Include             \
-    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg1x/config \
-    $(NULL)
-
-EFR32MG21_CPPFLAGS                                                            = \
-    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG21/Include              \
-    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s2                              \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg2x               \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg21/config \
     $(NULL)
 
 LDADD_COMMON                                                                 += \
@@ -127,29 +70,34 @@ bin_PROGRAMS                                                                 += 
     $(NULL)
 endif
 
-sleepy_demo_ftd_CPPFLAGS                                                      = \
-    $(CPPFLAGS_COMMON)                                                          \
-    $(NULL)
+
+# NOTE: The order of the -I flags should always be in order from part-specific to general.
+#  This will make sure the correct header files are used for a part.
+sleepy_demo_ftd_CPPFLAGS = $(NULL)
 
 if OPENTHREAD_EXAMPLES_EFR32MG1
 sleepy_demo_ftd_CPPFLAGS                                                     += \
-    $(EFR32MG1_CPPFLAGS)
+    $(SILABS_EFR32MG1_CPPFLAGS)
 endif
 
 if OPENTHREAD_EXAMPLES_EFR32MG12
 sleepy_demo_ftd_CPPFLAGS                                                     += \
-    $(EFR32MG12_CPPFLAGS)
+    $(SILABS_EFR32MG12_CPPFLAGS)
 endif
 
 if OPENTHREAD_EXAMPLES_EFR32MG13
 sleepy_demo_ftd_CPPFLAGS                                                     += \
-    $(EFR32MG13_CPPFLAGS)
+    $(SILABS_EFR32MG13_CPPFLAGS)
 endif
 
 if OPENTHREAD_EXAMPLES_EFR32MG21
 sleepy_demo_ftd_CPPFLAGS                                                     += \
-    $(EFR32MG21_CPPFLAGS)
+    $(SILABS_EFR32MG21_CPPFLAGS)
 endif
+
+sleepy_demo_ftd_CPPFLAGS += $(CPPFLAGS_COMMON)
+
+
 
 sleepy_demo_ftd_LDADD                                                         = \
     $(top_builddir)/src/cli/libopenthread-cli-ftd.a                             \

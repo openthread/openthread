@@ -50,18 +50,17 @@ $(top_builddir)/examples/platforms/efr32/libopenthread-$(PLATFORM_LOWERCASE).a:
 # ==============================================================================
 # filter-out flags for RAIL
 # ==============================================================================
-# Do not enable -Wconversion for rail
+# Do not enable -Wconversion for rail and Silicon Labs SDK sources
 override CFLAGS   := $(filter-out -Wconversion,$(CFLAGS))
 override CXXFLAGS := $(filter-out -Wconversion,$(CXXFLAGS))
 
-# Do not enable -pedantic-errors for rail
+# Do not enable -pedantic-errors for rail and Silicon Labs SDK sources
 override CFLAGS   := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
-# Do not enable -Wundef for rail
+# Do not enable -Wundef for rail and Silicon Labs SDK sources
 override CFLAGS   := $(filter-out -Wundef,$(CFLAGS))
 override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
-
 
 # ==============================================================================
 # GSDK CPPFLAGS
