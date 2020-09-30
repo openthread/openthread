@@ -27,25 +27,9 @@
 #
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+include $(top_srcdir)/examples/platforms/efr32/efr32_platform_defs.am
 
 lib_LIBRARIES = libopenthread-efr32mg1.a
-
-# Do not enable -Wconversion for rail
-override CFLAGS   := $(filter-out -Wconversion,$(CFLAGS))
-override CXXFLAGS := $(filter-out -Wconversion,$(CXXFLAGS))
-
-# Do not enable -pedantic-errors for rail
-override CFLAGS   := $(filter-out -pedantic-errors,$(CFLAGS))
-override CXXFLAGS := $(filter-out -pedantic-errors,$(CXXFLAGS))
-
-# Do not enable -Wundef for rail
-override CFLAGS   := $(filter-out -Wundef,$(CFLAGS))
-override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
-
-BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
-BOARD_UPPERCASE = $(shell echo $(BOARD) | tr a-z A-Z)
-
-SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0
 
 libopenthread_efr32mg1_a_CPPFLAGS                                             = \
     -DPLATFORM_HEADER=\"platform/base/hal/micro/cortexm3/compiler/gcc.h\"       \
@@ -63,43 +47,8 @@ libopenthread_efr32mg1_a_CPPFLAGS                                             = 
     -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/src/core                                                    \
     -I$(top_srcdir)/third_party/silabs/rail_config                              \
-    -I$(SDK_SRC_DIR)                                                            \
-    -I$(SDK_SRC_DIR)/hardware/kit/common/bsp                                    \
-    -I$(SDK_SRC_DIR)/hardware/kit/common/drivers                                \
-    -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG1_$(BOARD_UPPERCASE)/config            \
-    -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32                     \
-    -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32/config              \
-    -I$(SDK_SRC_DIR)/platform/base/hal/plugin/antenna/                          \
-    -I$(SDK_SRC_DIR)/platform/bootloader/api                                    \
-    -I$(SDK_SRC_DIR)/platform/common/inc                                        \
-    -I$(SDK_SRC_DIR)/platform/CMSIS/Include                                     \
-    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG1P/Include              \
-    -I$(SDK_SRC_DIR)/platform/emdrv/common/inc                                  \
-    -I$(SDK_SRC_DIR)/platform/emdrv/gpiointerrupt/inc                           \
-    -I$(SDK_SRC_DIR)/platform/emdrv/uartdrv/inc                                 \
-    -I$(SDK_SRC_DIR)/platform/emdrv/uartdrv/config                              \
-    -I$(SDK_SRC_DIR)/platform/emdrv/ustimer/inc                                 \
-    -I$(SDK_SRC_DIR)/platform/emdrv/dmadrv/inc                                  \
-    -I$(SDK_SRC_DIR)/platform/emdrv/dmadrv/config                               \
-    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/inc                                    \
-    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config                                 \
-    -I$(SDK_SRC_DIR)/platform/emlib/inc                                         \
-    -I$(SDK_SRC_DIR)/platform/halconfig/inc/hal-config                          \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32                         \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/rf/common/cortex        \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/common                             \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal                                \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal/efr32                          \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/protocol/ieee802154                \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions              \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg1x/config \
-    -I$(SDK_SRC_DIR)/platform/service/device_init/inc                           \
-    -I$(SDK_SRC_DIR)/platform/service/mpu/inc                                   \
-    -I$(SDK_SRC_DIR)/platform/service/sleeptimer/config                         \
-    -I$(SDK_SRC_DIR)/platform/service/sleeptimer/inc                            \
-    -I$(SDK_SRC_DIR)/util/plugin/plugin-common/fem-control                      \
-    -I$(SDK_SRC_DIR)/util/third_party/mbedtls/sl_crypto/include                 \
+    $(SILABS_EFR32MG1_CPPFLAGS)                                                 \
+    $(SILABS_GSDK_CPPFLAGS)                                                     \
     -Wno-unused-parameter                                                       \
     -Wno-missing-field-initializers                                             \
     $(NULL)
