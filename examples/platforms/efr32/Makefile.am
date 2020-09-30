@@ -37,17 +37,19 @@ endif
 
 if OPENTHREAD_EXAMPLES_EFR32MG12
 include efr32mg12/Makefile.am
+SUBDIRS = sleepy-demo
 endif
 
 if OPENTHREAD_EXAMPLES_EFR32MG13
 include efr32mg13/Makefile.am
+SUBDIRS = sleepy-demo
 endif
 
 if OPENTHREAD_EXAMPLES_EFR32MG21
 include efr32mg21/Makefile.am
+SUBDIRS = sleepy-demo
 endif
 
-SUBDIRS = sleepy-demo
 
 PRETTY_FILES                            = \
     $(NULL)

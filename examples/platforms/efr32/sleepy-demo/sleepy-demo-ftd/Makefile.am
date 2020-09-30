@@ -56,11 +56,11 @@ CPPFLAGS_COMMON                                                              += 
     -I$(top_srcdir)/third_party/silabs/rail_config                              \
     -I$(SDK_SRC_DIR)/hardware/kit/common/bsp                                    \
     -I$(SDK_SRC_DIR)/hardware/kit/common/drivers                                \
+    -I$(SDK_SRC_DIR)/hardware/kit/$(EFR32_PLATFORM)_$(BOARD_UPPERCASE)/config   \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32                     \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32/config              \
     -I$(SDK_SRC_DIR)/platform/common/inc                                        \
     -I$(SDK_SRC_DIR)/platform/CMSIS/Include                                     \
-    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG21/Include              \
     -I$(SDK_SRC_DIR)/platform/emdrv/common/inc                                  \
     -I$(SDK_SRC_DIR)/platform/emdrv/gpiointerrupt/inc                           \
     -I$(SDK_SRC_DIR)/platform/emdrv/uartdrv/inc                                 \
@@ -88,7 +88,6 @@ CPPFLAGS_COMMON                                                              += 
     $(NULL)
 
 EFR32MG1_CPPFLAGS                                                             = \
-    -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG1_$(BOARD_UPPERCASE)/config            \
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG1P/Include              \
     -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
@@ -96,7 +95,6 @@ EFR32MG1_CPPFLAGS                                                             = 
     $(NULL)
 
 EFR32MG12_CPPFLAGS                                                            = \
-    -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG12_$(BOARD_UPPERCASE)/config           \
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG12P/Include             \
     -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
@@ -104,7 +102,6 @@ EFR32MG12_CPPFLAGS                                                            = 
     $(NULL)
 
 EFR32MG13_CPPFLAGS                                                            = \
-    -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG13_$(BOARD_UPPERCASE)/config           \
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG13P/Include             \
     -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
@@ -112,7 +109,6 @@ EFR32MG13_CPPFLAGS                                                            = 
     $(NULL)
 
 EFR32MG21_CPPFLAGS                                                            = \
-    -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG21_$(BOARD_UPPERCASE)/config           \
     -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG21/Include              \
     -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s2                              \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg2x               \
