@@ -45,6 +45,7 @@ import pexpect.popen_spawn
 
 import config
 import simulator
+import thread_cert
 
 PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
@@ -412,6 +413,7 @@ class NodeImpl:
         super().__init__(nodeid, **kwargs)
 
         self.set_extpanid(config.EXTENDED_PANID)
+        self.set_addr64('%016x' % (thread_cert.EXTENDED_ADDRESS_BASE + nodeid))
 
     def _expect(self, pattern, timeout=-1, *args, **kwargs):
         """ Process simulator events until expected the pattern. """
@@ -831,7 +833,10 @@ class NodeImpl:
         self.send_command('extaddr')
         return self._expect_result('[0-9a-fA-F]{16}')
 
-    def set_addr64(self, addr64):
+    def set_addr64(self, addr64: str):
+        # Make sure `addr64` is a hex string of length 16
+        assert len(addr64) == 16
+        int(addr64, 16)
         self.send_command('extaddr %s' % addr64)
         self._expect('Done')
 
