@@ -123,9 +123,9 @@ BBR Primary: None
 Done
 ```
 
-### bbr mgmt dua \<status\> [meshLocalIid]
+### bbr mgmt dua \<status\|coap-code\> [meshLocalIid]
 
-Configure the response status for DUA.req with meshLocalIid in payload. Without meshLocalIid, simply respond any coming DUA.req next with the specified status.
+Configure the response status for DUA.req with meshLocalIid in payload. Without meshLocalIid, simply respond any coming DUA.req next with the specified status or COAP code.
 
 Only for testing/reference device.
 
@@ -138,9 +138,12 @@ known status value:
 - 4: ST_DUA_NO_RESOURCES
 - 5: ST_DUA_BBR_NOT_PRIMARY
 - 6: ST_DUA_GENERAL_FAILURE
+- 160: COAP code 5.00
 
 ```bash
 > bbr mgmt dua 1 2f7c235e5025a2fd
+Done
+> bbr mgmt dua 160
 Done
 ```
 
@@ -1182,28 +1185,33 @@ Done
 
 Get the Thread Device Mode value.
 
+- -: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
 - r: rx-on-when-idle
-- s: Secure IEEE 802.15.4 data requests
 - d: Full Thread Device
 - n: Full Network Data
 
 ```bash
 > mode
-rsdn
+rdn
 Done
 ```
 
-### mode [rsdn]
+### mode [rdn]
 
 Set the Thread Device Mode value.
 
+- -: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
 - r: rx-on-when-idle
-- s: Secure IEEE 802.15.4 data requests
 - d: Full Thread Device
 - n: Full Network Data
 
 ```bash
-> mode rsdn
+> mode rdn
+Done
+```
+
+```bash
+> mode -
 Done
 ```
 

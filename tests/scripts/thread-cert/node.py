@@ -728,7 +728,13 @@ class NodeImpl:
         self.remove_prefix(prefix)
         self.register_netdata()
 
-    def set_next_dua_response(self, status, iid=None):
+    def set_next_dua_response(self, status: Union[str, int], iid=None):
+        # Convert 5.00 to COAP CODE 160
+        if isinstance(status, str):
+            assert '.' in status
+            status = status.split('.')
+            status = (int(status[0]) << 5) + int(status[1])
+
         cmd = 'bbr mgmt dua {}'.format(status)
         if iid is not None:
             cmd += ' ' + str(iid)
@@ -964,6 +970,16 @@ class NodeImpl:
         self.send_command('routerdowngradethreshold')
         return int(self._expect_result(r'\d+'))
 
+    def set_router_eligible(self, enable: bool):
+        cmd = f'routereligible {"enable" if enable else "disable"}'
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def get_router_eligible(self) -> bool:
+        states = [r'Disabled', r'Enabled']
+        self.send_command('routereligible')
+        return self._expect_result(states) == 'Enabled'
+
     def prefer_router_id(self, router_id):
         cmd = 'preferrouterid %d' % router_id
         self.send_command(cmd)
@@ -1009,6 +1025,11 @@ class NodeImpl:
 
     def add_ipaddr(self, ipaddr):
         cmd = 'ipaddr add %s' % ipaddr
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def del_ipaddr(self, ipaddr):
+        cmd = 'ipaddr del %s' % ipaddr
         self.send_command(cmd)
         self._expect('Done')
 

@@ -44,13 +44,13 @@ class Cert_6_1_9_EDSynchronization(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER1, ED, ROUTER2]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ED, ROUTER3]
@@ -63,14 +63,14 @@ class Cert_6_1_9_EDSynchronization(thread_cert.TestCase):
         },
         ROUTER2: {
             'name': 'ROUTER_2',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ED, ROUTER3]
         },
         ROUTER3: {
             'name': 'ROUTER_3',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [ED, ROUTER1, ROUTER2]

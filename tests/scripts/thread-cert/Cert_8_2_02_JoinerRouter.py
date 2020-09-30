@@ -45,20 +45,20 @@ class Cert_8_2_02_JoinerRouter(thread_cert.TestCase):
         COMMISSIONER: {
             'name': 'COMMISSIONER',
             'masterkey': '00112233445566778899aabbccddeeff',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         JOINER_ROUTER: {
             'name': 'JOINER_ROUTER',
             'masterkey': '00112233445566778899aabbccddeeff',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1
         },
         JOINER: {
             'name': 'JOINER',
             'masterkey': '00112233445566778899aabbccddeeff',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1
         },
     }

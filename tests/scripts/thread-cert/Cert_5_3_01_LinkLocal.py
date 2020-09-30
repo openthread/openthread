@@ -39,11 +39,11 @@ DUT_ROUTER1 = 2
 class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface
         },
         DUT_ROUTER1: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },

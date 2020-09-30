@@ -56,7 +56,7 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
                 'panid': DATASET1_PANID,
                 'channel': DATASET1_CHANNEL
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'allowlist': [ROUTER1]
         },
         ROUTER1: {
@@ -65,7 +65,7 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
                 'panid': DATASET1_PANID,
                 'channel': DATASET1_CHANNEL
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [LEADER1, LEADER2]
         },
@@ -75,7 +75,7 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
                 'panid': DATASET2_PANID,
                 'channel': DATASET2_CHANNEL
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [ROUTER1, ROUTER2]
         },
@@ -85,14 +85,14 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
                 'panid': DATASET2_PANID,
                 'channel': DATASET2_CHANNEL
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [LEADER2, MED]
         },
         MED: {
             'channel': DATASET2_CHANNEL,
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': DATASET2_PANID,
             'allowlist': [ROUTER2]
         },

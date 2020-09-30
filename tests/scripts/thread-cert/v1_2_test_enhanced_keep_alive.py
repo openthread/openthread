@@ -50,7 +50,7 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
             'version': '1.2'
         },
         SED_1: {
-            'mode': 's',
+            'mode': '-',
             'version': '1.2',
         },
     }

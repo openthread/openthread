@@ -64,13 +64,13 @@ class Cert_5_7_01_CoapDiagCommands_A(thread_cert.TestCase):
         },
         SED1: {
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'allowlist': [ROUTER1],
             'timeout': config.DEFAULT_CHILD_TIMEOUT
         },
         MED1: {
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'allowlist': [ROUTER1]
         },
         FED1: {

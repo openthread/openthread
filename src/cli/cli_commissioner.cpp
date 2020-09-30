@@ -40,7 +40,7 @@
 namespace ot {
 namespace Cli {
 
-const struct Commissioner::Command Commissioner::sCommands[] = {
+const Commissioner::Command Commissioner::sCommands[] = {
     {"help", &Commissioner::ProcessHelp},           {"announce", &Commissioner::ProcessAnnounce},
     {"energy", &Commissioner::ProcessEnergy},       {"joiner", &Commissioner::ProcessJoiner},
     {"mgmtget", &Commissioner::ProcessMgmtGet},     {"mgmtset", &Commissioner::ProcessMgmtSet},
@@ -56,7 +56,7 @@ otError Commissioner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine("%s", command.mName);
+        mInterpreter.OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -410,7 +410,7 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
 
     if (aJoinerId != nullptr)
     {
-        mInterpreter.OutputBytes(aJoinerId->m8, sizeof(*aJoinerId));
+        mInterpreter.OutputExtAddress(*aJoinerId);
     }
 
     mInterpreter.OutputLine("");
@@ -429,7 +429,7 @@ otError Commissioner::ProcessState(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    mInterpreter.OutputLine("%s", StateToString(otCommissionerGetState(mInterpreter.mInstance)));
+    mInterpreter.OutputLine(StateToString(otCommissionerGetState(mInterpreter.mInstance)));
 
     return OT_ERROR_NONE;
 }

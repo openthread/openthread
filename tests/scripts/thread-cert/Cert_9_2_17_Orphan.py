@@ -56,7 +56,7 @@ class Cert_9_2_17_Orphan(thread_cert.TestCase):
                 'channel': CHANNEL1,
                 'channel_mask': CHANNEL_MASK
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [ED1]
         },
@@ -68,14 +68,14 @@ class Cert_9_2_17_Orphan(thread_cert.TestCase):
                 'channel': CHANNEL2,
                 'channel_mask': CHANNEL_MASK
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1
         },
         ED1: {
             'name': 'ED',
             'channel': CHANNEL1,
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': PANID_INIT,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [LEADER1]

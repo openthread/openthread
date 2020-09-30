@@ -412,10 +412,10 @@ public:
      * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
      *
      */
-    template <typename Inidcator>
+    template <typename Indicator>
     const Type *FindMatching(const Type *     aBegin,
                              const Type *     aEnd,
-                             const Inidcator &aIndicator,
+                             const Indicator &aIndicator,
                              const Type *&    aPrevEntry) const
     {
         const Type *entry;
@@ -453,8 +453,8 @@ public:
      * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
      *
      */
-    template <typename Inidcator>
-    Type *FindMatching(const Type *aBegin, const Type *aEnd, const Inidcator &aIndicator, Type *&aPrevEntry)
+    template <typename Indicator>
+    Type *FindMatching(const Type *aBegin, const Type *aEnd, const Indicator &aIndicator, Type *&aPrevEntry)
     {
         return const_cast<Type *>(FindMatching(aBegin, aEnd, aIndicator, const_cast<const Type *&>(aPrevEntry)));
     }
@@ -476,7 +476,7 @@ public:
      * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
      *
      */
-    template <typename Inidcator> const Type *FindMatching(const Inidcator &aIndicator, const Type *&aPrevEntry) const
+    template <typename Indicator> const Type *FindMatching(const Indicator &aIndicator, const Type *&aPrevEntry) const
     {
         return FindMatching(mHead, nullptr, aIndicator, aPrevEntry);
     }
@@ -499,7 +499,7 @@ public:
      * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
      *
      */
-    template <typename Inidcator> Type *FindMatching(const Inidcator &aIndicator, Type *&aPrevEntry)
+    template <typename Indicator> Type *FindMatching(const Indicator &aIndicator, Type *&aPrevEntry)
     {
         return const_cast<Type *>(
             const_cast<const LinkedList *>(this)->FindMatching(aIndicator, const_cast<const Type *&>(aPrevEntry)));

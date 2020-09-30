@@ -42,7 +42,7 @@
 namespace ot {
 namespace Cli {
 
-const struct Joiner::Command Joiner::sCommands[] = {
+const Joiner::Command Joiner::sCommands[] = {
     {"discerner", &Joiner::ProcessDiscerner}, {"help", &Joiner::ProcessHelp}, {"id", &Joiner::ProcessId},
     {"start", &Joiner::ProcessStart},         {"stop", &Joiner::ProcessStop},
 };
@@ -91,7 +91,7 @@ otError Joiner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine("%s", command.mName);
+        mInterpreter.OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -102,11 +102,7 @@ otError Joiner::ProcessId(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    const otExtAddress *joinerId;
-
-    joinerId = otJoinerGetId(mInterpreter.mInstance);
-
-    mInterpreter.OutputBytes(joinerId->m8, sizeof(otExtAddress));
+    mInterpreter.OutputExtAddress(*otJoinerGetId(mInterpreter.mInstance));
     mInterpreter.OutputLine("");
 
     return OT_ERROR_NONE;
