@@ -319,7 +319,7 @@ void Manager::SendBackboneMulticastListenerRegistration(const Ip6::Address *aAdd
     SuccessOrExit(error = message->Append(&addressesTlv, sizeof(addressesTlv)));
     SuccessOrExit(error = message->Append(aAddresses, sizeof(Ip6::Address) * aAddressNum));
 
-    SuccessOrExit(ThreadTlv::AppendUint32Tlv(*message, ThreadTlv::kTimeout, aTimeout));
+    SuccessOrExit(error = ThreadTlv::AppendUint32Tlv(*message, ThreadTlv::kTimeout, aTimeout));
 
     messageInfo.SetPeerAddr(Get<BackboneRouter::Local>().GetAllNetworkBackboneRoutersAddress());
     messageInfo.SetPeerPort(BackboneRouter::kBackboneUdpPort); // TODO: Provide API for configuring Backbone COAP port.
