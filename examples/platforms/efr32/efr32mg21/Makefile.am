@@ -36,8 +36,8 @@ libopenthread_efr32mg21_a_CPPFLAGS                                            = 
     -DPLATFORM_HEADER=\"platform/base/hal/micro/cortexm3/compiler/gcc.h\"       \
     -Wno-sign-compare                                                           \
     -I$(top_srcdir)/examples/platforms                                          \
-    -I$(top_srcdir)/examples/platforms/efr32/$(EFR32_PLATFORM)/$(BOARD_LOWERCASE) \
-    -I$(top_srcdir)/examples/platforms/efr32/$(EFR32_PLATFORM)                  \
+    -I$(top_srcdir)/examples/platforms/efr32/$(PLATFORM_LOWERCASE)/$(BOARD_LOWERCASE) \
+    -I$(top_srcdir)/examples/platforms/efr32/$(PLATFORM_LOWERCASE)              \
     -I$(top_srcdir)/examples/platforms/efr32/src                                \
     -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/src/core                                                    \

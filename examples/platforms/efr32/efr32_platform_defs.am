@@ -32,28 +32,20 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # ==============================================================================
 SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0
 
-if OPENTHREAD_EXAMPLES_EFR32MG1
-EFR32_PLATFORM = efr32mg1
-endif
+EFR32_PLATFORM = $(subst /,,$(exec_prefix))
+# NOTE: This is a work-around that sets EFR32_PLATFORM to the correct platform name.
+# Example:
+#    EFR32_PLATFORM = efr32mg12
 
-if OPENTHREAD_EXAMPLES_EFR32MG12
-EFR32_PLATFORM = efr32mg12
-endif
-
-if OPENTHREAD_EXAMPLES_EFR32MG13
-EFR32_PLATFORM = efr32mg13
-endif
-
-if OPENTHREAD_EXAMPLES_EFR32MG21
-EFR32_PLATFORM = efr32mg21
-endif
+PLATFORM_LOWERCASE = $(shell echo $(EFR32_PLATFORM) | tr A-Z a-z)
+PLATFORM_UPPERCASE = $(shell echo $(EFR32_PLATFORM) | tr a-z A-Z)
 
 BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
 BOARD_UPPERCASE = $(shell echo $(BOARD) | tr a-z A-Z)
 
-$(top_builddir)/examples/platforms/efr32/libopenthread-$(EFR32_PLATFORM).a:
-	echo MAKING examples/platforms/efr32/libopenthread-$(EFR32_PLATFORM).a
-	(cd $(top_builddir)/examples/platforms/efr32/ && $(MAKE) $(AM_MAKEFLAGS) libopenthread-$(EFR32_PLATFORM).a )
+$(top_builddir)/examples/platforms/efr32/libopenthread-$(PLATFORM_LOWERCASE).a:
+	echo MAKING examples/platforms/efr32/libopenthread-$(PLATFORM_LOWERCASE).a
+	(cd $(top_builddir)/examples/platforms/efr32/ && $(MAKE) $(AM_MAKEFLAGS) libopenthread-$(PLATFORM_LOWERCASE).a )
 
 # ==============================================================================
 # filter-out flags for RAIL
@@ -76,7 +68,7 @@ override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
 # ==============================================================================
 SILABS_GSDK_CPPFLAGS                                                          = \
     -I$(SDK_SRC_DIR)                                                            \
-    -I$(SDK_SRC_DIR)/hardware/kit/$(EFR32_PLATFORM)_$(BOARD_UPPERCASE)/config   \
+    -I$(SDK_SRC_DIR)/hardware/kit/$(PLATFORM_UPPERCASE)_$(BOARD_UPPERCASE)/config \
     -I$(SDK_SRC_DIR)/hardware/kit/common/bsp                                    \
     -I$(SDK_SRC_DIR)/hardware/kit/common/drivers                                \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32                     \

@@ -28,17 +28,10 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 include $(top_srcdir)/examples/platforms/Makefile.platform.am
+include $(top_srcdir)/examples/platforms/efr32/efr32_platform_defs.am
 
 override CFLAGS   := $(filter-out -Wconversion,$(CFLAGS))
 override CXXFLAGS := $(filter-out -Wconversion,$(CXXFLAGS))
-
-BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
-BOARD_UPPERCASE = $(shell echo $(BOARD) | tr a-z A-Z)
-
-SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0
-
-$(top_builddir)/examples/platforms/efr32/libopenthread-$(EFR32_PLATFORM).a:
-	(cd $(top_builddir)/examples/platforms/efr32/ && $(MAKE) $(AM_MAKEFLAGS) libopenthread-$(EFR32_PLATFORM).a )
 
 bin_PROGRAMS                                                                  = \
     $(NULL)
@@ -48,15 +41,15 @@ CPPFLAGS_COMMON                                                              += 
     -DPLATFORM_HEADER=\"platform/base/hal/micro/cortexm3/compiler/gcc.h\"       \
     -Wno-sign-compare                                                           \
     -I$(top_srcdir)/examples/platforms                                          \
-    -I$(top_srcdir)/examples/platforms/efr32/$(EFR32_PLATFORM)/$(BOARD_LOWERCASE) \
-    -I$(top_srcdir)/examples/platforms/efr32/$(EFR32_PLATFORM)                  \
+    -I$(top_srcdir)/examples/platforms/efr32/$(PLATFORM_LOWERCASE)/$(BOARD_LOWERCASE) \
+    -I$(top_srcdir)/examples/platforms/efr32/$(PLATFORM_LOWERCASE)              \
     -I$(top_srcdir)/examples/platforms/efr32/src                                \
     -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/src/core                                                    \
     -I$(top_srcdir)/third_party/silabs/rail_config                              \
     -I$(SDK_SRC_DIR)/hardware/kit/common/bsp                                    \
     -I$(SDK_SRC_DIR)/hardware/kit/common/drivers                                \
-    -I$(SDK_SRC_DIR)/hardware/kit/$(EFR32_PLATFORM)_$(BOARD_UPPERCASE)/config   \
+    -I$(SDK_SRC_DIR)/hardware/kit/$(PLATFORM_LOWERCASE)_$(BOARD_UPPERCASE)/config   \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32                     \
     -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32/config              \
     -I$(SDK_SRC_DIR)/platform/common/inc                                        \
