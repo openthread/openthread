@@ -130,6 +130,7 @@ SOURCES_COMMON                                  = \
     api/jam_detection_api.cpp                     \
     api/joiner_api.cpp                            \
     api/link_api.cpp                              \
+    api/link_metrics_api.cpp                      \
     api/link_raw_api.cpp                          \
     api/logging_api.cpp                           \
     api/message_api.cpp                           \
@@ -226,6 +227,7 @@ SOURCES_COMMON                                  = \
     thread/energy_scan_server.cpp                 \
     thread/indirect_sender.cpp                    \
     thread/key_manager.cpp                        \
+    thread/link_metrics.cpp                       \
     thread/link_quality.cpp                       \
     thread/lowpan.cpp                             \
     thread/mesh_forwarder.cpp                     \
@@ -451,6 +453,8 @@ HEADERS_COMMON                                  = \
     thread/indirect_sender.hpp                    \
     thread/indirect_sender_frame_context.hpp      \
     thread/key_manager.hpp                        \
+    thread/link_metrics.hpp                       \
+    thread/link_metrics_tlvs.hpp                  \
     thread/link_quality.hpp                       \
     thread/lowpan.hpp                             \
     thread/mesh_forwarder.hpp                     \

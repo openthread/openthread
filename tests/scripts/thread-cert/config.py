@@ -67,6 +67,7 @@ PORT_OFFSET = int(os.getenv('PORT_OFFSET', '0'))
 BACKBONE_PREFIX = f'{0x9100 + PORT_OFFSET:04x}::/64'
 BACKBONE_PREFIX_REGEX_PATTERN = f'^{0x9100 + PORT_OFFSET:04x}:'
 BACKBONE_DOCKER_NETWORK_NAME = f'backbone{PORT_OFFSET}'
+BACKBONE_IFNAME = 'eth0'
 
 OTBR_DOCKER_IMAGE = os.getenv('OTBR_DOCKER_IMAGE', 'otbr-ot12-backbone-ci')
 OTBR_DOCKER_NAME_PREFIX = f'otbr_{PORT_OFFSET}_'
@@ -127,6 +128,7 @@ AQ_TIMEOUT = 3
 ADDRESS_QUERY_INITIAL_RETRY_DELAY = 15
 DEFAULT_CHILD_TIMEOUT = 6
 VIRTUAL_TIME = int(os.getenv('VIRTUAL_TIME', 0))
+PARENT_AGGREGATIOIN_DELAY = 5
 
 LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST = True
 
@@ -257,6 +259,8 @@ def create_default_mle_tlvs_factories():
         mle.TlvType.TIME_REQUEST: mle.TimeRequestFactory(),
         mle.TlvType.TIME_PARAMETER: mle.TimeParameterFactory(),
         mle.TlvType.THREAD_DISCOVERY: create_default_mle_tlv_thread_discovery_factory(),
+        mle.TlvType.LINK_METRICS_QUERY: mle.LinkMetricsQueryFactory(),
+        mle.TlvType.LINK_METRICS_REPORT: mle.LinkMetricsReportFactory(),
     }
 
 

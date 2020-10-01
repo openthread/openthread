@@ -43,6 +43,7 @@
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop.hpp"
 #include "net/udp6.hpp"
+#include "thread/link_metrics.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/neighbor_table.hpp"
@@ -92,6 +93,9 @@ class Mle : public InstanceLocator
 {
     friend class DiscoverScanner;
     friend class ot::Notifier;
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    friend class ot::LinkMetrics;
+#endif
 
 public:
     /**
@@ -305,14 +309,6 @@ public:
      *
      */
     bool IsFullThreadDevice(void) const { return mDeviceMode.IsFullThreadDevice(); }
-
-    /**
-     * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
-     *
-     * @returns TRUE if using secure IEEE 802.15.4 Data Request messages, FALSE otherwise.
-     *
-     */
-    bool IsSecureDataRequest(void) const { return mDeviceMode.IsSecureDataRequest(); }
 
     /**
      * This method indicates whether or not the device requests Full Network Data.
@@ -1288,10 +1284,12 @@ protected:
     /**
      * This method generates an MLE Data Request message.
      *
-     * @param[in]  aDestination  A reference to the IPv6 address of the destination.
-     * @param[in]  aTlvs         A pointer to requested TLV types.
-     * @param[in]  aTlvsLength   The number of TLV types in @p aTlvs.
-     * @param[in]  aDelay        Delay in milliseconds before the Data Request message is sent.
+     * @param[in]  aDestination      A reference to the IPv6 address of the destination.
+     * @param[in]  aTlvs             A pointer to requested TLV types.
+     * @param[in]  aTlvsLength       The number of TLV types in @p aTlvs.
+     * @param[in]  aDelay            Delay in milliseconds before the Data Request message is sent.
+     * @param[in]  aExtraTlvs        A pointer to extra TLVs.
+     * @param[in]  aExtraTlvsLength  Length of extra TLVs.
      *
      * @retval OT_ERROR_NONE     Successfully generated an MLE Data Request message.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate the MLE Data Request message.
@@ -1300,7 +1298,9 @@ protected:
     otError SendDataRequest(const Ip6::Address &aDestination,
                             const uint8_t *     aTlvs,
                             uint8_t             aTlvsLength,
-                            uint16_t            aDelay);
+                            uint16_t            aDelay,
+                            const uint8_t *     aExtraTlvs       = nullptr,
+                            uint8_t             aExtraTlvsLength = 0);
 
     /**
      * This method generates an MLE Child Update Request message.

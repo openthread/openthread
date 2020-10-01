@@ -62,7 +62,7 @@ proc setup_nodes {} {
     expect "Done"
 
     set spawn_id $spawn_2
-    send "mode rs\n"
+    send "mode r\n"
     expect "Done"
     send "ifconfig up\n"
     expect "Done"

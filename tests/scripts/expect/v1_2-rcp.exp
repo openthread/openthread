@@ -54,7 +54,7 @@ expect_after {
 
 send "panid 0xface\n"
 expect "Done"
-send "mode s\n"
+send "mode -\n"
 expect "Done"
 send "csl period 5000\n"
 expect "Done"

@@ -1049,7 +1049,7 @@ class OpenThreadTHCI(object):
         print(eRoleId)
 
         self.deviceRole = eRoleId
-        mode = ''
+        mode = '-'
         try:
             if ModuleHelper.LeaderDutChannelFound:
                 self.channel = ModuleHelper.Default_Channel
@@ -1058,36 +1058,36 @@ class OpenThreadTHCI(object):
             # only sleep end device requires stable networkdata now
             if eRoleId == Thread_Device_Role.Leader:
                 print('join as leader')
-                mode = 'rsdn'
+                mode = 'rdn'
                 if self.AutoDUTEnable is False:
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.Router:
                 print('join as router')
-                mode = 'rsdn'
+                mode = 'rdn'
                 if self.AutoDUTEnable is False:
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.SED:
                 print('join as sleepy end device')
-                mode = 's'
+                mode = '-'
                 self.__setPollPeriod(self.__sedPollPeriod)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print('join as end device')
-                mode = 'rsn'
+                mode = 'rn'
             elif eRoleId == Thread_Device_Role.REED:
                 print('join as REED')
-                mode = 'rsdn'
+                mode = 'rdn'
                 # set ROUTER_UPGRADE_THRESHOLD
                 self.__setRouterUpgradeThreshold(0)
             elif eRoleId == Thread_Device_Role.EndDevice_FED:
                 print('join as FED')
-                mode = 'rsdn'
+                mode = 'rdn'
                 # always remain an ED, never request to be a router
                 self.__disableRouterEligible()
             elif eRoleId == Thread_Device_Role.EndDevice_MED:
                 print('join as MED')
-                mode = 'rsn'
+                mode = 'rn'
             else:
                 pass
 

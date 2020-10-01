@@ -65,7 +65,7 @@ Mle::Mle(Instance &aInstance)
     , mRetrieveNewNetworkData(false)
     , mRole(kRoleDisabled)
     , mNeighborTable(aInstance)
-    , mDeviceMode(DeviceMode::kModeRxOnWhenIdle | DeviceMode::kModeSecureDataRequest)
+    , mDeviceMode(DeviceMode::kModeRxOnWhenIdle)
     , mAttachState(kAttachStateIdle)
     , mReattachState(kReattachStop)
     , mAttachCounter(0)
@@ -377,7 +377,7 @@ otError Mle::Restore(void)
         mParent.SetExtAddress(parentInfo.GetExtAddress());
         mParent.SetVersion(static_cast<uint8_t>(parentInfo.GetVersion()));
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
-                                         DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
+                                         DeviceMode::kModeFullNetworkData));
         mParent.SetRloc16(Rloc16FromRouterId(RouterIdFromRloc16(networkInfo.GetRloc16())));
         mParent.SetState(Neighbor::kStateRestored);
 
@@ -2035,8 +2035,13 @@ exit:
 otError Mle::SendDataRequest(const Ip6::Address &aDestination,
                              const uint8_t *     aTlvs,
                              uint8_t             aTlvsLength,
-                             uint16_t            aDelay)
+                             uint16_t            aDelay,
+                             const uint8_t *     aExtraTlvs,
+                             uint8_t             aExtraTlvsLength)
 {
+    OT_UNUSED_VARIABLE(aExtraTlvs);
+    OT_UNUSED_VARIABLE(aExtraTlvsLength);
+
     otError  error = OT_ERROR_NONE;
     Message *message;
 
@@ -2045,6 +2050,11 @@ otError Mle::SendDataRequest(const Ip6::Address &aDestination,
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
     SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
+
+    if (aExtraTlvs != nullptr && aExtraTlvsLength > 0)
+    {
+        SuccessOrExit(error = message->Append(aExtraTlvs, aExtraTlvsLength));
+    }
 
     if (aDelay)
     {
@@ -2801,10 +2811,22 @@ exit:
 void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor)
 {
     otError error;
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    uint16_t metricsReportValueOffset;
+    uint16_t length;
+#endif
 
     Log(kMessageReceive, kTypeDataResponse, aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = OT_ERROR_SECURITY);
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    if (Tlv::FindTlvValueOffset(aMessage, Tlv::kLinkMetricsReport, metricsReportValueOffset, length) == OT_ERROR_NONE)
+    {
+        Get<LinkMetrics>().HandleLinkMetricsReport(aMessage, metricsReportValueOffset, length,
+                                                   aMessageInfo.GetPeerAddr());
+    }
+#endif
 
     error = HandleLeaderData(aMessage, aMessageInfo);
 
@@ -3242,7 +3264,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
     mParentCandidate.SetMleFrameCounter(mleFrameCounter);
     mParentCandidate.SetVersion(static_cast<uint8_t>(version));
     mParentCandidate.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
-                                              DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
+                                              DeviceMode::kModeFullNetworkData));
     mParentCandidate.GetLinkInfo().Clear();
     mParentCandidate.GetLinkInfo().AddRss(linkInfo->GetRss());
     mParentCandidate.ResetLinkFailures();

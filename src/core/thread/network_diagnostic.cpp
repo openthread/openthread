@@ -661,10 +661,9 @@ exit:
 
 static inline void ParseMode(const Mle::DeviceMode &aMode, otLinkModeConfig &aLinkModeConfig)
 {
-    aLinkModeConfig.mRxOnWhenIdle       = aMode.IsRxOnWhenIdle();
-    aLinkModeConfig.mSecureDataRequests = aMode.IsSecureDataRequest();
-    aLinkModeConfig.mDeviceType         = aMode.IsFullThreadDevice();
-    aLinkModeConfig.mNetworkData        = aMode.IsFullNetworkData();
+    aLinkModeConfig.mRxOnWhenIdle = aMode.IsRxOnWhenIdle();
+    aLinkModeConfig.mDeviceType   = aMode.IsFullThreadDevice();
+    aLinkModeConfig.mNetworkData  = aMode.IsFullNetworkData();
 }
 
 static inline void ParseConnectivity(const ConnectivityTlv &    aConnectivityTlv,

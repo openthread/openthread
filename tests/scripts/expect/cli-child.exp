@@ -46,9 +46,9 @@ expect "Done"
 
 set spawn_id $spawn_1
 send "child table\n"
-expect "| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|S|D|N| Extended MAC     |"
-expect "+-----+--------+------------+------------+-------+------+-+-+-+-+------------------+"
-expect -re "\\| +(\\d+) \\| 0x$rloc \\| +\\d+ \\| +\\d+ \\| +\\d+ \\| +\\d+ \\|\\d\\|\\d\\|\\d\\|\\d\\| $extaddr \\|"
+expect "| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N| Extended MAC     |"
+expect "+-----+--------+------------+------------+-------+------+-+-+-+------------------+"
+expect -re "\\| +(\\d+) \\| 0x$rloc \\| +\\d+ \\| +\\d+ \\| +\\d+ \\| +\\d+ \\|\\d\\|\\d\\|\\d\\| $extaddr \\|"
 set child_id $expect_out(1,string)
 expect "Done"
 send "child list\n"

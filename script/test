@@ -67,6 +67,7 @@ build_simulation()
 
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_CSL_RECEIVER=ON")
+        options+=("-DOT_LINK_METRICS=ON")
     fi
 
     if [[ ${ot_extra_options[*]+x} ]]; then
@@ -291,6 +292,11 @@ do_build_otbr_docker()
     )
 
     rm -rf "${otbrdir}"
+}
+
+do_pktverify()
+{
+    python3 ./tests/scripts/thread-cert/pktverify/verify.py "$1"
 }
 
 do_expect()
@@ -521,6 +527,10 @@ main()
                 ;;
             build_otbr_docker)
                 do_build_otbr_docker
+                ;;
+            pktverify)
+                shift
+                do_pktverify "$1"
                 ;;
             unit)
                 do_unit

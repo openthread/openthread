@@ -36,7 +36,7 @@ import sys
 import time
 import traceback
 import unittest
-from typing import Optional
+from typing import Optional, Callable
 
 import config
 import debug
@@ -58,7 +58,7 @@ DEFAULT_PARAMS = {
     'is_bbr': False,
     'is_otbr': False,
     'is_host': False,
-    'mode': 'rsdn',
+    'mode': 'rdn',
     'panid': 0xface,
     'allowlist': None,
     'version': ENV_THREAD_VERSION,
@@ -174,6 +174,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 self.nodes[i].set_router_upgrade_threshold(params['router_upgrade_threshold'])
             if 'router_downgrade_threshold' in params:
                 self.nodes[i].set_router_downgrade_threshold(params['router_downgrade_threshold'])
+            if 'router_eligible' in params:
+                self.nodes[i].set_router_eligible(params['router_eligible'])
 
             if 'timeout' in params:
                 self.nodes[i].set_timeout(params['timeout'])
@@ -348,6 +350,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             return
 
         test_info = self._test_info = {
+            'script': os.path.abspath(sys.argv[0]),
             'testcase': self.test_name,
             'start_time': time.ctime(self._start_time),
             'pcap': '',
@@ -471,3 +474,17 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         mergecap = pvutils.which_mergecap()
         self.assure_run_ok(f'{mergecap} -w {merged_pcap} {thread_pcap} {backbone_pcap}', shell=True)
         return merged_pcap
+
+    def wait_until(self, cond: Callable[[], bool], timeout: int, go_interval: int = 1):
+        while True:
+            self.simulator.go(go_interval)
+
+            if cond():
+                break
+
+            timeout -= go_interval
+            if timeout <= 0:
+                raise RuntimeError(f'wait failed after {timeout} seconds')
+
+    def wait_node_state(self, nodeid: int, state: str, timeout: int):
+        self.wait_until(lambda: self.nodes[nodeid].get_state() == state, timeout)

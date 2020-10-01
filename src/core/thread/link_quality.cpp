@@ -121,6 +121,25 @@ exit:
     return string;
 }
 
+void LqiAverager::Reset(void)
+{
+    mCount   = 0;
+    mAverage = 0;
+}
+
+void LqiAverager::Add(uint8_t aLqi)
+{
+    uint8_t count;
+
+    if (mCount < UINT8_MAX)
+    {
+        mCount++;
+    }
+    count = OT_MIN((1 << kCoeffBitShift), mCount);
+
+    mAverage = static_cast<uint8_t>(((mAverage * (count - 1)) + aLqi) / count);
+}
+
 void LinkQualityInfo::Clear(void)
 {
     mRssAverager.Reset();

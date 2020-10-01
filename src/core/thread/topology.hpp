@@ -338,14 +338,6 @@ public:
     bool IsFullThreadDevice(void) const { return GetDeviceMode().IsFullThreadDevice(); }
 
     /**
-     * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
-     *
-     * @returns TRUE if using secure IEEE 802.15.4 Data Request messages, FALSE otherwise.
-     *
-     */
-    bool IsSecureDataRequest(void) const { return GetDeviceMode().IsSecureDataRequest(); }
-
-    /**
      * This method indicates whether or not the device requests Full Network Data.
      *
      * @returns TRUE if requests Full Network Data, FALSE otherwise.

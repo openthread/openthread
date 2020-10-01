@@ -63,8 +63,8 @@ otError NcpBase::EncodeChildInfo(const otChildInfo &aChildInfo)
     otError error = OT_ERROR_NONE;
     uint8_t modeFlags;
 
-    modeFlags = LinkFlagsToFlagByte(aChildInfo.mRxOnWhenIdle, aChildInfo.mSecureDataRequest,
-                                    aChildInfo.mFullThreadDevice, aChildInfo.mFullNetworkData);
+    modeFlags =
+        LinkFlagsToFlagByte(aChildInfo.mRxOnWhenIdle, aChildInfo.mFullThreadDevice, aChildInfo.mFullNetworkData);
 
     SuccessOrExit(error = mEncoder.WriteEui64(aChildInfo.mExtAddress));
     SuccessOrExit(error = mEncoder.WriteUint16(aChildInfo.mRloc16));

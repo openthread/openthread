@@ -55,7 +55,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
@@ -66,7 +66,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'partition_id': 0xffffffff,
             'router_selection_jitter': 1,
             'allowlist': [COMMISSIONER, ROUTER1]
@@ -78,7 +78,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER2]
         },
@@ -89,7 +89,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [ROUTER1]
         },

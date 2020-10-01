@@ -72,5 +72,6 @@ const char UriPath::kDuaRegistrationRequest[] = "n/dr";
 const char UriPath::kDuaRegistrationNotify[]  = "n/dn";
 const char UriPath::kBackboneQuery[]          = "b/bq";
 const char UriPath::kBackboneAnswer[]         = "b/ba";
+const char UriPath::kBackboneMlr[]            = "b/bmr";
 
 } // namespace ot

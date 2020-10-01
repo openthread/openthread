@@ -41,25 +41,25 @@ SED1 = 4
 class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER1]
         },
         ROUTER1: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, DUT_ROUTER2]
         },
         DUT_ROUTER2: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [ROUTER1, SED1]
         },
         SED1: {
             'is_mtd': True,
-            'mode': 'sn',
+            'mode': 'n',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [DUT_ROUTER2]

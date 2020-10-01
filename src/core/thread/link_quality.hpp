@@ -212,6 +212,55 @@ private:
 };
 
 /**
+ * This class implements a Link Quality Indicator (LQI) averager.
+ *
+ * It maintains the exponential moving average value of LQI.
+ *
+ */
+class LqiAverager
+{
+public:
+    /**
+     * This method resets the averager and clears the average value.
+     *
+     */
+    void Reset(void);
+
+    /**
+     * This method adds a link quality indicator (LQI) value to the average.
+     *
+     * @param[in] aLqi  Link Quality Indicator value to be added to the average.
+     *
+     */
+    void Add(uint8_t aLqi);
+
+    /**
+     * This method returns the current average link quality value maintained by the averager.
+     *
+     * @returns The current average value.
+     *
+     */
+    uint8_t GetAverage(void) const { return mAverage; }
+
+    /**
+     * This method returns the count of frames calculated so far.
+     *
+     * @returns The count of frames calculated.
+     *
+     */
+    uint8_t GetCount(void) const { return mCount; }
+
+private:
+    enum
+    {
+        kCoeffBitShift = 3, ///< Coefficient used for exponentially weighted filter (1 << kCoeffBitShift).
+    };
+
+    uint8_t mAverage; ///< The average link quality indicator value.
+    uint8_t mCount;   ///< Number of LQI values added to averager so far.
+};
+
+/**
  * This class encapsulates/stores all relevant information about quality of a link, including average received signal
  * strength (RSS), last RSS, link margin, and link quality.
  *

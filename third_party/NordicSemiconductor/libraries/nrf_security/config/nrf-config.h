@@ -304,7 +304,7 @@
  *            digests and ciphers instead.
  *
  */
-#define MBEDTLS_AES_ALT
+/* #undef MBEDTLS_AES_ALT */
 //#define MBEDTLS_ARC4_ALT
 //#define MBEDTLS_ARIA_ALT
 //#define MBEDTLS_BLOWFISH_ALT
@@ -312,7 +312,7 @@
 #define MBEDTLS_CCM_ALT
 #define MBEDTLS_CHACHA20_ALT
 #define MBEDTLS_CHACHAPOLY_ALT
-#define MBEDTLS_CMAC_ALT
+/* #undef MBEDTLS_CMAC_ALT */
 //#define MBEDTLS_DES_ALT
 #define MBEDTLS_DHM_ALT
 //#define MBEDTLS_ECJPAKE_ALT
@@ -3136,13 +3136,9 @@ it is (2^48 - 1), our restriction is :  (int - 0xFFFF - 0xF).*/
 
 /* Target and application specific configurations */
 
-#define CONFIG_CC310_MBEDTLS_AES_C
-#define CONFIG_CC310_MBEDTLS_C
 #define CONFIG_CC310_MBEDTLS_CCM_C
 #define CONFIG_CC310_MBEDTLS_CHACHA20_C
 #define CONFIG_CC310_MBEDTLS_CHACHAPOLY_C
-#define CONFIG_CC310_MBEDTLS_CIPHER_MODE_C
-#define CONFIG_CC310_MBEDTLS_CMAC_C
 #define CONFIG_CC310_MBEDTLS_DHM_C
 #define CONFIG_CC310_MBEDTLS_ECDH_C
 #define CONFIG_CC310_MBEDTLS_ECDSA_C
@@ -3151,12 +3147,9 @@ it is (2^48 - 1), our restriction is :  (int - 0xFFFF - 0xF).*/
 #define CONFIG_CC310_MBEDTLS_POLY1305_C
 #define CONFIG_CC310_MBEDTLS_SHA1_C
 #define CONFIG_CC310_MBEDTLS_SHA256_C
-#define CONFIG_GLUE_MBEDTLS_AES_C
-#define CONFIG_GLUE_MBEDTLS_C
 #define CONFIG_GLUE_MBEDTLS_CIPHER_MODE_C
 #define CONFIG_VANILLA_MBEDTLS_AES_C
-#define CONFIG_VANILLA_MBEDTLS_C
-#define CONFIG_VANILLA_MBEDTLS_CIPHER_MODE_C
+#define CONFIG_VANILLA_MBEDTLS_CMAC_C
 
 //#define YOTTA_CFG_MBEDTLS_TARGET_CONFIG_FILE "target_config.h"
 
@@ -3193,7 +3186,7 @@ it is (2^48 - 1), our restriction is :  (int - 0xFFFF - 0xF).*/
  * Nordic added. Defines for features not supported in HW
  * on non-glued functionality.
  */
-/* #undef MBEDTLS_AES_256_CMAC_C */
+#define MBEDTLS_AES_256_CMAC_C
 
 /*
  * Nordic added. Ensure there is a definition of mbedtls_ecp_restart_ctx

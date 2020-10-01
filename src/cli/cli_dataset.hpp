@@ -73,7 +73,6 @@ private:
         otError (Dataset::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
     };
 
-    void    OutputBytes(const uint8_t *aBytes, uint8_t aLength);
     otError Print(otOperationalDataset &aDataset);
 
     otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);

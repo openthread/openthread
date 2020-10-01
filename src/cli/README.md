@@ -58,6 +58,7 @@ Done
 - [leaderdata](#leaderdata)
 - [leaderpartitionid](#leaderpartitionid)
 - [leaderweight](#leaderweight)
+- [linkmetrics](#linkmetrics-query-ipaddr-single-pqmr)
 - [linkquality](#linkquality-extaddr)
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
@@ -123,9 +124,9 @@ BBR Primary: None
 Done
 ```
 
-### bbr mgmt dua \<status\> [meshLocalIid]
+### bbr mgmt dua \<status\|coap-code\> [meshLocalIid]
 
-Configure the response status for DUA.req with meshLocalIid in payload. Without meshLocalIid, simply respond any coming DUA.req next with the specified status.
+Configure the response status for DUA.req with meshLocalIid in payload. Without meshLocalIid, simply respond any coming DUA.req next with the specified status or COAP code.
 
 Only for testing/reference device.
 
@@ -138,9 +139,12 @@ known status value:
 - 4: ST_DUA_NO_RESOURCES
 - 5: ST_DUA_BBR_NOT_PRIMARY
 - 6: ST_DUA_GENERAL_FAILURE
+- 160: COAP code 5.00
 
 ```bash
 > bbr mgmt dua 1 2f7c235e5025a2fd
+Done
+> bbr mgmt dua 160
 Done
 ```
 
@@ -1096,6 +1100,27 @@ Set the Thread Leader Weight.
 Done
 ```
 
+### linkmetrics query \<ipaddr\> single [pqmr]
+
+Perform a Link Metrics query (Single Probe).
+
+- ipaddr: Peer address.
+- pqmr: This specifies what metrics to query.
+- p: Layer 2 Number of PDUs received.
+- q: Layer 2 LQI.
+- m: Link Margin.
+- r: RSSI.
+
+```bash
+> linkmetrics query fe80:0:0:0:3092:f334:1455:1ad2 single qmr
+Done
+> Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
+
+ - LQI: 76 (Exponential Moving Average)
+ - Margin: 82 (dB) (Exponential Moving Average)
+ - RSSI: -18 (dBm) (Exponential Moving Average)
+```
+
 ### linkquality \<extaddr\>
 
 Get the link quality on the link to a given extended address.
@@ -1190,28 +1215,33 @@ Done
 
 Get the Thread Device Mode value.
 
+- -: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
 - r: rx-on-when-idle
-- s: Secure IEEE 802.15.4 data requests
 - d: Full Thread Device
 - n: Full Network Data
 
 ```bash
 > mode
-rsdn
+rdn
 Done
 ```
 
-### mode [rsdn]
+### mode [rdn]
 
 Set the Thread Device Mode value.
 
+- -: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
 - r: rx-on-when-idle
-- s: Secure IEEE 802.15.4 data requests
 - d: Full Thread Device
 - n: Full Network Data
 
 ```bash
-> mode rsdn
+> mode rdn
+Done
+```
+
+```bash
+> mode -
 Done
 ```
 
