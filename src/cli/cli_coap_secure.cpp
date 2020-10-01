@@ -45,20 +45,7 @@
 namespace ot {
 namespace Cli {
 
-const CoapSecure::Command CoapSecure::sCommands[] = {
-    {"help", &CoapSecure::ProcessHelp},      {"connect", &CoapSecure::ProcessConnect},
-    {"delete", &CoapSecure::ProcessRequest}, {"disconnect", &CoapSecure::ProcessDisconnect},
-    {"get", &CoapSecure::ProcessRequest},    {"post", &CoapSecure::ProcessRequest},
-    {"put", &CoapSecure::ProcessRequest},    {"resource", &CoapSecure::ProcessResource},
-    {"set", &CoapSecure::ProcessSet},        {"start", &CoapSecure::ProcessStart},
-    {"stop", &CoapSecure::ProcessStop},
-#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-    {"psk", &CoapSecure::ProcessPsk},
-#endif
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    {"x509", &CoapSecure::ProcessX509},
-#endif
-};
+constexpr CoapSecure::Command CoapSecure::sCommands[];
 
 CoapSecure::CoapSecure(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
@@ -410,25 +397,17 @@ otError CoapSecure::ProcessX509(uint8_t aArgsLength, char *aArgs[])
 
 otError CoapSecure::Process(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error = OT_ERROR_INVALID_COMMAND;
+    otError        error = OT_ERROR_INVALID_ARGS;
+    const Command *command;
 
-    if (aArgsLength < 1)
-    {
-        IgnoreError(ProcessHelp(0, nullptr));
-        error = OT_ERROR_INVALID_ARGS;
-    }
-    else
-    {
-        for (const Command &command : sCommands)
-        {
-            if (strcmp(aArgs[0], command.mName) == 0)
-            {
-                error = (this->*command.mCommand)(aArgsLength, aArgs);
-                break;
-            }
-        }
-    }
+    VerifyOrExit(aArgsLength != 0, IgnoreError(ProcessHelp(0, nullptr)));
 
+    command = Utils::LookupTable::Find(aArgs[0], sCommands);
+    VerifyOrExit(command != nullptr, error = OT_ERROR_INVALID_COMMAND);
+
+    error = (this->*command->mHandler)(aArgsLength, aArgs);
+
+exit:
     return error;
 }
 

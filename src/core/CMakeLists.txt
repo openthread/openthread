@@ -216,6 +216,7 @@ set(COMMON_SOURCES
     utils/flash.cpp
     utils/heap.cpp
     utils/jam_detector.cpp
+    utils/lookup_table.cpp
     utils/otns.cpp
     utils/parse_cmdline.cpp
     utils/slaac_address.cpp
@@ -258,6 +259,7 @@ target_sources(openthread-radio PRIVATE
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp
     thread/link_quality.cpp
+    utils/lookup_table.cpp
     utils/parse_cmdline.cpp
 )
 

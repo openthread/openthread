@@ -39,6 +39,7 @@
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
 
 #include "coap/coap_message.hpp"
+#include "utils/lookup_table.hpp"
 
 namespace ot {
 namespace Cli {
@@ -79,7 +80,7 @@ private:
     struct Command
     {
         const char *mName;
-        otError (Coap::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
+        otError (Coap::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
     };
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
@@ -124,8 +125,28 @@ private:
         return mUseDefaultResponseTxParameters ? nullptr : &mResponseTxParameters;
     }
 
-    static const Command sCommands[];
-    Interpreter &        mInterpreter;
+    static constexpr Command sCommands[] = {
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        {"cancel", &Coap::ProcessCancel},
+#endif
+        {"delete", &Coap::ProcessRequest},
+        {"get", &Coap::ProcessRequest},
+        {"help", &Coap::ProcessHelp},
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        {"observe", &Coap::ProcessRequest},
+#endif
+        {"parameters", &Coap::ProcessParameters},
+        {"post", &Coap::ProcessRequest},
+        {"put", &Coap::ProcessRequest},
+        {"resource", &Coap::ProcessResource},
+        {"set", &Coap::ProcessSet},
+        {"start", &Coap::ProcessStart},
+        {"stop", &Coap::ProcessStop},
+    };
+
+    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+
+    Interpreter &mInterpreter;
 
     bool mUseDefaultRequestTxParameters;
     bool mUseDefaultResponseTxParameters;
