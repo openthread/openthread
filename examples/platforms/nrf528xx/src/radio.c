@@ -495,7 +495,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 
     nrf_802154_rssi_measure_begin();
 
-    return (nrf_802154_rssi_last_get() - sLnaGain);
+    return nrf_802154_rssi_last_get();
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
@@ -916,7 +916,7 @@ void nrf_802154_received_timestamp_raw(uint8_t *p_data, int8_t power, uint8_t lq
 
     receivedFrame->mPsdu               = &p_data[1];
     receivedFrame->mLength             = p_data[0];
-    receivedFrame->mInfo.mRxInfo.mRssi = power - sLnaGain;
+    receivedFrame->mInfo.mRxInfo.mRssi = power;
     receivedFrame->mInfo.mRxInfo.mLqi  = lqi;
     receivedFrame->mChannel            = nrf_802154_channel_get();
 
@@ -1044,7 +1044,7 @@ void nrf_802154_transmitted_timestamp_raw(const uint8_t *aFrame,
         sAckFrame.mInfo.mRxInfo.mTimestamp = nrf5AlarmGetCurrentTime() - offset;
         sAckFrame.mPsdu                    = &aAckPsdu[1];
         sAckFrame.mLength                  = aAckPsdu[0];
-        sAckFrame.mInfo.mRxInfo.mRssi      = aPower - sLnaGain;
+        sAckFrame.mInfo.mRxInfo.mRssi      = aPower;
         sAckFrame.mInfo.mRxInfo.mLqi       = aLqi;
         sAckFrame.mChannel                 = nrf_802154_channel_get();
     }
@@ -1078,7 +1078,7 @@ void nrf_802154_transmit_failed(const uint8_t *aFrame, nrf_802154_tx_error_t err
 
 void nrf_802154_energy_detected(uint8_t result)
 {
-    sEnergyDetected = nrf_802154_dbm_from_energy_level_calculate(result) - sLnaGain;
+    sEnergyDetected = nrf_802154_dbm_from_energy_level_calculate(result);
 
     setPendingEvent(kPendingEventEnergyDetected);
 }
