@@ -282,7 +282,7 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
 
     mAddMeshHeader = false;
 
-    aMessage.Read(0, sizeof(ip6Header), &ip6Header);
+    IgnoreError(aMessage.Read(0, ip6Header));
 
     VerifyOrExit(!ip6Header.GetSource().IsMulticast(), error = OT_ERROR_DROP);
 
@@ -705,7 +705,7 @@ start:
         payload += hcLength;
 
         // copy IPv6 Payload
-        aMessage.Read(aMessage.GetOffset(), payloadLength, payload);
+        aMessage.ReadBytes(aMessage.GetOffset(), payload, payloadLength);
         aFrame.SetPayloadLength(headerLength + payloadLength);
 
         nextOffset = aMessage.GetOffset() + payloadLength;
@@ -734,7 +734,7 @@ start:
         }
 
         // Copy IPv6 Payload
-        aMessage.Read(aMessage.GetOffset(), payloadLength, payload);
+        aMessage.ReadBytes(aMessage.GetOffset(), payload, payloadLength);
         aFrame.SetPayloadLength(headerLength + payloadLength);
 
         nextOffset = aMessage.GetOffset() + payloadLength;
@@ -1039,7 +1039,7 @@ void MeshForwarder::HandleFragment(const uint8_t *       aFrame,
 
         VerifyOrExit(message != nullptr, error = OT_ERROR_DROP);
 
-        message->Write(message->GetOffset(), aFrameLength, aFrame);
+        message->WriteBytes(message->GetOffset(), aFrame, aFrameLength);
         message->MoveOffset(aFrameLength);
         message->AddRss(aLinkInfo.GetRss());
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
@@ -1157,7 +1157,7 @@ otError MeshForwarder::FrameToMessage(const uint8_t *     aFrame,
     aFrameLength -= static_cast<uint16_t>(headerLength);
 
     SuccessOrExit(error = aMessage->SetLength(aMessage->GetLength() + aFrameLength));
-    aMessage->Write(aMessage->GetOffset(), aFrameLength, aFrame);
+    aMessage->WriteBytes(aMessage->GetOffset(), aFrame, aFrameLength);
     aMessage->MoveOffset(aFrameLength);
 
 exit:
@@ -1302,24 +1302,20 @@ otError MeshForwarder::ParseIp6UdpTcpHeader(const Message &aMessage,
     aSourcePort = 0;
     aDestPort   = 0;
 
-    VerifyOrExit(sizeof(Ip6::Header) == aMessage.Read(0, sizeof(Ip6::Header), &aIp6Header), OT_NOOP);
+    SuccessOrExit(aMessage.Read(0, aIp6Header));
     VerifyOrExit(aIp6Header.IsVersion6(), OT_NOOP);
 
     switch (aIp6Header.GetNextHeader())
     {
     case Ip6::kProtoUdp:
-        VerifyOrExit(sizeof(Ip6::Udp::Header) ==
-                         aMessage.Read(sizeof(Ip6::Header), sizeof(Ip6::Udp::Header), &header.udp),
-                     OT_NOOP);
+        SuccessOrExit(aMessage.Read(sizeof(Ip6::Header), header.udp));
         aChecksum   = header.udp.GetChecksum();
         aSourcePort = header.udp.GetSourcePort();
         aDestPort   = header.udp.GetDestinationPort();
         break;
 
     case Ip6::kProtoTcp:
-        VerifyOrExit(sizeof(Ip6::Tcp::Header) ==
-                         aMessage.Read(sizeof(Ip6::Header), sizeof(Ip6::Tcp::Header), &header.tcp),
-                     OT_NOOP);
+        SuccessOrExit(aMessage.Read(sizeof(Ip6::Header), header.tcp));
         aChecksum   = header.tcp.GetChecksum();
         aSourcePort = header.tcp.GetSourcePort();
         aDestPort   = header.tcp.GetDestinationPort();
