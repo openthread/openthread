@@ -277,6 +277,26 @@ exit:
     return error;
 }
 
+otError Interpreter::ParseIp6Prefix(char *aString, otIp6Prefix &aPrefix)
+{
+    otError       error = OT_ERROR_NONE;
+    char *        prefixLengthStr;
+    unsigned long length;
+
+    prefixLengthStr = strchr(aString, '/');
+    VerifyOrExit(prefixLengthStr != nullptr, error = OT_ERROR_INVALID_ARGS);
+
+    *prefixLengthStr++ = '\0';
+
+    SuccessOrExit(error = otIp6AddressFromString(aString, &aPrefix.mPrefix));
+
+    SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
+    aPrefix.mLength = static_cast<uint8_t>(length);
+
+exit:
+    return error;
+}
+
 otError Interpreter::ParsePingInterval(const char *aString, uint32_t &aInterval)
 {
     otError        error    = OT_ERROR_NONE;
@@ -2840,28 +2860,12 @@ otError Interpreter::ProcessPrefixAdd(uint8_t aArgsLength, char *aArgs[])
     otError              error = OT_ERROR_NONE;
     otBorderRouterConfig config;
     uint8_t              argcur = 0;
-    char *               prefixLengthStr;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
     memset(&config, 0, sizeof(otBorderRouterConfig));
 
-    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == nullptr)
-    {
-        ExitNow();
-    }
-
-    *prefixLengthStr++ = '\0';
-
-    SuccessOrExit(error = otIp6AddressFromString(aArgs[argcur], &config.mPrefix.mPrefix));
-
-    {
-        unsigned long length;
-
-        SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
-        config.mPrefix.mLength = static_cast<uint8_t>(length);
-    }
-
+    SuccessOrExit(error = ParseIp6Prefix(aArgs[argcur], config.mPrefix));
     argcur++;
 
     for (; argcur < aArgsLength; argcur++)
@@ -2938,28 +2942,10 @@ otError Interpreter::ProcessPrefixRemove(uint8_t aArgsLength, char *aArgs[])
 {
     otError     error = OT_ERROR_NONE;
     otIp6Prefix prefix;
-    uint8_t     argcur = 0;
-    char *      prefixLengthStr;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
-    memset(&prefix, 0, sizeof(otIp6Prefix));
-
-    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == nullptr)
-    {
-        ExitNow();
-    }
-
-    *prefixLengthStr++ = '\0';
-
-    SuccessOrExit(error = otIp6AddressFromString(aArgs[argcur], &prefix.mPrefix));
-
-    {
-        unsigned long length;
-
-        SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
-        prefix.mLength = static_cast<uint8_t>(length);
-    }
+    SuccessOrExit(error = ParseIp6Prefix(aArgs[0], prefix));
 
     error = otBorderRouterRemoveOnMeshPrefix(mInstance, &prefix);
 
@@ -3095,28 +3081,12 @@ otError Interpreter::ProcessRouteAdd(uint8_t aArgsLength, char *aArgs[])
     otError               error = OT_ERROR_NONE;
     otExternalRouteConfig config;
     uint8_t               argcur = 0;
-    char *                prefixLengthStr;
 
     memset(&config, 0, sizeof(otExternalRouteConfig));
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
-    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == nullptr)
-    {
-        ExitNow();
-    }
-
-    *prefixLengthStr++ = '\0';
-
-    SuccessOrExit(error = otIp6AddressFromString(aArgs[argcur], &config.mPrefix.mPrefix));
-
-    {
-        unsigned long length;
-
-        SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
-        config.mPrefix.mLength = static_cast<uint8_t>(length);
-    }
-
+    SuccessOrExit(error = ParseIp6Prefix(aArgs[argcur], config.mPrefix));
     argcur++;
 
     for (; argcur < aArgsLength; argcur++)
@@ -3153,28 +3123,10 @@ otError Interpreter::ProcessRouteRemove(uint8_t aArgsLength, char *aArgs[])
 {
     otError     error = OT_ERROR_NONE;
     otIp6Prefix prefix;
-    uint8_t     argcur = 0;
-    char *      prefixLengthStr;
-
-    memset(&prefix, 0, sizeof(otIp6Prefix));
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
-    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == nullptr)
-    {
-        ExitNow();
-    }
-
-    *prefixLengthStr++ = '\0';
-
-    SuccessOrExit(error = otIp6AddressFromString(aArgs[argcur], &prefix.mPrefix));
-
-    {
-        unsigned long length;
-
-        SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
-        prefix.mLength = static_cast<uint8_t>(length);
-    }
+    SuccessOrExit(error = ParseIp6Prefix(aArgs[0], prefix));
 
     error = otBorderRouterRemoveRoute(mInstance, &prefix);
 

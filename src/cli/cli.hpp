@@ -296,6 +296,7 @@ private:
     const Command *FindCommand(const char *aName) const;
     otError        ParsePingInterval(const char *aString, uint32_t &aInterval);
     static otError ParseJoinerDiscerner(char *aString, otJoinerDiscerner &aJoinerDiscerner);
+    static otError ParseIp6Prefix(char *aString, otIp6Prefix &aPrefix);
 
     otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessCcaThreshold(uint8_t aArgsLength, char *aArgs[]);
