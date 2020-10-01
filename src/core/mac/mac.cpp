@@ -1638,7 +1638,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 
         aNeighbor->SetLinkFrameCounter(frameCounter + 1);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-        if (aNeighbor->GetLinkFrameCounter() > aNeighbor->GetLinkAckFrameCounter())
+        if ((frameCounter + 1) > aNeighbor->GetLinkAckFrameCounter())
         {
             aNeighbor->SetLinkAckFrameCounter(frameCounter + 1);
         }

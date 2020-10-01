@@ -90,24 +90,21 @@ typedef struct otLinkModeConfig
  */
 typedef struct
 {
-    otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
-    uint32_t     mAge;              ///< Time last heard
-    uint16_t     mRloc16;           ///< RLOC16
-    uint32_t     mLinkFrameCounter; ///< Link Frame Counter
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    uint32_t mLinkAckFrameCounter; ///< Link ACK Frame Counter
-#endif
-    uint32_t mMleFrameCounter;       ///< MLE Frame Counter
-    uint8_t  mLinkQualityIn;         ///< Link Quality In
-    int8_t   mAverageRssi;           ///< Average RSSI
-    int8_t   mLastRssi;              ///< Last observed RSSI
-    uint16_t mFrameErrorRate;        ///< Frame error rate (0xffff->100%). Requires error tracking feature.
-    uint16_t mMessageErrorRate;      ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
-    bool     mRxOnWhenIdle : 1;      ///< rx-on-when-idle
-    bool     mSecureDataRequest : 1; ///< Secure Data Requests
-    bool     mFullThreadDevice : 1;  ///< Full Thread Device
-    bool     mFullNetworkData : 1;   ///< Full Network Data
-    bool     mIsChild : 1;           ///< Is the neighbor a child
+    otExtAddress mExtAddress;            ///< IEEE 802.15.4 Extended Address
+    uint32_t     mAge;                   ///< Time last heard
+    uint16_t     mRloc16;                ///< RLOC16
+    uint32_t     mLinkFrameCounter;      ///< Link Frame Counter
+    uint32_t     mMleFrameCounter;       ///< MLE Frame Counter
+    uint8_t      mLinkQualityIn;         ///< Link Quality In
+    int8_t       mAverageRssi;           ///< Average RSSI
+    int8_t       mLastRssi;              ///< Last observed RSSI
+    uint16_t     mFrameErrorRate;        ///< Frame error rate (0xffff->100%). Requires error tracking feature.
+    uint16_t     mMessageErrorRate;      ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
+    bool         mRxOnWhenIdle : 1;      ///< rx-on-when-idle
+    bool         mSecureDataRequest : 1; ///< Secure Data Requests
+    bool         mFullThreadDevice : 1;  ///< Full Thread Device
+    bool         mFullNetworkData : 1;   ///< Full Network Data
+    bool         mIsChild : 1;           ///< Is the neighbor a child
 } otNeighborInfo;
 
 #define OT_NEIGHBOR_INFO_ITERATOR_INIT 0 ///< Initializer for otNeighborInfoIterator.

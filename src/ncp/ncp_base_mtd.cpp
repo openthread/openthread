@@ -182,9 +182,6 @@ otError NcpBase::EncodeNeighborInfo(const otNeighborInfo &aNeighborInfo)
     SuccessOrExit(error = mEncoder.WriteUint32(aNeighborInfo.mLinkFrameCounter));
     SuccessOrExit(error = mEncoder.WriteUint32(aNeighborInfo.mMleFrameCounter));
     SuccessOrExit(error = mEncoder.WriteInt8(aNeighborInfo.mLastRssi));
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    SuccessOrExit(error = mEncoder.WriteUint32(aNeighborInfo.mLinkAckFrameCounter));
-#endif
 
     SuccessOrExit(error = mEncoder.CloseStruct());
 

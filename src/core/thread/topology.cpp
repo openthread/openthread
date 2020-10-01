@@ -80,9 +80,6 @@ void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
     mSecureDataRequest = aNeighbor.IsSecureDataRequest();
     mFullThreadDevice  = aNeighbor.IsFullThreadDevice();
     mFullNetworkData   = aNeighbor.IsFullNetworkData();
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    mLinkAckFrameCounter = aNeighbor.GetLinkAckFrameCounter();
-#endif
 }
 
 void Neighbor::Init(Instance &aInstance)
