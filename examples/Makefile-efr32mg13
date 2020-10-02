@@ -39,6 +39,10 @@ NM                              = arm-none-eabi-nm
 RANLIB                          = arm-none-eabi-ranlib
 OBJCOPY                         = arm-none-eabi-objcopy
 
+EFR32_PLATFORM = efr32mg13
+PLATFORM_LOWERCASE = $(shell echo $(EFR32_PLATFORM) | tr A-Z a-z)
+BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
+
 configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ftd                  \
@@ -47,7 +51,7 @@ configure_OPTIONS               = \
     --enable-radio-only           \
     --enable-linker-map           \
     --enable-builtin-mbedtls=no   \
-    --with-examples=efr32mg13     \
+    --with-examples=$(EFR32_PLATFORM)            \
     MBEDTLS_CPPFLAGS="$(EFR32_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
@@ -58,9 +62,6 @@ endif
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-# Needed for EFR32_MBEDTLS_CPPFLAGS
-EFR32_PLATFORM = efr32mg13
-BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
 
 #
 # Differentiate between boards
@@ -89,9 +90,9 @@ EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suit
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/efr32/
 HAL_CONF_DIR     = $(CONFIG_FILE_PATH)/$(EFR32_PLATFORM)/$(BOARD_LOWERCASE)
 
-EFR32MG13_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-efr32-config.h\"'
-EFR32MG13_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-efr32-config-check.h\"'
-EFR32MG13_CONFIG_FILE_CPPFLAGS += -I$(CONFIG_FILE_PATH)
+EFR32_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-efr32-config.h\"'
+EFR32_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-efr32-config-check.h\"'
+EFR32_CONFIG_FILE_CPPFLAGS += -I$(CONFIG_FILE_PATH)
 
 COMMONCFLAGS                       := \
     -fdata-sections                   \
@@ -101,7 +102,7 @@ COMMONCFLAGS                       := \
     -I$(HAL_CONF_DIR)                 \
     -D__START=main                    \
     -D$(MCU)                          \
-    $(EFR32MG13_CONFIG_FILE_CPPFLAGS) \
+    $(EFR32_CONFIG_FILE_CPPFLAGS)     \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
@@ -164,7 +165,7 @@ ResultPath                      = output
 TopResultDir                    = $(ResultPath)
 AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
-TargetTuple                     = efr32mg13
+TargetTuple                     = $(PLATFORM_LOWERCASE)
 
 ARCHS                           = cortex-m4
 

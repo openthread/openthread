@@ -32,9 +32,12 @@
 # to remove .Po files that were already removed
 
 
+# Always package (e.g. for 'make dist') these subdirectories.
+DIST_SUBDIRS = sleepy-demo
+
+# Always build (e.g. for 'make all') these subdirectories.
 SUBDIRS = $(NULL)
 
-if OPENTHREAD_EXAMPLES_EFR32
 if OPENTHREAD_EXAMPLES_EFR32MG1
 include efr32mg1/Makefile.am
 # SUBDIRS = sleepy-demo
@@ -61,12 +64,7 @@ include efr32mg21/Makefile.am
 endif # OPENTHREAD_EXAMPLES_EFR32MG21
 
 if OPENTHREAD_ENABLE_EXECUTABLE
-# SUBDIRS += \
-    # sleepy-demo
+SUBDIRS += sleepy-demo
 endif # OPENTHREAD_ENABLE_EXECUTABLE
 
 endif # OPENTHREAD_EXAMPLES_EFR32MG1
-
-PRETTY_FILES                            = \
-    $(NULL)
-endif # OPENTHREAD_EXAMPLES_EFR32

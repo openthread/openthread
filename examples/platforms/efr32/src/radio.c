@@ -60,36 +60,27 @@
 #include "rail_config.h"
 #include "rail_ieee802154.h"
 
-enum
-{
-    IEEE802154_MIN_LENGTH = 5,
-    IEEE802154_MAX_LENGTH = 127,
-    IEEE802154_ACK_LENGTH = 5,
+#define IEEE802154_MIN_LENGTH (5u)
+#define IEEE802154_MAX_LENGTH (127u)
+#define IEEE802154_ACK_LENGTH (5u)
 
-    // FCF + DSN + dest PANID + dest addr + src PANID + src addr (without security header)
-    IEEE802154_MAX_MHR_LENGTH = 2 + 1 + 2 + 8 + 2 + 8,
+// FCF + DSN + dest PANID + dest addr + src PANID + src addr (without security header)
+#define IEEE802154_MAX_MHR_LENGTH               (2u + 1u + 2u + 8u + 2u + 8u)
 
-    IEEE802154_FRAME_TYPE_MASK        = 0x7,
-    IEEE802154_FRAME_TYPE_ACK         = 0x2,
-    IEEE802154_FRAME_TYPE_MAC_COMMAND = 0x3,
-    IEEE802154_ACK_REQUEST            = 1 << 5,
-    IEEE802154_DSN_OFFSET             = 2,
-    IEEE802154_FCF_OFFSET             = 0,
-};
+#define IEEE802154_FRAME_TYPE_MASK              (0x07u)
+#define IEEE802154_FRAME_TYPE_ACK               (0x02u)
+#define IEEE802154_FRAME_TYPE_MAC_COMMAND       (0x03u)
+#define IEEE802154_ACK_REQUEST                  (1u << 5)
+#define IEEE802154_DSN_OFFSET                   (2u)
+#define IEEE802154_FCF_OFFSET                   (0u)
 
-enum
-{
-    EFR32_RECEIVE_SENSITIVITY    = -100, // dBm
-    EFR32_RSSI_AVERAGING_TIME    = 16,   // us
-    EFR32_RSSI_AVERAGING_TIMEOUT = 300,  // us
-};
+#define EFR32_RECEIVE_SENSITIVITY               (-100)  // dBm
+#define EFR32_RSSI_AVERAGING_TIME               (16u)   // us
+#define EFR32_RSSI_AVERAGING_TIMEOUT            (300u)  // us
 
-enum
-{
-    EFR32_SCHEDULER_SAMPLE_RSSI_PRIORITY = 10, // High priority
-    EFR32_SCHEDULER_TX_PRIORITY          = 10, // High priority
-    EFR32_SCHEDULER_RX_PRIORITY          = 20, // Low priority
-};
+#define EFR32_SCHEDULER_SAMPLE_RSSI_PRIORITY    (10u)   // High priority
+#define EFR32_SCHEDULER_TX_PRIORITY             (10u)   // High priority
+#define EFR32_SCHEDULER_RX_PRIORITY             (20u)   // Low priority
 
 enum
 {

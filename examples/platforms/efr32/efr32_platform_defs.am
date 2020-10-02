@@ -43,6 +43,10 @@ PLATFORM_UPPERCASE = $(shell echo $(EFR32_PLATFORM) | tr a-z A-Z)
 BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
 BOARD_UPPERCASE = $(shell echo $(BOARD) | tr a-z A-Z)
 
+$(top_builddir)/examples/platforms/efr32/libopenthread-$(PLATFORM_LOWERCASE).a:
+	echo MAKING examples/platforms/efr32/libopenthread-$(PLATFORM_LOWERCASE).a
+	(cd $(top_builddir)/examples/platforms/efr32/ && $(MAKE) $(AM_MAKEFLAGS) libopenthread-$(PLATFORM_LOWERCASE).a )
+
 # ==============================================================================
 # filter-out flags for RAIL
 # ==============================================================================
@@ -119,7 +123,7 @@ SILABS_EFR32MG2X_CPPFLAGS                                                     = 
 # ==============================================================================
 # Platform-level CPPFLAGS
 # ==============================================================================
-PLATFORM_COMMON_SOURCES_LIST                                                       = \
+PLATFORM_COMMON_SOURCES_LIST                                                  = \
     src/alarm.c                                                                 \
     src/diag.c                                                                  \
     src/entropy.c                                                               \
