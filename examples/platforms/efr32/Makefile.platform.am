@@ -28,26 +28,6 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 include $(top_srcdir)/examples/platforms/efr32/efr32_platform_defs.am
 
-
-# ==============================================================================
-# Platform includes
-# ==============================================================================
-if OPENTHREAD_EXAMPLES_EFR32MG1
-include $(top_srcdir)/examples/platforms/efr32/efr32mg1/Makefile.platform.am
-endif
-
-if OPENTHREAD_EXAMPLES_EFR32MG12
-include $(top_srcdir)/examples/platforms/efr32/efr32mg12/Makefile.platform.am
-endif
-
-if OPENTHREAD_EXAMPLES_EFR32MG13
-include $(top_srcdir)/examples/platforms/efr32/efr32mg13/Makefile.platform.am
-endif
-
-if OPENTHREAD_EXAMPLES_EFR32MG21
-include $(top_srcdir)/examples/platforms/efr32/efr32mg21/Makefile.platform.am
-endif
-
 # ==============================================================================
 # Add mbedtls archive to LDADD_COMMON
 # ==============================================================================
@@ -81,3 +61,22 @@ LDADD_COMMON                                                                  +=
 LDFLAGS_COMMON                                                                       += \
     -T $(top_srcdir)/examples/platforms/efr32/$(PLATFORM_LOWERCASE)/$(PLATFORM_LOWERCASE).ld    \
     $(NULL)
+
+# ==============================================================================
+# Platform includes
+# ==============================================================================
+if OPENTHREAD_EXAMPLES_EFR32MG1
+include $(top_srcdir)/examples/platforms/efr32/efr32mg1/Makefile.platform.am
+endif
+
+if OPENTHREAD_EXAMPLES_EFR32MG12
+include $(top_srcdir)/examples/platforms/efr32/efr32mg12/Makefile.platform.am
+endif
+
+if OPENTHREAD_EXAMPLES_EFR32MG13
+include $(top_srcdir)/examples/platforms/efr32/efr32mg13/Makefile.platform.am
+endif
+
+if OPENTHREAD_EXAMPLES_EFR32MG21
+include $(top_srcdir)/examples/platforms/efr32/efr32mg21/Makefile.platform.am
+endif

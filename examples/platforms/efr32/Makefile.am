@@ -32,7 +32,9 @@
 # to remove .Po files that were already removed
 
 
+SUBDIRS = $(NULL)
 
+if OPENTHREAD_EXAMPLES_EFR32
 if OPENTHREAD_EXAMPLES_EFR32MG1
 include efr32mg1/Makefile.am
 # SUBDIRS = sleepy-demo
@@ -43,23 +45,28 @@ include efr32mg1/Makefile.am
 # .../arm-none-eabi/bin/ld: region RAM overflowed with stack
 # .../arm-none-eabi/bin/ld: region `FLASH' overflowed by 33428 bytes
 # .../arm-none-eabi/bin/ld: region `RAM' overflowed by 4536 bytes
-endif
+
+else # not OPENTHREAD_EXAMPLES_EFR32MG1
 
 if OPENTHREAD_EXAMPLES_EFR32MG12
 include efr32mg12/Makefile.am
-SUBDIRS = sleepy-demo
-endif
+endif # OPENTHREAD_EXAMPLES_EFR32MG12
 
 if OPENTHREAD_EXAMPLES_EFR32MG13
 include efr32mg13/Makefile.am
-SUBDIRS = sleepy-demo
-endif
+endif # OPENTHREAD_EXAMPLES_EFR32MG13
 
 if OPENTHREAD_EXAMPLES_EFR32MG21
 include efr32mg21/Makefile.am
-SUBDIRS = sleepy-demo
-endif
+endif # OPENTHREAD_EXAMPLES_EFR32MG21
 
+if OPENTHREAD_ENABLE_EXECUTABLE
+# SUBDIRS += \
+    # sleepy-demo
+endif # OPENTHREAD_ENABLE_EXECUTABLE
+
+endif # OPENTHREAD_EXAMPLES_EFR32MG1
 
 PRETTY_FILES                            = \
     $(NULL)
+endif # OPENTHREAD_EXAMPLES_EFR32
