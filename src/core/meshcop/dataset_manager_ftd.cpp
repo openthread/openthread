@@ -295,9 +295,9 @@ otError DatasetManager::DatasetTlv::ReadFromMessage(const Message &aMessage, uin
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aMessage.ReadBytes(aOffset, this, sizeof(Tlv)) == sizeof(Tlv), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = aMessage.Read(aOffset, this, sizeof(Tlv)));
     VerifyOrExit(GetLength() <= kMaxValueSize, error = OT_ERROR_PARSE);
-    VerifyOrExit(aMessage.ReadBytes(aOffset + sizeof(Tlv), mValue, GetLength()) == GetLength(), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = aMessage.Read(aOffset + sizeof(Tlv), mValue, GetLength()));
     VerifyOrExit(Tlv::IsValid(*this), error = OT_ERROR_PARSE);
 
 exit:

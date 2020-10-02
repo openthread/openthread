@@ -107,8 +107,7 @@ uint16_t CalculateChecksum(const Ip6::Address &aSource,
     data.mPseudoHeader.mProtocol      = Encoding::BigEndian::HostSwap32(aIpProto);
     data.mPseudoHeader.mPayloadLength = Encoding::BigEndian::HostSwap32(payloadLength);
 
-    VerifyOrQuit(aMessage.ReadBytes(aMessage.GetOffset(), data.mPayload, payloadLength) == payloadLength,
-                 "Message::ReadBytes() failed");
+    SuccessOrQuit(aMessage.Read(aMessage.GetOffset(), data.mPayload, payloadLength), "Message::Read() failed");
 
     return CalculateChecksum(&data, sizeof(PseudoHeader) + payloadLength);
 }

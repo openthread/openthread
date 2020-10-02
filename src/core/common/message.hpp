@@ -633,9 +633,25 @@ public:
     uint16_t ReadBytes(uint16_t aOffset, void *aBuf, uint16_t aLength) const;
 
     /**
+     * This method reads a given number of bytes from the message.
+     *
+     * If there are fewer bytes available in the message than the requested read length, the available bytes will be
+     * read and copied into @p aBuf. In this case `OT_ERROR_PARSE` will be returned.
+     *
+     * @param[in]  aOffset  Byte offset within the message to begin reading.
+     * @param[out] aBuf     A pointer to a data buffer to copy the read bytes into.
+     * @param[in]  aLength  Number of bytes to read.
+     *
+     * @retval OT_ERROR_NONE     @p aLength bytes were successfully read from message.
+     * @retval OT_ERROR_PARSE    Not enough bytes remaining in message to read the entire object.
+     *
+     */
+    otError Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const;
+
+    /**
      * This method reads an object from the message.
      *
-     * If there are less bytes available in the message than the requested object size, the available bytes will be
+     * If there are fewer bytes available in the message than the requested object size, the available bytes will be
      * read and copied into @p aObject (@p aObject will be read partially). In this case `OT_ERROR_PARSE` will
      * be returned.
      *
@@ -1193,8 +1209,6 @@ private:
     {
         const_cast<const Message *>(this)->GetNextChunk(aLength, static_cast<Chunk &>(aChunk));
     }
-
-    otError Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const;
 };
 
 /**

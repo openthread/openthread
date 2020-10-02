@@ -2044,11 +2044,11 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         uint8_t len;
 
         // read out the control field
-        VerifyOrExit(aMessage.ReadBytes(offset, &entry, sizeof(uint8_t)) == sizeof(uint8_t), error = OT_ERROR_PARSE);
+        SuccessOrExit(error = aMessage.Read(offset, &entry, sizeof(uint8_t)));
 
         len = entry.GetLength();
 
-        VerifyOrExit(aMessage.ReadBytes(offset, &entry, len) == len, error = OT_ERROR_PARSE);
+        SuccessOrExit(error = aMessage.Read(offset, &entry, len));
 
         offset += len;
         registeredCount++;

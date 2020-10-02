@@ -65,7 +65,7 @@ void TestMessage(void)
     VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
     SuccessOrQuit(message->SetLength(kMaxSize), "Message::SetLength failed");
     message->WriteBytes(0, writeBuffer, kMaxSize);
-    VerifyOrQuit(message->ReadBytes(0, readBuffer, kMaxSize) == kMaxSize, "Message::Read failed");
+    SuccessOrQuit(message->Read(0, readBuffer, kMaxSize), "Message::Read failed");
     VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0, "Message compare failed");
     VerifyOrQuit(message->GetLength() == kMaxSize, "Message::GetLength failed");
 
@@ -80,11 +80,11 @@ void TestMessage(void)
 
             message->WriteBytes(offset, &writeBuffer[offset], length);
 
-            VerifyOrQuit(message->ReadBytes(0, readBuffer, kMaxSize) == kMaxSize, "Message::Read failed");
+            SuccessOrQuit(message->Read(0, readBuffer, kMaxSize), "Message::Read failed");
             VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0, "Message compare failed");
 
             memset(readBuffer, 0, sizeof(readBuffer));
-            VerifyOrQuit(message->ReadBytes(offset, readBuffer, length) == length, "Message::Read failed");
+            SuccessOrQuit(message->Read(offset, readBuffer, length), "Message::Read failed");
             VerifyOrQuit(memcmp(readBuffer, &writeBuffer[offset], length) == 0, "Message compare failed");
             VerifyOrQuit(memcmp(&readBuffer[length], zeroBuffer, kMaxSize - length) == 0, "Message read after length");
         }
@@ -132,7 +132,7 @@ void TestMessage(void)
                     VerifyOrQuit(bytesCopied == kMaxSize - srcOffset, "CopyTo() failed");
                 }
 
-                VerifyOrQuit(message2->ReadBytes(0, readBuffer, kMaxSize) == kMaxSize, "Message::Read failed");
+                SuccessOrQuit(message2->Read(0, readBuffer, kMaxSize), "Message::Read failed");
 
                 VerifyOrQuit(memcmp(&readBuffer[0], zeroBuffer, dstOffset) == 0, "read before length");
                 VerifyOrQuit(memcmp(&readBuffer[dstOffset], &writeBuffer[srcOffset], bytesCopied) == 0,
@@ -155,7 +155,7 @@ void TestMessage(void)
         bytesCopied = message->CopyTo(srcOffset, 0, kMaxSize, *message);
         VerifyOrQuit(bytesCopied == kMaxSize - srcOffset, "CopyTo() failed");
 
-        VerifyOrQuit(message->ReadBytes(0, readBuffer, kMaxSize) == kMaxSize, "Message::Read failed");
+        SuccessOrQuit(message->Read(0, readBuffer, kMaxSize), "Message::Read failed");
 
         VerifyOrQuit(memcmp(&readBuffer[0], &writeBuffer[srcOffset], bytesCopied) == 0,
                      "CopyTo() changed before srcOffset");

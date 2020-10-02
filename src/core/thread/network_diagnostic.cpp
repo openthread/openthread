@@ -780,7 +780,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
 
             tlvTotalLength = sizeof(tlv) + tlv.GetLength();
             VerifyOrExit(tlvTotalLength <= sizeof(route), error = OT_ERROR_PARSE);
-            VerifyOrExit(aMessage.ReadBytes(offset, &route, tlvTotalLength) == tlvTotalLength, error = OT_ERROR_PARSE);
+            SuccessOrExit(error = aMessage.Read(offset, &route, tlvTotalLength));
             VerifyOrExit(route.IsValid(), error = OT_ERROR_PARSE);
 
             ParseRoute(route, aNetworkDiagTlv.mData.mRoute);
@@ -804,8 +804,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
 
             tlvTotalLength = sizeof(tlv) + tlv.GetLength();
             VerifyOrExit(tlvTotalLength <= sizeof(networkData), error = OT_ERROR_PARSE);
-            VerifyOrExit(aMessage.ReadBytes(offset, &networkData, tlvTotalLength) == tlvTotalLength,
-                         error = OT_ERROR_PARSE);
+            SuccessOrExit(error = aMessage.Read(offset, &networkData, tlvTotalLength));
             VerifyOrExit(networkData.IsValid(), error = OT_ERROR_PARSE);
             VerifyOrExit(sizeof(aNetworkDiagTlv.mData.mNetworkData.m8) >= networkData.GetLength(),
                          error = OT_ERROR_PARSE);
@@ -822,10 +821,8 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             VerifyOrExit(ip6AddrList.IsValid(), error = OT_ERROR_PARSE);
             VerifyOrExit(sizeof(aNetworkDiagTlv.mData.mIp6AddrList.mList) >= ip6AddrList.GetLength(),
                          error = OT_ERROR_PARSE);
-            VerifyOrExit(aMessage.ReadBytes(offset + sizeof(ip6AddrList), aNetworkDiagTlv.mData.mIp6AddrList.mList,
-                                            ip6AddrList.GetLength()) == ip6AddrList.GetLength(),
-                         error = OT_ERROR_PARSE);
-
+            SuccessOrExit(error = aMessage.Read(offset + sizeof(ip6AddrList), aNetworkDiagTlv.mData.mIp6AddrList.mList,
+                                                ip6AddrList.GetLength()));
             aNetworkDiagTlv.mData.mIp6AddrList.mCount = ip6AddrList.GetLength() / OT_IP6_ADDRESS_SIZE;
             break;
         }
@@ -871,10 +868,8 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
         case NetworkDiagnosticTlv::kChannelPages:
         {
             VerifyOrExit(sizeof(aNetworkDiagTlv.mData.mChannelPages.m8) >= tlv.GetLength(), error = OT_ERROR_PARSE);
-            VerifyOrExit(aMessage.ReadBytes(offset + sizeof(tlv), aNetworkDiagTlv.mData.mChannelPages.m8,
-                                            tlv.GetLength()) == tlv.GetLength(),
-                         error = OT_ERROR_PARSE);
-
+            SuccessOrExit(
+                error = aMessage.Read(offset + sizeof(tlv), aNetworkDiagTlv.mData.mChannelPages.m8, tlv.GetLength()));
             aNetworkDiagTlv.mData.mChannelPages.mCount = tlv.GetLength();
             break;
         }

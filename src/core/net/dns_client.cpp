@@ -269,7 +269,7 @@ otError Client::CompareQuestions(Message &aMessageResponse, Message &aMessageQue
         VerifyOrExit((read = aMessageQuery.ReadBytes(offset, bufQuery,
                                                      length < sizeof(bufQuery) ? length : sizeof(bufQuery))) > 0,
                      error = OT_ERROR_PARSE);
-        VerifyOrExit(aMessageResponse.ReadBytes(aOffset, bufResponse, read) == read, error = OT_ERROR_PARSE);
+        SuccessOrExit(error = aMessageResponse.Read(aOffset, bufResponse, read));
 
         VerifyOrExit(memcmp(bufResponse, bufQuery, read) == 0, error = OT_ERROR_NOT_FOUND);
 

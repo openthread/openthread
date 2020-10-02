@@ -554,7 +554,7 @@ otError Option::Iterator::Read(uint16_t aLength, void *aBuffer)
 
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(GetMessage().ReadBytes(mNextOptionOffset, aBuffer, aLength) == aLength, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = GetMessage().Read(mNextOptionOffset, aBuffer, aLength));
     mNextOptionOffset += aLength;
 
 exit:
