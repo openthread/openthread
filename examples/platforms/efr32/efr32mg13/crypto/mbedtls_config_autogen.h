@@ -3,13 +3,9 @@
 #ifndef MBEDTLS_CONFIG_AUTOGEN_H
 #define MBEDTLS_CONFIG_AUTOGEN_H
 
+#define MBEDTLS_ECP_MAX_BITS 256
 
-#define MBEDTLS_ECP_MAX_BITS           256
-
-
-
-#define MBEDTLS_MPI_MAX_SIZE    32
-
+#define MBEDTLS_MPI_MAX_SIZE 32
 
 #define MBEDTLS_AES_C
 #define MBEDTLS_CIPHER_MODE_CTR
@@ -39,7 +35,7 @@
 #define MBEDTLS_PEM_PARSE_C
 #define MBEDTLS_ENTROPY_C
 #define MBEDTLS_ENTROPY_FORCE_SHA256
-#define MBEDTLS_ENTROPY_MAX_SOURCES  2
+#define MBEDTLS_ENTROPY_MAX_SOURCES 2
 #define MBEDTLS_NO_PLATFORM_ENTROPY
 #define MBEDTLS_ENTROPY_HARDWARE_ALT
 #define MBEDTLS_CTR_DRBG_C
@@ -58,17 +54,16 @@
 #define MBEDTLS_PK_C
 #define MBEDTLS_PK_PARSE_C
 
-
 #include "config-device-acceleration.h"
 
 #if defined(MBEDTLS_TRNG_PRESENT)
-  #define MBEDTLS_TRNG_C
+#define MBEDTLS_TRNG_C
 #endif
 
 #include "sl_malloc.h"
 
-#define MBEDTLS_PLATFORM_FREE_MACRO    sl_free
-#define MBEDTLS_PLATFORM_CALLOC_MACRO  sl_calloc
+#define MBEDTLS_PLATFORM_FREE_MACRO sl_free
+#define MBEDTLS_PLATFORM_CALLOC_MACRO sl_calloc
 #define MBEDTLS_PLATFORM_MEMORY
 #define MBEDTLS_PLATFORM_C
 

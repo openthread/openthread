@@ -185,10 +185,10 @@ static const RAIL_IEEE802154_Config_t sRailIeee802154Config = {
             .rxSearchTimeout     = 0,
             .txToRxSearchTimeout = 0,
         },
-    .framesMask       = RAIL_IEEE802154_ACCEPT_STANDARD_FRAMES,
-    .promiscuousMode  = false,
-    .isPanCoordinator = false,
-	.defaultFramePendingInOutgoingAcks = false,
+    .framesMask                        = RAIL_IEEE802154_ACCEPT_STANDARD_FRAMES,
+    .promiscuousMode                   = false,
+    .isPanCoordinator                  = false,
+    .defaultFramePendingInOutgoingAcks = false,
 };
 
 static int8_t sTxPowerDbm = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
@@ -234,7 +234,7 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
 
 static void efr32RailConfigLoad(efr32BandConfig *aBandConfig)
 {
-    RAIL_Status_t status;
+    RAIL_Status_t        status;
     RAIL_TxPowerConfig_t txPowerConfig = {SL_RAIL_UTIL_PA_SELECTION_2P4GHZ, SL_RAIL_UTIL_PA_VOLTAGE_MV, 10};
 
 #if RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
@@ -513,7 +513,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     if (sCurrentBandConfig != config)
     {
-		// TODO: Should this be RAIL_IDLE_ABORT?
+        // TODO: Should this be RAIL_IDLE_ABORT?
         RAIL_Idle(gRailHandle, RAIL_IDLE, true);
         efr32RailConfigLoad(config);
         sCurrentBandConfig = config;
@@ -562,7 +562,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     if (sCurrentBandConfig != config)
     {
-		// TODO: Should this be RAIL_IDLE_ABORT?
+        // TODO: Should this be RAIL_IDLE_ABORT?
         RAIL_Idle(gRailHandle, RAIL_IDLE, true);
         efr32RailConfigLoad(config);
         sCurrentBandConfig = config;

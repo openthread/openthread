@@ -128,5 +128,4 @@ void efr32SetSleepCallback(bool (*aCallback)(void));
  */
 void efr32Sleep(void);
 
-
 #endif // PLATFORM_EFR32_H_
