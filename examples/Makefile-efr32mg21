@@ -39,8 +39,6 @@ NM                              = arm-none-eabi-nm
 RANLIB                          = arm-none-eabi-ranlib
 OBJCOPY                         = arm-none-eabi-objcopy
 
-BuildJobs                      ?= 10
-
 configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ftd                  \
