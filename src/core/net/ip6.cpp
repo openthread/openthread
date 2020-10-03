@@ -1196,9 +1196,10 @@ start:
                              sizeof(dstPort),
                          error = OT_ERROR_PARSE);
             dstPort = HostSwap16(dstPort);
-            if (aMessage.IsLinkSecurityEnabled() && Get<ot::Ip6::Filter>().IsUnsecurePort(dstPort))
+
+            if (aMessage.IsLinkSecurityEnabled() && Get<Filter>().IsUnsecurePort(dstPort))
             {
-                Get<ot::Ip6::Filter>().RemoveUnsecurePort(dstPort);
+                IgnoreError(Get<Filter>().RemoveUnsecurePort(dstPort));
             }
         }
 #endif
@@ -1243,7 +1244,8 @@ start:
             VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(sourcePort), &sourcePort) == sizeof(sourcePort),
                          error = OT_ERROR_PARSE);
             sourcePort = HostSwap16(sourcePort);
-            if (Get<ot::Ip6::Filter>().IsUnsecurePort(sourcePort))
+
+            if (Get<Filter>().IsUnsecurePort(sourcePort))
             {
                 aMessage.SetLinkSecurityEnabled(false);
                 otLogInfoIp6("Disabled link security for packet to %s", header.GetDestination().ToString().AsCString());
