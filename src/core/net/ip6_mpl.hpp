@@ -304,7 +304,7 @@ private:
 #if OPENTHREAD_FTD
     struct Metadata
     {
-        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
         void    ReadFrom(const Message &aMessage);
         void    RemoveFrom(Message &aMessage) const;
         void    UpdateIn(Message &aMessage) const;

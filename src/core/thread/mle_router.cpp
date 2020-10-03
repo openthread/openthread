@@ -2007,7 +2007,7 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
     uint16_t     oldMlrRegisteredAddressNum = 0;
 #endif
 
-    VerifyOrExit(aMessage.Read(aOffset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = aMessage.Read(aOffset, tlv));
     VerifyOrExit(tlv.GetLength() <= (aMessage.GetLength() - aOffset - sizeof(tlv)), error = OT_ERROR_PARSE);
 
     offset = aOffset + sizeof(tlv);
@@ -2044,11 +2044,11 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         uint8_t len;
 
         // read out the control field
-        VerifyOrExit(aMessage.Read(offset, 1, &entry) == 1, error = OT_ERROR_PARSE);
+        SuccessOrExit(error = aMessage.Read(offset, &entry, sizeof(uint8_t)));
 
         len = entry.GetLength();
 
-        VerifyOrExit(aMessage.Read(offset, len, &entry) == len, error = OT_ERROR_PARSE);
+        SuccessOrExit(error = aMessage.Read(offset, &entry, len));
 
         offset += len;
         registeredCount++;
@@ -2829,19 +2829,19 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
 
     // find MLE Discovery TLV
     VerifyOrExit(Tlv::FindTlvOffset(aMessage, Tlv::kDiscovery, offset) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
-    aMessage.Read(offset, sizeof(tlv), &tlv);
+    IgnoreError(aMessage.Read(offset, tlv));
 
     offset += sizeof(tlv);
     end = offset + sizeof(tlv) + tlv.GetLength();
 
     while (offset < end)
     {
-        aMessage.Read(offset, sizeof(meshcopTlv), &meshcopTlv);
+        IgnoreError(aMessage.Read(offset, meshcopTlv));
 
         switch (meshcopTlv.GetType())
         {
         case MeshCoP::Tlv::kDiscoveryRequest:
-            aMessage.Read(offset, sizeof(discoveryRequest), &discoveryRequest);
+            IgnoreError(aMessage.Read(offset, discoveryRequest));
             VerifyOrExit(discoveryRequest.IsValid(), error = OT_ERROR_PARSE);
 
             break;
@@ -2909,7 +2909,7 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
 
     // Discovery TLV
     tlv.SetType(Tlv::kDiscovery);
-    SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+    SuccessOrExit(error = message->Append(tlv));
 
     startOffset = message->GetLength();
 
@@ -2966,7 +2966,7 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
                                                Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort()));
 
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
-    message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
+    message->Write(startOffset - sizeof(tlv), tlv);
 
     delay = Random::NonCrypto::GetUint16InRange(0, kDiscoveryMaxJitter + 1);
 
@@ -4020,7 +4020,7 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
     uint16_t                 startOffset = aMessage.GetLength();
 
     tlv.SetType(Tlv::kAddressRegistration);
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
+    SuccessOrExit(error = aMessage.Append(tlv));
 
     for (const Ip6::Address &address : aChild.IterateIp6Addresses())
     {
@@ -4041,12 +4041,12 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
             continue;
         }
 
-        SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
+        SuccessOrExit(error = aMessage.AppendBytes(&entry, entry.GetLength()));
         length += entry.GetLength();
     }
 
     tlv.SetLength(length);
-    aMessage.Write(startOffset, sizeof(tlv), &tlv);
+    aMessage.Write(startOffset, tlv);
 
 exit:
     return error;

@@ -373,7 +373,7 @@ void BorderAgent::HandleProxyTransmit(const Coap::Message &aMessage)
         UdpEncapsulationTlv tlv;
 
         SuccessOrExit(error = Tlv::FindTlvOffset(aMessage, Tlv::kUdpEncapsulation, offset));
-        VerifyOrExit(aMessage.Read(offset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
+        SuccessOrExit(error = aMessage.Read(offset, tlv));
 
         VerifyOrExit((message = Get<Ip6::Udp>().NewMessage(0)) != nullptr, error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = message->SetLength(tlv.GetUdpLength()));
@@ -420,7 +420,7 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
         tlv.SetSourcePort(aMessageInfo.GetPeerPort());
         tlv.SetDestinationPort(aMessageInfo.GetSockPort());
         tlv.SetUdpLength(udpLength);
-        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(tlv));
 
         offset = message->GetLength();
         SuccessOrExit(error = message->SetLength(offset + udpLength));

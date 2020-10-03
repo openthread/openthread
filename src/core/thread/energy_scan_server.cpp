@@ -186,8 +186,8 @@ void EnergyScanServer::SendReport(void)
 
     energyList.Init();
     energyList.SetLength(mScanResultsLength);
-    SuccessOrExit(error = message->Append(&energyList, sizeof(energyList)));
-    SuccessOrExit(error = message->Append(mScanResults, mScanResultsLength));
+    SuccessOrExit(error = message->Append(energyList));
+    SuccessOrExit(error = message->AppendBytes(mScanResults, mScanResultsLength));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(mCommissioner);

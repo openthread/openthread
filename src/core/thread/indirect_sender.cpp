@@ -381,7 +381,7 @@ uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, M
 
     // Determine the MAC source and destination addresses.
 
-    aMessage.Read(0, sizeof(ip6Header), &ip6Header);
+    IgnoreError(aMessage.Read(0, ip6Header));
 
     Get<MeshForwarder>().GetMacSourceAddress(ip6Header.GetSource(), macSource);
 

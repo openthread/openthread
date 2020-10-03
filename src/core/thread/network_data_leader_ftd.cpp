@@ -195,7 +195,7 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
     VerifyOrExit(length <= sizeof(tlvs), OT_NOOP);
     VerifyOrExit(Get<Mle::MleRouter>().IsLeader(), OT_NOOP);
 
-    aMessage.Read(offset, length, tlvs);
+    aMessage.ReadBytes(offset, tlvs, length);
 
     // Session Id and Border Router Locator MUST NOT be set, but accept including unexpected or
     // unknown TLV as long as there is at least one valid TLV.
@@ -322,7 +322,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
 
     if (aLength == 0)
     {
-        SuccessOrExit(error = message->Append(data, length));
+        SuccessOrExit(error = message->AppendBytes(data, length));
     }
     else
     {
@@ -330,7 +330,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
         {
             uint8_t type;
 
-            aRequest.Read(aRequest.GetOffset() + index, sizeof(type), &type);
+            IgnoreError(aRequest.Read(aRequest.GetOffset() + index, type));
 
             for (MeshCoP::Tlv *cur                                          = reinterpret_cast<MeshCoP::Tlv *>(data);
                  cur < reinterpret_cast<MeshCoP::Tlv *>(data + length); cur = cur->GetNext())
