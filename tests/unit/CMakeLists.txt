@@ -271,6 +271,28 @@ target_link_libraries(test-linked-list
 
 add_test(NAME test-linked-list COMMAND test-linked-list)
 
+add_executable(test-lookup-table
+    ${COMMON_SOURCES}
+    test_lookup_table.cpp
+)
+
+target_include_directories(test-lookup-table
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-lookup-table
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-lookup-table
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-lookup-table COMMAND test-lookup-table)
+
 add_executable(test-lowpan
     ${COMMON_SOURCES}
     test_lowpan.cpp
@@ -592,6 +614,7 @@ set_target_properties(
     test-ip6-address
     test-link-quality
     test-linked-list
+    test-lookup-table
     test-lowpan
     test-mac-frame
     test-message

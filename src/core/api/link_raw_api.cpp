@@ -44,7 +44,6 @@
 #include "common/locator-getters.hpp"
 #include "common/random.hpp"
 #include "mac/mac_frame.hpp"
-#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 

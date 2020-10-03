@@ -38,6 +38,8 @@
 
 #include <openthread/netdata.h>
 
+#include "utils/lookup_table.hpp"
+
 namespace ot {
 namespace Cli {
 
@@ -95,7 +97,7 @@ private:
     struct Command
     {
         const char *mName;
-        otError (NetworkData::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
+        otError (NetworkData::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
     };
 
     otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
@@ -110,8 +112,18 @@ private:
     void    OutputRoutes(void);
     void    OutputServices(void);
 
-    static const Command sCommands[];
-    Interpreter &        mInterpreter;
+    static constexpr Command sCommands[] = {
+        {"help", &NetworkData::ProcessHelp},
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+        {"register", &NetworkData::ProcessRegister},
+#endif
+        {"show", &NetworkData::ProcessShow},
+        {"steeringdata", &NetworkData::ProcessSteeringData},
+    };
+
+    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+
+    Interpreter &mInterpreter;
 };
 
 } // namespace Cli

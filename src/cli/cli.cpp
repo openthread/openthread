@@ -328,8 +328,6 @@ otError Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    static_assert(IsArraySorted(sCommands, OT_ARRAY_LENGTH(sCommands)), "Command list is not sorted");
-
     for (const Command &command : sCommands)
     {
         OutputLine(command.mName);
@@ -4201,35 +4199,6 @@ otError Interpreter::ProcessDiag(uint8_t aArgsLength, char *aArgs[])
 }
 #endif
 
-const Interpreter::Command *Interpreter::FindCommand(const char *aName) const
-{
-    const Command *rval  = nullptr;
-    uint16_t       left  = 0;
-    uint16_t       right = OT_ARRAY_LENGTH(sCommands);
-
-    while (left < right)
-    {
-        uint16_t middle  = (left + right) / 2;
-        int      compare = strcmp(aName, sCommands[middle].mName);
-
-        if (compare == 0)
-        {
-            rval = &sCommands[middle];
-            break;
-        }
-        else if (compare > 0)
-        {
-            left = middle + 1;
-        }
-        else
-        {
-            right = middle;
-        }
-    }
-
-    return rval;
-}
-
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength)
 {
     char *         aArgs[kMaxArgs] = {nullptr};
@@ -4250,11 +4219,11 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength)
                  OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands."));
 #endif
 
-    command = FindCommand(cmdName);
+    command = Utils::LookupTable::Find(cmdName, sCommands);
 
     if (command != nullptr)
     {
-        OutputResult((this->*command->mCommand)(aArgsLength - 1, &aArgs[1]));
+        OutputResult((this->*command->mHandler)(aArgsLength - 1, &aArgs[1]));
         ExitNow();
     }
 

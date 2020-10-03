@@ -116,6 +116,7 @@ check_PROGRAMS                                                     += \
     test-ip6-address                                                  \
     test-link-quality                                                 \
     test-linked-list                                                  \
+    test-lookup-table                                                 \
     test-lowpan                                                       \
     test-mac-frame                                                    \
     test-message                                                      \
@@ -202,6 +203,9 @@ test_link_quality_SOURCES    = $(COMMON_SOURCES) test_link_quality.cpp
 
 test_linked_list_LDADD       = $(COMMON_LDADD)
 test_linked_list_SOURCES     = $(COMMON_SOURCES) test_linked_list.cpp
+
+test_lookup_table_LDADD      = $(COMMON_LDADD)
+test_lookup_table_SOURCES    = $(COMMON_SOURCES) test_lookup_table.cpp
 
 test_lowpan_LDADD            = $(COMMON_LDADD)
 test_lowpan_SOURCES          = $(COMMON_SOURCES) test_lowpan.cpp

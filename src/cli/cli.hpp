@@ -61,6 +61,7 @@
 #include "common/instance.hpp"
 #include "common/timer.hpp"
 #include "net/icmp6.hpp"
+#include "utils/lookup_table.hpp"
 
 namespace ot {
 
@@ -290,10 +291,9 @@ private:
     struct Command
     {
         const char *mName;
-        otError (Interpreter::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
+        otError (Interpreter::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
     };
 
-    const Command *FindCommand(const char *aName) const;
     otError        ParsePingInterval(const char *aString, uint32_t &aInterval);
     static otError ParseJoinerDiscerner(char *aString, otJoinerDiscerner &aJoinerDiscerner);
 
@@ -568,17 +568,6 @@ private:
     }
     void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
 
-    constexpr static bool AreSorted(const char *aFirst, const char *aSecond)
-    {
-        return (*aFirst < *aSecond) ? true : ((*aFirst > *aSecond) ? false : AreSorted(aFirst + 1, aSecond + 1));
-    }
-
-    constexpr static bool IsArraySorted(const Interpreter::Command *aList, uint16_t aLength)
-    {
-        return (aLength <= 1) ? true
-                              : AreSorted(aList[0].mName, aList[1].mName) && IsArraySorted(aList + 1, aLength - 1);
-    }
-
     static constexpr Command sCommands[] = {
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
         {"bbr", &Interpreter::ProcessBackboneRouter},
@@ -736,6 +725,8 @@ private:
         {"unsecureport", &Interpreter::ProcessUnsecurePort},
         {"version", &Interpreter::ProcessVersion},
     };
+
+    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
 
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;
