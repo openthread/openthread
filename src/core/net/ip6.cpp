@@ -1187,9 +1187,10 @@ start:
             // TCP/UDP shares header uint16_t srcPort, uint16_t dstPort
             SuccessOrExit(error = aMessage.Read(aMessage.GetOffset() + sizeof(uint16_t), dstPort));
             dstPort = HostSwap16(dstPort);
-            if (aMessage.IsLinkSecurityEnabled() && Get<ot::Ip6::Filter>().IsUnsecurePort(dstPort))
+
+            if (aMessage.IsLinkSecurityEnabled() && Get<Filter>().IsUnsecurePort(dstPort))
             {
-                Get<ot::Ip6::Filter>().RemoveUnsecurePort(dstPort);
+                IgnoreError(Get<Filter>().RemoveUnsecurePort(dstPort));
             }
         }
 #endif
@@ -1233,7 +1234,8 @@ start:
 
             SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), sourcePort));
             sourcePort = HostSwap16(sourcePort);
-            if (Get<ot::Ip6::Filter>().IsUnsecurePort(sourcePort))
+
+            if (Get<Filter>().IsUnsecurePort(sourcePort))
             {
                 aMessage.SetLinkSecurityEnabled(false);
                 otLogInfoIp6("Disabled link security for packet to %s", header.GetDestination().ToString().AsCString());
