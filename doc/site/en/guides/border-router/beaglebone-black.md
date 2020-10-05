@@ -19,15 +19,15 @@ Steps to enable
 1. Build and install OTBR
 1. Set up a Wi-Fi access point
 
-Note: The BBB does not have built-in Wi-Fi support. This guide was built and
-tested with a BBONE-GATEWAY-CAPE for Wi-Fi AP operation. Some BeagleBone
-variants have onboard Wi-Fi capability, and some of this guide may be
-applicable.
+> Note: The BBB does not have built-in Wi-Fi support. This guide was built and
+> tested with a BBONE-GATEWAY-CAPE for Wi-Fi AP operation. Some BeagleBone
+> variants have onboard Wi-Fi capability, and some of this guide may be
+> applicable.
 
 ## Step 1: Download and install the OS.
 
-1. Download the latest Debian IoT image for BeagleBone. [beaglebone latest
-   images](https://beagleboard.org/latest-images)
+1. Download the [latest Debian IoT image for
+   BeagleBone](https://beagleboard.org/latest-images).
    *  The version used for this guide was
       `bone-debian-10.3-iot-armhf-2020-04-06-4gb.img.xz`
 1. Install the OS image on a uSD Card by following the [BeagleBone getting
@@ -36,15 +36,15 @@ applicable.
    *  Connectivity over a local Ethernet based network is recommended.
    *  The cloud9 IDE will be disabled later in this guide.
    *  This guide will change the state of BeagleBone network interfaces, be
-      aware you secure shell may disconnect.
+      aware your secure shell session may disconnect.
    *  Modern BeagleBone bootloaders will run from the uSD card by default, but
       some BeagleBone Black devices may try to boot from the internal eMMC.
       Make sure to press the BOOT Button in this case.
 
-Warning: The power requirements of the development kit used for the OpenThread
-RCP may be too great for the power that can be supplied from a computer's USB
-port. It is recommended that you use the 5V power adaptor for the BeagleBone
-where applicable.
+> Warning: The power requirements of the development kit used for the
+> OpenThread RCP may be too great for the power that can be supplied from a
+> computer's USB port. It is recommended that you use the 5V power adaptor for
+> the BeagleBone where applicable.
 
 For more detailed information on the BeagleBone, see the [BeagleBoard Support
 Page](https://beagleboard.org/support).
@@ -100,7 +100,7 @@ sudo shutdown -r now
 
 This will close your SSH session.
 
-Once logged back into the BeagleBone install `network-manager` with the command
+Once logged back into the BeagleBone, install Network Manager with the command
 `sudo apt-get install network-manager`. Then disable `connman` and enable
 `network-manager`:
 
@@ -110,7 +110,7 @@ sudo systemctl enable netowrk-manager
 ```
 
 If we were to `stop` connman directly here it would break the SSH session
-because the network interface is managed by connman. Instead we setup the
+because the network interface is managed by connman. Instead we configure the
 system to take effect on the next boot. Now reboot the Beaglebone and re-login.
 
 ```
@@ -132,9 +132,9 @@ Restart to make sure Network Manager is setup correctly.
 sudo shutdown -r now
 ```
 
-Note: If your BeagleBone has a WiLink based Wi-Fi module installed, the
-following steps may be applicable to you. This was tested with a
-BBONE-GATEWAY-CAPE. Some of these may not be required.
+> Note: If your BeagleBone has a WiLink based Wi-Fi module installed, the
+> following steps may be applicable to you. This was tested with a
+> BBONE-GATEWAY-CAPE. Some of these may not be required.
 
 The WiLink 8 module does not like to have its MAC address changed at runtime.
 Network Manager will try to do this when scanning. Edit the
@@ -181,18 +181,18 @@ sudo shutdown -r now
 Once logged back in you can run `ifconfig` or `nmcli` to see the new `wlan`
 interface.
 
-Warning: The startups scripts may take a few moments to enable the `wlan0`
-interface. If you do not see the interface, check `journalctl` to see if the
-system is having difficulty bringing up the interface.
+> Warning: The startup scripts may take a few moments to enable the `wlan0`
+> interface. If you do not see the interface, check `journalctl` to see if the
+> system is having difficulty bringing up the interface.
 
 ## Step 3: Build and install OTBR
 
 See [Build and Configuration](https://openthread.io/guides/border-router/build)
 for instructions on building and installing OTBR. 
 
-NOTE: If your BeagleBone has Wi-Fi capabilities, you can enable the OTBR build
-scripts to configure it as an access point by passing `NETWORK_MANAGER_WIFI=1`
-to the build scripts.
+> NOTE: If your BeagleBone has Wi-Fi capabilities, you can enable the OTBR
+> build scripts to configure it as an access point by passing
+> `NETWORK_MANAGER_WIFI=1` to the build scripts.
 
 ## Step 4: Set up a Wi-Fi access point
 
