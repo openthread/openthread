@@ -24,7 +24,7 @@ Steps to enable
 > variants have onboard Wi-Fi capability, and some of this guide may be
 > applicable.
 
-## Step 1: Download and install the OS.
+## Step 1: Download and install the OS
 
 1. Download the [latest Debian IoT image for
    BeagleBone](https://beagleboard.org/latest-images).
@@ -61,33 +61,33 @@ list-units --all` and `sudo systemctl list-sockets --all`.
 Stop and disable the modules:
 
 ```
-sudo systemctl stop bonescript-autorun.service
-sudo systemctl stop bonescript.socket
-sudo systemctl stop bonescript.service
-sudo systemctl stop cloud9.socket
-sudo systemctl stop cloud9.service
-sudo systemctl stop nodered.service
-sudo systemctl disable bonescript-autorun.service
-sudo systemctl disable bonescript.socket
-sudo systemctl disable bonescript.service
-sudo systemctl disable cloud9.socket
-sudo systemctl disable cloud9.service
-sudo systemctl disable nodered.service
-sudo systemctl daemon-relaod
+$ sudo systemctl stop bonescript-autorun.service
+$ sudo systemctl stop bonescript.socket
+$ sudo systemctl stop bonescript.service
+$ sudo systemctl stop cloud9.socket
+$ sudo systemctl stop cloud9.service
+$ sudo systemctl stop nodered.service
+$ sudo systemctl disable bonescript-autorun.service
+$ sudo systemctl disable bonescript.socket
+$ sudo systemctl disable bonescript.service
+$ sudo systemctl disable cloud9.socket
+$ sudo systemctl disable cloud9.service
+$ sudo systemctl disable nodered.service
+$ sudo systemctl daemon-relaod
 ```
 
 Disable advertising the Cloud9 IDE and NodeRED services with Avahi by deleting
 the service files:
 
 ```
-sudo rm /etc/avahi/services/*
+$ sudo rm /etc/avahi/services/*
 ```
 
 The filesystem for the uSD BeagleBone image is limited to 4GB to fit on most
 uSD cards. Expand the partition to enable usage of the entire storage capacity.
 
 ```
-sudo /opt/scripts/tools/grow_partitions.sh
+$ sudo /opt/scripts/tools/grow_partitions.sh
 ```
 
 You are encouraged to read that helper script to find out how the filesystem is
@@ -95,7 +95,7 @@ expanded. You will have to reboot the BeagleBone and re-login to use this new
 filesystem definition.
 
 ```
-sudo shutdown -r now
+$ sudo shutdown -r now
 ```
 
 This will close your SSH session.
@@ -105,8 +105,8 @@ Once logged back into the BeagleBone, install Network Manager with the command
 `network-manager`:
 
 ```
-sudo systemctl disable connman
-sudo systemctl enable netowrk-manager
+$ sudo systemctl disable connman
+$ sudo systemctl enable netowrk-manager
 ```
 
 If we were to `stop` connman directly here it would break the SSH session
@@ -114,7 +114,7 @@ because the network interface is managed by connman. Instead we configure the
 system to take effect on the next boot. Now reboot the Beaglebone and re-login.
 
 ```
-sudo shutdown -r now
+$ sudo shutdown -r now
 ```
 
 Network Manager may not have setup the DNS name servers. Edit `resolv.conf`
@@ -129,7 +129,7 @@ nameserver 1.1.1.1
 Restart to make sure Network Manager is setup correctly.
 
 ```
-sudo shutdown -r now
+$ sudo shutdown -r now
 ```
 
 > Note: If your BeagleBone has a WiLink based Wi-Fi module installed, the
@@ -175,7 +175,7 @@ USE_CONNMAN_TETHER=no
 Restart to make sure Network Manager can see the new interface.
 
 ```
-sudo shutdown -r now
+$ sudo shutdown -r now
 ```
 
 Once logged back in you can run `ifconfig` or `nmcli` to see the new `wlan`
