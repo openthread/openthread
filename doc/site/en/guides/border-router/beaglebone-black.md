@@ -119,7 +119,7 @@ sudo shutdown -r now
 
 Network Manager may not have setup the DNS name servers. Edit `resolv.conf`
 with the command `sudo vim /etc/resolv.conf` and make sure the contents contain
-the Google DNS:
+the Google DNS and Cloudflare DNS:
 
 ```
 nameserver 8.8.8.8
