@@ -33,7 +33,7 @@
 
 #include "cli_joiner.hpp"
 
-#include <inttypes.h>
+#include <cinttypes>
 
 #include "cli/cli.hpp"
 
