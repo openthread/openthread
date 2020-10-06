@@ -141,7 +141,7 @@ class Cert_9_2_13_EnergyScan_MED(Cert_9_2_13_EnergyScan_Base):
     TOPOLOGY = copy.deepcopy(Cert_9_2_13_EnergyScan_Base.TOPOLOGY)
     TOPOLOGY[ROUTER1]['name'] = 'ROUTER'
     TOPOLOGY[ED]['name'] = 'DUT'
-    TOPOLOGY[ED]['mode'] = 'rsn'
+    TOPOLOGY[ED]['mode'] = 'rn'
     TOPOLOGY[ED]['is_mtd'] = True
 
 
@@ -149,7 +149,7 @@ class Cert_9_2_13_EnergyScan_ROUTER(Cert_9_2_13_EnergyScan_Base):
     TOPOLOGY = copy.deepcopy(Cert_9_2_13_EnergyScan_Base.TOPOLOGY)
     TOPOLOGY[ROUTER1]['name'] = 'DUT'
     TOPOLOGY[ED]['name'] = 'ED'
-    TOPOLOGY[ED]['mode'] = 'rsn'
+    TOPOLOGY[ED]['mode'] = 'rn'
     TOPOLOGY[ED]['is_mtd'] = True
 
 
@@ -157,7 +157,7 @@ class Cert_9_2_13_EnergyScan_SED(Cert_9_2_13_EnergyScan_Base):
     TOPOLOGY = copy.deepcopy(Cert_9_2_13_EnergyScan_Base.TOPOLOGY)
     TOPOLOGY[ROUTER1]['name'] = 'ROUTER'
     TOPOLOGY[ED]['name'] = 'DUT'
-    TOPOLOGY[ED]['mode'] = 's'
+    TOPOLOGY[ED]['mode'] = '-'
     TOPOLOGY[ED]['is_mtd'] = True
     TOPOLOGY[ED]['timeout'] = config.DEFAULT_CHILD_TIMEOUT
 
