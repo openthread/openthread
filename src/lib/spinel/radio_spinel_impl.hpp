@@ -864,12 +864,12 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ParseRadioFrame(otRadioF
 
     unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength,
                                                SPINEL_DATATYPE_DATA_WLEN_S                          // Frame
-                                                               SPINEL_DATATYPE_INT8_S               // RSSI
-                                                               SPINEL_DATATYPE_INT8_S               // Noise Floor
-                                                               SPINEL_DATATYPE_UINT16_S             // Flags
+                                                   SPINEL_DATATYPE_INT8_S                           // RSSI
+                                                       SPINEL_DATATYPE_INT8_S                       // Noise Floor
+                                                           SPINEL_DATATYPE_UINT16_S                 // Flags
                                                                SPINEL_DATATYPE_STRUCT_S(            // PHY-data
                                                                    SPINEL_DATATYPE_UINT8_S          // 802.15.4 channel
-                                                                           SPINEL_DATATYPE_UINT8_S  // 802.15.4 LQI
+                                                                       SPINEL_DATATYPE_UINT8_S      // 802.15.4 LQI
                                                                            SPINEL_DATATYPE_UINT64_S // Timestamp (us).
                                                                    ) SPINEL_DATATYPE_STRUCT_S(      // Vendor-data
                                                                    SPINEL_DATATYPE_UINT_PACKED_S    // Receive error
@@ -1203,22 +1203,22 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::GetCoexMetrics(otRadioCo
     error = Get(SPINEL_PROP_RADIO_COEX_METRICS,
                 SPINEL_DATATYPE_STRUCT_S(                                    // Tx Coex Metrics Structure
                     SPINEL_DATATYPE_UINT32_S                                 // NumTxRequest
-                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantImmediate
-                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantWait
-                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantWaitActivated
-                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantWaitTimeout
-                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantDeactivatedDuringRequest
-                                                SPINEL_DATATYPE_UINT32_S     // NumTxDelayedGrant
+                        SPINEL_DATATYPE_UINT32_S                             // NumTxGrantImmediate
+                            SPINEL_DATATYPE_UINT32_S                         // NumTxGrantWait
+                                SPINEL_DATATYPE_UINT32_S                     // NumTxGrantWaitActivated
+                                    SPINEL_DATATYPE_UINT32_S                 // NumTxGrantWaitTimeout
+                                        SPINEL_DATATYPE_UINT32_S             // NumTxGrantDeactivatedDuringRequest
+                                            SPINEL_DATATYPE_UINT32_S         // NumTxDelayedGrant
                                                 SPINEL_DATATYPE_UINT32_S     // AvgTxRequestToGrantTime
                     ) SPINEL_DATATYPE_STRUCT_S(                              // Rx Coex Metrics Structure
                     SPINEL_DATATYPE_UINT32_S                                 // NumRxRequest
-                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantImmediate
-                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantWait
-                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantWaitActivated
-                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantWaitTimeout
-                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantDeactivatedDuringRequest
-                                                    SPINEL_DATATYPE_UINT32_S // NumRxDelayedGrant
-                                                    SPINEL_DATATYPE_UINT32_S // AvgRxRequestToGrantTime
+                        SPINEL_DATATYPE_UINT32_S                             // NumRxGrantImmediate
+                            SPINEL_DATATYPE_UINT32_S                         // NumRxGrantWait
+                                SPINEL_DATATYPE_UINT32_S                     // NumRxGrantWaitActivated
+                                    SPINEL_DATATYPE_UINT32_S                 // NumRxGrantWaitTimeout
+                                        SPINEL_DATATYPE_UINT32_S             // NumRxGrantDeactivatedDuringRequest
+                                            SPINEL_DATATYPE_UINT32_S         // NumRxDelayedGrant
+                                                SPINEL_DATATYPE_UINT32_S     // AvgRxRequestToGrantTime
                                                     SPINEL_DATATYPE_UINT32_S // NumRxGrantNone
                     ) SPINEL_DATATYPE_BOOL_S                                 // Stopped
                     SPINEL_DATATYPE_UINT32_S,                                // NumGrantGlitch
@@ -1563,13 +1563,13 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
 
     error = Request(true, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
                     SPINEL_DATATYPE_DATA_WLEN_S                               // Frame data
-                                                    SPINEL_DATATYPE_UINT8_S   // Channel
-                                                    SPINEL_DATATYPE_UINT8_S   // MaxCsmaBackoffs
-                                                    SPINEL_DATATYPE_UINT8_S   // MaxFrameRetries
-                                                    SPINEL_DATATYPE_BOOL_S    // CsmaCaEnabled
-                                                    SPINEL_DATATYPE_BOOL_S    // IsARetx
-                                                    SPINEL_DATATYPE_BOOL_S    // SkipAes
-                                                    SPINEL_DATATYPE_UINT16_S  // Period
+                        SPINEL_DATATYPE_UINT8_S                               // Channel
+                            SPINEL_DATATYPE_UINT8_S                           // MaxCsmaBackoffs
+                                SPINEL_DATATYPE_UINT8_S                       // MaxFrameRetries
+                                    SPINEL_DATATYPE_BOOL_S                    // CsmaCaEnabled
+                                        SPINEL_DATATYPE_BOOL_S                // IsARetx
+                                            SPINEL_DATATYPE_BOOL_S            // SkipAes
+                                                SPINEL_DATATYPE_UINT16_S      // Period
                                                     SPINEL_DATATYPE_UINT16_S, // Phase
                     mTransmitFrame->mPsdu, mTransmitFrame->mLength, mTransmitFrame->mChannel,
                     mTransmitFrame->mInfo.mTxInfo.mMaxCsmaBackoffs, mTransmitFrame->mInfo.mTxInfo.mMaxFrameRetries,
