@@ -41,13 +41,14 @@ jobs:
       if: "github.ref != 'refs/heads/master'"
 
   pretty:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y clang-format-10 shellcheck
+        sudo apt-get --no-install-recommends install -y clang-format-10 clang-tidy-10 shellcheck
+        sudo ln -s /usr/bin/run-clang-tidy-10.py /usr/local/bin/run-clang-tidy.py
         python3 -m pip install yapf==0.29.0
         sudo snap install shfmt
     - name: Check
@@ -99,7 +100,6 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get remove libllvm10
         sudo apt-get --no-install-recommends install -y clang-tools-10
     - name: Run
       run: |
