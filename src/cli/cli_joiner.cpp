@@ -70,7 +70,7 @@ otError Joiner::ProcessDiscerner(uint8_t aArgsLength, char *aArgs[])
 
         VerifyOrExit(discerner != nullptr, error = OT_ERROR_NOT_FOUND);
 
-        mInterpreter.OutputLine("0x%" PRIx64 "/%u", discerner->mValue, discerner->mLength);
+        mInterpreter.OutputLine("0x%llx/%u", static_cast<unsigned long long>(discerner->mValue), discerner->mLength);
     }
     else
     {
