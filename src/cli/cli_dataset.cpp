@@ -44,31 +44,8 @@
 namespace ot {
 namespace Cli {
 
-const Dataset::Command Dataset::sCommands[] = {
-    {"help", &Dataset::ProcessHelp},
-    {"active", &Dataset::ProcessActive},
-    {"activetimestamp", &Dataset::ProcessActiveTimestamp},
-    {"channel", &Dataset::ProcessChannel},
-    {"channelmask", &Dataset::ProcessChannelMask},
-    {"clear", &Dataset::ProcessClear},
-    {"commit", &Dataset::ProcessCommit},
-    {"delay", &Dataset::ProcessDelay},
-    {"extpanid", &Dataset::ProcessExtPanId},
-    {"init", &Dataset::ProcessInit},
-    {"masterkey", &Dataset::ProcessMasterKey},
-    {"meshlocalprefix", &Dataset::ProcessMeshLocalPrefix},
-    {"mgmtgetcommand", &Dataset::ProcessMgmtGetCommand},
-    {"mgmtsetcommand", &Dataset::ProcessMgmtSetCommand},
-    {"networkname", &Dataset::ProcessNetworkName},
-    {"panid", &Dataset::ProcessPanId},
-    {"pending", &Dataset::ProcessPending},
-    {"pendingtimestamp", &Dataset::ProcessPendingTimestamp},
-    {"pskc", &Dataset::ProcessPskc},
-    {"securitypolicy", &Dataset::ProcessSecurityPolicy},
-    {"set", &Dataset::ProcessSet},
-};
-
-otOperationalDataset Dataset::sDataset;
+constexpr Dataset::Command Dataset::sCommands[];
+otOperationalDataset       Dataset::sDataset;
 
 otError Dataset::Print(otOperationalDataset &aDataset)
 {
@@ -175,21 +152,18 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 
 otError Dataset::Process(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error = OT_ERROR_INVALID_COMMAND;
+    otError        error = OT_ERROR_INVALID_COMMAND;
+    const Command *command;
 
     if (aArgsLength == 0)
     {
         ExitNow(error = Print(sDataset));
     }
 
-    for (const Command &command : sCommands)
-    {
-        if (strcmp(aArgs[0], command.mName) == 0)
-        {
-            error = (this->*command.mCommand)(aArgsLength - 1, aArgs + 1);
-            break;
-        }
-    }
+    command = Utils::LookupTable::Find(aArgs[0], sCommands);
+    VerifyOrExit(command != nullptr, OT_NOOP);
+
+    error = (this->*command->mHandler)(aArgsLength - 1, aArgs + 1);
 
 exit:
     return error;

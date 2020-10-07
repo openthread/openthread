@@ -285,6 +285,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/child_supervision.cpp                    \
     src/core/utils/heap.cpp                                 \
     src/core/utils/jam_detector.cpp                         \
+    src/core/utils/lookup_table.cpp                         \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
     src/lib/hdlc/hdlc.cpp                                   \

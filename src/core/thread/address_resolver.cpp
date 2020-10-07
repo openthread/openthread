@@ -934,7 +934,7 @@ void AddressResolver::HandleIcmpReceive(Message &                aMessage,
 
     VerifyOrExit(aIcmpHeader.GetType() == Ip6::Icmp::Header::kTypeDstUnreach, OT_NOOP);
     VerifyOrExit(aIcmpHeader.GetCode() == Ip6::Icmp::Header::kCodeDstUnreachNoRoute, OT_NOOP);
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header), OT_NOOP);
+    SuccessOrExit(aMessage.Read(aMessage.GetOffset(), ip6Header));
 
     Remove(ip6Header.GetDestination(), kReasonReceivedIcmpDstUnreachNoRoute);
 

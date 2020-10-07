@@ -38,6 +38,8 @@
 
 #include <openthread/joiner.h>
 
+#include "utils/lookup_table.hpp"
+
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
 
 namespace ot {
@@ -76,7 +78,7 @@ private:
     struct Command
     {
         const char *mName;
-        otError (Joiner::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
+        otError (Joiner::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
     };
 
     otError ProcessDiscerner(uint8_t aArgsLength, char *aArgs[]);
@@ -88,8 +90,14 @@ private:
     static void HandleCallback(otError aError, void *aContext);
     void        HandleCallback(otError aError);
 
-    static const Command sCommands[];
-    Interpreter &        mInterpreter;
+    static constexpr Command sCommands[] = {
+        {"discerner", &Joiner::ProcessDiscerner}, {"help", &Joiner::ProcessHelp}, {"id", &Joiner::ProcessId},
+        {"start", &Joiner::ProcessStart},         {"stop", &Joiner::ProcessStop},
+    };
+
+    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+
+    Interpreter &mInterpreter;
 };
 
 } // namespace Cli

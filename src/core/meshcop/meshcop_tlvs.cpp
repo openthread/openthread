@@ -267,21 +267,21 @@ uint32_t ChannelMaskTlv::GetChannelMask(const Message &aMessage)
     {
         ChannelMaskEntry entry;
 
-        aMessage.Read(offset, sizeof(ChannelMaskEntryBase), &entry);
+        IgnoreError(aMessage.Read(offset, entry));
         VerifyOrExit(offset + entry.GetEntrySize() <= end, OT_NOOP);
 
         switch (entry.GetChannelPage())
         {
 #if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
         case OT_RADIO_CHANNEL_PAGE_0:
-            aMessage.Read(offset, sizeof(entry), &entry);
+            IgnoreError(aMessage.Read(offset, entry));
             mask |= entry.GetMask() & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK;
             break;
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
         case OT_RADIO_CHANNEL_PAGE_2:
-            aMessage.Read(offset, sizeof(entry), &entry);
+            IgnoreError(aMessage.Read(offset, entry));
             mask |= entry.GetMask() & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK;
             break;
 #endif

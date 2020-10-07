@@ -1006,7 +1006,7 @@ otError Mle::AppendHeader(Message &aMessage, Command aCommand)
 
     header.SetCommand(aCommand);
 
-    SuccessOrExit(error = aMessage.Append(&header, header.GetLength()));
+    SuccessOrExit(error = aMessage.AppendBytes(&header, header.GetLength()));
 
 exit:
     return error;
@@ -1061,7 +1061,7 @@ otError Mle::ReadChallengeOrResponse(const Message &aMessage, uint8_t aTlvType, 
         length = kMaxChallengeSize;
     }
 
-    aMessage.Read(offset, length, aBuffer.mBuffer);
+    aMessage.ReadBytes(offset, aBuffer.mBuffer, length);
     aBuffer.mLength = static_cast<uint8_t>(length);
 
 exit:
@@ -1154,7 +1154,7 @@ otError Mle::FindTlvRequest(const Message &aMessage, RequestedTlvs &aRequestedTl
         length = sizeof(aRequestedTlvs.mTlvs);
     }
 
-    aMessage.Read(offset, length, aRequestedTlvs.mTlvs);
+    aMessage.ReadBytes(offset, aRequestedTlvs.mTlvs, length);
     aRequestedTlvs.mNumTlvs = static_cast<uint8_t>(length);
 
 exit:
@@ -1218,12 +1218,12 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
 #endif
 
     tlv.SetType(Tlv::kAddressRegistration);
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
+    SuccessOrExit(error = aMessage.Append(tlv));
 
     // Prioritize ML-EID
     entry.SetContextId(kMeshLocalPrefixContextId);
     entry.SetIid(GetMeshLocal64().GetIid());
-    SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
+    SuccessOrExit(error = aMessage.AppendBytes(&entry, entry.GetLength()));
     length += entry.GetLength();
 
     // Continue to append the other addresses if not `kAppendMeshLocalOnly` mode
@@ -1243,7 +1243,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
         // Prioritize DUA, compressed entry
         entry.SetContextId(context.mContextId);
         entry.SetIid(domainUnicastAddress.GetIid());
-        SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
+        SuccessOrExit(error = aMessage.AppendBytes(&entry, entry.GetLength()));
         length += entry.GetLength();
         counter++;
     }
@@ -1278,7 +1278,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
             entry.SetIp6Address(addr->GetAddress());
         }
 
-        SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
+        SuccessOrExit(error = aMessage.AppendBytes(&entry, entry.GetLength()));
         length += entry.GetLength();
         counter++;
         // only continue to append if there is available entry.
@@ -1309,7 +1309,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
 
             entry.SetUncompressed();
             entry.SetIp6Address(addr.GetAddress());
-            SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
+            SuccessOrExit(error = aMessage.AppendBytes(&entry, entry.GetLength()));
             length += entry.GetLength();
 
             counter++;
@@ -1323,7 +1323,7 @@ exit:
     if (error == OT_ERROR_NONE && length > 0)
     {
         tlv.SetLength(length);
-        aMessage.Write(startOffset, sizeof(tlv), &tlv);
+        aMessage.Write(startOffset, tlv);
     }
 
     return error;
@@ -1406,7 +1406,7 @@ otError Mle::AppendCslChannel(Message &aMessage)
     cslChannel.SetChannelPage(0);
     cslChannel.SetChannel(Get<Mac::Mac>().GetCslChannel());
 
-    SuccessOrExit(error = aMessage.Append(&cslChannel, sizeof(CslChannelTlv)));
+    SuccessOrExit(error = aMessage.Append(cslChannel));
 
 exit:
     return error;
@@ -2053,7 +2053,7 @@ otError Mle::SendDataRequest(const Ip6::Address &aDestination,
 
     if (aExtraTlvs != nullptr && aExtraTlvsLength > 0)
     {
-        SuccessOrExit(error = message->Append(aExtraTlvs, aExtraTlvsLength));
+        SuccessOrExit(error = message->AppendBytes(aExtraTlvs, aExtraTlvsLength));
     }
 
     if (aDelay)
@@ -2434,7 +2434,7 @@ otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
     uint16_t         length;
     Ip6::MessageInfo messageInfo;
 
-    aMessage.Read(0, sizeof(header), &header);
+    IgnoreError(aMessage.Read(0, header));
 
     if (header.GetSecuritySuite() == Header::k154Security)
     {
@@ -2443,7 +2443,7 @@ otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
         keySequence = Get<KeyManager>().GetCurrentKeySequence();
         header.SetKeyId(keySequence);
 
-        aMessage.Write(0, header.GetLength(), &header);
+        aMessage.WriteBytes(0, &header, header.GetLength());
 
         Crypto::AesCcm::GenerateNonce(Get<Mac::Mac>().GetExtAddress(), Get<KeyManager>().GetMleFrameCounter(),
                                       Mac::Frame::kSecEncMic32, nonce);
@@ -2460,14 +2460,14 @@ otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 
         while (aMessage.GetOffset() < aMessage.GetLength())
         {
-            length = aMessage.Read(aMessage.GetOffset(), sizeof(buf), buf);
+            length = aMessage.ReadBytes(aMessage.GetOffset(), buf, sizeof(buf));
             aesCcm.Payload(buf, buf, length, Crypto::AesCcm::kEncrypt);
-            aMessage.Write(aMessage.GetOffset(), length, buf);
+            aMessage.WriteBytes(aMessage.GetOffset(), buf, length);
             aMessage.MoveOffset(length);
         }
 
         aesCcm.Finalize(tag);
-        SuccessOrExit(error = aMessage.Append(tag, sizeof(tag)));
+        SuccessOrExit(error = aMessage.AppendBytes(tag, sizeof(tag)));
 
         Get<KeyManager>().IncrementMleFrameCounter();
     }
@@ -2529,7 +2529,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     VerifyOrExit(aMessageInfo.GetLinkInfo() != nullptr, OT_NOOP);
     VerifyOrExit(aMessageInfo.GetHopLimit() == kMleHopLimit, error = OT_ERROR_PARSE);
 
-    length = aMessage.Read(aMessage.GetOffset(), sizeof(header), &header);
+    length = aMessage.ReadBytes(aMessage.GetOffset(), &header, sizeof(header));
     VerifyOrExit(header.IsValid() && header.GetLength() <= length, error = OT_ERROR_PARSE);
 
     if (header.GetSecuritySuite() == Header::kNoSecurity)
@@ -2573,7 +2573,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
                  error = OT_ERROR_PARSE);
     aMessage.MoveOffset(header.GetLength() - 1);
 
-    aMessage.Read(aMessage.GetLength() - sizeof(messageTag), sizeof(messageTag), messageTag);
+    IgnoreError(aMessage.Read(aMessage.GetLength() - sizeof(messageTag), messageTag));
     SuccessOrExit(error = aMessage.SetLength(aMessage.GetLength() - sizeof(messageTag)));
 
     aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
@@ -2593,10 +2593,10 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     while (aMessage.GetOffset() < aMessage.GetLength())
     {
-        length = aMessage.Read(aMessage.GetOffset(), sizeof(buf), buf);
+        length = aMessage.ReadBytes(aMessage.GetOffset(), buf, sizeof(buf));
         aesCcm.Payload(buf, buf, length, Crypto::AesCcm::kDecrypt);
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-        aMessage.Write(aMessage.GetOffset(), length, buf);
+        aMessage.WriteBytes(aMessage.GetOffset(), buf, length);
 #endif
         aMessage.MoveOffset(length);
     }
@@ -2613,7 +2613,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     aMessage.SetOffset(mleOffset);
 
-    aMessage.Read(aMessage.GetOffset(), sizeof(command), &command);
+    IgnoreError(aMessage.Read(aMessage.GetOffset(), command));
     aMessage.MoveOffset(sizeof(command));
 
     neighbor = (command == kCommandChildIdResponse) ? mNeighborTable.FindParent(extAddr)
@@ -2960,7 +2960,7 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
         {
             if (activeDatasetOffset > 0)
             {
-                aMessage.Read(activeDatasetOffset, sizeof(tlv), &tlv);
+                IgnoreError(aMessage.Read(activeDatasetOffset, tlv));
                 IgnoreError(Get<MeshCoP::ActiveDataset>().Save(activeTimestamp, aMessage,
                                                                activeDatasetOffset + sizeof(tlv), tlv.GetLength()));
             }
@@ -2971,7 +2971,7 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
         {
             if (pendingDatasetOffset > 0)
             {
-                aMessage.Read(pendingDatasetOffset, sizeof(tlv), &tlv);
+                IgnoreError(aMessage.Read(pendingDatasetOffset, tlv));
                 IgnoreError(Get<MeshCoP::PendingDataset>().Save(pendingTimestamp, aMessage,
                                                                 pendingDatasetOffset + sizeof(tlv), tlv.GetLength()));
             }
@@ -3330,7 +3330,7 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
         // Active Dataset
         if (Tlv::FindTlvOffset(aMessage, Tlv::kActiveDataset, offset) == OT_ERROR_NONE)
         {
-            aMessage.Read(offset, sizeof(tlv), &tlv);
+            IgnoreError(aMessage.Read(offset, tlv));
             IgnoreError(
                 Get<MeshCoP::ActiveDataset>().Save(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength()));
         }
@@ -3350,7 +3350,7 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
         // Pending Dataset
         if (Tlv::FindTlvOffset(aMessage, Tlv::kPendingDataset, offset) == OT_ERROR_NONE)
         {
-            aMessage.Read(offset, sizeof(tlv), &tlv);
+            IgnoreError(aMessage.Read(offset, tlv));
             IgnoreError(
                 Get<MeshCoP::PendingDataset>().Save(pendingTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength()));
         }
@@ -4246,7 +4246,7 @@ void Mle::DelayedResponseMetadata::ReadFrom(const Message &aMessage)
     uint16_t length = aMessage.GetLength();
 
     OT_ASSERT(length >= sizeof(*this));
-    aMessage.Read(length - sizeof(*this), sizeof(*this), this);
+    IgnoreError(aMessage.Read(length - sizeof(*this), *this));
 }
 
 void Mle::DelayedResponseMetadata::RemoveFrom(Message &aMessage) const

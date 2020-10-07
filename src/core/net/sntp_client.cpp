@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
@@ -177,7 +178,7 @@ Message *Client::NewMessage(const Header &aHeader)
     Message *message = nullptr;
 
     VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != nullptr, OT_NOOP);
-    IgnoreError(message->Prepend(&aHeader, sizeof(aHeader)));
+    IgnoreError(message->Prepend(aHeader));
     message->SetOffset(0);
 
 exit:
@@ -347,8 +348,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     Message *     message  = nullptr;
     uint64_t      unixTime = 0;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) == sizeof(responseHeader),
-                 OT_NOOP);
+    SuccessOrExit(aMessage.Read(aMessage.GetOffset(), responseHeader));
 
     VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != nullptr, OT_NOOP);
 

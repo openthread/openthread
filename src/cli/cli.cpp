@@ -277,6 +277,26 @@ exit:
     return error;
 }
 
+otError Interpreter::ParseIp6Prefix(char *aString, otIp6Prefix &aPrefix)
+{
+    otError       error = OT_ERROR_NONE;
+    char *        prefixLengthStr;
+    unsigned long length;
+
+    prefixLengthStr = strchr(aString, '/');
+    VerifyOrExit(prefixLengthStr != nullptr, error = OT_ERROR_INVALID_ARGS);
+
+    *prefixLengthStr++ = '\0';
+
+    SuccessOrExit(error = otIp6AddressFromString(aString, &aPrefix.mPrefix));
+
+    SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
+    aPrefix.mLength = static_cast<uint8_t>(length);
+
+exit:
+    return error;
+}
+
 otError Interpreter::ParsePingInterval(const char *aString, uint32_t &aInterval)
 {
     otError        error    = OT_ERROR_NONE;
@@ -327,8 +347,6 @@ otError Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
-
-    static_assert(IsArraySorted(sCommands, OT_ARRAY_LENGTH(sCommands)), "Command list is not sorted");
 
     for (const Command &command : sCommands)
     {
@@ -2840,28 +2858,12 @@ otError Interpreter::ProcessPrefixAdd(uint8_t aArgsLength, char *aArgs[])
     otError              error = OT_ERROR_NONE;
     otBorderRouterConfig config;
     uint8_t              argcur = 0;
-    char *               prefixLengthStr;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
     memset(&config, 0, sizeof(otBorderRouterConfig));
 
-    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == nullptr)
-    {
-        ExitNow();
-    }
-
-    *prefixLengthStr++ = '\0';
-
-    SuccessOrExit(error = otIp6AddressFromString(aArgs[argcur], &config.mPrefix.mPrefix));
-
-    {
-        unsigned long length;
-
-        SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
-        config.mPrefix.mLength = static_cast<uint8_t>(length);
-    }
-
+    SuccessOrExit(error = ParseIp6Prefix(aArgs[argcur], config.mPrefix));
     argcur++;
 
     for (; argcur < aArgsLength; argcur++)
@@ -2938,28 +2940,10 @@ otError Interpreter::ProcessPrefixRemove(uint8_t aArgsLength, char *aArgs[])
 {
     otError     error = OT_ERROR_NONE;
     otIp6Prefix prefix;
-    uint8_t     argcur = 0;
-    char *      prefixLengthStr;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
-    memset(&prefix, 0, sizeof(otIp6Prefix));
-
-    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == nullptr)
-    {
-        ExitNow();
-    }
-
-    *prefixLengthStr++ = '\0';
-
-    SuccessOrExit(error = otIp6AddressFromString(aArgs[argcur], &prefix.mPrefix));
-
-    {
-        unsigned long length;
-
-        SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
-        prefix.mLength = static_cast<uint8_t>(length);
-    }
+    SuccessOrExit(error = ParseIp6Prefix(aArgs[0], prefix));
 
     error = otBorderRouterRemoveOnMeshPrefix(mInstance, &prefix);
 
@@ -3095,28 +3079,12 @@ otError Interpreter::ProcessRouteAdd(uint8_t aArgsLength, char *aArgs[])
     otError               error = OT_ERROR_NONE;
     otExternalRouteConfig config;
     uint8_t               argcur = 0;
-    char *                prefixLengthStr;
 
     memset(&config, 0, sizeof(otExternalRouteConfig));
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
-    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == nullptr)
-    {
-        ExitNow();
-    }
-
-    *prefixLengthStr++ = '\0';
-
-    SuccessOrExit(error = otIp6AddressFromString(aArgs[argcur], &config.mPrefix.mPrefix));
-
-    {
-        unsigned long length;
-
-        SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
-        config.mPrefix.mLength = static_cast<uint8_t>(length);
-    }
-
+    SuccessOrExit(error = ParseIp6Prefix(aArgs[argcur], config.mPrefix));
     argcur++;
 
     for (; argcur < aArgsLength; argcur++)
@@ -3153,28 +3121,10 @@ otError Interpreter::ProcessRouteRemove(uint8_t aArgsLength, char *aArgs[])
 {
     otError     error = OT_ERROR_NONE;
     otIp6Prefix prefix;
-    uint8_t     argcur = 0;
-    char *      prefixLengthStr;
-
-    memset(&prefix, 0, sizeof(otIp6Prefix));
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
-    if ((prefixLengthStr = strchr(aArgs[argcur], '/')) == nullptr)
-    {
-        ExitNow();
-    }
-
-    *prefixLengthStr++ = '\0';
-
-    SuccessOrExit(error = otIp6AddressFromString(aArgs[argcur], &prefix.mPrefix));
-
-    {
-        unsigned long length;
-
-        SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
-        prefix.mLength = static_cast<uint8_t>(length);
-    }
+    SuccessOrExit(error = ParseIp6Prefix(aArgs[0], prefix));
 
     error = otBorderRouterRemoveRoute(mInstance, &prefix);
 
@@ -4201,35 +4151,6 @@ otError Interpreter::ProcessDiag(uint8_t aArgsLength, char *aArgs[])
 }
 #endif
 
-const Interpreter::Command *Interpreter::FindCommand(const char *aName) const
-{
-    const Command *rval  = nullptr;
-    uint16_t       left  = 0;
-    uint16_t       right = OT_ARRAY_LENGTH(sCommands);
-
-    while (left < right)
-    {
-        uint16_t middle  = (left + right) / 2;
-        int      compare = strcmp(aName, sCommands[middle].mName);
-
-        if (compare == 0)
-        {
-            rval = &sCommands[middle];
-            break;
-        }
-        else if (compare > 0)
-        {
-            left = middle + 1;
-        }
-        else
-        {
-            right = middle;
-        }
-    }
-
-    return rval;
-}
-
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength)
 {
     char *         aArgs[kMaxArgs] = {nullptr};
@@ -4250,11 +4171,11 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength)
                  OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands."));
 #endif
 
-    command = FindCommand(cmdName);
+    command = Utils::LookupTable::Find(cmdName, sCommands);
 
     if (command != nullptr)
     {
-        OutputResult((this->*command->mCommand)(aArgsLength - 1, &aArgs[1]));
+        OutputResult((this->*command->mHandler)(aArgsLength - 1, &aArgs[1]));
         ExitNow();
     }
 
