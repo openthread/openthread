@@ -110,6 +110,7 @@ check_PROGRAMS                                                     += \
     test-checksum                                                     \
     test-child                                                        \
     test-child-table                                                  \
+    test-cmd-line-parser                                              \
     test-flash                                                        \
     test-heap                                                         \
     test-hmac-sha256                                                  \
@@ -182,6 +183,9 @@ test_child_SOURCES           = $(COMMON_SOURCES) test_child.cpp
 
 test_child_table_LDADD       = $(COMMON_LDADD)
 test_child_table_SOURCES     = $(COMMON_SOURCES) test_child_table.cpp
+
+test_cmd_line_parser_LDADD   = $(COMMON_LDADD)
+test_cmd_line_parser_SOURCES = $(COMMON_SOURCES) test_cmd_line_parser.cpp
 
 test_flash_LDADD             = $(COMMON_LDADD)
 test_flash_SOURCES           = $(COMMON_SOURCES) test_flash.cpp

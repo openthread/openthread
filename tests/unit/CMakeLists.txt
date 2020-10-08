@@ -139,6 +139,28 @@ target_link_libraries(test-child-table
 
 add_test(NAME test-child-table COMMAND test-child-table)
 
+add_executable(test-cmd-line-parser
+    ${COMMON_SOURCES}
+    test_cmd_line_parser.cpp
+)
+
+target_include_directories(test-cmd-line-parser
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-cmd-line-parser
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-cmd-line-parser
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-cmd-line-parser COMMAND test-cmd-line-parser)
+
 add_executable(test-flash
     ${COMMON_SOURCES}
     test_flash.cpp
@@ -608,6 +630,7 @@ set_target_properties(
     test-checksum
     test-child
     test-child-table
+    test-cmd-line-parser
     test-flash
     test-heap
     test-hmac-sha256
