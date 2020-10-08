@@ -159,7 +159,7 @@ private:
         void           Advance(void);
         void           operator++(void) { Advance(); }
         void           operator++(int) { Advance(); }
-        const NdProxy &operator*(void)const { return *mCurrent; }
+        const NdProxy &operator*(void) const { return *mCurrent; }
         bool           operator==(const Iterator &aOther) const { return mCurrent == aOther.mCurrent; }
         bool           operator!=(const Iterator &aOther) const { return !(*this == aOther); }
         NdProxy *      operator->(void) { return mCurrent; }
