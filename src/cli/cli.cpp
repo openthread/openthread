@@ -56,6 +56,9 @@
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 #include <openthread/server.h>
 #endif
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+#include <openthread/child_supervision.h>
+#endif
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 #include <openthread/platform/misc.h>
 #endif
@@ -941,6 +944,58 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+otError Interpreter::ProcessChildSupervision(uint8_t aArgsLength, char *aArgs[])
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t value;
+
+    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(aArgs[0], "checktimeout") == 0)
+    {
+        if (aArgsLength == 1)
+        {
+            OutputLine("%u", otChildSupervisionGetCheckTimeout(mInstance));
+        }
+        else if (aArgsLength == 2)
+        {
+            SuccessOrExit(error = ParseAsUint16(aArgs[1], value));
+            otChildSupervisionSetCheckTimeout(mInstance, value);
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+#if OPENTHREAD_FTD
+    else if (strcmp(aArgs[0], "interval") == 0)
+    {
+        if (aArgsLength == 1)
+        {
+            OutputLine("%u", otChildSupervisionGetInterval(mInstance));
+        }
+        else if (aArgsLength == 2)
+        {
+            SuccessOrExit(error = ParseAsUint16(aArgs[1], value));
+            otChildSupervisionSetInterval(mInstance, value);
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+#endif
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 otError Interpreter::ProcessChildTimeout(uint8_t aArgsLength, char *aArgs[])
 {
