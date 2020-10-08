@@ -26,28 +26,14 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-ncp-ftd
+add_executable(ot-cli-mtd
     main.c
 )
 
-add_executable(ot-ncp-mtd
-    main.c
-)
+target_include_directories(ot-cli-mtd PRIVATE ${COMMON_INCLUDES})
 
-target_include_directories(ot-ncp-ftd PRIVATE ${COMMON_INCLUDES})
-target_include_directories(ot-ncp-mtd PRIVATE ${COMMON_INCLUDES})
-
-target_link_libraries(ot-ncp-ftd PRIVATE
-    openthread-ncp-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    mbedcrypto
-    ot-config
-)
-
-target_link_libraries(ot-ncp-mtd PRIVATE
-    openthread-ncp-mtd
+target_link_libraries(ot-cli-mtd PRIVATE
+    openthread-cli-mtd
     ${OT_PLATFORM_LIB}
     openthread-mtd
     ${OT_PLATFORM_LIB}
@@ -55,4 +41,5 @@ target_link_libraries(ot-ncp-mtd PRIVATE
     ot-config
 )
 
-install(TARGETS ot-ncp-ftd ot-ncp-mtd DESTINATION bin)
+install(TARGETS ot-cli-mtd
+    DESTINATION bin)

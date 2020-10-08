@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,34 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(COMMON_INCLUDES
-    ${OT_PUBLIC_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/src/core
+add_library(openthread-cli-ftd)
+
+set_target_properties(
+    openthread-cli-ftd
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
 )
 
-if(OT_FTD)
-    include(ftd.cmake)
-endif()
+target_compile_definitions(openthread-cli-ftd
+    PRIVATE
+        OPENTHREAD_FTD=1
+    PUBLIC
+        "OPENTHREAD_CONFIG_CLI_TRANSPORT=OT_CLI_TRANSPORT_${OT_CLI_TRANSPORT}"
+)
 
-if(OT_MTD)
-    include(mtd.cmake)
-endif()
+target_compile_options(openthread-cli-ftd PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_include_directories(openthread-cli-ftd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
+
+target_sources(openthread-cli-ftd PRIVATE ${COMMON_SOURCES})
+
+target_link_libraries(openthread-cli-ftd
+    PUBLIC
+        openthread-ftd
+    PRIVATE
+        ${OT_MBEDTLS}
+        ot-config
+)
