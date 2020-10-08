@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,19 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(COMMON_INCLUDES
-    ${OT_PUBLIC_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/src/core
+add_executable(ot-ncp-mtd
+    main.c
 )
 
-if(OT_FTD)
-    include(ftd.cmake)
-endif()
+target_include_directories(ot-ncp-mtd PRIVATE ${COMMON_INCLUDES})
 
-if(OT_MTD)
-    include(mtd.cmake)
-endif()
+target_link_libraries(ot-ncp-mtd PRIVATE
+    openthread-ncp-mtd
+    ${OT_PLATFORM_LIB}
+    openthread-mtd
+    ${OT_PLATFORM_LIB}
+    mbedcrypto
+    ot-config
+)
+
+install(TARGETS ot-ncp-mtd DESTINATION bin)

@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,40 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(COMMON_INCLUDES
-    ${OT_PUBLIC_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/src/core
+add_library(openthread-rcp)
+
+set_target_properties(
+    openthread-rcp
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
 )
 
-if(OT_FTD)
-    include(ftd.cmake)
-endif()
+target_compile_definitions(openthread-rcp PRIVATE
+    OPENTHREAD_RADIO=1
+    OPENTHREAD_CONFIG_NCP_UART_ENABLE=1
+)
 
-if(OT_MTD)
-    include(mtd.cmake)
-endif()
+target_compile_options(openthread-rcp PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_include_directories(openthread-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
+
+target_sources(openthread-rcp PRIVATE
+    changed_props_set.cpp
+    ncp_base.cpp
+    ncp_base_dispatcher.cpp
+    ncp_base_radio.cpp
+    ncp_spi.cpp
+    ncp_uart.cpp
+)
+
+target_link_libraries(openthread-rcp
+    PUBLIC
+        openthread-radio
+    PRIVATE
+        openthread-hdlc
+        openthread-spinel-rcp
+        ot-config
+)

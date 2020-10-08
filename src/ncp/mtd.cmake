@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,35 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(COMMON_INCLUDES
-    ${OT_PUBLIC_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/src/core
+add_library(openthread-ncp-mtd)
+
+set_target_properties(
+    openthread-ncp-mtd
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
 )
 
-if(OT_FTD)
-    include(ftd.cmake)
-endif()
+target_compile_definitions(openthread-ncp-mtd PRIVATE
+    OPENTHREAD_MTD=1
+    OPENTHREAD_CONFIG_NCP_UART_ENABLE=1
+)
 
-if(OT_MTD)
-    include(mtd.cmake)
-endif()
+target_compile_options(openthread-ncp-mtd PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_include_directories(openthread-ncp-mtd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
+
+target_sources(openthread-ncp-mtd PRIVATE ${COMMON_SOURCES})
+target_include_directories(openthread-ncp-mtd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_link_libraries(openthread-ncp-mtd
+    PUBLIC
+        openthread-mtd
+    PRIVATE
+        ${OT_MBEDTLS}
+        openthread-hdlc
+        openthread-spinel-ncp
+        ot-config
+)
