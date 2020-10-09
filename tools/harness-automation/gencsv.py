@@ -29,8 +29,6 @@
 
 import argparse
 import json
-import re
-import sys
 
 
 def get_key(item):
