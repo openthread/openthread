@@ -1948,10 +1948,15 @@ static void cc1352RadioProcessReceiveQueue(otInstance *aInstance)
 
             if ((receiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK)
             {
-                if (receiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET])
+                if (sState == cc1352_stateTransmit && sTxCmdChainDone &&
+                    receiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET])
                 {
+                    /* we found the ACK packet */
                     sState = cc1352_stateReceive;
                     cc1352RadioProcessTransmitDone(aInstance, &sTransmitFrame, &receiveFrame, receiveError);
+
+                    sTransmitError  = OT_ERROR_NONE;
+                    sTxCmdChainDone = false;
                 }
             }
             else
