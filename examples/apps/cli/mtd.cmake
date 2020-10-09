@@ -37,7 +37,7 @@ target_link_libraries(ot-cli-mtd PRIVATE
     ${OT_PLATFORM_LIB}
     openthread-mtd
     ${OT_PLATFORM_LIB}
-    mbedcrypto
+    ${OT_MBEDTLS}
     ot-config
 )
 
