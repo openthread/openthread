@@ -25,59 +25,55 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-visibility = [ "../../../*" ]
+import("../../etc/gn/openthread.gni")
 
-declare_args() {
-  # Platform portability header for spinel.
-  spinel_platform_header = "\"spinel_platform.h\""
-}
-
-spinel_sources = [
-  "openthread-spinel-config.h",
-  "radio_spinel.hpp",
-  "radio_spinel_impl.hpp",
-  "spinel.c",
-  "spinel_buffer.cpp",
-  "spinel_buffer.hpp",
-  "spinel_decoder.cpp",
-  "spinel_decoder.hpp",
-  "spinel_encoder.cpp",
-  "spinel_encoder.hpp",
-  "spinel_platform.h",
+openthread_ncp_sources = [
+  "changed_props_set.cpp",
+  "changed_props_set.hpp",
+  "example_vendor_hook.cpp",
+  "ncp_base.cpp",
+  "ncp_base.hpp",
+  "ncp_base_dispatcher.cpp",
+  "ncp_base_ftd.cpp",
+  "ncp_base_mtd.cpp",
+  "ncp_base_radio.cpp",
+  "ncp_config.h",
+  "ncp_spi.cpp",
+  "ncp_spi.hpp",
+  "ncp_uart.cpp",
+  "ncp_uart.hpp",
 ]
 
-config("spinel_config") {
-  defines = [ "SPINEL_PLATFORM_HEADER=${spinel_platform_header}" ]
+config("ncp_config") {
   include_dirs = [ ".." ]
 }
 
-config("spinel_config_openthread_message_enable") {
-  defines = [ "OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1" ]
-}
-
-config("spinel_config_openthread_message_disable") {
-  defines = [ "OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0" ]
-}
-
-source_set("spinel-api") {
-  public = [ "spinel.h" ]
-  public_configs = [ ":spinel_config" ]
-}
-
-static_library("libopenthread-spinel-ncp") {
-  sources = spinel_sources
+static_library("libopenthread-ncp-ftd") {
+  sources = openthread_ncp_sources
   public_deps = [
-    ":spinel-api",
-    "../../core:libopenthread_core_headers",
+    "../core:libopenthread-ftd",
+    "../lib/spinel:libopenthread-spinel-ncp",
   ]
-  public_configs = [ ":spinel_config_openthread_message_enable" ]
+  public_configs = [ ":ncp_config" ]
+  visibility = [ "../../*" ]
 }
 
-static_library("libopenthread-spinel-rcp") {
-  sources = spinel_sources
+static_library("libopenthread-ncp-mtd") {
+  sources = openthread_ncp_sources
   public_deps = [
-    ":spinel-api",
-    "../../core:libopenthread_core_headers",
+    "../core:libopenthread-mtd",
+    "../lib/spinel:libopenthread-spinel-ncp",
   ]
-  public_configs = [ ":spinel_config_openthread_message_disable" ]
+  public_configs = [ ":ncp_config" ]
+  visibility = [ "../../*" ]
+}
+
+static_library("libopenthread-rcp") {
+  sources = openthread_ncp_sources
+  public_deps = [
+    "../core:libopenthread-radio",
+    "../lib/spinel:libopenthread-spinel-rcp",
+  ]
+  public_configs = [ ":ncp_config" ]
+  visibility = [ "../../*" ]
 }
