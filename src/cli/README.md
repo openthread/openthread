@@ -28,6 +28,7 @@ Done
 - [child](#child-list)
 - [childip](#childip)
 - [childmax](#childmax)
+- [childsupervision](#childsupervision-interval)
 - [childtimeout](#childtimeout)
 - [coap](README_COAP.md)
 - [coaps](README_COAPS.md)
@@ -473,6 +474,48 @@ Set the Thread maximum number of allowed children.
 
 ```bash
 > childmax 2
+Done
+```
+
+### childsupervision interval
+
+Get the Child Supervision Interval value.
+
+Child supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child within the supervision interval. If there is no transmission to the child within the supervision interval, OpenThread enqueues and sends a supervision message (a data message with empty payload) to the child. This command can only be used with FTD devices.
+
+```bash
+> childsupervision interval
+30
+Done
+```
+
+### childsupervision interval \<interval\>
+
+Set the Child Supervision Interval value. This command can only be used with FTD devices.
+
+```bash
+> childsupervision interval 30
+Done
+```
+
+### childsupervision checktimeout
+
+Get the Child Supervision Check Timeout value.
+
+If the device is a sleepy child and it does not hear from its parent within the specified check timeout, it initiates the re-attach process (MLE Child Update Request/Response exchange with its parent).
+
+```bash
+> childsupervision checktimeout
+30
+Done
+```
+
+### childsupervision checktimeout \<timeout\>
+
+Set the Child Supervision Check Timeout value.
+
+```bash
+> childsupervision checktimeout 30
 Done
 ```
 

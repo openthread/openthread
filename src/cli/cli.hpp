@@ -287,6 +287,9 @@ private:
     otError ProcessChildIp(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessChildMax(uint8_t aArgsLength, char *aArgs[]);
 #endif
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+    otError ProcessChildSupervision(uint8_t aArgsLength, char *aArgs[]);
+#endif
     otError ProcessChildTimeout(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     otError ProcessCoap(uint8_t aArgsLength, char *aArgs[]);
@@ -541,6 +544,9 @@ private:
         {"child", &Interpreter::ProcessChild},
         {"childip", &Interpreter::ProcessChildIp},
         {"childmax", &Interpreter::ProcessChildMax},
+#endif
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+        {"childsupervision", &Interpreter::ProcessChildSupervision},
 #endif
         {"childtimeout", &Interpreter::ProcessChildTimeout},
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
