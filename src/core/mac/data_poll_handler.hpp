@@ -260,6 +260,12 @@ public:
      */
     void RequestFrameChange(FrameChange aChange, Child &aChild);
 
+    /**
+     * This method returns the current indirect tx child.
+     *
+     */
+    const Child *GetIndrectTxChild(void) const { return mIndirectTxChild; }
+
 private:
     // Callbacks from MAC
     void    HandleDataPoll(Mac::RxFrame &aFrame);

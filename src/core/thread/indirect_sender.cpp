@@ -276,6 +276,9 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
 
     VerifyOrExit(!aChild.IsWaitingForMessageUpdate(), OT_NOOP);
 
+    // Do not replace the message when it is being transmitted.
+    VerifyOrExit(Get<DataPollHandler>().GetIndrectTxChild() != &aChild, OT_NOOP);
+
     newMessage = FindIndirectMessage(aChild);
 
     VerifyOrExit(curMessage != newMessage, OT_NOOP);
