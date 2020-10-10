@@ -26,7 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import re
 import sys
 from operator import attrgetter
 from typing import Optional, Callable, Tuple
