@@ -26,6 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import re
 import sys
 from operator import attrgetter
 from typing import Optional, Callable, Tuple
@@ -414,6 +415,15 @@ class PacketFilter(object):
         :return: The new PacketFilter to filter WPAN packets.
         """
         return self.filter(lambda p: p.wpan.channel == channel, **kwargs)
+
+    def filter_wpan_src16(self, addr, **kwargs):
+        return self.filter(lambda p: p.wpan.src16 == addr, **kwargs)
+
+    def filter_wpan_dst16(self, addr, **kwargs):
+        return self.filter(lambda p: p.wpan.dst16 == addr, **kwargs)
+
+    def filter_wpan_src16_dst16(self, src_addr, dst_addr, **kwargs):
+        return self.filter(lambda p: p.wpan.src16 == src_addr and p.wpan.dst16 == dst_addr, **kwargs)
 
     def filter_wpan_src64(self, addr, **kwargs):
         assert isinstance(addr, (str, ExtAddr)), addr
