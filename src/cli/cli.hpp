@@ -471,6 +471,9 @@ private:
 #endif
     otError ProcessMac(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessMacRetries(uint8_t aArgsLength, char *aArgs[]);
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    otError ProcessMacSend(uint8_t aArgsLength, char *aArgs[]);
+#endif
 
     static void HandleIcmpReceive(void *               aContext,
                                   otMessage *          aMessage,

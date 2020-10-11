@@ -2047,6 +2047,20 @@ Set the number of indirect TX retries on the MAC layer.
 Done
 ```
 
+### mac send \<op\>
+
+Instruct an Rx-Off-When-Idle device to send a mac frame to its parent. The mac frame could be either a mac data request or an empty mac data frame. Use `datarequest` to send a mac data request and `data` to send an empty mac data. This feature is for certification, it can only be used when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+
+```bash
+> mac send datarequest
+Done
+```
+
+```bash
+> mac send emptydata
+Done
+```
+
 ### macfilter
 
 List the macfilter status, including address and received signal strength filter settings.

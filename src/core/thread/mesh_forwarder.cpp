@@ -151,6 +151,46 @@ exit:
     return;
 }
 
+void MeshForwarder::PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest)
+{
+    uint16_t fcf = 0;
+
+    Mac::Address macSource;
+    macSource.SetShort(Get<Mac::Mac>().GetShortAddress());
+
+    if (macSource.IsShortAddrInvalid() || aMacDest.IsExtended())
+    {
+        macSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
+    }
+
+    fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfPanidCompression | Mac::Frame::kFcfSecurityEnabled;
+
+    if (aAckRequest)
+    {
+        fcf |= Mac::Frame::kFcfAckRequest;
+    }
+
+    fcf |= (aMacDest.IsShort()) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
+    fcf |= (macSource.IsShort()) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
+    Get<Mac::Mac>().UpdateFrameControlField(nullptr, 0, fcf);
+
+    aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
+
+    if (aFrame.IsDstPanIdPresent())
+    {
+        aFrame.SetDstPanId(Get<Mac::Mac>().GetPanId());
+    }
+    IgnoreError(aFrame.SetSrcPanId(Get<Mac::Mac>().GetPanId()));
+
+    aFrame.SetDstAddr(aMacDest);
+    aFrame.SetSrcAddr(macSource);
+    aFrame.SetFramePending(false);
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    IgnoreError(Get<Mac::Mac>().AppendHeaderIe(false, aFrame));
+#endif
+    aFrame.SetPayloadLength(0);
+}
+
 void MeshForwarder::RemoveMessage(Message &aMessage)
 {
     PriorityQueue *queue = aMessage.GetPriorityQueue();
@@ -236,6 +276,12 @@ Message *MeshForwarder::GetDirectTransmission(void)
             error = UpdateMeshRoute(*curMessage);
             break;
 
+#endif
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        case Message::kTypeMacEmptyData:
+            error = OT_ERROR_NONE;
+            break;
 #endif
 
         default:
@@ -453,6 +499,17 @@ otError MeshForwarder::HandleFrameRequest(Mac::TxFrame &aFrame)
 
         OT_ASSERT(aFrame.GetLength() != 7);
         break;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    case Message::kTypeMacEmptyData:
+    {
+        Mac::Address macDestAddr;
+
+        macDestAddr.SetShort(Get<Mle::MleRouter>().GetParent().GetRloc16());
+        PrepareEmptyFrame(aFrame, macDestAddr, /* aAckRequest */ true);
+    }
+    break;
+#endif
 
 #if OPENTHREAD_FTD
 
@@ -1280,6 +1337,28 @@ otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError MeshForwarder::SendEmptyMessage(void)
+{
+    otError  error   = OT_ERROR_NONE;
+    Message *message = nullptr;
+
+    VerifyOrExit(mEnabled && !Get<Mac::Mac>().GetRxOnWhenIdle() &&
+                     Get<Mle::MleRouter>().GetParent().IsStateValidOrRestoring(),
+                 error = OT_ERROR_INVALID_STATE);
+
+    message = Get<MessagePool>().New(Message::kTypeMacEmptyData, 0);
+    VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+
+    SuccessOrExit(error = SendMessage(*message));
+
+exit:
+    FreeMessageOnError(message, error);
+    otLogDebgMac("Send empty message, error:%s", otThreadErrorToString(error));
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 // LCOV_EXCL_START
 

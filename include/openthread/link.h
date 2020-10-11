@@ -1110,6 +1110,21 @@ otError otLinkSetEnabled(otInstance *aInstance, bool aEnable);
 bool otLinkIsEnabled(otInstance *aInstance);
 
 /**
+ * This function instructs the device to send an empty IEEE 802.15.4 data frame.
+ *
+ * This function is only supported on an Rx-Off-When-Idle device to send an empty data frame to its parent.
+ * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval OT_ERROR_NONE           Successfully enqueued an empty message.
+ * @retval OT_ERROR_INVALID_STATE  Device is not in Rx-Off-When-Idle mode.
+ * @retval OT_ERROR_NO_BUFS        Insufficient message buffers available.
+ *
+ */
+otError otLinkSendEmptyData(otInstance *aInstance);
+
+/**
  * @}
  *
  */

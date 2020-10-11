@@ -418,37 +418,9 @@ uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, M
 
 void IndirectSender::PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool aAckRequest)
 {
-    uint16_t     fcf;
-    Mac::Address macSource, macDest;
-
+    Mac::Address macDest;
     aChild.GetMacAddress(macDest);
-
-    macSource.SetShort(Get<Mac::Mac>().GetShortAddress());
-
-    if (macSource.IsShortAddrInvalid() || macDest.IsExtended())
-    {
-        macSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
-    }
-
-    fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfPanidCompression |
-          Mac::Frame::kFcfSecurityEnabled;
-
-    if (aAckRequest)
-    {
-        fcf |= Mac::Frame::kFcfAckRequest;
-    }
-
-    fcf |= (macDest.IsShort()) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
-    fcf |= (macSource.IsShort()) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
-
-    aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
-
-    aFrame.SetDstPanId(Get<Mac::Mac>().GetPanId());
-    IgnoreError(aFrame.SetSrcPanId(Get<Mac::Mac>().GetPanId()));
-    aFrame.SetDstAddr(macDest);
-    aFrame.SetSrcAddr(macSource);
-    aFrame.SetPayloadLength(0);
-    aFrame.SetFramePending(false);
+    Get<MeshForwarder>().PrepareEmptyFrame(aFrame, macDest, aAckRequest);
 }
 
 void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
