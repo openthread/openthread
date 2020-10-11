@@ -1392,7 +1392,7 @@ class NodeImpl:
         self.send_command('dataset commit active')
         self._expect('Done')
 
-    def set_pending_dataset(self, pendingtimestamp, activetimestamp, panid=None, channel=None):
+    def set_pending_dataset(self, pendingtimestamp, activetimestamp, panid=None, channel=None, delay=None):
         self.send_command('dataset clear')
         self._expect('Done')
 
@@ -1411,6 +1411,11 @@ class NodeImpl:
 
         if channel is not None:
             cmd = 'dataset channel %d' % channel
+            self.send_command(cmd)
+            self._expect('Done')
+
+        if delay is not None:
+            cmd = 'dataset delay %d' % delay
             self.send_command(cmd)
             self._expect('Done')
 
