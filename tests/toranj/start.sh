@@ -143,6 +143,7 @@ run test-039-address-cache-table-snoop.py
 run test-040-network-data-stable-full.py
 run test-041-lowpan-fragmentation.py
 run test-042-meshcop-joiner-discerner.py
+run test-043-meshcop-joiner-router.py
 run test-100-mcu-power-state.py
 run test-600-channel-manager-properties.py
 run test-601-channel-manager-channel-change.py
