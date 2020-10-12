@@ -1695,8 +1695,7 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     {
         neighbor = Get<NeighborTable>().FindNeighbor(srcAddr);
     }
-
-    if (neighbor == nullptr && !dstAddr.IsNone())
+    else if (!dstAddr.IsNone())
     {
         // Get neighbor from destination address of transmitted frame
         neighbor = Get<NeighborTable>().FindNeighbor(dstAddr);
