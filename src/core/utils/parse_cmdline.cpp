@@ -33,11 +33,72 @@
 
 #include "parse_cmdline.hpp"
 
-#include <limits>
 #include <string.h>
 
 #include "common/code_utils.hpp"
 #include "net/ip6_address.hpp"
+
+namespace {
+template <typename Type> class NumericLimits
+{
+};
+
+template <> class NumericLimits<int8_t>
+{
+public:
+    static constexpr int8_t Min() { return INT8_MIN; }
+    static constexpr int8_t Max() { return INT8_MAX; }
+};
+
+template <> class NumericLimits<int16_t>
+{
+public:
+    static constexpr int16_t Min() { return INT16_MIN; }
+    static constexpr int16_t Max() { return INT16_MAX; }
+};
+
+template <> class NumericLimits<int32_t>
+{
+public:
+    static constexpr int32_t Min() { return INT32_MIN; }
+    static constexpr int32_t Max() { return INT32_MAX; }
+};
+
+template <> class NumericLimits<int64_t>
+{
+public:
+    static constexpr int64_t Min() { return INT64_MIN; }
+    static constexpr int64_t Max() { return INT64_MAX; }
+};
+
+template <> class NumericLimits<uint8_t>
+{
+public:
+    static constexpr uint8_t Min() { return 0; }
+    static constexpr uint8_t Max() { return UINT8_MAX; }
+};
+
+template <> class NumericLimits<uint16_t>
+{
+public:
+    static constexpr uint16_t Min() { return 0; }
+    static constexpr uint16_t Max() { return UINT16_MAX; }
+};
+
+template <> class NumericLimits<uint32_t>
+{
+public:
+    static constexpr uint32_t Min() { return 0; }
+    static constexpr uint32_t Max() { return UINT32_MAX; }
+};
+
+template <> class NumericLimits<uint64_t>
+{
+public:
+    static constexpr uint64_t Min() { return 0; }
+    static constexpr uint64_t Max() { return UINT64_MAX; }
+};
+} // namespace
 
 namespace ot {
 namespace Utils {
@@ -121,7 +182,7 @@ template <typename UintType> otError ParseUint(const char *aString, UintType &aU
 
     SuccessOrExit(error = ParseAsUint64(aString, value));
 
-    VerifyOrExit(value <= std::numeric_limits<UintType>::max(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(value <= NumericLimits<UintType>::Max(), error = OT_ERROR_INVALID_ARGS);
     aUint = static_cast<UintType>(value);
 
 exit:
@@ -189,7 +250,7 @@ template <typename IntType> otError ParseInt(const char *aString, IntType &aInt)
 
     SuccessOrExit(error = ParseAsInt32(aString, value));
 
-    VerifyOrExit((std::numeric_limits<IntType>::min() <= value) && (value <= std::numeric_limits<IntType>::max()),
+    VerifyOrExit((NumericLimits<IntType>::Min() <= value) && (value <= NumericLimits<IntType>::Max()),
                  error = OT_ERROR_INVALID_ARGS);
     aInt = static_cast<IntType>(value);
 
@@ -224,9 +285,8 @@ otError ParseAsInt32(const char *aString, int32_t &aInt32)
     }
 
     SuccessOrExit(error = ParseAsUint64(aString, value));
-    VerifyOrExit(value <= (isNegavtive
-                               ? static_cast<uint64_t>(-static_cast<int64_t>(std::numeric_limits<int32_t>::min()))
-                               : static_cast<uint64_t>(std::numeric_limits<int32_t>::max())),
+    VerifyOrExit(value <= (isNegavtive ? static_cast<uint64_t>(-static_cast<int64_t>(NumericLimits<int32_t>::Min()))
+                                       : static_cast<uint64_t>(NumericLimits<int32_t>::Max())),
                  error = OT_ERROR_INVALID_ARGS);
     aInt32 = isNegavtive ? -static_cast<int32_t>(value) : static_cast<int32_t>(value);
 
