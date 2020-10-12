@@ -683,11 +683,6 @@ protected:
     void UnsubscribeAllNodesMulticast(void);
 
 private:
-    enum
-    {
-        kMulticastPrefixLength = 128, ///< Multicast prefix length used to notify internal address changes.
-    };
-
     class ExternalMulticastAddressIteratorBuilder
     {
     public:
