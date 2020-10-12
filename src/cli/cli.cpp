@@ -1569,10 +1569,10 @@ otError Interpreter::ProcessFem(uint8_t aArgsLength, char *aArgs[])
         }
         else
         {
-            long lnaGain;
+            int8_t lnaGain;
 
-            SuccessOrExit(error = ParseLong(aArgs[1], lnaGain));
-            SuccessOrExit(error = otPlatRadioSetFemLnaGain(mInstance, static_cast<int8_t>(lnaGain)));
+            SuccessOrExit(error = ParseAsInt8(aArgs[1], lnaGain));
+            SuccessOrExit(error = otPlatRadioSetFemLnaGain(mInstance, lnaGain));
         }
     }
     else
