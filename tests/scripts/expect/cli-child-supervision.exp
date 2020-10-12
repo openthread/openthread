@@ -30,18 +30,18 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes "-"
+setup_two_nodes "-"
 
-set spawn_id $spawn_1
+switch_node 1
 send "childsupervision interval 30\n"
 expect "Done"
 send "childsupervision interval\n"
 expect "Done"
 
-set spawn_id $spawn_2
+switch_node 2
 send "childsupervision checktimeout 30\n"
 expect "Done"
 send "childsupervision checktimeout\n"
 expect "Done"
 
-dispose_nodes
+dispose_all

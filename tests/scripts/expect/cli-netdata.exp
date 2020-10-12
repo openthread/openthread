@@ -30,8 +30,9 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes
-set spawn_id $spawn_1
+setup_two_nodes
+
+switch_node 1
 
 send "netdata help\n"
 expect "Done"
@@ -45,4 +46,4 @@ expect "Done"
 send "netdata show -x\n"
 expect "Done"
 
-dispose_nodes
+dispose_all

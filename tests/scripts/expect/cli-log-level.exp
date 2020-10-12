@@ -29,10 +29,10 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "log level\n"
-expect "1"
+expect -re {\d}
 expect "Done"
 send "log level 5\n"
 expect "Done"
@@ -48,4 +48,4 @@ expect "Error 7: InvalidArgs"
 send "log level 1 2\n"
 expect "Error 7: InvalidArgs"
 
-dispose
+dispose_all

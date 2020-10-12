@@ -30,8 +30,7 @@
 source "tests/scripts/expect/_common.exp"
 
 set max_node 15
-set spawn_ids(1) [spawn_node 1]
-set spawn_id $spawn_ids(1)
+spawn_node 1
 expect_after {
     timeout { exit 1 }
 }
@@ -45,8 +44,7 @@ wait_for "state" "leader"
 expect "Done"
 
 for {set i 2} {$i <= $max_node} {incr i} {
-    set spawn_ids($i) [spawn_node $i]
-    set spawn_id $spawn_ids($i)
+    spawn_node $i
     expect_after {
         timeout { exit 1 }
     }
@@ -69,10 +67,4 @@ expect_after {
 send "child table\n"
 expect "Done"
 
-for {set i 1} {$i <= $max_node} {incr i} {
-    set spawn_id $spawn_ids($i)
-    expect_after {
-        timeout { exit 1 }
-    }
-    dispose
-}
+dispose_all

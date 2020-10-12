@@ -29,8 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set node_1 [spawn_node 1]
-set spawn_id $node_1
+spawn_node 1
 
 send "panid 0xface\n"
 expect "Done"
@@ -46,11 +45,7 @@ expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
 set addr $expect_out(1,string)
 expect "Done"
 
-spawn $env(MTD_COMMAND) "2"
-set node_2 $spawn_id
-expect_after {
-    timeout { exit 1 }
-}
+spawn_node_mtd 2
 
 send "panid 0xface\n"
 expect "Done"
@@ -67,7 +62,4 @@ expect "Done"
 send "ping $addr\n"
 expect "16 bytes from $addr: icmp_seq=1"
 
-dispose
-
-set spawn_id $node_1
-dispose
+dispose_all
