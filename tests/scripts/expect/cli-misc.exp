@@ -30,8 +30,9 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes
-set spawn_id $spawn_1
+setup_two_nodes
+
+switch_node 1
 
 send "leaderdata\n"
 expect -re {Partition ID: \d+}
@@ -154,4 +155,4 @@ expect "0:0:0:0::/64 s low"
 send "route remove ::/64\n"
 expect "Done"
 
-dispose_nodes
+dispose_all

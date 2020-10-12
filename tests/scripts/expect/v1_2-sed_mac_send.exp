@@ -30,12 +30,12 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes "-"
+setup_two_nodes "-"
 
-set spawn_id $spawn_2
+switch_node 2
 send "mac send emptydata\n"
 expect "Done"
 send "mac send datarequest\n"
 expect "Done"
 
-dispose_nodes
+dispose_all

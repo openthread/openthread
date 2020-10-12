@@ -29,7 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "ifconfig up\n"
 expect "Done"
@@ -86,4 +86,4 @@ expect "Done"
 send "channel manager something_invalid\n"
 expect "Error 7: InvalidArgs"
 
-dispose
+dispose_all

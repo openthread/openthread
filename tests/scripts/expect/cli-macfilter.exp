@@ -29,7 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "macfilter\n"
 expect "Address Mode: Disabled"
@@ -140,4 +140,4 @@ expect "Done"
 send "macfilter rss something_invalid\n"
 expect "Error 35: InvalidCommand"
 
-dispose
+dispose_all

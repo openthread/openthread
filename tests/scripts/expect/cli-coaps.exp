@@ -30,9 +30,9 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes
+setup_two_nodes
 
-set spawn_id $spawn_1
+switch_node 1
 send "coaps x509\n"
 expect "Done"
 send "coaps start\n"
@@ -47,7 +47,7 @@ expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
 set addr_1 $expect_out(1,string)
 expect "Done"
 
-set spawn_id $spawn_2
+switch_node 2
 send "coaps x509\n"
 expect "Done"
 send "coaps start\n"
@@ -78,7 +78,7 @@ expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
 set addr_2 $expect_out(1,string)
 expect "Done"
 
-set spawn_id $spawn_1
+switch_node 1
 expect "coaps request from $addr_2 GET"
 expect "coaps response sent"
 expect "coaps request from $addr_2 POST with payload: 54657374696e67313233"
@@ -105,12 +105,12 @@ expect "Error 24: Already"
 send "coaps start something_invalid\n"
 expect "Error 7: InvalidArgs"
 
-set spawn_id $spawn_2
+switch_node 2
 send "coaps stop\n"
 expect "Done"
 
-set spawn_id $spawn_1
+switch_node 1
 send "coaps stop\n"
 expect "Done"
 
-dispose_nodes
+dispose_all

@@ -55,7 +55,29 @@ proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
     }
 }
 
+proc spawn_node_mtd {id} {
+    global spawn_id
+    global spawn_ids
+
+    send_user "\n# ${id}\n"
+
+    spawn $::env(MTD_COMMAND) $id
+
+    expect_after {
+        timeout { exit 1 }
+    }
+
+    set spawn_ids($id) $spawn_id
+
+    return $spawn_id
+}
+
 proc spawn_node {id} {
+    global spawn_id
+    global spawn_ids
+
+    send_user "\n# ${id}\n"
+
     if {[info exists ::env(RCP_COMMAND)] && $::env(RCP_COMMAND) != ""} {
         spawn $::env(OT_COMMAND) "spinel+hdlc+uart://$::env(RCP_COMMAND)?forkpty-arg=$id"
     } else {
@@ -64,18 +86,27 @@ proc spawn_node {id} {
     expect_after {
         timeout { exit 1 }
     }
+
+    set spawn_ids($id) $spawn_id
+
     return $spawn_id
 }
 
-proc setup_leader {} {
-    # Sets up a Thread network spawn_1 as the leader.
-    global spawn_1
+proc switch_node {id} {
+    global spawn_ids
     global spawn_id
-    global env
 
-    set spawn_1 [spawn_node 1]
+    send_user "\n# ${id}\n"
+    set spawn_id $spawn_ids($id)
+}
 
-    set spawn_id $spawn_1
+proc dispose_node {id} {
+    switch_node $id
+    send "\x04"
+    expect eof
+}
+
+proc setup_leader {} {
     send "dataset init new\n"
     expect "Done"
     send "dataset commit active\n"
@@ -88,17 +119,12 @@ proc setup_leader {} {
     expect "Done"
 }
 
-proc dispose {} {
-    send "\x04"
-    expect eof
-}
-
-proc dispose_leader {} {
-    global spawn_1
-    global spawn_id
-
-    set spawn_id $spawn_1
-    dispose
+proc dispose_all {} {
+    global spawn_ids
+    set max_node [array size spawn_ids]
+    for {set i 1} {$i <= $max_node} {incr i} {
+        dispose_node $i
+    }
 }
 
 set timeout 10

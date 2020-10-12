@@ -31,7 +31,9 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
+
+set timeout 1
 
 send "panid 0xface\n"
 expect "Done"
@@ -43,6 +45,7 @@ send "thread start\n"
 expect "Done"
 
 wait_for "state" "leader"
+expect "Done"
 
 send "udp open\n"
 expect "Done"
@@ -53,10 +56,10 @@ expect "Done"
 send "udp connect fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234\n"
 expect "Done"
 
-send "udp connect :: 0\n"
+send "udp connect :: 1\n"
 expect "Done"
 
 send "udp close\n"
 expect "Done"
 
-dispose
+dispose_all
