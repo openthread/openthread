@@ -39,26 +39,18 @@
 #include <openthread/ip6.h>
 
 #include "cli/cli.hpp"
+#include "utils/parse_cmdline.hpp"
+
 // header for place your x509 certificate and private key
 #include "x509_cert_key.hpp"
+
+using ot::Utils::CmdLineParser::ParseAsIp6Address;
+using ot::Utils::CmdLineParser::ParseAsUint16;
 
 namespace ot {
 namespace Cli {
 
-const struct CoapSecure::Command CoapSecure::sCommands[] = {
-    {"help", &CoapSecure::ProcessHelp},      {"connect", &CoapSecure::ProcessConnect},
-    {"delete", &CoapSecure::ProcessRequest}, {"disconnect", &CoapSecure::ProcessDisconnect},
-    {"get", &CoapSecure::ProcessRequest},    {"post", &CoapSecure::ProcessRequest},
-    {"put", &CoapSecure::ProcessRequest},    {"resource", &CoapSecure::ProcessResource},
-    {"set", &CoapSecure::ProcessSet},        {"start", &CoapSecure::ProcessStart},
-    {"stop", &CoapSecure::ProcessStop},
-#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-    {"psk", &CoapSecure::ProcessPsk},
-#endif
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    {"x509", &CoapSecure::ProcessX509},
-#endif
-};
+constexpr CoapSecure::Command CoapSecure::sCommands[];
 
 CoapSecure::CoapSecure(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
@@ -107,7 +99,7 @@ otError CoapSecure::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine("%s", command.mName);
+        mInterpreter.OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -130,7 +122,7 @@ otError CoapSecure::ProcessResource(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        mInterpreter.OutputLine("%s", mResource.mUriPath);
+        mInterpreter.OutputLine("%s", mResource.mUriPath != nullptr ? mResource.mUriPath : "");
     }
 
 exit:
@@ -247,7 +239,7 @@ otError CoapSecure::ProcessRequest(uint8_t aArgsLength, char *aArgs[])
     // Destination IPv6 address
     if (aArgsLength > 1)
     {
-        error = otIp6AddressFromString(aArgs[1], &coapDestinationIp);
+        error = ParseAsIp6Address(aArgs[1], coapDestinationIp);
     }
     else
     {
@@ -335,17 +327,13 @@ otError CoapSecure::ProcessConnect(uint8_t aArgsLength, char *aArgs[])
 
     // Destination IPv6 address
     memset(&sockaddr, 0, sizeof(sockaddr));
-    SuccessOrExit(error = otIp6AddressFromString(aArgs[1], &sockaddr.mAddress));
+    SuccessOrExit(error = ParseAsIp6Address(aArgs[1], sockaddr.mAddress));
     sockaddr.mPort = OT_DEFAULT_COAP_SECURE_PORT;
 
     // check for port specification
     if (aArgsLength > 2)
     {
-        long value;
-
-        error = Interpreter::ParseLong(aArgs[2], value);
-        SuccessOrExit(error);
-        sockaddr.mPort = static_cast<uint16_t>(value);
+        SuccessOrExit(error = ParseAsUint16(aArgs[2], sockaddr.mPort));
     }
 
     SuccessOrExit(error = otCoapSecureConnect(mInterpreter.mInstance, &sockaddr, &CoapSecure::HandleConnected, this));
@@ -410,25 +398,17 @@ otError CoapSecure::ProcessX509(uint8_t aArgsLength, char *aArgs[])
 
 otError CoapSecure::Process(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error = OT_ERROR_INVALID_COMMAND;
+    otError        error = OT_ERROR_INVALID_ARGS;
+    const Command *command;
 
-    if (aArgsLength < 1)
-    {
-        IgnoreError(ProcessHelp(0, nullptr));
-        error = OT_ERROR_INVALID_ARGS;
-    }
-    else
-    {
-        for (const Command &command : sCommands)
-        {
-            if (strcmp(aArgs[0], command.mName) == 0)
-            {
-                error = (this->*command.mCommand)(aArgsLength, aArgs);
-                break;
-            }
-        }
-    }
+    VerifyOrExit(aArgsLength != 0, IgnoreError(ProcessHelp(0, nullptr)));
 
+    command = Utils::LookupTable::Find(aArgs[0], sCommands);
+    VerifyOrExit(command != nullptr, error = OT_ERROR_INVALID_COMMAND);
+
+    error = (this->*command->mHandler)(aArgsLength, aArgs);
+
+exit:
     return error;
 }
 

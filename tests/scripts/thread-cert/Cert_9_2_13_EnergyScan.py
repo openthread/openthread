@@ -42,25 +42,25 @@ class Cert_9_2_13_EnergyScan(thread_cert.TestCase):
 
     TOPOLOGY = {
         COMMISSIONER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ED1]
         },
         ED1: {
             'is_mtd': True,
-            'mode': 'rs',
+            'mode': 'r',
             'panid': 0xface,
             'allowlist': [ROUTER1]
         },

@@ -338,14 +338,6 @@ public:
     bool IsFullThreadDevice(void) const { return GetDeviceMode().IsFullThreadDevice(); }
 
     /**
-     * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
-     *
-     * @returns TRUE if using secure IEEE 802.15.4 Data Request messages, FALSE otherwise.
-     *
-     */
-    bool IsSecureDataRequest(void) const { return GetDeviceMode().IsSecureDataRequest(); }
-
-    /**
      * This method indicates whether or not the device requests Full Network Data.
      *
      * @returns TRUE if requests Full Network Data, FALSE otherwise.
@@ -751,7 +743,7 @@ public:
          * @returns A reference to the `Ip6::Address` entry currently pointed by the iterator.
          *
          */
-        const Ip6::Address &operator*(void)const { return *GetAddress(); }
+        const Ip6::Address &operator*(void) const { return *GetAddress(); }
 
         /**
          * This method overloads operator `==` to evaluate whether or not two `Iterator` instances are equal.

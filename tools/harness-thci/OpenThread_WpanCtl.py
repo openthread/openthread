@@ -307,7 +307,7 @@ class OpenThread_WpanCtl(IThci):
         """set thread device mode:
 
         Args:
-           mode: thread device mode. 15=rsdn, 13=rsn, 4=s
+           mode: thread device mode. 11=rdn, 9=rn
            r: rx-on-when-idle
            s: secure IEEE 802.15.4 data request
            d: full thread device
@@ -454,14 +454,14 @@ class OpenThread_WpanCtl(IThci):
                 self.__setRouterSelectionJitter(1)
 
             if startType == 'form':
-                startCmd = self.wpan_cmd_prefix + '%s %s -c %s -T %s ' % (
+                startCmd = self.wpan_cmd_prefix + '%s "%s" -c %s -T %s ' % (
                     startType,
                     self.networkName,
                     str(self.channel),
                     nodeType,
                 )
             else:
-                startCmd = self.wpan_cmd_prefix + '%s %s -p %s -c %s -T %s ' % (
+                startCmd = self.wpan_cmd_prefix + '%s "%s" -p %s -c %s -T %s ' % (
                     startType,
                     self.networkName,
                     str(hex(self.panId)),
@@ -828,10 +828,11 @@ class OpenThread_WpanCtl(IThci):
             False: fail to set the Thread Networkname
         """
         print('%s call setNetworkName' % self.port)
+        assert '"' not in networkName
 
         try:
-            cmd = self.wpan_cmd_prefix + 'setprop -s Network:Name %s' % networkName
-            datasetCmd = self.wpan_cmd_prefix + 'setprop Dataset:NetworkName %s' % networkName
+            cmd = self.wpan_cmd_prefix + 'setprop -s Network:Name "%s"' % networkName
+            datasetCmd = self.wpan_cmd_prefix + 'setprop Dataset:NetworkName "%s"' % networkName
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] != 'Fail' and self.__sendCommand(datasetCmd)[0] != 'Fail'
         except Exception as e:
@@ -1176,14 +1177,14 @@ class OpenThread_WpanCtl(IThci):
             # only sleep end device requires stable networkdata now
             if eRoleId == Thread_Device_Role.Leader:
                 print('join as leader')
-                # rsdn
+                # rdn
                 mode = 15
                 if self.AutoDUTEnable is False:
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.Router:
                 print('join as router')
-                # rsdn
+                # rdn
                 mode = 15
                 if self.AutoDUTEnable is False:
                     # set ROUTER_DOWNGRADE_THRESHOLD
@@ -1195,24 +1196,24 @@ class OpenThread_WpanCtl(IThci):
                 self.__setPollPeriod(self.__sedPollPeriod)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print('join as end device')
-                # rsn
+                # rn
                 mode = 13
             elif eRoleId == Thread_Device_Role.REED:
                 print('join as REED')
-                # rsdn
+                # rdn
                 mode = 15
                 # set ROUTER_UPGRADE_THRESHOLD
                 self.__setRouterUpgradeThreshold(0)
             elif eRoleId == Thread_Device_Role.EndDevice_FED:
                 # always remain an ED, never request to be a router
                 print('join as FED')
-                # rsdn
+                # rdn
                 mode = 15
                 # set ROUTER_UPGRADE_THRESHOLD
                 self.__setRouterUpgradeThreshold(0)
             elif eRoleId == Thread_Device_Role.EndDevice_MED:
                 print('join as MED')
-                # rsn
+                # rn
                 mode = 13
             else:
                 pass
@@ -1431,6 +1432,7 @@ class OpenThread_WpanCtl(IThci):
 
         # initialize variables
         self.networkName = ModuleHelper.Default_NwkName
+        assert '"' not in self.networkName
         self.networkKey = ModuleHelper.Default_NwkKey
         self.channel = ModuleHelper.Default_Channel
         self.channelMask = '0x7fff800'  # (0xffff << 11)
@@ -2014,7 +2016,7 @@ class OpenThread_WpanCtl(IThci):
             False: fail to start Commissioner
         """
         print('%s call startCollapsedCommissioner' % self.port)
-        startCmd = self.wpan_cmd_prefix + 'form %s -c %s -T router' % (self.networkName, str(self.channel))
+        startCmd = self.wpan_cmd_prefix + 'form "%s" -c %s -T router' % (self.networkName, str(self.channel))
         if self.__sendCommand(startCmd) != 'Fail':
             time.sleep(2)
             cmd = self.wpan_cmd_prefix + 'commissioner start'

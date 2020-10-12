@@ -31,7 +31,7 @@ from pktverify.addrs import Ipv6Addr
 from pktverify.bytes import Bytes
 
 DOMAIN_PREFIX = Bytes('fd00:7d03:7d03:7d03')
-BACKBONE_IPV6_PREFIX = Bytes('2001:0db8:0001:0000')
+BACKBONE_IPV6_PREFIX = Bytes('91')
 
 LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr('ff32:40:fd00:db8::1')
 REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr('ff33:40:fd00:db8::1')
@@ -86,12 +86,13 @@ SVR_DATA_URI = '/a/sd'
 ND_DATA_URI = '/a/nd'
 RLY_RX_URI = '/c/rx'
 RLY_TX_URI = '/c/tx'
-MGMT_ACTIVE_SET_URI = '/c/as'
-MGMT_ACTIVE_GET_URI = '/c/ag'
-MGMT_PENDING_SET_URI = '/c/ps'
 MGMT_PANID_QUERY = '/c/pq'
 MGMT_PANID_CONFLICT = '/c/pc'
 MGMT_ED_REPORT = '/c/er'
+MGMT_ACTIVE_GET_URI = '/c/ag'
+MGMT_ACTIVE_SET_URI = '/c/as'
+MGMT_PENDING_SET_URI = '/c/ps'
+MGMT_DATASET_CHANGED_URI = '/c/dc'
 
 # MLE TLVs
 SOURCE_ADDRESS_TLV = 0
@@ -134,6 +135,13 @@ NL_ROUTER_MASK_TLV = 7
 NL_ND_OPTION_TLV = 8
 NL_ND_DATA_TLV = 9
 NL_THREAD_NETWORK_DATA_TLV = 10
+
+# Network Layer Status
+NL_SUCESS = 0
+NL_NO_ADDRESS_AVAILABLE = 1
+NL_TOO_FEW_ROUTERS = 2
+NL_HAVE_CHILD_ID_REQUEST = 3
+NL_PARENT_PARTITION_CHANGE = 4
 
 # MeshCop TLVs
 NM_CHANNEL_TLV = 0
@@ -267,6 +275,9 @@ CSL_DEFAULT_PERIOD = 3125  # 0.5s, 3125 in units of ten symbols
 CSL_DEFAULT_PERIOD_IN_SECOND = 0.5
 US_PER_TEN_SYMBOLS = 160
 CSL_IE_ID = 0x1a
+
+# Thread Version TLV value
+THREAD_VERSION_1_2 = 3
 
 if __name__ == '__main__':
     from pktverify.addrs import Ipv6Addr

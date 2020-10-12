@@ -62,7 +62,6 @@ def verify_child_table(parent, children):
         verify(entry.is_rx_on_when_idle() == (mode & wpan.THREAD_MODE_FLAG_RX_ON_WHEN_IDLE != 0))
         verify(entry.is_ftd() == (mode & wpan.THREAD_MODE_FLAG_FULL_THREAD_DEV != 0))
         verify(entry.is_full_net_data() == (mode & wpan.THREAD_MODE_FLAG_FULL_NETWORK_DATA != 0))
-        verify(entry.is_sec_data_req() == (mode & wpan.THREAD_MODE_FLAG_SECURE_DATA_REQUEST != 0))
 
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -100,9 +99,9 @@ children = [child1, child2]
 WAIT_INTERVAL = 6
 
 # Thread Mode for end-device and sleepy end-device
-DEVICE_MODE_SLEEPY_END_DEVICE = (wpan.THREAD_MODE_FLAG_FULL_NETWORK_DATA | wpan.THREAD_MODE_FLAG_SECURE_DATA_REQUEST)
+DEVICE_MODE_SLEEPY_END_DEVICE = (wpan.THREAD_MODE_FLAG_FULL_NETWORK_DATA)
 DEVICE_MODE_END_DEVICE = (wpan.THREAD_MODE_FLAG_FULL_NETWORK_DATA | wpan.THREAD_MODE_FLAG_FULL_THREAD_DEV |
-                          wpan.THREAD_MODE_FLAG_SECURE_DATA_REQUEST | wpan.THREAD_MODE_FLAG_RX_ON_WHEN_IDLE)
+                          wpan.THREAD_MODE_FLAG_RX_ON_WHEN_IDLE)
 
 # Disable child supervision on all devices
 parent.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, '0')

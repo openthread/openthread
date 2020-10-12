@@ -284,7 +284,7 @@ void DatasetManager::SendSet(void)
     SuccessOrExit(error = message->SetPayloadMarker());
 
     IgnoreError(mLocal.Read(dataset));
-    SuccessOrExit(error = message->Append(dataset.GetBytes(), dataset.GetSize()));
+    SuccessOrExit(error = message->AppendBytes(dataset.GetBytes(), dataset.GetSize()));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
@@ -308,12 +308,7 @@ exit:
 
     default:
         otLogWarnMeshCoP("Failed to send %s to leader: %s", mUriSet, otThreadErrorToString(error));
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
-
+        FreeMessage(message);
         break;
     }
 }
@@ -345,7 +340,7 @@ void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::Message
 
     while (offset < aMessage.GetLength())
     {
-        aMessage.Read(offset, sizeof(tlv), &tlv);
+        IgnoreError(aMessage.Read(offset, tlv));
 
         if (tlv.GetType() == Tlv::kGet)
         {
@@ -357,7 +352,7 @@ void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::Message
                 length = sizeof(tlvs) - 1;
             }
 
-            aMessage.Read(offset + sizeof(Tlv), length, tlvs);
+            aMessage.ReadBytes(offset + sizeof(Tlv), tlvs, length);
             break;
         }
 
@@ -436,11 +431,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
     otLogInfoMeshCoP("sent dataset get response");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessageOnError(message, error);
 }
 
 otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength)
@@ -567,7 +558,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
     if (aLength > 0)
     {
-        SuccessOrExit(error = message->Append(aTlvs, aLength));
+        SuccessOrExit(error = message->AppendBytes(aTlvs, aLength));
     }
 
     if (message->GetLength() == message->GetOffset())
@@ -584,12 +575,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     otLogInfoMeshCoP("sent dataset set request to leader");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -680,16 +666,16 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
     {
         tlv.SetType(Tlv::kGet);
         tlv.SetLength(aLength + length);
-        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(tlv));
 
         if (length > 0)
         {
-            SuccessOrExit(error = message->Append(datasetTlvs, length));
+            SuccessOrExit(error = message->AppendBytes(datasetTlvs, length));
         }
 
         if (aLength > 0)
         {
-            SuccessOrExit(error = message->Append(aTlvTypes, aLength));
+            SuccessOrExit(error = message->AppendBytes(aTlvTypes, aLength));
         }
     }
 
@@ -709,12 +695,7 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
     otLogInfoMeshCoP("sent dataset get request");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 

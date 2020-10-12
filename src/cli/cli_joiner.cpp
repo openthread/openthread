@@ -36,16 +36,14 @@
 #include <inttypes.h>
 
 #include "cli/cli.hpp"
+#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
 
 namespace ot {
 namespace Cli {
 
-const struct Joiner::Command Joiner::sCommands[] = {
-    {"discerner", &Joiner::ProcessDiscerner}, {"help", &Joiner::ProcessHelp}, {"id", &Joiner::ProcessId},
-    {"start", &Joiner::ProcessStart},         {"stop", &Joiner::ProcessStop},
-};
+constexpr Joiner::Command Joiner::sCommands[];
 
 otError Joiner::ProcessDiscerner(uint8_t aArgsLength, char *aArgs[])
 {
@@ -73,7 +71,7 @@ otError Joiner::ProcessDiscerner(uint8_t aArgsLength, char *aArgs[])
 
         VerifyOrExit(discerner != nullptr, error = OT_ERROR_NOT_FOUND);
 
-        mInterpreter.OutputLine("0x%" PRIx64 "/%u", discerner->mValue, discerner->mLength);
+        mInterpreter.OutputLine("0x%llx/%u", static_cast<unsigned long long>(discerner->mValue), discerner->mLength);
     }
     else
     {
@@ -91,7 +89,7 @@ otError Joiner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine("%s", command.mName);
+        mInterpreter.OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -102,11 +100,7 @@ otError Joiner::ProcessId(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    const otExtAddress *joinerId;
-
-    joinerId = otJoinerGetId(mInterpreter.mInstance);
-
-    mInterpreter.OutputBytes(joinerId->m8, sizeof(otExtAddress));
+    mInterpreter.OutputExtAddress(*otJoinerGetId(mInterpreter.mInstance));
     mInterpreter.OutputLine("");
 
     return OT_ERROR_NONE;
@@ -143,24 +137,17 @@ otError Joiner::ProcessStop(uint8_t aArgsLength, char *aArgs[])
 
 otError Joiner::Process(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error = OT_ERROR_INVALID_COMMAND;
+    otError        error = OT_ERROR_INVALID_COMMAND;
+    const Command *command;
 
-    if (aArgsLength < 1)
-    {
-        IgnoreError(ProcessHelp(0, nullptr));
-    }
-    else
-    {
-        for (const Command &command : sCommands)
-        {
-            if (strcmp(aArgs[0], command.mName) == 0)
-            {
-                error = (this->*command.mCommand)(aArgsLength, aArgs);
-                break;
-            }
-        }
-    }
+    VerifyOrExit(aArgsLength != 0, IgnoreError(ProcessHelp(0, nullptr)));
 
+    command = Utils::LookupTable::Find(aArgs[0], sCommands);
+    VerifyOrExit(command != nullptr, OT_NOOP);
+
+    error = (this->*command->mHandler)(aArgsLength, aArgs);
+
+exit:
     return error;
 }
 

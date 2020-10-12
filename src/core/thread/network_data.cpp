@@ -816,8 +816,8 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::Response
         ThreadTlv tlv;
         tlv.SetType(ThreadTlv::kThreadNetworkData);
         tlv.SetLength(mLength);
-        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(mTlvs, mLength));
+        SuccessOrExit(error = message->Append(tlv));
+        SuccessOrExit(error = message->AppendBytes(mTlvs, mLength));
     }
 
     if (aRloc16 != Mac::kShortAddrInvalid)
@@ -833,12 +833,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::Response
     otLogInfoNetData("Sent server data notification");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 

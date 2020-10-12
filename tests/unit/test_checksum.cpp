@@ -107,8 +107,7 @@ uint16_t CalculateChecksum(const Ip6::Address &aSource,
     data.mPseudoHeader.mProtocol      = Encoding::BigEndian::HostSwap32(aIpProto);
     data.mPseudoHeader.mPayloadLength = Encoding::BigEndian::HostSwap32(payloadLength);
 
-    VerifyOrQuit(aMessage.Read(aMessage.GetOffset(), payloadLength, data.mPayload) == payloadLength,
-                 "Message::Read() failed");
+    SuccessOrQuit(aMessage.Read(aMessage.GetOffset(), data.mPayload, payloadLength), "Message::Read() failed");
 
     return CalculateChecksum(&data, sizeof(PseudoHeader) + payloadLength);
 }
@@ -123,13 +122,13 @@ void CorruptMessage(Message &aMessage)
 
     byteOffset = Random::NonCrypto::GetUint16InRange(0, aMessage.GetLength());
 
-    VerifyOrQuit(aMessage.Read(byteOffset, sizeof(uint8_t), &byte) == sizeof(uint8_t), "Read failed");
+    SuccessOrQuit(aMessage.Read(byteOffset, byte), "Read failed");
 
     bitOffset = Random::NonCrypto::GetUint8InRange(0, CHAR_BIT);
 
     byte ^= (1 << bitOffset);
 
-    aMessage.Write(byteOffset, sizeof(uint8_t), &byte);
+    aMessage.Write(byteOffset, byte);
 }
 
 void TestUdpMessageChecksum(void)
@@ -160,7 +159,7 @@ void TestUdpMessageChecksum(void)
 
         Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&udpHeader), sizeof(udpHeader));
         udpHeader.SetChecksum(0);
-        message->Write(0, sizeof(udpHeader), &udpHeader);
+        message->Write(0, udpHeader);
 
         if (size > sizeof(udpHeader))
         {
@@ -168,7 +167,7 @@ void TestUdpMessageChecksum(void)
             uint16_t payloadSize = size - sizeof(udpHeader);
 
             Random::NonCrypto::FillBuffer(buffer, payloadSize);
-            message->Write(sizeof(udpHeader), payloadSize, &buffer[0]);
+            message->WriteBytes(sizeof(udpHeader), &buffer[0], payloadSize);
         }
 
         SuccessOrQuit(messageInfo.GetSockAddr().FromString(kSourceAddress), "FromString() failed");
@@ -179,8 +178,7 @@ void TestUdpMessageChecksum(void)
 
         Checksum::UpdateMessageChecksum(*message, messageInfo.GetSockAddr(), messageInfo.GetPeerAddr(), Ip6::kProtoUdp);
 
-        VerifyOrQuit(message->Read(message->GetOffset(), sizeof(udpHeader), &udpHeader) == sizeof(udpHeader),
-                     "Message::Read() failed");
+        SuccessOrQuit(message->Read(message->GetOffset(), udpHeader), "Message::Read() failed");
         VerifyOrQuit(udpHeader.GetChecksum() != 0, "Failed to update checksum");
 
         // Verify that the calculated UDP checksum is valid.
@@ -234,7 +232,7 @@ void TestIcmp6MessageChecksum(void)
 
         Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&icmp6Header), sizeof(icmp6Header));
         icmp6Header.SetChecksum(0);
-        message->Write(0, sizeof(icmp6Header), &icmp6Header);
+        message->Write(0, icmp6Header);
 
         if (size > sizeof(icmp6Header))
         {
@@ -242,7 +240,7 @@ void TestIcmp6MessageChecksum(void)
             uint16_t payloadSize = size - sizeof(icmp6Header);
 
             Random::NonCrypto::FillBuffer(buffer, payloadSize);
-            message->Write(sizeof(icmp6Header), payloadSize, &buffer[0]);
+            message->WriteBytes(sizeof(icmp6Header), &buffer[0], payloadSize);
         }
 
         SuccessOrQuit(messageInfo.GetSockAddr().FromString(kSourceAddress), "FromString() failed");
@@ -254,8 +252,7 @@ void TestIcmp6MessageChecksum(void)
         Checksum::UpdateMessageChecksum(*message, messageInfo.GetSockAddr(), messageInfo.GetPeerAddr(),
                                         Ip6::kProtoIcmp6);
 
-        VerifyOrQuit(message->Read(message->GetOffset(), sizeof(icmp6Header), &icmp6Header) == sizeof(icmp6Header),
-                     "Message::Read() failed");
+        SuccessOrQuit(message->Read(message->GetOffset(), icmp6Header), "Message::Read() failed");
         VerifyOrQuit(icmp6Header.GetChecksum() != 0, "Failed to update checksum");
 
         // Verify that the calculated ICMP6 checksum is valid.

@@ -539,7 +539,7 @@ otError Dtls::Send(Message &aMessage, uint16_t aLength)
         mMessageSubType = aMessage.GetSubType();
     }
 
-    aMessage.Read(0, aLength, buffer);
+    aMessage.ReadBytes(0, buffer, aLength);
 
     SuccessOrExit(error = Crypto::MbedTls::MapError(mbedtls_ssl_write(&mSsl, buffer, aLength)));
 
@@ -631,7 +631,7 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
         aLength = static_cast<size_t>(rval);
     }
 
-    rval = mReceiveMessage->Read(mReceiveMessage->GetOffset(), static_cast<uint16_t>(aLength), aBuf);
+    rval = mReceiveMessage->ReadBytes(mReceiveMessage->GetOffset(), aBuf, static_cast<uint16_t>(aLength));
     mReceiveMessage->MoveOffset(rval);
 
 exit:
@@ -914,7 +914,7 @@ otError Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::Sub
     message->SetSubType(aMessageSubType);
     message->SetLinkSecurityEnabled(mLayerTwoSecurity);
 
-    SuccessOrExit(error = message->Append(aBuf, aLength));
+    SuccessOrExit(error = message->AppendBytes(aBuf, aLength));
 
     // Set message sub type in case Joiner Finalize Response is appended to the message.
     if (aMessageSubType != Message::kSubTypeNone)
@@ -932,12 +932,7 @@ otError Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::Sub
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 

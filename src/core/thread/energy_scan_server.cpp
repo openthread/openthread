@@ -186,8 +186,8 @@ void EnergyScanServer::SendReport(void)
 
     energyList.Init();
     energyList.SetLength(mScanResultsLength);
-    SuccessOrExit(error = message->Append(&energyList, sizeof(energyList)));
-    SuccessOrExit(error = message->Append(mScanResults, mScanResultsLength));
+    SuccessOrExit(error = message->Append(energyList));
+    SuccessOrExit(error = message->AppendBytes(mScanResults, mScanResultsLength));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(mCommissioner);
@@ -197,14 +197,8 @@ void EnergyScanServer::SendReport(void)
     otLogInfoMeshCoP("sent scan results");
 
 exit:
-
-    if ((error != OT_ERROR_NONE) && (message != nullptr))
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     MeshCoP::LogError("send scan results", error);
-
     mActive = false;
 }
 

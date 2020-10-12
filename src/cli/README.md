@@ -28,6 +28,7 @@ Done
 - [child](#child-list)
 - [childip](#childip)
 - [childmax](#childmax)
+- [childsupervision](#childsupervision-interval)
 - [childtimeout](#childtimeout)
 - [coap](README_COAP.md)
 - [coaps](README_COAPS.md)
@@ -47,6 +48,7 @@ Done
 - [extaddr](#extaddr)
 - [extpanid](#extpanid)
 - [factoryreset](#factoryreset)
+- [fake](#fake)
 - [ifconfig](#ifconfig)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
@@ -56,6 +58,7 @@ Done
 - [leaderdata](#leaderdata)
 - [leaderpartitionid](#leaderpartitionid)
 - [leaderweight](#leaderweight)
+- [linkmetrics](#linkmetrics-query-ipaddr-single-pqmr)
 - [linkquality](#linkquality-extaddr)
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
@@ -121,9 +124,9 @@ BBR Primary: None
 Done
 ```
 
-### bbr mgmt dua \<status\> [meshLocalIid]
+### bbr mgmt dua \<status\|coap-code\> [meshLocalIid]
 
-Configure the response status for DUA.req with meshLocalIid in payload. Without meshLocalIid, simply respond any coming DUA.req next with the specified status.
+Configure the response status for DUA.req with meshLocalIid in payload. Without meshLocalIid, simply respond any coming DUA.req next with the specified status or COAP code.
 
 Only for testing/reference device.
 
@@ -136,9 +139,12 @@ known status value:
 - 4: ST_DUA_NO_RESOURCES
 - 5: ST_DUA_BBR_NOT_PRIMARY
 - 6: ST_DUA_GENERAL_FAILURE
+- 160: COAP code 5.00
 
 ```bash
 > bbr mgmt dua 1 2f7c235e5025a2fd
+Done
+> bbr mgmt dua 160
 Done
 ```
 
@@ -468,6 +474,48 @@ Set the Thread maximum number of allowed children.
 
 ```bash
 > childmax 2
+Done
+```
+
+### childsupervision interval
+
+Get the Child Supervision Interval value.
+
+Child supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child within the supervision interval. If there is no transmission to the child within the supervision interval, OpenThread enqueues and sends a supervision message (a data message with empty payload) to the child. This command can only be used with FTD devices.
+
+```bash
+> childsupervision interval
+30
+Done
+```
+
+### childsupervision interval \<interval\>
+
+Set the Child Supervision Interval value. This command can only be used with FTD devices.
+
+```bash
+> childsupervision interval 30
+Done
+```
+
+### childsupervision checktimeout
+
+Get the Child Supervision Check Timeout value.
+
+If the device is a sleepy child and it does not hear from its parent within the specified check timeout, it initiates the re-attach process (MLE Child Update Request/Response exchange with its parent).
+
+```bash
+> childsupervision checktimeout
+30
+Done
+```
+
+### childsupervision checktimeout \<timeout\>
+
+Set the Child Supervision Check Timeout value.
+
+```bash
+> childsupervision checktimeout 30
 Done
 ```
 
@@ -807,6 +855,19 @@ Delete all stored settings, and signal a platform reset.
 > factoryreset
 ```
 
+### fake
+
+Send fake Thread messages.
+
+Note: Only for certification test.
+
+#### fake /a/an \<dst-ipaddr\> \<target\> \<meshLocalIid\>
+
+```bash
+> fake /a/an fdde:ad00:beef:0:0:ff:fe00:a800 fd00:7d03:7d03:7d03:55f2:bb6a:7a43:a03b 1111222233334444
+Done
+```
+
 ### ifconfig
 
 Show the status of the IPv6 interface.
@@ -1052,6 +1113,27 @@ Set the Thread Leader Weight.
 Done
 ```
 
+### linkmetrics query \<ipaddr\> single [pqmr]
+
+Perform a Link Metrics query (Single Probe).
+
+- ipaddr: Peer address.
+- pqmr: This specifies what metrics to query.
+- p: Layer 2 Number of PDUs received.
+- q: Layer 2 LQI.
+- m: Link Margin.
+- r: RSSI.
+
+```bash
+> linkmetrics query fe80:0:0:0:3092:f334:1455:1ad2 single qmr
+Done
+> Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
+
+ - LQI: 76 (Exponential Moving Average)
+ - Margin: 82 (dB) (Exponential Moving Average)
+ - RSSI: -18 (dBm) (Exponential Moving Average)
+```
+
 ### linkquality \<extaddr\>
 
 Get the link quality on the link to a given extended address.
@@ -1146,28 +1228,33 @@ Done
 
 Get the Thread Device Mode value.
 
+- -: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
 - r: rx-on-when-idle
-- s: Secure IEEE 802.15.4 data requests
 - d: Full Thread Device
 - n: Full Network Data
 
 ```bash
 > mode
-rsdn
+rdn
 Done
 ```
 
-### mode [rsdn]
+### mode [rdn]
 
 Set the Thread Device Mode value.
 
+- -: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
 - r: rx-on-when-idle
-- s: Secure IEEE 802.15.4 data requests
 - d: Full Thread Device
 - n: Full Network Data
 
 ```bash
-> mode rsdn
+> mode rdn
+Done
+```
+
+```bash
+> mode -
 Done
 ```
 
@@ -1957,6 +2044,20 @@ Set the number of indirect TX retries on the MAC layer.
 
 ```bash
 > mac retries indirect 5
+Done
+```
+
+### mac send \<op\>
+
+Instruct an Rx-Off-When-Idle device to send a mac frame to its parent. The mac frame could be either a mac data request or an empty mac data frame. Use `datarequest` to send a mac data request and `data` to send an empty mac data. This feature is for certification, it can only be used when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+
+```bash
+> mac send datarequest
+Done
+```
+
+```bash
+> mac send emptydata
 Done
 ```
 

@@ -45,27 +45,27 @@ class Cert_9_2_14_PanIdQuery(thread_cert.TestCase):
     TOPOLOGY = {
         COMMISSIONER: {
             'name': 'COMMISSIONER',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER1]
         },
         LEADER1: {
             'name': 'LEADER_1',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
             'name': 'ROUTER',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER1, LEADER2]
         },
         LEADER2: {
             'name': 'LEADER_2',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xdead,
             'allowlist': [ROUTER1]
         },

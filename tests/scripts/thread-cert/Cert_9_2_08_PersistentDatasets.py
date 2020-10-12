@@ -58,7 +58,7 @@ class Cert_9_2_8_PersistentDatasets(thread_cert.TestCase):
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
@@ -68,7 +68,7 @@ class Cert_9_2_8_PersistentDatasets(thread_cert.TestCase):
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'allowlist': [COMMISSIONER, ROUTER, ED, SED]
         },
         ROUTER: {
@@ -77,14 +77,14 @@ class Cert_9_2_8_PersistentDatasets(thread_cert.TestCase):
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         ED: {
             'channel': CHANNEL_INIT,
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': PANID_INIT,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [LEADER]
@@ -92,7 +92,7 @@ class Cert_9_2_8_PersistentDatasets(thread_cert.TestCase):
         SED: {
             'channel': CHANNEL_INIT,
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': PANID_INIT,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [LEADER]

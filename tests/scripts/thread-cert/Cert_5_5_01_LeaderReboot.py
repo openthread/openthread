@@ -42,12 +42,12 @@ DUT_ROUTER1 = 2
 class Cert_5_5_1_LeaderReboot(thread_cert.TestCase):
     TOPOLOGY = {
         DUT_LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [DUT_ROUTER1]
         },
         DUT_ROUTER1: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [DUT_LEADER]

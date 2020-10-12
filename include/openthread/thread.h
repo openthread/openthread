@@ -78,10 +78,9 @@ typedef enum
  */
 typedef struct otLinkModeConfig
 {
-    bool mRxOnWhenIdle : 1;       ///< 1, if the sender has its receiver on when not transmitting. 0, otherwise.
-    bool mSecureDataRequests : 1; ///< 1, if the sender uses IEEE 802.15.4 to secure all data requests. 0, otherwise.
-    bool mDeviceType : 1;         ///< 1, if the sender is an FTD. 0, otherwise.
-    bool mNetworkData : 1;        ///< 1, if the sender requires the full Network Data. 0, otherwise.
+    bool mRxOnWhenIdle : 1; ///< 1, if the sender has its receiver on when not transmitting. 0, otherwise.
+    bool mDeviceType : 1;   ///< 1, if the sender is an FTD. 0, otherwise.
+    bool mNetworkData : 1;  ///< 1, if the sender requires the full Network Data. 0, otherwise.
 } otLinkModeConfig;
 
 /**
@@ -90,21 +89,20 @@ typedef struct otLinkModeConfig
  */
 typedef struct
 {
-    otExtAddress mExtAddress;            ///< IEEE 802.15.4 Extended Address
-    uint32_t     mAge;                   ///< Time last heard
-    uint16_t     mRloc16;                ///< RLOC16
-    uint32_t     mLinkFrameCounter;      ///< Link Frame Counter
-    uint32_t     mMleFrameCounter;       ///< MLE Frame Counter
-    uint8_t      mLinkQualityIn;         ///< Link Quality In
-    int8_t       mAverageRssi;           ///< Average RSSI
-    int8_t       mLastRssi;              ///< Last observed RSSI
-    uint16_t     mFrameErrorRate;        ///< Frame error rate (0xffff->100%). Requires error tracking feature.
-    uint16_t     mMessageErrorRate;      ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
-    bool         mRxOnWhenIdle : 1;      ///< rx-on-when-idle
-    bool         mSecureDataRequest : 1; ///< Secure Data Requests
-    bool         mFullThreadDevice : 1;  ///< Full Thread Device
-    bool         mFullNetworkData : 1;   ///< Full Network Data
-    bool         mIsChild : 1;           ///< Is the neighbor a child
+    otExtAddress mExtAddress;           ///< IEEE 802.15.4 Extended Address
+    uint32_t     mAge;                  ///< Time last heard
+    uint16_t     mRloc16;               ///< RLOC16
+    uint32_t     mLinkFrameCounter;     ///< Link Frame Counter
+    uint32_t     mMleFrameCounter;      ///< MLE Frame Counter
+    uint8_t      mLinkQualityIn;        ///< Link Quality In
+    int8_t       mAverageRssi;          ///< Average RSSI
+    int8_t       mLastRssi;             ///< Last observed RSSI
+    uint16_t     mFrameErrorRate;       ///< Frame error rate (0xffff->100%). Requires error tracking feature.
+    uint16_t     mMessageErrorRate;     ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
+    bool         mRxOnWhenIdle : 1;     ///< rx-on-when-idle
+    bool         mFullThreadDevice : 1; ///< Full Thread Device
+    bool         mFullNetworkData : 1;  ///< Full Network Data
+    bool         mIsChild : 1;          ///< Is the neighbor a child
 } otNeighborInfo;
 
 #define OT_NEIGHBOR_INFO_ITERATOR_INIT 0 ///< Initializer for otNeighborInfoIterator.
@@ -836,6 +834,23 @@ typedef void (*otThreadDiscoveryRequestCallback)(const otThreadDiscoveryRequestI
 void otThreadSetDiscoveryRequestCallback(otInstance *                     aInstnace,
                                          otThreadDiscoveryRequestCallback aCallback,
                                          void *                           aContext);
+
+/**
+ * This function sends a Proactive Address Notification (ADDR_NTF.ntf) message.
+ *
+ * This function is only available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aDestination  The destination to send the ADDR_NTF.ntf message.
+ * @param[in]  aTarget       The target address of the ADDR_NTF.ntf message.
+ * @param[in]  aMlIid        The ML-IID of the ADDR_NTF.ntf message.
+ *
+ */
+void otThreadSendAddressNotification(otInstance *              aInstance,
+                                     otIp6Address *            aDestination,
+                                     otIp6Address *            aTarget,
+                                     otIp6InterfaceIdentifier *aMlIid);
+
 /**
  * @}
  *

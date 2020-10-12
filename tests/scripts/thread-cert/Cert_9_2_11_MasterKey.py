@@ -56,9 +56,9 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
                 'timestamp': 10,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT,
-                'master_key': '000102030405060708090a0b0c0d0e0f'
+                'master_key': KEY1
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
@@ -67,9 +67,9 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
                 'timestamp': 10,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT,
-                'master_key': '000102030405060708090a0b0c0d0e0f'
+                'master_key': KEY1
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [COMMISSIONER, ROUTER1]
         },
@@ -78,25 +78,25 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
                 'timestamp': 10,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT,
-                'master_key': '000102030405060708090a0b0c0d0e0f'
+                'master_key': KEY1
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ED1, SED1]
         },
         ED1: {
             'channel': CHANNEL_INIT,
             'is_mtd': True,
-            'masterkey': '000102030405060708090a0b0c0d0e0f',
-            'mode': 'rsn',
+            'masterkey': KEY1,
+            'mode': 'rn',
             'panid': PANID_INIT,
             'allowlist': [ROUTER1]
         },
         SED1: {
             'channel': CHANNEL_INIT,
             'is_mtd': True,
-            'masterkey': '000102030405060708090a0b0c0d0e0f',
-            'mode': 's',
+            'masterkey': KEY1,
+            'mode': '-',
             'panid': PANID_INIT,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER1]

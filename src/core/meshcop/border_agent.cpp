@@ -174,11 +174,7 @@ static void SendErrorMessage(Coap::CoapSecure &aCoapSecure, ForwardContext &aFor
     SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetMessageInfo()));
 
 exit:
-    if ((error != OT_ERROR_NONE) && (message != nullptr))
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     LogError("send error CoAP message", error);
 }
 
@@ -211,11 +207,7 @@ static void SendErrorMessage(Coap::CoapSecure &   aCoapSecure,
     SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetMessageInfo()));
 
 exit:
-    if ((error != OT_ERROR_NONE) && (message != nullptr))
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     LogError("send error CoAP message", error);
 }
 
@@ -265,12 +257,10 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
     SuccessOrExit(error = borderAgent.ForwardToCommissioner(*message, *response));
 
 exit:
+
     if (error != OT_ERROR_NONE)
     {
-        if (message != nullptr)
-        {
-            message->Free();
-        }
+        FreeMessage(message);
 
         otLogWarnMeshCoP("Commissioner request[%hu] failed: %s", forwardContext.GetMessageId(),
                          otThreadErrorToString(error));
@@ -383,7 +373,7 @@ void BorderAgent::HandleProxyTransmit(const Coap::Message &aMessage)
         UdpEncapsulationTlv tlv;
 
         SuccessOrExit(error = Tlv::FindTlvOffset(aMessage, Tlv::kUdpEncapsulation, offset));
-        VerifyOrExit(aMessage.Read(offset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
+        SuccessOrExit(error = aMessage.Read(offset, tlv));
 
         VerifyOrExit((message = Get<Ip6::Udp>().NewMessage(0)) != nullptr, error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = message->SetLength(tlv.GetUdpLength()));
@@ -401,11 +391,7 @@ void BorderAgent::HandleProxyTransmit(const Coap::Message &aMessage)
     otLogInfoMeshCoP("Proxy transmit sent");
 
 exit:
-    if ((error != OT_ERROR_NONE) && (message != nullptr))
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     LogError("send proxy stream", error);
 }
 
@@ -434,7 +420,7 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
         tlv.SetSourcePort(aMessageInfo.GetPeerPort());
         tlv.SetDestinationPort(aMessageInfo.GetSockPort());
         tlv.SetUdpLength(udpLength);
-        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(tlv));
 
         offset = message->GetLength();
         SuccessOrExit(error = message->SetLength(offset + udpLength));
@@ -449,11 +435,7 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
     otLogInfoMeshCoP("Sent to commissioner on %s", UriPath::kProxyRx);
 
 exit:
-    if (message != nullptr && error != OT_ERROR_NONE)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     LogError("notify commissioner on ProxyRx (c/ur)", error);
 
     return error != OT_ERROR_DESTINATION_ADDRESS_FILTERED;
@@ -479,10 +461,7 @@ void BorderAgent::HandleRelayReceive(const Coap::Message &aMessage)
     otLogInfoMeshCoP("Sent to commissioner on %s", UriPath::kRelayRx);
 
 exit:
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessageOnError(message, error);
 }
 
 otError BorderAgent::ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage)
@@ -548,14 +527,7 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
     otLogInfoMeshCoP("Sent to joiner router request on %s", UriPath::kRelayTx);
 
 exit:
-    if (error != OT_ERROR_NONE)
-    {
-        if (message != nullptr)
-        {
-            message->Free();
-        }
-    }
-
+    FreeMessageOnError(message, error);
     LogError("send to joiner router request RelayTx (c/tx)", error);
 }
 
@@ -617,11 +589,7 @@ exit:
             GetInstance().HeapFree(forwardContext);
         }
 
-        if (message != nullptr)
-        {
-            message->Free();
-        }
-
+        FreeMessage(message);
         SendErrorMessage(Get<Coap::CoapSecure>(), aMessage, aSeparate, error);
     }
 

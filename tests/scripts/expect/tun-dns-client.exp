@@ -29,7 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "panid 0xface\n"
 expect "Done"
@@ -44,4 +44,4 @@ send "dns resolve ipv6.google.com ::1 53\n"
 expect "DNS response for ipv6.google.com"
 expect "Done"
 
-dispose
+dispose_all

@@ -129,14 +129,14 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
     uint16_t     addressesOffset, addressesLength;
     Ip6::Address address;
-    Ip6::Address failedAddresses[kIPv6AddressesNumMax];
-    uint8_t      failedAddressNum = 0;
+    Ip6::Address addresses[kIPv6AddressesNumMax];
+    uint8_t      failedAddressNum  = 0;
+    uint8_t      successAddressNum = 0;
     TimeMilli    expireTime;
-
-    uint32_t timeout;
-    uint16_t commissionerSessionId;
-    bool     hasCommissionerSessionIdTlv = false;
-    bool     processTimeoutTlv           = false;
+    uint32_t     timeout;
+    uint16_t     commissionerSessionId;
+    bool         hasCommissionerSessionIdTlv = false;
+    bool         processTimeoutTlv           = false;
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = OT_ERROR_PARSE);
 
@@ -204,7 +204,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
     for (uint16_t offset = 0; offset < addressesLength; offset += sizeof(Ip6::Address))
     {
-        IgnoreReturnValue(aMessage.Read(addressesOffset + offset, sizeof(Ip6::Address), &address));
+        IgnoreError(aMessage.Read(addressesOffset + offset, address));
 
         if (timeout == 0)
         {
@@ -237,7 +237,12 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
             if (failed)
             {
-                failedAddresses[failedAddressNum++] = address;
+                addresses[failedAddressNum++] = address;
+            }
+            else
+            {
+                // Put successfully registered addresses at the end of `addresses`.
+                addresses[kIPv6AddressesNumMax - (++successAddressNum)] = address;
             }
         }
     }
@@ -245,8 +250,13 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 exit:
     if (error == OT_ERROR_NONE)
     {
-        SendMulticastListenerRegistrationResponse(aMessage, aMessageInfo, status, failedAddresses, failedAddressNum);
-        // TODO: (MLR) send BMLR.req
+        SendMulticastListenerRegistrationResponse(aMessage, aMessageInfo, status, addresses, failedAddressNum);
+    }
+
+    if (successAddressNum > 0)
+    {
+        SendBackboneMulticastListenerRegistration(&addresses[kIPv6AddressesNumMax - successAddressNum],
+                                                  successAddressNum, timeout);
     }
 }
 
@@ -272,23 +282,57 @@ void Manager::SendMulticastListenerRegistrationResponse(const Coap::Message &   
 
         addressesTlv.Init();
         addressesTlv.SetLength(sizeof(Ip6::Address) * aFailedAddressNum);
-        SuccessOrExit(error = message->Append(&addressesTlv, sizeof(addressesTlv)));
+        SuccessOrExit(error = message->Append(addressesTlv));
 
         for (uint8_t i = 0; i < aFailedAddressNum; i++)
         {
-            SuccessOrExit(error = message->Append(aFailedAddresses + i, sizeof(Ip6::Address)));
+            SuccessOrExit(error = message->Append(aFailedAddresses[i]));
         }
     }
 
     SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 
 exit:
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     otLogInfoBbr("Sent MLR.rsp (status=%d): %s", aStatus, otThreadErrorToString(error));
+}
+
+void Manager::SendBackboneMulticastListenerRegistration(const Ip6::Address *aAddresses,
+                                                        uint8_t             aAddressNum,
+                                                        uint32_t            aTimeout)
+{
+    otError           error   = OT_ERROR_NONE;
+    Coap::Message *   message = nullptr;
+    Ip6::MessageInfo  messageInfo;
+    IPv6AddressesTlv  addressesTlv;
+    BackboneTmfAgent &backboneTmf = Get<BackboneRouter::BackboneTmfAgent>();
+
+    OT_ASSERT(aAddressNum >= kIPv6AddressesNumMin && aAddressNum <= kIPv6AddressesNumMax);
+
+    VerifyOrExit((message = backboneTmf.NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+
+    SuccessOrExit(error = message->InitAsNonConfirmablePost(UriPath::kBackboneMlr));
+    SuccessOrExit(error = message->SetPayloadMarker());
+
+    addressesTlv.Init();
+    addressesTlv.SetLength(sizeof(Ip6::Address) * aAddressNum);
+    SuccessOrExit(error = message->Append(addressesTlv));
+    SuccessOrExit(error = message->AppendBytes(aAddresses, sizeof(Ip6::Address) * aAddressNum));
+
+    SuccessOrExit(error = ThreadTlv::AppendUint32Tlv(*message, ThreadTlv::kTimeout, aTimeout));
+
+    messageInfo.SetPeerAddr(Get<BackboneRouter::Local>().GetAllNetworkBackboneRoutersAddress());
+    messageInfo.SetPeerPort(BackboneRouter::kBackboneUdpPort); // TODO: Provide API for configuring Backbone COAP port.
+
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    messageInfo.SetHopLimit(Mle::kDefaultBackboneHoplimit);
+    messageInfo.SetIsHostInterface(true);
+
+    SuccessOrExit(error = backboneTmf.SendMessage(*message, messageInfo, nullptr, nullptr));
+
+exit:
+    FreeMessageOnError(message, error);
+    otLogInfoBbr("Sent BMLR.ntf: %s", otThreadErrorToString(error));
 }
 
 void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -300,6 +344,9 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
     bool                       hasLastTransactionTime;
     Ip6::Address               target;
     Ip6::InterfaceIdentifier   meshLocalIid;
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    Coap::Code duaRespCoapCode = Coap::kCodeEmpty;
+#endif
 
     VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator(), error = OT_ERROR_DROP);
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = OT_ERROR_PARSE);
@@ -311,7 +358,15 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
     if (mDuaResponseIsSpecified && (mDuaResponseTargetMlIid.IsUnspecified() || mDuaResponseTargetMlIid == meshLocalIid))
     {
         mDuaResponseIsSpecified = false;
-        ExitNow(status = mDuaResponseStatus);
+        if (mDuaResponseStatus >= Coap::kCodeResponseMin)
+        {
+            duaRespCoapCode = static_cast<Coap::Code>(mDuaResponseStatus);
+        }
+        else
+        {
+            status = static_cast<ThreadStatusTlv::DuaStatus>(mDuaResponseStatus);
+        }
+        ExitNow();
     }
 #endif
 
@@ -347,7 +402,16 @@ exit:
 
     if (error == OT_ERROR_NONE)
     {
-        SendDuaRegistrationResponse(aMessage, aMessageInfo, target, status);
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        if (duaRespCoapCode != Coap::kCodeEmpty)
+        {
+            IgnoreError(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo, duaRespCoapCode));
+        }
+        else
+#endif
+        {
+            SendDuaRegistrationResponse(aMessage, aMessageInfo, target, status);
+        }
     }
 }
 
@@ -370,11 +434,7 @@ void Manager::SendDuaRegistrationResponse(const Coap::Message &      aMessage,
     SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 
 exit:
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     otLogInfoBbr("Sent DUA.rsp for DUA %s, status %d %s", aTarget.ToString().AsCString(), aStatus,
                  otThreadErrorToString(error));
 }
@@ -393,7 +453,7 @@ void Manager::ConfigNextDuaRegistrationResponse(const Ip6::InterfaceIdentifier *
         mDuaResponseTargetMlIid.Clear();
     }
 
-    mDuaResponseStatus = static_cast<ThreadStatusTlv::DuaStatus>(aStatus);
+    mDuaResponseStatus = aStatus;
 }
 
 void Manager::ConfigNextMulticastListenerRegistrationResponse(ThreadStatusTlv::MlrStatus aStatus)

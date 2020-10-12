@@ -29,7 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "mac retries direct 5\n"
 expect "Done"
@@ -56,4 +56,4 @@ expect "Error 7: InvalidArgs"
 send "mac retries indirect 256\n"
 expect "Error 7: InvalidArgs"
 
-dispose
+dispose_all

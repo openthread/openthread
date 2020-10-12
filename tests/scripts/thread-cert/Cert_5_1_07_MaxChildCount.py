@@ -43,14 +43,14 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
             'max_children': 10,
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, 3, 4, 5, 6, SED1, 8, 9, 10, 11, 12]
@@ -58,7 +58,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
         3: {
             'name': 'MED1',
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]
@@ -66,7 +66,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
         4: {
             'name': 'MED2',
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]
@@ -74,7 +74,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
         5: {
             'name': 'MED3',
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]
@@ -82,7 +82,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
         6: {
             'name': 'MED4',
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]
@@ -90,7 +90,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
         SED1: {
             'name': 'SED1',
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]
@@ -98,7 +98,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
         8: {
             'name': 'SED2',
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]
@@ -106,7 +106,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
         9: {
             'name': 'SED3',
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]
@@ -114,7 +114,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
         10: {
             'name': 'SED4',
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]
@@ -122,7 +122,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
         11: {
             'name': 'SED5',
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]
@@ -130,7 +130,7 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
         12: {
             'name': 'SED6',
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]

@@ -46,19 +46,19 @@ SED = 3
 class Cert_6_1_2_REEDAttach_SED(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [REED]
         },
         REED: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
             'allowlist': [LEADER, SED]
         },
         SED: {
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [REED]

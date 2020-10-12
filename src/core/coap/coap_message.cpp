@@ -109,7 +109,7 @@ bool Message::IsNonConfirmablePostRequest(void) const
 
 void Message::Finish(void)
 {
-    Write(0, GetOptionStart(), &GetHelpData().mHeader);
+    WriteBytes(0, &GetHelpData().mHeader, GetOptionStart());
 }
 
 uint8_t Message::WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer)
@@ -176,8 +176,8 @@ otError Message::AppendOption(uint16_t aNumber, uint16_t aLength, const void *aV
     VerifyOrExit(static_cast<uint32_t>(GetLength()) + headerLength + aLength < kMaxHeaderLength,
                  error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = Append(header, headerLength));
-    SuccessOrExit(error = Append(aValue, aLength));
+    SuccessOrExit(error = AppendBytes(header, headerLength));
+    SuccessOrExit(error = AppendBytes(aValue, aLength));
 
     GetHelpData().mOptionLast = aNumber;
 
@@ -251,7 +251,7 @@ otError Message::SetPayloadMarker(void)
     uint8_t marker = kPayloadMarker;
 
     VerifyOrExit(GetLength() < kMaxHeaderLength, error = OT_ERROR_NO_BUFS);
-    SuccessOrExit(error = Append(&marker, sizeof(marker)));
+    SuccessOrExit(error = Append(marker));
     GetHelpData().mHeaderLength = GetLength();
 
     // Set offset to the start of payload.
@@ -273,7 +273,7 @@ otError Message::ParseHeader(void)
     GetHelpData().Clear();
 
     GetHelpData().mHeaderOffset = GetOffset();
-    Read(GetHelpData().mHeaderOffset, sizeof(GetHelpData().mHeader), &GetHelpData().mHeader);
+    IgnoreError(Read(GetHelpData().mHeaderOffset, GetHelpData().mHeader));
 
     VerifyOrExit(GetTokenLength() <= kMaxTokenLength, error = OT_ERROR_PARSE);
 
@@ -518,7 +518,7 @@ otError Option::Iterator::ReadOptionValue(void *aValue) const
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!IsDone(), error = OT_ERROR_NOT_FOUND);
-    GetMessage().Read(mNextOptionOffset - mOption.mLength, mOption.mLength, aValue);
+    GetMessage().ReadBytes(mNextOptionOffset - mOption.mLength, aValue, mOption.mLength);
 
 exit:
     return error;
@@ -554,7 +554,7 @@ otError Option::Iterator::Read(uint16_t aLength, void *aBuffer)
 
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(GetMessage().Read(mNextOptionOffset, aLength, aBuffer) == aLength, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = GetMessage().Read(mNextOptionOffset, aBuffer, aLength));
     mNextOptionOffset += aLength;
 
 exit:

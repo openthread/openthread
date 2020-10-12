@@ -107,6 +107,8 @@ jobs:
       COVERAGE: 1
       PACKET_VERIFICATION: 1
       THREAD_VERSION: 1.2
+      MAC_FILTER: 1
+      INTER_OP: 1
     steps:
       - uses: actions/checkout@v2
       - name: Bootstrap
@@ -117,6 +119,9 @@ jobs:
       - name: Build
         run: |
           ./script/test build
+      - name: Get Thread-Wireshark
+        run: |
+          ./script/test get_thread_wireshark
       - name: Run
         run: |
           for i in {1..10}
@@ -146,6 +151,45 @@ jobs:
         with:
           fail_ci_if_error: true
 
+  packet-verification-1-1-on-1-2:
+    runs-on: ubuntu-18.04
+    env:
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 1
+      PACKET_VERIFICATION: 1
+      THREAD_VERSION: 1.2
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bootstrap
+        run: |
+          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+          sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel ninja-build
+          python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+      - name: Build
+        run: |
+          ./script/test build
+      - name: Get Thread-Wireshark
+        run: |
+          ./script/test get_thread_wireshark
+      - name: Run
+        run: |
+          for i in {1..3}
+          do
+            ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
+          done
+      - uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: packet-verification-1.1-on-1.2-pcaps
+          path: |
+            *.pcap
+            *.json
+      - name: Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
+
+
   expects:
     runs-on: ubuntu-18.04
     env:
@@ -171,3 +215,49 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         fail_ci_if_error: true
+
+  thread-1-2-backbone:
+    runs-on: ubuntu-18.04
+    env:
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 0
+      PACKET_VERIFICATION: 1
+      THREAD_VERSION: 1.2
+      INTER_OP: 1
+      COVERAGE: 1
+      MULTIPLY: 3
+      PYTHONUNBUFFERED: 1
+      OTBR_COMMIT: "e05ad0ea47461bc7aa48858cf7e1d7a9c9044fed" # Sep 29, 2020
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build OTBR Docker
+        run: |
+          ./script/test build_otbr_docker
+      - name: Bootstrap
+        run: |
+          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+          sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build socat
+          python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+      - name: Build
+        run: |
+          ./script/test build
+      - name: Get Thread-Wireshark
+        run: |
+          ./script/test get_thread_wireshark
+      - name: Run
+        run: |
+          export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
+          echo "CI_ENV=${CI_ENV}"
+          sudo -E ./script/test cert_bbr ./tests/scripts/thread-cert/backbone/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
+      - uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: thread-1-2-backbone-results
+          path: |
+            *.pcap
+            *.json
+            *.log
+      - name: Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true

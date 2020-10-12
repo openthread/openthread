@@ -53,8 +53,6 @@
 
 namespace ot {
 
-class ThreadLinkInfo;
-
 /**
  * @addtogroup core-message
  *
@@ -64,6 +62,61 @@ class ThreadLinkInfo;
  * @{
  *
  */
+
+/**
+ * This macro frees a given message buffer if not nullptr.
+ *
+ * This macro and the ones that follow contain small but common code patterns used in many of the core modules. They
+ * are intentionally defined as macros instead of inline methods/functions to ensure that they are fully inlined.
+ * Note that an `inline` method/function is not necessarily always inlined by the toolchain and not inlining such
+ * small implementations can add a rather large code-size overhead.
+ *
+ * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
+ *
+ */
+#define FreeMessage(aMessage)      \
+    do                             \
+    {                              \
+        if ((aMessage) != nullptr) \
+        {                          \
+            (aMessage)->Free();    \
+        }                          \
+    } while (false)
+
+/**
+ * This macro frees a given message buffer if a given `otError` indicates an error.
+ *
+ * The parameter @p aMessage can be nullptr in which case this macro does nothing.
+ *
+ * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
+ * @param[in] aError      The `otError` to check.
+ *
+ */
+#define FreeMessageOnError(aMessage, aError)                        \
+    do                                                              \
+    {                                                               \
+        if (((aError) != OT_ERROR_NONE) && ((aMessage) != nullptr)) \
+        {                                                           \
+            (aMessage)->Free();                                     \
+        }                                                           \
+    } while (false)
+
+/**
+ * This macro frees a given message buffer if a given `otError` indicates an error and sets the `aMessage` to `nullptr`.
+ *
+ * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
+ * @param[in] aError      The `otError` to check.
+ *
+ */
+#define FreeAndNullMessageOnError(aMessage, aError)                 \
+    do                                                              \
+    {                                                               \
+        if (((aError) != OT_ERROR_NONE) && ((aMessage) != nullptr)) \
+        {                                                           \
+            (aMessage)->Free();                                     \
+            (aMessage) = nullptr;                                   \
+        }                                                           \
+    } while (false)
 
 enum
 {
@@ -75,6 +128,7 @@ class Message;
 class MessagePool;
 class MessageQueue;
 class PriorityQueue;
+class ThreadLinkInfo;
 
 /**
  * This structure contains metadata about a Message.
@@ -97,6 +151,9 @@ struct MessageMetadata
     uint16_t    mLength;      ///< Number of bytes within the message.
     uint16_t    mOffset;      ///< A byte offset within the message.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    LqiAverager mLqiAverager; ///< The averager maintaining the Link quality indicator (LQI) average.
+#endif
 
     ChildMask mChildMask; ///< A ChildMask to indicate which sleepy children need to receive this.
     uint16_t  mMeshDest;  ///< Used for unicast non-link-local messages.
@@ -107,7 +164,7 @@ struct MessageMetadata
         uint8_t  mChannel; ///< Used for MLE Announce.
     } mPanIdChannel;       ///< Used for MLE Discover Request, Response, and Announce messages.
 
-    uint8_t mType : 2;         ///< Identifies the type of message.
+    uint8_t mType : 3;         ///< Identifies the type of message.
     uint8_t mSubType : 4;      ///< Identifies the message sub type.
     bool    mDirectTx : 1;     ///< Used to indicate whether a direct transmission is required.
     bool    mLinkSecurity : 1; ///< Indicates whether or not link security is enabled.
@@ -240,10 +297,11 @@ public:
      */
     enum Type
     {
-        kTypeIp6         = 0, ///< A full uncompressed IPv6 packet
-        kType6lowpan     = 1, ///< A 6lowpan frame
-        kTypeSupervision = 2, ///< A child supervision frame.
-        kTypeOther       = 3, ///< Other (data) message.
+        kTypeIp6          = 0, ///< A full uncompressed IPv6 packet
+        kType6lowpan      = 1, ///< A 6lowpan frame
+        kTypeSupervision  = 2, ///< A child supervision frame.
+        kTypeMacEmptyData = 3, ///< An empty MAC data frame.
+        kTypeOther        = 4, ///< Other (data) message.
     };
 
     /**
@@ -496,14 +554,32 @@ public:
      *
      * On success, this method grows the message by @p aLength bytes.
      *
-     * @param[in]  aBuf     A pointer to a data buffer.
+     * @param[in]  aBuf     A pointer to a data buffer (can be `nullptr` to grow message without writing bytes).
      * @param[in]  aLength  The number of bytes to prepend.
      *
      * @retval OT_ERROR_NONE     Successfully prepended the bytes.
      * @retval OT_ERROR_NO_BUFS  Not enough reserved bytes in the message.
      *
      */
-    otError Prepend(const void *aBuf, uint16_t aLength);
+    otError PrependBytes(const void *aBuf, uint16_t aLength);
+
+    /**
+     * This method prepends an object to the front of the message.
+     *
+     * On success, this method grows the message by the size of the object.
+     *
+     * @tparam    ObjectType   The object type to prepend to the message.
+     *
+     * @param[in] aObject      A reference to the object to prepend to the message.
+     *
+     * @retval OT_ERROR_NONE     Successfully prepended the object.
+     * @retval OT_ERROR_NO_BUFS  Not enough reserved bytes in the message.
+     *
+     */
+    template <typename ObjectType> otError Prepend(const ObjectType &aObject)
+    {
+        return PrependBytes(&aObject, sizeof(ObjectType));
+    }
 
     /**
      * This method removes header bytes from the message.
@@ -518,26 +594,81 @@ public:
      *
      * On success, this method grows the message by @p aLength bytes.
      *
-     * @param[in]  aBuf     A pointer to a data buffer.
+     * @param[in]  aBuf     A pointer to a data buffer (MUST not be `nullptr`).
      * @param[in]  aLength  The number of bytes to append.
      *
      * @retval OT_ERROR_NONE     Successfully appended the bytes.
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    otError Append(const void *aBuf, uint16_t aLength);
+    otError AppendBytes(const void *aBuf, uint16_t aLength);
+
+    /**
+     * This method appends an object to the end of the message.
+     *
+     * On success, this method grows the message by the size of the appended object
+     *
+     * @tparam    ObjectType   The object type to append to the message.
+     *
+     * @param[in] aObject      A reference to the object to append to the message.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the object.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
+     *
+     */
+    template <typename ObjectType> otError Append(const ObjectType &aObject)
+    {
+        return AppendBytes(&aObject, sizeof(ObjectType));
+    }
 
     /**
      * This method reads bytes from the message.
      *
      * @param[in]  aOffset  Byte offset within the message to begin reading.
+     * @param[out] aBuf     A pointer to a data buffer to copy the read bytes into.
      * @param[in]  aLength  Number of bytes to read.
-     * @param[in]  aBuf     A pointer to a data buffer.
      *
      * @returns The number of bytes read.
      *
      */
-    uint16_t Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const;
+    uint16_t ReadBytes(uint16_t aOffset, void *aBuf, uint16_t aLength) const;
+
+    /**
+     * This method reads a given number of bytes from the message.
+     *
+     * If there are fewer bytes available in the message than the requested read length, the available bytes will be
+     * read and copied into @p aBuf. In this case `OT_ERROR_PARSE` will be returned.
+     *
+     * @param[in]  aOffset  Byte offset within the message to begin reading.
+     * @param[out] aBuf     A pointer to a data buffer to copy the read bytes into.
+     * @param[in]  aLength  Number of bytes to read.
+     *
+     * @retval OT_ERROR_NONE     @p aLength bytes were successfully read from message.
+     * @retval OT_ERROR_PARSE    Not enough bytes remaining in message to read the entire object.
+     *
+     */
+    otError Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const;
+
+    /**
+     * This method reads an object from the message.
+     *
+     * If there are fewer bytes available in the message than the requested object size, the available bytes will be
+     * read and copied into @p aObject (@p aObject will be read partially). In this case `OT_ERROR_PARSE` will
+     * be returned.
+     *
+     * @tparam     ObjectType   The object type to read from the message.
+     *
+     * @param[in]  aOffset      Byte offset within the message to begin reading.
+     * @param[out] aObject      A reference to the object to read into.
+     *
+     * @retval OT_ERROR_NONE     Object @p aObject was successfully read from message.
+     * @retval OT_ERROR_PARSE    Not enough bytes remaining in message to read the entire object.
+     *
+     */
+    template <typename ObjectType> otError Read(uint16_t aOffset, ObjectType &aObject) const
+    {
+        return Read(aOffset, &aObject, sizeof(ObjectType));
+    }
 
     /**
      * This method writes bytes to the message.
@@ -546,11 +677,28 @@ public:
      * existing message buffer (from the given offset @p aOffset up to the message's length).
      *
      * @param[in]  aOffset  Byte offset within the message to begin writing.
-     * @param[in]  aLength  Number of bytes to write.
      * @param[in]  aBuf     A pointer to a data buffer.
+     * @param[in]  aLength  Number of bytes to write.
      *
      */
-    void Write(uint16_t aOffset, uint16_t aLength, const void *aBuf);
+    void WriteBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength);
+
+    /**
+     * This methods writes an object to the message.
+     *
+     * This method will not resize the message. The entire given object (all its bytes) MUST fit within the existing
+     * message buffer (from the given offset @p aOffset up to the message's length).
+     *
+     * @tparam     ObjectType   The object type to write to the message.
+     *
+     * @param[in]  aOffset      Byte offset within the message to begin writing.
+     * @param[in]  aObject      A reference to the object to write.
+     *
+     */
+    template <typename ObjectType> void Write(uint16_t aOffset, const ObjectType &aObject)
+    {
+        WriteBytes(aOffset, &aObject, sizeof(ObjectType));
+    }
 
     /**
      * This method copies bytes from one message to another.
@@ -828,6 +976,35 @@ public:
      *
      */
     const RssAverager &GetRssAverager(void) const { return GetMetadata().mRssAverager; }
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    /**
+     * This method updates the average LQI (Link Quality Indicator) associated with the message.
+     *
+     * The given LQI value would be added to the average. Note that a message can be composed of multiple 802.15.4
+     * frame fragments each received with a different signal strength.
+     *
+     * @param[in] aLQI A new LQI value (has no unit) to be added to average.
+     *
+     */
+    void AddLqi(uint8_t aLqi) { GetMetadata().mLqiAverager.Add(aLqi); }
+
+    /**
+     * This method returns the average LQI (Link Quality Indicator) associated with the message.
+     *
+     * @returns The current average LQI value (in dBm) or OT_RADIO_LQI_NONE if no average is available.
+     *
+     */
+    uint8_t GetAverageLqi(void) const { return GetMetadata().mLqiAverager.GetAverage(); }
+
+    /**
+     * This mehod returns the count of frames counted so far.
+     *
+     * @retruns The count of frames that have been counted.
+     *
+     */
+    uint8_t GetPsduCount(void) const { return GetMetadata().mLqiAverager.GetCount(); }
+#endif
 
     /**
      * This method sets the message's link info properties (PAN ID, link security, RSS) from a given `ThreadLinkInfo`.

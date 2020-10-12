@@ -44,6 +44,7 @@ class PacketVerifier(object):
     NET_NAME = "OpenThread"
     MC_PORT = 49191
     MM_PORT = 61631
+    BB_PORT = 61631
     LLANMA = 'ff02::1'  # Link-Local All Nodes multicast address
     LLARMA = 'ff02::2'  # Link-Local All Routers multicast address
     RLANMA = 'ff03::1'  # realm-local all-nodes multicast address
@@ -89,6 +90,7 @@ class PacketVerifier(object):
             NET_NAME=PacketVerifier.NET_NAME,
             MM_PORT=PacketVerifier.MM_PORT,
             MC_PORT=PacketVerifier.MC_PORT,
+            BB_PORT=PacketVerifier.BB_PORT,
             LLANMA=PacketVerifier.LLANMA,  # Link-Local All Nodes multicast address
             LLARMA=PacketVerifier.LLARMA,  # Link-Local All Routers multicast address
             RLANMA=PacketVerifier.RLANMA,  # realm-local all-nodes multicast address
@@ -121,8 +123,11 @@ class PacketVerifier(object):
             for addr in addrs:
                 if addr.is_dua:
                     key = name + '_DUA'
-                elif addr.is_backbone:
-                    key = name + '_BBA'
+                elif addr.is_backbone_gua:
+                    key = name + '_BGUA'
+                elif addr.is_link_local and (name + '_BGUA') in self._vars:
+                    # FIXME: assume the link-local address after Backbone GUA is the Backbone Link Local address
+                    key = name + '_BLLA'
                 elif addr.is_link_local:
                     key = name + '_LLA'
                 else:
@@ -148,6 +153,9 @@ class PacketVerifier(object):
             key = self.test_info.get_node_name(i) + '_RLOC'
             self._vars[key] = rloc
 
+        if self.test_info.leader_aloc:
+            self._vars['LEADER_ALOC'] = self.test_info.leader_aloc
+
         for k, v in self.test_info.extra_vars.items():
             assert k not in self._vars, k
             logging.info("add extra var: %s = %s", k, v)
@@ -168,8 +176,8 @@ class PacketVerifier(object):
         :param td: TB's name.
         :param bbr: BBR's name.
         """
-        assert self.is_wpan_device(td)
-        assert self.is_wpan_device(bbr) and self.is_eth_device(bbr), bbr
+        assert self.is_thread_device(td)
+        assert self.is_thread_device(bbr) and self.is_backbone_device(bbr), bbr
 
         if pkts is None:
             pkts = self.pkts
@@ -334,7 +342,7 @@ class PacketVerifier(object):
         :param name: The device name.
         """
         result = VerifyResult()
-        assert self.is_wpan_device(name), name
+        assert self.is_thread_device(name), name
         pkts = pkts or self.pkts
         extaddr = self.vars[name]
 
@@ -366,9 +374,9 @@ class PacketVerifier(object):
         :return: The verification result.
         """
         if bbr:
-            assert not (self.is_wpan_device(src) and self.is_wpan_device(dst)), \
+            assert not (self.is_thread_device(src) and self.is_thread_device(dst)), \
                 f"both {src} and {dst} are WPAN devices"
-            assert not (self.is_eth_device(src) and self.is_eth_device(dst)), \
+            assert not (self.is_backbone_device(src) and self.is_backbone_device(dst)), \
                 f"both {src} and {dst} are ETH devices"
 
         if pkts is None:
@@ -382,7 +390,7 @@ class PacketVerifier(object):
 
         result = VerifyResult()
         ping_req = pkts.filter_ping_request().filter_ipv6_dst(dst_dua)
-        if self.is_eth_device(src):
+        if self.is_backbone_device(src):
             p = ping_req.filter_eth_src(self.vars[src + '_ETH']).must_next()
         else:
             p = ping_req.filter_wpan_src64(self.vars[src]).must_next()
@@ -395,7 +403,7 @@ class PacketVerifier(object):
 
         # BBR unicasts the ping packet to TD.
         if bbr:
-            if self.is_eth_device(src):
+            if self.is_backbone_device(src):
                 ping_req.filter_wpan_src64(bbr_ext).must_next()
             else:
                 ping_req.filter_eth_src(bbr_eth).must_next()
@@ -403,7 +411,7 @@ class PacketVerifier(object):
         ping_reply = pkts.filter_ping_reply().filter_ipv6_dst(src_dua).filter(
             lambda p: p.icmpv6.echo.identifier == ping_id)
         # TD receives ping packet and responds back to Host via SBBR.
-        if self.is_wpan_device(dst):
+        if self.is_thread_device(dst):
             ping_reply.filter_wpan_src64(self.vars[dst]).must_next()
         else:
             ping_reply.filter_eth_src(self.vars[dst + '_ETH']).must_next()
@@ -412,14 +420,14 @@ class PacketVerifier(object):
 
         if bbr:
             # SBBR forwards the ping response packet to Host.
-            if self.is_wpan_device(dst):
+            if self.is_thread_device(dst):
                 ping_reply.filter_eth_src(bbr_eth).must_next()
             else:
                 ping_reply.filter_wpan_src64(bbr_ext).must_next()
 
         return result
 
-    def is_wpan_device(self, name: str) -> bool:
+    def is_thread_device(self, name: str) -> bool:
         """
         Returns if the device is an WPAN device.
 
@@ -429,9 +437,9 @@ class PacketVerifier(object):
         """
         assert isinstance(name, str), name
 
-        return name in self.test_info.extaddrs
+        return name in self.vars
 
-    def is_eth_device(self, name: str) -> bool:
+    def is_backbone_device(self, name: str) -> bool:
         """
         Returns if the device s an Ethernet device.
 
@@ -441,7 +449,7 @@ class PacketVerifier(object):
         """
         assert isinstance(name, str), name
 
-        return name in self.test_info.ethaddrs
+        return f'{name}_ETH' in self.vars
 
     def max_index(self, *indexes: Tuple[int, int]) -> Tuple[int, int]:
         wpan_idx = 0

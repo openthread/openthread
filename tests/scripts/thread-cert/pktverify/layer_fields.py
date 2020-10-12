@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 import sys
+import time, datetime
 from typing import Any, Union
 
 from pyshark.packet.fields import LayerFieldsContainer, LayerField
@@ -64,10 +65,15 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
     if ':' in dv and '::' not in dv and dv.replace(':', '') == rv:  # '88:00', '8800'
         return int(rv, 16)
 
-    if dv.endswith(' CST'):
-        # e.x. 'Jan  1, 1970 08:00:00.000000000 CST', '0000000000000000'
-        # todo: check if the time is valid
-        return int(rv, 16)
+    # timestamp: 'Jan  1, 1970 08:00:00.000000000 CST', '0000000000000000'
+    # convert to seconds from 1970, ignore the nanosecond for now since
+    # there are integer seconds applied in the test cases
+    try:
+        time_str = datetime.datetime.strptime(dv, "%b  %d, %Y %H:%M:%S.%f000 %Z")
+        time_in_sec = time.mktime(time_str.utctimetuple())
+        return int(time_in_sec)
+    except (ValueError, TypeError):
+        pass
 
     try:
         int(rv, 16)
@@ -259,6 +265,7 @@ _LAYER_FIELDS = {
     'mle.tlv.version': _auto,
     'mle.tlv.source_addr': _auto,
     'mle.tlv.active_tstamp': _auto,
+    'mle.tlv.pending_tstamp': _auto,
     'mle.tlv.leader_data.partition_id': _auto,
     'mle.tlv.leader_data.weighting': _auto,
     'mle.tlv.leader_data.data_version': _auto,
@@ -504,10 +511,13 @@ _LAYER_FIELDS = {
     'thread_bl.tlv.target_eid': _ipv6_addr,
     'thread_bl.tlv.ml_eid': _ext_addr,
     'thread_bl.tlv.last_transaction_time': _auto,
+    'thread_bl.tlv.timeout': _auto,
     # THEAD NM
     'thread_nm.tlv.type': _list(_auto),
     'thread_nm.tlv.ml_eid': _ext_addr,
     'thread_nm.tlv.target_eid': _ipv6_addr,
+    'thread_nm.tlv.status': _auto,
+    'thread_nm.tlv.timeout': _auto,
     # thread_meshcop is not a real layer
     'thread_meshcop.len_size_mismatch': _str,
     'thread_meshcop.tlv.type': _list(_auto),
@@ -520,7 +530,7 @@ _LAYER_FIELDS = {
     "thread_meshcop.tlv.chan_mask": _str,  # from ble
     'thread_meshcop.tlv.chan_mask_page': _auto,
     'thread_meshcop.tlv.chan_mask_len': _auto,
-    'thread_meshcop.tlv.chan_mask_mask': _auto,
+    'thread_meshcop.tlv.chan_mask_mask': _bytes,
     'thread_meshcop.tlv.pan_id': _auto,
     'thread_meshcop.tlv.xpan_id': _bytes,
     'thread_meshcop.tlv.ml_prefix': _bytes,
@@ -537,6 +547,7 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.unknown': _bytes,
     'thread_meshcop.tlv.ba_locator': _auto,
     'thread_meshcop.tlv.active_tstamp': _auto,
+    'thread_meshcop.tlv.ipv6_addr': _list(_ipv6_addr),
 
     # THREAD NWD
     'thread_nwd.tlv.type': _list(_auto),
@@ -661,7 +672,7 @@ def check_layer_field_exists(packet, field_uri):
 
 def _get_candidate_layers(packet, layer_name):
     if layer_name == 'thread_meshcop':
-        candidate_layer_names = ['thread_meshcop', 'mle', 'coap', 'thread_bl']
+        candidate_layer_names = ['thread_meshcop', 'mle', 'coap', 'thread_bl', 'thread_nm']
     elif layer_name == 'thread_nwd':
         candidate_layer_names = ['mle', 'thread_address']
     elif layer_name == 'wpan':

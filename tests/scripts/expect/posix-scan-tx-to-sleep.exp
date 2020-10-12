@@ -87,7 +87,4 @@ expect "+---+------------------+------------------+------+------------------+---
 wait_for "" "\\| \\d \\| $network +\\| $extpan \\| $pan \\| $extaddr \\| +$channel \\| +-?\\d+ \\| +\\d \\|"
 wait_for "" "Done"
 
-dispose
-
-set spawn_id $node_1
-dispose
+dispose_all

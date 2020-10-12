@@ -46,14 +46,14 @@ class LowPower_5_3_01_SSEDAttachment(thread_cert.TestCase):
         LEADER: {
             'version': '1.2',
             'name': 'LEADER',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER, SSED_1]
         },
         ROUTER: {
             'version': '1.2',
             'name': 'ROUTER',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER],
@@ -61,7 +61,7 @@ class LowPower_5_3_01_SSEDAttachment(thread_cert.TestCase):
         SSED_1: {
             'version': '1.2',
             'name': 'SSED_1',
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'allowlist': [LEADER],
         },

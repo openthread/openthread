@@ -415,6 +415,15 @@ class PacketFilter(object):
         """
         return self.filter(lambda p: p.wpan.channel == channel, **kwargs)
 
+    def filter_wpan_src16(self, addr, **kwargs):
+        return self.filter(lambda p: p.wpan.src16 == addr, **kwargs)
+
+    def filter_wpan_dst16(self, addr, **kwargs):
+        return self.filter(lambda p: p.wpan.dst16 == addr, **kwargs)
+
+    def filter_wpan_src16_dst16(self, src_addr, dst_addr, **kwargs):
+        return self.filter(lambda p: p.wpan.src16 == src_addr and p.wpan.dst16 == dst_addr, **kwargs)
+
     def filter_wpan_src64(self, addr, **kwargs):
         assert isinstance(addr, (str, ExtAddr)), addr
         return self.filter(lambda p: p.wpan.src64 == addr, **kwargs)
@@ -443,6 +452,11 @@ class PacketFilter(object):
         assert isinstance(addr, (str, Ipv6Addr))
         return self.filter(lambda p: p.ipv6.dst == addr, **kwargs)
 
+    def filter_ipv6_2dsts(self, addr1, addr2, **kwargs):
+        assert isinstance(addr1, (str, Ipv6Addr))
+        assert isinstance(addr2, (str, Ipv6Addr))
+        return self.filter(lambda p: p.ipv6.dst == addr1 or p.ipv6.dst == addr2, **kwargs)
+
     def filter_ipv6_src_dst(self, src_addr, dst_addr, **kwargs):
         assert isinstance(src_addr, (str, Ipv6Addr))
         assert isinstance(dst_addr, (str, Ipv6Addr))
@@ -454,12 +468,18 @@ class PacketFilter(object):
     def filter_LLABMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_BBRS_MULTICAST_ADDRESS, **kwargs)
 
+    def filter_LLARMA(self, **kwargs):
+        return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS, **kwargs)
+
     def filter_mle(self, **kwargs):
         return self.filter(attrgetter('mle'), **kwargs)
 
     def filter_mle_cmd(self, cmd, **kwargs):
         assert isinstance(cmd, int), cmd
         return self.filter(lambda p: p.mle.cmd == cmd, **kwargs)
+
+    def filter_mle_has_tlv(self, *tlv_types, **kwargs):
+        return self.filter(lambda p: set(tlv_types) <= set(p.mle.tlv.type), **kwargs)
 
     def filter_icmpv6(self, **kwargs):
         return self.filter(attrgetter('icmpv6'), **kwargs)

@@ -44,26 +44,26 @@ MTDS = [ED, SED]
 class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ED, SED]
         },
         ED: {
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]
         },
         SED: {
             'is_mtd': True,
-            'mode': 'sn',
+            'mode': 'n',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]

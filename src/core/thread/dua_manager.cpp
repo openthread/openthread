@@ -258,7 +258,18 @@ void DuaManager::UpdateRegistrationDelay(uint8_t aDelay)
         UpdateTimeTickerRegistration();
     }
 }
-#endif
+
+void DuaManager::NotifyDuplicateDomainUnicastAddress(void)
+{
+    RemoveDomainUnicastAddress();
+    mDadCounter++;
+
+    if (GenerateDomainUnicastAddressIid() == OT_ERROR_NONE)
+    {
+        AddDomainUnicastAddress();
+    }
+}
+#endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
 void DuaManager::UpdateReregistrationDelay(void)
 {
@@ -493,7 +504,8 @@ void DuaManager::PerformNextRegistration(void)
     SuccessOrExit(error =
                       Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, &DuaManager::HandleDuaResponse, this));
 
-    mIsDuaPending = true;
+    mIsDuaPending   = true;
+    mRegisteringDua = dua;
 
     // TODO: (DUA) need update when CSL is enabled.
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
@@ -507,11 +519,7 @@ exit:
         UpdateCheckDelay(Mle::kNoBufDelay);
     }
 
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     otLogInfoDua("Sent DUA.req for DUA %s: %s", dua.ToString().AsCString(), otThreadErrorToString(error));
 }
 
@@ -528,7 +536,9 @@ void DuaManager::HandleDuaResponse(Coap::Message &aMessage, const Ip6::MessageIn
         ExitNow(error = aResult);
     }
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage.GetCode() == Coap::kCodeChanged, error = OT_ERROR_PARSE);
+    VerifyOrExit(aResult == OT_ERROR_NONE, error = OT_ERROR_PARSE);
+    VerifyOrExit(aMessage.GetCode() == Coap::kCodeChanged || aMessage.GetCode() >= Coap::kCodeBadRequest,
+                 error = OT_ERROR_PARSE);
 
     error = ProcessDuaResponse(aMessage);
 
@@ -567,8 +577,16 @@ otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
     Ip6::Address target;
     uint8_t      status;
 
-    SuccessOrExit(error = Tlv::FindUint8Tlv(aMessage, ThreadTlv::kStatus, status));
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+    if (aMessage.GetCode() >= Coap::kCodeBadRequest)
+    {
+        status = ThreadStatusTlv::kDuaGeneralFailure;
+        target = mRegisteringDua;
+    }
+    else
+    {
+        SuccessOrExit(error = Tlv::FindUint8Tlv(aMessage, ThreadTlv::kStatus, status));
+        SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+    }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     if (Get<ThreadNetif>().HasUnicastAddress(target))
@@ -588,14 +606,7 @@ otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
             RemoveDomainUnicastAddress();
             break;
         case ThreadStatusTlv::kDuaDuplicate:
-            RemoveDomainUnicastAddress();
-            mDadCounter++;
-
-            if (GenerateDomainUnicastAddressIid() == OT_ERROR_NONE)
-            {
-                AddDomainUnicastAddress();
-            }
-
+            NotifyDuplicateDomainUnicastAddress();
             break;
         case ThreadStatusTlv::kDuaNoResources:
         case ThreadStatusTlv::kDuaNotPrimary:
@@ -672,16 +683,14 @@ void DuaManager::SendAddressNotification(Ip6::Address &             aAddress,
     otLogInfoDua("Sent ADDR_NTF for child %04x DUA %s", aChild.GetRloc16(), aAddress.ToString().AsCString());
 
 exit:
+
     if (error != OT_ERROR_NONE)
     {
+        FreeMessage(message);
+
         // TODO: (DUA) (P4) may enhance to  guarantee the delivery of DUA.ntf
         otLogWarnDua("Sent ADDR_NTF for child %04x DUA %s Error %s", aChild.GetRloc16(),
                      aAddress.ToString().AsCString(), otThreadErrorToString(error));
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
     }
 }
 

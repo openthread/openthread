@@ -67,6 +67,7 @@ build_simulation()
 
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_CSL_RECEIVER=ON")
+        options+=("-DOT_LINK_METRICS=ON")
     fi
 
     if [[ ${ot_extra_options[*]+x} ]]; then
@@ -227,6 +228,75 @@ do_cert_suite()
     else
         exit 0
     fi
+}
+
+do_cert_bbr()
+{
+    if [[ ${THREAD_VERSION} != "1.2" ]]; then
+        echo "cert_bbr only work with THREAD_VERSION=1.2!"
+        exit 1
+    fi
+
+    if [[ ${VIRTUAL_TIME} != "0" ]]; then
+        echo "cert_bbr only work with VIRTUAL_TIME=0!"
+        exit 1
+    fi
+
+    export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-1.2"
+    export top_builddir_1_2_bbr="${OT_BUILDDIR}/cmake/openthread-simulation-1.2-bbr"
+    export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
+    export PYTHONPATH=tests/scripts/thread-cert
+
+    python3 tests/scripts/thread-cert/run_bbr_tests.py --multiply "${MULTIPLY:-1}" "$@"
+}
+
+do_get_thread_wireshark()
+{
+    echo "Downloading thread-wireshark from https://github.com/openthread/wireshark/releases ..."
+    local download_url=https://github.com/openthread/wireshark/releases/download/ot-pktverify-20200727/thread-wireshark.tar.gz
+    local save_file=/tmp/thread-wireshark.tar.gz
+
+    rm -rf /tmp/thread-wireshark || true
+    rm -rf "${save_file}" || true
+    curl -L "${download_url}" -o "${save_file}"
+    tar -C /tmp -xvzf "${save_file}"
+
+    LD_LIBRARY_PATH=/tmp/thread-wireshark /tmp/thread-wireshark/tshark -v
+    LD_LIBRARY_PATH=/tmp/thread-wireshark /tmp/thread-wireshark/dumpcap -v
+    rm -rf "${save_file}"
+}
+
+do_build_otbr_docker()
+{
+    echo "Building OTBR Docker ..."
+    local otdir
+    local otbrdir
+    local otbr_options="-DOTBR_BACKBONE_ROUTER=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_REFERENCE_DEVICE=ON -DOT_COVERAGE=ON"
+    local otbr_commit=${OTBR_COMMIT:-master}
+    local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
+
+    otbrdir=$(mktemp -d -t otbr_XXXXXX)
+    otdir=$(pwd)
+
+    (
+        cd "${otbrdir}"
+        git init
+        git remote add origin https://github.com/openthread/ot-br-posix.git
+        git fetch origin "${otbr_commit}" --depth 1
+        git reset --hard FETCH_HEAD
+        git submodule update --init --recursive --depth 1
+        rm -rf third_party/openthread/repo
+        cp -r "${otdir}" third_party/openthread/repo
+        rm -rf .git
+        docker build -t "${otbr_docker_image}" -f etc/docker/Dockerfile . --build-arg REFERENCE_DEVICE=1 --build-arg OT_BACKBONE_CI=1 --build-arg OTBR_OPTIONS="${otbr_options}"
+    )
+
+    rm -rf "${otbrdir}"
+}
+
+do_pktverify()
+{
+    python3 ./tests/scripts/thread-cert/pktverify/verify.py "$1"
 }
 
 do_expect()
@@ -423,7 +493,7 @@ main()
 {
     envsetup "$@"
 
-    if [[ -z $1 ]]; then
+    if [[ -z ${1:-} ]]; then
         print_usage 1
     fi
 
@@ -448,6 +518,20 @@ main()
                 shift
                 do_cert_suite "$@"
                 ;;
+            cert_bbr)
+                shift
+                do_cert_bbr "$@"
+                ;;
+            get_thread_wireshark)
+                do_get_thread_wireshark
+                ;;
+            build_otbr_docker)
+                do_build_otbr_docker
+                ;;
+            pktverify)
+                shift
+                do_pktverify "$1"
+                ;;
             unit)
                 do_unit
                 ;;
@@ -468,6 +552,10 @@ main()
             untar)
                 shift
                 do_untar "$@"
+                ;;
+            *)
+                echo
+                echo -e "${COLOR_FAIL}Warning:${COLOR_NONE} Ignoring: '$1'"
                 ;;
         esac
         shift

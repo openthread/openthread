@@ -131,10 +131,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        if (message)
-        {
-            message->Free();
-        }
+        FreeMessage(message);
 
         if (messageCopy)
         {
@@ -150,7 +147,7 @@ Message *Client::NewMessage(const Header &aHeader)
     Message *message = nullptr;
 
     VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != nullptr, OT_NOOP);
-    IgnoreError(message->Prepend(&aHeader, sizeof(aHeader)));
+    IgnoreError(message->Prepend(aHeader));
     message->SetOffset(0);
 
 exit:
@@ -172,13 +169,7 @@ Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetad
     mRetransmissionTimer.FireAtIfEarlier(aQueryMetadata.mTransmissionTime);
 
 exit:
-
-    if (error != OT_ERROR_NONE && messageCopy != nullptr)
-    {
-        messageCopy->Free();
-        messageCopy = nullptr;
-    }
-
+    FreeAndNullMessageOnError(messageCopy, error);
     return messageCopy;
 }
 
@@ -217,12 +208,8 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
+        FreeMessage(messageCopy);
         otLogWarnIp6("Failed to send DNS request: %s", otThreadErrorToString(error));
-
-        if (messageCopy != nullptr)
-        {
-            messageCopy->Free();
-        }
     }
 }
 
@@ -239,8 +226,8 @@ otError Client::AppendCompressedHostname(Message &aMessage, const char *aHostnam
         if (aHostname[index] == kLabelSeparator || aHostname[index] == kLabelTerminator)
         {
             VerifyOrExit(labelSize > 0, error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = aMessage.Append(&labelSize, 1));
-            SuccessOrExit(error = aMessage.Append(&aHostname[labelPosition], labelSize));
+            SuccessOrExit(error = aMessage.Append(labelSize));
+            SuccessOrExit(error = aMessage.AppendBytes(&aHostname[labelPosition], labelSize));
 
             labelPosition += labelSize + 1;
             labelSize = 0;
@@ -260,7 +247,7 @@ otError Client::AppendCompressedHostname(Message &aMessage, const char *aHostnam
 
     // Add termination character at the end.
     labelSize = kLabelTerminator;
-    SuccessOrExit(error = aMessage.Append(&labelSize, 1));
+    SuccessOrExit(error = aMessage.Append(labelSize));
 
 exit:
     return error;
@@ -279,10 +266,10 @@ otError Client::CompareQuestions(Message &aMessageResponse, Message &aMessageQue
 
     while (length > 0)
     {
-        VerifyOrExit(
-            (read = aMessageQuery.Read(offset, length < sizeof(bufQuery) ? length : sizeof(bufQuery), bufQuery)) > 0,
-            error = OT_ERROR_PARSE);
-        VerifyOrExit(aMessageResponse.Read(aOffset, read, bufResponse) == read, error = OT_ERROR_PARSE);
+        VerifyOrExit((read = aMessageQuery.ReadBytes(offset, bufQuery,
+                                                     length < sizeof(bufQuery) ? length : sizeof(bufQuery))) > 0,
+                     error = OT_ERROR_PARSE);
+        SuccessOrExit(error = aMessageResponse.Read(aOffset, bufResponse, read));
 
         VerifyOrExit(memcmp(bufResponse, bufQuery, read) == 0, error = OT_ERROR_NOT_FOUND);
 
@@ -306,7 +293,7 @@ otError Client::SkipHostname(Message &aMessage, uint16_t &aOffset)
 
     while (length > 0)
     {
-        VerifyOrExit((read = aMessage.Read(offset, sizeof(buf), buf)) > 0, error = OT_ERROR_PARSE);
+        VerifyOrExit((read = aMessage.ReadBytes(offset, buf, sizeof(buf))) > 0, error = OT_ERROR_PARSE);
 
         index = 0;
 
@@ -343,10 +330,10 @@ Message *Client::FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &
     while (message != nullptr)
     {
         // Partially read DNS header to obtain message ID only.
-        uint16_t count = message->Read(message->GetOffset(), sizeof(messageId), &messageId);
+        otError error = message->Read(message->GetOffset(), messageId);
 
-        OT_UNUSED_VARIABLE(count);
-        OT_ASSERT(count == sizeof(messageId));
+        OT_UNUSED_VARIABLE(error);
+        OT_ASSERT(error == OT_ERROR_NONE);
 
         if (HostSwap16(messageId) == aResponseHeader.GetMessageId())
         {
@@ -450,8 +437,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     Message *          message = nullptr;
     uint16_t           offset;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) == sizeof(responseHeader),
-                 OT_NOOP);
+    SuccessOrExit(aMessage.Read(aMessage.GetOffset(), responseHeader));
     VerifyOrExit(responseHeader.GetType() == Header::kTypeResponse && responseHeader.GetQuestionCount() == 1 &&
                      !responseHeader.IsTruncationFlagSet(),
                  OT_NOOP);
@@ -473,7 +459,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
         SuccessOrExit(error = SkipHostname(aMessage, offset));
 
-        VerifyOrExit(aMessage.Read(offset, sizeof(record), &record) == sizeof(record), error = OT_ERROR_PARSE);
+        SuccessOrExit(error = aMessage.Read(offset, record));
 
         if ((record.GetType() == ResourceRecordAaaa::kType) && (record.GetClass() == ResourceRecordAaaa::kClass))
         {
@@ -500,12 +486,12 @@ void Client::QueryMetadata::ReadFrom(const Message &aMessage)
     uint16_t length = aMessage.GetLength();
 
     OT_ASSERT(length >= sizeof(*this));
-    aMessage.Read(length - sizeof(*this), sizeof(*this), this);
+    IgnoreError(aMessage.Read(length - sizeof(*this), *this));
 }
 
 void Client::QueryMetadata::UpdateIn(Message &aMessage) const
 {
-    aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    aMessage.Write(aMessage.GetLength() - sizeof(*this), *this);
 }
 
 } // namespace Dns

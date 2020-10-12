@@ -80,17 +80,6 @@ def make_filter_func(func: Union[str, Callable], **vars) -> Callable:
     return func
 
 
-def _install_travis_thread_wireshark():
-    logging.info("downloading thread-wireshark from https://github.com/openthread/wireshark/releases ...")
-
-    download_url = 'https://github.com/openthread/wireshark/releases/download/ot-pktverify-20200727/thread-wireshark.tar.gz'
-    save_file = '/tmp/thread-wireshark.tar.gz'
-
-    subprocess.check_call(f'curl -L {download_url} -o {save_file}', shell=True)
-    subprocess.check_call(f'tar -C /tmp -xvzf {save_file}', shell=True)
-    assert os.path.isdir('/tmp/thread-wireshark')
-
-
 def _setup_wireshark_disabled_protos():
     home = os.environ['HOME']
     wireshark_config_dir = os.path.join(home, '.config', 'wireshark')
@@ -123,11 +112,7 @@ def get_wireshark_dir() -> str:
     :return: The path to wireshark directory.
     """
     dir = '/tmp/thread-wireshark'
-    if not os.path.exists(dir):
-        _install_travis_thread_wireshark()
-
     _setup_wireshark_disabled_protos()
-
     return dir
 
 

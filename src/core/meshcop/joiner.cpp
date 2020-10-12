@@ -611,11 +611,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6:
     otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.rsp");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessageOnError(message, error);
 }
 
 void Joiner::HandleTimer(Timer &aTimer)
@@ -691,7 +687,7 @@ void Joiner::LogCertMessage(const char *aText, const Coap::Message &aMessage) co
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
 
     VerifyOrExit(aMessage.GetLength() <= sizeof(buf), OT_NOOP);
-    aMessage.Read(aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset(), buf);
+    aMessage.ReadBytes(aMessage.GetOffset(), buf, aMessage.GetLength() - aMessage.GetOffset());
 
     otDumpCertMeshCoP(aText, buf, aMessage.GetLength() - aMessage.GetOffset());
 

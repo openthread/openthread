@@ -151,6 +151,9 @@ private:
                                                    ThreadStatusTlv::MlrStatus aStatus,
                                                    Ip6::Address *             aFailedAddresses,
                                                    uint8_t                    aFailedAddressNum);
+    void SendBackboneMulticastListenerRegistration(const Ip6::Address *aAddresses,
+                                                   uint8_t             aAddressNum,
+                                                   uint32_t            aTimeout);
 
     static void HandleDuaRegistration(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
@@ -179,7 +182,7 @@ private:
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     Ip6::InterfaceIdentifier   mDuaResponseTargetMlIid;
-    ThreadStatusTlv::DuaStatus mDuaResponseStatus;
+    uint8_t                    mDuaResponseStatus;
     ThreadStatusTlv::MlrStatus mMlrResponseStatus;
     bool                       mDuaResponseIsSpecified : 1;
     bool                       mMlrResponseIsSpecified : 1;

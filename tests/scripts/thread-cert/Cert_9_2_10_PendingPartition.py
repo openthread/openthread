@@ -60,7 +60,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
                 'panid': 0xface,
                 'channel': 19
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
@@ -71,7 +71,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
                 'panid': 0xface,
                 'channel': 19
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'partition_id': 0xffffffff,
             'router_selection_jitter': 1,
             'allowlist': [COMMISSIONER, ROUTER1]
@@ -83,7 +83,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
                 'panid': 0xface,
                 'channel': 19
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ED1, SED1]
         },
@@ -91,7 +91,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'name': 'MED',
             'channel': 19,
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [ROUTER1]
         },
@@ -99,7 +99,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'name': 'SED',
             'channel': 19,
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER1]
@@ -188,6 +188,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         # Step 5: Router MUST send a unicast MLE Data Request to the Leader
         _rpkts.filter_wpan_dst64(LEADER).filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
             lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
+        _rpkts_med = _rpkts.copy()
 
         # Step 7: Router MUST multicast a MLE Data Response
         _rpkts.filter_ipv6_dst(LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).filter_mle_cmd(
@@ -202,7 +203,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             ).must_verify(lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type))
 
         # Step 9: Router MUST send a unicast MLE Data Response to MED_1
-        _rpkts.copy().filter_wpan_dst64(MED).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
+        _rpkts_med.filter_wpan_dst64(MED).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(lambda p: {
             SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_OPERATION_DATASET_TLV
         } <= set(p.mle.tlv.type) and {
             NM_CHANNEL_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PAN_ID_TLV, NM_DELAY_TIMER_TLV,

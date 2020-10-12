@@ -252,10 +252,9 @@ otError CoapBase::SendAck(const Message &aRequest, const Ip6::MessageInfo &aMess
     return SendEmptyMessage(kTypeAck, aRequest, aMessageInfo);
 }
 
-otError CoapBase::SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
+otError CoapBase::SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo, Code aCode)
 {
-    return (aRequest.IsConfirmable() ? SendHeaderResponse(kCodeChanged, aRequest, aMessageInfo)
-                                     : OT_ERROR_INVALID_ARGS);
+    return (aRequest.IsConfirmable() ? SendHeaderResponse(aCode, aRequest, aMessageInfo) : OT_ERROR_INVALID_ARGS);
 }
 
 otError CoapBase::SendNotFound(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
@@ -279,12 +278,7 @@ otError CoapBase::SendEmptyMessage(Type aType, const Message &aRequest, const Ip
     SuccessOrExit(error = Send(*message, aMessageInfo));
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -317,12 +311,7 @@ otError CoapBase::SendHeaderResponse(Message::Code aCode, const Message &aReques
     SuccessOrExit(error = SendMessage(*message, aMessageInfo));
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -440,13 +429,7 @@ Message *CoapBase::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopy
     mPendingRequests.Enqueue(*messageCopy);
 
 exit:
-
-    if (error != OT_ERROR_NONE && messageCopy != nullptr)
-    {
-        messageCopy->Free();
-        messageCopy = nullptr;
-    }
-
+    FreeAndNullMessageOnError(messageCopy, error);
     return messageCopy;
 }
 
@@ -481,11 +464,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         otLogWarnCoap("Failed to send copy: %s", otThreadErrorToString(error));
-
-        if (messageCopy != nullptr)
-        {
-            messageCopy->Free();
-        }
+        FreeMessage(messageCopy);
     }
 }
 
@@ -762,10 +741,7 @@ exit:
             IgnoreError(SendNotFound(aMessage, aMessageInfo));
         }
 
-        if (cachedResponse != nullptr)
-        {
-            cachedResponse->Free();
-        }
+        FreeMessage(cachedResponse);
     }
 }
 
@@ -774,12 +750,12 @@ void CoapBase::Metadata::ReadFrom(const Message &aMessage)
     uint16_t length = aMessage.GetLength();
 
     OT_ASSERT(length >= sizeof(*this));
-    aMessage.Read(length - sizeof(*this), sizeof(*this), this);
+    IgnoreError(aMessage.Read(length - sizeof(*this), *this));
 }
 
 void CoapBase::Metadata::UpdateIn(Message &aMessage) const
 {
-    aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    aMessage.Write(aMessage.GetLength() - sizeof(*this), *this);
 }
 
 ResponsesQueue::ResponsesQueue(Instance &aInstance)
@@ -943,7 +919,7 @@ void ResponsesQueue::ResponseMetadata::ReadFrom(const Message &aMessage)
     uint16_t length = aMessage.GetLength();
 
     OT_ASSERT(length >= sizeof(*this));
-    aMessage.Read(length - sizeof(*this), sizeof(*this), this);
+    IgnoreError(aMessage.Read(length - sizeof(*this), *this));
 }
 
 /// Return product of @p aValueA and @p aValueB if no overflow otherwise 0.

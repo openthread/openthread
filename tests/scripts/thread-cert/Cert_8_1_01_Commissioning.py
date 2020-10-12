@@ -46,12 +46,12 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
     TOPOLOGY = {
         COMMISSIONER: {
             'masterkey': '00112233445566778899aabbccddeeff',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface
         },
         JOINER: {
             'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1
         },
     }
@@ -81,12 +81,15 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
 
         # 3 - Joiner_1
         msg = joiner_messages.next_mle_message(mle.CommandType.DISCOVERY_REQUEST)
-        command.check_discovery_request(msg)
+        command.check_discovery_request(msg, thread_version=self.nodes[JOINER].version)
         request_src_addr = msg.mac_header.src_address
 
         # 4 - Commissioner
         msg = commissioner_messages.next_mle_message(mle.CommandType.DISCOVERY_RESPONSE)
-        command.check_discovery_response(msg, request_src_addr, steering_data=CheckType.CONTAIN)
+        command.check_discovery_response(msg,
+                                         request_src_addr,
+                                         steering_data=CheckType.CONTAIN,
+                                         thread_version=self.nodes[COMMISSIONER].version)
         udp_port_set_by_commissioner = command.get_joiner_udp_port_in_discovery_response(msg)
 
         # 5.2 - Joiner_1

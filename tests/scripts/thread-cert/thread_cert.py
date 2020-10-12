@@ -28,31 +28,40 @@
 #
 
 import json
+import logging
 import os
+import signal
 import subprocess
 import sys
 import time
+import traceback
 import unittest
+from typing import Optional, Callable
 
 import config
 import debug
-from node import Node
+from node import Node, OtbrNode, HostNode
+from pktverify import utils as pvutils
 
 PACKET_VERIFICATION = int(os.getenv('PACKET_VERIFICATION', 0))
 
 if PACKET_VERIFICATION:
-    from pktverify.addrs import ExtAddr
+    from pktverify.addrs import ExtAddr, EthAddr
     from pktverify.packet_verifier import PacketVerifier
 
 PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
+ENV_THREAD_VERSION = os.getenv('THREAD_VERSION', '1.1')
+
 DEFAULT_PARAMS = {
     'is_mtd': False,
     'is_bbr': False,
-    'mode': 'rsdn',
+    'is_otbr': False,
+    'is_host': False,
+    'mode': 'rdn',
     'panid': 0xface,
     'allowlist': None,
-    'version': '1.1',
+    'version': ENV_THREAD_VERSION,
 }
 """Default configurations when creating nodes."""
 
@@ -80,39 +89,73 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
     The `topology` member of sub-class is used to create test topology.
     """
 
+    USE_MESSAGE_FACTORY = True
     TOPOLOGY = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
         self._start_time = None
         self._do_packet_verification = PACKET_VERIFICATION and hasattr(self, 'verify')
 
     def setUp(self):
+        try:
+            self._setUp()
+        except:
+            traceback.print_exc()
+            for node in list(self.nodes.values()):
+                try:
+                    node.destroy()
+                except Exception:
+                    traceback.print_exc()
+
+            raise
+
+    def _setUp(self):
         """Create simulator, nodes and apply configurations.
         """
         self._clean_up_tmp()
 
-        self.simulator = config.create_default_simulator()
+        self.simulator = config.create_default_simulator(use_message_factory=self.USE_MESSAGE_FACTORY)
         self.nodes = {}
+
+        os.environ['LD_LIBRARY_PATH'] = '/tmp/thread-wireshark'
+
+        if self._has_backbone_traffic():
+            self._prepare_backbone_network()
+            self._start_backbone_sniffer()
 
         self._initial_topology = initial_topology = {}
 
         for i, params in self.TOPOLOGY.items():
-            if params:
-                params = dict(DEFAULT_PARAMS, **params)
-            else:
-                params = DEFAULT_PARAMS.copy()
-
+            params = self._parse_params(params)
             initial_topology[i] = params
 
-            self.nodes[i] = Node(
+            logging.info("Creating node %d: %r", i, params)
+
+            if params['is_otbr']:
+                nodeclass = OtbrNode
+            elif params['is_host']:
+                nodeclass = HostNode
+            else:
+                nodeclass = Node
+
+            node = nodeclass(
                 i,
-                params['is_mtd'],
+                is_mtd=params['is_mtd'],
                 simulator=self.simulator,
                 name=params.get('name'),
                 version=params['version'],
                 is_bbr=params['is_bbr'],
             )
+
+            self.nodes[i] = node
+
+            if node.is_host:
+                continue
+
             self.nodes[i].set_panid(params['panid'])
             self.nodes[i].set_mode(params['mode'])
 
@@ -131,6 +174,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 self.nodes[i].set_router_upgrade_threshold(params['router_upgrade_threshold'])
             if 'router_downgrade_threshold' in params:
                 self.nodes[i].set_router_downgrade_threshold(params['router_downgrade_threshold'])
+            if 'router_eligible' in params:
+                self.nodes[i].set_router_eligible(params['router_eligible'])
 
             if 'timeout' in params:
                 self.nodes[i].set_timeout(params['timeout'])
@@ -146,7 +191,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 self.nodes[i].set_pending_dataset(params['pending_dataset']['pendingtimestamp'],
                                                   params['pending_dataset']['activetimestamp'],
                                                   panid=params['pending_dataset'].get('panid'),
-                                                  channel=params['pending_dataset'].get('channel'))
+                                                  channel=params['pending_dataset'].get('channel'),
+                                                  delay=params['pending_dataset'].get('delay'))
 
             if 'key_switch_guardtime' in params:
                 self.nodes[i].set_key_switch_guardtime(params['key_switch_guardtime'])
@@ -186,10 +232,14 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         """
         if self._do_packet_verification and os.uname().sysname != "Linux":
             raise NotImplementedError(
-                f'{self.testcase_name}: Packet Verification not available on {os.uname().sysname} (Linux only).')
+                f'{self.test_name}: Packet Verification not available on {os.uname().sysname} (Linux only).')
 
         if self._do_packet_verification:
             time.sleep(3)
+
+        if self._has_backbone_traffic():
+            # Stop Backbone sniffer before stopping nodes so that we don't capture Codecov Uploading traffic
+            self._stop_backbone_sniffer()
 
         for node in list(self.nodes.values()):
             node.stop()
@@ -197,11 +247,16 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
         self.simulator.stop()
 
+        if self._has_backbone_traffic():
+            self._remove_backbone_network()
+            pcap_filename = self._merge_thread_backbone_pcaps()
+        else:
+            pcap_filename = self._get_thread_pcap_filename()
+
         if self._do_packet_verification:
-            self._test_info['pcap'] = self._get_pcap_filename()
+            self._test_info['pcap'] = pcap_filename
 
             test_info_path = self._output_test_info()
-            os.environ['LD_LIBRARY_PATH'] = '/tmp/thread-wireshark'
             self._verify_packets(test_info_path)
 
     def flush_all(self):
@@ -234,8 +289,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         print("Packet verification passed: %s" % test_info_path, file=sys.stderr)
 
     @property
-    def testcase_name(self):
-        return os.path.splitext(os.path.basename(sys.argv[0]))[0]
+    def test_name(self):
+        return os.getenv('TEST_NAME', 'current')
 
     def collect_ipaddrs(self):
         if not self._do_packet_verification:
@@ -246,8 +301,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         for i, node in self.nodes.items():
             ipaddrs = node.get_addrs()
             test_info['ipaddrs'][i] = ipaddrs
-            mleid = node.get_mleid()
-            test_info['mleids'][i] = mleid
+            if not node.is_host:
+                mleid = node.get_mleid()
+                test_info['mleids'][i] = mleid
 
     def collect_rloc16s(self):
         if not self._do_packet_verification:
@@ -257,7 +313,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         test_info['rloc16s'] = {}
 
         for i, node in self.nodes.items():
-            test_info['rloc16s'][i] = '0x%04x' % node.get_addr16()
+            if not node.is_host:
+                test_info['rloc16s'][i] = '0x%04x' % node.get_addr16()
 
     def collect_rlocs(self):
         if not self._do_packet_verification:
@@ -268,6 +325,13 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
         for i, node in self.nodes.items():
             test_info['rlocs'][i] = node.get_rloc()
+
+    def collect_leader_aloc(self, node):
+        if not self._do_packet_verification:
+            return
+
+        test_info = self._test_info
+        test_info['leader_aloc'] = self.nodes[node].get_addr_leader_aloc()
 
     def collect_extra_vars(self, **vars):
         if not self._do_packet_verification:
@@ -287,7 +351,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             return
 
         test_info = self._test_info = {
-            'testcase': self.testcase_name,
+            'script': os.path.abspath(sys.argv[0]),
+            'testcase': self.test_name,
             'start_time': time.ctime(self._start_time),
             'pcap': '',
             'extaddrs': {},
@@ -295,24 +360,38 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             'ipaddrs': {},
             'mleids': {},
             'topology': self._initial_topology,
+            'backbone': {
+                'interface': config.BACKBONE_DOCKER_NETWORK_NAME,
+                'prefix': config.BACKBONE_PREFIX,
+            },
+            'otbr_commit': config.OTBR_COMMIT,
+            'domain_prefix': config.DOMAIN_PREFIX,
+            'env': {
+                'PORT_OFFSET': config.PORT_OFFSET,
+            },
         }
 
         for i, node in self.nodes.items():
-            extaddr = node.get_addr64()
-            test_info['extaddrs'][i] = ExtAddr(extaddr).format_octets()
+            if not node.is_host:
+                extaddr = node.get_addr64()
+                test_info['extaddrs'][i] = ExtAddr(extaddr).format_octets()
+
+            if node.is_host or node.is_otbr:
+                ethaddr = node.get_ether_mac()
+                test_info['ethaddrs'][i] = EthAddr(ethaddr).format_octets()
 
     def _output_test_info(self):
         """
         Output test info to json file after tearDown
         """
-        filename = f'{self.testcase_name}.json'
+        filename = f'{self.test_name}.json'
         with open(filename, 'wt') as ofd:
             ofd.write(json.dumps(self._test_info, indent=1, sort_keys=True))
 
         return filename
 
-    def _get_pcap_filename(self):
-        current_pcap = os.getenv('TEST_NAME', 'current') + '.pcap'
+    def _get_thread_pcap_filename(self):
+        current_pcap = self.test_name + '.pcap'
         return os.path.abspath(current_pcap)
 
     def assure_run_ok(self, cmd, shell=False):
@@ -321,3 +400,92 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         proc = subprocess.run(cmd, stdout=sys.stdout, stderr=sys.stderr, shell=shell)
         print(">>> %s => %d" % (cmd, proc.returncode), file=sys.stderr)
         proc.check_returncode()
+
+    def _parse_params(self, params: Optional[dict]) -> dict:
+        params = params or {}
+
+        if params.get('is_bbr') or params.get('is_otbr'):
+            # BBRs must use thread version 1.2
+            assert params.get('version', '1.2') == '1.2', params
+            params['version'] = '1.2'
+        elif params.get('is_host'):
+            # Hosts must not specify thread version
+            assert params.get('version', '') == '', params
+            params['version'] = ''
+
+        if params:
+            params = dict(DEFAULT_PARAMS, **params)
+        else:
+            params = DEFAULT_PARAMS.copy()
+
+        return params
+
+    def _has_backbone_traffic(self):
+        for param in self.TOPOLOGY.values():
+            if param and (param.get('is_otbr') or param.get('is_host')):
+                return True
+
+        return False
+
+    def _prepare_backbone_network(self):
+        network_name = config.BACKBONE_DOCKER_NETWORK_NAME
+        self.assure_run_ok(
+            f'docker network create --driver bridge --ipv6 --subnet {config.BACKBONE_PREFIX} -o "com.docker.network.bridge.name"="{network_name}" {network_name} || true',
+            shell=True)
+
+    def _remove_backbone_network(self):
+        network_name = config.BACKBONE_DOCKER_NETWORK_NAME
+        self.assure_run_ok(f'docker network rm {network_name}', shell=True)
+
+    def _start_backbone_sniffer(self):
+        # don't know why but I have to create the empty bbr.pcap first, otherwise tshark won't work
+        # self.assure_run_ok("truncate --size 0 bbr.pcap && chmod 664 bbr.pcap", shell=True)
+        pcap_file = self._get_backbone_pcap_filename()
+        try:
+            os.remove(pcap_file)
+        except FileNotFoundError:
+            pass
+
+        dumpcap = pvutils.which_dumpcap()
+        self._dumpcap_proc = subprocess.Popen([dumpcap, '-i', config.BACKBONE_DOCKER_NETWORK_NAME, '-w', pcap_file],
+                                              stdout=sys.stdout,
+                                              stderr=sys.stderr)
+        time.sleep(0.2)
+        assert self._dumpcap_proc.poll() is None, 'tshark terminated unexpectedly'
+        logging.info('Backbone sniffer launched successfully: pid=%s', self._dumpcap_proc.pid)
+
+    def _get_backbone_pcap_filename(self):
+        backbone_pcap = self.test_name + '_backbone.pcap'
+        return os.path.abspath(backbone_pcap)
+
+    def _get_merged_pcap_filename(self):
+        backbone_pcap = self.test_name + '_merged.pcap'
+        return os.path.abspath(backbone_pcap)
+
+    def _stop_backbone_sniffer(self):
+        self._dumpcap_proc.send_signal(signal.SIGTERM)
+        self._dumpcap_proc.__exit__(None, None, None)
+        logging.info('Backbone sniffer terminated successfully: pid=%s' % self._dumpcap_proc.pid)
+
+    def _merge_thread_backbone_pcaps(self):
+        thread_pcap = self._get_thread_pcap_filename()
+        backbone_pcap = self._get_backbone_pcap_filename()
+        merged_pcap = self._get_merged_pcap_filename()
+
+        mergecap = pvutils.which_mergecap()
+        self.assure_run_ok(f'{mergecap} -w {merged_pcap} {thread_pcap} {backbone_pcap}', shell=True)
+        return merged_pcap
+
+    def wait_until(self, cond: Callable[[], bool], timeout: int, go_interval: int = 1):
+        while True:
+            self.simulator.go(go_interval)
+
+            if cond():
+                break
+
+            timeout -= go_interval
+            if timeout <= 0:
+                raise RuntimeError(f'wait failed after {timeout} seconds')
+
+    def wait_node_state(self, nodeid: int, state: str, timeout: int):
+        self.wait_until(lambda: self.nodes[nodeid].get_state() == state, timeout)

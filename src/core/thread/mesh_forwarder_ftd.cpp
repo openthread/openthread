@@ -60,7 +60,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
     {
         Ip6::Header ip6Header;
 
-        aMessage.Read(0, sizeof(ip6Header), &ip6Header);
+        IgnoreError(aMessage.Read(0, ip6Header));
 
         if (ip6Header.GetDestination().IsMulticast())
         {
@@ -150,7 +150,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
             continue;
         }
 
-        cur->Read(Ip6::Header::kDestinationFieldOffset, sizeof(ip6Dst), &ip6Dst);
+        IgnoreError(cur->Read(Ip6::Header::kDestinationFieldOffset, ip6Dst));
 
         if (ip6Dst == aEid)
         {
@@ -265,7 +265,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
             {
                 Ip6::Header ip6header;
 
-                IgnoreReturnValue(message->Read(0, sizeof(ip6header), &ip6header));
+                IgnoreError(message->Read(0, ip6header));
 
                 if (&aChild == static_cast<Child *>(Get<NeighborTable>().FindNeighbor(ip6header.GetDestination())))
                 {
@@ -318,7 +318,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
             continue;
         }
 
-        message->Read(0, sizeof(ip6Header), &ip6Header);
+        IgnoreError(message->Read(0, ip6Header));
 
         if (!(ip6Header.GetDestination().IsMulticast()))
         {
@@ -370,7 +370,7 @@ void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
 
     // write payload
     OT_ASSERT(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
-    aMessage.Read(0, aMessage.GetLength(), aFrame.GetPayload());
+    aMessage.ReadBytes(0, aFrame.GetPayload(), aMessage.GetLength());
     aFrame.SetPayloadLength(aMessage.GetLength());
 
     mMessageNextOffset = aMessage.GetLength();
@@ -538,7 +538,7 @@ void MeshForwarder::SendIcmpErrorIfDstUnreach(const Message &     aMessage,
     child = Get<ChildTable>().FindChild(aMacSource.GetShort(), Child::kInStateAnyExceptInvalid);
     VerifyOrExit((child == nullptr) || child->IsFullThreadDevice(), OT_NOOP);
 
-    aMessage.Read(0, sizeof(ip6header), &ip6header);
+    IgnoreError(aMessage.Read(0, ip6header));
     VerifyOrExit(!ip6header.GetDestination().IsMulticast() &&
                      Get<NetworkData::Leader>().IsOnMesh(ip6header.GetDestination()),
                  OT_NOOP);
@@ -581,7 +581,7 @@ otError MeshForwarder::CheckReachability(const uint8_t *     aFrame,
     error = FrameToMessage(aFrame, aFrameLength, datagramSize, aMeshSource, aMeshDest, message);
     SuccessOrExit(error);
 
-    message->Read(0, sizeof(ip6Header), &ip6Header);
+    IgnoreError(message->Read(0, ip6Header));
     error = Get<Mle::MleRouter>().CheckReachability(aMeshDest.GetShort(), ip6Header);
 
 exit:
@@ -595,10 +595,7 @@ exit:
         SendDestinationUnreachable(aMeshSource.GetShort(), *message);
     }
 
-    if (message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessage(message);
 
     return error;
 }
@@ -672,7 +669,7 @@ void MeshForwarder::HandleMesh(uint8_t *             aFrame,
 
         SuccessOrExit(error = message->SetLength(meshHeader.GetHeaderLength() + aFrameLength));
         offset += meshHeader.WriteTo(*message, offset);
-        message->Write(offset, aFrameLength, aFrame);
+        message->WriteBytes(offset, aFrame, aFrameLength);
         message->SetLinkInfo(aLinkInfo);
 
         LogMessage(kMessageReceive, *message, &aMacSource, OT_ERROR_NONE);
@@ -686,11 +683,7 @@ exit:
     {
         otLogInfoMac("Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s", otThreadErrorToString(error),
                      aFrameLength, aMacSource.ToString().AsCString(), aLinkInfo.IsLinkSecurityEnabled() ? "yes" : "no");
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
+        FreeMessage(message);
     }
 }
 
@@ -1064,7 +1057,7 @@ otError MeshForwarder::DecompressIp6UdpTcpHeader(const Message &     aMessage,
 
     // Read and decompress the IPv6 header
 
-    frameLength = aMessage.Read(aOffset, sizeof(frameBuffer), frameBuffer);
+    frameLength = aMessage.ReadBytes(aOffset, frameBuffer, sizeof(frameBuffer));
 
     headerLength = Get<Lowpan::Lowpan>().DecompressBaseHeader(aIp6Header, nextHeaderCompressed, aMeshSource, aMeshDest,
                                                               frameBuffer, frameLength);
@@ -1079,14 +1072,13 @@ otError MeshForwarder::DecompressIp6UdpTcpHeader(const Message &     aMessage,
     case Ip6::kProtoUdp:
         if (nextHeaderCompressed)
         {
-            frameLength  = aMessage.Read(aOffset, sizeof(Ip6::Udp::Header), frameBuffer);
+            frameLength  = aMessage.ReadBytes(aOffset, frameBuffer, sizeof(Ip6::Udp::Header));
             headerLength = Get<Lowpan::Lowpan>().DecompressUdpHeader(header.udp, frameBuffer, frameLength);
             VerifyOrExit(headerLength >= 0, OT_NOOP);
         }
         else
         {
-            VerifyOrExit(sizeof(Ip6::Udp::Header) == aMessage.Read(aOffset, sizeof(Ip6::Udp::Header), &header.udp),
-                         OT_NOOP);
+            SuccessOrExit(aMessage.Read(aOffset, header.udp));
         }
 
         aChecksum   = header.udp.GetChecksum();
@@ -1095,8 +1087,7 @@ otError MeshForwarder::DecompressIp6UdpTcpHeader(const Message &     aMessage,
         break;
 
     case Ip6::kProtoTcp:
-        VerifyOrExit(sizeof(Ip6::Tcp::Header) == aMessage.Read(aOffset, sizeof(Ip6::Tcp::Header), &header.tcp),
-                     OT_NOOP);
+        SuccessOrExit(aMessage.Read(aOffset, header.tcp));
         aChecksum   = header.tcp.GetChecksum();
         aSourcePort = header.tcp.GetSourcePort();
         aDestPort   = header.tcp.GetDestinationPort();

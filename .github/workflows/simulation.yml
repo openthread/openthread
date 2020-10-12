@@ -88,7 +88,7 @@ jobs:
         ./bootstrap
     - name: Run OTNS Tests
       env:
-        OTNS_COMMIT: "8e9b4ba5825dd37e6e84f7801dd72101fde3d191" # Sep 17, 2020
+        OTNS_COMMIT: "632503d7ccbadcbdc49c6245eafc2425c80bbf04" # Sep 29, 2020
       run: |
         export OT_DIR=$PWD
         mkdir -p /tmp/otns
@@ -129,6 +129,9 @@ jobs:
       - name: Build
         run: |
           ./script/test build
+      - name: Get Thread-Wireshark
+        run: |
+          ./script/test get_thread_wireshark
       - name: Run
         run: |
           for i in {1..10}
@@ -286,6 +289,7 @@ jobs:
         fail_ci_if_error: true
     - name: Run TUN Mode
       run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get install --no-install-recommends -y dnsmasq bind9-host ntp
         sudo systemctl start dnsmasq ntp
         host ipv6.google.com 127.0.0.1

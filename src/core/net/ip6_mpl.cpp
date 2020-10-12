@@ -82,7 +82,7 @@ otError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsO
     otError   error;
     OptionMpl option;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(option), &option) >= OptionMpl::kMinLength &&
+    VerifyOrExit(aMessage.ReadBytes(aMessage.GetOffset(), &option, sizeof(option)) >= OptionMpl::kMinLength &&
                      (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0 ||
                       option.GetSeedIdLength() == OptionMpl::kSeedIdLength2),
                  error = OT_ERROR_PARSE);
@@ -314,9 +314,9 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
 
     if (!aIsOutbound)
     {
-        aMessage.Read(Header::kHopLimitFieldOffset, sizeof(hopLimit), &hopLimit);
+        IgnoreError(aMessage.Read(Header::kHopLimitFieldOffset, hopLimit));
         VerifyOrExit(hopLimit-- > 1, error = OT_ERROR_DROP);
-        messageCopy->Write(Header::kHopLimitFieldOffset, sizeof(hopLimit), &hopLimit);
+        messageCopy->Write(Header::kHopLimitFieldOffset, hopLimit);
     }
 
     metadata.mSeedId            = aSeedId;
@@ -331,11 +331,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     mRetransmissionTimer.FireAtIfEarlier(metadata.mTransmissionTime);
 
 exit:
-
-    if (error != OT_ERROR_NONE && messageCopy != nullptr)
-    {
-        messageCopy->Free();
-    }
+    FreeMessageOnError(messageCopy, error);
 }
 
 void Mpl::HandleRetransmissionTimer(Timer &aTimer)
@@ -425,7 +421,7 @@ void Mpl::Metadata::ReadFrom(const Message &aMessage)
     uint16_t length = aMessage.GetLength();
 
     OT_ASSERT(length >= sizeof(*this));
-    aMessage.Read(length - sizeof(*this), sizeof(*this), this);
+    IgnoreError(aMessage.Read(length - sizeof(*this), *this));
 }
 
 void Mpl::Metadata::RemoveFrom(Message &aMessage) const
@@ -438,7 +434,7 @@ void Mpl::Metadata::RemoveFrom(Message &aMessage) const
 
 void Mpl::Metadata::UpdateIn(Message &aMessage) const
 {
-    aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    aMessage.Write(aMessage.GetLength() - sizeof(*this), *this);
 }
 
 void Mpl::Metadata::GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval)

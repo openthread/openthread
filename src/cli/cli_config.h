@@ -35,7 +35,7 @@
 #ifndef CONFIG_CLI_H_
 #define CONFIG_CLI_H_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 /**
  * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH

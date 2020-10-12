@@ -60,6 +60,7 @@ openthread_headers                      = \
     openthread/jam_detection.h            \
     openthread/joiner.h                   \
     openthread/link.h                     \
+    openthread/link_metrics.h             \
     openthread/link_raw.h                 \
     openthread/logging.h                  \
     openthread/message.h                  \

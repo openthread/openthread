@@ -9,6 +9,7 @@ We would love for you to contribute to OpenThread and help make it even better t
   - [4.1 Initial Setup](#initial-setup)
   - [4.2 Contributor License Agreement (CLA)](#contributor-license-agreement--cla-)
   - [4.3 Submitting a Pull Request](#submitting-a-pull-request)
+- [5 Contributing Documentation](#contributing-documentation)
 
 ## Code of Conduct
 
@@ -108,7 +109,7 @@ This will open up a text editor where you can specify which commits to squash.
 
 #### Coding Conventions and Style
 
-OpenThread uses and enforces the [OpenThread Coding Conventions and Style](STYLE_GUIDE.md) on all code, except for code located in [third_party](third_party). Use `script/make-pretty` and `script/make-pretty check` to automatically reformat code and check for code-style compliance, respectively. OpenThread currently requires [clang-format v6.0.0](http://releases.llvm.org/download.html#6.0.0) for C/C++ and [yapf v0.29.0](https://github.com/google/yapf) for Python.
+OpenThread uses and enforces the [OpenThread Coding Conventions and Style](STYLE_GUIDE.md) on all code, except for code located in [third_party](third_party). Use `script/make-pretty` and `script/make-pretty check` to automatically reformat code and check for code-style compliance, respectively. OpenThread currently requires [clang-format v10.0.0](http://releases.llvm.org/download.html#10.0.0) for C/C++ and [yapf v0.29.0](https://github.com/google/yapf) for Python.
 
 As part of the cleanup process, you should also run `script/make-pretty check` to ensure that your code passes the baseline code style checks.
 
@@ -127,3 +128,7 @@ This will trigger continuous-integration checks using GitHub Actions. You can vi
 #### Submit Pull Request
 
 Once you've validated that all continuous-integration checks have passed, go to the page for your fork on GitHub, select your development branch, and click the pull request button. If you need to make any adjustments to your pull request, just push the updates to GitHub. Your pull request will automatically track the changes on your development branch and update.
+
+## Contributing Documentation
+
+Documentation undergoes the same review process as code and contributions may be mirrored on our [openthread.io](https://openthread.io) website. See the [Documentation Style Guide](/doc/STYLE_GUIDE.md) for more information on how to author and format documentation for contribution.
