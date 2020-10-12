@@ -795,15 +795,15 @@ static void processNextRxPacket(otInstance *aInstance)
     length = packetInfo.packetBytes + 1;
 
     // check the length in recv packet info structure; RAIL should take care of this.
-    assert(length == packetInfo.firstPortionData[0]);
+    otEXPECT(length == packetInfo.firstPortionData[0]);
 
     // check the length validity of recv packet; RAIL should take care of this.
-    assert(length >= IEEE802154_MIN_LENGTH && length <= IEEE802154_MAX_LENGTH);
+    otEXPECT(length >= IEEE802154_MIN_LENGTH && length <= IEEE802154_MAX_LENGTH);
 
     otLogInfoPlat("Received data:%d", length);
 
     // skip length byte
-    assert(packetInfo.firstPortionBytes > 0);
+    otEXPECT(packetInfo.firstPortionBytes > 0);
     packetInfo.firstPortionData++;
     packetInfo.firstPortionBytes--;
     packetInfo.packetBytes--;
@@ -821,8 +821,8 @@ static void processNextRxPacket(otInstance *aInstance)
 
     if (packetDetails.isAck)
     {
-        assert((length == IEEE802154_ACK_LENGTH) &&
-               (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK);
+        otEXPECT((length == IEEE802154_ACK_LENGTH) &&
+                 (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK);
 
         RAIL_YieldRadio(gRailHandle);
         sTransmitBusy = false;
