@@ -742,7 +742,7 @@ extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRad
 extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
- * Get the most recent RSSI measurement measured at antenna connector.
+ * Get the most recent RSSI measurement.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
@@ -772,7 +772,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
  * This function is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
  *
  * @param[in]  aInstance           The OpenThread instance structure.
- * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel measured at antenna connector.
+ * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
  *
  */
 extern void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
