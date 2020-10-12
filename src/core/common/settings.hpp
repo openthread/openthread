@@ -916,7 +916,7 @@ public:
          * @returns A reference to the `ChildInfo` entry currently pointed by the iterator.
          *
          */
-        const ChildInfo &operator*(void)const { return mChildInfo; }
+        const ChildInfo &operator*(void) const { return mChildInfo; }
 
         /**
          * This method overloads operator `==` to evaluate whether or not two iterator instances are equal.

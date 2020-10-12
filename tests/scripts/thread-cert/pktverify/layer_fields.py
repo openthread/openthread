@@ -265,6 +265,7 @@ _LAYER_FIELDS = {
     'mle.tlv.version': _auto,
     'mle.tlv.source_addr': _auto,
     'mle.tlv.active_tstamp': _auto,
+    'mle.tlv.pending_tstamp': _auto,
     'mle.tlv.leader_data.partition_id': _auto,
     'mle.tlv.leader_data.weighting': _auto,
     'mle.tlv.leader_data.data_version': _auto,

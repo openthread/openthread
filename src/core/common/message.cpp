@@ -362,19 +362,19 @@ exit:
     return error;
 }
 
-otError Message::Append(const void *aBuf, uint16_t aLength)
+otError Message::AppendBytes(const void *aBuf, uint16_t aLength)
 {
     otError  error     = OT_ERROR_NONE;
     uint16_t oldLength = GetLength();
 
     SuccessOrExit(error = SetLength(GetLength() + aLength));
-    Write(oldLength, aLength, aBuf);
+    WriteBytes(oldLength, aBuf, aLength);
 
 exit:
     return error;
 }
 
-otError Message::Prepend(const void *aBuf, uint16_t aLength)
+otError Message::PrependBytes(const void *aBuf, uint16_t aLength)
 {
     otError error     = OT_ERROR_NONE;
     Buffer *newBuffer = nullptr;
@@ -402,7 +402,7 @@ otError Message::Prepend(const void *aBuf, uint16_t aLength)
 
     if (aBuf != nullptr)
     {
-        Write(0, aLength, aBuf);
+        WriteBytes(0, aBuf, aLength);
     }
 
 exit:
@@ -510,7 +510,7 @@ exit:
     return;
 }
 
-uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
+uint16_t Message::ReadBytes(uint16_t aOffset, void *aBuf, uint16_t aLength) const
 {
     uint8_t *bufPtr = reinterpret_cast<uint8_t *>(aBuf);
     Chunk    chunk;
@@ -527,7 +527,12 @@ uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
     return static_cast<uint16_t>(bufPtr - reinterpret_cast<uint8_t *>(aBuf));
 }
 
-void Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
+otError Message::Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const
+{
+    return (ReadBytes(aOffset, aBuf, aLength) == aLength) ? OT_ERROR_NONE : OT_ERROR_PARSE;
+}
+
+void Message::WriteBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength)
 {
     const uint8_t *bufPtr = reinterpret_cast<const uint8_t *>(aBuf);
     WritableChunk  chunk;
@@ -560,7 +565,7 @@ uint16_t Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, ui
 
     while (chunk.GetLength() > 0)
     {
-        aMessage.Write(aDestinationOffset, chunk.GetLength(), chunk.GetData());
+        aMessage.WriteBytes(aDestinationOffset, chunk.GetData(), chunk.GetLength());
         aDestinationOffset += chunk.GetLength();
         bytesCopied += chunk.GetLength();
         GetNextChunk(aLength, chunk);

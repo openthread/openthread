@@ -956,6 +956,14 @@ class NodeImpl:
         self.send_command('csl timeout %d' % csl_timeout)
         self._expect('Done')
 
+    def send_mac_emptydata(self):
+        self.send_command('mac send emptydata')
+        self._expect('Done')
+
+    def send_mac_datarequest(self):
+        self.send_command('mac send datarequest')
+        self._expect('Done')
+
     def set_router_upgrade_threshold(self, threshold):
         cmd = 'routerupgradethreshold %d' % threshold
         self.send_command(cmd)
@@ -1384,7 +1392,7 @@ class NodeImpl:
         self.send_command('dataset commit active')
         self._expect('Done')
 
-    def set_pending_dataset(self, pendingtimestamp, activetimestamp, panid=None, channel=None):
+    def set_pending_dataset(self, pendingtimestamp, activetimestamp, panid=None, channel=None, delay=None):
         self.send_command('dataset clear')
         self._expect('Done')
 
@@ -1403,6 +1411,11 @@ class NodeImpl:
 
         if channel is not None:
             cmd = 'dataset channel %d' % channel
+            self.send_command(cmd)
+            self._expect('Done')
+
+        if delay is not None:
+            cmd = 'dataset delay %d' % delay
             self.send_command(cmd)
             self._expect('Done')
 

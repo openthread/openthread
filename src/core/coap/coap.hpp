@@ -247,7 +247,7 @@ private:
 
     struct ResponseMetadata
     {
-        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
         void    ReadFrom(const Message &aMessage);
 
         TimeMilli        mDequeueTime;
@@ -533,7 +533,7 @@ protected:
 private:
     struct Metadata
     {
-        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
         void    ReadFrom(const Message &aMessage);
         void    UpdateIn(Message &aMessage) const;
 

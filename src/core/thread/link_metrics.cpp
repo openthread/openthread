@@ -85,7 +85,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
 
     while (offset < endOffset)
     {
-        VerifyOrExit(aRequestMessage.Read(offset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
+        SuccessOrExit(error = aRequestMessage.Read(offset, tlv));
 
         switch (tlv.GetType())
         {
@@ -100,8 +100,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
             {
                 LinkMetricsTypeIdFlags typeIdFlags;
 
-                VerifyOrExit(aRequestMessage.Read(index, sizeof(typeIdFlags), &typeIdFlags) == sizeof(typeIdFlags),
-                             error = OT_ERROR_PARSE);
+                SuccessOrExit(error = aRequestMessage.Read(index, typeIdFlags));
 
                 switch (typeIdFlags.GetRawValue())
                 {
@@ -146,7 +145,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
 
     // Link Metrics Report TLV
     tlv.SetType(Mle::Tlv::kLinkMetricsReport);
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
+    SuccessOrExit(error = aMessage.Append(tlv));
 
     if (queryId == 0)
     {
@@ -158,7 +157,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
     }
 
     tlv.SetLength(length);
-    aMessage.Write(startOffset, sizeof(tlv), &tlv);
+    aMessage.Write(startOffset, tlv);
 
 exit:
     otLogDebgMle("AppendLinkMetricsReport, error:%s", otThreadErrorToString(error));
@@ -185,38 +184,40 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
 
     while (pos < endPos)
     {
-        VerifyOrExit(aMessage.Read(pos, sizeof(Tlv), &tlv) == sizeof(Tlv), OT_NOOP);
+        SuccessOrExit(aMessage.Read(pos, tlv));
         VerifyOrExit(tlv.GetType() == kLinkMetricsReportSub, OT_NOOP);
         pos += sizeof(Tlv);
         VerifyOrExit(pos + tlv.GetLength() <= endPos, OT_NOOP);
 
-        aMessage.Read(pos, sizeof(LinkMetricsTypeIdFlags), &typeIdFlags);
+        IgnoreError(aMessage.Read(pos, typeIdFlags));
+
         if (typeIdFlags.IsExtendedFlagSet())
         {
             pos += tlv.GetLength(); // Skip the whole sub-TLV if `E` flag is set
             continue;
         }
+
         pos += sizeof(LinkMetricsTypeIdFlags);
 
         switch (typeIdFlags.GetRawValue())
         {
         case kTypeIdFlagPdu:
             metricsValues.mMetrics.mPduCount = true;
-            aMessage.Read(pos, sizeof(uint32_t), &metricsValues.mPduCountValue);
+            IgnoreError(aMessage.Read(pos, metricsValues.mPduCountValue));
             pos += sizeof(uint32_t);
             otLogDebgMle(" - PDU Counter: %d (Count/Summation)", metricsValues.mPduCountValue);
             break;
 
         case kTypeIdFlagLqi:
             metricsValues.mMetrics.mLqi = true;
-            aMessage.Read(pos, sizeof(uint8_t), &metricsValues.mLqiValue);
+            IgnoreError(aMessage.Read(pos, metricsValues.mLqiValue));
             pos += sizeof(uint8_t);
             otLogDebgMle(" - LQI: %d (Exponential Moving Average)", metricsValues.mLqiValue);
             break;
 
         case kTypeIdFlagLinkMargin:
             metricsValues.mMetrics.mLinkMargin = true;
-            aMessage.Read(pos, sizeof(uint8_t), &metricsRawValue);
+            IgnoreError(aMessage.Read(pos, metricsRawValue));
             metricsValues.mLinkMarginValue =
                 metricsRawValue * 130 / 255; // Reverse operation for linear scale, map from [0, 255] to [0, 130]
             pos += sizeof(uint8_t);
@@ -225,7 +226,7 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
 
         case kTypeIdFlagRssi:
             metricsValues.mMetrics.mRssi = true;
-            aMessage.Read(pos, sizeof(uint8_t), &metricsRawValue);
+            IgnoreError(aMessage.Read(pos, metricsRawValue));
             metricsValues.mRssiValue =
                 metricsRawValue * 130 / 255 - 130; // Reverse operation for linear scale, map from [0, 255] to [-130, 0]
             pos += sizeof(uint8_t);
@@ -314,7 +315,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &            aMe
         metric.Init();
         metric.SetMetricsTypeId(kTypeIdFlagPdu);
         metric.SetMetricsValue32(aRequestMessage.GetPsduCount());
-        SuccessOrExit(error = aMessage.Append(&metric, metric.GetSize()));
+        SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
         aLength += metric.GetSize();
     }
 
@@ -323,7 +324,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &            aMe
         metric.Init();
         metric.SetMetricsTypeId(kTypeIdFlagLqi);
         metric.SetMetricsValue8(aRequestMessage.GetAverageLqi()); // IEEE 802.15.4 LQI is in scale 0-255
-        SuccessOrExit(error = aMessage.Append(&metric, metric.GetSize()));
+        SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
         aLength += metric.GetSize();
     }
 
@@ -334,7 +335,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &            aMe
         metric.SetMetricsValue8(
             LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), aRequestMessage.GetAverageRss()) *
             255 / 130); // Linear scale Link Margin from [0, 130] to [0, 255]
-        SuccessOrExit(error = aMessage.Append(&metric, metric.GetSize()));
+        SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
         aLength += metric.GetSize();
     }
 
@@ -344,7 +345,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &            aMe
         metric.SetMetricsTypeId(kTypeIdFlagRssi);
         metric.SetMetricsValue8((aRequestMessage.GetAverageRss() + 130) * 255 /
                                 130); // Linear scale rss from [-130, 0] to [0, 255]
-        SuccessOrExit(error = aMessage.Append(&metric, metric.GetSize()));
+        SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
         aLength += metric.GetSize();
     }
 

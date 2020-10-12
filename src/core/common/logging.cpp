@@ -28,12 +28,14 @@
 
 /**
  * @file
- *   This file implements the tasklet scheduler.
+ *   This file implements the logging related functions.
  */
 
 #include "logging.hpp"
 
+#include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/string.hpp"
 
 /*
  * Verify debug uart dependency.
@@ -50,104 +52,95 @@
 extern "C" {
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_PKT_DUMP == 1
-/**
- * This static method outputs a line of the memory dump.
- *
- * @param[in]  aLogLevel   The log level.
- * @param[in]  aLogRegion  The log region.
- * @param[in]  aBuf        A pointer to the buffer.
- * @param[in]  aLength     Number of bytes in the buffer.
- *
- */
-static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const void *aBuf, const size_t aLength)
+#if OPENTHREAD_CONFIG_LOG_PKT_DUMP
+
+enum : uint8_t
 {
-    char  buf[80];
-    char *cur = buf;
+    kStringLineLength = 80,
+    kDumpBytesPerLine = 16,
+};
 
-    snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "|");
-    cur += strlen(cur);
+static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const uint8_t *aBytes, const size_t aLength)
+{
+    ot::String<kStringLineLength> string("|");
 
-    for (size_t i = 0; i < 16; i++)
+    for (uint8_t i = 0; i < kDumpBytesPerLine; i++)
     {
         if (i < aLength)
         {
-            snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), " %02X", ((uint8_t *)(aBuf))[i]);
-            cur += strlen(cur);
+            IgnoreError(string.Append(" %02X", aBytes[i]));
         }
         else
         {
-            snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), " ..");
-            cur += strlen(cur);
+            IgnoreError(string.Append(" .."));
         }
 
         if (!((i + 1) % 8))
         {
-            snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), " |");
-            cur += strlen(cur);
+            IgnoreError(string.Append(" |"));
         }
     }
 
-    snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), " ");
-    cur += strlen(cur);
+    IgnoreError(string.Append(" "));
 
-    for (size_t i = 0; i < 16; i++)
+    for (uint8_t i = 0; i < kDumpBytesPerLine; i++)
     {
-        char c = 0x7f & ((char *)(aBuf))[i];
+        char c = '.';
 
-        if (i < aLength && isprint(c))
+        if (i < aLength)
         {
-            snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "%c", c);
-            cur += strlen(cur);
+            char byteAsChar = static_cast<char>(0x7f & aBytes[i]);
+
+            if (isprint(byteAsChar))
+            {
+                c = byteAsChar;
+            }
         }
-        else
-        {
-            snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), ".");
-            cur += strlen(cur);
-        }
+
+        IgnoreError(string.Append("%c", c));
     }
 
-    otLogDump("%s", buf);
+    otLogDump("%s", string.AsCString());
 }
 
 void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf, const size_t aLength)
 {
-    size_t       idlen = strlen(aId);
-    const size_t width = 72;
-    char         buf[80];
-    char *       cur = buf;
-
-    for (size_t i = 0; i < (width - idlen) / 2 - 5; i++)
+    enum : uint8_t
     {
-        snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "=");
-        cur += strlen(cur);
+        kWidth = 72,
+    };
+
+    size_t                        idLen = strlen(aId);
+    ot::String<kStringLineLength> string;
+
+    for (size_t i = 0; i < (kWidth - idLen) / 2 - 5; i++)
+    {
+        IgnoreError(string.Append("="));
     }
 
-    snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "[%s len=%03u]", aId, static_cast<unsigned>(aLength));
-    cur += strlen(cur);
+    IgnoreError(string.Append("[%s len=%03u]", aId, static_cast<unsigned>(aLength)));
 
-    for (size_t i = 0; i < (width - idlen) / 2 - 4; i++)
+    for (size_t i = 0; i < (kWidth - idLen) / 2 - 4; i++)
     {
-        snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "=");
-        cur += strlen(cur);
+        IgnoreError(string.Append("="));
     }
 
-    otLogDump("%s", buf);
+    otLogDump("%s", string.AsCString());
 
-    for (size_t i = 0; i < aLength; i += 16)
+    for (size_t i = 0; i < aLength; i += kDumpBytesPerLine)
     {
-        DumpLine(aLogLevel, aLogRegion, (uint8_t *)(aBuf) + i, (aLength - i) < 16 ? (aLength - i) : 16);
+        DumpLine(aLogLevel, aLogRegion, static_cast<const uint8_t *>(aBuf) + i,
+                 OT_MIN((aLength - i), static_cast<size_t>(kDumpBytesPerLine)));
     }
 
-    cur = buf;
+    string.Clear();
 
-    for (size_t i = 0; i < width; i++)
+    for (size_t i = 0; i < kWidth; i++)
     {
-        snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "-");
-        cur += strlen(cur);
+        IgnoreError(string.Append("-"));
     }
 
-    otLogDump("%s", buf);
+    otLogDump("%s", string.AsCString());
 }
 #else  // OPENTHREAD_CONFIG_LOG_PKT_DUMP
 void otDump(otLogLevel, otLogRegion, const char *, const void *, const size_t)

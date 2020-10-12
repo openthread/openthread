@@ -401,8 +401,8 @@ otError MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address 
 
     addressesTlv.Init();
     addressesTlv.SetLength(sizeof(Ip6::Address) * aAddressNum);
-    SuccessOrExit(error = message->Append(&addressesTlv, sizeof(addressesTlv)));
-    SuccessOrExit(error = message->Append(aAddresses, sizeof(Ip6::Address) * aAddressNum));
+    SuccessOrExit(error = message->Append(addressesTlv));
+    SuccessOrExit(error = message->AppendBytes(aAddresses, sizeof(Ip6::Address) * aAddressNum));
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     if (Get<MeshCoP::Commissioner>().IsActive())
@@ -515,8 +515,7 @@ otError MlrManager::ParseMulticastListenerRegistrationResponse(otError        aR
 
         for (uint16_t offset = 0; offset < addressesLength; offset += sizeof(Ip6::Address))
         {
-            IgnoreReturnValue(
-                aMessage->Read(addressesOffset + offset, sizeof(Ip6::Address), &aFailedAddresses[aFailedAddressNum]));
+            IgnoreError(aMessage->Read(addressesOffset + offset, aFailedAddresses[aFailedAddressNum]));
             aFailedAddressNum++;
         }
     }

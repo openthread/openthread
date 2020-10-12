@@ -44,26 +44,22 @@ install_packages_apt()
     echo 'Installing GNU Arm Embedded Toolchain...'
 
     PLATFORM=$(lsb_release -is)
-    RELEASE=$(lsb_release -rs)
-    UBUNTU2004=20.04
 
     if [ "$PLATFORM" = "Raspbian" ]; then
         sudo apt-get --no-install-recommends install -y binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
-    elif [ "$PLATFORM" = "Ubuntu" ] && [[ ! $RELEASE < $UBUNTU2004 ]]; then
-        echo "Ubuntu Release >= $UBUNTU2004"
-        # no need to use ppa
-        sudo apt-get --no-install-recommends install -y gcc-arm-none-eabi gdb-multiarch libnewlib-arm-none-eabi
-    elif ! command -v arm-none-eabi-g++; then
-        # add gcc-arm-embedded ppa
-        sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa -y
-        sudo apt-get update
-        sudo apt-get --no-install-recommends install -y gcc-arm-embedded
+    elif [ "$PLATFORM" = "Ubuntu" ]; then
+        sudo apt-get --no-install-recommends install -y ca-certificates wget
+        (cd /opt \
+            && wget -c https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2 \
+            && tar xjf gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2 \
+            && rm gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2 \
+            && ln -s /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/* /usr/local/bin/.)
     fi
 
     echo 'Installing pretty tools useful for code contributions...'
 
     # add clang-format for pretty
-    sudo apt-get --no-install-recommends install -y clang-format-6.0
+    sudo apt-get --no-install-recommends install -y clang-format-10
 
     # add yapf for pretty
     python3 -m pip install yapf==0.29.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
@@ -107,10 +103,10 @@ install_packages_brew()
     echo 'Installing pretty tools useful for code contributions...'
 
     # add clang-format for pretty
-    CLANG_FORMAT_VERSION="clang-format version 6.0"
-    command -v clang-format-6.0 || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
-        brew install llvm@6
-        sudo ln -s "$(brew --prefix llvm@6)/bin/clang-format" /usr/local/bin/clang-format-6.0
+    CLANG_FORMAT_VERSION="clang-format version 10"
+    command -v clang-format-10 || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
+        brew install llvm@10
+        sudo ln -s "$(brew --prefix llvm@6)/bin/clang-format" /usr/local/bin/clang-format-10
     }
 
     # add yapf for pretty

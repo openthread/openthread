@@ -26,45 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-ncp-ftd)
-add_library(openthread-ncp-mtd)
-add_library(openthread-rcp)
-
-# We depend on C++11 to validate that NCP handlers are sorted.
-set_target_properties(
-    openthread-ncp-ftd openthread-ncp-mtd openthread-rcp
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
-target_compile_definitions(openthread-ncp-ftd PRIVATE
-    OPENTHREAD_FTD=1
-    OPENTHREAD_CONFIG_NCP_UART_ENABLE=1
-)
-
-target_compile_definitions(openthread-ncp-mtd PRIVATE
-    OPENTHREAD_MTD=1
-    OPENTHREAD_CONFIG_NCP_UART_ENABLE=1
-)
-
-target_compile_definitions(openthread-rcp PRIVATE
-    OPENTHREAD_RADIO=1
-    OPENTHREAD_CONFIG_NCP_UART_ENABLE=1
-)
-
-target_compile_options(openthread-ncp-ftd PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_compile_options(openthread-ncp-mtd PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_compile_options(openthread-rcp PRIVATE
-    ${OT_CFLAGS}
-)
-
 set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
@@ -87,50 +48,14 @@ if(OT_NCP_VENDOR_HOOK_SOURCE)
     list(APPEND COMMON_SOURCES ${OT_NCP_VENDOR_HOOK_SOURCE_DIR}${OT_NCP_VENDOR_HOOK_SOURCE})
 endif()
 
-target_include_directories(openthread-ncp-ftd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
-target_include_directories(openthread-ncp-mtd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
-target_include_directories(openthread-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
+if(OT_FTD)
+    include(ftd.cmake)
+endif()
 
-target_sources(openthread-ncp-ftd PRIVATE ${COMMON_SOURCES})
-target_sources(openthread-ncp-mtd PRIVATE ${COMMON_SOURCES})
-target_include_directories(openthread-ncp-ftd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(openthread-ncp-mtd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+if(OT_MTD)
+    include(mtd.cmake)
+endif()
 
-target_sources(openthread-rcp PRIVATE
-    changed_props_set.cpp
-    ncp_base.cpp
-    ncp_base_dispatcher.cpp
-    ncp_base_radio.cpp
-    ncp_spi.cpp
-    ncp_uart.cpp
-)
-
-target_link_libraries(openthread-ncp-ftd
-    PUBLIC
-        openthread-ftd
-    PRIVATE
-        ${OT_PLATFORM_LIB}
-        ${OT_MBEDTLS}
-        openthread-hdlc
-        openthread-spinel-ncp
-        ot-config
-)
-
-target_link_libraries(openthread-ncp-mtd
-    PUBLIC
-        openthread-mtd
-    PRIVATE
-        ${OT_MBEDTLS}
-        openthread-hdlc
-        openthread-spinel-ncp
-        ot-config
-)
-
-target_link_libraries(openthread-rcp
-    PUBLIC
-        openthread-radio
-    PRIVATE
-        openthread-hdlc
-        openthread-spinel-rcp
-        ot-config
-)
+if(OT_RCP)
+    include(radio.cmake)
+endif()

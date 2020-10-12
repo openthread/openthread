@@ -61,6 +61,7 @@
 #include "common/instance.hpp"
 #include "common/timer.hpp"
 #include "net/icmp6.hpp"
+#include "utils/lookup_table.hpp"
 
 namespace ot {
 
@@ -124,44 +125,6 @@ public:
      *
      */
     void ProcessLine(char *aBuf, uint16_t aBufLength);
-
-    /**
-     * This method parses an ASCII string as a long.
-     *
-     * @param[in]   aString  A pointer to the ASCII string.
-     * @param[out]  aLong    A reference to where the parsed long is placed.
-     *
-     * @retval OT_ERROR_NONE          Successfully parsed the ASCII string.
-     * @retval OT_ERROR_INVALID_ARGS  @p aString is not a valid long integer.
-     *
-     */
-    static otError ParseLong(char *aString, long &aLong);
-
-    /**
-     * This method parses an ASCII string as an unsigned long.
-     *
-     * @param[in]   aString          A pointer to the ASCII string.
-     * @param[out]  aUnsignedLong    A reference to where the parsed unsigned long is placed.
-     *
-     * @retval OT_ERROR_NONE          Successfully parsed the ASCII string.
-     * @retval OT_ERROR_INVALID_ARGS  @p aString is not a valid unsigned long integer.
-     *
-     */
-    static otError ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong);
-
-    /**
-     * This method converts a hex string to binary.
-     *
-     * @param[in]   aHex            A pointer to the hex string.
-     * @param[out]  aBin            A pointer to where the binary representation is placed.
-     * @param[in]   aBinLength      Maximum length of the binary representation.
-     * @param[in]   aAllowTruncate  TRUE if @p aBinLength may be less than what is required
-     *                              to convert @p aHex to binary representation, FALSE otherwise.
-     *
-     * @returns  The number of bytes in the binary representation, or -1 if @p aHex is not a valid hex string
-     *
-     */
-    static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength, bool aAllowTruncate = false);
 
     /**
      * This method delivers raw characters to the client.
@@ -290,10 +253,9 @@ private:
     struct Command
     {
         const char *mName;
-        otError (Interpreter::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
+        otError (Interpreter::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
     };
 
-    const Command *FindCommand(const char *aName) const;
     otError        ParsePingInterval(const char *aString, uint32_t &aInterval);
     static otError ParseJoinerDiscerner(char *aString, otJoinerDiscerner &aJoinerDiscerner);
 
@@ -325,6 +287,9 @@ private:
     otError ProcessChildIp(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessChildMax(uint8_t aArgsLength, char *aArgs[]);
 #endif
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+    otError ProcessChildSupervision(uint8_t aArgsLength, char *aArgs[]);
+#endif
     otError ProcessChildTimeout(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     otError ProcessCoap(uint8_t aArgsLength, char *aArgs[]);
@@ -342,7 +307,7 @@ private:
     otError ProcessContextIdReuseDelay(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessCounters(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessCsl(uint8_t aArgsLength, char *argv[]);
+    otError ProcessCsl(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
     otError ProcessDelayTimerMin(uint8_t aArgsLength, char *aArgs[]);
 #endif
@@ -507,6 +472,9 @@ private:
 #endif
     otError ProcessMac(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessMacRetries(uint8_t aArgsLength, char *aArgs[]);
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    otError ProcessMacSend(uint8_t aArgsLength, char *aArgs[]);
+#endif
 
     static void HandleIcmpReceive(void *               aContext,
                                   otMessage *          aMessage,
@@ -569,17 +537,6 @@ private:
     }
     void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
 
-    constexpr static bool AreSorted(const char *aFirst, const char *aSecond)
-    {
-        return (*aFirst < *aSecond) ? true : ((*aFirst > *aSecond) ? false : AreSorted(aFirst + 1, aSecond + 1));
-    }
-
-    constexpr static bool IsArraySorted(const Interpreter::Command *aList, uint16_t aLength)
-    {
-        return (aLength <= 1) ? true
-                              : AreSorted(aList[0].mName, aList[1].mName) && IsArraySorted(aList + 1, aLength - 1);
-    }
-
     static constexpr Command sCommands[] = {
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
         {"bbr", &Interpreter::ProcessBackboneRouter},
@@ -591,6 +548,9 @@ private:
         {"child", &Interpreter::ProcessChild},
         {"childip", &Interpreter::ProcessChildIp},
         {"childmax", &Interpreter::ProcessChildMax},
+#endif
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+        {"childsupervision", &Interpreter::ProcessChildSupervision},
 #endif
         {"childtimeout", &Interpreter::ProcessChildTimeout},
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
@@ -738,6 +698,8 @@ private:
         {"unsecureport", &Interpreter::ProcessUnsecurePort},
         {"version", &Interpreter::ProcessVersion},
     };
+
+    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
 
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;

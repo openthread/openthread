@@ -35,10 +35,13 @@
 #define PARSE_CMD_LINE_HPP_
 
 #include <stdint.h>
+
 #include <openthread/error.h>
+#include <openthread/ip6.h>
 
 namespace ot {
 namespace Utils {
+namespace CmdLineParser {
 
 /**
  * @addtogroup utils-parse-cmd-line
@@ -50,32 +53,242 @@ namespace Utils {
  */
 
 /**
- * This class implements the command line parser.
+ * This enumeration type represents the parse mode value used as a parameter in `ParseAsHexString()`.
  *
  */
-class CmdLineParser
+enum HexStringParseMode : uint8_t
 {
-public:
-    /**
-     * This function parses the command line.
-     *
-     * Note: this method may change the input @p aString, it will put a '\0' by the end of each argument,
-     *       and @p aArgs will point to the arguments in the input @p aString. Backslash ('\') can be used
-     *       to escape separators (' ', '\t', '\r', '\n') and the backslash itself.
-     *
-     * @param[in]   aString         A null-terminated input string.
-     * @param[out]  aArgsLength     The argument counter of the command line.
-     * @param[out]  aArgs           The argument vector of the command line.
-     * @param[in]   aArgsLengthMax  The maximum argument counter.
-     *
-     */
-    static otError ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[], uint8_t aArgsLengthMax);
+    kDisallowTruncate, // Disallow truncation of hex string.
+    kAllowTruncate,    // Allow truncation of hex string.
 };
+
+/**
+ * This function parses a given command line string and breaks it into an argument list.
+ *
+ * Note: this method may change the input @p aCommandString, it will put a '\0' by the end of each argument,
+ *       and @p aArgs will point to the arguments in the input @p aCommandString. Backslash ('\') can be used
+ *       to escape separators (' ', '\t', '\r', '\n') and the backslash itself.
+ *
+ * @param[in]   aCommandString  A null-terminated input string.
+ * @param[out]  aArgsLength     The argument counter of the command line.
+ * @param[out]  aArgs           The argument vector of the command line.
+ * @param[in]   aArgsLengthMax  The maximum argument counter.
+ *
+ */
+otError ParseCmd(char *aCommandString, uint8_t &aArgsLength, char *aArgs[], uint8_t aArgsLengthMax);
+
+/**
+ * This function parses a string as a `uint8_t` value.
+ *
+ * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aUint8    A reference to an `uint8_t` variable to output the parsed value.
+ *
+ * @retval OT_ERROR_NONE          The string was parsed successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ *
+ */
+otError ParseAsUint8(const char *aString, uint8_t &aUint8);
+
+/**
+ * This function parses a string as a `uint16_t` value.
+ *
+ * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aUint16   A reference to an `uint16_t` variable to output the parsed value.
+ *
+ * @retval OT_ERROR_NONE          The string was parsed successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ *
+ */
+otError ParseAsUint16(const char *aString, uint16_t &aUint16);
+
+/**
+ * This function parses a string as a `uint32_t` value.
+ *
+ * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aUint32   A reference to an `uint32_t` variable to output the parsed value.
+ *
+ * @retval OT_ERROR_NONE          The string was parsed successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ *
+ */
+otError ParseAsUint32(const char *aString, uint32_t &aUint32);
+
+/**
+ * This function parses a string as a `uint64_t` value.
+ *
+ * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aUint64   A reference to an `uint64_t` variable to output the parsed value.
+ *
+ * @retval OT_ERROR_NONE          The string was parsed successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ *
+ */
+otError ParseAsUint64(const char *aString, uint64_t &aUint64);
+
+/**
+ * This function parses a string as a `int8_t` value.
+ *
+ * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix). The string can start with
+ * `+`/`-` sign.
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aInt8     A reference to an `int8_t` variable to output the parsed value.
+ *
+ * @retval OT_ERROR_NONE          The string was parsed successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ *
+ */
+otError ParseAsInt8(const char *aString, int8_t &aInt8);
+
+/**
+ * This function parses a string as a `int16_t` value.
+ *
+ * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix). The string can start with
+ * `+`/`-` sign.
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aInt16    A reference to an `int16_t` variable to output the parsed value.
+ *
+ * @retval OT_ERROR_NONE          The string was parsed successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ *
+ */
+otError ParseAsInt16(const char *aString, int16_t &aInt16);
+
+/**
+ * This function parses a string as a `int32_t` value.
+ *
+ * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix). The string can start with
+ * `+`/`-` sign.
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aInt32    A reference to an `int32_t` variable to output the parsed value.
+ *
+ * @retval OT_ERROR_NONE          The string was parsed successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ *
+ */
+otError ParseAsInt32(const char *aString, int32_t &aInt32);
+
+/**
+ * This function parses a string as a `bool` value.
+ *
+ * Zero value is treated as `false, non-zero value as `true`.
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aBool     A reference to a `bool` variable to output the parsed value.
+ *
+ * @retval OT_ERROR_NONE          The string was parsed successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number.
+ *
+ */
+otError ParseAsBool(const char *aString, bool &aBool);
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+/**
+ * This function parses a string as an IPv6 address.
+ *
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aAddress  A reference to an `otIp6Address` to output the parsed IPv6 address.
+ *
+ * @retval OT_ERROR_NONE          The string was parsed successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid IPv6 address.
+ *
+ */
+inline otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress)
+{
+    return otIp6AddressFromString(aString, &aAddress);
+}
+
+/**
+ * This function parses a string as an IPv6 prefix.
+ *
+ * The string is parsed as `{IPv6Address}/{PrefixLength}`.
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aPrefix   A reference to an `otIp6Prefix` to output the parsed IPv6 prefix.
+ *
+ * @retval OT_ERROR_NONE          The string was parsed successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid IPv6 prefix
+ *
+ */
+otError ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix);
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+
+/**
+ * This function parses a hex string into a byte array of fixed expected size.
+ *
+ * This function returns `OT_ERROR_NONE` only when the hex string contains exactly @p aSize bytes (after parsing). If
+ * there are fewer or more bytes in hex string that @p aSize, the parsed bytes (up to @p aSize) are copied into the
+ * `aBuffer` and `OT_ERROR_INVALID_ARGS` is returned.
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aBuffer   A pointer to a buffer to output the parsed byte sequence.
+ * @param[in]  aSize     The expected size of byte sequence (number of bytes after parsing).
+ *
+ * @retval OT_ERROR_NONE          The string was parsed successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid hex bytes and/or not @p aSize bytes.
+ *
+ */
+otError ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize);
+
+/**
+ * This template function parses a hex string into a a given fixed size array.
+ *
+ * This function returns `OT_ERROR_NONE` only when the hex string contains exactly @p kBufferSize bytes (after parsing).
+ * If there are fewer or more bytes in hex string that @p kBufferSize, the parsed bytes (up to @p kBufferSize) are
+ * copied into the `aBuffer` and `OT_ERROR_INVALID_ARGS` is returned.
+ *
+ * @tparam kBufferSize   The byte array size (number of bytes).
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aBuffer   A reference to a byte array to output the parsed byte sequence.
+ *
+ * @retval OT_ERROR_NONE          The string was parsed successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid hex bytes and/or not @p aSize bytes.
+ *
+ */
+template <uint16_t kBufferSize> static otError ParseAsHexString(const char *aString, uint8_t (&aBuffer)[kBufferSize])
+{
+    return ParseAsHexString(aString, aBuffer, kBufferSize);
+}
+
+/**
+ * This function parses a hex string into a byte array.
+ *
+ * If @p aMode disallows truncation (`kDisallowTruncate`), this function verifies that parses hex string bytes fit in
+ * @p aBuffer with its given size in @aSize. Otherwise when @p aMode allows truncation, extra bytes after @p aSize bytes
+ * are ignored.
+ *
+ * @param[in]     aString   The string to parse.
+ * @param[inout]  aSize     On entry indicates the number of bytes in @p aBuffer (max size of @p aBuffer).
+ *                          On exit provides number of bytes parsed and copied into @p aBuffer
+ * @param[out]    aBuffer   A pointer to a buffer to output the parsed byte sequence.
+ * @param[in]     aMode     Indicates parsing mode whether to allow truncation or not.
+ *
+ * @retval OT_ERROR_NONE         The string was parsed successfully.
+ * @retval OT_ERROR_INVALID_ARGS The string does not contain valid format or too many bytes (if truncation not allowed)
+ *
+ */
+otError ParseAsHexString(const char *       aString,
+                         uint16_t &         aSize,
+                         uint8_t *          aBuffer,
+                         HexStringParseMode aMode = kDisallowTruncate);
 
 /**
  * @}
  */
 
+} // namespace CmdLineParser
 } // namespace Utils
 } // namespace ot
 

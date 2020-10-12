@@ -200,7 +200,7 @@ public:
 
         VerifyOrExit(CanWrite(aLength), error = OT_ERROR_NO_BUFS);
 
-        rval = aMessage.Read(aMessage.GetOffset(), aLength, mWritePointer);
+        rval = aMessage.ReadBytes(aMessage.GetOffset(), mWritePointer, aLength);
         OT_ASSERT(rval == aLength);
 
         mWritePointer += aLength;

@@ -204,7 +204,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
     for (uint16_t offset = 0; offset < addressesLength; offset += sizeof(Ip6::Address))
     {
-        IgnoreReturnValue(aMessage.Read(addressesOffset + offset, sizeof(Ip6::Address), &address));
+        IgnoreError(aMessage.Read(addressesOffset + offset, address));
 
         if (timeout == 0)
         {
@@ -282,11 +282,11 @@ void Manager::SendMulticastListenerRegistrationResponse(const Coap::Message &   
 
         addressesTlv.Init();
         addressesTlv.SetLength(sizeof(Ip6::Address) * aFailedAddressNum);
-        SuccessOrExit(error = message->Append(&addressesTlv, sizeof(addressesTlv)));
+        SuccessOrExit(error = message->Append(addressesTlv));
 
         for (uint8_t i = 0; i < aFailedAddressNum; i++)
         {
-            SuccessOrExit(error = message->Append(aFailedAddresses + i, sizeof(Ip6::Address)));
+            SuccessOrExit(error = message->Append(aFailedAddresses[i]));
         }
     }
 
@@ -316,8 +316,8 @@ void Manager::SendBackboneMulticastListenerRegistration(const Ip6::Address *aAdd
 
     addressesTlv.Init();
     addressesTlv.SetLength(sizeof(Ip6::Address) * aAddressNum);
-    SuccessOrExit(error = message->Append(&addressesTlv, sizeof(addressesTlv)));
-    SuccessOrExit(error = message->Append(aAddresses, sizeof(Ip6::Address) * aAddressNum));
+    SuccessOrExit(error = message->Append(addressesTlv));
+    SuccessOrExit(error = message->AppendBytes(aAddresses, sizeof(Ip6::Address) * aAddressNum));
 
     SuccessOrExit(error = ThreadTlv::AppendUint32Tlv(*message, ThreadTlv::kTimeout, aTimeout));
 

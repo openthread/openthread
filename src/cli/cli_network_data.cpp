@@ -38,20 +38,15 @@
 
 #include "cli/cli.hpp"
 #include "common/encoding.hpp"
+#include "utils/parse_cmdline.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
+using ot::Utils::CmdLineParser::ParseAsHexString;
 
 namespace ot {
 namespace Cli {
 
-const NetworkData::Command NetworkData::sCommands[] = {
-    {"help", &NetworkData::ProcessHelp},
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    {"register", &NetworkData::ProcessRegister},
-#endif
-    {"show", &NetworkData::ProcessShow},
-    {"steeringdata", &NetworkData::ProcessSteeringData},
-};
+constexpr NetworkData::Command NetworkData::sCommands[];
 
 NetworkData::NetworkData(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
@@ -219,7 +214,7 @@ otError NetworkData::ProcessSteeringData(uint8_t aArgsLength, char *aArgs[])
 
     if (error == OT_ERROR_NOT_FOUND)
     {
-        VerifyOrExit(Interpreter::Hex2Bin(aArgs[1], addr.m8, sizeof(addr)) == sizeof(addr), OT_NOOP);
+        SuccessOrExit(error = ParseAsHexString(aArgs[1], addr.m8));
     }
     else if (error != OT_ERROR_NONE)
     {
@@ -318,24 +313,17 @@ otError NetworkData::ProcessShow(uint8_t aArgsLength, char *aArgs[])
 
 otError NetworkData::Process(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error = OT_ERROR_INVALID_COMMAND;
+    otError        error = OT_ERROR_INVALID_COMMAND;
+    const Command *command;
 
-    if (aArgsLength < 1)
-    {
-        IgnoreError(ProcessHelp(0, nullptr));
-        error = OT_ERROR_INVALID_ARGS;
-    }
-    else
-    {
-        for (const Command &command : sCommands)
-        {
-            if (strcmp(aArgs[0], command.mName) == 0)
-            {
-                error = (this->*command.mCommand)(aArgsLength - 1, aArgs + 1);
-                break;
-            }
-        }
-    }
+    VerifyOrExit(aArgsLength != 0, IgnoreError(ProcessHelp(0, nullptr)));
+
+    command = Utils::LookupTable::Find(aArgs[0], sCommands);
+    VerifyOrExit(command != nullptr, OT_NOOP);
+
+    error = (this->*command->mHandler)(aArgsLength - 1, aArgs + 1);
+
+exit:
     return error;
 }
 

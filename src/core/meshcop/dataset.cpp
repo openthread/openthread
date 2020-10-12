@@ -366,12 +366,13 @@ otError Dataset::SetUint32Tlv(Tlv::Type aType, uint32_t aValue)
 
 otError Dataset::Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError error = OT_ERROR_INVALID_ARGS;
 
-    VerifyOrExit(aLength == aMessage.Read(aOffset, aLength, mTlvs), error = OT_ERROR_INVALID_ARGS);
+    SuccessOrExit(aMessage.Read(aOffset, mTlvs, aLength));
     mLength = aLength;
 
     mUpdateTime = TimerMilli::GetNow();
+    error       = OT_ERROR_NONE;
 
 exit:
     return error;
@@ -400,7 +401,7 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
 
     tlv.SetType(type);
     tlv.SetLength(static_cast<uint8_t>(mLength) - sizeof(Tlv) - sizeof(Timestamp));
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(Tlv)));
+    SuccessOrExit(error = aMessage.Append(tlv));
 
     for (const Tlv *cur = GetTlvsStart(); cur < GetTlvsEnd(); cur = cur->GetNext())
     {
