@@ -46,25 +46,25 @@ MTDS = [MED1, MED2]
 class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
     TOPOLOGY = {
         DUT_LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [BR, MED1, MED2]
         },
         BR: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [DUT_LEADER]
         },
         MED1: {
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [DUT_LEADER]
         },
         MED2: {
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [DUT_LEADER]
         },

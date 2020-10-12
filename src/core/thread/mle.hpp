@@ -311,14 +311,6 @@ public:
     bool IsFullThreadDevice(void) const { return mDeviceMode.IsFullThreadDevice(); }
 
     /**
-     * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
-     *
-     * @returns TRUE if using secure IEEE 802.15.4 Data Request messages, FALSE otherwise.
-     *
-     */
-    bool IsSecureDataRequest(void) const { return mDeviceMode.IsSecureDataRequest(); }
-
-    /**
      * This method indicates whether or not the device requests Full Network Data.
      *
      * @returns TRUE if requests Full Network Data, FALSE otherwise.
@@ -1550,7 +1542,7 @@ private:
 
     struct DelayedResponseMetadata
     {
-        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
         void    ReadFrom(const Message &aMessage);
         void    RemoveFrom(Message &aMessage) const;
 

@@ -444,7 +444,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+    otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
 
     /**
      * This method reads request data from the message.
@@ -454,9 +454,10 @@ public:
      */
     void ReadFrom(const Message &aMessage)
     {
-        uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-        OT_ASSERT(length == sizeof(*this));
-        OT_UNUSED_VARIABLE(length);
+        otError error = aMessage.Read(aMessage.GetLength() - sizeof(*this), *this);
+
+        OT_ASSERT(error == OT_ERROR_NONE);
+        OT_UNUSED_VARIABLE(error);
     }
 
     /**
@@ -465,10 +466,7 @@ public:
      * @param[in]  aMessage  A reference to the message.
      *
      */
-    void UpdateIn(Message &aMessage) const
-    {
-        aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    }
+    void UpdateIn(Message &aMessage) const { aMessage.Write(aMessage.GetLength() - sizeof(*this), *this); }
 
 private:
     uint32_t              mTransmitTimestamp;   ///< Time at the client when the request departed for the server.

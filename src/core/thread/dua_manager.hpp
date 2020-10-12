@@ -218,8 +218,8 @@ private:
 
     Tasklet        mRegistrationTask;
     Coap::Resource mDuaNotification;
-
-    bool mIsDuaPending : 1;
+    Ip6::Address   mRegisteringDua;
+    bool           mIsDuaPending : 1;
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     enum DuaState

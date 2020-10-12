@@ -46,9 +46,9 @@ expect "Done"
 
 set spawn_id $spawn_1
 send "neighbor table\n"
-expect "| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|S|D|N| Extended MAC     |"
-expect "+------+--------+-----+----------+-----------+-+-+-+-+------------------+"
-expect -re "\\| +C +\\| 0x$rloc \\| +\\d+ \\| +-?\\d+ \\| +-?\\d+ \\|1\\|1\\|0\\|0\\| $extaddr \\|"
+expect "| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|D|N| Extended MAC     |"
+expect "+------+--------+-----+----------+-----------+-+-+-+------------------+"
+expect -re "\\| +C +\\| 0x$rloc \\| +\\d+ \\| +-?\\d+ \\| +-?\\d+ \\|1\\|0\\|0\\| $extaddr \\|"
 expect "Done"
 send "neighbor list\n"
 expect "0x$rloc"

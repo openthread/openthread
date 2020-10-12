@@ -258,6 +258,7 @@ SOURCES_COMMON                                  = \
     utils/flash.cpp                               \
     utils/heap.cpp                                \
     utils/jam_detector.cpp                        \
+    utils/lookup_table.cpp                        \
     utils/otns.cpp                                \
     utils/parse_cmdline.cpp                       \
     utils/slaac_address.cpp                       \
@@ -293,6 +294,7 @@ libopenthread_radio_a_SOURCES              = \
     radio/radio_callbacks.cpp                \
     radio/radio_platform.cpp                 \
     thread/link_quality.cpp                  \
+    utils/lookup_table.cpp                   \
     utils/parse_cmdline.cpp                  \
     $(NULL)
 
@@ -488,6 +490,7 @@ HEADERS_COMMON                                  = \
     utils/flash.hpp                               \
     utils/heap.hpp                                \
     utils/jam_detector.hpp                        \
+    utils/lookup_table.hpp                        \
     utils/otns.hpp                                \
     utils/parse_cmdline.hpp                       \
     utils/slaac_address.hpp                       \

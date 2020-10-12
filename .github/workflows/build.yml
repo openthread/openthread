@@ -47,9 +47,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
-        sudo apt-get autoremove
-        sudo apt-get --no-install-recommends install -y clang-tools clang-format-6.0 shellcheck
+        sudo apt-get --no-install-recommends install -y clang-format-10 shellcheck
         python3 -m pip install yapf==0.29.0
         sudo snap install shfmt
     - name: Check
@@ -95,15 +93,14 @@ jobs:
         script/test package
 
   scan-build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
-        sudo apt-get autoremove
-        sudo apt-get --no-install-recommends install -y clang-tools
+        sudo apt-get remove libllvm10
+        sudo apt-get --no-install-recommends install -y clang-tools-10
     - name: Run
       run: |
         script/check-scan-build

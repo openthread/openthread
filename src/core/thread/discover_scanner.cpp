@@ -127,7 +127,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     tlv.SetLength(
         static_cast<uint8_t>(discoveryRequest.GetSize() + ((mAdvDataLength != 0) ? joinerAdvertisement.GetSize() : 0)));
 
-    SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+    SuccessOrExit(error = message->Append(tlv));
     SuccessOrExit(error = discoveryRequest.AppendTo(*message));
 
     if (mAdvDataLength != 0)
@@ -303,7 +303,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
 
     // Find MLE Discovery TLV
     VerifyOrExit(Tlv::FindTlvOffset(aMessage, Tlv::kDiscovery, offset) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
-    aMessage.Read(offset, sizeof(tlv), &tlv);
+    IgnoreError(aMessage.Read(offset, tlv));
 
     offset += sizeof(tlv);
     end = offset + tlv.GetLength();
@@ -319,12 +319,12 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
     // Process MeshCoP TLVs
     while (offset < end)
     {
-        aMessage.Read(offset, sizeof(meshcopTlv), &meshcopTlv);
+        IgnoreError(aMessage.Read(offset, meshcopTlv));
 
         switch (meshcopTlv.GetType())
         {
         case MeshCoP::Tlv::kDiscoveryResponse:
-            aMessage.Read(offset, sizeof(discoveryResponse), &discoveryResponse);
+            IgnoreError(aMessage.Read(offset, discoveryResponse));
             VerifyOrExit(discoveryResponse.IsValid(), error = OT_ERROR_PARSE);
             result.mVersion  = discoveryResponse.GetVersion();
             result.mIsNative = discoveryResponse.IsNativeCommissioner();
@@ -335,7 +335,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
             break;
 
         case MeshCoP::Tlv::kNetworkName:
-            aMessage.Read(offset, sizeof(networkName), &networkName);
+            IgnoreError(aMessage.Read(offset, networkName));
             IgnoreError(static_cast<Mac::NetworkName &>(result.mNetworkName).Set(networkName.GetNetworkName()));
             break;
 

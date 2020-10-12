@@ -43,7 +43,7 @@ class Cert_6_6_2_KeyIncrement1(thread_cert.TestCase):
             'name': 'LEADER',
             'key_sequence_counter': 127,
             'key_switch_guardtime': 0,
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ED]
         },
@@ -51,7 +51,7 @@ class Cert_6_6_2_KeyIncrement1(thread_cert.TestCase):
             'name': 'ED',
             'is_mtd': True,
             'key_switch_guardtime': 0,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [LEADER]
         },

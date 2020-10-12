@@ -105,10 +105,9 @@ int main(int argc, char *argv[])
     setNetworkConfiguration(instance);
     otSetStateChangedCallback(instance, handleNetifStateChanged, instance);
 
-    config.mRxOnWhenIdle       = true;
-    config.mSecureDataRequests = true;
-    config.mDeviceType         = 0;
-    config.mNetworkData        = 0;
+    config.mRxOnWhenIdle = true;
+    config.mDeviceType   = 0;
+    config.mNetworkData  = 0;
     otThreadSetLinkMode(instance, config);
 
     initUdp();
@@ -225,10 +224,9 @@ void handleNetifStateChanged(uint32_t aFlags, void *aContext)
             break;
 
         case OT_DEVICE_ROLE_CHILD:
-            config.mRxOnWhenIdle       = 0;
-            config.mSecureDataRequests = true;
-            config.mDeviceType         = 0;
-            config.mNetworkData        = 0;
+            config.mRxOnWhenIdle = 0;
+            config.mDeviceType   = 0;
+            config.mNetworkData  = 0;
             otThreadSetLinkMode(instance, config);
             sAllowDeepSleep = true;
             break;
@@ -326,12 +324,11 @@ void applicationTick(void)
 
     if (sRxOnIdleButtonPressed == true)
     {
-        sRxOnIdleButtonPressed     = false;
-        sAllowDeepSleep            = !sAllowDeepSleep;
-        config.mRxOnWhenIdle       = !sAllowDeepSleep;
-        config.mSecureDataRequests = true;
-        config.mDeviceType         = 0;
-        config.mNetworkData        = 0;
+        sRxOnIdleButtonPressed = false;
+        sAllowDeepSleep        = !sAllowDeepSleep;
+        config.mRxOnWhenIdle   = !sAllowDeepSleep;
+        config.mDeviceType     = 0;
+        config.mNetworkData    = 0;
         otThreadSetLinkMode(instance, config);
     }
 

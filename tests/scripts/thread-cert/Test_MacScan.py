@@ -40,14 +40,14 @@ class Test_MacScan(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'channel': 12,
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'network_name': 'OpenThread',
             'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'channel': 12,
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'network_name': 'OpenThread',
             'panid': 0xface,
             'allowlist': [LEADER]

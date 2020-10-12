@@ -85,7 +85,7 @@ void Checksum::WriteToMessage(uint16_t aOffset, Message &aMessage) const
 
     checksum = Encoding::BigEndian::HostSwap16(checksum);
 
-    aMessage.Write(aOffset, sizeof(checksum), &checksum);
+    aMessage.Write(aOffset, checksum);
 }
 
 void Checksum::Calculate(const Ip6::Address &aSource,

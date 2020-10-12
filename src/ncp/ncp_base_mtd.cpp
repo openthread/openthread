@@ -135,18 +135,13 @@ static uint8_t ExternalRoutePreferenceToFlagByte(int aPreference)
     return flags;
 }
 
-uint8_t NcpBase::LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aSecureDataRequests, bool aDeviceType, bool aNetworkData)
+uint8_t NcpBase::LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aDeviceType, bool aNetworkData)
 {
     uint8_t flags(0);
 
     if (aRxOnWhenIdle)
     {
         flags |= SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE;
-    }
-
-    if (aSecureDataRequests)
-    {
-        flags |= SPINEL_THREAD_MODE_SECURE_DATA_REQUEST;
     }
 
     if (aDeviceType)
@@ -167,8 +162,8 @@ otError NcpBase::EncodeNeighborInfo(const otNeighborInfo &aNeighborInfo)
     otError error;
     uint8_t modeFlags;
 
-    modeFlags = LinkFlagsToFlagByte(aNeighborInfo.mRxOnWhenIdle, aNeighborInfo.mSecureDataRequest,
-                                    aNeighborInfo.mFullThreadDevice, aNeighborInfo.mFullNetworkData);
+    modeFlags = LinkFlagsToFlagByte(aNeighborInfo.mRxOnWhenIdle, aNeighborInfo.mFullThreadDevice,
+                                    aNeighborInfo.mFullNetworkData);
 
     SuccessOrExit(error = mEncoder.OpenStruct());
 
@@ -2848,8 +2843,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_MODE>(void)
     uint8_t          numericMode;
     otLinkModeConfig modeConfig = otThreadGetLinkMode(mInstance);
 
-    numericMode = LinkFlagsToFlagByte(modeConfig.mRxOnWhenIdle, modeConfig.mSecureDataRequests, modeConfig.mDeviceType,
-                                      modeConfig.mNetworkData);
+    numericMode = LinkFlagsToFlagByte(modeConfig.mRxOnWhenIdle, modeConfig.mDeviceType, modeConfig.mNetworkData);
 
     return mEncoder.WriteUint8(numericMode);
 }
@@ -2864,8 +2858,6 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MODE>(void)
 
     modeConfig.mRxOnWhenIdle =
         ((numericMode & SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE) == SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE);
-    modeConfig.mSecureDataRequests =
-        ((numericMode & SPINEL_THREAD_MODE_SECURE_DATA_REQUEST) == SPINEL_THREAD_MODE_SECURE_DATA_REQUEST);
     modeConfig.mDeviceType = ((numericMode & SPINEL_THREAD_MODE_FULL_THREAD_DEV) == SPINEL_THREAD_MODE_FULL_THREAD_DEV);
     modeConfig.mNetworkData =
         ((numericMode & SPINEL_THREAD_MODE_FULL_NETWORK_DATA) == SPINEL_THREAD_MODE_FULL_NETWORK_DATA);

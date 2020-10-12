@@ -101,22 +101,22 @@ class TestMulticastRegistration(thread_cert.TestCase):
             'allowlist': [MED_1_2, SED_1_2, MED_1_1, SED_1_1, ROUTER_1_1],
         },
         MED_1_2: {
-            'mode': 'rsn',
+            'mode': 'rn',
             'version': '1.2',
             'allowlist': [LEADER_1_2],
         },
         SED_1_2: {
-            'mode': 'sn',
+            'mode': 'n',
             'version': '1.2',
             'allowlist': [LEADER_1_2],
         },
         MED_1_1: {
-            'mode': 'rsn',
+            'mode': 'rn',
             'version': '1.1',
             'allowlist': [LEADER_1_2],
         },
         SED_1_1: {
-            'mode': 'sn',
+            'mode': 'n',
             'version': '1.1',
             'allowlist': [LEADER_1_2],
         },
@@ -125,12 +125,12 @@ class TestMulticastRegistration(thread_cert.TestCase):
             'allowlist': [LEADER_1_2, MED_1_2_2, SED_1_2_2],
         },
         MED_1_2_2: {
-            'mode': 'rsn',
+            'mode': 'rn',
             'version': '1.2',
             'allowlist': [ROUTER_1_1],
         },
         SED_1_2_2: {
-            'mode': 'sn',
+            'mode': 'n',
             'version': '1.2',
             'allowlist': [ROUTER_1_1],
         },

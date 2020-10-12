@@ -571,6 +571,8 @@ openthread_core_files = [
   "utils/heap.hpp",
   "utils/jam_detector.cpp",
   "utils/jam_detector.hpp",
+  "utils/lookup_table.cpp",
+  "utils/lookup_table.hpp",
   "utils/otns.cpp",
   "utils/otns.hpp",
   "utils/parse_cmdline.cpp",
@@ -604,6 +606,7 @@ openthread_radio_sources = [
   "radio/radio_callbacks.cpp",
   "radio/radio_platform.cpp",
   "thread/link_quality.cpp",
+  "utils/lookup_table.cpp",
   "utils/parse_cmdline.cpp",
 ]
 

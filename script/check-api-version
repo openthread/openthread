@@ -46,7 +46,7 @@ main()
 
     git fetch --depth 1 origin "${OT_SHA_OLD}"
 
-    if git diff --name-only "${OT_SHA_OLD}" -- include/openthread; then
+    if git diff --name-only --exit-code "${OT_SHA_OLD}" -- include/openthread; then
         echo 'No OpenThread public APIs updates.'
         exit 0
     fi

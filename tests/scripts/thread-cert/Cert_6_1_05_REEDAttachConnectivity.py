@@ -44,27 +44,27 @@ class Cert_6_1_5_REEDAttachConnectivity(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER1, REED1, REED2]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, REED2]
         },
         REED1: {
             'name': 'REED_1',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
             'allowlist': [LEADER, ROUTER1, ED]
         },
         REED2: {
             'name': 'REED_2',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
             'allowlist': [LEADER, (ED, -85)]
@@ -72,7 +72,7 @@ class Cert_6_1_5_REEDAttachConnectivity(thread_cert.TestCase):
         ED: {
             'name': 'ED',
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [REED1, REED2]
         },

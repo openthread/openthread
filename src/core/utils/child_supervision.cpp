@@ -66,7 +66,7 @@ Child *ChildSupervisor::GetDestination(const Message &aMessage) const
 
     VerifyOrExit(aMessage.GetType() == Message::kTypeSupervision, OT_NOOP);
 
-    aMessage.Read(0, sizeof(childIndex), &childIndex);
+    IgnoreError(aMessage.Read(0, childIndex));
     child = Get<ChildTable>().GetChildAtIndex(childIndex);
 
 exit:
@@ -89,7 +89,7 @@ void ChildSupervisor::SendMessage(Child &aChild)
     // `ChildSupervisor::GetDestination(message)`.
 
     childIndex = Get<ChildTable>().GetChildIndex(aChild);
-    SuccessOrExit(message->Append(&childIndex, sizeof(childIndex)));
+    SuccessOrExit(message->Append(childIndex));
 
     SuccessOrExit(Get<ThreadNetif>().SendMessage(*message));
     message = nullptr;

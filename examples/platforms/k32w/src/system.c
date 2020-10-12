@@ -41,7 +41,7 @@
 
 #include "MemManager.h"
 
-otInstance * sInstance;
+otInstance *          sInstance;
 OT_TOOL_WEAK uint32_t gInterruptDisableCount = 0;
 
 void otSysInit(int argc, char *argv[])

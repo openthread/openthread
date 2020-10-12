@@ -66,20 +66,19 @@ exit:
 void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
 {
     Clear();
-    mExtAddress        = aNeighbor.GetExtAddress();
-    mAge               = Time::MsecToSec(TimerMilli::GetNow() - aNeighbor.GetLastHeard());
-    mRloc16            = aNeighbor.GetRloc16();
-    mLinkFrameCounter  = aNeighbor.GetLinkFrameCounter();
-    mMleFrameCounter   = aNeighbor.GetMleFrameCounter();
-    mLinkQualityIn     = aNeighbor.GetLinkInfo().GetLinkQuality();
-    mAverageRssi       = aNeighbor.GetLinkInfo().GetAverageRss();
-    mLastRssi          = aNeighbor.GetLinkInfo().GetLastRss();
-    mFrameErrorRate    = aNeighbor.GetLinkInfo().GetFrameErrorRate();
-    mMessageErrorRate  = aNeighbor.GetLinkInfo().GetMessageErrorRate();
-    mRxOnWhenIdle      = aNeighbor.IsRxOnWhenIdle();
-    mSecureDataRequest = aNeighbor.IsSecureDataRequest();
-    mFullThreadDevice  = aNeighbor.IsFullThreadDevice();
-    mFullNetworkData   = aNeighbor.IsFullNetworkData();
+    mExtAddress       = aNeighbor.GetExtAddress();
+    mAge              = Time::MsecToSec(TimerMilli::GetNow() - aNeighbor.GetLastHeard());
+    mRloc16           = aNeighbor.GetRloc16();
+    mLinkFrameCounter = aNeighbor.GetLinkFrameCounter();
+    mMleFrameCounter  = aNeighbor.GetMleFrameCounter();
+    mLinkQualityIn    = aNeighbor.GetLinkInfo().GetLinkQuality();
+    mAverageRssi      = aNeighbor.GetLinkInfo().GetAverageRss();
+    mLastRssi         = aNeighbor.GetLinkInfo().GetLastRss();
+    mFrameErrorRate   = aNeighbor.GetLinkInfo().GetFrameErrorRate();
+    mMessageErrorRate = aNeighbor.GetLinkInfo().GetMessageErrorRate();
+    mRxOnWhenIdle     = aNeighbor.IsRxOnWhenIdle();
+    mFullThreadDevice = aNeighbor.IsFullThreadDevice();
+    mFullNetworkData  = aNeighbor.IsFullNetworkData();
 }
 
 void Neighbor::Init(Instance &aInstance)
@@ -175,7 +174,6 @@ void Child::Info::SetFrom(const Child &aChild)
     mFrameErrorRate     = aChild.GetLinkInfo().GetFrameErrorRate();
     mMessageErrorRate   = aChild.GetLinkInfo().GetMessageErrorRate();
     mRxOnWhenIdle       = aChild.IsRxOnWhenIdle();
-    mSecureDataRequest  = aChild.IsSecureDataRequest();
     mFullThreadDevice   = aChild.IsFullThreadDevice();
     mFullNetworkData    = aChild.IsFullNetworkData();
     mIsStateRestoring   = aChild.IsStateRestoring();

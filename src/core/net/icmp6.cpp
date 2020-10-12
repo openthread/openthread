@@ -76,7 +76,7 @@ otError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo
     icmpHeader.SetId(aIdentifier);
     icmpHeader.SetSequence(mEchoSequence++);
 
-    SuccessOrExit(error = aMessage.Prepend(&icmpHeader, sizeof(icmpHeader)));
+    SuccessOrExit(error = aMessage.Prepend(icmpHeader));
     aMessage.SetOffset(0);
     SuccessOrExit(error = Get<Ip6>().SendDatagram(aMessage, messageInfoLocal, kProtoIcmp6));
 
@@ -98,15 +98,11 @@ otError Icmp::SendError(Header::Type       aType,
     ot::Ip6::Header   ip6Header;
     Message::Settings settings(Message::kWithLinkSecurity, Message::kPriorityNet);
 
-    VerifyOrExit(aMessage.GetLength() >= sizeof(ip6Header), error = OT_ERROR_INVALID_ARGS);
-
-    aMessage.Read(0, sizeof(ip6Header), &ip6Header);
+    SuccessOrExit(error = aMessage.Read(0, ip6Header));
 
     if (ip6Header.GetNextHeader() == kProtoIcmp6)
     {
-        VerifyOrExit(aMessage.GetLength() >= (sizeof(ip6Header) + sizeof(icmp6Header)), OT_NOOP);
-
-        aMessage.Read(sizeof(ip6Header), sizeof(icmp6Header), &icmp6Header);
+        SuccessOrExit(aMessage.Read(sizeof(ip6Header), icmp6Header));
         VerifyOrExit(!icmp6Header.IsError(), OT_NOOP);
     }
 
@@ -115,12 +111,12 @@ otError Icmp::SendError(Header::Type       aType,
     VerifyOrExit((message = Get<Ip6>().NewMessage(0, settings)) != nullptr, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = message->SetLength(sizeof(icmp6Header) + sizeof(ip6Header)));
 
-    message->Write(sizeof(icmp6Header), sizeof(ip6Header), &ip6Header);
+    message->Write(sizeof(icmp6Header), ip6Header);
 
     icmp6Header.Clear();
     icmp6Header.SetType(aType);
     icmp6Header.SetCode(aCode);
-    message->Write(0, sizeof(icmp6Header), &icmp6Header);
+    message->Write(0, icmp6Header);
 
     SuccessOrExit(error = Get<Ip6>().SendDatagram(*message, messageInfoLocal, kProtoIcmp6));
 
@@ -136,8 +132,7 @@ otError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     otError error = OT_ERROR_NONE;
     Header  icmp6Header;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(icmp6Header), &icmp6Header) == sizeof(icmp6Header),
-                 error = OT_ERROR_PARSE);
+    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), icmp6Header));
 
     SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessageInfo, kProtoIcmp6));
 
@@ -205,7 +200,7 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
     payloadLength = aRequestMessage.GetLength() - aRequestMessage.GetOffset() - Header::kDataFieldOffset;
     SuccessOrExit(error = replyMessage->SetLength(Header::kDataFieldOffset + payloadLength));
 
-    replyMessage->Write(0, Header::kDataFieldOffset, &icmp6Header);
+    replyMessage->WriteBytes(0, &icmp6Header, Header::kDataFieldOffset);
     aRequestMessage.CopyTo(aRequestMessage.GetOffset() + Header::kDataFieldOffset, Header::kDataFieldOffset,
                            payloadLength, *replyMessage);
 
@@ -218,7 +213,7 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
 
     SuccessOrExit(error = Get<Ip6>().SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
 
-    replyMessage->Read(replyMessage->GetOffset(), sizeof(icmp6Header), &icmp6Header);
+    IgnoreError(replyMessage->Read(replyMessage->GetOffset(), icmp6Header));
     otLogInfoIcmp("Sent Echo Reply (seq = %d)", icmp6Header.GetSequence());
 
 exit:

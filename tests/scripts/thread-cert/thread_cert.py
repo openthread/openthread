@@ -36,7 +36,7 @@ import sys
 import time
 import traceback
 import unittest
-from typing import Optional
+from typing import Optional, Callable
 
 import config
 import debug
@@ -58,7 +58,7 @@ DEFAULT_PARAMS = {
     'is_bbr': False,
     'is_otbr': False,
     'is_host': False,
-    'mode': 'rsdn',
+    'mode': 'rdn',
     'panid': 0xface,
     'allowlist': None,
     'version': ENV_THREAD_VERSION,
@@ -191,7 +191,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 self.nodes[i].set_pending_dataset(params['pending_dataset']['pendingtimestamp'],
                                                   params['pending_dataset']['activetimestamp'],
                                                   panid=params['pending_dataset'].get('panid'),
-                                                  channel=params['pending_dataset'].get('channel'))
+                                                  channel=params['pending_dataset'].get('channel'),
+                                                  delay=params['pending_dataset'].get('delay'))
 
             if 'key_switch_guardtime' in params:
                 self.nodes[i].set_key_switch_guardtime(params['key_switch_guardtime'])
@@ -474,3 +475,17 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         mergecap = pvutils.which_mergecap()
         self.assure_run_ok(f'{mergecap} -w {merged_pcap} {thread_pcap} {backbone_pcap}', shell=True)
         return merged_pcap
+
+    def wait_until(self, cond: Callable[[], bool], timeout: int, go_interval: int = 1):
+        while True:
+            self.simulator.go(go_interval)
+
+            if cond():
+                break
+
+            timeout -= go_interval
+            if timeout <= 0:
+                raise RuntimeError(f'wait failed after {timeout} seconds')
+
+    def wait_node_state(self, nodeid: int, state: str, timeout: int):
+        self.wait_until(lambda: self.nodes[nodeid].get_state() == state, timeout)

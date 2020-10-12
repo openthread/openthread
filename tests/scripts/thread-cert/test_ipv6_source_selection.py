@@ -41,12 +41,12 @@ class TestIPv6SourceSelection(thread_cert.TestCase):
 
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xcafe,
             'allowlist': [ROUTER]
         },
         ROUTER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xcafe,
             'router_selection_jitter': 1,
             'allowlist': [LEADER]

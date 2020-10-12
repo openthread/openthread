@@ -48,14 +48,14 @@ class LowPower_6_1_07_PreferringARouterOverAReed_Base(thread_cert.TestCase):
         LEADER: {
             'version': '1.2',
             'name': 'LEADER',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER_1, REED_1]
         },
         ROUTER_1: {
             'version': '1.1',
             'name': 'ROUTER_1',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, DUT],
@@ -63,7 +63,7 @@ class LowPower_6_1_07_PreferringARouterOverAReed_Base(thread_cert.TestCase):
         REED_1: {
             'version': '1.2',
             'name': 'REED_1',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
             'allowlist': [LEADER, DUT],
@@ -162,12 +162,12 @@ class LowPower_6_1_07_PreferringARouterOverAReed_Base(thread_cert.TestCase):
 
 class LowPower_6_1_07_PreferringARouterOverAReed_MED(LowPower_6_1_07_PreferringARouterOverAReed_Base):
     TOPOLOGY = copy.deepcopy(LowPower_6_1_07_PreferringARouterOverAReed_Base.TOPOLOGY)
-    TOPOLOGY[DUT]['mode'] = 'rsn'
+    TOPOLOGY[DUT]['mode'] = 'rn'
 
 
 class LowPower_6_1_07_PreferringARouterOverAReed_SED(LowPower_6_1_07_PreferringARouterOverAReed_Base):
     TOPOLOGY = copy.deepcopy(LowPower_6_1_07_PreferringARouterOverAReed_Base.TOPOLOGY)
-    TOPOLOGY[DUT]['mode'] = 's'
+    TOPOLOGY[DUT]['mode'] = '-'
 
 
 del (LowPower_6_1_07_PreferringARouterOverAReed_Base)

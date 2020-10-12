@@ -115,12 +115,12 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
             'allowlist': [BBR_1, MED_1_2]
         },
         MED_1_2: {
-            'mode': 'rsn',
+            'mode': 'rn',
             'version': '1.2',
             'allowlist': [ROUTER_1_2],
         },
         SED_1_2: {
-            'mode': 'sn',
+            'mode': 'n',
             'version': '1.2',
             'allowlist': [ROUTER_1_1],
         },
