@@ -272,7 +272,7 @@ do_build_otbr_docker()
     local otdir
     local otbrdir
     local otbr_options="-DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON"
-    local otbr_commit=${OTBR_COMMIT:-ce1cc3f9141571505bc9a8b705d2eb775849c92c} # ot-br-posix #532
+    local otbr_commit=${OTBR_COMMIT:-master}
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
@@ -450,6 +450,37 @@ do_untar()
     rm "${build_dir:?}/${target_name}.tar"
 }
 
+do_generate_coverage()
+{
+    mkdir -p tmp/
+    sudo chmod 777 tmp/
+    rm -f tmp/coverage.lcov
+    if [[ $1 == "llvm" ]]; then
+        local llvm_gcov
+        llvm_gcov="$(mktemp -d)/llvm-gcov"
+        echo '#!/bin/bash' >>"$llvm_gcov"
+        echo 'exec llvm-cov gcov "$@"' >>"$llvm_gcov"
+        chmod +x "$llvm_gcov"
+        lcov --gcov-tool "$llvm_gcov" --directory . --capture --output-file tmp/coverage.info
+    else
+        lcov --directory . --capture --output-file tmp/coverage.info
+    fi
+    lcov --list tmp/coverage.info
+}
+
+do_upload_codecov()
+{
+    ls -R coverage/
+    readarray -d '' files < <(find coverage/ -type f -name 'coverage*.info' -print0)
+    local args=()
+    for i in "${files[@]}"; do
+        args+=('-a')
+        args+=("$i")
+    done
+    lcov "${args[@]}" -o final.info
+    bash <(curl -s https://codecov.io/bash) -f final.info -Z
+}
+
 envsetup()
 {
     if [[ ${NODE_MODE} == 'rcp' ]]; then
@@ -557,6 +588,13 @@ main()
             untar)
                 shift
                 do_untar "$@"
+                ;;
+            generate_coverage)
+                shift
+                do_generate_coverage "$1"
+                ;;
+            upload_codecov)
+                do_upload_codecov
                 ;;
             *)
                 echo

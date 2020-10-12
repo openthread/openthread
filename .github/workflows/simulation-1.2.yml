@@ -55,14 +55,14 @@ jobs:
       CXX: ${{ matrix.compiler.cxx }}
     strategy:
       matrix:
-        compiler: [{c: "gcc", cxx: "g++", gcov: "gcov"}, { c: "clang", cxx: "clang++", gcov: "llvm-cov gcov"}]
+        compiler: [{c: "gcc", cxx: "g++", gcov: "gcc"}, { c: "clang", cxx: "clang++", gcov: "llvm"}]
         arch: ["m32", "m64"]
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build python3-setuptools python3-wheel llvm
+        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build python3-setuptools python3-wheel llvm lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -81,23 +81,35 @@ jobs:
       run: |
         ./script/test tar simulation 1.1
         ./script/test tar simulation 1.2-bbr
-    - name: Codecov
+    - name: Generate Coverage
       run: |
-        bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}" -Z
+        ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-1
+        path: tmp/coverage.info
     - name: Keep-1-2-bbr-only
       run: |
         ./script/test tar simulation 1.2
         ./script/test untar simulation 1.2-bbr
-    - name: Codecov
+    - name: Generate Coverage
       run: |
-        bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}" -Z
+        ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-2
+        path: tmp/coverage.info
     - name: Keep-1-1-only
       run: |
         ./script/test tar simulation 1.2-bbr
         ./script/test untar simulation 1.1
-    - name: Codecov
+    - name: Generate Coverage
       run: |
-        bash <(curl -s https://codecov.io/bash) -x "${{ matrix.compiler.gcov }}" -Z
+        ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-3
+        path: tmp/coverage.info
 
   packet-verification-low-power:
     runs-on: ubuntu-18.04
@@ -110,46 +122,52 @@ jobs:
       MAC_FILTER: 1
       INTER_OP: 1
     steps:
-      - uses: actions/checkout@v2
-      - name: Bootstrap
-        run: |
-          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-          sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel ninja-build
-          python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-      - name: Build
-        run: |
-          ./script/test build
-      - name: Get Thread-Wireshark
-        run: |
-          ./script/test get_thread_wireshark
-      - name: Run
-        run: |
-          for i in {1..10}
-          do
-            ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
-          done
-      - uses: actions/upload-artifact@v2
-        if: ${{ failure() }}
-        with:
-          name: packet-verification-low-power-pcaps
-          path: |
-            *.pcap
-            *.json
-      - name: Keep-1-2-only
-        run: |
-          ./script/test tar simulation 1.2-bbr
-      - name: Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          fail_ci_if_error: true
-      - name: Keep-1-2-bbr-only
-        run: |
-          ./script/test tar simulation 1.2
-          ./script/test untar simulation 1.2-bbr
-      - name: Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          fail_ci_if_error: true
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel ninja-build lcov
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        ./script/test build
+    - name: Get Thread-Wireshark
+      run: |
+        ./script/test get_thread_wireshark
+    - name: Run
+      run: |
+        for i in {1..10}
+        do
+          ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
+        done
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: packet-verification-low-power-pcaps
+        path: |
+          *.pcap
+          *.json
+    - name: Keep-1-2-only
+      run: |
+        ./script/test tar simulation 1.2-bbr
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-packet-verification-low-power-1
+        path: tmp/coverage.info
+    - name: Keep-1-2-bbr-only
+      run: |
+        ./script/test tar simulation 1.2
+        ./script/test untar simulation 1.2-bbr
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-packet-verification-low-power-2
+        path: tmp/coverage.info
 
   packet-verification-1-1-on-1-2:
     runs-on: ubuntu-18.04
@@ -159,36 +177,38 @@ jobs:
       PACKET_VERIFICATION: 1
       THREAD_VERSION: 1.2
     steps:
-      - uses: actions/checkout@v2
-      - name: Bootstrap
-        run: |
-          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-          sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel ninja-build
-          python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-      - name: Build
-        run: |
-          ./script/test build
-      - name: Get Thread-Wireshark
-        run: |
-          ./script/test get_thread_wireshark
-      - name: Run
-        run: |
-          for i in {1..3}
-          do
-            ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
-          done
-      - uses: actions/upload-artifact@v2
-        if: ${{ failure() }}
-        with:
-          name: packet-verification-1.1-on-1.2-pcaps
-          path: |
-            *.pcap
-            *.json
-      - name: Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          fail_ci_if_error: true
-
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel ninja-build lcov
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        ./script/test build
+    - name: Get Thread-Wireshark
+      run: |
+        ./script/test get_thread_wireshark
+    - name: Run
+      run: |
+        for i in {1..3}
+        do
+          ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
+        done
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: packet-verification-1.1-on-1.2-pcaps
+        path: |
+          *.pcap
+          *.json
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-packet-verification-1-1-on-1-2
+        path: tmp/coverage.info
 
   expects:
     runs-on: ubuntu-18.04
@@ -200,7 +220,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get --no-install-recommends install -y expect ninja-build
+        sudo apt-get --no-install-recommends install -y expect ninja-build lcov
     - name: Run RCP Mode
       run: |
         OT_OPTIONS=-DOT_READLINE=OFF NODE_MODE=rcp ./script/test build expect
@@ -211,10 +231,13 @@ jobs:
     - name: Keep POSIX Only
       run: |
         ./script/test tar simulation 1.2
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-expects
+        path: tmp/coverage.info
 
   thread-1-2-backbone:
     runs-on: ubuntu-18.04
@@ -228,37 +251,64 @@ jobs:
       MULTIPLY: 3
       PYTHONUNBUFFERED: 1
       VERBOSE: 1
-      OTBR_COMMIT: "3cf6ff1126dca96803252514691f40d0554046bf" # Date:   Mon Oct 26 15:27:04 2020 +0800
+      OTBR_COMMIT: "693483e086d8802c6ac192596ec08d654af0fd86" # Date:   Wed Oct 28 23:37:56 2020 +0800
     steps:
-      - uses: actions/checkout@v2
-      - name: Build OTBR Docker
-        run: |
-          ./script/test build_otbr_docker
-      - name: Bootstrap
-        run: |
-          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-          sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build socat
-          python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-      - name: Build
-        run: |
-          ./script/test build
-      - name: Get Thread-Wireshark
-        run: |
-          ./script/test get_thread_wireshark
-      - name: Run
-        run: |
-          export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
-          echo "CI_ENV=${CI_ENV}"
-          sudo -E ./script/test cert_bbr ./tests/scripts/thread-cert/backbone/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
-      - uses: actions/upload-artifact@v2
-        if: ${{ failure() }}
-        with:
-          name: thread-1-2-backbone-results
-          path: |
-            *.pcap
-            *.json
-            *.log
-      - name: Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          fail_ci_if_error: true
+    - uses: actions/checkout@v2
+    - name: Build OTBR Docker
+      run: |
+        ./script/test build_otbr_docker
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build socat lcov
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        ./script/test build
+    - name: Get Thread-Wireshark
+      run: |
+        ./script/test get_thread_wireshark
+    - name: Run
+      run: |
+        export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
+        echo "CI_ENV=${CI_ENV}"
+        sudo -E ./script/test cert_bbr ./tests/scripts/thread-cert/backbone/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-thread-1-2-backbone-docker
+        path: /tmp/coverage/
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: thread-1-2-backbone-results
+        path: |
+          *.pcap
+          *.json
+          *.log
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-thread-1-2-backbone
+        path: tmp/coverage.info
+
+  upload-coverage:
+    needs:
+    - thread-1-2
+    - packet-verification-low-power
+    - packet-verification-1-1-on-1-2
+    - expects
+    - thread-1-2-backbone
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y lcov
+    - uses: actions/download-artifact@v2
+      with:
+        path: coverage/
+    - name: Upload Coverage
+      run: |
+        script/test upload_codecov

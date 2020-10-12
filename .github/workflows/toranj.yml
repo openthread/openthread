@@ -55,6 +55,7 @@ jobs:
         sudo apt-get --no-install-recommends install -y libtool
         sudo apt-get --no-install-recommends install -y libglib2.0-dev
         sudo apt-get --no-install-recommends install -y libboost-dev libboost-signals-dev
+        sudo apt-get --no-install-recommends install -y lcov
 
         git clone --depth=1 --branch=master https://github.com/openthread/wpantund.git
         cd wpantund
@@ -65,10 +66,13 @@ jobs:
     - name: Build & Run
       run: |
         top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-toranj-ncp
+        path: tmp/coverage.info
 
   toranj-rcp:
     runs-on: ubuntu-18.04
@@ -86,6 +90,7 @@ jobs:
         sudo apt-get --no-install-recommends install -y libtool
         sudo apt-get --no-install-recommends install -y libglib2.0-dev
         sudo apt-get --no-install-recommends install -y libboost-dev libboost-signals-dev
+        sudo apt-get --no-install-recommends install -y lcov
 
         git clone --depth=1 --branch=master https://github.com/openthread/wpantund.git
         cd wpantund
@@ -96,7 +101,27 @@ jobs:
     - name: Build & Run
       run: |
         top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-toranj-rcp
+        path: tmp/coverage.info
+
+  upload-coverage:
+    needs:
+    - toranj-ncp
+    - toranj-rcp
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y lcov
+    - uses: actions/download-artifact@v2
+      with:
+        path: coverage/
+    - name: Upload Coverage
+      run: |
+        script/test upload_codecov
