@@ -106,7 +106,7 @@ install_packages_brew()
     CLANG_FORMAT_VERSION="clang-format version 10"
     command -v clang-format-10 || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
         brew install llvm@10
-        sudo ln -s "$(brew --prefix llvm@6)/bin/clang-format" /usr/local/bin/clang-format-10
+        sudo ln -s "$(brew --prefix llvm@10)/bin/clang-format" /usr/local/bin/clang-format-10
     }
 
     # add yapf for pretty
