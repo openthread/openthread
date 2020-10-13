@@ -20,9 +20,9 @@ Steps to enable
 1. Set up a Wi-Fi access point
 
 > Note: The BBB does not have built-in Wi-Fi support. This guide was built and
-> tested with a BBONE-GATEWAY-CAPE for Wi-Fi AP operation. Some BeagleBone
-> variants have onboard Wi-Fi capability, and some of this guide may be
-> applicable.
+tested with a BBONE-GATEWAY-CAPE for Wi-Fi AP operation. Some BeagleBone
+variants have onboard Wi-Fi capability, and some of this guide may be
+applicable.
 
 ## Step 1: Download and install the OS
 
@@ -42,9 +42,9 @@ Steps to enable
       Make sure to press the BOOT Button in this case.
 
 > Warning: The power requirements of the development kit used for the
-> OpenThread RCP may be too great for the power that can be supplied from a
-> computer's USB port. It is recommended that you use the 5V power adaptor for
-> the BeagleBone where applicable.
+OpenThread RCP may be too great for the power that can be supplied from a
+computer's USB port. It is recommended that you use the 5V power adaptor for
+the BeagleBone where applicable.
 
 For more detailed information on the BeagleBone, see the [BeagleBoard Support
 Page](https://beagleboard.org/support).
@@ -133,8 +133,8 @@ $ sudo shutdown -r now
 ```
 
 > Note: If your BeagleBone has a WiLink based Wi-Fi module installed, the
-> following steps may be applicable to you. This was tested with a
-> BBONE-GATEWAY-CAPE. Some of these may not be required.
+following steps may be applicable to you. This was tested with a
+BBONE-GATEWAY-CAPE. Some of these may not be required.
 
 The WiLink 8 module does not like to have its MAC address changed at runtime.
 Network Manager will try to do this when scanning. Edit the
@@ -152,10 +152,10 @@ with the command `sudo vim /boot/uEnv.txt` and make sure the following lines
 match:
 
 ```
-###Custom Cape
+#Custom Cape
 dtb_overlay=/lib/firmware/BB-GATEWAY-WL1837-00A0.dtbo
-###
-###Disable auto loading of virtual capes (emmc/video/wireless/adc)
+#
+#Disable auto loading of virtual capes (emmc/video/wireless/adc)
 disable_uboot_overlay_emmc=1
 disable_uboot_overlay_video=1
 disable_uboot_overlay_audio=1
@@ -182,17 +182,17 @@ Once logged back in you can run `ifconfig` or `nmcli` to see the new `wlan`
 interface.
 
 > Warning: The startup scripts may take a few moments to enable the `wlan0`
-> interface. If you do not see the interface, check `journalctl` to see if the
-> system is having difficulty bringing up the interface.
+interface. If you do not see the interface, check `journalctl` to see if the
+system is having difficulty bringing up the interface.
 
 ## Step 3: Build and install OTBR
 
 See [Build and Configuration](https://openthread.io/guides/border-router/build)
 for instructions on building and installing OTBR. 
 
-> NOTE: If your BeagleBone has Wi-Fi capabilities, you can enable the OTBR
-> build scripts to configure it as an access point by passing
-> `NETWORK_MANAGER_WIFI=1` to the build scripts.
+> Note: If your BeagleBone has Wi-Fi capabilities, you can enable the OTBR
+build scripts to configure it as an access point by passing
+`NETWORK_MANAGER_WIFI=1` to the build scripts.
 
 ## Step 4: Set up a Wi-Fi access point
 
