@@ -51,34 +51,6 @@ CPPFLAGS_COMMON                                                              += 
     -Wno-missing-field-initializers                                             \
     $(NULL)
 
-EFR32MG1_CPPFLAGS                                                             = \
-    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG1P/Include              \
-    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg1x/config \
-    $(NULL)
-
-EFR32MG12_CPPFLAGS                                                            = \
-    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG12P/Include             \
-    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg1x/config \
-    $(NULL)
-
-EFR32MG13_CPPFLAGS                                                            = \
-    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG13P/Include             \
-    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s1                              \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg1x/config \
-    $(NULL)
-
-EFR32MG21_CPPFLAGS                                                            = \
-    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG21/Include              \
-    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s2                              \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg2x               \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg21/config \
-    $(NULL)
-
 LDADD_COMMON                                                                 += \
     $(NULL)
 
