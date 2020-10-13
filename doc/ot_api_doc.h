@@ -72,6 +72,7 @@
  * @{
  *
  * @defgroup api-link-link            Link
+ * @defgroup api-link-metrics         Link Metrics
  * @defgroup api-link-raw             Raw Link
  *
  * @}
@@ -145,7 +146,6 @@
  * @{
  *
  * @defgroup plat-alarm               Alarm
- * @defgroup plat-ble                 BLE Host
  * @defgroup plat-entropy             Entropy
  * @defgroup plat-factory-diagnostics Factory Diagnostics
  * @defgroup plat-logging             Logging
