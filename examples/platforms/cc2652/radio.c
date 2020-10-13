@@ -1929,7 +1929,7 @@ static void cc2652RadioProcessReceiveQueue(otInstance *aInstance)
 
             if ((receiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK)
             {
-                if (sState == cc1352_stateTransmit && sTxCmdChainDone &&
+                if (sState == cc2652_stateTransmit && sTxCmdChainDone &&
                     receiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET])
                 {
                     /* we found the ACK packet */
