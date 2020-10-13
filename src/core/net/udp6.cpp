@@ -327,6 +327,15 @@ otError Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo 
     if (!IsMlePort(aSocket.mSockName.mPort) &&
         !(aSocket.mSockName.mPort == Tmf::kUdpPort && aMessage.GetSubType() == Message::kSubTypeJoinerEntrust))
     {
+        // Change anycast address to unicast address here because host may be unclear about the anycast address
+        if (Get<Mle::Mle>().IsAnycastLocator(messageInfoLocal.GetSockAddr()))
+        {
+            const NetifUnicastAddress *netifAddr = Get<Ip6>().SelectSourceAddress(messageInfoLocal);
+
+            VerifyOrExit(netifAddr != nullptr, error = OT_ERROR_INVALID_ARGS);
+            messageInfoLocal.SetSockAddr(netifAddr->GetAddress());
+        }
+
         SuccessOrExit(error = otPlatUdpSend(&aSocket, &aMessage, &messageInfoLocal));
     }
     else
