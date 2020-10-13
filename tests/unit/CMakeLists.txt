@@ -362,6 +362,27 @@ target_link_libraries(test-mac-frame
 
 add_test(NAME test-mac-frame COMMAND test-mac-frame)
 
+add_executable(test-macros
+    test_macros.cpp
+)
+
+target_include_directories(test-macros
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-macros
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-macros
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-macros COMMAND test-macros)
+
 add_executable(test-message
     test_message.cpp
 )
@@ -632,6 +653,7 @@ set_target_properties(
     test-lookup-table
     test-lowpan
     test-mac-frame
+    test-macros
     test-message
     test-message-queue
     test-multicast-listeners-table
