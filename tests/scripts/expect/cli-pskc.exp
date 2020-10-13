@@ -29,7 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "pskc 00112233445566778899aabbccddeeff\n"
 expect "Done"
@@ -52,4 +52,4 @@ sleep 0.1
 send "pskc -x\n"
 expect "Error 7: InvalidArgs"
 
-dispose
+dispose_all

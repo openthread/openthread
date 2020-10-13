@@ -416,18 +416,28 @@ typedef void (*otIp6ReceiveCallback)(otMessage *aMessage, void *aContext);
 void otIp6SetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext);
 
 /**
+ * @struct otIp6AddressInfo
+ *
+ * This structure represents IPv6 address information.
+ *
+ */
+typedef struct otIp6AddressInfo
+{
+    const otIp6Address *mAddress;       ///< A pointer to the IPv6 address.
+    uint8_t             mPrefixLength;  ///< The prefix length of mAddress if it is a unicast address.
+    uint8_t             mScope : 4;     ///< The scope of this address.
+    bool                mIsAnycast : 1; ///< Whether this is an anycast address.
+} otIp6AddressInfo;
+
+/**
  * This function pointer is called when an internal IPv6 address is added or removed.
  *
- * @param[in]   aAddress            A pointer to the IPv6 address.
- * @param[in]   aPrefixLength       The prefix length if @p aAddress is unicast address, and 128 for multicast address.
+ * @param[in]   aAddressInfo        A pointer to the IPv6 address information.
  * @param[in]   aIsAdded            TRUE if the @p aAddress was added, FALSE if @p aAddress was removed.
  * @param[in]   aContext            A pointer to application-specific context.
  *
  */
-typedef void (*otIp6AddressCallback)(const otIp6Address *aAddress,
-                                     uint8_t             aPrefixLength,
-                                     bool                aIsAdded,
-                                     void *              aContext);
+typedef void (*otIp6AddressCallback)(const otIp6AddressInfo *aAddressInfo, bool aIsAdded, void *aContext);
 
 /**
  * This function registers a callback to notify internal IPv6 address changes.
@@ -476,11 +486,13 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aMessage  A pointer to the message buffer containing the IPv6 datagram.
  *
- * @retval OT_ERROR_NONE      Successfully processed the message.
- * @retval OT_ERROR_DROP      Message was well-formed but not fully processed due to packet processing rules.
- * @retval OT_ERROR_NO_BUFS   Could not allocate necessary message buffers when processing the datagram.
- * @retval OT_ERROR_NO_ROUTE  No route to host.
- * @retval OT_ERROR_PARSE     Encountered a malformed header when processing the message.
+ * @retval OT_ERROR_NONE                    Successfully processed the message.
+ * @retval OT_ERROR_DROP                    Message was well-formed but not fully processed due to packet processing
+ * rules.
+ * @retval OT_ERROR_NO_BUFS                 Could not allocate necessary message buffers when processing the datagram.
+ * @retval OT_ERROR_NO_ROUTE                No route to host.
+ * @retval OT_ERROR_INVALID_SOURCE_ADDRESS  Source addresss is invalid, e.g. an anycast address or a multicast address.
+ * @retval OT_ERROR_PARSE                   Encountered a malformed header when processing the message.
  *
  */
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage);

@@ -332,6 +332,7 @@ private:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     otError ProcessFake(uint8_t aArgsLength, char *aArgs[]);
 #endif
+    otError ProcessFem(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIfconfig(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIpAddr(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIpAddrAdd(uint8_t aArgsLength, char *aArgs[]);
@@ -471,6 +472,9 @@ private:
 #endif
     otError ProcessMac(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessMacRetries(uint8_t aArgsLength, char *aArgs[]);
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    otError ProcessMacSend(uint8_t aArgsLength, char *aArgs[]);
+#endif
 
     static void HandleIcmpReceive(void *               aContext,
                                   otMessage *          aMessage,
@@ -598,6 +602,7 @@ private:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         {"fake", &Interpreter::ProcessFake},
 #endif
+        {"fem", &Interpreter::ProcessFem},
         {"help", &Interpreter::ProcessHelp},
         {"ifconfig", &Interpreter::ProcessIfconfig},
         {"ipaddr", &Interpreter::ProcessIpAddr},

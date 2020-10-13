@@ -33,10 +33,10 @@
 
 #include "parse_cmdline.hpp"
 
-#include <limits>
 #include <string.h>
 
 #include "common/code_utils.hpp"
+#include "common/numeric_limits.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -121,7 +121,7 @@ template <typename UintType> otError ParseUint(const char *aString, UintType &aU
 
     SuccessOrExit(error = ParseAsUint64(aString, value));
 
-    VerifyOrExit(value <= std::numeric_limits<UintType>::max(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(value <= NumericLimits<UintType>::Max(), error = OT_ERROR_INVALID_ARGS);
     aUint = static_cast<UintType>(value);
 
 exit:
@@ -189,7 +189,7 @@ template <typename IntType> otError ParseInt(const char *aString, IntType &aInt)
 
     SuccessOrExit(error = ParseAsInt32(aString, value));
 
-    VerifyOrExit((std::numeric_limits<IntType>::min() <= value) && (value <= std::numeric_limits<IntType>::max()),
+    VerifyOrExit((NumericLimits<IntType>::Min() <= value) && (value <= NumericLimits<IntType>::Max()),
                  error = OT_ERROR_INVALID_ARGS);
     aInt = static_cast<IntType>(value);
 
@@ -224,9 +224,8 @@ otError ParseAsInt32(const char *aString, int32_t &aInt32)
     }
 
     SuccessOrExit(error = ParseAsUint64(aString, value));
-    VerifyOrExit(value <= (isNegavtive
-                               ? static_cast<uint64_t>(-static_cast<int64_t>(std::numeric_limits<int32_t>::min()))
-                               : static_cast<uint64_t>(std::numeric_limits<int32_t>::max())),
+    VerifyOrExit(value <= (isNegavtive ? static_cast<uint64_t>(-static_cast<int64_t>(NumericLimits<int32_t>::Min()))
+                                       : static_cast<uint64_t>(NumericLimits<int32_t>::Max())),
                  error = OT_ERROR_INVALID_ARGS);
     aInt32 = isNegavtive ? -static_cast<int32_t>(value) : static_cast<int32_t>(value);
 

@@ -51,13 +51,13 @@ class Cert_8_2_01_JoinerRouter(thread_cert.TestCase):
         },
         JOINER_ROUTER: {
             'name': 'JOINER_ROUTER',
-            'masterkey': '00112233445566778899aabbccddeeff',
+            'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
             'mode': 'rdn',
             'router_selection_jitter': 1
         },
         JOINER: {
             'name': 'JOINER',
-            'masterkey': '00112233445566778899aabbccddeeff',
+            'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
             'mode': 'rdn',
             'router_selection_jitter': 1
         },

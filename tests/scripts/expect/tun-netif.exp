@@ -29,10 +29,10 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "netif\n"
 expect -re {[\r\n][^\r\n:]+?:\d+}
 expect "Done"
 
-dispose
+dispose_all

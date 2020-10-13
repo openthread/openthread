@@ -1547,6 +1547,43 @@ exit:
 }
 #endif
 
+otError Interpreter::ProcessFem(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        int8_t lnaGain;
+
+        SuccessOrExit(error = otPlatRadioGetFemLnaGain(mInstance, &lnaGain));
+        OutputLine("LNA gain %d dBm", lnaGain);
+    }
+    else if (strcmp(aArgs[0], "lnagain") == 0)
+    {
+        if (aArgsLength == 1)
+        {
+            int8_t lnaGain;
+
+            SuccessOrExit(error = otPlatRadioGetFemLnaGain(mInstance, &lnaGain));
+            OutputLine("%d", lnaGain);
+        }
+        else
+        {
+            int8_t lnaGain;
+
+            SuccessOrExit(error = ParseAsInt8(aArgs[1], lnaGain));
+            SuccessOrExit(error = otPlatRadioSetFemLnaGain(mInstance, lnaGain));
+        }
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    return error;
+}
+
 otError Interpreter::ProcessIfconfig(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -4028,6 +4065,12 @@ otError Interpreter::ProcessMac(uint8_t aArgsLength, char *aArgs[])
     {
         error = ProcessMacRetries(aArgsLength - 1, aArgs + 1);
     }
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    else if (strcmp(aArgs[0], "send") == 0)
+    {
+        error = ProcessMacSend(aArgsLength - 1, aArgs + 1);
+    }
+#endif
     else
     {
         error = OT_ERROR_INVALID_COMMAND;
@@ -4081,6 +4124,27 @@ otError Interpreter::ProcessMacRetries(uint8_t aArgsLength, char *aArgs[])
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError Interpreter::ProcessMacSend(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_INVALID_ARGS;
+
+    VerifyOrExit(aArgsLength == 1, OT_NOOP);
+
+    if (strcmp(aArgs[0], "datarequest") == 0)
+    {
+        error = otLinkSendDataRequest(mInstance);
+    }
+    else if (strcmp(aArgs[0], "emptydata") == 0)
+    {
+        error = otLinkSendEmptyData(mInstance);
+    }
+
+exit:
+    return error;
+}
+#endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 otError Interpreter::ProcessDiag(uint8_t aArgsLength, char *aArgs[])

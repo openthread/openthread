@@ -45,6 +45,7 @@ import pexpect.popen_spawn
 
 import config
 import simulator
+import thread_cert
 
 PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
@@ -412,6 +413,7 @@ class NodeImpl:
         super().__init__(nodeid, **kwargs)
 
         self.set_extpanid(config.EXTENDED_PANID)
+        self.set_addr64('%016x' % (thread_cert.EXTENDED_ADDRESS_BASE + nodeid))
 
     def _expect(self, pattern, timeout=-1, *args, **kwargs):
         """ Process simulator events until expected the pattern. """
@@ -831,7 +833,10 @@ class NodeImpl:
         self.send_command('extaddr')
         return self._expect_result('[0-9a-fA-F]{16}')
 
-    def set_addr64(self, addr64):
+    def set_addr64(self, addr64: str):
+        # Make sure `addr64` is a hex string of length 16
+        assert len(addr64) == 16
+        int(addr64, 16)
         self.send_command('extaddr %s' % addr64)
         self._expect('Done')
 
@@ -954,6 +959,14 @@ class NodeImpl:
 
     def set_csl_timeout(self, csl_timeout):
         self.send_command('csl timeout %d' % csl_timeout)
+        self._expect('Done')
+
+    def send_mac_emptydata(self):
+        self.send_command('mac send emptydata')
+        self._expect('Done')
+
+    def send_mac_datarequest(self):
+        self.send_command('mac send datarequest')
         self._expect('Done')
 
     def set_router_upgrade_threshold(self, threshold):
@@ -1384,7 +1397,7 @@ class NodeImpl:
         self.send_command('dataset commit active')
         self._expect('Done')
 
-    def set_pending_dataset(self, pendingtimestamp, activetimestamp, panid=None, channel=None):
+    def set_pending_dataset(self, pendingtimestamp, activetimestamp, panid=None, channel=None, delay=None):
         self.send_command('dataset clear')
         self._expect('Done')
 
@@ -1403,6 +1416,11 @@ class NodeImpl:
 
         if channel is not None:
             cmd = 'dataset channel %d' % channel
+            self.send_command(cmd)
+            self._expect('Done')
+
+        if delay is not None:
+            cmd = 'dataset delay %d' % delay
             self.send_command(cmd)
             self._expect('Done')
 

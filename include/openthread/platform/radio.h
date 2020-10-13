@@ -431,7 +431,7 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower);
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower);
 
 /**
- * Get the radio's CCA ED threshold in dBm.
+ * Get the radio's CCA ED threshold in dBm measured at antenna connector per IEEE 802.15.4 - 2015 section 10.1.4.
  *
  * @param[in] aInstance    The OpenThread instance structure.
  * @param[out] aThreshold  The CCA ED threshold in dBm.
@@ -444,7 +444,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower);
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold);
 
 /**
- * Set the radio's CCA ED threshold in dBm.
+ * Set the radio's CCA ED threshold in dBm measured at antenna connector per IEEE 802.15.4 - 2015 section 10.1.4.
  *
  * @param[in] aInstance   The OpenThread instance structure.
  * @param[in] aThreshold  The CCA ED threshold in dBm.
@@ -455,6 +455,31 @@ otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aT
  *
  */
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold);
+
+/**
+ * Get the external FEM's Rx LNA gain in dBm.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[out] aGain     The external FEM's Rx LNA gain in dBm.
+ *
+ * @retval OT_ERROR_NONE             Successfully retrieved the external FEM's LNA gain.
+ * @retval OT_ERROR_INVALID_ARGS     @p aGain was NULL.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  External FEM's LNA setting is not implemented.
+ *
+ */
+otError otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain);
+
+/**
+ * Set the external FEM's Rx LNA gain in dBm.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aGain      The external FEM's Rx LNA gain in dBm.
+ *
+ * @retval OT_ERROR_NONE             Successfully set the external FEM's LNA gain.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  External FEM's LNA gain setting is not implemented.
+ *
+ */
+otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain);
 
 /**
  * Get the status of promiscuous mode.

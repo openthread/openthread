@@ -1169,6 +1169,15 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::GetCcaEnergyDetectThresh
 }
 
 template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::GetFemLnaGain(int8_t &aGain)
+{
+    otError error = Get(SPINEL_PROP_PHY_FEM_LNA_GAIN, SPINEL_DATATYPE_INT8_S, &aGain);
+
+    LogIfFail("Get FEM LNA gain failed", error);
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
 int8_t RadioSpinel<InterfaceType, ProcessContextType>::GetRssi(void)
 {
     int8_t  rssi  = OT_RADIO_RSSI_INVALID;
@@ -1249,6 +1258,14 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SetCcaEnergyDetectThresh
 {
     otError error = Set(SPINEL_PROP_PHY_CCA_THRESHOLD, SPINEL_DATATYPE_INT8_S, aThreshold);
     LogIfFail("Set CCA ED threshold failed", error);
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetFemLnaGain(int8_t aGain)
+{
+    otError error = Set(SPINEL_PROP_PHY_FEM_LNA_GAIN, SPINEL_DATATYPE_INT8_S, aGain);
+    LogIfFail("Set FEM LNA gain failed", error);
     return error;
 }
 

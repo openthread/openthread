@@ -164,7 +164,7 @@ struct MessageMetadata
         uint8_t  mChannel; ///< Used for MLE Announce.
     } mPanIdChannel;       ///< Used for MLE Discover Request, Response, and Announce messages.
 
-    uint8_t mType : 2;         ///< Identifies the type of message.
+    uint8_t mType : 3;         ///< Identifies the type of message.
     uint8_t mSubType : 4;      ///< Identifies the message sub type.
     bool    mDirectTx : 1;     ///< Used to indicate whether a direct transmission is required.
     bool    mLinkSecurity : 1; ///< Indicates whether or not link security is enabled.
@@ -297,10 +297,11 @@ public:
      */
     enum Type
     {
-        kTypeIp6         = 0, ///< A full uncompressed IPv6 packet
-        kType6lowpan     = 1, ///< A 6lowpan frame
-        kTypeSupervision = 2, ///< A child supervision frame.
-        kTypeOther       = 3, ///< Other (data) message.
+        kTypeIp6          = 0, ///< A full uncompressed IPv6 packet
+        kType6lowpan      = 1, ///< A 6lowpan frame
+        kTypeSupervision  = 2, ///< A child supervision frame.
+        kTypeMacEmptyData = 3, ///< An empty MAC data frame.
+        kTypeOther        = 4, ///< Other (data) message.
     };
 
     /**

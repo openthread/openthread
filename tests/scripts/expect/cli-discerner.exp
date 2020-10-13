@@ -29,6 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
+spawn_node 1
 setup_leader
 
 set pskd "J01NME"
@@ -58,9 +59,8 @@ wait_for "netdata steeringdata check $discerner" "NotFound"
 send "commissioner joiner add $discerner $pskd\n"
 expect "Done"
 
-set spawn_2 [spawn_node 2]
+spawn_node 2
 
-set spawn_id $spawn_2
 send "mode r\n"
 expect "Done"
 send "ifconfig up\n"
@@ -96,6 +96,4 @@ expect "Done"
 wait_for "state" "child"
 expect "Done"
 
-dispose
-
-dispose_leader
+dispose_all

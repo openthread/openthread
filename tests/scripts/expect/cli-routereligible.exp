@@ -29,7 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "routereligible disable\n"
 expect "Done"
@@ -51,4 +51,4 @@ expect "Done"
 send "routereligible enable\n"
 expect "Error 27: NotCapable"
 
-dispose
+dispose_all

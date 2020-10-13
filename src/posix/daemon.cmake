@@ -54,7 +54,7 @@ target_link_libraries(ot-daemon PRIVATE
     openthread-ftd
     ${OT_PLATFORM_LIB}
     openthread-ncp-ftd
-    mbedcrypto
+    ${OT_MBEDTLS}
 )
 
 add_executable(ot-ctl

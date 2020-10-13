@@ -30,9 +30,9 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes
+setup_two_nodes
 
-set spawn_id $spawn_1
+switch_node 1
 send "ipmaddr add ff0e::1\n"
 expect "Done"
 send "ipmaddr\n"
@@ -43,12 +43,12 @@ expect "ipaddr mleid"
 expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
 set addr $expect_out(1,string)
 
-set spawn_id $spawn_2
+switch_node 2
 send "ping ff0e::1\n"
 expect "Done"
 expect "16 bytes from $addr: icmp_seq=1"
 
-set spawn_id $spawn_1
+switch_node 1
 send "ipmaddr del ff0e::1\n"
 expect "Done"
 send "ipmaddr del ff0e::1\n"
@@ -66,4 +66,4 @@ expect "Done"
 send "ipmaddr something_invalid\n"
 expect "Error 35: InvalidCommand"
 
-dispose_nodes
+dispose_all

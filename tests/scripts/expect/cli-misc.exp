@@ -30,8 +30,9 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes
-set spawn_id $spawn_1
+setup_two_nodes
+
+switch_node 1
 
 send "leaderdata\n"
 expect -re {Partition ID: \d+}
@@ -64,6 +65,15 @@ expect "Done"
 send "delaytimermin 1 2\n"
 send "counters mac 1\n"
 expect "Error 7: InvalidArgs"
+
+send "fem lnagain 11\n"
+expect "Done"
+send "fem lnagain\n"
+expect -- "11"
+expect "Done"
+send "fem\n"
+expect -- "LNA gain 11 dBm"
+expect "Done"
 
 send "ifconfig down\n"
 expect "Done"
@@ -154,4 +164,4 @@ expect "0:0:0:0::/64 s low"
 send "route remove ::/64\n"
 expect "Done"
 
-dispose_nodes
+dispose_all

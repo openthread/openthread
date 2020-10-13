@@ -30,9 +30,9 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes
+setup_two_nodes
 
-set spawn_id $spawn_2
+switch_node 2
 send "extaddr\n"
 expect "extaddr"
 expect -re {([0-9a-f]{16})}
@@ -44,7 +44,7 @@ expect -re {([0-9a-f]{4})}
 set rloc $expect_out(1,string)
 expect "Done"
 
-set spawn_id $spawn_1
+switch_node 1
 send "child table\n"
 expect "| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N| Extended MAC     |"
 expect "+-----+--------+------------+------------+-------+------+-+-+-+------------------+"
@@ -59,4 +59,4 @@ send "child $child_id\n"
 expect "Ext Addr: $extaddr"
 expect "Done"
 
-dispose_nodes
+dispose_all

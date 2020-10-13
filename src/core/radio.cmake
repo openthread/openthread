@@ -26,33 +26,60 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-ncp-ftd
-    main.c
+add_library(openthread-radio)
+
+set_target_properties(
+    openthread-radio
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
 )
 
-add_executable(ot-ncp-mtd
-    main.c
+target_compile_definitions(openthread-radio PRIVATE
+    OPENTHREAD_RADIO=1
 )
 
-target_include_directories(ot-ncp-ftd PRIVATE ${COMMON_INCLUDES})
-target_include_directories(ot-ncp-mtd PRIVATE ${COMMON_INCLUDES})
-
-target_link_libraries(ot-ncp-ftd PRIVATE
-    openthread-ncp-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    mbedcrypto
-    ot-config
+target_compile_options(openthread-radio PRIVATE
+    ${OT_CFLAGS}
 )
 
-target_link_libraries(ot-ncp-mtd PRIVATE
-    openthread-ncp-mtd
-    ${OT_PLATFORM_LIB}
-    openthread-mtd
-    ${OT_PLATFORM_LIB}
-    mbedcrypto
-    ot-config
+target_include_directories(openthread-radio PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
+
+target_sources(openthread-radio PRIVATE
+    api/diags_api.cpp
+    api/instance_api.cpp
+    api/link_raw_api.cpp
+    api/logging_api.cpp
+    api/random_noncrypto_api.cpp
+    api/tasklet_api.cpp
+    common/instance.cpp
+    common/logging.cpp
+    common/random_manager.cpp
+    common/string.cpp
+    common/tasklet.cpp
+    common/timer.cpp
+    crypto/aes_ccm.cpp
+    crypto/aes_ecb.cpp
+    diags/factory_diags.cpp
+    mac/link_raw.cpp
+    mac/mac_frame.cpp
+    mac/mac_types.cpp
+    mac/sub_mac.cpp
+    mac/sub_mac_callbacks.cpp
+    radio/radio.cpp
+    radio/radio_callbacks.cpp
+    radio/radio_platform.cpp
+    thread/link_quality.cpp
+    utils/lookup_table.cpp
+    utils/parse_cmdline.cpp
 )
 
-install(TARGETS ot-ncp-ftd ot-ncp-mtd DESTINATION bin)
+if(OT_VENDOR_EXTENSION)
+  target_sources(openthread-radio PRIVATE ${OT_VENDOR_EXTENSION})
+endif()
+
+target_link_libraries(openthread-radio
+    PRIVATE
+        ${OT_MBEDTLS}
+        ot-config
+)
