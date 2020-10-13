@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -55,7 +56,7 @@ namespace Ip6 {
  * This class implements an IPv6 datagram filter.
  *
  */
-class Filter
+class Filter : private NonCopyable
 {
 public:
     /**

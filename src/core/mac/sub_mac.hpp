@@ -39,6 +39,7 @@
 #include <openthread/link.h>
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "radio/radio.hpp"
@@ -74,7 +75,7 @@ namespace Mac {
  * addresses and PAN Id.
  *
  */
-class SubMac : public InstanceLocator
+class SubMac : public InstanceLocator, private NonCopyable
 {
     friend class Radio::Callbacks;
 

@@ -38,6 +38,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/topology.hpp"
@@ -58,7 +59,7 @@ namespace ot {
  *
  */
 
-class DataPollSender : public InstanceLocator
+class DataPollSender : public InstanceLocator, private NonCopyable
 {
 public:
     enum

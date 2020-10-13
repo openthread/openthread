@@ -38,6 +38,7 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "mac/data_poll_handler.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/csl_tx_scheduler.hpp"
@@ -62,7 +63,7 @@ class Child;
  * This class implements indirect transmission.
  *
  */
-class IndirectSender : public InstanceLocator, public IndirectSenderBase
+class IndirectSender : public InstanceLocator, public IndirectSenderBase, private NonCopyable
 {
     friend class Instance;
     friend class DataPollHandler::Callbacks;

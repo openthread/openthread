@@ -34,6 +34,7 @@
 #include <openthread/sntp.h>
 
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
@@ -483,7 +484,7 @@ private:
  * This class implements SNTP client.
  *
  */
-class Client
+class Client : private NonCopyable
 {
 public:
     /**

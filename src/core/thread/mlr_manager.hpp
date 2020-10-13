@@ -41,6 +41,7 @@
 #include "backbone_router/bbr_leader.hpp"
 #include "coap/coap_message.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
@@ -68,7 +69,7 @@ namespace ot {
  * This class implements MLR management.
  *
  */
-class MlrManager : public InstanceLocator
+class MlrManager : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
     friend class ot::TimeTicker;

@@ -44,6 +44,7 @@
 #include "common/locator.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/dtls.hpp"
 #include "meshcop/meshcop.hpp"
@@ -54,7 +55,7 @@ namespace ot {
 
 namespace MeshCoP {
 
-class Joiner : public InstanceLocator
+class Joiner : public InstanceLocator, private NonCopyable
 {
 public:
     /**

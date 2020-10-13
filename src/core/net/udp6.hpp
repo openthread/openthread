@@ -41,6 +41,7 @@
 
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "net/ip6_headers.hpp"
 
 namespace ot {
@@ -62,7 +63,7 @@ class Udp;
  * This class implements core UDP message handling.
  *
  */
-class Udp : public InstanceLocator
+class Udp : public InstanceLocator, private NonCopyable
 {
 public:
     /**
