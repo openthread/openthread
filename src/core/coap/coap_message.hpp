@@ -471,6 +471,18 @@ public:
     otError AppendUriPathOptions(const char *aUriPath);
 
     /**
+     * This method reads the Uri-Path options and constructs the URI path in the buffer pointed to by @p `aUriPath`.
+     *
+     * @param[in] aUriPath  A pointer to the buffer for storing URI path.
+     * @param[in] aSize     The buffer size.
+     *
+     * @retval  OT_ERROR_NONE   Successfully read the Uri-Path options.
+     * @retval  OT_ERROR_PARSE  CoAP Option header not well-formed.
+     *
+     */
+    otError ReadUriPathOptions(char *aUriPath, uint8_t aSize) const;
+
+    /**
      * This method appends a Block option
      *
      * @param[in]  aType              Type of block option, 1 or 2.

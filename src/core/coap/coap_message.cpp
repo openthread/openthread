@@ -227,6 +227,38 @@ exit:
     return error;
 }
 
+otError Message::ReadUriPathOptions(char *aUriPath, uint8_t aSize) const
+{
+    char *           curUriPath = aUriPath;
+    char *           uriPathEnd = aUriPath + aSize;
+    otError          error      = OT_ERROR_NONE;
+    Option::Iterator iterator;
+
+    SuccessOrExit(error = iterator.Init(*this, kOptionUriPath));
+
+    while (!iterator.IsDone())
+    {
+        uint16_t optionLength = iterator.GetOption()->GetLength();
+
+        if (curUriPath != aUriPath)
+        {
+            *curUriPath++ = '/';
+        }
+
+        VerifyOrExit(curUriPath + optionLength < uriPathEnd, error = OT_ERROR_PARSE);
+
+        IgnoreError(iterator.ReadOptionValue(curUriPath));
+        curUriPath += optionLength;
+
+        SuccessOrExit(error = iterator.Advance(kOptionUriPath));
+    }
+
+    *curUriPath = '\0';
+
+exit:
+    return error;
+}
+
 otError Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
 {
     otError  error   = OT_ERROR_NONE;
