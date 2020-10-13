@@ -530,7 +530,7 @@ _LAYER_FIELDS = {
     "thread_meshcop.tlv.chan_mask": _str,  # from ble
     'thread_meshcop.tlv.chan_mask_page': _auto,
     'thread_meshcop.tlv.chan_mask_len': _auto,
-    'thread_meshcop.tlv.chan_mask_mask': _auto,
+    'thread_meshcop.tlv.chan_mask_mask': _bytes,
     'thread_meshcop.tlv.energy_list': _list(_auto),
     'thread_meshcop.tlv.pan_id': _auto,
     'thread_meshcop.tlv.xpan_id': _bytes,
