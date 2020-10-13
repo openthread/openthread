@@ -29,7 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "coex disable\n"
 expect "Done"
@@ -67,4 +67,4 @@ expect "Done"
 send "coex something_invalid\n"
 expect "Error 7: InvalidArgs"
 
-dispose
+dispose_all

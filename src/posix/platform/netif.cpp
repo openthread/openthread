@@ -152,6 +152,40 @@ char         gNetifName[IFNAMSIZ];
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 
+namespace {
+
+/**
+ * This utility class converts binary IPv6 address to text format.
+ *
+ */
+class Ip6AddressString
+{
+public:
+    /**
+     * The constructor of this converter.
+     *
+     * @param[in]   aAddress    A pointer to a buffer holding an IPv6 address.
+     *
+     */
+    Ip6AddressString(const void *aAddress)
+    {
+        VerifyOrDie(inet_ntop(AF_INET6, aAddress, mBuffer, sizeof(mBuffer)) != nullptr, OT_EXIT_ERROR_ERRNO);
+    }
+
+    /**
+     * This method returns the string as a null-terminated C string.
+     *
+     * @returns The null-terminated C string.
+     *
+     */
+    const char *AsCString(void) const { return mBuffer; }
+
+private:
+    char mBuffer[INET6_ADDRSTRLEN];
+};
+
+} // namespace
+
 #ifndef OPENTHREAD_POSIX_TUN_DEVICE
 
 #ifdef __linux__
@@ -171,16 +205,9 @@ char         gNetifName[IFNAMSIZ];
 
 #endif // OPENTHREAD_TUN_DEVICE
 
-// Some platforms will include linux/ipv6.h in netinet/in.h
-#if defined(__linux__) && !defined(_IPV6_H) && !defined(_UAPI_IPV6_H)
-// from linux/ipv6.h
-struct in6_ifreq
-{
-    struct in6_addr ifr6_addr;
-    __u32           ifr6_prefixlen;
-    int             ifr6_ifindex;
-};
-#endif // defined(__linux__) && !defined(_IPV6_H) && !defined(_UAPI_IPV6_H)
+#if defined(__linux__)
+static uint32_t sNetlinkSequence = 0; ///< Netlink message sequence.
+#endif
 
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
 // on some BSDs (mac OS, FreeBSD), we get RTM_NEWMADDR/RTM_DELMADDR messages, so we don't need to monitor using MLD
@@ -298,46 +325,91 @@ static uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
 }
 #endif
 
-static void UpdateUnicast(otInstance *aInstance, const otIp6Address &aAddress, uint8_t aPrefixLength, bool aIsAdded)
+#if defined(__linux__)
+static void UpdateUnicastLinux(const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
+{
+    struct rtattr *rta;
+
+    struct
+    {
+        struct nlmsghdr  nh;
+        struct ifaddrmsg ifa;
+        char             buf[512];
+    } req;
+
+    memset(&req, 0, sizeof(req));
+
+    req.nh.nlmsg_len   = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
+    req.nh.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL;
+    req.nh.nlmsg_type  = aIsAdded ? RTM_NEWADDR : RTM_DELADDR;
+    req.nh.nlmsg_pid   = 0;
+    req.nh.nlmsg_seq   = ++sNetlinkSequence;
+
+    req.ifa.ifa_family    = AF_INET6;
+    req.ifa.ifa_prefixlen = aAddressInfo.mPrefixLength;
+    req.ifa.ifa_flags     = IFA_F_NODAD;
+    req.ifa.ifa_scope     = aAddressInfo.mScope;
+    req.ifa.ifa_index     = gNetifIndex;
+
+    rta           = reinterpret_cast<struct rtattr *>((reinterpret_cast<char *>(&req)) + NLMSG_ALIGN(req.nh.nlmsg_len));
+    rta->rta_type = IFA_LOCAL;
+    rta->rta_len  = RTA_LENGTH(sizeof(*aAddressInfo.mAddress));
+
+    memcpy(RTA_DATA(rta), aAddressInfo.mAddress, sizeof(*aAddressInfo.mAddress));
+
+    req.nh.nlmsg_len = NLMSG_ALIGN(req.nh.nlmsg_len) + rta->rta_len;
+
+    if (aAddressInfo.mIsAnycast)
+    {
+        struct ifa_cacheinfo cacheinfo;
+
+        rta           = reinterpret_cast<struct rtattr *>((reinterpret_cast<char *>(rta)) + rta->rta_len);
+        rta->rta_type = IFA_CACHEINFO;
+        rta->rta_len  = RTA_LENGTH(sizeof(cacheinfo));
+
+        memset(&cacheinfo, 0, sizeof(cacheinfo));
+        cacheinfo.ifa_valid = UINT32_MAX;
+
+        memcpy(RTA_DATA(rta), &cacheinfo, sizeof(cacheinfo));
+
+        req.nh.nlmsg_len += rta->rta_len;
+    }
+
+    if (send(sNetlinkFd, &req, req.nh.nlmsg_len, 0) != -1)
+    {
+        otLogInfoPlat("Sent request#%u to %s %s/%u", sNetlinkSequence, (aIsAdded ? "add" : "remove"),
+                      Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
+    }
+    else
+    {
+        otLogInfoPlat("Failed to send request#%u to %s %s/%u", sNetlinkSequence, (aIsAdded ? "add" : "remove"),
+                      Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
+    }
+}
+#endif // defined(__linux__)
+
+static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otError error = OT_ERROR_NONE;
-
     assert(sInstance == aInstance);
-
-    VerifyOrExit(sIpFd >= 0, error = OT_ERROR_INVALID_STATE);
+    assert(sIpFd >= 0);
 
 #if defined(__linux__)
-    {
-        struct in6_ifreq ifr6;
-        memcpy(&ifr6.ifr6_addr, &aAddress, sizeof(ifr6.ifr6_addr));
-
-        ifr6.ifr6_ifindex   = static_cast<int>(gNetifIndex);
-        ifr6.ifr6_prefixlen = aPrefixLength;
-
-        if (aIsAdded)
-        {
-            VerifyOrDie(ioctl(sIpFd, SIOCSIFADDR, &ifr6) == 0, OT_EXIT_ERROR_ERRNO);
-        }
-        else
-        {
-            VerifyOrExit(ioctl(sIpFd, SIOCDIFADDR, &ifr6) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
-        }
-    }
+    UpdateUnicastLinux(aAddressInfo, aIsAdded);
 #elif defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     {
-        int                 err;
+        int                 rval;
         struct in6_aliasreq ifr6;
 
         memset(&ifr6, 0, sizeof(ifr6));
         strlcpy(ifr6.ifra_name, gNetifName, sizeof(ifr6.ifra_name));
         ifr6.ifra_addr.sin6_family = AF_INET6;
         ifr6.ifra_addr.sin6_len    = sizeof(ifr6.ifra_addr);
-        memcpy(&ifr6.ifra_addr.sin6_addr, &aAddress, sizeof(struct in6_addr));
+        memcpy(&ifr6.ifra_addr.sin6_addr, aAddressInfo.mAddress, sizeof(struct in6_addr));
         ifr6.ifra_prefixmask.sin6_family = AF_INET6;
         ifr6.ifra_prefixmask.sin6_len    = sizeof(ifr6.ifra_prefixmask);
-        InitNetaskWithPrefixLength(&ifr6.ifra_prefixmask.sin6_addr, aPrefixLength);
+        InitNetaskWithPrefixLength(&ifr6.ifra_prefixmask.sin6_addr, aAddressInfo.mPrefixLength);
         ifr6.ifra_lifetime.ia6t_vltime    = ND6_INFINITE_LIFETIME;
         ifr6.ifra_lifetime.ia6t_pltime    = ND6_INFINITE_LIFETIME;
 
@@ -346,24 +418,20 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6Address &aAddress, u
         ifr6.ifra_lifetime.ia6t_preferred = ND6_INFINITE_LIFETIME;
 #endif
 
-        err = ioctl(sIpFd, aIsAdded ? SIOCAIFADDR_IN6 : SIOCDIFADDR_IN6, &ifr6);
-        if ((err == -1) && (errno == EALREADY))
+        rval = ioctl(sIpFd, aIsAdded ? SIOCAIFADDR_IN6 : SIOCDIFADDR_IN6, &ifr6);
+        if (rval == 0)
         {
-            err = 0;
+            otLogInfoPlat("%s %s/%u", (aIsAdded ? "Added" : "Removed"),
+                          Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
         }
-        VerifyOrExit(err == 0, perror("ioctl"); error = OT_ERROR_FAILED);
+        else if (errno != EALREADY)
+        {
+            otLogWarnPlat("Failed to %s %s/%u: %s", (aIsAdded ? "add" : "remove"),
+                          Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength,
+                          strerror(errno));
+        }
     }
 #endif
-
-exit:
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnPlat("%s: %s", __func__, otThreadErrorToString(error));
-    }
-    else
-    {
-        otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
-    }
 }
 
 static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress, bool aIsAdded)
@@ -385,9 +453,9 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
     if ((err != 0) && (errno == EINVAL) && (IN6_IS_ADDR_MC_LINKLOCAL(&mreq.ipv6mr_multiaddr)))
     {
         // FIX ME
-        // on mac OS (and FreeBSD), the first time we run (but not subsequently), we get a failure on this particular
-        // join. do we need to bring up the interface at least once prior to joining?
-        // we need to figure out why so we can get rid of this workaround
+        // on mac OS (and FreeBSD), the first time we run (but not subsequently), we get a failure on this
+        // particular join. do we need to bring up the interface at least once prior to joining? we need to figure
+        // out why so we can get rid of this workaround
         char addressString[INET6_ADDRSTRLEN + 1];
 
         inet_ntop(AF_INET6, mreq.ipv6mr_multiaddr.s6_addr, addressString, sizeof(addressString));
@@ -445,15 +513,15 @@ exit:
     }
 }
 
-static void processAddressChange(const otIp6Address *aAddress, uint8_t aPrefixLength, bool aIsAdded, void *aContext)
+static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsAdded, void *aContext)
 {
-    if (aAddress->mFields.m8[0] == 0xff)
+    if (aAddressInfo->mAddress->mFields.m8[0] == 0xff)
     {
-        UpdateMulticast(static_cast<otInstance *>(aContext), *aAddress, aIsAdded);
+        UpdateMulticast(static_cast<otInstance *>(aContext), *aAddressInfo->mAddress, aIsAdded);
     }
     else
     {
-        UpdateUnicast(static_cast<otInstance *>(aContext), *aAddress, aPrefixLength, aIsAdded);
+        UpdateUnicast(static_cast<otInstance *>(aContext), *aAddressInfo, aIsAdded);
     }
 }
 
@@ -959,7 +1027,7 @@ exit:
 
 #endif
 
-static void processNetifEvent(otInstance *aInstance)
+static void processNetlinkEvent(otInstance *aInstance)
 {
     const size_t kMaxNetifEvent = 8192;
     ssize_t      length;
@@ -1008,6 +1076,23 @@ static void processNetifEvent(otInstance *aInstance)
         case RTM_IFINFO:
             processNetifInfoEvent(aInstance, msg);
             break;
+
+#else
+        case NLMSG_ERROR:
+        {
+            const struct nlmsgerr *err = reinterpret_cast<const nlmsgerr *>(NLMSG_DATA(msg));
+
+            if (err->error == 0)
+            {
+                otLogInfoPlat("Succeeded to process request#%u", err->msg.nlmsg_seq);
+            }
+            else
+            {
+                otLogWarnPlat("Failed to process request#%u: %s", err->msg.nlmsg_seq, strerror(err->error));
+            }
+
+            break;
+        }
 #endif
 
 #if defined(ROUTE_FILTER) || defined(RO_MSGFILTER) || defined(__linux__)
@@ -1015,7 +1100,7 @@ static void processNetifEvent(otInstance *aInstance)
             otLogWarnPlat("unhandled/unexpected netlink/route message (%d).", (int)msg->nlmsg_type);
             break;
 #else
-            // this platform doesn't support filtering, so we expect messages of other types...we just ignore them
+        // this platform doesn't support filtering, so we expect messages of other types...we just ignore them
 #endif
         }
     }
@@ -1190,7 +1275,7 @@ static void platformConfigureTunDevice(otInstance *aInstance,
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&ifr, 0, sizeof(ifr));
-    ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
+    ifr.ifr_flags = IFF_TUN | IFF_NO_PI | static_cast<short>(IFF_TUN_EXCL);
 
     if (aInterfaceName)
     {
@@ -1451,7 +1536,7 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
 
     if (FD_ISSET(sNetlinkFd, aReadFdSet))
     {
-        processNetifEvent(sInstance);
+        processNetlinkEvent(sInstance);
     }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR

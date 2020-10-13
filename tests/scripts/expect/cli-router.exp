@@ -30,9 +30,9 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes
+setup_two_nodes
 
-set spawn_id $spawn_1
+switch_node 1
 send "extaddr\n"
 expect "extaddr"
 expect -re {([0-9a-f]{16})}
@@ -53,7 +53,7 @@ expect "+----+--------+----------+-----------+-------+--------+-----+-----------
 expect -re "\\| +$router_id \\| 0x$rloc \\| +\\d+ \\| +\\d+ \\| +\\d+ \\| +\\d+ \\| +\\d+ \\| $extaddr \\|"
 expect "Done"
 
-set spawn_id $spawn_2
+switch_node 2
 send "mode rdn\n"
 expect "Done"
 send "state router\n"
@@ -66,4 +66,4 @@ expect "Next Hop: fc00"
 expect -re {Link: [01]}
 expect "Done"
 
-dispose_nodes
+dispose_all

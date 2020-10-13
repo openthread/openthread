@@ -29,7 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "ifconfig up\n"
 expect "Done"
@@ -59,4 +59,4 @@ expect "+-----------------------------------------------+-----------------------
 expect -re "\\| 0:0:0:0:0:0:0:0:10001 +\\| $addr:10001 +\\|"
 expect "Done"
 
-dispose
+dispose_all
