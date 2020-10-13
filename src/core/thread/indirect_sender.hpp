@@ -218,7 +218,7 @@ private:
     void    HandleFrameChangeDone(Child &aChild);
 
     void     UpdateIndirectMessage(Child &aChild);
-    Message *FindIndirectMessage(Child &aChild);
+    Message *FindIndirectMessage(Child &aChild, bool aSupervisionTypeOnly = false);
     void     RequestMessageUpdate(Child &aChild);
     uint16_t PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage);
     void     PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool aAckRequest);

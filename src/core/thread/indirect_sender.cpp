@@ -102,6 +102,16 @@ void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
     aMessage.SetChildMask(childIndex);
     mSourceMatchController.IncrementMessageCount(aChild);
 
+    if ((aMessage.GetType() != Message::kTypeSupervision) && (aChild.GetIndirectMessageCount() > 1))
+    {
+        Message *supervisionMessage = FindIndirectMessage(aChild, /* aSupervisionTypeOnly */ true);
+
+        if (supervisionMessage != nullptr)
+        {
+            IgnoreError(RemoveMessageFromSleepyChild(*supervisionMessage, aChild));
+        }
+    }
+
     RequestMessageUpdate(aChild);
 
 exit:
@@ -211,30 +221,16 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
     // case.
 }
 
-Message *IndirectSender::FindIndirectMessage(Child &aChild)
+Message *IndirectSender::FindIndirectMessage(Child &aChild, bool aSupervisionTypeOnly)
 {
     Message *message;
-    Message *next;
     uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
-    for (message = Get<MeshForwarder>().mSendQueue.GetHead(); message; message = next)
+    for (message = Get<MeshForwarder>().mSendQueue.GetHead(); message; message = message->GetNext())
     {
-        next = message->GetNext();
-
-        if (message->GetChildMask(childIndex))
+        if (message->GetChildMask(childIndex) &&
+            (!aSupervisionTypeOnly || (message->GetType() == Message::kTypeSupervision)))
         {
-            // Skip and remove the supervision message if there are
-            // other messages queued for the child.
-
-            if ((message->GetType() == Message::kTypeSupervision) && (aChild.GetIndirectMessageCount() > 1))
-            {
-                message->ClearChildMask(childIndex);
-                mSourceMatchController.DecrementMessageCount(aChild);
-                Get<MeshForwarder>().mSendQueue.Dequeue(*message);
-                message->Free();
-                continue;
-            }
-
             break;
         }
     }
