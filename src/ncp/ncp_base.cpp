@@ -2205,6 +2205,37 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FEM_LNA_GAIN>(void)
+{
+    int8_t  gain;
+    otError error = OT_ERROR_NONE;
+
+    error = otPlatRadioGetFemLnaGain(mInstance, &gain);
+
+    if (error == OT_ERROR_NONE)
+    {
+        error = mEncoder.WriteInt8(gain);
+    }
+    else
+    {
+        error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error));
+    }
+
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_FEM_LNA_GAIN>(void)
+{
+    int8_t  gain  = 0;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadInt8(gain));
+    error = otPlatRadioSetFemLnaGain(mInstance, gain);
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TEST_ASSERT>(void)
 {
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION

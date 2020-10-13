@@ -111,6 +111,7 @@ static bool           sPromiscuous = false;
 static bool           sTxWait      = false;
 static int8_t         sTxPower     = 0;
 static int8_t         sCcaEdThresh = -74;
+static int8_t         sLnaGain     = 0;
 
 static bool sSrcMatchEnabled = false;
 
@@ -979,6 +980,28 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
     assert(aInstance != NULL);
 
     sCcaEdThresh = aThreshold;
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    assert(aInstance != NULL && aGain != NULL);
+
+    *aGain = sLnaGain;
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    assert(aInstance != NULL);
+
+    sLnaGain = aGain;
 
     return OT_ERROR_NONE;
 }
