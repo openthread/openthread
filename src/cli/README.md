@@ -874,7 +874,7 @@ Done
 Get external FEM parameters.
 
 ```bash
-> fem lnagain
+> fem
 LNA gain 11 dBm
 Done
 ```
