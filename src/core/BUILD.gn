@@ -364,6 +364,7 @@ openthread_core_files = [
   "common/non_copyable.hpp",
   "common/notifier.cpp",
   "common/notifier.hpp",
+  "common/numeric_limits.hpp",
   "common/pool.hpp",
   "common/random.hpp",
   "common/random_manager.cpp",
