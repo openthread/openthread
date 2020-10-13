@@ -76,6 +76,14 @@ otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState
     return error;
 }
 
+void otPlatAssertFail(const char *aFilename, int aLineNumber)
+{
+    otLogCritPlat("assert failed at %s:%d", aFilename, aLineNumber);
+    // For debug build, use assert to genreate a core dump
+    assert(false);
+    exit(1);
+}
+
 otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
