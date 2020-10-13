@@ -486,11 +486,13 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aMessage  A pointer to the message buffer containing the IPv6 datagram.
  *
- * @retval OT_ERROR_NONE      Successfully processed the message.
- * @retval OT_ERROR_DROP      Message was well-formed but not fully processed due to packet processing rules.
- * @retval OT_ERROR_NO_BUFS   Could not allocate necessary message buffers when processing the datagram.
- * @retval OT_ERROR_NO_ROUTE  No route to host.
- * @retval OT_ERROR_PARSE     Encountered a malformed header when processing the message.
+ * @retval OT_ERROR_NONE                    Successfully processed the message.
+ * @retval OT_ERROR_DROP                    Message was well-formed but not fully processed due to packet processing
+ * rules.
+ * @retval OT_ERROR_NO_BUFS                 Could not allocate necessary message buffers when processing the datagram.
+ * @retval OT_ERROR_NO_ROUTE                No route to host.
+ * @retval OT_ERROR_INVALID_SOURCE_ADDRESS  Source addresss is invalid, e.g. an anycast address or a multicast address.
+ * @retval OT_ERROR_PARSE                   Encountered a malformed header when processing the message.
  *
  */
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage);

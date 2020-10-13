@@ -457,7 +457,8 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t 
         header.SetHopLimit(static_cast<uint8_t>(kDefaultHopLimit));
     }
 
-    if (aMessageInfo.GetSockAddr().IsUnspecified() || aMessageInfo.GetSockAddr().IsMulticast())
+    if (aMessageInfo.GetSockAddr().IsUnspecified() || aMessageInfo.GetSockAddr().IsMulticast() ||
+        Get<Mle::Mle>().IsAnycastLocator(aMessageInfo.GetSockAddr()))
     {
         const NetifUnicastAddress *source = SelectSourceAddress(aMessageInfo);
 
@@ -1071,6 +1072,8 @@ otError Ip6::SendRaw(Message &aMessage)
     bool        freed = false;
 
     SuccessOrExit(error = header.Init(aMessage));
+    VerifyOrExit(!header.GetSource().IsMulticast() && !Get<Mle::Mle>().IsAnycastLocator(header.GetSource()),
+                 error = OT_ERROR_INVALID_SOURCE_ADDRESS);
 
     messageInfo.SetPeerAddr(header.GetSource());
     messageInfo.SetSockAddr(header.GetDestination());
@@ -1301,10 +1304,11 @@ exit:
 
 const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
 {
-    Address *                  destination       = &aMessageInfo.GetPeerAddr();
-    uint8_t                    destinationScope  = destination->GetScope();
-    const NetifUnicastAddress *rvalAddr          = nullptr;
-    uint8_t                    rvalPrefixMatched = 0;
+    Address *                  destination                 = &aMessageInfo.GetPeerAddr();
+    uint8_t                    destinationScope            = destination->GetScope();
+    const bool                 destinationIsRoutingLocator = Get<Mle::Mle>().IsRoutingLocator(*destination);
+    const NetifUnicastAddress *rvalAddr                    = nullptr;
+    uint8_t                    rvalPrefixMatched           = 0;
 
     for (const NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
@@ -1312,7 +1316,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
         uint8_t        candidatePrefixMatched;
         uint8_t        overrideScope;
 
-        if (candidateAddr->GetIid().IsAnycastLocator())
+        if (Get<Mle::Mle>().IsAnycastLocator(*candidateAddr))
         {
             // Don't use anycast address as source address.
             continue;
@@ -1382,7 +1386,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             rvalPrefixMatched = candidatePrefixMatched;
         }
         else if ((candidatePrefixMatched == rvalPrefixMatched) &&
-                 (destination->GetIid().IsRoutingLocator() == candidateAddr->GetIid().IsRoutingLocator()))
+                 (destinationIsRoutingLocator == Get<Mle::Mle>().IsRoutingLocator(*candidateAddr)))
         {
             // Additional rule: Prefer RLOC source for RLOC destination, EID source for anything else
             rvalAddr          = addr;
