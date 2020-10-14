@@ -272,7 +272,7 @@ do_build_otbr_docker()
     local otdir
     local otbrdir
     local otbr_options="-DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON"
-    local otbr_commit=${OTBR_COMMIT:-623c3fe34b209a15ede5b3e2a7116c1dd6c4855c} # [backbone-router] implement Backbone ND proxy #581
+    local otbr_commit=${OTBR_COMMIT:-358fd1324267d5232eed58f62c9e26ea74860f6a} # [backbone-router] manage Backbone routes for Domain Prefix #586
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
