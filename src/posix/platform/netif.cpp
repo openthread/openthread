@@ -248,7 +248,7 @@ enum
 };
 #endif
 
-static const size_t kMaxIp6Size = 1536;
+static constexpr size_t kMaxIp6Size = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
 
 #define OPENTHREAD_POSIX_LOG_TUN_PACKETS 0
 
@@ -480,6 +480,7 @@ static void processReceive(otMessage *aMessage, void *aContext)
 #endif
 
     assert(sInstance == aContext);
+    assert(length <= kMaxIp6Size);
 
     VerifyOrExit(sTunFd > 0, OT_NOOP);
 
@@ -1207,6 +1208,9 @@ static void platformConfigureTunDevice(otInstance *aInstance,
     VerifyOrDie(ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID) == 0, OT_EXIT_ERROR_ERRNO);
 
     strncpy(deviceName, ifr.ifr_name, deviceNameLen);
+
+    ifr.ifr_mtu = static_cast<int>(kMaxIp6Size);
+    VerifyOrDie(ioctl(sIpFd, SIOCSIFMTU, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
 }
 #endif
 
