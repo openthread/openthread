@@ -177,7 +177,7 @@ Message *Client::NewMessage(const Header &aHeader)
 {
     Message *message = nullptr;
 
-    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != nullptr, OT_NOOP);
+    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != nullptr);
     IgnoreError(message->Prepend(aHeader));
     message->SetOffset(0);
 
@@ -350,7 +350,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), responseHeader));
 
-    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != nullptr, OT_NOOP);
+    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != nullptr);
 
     // Check if response came from the server.
     VerifyOrExit(responseHeader.GetMode() == Header::kModeServer, error = OT_ERROR_FAILED);

@@ -78,7 +78,7 @@ Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const Messa
 {
     Message *message = Get<MessagePool>().New(Message::kTypeIp6, 0, aSettings);
 
-    VerifyOrExit(message != nullptr, OT_NOOP);
+    VerifyOrExit(message != nullptr);
 
     if (message->AppendBytes(aData, aDataLength) != OT_ERROR_NONE)
     {
@@ -239,8 +239,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aM
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aHeader.GetDestination().IsMulticast() &&
-                     aHeader.GetDestination().GetScope() >= Address::kRealmLocalScope,
-                 OT_NOOP);
+                 aHeader.GetDestination().GetScope() >= Address::kRealmLocalScope);
 
     if (aHeader.GetDestination().IsRealmLocalMulticast())
     {
@@ -329,7 +328,7 @@ otError Ip6::RemoveMplOption(Message &aMessage)
     offset = 0;
     IgnoreError(aMessage.Read(offset, ip6Header));
     offset += sizeof(ip6Header);
-    VerifyOrExit(ip6Header.GetNextHeader() == kProtoHopOpts, OT_NOOP);
+    VerifyOrExit(ip6Header.GetNextHeader() == kProtoHopOpts);
 
     IgnoreError(aMessage.Read(offset, hbh));
     endOffset = offset + (hbh.GetLength() + 1) * 8;
@@ -1220,7 +1219,7 @@ start:
 
         if (aNetif != nullptr)
         {
-            VerifyOrExit(mForwardingEnabled, OT_NOOP);
+            VerifyOrExit(mForwardingEnabled);
             header.SetHopLimit(header.GetHopLimit() - 1);
         }
 

@@ -60,7 +60,7 @@ Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, Message:
     otError  error = OT_ERROR_NONE;
     Message *message;
 
-    VerifyOrExit((message = static_cast<Message *>(NewBuffer(aPriority))) != nullptr, OT_NOOP);
+    VerifyOrExit((message = static_cast<Message *>(NewBuffer(aPriority))) != nullptr);
 
     memset(message, 0, sizeof(*message));
     message->SetMessagePool(this);
@@ -113,7 +113,7 @@ Buffer *MessagePool::NewBuffer(Message::Priority aPriority)
 #else
 
     buffer = mBufferPool.Allocate();
-    VerifyOrExit(buffer != nullptr, OT_NOOP);
+    VerifyOrExit(buffer != nullptr);
 
     mNumFreeBuffers--;
     buffer->SetNextBuffer(nullptr);
@@ -343,7 +343,7 @@ otError Message::SetPriority(Priority aPriority)
     VerifyOrExit(priority < kNumPriorities, error = OT_ERROR_INVALID_ARGS);
 
     VerifyOrExit(IsInAQueue(), GetMetadata().mPriority = priority);
-    VerifyOrExit(GetMetadata().mPriority != priority, OT_NOOP);
+    VerifyOrExit(GetMetadata().mPriority != priority);
 
     if (GetMetadata().mInPriorityQ)
     {

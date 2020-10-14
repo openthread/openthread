@@ -86,7 +86,7 @@ exit:
 
 void NcpBase::HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *aContext)
 {
-    VerifyOrExit(aInfo && aContext, OT_NOOP);
+    VerifyOrExit(aInfo && aContext);
 
     static_cast<NcpBase *>(aContext)->HandleParentResponseInfo(*aInfo);
 
@@ -96,7 +96,7 @@ exit:
 
 void NcpBase::HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo)
 {
-    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_PARENT_RESPONSE_INFO), OT_NOOP);
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_PARENT_RESPONSE_INFO));
 
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_PARENT_RESPONSE_INFO));
@@ -134,7 +134,7 @@ void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNe
         // Fall through
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
         property = SPINEL_PROP_THREAD_CHILD_TABLE;
-        VerifyOrExit(!aEntry.mInfo.mChild.mIsStateRestoring, OT_NOOP);
+        VerifyOrExit(!aEntry.mInfo.mChild.mIsStateRestoring);
         break;
 
     case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
@@ -148,7 +148,7 @@ void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNe
         ExitNow();
     }
 
-    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(property), OT_NOOP);
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(property));
 
     SuccessOrExit(error = mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, command, property));
 

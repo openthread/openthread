@@ -120,7 +120,7 @@ void MeshForwarder::Stop(void)
 {
     Message *message;
 
-    VerifyOrExit(mEnabled, OT_NOOP);
+    VerifyOrExit(mEnabled);
 
     mDataPollSender.StopPolling();
     Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMeshForwarder);
@@ -233,10 +233,10 @@ void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 
 void MeshForwarder::ScheduleTransmissionTask(void)
 {
-    VerifyOrExit(!mSendBusy && !mTxPaused, OT_NOOP);
+    VerifyOrExit(!mSendBusy && !mTxPaused);
 
     mSendMessage = GetDirectTransmission();
-    VerifyOrExit(mSendMessage != nullptr, OT_NOOP);
+    VerifyOrExit(mSendMessage != nullptr);
 
     if (mSendMessage->GetOffset() == 0)
     {
@@ -812,12 +812,12 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, otError
 {
     Neighbor *neighbor = nullptr;
 
-    VerifyOrExit(mEnabled, OT_NOOP);
+    VerifyOrExit(mEnabled);
 
     neighbor = Get<NeighborTable>().FindNeighbor(aMacDest);
-    VerifyOrExit(neighbor != nullptr, OT_NOOP);
+    VerifyOrExit(neighbor != nullptr);
 
-    VerifyOrExit(aFrame.GetAckRequest(), OT_NOOP);
+    VerifyOrExit(aFrame.GetAckRequest());
 
     if (aError == OT_ERROR_NONE)
     {
@@ -826,7 +826,7 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, otError
     else if (aError == OT_ERROR_NO_ACK)
     {
         neighbor->IncrementLinkFailures();
-        VerifyOrExit(Mle::Mle::IsActiveRouter(neighbor->GetRloc16()), OT_NOOP);
+        VerifyOrExit(Mle::Mle::IsActiveRouter(neighbor->GetRloc16()));
 
         if (neighbor->GetLinkFailures() >= Mle::kFailedRouterTransmissions)
         {
@@ -848,7 +848,7 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, otError aError)
 
     mSendBusy = false;
 
-    VerifyOrExit(mEnabled, OT_NOOP);
+    VerifyOrExit(mEnabled);
 
     if (!aFrame.IsEmpty())
     {
@@ -856,7 +856,7 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, otError aError)
         neighbor = UpdateNeighborOnSentFrame(aFrame, aError, macDest);
     }
 
-    VerifyOrExit(mSendMessage != nullptr, OT_NOOP);
+    VerifyOrExit(mSendMessage != nullptr);
     OT_ASSERT(mSendMessage->GetDirectTransmission());
 
     if (aError != OT_ERROR_NONE)
@@ -1382,7 +1382,7 @@ otError MeshForwarder::ParseIp6UdpTcpHeader(const Message &aMessage,
     aDestPort   = 0;
 
     SuccessOrExit(aMessage.Read(0, aIp6Header));
-    VerifyOrExit(aIp6Header.IsVersion6(), OT_NOOP);
+    VerifyOrExit(aIp6Header.IsVersion6());
 
     switch (aIp6Header.GetNextHeader())
     {
@@ -1556,7 +1556,7 @@ void MeshForwarder::LogMessage(MessageAction       aAction,
         break;
     }
 
-    VerifyOrExit(GetInstance().GetLogLevel() >= logLevel, OT_NOOP);
+    VerifyOrExit(GetInstance().GetLogLevel() >= logLevel);
 
     switch (aMessage.GetType())
     {

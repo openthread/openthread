@@ -292,13 +292,13 @@ const Timestamp *Dataset::GetTimestamp(void) const
     if (mType == kActive)
     {
         const ActiveTimestampTlv *tlv = GetTlv<ActiveTimestampTlv>();
-        VerifyOrExit(tlv != nullptr, OT_NOOP);
+        VerifyOrExit(tlv != nullptr);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
     else
     {
         const PendingTimestampTlv *tlv = GetTlv<PendingTimestampTlv>();
-        VerifyOrExit(tlv != nullptr, OT_NOOP);
+        VerifyOrExit(tlv != nullptr);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
 
@@ -382,7 +382,7 @@ void Dataset::RemoveTlv(Tlv::Type aType)
 {
     Tlv *tlv;
 
-    VerifyOrExit((tlv = GetTlv(aType)) != nullptr, OT_NOOP);
+    VerifyOrExit((tlv = GetTlv(aType)) != nullptr);
     RemoveTlv(tlv);
 
 exit:
@@ -395,7 +395,7 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
     Mle::Tlv       tlv;
     Mle::Tlv::Type type;
 
-    VerifyOrExit(mLength > 0, OT_NOOP);
+    VerifyOrExit(mLength > 0);
 
     type = (mType == kActive ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
 

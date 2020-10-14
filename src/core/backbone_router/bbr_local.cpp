@@ -81,7 +81,7 @@ Local::Local(Instance &aInstance)
 
 void Local::SetEnabled(bool aEnable)
 {
-    VerifyOrExit(aEnable == (mState == OT_BACKBONE_ROUTER_STATE_DISABLED), OT_NOOP);
+    VerifyOrExit(aEnable == (mState == OT_BACKBONE_ROUTER_STATE_DISABLED));
 
     if (aEnable)
     {
@@ -104,7 +104,7 @@ exit:
 
 void Local::Reset(void)
 {
-    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED, OT_NOOP);
+    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED);
 
     if (RemoveService() == OT_ERROR_NONE)
     {
@@ -183,14 +183,13 @@ otError Local::AddService(bool aForce)
     uint8_t                               serviceData = NetworkData::ServiceTlv::kServiceDataBackboneRouter;
     NetworkData::BackboneRouterServerData serverData;
 
-    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED && Get<Mle::Mle>().IsAttached(), OT_NOOP);
+    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED && Get<Mle::Mle>().IsAttached());
 
     VerifyOrExit(aForce /* if register by force */ ||
-                     !Get<BackboneRouter::Leader>().HasPrimary() /* if no available Backbone Router service */ ||
-                     Get<BackboneRouter::Leader>().GetServer16() == Get<Mle::MleRouter>().GetRloc16()
+                 !Get<BackboneRouter::Leader>().HasPrimary() /* if no available Backbone Router service */ ||
+                 Get<BackboneRouter::Leader>().GetServer16() == Get<Mle::MleRouter>().GetRloc16()
                  /* If the device itself should be BBR. */
-                 ,
-                 OT_NOOP);
+    );
 
     serverData.SetSequenceNumber(mSequenceNumber);
     serverData.SetReregistrationDelay(mReregistrationDelay);
@@ -224,7 +223,7 @@ exit:
 
 void Local::SetState(BackboneRouterState aState)
 {
-    VerifyOrExit(mState != aState, OT_NOOP);
+    VerifyOrExit(mState != aState);
 
     if (mState == OT_BACKBONE_ROUTER_STATE_DISABLED)
     {
@@ -260,7 +259,7 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Backbo
 {
     OT_UNUSED_VARIABLE(aState);
 
-    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED && Get<Mle::MleRouter>().IsAttached(), OT_NOOP);
+    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED && Get<Mle::MleRouter>().IsAttached());
 
     // Wait some jitter before trying to Register.
     if (aConfig.mServer16 == Mac::kShortAddrInvalid)
@@ -350,7 +349,7 @@ void Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
 
 void Local::ApplyMeshLocalPrefix(void)
 {
-    VerifyOrExit(IsEnabled(), OT_NOOP);
+    VerifyOrExit(IsEnabled());
 
     Get<ThreadNetif>().UnsubscribeMulticast(mAllNetworkBackboneRouters);
     mAllNetworkBackboneRouters.GetAddress().SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());

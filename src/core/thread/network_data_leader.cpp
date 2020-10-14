@@ -124,7 +124,7 @@ otError LeaderBase::GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfi
         }
     }
 
-    VerifyOrExit(rvalServerTlv != nullptr, OT_NOOP);
+    VerifyOrExit(rvalServerTlv != nullptr);
 
     aConfig.mServer16            = rvalServerTlv->GetServer16();
     aConfig.mSequenceNumber      = rvalServerData->GetSequenceNumber();
@@ -499,7 +499,7 @@ const MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aT
     const NetworkDataTlv *commissioningDataTlv;
 
     commissioningDataTlv = GetCommissioningData();
-    VerifyOrExit(commissioningDataTlv != nullptr, OT_NOOP);
+    VerifyOrExit(commissioningDataTlv != nullptr);
 
     rval = MeshCoP::Tlv::FindTlv(commissioningDataTlv->GetValue(), commissioningDataTlv->GetLength(), aType);
 
@@ -512,10 +512,10 @@ bool LeaderBase::IsJoiningEnabled(void) const
     const MeshCoP::Tlv *steeringData;
     bool                rval = false;
 
-    VerifyOrExit(GetCommissioningDataSubTlv(MeshCoP::Tlv::kBorderAgentLocator) != nullptr, OT_NOOP);
+    VerifyOrExit(GetCommissioningDataSubTlv(MeshCoP::Tlv::kBorderAgentLocator) != nullptr);
 
     steeringData = GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
-    VerifyOrExit(steeringData != nullptr, OT_NOOP);
+    VerifyOrExit(steeringData != nullptr);
 
     for (int i = 0; i < steeringData->GetLength(); i++)
     {
@@ -533,7 +533,7 @@ void LeaderBase::RemoveCommissioningData(void)
 {
     CommissioningDataTlv *tlv = GetCommissioningData();
 
-    VerifyOrExit(tlv != nullptr, OT_NOOP);
+    VerifyOrExit(tlv != nullptr);
     RemoveTlv(tlv);
 
 exit:

@@ -364,7 +364,7 @@ Message *Message::Clone(uint16_t aLength) const
 {
     Message *message = static_cast<Message *>(ot::Message::Clone(aLength));
 
-    VerifyOrExit(message != nullptr, OT_NOOP);
+    VerifyOrExit(message != nullptr);
 
     message->GetHelpData() = GetHelpData();
 
@@ -501,7 +501,7 @@ otError Option::Iterator::Advance(void)
     uint16_t optionDelta;
     uint16_t optionLength;
 
-    VerifyOrExit(!IsDone(), OT_NOOP);
+    VerifyOrExit(!IsDone());
 
     error = Read(sizeof(uint8_t), &headerByte);
 
@@ -596,7 +596,7 @@ otError Option::Iterator::ReadExtendedOptionField(uint16_t &aValue)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aValue >= Message::kOption1ByteExtension, OT_NOOP);
+    VerifyOrExit(aValue >= Message::kOption1ByteExtension);
 
     if (aValue == Message::kOption1ByteExtension)
     {

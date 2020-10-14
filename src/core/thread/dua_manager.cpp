@@ -108,7 +108,7 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
     {
     case BackboneRouter::Leader::kDomainPrefixUnchanged:
         // In case removed for some reason e.g. the kDuaInvalid response from PBBR forcely
-        VerifyOrExit(!Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()), OT_NOOP);
+        VerifyOrExit(!Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()));
 
         // fall through
     case BackboneRouter::Leader::kDomainPrefixRefreshed:
@@ -171,7 +171,7 @@ otError DuaManager::SetFixedDuaInterfaceIdentifier(const Ip6::InterfaceIdentifie
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!aIid.IsReserved(), error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(mFixedDuaInterfaceIdentifier.IsUnspecified() || mFixedDuaInterfaceIdentifier != aIid, OT_NOOP);
+    VerifyOrExit(mFixedDuaInterfaceIdentifier.IsUnspecified() || mFixedDuaInterfaceIdentifier != aIid);
 
     mFixedDuaInterfaceIdentifier = aIid;
     otLogInfoDua("Set DUA IID: %s", mFixedDuaInterfaceIdentifier.ToString().AsCString());
@@ -190,7 +190,7 @@ exit:
 void DuaManager::ClearFixedDuaInterfaceIdentifier(void)
 {
     // Nothing to clear.
-    VerifyOrExit(IsFixedDuaInterfaceIdentifierSet(), OT_NOOP);
+    VerifyOrExit(IsFixedDuaInterfaceIdentifierSet());
 
     if (GetDomainUnicastAddress().GetIid() == mFixedDuaInterfaceIdentifier &&
         Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
@@ -276,7 +276,7 @@ void DuaManager::UpdateReregistrationDelay(void)
     uint16_t               delay = 0;
     otBackboneRouterConfig config;
 
-    VerifyOrExit(Get<BackboneRouter::Leader>().GetConfig(config) == OT_ERROR_NONE, OT_NOOP);
+    VerifyOrExit(Get<BackboneRouter::Leader>().GetConfig(config) == OT_ERROR_NONE);
 
     delay = config.mReregistrationDelay > 1 ? Random::NonCrypto::GetUint16InRange(1, config.mReregistrationDelay) : 1;
 

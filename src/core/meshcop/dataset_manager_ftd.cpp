@@ -92,18 +92,18 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     channel.SetLength(0);
     pendingTimestamp.SetLength(0);
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsLeader(), OT_NOOP);
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
     // verify that TLV data size is less than maximum TLV value size
     while (offset < aMessage.GetLength())
     {
         SuccessOrExit(aMessage.Read(offset, tlv));
-        VerifyOrExit(tlv.GetLength() <= Dataset::kMaxValueSize, OT_NOOP);
+        VerifyOrExit(tlv.GetLength() <= Dataset::kMaxValueSize);
         offset += sizeof(tlv) + tlv.GetLength();
     }
 
     // verify that does not overflow dataset buffer
-    VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize, OT_NOOP);
+    VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize);
 
     type = (strcmp(mUriSet, UriPath::kActiveSet) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp);
 
@@ -112,23 +112,23 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
         ExitNow();
     }
 
-    VerifyOrExit(activeTimestamp.IsValid(), OT_NOOP);
+    VerifyOrExit(activeTimestamp.IsValid());
 
     if (Tlv::FindTlv(aMessage, Tlv::kPendingTimestamp, sizeof(pendingTimestamp), pendingTimestamp) == OT_ERROR_NONE)
     {
-        VerifyOrExit(pendingTimestamp.IsValid(), OT_NOOP);
+        VerifyOrExit(pendingTimestamp.IsValid());
     }
 
     // verify the request includes a timestamp that is ahead of the locally stored value
     timestamp = (type == Tlv::kActiveTimestamp) ? static_cast<Timestamp *>(&activeTimestamp)
                                                 : static_cast<Timestamp *>(&pendingTimestamp);
 
-    VerifyOrExit(mLocal.Compare(timestamp) > 0, OT_NOOP);
+    VerifyOrExit(mLocal.Compare(timestamp) > 0);
 
     // check channel
     if (Tlv::FindTlv(aMessage, Tlv::kChannel, sizeof(channel), channel) == OT_ERROR_NONE)
     {
-        VerifyOrExit(channel.IsValid(), OT_NOOP);
+        VerifyOrExit(channel.IsValid());
 
         if (channel.GetChannel() != Get<Mac::Mac>().GetPanChannel())
         {
@@ -167,7 +167,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
         // no change to master key, active timestamp must be ahead
         const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
 
-        VerifyOrExit(localActiveTimestamp == nullptr || localActiveTimestamp->Compare(activeTimestamp) > 0, OT_NOOP);
+        VerifyOrExit(localActiveTimestamp == nullptr || localActiveTimestamp->Compare(activeTimestamp) > 0);
     }
 
     // check commissioner session id
@@ -180,11 +180,11 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
         localId = static_cast<const CommissionerSessionIdTlv *>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
 
-        VerifyOrExit(localId != nullptr && localId->GetCommissionerSessionId() == sessionId, OT_NOOP);
+        VerifyOrExit(localId != nullptr && localId->GetCommissionerSessionId() == sessionId);
     }
 
     // verify an MGMT_ACTIVE_SET.req from a Commissioner does not affect connectivity
-    VerifyOrExit(!isUpdateFromCommissioner || type == Tlv::kPendingTimestamp || !doesAffectConnectivity, OT_NOOP);
+    VerifyOrExit(!isUpdateFromCommissioner || type == Tlv::kPendingTimestamp || !doesAffectConnectivity);
 
     if (isUpdateFromCommissioner)
     {
@@ -251,7 +251,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
 
         localSessionId = static_cast<const CommissionerSessionIdTlv *>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
-        VerifyOrExit(localSessionId != nullptr, OT_NOOP);
+        VerifyOrExit(localSessionId != nullptr);
 
         SuccessOrExit(
             Get<Mle::MleRouter>().GetCommissionerAloc(destination, localSessionId->GetCommissionerSessionId()));
@@ -510,7 +510,7 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Messa
     uint16_t offset = aMessage.GetOffset();
     Dataset  dataset(mLocal.GetType());
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), OT_NOOP);
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
 
     while (offset < aMessage.GetLength())
     {

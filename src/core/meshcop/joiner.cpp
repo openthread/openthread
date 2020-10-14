@@ -103,7 +103,7 @@ otError Joiner::ClearDiscerner(void)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mState == kStateIdle, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!mDiscerner.IsEmpty(), OT_NOOP);
+    VerifyOrExit(!mDiscerner.IsEmpty());
 
     mDiscerner.Clear();
     SetIdFromIeeeEui64();
@@ -274,7 +274,7 @@ void Joiner::HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult, voi
 
 void Joiner::HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult)
 {
-    VerifyOrExit(mState == kStateDiscover, OT_NOOP);
+    VerifyOrExit(mState == kStateDiscover);
 
     if (aResult != nullptr)
     {
@@ -319,7 +319,7 @@ void Joiner::SaveDiscoveredJoinerRouter(const Mle::DiscoverScanner::ScanResult &
         }
     }
 
-    VerifyOrExit(entry < end, OT_NOOP);
+    VerifyOrExit(entry < end);
 
     // Shift elements in array to make room for the new one.
     memmove(entry + 1, entry,
@@ -404,7 +404,7 @@ void Joiner::HandleSecureCoapClientConnect(bool aConnected, void *aContext)
 
 void Joiner::HandleSecureCoapClientConnect(bool aConnected)
 {
-    VerifyOrExit(mState == kStateConnect, OT_NOOP);
+    VerifyOrExit(mState == kStateConnect);
 
     if (aConnected)
     {
@@ -489,7 +489,7 @@ exit:
 
 void Joiner::FreeJoinerFinalizeMessage(void)
 {
-    VerifyOrExit(mState == kStateIdle && mFinalizeMessage != nullptr, OT_NOOP);
+    VerifyOrExit(mState == kStateIdle && mFinalizeMessage != nullptr);
 
     mFinalizeMessage->Free();
     mFinalizeMessage = nullptr;
@@ -533,8 +533,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message &         aMessage,
     uint8_t state;
 
     VerifyOrExit(mState == kStateConnected && aResult == OT_ERROR_NONE && aMessage.IsAck() &&
-                     aMessage.GetCode() == Coap::kCodeChanged,
-                 OT_NOOP);
+                 aMessage.GetCode() == Coap::kCodeChanged);
 
     SuccessOrExit(Tlv::FindUint8Tlv(aMessage, Tlv::kState, state));
 
@@ -686,7 +685,7 @@ void Joiner::LogCertMessage(const char *aText, const Coap::Message &aMessage) co
 {
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
 
-    VerifyOrExit(aMessage.GetLength() <= sizeof(buf), OT_NOOP);
+    VerifyOrExit(aMessage.GetLength() <= sizeof(buf));
     aMessage.ReadBytes(aMessage.GetOffset(), buf, aMessage.GetLength() - aMessage.GetOffset());
 
     otDumpCertMeshCoP(aText, buf, aMessage.GetLength() - aMessage.GetOffset());

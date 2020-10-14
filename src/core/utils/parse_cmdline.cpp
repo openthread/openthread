@@ -258,9 +258,9 @@ otError ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix)
     const char *prefixLengthStr;
 
     prefixLengthStr = strchr(aString, '/');
-    VerifyOrExit(prefixLengthStr != nullptr, OT_NOOP);
+    VerifyOrExit(prefixLengthStr != nullptr);
 
-    VerifyOrExit(prefixLengthStr - aString < static_cast<int32_t>(sizeof(string)), OT_NOOP);
+    VerifyOrExit(prefixLengthStr - aString < static_cast<int32_t>(sizeof(string)));
 
     memcpy(string, aString, static_cast<uint8_t>(prefixLengthStr - aString));
     string[prefixLengthStr - aString] = '\0';

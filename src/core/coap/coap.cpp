@@ -117,7 +117,7 @@ Message *CoapBase::NewMessage(const Message::Settings &aSettings)
 {
     Message *message = nullptr;
 
-    VerifyOrExit((message = static_cast<Message *>(Get<Ip6::Udp>().NewMessage(0, aSettings))) != nullptr, OT_NOOP);
+    VerifyOrExit((message = static_cast<Message *>(Get<Ip6::Udp>().NewMessage(0, aSettings))) != nullptr);
     message->SetOffset(0);
 
 exit:
@@ -561,7 +561,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
 #endif
 
     request = FindRelatedRequest(aMessage, aMessageInfo, metadata);
-    VerifyOrExit(request != nullptr, OT_NOOP);
+    VerifyOrExit(request != nullptr);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     if (metadata.mObserve && request->IsRequest())
@@ -811,11 +811,11 @@ void ResponsesQueue::EnqueueResponse(Message &               aMessage,
     metadata.mDequeueTime = TimerMilli::GetNow() + aTxParameters.CalculateExchangeLifetime();
     metadata.mMessageInfo = aMessageInfo;
 
-    VerifyOrExit(FindMatchedResponse(aMessage, aMessageInfo) == nullptr, OT_NOOP);
+    VerifyOrExit(FindMatchedResponse(aMessage, aMessageInfo) == nullptr);
 
     UpdateQueue();
 
-    VerifyOrExit((responseCopy = aMessage.Clone()) != nullptr, OT_NOOP);
+    VerifyOrExit((responseCopy = aMessage.Clone()) != nullptr);
 
     VerifyOrExit(metadata.AppendTo(*responseCopy) == OT_ERROR_NONE, responseCopy->Free());
 
@@ -924,7 +924,7 @@ static uint32_t Multiply(uint32_t aValueA, uint32_t aValueB)
 {
     uint32_t result = 0;
 
-    VerifyOrExit(aValueA, OT_NOOP);
+    VerifyOrExit(aValueA);
 
     result = aValueA * aValueB;
     result = (result / aValueA == aValueB) ? result : 0;
@@ -993,7 +993,7 @@ otError Coap::Start(uint16_t aPort, otNetifIdentifier aNetifIdentifier)
     otError error        = OT_ERROR_NONE;
     bool    socketOpened = false;
 
-    VerifyOrExit(!mSocket.IsBound(), OT_NOOP);
+    VerifyOrExit(!mSocket.IsBound());
 
     SuccessOrExit(error = mSocket.Open(&Coap::HandleUdpReceive, this));
     socketOpened = true;
@@ -1014,7 +1014,7 @@ otError Coap::Stop(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mSocket.IsBound(), OT_NOOP);
+    VerifyOrExit(mSocket.IsBound());
 
     SuccessOrExit(error = mSocket.Close());
     ClearRequestsAndResponses();

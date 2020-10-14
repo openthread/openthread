@@ -112,7 +112,7 @@ void Commissioner::SignalJoinerEvent(JoinerEvent aEvent, const Joiner *aJoiner) 
     Mac::ExtAddress joinerId;
     bool            noJoinerId = false;
 
-    VerifyOrExit((mJoinerCallback != nullptr) && (aJoiner != nullptr), OT_NOOP);
+    VerifyOrExit((mJoinerCallback != nullptr) && (aJoiner != nullptr));
 
     aJoiner->CopyToJoinerInfo(joinerInfo);
 
@@ -306,7 +306,7 @@ otError Commissioner::Start(otCommissionerStateCallback  aStateCallback,
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     error = Get<MeshCoP::BorderAgent>().Stop();
-    VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY, OT_NOOP);
+    VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY);
 #endif
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(SendRelayTransmit, this));
@@ -733,7 +733,7 @@ void Commissioner::HandleMgmtCommissionerGetResponse(Coap::Message *         aMe
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == Coap::kCodeChanged, OT_NOOP);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == Coap::kCodeChanged);
     otLogInfoMeshCoP("received MGMT_COMMISSIONER_GET response");
 
 exit:
@@ -814,7 +814,7 @@ void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message *         aMe
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == Coap::kCodeChanged, OT_NOOP);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == Coap::kCodeChanged);
     otLogInfoMeshCoP("received MGMT_COMMISSIONER_SET response");
 
 exit:
@@ -871,7 +871,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     uint8_t state;
     bool    retransmit = false;
 
-    VerifyOrExit(mState != kStateActive, OT_NOOP);
+    VerifyOrExit(mState != kStateActive);
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == Coap::kCodeChanged,
                  retransmit = (mState == kStatePetition));
 
@@ -965,7 +965,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessag
 
     uint8_t state;
 
-    VerifyOrExit(mState == kStateActive, OT_NOOP);
+    VerifyOrExit(mState == kStateActive);
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == Coap::kCodeChanged,
                  IgnoreError(Stop(/* aResign */ false)));
 
@@ -1000,7 +1000,7 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
 
     VerifyOrExit(mState == kStateActive, error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(aMessage.IsNonConfirmablePostRequest(), OT_NOOP);
+    VerifyOrExit(aMessage.IsNonConfirmablePostRequest());
 
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kJoinerUdpPort, joinerPort));
     SuccessOrExit(error = Tlv::FindTlv(aMessage, Tlv::kJoinerIid, &joinerIid, sizeof(joinerIid)));
@@ -1018,7 +1018,7 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
         mJoinerIid.ConvertToExtAddress(receivedId);
 
         joiner = FindBestMatchingJoinerEntry(receivedId);
-        VerifyOrExit(joiner != nullptr, OT_NOOP);
+        VerifyOrExit(joiner != nullptr);
 
         Get<Coap::CoapSecure>().SetPsk(joiner->mPskd);
         mActiveJoiner = joiner;
@@ -1028,7 +1028,7 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
     }
     else
     {
-        VerifyOrExit(mJoinerIid == joinerIid, OT_NOOP);
+        VerifyOrExit(mJoinerIid == joinerIid);
     }
 
     mJoinerPort = joinerPort;
@@ -1057,7 +1057,7 @@ void Commissioner::HandleDatasetChanged(void *aContext, otMessage *aMessage, con
 
 void Commissioner::HandleDatasetChanged(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    VerifyOrExit(aMessage.IsConfirmablePostRequest(), OT_NOOP);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
     otLogInfoMeshCoP("received dataset changed");
 
@@ -1131,7 +1131,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
 
-    VerifyOrExit(message->GetLength() <= sizeof(buf), OT_NOOP);
+    VerifyOrExit(message->GetLength() <= sizeof(buf));
     message->ReadBytes(message->GetOffset(), buf, message->GetLength() - message->GetOffset());
     otDumpCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp |", buf, message->GetLength() - message->GetOffset());
 #endif
@@ -1206,7 +1206,7 @@ exit:
 
 void Commissioner::ApplyMeshLocalPrefix(void)
 {
-    VerifyOrExit(mState == kStateActive, OT_NOOP);
+    VerifyOrExit(mState == kStateActive);
 
     Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
     mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());

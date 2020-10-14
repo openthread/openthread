@@ -71,7 +71,7 @@ bool Filter::Accept(Message &aMessage) const
     SuccessOrExit(aMessage.Read(0, ip6));
 
     // Allow only link-local unicast or multicast
-    VerifyOrExit(ip6.GetDestination().IsLinkLocal() || ip6.GetDestination().IsLinkLocalMulticast(), OT_NOOP);
+    VerifyOrExit(ip6.GetDestination().IsLinkLocal() || ip6.GetDestination().IsLinkLocalMulticast());
 
     switch (ip6.GetNextHeader())
     {

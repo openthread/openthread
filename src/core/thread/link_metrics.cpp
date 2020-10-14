@@ -176,7 +176,7 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
     Tlv                    tlv;
     LinkMetricsTypeIdFlags typeIdFlags;
 
-    VerifyOrExit(mLinkMetricsReportCallback != nullptr, OT_NOOP);
+    VerifyOrExit(mLinkMetricsReportCallback != nullptr);
 
     memset(&metricsValues, 0, sizeof(metricsValues));
 
@@ -185,9 +185,9 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
     while (pos < endPos)
     {
         SuccessOrExit(aMessage.Read(pos, tlv));
-        VerifyOrExit(tlv.GetType() == kLinkMetricsReportSub, OT_NOOP);
+        VerifyOrExit(tlv.GetType() == kLinkMetricsReportSub);
         pos += sizeof(Tlv);
-        VerifyOrExit(pos + tlv.GetLength() <= endPos, OT_NOOP);
+        VerifyOrExit(pos + tlv.GetLength() <= endPos);
 
         IgnoreError(aMessage.Read(pos, typeIdFlags));
 

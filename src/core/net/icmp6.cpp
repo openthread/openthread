@@ -103,7 +103,7 @@ otError Icmp::SendError(Header::Type       aType,
     if (ip6Header.GetNextHeader() == kProtoIcmp6)
     {
         SuccessOrExit(aMessage.Read(sizeof(ip6Header), icmp6Header));
-        VerifyOrExit(!icmp6Header.IsError(), OT_NOOP);
+        VerifyOrExit(!icmp6Header.IsError());
     }
 
     messageInfoLocal = aMessageInfo;
@@ -184,7 +184,7 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
     uint16_t    payloadLength;
 
     // always handle Echo Request destined for RLOC or ALOC
-    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().GetIid().IsLocator(), OT_NOOP);
+    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().GetIid().IsLocator());
 
     otLogInfoIcmp("Received Echo Request");
 

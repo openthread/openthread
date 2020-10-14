@@ -80,15 +80,14 @@ void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
 
     otLogInfoMeshCoP("received petition");
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()), OT_NOOP);
+    VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
     SuccessOrExit(Tlv::FindTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
 
     if (mTimer.IsRunning())
     {
         VerifyOrExit((commissionerId.GetCommissionerIdLength() == mCommissionerId.GetCommissionerIdLength()) &&
-                         (!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
-                                   commissionerId.GetCommissionerIdLength())),
-                     OT_NOOP);
+                     (!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
+                               commissionerId.GetCommissionerIdLength())));
 
         ResignCommissioner();
     }
@@ -272,7 +271,7 @@ void Leader::HandleTimer(Timer &aTimer)
 
 void Leader::HandleTimer(void)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().IsLeader(), OT_NOOP);
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
     ResignCommissioner();
 

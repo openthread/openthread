@@ -474,13 +474,13 @@ bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &aAddress)
     Mac::ShortAddress rloc16;
     otError           error;
 
-    VerifyOrExit(Get<Local>().IsPrimary(), OT_NOOP);
-    VerifyOrExit(Get<Leader>().IsDomainUnicast(aAddress), OT_NOOP);
+    VerifyOrExit(Get<Local>().IsPrimary());
+    VerifyOrExit(Get<Leader>().IsDomainUnicast(aAddress));
 
-    VerifyOrExit(!mNdProxyTable.IsRegistered(aAddress.GetIid()), OT_NOOP);
+    VerifyOrExit(!mNdProxyTable.IsRegistered(aAddress.GetIid()));
 
     error = Get<AddressResolver>().Resolve(aAddress, rloc16, /* aAllowAddressQuery */ false);
-    VerifyOrExit(error != OT_ERROR_NONE || rloc16 == Get<Mle::MleRouter>().GetRloc16(), OT_NOOP);
+    VerifyOrExit(error != OT_ERROR_NONE || rloc16 == Get<Mle::MleRouter>().GetRloc16());
 
     // TODO: check if the DUA is an address of any Child?
     forwardToBackbone = true;

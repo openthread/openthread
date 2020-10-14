@@ -101,7 +101,7 @@ Neighbor *NeighborTable::FindNeighbor(Mac::ShortAddress aShortAddress, Neighbor:
 {
     Neighbor *neighbor = nullptr;
 
-    VerifyOrExit((aShortAddress != Mac::kShortAddrBroadcast) && (aShortAddress != Mac::kShortAddrInvalid), OT_NOOP);
+    VerifyOrExit((aShortAddress != Mac::kShortAddrBroadcast) && (aShortAddress != Mac::kShortAddrInvalid));
     neighbor = FindNeighbor(Neighbor::AddressMatcher(aShortAddress, aFilter));
 
 exit:
@@ -171,7 +171,7 @@ Neighbor *NeighborTable::FindRxOnlyNeighborRouter(const Mac::Address &aMacAddres
 {
     Neighbor *neighbor = nullptr;
 
-    VerifyOrExit(Get<Mle::Mle>().IsChild(), OT_NOOP);
+    VerifyOrExit(Get<Mle::Mle>().IsChild());
     neighbor = Get<RouterTable>().GetNeighbor(aMacAddress);
 
 exit:
@@ -240,10 +240,10 @@ otError NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Ne
 {
     otError error = OT_ERROR_NOT_FOUND;
 
-    VerifyOrExit(aIterator == OT_NEIGHBOR_INFO_ITERATOR_INIT, OT_NOOP);
+    VerifyOrExit(aIterator == OT_NEIGHBOR_INFO_ITERATOR_INIT);
 
     aIterator++;
-    VerifyOrExit(Get<Mle::Mle>().GetParent().IsStateValid(), OT_NOOP);
+    VerifyOrExit(Get<Mle::Mle>().GetParent().IsStateValid());
 
     aNeighInfo.SetFrom(Get<Mle::Mle>().GetParent());
     aNeighInfo.mIsChild = false;

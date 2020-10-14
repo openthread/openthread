@@ -116,9 +116,59 @@ void TestMacros(void)
     VerifyOrQuit(OT_SECOND_ARG(1, 2) == 2, "OT_SECOND_ARG() failed");
 }
 
+void TestVerifyOrExitSuccessNoAction(void)
+{
+    bool reachedEnd = false;
+
+    VerifyOrExit(true);
+    reachedEnd = true;
+
+exit:
+    VerifyOrQuit(reachedEnd, "VerifyOrExit() failed");
+}
+
+void TestVerifyOrExitFailureNoAction(void)
+{
+    bool reachedEnd = false;
+
+    VerifyOrExit(false);
+    reachedEnd = true;
+
+exit:
+    VerifyOrQuit(!reachedEnd, "VerifyOrExit() failed");
+}
+
+void TestVerifyOrExitSuccessWithAction(void)
+{
+    bool didAction  = false;
+    bool reachedEnd = false;
+
+    VerifyOrExit(true, didAction = true);
+    reachedEnd = true;
+
+exit:
+    VerifyOrQuit(reachedEnd && !didAction, "VerifyOrExit() failed");
+}
+
+void TestVerifyOrExitFailureWithAction(void)
+{
+    bool didAction  = false;
+    bool reachedEnd = false;
+
+    VerifyOrExit(false, didAction = true);
+    reachedEnd = true;
+
+exit:
+    VerifyOrQuit(!reachedEnd && didAction, "VerifyOrExit() failed");
+}
+
 int main(void)
 {
     TestMacros();
+    TestVerifyOrExitSuccessNoAction();
+    TestVerifyOrExitFailureNoAction();
+    TestVerifyOrExitSuccessWithAction();
+    TestVerifyOrExitFailureWithAction();
     printf("All tests passed\n");
     return 0;
 }

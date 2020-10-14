@@ -105,7 +105,7 @@ uint16_t ChannelMonitor::GetChannelOccupancy(uint8_t aChannel) const
 {
     uint16_t occupancy = 0;
 
-    VerifyOrExit((Radio::kChannelMin <= aChannel) && (aChannel <= Radio::kChannelMax), OT_NOOP);
+    VerifyOrExit((Radio::kChannelMin <= aChannel) && (aChannel <= Radio::kChannelMax));
     occupancy = mChannelOccupancy[aChannel - Radio::kChannelMin];
 
 exit:

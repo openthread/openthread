@@ -697,7 +697,7 @@ const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix,
     {
         prefixTlv = FindTlv<PrefixTlv>(start, end);
 
-        VerifyOrExit(prefixTlv != nullptr, OT_NOOP);
+        VerifyOrExit(prefixTlv != nullptr);
 
         if (prefixTlv->IsEqual(aPrefix, aPrefixLength))
         {
@@ -734,7 +734,7 @@ const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
     {
         serviceTlv = FindTlv<ServiceTlv>(start, end);
 
-        VerifyOrExit(serviceTlv != nullptr, OT_NOOP);
+        VerifyOrExit(serviceTlv != nullptr);
 
         if ((serviceTlv->GetEnterpriseNumber() == aEnterpriseNumber) &&
             (serviceTlv->GetServiceDataLength() == aServiceDataLength) &&

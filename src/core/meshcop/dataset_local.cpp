@@ -106,7 +106,7 @@ otError DatasetLocal::Read(Dataset &aDataset) const
     else
     {
         delayTimer = aDataset.GetTlv<DelayTimerTlv>();
-        VerifyOrExit(delayTimer, OT_NOOP);
+        VerifyOrExit(delayTimer);
 
         elapsed = TimerMilli::GetNow() - mUpdateTime;
 
