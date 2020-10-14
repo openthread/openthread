@@ -2,7 +2,7 @@
 Harness Automation Tool
 =======================
 
-This is a tool to automate testing openthread with GRL Test Harness Release 2.0.1 for Thread V1.1
+This is a tool to automate testing openthread with GRL Test Harness Release 2.0.1 for Thread V1.1.
 
 -----------
 Get Started
