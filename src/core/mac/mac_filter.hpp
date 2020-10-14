@@ -38,6 +38,7 @@
 
 #include <stdint.h>
 
+#include "common/non_copyable.hpp"
 #include "mac/mac_frame.hpp"
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
@@ -56,7 +57,7 @@ namespace Mac {
  * This class implements Mac Filter on IEEE 802.15.4 frames.
  *
  */
-class Filter
+class Filter : private NonCopyable
 {
 public:
     /**

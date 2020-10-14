@@ -39,6 +39,7 @@
 #include "coap/coap.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
@@ -61,7 +62,7 @@ namespace ot {
  * This class implements the EID-to-RLOC mapping and caching.
  *
  */
-class AddressResolver : public InstanceLocator
+class AddressResolver : public InstanceLocator, private NonCopyable
 {
     friend class TimeTicker;
 

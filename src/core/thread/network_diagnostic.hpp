@@ -40,6 +40,7 @@
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
 
@@ -60,7 +61,7 @@ namespace NetworkDiagnostic {
  * This class implements the Network Diagnostic processing.
  *
  */
-class NetworkDiagnostic : public InstanceLocator
+class NetworkDiagnostic : public InstanceLocator, private NonCopyable
 {
 public:
     enum

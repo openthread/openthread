@@ -45,6 +45,7 @@
 #include "backbone_router/multicast_listeners_table.hpp"
 #include "backbone_router/ndproxy_table.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "net/netif.hpp"
 #include "thread/network_data.hpp"
 
@@ -56,7 +57,7 @@ namespace BackboneRouter {
  * This class implements the definitions for Backbone Router management.
  *
  */
-class Manager : public InstanceLocator
+class Manager : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
 

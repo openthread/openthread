@@ -42,6 +42,7 @@
 
 #include "backbone_router/bbr_leader.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "net/netif.hpp"
 #include "thread/network_data.hpp"
 
@@ -53,7 +54,7 @@ namespace BackboneRouter {
  * This class implements the definitions for local Backbone Router service.
  *
  */
-class Local : public InstanceLocator
+class Local : public InstanceLocator, private NonCopyable
 {
 public:
     typedef otBackboneRouterState BackboneRouterState;

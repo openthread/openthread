@@ -38,6 +38,7 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_headers.hpp"
 
@@ -186,7 +187,7 @@ private:
  * This class implements MPL message processing.
  *
  */
-class Mpl : public InstanceLocator
+class Mpl : public InstanceLocator, private NonCopyable
 {
 public:
     /**

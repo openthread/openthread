@@ -39,6 +39,7 @@
 #include <stdint.h>
 
 #include "coap/coap.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/mle_router.hpp"
@@ -62,7 +63,7 @@ namespace NetworkData {
  * This class implements the Thread Network Data maintained by the Leader.
  *
  */
-class Leader : public LeaderBase
+class Leader : public LeaderBase, private NonCopyable
 {
 public:
     /**

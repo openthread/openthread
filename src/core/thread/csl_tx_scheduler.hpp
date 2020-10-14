@@ -33,6 +33,7 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/time.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
@@ -57,7 +58,7 @@ class Child;
  * This class implements CSL tx scheduling functionality.
  *
  */
-class CslTxScheduler : public InstanceLocator
+class CslTxScheduler : public InstanceLocator, private NonCopyable
 {
     friend class Mac::Mac;
     friend class IndirectSender;
