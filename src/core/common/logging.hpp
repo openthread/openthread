@@ -42,6 +42,8 @@
 #include <openthread/logging.h>
 #include <openthread/platform/logging.h>
 
+#include "common/arg_macros.hpp"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -124,7 +126,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_CRIT
-#define otLogCrit(aRegion, ...) _otLogFormatter(OT_LOG_LEVEL_CRIT, aRegion, _OT_LEVEL_CRIT_PREFIX __VA_ARGS__, NULL)
+#define otLogCrit(aRegion, ...) _otLogFormatter(OT_LOG_LEVEL_CRIT, aRegion, _OT_LEVEL_CRIT_PREFIX __VA_ARGS__)
 #else
 #define otLogCrit(aRegion, ...)
 #endif
@@ -139,7 +141,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
-#define otLogWarn(aRegion, ...) _otLogFormatter(OT_LOG_LEVEL_WARN, aRegion, _OT_LEVEL_WARN_PREFIX __VA_ARGS__, NULL)
+#define otLogWarn(aRegion, ...) _otLogFormatter(OT_LOG_LEVEL_WARN, aRegion, _OT_LEVEL_WARN_PREFIX __VA_ARGS__)
 #else
 #define otLogWarn(aRegion, ...)
 #endif
@@ -154,7 +156,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
-#define otLogNote(aRegion, ...) _otLogFormatter(OT_LOG_LEVEL_NOTE, aRegion, _OT_LEVEL_NOTE_PREFIX __VA_ARGS__, NULL)
+#define otLogNote(aRegion, ...) _otLogFormatter(OT_LOG_LEVEL_NOTE, aRegion, _OT_LEVEL_NOTE_PREFIX __VA_ARGS__)
 #else
 #define otLogNote(aRegion, ...)
 #endif
@@ -169,7 +171,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
-#define otLogInfo(aRegion, ...) _otLogFormatter(OT_LOG_LEVEL_INFO, aRegion, _OT_LEVEL_INFO_PREFIX __VA_ARGS__, NULL)
+#define otLogInfo(aRegion, ...) _otLogFormatter(OT_LOG_LEVEL_INFO, aRegion, _OT_LEVEL_INFO_PREFIX __VA_ARGS__)
 #else
 #define otLogInfo(aRegion, ...)
 #endif
@@ -184,7 +186,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
-#define otLogDebg(aRegion, ...) _otLogFormatter(OT_LOG_LEVEL_DEBG, aRegion, _OT_LEVEL_DEBG_PREFIX __VA_ARGS__, NULL)
+#define otLogDebg(aRegion, ...) _otLogFormatter(OT_LOG_LEVEL_DEBG, aRegion, _OT_LEVEL_DEBG_PREFIX __VA_ARGS__)
 #else
 #define otLogDebg(aRegion, ...)
 #endif
@@ -1040,7 +1042,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-#define otLogCertMeshCoP(...) _otLogFormatter(OT_LOG_LEVEL_NONE, OT_LOG_REGION_MESH_COP, __VA_ARGS__, NULL)
+#define otLogCertMeshCoP(...) _otLogFormatter(OT_LOG_LEVEL_NONE, OT_LOG_REGION_MESH_COP, __VA_ARGS__)
 #else
 #define otLogCertMeshCoP(...)
 #endif
@@ -1288,7 +1290,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
-#define otLogOtns(...) _otLogFormatter(OT_LOG_LEVEL_NONE, OT_LOG_REGION_CORE, _OT_LEVEL_NONE_PREFIX __VA_ARGS__, NULL)
+#define otLogOtns(...) _otLogFormatter(OT_LOG_LEVEL_NONE, OT_LOG_REGION_CORE, _OT_LEVEL_NONE_PREFIX __VA_ARGS__)
 #endif
 
 /**
@@ -2160,8 +2162,8 @@ const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
 /**
  * Local/private macro to format the log message
  */
-#define _otLogFormatter(aLogLevel, aRegion, aFormat, ...) \
-    _otDynamicLog(aLogLevel, aRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, __VA_ARGS__)
+#define _otLogFormatter(aLogLevel, aRegion, ...) \
+    _otDynamicLog(aLogLevel, aRegion, OT_FIRST_ARG(__VA_ARGS__) OPENTHREAD_CONFIG_LOG_SUFFIX OT_REST_ARGS(__VA_ARGS__))
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE == 1
 
