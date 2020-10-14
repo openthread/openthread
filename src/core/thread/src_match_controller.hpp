@@ -38,6 +38,7 @@
 
 #include <openthread/error.h>
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 
 namespace ot {
 
@@ -65,7 +66,7 @@ class Child;
  * address or an extended/long address can be added to the source address match table.
  *
  */
-class SourceMatchController : public InstanceLocator
+class SourceMatchController : public InstanceLocator, private NonCopyable
 {
 public:
     /**

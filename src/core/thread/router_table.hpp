@@ -35,6 +35,7 @@
 
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_tlvs.hpp"
@@ -42,7 +43,7 @@
 
 namespace ot {
 
-class RouterTable : public InstanceLocator
+class RouterTable : public InstanceLocator, private NonCopyable
 {
     friend class NeighborTable;
     class IteratorBuilder;

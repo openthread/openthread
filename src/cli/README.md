@@ -49,6 +49,7 @@ Done
 - [extpanid](#extpanid)
 - [factoryreset](#factoryreset)
 - [fake](#fake)
+- [fem](#fem)
 - [ifconfig](#ifconfig)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
@@ -330,7 +331,7 @@ Done
 
 ### ccathreshold
 
-Get the CCA threshold in dBm.
+Get the CCA threshold in dBm measured at antenna connector per IEEE 802.15.4 - 2015 section 10.1.4.
 
 ```bash
 > ccathreshold
@@ -340,7 +341,7 @@ Done
 
 ### ccathreshold \<ccathreshold\>
 
-Set the CCA threshold.
+Set the CCA threshold measured at antenna connector per IEEE 802.15.4 - 2015 section 10.1.4.
 
 ```bash
 > ccathreshold -62
@@ -865,6 +866,35 @@ Note: Only for certification test.
 
 ```bash
 > fake /a/an fdde:ad00:beef:0:0:ff:fe00:a800 fd00:7d03:7d03:7d03:55f2:bb6a:7a43:a03b 1111222233334444
+Done
+```
+
+### fem
+
+Get external FEM parameters.
+
+```bash
+> fem
+LNA gain 11 dBm
+Done
+```
+
+### fem lnagain
+
+Get the Rx LNA gain in dBm of the external FEM.
+
+```bash
+> fem lnagain
+11
+Done
+```
+
+### fem lnagain \<LNA gain\>
+
+Set the Rx LNA gain in dBm of the external FEM.
+
+```bash
+> fem lnagain 8
 Done
 ```
 
@@ -1945,7 +1975,7 @@ Done
 
 ### txpower \<txpower\>
 
-Set the transmit power.
+Set the transmit power in dBm.
 
 ```bash
 > txpower -10

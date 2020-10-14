@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/channel_mask.hpp"
 #include "mac/mac.hpp"
@@ -54,7 +55,7 @@ namespace Mle {
  * This class implements MLE Discover Scan.
  *
  */
-class DiscoverScanner : public InstanceLocator
+class DiscoverScanner : public InstanceLocator, private NonCopyable
 {
     friend class ot::Instance;
     friend class ot::MeshForwarder;

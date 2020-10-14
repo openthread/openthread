@@ -42,6 +42,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 
 #include "link_metrics_tlvs.hpp"
 #include "topology.hpp"
@@ -57,7 +58,7 @@ namespace ot {
  * @{
  */
 
-class LinkMetrics : public InstanceLocator
+class LinkMetrics : public InstanceLocator, private NonCopyable
 {
 public:
     /**

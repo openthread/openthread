@@ -39,6 +39,7 @@
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/channel_mask.hpp"
 #include "meshcop/dataset.hpp"
@@ -359,7 +360,7 @@ private:
 #endif // OPENTHREAD_FTD
 };
 
-class ActiveDataset : public DatasetManager
+class ActiveDataset : public DatasetManager, private NonCopyable
 {
 public:
     /**
@@ -489,7 +490,7 @@ private:
 #endif
 };
 
-class PendingDataset : public DatasetManager
+class PendingDataset : public DatasetManager, private NonCopyable
 {
 public:
     /**

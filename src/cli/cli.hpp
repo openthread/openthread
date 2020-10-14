@@ -332,6 +332,7 @@ private:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     otError ProcessFake(uint8_t aArgsLength, char *aArgs[]);
 #endif
+    otError ProcessFem(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIfconfig(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIpAddr(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIpAddrAdd(uint8_t aArgsLength, char *aArgs[]);
@@ -601,6 +602,7 @@ private:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         {"fake", &Interpreter::ProcessFake},
 #endif
+        {"fem", &Interpreter::ProcessFem},
         {"help", &Interpreter::ProcessHelp},
         {"ifconfig", &Interpreter::ProcessIfconfig},
         {"ipaddr", &Interpreter::ProcessIpAddr},

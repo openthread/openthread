@@ -38,6 +38,7 @@
 
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "meshcop/joiner_router.hpp"
@@ -89,7 +90,7 @@ namespace Mle {
  * This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
  *
  */
-class Mle : public InstanceLocator
+class Mle : public InstanceLocator, private NonCopyable
 {
     friend class DiscoverScanner;
     friend class ot::Notifier;

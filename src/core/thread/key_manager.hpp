@@ -43,6 +43,7 @@
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/random.hpp"
 #include "common/timer.hpp"
 #include "crypto/hmac_sha256.hpp"
@@ -111,7 +112,7 @@ typedef Mac::Key Kek;
  * This class defines Thread Key Manager.
  *
  */
-class KeyManager : public InstanceLocator
+class KeyManager : public InstanceLocator, private NonCopyable
 {
 public:
     /**

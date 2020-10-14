@@ -38,6 +38,7 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
 #include "mac/mac.hpp"
@@ -64,7 +65,7 @@ namespace Dhcp6 {
  * This class implements DHCPv6 Client.
  *
  */
-class Client : public InstanceLocator
+class Client : public InstanceLocator, private NonCopyable
 {
 public:
     /**

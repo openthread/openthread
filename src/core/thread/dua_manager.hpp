@@ -42,6 +42,7 @@
 #include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/tasklet.hpp"
 #include "common/time.hpp"
@@ -71,7 +72,7 @@ namespace ot {
  * This class implements managing DUA.
  *
  */
-class DuaManager : public InstanceLocator
+class DuaManager : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
     friend class ot::TimeTicker;

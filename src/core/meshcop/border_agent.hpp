@@ -40,6 +40,7 @@
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "net/udp6.hpp"
 
@@ -49,7 +50,7 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class BorderAgent : public InstanceLocator
+class BorderAgent : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
 
