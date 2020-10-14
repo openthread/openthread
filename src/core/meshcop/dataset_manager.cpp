@@ -39,6 +39,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "common/notifier.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "radio/radio.hpp"
@@ -102,6 +103,8 @@ otError DatasetManager::Restore(void)
         IgnoreError(dataset.ApplyConfiguration(GetInstance()));
     }
 
+    SignalDatasetChange();
+
 exit:
     return error;
 }
@@ -124,6 +127,7 @@ void DatasetManager::Clear(void)
     mTimestampValid = false;
     mLocal.Clear();
     mTimer.Stop();
+    SignalDatasetChange();
 }
 
 void DatasetManager::HandleDetach(void)
@@ -166,6 +170,8 @@ otError DatasetManager::Save(const Dataset &aDataset)
         VerifyOrExit(!Get<Mle::MleRouter>().IsLeader(), error = OT_ERROR_INVALID_STATE);
         SendSet();
     }
+
+    SignalDatasetChange();
 
 exit:
     return error;
@@ -218,6 +224,14 @@ void DatasetManager::HandleDatasetUpdated(void)
     default:
         break;
     }
+
+    SignalDatasetChange();
+}
+
+void DatasetManager::SignalDatasetChange(void) const
+{
+    Get<Notifier>().Signal(mLocal.GetType() == Dataset::kActive ? kEventActiveDatasetChanged
+                                                                : kEventPendingDatasetChanged);
 }
 
 otError DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
