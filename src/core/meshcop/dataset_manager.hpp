@@ -336,6 +336,7 @@ private:
 
     bool IsActiveDataset(void) const { return GetType() == Dataset::kActive; }
     bool IsPendingDataset(void) const { return GetType() == Dataset::kPending; }
+    void SignalDatasetChange(void) const;
     void HandleDatasetUpdated(void);
     void SendSet(void);
     void SendGetResponse(const Coap::Message &   aRequest,

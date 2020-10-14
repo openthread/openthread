@@ -353,6 +353,14 @@ const char *Notifier::EventToString(Event aEvent) const
     case kEventJoinerStateChanged:
         retval = "JoinerState";
         break;
+
+    case kEventActiveDatasetChanged:
+        retval = "ActDset";
+        break;
+
+    case kEventPendingDatasetChanged:
+        retval = "PndDset";
+        break;
     }
 
     return retval;
