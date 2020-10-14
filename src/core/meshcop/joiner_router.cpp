@@ -74,13 +74,13 @@ void JoinerRouter::HandleNotifierEvents(Events aEvents)
 
 void JoinerRouter::Start(void)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice(), OT_NOOP);
+    VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice());
 
     if (Get<NetworkData::Leader>().IsJoiningEnabled())
     {
         uint16_t port = GetJoinerUdpPort();
 
-        VerifyOrExit(!mSocket.IsBound(), OT_NOOP);
+        VerifyOrExit(!mSocket.IsBound());
 
         IgnoreError(mSocket.Open(&JoinerRouter::HandleUdpReceive, this));
         IgnoreError(mSocket.Bind(port));
@@ -89,7 +89,7 @@ void JoinerRouter::Start(void)
     }
     else
     {
-        VerifyOrExit(mSocket.IsBound(), OT_NOOP);
+        VerifyOrExit(mSocket.IsBound());
 
         IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(mSocket.GetSockName().mPort));
 
@@ -109,7 +109,7 @@ uint16_t JoinerRouter::GetJoinerUdpPort(void)
 
     joinerUdpPort = static_cast<const JoinerUdpPortTlv *>(
         Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kJoinerUdpPort));
-    VerifyOrExit(joinerUdpPort != nullptr, OT_NOOP);
+    VerifyOrExit(joinerUdpPort != nullptr);
 
     rval = joinerUdpPort->GetUdpPort();
 
@@ -265,8 +265,8 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     JoinerEntrustMetadata metadata;
     Message *             message = mDelayedJoinEnts.GetHead();
 
-    VerifyOrExit(message != nullptr, OT_NOOP);
-    VerifyOrExit(!mTimer.IsRunning(), OT_NOOP);
+    VerifyOrExit(message != nullptr);
+    VerifyOrExit(!mTimer.IsRunning());
 
     metadata.ReadFrom(*message);
 
@@ -413,9 +413,9 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message *         aMessage,
 
     SendDelayedJoinerEntrust();
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage != nullptr, OT_NOOP);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage != nullptr);
 
-    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, OT_NOOP);
+    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged);
 
     otLogInfoMeshCoP("Receive joiner entrust response");
     otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.rsp");

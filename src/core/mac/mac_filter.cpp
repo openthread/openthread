@@ -162,7 +162,7 @@ void Filter::RemoveRssIn(const ExtAddress &aExtAddress)
 {
     FilterEntry *entry = FindEntry(aExtAddress);
 
-    VerifyOrExit(entry != nullptr, OT_NOOP);
+    VerifyOrExit(entry != nullptr);
 
     entry->mRssIn = kFixedRssDisabled;
 

@@ -343,10 +343,10 @@ BorderAgent::BorderAgent(Instance &aInstance)
 
 void BorderAgent::HandleNotifierEvents(Events aEvents)
 {
-    VerifyOrExit(aEvents.ContainsAny(kEventThreadRoleChanged | kEventCommissionerStateChanged), OT_NOOP);
+    VerifyOrExit(aEvents.ContainsAny(kEventThreadRoleChanged | kEventCommissionerStateChanged));
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-    VerifyOrExit(Get<MeshCoP::Commissioner>().IsDisabled(), OT_NOOP);
+    VerifyOrExit(Get<MeshCoP::Commissioner>().IsDisabled());
 #endif
 
     if (Get<Mle::MleRouter>().IsAttached())
@@ -503,7 +503,7 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
     Ip6::MessageInfo messageInfo;
     uint16_t         offset = 0;
 
-    VerifyOrExit(aMessage.IsNonConfirmablePostRequest(), OT_NOOP);
+    VerifyOrExit(aMessage.IsNonConfirmablePostRequest());
 
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kJoinerRouterLocator, joinerRouterRloc));
 
@@ -696,7 +696,7 @@ void BorderAgent::SetState(otBorderAgentState aState)
 
 void BorderAgent::ApplyMeshLocalPrefix(void)
 {
-    VerifyOrExit(mState == OT_BORDER_AGENT_STATE_ACTIVE, OT_NOOP);
+    VerifyOrExit(mState == OT_BORDER_AGENT_STATE_ACTIVE);
 
     if (Get<ThreadNetif>().HasUnicastAddress(mCommissionerAloc))
     {

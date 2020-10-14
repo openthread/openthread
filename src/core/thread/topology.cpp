@@ -45,16 +45,16 @@ bool Neighbor::AddressMatcher::Matches(const Neighbor &aNeighbor) const
 {
     bool matches = false;
 
-    VerifyOrExit(aNeighbor.MatchesFilter(mStateFilter), OT_NOOP);
+    VerifyOrExit(aNeighbor.MatchesFilter(mStateFilter));
 
     if (mShortAddress != Mac::kShortAddrInvalid)
     {
-        VerifyOrExit(mShortAddress == aNeighbor.GetRloc16(), OT_NOOP);
+        VerifyOrExit(mShortAddress == aNeighbor.GetRloc16());
     }
 
     if (mExtAddress != nullptr)
     {
-        VerifyOrExit(*mExtAddress == aNeighbor.GetExtAddress(), OT_NOOP);
+        VerifyOrExit(*mExtAddress == aNeighbor.GetExtAddress());
     }
 
     matches = true;
@@ -204,7 +204,7 @@ void Child::AddressIterator::Update(void)
 
         VerifyOrExit((address != nullptr) && !address->IsUnspecified(), mIndex = kMaxIndex);
 
-        VerifyOrExit(!address->MatchesFilter(mFilter), OT_NOOP);
+        VerifyOrExit(!address->MatchesFilter(mFilter));
         mIndex++;
     }
 
@@ -293,7 +293,7 @@ otError Child::RemoveIp6Address(const Ip6::Address &aAddress)
 
     for (index = 0; index < kNumIp6Addresses; index++)
     {
-        VerifyOrExit(!mIp6Address[index].IsUnspecified(), OT_NOOP);
+        VerifyOrExit(!mIp6Address[index].IsUnspecified());
 
         if (mIp6Address[index] == aAddress)
         {
@@ -319,7 +319,7 @@ bool Child::HasIp6Address(const Ip6::Address &aAddress) const
 {
     bool retval = false;
 
-    VerifyOrExit(!aAddress.IsUnspecified(), OT_NOOP);
+    VerifyOrExit(!aAddress.IsUnspecified());
 
     if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
@@ -329,7 +329,7 @@ bool Child::HasIp6Address(const Ip6::Address &aAddress) const
 
     for (const Ip6::Address &ip6Address : mIp6Address)
     {
-        VerifyOrExit(!ip6Address.IsUnspecified(), OT_NOOP);
+        VerifyOrExit(!ip6Address.IsUnspecified());
 
         if (ip6Address == aAddress)
         {
@@ -348,7 +348,7 @@ const Ip6::Address *Child::GetDomainUnicastAddress(void) const
 
     for (const Ip6::Address &ip6Address : mIp6Address)
     {
-        VerifyOrExit(!ip6Address.IsUnspecified(), OT_NOOP);
+        VerifyOrExit(!ip6Address.IsUnspecified());
 
         if (Get<BackboneRouter::Leader>().IsDomainUnicast(ip6Address))
         {
@@ -371,7 +371,7 @@ bool Child::HasMlrRegisteredAddress(const Ip6::Address &aAddress) const
 {
     bool has = false;
 
-    VerifyOrExit(mMlrRegisteredMask.HasAny(), OT_NOOP);
+    VerifyOrExit(mMlrRegisteredMask.HasAny());
 
     for (const Ip6::Address &address : IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
     {

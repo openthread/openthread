@@ -59,11 +59,11 @@ AnnounceSenderBase::AnnounceSenderBase(Instance &aInstance, Timer::Handler aHand
 
 void AnnounceSenderBase::SendAnnounce(Mac::ChannelMask aChannelMask, uint8_t aCount, uint32_t aPeriod, uint16_t aJitter)
 {
-    VerifyOrExit(aPeriod != 0, OT_NOOP);
-    VerifyOrExit(aJitter < aPeriod, OT_NOOP);
+    VerifyOrExit(aPeriod != 0);
+    VerifyOrExit(aJitter < aPeriod);
 
     aChannelMask.Intersect(Get<Mac::Mac>().GetSupportedChannelMask());
-    VerifyOrExit(!aChannelMask.IsEmpty(), OT_NOOP);
+    VerifyOrExit(!aChannelMask.IsEmpty());
 
     mChannelMask = aChannelMask;
     mCount       = aCount;
@@ -91,7 +91,7 @@ void AnnounceSenderBase::HandleTimer(void)
         if (mCount != 0)
         {
             mCount--;
-            VerifyOrExit(mCount != 0, OT_NOOP);
+            VerifyOrExit(mCount != 0);
         }
 
         mChannel = Mac::ChannelMask::kChannelIteratorFirst;
@@ -160,7 +160,7 @@ void AnnounceSender::CheckState(void)
         period = kMinTxPeriod;
     }
 
-    VerifyOrExit(!IsRunning() || (period != GetPeriod()) || (GetChannelMask() != channelMask), OT_NOOP);
+    VerifyOrExit(!IsRunning() || (period != GetPeriod()) || (GetChannelMask() != channelMask));
 
     SendAnnounce(channelMask, 0, period, kMaxJitter);
 

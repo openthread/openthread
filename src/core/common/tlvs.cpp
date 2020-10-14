@@ -119,7 +119,7 @@ otError Tlv::Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uin
     Tlv      tlv;
     uint32_t size;
 
-    VerifyOrExit(offset <= remainingLen, OT_NOOP);
+    VerifyOrExit(offset <= remainingLen);
     remainingLen -= offset;
 
     while (true)
@@ -136,11 +136,11 @@ otError Tlv::Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uin
 
             SuccessOrExit(aMessage.Read(offset, extTlv));
 
-            VerifyOrExit(extTlv.GetLength() <= (remainingLen - sizeof(ExtendedTlv)), OT_NOOP);
+            VerifyOrExit(extTlv.GetLength() <= (remainingLen - sizeof(ExtendedTlv)));
             size = extTlv.GetSize();
         }
 
-        VerifyOrExit(size <= remainingLen, OT_NOOP);
+        VerifyOrExit(size <= remainingLen);
 
         if (tlv.GetType() == aType)
         {
@@ -295,7 +295,7 @@ otError Tlv::AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uin
     tlv.SetLength(aLength);
     SuccessOrExit(error = aMessage.Append(tlv));
 
-    VerifyOrExit(aLength > 0, OT_NOOP);
+    VerifyOrExit(aLength > 0);
     error = aMessage.AppendBytes(aValue, aLength);
 
 exit:

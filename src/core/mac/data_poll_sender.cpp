@@ -71,7 +71,7 @@ const Neighbor &DataPollSender::GetParent(void) const
 
 void DataPollSender::StartPolling(void)
 {
-    VerifyOrExit(!mEnabled, OT_NOOP);
+    VerifyOrExit(!mEnabled);
 
     OT_ASSERT(!Get<Mle::MleRouter>().IsRxOnWhenIdle());
 
@@ -203,7 +203,7 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, otError aError)
     Mac::Address macDest;
     bool         shouldRecalculatePollPeriod = false;
 
-    VerifyOrExit(mEnabled, OT_NOOP);
+    VerifyOrExit(mEnabled);
 
     if (!aFrame.IsEmpty())
     {
@@ -287,7 +287,7 @@ void DataPollSender::HandlePollTimeout(void)
     // a data poll indicated that a frame was pending, but no frame
     // was received after timeout interval.
 
-    VerifyOrExit(mEnabled, OT_NOOP);
+    VerifyOrExit(mEnabled);
 
     mPollTimeoutCounter++;
 
@@ -308,7 +308,7 @@ exit:
 
 void DataPollSender::ProcessFrame(const Mac::RxFrame &aFrame)
 {
-    VerifyOrExit(mEnabled, OT_NOOP);
+    VerifyOrExit(mEnabled);
 
     mPollTimeoutCounter = 0;
 
@@ -380,15 +380,15 @@ void DataPollSender::SendFastPolls(uint8_t aNumFastPolls)
 
 void DataPollSender::StopFastPolls(void)
 {
-    VerifyOrExit(mFastPollsUsers != 0, OT_NOOP);
+    VerifyOrExit(mFastPollsUsers != 0);
 
     // If `mFastPollsUsers` hits the max, let it be cleared
     // from `HandlePollSent()` (after all fast polls are sent).
-    VerifyOrExit(mFastPollsUsers < kMaxFastPollsUsers, OT_NOOP);
+    VerifyOrExit(mFastPollsUsers < kMaxFastPollsUsers);
 
     mFastPollsUsers--;
 
-    VerifyOrExit(mFastPollsUsers == 0, OT_NOOP);
+    VerifyOrExit(mFastPollsUsers == 0);
 
     mRemainingFastPolls = 0;
     ScheduleNextPoll(kRecalculatePollPeriod);

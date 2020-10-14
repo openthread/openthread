@@ -121,7 +121,7 @@ Instance &Instance::InitSingle(void)
 {
     Instance *instance = &Get();
 
-    VerifyOrExit(!instance->mIsInitialized, OT_NOOP);
+    VerifyOrExit(!instance->mIsInitialized);
 
     instance = new (&gInstanceRaw) Instance();
 
@@ -144,12 +144,12 @@ Instance *Instance::Init(void *aBuffer, size_t *aBufferSize)
 {
     Instance *instance = nullptr;
 
-    VerifyOrExit(aBufferSize != nullptr, OT_NOOP);
+    VerifyOrExit(aBufferSize != nullptr);
 
     // Make sure the input buffer is big enough
     VerifyOrExit(sizeof(Instance) <= *aBufferSize, *aBufferSize = sizeof(Instance));
 
-    VerifyOrExit(aBuffer != nullptr, OT_NOOP);
+    VerifyOrExit(aBuffer != nullptr);
 
     instance = new (aBuffer) Instance();
 
@@ -185,7 +185,7 @@ void Instance::AfterInit(void)
 
 void Instance::Finalize(void)
 {
-    VerifyOrExit(mIsInitialized, OT_NOOP);
+    VerifyOrExit(mIsInitialized);
 
     mIsInitialized = false;
 

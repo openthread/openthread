@@ -50,7 +50,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     otError           error    = OT_ERROR_NONE;
     otMessageSettings settings;
 
-    VerifyOrExit(size > 0, OT_NOOP);
+    VerifyOrExit(size > 0);
 
     FuzzerPlatformInit();
 
@@ -73,7 +73,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     message = nullptr;
 
-    VerifyOrExit(!FuzzerPlatformResetWasRequested(), OT_NOOP);
+    VerifyOrExit(!FuzzerPlatformResetWasRequested());
 
     for (int i = 0; i < MAX_ITERATIONS; i++)
     {

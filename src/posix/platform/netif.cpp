@@ -443,7 +443,7 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
 
     assert(sInstance == aInstance);
 
-    VerifyOrExit(sIpFd >= 0, OT_NOOP);
+    VerifyOrExit(sIpFd >= 0);
     memcpy(&mreq.ipv6mr_multiaddr, &aAddress, sizeof(mreq.ipv6mr_multiaddr));
     mreq.ipv6mr_interface = gNetifIndex;
 
@@ -486,7 +486,7 @@ static void UpdateLink(otInstance *aInstance)
 
     assert(sInstance == aInstance);
 
-    VerifyOrExit(sIpFd >= 0, OT_NOOP);
+    VerifyOrExit(sIpFd >= 0);
     memset(&ifr, 0, sizeof(ifr));
     strncpy(ifr.ifr_name, gNetifName, sizeof(ifr.ifr_name));
     VerifyOrExit(ioctl(sIpFd, SIOCGIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
@@ -550,7 +550,7 @@ static void processReceive(otMessage *aMessage, void *aContext)
     assert(sInstance == aContext);
     assert(length <= kMaxIp6Size);
 
-    VerifyOrExit(sTunFd > 0, OT_NOOP);
+    VerifyOrExit(sTunFd > 0);
 
     VerifyOrExit(otMessageRead(aMessage, 0, &packet[offset], maxLength) == length, error = OT_ERROR_NO_BUFS);
 
@@ -671,8 +671,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     otError             error = OT_ERROR_NONE;
     struct sockaddr_in6 addr6;
 
-    VerifyOrExit(ifaddr->ifa_index == static_cast<unsigned int>(gNetifIndex) && ifaddr->ifa_family == AF_INET6,
-                 OT_NOOP);
+    VerifyOrExit(ifaddr->ifa_index == static_cast<unsigned int>(gNetifIndex) && ifaddr->ifa_family == AF_INET6);
 
     rtaLength = IFA_PAYLOAD(aNetlinkMessage);
 
@@ -770,7 +769,7 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     struct ifinfomsg *ifinfo = reinterpret_cast<struct ifinfomsg *>(NLMSG_DATA(aNetlinkMessage));
     otError           error  = OT_ERROR_NONE;
 
-    VerifyOrExit(ifinfo->ifi_index == static_cast<int>(gNetifIndex), OT_NOOP);
+    VerifyOrExit(ifinfo->ifi_index == static_cast<int>(gNetifIndex));
     SuccessOrExit(error = otIp6SetEnabled(aInstance, ifinfo->ifi_flags & IFF_UP));
 
 exit:
@@ -827,7 +826,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
     {
         ifam = reinterpret_cast<struct ifa_msghdr *>(rtm);
 
-        VerifyOrExit(ifam->ifam_index == static_cast<unsigned int>(gNetifIndex), OT_NOOP);
+        VerifyOrExit(ifam->ifam_index == static_cast<unsigned int>(gNetifIndex));
 
         addrbuf  = (uint8_t *)&ifam[1];
         addrmask = (unsigned int)ifam->ifam_addrs;
@@ -837,7 +836,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
     {
         ifmam = reinterpret_cast<struct ifma_msghdr *>(rtm);
 
-        VerifyOrExit(ifmam->ifmam_index == static_cast<unsigned int>(gNetifIndex), OT_NOOP);
+        VerifyOrExit(ifmam->ifmam_index == static_cast<unsigned int>(gNetifIndex));
 
         addrbuf  = (uint8_t *)&ifmam[1];
         addrmask = (unsigned int)ifmam->ifmam_addrs;
@@ -1011,7 +1010,7 @@ static void processNetifInfoEvent(otInstance *aInstance, struct rt_msghdr *rtm)
     struct if_msghdr *ifm   = reinterpret_cast<struct if_msghdr *>(rtm);
     otError           error = OT_ERROR_NONE;
 
-    VerifyOrExit(ifm->ifm_index == static_cast<int>(gNetifIndex), OT_NOOP);
+    VerifyOrExit(ifm->ifm_index == static_cast<int>(gNetifIndex));
 
     UpdateLink(aInstance);
 
@@ -1036,7 +1035,7 @@ static void processNetlinkEvent(otInstance *aInstance)
 
     length = recv(sNetlinkFd, buffer, sizeof(buffer), 0);
 
-    VerifyOrExit(length > 0, OT_NOOP);
+    VerifyOrExit(length > 0);
 
 #if defined(__linux__)
     for (struct nlmsghdr *msg = reinterpret_cast<struct nlmsghdr *>(buffer); NLMSG_OK(msg, static_cast<size_t>(length));
@@ -1177,13 +1176,13 @@ static void processMLDEvent(otInstance *aInstance)
     char                addressString[INET6_ADDRSTRLEN + 1];
 
     bufferLen = recvfrom(sMLDMonitorFd, buffer, sizeof(buffer), 0, reinterpret_cast<sockaddr *>(&srcAddr), &addrLen);
-    VerifyOrExit(bufferLen > 0, OT_NOOP);
+    VerifyOrExit(bufferLen > 0);
 
     type = buffer[0];
-    VerifyOrExit(type == kICMPv6MLDv2Type && bufferLen >= static_cast<ssize_t>(sizeof(MLDv2Header)), OT_NOOP);
+    VerifyOrExit(type == kICMPv6MLDv2Type && bufferLen >= static_cast<ssize_t>(sizeof(MLDv2Header)));
 
     // Check whether it is sent by self
-    VerifyOrExit(getifaddrs(&ifAddrs) == 0, OT_NOOP);
+    VerifyOrExit(getifaddrs(&ifAddrs) == 0);
     for (struct ifaddrs *ifAddr = ifAddrs; ifAddr != nullptr; ifAddr = ifAddr->ifa_next)
     {
         if (ifAddr->ifa_addr != nullptr && ifAddr->ifa_addr->sa_family == AF_INET6 &&
@@ -1198,7 +1197,7 @@ static void processMLDEvent(otInstance *aInstance)
             }
         }
     }
-    VerifyOrExit(fromSelf, OT_NOOP);
+    VerifyOrExit(fromSelf);
 
     hdr    = reinterpret_cast<MLDv2Header *>(buffer);
     offset = sizeof(MLDv2Header);
@@ -1473,7 +1472,7 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
 {
     OT_UNUSED_VARIABLE(aWriteFdSet);
 
-    VerifyOrExit(gNetifIndex > 0, OT_NOOP);
+    VerifyOrExit(gNetifIndex > 0);
 
     assert(sTunFd >= 0);
     assert(sNetlinkFd >= 0);
@@ -1511,7 +1510,7 @@ exit:
 void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet)
 {
     OT_UNUSED_VARIABLE(aWriteFdSet);
-    VerifyOrExit(gNetifIndex > 0, OT_NOOP);
+    VerifyOrExit(gNetifIndex > 0);
 
     if (FD_ISSET(sTunFd, aErrorFdSet))
     {

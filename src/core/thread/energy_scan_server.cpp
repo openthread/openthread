@@ -75,13 +75,13 @@ void EnergyScanServer::HandleRequest(Coap::Message &aMessage, const Ip6::Message
     Ip6::MessageInfo responseInfo(aMessageInfo);
     uint32_t         mask;
 
-    VerifyOrExit(aMessage.IsPostRequest(), OT_NOOP);
+    VerifyOrExit(aMessage.IsPostRequest());
 
     SuccessOrExit(Tlv::FindUint8Tlv(aMessage, MeshCoP::Tlv::kCount, count));
     SuccessOrExit(Tlv::FindUint16Tlv(aMessage, MeshCoP::Tlv::kPeriod, period));
     SuccessOrExit(Tlv::FindUint16Tlv(aMessage, MeshCoP::Tlv::kScanDuration, scanDuration));
 
-    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0, OT_NOOP);
+    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
     mChannelMask        = mask;
     mChannelMaskCurrent = mChannelMask;
@@ -111,7 +111,7 @@ void EnergyScanServer::HandleTimer(Timer &aTimer)
 
 void EnergyScanServer::HandleTimer(void)
 {
-    VerifyOrExit(mActive, OT_NOOP);
+    VerifyOrExit(mActive);
 
     if (mCount)
     {
@@ -135,11 +135,11 @@ void EnergyScanServer::HandleScanResult(Mac::EnergyScanResult *aResult, void *aC
 
 void EnergyScanServer::HandleScanResult(Mac::EnergyScanResult *aResult)
 {
-    VerifyOrExit(mActive, OT_NOOP);
+    VerifyOrExit(mActive);
 
     if (aResult)
     {
-        VerifyOrExit(mScanResultsLength < OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS, OT_NOOP);
+        VerifyOrExit(mScanResultsLength < OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS);
         mScanResults[mScanResultsLength++] = aResult->mMaxRssi;
     }
     else

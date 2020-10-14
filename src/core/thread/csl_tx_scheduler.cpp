@@ -213,7 +213,7 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError)
 {
     Child *child = mCslTxChild;
 
-    VerifyOrExit(child != nullptr, OT_NOOP); // The result is no longer interested by upper layer
+    VerifyOrExit(child != nullptr); // The result is no longer interested by upper layer
 
     mCslTxChild   = nullptr;
     mCslTxMessage = nullptr;

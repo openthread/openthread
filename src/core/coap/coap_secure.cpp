@@ -171,8 +171,7 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
     ot::Message *message = nullptr;
 
-    VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, Message::GetHelpDataReserved())) != nullptr,
-                 OT_NOOP);
+    VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, Message::GetHelpDataReserved())) != nullptr);
     SuccessOrExit(message->AppendBytes(aBuf, aLength));
 
     CoapBase::Receive(*message, mDtls.GetMessageInfo());
@@ -191,7 +190,7 @@ void CoapSecure::HandleTransmit(void)
     otError      error   = OT_ERROR_NONE;
     ot::Message *message = mTransmitQueue.GetHead();
 
-    VerifyOrExit(message != nullptr, OT_NOOP);
+    VerifyOrExit(message != nullptr);
     mTransmitQueue.Dequeue(*message);
 
     if (mTransmitQueue.GetHead() != nullptr)

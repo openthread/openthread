@@ -128,7 +128,7 @@ void Netif::SubscribeAllNodesMulticast(void)
     NetifMulticastAddress &linkLocalAllNodesAddress =
         static_cast<NetifMulticastAddress &>(const_cast<otNetifMulticastAddress &>(kLinkLocalAllNodesMulticastAddress));
 
-    VerifyOrExit(!mMulticastAddresses.Contains(linkLocalAllNodesAddress), OT_NOOP);
+    VerifyOrExit(!mMulticastAddresses.Contains(linkLocalAllNodesAddress));
 
     // Append the fixed chain of three multicast addresses to the
     // tail of the list:
@@ -148,7 +148,7 @@ void Netif::SubscribeAllNodesMulticast(void)
 
     Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    VerifyOrExit(mAddressCallback != nullptr);
 
     for (const NetifMulticastAddress *entry = &linkLocalAllNodesAddress; entry; entry = entry->GetNext())
     {
@@ -198,7 +198,7 @@ void Netif::UnsubscribeAllNodesMulticast(void)
 
     Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    VerifyOrExit(mAddressCallback != nullptr);
 
     for (const NetifMulticastAddress *entry = &linkLocalAllNodesAddress; entry; entry = entry->GetNext())
     {
@@ -245,7 +245,7 @@ void Netif::SubscribeAllRoutersMulticast(void)
     // `RealmLocalAllRouters` then all five addresses are on
     // the list already.
 
-    VerifyOrExit(prev != &realmLocalAllRoutersAddress, OT_NOOP);
+    VerifyOrExit(prev != &realmLocalAllRoutersAddress);
 
     if (prev == nullptr)
     {
@@ -258,7 +258,7 @@ void Netif::SubscribeAllRoutersMulticast(void)
 
     Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    VerifyOrExit(mAddressCallback != nullptr);
 
     for (const NetifMulticastAddress *entry = &linkLocalAllRoutersAddress; entry != &linkLocalAllNodesAddress;
          entry                              = entry->GetNext())
@@ -304,7 +304,7 @@ void Netif::UnsubscribeAllRoutersMulticast(void)
 
     Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    VerifyOrExit(mAddressCallback != nullptr);
 
     for (const NetifMulticastAddress *entry = &linkLocalAllRoutersAddress; entry != &linkLocalAllNodesAddress;
          entry                              = entry->GetNext())
@@ -330,7 +330,7 @@ void Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
 
     Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    VerifyOrExit(mAddressCallback != nullptr);
 
     {
         AddressInfo addressInfo(aAddress);
@@ -349,7 +349,7 @@ void Netif::UnsubscribeMulticast(const NetifMulticastAddress &aAddress)
 
     Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    VerifyOrExit(mAddressCallback != nullptr);
     {
         AddressInfo addressInfo(aAddress);
 
@@ -442,7 +442,7 @@ void Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
 
     Get<Notifier>().Signal(aAddress.mRloc ? kEventThreadRlocAdded : kEventIp6AddressAdded);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    VerifyOrExit(mAddressCallback != nullptr);
 
     {
         AddressInfo addressInfo(aAddress, GetInstance());
@@ -461,7 +461,7 @@ void Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
 
     Get<Notifier>().Signal(aAddress.mRloc ? kEventThreadRlocRemoved : kEventIp6AddressRemoved);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    VerifyOrExit(mAddressCallback != nullptr);
     {
         AddressInfo addressInfo(aAddress, GetInstance());
 

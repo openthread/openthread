@@ -126,7 +126,7 @@ void TimerScheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
 
 void TimerScheduler::Remove(Timer &aTimer, const AlarmApi &aAlarmApi)
 {
-    VerifyOrExit(aTimer.IsRunning(), OT_NOOP);
+    VerifyOrExit(aTimer.IsRunning());
 
     if (mTimerList.GetHead() == &aTimer)
     {
@@ -188,7 +188,7 @@ extern "C" void otPlatAlarmMilliFired(otInstance *aInstance)
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(otInstanceIsInitialized(aInstance), OT_NOOP);
+    VerifyOrExit(otInstanceIsInitialized(aInstance));
     instance->Get<TimerMilliScheduler>().ProcessTimers();
 
 exit:
@@ -224,7 +224,7 @@ extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(otInstanceIsInitialized(aInstance), OT_NOOP);
+    VerifyOrExit(otInstanceIsInitialized(aInstance));
     instance->Get<TimerMicroScheduler>().ProcessTimers();
 
 exit:

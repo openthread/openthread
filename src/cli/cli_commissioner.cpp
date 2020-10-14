@@ -425,7 +425,7 @@ otError Commissioner::Process(uint8_t aArgsLength, char *aArgs[])
     VerifyOrExit(aArgsLength != 0, IgnoreError(ProcessHelp(0, nullptr)));
 
     command = Utils::LookupTable::Find(aArgs[0], sCommands);
-    VerifyOrExit(command != nullptr, OT_NOOP);
+    VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgsLength, aArgs);
 

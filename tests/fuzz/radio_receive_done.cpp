@@ -50,7 +50,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     otRadioFrame frame;
     uint8_t *    buf = nullptr;
 
-    VerifyOrExit(size <= OT_RADIO_FRAME_MAX_SIZE, OT_NOOP);
+    VerifyOrExit(size <= OT_RADIO_FRAME_MAX_SIZE);
 
     FuzzerPlatformInit();
 
@@ -71,7 +71,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     otPlatRadioReceiveDone(instance, &frame, OT_ERROR_NONE);
 
-    VerifyOrExit(!FuzzerPlatformResetWasRequested(), OT_NOOP);
+    VerifyOrExit(!FuzzerPlatformResetWasRequested());
 
     for (int i = 0; i < MAX_ITERATIONS; i++)
     {

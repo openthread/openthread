@@ -169,7 +169,7 @@ otError Dataset::Process(uint8_t aArgsLength, char *aArgs[])
     }
 
     command = Utils::LookupTable::Find(aArgs[0], sCommands);
-    VerifyOrExit(command != nullptr, OT_NOOP);
+    VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgsLength - 1, aArgs + 1);
 

@@ -120,14 +120,14 @@ void EnergyScanClient::HandleReport(Coap::Message &aMessage, const Ip6::MessageI
         uint8_t                list[OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS];
     } OT_TOOL_PACKED_END energyList;
 
-    VerifyOrExit(aMessage.IsConfirmablePostRequest(), OT_NOOP);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
     otLogInfoMeshCoP("received energy scan report");
 
-    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0, OT_NOOP);
+    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
     SuccessOrExit(MeshCoP::Tlv::FindTlv(aMessage, MeshCoP::Tlv::kEnergyList, sizeof(energyList), energyList.tlv));
-    VerifyOrExit(energyList.tlv.IsValid(), OT_NOOP);
+    VerifyOrExit(energyList.tlv.IsValid());
 
     if (mCallback != nullptr)
     {

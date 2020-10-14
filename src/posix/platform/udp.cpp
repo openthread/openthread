@@ -429,7 +429,7 @@ exit:
 
 void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd)
 {
-    VerifyOrExit(gNetifIndex != 0, OT_NOOP);
+    VerifyOrExit(gNetifIndex != 0);
 
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != nullptr; socket = socket->mNext)
     {

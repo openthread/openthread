@@ -344,7 +344,7 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char **aA
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
-    VerifyOrExit(aArgsLength >= 1, OT_NOOP);
+    VerifyOrExit(aArgsLength >= 1);
 
     if (!strcmp(aArgs[0], "listener"))
     {
@@ -1528,7 +1528,7 @@ otError Interpreter::ProcessFake(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
-    VerifyOrExit(aArgsLength >= 1, OT_NOOP);
+    VerifyOrExit(aArgsLength >= 1);
 
     if (strcmp(aArgs[0], "/a/an") == 0)
     {
@@ -1943,7 +1943,7 @@ otError Interpreter::ProcessLinkMetrics(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
-    VerifyOrExit(aArgsLength >= 1, OT_NOOP);
+    VerifyOrExit(aArgsLength >= 1);
 
     if (strcmp(aArgs[0], "query") == 0)
     {
@@ -1961,7 +1961,7 @@ otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
     otLinkMetrics linkMetrics;
     long          seriesId = 0;
 
-    VerifyOrExit(aArgsLength >= 2, OT_NOOP);
+    VerifyOrExit(aArgsLength >= 2);
 
     SuccessOrExit(error = ParseAsIp6Address(aArgs[0], address));
 
@@ -1969,7 +1969,7 @@ otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
 
     if (strcmp(aArgs[1], "single") == 0)
     {
-        VerifyOrExit(aArgsLength == 3, OT_NOOP);
+        VerifyOrExit(aArgsLength == 3);
         for (char *arg = aArgs[2]; *arg != '\0'; arg++)
         {
             switch (*arg)
@@ -2592,8 +2592,8 @@ void Interpreter::HandleIcmpReceive(otMessage *          aMessage,
     uint32_t timestamp = 0;
     uint16_t dataSize;
 
-    VerifyOrExit(aIcmpHeader->mType == OT_ICMP6_TYPE_ECHO_REPLY, OT_NOOP);
-    VerifyOrExit((mPingIdentifier != 0) && (mPingIdentifier == HostSwap16(aIcmpHeader->mData.m16[0])), OT_NOOP);
+    VerifyOrExit(aIcmpHeader->mType == OT_ICMP6_TYPE_ECHO_REPLY);
+    VerifyOrExit((mPingIdentifier != 0) && (mPingIdentifier == HostSwap16(aIcmpHeader->mData.m16[0])));
 
     dataSize = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
     OutputFormat("%u bytes from ", dataSize + static_cast<uint16_t>(sizeof(otIcmp6Header)));
@@ -2702,7 +2702,7 @@ void Interpreter::SendPing(void)
     messageInfo.mAllowZeroHopLimit = mPingAllowZeroHopLimit;
 
     message = otIp6NewMessage(mInstance, nullptr);
-    VerifyOrExit(message != nullptr, OT_NOOP);
+    VerifyOrExit(message != nullptr);
 
     SuccessOrExit(otMessageAppend(message, &timestamp, sizeof(timestamp)));
     SuccessOrExit(otMessageSetLength(message, mPingLength));
@@ -3922,7 +3922,7 @@ otError Interpreter::ProcessMacFilterAddress(uint8_t aArgsLength, char *aArgs[])
             SuccessOrExit(error = ParseAsHexString(aArgs[1], extAddr.m8));
             error = otLinkFilterAddAddress(mInstance, &extAddr);
 
-            VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY, OT_NOOP);
+            VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY);
 
             if (aArgsLength > 2)
             {
@@ -4130,7 +4130,7 @@ otError Interpreter::ProcessMacSend(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
-    VerifyOrExit(aArgsLength == 1, OT_NOOP);
+    VerifyOrExit(aArgsLength == 1);
 
     if (strcmp(aArgs[0], "datarequest") == 0)
     {
@@ -4170,7 +4170,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength)
     uint8_t        aArgsLength = 0;
     const Command *command;
 
-    VerifyOrExit(aBuf != nullptr && StringLength(aBuf, aBufLength + 1) <= aBufLength, OT_NOOP);
+    VerifyOrExit(aBuf != nullptr && StringLength(aBuf, aBufLength + 1) <= aBufLength);
 
     VerifyOrExit(Utils::CmdLineParser::ParseCmd(aBuf, aArgsLength, aArgs, kMaxArgs) == OT_ERROR_NONE,
                  OutputLine("Error: too many args (max %d)", kMaxArgs));
@@ -4630,7 +4630,7 @@ extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 
-    VerifyOrExit(Interpreter::IsInitialized(), OT_NOOP);
+    VerifyOrExit(Interpreter::IsInitialized());
 
     Interpreter::GetInterpreter().OutputFormatV(aFormat, aArgs);
     Interpreter::GetInterpreter().OutputLine("");

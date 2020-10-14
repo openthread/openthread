@@ -146,7 +146,7 @@ Message *Client::NewMessage(const Header &aHeader)
 {
     Message *message = nullptr;
 
-    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != nullptr, OT_NOOP);
+    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != nullptr);
     IgnoreError(message->Prepend(aHeader));
     message->SetOffset(0);
 
@@ -439,13 +439,12 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), responseHeader));
     VerifyOrExit(responseHeader.GetType() == Header::kTypeResponse && responseHeader.GetQuestionCount() == 1 &&
-                     !responseHeader.IsTruncationFlagSet(),
-                 OT_NOOP);
+                 !responseHeader.IsTruncationFlagSet());
 
     aMessage.MoveOffset(sizeof(responseHeader));
     offset = aMessage.GetOffset();
 
-    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != nullptr, OT_NOOP);
+    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != nullptr);
 
     VerifyOrExit(responseHeader.GetResponseCode() == Header::kResponseSuccess, error = OT_ERROR_FAILED);
 

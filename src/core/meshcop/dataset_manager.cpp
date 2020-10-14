@@ -237,7 +237,7 @@ otError DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
 
     channelMaskTlv = dataset.GetTlv<ChannelMaskTlv>();
     VerifyOrExit(channelMaskTlv != nullptr, error = OT_ERROR_NOT_FOUND);
-    VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0, OT_NOOP);
+    VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0);
 
     aChannelMask.SetMask(mask & Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
 
@@ -360,7 +360,7 @@ void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::Message
     }
 
     // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1 Section 8.7.5.4)
-    VerifyOrExit(length > 0 && strcmp(mUriGet, UriPath::kPendingGet) == 0, OT_NOOP);
+    VerifyOrExit(length > 0 && strcmp(mUriGet, UriPath::kPendingGet) == 0);
 
     for (uint8_t i = 0; i < length; i++)
     {

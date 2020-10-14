@@ -206,7 +206,7 @@ otError NetworkData::ProcessSteeringData(uint8_t aArgsLength, char *aArgs[])
     otExtAddress      addr;
     otJoinerDiscerner discerner;
 
-    VerifyOrExit((aArgsLength > 1) && (strcmp(aArgs[0], "check") == 0), OT_NOOP);
+    VerifyOrExit((aArgsLength > 1) && (strcmp(aArgs[0], "check") == 0));
 
     discerner.mLength = 0;
 
@@ -319,7 +319,7 @@ otError NetworkData::Process(uint8_t aArgsLength, char *aArgs[])
     VerifyOrExit(aArgsLength != 0, IgnoreError(ProcessHelp(0, nullptr)));
 
     command = Utils::LookupTable::Find(aArgs[0], sCommands);
-    VerifyOrExit(command != nullptr, OT_NOOP);
+    VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgsLength - 1, aArgs + 1);
 
