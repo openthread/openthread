@@ -288,7 +288,11 @@ do_build_otbr_docker()
         rm -rf third_party/openthread/repo
         cp -r "${otdir}" third_party/openthread/repo
         rm -rf .git
-        docker build -t "${otbr_docker_image}" -f etc/docker/Dockerfile . --build-arg REFERENCE_DEVICE=1 --build-arg OT_BACKBONE_CI=1 --build-arg OTBR_OPTIONS="${otbr_options}"
+        docker build -t "${otbr_docker_image}" -f etc/docker/Dockerfile . \
+            --build-arg REFERENCE_DEVICE=1 \
+            --build-arg OT_BACKBONE_CI=1 \
+            --build-arg NAT64=0 \
+            --build-arg OTBR_OPTIONS="${otbr_options}"
     )
 
     rm -rf "${otbrdir}"
