@@ -227,7 +227,7 @@ jobs:
       COVERAGE: 1
       MULTIPLY: 3
       PYTHONUNBUFFERED: 1
-      OTBR_COMMIT: "e05ad0ea47461bc7aa48858cf7e1d7a9c9044fed" # Sep 29, 2020
+      OTBR_COMMIT: "bf28f461fa2a8551f0a4161c04b87f7240856608" # Date:   Wed Oct 14 12:00:44 2020 +0800
     steps:
       - uses: actions/checkout@v2
       - name: Build OTBR Docker
