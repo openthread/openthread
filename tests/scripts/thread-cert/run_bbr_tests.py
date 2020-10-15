@@ -36,7 +36,7 @@ from collections import Counter
 
 import config
 
-MULTIPLE_JOBS = 20
+MULTIPLE_JOBS = 10
 
 logging.basicConfig(level=logging.DEBUG,
                     format='File "%(pathname)s", line %(lineno)d, in %(funcName)s\n'

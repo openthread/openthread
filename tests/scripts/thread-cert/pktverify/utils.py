@@ -28,7 +28,6 @@
 #
 import logging
 import os
-import subprocess
 import sys
 from typing import Callable, Union
 
@@ -71,6 +70,7 @@ def make_filter_func(func: Union[str, Callable], **vars) -> Callable:
                     'EthAddr': EthAddr,
                     'thread_nm': p.thread_nm,
                     'thread_nwd': p.thread_nwd,
+                    'thread_address': p.thread_address,
                     'null': nullField,
                 })
     else:

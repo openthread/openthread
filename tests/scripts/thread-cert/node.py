@@ -748,7 +748,10 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect('Done')
 
-    def set_dua_iid(self, iid):
+    def set_dua_iid(self, iid: str):
+        assert len(iid) == 16
+        int(iid, 16)
+
         cmd = 'dua iid {}'.format(iid)
         self.send_command(cmd)
         self._expect('Done')
@@ -1938,6 +1941,11 @@ class NodeImpl:
 
     def send_address_notification(self, dst: str, target: str, mliid: str):
         cmd = f'fake /a/an {dst} {target} {mliid}'
+        self.send_command(cmd)
+        self._expect("Done")
+
+    def send_proactive_backbone_notification(self, target: str, mliid: str, ltt: int):
+        cmd = f'fake /b/ba {target} {mliid} {ltt}'
         self.send_command(cmd)
         self._expect("Done")
 

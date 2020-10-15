@@ -26,8 +26,9 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+import datetime
 import sys
-import time, datetime
+import time
 from typing import Any, Union
 
 from pyshark.packet.fields import LayerFieldsContainer, LayerField
@@ -512,6 +513,8 @@ _LAYER_FIELDS = {
     'thread_address.tlv.router_mask_id_seq': _auto,
     'thread_address.tlv.router_mask_assigned': _bytes,
     'thread_address.tlv.rloc16': _hex,
+    'thread_address.tlv.target_eid': _ipv6_addr,
+    'thread_address.tlv.ml_eid': _ext_addr,
 
     # thread bl
     'thread_bl.tlv.type': _list(_auto),
@@ -571,7 +574,7 @@ _LAYER_FIELDS = {
     'thread_nwd.tlv.server_16': _auto,
     'thread_nwd.tlv.border_router_16': _list(_auto),
     'thread_nwd.tlv.sub_tlvs': _list(_str),
-    #TODO: support thread_nwd.tlv.prefix.length and thread_nwd.tlv.prefix.domain_id
+    # TODO: support thread_nwd.tlv.prefix.length and thread_nwd.tlv.prefix.domain_id
     'thread_nwd.tlv.prefix': _list(_ipv6_addr),
     'thread_nwd.tlv.border_router.pref': _auto,
     'thread_nwd.tlv.border_router.flag.s': _list(_auto),
