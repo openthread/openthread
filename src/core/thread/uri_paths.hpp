@@ -81,7 +81,7 @@ struct UriPath
     static const char kDuaRegistrationRequest[]; ///< The URI Path for DUA Registration Request ("n/dr").
     static const char kDuaRegistrationNotify[];  ///< The URI Path for DUA Registration Notification ("n/dn").
     static const char kBackboneQuery[];          ///< The URI Path for Backbone Query ("b/bq").
-    static const char kBackboneAnswer[];         ///< The URI Path for Backbone Answer ("b/ba").
+    static const char kBackboneAnswer[];         ///< The URI Path for Backbone Answer / Backbone Notification ("b/ba").
     static const char kBackboneMlr[];            ///< The URI Path for Backbone Multicast Listener Report ("b/bmr").
 };
 

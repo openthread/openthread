@@ -37,6 +37,7 @@
 
 #include <openthread/thread_ftd.h>
 
+#include "backbone_router/bbr_manager.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "thread/mle_types.hpp"
@@ -404,6 +405,20 @@ void otThreadSendAddressNotification(otInstance *              aInstance,
                                                              static_cast<Ip6::InterfaceIdentifier &>(*aMlIid), nullptr,
                                                              static_cast<Ip6::Address &>(*aDestination));
 }
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+otError otThreadSendProactiveBackboneNotification(otInstance *              aInstance,
+                                                  otIp6Address *            aTarget,
+                                                  otIp6InterfaceIdentifier *aMlIid,
+                                                  uint32_t                  aTimeSinceLastTransaction)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<BackboneRouter::Manager>().SendProactiveBackboneNotification(
+        static_cast<Ip6::Address &>(*aTarget), static_cast<Ip6::InterfaceIdentifier &>(*aMlIid),
+        aTimeSinceLastTransaction);
+}
+#endif
 #endif
 
 #endif // OPENTHREAD_FTD

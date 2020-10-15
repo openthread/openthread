@@ -1542,6 +1542,22 @@ otError Interpreter::ProcessFake(uint8_t aArgsLength, char *aArgs[])
         SuccessOrExit(error = ParseAsHexString(aArgs[3], mlIid.mFields.m8));
         otThreadSendAddressNotification(mInstance, &destination, &target, &mlIid);
     }
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    else if (strcmp(aArgs[0], "/b/ba") == 0)
+    {
+        otIp6Address             target;
+        otIp6InterfaceIdentifier mlIid;
+        uint32_t                 timeSinceLastTransaction;
+
+        VerifyOrExit(aArgsLength == 4, error = OT_ERROR_INVALID_ARGS);
+
+        SuccessOrExit(error = ParseAsIp6Address(aArgs[1], target));
+        SuccessOrExit(error = ParseAsHexString(aArgs[2], mlIid.mFields.m8));
+        SuccessOrExit(error = ParseAsUint32(aArgs[3], timeSinceLastTransaction));
+
+        error = otThreadSendProactiveBackboneNotification(mInstance, &target, &mlIid, timeSinceLastTransaction);
+    }
+#endif
 exit:
     return error;
 }

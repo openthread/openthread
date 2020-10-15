@@ -193,6 +193,18 @@ public:
                                   const uint32_t *                aLastTransactionTimeTlv,
                                   const Ip6::Address &            aDestination);
 
+    /**
+     * This method sends an Address Error Notification (ADDR_ERR.ntf) message.
+     *
+     * @param aTarget        The target address of the ADDR_ERR.ntf message.
+     * @param aMeshLocalIid  The ML-IID of the ADDR_ERR.ntf message.
+     * @param aDestination   The destination to send the ADDR_ERR.ntf message.
+     *
+     */
+    void SendAddressError(const Ip6::Address &            aTarget,
+                          const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                          const Ip6::Address *            aDestination);
+
 private:
     enum
     {
@@ -301,9 +313,6 @@ private:
     void        RemoveCacheEntry(CacheEntry &aEntry, CacheEntryList &aList, CacheEntry *aPrevEntry, Reason aReason);
 
     otError SendAddressQuery(const Ip6::Address &aEid);
-    void    SendAddressError(const Ip6::Address &            aTarget,
-                             const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                             const Ip6::Address *            aDestination);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 

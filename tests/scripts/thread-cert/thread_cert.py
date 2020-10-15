@@ -176,6 +176,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 self.nodes[i].set_router_downgrade_threshold(params['router_downgrade_threshold'])
             if 'router_eligible' in params:
                 self.nodes[i].set_router_eligible(params['router_eligible'])
+            if 'prefer_router_id' in params:
+                self.nodes[i].prefer_router_id(params['prefer_router_id'])
 
             if 'timeout' in params:
                 self.nodes[i].set_timeout(params['timeout'])
@@ -327,6 +329,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         test_info['rlocs'] = {}
 
         for i, node in self.nodes.items():
+            if node.is_host:
+                continue
+
             test_info['rlocs'][i] = node.get_rloc()
 
     def collect_leader_aloc(self, node):

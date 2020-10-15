@@ -80,6 +80,7 @@ public:
         kNDData                = 9,  ///< ND Data TLV
         kThreadNetworkData     = 10, ///< Thread Network Data TLV
         kTimeout               = 11, ///< Timeout TLV
+        kNetworkName           = 12, ///< Network Name TLV
         kIPv6Addresses         = 14, ///< IPv6 Addresses TLV
         kCommissionerSessionId = 15, ///< Commissioner Session ID TLV
     };
