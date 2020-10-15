@@ -1689,16 +1689,20 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     otLogDebgMac("Rx security - Ack frame counter %u", frameCounter);
 
     IgnoreError(aAckFrame.GetSrcAddr(srcAddr));
-    IgnoreError(aTxFrame.GetDstAddr(dstAddr));
 
     if (!srcAddr.IsNone())
     {
         neighbor = Get<NeighborTable>().FindNeighbor(srcAddr);
     }
-    else if (!dstAddr.IsNone())
+    else
     {
-        // Get neighbor from destination address of transmitted frame
-        neighbor = Get<NeighborTable>().FindNeighbor(dstAddr);
+        IgnoreError(aTxFrame.GetDstAddr(dstAddr));
+
+        if (!dstAddr.IsNone())
+        {
+            // Get neighbor from destination address of transmitted frame
+            neighbor = Get<NeighborTable>().FindNeighbor(dstAddr);
+        }
     }
 
     if (!srcAddr.IsExtended() && neighbor != nullptr)
