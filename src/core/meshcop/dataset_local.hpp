@@ -59,8 +59,7 @@ public:
     /**
      * This method indicates whether this is an Active or Pending Dataset.
      *
-     * @retval Tlv::kActiveTimestamp when this is an Active Dataset.
-     * @retval Tlv::kPendingTimetamp when this is a Pending Dataset.
+     * @returns The Dataset type.
      *
      */
     Dataset::Type GetType(void) const { return mType; }
