@@ -4266,9 +4266,8 @@ void Interpreter::HandleDiagnosticGetResponse(otError aError, const otMessage *a
     uint16_t              length;
     otNetworkDiagTlv      diagTlv;
     otNetworkDiagIterator iterator = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT;
-    otError               error    = OT_ERROR_NONE;
 
-    SuccessOrExit(error = aError);
+    SuccessOrExit(aError);
 
     OutputFormat("DIAG_GET.rsp/ans: ");
 
@@ -4288,7 +4287,7 @@ void Interpreter::HandleDiagnosticGetResponse(otError aError, const otMessage *a
     OutputLine("");
 
     // Output Network Diagnostic TLV values in standard YAML format.
-    while ((error = otThreadGetNextDiagnosticTlv(aMessage, &iterator, &diagTlv)) == OT_ERROR_NONE)
+    while ((aError = otThreadGetNextDiagnosticTlv(aMessage, &iterator, &diagTlv)) == OT_ERROR_NONE)
     {
         uint16_t column = 0;
         switch (diagTlv.mType)
@@ -4365,13 +4364,13 @@ void Interpreter::HandleDiagnosticGetResponse(otError aError, const otMessage *a
         }
     }
 
-    if (error == OT_ERROR_NOT_FOUND)
+    if (aError == OT_ERROR_NOT_FOUND)
     {
-        error = OT_ERROR_NONE;
+        aError = OT_ERROR_NONE;
     }
 
 exit:
-    OutputResult(error);
+    OutputResult(aError);
 }
 
 void Interpreter::OutputSpaces(uint16_t aCount)

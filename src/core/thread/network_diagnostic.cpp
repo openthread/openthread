@@ -141,19 +141,17 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Message *         aMes
                                                     const Ip6::MessageInfo *aMessageInfo,
                                                     otError                 aResult)
 {
-    otError error = OT_ERROR_FAILED;
-
-    SuccessOrExit(error = aResult);
-    VerifyOrExit(aMessage && aMessage->GetCode() == Coap::kCodeChanged, error = OT_ERROR_FAILED);
+    SuccessOrExit(aResult);
+    VerifyOrExit(aMessage && aMessage->GetCode() == Coap::kCodeChanged, aResult = OT_ERROR_FAILED);
 
 exit:
     if (mReceiveDiagnosticGetCallback)
     {
-        mReceiveDiagnosticGetCallback(error, aMessage, aMessageInfo, mReceiveDiagnosticGetCallbackContext);
+        mReceiveDiagnosticGetCallback(aResult, aMessage, aMessageInfo, mReceiveDiagnosticGetCallbackContext);
     }
     else
     {
-        otLogDebgNetDiag("Received diagnostic get response, error = %s", otThreadErrorToString(error));
+        otLogDebgNetDiag("Received diagnostic get response, error = %s", otThreadErrorToString(aResult));
     }
     return;
 }
