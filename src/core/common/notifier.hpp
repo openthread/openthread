@@ -62,7 +62,7 @@ namespace ot {
  * This enumeration type represents events emitted from OpenThread Notifier.
  *
  */
-enum Event
+enum Event : uint32_t
 {
     kEventIp6AddressAdded                  = OT_CHANGED_IP6_ADDRESS_ADDED,            ///< IPv6 address was added
     kEventIp6AddressRemoved                = OT_CHANGED_IP6_ADDRESS_REMOVED,          ///< IPv6 address was removed
