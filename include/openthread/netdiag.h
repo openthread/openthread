@@ -283,13 +283,18 @@ otError otThreadGetNextDiagnosticTlv(const otMessage *      aMessage,
 /**
  * This function pointer is called when Network Diagnostic Get response is received.
  *
+ * @param[in]  aError        The error when failed to get the response.
  * @param[in]  aMessage      A pointer to the message buffer containing the received Network Diagnostic
- *                           Get response payload.
- * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage.
+ *                           Get response payload. Available only when @p aError is `OT_ERROR_NONE`.
+ * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage. Available only when
+ *                           @p aError is `OT_ERROR_NONE`.
  * @param[in]  aContext      A pointer to application-specific context.
  *
  */
-typedef void (*otReceiveDiagnosticGetCallback)(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
+typedef void (*otReceiveDiagnosticGetCallback)(otError              aError,
+                                               otMessage *          aMessage,
+                                               const otMessageInfo *aMessageInfo,
+                                               void *               aContext);
 
 /**
  * This function registers a callback to provide received raw Network Diagnostic Get response payload.

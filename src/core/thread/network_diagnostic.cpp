@@ -141,17 +141,20 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Message *         aMes
                                                     const Ip6::MessageInfo *aMessageInfo,
                                                     otError                 aResult)
 {
-    VerifyOrExit(aResult == OT_ERROR_NONE);
-    VerifyOrExit(aMessage && aMessage->GetCode() == Coap::kCodeChanged);
+    otError error = OT_ERROR_FAILED;
 
-    otLogInfoNetDiag("Received diagnostic get response");
-
-    if (mReceiveDiagnosticGetCallback)
-    {
-        mReceiveDiagnosticGetCallback(aMessage, aMessageInfo, mReceiveDiagnosticGetCallbackContext);
-    }
+    SuccessOrExit(error = aResult);
+    VerifyOrExit(aMessage && aMessage->GetCode() == Coap::kCodeChanged, error = OT_ERROR_FAILED);
 
 exit:
+    if (mReceiveDiagnosticGetCallback)
+    {
+        mReceiveDiagnosticGetCallback(error, aMessage, aMessageInfo, mReceiveDiagnosticGetCallbackContext);
+    }
+    else
+    {
+        otLogDebgNetDiag("Received diagnostic get response, error = %s", otThreadErrorToString(error));
+    }
     return;
 }
 
@@ -171,7 +174,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Message &aMessage, const
 
     if (mReceiveDiagnosticGetCallback)
     {
-        mReceiveDiagnosticGetCallback(&aMessage, &aMessageInfo, mReceiveDiagnosticGetCallbackContext);
+        mReceiveDiagnosticGetCallback(OT_ERROR_NONE, &aMessage, &aMessageInfo, mReceiveDiagnosticGetCallbackContext);
     }
 
     SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo));
