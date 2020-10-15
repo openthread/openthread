@@ -1637,6 +1637,12 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         }
 
         aNeighbor->SetLinkFrameCounter(frameCounter + 1);
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        if ((frameCounter + 1) > aNeighbor->GetLinkAckFrameCounter())
+        {
+            aNeighbor->SetLinkAckFrameCounter(frameCounter + 1);
+        }
+#endif
 
         if (keySequence > keyManager.GetCurrentKeySequence())
         {
@@ -1658,8 +1664,10 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     uint8_t     txKeyId;
     uint8_t     ackKeyId;
     uint8_t     keyIdMode;
+    uint32_t    frameCounter;
     Address     srcAddr;
-    Neighbor *  neighbor;
+    Address     dstAddr;
+    Neighbor *  neighbor   = nullptr;
     KeyManager &keyManager = Get<KeyManager>();
     const Key * macKey;
 
@@ -1677,35 +1685,32 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 
     VerifyOrExit(txKeyId == ackKeyId, OT_NOOP);
 
+    IgnoreError(aAckFrame.GetFrameCounter(frameCounter));
+    otLogDebgMac("Rx security - Ack frame counter %u", frameCounter);
+
     IgnoreError(aAckFrame.GetSrcAddr(srcAddr));
 
-    if (srcAddr.IsShort())
+    if (!srcAddr.IsNone())
     {
         neighbor = Get<NeighborTable>().FindNeighbor(srcAddr);
-
-        if (neighbor != nullptr)
-        {
-            srcAddr.SetExtended(neighbor->GetExtAddress());
-        }
     }
-
-    if (!srcAddr.IsExtended())
+    else
     {
-        // Get Enh-ACK source address from transmitted frame destination address
-        IgnoreError(aTxFrame.GetDstAddr(srcAddr));
+        IgnoreError(aTxFrame.GetDstAddr(dstAddr));
 
-        if (srcAddr.IsShort())
+        if (!dstAddr.IsNone())
         {
-            neighbor = Get<NeighborTable>().FindNeighbor(srcAddr);
-
-            if (neighbor != nullptr)
-            {
-                srcAddr.SetExtended(neighbor->GetExtAddress());
-            }
+            // Get neighbor from destination address of transmitted frame
+            neighbor = Get<NeighborTable>().FindNeighbor(dstAddr);
         }
     }
 
-    VerifyOrExit(srcAddr.IsExtended(), OT_NOOP);
+    if (!srcAddr.IsExtended() && neighbor != nullptr)
+    {
+        srcAddr.SetExtended(neighbor->GetExtAddress());
+    }
+
+    VerifyOrExit(srcAddr.IsExtended() && neighbor != nullptr, OT_NOOP);
 
     ackKeyId--;
 
@@ -1726,9 +1731,17 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
         ExitNow();
     }
 
-    if (aAckFrame.ProcessReceiveAesCcm(srcAddr.GetExtended(), *macKey) == OT_ERROR_NONE)
+    if (neighbor->IsStateValid())
     {
-        error = OT_ERROR_NONE;
+        VerifyOrExit(frameCounter >= neighbor->GetLinkAckFrameCounter(), OT_NOOP);
+    }
+
+    error = aAckFrame.ProcessReceiveAesCcm(srcAddr.GetExtended(), *macKey);
+    SuccessOrExit(error);
+
+    if (neighbor->IsStateValid())
+    {
+        neighbor->SetLinkAckFrameCounter(frameCounter + 1);
     }
 
 exit:
