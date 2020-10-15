@@ -743,7 +743,10 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect('Done')
 
-    def set_dua_iid(self, iid):
+    def set_dua_iid(self, iid: str):
+        assert len(iid) == 16
+        int(iid, 16)
+
         cmd = 'dua iid {}'.format(iid)
         self.send_command(cmd)
         self._expect('Done')

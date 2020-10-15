@@ -225,6 +225,8 @@ otError CoapBase::SendMessage(Message &               aMessage,
         metadata.mRetransmissionTimeout    = aTxParameters.CalculateInitialRetransmissionTimeout();
         metadata.mAcknowledged             = false;
         metadata.mConfirmable              = aMessage.IsConfirmable();
+        metadata.mHopLimit                 = aMessageInfo.GetHopLimit();
+        metadata.mIsHostInterface          = aMessageInfo.IsHostInterface();
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         metadata.mObserve = observe;
 #endif
@@ -377,6 +379,8 @@ void CoapBase::HandleRetransmissionTimer(void)
                 messageInfo.SetPeerAddr(metadata.mDestinationAddress);
                 messageInfo.SetPeerPort(metadata.mDestinationPort);
                 messageInfo.SetSockAddr(metadata.mSourceAddress);
+                messageInfo.SetHopLimit(metadata.mHopLimit);
+                messageInfo.SetIsHostInterface(metadata.mIsHostInterface);
 
                 SendCopy(*message, messageInfo);
             }

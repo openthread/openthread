@@ -97,6 +97,7 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
     if (IsLinkLocal(peerAddr.sin6_addr) && !aMessageInfo.mIsHostInterface)
     {
         // sin6_scope_id only works for link local destinations
+        otLogCritPlat("Using gNetifIndex for sin6_scope_id");
         peerAddr.sin6_scope_id = gNetifIndex;
     }
 
@@ -314,6 +315,10 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
         VerifyOrExit(setsockopt(fd, IPPROTO_IP, IP_BOUND_IF, &gNetifIndex, sizeof(gNetifIndex)) == 0,
                      error = OT_ERROR_FAILED);
 #endif // __linux__
+
+        VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &gNetifIndex, sizeof(gNetifIndex)) == 0,
+                     error = OT_ERROR_FAILED);
+
         break;
     }
     case OT_NETIF_BACKBONE:
@@ -326,6 +331,11 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
         VerifyOrExit(setsockopt(fd, IPPROTO_IP, IP_BOUND_IF, &gBackboneNetifIndex, sizeof(gBackboneNetifIndex)) == 0,
                      error = OT_ERROR_FAILED);
 #endif // __linux__
+
+        VerifyOrExit(
+            setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &gBackboneNetifIndex, sizeof(gBackboneNetifIndex)) == 0,
+            error = OT_ERROR_FAILED);
+
 #else
         ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
 #endif
@@ -339,6 +349,7 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
     VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &zero, sizeof(zero)) == 0, error = OT_ERROR_FAILED);
 
 exit:
+    otLogCritPlat("otPlatUdpBindToNetif: netif=%d: %s", aNetifIdentifier, otThreadErrorToString(error));
     return error;
 }
 

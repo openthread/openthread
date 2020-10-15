@@ -133,6 +133,19 @@ public:
      */
     BackboneTmfAgent &GetBackboneTmfAgent(void) { return mBackboneTmfAgent; }
 
+    /**
+     * This method sends BB.qry on the Backbone link.
+     *
+     * @param[in]  aDua     The Domain Unicast Address to query.
+     * @param[in]  aRloc16  The RLOC16 in the RLOC16 TLV of BB.qry, or Mac::kShortAddrInvalid to not have RLOC16 TLV.
+     *
+     * @retval OT_ERROR_NONE           Successfully sent BB.qry on backbone link.
+     * @retval OT_ERROR_INVALID_STATE  If the Backbone Router is not primary, or not enabled.
+     * @retval OT_ERROR_NO_BUFS        If insufficient message buffers available.
+     *
+     */
+    otError SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16 = Mac::kShortAddrInvalid);
+
 private:
     enum
     {
@@ -161,7 +174,12 @@ private:
         static_cast<Manager *>(aContext)->HandleDuaRegistration(*static_cast<const Coap::Message *>(aMessage),
                                                                 *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
     }
-    void HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleBackboneQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleBackboneQuery(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleBackboneAnswer(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleBackboneAnswer(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
     void SendDuaRegistrationResponse(const Coap::Message &      aMessage,
                                      const Ip6::MessageInfo &   aMessageInfo,
                                      const Ip6::Address &       aTarget,
@@ -174,6 +192,8 @@ private:
 
     Coap::Resource mMulticastListenerRegistration;
     Coap::Resource mDuaRegistration;
+    Coap::Resource mBackboneQuery;
+    Coap::Resource mBackboneAnswer;
     NdProxyTable   mNdProxyTable;
 
     MulticastListenersTable mMulticastListenersTable;
@@ -188,6 +208,10 @@ private:
     bool                       mDuaResponseIsSpecified : 1;
     bool                       mMlrResponseIsSpecified : 1;
 #endif
+    otError SendBackboneAnswer(const Ip6::MessageInfo &     aMessageInfo,
+                               const Ip6::Address &         aDua,
+                               uint16_t                     aSrcRloc16,
+                               const NdProxyTable::NdProxy &aNdProxy);
 };
 
 } // namespace BackboneRouter

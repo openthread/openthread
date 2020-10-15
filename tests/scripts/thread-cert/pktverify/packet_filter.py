@@ -386,6 +386,14 @@ class PacketFilter(object):
             lambda p: (p.coap.is_ack and p.coap.opt.uri_path_recon == uri_path and
                        (port is None or p.udp.dstport == port)), **kwargs)
 
+    def filter_backbone_answer(self, target: str, *, eth_src: Optional[EthAddr] = None, port: int = None):
+        filter_eth = self.filter_eth_src(eth_src) if eth_src else self.filter_eth()
+        return filter_eth.filter_coap_request('/b/ba').filter('thread_bl.tlv.target_eid == {target}', target=target)
+
+    def filter_backbone_query(self, target: str, *, eth_src: EthAddr, port: int = None) -> 'PacketFilter':
+        return self.filter_eth_src(eth_src).filter_coap_request('/b/bq', port=port).filter(
+            'thread_bl.tlv.target_eid == {target}', target=target)
+
     def filter_wpan(self, **kwargs):
         """
         Create a new PacketFilter for filter WPAN packets.

@@ -324,6 +324,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         test_info['rlocs'] = {}
 
         for i, node in self.nodes.items():
+            if node.is_host:
+                continue
+
             test_info['rlocs'][i] = node.get_rloc()
 
     def collect_leader_aloc(self, node):
