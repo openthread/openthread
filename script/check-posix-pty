@@ -43,6 +43,8 @@ at_exit()
     sudo killall expect || true
     sudo killall ot-ctl || true
     sudo killall ot-daemon || true
+    sudo killall ot-cli || true
+    sudo killall ot-rcp || true
     sudo killall socat || true
 
     exit $EXIT_CODE
