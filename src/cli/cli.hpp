@@ -229,9 +229,10 @@ public:
      *
      * @param[in]  aUserCommands  A pointer to an array with user commands.
      * @param[in]  aLength        @p aUserCommands length.
+     * @param[in]  aContext       @p aUserCommands length.
      *
      */
-    void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength);
+    void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext);
 
 protected:
     static Interpreter *sInterpreter;
@@ -703,6 +704,7 @@ private:
 
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;
+    void *              mUserCommandsContext;
     uint16_t            mPingLength;
     uint16_t            mPingCount;
     uint32_t            mPingInterval;

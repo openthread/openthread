@@ -108,6 +108,9 @@ check()
 
     sudo expect <<EOF | tee "${OT_OUTPUT}" &
 spawn ${OT_CLI_CMD}
+send "radiourl\r\n"
+expect "${RADIO_URL}"
+expect "Done"
 send "panid 0xface\r\n"
 expect "Done"
 send "ifconfig up\r\n"

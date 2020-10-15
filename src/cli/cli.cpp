@@ -4196,7 +4196,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength)
     {
         if (strcmp(cmdName, mUserCommands[i].mName) == 0)
         {
-            mUserCommands[i].mCommand(aArgsLength - 1, &aArgs[1]);
+            mUserCommands[i].mCommand(mUserCommandsContext, aArgsLength - 1, &aArgs[1]);
             ExitNow();
         }
     }
@@ -4509,10 +4509,11 @@ void Interpreter::OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEnt
 }
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
-void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength)
+void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext)
 {
-    mUserCommands       = aCommands;
-    mUserCommandsLength = aLength;
+    mUserCommands        = aCommands;
+    mUserCommandsLength  = aLength;
+    mUserCommandsContext = aContext;
 }
 
 Interpreter &Interpreter::GetOwner(OwnerLocator &aOwnerLocator)
@@ -4596,9 +4597,9 @@ int Interpreter::OutputFormatV(const char *aFormat, va_list aArguments)
     return Output(buf, static_cast<uint16_t>(strlen(buf)));
 }
 
-extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)
+extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext)
 {
-    Interpreter::GetInterpreter().SetUserCommands(aUserCommands, aLength);
+    Interpreter::GetInterpreter().SetUserCommands(aUserCommands, aLength, aContext);
 }
 
 extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength)

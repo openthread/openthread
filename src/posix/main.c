@@ -56,6 +56,7 @@
 #define OT_POSIX_APP_TYPE_NCP 1
 #define OT_POSIX_APP_TYPE_CLI 2
 
+#include <openthread/cli.h>
 #include <openthread/diag.h>
 #include <openthread/logging.h>
 #include <openthread/tasklet.h>
@@ -250,24 +251,30 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mPlatformConfig.mRadioUrl = aArgVector[optind];
 }
 
-static otInstance *InitInstance(int aArgCount, char *aArgVector[])
+#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
+static void PrintRadioUrl(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
-    PosixConfig config;
+    (void)aArgsLength;
+    (void)aArgs;
+
+    otPlatformConfig *config = (otPlatformConfig *)aContext;
+    otCliOutputFormat("%s\r\nDone\r\n", config->mRadioUrl);
+}
+#endif // OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
+
+static otInstance *InitInstance(PosixConfig *aConfig)
+{
     otInstance *instance = NULL;
 
-    ParseArg(aArgCount, aArgVector, &config);
-
-    openlog(aArgVector[0], LOG_PID | (config.mIsVerbose ? LOG_PERROR : 0), LOG_DAEMON);
-    setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
     syslog(LOG_INFO, "Running %s", otGetVersionString());
     syslog(LOG_INFO, "Thread version: %hu", otThreadGetVersion());
-    IgnoreError(otLoggingSetLevel(config.mLogLevel));
+    IgnoreError(otLoggingSetLevel(aConfig->mLogLevel));
 
-    instance = otSysInit(&config.mPlatformConfig);
+    instance = otSysInit(&aConfig->mPlatformConfig);
 
     atexit(otSysDeinit);
 
-    if (config.mPrintRadioVersion)
+    if (aConfig->mPrintRadioVersion)
     {
         printf("%s\n", otPlatRadioGetVersionString(instance));
     }
@@ -276,7 +283,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
         syslog(LOG_INFO, "RCP version: %s", otPlatRadioGetVersionString(instance));
     }
 
-    if (config.mIsDryRun)
+    if (aConfig->mIsDryRun)
     {
         exit(OT_EXIT_SUCCESS);
     }
@@ -304,6 +311,10 @@ int main(int argc, char *argv[])
 {
     otInstance *instance;
     int         rval = 0;
+    PosixConfig config;
+#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
+    otCliCommand radioUrlCommand = {"radiourl", PrintRadioUrl};
+#endif
 
 #ifdef __linux__
     // Ensure we terminate this process if the
@@ -320,7 +331,10 @@ int main(int argc, char *argv[])
         execvp(argv[0], argv);
     }
 
-    instance = InitInstance(argc, argv);
+    ParseArg(argc, argv, &config);
+    openlog(argv[0], LOG_PID | (config.mIsVerbose ? LOG_PERROR : 0), LOG_DAEMON);
+    setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
+    instance = InitInstance(&config);
 
 #if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
     otNcpInit(instance);
@@ -330,6 +344,7 @@ int main(int argc, char *argv[])
 #else
     otCliUartInit(instance);
 #endif
+    otCliSetUserCommands(&radioUrlCommand, 1, &config.mPlatformConfig);
 #endif
 
     while (true)
