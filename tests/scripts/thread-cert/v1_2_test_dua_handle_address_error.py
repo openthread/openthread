@@ -102,7 +102,6 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
 
         self.nodes[BBR_1].set_domain_prefix(config.DOMAIN_PREFIX, 'prosD')
         self.simulator.go(WAIT_REDUNDANCE)
-        assert self.nodes[BBR_1].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
 
         # 2) Bring up ROUTER_1
         self.nodes[ROUTER].start()

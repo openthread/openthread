@@ -205,10 +205,7 @@ public:
      * @returns A reference to the All Network Backbone Routers Multicast Address.
      *
      */
-    const Ip6::Address &GetAllNetworkBackboneRoutersAddress(void) const
-    {
-        return mAllNetworkBackboneRouters.GetAddress();
-    }
+    const Ip6::Address &GetAllNetworkBackboneRoutersAddress(void) const { return mAllNetworkBackboneRouters; }
 
     /**
      * This method returns a reference to the All Domain Backbone Routers Multicast Address.
@@ -216,10 +213,7 @@ public:
      * @returns A reference to the All Domain Backbone Routers Multicast Address.
      *
      */
-    const Ip6::Address &GetAllDomainBackboneRoutersAddress(void) const
-    {
-        return mAllDomainBackboneRouters.GetAddress();
-    }
+    const Ip6::Address &GetAllDomainBackboneRoutersAddress(void) const { return mAllDomainBackboneRouters; }
 
     /**
      * This method applies the Mesh Local Prefix.
@@ -261,9 +255,9 @@ private:
 
     NetworkData::OnMeshPrefixConfig mDomainPrefixConfig;
 
-    Ip6::NetifUnicastAddress   mBackboneRouterPrimaryAloc;
-    Ip6::NetifMulticastAddress mAllNetworkBackboneRouters;
-    Ip6::NetifMulticastAddress mAllDomainBackboneRouters;
+    Ip6::NetifUnicastAddress mBackboneRouterPrimaryAloc;
+    Ip6::Address             mAllNetworkBackboneRouters;
+    Ip6::Address             mAllDomainBackboneRouters;
 };
 
 } // namespace BackboneRouter

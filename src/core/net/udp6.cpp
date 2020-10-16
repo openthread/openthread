@@ -137,6 +137,36 @@ otError Udp::Socket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
     return Get<Udp>().SendTo(*this, aMessage, aMessageInfo);
 }
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+otError Udp::Socket::JoinNetifMulticastGroup(otNetifIdentifier aNetifIdentifier, const Address &aAddress)
+{
+    OT_UNUSED_VARIABLE(aNetifIdentifier);
+    OT_UNUSED_VARIABLE(aAddress);
+
+    otError error = OT_ERROR_NOT_IMPLEMENTED;
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    error = otPlatUdpJoinMulticastGroup(this, aNetifIdentifier, &aAddress);
+#endif
+
+    return error;
+}
+
+otError Udp::Socket::LeaveNetifMulticastGroup(otNetifIdentifier aNetifIdentifier, const Address &aAddress)
+{
+    OT_UNUSED_VARIABLE(aNetifIdentifier);
+    OT_UNUSED_VARIABLE(aAddress);
+
+    otError error = OT_ERROR_NOT_IMPLEMENTED;
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    error = otPlatUdpLeaveMulticastGroup(this, aNetifIdentifier, &aAddress);
+#endif
+
+    return error;
+}
+#endif
+
 Udp::Udp(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEphemeralPort(kDynamicPortMin)
