@@ -185,31 +185,6 @@
 #define HAL_SERIAL_APP_FLOW_CONTROL (HAL_USART_FLOW_CONTROL_HWUART)
 // [SERIAL]$
 
-// $[SPIDISPLAY]
-
-#define BSP_SPIDISPLAY_CS_PIN                         (3U)
-#define BSP_SPIDISPLAY_CS_PORT                        (gpioPortC)
-
-#define BSP_SPIDISPLAY_ENABLE_PIN                     (4U)
-#define BSP_SPIDISPLAY_ENABLE_PORT                    (gpioPortD)
-
-#define BSP_SPIDISPLAY_EXTCOMIN_PIN                   (0U)
-#define BSP_SPIDISPLAY_EXTCOMIN_PORT                  (gpioPortA)
-
-#define BSP_SPIDISPLAY_DISPLAY                        (HAL_DISPLAY_SHARP_LS013B7DH03)
-#define BSP_SPIDISPLAY_USART                          (HAL_SPI_PORT_USART2)
-#define BSP_SPIDISPLAY_EXTCOMIN_CHANNEL               (4)
-#define BSP_SPIDISPLAY_MOSI_PIN                       (0U)
-#define BSP_SPIDISPLAY_MOSI_PORT                      (gpioPortC)
-
-#define BSP_SPIDISPLAY_MISO_PIN                       (1U)
-#define BSP_SPIDISPLAY_MISO_PORT                      (gpioPortC)
-
-#define BSP_SPIDISPLAY_CLK_PIN                        (2U)
-#define BSP_SPIDISPLAY_CLK_PORT                       (gpioPortC)
-
-// [SPIDISPLAY]$
-
 // $[SPINCP]
 // [SPINCP]$
 
