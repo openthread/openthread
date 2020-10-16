@@ -59,9 +59,9 @@ namespace MeshCoP {
 
 otError DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
 {
-    Dataset dataset(mLocal.GetType());
+    Dataset dataset(GetType());
 
-    IgnoreError(mLocal.Read(dataset));
+    IgnoreError(Read(dataset));
 
     return dataset.AppendMleDatasetTlv(aMessage);
 }
@@ -77,7 +77,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     bool            doesAffectMasterKey      = false;
     bool            hasMasterKey             = false;
     StateTlv::State state                    = StateTlv::kReject;
-    Dataset         dataset(mLocal.GetType());
+    Dataset         dataset(GetType());
 
     ActiveTimestampTlv   activeTimestamp;
     PendingTimestampTlv  pendingTimestamp;
@@ -105,7 +105,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     // verify that does not overflow dataset buffer
     VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize);
 
-    type = (strcmp(mUriSet, UriPath::kActiveSet) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp);
+    type = (GetType() == Dataset::kActive) ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp;
 
     if (Tlv::FindTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) != OT_ERROR_NONE)
     {
@@ -358,12 +358,12 @@ exit:
 otError ActiveDataset::GenerateLocal(void)
 {
     otError error = OT_ERROR_NONE;
-    Dataset dataset(mLocal.GetType());
+    Dataset dataset(GetType());
 
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!mLocal.IsTimestampPresent(), error = OT_ERROR_ALREADY);
 
-    IgnoreError(mLocal.Read(dataset));
+    IgnoreError(Read(dataset));
 
     if (dataset.GetTlv<ActiveTimestampTlv>() == nullptr)
     {
@@ -508,7 +508,7 @@ exit:
 void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Message &aMessage)
 {
     uint16_t offset = aMessage.GetOffset();
-    Dataset  dataset(mLocal.GetType());
+    Dataset  dataset(GetType());
 
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
 
