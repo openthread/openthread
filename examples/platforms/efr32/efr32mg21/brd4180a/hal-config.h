@@ -23,6 +23,18 @@
 
 
 // $[BUTTON]
+#define BSP_BUTTON_PRESENT                            (1)
+
+#define BSP_BUTTON0_PIN                               (2U)
+#define BSP_BUTTON0_PORT                              (gpioPortD)
+
+#define BSP_BUTTON1_PIN                               (3U)
+#define BSP_BUTTON1_PORT                              (gpioPortD)
+
+#define BSP_BUTTON_COUNT                              (2U)
+#define BSP_BUTTON_INIT                               { { BSP_BUTTON0_PORT, BSP_BUTTON0_PIN }, { BSP_BUTTON1_PORT, BSP_BUTTON1_PIN } }
+#define BSP_BUTTON_GPIO_DOUT                          (HAL_GPIO_DOUT_LOW)
+#define BSP_BUTTON_GPIO_MODE                          (HAL_GPIO_MODE_INPUT)
 // [BUTTON]$
 
 // $[CMU]
@@ -174,6 +186,28 @@
 // [SERIAL]$
 
 // $[SPIDISPLAY]
+
+#define BSP_SPIDISPLAY_CS_PIN                         (3U)
+#define BSP_SPIDISPLAY_CS_PORT                        (gpioPortC)
+
+#define BSP_SPIDISPLAY_ENABLE_PIN                     (4U)
+#define BSP_SPIDISPLAY_ENABLE_PORT                    (gpioPortD)
+
+#define BSP_SPIDISPLAY_EXTCOMIN_PIN                   (0U)
+#define BSP_SPIDISPLAY_EXTCOMIN_PORT                  (gpioPortA)
+
+#define BSP_SPIDISPLAY_DISPLAY                        (HAL_DISPLAY_SHARP_LS013B7DH03)
+#define BSP_SPIDISPLAY_USART                          (HAL_SPI_PORT_USART2)
+#define BSP_SPIDISPLAY_EXTCOMIN_CHANNEL               (4)
+#define BSP_SPIDISPLAY_MOSI_PIN                       (0U)
+#define BSP_SPIDISPLAY_MOSI_PORT                      (gpioPortC)
+
+#define BSP_SPIDISPLAY_MISO_PIN                       (1U)
+#define BSP_SPIDISPLAY_MISO_PORT                      (gpioPortC)
+
+#define BSP_SPIDISPLAY_CLK_PIN                        (2U)
+#define BSP_SPIDISPLAY_CLK_PORT                       (gpioPortC)
+
 // [SPIDISPLAY]$
 
 // $[SPINCP]
