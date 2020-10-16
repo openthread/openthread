@@ -540,8 +540,14 @@ private:
         TimeMilli       mNextTimerShot;            // Time when the timer should shoot for this message.
         uint32_t        mRetransmissionTimeout;    // Delay that is applied to next retransmission.
         uint8_t         mRetransmissionsRemaining; // Number of retransmissions remaining.
-        bool            mAcknowledged : 1;         // Information that request was acknowledged.
-        bool            mConfirmable : 1;          // Information that message is confirmable.
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+        uint8_t mHopLimit; // The hop limit.
+#endif
+        bool mAcknowledged : 1; // Information that request was acknowledged.
+        bool mConfirmable : 1;  // Information that message is confirmable.
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+        bool mIsHostInterface : 1; // TRUE if packets sent/received via host interface, FALSE otherwise.
+#endif
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         bool mObserve : 1; // Information that this request involves Observations.
 #endif

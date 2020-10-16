@@ -108,13 +108,10 @@ class TestBackboneRouterService(thread_cert.TestCase):
         WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(), 'Primary')
-        assert self.nodes[BBR_1].has_ipmaddr(config.ALL_NETWORK_BBRS_ADDRESS)
-        assert not self.nodes[BBR_1].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
 
         self.nodes[BBR_1].set_domain_prefix(config.DOMAIN_PREFIX)
         WAIT_TIME = WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
-        assert self.nodes[BBR_1].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
 
         # 2) Reset BBR_1 and bring it back soon.
         # Verify that it restores Primary State with sequence number
@@ -174,9 +171,6 @@ class TestBackboneRouterService(thread_cert.TestCase):
         WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_2].get_backbone_router_state(), 'Disabled')
-
-        assert not self.nodes[BBR_2].has_ipmaddr(config.ALL_NETWORK_BBRS_ADDRESS)
-        assert not self.nodes[BBR_2].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
 
         # Enable Backbone function, it will stay at Secondary state as
         # there is Primary Backbone Router already.
@@ -241,9 +235,6 @@ class TestBackboneRouterService(thread_cert.TestCase):
         WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_2].get_backbone_router_state(), 'Secondary')
-
-        assert self.nodes[BBR_1].has_ipmaddr(config.ALL_NETWORK_BBRS_ADDRESS)
-        assert self.nodes[BBR_1].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
 
         # 6a) Check the uniqueness of DUA by comparing the one in above 4a).
         bbr2_dua2 = self.nodes[BBR_2].get_addr(config.DOMAIN_PREFIX)

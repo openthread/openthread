@@ -147,6 +147,7 @@ class BBR_5_11_01(thread_cert.TestCase):
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
             thread_meshcop.tlv.ipv6_addr == ['{MA1}']
             and thread_bl.tlv.timeout == {MLR_TIMEOUT}
+            and ipv6.src.is_link_local
         """)
 
         # Router registers MA2 with default timeout
@@ -158,6 +159,7 @@ class BBR_5_11_01(thread_cert.TestCase):
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
             thread_meshcop.tlv.ipv6_addr == ['{MA2}']
             and thread_bl.tlv.timeout == {MLR_TIMEOUT}
+            and ipv6.src.is_link_local
         """)
 
         # Commissioner registers MA3 with deafult timeout
@@ -169,6 +171,7 @@ class BBR_5_11_01(thread_cert.TestCase):
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
             thread_meshcop.tlv.ipv6_addr == ['{MA3}']
             and thread_bl.tlv.timeout == {MLR_TIMEOUT}
+            and ipv6.src.is_link_local
         """)
 
         # Commissioner registers MA4 with custom timeout
@@ -180,6 +183,7 @@ class BBR_5_11_01(thread_cert.TestCase):
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
             thread_meshcop.tlv.ipv6_addr == ['{MA4}']
             and thread_bl.tlv.timeout == {CUSTOM_MLR_TIMEOUT}
+            and ipv6.src.is_link_local
         """)
 
         # Commissioner unregisters MA5
@@ -190,6 +194,7 @@ class BBR_5_11_01(thread_cert.TestCase):
         # Verify PBBR not sends `/b/bmr` on the Backbone link for MA5.
         pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').filter(f"""
             thread_meshcop.tlv.ipv6_addr == ['{MA5}']
+            and ipv6.src.is_link_local
         """).must_not_next()
 
 
