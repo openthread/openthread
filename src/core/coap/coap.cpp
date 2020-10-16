@@ -126,7 +126,21 @@ exit:
 
 otError CoapBase::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    return mSender(*this, aMessage, aMessageInfo);
+    otError error;
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    Get<Utils::Otns>().EmitCoapSend(static_cast<Message &>(aMessage), aMessageInfo);
+#endif
+
+    error = mSender(*this, aMessage, aMessageInfo);
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    if (error != OT_ERROR_NONE)
+    {
+        Get<Utils::Otns>().EmitCoapSendFailure(error, static_cast<Message &>(aMessage), aMessageInfo);
+    }
+#endif
+    return error;
 }
 
 otError CoapBase::SendMessage(Message &               aMessage,
@@ -531,6 +545,10 @@ void CoapBase::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageIn
     {
         ProcessReceivedResponse(message, aMessageInfo);
     }
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    Get<Utils::Otns>().EmitCoapReceive(message, aMessageInfo);
+#endif
 }
 
 void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -666,11 +684,9 @@ exit:
 
 void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    char             uriPath[Resource::kMaxReceivedUriPath + 1];
-    char *           curUriPath     = uriPath;
-    Message *        cachedResponse = nullptr;
-    otError          error          = OT_ERROR_NOT_FOUND;
-    Option::Iterator iterator;
+    char     uriPath[Message::kMaxReceivedUriPath + 1];
+    Message *cachedResponse = nullptr;
+    otError  error          = OT_ERROR_NOT_FOUND;
 
     if (mInterceptor != nullptr)
     {
@@ -693,26 +709,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
         break;
     }
 
-    SuccessOrExit(error = iterator.Init(aMessage, kOptionUriPath));
-
-    while (!iterator.IsDone())
-    {
-        uint16_t optionLength = iterator.GetOption()->GetLength();
-
-        if (curUriPath != uriPath)
-        {
-            *curUriPath++ = '/';
-        }
-
-        VerifyOrExit(curUriPath + optionLength < OT_ARRAY_END(uriPath), error = OT_ERROR_PARSE);
-
-        IgnoreError(iterator.ReadOptionValue(curUriPath));
-        curUriPath += optionLength;
-
-        SuccessOrExit(error = iterator.Advance(kOptionUriPath));
-    }
-
-    *curUriPath = '\0';
+    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
     for (const Resource *resource = mResources.GetHead(); resource; resource = resource->GetNext())
     {

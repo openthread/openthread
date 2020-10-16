@@ -146,11 +146,6 @@ class Resource : public otCoapResource, public LinkedListEntry<Resource>
     friend class CoapBase;
 
 public:
-    enum
-    {
-        kMaxReceivedUriPath = 32, ///< Maximum supported URI path on received messages.
-    };
-
     /**
      * This constructor initializes the resource.
      *
