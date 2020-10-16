@@ -92,7 +92,7 @@ class SnifferSocketTransport(SnifferTransport):
 
     BASE_PORT = 9000
 
-    WELLKNOWN_NODE_ID = 34
+    MAX_NETWORK_SIZE = 33
 
     PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
@@ -110,12 +110,12 @@ class SnifferSocketTransport(SnifferTransport):
     def _nodeid_to_address(self, nodeid, ip_address=''):
         return (
             ip_address,
-            self.BASE_PORT + (self.PORT_OFFSET * self.WELLKNOWN_NODE_ID) + nodeid,
+            self.BASE_PORT + (self.PORT_OFFSET * (self.MAX_NETWORK_SIZE + 1)) + nodeid,
         )
 
     def _address_to_nodeid(self, address):
         _, port = address
-        return (port - self.BASE_PORT - (self.PORT_OFFSET * self.WELLKNOWN_NODE_ID))
+        return (port - self.BASE_PORT - (self.PORT_OFFSET * (self.MAX_NETWORK_SIZE + 1)))
 
     def open(self):
         if self.is_opened:
@@ -130,7 +130,7 @@ class SnifferSocketTransport(SnifferTransport):
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         self._socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
                                 socket.inet_aton(self.RADIO_GROUP) + socket.inet_aton('127.0.0.1'))
-        self._socket.bind(self._nodeid_to_address(self.WELLKNOWN_NODE_ID))
+        self._socket.bind(self._nodeid_to_address(0))
 
     def close(self):
         if not self.is_opened:

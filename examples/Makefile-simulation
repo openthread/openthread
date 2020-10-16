@@ -103,6 +103,10 @@ ifeq ($(VIRTUAL_TIME_UART),1)
 COMMONCFLAGS                   += -DOPENTHREAD_SIMULATION_VIRTUAL_TIME_UART=1
 endif
 
+ifneq ($(MAX_NETWORK_SIZE),)
+COMMONCFLAGS                   += -DOPENTHREAD_SIMULATION_MAX_NETWORK_SIZE=$(MAX_NETWORK_SIZE)
+endif
+
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
