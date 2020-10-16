@@ -166,6 +166,7 @@ public:
     enum : uint8_t
     {
         kDefaultTokenLength = OT_COAP_DEFAULT_TOKEN_LENGTH, ///< Default token length
+        kMaxReceivedUriPath = 32,                           ///< Maximum supported URI path on received messages.
         kMaxTokenLength     = OT_COAP_MAX_TOKEN_LENGTH,     ///< Maximum token length.
     };
 
@@ -471,16 +472,16 @@ public:
     otError AppendUriPathOptions(const char *aUriPath);
 
     /**
-     * This method reads the Uri-Path options and constructs the URI path in the buffer pointed to by @p `aUriPath`.
+     * This method reads the Uri-Path options and constructs the URI path in the buffer referenced by @p `aUriPath`.
      *
-     * @param[in] aUriPath  A pointer to the buffer for storing URI path.
-     * @param[in] aSize     The buffer size.
+     * @param[in] aUriPath  A reference to the buffer for storing URI path.
+     *                      NOTE: The buffer size must be `kMaxReceivedUriPath + 1`.
      *
      * @retval  OT_ERROR_NONE   Successfully read the Uri-Path options.
      * @retval  OT_ERROR_PARSE  CoAP Option header not well-formed.
      *
      */
-    otError ReadUriPathOptions(char *aUriPath, uint8_t aSize) const;
+    otError ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) const;
 
     /**
      * This method appends a Block option

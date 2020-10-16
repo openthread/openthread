@@ -227,10 +227,9 @@ exit:
     return error;
 }
 
-otError Message::ReadUriPathOptions(char *aUriPath, uint8_t aSize) const
+otError Message::ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) const
 {
     char *           curUriPath = aUriPath;
-    char *           uriPathEnd = aUriPath + aSize;
     otError          error      = OT_ERROR_NONE;
     Option::Iterator iterator;
 
@@ -245,7 +244,7 @@ otError Message::ReadUriPathOptions(char *aUriPath, uint8_t aSize) const
             *curUriPath++ = '/';
         }
 
-        VerifyOrExit(curUriPath + optionLength < uriPathEnd, error = OT_ERROR_PARSE);
+        VerifyOrExit(curUriPath + optionLength < OT_ARRAY_END(aUriPath), error = OT_ERROR_PARSE);
 
         IgnoreError(iterator.ReadOptionValue(curUriPath));
         curUriPath += optionLength;

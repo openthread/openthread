@@ -157,10 +157,10 @@ void Otns::EmitDeviceMode(Mle::DeviceMode aMode)
 
 void Otns::EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    char    uriPath[Coap::Resource::kMaxReceivedUriPath + 1];
+    char    uriPath[Coap::Message::kMaxReceivedUriPath + 1];
     otError error;
 
-    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath, sizeof(uriPath)));
+    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
     EmitStatus("coap=send,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
                aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
@@ -173,10 +173,10 @@ exit:
 
 void Otns::EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    char    uriPath[Coap::Resource::kMaxReceivedUriPath + 1];
+    char    uriPath[Coap::Message::kMaxReceivedUriPath + 1];
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath, sizeof(uriPath)));
+    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
     EmitStatus("coap=recv,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
                aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
@@ -189,10 +189,10 @@ exit:
 
 void Otns::EmitCoapSendFailure(otError aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    char    uriPath[Coap::Resource::kMaxReceivedUriPath + 1];
+    char    uriPath[Coap::Message::kMaxReceivedUriPath + 1];
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath, sizeof(uriPath)));
+    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
     EmitStatus("coap=send_error,%d,%d,%d,%s,%s,%d,%s", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(),
                uriPath, aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort(),

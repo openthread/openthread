@@ -684,7 +684,7 @@ exit:
 
 void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    char     uriPath[Resource::kMaxReceivedUriPath + 1];
+    char     uriPath[Message::kMaxReceivedUriPath + 1];
     Message *cachedResponse = nullptr;
     otError  error          = OT_ERROR_NOT_FOUND;
 
@@ -709,7 +709,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
         break;
     }
 
-    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath, sizeof(uriPath)));
+    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
     for (const Resource *resource = mResources.GetHead(); resource; resource = resource->GetNext())
     {
