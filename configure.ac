@@ -248,7 +248,7 @@ if test "${nl_cv_clang}" = "yes"; then
     PROSPECTIVE_CXXFLAGS="${PROSPECTIVE_CXXFLAGS} -Wconversion"
 fi
 
-function convert_warning_flags_to_positive() {
+convert_warning_flags_to_positive() {
     flags_to_check=""
     warning_flag_backup=""
     for option in ${1}; do
@@ -263,7 +263,7 @@ function convert_warning_flags_to_positive() {
     done
 }
 
-function restore_negative_form_of_warning_flags() {
+restore_negative_form_of_warning_flags() {
     final_flags=${1}
     for positive_option in ${warning_flag_backup}; do
         final_flags=$(echo $ECHO_N $final_flags | $SED "s|-W${positive_option}|-Wno-${positive_option}|g")
@@ -272,7 +272,7 @@ function restore_negative_form_of_warning_flags() {
     unset warning_flag_backup
 }
 
-function check_prospective_CFLAGS() {
+check_prospective_CFLAGS() {
     if test "${nl_cv_clang}" = "yes"; then
         AX_CHECK_COMPILER_OPTIONS([C], ${PROSPECTIVE_CFLAGS})
     else
@@ -284,7 +284,7 @@ function check_prospective_CFLAGS() {
     fi
 }
 
-function check_prospective_CXXFLAGS() {
+check_prospective_CXXFLAGS() {
     if test "${nl_cv_clang}" = "yes"; then
         AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CXXFLAGS})
     else
@@ -1087,7 +1087,7 @@ AC_MSG_NOTICE([
   ---------------------
   Package                                   : ${PACKAGE_NAME}
   Version                                   : ${PACKAGE_VERSION}
-  Interface                                 : ${LIBOPENTHREAD_VERSION_INFO//:/.}
+  Interface                                 : $(echo $LIBOPENTHREAD_VERSION_INFO | $SED 's/:/./g')
   Build system                              : ${build}
   Host system                               : ${host}
   Host architecture                         : ${host_cpu}
