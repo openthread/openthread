@@ -320,7 +320,7 @@ otError CoapBase::SendHeaderResponse(Message::Code aCode, const Message &aReques
         OT_UNREACHABLE_CODE(break);
     }
 
-    SuccessOrExit(error = message->SetToken(aRequest.GetToken(), aRequest.GetTokenLength()));
+    SuccessOrExit(error = message->SetTokenFromMessage(aRequest));
 
     SuccessOrExit(error = SendMessage(*message, aMessageInfo));
 

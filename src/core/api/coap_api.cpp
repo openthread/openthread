@@ -63,7 +63,7 @@ otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aReques
     response.Init(static_cast<Coap::Type>(aType), static_cast<Coap::Code>(aCode));
     response.SetMessageId(request.GetMessageId());
 
-    return response.SetToken(request.GetToken(), request.GetTokenLength());
+    return response.SetTokenFromMessage(request);
 }
 
 otError otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_t aTokenLength)
@@ -73,7 +73,7 @@ otError otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_
 
 void otCoapMessageGenerateToken(otMessage *aMessage, uint8_t aTokenLength)
 {
-    IgnoreError(static_cast<Coap::Message *>(aMessage)->SetToken(aTokenLength));
+    IgnoreError(static_cast<Coap::Message *>(aMessage)->GenerateRandomToken(aTokenLength));
 }
 
 otError otCoapMessageAppendContentFormatOption(otMessage *aMessage, otCoapOptionContentFormat aContentFormat)
