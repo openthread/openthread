@@ -387,6 +387,17 @@ public:
     otError SetToken(const uint8_t *aToken, uint8_t aTokenLength);
 
     /**
+     * This method sets the Token value and length by copying it from another given message.
+     *
+     * @param[in] aMessage       The message to copy the Token from.
+     *
+     * @retval OT_ERROR_NONE     Successfully set the token value.
+     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to set the token value.
+     *
+     */
+    otError SetTokenFromMessage(const Message &aMessage);
+
+    /**
      * This method sets the Token length and randomizes its value.
      *
      * @param[in]  aTokenLength  The Length of a Token to set.
@@ -395,7 +406,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to set the token value.
      *
      */
-    otError SetToken(uint8_t aTokenLength);
+    otError GenerateRandomToken(uint8_t aTokenLength);
 
     /**
      * This method checks if Tokens in two CoAP headers are equal.

@@ -65,7 +65,7 @@ otError Message::Init(Type aType, Code aCode, const char *aUriPath)
     otError error;
 
     Init(aType, aCode);
-    SuccessOrExit(error = SetToken(kDefaultTokenLength));
+    SuccessOrExit(error = GenerateRandomToken(kDefaultTokenLength));
     SuccessOrExit(error = AppendUriPathOptions(aUriPath));
 
 exit:
@@ -333,7 +333,7 @@ otError Message::SetToken(const uint8_t *aToken, uint8_t aTokenLength)
     return SetLength(GetHelpData().mHeaderLength);
 }
 
-otError Message::SetToken(uint8_t aTokenLength)
+otError Message::GenerateRandomToken(uint8_t aTokenLength)
 {
     uint8_t token[kMaxTokenLength];
 
@@ -342,6 +342,11 @@ otError Message::SetToken(uint8_t aTokenLength)
     IgnoreError(Random::Crypto::FillBuffer(token, aTokenLength));
 
     return SetToken(token, aTokenLength);
+}
+
+otError Message::SetTokenFromMessage(const Message &aMessage)
+{
+    return SetToken(aMessage.GetToken(), aMessage.GetTokenLength());
 }
 
 bool Message::IsTokenEqual(const Message &aMessage) const
@@ -357,7 +362,7 @@ otError Message::SetDefaultResponseHeader(const Message &aRequest)
 
     SetMessageId(aRequest.GetMessageId());
 
-    return SetToken(aRequest.GetToken(), aRequest.GetTokenLength());
+    return SetTokenFromMessage(aRequest);
 }
 
 Message *Message::Clone(uint16_t aLength) const

@@ -202,7 +202,7 @@ static void SendErrorMessage(Coap::CoapSecure &   aCoapSecure,
         message->SetMessageId(aRequest.GetMessageId());
     }
 
-    SuccessOrExit(error = message->SetToken(aRequest.GetToken(), aRequest.GetTokenLength()));
+    SuccessOrExit(error = message->SetTokenFromMessage(aRequest));
 
     SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetMessageInfo()));
 

@@ -395,7 +395,7 @@ otError MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address 
     VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
     message->InitAsConfirmablePost();
-    SuccessOrExit(message->SetToken(Coap::Message::kDefaultTokenLength));
+    SuccessOrExit(message->GenerateRandomToken(Coap::Message::kDefaultTokenLength));
     SuccessOrExit(message->AppendUriPathOptions(UriPath::kMlr));
     SuccessOrExit(message->SetPayloadMarker());
 
