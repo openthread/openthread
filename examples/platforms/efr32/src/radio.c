@@ -65,22 +65,22 @@
 #define IEEE802154_ACK_LENGTH (5u)
 
 // FCF + DSN + dest PANID + dest addr + src PANID + src addr (without security header)
-#define IEEE802154_MAX_MHR_LENGTH               (2u + 1u + 2u + 8u + 2u + 8u)
+#define IEEE802154_MAX_MHR_LENGTH (2u + 1u + 2u + 8u + 2u + 8u)
 
-#define IEEE802154_FRAME_TYPE_MASK              (0x07u)
-#define IEEE802154_FRAME_TYPE_ACK               (0x02u)
-#define IEEE802154_FRAME_TYPE_MAC_COMMAND       (0x03u)
-#define IEEE802154_ACK_REQUEST                  (1u << 5)
-#define IEEE802154_DSN_OFFSET                   (2u)
-#define IEEE802154_FCF_OFFSET                   (0u)
+#define IEEE802154_FRAME_TYPE_MASK (0x07u)
+#define IEEE802154_FRAME_TYPE_ACK (0x02u)
+#define IEEE802154_FRAME_TYPE_MAC_COMMAND (0x03u)
+#define IEEE802154_ACK_REQUEST (1u << 5)
+#define IEEE802154_DSN_OFFSET (2u)
+#define IEEE802154_FCF_OFFSET (0u)
 
-#define EFR32_RECEIVE_SENSITIVITY               (-100)  // dBm
-#define EFR32_RSSI_AVERAGING_TIME               (16u)   // us
-#define EFR32_RSSI_AVERAGING_TIMEOUT            (300u)  // us
+#define EFR32_RECEIVE_SENSITIVITY (-100)    // dBm
+#define EFR32_RSSI_AVERAGING_TIME (16u)     // us
+#define EFR32_RSSI_AVERAGING_TIMEOUT (300u) // us
 
-#define EFR32_SCHEDULER_SAMPLE_RSSI_PRIORITY    (10u)   // High priority
-#define EFR32_SCHEDULER_TX_PRIORITY             (10u)   // High priority
-#define EFR32_SCHEDULER_RX_PRIORITY             (20u)   // Low priority
+#define EFR32_SCHEDULER_SAMPLE_RSSI_PRIORITY (10u) // High priority
+#define EFR32_SCHEDULER_TX_PRIORITY (10u)          // High priority
+#define EFR32_SCHEDULER_RX_PRIORITY (20u)          // Low priority
 
 enum
 {
