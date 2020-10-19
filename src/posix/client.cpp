@@ -152,7 +152,7 @@ static bool ReconnectSession(void)
         VerifyOrExit(rval == -1, ok = true);
 
         // Exit immediately if the sock file is not found
-        VerifyOrExit(errno != ENOENT, OT_NOOP);
+        VerifyOrExit(errno != ENOENT);
     }
 
 exit:

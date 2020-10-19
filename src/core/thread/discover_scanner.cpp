@@ -264,7 +264,7 @@ void DiscoverScanner::HandleTimer(Timer &aTimer)
 
 void DiscoverScanner::HandleTimer(void)
 {
-    VerifyOrExit(mState == kStateScanning, OT_NOOP);
+    VerifyOrExit(mState == kStateScanning);
 
     // Move to next scan channel and resume message transmissions on
     // `MeshForwarder` so that the queued MLE Discovery Request message
@@ -356,7 +356,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
 
                 if (mEnableFiltering)
                 {
-                    VerifyOrExit(steeringData.Contains(mFilterIndexes), OT_NOOP);
+                    VerifyOrExit(steeringData.Contains(mFilterIndexes));
                 }
 
                 didCheckSteeringData = true;
@@ -374,7 +374,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
         offset += sizeof(meshcopTlv) + meshcopTlv.GetLength();
     }
 
-    VerifyOrExit(!mEnableFiltering || didCheckSteeringData, OT_NOOP);
+    VerifyOrExit(!mEnableFiltering || didCheckSteeringData);
 
     if (mHandler)
     {

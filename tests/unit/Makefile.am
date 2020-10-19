@@ -120,6 +120,7 @@ check_PROGRAMS                                                     += \
     test-lookup-table                                                 \
     test-lowpan                                                       \
     test-mac-frame                                                    \
+    test-macros                                                       \
     test-message                                                      \
     test-message-queue                                                \
     test-multicast-listeners-table                                    \
@@ -216,6 +217,9 @@ test_lowpan_SOURCES          = $(COMMON_SOURCES) test_lowpan.cpp
 
 test_mac_frame_LDADD         = $(COMMON_LDADD)
 test_mac_frame_SOURCES       = $(COMMON_SOURCES) test_mac_frame.cpp
+
+test_macros_LDADD            = $(COMMON_LDADD)
+test_macros_SOURCES          = $(COMMON_SOURCES) test_macros.cpp
 
 test_message_LDADD           = $(COMMON_LDADD)
 test_message_SOURCES         = $(COMMON_SOURCES) test_message.cpp

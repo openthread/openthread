@@ -154,7 +154,7 @@ otError SubMac::Enable(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mState == kStateDisabled, OT_NOOP);
+    VerifyOrExit(mState == kStateDisabled);
 
     SuccessOrExit(error = Get<Radio>().Enable());
     SuccessOrExit(error = Get<Radio>().Sleep());
@@ -312,12 +312,12 @@ void SubMac::ProcessTransmitSecurity(void)
     const ExtAddress *extAddress = nullptr;
     uint8_t           keyIdMode;
 
-    VerifyOrExit(ShouldHandleTransmitSecurity(), OT_NOOP);
-    VerifyOrExit(mTransmitFrame.GetSecurityEnabled(), OT_NOOP);
-    VerifyOrExit(!mTransmitFrame.IsSecurityProcessed(), OT_NOOP);
+    VerifyOrExit(ShouldHandleTransmitSecurity());
+    VerifyOrExit(mTransmitFrame.GetSecurityEnabled());
+    VerifyOrExit(!mTransmitFrame.IsSecurityProcessed());
 
     SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
-    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1, OT_NOOP);
+    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
 
     mTransmitFrame.SetAesKey(GetCurrentMacKey());
 
@@ -334,7 +334,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Transmit security will be processed after time IE content is updated.
-    VerifyOrExit(mTransmitFrame.GetTimeIeOffset() == 0, OT_NOOP);
+    VerifyOrExit(mTransmitFrame.GetTimeIeOffset() == 0);
 #endif
 
     mTransmitFrame.ProcessTransmitAesCcm(*extAddress);
@@ -418,9 +418,9 @@ void SubMac::BeginTransmit(void)
     OT_UNUSED_VARIABLE(error);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    VerifyOrExit(mState == kStateCsmaBackoff || mState == kStateCslTransmit, OT_NOOP);
+    VerifyOrExit(mState == kStateCsmaBackoff || mState == kStateCslTransmit);
 #else
-    VerifyOrExit(mState == kStateCsmaBackoff, OT_NOOP);
+    VerifyOrExit(mState == kStateCsmaBackoff);
 #endif
 
     mTransmitFrame.SetCsmaCaEnabled(mTransmitFrame.mInfo.mTxInfo.mPeriod == 0);
@@ -538,7 +538,7 @@ void SubMac::UpdateFrameCounterOnTxDone(const TxFrame &aFrame)
 
     OT_UNUSED_VARIABLE(allowError);
 
-    VerifyOrExit(!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled(), OT_NOOP);
+    VerifyOrExit(!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled());
 
     // In an FTD/MTD build, if/when link-raw is enabled, the `TxFrame`
     // is prepared and given by user and may not necessarily follow 15.4
@@ -554,7 +554,7 @@ void SubMac::UpdateFrameCounterOnTxDone(const TxFrame &aFrame)
 #endif
 
     VerifyOrExit(aFrame.GetKeyIdMode(keyIdMode) == OT_ERROR_NONE, OT_ASSERT(allowError));
-    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1, OT_NOOP);
+    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
 
     VerifyOrExit(aFrame.GetFrameCounter(frameCounter) == OT_ERROR_NONE, OT_ASSERT(allowError));
     UpdateFrameCounter(frameCounter);
@@ -694,7 +694,7 @@ bool SubMac::ShouldHandleTransmitSecurity(void) const
     VerifyOrExit(!RadioSupportsTransmitSecurity(), swTxSecurity = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NOOP);
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -712,7 +712,7 @@ bool SubMac::ShouldHandleCsmaBackOff(void) const
     VerifyOrExit(!RadioSupportsCsmaBackoff(), swCsma = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NOOP);
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -730,7 +730,7 @@ bool SubMac::ShouldHandleAckTimeout(void) const
     VerifyOrExit(!RadioSupportsAckTimeout(), swAckTimeout = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NOOP);
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -748,7 +748,7 @@ bool SubMac::ShouldHandleRetries(void) const
     VerifyOrExit(!RadioSupportsRetries(), swRetries = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NOOP);
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -766,7 +766,7 @@ bool SubMac::ShouldHandleEnergyScan(void) const
     VerifyOrExit(!RadioSupportsEnergyScan(), swEnergyScan = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NOOP);
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -784,7 +784,7 @@ bool SubMac::ShouldHandleTransmitTargetTime(void) const
     VerifyOrExit(!RadioSupportsTransmitTiming(), swTxDelay = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NOOP);
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -827,7 +827,7 @@ void SubMac::SetMacKey(uint8_t    aKeyIdMode,
         break;
     }
 
-    VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
+    VerifyOrExit(!ShouldHandleTransmitSecurity());
 
     Get<Radio>().SetMacKey(aKeyIdMode, aKeyId, aPrevKey, aCurrKey, aNextKey);
 
@@ -846,7 +846,7 @@ void SubMac::SetFrameCounter(uint32_t aFrameCounter)
 {
     mFrameCounter = aFrameCounter;
 
-    VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
+    VerifyOrExit(!ShouldHandleTransmitSecurity());
 
     Get<Radio>().SetMacFrameCounter(aFrameCounter);
 
@@ -932,7 +932,7 @@ void SubMac::SetCslChannel(uint8_t aChannel)
 
 void SubMac::SetCslPeriod(uint16_t aPeriod)
 {
-    VerifyOrExit(mCslPeriod != aPeriod, OT_NOOP);
+    VerifyOrExit(mCslPeriod != aPeriod);
 
     mCslPeriod = aPeriod;
 

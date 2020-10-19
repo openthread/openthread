@@ -37,6 +37,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/non_copyable.hpp"
 #include "thread/network_data.hpp"
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -58,7 +59,7 @@ namespace NetworkData {
  * This class implements the Thread Network Data contributed by the local device.
  *
  */
-class Local : public NetworkData
+class Local : public NetworkData, private NonCopyable
 {
 public:
     /**

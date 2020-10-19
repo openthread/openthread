@@ -177,7 +177,7 @@ HdlcInterface::~HdlcInterface(void)
 
 void HdlcInterface::Deinit(void)
 {
-    VerifyOrExit(mSockFd != -1, OT_NOOP);
+    VerifyOrExit(mSockFd != -1);
 
     VerifyOrExit(0 == close(mSockFd), perror("close RCP"));
     VerifyOrExit(-1 != wait(nullptr) || errno == ECHILD, perror("wait RCP"));
@@ -431,7 +431,7 @@ int HdlcInterface::OpenFile(const RadioUrl &aRadioUrl)
         int      stopBit  = 1;
         uint32_t baudrate = 115200;
 
-        VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0, OT_NOOP);
+        VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0);
 
         cfmakeraw(&tios);
 
@@ -573,7 +573,7 @@ int HdlcInterface::OpenFile(const RadioUrl &aRadioUrl)
 
         VerifyOrExit((rval = cfsetspeed(&tios, static_cast<speed_t>(speed))) == 0, perror("cfsetspeed"));
         VerifyOrExit((rval = tcsetattr(fd, TCSANOW, &tios)) == 0, perror("tcsetattr"));
-        VerifyOrExit((rval = tcflush(fd, TCIOFLUSH)) == 0, OT_NOOP);
+        VerifyOrExit((rval = tcflush(fd, TCIOFLUSH)) == 0);
     }
 
 exit:

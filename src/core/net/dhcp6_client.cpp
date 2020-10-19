@@ -165,7 +165,7 @@ void Client::UpdateAddresses(void)
 
 void Client::Start(void)
 {
-    VerifyOrExit(!mSocket.IsBound(), OT_NOOP);
+    VerifyOrExit(!mSocket.IsBound());
 
     IgnoreError(mSocket.Open(&Client::HandleUdpReceive, this));
     IgnoreError(mSocket.Bind(kDhcpClientPort));
@@ -186,8 +186,7 @@ bool Client::ProcessNextIdentityAssociation(void)
     bool rval = false;
 
     // not interrupt in-progress solicit
-    VerifyOrExit(mIdentityAssociationCurrent == nullptr || mIdentityAssociationCurrent->mStatus != kIaStatusSoliciting,
-                 OT_NOOP);
+    VerifyOrExit(mIdentityAssociationCurrent == nullptr || mIdentityAssociationCurrent->mStatus != kIaStatusSoliciting);
 
     mTrickleTimer.Stop();
 
@@ -432,18 +431,18 @@ void Client::ProcessReply(Message &aMessage)
     }
 
     // Server Identifier
-    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionServerIdentifier)) > 0, OT_NOOP);
+    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionServerIdentifier)) > 0);
     SuccessOrExit(ProcessServerIdentifier(aMessage, optionOffset));
 
     // Client Identifier
-    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionClientIdentifier)) > 0, OT_NOOP);
+    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionClientIdentifier)) > 0);
     SuccessOrExit(ProcessClientIdentifier(aMessage, optionOffset));
 
     // Rapid Commit
-    VerifyOrExit(FindOption(aMessage, offset, length, kOptionRapidCommit) > 0, OT_NOOP);
+    VerifyOrExit(FindOption(aMessage, offset, length, kOptionRapidCommit) > 0);
 
     // IA_NA
-    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionIaNa)) > 0, OT_NOOP);
+    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionIaNa)) > 0);
     SuccessOrExit(ProcessIaNa(aMessage, optionOffset));
 
     HandleTrickleTimer();

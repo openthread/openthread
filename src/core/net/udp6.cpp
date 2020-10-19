@@ -51,20 +51,18 @@ bool Udp::SocketHandle::Matches(const MessageInfo &aMessageInfo) const
 {
     bool matches = false;
 
-    VerifyOrExit(GetSockName().mPort == aMessageInfo.GetSockPort(), OT_NOOP);
+    VerifyOrExit(GetSockName().mPort == aMessageInfo.GetSockPort());
 
     VerifyOrExit(aMessageInfo.GetSockAddr().IsMulticast() || GetSockName().GetAddress().IsUnspecified() ||
-                     GetSockName().GetAddress() == aMessageInfo.GetSockAddr(),
-                 OT_NOOP);
+                 GetSockName().GetAddress() == aMessageInfo.GetSockAddr());
 
     // Verify source if connected socket
     if (GetPeerName().mPort != 0)
     {
-        VerifyOrExit(GetPeerName().mPort == aMessageInfo.GetPeerPort(), OT_NOOP);
+        VerifyOrExit(GetPeerName().mPort == aMessageInfo.GetPeerPort());
 
         VerifyOrExit(GetPeerName().GetAddress().IsUnspecified() ||
-                         GetPeerName().GetAddress() == aMessageInfo.GetPeerAddr(),
-                     OT_NOOP);
+                     GetPeerName().GetAddress() == aMessageInfo.GetPeerAddr());
     }
 
     matches = true;
@@ -327,6 +325,15 @@ otError Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo 
     if (!IsMlePort(aSocket.mSockName.mPort) &&
         !(aSocket.mSockName.mPort == Tmf::kUdpPort && aMessage.GetSubType() == Message::kSubTypeJoinerEntrust))
     {
+        // Replace anycast address with a valid unicast address since response messages typically copy the peer address
+        if (Get<Mle::Mle>().IsAnycastLocator(messageInfoLocal.GetSockAddr()))
+        {
+            const NetifUnicastAddress *netifAddr = Get<Ip6>().SelectSourceAddress(messageInfoLocal);
+
+            VerifyOrExit(netifAddr != nullptr, error = OT_ERROR_INVALID_ARGS);
+            messageInfoLocal.SetSockAddr(netifAddr->GetAddress());
+        }
+
         SuccessOrExit(error = otPlatUdpSend(&aSocket, &aMessage, &messageInfoLocal));
     }
     else
@@ -442,12 +449,12 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    VerifyOrExit(IsMlePort(aMessageInfo.mSockPort), OT_NOOP);
+    VerifyOrExit(IsMlePort(aMessageInfo.mSockPort));
 #endif
 
     for (Receiver *receiver = mReceivers.GetHead(); receiver; receiver = receiver->GetNext())
     {
-        VerifyOrExit(!receiver->HandleMessage(aMessage, aMessageInfo), OT_NOOP);
+        VerifyOrExit(!receiver->HandleMessage(aMessage, aMessageInfo));
     }
 
     HandlePayload(aMessage, aMessageInfo);
@@ -482,7 +489,7 @@ void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
     socket = mSockets.FindMatching(aMessageInfo, prev);
 #endif
 
-    VerifyOrExit(socket != nullptr, OT_NOOP);
+    VerifyOrExit(socket != nullptr);
 
     aMessage.RemoveHeader(aMessage.GetOffset());
     OT_ASSERT(aMessage.GetOffset() == 0);

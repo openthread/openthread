@@ -42,6 +42,7 @@
 #include <openthread/thread_ftd.h>
 #include <openthread/platform/otns.h>
 
+#include "coap/coap_message.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -141,6 +142,34 @@ public:
      *
      */
     static void EmitDeviceMode(Mle::DeviceMode aMode);
+
+    /**
+     * This function emits the sending COAP message info to OTNS.
+     *
+     * @param[in] aMessage      The sending COAP message.
+     * @param[in] aMessageInfo  The message info.
+     *
+     */
+    static void EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    /**
+     * This function emits the COAP message sending failure to OTNS.
+     *
+     * @param[in] aError        The error in sending the COAP message.
+     * @param[in] aMessage      The COAP message failed to send.
+     * @param[in] aMessageInfo  The message info.
+     *
+     */
+    static void EmitCoapSendFailure(otError aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    /**
+     * This function emits the received COAP message info to OTNS.
+     *
+     * @param[in] aMessage      The received COAP message.
+     * @param[in] aMessageInfo  The message info.
+     *
+     */
+    static void EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
     static void EmitStatus(const char *aFmt, ...);

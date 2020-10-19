@@ -85,14 +85,14 @@ bool JoinerPskd::IsPskdValid(const char *aPskString)
     bool     valid      = false;
     uint16_t pskdLength = StringLength(aPskString, kMaxLength + 1);
 
-    VerifyOrExit(pskdLength >= kMinLength && pskdLength <= kMaxLength, OT_NOOP);
+    VerifyOrExit(pskdLength >= kMinLength && pskdLength <= kMaxLength);
 
     for (uint16_t i = 0; i < pskdLength; i++)
     {
         char c = aPskString[i];
 
-        VerifyOrExit(isdigit(c) || isupper(c), OT_NOOP);
-        VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z', OT_NOOP);
+        VerifyOrExit(isdigit(c) || isupper(c));
+        VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z');
     }
 
     valid = true;

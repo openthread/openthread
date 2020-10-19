@@ -58,7 +58,7 @@ otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aCont
     otError           error          = OT_ERROR_NONE;
     ExternalCallback *unusedCallback = nullptr;
 
-    VerifyOrExit(aCallback != nullptr, OT_NOOP);
+    VerifyOrExit(aCallback != nullptr);
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {
@@ -86,7 +86,7 @@ exit:
 
 void Notifier::RemoveCallback(otStateChangedCallback aCallback, void *aContext)
 {
-    VerifyOrExit(aCallback != nullptr, OT_NOOP);
+    VerifyOrExit(aCallback != nullptr);
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {
@@ -125,7 +125,7 @@ void Notifier::EmitEvents(void)
 {
     Events events;
 
-    VerifyOrExit(!mEventsToSignal.IsEmpty(), OT_NOOP);
+    VerifyOrExit(!mEventsToSignal.IsEmpty());
 
     // Note that the callbacks may signal new events, so we create a
     // copy of `mEventsToSignal` and then clear it.
@@ -207,7 +207,7 @@ void Notifier::LogEvents(Events aEvents) const
 
     for (uint8_t bit = 0; bit < sizeof(Events::Flags) * CHAR_BIT; bit++)
     {
-        VerifyOrExit(flags != 0, OT_NOOP);
+        VerifyOrExit(flags != 0);
 
         if (flags & (1 << bit))
         {

@@ -117,7 +117,7 @@ Message *CoapBase::NewMessage(const Message::Settings &aSettings)
 {
     Message *message = nullptr;
 
-    VerifyOrExit((message = static_cast<Message *>(Get<Ip6::Udp>().NewMessage(0, aSettings))) != nullptr, OT_NOOP);
+    VerifyOrExit((message = static_cast<Message *>(Get<Ip6::Udp>().NewMessage(0, aSettings))) != nullptr);
     message->SetOffset(0);
 
 exit:
@@ -126,7 +126,21 @@ exit:
 
 otError CoapBase::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    return mSender(*this, aMessage, aMessageInfo);
+    otError error;
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    Get<Utils::Otns>().EmitCoapSend(static_cast<Message &>(aMessage), aMessageInfo);
+#endif
+
+    error = mSender(*this, aMessage, aMessageInfo);
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    if (error != OT_ERROR_NONE)
+    {
+        Get<Utils::Otns>().EmitCoapSendFailure(error, static_cast<Message &>(aMessage), aMessageInfo);
+    }
+#endif
+    return error;
 }
 
 otError CoapBase::SendMessage(Message &               aMessage,
@@ -531,6 +545,10 @@ void CoapBase::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageIn
     {
         ProcessReceivedResponse(message, aMessageInfo);
     }
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    Get<Utils::Otns>().EmitCoapReceive(message, aMessageInfo);
+#endif
 }
 
 void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -543,7 +561,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
 #endif
 
     request = FindRelatedRequest(aMessage, aMessageInfo, metadata);
-    VerifyOrExit(request != nullptr, OT_NOOP);
+    VerifyOrExit(request != nullptr);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     if (metadata.mObserve && request->IsRequest())
@@ -666,11 +684,9 @@ exit:
 
 void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    char             uriPath[Resource::kMaxReceivedUriPath];
-    char *           curUriPath     = uriPath;
-    Message *        cachedResponse = nullptr;
-    otError          error          = OT_ERROR_NOT_FOUND;
-    Option::Iterator iterator;
+    char     uriPath[Message::kMaxReceivedUriPath + 1];
+    Message *cachedResponse = nullptr;
+    otError  error          = OT_ERROR_NOT_FOUND;
 
     if (mInterceptor != nullptr)
     {
@@ -693,26 +709,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
         break;
     }
 
-    SuccessOrExit(error = iterator.Init(aMessage, kOptionUriPath));
-
-    while (!iterator.IsDone())
-    {
-        uint16_t optionLength = iterator.GetOption()->GetLength();
-
-        if (curUriPath != uriPath)
-        {
-            *curUriPath++ = '/';
-        }
-
-        VerifyOrExit(curUriPath + optionLength < OT_ARRAY_END(uriPath), OT_NOOP);
-
-        IgnoreError(iterator.ReadOptionValue(curUriPath));
-        curUriPath += optionLength;
-
-        SuccessOrExit(error = iterator.Advance(kOptionUriPath));
-    }
-
-    *curUriPath = '\0';
+    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
     for (const Resource *resource = mResources.GetHead(); resource; resource = resource->GetNext())
     {
@@ -814,11 +811,11 @@ void ResponsesQueue::EnqueueResponse(Message &               aMessage,
     metadata.mDequeueTime = TimerMilli::GetNow() + aTxParameters.CalculateExchangeLifetime();
     metadata.mMessageInfo = aMessageInfo;
 
-    VerifyOrExit(FindMatchedResponse(aMessage, aMessageInfo) == nullptr, OT_NOOP);
+    VerifyOrExit(FindMatchedResponse(aMessage, aMessageInfo) == nullptr);
 
     UpdateQueue();
 
-    VerifyOrExit((responseCopy = aMessage.Clone()) != nullptr, OT_NOOP);
+    VerifyOrExit((responseCopy = aMessage.Clone()) != nullptr);
 
     VerifyOrExit(metadata.AppendTo(*responseCopy) == OT_ERROR_NONE, responseCopy->Free());
 
@@ -927,7 +924,7 @@ static uint32_t Multiply(uint32_t aValueA, uint32_t aValueB)
 {
     uint32_t result = 0;
 
-    VerifyOrExit(aValueA, OT_NOOP);
+    VerifyOrExit(aValueA);
 
     result = aValueA * aValueB;
     result = (result / aValueA == aValueB) ? result : 0;
@@ -996,7 +993,7 @@ otError Coap::Start(uint16_t aPort, otNetifIdentifier aNetifIdentifier)
     otError error        = OT_ERROR_NONE;
     bool    socketOpened = false;
 
-    VerifyOrExit(!mSocket.IsBound(), OT_NOOP);
+    VerifyOrExit(!mSocket.IsBound());
 
     SuccessOrExit(error = mSocket.Open(&Coap::HandleUdpReceive, this));
     socketOpened = true;
@@ -1017,7 +1014,7 @@ otError Coap::Stop(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mSocket.IsBound(), OT_NOOP);
+    VerifyOrExit(mSocket.IsBound());
 
     SuccessOrExit(error = mSocket.Close());
     ClearRequestsAndResponses();

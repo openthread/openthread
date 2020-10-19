@@ -155,6 +155,55 @@ void Otns::EmitDeviceMode(Mle::DeviceMode aMode)
                aMode.IsFullNetworkData() ? "n" : "");
 }
 
+void Otns::EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    char    uriPath[Coap::Message::kMaxReceivedUriPath + 1];
+    otError error;
+
+    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
+
+    EmitStatus("coap=send,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
+               aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnCore("Otns::EmitCoapSend failed: %s", otThreadErrorToString(error));
+    }
+}
+
+void Otns::EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    char    uriPath[Coap::Message::kMaxReceivedUriPath + 1];
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
+
+    EmitStatus("coap=recv,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
+               aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnCore("Otns::EmitCoapReceive failed: %s", otThreadErrorToString(error));
+    }
+}
+
+void Otns::EmitCoapSendFailure(otError aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    char    uriPath[Coap::Message::kMaxReceivedUriPath + 1];
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
+
+    EmitStatus("coap=send_error,%d,%d,%d,%s,%s,%d,%s", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(),
+               uriPath, aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort(),
+               otThreadErrorToString(aError));
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnCore("Otns::EmitCoapSendFailure failed: %s", otThreadErrorToString(error));
+    }
+}
+
 } // namespace Utils
 } // namespace ot
 

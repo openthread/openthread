@@ -344,7 +344,7 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char **aA
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
-    VerifyOrExit(aArgsLength >= 1, OT_NOOP);
+    VerifyOrExit(aArgsLength >= 1);
 
     if (!strcmp(aArgs[0], "listener"))
     {
@@ -1528,7 +1528,7 @@ otError Interpreter::ProcessFake(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
-    VerifyOrExit(aArgsLength >= 1, OT_NOOP);
+    VerifyOrExit(aArgsLength >= 1);
 
     if (strcmp(aArgs[0], "/a/an") == 0)
     {
@@ -1546,6 +1546,43 @@ exit:
     return error;
 }
 #endif
+
+otError Interpreter::ProcessFem(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        int8_t lnaGain;
+
+        SuccessOrExit(error = otPlatRadioGetFemLnaGain(mInstance, &lnaGain));
+        OutputLine("LNA gain %d dBm", lnaGain);
+    }
+    else if (strcmp(aArgs[0], "lnagain") == 0)
+    {
+        if (aArgsLength == 1)
+        {
+            int8_t lnaGain;
+
+            SuccessOrExit(error = otPlatRadioGetFemLnaGain(mInstance, &lnaGain));
+            OutputLine("%d", lnaGain);
+        }
+        else
+        {
+            int8_t lnaGain;
+
+            SuccessOrExit(error = ParseAsInt8(aArgs[1], lnaGain));
+            SuccessOrExit(error = otPlatRadioSetFemLnaGain(mInstance, lnaGain));
+        }
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    return error;
+}
 
 otError Interpreter::ProcessIfconfig(uint8_t aArgsLength, char *aArgs[])
 {
@@ -1906,7 +1943,7 @@ otError Interpreter::ProcessLinkMetrics(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
-    VerifyOrExit(aArgsLength >= 1, OT_NOOP);
+    VerifyOrExit(aArgsLength >= 1);
 
     if (strcmp(aArgs[0], "query") == 0)
     {
@@ -1924,7 +1961,7 @@ otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
     otLinkMetrics linkMetrics;
     long          seriesId = 0;
 
-    VerifyOrExit(aArgsLength >= 2, OT_NOOP);
+    VerifyOrExit(aArgsLength >= 2);
 
     SuccessOrExit(error = ParseAsIp6Address(aArgs[0], address));
 
@@ -1932,7 +1969,7 @@ otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
 
     if (strcmp(aArgs[1], "single") == 0)
     {
-        VerifyOrExit(aArgsLength == 3, OT_NOOP);
+        VerifyOrExit(aArgsLength == 3);
         for (char *arg = aArgs[2]; *arg != '\0'; arg++)
         {
             switch (*arg)
@@ -2555,8 +2592,8 @@ void Interpreter::HandleIcmpReceive(otMessage *          aMessage,
     uint32_t timestamp = 0;
     uint16_t dataSize;
 
-    VerifyOrExit(aIcmpHeader->mType == OT_ICMP6_TYPE_ECHO_REPLY, OT_NOOP);
-    VerifyOrExit((mPingIdentifier != 0) && (mPingIdentifier == HostSwap16(aIcmpHeader->mData.m16[0])), OT_NOOP);
+    VerifyOrExit(aIcmpHeader->mType == OT_ICMP6_TYPE_ECHO_REPLY);
+    VerifyOrExit((mPingIdentifier != 0) && (mPingIdentifier == HostSwap16(aIcmpHeader->mData.m16[0])));
 
     dataSize = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
     OutputFormat("%u bytes from ", dataSize + static_cast<uint16_t>(sizeof(otIcmp6Header)));
@@ -2665,7 +2702,7 @@ void Interpreter::SendPing(void)
     messageInfo.mAllowZeroHopLimit = mPingAllowZeroHopLimit;
 
     message = otIp6NewMessage(mInstance, nullptr);
-    VerifyOrExit(message != nullptr, OT_NOOP);
+    VerifyOrExit(message != nullptr);
 
     SuccessOrExit(otMessageAppend(message, &timestamp, sizeof(timestamp)));
     SuccessOrExit(otMessageSetLength(message, mPingLength));
@@ -3885,7 +3922,7 @@ otError Interpreter::ProcessMacFilterAddress(uint8_t aArgsLength, char *aArgs[])
             SuccessOrExit(error = ParseAsHexString(aArgs[1], extAddr.m8));
             error = otLinkFilterAddAddress(mInstance, &extAddr);
 
-            VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY, OT_NOOP);
+            VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY);
 
             if (aArgsLength > 2)
             {
@@ -4093,7 +4130,7 @@ otError Interpreter::ProcessMacSend(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
-    VerifyOrExit(aArgsLength == 1, OT_NOOP);
+    VerifyOrExit(aArgsLength == 1);
 
     if (strcmp(aArgs[0], "datarequest") == 0)
     {
@@ -4133,7 +4170,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength)
     uint8_t        aArgsLength = 0;
     const Command *command;
 
-    VerifyOrExit(aBuf != nullptr && StringLength(aBuf, aBufLength + 1) <= aBufLength, OT_NOOP);
+    VerifyOrExit(aBuf != nullptr && StringLength(aBuf, aBufLength + 1) <= aBufLength);
 
     VerifyOrExit(Utils::CmdLineParser::ParseCmd(aBuf, aArgsLength, aArgs, kMaxArgs) == OT_ERROR_NONE,
                  OutputLine("Error: too many args (max %d)", kMaxArgs));
@@ -4159,7 +4196,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength)
     {
         if (strcmp(cmdName, mUserCommands[i].mName) == 0)
         {
-            mUserCommands[i].mCommand(aArgsLength - 1, &aArgs[1]);
+            mUserCommands[i].mCommand(mUserCommandsContext, aArgsLength - 1, &aArgs[1]);
             ExitNow();
         }
     }
@@ -4472,10 +4509,11 @@ void Interpreter::OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEnt
 }
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
-void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength)
+void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext)
 {
-    mUserCommands       = aCommands;
-    mUserCommandsLength = aLength;
+    mUserCommands        = aCommands;
+    mUserCommandsLength  = aLength;
+    mUserCommandsContext = aContext;
 }
 
 Interpreter &Interpreter::GetOwner(OwnerLocator &aOwnerLocator)
@@ -4559,9 +4597,9 @@ int Interpreter::OutputFormatV(const char *aFormat, va_list aArguments)
     return Output(buf, static_cast<uint16_t>(strlen(buf)));
 }
 
-extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)
+extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext)
 {
-    Interpreter::GetInterpreter().SetUserCommands(aUserCommands, aLength);
+    Interpreter::GetInterpreter().SetUserCommands(aUserCommands, aLength, aContext);
 }
 
 extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength)
@@ -4592,7 +4630,7 @@ extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 
-    VerifyOrExit(Interpreter::IsInitialized(), OT_NOOP);
+    VerifyOrExit(Interpreter::IsInitialized());
 
     Interpreter::GetInterpreter().OutputFormatV(aFormat, aArgs);
     Interpreter::GetInterpreter().OutputLine("");

@@ -556,7 +556,7 @@ otError Frame::GetKeyId(uint8_t &aKeyId) const
     uint8_t keySourceLength;
     uint8_t index = FindSecurityHeaderIndex();
 
-    VerifyOrExit(index != kInvalidIndex, OT_NOOP);
+    VerifyOrExit(index != kInvalidIndex);
 
     keySourceLength = GetKeySourceLength(mPsdu[index] & kKeyIdModeMask);
 
@@ -608,7 +608,7 @@ bool Frame::IsDataRequestCommand(void) const
     bool    isDataRequest = false;
     uint8_t commandId;
 
-    VerifyOrExit(GetType() == kFcfFrameMacCmd, OT_NOOP);
+    VerifyOrExit(GetType() == kFcfFrameMacCmd);
     SuccessOrExit(GetCommandId(commandId));
     isDataRequest = (commandId == kMacCmdDataRequest);
 
@@ -626,7 +626,7 @@ uint8_t Frame::GetFooterLength(void) const
     uint8_t footerLength = static_cast<uint8_t>(GetFcsSize());
     uint8_t index        = FindSecurityHeaderIndex();
 
-    VerifyOrExit(index != kInvalidIndex, OT_NOOP);
+    VerifyOrExit(index != kInvalidIndex);
     footerLength += CalculateMicSize(mPsdu[index]);
 
 exit:
@@ -682,7 +682,7 @@ uint8_t Frame::SkipSecurityHeaderIndex(void) const
 {
     uint8_t index = SkipAddrFieldIndex();
 
-    VerifyOrExit(index != kInvalidIndex, OT_NOOP);
+    VerifyOrExit(index != kInvalidIndex);
 
     if (GetSecurityEnabled())
     {
@@ -811,7 +811,7 @@ uint8_t Frame::FindPayloadIndex(void) const
 
     uint16_t index = SkipSecurityHeaderIndex();
 
-    VerifyOrExit(index != kInvalidIndex, OT_NOOP);
+    VerifyOrExit(index != kInvalidIndex);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     if (IsIePresent())
@@ -914,7 +914,7 @@ const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
     // `FindPayloadIndex()` verifies that Header IE(s) in frame (if present)
     // are well-formed.
 
-    VerifyOrExit((index != kInvalidIndex) && (payloadIndex != kInvalidIndex), OT_NOOP);
+    VerifyOrExit((index != kInvalidIndex) && (payloadIndex != kInvalidIndex));
 
     while (index <= payloadIndex)
     {
@@ -940,7 +940,7 @@ void Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
     uint8_t *cur = GetHeaderIe(Frame::kHeaderIeCsl);
     CslIe *  csl;
 
-    VerifyOrExit(cur != nullptr, OT_NOOP);
+    VerifyOrExit(cur != nullptr);
 
     csl = reinterpret_cast<CslIe *>(cur + sizeof(HeaderIe));
     csl->SetPeriod(aCslPeriod);
@@ -957,7 +957,7 @@ const TimeIe *Frame::GetTimeIe(void) const
     const uint8_t *cur    = nullptr;
 
     cur = GetHeaderIe(kHeaderIeVendor);
-    VerifyOrExit(cur != nullptr, OT_NOOP);
+    VerifyOrExit(cur != nullptr);
 
     cur += sizeof(HeaderIe);
 
@@ -1002,7 +1002,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     uint8_t        tagLength;
     Crypto::AesCcm aesCcm;
 
-    VerifyOrExit(GetSecurityEnabled(), OT_NOOP);
+    VerifyOrExit(GetSecurityEnabled());
 
     SuccessOrExit(GetSecurityLevel(securityLevel));
     SuccessOrExit(GetFrameCounter(frameCounter));
@@ -1191,7 +1191,7 @@ otError RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &
     aesCcm.Finalize(tag);
 
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(tag, GetFooter(), tagLength) == 0, OT_NOOP);
+    VerifyOrExit(memcmp(tag, GetFooter(), tagLength) == 0);
 #endif
 
     error = OT_ERROR_NONE;

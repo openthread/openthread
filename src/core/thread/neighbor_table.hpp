@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -45,7 +46,7 @@ namespace ot {
  * This class represents the Thread neighbor table.
  *
  */
-class NeighborTable : public InstanceLocator
+class NeighborTable : public InstanceLocator, private NonCopyable
 {
 public:
     /**

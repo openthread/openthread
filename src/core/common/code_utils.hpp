@@ -38,6 +38,8 @@
 
 #include <openthread/error.h>
 
+#include "common/arg_macros.hpp"
+
 /**
  * This macro calculates the number of elements in an array.
  *
@@ -109,25 +111,19 @@
     } while (false)
 
 /**
- * Use this macro in conjunction with `VerifyOrExit()` when no action is specified.
- *
- */
-#define OT_NOOP
-
-/**
  * This macro checks for the specified condition, which is expected to commonly be true, and both executes @a ... and
  * branches to the local label 'exit' if the condition is false.
  *
  * @param[in]  aCondition  A Boolean expression to be evaluated.
- * @param[in]  aAction     An expression or block to execute when the assertion fails.
+ * @param[in]  aAction     An optional expression or block to execute when the assertion fails.
  *
  */
-#define VerifyOrExit(aCondition, aAction) \
+#define VerifyOrExit(...)                 \
     do                                    \
     {                                     \
-        if (!(aCondition))                \
+        if (!(OT_FIRST_ARG(__VA_ARGS__))) \
         {                                 \
-            aAction;                      \
+            OT_SECOND_ARG(__VA_ARGS__);   \
             goto exit;                    \
         }                                 \
     } while (false)

@@ -100,18 +100,18 @@ exit:
 
 void JamDetector::CheckState(void)
 {
-    VerifyOrExit(mEnabled, OT_NOOP);
+    VerifyOrExit(mEnabled);
 
     switch (Get<Mle::MleRouter>().GetRole())
     {
     case Mle::kRoleDisabled:
-        VerifyOrExit(mTimer.IsRunning(), OT_NOOP);
+        VerifyOrExit(mTimer.IsRunning());
         mTimer.Stop();
         SetJamState(false);
         break;
 
     default:
-        VerifyOrExit(!mTimer.IsRunning(), OT_NOOP);
+        VerifyOrExit(!mTimer.IsRunning());
         mCurSecondStartTime   = TimerMilli::GetNow();
         mAlwaysAboveThreshold = true;
         mHistoryBitmap        = 0;
@@ -169,7 +169,7 @@ void JamDetector::HandleTimer(void)
     int8_t rssi;
     bool   didExceedThreshold = true;
 
-    VerifyOrExit(mEnabled, OT_NOOP);
+    VerifyOrExit(mEnabled);
 
     rssi = Get<Radio>().GetRssi();
 

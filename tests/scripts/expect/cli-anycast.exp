@@ -1,3 +1,4 @@
+#!/usr/bin/expect -f
 #
 #  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
@@ -26,36 +27,30 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+source "tests/scripts/expect/_common.exp"
 
-noinst_LIBRARIES = libopenthread-url.a
 
-libopenthread_url_a_CPPFLAGS                = \
-    -I$(top_srcdir)/include                   \
-    -I$(top_srcdir)/src                       \
-    -I$(top_srcdir)/src/core                  \
-    $(NULL)
+set spawn_id [spawn_node 1]
 
-libopenthread_url_a_SOURCES                 = \
-    url.cpp                                   \
-    url.hpp                                   \
-    $(NULL)
+send "panid 0xface\n"
+expect "Done"
+send "ifconfig up\n"
+expect "Done"
+send "thread start\n"
+expect "Done"
 
-check_PROGRAMS = test-url
+wait_for "state" "leader"
+expect "Done"
 
-test_url_CPPFLAGS                                             = \
-    -I$(top_srcdir)/include                                     \
-    -I$(top_srcdir)/src                                         \
-    -I$(top_srcdir)/src/core                                    \
-    -DSELF_TEST                                                 \
-    $(NULL)
+send "ping fdde:ad00:beef:0:0:ff:fe00:fc00\n"
+expect "Done"
+expect "16 bytes from "
+expect {
+    "fdde:ad00:beef:0:0:ff:fe00:fc00" abort
 
-test_url_SOURCES                    = \
-    url.cpp                           \
-    $(NULL)
+    -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})} {}
 
-TESTS                               = \
-    test-url                          \
-    $(NULL)
+    timeout abort
+}
 
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+dispose

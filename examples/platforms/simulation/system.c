@@ -95,7 +95,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
 
     gNodeId = (uint32_t)strtol(aArgVector[argIndex], &endptr, 0);
 
-    if (*endptr != '\0' || gNodeId < 1 || gNodeId >= WELLKNOWN_NODE_ID)
+    if (*endptr != '\0' || gNodeId < 1 || gNodeId > MAX_NETWORK_SIZE)
     {
         fprintf(stderr, "Invalid NodeId: %s\n", aArgVector[argIndex]);
         exit(EXIT_FAILURE);

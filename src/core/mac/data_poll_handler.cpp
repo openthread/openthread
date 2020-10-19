@@ -129,12 +129,12 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
     Child *      child;
     uint16_t     indirectMsgCount;
 
-    VerifyOrExit(aFrame.GetSecurityEnabled(), OT_NOOP);
-    VerifyOrExit(!Get<Mle::MleRouter>().IsDetached(), OT_NOOP);
+    VerifyOrExit(aFrame.GetSecurityEnabled());
+    VerifyOrExit(!Get<Mle::MleRouter>().IsDetached());
 
     SuccessOrExit(aFrame.GetSrcAddr(macSource));
     child = Get<ChildTable>().FindChild(macSource, Child::kInStateValidOrRestoring);
-    VerifyOrExit(child != nullptr, OT_NOOP);
+    VerifyOrExit(child != nullptr);
 
     child->SetLastHeard(TimerMilli::GetNow());
     child->ResetLinkFailures();
@@ -203,7 +203,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
 {
     Child *child = mIndirectTxChild;
 
-    VerifyOrExit(child != nullptr, OT_NOOP);
+    VerifyOrExit(child != nullptr);
 
     mIndirectTxChild = nullptr;
     HandleSentFrame(aFrame, aError, *child);

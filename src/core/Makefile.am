@@ -339,6 +339,7 @@ HEADERS_COMMON                                  = \
     coap/coap.hpp                                 \
     coap/coap_message.hpp                         \
     coap/coap_secure.hpp                          \
+    common/arg_macros.hpp                         \
     common/bit_vector.hpp                         \
     common/clearable.hpp                          \
     common/code_utils.hpp                         \
@@ -356,6 +357,7 @@ HEADERS_COMMON                                  = \
     common/new.hpp                                \
     common/non_copyable.hpp                       \
     common/notifier.hpp                           \
+    common/numeric_limits.hpp                     \
     common/pool.hpp                               \
     common/random.hpp                             \
     common/random_manager.hpp                     \

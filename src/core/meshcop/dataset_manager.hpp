@@ -39,6 +39,7 @@
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/channel_mask.hpp"
 #include "meshcop/dataset.hpp"
@@ -53,7 +54,7 @@ class DatasetManager : public InstanceLocator
 {
 public:
     /**
-     * This method returns a reference to the Timestamp.
+     * This method returns a pointer to the Timestamp.
      *
      * @returns A pointer to the Timestamp.
      *
@@ -171,6 +172,18 @@ public:
                            const uint8_t *                       aTlvTypes,
                            uint8_t                               aLength,
                            const otIp6Address *                  aAddress) const;
+#if OPENTHREAD_FTD
+    /**
+     * This method appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
+     *
+     * @param[in] aMessage       The message to append the TLV to.
+     *
+     * @retval OT_ERROR_NONE     Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to append the message with MLE Dataset TLV.
+     *
+     */
+    otError AppendMleDatasetTlv(Message &aMessage) const;
+#endif
 
 protected:
     /**
@@ -206,17 +219,19 @@ protected:
      * This constructor initializes the object.
      *
      * @param[in]  aInstance      A reference to the OpenThread instance.
-     * @param[in]  aType          Identifies Active or Pending Operational Dataset.
-     * @param[in]  aUriGet        The URI-PATH for getting the Operational Dataset.
-     * @param[in]  aUriSet        The URI-PATH for setting the Operational Dataset.
+     * @param[in]  aType          Dataset type, Active or Pending.
      * @param[in]  aTimerHandler  The registration timer handler.
      *
      */
-    DatasetManager(Instance &          aInstance,
-                   Dataset::Type       aType,
-                   const char *        aUriGet,
-                   const char *        aUriSet,
-                   TimerMilli::Handler aTimerHandler);
+    DatasetManager(Instance &aInstance, Dataset::Type aType, TimerMilli::Handler aTimerHandler);
+
+    /**
+     * This method gets the Operational Dataset type (Active or Pending).
+     *
+     * @returns The Operational Dataset type.
+     *
+     */
+    Dataset::Type GetType(void) const { return mLocal.GetType(); }
 
     /**
      * This method clears the Operational Dataset.
@@ -273,7 +288,6 @@ protected:
     /**
      * This method handles a MGMT_GET request message.
      *
-     * @param[in]  aHeader       The CoAP header.
      * @param[in]  aMessage      The CoAP message buffer.
      * @param[in]  aMessageInfo  The message info.
      *
@@ -295,56 +309,10 @@ protected:
      */
     void HandleTimer(void);
 
-    DatasetLocal mLocal;
-    Timestamp    mTimestamp;
-    bool         mTimestampValid : 1;
-
-private:
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleUdpReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleCoapResponse(void *               aContext,
-                                   otMessage *          aMessage,
-                                   const otMessageInfo *aMessageInfo,
-                                   otError              aError);
-    void        HandleCoapResponse(void);
-
-    void HandleDatasetUpdated(void);
-    void SendSet(void);
-    void SendGetResponse(const Coap::Message &   aRequest,
-                         const Ip6::MessageInfo &aMessageInfo,
-                         uint8_t *               aTlvs,
-                         uint8_t                 aLength) const;
-
-    enum
-    {
-        kMaxDatasetTlvs = 16,   // Maximum number of TLVs in an `otOperationalDataset`.
-        kDelayNoBufs    = 1000, // Milliseconds
-    };
-
-    TimerMilli mTimer;
-
-    const char *mUriGet;
-    const char *mUriSet;
-
-    bool mCoapPending : 1;
-
 #if OPENTHREAD_FTD
-public:
-    /**
-     * This method appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
-     *
-     * @retval OT_ERROR_NONE     Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to append the message with MLE Dataset TLV.
-     *
-     */
-    otError AppendMleDatasetTlv(Message &aMessage) const;
-
-protected:
     /**
      * This method handles the MGMT_SET request message.
      *
-     * @param[in]  aHeader       The CoAP header.
      * @param[in]  aMessage      The CoAP message buffer.
      * @param[in]  aMessageInfo  The message info.
      *
@@ -353,17 +321,47 @@ protected:
      *
      */
     otError HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+#endif
+
+    DatasetLocal mLocal;
+    Timestamp    mTimestamp;
+    bool         mTimestampValid : 1;
 
 private:
+    static void HandleCoapResponse(void *               aContext,
+                                   otMessage *          aMessage,
+                                   const otMessageInfo *aMessageInfo,
+                                   otError              aError);
+    void        HandleCoapResponse(void);
+
+    bool IsActiveDataset(void) const { return GetType() == Dataset::kActive; }
+    bool IsPendingDataset(void) const { return GetType() == Dataset::kPending; }
+    void HandleDatasetUpdated(void);
+    void SendSet(void);
+    void SendGetResponse(const Coap::Message &   aRequest,
+                         const Ip6::MessageInfo &aMessageInfo,
+                         uint8_t *               aTlvs,
+                         uint8_t                 aLength) const;
+
+#if OPENTHREAD_FTD
     void SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
-#endif // OPENTHREAD_FTD
+#endif
+
+    enum
+    {
+        kMaxDatasetTlvs = 16,   // Maximum number of TLVs in an `otOperationalDataset`.
+        kDelayNoBufs    = 1000, // Milliseconds
+    };
+
+    bool       mCoapPending : 1;
+    TimerMilli mTimer;
 };
 
-class ActiveDataset : public DatasetManager
+class ActiveDataset : public DatasetManager, private NonCopyable
 {
 public:
     /**
-     * Constructor.
+     * This constructor initializes the ActiveDataset object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
@@ -489,13 +487,13 @@ private:
 #endif
 };
 
-class PendingDataset : public DatasetManager
+class PendingDataset : public DatasetManager, private NonCopyable
 {
 public:
     /**
-     * Constructor.
+     * This constructor initializes the PendingDataset object.
      *
-     * @param[in]  The Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
     explicit PendingDataset(Instance &aInstance);
@@ -558,7 +556,6 @@ public:
     otError Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
 #if OPENTHREAD_FTD
-
     /**
      * This method starts the Leader functions for maintaining the Active Operational Dataset.
      *

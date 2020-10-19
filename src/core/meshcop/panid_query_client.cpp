@@ -110,13 +110,13 @@ void PanIdQueryClient::HandleConflict(Coap::Message &aMessage, const Ip6::Messag
     Ip6::MessageInfo responseInfo(aMessageInfo);
     uint32_t         mask;
 
-    VerifyOrExit(aMessage.IsConfirmablePostRequest(), OT_NOOP);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
     otLogInfoMeshCoP("received panid conflict");
 
     SuccessOrExit(Tlv::FindUint16Tlv(aMessage, MeshCoP::Tlv::kPanId, panId));
 
-    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0, OT_NOOP);
+    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
     if (mCallback != nullptr)
     {

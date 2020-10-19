@@ -90,7 +90,7 @@ void TrickleTimer::IndicateInconsistent(void)
 {
     // If interval is equal to minimum when an "inconsistent" event
     // is received, do nothing.
-    VerifyOrExit(mIsRunning && (mInterval != mIntervalMin), OT_NOOP);
+    VerifyOrExit(mIsRunning && (mInterval != mIntervalMin));
 
     mInterval = mIntervalMin;
     StartNewInterval();

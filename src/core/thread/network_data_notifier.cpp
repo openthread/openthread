@@ -62,20 +62,20 @@ void Notifier::SynchronizeServerData(void)
 {
     otError error = OT_ERROR_NOT_FOUND;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached() && !mWaitingForResponse, OT_NOOP);
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached() && !mWaitingForResponse);
 
-    VerifyOrExit((mNextDelay == 0) || !mTimer.IsRunning(), OT_NOOP);
+    VerifyOrExit((mNextDelay == 0) || !mTimer.IsRunning());
 
 #if OPENTHREAD_FTD
     mNextDelay = kDelayRemoveStaleChildren;
     error      = Get<Leader>().RemoveStaleChildEntries(&Notifier::HandleCoapResponse, this);
-    VerifyOrExit(error == OT_ERROR_NOT_FOUND, OT_NOOP);
+    VerifyOrExit(error == OT_ERROR_NOT_FOUND);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     mNextDelay = kDelaySynchronizeServerData;
     error      = Get<Local>().UpdateInconsistentServerData(&Notifier::HandleCoapResponse, this);
-    VerifyOrExit(error == OT_ERROR_NOT_FOUND, OT_NOOP);
+    VerifyOrExit(error == OT_ERROR_NOT_FOUND);
 #endif
 
 exit:

@@ -229,9 +229,10 @@ public:
      *
      * @param[in]  aUserCommands  A pointer to an array with user commands.
      * @param[in]  aLength        @p aUserCommands length.
+     * @param[in]  aContext       @p aUserCommands length.
      *
      */
-    void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength);
+    void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext);
 
 protected:
     static Interpreter *sInterpreter;
@@ -332,6 +333,7 @@ private:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     otError ProcessFake(uint8_t aArgsLength, char *aArgs[]);
 #endif
+    otError ProcessFem(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIfconfig(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIpAddr(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessIpAddrAdd(uint8_t aArgsLength, char *aArgs[]);
@@ -601,6 +603,7 @@ private:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         {"fake", &Interpreter::ProcessFake},
 #endif
+        {"fem", &Interpreter::ProcessFem},
         {"help", &Interpreter::ProcessHelp},
         {"ifconfig", &Interpreter::ProcessIfconfig},
         {"ipaddr", &Interpreter::ProcessIpAddr},
@@ -701,6 +704,7 @@ private:
 
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;
+    void *              mUserCommandsContext;
     uint16_t            mPingLength;
     uint16_t            mPingCount;
     uint32_t            mPingInterval;

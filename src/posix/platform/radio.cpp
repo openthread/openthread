@@ -356,6 +356,19 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
     return sRadioSpinel.SetCcaEnergyDetectThreshold(aThreshold);
 }
 
+otError otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    assert(aGain != nullptr);
+    return sRadioSpinel.GetFemLnaGain(*aGain);
+}
+
+otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.SetFemLnaGain(aGain);
+}
+
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);

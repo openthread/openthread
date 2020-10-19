@@ -43,6 +43,8 @@ at_exit()
     sudo killall expect || true
     sudo killall ot-ctl || true
     sudo killall ot-daemon || true
+    sudo killall ot-cli || true
+    sudo killall ot-rcp || true
     sudo killall socat || true
 
     exit $EXIT_CODE
@@ -108,6 +110,9 @@ check()
 
     sudo expect <<EOF | tee "${OT_OUTPUT}" &
 spawn ${OT_CLI_CMD}
+send "radiourl\r\n"
+expect "${RADIO_URL}"
+expect "Done"
 send "panid 0xface\r\n"
 expect "Done"
 send "ifconfig up\r\n"

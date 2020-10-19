@@ -227,6 +227,37 @@ exit:
     return error;
 }
 
+otError Message::ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) const
+{
+    char *           curUriPath = aUriPath;
+    otError          error      = OT_ERROR_NONE;
+    Option::Iterator iterator;
+
+    SuccessOrExit(error = iterator.Init(*this, kOptionUriPath));
+
+    while (!iterator.IsDone())
+    {
+        uint16_t optionLength = iterator.GetOption()->GetLength();
+
+        if (curUriPath != aUriPath)
+        {
+            *curUriPath++ = '/';
+        }
+
+        VerifyOrExit(curUriPath + optionLength < OT_ARRAY_END(aUriPath), error = OT_ERROR_PARSE);
+
+        IgnoreError(iterator.ReadOptionValue(curUriPath));
+        curUriPath += optionLength;
+
+        SuccessOrExit(error = iterator.Advance(kOptionUriPath));
+    }
+
+    *curUriPath = '\0';
+
+exit:
+    return error;
+}
+
 otError Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
 {
     otError  error   = OT_ERROR_NONE;
@@ -333,7 +364,7 @@ Message *Message::Clone(uint16_t aLength) const
 {
     Message *message = static_cast<Message *>(ot::Message::Clone(aLength));
 
-    VerifyOrExit(message != nullptr, OT_NOOP);
+    VerifyOrExit(message != nullptr);
 
     message->GetHelpData() = GetHelpData();
 
@@ -470,7 +501,7 @@ otError Option::Iterator::Advance(void)
     uint16_t optionDelta;
     uint16_t optionLength;
 
-    VerifyOrExit(!IsDone(), OT_NOOP);
+    VerifyOrExit(!IsDone());
 
     error = Read(sizeof(uint8_t), &headerByte);
 
@@ -565,7 +596,7 @@ otError Option::Iterator::ReadExtendedOptionField(uint16_t &aValue)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aValue >= Message::kOption1ByteExtension, OT_NOOP);
+    VerifyOrExit(aValue >= Message::kOption1ByteExtension);
 
     if (aValue == Message::kOption1ByteExtension)
     {

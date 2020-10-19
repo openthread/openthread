@@ -107,6 +107,7 @@ static otRadioFrame sAckFrame;
 static bool         sAckedWithFramePending;
 
 static int8_t sDefaultTxPower;
+static int8_t sLnaGain = 0;
 
 static uint32_t sEnergyDetectionTime;
 static uint8_t  sEnergyDetectionChannel;
@@ -687,7 +688,7 @@ otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aT
     {
         nrf_802154_cca_cfg_get(&ccaConfig);
         // The radio driver has no function to convert ED threshold to dBm
-        *aThreshold = (int8_t)ccaConfig.ed_threshold + NRF528XX_MIN_CCA_ED_THRESHOLD;
+        *aThreshold = (int8_t)ccaConfig.ed_threshold + NRF528XX_MIN_CCA_ED_THRESHOLD - sLnaGain;
     }
 
     return error;
@@ -699,6 +700,8 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
 
     otError              error = OT_ERROR_NONE;
     nrf_802154_cca_cfg_t ccaConfig;
+
+    aThreshold += sLnaGain;
 
     // The minimum value of ED threshold for radio driver is -94 dBm
     if (aThreshold < NRF528XX_MIN_CCA_ED_THRESHOLD)
@@ -714,6 +717,43 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
         nrf_802154_cca_cfg_set(&ccaConfig);
     }
 
+    return error;
+}
+
+otError otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
+
+    if (aGain == NULL)
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+    else
+    {
+        *aGain = sLnaGain;
+    }
+
+    return error;
+}
+
+otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    int8_t  threshold;
+    int8_t  oldLnaGain = sLnaGain;
+    otError error      = OT_ERROR_NONE;
+
+    error = otPlatRadioGetCcaEnergyDetectThreshold(aInstance, &threshold);
+    otEXPECT(error == OT_ERROR_NONE);
+
+    sLnaGain = aGain;
+    error    = otPlatRadioSetCcaEnergyDetectThreshold(aInstance, threshold);
+    otEXPECT_ACTION(error == OT_ERROR_NONE, sLnaGain = oldLnaGain);
+
+exit:
     return error;
 }
 

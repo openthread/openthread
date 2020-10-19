@@ -341,7 +341,7 @@ void NcpBase::HandleReceive(const uint8_t *aBuf, uint16_t aBufLength)
     // Skip if there is no header byte to read or this isn't a spinel frame.
 
     SuccessOrExit(mDecoder.ReadUint8(header));
-    VerifyOrExit((SPINEL_HEADER_FLAG & header) == SPINEL_HEADER_FLAG, OT_NOOP);
+    VerifyOrExit((SPINEL_HEADER_FLAG & header) == SPINEL_HEADER_FLAG);
 
     mRxSpinelFrameCounter++;
 
@@ -631,7 +631,7 @@ void NcpBase::Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLog
     uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
     VerifyOrExit(!mDisableStreamWrite, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_STREAM_LOG), OT_NOOP);
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_STREAM_LOG));
 
     // If there is a pending queued response we do not allow any new log
     // stream writes. This is to ensure that log messages can not continue
@@ -819,7 +819,7 @@ void NcpBase::UpdateChangedProps(void)
     ProcessThreadChangedFlags();
 #endif
 
-    VerifyOrExit(!mChangedPropsSet.IsEmpty(), OT_NOOP);
+    VerifyOrExit(!mChangedPropsSet.IsEmpty());
 
     entry = mChangedPropsSet.GetSupportedEntries(numEntries);
 
@@ -849,7 +849,7 @@ void NcpBase::UpdateChangedProps(void)
         }
 
         mChangedPropsSet.RemoveEntry(index);
-        VerifyOrExit(!mChangedPropsSet.IsEmpty(), OT_NOOP);
+        VerifyOrExit(!mChangedPropsSet.IsEmpty());
     }
 
 exit:
@@ -986,7 +986,7 @@ otError NcpBase::HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKe
 
         bool didHandle = HandlePropertySetForSpecialProperties(aHeader, aKey, error);
 
-        VerifyOrExit(!didHandle, OT_NOOP);
+        VerifyOrExit(!didHandle);
 
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
         if (aKey >= SPINEL_PROP_VENDOR__BEGIN && aKey < SPINEL_PROP_VENDOR__END)
@@ -2200,6 +2200,37 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_TX_POWER>(void)
 
     SuccessOrExit(error = mDecoder.ReadInt8(txPower));
     error = otPlatRadioSetTransmitPower(mInstance, txPower);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FEM_LNA_GAIN>(void)
+{
+    int8_t  gain;
+    otError error = OT_ERROR_NONE;
+
+    error = otPlatRadioGetFemLnaGain(mInstance, &gain);
+
+    if (error == OT_ERROR_NONE)
+    {
+        error = mEncoder.WriteInt8(gain);
+    }
+    else
+    {
+        error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error));
+    }
+
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_FEM_LNA_GAIN>(void)
+{
+    int8_t  gain  = 0;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadInt8(gain));
+    error = otPlatRadioSetFemLnaGain(mInstance, gain);
 
 exit:
     return error;

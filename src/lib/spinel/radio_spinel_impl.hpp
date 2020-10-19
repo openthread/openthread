@@ -479,7 +479,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleNotification(const ui
     unpacked = spinel_datatype_unpack(aFrame, aLength, "CiiD", &header, &cmd, &key, &data, &len);
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
     VerifyOrExit(SPINEL_HEADER_GET_TID(header) == 0, error = OT_ERROR_PARSE);
-    VerifyOrExit(cmd == SPINEL_CMD_PROP_VALUE_IS, OT_NOOP);
+    VerifyOrExit(cmd == SPINEL_CMD_PROP_VALUE_IS);
     HandleValueIs(key, data, static_cast<uint16_t>(len));
 
 exit:
@@ -700,7 +700,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleWaitingResponse(uint3
     {
         spinel_ssize_t unpacked;
 
-        VerifyOrExit(mDiagOutput != nullptr, OT_NOOP);
+        VerifyOrExit(mDiagOutput != nullptr);
         unpacked =
             spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, mDiagOutput, &mDiagOutputMaxLen);
         VerifyOrExit(unpacked > 0, mError = OT_ERROR_PARSE);
@@ -1037,7 +1037,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SetShortAddress(uint16_t
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mShortAddress != aAddress, OT_NOOP);
+    VerifyOrExit(mShortAddress != aAddress);
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, aAddress));
     mShortAddress = aAddress;
 
@@ -1100,7 +1100,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SetPanId(uint16_t aPanId
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mPanId != aPanId, OT_NOOP);
+    VerifyOrExit(mPanId != aPanId);
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_PANID, SPINEL_DATATYPE_UINT16_S, aPanId));
     mPanId = aPanId;
 
@@ -1165,6 +1165,15 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::GetCcaEnergyDetectThresh
     otError error = Get(SPINEL_PROP_PHY_CCA_THRESHOLD, SPINEL_DATATYPE_INT8_S, &aThreshold);
 
     LogIfFail("Get CCA ED threshold failed", error);
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::GetFemLnaGain(int8_t &aGain)
+{
+    otError error = Get(SPINEL_PROP_PHY_FEM_LNA_GAIN, SPINEL_DATATYPE_INT8_S, &aGain);
+
+    LogIfFail("Get FEM LNA gain failed", error);
     return error;
 }
 
@@ -1249,6 +1258,14 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SetCcaEnergyDetectThresh
 {
     otError error = Set(SPINEL_PROP_PHY_CCA_THRESHOLD, SPINEL_DATATYPE_INT8_S, aThreshold);
     LogIfFail("Set CCA ED threshold failed", error);
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetFemLnaGain(int8_t aGain)
+{
+    otError error = Set(SPINEL_PROP_PHY_FEM_LNA_GAIN, SPINEL_DATATYPE_INT8_S, aGain);
+    LogIfFail("Set FEM LNA gain failed", error);
     return error;
 }
 
@@ -1553,8 +1570,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
 {
     otError error = OT_ERROR_INVALID_STATE;
 
-    VerifyOrExit(mState == kStateReceive || (mState == kStateSleep && (mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX)),
-                 OT_NOOP);
+    VerifyOrExit(mState == kStateReceive || (mState == kStateSleep && (mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX)));
 
     mTransmitFrame = &aFrame;
 
@@ -1651,7 +1667,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Enable(otInstance *aInst
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(!IsEnabled(), OT_NOOP);
+    VerifyOrExit(!IsEnabled());
 
     mInstance = aInstance;
 
@@ -1677,7 +1693,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Disable(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(IsEnabled(), OT_NOOP);
+    VerifyOrExit(IsEnabled());
     VerifyOrExit(mState == kStateSleep, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrDie(Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, false));
@@ -1788,7 +1804,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::CalcRcpTimeOffset(void)
      *         D = T1' - ((T0 + T2)/ 2)
      */
 
-    VerifyOrExit(!mIsTimeSynced || (otPlatTimeGet() >= GetNextRadioTimeRecalcStart()), OT_NOOP);
+    VerifyOrExit(!mIsTimeSynced || (otPlatTimeGet() >= GetNextRadioTimeRecalcStart()));
     packed = spinel_datatype_pack(buffer, sizeof(buffer), SPINEL_DATATYPE_UINT64_S, remoteTimestamp);
     VerifyOrExit(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 

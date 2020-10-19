@@ -72,6 +72,7 @@ jobs:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 1
       VIRTUAL_TIME_UART: 1
+      MAX_NETWORK_SIZE: 999
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-go@v1

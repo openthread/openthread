@@ -42,6 +42,7 @@
 #include "common/encoding.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "net/ip6_headers.hpp"
 
 namespace ot {
@@ -63,7 +64,7 @@ using ot::Encoding::BigEndian::HostSwap16;
  * This class implements ICMPv6.
  *
  */
-class Icmp : public InstanceLocator
+class Icmp : public InstanceLocator, private NonCopyable
 {
 public:
     /*

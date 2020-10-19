@@ -45,10 +45,10 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup linkmetrics   Link Metrics
+ * @addtogroup api-link-metrics
  *
  * @brief
- *   This module includes functions that control Link Metrics protocol.
+ *   This module includes functions that control the Link Metrics protocol.
  *
  * @{
  *

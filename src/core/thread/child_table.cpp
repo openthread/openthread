@@ -61,7 +61,7 @@ void ChildTable::Iterator::Reset(void)
 
 void ChildTable::Iterator::Advance(void)
 {
-    VerifyOrExit(mChild != nullptr, OT_NOOP);
+    VerifyOrExit(mChild != nullptr);
 
     do
     {
@@ -96,7 +96,7 @@ Child *ChildTable::GetChildAtIndex(uint16_t aChildIndex)
 {
     Child *child = nullptr;
 
-    VerifyOrExit(aChildIndex < mMaxChildrenAllowed, OT_NOOP);
+    VerifyOrExit(aChildIndex < mMaxChildrenAllowed);
     child = &mChildren[aChildIndex];
 
 exit:
@@ -107,7 +107,7 @@ Child *ChildTable::GetNewChild(void)
 {
     Child *child = FindChild(Child::AddressMatcher(Child::kInStateInvalid));
 
-    VerifyOrExit(child != nullptr, OT_NOOP);
+    VerifyOrExit(child != nullptr);
     child->Clear();
 
 exit:

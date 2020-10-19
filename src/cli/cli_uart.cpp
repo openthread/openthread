@@ -293,7 +293,7 @@ int Uart::Output(const char *aBuf, uint16_t aBufLength)
 
 void Uart::Send(void)
 {
-    VerifyOrExit(mSendLength == 0, OT_NOOP);
+    VerifyOrExit(mSendLength == 0);
 
     if (mTxLength > kTxBufferSize - mTxHead)
     {

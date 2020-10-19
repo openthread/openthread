@@ -82,7 +82,7 @@ const char *Url::GetValue(const char *aName, const char *aLastValue) const
     }
     else
     {
-        VerifyOrExit(aLastValue > mQuery && aLastValue < mEnd, OT_NOOP);
+        VerifyOrExit(aLastValue > mQuery && aLastValue < mEnd);
         start = aLastValue + strlen(aLastValue) + 1;
     }
 

@@ -1379,6 +1379,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PHY_TX_POWER";
         break;
 
+    case SPINEL_PROP_PHY_FEM_LNA_GAIN:
+        ret = "PHY_FEM_LNA_GAIN";
+        break;
+
     case SPINEL_PROP_PHY_RSSI:
         ret = "PHY_RSSI";
         break;

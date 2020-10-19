@@ -1575,7 +1575,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ML_PREFIX>(void)
     const otMeshLocalPrefix *mlPrefix = otThreadGetMeshLocalPrefix(mInstance);
     otIp6Address             addr;
 
-    VerifyOrExit(mlPrefix != nullptr, OT_NOOP); // If `mlPrefix` is nullptr send empty response.
+    VerifyOrExit(mlPrefix != nullptr); // If `mlPrefix` is nullptr send empty response.
 
     memcpy(addr.mFields.m8, mlPrefix->m8, 8);
 
@@ -1610,7 +1610,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ML_ADDR>(void)
     otError             error = OT_ERROR_NONE;
     const otIp6Address *ml64  = otThreadGetMeshLocalEid(mInstance);
 
-    VerifyOrExit(ml64 != nullptr, OT_NOOP);
+    VerifyOrExit(ml64 != nullptr);
     SuccessOrExit(error = mEncoder.WriteIp6Address(*ml64));
 
 exit:
@@ -1622,7 +1622,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_LL_ADDR>(void)
     otError             error   = OT_ERROR_NONE;
     const otIp6Address *address = otThreadGetLinkLocalIp6Address(mInstance);
 
-    VerifyOrExit(address != nullptr, OT_NOOP);
+    VerifyOrExit(address != nullptr);
     SuccessOrExit(error = mEncoder.WriteIp6Address(*address));
 
 exit:
@@ -3152,7 +3152,7 @@ void NcpBase::RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
     mLegacyHandlers = aHandlers;
     bool isEnabled;
 
-    VerifyOrExit(mLegacyHandlers != nullptr, OT_NOOP);
+    VerifyOrExit(mLegacyHandlers != nullptr);
 
     isEnabled = (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED);
 
@@ -3427,7 +3427,7 @@ void NcpBase::HandleDatagramFromStack(otMessage *aMessage, void *aContext)
 
 void NcpBase::HandleDatagramFromStack(otMessage *aMessage)
 {
-    VerifyOrExit(aMessage != nullptr, OT_NOOP);
+    VerifyOrExit(aMessage != nullptr);
 
     // Do not forward frames larger than SPINEL payload size.
     VerifyOrExit(otMessageGetLength(aMessage) <= SPINEL_FRAME_MAX_COMMAND_PAYLOAD_SIZE, otMessageFree(aMessage));
@@ -3597,7 +3597,7 @@ void NcpBase::HandlePcapFrame(const otRadioFrame *aFrame, bool aIsTx)
     uint16_t flags  = 0;
     uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
-    VerifyOrExit(mPcapEnabled, OT_NOOP);
+    VerifyOrExit(mPcapEnabled);
 
     if (aIsTx)
     {
@@ -3639,7 +3639,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_PCAP_ENABLED>(voi
     bool    enabled;
 
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
-    VerifyOrExit(enabled != mPcapEnabled, OT_NOOP);
+    VerifyOrExit(enabled != mPcapEnabled);
 
     mPcapEnabled = enabled;
 
@@ -3699,7 +3699,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
         {OT_CHANGED_SUPPORTED_CHANNEL_MASK, SPINEL_PROP_PHY_CHAN_SUPPORTED},
     };
 
-    VerifyOrExit(mThreadChangedFlags != 0, OT_NOOP);
+    VerifyOrExit(mThreadChangedFlags != 0);
 
     // If thread role has changed, check for possible "join" error.
 
@@ -3770,7 +3770,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
             }
 
             mThreadChangedFlags &= ~threadFlag;
-            VerifyOrExit(mThreadChangedFlags != 0, OT_NOOP);
+            VerifyOrExit(mThreadChangedFlags != 0);
         }
     }
 

@@ -68,7 +68,7 @@ otError otPlatUartEnable(void)
     int                ret;
 
     // This allows implementing pseudo reset.
-    VerifyOrExit(sUartSocket == -1, OT_NOOP);
+    VerifyOrExit(sUartSocket == -1);
 
     sUartSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0, kSocketNonBlock);
 
@@ -171,7 +171,7 @@ exit:
 
 void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
 {
-    VerifyOrExit(sEnabled, OT_NOOP);
+    VerifyOrExit(sEnabled);
 
     if (aReadFdSet != nullptr)
     {
@@ -226,11 +226,11 @@ static void InitializeSessionSocket(void)
 
     VerifyOrExit((newSessionSocket = accept(sUartSocket, nullptr, nullptr)) != -1, rval = -1);
 
-    VerifyOrExit((rval = fcntl(newSessionSocket, F_GETFD, 0)) != -1, OT_NOOP);
+    VerifyOrExit((rval = fcntl(newSessionSocket, F_GETFD, 0)) != -1);
 
     rval |= FD_CLOEXEC;
 
-    VerifyOrExit((rval = fcntl(newSessionSocket, F_SETFD, rval)) != -1, OT_NOOP);
+    VerifyOrExit((rval = fcntl(newSessionSocket, F_SETFD, rval)) != -1);
 
 #ifndef __linux__
     // some platforms (macOS, Solaris) don't have MSG_NOSIGNAL
@@ -239,7 +239,7 @@ static void InitializeSessionSocket(void)
     // to simply ignore it.
 #if defined(SO_NOSIGPIPE)
     rval = setsockopt(newSessionSocket, SOL_SOCKET, SO_NOSIGPIPE, &rval, sizeof(rval));
-    VerifyOrExit(rval != -1, OT_NOOP);
+    VerifyOrExit(rval != -1);
 #else
 #warning "no support for MSG_NOSIGNAL or SO_NOSIGPIPE"
 #endif
@@ -313,7 +313,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
     ssize_t rval;
     int     fd;
 
-    VerifyOrExit(sEnabled, OT_NOOP);
+    VerifyOrExit(sEnabled);
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     if (FD_ISSET(sUartSocket, aErrorFdSet))
     {
@@ -332,7 +332,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         otPlatUartSendDone();
     }
 
-    VerifyOrExit(sSessionSocket != -1, OT_NOOP);
+    VerifyOrExit(sSessionSocket != -1);
 
     if (FD_ISSET(sSessionSocket, aErrorFdSet))
     {
@@ -340,7 +340,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         sSessionSocket = -1;
     }
 
-    VerifyOrExit(sSessionSocket != -1, OT_NOOP);
+    VerifyOrExit(sSessionSocket != -1);
 
     fd = sSessionSocket;
 #else  // OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE

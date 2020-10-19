@@ -151,7 +151,7 @@ void MlrManager::UpdateProxiedSubscriptions(Child &             aChild,
                                             const Ip6::Address *aOldMlrRegisteredAddresses,
                                             uint16_t            aOldMlrRegisteredAddressNum)
 {
-    VerifyOrExit(aChild.IsStateValid(), OT_NOOP);
+    VerifyOrExit(aChild.IsStateValid());
 
     // Search the new multicast addresses and set its flag accordingly
     for (const Ip6::Address &address : aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
@@ -194,7 +194,7 @@ void MlrManager::ScheduleSend(uint16_t aDelay)
 {
     OT_ASSERT(!mMlrPending || mSendDelay == 0);
 
-    VerifyOrExit(!mMlrPending, OT_NOOP);
+    VerifyOrExit(!mMlrPending);
 
     if (aDelay == 0)
     {

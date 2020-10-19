@@ -205,7 +205,7 @@ class Cert_5_6_7_NetworkDataRequestREED(thread_cert.TestCase):
 
         # Step 10: REED1 send MLE Advertisement
         pkts.filter_wpan_src64(REED).filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
-            lambda p: p.mle.tlv.leader_data.data_version == _pkt.mle.tlv.leader_data.data_version + 1)
+            lambda p: p.mle.tlv.leader_data.data_version == (_pkt.mle.tlv.leader_data.data_version + 1) % 256)
 
 
 if __name__ == '__main__':

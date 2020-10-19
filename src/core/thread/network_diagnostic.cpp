@@ -141,8 +141,8 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Message *         aMes
                                                     const Ip6::MessageInfo *aMessageInfo,
                                                     otError                 aResult)
 {
-    VerifyOrExit(aResult == OT_ERROR_NONE, OT_NOOP);
-    VerifyOrExit(aMessage && aMessage->GetCode() == Coap::kCodeChanged, OT_NOOP);
+    VerifyOrExit(aResult == OT_ERROR_NONE);
+    VerifyOrExit(aMessage && aMessage->GetCode() == Coap::kCodeChanged);
 
     otLogInfoNetDiag("Received diagnostic get response");
 
@@ -165,7 +165,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *               aContext,
 
 void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    VerifyOrExit(aMessage.IsConfirmablePostRequest(), OT_NOOP);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
     otLogInfoNetDiag("Diagnostic get answer received");
 
@@ -236,7 +236,7 @@ otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        VerifyOrExit(count--, OT_NOOP);
+        VerifyOrExit(count--);
 
         timeout = 0;
 
@@ -622,11 +622,11 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Message &aMessage, const Ip6
 
     otLogInfoNetDiag("Received diagnostic reset request");
 
-    VerifyOrExit(aMessage.IsConfirmablePostRequest(), OT_NOOP);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), tlv));
 
-    VerifyOrExit(tlv.GetType() == NetworkDiagnosticTlv::kTypeList, OT_NOOP);
+    VerifyOrExit(tlv.GetType() == NetworkDiagnosticTlv::kTypeList);
 
     offset = aMessage.GetOffset() + sizeof(NetworkDiagnosticTlv);
 

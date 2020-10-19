@@ -38,6 +38,7 @@
 
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
 #include "mac/channel_mask.hpp"
@@ -144,7 +145,7 @@ public:
  * This class implements mesh forwarding within Thread.
  *
  */
-class MeshForwarder : public InstanceLocator
+class MeshForwarder : public InstanceLocator, private NonCopyable
 {
     friend class Mac::Mac;
     friend class Instance;
