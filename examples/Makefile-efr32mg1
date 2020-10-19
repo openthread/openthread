@@ -39,14 +39,16 @@ NM                              = arm-none-eabi-nm
 RANLIB                          = arm-none-eabi-ranlib
 OBJCOPY                         = arm-none-eabi-objcopy
 
-BuildJobs                      ?= 10
+EFR32_PLATFORM = efr32mg1
+PLATFORM_LOWERCASE = $(shell echo $(EFR32_PLATFORM) | tr A-Z a-z)
+BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
 
-configure_OPTIONS               = \
-    --enable-ncp                  \
-    --enable-radio-only           \
-    --enable-linker-map           \
-    --enable-builtin-mbedtls=no   \
-    --with-examples=efr32mg1      \
+configure_OPTIONS                              = \
+    --enable-ncp                                 \
+    --enable-radio-only                          \
+    --enable-linker-map                          \
+    --enable-builtin-mbedtls=no                  \
+    --with-examples=$(EFR32_PLATFORM)            \
     MBEDTLS_CPPFLAGS="$(EFR32_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
@@ -57,8 +59,6 @@ endif
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-# Needed for EFR32_MBEDTLS_CPPFLAGS
-BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
 
 #
 # Differentiate between boards
@@ -71,7 +71,8 @@ endif
 
 EFR32_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls_config.h\"'
 EFR32_MBEDTLS_CPPFLAGS += -D$(MCU)
-EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/efr32mg1/crypto
+EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/efr32/src
+EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/efr32/$(PLATFORM_LOWERCASE)/crypto
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v3.0/util/third_party/mbedtls/configs
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v3.0/util/third_party/mbedtls/include
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v3.0/util/third_party/mbedtls/include/mbedtls
@@ -82,12 +83,12 @@ EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suit
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v3.0/platform/radio/rail_lib/chip/efr32/efr32xg1x
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v3.0/util/silicon_labs/silabs_core/memory_manager
 
-CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/efr32mg1/
-HAL_CONF_DIR     = $(CONFIG_FILE_PATH)/$(BOARD_LOWERCASE)
+CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/efr32/
+HAL_CONF_DIR     = $(CONFIG_FILE_PATH)/$(EFR32_PLATFORM)/$(BOARD_LOWERCASE)
 
-EFR32MG1_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-efr32-config.h\"'
-EFR32MG1_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-efr32-config-check.h\"'
-EFR32MG1_CONFIG_FILE_CPPFLAGS += -I$(CONFIG_FILE_PATH)
+EFR32_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-efr32-config.h\"'
+EFR32_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-efr32-config-check.h\"'
+EFR32_CONFIG_FILE_CPPFLAGS += -I$(CONFIG_FILE_PATH)
 
 COMMONCFLAGS                       := \
     -fdata-sections                   \
@@ -97,7 +98,7 @@ COMMONCFLAGS                       := \
     -I$(HAL_CONF_DIR)                 \
     -D__START=main                    \
     -D$(MCU)                          \
-    $(EFR32MG1_CONFIG_FILE_CPPFLAGS)  \
+    $(EFR32_CONFIG_FILE_CPPFLAGS)     \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
@@ -160,7 +161,7 @@ ResultPath                      = output
 TopResultDir                    = $(ResultPath)
 AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
-TargetTuple                     = efr32mg1
+TargetTuple                     = $(PLATFORM_LOWERCASE)
 
 ARCHS                           = cortex-m4
 
@@ -265,10 +266,10 @@ all: stage
 #
 
 cortex-m4_target_ABI                  = cortex-m4
-cortex-m4_target_CPPFLAGS             = -mcpu=cortex-m4 -mfloat-abi=soft -mthumb
-cortex-m4_target_CFLAGS               = -mcpu=cortex-m4 -mfloat-abi=soft -mthumb
-cortex-m4_target_CXXFLAGS             = -mcpu=cortex-m4 -mfloat-abi=soft -mthumb
-cortex-m4_target_LDFLAGS              = -mcpu=cortex-m4 -mfloat-abi=soft -mthumb
+cortex-m4_target_CPPFLAGS             = -mcpu=cortex-m4 -mfloat-abi=softfp -mthumb
+cortex-m4_target_CFLAGS               = -mcpu=cortex-m4 -mfloat-abi=softfp -mthumb
+cortex-m4_target_CXXFLAGS             = -mcpu=cortex-m4 -mfloat-abi=softfp -mthumb
+cortex-m4_target_LDFLAGS              = -mcpu=cortex-m4 -mfloat-abi=softfp -mthumb
 
 # Instantiate an architecture-specific build template for each target
 # architecture.
