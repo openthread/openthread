@@ -145,10 +145,6 @@ const char *Leader::DomainPrefixStateToString(DomainPrefixState aState)
 
     switch (aState)
     {
-    case kDomainPrefixNone:
-        logString = "None";
-        break;
-
     case kDomainPrefixAdded:
         logString = "Added";
         break;
@@ -159,10 +155,6 @@ const char *Leader::DomainPrefixStateToString(DomainPrefixState aState)
 
     case kDomainPrefixRefreshed:
         logString = "Refreshed";
-        break;
-
-    case kDomainPrefixUnchanged:
-        logString = "Unchanged";
         break;
     }
 
@@ -277,12 +269,12 @@ void Leader::UpdateDomainPrefixConfig(void)
         }
         else
         {
-            state = kDomainPrefixNone;
+            ExitNow();
         }
     }
     else if (config.GetPrefix() == mDomainPrefix)
     {
-        state = kDomainPrefixUnchanged;
+        ExitNow();
     }
     else
     {
@@ -308,6 +300,9 @@ void Leader::UpdateDomainPrefixConfig(void)
 #if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     Get<DuaManager>().HandleDomainPrefixUpdate(state);
 #endif
+
+exit:
+    return;
 }
 
 bool Leader::IsDomainUnicast(const Ip6::Address &aAddress) const

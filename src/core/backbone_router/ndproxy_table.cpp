@@ -120,11 +120,9 @@ void NdProxyTable::Erase(NdProxy &aProxy)
 
 void NdProxyTable::HandleDomainPrefixUpdate(Leader::DomainPrefixState aState)
 {
-    if (aState == Leader::kDomainPrefixAdded || aState == Leader::kDomainPrefixRemoved ||
-        aState == Leader::kDomainPrefixRefreshed)
-    {
-        Clear();
-    }
+    OT_UNUSED_VARIABLE(aState);
+
+    Clear();
 }
 
 void NdProxyTable::Clear(void)

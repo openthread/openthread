@@ -72,13 +72,11 @@ public:
     };
 
     // Domain Prefix state or state change.
-    enum DomainPrefixState
+    enum DomainPrefixState : uint8_t
     {
-        kDomainPrefixNone = 0,  ///< Not available.
         kDomainPrefixAdded,     ///< Added.
         kDomainPrefixRemoved,   ///< Removed.
         kDomainPrefixRefreshed, ///< Changed.
-        kDomainPrefixUnchanged, ///< Nothing changed.
     };
 
     /**
