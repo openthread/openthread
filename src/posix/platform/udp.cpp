@@ -72,9 +72,9 @@ static bool IsLinkLocal(const struct in6_addr &aAddress)
     return aAddress.s6_addr[0] == 0xfe && aAddress.s6_addr[1] == 0x80;
 }
 
-static bool IsMulticast(const struct in6_addr &aAddress)
+static bool IsMulticast(const otIp6Address &aAddress)
 {
-    return aAddress.s6_addr[0] == 0xff;
+    return aAddress.mFields.m8[0] == 0xff;
 }
 
 static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMessageInfo &aMessageInfo)
@@ -128,7 +128,7 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
         controlLength += CMSG_SPACE(sizeof(int));
     }
 
-    if (!IsMulticast(reinterpret_cast<const struct in6_addr &>(aMessageInfo.mSockAddr)) &&
+    if (!IsMulticast(aMessageInfo.mSockAddr) &&
         memcmp(&aMessageInfo.mSockAddr, &in6addr_any, sizeof(aMessageInfo.mSockAddr)))
     {
         struct in6_pktinfo pktinfo;

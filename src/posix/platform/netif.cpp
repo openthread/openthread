@@ -326,6 +326,9 @@ static uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
 #endif
 
 #if defined(__linux__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
+
 static void UpdateUnicastLinux(const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
 {
     struct rtattr *rta;
@@ -386,6 +389,8 @@ static void UpdateUnicastLinux(const otIp6AddressInfo &aAddressInfo, bool aIsAdd
                       Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
     }
 }
+
+#pragma GCC diagnostic pop
 #endif // defined(__linux__)
 
 static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
@@ -1027,11 +1032,20 @@ exit:
 
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
+
 static void processNetlinkEvent(otInstance *aInstance)
 {
     const size_t kMaxNetifEvent = 8192;
     ssize_t      length;
-    char         buffer[kMaxNetifEvent];
+
+#if defined(__linux__)
+    alignas(nlmsghdr)
+#else
+    alignas(rt_msghdr)
+#endif
+        char buffer[kMaxNetifEvent];
 
     length = recv(sNetlinkFd, buffer, sizeof(buffer), 0);
 
@@ -1108,6 +1122,8 @@ static void processNetlinkEvent(otInstance *aInstance)
 exit:
     return;
 }
+
+#pragma GCC diagnostic pop
 
 void platformNetifDeinit(void)
 {
@@ -1188,7 +1204,10 @@ static void processMLDEvent(otInstance *aInstance)
         if (ifAddr->ifa_addr != nullptr && ifAddr->ifa_addr->sa_family == AF_INET6 &&
             strncmp(gNetifName, ifAddr->ifa_name, IFNAMSIZ) == 0)
         {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
             struct sockaddr_in6 *addr6 = reinterpret_cast<struct sockaddr_in6 *>(ifAddr->ifa_addr);
+#pragma GCC diagnostic pop
 
             if (memcmp(&addr6->sin6_addr, &srcAddr.sin6_addr, sizeof(in6_addr)) == 0)
             {
