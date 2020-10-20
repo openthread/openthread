@@ -239,7 +239,7 @@ const char *Notifier::EventToString(Event aEvent) const
     // To ensure no clipping of flag names in the logs, the returned
     // strings from this method should have shorter length than
     // `kMaxFlagNameLength` value.
-    static const char *kEventStrings[] = {
+    static const char *const kEventStrings[] = {
         "Ip6+",              // kEventIp6AddressAdded                  (1 << 0)
         "Ip6-",              // kEventIp6AddressRemoved                (1 << 1)
         "Role",              // kEventThreadRoleChanged                (1 << 2)
