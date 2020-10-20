@@ -26,7 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Use automake includes since we cannot use SUBDIRS feature due to  cleanup
+# Use automake includes since we cannot use SUBDIRS feature due to cleanup
 # errors - few targets may use the same source file but dependency file is
 # created only once which leads to errors when auto-generated Makefile tries
 # to remove .Po files that were already removed
@@ -53,18 +53,18 @@ else # not OPENTHREAD_EXAMPLES_EFR32MG1
 
 if OPENTHREAD_EXAMPLES_EFR32MG12
 include efr32mg12/Makefile.am
-endif # OPENTHREAD_EXAMPLES_EFR32MG12
+endif
 
 if OPENTHREAD_EXAMPLES_EFR32MG13
 include efr32mg13/Makefile.am
-endif # OPENTHREAD_EXAMPLES_EFR32MG13
+endif
 
 if OPENTHREAD_EXAMPLES_EFR32MG21
 include efr32mg21/Makefile.am
-endif # OPENTHREAD_EXAMPLES_EFR32MG21
+endif
 
 if OPENTHREAD_ENABLE_EXECUTABLE
 SUBDIRS += sleepy-demo
-endif # OPENTHREAD_ENABLE_EXECUTABLE
+endif
 
 endif # OPENTHREAD_EXAMPLES_EFR32MG1
