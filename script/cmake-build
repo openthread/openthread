@@ -154,7 +154,7 @@ main()
             OT_CMAKE_NINJA_TARGET=("ot-cli-mtd" "ot-ncp-mtd")
             options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
             ;;
-        cc1352 | cc2652 | samr21 | qpg6095)
+        cc1352 | cc2538 | cc2652 | qpg6095 | samr21)
             options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
             ;;
         *)
