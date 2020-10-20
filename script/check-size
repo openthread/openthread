@@ -109,6 +109,7 @@ size_nrf52840_version()
         "COAP=1"
         "COAPS=1"
         "COMMISSIONER=1"
+        "DATASET_UPDATER=1"
         "DHCP6_CLIENT=1"
         "DHCP6_SERVER=1"
         "DIAGNOSTIC=1"

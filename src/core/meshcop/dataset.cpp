@@ -95,6 +95,63 @@ exit:
     return error;
 }
 
+bool Dataset::Info::IsSubsetOf(const Info &aOther) const
+{
+    bool isSubset = false;
+
+    if (IsMasterKeyPresent())
+    {
+        VerifyOrExit(aOther.IsMasterKeyPresent() && GetMasterKey() == aOther.GetMasterKey());
+    }
+
+    if (IsNetworkNamePresent())
+    {
+        VerifyOrExit(aOther.IsNetworkNamePresent() && GetNetworkName() == aOther.GetNetworkName());
+    }
+
+    if (IsExtendedPanIdPresent())
+    {
+        VerifyOrExit(aOther.IsExtendedPanIdPresent() && GetExtendedPanId() == aOther.GetExtendedPanId());
+    }
+
+    if (IsMeshLocalPrefixPresent())
+    {
+        VerifyOrExit(aOther.IsMeshLocalPrefixPresent() && GetMeshLocalPrefix() == aOther.GetMeshLocalPrefix());
+    }
+
+    if (IsPanIdPresent())
+    {
+        VerifyOrExit(aOther.IsPanIdPresent() && GetPanId() == aOther.GetPanId());
+    }
+
+    if (IsChannelPresent())
+    {
+        VerifyOrExit(aOther.IsChannelPresent() && GetChannel() == aOther.GetChannel());
+    }
+
+    if (IsPskcPresent())
+    {
+        VerifyOrExit(aOther.IsPskcPresent() && GetPskc() == aOther.GetPskc());
+    }
+
+    if (IsSecurityPolicyPresent())
+    {
+        VerifyOrExit(aOther.IsSecurityPolicyPresent() &&
+                     GetSecurityPolicy().mRotationTime == aOther.GetSecurityPolicy().mRotationTime &&
+                     GetSecurityPolicy().mFlags == aOther.GetSecurityPolicy().mFlags);
+    }
+
+    if (IsChannelMaskPresent())
+    {
+        VerifyOrExit(aOther.IsChannelMaskPresent() && GetChannelMask() == aOther.GetChannelMask());
+    }
+
+    isSubset = true;
+
+exit:
+    return isSubset;
+}
+
 Dataset::Dataset(Type aType)
     : mUpdateTime(0)
     , mLength(0)
