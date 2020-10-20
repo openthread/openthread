@@ -399,7 +399,6 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
     }
 
     // TODO: (DUA) Add DAD process
-    // TODO: (DUA) Extended Address Query
 
 exit:
     otLogInfoBbr("Received DUA.req on %s: %s", (isPrimary ? "PBBR" : "SBBR"), otThreadErrorToString(error));
@@ -578,9 +577,7 @@ void Manager::HandleBackboneAnswer(const Coap::Message &aMessage, const Ip6::Mes
     Ip6::InterfaceIdentifier meshLocalIid;
     uint16_t                 networkNameOffset, networkNameLength;
     uint32_t                 timeSinceLastTransaction;
-    uint16_t                 rloc16 = Mac::kShortAddrInvalid;
-    NdProxyTable::NdProxy *  ndProxy;
-    bool                     duplicated;
+    uint16_t                 srcRloc16 = Mac::kShortAddrInvalid;
 
     VerifyOrExit(aMessageInfo.IsHostInterface(), error = OT_ERROR_DROP);
 
@@ -599,26 +596,18 @@ void Manager::HandleBackboneAnswer(const Coap::Message &aMessage, const Ip6::Mes
     SuccessOrExit(
         error = ThreadTlv::FindTlvValueOffset(aMessage, ThreadTlv::kNetworkName, networkNameOffset, networkNameLength));
 
-    error = ThreadTlv::FindUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16);
+    error = ThreadTlv::FindUint16Tlv(aMessage, ThreadTlv::kRloc16, srcRloc16);
     VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_NOT_FOUND);
 
-    // TODO: (DUA) handle BB.ans for Backbone Address Query
-    VerifyOrExit(rloc16 == Mac::kShortAddrInvalid, error = OT_ERROR_NOT_IMPLEMENTED);
-
-    ndProxy = mNdProxyTable.ResolveDua(dua);
-    VerifyOrExit(ndProxy != nullptr, error = OT_ERROR_NOT_FOUND);
-
-    duplicated = ndProxy->GetMeshLocalIid() != meshLocalIid;
-
-    if (duplicated)
+    if (srcRloc16 == Mac::kShortAddrInvalid)
     {
-        Ip6::Address dest;
-
-        dest.SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), ndProxy->GetRloc16());
-        Get<AddressResolver>().SendAddressError(dua, meshLocalIid, &dest);
+        // Handle BB.ans for DAD process
+        HandleDadBackboneAnswer(dua, meshLocalIid);
     }
-
-    ot::BackboneRouter::NdProxyTable::NotifyDadComplete(*ndProxy, duplicated);
+    else
+    {
+        HandleExtendedBackboneAnswer(dua, meshLocalIid, timeSinceLastTransaction, srcRloc16);
+    }
 
     SuccessOrExit(error = mBackboneTmfAgent.SendEmptyAck(aMessage, aMessageInfo));
 
@@ -678,6 +667,48 @@ exit:
 
     FreeMessageOnError(message, error);
     return error;
+}
+
+void Manager::HandleDadBackboneAnswer(const Ip6::Address &aDua, const Ip6::InterfaceIdentifier &aMeshLocalIid)
+{
+    otError                error     = OT_ERROR_NONE;
+    NdProxyTable::NdProxy *ndProxy   = mNdProxyTable.ResolveDua(aDua);
+    bool                   duplicate = false;
+
+    OT_UNUSED_VARIABLE(error);
+
+    VerifyOrExit(ndProxy != nullptr, error = OT_ERROR_NOT_FOUND);
+
+    duplicate = ndProxy->GetMeshLocalIid() != aMeshLocalIid;
+
+    if (duplicate)
+    {
+        Ip6::Address dest;
+
+        dest.SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), ndProxy->GetRloc16());
+        Get<AddressResolver>().SendAddressError(aDua, aMeshLocalIid, &dest);
+    }
+
+    ot::BackboneRouter::NdProxyTable::NotifyDadComplete(*ndProxy, duplicate);
+
+exit:
+    otLogInfoBbr("HandleDadBackboneAnswer: %s, target=%s, mliid=%s, duplicate=%s", otThreadErrorToString(error),
+                 aDua.ToString().AsCString(), aMeshLocalIid.ToString().AsCString(), duplicate ? "Y" : "N");
+}
+
+void Manager::HandleExtendedBackboneAnswer(const Ip6::Address &            aDua,
+                                           const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                           uint32_t                        aTimeSinceLastTransaction,
+                                           uint16_t                        aSrcRloc16)
+{
+    Ip6::Address dest;
+
+    dest.SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), aSrcRloc16);
+    Get<AddressResolver>().SendAddressQueryResponse(aDua, aMeshLocalIid, &aTimeSinceLastTransaction, dest);
+
+    otLogInfoBbr("HandleExtendedBackboneAnswer: target=%s, mliid=%s, LTT=%lds, rloc16=%04x",
+                 aDua.ToString().AsCString(), aMeshLocalIid.ToString().AsCString(), aTimeSinceLastTransaction,
+                 aSrcRloc16);
 }
 
 } // namespace BackboneRouter

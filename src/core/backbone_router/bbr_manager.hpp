@@ -212,6 +212,11 @@ private:
                                const Ip6::Address &         aDua,
                                uint16_t                     aSrcRloc16,
                                const NdProxyTable::NdProxy &aNdProxy);
+    void    HandleDadBackboneAnswer(const Ip6::Address &aDua, const Ip6::InterfaceIdentifier &aMeshLocalIid);
+    void    HandleExtendedBackboneAnswer(const Ip6::Address &            aDua,
+                                         const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                         uint32_t                        aTimeSinceLastTransaction,
+                                         uint16_t                        aSrcRloc16);
 };
 
 } // namespace BackboneRouter
