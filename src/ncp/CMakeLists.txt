@@ -26,49 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-ncp-ftd)
-add_library(openthread-ncp-mtd)
-add_library(openthread-rcp)
-
-option(OT_NCP_SPI "enable NCP SPI support")
-if(OT_NCP_SPI)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_SPI_ENABLE=1")
-else()
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1")
-endif()
-
-# We depend on C++11 to validate that NCP handlers are sorted.
-set_target_properties(
-    openthread-ncp-ftd openthread-ncp-mtd openthread-rcp
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
-target_compile_definitions(openthread-ncp-ftd PRIVATE
-    OPENTHREAD_FTD=1
-)
-
-target_compile_definitions(openthread-ncp-mtd PRIVATE
-    OPENTHREAD_MTD=1
-)
-
-target_compile_definitions(openthread-rcp PRIVATE
-    OPENTHREAD_RADIO=1
-)
-
-target_compile_options(openthread-ncp-ftd PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_compile_options(openthread-ncp-mtd PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_compile_options(openthread-rcp PRIVATE
-    ${OT_CFLAGS}
-)
-
 set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
@@ -94,6 +51,12 @@ set(COMMON_NCP_SOURCES
     ncp_base_ftd.cpp
     ncp_base_mtd.cpp
 )
+option(OT_NCP_SPI "enable NCP SPI support")
+if(OT_NCP_SPI)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_SPI_ENABLE=1")
+else()
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1")
+endif()
 
 if(OT_FTD)
     include(ftd.cmake)
