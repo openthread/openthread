@@ -202,7 +202,7 @@ void ChannelMonitor::LogResults(void)
 #endif
 }
 
-Mac::ChannelMask ChannelMonitor::FindBestChannels(const Mac::ChannelMask &aMask, uint16_t &aOccupancy)
+Mac::ChannelMask ChannelMonitor::FindBestChannels(const Mac::ChannelMask &aMask, uint16_t &aOccupancy) const
 {
     uint8_t          channel;
     Mac::ChannelMask bestMask;

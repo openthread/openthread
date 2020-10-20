@@ -44,7 +44,7 @@ namespace ot {
 const TimerScheduler::AlarmApi TimerMilliScheduler::sAlarmMilliApi = {&otPlatAlarmMilliStartAt, &otPlatAlarmMilliStop,
                                                                       &otPlatAlarmMilliGetNow};
 
-bool Timer::DoesFireBefore(const Timer &aSecondTimer, Time aNow)
+bool Timer::DoesFireBefore(const Timer &aSecondTimer, Time aNow) const
 {
     bool retval;
     bool isBeforeNow = (GetFireTime() < aNow);

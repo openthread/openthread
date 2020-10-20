@@ -89,7 +89,7 @@ private:
 
     struct JoinerEntrustMetadata
     {
-        otError AppendTo(Message &aMessage) { return aMessage.Append(*this); }
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
         void    ReadFrom(const Message &aMessage);
 
         Ip6::MessageInfo mMessageInfo; // Message info of the message to send.

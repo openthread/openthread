@@ -183,7 +183,7 @@ public:
      *             channel with the same occupancy rate value.
      *
      */
-    Mac::ChannelMask FindBestChannels(const Mac::ChannelMask &aMask, uint16_t &aOccupancy);
+    Mac::ChannelMask FindBestChannels(const Mac::ChannelMask &aMask, uint16_t &aOccupancy) const;
 
 private:
     enum
