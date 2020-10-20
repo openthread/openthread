@@ -64,6 +64,14 @@
 #define OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES 4
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+ *
+ * Define to 1 to enable Border Agent support.
+ *
+ */
+#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_DIAG_ENABLE
  *
  * Define to 1 to enable Factory Diagnostics support.

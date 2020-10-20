@@ -46,8 +46,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 namespace MeshCoP {
 
 class BorderAgent : public InstanceLocator, private NonCopyable
@@ -56,7 +54,18 @@ class BorderAgent : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the BorderAgent object.
+     * This enumeration defines the Border Agent state.
+     *
+     */
+    enum State : uint8_t
+    {
+        kStateStopped = OT_BORDER_AGENT_STATE_STOPPED, ///< Border agent is stopped/disabled.
+        kStateStarted = OT_BORDER_AGENT_STATE_STARTED, ///< Border agent is started.
+        kStateActive  = OT_BORDER_AGENT_STATE_ACTIVE,  ///< Border agent is connected with external commissioner.
+    };
+
+    /**
+     * This constructor initializes the `BorderAgent` object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -87,7 +96,7 @@ public:
      * @returns The state of the Border Agent service.
      *
      */
-    otBorderAgentState GetState(void) const { return mState; }
+    State GetState(void) const { return mState; }
 
     /**
      * This method applies the Mesh Local Prefix.
@@ -96,21 +105,34 @@ public:
     void ApplyMeshLocalPrefix(void);
 
 private:
+    class ForwardContext : public InstanceLocatorInit
+    {
+    public:
+        void     Init(Instance &aInstance, const Coap::Message &aMessage, bool aPetition, bool aSeparate);
+        bool     IsPetition(void) const { return mPetition; }
+        uint16_t GetMessageId(void) const { return mMessageId; }
+        otError  ToHeader(Coap::Message &aMessage, uint8_t aCode);
+
+    private:
+        uint16_t mMessageId;                             // The CoAP Message ID of the original request.
+        bool     mPetition : 1;                          // Whether the forwarding request is leader petition.
+        bool     mSeparate : 1;                          // Whether the original request expects separate response.
+        uint8_t  mTokenLength : 4;                       // The CoAP Token Length of the original request.
+        uint8_t  mType : 2;                              // The CoAP Type of the original request.
+        uint8_t  mToken[Coap::Message::kMaxTokenLength]; // The CoAP Token of the original request.
+    };
+
     void HandleNotifierEvents(Events aEvents);
 
-    static void HandleConnected(bool aConnected, void *aContext)
-    {
-        static_cast<BorderAgent *>(aContext)->HandleConnected(aConnected);
-    }
-    void HandleConnected(bool aConnected);
+    Coap::Message::Code CoapCodeFromError(otError aError);
+    void                SendErrorMessage(ForwardContext &aForwardContext, otError aError);
+    void                SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, otError aError);
+
+    static void HandleConnected(bool aConnected, void *aContext);
+    void        HandleConnected(bool aConnected);
 
     template <Coap::Resource BorderAgent::*aResource>
-    static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-    {
-        IgnoreError(static_cast<BorderAgent *>(aContext)->ForwardToLeader(
-            *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-            (static_cast<BorderAgent *>(aContext)->*aResource).GetUriPath(), false, false));
-    }
+    static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     static void HandleTimeout(Timer &aTimer);
     void        HandleTimeout(void);
@@ -119,6 +141,7 @@ private:
                                    otMessage *          aMessage,
                                    const otMessageInfo *aMessageInfo,
                                    otError              aResult);
+    void        HandleCoapResponse(ForwardContext &aForwardContext, const Coap::Message *aResponse, otError aResult);
 
     otError     ForwardToLeader(const Coap::Message &   aMessage,
                                 const Ip6::MessageInfo &aMessageInfo,
@@ -136,8 +159,6 @@ private:
             *static_cast<const Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
     }
     bool HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    void SetState(otBorderAgentState aState);
 
     enum
     {
@@ -162,8 +183,8 @@ private:
     Ip6::Udp::Receiver       mUdpReceiver; ///< The UDP receiver to receive packets from external commissioner
     Ip6::NetifUnicastAddress mCommissionerAloc;
 
-    TimerMilli         mTimer;
-    otBorderAgentState mState;
+    TimerMilli mTimer;
+    State      mState;
 };
 
 } // namespace MeshCoP
