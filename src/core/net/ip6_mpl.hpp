@@ -106,7 +106,7 @@ public:
      * @returns The MPL Seed Id Length value.
      *
      */
-    SeedIdLength GetSeedIdLength(void) { return static_cast<SeedIdLength>(mControl & kSeedIdLengthMask); }
+    SeedIdLength GetSeedIdLength(void) const { return static_cast<SeedIdLength>(mControl & kSeedIdLengthMask); }
 
     /**
      * This method sets the MPL Seed Id Length value.

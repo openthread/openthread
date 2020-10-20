@@ -151,7 +151,7 @@ void CslTxScheduler::RescheduleCslTx(void)
     mCslTxChild = bestChild;
 }
 
-uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild, uint64_t aRadioNow)
+uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild, uint64_t aRadioNow) const
 {
     uint32_t delay;
     uint16_t period_offset = (aRadioNow / kUsPerTenSymbols) % aChild.GetCslPeriod();

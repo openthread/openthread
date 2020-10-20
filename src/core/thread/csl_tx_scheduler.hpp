@@ -190,7 +190,7 @@ private:
     void InitFrameRequestAhead(void);
     void RescheduleCslTx(void);
 
-    uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint64_t aRadioNow);
+    uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint64_t aRadioNow) const;
 
     // Callbacks from `Mac`
     otError HandleFrameRequest(Mac::TxFrame &aFrame);

@@ -1011,7 +1011,7 @@ exit:
     return error;
 }
 
-otError Mle::AppendSourceAddress(Message &aMessage)
+otError Mle::AppendSourceAddress(Message &aMessage) const
 {
     return Tlv::AppendUint16Tlv(aMessage, Tlv::kSourceAddress, GetRloc16());
 }
