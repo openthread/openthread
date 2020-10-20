@@ -31,9 +31,6 @@ source "tests/scripts/expect/_common.exp"
 
 set max_node 15
 spawn_node 1
-expect_after {
-    timeout { exit 1 }
-}
 send "panid 0xface\n"
 expect "Done"
 send "ifconfig up\n"
@@ -45,9 +42,6 @@ expect "Done"
 
 for {set i 2} {$i <= $max_node} {incr i} {
     spawn_node $i
-    expect_after {
-        timeout { exit 1 }
-    }
     send "mode r\n"
     expect "Done"
     send "panid 0xface\n"
@@ -61,9 +55,6 @@ for {set i 2} {$i <= $max_node} {incr i} {
 }
 
 set spawn_id $spawn_ids(1)
-expect_after {
-    timeout { exit 1 }
-}
 send "child table\n"
 expect "Done"
 

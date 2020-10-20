@@ -287,6 +287,11 @@ if(OT_OTNS)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_OTNS_ENABLE=1")
 endif()
 
+option(OT_RCP_RESTORATION "enable RCP restoration on failures")
+if(OT_RCP_RESTORATION)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_ENABLE=1")
+endif()
+
 # Checks
 if(OT_PLATFORM_UDP AND OT_UDP_FORWARD)
     message(FATAL_ERROR "OT_PLATFORM_UDP and OT_UDP_FORWARD are exclusive")

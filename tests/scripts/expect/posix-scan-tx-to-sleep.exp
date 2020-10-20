@@ -29,12 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=--sleep-to-tx&forkpty-arg=1"
-set node_1 $spawn_id
-expect_after {
-    timeout { exit 1 }
-}
-
+spawn_node 1 "rcp" "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=--sleep-to-tx&forkpty-arg=1"
 send "dataset init new\n"
 expect "Done"
 send "dataset panid 0xface\n"
@@ -75,12 +70,7 @@ expect -re {(\d+)}
 set channel $expect_out(1,string)
 expect "Done"
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=--sleep-to-tx&forkpty-arg=2"
-set node_2 $spawn_id
-expect_after {
-    timeout { exit 1 }
-}
-
+spawn_node 2 "rcp" "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=--sleep-to-tx&forkpty-arg=2"
 send "scan\n"
 expect "| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |"
 expect "+---+------------------+------------------+------+------------------+----+-----+-----+"
