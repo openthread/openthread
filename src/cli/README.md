@@ -1825,7 +1825,7 @@ Perform an IEEE 802.15.4 Active Scan.
 Done
 ```
 
-### scan energy \[duration\]
+### scan energy \[duration\] \[channel\]
 
 Perform an IEEE 802.15.4 Energy Scan.
 
@@ -1851,6 +1851,14 @@ Perform an IEEE 802.15.4 Energy Scan.
 | 24 |  -81 |
 | 25 |  -88 |
 | 26 |  -71 |
+Done
+```
+
+```bash
+> scan energy 10 20
+| Ch | RSSI |
++----+------+
+| 20 |  -82 |
 Done
 ```
 

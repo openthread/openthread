@@ -3355,23 +3355,26 @@ otError Interpreter::ProcessScan(uint8_t aArgsLength, char *aArgs[])
     uint32_t scanChannels = 0;
     uint16_t scanDuration = 0;
     bool     energyScan   = false;
+    uint8_t  index        = 0;
 
     if (aArgsLength > 0)
     {
-        if (strcmp(aArgs[0], "energy") == 0)
+        if (strcmp(aArgs[index], "energy") == 0)
         {
             energyScan = true;
+            index++;
 
             if (aArgsLength > 1)
             {
-                SuccessOrExit(error = ParseAsUint16(aArgs[1], scanDuration));
+                SuccessOrExit(error = ParseAsUint16(aArgs[index++], scanDuration));
             }
         }
-        else
+
+        if (index < aArgsLength)
         {
             uint8_t channel;
 
-            SuccessOrExit(error = ParseAsUint8(aArgs[0], channel));
+            SuccessOrExit(error = ParseAsUint8(aArgs[index++], channel));
             VerifyOrExit(channel < sizeof(scanChannels) * CHAR_BIT, error = OT_ERROR_INVALID_ARGS);
             scanChannels = 1 << channel;
         }
