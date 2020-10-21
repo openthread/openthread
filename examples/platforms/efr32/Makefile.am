@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -31,10 +31,40 @@
 # created only once which leads to errors when auto-generated Makefile tries
 # to remove .Po files that were already removed
 
-if OPENTHREAD_EXAMPLES_JN5189
-include jn5189/Makefile.am
+
+# Always package (e.g. for 'make dist') these subdirectories.
+DIST_SUBDIRS = sleepy-demo
+
+# Always build (e.g. for 'make all') these subdirectories.
+SUBDIRS = $(NULL)
+
+if OPENTHREAD_EXAMPLES_EFR32MG1
+include efr32mg1/Makefile.am
+# SUBDIRS = sleepy-demo
+# NOTE: The sleepy-demo app currently does not fit on this platform.
+#
+# .../arm-none-eabi/bin/ld: sleepy-demo-mtd section `.bss' will not fit in region `RAM'
+# .../arm-none-eabi/bin/ld: sleepy-demo-mtd section `.nvm' will not fit in region `FLASH'
+# .../arm-none-eabi/bin/ld: region RAM overflowed with stack
+# .../arm-none-eabi/bin/ld: region `FLASH' overflowed by 33428 bytes
+# .../arm-none-eabi/bin/ld: region `RAM' overflowed by 4536 bytes
+
+else # not OPENTHREAD_EXAMPLES_EFR32MG1
+
+if OPENTHREAD_EXAMPLES_EFR32MG12
+include efr32mg12/Makefile.am
 endif
 
-if OPENTHREAD_EXAMPLES_K32W061
-include k32w061/Makefile.am
+if OPENTHREAD_EXAMPLES_EFR32MG13
+include efr32mg13/Makefile.am
 endif
+
+if OPENTHREAD_EXAMPLES_EFR32MG21
+include efr32mg21/Makefile.am
+endif
+
+if OPENTHREAD_ENABLE_EXECUTABLE
+SUBDIRS += sleepy-demo
+endif
+
+endif # OPENTHREAD_EXAMPLES_EFR32MG1

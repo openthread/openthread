@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,15 +26,22 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Use automake includes since we cannot use SUBDIRS feature due to cleanup
-# errors - few targets may use the same source file but dependency file is
-# created only once which leads to errors when auto-generated Makefile tries
-# to remove .Po files that were already removed
 
-if OPENTHREAD_EXAMPLES_JN5189
-include jn5189/Makefile.am
-endif
+# Always package (e.g. for 'make dist') these subdirectories.
 
-if OPENTHREAD_EXAMPLES_K32W061
-include k32w061/Makefile.am
+DIST_SUBDIRS                              = \
+    sleepy-demo-mtd                         \
+    sleepy-demo-ftd                         \
+    $(NULL)
+
+# Always build (e.g. for 'make all') these subdirectories.
+
+SUBDIRS                                 = \
+    $(NULL)
+
+if OPENTHREAD_ENABLE_EXECUTABLE
+SUBDIRS                                 += \
+    sleepy-demo-mtd                        \
+    sleepy-demo-ftd                        \
+    $(NULL)
 endif
