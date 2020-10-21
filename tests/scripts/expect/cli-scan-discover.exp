@@ -75,6 +75,11 @@ for {set i 11} {$i <= 26} {incr i} {
     expect -re "\\| +$i \\| +-?\\d+ \\|"
 }
 expect "Done"
+send "scan energy 100 $channel\n"
+expect "| Ch | RSSI |"
+expect "+----+------+"
+expect -re "\\| +$channel \\| +-?\\d+ \\|"
+expect "Done"
 
 switch_node 3
 send "ifconfig up\n"
