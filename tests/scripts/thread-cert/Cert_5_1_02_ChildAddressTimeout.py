@@ -32,29 +32,40 @@ import unittest
 import config
 import mle
 import thread_cert
+from pktverify.consts import MLE_CHILD_ID_RESPONSE, ADDR_QRY_URI
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER = 2
-ED = 3
+MED = 3
 SED = 4
 
-MTDS = [ED, SED]
+MTDS = [MED, SED]
+
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of the test case is to verify that when the timer reaches
+# the value of the Timeout TLV sent by the Child, the Parent stops
+# responding to Address Query on the Child's behalf
 
 
 class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
+            'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'allowlist': [LEADER, ED, SED]
+            'allowlist': [LEADER, MED, SED]
         },
-        ED: {
+        MED: {
+            'name': 'MED',
             'is_mtd': True,
             'mode': 'rn',
             'panid': 0xface,
@@ -62,6 +73,7 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
             'allowlist': [ROUTER]
         },
         SED: {
+            'name': 'SED',
             'is_mtd': True,
             'mode': 'n',
             'panid': 0xface,
@@ -79,18 +91,20 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
-        self.nodes[ED].start()
+        self.nodes[MED].start()
         self.simulator.go(5)
-        self.assertEqual(self.nodes[ED].get_state(), 'child')
+        self.assertEqual(self.nodes[MED].get_state(), 'child')
 
         self.nodes[SED].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED].get_state(), 'child')
 
-        ed_addrs = self.nodes[ED].get_addrs()
+        self.collect_rlocs()
+
+        ed_addrs = self.nodes[MED].get_addrs()
         sed_addrs = self.nodes[SED].get_addrs()
 
-        self.nodes[ED].stop()
+        self.nodes[MED].stop()
         self.simulator.go(5)
         for addr in ed_addrs:
             if addr[0:4] != 'fe80':
@@ -104,7 +118,7 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
 
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         router1_messages = self.simulator.get_messages_sent_by(ROUTER)
-        ed_messages = self.simulator.get_messages_sent_by(ED)
+        ed_messages = self.simulator.get_messages_sent_by(MED)
         sed_messages = self.simulator.get_messages_sent_by(SED)
 
         # 1 - All
@@ -143,15 +157,92 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         # 4 - Router1
         msg = router1_messages.does_not_contain_coap_message()
 
-        # 6 - Leader
+        # 5 - Leader
         msg = leader_messages.next_coap_message("0.02")
         msg.assertCoapMessageRequestUriPath("/a/aq")
 
         msg = leader_messages.next_coap_message("0.02")
         msg.assertCoapMessageRequestUriPath("/a/aq")
 
-        # 7 - Router1
+        # 6 - Router1
         msg = router1_messages.does_not_contain_coap_message()
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        LEADER_RLOC = pv.vars['LEADER_RLOC']
+        ROUTER = pv.vars['ROUTER']
+        MED = pv.vars['MED']
+        MED_RLOC = pv.vars['MED_RLOC']
+        SED = pv.vars['SED']
+        SED_RLOC = pv.vars['SED_RLOC']
+
+        # Step 1: Verify topology is formed correctly
+
+        pv.verify_attached('ROUTER')
+
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_wpan_dst64(MED).\
+            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
+            must_next()
+
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_wpan_dst64(SED).\
+            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
+            must_next()
+
+        # Step 2: Power off both devices and allow for the keep-alive timeout to expire
+        # Step 3: The Leader sends an ICMPv6 Echo Request to MED and attempts to perform
+        #         address resolution by sending an Address Query Request
+
+        _pkt = pkts.filter_ping_request().\
+            filter_wpan_src64(LEADER).\
+            filter_ipv6_dst(MED_RLOC).\
+            must_next()
+
+        pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+            filter_wpan_src64(MED).\
+            filter_ipv6_dst(LEADER_RLOC).\
+            must_not_next()
+
+        pkts.filter_wpan_src64(LEADER).\
+            filter_RLARA().\
+            filter_coap_request(ADDR_QRY_URI).\
+            must_next()
+
+        # Step 4: Router MUST NOT respond with an Address Notification Message
+
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_wpan_dst64(LEADER).\
+            filter_coap_ack(ADDR_QRY_URI).\
+            must_not_next()
+
+        # Step 5: The Leader sends an ICMPv6 Echo Request to SED and attempts to perform
+        #         address resolution by sending an Address Query Request
+
+        _pkt = pkts.filter_ping_request().\
+            filter_wpan_src64(LEADER).\
+            filter_ipv6_dst(SED_RLOC).\
+            must_next()
+
+        pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+            filter_wpan_src64(MED).\
+            filter_ipv6_dst(LEADER_RLOC).\
+            must_not_next()
+
+        pkts.filter_wpan_src64(LEADER).\
+            filter_RLARA().\
+            filter_coap_request(ADDR_QRY_URI).\
+            must_next()
+
+        # Step 6: Router MUST NOT respond with an Address Notification Message
+
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_RLARA().\
+            filter_coap_ack(ADDR_QRY_URI).\
+            must_not_next()
 
 
 if __name__ == '__main__':
