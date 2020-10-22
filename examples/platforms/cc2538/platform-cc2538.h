@@ -104,4 +104,19 @@ void cc2538RadioSetHgm(bool aState);
 bool cc2538RadioGetHgm(void);
 #endif // OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
 
+typedef enum
+{
+    OT_CC2538_TIMER_ENERGY_SCAN, ///< Internal timer for energy scan
+    OT_CC2538_TIMERS_COUNT,      ///< Number of internal timers
+} otCC2538Timer;
+
+/**
+ * This function sets the internal timer.
+ *
+ * @param[in]   aTimer  The timer identifier.
+ * @param[in]   aDelay  The delay to trigger the timer, and must be no more than `INT32_MAX`.
+ *
+ */
+void cc2538SetTimer(otCC2538Timer aTimer, uint32_t aDelay);
+
 #endif // PLATFORM_CC2538_H_
