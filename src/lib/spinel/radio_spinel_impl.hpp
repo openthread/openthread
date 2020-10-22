@@ -1823,7 +1823,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::CalcRcpTimeOffset(void)
 
 exit:
     LogIfFail("Error calculating RCP time offset: %s", error);
-#endif //OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 }
 
 template <typename InterfaceType, typename ProcessContextType>
