@@ -95,6 +95,7 @@
 #define RFCORE_XREG_FSMSTAT1                    0x4008864C  // Radio status register
 #define RFCORE_XREG_FIFOPCTRL                   0x40088650  // FIFOP threshold
 #define RFCORE_XREG_CCACTRL0                    0x40088658  // CCA threshold
+#define RFCORE_XREG_RSSI                        0x40088660  // RSSI status register
 #define RFCORE_XREG_RSSISTAT                    0x40088664  // RSSI valid status register
 #define RFCORE_XREG_AGCCTRL1                    0x400886C8  // AGC reference level
 #define RFCORE_XREG_RFC_OBS_CTRL                0x400887AC  // RF Core observable output
@@ -109,6 +110,7 @@
 #define RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN    0x00000001  // Enables frame filtering
 
 #define RFCORE_XREG_FRMCTRL0_AUTOACK            0x00000020
+#define RFCORE_XREG_FRMCTRL0_ENERGY_SCAN        0x00000010
 #define RFCORE_XREG_FRMCTRL0_AUTOCRC            0x00000040
 #define RFCORE_XREG_FRMCTRL0_INFINITY_RX        0x00000008
 
