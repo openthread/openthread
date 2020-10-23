@@ -227,7 +227,7 @@ otError ParseAsInt32(const char *aString, int32_t &aInt32)
     VerifyOrExit(value <= (isNegavtive ? static_cast<uint64_t>(-static_cast<int64_t>(NumericLimits<int32_t>::Min()))
                                        : static_cast<uint64_t>(NumericLimits<int32_t>::Max())),
                  error = OT_ERROR_INVALID_ARGS);
-    aInt32 = isNegavtive ? -static_cast<int32_t>(value) : static_cast<int32_t>(value);
+    aInt32 = static_cast<int32_t>(isNegavtive ? -static_cast<int64_t>(value) : static_cast<int64_t>(value));
 
 exit:
     return error;
