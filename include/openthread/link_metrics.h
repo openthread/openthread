@@ -158,7 +158,8 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
  * @param[in] aInstance          A pointer to an OpenThread instance.
  * @param[in] aDestination       A pointer to the destination address.
  * @param[in] aSeriesId          The Series ID to operate with.
- * @param[in] aSeriesFlags       A pointer to the Series Flags that specifies which frames are to be accounted.
+ * @param[in] aSeriesFlags       A pointer to the Series Flags that specifies which frames are to be accounted. The
+ * pointer MUST NOT be `nullptr`.
  * @param[in] aLinkMetricsFlags  A pointer to flags specifying what metrics to query.
  *
  * @retval OT_ERROR_NONE          Successfully sent a Link Metrics Management Request message.
@@ -166,13 +167,13 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
  * @retval OT_ERROR_INVALID_ARGS  @p aSeriesId is not within the valid range.
  *
  */
-otError otLinkMetricsSendMgmtRequestForwardTrackingSeries(otInstance *                      aInstance,
-                                                          const otIp6Address *              aDestination,
-                                                          uint8_t                           aSeriesId,
-                                                          const otLinkMetricsSeriesFlags *  aSeriesFlags,
-                                                          const otLinkMetrics *             aLinkMetricsFlags,
-                                                          otLinkMetricsMgmtResponseCallback aCallback,
-                                                          void *                            aCallbackContext);
+otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                      aInstance,
+                                                 const otIp6Address *              aDestination,
+                                                 uint8_t                           aSeriesId,
+                                                 const otLinkMetricsSeriesFlags *  aSeriesFlags,
+                                                 const otLinkMetrics *             aLinkMetricsFlags,
+                                                 otLinkMetricsMgmtResponseCallback aCallback,
+                                                 void *                            aCallbackContext);
 
 /**
  * This function sends an MLE Link Probe message.

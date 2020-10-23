@@ -57,13 +57,13 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
         static_cast<const Ip6::Address &>(*aDestination), aSeriesId, aLinkMetricsFlags);
 }
 
-otError otLinkMetricsSendMgmtRequestForwardTrackingSeries(otInstance *                      aInstance,
-                                                          const otIp6Address *              aDestination,
-                                                          uint8_t                           aSeriesId,
-                                                          const otLinkMetricsSeriesFlags *  aSeriesFlags,
-                                                          const otLinkMetrics *             aLinkMetricsFlags,
-                                                          otLinkMetricsMgmtResponseCallback aCallback,
-                                                          void *                            aCallbackContext)
+otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                      aInstance,
+                                                 const otIp6Address *              aDestination,
+                                                 uint8_t                           aSeriesId,
+                                                 const otLinkMetricsSeriesFlags *  aSeriesFlags,
+                                                 const otLinkMetrics *             aLinkMetricsFlags,
+                                                 otLinkMetricsMgmtResponseCallback aCallback,
+                                                 void *                            aCallbackContext)
 {
     OT_ASSERT(aDestination != nullptr && aSeriesFlags != nullptr && aLinkMetricsFlags != nullptr);
 
