@@ -786,14 +786,14 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
 #if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
     if (sIsSyncingState)
     {
-        VerifyOrExit(isUp == otIp6IsEnabled(aInstance), otLogWarnPlat("Host netif state notfication is unexpected"));
+        VerifyOrExit(isUp == otIp6IsEnabled(aInstance), otLogWarnPlat("Host netif state notification is unexpected (ignored)"));
         sIsSyncingState = false;
     }
     else
 #endif
         if (isUp != otIp6IsEnabled(aInstance))
     {
-        SuccessOrExit(error = otIp6SetEnabled(aInstance, ifinfo->ifi_flags & IFF_UP));
+        SuccessOrExit(error = otIp6SetEnabled(aInstance, isUp));
         otLogInfoPlat("Succeeded to sync netif state with host");
     }
 
