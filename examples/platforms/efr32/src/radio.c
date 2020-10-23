@@ -889,14 +889,14 @@ exit:
 
 static void ieee802154DataRequestCommand(RAIL_Handle_t aRailHandle)
 {
-    RAIL_Status_t status;
+    RAIL_Status_t status = RAIL_STATUS_NO_ERROR;
 
     if (sIsSrcMatchEnabled)
     {
         RAIL_IEEE802154_Address_t sourceAddress;
 
         status = RAIL_IEEE802154_GetAddress(aRailHandle, &sourceAddress);
-        assert(status == RAIL_STATUS_NO_ERROR);
+        otEXPECT(status == RAIL_STATUS_NO_ERROR);
 
         if ((sourceAddress.length == RAIL_IEEE802154_LongAddress &&
              utilsSoftSrcMatchExtFindEntry((otExtAddress *)sourceAddress.longAddress) >= 0) ||
@@ -904,15 +904,25 @@ static void ieee802154DataRequestCommand(RAIL_Handle_t aRailHandle)
              utilsSoftSrcMatchShortFindEntry(sourceAddress.shortAddress) >= 0))
         {
             status = RAIL_IEEE802154_SetFramePending(aRailHandle);
-            assert(status == RAIL_STATUS_NO_ERROR);
+            otEXPECT(status == RAIL_STATUS_NO_ERROR);
             insertIeee802154DataRequestCommand(aRailHandle);
         }
     }
     else
     {
         status = RAIL_IEEE802154_SetFramePending(aRailHandle);
-        assert(status == RAIL_STATUS_NO_ERROR);
+        otEXPECT(status == RAIL_STATUS_NO_ERROR);
         insertIeee802154DataRequestCommand(aRailHandle);
+    }
+
+exit:
+    if (status == RAIL_STATUS_INVALID_STATE)
+    {
+        otLogWarnPlat("Too late to modify outgoing FP");
+    }
+    else
+    {
+        assert(status == RAIL_STATUS_NO_ERROR);
     }
 }
 
