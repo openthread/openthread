@@ -84,7 +84,7 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
              (sResetCause & EMU_RSTCAUSE_DVDDBOD) || (sResetCause & EMU_RSTCAUSE_DVDDLEBOD) ||
              (sResetCause & EMU_RSTCAUSE_EM4))
     {
-        reason = OT_PLAT_RESET_REASON_ASSERT;
+        reason = OT_PLAT_RESET_REASON_OTHER;
     }
 #endif
 #if defined(_RMU_RSTCAUSE_MASK)
@@ -111,7 +111,7 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     else if ((sResetCause & RMU_RSTCAUSE_AVDDBOD) || (sResetCause & RMU_RSTCAUSE_DECBOD) ||
              (sResetCause & RMU_RSTCAUSE_DVDDBOD) || (sResetCause & RMU_RSTCAUSE_EM4RST))
     {
-        reason = OT_PLAT_RESET_REASON_ASSERT;
+        reason = OT_PLAT_RESET_REASON_OTHER;
     }
 #endif
     return reason;
