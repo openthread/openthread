@@ -150,7 +150,7 @@ do_clang_tidy_fix()
     (mkdir -p ./build/cmake-tidy \
         && cd ./build/cmake-tidy \
         && THREAD_VERSION=1.2 cmake "${OT_CLANG_TIDY_BUILD_OPTS[@]}" ../.. \
-        && run-clang-tidy.py -header-filter='.*' -checks="${OT_CLANG_TIDY_CHECKS}" -j"$OT_BUILD_JOBS" "${OT_CLANG_TIDY_FIX_DIRS[@]}" -fix)
+        && ../../script/clang-tidy -header-filter='.*' -checks="${OT_CLANG_TIDY_CHECKS}" -j"$OT_BUILD_JOBS" "${OT_CLANG_TIDY_FIX_DIRS[@]}" -fix)
 }
 
 do_clang_tidy_check()
@@ -163,7 +163,7 @@ do_clang_tidy_check()
         mkdir -p ./build/cmake-tidy \
             && cd ./build/cmake-tidy \
             && THREAD_VERSION=1.2 cmake "${OT_CLANG_TIDY_BUILD_OPTS[@]}" ../.. \
-            && run-clang-tidy.py -header-filter='.*' -checks="${OT_CLANG_TIDY_CHECKS}" -j"$OT_BUILD_JOBS" "${OT_CLANG_TIDY_FIX_DIRS[@]}" \
+            && ../../script/clang-tidy -header-filter='.*' -checks="${OT_CLANG_TIDY_CHECKS}" -j"$OT_BUILD_JOBS" "${OT_CLANG_TIDY_FIX_DIRS[@]}" \
             | grep -v -E "third_party" >output.txt
         if grep -q "warning: \|error: " output.txt; then
             echo "You must pass the clang tidy checks before submitting a pull request"
