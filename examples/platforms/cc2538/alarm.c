@@ -52,6 +52,17 @@ static uint32_t sAlarmT0   = 0;
 static uint32_t sAlarmDt   = 0;
 static bool     sIsRunning = false;
 
+static uint8_t  sTimersIsRunning = 0;
+static uint32_t sTimersExpireAt[OT_CC2538_TIMERS_COUNT];
+
+extern void cc2538EnergyScanTimerHandler(void);
+
+void cc2538SetTimer(otCC2538Timer aTimer, uint32_t aDelay)
+{
+    sTimersIsRunning |= (1 << aTimer);
+    sTimersExpireAt[aTimer] = sCounter + aDelay;
+}
+
 void cc2538AlarmInit(void)
 {
     HWREG(NVIC_ST_RELOAD) = kSystemClock / kTicksPerSec;
@@ -83,6 +94,15 @@ void cc2538AlarmProcess(otInstance *aInstance)
 {
     uint32_t expires;
     bool     fire = false;
+
+    if (sTimersIsRunning)
+    {
+        if ((int32_t)(sTimersExpireAt[OT_CC2538_TIMER_ENERGY_SCAN] - sCounter) < 0)
+        {
+            sTimersIsRunning &= ~(1 << OT_CC2538_TIMER_ENERGY_SCAN);
+            cc2538EnergyScanTimerHandler();
+        }
+    }
 
     if (sIsRunning)
     {

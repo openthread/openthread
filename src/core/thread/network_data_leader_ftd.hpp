@@ -215,7 +215,7 @@ private:
     otError AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags);
     otError AddServer(const ServerTlv &aServer, ServiceTlv &aDstService, ChangedFlags &aChangedFlags);
 
-    otError AllocateServiceId(uint8_t &aServiceId);
+    otError AllocateServiceId(uint8_t &aServiceId) const;
 
     otError AllocateContextId(uint8_t &aConextId);
     void    FreeContextId(uint8_t aContextId);

@@ -963,7 +963,7 @@ exit:
     return error;
 }
 
-otError Leader::AllocateServiceId(uint8_t &aServiceId)
+otError Leader::AllocateServiceId(uint8_t &aServiceId) const
 {
     otError error = OT_ERROR_NOT_FOUND;
     uint8_t serviceId;

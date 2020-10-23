@@ -935,7 +935,7 @@ protected:
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Source Address TLV.
      *
      */
-    otError AppendSourceAddress(Message &aMessage);
+    otError AppendSourceAddress(Message &aMessage) const;
 
     /**
      * This method appends a Mode TLV to a message.

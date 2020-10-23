@@ -58,8 +58,10 @@ install_packages_apt()
 
     echo 'Installing pretty tools useful for code contributions...'
 
-    # add clang-format for pretty
-    sudo apt-get --no-install-recommends install -y clang-format-10
+    # add clang-format and clang-tidy for pretty
+    sudo apt-get --no-install-recommends install -y clang-format-10 clang-tidy-10
+    sudo ln -sf /usr/bin/clang-tidy-10 /usr/bin/clang-tidy
+    sudo ln -sf /usr/bin/clang-apply-replacements-10 /usr/bin/clang-apply-replacements
 
     # add yapf for pretty
     python3 -m pip install yapf==0.29.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'

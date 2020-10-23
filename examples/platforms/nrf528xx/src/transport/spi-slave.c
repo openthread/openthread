@@ -179,7 +179,7 @@ otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
     assert(sCompleteCallback != NULL);
 
     otEXPECT_ACTION(((semaphore_status != NRF_SPIS_SEMSTAT_SPIS) && (semaphore_status != NRF_SPIS_SEMSTAT_CPUPENDING)),
-                    error = OT_ERROR_BUSY);
+                    result = OT_ERROR_BUSY);
 
     if (aOutputBuf != NULL)
     {
