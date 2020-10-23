@@ -92,8 +92,8 @@ public:
          *
          */
         WritePosition(void)
-            : mPosition(0)
-            , mSegmentHead(0)
+            : mPosition(nullptr)
+            , mSegmentHead(nullptr)
         {
         }
 

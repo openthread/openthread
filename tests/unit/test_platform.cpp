@@ -302,7 +302,7 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
     }
     else
     {
-        return (otRadioFrame *)0;
+        return nullptr;
     }
 }
 
