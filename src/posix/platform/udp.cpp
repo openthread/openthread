@@ -240,7 +240,10 @@ otError otPlatUdpClose(otUdpSocket *aUdpSocket)
     otError error = OT_ERROR_NONE;
     int     fd;
 
-    VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
+    // Here skips further close ops for non Platform UDP socket.
+    // Platform UDP always has valid mHandle when create.
+    VerifyOrExit(aUdpSocket->mHandle != nullptr);
+
     fd = FdFromHandle(aUdpSocket->mHandle);
     VerifyOrExit(0 == close(fd), error = OT_ERROR_FAILED);
 
