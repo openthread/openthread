@@ -116,57 +116,6 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
             if addr[0:4] != 'fe80':
                 self.assertFalse(self.nodes[LEADER].ping(addr))
 
-        leader_messages = self.simulator.get_messages_sent_by(LEADER)
-        router1_messages = self.simulator.get_messages_sent_by(ROUTER)
-        ed_messages = self.simulator.get_messages_sent_by(MED)
-        sed_messages = self.simulator.get_messages_sent_by(SED)
-
-        # 1 - All
-        leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
-
-        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
-
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-
-        msg = router1_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/as")
-
-        msg = leader_messages.next_coap_message("2.04")
-
-        router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
-
-        ed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
-        ed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-
-        sed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
-        sed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-
-        # 3 - Leader
-        msg = leader_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/aq")
-
-        msg = leader_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/aq")
-
-        # 4 - Router1
-        msg = router1_messages.does_not_contain_coap_message()
-
-        # 5 - Leader
-        msg = leader_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/aq")
-
-        msg = leader_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/aq")
-
-        # 6 - Router1
-        msg = router1_messages.does_not_contain_coap_message()
-
     def verify(self, pv):
         pkts = pv.pkts
         pv.summary.show()
