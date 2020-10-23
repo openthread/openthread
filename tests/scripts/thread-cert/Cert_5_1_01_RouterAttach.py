@@ -43,9 +43,22 @@ ROUTER = 2
 # -----------------------------
 # The purpose of this test case is to show that the Leader is able to form
 # a network and the Router attaches to it with proper steps.
+#
+# Test Toplogy:
+# -------------
+# Leader
+#    |
+# Router
+#
+# DUT Types:
+# ----------
+#  Leader
+#  Router
 
 
 class Cert_5_1_01_RouterAttach(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
@@ -135,8 +148,6 @@ class Cert_5_1_01_RouterAttach(thread_cert.TestCase):
                    p.mle.tlv.scan_mask.r == 1 and\
                    p.mle.tlv.scan_mask.e == 0).\
             must_next()
-        pkts_copy = pkts.copy()
-        start_index = pkts.index
 
         # Step 3: Leader responds with a MLE Parent Response.
         #         The following TLVs MUST be present in the MLE Parent Response:
@@ -164,27 +175,6 @@ class Cert_5_1_01_RouterAttach(thread_cert.TestCase):
                               VERSION_TLV
                                } <= set(p.mle.tlv.type)).\
                    must_next()
-        end_index = pkts.index
-
-        # verify sub step in Step 2 : Subsequent ones MAY be sent to all Routers and REEDS
-
-        _pkt = pkts_copy.range(start_index, end_index).\
-            filter_wpan_src64(ROUTER).\
-            filter_LLARMA().\
-            filter_mle_cmd(MLE_PARENT_REQUEST).\
-            filter(lambda p: {
-                              CHALLENGE_TLV,
-                              MODE_TLV,
-                              SCAN_MASK_TLV,
-                              VERSION_TLV
-                              } <= set(p.mle.tlv.type) and\
-                   p.ipv6.hlim == 255)\
-            .next()
-
-        if _pkt is not None:
-            _pkt.must_verify(lambda p:
-                    p.mle.tlv.scan_mask.r == 1 and\
-                    p.mle.tlv.scan_mask.e == 1)
 
         # Step 4: Router sends a MLE Child ID Request.
         #         The following TLVs MUST be present in the MLE Child ID Request:
