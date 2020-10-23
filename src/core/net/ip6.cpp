@@ -978,9 +978,13 @@ otError Ip6::ProcessReceiveCallback(Message &          aMessage,
     if (mIsReceiveIp6FilterEnabled)
     {
         // do not pass messages sent to an RLOC/ALOC, except Service Locator
-        VerifyOrExit(!aMessageInfo.GetSockAddr().GetIid().IsLocator() ||
-                         aMessageInfo.GetSockAddr().GetIid().IsAnycastServiceLocator(),
+#if !OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+        bool isLocator = Get<Mle::Mle>().IsMeshLocalAddress(aMessageInfo.GetSockAddr()) &&
+                         aMessageInfo.GetSockAddr().GetIid().IsLocator();
+
+        VerifyOrExit(!isLocator || aMessageInfo.GetSockAddr().GetIid().IsAnycastServiceLocator(),
                      error = OT_ERROR_NO_ROUTE);
+#endif
 
         switch (aIpProto)
         {

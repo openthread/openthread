@@ -1479,6 +1479,7 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
     mldListenerInit();
 #endif
 
+    otIp6SetReceiveFilterEnabled(aInstance, true);
     otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
     otIp6SetReceiveCallback(aInstance, processReceive, aInstance);
     otIp6SetAddressCallback(aInstance, processAddressChange, aInstance);

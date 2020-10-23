@@ -26,6 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import logging
 import sys
 from operator import attrgetter
 from typing import Optional, Callable, Tuple
@@ -238,6 +239,9 @@ class PacketFilter(object):
         if p is None:
             return
         else:
+            logging.error("Found unexpected packet at #%s", self.index)
+            p.show()
+            p.debug_fields()
             raise errors.UnexpectedPacketFound(self.index, p)
 
     def _on_found_next(self, idx: int, p: Packet):
