@@ -261,6 +261,32 @@ public:
          *
          */
         otError SendTo(Message &aMessage, const MessageInfo &aMessageInfo);
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+        /**
+         * This method configures the UDP socket to join a mutlicast group on a Host network interface.
+         *
+         * @param[in]  aNetifIdentifier     The network interface identifier.
+         * @param[in]  aAddress             The multicast group address.
+         *
+         * @retval  OT_ERROR_NONE   Successfully joined the multicast group.
+         * @retval  OT_ERROR_FAILED Failed to join the multicast group.
+         *
+         */
+        otError JoinNetifMulticastGroup(otNetifIdentifier aNetifIdentifier, const Address &aAddress);
+
+        /**
+         * This method configures the UDP socket to leave a multicast group on a Host network interface.
+         *
+         * @param[in]  aNetifIdentifier     The network interface identifier.
+         * @param[in]  aAddress             The multicast group address.
+         *
+         * @retval  OT_ERROR_NONE   Successfully left the multicast group.
+         * @retval  OT_ERROR_FAILED Failed to leave the multicast group.
+         *
+         */
+        otError LeaveNetifMulticastGroup(otNetifIdentifier aNetifIdentifier, const Address &aAddress);
+#endif
     };
 
     /**

@@ -42,7 +42,13 @@ namespace BackboneRouter {
 
 otError BackboneTmfAgent::Start(void)
 {
-    return Coap::Start(kBackboneUdpPort, OT_NETIF_BACKBONE);
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = Coap::Start(kBackboneUdpPort, OT_NETIF_BACKBONE));
+    SubscribeMulticast(Get<Local>().GetAllNetworkBackboneRoutersAddress());
+
+exit:
+    return error;
 }
 
 otError BackboneTmfAgent::Filter(const ot::Coap::Message &aMessage,
@@ -69,6 +75,38 @@ bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo
     return (Get<BackboneRouter::Local>().IsEnabled() && src.IsLinkLocal() &&
             (dst.IsLinkLocal() || dst == Get<BackboneRouter::Local>().GetAllNetworkBackboneRoutersAddress() ||
              dst == Get<BackboneRouter::Local>().GetAllDomainBackboneRoutersAddress()));
+}
+
+void BackboneTmfAgent::SubscribeMulticast(const Ip6::Address &aAddress)
+{
+    otError error;
+
+    error = mSocket.JoinNetifMulticastGroup(OT_NETIF_BACKBONE, aAddress);
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogDebgBbr("Backbone TMF subscribes %s: %s", aAddress.ToString().AsCString(), otThreadErrorToString(error));
+    }
+    else
+    {
+        otLogCritBbr("Backbone TMF subscribes %s: %s", aAddress.ToString().AsCString(), otThreadErrorToString(error));
+    }
+}
+
+void BackboneTmfAgent::UnsubscribeMulticast(const Ip6::Address &aAddress)
+{
+    otError error;
+
+    error = mSocket.LeaveNetifMulticastGroup(OT_NETIF_BACKBONE, aAddress);
+
+    if (error == OT_ERROR_NONE)
+    {
+        otLogDebgBbr("Backbone TMF unsubscribes %s: %s", aAddress.ToString().AsCString(), otThreadErrorToString(error));
+    }
+    else
+    {
+        otLogCritBbr("Backbone TMF unsubscribes %s: %s", aAddress.ToString().AsCString(), otThreadErrorToString(error));
+    }
 }
 
 } // namespace BackboneRouter

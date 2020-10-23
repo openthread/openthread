@@ -65,18 +65,16 @@ Local::Local(Instance &aInstance)
     // All Network Backbone Routers Multicast Address.
     mAllNetworkBackboneRouters.Clear();
 
-    mAllNetworkBackboneRouters.GetAddress().mFields.m8[0]  = 0xff; // Multicast
-    mAllNetworkBackboneRouters.GetAddress().mFields.m8[1]  = 0x32; // Flags = 3, Scope = 2
-    mAllNetworkBackboneRouters.GetAddress().mFields.m8[2]  = 0;    // Reserved
-    mAllNetworkBackboneRouters.GetAddress().mFields.m8[15] = 3;    // Group ID = 3
+    mAllNetworkBackboneRouters.mFields.m8[0]  = 0xff; // Multicast
+    mAllNetworkBackboneRouters.mFields.m8[1]  = 0x32; // Flags = 3, Scope = 2
+    mAllNetworkBackboneRouters.mFields.m8[15] = 3;    // Group ID = 3
 
     // All Domain Backbone Routers Multicast Address.
     mAllDomainBackboneRouters.Clear();
 
-    mAllDomainBackboneRouters.GetAddress().mFields.m8[0]  = 0xff; // Multicast
-    mAllDomainBackboneRouters.GetAddress().mFields.m8[1]  = 0x32; // Flags = 3, Scope = 2
-    mAllDomainBackboneRouters.GetAddress().mFields.m8[2]  = 0;    // Reserved
-    mAllDomainBackboneRouters.GetAddress().mFields.m8[15] = 3;    // Group ID = 3
+    mAllDomainBackboneRouters.mFields.m8[0]  = 0xff; // Multicast
+    mAllDomainBackboneRouters.mFields.m8[1]  = 0x32; // Flags = 3, Scope = 2
+    mAllDomainBackboneRouters.mFields.m8[15] = 3;    // Group ID = 3
 }
 
 void Local::SetEnabled(bool aEnable)
@@ -227,13 +225,8 @@ void Local::SetState(BackboneRouterState aState)
 
     if (mState == OT_BACKBONE_ROUTER_STATE_DISABLED)
     {
-        // Subscribe All Network Backbone Routers Multicast Address for both Secondary and Primary state.
-        mAllNetworkBackboneRouters.GetAddress().SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        Get<ThreadNetif>().SubscribeMulticast(mAllNetworkBackboneRouters);
-    }
-    else if (aState == OT_BACKBONE_ROUTER_STATE_DISABLED)
-    {
-        Get<ThreadNetif>().UnsubscribeMulticast(mAllNetworkBackboneRouters);
+        // Update All Network Backbone Routers Multicast Address for both Secondary and Primary state.
+        mAllNetworkBackboneRouters.SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
     }
 
     if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
@@ -351,9 +344,9 @@ void Local::ApplyMeshLocalPrefix(void)
 {
     VerifyOrExit(IsEnabled());
 
-    Get<ThreadNetif>().UnsubscribeMulticast(mAllNetworkBackboneRouters);
-    mAllNetworkBackboneRouters.GetAddress().SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-    Get<ThreadNetif>().SubscribeMulticast(mAllNetworkBackboneRouters);
+    Get<BackboneTmfAgent>().UnsubscribeMulticast(mAllNetworkBackboneRouters);
+    mAllNetworkBackboneRouters.SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+    Get<BackboneTmfAgent>().SubscribeMulticast(mAllNetworkBackboneRouters);
 
     if (IsPrimary())
     {
@@ -370,19 +363,18 @@ void Local::UpdateAllDomainBackboneRouters(Leader::DomainPrefixState aState)
 {
     if (!IsEnabled())
     {
-        Get<ThreadNetif>().UnsubscribeMulticast(mAllDomainBackboneRouters);
         ExitNow();
     }
 
     if (aState == Leader::kDomainPrefixRemoved || aState == Leader::kDomainPrefixRefreshed)
     {
-        Get<ThreadNetif>().UnsubscribeMulticast(mAllDomainBackboneRouters);
+        Get<BackboneTmfAgent>().UnsubscribeMulticast(mAllDomainBackboneRouters);
     }
 
     if (aState == Leader::kDomainPrefixAdded || aState == Leader::kDomainPrefixRefreshed)
     {
-        mAllDomainBackboneRouters.GetAddress().SetMulticastNetworkPrefix(*Get<Leader>().GetDomainPrefix());
-        Get<ThreadNetif>().SubscribeMulticast(mAllDomainBackboneRouters);
+        mAllDomainBackboneRouters.SetMulticastNetworkPrefix(*Get<Leader>().GetDomainPrefix());
+        Get<BackboneTmfAgent>().SubscribeMulticast(mAllDomainBackboneRouters);
     }
 
 exit:
