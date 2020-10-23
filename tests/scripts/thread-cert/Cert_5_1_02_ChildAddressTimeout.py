@@ -47,9 +47,23 @@ MTDS = [MED, SED]
 # The purpose of the test case is to verify that when the timer reaches
 # the value of the Timeout TLV sent by the Child, the Parent stops
 # responding to Address Query on the Child's behalf
+#
+# Test Toplogy:
+# -------------
+# Leader
+#    |
+# Router
+#   / \
+# MED SED
+#
+# DUT Types:
+# ----------
+#  Router
 
 
 class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
