@@ -120,7 +120,7 @@ Interpreter::Interpreter(Instance *aInstance)
     , mPingIdentifier(0)
     , mPingTimer(*aInstance, Interpreter::HandlePingTimer, this)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    , mResolvingInProgress(0)
+    , mResolvingInProgress(false)
 #endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpQueryingInProgress(false)
@@ -1975,19 +1975,19 @@ otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
             switch (*arg)
             {
             case 'p':
-                linkMetrics.mPduCount = 1;
+                linkMetrics.mPduCount = true;
                 break;
 
             case 'q':
-                linkMetrics.mLqi = 1;
+                linkMetrics.mLqi = true;
                 break;
 
             case 'm':
-                linkMetrics.mLinkMargin = 1;
+                linkMetrics.mLinkMargin = true;
                 break;
 
             case 'r':
-                linkMetrics.mRssi = 1;
+                linkMetrics.mRssi = true;
                 break;
 
             default:
@@ -2196,15 +2196,15 @@ otError Interpreter::ProcessMode(uint8_t aArgsLength, char *aArgs[])
             switch (*arg)
             {
             case 'r':
-                linkMode.mRxOnWhenIdle = 1;
+                linkMode.mRxOnWhenIdle = true;
                 break;
 
             case 'd':
-                linkMode.mDeviceType = 1;
+                linkMode.mDeviceType = true;
                 break;
 
             case 'n':
-                linkMode.mNetworkData = 1;
+                linkMode.mNetworkData = true;
                 break;
 
             default:

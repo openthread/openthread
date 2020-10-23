@@ -116,6 +116,7 @@ readonly OT_CLANG_TIDY_BUILD_OPTS=(
 
 readonly OT_CLANG_TIDY_CHECKS="\
 -*,\
+modernize-use-bool-literals,\
 readability-make-member-function-const,\
 "
 
