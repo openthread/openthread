@@ -146,6 +146,20 @@ public:
      */
     otError SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16 = Mac::kShortAddrInvalid);
 
+    /**
+     * This method sends BB.ans/PRO_BB.ntf on the Backbone link.
+     *
+     * @param aQueryMessageInfo
+     * @param aDua
+     * @param aSrcRloc16
+     * @param aNdProxy
+     * @param aProactive
+     * @return
+     */
+    otError SendProactiveBackboneNotification(const Ip6::Address &            aDua,
+                                              const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                              uint32_t                        aTimeSinceLastTransaction);
+
 private:
     enum
     {
@@ -208,15 +222,25 @@ private:
     bool                       mDuaResponseIsSpecified : 1;
     bool                       mMlrResponseIsSpecified : 1;
 #endif
-    otError SendBackboneAnswer(const Ip6::MessageInfo &     aMessageInfo,
+
+    otError SendBackboneAnswer(const Ip6::MessageInfo &     aQueryMessageInfo,
                                const Ip6::Address &         aDua,
                                uint16_t                     aSrcRloc16,
                                const NdProxyTable::NdProxy &aNdProxy);
+    otError SendBackboneAnswer(const Ip6::Address              aDstAddr,
+                               uint16_t                        aDstPort,
+                               const Ip6::Address &            aDua,
+                               const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                               uint32_t                        aTimeSinceLastTransaction,
+                               uint16_t                        aSrcRloc16);
     void    HandleDadBackboneAnswer(const Ip6::Address &aDua, const Ip6::InterfaceIdentifier &aMeshLocalIid);
     void    HandleExtendedBackboneAnswer(const Ip6::Address &            aDua,
                                          const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                          uint32_t                        aTimeSinceLastTransaction,
                                          uint16_t                        aSrcRloc16);
+    void    HandleProactiveBackboneNotification(const Ip6::Address &            aDua,
+                                                const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                                uint32_t                        aTimeSinceLastTransaction);
 };
 
 } // namespace BackboneRouter

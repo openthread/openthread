@@ -191,6 +191,14 @@ public:
      */
     static void NotifyDadComplete(NdProxy &aNdProxy, bool aDuplicated);
 
+    /**
+     * This method removes the ND Proxy.
+     *
+     * @param[in] aNdProxy      The ND Proxy to remove.
+     *
+     */
+    static void Erase(NdProxy &aNdProxy);
+
 private:
     enum
     {
@@ -259,10 +267,10 @@ private:
     NdProxy *       FindByAddressIid(const Ip6::InterfaceIdentifier &aAddressIid);
     NdProxy *       FindByMeshLocalIid(const Ip6::InterfaceIdentifier &aMeshLocalIid);
     NdProxy *       FindInvalid(void);
-    static void     Erase(NdProxy &aProxy);
     void            GetDua(NdProxy &aNdProxy, Ip6::Address &aDua);
 
     NdProxy mProxies[kMaxNdProxyNum];
+    void    NotifyDuaRegistrationOnBackboneLink(NdProxy &aNdProxy);
 };
 
 } // namespace BackboneRouter
