@@ -276,6 +276,9 @@ enum
 #endif
 
 static constexpr size_t kMaxIp6Size = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
+#if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
+static bool sIsSyncingState = false;
+#endif
 
 #define OPENTHREAD_POSIX_LOG_TUN_PACKETS 0
 
@@ -494,12 +497,16 @@ static void UpdateLink(otInstance *aInstance)
     ifState = ((ifr.ifr_flags & IFF_UP) == IFF_UP) ? true : false;
     otState = otIp6IsEnabled(aInstance);
 
-    otLogNotePlat("changing interface state to %s%s.", otState ? "UP" : "DOWN",
+    otLogNotePlat("changing interface state to %s%s.", otState ? "up" : "down",
                   (ifState == otState) ? " (already done, ignoring)" : "");
     if (ifState != otState)
     {
         ifr.ifr_flags = otState ? (ifr.ifr_flags | IFF_UP) : (ifr.ifr_flags & ~IFF_UP);
         VerifyOrExit(ioctl(sIpFd, SIOCSIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
+#if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
+        // wait for RTM_NEWLINK event before processing notification from kernel to avoid infinite loop
+        sIsSyncingState = true;
+#endif
     }
 
 exit:
@@ -768,18 +775,32 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
 {
     struct ifinfomsg *ifinfo = reinterpret_cast<struct ifinfomsg *>(NLMSG_DATA(aNetlinkMessage));
     otError           error  = OT_ERROR_NONE;
+    bool              isUp;
 
-    VerifyOrExit(ifinfo->ifi_index == static_cast<int>(gNetifIndex));
-    SuccessOrExit(error = otIp6SetEnabled(aInstance, ifinfo->ifi_flags & IFF_UP));
+    VerifyOrExit(ifinfo->ifi_index == static_cast<int>(gNetifIndex) && (ifinfo->ifi_change & IFF_UP));
 
-exit:
-    if (error == OT_ERROR_NONE)
+    isUp = ((ifinfo->ifi_flags & IFF_UP) != 0);
+
+    otLogInfoPlat("Host netif is %s", isUp ? "up" : "down");
+
+#if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
+    if (sIsSyncingState)
     {
-        otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
+        VerifyOrExit(isUp == otIp6IsEnabled(aInstance), otLogWarnPlat("Host netif state notfication is unexpected"));
+        sIsSyncingState = false;
     }
     else
+#endif
+        if (isUp != otIp6IsEnabled(aInstance))
     {
-        otLogWarnPlat("%s: %s", __func__, otThreadErrorToString(error));
+        SuccessOrExit(error = otIp6SetEnabled(aInstance, ifinfo->ifi_flags & IFF_UP));
+        otLogInfoPlat("Succeeded to sync netif state with host");
+    }
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnPlat("Failed to sync netif state with host: %s", otThreadErrorToString(error));
     }
 }
 #endif
