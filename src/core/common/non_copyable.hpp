@@ -47,7 +47,7 @@ public:
     NonCopyable &operator=(const NonCopyable &) = delete;
 
 protected:
-    NonCopyable(void) {}
+    NonCopyable(void) = default;
 };
 
 } // namespace ot

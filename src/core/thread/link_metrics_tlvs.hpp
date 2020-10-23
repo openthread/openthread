@@ -82,7 +82,7 @@ public:
      * Default constructor.
      *
      */
-    LinkMetricsTypeIdFlags(void) {}
+    LinkMetricsTypeIdFlags(void) = default;
 
     /**
      * Constructor for implicit cast from `uint8_t` to `LinkMetricsTypeIdFlags`.

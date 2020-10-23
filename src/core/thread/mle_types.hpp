@@ -327,7 +327,7 @@ public:
      * This is the default constructor for `DeviceMode` object.
      *
      */
-    DeviceMode(void) {}
+    DeviceMode(void) = default;
 
     /**
      * This constructor initializes a `DeviceMode` object from a given mode TLV bitmask.
