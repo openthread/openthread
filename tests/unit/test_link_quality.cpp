@@ -111,7 +111,7 @@ void TestLinkQualityData(RssTestData aRssData)
         VerifyOrQuit(ave >= min, "TestLinkQualityInfo failed - GetAverageRss() is smaller than min value.");
         VerifyOrQuit(ave <= max, "TestLinkQualityInfo failed - GetAverageRss() is larger than min value");
         VerifyRawRssValue(linkInfo.GetAverageRss(), linkInfo.GetAverageRssRaw());
-        printf("%02u) AddRss(%4d): ", (unsigned int)i, rss);
+        printf("%02u) AddRss(%4d): ", static_cast<unsigned int>(i), rss);
         PrintOutcome(linkInfo);
     }
 

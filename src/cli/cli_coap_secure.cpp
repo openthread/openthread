@@ -384,11 +384,12 @@ otError CoapSecure::ProcessX509(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    otCoapSecureSetCertificate(mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT,
-                               sizeof(OT_CLI_COAPS_X509_CERT), (const uint8_t *)OT_CLI_COAPS_PRIV_KEY,
+    otCoapSecureSetCertificate(mInterpreter.mInstance, reinterpret_cast<const uint8_t *>(OT_CLI_COAPS_X509_CERT),
+                               sizeof(OT_CLI_COAPS_X509_CERT), reinterpret_cast<const uint8_t *>(OT_CLI_COAPS_PRIV_KEY),
                                sizeof(OT_CLI_COAPS_PRIV_KEY));
 
-    otCoapSecureSetCaCertificateChain(mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE,
+    otCoapSecureSetCaCertificateChain(mInterpreter.mInstance,
+                                      reinterpret_cast<const uint8_t *>(OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE),
                                       sizeof(OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE));
     mUseCertificate = true;
 
