@@ -119,6 +119,7 @@ readonly OT_CLANG_TIDY_CHECKS="\
 modernize-use-bool-literals,\
 modernize-use-nullptr,\
 readability-make-member-function-const,\
+readability-simplify-boolean-expr,\
 "
 
 #performance-for-range-copy\
