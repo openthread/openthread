@@ -747,7 +747,7 @@ const otCoapOption *otCoapOptionIteratorGetNextOption(otCoapOptionIterator *aIte
  *
  * @see otCoapMessageAppendUintOption
  */
-otError otCoapOptionIteratorGetOptionUintValue(otCoapOptionIterator *aIterator, uint64_t *const aValue);
+otError otCoapOptionIteratorGetOptionUintValue(otCoapOptionIterator *aIterator, uint64_t *aValue);
 
 /**
  * This function fills current option value into @p aValue.
