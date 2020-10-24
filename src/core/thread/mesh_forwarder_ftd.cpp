@@ -905,7 +905,7 @@ otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, ui
                 // Path cost
                 curCost = Get<Mle::MleRouter>().GetCost(server16);
 
-                if (!Get<Mle::MleRouter>().IsActiveRouter(server16))
+                if (!Mle::MleRouter::IsActiveRouter(server16))
                 {
                     // Assume best link between remote child server and its parent.
                     curCost += 1;
@@ -918,7 +918,7 @@ otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, ui
                 {
                     uint8_t cost;
 
-                    if (!Get<Mle::MleRouter>().IsActiveRouter(server16))
+                    if (!Mle::MleRouter::IsActiveRouter(server16))
                     {
                         // Cost calculated only from Link Quality In as the parent only maintains
                         // one-direction link info.
