@@ -332,6 +332,28 @@ __STATIC_INLINE void nrf_spis_rx_buffer_set(NRF_SPIS_Type * p_reg,
                                             size_t          length);
 
 /**
+ * @brief Function for getting the transmit buffer.
+ *
+ * @param[in]  p_reg    Pointer to the structure of registers of the peripheral.
+ * @param[out] p_buffer Pointer to the transmit buffer pointer.
+ * @param[out] length   Pointer to the maximum number of data bytes in transmit buffer.
+ */
+__STATIC_INLINE void nrf_spis_tx_buffer_get(NRF_SPIS_Type * p_reg,
+                                            uint8_t      ** p_buffer,
+                                            size_t *        length);
+
+/**
+ * @brief Function for getting the receive buffer.
+ *
+ * @param[in]  p_reg    Pointer to the structure of registers of the peripheral.
+ * @param[out] p_buffer Pointer to the receive buffer pointer.
+ * @param[out] length   Pointer to the maximum number of data bytes in receive buffer.
+ */
+__STATIC_INLINE void nrf_spis_rx_buffer_get(NRF_SPIS_Type * p_reg,
+                                            uint8_t **      p_buffer,
+                                            size_t *        length);
+
+/**
  * @brief Function for getting the number of bytes transmitted
  *        in the last granted transaction.
  *
@@ -542,6 +564,32 @@ __STATIC_INLINE void nrf_spis_rx_buffer_set(NRF_SPIS_Type * p_reg,
 #else
     p_reg->RXD.PTR    = (uint32_t)p_buffer;
     p_reg->RXD.MAXCNT = length;
+#endif
+}
+
+__STATIC_INLINE void nrf_spis_tx_buffer_get(NRF_SPIS_Type * p_reg,
+                                            uint8_t      ** p_buffer,
+                                            size_t *        length)
+{
+#if defined (NRF51)
+    *p_buffer = (uint8_t *)p_reg->TXDPTR
+    *length   = p_reg->MAXTX;
+#else
+    *p_buffer = (uint8_t *)p_reg->TXD.PTR;
+    *length   = p_reg->TXD.MAXCNT;
+#endif
+}
+
+__STATIC_INLINE void nrf_spis_rx_buffer_get(NRF_SPIS_Type * p_reg,
+                                            uint8_t **      p_buffer,
+                                            size_t *        length)
+{
+#if defined (NRF51)
+    *p_buffer = (uint8_t *)p_reg->RXDPTR;
+    *length   = p_reg->MAXRX;
+#else
+    *p_buffer = (uint8_t *)p_reg->RXD.PTR;
+    *length   = p_reg->RXD.MAXCNT;
 #endif
 }
 

@@ -102,9 +102,13 @@ typedef enum
 /** @brief SPI slave driver event structure. */
 typedef struct
 {
-    nrfx_spis_evt_type_t evt_type;  //!< Type of the event.
-    size_t               rx_amount; //!< Number of bytes received in the last transaction. This parameter is only valid for @ref NRFX_SPIS_XFER_DONE events.
-    size_t               tx_amount; //!< Number of bytes transmitted in the last transaction. This parameter is only valid for @ref NRFX_SPIS_XFER_DONE events.
+    nrfx_spis_evt_type_t evt_type;       //!< Type of the event.
+    uint8_t *            tx_buffer;      //!< SPI slave TX buffer.
+    uint8_t *            rx_buffer;      //!< SPI slave RX buffer.
+    size_t               tx_buffer_size; //!< SPI slave TX buffer size in bytes.
+    size_t               rx_buffer_size; //!< SPI slave RX buffer size in bytes.
+    size_t               rx_amount;      //!< Number of bytes received in the last transaction. This parameter is only valid for @ref NRFX_SPIS_XFER_DONE events.
+    size_t               tx_amount;      //!< Number of bytes transmitted in the last transaction. This parameter is only valid for @ref NRFX_SPIS_XFER_DONE events.
 } nrfx_spis_evt_t;
 
 /** @brief The default configuration of the SPI slave instance. */
