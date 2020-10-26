@@ -115,17 +115,15 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
 
         self.collect_rlocs()
 
-        ed_addrs = self.nodes[MED].get_addrs()
+        med_addrs = self.nodes[MED].get_addrs()
         sed_addrs = self.nodes[SED].get_addrs()
 
         self.nodes[MED].stop()
-        self.simulator.go(5)
-        for addr in ed_addrs:
+        self.nodes[SED].stop()
+        self.simulator.go(config.DEFAULT_CHILD_TIMEOUT)
+        for addr in med_addrs:
             if addr[0:4] != 'fe80':
                 self.assertFalse(self.nodes[LEADER].ping(addr))
-
-        self.nodes[SED].stop()
-        self.simulator.go(5)
         for addr in sed_addrs:
             if addr[0:4] != 'fe80':
                 self.assertFalse(self.nodes[LEADER].ping(addr))
