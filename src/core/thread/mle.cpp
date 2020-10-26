@@ -3763,7 +3763,7 @@ void Mle::HandleLinkMetricsManagementRequest(const Message &         aMessage,
 
     VerifyOrExit(aNeighbor != nullptr, error = OT_ERROR_INVALID_STATE);
 
-    error = Get<LinkMetrics>().HandleLinkMetricsManagementRequest(aMessage, *aNeighbor, status);
+    SuccessOrExit(error = Get<LinkMetrics>().HandleLinkMetricsManagementRequest(aMessage, *aNeighbor, status));
     error = SendLinkMetricsManagementResponse(aMessageInfo.GetPeerAddr(), status);
 
 exit:

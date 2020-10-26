@@ -86,7 +86,7 @@ typedef struct otLinkMetricsValues
  */
 typedef struct otLinkMetricsSeriesFlags
 {
-    bool mLinkProbe : 1;      ///< Mle Link Probe.
+    bool mLinkProbe : 1;      ///< MLE Link Probe.
     bool mMacData : 1;        ///< MAC Data frame.
     bool mMacDataRequest : 1; ///< MAC Data Request.
     bool mMacAck : 1;         ///< Mac Ack.
