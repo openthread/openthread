@@ -48,8 +48,8 @@ MTDS = [MED, SED]
 # the value of the Timeout TLV sent by the Child, the Parent stops
 # responding to Address Query on the Child's behalf
 #
-# Test Toplogy:
-# -------------
+# Test Topology:
+# --------------
 # Leader
 #    |
 # Router
