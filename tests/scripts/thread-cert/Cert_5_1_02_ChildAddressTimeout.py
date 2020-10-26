@@ -113,32 +113,23 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED].get_state(), 'child')
 
-        self.collect_rlocs()
-
-        med_addrs = self.nodes[MED].get_addrs()
-        sed_addrs = self.nodes[SED].get_addrs()
+        med_mleid = self.nodes[MED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        sed_mleid = self.nodes[SED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
 
         self.nodes[MED].stop()
         self.nodes[SED].stop()
         self.simulator.go(config.DEFAULT_CHILD_TIMEOUT)
-        for addr in med_addrs:
-            if addr[0:4] != 'fe80':
-                self.assertFalse(self.nodes[LEADER].ping(addr))
-        for addr in sed_addrs:
-            if addr[0:4] != 'fe80':
-                self.assertFalse(self.nodes[LEADER].ping(addr))
+        self.assertFalse(self.nodes[LEADER].ping(med_mleid))
+        self.assertFalse(self.nodes[LEADER].ping(sed_mleid))
 
     def verify(self, pv):
         pkts = pv.pkts
         pv.summary.show()
 
         LEADER = pv.vars['LEADER']
-        LEADER_RLOC = pv.vars['LEADER_RLOC']
         ROUTER = pv.vars['ROUTER']
         MED = pv.vars['MED']
-        MED_RLOC = pv.vars['MED_RLOC']
         SED = pv.vars['SED']
-        SED_RLOC = pv.vars['SED_RLOC']
 
         # Step 1: Verify topology is formed correctly
 
@@ -158,16 +149,6 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         # Step 3: The Leader sends an ICMPv6 Echo Request to MED and attempts to perform
         #         address resolution by sending an Address Query Request
 
-        _pkt = pkts.filter_ping_request().\
-            filter_wpan_src64(LEADER).\
-            filter_ipv6_dst(MED_RLOC).\
-            must_next()
-
-        pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
-            filter_wpan_src64(MED).\
-            filter_ipv6_dst(LEADER_RLOC).\
-            must_not_next()
-
         pkts.filter_wpan_src64(LEADER).\
             filter_RLARA().\
             filter_coap_request(ADDR_QRY_URI).\
@@ -176,22 +157,11 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         # Step 4: Router MUST NOT respond with an Address Notification Message
 
         pkts.filter_wpan_src64(ROUTER).\
-            filter_wpan_dst64(LEADER).\
             filter_coap_ack(ADDR_QRY_URI).\
             must_not_next()
 
         # Step 5: The Leader sends an ICMPv6 Echo Request to SED and attempts to perform
         #         address resolution by sending an Address Query Request
-
-        _pkt = pkts.filter_ping_request().\
-            filter_wpan_src64(LEADER).\
-            filter_ipv6_dst(SED_RLOC).\
-            must_next()
-
-        pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
-            filter_wpan_src64(MED).\
-            filter_ipv6_dst(LEADER_RLOC).\
-            must_not_next()
 
         pkts.filter_wpan_src64(LEADER).\
             filter_RLARA().\
@@ -201,7 +171,6 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         # Step 6: Router MUST NOT respond with an Address Notification Message
 
         pkts.filter_wpan_src64(ROUTER).\
-            filter_RLARA().\
             filter_coap_ack(ADDR_QRY_URI).\
             must_not_next()
 
