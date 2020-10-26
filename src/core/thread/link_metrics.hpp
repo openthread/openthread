@@ -98,6 +98,14 @@ public:
     void Init(uint8_t aSeriesId, const SeriesFlags &aSeriesFlags, const otLinkMetrics &aLinkMetrics);
 
     /**
+     * This method gets the Series ID.
+     *
+     * @returns  The Series ID.
+     *
+     */
+    uint8_t GetSeriesId() const { return mSeriesId; }
+
+    /**
      * This method gets the PDU count.
      *
      * @returns  The PDU count.
@@ -184,13 +192,13 @@ public:
                              const otLinkMetrics *aLinkMetricsFlags);
 
     /**
-     * This method sends an MLE Link Metrics Management Request to configure a Forward Tracking Series.
+     * This method sends an MLE Link Metrics Management Request to configure/clear a Forward Tracking Series.
      *
      * @param[in] aDestination       A reference to the IPv6 address of the destination.
      * @param[in] aSeriesId          The Series ID.
      * @param[in] aSeriesFlags       A reference to the Series Flags which specify what types of frames are to be
      * accounted.
-     * @param[in] aLinkMetricsFlags  A reference to flags specifying what metrics to query.
+     * @param[in] aLinkMetricsFlags  A pointer to flags specifying what metrics to query.
      *
      * @retval OT_ERROR_NONE          Successfully sent a Link Metrics Management Request message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Link Metrics Management Request message.
@@ -200,7 +208,7 @@ public:
     otError SendMgmtRequestForwardTrackingSeries(const Ip6::Address &            aDestination,
                                                  uint8_t                         aSeriesId,
                                                  const otLinkMetricsSeriesFlags &aSeriesFlags,
-                                                 const otLinkMetrics &           aLinkMetricsFlags);
+                                                 const otLinkMetrics *           aLinkMetricsFlags);
 
     /**
      * This method sends an MLE Link Probe message.
@@ -270,6 +278,18 @@ public:
                                  uint16_t            aOffset,
                                  uint16_t            aLength,
                                  const Ip6::Address &aAddress);
+
+    /**
+     * This method handles the Link Probe contained in @p aMessage.
+     *
+     * @param[in]   aMessage     A reference to the message that contains the Link Probe Message.
+     * @param[out]  aSeriesId    A reference to Series ID that parsed from the message.
+     *
+     * @retval OT_ERROR_NONE     Successfully handled the Link Metrics Management Response.
+     * @retval OT_ERROR_PARSE    Cannot parse sub-TLVs from @p aMessage successfully.
+     *
+     */
+    otError HandleLinkProbe(const Message &aMessage, uint8_t &aSeriesId);
 
     /**
      * This method registers a callback to handle Link Metrics report received.

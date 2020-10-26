@@ -3788,10 +3788,17 @@ exit:
 
 void Mle::HandleLinkProbe(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
 {
+    otError error = OT_ERROR_NONE;
+    uint8_t seriesId;
+
     Log(kMessageReceive, kTypeLinkProbe, aMessageInfo.GetPeerAddr());
 
-    aNeighbor->AggregateLinkMetrics(LinkMetricsSeriesInfo::kSeriesTypeLinkProbe, aMessage.GetAverageLqi(),
+    SuccessOrExit(error = Get<LinkMetrics>().HandleLinkProbe(aMessage, seriesId));
+    aNeighbor->AggregateLinkMetrics(seriesId, LinkMetricsSeriesInfo::kSeriesTypeLinkProbe, aMessage.GetAverageLqi(),
                                     aMessage.GetAverageRss());
+
+exit:
+    LogProcessError(kTypeLinkProbe, error);
 }
 #endif
 

@@ -2022,13 +2022,12 @@ otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
     otIp6Address  address;
     otLinkMetrics linkMetrics;
 
-    VerifyOrExit(aArgsLength >= 2);
+    VerifyOrExit(aArgsLength == 3);
 
     SuccessOrExit(error = ParseAsIp6Address(aArgs[0], address));
 
     if (strcmp(aArgs[1], "single") == 0)
     {
-        VerifyOrExit(aArgsLength == 3);
         SuccessOrExit(error = ParseLinkMetricsFlags(linkMetrics, aArgs[2]));
         error = otLinkMetricsQuery(mInstance, &address, /* aSeriesId */ 0, &linkMetrics,
                                    &Interpreter::HandleLinkMetricsReport, this);
@@ -2036,7 +2035,6 @@ otError Interpreter::ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[])
     else if (strcmp(aArgs[1], "forward") == 0)
     {
         uint8_t seriesId;
-        VerifyOrExit(aArgsLength == 3);
         SuccessOrExit(error = ParseAsUint8(aArgs[2], seriesId));
         error = otLinkMetricsQuery(mInstance, &address, seriesId, nullptr, &Interpreter::HandleLinkMetricsReport, this);
     }
@@ -2085,21 +2083,24 @@ otError Interpreter::ProcessLinkMetricsMgmt(uint8_t aArgsLength, char *aArgs[])
     otError                  error = OT_ERROR_INVALID_ARGS;
     otIp6Address             address;
     otLinkMetricsSeriesFlags seriesFlags;
-    otLinkMetrics            linkMetrics;
     bool                     clear = false;
 
     VerifyOrExit(aArgsLength >= 2);
 
     SuccessOrExit(error = ParseAsIp6Address(aArgs[0], address));
 
-    memset(&linkMetrics, 0, sizeof(otLinkMetrics));
     memset(&seriesFlags, 0, sizeof(otLinkMetricsSeriesFlags));
 
     if (strcmp(aArgs[1], "forward") == 0)
     {
-        uint8_t seriesId;
+        uint8_t       seriesId;
+        otLinkMetrics linkMetrics;
+
         VerifyOrExit(aArgsLength >= 4);
+
+        memset(&linkMetrics, 0, sizeof(otLinkMetrics));
         SuccessOrExit(error = ParseAsUint8(aArgs[2], seriesId));
+
         for (char *arg = aArgs[3]; *arg != '\0'; arg++)
         {
             switch (*arg)
@@ -2137,12 +2138,9 @@ otError Interpreter::ProcessLinkMetricsMgmt(uint8_t aArgsLength, char *aArgs[])
             SuccessOrExit(error = ParseLinkMetricsFlags(linkMetrics, aArgs[4]));
         }
 
-        error = otLinkMetricsConfigForwardTrackingSeries(mInstance, &address, seriesId, &seriesFlags, &linkMetrics,
+        error = otLinkMetricsConfigForwardTrackingSeries(mInstance, &address, seriesId, &seriesFlags,
+                                                         clear ? nullptr : &linkMetrics,
                                                          &Interpreter::HandleLinkMetricsMgmtResponse, this);
-    }
-    else
-    {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
 exit:

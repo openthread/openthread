@@ -602,12 +602,13 @@ public:
      * If a series wants to account frames of @p aFrameType, it would add count by 1 and aggregrate @p aLqi and
      * @p aRss into its averagers.
      *
+     * @param[in] aSeriesId     Series ID for Link Probe. Should be `0` if this method is not called by Link Probe.
      * @param[in] aFrameType    Type of the frame that carries Link Metrics data.
      * @param[in] aLqi          The LQI value.
      * @param[in] aRss          The Rss value.
      *
      */
-    void AggregateLinkMetrics(uint8_t aFrameType, uint8_t aLqi, int8_t aRss);
+    void AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8_t aLqi, int8_t aRss);
 
     /**
      * This method adds a new LinkMetricsSeriesInfo to the neighbor's list.

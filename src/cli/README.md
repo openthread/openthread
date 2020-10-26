@@ -1148,7 +1148,7 @@ Done
 Send a Link Metrics Management Request to configure a Forward Tracking Series.
 
 - ipaddr: Peer address.
-- seriesid: The ID of the series.
+- seriesid: The Series ID.
 - ldraX: This specifies which frames are to be accounted.
 - l: MLE Link Probe.
 - d: MAC Data.
@@ -1214,6 +1214,7 @@ Perform a Link Metrics query (Forward Tracking Series).
 Done
 > Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
 
+ - PDU Counter: 2 (Count/Summation)
  - LQI: 76 (Exponential Moving Average)
  - Margin: 82 (dB) (Exponential Moving Average)
  - RSSI: -18 (dBm) (Exponential Moving Average)

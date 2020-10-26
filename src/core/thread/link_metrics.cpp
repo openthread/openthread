@@ -139,7 +139,7 @@ exit:
 otError LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &            aDestination,
                                                           uint8_t                         aSeriesId,
                                                           const otLinkMetricsSeriesFlags &aSeriesFlags,
-                                                          const otLinkMetrics &           aLinkMetricsFlags)
+                                                          const otLinkMetrics *           aLinkMetricsFlags)
 {
     otError     error = OT_ERROR_NONE;
     Tlv         forwardProbingRegistrationSubTlv;
@@ -148,9 +148,11 @@ otError LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &  
         sizeof(Tlv) + sizeof(uint8_t) * 2; // Forward Probing Registration sub-TLV header + SeriesId + SeriesFlags
     uint8_t subTlvs[sizeof(Tlv) + sizeof(uint8_t) * 2 + sizeof(LinkMetricsTypeIdFlags) * kMaxTypeIdFlags];
     uint8_t typeIdFlagsCount =
-        TypeIdFlagsFromLinkMetricsFlags(reinterpret_cast<LinkMetricsTypeIdFlags *>(subTlvs + typeIdFlagsOffset),
-                                        aLinkMetricsFlags); // Directly transform `aLinkMetricsFlags` into
-                                                            // LinkMetricsTypeIdFlags and put them into `subTlvs`
+        aLinkMetricsFlags == nullptr
+            ? 0
+            : TypeIdFlagsFromLinkMetricsFlags(reinterpret_cast<LinkMetricsTypeIdFlags *>(subTlvs + typeIdFlagsOffset),
+                                              *aLinkMetricsFlags); // Directly transform `aLinkMetricsFlags` into
+                                                                   // LinkMetricsTypeIdFlags and put them into `subTlvs`
 
     VerifyOrExit(aSeriesId > kQueryIdSingleProbe, error = OT_ERROR_INVALID_ARGS);
 
@@ -199,6 +201,7 @@ otError LinkMetrics::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSe
 
     error = Get<Mle::MleRouter>().SendLinkProbe(aDestination, aSeriesId, buf, aLength);
 exit:
+    otLogDebgMle("SendLinkProbe, error:%s", otThreadErrorToString(error));
     return error;
 }
 
@@ -499,6 +502,19 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
 exit:
     otLogDebgMle("HandleLinkMetricsReport, error:%s", otThreadErrorToString(error));
     return;
+}
+
+otError LinkMetrics::HandleLinkProbe(const Message &aMessage, uint8_t &aSeriesId)
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t offset;
+    uint16_t length;
+
+    SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Mle::Tlv::Type::kLinkProbe, offset, length));
+    SuccessOrExit(error = aMessage.Read(offset, aSeriesId));
+
+exit:
+    return error;
 }
 
 void LinkMetrics::SetLinkMetricsReportCallback(otLinkMetricsReportCallback aCallback, void *aCallbackContext)

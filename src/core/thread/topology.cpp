@@ -160,12 +160,15 @@ void Neighbor::GenerateChallenge(void)
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-void Neighbor::AggregateLinkMetrics(uint8_t aFrameType, uint8_t aLqi, int8_t aRss)
+void Neighbor::AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8_t aLqi, int8_t aRss)
 {
     for (LinkMetricsSeriesInfo *entry = mLinkMetricsSeriesInfoList.GetHead(); entry != nullptr;
          entry                        = entry->GetNext())
     {
-        entry->AggregateLinkMetrics(aFrameType, aLqi, aRss);
+        if (aSeriesId == 0 || aSeriesId == entry->GetSeriesId())
+        {
+            entry->AggregateLinkMetrics(aFrameType, aLqi, aRss);
+        }
     }
 }
 

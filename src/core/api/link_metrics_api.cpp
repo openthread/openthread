@@ -65,13 +65,13 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                   
                                                  otLinkMetricsMgmtResponseCallback aCallback,
                                                  void *                            aCallbackContext)
 {
-    OT_ASSERT(aDestination != nullptr && aSeriesFlags != nullptr && aLinkMetricsFlags != nullptr);
+    OT_ASSERT(aDestination != nullptr && aSeriesFlags != nullptr);
 
     static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SetLinkMetricsMgmtResponseCallback(aCallback,
                                                                                               aCallbackContext);
 
     return static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SendMgmtRequestForwardTrackingSeries(
-        static_cast<const Ip6::Address &>(*aDestination), aSeriesId, *aSeriesFlags, *aLinkMetricsFlags);
+        static_cast<const Ip6::Address &>(*aDestination), aSeriesId, *aSeriesFlags, aLinkMetricsFlags);
 }
 
 otError otLinkMetricsSendLinkProbe(otInstance *        aInstance,
