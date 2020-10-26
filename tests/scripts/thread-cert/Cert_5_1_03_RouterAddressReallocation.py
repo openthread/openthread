@@ -57,6 +57,8 @@ ROUTER2 = 3
 
 
 class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
