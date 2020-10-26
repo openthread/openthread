@@ -44,7 +44,7 @@ ROUTER = 2
 # The purpose of this test case is to show that the Leader is able to form
 # a network and the Router attaches to it with proper steps.
 #
-# Test Toplogy:
+# Test Topology:
 # -------------
 # Leader
 #    |
