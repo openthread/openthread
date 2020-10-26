@@ -43,7 +43,8 @@ ROUTER2 = 3
 # -----------------------------
 # The purpose of this test case is to verify that after the removal of the
 # Leader from the network, the DUT will first attempt to reattach to the
-# original partition, and then attach to a new partition.
+# original partition, then attach to a new partition and request its
+# original short address.
 #
 # Test Topology:
 # -------------
@@ -108,14 +109,19 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
         pv.summary.show()
 
         LEADER = pv.vars['LEADER']
+        LEADER_RLOC16 = pv.vars['LEADER_RLOC16']
         ROUTER_1 = pv.vars['ROUTER_1']
         ROUTER_2 = pv.vars['ROUTER_2']
         ROUTER_2_RLOC16 = pv.vars['ROUTER_2_RLOC16']
 
         # Step 2: Verify topology is formed correctly.
         pv.verify_attached('ROUTER_1')
+        _pkt_as = pkts.filter_wpan_src64(LEADER).\
+            filter_coap_ack(ADDR_SOL_URI).\
+            must_next()
+
         pv.verify_attached('ROUTER_2')
-        _pkt = pkts.filter_wpan_src64(ROUTER_2).\
+        _pkt_pt = pkts.filter_wpan_src64(ROUTER_2).\
                    filter_LLANMA().\
                    filter_mle_cmd(MLE_ADVERTISEMENT).\
                    must_next()
@@ -159,8 +165,8 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
                    filter_mle_cmd(MLE_ADVERTISEMENT).\
                    filter_LLANMA().\
                    filter(lambda p:\
-                               p.mle.tlv.leader_data.partition_id !=\
-                               _pkt.mle.tlv.leader_data.partition_id).\
+                               p.mle.tlv.leader_data.partition_id !=
+                               _pkt_pt.mle.tlv.leader_data.partition_id).\
                    must_next()
 
         pkts.filter_wpan_src64(ROUTER_1).\
@@ -218,7 +224,9 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
                               NL_MAC_EXTENDED_ADDRESS_TLV,
                               NL_STATUS_TLV,
                               NL_RLOC16_TLV
-                              } <= set(p.coap.tlv.type)).\
+                              } <= set(p.coap.tlv.type) and\
+                   p.thread_address.tlv.rloc16 ==
+                   _pkt_as.thread_address.tlv.rloc16).\
            must_next()
 
         # Step 9: Router_2 automatically sends an Address Solicit Response.
@@ -226,6 +234,8 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
         pkts.filter_wpan_src64(ROUTER_2).\
             filter_wpan_dst16(_pkt.wpan.src16).\
             filter_coap_ack(ADDR_SOL_URI).\
+            filter(lambda p: p.thread_address.tlv.rloc16 ==
+                   _pkt_as.thread_address.tlv.rloc16).\
             must_next()
 
 
