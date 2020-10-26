@@ -137,7 +137,6 @@ void CslTxScheduler::RescheduleCslTx(void)
         }
 
         delay = GetNextCslTransmissionDelay(child, radioNow, cslTxDelay);
-        child.SetCslTxDelay(cslTxDelay);
 
         if (delay < minDelayTime)
         {
@@ -171,7 +170,8 @@ uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild,
 
 otError CslTxScheduler::HandleFrameRequest(Mac::TxFrame &aFrame)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
+    uint32_t txDelay;
 
     VerifyOrExit(mCslTxChild != nullptr, error = OT_ERROR_ABORT);
 
@@ -201,7 +201,9 @@ otError CslTxScheduler::HandleFrameRequest(Mac::TxFrame &aFrame)
 
     aFrame.SetChannel(mCslTxChild->GetCslChannel() == 0 ? Get<Mac::Mac>().GetPanChannel()
                                                         : mCslTxChild->GetCslChannel());
-    aFrame.SetTxDelay(mCslTxChild->GetCslTxDelay());
+
+    GetNextCslTransmissionDelay(*mCslTxChild, otPlatRadioGetNow(&GetInstance()), txDelay);
+    aFrame.SetTxDelay(txDelay);
     aFrame.SetTxDelayBaseTime(
         static_cast<uint32_t>(mCslTxChild->GetLastRxTimestamp())); // Only LSB part of the time is required.
     aFrame.SetCsmaCaEnabled(false);

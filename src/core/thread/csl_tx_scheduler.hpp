@@ -98,9 +98,6 @@ public:
         uint16_t GetCslPhase(void) const { return mCslPhase; }
         void     SetCslPhase(uint16_t aPhase) { mCslPhase = aPhase; }
 
-        uint32_t GetCslTxDelay(void) const { return mCslTxDelay; }
-        void     SetCslTxDelay(uint32_t aCslTxDelay) { mCslTxDelay = aCslTxDelay; }
-
         TimeMilli GetCslLastHeard(void) const { return mCslLastHeard; }
         void      SetCslLastHeard(TimeMilli aCslLastHeard) { mCslLastHeard = aCslLastHeard; }
 
@@ -114,7 +111,6 @@ public:
         uint32_t  mCslTimeout;          ///< The sync timeout, in seconds.
         uint16_t  mCslPeriod;           ///< CSL sampled listening period in units of 10 symbols (160 microseconds).
         uint16_t  mCslPhase;            ///< The time when the next CSL sample will start.
-        uint32_t  mCslTxDelay;          ///< The delay time for Tx since last Rx time, in microseconds.
         TimeMilli mCslLastHeard;        ///< Time when last frame containing CSL IE was heard.
         uint64_t  mLastRxTimstamp;      ///< Time when last frame containing CSL IE was received, in microseconds.
 

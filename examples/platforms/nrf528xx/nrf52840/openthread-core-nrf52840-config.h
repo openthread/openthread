@@ -289,22 +289,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_PLATFORM_DELAY_TRANSMIT_SUPPORTED
- *
- * The platform radio has the ability to transmit after a specified delay time.
- *
- */
-#define OPENTHREAD_CONFIG_PLATFORM_DELAY_TRANSMIT_SUPPORTED 1
-
-/**
- * @def OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT
- *
- */
-#ifndef OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT
-#define OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD
  *
  * For some reasons, CSL receivers wake up a little later than expected. This variable specifies how much time that

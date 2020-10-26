@@ -396,14 +396,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT
- *
- */
-#ifndef OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT
-#define OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD
  *
  * For some reasons, CSL receivers wake up a little later than expected. This variable specifies how much time that

@@ -359,17 +359,11 @@ void SubMac::StartCsmaBackoff(void)
             if (otPlatRadioGetNow(&GetInstance()) <
                 mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime + mTransmitFrame.mInfo.mTxInfo.mTxDelay)
             {
-#if OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT
-                BeginTransmit();
-#else
                 mTimer.StartAt(Time(mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime),
                                mTransmitFrame.mInfo.mTxInfo.mTxDelay);
-#endif
             }
             else // Transmit without delay
             {
-                mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime = 0;
-                mTransmitFrame.mInfo.mTxInfo.mTxDelay         = 0;
                 BeginTransmit();
             }
         }

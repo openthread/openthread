@@ -459,7 +459,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     nrf_802154_channel_set(aFrame->mChannel);
 
-#if OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     if (aFrame->mInfo.mTxInfo.mTxDelay != 0)
     {
         if (!nrf_802154_transmit_raw_at(&aFrame->mPsdu[-1], aFrame->mInfo.mTxInfo.mCsmaCaEnabled,
@@ -468,7 +468,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         {
             error = OT_ERROR_INVALID_STATE;
         }
-        goto exit;
     }
     else
 #endif
@@ -491,9 +490,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         setPendingEvent(kPendingEventChannelAccessFailure);
     }
 
-#if OPENTHREAD_CONFIG_CSL_USE_PLATFORM_DELAY_TRANSMIT
-exit:
-#endif
     return error;
 }
 
@@ -523,7 +519,7 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 
     return (otRadioCaps)(OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF |
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-                         OT_RADIO_CAPS_TRANSMIT_SEC |
+                         OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING |
 #endif
                          OT_RADIO_CAPS_SLEEP_TO_TX);
 }
