@@ -334,24 +334,24 @@ __STATIC_INLINE void nrf_spis_rx_buffer_set(NRF_SPIS_Type * p_reg,
 /**
  * @brief Function for getting the transmit buffer.
  *
- * @param[in]  p_reg    Pointer to the structure of registers of the peripheral.
- * @param[out] length   Pointer to the maximum number of data bytes in transmit buffer.
+ * @param[in]  p_reg      Pointer to the structure of registers of the peripheral.
+ * @param[out] p_length   Pointer to the maximum number of data bytes in transmit buffer.
  *
  * @returns The transmit buffer pointer.
  */
 __STATIC_INLINE uint8_t * nrf_spis_tx_buffer_get(NRF_SPIS_Type * p_reg,
-                                            size_t *             length);
+                                            size_t *             p_length);
 
 /**
  * @brief Function for getting the receive buffer.
  *
- * @param[in]  p_reg    Pointer to the structure of registers of the peripheral.
- * @param[out] length   Pointer to the maximum number of data bytes in receive buffer.
+ * @param[in]  p_reg      Pointer to the structure of registers of the peripheral.
+ * @param[out] p_length   Pointer to the maximum number of data bytes in receive buffer.
  *
  * @returns The receive buffer pointer.
  */
 __STATIC_INLINE uint8_t * nrf_spis_rx_buffer_get(NRF_SPIS_Type * p_reg,
-                                                 size_t *        length);
+                                                 size_t *        p_length);
 
 /**
  * @brief Function for getting the number of bytes transmitted
@@ -568,25 +568,25 @@ __STATIC_INLINE void nrf_spis_rx_buffer_set(NRF_SPIS_Type * p_reg,
 }
 
 __STATIC_INLINE uint8_t * nrf_spis_tx_buffer_get(NRF_SPIS_Type * p_reg,
-                                                 size_t *        length)
+                                                 size_t *        p_length)
 {
 #if defined (NRF51)
-    *length   = p_reg->MAXTX;
+    *p_length = p_reg->MAXTX;
     return (uint8_t *)p_reg->TXDPTR
 #else
-    *length   = p_reg->TXD.MAXCNT;
+    *p_length = p_reg->TXD.MAXCNT;
     return (uint8_t *)p_reg->TXD.PTR;
 #endif
 }
 
 __STATIC_INLINE uint8_t * nrf_spis_rx_buffer_get(NRF_SPIS_Type * p_reg,
-                                                 size_t *        length)
+                                                 size_t *        p_length)
 {
 #if defined (NRF51)
-    *length   = p_reg->MAXRX;
+    *p_length = p_reg->MAXRX;
     return (uint8_t *)p_reg->RXDPTR;
 #else
-    *length   = p_reg->RXD.MAXCNT;
+    *p_length = p_reg->RXD.MAXCNT;
     return (uint8_t *)p_reg->RXD.PTR;
 #endif
 }
