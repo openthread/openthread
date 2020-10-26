@@ -86,14 +86,14 @@ class Cert_5_1_01_RouterAttach(thread_cert.TestCase):
 
         self.collect_rloc16s()
 
-        for addr in self.nodes[LEADER].get_addrs():
-            if addr[0:4] == 'fe80':
-                self.assertTrue(self.nodes[ROUTER].ping(addr))
+        print(self.nodes[LEADER].get_linklocal())
+
+        leader_addr = self.nodes[LEADER].get_linklocal()
+        self.assertTrue(self.nodes[ROUTER].ping(leader_addr))
         self.simulator.go(5)
 
-        for addr in self.nodes[ROUTER].get_addrs():
-            if addr[0:4] == 'fe80':
-                self.assertTrue(self.nodes[LEADER].ping(addr))
+        router_addr = self.nodes[ROUTER].get_linklocal()
+        self.assertTrue(self.nodes[LEADER].ping(router_addr))
 
     def verify(self, pv):
         pkts = pv.pkts
