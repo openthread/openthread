@@ -182,8 +182,6 @@ static const RAIL_IEEE802154_Config_t sRailIeee802154Config = {
     .defaultFramePendingInOutgoingAcks = false,
 };
 
-static int8_t sTxPowerDbm = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
-
 static int8_t sCcaThresholdDbm = -75; // default -75dBm energy detect threshold
 
 static efr32BandConfig *sCurrentBandConfig = NULL;
@@ -334,7 +332,7 @@ void efr32RadioInit(void)
     sAckedWithFPWriteIndex = 0;
     sAckedWithFPReadIndex  = 0;
 
-    efr32RadioSetTxPower(sTxPowerDbm);
+    efr32RadioSetTxPower(OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER);
 
     sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
     sTransmitError    = OT_ERROR_NONE;
@@ -356,7 +354,7 @@ void efr32RadioDeinit(void)
 
 static otError efr32StartEnergyScan(energyScanMode aMode, uint16_t aChannel, RAIL_Time_t aAveragingTimeUs)
 {
-    RAIL_Status_t    status;
+    RAIL_Status_t    status = RAIL_STATUS_NO_ERROR;
     otError          error  = OT_ERROR_NONE;
     efr32BandConfig *config = NULL;
 
@@ -1123,7 +1121,10 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
     otError error = OT_ERROR_NONE;
 
     otEXPECT_ACTION(aPower != NULL, error = OT_ERROR_INVALID_ARGS);
-    *aPower = sTxPowerDbm;
+
+    // RAIL_GetTxPowerDbm() returns power in deci-dBm (0.1dBm)
+    // Divide by 10 because aPower is supposed be in units dBm
+    *aPower = RAIL_GetTxPowerDbm(gRailHandle) / 10U;
 
 exit:
     return error;
@@ -1135,10 +1136,10 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 
     RAIL_Status_t status;
 
-    status = RAIL_SetTxPowerDbm(gRailHandle, ((RAIL_TxPower_t)aPower) * 10);
+    // RAIL_SetTxPowerDbm() takes power in units of deci-dBm (0.1dBm)
+    // Divide by 10 because aPower is supposed be in units dBm
+    status = RAIL_SetTxPowerDbm(gRailHandle, ((RAIL_TxPower_t)aPower) * 10U);
     assert(status == RAIL_STATUS_NO_ERROR);
-
-    sTxPowerDbm = aPower;
 
     return OT_ERROR_NONE;
 }
