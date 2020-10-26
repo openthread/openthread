@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import mle
 import network_layer
 import thread_cert
@@ -86,11 +87,11 @@ class Cert_5_1_01_RouterAttach(thread_cert.TestCase):
 
         self.collect_rloc16s()
 
-        leader_addr = self.nodes[LEADER].get_linklocal()
+        leader_addr = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
         self.assertTrue(self.nodes[ROUTER].ping(leader_addr))
         self.simulator.go(5)
 
-        router_addr = self.nodes[ROUTER].get_linklocal()
+        router_addr = self.nodes[ROUTER].get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
         self.assertTrue(self.nodes[LEADER].ping(router_addr))
 
     def verify(self, pv):
