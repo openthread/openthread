@@ -40,11 +40,3 @@ set(CMAKE_C_FLAGS_INIT             "${COMMON_C_FLAGS} -std=gnu99")
 set(CMAKE_CXX_FLAGS_INIT           "${COMMON_C_FLAGS} -fno-exceptions -fno-rtti")
 set(CMAKE_ASM_FLAGS_INIT           "${COMMON_C_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS_INIT    "${COMMON_C_FLAGS} -specs=nano.specs -specs=nosys.specs -Wl,--entry=Reset_Handler")
-
-set(CMAKE_C_FLAGS_DEBUG_INIT       "-Og -g")
-set(CMAKE_CXX_FLAGS_DEBUG_INIT     "-Og -g")
-set(CMAKE_ASM_FLAGS_DEBUG_INIT     "-g")
-
-set(CMAKE_C_FLAGS_RELEASE_INIT     "-Os")
-set(CMAKE_CXX_FLAGS_RELEASE_INIT   "-Os")
-set(CMAKE_ASM_FLAGS_RELEASE_INIT   "")
