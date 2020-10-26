@@ -341,8 +341,8 @@ static void spis_state_entry_action_execute(NRF_SPIS_Type * p_spis,
             event.tx_amount = nrf_spis_tx_amount_get(p_spis);
             NRFX_LOG_INFO("Transfer rx_len:%d.", event.rx_amount);
             NRFX_LOG_DEBUG("Rx data:");
-            NRFX_LOG_HEXDUMP_DEBUG((uint8_t const *)p_cb->rx_buffer,
-                                   event.rx_amount * sizeof(p_cb->rx_buffer[0]));
+            NRFX_LOG_HEXDUMP_DEBUG((uint8_t const *)event.rx_buffer,
+                                   event.rx_amount * sizeof(event.rx_buffer[0]));
             NRFX_ASSERT(p_cb->handler != NULL);
             p_cb->handler(&event, p_cb->p_context);
             break;
