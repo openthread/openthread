@@ -177,11 +177,11 @@ exit:
     return error;
 }
 
-otError DatasetManager::Save(const otOperationalDataset &aDataset)
+otError DatasetManager::Save(const Dataset::Info &aDatasetInfo)
 {
     otError error;
 
-    SuccessOrExit(error = mLocal.Save(aDataset));
+    SuccessOrExit(error = mLocal.Save(aDatasetInfo));
     HandleDatasetUpdated();
 
 exit:
@@ -443,19 +443,19 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-otError DatasetManager::AppendDatasetToMessage(const otOperationalDataset &aDataset, Message &aMessage) const
+otError DatasetManager::AppendDatasetToMessage(const Dataset::Info &aDatasetInfo, Message &aMessage) const
 {
     otError error;
     Dataset dataset(GetType());
 
-    SuccessOrExit(error = dataset.SetFrom(aDataset));
+    SuccessOrExit(error = dataset.SetFrom(aDatasetInfo));
     error = aMessage.AppendBytes(dataset.GetBytes(), dataset.GetSize());
 
 exit:
     return error;
 }
 
-otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength)
+otError DatasetManager::SendSetRequest(const Dataset::Info &aDatasetInfo, const uint8_t *aTlvs, uint8_t aLength)
 {
     otError          error = OT_ERROR_NONE;
     Coap::Message *  message;
@@ -493,7 +493,8 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     }
 
 #endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-    SuccessOrExit(error = AppendDatasetToMessage(aDataset, *message));
+
+    SuccessOrExit(error = AppendDatasetToMessage(aDatasetInfo, *message));
 
     if (aLength > 0)
     {
@@ -518,10 +519,10 @@ exit:
     return error;
 }
 
-otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDatasetComponents,
-                                       const uint8_t *                       aTlvTypes,
-                                       uint8_t                               aLength,
-                                       const otIp6Address *                  aAddress) const
+otError DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponents,
+                                       const uint8_t *            aTlvTypes,
+                                       uint8_t                    aLength,
+                                       const otIp6Address *       aAddress) const
 {
     otError          error = OT_ERROR_NONE;
     Coap::Message *  message;
@@ -532,62 +533,62 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
 
     length = 0;
 
-    if (aDatasetComponents.mIsActiveTimestampPresent)
+    if (aDatasetComponents.IsActiveTimestampPresent())
     {
         datasetTlvs[length++] = Tlv::kActiveTimestamp;
     }
 
-    if (aDatasetComponents.mIsPendingTimestampPresent)
+    if (aDatasetComponents.IsPendingTimestampPresent())
     {
         datasetTlvs[length++] = Tlv::kPendingTimestamp;
     }
 
-    if (aDatasetComponents.mIsMasterKeyPresent)
+    if (aDatasetComponents.IsMasterKeyPresent())
     {
         datasetTlvs[length++] = Tlv::kNetworkMasterKey;
     }
 
-    if (aDatasetComponents.mIsNetworkNamePresent)
+    if (aDatasetComponents.IsNetworkNamePresent())
     {
         datasetTlvs[length++] = Tlv::kNetworkName;
     }
 
-    if (aDatasetComponents.mIsExtendedPanIdPresent)
+    if (aDatasetComponents.IsExtendedPanIdPresent())
     {
         datasetTlvs[length++] = Tlv::kExtendedPanId;
     }
 
-    if (aDatasetComponents.mIsMeshLocalPrefixPresent)
+    if (aDatasetComponents.IsMeshLocalPrefixPresent())
     {
         datasetTlvs[length++] = Tlv::kMeshLocalPrefix;
     }
 
-    if (aDatasetComponents.mIsDelayPresent)
+    if (aDatasetComponents.IsDelayPresent())
     {
         datasetTlvs[length++] = Tlv::kDelayTimer;
     }
 
-    if (aDatasetComponents.mIsPanIdPresent)
+    if (aDatasetComponents.IsPanIdPresent())
     {
         datasetTlvs[length++] = Tlv::kPanId;
     }
 
-    if (aDatasetComponents.mIsChannelPresent)
+    if (aDatasetComponents.IsChannelPresent())
     {
         datasetTlvs[length++] = Tlv::kChannel;
     }
 
-    if (aDatasetComponents.mIsPskcPresent)
+    if (aDatasetComponents.IsPskcPresent())
     {
         datasetTlvs[length++] = Tlv::kPskc;
     }
 
-    if (aDatasetComponents.mIsSecurityPolicyPresent)
+    if (aDatasetComponents.IsSecurityPolicyPresent())
     {
         datasetTlvs[length++] = Tlv::kSecurityPolicy;
     }
 
-    if (aDatasetComponents.mIsChannelMaskPresent)
+    if (aDatasetComponents.IsChannelMaskPresent())
     {
         datasetTlvs[length++] = Tlv::kChannelMask;
     }
@@ -654,6 +655,20 @@ bool ActiveDataset::IsPartiallyComplete(void) const
     return mLocal.IsSaved() && !mTimestampValid;
 }
 
+bool ActiveDataset::IsCommissioned(void) const
+{
+    Dataset::Info datasetInfo;
+    bool          isValid = false;
+
+    SuccessOrExit(Read(datasetInfo));
+
+    isValid = (datasetInfo.IsMasterKeyPresent() && datasetInfo.IsNetworkNamePresent() &&
+               datasetInfo.IsExtendedPanIdPresent() && datasetInfo.IsPanIdPresent() && datasetInfo.IsChannelPresent());
+
+exit:
+    return isValid;
+}
+
 otError ActiveDataset::Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
     otError error = OT_ERROR_NONE;
@@ -709,11 +724,11 @@ void PendingDataset::ClearNetwork(void)
     IgnoreError(DatasetManager::Save(dataset));
 }
 
-otError PendingDataset::Save(const otOperationalDataset &aDataset)
+otError PendingDataset::Save(const Dataset::Info &aDatasetInfo)
 {
     otError error;
 
-    SuccessOrExit(error = DatasetManager::Save(aDataset));
+    SuccessOrExit(error = DatasetManager::Save(aDatasetInfo));
     StartDelayTimer();
 
 exit:

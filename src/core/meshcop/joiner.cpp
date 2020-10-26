@@ -559,26 +559,23 @@ void Joiner::HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMe
 
 void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError              error;
-    otOperationalDataset dataset;
+    otError       error;
+    Dataset::Info datasetInfo;
 
     VerifyOrExit(mState == kStateEntrust && aMessage.IsConfirmablePostRequest(), error = OT_ERROR_DROP);
 
     otLogInfoMeshCoP("Joiner received entrust");
     otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.ntf");
 
-    memset(&dataset, 0, sizeof(dataset));
+    datasetInfo.Clear();
 
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, Tlv::kNetworkMasterKey, &dataset.mMasterKey, sizeof(MasterKey)));
-    dataset.mComponents.mIsMasterKeyPresent = true;
+    SuccessOrExit(
+        error = Tlv::FindTlv(aMessage, Tlv::kNetworkMasterKey, &datasetInfo.UpdateMasterKey(), sizeof(MasterKey)));
 
-    dataset.mChannel                      = Get<Mac::Mac>().GetPanChannel();
-    dataset.mComponents.mIsChannelPresent = true;
+    datasetInfo.SetChannel(Get<Mac::Mac>().GetPanChannel());
+    datasetInfo.SetPanId(Get<Mac::Mac>().GetPanId());
 
-    dataset.mPanId                      = Get<Mac::Mac>().GetPanId();
-    dataset.mComponents.mIsPanIdPresent = true;
-
-    IgnoreError(Get<MeshCoP::ActiveDataset>().Save(dataset));
+    IgnoreError(Get<MeshCoP::ActiveDataset>().Save(datasetInfo));
 
     otLogInfoMeshCoP("Joiner successful!");
 

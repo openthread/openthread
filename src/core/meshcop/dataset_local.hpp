@@ -115,13 +115,13 @@ public:
     /**
      * This method retrieves the dataset from non-volatile memory.
      *
-     * @param[out]  aDataset  Where to place the dataset.
+     * @param[out]  aDatasetInfo  Where to place the dataset as `Dataset::Info`.
      *
      * @retval OT_ERROR_NONE       Successfully retrieved the dataset.
      * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Read(otOperationalDataset &aDataset) const;
+    otError Read(Dataset::Info &aDatasetInfo) const;
 
     /**
      * This method retrieves the dataset from non-volatile memory.
@@ -145,14 +145,18 @@ public:
     /**
      * This method stores the dataset into non-volatile memory.
      *
+     * @param[in] aDatasetInfo     The Dataset to save as `Dataset::Info`.
+     *
      * @retval OT_ERROR_NONE              Successfully saved the dataset.
      * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
      *
      */
-    otError Save(const otOperationalDataset &aDataset);
+    otError Save(const Dataset::Info &aDatasetInfo);
 
     /**
      * This method stores the dataset into non-volatile memory.
+     *
+     * @param[in]  aDataset  The Dataset to save as `otOperationalDatasetTlvs`.
      *
      * @retval OT_ERROR_NONE              Successfully saved the dataset.
      * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
@@ -162,6 +166,8 @@ public:
 
     /**
      * This method stores the dataset into non-volatile memory.
+     *
+     * @param[in]  aDataset  The Dataset to save.
      *
      * @retval OT_ERROR_NONE              Successfully saved the dataset.
      * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.

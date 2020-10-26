@@ -672,7 +672,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ThreadDatasetHandler(con
     opDataset.mActiveTimestamp                      = 0;
     opDataset.mComponents.mIsActiveTimestampPresent = true;
 
-    SuccessOrExit(error = dataset.SetFrom(opDataset));
+    SuccessOrExit(error = dataset.SetFrom(static_cast<MeshCoP::Dataset::Info &>(opDataset)));
     SuccessOrExit(error = otPlatSettingsSet(
                       mInstance, isActive ? SettingsBase::kKeyActiveDataset : SettingsBase::kKeyPendingDataset,
                       dataset.GetBytes(), dataset.GetSize()));
