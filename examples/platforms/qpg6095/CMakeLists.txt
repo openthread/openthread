@@ -79,9 +79,6 @@ target_link_libraries(openthread-qpg6095
         qpg6095-driver
         ${OT_MBEDTLS}
         ot-config
-)
-
-target_link_options(openthread-qpg6095
     PUBLIC
         -T${CMAKE_CURRENT_SOURCE_DIR}/qpg6095.ld
         -Wl,--gc-sections

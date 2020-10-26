@@ -74,15 +74,11 @@ set_target_properties(
 target_link_libraries(openthread-cc1352
     PUBLIC
         cc13x2-cc26x2-driver
+        -Wl,--gc-sections
+        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
     PRIVATE
         ${OT_MBEDTLS}
         ot-config
-)
-
-target_link_options(openthread-cc1352
-    PUBLIC
-        -Wl,--gc-sections
-        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 
 target_compile_definitions(openthread-cc1352
