@@ -86,8 +86,6 @@ class Cert_5_1_01_RouterAttach(thread_cert.TestCase):
 
         self.collect_rloc16s()
 
-        print(self.nodes[LEADER].get_linklocal())
-
         leader_addr = self.nodes[LEADER].get_linklocal()
         self.assertTrue(self.nodes[ROUTER].ping(leader_addr))
         self.simulator.go(5)
