@@ -93,7 +93,7 @@
  * Define to 1 if you want to enable software CSMA-CA backoff logic.
  *
  */
-#define OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE 1
+#define OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE 0
 
 /**
  * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
@@ -109,7 +109,7 @@
  * Define to 1 if you want to enable software energy scanning logic.
  *
  */
-#define OPENTHREAD_CONFIG_MAC_SOFTWARE_ENERGY_SCAN_ENABLE 1
+#define OPENTHREAD_CONFIG_MAC_SOFTWARE_ENERGY_SCAN_ENABLE 0
 
 /**
  * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
