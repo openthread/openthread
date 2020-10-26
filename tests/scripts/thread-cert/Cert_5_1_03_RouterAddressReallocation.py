@@ -32,7 +32,7 @@ import unittest
 import mle
 import network_layer
 import thread_cert
-from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_REQUEST, MLE_CHILD_ID_REQUEST, ADDR_SOL_URI, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, TLV_REQUEST_TLV, SCAN_MASK_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, NL_MAC_EXTENDED_ADDRESS_TLV, NL_STATUS_TLV
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_REQUEST, MLE_CHILD_ID_REQUEST, ADDR_SOL_URI, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, TLV_REQUEST_TLV, SCAN_MASK_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, NL_MAC_EXTENDED_ADDRESS_TLV, NL_STATUS_TLV, NL_RLOC16_TLV
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -116,6 +116,7 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
         pv.verify_attached('ROUTER_1')
         pv.verify_attached('ROUTER_2')
         _pkt = pkts.filter_wpan_src64(ROUTER_2).\
+                   filter_LLANMA().\
                    filter_mle_cmd(MLE_ADVERTISEMENT).\
                    must_next()
 
@@ -130,20 +131,21 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
         #         The DUT MUST make two separate attempts to reconnect to its
         #         original partition in this manner
 
-        for i in range(1, 3):
-            pkts.filter_wpan_src64(ROUTER_1).\
-                filter_LLARMA().\
-                filter_mle_cmd(MLE_PARENT_REQUEST).\
-                filter(lambda p: {
-                                  CHALLENGE_TLV,
-                                  MODE_TLV,
-                                  SCAN_MASK_TLV,
-                                  VERSION_TLV
-                                  } <= set(p.mle.tlv.type) and\
-                       p.ipv6.hlim == 255 and\
-                       p.mle.tlv.scan_mask.r == 1 and\
-                       p.mle.tlv.scan_mask.e == 1).\
-                must_next()
+        with pkts.save_index():
+            for i in range(1, 3):
+                pkts.filter_wpan_src64(ROUTER_1).\
+                    filter_LLARMA().\
+                    filter_mle_cmd(MLE_PARENT_REQUEST).\
+                    filter(lambda p: {
+                                      CHALLENGE_TLV,
+                                      MODE_TLV,
+                                      SCAN_MASK_TLV,
+                                      VERSION_TLV
+                                      } <= set(p.mle.tlv.type) and\
+                           p.ipv6.hlim == 255 and\
+                           p.mle.tlv.scan_mask.r == 1 and\
+                           p.mle.tlv.scan_mask.e == 1).\
+                    must_next()
 
         # Step 6: Router_1 MUST attempt to attach to any other partition
         #         within range by sending a MLE Parent Request.
@@ -155,10 +157,11 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
 
         pkts.filter_wpan_src64(ROUTER_2).\
                    filter_mle_cmd(MLE_ADVERTISEMENT).\
-                   must_next().\
-                   must_verify(lambda p:\
+                   filter_LLANMA().\
+                   filter(lambda p:\
                                p.mle.tlv.leader_data.partition_id !=\
-                               _pkt.mle.tlv.leader_data.partition_id)
+                               _pkt.mle.tlv.leader_data.partition_id).\
+                   must_next()
 
         pkts.filter_wpan_src64(ROUTER_1).\
             filter_LLARMA().\
@@ -169,8 +172,9 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
                               SCAN_MASK_TLV,
                               VERSION_TLV
                               } <= set(p.mle.tlv.type) and\
-                   p.ipv6.hlim == 255)\
-            .must_next()
+                   p.mle.tlv.scan_mask.r == 1 and\
+                   p.ipv6.hlim == 255).\
+            must_next()
 
         # Step 7: Router_1 sends a MLE Child ID Request to Router_2.
         #         The following TLVs MUST be present in the MLE Child ID Request:
@@ -205,15 +209,16 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
         #         CoAP Payload
         #             - MAC Extended Address TLV
         #             - Status TLV
+        #             - RLOC16 TLV
 
         _pkt = pkts.filter_wpan_src64(ROUTER_1).\
             filter_wpan_dst16(ROUTER_2_RLOC16).\
             filter_coap_request(ADDR_SOL_URI).\
             filter(lambda p: {
                               NL_MAC_EXTENDED_ADDRESS_TLV,
-                              NL_STATUS_TLV
-                              } <= set(p.coap.tlv.type)\
-                   ).\
+                              NL_STATUS_TLV,
+                              NL_RLOC16_TLV
+                              } <= set(p.coap.tlv.type)).\
            must_next()
 
         # Step 9: Router_2 automatically sends an Address Solicit Response.
