@@ -572,7 +572,7 @@ __STATIC_INLINE uint8_t * nrf_spis_tx_buffer_get(NRF_SPIS_Type * p_reg,
 {
 #if defined (NRF51)
     *p_length = p_reg->MAXTX;
-    return (uint8_t *)p_reg->TXDPTR
+    return (uint8_t *)p_reg->TXDPTR;
 #else
     *p_length = p_reg->TXD.MAXCNT;
     return (uint8_t *)p_reg->TXD.PTR;
