@@ -359,10 +359,9 @@ private:
     otError ProcessLinkMetrics(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[]);
 #endif
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     otError ProcessMlr(uint8_t aArgsLength, char *aArgs[]);
 
-#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     otError ProcessMlrReg(uint8_t aArgsLength, char *aArgs[]);
 
     static void HandleMlrRegResult(void *              aContext,
@@ -374,7 +373,6 @@ private:
                                    uint8_t             aMlrStatus,
                                    const otIp6Address *aFailedAddresses,
                                    uint8_t             aFailedAddressNum);
-#endif
 #endif
     otError ProcessMode(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
