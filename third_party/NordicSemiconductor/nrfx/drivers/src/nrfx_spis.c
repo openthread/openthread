@@ -335,8 +335,8 @@ static void spis_state_entry_action_execute(NRF_SPIS_Type * p_spis,
 
         case SPIS_XFER_COMPLETED:
             event.evt_type  = NRFX_SPIS_XFER_DONE;
-            nrf_spis_tx_buffer_get(p_spis, &event.tx_buffer, &event.tx_buffer_size);
-            nrf_spis_rx_buffer_get(p_spis, &event.rx_buffer, &event.rx_buffer_size);
+            event.tx_buffer = nrf_spis_tx_buffer_get(p_spis, &event.tx_buffer_size);
+            event.rx_buffer = nrf_spis_rx_buffer_get(p_spis, &event.rx_buffer_size);
             event.rx_amount = nrf_spis_rx_amount_get(p_spis);
             event.tx_amount = nrf_spis_tx_amount_get(p_spis);
             NRFX_LOG_INFO("Transfer rx_len:%d.", event.rx_amount);
@@ -448,14 +448,14 @@ static void spis_irq_handler(NRF_SPIS_Type * p_spis, spis_cb_t * p_cb)
 
             case SPIS_BUFFER_RESOURCE_REQUESTED:
                 event.evt_type  = NRFX_SPIS_XFER_DONE;
-                nrf_spis_tx_buffer_get(p_spis, &event.tx_buffer, &event.tx_buffer_size);
-                nrf_spis_rx_buffer_get(p_spis, &event.rx_buffer, &event.rx_buffer_size);
+                event.tx_buffer = nrf_spis_tx_buffer_get(p_spis, &event.tx_buffer_size);
+                event.rx_buffer = nrf_spis_rx_buffer_get(p_spis, &event.rx_buffer_size);
                 event.rx_amount = nrf_spis_rx_amount_get(p_spis);
                 event.tx_amount = nrf_spis_tx_amount_get(p_spis);
                 NRFX_LOG_INFO("Transfer rx_len:%d.", event.rx_amount);
                 NRFX_LOG_DEBUG("Rx data:");
-                NRFX_LOG_HEXDUMP_DEBUG((uint8_t const *)p_cb->rx_buffer,
-                                       event.rx_amount * sizeof(p_cb->rx_buffer[0]));
+                NRFX_LOG_HEXDUMP_DEBUG((uint8_t const *)event.rx_buffer,
+                                       event.rx_amount * sizeof(event.rx_buffer[0]));
                 NRFX_ASSERT(p_cb->handler != NULL);
                 p_cb->handler(&event, p_cb->p_context);
                 break;
