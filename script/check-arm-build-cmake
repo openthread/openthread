@@ -98,13 +98,21 @@ build_samr21()
 
 main()
 {
-    build_cc1352
-    build_cc2538
-    build_cc2650
-    build_cc2652
-    build_kw41z
-    build_qpg6095
-    build_samr21
+    if [[ $# == 0 ]]; then
+        build_cc1352
+        build_cc2538
+        build_cc2650
+        build_cc2652
+        build_kw41z
+        build_qpg6095
+        build_samr21
+        return 0
+    fi
+
+    while [[ $# != 0 ]]; do
+        "build_$1"
+        shift
+    done
 }
 
 main "$@"
