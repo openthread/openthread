@@ -340,7 +340,7 @@ __STATIC_INLINE void nrf_spis_rx_buffer_set(NRF_SPIS_Type * p_reg,
  * @returns The transmit buffer pointer.
  */
 __STATIC_INLINE uint8_t * nrf_spis_tx_buffer_get(NRF_SPIS_Type * p_reg,
-                                            size_t *             p_length);
+                                                 size_t *        p_length);
 
 /**
  * @brief Function for getting the receive buffer.
