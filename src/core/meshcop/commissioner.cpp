@@ -75,7 +75,7 @@ Commissioner::Commissioner(Instance &aInstance)
     , mJoinerCallback(nullptr)
     , mCallbackContext(nullptr)
 {
-    memset(mJoiners, 0, sizeof(mJoiners));
+    memset(reinterpret_cast<void *>(mJoiners), 0, sizeof(mJoiners));
 
     mCommissionerAloc.Clear();
     mCommissionerAloc.mPrefixLength       = 64;
