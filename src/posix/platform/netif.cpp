@@ -1039,9 +1039,12 @@ static void processNetlinkEvent(otInstance *aInstance)
 
     union
     {
-        nlmsghdr  nlMsg;
+#if defined(__linux__)
+        nlmsghdr nlMsg;
+#else
         rt_msghdr rtMsg;
-        char      buffer[kMaxNetifEvent];
+#endif
+        char buffer[kMaxNetifEvent];
     } msgBuffer;
 
     length = recv(sNetlinkFd, msgBuffer.buffer, sizeof(msgBuffer.buffer), 0);
