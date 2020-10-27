@@ -74,14 +74,10 @@ set_target_properties(
 target_link_libraries(openthread-cc2652
     PUBLIC
         cc13x2-cc26x2-driver
+        -Wl,--gc-sections
     PRIVATE
         ${OT_MBEDTLS}
         ot-config
-)
-
-target_link_options(openthread-cc2652
-    PUBLIC
-        -Wl,--gc-sections
 )
 
 target_compile_definitions(openthread-cc2652

@@ -55,12 +55,12 @@ if(OT_CFLAGS MATCHES "-pedantic-errors")
     string(REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
 endif()
 
-target_link_options(samr21-driver
+target_link_libraries(samr21-driver
     PUBLIC
         -T${PROJECT_SOURCE_DIR}/third_party/microchip/include/samr21x18a.ld
+    PRIVATE
+        ot-config
 )
-
-target_link_libraries(samr21-driver PRIVATE ot-config)
 
 target_compile_definitions(samr21-driver
     PUBLIC
