@@ -656,6 +656,8 @@ otError LinkMetrics::ReadTypeIdFlagsFromMessage(const Message &aMessage,
 {
     otError error = OT_ERROR_NONE;
 
+    memset(&aLinkMetrics, 0, sizeof(aLinkMetrics));
+
     for (uint16_t pos = aStartPos; pos < aEndPos; pos += sizeof(LinkMetricsTypeIdFlags))
     {
         LinkMetricsTypeIdFlags typeIdFlags;
