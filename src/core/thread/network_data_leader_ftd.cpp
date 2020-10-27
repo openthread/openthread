@@ -69,7 +69,7 @@ void Leader::Reset(void)
 {
     LeaderBase::Reset();
 
-    memset(mContextLastUsed, 0, sizeof(mContextLastUsed));
+    memset(reinterpret_cast<void *>(mContextLastUsed), 0, sizeof(mContextLastUsed));
     mContextUsed         = 0;
     mContextIdReuseDelay = kContextIdReuseDelay;
 }
