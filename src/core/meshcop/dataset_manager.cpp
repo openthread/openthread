@@ -443,6 +443,18 @@ exit:
     FreeMessageOnError(message, error);
 }
 
+otError DatasetManager::AppendDatasetToMessage(const otOperationalDataset &aDataset, Message &aMessage) const
+{
+    otError error;
+    Dataset dataset(GetType());
+
+    SuccessOrExit(error = dataset.SetFrom(aDataset));
+    error = aMessage.AppendBytes(dataset.GetBytes(), dataset.GetSize());
+
+exit:
+    return error;
+}
+
 otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength)
 {
     otError          error = OT_ERROR_NONE;
@@ -481,90 +493,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     }
 
 #endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-
-    if (aDataset.mComponents.mIsActiveTimestampPresent)
-    {
-        ActiveTimestampTlv timestamp;
-        timestamp.Init();
-        timestamp.SetSeconds(aDataset.mActiveTimestamp);
-        timestamp.SetTicks(0);
-        SuccessOrExit(error = timestamp.AppendTo(*message));
-    }
-
-    if (aDataset.mComponents.mIsPendingTimestampPresent)
-    {
-        PendingTimestampTlv timestamp;
-        timestamp.Init();
-        timestamp.SetSeconds(aDataset.mPendingTimestamp);
-        timestamp.SetTicks(0);
-        SuccessOrExit(error = timestamp.AppendTo(*message));
-    }
-
-    if (aDataset.mComponents.mIsMasterKeyPresent)
-    {
-        SuccessOrExit(error =
-                          Tlv::AppendTlv(*message, Tlv::kNetworkMasterKey, &aDataset.mMasterKey, sizeof(MasterKey)));
-    }
-
-    if (aDataset.mComponents.mIsNetworkNamePresent)
-    {
-        NetworkNameTlv networkname;
-        networkname.Init();
-        networkname.SetNetworkName(static_cast<const Mac::NetworkName &>(aDataset.mNetworkName).GetAsData());
-        SuccessOrExit(error = networkname.AppendTo(*message));
-    }
-
-    if (aDataset.mComponents.mIsExtendedPanIdPresent)
-    {
-        SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kExtendedPanId, &aDataset.mExtendedPanId,
-                                             sizeof(Mac::ExtendedPanId)));
-    }
-
-    if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
-    {
-        SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kMeshLocalPrefix, &aDataset.mMeshLocalPrefix,
-                                             sizeof(otMeshLocalPrefix)));
-    }
-
-    if (aDataset.mComponents.mIsDelayPresent)
-    {
-        SuccessOrExit(error = Tlv::AppendUint32Tlv(*message, Tlv::kDelayTimer, aDataset.mDelay));
-    }
-
-    if (aDataset.mComponents.mIsPanIdPresent)
-    {
-        SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kPanId, aDataset.mPanId));
-    }
-
-    if (aDataset.mComponents.mIsChannelPresent)
-    {
-        ChannelTlv channel;
-        channel.Init();
-        channel.SetChannel(aDataset.mChannel);
-        SuccessOrExit(error = channel.AppendTo(*message));
-    }
-
-    if (aDataset.mComponents.mIsChannelMaskPresent)
-    {
-        ChannelMaskTlv channelMask;
-        channelMask.Init();
-        channelMask.SetChannelMask(aDataset.mChannelMask);
-        SuccessOrExit(error = channelMask.AppendTo(*message));
-    }
-
-    if (aDataset.mComponents.mIsPskcPresent)
-    {
-        SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kPskc, aDataset.mPskc.m8, sizeof(Pskc)));
-    }
-
-    if (aDataset.mComponents.mIsSecurityPolicyPresent)
-    {
-        SecurityPolicyTlv securityPolicy;
-        securityPolicy.Init();
-        securityPolicy.SetRotationTime(aDataset.mSecurityPolicy.mRotationTime);
-        securityPolicy.SetFlags(aDataset.mSecurityPolicy.mFlags);
-        SuccessOrExit(error = securityPolicy.AppendTo(*message));
-    }
+    SuccessOrExit(error = AppendDatasetToMessage(aDataset, *message));
 
     if (aLength > 0)
     {
