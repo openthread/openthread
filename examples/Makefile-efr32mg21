@@ -70,7 +70,11 @@ AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST)
 ifeq ($(BOARD_LOWERCASE),brd4180a)
 MCU = EFR32MG21A020F1024IM32
 else
-$(error Please provide a value for BOARD variable e.g BOARD=BRD4180A (currently supported BRD4180A))
+ifeq ($(BOARD_LOWERCASE),brd4180b)
+MCU = EFR32MG21A020F1024IM32
+else
+$(error Please provide a value for BOARD variable e.g BOARD=BRD4180A (currently supported BRD4180A, BRD4180B))
+endif
 endif
 
 EFR32_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls_config.h\"'
