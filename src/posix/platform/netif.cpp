@@ -1032,27 +1032,24 @@ exit:
 
 #endif
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-align"
-
 static void processNetlinkEvent(otInstance *aInstance)
 {
     const size_t kMaxNetifEvent = 8192;
     ssize_t      length;
 
-#if defined(__linux__)
-    alignas(nlmsghdr)
-#else
-    alignas(rt_msghdr)
-#endif
-        char buffer[kMaxNetifEvent];
+    union
+    {
+        nlmsghdr  nlMsg;
+        rt_msghdr rtMsg;
+        char      buffer[kMaxNetifEvent];
+    } msgBuffer;
 
-    length = recv(sNetlinkFd, buffer, sizeof(buffer), 0);
+    length = recv(sNetlinkFd, msgBuffer.buffer, sizeof(msgBuffer.buffer), 0);
 
     VerifyOrExit(length > 0);
 
 #if defined(__linux__)
-    for (struct nlmsghdr *msg = reinterpret_cast<struct nlmsghdr *>(buffer); NLMSG_OK(msg, static_cast<size_t>(length));
+    for (struct nlmsghdr *msg = &msgBuffer.nlMsg; NLMSG_OK(msg, static_cast<size_t>(length));
          msg                  = NLMSG_NEXT(msg, length))
     {
 #else
@@ -1060,7 +1057,7 @@ static void processNetlinkEvent(otInstance *aInstance)
         // BSD sends one message per read to routing socket (see route.c, monitor command)
         struct rt_msghdr *msg;
 
-        msg = (struct rt_msghdr *)buffer;
+        msg = &msgBuffer.rtMsg;
 
 #define nlmsg_type rtm_type
 
@@ -1122,8 +1119,6 @@ static void processNetlinkEvent(otInstance *aInstance)
 exit:
     return;
 }
-
-#pragma GCC diagnostic pop
 
 void platformNetifDeinit(void)
 {
