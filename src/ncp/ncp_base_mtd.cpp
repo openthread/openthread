@@ -277,9 +277,9 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_STACK_UP>(void)
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
 
     // If the value has changed...
-    if ((enabled != false) != (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED))
+    if (enabled != (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED))
     {
-        if (enabled != false)
+        if (enabled)
         {
             error = otThreadSetEnabled(mInstance, true);
             StartLegacy();
@@ -679,7 +679,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ALLOW_LOCAL_NE
     SuccessOrExit(error = mDecoder.ReadBool(value));
 
     // Register any net data changes on transition from `true` to `false`.
-    shouldRegisterWithLeader = (mAllowLocalNetworkDataChange == true) && (value == false);
+    shouldRegisterWithLeader = mAllowLocalNetworkDataChange && !value;
 
     mAllowLocalNetworkDataChange = value;
 
@@ -819,7 +819,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SERVER_ALLOW_LOCAL_DA
     SuccessOrExit(error = mDecoder.ReadBool(value));
 
     // Register any server data changes on transition from `true` to `false`.
-    shouldRegisterWithLeader = (mAllowLocalServerDataChange == true) && (value == false);
+    shouldRegisterWithLeader = mAllowLocalServerDataChange && !value;
 
     mAllowLocalServerDataChange = value;
 
@@ -1467,7 +1467,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMIS
 
     SuccessOrExit(error = mDecoder.ReadBool(action));
 
-    if (action == false)
+    if (!action)
     {
         otJoinerStop(mInstance);
         ExitNow();

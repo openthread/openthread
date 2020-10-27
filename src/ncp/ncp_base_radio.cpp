@@ -346,7 +346,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_ENABLED>(void)
 
     SuccessOrExit(error = mDecoder.ReadBool(value));
 
-    if (value == false)
+    if (!value)
     {
         error = otLinkRawSetReceiveDone(mInstance, nullptr);
     }
