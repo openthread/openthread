@@ -392,19 +392,17 @@ otError ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<ExtendedPanIdTlv>() == nullptr)
     {
-        IgnoreError(
-            dataset.SetTlv(Tlv::kExtendedPanId, &Get<Mac::Mac>().GetExtendedPanId(), sizeof(Mac::ExtendedPanId)));
+        IgnoreError(dataset.SetTlv(Tlv::kExtendedPanId, Get<Mac::Mac>().GetExtendedPanId()));
     }
 
     if (dataset.GetTlv<MeshLocalPrefixTlv>() == nullptr)
     {
-        IgnoreError(dataset.SetTlv(Tlv::kMeshLocalPrefix, &Get<Mle::MleRouter>().GetMeshLocalPrefix(),
-                                   sizeof(Mle::MeshLocalPrefix)));
+        IgnoreError(dataset.SetTlv(Tlv::kMeshLocalPrefix, Get<Mle::MleRouter>().GetMeshLocalPrefix()));
     }
 
     if (dataset.GetTlv<NetworkMasterKeyTlv>() == nullptr)
     {
-        IgnoreError(dataset.SetTlv(Tlv::kNetworkMasterKey, &Get<KeyManager>().GetMasterKey(), sizeof(MasterKey)));
+        IgnoreError(dataset.SetTlv(Tlv::kNetworkMasterKey, Get<KeyManager>().GetMasterKey()));
     }
 
     if (dataset.GetTlv<NetworkNameTlv>() == nullptr)
@@ -416,14 +414,14 @@ otError ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<PanIdTlv>() == nullptr)
     {
-        IgnoreError(dataset.SetUint16Tlv(Tlv::kPanId, Get<Mac::Mac>().GetPanId()));
+        IgnoreError(dataset.SetTlv(Tlv::kPanId, Get<Mac::Mac>().GetPanId()));
     }
 
     if (dataset.GetTlv<PskcTlv>() == nullptr)
     {
         if (Get<KeyManager>().IsPskcSet())
         {
-            IgnoreError(dataset.SetTlv(Tlv::kPskc, &Get<KeyManager>().GetPskc(), sizeof(Pskc)));
+            IgnoreError(dataset.SetTlv(Tlv::kPskc, Get<KeyManager>().GetPskc()));
         }
         else
         {
@@ -431,7 +429,7 @@ otError ActiveDataset::GenerateLocal(void)
             Pskc pskc;
 
             SuccessOrExit(error = pskc.GenerateRandom());
-            IgnoreError(dataset.SetTlv(Tlv::kPskc, &pskc, sizeof(Pskc)));
+            IgnoreError(dataset.SetTlv(Tlv::kPskc, pskc));
         }
     }
 
@@ -522,7 +520,7 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Messa
     }
 
     // add delay timer tlv
-    IgnoreError(dataset.SetUint32Tlv(Tlv::kDelayTimer, Get<Leader>().GetDelayTimerMinimal()));
+    IgnoreError(dataset.SetTlv(Tlv::kDelayTimer, Get<Leader>().GetDelayTimerMinimal()));
 
     // add pending timestamp tlv
     dataset.SetTimestamp(aTimestamp);

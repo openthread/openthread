@@ -234,28 +234,21 @@ public:
     otError SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength);
 
     /**
-     * This method sets a TLV with a given TLV Type and a `uint16_t` Value.
+     * This template method sets a TLV with a given TLV Type and Value.
+     *
+     * @tparam ValueType    The type of TLV's Value.
      *
      * @param[in] aType     The TLV Type.
-     * @param[in] aValue    The TLV value (as `uint16_t`).
+     * @param[in] aValue    The TLV Value (of type `ValueType`).
      *
      * @retval OT_ERROR_NONE     Successfully set the TLV.
      * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
      *
      */
-    otError SetUint16Tlv(Tlv::Type aType, uint16_t aValue);
-
-    /**
-     * This method sets a TLV with a given TLV Type and a `uint32_t` Value.
-     *
-     * @param[in] aType     The TLV Type.
-     * @param[in] aValue    The TLV value (as `uint32_t`).
-     *
-     * @retval OT_ERROR_NONE     Successfully set the TLV.
-     * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
-     *
-     */
-    otError SetUint32Tlv(Tlv::Type aType, uint32_t aValue);
+    template <typename ValueType> otError SetTlv(Tlv::Type aType, const ValueType &aValue)
+    {
+        return SetTlv(aType, &aValue, sizeof(ValueType));
+    }
 
     /**
      * This method sets the Dataset using TLVs stored in a message buffer.
@@ -391,6 +384,40 @@ private:
     uint16_t  mLength;         ///< The number of valid bytes in @var mTlvs
     Type      mType;           ///< Active or Pending
 };
+
+/**
+ * This is a template specialization of `SetTlv<ValueType>` with a `uint16_t` value type.
+ *
+ * @param[in] aType     The TLV Type.
+ * @param[in] aValue    The TLV value (as `uint16_t`).
+ *
+ * @retval OT_ERROR_NONE     Successfully set the TLV.
+ * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
+ *
+ */
+template <> inline otError Dataset::SetTlv(Tlv::Type aType, const uint16_t &aValue)
+{
+    uint16_t value = Encoding::BigEndian::HostSwap16(aValue);
+
+    return SetTlv(aType, &value, sizeof(uint16_t));
+}
+
+/**
+ * This is a template specialization of `SetTlv<ValueType>` with a `uint32_t` value type
+ *
+ * @param[in] aType     The TLV Type.
+ * @param[in] aValue    The TLV value (as `uint32_t`).
+ *
+ * @retval OT_ERROR_NONE     Successfully set the TLV.
+ * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
+ *
+ */
+template <> inline otError Dataset::SetTlv(Tlv::Type aType, const uint32_t &aValue)
+{
+    uint32_t value = Encoding::BigEndian::HostSwap32(aValue);
+
+    return SetTlv(aType, &value, sizeof(uint32_t));
+}
 
 } // namespace MeshCoP
 } // namespace ot
