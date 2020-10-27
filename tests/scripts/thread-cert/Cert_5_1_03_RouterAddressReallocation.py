@@ -179,6 +179,7 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
                               VERSION_TLV
                               } <= set(p.mle.tlv.type) and\
                    p.mle.tlv.scan_mask.r == 1 and\
+                   p.mle.tlv.scan_mask.e == 0 and\
                    p.ipv6.hlim == 255).\
             must_next()
 
@@ -235,7 +236,8 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
             filter_wpan_dst16(_pkt.wpan.src16).\
             filter_coap_ack(ADDR_SOL_URI).\
             filter(lambda p: p.thread_address.tlv.rloc16 ==
-                   _pkt_as.thread_address.tlv.rloc16).\
+                   _pkt_as.thread_address.tlv.rloc16 and\
+                   p.thread_address.tlv.status == 0).\
             must_next()
 
 
