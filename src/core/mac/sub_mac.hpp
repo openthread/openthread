@@ -539,12 +539,13 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    /**
-     * The SSED sample window in units of 10 symbols.
-     *
-     */
     enum : uint32_t{
-        kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols,
+        kCslSampleWindow =
+            OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols, ///< The SSED sample window in units of 10 symbols.
+        kCslReceiveTimeAhead =
+            OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD, ///< CSL receivers would wake up `kCslReceiveTimeAhead` earlier
+                                                      ///< than expected sample window. The time is in unit of 10
+                                                      ///< symbols.
     };
 
     /**

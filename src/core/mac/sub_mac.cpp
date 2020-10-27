@@ -44,6 +44,7 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
+#include "common/time.hpp"
 
 namespace ot {
 namespace Mac {
@@ -349,25 +350,19 @@ void SubMac::StartCsmaBackoff(void)
     uint32_t backoffExponent = kMinBE + mTransmitRetries + mCsmaBackoffs;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    if (mTransmitFrame.mInfo.mTxInfo.mPeriod != 0)
+    if (mTransmitFrame.mInfo.mTxInfo.mTxDelay != 0)
     {
         SetState(kStateCslTransmit);
 
         if (ShouldHandleTransmitTargetTime())
         {
-            uint32_t phaseNow =
-                (otPlatRadioGetNow(&GetInstance()) / kUsPerTenSymbols) % mTransmitFrame.mInfo.mTxInfo.mPeriod;
-            uint32_t phaseDesired = mTransmitFrame.mInfo.mTxInfo.mPhase;
-
-            if (phaseNow < phaseDesired)
+            if (otPlatRadioGetNow(&GetInstance()) <
+                mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime + mTransmitFrame.mInfo.mTxInfo.mTxDelay)
             {
-                mTimer.Start((phaseDesired - phaseNow) * kUsPerTenSymbols);
+                mTimer.StartAt(Time(mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime),
+                               mTransmitFrame.mInfo.mTxInfo.mTxDelay);
             }
-            else if (phaseNow > phaseDesired)
-            {
-                mTimer.Start((phaseDesired + mTransmitFrame.mInfo.mTxInfo.mPeriod - phaseNow) * kUsPerTenSymbols);
-            }
-            else
+            else // Transmit without delay
             {
                 BeginTransmit();
             }
@@ -423,8 +418,6 @@ void SubMac::BeginTransmit(void)
     VerifyOrExit(mState == kStateCsmaBackoff);
 #endif
 
-    mTransmitFrame.SetCsmaCaEnabled(mTransmitFrame.mInfo.mTxInfo.mPeriod == 0);
-
     if ((mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX) == 0)
     {
         error = Get<Radio>().Receive(mTransmitFrame.GetChannel());
@@ -439,6 +432,13 @@ void SubMac::BeginTransmit(void)
     }
 
     error = Get<Radio>().Transmit(mTransmitFrame);
+    if (error == OT_ERROR_INVALID_STATE && mTransmitFrame.mInfo.mTxInfo.mTxDelay > 0)
+    {
+        // Platform `transmit_at` fails and we send the frame directly.
+        mTransmitFrame.mInfo.mTxInfo.mTxDelay         = 0;
+        mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime = 0;
+        error                                         = Get<Radio>().Transmit(mTransmitFrame);
+    }
     OT_ASSERT(error == OT_ERROR_NONE);
 
 exit:
@@ -997,7 +997,7 @@ void SubMac::HandleCslTimer(void)
     case kCslSample:
         mCslState = kCslSleep;
         // kUsPerTenSymbols: computing CSL Phase using floor division.
-        mCslTimer.StartAt(mCslSampleTime, mCslPeriod * kUsPerTenSymbols - kUsPerTenSymbols);
+        mCslTimer.StartAt(mCslSampleTime, (mCslPeriod - kCslReceiveTimeAhead) * kUsPerTenSymbols);
         if (mState == kStateCslSample)
         {
 #if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE

@@ -1310,9 +1310,22 @@ public:
      */
     otError GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    void SetTxPhase(uint16_t aPhase) { mInfo.mTxInfo.mPhase = aPhase; }
-    void SetTxPeriod(uint16_t aPeriod) { mInfo.mTxInfo.mPeriod = aPeriod; }
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    /**
+     * Set TX delay field for the frame.
+     *
+     * @param[in]    aTxDelay    The delay time for the TX frame.
+     *
+     */
+    void SetTxDelay(uint32_t aTxDelay) { mInfo.mTxInfo.mTxDelay = aTxDelay; }
+
+    /**
+     * Set TX delay base time field for the frame.
+     *
+     * @param[in]    aTxDelayBaseTime    The delay base time for the TX frame.
+     *
+     */
+    void SetTxDelayBaseTime(uint32_t aTxDelayBaseTime) { mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime; }
 #endif
 };
 

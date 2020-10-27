@@ -1086,8 +1086,10 @@ void Mac::BeginTransmit(void)
     sendFrame.SetIsARetransmission(false);
     sendFrame.SetIsSecurityProcessed(false);
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    sendFrame.SetTxPeriod(0);
+    sendFrame.SetTxDelay(0);
+    sendFrame.SetTxDelayBaseTime(0);
 #endif
+    sendFrame.SetCsmaCaEnabled(true); // Set to true by default, only set to `false` for CSL transmission
 
     switch (mOperation)
     {
@@ -2348,10 +2350,10 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
 
     child->SetCslPeriod(csl->GetPeriod());
     // Use ceiling to ensure the the time diff will be within kUsPerTenSymbols
-    child->SetCslPhase(((aFrame.GetTimestamp() + kUsPerTenSymbols - 1) / kUsPerTenSymbols + csl->GetPhase()) %
-                       csl->GetPeriod());
+    child->SetCslPhase(csl->GetPhase());
     child->SetCslSynchronized(true);
     child->SetCslLastHeard(TimerMilli::GetNow());
+    child->SetLastRxTimestamp(aFrame.GetTimestamp());
     otLogDebgMac("Timestamp=%u Sequence=%u CslPeriod=%hu CslPhase=%hu TransmitPhase=%hu",
                  static_cast<uint32_t>(aFrame.GetTimestamp()), aFrame.GetSequence(), csl->GetPeriod(), csl->GetPhase(),
                  child->GetCslPhase());
