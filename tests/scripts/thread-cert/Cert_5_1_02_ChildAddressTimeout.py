@@ -134,6 +134,7 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         MED_MLEID = pv.vars['MED_MLEID']
         SED = pv.vars['SED']
         SED_MLEID = pv.vars['SED_MLEID']
+        MM = pv.vars['MM_PORT']
 
         # Step 1: Verify topology is formed correctly
 
@@ -154,8 +155,8 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         #         address resolution by sending an Address Query Request
 
         pkts.filter_wpan_src64(LEADER).\
-            filter_RLARA().\
-            filter_coap_request(ADDR_QRY_URI).\
+            filter_RLARMA().\
+            filter_coap_request(ADDR_QRY_URI, port=MM).\
             filter(lambda p: p.thread_address.tlv.type == [NL_TARGET_EID_TLV] and\
                    p.thread_address.tlv.target_eid == MED_MLEID).\
             must_next()
@@ -170,10 +171,10 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         #         address resolution by sending an Address Query Request
 
         pkts.filter_wpan_src64(LEADER).\
-            filter_RLARA().\
+            filter_RLARMA().\
             filter(lambda p: p.thread_address.tlv.type == [NL_TARGET_EID_TLV] and\
                    p.thread_address.tlv.target_eid == SED_MLEID).\
-            filter_coap_request(ADDR_QRY_URI).\
+            filter_coap_request(ADDR_QRY_URI, port=MM).\
             must_next()
 
         # Step 6: Router MUST NOT respond with an Address Notification Message
