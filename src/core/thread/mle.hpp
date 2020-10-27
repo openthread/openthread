@@ -1514,12 +1514,13 @@ protected:
      * This method sends an MLE Link Probe message.
      *
      * @param[in]  aDestination  A reference to the IPv6 address of the destination.
-     * @param[in]  aSeriesId     The ID of the Series which the Probe message targets at.
+     * @param[in]  aSeriesId     The Series ID [1, 254] which the Probe message targets at.
      * @param[in]  aBuf          A pointer to the data payload.
      * @param[in]  aLength       The length of the data payload in Link Probe TLV, [0, 64].
      *
-     * @retval OT_ERROR_NONE     Successfully sent a Link Metrics Management Request.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate the MLE Link Metrics Management Request message.
+     * @retval OT_ERROR_NONE          Successfully sent a Link Metrics Management Request.
+     * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Link Metrics Management Request message.
+     * @retval OT_ERROR_INVALID_ARGS  Series ID is not a valid value, not within range [1, 254].
      *
      */
     otError SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t *aBuf, uint8_t aLength);

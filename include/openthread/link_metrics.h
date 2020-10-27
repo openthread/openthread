@@ -89,7 +89,7 @@ typedef struct otLinkMetricsSeriesFlags
     bool mLinkProbe : 1;      ///< MLE Link Probe.
     bool mMacData : 1;        ///< MAC Data frame.
     bool mMacDataRequest : 1; ///< MAC Data Request.
-    bool mMacAck : 1;         ///< Mac Ack.
+    bool mMacAck : 1;         ///< MAC Ack.
 } otLinkMetricsSeriesFlags;
 
 /**
@@ -161,7 +161,7 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
  * @param[in] aSeriesFlags       A pointer to the Series Flags that specifies which frames are to be accounted. The
  * pointer MUST NOT be `nullptr`.
  * @param[in] aLinkMetricsFlags  A pointer to flags specifying what metrics to query. Should be `NULL` when
- * `aSeriesFlags` is `0`.
+ * `aSeriesFlags` is `NULL`.
  *
  * @retval OT_ERROR_NONE          Successfully sent a Link Metrics Management Request message.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Link Metrics Management Request message.
@@ -181,8 +181,8 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                   
  *
  * @param[in] aInstance       A pointer to an OpenThread instance.
  * @param[in] aDestination    A pointer to the destination address.
- * @param[in] aSeriesId       The Series ID which the Probe message aims at.  * @param[in] aLength         The length of
- * the data payload in Link Probe TLV, [0, 64] (per Thread 1.2 spec, 4.4.37).
+ * @param[in] aSeriesId       The Series ID [1, 254] which the Probe message aims at.
+ * @param[in] aLength         The length of the data payload in Link Probe TLV, [0, 64] (per Thread 1.2 spec, 4.4.37).
  *
  * @retval OT_ERROR_NONE          Successfully sent a Link Probe message.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Link Probe message.

@@ -2460,7 +2460,7 @@ otError Mle::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, 
 
     SuccessOrExit(error = message->Append(tlv));
     SuccessOrExit(error = message->Append(aSeriesId));
-    SuccessOrExit(error = message->Append(aBuf));
+    SuccessOrExit(error = message->AppendBytes(aBuf, aLength));
 
     SuccessOrExit(error = SendMessage(*message, aDestination));
 exit:

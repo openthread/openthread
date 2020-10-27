@@ -178,11 +178,6 @@ LinkMetricsSeriesInfo *Neighbor::GetForwardTrackingSeriesInfo(const uint8_t &aSe
     return mLinkMetricsSeriesInfoList.FindMatching(aSeriesId, prev);
 }
 
-LinkedList<LinkMetricsSeriesInfo> &Neighbor::GetForwardTrackingSeriesInfoList(void)
-{
-    return mLinkMetricsSeriesInfoList;
-}
-
 void Neighbor::AddForwardTrackingSeriesInfo(LinkMetricsSeriesInfo &aLinkMetricsSeriesInfo)
 {
     mLinkMetricsSeriesInfoList.Push(aLinkMetricsSeriesInfo);
@@ -192,7 +187,16 @@ LinkMetricsSeriesInfo *Neighbor::RemoveForwardTrackingSeriesInfo(const uint8_t &
 {
     return mLinkMetricsSeriesInfoList.RemoveMatching(aSeriesId);
 }
-#endif
+
+void Neighbor::RemoveAllForwardTrackingSeriesInfo(void)
+{
+    while (!mLinkMetricsSeriesInfoList.IsEmpty())
+    {
+        LinkMetricsSeriesInfo *seriesInfo = mLinkMetricsSeriesInfoList.Pop();
+        Get<LinkMetrics>().mLinkMetricsSeriesInfoPool.Free(*seriesInfo);
+    }
+}
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 void Child::Info::SetFrom(const Child &aChild)
 {

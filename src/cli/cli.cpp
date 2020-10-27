@@ -2054,19 +2054,19 @@ otError Interpreter::ParseLinkMetricsFlags(otLinkMetrics &aLinkMetrics, char *aF
         switch (*arg)
         {
         case 'p':
-            aLinkMetrics.mPduCount = 1;
+            aLinkMetrics.mPduCount = true;
             break;
 
         case 'q':
-            aLinkMetrics.mLqi = 1;
+            aLinkMetrics.mLqi = true;
             break;
 
         case 'm':
-            aLinkMetrics.mLinkMargin = 1;
+            aLinkMetrics.mLinkMargin = true;
             break;
 
         case 'r':
-            aLinkMetrics.mRssi = 1;
+            aLinkMetrics.mRssi = true;
             break;
 
         default:
@@ -2122,7 +2122,7 @@ otError Interpreter::ProcessLinkMetricsMgmt(uint8_t aArgsLength, char *aArgs[])
                 break;
 
             case 'X':
-                VerifyOrExit(arg == aArgs[3] && *(arg + 1) == '\0',
+                VerifyOrExit(arg == aArgs[3] && *(arg + 1) == '\0' && aArgsLength == 4,
                              error = OT_ERROR_INVALID_ARGS); // Ensure the flags only contain 'X'
                 clear = true;
                 break;

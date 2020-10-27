@@ -107,7 +107,7 @@ public:
         kLinkMetricsQuery      = 87, ///< Link Metrics Query TLV
         kLinkMetricsManagement = 88, ///< Link Metrics Management TLV
         kLinkMetricsReport     = 89, ///< Link Metrics Report TLV
-        kLinkProbe             = 90, /// Link Probe TLV
+        kLinkProbe             = 90, ///< Link Probe TLV
 
         /**
          * Applicable/Required only when time synchronization service

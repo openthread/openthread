@@ -3371,6 +3371,9 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 
     aNeighbor.GetLinkInfo().Clear();
     aNeighbor.SetState(Neighbor::kStateInvalid);
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    aNeighbor.RemoveAllForwardTrackingSeriesInfo();
+#endif
 
 exit:
     return;

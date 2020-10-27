@@ -631,7 +631,7 @@ public:
     /**
      * This method removes a specific LinkMetricsSeriesInfo by Series ID.
      *
-     * @param[in] aSeriesId    A reference to the Series ID.
+     * @param[in] aSeriesId    A reference to the Series ID to remove.
      *
      * @returns The pointer to the LinkMetricsSeriesInfo. `nullptr` if not found.
      *
@@ -639,12 +639,11 @@ public:
     LinkMetricsSeriesInfo *RemoveForwardTrackingSeriesInfo(const uint8_t &aSeriesId);
 
     /**
-     * This method returns the entire list of LinkMetricsSeriesInfo that is maintained for this neighbor.
-     *
-     * @returns A reference th the entire list.
+     * This method removes all the Series and return the data structures to the Pool
      *
      */
-    LinkedList<LinkMetricsSeriesInfo> &GetForwardTrackingSeriesInfoList(void);
+    void RemoveAllForwardTrackingSeriesInfo(void);
+
 #endif
 protected:
     /**

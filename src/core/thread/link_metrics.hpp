@@ -69,7 +69,7 @@ namespace ot {
  * when a new Series comes, and free it when a Series finishes.
  *
  * This class inherits `LinkedListEntry` and each `Neighbor` has a list of `LinkMetricsSeriesInfo` so that the Subject
- * could track all Series for each Initiator.
+ * could track per Series initiated by neighbors as long as it has available resources.
  *
  */
 class LinkMetricsSeriesInfo : public LinkedListEntry<LinkMetricsSeriesInfo>
@@ -164,6 +164,8 @@ private:
 
 class LinkMetrics : public InstanceLocator, private NonCopyable
 {
+    friend class Neighbor;
+
 public:
     /**
      * This constructor initializes an instance of the LinkMetrics class.
