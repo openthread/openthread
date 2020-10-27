@@ -120,7 +120,7 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
 
         self.nodes[MED].stop()
         self.nodes[SED].stop()
-        self.simulator.go(config.DEFAULT_CHILD_TIMEOUT)
+        self.simulator.go(config.DEFAULT_CHILD_TIMEOUT + 5)
         self.assertFalse(self.nodes[LEADER].ping(med_mleid))
         self.assertFalse(self.nodes[LEADER].ping(sed_mleid))
 
