@@ -148,7 +148,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        gcc_ver: [5, 6, 7, 8, 9]
+        gcc_ver: [5, 6, 7, 8, 9, 10]
     env:
       CC: gcc-${{ matrix.gcc_ver }}
       CXX: g++-${{ matrix.gcc_ver }}
