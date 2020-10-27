@@ -59,6 +59,7 @@ ROUTER2 = 3
 
 class Cert_5_1_04_RouterAddressReallocation(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
+    SUPPORT_NCP = False
 
     TOPOLOGY = {
         LEADER: {
@@ -110,6 +111,7 @@ class Cert_5_1_04_RouterAddressReallocation(thread_cert.TestCase):
         LEADER = pv.vars['LEADER']
         ROUTER_1 = pv.vars['ROUTER_1']
         ROUTER_2 = pv.vars['ROUTER_2']
+        MM = pv.vars['MM_PORT']
 
         # Step 3: Verify topology is formed correctly.
 
@@ -126,7 +128,7 @@ class Cert_5_1_04_RouterAddressReallocation(thread_cert.TestCase):
 
         pv.verify_attached('ROUTER_2')
         _pkt_as = pkts.filter_wpan_src64(LEADER).\
-            filter_coap_ack(ADDR_SOL_URI).\
+            filter_coap_ack(ADDR_SOL_URI, port=MM).\
             must_next()
 
         # Step 5: Router_1 MUST attempt to reattach to its original partition
@@ -250,7 +252,7 @@ class Cert_5_1_04_RouterAddressReallocation(thread_cert.TestCase):
         #              - Router Mask TLV
 
         pkts.filter_wpan_src64(ROUTER_1).\
-            filter_coap_ack(ADDR_SOL_URI).\
+            filter_coap_ack(ADDR_SOL_URI, port=MM).\
             filter(lambda p: {
                               NL_STATUS_TLV,
                               NL_RLOC16_TLV,
