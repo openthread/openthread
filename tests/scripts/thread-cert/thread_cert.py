@@ -208,6 +208,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             if 'max_children' in params:
                 self.nodes[i].set_max_children(params['max_children'])
 
+            if 'bbr_registration_jitter' in params:
+                self.nodes[i].set_bbr_registration_jitter(params['bbr_registration_jitter'])
+
         # we have to add allowlist after nodes are all created
         for i, params in initial_topology.items():
             allowlist = params['allowlist']
@@ -364,7 +367,6 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 'interface': config.BACKBONE_DOCKER_NETWORK_NAME,
                 'prefix': config.BACKBONE_PREFIX,
             },
-            'otbr_commit': config.OTBR_COMMIT,
             'domain_prefix': config.DOMAIN_PREFIX,
             'env': {
                 'PORT_OFFSET': config.PORT_OFFSET,

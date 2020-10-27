@@ -71,7 +71,6 @@ BACKBONE_IFNAME = 'eth0'
 
 OTBR_DOCKER_IMAGE = os.getenv('OTBR_DOCKER_IMAGE', 'otbr-ot12-backbone-ci')
 OTBR_DOCKER_NAME_PREFIX = f'otbr_{PORT_OFFSET}_'
-OTBR_COMMIT = os.getenv('OTBR_COMMIT', 'master')
 
 ALL_NETWORK_BBRS_ADDRESS = 'ff32:40:fd00:db8:0:0:0:3'
 

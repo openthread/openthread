@@ -436,8 +436,10 @@ class PacketFilter(object):
         assert isinstance(addr, (str, ExtAddr)), addr
         return self.filter(lambda p: p.wpan.dst64 == addr, **kwargs)
 
-    def filter_ping_request(self, **kwargs):
-        return self.filter(lambda p: p.icmpv6.is_ping_request, **kwargs)
+    def filter_ping_request(self, identifier=None, **kwargs):
+        return self.filter(
+            lambda p: p.icmpv6.is_ping_request and (identifier is None or p.icmpv6.echo.identifier == identifier),
+            **kwargs)
 
     def filter_ping_reply(self, **kwargs):
         identifier = kwargs.pop('identifier', None)
@@ -474,6 +476,9 @@ class PacketFilter(object):
 
     def filter_LLARMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS, **kwargs)
+
+    def filter_AMPLFMA(self, **kwargs):
+        return self.filter(lambda p: p.ipv6.dst == consts.ALL_MPL_FORWARDERS_MA, **kwargs)
 
     def filter_mle(self, **kwargs):
         return self.filter(attrgetter('mle'), **kwargs)

@@ -271,8 +271,8 @@ do_build_otbr_docker()
     echo "Building OTBR Docker ..."
     local otdir
     local otbrdir
-    local otbr_options="-DOTBR_BACKBONE_ROUTER=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_REFERENCE_DEVICE=ON -DOT_COVERAGE=ON"
-    local otbr_commit=${OTBR_COMMIT:-master}
+    local otbr_options="-DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON"
+    local otbr_commit=${OTBR_COMMIT:-ce1cc3f9141571505bc9a8b705d2eb775849c92c} # ot-br-posix #532
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
@@ -289,6 +289,7 @@ do_build_otbr_docker()
         cp -r "${otdir}" third_party/openthread/repo
         rm -rf .git
         docker build -t "${otbr_docker_image}" -f etc/docker/Dockerfile . \
+            --build-arg BACKBONE_ROUTER=1 \
             --build-arg REFERENCE_DEVICE=1 \
             --build-arg OT_BACKBONE_CI=1 \
             --build-arg NAT64=0 \
