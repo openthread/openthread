@@ -3701,7 +3701,7 @@ otError Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[])
 
         ports = otIp6GetUnsecurePorts(mInstance, &numPorts);
 
-        if (ports != NULL)
+        if (ports != nullptr)
         {
             for (uint8_t i = 0; i < numPorts; i++)
             {
