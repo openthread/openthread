@@ -220,7 +220,7 @@ otError Dataset::SetFrom(const otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsDelayPresent)
     {
-        IgnoreError(SetUint32Tlv(Tlv::kDelayTimer, aDataset.mDelay));
+        IgnoreError(SetTlv(Tlv::kDelayTimer, aDataset.mDelay));
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
@@ -241,17 +241,17 @@ otError Dataset::SetFrom(const otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsExtendedPanIdPresent)
     {
-        IgnoreError(SetTlv(Tlv::kExtendedPanId, &aDataset.mExtendedPanId, sizeof(Mac::ExtendedPanId)));
+        IgnoreError(SetTlv(Tlv::kExtendedPanId, aDataset.mExtendedPanId));
     }
 
     if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
     {
-        IgnoreError(SetTlv(Tlv::kMeshLocalPrefix, &aDataset.mMeshLocalPrefix, sizeof(Mle::MeshLocalPrefix)));
+        IgnoreError(SetTlv(Tlv::kMeshLocalPrefix, aDataset.mMeshLocalPrefix));
     }
 
     if (aDataset.mComponents.mIsMasterKeyPresent)
     {
-        IgnoreError(SetTlv(Tlv::kNetworkMasterKey, &aDataset.mMasterKey, sizeof(MasterKey)));
+        IgnoreError(SetTlv(Tlv::kNetworkMasterKey, aDataset.mMasterKey));
     }
 
     if (aDataset.mComponents.mIsNetworkNamePresent)
@@ -263,12 +263,12 @@ otError Dataset::SetFrom(const otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsPanIdPresent)
     {
-        IgnoreError(SetUint16Tlv(Tlv::kPanId, aDataset.mPanId));
+        IgnoreError(SetTlv(Tlv::kPanId, aDataset.mPanId));
     }
 
     if (aDataset.mComponents.mIsPskcPresent)
     {
-        IgnoreError(SetTlv(Tlv::kPskc, &aDataset.mPskc, sizeof(Pskc)));
+        IgnoreError(SetTlv(Tlv::kPskc, aDataset.mPskc));
     }
 
     if (aDataset.mComponents.mIsSecurityPolicyPresent)
@@ -308,8 +308,7 @@ exit:
 
 void Dataset::SetTimestamp(const Timestamp &aTimestamp)
 {
-    IgnoreError(
-        SetTlv((mType == kActive) ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp, &aTimestamp, sizeof(Timestamp)));
+    IgnoreError(SetTlv((mType == kActive) ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp, aTimestamp));
 }
 
 otError Dataset::SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength)
@@ -348,20 +347,6 @@ exit:
 otError Dataset::SetTlv(const Tlv &aTlv)
 {
     return SetTlv(aTlv.GetType(), aTlv.GetValue(), aTlv.GetLength());
-}
-
-otError Dataset::SetUint16Tlv(Tlv::Type aType, uint16_t aValue)
-{
-    uint16_t value16 = HostSwap16(aValue);
-
-    return SetTlv(aType, &value16, sizeof(uint16_t));
-}
-
-otError Dataset::SetUint32Tlv(Tlv::Type aType, uint32_t aValue)
-{
-    uint32_t value32 = HostSwap32(aValue);
-
-    return SetTlv(aType, &value32, sizeof(uint32_t));
 }
 
 otError Dataset::Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
