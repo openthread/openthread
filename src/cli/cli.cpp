@@ -4641,6 +4641,18 @@ exit:
     return;
 }
 
+extern "C" void otCliPlatLogLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogLine)
+{
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+
+    VerifyOrExit(Interpreter::IsInitialized());
+    Interpreter::GetInterpreter().OutputLine(aLogLine);
+
+exit:
+    return;
+}
+
 } // namespace Cli
 } // namespace ot
 

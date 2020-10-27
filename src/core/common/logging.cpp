@@ -390,6 +390,11 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 }
 #endif
 
+OT_TOOL_WEAK void otPlatLogLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogLine)
+{
+    otPlatLog(aLogLevel, aLogRegion, "%s", aLogLine);
+}
+
 #ifdef __cplusplus
 }
 #endif
