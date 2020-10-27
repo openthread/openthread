@@ -32,7 +32,7 @@ import unittest
 import config
 import mle
 import thread_cert
-from pktverify.consts import MLE_CHILD_ID_RESPONSE, ADDR_QRY_URI
+from pktverify.consts import MLE_CHILD_ID_RESPONSE, ADDR_QRY_URI, ADDR_NTF_URI, NL_TARGET_EID_TLV
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -113,6 +113,8 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED].get_state(), 'child')
 
+        self.collect_ipaddrs()
+
         med_mleid = self.nodes[MED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         sed_mleid = self.nodes[SED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
 
@@ -129,7 +131,9 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         LEADER = pv.vars['LEADER']
         ROUTER = pv.vars['ROUTER']
         MED = pv.vars['MED']
+        MED_MLEID = pv.vars['MED_MLEID']
         SED = pv.vars['SED']
+        SED_MLEID = pv.vars['SED_MLEID']
 
         # Step 1: Verify topology is formed correctly
 
@@ -152,12 +156,14 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         pkts.filter_wpan_src64(LEADER).\
             filter_RLARA().\
             filter_coap_request(ADDR_QRY_URI).\
+            filter(lambda p: p.thread_address.tlv.type == [NL_TARGET_EID_TLV] and\
+                   p.thread_address.tlv.target_eid == MED_MLEID).\
             must_next()
 
         # Step 4: Router MUST NOT respond with an Address Notification Message
 
         pkts.filter_wpan_src64(ROUTER).\
-            filter_coap_ack(ADDR_QRY_URI).\
+            filter_coap_request(ADDR_NTF_URI).\
             must_not_next()
 
         # Step 5: The Leader sends an ICMPv6 Echo Request to SED and attempts to perform
@@ -165,13 +171,15 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
 
         pkts.filter_wpan_src64(LEADER).\
             filter_RLARA().\
+            filter(lambda p: p.thread_address.tlv.type == [NL_TARGET_EID_TLV] and\
+                   p.thread_address.tlv.target_eid == SED_MLEID).\
             filter_coap_request(ADDR_QRY_URI).\
             must_next()
 
         # Step 6: Router MUST NOT respond with an Address Notification Message
 
         pkts.filter_wpan_src64(ROUTER).\
-            filter_coap_ack(ADDR_QRY_URI).\
+            filter_coap_request(ADDR_NTF_URI).\
             must_not_next()
 
 
