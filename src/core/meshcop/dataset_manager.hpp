@@ -334,15 +334,16 @@ private:
                                    otError              aError);
     void        HandleCoapResponse(void);
 
-    bool IsActiveDataset(void) const { return GetType() == Dataset::kActive; }
-    bool IsPendingDataset(void) const { return GetType() == Dataset::kPending; }
-    void SignalDatasetChange(void) const;
-    void HandleDatasetUpdated(void);
-    void SendSet(void);
-    void SendGetResponse(const Coap::Message &   aRequest,
-                         const Ip6::MessageInfo &aMessageInfo,
-                         uint8_t *               aTlvs,
-                         uint8_t                 aLength) const;
+    bool    IsActiveDataset(void) const { return GetType() == Dataset::kActive; }
+    bool    IsPendingDataset(void) const { return GetType() == Dataset::kPending; }
+    void    SignalDatasetChange(void) const;
+    void    HandleDatasetUpdated(void);
+    otError AppendDatasetToMessage(const otOperationalDataset &aDataset, Message &aMessage) const;
+    void    SendSet(void);
+    void    SendGetResponse(const Coap::Message &   aRequest,
+                            const Ip6::MessageInfo &aMessageInfo,
+                            uint8_t *               aTlvs,
+                            uint8_t                 aLength) const;
 
 #if OPENTHREAD_FTD
     void SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
