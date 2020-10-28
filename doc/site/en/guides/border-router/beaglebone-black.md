@@ -106,7 +106,7 @@ Once logged back into the BeagleBone, install Network Manager with the command
 
 ```
 $ sudo systemctl disable connman
-$ sudo systemctl enable netowrk-manager
+$ sudo systemctl enable network-manager
 ```
 
 If we were to `stop` connman directly here it would break the SSH session
