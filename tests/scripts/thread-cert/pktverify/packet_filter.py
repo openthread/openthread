@@ -468,6 +468,9 @@ class PacketFilter(object):
         assert isinstance(dst_addr, (str, Ipv6Addr))
         return self.filter(lambda p: p.ipv6.src == src_addr and p.ipv6.dst == dst_addr, **kwargs)
 
+    def filter_RLARMA(self, **kwargs):
+        return self.filter(lambda p: p.ipv6.dst == consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS, **kwargs)
+
     def filter_LLANMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS, **kwargs)
 

@@ -500,6 +500,7 @@ _LAYER_FIELDS = {
     'thread_address.tlv.len': _list(_auto),
     'thread_address.tlv.type': _list(_auto),
     'thread_address.tlv.status': _auto,
+    'thread_address.tlv.target_eid': _ipv6_addr,
     'thread_address.tlv.ext_mac_addr': _ext_addr,
     'thread_address.tlv.router_mask_id_seq': _auto,
     'thread_address.tlv.router_mask_assigned': _bytes,

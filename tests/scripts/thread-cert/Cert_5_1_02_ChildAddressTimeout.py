@@ -32,29 +32,54 @@ import unittest
 import config
 import mle
 import thread_cert
+from pktverify.consts import MLE_CHILD_ID_RESPONSE, ADDR_QRY_URI, ADDR_NTF_URI, NL_TARGET_EID_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER = 2
-ED = 3
+MED = 3
 SED = 4
 
-MTDS = [ED, SED]
+MTDS = [MED, SED]
+
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of the test case is to verify that when the timer reaches
+# the value of the Timeout TLV sent by the Child, the Parent stops
+# responding to Address Query on the Child's behalf
+#
+# Test Topology:
+# --------------
+# Leader
+#    |
+# Router
+#   / \
+# MED SED
+#
+# DUT Types:
+# ----------
+#  Router
 
 
 class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
+            'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'allowlist': [LEADER, ED, SED]
+            'allowlist': [LEADER, MED, SED]
         },
-        ED: {
+        MED: {
+            'name': 'MED',
             'is_mtd': True,
             'mode': 'rn',
             'panid': 0xface,
@@ -62,6 +87,7 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
             'allowlist': [ROUTER]
         },
         SED: {
+            'name': 'SED',
             'is_mtd': True,
             'mode': 'n',
             'panid': 0xface,
@@ -79,79 +105,83 @@ class Cert_5_1_02_ChildAddressTimeout(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
-        self.nodes[ED].start()
+        self.nodes[MED].start()
         self.simulator.go(5)
-        self.assertEqual(self.nodes[ED].get_state(), 'child')
+        self.assertEqual(self.nodes[MED].get_state(), 'child')
 
         self.nodes[SED].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED].get_state(), 'child')
 
-        ed_addrs = self.nodes[ED].get_addrs()
-        sed_addrs = self.nodes[SED].get_addrs()
+        self.collect_ipaddrs()
 
-        self.nodes[ED].stop()
-        self.simulator.go(5)
-        for addr in ed_addrs:
-            if addr[0:4] != 'fe80':
-                self.assertFalse(self.nodes[LEADER].ping(addr))
+        med_mleid = self.nodes[MED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        sed_mleid = self.nodes[SED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
 
+        self.nodes[MED].stop()
         self.nodes[SED].stop()
-        self.simulator.go(5)
-        for addr in sed_addrs:
-            if addr[0:4] != 'fe80':
-                self.assertFalse(self.nodes[LEADER].ping(addr))
+        self.simulator.go(config.DEFAULT_CHILD_TIMEOUT + 5)
+        self.assertFalse(self.nodes[LEADER].ping(med_mleid))
+        self.assertFalse(self.nodes[LEADER].ping(sed_mleid))
 
-        leader_messages = self.simulator.get_messages_sent_by(LEADER)
-        router1_messages = self.simulator.get_messages_sent_by(ROUTER)
-        ed_messages = self.simulator.get_messages_sent_by(ED)
-        sed_messages = self.simulator.get_messages_sent_by(SED)
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
 
-        # 1 - All
-        leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        LEADER = pv.vars['LEADER']
+        ROUTER = pv.vars['ROUTER']
+        MED = pv.vars['MED']
+        MED_MLEID = pv.vars['MED_MLEID']
+        SED = pv.vars['SED']
+        SED_MLEID = pv.vars['SED_MLEID']
+        MM = pv.vars['MM_PORT']
 
-        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        # Step 1: Verify topology is formed correctly
 
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        pv.verify_attached('ROUTER')
 
-        msg = router1_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/as")
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_wpan_dst64(MED).\
+            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
+            must_next()
 
-        msg = leader_messages.next_coap_message("2.04")
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_wpan_dst64(SED).\
+            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
+            must_next()
 
-        router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        # Step 2: Power off both devices and allow for the keep-alive timeout to expire
+        # Step 3: The Leader sends an ICMPv6 Echo Request to MED and attempts to perform
+        #         address resolution by sending an Address Query Request
 
-        ed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
-        ed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        pkts.filter_wpan_src64(LEADER).\
+            filter_RLARMA().\
+            filter_coap_request(ADDR_QRY_URI, port=MM).\
+            filter(lambda p: p.thread_address.tlv.type == [NL_TARGET_EID_TLV] and\
+                   p.thread_address.tlv.target_eid == MED_MLEID).\
+            must_next()
 
-        sed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
-        sed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        # Step 4: Router MUST NOT respond with an Address Notification Message
 
-        # 3 - Leader
-        msg = leader_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/aq")
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_coap_request(ADDR_NTF_URI).\
+            must_not_next()
 
-        msg = leader_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/aq")
+        # Step 5: The Leader sends an ICMPv6 Echo Request to SED and attempts to perform
+        #         address resolution by sending an Address Query Request
 
-        # 4 - Router1
-        msg = router1_messages.does_not_contain_coap_message()
+        pkts.filter_wpan_src64(LEADER).\
+            filter_RLARMA().\
+            filter(lambda p: p.thread_address.tlv.type == [NL_TARGET_EID_TLV] and\
+                   p.thread_address.tlv.target_eid == SED_MLEID).\
+            filter_coap_request(ADDR_QRY_URI, port=MM).\
+            must_next()
 
-        # 6 - Leader
-        msg = leader_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/aq")
+        # Step 6: Router MUST NOT respond with an Address Notification Message
 
-        msg = leader_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/aq")
-
-        # 7 - Router1
-        msg = router1_messages.does_not_contain_coap_message()
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_coap_request(ADDR_NTF_URI).\
+            must_not_next()
 
 
 if __name__ == '__main__':
