@@ -329,6 +329,9 @@ static uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
 #endif
 
 #if defined(__linux__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
+
 static void UpdateUnicastLinux(const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
 {
     struct rtattr *rta;
@@ -389,6 +392,8 @@ static void UpdateUnicastLinux(const otIp6AddressInfo &aAddressInfo, bool aIsAdd
                       Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
     }
 }
+
+#pragma GCC diagnostic pop
 #endif // defined(__linux__)
 
 static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
@@ -1053,14 +1058,23 @@ static void processNetlinkEvent(otInstance *aInstance)
 {
     const size_t kMaxNetifEvent = 8192;
     ssize_t      length;
-    char         buffer[kMaxNetifEvent];
 
-    length = recv(sNetlinkFd, buffer, sizeof(buffer), 0);
+    union
+    {
+#if defined(__linux__)
+        nlmsghdr nlMsg;
+#else
+        rt_msghdr rtMsg;
+#endif
+        char buffer[kMaxNetifEvent];
+    } msgBuffer;
+
+    length = recv(sNetlinkFd, msgBuffer.buffer, sizeof(msgBuffer.buffer), 0);
 
     VerifyOrExit(length > 0);
 
 #if defined(__linux__)
-    for (struct nlmsghdr *msg = reinterpret_cast<struct nlmsghdr *>(buffer); NLMSG_OK(msg, static_cast<size_t>(length));
+    for (struct nlmsghdr *msg = &msgBuffer.nlMsg; NLMSG_OK(msg, static_cast<size_t>(length));
          msg                  = NLMSG_NEXT(msg, length))
     {
 #else
@@ -1068,7 +1082,7 @@ static void processNetlinkEvent(otInstance *aInstance)
         // BSD sends one message per read to routing socket (see route.c, monitor command)
         struct rt_msghdr *msg;
 
-        msg = (struct rt_msghdr *)buffer;
+        msg = &msgBuffer.rtMsg;
 
 #define nlmsg_type rtm_type
 
@@ -1210,7 +1224,10 @@ static void processMLDEvent(otInstance *aInstance)
         if (ifAddr->ifa_addr != nullptr && ifAddr->ifa_addr->sa_family == AF_INET6 &&
             strncmp(gNetifName, ifAddr->ifa_name, IFNAMSIZ) == 0)
         {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
             struct sockaddr_in6 *addr6 = reinterpret_cast<struct sockaddr_in6 *>(ifAddr->ifa_addr);
+#pragma GCC diagnostic pop
 
             if (memcmp(&addr6->sin6_addr, &srcAddr.sin6_addr, sizeof(in6_addr)) == 0)
             {
