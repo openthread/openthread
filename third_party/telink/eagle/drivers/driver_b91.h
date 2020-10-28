@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file	watchdog.h
+ * @file	driver_b91.h
  *
  * @brief	This is the header file for B91
  *
@@ -43,63 +43,42 @@
  *          SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *         
  *******************************************************************************************************/
-#ifndef WATCHDOG_H_
-#define WATCHDOG_H_
+#pragma once
+
+
+
+
 #include "analog.h"
+#include "dma.h"
 #include "gpio.h"
+#include "i2c.h"
+#include "spi.h"
+#include "pwm.h"
+#include "pm.h"
+#include "timer.h"
+#include "compiler.h"
+#include "flash.h"
 
-/**
- * @brief     start watchdog.
- * @return    none
- */
-static inline void wd_start(void){
+#include "watchdog.h"
+#include "putchar.h"
+#include "nds_intrinsic.h"
 
-	BM_SET(reg_tmr_ctrl2, FLD_TMR_WD_EN);
-}
+#include "core.h"
+#include "trng.h"
 
+#include "sys.h"
 
-/**
- * @brief     stop watchdog. 
- * @return    none
- */
-static inline void wd_stop(void){
-	BM_CLR(reg_tmr_ctrl2, FLD_TMR_WD_EN);
-}
+#include "plic.h"
+#include "uart.h"
+#include "stimer.h"
 
 
-/**
- * @brief     clear watchdog.
- * @return    none
- */
-static inline void wd_clear(void)
-{
-	reg_tmr_sta = FLD_TMR_STA_WD|FLD_TMR_WD_CNT_CLR;
+#include "rf.h"
 
-}
 
-/**
- * @brief     clear watchdog timer tick cnt.
- * @return    none
- */
-static inline void wd_clear_cnt(void)
-{
-	reg_tmr_sta = FLD_TMR_WD_CNT_CLR;
+#include "clock.h"
 
-}
+#include "mdec.h"
+#include "mspi.h"
 
-/**
- * @brief     This function set the watchdog trigger time.
- * 			  Because the lower 8bit of the wd timer register will always be 0, there will be an error ,
-			  The time error = (0x00~0xff)/(APB clock frequency)
- * @param[in] period_ms - The watchdog trigger time. Unit is  millisecond
- * @param[in] tick_per_ms - Number of tick in 1 millisecond;
- * @return    none
- */
-static inline void wd_set_interval_ms(unsigned int period_ms,unsigned long int tick_per_ms)
-{
-	static unsigned int tmp_period_ms = 0;
-	tmp_period_ms=period_ms*tick_per_ms;
-	reg_wt_target=tmp_period_ms;
-}
 
-#endif

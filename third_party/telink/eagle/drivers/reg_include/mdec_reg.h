@@ -1,9 +1,9 @@
 /********************************************************************************************************
- * @file	watchdog.h
+ * @file	mdec_reg.h
  *
  * @brief	This is the header file for B91
  *
- * @author	D.M.H
+ * @author	Z.W.H
  * @date	2019
  *
  * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
@@ -43,63 +43,28 @@
  *          SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *         
  *******************************************************************************************************/
-#ifndef WATCHDOG_H_
-#define WATCHDOG_H_
-#include "analog.h"
-#include "gpio.h"
+#pragma once
 
-/**
- * @brief     start watchdog.
- * @return    none
- */
-static inline void wd_start(void){
+#include "../sys.h"
+#include "../../common/bit.h"
 
-	BM_SET(reg_tmr_ctrl2, FLD_TMR_WD_EN);
-}
+#define mdec_rst_addr                   0x53
+typedef enum{
+	FLD_SELE_PA0		= BIT(0),
+	FLD_SELE_PB7		= BIT(1),
+	FLD_SELE_PC4		= BIT(2),
+	FLD_SELE_PD0		= BIT(3),
+	FLD_SELE_PE0		= BIT(4),
+}mdec_pin_e;
+typedef enum{
+	FLD_CLS_MDEC	    = BIT_RNG(0,4),
+	FLD_RSVD			= BIT_RNG(5,6),
+	FLD_MDEC_RST		= BIT(7),
+}mdec_set_e;
 
-
-/**
- * @brief     stop watchdog. 
- * @return    none
- */
-static inline void wd_stop(void){
-	BM_CLR(reg_tmr_ctrl2, FLD_TMR_WD_EN);
-}
+#define	mdec_ctrl						0x54
 
 
-/**
- * @brief     clear watchdog.
- * @return    none
- */
-static inline void wd_clear(void)
-{
-	reg_tmr_sta = FLD_TMR_STA_WD|FLD_TMR_WD_CNT_CLR;
 
-}
 
-/**
- * @brief     clear watchdog timer tick cnt.
- * @return    none
- */
-static inline void wd_clear_cnt(void)
-{
-	reg_tmr_sta = FLD_TMR_WD_CNT_CLR;
 
-}
-
-/**
- * @brief     This function set the watchdog trigger time.
- * 			  Because the lower 8bit of the wd timer register will always be 0, there will be an error ,
-			  The time error = (0x00~0xff)/(APB clock frequency)
- * @param[in] period_ms - The watchdog trigger time. Unit is  millisecond
- * @param[in] tick_per_ms - Number of tick in 1 millisecond;
- * @return    none
- */
-static inline void wd_set_interval_ms(unsigned int period_ms,unsigned long int tick_per_ms)
-{
-	static unsigned int tmp_period_ms = 0;
-	tmp_period_ms=period_ms*tick_per_ms;
-	reg_wt_target=tmp_period_ms;
-}
-
-#endif

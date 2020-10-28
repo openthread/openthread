@@ -45,7 +45,6 @@ PLATFORM_SOURCES                          = \
     system.c                                \
     logging.c                               \
     uart_wrap.c                                  \
-	irq_handler.c            \
     $(NULL)
 
 libopenthread_eagle_a_SOURCES            = \

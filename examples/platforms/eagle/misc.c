@@ -35,7 +35,7 @@ void otPlatReset(otInstance *aInstance)
 
     Tl_printf("call : otPlatReset\n");
     // Disable CPU interrupts
-    core_disable_interrupt();
+    core_interrupt_disable();
     // Write reset register
     write_reg8(0x1401ef, 0x20);
     // Finally, wait until the above write propagates

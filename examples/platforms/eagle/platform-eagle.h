@@ -40,7 +40,7 @@
 #include <openthread/config.h>
 #include <openthread/instance.h>
 
-#include <driver_9518.h>
+#include <driver_b91.h>
 
 // Global OpenThread instance structure
 extern otInstance *sInstance;

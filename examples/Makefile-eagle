@@ -61,7 +61,7 @@ COMMONCFLAGS                   := \
     -fdata-sections               \
     -ffunction-sections           \
     -O2                           \
-    -g3                            \
+    -g0                            \
     $(EAGLE_CONFIG_FILE_CPPFLAGS) \
     -I$(PWD)/third_party/telink/eagle/drivers/  \
     $(NULL)

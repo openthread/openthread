@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file	watchdog.h
+ * @file	register_b91.h
  *
  * @brief	This is the header file for B91
  *
@@ -43,63 +43,22 @@
  *          SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *         
  *******************************************************************************************************/
-#ifndef WATCHDOG_H_
-#define WATCHDOG_H_
-#include "analog.h"
-#include "gpio.h"
+#ifndef  REGISTER_B91_H
+#define  REGISTER_B91_H
 
-/**
- * @brief     start watchdog.
- * @return    none
- */
-static inline void wd_start(void){
-
-	BM_SET(reg_tmr_ctrl2, FLD_TMR_WD_EN);
-}
-
-
-/**
- * @brief     stop watchdog. 
- * @return    none
- */
-static inline void wd_stop(void){
-	BM_CLR(reg_tmr_ctrl2, FLD_TMR_WD_EN);
-}
-
-
-/**
- * @brief     clear watchdog.
- * @return    none
- */
-static inline void wd_clear(void)
-{
-	reg_tmr_sta = FLD_TMR_STA_WD|FLD_TMR_WD_CNT_CLR;
-
-}
-
-/**
- * @brief     clear watchdog timer tick cnt.
- * @return    none
- */
-static inline void wd_clear_cnt(void)
-{
-	reg_tmr_sta = FLD_TMR_WD_CNT_CLR;
-
-}
-
-/**
- * @brief     This function set the watchdog trigger time.
- * 			  Because the lower 8bit of the wd timer register will always be 0, there will be an error ,
-			  The time error = (0x00~0xff)/(APB clock frequency)
- * @param[in] period_ms - The watchdog trigger time. Unit is  millisecond
- * @param[in] tick_per_ms - Number of tick in 1 millisecond;
- * @return    none
- */
-static inline void wd_set_interval_ms(unsigned int period_ms,unsigned long int tick_per_ms)
-{
-	static unsigned int tmp_period_ms = 0;
-	tmp_period_ms=period_ms*tick_per_ms;
-	reg_wt_target=tmp_period_ms;
-}
-
+#include "gpio_reg.h"
+#include "soc.h"
+#include "analog_reg.h"
+#include "uart_reg.h"
+#include "timer_reg.h"
+#include "dma_reg.h"
+#include "pwm_reg.h"
+#include "spi_reg.h"
+#include "i2c_reg.h"
+#include "mspi_reg.h"
+#include "rf_reg.h"
+#include "trng_reg.h"
+#include "plic_reg.h"
+#include "stimer_reg.h"
+#include "mdec_reg.h"
 #endif

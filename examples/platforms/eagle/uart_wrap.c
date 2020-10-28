@@ -89,14 +89,16 @@ otError otPlatUartEnable(void)
     uart_reset(UART0);
     uart_set_pin(UART0_TX_PB2, UART0_RX_PB3); // uart tx/rx pin set
     uart_cal_div_and_bwpc(115200, sys_clk.pclk * 1000 * 1000, &div, &bwpc);
-    uart_set_dma_rx_timeout(UART0, bwpc, 12, UART_BW_MUL1);
+    
     uart_init(UART0, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
 
     plic_interrupt_enable(IRQ19_UART0);
-    uart_tx_irq_trig_level_ndma(UART0, 0);
-    uart_rx_irq_trig_level_ndma(UART0, 1);
+    uart_tx_irq_trig_level(UART0, 0);
+    uart_rx_irq_trig_level(UART0, 1);
 
     uart_set_irq_mask(UART0, UART_RX_IRQ_MASK);
+    uart_set_irq_mask(UART0, UART_ERR_IRQ_MASK);
+    
     return OT_ERROR_NONE;
 }
 
@@ -214,5 +216,5 @@ void irq_uart0_handler(void)
         }
     }
 
-    plic_interrupt_complete(IRQ19_UART0);
+    //plic_interrupt_complete(IRQ19_UART0);
 }

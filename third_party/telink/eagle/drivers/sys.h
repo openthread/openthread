@@ -1,27 +1,47 @@
 /********************************************************************************************************
- * @file     uart.h
+ * @file	sys.h
  *
- * @brief    This is the header file for TLSR8258
+ * @brief	This is the header file for B91
  *
- * @author	 Driver Group
- * @date     May 8, 2018
+ * @author	B.Y
+ * @date	2019
  *
- * @par      Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
+ *          
+ *          Redistribution and use in source and binary forms, with or without
+ *          modification, are permitted provided that the following conditions are met:
+ *          
+ *              1. Redistributions of source code must retain the above copyright
+ *              notice, this list of conditions and the following disclaimer.
+ *          
+ *              2. Unless for usage inside a TELINK integrated circuit, redistributions 
+ *              in binary form must reproduce the above copyright notice, this list of 
+ *              conditions and the following disclaimer in the documentation and/or other
+ *              materials provided with the distribution.
+ *          
+ *              3. Neither the name of TELINK, nor the names of its contributors may be 
+ *              used to endorse or promote products derived from this software without 
+ *              specific prior written permission.
+ *          
+ *              4. This software, with or without modification, must only be used with a
+ *              TELINK integrated circuit. All other usages are subject to written permission
+ *              from TELINK and different commercial license may apply.
  *
- *           The information contained herein is confidential property of Telink
- *           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *           of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *           Co., Ltd. and the licensee or the terms described here-in. This heading
- *           MUST NOT be removed from this file.
- *
- *           Licensees are granted free, non-transferable use of the information in this
- *           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
- * @par      History:
- * 			 1.initial release(DEC. 26 2018)
- *
- * @version  A001
- *
+ *              5. Licensee shall be solely responsible for any claim to the extent arising out of or 
+ *              relating to such deletion(s), modification(s) or alteration(s).
+ *         
+ *          THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ *          ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *          WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ *          DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDER BE LIABLE FOR ANY
+ *          DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ *          (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *          LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ *          ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *          (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ *          SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *         
  *******************************************************************************************************/
 /**	@page SYS
  *
@@ -36,9 +56,9 @@
 
 #ifndef SYS_H_
 #define SYS_H_
-#include "../common/types.h"
 #include "reg_include/soc.h"
 #include "reg_include/stimer_reg.h"
+#include "../common/types.h"
 
 /**********************************************************************************************************************
  *                                         global constants                                                           *
@@ -47,142 +67,94 @@
 /**********************************************************************************************************************
  *                                           global macro                                                             *
  *********************************************************************************************************************/
+/*
+ * brief instruction delay
+ */
 
-#define BASE_ADDRESS 0
-#define REG_ADDR8(a) (*(volatile unsigned char *)(BASE_ADDRESS | (a)))
-#define REG_ADDR16(a) (*(volatile unsigned short *)(BASE_ADDRESS | (a)))
-#define REG_ADDR32(a) (*(volatile unsigned long *)(BASE_ADDRESS | (a)))
+#define	_ASM_NOP_					__asm__("nop")
 
-#define write_reg8(addr, v) (*(volatile unsigned char *)(BASE_ADDRESS | (addr)) = (unsigned char)(v))
-#define write_reg16(addr, v) (*(volatile unsigned short *)(BASE_ADDRESS | (addr)) = (unsigned short)(v))
-#define write_reg32(addr, v) (*(volatile unsigned long *)(BASE_ADDRESS | (addr)) = (unsigned long)(v))
+#define	CLOCK_DLY_1_CYC				_ASM_NOP_
+#define	CLOCK_DLY_2_CYC				_ASM_NOP_;_ASM_NOP_
+#define	CLOCK_DLY_3_CYC				_ASM_NOP_;_ASM_NOP_;_ASM_NOP_
+#define	CLOCK_DLY_4_CYC				_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_
+#define	CLOCK_DLY_5_CYC				_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_
+#define	CLOCK_DLY_6_CYC				_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_
+#define	CLOCK_DLY_7_CYC				_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_
+#define	CLOCK_DLY_8_CYC				_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_
+#define	CLOCK_DLY_9_CYC				_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_
+#define	CLOCK_DLY_10_CYC			_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_
 
-#define read_reg8(addr) (*(volatile unsigned char *)(BASE_ADDRESS | (addr)))
-#define read_reg16(addr) (*(volatile unsigned short *)(BASE_ADDRESS | (addr)))
-#define read_reg32(addr) (*(volatile unsigned long *)(BASE_ADDRESS | (addr)))
+#define FLASH_R_BASE_ADDR   		0x20000000
+#define REG_RW_BASE_ADDR  			0x80000000
+#define REG_ADDR8(a)				(*(volatile unsigned char*)(REG_RW_BASE_ADDR | (a)))
+#define REG_ADDR16(a)				(*(volatile unsigned short*)(REG_RW_BASE_ADDR | (a)))
+#define REG_ADDR32(a)				(*(volatile unsigned long*)(REG_RW_BASE_ADDR | (a)))
+
+#define write_reg8(addr,v)			(*(volatile unsigned char*)(REG_RW_BASE_ADDR | (addr)) = (unsigned char)(v))
+#define write_reg16(addr,v)			(*(volatile unsigned short*)(REG_RW_BASE_ADDR | (addr)) = (unsigned short)(v))
+#define write_reg32(addr,v)			(*(volatile unsigned long*)(REG_RW_BASE_ADDR | (addr)) = (unsigned long)(v))
+
+#define read_reg8(addr)				(*(volatile unsigned char*)(REG_RW_BASE_ADDR | (addr)))
+#define read_reg16(addr)            (*(volatile unsigned short*)(REG_RW_BASE_ADDR | (addr)))
+#define read_reg32(addr)            (*(volatile unsigned long*)(REG_RW_BASE_ADDR | (addr)))
+
+#define write_sram8(addr,v)			(*(volatile unsigned char*)( (addr)) = (unsigned char)(v))
+#define write_sram16(addr,v)		(*(volatile unsigned short*)( (addr)) = (unsigned short)(v))
+#define write_sram32(addr,v)		(*(volatile unsigned long*)( (addr)) = (unsigned long)(v))
+
+#define read_sram8(addr)			(*(volatile unsigned char*)((addr)))
+#define read_sram16(addr)           (*(volatile unsigned short*)((addr)))
+#define read_sram32(addr)           (*(volatile unsigned long*)((addr)))
+#define TCMD_UNDER_BOTH				0xc0
+#define TCMD_UNDER_RD				0x80
+#define TCMD_UNDER_WR				0x40
+
+#define TCMD_MASK					0x3f
+
+#define TCMD_WRITE					0x3
+#define TCMD_WAIT					0x7
+#define TCMD_WAREG					0x8
+
+#define convert_ram_addr_cpu2bus(addr)  ((u32)((((u32)addr) >=0x80000)?(((u32)addr)- 0x80000 + 0xc0200000) : (((u32)addr) + 0xc0000000)))
+#define convert_ram_addr_bus2cpu(addr)  ((u32)((((u32)addr) >=0xc0200000)?(((u32)addr) + 0x80000 - 0xc0200000) : (((u32)addr) - 0xc0000000)))
+
 
 /**********************************************************************************************************************
  *                                         global data type                                                           *
  *********************************************************************************************************************/
-/**
- *  @brief  Define sys_clk struct.
- */
-typedef struct SYS_CLK
-{
-    unsigned short pll_clk;    /**< pll clk */
-    unsigned char  cclk;       /**< cpu clk */
-    unsigned char  hclk;       /**< hclk */
-    unsigned char  pclk;       /**< pclk */
-    unsigned char  mspi_clk;   /**< mspi_clk */
-    unsigned char  stimer_clk; /**< stimer_clk */
-} sys_clk_s;
 
 /**
  * @brief 	Power type for different application
  */
-typedef enum
-{
-    LDO_MODE      = 0x40, /**< LDO mode */
-    DCDC_LDO_MODE = 0x41, /**< DCDC_LDO mode */
-    DCDC_MODE     = 0x43, /**< DCDC mode (16pin is not suported this mode. */
-} power_mode_e;
+typedef enum{
+	LDO_1P4_LDO_1P8 	= 0x00,	/**< 1.4V-LDO & 1.8V-LDO mode */
+	DCDC_1P4_LDO_1P8	= 0x01,	/**< 1.4V-DCDC & 1.8V-LDO mode */
+	DCDC_1P4_DCDC_1P8	= 0x03,	/**< 1.4V-DCDC & 1.8V-DCDC mode */
+}power_mode_e;
 
 /**
- * @brief system clock type
+ * @brief command table for special registers
  */
-typedef enum
-{                                             /**<     <1:0>         <2:6>   <15:8> */
-  PLL_CLK_48M  = (0 | (16 << 2) | (48 << 8)), /**< ana_09<3:2> | ana_80<4:0> | clk  */
-  PLL_CLK_54M  = (0 | (17 << 2) | (54 << 8)),
-  PLL_CLK_60M  = (0 | (18 << 2) | (54 << 8)),
-  PLL_CLK_66M  = (0 | (19 << 2) | (66 << 8)),
-  PLL_CLK_96M  = (1 | (16 << 2) | (96 << 8)),
-  PLL_CLK_108M = (1 | (17 << 2) | (108 << 8)),
-  PLL_CLK_120M = (1 | (18 << 2) | (120 << 8)),
-  PLL_CLK_132M = (1 | (19 << 2) | (132 << 8)),
-  PLL_CLK_192M = (2 | (16 << 2) | (192 << 8)),
-  PLL_CLK_216M = (2 | (17 << 2) | (216 << 8)),
-  PLL_CLK_240M = (2 | (18 << 2) | (240 << 8)),
-  PLL_CLK_264M = (2 | (19 << 2) | (264 << 8)),
-} sys_pll_clk_e;
+typedef struct tbl_cmd_set_t {
+	unsigned int  	adr;
+	unsigned char	dat;
+	unsigned char	cmd;
+} tbl_cmd_set_t;
 
 /**
- * @brief system clock type.
+ * @brief define system clock tick per us/ms/s.
  */
-typedef enum
-{
-    RC24M,
-    PAD24M,
-    PAD_PLL_DIV,
-    PAD_PLL,
-} sys_clock_src_e;
+enum{
+	CLOCK_16M_SYS_TIMER_CLK_1US = 16,
+	CLOCK_16M_SYS_TIMER_CLK_1MS = 16*1000,
+	CLOCK_16M_SYS_TIMER_CLK_1S =  16*1000*1000,
+};
 
-/**
- * @brief pll div to cclk.
- */
-typedef enum
-{
-    PLL_DIV2_TO_CCLK  = 2,
-    PLL_DIV3_TO_CCLK  = 3,
-    PLL_DIV4_TO_CCLK  = 4,
-    PLL_DIV5_TO_CCLK  = 5,
-    PLL_DIV6_TO_CCLK  = 6,
-    PLL_DIV7_TO_CCLK  = 7,
-    PLL_DIV8_TO_CCLK  = 8,
-    PLL_DIV9_TO_CCLK  = 9,
-    PLL_DIV10_TO_CCLK = 10,
-    PLL_DIV11_TO_CCLK = 11,
-    PLL_DIV12_TO_CCLK = 12,
-    PLL_DIV13_TO_CCLK = 13,
-    PLL_DIV14_TO_CCLK = 14,
-    PLL_DIV15_TO_CCLK = 15,
-} sys_pll_div_to_cclk_e;
-
-/**
- * @brief pll div to mspi_clk.
- */
-typedef enum
-{
-    CCLK_TO_MSPI_CLK      = 1,
-    PLL_DIV2_TO_MSPI_CLK  = 2,
-    PLL_DIV3_TO_MSPI_CLK  = 3,
-    PLL_DIV4_TO_MSPI_CLK  = 4,
-    PLL_DIV5_TO_MSPI_CLK  = 5,
-    PLL_DIV6_TO_MSPI_CLK  = 6,
-    PLL_DIV7_TO_MSPI_CLK  = 7,
-    PLL_DIV8_TO_MSPI_CLK  = 8,
-    PLL_DIV9_TO_MSPI_CLK  = 9,
-    PLL_DIV10_TO_MSPI_CLK = 10,
-    PLL_DIV11_TO_MSPI_CLK = 11,
-    PLL_DIV12_TO_MSPI_CLK = 12,
-    PLL_DIV13_TO_MSPI_CLK = 13,
-    PLL_DIV14_TO_MSPI_CLK = 14,
-    PLL_DIV15_TO_MSPI_CLK = 15,
-} sys_pll_div_to_mspi_clk_e;
-
-/**
- * @brief cclk div to hclk.
- */
-typedef enum
-{
-    HCLK_DIV1_TO_PCLK = 1,
-    HCLK_DIV2_TO_PCLK = 2,
-    HCLK_DIV4_TO_PCLK = 4,
-} sys_hclk_div_to_pclk_e;
-
-/**
- * @brief cclk div to hclk.
- */
-typedef enum
-{
-    CCLK_DIV1_TO_HCLK = 1,
-    CCLK_DIV2_TO_HCLK = 2,
-} sys_cclk_div_to_hclk_e;
 
 /**********************************************************************************************************************
  *                                     global variable declaration                                                    *
  *********************************************************************************************************************/
-extern sys_clk_s sys_clk;
+
 
 /**********************************************************************************************************************
  *                                      global function prototype                                                     *
@@ -192,31 +164,33 @@ extern sys_clk_s sys_clk;
  * @brief     This function performs to enable system timer and 32K calibration.
  * @param[in] none.
  * @return    system timer tick value.
- **/
-static inline void sys_clock_time_en(void)
+**/
+static inline  void  sys_clock_time_en(void)
 {
-    reg_system_ctrl |= FLD_SYSTEM_TIMER_EN | FLD_SYSTEM_32K_CAL_EN;
+	reg_system_ctrl |= (FLD_SYSTEM_TIMER_EN | FLD_SYSTEM_32K_CAL_EN) ;
 }
+
 
 /*
  * @brief     This function performs to get system timer tick.
- * @param[in] none.
  * @return    system timer tick value.
- **/
+**/
 static inline u32 sys_get_stimer_tick(void)
 {
-    return reg_system_tick;
+
+	return reg_system_tick;
 }
+
 
 /**
  * @brief     This function serves to set timeout by us.
- * @param[in] ref - reference tick of system timer .
- * @param[in] us  - count by us.
+ * @param[in] ref  - reference tick of system timer .
+ * @param[in] us   - count by us.
  * @return    true - timeout, false - not timeout
  */
-static inline _Bool sys_timeout(unsigned int ref, unsigned int us)
+static inline _Bool clock_time_exceed(unsigned int ref, unsigned int us)
 {
-    return ((unsigned int)(sys_get_stimer_tick() - ref) > us * 16);
+	return ((unsigned int)(sys_get_stimer_tick() - ref) > us * CLOCK_16M_SYS_TIMER_CLK_1US);
 }
 
 /**
@@ -227,21 +201,14 @@ static inline _Bool sys_timeout(unsigned int ref, unsigned int us)
 void sys_init(power_mode_e power_mode);
 
 /**
- * @brief       This function use to select the system clock source.
- * @param[in]   pll - pll clock.
- * @param[in]	src - cclk source.
- * @param[in]	cclk_div - the cclk divide from pll.it is useless if src is not PAD_PLL_DIV. cclk max is 96M
- * @param[in]	hclk_div - the hclk divide from cclk.hclk max is 48M.
- * @param[in]	pclk_div - the pclk divide from hclk.pclk max is 24M.
- * @param[in]	mspi_clk_div - mspi_clk has two source. pll div and hclk.mspi max is 64M.
- * @return      none
+ * @brief      This function performs a series of operations of writing digital or analog registers
+ *             according to a command table
+ * @param[in]  pt    - pointer to a command table containing several writing commands
+ * @param[in]  size  - number of commands in the table
+ * @return     number of commands are carried out
  */
-void clock_init(sys_pll_clk_e             pll,
-                sys_clock_src_e           src,
-                sys_pll_div_to_cclk_e     pll_div,
-                sys_cclk_div_to_hclk_e    cclk_div,
-                sys_hclk_div_to_pclk_e    pclk_div,
-                sys_pll_div_to_mspi_clk_e mspi_clk_div);
+
+int write_reg_table(const tbl_cmd_set_t * pt, int size);
 
 /**
  * @brief     This function performs to set delay time by us.
@@ -252,19 +219,21 @@ void delay_us(u32 microsec);
 
 /**
  * @brief     This function performs to set delay time by ms.
- * @param[in] millisec - need to delay.
+ * @param[in] millisec - ms need to delay.
  * @return    none
  */
 void delay_ms(u32 millisec);
 
+
+/*
+ * @brief     This function performs to get system timer tick.
+ * @return    system timer tick value.
+**/
 static inline u32 clock_time(void)
 {
-    return reg_system_tick;
+
+	return reg_system_tick;
 }
 
-static inline _Bool clock_time_exceed(unsigned int ref, unsigned int us)
-{
-    return ((unsigned int)(sys_get_stimer_tick() - ref) > us * 16);
-}
 
 #endif

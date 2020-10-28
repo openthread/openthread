@@ -56,7 +56,7 @@ void otSysInit(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-    core_enable_interrupt();
+    core_interrupt_enable();
 
     EagleRandomInit();
     eagleRadioInit();

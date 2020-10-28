@@ -1,9 +1,9 @@
 /********************************************************************************************************
- * @file	watchdog.h
+ * @file	mdec.h
  *
  * @brief	This is the header file for B91
  *
- * @author	D.M.H
+ * @author	Z.W.H
  * @date	2019
  *
  * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
@@ -43,63 +43,58 @@
  *          SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *         
  *******************************************************************************************************/
-#ifndef WATCHDOG_H_
-#define WATCHDOG_H_
+#pragma once
+
 #include "analog.h"
-#include "gpio.h"
+#include "reg_include/mdec_reg.h"
 
 /**
- * @brief     start watchdog.
- * @return    none
+ * @brief		This function servers to reset the MDEC module.When the system is wakeup by MDEC, you should
+ * 			  	to reset the MDEC module to clear the flag bit of MDEC wakeup.
+ * @return		none.
  */
-static inline void wd_start(void){
-
-	BM_SET(reg_tmr_ctrl2, FLD_TMR_WD_EN);
-}
-
-
-/**
- * @brief     stop watchdog. 
- * @return    none
- */
-static inline void wd_stop(void){
-	BM_CLR(reg_tmr_ctrl2, FLD_TMR_WD_EN);
-}
-
-
-/**
- * @brief     clear watchdog.
- * @return    none
- */
-static inline void wd_clear(void)
+static inline void mdec_reset(void)
 {
-	reg_tmr_sta = FLD_TMR_STA_WD|FLD_TMR_WD_CNT_CLR;
-
+	analog_write_reg8(mdec_rst_addr,analog_read_reg8(mdec_rst_addr) | FLD_MDEC_RST);
+	analog_write_reg8(mdec_rst_addr,analog_read_reg8(mdec_rst_addr) & (~FLD_MDEC_RST));
 }
 
 /**
- * @brief     clear watchdog timer tick cnt.
- * @return    none
+ * @brief		After all packet data are received, it can check whether packet transmission is finished.
+ * @param[in]	status	- the interrupt status to be obtained.
+ * @return		irq status.
  */
-static inline void wd_clear_cnt(void)
+static inline unsigned char mdec_get_irq_status(wakeup_status_e status)
 {
-	reg_tmr_sta = FLD_TMR_WD_CNT_CLR;
-
+	return (analog_read_reg8(reg_wakeup_status) & status);
 }
 
 /**
- * @brief     This function set the watchdog trigger time.
- * 			  Because the lower 8bit of the wd timer register will always be 0, there will be an error ,
-			  The time error = (0x00~0xff)/(APB clock frequency)
- * @param[in] period_ms - The watchdog trigger time. Unit is  millisecond
- * @param[in] tick_per_ms - Number of tick in 1 millisecond;
- * @return    none
+ * @brief		This function serves to clear the wake mdec bit.After all packet
+ *				data are received, corresponding flag bit will be set as 1.
+ *				needed to manually clear this flag bit so as to avoid misjudgment.
+ * @param[in]	status	- the interrupt status that needs to be cleared.
+ * @return		none.
  */
-static inline void wd_set_interval_ms(unsigned int period_ms,unsigned long int tick_per_ms)
+static inline void mdec_clr_irq_status(wakeup_status_e status)
 {
-	static unsigned int tmp_period_ms = 0;
-	tmp_period_ms=period_ms*tick_per_ms;
-	reg_wt_target=tmp_period_ms;
+	analog_write_reg8(reg_wakeup_status, (analog_read_reg8(reg_wakeup_status) | status));
 }
 
-#endif
+/**
+ * @brief		This function is used to initialize the MDEC module,include clock setting and input IO select.
+ * @param[in]	pin	- mdec pin.
+ * 					  In order to distinguish which pin the data is input from,only one input pin can be selected one time.
+ * @return		none.
+ */
+void mdec_init(mdec_pin_e pin);
+
+/**
+ * @brief		This function is used to read the receive data of MDEC module's IO.
+ * @param[out]	dat		- The array to store date.
+ * @return		1 decode success,  0 decode failure.
+ */
+unsigned char mdec_read_dat(unsigned char *dat);
+
+
+
