@@ -115,7 +115,7 @@ protected:
     }
 
 private:
-    InstanceLocator(void) {}
+    InstanceLocator(void) = default;
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     Instance *mInstance;
