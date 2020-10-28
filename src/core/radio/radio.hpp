@@ -195,7 +195,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    Radio(Instance &aInstance)
+    explicit Radio(Instance &aInstance)
         : InstanceLocator(aInstance)
         , mCallbacks(aInstance)
     {

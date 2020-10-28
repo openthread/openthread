@@ -59,7 +59,7 @@ public:
      * Default constructor for the object.
      *
      */
-    TestIphcVector(const char *aTestName)
+    explicit TestIphcVector(const char *aTestName)
     {
         memset(reinterpret_cast<void *>(this), 0, sizeof(TestIphcVector));
         mTestName              = aTestName;

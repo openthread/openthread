@@ -53,7 +53,7 @@ public:
         mIsAnycast    = aInstance.Get<Mle::MleRouter>().IsAnycastLocator(aAddress.GetAddress());
     }
 
-    AddressInfo(const NetifMulticastAddress &aAddress)
+    explicit AddressInfo(const NetifMulticastAddress &aAddress)
     {
         mAddress      = &aAddress.GetAddress();
         mPrefixLength = kMulticastPrefixLength;

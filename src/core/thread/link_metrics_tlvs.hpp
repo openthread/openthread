@@ -88,8 +88,8 @@ public:
      * Constructor for implicit cast from `uint8_t` to `LinkMetricsTypeIdFlags`.
      *
      */
-    LinkMetricsTypeIdFlags(uint8_t typeIdFlags)
-        : mTypeIdFlags(typeIdFlags)
+    explicit LinkMetricsTypeIdFlags(uint8_t aTypeIdFlags)
+        : mTypeIdFlags(aTypeIdFlags)
     {
     }
 

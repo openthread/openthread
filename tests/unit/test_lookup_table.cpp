@@ -41,7 +41,7 @@ typedef ot::Utils::LookupTable::Entry Entry;
 
 struct TableEntryBase
 {
-    constexpr TableEntryBase(uint8_t aValue)
+    constexpr explicit TableEntryBase(uint8_t aValue)
         : mValue(aValue)
     {
     }
@@ -76,8 +76,8 @@ void TestLookupTable(void)
         {"sekiro", 10},     {"tomb raider", 9},   {"uncharted", 9},
     };
 
-    constexpr Entry kUnsortedTable[]       = {{"z"}, {"a"}, {"b"}};
-    constexpr Entry kDuplicateEntryTable[] = {"duplicate", "duplicate"};
+    constexpr Entry kUnsortedTable[]       = {Entry("z"), Entry("a"), Entry("b")};
+    constexpr Entry kDuplicateEntryTable[] = {Entry("duplicate"), Entry("duplicate")};
 
     static_assert(ot::Utils::LookupTable::IsSorted(kTable), "LookupTable::IsSorted() failed");
     static_assert(!ot::Utils::LookupTable::IsSorted(kUnsortedTable),

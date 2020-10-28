@@ -391,7 +391,7 @@ public:
          *                       security enabled with `kPriorityNormal` priority) would be used.
          *
          */
-        Settings(const otMessageSettings *aSettings);
+        explicit Settings(const otMessageSettings *aSettings);
 
         /**
          * This method gets the message priority.

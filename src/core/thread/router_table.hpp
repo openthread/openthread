@@ -417,7 +417,7 @@ private:
     class IteratorBuilder : public InstanceLocator
     {
     public:
-        IteratorBuilder(Instance &aInstance)
+        explicit IteratorBuilder(Instance &aInstance)
             : InstanceLocator(aInstance)
         {
         }
