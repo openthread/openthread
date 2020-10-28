@@ -126,7 +126,7 @@ uint32_t RandomManager::NonCryptoPrng::GetNext(void)
     uint32_t mlcg, p, q;
     uint64_t tmpstate;
 
-    tmpstate = (uint64_t)33614 * (uint64_t)mState;
+    tmpstate = static_cast<uint64_t>(33614) * static_cast<uint64_t>(mState);
     q        = tmpstate & 0xffffffff;
     q        = q >> 1;
     p        = tmpstate >> 32;
