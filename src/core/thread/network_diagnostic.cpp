@@ -142,7 +142,7 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Message *         aMes
                                                     otError                 aResult)
 {
     SuccessOrExit(aResult);
-    VerifyOrExit(aMessage && aMessage->GetCode() == Coap::kCodeChanged, aResult = OT_ERROR_FAILED);
+    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, aResult = OT_ERROR_FAILED);
 
 exit:
     if (mReceiveDiagnosticGetCallback)
