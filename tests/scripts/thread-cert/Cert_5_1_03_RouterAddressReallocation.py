@@ -138,7 +138,7 @@ class Cert_5_1_03_RouterAddressReallocation(thread_cert.TestCase):
         #         original partition in this manner
 
         with pkts.save_index():
-            for i in range(1, 3):
+            for i in range(2):
                 pkts.filter_wpan_src64(ROUTER_1).\
                     filter_LLARMA().\
                     filter_mle_cmd(MLE_PARENT_REQUEST).\
