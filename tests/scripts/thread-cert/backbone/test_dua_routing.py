@@ -186,18 +186,8 @@ class TestNdProxy(thread_cert.TestCase):
 
         self.simulator.go(WAIT_REDUNDANCE)
 
-        # Step 4: ROUTER2 pings ROUTER1 but failed because Backbone Address Query is not implemented yet.
-        # TODO: (DUA) implement Backbone Address Query
+        # Step 4: ROUTER2 pings ROUTER1 which should succeed
         ROUTER1_DUA = self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.DUA)
-        self.assertFalse(self.nodes[ROUTER2].ping(ROUTER1_DUA))
-
-        # Prepare for Step 5: PBBR2 send fake /a/an to ROUTER2 to fill EID Cache for ROUTER1_DUA
-        ROUTER2_RLOC = self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.RLOC)
-        PBBR2_MLIID = self._get_mliid(PBBR2)
-        self.nodes[PBBR2].send_address_notification(ROUTER2_RLOC, ROUTER1_DUA, PBBR2_MLIID)
-        self.simulator.go(WAIT_REDUNDANCE)
-
-        # Step 5: ROUTER2 pings ROUTER1 again which should succeed
         self.assertTrue(self.nodes[ROUTER2].ping(ROUTER1_DUA))
 
         self.simulator.go(WAIT_REDUNDANCE)
@@ -247,7 +237,7 @@ class TestNdProxy(thread_cert.TestCase):
         ping3_pkts.filter_eth().must_next()
         ping3_pkts.filter_wpan().must_next()
 
-        # Step 5: ROUTER2 pings ROUTER1
+        # Step 4: ROUTER2 pings ROUTER1
         # Verify Ping Request: ROUTER2 -> PBBR2 -> PBBR -> ROUTER1
         ping5_request_pkts = pkts.filter_ipv6_src_dst(ROUTER2_DUA, ROUTER1_DUA)
         ping5_id = ping5_request_pkts.filter_wpan_src64(

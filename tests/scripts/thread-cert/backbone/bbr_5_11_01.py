@@ -122,8 +122,7 @@ class BBR_5_11_01(thread_cert.TestCase):
                                               backbone=True))
 
         # Step 23: Host sends ping packet to destination Dg
-        self.assertFalse(self.nodes[HOST].ping(Dg,
-                                               backbone=True))  # Must fail since ND Proxying is not implemented yet
+        self.assertTrue(self.nodes[HOST].ping(Dg, backbone=True))
 
     def verify(self, pv: PacketVerifier):
         pkts = pv.pkts
@@ -161,12 +160,11 @@ class BBR_5_11_01(thread_cert.TestCase):
         pkts.filter_eth_src(Host_ETH).filter_ipv6_src_dst(Host_BGUA, BR_1_BGUA).filter_ping_reply().must_next()
 
         # Step 16: Host: Queries DUA, Dg, with ND-NS
-        # TODO: setup radvd on Host
-        pkts.filter_eth_src(Host_ETH).filter_icmpv6_nd_ns(Dg).must_not_next()
+        pkts.filter_eth_src(Host_ETH).filter_icmpv6_nd_ns(Dg).must_next()
 
         # Step 17: BR_1: Responds with a neighbor advertisement.
         # TODO: (DUA) implement ND proxy on PBBR
-        pkts.filter_eth_src(BR_1_ETH).filter_icmpv6_nd_na(Dg).must_not_next()
+        pkts.filter_eth_src(BR_1_ETH).filter_icmpv6_nd_na(Dg).must_next()
 
 
 if __name__ == '__main__':
