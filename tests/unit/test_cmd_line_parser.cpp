@@ -42,8 +42,6 @@ using ot::Utils::CmdLineParser::ParseAsHexString;
 using ot::Utils::CmdLineParser::ParseAsInt16;
 using ot::Utils::CmdLineParser::ParseAsInt32;
 using ot::Utils::CmdLineParser::ParseAsInt8;
-using ot::Utils::CmdLineParser::ParseAsIp6Address;
-using ot::Utils::CmdLineParser::ParseAsIp6Prefix;
 using ot::Utils::CmdLineParser::ParseAsUint16;
 using ot::Utils::CmdLineParser::ParseAsUint32;
 using ot::Utils::CmdLineParser::ParseAsUint64;

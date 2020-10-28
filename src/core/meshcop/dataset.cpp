@@ -48,9 +48,6 @@
 namespace ot {
 namespace MeshCoP {
 
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
-
 Dataset::Dataset(Type aType)
     : mUpdateTime(0)
     , mLength(0)

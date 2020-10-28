@@ -47,7 +47,6 @@ using ot::Utils::CmdLineParser::ParseAsIp6Address;
 using ot::Utils::CmdLineParser::ParseAsUint16;
 using ot::Utils::CmdLineParser::ParseAsUint32;
 using ot::Utils::CmdLineParser::ParseAsUint64;
-using ot::Utils::CmdLineParser::ParseAsUint8;
 
 namespace ot {
 namespace Cli {

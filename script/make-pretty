@@ -117,6 +117,7 @@ readonly OT_CLANG_TIDY_BUILD_OPTS=(
 readonly OT_CLANG_TIDY_CHECKS="\
 -*,\
 google-readability-casting,\
+misc-unused-using-decls,\
 modernize-use-bool-literals,\
 modernize-use-equals-default,\
 modernize-use-equals-delete,\
