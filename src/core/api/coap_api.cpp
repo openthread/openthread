@@ -204,7 +204,7 @@ const otCoapOption *otCoapOptionIteratorGetNextOption(otCoapOptionIterator *aIte
     return iterator.GetOption();
 }
 
-otError otCoapOptionIteratorGetOptionUintValue(otCoapOptionIterator *aIterator, uint64_t *const aValue)
+otError otCoapOptionIteratorGetOptionUintValue(otCoapOptionIterator *aIterator, uint64_t *aValue)
 {
     return static_cast<Coap::Option::Iterator *>(aIterator)->ReadOptionValue(*aValue);
 }
