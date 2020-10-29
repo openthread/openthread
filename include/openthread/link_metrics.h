@@ -158,10 +158,10 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
  * @param[in] aInstance          A pointer to an OpenThread instance.
  * @param[in] aDestination       A pointer to the destination address.
  * @param[in] aSeriesId          The Series ID to operate with.
- * @param[in] aSeriesFlags       A pointer to the Series Flags that specifies which frames are to be accounted. The
- * pointer MUST NOT be `nullptr`.
+ * @param[in] aSeriesFlags       The Series Flags that specifies which frames are to be accounted.
+ *
  * @param[in] aLinkMetricsFlags  A pointer to flags specifying what metrics to query. Should be `NULL` when
- * `aSeriesFlags` is `NULL`.
+ * `aSeriesFlags` is `0`.
  *
  * @retval OT_ERROR_NONE          Successfully sent a Link Metrics Management Request message.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Link Metrics Management Request message.
@@ -171,7 +171,7 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
 otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                      aInstance,
                                                  const otIp6Address *              aDestination,
                                                  uint8_t                           aSeriesId,
-                                                 const otLinkMetricsSeriesFlags *  aSeriesFlags,
+                                                 otLinkMetricsSeriesFlags          aSeriesFlags,
                                                  const otLinkMetrics *             aLinkMetricsFlags,
                                                  otLinkMetricsMgmtResponseCallback aCallback,
                                                  void *                            aCallbackContext);

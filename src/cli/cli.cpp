@@ -2138,7 +2138,7 @@ otError Interpreter::ProcessLinkMetricsMgmt(uint8_t aArgsLength, char *aArgs[])
             SuccessOrExit(error = ParseLinkMetricsFlags(linkMetrics, aArgs[4]));
         }
 
-        error = otLinkMetricsConfigForwardTrackingSeries(mInstance, &address, seriesId, &seriesFlags,
+        error = otLinkMetricsConfigForwardTrackingSeries(mInstance, &address, seriesId, seriesFlags,
                                                          clear ? nullptr : &linkMetrics,
                                                          &Interpreter::HandleLinkMetricsMgmtResponse, this);
     }

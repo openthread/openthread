@@ -378,8 +378,9 @@ otError LinkMetrics::HandleLinkMetricsManagementResponse(const Message &aMessage
         {
         case kLinkMetricsStatus:
             VerifyOrExit(!hasStatus, error = OT_ERROR_PARSE);
-            hasStatus = true;
+            VerifyOrExit(tlv.GetLength() == sizeof(status), error = OT_ERROR_PARSE);
             SuccessOrExit(aMessage.Read(offset + index + sizeof(tlv), status));
+            hasStatus = true;
             break;
 
         default:
@@ -432,9 +433,9 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
         case kLinkMetricsStatus:
             VerifyOrExit(!hasStatus && !hasReport,
                          error = OT_ERROR_DROP); // There should be either: one Status TLV or some Report-Sub TLVs
-            hasStatus = true;
             VerifyOrExit(tlv.GetLength() == sizeof(status), error = OT_ERROR_PARSE);
             SuccessOrExit(aMessage.Read(pos, status));
+            hasStatus = true;
             pos += sizeof(status);
             break;
 
@@ -514,6 +515,7 @@ otError LinkMetrics::HandleLinkProbe(const Message &aMessage, uint8_t &aSeriesId
     uint16_t length;
 
     SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Mle::Tlv::Type::kLinkProbe, offset, length));
+    VerifyOrExit(length >= sizeof(aSeriesId), error = OT_ERROR_PARSE);
     SuccessOrExit(error = aMessage.Read(offset, aSeriesId));
     VerifyOrExit(aSeriesId >= kQueryIdSingleProbe && aSeriesId <= kSeriesIdAllSeries, error = OT_ERROR_INVALID_ARGS);
 

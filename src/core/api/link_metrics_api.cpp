@@ -60,18 +60,18 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
 otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                      aInstance,
                                                  const otIp6Address *              aDestination,
                                                  uint8_t                           aSeriesId,
-                                                 const otLinkMetricsSeriesFlags *  aSeriesFlags,
+                                                 const otLinkMetricsSeriesFlags    aSeriesFlags,
                                                  const otLinkMetrics *             aLinkMetricsFlags,
                                                  otLinkMetricsMgmtResponseCallback aCallback,
                                                  void *                            aCallbackContext)
 {
-    OT_ASSERT(aDestination != nullptr && aSeriesFlags != nullptr);
+    OT_ASSERT(aDestination != nullptr);
 
     static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SetLinkMetricsMgmtResponseCallback(aCallback,
                                                                                               aCallbackContext);
 
     return static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SendMgmtRequestForwardTrackingSeries(
-        static_cast<const Ip6::Address &>(*aDestination), aSeriesId, *aSeriesFlags, aLinkMetricsFlags);
+        static_cast<const Ip6::Address &>(*aDestination), aSeriesId, aSeriesFlags, aLinkMetricsFlags);
 }
 
 otError otLinkMetricsSendLinkProbe(otInstance *        aInstance,
