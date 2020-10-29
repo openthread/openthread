@@ -485,8 +485,11 @@ private:
     static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
 
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-    void        HandleDiagnosticGetResponse(const otMessage &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
+    void HandleDiagnosticGetResponse(otError aError, const otMessage *aMessage, const Ip6::MessageInfo *aMessageInfo);
+    static void HandleDiagnosticGetResponse(otError              aError,
+                                            otMessage *          aMessage,
+                                            const otMessageInfo *aMessageInfo,
+                                            void *               aContext);
     void        OutputSpaces(uint16_t aCount);
     void        OutputMode(const otLinkModeConfig &aMode, uint16_t aColumn);
     void        OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity, uint16_t aColumn);

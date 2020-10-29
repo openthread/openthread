@@ -4249,28 +4249,34 @@ exit:
     return error;
 }
 
-void Interpreter::HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext)
+void Interpreter::HandleDiagnosticGetResponse(otError              aError,
+                                              otMessage *          aMessage,
+                                              const otMessageInfo *aMessageInfo,
+                                              void *               aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleDiagnosticGetResponse(
-        *aMessage, *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+        aError, aMessage, static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const Ip6::MessageInfo &)
+void Interpreter::HandleDiagnosticGetResponse(otError aError, const otMessage *aMessage, const Ip6::MessageInfo *)
 {
     uint8_t               buf[16];
     uint16_t              bytesToPrint;
     uint16_t              bytesPrinted = 0;
-    uint16_t              length       = otMessageGetLength(&aMessage) - otMessageGetOffset(&aMessage);
+    uint16_t              length;
     otNetworkDiagTlv      diagTlv;
     otNetworkDiagIterator iterator = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT;
-    otError               error    = OT_ERROR_NONE;
+
+    SuccessOrExit(aError);
 
     OutputFormat("DIAG_GET.rsp/ans: ");
+
+    length = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
 
     while (length > 0)
     {
         bytesToPrint = (length < sizeof(buf)) ? length : sizeof(buf);
-        otMessageRead(&aMessage, otMessageGetOffset(&aMessage) + bytesPrinted, buf, bytesToPrint);
+        otMessageRead(aMessage, otMessageGetOffset(aMessage) + bytesPrinted, buf, bytesToPrint);
 
         OutputBytes(buf, static_cast<uint8_t>(bytesToPrint));
 
@@ -4281,7 +4287,7 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
     OutputLine("");
 
     // Output Network Diagnostic TLV values in standard YAML format.
-    while ((error = otThreadGetNextDiagnosticTlv(&aMessage, &iterator, &diagTlv)) == OT_ERROR_NONE)
+    while ((aError = otThreadGetNextDiagnosticTlv(aMessage, &iterator, &diagTlv)) == OT_ERROR_NONE)
     {
         uint16_t column = 0;
         switch (diagTlv.mType)
@@ -4358,7 +4364,13 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
         }
     }
 
-    OutputResult(error == OT_ERROR_NOT_FOUND ? OT_ERROR_NONE : error);
+    if (aError == OT_ERROR_NOT_FOUND)
+    {
+        aError = OT_ERROR_NONE;
+    }
+
+exit:
+    OutputResult(aError);
 }
 
 void Interpreter::OutputSpaces(uint16_t aCount)
