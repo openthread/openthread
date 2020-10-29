@@ -272,7 +272,7 @@ jobs:
         fail_ci_if_error: true
     - name: Run RCP Mode
       run: |
-        OT_OPTIONS=-DOT_READLINE=OFF VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
+        OT_OPTIONS=-DOT_READLINE=OFF VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
     - name: Keep POSIX Only
       run: |
         ./script/test tar simulation 1.1
@@ -298,7 +298,7 @@ jobs:
         echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
         sudo systemctl restart dnsmasq
         host ipv6.google.com ::1
-        OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
+        OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
     - name: Keep POSIX Only
       run: |
         ./script/test tar simulation 1.1

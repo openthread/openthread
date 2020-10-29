@@ -65,7 +65,7 @@ jobs:
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
     - name: Build
       run: |
-        NODE_MODE=rcp ./script/test build
+        OT_NODE_TYPE=rcp ./script/test build
 
   package:
     name: package-${{ matrix.compiler }}

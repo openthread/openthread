@@ -39,8 +39,7 @@ readonly COLOR_PASS='\033[0;32m'
 readonly COLOR_FAIL='\033[0;31m'
 readonly COLOR_NONE='\033[0m'
 
-readonly NODE_MODE="${NODE_MODE:-standalone}"
-readonly NODE_TYPE="${NODE_TYPE:-sim}"
+readonly OT_NODE_TYPE="${OT_NODE_TYPE:-cli}"
 readonly OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
 readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
 readonly INTER_OP="${INTER_OP:-0}"
@@ -59,7 +58,7 @@ build_simulation()
     if [[ ${VIRTUAL_TIME} == 1 ]]; then
         options+=("-DOT_SIMULATION_VIRTUAL_TIME=ON")
 
-        if [[ ${NODE_MODE} == "rcp" ]]; then
+        if [[ ${OT_NODE_TYPE} == "rcp" ]]; then
             options+=("-DOT_SIMULATION_VIRTUAL_TIME_UART=ON")
         fi
 
@@ -123,7 +122,7 @@ build_for_one_version()
 
     build_simulation "${version}"
 
-    if [[ ${NODE_MODE} == "rcp" ]]; then
+    if [[ ${OT_NODE_TYPE} == "rcp" ]]; then
         build_posix "${version}"
     fi
 }
@@ -170,6 +169,15 @@ do_unit()
 do_cert()
 {
     export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
+
+    case "${OT_NODE_TYPE}" in
+        rcp | cli)
+            export NODE_TYPE=sim
+            ;;
+        ncp)
+            export NODE_TYPE=ncp-sim
+            ;;
+    esac
 
     if [[ ${THREAD_VERSION} == "1.2" ]]; then
         export top_builddir_1_2_bbr="${OT_BUILDDIR}/cmake/openthread-simulation-1.2-bbr"
@@ -306,16 +314,10 @@ do_pktverify()
 
 do_expect()
 {
-    local ot_command
-    local rcp_command=
-    local mtd_command=
     local test_patterns
 
-    if [[ ${NODE_MODE} == rcp ]]; then
-        ot_command="${OT_CLI_PATH}"
-        rcp_command="${RADIO_DEVICE}"
+    if [[ ${OT_NODE_TYPE} == rcp ]]; then
         if [[ ${THREAD_VERSION} == "1.2" ]]; then
-            mtd_command="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/cli/ot-cli-mtd"
             test_patterns=(-name 'v1_2-*.exp')
         elif [[ ${OT_NATIVE_IP} == 1 ]]; then
             test_patterns=(-name 'tun-*.exp')
@@ -323,7 +325,6 @@ do_expect()
             test_patterns=(-name 'posix-*.exp' -o -name 'cli-*.exp')
         fi
     else
-        ot_command="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/cli/ot-cli-ftd"
         test_patterns=(-name 'cli-*.exp' -o -name 'simulation-*.exp')
     fi
 
@@ -333,9 +334,9 @@ do_expect()
         mkdir tmp
         {
             if [[ ${OT_NATIVE_IP} == 1 ]]; then
-                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" MTD_COMMAND="${mtd_command}" sudo -E expect -df "${script}" 2>"${log_file}"
+                sudo -E expect -df "${script}" 2>"${log_file}"
             else
-                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" MTD_COMMAND="${mtd_command}" expect -df "${script}" 2>"${log_file}"
+                expect -df "${script}" 2>"${log_file}"
             fi
         } || {
             local exit_code=$?
@@ -363,8 +364,8 @@ print_usage()
     echo "USAGE: [ENVIRONMENTS] $0 COMMANDS
 
 ENVIRONMENTS:
-    NODE_TYPE       'sim' for CLI, 'ncp-sim' for NCP. The default is 'sim'.
-    NODE_MODE       'rcp' for RCP mode, otherwise for standalone mode. The default is standalone mode.
+    OT_NODE_TYPE    'rcp' for POSIX/RCP, 'cli' for CLI simulation, 'ncp' for NCP simulation, The default is 'cli'.
+    OT_NATIVE_IP    1 to enable platform UDP and netif on POSIX platform. The default is 0.
     VERBOSE         1 to build or test verbosely. The default is 0.
     VIRTUAL_TIME    1 for virtual time, otherwise real time. The default is 1.
     THREAD_VERSION  1.1 for Thread 1.1 stack, 1.2 for Thread 1.2 stack. The default is 1.1.
@@ -385,12 +386,12 @@ EXAMPLES:
     $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
 
     # Test NCP with default settings
-    NODE_TYPE=ncp-sim $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
-    NODE_TYPE=ncp-sim $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
+    $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
+    $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
 
     # Test CLI with radio only
-    NODE_MODE=rcp $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
-    NODE_MODE=rcp $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
+    $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
+    $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
 
     # Test CLI with real time
     VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
@@ -452,7 +453,7 @@ do_untar()
 
 envsetup()
 {
-    if [[ ${NODE_MODE} == 'rcp' ]]; then
+    if [[ ${OT_NODE_TYPE} == 'rcp' ]]; then
         export RADIO_DEVICE="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
         export OT_CLI_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-cli"
         export OT_NCP_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-ncp"
@@ -466,6 +467,9 @@ envsetup()
         fi
     fi
 
+    export OT_SIMULATION_APPS="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps"
+    export OT_POSIX_APPS="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix"
+
     if [[ ! ${VIRTUAL_TIME+x} ]]; then
         # All expect tests only works in real time mode.
         VIRTUAL_TIME=1
@@ -478,7 +482,7 @@ envsetup()
     fi
 
     readonly VIRTUAL_TIME
-    export NODE_TYPE VIRTUAL_TIME
+    export OT_NODE_TYPE VIRTUAL_TIME
 
     # CMake always works in verbose mode if VERBOSE exists in environments.
     if [[ ${VERBOSE} == 1 ]]; then
@@ -502,8 +506,6 @@ main()
         print_usage 1
     fi
 
-    [[ ${NODE_MODE} == "rcp" ]] && echo "Using rcp mode" || echo "Using standalone mode"
-    [[ ${NODE_TYPE} == "ncp-sim" ]] && echo "Using NCP node" || echo "Using CLI node"
     [[ ${VIRTUAL_TIME} == 1 ]] && echo "Using virtual time" || echo "Using real time"
     [[ ${THREAD_VERSION} == "1.2" ]] && echo "Using Thread 1.2 stack" || echo "Using Thread 1.1 stack"
 
