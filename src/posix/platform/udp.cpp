@@ -116,7 +116,7 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
     cmsg = CMSG_FIRSTHDR(&msg);
 
     {
-        int hopLimit = (aMessageInfo.mHopLimit ? aMessageInfo.mHopLimit : -1);
+        int hopLimit = (aMessageInfo.mHopLimit ? aMessageInfo.mHopLimit : OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT);
 
         cmsg->cmsg_level = IPPROTO_IPV6;
         cmsg->cmsg_type  = IPV6_HOPLIMIT;
