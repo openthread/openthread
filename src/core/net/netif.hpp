@@ -403,7 +403,7 @@ public:
      * @param[in]  aInstance        A reference to the OpenThread instance.
      *
      */
-    Netif(Instance &aInstance);
+    explicit Netif(Instance &aInstance);
 
     /**
      * This method registers a callback to notify internal IPv6 address changes.

@@ -61,7 +61,7 @@ public:
      * @param[in] aInstance  The OpenThread instance.
      *
      */
-    Notifier(Instance &aInstance);
+    explicit Notifier(Instance &aInstance);
 
     /**
      * Call this method to inform the notifier that new server data is available.

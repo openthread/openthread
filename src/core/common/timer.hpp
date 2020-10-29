@@ -437,7 +437,7 @@ public:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerMicroScheduler(Instance &aInstance)
+    explicit TimerMicroScheduler(Instance &aInstance)
         : TimerScheduler(aInstance)
     {
     }

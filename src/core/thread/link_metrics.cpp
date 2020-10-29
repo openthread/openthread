@@ -313,7 +313,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &            aMe
     if (aLinkMetrics.mPduCount)
     {
         metric.Init();
-        metric.SetMetricsTypeId(kTypeIdFlagPdu);
+        metric.SetMetricsTypeId(LinkMetricsTypeIdFlags(kTypeIdFlagPdu));
         metric.SetMetricsValue32(aRequestMessage.GetPsduCount());
         SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
         aLength += metric.GetSize();
@@ -322,7 +322,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &            aMe
     if (aLinkMetrics.mLqi)
     {
         metric.Init();
-        metric.SetMetricsTypeId(kTypeIdFlagLqi);
+        metric.SetMetricsTypeId(LinkMetricsTypeIdFlags(kTypeIdFlagLqi));
         metric.SetMetricsValue8(aRequestMessage.GetAverageLqi()); // IEEE 802.15.4 LQI is in scale 0-255
         SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
         aLength += metric.GetSize();
@@ -331,7 +331,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &            aMe
     if (aLinkMetrics.mLinkMargin)
     {
         metric.Init();
-        metric.SetMetricsTypeId(kTypeIdFlagLinkMargin);
+        metric.SetMetricsTypeId(LinkMetricsTypeIdFlags(kTypeIdFlagLinkMargin));
         metric.SetMetricsValue8(
             LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), aRequestMessage.GetAverageRss()) *
             255 / 130); // Linear scale Link Margin from [0, 130] to [0, 255]
@@ -342,7 +342,7 @@ otError LinkMetrics::AppendSingleProbeLinkMetricsReport(Message &            aMe
     if (aLinkMetrics.mRssi)
     {
         metric.Init();
-        metric.SetMetricsTypeId(kTypeIdFlagRssi);
+        metric.SetMetricsTypeId(LinkMetricsTypeIdFlags(kTypeIdFlagRssi));
         metric.SetMetricsValue8((aRequestMessage.GetAverageRss() + 130) * 255 /
                                 130); // Linear scale rss from [-130, 0] to [0, 255]
         SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));

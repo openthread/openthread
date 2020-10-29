@@ -59,7 +59,7 @@ public:
          * @param[in] aName   The null-terminated name string with which to initialize the entry.
          *
          */
-        constexpr Entry(const char *aName)
+        constexpr explicit Entry(const char *aName)
             : mName(aName)
         {
         }

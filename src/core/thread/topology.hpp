@@ -690,7 +690,7 @@ public:
          * @param[in] aFilter   An IPv6 address type filter restricting iterator to certain type of addresses.
          *
          */
-        AddressIterator(const Child &aChild, Ip6::Address::TypeFilter aFilter = Ip6::Address::kTypeAny)
+        explicit AddressIterator(const Child &aChild, Ip6::Address::TypeFilter aFilter = Ip6::Address::kTypeAny)
             : AddressIterator(aChild, 0, aFilter)
         {
         }

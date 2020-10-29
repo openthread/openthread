@@ -86,7 +86,7 @@ void InitCounters(void)
 template <typename TimerType> class TestTimer : public TimerType
 {
 public:
-    TestTimer(ot::Instance &aInstance)
+    explicit TestTimer(ot::Instance &aInstance)
         : TimerType(aInstance, TestTimer::HandleTimerFired, nullptr)
         , mFiredCounter(0)
     {
