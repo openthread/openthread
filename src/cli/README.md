@@ -1150,16 +1150,16 @@ Send a Link Metrics Management Request to configure a Forward Tracking Series.
 - ipaddr: Peer address.
 - seriesid: The Series ID.
 - ldraX: This specifies which frames are to be accounted.
-- l: MLE Link Probe.
-- d: MAC Data.
-- r: MAC Data Request.
-- a: MAC Ack.
-- X: This represents none of the above flags, i.e., to stop accounting and remove the series. This can only be used without any other flags.
+  - l: MLE Link Probe.
+  - d: MAC Data.
+  - r: MAC Data Request.
+  - a: MAC Ack.
+  - X: This represents none of the above flags, i.e., to stop accounting and remove the series. This can only be used without any other flags.
 - pqmr: This specifies what metrics to query.
-- p: Layer 2 Number of PDUs received.
-- q: Layer 2 LQI.
-- m: Link Margin.
-- r: RSSI.
+  - p: Layer 2 Number of PDUs received.
+  - q: Layer 2 LQI.
+  - m: Link Margin.
+  - r: RSSI.
 
 ```bash
 > linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 forward 1 dra pqmr

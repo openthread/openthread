@@ -1945,8 +1945,7 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
     }
     else
     {
-        OutputFormat("Link Metrics Report, status: ");
-        OutputLinkMetricsStatus(aStatus);
+        OutputLine("Link Metrics Report, status: %s", LinkMetricsStatusToStr(aStatus));
     }
 }
 
@@ -1961,36 +1960,48 @@ void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, ui
     OutputIp6Address(*aAddress);
     OutputLine("");
 
-    OutputFormat("Status: ");
-    OutputLinkMetricsStatus(aStatus);
+    OutputLine("Status: %s", LinkMetricsStatusToStr(aStatus));
 }
 
-void Interpreter::OutputLinkMetricsStatus(uint8_t aStatus)
+const char *Interpreter::LinkMetricsStatusToStr(uint8_t aStatus)
 {
+    uint8_t            strIndex                = 0;
+    static const char *linkMetricsStatusText[] = {
+        "Success",
+        "Cannot support new series",
+        "Series ID already registered",
+        "Series ID not recognized",
+        "No matching series ID",
+        "Other error",
+        "Unknown error",
+    };
+
     switch (aStatus)
     {
     case OT_LINK_METRICS_STATUS_SUCCESS:
-        OutputLine("Success");
+        strIndex = 0;
         break;
     case OT_LINK_METRICS_STATUS_CANNOT_SUPPORT_NEW_SERIES:
-        OutputLine("Cannot support new series");
+        strIndex = 1;
         break;
     case OT_LINK_METRICS_STATUS_SERIESID_ALREADY_REGISTERED:
-        OutputLine("Series ID already registered");
+        strIndex = 2;
         break;
     case OT_LINK_METRICS_STATUS_SERIESID_NOT_RECOGNIZED:
-        OutputLine("Series ID not recognized");
+        strIndex = 3;
         break;
     case OT_LINK_METRICS_STATUS_NO_MATCHING_FRAMES_RECEIVED:
-        OutputLine("No matching series ID");
+        strIndex = 4;
         break;
     case OT_LINK_METRICS_STATUS_OTHER_ERROR:
-        OutputLine("Other error");
+        strIndex = 5;
         break;
     default:
-        OutputLine("Unknown error");
+        strIndex = 6;
         break;
     }
+
+    return linkMetricsStatusText[strIndex];
 }
 
 otError Interpreter::ProcessLinkMetrics(uint8_t aArgsLength, char *aArgs[])

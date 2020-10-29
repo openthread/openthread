@@ -541,7 +541,7 @@ private:
 
     void HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, uint8_t aStatus);
 
-    void OutputLinkMetricsStatus(uint8_t aStatus);
+    const char *LinkMetricsStatusToStr(uint8_t aStatus);
 #endif
 
     static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);

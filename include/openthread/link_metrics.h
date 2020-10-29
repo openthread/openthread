@@ -159,9 +159,11 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
  * @param[in] aDestination       A pointer to the destination address.
  * @param[in] aSeriesId          The Series ID to operate with.
  * @param[in] aSeriesFlags       The Series Flags that specifies which frames are to be accounted.
- *
  * @param[in] aLinkMetricsFlags  A pointer to flags specifying what metrics to query. Should be `NULL` when
- * `aSeriesFlags` is `0`.
+ *                               `aSeriesFlags` is `0`.
+ * @param[in]  aCallback         A pointer to a function that is called when Link Metrics Management Response is
+ *                               received.
+ * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  * @retval OT_ERROR_NONE          Successfully sent a Link Metrics Management Request message.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Link Metrics Management Request message.

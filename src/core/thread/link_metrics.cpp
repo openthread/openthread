@@ -141,18 +141,19 @@ otError LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &  
                                                           const otLinkMetricsSeriesFlags &aSeriesFlags,
                                                           const otLinkMetrics *           aLinkMetricsFlags)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t typeIdFlagsOffset =
-        sizeof(Tlv) + sizeof(uint8_t) * 2; // Forward Probing Registration sub-TLV header + SeriesId + SeriesFlags
+    otError      error = OT_ERROR_NONE;
     uint8_t      subTlvs[sizeof(Tlv) + sizeof(uint8_t) * 2 + sizeof(LinkMetricsTypeIdFlags) * kMaxTypeIdFlags];
     Tlv *        forwardProbingRegistrationSubTlv = reinterpret_cast<Tlv *>(subTlvs);
-    SeriesFlags *seriesFlags = reinterpret_cast<SeriesFlags *>(subTlvs + sizeof(Tlv) + sizeof(aSeriesId));
-    uint8_t      typeIdFlagsCount =
-        aLinkMetricsFlags == nullptr
-            ? 0
-            : TypeIdFlagsFromLinkMetricsFlags(reinterpret_cast<LinkMetricsTypeIdFlags *>(subTlvs + typeIdFlagsOffset),
-                                              *aLinkMetricsFlags); // Directly transform `aLinkMetricsFlags` into
-                                                                   // LinkMetricsTypeIdFlags and put them into `subTlvs`
+    SeriesFlags *seriesFlags       = reinterpret_cast<SeriesFlags *>(subTlvs + sizeof(Tlv) + sizeof(aSeriesId));
+    uint8_t      typeIdFlagsOffset = sizeof(Tlv) + sizeof(uint8_t) * 2;
+    uint8_t      typeIdFlagsCount  = 0;
+
+    // Directly transform `aLinkMetricsFlags` into LinkMetricsTypeIdFlags and put them into `subTlvs`
+    if (aLinkMetricsFlags != nullptr)
+    {
+        typeIdFlagsCount = TypeIdFlagsFromLinkMetricsFlags(
+            reinterpret_cast<LinkMetricsTypeIdFlags *>(subTlvs + typeIdFlagsOffset), *aLinkMetricsFlags);
+    }
 
     VerifyOrExit(aSeriesId > kQueryIdSingleProbe, error = OT_ERROR_INVALID_ARGS);
 

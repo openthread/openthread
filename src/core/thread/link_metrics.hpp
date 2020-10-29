@@ -78,12 +78,12 @@ class LinkMetricsSeriesInfo : public LinkedListEntry<LinkMetricsSeriesInfo>
     friend class LinkedListEntry<LinkMetricsSeriesInfo>;
 
 public:
+    ///< This represents Link Probe when filtering frames to be accounted using Series Flag. There's
+    ///< already `kFcfFrameData`, `kFcfFrameAck` and `kFcfFrameMacCmd`. This item is added so that we can
+    ///< filter a Link Probe for series in the same way as other frames.
     enum
     {
-        kSeriesTypeLinkProbe =
-            0, ///< This represents Link Probe when filtering frames to be accounted using Series Flag. There's
-               ///< already `kFcfFrameData`, `kFcfFrameAck` and `kFcfFrameMacCmd`. This item is added so that we can
-               ///< filter a Link Probe for series in the same way as other frames.
+        kSeriesTypeLinkProbe = 0,
     };
 
     /**
@@ -91,7 +91,7 @@ public:
      *
      * @param[in]  aSeriesId            The Series ID.
      * @param[in]  aSeriesFlags         A reference to the Series Flags which specify what types of frames are to be
-     * accounted.
+     *                                  accounted.
      * @param[in]  aLinkMetricsFlags    A reference to flags specifying what metrics to query.
      *
      */
@@ -199,7 +199,7 @@ public:
      * @param[in] aDestination       A reference to the IPv6 address of the destination.
      * @param[in] aSeriesId          The Series ID.
      * @param[in] aSeriesFlags       A reference to the Series Flags which specify what types of frames are to be
-     * accounted.
+     *                               accounted.
      * @param[in] aLinkMetricsFlags  A pointer to flags specifying what metrics to query.
      *
      * @retval OT_ERROR_NONE          Successfully sent a Link Metrics Management Request message.
@@ -306,24 +306,28 @@ public:
      * This method registers a callback to handle Link Metrics Management Response received.
      *
      * @param[in]  aCallback         A pointer to a function that is called when a Link Metrics Management Response is
-     * received.
+     *                               received.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
     void SetLinkMetricsMgmtResponseCallback(otLinkMetricsMgmtResponseCallback aCallback, void *aCallbackContext);
 
 private:
+    /**
+     * TypeIdFlagPdu: 0x0_1_000_000 -> 0x40 ==> L bit set, type = 0 (count/summation), metric-enum = 0 (PDU rxed).
+     * TypeIdFlagLqi: 0x0_0_001_001 -> 0x00 ==> L bit not set, type = 1 (exp ave), metric-enum = 1 (LQI).
+     * TypeIdFlagLinkMargin: 0x0_0_001_010 -> 0x00 ==> L bit not set, type = 1 (exp ave), metric-enum = 2 (Link Margin).
+     * TypeIdFlagRssi: 0x0_0_001_011 -> 0x00 ==> L bit not set, type = 1 (exp ave), metric-enum = 3 (RSSI).
+     *
+     */
     enum
     {
         kMaxTypeIdFlags = 4,
 
-        kTypeIdFlagPdu =
-            0x40, ///< 0x0_1_000_000 -> 0x40 ==> L bit set, type = 0 (count/summation), metric-enum = 0 (PDU rxed).
-        kTypeIdFlagLqi = 0x09, ///< 0x0_0_001_001 -> 0x00 ==> L bit not set, type = 1 (exp ave), metric-enum = 1 (LQI).
-        kTypeIdFlagLinkMargin =
-            0x0a, ///< 0x0_0_001_010 -> 0x00 ==> L bit not set, type = 1 (exp ave), metric-enum = 2 (Link Margin).
-        kTypeIdFlagRssi =
-            0x0b, ///< 0x0_0_001_011 -> 0x00 ==> L bit not set, type = 1 (exp ave), metric-enum = 3 (RSSI).
+        kTypeIdFlagPdu        = 0x40,
+        kTypeIdFlagLqi        = 0x09,
+        kTypeIdFlagLinkMargin = 0x0a,
+        kTypeIdFlagRssi       = 0x0b,
 
         kMaxSeriesSupported =
             OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED, ///< Max number of LinkMetricsSeriesInfo that could
