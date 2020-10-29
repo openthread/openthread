@@ -53,7 +53,7 @@ public:
      * Constructor.
      *
      */
-    Flash(Instance &aInstance)
+    explicit Flash(Instance &aInstance)
         : InstanceLocator(aInstance)
     {
     }

@@ -52,8 +52,6 @@
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 namespace ot {
 
 void ThreadLinkInfo::SetFrom(const Mac::RxFrame &aFrame)

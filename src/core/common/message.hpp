@@ -47,6 +47,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/pool.hpp"
+#include "common/type_traits.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/child_mask.hpp"
 #include "thread/link_quality.hpp"
@@ -391,7 +392,7 @@ public:
          *                       security enabled with `kPriorityNormal` priority) would be used.
          *
          */
-        Settings(const otMessageSettings *aSettings);
+        explicit Settings(const otMessageSettings *aSettings);
 
         /**
          * This method gets the message priority.
@@ -578,6 +579,8 @@ public:
      */
     template <typename ObjectType> otError Prepend(const ObjectType &aObject)
     {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
         return PrependBytes(&aObject, sizeof(ObjectType));
     }
 
@@ -618,6 +621,8 @@ public:
      */
     template <typename ObjectType> otError Append(const ObjectType &aObject)
     {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
         return AppendBytes(&aObject, sizeof(ObjectType));
     }
 
@@ -667,6 +672,8 @@ public:
      */
     template <typename ObjectType> otError Read(uint16_t aOffset, ObjectType &aObject) const
     {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
         return Read(aOffset, &aObject, sizeof(ObjectType));
     }
 
@@ -697,6 +704,8 @@ public:
      */
     template <typename ObjectType> void Write(uint16_t aOffset, const ObjectType &aObject)
     {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
         WriteBytes(aOffset, &aObject, sizeof(ObjectType));
     }
 

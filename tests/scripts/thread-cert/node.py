@@ -93,6 +93,7 @@ class OtbrDocker:
     def _launch_docker(self):
         subprocess.check_call(f"docker rm -f {self._docker_name} || true", shell=True)
         CI_ENV = os.getenv('CI_ENV', '').split()
+        os.makedirs('/tmp/coverage/', exist_ok=True)
         self._docker_proc = subprocess.Popen(['docker', 'run'] + CI_ENV + [
             '--rm',
             '--name',
@@ -107,7 +108,7 @@ class OtbrDocker:
             '--volume',
             f'{self._rcp_device}:/dev/ttyUSB0',
             '-v',
-            '/tmp/codecov.bash:/tmp/codecov.bash',
+            '/tmp/coverage/:/tmp/coverage/',
             config.OTBR_DOCKER_IMAGE,
             '-B',
             config.BACKBONE_IFNAME,
@@ -160,10 +161,14 @@ class OtbrDocker:
             if COVERAGE or OTBR_COVERAGE:
                 self.bash('service otbr-agent stop')
 
-                codecov_cmd = 'bash /tmp/codecov.bash -Z'
+                test_name = os.getenv('TEST_NAME')
+                cov_file_path = f'/tmp/coverage/coverage-{test_name}-{PORT_OFFSET}-{self.nodeid}.info'
                 # Upload OTBR code coverage if OTBR_COVERAGE=1, otherwise OpenThread code coverage.
-                if not OTBR_COVERAGE:
-                    codecov_cmd += ' -R third_party/openthread/repo'
+                if OTBR_COVERAGE:
+                    codecov_cmd = f'lcov --directory . --capture --output-file {cov_file_path}'
+                else:
+                    codecov_cmd = ('lcov --directory build/otbr/third_party/openthread/repo --capture '
+                                   f'--output-file {cov_file_path}')
 
                 self.bash(codecov_cmd)
 

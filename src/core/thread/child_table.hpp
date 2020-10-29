@@ -161,7 +161,7 @@ public:
         bool operator!=(const Iterator &aOther) const { return mChild != aOther.mChild; }
 
     private:
-        Iterator(Instance &aInstance)
+        explicit Iterator(Instance &aInstance)
             : InstanceLocator(aInstance)
             , mFilter(Child::StateFilter::kInStateValid)
             , mChild(nullptr)

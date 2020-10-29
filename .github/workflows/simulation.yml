@@ -85,7 +85,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib
+        sudo apt-get --no-install-recommends install -y g++-multilib lcov
         ./bootstrap
     - name: Run OTNS Tests
       env:
@@ -108,11 +108,13 @@ jobs:
         path: |
           ./output/*/bin/*.pcap
           ./output/*/bin/*.replay
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
-
+        name: cov-cli-ftd-otns
+        path: tmp/coverage.info
 
   packet-verification:
     runs-on: ubuntu-18.04
@@ -121,36 +123,38 @@ jobs:
       VIRTUAL_TIME: 1
       PACKET_VERIFICATION: 1
     steps:
-      - uses: actions/checkout@v2
-      - name: Bootstrap
-        run: |
-          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-          sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel ninja-build
-          python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-      - name: Build
-        run: |
-          ./script/test build
-      - name: Get Thread-Wireshark
-        run: |
-          ./script/test get_thread_wireshark
-      - name: Run
-        run: |
-          for i in {1..10}
-          do
-            ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
-          done
-      - uses: actions/upload-artifact@v2
-        if: ${{ failure() }}
-        with:
-          name: packet-verification-pcaps
-          path: |
-            *.pcap
-            *.json
-      - name: Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          fail_ci_if_error: true
-
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel ninja-build lcov
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        ./script/test build
+    - name: Get Thread-Wireshark
+      run: |
+        ./script/test get_thread_wireshark
+    - name: Run
+      run: |
+        for i in {1..10}
+        do
+          ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
+        done
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: packet-verification-pcaps
+        path: |
+          *.pcap
+          *.json
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-packet-verification
+        path: tmp/coverage.info
 
   cli-ftd:
     runs-on: ubuntu-18.04
@@ -166,7 +170,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel
+        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -180,10 +184,13 @@ jobs:
       with:
         name: cli-ftd-thread-cert
         path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-cli-ftd
+        path: tmp/coverage.info
 
   cli-mtd:
     runs-on: ubuntu-18.04
@@ -200,7 +207,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel
+        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -214,10 +221,13 @@ jobs:
       with:
         name: cli-mtd-thread-cert
         path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-cli-mtd
+        path: tmp/coverage.info
 
   cli-time-sync:
     runs-on: ubuntu-18.04
@@ -234,7 +244,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel
+        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -248,10 +258,13 @@ jobs:
       with:
         name: cli-time-sync-thread-cert
         path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-cli-time-sync
+        path: tmp/coverage.info
 
   expects:
     runs-on: ubuntu-18.04
@@ -262,32 +275,41 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build
+        OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build lcov
     - name: Run
       run: |
         OT_OPTIONS=-DOT_TIME_SYNC=ON VIRTUAL_TIME=0 ./script/test build expect
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-expects-1
+        path: tmp/coverage.info
     - name: Run RCP Mode
       run: |
-        OT_OPTIONS=-DOT_READLINE=OFF VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
+        OT_OPTIONS=-DOT_READLINE=OFF VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
     - name: Keep POSIX Only
       run: |
         ./script/test tar simulation 1.1
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-expects-2
+        path: tmp/coverage.info
     - name: Keep Simulation Only
       run: |
         ./script/test tar posix 1.1
         ./script/test untar simulation 1.1
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-expects-3
+        path: tmp/coverage.info
     - name: Run TUN Mode
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -298,22 +320,28 @@ jobs:
         echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
         sudo systemctl restart dnsmasq
         host ipv6.google.com ::1
-        OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
+        OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
     - name: Keep POSIX Only
       run: |
         ./script/test tar simulation 1.1
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-expects-4
+        path: tmp/coverage.info
     - name: Keep Simulation Only
       run: |
         ./script/test tar posix 1.1
         ./script/test untar simulation 1.1
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-expects-5
+        path: tmp/coverage.info
 
   external-commissioner:
     runs-on: ubuntu-18.04
@@ -322,7 +350,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/*
-        sudo apt-get install avahi-daemon avahi-utils -y
+        sudo apt-get install -y avahi-daemon avahi-utils lcov
         git clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch master
     - name: Build
       run: |
@@ -344,10 +372,13 @@ jobs:
         cd /tmp/ot-commissioner/tests/integration
         ./bootstrap.sh
         ./run_tests.sh
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-external-commissioner
+        path: tmp/coverage.info
 
   multiple-instance:
     runs-on: ubuntu-18.04
@@ -360,7 +391,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel
+        sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -374,10 +405,13 @@ jobs:
       with:
         name: multiple-instance-thread-cert
         path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-multiple-instance
+        path: tmp/coverage.info
 
   ncp-gcc-m32:
     runs-on: ubuntu-18.04
@@ -395,7 +429,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel
+        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         sudo python3 -m pip install git+https://github.com/openthread/pyspinel
     - name: Build
@@ -410,10 +444,13 @@ jobs:
       with:
         name: ncp-gcc-m32-thread-cert
         path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-ncp-gcc-m32
+        path: tmp/coverage.info
 
   ncp-clang:
     runs-on: ubuntu-18.04
@@ -426,25 +463,54 @@ jobs:
       CC: clang
       CXX: clang++
     steps:
-      - uses: actions/checkout@v2
-      - name: Bootstrap
-        run: |
-          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-          sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel llvm
-          python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-          sudo python3 -m pip install git+https://github.com/openthread/pyspinel
-      - name: Build
-        run: |
-          ./bootstrap
-          make -f examples/Makefile-simulation
-      - name: Run
-        run: |
-          VERBOSE=1 make -f examples/Makefile-simulation check
-      - uses: actions/upload-artifact@v2
-        if: ${{ failure() }}
-        with:
-          name: cli-clang-thread-cert
-          path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
-      - name: Codecov
-        run: |
-          bash <(curl -s https://codecov.io/bash) -x "llvm-cov gcov" -Z
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel llvm lcov
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+        sudo python3 -m pip install git+https://github.com/openthread/pyspinel
+    - name: Build
+      run: |
+        ./bootstrap
+        make -f examples/Makefile-simulation
+    - name: Run
+      run: |
+        VERBOSE=1 make -f examples/Makefile-simulation check
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: cli-clang-thread-cert
+        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage llvm
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-ncp-clang
+        path: tmp/coverage.info
+
+  upload-coverage:
+    needs:
+    - cli-ftd-otns
+    - packet-verification
+    - cli-ftd
+    - cli-mtd
+    - cli-time-sync
+    - expects
+    - external-commissioner
+    - multiple-instance
+    - ncp-gcc-m32
+    - ncp-clang
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y lcov
+    - uses: actions/download-artifact@v2
+      with:
+        path: coverage/
+    - name: Upload Coverage
+      run: |
+        script/test upload_codecov

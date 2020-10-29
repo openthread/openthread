@@ -714,7 +714,7 @@ otError LinkMetrics::AppendReportSubTlvToMessage(Message &                  aMes
     if (aValues.mMetrics.mPduCount)
     {
         metric.Init();
-        metric.SetMetricsTypeId(kTypeIdFlagPdu);
+        metric.SetMetricsTypeId(LinkMetricsTypeIdFlags(kTypeIdFlagPdu));
         metric.SetMetricsValue32(aValues.mPduCountValue);
         SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
         aLength += metric.GetSize();
@@ -723,7 +723,7 @@ otError LinkMetrics::AppendReportSubTlvToMessage(Message &                  aMes
     if (aValues.mMetrics.mLqi)
     {
         metric.Init();
-        metric.SetMetricsTypeId(kTypeIdFlagLqi);
+        metric.SetMetricsTypeId(LinkMetricsTypeIdFlags(kTypeIdFlagLqi));
         metric.SetMetricsValue8(aValues.mLqiValue);
         SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
         aLength += metric.GetSize();
@@ -732,7 +732,7 @@ otError LinkMetrics::AppendReportSubTlvToMessage(Message &                  aMes
     if (aValues.mMetrics.mLinkMargin)
     {
         metric.Init();
-        metric.SetMetricsTypeId(kTypeIdFlagLinkMargin);
+        metric.SetMetricsTypeId(LinkMetricsTypeIdFlags(kTypeIdFlagLinkMargin));
         metric.SetMetricsValue8(aValues.mLinkMarginValue);
         SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
         aLength += metric.GetSize();
@@ -741,7 +741,7 @@ otError LinkMetrics::AppendReportSubTlvToMessage(Message &                  aMes
     if (aValues.mMetrics.mRssi)
     {
         metric.Init();
-        metric.SetMetricsTypeId(kTypeIdFlagRssi);
+        metric.SetMetricsTypeId(LinkMetricsTypeIdFlags(kTypeIdFlagRssi));
         metric.SetMetricsValue8(aValues.mRssiValue);
         SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
         aLength += metric.GetSize();

@@ -32,7 +32,6 @@
 #include "test_util.hpp"
 
 using namespace ot;
-using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
