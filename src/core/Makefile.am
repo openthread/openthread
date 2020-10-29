@@ -369,6 +369,7 @@ HEADERS_COMMON                                  = \
     common/timer.hpp                              \
     common/tlvs.hpp                               \
     common/trickle_timer.hpp                      \
+    common/type_traits.hpp                        \
     config/announce_sender.h                      \
     config/backbone_router.h                      \
     config/border_router.h                        \

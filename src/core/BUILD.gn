@@ -385,6 +385,7 @@ openthread_core_files = [
   "common/tlvs.hpp",
   "common/trickle_timer.cpp",
   "common/trickle_timer.hpp",
+  "common/type_traits.hpp",
   "crypto/aes_ccm.cpp",
   "crypto/aes_ccm.hpp",
   "crypto/aes_ecb.cpp",

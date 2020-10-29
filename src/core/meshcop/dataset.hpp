@@ -42,6 +42,7 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
+#include "common/type_traits.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 
 namespace ot {
@@ -247,6 +248,8 @@ public:
      */
     template <typename ValueType> otError SetTlv(Tlv::Type aType, const ValueType &aValue)
     {
+        static_assert(!TypeTraits::IsPointer<ValueType>::kValue, "ValueType must not be a pointer");
+
         return SetTlv(aType, &aValue, sizeof(ValueType));
     }
 
