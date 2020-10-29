@@ -33,30 +33,27 @@
  */
 
 #include <openthread/platform/entropy.h>
-
 #include "mbedtls/entropy_poll.h"
 #include "utils/code_utils.h"
-
-static uint32_t randomUint32Get(void)
-{
-    uint32_t random   = 0;
-    size_t   ouputLen = 0;
-
-    mbedtls_hardware_poll(NULL, (unsigned char *)&random, sizeof(random), &ouputLen);
-
-    return random;
-}
 
 otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError error = OT_ERROR_NONE;
-
     otEXPECT_ACTION(aOutput, error = OT_ERROR_INVALID_ARGS);
 
-    for (uint16_t length = 0; length < aOutputLength; length++)
+    size_t outputLen = 0;
+
+    for (size_t partialLen = 0; outputLen < aOutputLength; outputLen += partialLen)
     {
-        aOutput[length] = (uint8_t)randomUint32Get();
+        partialLen = 0;
+        const uint16_t remaining = aOutputLength - outputLen;
+
+        // Non-zero return values for mbedtls_hardware_poll() signify an error has occurred
+        otEXPECT_ACTION(0 == mbedtls_hardware_poll(NULL, &aOutput[outputLen], remaining, &partialLen), error = OT_ERROR_FAILED);
+        otEXPECT_ACTION(partialLen > 0, error = OT_ERROR_FAILED);
     }
+
+    otEXPECT_ACTION(outputLen == aOutputLength, error = OT_ERROR_FAILED);
 
 exit:
     return error;
