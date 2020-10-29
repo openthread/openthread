@@ -54,8 +54,6 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
         otEXPECT_ACTION(partialLen > 0, error = OT_ERROR_FAILED);
     }
 
-    otEXPECT_ACTION(outputLen == aOutputLength, error = OT_ERROR_FAILED);
-
 exit:
     return error;
 }
