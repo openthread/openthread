@@ -223,7 +223,7 @@ jobs:
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov
     - name: Run RCP Mode
       run: |
-        OT_OPTIONS=-DOT_READLINE=OFF NODE_MODE=rcp ./script/test build expect
+        OT_OPTIONS=-DOT_READLINE=OFF OT_NODE_TYPE=rcp ./script/test build expect
     - name: Keep-1-2-only
       run: |
         ./script/test tar posix 1.2-bbr

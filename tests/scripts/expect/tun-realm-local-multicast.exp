@@ -27,64 +27,95 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+# This script verifies realm-local multicast on POSIX platform.
+
+#
+#
+# R1(Leader,POSIX) -- R2 -- R3 -- E4
+#
+
 source "tests/scripts/expect/_common.exp"
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=--sleep-to-tx 1"
-set node_1 $spawn_id
-expect_after {
-    timeout { exit 1 }
-}
+spawn_node 1
 
-send "dataset init new\n"
+set timeout 1
+
+send "panid 0xface\n"
 expect "Done"
-send "dataset panid 0xface\n"
-expect "Done"
-send "dataset commit active\n"
-expect "Done"
+
 send "ifconfig up\n"
 expect "Done"
+
 send "thread start\n"
 expect "Done"
+
 wait_for "state" "leader"
 expect "Done"
 
-send "extaddr\n"
-expect "extaddr"
-expect -re {([0-9a-f]{16})}
-set extaddr $expect_out(1,string)
-expect "Done"
-send "panid\n"
-expect "panid"
-expect -re {([0-9a-f]{4})}
-set pan $expect_out(1,string)
-expect "Done"
-send "extpanid\n"
-expect "extpanid"
-expect -re {([0-9a-f]{16})}
-set extpan $expect_out(1,string)
-expect "Done"
-expect "> "
-send "networkname\n"
-expect "networkname"
-expect -re {[\r\n]([^\r\n]+)[\r\n]}
-set network $expect_out(1,string)
-expect "Done"
-send "channel\n"
-expect "channel"
-expect -re {(\d+)}
-set channel $expect_out(1,string)
+set extaddr1 [get_extaddr]
+
+spawn_node 2 cli
+
+send "panid 0xface\n"
 expect "Done"
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=--sleep-to-tx 2"
-set node_2 $spawn_id
-expect_after {
-    timeout { exit 1 }
-}
+send "ifconfig up\n"
+expect "Done"
 
-send "scan\n"
-expect "| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |"
-expect "+---+------------------+------------------+------+------------------+----+-----+-----+"
-wait_for "" "\\| \\d \\| $network +\\| $extpan \\| $pan \\| $extaddr \\| +$channel \\| +-?\\d+ \\| +\\d \\|"
-wait_for "" "Done"
+send "thread start\n"
+expect "Done"
+
+wait_for "state" "router"
+
+spawn_node 3 cli
+
+send "panid 0xface\n"
+expect "Done"
+
+send "macfilter addr add ${extaddr1}\n"
+expect "Done"
+
+send "macfilter addr denylist\n"
+expect "Done"
+
+send "ifconfig up\n"
+expect "Done"
+
+send "thread start\n"
+expect "Done"
+
+wait_for "state" "router"
+
+set extaddr3 [get_extaddr]
+
+spawn_node 4 cli
+
+send "panid 0xface\n"
+expect "Done"
+
+send "mode rn\n"
+expect "Done"
+
+send "macfilter addr add ${extaddr3}\n"
+expect "Done"
+
+send "macfilter addr allowlist\n"
+expect "Done"
+
+send "ifconfig up\n"
+expect "Done"
+
+send "thread start\n"
+expect "Done"
+
+wait_for "state" "child"
+
+set mleid4 [get_mleid]
+
+switch_node 1
+
+send "ping ${mleid4}\n"
+expect "Done"
+expect "16 bytes from $mleid4: icmp_seq=1"
 
 dispose_all
