@@ -113,7 +113,7 @@ static otRadioState  sState        = OT_RADIO_STATE_DISABLED;
 enum
 {
     ACKED_WITH_FP_MATCH_LENGTH = 1 + IEEE802154_MAX_MHR_LENGTH, // PHR and MHR
-    ACKED_WITH_FP_SLOTS = 16, // maximum number of Data Request packets in the RX FIFO. Length should be a power of 2.
+    ACKED_WITH_FP_SLOTS = 32, // maximum number of Data Request packets in the RX FIFO. Length should be a power of 2.
 };
 
 typedef struct efr32AckedWithFP
