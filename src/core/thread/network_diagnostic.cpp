@@ -298,8 +298,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(const Message &       aRequest,
         switch (type)
         {
         case NetworkDiagnosticTlv::kExtMacAddress:
-            SuccessOrExit(
-                error = Tlv::AppendTlv(aResponse, type, &Get<Mac::Mac>().GetExtAddress(), sizeof(Mac::ExtAddress)));
+            SuccessOrExit(error = Tlv::AppendTlv(aResponse, type, Get<Mac::Mac>().GetExtAddress()));
             break;
 
         case NetworkDiagnosticTlv::kAddress16:
@@ -743,8 +742,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
         switch (tlv.GetType())
         {
         case NetworkDiagnosticTlv::kExtMacAddress:
-            SuccessOrExit(
-                error = Tlv::ReadTlv(aMessage, offset, &aNetworkDiagTlv.mData.mExtAddress, sizeof(Mac::ExtAddress)));
+            SuccessOrExit(error = Tlv::ReadTlv(aMessage, offset, aNetworkDiagTlv.mData.mExtAddress));
             break;
 
         case NetworkDiagnosticTlv::kAddress16:

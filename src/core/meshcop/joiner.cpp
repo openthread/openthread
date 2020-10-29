@@ -569,7 +569,7 @@ void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo
 
     memset(&dataset, 0, sizeof(dataset));
 
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, Tlv::kNetworkMasterKey, &dataset.mMasterKey, sizeof(MasterKey)));
+    SuccessOrExit(error = Tlv::FindTlv(aMessage, Tlv::kNetworkMasterKey, dataset.mMasterKey));
     dataset.mComponents.mIsMasterKeyPresent = true;
 
     dataset.mChannel                      = Get<Mac::Mac>().GetPanChannel();

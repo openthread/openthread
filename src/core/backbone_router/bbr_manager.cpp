@@ -350,8 +350,8 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
     VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator(), error = OT_ERROR_DROP);
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = OT_ERROR_PARSE);
 
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, &meshLocalIid, sizeof(meshLocalIid)));
+    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, target));
+    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, meshLocalIid));
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     if (mDuaResponseIsSpecified && (mDuaResponseTargetMlIid.IsUnspecified() || mDuaResponseTargetMlIid == meshLocalIid))
@@ -428,7 +428,7 @@ void Manager::SendDuaRegistrationResponse(const Coap::Message &      aMessage,
     SuccessOrExit(message->SetPayloadMarker());
 
     SuccessOrExit(Tlv::AppendUint8Tlv(*message, ThreadTlv::kStatus, aStatus));
-    SuccessOrExit(Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aTarget, sizeof(aTarget)));
+    SuccessOrExit(Tlv::AppendTlv(*message, ThreadTlv::kTarget, aTarget));
 
     SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 

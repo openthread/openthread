@@ -331,7 +331,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
             break;
 
         case MeshCoP::Tlv::kExtendedPanId:
-            SuccessOrExit(error = Tlv::ReadTlv(aMessage, offset, &result.mExtendedPanId, sizeof(Mac::ExtendedPanId)));
+            SuccessOrExit(error = Tlv::ReadTlv(aMessage, offset, result.mExtendedPanId));
             break;
 
         case MeshCoP::Tlv::kNetworkName:

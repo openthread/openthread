@@ -147,8 +147,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kJoinerUdpPort, aMessageInfo.GetPeerPort()));
-    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kJoinerIid, &aMessageInfo.GetPeerAddr().GetIid(),
-                                         Ip6::InterfaceIdentifier::kSize));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kJoinerIid, aMessageInfo.GetPeerAddr().GetIid()));
     SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kJoinerRouterLocator, Get<Mle::MleRouter>().GetRloc16()));
 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);
@@ -210,7 +209,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    if (Tlv::FindTlv(aMessage, Tlv::kJoinerRouterKek, &kek, sizeof(kek)) == OT_ERROR_NONE)
+    if (Tlv::FindTlv(aMessage, Tlv::kJoinerRouterKek, kek) == OT_ERROR_NONE)
     {
         otLogInfoMeshCoP("Received kek");
 
@@ -327,14 +326,9 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     SuccessOrExit(error = message->SetPayloadMarker());
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
-    SuccessOrExit(
-        error = Tlv::AppendTlv(*message, Tlv::kNetworkMasterKey, &Get<KeyManager>().GetMasterKey(), sizeof(MasterKey)));
-
-    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kMeshLocalPrefix, &Get<Mle::MleRouter>().GetMeshLocalPrefix(),
-                                         sizeof(otMeshLocalPrefix)));
-
-    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kExtendedPanId, &Get<Mac::Mac>().GetExtendedPanId(),
-                                         sizeof(Mac::ExtendedPanId)));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kNetworkMasterKey, Get<KeyManager>().GetMasterKey()));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kMeshLocalPrefix, Get<Mle::MleRouter>().GetMeshLocalPrefix()));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kExtendedPanId, Get<Mac::Mac>().GetExtendedPanId()));
 
     networkName.Init();
     networkName.SetNetworkName(Get<Mac::Mac>().GetNetworkName().GetAsData());

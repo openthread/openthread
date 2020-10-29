@@ -330,8 +330,7 @@ void BorderAgent::HandleProxyTransmit(const Coap::Message &aMessage)
     messageInfo.SetSockAddr(mCommissionerAloc.GetAddress());
     messageInfo.SetPeerPort(tlv.GetDestinationPort());
 
-    SuccessOrExit(
-        error = Tlv::FindTlv(aMessage, Tlv::kIPv6Address, messageInfo.GetPeerAddr().mFields.m8, sizeof(Ip6::Address)));
+    SuccessOrExit(error = Tlv::FindTlv(aMessage, Tlv::kIPv6Address, messageInfo.GetPeerAddr()));
 
     SuccessOrExit(error = Get<Ip6::Udp>().SendDatagram(*message, messageInfo, Ip6::kProtoUdp));
     otLogInfoMeshCoP("Proxy transmit sent");
@@ -373,8 +372,7 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
         aMessage.CopyTo(aMessage.GetOffset(), offset, udpLength, *message);
     }
 
-    SuccessOrExit(error =
-                      Tlv::AppendTlv(*message, Tlv::kIPv6Address, &aMessageInfo.GetPeerAddr(), sizeof(Ip6::Address)));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kIPv6Address, aMessageInfo.GetPeerAddr()));
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().SendMessage(*message, Get<Coap::CoapSecure>().GetMessageInfo()));
 

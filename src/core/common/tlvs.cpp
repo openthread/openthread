@@ -180,7 +180,7 @@ otError Tlv::ReadUint16Tlv(const Message &aMessage, uint16_t aOffset, uint16_t &
 {
     otError error;
 
-    SuccessOrExit(error = ReadTlv(aMessage, aOffset, &aValue, sizeof(uint16_t)));
+    SuccessOrExit(error = ReadTlv(aMessage, aOffset, aValue));
     aValue = HostSwap16(aValue);
 
 exit:
@@ -191,7 +191,7 @@ otError Tlv::ReadUint32Tlv(const Message &aMessage, uint16_t aOffset, uint32_t &
 {
     otError error;
 
-    SuccessOrExit(error = ReadTlv(aMessage, aOffset, &aValue, sizeof(uint32_t)));
+    SuccessOrExit(error = ReadTlv(aMessage, aOffset, aValue));
     aValue = HostSwap32(aValue);
 
 exit:

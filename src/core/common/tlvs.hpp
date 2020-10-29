@@ -41,6 +41,7 @@
 #include <openthread/platform/toolchain.h>
 
 #include "common/encoding.hpp"
+#include "common/type_traits.hpp"
 
 namespace ot {
 
@@ -230,6 +231,26 @@ public:
     static otError ReadTlv(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength);
 
     /**
+     * This static method reads a TLV in a message at a given offset into a given value object.
+     *
+     * @tparam      ValueType   The type of TLV's value.
+     *
+     * @param[in]   aMessage    The message to read from.
+     * @param[in]   aOffset     The offset into the message pointing to the start of the TLV.
+     * @param[out]  aValue      A reference to a `ValueType` object to output the TLV's value.
+     *
+     * @retval OT_ERROR_NONE        Successfully read the TLV and updated the @p aValue.
+     * @retval OT_ERROR_PARSE       The TLV was not well-formed and could not be parsed.
+     *
+     */
+    template <typename ValueType> static otError ReadTlv(const Message &aMessage, uint16_t aOffset, ValueType &aValue)
+    {
+        static_assert(!TypeTraits::IsPointer<ValueType>::kValue, "ValueType must not be a pointer");
+
+        return ReadTlv(aMessage, aOffset, &aValue, sizeof(ValueType));
+    }
+
+    /**
      * This static method reads the requested TLV out of @p aMessage.
      *
      * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
@@ -341,6 +362,34 @@ public:
     static otError FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t aLength);
 
     /**
+     * This static method searches for a TLV with a given type in a message, ensures its length is same or larger than
+     * a given `ValueType` object size, and then reads its value into a value object reference.
+     *
+     * If the TLV length is smaller than the size of `ValueType`, the TLV is considered invalid. In this case, this
+     * method returns `OT_ERROR_PARSE` and the @p aValue  is not updated.
+     *
+     * If the TLV length is larger than the size of `ValueType`, the TLV is considered valid, but the size of
+     * `ValueType` bytes are read and copied into the @p aValue.
+     *
+     * @tparam       ValueType   The type of TLV's value.
+     *
+     * @param[in]    aMessage    A reference to the message.
+     * @param[in]    aType       The TLV type to search for.
+     * @param[out]   aValue      A reference to a `ValueType` object to output the read value.
+     *
+     * @retval OT_ERROR_NONE       The TLV was found and read successfully. @p aValue is updated.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
+     * @retval OT_ERROR_PARSE      TLV was found but it was not well-formed and could not be parsed.
+     *
+     */
+    template <typename ValueType> static otError FindTlv(const Message &aMessage, uint8_t aType, ValueType &aValue)
+    {
+        static_assert(!TypeTraits::IsPointer<ValueType>::kValue, "ValueType must not be a pointer");
+
+        return FindTlv(aMessage, aType, &aValue, sizeof(ValueType));
+    }
+
+    /**
      * This static method appends a simple TLV with a given type and an `uint8_t` value to a message.
      *
      * On success this method grows the message by the size of the TLV.
@@ -400,6 +449,28 @@ public:
      *
      */
     static otError AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength);
+
+    /**
+     * This static method appends a TLV with a given type and value to a message.
+     *
+     * On success this method grows the message by the size of the TLV.
+     *
+     * @tparam     ValueType     The type of TLV's value.
+     *
+     * @param[in]  aMessage      A reference to the message to append to.
+     * @param[in]  aType         The TLV type.
+     * @param[in]  aValue        A reference to the object containing TLV's value.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the TLV to the message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
+     *
+     */
+    template <typename ValueType> static otError AppendTlv(Message &aMessage, uint8_t aType, const ValueType &aValue)
+    {
+        static_assert(!TypeTraits::IsPointer<ValueType>::kValue, "ValueType must not be a pointer");
+
+        return AppendTlv(aMessage, aType, &aValue, sizeof(ValueType));
+    }
 
 protected:
     enum

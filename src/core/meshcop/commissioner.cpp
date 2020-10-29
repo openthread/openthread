@@ -1003,7 +1003,7 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest());
 
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kJoinerUdpPort, joinerPort));
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, Tlv::kJoinerIid, &joinerIid, sizeof(joinerIid)));
+    SuccessOrExit(error = Tlv::FindTlv(aMessage, Tlv::kJoinerIid, joinerIid));
     SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kJoinerRouterLocator, joinerRloc));
 
     SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
@@ -1174,7 +1174,7 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kJoinerUdpPort, mJoinerPort));
-    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kJoinerIid, &mJoinerIid, sizeof(mJoinerIid)));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kJoinerIid, mJoinerIid));
     SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kJoinerRouterLocator, mJoinerRloc));
 
     if (aMessage.GetSubType() == Message::kSubTypeJoinerFinalizeResponse)
