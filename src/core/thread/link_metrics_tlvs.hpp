@@ -83,6 +83,11 @@ typedef UintTlvInfo<kLinkMetricsQueryId, uint8_t> LinkMetricsQueryIdTlv;
 OT_TOOL_PACKED_BEGIN class LinkMetricsTypeIdFlags
 {
 public:
+    enum : uint8_t
+    {
+        kTypeEnumReserved = 2,
+    };
+
     /**
      * Default constructor.
      *
@@ -354,6 +359,33 @@ public:
      *
      */
     SeriesFlags(const SeriesFlags &aSeriesFlags) { mSeriesFlags = aSeriesFlags.mSeriesFlags; }
+
+    /**
+     * This method sets the values of this object from a `otLinkMetricsSeriesFlags` object.
+     *
+     * @param[in]  aSeriesFlags  The `otLinkMetricsSeriesFlags` object.
+     *
+     */
+    void SetFromPublicSeriesFlags(const otLinkMetricsSeriesFlags aSeriesFlags)
+    {
+        Clear();
+        if (aSeriesFlags.mLinkProbe)
+        {
+            SetLinkProbeFlag();
+        }
+        if (aSeriesFlags.mMacData)
+        {
+            SetMacDataFlag();
+        }
+        if (aSeriesFlags.mMacDataRequest)
+        {
+            SetMacDataRequestFlag();
+        }
+        if (aSeriesFlags.mMacAck)
+        {
+            SetMacAckFlag();
+        }
+    }
 
     /**
      * This method clears the Link Probe flag.

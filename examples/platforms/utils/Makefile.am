@@ -42,6 +42,8 @@ libopenthread_platform_utils_a_SOURCES  = \
     debug_uart.c                          \
     logging_rtt.c                         \
     logging_rtt.h                         \
+    link_metrics.cpp                      \
+    link_metrics.h                        \
     mac_frame.cpp                         \
     mac_frame.h                           \
     otns_utils.cpp                        \

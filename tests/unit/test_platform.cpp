@@ -653,4 +653,25 @@ otError otPlatTrelUdp6SetTestMode(otInstance *aInstance, bool aEnable)
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
+                                          otLinkMetrics        aLinkMetrics,
+                                          const otShortAddress aShortAddress,
+                                          const otExtAddress * aExtAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aLinkMetrics);
+    OT_UNUSED_VARIABLE(aShortAddress);
+    OT_UNUSED_VARIABLE(aExtAddress);
+
+    return OT_ERROR_NONE;
+}
+
+otLinkMetrics otPlatRadioGetEnhAckProbingMetrics(otInstance *aInstance, const otShortAddress aShortAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aShortAddress);
+}
+#endif
+
 } // extern "C"

@@ -824,7 +824,6 @@ uint8_t Frame::FindPayloadIndex(void) const
             const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
 
             index += sizeof(HeaderIe);
-
             VerifyOrExit(index + footerLength <= mLength, index = kInvalidIndex);
 
             index += ie->GetLength();
@@ -933,6 +932,41 @@ const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
 exit:
     return header;
 }
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
+{
+    uint8_t        index        = FindHeaderIeIndex();
+    uint8_t        payloadIndex = FindPayloadIndex();
+    const uint8_t *header       = nullptr;
+
+    // `FindPayloadIndex()` verifies that Header IE(s) in frame (if present)
+    // are well-formed.
+    VerifyOrExit((index != kInvalidIndex) && (payloadIndex != kInvalidIndex));
+
+    while (index <= payloadIndex)
+    {
+        const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
+
+        if (ie->GetId() == kHeaderIeVendor)
+        {
+            const VendorIeHeader *vendorIe =
+                reinterpret_cast<const VendorIeHeader *>(reinterpret_cast<const uint8_t *>(ie) + sizeof(HeaderIe));
+            if (vendorIe->GetVendorOui() == ThreadIe::kVendorOuiThreadCompanyId && vendorIe->GetSubType() == aSubType)
+            {
+                header = &mPsdu[index];
+                ExitNow();
+            }
+        }
+
+        index += sizeof(HeaderIe) + ie->GetLength();
+    }
+
+exit:
+    return header;
+}
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -950,6 +984,17 @@ exit:
     return;
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+void Frame::SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen)
+{
+    uint8_t *cur = GetThreadIe(ThreadIe::kEnhAckProbingIe);
+
+    OT_ASSERT(cur != nullptr);
+
+    memcpy(cur + sizeof(HeaderIe) + sizeof(VendorIeHeader), aValue, aLen);
+}
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 const TimeIe *Frame::GetTimeIe(void) const

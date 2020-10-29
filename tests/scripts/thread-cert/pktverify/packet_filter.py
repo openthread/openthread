@@ -436,6 +436,34 @@ class PacketFilter(object):
         """
         return self.filter(attrgetter('wpan'), **kwargs)
 
+    def filter_wpan_ack(self, **kwargs):
+        """
+        Create a new PacketFilter for filter WPAN ACK packets.
+
+        :param kwargs: Extra arguments for `filter`.
+        :return: The new PacketFilter to filter WPAN packets.
+        """
+        return self.filter(lambda p: p.wpan.frame_type == consts.MAC_FRAME_TYPE_ACK, **kwargs)
+
+    def filter_wpan_data(self, **kwargs):
+        """
+        Create a new PacketFilter for filter WPAN data packets.
+
+        :param kwargs: Extra arguments for `filter`.
+        :return: The new PacketFilter to filter WPAN packets.
+        """
+        return self.filter(lambda p: p.wpan.frame_type == consts.MAC_FRAME_TYPE_DATA, **kwargs)
+
+    def filter_wpan_seq(self, seq, **kwargs):
+        """
+        Create a new PacketFilter for filter WPAN packets of a sequence number.
+
+        :param seq: The sequence number to filter.
+        :param kwargs: Extra arguments for `filter`.
+        :return: The new PacketFilter to filter WPAN packets.
+        """
+        return self.filter(lambda p: p.wpan.seq_no == seq, **kwargs)
+
     def filter_wpan_version(self, version: int, **kwargs):
         """
         Create a new PacketFilter for filter WPAN packets of a given version.
@@ -475,6 +503,12 @@ class PacketFilter(object):
 
     def filter_dst16(self, rloc16: int, **kwargs):
         return self.filter(lambda p: p.lowpan.mesh.dest16 == rloc16 or p.wpan.dst16 == rloc16, **kwargs)
+
+    def filter_wpan_ie_present(self, **kwargs):
+        return self.filter(lambda p: p.wpan.ie_present == 1)
+
+    def filter_wpan_ie_not_present(self, **kwargs):
+        return self.filter(lambda p: p.wpan.ie_present == 0)
 
     def filter_ping_request(self, identifier=None, **kwargs):
         return self.filter(

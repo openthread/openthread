@@ -135,7 +135,7 @@ private:
 
 } OT_TOOL_PACKED_END;
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 /**
  * This class implements vendor specific Header IE generation and parsing.
  *
@@ -186,6 +186,7 @@ private:
     uint8_t mSubType;
 } OT_TOOL_PACKED_END;
 
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**
  * This class implements Time Header IE generation and parsing.
  *
@@ -251,6 +252,24 @@ private:
     uint64_t mTime;
 } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+class ThreadIe
+{
+public:
+    enum : uint32_t
+    {
+        kVendorOuiThreadCompanyId = 0xeab89b,
+    };
+
+    enum SubType : uint8_t
+    {
+        kEnhAckProbingIe = 0x00,
+    };
+};
+#endif
+
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 /**
  * This class implements IEEE 802.15.4 MAC frame generation and parsing.
@@ -938,6 +957,33 @@ public:
      */
     const uint8_t *GetHeaderIe(uint8_t aIeId) const;
 
+    /**
+     * This method returns a pointer to a specific Thread IE.
+     *
+     * A Thread IE is a vendor specific IE with Vendor OUI as `kVendorOuiThreadCompanyId`.
+     *
+     * @param[in] aSubType  The sub type of the Thread IE.
+     *
+     * @returns A pointer to the Thread IE, nullptr if not found.
+     *
+     */
+    uint8_t *GetThreadIe(uint8_t aSubType)
+    {
+        return const_cast<uint8_t *>(const_cast<const Frame *>(this)->GetThreadIe(aSubType));
+    }
+
+    /**
+     * This method returns a pointer to a specific Thread IE.
+     *
+     * A Thread IE is a vendor specific IE with Vendor OUI as `kVendorOuiThreadCompanyId`.
+     *
+     * @param[in] aSubType  The sub type of the Thread IE.
+     *
+     * @returns A pointer to the Thread IE, nullptr if not found.
+     *
+     */
+    const uint8_t *GetThreadIe(uint8_t aSubType) const;
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * This method finds CSL IE in the frame and modify its content.
@@ -948,6 +994,17 @@ public:
      */
     void SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase);
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    /**
+     * This method finds Enhanced ACK Probing (Vendor Specific) IE and set its value.
+     *
+     * @param[in] aValue  A pointer to the value to set.
+     * @param[in] aLen    The length of @p aValue.
+     *
+     */
+    void SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen);
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 

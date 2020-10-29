@@ -1936,6 +1936,19 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect('Done')
 
+    def link_metrics_mgmt_req_enhanced_ack_based_probing(self,
+                                                         dst_addr: str,
+                                                         enable: bool,
+                                                         metrics_flags: str,
+                                                         ext_flags=''):
+        cmd = "linkmetrics mgmt %s enhanced-ack" % (dst_addr)
+        if enable:
+            cmd = cmd + (" register %s %s" % (metrics_flags, ext_flags))
+        else:
+            cmd = cmd + " clear"
+        self.send_command(cmd)
+        self._expect('Done')
+
     def link_metrics_mgmt_req_forward_tracking_series(self, dst_addr: str, series_id: int, series_flags: str,
                                                       metrics_flags: str):
         cmd = "linkmetrics mgmt %s forward %d %s %s" % (dst_addr, series_id, series_flags, metrics_flags)

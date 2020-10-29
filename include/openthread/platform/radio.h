@@ -151,9 +151,10 @@ typedef uint16_t otShortAddress;
  */
 enum
 {
-    OT_IE_HEADER_SIZE  = 2,  ///< Size of IE header in bytes.
-    OT_CSL_IE_SIZE     = 4,  ///< Size of CSL IE content in bytes.
-    OT_ACK_IE_MAX_SIZE = 16, ///< Max length for header IE in ACK.
+    OT_IE_HEADER_SIZE               = 2,  ///< Size of IE header in bytes.
+    OT_CSL_IE_SIZE                  = 4,  ///< Size of CSL IE content in bytes.
+    OT_ACK_IE_MAX_SIZE              = 16, ///< Max length for header IE in ACK.
+    OT_ENH_PROBING_IE_DATA_MAX_SIZE = 2,  ///< Max length of Link Metrics data in Vendor-Specific IE.
 };
 
 #define CSL_IE_HEADER_BYTES_LO 0x04 ///< Fixed CSL IE header first byte
@@ -322,6 +323,19 @@ typedef struct otRadioCoexMetrics
     uint32_t mNumRxGrantNone;                     ///< Number of rx requests that completed without receiving grant.
     bool     mStopped;                            ///< Stats collection stopped due to saturation.
 } otRadioCoexMetrics;
+
+/**
+ * This structure represents what metrics are specified to query.
+ *
+ */
+typedef struct otLinkMetrics
+{
+    bool mPduCount : 1;   ///< Pdu count.
+    bool mLqi : 1;        ///< Link Quality Indicator.
+    bool mLinkMargin : 1; ///< Link Margin.
+    bool mRssi : 1;       ///< Received Signal Strength Indicator.
+    bool mReserved : 1;   ///< Reserved, this is for reference device.
+} otLinkMetrics;
 
 /**
  * @}
@@ -963,6 +977,31 @@ void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTi
  *
  */
 otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower);
+
+/**
+ * Enable/disable or update Enhanced-ACK Based Probing in radio for a specific Initiator.
+ *
+ * After Enhanced-ACK Based Probing is configured by a specific Probing Initiator, the Enhanced-ACK sent to that
+ * node should include Vendor-Specific IE containing Link Metrics data. This method informs the radio to start/stop to
+ * collect Link Metrics data and include Vendor-Specific IE that containing the data in Enhanced-ACK sent to that
+ * Probing Initiator.
+ *
+ * @param[in]  aInstance     The OpenThread instance structure.
+ * @param[in]  aLinkMetrics  This parameter specifies what metrics to query. Per spec 4.11.3.4.4.6, at most 2 metrics
+ *                           can be specified. The probing would be disabled if @p `aLinkMetrics` is bitwise 0.
+ * @param[in]  aShortAddr    The short address of the Probing Initiator.
+ * @param[in]  aExtAddr      The extended source address of the Probing Initiator. @p aExtAddr MUST NOT be `NULL`.
+ *
+ * @retval  OT_ERROR_NONE            Successfully configured the Enhanced-ACK Based Probing.
+ * @retval  OT_ERROR_INVALID_ARGS    @p aExtAddress is `NULL`.
+ * @retval  OT_ERROR_NOT_FOUND       The Initiator indicated by @p aShortAddress is not found when trying to clear.
+ * @retval  OT_ERROR_NO_BUFS         No more Initiator can be supported.
+ *
+ */
+otError otPlatRadioConfigureEnhAckProbing(otInstance *        aInstance,
+                                          otLinkMetrics       aLinkMetrics,
+                                          otShortAddress      aShortAddress,
+                                          const otExtAddress *aExtAddress);
 
 /**
  * @}
