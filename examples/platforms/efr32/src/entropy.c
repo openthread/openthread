@@ -45,11 +45,12 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 
     for (size_t partialLen = 0; outputLen < aOutputLength; outputLen += partialLen)
     {
-        partialLen = 0;
         const uint16_t remaining = aOutputLength - outputLen;
+        partialLen               = 0;
 
         // Non-zero return values for mbedtls_hardware_poll() signify an error has occurred
-        otEXPECT_ACTION(0 == mbedtls_hardware_poll(NULL, &aOutput[outputLen], remaining, &partialLen), error = OT_ERROR_FAILED);
+        otEXPECT_ACTION(0 == mbedtls_hardware_poll(NULL, &aOutput[outputLen], remaining, &partialLen),
+                        error = OT_ERROR_FAILED);
         otEXPECT_ACTION(partialLen > 0, error = OT_ERROR_FAILED);
     }
 
