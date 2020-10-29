@@ -55,7 +55,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y libreadline6-dev python3-setuptools python3-wheel
+        sudo apt-get --no-install-recommends install -y libreadline6-dev python3-setuptools python3-wheel lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -74,18 +74,24 @@ jobs:
       run: |
         tar -cf build/posix.tar -C build/ posix/
         rm -rf build/posix/
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-posix-cli-1
+        path: tmp/coverage.info
     - name: Keep POSIX Only
       run: |
         rm -rf build/x86_64-unknown-linux-gnu/
         tar -xf build/posix.tar -C build/
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-posix-cli-2
+        path: tmp/coverage.info
 
   posix-ncp:
     runs-on: ubuntu-18.04
@@ -102,7 +108,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y libreadline6-dev python3-setuptools python3-wheel
+        sudo apt-get --no-install-recommends install -y libreadline6-dev python3-setuptools python3-wheel lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         sudo python3 -m pip install git+https://github.com/openthread/pyspinel
     - name: Build
@@ -122,18 +128,24 @@ jobs:
       run: |
         tar -cf build/posix.tar -C build/ posix/
         rm -rf build/posix/
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-posix-ncp-1
+        path: tmp/coverage.info
     - name: Keep POSIX Only
       run: |
         rm -rf build/x86_64-unknown-linux-gnu/
         tar -xf build/posix.tar -C build/
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-posix-ncp-2
+        path: tmp/coverage.info
 
   posix-ncp-rcp-migrate:
     runs-on: ubuntu-18.04
@@ -144,7 +156,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y expect
+        sudo apt-get --no-install-recommends install -y expect lcov
     - name: Build
       run: |
         ./bootstrap
@@ -156,18 +168,24 @@ jobs:
       run: |
         tar -cf build/posix.tar -C build/ posix/
         rm -rf build/posix/
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-posix-ncp-rcp-migrate-1
+        path: tmp/coverage.info
     - name: Keep POSIX Only
       run: |
         rm -rf build/x86_64-unknown-linux-gnu/
         tar -xf build/posix.tar -C build/
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-posix-ncp-rcp-migrate-2
+        path: tmp/coverage.info
 
   posix-pty:
     runs-on: ubuntu-18.04
@@ -178,7 +196,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y socat expect
+        sudo apt-get --no-install-recommends install -y socat expect lcov
         cd /tmp
         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
         tar xvf bsd-licensed.tar.gz
@@ -198,18 +216,24 @@ jobs:
       run: |
         tar -cf build/posix.tar -C build/ posix/
         rm -rf build/posix/
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-posix-pty-1
+        path: tmp/coverage.info
     - name: Keep POSIX Only
       run: |
         rm -rf build/x86_64-unknown-linux-gnu/
         tar -xf build/posix.tar -C build/
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-posix-pty-2
+        path: tmp/coverage.info
 
   posix-pty-daemon:
     runs-on: ubuntu-18.04
@@ -221,7 +245,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y socat expect
+        sudo apt-get --no-install-recommends install -y socat expect lcov
         cd /tmp
         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
         tar xvf bsd-licensed.tar.gz
@@ -241,15 +265,41 @@ jobs:
       run: |
         tar -cf build/posix.tar -C build/ posix/
         rm -rf build/posix/
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-posix-pty-daemon-1
+        path: tmp/coverage.info
     - name: Keep POSIX Only
       run: |
         rm -rf build/x86_64-unknown-linux-gnu/
         tar -xf build/posix.tar -C build/
-    - name: Codecov
-      uses: codecov/codecov-action@v1
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
       with:
-        fail_ci_if_error: true
+        name: cov-posix-pty-daemon-2
+        path: tmp/coverage.info
+
+  upload-coverage:
+    needs:
+    - posix-cli
+    - posix-ncp
+    - posix-ncp-rcp-migrate
+    - posix-pty
+    - posix-pty-daemon
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y lcov
+    - uses: actions/download-artifact@v2
+      with:
+        path: coverage/
+    - name: Upload Coverage
+      run: |
+        script/test upload_codecov
