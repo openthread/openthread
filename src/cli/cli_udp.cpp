@@ -40,8 +40,6 @@
 #include "common/encoding.hpp"
 #include "utils/parse_cmdline.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 using ot::Utils::CmdLineParser::ParseAsHexString;
 using ot::Utils::CmdLineParser::ParseAsIp6Address;
 using ot::Utils::CmdLineParser::ParseAsUint16;

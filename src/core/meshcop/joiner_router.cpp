@@ -48,8 +48,6 @@
 #include "thread/thread_netif.hpp"
 #include "thread/uri_paths.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 namespace ot {
 namespace MeshCoP {
 

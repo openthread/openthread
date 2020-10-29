@@ -51,8 +51,6 @@
 #include "thread/uri_paths.hpp"
 #include "utils/otns.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 namespace ot {
 namespace Mle {
 
