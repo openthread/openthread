@@ -107,14 +107,14 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
 
     type = (GetType() == Dataset::kActive) ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp;
 
-    if (Tlv::FindTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) != OT_ERROR_NONE)
+    if (Tlv::FindTlv(aMessage, activeTimestamp) != OT_ERROR_NONE)
     {
         ExitNow();
     }
 
     VerifyOrExit(activeTimestamp.IsValid());
 
-    if (Tlv::FindTlv(aMessage, Tlv::kPendingTimestamp, sizeof(pendingTimestamp), pendingTimestamp) == OT_ERROR_NONE)
+    if (Tlv::FindTlv(aMessage, pendingTimestamp) == OT_ERROR_NONE)
     {
         VerifyOrExit(pendingTimestamp.IsValid());
     }
@@ -126,7 +126,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     VerifyOrExit(mLocal.Compare(timestamp) > 0);
 
     // check channel
-    if (Tlv::FindTlv(aMessage, Tlv::kChannel, sizeof(channel), channel) == OT_ERROR_NONE)
+    if (Tlv::FindTlv(aMessage, channel) == OT_ERROR_NONE)
     {
         VerifyOrExit(channel.IsValid());
 
@@ -137,20 +137,20 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     }
 
     // check PAN ID
-    if (Tlv::FindUint16Tlv(aMessage, Tlv::kPanId, panId) == OT_ERROR_NONE && panId != Get<Mac::Mac>().GetPanId())
+    if (Tlv::Find<PanIdTlv>(aMessage, panId) == OT_ERROR_NONE && panId != Get<Mac::Mac>().GetPanId())
     {
         doesAffectConnectivity = true;
     }
 
     // check mesh local prefix
-    if (Tlv::FindTlv(aMessage, Tlv::kMeshLocalPrefix, &meshLocalPrefix, sizeof(meshLocalPrefix)) == OT_ERROR_NONE &&
+    if (Tlv::Find<MeshLocalPrefixTlv>(aMessage, meshLocalPrefix) == OT_ERROR_NONE &&
         meshLocalPrefix != Get<Mle::MleRouter>().GetMeshLocalPrefix())
     {
         doesAffectConnectivity = true;
     }
 
     // check network master key
-    if (Tlv::FindTlv(aMessage, Tlv::kNetworkMasterKey, &masterKey, sizeof(masterKey)) == OT_ERROR_NONE)
+    if (Tlv::Find<NetworkMasterKeyTlv>(aMessage, masterKey) == OT_ERROR_NONE)
     {
         hasMasterKey = true;
 
@@ -171,7 +171,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     }
 
     // check commissioner session id
-    if (Tlv::FindUint16Tlv(aMessage, Tlv::kCommissionerSessionId, sessionId) == OT_ERROR_NONE)
+    if (Tlv::Find<CommissionerSessionIdTlv>(aMessage, sessionId) == OT_ERROR_NONE)
     {
         const CommissionerSessionIdTlv *localId;
 
@@ -281,7 +281,7 @@ void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, Tlv::kState, static_cast<uint8_t>(aState)));
+    SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
     SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 

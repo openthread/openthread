@@ -822,7 +822,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::Response
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
-        SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, ThreadTlv::kRloc16, aRloc16));
+        SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, aRloc16));
     }
 
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));

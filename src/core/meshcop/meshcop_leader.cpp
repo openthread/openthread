@@ -81,7 +81,7 @@ void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
     otLogInfoMeshCoP("received petition");
 
     VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
-    SuccessOrExit(Tlv::FindTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
+    SuccessOrExit(Tlv::FindTlv(aMessage, commissionerId));
 
     if (mTimer.IsRunning())
     {
@@ -131,7 +131,7 @@ void Leader::SendPetitionResponse(const Coap::Message &   aRequest,
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, Tlv::kState, static_cast<uint8_t>(aState)));
+    SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
     if (mTimer.IsRunning())
     {
@@ -140,7 +140,7 @@ void Leader::SendPetitionResponse(const Coap::Message &   aRequest,
 
     if (aState == StateTlv::kAccept)
     {
-        SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kCommissionerSessionId, mSessionId));
+        SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, mSessionId));
     }
 
     SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
@@ -167,9 +167,9 @@ void Leader::HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aM
 
     otLogInfoMeshCoP("received keep alive");
 
-    SuccessOrExit(Tlv::FindUint8Tlv(aMessage, Tlv::kState, state));
+    SuccessOrExit(Tlv::Find<StateTlv>(aMessage, state));
 
-    SuccessOrExit(Tlv::FindUint16Tlv(aMessage, Tlv::kCommissionerSessionId, sessionId));
+    SuccessOrExit(Tlv::Find<CommissionerSessionIdTlv>(aMessage, sessionId));
 
     borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(
         Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
@@ -215,7 +215,7 @@ void Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, Tlv::kState, static_cast<uint8_t>(aState)));
+    SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
     SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 

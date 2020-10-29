@@ -233,7 +233,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
         switch (tlv.GetType())
         {
         case kLinkMetricsQueryId:
-            SuccessOrExit(error = Tlv::ReadUint8Tlv(aRequestMessage, offset, queryId));
+            SuccessOrExit(error = Tlv::Read<LinkMetricsQueryIdTlv>(aRequestMessage, offset, queryId));
             hasQueryId = true;
             break;
 

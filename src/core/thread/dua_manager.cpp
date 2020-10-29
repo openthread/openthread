@@ -443,9 +443,8 @@ void DuaManager::PerformNextRegistration(void)
     if (mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0)
     {
         dua = GetDomainUnicastAddress();
-        SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &dua, sizeof(dua)));
-        SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kMeshLocalEid, &mle.GetMeshLocal64().GetIid(),
-                                             sizeof(Ip6::InterfaceIdentifier)));
+        SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, dua));
+        SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, mle.GetMeshLocal64().GetIid()));
         mDuaState             = kRegistering;
         mLastRegistrationTime = TimerMilli::GetNow();
     }
@@ -477,12 +476,11 @@ void DuaManager::PerformNextRegistration(void)
         OT_ASSERT(duaPtr != nullptr);
 
         dua = *duaPtr;
-        SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &dua, sizeof(dua)));
-        SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kMeshLocalEid, &child->GetMeshLocalIid(),
-                                             sizeof(Ip6::InterfaceIdentifier)));
+        SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, dua));
+        SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, child->GetMeshLocalIid()));
 
         lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child->GetLastHeard());
-        SuccessOrExit(error = Tlv::AppendUint32Tlv(*message, ThreadTlv::kLastTransactionTime, lastTransactionTime));
+        SuccessOrExit(error = Tlv::Append<ThreadLastTransactionTimeTlv>(*message, lastTransactionTime));
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     }
 
@@ -585,8 +583,8 @@ otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
     }
     else
     {
-        SuccessOrExit(error = Tlv::FindUint8Tlv(aMessage, ThreadTlv::kStatus, status));
-        SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+        SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMessage, status));
+        SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMessage, target));
     }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
@@ -672,8 +670,8 @@ void DuaManager::SendAddressNotification(Ip6::Address &             aAddress,
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDuaRegistrationNotify));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, ThreadTlv::kStatus, static_cast<uint8_t>(aStatus)));
-    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aAddress, sizeof(aAddress)));
+    SuccessOrExit(error = Tlv::Append<ThreadStatusTlv>(*message, aStatus));
+    SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aAddress));
 
     messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), aChild.GetRloc16());
     messageInfo.SetPeerPort(Tmf::kUdpPort);
