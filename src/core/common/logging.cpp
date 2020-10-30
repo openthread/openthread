@@ -96,13 +96,13 @@ static void Log(otLogLevel  aLogLevel,
             break;
         }
 
-#if OPENTHREAD_CONFIG_LOG_PREPEND_REGION
         IgnoreError(logString.Append("[%s]", levelStr));
-#endif
     }
 #endif // OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
 
+#if OPENTHREAD_CONFIG_LOG_PREPEND_REGION
     IgnoreError(logString.Append("%s", aRegionPrefix));
+#endif
     VerifyOrExit(logString.AppendVarArgs(aFormat, aArgs) != OT_ERROR_INVALID_ARGS);
     otPlatLog(aLogLevel, aLogRegion, "%s" OPENTHREAD_CONFIG_LOG_SUFFIX, logString.AsCString());
 
