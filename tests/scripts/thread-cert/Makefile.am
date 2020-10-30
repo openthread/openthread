@@ -184,6 +184,7 @@ EXTRA_DIST                                                         = \
     pktverify/test_info.py                                           \
     pktverify/utils.py                                               \
     pktverify/verify_result.py                                       \
+    wpan.py                                                          \
     $(NULL)
 
 check_PROGRAMS                                                     = \
