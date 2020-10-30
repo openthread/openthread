@@ -304,57 +304,6 @@ exit:
     return error;
 }
 
-otError ActiveDataset::CreateNewNetwork(otOperationalDataset &aDataset)
-{
-    otError          error             = OT_ERROR_NONE;
-    Mac::ChannelMask supportedChannels = Get<Mac::Mac>().GetSupportedChannelMask();
-    Mac::ChannelMask preferredChannels(Get<Radio>().GetPreferredChannelMask());
-
-    memset(&aDataset, 0, sizeof(aDataset));
-
-    aDataset.mActiveTimestamp = 1;
-
-    SuccessOrExit(error = static_cast<MasterKey &>(aDataset.mMasterKey).GenerateRandom());
-    SuccessOrExit(error = static_cast<Pskc &>(aDataset.mPskc).GenerateRandom());
-    SuccessOrExit(error = Random::Crypto::FillBuffer(aDataset.mExtendedPanId.m8, sizeof(aDataset.mExtendedPanId)));
-
-    SuccessOrExit(error = static_cast<Ip6::NetworkPrefix &>(aDataset.mMeshLocalPrefix).GenerateRandomUla());
-
-    aDataset.mSecurityPolicy.mFlags = Get<KeyManager>().GetSecurityPolicyFlags();
-
-    // If the preferred channel mask is not empty, select a random
-    // channel from it, otherwise choose one from the supported
-    // channel mask.
-
-    preferredChannels.Intersect(supportedChannels);
-
-    if (preferredChannels.IsEmpty())
-    {
-        preferredChannels = supportedChannels;
-    }
-
-    aDataset.mChannel     = preferredChannels.ChooseRandomChannel();
-    aDataset.mChannelMask = supportedChannels.GetMask();
-
-    aDataset.mPanId = Mac::GenerateRandomPanId();
-
-    snprintf(aDataset.mNetworkName.m8, sizeof(aDataset.mNetworkName), "OpenThread-%04x", aDataset.mPanId);
-
-    aDataset.mComponents.mIsActiveTimestampPresent = true;
-    aDataset.mComponents.mIsMasterKeyPresent       = true;
-    aDataset.mComponents.mIsNetworkNamePresent     = true;
-    aDataset.mComponents.mIsExtendedPanIdPresent   = true;
-    aDataset.mComponents.mIsMeshLocalPrefixPresent = true;
-    aDataset.mComponents.mIsPanIdPresent           = true;
-    aDataset.mComponents.mIsChannelPresent         = true;
-    aDataset.mComponents.mIsPskcPresent            = true;
-    aDataset.mComponents.mIsSecurityPolicyPresent  = true;
-    aDataset.mComponents.mIsChannelMaskPresent     = true;
-
-exit:
-    return error;
-}
-
 otError ActiveDataset::GenerateLocal(void)
 {
     otError error = OT_ERROR_NONE;

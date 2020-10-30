@@ -95,11 +95,11 @@ exit:
 
 void ChannelManager::PreparePendingDataset(void)
 {
-    uint64_t             pendingTimestamp       = 0;
-    uint64_t             pendingActiveTimestamp = 0;
-    uint32_t             delayInMs              = Time::SecToMsec(static_cast<uint32_t>(mDelay));
-    otOperationalDataset dataset;
-    otError              error;
+    uint64_t               pendingTimestamp       = 0;
+    uint64_t               pendingActiveTimestamp = 0;
+    uint32_t               delayInMs              = Time::SecToMsec(static_cast<uint32_t>(mDelay));
+    MeshCoP::Dataset::Info dataset;
+    otError                error;
 
     VerifyOrExit(mState == kStateChangeRequested);
 
@@ -107,9 +107,9 @@ void ChannelManager::PreparePendingDataset(void)
 
     if (Get<MeshCoP::PendingDataset>().Read(dataset) == OT_ERROR_NONE)
     {
-        if (dataset.mComponents.mIsPendingTimestampPresent)
+        if (dataset.IsPendingTimestampPresent())
         {
-            pendingTimestamp = dataset.mPendingTimestamp;
+            pendingTimestamp = dataset.GetPendingTimestamp();
         }
 
         // We check whether the Pending Dataset is changing the
@@ -117,14 +117,13 @@ void ChannelManager::PreparePendingDataset(void)
         // should match and delay should be less than the requested
         // delay).
 
-        if (dataset.mComponents.mIsChannelPresent && (mChannel == dataset.mChannel) &&
-            dataset.mComponents.mIsDelayPresent && (dataset.mDelay <= delayInMs) &&
-            dataset.mComponents.mIsActiveTimestampPresent)
+        if (dataset.IsChannelPresent() && (mChannel == dataset.GetChannel()) && dataset.IsDelayPresent() &&
+            (dataset.GetDelay() <= delayInMs) && dataset.IsActiveTimestampPresent())
         {
             // We save the active timestamp to later check and ensure it
             // is ahead of current ActiveDataset timestamp.
 
-            pendingActiveTimestamp = dataset.mActiveTimestamp;
+            pendingActiveTimestamp = dataset.GetActiveTimestamp();
         }
     }
 
@@ -162,7 +161,7 @@ void ChannelManager::PreparePendingDataset(void)
 
     if (pendingActiveTimestamp != 0)
     {
-        if (dataset.mActiveTimestamp < pendingActiveTimestamp)
+        if (dataset.GetActiveTimestamp() < pendingActiveTimestamp)
         {
             otLogInfoUtil("ChannelManager: Pending Dataset is valid for change channel to %d", mChannel);
             mState = kStateSentMgmtPendingDataset;
@@ -181,7 +180,7 @@ void ChannelManager::PreparePendingDataset(void)
 
     if (mActiveTimestamp != 0)
     {
-        if (dataset.mActiveTimestamp >= mActiveTimestamp)
+        if (dataset.GetActiveTimestamp() >= mActiveTimestamp)
         {
             otLogInfoUtil("ChannelManager: Canceling channel change to %d since current ActiveDataset is more recent",
                           mChannel);
@@ -191,17 +190,14 @@ void ChannelManager::PreparePendingDataset(void)
     }
     else
     {
-        mActiveTimestamp = dataset.mActiveTimestamp + 1 + Random::NonCrypto::GetUint32InRange(0, kMaxTimestampIncrease);
+        mActiveTimestamp =
+            dataset.GetActiveTimestamp() + 1 + Random::NonCrypto::GetUint32InRange(0, kMaxTimestampIncrease);
     }
 
-    dataset.mActiveTimestamp                       = mActiveTimestamp;
-    dataset.mComponents.mIsActiveTimestampPresent  = true;
-    dataset.mChannel                               = mChannel;
-    dataset.mComponents.mIsChannelPresent          = true;
-    dataset.mPendingTimestamp                      = pendingTimestamp;
-    dataset.mComponents.mIsPendingTimestampPresent = true;
-    dataset.mDelay                                 = delayInMs;
-    dataset.mComponents.mIsDelayPresent            = true;
+    dataset.SetActiveTimestamp(mActiveTimestamp);
+    dataset.SetChannel(mChannel);
+    dataset.SetPendingTimestamp(pendingTimestamp);
+    dataset.SetDelay(delayInMs);
 
     error = Get<MeshCoP::PendingDataset>().SendSetRequest(dataset, nullptr, 0);
 

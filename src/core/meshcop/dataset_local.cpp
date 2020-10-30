@@ -126,15 +126,15 @@ exit:
     return error;
 }
 
-otError DatasetLocal::Read(otOperationalDataset &aDataset) const
+otError DatasetLocal::Read(Dataset::Info &aDatasetInfo) const
 {
     Dataset dataset(mType);
     otError error;
 
-    memset(&aDataset, 0, sizeof(aDataset));
+    aDatasetInfo.Clear();
 
     SuccessOrExit(error = Read(dataset));
-    dataset.ConvertTo(aDataset);
+    dataset.ConvertTo(aDatasetInfo);
 
 exit:
     return error;
@@ -154,12 +154,12 @@ exit:
     return error;
 }
 
-otError DatasetLocal::Save(const otOperationalDataset &aDataset)
+otError DatasetLocal::Save(const Dataset::Info &aDatasetInfo)
 {
     otError error;
     Dataset dataset(mType);
 
-    SuccessOrExit(error = dataset.SetFrom(aDataset));
+    SuccessOrExit(error = dataset.SetFrom(aDatasetInfo));
     SuccessOrExit(error = Save(dataset));
 
 exit:
