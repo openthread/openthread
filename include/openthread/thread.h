@@ -861,7 +861,7 @@ void otThreadSendAddressNotification(otInstance *              aInstance,
  * @param[in]  aMlIid                       The ML-IID of the PRO_BB.ntf message.
  * @param[in]  aTimeSinceLastTransaction    Time since last transaction (in seconds).
  *
- * @retval OT_ERROR_NONE           Successfully sent BB.ntf on backbone link.
+ * @retval OT_ERROR_NONE           Successfully sent PRO_BB.ntf on backbone link.
  * @retval OT_ERROR_NO_BUFS        If insufficient message buffers available.
  *
  */

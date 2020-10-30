@@ -492,14 +492,13 @@ exit:
 
 otError Manager::SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16)
 {
-    otError           error       = OT_ERROR_NONE;
-    BackboneTmfAgent &backboneTmf = Get<BackboneRouter::BackboneTmfAgent>();
-    Coap::Message *   message     = nullptr;
-    Ip6::MessageInfo  messageInfo;
+    otError          error   = OT_ERROR_NONE;
+    Coap::Message *  message = nullptr;
+    Ip6::MessageInfo messageInfo;
 
     VerifyOrExit(Get<BackboneRouter::Local>().IsPrimary(), error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit((message = backboneTmf.NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = mBackboneTmfAgent.NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->InitAsNonConfirmablePost(UriPath::kBackboneQuery));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -517,7 +516,7 @@ otError Manager::SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16)
     messageInfo.SetHopLimit(Mle::kDefaultBackboneHoplimit);
     messageInfo.SetIsHostInterface(true);
 
-    error = backboneTmf.SendMessage(*message, messageInfo);
+    error = mBackboneTmfAgent.SendMessage(*message, messageInfo);
 
 exit:
     otLogInfoBbr("SendBackboneQuery for %s (rloc16=%04x): %s", aDua.ToString().AsCString(), aRloc16,
@@ -639,13 +638,12 @@ otError Manager::SendBackboneAnswer(const Ip6::Address &            aDstAddr,
                                     uint32_t                        aTimeSinceLastTransaction,
                                     uint16_t                        aSrcRloc16)
 {
-    otError           error       = OT_ERROR_NONE;
-    BackboneTmfAgent &backboneTmf = Get<BackboneRouter::BackboneTmfAgent>();
-    Coap::Message *   message     = nullptr;
-    Ip6::MessageInfo  messageInfo;
-    bool              proactive = aDstAddr.IsMulticast();
+    otError          error   = OT_ERROR_NONE;
+    Coap::Message *  message = nullptr;
+    Ip6::MessageInfo messageInfo;
+    bool             proactive = aDstAddr.IsMulticast();
 
-    VerifyOrExit((message = backboneTmf.NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = mBackboneTmfAgent.NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(proactive ? Coap::kTypeNonConfirmable : Coap::kTypeConfirmable, Coap::kCodePost,
                                         UriPath::kBackboneAnswer));
@@ -677,7 +675,7 @@ otError Manager::SendBackboneAnswer(const Ip6::Address &            aDstAddr,
     messageInfo.SetHopLimit(Mle::kDefaultBackboneHoplimit);
     messageInfo.SetIsHostInterface(true);
 
-    error = backboneTmf.SendMessage(*message, messageInfo);
+    error = mBackboneTmfAgent.SendMessage(*message, messageInfo);
 
 exit:
     otLogInfoBbr("Send %s for %s (rloc16=%04x): %s", proactive ? "PRO_BB.ntf" : "BB.ans", aDua.ToString().AsCString(),

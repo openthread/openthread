@@ -137,7 +137,8 @@ public:
      * This method sends BB.qry on the Backbone link.
      *
      * @param[in]  aDua     The Domain Unicast Address to query.
-     * @param[in]  aRloc16  The RLOC16 in the RLOC16 TLV of BB.qry, or Mac::kShortAddrInvalid to not have RLOC16 TLV.
+     * @param[in]  aRloc16  The short address of the address resolution initiator or `Mac::kShortAddrInvalid` for
+     *                      DUA DAD.
      *
      * @retval OT_ERROR_NONE           Successfully sent BB.qry on backbone link.
      * @retval OT_ERROR_INVALID_STATE  If the Backbone Router is not primary, or not enabled.
@@ -153,7 +154,7 @@ public:
      * @param[in] aMeshLocalIid                 The Mesh-Local IID to notify.
      * @param[in] aTimeSinceLastTransaction     Time since last transaction (in seconds).
      *
-     * @retval OT_ERROR_NONE           Successfully sent BB.ntf on backbone link.
+     * @retval OT_ERROR_NONE           Successfully sent PRO_BB.ntf on backbone link.
      * @retval OT_ERROR_NO_BUFS        If insufficient message buffers available.
      *
      */
