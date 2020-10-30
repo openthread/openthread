@@ -351,7 +351,8 @@ void DuaManager::HandleTimeTick(void)
     otLogDebgDua("regdelay %d, reregdelay %d, checkdelay %d", mDelay.mFields.mRegistrationDelay,
                  mDelay.mFields.mReregistrationDelay, mDelay.mFields.mCheckDelay);
 
-    if (mDuaState != kNotExist && TimerMilli::GetNow() > mLastRegistrationTime + Mle::kDuaDadPeriod)
+    if ((mDuaState != kNotExist) &&
+        (TimerMilli::GetNow() > (mLastRegistrationTime + TimeMilli::SecToMsec(Mle::kDuaDadPeriod))))
     {
         mDomainUnicastAddress.mPreferred = true;
     }
