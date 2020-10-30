@@ -630,7 +630,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
     {
         rssi = HWREG(RFCORE_XREG_RSSI) & 0xff;
 
-        if (rssi <= cc2538RadioGetRssiOffset() - 128)
+        if (rssi > cc2538RadioGetRssiOffset() - 128)
         {
             rssi -= cc2538RadioGetRssiOffset();
         }
