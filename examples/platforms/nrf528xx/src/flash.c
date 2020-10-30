@@ -125,6 +125,8 @@ void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
         {
         }
     }
+
+    OT_UNUSED_VARIABLE(error);
 }
 
 void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
@@ -135,6 +137,8 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
 
     error = nrf5FlashWrite(mapAddress(aSwapIndex, aOffset), aData, aSize);
     assert(error == OT_ERROR_NONE);
+
+    OT_UNUSED_VARIABLE(error);
 }
 
 void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)

@@ -84,6 +84,9 @@ override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
 override CFLAGS   := $(filter-out -Wcast-align,$(CFLAGS))
 override CXXFLAGS := $(filter-out -Wcast-align,$(CXXFLAGS))
 
+CFLAGS += -Wno-unused-but-set-variable
+CXXFLAGS += -Wno-unused-but-set-variable
+
 COMMONCPPFLAGS                                                                                                          = \
     -DCONFIG_GPIO_AS_PINRESET                                                                                             \
     -DENABLE_FEM=1                                                                                                        \
