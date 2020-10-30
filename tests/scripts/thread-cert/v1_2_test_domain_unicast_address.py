@@ -115,12 +115,12 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
             'allowlist': [BBR_1, MED_1_2]
         },
         MED_1_2: {
-            'mode': 'rsn',
+            'mode': 'rn',
             'version': '1.2',
             'allowlist': [ROUTER_1_2],
         },
         SED_1_2: {
-            'mode': 'sn',
+            'mode': 'n',
             'version': '1.2',
             'allowlist': [ROUTER_1_1],
         },
@@ -166,13 +166,10 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(), 'Primary')
-        assert self.nodes[BBR_1].has_ipmaddr(config.ALL_NETWORK_BBRS_ADDRESS)
-        assert not self.nodes[BBR_1].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
 
         self.nodes[BBR_1].set_domain_prefix(config.DOMAIN_PREFIX, 'prosD')
         WAIT_TIME = WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
-        assert self.nodes[BBR_1].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
 
         self.simulator.set_lowpan_context(context_id, config.DOMAIN_PREFIX)
         domain_prefix_cid = context_id

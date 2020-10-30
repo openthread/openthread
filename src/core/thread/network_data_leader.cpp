@@ -124,7 +124,7 @@ otError LeaderBase::GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfi
         }
     }
 
-    VerifyOrExit(rvalServerTlv != nullptr, OT_NOOP);
+    VerifyOrExit(rvalServerTlv != nullptr);
 
     aConfig.mServer16            = rvalServerTlv->GetServer16();
     aConfig.mSequenceNumber      = rvalServerData->GetSequenceNumber();
@@ -432,10 +432,9 @@ otError LeaderBase::SetNetworkData(uint8_t        aVersion,
     Mle::Tlv tlv;
     uint16_t length;
 
-    length = aMessage.Read(aMessageOffset, sizeof(tlv), &tlv);
-    VerifyOrExit(length == sizeof(tlv), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = aMessage.Read(aMessageOffset, tlv));
 
-    length = aMessage.Read(aMessageOffset + sizeof(tlv), tlv.GetLength(), mTlvs);
+    length = aMessage.ReadBytes(aMessageOffset + sizeof(tlv), mTlvs, tlv.GetLength());
     VerifyOrExit(length == tlv.GetLength(), error = OT_ERROR_PARSE);
 
     mLength        = tlv.GetLength();
@@ -500,7 +499,7 @@ const MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aT
     const NetworkDataTlv *commissioningDataTlv;
 
     commissioningDataTlv = GetCommissioningData();
-    VerifyOrExit(commissioningDataTlv != nullptr, OT_NOOP);
+    VerifyOrExit(commissioningDataTlv != nullptr);
 
     rval = MeshCoP::Tlv::FindTlv(commissioningDataTlv->GetValue(), commissioningDataTlv->GetLength(), aType);
 
@@ -513,10 +512,10 @@ bool LeaderBase::IsJoiningEnabled(void) const
     const MeshCoP::Tlv *steeringData;
     bool                rval = false;
 
-    VerifyOrExit(GetCommissioningDataSubTlv(MeshCoP::Tlv::kBorderAgentLocator) != nullptr, OT_NOOP);
+    VerifyOrExit(GetCommissioningDataSubTlv(MeshCoP::Tlv::kBorderAgentLocator) != nullptr);
 
     steeringData = GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
-    VerifyOrExit(steeringData != nullptr, OT_NOOP);
+    VerifyOrExit(steeringData != nullptr);
 
     for (int i = 0; i < steeringData->GetLength(); i++)
     {
@@ -534,7 +533,7 @@ void LeaderBase::RemoveCommissioningData(void)
 {
     CommissioningDataTlv *tlv = GetCommissioningData();
 
-    VerifyOrExit(tlv != nullptr, OT_NOOP);
+    VerifyOrExit(tlv != nullptr);
     RemoveTlv(tlv);
 
 exit:

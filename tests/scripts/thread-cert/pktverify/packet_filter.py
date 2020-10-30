@@ -26,6 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import logging
 import sys
 from operator import attrgetter
 from typing import Optional, Callable, Tuple
@@ -238,6 +239,9 @@ class PacketFilter(object):
         if p is None:
             return
         else:
+            logging.error("Found unexpected packet at #%s", self.index)
+            p.show()
+            p.debug_fields()
             raise errors.UnexpectedPacketFound(self.index, p)
 
     def _on_found_next(self, idx: int, p: Packet):
@@ -356,7 +360,7 @@ class PacketFilter(object):
         """
         return self.filter(attrgetter('coap'), **kwargs)
 
-    def filter_coap_request(self, uri_path, port=None, **kwargs):
+    def filter_coap_request(self, uri_path, port=None, confirmable=None, **kwargs):
         """
         Create a new PacketFilter to filter COAP Request packets.
 
@@ -369,7 +373,8 @@ class PacketFilter(object):
         assert port is None or isinstance(port, int), port
         return self.filter(
             lambda p: (p.coap.is_post and p.coap.opt.uri_path_recon == uri_path and
-                       (port is None or p.udp.dstport == port)), **kwargs)
+                       (confirmable is None or p.coap.type ==
+                        (0 if confirmable else 1)) and (port is None or p.udp.dstport == port)), **kwargs)
 
     def filter_coap_ack(self, uri_path, port=None, **kwargs):
         """
@@ -385,6 +390,26 @@ class PacketFilter(object):
         return self.filter(
             lambda p: (p.coap.is_ack and p.coap.opt.uri_path_recon == uri_path and
                        (port is None or p.udp.dstport == port)), **kwargs)
+
+    def filter_backbone_answer(self,
+                               target: str,
+                               *,
+                               eth_src: Optional[EthAddr] = None,
+                               port: int = None,
+                               confirmable: bool = None,
+                               mliid=None):
+        filter_eth = self.filter_eth_src(eth_src) if eth_src else self.filter_eth()
+        f = filter_eth.filter_coap_request('/b/ba', port=port,
+                                           confirmable=confirmable).filter('thread_bl.tlv.target_eid == {target}',
+                                                                           target=target)
+        if mliid is not None:
+            f = f.filter('thread_bl.tlv.ml_eid == {mliid}', mliid=mliid)
+
+        return f
+
+    def filter_backbone_query(self, target: str, *, eth_src: EthAddr, port: int = None) -> 'PacketFilter':
+        return self.filter_eth_src(eth_src).filter_coap_request('/b/bq', port=port, confirmable=False).filter(
+            'thread_bl.tlv.target_eid == {target}', target=target)
 
     def filter_wpan(self, **kwargs):
         """
@@ -415,6 +440,15 @@ class PacketFilter(object):
         """
         return self.filter(lambda p: p.wpan.channel == channel, **kwargs)
 
+    def filter_wpan_src16(self, addr, **kwargs):
+        return self.filter(lambda p: p.wpan.src16 == addr, **kwargs)
+
+    def filter_wpan_dst16(self, addr, **kwargs):
+        return self.filter(lambda p: p.wpan.dst16 == addr, **kwargs)
+
+    def filter_wpan_src16_dst16(self, src_addr, dst_addr, **kwargs):
+        return self.filter(lambda p: p.wpan.src16 == src_addr and p.wpan.dst16 == dst_addr, **kwargs)
+
     def filter_wpan_src64(self, addr, **kwargs):
         assert isinstance(addr, (str, ExtAddr)), addr
         return self.filter(lambda p: p.wpan.src64 == addr, **kwargs)
@@ -423,8 +457,10 @@ class PacketFilter(object):
         assert isinstance(addr, (str, ExtAddr)), addr
         return self.filter(lambda p: p.wpan.dst64 == addr, **kwargs)
 
-    def filter_ping_request(self, **kwargs):
-        return self.filter(lambda p: p.icmpv6.is_ping_request, **kwargs)
+    def filter_ping_request(self, identifier=None, **kwargs):
+        return self.filter(
+            lambda p: p.icmpv6.is_ping_request and (identifier is None or p.icmpv6.echo.identifier == identifier),
+            **kwargs)
 
     def filter_ping_reply(self, **kwargs):
         identifier = kwargs.pop('identifier', None)
@@ -443,10 +479,18 @@ class PacketFilter(object):
         assert isinstance(addr, (str, Ipv6Addr))
         return self.filter(lambda p: p.ipv6.dst == addr, **kwargs)
 
+    def filter_ipv6_2dsts(self, addr1, addr2, **kwargs):
+        assert isinstance(addr1, (str, Ipv6Addr))
+        assert isinstance(addr2, (str, Ipv6Addr))
+        return self.filter(lambda p: p.ipv6.dst == addr1 or p.ipv6.dst == addr2, **kwargs)
+
     def filter_ipv6_src_dst(self, src_addr, dst_addr, **kwargs):
         assert isinstance(src_addr, (str, Ipv6Addr))
         assert isinstance(dst_addr, (str, Ipv6Addr))
         return self.filter(lambda p: p.ipv6.src == src_addr and p.ipv6.dst == dst_addr, **kwargs)
+
+    def filter_RLARMA(self, **kwargs):
+        return self.filter(lambda p: p.ipv6.dst == consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS, **kwargs)
 
     def filter_LLANMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS, **kwargs)
@@ -454,12 +498,21 @@ class PacketFilter(object):
     def filter_LLABMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_BBRS_MULTICAST_ADDRESS, **kwargs)
 
+    def filter_LLARMA(self, **kwargs):
+        return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS, **kwargs)
+
+    def filter_AMPLFMA(self, **kwargs):
+        return self.filter(lambda p: p.ipv6.dst == consts.ALL_MPL_FORWARDERS_MA, **kwargs)
+
     def filter_mle(self, **kwargs):
         return self.filter(attrgetter('mle'), **kwargs)
 
     def filter_mle_cmd(self, cmd, **kwargs):
         assert isinstance(cmd, int), cmd
         return self.filter(lambda p: p.mle.cmd == cmd, **kwargs)
+
+    def filter_mle_has_tlv(self, *tlv_types, **kwargs):
+        return self.filter(lambda p: set(tlv_types) <= set(p.mle.tlv.type), **kwargs)
 
     def filter_icmpv6(self, **kwargs):
         return self.filter(attrgetter('icmpv6'), **kwargs)

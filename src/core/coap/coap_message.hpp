@@ -96,12 +96,13 @@ enum Code : uint8_t
 
     // Response Codes:
 
-    kCodeCreated  = OT_COAP_CODE_CREATED,  ///< Created
-    kCodeDeleted  = OT_COAP_CODE_DELETED,  ///< Deleted
-    kCodeValid    = OT_COAP_CODE_VALID,    ///< Valid
-    kCodeChanged  = OT_COAP_CODE_CHANGED,  ///< Changed
-    kCodeContent  = OT_COAP_CODE_CONTENT,  ///< Content
-    kCodeContinue = OT_COAP_CODE_CONTINUE, ///< RFC7959 Continue
+    kCodeResponseMin = OT_COAP_CODE_RESPONSE_MIN, ///< 2.00
+    kCodeCreated     = OT_COAP_CODE_CREATED,      ///< Created
+    kCodeDeleted     = OT_COAP_CODE_DELETED,      ///< Deleted
+    kCodeValid       = OT_COAP_CODE_VALID,        ///< Valid
+    kCodeChanged     = OT_COAP_CODE_CHANGED,      ///< Changed
+    kCodeContent     = OT_COAP_CODE_CONTENT,      ///< Content
+    kCodeContinue    = OT_COAP_CODE_CONTINUE,     ///< RFC7959 Continue
 
     // Client Error Codes:
 
@@ -165,6 +166,7 @@ public:
     enum : uint8_t
     {
         kDefaultTokenLength = OT_COAP_DEFAULT_TOKEN_LENGTH, ///< Default token length
+        kMaxReceivedUriPath = 32,                           ///< Maximum supported URI path on received messages.
         kMaxTokenLength     = OT_COAP_MAX_TOKEN_LENGTH,     ///< Maximum token length.
     };
 
@@ -385,6 +387,17 @@ public:
     otError SetToken(const uint8_t *aToken, uint8_t aTokenLength);
 
     /**
+     * This method sets the Token value and length by copying it from another given message.
+     *
+     * @param[in] aMessage       The message to copy the Token from.
+     *
+     * @retval OT_ERROR_NONE     Successfully set the token value.
+     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to set the token value.
+     *
+     */
+    otError SetTokenFromMessage(const Message &aMessage);
+
+    /**
      * This method sets the Token length and randomizes its value.
      *
      * @param[in]  aTokenLength  The Length of a Token to set.
@@ -393,7 +406,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to set the token value.
      *
      */
-    otError SetToken(uint8_t aTokenLength);
+    otError GenerateRandomToken(uint8_t aTokenLength);
 
     /**
      * This method checks if Tokens in two CoAP headers are equal.
@@ -468,6 +481,18 @@ public:
      *
      */
     otError AppendUriPathOptions(const char *aUriPath);
+
+    /**
+     * This method reads the Uri-Path options and constructs the URI path in the buffer referenced by @p `aUriPath`.
+     *
+     * @param[in] aUriPath  A reference to the buffer for storing URI path.
+     *                      NOTE: The buffer size must be `kMaxReceivedUriPath + 1`.
+     *
+     * @retval  OT_ERROR_NONE   Successfully read the Uri-Path options.
+     * @retval  OT_ERROR_PARSE  CoAP Option header not well-formed.
+     *
+     */
+    otError ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) const;
 
     /**
      * This method appends a Block option

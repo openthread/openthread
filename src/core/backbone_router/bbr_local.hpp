@@ -42,6 +42,7 @@
 
 #include "backbone_router/bbr_leader.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "net/netif.hpp"
 #include "thread/network_data.hpp"
 
@@ -53,7 +54,7 @@ namespace BackboneRouter {
  * This class implements the definitions for local Backbone Router service.
  *
  */
-class Local : public InstanceLocator
+class Local : public InstanceLocator, private NonCopyable
 {
 public:
     typedef otBackboneRouterState BackboneRouterState;
@@ -204,10 +205,7 @@ public:
      * @returns A reference to the All Network Backbone Routers Multicast Address.
      *
      */
-    const Ip6::Address &GetAllNetworkBackboneRoutersAddress(void) const
-    {
-        return mAllNetworkBackboneRouters.GetAddress();
-    }
+    const Ip6::Address &GetAllNetworkBackboneRoutersAddress(void) const { return mAllNetworkBackboneRouters; }
 
     /**
      * This method returns a reference to the All Domain Backbone Routers Multicast Address.
@@ -215,10 +213,7 @@ public:
      * @returns A reference to the All Domain Backbone Routers Multicast Address.
      *
      */
-    const Ip6::Address &GetAllDomainBackboneRoutersAddress(void) const
-    {
-        return mAllDomainBackboneRouters.GetAddress();
-    }
+    const Ip6::Address &GetAllDomainBackboneRoutersAddress(void) const { return mAllDomainBackboneRouters; }
 
     /**
      * This method applies the Mesh Local Prefix.
@@ -260,9 +255,9 @@ private:
 
     NetworkData::OnMeshPrefixConfig mDomainPrefixConfig;
 
-    Ip6::NetifUnicastAddress   mBackboneRouterPrimaryAloc;
-    Ip6::NetifMulticastAddress mAllNetworkBackboneRouters;
-    Ip6::NetifMulticastAddress mAllDomainBackboneRouters;
+    Ip6::NetifUnicastAddress mBackboneRouterPrimaryAloc;
+    Ip6::Address             mAllNetworkBackboneRouters;
+    Ip6::Address             mAllDomainBackboneRouters;
 };
 
 } // namespace BackboneRouter

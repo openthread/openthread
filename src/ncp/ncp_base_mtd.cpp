@@ -135,18 +135,13 @@ static uint8_t ExternalRoutePreferenceToFlagByte(int aPreference)
     return flags;
 }
 
-uint8_t NcpBase::LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aSecureDataRequests, bool aDeviceType, bool aNetworkData)
+uint8_t NcpBase::LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aDeviceType, bool aNetworkData)
 {
     uint8_t flags(0);
 
     if (aRxOnWhenIdle)
     {
         flags |= SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE;
-    }
-
-    if (aSecureDataRequests)
-    {
-        flags |= SPINEL_THREAD_MODE_SECURE_DATA_REQUEST;
     }
 
     if (aDeviceType)
@@ -167,8 +162,8 @@ otError NcpBase::EncodeNeighborInfo(const otNeighborInfo &aNeighborInfo)
     otError error;
     uint8_t modeFlags;
 
-    modeFlags = LinkFlagsToFlagByte(aNeighborInfo.mRxOnWhenIdle, aNeighborInfo.mSecureDataRequest,
-                                    aNeighborInfo.mFullThreadDevice, aNeighborInfo.mFullNetworkData);
+    modeFlags = LinkFlagsToFlagByte(aNeighborInfo.mRxOnWhenIdle, aNeighborInfo.mFullThreadDevice,
+                                    aNeighborInfo.mFullNetworkData);
 
     SuccessOrExit(error = mEncoder.OpenStruct());
 
@@ -282,9 +277,9 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_STACK_UP>(void)
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
 
     // If the value has changed...
-    if ((enabled != false) != (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED))
+    if (enabled != (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED))
     {
-        if (enabled != false)
+        if (enabled)
         {
             error = otThreadSetEnabled(mInstance, true);
             StartLegacy();
@@ -684,7 +679,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ALLOW_LOCAL_NE
     SuccessOrExit(error = mDecoder.ReadBool(value));
 
     // Register any net data changes on transition from `true` to `false`.
-    shouldRegisterWithLeader = (mAllowLocalNetworkDataChange == true) && (value == false);
+    shouldRegisterWithLeader = mAllowLocalNetworkDataChange && !value;
 
     mAllowLocalNetworkDataChange = value;
 
@@ -824,7 +819,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SERVER_ALLOW_LOCAL_DA
     SuccessOrExit(error = mDecoder.ReadBool(value));
 
     // Register any server data changes on transition from `true` to `false`.
-    shouldRegisterWithLeader = (mAllowLocalServerDataChange == true) && (value == false);
+    shouldRegisterWithLeader = mAllowLocalServerDataChange && !value;
 
     mAllowLocalServerDataChange = value;
 
@@ -1472,7 +1467,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMIS
 
     SuccessOrExit(error = mDecoder.ReadBool(action));
 
-    if (action == false)
+    if (!action)
     {
         otJoinerStop(mInstance);
         ExitNow();
@@ -1580,7 +1575,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ML_PREFIX>(void)
     const otMeshLocalPrefix *mlPrefix = otThreadGetMeshLocalPrefix(mInstance);
     otIp6Address             addr;
 
-    VerifyOrExit(mlPrefix != nullptr, OT_NOOP); // If `mlPrefix` is nullptr send empty response.
+    VerifyOrExit(mlPrefix != nullptr); // If `mlPrefix` is nullptr send empty response.
 
     memcpy(addr.mFields.m8, mlPrefix->m8, 8);
 
@@ -1615,7 +1610,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ML_ADDR>(void)
     otError             error = OT_ERROR_NONE;
     const otIp6Address *ml64  = otThreadGetMeshLocalEid(mInstance);
 
-    VerifyOrExit(ml64 != nullptr, OT_NOOP);
+    VerifyOrExit(ml64 != nullptr);
     SuccessOrExit(error = mEncoder.WriteIp6Address(*ml64));
 
 exit:
@@ -1627,7 +1622,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_LL_ADDR>(void)
     otError             error   = OT_ERROR_NONE;
     const otIp6Address *address = otThreadGetLinkLocalIp6Address(mInstance);
 
-    VerifyOrExit(address != nullptr, OT_NOOP);
+    VerifyOrExit(address != nullptr);
     SuccessOrExit(error = mEncoder.WriteIp6Address(*address));
 
 exit:
@@ -2848,8 +2843,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_MODE>(void)
     uint8_t          numericMode;
     otLinkModeConfig modeConfig = otThreadGetLinkMode(mInstance);
 
-    numericMode = LinkFlagsToFlagByte(modeConfig.mRxOnWhenIdle, modeConfig.mSecureDataRequests, modeConfig.mDeviceType,
-                                      modeConfig.mNetworkData);
+    numericMode = LinkFlagsToFlagByte(modeConfig.mRxOnWhenIdle, modeConfig.mDeviceType, modeConfig.mNetworkData);
 
     return mEncoder.WriteUint8(numericMode);
 }
@@ -2864,8 +2858,6 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MODE>(void)
 
     modeConfig.mRxOnWhenIdle =
         ((numericMode & SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE) == SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE);
-    modeConfig.mSecureDataRequests =
-        ((numericMode & SPINEL_THREAD_MODE_SECURE_DATA_REQUEST) == SPINEL_THREAD_MODE_SECURE_DATA_REQUEST);
     modeConfig.mDeviceType = ((numericMode & SPINEL_THREAD_MODE_FULL_THREAD_DEV) == SPINEL_THREAD_MODE_FULL_THREAD_DEV);
     modeConfig.mNetworkData =
         ((numericMode & SPINEL_THREAD_MODE_FULL_NETWORK_DATA) == SPINEL_THREAD_MODE_FULL_NETWORK_DATA);
@@ -3160,7 +3152,7 @@ void NcpBase::RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
     mLegacyHandlers = aHandlers;
     bool isEnabled;
 
-    VerifyOrExit(mLegacyHandlers != nullptr, OT_NOOP);
+    VerifyOrExit(mLegacyHandlers != nullptr);
 
     isEnabled = (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED);
 
@@ -3435,7 +3427,7 @@ void NcpBase::HandleDatagramFromStack(otMessage *aMessage, void *aContext)
 
 void NcpBase::HandleDatagramFromStack(otMessage *aMessage)
 {
-    VerifyOrExit(aMessage != nullptr, OT_NOOP);
+    VerifyOrExit(aMessage != nullptr);
 
     // Do not forward frames larger than SPINEL payload size.
     VerifyOrExit(otMessageGetLength(aMessage) <= SPINEL_FRAME_MAX_COMMAND_PAYLOAD_SIZE, otMessageFree(aMessage));
@@ -3605,7 +3597,7 @@ void NcpBase::HandlePcapFrame(const otRadioFrame *aFrame, bool aIsTx)
     uint16_t flags  = 0;
     uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
-    VerifyOrExit(mPcapEnabled, OT_NOOP);
+    VerifyOrExit(mPcapEnabled);
 
     if (aIsTx)
     {
@@ -3647,7 +3639,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_PCAP_ENABLED>(voi
     bool    enabled;
 
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
-    VerifyOrExit(enabled != mPcapEnabled, OT_NOOP);
+    VerifyOrExit(enabled != mPcapEnabled);
 
     mPcapEnabled = enabled;
 
@@ -3707,7 +3699,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
         {OT_CHANGED_SUPPORTED_CHANNEL_MASK, SPINEL_PROP_PHY_CHAN_SUPPORTED},
     };
 
-    VerifyOrExit(mThreadChangedFlags != 0, OT_NOOP);
+    VerifyOrExit(mThreadChangedFlags != 0);
 
     // If thread role has changed, check for possible "join" error.
 
@@ -3778,7 +3770,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
             }
 
             mThreadChangedFlags &= ~threadFlag;
-            VerifyOrExit(mThreadChangedFlags != 0, OT_NOOP);
+            VerifyOrExit(mThreadChangedFlags != 0);
         }
     }
 

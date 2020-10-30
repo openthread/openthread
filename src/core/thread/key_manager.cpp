@@ -118,6 +118,7 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
     parent = &Get<Mle::MleRouter>().GetParent();
     parent->SetKeySequence(0);
     parent->SetLinkFrameCounter(0);
+    parent->SetLinkAckFrameCounter(0);
     parent->SetMleFrameCounter(0);
 
 #if OPENTHREAD_FTD
@@ -126,6 +127,7 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
     {
         router.SetKeySequence(0);
         router.SetLinkFrameCounter(0);
+        router.SetLinkAckFrameCounter(0);
         router.SetMleFrameCounter(0);
     }
 
@@ -134,6 +136,7 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
     {
         child.SetKeySequence(0);
         child.SetLinkFrameCounter(0);
+        child.SetLinkAckFrameCounter(0);
         child.SetMleFrameCounter(0);
     }
 #endif
@@ -181,7 +184,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
         if (mKeySwitchGuardEnabled)
         {
             // Check if the guard timer has expired if key rotation is requested.
-            VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime, OT_NOOP);
+            VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime);
             StartKeyRotationTimer();
         }
 

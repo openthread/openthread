@@ -54,7 +54,7 @@ otError MeshForwarder::EvictMessage(Message::Priority aPriority)
     otError  error = OT_ERROR_NOT_FOUND;
     Message *message;
 
-    VerifyOrExit((message = mSendQueue.GetTail()) != nullptr, OT_NOOP);
+    VerifyOrExit((message = mSendQueue.GetTail()) != nullptr);
 
     if (message->GetPriority() < static_cast<uint8_t>(aPriority))
     {

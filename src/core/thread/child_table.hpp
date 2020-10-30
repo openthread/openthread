@@ -39,6 +39,7 @@
 #if OPENTHREAD_FTD
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -47,7 +48,7 @@ namespace ot {
  * This class represents the Thread child table.
  *
  */
-class ChildTable : public InstanceLocator
+class ChildTable : public InstanceLocator, private NonCopyable
 {
     friend class NeighborTable;
     class IteratorBuilder;
@@ -160,7 +161,7 @@ public:
         bool operator!=(const Iterator &aOther) const { return mChild != aOther.mChild; }
 
     private:
-        Iterator(Instance &aInstance)
+        explicit Iterator(Instance &aInstance)
             : InstanceLocator(aInstance)
             , mFilter(Child::StateFilter::kInStateValid)
             , mChild(nullptr)

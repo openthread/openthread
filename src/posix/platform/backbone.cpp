@@ -45,13 +45,16 @@ void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    VerifyOrExit(aInterfaceName != nullptr, OT_NOOP);
+    VerifyOrExit(aInterfaceName != nullptr, otLogInfoPlat("Backbone interface is not configured"));
 
     VerifyOrDie(strnlen(aInterfaceName, IFNAMSIZ) <= IFNAMSIZ - 1, OT_EXIT_INVALID_ARGUMENTS);
     strcpy(gBackboneNetifName, aInterfaceName);
 
     gBackboneNetifIndex = if_nametoindex(gBackboneNetifName);
     VerifyOrDie(gBackboneNetifIndex > 0, OT_EXIT_FAILURE);
+
+    otLogInfoPlat("Backbone interface is configured to %s (%d)", gBackboneNetifName, gBackboneNetifIndex);
+
 exit:
     return;
 }

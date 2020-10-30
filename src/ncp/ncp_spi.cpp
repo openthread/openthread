@@ -145,9 +145,8 @@ bool NcpSpi::SpiTransactionComplete(uint8_t *aOutputBuf,
     SpiFrame inputFrame(aInputBuf);
     SpiFrame sendFrame(mSendFrame);
 
-    VerifyOrExit((aTransLen >= kSpiHeaderSize) && (aInputLen >= kSpiHeaderSize) && (aOutputLen >= kSpiHeaderSize),
-                 OT_NOOP);
-    VerifyOrExit(inputFrame.IsValid() && outputFrame.IsValid(), OT_NOOP);
+    VerifyOrExit((aTransLen >= kSpiHeaderSize) && (aInputLen >= kSpiHeaderSize) && (aOutputLen >= kSpiHeaderSize));
+    VerifyOrExit(inputFrame.IsValid() && outputFrame.IsValid());
 
     transDataLen = aTransLen - kSpiHeaderSize;
 
@@ -262,7 +261,7 @@ void NcpSpi::PrepareNextSpiSendFrame(void)
     uint16_t readLength;
     SpiFrame sendFrame(mSendFrame);
 
-    VerifyOrExit(!mTxFrameBuffer.IsEmpty(), OT_NOOP);
+    VerifyOrExit(!mTxFrameBuffer.IsEmpty());
 
     if (ShouldWakeHost())
     {

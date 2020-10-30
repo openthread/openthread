@@ -80,15 +80,14 @@ void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
 
     otLogInfoMeshCoP("received petition");
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()), OT_NOOP);
+    VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
     SuccessOrExit(Tlv::FindTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
 
     if (mTimer.IsRunning())
     {
         VerifyOrExit((commissionerId.GetCommissionerIdLength() == mCommissionerId.GetCommissionerIdLength()) &&
-                         (!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
-                                   commissionerId.GetCommissionerIdLength())),
-                     OT_NOOP);
+                     (!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
+                               commissionerId.GetCommissionerIdLength())));
 
         ResignCommissioner();
     }
@@ -149,12 +148,7 @@ void Leader::SendPetitionResponse(const Coap::Message &   aRequest,
     otLogInfoMeshCoP("sent petition response");
 
 exit:
-
-    if ((error != OT_ERROR_NONE) && (message != nullptr))
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     LogError("send petition response", error);
 }
 
@@ -228,12 +222,7 @@ void Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
     otLogInfoMeshCoP("sent keep alive response");
 
 exit:
-
-    if ((error != OT_ERROR_NONE) && (message != nullptr))
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     LogError("send keep alive response", error);
 }
 
@@ -255,12 +244,7 @@ void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     otLogInfoMeshCoP("sent dataset changed");
 
 exit:
-
-    if ((error != OT_ERROR_NONE) && (message != nullptr))
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     LogError("send dataset changed", error);
 }
 
@@ -287,7 +271,7 @@ void Leader::HandleTimer(Timer &aTimer)
 
 void Leader::HandleTimer(void)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().IsLeader(), OT_NOOP);
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
     ResignCommissioner();
 

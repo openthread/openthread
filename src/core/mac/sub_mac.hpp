@@ -39,6 +39,7 @@
 #include <openthread/link.h>
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "radio/radio.hpp"
@@ -74,7 +75,7 @@ namespace Mac {
  * addresses and PAN Id.
  *
  */
-class SubMac : public InstanceLocator
+class SubMac : public InstanceLocator, private NonCopyable
 {
     friend class Radio::Callbacks;
 
@@ -489,7 +490,7 @@ public:
      * @returns The current MAC frame counter value.
      *
      */
-    uint32_t GetFrameCounter(void) const { return mFrameCounter; };
+    uint32_t GetFrameCounter(void) const { return mFrameCounter; }
 
     /**
      * This method sets the current MAC Frame Counter value.
@@ -538,12 +539,13 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    /**
-     * The SSED sample window in units of 10 symbols.
-     *
-     */
     enum : uint32_t{
-        kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols,
+        kCslSampleWindow =
+            OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols, ///< The SSED sample window in units of 10 symbols.
+        kCslReceiveTimeAhead =
+            OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD, ///< CSL receivers would wake up `kCslReceiveTimeAhead` earlier
+                                                      ///< than expected sample window. The time is in unit of 10
+                                                      ///< symbols.
     };
 
     /**

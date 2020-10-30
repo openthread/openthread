@@ -130,6 +130,7 @@ SOURCES_COMMON                                  = \
     api/jam_detection_api.cpp                     \
     api/joiner_api.cpp                            \
     api/link_api.cpp                              \
+    api/link_metrics_api.cpp                      \
     api/link_raw_api.cpp                          \
     api/logging_api.cpp                           \
     api/message_api.cpp                           \
@@ -226,6 +227,7 @@ SOURCES_COMMON                                  = \
     thread/energy_scan_server.cpp                 \
     thread/indirect_sender.cpp                    \
     thread/key_manager.cpp                        \
+    thread/link_metrics.cpp                       \
     thread/link_quality.cpp                       \
     thread/lowpan.cpp                             \
     thread/mesh_forwarder.cpp                     \
@@ -256,6 +258,7 @@ SOURCES_COMMON                                  = \
     utils/flash.cpp                               \
     utils/heap.cpp                                \
     utils/jam_detector.cpp                        \
+    utils/lookup_table.cpp                        \
     utils/otns.cpp                                \
     utils/parse_cmdline.cpp                       \
     utils/slaac_address.cpp                       \
@@ -291,6 +294,7 @@ libopenthread_radio_a_SOURCES              = \
     radio/radio_callbacks.cpp                \
     radio/radio_platform.cpp                 \
     thread/link_quality.cpp                  \
+    utils/lookup_table.cpp                   \
     utils/parse_cmdline.cpp                  \
     $(NULL)
 
@@ -335,6 +339,7 @@ HEADERS_COMMON                                  = \
     coap/coap.hpp                                 \
     coap/coap_message.hpp                         \
     coap/coap_secure.hpp                          \
+    common/arg_macros.hpp                         \
     common/bit_vector.hpp                         \
     common/clearable.hpp                          \
     common/code_utils.hpp                         \
@@ -352,6 +357,7 @@ HEADERS_COMMON                                  = \
     common/new.hpp                                \
     common/non_copyable.hpp                       \
     common/notifier.hpp                           \
+    common/numeric_limits.hpp                     \
     common/pool.hpp                               \
     common/random.hpp                             \
     common/random_manager.hpp                     \
@@ -363,6 +369,7 @@ HEADERS_COMMON                                  = \
     common/timer.hpp                              \
     common/tlvs.hpp                               \
     common/trickle_timer.hpp                      \
+    common/type_traits.hpp                        \
     config/announce_sender.h                      \
     config/backbone_router.h                      \
     config/border_router.h                        \
@@ -451,6 +458,8 @@ HEADERS_COMMON                                  = \
     thread/indirect_sender.hpp                    \
     thread/indirect_sender_frame_context.hpp      \
     thread/key_manager.hpp                        \
+    thread/link_metrics.hpp                       \
+    thread/link_metrics_tlvs.hpp                  \
     thread/link_quality.hpp                       \
     thread/lowpan.hpp                             \
     thread/mesh_forwarder.hpp                     \
@@ -484,6 +493,7 @@ HEADERS_COMMON                                  = \
     utils/flash.hpp                               \
     utils/heap.hpp                                \
     utils/jam_detector.hpp                        \
+    utils/lookup_table.hpp                        \
     utils/otns.hpp                                \
     utils/parse_cmdline.hpp                       \
     utils/slaac_address.hpp                       \

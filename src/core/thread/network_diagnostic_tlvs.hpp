@@ -1075,9 +1075,9 @@ public:
      */
     otError ReadEntry(ChildTableEntry &aEntry, const Message &aMessage, uint16_t aOffset, uint8_t aIndex) const
     {
-        return (aIndex < GetNumEntries() &&
-                aMessage.Read(aOffset + sizeof(ChildTableTlv) + (aIndex * sizeof(ChildTableEntry)),
-                              sizeof(ChildTableEntry), &aEntry) == sizeof(ChildTableEntry))
+        return ((aIndex < GetNumEntries()) &&
+                (aMessage.Read(aOffset + sizeof(ChildTableTlv) + (aIndex * sizeof(ChildTableEntry)), aEntry) ==
+                 OT_ERROR_NONE))
                    ? OT_ERROR_NONE
                    : OT_ERROR_INVALID_ARGS;
     }

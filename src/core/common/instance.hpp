@@ -86,6 +86,10 @@
 #include "backbone_router/bbr_local.hpp"
 #endif
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#include "thread/link_metrics.hpp"
+#endif
+
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -786,6 +790,13 @@ template <> inline MlrManager &Instance::Get(void)
 template <> inline DuaManager &Instance::Get(void)
 {
     return mThreadNetif.mDuaManager;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+template <> inline LinkMetrics &Instance::Get(void)
+{
+    return mThreadNetif.mLinkMetrics;
 }
 #endif
 

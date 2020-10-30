@@ -160,6 +160,10 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_LEGACY_ENABLE=1" ]
     }
 
+    if (openthread_config_link_metrics_enable) {
+      defines += [ "OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE=1" ]
+    }
+
     if (openthread_config_link_raw_enable) {
       defines += [ "OPENTHREAD_CONFIG_LINK_RAW_ENABLE=1" ]
     }
@@ -305,6 +309,7 @@ openthread_core_files = [
   "api/jam_detection_api.cpp",
   "api/joiner_api.cpp",
   "api/link_api.cpp",
+  "api/link_metrics_api.cpp",
   "api/link_raw_api.cpp",
   "api/logging_api.cpp",
   "api/message_api.cpp",
@@ -337,6 +342,7 @@ openthread_core_files = [
   "coap/coap_message.hpp",
   "coap/coap_secure.cpp",
   "coap/coap_secure.hpp",
+  "common/arg_macros.hpp",
   "common/bit_vector.hpp",
   "common/clearable.hpp",
   "common/code_utils.hpp",
@@ -359,6 +365,7 @@ openthread_core_files = [
   "common/non_copyable.hpp",
   "common/notifier.cpp",
   "common/notifier.hpp",
+  "common/numeric_limits.hpp",
   "common/pool.hpp",
   "common/random.hpp",
   "common/random_manager.cpp",
@@ -378,6 +385,7 @@ openthread_core_files = [
   "common/tlvs.hpp",
   "common/trickle_timer.cpp",
   "common/trickle_timer.hpp",
+  "common/type_traits.hpp",
   "crypto/aes_ccm.cpp",
   "crypto/aes_ccm.hpp",
   "crypto/aes_ecb.cpp",
@@ -487,6 +495,8 @@ openthread_core_files = [
   "thread/child_mask.hpp",
   "thread/child_table.cpp",
   "thread/child_table.hpp",
+  "thread/csl_tx_scheduler.cpp",
+  "thread/csl_tx_scheduler.hpp",
   "thread/discover_scanner.cpp",
   "thread/discover_scanner.hpp",
   "thread/dua_manager.cpp",
@@ -498,6 +508,9 @@ openthread_core_files = [
   "thread/indirect_sender_frame_context.hpp",
   "thread/key_manager.cpp",
   "thread/key_manager.hpp",
+  "thread/link_metrics.cpp",
+  "thread/link_metrics.hpp",
+  "thread/link_metrics_tlvs.hpp",
   "thread/link_quality.cpp",
   "thread/link_quality.hpp",
   "thread/lowpan.cpp",
@@ -561,6 +574,8 @@ openthread_core_files = [
   "utils/heap.hpp",
   "utils/jam_detector.cpp",
   "utils/jam_detector.hpp",
+  "utils/lookup_table.cpp",
+  "utils/lookup_table.hpp",
   "utils/otns.cpp",
   "utils/otns.hpp",
   "utils/parse_cmdline.cpp",
@@ -594,6 +609,7 @@ openthread_radio_sources = [
   "radio/radio_callbacks.cpp",
   "radio/radio_platform.cpp",
   "thread/link_quality.cpp",
+  "utils/lookup_table.cpp",
   "utils/parse_cmdline.cpp",
 ]
 

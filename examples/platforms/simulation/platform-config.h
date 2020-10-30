@@ -93,3 +93,13 @@
 #endif
 
 #endif // OPENTHREAD_CONFIG_OTNS_ENABLE
+
+/**
+ * @def OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE
+ *
+ * This setting configures the maximum network size in simulation.
+ *
+ */
+#ifndef OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE
+#define OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE 33
+#endif

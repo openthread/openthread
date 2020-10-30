@@ -30,9 +30,9 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes
+setup_two_nodes
 
-set spawn_id $spawn_1
+switch_node 1
 send "dataset active\n"
 expect -re {Active Timestamp: \d+}
 expect -re {Channel: (\d+)}
@@ -140,7 +140,7 @@ expect "Done"
 
 sleep 30
 
-set spawn_id $spawn_2
+switch_node 2
 wait_for "dataset active" "Active Timestamp: 100"
 expect "Done"
 send "dataset active\n"
@@ -182,14 +182,14 @@ expect "Done"
 send "dataset init pending\n"
 expect "Error 23: NotFound"
 
-set spawn_id $spawn_1
+switch_node 1
 send "ipaddr mleid\n"
 expect "ipaddr mleid"
 expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
 set addr $expect_out(1,string)
 expect "Done"
 
-set spawn_id $spawn_2
+switch_node 2
 send "dataset mgmtgetcommand active \
 activetimestamp pendingtimestamp masterkey networkname extpanid \
 localprefix delaytimer panid channel \
@@ -203,7 +203,7 @@ localprefix delaytimer panid channel \
 address $addr\n"
 expect "Done"
 
-set spawn_id $spawn_1
+switch_node 1
 send "dataset active -x\n"
 expect "dataset active -x"
 expect -re {([0-9a-f]+)}
@@ -243,4 +243,4 @@ expect "Error 7: InvalidArgs"
 send "dataset set something_invalid 00\n"
 expect "Error 7: InvalidArgs"
 
-dispose_nodes
+dispose_all

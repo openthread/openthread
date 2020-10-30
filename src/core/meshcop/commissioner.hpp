@@ -41,6 +41,7 @@
 #include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/announce_begin_client.hpp"
@@ -56,7 +57,7 @@ namespace ot {
 
 namespace MeshCoP {
 
-class Commissioner : public InstanceLocator
+class Commissioner : public InstanceLocator, private NonCopyable
 {
 public:
     /**

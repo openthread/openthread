@@ -596,16 +596,23 @@ def assert_contains_tlv(tlvs, check_type, tlv_type):
         raise ValueError("Invalid check type: {}".format(check_type))
 
 
-def check_discovery_request(command_msg):
+def check_discovery_request(command_msg, thread_version: str = None):
     """Verify a properly formatted Thread Discovery Request command message.
     """
     assert not isinstance(command_msg.mle, mle.MleMessageSecured)
     tlvs = command_msg.assertMleMessageContainsTlv(mle.ThreadDiscovery).tlvs
     request = assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.DiscoveryRequest)
-    assert request.version == config.PROTOCOL_VERSION
+    assert not thread_version or thread_version in ['1.1', '1.2']
+    if thread_version == '1.1':
+        assert request.version == config.THREAD_VERSION_1_1
+    elif thread_version == '1.2':
+        assert request.version == config.THREAD_VERSION_1_2
 
 
-def check_discovery_response(command_msg, request_src_addr, steering_data=CheckType.OPTIONAL):
+def check_discovery_response(command_msg,
+                             request_src_addr,
+                             steering_data=CheckType.OPTIONAL,
+                             thread_version: str = None):
     """Verify a properly formatted Thread Discovery Response command message.
     """
     assert not isinstance(command_msg.mle, mle.MleMessageSecured)
@@ -614,7 +621,11 @@ def check_discovery_response(command_msg, request_src_addr, steering_data=CheckT
 
     tlvs = command_msg.assertMleMessageContainsTlv(mle.ThreadDiscovery).tlvs
     response = assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.DiscoveryResponse)
-    assert response.version == config.PROTOCOL_VERSION
+    assert not thread_version or thread_version in ['1.1', '1.2']
+    if thread_version == '1.1':
+        assert response.version == config.THREAD_VERSION_1_1
+    elif thread_version == '1.2':
+        assert response.version == config.THREAD_VERSION_1_2
     assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.ExtendedPanid)
     assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.NetworkName)
     assert_contains_tlv(tlvs, steering_data, mesh_cop.SteeringData)

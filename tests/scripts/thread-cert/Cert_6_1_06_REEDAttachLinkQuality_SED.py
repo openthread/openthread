@@ -42,25 +42,25 @@ SED = 4
 class Cert_6_1_6_REEDAttachLinkQuality_SED(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [REED, ROUTER2]
         },
         REED: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
             'allowlist': [LEADER, SED]
         },
         ROUTER2: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, (SED, -85)]
         },
         SED: {
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [REED, ROUTER2]

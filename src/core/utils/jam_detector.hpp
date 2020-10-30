@@ -39,6 +39,7 @@
 #include <stdint.h>
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
 
@@ -48,7 +49,7 @@ class ThreadNetif;
 
 namespace Utils {
 
-class JamDetector : public InstanceLocator
+class JamDetector : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
 

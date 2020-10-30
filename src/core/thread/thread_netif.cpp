@@ -126,12 +126,15 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     , mTimeSync(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    , mLinkMetrics(aInstance)
+#endif
 {
 }
 
 void ThreadNetif::Up(void)
 {
-    VerifyOrExit(!mIsUp, OT_NOOP);
+    VerifyOrExit(!mIsUp);
 
     // Enable the MAC just in case it was disabled while the Interface was down.
     Get<Mac::Mac>().SetEnabled(true);
@@ -159,7 +162,7 @@ exit:
 
 void ThreadNetif::Down(void)
 {
-    VerifyOrExit(mIsUp, OT_NOOP);
+    VerifyOrExit(mIsUp);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     IgnoreError(Get<Dns::Client>().Stop());

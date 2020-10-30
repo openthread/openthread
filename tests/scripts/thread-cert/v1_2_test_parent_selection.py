@@ -91,12 +91,12 @@ class TestParentSelection(thread_cert.TestCase):
             'allowlist': [ROUTER_1_2, LEADER_1_2]
         },
         MED_1_1: {
-            'mode': 'rs',
+            'mode': 'r',
             'version': '1.1',
             'allowlist': [LEADER_1_2, ROUTER_1_1],
         },
         MED_1_2: {
-            'mode': 'rs',
+            'mode': 'r',
             'version': '1.2',
             'allowlist': [ROUTER_1_1, ROUTER_1_2],
         },

@@ -136,7 +136,8 @@ size_nrf52840_version()
             "BACKBONE_ROUTER=1"
             "DUA=1"
             "MLR=1"
-            # "CSL_RECEIVER=1" not supported on nrf52840 yet
+            "CSL_RECEIVER=1"
+            "LINK_METRICS=1"
         )
     fi
 

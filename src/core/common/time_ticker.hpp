@@ -79,7 +79,7 @@ public:
      * This constructor initializes the `TimeTicker` instance.
      *
      */
-    TimeTicker(Instance &aInstance);
+    explicit TimeTicker(Instance &aInstance);
 
     /**
      * This method registers a receiver with `TimeTicker` to receive periodic ticks.

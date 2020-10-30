@@ -132,7 +132,7 @@ protected:
      * @retval FALSE If the fire time of this timer object is the same or after aTimer's fire time.
      *
      */
-    bool DoesFireBefore(const Timer &aSecondTimer, Time aNow);
+    bool DoesFireBefore(const Timer &aSecondTimer, Time aNow) const;
 
     void Fired(void) { mHandler(*this); }
 
@@ -437,7 +437,7 @@ public:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerMicroScheduler(Instance &aInstance)
+    explicit TimerMicroScheduler(Instance &aInstance)
         : TimerScheduler(aInstance)
     {
     }

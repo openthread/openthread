@@ -150,6 +150,9 @@ if (openthread_enable_core_config_args) {
     # Enable legacy network support
     openthread_config_legacy_enable = false
 
+    # Enable link metrics
+    openthread_config_link_metrics_enable = false
+
     # Enable link raw service
     openthread_config_link_raw_enable = false
 

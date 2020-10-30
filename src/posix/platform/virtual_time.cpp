@@ -44,9 +44,9 @@
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
 
-static const int kWellKnownNodeId = 34;      ///< Well-known ID used by a simulated radio supporting promiscuous mode.
-static const int kBasePort        = 18000;   ///< This base port for posix app simulation.
-static const int kUsPerSecond     = 1000000; ///< Number of microseconds per second.
+static const int kMaxNetworkSize = 33;      ///< Well-known ID used by a simulated radio supporting promiscuous mode.
+static const int kBasePort       = 18000;   ///< This base port for posix app simulation.
+static const int kUsPerSecond    = 1000000; ///< Number of microseconds per second.
 
 static uint64_t sNow        = 0;  ///< Time of simulation.
 static int      sSockFd     = -1; ///< Socket used to communicating with simulator.
@@ -77,7 +77,7 @@ void virtualTimeInit(uint16_t aNodeId)
             DieNowWithMessage(msg, OT_EXIT_INVALID_ARGUMENTS);
         }
 
-        sPortOffset *= kWellKnownNodeId;
+        sPortOffset *= (kMaxNetworkSize + 1);
     }
 
     sockaddr.sin_port        = htons(kBasePort + sPortOffset + aNodeId);

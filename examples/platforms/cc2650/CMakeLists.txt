@@ -74,16 +74,11 @@ set_target_properties(
 target_link_libraries(openthread-cc2650
     PUBLIC
         cc26x0-driver
-    PRIVATE
-        ${OT_MBEDTLS}
-        openthread-platform-utils
-        ot-config
-)
-
-target_link_options(openthread-cc2650
-    PUBLIC
         -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
+    PRIVATE
+        ${OT_MBEDTLS}
+        ot-config
 )
 
 target_compile_definitions(openthread-cc2650

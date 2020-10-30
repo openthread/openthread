@@ -34,6 +34,7 @@
 #include <openthread/dns.h>
 
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "net/dns_headers.hpp"
 #include "net/ip6.hpp"
@@ -51,7 +52,7 @@ namespace Dns {
  * This class implements DNS client.
  *
  */
-class Client
+class Client : private NonCopyable
 {
 public:
     /**
@@ -123,7 +124,7 @@ private:
 
     struct QueryMetadata
     {
-        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
         void    ReadFrom(const Message &aMessage);
         void    UpdateIn(Message &aMessage) const;
 

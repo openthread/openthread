@@ -40,6 +40,7 @@
 
 #include <openthread/backbone_router_ftd.h>
 
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/time.hpp"
 #include "net/ip6_address.hpp"
@@ -202,7 +203,7 @@ private:
     class IteratorBuilder : InstanceLocator
     {
     public:
-        IteratorBuilder(Instance &aInstance)
+        explicit IteratorBuilder(Instance &aInstance)
             : InstanceLocator(aInstance)
         {
         }

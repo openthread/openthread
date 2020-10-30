@@ -73,7 +73,7 @@ IndirectSender::IndirectSender(Instance &aInstance)
 
 void IndirectSender::Stop(void)
 {
-    VerifyOrExit(mEnabled, OT_NOOP);
+    VerifyOrExit(mEnabled);
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
@@ -97,10 +97,20 @@ void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
     OT_ASSERT(!aChild.IsRxOnWhenIdle());
 
     childIndex = Get<ChildTable>().GetChildIndex(aChild);
-    VerifyOrExit(!aMessage.GetChildMask(childIndex), OT_NOOP);
+    VerifyOrExit(!aMessage.GetChildMask(childIndex));
 
     aMessage.SetChildMask(childIndex);
     mSourceMatchController.IncrementMessageCount(aChild);
+
+    if ((aMessage.GetType() != Message::kTypeSupervision) && (aChild.GetIndirectMessageCount() > 1))
+    {
+        Message *supervisionMessage = FindIndirectMessage(aChild, /* aSupervisionTypeOnly */ true);
+
+        if (supervisionMessage != nullptr)
+        {
+            IgnoreError(RemoveMessageFromSleepyChild(*supervisionMessage, aChild));
+        }
+    }
 
     RequestMessageUpdate(aChild);
 
@@ -129,7 +139,7 @@ void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
     Message *message;
     Message *nextMessage;
 
-    VerifyOrExit(aChild.GetIndirectMessageCount() > 0, OT_NOOP);
+    VerifyOrExit(aChild.GetIndirectMessageCount() > 0);
 
     for (message = Get<MeshForwarder>().mSendQueue.GetHead(); message; message = nextMessage)
     {
@@ -163,7 +173,7 @@ exit:
 
 void IndirectSender::SetChildUseShortAddress(Child &aChild, bool aUseShortAddress)
 {
-    VerifyOrExit(aChild.IsIndirectSourceMatchShort() != aUseShortAddress, OT_NOOP);
+    VerifyOrExit(aChild.IsIndirectSourceMatchShort() != aUseShortAddress);
 
     mSourceMatchController.SetSrcMatchAsShort(aChild, aUseShortAddress);
 
@@ -211,30 +221,16 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
     // case.
 }
 
-Message *IndirectSender::FindIndirectMessage(Child &aChild)
+Message *IndirectSender::FindIndirectMessage(Child &aChild, bool aSupervisionTypeOnly)
 {
     Message *message;
-    Message *next;
     uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
-    for (message = Get<MeshForwarder>().mSendQueue.GetHead(); message; message = next)
+    for (message = Get<MeshForwarder>().mSendQueue.GetHead(); message; message = message->GetNext())
     {
-        next = message->GetNext();
-
-        if (message->GetChildMask(childIndex))
+        if (message->GetChildMask(childIndex) &&
+            (!aSupervisionTypeOnly || (message->GetType() == Message::kTypeSupervision)))
         {
-            // Skip and remove the supervision message if there are
-            // other messages queued for the child.
-
-            if ((message->GetType() == Message::kTypeSupervision) && (aChild.GetIndirectMessageCount() > 1))
-            {
-                message->ClearChildMask(childIndex);
-                mSourceMatchController.DecrementMessageCount(aChild);
-                Get<MeshForwarder>().mSendQueue.Dequeue(*message);
-                message->Free();
-                continue;
-            }
-
             break;
         }
     }
@@ -274,11 +270,11 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
         ExitNow();
     }
 
-    VerifyOrExit(!aChild.IsWaitingForMessageUpdate(), OT_NOOP);
+    VerifyOrExit(!aChild.IsWaitingForMessageUpdate());
 
     newMessage = FindIndirectMessage(aChild);
 
-    VerifyOrExit(curMessage != newMessage, OT_NOOP);
+    VerifyOrExit(curMessage != newMessage);
 
     if (curMessage == nullptr)
     {
@@ -295,7 +291,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
     // fragment. If a next fragment frame for message is already
     // prepared, we wait for the entire message to be delivered.
 
-    VerifyOrExit(aChild.GetIndirectFragmentOffset() == 0, OT_NOOP);
+    VerifyOrExit(aChild.GetIndirectFragmentOffset() == 0);
 
     aChild.SetWaitingForMessageUpdate(true);
     mDataPollHandler.RequestFrameChange(DataPollHandler::kReplaceFrame, aChild);
@@ -309,7 +305,7 @@ exit:
 
 void IndirectSender::HandleFrameChangeDone(Child &aChild)
 {
-    VerifyOrExit(aChild.IsWaitingForMessageUpdate(), OT_NOOP);
+    VerifyOrExit(aChild.IsWaitingForMessageUpdate());
     UpdateIndirectMessage(aChild);
 
 exit:
@@ -381,7 +377,7 @@ uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, M
 
     // Determine the MAC source and destination addresses.
 
-    aMessage.Read(0, sizeof(ip6Header), &ip6Header);
+    IgnoreError(aMessage.Read(0, ip6Header));
 
     Get<MeshForwarder>().GetMacSourceAddress(ip6Header.GetSource(), macSource);
 
@@ -418,37 +414,9 @@ uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, M
 
 void IndirectSender::PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool aAckRequest)
 {
-    uint16_t     fcf;
-    Mac::Address macSource, macDest;
-
+    Mac::Address macDest;
     aChild.GetMacAddress(macDest);
-
-    macSource.SetShort(Get<Mac::Mac>().GetShortAddress());
-
-    if (macSource.IsShortAddrInvalid() || macDest.IsExtended())
-    {
-        macSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
-    }
-
-    fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfPanidCompression |
-          Mac::Frame::kFcfSecurityEnabled;
-
-    if (aAckRequest)
-    {
-        fcf |= Mac::Frame::kFcfAckRequest;
-    }
-
-    fcf |= (macDest.IsShort()) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
-    fcf |= (macSource.IsShort()) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
-
-    aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
-
-    aFrame.SetDstPanId(Get<Mac::Mac>().GetPanId());
-    IgnoreError(aFrame.SetSrcPanId(Get<Mac::Mac>().GetPanId()));
-    aFrame.SetDstAddr(macDest);
-    aFrame.SetSrcAddr(macSource);
-    aFrame.SetPayloadLength(0);
-    aFrame.SetFramePending(false);
+    Get<MeshForwarder>().PrepareEmptyFrame(aFrame, macDest, aAckRequest);
 }
 
 void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
@@ -459,7 +427,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
     Message *message    = aChild.GetIndirectMessage();
     uint16_t nextOffset = aContext.mMessageNextOffset;
 
-    VerifyOrExit(mEnabled, OT_NOOP);
+    VerifyOrExit(mEnabled);
 
     switch (aError)
     {

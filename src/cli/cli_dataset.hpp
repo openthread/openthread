@@ -40,6 +40,8 @@
 
 #include <openthread/dataset.h>
 
+#include "utils/lookup_table.hpp"
+
 namespace ot {
 namespace Cli {
 
@@ -70,10 +72,9 @@ private:
     struct Command
     {
         const char *mName;
-        otError (Dataset::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
+        otError (Dataset::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
     };
 
-    void    OutputBytes(const uint8_t *aBytes, uint8_t aLength);
     otError Print(otOperationalDataset &aDataset);
 
     otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
@@ -98,9 +99,34 @@ private:
     otError ProcessSecurityPolicy(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessSet(uint8_t aArgsLength, char *aArgs[]);
 
+    static constexpr Command sCommands[] = {
+        {"active", &Dataset::ProcessActive},
+        {"activetimestamp", &Dataset::ProcessActiveTimestamp},
+        {"channel", &Dataset::ProcessChannel},
+        {"channelmask", &Dataset::ProcessChannelMask},
+        {"clear", &Dataset::ProcessClear},
+        {"commit", &Dataset::ProcessCommit},
+        {"delay", &Dataset::ProcessDelay},
+        {"extpanid", &Dataset::ProcessExtPanId},
+        {"help", &Dataset::ProcessHelp},
+        {"init", &Dataset::ProcessInit},
+        {"masterkey", &Dataset::ProcessMasterKey},
+        {"meshlocalprefix", &Dataset::ProcessMeshLocalPrefix},
+        {"mgmtgetcommand", &Dataset::ProcessMgmtGetCommand},
+        {"mgmtsetcommand", &Dataset::ProcessMgmtSetCommand},
+        {"networkname", &Dataset::ProcessNetworkName},
+        {"panid", &Dataset::ProcessPanId},
+        {"pending", &Dataset::ProcessPending},
+        {"pendingtimestamp", &Dataset::ProcessPendingTimestamp},
+        {"pskc", &Dataset::ProcessPskc},
+        {"securitypolicy", &Dataset::ProcessSecurityPolicy},
+        {"set", &Dataset::ProcessSet},
+    };
+
+    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+
     Interpreter &mInterpreter;
 
-    static const Command        sCommands[];
     static otOperationalDataset sDataset;
 };
 

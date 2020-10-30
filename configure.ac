@@ -248,7 +248,7 @@ if test "${nl_cv_clang}" = "yes"; then
     PROSPECTIVE_CXXFLAGS="${PROSPECTIVE_CXXFLAGS} -Wconversion"
 fi
 
-function convert_warning_flags_to_positive() {
+convert_warning_flags_to_positive() {
     flags_to_check=""
     warning_flag_backup=""
     for option in ${1}; do
@@ -263,7 +263,7 @@ function convert_warning_flags_to_positive() {
     done
 }
 
-function restore_negative_form_of_warning_flags() {
+restore_negative_form_of_warning_flags() {
     final_flags=${1}
     for positive_option in ${warning_flag_backup}; do
         final_flags=$(echo $ECHO_N $final_flags | $SED "s|-W${positive_option}|-Wno-${positive_option}|g")
@@ -272,7 +272,7 @@ function restore_negative_form_of_warning_flags() {
     unset warning_flag_backup
 }
 
-function check_prospective_CFLAGS() {
+check_prospective_CFLAGS() {
     if test "${nl_cv_clang}" = "yes"; then
         AX_CHECK_COMPILER_OPTIONS([C], ${PROSPECTIVE_CFLAGS})
     else
@@ -284,7 +284,7 @@ function check_prospective_CFLAGS() {
     fi
 }
 
-function check_prospective_CXXFLAGS() {
+check_prospective_CXXFLAGS() {
     if test "${nl_cv_clang}" = "yes"; then
         AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CXXFLAGS})
     else
@@ -822,6 +822,7 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21],    [test "${with_examples}" = "samr
 AM_COND_IF([OPENTHREAD_EXAMPLES_SIMULATION], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_SIMULATION=1", CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_SIMULATION=0")
 
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF528XX], [test OPENTHREAD_EXAMPLES_NRF52811 || test OPENTHREAD_EXAMPLES_NRF52833 || test OPENTHREAD_EXAMPLES_NRF52840])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32], [test "${with_examples}" = "efr32mg1" -o "${with_examples}" = "efr32mg12" -o "${with_examples}" = "efr32mg13" -o "${with_examples}" = "efr32mg21"])
 
 case ${with_examples} in
     no)
@@ -896,6 +897,7 @@ AM_CONDITIONAL([OPENTHREAD_PLATFORM_SAMR21],    [test "${with_platform}" = "samr
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_SIMULATION],[test "${with_platform}" = "simulation"])
 
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF528XX], [test OPENTHREAD_PLATFORM_NRF52811 || test OPENTHREAD_PLATFORM_NRF52833 || test OPENTHREAD_PLATFORM_NRF52840])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_EFR32], [test "${with_platform}" = "efr32mg1" -o "${with_platform}" = "efr32mg12" -o "${with_platform}" = "efr32mg13" -o "${with_platform}" = "efr32mg21"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_K32W], [test OPENTHREAD_PLATFORM_K32W061 || test OPENTHREAD_PLATFORM_JN5189])
 
 AM_COND_IF([OPENTHREAD_PLATFORM_POSIX], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_PLATFORM_POSIX=1", CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_PLATFORM_POSIX=0")
@@ -1039,19 +1041,10 @@ examples/platforms/cc1352/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
 examples/platforms/cc2652/Makefile
-examples/platforms/efr32mg1/Makefile
-examples/platforms/efr32mg12/Makefile
-examples/platforms/efr32mg12/sleepy-demo/Makefile
-examples/platforms/efr32mg12/sleepy-demo/sleepy-demo-ftd/Makefile
-examples/platforms/efr32mg12/sleepy-demo/sleepy-demo-mtd/Makefile
-examples/platforms/efr32mg13/Makefile
-examples/platforms/efr32mg13/sleepy-demo/Makefile
-examples/platforms/efr32mg13/sleepy-demo/sleepy-demo-ftd/Makefile
-examples/platforms/efr32mg13/sleepy-demo/sleepy-demo-mtd/Makefile
-examples/platforms/efr32mg21/Makefile
-examples/platforms/efr32mg21/sleepy-demo/Makefile
-examples/platforms/efr32mg21/sleepy-demo/sleepy-demo-ftd/Makefile
-examples/platforms/efr32mg21/sleepy-demo/sleepy-demo-mtd/Makefile
+examples/platforms/efr32/Makefile
+examples/platforms/efr32/sleepy-demo/Makefile
+examples/platforms/efr32/sleepy-demo/sleepy-demo-mtd/Makefile
+examples/platforms/efr32/sleepy-demo/sleepy-demo-ftd/Makefile
 examples/platforms/gp712/Makefile
 examples/platforms/k32w/Makefile
 examples/platforms/kw41z/Makefile
@@ -1087,7 +1080,7 @@ AC_MSG_NOTICE([
   ---------------------
   Package                                   : ${PACKAGE_NAME}
   Version                                   : ${PACKAGE_VERSION}
-  Interface                                 : ${LIBOPENTHREAD_VERSION_INFO//:/.}
+  Interface                                 : $(echo $LIBOPENTHREAD_VERSION_INFO | $SED 's/:/./g')
   Build system                              : ${build}
   Host system                               : ${host}
   Host architecture                         : ${host_cpu}

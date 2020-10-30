@@ -403,7 +403,7 @@ public:
      * @param[in]  aInstance        A reference to the OpenThread instance.
      *
      */
-    Netif(Instance &aInstance);
+    explicit Netif(Instance &aInstance);
 
     /**
      * This method registers a callback to notify internal IPv6 address changes.
@@ -683,11 +683,6 @@ protected:
     void UnsubscribeAllNodesMulticast(void);
 
 private:
-    enum
-    {
-        kMulticastPrefixLength = 128, ///< Multicast prefix length used to notify internal address changes.
-    };
-
     class ExternalMulticastAddressIteratorBuilder
     {
     public:

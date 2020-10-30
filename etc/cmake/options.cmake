@@ -30,6 +30,10 @@ option(OT_APP_CLI "enable CLI app" ON)
 option(OT_APP_NCP "enable NCP app" ON)
 option(OT_APP_RCP "enable RCP app" ON)
 
+option(OT_FTD "enable FTD" ON)
+option(OT_MTD "enable MTD" ON)
+option(OT_RCP "enable RCP" ON)
+
 option(OT_ASSERT "enable assert function OT_ASSERT()" ON)
 if(OT_ASSERT)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ASSERT_ENABLE=1")
@@ -175,6 +179,11 @@ endif()
 option(OT_LINK_RAW "enable link raw service")
 if(OT_LINK_RAW)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LINK_RAW_ENABLE=1")
+endif()
+
+option(OT_LINK_METRICS "enable link metrics")
+if (OT_LINK_METRICS)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE=1")
 endif()
 
 option(OT_LOG_LEVEL_DYNAMIC "enable dynamic log level control")

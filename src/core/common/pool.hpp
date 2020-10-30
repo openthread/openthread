@@ -86,7 +86,7 @@ public:
      * @param[in] aInstance   A reference to the OpenThread instance.
      *
      */
-    Pool(Instance &aInstance)
+    explicit Pool(Instance &aInstance)
         : mFreeList()
     {
         for (Type &entry : mPool)

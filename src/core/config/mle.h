@@ -240,4 +240,24 @@
 #define OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+ *
+ * Define as 1 to enable Link Metrics feature.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#define OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED
+ *
+ * The max number of series that a Link Metrics Subject can track simultaneously.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED
+#define OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED 10
+#endif
+
 #endif // CONFIG_MLE_H_

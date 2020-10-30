@@ -38,6 +38,7 @@
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
@@ -50,7 +51,7 @@ namespace ot {
  * This class implements handling Energy Scan Requests.
  *
  */
-class EnergyScanServer : public InstanceLocator
+class EnergyScanServer : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
 

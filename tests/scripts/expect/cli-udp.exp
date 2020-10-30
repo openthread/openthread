@@ -30,9 +30,9 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes
+setup_two_nodes
 
-set spawn_id $spawn_2
+switch_node 2
 send "udp open\n"
 expect "Done"
 send "udp bind :: 11001\n"
@@ -42,7 +42,7 @@ expect "ipaddr mleid"
 expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
 set addr_2 $expect_out(1,string)
 
-set spawn_id $spawn_1
+switch_node 1
 send "ipaddr mleid\n"
 expect "ipaddr mleid"
 expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
@@ -60,13 +60,13 @@ expect "Done"
 send "udp send -t there\n"
 expect "Done"
 
-set spawn_id $spawn_2
+switch_node 2
 expect "10 bytes from $addr_1 11002 0123456789"
 expect "6 bytes from $addr_1 11002"
 expect "hello"
 expect "5 bytes from $addr_1 11002 there"
 
-set spawn_id $spawn_1
+switch_node 1
 send "udp help\n"
 expect "Done"
 send "udp connect something_invalid\n"
@@ -93,4 +93,4 @@ expect "Done"
 send "udp linksecurity something_invalid\n"
 expect "Error 35: InvalidCommand"
 
-dispose_nodes
+dispose_all

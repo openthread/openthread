@@ -151,7 +151,7 @@ void MlrManager::UpdateProxiedSubscriptions(Child &             aChild,
                                             const Ip6::Address *aOldMlrRegisteredAddresses,
                                             uint16_t            aOldMlrRegisteredAddressNum)
 {
-    VerifyOrExit(aChild.IsStateValid(), OT_NOOP);
+    VerifyOrExit(aChild.IsStateValid());
 
     // Search the new multicast addresses and set its flag accordingly
     for (const Ip6::Address &address : aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
@@ -194,7 +194,7 @@ void MlrManager::ScheduleSend(uint16_t aDelay)
 {
     OT_ASSERT(!mMlrPending || mSendDelay == 0);
 
-    VerifyOrExit(!mMlrPending, OT_NOOP);
+    VerifyOrExit(!mMlrPending);
 
     if (aDelay == 0)
     {
@@ -395,14 +395,14 @@ otError MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address 
     VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
     message->InitAsConfirmablePost();
-    SuccessOrExit(message->SetToken(Coap::Message::kDefaultTokenLength));
+    SuccessOrExit(message->GenerateRandomToken(Coap::Message::kDefaultTokenLength));
     SuccessOrExit(message->AppendUriPathOptions(UriPath::kMlr));
     SuccessOrExit(message->SetPayloadMarker());
 
     addressesTlv.Init();
     addressesTlv.SetLength(sizeof(Ip6::Address) * aAddressNum);
-    SuccessOrExit(error = message->Append(&addressesTlv, sizeof(addressesTlv)));
-    SuccessOrExit(error = message->Append(aAddresses, sizeof(Ip6::Address) * aAddressNum));
+    SuccessOrExit(error = message->Append(addressesTlv));
+    SuccessOrExit(error = message->AppendBytes(aAddresses, sizeof(Ip6::Address) * aAddressNum));
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     if (Get<MeshCoP::Commissioner>().IsActive())
@@ -439,12 +439,7 @@ otError MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address 
 
 exit:
     otLogInfoMlr("Send MLR.req: %s, addressNum=%d", otThreadErrorToString(error), aAddressNum);
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -520,8 +515,7 @@ otError MlrManager::ParseMulticastListenerRegistrationResponse(otError        aR
 
         for (uint16_t offset = 0; offset < addressesLength; offset += sizeof(Ip6::Address))
         {
-            IgnoreReturnValue(
-                aMessage->Read(addressesOffset + offset, sizeof(Ip6::Address), &aFailedAddresses[aFailedAddressNum]));
+            IgnoreError(aMessage->Read(addressesOffset + offset, aFailedAddresses[aFailedAddressNum]));
             aFailedAddressNum++;
         }
     }

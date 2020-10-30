@@ -41,13 +41,7 @@
 
 #if OPENTHREAD_CONFIG_ASSERT_ENABLE
 
-#if defined(__APPLE__) || defined(__linux__)
-
-#include <assert.h>
-
-#define OT_ASSERT(cond) assert(cond)
-
-#elif OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
+#if OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 
 #include "openthread/platform/misc.h"
 
@@ -70,6 +64,12 @@
             }                                      \
         }                                          \
     } while (0)
+
+#elif defined(__APPLE__) || defined(__linux__)
+
+#include <assert.h>
+
+#define OT_ASSERT(cond) assert(cond)
 
 #else // OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 

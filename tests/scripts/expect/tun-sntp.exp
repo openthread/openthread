@@ -27,9 +27,15 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+set OSTYPE [lindex $tcl_platform(os) 0]
+
+if { $OSTYPE == "Darwin" } {
+    exit 77
+}
+
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "panid 0xface\n"
 expect "Done"
@@ -44,4 +50,4 @@ send "sntp query ::1 123\n"
 expect -re {SNTP response - Unix time: \d+ \(era: \d+\)}
 expect "Done"
 
-dispose
+dispose_all

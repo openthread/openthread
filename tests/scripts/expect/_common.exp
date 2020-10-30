@@ -55,27 +55,56 @@ proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
     }
 }
 
-proc spawn_node {id} {
-    if {[info exists ::env(RCP_COMMAND)] && $::env(RCP_COMMAND) != ""} {
-        spawn $::env(OT_COMMAND) "spinel+hdlc+uart://$::env(RCP_COMMAND)?forkpty-arg=$id"
-    } else {
-        spawn $::env(OT_COMMAND) $id
+proc spawn_node {id {type ""}} {
+    global spawn_id
+    global spawn_ids
+
+    if {${type} == ""} {
+        set type $::env(OT_NODE_TYPE)
     }
+
+    send_user "\n# ${id} ${type}\n"
+
+    switch ${type} {
+        rcp {
+            spawn $::env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$::env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=$id"
+            send "routerselectionjitter 1\n"
+            expect "Done"
+        }
+        cli {
+            spawn $::env(OT_SIMULATION_APPS)/cli/ot-cli-ftd $id
+            send "routerselectionjitter 1\n"
+            expect "Done"
+        }
+        mtd {
+            spawn $::env(OT_SIMULATION_APPS)/cli/ot-cli-mtd $id
+        }
+    }
+
     expect_after {
         timeout { exit 1 }
     }
+
+    set spawn_ids($id) $spawn_id
+
     return $spawn_id
 }
 
-proc setup_leader {} {
-    # Sets up a Thread network spawn_1 as the leader.
-    global spawn_1
+proc switch_node {id} {
+    global spawn_ids
     global spawn_id
-    global env
 
-    set spawn_1 [spawn_node 1]
+    send_user "\n# ${id}\n"
+    set spawn_id $spawn_ids($id)
+}
 
-    set spawn_id $spawn_1
+proc dispose_node {id} {
+    switch_node $id
+    send "\x04"
+    expect eof
+}
+
+proc setup_leader {} {
     send "dataset init new\n"
     expect "Done"
     send "dataset commit active\n"
@@ -88,17 +117,31 @@ proc setup_leader {} {
     expect "Done"
 }
 
-proc dispose {} {
-    send "\x04"
-    expect eof
+proc dispose_all {} {
+    global spawn_ids
+    set max_node [array size spawn_ids]
+    for {set i 1} {$i <= $max_node} {incr i} {
+        dispose_node $i
+    }
 }
 
-proc dispose_leader {} {
-    global spawn_1
-    global spawn_id
+proc get_mleid {} {
+    send "ipaddr mleid\n"
+    expect "ipaddr mleid"
+    expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
+    set rval $expect_out(1,string)
+    expect "Done"
 
-    set spawn_id $spawn_1
-    dispose
+    return $rval
+}
+
+proc get_extaddr {} {
+    send "extaddr\n"
+    expect -re {([0-9a-fA-F]{16})}
+    set rval $expect_out(1,string)
+    expect "Done"
+
+    return $rval
 }
 
 set timeout 10

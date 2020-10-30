@@ -45,7 +45,7 @@ class SpinelInterface
 public:
     enum
     {
-        kMaxFrameSize = 2048, ///< Maximum frame size (number of bytes).
+        kMaxFrameSize = OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE, ///< Maximum buffer size.
     };
 
     /**

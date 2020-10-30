@@ -40,6 +40,7 @@
 
 #include "coap/coap.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 
 namespace ot {
@@ -49,7 +50,7 @@ namespace NetworkData {
  * This class implements the SVR_DATA.ntf transmission logic.
  *
  */
-class Notifier : public InstanceLocator
+class Notifier : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
 
@@ -60,7 +61,7 @@ public:
      * @param[in] aInstance  The OpenThread instance.
      *
      */
-    Notifier(Instance &aInstance);
+    explicit Notifier(Instance &aInstance);
 
     /**
      * Call this method to inform the notifier that new server data is available.

@@ -58,6 +58,9 @@ class CommandType(IntEnum):
     ANNOUNCE = 15
     DISCOVERY_REQUEST = 16
     DISCOVERY_RESPONSE = 17
+    LINK_METRICS_MANAGEMENT_REQUEST = 18
+    LINK_METRICS_MANAGEMENT_RESPONSE = 19
+    LINK_PROBE = 20
     TIME_SYNC = 99
 
 
@@ -89,8 +92,21 @@ class TlvType(IntEnum):
     THREAD_DISCOVERY = 26
     CSL_CHANNEL = 80
     CSL_SYNCHRONIZED_TIMEOUT = 85
+    LINK_METRICS_QUERY = 87
+    LINK_METRICS_MANAGEMENT = 88
+    LINK_METRICS_REPORT = 89
+    LINK_PROBE = 90
     TIME_REQUEST = 252
     TIME_PARAMETER = 253
+
+
+class LinkMetricsSubTlvType(IntEnum):
+    LINK_METRICS_REPORT = 0
+    LINK_METRICS_QUERY_ID = 1
+    LINK_METRICS_QUERY_OPTIONS = 2
+    FORWARD_PROBING_REGISTRATION = 3
+    LINK_METRICS_STATUS = 5
+    ENHANCED_ACK_LINK_METRICS_CONFIGURATION = 7
 
 
 class SourceAddress(object):
@@ -1100,6 +1116,58 @@ class TimeParameterFactory:
 
     def parse(self, data, message_info):
         return TimeParameter()
+
+
+class LinkMetricsQuery:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("LinkMetricsQuery is not implemented yet.")
+
+
+class LinkMetricsQueryFactory:
+
+    def parse(self, data, message_info):
+        return LinkMetricsQuery()
+
+
+class LinkMetricsManagement:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("LinkMetricsManagement is not implemented yet.")
+
+
+class LinkMetricsManagementFactory:
+
+    def parse(self, data, message_info):
+        return LinkMetricsManagement()
+
+
+class LinkMetricsReport:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("LinkMetricsReport is not implemented yet.")
+
+
+class LinkMetricsReportFactory:
+
+    def parse(self, data, message_info):
+        return LinkMetricsReport()
+
+
+class LinkProbe:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("LinkProbe is not implemented yet.")
+
+
+class LinkProbeFactory:
+
+    def parse(self, data, message_info):
+        return LinkProbe()
 
 
 class MleCommand(object):

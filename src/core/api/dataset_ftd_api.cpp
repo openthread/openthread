@@ -46,7 +46,7 @@ otError otDatasetCreateNewNetwork(otInstance *aInstance, otOperationalDataset *a
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<MeshCoP::ActiveDataset>().CreateNewNetwork(*aDataset);
+    return instance.Get<MeshCoP::ActiveDataset>().CreateNewNetwork(*static_cast<MeshCoP::Dataset::Info *>(aDataset));
 }
 
 uint32_t otDatasetGetDelayTimerMinimal(otInstance *aInstance)

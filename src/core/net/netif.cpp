@@ -42,6 +42,30 @@
 namespace ot {
 namespace Ip6 {
 
+class AddressInfo : public otIp6AddressInfo
+{
+public:
+    AddressInfo(const NetifUnicastAddress &aAddress, Instance &aInstance)
+    {
+        mAddress      = &aAddress.mAddress;
+        mPrefixLength = aAddress.mPrefixLength;
+        mScope        = aAddress.GetScope();
+        mIsAnycast    = aInstance.Get<Mle::MleRouter>().IsAnycastLocator(aAddress.GetAddress());
+    }
+
+    explicit AddressInfo(const NetifMulticastAddress &aAddress)
+    {
+        mAddress      = &aAddress.GetAddress();
+        mPrefixLength = kMulticastPrefixLength;
+        mScope        = aAddress.GetAddress().GetScope();
+        mIsAnycast    = false;
+    }
+
+private:
+    static constexpr uint8_t kMulticastPrefixLength =
+        128; ///< Multicast prefix length used to notify internal address changes.
+};
+
 /*
  * Certain fixed multicast addresses are defined as a set of chained (linked-list) constant `otNetifMulticastAddress`
  * entries:
@@ -104,7 +128,7 @@ void Netif::SubscribeAllNodesMulticast(void)
     NetifMulticastAddress &linkLocalAllNodesAddress =
         static_cast<NetifMulticastAddress &>(const_cast<otNetifMulticastAddress &>(kLinkLocalAllNodesMulticastAddress));
 
-    VerifyOrExit(!mMulticastAddresses.Contains(linkLocalAllNodesAddress), OT_NOOP);
+    VerifyOrExit(!mMulticastAddresses.Contains(linkLocalAllNodesAddress));
 
     // Append the fixed chain of three multicast addresses to the
     // tail of the list:
@@ -124,11 +148,14 @@ void Netif::SubscribeAllNodesMulticast(void)
 
     Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    VerifyOrExit(mAddressCallback != nullptr);
 
     for (const NetifMulticastAddress *entry = &linkLocalAllNodesAddress; entry; entry = entry->GetNext())
     {
-        mAddressCallback(&entry->GetAddress(), kMulticastPrefixLength, /* IsAdded */ true, mAddressCallbackContext);
+        AddressInfo addressInfo(*entry);
+
+        mAddressCallback(&addressInfo,
+                         /* IsAdded */ true, mAddressCallbackContext);
     }
 
 exit:
@@ -171,11 +198,14 @@ void Netif::UnsubscribeAllNodesMulticast(void)
 
     Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    VerifyOrExit(mAddressCallback != nullptr);
 
     for (const NetifMulticastAddress *entry = &linkLocalAllNodesAddress; entry; entry = entry->GetNext())
     {
-        mAddressCallback(&entry->GetAddress(), kMulticastPrefixLength, /* IsAdded */ false, mAddressCallbackContext);
+        AddressInfo addressInfo(*entry);
+
+        mAddressCallback(&addressInfo,
+                         /* IsAdded */ false, mAddressCallbackContext);
     }
 
 exit:
@@ -215,7 +245,7 @@ void Netif::SubscribeAllRoutersMulticast(void)
     // `RealmLocalAllRouters` then all five addresses are on
     // the list already.
 
-    VerifyOrExit(prev != &realmLocalAllRoutersAddress, OT_NOOP);
+    VerifyOrExit(prev != &realmLocalAllRoutersAddress);
 
     if (prev == nullptr)
     {
@@ -228,12 +258,15 @@ void Netif::SubscribeAllRoutersMulticast(void)
 
     Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    VerifyOrExit(mAddressCallback != nullptr);
 
     for (const NetifMulticastAddress *entry = &linkLocalAllRoutersAddress; entry != &linkLocalAllNodesAddress;
          entry                              = entry->GetNext())
     {
-        mAddressCallback(&entry->GetAddress(), kMulticastPrefixLength, /* IsAdded */ true, mAddressCallbackContext);
+        AddressInfo addressInfo(*entry);
+
+        mAddressCallback(&addressInfo,
+                         /* IsAdded */ true, mAddressCallbackContext);
     }
 
 exit:
@@ -271,12 +304,15 @@ void Netif::UnsubscribeAllRoutersMulticast(void)
 
     Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
+    VerifyOrExit(mAddressCallback != nullptr);
 
     for (const NetifMulticastAddress *entry = &linkLocalAllRoutersAddress; entry != &linkLocalAllNodesAddress;
          entry                              = entry->GetNext())
     {
-        mAddressCallback(&entry->GetAddress(), kMulticastPrefixLength, /* IsAdded */ false, mAddressCallbackContext);
+        AddressInfo addressInfo(*entry);
+
+        mAddressCallback(&addressInfo,
+                         /* IsAdded */ false, mAddressCallbackContext);
     }
 
 exit:
@@ -294,8 +330,14 @@ void Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
 
     Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
-    mAddressCallback(&aAddress.mAddress, kMulticastPrefixLength, /* IsAdded */ true, mAddressCallbackContext);
+    VerifyOrExit(mAddressCallback != nullptr);
+
+    {
+        AddressInfo addressInfo(aAddress);
+
+        mAddressCallback(&addressInfo,
+                         /* IsAdded */ true, mAddressCallbackContext);
+    }
 
 exit:
     return;
@@ -307,8 +349,13 @@ void Netif::UnsubscribeMulticast(const NetifMulticastAddress &aAddress)
 
     Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
-    mAddressCallback(&aAddress.mAddress, kMulticastPrefixLength, /* IsAdded */ false, mAddressCallbackContext);
+    VerifyOrExit(mAddressCallback != nullptr);
+    {
+        AddressInfo addressInfo(aAddress);
+
+        mAddressCallback(&addressInfo,
+                         /* IsAdded */ false, mAddressCallbackContext);
+    }
 
 exit:
     return;
@@ -395,8 +442,14 @@ void Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
 
     Get<Notifier>().Signal(aAddress.mRloc ? kEventThreadRlocAdded : kEventIp6AddressAdded);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
-    mAddressCallback(&aAddress.mAddress, aAddress.mPrefixLength, /* IsAdded */ true, mAddressCallbackContext);
+    VerifyOrExit(mAddressCallback != nullptr);
+
+    {
+        AddressInfo addressInfo(aAddress, GetInstance());
+
+        mAddressCallback(&addressInfo,
+                         /* IsAdded */ true, mAddressCallbackContext);
+    }
 
 exit:
     return;
@@ -408,8 +461,12 @@ void Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
 
     Get<Notifier>().Signal(aAddress.mRloc ? kEventThreadRlocRemoved : kEventIp6AddressRemoved);
 
-    VerifyOrExit(mAddressCallback != nullptr, OT_NOOP);
-    mAddressCallback(&aAddress.mAddress, aAddress.mPrefixLength, /* IsAdded */ false, mAddressCallbackContext);
+    VerifyOrExit(mAddressCallback != nullptr);
+    {
+        AddressInfo addressInfo(aAddress, GetInstance());
+
+        mAddressCallback(&addressInfo, /* IsAdded */ false, mAddressCallbackContext);
+    }
 
 exit:
     return;

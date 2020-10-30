@@ -946,10 +946,10 @@ class HarnessCase(unittest.TestCase):
                 self.dut.mode = 's'
                 self.dut.child_timeout = self.child_timeout
             elif 'End Device' in body:
-                self.dut.mode = 'rsn'
+                self.dut.mode = 'rn'
                 self.dut.child_timeout = self.child_timeout
             else:
-                self.dut.mode = 'rsdn'
+                self.dut.mode = 'rdn'
 
             if 'at channel' in body:
                 self.channel = int(body.split(':')[1])

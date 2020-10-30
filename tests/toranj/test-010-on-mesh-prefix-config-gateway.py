@@ -249,7 +249,7 @@ wpan.verify_within(check_prefix4_removed_from_r1, WAIT_TIME)
 
 r1.add_prefix(
     prefix4,
-    48,
+    64,
     priority="-1",
     stable=True,
     on_mesh=False,
@@ -262,7 +262,7 @@ r1.add_prefix(
 verify_prefix(
     [r1],
     prefix4,
-    48,
+    64,
     priority="low",
     stable=True,
     on_mesh=False,

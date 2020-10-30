@@ -47,37 +47,37 @@ MTDS = [MED1, SED1, MED3]
 class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
     TOPOLOGY = {
         DUT_LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER1, ROUTER2, MED3]
         },
         ROUTER1: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [DUT_LEADER, MED1]
         },
         ROUTER2: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [DUT_LEADER, SED1]
         },
         MED1: {
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [ROUTER1]
         },
         SED1: {
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'allowlist': [ROUTER2]
         },
         MED3: {
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
             'allowlist': [DUT_LEADER]
         },

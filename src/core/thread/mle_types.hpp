@@ -252,7 +252,7 @@ enum
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
- * Backbone Router / MLR constants
+ * Backbone Router / DUA / MLR constants
  *
  */
 enum
@@ -268,7 +268,11 @@ enum
     KResponseTimeoutDelay             = 30,                ///< In seconds.
     kDuaDadPeriod                     = 100,               ///< In seconds. Time period after which the address
                                                            ///< becomes "Preferred" if no duplicate address error.
-    kTimeSinceLastTransactionMax = 10 * 86400,             ///< In seconds (10 days).
+    kDuaDadRepeats = 3,  ///< Maximum number of times the multicast DAD query and wait time DUA_DAD_QUERY_TIMEOUT are
+                         ///< repeated by the BBR, as part of the DAD process.
+    kDuaRecentTime = 20, ///< Time period (in seconds) during which a DUA registration is considered 'recent' at a BBR.
+    kTimeSinceLastTransactionMax = 10 * 86400, ///< In seconds (10 days).
+    kDefaultBackboneHoplimit     = 1,          ///< default hoplimit for Thread Backbone Link Protocol messages
 };
 
 static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin && kMlrTimeoutDefault <= kMlrTimeoutMax,
@@ -302,10 +306,10 @@ class DeviceMode : public Equatable<DeviceMode>
 public:
     enum
     {
-        kModeRxOnWhenIdle      = 1 << 3, ///< If the device has its receiver on when not transmitting.
-        kModeSecureDataRequest = 1 << 2, ///< If the device uses link layer security for all data requests.
-        kModeFullThreadDevice  = 1 << 1, ///< If the device is an FTD.
-        kModeFullNetworkData   = 1 << 0, ///< If the device requires the full Network Data.
+        kModeRxOnWhenIdle     = 1 << 3, ///< If the device has its receiver on when not transmitting.
+        kModeReserved         = 1 << 2, ///< Set to 1 on transmission, ignore on reception.
+        kModeFullThreadDevice = 1 << 1, ///< If the device is an FTD.
+        kModeFullNetworkData  = 1 << 0, ///< If the device requires the full Network Data.
 
         kInfoStringSize = 45, ///< String buffer size used for `ToString()`.
     };
@@ -326,7 +330,7 @@ public:
      * This is the default constructor for `DeviceMode` object.
      *
      */
-    DeviceMode(void) {}
+    DeviceMode(void) = default;
 
     /**
      * This constructor initializes a `DeviceMode` object from a given mode TLV bitmask.
@@ -361,7 +365,7 @@ public:
      * @param[in] aMode   A mode TLV bitmask.
      *
      */
-    void Set(uint8_t aMode) { mMode = aMode; }
+    void Set(uint8_t aMode) { mMode = aMode | kModeReserved; }
 
     /**
      * This method gets the device mode as a mode configuration structure.
@@ -387,15 +391,6 @@ public:
      *
      */
     bool IsRxOnWhenIdle(void) const { return (mMode & kModeRxOnWhenIdle) != 0; }
-
-    /**
-     * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
-     *
-     * @retval TRUE   If the device uses secure IEEE 802.15.4 Data Request (data poll) messages.
-     * @retval FALSE  If the device uses any IEEE 802.15.4 Data Request (data poll) messages.
-     *
-     */
-    bool IsSecureDataRequest(void) const { return (mMode & kModeSecureDataRequest) != 0; }
 
     /**
      * This method indicates whether or not the device is a Full Thread Device.

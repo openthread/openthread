@@ -164,6 +164,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/jam_detection_api.cpp                      \
     src/core/api/joiner_api.cpp                             \
     src/core/api/link_api.cpp                               \
+    src/core/api/link_metrics_api.cpp                       \
     src/core/api/link_raw_api.cpp                           \
     src/core/api/logging_api.cpp                            \
     src/core/api/message_api.cpp                            \
@@ -255,6 +256,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/energy_scan_server.cpp                  \
     src/core/thread/indirect_sender.cpp                     \
     src/core/thread/key_manager.cpp                         \
+    src/core/thread/link_metrics.cpp                        \
     src/core/thread/link_quality.cpp                        \
     src/core/thread/lowpan.cpp                              \
     src/core/thread/mesh_forwarder.cpp                      \
@@ -283,6 +285,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/child_supervision.cpp                    \
     src/core/utils/heap.cpp                                 \
     src/core/utils/jam_detector.cpp                         \
+    src/core/utils/lookup_table.cpp                         \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
     src/lib/hdlc/hdlc.cpp                                   \

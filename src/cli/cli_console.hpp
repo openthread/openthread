@@ -35,7 +35,6 @@
 #define CLI_CONSOLE_HPP_
 
 #include "cli_config.h"
-#include "openthread-core-config.h"
 
 #include <openthread/cli.h>
 

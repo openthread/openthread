@@ -41,6 +41,7 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
 
@@ -50,7 +51,7 @@ namespace ot {
  * This class implements OpenThread Time Synchronization Service.
  *
  */
-class TimeSync : public InstanceLocator
+class TimeSync : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
 

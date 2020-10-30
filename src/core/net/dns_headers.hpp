@@ -507,7 +507,7 @@ public:
     {
         SetType(aType);
         SetClass(aClass);
-    };
+    }
 
     /**
      * This method returns the type of the question.
@@ -576,7 +576,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+    otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
 };
 
 /**

@@ -44,7 +44,7 @@ namespace ot {
 class TestNetif : public Ip6::Netif
 {
 public:
-    TestNetif(Instance &aInstance)
+    explicit TestNetif(Instance &aInstance)
         : Ip6::Netif(aInstance)
     {
     }

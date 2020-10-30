@@ -68,7 +68,7 @@ public:
      * This is the default constructor for a `Time` object.
      *
      */
-    Time(void) {}
+    Time(void) = default;
 
     /**
      * This constructor initializes a `Time` object with a given value.
