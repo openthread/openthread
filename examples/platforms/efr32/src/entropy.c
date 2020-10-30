@@ -38,10 +38,10 @@
 
 otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    otError error = OT_ERROR_NONE;
-    otEXPECT_ACTION(aOutput, error = OT_ERROR_INVALID_ARGS);
+    otError error     = OT_ERROR_NONE;
+    size_t  outputLen = 0;
 
-    size_t outputLen = 0;
+    otEXPECT_ACTION(aOutput, error = OT_ERROR_INVALID_ARGS);
 
     for (size_t partialLen = 0; outputLen < aOutputLength; outputLen += partialLen)
     {
