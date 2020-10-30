@@ -1075,8 +1075,7 @@ otError Ip6::SendRaw(Message &aMessage)
     bool        freed = false;
 
     SuccessOrExit(error = header.Init(aMessage));
-    VerifyOrExit(!header.GetSource().IsMulticast() && !Get<Mle::Mle>().IsAnycastLocator(header.GetSource()),
-                 error = OT_ERROR_INVALID_SOURCE_ADDRESS);
+    VerifyOrExit(!header.GetSource().IsMulticast(), error = OT_ERROR_INVALID_SOURCE_ADDRESS);
 
     messageInfo.SetPeerAddr(header.GetSource());
     messageInfo.SetSockAddr(header.GetDestination());
