@@ -268,9 +268,9 @@ enum
     KResponseTimeoutDelay             = 30,                ///< In seconds.
     kDuaDadPeriod                     = 100,               ///< In seconds. Time period after which the address
                                                            ///< becomes "Preferred" if no duplicate address error.
-    kDuaDadRepeats = 3, ///< Maximum number of times the multicast DAD query and wait time DUA_DAD_QUERY_TIMEOUT are
-                        ///< repeated by the BBR, as part of the DAD process.
-    kDuaRecentTime               = 20, ///< Time period during which a DUA registration is considered 'recent' at a BBR.
+    kDuaDadRepeats = 3,  ///< Maximum number of times the multicast DAD query and wait time DUA_DAD_QUERY_TIMEOUT are
+                         ///< repeated by the BBR, as part of the DAD process.
+    kDuaRecentTime = 20, ///< Time period (in seconds) during which a DUA registration is considered 'recent' at a BBR.
     kTimeSinceLastTransactionMax = 10 * 86400, ///< In seconds (10 days).
     kDefaultBackboneHoplimit     = 1,          ///< default hoplimit for Thread Backbone Link Protocol messages
 };

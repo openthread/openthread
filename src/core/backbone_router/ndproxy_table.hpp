@@ -86,7 +86,7 @@ public:
         }
 
         /**
-         * This method gets the RLOC16 of the ND Proxy.
+         * This method gets the short address of the device who sends the DUA registration.
          *
          * @returns  The RLOC16 value.
          *
@@ -184,7 +184,7 @@ public:
      *
      * @param[in] aDua  The Domain Unicaste Address.
      *
-     * @returns The `NdProxy` instance containing ND Proxy info, or nullptr if not found.
+     * @returns The `NdProxy` instance matching the specified @p aDua, or nullptr if not found.
      *
      */
     NdProxy *ResolveDua(const Ip6::Address &aDua);
