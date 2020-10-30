@@ -360,7 +360,7 @@ class PacketFilter(object):
         """
         return self.filter(attrgetter('coap'), **kwargs)
 
-    def filter_coap_request(self, uri_path, port=None, **kwargs):
+    def filter_coap_request(self, uri_path, port=None, confirmable=None, **kwargs):
         """
         Create a new PacketFilter to filter COAP Request packets.
 
@@ -373,7 +373,8 @@ class PacketFilter(object):
         assert port is None or isinstance(port, int), port
         return self.filter(
             lambda p: (p.coap.is_post and p.coap.opt.uri_path_recon == uri_path and
-                       (port is None or p.udp.dstport == port)), **kwargs)
+                       (confirmable is None or p.coap.type ==
+                        (0 if confirmable else 1)) and (port is None or p.udp.dstport == port)), **kwargs)
 
     def filter_coap_ack(self, uri_path, port=None, **kwargs):
         """
@@ -389,6 +390,26 @@ class PacketFilter(object):
         return self.filter(
             lambda p: (p.coap.is_ack and p.coap.opt.uri_path_recon == uri_path and
                        (port is None or p.udp.dstport == port)), **kwargs)
+
+    def filter_backbone_answer(self,
+                               target: str,
+                               *,
+                               eth_src: Optional[EthAddr] = None,
+                               port: int = None,
+                               confirmable: bool = None,
+                               mliid=None):
+        filter_eth = self.filter_eth_src(eth_src) if eth_src else self.filter_eth()
+        f = filter_eth.filter_coap_request('/b/ba', port=port,
+                                           confirmable=confirmable).filter('thread_bl.tlv.target_eid == {target}',
+                                                                           target=target)
+        if mliid is not None:
+            f = f.filter('thread_bl.tlv.ml_eid == {mliid}', mliid=mliid)
+
+        return f
+
+    def filter_backbone_query(self, target: str, *, eth_src: EthAddr, port: int = None) -> 'PacketFilter':
+        return self.filter_eth_src(eth_src).filter_coap_request('/b/bq', port=port, confirmable=False).filter(
+            'thread_bl.tlv.target_eid == {target}', target=target)
 
     def filter_wpan(self, **kwargs):
         """

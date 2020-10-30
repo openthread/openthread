@@ -131,9 +131,13 @@ class Packet(object):
             self.debug_fields()
             raise errors.VerifyFailed(self)
 
+        return self
+
     def must_not_verify(self, func: Union[str, Callable], **vars):
         if self.verify(func, **vars):
             raise errors.VerifyFailed(self)
+
+        return self
 
     @property
     def sniff_timestamp(self) -> float:

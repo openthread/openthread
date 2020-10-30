@@ -252,7 +252,7 @@ enum
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
- * Backbone Router / MLR constants
+ * Backbone Router / DUA / MLR constants
  *
  */
 enum
@@ -268,8 +268,11 @@ enum
     KResponseTimeoutDelay             = 30,                ///< In seconds.
     kDuaDadPeriod                     = 100,               ///< In seconds. Time period after which the address
                                                            ///< becomes "Preferred" if no duplicate address error.
-    kTimeSinceLastTransactionMax = 10 * 86400,             ///< In seconds (10 days).
-    kDefaultBackboneHoplimit     = 1, ///< default hoplimit for Thread Backbone Link Protocol messages
+    kDuaDadRepeats = 3,  ///< Maximum number of times the multicast DAD query and wait time DUA_DAD_QUERY_TIMEOUT are
+                         ///< repeated by the BBR, as part of the DAD process.
+    kDuaRecentTime = 20, ///< Time period (in seconds) during which a DUA registration is considered 'recent' at a BBR.
+    kTimeSinceLastTransactionMax = 10 * 86400, ///< In seconds (10 days).
+    kDefaultBackboneHoplimit     = 1,          ///< default hoplimit for Thread Backbone Link Protocol messages
 };
 
 static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin && kMlrTimeoutDefault <= kMlrTimeoutMax,

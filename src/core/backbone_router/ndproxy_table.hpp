@@ -44,6 +44,7 @@
 #include "common/non_copyable.hpp"
 #include "common/time.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/mle_types.hpp"
 
 namespace ot {
 
@@ -57,6 +58,73 @@ class NdProxyTable : public InstanceLocator, private NonCopyable
 {
 public:
     /**
+     * This class represents a ND Proxy instance.
+     *
+     */
+    class NdProxy : private Clearable<NdProxy>
+    {
+        friend class NdProxyTable;
+
+    public:
+        /**
+         * This method gets the Mesh-Local IID of the ND Proxy.
+         *
+         * @returns  The Mesh-Local IID.
+         *
+         */
+        const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mMeshLocalIid; }
+
+        /**
+         * This method gets the time since last transaction of the ND Proxy.
+         *
+         * @returns  The time since last transaction in seconds.
+         *
+         */
+        uint32_t GetTimeSinceLastTransaction(void) const
+        {
+            return TimeMilli::MsecToSec(TimerMilli::GetNow() - mLastRegistrationTime);
+        }
+
+        /**
+         * This method gets the short address of the device who sends the DUA registration.
+         *
+         * @returns  The RLOC16 value.
+         *
+         */
+        uint16_t GetRloc16(void) const { return mRloc16; }
+
+        /**
+         * This method gets the DAD flag of the ND Proxy.
+         *
+         * @returns  The DAD flag.
+         *
+         */
+        bool GetDadFlag(void) const { return mDadFlag; }
+
+    private:
+        NdProxy(void) { Clear(); }
+
+        void Init(const Ip6::InterfaceIdentifier &aAddressIid,
+                  const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                  uint16_t                        aRloc16,
+                  uint32_t                        aTimeSinceLastTransaction);
+
+        void Update(uint16_t aRloc16, uint32_t aTimeSinceLastTransaction);
+        void IncreaseDadAttampts(void) { mDadAttempts++; }
+        bool IsDadAttamptsComplete() const { return mDadAttempts == Mle::kDuaDadRepeats; }
+
+        Ip6::InterfaceIdentifier mAddressIid;
+        Ip6::InterfaceIdentifier mMeshLocalIid;
+        TimeMilli                mLastRegistrationTime; ///< in milliseconds
+        uint16_t                 mRloc16;
+        uint8_t                  mDadAttempts : 2;
+        bool                     mDadFlag : 1;
+        bool                     mValid : 1;
+
+        static_assert(Mle::kDuaDadRepeats < 4, "Mle::kDuaDadRepeats does not fit in mDadAttempts field as 2-bit value");
+    };
+
+    /**
      * This constructor initializes the `NdProxyTable` object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -64,6 +132,7 @@ public:
      */
     explicit NdProxyTable(Instance &aInstance)
         : InstanceLocator(aInstance)
+        , mIsAnyDadInProcess(false)
     {
     }
 
@@ -104,6 +173,39 @@ public:
      */
     void HandleDomainPrefixUpdate(Leader::DomainPrefixState aState);
 
+    /**
+     * This method notifies ND Proxy table of the timer tick.
+     *
+     */
+    void HandleTimer(void);
+
+    /**
+     * This method gets the ND Proxy info for a given Domain Unicast Address.
+     *
+     * @param[in] aDua  The Domain Unicaste Address.
+     *
+     * @returns The `NdProxy` instance matching the specified @p aDua, or nullptr if not found.
+     *
+     */
+    NdProxy *ResolveDua(const Ip6::Address &aDua);
+
+    /**
+     * This method notifies DAD completed for a given ND Proxy.
+     *
+     * @param[in] aNdProxy      The ND Proxy to notify of.
+     * @param[in] aDuplicated   Whether duplicate was detected.
+     *
+     */
+    static void NotifyDadComplete(NdProxy &aNdProxy, bool aDuplicated);
+
+    /**
+     * This method removes the ND Proxy.
+     *
+     * @param[in] aNdProxy      The ND Proxy to remove.
+     *
+     */
+    static void Erase(NdProxy &aNdProxy);
+
 private:
     enum
     {
@@ -114,27 +216,7 @@ private:
     {
         kFilterInvalid,
         kFilterValid,
-    };
-
-    class NdProxy : private Clearable<NdProxy>
-    {
-        friend class NdProxyTable;
-
-    private:
-        NdProxy(void) { Clear(); }
-
-        void Init(const Ip6::InterfaceIdentifier &aAddressIid,
-                  const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                  uint16_t                        aRloc16,
-                  uint32_t                        aTimeSinceLastTransaction);
-
-        void Update(uint16_t aRloc16, uint32_t aTimeSinceLastTransaction);
-
-        Ip6::InterfaceIdentifier mAddressIid;
-        Ip6::InterfaceIdentifier mMeshLocalIid;
-        TimeMilli                mLastRegistrationTime; ///< in milliseconds
-        uint16_t                 mRloc16;
-        bool                     mValid : 1;
+        kFilterDadInProcess,
     };
 
     /**
@@ -192,9 +274,11 @@ private:
     NdProxy *       FindByAddressIid(const Ip6::InterfaceIdentifier &aAddressIid);
     NdProxy *       FindByMeshLocalIid(const Ip6::InterfaceIdentifier &aMeshLocalIid);
     NdProxy *       FindInvalid(void);
-    static void     Erase(NdProxy &aProxy);
+    Ip6::Address    GetDua(NdProxy &aNdProxy);
+    void            NotifyDuaRegistrationOnBackboneLink(NdProxy &aNdProxy);
 
     NdProxy mProxies[kMaxNdProxyNum];
+    bool    mIsAnyDadInProcess : 1;
 };
 
 } // namespace BackboneRouter

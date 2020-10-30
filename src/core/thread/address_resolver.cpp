@@ -548,6 +548,18 @@ exit:
 
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kAddressResolver);
     FreeMessageOnError(message, error);
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(aEid))
+    {
+        uint16_t selfRloc16 = Get<Mle::MleRouter>().GetRloc16();
+
+        otLogInfoArp("Extending ADDR.qry to BB.qry for target=%s, rloc16=%04x(self)", aEid.ToString().AsCString(),
+                     selfRloc16);
+        IgnoreError(Get<BackboneRouter::Manager>().SendBackboneQuery(aEid, selfRloc16));
+    }
+#endif
+
     return error;
 }
 
@@ -787,6 +799,17 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
             ExitNow();
         }
     }
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(target))
+    {
+        uint16_t srcRloc16 = aMessageInfo.GetPeerAddr().GetIid().GetLocator();
+
+        otLogInfoArp("Extending ADDR.qry to BB.qry for target=%s, rloc16=%04x", target.ToString().AsCString(),
+                     srcRloc16);
+        IgnoreError(Get<BackboneRouter::Manager>().SendBackboneQuery(target, srcRloc16));
+    }
+#endif
 
 exit:
     return;

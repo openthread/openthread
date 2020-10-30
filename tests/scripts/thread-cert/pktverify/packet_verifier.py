@@ -30,7 +30,7 @@ import logging
 from typing import Tuple
 
 from pktverify import consts
-from pktverify.consts import DUA_RECENT_TIME, MLE_CHILD_ID_REQUEST, MLE_ADVERTISEMENT, MLE_CHILD_ID_RESPONSE
+from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_ADVERTISEMENT, MLE_CHILD_ID_RESPONSE
 from pktverify.pcap_reader import PcapReader
 from pktverify.summary import Summary
 from pktverify.test_info import TestInfo
@@ -161,180 +161,6 @@ class PacketVerifier(object):
             logging.info("add extra var: %s = %s", k, v)
             self._vars[k] = v
 
-    def verify_dua_registration(self,
-                                td: str,
-                                bbr: str,
-                                pkts=None,
-                                dua_deadline=None,
-                                DAD=False,
-                                sbbr=None) -> VerifyResult:
-        """
-        Run the packet verification for the while DAD registration, including optional steps
-        This is commonly used in many test cases.
-
-        :param pkts: The packet filter to verify, or self.pkts if None
-        :param td: TB's name.
-        :param bbr: BBR's name.
-        """
-        assert self.is_thread_device(td)
-        assert self.is_thread_device(bbr) and self.is_backbone_device(bbr), bbr
-
-        if pkts is None:
-            pkts = self.pkts
-
-        logging.info("verifying DUA registration from %s to %s ...", td, bbr)
-        result = VerifyResult()
-
-        TD = self.vars[td]
-        BBR = self.vars[bbr]
-        BBR_ETH = self.vars[bbr + '_ETH']
-        if sbbr:
-            SBBR_ETH = self.vars[sbbr + '_ETH']
-        # BBR_DUA = self.vars[bbr + '_DUA']
-        p = pkts.filter_wpan_src64(TD) \
-            .filter_coap_request("/n/dr", port=self.MM_PORT) \
-            .must_next()
-
-        result.record_last("/n/dr", pkts)
-
-        if dua_deadline is not None:
-            p.must_verify(lambda p: p.sniff_timestamp <= dua_deadline)
-
-        idx_after_n_dr = pkts.index
-
-        p.must_verify(lambda p: p.coap.tlv.target_eid and p.coap.tlv.ml_eid)
-        DUA = p.coap.tlv.target_eid
-        MLEID = p.coap.tlv.ml_eid
-        self.add_vars(**{td + "_DUA": DUA, td + "_MLEID": MLEID})
-        logging.info(f"DUA={DUA}, MLEID={MLEID}")
-
-        if DAD:
-            # DAD (DUA_DATA_REPEAT+1) TIMES
-            before_dad_index = pkts.index
-            after_dad_index = before_dad_index
-            with pkts.save_index():
-                for i in range(consts.DUA_DAD_REPEATS + 1):
-                    # Step 3: PBBR - Performs DAD on the backbone link - Multicasts a BB.qry CoAP request
-                    filter = pkts.filter_eth_src(BBR_ETH) \
-                        .filter_LLABMA() \
-                        .filter_coap_request("/b/bq") \
-                        .filter(lambda p: p.coap.tlv.target_eid == DUA)
-                    p = filter.must_next()
-                    after_dad_index = self.max_index(after_dad_index, pkts.index)
-
-                    with pkts.save_index():
-                        # try to find the next multicast
-                        # start_index = pkts.index
-                        if filter.next():
-                            pe = pkts.last()
-                            time_gap = pe.sniff_timestamp - p.sniff_timestamp
-                            # PBBR Waits for DUA_DAD_QUERY_TIMEOUT: Verify that DUA_DAD_QUERY_TIMEOUT time passes
-                            assert time_gap >= consts.DUA_DAD_QUERY_TIMEOUT - 0.01, time_gap
-
-            # SBBR: Does not respond: SBBR does not respond to the BB.qry message.
-            if sbbr is not None:
-                dad_pkts_range = pkts.range(before_dad_index, after_dad_index, cascade=False)
-                dad_pkts_range.filter_eth_src(SBBR_ETH) \
-                    .filter_LLABMA() \
-                    .filter_coap_ack("/b/bq") \
-                    .must_not_next()
-
-        # BBR updates the corresponding entry in its DUA device table.
-        # No pass criteria
-
-        # Step 7: BBR informs other BBRs on the network of the DUA registration.
-        # FIXME: Test plan requires that last_transaction_time <= 3,
-        #  however real OT implementation can have last_transaction_time == 4
-        expected_last_transaction_time = 0 if not DAD else 4
-        pkts.filter_eth_src(BBR_ETH) \
-            .filter_LLABMA() \
-            .filter_coap_request("/b/ba") \
-            .filter("coap.tlv.target_eid == {DUA}", DUA=DUA) \
-            .must_next() \
-            .must_verify("""
-                    coap.tlv.ml_eid == {MLEID}
-                    and coap.tlv.last_transaction_time <= {expected_last_transaction_time}
-                    and coap.tlv.net_name == {NET_NAME}
-                """, MLEID=MLEID, NET_NAME=self.NET_NAME,
-                         expected_last_transaction_time=expected_last_transaction_time)
-
-        idx1 = pkts.index
-
-        # SBBR receives PRO_BB.ntf and optionally updates the corresponding entry
-        # in its Backup DUA Devices Table. No pass criteria.
-
-        # BBR announces itself as the new ND proxy for the roaming device
-        pkts.seek_back(0.2, eth=True) \
-            .filter_eth_src(BBR_ETH) \
-            .filter_LLANMA() \
-            .filter_icmpv6_nd_na(DUA) \
-            .must_next() \
-            .must_verify("""
-                    icmpv6.nd.na.flag.s == 0
-                    and icmpv6.nd.na.flag.o == 1
-                    and icmpv6.nd.na.flag.r == 1
-                    and icmpv6.opt.target_linkaddr == {BBR_ETH}
-                """, BBR_ETH=BBR_ETH)
-
-        idx2 = pkts.index
-        # BBR responds to the DUA registration
-        pkts.index = idx_after_n_dr  # reset index to just after /n/dr request
-        pkts.filter_wpan_src64(BBR) \
-            .filter_coap_ack("/n/dr") \
-            .filter("coap.tlv.target_eid == {DUA}", DUA=DUA) \
-            .must_next() \
-            .must_verify("""
-                    coap.tlv.target_eid == {DUA}
-                    and coap.tlv.status == 0
-                    """, DUA=DUA)
-
-        pkts.index = self.max_index(idx1, idx2, pkts.index)
-        # BBR optionally repeats the unsolicited neighbor advertisement.
-        # Optional 1 or 2 times
-        with pkts.save_index():
-            filter = pkts.filter_eth_src(BBR_ETH) \
-                .filter_LLANMA() \
-                .filter_icmpv6_nd_na(DUA)
-
-            for i in range(2):
-                if not filter.next():
-                    break
-
-                filter.last().must_verify("""
-                        icmpv6.nd.na.flag.s == 0
-                        and icmpv6.nd.na.flag.o == 1
-                        and icmpv6.nd.na.flag.r == 1
-                        and icmpv6.opt.target_linkaddr == {BBR_ETH}
-                    """,
-                                          BBR_ETH=BBR_ETH)
-
-        # BBR Optionally repeats the DUA registration notification
-        # Optional
-        with pkts.save_index():
-            filter = pkts.filter_eth_src(BBR_ETH) \
-                .filter_LLABMA() \
-                .filter_coap_request("/b/ba") \
-                .filter("coap.tlv.target_eid == {DUA}", DUA=DUA)
-
-            if filter.next():
-                p = filter.last()
-                p.must_verify("""
-                    coap.tlv.ml_eid == {MLEID}
-                    and coap.tlv.net_name == {NET_NAME}
-                    and 3 < coap.tlv.last_transaction_time < DUA_RECENT_TIME
-                    """,
-                              DUA_RECENT_TIME=DUA_RECENT_TIME,
-                              MLEID=MLEID,
-                              NET_NAME=self.NET_NAME)
-
-        if sbbr is not None:
-            # SBBR: Does not respond to the ND Neighbor Solicitation message.
-            SBBR_ETH = self.vars[sbbr + '_ETH']
-            pkts_in_range = pkts.range(idx_after_n_dr, pkts.index, cascade=False)
-            pkts_in_range.filter_eth_src(SBBR_ETH).filter_LLANMA().filter_icmpv6_nd_na(DUA).must_not_next()
-
-        return result
-
     def verify_attached(self, name: str, pkts=None) -> VerifyResult:
         """
         Verify that the device attaches to the Thread network.
@@ -459,3 +285,45 @@ class PacketVerifier(object):
             eth_idx = max(eth_idx, ei)
 
         return wpan_idx, eth_idx
+
+    def verify_dua_registration(self, src64, dua, *, pbbr_eth, sbbr_eth=None, pbbr_src64=None):
+        pv, pkts = self, self.pkts
+        MM = pv.vars['MM_PORT']
+        BB = pv.vars['BB_PORT']
+
+        # Router1 should send /n/dr for DUA registration
+        dr = pkts.filter_wpan_src64(src64).filter_coap_request('/n/dr', port=MM).filter(
+            'thread_nm.tlv.target_eid == {ROUTER1_DUA}', ROUTER1_DUA=dua).must_next()
+
+        # SBBR should not send /b/bq for Router1's DUA
+        if sbbr_eth is not None:
+            pkts.filter_backbone_query(dua, eth_src=sbbr_eth, port=BB).must_not_next()
+
+        # PBBR should respond to /n/dr
+        if pbbr_src64 is not None:
+            pkts.filter_wpan_src64(pbbr_src64).filter_coap_ack(
+                '/n/dr', port=MM).must_next().must_verify('thread_nm.tlv.status == 0')
+
+        # PBBR should send /b/bq for Router1's DUA (1st time)
+        bq1 = pkts.filter_backbone_query(dua, eth_src=pbbr_eth, port=BB).must_next()
+        bq1_index = pkts.index
+
+        assert bq1.sniff_timestamp - dr.sniff_timestamp <= 1.0, bq1.sniff_timestamp - dr.sniff_timestamp
+
+        # PBBR should send /b/bq for Router1's DUA (2nd time)
+        bq2 = pkts.filter_backbone_query(dua, eth_src=pbbr_eth, port=BB).must_next()
+
+        assert 0.9 < bq2.sniff_timestamp - bq1.sniff_timestamp < 1.1, bq2.sniff_timestamp - bq1.sniff_timestamp
+
+        # PBBR should send /b/bq for Router1's DUA (3rd time)
+        bq3 = pkts.filter_backbone_query(dua, eth_src=pbbr_eth, port=BB).must_next()
+
+        assert 0.9 < bq3.sniff_timestamp - bq2.sniff_timestamp < 1.1, bq3.sniff_timestamp - bq2.sniff_timestamp
+
+        # PBBR should send PRO_BB.ntf for Router's DUA when DAD completed
+        pkts.filter_eth_src(pbbr_eth).filter_backbone_answer(dua, port=BB, confirmable=False).must_next().show()
+
+        # PBBR should not recv /b/ba response from other BBRs during this period
+        pkts.range(bq1_index, pkts.index,
+                   cascade=False).filter('eth.src != {PBBR_ETH}',
+                                         PBBR_ETH=pbbr_eth).filter_backbone_answer(dua, port=BB).must_not_next()
