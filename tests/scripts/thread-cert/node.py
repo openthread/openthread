@@ -1884,6 +1884,12 @@ class NodeImpl:
         """
         return self._coap_rq('get', ipaddr, uri, con, payload)
 
+    def coap_get_block(self, ipaddr, uri, size=16, count=0):
+        """
+        Send a GET request via CoAP.
+        """
+        return self._coap_rq('get', ipaddr, uri, size, count)
+
     def coap_observe(self, ipaddr, uri, con=False, payload=None):
         """
         Send a GET request via CoAP with Observe set.
@@ -1896,11 +1902,23 @@ class NodeImpl:
         """
         return self._coap_rq('post', ipaddr, uri, con, payload)
 
+    def coap_post_block(self, ipaddr, uri, size=16, count=0):
+        """
+        Send a POST request via CoAP.
+        """
+        return self._coap_rq_block('post', ipaddr, uri, size, count)
+
     def coap_put(self, ipaddr, uri, con=False, payload=None):
         """
         Send a PUT request via CoAP.
         """
         return self._coap_rq('put', ipaddr, uri, con, payload)
+
+    def coap_put_block(self, ipaddr, uri, size=16, count=0):
+        """
+        Send a PUT request via CoAP.
+        """
+        return self._coap_rq_block('put', ipaddr, uri, size, count)
 
     def _coap_rq(self, method, ipaddr, uri, con=False, payload=None):
         """
@@ -1914,6 +1932,20 @@ class NodeImpl:
 
         if payload is not None:
             cmd += ' %s' % payload
+
+        self.send_command(cmd)
+        return self.coap_wait_response()
+
+    def _coap_rq_block(self, method, ipaddr, uri, size=16, count=0):
+        """
+        Issue a GET/POST/PUT/DELETE/GET OBSERVE BLOCK request.
+        """
+        cmd = 'coap %s %s %s' % (method, ipaddr, uri)
+
+        cmd += ' block-%d' % size
+
+        if count is not 0:
+            cmd += ' %d' % count
 
         self.send_command(cmd)
         return self.coap_wait_response()
@@ -2003,6 +2035,14 @@ class NodeImpl:
         cmd = 'coap resource %s' % path
         self.send_command(cmd)
         self._expect_done()
+
+    def coap_set_resource_path_block(self, path, count=0):
+        """
+        Set the path for the CoAP resource and how many blocks can be received from this resource.
+        """
+        cmd = 'coap resource %s %d' % (path, count)
+        self.send_command(cmd)
+        self._expect('Done')
 
     def coap_set_content(self, content):
         """

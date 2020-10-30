@@ -154,6 +154,7 @@ EXTRA_DIST                                                         = \
     test_coap.py                                                     \
     test_coap_observe.py                                             \
     test_coaps.py                                                    \
+    test_coap_block.py                                               \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_diag.py                                                     \
@@ -205,6 +206,7 @@ check_SCRIPTS                                                      = \
     test_coap.py                                                     \
     test_coap_observe.py                                             \
     test_coaps.py                                                    \
+    test_coap_block.py                                               \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_diag.py                                                     \
