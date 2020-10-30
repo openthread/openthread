@@ -1298,6 +1298,10 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
     if ((aError == OT_ERROR_NONE) && ackRequested && (aAckFrame != nullptr) && (neighbor != nullptr))
     {
         neighbor->GetLinkInfo().AddRss(aAckFrame->GetRssi());
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+        neighbor->AggregateLinkMetrics(/* aSeriesId */ 0, aAckFrame->GetType(), aAckFrame->GetLqi(),
+                                       aAckFrame->GetRssi());
+#endif
 #if OPENTHREAD_FTD
         if (aAckFrame->GetVersion() == Frame::kFcfFrameVersion2015)
         {
@@ -1903,6 +1907,9 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     if (neighbor != nullptr)
     {
         neighbor->GetLinkInfo().AddRss(aFrame->GetRssi());
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+        neighbor->AggregateLinkMetrics(/* aSeriesId */ 0, aFrame->GetType(), aFrame->GetLqi(), aFrame->GetRssi());
+#endif
 
         if (aFrame->GetSecurityEnabled())
         {

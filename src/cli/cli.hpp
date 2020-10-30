@@ -358,6 +358,10 @@ private:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     otError ProcessLinkMetrics(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessLinkMetricsQuery(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessLinkMetricsMgmt(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessLinkMetricsProbe(uint8_t aArgsLength, char *aArgs[]);
+
+    otError ParseLinkMetricsFlags(otLinkMetrics &aLinkMetrics, char *aFlags);
 #endif
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     otError ProcessMlr(uint8_t aArgsLength, char *aArgs[]);
@@ -526,9 +530,18 @@ private:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     static void HandleLinkMetricsReport(const otIp6Address *       aAddress,
                                         const otLinkMetricsValues *aMetricsValues,
+                                        uint8_t                    aStatus,
                                         void *                     aContext);
 
-    void HandleLinkMetricsReport(const otIp6Address *aAddress, const otLinkMetricsValues *aMetricsValues);
+    void HandleLinkMetricsReport(const otIp6Address *       aAddress,
+                                 const otLinkMetricsValues *aMetricsValues,
+                                 uint8_t                    aStatus);
+
+    static void HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, uint8_t aStatus, void *aContext);
+
+    void HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, uint8_t aStatus);
+
+    const char *LinkMetricsStatusToStr(uint8_t aStatus);
 #endif
 
     static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);

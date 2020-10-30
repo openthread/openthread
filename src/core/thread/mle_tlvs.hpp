@@ -75,37 +75,39 @@ public:
      */
     enum Type
     {
-        kSourceAddress       = 0,  ///< Source Address TLV
-        kMode                = 1,  ///< Mode TLV
-        kTimeout             = 2,  ///< Timeout TLV
-        kChallenge           = 3,  ///< Challenge TLV
-        kResponse            = 4,  ///< Response TLV
-        kLinkFrameCounter    = 5,  ///< Link-Layer Frame Counter TLV
-        kLinkQuality         = 6,  ///< Link Quality TLV
-        kNetworkParameter    = 7,  ///< Network Parameter TLV
-        kMleFrameCounter     = 8,  ///< MLE Frame Counter TLV
-        kRoute               = 9,  ///< Route64 TLV
-        kAddress16           = 10, ///< Address16 TLV
-        kLeaderData          = 11, ///< Leader Data TLV
-        kNetworkData         = 12, ///< Network Data TLV
-        kTlvRequest          = 13, ///< TLV Request TLV
-        kScanMask            = 14, ///< Scan Mask TLV
-        kConnectivity        = 15, ///< Connectivity TLV
-        kLinkMargin          = 16, ///< Link Margin TLV
-        kStatus              = 17, ///< Status TLV
-        kVersion             = 18, ///< Version TLV
-        kAddressRegistration = 19, ///< Address Registration TLV
-        kChannel             = 20, ///< Channel TLV
-        kPanId               = 21, ///< PAN ID TLV
-        kActiveTimestamp     = 22, ///< Active Timestamp TLV
-        kPendingTimestamp    = 23, ///< Pending Timestamp TLV
-        kActiveDataset       = 24, ///< Active Operational Dataset TLV
-        kPendingDataset      = 25, ///< Pending Operational Dataset TLV
-        kDiscovery           = 26, ///< Thread Discovery TLV
-        kCslChannel          = 80, ///< CSL Channel TLV
-        kCslTimeout          = 85, ///< CSL Timeout TLV
-        kLinkMetricsQuery    = 87, ///< Link Metrics Query TLV
-        kLinkMetricsReport   = 89, ///< Link Metrics Report TLV
+        kSourceAddress         = 0,  ///< Source Address TLV
+        kMode                  = 1,  ///< Mode TLV
+        kTimeout               = 2,  ///< Timeout TLV
+        kChallenge             = 3,  ///< Challenge TLV
+        kResponse              = 4,  ///< Response TLV
+        kLinkFrameCounter      = 5,  ///< Link-Layer Frame Counter TLV
+        kLinkQuality           = 6,  ///< Link Quality TLV
+        kNetworkParameter      = 7,  ///< Network Parameter TLV
+        kMleFrameCounter       = 8,  ///< MLE Frame Counter TLV
+        kRoute                 = 9,  ///< Route64 TLV
+        kAddress16             = 10, ///< Address16 TLV
+        kLeaderData            = 11, ///< Leader Data TLV
+        kNetworkData           = 12, ///< Network Data TLV
+        kTlvRequest            = 13, ///< TLV Request TLV
+        kScanMask              = 14, ///< Scan Mask TLV
+        kConnectivity          = 15, ///< Connectivity TLV
+        kLinkMargin            = 16, ///< Link Margin TLV
+        kStatus                = 17, ///< Status TLV
+        kVersion               = 18, ///< Version TLV
+        kAddressRegistration   = 19, ///< Address Registration TLV
+        kChannel               = 20, ///< Channel TLV
+        kPanId                 = 21, ///< PAN ID TLV
+        kActiveTimestamp       = 22, ///< Active Timestamp TLV
+        kPendingTimestamp      = 23, ///< Pending Timestamp TLV
+        kActiveDataset         = 24, ///< Active Operational Dataset TLV
+        kPendingDataset        = 25, ///< Pending Operational Dataset TLV
+        kDiscovery             = 26, ///< Thread Discovery TLV
+        kCslChannel            = 80, ///< CSL Channel TLV
+        kCslTimeout            = 85, ///< CSL Timeout TLV
+        kLinkMetricsQuery      = 87, ///< Link Metrics Query TLV
+        kLinkMetricsManagement = 88, ///< Link Metrics Management TLV
+        kLinkMetricsReport     = 89, ///< Link Metrics Report TLV
+        kLinkProbe             = 90, ///< Link Probe TLV
 
         /**
          * Applicable/Required only when time synchronization service

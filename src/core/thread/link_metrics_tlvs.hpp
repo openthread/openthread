@@ -41,12 +41,14 @@
 #include "common/message.hpp"
 #include "common/tlvs.hpp"
 
+#include "mac/mac_frame.hpp"
+
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 namespace ot {
 
 /**
- *  Link Metrics parameters
+ *  Link Metrics parameters.
  *
  */
 enum
@@ -55,18 +57,16 @@ enum
 };
 
 /**
- * Link Metrics Sub-TLV types
+ * Link Metrics Sub-TLV types.
  *
  */
-enum Type
+enum Type : uint8_t
 {
     kLinkMetricsReportSub       = 0, ///< Link Metrics Report Sub-TLV
     kLinkMetricsQueryId         = 1, ///< Link Metrics Query ID Sub-TLV
     kLinkMetricsQueryOptions    = 2, ///< Link Metrics Query Options Sub-TLV
     kForwardProbingRegistration = 3, ///< Forward Probing Registration Sub-TLV
-    kReverseProbingRegistration = 4, ///< Reverse Probing Registration Sub-TLV
     kLinkMetricsStatus          = 5, ///< Link Metrics Status Sub-TLV
-    kSeriesTrackingCapabilities = 6, ///< Series Tracking Capabilities Sub-TLV
     kEnhancedACKConfiguration   = 7, ///< Enhanced ACK Configuration Sub-TLV
 };
 
@@ -328,6 +328,140 @@ public:
      */
     bool IsValid(void) const { return GetLength() >= sizeof(LinkMetricsTypeIdFlags); }
 
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Series Flags for Forward Tracking Series.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class SeriesFlags
+{
+public:
+    /**
+     * Default constructor
+     *
+     */
+    SeriesFlags(void) { mSeriesFlags = 0; }
+
+    /**
+     * Copy constructor
+     *
+     */
+    SeriesFlags(const SeriesFlags &aSeriesFlags) { mSeriesFlags = aSeriesFlags.mSeriesFlags; }
+
+    /**
+     * This method clears the Link Probe flag.
+     *
+     */
+    void ClearLinkProbeFlag(void) { mSeriesFlags &= ~kLinkProbeFlag; }
+
+    /**
+     * This method sets the Link Probe flag.
+     *
+     */
+    void SetLinkProbeFlag(void) { mSeriesFlags |= kLinkProbeFlag; }
+
+    /**
+     * This method indicates whether or not the Link Probe flag is set.
+     *
+     * @retval true   The Link Probe flag is set.
+     * @retval false  The Link Probe flag is not set.
+     *
+     */
+    bool IsLinkProbeFlagSet(void) const { return (mSeriesFlags & kLinkProbeFlag) != 0; }
+
+    /**
+     * This method clears the MAC Data flag.
+     *
+     */
+    void ClearMacDataFlag(void) { mSeriesFlags &= ~kMacDataFlag; }
+
+    /**
+     * This method sets the MAC Data flag.
+     *
+     */
+    void SetMacDataFlag(void) { mSeriesFlags |= kMacDataFlag; }
+
+    /**
+     * This method indicates whether or not the MAC Data flag is set.
+     *
+     * @retval true   The MAC Data flag is set.
+     * @retval false  The MAC Data flag is not set.
+     *
+     */
+    bool IsMacDataFlagSet(void) const { return (mSeriesFlags & kMacDataFlag) != 0; }
+
+    /**
+     * This method clears the MAC Data Request flag.
+     *
+     */
+    void ClearMacDataRequestFlag(void) { mSeriesFlags &= ~kMacDataRequestFlag; }
+
+    /**
+     * This method sets the MAC Data Request flag.
+     *
+     */
+    void SetMacDataRequestFlag(void) { mSeriesFlags |= kMacDataRequestFlag; }
+
+    /**
+     * This method indicates whether or not the MAC Data Request flag is set.
+     *
+     * @retval true   The MAC Data Request flag is set.
+     * @retval false  The MAC Data Request flag is not set.
+     *
+     */
+    bool IsMacDataRequestFlagSet(void) const { return (mSeriesFlags & kMacDataRequestFlag) != 0; }
+
+    /**
+     * This method clears the Mac Ack flag.
+     *
+     */
+    void ClearMacAckFlag(void) { mSeriesFlags &= ~kMacAckFlag; }
+
+    /**
+     * This method sets the Mac Ack flag.
+     *
+     */
+    void SetMacAckFlag(void) { mSeriesFlags |= kMacAckFlag; }
+
+    /**
+     * This method indicates whether or not the Mac Ack flag is set.
+     *
+     * @retval true   The Mac Ack flag is set.
+     * @retval false  The Mac Ack flag is not set.
+     *
+     */
+    bool IsMacAckFlagSet(void) const { return (mSeriesFlags & kMacAckFlag) != 0; }
+
+    /**
+     * This method returns the raw value of mSeriesFlags.
+     *
+     */
+    uint8_t GetRawValue(void) const { return mSeriesFlags; }
+
+    /**
+     * This method clears the all the flags.
+     *
+     */
+    void Clear(void) { mSeriesFlags = 0; }
+
+    /**
+     * This method overloads the assignment operator.
+     *
+     */
+    void operator=(const SeriesFlags &aSeriesFlags) { mSeriesFlags = aSeriesFlags.mSeriesFlags; }
+
+private:
+    enum
+    {
+        kLinkProbeFlag      = 1 << 0,
+        kMacDataFlag        = 1 << 1,
+        kMacDataRequestFlag = 1 << 2,
+        kMacAckFlag         = 1 << 3,
+    };
+
+    uint8_t mSeriesFlags;
 } OT_TOOL_PACKED_END;
 
 } // namespace ot

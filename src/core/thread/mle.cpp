@@ -51,6 +51,7 @@
 #include "net/udp6.hpp"
 #include "thread/address_resolver.hpp"
 #include "thread/key_manager.hpp"
+#include "thread/link_metrics.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/time_sync_service.hpp"
@@ -2420,6 +2421,53 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+otError Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, otLinkMetricsStatus aStatus)
+{
+    otError  error = OT_ERROR_NONE;
+    Message *message;
+    Tlv      tlv;
+    ot::Tlv  statusSubTlv;
+
+    VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    SuccessOrExit(error = AppendHeader(*message, kCommandLinkMetricsManagementResponse));
+
+    tlv.SetType(Tlv::kLinkMetricsManagement);
+    statusSubTlv.SetType(kLinkMetricsStatus);
+    statusSubTlv.SetLength(sizeof(aStatus));
+    tlv.SetLength(statusSubTlv.GetSize());
+
+    SuccessOrExit(error = message->Append(tlv));
+    SuccessOrExit(error = message->Append(statusSubTlv));
+    SuccessOrExit(error = message->Append(aStatus));
+
+    SuccessOrExit(error = SendMessage(*message, aDestination));
+exit:
+    return error;
+}
+
+otError Mle::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t *aBuf, uint8_t aLength)
+{
+    otError  error = OT_ERROR_NONE;
+    Message *message;
+    Tlv      tlv;
+
+    VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    SuccessOrExit(error = AppendHeader(*message, kCommandLinkProbe));
+
+    tlv.SetType(Tlv::kLinkProbe);
+    tlv.SetLength(sizeof(aSeriesId) + aLength);
+
+    SuccessOrExit(error = message->Append(tlv));
+    SuccessOrExit(error = message->Append(aSeriesId));
+    SuccessOrExit(error = message->AppendBytes(aBuf, aLength));
+
+    SuccessOrExit(error = SendMessage(*message, aDestination));
+exit:
+    return error;
+}
+#endif
+
 otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 {
     otError          error = OT_ERROR_NONE;
@@ -2715,6 +2763,20 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         break;
 #endif
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    case kCommandLinkMetricsManagementRequest:
+        HandleLinkMetricsManagementRequest(aMessage, aMessageInfo, neighbor);
+        break;
+
+    case kCommandLinkMetricsManagementResponse:
+        HandleLinkMetricsManagementResponse(aMessage, aMessageInfo, neighbor);
+        break;
+
+    case kCommandLinkProbe:
+        HandleLinkProbe(aMessage, aMessageInfo, neighbor);
+        break;
+#endif
 
     default:
         ExitNow(error = OT_ERROR_DROP);
@@ -3689,6 +3751,57 @@ exit:
     LogProcessError(kTypeAnnounce, error);
 }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+void Mle::HandleLinkMetricsManagementRequest(const Message &         aMessage,
+                                             const Ip6::MessageInfo &aMessageInfo,
+                                             Neighbor *              aNeighbor)
+{
+    otError             error = OT_ERROR_NONE;
+    otLinkMetricsStatus status;
+
+    Log(kMessageReceive, kTypeLinkMetricsManagementRequest, aMessageInfo.GetPeerAddr());
+
+    VerifyOrExit(aNeighbor != nullptr, error = OT_ERROR_INVALID_STATE);
+
+    SuccessOrExit(error = Get<LinkMetrics>().HandleLinkMetricsManagementRequest(aMessage, *aNeighbor, status));
+    error = SendLinkMetricsManagementResponse(aMessageInfo.GetPeerAddr(), status);
+
+exit:
+    LogProcessError(kTypeLinkMetricsManagementRequest, error);
+}
+
+void Mle::HandleLinkMetricsManagementResponse(const Message &         aMessage,
+                                              const Ip6::MessageInfo &aMessageInfo,
+                                              Neighbor *              aNeighbor)
+{
+    otError error = OT_ERROR_NONE;
+
+    Log(kMessageReceive, kTypeLinkMetricsManagementResponse, aMessageInfo.GetPeerAddr());
+
+    VerifyOrExit(aNeighbor != nullptr, error = OT_ERROR_INVALID_STATE);
+
+    error = Get<LinkMetrics>().HandleLinkMetricsManagementResponse(aMessage, aMessageInfo.GetPeerAddr());
+
+exit:
+    LogProcessError(kTypeLinkMetricsManagementResponse, error);
+}
+
+void Mle::HandleLinkProbe(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t seriesId;
+
+    Log(kMessageReceive, kTypeLinkProbe, aMessageInfo.GetPeerAddr());
+
+    SuccessOrExit(error = Get<LinkMetrics>().HandleLinkProbe(aMessage, seriesId));
+    aNeighbor->AggregateLinkMetrics(seriesId, LinkMetricsSeriesInfo::kSeriesTypeLinkProbe, aMessage.GetAverageLqi(),
+                                    aMessage.GetAverageRss());
+
+exit:
+    LogProcessError(kTypeLinkProbe, error);
+}
+#endif
+
 void Mle::ProcessAnnounce(void)
 {
     uint8_t  newChannel = mAlternateChannel;
@@ -4046,6 +4159,17 @@ const char *Mle::MessageTypeToString(MessageType aType)
         break;
 #endif
 #endif // OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    case kTypeLinkMetricsManagementRequest:
+        str = "Link Metrics Management Request";
+        break;
+    case kTypeLinkMetricsManagementResponse:
+        str = "Link Metrics Management Response";
+        break;
+    case kTypeLinkProbe:
+        str = "Link Probe";
+        break;
+#endif
     }
 
     return str;
@@ -4220,6 +4344,32 @@ const char *Mle::ReattachStateToString(ReattachState aState)
 #endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
 
 // LCOV_EXCL_STOP
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+otError Mle::SendLinkMetricsManagementRequest(const Ip6::Address &aDestination,
+                                              const uint8_t *     aSubTlvs,
+                                              uint8_t             aLength)
+{
+    otError  error = OT_ERROR_NONE;
+    Message *message;
+    Tlv      tlv;
+
+    VerifyOrExit((message = NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    SuccessOrExit(error = AppendHeader(*message, kCommandLinkMetricsManagementRequest));
+
+    // Link Metrics Management TLV
+    tlv.SetType(Tlv::kLinkMetricsManagement);
+    tlv.SetLength(aLength);
+
+    SuccessOrExit(error = message->AppendBytes(&tlv, sizeof(tlv)));
+    SuccessOrExit(error = message->AppendBytes(aSubTlvs, aLength));
+
+    SuccessOrExit(error = SendMessage(*message, aDestination));
+
+exit:
+    return error;
+}
+#endif
 
 void Mle::RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext)
 {

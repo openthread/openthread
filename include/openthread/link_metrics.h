@@ -54,7 +54,7 @@ extern "C" {
  *
  */
 
-/*
+/**
  * This structure represents what metrics are specified to query.
  *
  */
@@ -66,7 +66,7 @@ typedef struct otLinkMetrics
     bool mRssi : 1;
 } otLinkMetrics;
 
-/*
+/**
  * This structure represents the result (value) for a Link Metrics query.
  *
  */
@@ -81,16 +81,53 @@ typedef struct otLinkMetricsValues
 } otLinkMetricsValues;
 
 /**
+ * This structure represents which frames are accounted in a Forward Tracking Series.
+ *
+ */
+typedef struct otLinkMetricsSeriesFlags
+{
+    bool mLinkProbe : 1;      ///< MLE Link Probe.
+    bool mMacData : 1;        ///< MAC Data frame.
+    bool mMacDataRequest : 1; ///< MAC Data Request.
+    bool mMacAck : 1;         ///< MAC Ack.
+} otLinkMetricsSeriesFlags;
+
+/**
+ * Link Metrics Status values.
+ *
+ */
+typedef enum otLinkMetricsStatus : uint8_t
+{
+    OT_LINK_METRICS_STATUS_SUCCESS                     = 0,
+    OT_LINK_METRICS_STATUS_CANNOT_SUPPORT_NEW_SERIES   = 1,
+    OT_LINK_METRICS_STATUS_SERIESID_ALREADY_REGISTERED = 2,
+    OT_LINK_METRICS_STATUS_SERIESID_NOT_RECOGNIZED     = 3,
+    OT_LINK_METRICS_STATUS_NO_MATCHING_FRAMES_RECEIVED = 4,
+    OT_LINK_METRICS_STATUS_OTHER_ERROR                 = 254,
+} otLinkMetricsStatus;
+
+/**
  * This function pointer is called when a Link Metrics report is received.
  *
  * @param[in]  aSource         A pointer to the source address.
  * @param[in]  aMetricsValues  A pointer to the Link Metrics values (the query result).
+ * @param[in]  aStatus         The status code in the report (only useful when @p aMetricsValues is NULL).
  * @param[in]  aContext        A pointer to application-specific context.
  *
  */
 typedef void (*otLinkMetricsReportCallback)(const otIp6Address *       aSource,
                                             const otLinkMetricsValues *aMetricsValues,
+                                            uint8_t                    aStatus,
                                             void *                     aContext);
+/**
+ * This function pointer is called when a Link Metrics Management Response is received.
+ *
+ * @param[in]  aSource         A pointer to the source address.
+ * @param[in]  aStatus         The status code in the response.
+ * @param[in]  aContext        A pointer to application-specific context.
+ *
+ */
+typedef void (*otLinkMetricsMgmtResponseCallback)(const otIp6Address *aSource, uint8_t aStatus, void *aContext);
 
 /**
  * This function sends an MLE Data Request to query Link Metrics.
@@ -114,6 +151,50 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
                            const otLinkMetrics *       aLinkMetricsFlags,
                            otLinkMetricsReportCallback aCallback,
                            void *                      aCallbackContext);
+
+/**
+ * This function sends an MLE Link Metrics Management Request to configure/clear a Forward Tracking Series.
+ *
+ * @param[in] aInstance          A pointer to an OpenThread instance.
+ * @param[in] aDestination       A pointer to the destination address.
+ * @param[in] aSeriesId          The Series ID to operate with.
+ * @param[in] aSeriesFlags       The Series Flags that specifies which frames are to be accounted.
+ * @param[in] aLinkMetricsFlags  A pointer to flags specifying what metrics to query. Should be `NULL` when
+ *                               `aSeriesFlags` is `0`.
+ * @param[in]  aCallback         A pointer to a function that is called when Link Metrics Management Response is
+ *                               received.
+ * @param[in]  aCallbackContext  A pointer to application-specific context.
+ *
+ * @retval OT_ERROR_NONE          Successfully sent a Link Metrics Management Request message.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Link Metrics Management Request message.
+ * @retval OT_ERROR_INVALID_ARGS  @p aSeriesId is not within the valid range.
+ *
+ */
+otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                      aInstance,
+                                                 const otIp6Address *              aDestination,
+                                                 uint8_t                           aSeriesId,
+                                                 otLinkMetricsSeriesFlags          aSeriesFlags,
+                                                 const otLinkMetrics *             aLinkMetricsFlags,
+                                                 otLinkMetricsMgmtResponseCallback aCallback,
+                                                 void *                            aCallbackContext);
+
+/**
+ * This function sends an MLE Link Probe message.
+ *
+ * @param[in] aInstance       A pointer to an OpenThread instance.
+ * @param[in] aDestination    A pointer to the destination address.
+ * @param[in] aSeriesId       The Series ID [1, 254] which the Probe message aims at.
+ * @param[in] aLength         The length of the data payload in Link Probe TLV, [0, 64] (per Thread 1.2 spec, 4.4.37).
+ *
+ * @retval OT_ERROR_NONE          Successfully sent a Link Probe message.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Link Probe message.
+ * @retval OT_ERROR_INVALID_ARGS  @p aSeriesId or @p aLength is not within the valid range.
+ *
+ */
+otError otLinkMetricsSendLinkProbe(otInstance *        aInstance,
+                                   const otIp6Address *aDestination,
+                                   uint8_t             aSeriesId,
+                                   uint8_t             aLength);
 
 /**
  * @}

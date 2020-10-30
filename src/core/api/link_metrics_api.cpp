@@ -49,12 +49,40 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
                            otLinkMetricsReportCallback aCallback,
                            void *                      aCallbackContext)
 {
-    OT_ASSERT(aDestination != nullptr && aLinkMetricsFlags != nullptr);
+    OT_ASSERT(aDestination != nullptr);
 
     static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SetLinkMetricsReportCallback(aCallback, aCallbackContext);
 
     return static_cast<Instance *>(aInstance)->Get<LinkMetrics>().LinkMetricsQuery(
-        static_cast<const Ip6::Address &>(*aDestination), aSeriesId, *aLinkMetricsFlags);
+        static_cast<const Ip6::Address &>(*aDestination), aSeriesId, aLinkMetricsFlags);
+}
+
+otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                      aInstance,
+                                                 const otIp6Address *              aDestination,
+                                                 uint8_t                           aSeriesId,
+                                                 const otLinkMetricsSeriesFlags    aSeriesFlags,
+                                                 const otLinkMetrics *             aLinkMetricsFlags,
+                                                 otLinkMetricsMgmtResponseCallback aCallback,
+                                                 void *                            aCallbackContext)
+{
+    OT_ASSERT(aDestination != nullptr);
+
+    static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SetLinkMetricsMgmtResponseCallback(aCallback,
+                                                                                              aCallbackContext);
+
+    return static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SendMgmtRequestForwardTrackingSeries(
+        static_cast<const Ip6::Address &>(*aDestination), aSeriesId, aSeriesFlags, aLinkMetricsFlags);
+}
+
+otError otLinkMetricsSendLinkProbe(otInstance *        aInstance,
+                                   const otIp6Address *aDestination,
+                                   uint8_t             aSeriesId,
+                                   uint8_t             aLength)
+{
+    OT_ASSERT(aDestination != nullptr);
+
+    return static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SendLinkProbe(
+        static_cast<const Ip6::Address &>(*aDestination), aSeriesId, aLength);
 }
 
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE

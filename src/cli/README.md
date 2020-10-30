@@ -59,7 +59,7 @@ Done
 - [leaderdata](#leaderdata)
 - [leaderpartitionid](#leaderpartitionid)
 - [leaderweight](#leaderweight)
-- [linkmetrics](#linkmetrics-query-ipaddr-single-pqmr)
+- [linkmetrics](#linkmetrics-mgmt-ipaddr-forward-seriesid-ldraxpqmr)
 - [linkquality](#linkquality-extaddr)
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
@@ -1143,6 +1143,44 @@ Set the Thread Leader Weight.
 Done
 ```
 
+### linkmetrics mgmt \<ipaddr\> forward \<seriesid\> [ldraX][pqmr]
+
+Send a Link Metrics Management Request to configure a Forward Tracking Series.
+
+- ipaddr: Peer address.
+- seriesid: The Series ID.
+- ldraX: This specifies which frames are to be accounted.
+  - l: MLE Link Probe.
+  - d: MAC Data.
+  - r: MAC Data Request.
+  - a: MAC Ack.
+  - X: This represents none of the above flags, i.e., to stop accounting and remove the series. This can only be used without any other flags.
+- pqmr: This specifies what metrics to query.
+  - p: Layer 2 Number of PDUs received.
+  - q: Layer 2 LQI.
+  - m: Link Margin.
+  - r: RSSI.
+
+```bash
+> linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 forward 1 dra pqmr
+Done
+> Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+Status: SUCCESS
+```
+
+### linkmetrics probe \<ipaddr\> \<seriesid\> \<length\>
+
+Send a MLE Link Probe message to the peer.
+
+- ipaddr: Peer address.
+- seriesid: The Series ID for which this Probe message targets at.
+- length: The length of the Probe message, valid range: [0, 64].
+
+```bash
+> linkmetrics probe fe80:0:0:0:3092:f334:1455:1ad2 1 10
+Done
+```
+
 ### linkmetrics query \<ipaddr\> single [pqmr]
 
 Perform a Link Metrics query (Single Probe).
@@ -1159,6 +1197,24 @@ Perform a Link Metrics query (Single Probe).
 Done
 > Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
 
+ - LQI: 76 (Exponential Moving Average)
+ - Margin: 82 (dB) (Exponential Moving Average)
+ - RSSI: -18 (dBm) (Exponential Moving Average)
+```
+
+### linkmetrics query \<ipaddr\> forward \<seriesid\>
+
+Perform a Link Metrics query (Forward Tracking Series).
+
+- ipaddr: Peer address.
+- seriesid: The Series ID.
+
+```bash
+> linkmetrics query fe80:0:0:0:3092:f334:1455:1ad2 forward 1
+Done
+> Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
+
+ - PDU Counter: 2 (Count/Summation)
  - LQI: 76 (Exponential Moving Average)
  - Margin: 82 (dB) (Exponential Moving Average)
  - RSSI: -18 (dBm) (Exponential Moving Average)

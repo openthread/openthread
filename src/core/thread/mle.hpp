@@ -45,6 +45,7 @@
 #include "meshcop/meshcop.hpp"
 #include "net/udp6.hpp"
 #include "thread/link_metrics.hpp"
+#include "thread/link_metrics_tlvs.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/neighbor_table.hpp"
@@ -719,25 +720,28 @@ protected:
      */
     enum Command : uint8_t
     {
-        kCommandLinkRequest          = 0,  ///< Link Request
-        kCommandLinkAccept           = 1,  ///< Link Accept
-        kCommandLinkAcceptAndRequest = 2,  ///< Link Accept and Reject
-        kCommandLinkReject           = 3,  ///< Link Reject
-        kCommandAdvertisement        = 4,  ///< Advertisement
-        kCommandUpdate               = 5,  ///< Update
-        kCommandUpdateRequest        = 6,  ///< Update Request
-        kCommandDataRequest          = 7,  ///< Data Request
-        kCommandDataResponse         = 8,  ///< Data Response
-        kCommandParentRequest        = 9,  ///< Parent Request
-        kCommandParentResponse       = 10, ///< Parent Response
-        kCommandChildIdRequest       = 11, ///< Child ID Request
-        kCommandChildIdResponse      = 12, ///< Child ID Response
-        kCommandChildUpdateRequest   = 13, ///< Child Update Request
-        kCommandChildUpdateResponse  = 14, ///< Child Update Response
-        kCommandAnnounce             = 15, ///< Announce
-        kCommandDiscoveryRequest     = 16, ///< Discovery Request
-        kCommandDiscoveryResponse    = 17, ///< Discovery Response
-        kCommandTimeSync             = 99, ///< Time Sync (applicable when OPENTHREAD_CONFIG_TIME_SYNC_ENABLE enabled)
+        kCommandLinkRequest                   = 0,  ///< Link Request
+        kCommandLinkAccept                    = 1,  ///< Link Accept
+        kCommandLinkAcceptAndRequest          = 2,  ///< Link Accept and Reject
+        kCommandLinkReject                    = 3,  ///< Link Reject
+        kCommandAdvertisement                 = 4,  ///< Advertisement
+        kCommandUpdate                        = 5,  ///< Update
+        kCommandUpdateRequest                 = 6,  ///< Update Request
+        kCommandDataRequest                   = 7,  ///< Data Request
+        kCommandDataResponse                  = 8,  ///< Data Response
+        kCommandParentRequest                 = 9,  ///< Parent Request
+        kCommandParentResponse                = 10, ///< Parent Response
+        kCommandChildIdRequest                = 11, ///< Child ID Request
+        kCommandChildIdResponse               = 12, ///< Child ID Response
+        kCommandChildUpdateRequest            = 13, ///< Child Update Request
+        kCommandChildUpdateResponse           = 14, ///< Child Update Response
+        kCommandAnnounce                      = 15, ///< Announce
+        kCommandDiscoveryRequest              = 16, ///< Discovery Request
+        kCommandDiscoveryResponse             = 17, ///< Discovery Response
+        kCommandLinkMetricsManagementRequest  = 18, ///< Link Metrics Management Request
+        kCommandLinkMetricsManagementResponse = 19, ///< Link Metrics Management Response
+        kCommandLinkProbe                     = 20, ///< Link Probe
+        kCommandTimeSync = 99, ///< Time Sync (applicable when OPENTHREAD_CONFIG_TIME_SYNC_ENABLE enabled)
     };
 
     /**
@@ -833,6 +837,11 @@ protected:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         kTypeTimeSync,
 #endif
+#endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+        kTypeLinkMetricsManagementRequest,
+        kTypeLinkMetricsManagementResponse,
+        kTypeLinkProbe,
 #endif
     };
 
@@ -1485,6 +1494,39 @@ protected:
     static const char *ReattachStateToString(ReattachState aState);
 #endif
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    /**
+     * This method sends a Link Metrics Management Request message.
+     *
+     * @param[in]  aDestination  A reference to the IPv6 address of the destination.
+     * @param[in]  aSubTlvs      A pointer to the buffer of the sub-TLVs in the message.
+     * @param[in]  aLength       The overall length of @p aSubTlvs.
+     *
+     * @retval OT_ERROR_NONE     Successfully sent a Link Metrics Management Request.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate the MLE Link Metrics Management Request message.
+     *
+     */
+    otError SendLinkMetricsManagementRequest(const Ip6::Address &aDestination,
+                                             const uint8_t *     aSubTlvs,
+                                             uint8_t             aLength);
+
+    /**
+     * This method sends an MLE Link Probe message.
+     *
+     * @param[in]  aDestination  A reference to the IPv6 address of the destination.
+     * @param[in]  aSeriesId     The Series ID [1, 254] which the Probe message targets at.
+     * @param[in]  aBuf          A pointer to the data payload.
+     * @param[in]  aLength       The length of the data payload in Link Probe TLV, [0, 64].
+     *
+     * @retval OT_ERROR_NONE          Successfully sent a Link Metrics Management Request.
+     * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Link Metrics Management Request message.
+     * @retval OT_ERROR_INVALID_ARGS  Series ID is not a valid value, not within range [1, 254].
+     *
+     */
+    otError SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t *aBuf, uint8_t aLength);
+
+#endif
+
     Ip6::NetifUnicastAddress mLeaderAloc; ///< Leader anycast locator
 
     LeaderData    mLeaderData;               ///< Last received Leader Data TLV.
@@ -1666,6 +1708,15 @@ private:
     void HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
     void HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
     void HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    void HandleLinkMetricsManagementRequest(const Message &         aMessage,
+                                            const Ip6::MessageInfo &aMessageInfo,
+                                            Neighbor *              aNeighbor);
+    void HandleLinkMetricsManagementResponse(const Message &         aMessage,
+                                             const Ip6::MessageInfo &aMessageInfo,
+                                             Neighbor *              aNeighbor);
+    void HandleLinkProbe(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
+#endif
     otError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void    ProcessAnnounce(void);
     bool    HasUnregisteredAddress(void);
@@ -1676,6 +1727,9 @@ private:
     otError  SendOrphanAnnounce(void);
     bool     PrepareAnnounceState(void);
     void     SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    otError SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, otLinkMetricsStatus aStatus);
+#endif
     uint32_t Reattach(void);
 
     bool IsBetterParent(uint16_t               aRloc16,

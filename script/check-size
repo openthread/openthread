@@ -137,6 +137,7 @@ size_nrf52840_version()
             "DUA=1"
             "MLR=1"
             "CSL_RECEIVER=1"
+            "LINK_METRICS=1"
         )
     fi
 

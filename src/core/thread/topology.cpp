@@ -159,6 +159,45 @@ void Neighbor::GenerateChallenge(void)
         Random::Crypto::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge)));
 }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+void Neighbor::AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8_t aLqi, int8_t aRss)
+{
+    for (LinkMetricsSeriesInfo *entry = mLinkMetricsSeriesInfoList.GetHead(); entry != nullptr;
+         entry                        = entry->GetNext())
+    {
+        if (aSeriesId == 0 || aSeriesId == entry->GetSeriesId())
+        {
+            entry->AggregateLinkMetrics(aFrameType, aLqi, aRss);
+        }
+    }
+}
+
+LinkMetricsSeriesInfo *Neighbor::GetForwardTrackingSeriesInfo(const uint8_t &aSeriesId)
+{
+    LinkMetricsSeriesInfo *prev;
+    return mLinkMetricsSeriesInfoList.FindMatching(aSeriesId, prev);
+}
+
+void Neighbor::AddForwardTrackingSeriesInfo(LinkMetricsSeriesInfo &aLinkMetricsSeriesInfo)
+{
+    mLinkMetricsSeriesInfoList.Push(aLinkMetricsSeriesInfo);
+}
+
+LinkMetricsSeriesInfo *Neighbor::RemoveForwardTrackingSeriesInfo(const uint8_t &aSeriesId)
+{
+    return mLinkMetricsSeriesInfoList.RemoveMatching(aSeriesId);
+}
+
+void Neighbor::RemoveAllForwardTrackingSeriesInfo(void)
+{
+    while (!mLinkMetricsSeriesInfoList.IsEmpty())
+    {
+        LinkMetricsSeriesInfo *seriesInfo = mLinkMetricsSeriesInfoList.Pop();
+        Get<LinkMetrics>().mLinkMetricsSeriesInfoPool.Free(*seriesInfo);
+    }
+}
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+
 void Child::Info::SetFrom(const Child &aChild)
 {
     Clear();
