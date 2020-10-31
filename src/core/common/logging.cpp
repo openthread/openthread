@@ -58,8 +58,6 @@ static void Log(otLogLevel  aLogLevel,
                 const char *aFormat,
                 va_list     aArgs)
 {
-    OT_UNUSED_VARIABLE(aRegionPrefix);
-
     ot::String<OPENTHREAD_CONFIG_LOG_MAX_SIZE> logString;
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
@@ -98,13 +96,11 @@ static void Log(otLogLevel  aLogLevel,
             break;
         }
 
-        IgnoreError(logString.Append("[%s]", levelStr));
+        IgnoreError(logString.Append("%s", levelStr));
     }
 #endif // OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
 
-#if OPENTHREAD_CONFIG_LOG_PREPEND_REGION
     IgnoreError(logString.Append("%s", aRegionPrefix));
-#endif
     VerifyOrExit(logString.AppendVarArgs(aFormat, aArgs) != OT_ERROR_INVALID_ARGS);
     otPlatLog(aLogLevel, aLogRegion, "%s" OPENTHREAD_CONFIG_LOG_SUFFIX, logString.AsCString());
 
