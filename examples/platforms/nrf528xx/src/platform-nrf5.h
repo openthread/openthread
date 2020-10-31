@@ -228,4 +228,5 @@ void nrf5RadioCustomFemDisable(void);
  */
 void nrf5RadioCustomFemAdjustPower(uint8_t aChannel, bool aIsTransmit);
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
+
 #endif // PLATFORM_NRF5_H_

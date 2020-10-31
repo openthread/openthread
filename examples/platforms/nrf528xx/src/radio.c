@@ -106,7 +106,7 @@ static otInstance *  sInstance = NULL;
 static otRadioFrame sAckFrame;
 static bool         sAckedWithFramePending;
 
-#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_POWER_CUSTOM_SOURCE
+#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
 static int8_t sDefaultTxPower;
 #endif
 static int8_t sLnaGain = 0;
@@ -694,7 +694,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     return OT_ERROR_NONE;
 }
 
-#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_POWER_CUSTOM_SOURCE
+#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
