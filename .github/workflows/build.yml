@@ -40,6 +40,17 @@ jobs:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       if: "github.ref != 'refs/heads/master'"
 
+  bootstrap:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-10.15]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bootstrap
+        run: |
+          script/bootstrap
+
   pretty:
     runs-on: ubuntu-20.04
     steps:
