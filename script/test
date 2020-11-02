@@ -279,8 +279,8 @@ do_build_otbr_docker()
     echo "Building OTBR Docker ..."
     local otdir
     local otbrdir
-    local otbr_options="-DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON"
-    local otbr_commit=${OTBR_COMMIT:-master}
+    local otbr_options="-DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF"
+    local otbr_commit=${OTBR_COMMIT:-8d0b6ccd857441208f56ed29050a9367d8d74a62} # [backbone-router] implement Backbone ND proxy #581
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
@@ -289,10 +289,8 @@ do_build_otbr_docker()
     (
         cd "${otbrdir}"
         git init
-        git remote add origin https://github.com/openthread/ot-br-posix.git
-        git fetch origin "${otbr_commit}" --depth 1
+        git fetch https://github.com/openthread/ot-br-posix.git "${otbr_commit}" --depth 1
         git reset --hard FETCH_HEAD
-        git submodule update --init --recursive --depth 1
         rm -rf third_party/openthread/repo
         cp -r "${otdir}" third_party/openthread/repo
         rm -rf .git

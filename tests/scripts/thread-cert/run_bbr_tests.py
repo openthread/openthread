@@ -85,6 +85,7 @@ def cleanup_env():
 
 
 def setup_env():
+    bash('sudo modprobe ip6table_filter')
     bash(f'docker image inspect {config.OTBR_DOCKER_IMAGE} >/dev/null')
 
 

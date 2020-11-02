@@ -227,7 +227,16 @@ public:
      * @param[in]  aState  The Domain Prefix state or state change.
      *
      */
-    void UpdateAllDomainBackboneRouters(Leader::DomainPrefixState aState);
+    void HandleDomainPrefixUpdate(Leader::DomainPrefixState aState);
+
+    /**
+     * This method sets the Domain Prefix callback.
+     *
+     * @param[in] aCallback  The callback function.
+     * @param[in] aContext   A user context pointer.
+     *
+     */
+    void SetDomainPrefixCallback(otBackboneRouterDomainPrefixCallback aCallback, void *aContext);
 
 private:
     void    SetState(BackboneRouterState aState);
@@ -255,9 +264,11 @@ private:
 
     NetworkData::OnMeshPrefixConfig mDomainPrefixConfig;
 
-    Ip6::NetifUnicastAddress mBackboneRouterPrimaryAloc;
-    Ip6::Address             mAllNetworkBackboneRouters;
-    Ip6::Address             mAllDomainBackboneRouters;
+    Ip6::NetifUnicastAddress             mBackboneRouterPrimaryAloc;
+    Ip6::Address                         mAllNetworkBackboneRouters;
+    Ip6::Address                         mAllDomainBackboneRouters;
+    otBackboneRouterDomainPrefixCallback mDomainPrefixCallback;
+    void *                               mDomainPrefixCallbackContext;
 };
 
 } // namespace BackboneRouter

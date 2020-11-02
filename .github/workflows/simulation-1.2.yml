@@ -251,7 +251,6 @@ jobs:
       MULTIPLY: 1
       PYTHONUNBUFFERED: 1
       VERBOSE: 1
-      OTBR_COMMIT: "3cf6ff1126dca96803252514691f40d0554046bf" # Date:   Mon Oct 26 15:27:04 2020 +0800
     steps:
     - uses: actions/checkout@v2
     - name: Build OTBR Docker

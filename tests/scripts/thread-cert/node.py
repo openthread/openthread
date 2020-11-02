@@ -217,6 +217,9 @@ class OtbrDocker:
             else:
                 return lines
 
+    def _setup_sysctl(self):
+        self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra=2')
+
 
 class OtCli:
 
@@ -2018,6 +2021,14 @@ class LinuxHost():
         else:
             return super().ping(*args, **kwargs)
 
+    def ip_neighbors_flush(self):
+        # clear neigh cache on linux
+        self.bash(f'ip -6 neigh list dev {self.ETH_DEV}')
+        self.bash(f'ip -6 neigh flush nud all nud failed nud noarp dev {self.ETH_DEV}')
+        self.bash('ip -6 neigh list nud all dev %s | cut -d " " -f1 | sudo xargs -I{} ip -6 neigh delete {} dev %s' %
+                  (self.ETH_DEV, self.ETH_DEV))
+        self.bash(f'ip -6 neigh list dev {self.ETH_DEV}')
+
 
 class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
     is_otbr = True
@@ -2030,6 +2041,10 @@ class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
     def get_addrs(self) -> List[str]:
         return super().get_addrs() + self.get_ether_addrs()
 
+    def start(self):
+        self._setup_sysctl()
+        super().start()
+
 
 class HostNode(LinuxHost, OtbrDocker):
     is_host = True
@@ -2040,11 +2055,11 @@ class HostNode(LinuxHost, OtbrDocker):
         super().__init__(nodeid, **kwargs)
 
     def start(self):
-        # TODO: Use radvd to advertise the Domain Prefix on the Backbone link.
-        pass
+        self._setup_sysctl()
+        self._service_radvd_start()
 
     def stop(self):
-        pass
+        self._service_radvd_stop()
 
     def get_addrs(self) -> List[str]:
         return self.get_ether_addrs()
@@ -2067,6 +2082,31 @@ class HostNode(LinuxHost, OtbrDocker):
             return self._getBackboneGua()
         else:
             return None
+
+    def _service_radvd_start(self):
+        self.bash("""cat >/etc/radvd.conf <<EOF
+interface eth0
+{
+	AdvSendAdvert on;
+
+	MinRtrAdvInterval 3;
+	MaxRtrAdvInterval 30;
+	AdvDefaultPreference low;
+
+	prefix %s
+	{
+		AdvOnLink on;
+		AdvAutonomous off;
+		AdvRouterAddr off;
+	};
+};
+EOF
+""" % config.DOMAIN_PREFIX)
+        self.bash('service radvd start')
+        self.bash('service radvd status')  # Make sure radvd service is running
+
+    def _service_radvd_stop(self):
+        self.bash('service radvd stop')
 
 
 if __name__ == '__main__':
