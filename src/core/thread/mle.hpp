@@ -1045,6 +1045,24 @@ protected:
     otError AppendLinkFrameCounter(Message &aMessage);
 
     /**
+     * This method reads Link and MLE Frame Counters from a message.
+     *
+     * Link Frame Counter TLV must be present in the message and its value is read into @p aLinkFrameCounter. If MLE
+     * Frame Counter TLV is present in the message, its value is read into @p aMleFrameCounter. If the MLE Frame
+     * Counter TLV is not present in the message, then @p aMleFrameCounter is set to same value as @p aLinkFrameCounter.
+     *
+     * @param[in]  aMesssage           A reference to the message to read from.
+     * @param[out] aLinkFrameCounter   A reference to an `uint32_t` to output the Link Frame Counter.
+     * @param[out] aMleFrameCounter    A reference to an `uint32_t` to output the MLE Frame Counter.
+     *
+     * @retval OT_ERROR_NONE       Successfully read the counters.
+     * @retval OT_ERROR_NOT_FOUND  Link Frame Counter TLV was not found in the message.
+     * @retval OT_ERROR_PARSE      TLVs are not well-formed.
+     *
+     */
+    otError ReadFrameCounters(const Message &aMessage, uint32_t &aLinkFrameCounter, uint32_t &aMleFrameCounter) const;
+
+    /**
      * This method appends an MLE Frame Counter TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
