@@ -41,7 +41,10 @@ class TestCoapBlockTransfer(thread_cert.TestCase):
     """
     Test suite for CoAP Block-Wise Transfers (RFC7959).
     """
-    topology = {
+    
+    SUPPORT_NCP = False
+    
+    TOPOLOGY = {
         LEADER: {
             'mode': 'rsdn',
             'panid': 0xface,
