@@ -298,7 +298,7 @@ private:
     NdProxy *       FindByMeshLocalIid(const Ip6::InterfaceIdentifier &aMeshLocalIid);
     NdProxy *       FindInvalid(void);
     Ip6::Address    GetDua(NdProxy &aNdProxy);
-    void            NotifyDuaRegistrationOnBackboneLink(NdProxy &aNdProxy);
+    void            NotifyDuaRegistrationOnBackboneLink(NdProxy &aNdProxy, bool aIsRenew);
     void TriggerCallback(otBackboneRouterNdProxyEvent aEvent, const Ip6::InterfaceIdentifier &aAddressIid) const;
 
     NdProxy                         mProxies[kMaxNdProxyNum];
