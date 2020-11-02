@@ -831,7 +831,7 @@ public:
          * @returns A reference to the `Ip6::Address` entry currently pointed by the iterator.
          *
          */
-        const Ip6::Address &operator*(void) const { return *GetAddress(); }
+        const Ip6::Address &operator*(void)const { return *GetAddress(); }
 
         /**
          * This method overloads operator `==` to evaluate whether or not two `Iterator` instances are equal.
