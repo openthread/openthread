@@ -59,7 +59,7 @@ install_packages_apt()
     echo 'Installing pretty tools useful for code contributions...'
 
     # add clang-format and clang-tidy for pretty
-    sudo apt-get --no-install-recommends install -y clang-format-10 clang-tidy-10
+    sudo apt-get --no-install-recommends install -y clang-format-9 clang-tidy-9
 
     # add yapf for pretty
     python3 -m pip install yapf==0.29.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
@@ -104,9 +104,9 @@ install_packages_brew()
 
     # add clang-format for pretty
     CLANG_FORMAT_VERSION="clang-format version 10"
-    command -v clang-format-10 || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
-        brew install llvm@10
-        sudo ln -s "$(brew --prefix llvm@10)/bin/clang-format" /usr/local/bin/clang-format-10
+    command -v clang-format-9 || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
+        brew install llvm@9
+        sudo ln -s "$(brew --prefix llvm@9)/bin/clang-format" /usr/local/bin/clang-format-9
     }
 
     # add yapf for pretty
