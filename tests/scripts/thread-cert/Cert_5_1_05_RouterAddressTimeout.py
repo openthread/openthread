@@ -32,19 +32,41 @@ import unittest
 import mle
 import network_layer
 import thread_cert
+from pktverify.consts import MLE_PARENT_RESPONSE, MLE_CHILD_ID_RESPONSE, MLE_LINK_REQUEST, ADDR_SOL_URI, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, CONNECTIVITY_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, VERSION_TLV, TLV_REQUEST_TLV, LINK_MARGIN_TLV, SOURCE_ADDRESS_TLV, COAP_CODE_ACK, COAP_CODE_POST, NL_MAC_EXTENDED_ADDRESS_TLV, NL_STATUS_TLV, NL_RLOC16_TLV, NL_ROUTER_MASK_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER1 = 2
 
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of this test case is to verify that after deallocating a Router ID,
+# Leader as a DUT doesn't reassign the Router ID for at least ID_REUSE_DELAY
+# seconds
+#
+# Test Topology:
+# -------------
+# Leader
+#   |
+# Router
+#
+# DUT Types:
+# ----------
+# Leader
+
 
 class Cert_5_1_05_RouterAddressTimeout(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER1]
         },
         ROUTER1: {
+            'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
@@ -66,74 +88,228 @@ class Cert_5_1_05_RouterAddressTimeout(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
-        rloc16 = self.nodes[ROUTER1].get_addr16()
-
         self.nodes[ROUTER1].reset()
         self._setUpRouter1()
         self.simulator.go(200)
         self.nodes[ROUTER1].start()
         self.simulator.go(15)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
-        self.assertNotEqual(self.nodes[ROUTER1].get_addr16(), rloc16)
 
-        rloc16 = self.nodes[ROUTER1].get_addr16()
         self.nodes[ROUTER1].reset()
         self._setUpRouter1()
         self.simulator.go(300)
         self.nodes[ROUTER1].start()
         self.simulator.go(15)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
-        self.assertEqual(self.nodes[ROUTER1].get_addr16(), rloc16)
 
-        leader_messages = self.simulator.get_messages_sent_by(LEADER)
-        router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
 
-        # 2 - All
-        leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        LEADER = pv.vars['LEADER']
+        ROUTER = pv.vars['ROUTER']
+        MM = pv.vars['MM_PORT']
 
-        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        # Step 1: Verify topology is formed correctly.
 
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        pv.verify_attached('ROUTER')
+        _pkt_as = pkts.filter_wpan_src64(LEADER).\
+            filter_coap_ack(ADDR_SOL_URI, port=MM).\
+            filter(lambda p: {
+                              NL_STATUS_TLV,
+                              NL_RLOC16_TLV,
+                              NL_ROUTER_MASK_TLV
+                              } == set(p.coap.tlv.type) and\
+                   p.coap.code == COAP_CODE_ACK and\
+                   p.thread_address.tlv.status == 0
+                   ).\
+            must_next()
 
-        # 3 - Router1
-        router1_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
-        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        # Step 3: Router automatically sends a link request, reattaches and
+        #         requests its original Router ID after reset within the
+        #         ID_REUSE_DELAY interval
 
-        msg = router1_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/as")
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_LLARMA().\
+            filter_mle_cmd(MLE_LINK_REQUEST).\
+            filter(lambda p: {
+                              CHALLENGE_TLV,
+                              VERSION_TLV,
+                              TLV_REQUEST_TLV,
+                              ADDRESS16_TLV,
+                              ROUTE64_TLV
+                              } <= set(p.mle.tlv.type)\
+                   ).\
+            must_next()
 
-        # 4 - Leader
-        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
-        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        # Step 4: Leader MUST send a properly formatted Parent Response and
+        #         Child ID Response to Router.
+        #         And send Address Solicit Response Message to Router.
+        #         The RLOC16 TLV in the Address Solicit Response message MUST
+        #         contain a different Router ID then the one allocated in the
+        #         original attach because ID_REUSE_DELAY interval has not
+        #         timed out.
+        #
+        #         CoAP Response Code
+        #             - 2.04 Changed
+        #         CoAP Payload
+        #             - Status TLV (value = Success)
+        #             - RLOC16 TLV
+        #             - Router Mask TLV
 
-        msg = leader_messages.next_coap_message("2.04")
-        msg.assertCoapMessageContainsTlv(network_layer.Status)
-        msg.assertCoapMessageContainsOptionalTlv(network_layer.RouterMask)
+        pkts.filter_wpan_src64(LEADER).\
+            filter_wpan_dst64(ROUTER).\
+            filter_mle_cmd(MLE_PARENT_RESPONSE).\
+            filter(lambda p: {
+                              CHALLENGE_TLV,
+                              CONNECTIVITY_TLV,
+                              LEADER_DATA_TLV,
+                              LINK_LAYER_FRAME_COUNTER_TLV,
+                              LINK_MARGIN_TLV,
+                              RESPONSE_TLV,
+                              SOURCE_ADDRESS_TLV,
+                              VERSION_TLV
+                             } <= set(p.mle.tlv.type)
+                   ).\
+            must_next()
 
-        status_tlv = msg.get_coap_message_tlv(network_layer.Status)
-        self.assertEqual(network_layer.StatusValues.SUCCESS, status_tlv.status)
+        pkts.filter_wpan_src64(LEADER).\
+            filter_wpan_dst64(ROUTER).\
+            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
+            filter(lambda p: {
+                              ADDRESS16_TLV,
+                              LEADER_DATA_TLV,
+                              NETWORK_DATA_TLV,
+                              SOURCE_ADDRESS_TLV,
+                              ROUTE64_TLV
+                              } <= set(p.mle.tlv.type) or\
+                             {
+                              ADDRESS16_TLV,
+                              LEADER_DATA_TLV,
+                              NETWORK_DATA_TLV,
+                              SOURCE_ADDRESS_TLV
+                             } <= set(p.mle.tlv.type)\
+                   ).\
+            must_next()
 
-        # 6 - Router1
-        router1_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
-        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        _pkt_as2 = pkts.filter_wpan_src64(ROUTER).\
+            filter_coap_request(ADDR_SOL_URI, port=MM).\
+            filter(lambda p: {
+                              NL_MAC_EXTENDED_ADDRESS_TLV,
+                              NL_RLOC16_TLV,
+                              NL_STATUS_TLV
+                              } == set(p.coap.tlv.type) and\
+                   p.coap.code == COAP_CODE_POST and\
+                   p.thread_address.tlv.rloc16 ==
+                   _pkt_as.thread_address.tlv.rloc16
+                   ).\
+            must_next()
 
-        msg = router1_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/as")
+        _pkt_as3 = pkts.filter_wpan_src64(LEADER).\
+            filter_coap_ack(ADDR_SOL_URI, port=MM).\
+            filter(lambda p: {
+                              NL_STATUS_TLV,
+                              NL_RLOC16_TLV,
+                              NL_ROUTER_MASK_TLV
+                              } == set(p.coap.tlv.type) and\
+                   p.coap.code == COAP_CODE_ACK and\
+                   p.thread_address.tlv.rloc16 !=
+                   _pkt_as2.thread_address.tlv.rloc16 and\
+                   p.thread_address.tlv.status == 0
+                   ).\
+            must_next()
 
-        # 7 - Leader
-        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
-        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        # Step 6: Router automatically sends a link request, reattaches and
+        #         requests its most recent Router ID after reset after the
+        #         ID_REUSE_DELAY interval
 
-        msg = leader_messages.next_coap_message("2.04")
-        msg.assertCoapMessageContainsTlv(network_layer.Status)
-        msg.assertCoapMessageContainsOptionalTlv(network_layer.RouterMask)
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_LLARMA().\
+            filter_mle_cmd(MLE_LINK_REQUEST).\
+            filter(lambda p: {
+                              CHALLENGE_TLV,
+                              VERSION_TLV,
+                              TLV_REQUEST_TLV,
+                              ADDRESS16_TLV,
+                              ROUTE64_TLV
+                              } <= set(p.mle.tlv.type)\
+                   ).\
+            must_next()
 
-        status_tlv = msg.get_coap_message_tlv(network_layer.Status)
-        self.assertEqual(network_layer.StatusValues.SUCCESS, status_tlv.status)
+        # Step 7: Leader MUST send a properly formatted Parent Response and
+        #         Child ID Response to Router.
+        #         And send Address Solicit Response Message to Router.
+        #         The RLOC16 TLV in the Address Solicit Response message MUST
+        #         contain the requested Router ID
+        #
+        #         CoAP Response Code
+        #             - 2.04 Changed
+        #         CoAP Payload
+        #             - Status TLV (value = Success)
+        #             - RLOC16 TLV
+        #             - Router Mask TLV
+
+        pkts.filter_wpan_src64(LEADER).\
+            filter_wpan_dst64(ROUTER).\
+            filter_mle_cmd(MLE_PARENT_RESPONSE).\
+            filter(lambda p: {
+                              CHALLENGE_TLV,
+                              CONNECTIVITY_TLV,
+                              LEADER_DATA_TLV,
+                              LINK_LAYER_FRAME_COUNTER_TLV,
+                              LINK_MARGIN_TLV,
+                              RESPONSE_TLV,
+                              SOURCE_ADDRESS_TLV,
+                              VERSION_TLV
+                             } <= set(p.mle.tlv.type)
+                   ).\
+            must_next()
+
+        pkts.filter_wpan_src64(LEADER).\
+            filter_wpan_dst64(ROUTER).\
+            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
+            filter(lambda p: {
+                              ADDRESS16_TLV,
+                              LEADER_DATA_TLV,
+                              NETWORK_DATA_TLV,
+                              SOURCE_ADDRESS_TLV,
+                              ROUTE64_TLV
+                              } <= set(p.mle.tlv.type) or\
+                             {
+                              ADDRESS16_TLV,
+                              LEADER_DATA_TLV,
+                              NETWORK_DATA_TLV,
+                              SOURCE_ADDRESS_TLV
+                             } <= set(p.mle.tlv.type)\
+                   ).\
+            must_next()
+
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_coap_request(ADDR_SOL_URI, port=MM).\
+            filter(lambda p: {
+                              NL_MAC_EXTENDED_ADDRESS_TLV,
+                              NL_RLOC16_TLV,
+                              NL_STATUS_TLV
+                              } == set(p.coap.tlv.type) and\
+                   p.coap.code == COAP_CODE_POST and\
+                   p.thread_address.tlv.rloc16 ==
+                   _pkt_as3.thread_address.tlv.rloc16
+                   ).\
+            must_next()
+
+        pkts.filter_wpan_src64(LEADER).\
+            filter_coap_ack(ADDR_SOL_URI, port=MM).\
+            filter(lambda p: {
+                              NL_STATUS_TLV,
+                              NL_RLOC16_TLV,
+                              NL_ROUTER_MASK_TLV
+                              } == set(p.coap.tlv.type) and\
+                   p.coap.code == COAP_CODE_ACK and\
+                   p.thread_address.tlv.rloc16 ==
+                   _pkt_as3.thread_address.tlv.rloc16 and\
+                   p.thread_address.tlv.status == 0
+                   ).\
+            must_next()
 
 
 if __name__ == '__main__':
