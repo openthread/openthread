@@ -1888,7 +1888,7 @@ class NodeImpl:
         """
         Send a GET request via CoAP.
         """
-        return self._coap_rq('get', ipaddr, uri, size, count)
+        return self._coap_rq_block('get', ipaddr, uri, size, count)
 
     def coap_observe(self, ipaddr, uri, con=False, payload=None):
         """

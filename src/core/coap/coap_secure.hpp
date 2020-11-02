@@ -292,10 +292,10 @@ public:
      *
      */
     otError SendMessage(Message &                   aMessage,
-                        ResponseHandler             aHandler      = NULL,
-                        void *                      aContext      = NULL,
-                        otCoapBlockwiseTransmitHook aTransmitHook = NULL,
-                        otCoapBlockwiseReceiveHook  aReceiveHook  = NULL);
+                        ResponseHandler             aHandler      = nullptr,
+                        void *                      aContext      = nullptr,
+                        otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
+                        otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
 
     /**
      * This method sends a CoAP message over secure DTLS connection.
@@ -318,10 +318,10 @@ public:
      */
     otError SendMessage(Message &                   aMessage,
                         const Ip6::MessageInfo &    aMessageInfo,
-                        ResponseHandler             aHandler      = NULL,
-                        void *                      aContext      = NULL,
-                        otCoapBlockwiseTransmitHook aTransmitHook = NULL,
-                        otCoapBlockwiseReceiveHook  aReceiveHook  = NULL);
+                        ResponseHandler             aHandler      = nullptr,
+                        void *                      aContext      = nullptr,
+                        otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
+                        otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
 #else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     /**
      * This method sends a CoAP message over secure DTLS connection.

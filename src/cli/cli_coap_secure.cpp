@@ -46,8 +46,8 @@
 #include "x509_cert_key.hpp"
 
 using ot::Utils::CmdLineParser::ParseAsIp6Address;
-using ot::Utils::CmdLineParser::ParseAsUint32;
 using ot::Utils::CmdLineParser::ParseAsUint16;
+using ot::Utils::CmdLineParser::ParseAsUint32;
 
 namespace ot {
 namespace Cli {
@@ -410,7 +410,6 @@ otError CoapSecure::ProcessRequest(uint8_t aArgsLength, char *aArgs[])
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         if (coapBlock)
         {
-            SuccessOrExit(error = otCoapMessageSetPayloadMarker(message));
             error =
                 otCoapSecureSendRequestBlockWise(mInterpreter.mInstance, message, &CoapSecure::HandleResponse, this,
                                                  &CoapSecure::BlockwiseTransmitHook, &CoapSecure::BlockwiseReceiveHook);
@@ -592,7 +591,7 @@ void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessag
         mInterpreter.OutputFormat("GET");
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         SuccessOrExit(error = otCoapOptionIteratorInit(&iterator, aMessage));
-        if (otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_BLOCK2) != NULL)
+        if (otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_BLOCK2) != nullptr)
         {
             SuccessOrExit(error = otCoapOptionIteratorGetOptionUintValue(&iterator, &blockValue));
             blockPresent = true;

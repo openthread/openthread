@@ -577,7 +577,6 @@ otError Coap::ProcessRequest(uint8_t aArgsLength, char *aArgs[])
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         if (coapBlock)
         {
-            SuccessOrExit(error = otCoapMessageSetPayloadMarker(message));
             error = otCoapSendRequestBlockWiseWithParameters(mInterpreter.mInstance, message, &messageInfo,
                                                              &Coap::HandleResponse, this, GetRequestTxParameters(),
                                                              Coap::BlockwiseTransmitHook, Coap::BlockwiseReceiveHook);
@@ -666,7 +665,7 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
         }
 #endif
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-        if (otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_BLOCK2) != NULL)
+        if (otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_BLOCK2) != nullptr)
         {
             SuccessOrExit(error = otCoapOptionIteratorGetOptionUintValue(&iterator, &blockValue));
             blockPresent = true;

@@ -1,2 +1,0 @@
-#!/bin/bash
-docker run --rm -d --name otsim openthread/simulation tail -F /dev/null

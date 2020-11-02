@@ -486,10 +486,10 @@ public:
     otError SendMessage(Message &                   aMessage,
                         const Ip6::MessageInfo &    aMessageInfo,
                         const TxParameters &        aTxParameters,
-                        otCoapResponseHandler       aHandler      = NULL,
-                        void *                      aContext      = NULL,
-                        otCoapBlockwiseTransmitHook aTransmitHook = NULL,
-                        otCoapBlockwiseReceiveHook  aReceiveHook  = NULL);
+                        otCoapResponseHandler       aHandler      = nullptr,
+                        void *                      aContext      = nullptr,
+                        otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
+                        otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
 #else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**

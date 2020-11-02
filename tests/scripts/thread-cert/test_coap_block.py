@@ -41,17 +41,17 @@ class TestCoapBlockTransfer(thread_cert.TestCase):
     """
     Test suite for CoAP Block-Wise Transfers (RFC7959).
     """
-    
+
     SUPPORT_NCP = False
-    
+
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'whitelist': [ROUTER]
         },
         ROUTER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'whitelist': [LEADER]
@@ -80,13 +80,13 @@ class TestCoapBlockTransfer(thread_cert.TestCase):
             self.assertIsNotNone(response_payload)
 
         if method == 'PUT':
-            self.nodes[ROUTER].coap_put_block(mleid, 'test', size=256, count=10)
+            self.nodes[ROUTER].coap_put_block(mleid, 'test', size=256, count=2)
             request = self.nodes[ROUTER].coap_wait_request()
             request_payload = request['payload']
             self.assertIsNotNone(request_payload)
 
         if method == 'POST':
-            self.nodes[ROUTER].coap_post_block(mleid, 'test', size=1024, count=10)
+            self.nodes[ROUTER].coap_post_block(mleid, 'test', size=1024, count=2)
             request = self.nodes[ROUTER].coap_wait_request()
             request_payload = request['payload']
             self.assertIsNotNone(request_payload)

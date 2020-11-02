@@ -584,7 +584,7 @@ otError CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
 
     blockOption = (aType == Message::kBlockType1) ? kOptionBlock1 : kOptionBlock2;
 
-    aRequest.Init(kTypeConfirmable, (ot::Coap::Code)aRequestOld.GetCode());
+    aRequest.Init(kTypeConfirmable, static_cast<ot::Coap::Code>(aRequestOld.GetCode()));
     SuccessOrExit(error = iterator.Init(aRequestOld));
 
     // Copy options from last response to next message
@@ -780,7 +780,8 @@ otError CoapBase::ProcessBlock1Request(Message &                aMessage,
         VerifyOrExit((response = NewMessage()) != nullptr, error = OT_ERROR_FAILED);
         response->Init(kTypeAck, kCodeContinue);
         response->SetMessageId(aMessage.GetMessageId());
-        IgnoreReturnValue(response->SetToken(aMessage.GetToken(), aMessage.GetTokenLength()));
+        IgnoreReturnValue(
+            response->SetToken(static_cast<const Message &>(aMessage).GetToken(), aMessage.GetTokenLength()));
 
         response->SetBlockWiseBlockNumber(aMessage.GetBlockWiseBlockNumber());
         response->SetMoreBlocksFlag(aMessage.IsMoreBlocksFlagSet());
