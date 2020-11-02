@@ -96,9 +96,7 @@ static void Log(otLogLevel  aLogLevel,
             break;
         }
 
-#if OPENTHREAD_CONFIG_LOG_PREPEND_REGION
-        IgnoreError(logString.Append("[%s]", levelStr));
-#endif
+        IgnoreError(logString.Append("%s", levelStr));
     }
 #endif // OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
 
