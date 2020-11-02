@@ -266,10 +266,10 @@ all: stage
 #
 
 cortex-m4_target_ABI                  = cortex-m4
-cortex-m4_target_CPPFLAGS             = -mcpu=cortex-m4 -mfloat-abi=softfp -mthumb
-cortex-m4_target_CFLAGS               = -mcpu=cortex-m4 -mfloat-abi=softfp -mthumb
-cortex-m4_target_CXXFLAGS             = -mcpu=cortex-m4 -mfloat-abi=softfp -mthumb
-cortex-m4_target_LDFLAGS              = -mcpu=cortex-m4 -mfloat-abi=softfp -mthumb
+cortex-m4_target_CPPFLAGS             = -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp -mthumb
+cortex-m4_target_CFLAGS               = -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp -mthumb
+cortex-m4_target_CXXFLAGS             = -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp -mthumb
+cortex-m4_target_LDFLAGS              = -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp -mthumb
 
 # Instantiate an architecture-specific build template for each target
 # architecture.
