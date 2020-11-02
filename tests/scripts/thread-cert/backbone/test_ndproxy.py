@@ -88,7 +88,6 @@ class TestNdProxy(thread_cert.TestCase):
     def test(self):
         # Bring up HOST
         self.nodes[HOST].start()
-        self.nodes[HOST].set_arp_reachable_time_ms(10000)
 
         # Bring up PBBR
         self.nodes[PBBR].start()

@@ -2029,9 +2029,6 @@ class LinuxHost():
                   (self.ETH_DEV, self.ETH_DEV))
         self.bash(f'ip -6 neigh list dev {self.ETH_DEV}')
 
-    def set_arp_reachable_time_ms(self, time: int):
-        self.bash(f'sysctl net.ipv6.neigh.{self.ETH_DEV}.base_reachable_time_ms={time}')
-
 
 class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
     is_otbr = True
