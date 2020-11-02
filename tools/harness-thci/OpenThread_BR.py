@@ -34,6 +34,7 @@ import re
 
 import logging
 import serial
+import sys
 import time
 
 from IThci import IThci
@@ -56,18 +57,30 @@ assert OTBR_AGENT_SYSLOG_PATTERN.search(
 ).group(1) == '=========[[THCI] direction=send | type=JOIN_FIN.req | len=039]==========]'
 
 
-class OpenThread_BR(OpenThreadTHCI, IThci):
-    DEFAULT_COMMAND_TIMEOUT = 20
+class SSHHandle(object):
 
-    def _connect(self):
-        self.log("logining Raspberry Pi ...")
-        self.__cli_output_lines = []
-        self.__syslog_skip_lines = None
-        self.__syslog_last_read_ts = 0
+    def __init__(self, ip, port, username, password):
+        import paramiko
+        self.__handle = paramiko.SSHClient()
+        self.__handle.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.__handle.connect(ip, port=int(port), username=username, password=password)
 
-        self.__handle = serial.Serial(self.port, 115200, timeout=0)
-        self.__lines = ['']
-        assert len(self.__lines) >= 1, self.__lines
+    def close(self):
+        self.__handle.close()
+
+    def bash(self, cmd, timeout):
+        stdin, stdout, stderr = self.__handle.exec_command(cmd, timeout=timeout)
+
+        sys.stderr.write(stderr.read())
+        output = [r.encode('utf8').rstrip('\r\n') for r in stdout.readlines()]
+        return output
+
+
+def SerialHandle(object):
+
+    def __init__(self, port, baudrate):
+        self.port = port
+        self.__handle = serial.Serial(port, baudrate, timeout=0)
 
         self.log("inputing username ...")
         self.__bashWriteLine('pi')
@@ -104,65 +117,18 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             raise Exception('login fail')
 
         self.bash('stty cols 256')
-        self.__truncateSyslog()
 
-    def _disconnect(self):
-        if self.__handle:
-            self.__handle.close()
-            self.__handle = None
+    def log(self, fmt, *args):
+        try:
+            msg = fmt % args
+            logging.info('%s - %s', self.port, msg)
+        except Exception:
+            pass
 
-    def _cliReadLine(self):
-        # read commissioning log if it's commissioning
-        if not self.__cli_output_lines:
-            self.__readSyslogToCli()
+    def close(self):
+        self.__handle.close()
 
-        if self.__cli_output_lines:
-            return self.__cli_output_lines.pop(0)
-
-        return None
-
-    @watched
-    def _onCommissionStart(self):
-        assert self.__syslog_skip_lines is None
-        self.__syslog_skip_lines = int(self.bash('wc -l /var/log/syslog')[0].split()[0])
-        self.__syslog_last_read_ts = 0
-
-    @watched
-    def _onCommissionStop(self):
-        assert self.__syslog_skip_lines is not None
-        self.__syslog_skip_lines = None
-
-    def __readSyslogToCli(self):
-        if self.__syslog_skip_lines is None:
-            return 0
-
-        # read syslog once per second
-        if time.time() < self.__syslog_last_read_ts + 1:
-            return 0
-
-        self.__syslog_last_read_ts = time.time()
-
-        lines = self.bash('tail +%d /var/log/syslog' % self.__syslog_skip_lines)
-        for line in lines:
-            m = OTBR_AGENT_SYSLOG_PATTERN.search(line)
-            if not m:
-                continue
-
-            self.__cli_output_lines.append(m.group(1))
-
-        self.__syslog_skip_lines += len(lines)
-        return len(lines)
-
-    def _cliWriteLine(self, line):
-        cmd = 'sudo ot-ctl "%s"' % line
-        output = self.bash(cmd)
-        # fake the line echo back
-        self.__cli_output_lines.append(line)
-        for line in output:
-            self.__cli_output_lines.append(line)
-
-    @watched
-    def bash(self, cmd, timeout=DEFAULT_COMMAND_TIMEOUT):
+    def bash(self, cmd, timeout):
         """
         Execute the command in bash.
         """
@@ -218,7 +184,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         deadline = time.time() + timeout
         data = ''
         while True:
-            piece = self.__handle.read(self.__handle.inWaiting())
+            piece = self.__handle.read()
             data = data + piece
             if piece:
                 continue
@@ -275,6 +241,84 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
 
     def __bashWriteLine(self, line):
         self.__bashWrite(line + '\n')
+
+
+class OpenThread_BR(OpenThreadTHCI, IThci):
+    DEFAULT_COMMAND_TIMEOUT = 20
+
+    def _connect(self):
+        self.log("logining Raspberry Pi ...")
+        self.__cli_output_lines = []
+        self.__syslog_skip_lines = None
+        self.__syslog_last_read_ts = 0
+
+        if self.connectType == 'ip':
+            self.__handle = SSHHandle(self.telnetIp, self.telnetPort, self.telnetUsername, self.telnetPassword)
+        else:
+            self.__handle = SerialHandle(self.port, 115200)
+        self.__lines = ['']
+        assert len(self.__lines) >= 1, self.__lines
+
+        self.__truncateSyslog()
+
+    def _disconnect(self):
+        if self.__handle:
+            self.__handle.close()
+            self.__handle = None
+
+    @watched
+    def bash(self, cmd, timeout=DEFAULT_COMMAND_TIMEOUT):
+        return self.__handle.bash(cmd, timeout=timeout)
+
+    def _cliReadLine(self):
+        # read commissioning log if it's commissioning
+        if not self.__cli_output_lines:
+            self.__readSyslogToCli()
+
+        if self.__cli_output_lines:
+            return self.__cli_output_lines.pop(0)
+
+        return None
+
+    @watched
+    def _onCommissionStart(self):
+        assert self.__syslog_skip_lines is None
+        self.__syslog_skip_lines = int(self.bash('wc -l /var/log/syslog')[0].split()[0])
+        self.__syslog_last_read_ts = 0
+
+    @watched
+    def _onCommissionStop(self):
+        assert self.__syslog_skip_lines is not None
+        self.__syslog_skip_lines = None
+
+    def __readSyslogToCli(self):
+        if self.__syslog_skip_lines is None:
+            return 0
+
+        # read syslog once per second
+        if time.time() < self.__syslog_last_read_ts + 1:
+            return 0
+
+        self.__syslog_last_read_ts = time.time()
+
+        lines = self.bash('tail +%d /var/log/syslog' % self.__syslog_skip_lines)
+        for line in lines:
+            m = OTBR_AGENT_SYSLOG_PATTERN.search(line)
+            if not m:
+                continue
+
+            self.__cli_output_lines.append(m.group(1))
+
+        self.__syslog_skip_lines += len(lines)
+        return len(lines)
+
+    def _cliWriteLine(self, line):
+        cmd = 'sudo ot-ctl "%s"' % line
+        output = self.bash(cmd)
+        # fake the line echo back
+        self.__cli_output_lines.append(line)
+        for line in output:
+            self.__cli_output_lines.append(line)
 
     def __truncateSyslog(self):
         self.bash('sudo truncate -s 0 /var/log/syslog')
