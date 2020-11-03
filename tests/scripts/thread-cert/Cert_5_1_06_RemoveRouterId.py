@@ -30,22 +30,45 @@
 import unittest
 
 import command
+import config
 import mle
 import thread_cert
 from command import CheckType
+from pktverify.consts import MLE_PARENT_REQUEST, MLE_CHILD_ID_REQUEST, ADDR_SOL_URI, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, ADDRESS16_TLV, NETWORK_DATA_TLV, TLV_REQUEST_TLV, SCAN_MASK_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, NL_MAC_EXTENDED_ADDRESS_TLV, NL_RLOC16_TLV, NL_STATUS_TLV, NL_ROUTER_MASK_TLV, COAP_CODE_POST, COAP_CODE_ACK
+from pktverify.packet_verifier import PacketVerifier
+from pktverify.null_field import nullField
 
 LEADER = 1
 ROUTER1 = 2
 
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of this test case is to verify that when the Leader
+# de-allocates a router ID, the DUT, as a router, re-attaches.
+#
+# Test Topology:
+# -------------
+# Leader
+#    |
+# Router
+#
+# DUT Types:
+# ----------
+# Router
+
 
 class Cert_5_1_06_RemoveRouterId(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER1]
         },
         ROUTER1: {
+            'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
@@ -62,53 +85,117 @@ class Cert_5_1_06_RemoveRouterId(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         rloc16 = self.nodes[ROUTER1].get_addr16()
+        self.collect_rloc16s()
 
-        for addr in self.nodes[ROUTER1].get_addrs():
-            self.assertTrue(self.nodes[LEADER].ping(addr))
+        router_lladdr = self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
+        self.assertTrue(self.nodes[LEADER].ping(router_lladdr))
 
         self.nodes[LEADER].release_router_id(rloc16 >> 10)
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
-        leader_messages = self.simulator.get_messages_sent_by(LEADER)
-        router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
+        self.assertTrue(self.nodes[LEADER].ping(router_lladdr))
 
-        # 1 - All
-        leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
 
-        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        LEADER = pv.vars['LEADER']
+        LEADER_RLOC16 = pv.vars['LEADER_RLOC16']
+        ROUTER = pv.vars['ROUTER']
+        MM = pv.vars['MM_PORT']
 
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        # Step 1: Verify topology is formed correctly.
 
-        msg = router1_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/as")
+        pv.verify_attached('ROUTER')
+        _pkt_as = pkts.filter_wpan_src64(LEADER).\
+            filter_coap_ack(ADDR_SOL_URI, port=MM).\
+            filter(lambda p: {
+                              NL_STATUS_TLV,
+                              NL_RLOC16_TLV,
+                              NL_ROUTER_MASK_TLV
+                              } == set(p.coap.tlv.type) and\
+                   p.coap.code == COAP_CODE_ACK and\
+                   p.thread_address.tlv.status == 0
+                   ).\
+            must_next()
 
-        leader_messages.next_coap_message("2.04")
+        # Step 3: Router send a properly formatted
+        #         MLE Parent Request,
+        #         MLE Child ID Request,
+        #         and Address Solicit Request
+        #         messages to the Leader.
 
-        # 2 - N/A
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_LLARMA().\
+            filter_mle_cmd(MLE_PARENT_REQUEST).\
+            filter(lambda p: {
+                              CHALLENGE_TLV,
+                              MODE_TLV,
+                              SCAN_MASK_TLV,
+                              VERSION_TLV
+                              } <= set(p.mle.tlv.type) and\
+                   p.ipv6.hlim == 255 and\
+                   p.mle.tlv.scan_mask.r == 1 and\
+                   p.mle.tlv.scan_mask.e == 0).\
+            must_next()
 
-        # 3 - Router1
-        msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        command.check_parent_request(msg, is_first_request=True)
+        _pkt = pkts.filter_wpan_src64(ROUTER).\
+            filter_wpan_dst64(LEADER).\
+            filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
+            filter(lambda p: {
+                              LINK_LAYER_FRAME_COUNTER_TLV,
+                              MODE_TLV,
+                              RESPONSE_TLV,
+                              TIMEOUT_TLV,
+                              TLV_REQUEST_TLV,
+                              ADDRESS16_TLV,
+                              NETWORK_DATA_TLV,
+                              VERSION_TLV
+                    } <= set(p.mle.tlv.type) and\
+                   p.mle.tlv.addr16 is nullField and\
+                   p.thread_nwd.tlv.type is nullField).\
+                   must_next()
+        _pkt.must_not_verify(lambda p: (ADDRESS_REGISTRATION_TLV) in p.mle.tlv.type)
 
-        msg = router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[LEADER])
-        command.check_child_id_request(
-            msg,
-            tlv_request=CheckType.CONTAIN,
-            mle_frame_counter=CheckType.OPTIONAL,
-            address_registration=CheckType.NOT_CONTAIN,
-            active_timestamp=CheckType.OPTIONAL,
-            pending_timestamp=CheckType.OPTIONAL,
-        )
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_wpan_dst16(LEADER_RLOC16).\
+            filter_coap_request(ADDR_SOL_URI, port=MM).\
+            filter(lambda p: {
+                              NL_MAC_EXTENDED_ADDRESS_TLV,
+                              NL_RLOC16_TLV,
+                              NL_STATUS_TLV
+                              } == set(p.coap.tlv.type) and\
+                   p.coap.code == COAP_CODE_POST and\
+                   p.thread_address.tlv.rloc16 ==
+                   _pkt_as.thread_address.tlv.rloc16
+                   ).\
+           must_next()
 
-        msg = router1_messages.next_coap_message(code="0.02")
-        command.check_address_solicit(msg, was_router=True)
+        pkts.filter_wpan_src64(LEADER).\
+            filter_coap_ack(ADDR_SOL_URI, port=MM).\
+            filter(lambda p: {
+                              NL_STATUS_TLV,
+                              NL_RLOC16_TLV,
+                              NL_ROUTER_MASK_TLV
+                              } == set(p.coap.tlv.type) and\
+                   p.coap.code == COAP_CODE_ACK and\
+                   p.thread_address.tlv.rloc16 !=
+                   _pkt_as.thread_address.tlv.rloc16 and\
+                   p.thread_address.tlv.status == 0
+                   ).\
+            must_next()
 
-        # 4 - Router1
-        for addr in self.nodes[ROUTER1].get_addrs():
-            self.assertTrue(self.nodes[LEADER].ping(addr))
+        # Step 4: DUT responds with ICMPv6 Echo Reply
+
+        _pkt = pkts.filter_ping_request().\
+            filter_wpan_src64(LEADER).\
+            filter_wpan_dst64(ROUTER).\
+            must_next()
+        pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+            filter_wpan_src64(ROUTER).\
+            filter_wpan_dst64(LEADER).\
+            must_next()
 
 
 if __name__ == '__main__':
