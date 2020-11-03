@@ -177,7 +177,7 @@ do_clang_tidy_check()
         if grep -q "warning: \|error: " output.txt; then
             echo "You must pass the clang tidy checks before submitting a pull request"
             echo ""
-            grep --color -E '^|warning: |error: ' output.txt
+            grep --color -E 'warning: |error: ' -A 5 output.txt
             exit 1
         fi
     )
