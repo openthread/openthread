@@ -511,6 +511,11 @@ class PacketFilter(object):
         assert isinstance(cmd, int), cmd
         return self.filter(lambda p: p.mle.cmd == cmd, **kwargs)
 
+    def filter_mle_cmd2(self, cmd1, cmd2, **kwargs):
+        assert isinstance(cmd1, int), cmd1
+        assert isinstance(cmd2, int), cmd2
+        return self.filter(lambda p: p.mle.cmd == cmd1 or p.mle.cmd == cmd2, **kwargs)
+
     def filter_mle_has_tlv(self, *tlv_types, **kwargs):
         return self.filter(lambda p: set(tlv_types) <= set(p.mle.tlv.type), **kwargs)
 
