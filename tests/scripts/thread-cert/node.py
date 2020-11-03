@@ -1970,7 +1970,11 @@ class NodeImpl:
             observe = int(observe, base=10)
 
         if payload is not None:
-            payload = binascii.a2b_hex(payload).decode('UTF-8')
+            try:
+                payload = binascii.a2b_hex(payload).decode('UTF-8')
+            except UnicodeDecodeError:
+                pass
+
 
         # Return the values received
         return dict(source=source, observe=observe, payload=payload)
