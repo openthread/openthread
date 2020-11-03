@@ -91,6 +91,8 @@ class TestCoapBlockTransfer(thread_cert.TestCase):
             request_payload = request['payload']
             self.assertIsNotNone(request_payload)
 
+        self.simulator.go(10)
+
         self.nodes[ROUTER].coap_stop()
         self.nodes[LEADER].coap_stop()
 

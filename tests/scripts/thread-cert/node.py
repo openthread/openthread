@@ -1975,7 +1975,6 @@ class NodeImpl:
             except UnicodeDecodeError:
                 pass
 
-
         # Return the values received
         return dict(source=source, observe=observe, payload=payload)
 
