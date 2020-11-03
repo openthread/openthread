@@ -75,9 +75,7 @@ void CslTxScheduler::InitFrameRequestAhead(void)
     // longest frame on bus is 127 bytes with some metadata, use 150 bytes for bus Tx time estimation
     uint32_t busTxTimeUs = ((busSpeedHz == 0) ? 0 : (150 * 8 * 1000000 + busSpeedHz - 1) / busSpeedHz);
 
-    // Use ceiling to get next closest integer
-    mCslFrameRequestAhead =
-        (OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US + busTxTimeUs + kUsPerTenSymbols - 1) / kUsPerTenSymbols;
+    mCslFrameRequestAheadUs = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US + busTxTimeUs;
 }
 
 void CslTxScheduler::Update(void)
@@ -161,11 +159,11 @@ uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild,
     uint64_t firstTxWindow = aChild.GetLastRxTimestamp() + aChild.GetCslPhase() * kUsPerTenSymbols;
     uint64_t nextTxWindow  = aRadioNow - (aRadioNow % periodInUs) + (firstTxWindow % periodInUs);
 
-    while (aRadioNow + mCslFrameRequestAhead >= nextTxWindow) nextTxWindow += periodInUs;
+    while (aRadioNow + mCslFrameRequestAheadUs >= nextTxWindow) nextTxWindow += periodInUs;
 
     aDelayFromLastRx = static_cast<uint32_t>(nextTxWindow - aChild.GetLastRxTimestamp());
 
-    return static_cast<uint32_t>(nextTxWindow - aRadioNow);
+    return static_cast<uint32_t>(nextTxWindow - aRadioNow - mCslFrameRequestAheadUs);
 }
 
 otError CslTxScheduler::HandleFrameRequest(Mac::TxFrame &aFrame)

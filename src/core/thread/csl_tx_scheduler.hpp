@@ -202,7 +202,7 @@ private:
 
     void HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, Child &aChild);
 
-    uint32_t                mCslFrameRequestAhead;
+    uint32_t                mCslFrameRequestAheadUs;
     Child *                 mCslTxChild;
     Message *               mCslTxMessage;
     Callbacks::FrameContext mFrameContext;
