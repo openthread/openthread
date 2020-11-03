@@ -132,7 +132,7 @@ Mac::Mac(Instance &aInstance)
 
     randomExtAddress.GenerateRandom();
 
-    mCcaSuccessRateTracker.Reset();
+    mCcaSuccessRateTracker.Clear();
     ResetCounters();
     mExtendedPanId.Clear();
 
@@ -428,7 +428,7 @@ otError Mac::SetPanChannel(uint8_t aChannel)
 
     SuccessOrExit(Get<Notifier>().Update(mPanChannel, aChannel, kEventThreadChannelChanged));
 
-    mCcaSuccessRateTracker.Reset();
+    mCcaSuccessRateTracker.Clear();
 
     VerifyOrExit(!mUsingTemporaryChannel);
 

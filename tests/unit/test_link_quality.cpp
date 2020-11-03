@@ -162,9 +162,9 @@ void TestRssAveraging(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Values after initialization/reset.
 
-    rssAverager.Reset();
+    rssAverager.Clear();
 
-    printf("\nAfter Reset: ");
+    printf("\nAfter Clear: ");
     VerifyOrQuit(rssAverager.GetAverage() == OT_RADIO_RSSI_INVALID,
                  "TestLinkQualityInfo failed - Initial value from GetAverage() is incorrect.");
     VerifyRawRssValue(rssAverager);
@@ -180,12 +180,12 @@ void TestRssAveraging(void)
     PrintOutcome(rssAverager);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Reset
+    // Clear
 
-    printf("Reset(): ");
-    rssAverager.Reset();
+    printf("Clear(): ");
+    rssAverager.Clear();
     VerifyOrQuit(rssAverager.GetAverage() == OT_RADIO_RSSI_INVALID,
-                 "TestLinkQualityInfo failed - GetAverage() after Reset() is incorrect.");
+                 "TestLinkQualityInfo failed - GetAverage() after Clear() is incorrect.");
     VerifyRawRssValue(rssAverager);
     PrintOutcome(rssAverager);
 
@@ -196,7 +196,7 @@ void TestRssAveraging(void)
 
     for (j = 0; j < sizeof(rssValues); j++)
     {
-        rssAverager.Reset();
+        rssAverager.Clear();
         rss = rssValues[j];
         printf("AddRss(%4d) %d times: ", rss, kNumRssAdds);
 
@@ -228,7 +228,7 @@ void TestRssAveraging(void)
             }
 
             rss2 = rssValues[k];
-            rssAverager.Reset();
+            rssAverager.Clear();
             IgnoreError(rssAverager.Add(rss));
             IgnoreError(rssAverager.Add(rss2));
             printf("AddRss(%4d), AddRss(%4d): ", rss, rss2);
@@ -256,7 +256,7 @@ void TestRssAveraging(void)
             }
 
             rss2 = rssValues[k];
-            rssAverager.Reset();
+            rssAverager.Clear();
 
             for (i = 0; i < kNumRssAdds; i++)
             {
@@ -292,7 +292,7 @@ void TestRssAveraging(void)
             }
 
             rss2 = rssValues[k];
-            rssAverager.Reset();
+            rssAverager.Clear();
 
             for (i = 0; i < kNumRssAdds; i++)
             {
@@ -323,7 +323,7 @@ void TestRssAveraging(void)
     {
         double mean;
 
-        rssAverager.Reset();
+        rssAverager.Clear();
         sum = 0;
 
         printf("\n");
@@ -391,7 +391,7 @@ void TestSuccessRateTracker(void)
 
     printf("\nTesting SuccessRateTracker\n");
 
-    rateTracker.Reset();
+    rateTracker.Clear();
 
     VerifyOrQuit(rateTracker.GetSuccessRate() == kMaxRate, "SuccessRateTracker: Initial value incorrect");
     VerifyOrQuit(rateTracker.GetFailureRate() == 0, "SuccessRateTracker: Initial value incorrect");
@@ -405,7 +405,7 @@ void TestSuccessRateTracker(void)
         VerifyOrQuit(rateTracker.GetFailureRate() == 0, "SuccessRateTracker: incorrect rate in all success case");
     }
 
-    rateTracker.Reset();
+    rateTracker.Clear();
     VerifyOrQuit(rateTracker.GetSuccessRate() == kMaxRate, "SuccessRateTracker: Rate incorrect after reset");
     VerifyOrQuit(rateTracker.GetFailureRate() == 0, "SuccessRateTracker: Rate incorrect after reset");
 
@@ -439,7 +439,7 @@ void TestSuccessRateTracker(void)
         {
             uint16_t failureCount = 0;
 
-            rateTracker.Reset();
+            rateTracker.Clear();
 
             for (sampleCount = 1; sampleCount < kMaxSamples; sampleCount++)
             {

@@ -58,12 +58,6 @@ void SuccessRateTracker::AddSample(bool aSuccess, uint16_t aWeight)
     mFailureRate = static_cast<uint16_t>(((oldAverage * (n - 1)) + newValue + (n / 2)) / n);
 }
 
-void RssAverager::Reset(void)
-{
-    mAverage = 0;
-    mCount   = 0;
-}
-
 otError RssAverager::Add(int8_t aRss)
 {
     otError  error = OT_ERROR_NONE;
@@ -121,12 +115,6 @@ exit:
     return string;
 }
 
-void LqiAverager::Reset(void)
-{
-    mCount   = 0;
-    mAverage = 0;
-}
-
 void LqiAverager::Add(uint8_t aLqi)
 {
     uint8_t count;
@@ -142,12 +130,12 @@ void LqiAverager::Add(uint8_t aLqi)
 
 void LinkQualityInfo::Clear(void)
 {
-    mRssAverager.Reset();
+    mRssAverager.Clear();
     SetLinkQuality(0);
     mLastRss = OT_RADIO_RSSI_INVALID;
 
-    mFrameErrorRate.Reset();
-    mMessageErrorRate.Reset();
+    mFrameErrorRate.Clear();
+    mMessageErrorRate.Clear();
 }
 
 void LinkQualityInfo::AddRss(int8_t aRss)

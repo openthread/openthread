@@ -38,6 +38,7 @@
 
 #include <openthread/platform/radio.h>
 
+#include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/string.hpp"
 
@@ -59,19 +60,13 @@ namespace ot {
  * The success rate is maintained using an exponential moving IIR averaging filter with a `uint16_t` as the storage.
  *
  */
-class SuccessRateTracker
+class SuccessRateTracker : public Clearable<SuccessRateTracker>
 {
 public:
     enum
     {
         kMaxRateValue = 0xffff, ///< Indicates value corresponding to maximum (failure/success) rate of 100%.
     };
-
-    /**
-     * This method resets the tracker to its initialized state, setting success rate to 100%.
-     *
-     */
-    void Reset(void) { mFailureRate = 0; }
 
     /**
      * This method adds a sample (success or failure) to `SuccessRateTracker`.
@@ -113,7 +108,7 @@ private:
  * The average is maintained using an adaptive exponentially weighted moving filter.
  *
  */
-class RssAverager
+class RssAverager : public Clearable<RssAverager>
 {
 public:
     enum
@@ -126,12 +121,6 @@ public:
      *
      */
     typedef String<kStringSize> InfoString;
-
-    /**
-     * This method reset the averager and clears the average value.
-     *
-     */
-    void Reset(void);
 
     /**
      * This method indicates whether the averager contains an average (i.e., at least one RSS value has been added).
@@ -217,15 +206,9 @@ private:
  * It maintains the exponential moving average value of LQI.
  *
  */
-class LqiAverager
+class LqiAverager : public Clearable<LqiAverager>
 {
 public:
-    /**
-     * This method resets the averager and clears the average value.
-     *
-     */
-    void Reset(void);
-
     /**
      * This method adds a link quality indicator (LQI) value to the average.
      *
