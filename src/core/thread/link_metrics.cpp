@@ -54,8 +54,8 @@ void LinkMetricsSeriesInfo::Init(uint8_t              aSeriesId,
     mLinkMetrics.mLqi        = aLinkMetricsFlags.mLqi;
     mLinkMetrics.mLinkMargin = aLinkMetricsFlags.mLinkMargin;
     mLinkMetrics.mRssi       = aLinkMetricsFlags.mRssi;
-    mRssAverager.Reset();
-    mLqiAverager.Reset();
+    mRssAverager.Clear();
+    mLqiAverager.Clear();
     mPduCount = 0;
 }
 
