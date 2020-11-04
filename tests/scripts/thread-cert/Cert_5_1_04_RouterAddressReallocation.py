@@ -187,6 +187,9 @@ class Cert_5_1_04_RouterAddressReallocation(thread_cert.TestCase):
         #             - Partition ID
         #             - Initial VN_version & VN_stable_version
         #             - Initial ID sequence number
+        #  Notes: Considerring the randomly created VN_version & VN_stable_version
+        #         could equal the previous versions, checking one of them to
+        #         reduce case failures
 
         pkts.filter_wpan_src64(ROUTER_1).\
             filter_LLANMA().\
@@ -194,10 +197,10 @@ class Cert_5_1_04_RouterAddressReallocation(thread_cert.TestCase):
             filter(lambda p:\
                    p.mle.tlv.leader_data.partition_id !=
                    _pkt_pt.mle.tlv.leader_data.partition_id and\
-                   p.mle.tlv.leader_data.data_version !=
-                   _pkt_pt.mle.tlv.leader_data.data_version and\
-                   p.mle.tlv.leader_data.stable_data_version !=
-                   _pkt_pt.mle.tlv.leader_data.stable_data_version
+                   (p.mle.tlv.leader_data.data_version !=
+                    _pkt_pt.mle.tlv.leader_data.data_version or\
+                    p.mle.tlv.leader_data.stable_data_version !=
+                    _pkt_pt.mle.tlv.leader_data.stable_data_version)
                    ).\
             must_next()
 
