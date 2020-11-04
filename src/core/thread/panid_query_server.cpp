@@ -71,7 +71,7 @@ void PanIdQueryServer::HandleQuery(Coap::Message &aMessage, const Ip6::MessageIn
     VerifyOrExit(aMessage.IsPostRequest());
     VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
-    SuccessOrExit(Tlv::FindUint16Tlv(aMessage, MeshCoP::Tlv::kPanId, panId));
+    SuccessOrExit(Tlv::Find<MeshCoP::PanIdTlv>(aMessage, panId));
 
     mChannelMask  = mask;
     mCommissioner = aMessageInfo.GetPeerAddr();
@@ -124,7 +124,7 @@ void PanIdQueryServer::SendConflict(void)
     channelMask.SetChannelMask(mChannelMask);
     SuccessOrExit(error = channelMask.AppendTo(*message));
 
-    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kPanId, mPanId));
+    SuccessOrExit(error = Tlv::Append<MeshCoP::PanIdTlv>(*message, mPanId));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(mCommissioner);

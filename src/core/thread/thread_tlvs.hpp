@@ -104,17 +104,65 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class defines Status TLV constants.
+ * This class defines Target TLV constants and types.
  *
  */
-class ThreadStatusTlv
+typedef SimpleTlvInfo<ThreadTlv::kTarget, Ip6::Address> ThreadTargetTlv;
+
+/**
+ * This class defines Extended MAC Address TLV constants and types.
+ *
+ */
+typedef SimpleTlvInfo<ThreadTlv::kExtMacAddress, Mac::ExtAddress> ThreadExtMacAddressTlv;
+
+/**
+ * This class defines RLOC16 TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<ThreadTlv::kRloc16, uint16_t> ThreadRloc16Tlv;
+
+/**
+ * This class defines ML-EID TLV constants and types.
+ *
+ */
+typedef SimpleTlvInfo<ThreadTlv::kMeshLocalEid, Ip6::InterfaceIdentifier> ThreadMeshLocalEidTlv;
+
+/**
+ * This class defines Time Since Last Transaction TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<ThreadTlv::kLastTransactionTime, uint32_t> ThreadLastTransactionTimeTlv;
+
+/**
+ * This class defines Timeout TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<ThreadTlv::kTimeout, uint32_t> ThreadTimeoutTlv;
+
+/**
+ * This class defines Network Name TLV constants and types.
+ *
+ */
+typedef TlvInfo<ThreadTlv::kNetworkName> ThreadNetworkNameTlv;
+
+/**
+ * This class defines Commissioner Session ID TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<ThreadTlv::kCommissionerSessionId, uint16_t> ThreadCommissionerSessionIdTlv;
+
+/**
+ * This class defines Status TLV constants and types.
+ *
+ */
+class ThreadStatusTlv : public UintTlvInfo<ThreadTlv::kStatus, uint8_t>
 {
 public:
     /**
      * Status values.
      *
      */
-    enum Status
+    enum Status : uint8_t
     {
         kSuccess               = 0, ///< Success.
         kNoAddressAvailable    = 1, ///< No address available.
@@ -158,7 +206,7 @@ public:
  * This class implements Router Mask TLV generation and parsing.
  *
  */
-class ThreadRouterMaskTlv : public ThreadTlv
+class ThreadRouterMaskTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kRouterMask>
 {
 public:
     /**
@@ -223,7 +271,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ThreadNetworkDataTlv : public ThreadTlv
+class ThreadNetworkDataTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kThreadNetworkData>
 {
 public:
     /**
@@ -268,7 +316,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class IPv6AddressesTlv : public ThreadTlv
+class IPv6AddressesTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kIPv6Addresses>
 {
 public:
     /**

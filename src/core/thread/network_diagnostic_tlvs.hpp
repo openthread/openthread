@@ -119,11 +119,53 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
+ * This class defines Extended MAC Address TLV constants and types.
+ *
+ */
+typedef SimpleTlvInfo<NetworkDiagnosticTlv::kExtMacAddress, Mac::ExtAddress> ExtMacAddressTlv;
+
+/**
+ * This class defines Address16 TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<NetworkDiagnosticTlv::kAddress16, uint16_t> Address16Tlv;
+
+/**
+ * This class defines Mode TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<NetworkDiagnosticTlv::kMode, uint8_t> ModeTlv;
+
+/**
+ * This class defines Timeout TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<NetworkDiagnosticTlv::kTimeout, uint32_t> TimeoutTlv;
+
+/**
+ * This class defines Battery Level TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<NetworkDiagnosticTlv::kBatteryLevel, uint8_t> BatteryLevelTlv;
+
+/**
+ * This class defines Supply Voltage TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<NetworkDiagnosticTlv::kSupplyVoltage, uint16_t> SupplyVoltageTlv;
+
+/**
+ * This class defines Max Child Timeout TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<NetworkDiagnosticTlv::kMaxChildTimeout, uint32_t> MaxChildTimeoutTlv;
+
+/**
  * This class implements Connectivity TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ConnectivityTlv : public NetworkDiagnosticTlv
+class ConnectivityTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kConnectivity>
 {
 public:
     /**
@@ -346,7 +388,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class RouteTlv : public NetworkDiagnosticTlv
+class RouteTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kRoute>
 {
 public:
     /**
@@ -514,7 +556,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class LeaderDataTlv : public NetworkDiagnosticTlv
+class LeaderDataTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kLeaderData>
 {
 public:
     /**
@@ -629,7 +671,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class NetworkDataTlv : public NetworkDiagnosticTlv
+class NetworkDataTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kNetworkData>
 {
 public:
     /**
@@ -676,7 +718,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Ip6AddressListTlv : public NetworkDiagnosticTlv
+class Ip6AddressListTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kIp6AddressList>
 {
 public:
     /**
@@ -718,7 +760,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class MacCountersTlv : public NetworkDiagnosticTlv
+class MacCountersTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kMacCounters>
 {
 public:
     /**
@@ -1020,7 +1062,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChildTableTlv : public NetworkDiagnosticTlv
+class ChildTableTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kChildTable>
 {
 public:
     /**
@@ -1089,7 +1131,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChannelPagesTlv : public NetworkDiagnosticTlv
+class ChannelPagesTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kChannelPages>
 {
 public:
     /**
@@ -1132,7 +1174,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class TypeListTlv : public NetworkDiagnosticTlv
+class TypeListTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kTypeList>
 {
 public:
     /**

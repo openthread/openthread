@@ -146,7 +146,7 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
 
     VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator());
 
-    switch (Tlv::FindUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16))
+    switch (Tlv::Find<ThreadRloc16Tlv>(aMessage, rloc16))
     {
     case OT_ERROR_NONE:
         RemoveBorderRouter(rloc16, kMatchModeRloc16);
@@ -157,7 +157,7 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
         ExitNow();
     }
 
-    if (ThreadTlv::FindTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) == OT_ERROR_NONE)
+    if (Tlv::FindTlv(aMessage, networkData) == OT_ERROR_NONE)
     {
         VerifyOrExit(networkData.IsValid());
         RegisterNetworkData(aMessageInfo.GetPeerAddr().GetIid().GetLocator(), networkData.GetTlvs(),
@@ -369,7 +369,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, MeshCoP::Tlv::kState, static_cast<uint8_t>(aState)));
+    SuccessOrExit(error = Tlv::Append<MeshCoP::StateTlv>(*message, aState));
 
     SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 

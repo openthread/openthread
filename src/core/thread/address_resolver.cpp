@@ -533,7 +533,7 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kAddressQuery));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aEid, sizeof(aEid)));
+    SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aEid));
 
     messageInfo.GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
 
@@ -581,11 +581,11 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
-    SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
-    SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, &meshLocalIid, sizeof(meshLocalIid)));
-    SuccessOrExit(Tlv::FindUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16));
+    SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMessage, target));
+    SuccessOrExit(Tlv::Find<ThreadMeshLocalEidTlv>(aMessage, meshLocalIid));
+    SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(aMessage, rloc16));
 
-    switch (Tlv::FindUint32Tlv(aMessage, ThreadTlv::kLastTransactionTime, lastTransactionTime))
+    switch (Tlv::Find<ThreadLastTransactionTimeTlv>(aMessage, lastTransactionTime))
     {
     case OT_ERROR_NONE:
         break;
@@ -651,8 +651,8 @@ void AddressResolver::SendAddressError(const Ip6::Address &            aTarget,
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kAddressError));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aTarget, sizeof(aTarget)));
-    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kMeshLocalEid, &aMeshLocalIid, sizeof(aMeshLocalIid)));
+    SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));
+    SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, aMeshLocalIid));
 
     if (aDestination == nullptr)
     {
@@ -705,8 +705,8 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
         }
     }
 
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, ThreadTlv::kMeshLocalEid, &meshLocalIid, sizeof(meshLocalIid)));
+    SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMessage, target));
+    SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMessage, meshLocalIid));
 
     for (const Ip6::NetifUnicastAddress *address = Get<ThreadNetif>().GetUnicastAddresses(); address;
          address                                 = address->GetNext())
@@ -773,7 +773,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
 
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest());
 
-    SuccessOrExit(Tlv::FindTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+    SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMessage, target));
 
     otLogInfoArp("Received address query from 0x%04x for target %s", aMessageInfo.GetPeerAddr().GetIid().GetLocator(),
                  target.ToString().AsCString());
@@ -830,13 +830,13 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address &            a
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kAddressNotify));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, &aTarget, sizeof(aTarget)));
-    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kMeshLocalEid, &aMeshLocalIid, sizeof(aMeshLocalIid)));
-    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, ThreadTlv::kRloc16, Get<Mle::MleRouter>().GetRloc16()));
+    SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));
+    SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, aMeshLocalIid));
+    SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, Get<Mle::MleRouter>().GetRloc16()));
 
     if (aLastTransactionTime != nullptr)
     {
-        SuccessOrExit(error = Tlv::AppendUint32Tlv(*message, ThreadTlv::kLastTransactionTime, *aLastTransactionTime));
+        SuccessOrExit(error = Tlv::Append<ThreadLastTransactionTimeTlv>(*message, *aLastTransactionTime));
     }
 
     messageInfo.SetPeerAddr(aDestination);

@@ -86,6 +86,24 @@ template <typename Type> struct IsPointer<const volatile Type *> : TrueValue
 {
 };
 
+/**
+ * This type indicates whether or not a given template `FirstType is the same as `SecondType`.
+ *
+ * The `constexpr` expression `IsSame<FirstType, SecondType>::kValue` would be `true` when the two types are the same,
+ * otherwise it would be `false`.
+ *
+ * @tparam FirstType     The first type.
+ * @tparam SecondType    The second type.
+ *
+ */
+template <typename FirstType, typename SecondType> struct IsSame : public FalseValue
+{
+};
+
+template <typename Type> struct IsSame<Type, Type> : public TrueValue
+{
+};
+
 } // namespace TypeTraits
 } // namespace ot
 

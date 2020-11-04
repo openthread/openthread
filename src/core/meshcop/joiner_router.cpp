@@ -146,10 +146,9 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     SuccessOrExit(error = message->InitAsNonConfirmablePost(UriPath::kRelayRx));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kJoinerUdpPort, aMessageInfo.GetPeerPort()));
-    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kJoinerIid, &aMessageInfo.GetPeerAddr().GetIid(),
-                                         Ip6::InterfaceIdentifier::kSize));
-    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kJoinerRouterLocator, Get<Mle::MleRouter>().GetRloc16()));
+    SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, aMessageInfo.GetPeerPort()));
+    SuccessOrExit(error = Tlv::Append<JoinerIidTlv>(*message, aMessageInfo.GetPeerAddr().GetIid()));
+    SuccessOrExit(error = Tlv::Append<JoinerRouterLocatorTlv>(*message, Get<Mle::MleRouter>().GetRloc16()));
 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);
     tlv.SetLength(aMessage.GetLength() - aMessage.GetOffset());
@@ -195,8 +194,8 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
 
     otLogInfoMeshCoP("Received relay transmit");
 
-    SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kJoinerUdpPort, joinerPort));
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, Tlv::kJoinerIid, &joinerIid, sizeof(joinerIid)));
+    SuccessOrExit(error = Tlv::Find<JoinerUdpPortTlv>(aMessage, joinerPort));
+    SuccessOrExit(error = Tlv::Find<JoinerIidTlv>(aMessage, joinerIid));
 
     SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
 
@@ -210,7 +209,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    if (Tlv::FindTlv(aMessage, Tlv::kJoinerRouterKek, &kek, sizeof(kek)) == OT_ERROR_NONE)
+    if (Tlv::Find<JoinerRouterKekTlv>(aMessage, kek) == OT_ERROR_NONE)
     {
         otLogInfoMeshCoP("Received kek");
 
@@ -327,14 +326,9 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     SuccessOrExit(error = message->SetPayloadMarker());
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
-    SuccessOrExit(
-        error = Tlv::AppendTlv(*message, Tlv::kNetworkMasterKey, &Get<KeyManager>().GetMasterKey(), sizeof(MasterKey)));
-
-    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kMeshLocalPrefix, &Get<Mle::MleRouter>().GetMeshLocalPrefix(),
-                                         sizeof(otMeshLocalPrefix)));
-
-    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kExtendedPanId, &Get<Mac::Mac>().GetExtendedPanId(),
-                                         sizeof(Mac::ExtendedPanId)));
+    SuccessOrExit(error = Tlv::Append<NetworkMasterKeyTlv>(*message, Get<KeyManager>().GetMasterKey()));
+    SuccessOrExit(error = Tlv::Append<MeshLocalPrefixTlv>(*message, Get<Mle::MleRouter>().GetMeshLocalPrefix()));
+    SuccessOrExit(error = Tlv::Append<ExtendedPanIdTlv>(*message, Get<Mac::Mac>().GetExtendedPanId()));
 
     networkName.Init();
     networkName.SetNetworkName(Get<Mac::Mac>().GetNetworkName().GetAsData());
@@ -386,8 +380,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
         SuccessOrExit(error = securityPolicy.AppendTo(*message));
     }
 
-    SuccessOrExit(
-        error = Tlv::AppendUint32Tlv(*message, Tlv::kNetworkKeySequence, Get<KeyManager>().GetCurrentKeySequence()));
+    SuccessOrExit(error = Tlv::Append<NetworkKeySequenceTlv>(*message, Get<KeyManager>().GetCurrentKeySequence()));
 
 exit:
     FreeAndNullMessageOnError(message, error);

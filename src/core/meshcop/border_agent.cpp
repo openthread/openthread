@@ -174,13 +174,13 @@ void BorderAgent::HandleCoapResponse(ForwardContext &aForwardContext, const Coap
     {
         uint8_t state;
 
-        SuccessOrExit(error = Tlv::FindUint8Tlv(*aResponse, Tlv::kState, state));
+        SuccessOrExit(error = Tlv::Find<StateTlv>(*aResponse, state));
 
         if (state == StateTlv::kAccept)
         {
             uint16_t sessionId;
 
-            SuccessOrExit(error = Tlv::FindUint16Tlv(*aResponse, Tlv::kCommissionerSessionId, sessionId));
+            SuccessOrExit(error = Tlv::Find<CommissionerSessionIdTlv>(*aResponse, sessionId));
 
             IgnoreError(Get<Mle::MleRouter>().GetCommissionerAloc(mCommissionerAloc.GetAddress(), sessionId));
             Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
@@ -330,8 +330,7 @@ void BorderAgent::HandleProxyTransmit(const Coap::Message &aMessage)
     messageInfo.SetSockAddr(mCommissionerAloc.GetAddress());
     messageInfo.SetPeerPort(tlv.GetDestinationPort());
 
-    SuccessOrExit(
-        error = Tlv::FindTlv(aMessage, Tlv::kIPv6Address, messageInfo.GetPeerAddr().mFields.m8, sizeof(Ip6::Address)));
+    SuccessOrExit(error = Tlv::Find<Ip6AddressTlv>(aMessage, messageInfo.GetPeerAddr()));
 
     SuccessOrExit(error = Get<Ip6::Udp>().SendDatagram(*message, messageInfo, Ip6::kProtoUdp));
     otLogInfoMeshCoP("Proxy transmit sent");
@@ -373,8 +372,7 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
         aMessage.CopyTo(aMessage.GetOffset(), offset, udpLength, *message);
     }
 
-    SuccessOrExit(error =
-                      Tlv::AppendTlv(*message, Tlv::kIPv6Address, &aMessageInfo.GetPeerAddr(), sizeof(Ip6::Address)));
+    SuccessOrExit(error = Tlv::Append<Ip6AddressTlv>(*message, aMessageInfo.GetPeerAddr()));
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().SendMessage(*message, Get<Coap::CoapSecure>().GetMessageInfo()));
 
@@ -451,7 +449,7 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
 
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest());
 
-    SuccessOrExit(error = Tlv::FindUint16Tlv(aMessage, Tlv::kJoinerRouterLocator, joinerRouterRloc));
+    SuccessOrExit(error = Tlv::Find<JoinerRouterLocatorTlv>(aMessage, joinerRouterRloc));
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 

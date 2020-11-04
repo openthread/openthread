@@ -74,14 +74,14 @@ otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,
     SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kPanIdQuery));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kCommissionerSessionId,
-                                               Get<MeshCoP::Commissioner>().GetSessionId()));
+    SuccessOrExit(
+        error = Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, Get<MeshCoP::Commissioner>().GetSessionId()));
 
     channelMask.Init();
     channelMask.SetChannelMask(aChannelMask);
     SuccessOrExit(error = channelMask.AppendTo(*message));
 
-    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kPanId, aPanId));
+    SuccessOrExit(error = Tlv::Append<MeshCoP::PanIdTlv>(*message, aPanId));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
@@ -114,7 +114,7 @@ void PanIdQueryClient::HandleConflict(Coap::Message &aMessage, const Ip6::Messag
 
     otLogInfoMeshCoP("received panid conflict");
 
-    SuccessOrExit(Tlv::FindUint16Tlv(aMessage, MeshCoP::Tlv::kPanId, panId));
+    SuccessOrExit(Tlv::Find<MeshCoP::PanIdTlv>(aMessage, panId));
 
     VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
