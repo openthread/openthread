@@ -722,7 +722,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 
     return OT_ERROR_NONE;
 }
-#endif
+#endif // !OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
 
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {

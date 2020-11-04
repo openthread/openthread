@@ -225,6 +225,9 @@ void nrf5RadioCustomFemDisable(void);
 /**
  * Adjust the FEM output power based on the given channel.
  *
+ * @param[in]    aChannel      Radio channel.
+ * @param[in]    aIsTransmit   TRUE to begin transmit sequence or FALSE to begin receive sequence.
+ *
  */
 void nrf5RadioCustomFemAdjustPower(uint8_t aChannel, bool aIsTransmit);
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
