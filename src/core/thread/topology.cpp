@@ -174,8 +174,7 @@ void Neighbor::AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8
 
 LinkMetricsSeriesInfo *Neighbor::GetForwardTrackingSeriesInfo(const uint8_t &aSeriesId)
 {
-    LinkMetricsSeriesInfo *prev;
-    return mLinkMetricsSeriesInfoList.FindMatching(aSeriesId, prev);
+    return mLinkMetricsSeriesInfoList.FindMatching(aSeriesId);
 }
 
 void Neighbor::AddForwardTrackingSeriesInfo(LinkMetricsSeriesInfo &aLinkMetricsSeriesInfo)

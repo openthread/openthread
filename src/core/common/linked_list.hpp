@@ -259,9 +259,7 @@ public:
      */
     template <typename Indicator> bool ContainsMatching(const Indicator &aIndicator) const
     {
-        const Type *prev;
-
-        return FindMatching(aIndicator, prev) != nullptr;
+        return FindMatching(aIndicator) != nullptr;
     }
 
     /**
@@ -503,6 +501,46 @@ public:
     {
         return const_cast<Type *>(
             const_cast<const LinkedList *>(this)->FindMatching(aIndicator, const_cast<const Type *&>(aPrevEntry)));
+    }
+
+    /**
+     * This template method searches within the linked list to find an entry matching a given indicator.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
+     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in]  aIndicator  An indicator to match with entries in the list.
+     *
+     * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
+     *
+     */
+    template <typename Indicator> const Type *FindMatching(const Indicator &aIndicator) const
+    {
+        const Type *prev;
+
+        return FindMatching(aIndicator, prev);
+    }
+
+    /**
+     * This template method searches within the linked list to find an entry matching a given indicator.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
+     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in]  aIndicator  An indicator to match with entries in the list.
+     *
+     * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
+     *
+     */
+    template <typename Indicator> Type *FindMatching(const Indicator &aIndicator)
+    {
+        return const_cast<Type *>(const_cast<const LinkedList *>(this)->FindMatching(aIndicator));
     }
 
     /**
