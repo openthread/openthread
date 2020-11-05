@@ -149,7 +149,6 @@ class Cert_5_1_09_REEDAttachConnectivity(thread_cert.TestCase):
         #         If the first MLE Parent Request was sent to all Routers and
         #         REEDS, the test fails.
 
-        pkts_copy = pkts.copy()
         pkts.filter_wpan_src64(ROUTER_2).\
             filter_LLARMA().\
             filter_mle_cmd(MLE_PARENT_REQUEST).\
@@ -204,8 +203,8 @@ class Cert_5_1_09_REEDAttachConnectivity(thread_cert.TestCase):
 
         # Step 4: REED_1 and REED_2 no response to Parent Request meant for all routers.
 
-        for i in range(1, 3):
-            pkts_copy.range(lstart, lend).\
+        for i in (1, 2):
+            pkts.range(lstart, lend).\
                 filter_wpan_src64(pv.vars['REED_%d' % i]).\
                 filter_wpan_dst64(ROUTER_2).\
                 filter_mle_cmd(MLE_PARENT_RESPONSE).\
@@ -223,7 +222,7 @@ class Cert_5_1_09_REEDAttachConnectivity(thread_cert.TestCase):
         #             - Version TLV
         #             - MLE Frame Counter TLV (optional)
 
-        for i in range(1, 3):
+        for i in (1, 2):
             with pkts.save_index():
                 pkts.filter_wpan_src64(pv.vars['REED_%d' % i]).\
                     filter_wpan_dst64(ROUTER_2).\
