@@ -172,7 +172,7 @@ class Cert_5_1_08_RouterAttachConnectivity(thread_cert.TestCase):
         #             - Version TLV
         #             - MLE Frame Counter TLV (optional)
 
-        for i in range(2, 4):
+        for i in (2, 3):
             with pkts.save_index():
                 pkts.filter_wpan_src64(pv.vars['ROUTER_%d' % i]).\
                     filter_wpan_dst64(ROUTER_4).\
