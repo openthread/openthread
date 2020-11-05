@@ -128,7 +128,7 @@ class Cert_5_1_08_RouterAttachConnectivity(thread_cert.TestCase):
         ROUTER_4 = pv.vars['ROUTER_4']
 
         # Step 1: Verify all routers and Leader are sending MLE advertisements.
-        for i in range(1, 4):
+        for i in (1, 2, 3):
             with pkts.save_index():
                 pv.verify_attached('ROUTER_%d' % i)
 
