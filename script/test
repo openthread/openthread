@@ -201,61 +201,11 @@ do_cert_suite()
         fi
     fi
 
-    local pass_count=0
-    local fail_count=0
-
-    [[ ! -f fail.log ]] || rm fail.log
-
-    for test_case in "$@"; do
-        rm -rf tmp || sudo rm -rf tmp
-        if TEST_NAME="$(basename "${test_case}" .py)" "${test_case}" &>test.log; then
-            echo -e "${COLOR_PASS}PASS${COLOR_NONE} ${test_case}"
-            pass_count=$((pass_count + 1))
-        else
-            echo -e "${COLOR_FAIL}FAIL${COLOR_NONE} ${test_case}"
-            fail_count=$((fail_count + 1))
-            {
-                echo "=============================="
-                echo "!!! FAIL:${test_case}"
-                echo "=============================="
-                cat test.log
-            } >>fail.log
-        fi
-    done
-
-    echo "=================================="
-    echo "         Test Summary"
-    echo "=================================="
-    echo "# TOTAL: $((pass_count + fail_count))"
-    echo "# PASS: ${pass_count}"
-    echo "# FAIL: ${fail_count}"
-
-    if [[ ${fail_count} -gt 0 ]]; then
-        tr -dc '[:print:]\r\n\t' <fail.log
-        exit 1
-    else
-        exit 0
-    fi
-}
-
-do_cert_bbr()
-{
-    if [[ ${THREAD_VERSION} != "1.2" ]]; then
-        echo "cert_bbr only work with THREAD_VERSION=1.2!"
-        exit 1
-    fi
-
-    if [[ ${VIRTUAL_TIME} != "0" ]]; then
-        echo "cert_bbr only work with VIRTUAL_TIME=0!"
-        exit 1
-    fi
-
-    export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-1.2"
-    export top_builddir_1_2_bbr="${OT_BUILDDIR}/cmake/openthread-simulation-1.2-bbr"
-    export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
     export PYTHONPATH=tests/scripts/thread-cert
+    export VIRTUAL_TIME
 
-    python3 tests/scripts/thread-cert/run_bbr_tests.py --multiply "${MULTIPLY:-1}" "$@"
+    python3 tests/scripts/thread-cert/run_cert_suite.py --multiply "${MULTIPLY:-1}" "$@"
+    exit 0
 }
 
 do_get_thread_wireshark()
@@ -553,10 +503,6 @@ main()
             cert_suite)
                 shift
                 do_cert_suite "$@"
-                ;;
-            cert_bbr)
-                shift
-                do_cert_bbr "$@"
                 ;;
             get_thread_wireshark)
                 do_get_thread_wireshark
