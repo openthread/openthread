@@ -32,26 +32,52 @@ import unittest
 import mle
 import network_layer
 import thread_cert
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, MODE_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, CONNECTIVITY_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, SCAN_MASK_TLV, VERSION_TLV, LINK_MARGIN_TLV, SOURCE_ADDRESS_TLV, COAP_CODE_ACK, NL_STATUS_TLV, NL_RLOC16_TLV, NL_ROUTER_MASK_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER1 = 2
 ROUTER2 = 3
 
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of this test case is to verify that when the original Leader is
+# removed from the network, the DUT will create a new partition as Leader and
+# will assign a router ID if a specific ID is requested.
+#
+# Test Topology:
+# -------------
+#        Leader
+#       /     \
+# Router_1  -  Router_2
+# [DUT]
+#
+# DUT Types:
+# ----------
+# Router
+
 
 class Cert_5_1_04_RouterAddressReallocation(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+    SUPPORT_NCP = False
+
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
+            'partition_id': 1,
             'allowlist': [ROUTER1, ROUTER2]
         },
         ROUTER1: {
+            'name': 'ROUTER_1',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER2]
         },
         ROUTER2: {
+            'name': 'ROUTER_2',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
@@ -72,124 +98,175 @@ class Cert_5_1_04_RouterAddressReallocation(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
-        rloc16 = self.nodes[ROUTER1].get_addr16()
-
         self.nodes[ROUTER2].set_network_id_timeout(200)
         self.nodes[LEADER].stop()
         self.simulator.go(220)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'leader')
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
-        self.assertEqual(self.nodes[ROUTER1].get_addr16(), rloc16)
 
-        leader_messages = self.simulator.get_messages_sent_by(LEADER)
-        router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
-        router2_messages = self.simulator.get_messages_sent_by(ROUTER2)
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
 
-        # 2 - All
-        leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        LEADER = pv.vars['LEADER']
+        ROUTER_1 = pv.vars['ROUTER_1']
+        ROUTER_2 = pv.vars['ROUTER_2']
+        MM = pv.vars['MM_PORT']
 
-        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        # Step 3: Verify topology is formed correctly.
 
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        pv.verify_attached('ROUTER_1')
+        _pkt_pt = pkts.filter_wpan_src64(ROUTER_1).\
+            filter_LLANMA().\
+            filter_mle_cmd(MLE_ADVERTISEMENT).\
+            must_next()
+        with pkts.save_index():
+            _pkt_id = pkts.filter_wpan_src64(ROUTER_1).\
+                filter_wpan_dst64(ROUTER_2).\
+                filter_mle_cmd(MLE_PARENT_RESPONSE).\
+                must_next()
 
-        msg = router1_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/as")
+        pv.verify_attached('ROUTER_2')
+        _pkt_as = pkts.filter_wpan_src64(LEADER).\
+            filter_coap_ack(ADDR_SOL_URI, port=MM).\
+            must_next()
 
-        msg = leader_messages.next_coap_message("2.04")
+        # Step 5: Router_1 MUST attempt to reattach to its original partition
+        #         by sending a MLE Parent Request with a hop limit of 255 to
+        #         the All-Routers multicast address (FF02::2).
+        #         The following TLVs MUST be present in the MLE Parent Request:
+        #            - Challenge TLV
+        #            - Mode TLV
+        #            - Scan Mask TLV (MUST have E and R flags set)
+        #            - Version TLV
+        #         The DUT MUST make two separate attempts to reconnect to its
+        #         original partition in this manner
 
-        router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        with pkts.save_index():
+            for i in range(1, 3):
+                pkts.filter_wpan_src64(ROUTER_1).\
+                    filter_LLARMA().\
+                    filter_mle_cmd(MLE_PARENT_REQUEST).\
+                    filter(lambda p: {
+                                      CHALLENGE_TLV,
+                                      MODE_TLV,
+                                      SCAN_MASK_TLV,
+                                      VERSION_TLV
+                                      } <= set(p.mle.tlv.type) and\
+                           p.ipv6.hlim == 255 and\
+                           p.mle.tlv.scan_mask.r == 1 and\
+                           p.mle.tlv.scan_mask.e == 1
+                           ).\
+                    must_next()
 
-        router2_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
-        router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+            # Step 6: Router_1 MUST attempt to attach to any other partition
+            #         within range by sending a MLE Parent Request.
+            #         The following TLVs MUST be present in the MLE Parent Request:
+            #            - Challenge TLV
+            #            - Mode TLV
+            #            - Scan Mask TLV
+            #            - Version TLV
 
-        router2_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+            pkts.filter_wpan_src64(ROUTER_1).\
+                filter_LLARMA().\
+                filter_mle_cmd(MLE_PARENT_REQUEST).\
+                filter(lambda p: {
+                                  CHALLENGE_TLV,
+                                  MODE_TLV,
+                                  SCAN_MASK_TLV,
+                                  VERSION_TLV
+                                  } <= set(p.mle.tlv.type) and\
+                       p.ipv6.hlim == 255 and\
+                       p.mle.tlv.scan_mask.r == 1 and\
+                       p.mle.tlv.scan_mask.e == 0
+                       ).\
+                must_next()
 
-        # Leader or Router1 can be parent of Router2
-        if leader_messages.contains_mle_message(mle.CommandType.CHILD_ID_RESPONSE):
-            leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        # Step 7: Router_1 MUST create a new partition and update the following
+        #         values randomly:
+        #             - Partition ID
+        #             - Initial VN_version & VN_stable_version
+        #             - Initial ID sequence number
+        #  Notes: Considerring the randomly created VN_version & VN_stable_version
+        #         could equal the previous versions, checking one of them to
+        #         reduce case failures
 
-            msg = router2_messages.next_coap_message("0.02")
-            msg.assertCoapMessageRequestUriPath("/a/as")
+        pkts.filter_wpan_src64(ROUTER_1).\
+            filter_LLANMA().\
+            filter_mle_cmd(MLE_ADVERTISEMENT).\
+            filter(lambda p:\
+                   p.mle.tlv.leader_data.partition_id !=
+                   _pkt_pt.mle.tlv.leader_data.partition_id and\
+                   (p.mle.tlv.leader_data.data_version !=
+                    _pkt_pt.mle.tlv.leader_data.data_version or\
+                    p.mle.tlv.leader_data.stable_data_version !=
+                    _pkt_pt.mle.tlv.leader_data.stable_data_version)
+                   ).\
+            must_next()
 
-            msg = leader_messages.next_coap_message("2.04")
+        # Step 9: Router_1 MUST send a properly formatted Parent Response and
+        #         Child ID Response to Router_2.
 
-        elif router1_messages.contains_mle_message(mle.CommandType.CHILD_ID_RESPONSE):
-            router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        pkts.filter_wpan_src64(ROUTER_1).\
+            filter_wpan_dst64(ROUTER_2).\
+            filter_mle_cmd(MLE_PARENT_RESPONSE).\
+            filter(lambda p: {
+                              CHALLENGE_TLV,
+                              CONNECTIVITY_TLV,
+                              LEADER_DATA_TLV,
+                              LINK_LAYER_FRAME_COUNTER_TLV,
+                              LINK_MARGIN_TLV,
+                              RESPONSE_TLV,
+                              SOURCE_ADDRESS_TLV,
+                              VERSION_TLV
+                             } <= set(p.mle.tlv.type) and\
+                   p.mle.tlv.conn.id_seq != _pkt_id.mle.tlv.conn.id_seq
+                   ).\
+            must_next()
 
-            msg = router2_messages.next_coap_message("0.02")
-            msg.assertCoapMessageRequestUriPath("/a/as")
+        pkts.filter_wpan_src64(ROUTER_1).\
+            filter_wpan_dst64(ROUTER_2).\
+            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
+            filter(lambda p: {
+                              ADDRESS16_TLV,
+                              LEADER_DATA_TLV,
+                              NETWORK_DATA_TLV,
+                              SOURCE_ADDRESS_TLV,
+                              ROUTE64_TLV
+                              } <= set(p.mle.tlv.type) or\
+                             {
+                              ADDRESS16_TLV,
+                              LEADER_DATA_TLV,
+                              NETWORK_DATA_TLV,
+                              SOURCE_ADDRESS_TLV
+                             } <= set(p.mle.tlv.type)\
+                   ).\
+            must_next()
 
-            msg = router1_messages.next_coap_message("0.02")
-            msg.assertCoapMessageRequestUriPath("/a/as")
+        # Step 10: Router_1 MUST send a properly-formatted Address Solicit
+        #          Response Message to Router_2.
+        #          If a specific router ID is requested, the DUT MUST provide this
+        #          router ID:
+        #          CoAP Response Code
+        #              - 2.04 Changed
+        #          CoAP Payload
+        #              - Status TLV (value = Success)
+        #              - RLOC16 TLV
+        #              - Router Mask TLV
 
-            msg = leader_messages.next_coap_message("2.04")
-
-            msg = router1_messages.next_coap_message("2.04")
-
-        # 5 - Router1
-        # Router1 make two attempts to reconnect to its current Partition.
-        for _ in range(4):
-            msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-            msg.assertSentWithHopLimit(255)
-            msg.assertSentToDestinationAddress("ff02::2")
-            msg.assertMleMessageContainsTlv(mle.Mode)
-            msg.assertMleMessageContainsTlv(mle.Challenge)
-            msg.assertMleMessageContainsTlv(mle.ScanMask)
-            msg.assertMleMessageContainsTlv(mle.Version)
-
-            scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
-            self.assertEqual(1, scan_mask_tlv.router)
-            self.assertEqual(1, scan_mask_tlv.end_device)
-
-        # 6 - Router1
-        msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        msg.assertSentWithHopLimit(255)
-        msg.assertSentToDestinationAddress("ff02::2")
-        msg.assertMleMessageContainsTlv(mle.Mode)
-        msg.assertMleMessageContainsTlv(mle.Challenge)
-        msg.assertMleMessageContainsTlv(mle.ScanMask)
-        msg.assertMleMessageContainsTlv(mle.Version)
-
-        scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
-        self.assertEqual(1, scan_mask_tlv.router)
-        self.assertEqual(0, scan_mask_tlv.end_device)
-
-        # 8 - Router2
-        router2_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        router2_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-
-        # 9 - Router1
-        msg = router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
-        msg.assertSentToNode(self.nodes[ROUTER2])
-        msg.assertMleMessageContainsTlv(mle.SourceAddress)
-        msg.assertMleMessageContainsTlv(mle.LeaderData)
-        msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
-        msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
-        msg.assertMleMessageContainsTlv(mle.Response)
-        msg.assertMleMessageContainsTlv(mle.Challenge)
-        msg.assertMleMessageContainsTlv(mle.LinkMargin)
-        msg.assertMleMessageContainsTlv(mle.Connectivity)
-        msg.assertMleMessageContainsTlv(mle.Version)
-
-        msg = router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        msg.assertSentToNode(self.nodes[ROUTER2])
-        msg.assertMleMessageContainsTlv(mle.SourceAddress)
-        msg.assertMleMessageContainsTlv(mle.LeaderData)
-        msg.assertMleMessageContainsTlv(mle.Address16)
-        msg.assertMleMessageContainsOptionalTlv(mle.NetworkData)
-        msg.assertMleMessageContainsOptionalTlv(mle.Route64)
-        msg.assertMleMessageContainsOptionalTlv(mle.AddressRegistration)
-
-        # 10 - Router1
-        msg = router1_messages.next_coap_message("2.04")
-        msg.assertCoapMessageContainsTlv(network_layer.Status)
-        msg.assertCoapMessageContainsOptionalTlv(network_layer.RouterMask)
-
-        status_tlv = msg.get_coap_message_tlv(network_layer.Status)
-        self.assertEqual(network_layer.StatusValues.SUCCESS, status_tlv.status)
+        pkts.filter_wpan_src64(ROUTER_1).\
+            filter_coap_ack(ADDR_SOL_URI, port=MM).\
+            filter(lambda p: {
+                              NL_STATUS_TLV,
+                              NL_RLOC16_TLV,
+                              NL_ROUTER_MASK_TLV
+                              } == set(p.coap.tlv.type) and\
+                   p.coap.code == COAP_CODE_ACK and\
+                   p.thread_address.tlv.rloc16 ==
+                   _pkt_as.thread_address.tlv.rloc16 and\
+                   p.thread_address.tlv.status == 0
+                   ).\
+            must_next()
 
 
 if __name__ == '__main__':
