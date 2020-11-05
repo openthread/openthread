@@ -940,7 +940,7 @@ void SubMac::SetCslPeriod(uint16_t aPeriod)
 
     if (mCslPeriod > 0)
     {
-        mCslSampleTime = mCslTimer.GetNow();
+        mCslSampleTime = TimerMicro::GetNow();
         Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetValue());
 
         mCslState = kCslSample;

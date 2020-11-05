@@ -577,7 +577,7 @@ void Mac::RequestCslFrameTransmission(uint32_t aDelay)
 {
     VerifyOrExit(mEnabled);
 
-    mCslTxFireTime = mTimer.GetNow() + aDelay;
+    mCslTxFireTime = TimerMilli::GetNow() + aDelay;
 
     StartOperation(kOperationTransmitDataCsl);
 
@@ -785,7 +785,7 @@ void Mac::PerformNextOperation(void)
         mOperation             = kOperationWaitingForData;
     }
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    else if (mPendingTransmitDataCsl && mTimer.GetNow() >= mCslTxFireTime)
+    else if (mPendingTransmitDataCsl && TimerMilli::GetNow() >= mCslTxFireTime)
     {
         mPendingTransmitDataCsl = false;
         mOperation              = kOperationTransmitDataCsl;
@@ -2456,7 +2456,7 @@ void Mac::UpdateFrameControlField(const Neighbor *aNeighbor, bool aIsTimeSync, u
     else
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        if (aNeighbor != nullptr && !Get<Mle::MleRouter>().IsActiveRouter(aNeighbor->GetRloc16()) &&
+        if (aNeighbor != nullptr && !Mle::MleRouter::IsActiveRouter(aNeighbor->GetRloc16()) &&
             static_cast<const Child *>(aNeighbor)->IsCslSynchronized())
     {
         aFcf |= Frame::kFcfFrameVersion2015;

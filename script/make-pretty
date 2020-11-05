@@ -126,6 +126,7 @@ modernize-use-nullptr,\
 readability-avoid-const-params-in-decls,\
 readability-make-member-function-const,\
 readability-simplify-boolean-expr,\
+readability-static-accessed-through-instance,\
 "
 
 #performance-for-range-copy\
