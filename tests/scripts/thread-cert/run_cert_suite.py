@@ -158,7 +158,7 @@ def run_tests(scripts: List[str], multiply: int = 1):
             color = _COLOR_PASS if script_fail_count[script] == 0 else _COLOR_FAIL
             print(f'{color}PASS {script_succ_count[script]} FAIL {script_fail_count[script]}{_COLOR_NONE} {script}')
 
-    def succ_callback(port_offset, script):
+    def pass_callback(port_offset, script):
         port_offset_pool.release(port_offset)
 
         script_succ_count[script] += 1
@@ -170,7 +170,7 @@ def run_tests(scripts: List[str], multiply: int = 1):
         port_offset = port_offset_pool.allocate()
         pool.apply_async(
             run_cert, [port_offset, script],
-            callback=lambda ret, port_offset=port_offset, script=script: succ_callback(port_offset, script),
+            callback=lambda ret, port_offset=port_offset, script=script: pass_callback(port_offset, script),
             error_callback=lambda err, port_offset=port_offset, script=script: error_callback(
                 port_offset, script, err))
 
