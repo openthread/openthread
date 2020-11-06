@@ -40,11 +40,12 @@ _HEADERS = {'Accept': 'application/vnd.github.v3+json', 'Authorization': f'Beare
 def _main():
     logging.getLogger().setLevel(logging.DEBUG)
 
-    with urllib.request.urlopen(
-            urllib.request.Request(
-                url=f'https://api.github.com/repos/openthread/openthread/actions/runs/{_GITHUB_RUN_ID}/artifacts',
-                headers=_HEADERS,
-            )) as response:
+    url = f'https://api.github.com/repos/openthread/openthread/actions/runs/{_GITHUB_RUN_ID}/artifacts'
+    logging.info('GET %s', url)
+    with urllib.request.urlopen(urllib.request.Request(
+            url=url,
+            headers=_HEADERS,
+    )) as response:
         result = json.loads(response.read().decode())
 
         logging.debug("Result: %s", result)
@@ -54,12 +55,12 @@ def _main():
                 continue
 
             artifact_id = artifact['id']
-            logging.info("Deleting artifact %d", artifact_id)
-            with urllib.request.urlopen(
-                    urllib.request.Request(
-                        url=f'https://api.github.com/repos/openthread/openthread/actions/artifacts/{artifact_id}',
-                        method='DELETE',
-                    )):
+            url = f'https://api.github.com/repos/openthread/openthread/actions/artifacts/{artifact_id}'
+            logging.info('DELETE %s', url)
+            with urllib.request.urlopen(urllib.request.Request(
+                    url=url,
+                    method='DELETE',
+            )):
                 pass
 
 
