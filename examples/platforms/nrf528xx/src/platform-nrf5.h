@@ -197,39 +197,4 @@ otError nrf5SdErrorToOtError(uint32_t aSdError);
 void nrf5SdSocFlashProcess(uint32_t aEvtId);
 #endif // SOFTDEVICE_PRESENT
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
-/**
- * Initialization of custom FEM.
- *
- */
-void nrf5RadioCustomFemInit(void);
-
-/**
- * Deinitialization of custom FEM.
- *
- */
-void nrf5RadioCustomFemDeinit(void);
-
-/**
- * Enable custom FEM.
- *
- */
-void nrf5RadioCustomFemEnable(void);
-
-/**
- * Disable custom FEM.
- *
- */
-void nrf5RadioCustomFemDisable(void);
-
-/**
- * Adjust the FEM output power based on the given channel.
- *
- * @param[in]    aChannel      Radio channel.
- * @param[in]    aIsTransmit   TRUE to begin transmit sequence or FALSE to begin receive sequence.
- *
- */
-void nrf5RadioCustomFemAdjustPower(uint8_t aChannel, bool aIsTransmit);
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
-
 #endif // PLATFORM_NRF5_H_
