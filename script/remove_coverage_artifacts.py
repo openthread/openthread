@@ -30,6 +30,7 @@
 import urllib.request
 import json
 import os
+import logging
 
 _GITHUB_RUN_ID = os.getenv('GITHUB_RUN_ID')
 _GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
@@ -37,16 +38,23 @@ _HEADERS = {'Accept': 'application/vnd.github.v3+json', 'Authorization': f'Beare
 
 
 def _main():
+    logging.set_verbosity(logging.DEBUG)
+
     with urllib.request.urlopen(
             urllib.request.Request(
                 url=f'https://api.github.com/repos/openthread/openthread/actions/runs/{_GITHUB_RUN_ID}/artifacts',
                 headers=_HEADERS,
             )) as response:
         result = json.loads(response.read().decode())
+
+        logging.debug("Result: %s", result)
+
         for artifact in result['artifacts']:
             if not artifact['name'].startswith('cov-'):
                 continue
+
             artifact_id = artifact['id']
+            logging.info("Deleting artifact %d", artifact_id)
             with urllib.request.urlopen(
                     urllib.request.Request(
                         url=f'https://api.github.com/repos/openthread/openthread/actions/artifacts/{artifact_id}',
