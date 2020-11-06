@@ -31,6 +31,7 @@ import urllib.request
 import json
 import os
 import logging
+import time
 
 _GITHUB_RUN_ID = os.getenv('GITHUB_RUN_ID')
 _GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
@@ -40,28 +41,39 @@ _HEADERS = {'Accept': 'application/vnd.github.v3+json', 'Authorization': f'Beare
 def _main():
     logging.getLogger().setLevel(logging.DEBUG)
 
-    url = f'https://api.github.com/repos/openthread/openthread/actions/runs/{_GITHUB_RUN_ID}/artifacts'
-    logging.info('GET %s', url)
-    with urllib.request.urlopen(urllib.request.Request(
-            url=url,
-            headers=_HEADERS,
-    )) as response:
-        result = json.loads(response.read().decode())
+    artifact_count = len(os.listdir('coverage/'))
+    logging.info('Found %d artifacts')
 
-        logging.debug("Result: %s", result)
+    while True:
+        url = f'https://api.github.com/repos/openthread/openthread/actions/runs/{_GITHUB_RUN_ID}/artifacts'
+        logging.info('GET %s', url)
+        with urllib.request.urlopen(urllib.request.Request(
+                url=url,
+                headers=_HEADERS,
+        )) as response:
+            result = json.loads(response.read().decode())
+            logging.debug("Result: %s", result)
 
-        for artifact in result['artifacts']:
-            if not artifact['name'].startswith('cov-'):
+            artifacts = result['artifacts']
+            if len(artifacts) < artifact_count:
+                logging.info('Waiting for artifacts...')
+                time.sleep(10)
                 continue
 
-            artifact_id = artifact['id']
-            url = f'https://api.github.com/repos/openthread/openthread/actions/artifacts/{artifact_id}'
-            logging.info('DELETE %s', url)
-            with urllib.request.urlopen(urllib.request.Request(
-                    url=url,
-                    method='DELETE',
-            )):
-                pass
+            for artifact in artifacts:
+                if not artifact['name'].startswith('cov-'):
+                    continue
+
+                artifact_id = artifact['id']
+                url = f'https://api.github.com/repos/openthread/openthread/actions/artifacts/{artifact_id}'
+                logging.info('DELETE %s', url)
+                with urllib.request.urlopen(urllib.request.Request(
+                        url=url,
+                        method='DELETE',
+                )):
+                    pass
+
+            break
 
 
 if __name__ == "__main__":
