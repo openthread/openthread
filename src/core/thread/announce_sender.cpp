@@ -48,7 +48,6 @@ namespace ot {
 
 AnnounceSenderBase::AnnounceSenderBase(Instance &aInstance, Timer::Handler aHandler)
     : InstanceLocator(aInstance)
-    , mChannelMask()
     , mPeriod(0)
     , mJitter(0)
     , mCount(0)

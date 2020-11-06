@@ -108,7 +108,6 @@ LinkMetrics::LinkMetrics(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mLinkMetricsReportCallback(nullptr)
     , mLinkMetricsReportCallbackContext(nullptr)
-    , mLinkMetricsSeriesInfoPool()
 {
 }
 

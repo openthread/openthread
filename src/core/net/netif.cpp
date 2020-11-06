@@ -105,13 +105,9 @@ const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress = {
 
 Netif::Netif(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mUnicastAddresses()
-    , mMulticastAddresses()
     , mMulticastPromiscuous(false)
     , mAddressCallback(nullptr)
     , mAddressCallbackContext(nullptr)
-    , mExtUnicastAddressPool()
-    , mExtMulticastAddressPool()
 {
 }
 

@@ -47,7 +47,6 @@ MessagePool::MessagePool(Instance &aInstance)
     : InstanceLocator(aInstance)
 #if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     , mNumFreeBuffers(kNumBuffers)
-    , mBufferPool()
 #endif
 {
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
