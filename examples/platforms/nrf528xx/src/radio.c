@@ -54,6 +54,7 @@
 #include <openthread/platform/time.h>
 
 #include "openthread-system.h"
+#include "platform-fem.h"
 #include "platform-nrf5.h"
 
 #include <nrf.h>
@@ -106,7 +107,7 @@ static otInstance *  sInstance = NULL;
 static otRadioFrame sAckFrame;
 static bool         sAckedWithFramePending;
 
-#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
+#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_POWER_CUSTOM_SOURCE
 static int8_t sDefaultTxPower;
 #endif
 static int8_t sLnaGain = 0;
@@ -323,16 +324,10 @@ void nrf5RadioInit(void)
 {
     dataInit();
     nrf_802154_init();
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
-    nrf5RadioCustomFemInit();
-#endif
 }
 
 void nrf5RadioDeinit(void)
 {
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
-    nrf5RadioCustomFemDeinit();
-#endif
     nrf_802154_sleep();
     nrf_802154_deinit();
     sPendingEvents = 0;
@@ -433,9 +428,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     if (nrf_802154_sleep_if_idle() == NRF_802154_SLEEP_ERROR_NONE)
     {
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
-        nrf5RadioCustomFemDisable();
-#endif
+        nrf5FemDisable();
         clearPendingEvents();
     }
     else
@@ -454,16 +447,13 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     bool result;
 
     nrf_802154_channel_set(aChannel);
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
     if (nrf_802154_state_get() == NRF_802154_STATE_SLEEP)
     {
         // Enable FEM before RADIO leaving SLEEP state.
-        nrf5RadioCustomFemEnable();
+        nrf5FemEnable();
     }
 
-    // Adjust the output power based on the given channel.
-    nrf5RadioCustomFemAdjustPower(aChannel, false);
-#else
+#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_POWER_CUSTOM_SOURCE
     nrf_802154_tx_power_set(sDefaultTxPower);
 #endif
 
@@ -480,16 +470,11 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     aFrame->mPsdu[-1] = aFrame->mLength;
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
     if (nrf_802154_state_get() == NRF_802154_STATE_SLEEP)
     {
         // Enable FEM before RADIO leaving SLEEP state.
-        nrf5RadioCustomFemEnable();
+        nrf5FemEnable();
     }
-
-    // Adjust the output power based on the given channel.
-    nrf5RadioCustomFemAdjustPower(aFrame->mChannel, true);
-#endif
 
     nrf_802154_channel_set(aFrame->mChannel);
 
@@ -694,7 +679,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     return OT_ERROR_NONE;
 }
 
-#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
+#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_POWER_CUSTOM_SOURCE
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -722,7 +707,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 
     return OT_ERROR_NONE;
 }
-#endif // !OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
+#endif // !OPENTHREAD_CONFIG_ENABLE_PLATFORM_POWER_CUSTOM_SOURCE
 
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {
@@ -920,9 +905,7 @@ void nrf5RadioProcess(otInstance *aInstance)
     {
         if (nrf_802154_sleep_if_idle() == NRF_802154_SLEEP_ERROR_NONE)
         {
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_FEM_CUSTOM_SOURCE
-            nrf5RadioCustomFemDisable();
-#endif
+            nrf5FemDisable();
             resetPendingEvent(kPendingEventSleep);
         }
         else
