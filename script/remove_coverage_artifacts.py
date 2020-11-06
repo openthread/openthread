@@ -38,7 +38,7 @@ _HEADERS = {'Accept': 'application/vnd.github.v3+json', 'Authorization': f'Beare
 
 
 def _main():
-    logging.set_verbosity(logging.DEBUG)
+    logging.getLogger().setLevel(logging.DEBUG)
 
     with urllib.request.urlopen(
             urllib.request.Request(
