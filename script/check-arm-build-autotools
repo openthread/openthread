@@ -284,18 +284,28 @@ main()
 {
     ./bootstrap
 
-    build_cc1352
-    build_cc2538
-    build_cc2650
-    build_cc2652
-    build_jn5189
-    build_k32w061
-    build_kw41z
-    build_nrf52811
-    build_nrf52833
-    build_nrf52840
-    build_qpg6095
-    build_samr21
+    export CPPFLAGS="${CPPFLAGS:-} -DNDEBUG"
+
+    if [[ $# == 0 ]]; then
+        build_cc1352
+        build_cc2538
+        build_cc2650
+        build_cc2652
+        build_jn5189
+        build_k32w061
+        build_kw41z
+        build_nrf52811
+        build_nrf52833
+        build_nrf52840
+        build_qpg6095
+        build_samr21
+        return 0
+    fi
+
+    while [[ $# != 0 ]]; do
+        "build_$1"
+        shift
+    done
 }
 
 main "$@"

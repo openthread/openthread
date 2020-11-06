@@ -98,6 +98,8 @@ build_samr21()
 
 main()
 {
+    export CPPFLAGS="${CPPFLAGS:-} -DNDEBUG"
+
     if [[ $# == 0 ]]; then
         build_cc1352
         build_cc2538
