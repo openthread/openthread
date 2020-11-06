@@ -125,3 +125,6 @@ jobs:
     - name: Upload Coverage
       run: |
         script/test upload_codecov
+    - name: Remove Artifacts
+      run: |
+        GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} script/remove_coverage_artifacts.py
