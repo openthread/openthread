@@ -32,7 +32,7 @@ import unittest
 import mle
 import network_layer
 import thread_cert
-from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_RESPONSE, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, SOURCE_ADDRESS_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, ADDRESS16_TLV, ROUTE64_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, CONNECTIVITY_TLV, LINK_MARGIN_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, NL_MAC_EXTENDED_ADDRESS_TLV, NL_RLOC16_TLV, NL_STATUS_TLV, NL_ROUTER_MASK_TLV, COAP_CODE_ACK
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_RESPONSE, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, SOURCE_ADDRESS_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, ADDRESS16_TLV, ROUTE64_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, CONNECTIVITY_TLV, LINK_MARGIN_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, NL_MAC_EXTENDED_ADDRESS_TLV, NL_RLOC16_TLV, NL_STATUS_TLV, NL_ROUTER_MASK_TLV, COAP_CODE_ACK, ADDR_SOL_NA, ADDR_SOL_SUCCESS
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.null_field import nullField
 
@@ -46,7 +46,7 @@ ROUTER_32 = 33
 # The purpose of this test case is to show that the DUT will
 # only allow 32 active routers on the network and reject the
 # Address Solicit Request from a 33rd router - that is
-# 2-hopsaway - with a No Address Available status.
+# 2-hops away - with a No Address Available status.
 #
 # Test Topology:
 # -------------
@@ -435,7 +435,7 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
                               NL_ROUTER_MASK_TLV
                               } == set(p.coap.tlv.type) and\
                    p.coap.code == COAP_CODE_ACK and\
-                   p.thread_address.tlv.status == 0\
+                   p.thread_address.tlv.status == ADDR_SOL_SUCCESS\
                    ).\
             must_next()
 
@@ -480,9 +480,9 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
         pkts.filter_wpan_src64(LEADER).\
             filter_ipv6_dst(_pkt.ipv6.src).\
             filter_coap_ack(ADDR_SOL_URI).\
-            filter(lambda p: (NL_STATUS_TLV) in p.coap.tlv.type and\
+            filter(lambda p:
                    p.coap.code == COAP_CODE_ACK and\
-                   p.thread_address.tlv.status == 1
+                   p.thread_address.tlv.status == ADDR_SOL_NA
                    ).\
             must_next()
 
