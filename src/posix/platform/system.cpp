@@ -54,9 +54,9 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     // The last argument must be the node id
     {
-        const char *nodeId = radioUrl.GetValue("forkpty-arg");
+        const char *nodeId = nullptr;
 
-        for (const char *arg = nodeId; (arg = radioUrl.GetValue("forkpty-arg", nodeId)) != nullptr; nodeId = arg)
+        for (const char *arg = nullptr; (arg = radioUrl.GetValue("forkpty-arg", arg)) != nullptr; nodeId = arg)
         {
         }
 

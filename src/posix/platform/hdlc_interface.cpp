@@ -601,7 +601,7 @@ int HdlcInterface::ForkPty(const RadioUrl &aRadioUrl)
     if (0 == pid)
     {
         constexpr int kMaxArguments = 32;
-        char *        argv[kMaxArguments];
+        char *        argv[kMaxArguments + 1];
         size_t        index = 0;
 
         argv[index++] = const_cast<char *>(aRadioUrl.GetPath());
