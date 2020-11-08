@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import copy
 import unittest
 
 import command
@@ -34,97 +35,139 @@ import config
 import ipv6
 import mle
 import thread_cert
+from pktverify.consts import MLE_ADVERTISEMENT, ADDR_SOL_URI, MLE_LINK_REQUEST, MLE_LINK_ACCEPT, MLE_LINK_ACCEPT_AND_REQUEST, SOURCE_ADDRESS_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, TLV_REQUEST_TLV, VERSION_TLV
+from pktverify.packet_verifier import PacketVerifier
+from pktverify.null_field import nullField
 
 LEADER = 1
 DUT_ROUTER1 = 2
+ROUTER2 = 3
 DUT_REED = 17
 
 MLE_MIN_LINKS = 3
 
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of this test case is to validate the REED’s Synchronization
+# procedure after attaching to a network with multiple Routers. A REED
+# MUST process incoming Advertisements and perform a one-way frame-counter
+# synchronization with at least 3 neighboring Routers. When Router receives
+# unicast MLE Link Request from REED, it replies with MLE Link Accept.
+#
+# Test Topology:
+# -------------
+#  Router-15 - Leader
+#            /     \
+#         Router_n  Router_1(DUT)
+#          |
+#      REED(DUT)
+#
+# DUT Types:
+# ----------
+#  Router
+#  REED
 
-class Cert_5_2_7_REEDSynchronization(thread_cert.TestCase):
+
+class Cert_5_2_7_REEDSynchronization_Base(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         DUT_ROUTER1: {
+            'name': 'ROUTER_1',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
-        3: {
+        ROUTER2: {
+            'name': 'ROUTER_2',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         4: {
+            'name': 'ROUTER_3',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         5: {
+            'name': 'ROUTER_4',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         6: {
+            'name': 'ROUTER_5',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         7: {
+            'name': 'ROUTER_6',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         8: {
+            'name': 'ROUTER_7',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         9: {
+            'name': 'ROUTER_8',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         10: {
+            'name': 'ROUTER_9',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         11: {
+            'name': 'ROUTER_10',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         12: {
+            'name': 'ROUTER_11',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         13: {
+            'name': 'ROUTER_12',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         14: {
+            'name': 'ROUTER_13',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         15: {
+            'name': 'ROUTER_14',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         16: {
+            'name': 'ROUTER_15',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },
         DUT_REED: {
+            'name': 'REED',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
@@ -132,60 +175,117 @@ class Cert_5_2_7_REEDSynchronization(thread_cert.TestCase):
     }
 
     def test(self):
-        # 1. Ensure topology is formed correctly without DUT_ROUTER1.
         self.nodes[LEADER].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         for i in range(2, 17):
             self.nodes[i].start()
-        self.simulator.go(10)
+            self.simulator.go(10)
 
         for i in range(2, 17):
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
-        # 2. DUT_REED: Attach to network. Verify it didn't send an Address Solicit Request.
         # Avoid DUT_REED attach to DUT_ROUTER1.
-        self.nodes[DUT_REED].add_allowlist(self.nodes[DUT_ROUTER1].get_addr64(), config.RSSI['LINK_QULITY_1'])
+        if self.__class__.__name__ == 'Cert_5_2_7_REEDSynchronization_REED':
+            self.nodes[DUT_REED].\
+                add_allowlist(self.nodes[DUT_ROUTER1].get_addr64(),
+                              config.RSSI['LINK_QULITY_1'])
+
+        if self.__class__.__name__ == 'Cert_5_2_7_REEDSynchronization_ROUTER':
+            self.nodes[DUT_REED].\
+                add_allowlist(self.nodes[DUT_ROUTER1].get_addr64(),
+                              config.RSSI['LINK_QULITY_1'])
+            self.nodes[DUT_REED].add_allowlist(self.nodes[ROUTER2].get_addr64())
+            self.nodes[DUT_REED].enable_allowlist()
 
         self.nodes[DUT_REED].start()
         self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
         self.assertEqual(self.nodes[DUT_REED].get_state(), 'child')
 
-        # The DUT_REED must not send a coap message here.
-        reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
-        msg = reed_messages.does_not_contain_coap_message()
-        assert (msg is True), "Error: The DUT_REED sent an Address Solicit Request"
-
-        # 3. DUT_REED: Verify sent a Link Request to at least 3 neighboring
-        # Routers.
-        for i in range(0, MLE_MIN_LINKS):
-            msg = reed_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
-            command.check_link_request(
-                msg,
-                source_address=command.CheckType.CONTAIN,
-                leader_data=command.CheckType.CONTAIN,
-            )
-
-        # 4. DUT_REED: Verify at least 3 Link Accept messages sent to DUT_REED.
         self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
 
-        link_accept_count = 0
-        destination_link_local = self.nodes[DUT_REED].get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
 
-        for i in range(1, DUT_REED):
-            dut_messages = self.simulator.get_messages_sent_by(i)
+        LEADER = pv.vars['LEADER']
+        ROUTER_1 = pv.vars['ROUTER_1']
+        REED = pv.vars['REED']
 
-            while True:
-                msg = dut_messages.next_mle_message(mle.CommandType.LINK_ACCEPT, False)
-                if msg is None:
-                    break
-                if (ipv6.ip_address(destination_link_local) == msg.ipv6_packet.ipv6_header.destination_address):
-                    command.check_link_accept(msg, self.nodes[DUT_REED])
-                    link_accept_count += 1
-                    break
+        # Step 1: Verify topology is formed correctly except REED.
+        with pkts.save_index():
+            for i in range(1, 16):
+                pv.verify_attached('ROUTER_%d' % i)
 
-        assert (link_accept_count >= MLE_MIN_LINKS) is True, "Error: too few Link Accept sent to DUT_REED"
+        # Step 2: REED attaches to the network and MUST NOT attempt to become
+        #         an active router by sending an Address Solicit Request
+
+        pv.verify_attached('REED')
+        pkts.filter_wpan_src64(REED).\
+            filter_coap_request(ADDR_SOL_URI).\
+            filter(lambda p: {
+                              NL_MAC_EXTENDED_ADDRESS_TLV,
+                              NL_STATUS_TLV
+                              } == set(p.coap.tlv.type)
+                  ).\
+            must_not_next()
+
+        # Step 3: REED sends a unicast Link Request message to at lease 3 Routers
+        #
+        #         The Link Request Message MUST contain the following TLVs:
+        #             - Challenge TLV
+        #             - Leader Data TLV
+        #             - Source Address TLV
+        #             - Version TLV
+        #
+        if self.__class__.__name__ == 'Cert_5_2_7_REEDSynchronization_REED':
+            for i in range(0, MLE_MIN_LINKS):
+                pkts.filter_wpan_src64(REED).\
+                    filter_mle_cmd(MLE_LINK_REQUEST).\
+                    filter(lambda p: {
+                                      CHALLENGE_TLV,
+                                      LEADER_DATA_TLV,
+                                      SOURCE_ADDRESS_TLV,
+                                      VERSION_TLV
+                                      } <= set(p.mle.tlv.type)
+                           ).\
+                    must_next()
+
+        # Step 5: Router_1 sends Link Accept message
+        #         The following TLVs MUST be present in the Link Accept message:
+        #             - Link-layer Frame Counter TLV
+        #             - Source Address TLV
+        #             - Response TLV
+        #             - Version TLV
+        #             - MLE Frame Counter TLV (optional)
+        #
+        #         The recipient does not make any change to its local state and
+        #         MUST NOT reply with a Link Accept And Request message.
+
+        if self.__class__.__name__ == 'Cert_5_2_7_REEDSynchronization_ROUTER':
+            pkts.filter_wpan_dst64(REED).\
+                filter_wpan_src64(ROUTER_1).\
+                filter_mle_cmd(MLE_LINK_ACCEPT).\
+                filter(lambda p: {
+                                  LINK_LAYER_FRAME_COUNTER_TLV,
+                                  RESPONSE_TLV,
+                                  SOURCE_ADDRESS_TLV,
+                                  VERSION_TLV
+                                   } <= set(p.mle.tlv.type)
+                       ).\
+                must_next()
+            pkts.filter_wpan_src64(REED).\
+                filter_mle_cmd(MLE_LINK_ACCEPT_AND_REQUEST).\
+                must_not_next()
+
+
+class Cert_5_2_7_REEDSynchronization_REED(Cert_5_2_7_REEDSynchronization_Base):
+    TOPOLOGY = copy.deepcopy(Cert_5_2_7_REEDSynchronization_Base.TOPOLOGY)
+
+
+class Cert_5_2_7_REEDSynchronization_ROUTER(Cert_5_2_7_REEDSynchronization_Base):
+    TOPOLOGY = copy.deepcopy(Cert_5_2_7_REEDSynchronization_Base.TOPOLOGY)
 
 
 if __name__ == '__main__':
