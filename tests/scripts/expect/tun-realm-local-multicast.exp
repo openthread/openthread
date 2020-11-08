@@ -113,6 +113,7 @@ wait_for "state" "child"
 set mleid4 [get_mleid]
 
 switch_node 1
+sleep 10
 
 send "ping ${mleid4}\n"
 expect "Done"
