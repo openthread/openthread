@@ -176,8 +176,6 @@ exit:
 Udp::Udp(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEphemeralPort(kDynamicPortMin)
-    , mReceivers()
-    , mSockets()
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     , mPrevBackboneSockets(nullptr)
 #endif

@@ -125,6 +125,7 @@ modernize-use-equals-delete,\
 modernize-use-nullptr,\
 readability-avoid-const-params-in-decls,\
 readability-make-member-function-const,\
+readability-redundant-member-init,\
 readability-simplify-boolean-expr,\
 readability-static-accessed-through-instance,\
 "

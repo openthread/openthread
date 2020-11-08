@@ -102,13 +102,8 @@ Mac::Mac(Instance &aInstance)
     , mPanChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mSupportedChannelMask(Get<Radio>().GetSupportedChannelMask())
-    , mNetworkName()
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    , mDomainName()
-#endif
     , mScanChannel(Radio::kChannelMin)
     , mScanDuration(0)
-    , mScanChannelMask()
     , mMaxFrameRetriesDirect(kDefaultMaxFrameRetriesDirect)
 #if OPENTHREAD_FTD
     , mMaxFrameRetriesIndirect(kDefaultMaxFrameRetriesIndirect)
@@ -124,9 +119,6 @@ Mac::Mac(Instance &aInstance)
     , mOobFrame(nullptr)
     , mKeyIdMode2FrameCounter(0)
     , mCcaSampleCount(0)
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    , mFilter()
-#endif
 {
     ExtAddress randomExtAddress;
 

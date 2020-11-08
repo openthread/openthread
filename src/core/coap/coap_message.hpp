@@ -902,10 +902,7 @@ public:
      * This constructor initializes the message queue.
      *
      */
-    MessageQueue(void)
-        : ot::MessageQueue()
-    {
-    }
+    MessageQueue(void) = default;
 
     /**
      * This method returns a pointer to the first message.

@@ -276,7 +276,6 @@ protected:
      */
     explicit TimerScheduler(Instance &aInstance)
         : InstanceLocator(aInstance)
-        , mTimerList()
     {
     }
 

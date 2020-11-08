@@ -59,18 +59,10 @@ otHeapCAllocFn ot::Instance::mCAlloc = nullptr;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 Instance::Instance(void)
-    : mTaskletScheduler()
-    , mTimerMilliScheduler(*this)
+    : mTimerMilliScheduler(*this)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     , mTimerMicroScheduler(*this)
 #endif
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    , mHeap()
-#endif
-    , mMbedTls()
-#endif // #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    , mRandomManager()
     , mRadio(*this)
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mNotifier(*this)

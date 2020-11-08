@@ -57,10 +57,6 @@ AddressResolver::AddressResolver(Instance &aInstance)
     , mAddressQuery(UriPath::kAddressQuery, &AddressResolver::HandleAddressQuery, this)
     , mAddressNotification(UriPath::kAddressNotify, &AddressResolver::HandleAddressNotification, this)
     , mCacheEntryPool(aInstance)
-    , mCachedList()
-    , mSnoopedList()
-    , mQueryList()
-    , mQueryRetryList()
     , mIcmpHandler(&AddressResolver::HandleIcmpReceive, this)
 {
     Get<Tmf::TmfAgent>().AddResource(mAddressError);
