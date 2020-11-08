@@ -559,7 +559,7 @@ exit:
 
 otError Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
 {
-    otError   error = OT_ERROR_NONE;
+    otError   error;
     IaAddress option;
 
     SuccessOrExit(error = aMessage.Read(aOffset, option));
@@ -583,9 +583,11 @@ otError Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             idAssociation.mNetifAddress.mValid         = option.GetValidLifetime() != 0;
             idAssociation.mStatus                      = kIaStatusSolicitReplied;
             Get<ThreadNetif>().AddUnicastAddress(idAssociation.mNetifAddress);
-            break;
+            ExitNow(error = OT_ERROR_NONE);
         }
     }
+
+    error = OT_ERROR_NOT_FOUND;
 
 exit:
     return error;
