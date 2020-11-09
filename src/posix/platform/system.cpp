@@ -52,7 +52,16 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     ot::Posix::RadioUrl radioUrl(aPlatformConfig->mRadioUrl);
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    virtualTimeInit(static_cast<uint16_t>(atoi(radioUrl.GetValue("forkpty-arg"))));
+    // The last argument must be the node id
+    {
+        const char *nodeId = nullptr;
+
+        for (const char *arg = nullptr; (arg = radioUrl.GetValue("forkpty-arg", arg)) != nullptr; nodeId = arg)
+        {
+        }
+
+        virtualTimeInit(static_cast<uint16_t>(atoi(nodeId)));
+    }
 #endif
 
     VerifyOrDie(radioUrl.GetPath() != nullptr, OT_EXIT_INVALID_ARGUMENTS);
