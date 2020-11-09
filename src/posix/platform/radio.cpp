@@ -135,7 +135,7 @@ void platformRadioInit(otUrl *aRadioUrl)
         long femLnaGain = strtol(argFemLnaGain, nullptr, 0);
 
         VerifyOrDie(INT8_MIN <= femLnaGain && femLnaGain <= INT8_MAX, OT_EXIT_INVALID_ARGUMENTS);
-        SuccessOrDie(sRadioSpinel.SetFemLnaGain(femLnaGain));
+        SuccessOrDie(sRadioSpinel.SetFemLnaGain(static_cast<int8_t>(femLnaGain)));
     }
 }
 
