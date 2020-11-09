@@ -99,7 +99,8 @@ void platformRadioInit(otUrl *aRadioUrl)
     ot::Posix::RadioUrl &radioUrl       = *static_cast<ot::Posix::RadioUrl *>(aRadioUrl);
     bool                 resetRadio     = (radioUrl.GetValue("no-reset") == nullptr);
     bool                 restoreDataset = (radioUrl.GetValue("ncp-dataset") != nullptr);
-    const char *         argFemLnaGain  = radioUrl.GetValue("fem-lnagain");
+    const char *         urlFemLnaGain  = radioUrl.GetValue("fem-lnagain");
+    uint8_t              femLnaGain     = 0;
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
     uint8_t     channel       = ot::Radio::kChannelMin;
     int8_t      power         = ot::Posix::MaxPowerTable::kPowerDefault;
@@ -130,13 +131,15 @@ void platformRadioInit(otUrl *aRadioUrl)
     SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(radioUrl));
     sRadioSpinel.Init(resetRadio, restoreDataset);
 
-    if (argFemLnaGain != nullptr)
+    if (urlFemLnaGain != nullptr)
     {
-        long femLnaGain = strtol(argFemLnaGain, nullptr, 0);
+        long urlValue = strtol(urlFemLnaGain, nullptr, 0);
 
-        VerifyOrDie(INT8_MIN <= femLnaGain && femLnaGain <= INT8_MAX, OT_EXIT_INVALID_ARGUMENTS);
-        SuccessOrDie(sRadioSpinel.SetFemLnaGain(static_cast<int8_t>(femLnaGain)));
+        VerifyOrDie(INT8_MIN <= urlValue && urlValue <= INT8_MAX, OT_EXIT_INVALID_ARGUMENTS);
+        femLnaGain = static_cast<int8_t>(urlValue);
     }
+
+    sRadioSpinel.SetFemLnaGain(femLnaGain);
 }
 
 void platformRadioDeinit(void)
