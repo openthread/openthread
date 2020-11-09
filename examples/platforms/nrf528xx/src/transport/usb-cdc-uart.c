@@ -285,6 +285,8 @@ void nrf5UartInit(void)
 
     ret = app_usbd_power_events_enable();
     assert(ret == NRF_SUCCESS);
+
+    OT_UNUSED_VARIABLE(ret);
 }
 
 void nrf5UartDeinit(void)

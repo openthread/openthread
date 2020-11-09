@@ -47,7 +47,6 @@ namespace Ip6 {
 
 Icmp::Icmp(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mHandlers()
     , mEchoSequence(1)
     , mEchoMode(OT_ICMP6_ECHO_HANDLER_ALL)
 {

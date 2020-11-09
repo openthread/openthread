@@ -1088,6 +1088,28 @@ otError Mle::AppendMleFrameCounter(Message &aMessage)
     return Tlv::Append<MleFrameCounterTlv>(aMessage, Get<KeyManager>().GetMleFrameCounter());
 }
 
+otError Mle::ReadFrameCounters(const Message &aMessage, uint32_t &aLinkFrameCounter, uint32_t &aMleFrameCounter) const
+{
+    otError error;
+
+    SuccessOrExit(error = Tlv::Find<LinkFrameCounterTlv>(aMessage, aLinkFrameCounter));
+
+    switch (Tlv::Find<MleFrameCounterTlv>(aMessage, aMleFrameCounter))
+    {
+    case OT_ERROR_NONE:
+        break;
+    case OT_ERROR_NOT_FOUND:
+        aMleFrameCounter = aLinkFrameCounter;
+        break;
+    default:
+        error = OT_ERROR_PARSE;
+        break;
+    }
+
+exit:
+    return error;
+}
+
 otError Mle::AppendAddress16(Message &aMessage, uint16_t aRloc16)
 {
     return Tlv::Append<Address16Tlv>(aMessage, aRloc16);
@@ -3278,20 +3300,8 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
                                                     static_cast<uint8_t>(version)));
     }
 
-    // Link Frame Counter
-    SuccessOrExit(error = Tlv::Find<LinkFrameCounterTlv>(aMessage, linkFrameCounter));
-
-    // Mle Frame Counter
-    switch (Tlv::Find<MleFrameCounterTlv>(aMessage, mleFrameCounter))
-    {
-    case OT_ERROR_NONE:
-        break;
-    case OT_ERROR_NOT_FOUND:
-        mleFrameCounter = linkFrameCounter;
-        break;
-    default:
-        ExitNow(error = OT_ERROR_PARSE);
-    }
+    // Link/MLE Frame Counters
+    SuccessOrExit(error = ReadFrameCounters(aMessage, linkFrameCounter, mleFrameCounter));
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
@@ -3603,18 +3613,7 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
     switch (mRole)
     {
     case kRoleDetached:
-        SuccessOrExit(error = Tlv::Find<LinkFrameCounterTlv>(aMessage, linkFrameCounter));
-
-        switch (Tlv::Find<MleFrameCounterTlv>(aMessage, mleFrameCounter))
-        {
-        case OT_ERROR_NONE:
-            break;
-        case OT_ERROR_NOT_FOUND:
-            mleFrameCounter = linkFrameCounter;
-            break;
-        default:
-            ExitNow(error = OT_ERROR_PARSE);
-        }
+        SuccessOrExit(error = ReadFrameCounters(aMessage, linkFrameCounter, mleFrameCounter));
 
         mParent.SetLinkFrameCounter(linkFrameCounter);
         mParent.SetLinkAckFrameCounter(linkFrameCounter);

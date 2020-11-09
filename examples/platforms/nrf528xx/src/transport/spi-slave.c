@@ -148,6 +148,10 @@ otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aComplete
 
     error = nrfx_spis_init(&sSpiSlaveInstance, &config, spisEventHandler, NULL);
     assert(error == NRFX_SUCCESS);
+    if (error != NRFX_SUCCESS)
+    {
+        result = OT_ERROR_FAILED;
+    }
 
     // Set up Host IRQ pin.
     nrf_gpio_pin_set(SPIS_PIN_HOST_IRQ);

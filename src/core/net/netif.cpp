@@ -105,21 +105,15 @@ const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress = {
 
 Netif::Netif(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mUnicastAddresses()
-    , mMulticastAddresses()
     , mMulticastPromiscuous(false)
     , mAddressCallback(nullptr)
     , mAddressCallbackContext(nullptr)
-    , mExtUnicastAddressPool()
-    , mExtMulticastAddressPool()
 {
 }
 
 bool Netif::IsMulticastSubscribed(const Address &aAddress) const
 {
-    const NetifMulticastAddress *prev;
-
-    return mMulticastAddresses.FindMatching(aAddress, prev) != nullptr;
+    return mMulticastAddresses.ContainsMatching(aAddress);
 }
 
 void Netif::SubscribeAllNodesMulticast(void)
@@ -476,11 +470,10 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
 {
     otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
-    NetifUnicastAddress *prev;
 
     VerifyOrExit(!aAddress.GetAddress().IsMulticast(), error = OT_ERROR_INVALID_ARGS);
 
-    entry = mUnicastAddresses.FindMatching(aAddress.GetAddress(), prev);
+    entry = mUnicastAddresses.FindMatching(aAddress.GetAddress());
 
     if (entry != nullptr)
     {
@@ -542,9 +535,7 @@ void Netif::RemoveAllExternalUnicastAddresses(void)
 
 bool Netif::HasUnicastAddress(const Address &aAddress) const
 {
-    const NetifUnicastAddress *prev;
-
-    return mUnicastAddresses.FindMatching(aAddress, prev) != nullptr;
+    return mUnicastAddresses.ContainsMatching(aAddress);
 }
 
 bool Netif::IsUnicastAddressExternal(const NetifUnicastAddress &aAddress) const

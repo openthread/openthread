@@ -32,44 +32,71 @@ import unittest
 import config
 import mle
 import thread_cert
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_ID_REQUEST, SOURCE_ADDRESS_TLV, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, TLV_REQUEST_TLV, SCAN_MASK_TLV, CONNECTIVITY_TLV, LINK_MARGIN_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV
+from pktverify.packet_verifier import PacketVerifier
+from pktverify.null_field import nullField
 
 LEADER = 1
 ROUTER1 = 2
-REED0 = 3
-REED1 = 4
+REED1 = 3
+REED2 = 4
 ROUTER2 = 5
+
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of this test case is to verify that the DUT will
+# pick REED_1 as its parent because of its better connectivity
+#
+# Test Topology:
+# -------------
+#     Leader--Router1
+#       /  \     /
+# REED2  REED1
+#       \  /
+#      Router2[DUT]
+#
+# DUT Types:
+# ----------
+#  Router
 
 
 class Cert_5_1_09_REEDAttachConnectivity(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
-            'allowlist': [ROUTER1, REED0, REED1]
+            'allowlist': [ROUTER1, REED1, REED2]
         },
         ROUTER1: {
+            'name': 'ROUTER_1',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER, REED1]
         },
-        REED0: {
-            'mode': 'rdn',
-            'panid': 0xface,
-            'router_upgrade_threshold': 0,
-            'allowlist': [LEADER, ROUTER2]
-        },
         REED1: {
+            'name': 'REED_1',
             'mode': 'rdn',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
             'allowlist': [LEADER, ROUTER1, ROUTER2]
         },
+        REED2: {
+            'name': 'REED_2',
+            'mode': 'rdn',
+            'panid': 0xface,
+            'router_upgrade_threshold': 0,
+            'allowlist': [LEADER, ROUTER2]
+        },
         ROUTER2: {
+            'name': 'ROUTER_2',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'allowlist': [REED0, REED1]
+            'allowlist': [REED1, REED2]
         },
     }
 
@@ -84,8 +111,8 @@ class Cert_5_1_09_REEDAttachConnectivity(thread_cert.TestCase):
         self.simulator.go(5)
 
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
-        self.assertEqual(self.nodes[REED0].get_state(), 'child')
         self.assertEqual(self.nodes[REED1].get_state(), 'child')
+        self.assertEqual(self.nodes[REED2].get_state(), 'child')
 
         self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
 
@@ -94,65 +121,160 @@ class Cert_5_1_09_REEDAttachConnectivity(thread_cert.TestCase):
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
         self.assertEqual(self.nodes[REED1].get_state(), 'router')
 
-        leader_messages = self.simulator.get_messages_sent_by(LEADER)
-        router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
-        reed0_messages = self.simulator.get_messages_sent_by(REED0)
-        reed1_messages = self.simulator.get_messages_sent_by(REED1)
-        router2_messages = self.simulator.get_messages_sent_by(ROUTER2)
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
 
-        # 1 - Leader, Router1, REED1, REED2
-        leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
-        router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        LEADER = pv.vars['LEADER']
+        REED_1 = pv.vars['REED_1']
+        ROUTER_1 = pv.vars['ROUTER_1']
+        ROUTER_2 = pv.vars['ROUTER_2']
 
-        # 2 - Router2
-        msg = router2_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        msg.assertSentWithHopLimit(255)
-        msg.assertSentToDestinationAddress("ff02::2")
-        msg.assertMleMessageContainsTlv(mle.Mode)
-        msg.assertMleMessageContainsTlv(mle.Challenge)
-        msg.assertMleMessageContainsTlv(mle.ScanMask)
-        msg.assertMleMessageContainsTlv(mle.Version)
+        # Step 1: Verify ROUTER_1 and Leader are sending MLE advertisements.
+        pkts.filter_wpan_src64(LEADER).\
+                   filter_mle_cmd(MLE_ADVERTISEMENT).\
+                   must_next()
+        pv.verify_attached('ROUTER_1')
 
-        scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
-        self.assertEqual(1, scan_mask_tlv.router)
-        self.assertEqual(0, scan_mask_tlv.end_device)
+        # Step 3: The DUT sends a MLE Parent Request with an IP hop limit of
+        #         255 to the Link-Local All Routers multicast address (FF02::2).
+        #         The following TLVs MUST be present in the MLE Parent Request:
+        #            - Challenge TLV
+        #            - Mode TLV
+        #            - Scan Mask TLV
+        #                If the DUT sends multiple MLE Parent Requests
+        #                    - The first one MUST be sent only to all Routers
+        #                    - Subsequent ones MAY be sent to all Routers and REEDS
+        #            -  Version TLV
+        #         If the first MLE Parent Request was sent to all Routers and
+        #         REEDS, the test fails.
 
-        # 4 - Router2
-        msg = router2_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        msg.assertSentWithHopLimit(255)
-        msg.assertSentToDestinationAddress("ff02::2")
-        msg.assertMleMessageContainsTlv(mle.Mode)
-        msg.assertMleMessageContainsTlv(mle.Challenge)
-        msg.assertMleMessageContainsTlv(mle.ScanMask)
-        msg.assertMleMessageContainsTlv(mle.Version)
+        pkts.filter_wpan_src64(ROUTER_2).\
+            filter_LLARMA().\
+            filter_mle_cmd(MLE_PARENT_REQUEST).\
+            filter(lambda p: {
+                              CHALLENGE_TLV,
+                              MODE_TLV,
+                              SCAN_MASK_TLV,
+                              VERSION_TLV
+                              } <= set(p.mle.tlv.type) and\
+                   p.ipv6.hlim == 255 and\
+                   p.mle.tlv.scan_mask.r == 1 and\
+                   p.mle.tlv.scan_mask.e == 0
+                   ).\
+            must_next()
+        lstart = pkts.index
 
-        scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
-        self.assertEqual(1, scan_mask_tlv.router)
-        self.assertEqual(1, scan_mask_tlv.end_device)
+        # Step 5: The DUT MUST send a MLE Parent Request with an IP hop limit of
+        #         255 to the Link-Local All Routers multicast address (FF02::2).
+        #         The following TLVs MUST be present in the MLE Parent Request:
+        #            - Challenge TLV
+        #            - Mode TLV
+        #            - Scan Mask TLV
+        #               - The Scan Mask TLV MUST be sent to Routers And REEDs
+        #            -  Version TLV
+        #
+        #         In securing the first three messages of the attaching process,
+        #         the full four-byte key sequence number MUST be included in
+        #         the Auxiliary Security Header used for MLE security.
+        #
+        #         To send the full four-byte key sequence number, the Key
+        #         Identifier Mode of the Security Control Field SHALL be set to
+        #         ‘0x02’, indicating the presence of a four-byte Key Source,
+        #         which SHALL contain the four-byte key sequence number in
+        #         network byte order.
 
-        # 5 - REED1, REED2
-        msg = reed0_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
-        connectivity_tlv_reed0 = msg.get_mle_message_tlv(mle.Connectivity)
+        pkts.filter_wpan_src64(ROUTER_2).\
+            filter_LLARMA().\
+            filter_mle_cmd(MLE_PARENT_REQUEST).\
+            filter(lambda p: {
+                              CHALLENGE_TLV,
+                              MODE_TLV,
+                              SCAN_MASK_TLV,
+                              VERSION_TLV
+                              } <= set(p.mle.tlv.type) and\
+                   p.ipv6.hlim == 255 and\
+                   p.mle.tlv.scan_mask.r == 1 and\
+                   p.mle.tlv.scan_mask.e == 1 and\
+                   p.wpan.aux_sec.key_id_mode == 0x2
+                   ).\
+            must_next()
+        lend = pkts.index
 
-        msg = reed1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
-        connectivity_tlv_reed1 = msg.get_mle_message_tlv(mle.Connectivity)
+        # Step 4: REED_1 and REED_2 no response to Parent Request meant for all routers.
 
-        self.assertGreater(
-            connectivity_tlv_reed1.link_quality_3,
-            connectivity_tlv_reed0.link_quality_3,
-        )
+        for i in (1, 2):
+            pkts.range(lstart, lend).\
+                filter_wpan_src64(pv.vars['REED_%d' % i]).\
+                filter_wpan_dst64(ROUTER_2).\
+                filter_mle_cmd(MLE_PARENT_RESPONSE).\
+                must_not_next()
 
-        # 6 - Router2
-        msg = router2_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        msg.assertSentToNode(self.nodes[REED1])
-        msg.assertMleMessageContainsTlv(mle.Response)
-        msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
-        msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
-        msg.assertMleMessageContainsTlv(mle.Mode)
-        msg.assertMleMessageContainsTlv(mle.Timeout)
-        msg.assertMleMessageContainsTlv(mle.Version)
-        msg.assertMleMessageContainsTlv(mle.TlvRequest)
-        msg.assertMleMessageDoesNotContainTlv(mle.AddressRegistration)
+        # Step 6: REED_1 and REED_2 respond with a MLE Parent Response.
+        #         The following TLVs MUST be present in the MLE Parent Response:
+        #             - Challenge TLV
+        #             - Connectivity TLV
+        #             - Leader Data TLV
+        #             - Link-layer Frame Counter TLV
+        #             - Link Margin TLV
+        #             - Response TLV
+        #             - Source Address
+        #             - Version TLV
+        #             - MLE Frame Counter TLV (optional)
+
+        for i in (1, 2):
+            with pkts.save_index():
+                pkts.filter_wpan_src64(pv.vars['REED_%d' % i]).\
+                    filter_wpan_dst64(ROUTER_2).\
+                    filter_mle_cmd(MLE_PARENT_RESPONSE).\
+                    filter(lambda p: {
+                                      CHALLENGE_TLV,
+                                      CONNECTIVITY_TLV,
+                                      LEADER_DATA_TLV,
+                                      LINK_LAYER_FRAME_COUNTER_TLV,
+                                      LINK_MARGIN_TLV,
+                                      RESPONSE_TLV,
+                                      SOURCE_ADDRESS_TLV,
+                                      VERSION_TLV
+                                    } <= set(p.mle.tlv.type) and\
+                           p.wpan.aux_sec.key_id_mode == 0x2
+                           ).\
+                    must_next()
+
+        # Step 7: DUT sends a MLE Child ID Request to REED_1.
+        #         The following TLVs MUST be present in the MLE Child ID Request:
+        #             - Link-layer Frame Counter TLV
+        #             - Mode TLV
+        #             - Response TLV
+        #             - Timeout TLV
+        #             - TLV Request TLV
+        #                 - Address16 TLV
+        #                 - Network Data TLV
+        #                 - Route64 TLV (optional)
+        #             - Version TLV
+        #             - MLE Frame Counter TLV (optional)
+        #         The following TLV MUST NOT be present in the MLE Child ID Request:
+        #             - Address Registration TLV
+
+        _pkt = pkts.filter_wpan_src64(ROUTER_2).\
+            filter_wpan_dst64(REED_1).\
+            filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
+            filter(lambda p: {
+                              LINK_LAYER_FRAME_COUNTER_TLV,
+                              MODE_TLV,
+                              RESPONSE_TLV,
+                              TIMEOUT_TLV,
+                              TLV_REQUEST_TLV,
+                              ADDRESS16_TLV,
+                              NETWORK_DATA_TLV,
+                              VERSION_TLV
+                    } <= set(p.mle.tlv.type) and\
+                   p.mle.tlv.addr16 is nullField and\
+                   p.thread_nwd.tlv.type is nullField and\
+                   p.wpan.aux_sec.key_id_mode == 0x2
+                   ).\
+            must_next()
+        _pkt.must_not_verify(lambda p: (ADDRESS_REGISTRATION_TLV) in p.mle.tlv.type)
 
 
 if __name__ == '__main__':
