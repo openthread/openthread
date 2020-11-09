@@ -139,7 +139,7 @@ void platformRadioInit(otUrl *aRadioUrl)
         femLnaGain = static_cast<int8_t>(urlValue);
     }
 
-    sRadioSpinel.SetFemLnaGain(femLnaGain);
+    SuccessOrDie(sRadioSpinel.SetFemLnaGain(femLnaGain));
 }
 
 void platformRadioDeinit(void)

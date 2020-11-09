@@ -89,7 +89,8 @@ const char *otSysGetRadioUrlHelpString(void)
 
     return "RadioURL:\n" OT_RADIO_URL_HELP_BUS OT_RADIO_URL_HELP_MAX_POWER_TABLE
            "    no-reset                      Do not send Spinel reset command to RCP on initialization.\n"
-           "    ncp-dataset                   Retrieve dataset from ncp.\n";
+           "    ncp-dataset                   Retrieve dataset from ncp.\n"
+           "    fem-lnagain[=dbm]             Set the Rx LNA gain in dBm of the external FEM.\n";
 }
 
 namespace ot {
