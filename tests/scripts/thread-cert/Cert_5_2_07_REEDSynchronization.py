@@ -35,7 +35,7 @@ import config
 import ipv6
 import mle
 import thread_cert
-from pktverify.consts import MLE_ADVERTISEMENT, ADDR_SOL_URI, MLE_LINK_REQUEST, MLE_LINK_ACCEPT, MLE_LINK_ACCEPT_AND_REQUEST, SOURCE_ADDRESS_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, TLV_REQUEST_TLV, VERSION_TLV
+from pktverify.consts import ADDR_SOL_URI, MLE_LINK_REQUEST, MLE_LINK_ACCEPT, MLE_LINK_ACCEPT_AND_REQUEST, SOURCE_ADDRESS_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, LEADER_DATA_TLV, VERSION_TLV
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.null_field import nullField
 
@@ -56,8 +56,8 @@ MLE_MIN_LINKS = 3
 #
 # Test Topology:
 # -------------
-#  Router-15 - Leader
-#            /     \
+#  Router_15 - Leader
+#      ...    /     \
 #         Router_n  Router_1(DUT)
 #          |
 #      REED(DUT)
@@ -252,7 +252,7 @@ class Cert_5_2_7_REEDSynchronization_Base(thread_cert.TestCase):
                            ).\
                     must_next()
 
-        # Step 5: Router_1 sends Link Accept message
+        # Step 4: Router_1 sends Link Accept message
         #         The following TLVs MUST be present in the Link Accept message:
         #             - Link-layer Frame Counter TLV
         #             - Source Address TLV
