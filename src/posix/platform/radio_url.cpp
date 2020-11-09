@@ -66,14 +66,14 @@ const char *otSysGetRadioUrlHelpString(void)
 #else
 
 #define OT_RADIO_URL_HELP_BUS                                                                        \
+    "    forkpty-arg[=argument string]  Command line arguments for subprocess, can be repeated.\n"   \
     "    spinel+hdlc+uart://${PATH_TO_UART_DEVICE}?${Parameters} for real uart device\n"             \
     "    spinel+hdlc+forkpty://${PATH_TO_UART_DEVICE}?${Parameters} for forking a pty subprocess.\n" \
     "Parameters:\n"                                                                                  \
     "    uart-parity[=even|odd]         Uart parity config, optional.\n"                             \
     "    uart-stop[=number-of-bits]     Uart stop bit, default is 1.\n"                              \
     "    uart-baudrate[=baudrate]       Uart baud rate, default is 115200.\n"                        \
-    "    uart-flow-control              Enable flow control, disabled by default.\n"                 \
-    "    forkpty-arg[=argument string]  Command line arguments for subprocess, can be repeated.\n"
+    "    uart-flow-control              Enable flow control, disabled by default.\n"
 
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
 
@@ -88,8 +88,9 @@ const char *otSysGetRadioUrlHelpString(void)
 #endif
 
     return "RadioURL:\n" OT_RADIO_URL_HELP_BUS OT_RADIO_URL_HELP_MAX_POWER_TABLE
-           "    no-reset                      Do not send Spinel reset command to RCP on initialization.\n"
-           "    ncp-dataset                   Retrieve dataset from ncp.\n";
+           "    fem-lnagain[=dbm]             Set the Rx LNA gain in dBm of the external FEM.\n"
+           "    ncp-dataset                   Retrieve dataset from ncp.\n"
+           "    no-reset                      Do not send Spinel reset command to RCP on initialization.\n";
 }
 
 namespace ot {
