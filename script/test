@@ -48,7 +48,7 @@ readonly VERBOSE="${VERBOSE:-0}"
 build_simulation()
 {
     local version="$1"
-    local options=("-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON" "-DOT_REFERENCE_DEVICE=ON")
+    local options=("-DOT_MESSAGE_USE_HEAP=ON" "-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON" "-DOT_REFERENCE_DEVICE=ON")
 
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_DUA=ON")

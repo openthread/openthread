@@ -61,6 +61,7 @@ LOG_OUTPUT          ?= APP
 endif
 LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
+MESSAGE_USE_HEAP    ?= 0
 MLE_LONG_ROUTES     ?= 0
 MLR                 ?= 0
 MTD_NETDIAG         ?= 0
@@ -212,6 +213,10 @@ endif
 
 ifeq ($(MAC_FILTER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1
+endif
+
+ifeq ($(MESSAGE_USE_HEAP),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE=1
 endif
 
 # Enable MLE long routes extension (experimental, breaks Thread conformance)
