@@ -2138,10 +2138,11 @@ uint32_t RadioSpinel<InterfaceType, ProcessContextType>::GetBusSpeed(void) const
 template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpUnexpectedReset(spinel_status_t aStatus)
 {
+    otLogCritPlat("Unexpected RCP reset: %s", spinel_status_to_cstr(aStatus));
+
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_ENABLE
     mRcpFailed = true;
 #else
-    otLogCritPlat("Unexpected RCP reset: %s", spinel_status_to_cstr(aStatus));
     DieNow(OT_EXIT_RADIO_SPINEL_RESET);
 #endif
 }
