@@ -790,7 +790,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleValueIs(spinel_prop_k
         {
             if (IsEnabled())
             {
-                HandleRcpUnexpectedReset();
+                HandleRcpUnexpectedReset(status);
                 ExitNow();
             }
 
