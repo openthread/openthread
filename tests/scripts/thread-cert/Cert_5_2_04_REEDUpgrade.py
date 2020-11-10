@@ -215,6 +215,7 @@ class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
         self.simulator.go(ROUTER_SELECTION_JITTER)
 
         self.collect_rloc16s()
+        self.collect_rlocs()
 
         self.simulator.go(REED_ADVERTISEMENT_INTERVAL + REED_ADVERTISEMENT_MAX_JITTER)
 
@@ -230,6 +231,7 @@ class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
         pv.summary.show()
 
         LEADER_RLOC16 = pv.vars['LEADER_RLOC16']
+        LEADER_RLOC = pv.vars['LEADER_RLOC']
         LEADER_MLEID= pv.vars['LEADER_MLEID']
         REED = pv.vars['REED']
         REED_RLOC16 = pv.vars['REED_RLOC16']
@@ -366,14 +368,14 @@ class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
         #             - Status TLV
 
         pkts.filter_wpan_src64(REED).\
-            filter_wpan_dst16(LEADER_RLOC16).\
+            filter_ipv6_dst(LEADER_RLOC).\
             filter_coap_request(ADDR_SOL_URI).\
             filter(lambda p: {
                               NL_MAC_EXTENDED_ADDRESS_TLV,
                               NL_STATUS_TLV
-                              } == set(p.coap.tlv.type)
+                              } <= set(p.coap.tlv.type)
                    ).\
-            must_not_next()
+            must_next()
 
         # Step 10: REED Sends a Link Request Message.
         #          The Link Request Message MUST be multicast and contain
