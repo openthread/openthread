@@ -107,9 +107,7 @@ static otInstance *  sInstance = NULL;
 static otRadioFrame sAckFrame;
 static bool         sAckedWithFramePending;
 
-#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_POWER_CUSTOM_SOURCE
 static int8_t sDefaultTxPower;
-#endif
 static int8_t sLnaGain = 0;
 
 static uint32_t sEnergyDetectionTime;
@@ -453,9 +451,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         nrf5FemEnable();
     }
 
-#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_POWER_CUSTOM_SOURCE
     nrf_802154_tx_power_set(sDefaultTxPower);
-#endif
 
     result = nrf_802154_receive();
     clearPendingEvents();
@@ -679,7 +675,6 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     return OT_ERROR_NONE;
 }
 
-#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_POWER_CUSTOM_SOURCE
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -707,7 +702,6 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 
     return OT_ERROR_NONE;
 }
-#endif // !OPENTHREAD_CONFIG_ENABLE_PLATFORM_POWER_CUSTOM_SOURCE
 
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {
