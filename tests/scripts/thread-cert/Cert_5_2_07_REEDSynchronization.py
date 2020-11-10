@@ -69,6 +69,8 @@ MLE_MIN_LINKS = 3
 
 
 class Cert_5_2_7_REEDSynchronization_Base(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
