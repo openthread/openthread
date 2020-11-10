@@ -70,6 +70,7 @@ ROUTER_SELECTION_JITTER = 1
 # ----------
 #  REED
 
+
 class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
@@ -232,12 +233,12 @@ class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
 
         LEADER_RLOC16 = pv.vars['LEADER_RLOC16']
         LEADER_RLOC = pv.vars['LEADER_RLOC']
-        LEADER_MLEID= pv.vars['LEADER_MLEID']
+        LEADER_MLEID = pv.vars['LEADER_MLEID']
         REED = pv.vars['REED']
         REED_RLOC16 = pv.vars['REED_RLOC16']
         MED = pv.vars['MED']
         MED_RLOC16 = pv.vars['MED_RLOC16']
-        MED_MLEID= pv.vars['MED_MLEID']
+        MED_MLEID = pv.vars['MED_MLEID']
 
         # Step 1: Verify topology is formed correctly except REED.
 

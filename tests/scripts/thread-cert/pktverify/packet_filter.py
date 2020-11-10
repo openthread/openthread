@@ -354,10 +354,7 @@ class PacketFilter(object):
     def filter_mle_advertisement(self, role, **kwargs):
         assert role in ('Leader', 'Router', 'REED'), role
 
-        tlv_set = {
-            consts.LEADER_DATA_TLV,
-            consts.SOURCE_ADDRESS_TLV
-        }
+        tlv_set = {consts.LEADER_DATA_TLV, consts.SOURCE_ADDRESS_TLV}
 
         if role != 'REED':
             tlv_set.add(consts.ROUTE64_TLV)
