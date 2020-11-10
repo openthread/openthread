@@ -537,11 +537,11 @@ static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsA
     }
 }
 
-static void processStateChange(otChangedFlags aFlags, void *aContext)
+void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
 {
     if (OT_CHANGED_THREAD_NETIF_STATE & aFlags)
     {
-        UpdateLink(static_cast<otInstance *>(aContext));
+        UpdateLink(aInstance);
     }
 }
 
@@ -1500,7 +1500,6 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
     otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
     otIp6SetReceiveCallback(aInstance, processReceive, aInstance);
     otIp6SetAddressCallback(aInstance, processAddressChange, aInstance);
-    SuccessOrDie(otSetStateChangedCallback(aInstance, processStateChange, aInstance));
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
     otIp6SetMulticastPromiscuousEnabled(aInstance, true);
 #endif

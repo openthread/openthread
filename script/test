@@ -230,7 +230,7 @@ do_build_otbr_docker()
     local otdir
     local otbrdir
     local otbr_options="-DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF"
-    local otbr_commit=${OTBR_COMMIT:-8d0b6ccd857441208f56ed29050a9367d8d74a62} # [backbone-router] implement Backbone ND proxy #581
+    local otbr_commit=${OTBR_COMMIT:-5092e71b06b23f78f2288fcc5386bce3a8986bb1} # [backbone-router] remove MLR multicast routing using smcroute #604
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
