@@ -41,11 +41,8 @@ _HEADERS = {'Accept': 'application/vnd.github.v3+json', 'Authorization': f'Beare
 def _main():
     logging.getLogger().setLevel(logging.DEBUG)
 
-    artifact_count = len(os.listdir('coverage/'))
-    logging.info('Found %d artifacts')
-
     while True:
-        url = f'https://api.github.com/repos/openthread/openthread/actions/runs/{_GITHUB_RUN_ID}/artifacts'
+        url = f'https://api.github.com/repos/openthread/openthread/actions/artifacts'
         logging.info('GET %s', url)
         with urllib.request.urlopen(urllib.request.Request(
                 url=url,
@@ -54,26 +51,24 @@ def _main():
             result = json.loads(response.read().decode())
             logging.debug("Result: %s", result)
 
-            artifacts = result['artifacts']
-            if len(artifacts) < artifact_count:
-                logging.info('Waiting for artifacts...')
-                time.sleep(10)
+        artifacts = [artifact for artifact in result['artifacts'] if artifact['name'].startswith('cov-')]
+        if not artifacts:
+            break
+
+        for artifact in artifacts:
+            if not artifact['name'].startswith('cov-'):
                 continue
 
-            for artifact in artifacts:
-                if not artifact['name'].startswith('cov-'):
-                    continue
+            artifact_id = artifact['id']
+            url = f'https://api.github.com/repos/openthread/openthread/actions/artifacts/{artifact_id}'
+            logging.info('DELETE %s', url)
+            with urllib.request.urlopen(urllib.request.Request(
+                    url=url,
+                    method='DELETE',
+            )):
+                pass
 
-                artifact_id = artifact['id']
-                url = f'https://api.github.com/repos/openthread/openthread/actions/artifacts/{artifact_id}'
-                logging.info('DELETE %s', url)
-                with urllib.request.urlopen(urllib.request.Request(
-                        url=url,
-                        method='DELETE',
-                )):
-                    pass
-
-            break
+        break
 
 
 if __name__ == "__main__":
