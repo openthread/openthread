@@ -116,4 +116,14 @@
 
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_LOG_MAX_SIZE
+ *
+ * The maximum log string size (number of chars).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_MAX_SIZE
+#define OPENTHREAD_CONFIG_LOG_MAX_SIZE 1024
+#endif
+
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_
