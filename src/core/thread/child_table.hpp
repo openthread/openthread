@@ -234,24 +234,24 @@ public:
      * This method searches the child table for a `Child` with a given extended address also matching a given state
      * filter.
      *
-     * @param[in]  aAddress A reference to an extended address.
-     * @param[in]  aFilter  A child state filter.
+     * @param[in]  aExtAddress A reference to an extended address.
+     * @param[in]  aFilter     A child state filter.
      *
      * @returns  A pointer to the `Child` entry if one is found, or `nullptr` otherwise.
      *
      */
-    Child *FindChild(const Mac::ExtAddress &aAddress, Child::StateFilter aFilter);
+    Child *FindChild(const Mac::ExtAddress &aExtAddress, Child::StateFilter aFilter);
 
     /**
      * This method searches the child table for a `Child` with a given address also matching a given state filter.
      *
-     * @param[in]  aAddress A reference to a MAC address.
-     * @param[in]  aFilter  A child state filter.
+     * @param[in]  aMacAddress A reference to a MAC address.
+     * @param[in]  aFilter     A child state filter.
      *
      * @returns  A pointer to the `Child` entry if one is found, or `nullptr` otherwise.
      *
      */
-    Child *FindChild(const Mac::Address &aAddress, Child::StateFilter aFilter);
+    Child *FindChild(const Mac::Address &aMacAddress, Child::StateFilter aFilter);
 
     /**
      * This method indicates whether the child table contains any child matching a given state filter.
@@ -375,7 +375,7 @@ public:
      * @retval FALSE  If the child table does not contain any sleepy child with @p aIp6Address.
      *
      */
-    bool HasSleepyChildWithAddress(const Ip6::Address &aIp6ddress) const;
+    bool HasSleepyChildWithAddress(const Ip6::Address &aIp6Address) const;
 
 private:
     enum

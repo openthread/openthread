@@ -184,16 +184,16 @@ template otError Tlv::ReadUintTlv<uint8_t>(const Message &aMessage, uint16_t aOf
 template otError Tlv::ReadUintTlv<uint16_t>(const Message &aMessage, uint16_t aOffset, uint16_t &aValue);
 template otError Tlv::ReadUintTlv<uint32_t>(const Message &aMessage, uint16_t aOffset, uint32_t &aValue);
 
-otError Tlv::ReadTlv(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aLength)
+otError Tlv::ReadTlv(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength)
 {
     otError error = OT_ERROR_NONE;
     Tlv     tlv;
 
     SuccessOrExit(error = aMessage.Read(aOffset, tlv));
-    VerifyOrExit(!tlv.IsExtended() && (tlv.GetLength() >= aLength), error = OT_ERROR_PARSE);
+    VerifyOrExit(!tlv.IsExtended() && (tlv.GetLength() >= aMinLength), error = OT_ERROR_PARSE);
     VerifyOrExit(tlv.GetSize() + aOffset <= aMessage.GetLength(), error = OT_ERROR_PARSE);
 
-    aMessage.ReadBytes(aOffset + sizeof(Tlv), aValue, aLength);
+    aMessage.ReadBytes(aOffset + sizeof(Tlv), aValue, aMinLength);
 
 exit:
     return error;

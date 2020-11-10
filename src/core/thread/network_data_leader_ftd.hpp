@@ -211,13 +211,13 @@ private:
 
     otError AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags);
     otError AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags);
-    otError AddBorderRouter(const BorderRouterTlv &aBorderRouter, PrefixTlv &aDstPrefix, ChangedFlags &aFlags);
+    otError AddBorderRouter(const BorderRouterTlv &aBorderRouter, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags);
     otError AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags);
     otError AddServer(const ServerTlv &aServer, ServiceTlv &aDstService, ChangedFlags &aChangedFlags);
 
     otError AllocateServiceId(uint8_t &aServiceId) const;
 
-    otError AllocateContextId(uint8_t &aConextId);
+    otError AllocateContextId(uint8_t &aContextId);
     void    FreeContextId(uint8_t aContextId);
     void    StartContextReuseTimer(uint8_t aContextId);
     void    StopContextReuseTimer(uint8_t aContextId);

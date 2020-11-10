@@ -484,38 +484,38 @@ exit:
     return error;
 }
 
-void Commissioner::Joiner::CopyToJoinerInfo(otJoinerInfo &aInfo) const
+void Commissioner::Joiner::CopyToJoinerInfo(otJoinerInfo &aJoiner) const
 {
-    memset(&aInfo, 0, sizeof(aInfo));
+    memset(&aJoiner, 0, sizeof(aJoiner));
 
     switch (mType)
     {
     case kTypeAny:
-        aInfo.mType = OT_JOINER_INFO_TYPE_ANY;
+        aJoiner.mType = OT_JOINER_INFO_TYPE_ANY;
         break;
 
     case kTypeEui64:
-        aInfo.mType            = OT_JOINER_INFO_TYPE_EUI64;
-        aInfo.mSharedId.mEui64 = mSharedId.mEui64;
+        aJoiner.mType            = OT_JOINER_INFO_TYPE_EUI64;
+        aJoiner.mSharedId.mEui64 = mSharedId.mEui64;
         break;
 
     case kTypeDiscerner:
-        aInfo.mType                = OT_JOINER_INFO_TYPE_DISCERNER;
-        aInfo.mSharedId.mDiscerner = mSharedId.mDiscerner;
+        aJoiner.mType                = OT_JOINER_INFO_TYPE_DISCERNER;
+        aJoiner.mSharedId.mDiscerner = mSharedId.mDiscerner;
         break;
 
     case kTypeUnused:
         ExitNow();
     }
 
-    aInfo.mPskd           = mPskd;
-    aInfo.mExpirationTime = mExpirationTime - TimerMilli::GetNow();
+    aJoiner.mPskd           = mPskd;
+    aJoiner.mExpirationTime = mExpirationTime - TimerMilli::GetNow();
 
 exit:
     return;
 }
 
-otError Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aInfo) const
+otError Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoinerInfo) const
 {
     otError error = OT_ERROR_NONE;
 
@@ -525,7 +525,7 @@ otError Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aInfo
 
         if (joiner.mType != Joiner::kTypeUnused)
         {
-            joiner.CopyToJoinerInfo(aInfo);
+            joiner.CopyToJoinerInfo(aJoinerInfo);
             ExitNow();
         }
     }

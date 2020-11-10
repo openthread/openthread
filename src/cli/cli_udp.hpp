@@ -90,7 +90,7 @@ private:
     otError ProcessOpen(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessSend(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessLinkSecurity(uint8_t aArgsLength, char *aArgs[]);
-    otError WriteCharToBuffer(otMessage *aMessage, uint16_t aSize);
+    otError WriteCharToBuffer(otMessage *aMessage, uint16_t aMessageSize);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);

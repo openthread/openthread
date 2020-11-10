@@ -1064,14 +1064,14 @@ public:
         /**
          * This method read the current Option Value which is assumed to be an unsigned integer.
          *
-         * @param[out]  aValue          A reference to `uint64_t` to output the read Option Value.
+         * @param[out]  aUintValue      A reference to `uint64_t` to output the read Option Value.
          *
          * @retval OT_ERROR_NONE        Successfully read the Option value.
          * @retval OT_ERROR_NO_BUFS     Value is too long to fit in an `uint64_t`.
          * @retval OT_ERROR_NOT_FOUND   Iterator is done (not pointing to any option).
          *
          */
-        otError ReadOptionValue(uint64_t &aValue) const;
+        otError ReadOptionValue(uint64_t &aUintValue) const;
 
         /**
          * This method gets the offset of beginning of the CoAP message payload (after the CoAP header).
