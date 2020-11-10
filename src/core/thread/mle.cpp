@@ -4121,6 +4121,8 @@ const char *Mle::MessageTypeToString(MessageType aType)
         break;
     case kTypeParentRequestToRouters:
     case kTypeParentRequestToRoutersReeds:
+        str = "Parent Request";
+        break;
     case kTypeParentResponse:
         str = "Parent Response";
         break;
