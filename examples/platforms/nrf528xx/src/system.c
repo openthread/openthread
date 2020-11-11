@@ -102,16 +102,14 @@ void otSysInit(int argc, char *argv[])
     nrf5MiscInit();
     nrf5RadioInit();
     nrf5TempInit();
-
-#if PLATFORM_FEM_ENABLE_DEFAULT_CONFIG
-    PlatformFemSetConfigParams(&PLATFORM_FEM_DEFAULT_CONFIG);
-#endif
+    nrf5FemInit();
 
     gPlatformPseudoResetWasRequested = false;
 }
 
 void otSysDeinit(void)
 {
+    nrf5FemDeinit();
     nrf5TempDeinit();
     nrf5RadioDeinit();
     nrf5MiscDeinit();

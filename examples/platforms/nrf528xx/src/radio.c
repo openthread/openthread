@@ -54,6 +54,7 @@
 #include <openthread/platform/time.h>
 
 #include "openthread-system.h"
+#include "platform-fem.h"
 #include "platform-nrf5.h"
 
 #include <nrf.h>
@@ -425,6 +426,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     if (nrf_802154_sleep_if_idle() == NRF_802154_SLEEP_ERROR_NONE)
     {
+        nrf5FemDisable();
         clearPendingEvents();
     }
     else
@@ -443,7 +445,14 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     bool result;
 
     nrf_802154_channel_set(aChannel);
+    if (nrf_802154_state_get() == NRF_802154_STATE_SLEEP)
+    {
+        // Enable FEM before RADIO leaving SLEEP state.
+        nrf5FemEnable();
+    }
+
     nrf_802154_tx_power_set(sDefaultTxPower);
+
     result = nrf_802154_receive();
     clearPendingEvents();
 
@@ -456,6 +465,12 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     otError error  = OT_ERROR_NONE;
 
     aFrame->mPsdu[-1] = aFrame->mLength;
+
+    if (nrf_802154_state_get() == NRF_802154_STATE_SLEEP)
+    {
+        // Enable FEM before RADIO leaving SLEEP state.
+        nrf5FemEnable();
+    }
 
     nrf_802154_channel_set(aFrame->mChannel);
 
@@ -884,6 +899,7 @@ void nrf5RadioProcess(otInstance *aInstance)
     {
         if (nrf_802154_sleep_if_idle() == NRF_802154_SLEEP_ERROR_NONE)
         {
+            nrf5FemDisable();
             resetPendingEvent(kPendingEventSleep);
         }
         else
