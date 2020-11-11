@@ -436,6 +436,7 @@ do_upload_codecov()
         bash <(curl -s https://codecov.io/bash) -f final.info -Z && break
         ((++fail_count))
         echo >&2 "Upload failed, retrying (${fail_count}/${retry_count})"
+        sleep 1m
     done
 
     if ((fail_count > retry_count)); then
