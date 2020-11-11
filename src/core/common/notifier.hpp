@@ -240,7 +240,7 @@ public:
      * @param[in]  aEvent     The event to signal.
      *
      */
-    void SignalIfFirst(Event aFlags);
+    void SignalIfFirst(Event aEvent);
 
     /**
      * This method indicates whether or not an event signal callback is pending/scheduled.

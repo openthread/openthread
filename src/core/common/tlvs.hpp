@@ -284,16 +284,19 @@ public:
      *
      * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
-     * @param[in]   aMessage    A reference to the message.
-     * @param[in]   aType       The Type value to search for.
-     * @param[out]  aOffset     The offset where the value starts.
-     * @param[out]  aLength     The length of the value.
+     * @param[in]   aMessage      A reference to the message.
+     * @param[in]   aType         The Type value to search for.
+     * @param[out]  aValueOffset  The offset where the value starts.
+     * @param[out]  aLength       The length of the value.
      *
      * @retval OT_ERROR_NONE       Successfully found the TLV.
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static otError FindTlvValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength);
+    static otError FindTlvValueOffset(const Message &aMessage,
+                                      uint8_t        aType,
+                                      uint16_t &     aValueOffset,
+                                      uint16_t &     aLength);
 
     /**
      * This static method searches for a TLV with a given type in a message, ensures its length is same or larger than
@@ -465,7 +468,7 @@ private:
     static otError AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength);
     template <typename UintType>
     static otError ReadUintTlv(const Message &aMessage, uint16_t aOffset, UintType &aValue);
-    template <typename UintType> static otError FindUintTlv(const Message &aMessage, uint8_t aTyle, UintType &aValue);
+    template <typename UintType> static otError FindUintTlv(const Message &aMessage, uint8_t aType, UintType &aValue);
     template <typename UintType> static otError AppendUintTlv(Message &aMessage, uint8_t aType, UintType aValue);
 
     uint8_t mType;

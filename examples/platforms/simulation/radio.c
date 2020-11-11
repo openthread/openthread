@@ -241,13 +241,13 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
     ReverseExtAddress(&sExtAddress, aExtAddress);
 }
 
-void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aAddress)
+void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     assert(aInstance != NULL);
 
-    sShortAddress = aAddress;
+    sShortAddress = aShortAddress;
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
@@ -438,13 +438,13 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     return error;
 }
 
-otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aRadio)
+otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aRadio);
+    OT_UNUSED_VARIABLE(aFrame);
 
     assert(aInstance != NULL);
-    assert(aRadio != NULL);
+    assert(aFrame != NULL);
 
     otError error = OT_ERROR_INVALID_STATE;
 

@@ -176,7 +176,7 @@ public:
      * @param[in]  aDelay      The delay in milliseconds. It must not be longer than `kMaxDelay`.
      *
      */
-    void StartAt(TimeMilli sStartTime, uint32_t aDelay);
+    void StartAt(TimeMilli aStartTime, uint32_t aDelay);
 
     /**
      * This method schedules the timer to fire at a given fire time.

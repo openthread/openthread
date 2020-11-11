@@ -365,13 +365,13 @@ private:
         JoinerPskd mPskd;
         Type       mType;
 
-        void CopyToJoinerInfo(otJoinerInfo &aInfo) const;
+        void CopyToJoinerInfo(otJoinerInfo &aJoiner) const;
     };
 
     Joiner *GetUnusedJoinerEntry(void);
     Joiner *FindJoinerEntry(const Mac::ExtAddress *aEui64);
     Joiner *FindJoinerEntry(const JoinerDiscerner &aDiscerner);
-    Joiner *FindBestMatchingJoinerEntry(const Mac::ExtAddress &aRxJoinerId);
+    Joiner *FindBestMatchingJoinerEntry(const Mac::ExtAddress &aReceivedJoinerId);
     void    RemoveJoinerEntry(Joiner &aJoiner);
 
     otError AddJoiner(const Mac::ExtAddress *aEui64,

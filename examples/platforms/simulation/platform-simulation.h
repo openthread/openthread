@@ -99,10 +99,10 @@ void platformAlarmInit(uint32_t aSpeedUpFactor);
 /**
  * This function retrieves the time remaining until the alarm fires.
  *
- * @param[out]  aTimeval  A pointer to the timeval struct.
+ * @param[out]  aTimeout  A pointer to the timeval struct.
  *
  */
-void platformAlarmUpdateTimeout(struct timeval *tv);
+void platformAlarmUpdateTimeout(struct timeval *aTimeout);
 
 /**
  * This function performs alarm driver processing.

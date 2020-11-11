@@ -110,7 +110,8 @@ private:
     void Start(void);
     void Stop(void);
 
-    static bool MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aAddress, const Ip6::Prefix &aIp6Prefix);
+    static bool MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aNetifAddress,
+                                            const Ip6::Prefix &             aIp6Prefix);
 
     void Solicit(uint16_t aRloc16);
 

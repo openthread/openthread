@@ -124,7 +124,7 @@ public:
                      bool                    aJoiner,
                      bool                    aEnableFiltering,
                      const FilterIndexes *   aFilterIndexes,
-                     Handler                 aHandler,
+                     Handler                 aCallback,
                      void *                  aContext);
 
     /**

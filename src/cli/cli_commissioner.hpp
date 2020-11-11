@@ -102,11 +102,11 @@ private:
     static void HandleStateChanged(otCommissionerState aState, void *aContext);
     void        HandleStateChanged(otCommissionerState aState);
 
-    static void HandleJoinerEvent(otCommissionerJoinerEvent aJoinerEvent,
+    static void HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
                                   const otJoinerInfo *      aJoinerInfo,
                                   const otExtAddress *      aJoinerId,
                                   void *                    aContext);
-    void        HandleJoinerEvent(otCommissionerJoinerEvent aJoinerEvent,
+    void        HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
                                   const otJoinerInfo *      aJoinerInfo,
                                   const otExtAddress *      aJoinerId);
 
