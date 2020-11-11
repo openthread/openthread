@@ -87,7 +87,7 @@ build_simulation()
 build_posix()
 {
     local version="$1"
-    local options=("-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON")
+    local options=("-DOT_MESSAGE_USE_HEAP=ON" "-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON")
 
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_DUA=ON")
