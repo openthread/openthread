@@ -91,6 +91,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
     USE_MESSAGE_FACTORY = True
     TOPOLOGY = None
+    CASE_WIRESHARK_PREFS = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -288,7 +289,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         os.system(f"rm -f tmp/{PORT_OFFSET}_*.flash tmp/{PORT_OFFSET}_*.data tmp/{PORT_OFFSET}_*.swap")
 
     def _verify_packets(self, test_info_path: str):
-        pv = PacketVerifier(test_info_path)
+        pv = PacketVerifier(test_info_path, self.CASE_WIRESHARK_PREFS)
         pv.add_common_vars()
         self.verify(pv)
         print("Packet verification passed: %s" % test_info_path, file=sys.stderr)
