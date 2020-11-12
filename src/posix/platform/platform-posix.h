@@ -463,21 +463,6 @@ extern char gBackboneNetifName[IFNAMSIZ];
  */
 extern unsigned int gBackboneNetifIndex;
 
-#define otLogResultPlat(aError, ...)                                                                                \
-    do                                                                                                              \
-    {                                                                                                               \
-        otError _err = (aError);                                                                                    \
-                                                                                                                    \
-        if (_err == OT_ERROR_NONE)                                                                                  \
-        {                                                                                                           \
-            otLogInfoPlat(OT_FIRST_ARG(__VA_ARGS__) ": %s" OT_REST_ARGS(__VA_ARGS__), otThreadErrorToString(_err)); \
-        }                                                                                                           \
-        else                                                                                                        \
-        {                                                                                                           \
-            otLogCritPlat(OT_FIRST_ARG(__VA_ARGS__) ": %s" OT_REST_ARGS(__VA_ARGS__), otThreadErrorToString(_err)); \
-        }                                                                                                           \
-    } while (false)
-
 #ifdef __cplusplus
 }
 #endif
