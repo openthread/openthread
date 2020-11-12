@@ -466,6 +466,7 @@ _LAYER_FIELDS = {
     'icmpv6.nd.ra.flag.h': _auto,
     'icmpv6.echo.sequence_number': _auto,
     'icmpv6.echo.identifier': _auto,
+    'icmpv6.data.len': _auto,
 
     # COAP
     'coap.code': _auto,
