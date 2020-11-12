@@ -26,7 +26,15 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-LOCAL_PATH := $(call my-dir)
+# Save LOCAL_PATH of the current Android.mk file
+SAVED_LOCAL_PATH := $(call my-dir)
+
+ifneq ($(OPENTHREAD_PROJECT_ANDROID_MK),)
+include $(OPENTHREAD_PROJECT_ANDROID_MK)
+endif
+
+# Restore LOCAL_PATH variable
+LOCAL_PATH:= $(SAVED_LOCAL_PATH)
 
 OPENTHREAD_DEFAULT_VERSION := $(shell cat $(LOCAL_PATH)/.default-version)
 OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --match "[0-9].*" 2> /dev/null)
