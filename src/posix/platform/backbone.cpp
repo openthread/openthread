@@ -60,14 +60,14 @@ void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName)
     sMulticastRoutingManager.Init(aInstance);
 }
 
-void platformBackboneUpdateFdSet(fd_set *aReadFdSet, int *aMaxFd)
+void platformBackboneUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd)
 {
-    sMulticastRoutingManager.UpdateFdSet(*aReadFdSet, *aMaxFd);
+    sMulticastRoutingManager.UpdateFdSet(aReadFdSet, aMaxFd);
 }
 
-void platformBackboneProcess(const fd_set *aReadSet)
+void platformBackboneProcess(const fd_set &aReadSet)
 {
-    sMulticastRoutingManager.Process(*aReadSet);
+    sMulticastRoutingManager.Process(aReadSet);
 }
 
 void platformBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags)

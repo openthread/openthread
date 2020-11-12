@@ -428,19 +428,19 @@ void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName);
 /**
  * This function updates the file descriptor sets with file descriptors used by the platform Backbone network.
  *
- * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
- * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ * @param[inout]  aReadFdSet   A reference to the read file descriptors.
+ * @param[inout]  aMaxFd       A reference to the max file descriptor.
  *
  */
-void platformBackboneUpdateFdSet(fd_set *aReadFdSet, int *aMaxFd);
+void platformBackboneUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd);
 
 /**
  * This function performs platform Backbone network processing.
  *
- * @param[in]   aReadFdSet  A pointer to the read file descriptors.
+ * @param[in]   aReadFdSet  A reference to the read file descriptors.
  *
  */
-void platformBackboneProcess(const fd_set *aReadSet);
+void platformBackboneProcess(const fd_set &aReadSet);
 
 /**
  * This function performs notifies state changes to platform Backbone network.

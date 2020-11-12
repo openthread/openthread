@@ -165,7 +165,7 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
                              &aMainloop->mMaxFd);
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    platformBackboneUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mMaxFd);
+    platformBackboneUpdateFdSet(aMainloop->mReadFdSet, aMainloop->mMaxFd);
 #endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
@@ -240,7 +240,7 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
     platformUdpProcess(aInstance, &aMainloop->mReadFdSet);
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    platformBackboneProcess(&aMainloop->mReadFdSet);
+    platformBackboneProcess(aMainloop->mReadFdSet);
 #endif
 }
 

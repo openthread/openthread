@@ -36,7 +36,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <chrono>
 #include <map>
 #include <set>
 #include <openthread/backbone_router_ftd.h>
@@ -62,7 +61,9 @@ public:
      *
      */
     explicit MulticastRoutingManager()
-        : mMulticastRouterSock(-1)
+        : mLastExpireTime(0)
+        , mMulticastRouterSock(-1)
+        , mInstance(nullptr)
     {
     }
 
@@ -105,6 +106,8 @@ private:
     {
         kMulticastForwardingCacheExpireTimeout    = 300, //< Expire timeout of Multicast Forwarding Cache (in seconds)
         kMulticastForwardingCacheExpiringInterval = 60,  //< Expire interval of Multicast Forwarding Cache (in seconds)
+        kMulitcastForwardingCacheTableSize =
+            OPENTHREAD_POSIX_CONFIG_MAX_MULTICAST_FORWARDING_CACHE_TABLE, //< The max size of MFC table.
     };
 
     enum MifIndex : uint8_t
@@ -114,61 +117,48 @@ private:
         kMifIndexBackbone = 1,
     };
 
-    class MulticastRoute
+    class MulticastForwardingCache
     {
         friend class MulticastRoutingManager;
 
-    public:
-        MulticastRoute(const Ip6::Address &aSrcAddr, const Ip6::Address &aGroupAddr)
-            : mSrcAddr(aSrcAddr)
-            , mGroupAddr(aGroupAddr)
+    private:
+        MulticastForwardingCache()
+            : mIif(kMifIndexNone)
         {
         }
 
-        bool operator<(const MulticastRoute &aOther) const;
+        bool IsValid() const { return mIif != kMifIndexNone; }
+        void Set(MifIndex aIif, MifIndex aOif);
+        void Set(const Ip6::Address &aSrcAddr, const Ip6::Address &aGroupAddr, MifIndex aIif, MifIndex aOif);
+        void Erase(void) { mIif = kMifIndexNone; }
+        void SetValidPktCnt(unsigned long aValidPktCnt);
 
-    private:
-        Ip6::Address mSrcAddr;
-        Ip6::Address mGroupAddr;
-    };
-
-    using Clock = std::chrono::steady_clock;
-
-    class MulticastRouteInfo
-    {
-        friend class MulticastRoutingManager;
-
-    public:
-        MulticastRouteInfo(MifIndex aIif, MifIndex aOif)
-            : mValidPktCnt(0)
-            , mOif(aOif)
-            , mIif(aIif)
-        {
-            mLastUseTime = Clock::now();
-        }
-
-        MulticastRouteInfo() = default;
-
-    private:
-        std::chrono::time_point<Clock> mLastUseTime;
-        unsigned long                  mValidPktCnt;
-        MifIndex                       mOif;
-        MifIndex                       mIif;
+        Ip6::Address  mSrcAddr;
+        Ip6::Address  mGroupAddr;
+        uint64_t      mLastUseTime;
+        unsigned long mValidPktCnt;
+        MifIndex      mIif;
+        MifIndex      mOif;
     };
 
     void    Enable(void);
     void    Disable(void);
     void    Add(const Ip6::Address &aAddress);
     void    Remove(const Ip6::Address &aAddress);
+    bool    HasMulticastListener(const Ip6::Address &aAddress);
     bool    IsEnabled(void) const { return mMulticastRouterSock >= 0; }
-    otError InitMulticastRouterSock(void);
+    void    InitMulticastRouterSock(void);
     void    FinalizeMulticastRouterSock(void);
     void    ProcessMulticastRouterMessages(void);
     otError AddMulticastForwardingCache(const Ip6::Address &aSrcAddr, const Ip6::Address &aGroupAddr, MifIndex aIif);
-    void    RemoveInboundMulticastForwardingCache(const Ip6::Address &aGroupAddr);
+    void    SaveMulticastForwardingCache(const Ip6::Address &aSrcAddr,
+                                         const Ip6::Address &aGroupAddr,
+                                         MifIndex            aIif,
+                                         MifIndex            aOif);
     void    UnblockInboundMulticastForwardingCache(const Ip6::Address &aGroupAddr);
+    void    RemoveInboundMulticastForwardingCache(const Ip6::Address &aGroupAddr);
     void    ExpireMulticastForwardingCache(void);
-    bool    UpdateMulticastRouteInfo(const MulticastRoute &route);
+    bool    UpdateMulticastRouteInfo(MulticastForwardingCache &aMfc) const;
     static const char *MifIndexToString(MifIndex aMif);
     void               DumpMulticastForwardingCache(void);
     static void        HandleBackboneMulticastListenerEvent(void *                                 aContext,
@@ -177,10 +167,11 @@ private:
     void               HandleBackboneMulticastListenerEvent(otBackboneRouterMulticastListenerEvent aEvent,
                                                             const Ip6::Address &                   aAddress);
 
-    std::set<Ip6::Address>                       mListenerSet;
-    std::map<MulticastRoute, MulticastRouteInfo> mMulticastForwardingCache;
-    int                                          mMulticastRouterSock;
-    std::chrono::time_point<Clock>               mLastExpireTime;
+    MulticastForwardingCache mMulticastForwardingCacheTable[kMulitcastForwardingCacheTableSize];
+    uint64_t                 mLastExpireTime;
+    int                      mMulticastRouterSock;
+    otInstance *             mInstance;
+    void                     RemoveMulticastForwardingCache(MulticastForwardingCache &aMfc) const;
 };
 
 } // namespace Posix
