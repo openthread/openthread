@@ -1468,6 +1468,13 @@ public:
      */
     uint16_t GetFreeBufferCount(void) const;
 
+    /**
+     * This method returns the total number of buffers.
+     *
+     * @returns The total number of buffers.
+     */
+    uint16_t GetTotalBufferCount(void) const;
+
 private:
     Buffer *NewBuffer(Message::Priority aPriority);
     void    FreeBuffers(Buffer *aBuffer);

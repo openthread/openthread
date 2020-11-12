@@ -174,7 +174,7 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     uint16_t  messages, buffers;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    aBufferInfo->mTotalBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
+    aBufferInfo->mTotalBuffers = instance.Get<MessagePool>().GetTotalBufferCount();
 
     aBufferInfo->mFreeBuffers = instance.Get<MessagePool>().GetFreeBufferCount();
 
