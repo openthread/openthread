@@ -420,14 +420,28 @@ do_generate_coverage()
 do_upload_codecov()
 {
     ls -R coverage/
+
     readarray -d '' files < <(find coverage/ -type f -name 'coverage*.info' -print0)
+
     local args=()
     for i in "${files[@]}"; do
         args+=('-a')
         args+=("$i")
     done
     lcov "${args[@]}" -o final.info
-    bash <(curl -s https://codecov.io/bash) -f final.info -Z
+
+    local retry_count=5
+    local fail_count=0
+    until ((fail_count > retry_count)); do
+        bash <(curl -s https://codecov.io/bash) -f final.info -Z && break
+        ((++fail_count))
+        echo >&2 "Upload failed, retrying (${fail_count}/${retry_count})"
+        sleep 1m
+    done
+
+    if ((fail_count > retry_count)); then
+        exit 1
+    fi
 }
 
 envsetup()
