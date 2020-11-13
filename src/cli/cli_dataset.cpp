@@ -40,7 +40,7 @@
 #include <openthread/dataset_ftd.h>
 
 #include "cli/cli.hpp"
-#include "common/utf8.h"
+#include "common/utf8.hpp"
 #include "utils/parse_cmdline.hpp"
 
 using ot::Utils::CmdLineParser::ParseAsHexString;

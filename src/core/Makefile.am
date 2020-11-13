@@ -371,7 +371,7 @@ HEADERS_COMMON                                  = \
     common/tlvs.hpp                               \
     common/trickle_timer.hpp                      \
     common/type_traits.hpp                        \
-    common/utf8.h                                 \
+    common/utf8.hpp                               \
     config/announce_sender.h                      \
     config/backbone_router.h                      \
     config/border_router.h                        \

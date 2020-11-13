@@ -36,9 +36,7 @@
 
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace ot {
 
 /**
  * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
@@ -51,8 +49,6 @@ extern "C" {
  */
 bool ValidateUtf8(const uint8_t *aString);
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
+} // namespace ot
 
 #endif // UTF8_H_

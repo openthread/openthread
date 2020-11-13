@@ -26,11 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "utf8.h"
+#include "utf8.hpp"
 
 #include "common/code_utils.hpp"
 
-extern "C" {
+namespace ot {
+
 bool ValidateUtf8(const uint8_t *aString)
 {
     bool    ret = true;
@@ -80,4 +81,5 @@ bool ValidateUtf8(const uint8_t *aString)
 exit:
     return ret;
 }
-} // extern "C"
+
+} // namespace ot

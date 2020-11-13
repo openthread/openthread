@@ -57,8 +57,6 @@
 #include <string.h>
 #endif // #ifndef SPINEL_PLATFORM_HEADER
 
-#include <core/common/utf8.h>
-
 // ----------------------------------------------------------------------------
 // MARK: -
 
@@ -171,6 +169,65 @@ typedef struct
 } va_list_obj;
 
 #define SPINEL_MAX_PACK_LENGTH 32767
+
+// ----------------------------------------------------------------------------
+
+// This function validates whether a given byte sequence (string) follows UTF8 encoding.
+static bool spinel_validate_utf8(const uint8_t *string)
+{
+    bool    ret = true;
+    uint8_t byte;
+    uint8_t continuation_bytes = 0;
+
+    while ((byte = *string++) != 0)
+    {
+        if ((byte & 0x80) == 0)
+        {
+            continue;
+        }
+
+        // This is a leading byte 1xxx-xxxx.
+
+        if ((byte & 0x40) == 0) // 10xx-xxxx
+        {
+            // We got a continuation byte pattern without seeing a leading byte earlier.
+            ret = false;
+            goto bail;
+        }
+        else if ((byte & 0x20) == 0) // 110x-xxxx
+        {
+            continuation_bytes = 1;
+        }
+        else if ((byte & 0x10) == 0) // 1110-xxxx
+        {
+            continuation_bytes = 2;
+        }
+        else if ((byte & 0x08) == 0) // 1111-0xxx
+        {
+            continuation_bytes = 3;
+        }
+        else // 1111-1xxx  (invalid pattern).
+        {
+            ret = false;
+            goto bail;
+        }
+
+        while (continuation_bytes-- != 0)
+        {
+            byte = *string++;
+
+            // Verify the continuation byte pattern 10xx-xxxx
+            if ((byte & 0xc0) != 0x80)
+            {
+                ret = false;
+                goto bail;
+            }
+        }
+    }
+
+bail:
+    return ret;
+}
 
 // ----------------------------------------------------------------------------
 // MARK: -
@@ -503,7 +560,7 @@ static spinel_ssize_t spinel_datatype_vunpack_(bool           in_place,
             require_action(len <= data_len, bail, (ret = -1, errno = EOVERFLOW));
 
             // Verify the string follows valid UTF8 encoding.
-            require_action(ValidateUtf8(data_in), bail, (ret = -1, errno = EINVAL));
+            require_action(spinel_validate_utf8(data_in), bail, (ret = -1, errno = EINVAL));
 
             if (in_place)
             {
@@ -2944,9 +3001,9 @@ int main(void)
 
         for (str_ptr = &good_strings[0]; *str_ptr != NULL; str_ptr++)
         {
-            if (!ValidateUtf8(*str_ptr))
+            if (!spinel_validate_utf8(*str_ptr))
             {
-                printf("error: ValidateUtf8() did not correctly detect a valid UTF8 sequence!\n");
+                printf("error: spinel_validate_utf8() did not correctly detect a valid UTF8 sequence!\n");
                 goto bail;
             }
         }
@@ -2974,9 +3031,9 @@ int main(void)
 
         for (str_ptr = &bad_strings[0]; *str_ptr != NULL; str_ptr++)
         {
-            if (ValidateUtf8(*str_ptr))
+            if (spinel_validate_utf8(*str_ptr))
             {
-                printf("error: ValidateUtf8() did not correctly detect an invalid UTF8 sequence\n");
+                printf("error: spinel_validate_utf8() did not correctly detect an invalid UTF8 sequence\n");
                 goto bail;
             }
         }

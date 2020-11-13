@@ -39,7 +39,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/settings.hpp"
-#include "common/utf8.h"
+#include "common/utf8.hpp"
 
 using namespace ot;
 
