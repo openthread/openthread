@@ -39,6 +39,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/settings.hpp"
+#include "common/utf8.h"
 
 using namespace ot;
 
@@ -191,6 +192,7 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(ValidateUtf8(reinterpret_cast<const uint8_t *>(aNetworkName)), error = OT_ERROR_INVALID_ARGS);
 
     error = instance.Get<Mac::Mac>().SetNetworkName(aNetworkName);
     instance.Get<MeshCoP::ActiveDataset>().Clear();
