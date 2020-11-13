@@ -41,7 +41,7 @@ namespace ot {
 /**
  * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
  *
- * @param[in]  aString  A byte sequence.
+ * @param[in]  aString  A null-terminated byte sequence.
  *
  * @retval TRUE   The sequence is a valid UTF-8 string.
  * @retval FALSE  The sequence is not a valid UTF-8 string.

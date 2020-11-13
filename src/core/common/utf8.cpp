@@ -36,7 +36,7 @@ bool ValidateUtf8(const uint8_t *aString)
 {
     bool    ret = true;
     uint8_t byte;
-    uint8_t continuation_bytes = 0;
+    uint8_t continuationBytes = 0;
 
     while ((byte = *aString++) != 0)
     {
@@ -54,22 +54,22 @@ bool ValidateUtf8(const uint8_t *aString)
         }
         else if ((byte & 0x20) == 0) // 110x-xxxx
         {
-            continuation_bytes = 1;
+            continuationBytes = 1;
         }
         else if ((byte & 0x10) == 0) // 1110-xxxx
         {
-            continuation_bytes = 2;
+            continuationBytes = 2;
         }
         else if ((byte & 0x08) == 0) // 1111-0xxx
         {
-            continuation_bytes = 3;
+            continuationBytes = 3;
         }
         else // 1111-1xxx  (invalid pattern).
         {
             ExitNow(ret = false);
         }
 
-        while (continuation_bytes-- != 0)
+        while (continuationBytes-- != 0)
         {
             byte = *aString++;
 
