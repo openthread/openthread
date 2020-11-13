@@ -146,6 +146,11 @@ if(OT_DUA)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DUA_ENABLE=1")
 endif()
 
+option(OT_MESSAGE_USE_HEAP "enable heap allocator for message buffers")
+if(OT_MESSAGE_USE_HEAP)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE=1")
+endif()
+
 option(OT_MLR "enable Multicast Listener Registration feature for Thread 1.2")
 if(OT_MLR)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MLR_ENABLE=1")

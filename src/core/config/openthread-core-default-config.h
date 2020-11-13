@@ -128,6 +128,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
+ *
+ * Whether use heap allocator for message buffers.
+ *
+ * @note If this is set, OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS is ignored.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
+#define OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
  *
  * The number of message buffers in the buffer pool.
