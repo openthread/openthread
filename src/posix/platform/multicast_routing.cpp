@@ -143,7 +143,7 @@ void MulticastRoutingManager::UpdateFdSet(fd_set &aReadFdSet, int &aMaxFd) const
     VerifyOrExit(IsEnabled());
 
     FD_SET(mMulticastRouterSock, &aReadFdSet);
-    aMaxFd = std::max(aMaxFd, mMulticastRouterSock);
+    aMaxFd = OT_MAX(aMaxFd, mMulticastRouterSock);
 
 exit:
     return;
