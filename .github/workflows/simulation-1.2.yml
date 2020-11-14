@@ -70,13 +70,27 @@ jobs:
         ./script/test build
     - name: Run
       run: |
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
         ./script/test unit
         ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
+    - name: Copy Shared Libraries
+      if: ${{ failure() }}
+      run: |
+          ./script/test copy_so_lib
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
         name: thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-pcaps
         path: "*.pcap"
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: core-${{ matrix.compiler.c }}-${{ matrix.arch }}
+        path: |
+          ./build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
+          ./ot-core-dump/*
+          ./so-lib/*
     - name: Keep-1-2-only
       run: |
         ./script/test tar simulation 1.1
@@ -136,10 +150,16 @@ jobs:
         ./script/test get_thread_wireshark
     - name: Run
       run: |
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
         for i in {1..10}
         do
           ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
         done
+    - name: Copy Shared Libraries
+      if: ${{ failure() }}
+      run: |
+          ./script/test copy_so_lib
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
@@ -147,6 +167,15 @@ jobs:
         path: |
           *.pcap
           *.json
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: core-packet-verification-low-power
+        path: |
+          ./build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
+          ./build/cmake/openthread-simulation-1.1/examples/apps/cli/ot-cli-*
+          ./ot-core-dump/*
+          ./so-lib/*
     - name: Keep-1-2-only
       run: |
         ./script/test tar simulation 1.2-bbr
@@ -169,145 +198,3 @@ jobs:
         name: cov-packet-verification-low-power-2
         path: tmp/coverage.info
 
-  packet-verification-1-1-on-1-2:
-    runs-on: ubuntu-18.04
-    env:
-      REFERENCE_DEVICE: 1
-      VIRTUAL_TIME: 1
-      PACKET_VERIFICATION: 1
-      THREAD_VERSION: 1.2
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel ninja-build lcov
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-    - name: Build
-      run: |
-        ./script/test build
-    - name: Get Thread-Wireshark
-      run: |
-        ./script/test get_thread_wireshark
-    - name: Run
-      run: |
-        for i in {1..3}
-        do
-          ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
-        done
-    - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
-      with:
-        name: packet-verification-1.1-on-1.2-pcaps
-        path: |
-          *.pcap
-          *.json
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-packet-verification-1-1-on-1-2
-        path: tmp/coverage.info
-
-  expects:
-    runs-on: ubuntu-18.04
-    env:
-      COVERAGE: 1
-      THREAD_VERSION: 1.2
-      VIRTUAL_TIME: 0
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt-get --no-install-recommends install -y expect ninja-build lcov
-    - name: Run RCP Mode
-      run: |
-        OT_OPTIONS=-DOT_READLINE=OFF OT_NODE_TYPE=rcp ./script/test build expect
-    - name: Keep-1-2-only
-      run: |
-        ./script/test tar posix 1.2-bbr
-        ./script/test tar simulation 1.2-bbr
-    - name: Keep POSIX Only
-      run: |
-        ./script/test tar simulation 1.2
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-expects
-        path: tmp/coverage.info
-
-  thread-1-2-backbone:
-    runs-on: ubuntu-18.04
-    env:
-      REFERENCE_DEVICE: 1
-      VIRTUAL_TIME: 0
-      PACKET_VERIFICATION: 1
-      THREAD_VERSION: 1.2
-      INTER_OP: 1
-      COVERAGE: 1
-      MULTIPLY: 1
-      PYTHONUNBUFFERED: 1
-      VERBOSE: 1
-    steps:
-    - uses: actions/checkout@v2
-    - name: Build OTBR Docker
-      run: |
-        ./script/test build_otbr_docker
-    - name: Bootstrap
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build socat lcov
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-    - name: Build
-      run: |
-        ./script/test build
-    - name: Get Thread-Wireshark
-      run: |
-        ./script/test get_thread_wireshark
-    - name: Run
-      run: |
-        export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
-        echo "CI_ENV=${CI_ENV}"
-        sudo -E ./script/test cert_suite ./tests/scripts/thread-cert/backbone/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-thread-1-2-backbone-docker
-        path: /tmp/coverage/
-    - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
-      with:
-        name: thread-1-2-backbone-results
-        path: |
-          *.pcap
-          *.json
-          *.log
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-thread-1-2-backbone
-        path: tmp/coverage.info
-
-  upload-coverage:
-    needs:
-    - thread-1-2
-    - packet-verification-low-power
-    - packet-verification-1-1-on-1-2
-    - expects
-    - thread-1-2-backbone
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt-get --no-install-recommends install -y lcov
-    - uses: actions/download-artifact@v2
-      with:
-        path: coverage/
-    - name: Upload Coverage
-      run: |
-        script/test upload_codecov
