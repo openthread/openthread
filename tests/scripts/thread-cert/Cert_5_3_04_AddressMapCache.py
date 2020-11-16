@@ -132,7 +132,6 @@ class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
             self.nodes[i].start()
         self.simulator.go(5)
 
-
         for i in MTDS:
             self.assertEqual(self.nodes[i].get_state(), 'child')
 
