@@ -351,7 +351,7 @@ class PacketFilter(object):
         if self._parent is not None:
             self._parent._set_found_index(last_index, index)
 
-    def filter_mle_advertisement(self, role, **kwargs):
+    def filter_mle_advertisement(self, role: str, **kwargs):
         assert role in ('Leader', 'Router', 'REED'), role
 
         tlv_set = {consts.LEADER_DATA_TLV, consts.SOURCE_ADDRESS_TLV}
@@ -363,7 +363,7 @@ class PacketFilter(object):
             filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
             filter(lambda p: tlv_set ==
                    set(p.mle.tlv.type) and\
-                   p.ipv6.hlim == 255
+                   p.ipv6.hlim == 255, **kwargs
                    )
 
     def filter_coap(self, **kwargs):

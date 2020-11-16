@@ -283,11 +283,10 @@ class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
         pkts.filter_wpan_src64(REED).\
             filter_mle_advertisement('REED').\
             filter(lambda p:
+                   REED_ADVERTISEMENT_INTERVAL <
                    p.sniff_timestamp - _pkt.sniff_timestamp <=
                    REED_ADVERTISEMENT_INTERVAL +
-                   REED_ADVERTISEMENT_MAX_JITTER and\
-                   p.sniff_timestamp - _pkt.sniff_timestamp >
-                   REED_ADVERTISEMENT_INTERVAL
+                   REED_ADVERTISEMENT_MAX_JITTER
                    ).\
             must_next()
 
