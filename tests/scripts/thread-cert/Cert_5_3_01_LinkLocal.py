@@ -36,6 +36,7 @@ from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 DUT_ROUTER1 = 2
+DATA_LEN = 256
 
 # Test Purpose and Description:
 # -----------------------------
@@ -85,16 +86,16 @@ class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
 
         # 2 & 3
         link_local = self.nodes[DUT_ROUTER1].get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
-        self.assertTrue(self.nodes[LEADER].ping(link_local, size=256))
+        self.assertTrue(self.nodes[LEADER].ping(link_local, size=DATA_LEN))
         self.assertTrue(self.nodes[LEADER].ping(link_local))
 
         # 4 & 5
-        self.assertTrue(self.nodes[LEADER].ping('ff02::1', size=256))
-        self.assertTrue(self.nodes[LEADER].ping('ff02::1'))
+        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_NODES_ADDRESS, size=DATA_LEN))
+        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_NODES_ADDRESS))
 
         # 6 & 7
-        self.assertTrue(self.nodes[LEADER].ping('ff02::2', size=256))
-        self.assertTrue(self.nodes[LEADER].ping('ff02::2'))
+        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_ROUTERS_ADDRESS, size=DATA_LEN))
+        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_ROUTERS_ADDRESS))
 
         # 8
         self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS))
@@ -110,20 +111,20 @@ class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
         # Step 1: Build the topology as described
         pv.verify_attached('ROUTER')
 
-        # Step 2: Leader Send a Fragmented ICMPv6 Echo Request to DUT’s
+        # Step 2: Leader sends a Fragmented ICMPv6 Echo Request to DUT’s
         #         MAC extended address based Link-Local address
         #         The DUT MUST respond with an ICMPv6 Echo Reply
 
         _pkt = pkts.filter_ping_request().\
             filter_ipv6_src_dst(LEADER_LLA, ROUTER_LLA).\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
             filter_ipv6_src_dst(ROUTER_LLA, LEADER_LLA).\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_next()
 
-        # Step 3: Leader Send a Unfragmented ICMPv6 Echo Request to DUT’s
+        # Step 3: Leader sends an Unfragmented ICMPv6 Echo Request to DUT’s
         #         MAC extended address based Link-Local address
         #         The DUT MUST respond with an ICMPv6 Echo Reply
 
@@ -134,21 +135,21 @@ class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
             filter_ipv6_src_dst(ROUTER_LLA, LEADER_LLA).\
             must_next()
 
-        # Step 4: Leader Send a Fragmented ICMPv6 Echo Request to the
+        # Step 4: Leader sends a Fragmented ICMPv6 Echo Request to the
         #         Link-Local All Nodes multicast address (FF02::1)
         #         The DUT MUST respond with an ICMPv6 Echo Reply
 
         _pkt = pkts.filter_ping_request().\
             filter_wpan_src64(LEADER).\
             filter_LLANMA().\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
             filter_ipv6_src_dst(ROUTER_LLA, LEADER_LLA).\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_next()
 
-        # Step 5: Leader Send a Unfragmented ICMPv6 Echo Request to the
+        # Step 5: Leader sends an Unfragmented ICMPv6 Echo Request to the
         #         Link-Local All Nodes multicast address (FF02::1)
         #         The DUT MUST respond with an ICMPv6 Echo Reply
 
@@ -160,21 +161,21 @@ class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
             filter_ipv6_src_dst(ROUTER_LLA, LEADER_LLA).\
             must_next()
 
-        # Step 6: Leader Send a Fragmented ICMPv6 Echo Request to the
+        # Step 6: Leader sends a Fragmented ICMPv6 Echo Request to the
         #         Link-Local All Routers multicast address (FF02::2)
         #         The DUT MUST respond with an ICMPv6 Echo Reply
 
         _pkt = pkts.filter_ping_request().\
             filter_wpan_src64(LEADER).\
             filter_LLARMA().\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
             filter_ipv6_src_dst(ROUTER_LLA, LEADER_LLA).\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_next()
 
-        # Step 7: Leader Send a Unfragmented ICMPv6 Echo Request to the
+        # Step 7: Leader sends an Unfragmented ICMPv6 Echo Request to the
         #         Link-Local All Routers multicast address (FF02::2)
         #         The DUT MUST respond with an ICMPv6 Echo Reply
 
@@ -186,7 +187,7 @@ class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
             filter_ipv6_src_dst(ROUTER_LLA, LEADER_LLA).\
             must_next()
 
-        # Step 8: Leader Send a Unfragmented ICMPv6 Echo Request to the
+        # Step 8: Leader sends an Unfragmented ICMPv6 Echo Request to the
         #         Link-Local All Thread Nodes multicast address
         #         The DUT MUST respond with an ICMPv6 Echo Reply
 
