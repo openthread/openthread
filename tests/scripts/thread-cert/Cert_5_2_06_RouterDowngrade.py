@@ -41,7 +41,7 @@ from pktverify.null_field import nullField
 LEADER = 1
 DUT_ROUTER1 = 2
 ROUTER2 = 3
-ROUTER24 = 24
+ROUTER23 = 24
 
 # Test Purpose and Description:
 # -----------------------------
@@ -246,7 +246,7 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
-        ROUTER24: {
+        ROUTER23: {
             'name': 'ROUTER_23',
             'mode': 'rdn',
             'panid': 0xface,
@@ -257,7 +257,7 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
     }
 
     def test(self):
-        # 1 Ensure topology is formed correctly without ROUTER24.
+        # 1 Ensure topology is formed correctly without ROUTER23.
         self.nodes[LEADER].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
@@ -269,11 +269,11 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
         self.collect_rloc16s()
 
         # All reference testbed devices have been configured with downgrade threshold as 32 except DUT_ROUTER1,
-        # so we don't need to ensure ROUTER24 has a better link quality on
+        # so we don't need to ensure ROUTER23 has a better link quality on
         # posix.
-        self.nodes[ROUTER24].start()
+        self.nodes[ROUTER23].start()
         self.simulator.go(5)
-        self.assertEqual(self.nodes[ROUTER24].get_state(), 'router')
+        self.assertEqual(self.nodes[ROUTER23].get_state(), 'router')
 
         self.simulator.go(10)
         self.assertEqual(self.nodes[DUT_ROUTER1].get_state(), 'child')
