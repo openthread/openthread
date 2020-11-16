@@ -161,29 +161,42 @@ class PacketVerifier(object):
             logging.info("add extra var: %s = %s", k, v)
             self._vars[k] = v
 
-    def verify_attached(self, name: str, pkts=None) -> VerifyResult:
+    def verify_attached(self, child: str, parent: str = None, child_type: str = None, pkts=None) -> VerifyResult:
         """
         Verify that the device attaches to the Thread network.
 
-        :param name: The device name.
+        :param child: The child device name.
+        :param parent: The parent device name.
+        :param child_type: The child device type (FTD, MTD).
         """
         result = VerifyResult()
-        assert self.is_thread_device(name), name
+        assert self.is_thread_device(child), child
         pkts = pkts or self.pkts
-        extaddr = self.vars[name]
+        child_extaddr = self.vars[child]
 
-        src_pkts = pkts.filter_wpan_src64(extaddr)
+        src_pkts = pkts.filter_wpan_src64(child_extaddr)
+        if parent:
+            assert self.is_thread_device(parent), parent
+            src_pkts = pkts.filter_wpan_src64(child_extaddr).\
+                filter_wpan_dst64(self.vars[parent])
         src_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()  # Child Id Request
         result.record_last('child_id_request', pkts)
 
-        dst_pkts = pkts.filter_wpan_dst64(extaddr)
+        dst_pkts = pkts.filter_wpan_dst64(child_extaddr)
+        if parent:
+            src_pkts = pkts.filter_wpan_src64(self.vars[parent]).\
+                filter_wpan_dst64(child_extaddr)
         dst_pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()  # Child Id Response
         result.record_last('child_id_response', pkts)
 
         with pkts.save_index():
-            src_pkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next()  # MLE Advertisement
-            result.record_last('mle_advertisement', pkts)
-            logging.info(f"verify attached: d={name}, result={result}")
+            if child_type:
+                assert child_type in ('FTD', 'MTD'), role
+            if child_type != 'MTD':
+                src_pkts = pkts.filter_wpan_src64(child_extaddr)
+                src_pkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next()  # MLE Advertisement
+                result.record_last('mle_advertisement', pkts)
+            logging.info(f"verify attached: d={child}, result={result}")
 
         return result
 

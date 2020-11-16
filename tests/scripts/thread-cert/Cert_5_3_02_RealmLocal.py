@@ -38,6 +38,7 @@ LEADER = 1
 ROUTER1 = 2
 DUT_ROUTER2 = 3
 SED1 = 4
+DATA_LEN = 256
 
 # Test Purpose and Description:
 # -----------------------------
@@ -114,19 +115,19 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
 
         # 2 & 3
         mleid = self.nodes[DUT_ROUTER2].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
-        self.assertTrue(self.nodes[LEADER].ping(mleid, size=256))
+        self.assertTrue(self.nodes[LEADER].ping(mleid, size=DATA_LEN))
         self.simulator.go(2)
         self.assertTrue(self.nodes[LEADER].ping(mleid))
         self.simulator.go(2)
 
         # 4 & 5
-        self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2, size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2, size=DATA_LEN))
         self.simulator.go(5)
         self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2))
         self.simulator.go(5)
 
         # 6 & 7
-        self.assertTrue(self.nodes[LEADER].ping('ff03::2', num_responses=2, size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff03::2', num_responses=2, size=DATA_LEN))
         self.simulator.go(5)
         self.assertTrue(self.nodes[LEADER].ping('ff03::2', num_responses=2))
         self.simulator.go(5)
@@ -135,7 +136,7 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
         self.assertTrue(self.nodes[LEADER].ping(
             config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
             num_responses=3,
-            size=256,
+            size=DATA_LEN,
         ))
         self.simulator.go(5)
 
@@ -145,6 +146,7 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
 
         LEADER = pv.vars['LEADER']
         LEADER_MLEID = pv.vars['LEADER_MLEID']
+        ROUTER_1 = pv.vars['ROUTER_1']
         ROUTER_2 = pv.vars['ROUTER_2']
         ROUTER_2_RLOC16 = pv.vars['ROUTER_2_RLOC16']
         ROUTER_2_MLEID = pv.vars['ROUTER_2_MLEID']
@@ -152,30 +154,25 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
         SED_RLOC16 = pv.vars['SED_RLOC16']
 
         # Step 1: Build the topology as described
-        for i in (1, 2):
-            pv.verify_attached('ROUTER_%d' % i)
-        pkts.filter_wpan_src64(SED).\
-            filter_wpan_dst64(ROUTER_2).\
-            filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
-            must_next()
-        pkts.filter_wpan_src64(ROUTER_2).\
-            filter_wpan_dst64(SED).\
-            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
-            must_next()
+        pv.verify_attached('ROUTER_1', 'LEADER')
+        pv.verify_attached('ROUTER_2', 'ROUTER_1')
+        pv.verify_attached('SED', 'ROUTER_2', 'MTD')
 
-        # Step 2: Leader sends a Fragmented ICMPv6 Echo Request to DUT ML-EID
+        # Step 2: Leader sends a Fragmented ICMPv6 Echo Request to
+        #         DUT's ML-EID
         #         The DUT MUST respond with an ICMPv6 Echo Reply
 
         _pkt = pkts.filter_ping_request().\
             filter_ipv6_src_dst(LEADER_MLEID, ROUTER_2_MLEID).\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
             filter_ipv6_src_dst(ROUTER_2_MLEID, LEADER_MLEID).\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_next()
 
-        # Step 3: Leader sends a Unfragmented ICMPv6 Echo Request to DUT’s
+        # Step 3: Leader sends a Unfragmented ICMPv6 Echo Request to
+        #         DUT’s ML-EID
         #         The DUT MUST respond with an ICMPv6 Echo Reply
 
         _pkt = pkts.filter_ping_request().\
@@ -193,16 +190,16 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
         _pkt1 = pkts.filter_ping_request().\
             filter_wpan_src64(LEADER).\
             filter_ipv6_dst(REALM_LOCAL_ALL_NODES_ADDRESS).\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_next()
         with pkts.save_index():
             pkts.filter_ping_reply(identifier=_pkt1.icmpv6.echo.identifier).\
                 filter_ipv6_src_dst(ROUTER_2_MLEID, LEADER_MLEID).\
-                filter(lambda p: p.icmpv6.data.len == 256).\
+                filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
                 must_next()
         pkts.filter_ping_request(identifier=_pkt1.icmpv6.echo.identifier).\
             filter_wpan_src16_dst16(ROUTER_2_RLOC16, SED_RLOC16).\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_not_next()
 
         # Step 5: Leader sends an Unfragmented ICMPv6 Echo Request to the
@@ -233,16 +230,16 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
         _pkt1 = pkts.filter_ping_request().\
             filter_wpan_src64(LEADER).\
             filter_ipv6_dst(REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_next()
         with pkts.save_index():
             pkts.filter_ping_reply(identifier=_pkt1.icmpv6.echo.identifier).\
                 filter_ipv6_src_dst(ROUTER_2_MLEID, LEADER_MLEID).\
-                filter(lambda p: p.icmpv6.data.len == 256).\
+                filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
                 must_next()
         pkts.filter_ping_request(identifier=_pkt1.icmpv6.echo.identifier).\
             filter_wpan_src16_dst16(ROUTER_2_RLOC16, SED_RLOC16).\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_not_next()
 
         # Step 7: Leader sends an Unfragmented ICMPv6 Echo Request to the
@@ -265,7 +262,7 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
             filter_wpan_src16_dst16(ROUTER_2_RLOC16, SED_RLOC16).\
             must_not_next()
 
-        # Step 8: Leader send a Fragmented ICMPv6 Echo Request to the
+        # Step 8: Leader sends a Fragmented ICMPv6 Echo Request to the
         #         Realm-Local All Thread Nodes multicast address
         #         The DUT MUST respond with an ICMPv6 Echo Reply
         #         The Realm-Local All Thread Nodes multicast address
@@ -282,21 +279,21 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
         _pkt = pkts.filter_ping_request().\
             filter_wpan_src64(LEADER).\
             filter_ipv6_dst(REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS).\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_next()
         with pkts.save_index():
             pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
                 filter_ipv6_src_dst(ROUTER_2_MLEID, LEADER_MLEID).\
-                filter(lambda p: p.icmpv6.data.len == 256).\
+                filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
                 must_next()
         pkts.filter_ping_request(identifier = _pkt.icmpv6.echo.identifier).\
             filter_wpan_src16_dst16(ROUTER_2_RLOC16, SED_RLOC16).\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
             filter_wpan_src64(SED).\
             filter_ipv6_dst(LEADER_MLEID).\
-            filter(lambda p: p.icmpv6.data.len == 256).\
+            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
             must_next()
 
 
