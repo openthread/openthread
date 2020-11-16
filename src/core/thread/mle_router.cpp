@@ -4230,10 +4230,8 @@ bool MleRouter::HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute,
                     routerCount++;
                     continue;
                 }
-                else
-                {
-                    ExitNow(rval = false);
-                }
+
+                ExitNow(rval = false);
             }
         }
 
