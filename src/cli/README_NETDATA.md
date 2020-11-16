@@ -165,7 +165,7 @@ Done
 
 ### register
 
-Usage: `dataset register`
+Usage: `netdata register`
 
 Register configured prefixes, routes, and services with the Leader.
 
@@ -176,7 +176,7 @@ Done
 
 ### show
 
-Usage: `dataset show [-x]`
+Usage: `netdata show [-x]`
 
 Print Network Data received from the Leader.
 
