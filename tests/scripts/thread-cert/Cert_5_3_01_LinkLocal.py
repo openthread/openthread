@@ -36,7 +36,7 @@ from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 DUT_ROUTER1 = 2
-DATA_LEN = 256
+FRAGMENTED_DATA_LEN = 256
 
 # Test Purpose and Description:
 # -----------------------------
@@ -86,15 +86,15 @@ class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
 
         # 2 & 3
         link_local = self.nodes[DUT_ROUTER1].get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
-        self.assertTrue(self.nodes[LEADER].ping(link_local, size=DATA_LEN))
+        self.assertTrue(self.nodes[LEADER].ping(link_local, size=FRAGMENTED_DATA_LEN))
         self.assertTrue(self.nodes[LEADER].ping(link_local))
 
         # 4 & 5
-        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_NODES_ADDRESS, size=DATA_LEN))
+        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_NODES_ADDRESS, size=FRAGMENTED_DATA_LEN))
         self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_NODES_ADDRESS))
 
         # 6 & 7
-        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_ROUTERS_ADDRESS, size=DATA_LEN))
+        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_ROUTERS_ADDRESS, size=FRAGMENTED_DATA_LEN))
         self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_ROUTERS_ADDRESS))
 
         # 8
@@ -117,11 +117,11 @@ class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
 
         _pkt = pkts.filter_ping_request().\
             filter_ipv6_src_dst(LEADER_LLA, ROUTER_LLA).\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
             filter_ipv6_src_dst(ROUTER_LLA, LEADER_LLA).\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
 
         # Step 3: Leader sends an Unfragmented ICMPv6 Echo Request to DUT’s
@@ -142,11 +142,11 @@ class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
         _pkt = pkts.filter_ping_request().\
             filter_wpan_src64(LEADER).\
             filter_LLANMA().\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
             filter_ipv6_src_dst(ROUTER_LLA, LEADER_LLA).\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
 
         # Step 5: Leader sends an Unfragmented ICMPv6 Echo Request to the
@@ -168,11 +168,11 @@ class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
         _pkt = pkts.filter_ping_request().\
             filter_wpan_src64(LEADER).\
             filter_LLARMA().\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
             filter_ipv6_src_dst(ROUTER_LLA, LEADER_LLA).\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
 
         # Step 7: Leader sends an Unfragmented ICMPv6 Echo Request to the
