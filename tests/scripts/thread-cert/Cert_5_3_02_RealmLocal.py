@@ -38,7 +38,7 @@ LEADER = 1
 ROUTER1 = 2
 DUT_ROUTER2 = 3
 SED1 = 4
-DATA_LEN = 256
+FRAGMENTED_DATA_LEN = 256
 
 # Test Purpose and Description:
 # -----------------------------
@@ -115,19 +115,19 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
 
         # 2 & 3
         mleid = self.nodes[DUT_ROUTER2].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
-        self.assertTrue(self.nodes[LEADER].ping(mleid, size=DATA_LEN))
+        self.assertTrue(self.nodes[LEADER].ping(mleid, size=FRAGMENTED_DATA_LEN))
         self.simulator.go(2)
         self.assertTrue(self.nodes[LEADER].ping(mleid))
         self.simulator.go(2)
 
         # 4 & 5
-        self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2, size=DATA_LEN))
+        self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2, size=FRAGMENTED_DATA_LEN))
         self.simulator.go(5)
         self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2))
         self.simulator.go(5)
 
         # 6 & 7
-        self.assertTrue(self.nodes[LEADER].ping('ff03::2', num_responses=2, size=DATA_LEN))
+        self.assertTrue(self.nodes[LEADER].ping('ff03::2', num_responses=2, size=FRAGMENTED_DATA_LEN))
         self.simulator.go(5)
         self.assertTrue(self.nodes[LEADER].ping('ff03::2', num_responses=2))
         self.simulator.go(5)
@@ -136,7 +136,7 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
         self.assertTrue(self.nodes[LEADER].ping(
             config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
             num_responses=3,
-            size=DATA_LEN,
+            size=FRAGMENTED_DATA_LEN,
         ))
         self.simulator.go(5)
 
@@ -164,11 +164,11 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
 
         _pkt = pkts.filter_ping_request().\
             filter_ipv6_src_dst(LEADER_MLEID, ROUTER_2_MLEID).\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
             filter_ipv6_src_dst(ROUTER_2_MLEID, LEADER_MLEID).\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
 
         # Step 3: Leader sends a Unfragmented ICMPv6 Echo Request to
@@ -190,16 +190,16 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
         _pkt1 = pkts.filter_ping_request().\
             filter_wpan_src64(LEADER).\
             filter_ipv6_dst(REALM_LOCAL_ALL_NODES_ADDRESS).\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
         with pkts.save_index():
             pkts.filter_ping_reply(identifier=_pkt1.icmpv6.echo.identifier).\
                 filter_ipv6_src_dst(ROUTER_2_MLEID, LEADER_MLEID).\
-                filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+                filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
                 must_next()
         pkts.filter_ping_request(identifier=_pkt1.icmpv6.echo.identifier).\
             filter_wpan_src16_dst16(ROUTER_2_RLOC16, SED_RLOC16).\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_not_next()
 
         # Step 5: Leader sends an Unfragmented ICMPv6 Echo Request to the
@@ -230,16 +230,16 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
         _pkt1 = pkts.filter_ping_request().\
             filter_wpan_src64(LEADER).\
             filter_ipv6_dst(REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
         with pkts.save_index():
             pkts.filter_ping_reply(identifier=_pkt1.icmpv6.echo.identifier).\
                 filter_ipv6_src_dst(ROUTER_2_MLEID, LEADER_MLEID).\
-                filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+                filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
                 must_next()
         pkts.filter_ping_request(identifier=_pkt1.icmpv6.echo.identifier).\
             filter_wpan_src16_dst16(ROUTER_2_RLOC16, SED_RLOC16).\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_not_next()
 
         # Step 7: Leader sends an Unfragmented ICMPv6 Echo Request to the
@@ -279,21 +279,21 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
         _pkt = pkts.filter_ping_request().\
             filter_wpan_src64(LEADER).\
             filter_ipv6_dst(REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS).\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
         with pkts.save_index():
             pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
                 filter_ipv6_src_dst(ROUTER_2_MLEID, LEADER_MLEID).\
-                filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+                filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
                 must_next()
         pkts.filter_ping_request(identifier = _pkt.icmpv6.echo.identifier).\
             filter_wpan_src16_dst16(ROUTER_2_RLOC16, SED_RLOC16).\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
             filter_wpan_src64(SED).\
             filter_ipv6_dst(LEADER_MLEID).\
-            filter(lambda p: p.icmpv6.data.len == DATA_LEN).\
+            filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
 
 

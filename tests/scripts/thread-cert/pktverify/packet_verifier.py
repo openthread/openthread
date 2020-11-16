@@ -161,7 +161,7 @@ class PacketVerifier(object):
             logging.info("add extra var: %s = %s", k, v)
             self._vars[k] = v
 
-    def verify_attached(self, child: str, parent: str = None, child_type: str = None, pkts=None) -> VerifyResult:
+    def verify_attached(self, child: str, parent: str = None, child_type: str = 'FTD', pkts=None) -> VerifyResult:
         """
         Verify that the device attaches to the Thread network.
 
@@ -171,6 +171,7 @@ class PacketVerifier(object):
         """
         result = VerifyResult()
         assert self.is_thread_device(child), child
+        assert child_type in ('FTD', 'MTD'), child_type
         pkts = pkts or self.pkts
         child_extaddr = self.vars[child]
 
@@ -184,15 +185,13 @@ class PacketVerifier(object):
 
         dst_pkts = pkts.filter_wpan_dst64(child_extaddr)
         if parent:
-            src_pkts = pkts.filter_wpan_src64(self.vars[parent]).\
+            dst_pkts = pkts.filter_wpan_src64(self.vars[parent]).\
                 filter_wpan_dst64(child_extaddr)
         dst_pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()  # Child Id Response
         result.record_last('child_id_response', pkts)
 
         with pkts.save_index():
-            if child_type:
-                assert child_type in ('FTD', 'MTD'), role
-            if child_type != 'MTD':
+            if child_type == 'FTD':
                 src_pkts = pkts.filter_wpan_src64(child_extaddr)
                 src_pkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next()  # MLE Advertisement
                 result.record_last('mle_advertisement', pkts)
