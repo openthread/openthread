@@ -129,7 +129,6 @@ class Cert_5_3_5_RoutingLinkQuality(thread_cert.TestCase):
         self.nodes[DUT_ROUTER1].add_allowlist(self.nodes[LEADER].get_addr64(), config.RSSI['LINK_QULITY_0'])
         self.simulator.go(3 * config.MAX_ADVERTISEMENT_INTERVAL)
 
-        leader_rloc = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.RLOC)
         self.assertTrue(self.nodes[ROUTER3].ping(leader_rloc))
 
     def verify(self, pv):
