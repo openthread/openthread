@@ -266,6 +266,7 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             self.nodes[i].start()
             self.simulator.go(5)
             self.assertEqual(self.nodes[i].get_state(), 'router')
+        self.collect_rloc16s()
 
         # All reference testbed devices have been configured with downgrade threshold as 32 except DUT_ROUTER1,
         # so we don't need to ensure ROUTER24 has a better link quality on
@@ -289,13 +290,14 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
         LEADER_RLOC = pv.vars['LEADER_RLOC']
         ROUTER_1 = pv.vars['ROUTER_1']
         ROUTER_1_RLOC = pv.vars['ROUTER_1_RLOC']
+        ROUTER_1_RLOC16 = pv.vars['ROUTER_1_RLOC16']
 
         # Step 1: Ensure topology is formed correctly
 
         for i in range(1, 24):
             pv.verify_attached('ROUTER_%d' % i)
 
-        # Step 3: Allow enough time for for the DUT to get Network Data Updates
+        # Step 3: Allow enough time for the DUT to get Network Data Updates
         #         and resign its Router ID.
         #         The DUT MUST first reconnect to the network as a Child by
         #         sending properly formatted Parent Request and Child ID Request
@@ -341,13 +343,14 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             must_next()
         _pkt.must_not_verify(lambda p: (ADDRESS_REGISTRATION_TLV) in p.mle.tlv.type)
 
-        _pkt = pkts.filter_wpan_src64(ROUTER_1).\
+        pkts.filter_wpan_src64(ROUTER_1).\
             filter_ipv6_dst(LEADER_RLOC).\
             filter_coap_request(ADDR_REL_URI).\
             filter(lambda p: {
                               NL_MAC_EXTENDED_ADDRESS_TLV,
                               NL_RLOC16_TLV
-                              } == set(p.coap.tlv.type)
+                              } == set(p.coap.tlv.type) and\
+                   p.thread_address.tlv.rloc16 == ROUTER_1_RLOC16
                    ).\
            must_next()
 
@@ -357,7 +360,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
         pkts.filter_wpan_src64(LEADER).\
             filter_ipv6_dst(ROUTER_1_RLOC).\
             filter_coap_ack(ADDR_REL_URI).\
-            filter(lambda p: p.coap.code == COAP_CODE_ACK).\
             must_next()
 
         # Step 5: ROUTER_1 responds with ICMPv6 Echo Reply
