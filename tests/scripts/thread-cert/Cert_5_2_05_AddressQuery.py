@@ -50,7 +50,10 @@ ROUTER_SELECTION_JITTER = 1
 # Address Notification messages in response to Address Query messages.
 #
 #  - Build a topology that has a total of 16 active routers, including the Leader,
-#    with no communication constraints
+#    with no communication constraints and
+#        - MED only allows Leader
+#        - DUT only allows Router1
+#        - DUT allows BR later as required in step 5.
 #  - The Leader is configured as a DHCPv6 server for prefix 2001::
 #  - The Border Router is configured as a SLAAC server for prefix 2002::
 #
@@ -70,6 +73,7 @@ ROUTER_SELECTION_JITTER = 1
 
 
 class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
         LEADER: {
@@ -211,7 +215,6 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
         self.nodes[LEADER].add_prefix('2001::/64', 'pdros')
         self.nodes[LEADER].register_netdata()
-        self.simulator.set_lowpan_context(1, '2001::/64')
 
         # 2. BR: SLAAC Server for prefix 2002::/64.
         self.nodes[BR].start()
@@ -219,7 +222,6 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
         self.assertEqual(self.nodes[BR].get_state(), 'router')
         self.nodes[BR].add_prefix('2002::/64', 'paros')
         self.nodes[BR].register_netdata()
-        self.simulator.set_lowpan_context(2, '2002::/64')
 
         # 3. Bring up remaining devices except DUT_REED.
         for i in range(2, 17):
@@ -301,11 +303,8 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
 
         # Step 3: Verify topology is formed correctly except REED.
 
-        pv.verify_attached('ROUTER_2')
         for i in range(1, 16):
             with pkts.save_index():
-                if i == 2:
-                    continue
                 pv.verify_attached('ROUTER_%d' % i)
 
         # Step 4: REED attaches to Router_1 and MUST NOT attempt to become
@@ -314,36 +313,11 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
         pkts.filter_wpan_src64(ROUTER_1).\
             filter_wpan_dst64(REED).\
             filter_mle_cmd(MLE_PARENT_RESPONSE).\
-            filter(lambda p: {
-                              CHALLENGE_TLV,
-                              CONNECTIVITY_TLV,
-                              LEADER_DATA_TLV,
-                              LINK_LAYER_FRAME_COUNTER_TLV,
-                              LINK_MARGIN_TLV,
-                              RESPONSE_TLV,
-                              SOURCE_ADDRESS_TLV,
-                              VERSION_TLV
-                               } <= set(p.mle.tlv.type)
-                   ).\
-                   must_next()
+            must_next()
         pkts.filter_wpan_src64(ROUTER_1).\
             filter_wpan_dst64(REED).\
             filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
-            filter(lambda p: {
-                              ADDRESS16_TLV,
-                              LEADER_DATA_TLV,
-                              NETWORK_DATA_TLV,
-                              SOURCE_ADDRESS_TLV,
-                              ROUTE64_TLV
-                              } <= set(p.mle.tlv.type) or\
-                             {
-                              ADDRESS16_TLV,
-                              LEADER_DATA_TLV,
-                              NETWORK_DATA_TLV,
-                              SOURCE_ADDRESS_TLV
-                              } <= set(p.mle.tlv.type)
-                   ).\
-                   must_next()
+            must_next()
 
         pkts.filter_wpan_src64(REED).\
             filter_coap_request(ADDR_SOL_URI).\

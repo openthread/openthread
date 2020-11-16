@@ -58,7 +58,6 @@ class PcapReader(object):
         """
         if override_prefs is None:
             override_prefs = consts.WIRESHARK_OVERRIDE_PREFS
-            tshark_path = utils.which_tshark()
         if tshark_path is None:
             tshark_path = utils.which_tshark()
 
