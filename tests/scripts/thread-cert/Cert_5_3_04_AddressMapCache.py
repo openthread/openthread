@@ -32,7 +32,7 @@ import unittest
 import command
 import config
 import thread_cert
-from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, REALM_LOCAL_ALL_ROUTERS_ADDRESS, ADDR_QRY_URI, ADDR_NTF_URI, NL_ML_EID_TLV, NL_RLOC16_TLV, NL_TARGET_EID_TLV, COAP_CODE_POST
+from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_QRY_URI, ADDR_NTF_URI, NL_ML_EID_TLV, NL_RLOC16_TLV, NL_TARGET_EID_TLV, COAP_CODE_POST
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -126,11 +126,12 @@ class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
 
         self.nodes[DUT_ROUTER1].start()
         self.simulator.go(5)
+        self.assertEqual(self.nodes[DUT_ROUTER1].get_state(), 'router')
+
         for i in MTDS:
             self.nodes[i].start()
         self.simulator.go(5)
 
-        self.assertEqual(self.nodes[DUT_ROUTER1].get_state(), 'router')
 
         for i in MTDS:
             self.assertEqual(self.nodes[i].get_state(), 'child')
@@ -156,6 +157,7 @@ class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
         pv.summary.show()
 
         LEADER = pv.vars['LEADER']
+        LEADER_RLOC16 = pv.vars['LEADER_RLOC16']
         ROUTER = pv.vars['ROUTER']
         ROUTER_RLOC = pv.vars['ROUTER_RLOC']
         SED = pv.vars['SED']
@@ -202,7 +204,7 @@ class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
                 filter_ipv6_dst(pv.vars['MED_%d_MLEID' %i]).\
                 must_next()
             pkts.filter_wpan_src64(ROUTER).\
-                filter_ipv6_dst(REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+                filter_RLARMA().\
                 filter_coap_request(ADDR_QRY_URI, port=MM).\
                 filter(lambda p: p.thread_address.tlv.target_eid == pv.vars['MED_%d_MLEID' %i]).\
                 must_next()
@@ -215,6 +217,7 @@ class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
                                   NL_TARGET_EID_TLV
                                   } <= set(p.coap.tlv.type) and\
                        p.thread_address.tlv.target_eid == pv.vars['MED_%d_MLEID' %i] and\
+                       p.thread_address.tlv.rloc16 == LEADER_RLOC16 and\
                        p.coap.code == COAP_CODE_POST
                        ).\
                must_next()
@@ -241,7 +244,7 @@ class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
                 filter_ipv6_dst(pv.vars['MED_%d_MLEID' %i]).\
                 must_next()
             pkts.filter_wpan_src64(ROUTER).\
-                filter_ipv6_dst(REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+                filter_RLARMA().\
                 filter_coap_request(ADDR_QRY_URI, port=MM).\
                 must_not_next()
             pkts.filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).\
