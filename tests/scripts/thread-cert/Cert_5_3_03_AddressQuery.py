@@ -32,7 +32,7 @@ import unittest
 import command
 import config
 import thread_cert
-from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, REALM_LOCAL_ALL_ROUTERS_ADDRESS, ADDR_QRY_URI, ADDR_NTF_URI, NL_ML_EID_TLV, NL_RLOC16_TLV, NL_TARGET_EID_TLV, COAP_CODE_POST
+from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_QRY_URI, ADDR_NTF_URI, NL_ML_EID_TLV, NL_RLOC16_TLV, NL_TARGET_EID_TLV, COAP_CODE_POST
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -117,6 +117,9 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
         self.assertEqual(self.nodes[DUT_ROUTER2].get_state(), 'router')
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
         self.assertEqual(self.nodes[MED1].get_state(), 'child')
+        self.collect_ipaddrs()
+        self.collect_rlocs()
+        self.collect_rloc16s()
 
         # 2
         router3_mleid = self.nodes[ROUTER3].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
@@ -129,10 +132,6 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
 
         med1_mleid = self.nodes[MED1].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[ROUTER1].ping(med1_mleid))
-
-        self.collect_ipaddrs()
-        self.collect_rlocs()
-        self.collect_rloc16s()
 
         # 4
         # Wait the finish of address resolution traffic triggerred by previous
@@ -210,7 +209,7 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
             filter_ipv6_dst(ROUTER_3_MLEID).\
             must_next()
         pkts.filter_wpan_src64(ROUTER_2).\
-            filter_ipv6_dst(REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+            filter_RLARMA().\
             filter_coap_request(ADDR_QRY_URI, port=MM).\
             filter(lambda p: p.thread_address.tlv.target_eid == ROUTER_3_MLEID).\
             must_next()
@@ -252,7 +251,7 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
         #         The IPv6 Destination address MUST be the RLOC of the destination
 
         pkts.filter_wpan_src64(ROUTER_1).\
-            filter_ipv6_dst(REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+            filter_RLARMA().\
             filter_coap_request(ADDR_QRY_URI, port=MM).\
             filter(lambda p: p.thread_address.tlv.target_eid == MED_MLEID).\
             must_next()
@@ -302,7 +301,7 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
 
         pkts.range(lstart, lend).\
             filter_wpan_src64(ROUTER_2).\
-            filter_ipv6_dst(REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+            filter_RLARMA().\
             filter_coap_request(ADDR_QRY_URI).\
             must_not_next()
 
@@ -319,7 +318,7 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
         #         Send an ICMPv6 Echo Request from MED to the Router_3 ML-EID address
         #         The DUT MUST update its address cache and removes all entries based
         #         on Router_3’s Router ID.
-        #         The DUT MUST be sent an Address Query to discover Router_3’s RLOC
+        #         The DUT MUST send an Address Query to discover Router_3’s RLOC
         #         address.
 
         _pkt = pkts.filter_ping_request().\
@@ -328,7 +327,7 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
             filter(lambda p: p.sniff_timestamp - _pkt1.sniff_timestamp >= 700).\
             must_next()
         pkts.filter_wpan_src64(ROUTER_2).\
-            filter_ipv6_dst(REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+            filter_RLARMA().\
             filter_coap_request(ADDR_QRY_URI, port=MM).\
             filter(lambda p: p.thread_address.tlv.target_eid == ROUTER_3_MLEID and\
                    p.coap.code == COAP_CODE_POST
@@ -345,7 +344,7 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
             must_next()
 
         pkts.filter_wpan_src64(ROUTER_1).\
-            filter_ipv6_dst(REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+            filter_RLARMA().\
             filter_coap_request(ADDR_QRY_URI, port=MM).\
             filter(lambda p: p.thread_address.tlv.target_eid == MED_MLEID and\
                    p.coap.code == COAP_CODE_POST
