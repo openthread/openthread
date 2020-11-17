@@ -815,10 +815,23 @@ static void processNextRxPacket(otInstance *aInstance)
 
     sReceiveFrame.mLength = length;
 
+    sReceiveFrame.mInfo.mRxInfo.mRssi = packetDetails.rssi;
+    sReceiveFrame.mInfo.mRxInfo.mLqi  = packetDetails.lqi;
+
+    // Get the timestamp when the SFD was received
+    assert(packetDetails.timeReceived.timePosition != RAIL_PACKET_TIME_INVALID);
+    packetDetails.timeReceived.totalPacketBytes = length + 1;
+
+    status = RAIL_GetRxTimeSyncWordEndAlt(gRailHandle, &packetDetails);
+    assert(status == RAIL_STATUS_NO_ERROR);
+    sReceiveFrame.mInfo.mRxInfo.mTimestamp = packetDetails.timeReceived.packetTime;
+
     if (packetDetails.isAck)
     {
         otEXPECT((length == IEEE802154_ACK_LENGTH) &&
                  (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK);
+
+        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = false;
 
         RAIL_YieldRadio(gRailHandle);
         sTransmitBusy = false;
@@ -839,17 +852,6 @@ static void processNextRxPacket(otInstance *aInstance)
         otEXPECT(sPromiscuous || (length != IEEE802154_ACK_LENGTH));
 
         sReceiveError = OT_ERROR_NONE;
-
-        sReceiveFrame.mInfo.mRxInfo.mRssi = packetDetails.rssi;
-        sReceiveFrame.mInfo.mRxInfo.mLqi  = packetDetails.lqi;
-
-        // Get the timestamp when the SFD was received
-        assert(packetDetails.timeReceived.timePosition != RAIL_PACKET_TIME_INVALID);
-        packetDetails.timeReceived.totalPacketBytes = length + 1;
-
-        status = RAIL_GetRxTimeSyncWordEndAlt(gRailHandle, &packetDetails);
-        assert(status == RAIL_STATUS_NO_ERROR);
-        sReceiveFrame.mInfo.mRxInfo.mTimestamp = packetDetails.timeReceived.packetTime;
 
         // Set this flag only when the packet is really acknowledged with frame pending set.
         framePending = wasAckedWithFramePending(sReceiveFrame.mPsdu, sReceiveFrame.mLength);
