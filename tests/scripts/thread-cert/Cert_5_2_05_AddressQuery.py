@@ -310,15 +310,7 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
         # Step 4: REED attaches to Router_1 and MUST NOT attempt to become
         #         an active router by sending an Address Solicit Request
 
-        pkts.filter_wpan_src64(ROUTER_1).\
-            filter_wpan_dst64(REED).\
-            filter_mle_cmd(MLE_PARENT_RESPONSE).\
-            must_next()
-        pkts.filter_wpan_src64(ROUTER_1).\
-            filter_wpan_dst64(REED).\
-            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
-            must_next()
-
+        pv.verify_attached('REED', 'ROUTER_1')
         pkts.filter_wpan_src64(REED).\
             filter_coap_request(ADDR_SOL_URI).\
             must_not_next()
