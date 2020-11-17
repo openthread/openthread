@@ -176,6 +176,8 @@ class Cert_5_2_7_REEDSynchronization_Base(thread_cert.TestCase):
         },
     }
 
+    DUT = 0
+
     def test(self):
         self.nodes[LEADER].start()
         self.simulator.go(5)
@@ -183,18 +185,18 @@ class Cert_5_2_7_REEDSynchronization_Base(thread_cert.TestCase):
 
         for i in range(2, 17):
             self.nodes[i].start()
-            self.simulator.go(10)
+        self.simulator.go(10)
 
         for i in range(2, 17):
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         # Avoid DUT_REED attach to DUT_ROUTER1.
-        if self.__class__.__name__ == 'Cert_5_2_7_REEDSynchronization_REED':
+        if self.DUT == DUT_REED:
             self.nodes[DUT_REED].\
                 add_allowlist(self.nodes[DUT_ROUTER1].get_addr64(),
                               config.RSSI['LINK_QULITY_1'])
 
-        if self.__class__.__name__ == 'Cert_5_2_7_REEDSynchronization_ROUTER':
+        if self.DUT == DUT_ROUTER1:
             self.nodes[DUT_REED].\
                 add_allowlist(self.nodes[DUT_ROUTER1].get_addr64(),
                               config.RSSI['LINK_QULITY_1'])
@@ -216,8 +218,9 @@ class Cert_5_2_7_REEDSynchronization_Base(thread_cert.TestCase):
         REED = pv.vars['REED']
 
         # Step 1: Verify topology is formed correctly except REED.
-        with pkts.save_index():
-            for i in range(1, 16):
+
+        for i in range(1, 16):
+            with pkts.save_index():
                 pv.verify_attached('ROUTER_%d' % i)
 
         # Step 2: REED attaches to the network and MUST NOT attempt to become
@@ -240,8 +243,8 @@ class Cert_5_2_7_REEDSynchronization_Base(thread_cert.TestCase):
         #             - Leader Data TLV
         #             - Source Address TLV
         #             - Version TLV
-        #
-        if self.__class__.__name__ == 'Cert_5_2_7_REEDSynchronization_REED':
+
+        if self.DUT == DUT_REED:
             for i in range(0, MLE_MIN_LINKS):
                 pkts.filter_wpan_src64(REED).\
                     filter_mle_cmd(MLE_LINK_REQUEST).\
@@ -265,7 +268,7 @@ class Cert_5_2_7_REEDSynchronization_Base(thread_cert.TestCase):
         #         The recipient does not make any change to its local state and
         #         MUST NOT reply with a Link Accept And Request message.
 
-        if self.__class__.__name__ == 'Cert_5_2_7_REEDSynchronization_ROUTER':
+        if self.DUT == DUT_ROUTER1:
             pkts.filter_wpan_dst64(REED).\
                 filter_wpan_src64(ROUTER_1).\
                 filter_mle_cmd(MLE_LINK_ACCEPT).\
@@ -283,11 +286,11 @@ class Cert_5_2_7_REEDSynchronization_Base(thread_cert.TestCase):
 
 
 class Cert_5_2_7_REEDSynchronization_REED(Cert_5_2_7_REEDSynchronization_Base):
-    TOPOLOGY = copy.deepcopy(Cert_5_2_7_REEDSynchronization_Base.TOPOLOGY)
+    DUT = DUT_REED
 
 
 class Cert_5_2_7_REEDSynchronization_ROUTER(Cert_5_2_7_REEDSynchronization_Base):
-    TOPOLOGY = copy.deepcopy(Cert_5_2_7_REEDSynchronization_Base.TOPOLOGY)
+    DUT = DUT_ROUTER1
 
 
 if __name__ == '__main__':
