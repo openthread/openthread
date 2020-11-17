@@ -125,7 +125,7 @@
  * Whether use heap allocator for message buffers.
  *
  */
-#define OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE 1
+#define OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE 0
 
 /**
  * @def OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
