@@ -52,13 +52,16 @@ class PacketVerifier(object):
     RLAMFMA = 'ff03::fc'  # realm-local ALL_MPL_FORWARDERS address
     LLABMA = 'ff32:40:fd00:7d03:7d03:7d03:0:3'  # Link-Local All BBRs multicast address
 
-    def __init__(self, test_info_path):
+    def __init__(self, test_info_path, wireshark_prefs=None):
         logging.basicConfig(level=logging.INFO,
                             format='File "%(pathname)s", line %(lineno)d, in %(funcName)s\n'
                             '%(asctime)s - %(levelname)s - %(message)s')
 
         ti = TestInfo(test_info_path)
-        pkts = PcapReader.read(ti.pcap_path)
+        if wireshark_prefs is not None:
+            pkts = PcapReader.read(ti.pcap_path, wireshark_prefs)
+        else:
+            pkts = PcapReader.read(ti.pcap_path)
         print('loaded %d packets from %s' % (len(pkts), ti.pcap_path))
         self.pkts = pkts
         self.test_info = ti
@@ -120,6 +123,7 @@ class PacketVerifier(object):
 
         for i, addrs in self.test_info.ipaddrs.items():
             name = self.test_info.get_node_name(i)
+            self._vars[name + '_IPADDRS'] = addrs
             for addr in addrs:
                 if addr.is_dua:
                     key = name + '_DUA'

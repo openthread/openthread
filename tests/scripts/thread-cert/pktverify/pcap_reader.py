@@ -44,14 +44,20 @@ class PcapReader(object):
     """
 
     @classmethod
-    def read(cls, filename: str, tshark_path: Optional[str] = None) -> PacketFilter:
+    def read(cls,
+             filename: str,
+             override_prefs: Optional[dict] = None,
+             tshark_path: Optional[str] = None) -> PacketFilter:
         """
         Read packets from a given Pcap file.
 
-        :param filename:  The Pcap file.
+        :param filename: The Pcap file.
+        :param override_prefs: Preferences settings for wireshark
         :param tshark_path: The optional path to the `tshark`.
         :return: A PacketFilter containing all packets of the Pcap file.
         """
+        if override_prefs is None:
+            override_prefs = consts.WIRESHARK_OVERRIDE_PREFS
         if tshark_path is None:
             tshark_path = utils.which_tshark()
 
@@ -60,7 +66,7 @@ class PcapReader(object):
         os.system(f"ls -l {filename}")
         filecap = pyshark.FileCapture(filename,
                                       tshark_path=tshark_path,
-                                      override_prefs=consts.WIRESHARK_OVERRIDE_PREFS,
+                                      override_prefs=override_prefs,
                                       decode_as=consts.WIRESHARK_DECODE_AS_ENTRIES)
         filecap.load_packets()
         return PacketFilter(tuple(map(Packet, filecap._packets)))
