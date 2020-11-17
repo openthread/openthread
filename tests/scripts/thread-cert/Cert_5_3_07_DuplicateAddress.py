@@ -33,7 +33,7 @@ import command
 import config
 import mle
 import thread_cert
-from pktverify.consts import ADDR_ERR_URI, ADDR_QRY_URI, ADDR_NTF_URI, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, REALM_LOCAL_ALL_ROUTERS_ADDRESS, NL_ML_EID_TLV, NL_TARGET_EID_TLV, NL_RLOC16_TLV, COAP_CODE_POST
+from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, ADDR_ERR_URI, ADDR_QRY_URI, ADDR_NTF_URI, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, REALM_LOCAL_ALL_ROUTERS_ADDRESS, NL_ML_EID_TLV, NL_TARGET_EID_TLV, NL_RLOC16_TLV, COAP_CODE_POST
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.addrs import Ipv6Addr
 
@@ -45,6 +45,8 @@ SED1 = 5
 MED2 = 6
 
 MTDS = [MED1, SED1, MED2]
+ON_MESH_PREFIX = '2001::/64'
+IPV6_ADDR = '2001::1234'
 
 # Test Purpose and Description:
 # -----------------------------
@@ -111,6 +113,10 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
         },
     }
 
+    # override wireshark preferences with case needed parameters
+    CASE_WIRESHARK_PREFS = WIRESHARK_OVERRIDE_PREFS
+    CASE_WIRESHARK_PREFS['6lowpan.context1'] = ON_MESH_PREFIX
+
     def test(self):
         self.nodes[DUT_LEADER].start()
         self.simulator.go(5)
@@ -129,14 +135,14 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
         self.collect_ipaddrs()
         self.collect_rlocs()
 
-        self.nodes[ROUTER2].add_prefix('2001::/64', 'paros')
+        self.nodes[ROUTER2].add_prefix(ON_MESH_PREFIX, 'paros')
         self.nodes[ROUTER2].register_netdata()
 
-        self.nodes[MED1].add_ipaddr('2001::1234')
-        self.nodes[SED1].add_ipaddr('2001::1234')
+        self.nodes[MED1].add_ipaddr(IPV6_ADDR)
+        self.nodes[SED1].add_ipaddr(IPV6_ADDR)
         self.simulator.go(5)
 
-        self.nodes[MED2].ping('2001::1234')
+        self.nodes[MED2].ping(IPV6_ADDR)
         self.simulator.go(5)
 
     def verify(self, pv):
@@ -154,31 +160,10 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
 
         # Step 1: Ensure topology is formed correctly
         for i in (1, 2):
-            pv.verify_attached('ROUTER_%d' % i)
-        pkts.filter_wpan_src64(MED_1).\
-            filter_wpan_dst64(ROUTER_1).\
-            filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
-            must_next()
-        pkts.filter_wpan_src64(ROUTER_1).\
-            filter_wpan_dst64(MED_1).\
-            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
-            must_next()
-        pkts.filter_wpan_src64(SED).\
-            filter_wpan_dst64(ROUTER_2).\
-            filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
-            must_next()
-        pkts.filter_wpan_src64(ROUTER_2).\
-            filter_wpan_dst64(SED).\
-            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
-            must_next()
-        pkts.filter_wpan_src64(MED_2).\
-            filter_wpan_dst64(LEADER).\
-            filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
-            must_next()
-        pkts.filter_wpan_src64(LEADER).\
-            filter_wpan_dst64(MED_2).\
-            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
-            must_next()
+            pv.verify_attached('ROUTER_%d' % i, 'LEADER')
+        pv.verify_attached('MED_1', 'ROUTER_1', 'MTD')
+        pv.verify_attached('SED', 'ROUTER_2', 'MTD')
+        pv.verify_attached('MED_2', 'LEADER', 'MTD')
 
         # Step 5: MED_2 sends ICMPv6 Echo Request to address configured on MED_1
         #         and SED_1 with Prefix 2001::
@@ -190,19 +175,20 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
         #                 - Target EID TLV
 
         pkts.filter_ping_request().\
-            filter_wpan_src64(MED_2).\
+            filter_wpan_src64(MED_2). \
+            filter_ipv6_dst(IPV6_ADDR). \
             must_next()
         pkts.filter_wpan_src64(LEADER).\
             filter_ipv6_dst(REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
             filter_coap_request(ADDR_QRY_URI, port=MM).\
-            filter(lambda p: p.thread_address.tlv.target_eid == Ipv6Addr('2001::1234')).\
+            filter(lambda p: p.thread_address.tlv.target_eid == Ipv6Addr(IPV6_ADDR)).\
             must_next()
 
         # Step 6: Router_1 & Router_2 respond with Address Notification message
         #         with matching Target TLVs
 
-        with pkts.save_index():
-            for i in (1, 2):
+        for i in (1, 2):
+            with pkts.save_index():
                 pkts.filter_wpan_src64(pv.vars['ROUTER_%d' %i]).\
                     filter_ipv6_dst(LEADER_RLOC).\
                     filter_coap_request(ADDR_NTF_URI, port=MM).\
@@ -211,7 +197,7 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
                                       NL_RLOC16_TLV,
                                       NL_TARGET_EID_TLV
                                       } <= set(p.coap.tlv.type) and\
-                           p.thread_address.tlv.target_eid == Ipv6Addr('2001::1234') and\
+                           p.thread_address.tlv.target_eid == Ipv6Addr(IPV6_ADDR) and\
                            p.coap.code == COAP_CODE_POST
                            ).\
                    must_next()
@@ -232,7 +218,7 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
                               NL_ML_EID_TLV,
                               NL_TARGET_EID_TLV
                               } == set(p.coap.tlv.type) and\
-                   p.thread_address.tlv.target_eid == Ipv6Addr('2001::1234') and\
+                   p.thread_address.tlv.target_eid == Ipv6Addr(IPV6_ADDR) and\
                    p.coap.code == COAP_CODE_POST
                    ).\
             must_next()
