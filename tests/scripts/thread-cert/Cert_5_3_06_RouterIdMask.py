@@ -115,7 +115,6 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         # 3 & 4
 
         self.simulator.go(720)
-        self.simulator.go(config.INFINITE_COST_TIMEOUT + config.MAX_ADVERTISEMENT_INTERVAL)
 
         # 5
 
@@ -129,7 +128,7 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         self.nodes[ROUTER1].reset()
         self.nodes[ROUTER2].reset()
 
-        self.simulator.go(config.MAX_NEIGHBOR_AGE + config.MAX_ADVERTISEMENT_INTERVAL)
+        self.simulator.go(720)
 
     def verify(self, pv):
         pkts = pv.pkts
@@ -140,22 +139,8 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         ROUTER_2 = pv.vars['ROUTER_2']
 
         # Step 1: Ensure topology is formed correctly
-        pkts.filter_wpan_src64(ROUTER_1).\
-            filter_wpan_dst64(LEADER).\
-            filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
-            must_next()
-        pkts.filter_wpan_src64(LEADER).\
-            filter_wpan_dst64(ROUTER_1).\
-            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
-            must_next()
-        pkts.filter_wpan_src64(ROUTER_2).\
-            filter_wpan_dst64(ROUTER_1).\
-            filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
-            must_next()
-        pkts.filter_wpan_src64(ROUTER_1).\
-            filter_wpan_dst64(ROUTER_2).\
-            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
-            must_next()
+        pv.verify_attached('ROUTER_1', 'LEADER')
+        pv.verify_attached('ROUTER_2', 'ROUTER_1')
 
         pkts.filter_wpan_src64(LEADER).\
             filter_LLANMA().\
@@ -180,10 +165,27 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         # Step 5: Re-attach Router_2 to Router_1.
         #         The DUT MUST reset the MLE Advertisement trickle timer and
         #         send an Advertisement
+        pv.verify_attached('ROUTER_2', 'ROUTER_1')
+        with pkts.save_index():
+            _pkt = pkts.filter_wpan_src64(LEADER).\
+                filter_LLANMA().\
+                filter_mle_cmd(MLE_ADVERTISEMENT).\
+                must_next()
+            pkts.filter_wpan_src64(LEADER).\
+                filter_LLANMA().\
+                filter_mle_cmd(MLE_ADVERTISEMENT).\
+                filter(lambda p: p.sniff_timestamp - _pkt.sniff_timestamp <= 3).\
+                must_next()
         pkts.filter_wpan_src64(LEADER).\
             filter_LLANMA().\
             filter_mle_cmd(MLE_ADVERTISEMENT).\
-            filter(lambda p: {1,2,1} == set(p.mle.tlv.route64.cost)).\
+            filter(lambda p: {1,0,1} == set(p.mle.tlv.route64.cost)).\
+            must_next()
+        pkts.filter_wpan_src64(LEADER).\
+            filter_LLANMA().\
+            filter_mle_cmd(MLE_ADVERTISEMENT).\
+            filter(lambda p: {1,2,1} == set(p.mle.tlv.route64.cost) and\
+                   p.sniff_timestamp - _pkt.sniff_timestamp <= 3).\
             must_next()
 
         # Step 6: The DUT’s routing cost to Router_1 MUST go directly to
@@ -202,7 +204,7 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         pkts.filter_wpan_src64(LEADER).\
             filter_LLANMA().\
             filter_mle_cmd(MLE_ADVERTISEMENT).\
-            filter(lambda p: (1) in p.mle.tlv.route64.cost).\
+            filter(lambda p: [1] == p.mle.tlv.route64.cost).\
             must_next()
 
 
