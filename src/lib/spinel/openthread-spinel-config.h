@@ -45,13 +45,14 @@
 #endif
 
 /**
- * @def OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_ENABLE
+ * @def OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT
  *
- * Define 1 to enable restoration on RCP failures.
+ * Defines the max count of RCP failures allowed to be recovered.
+ * 0 means to disable RCP failure recovering.
  *
  */
-#ifndef OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_ENABLE
-#define OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_ENABLE 0
+#ifndef OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT
+#define OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT 0
 #endif
 
 #endif // OPENTHREAD_SPINEL_CONFIG_H_

@@ -880,7 +880,7 @@ private:
     void HandleRcpTimeout(void);
     void RecoverFromRcpFailure(void);
 
-#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_ENABLE
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     void RestoreProperties(void);
 #endif
 
@@ -924,8 +924,10 @@ private:
     bool  mSupportsLogStream : 1; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
     bool  mIsTimeSynced : 1;      ///< Host has calculated the time difference between host and RCP.
 
-#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_ENABLE
-    bool mResetRadioOnStartup : 1; ///< Whether should send reset command when init.
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+
+    bool    mResetRadioOnStartup : 1; ///< Whether should send reset command when init.
+    int16_t mRcpFailureCount;         ///< Count of consecutive RCP failures.
 
     // Properties set by core.
     uint8_t      mKeyIdMode;
@@ -950,9 +952,9 @@ private:
     bool mCoexEnabledSet : 1;              ///< Whether coex enabled has been set.
     bool mFemLnaGainSet : 1;               ///< Whether FEM LNA gain has benn set.
     bool mRcpFailed : 1;                   ///< RCP failure happened, should recover and retry operation.
-    bool mIsRcpRecovering : 1;             ///< RCP is recovering, if fails while this is true, dies.
     bool mEnergyScanning : 1;              ///< If fails while scanning, restarts scanning.
-#endif
+
+#endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     bool   mDiagMode;
