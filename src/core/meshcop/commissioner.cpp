@@ -590,6 +590,8 @@ otError Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
         ExitNow();
     }
 
+    VerifyOrExit(ValidateUtf8(aProvisioningUrl), error = OT_ERROR_INVALID_ARGS);
+
     len = static_cast<uint8_t>(StringLength(aProvisioningUrl, sizeof(mProvisioningUrl)));
 
     VerifyOrExit(len < sizeof(mProvisioningUrl), error = OT_ERROR_INVALID_ARGS);

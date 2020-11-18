@@ -39,7 +39,6 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/settings.hpp"
-#include "common/string.hpp"
 
 using namespace ot;
 
@@ -192,7 +191,6 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(ValidateUtf8(aNetworkName), error = OT_ERROR_INVALID_ARGS);
 
     error = instance.Get<Mac::Mac>().SetNetworkName(aNetworkName);
     instance.Get<MeshCoP::ActiveDataset>().Clear();
@@ -216,7 +214,6 @@ otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(ValidateUtf8(aDomainName), error = OT_ERROR_INVALID_ARGS);
 
     error = instance.Get<Mac::Mac>().SetDomainName(aDomainName);
 

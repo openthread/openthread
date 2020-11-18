@@ -42,6 +42,7 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
+#include "common/string.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac_frame.hpp"
@@ -475,9 +476,15 @@ otError Mac::SetNetworkName(const char *aNameString)
     // longer than `kMaxSize` is correctly rejected (returning error
     // `OT_ERROR_INVALID_ARGS`).
 
+    otError  error;
     NameData data(aNameString, NetworkName::kMaxSize + 1);
 
-    return SetNetworkName(data);
+    VerifyOrExit(ValidateUtf8(aNameString), error = OT_ERROR_INVALID_ARGS);
+
+    error = SetNetworkName(data);
+
+exit:
+    return error;
 }
 
 otError Mac::SetNetworkName(const NameData &aNameData)
@@ -509,9 +516,15 @@ otError Mac::SetDomainName(const char *aNameString)
     // longer than `kMaxSize` is correctly rejected (returning error
     // `OT_ERROR_INVALID_ARGS`).
 
+    otError  error;
     NameData data(aNameString, DomainName::kMaxSize + 1);
 
-    return SetDomainName(data);
+    VerifyOrExit(ValidateUtf8(aNameString), error = OT_ERROR_INVALID_ARGS);
+
+    error = SetDomainName(data);
+
+exit:
+    return error;
 }
 
 otError Mac::SetDomainName(const NameData &aNameData)
