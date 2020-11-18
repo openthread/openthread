@@ -46,14 +46,8 @@ target_compile_options(openthread-rcp PRIVATE
 
 target_include_directories(openthread-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
-target_sources(openthread-rcp PRIVATE
-    changed_props_set.cpp
-    ncp_base.cpp
-    ncp_base_dispatcher.cpp
-    ncp_base_radio.cpp
-    ncp_spi.cpp
-    ncp_uart.cpp
-)
+target_sources(openthread-rcp PRIVATE ${COMMON_SOURCES})
+target_include_directories(openthread-rcp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(openthread-rcp
     PUBLIC
