@@ -216,6 +216,7 @@ otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(ValidateUtf8(aDomainName), error = OT_ERROR_INVALID_ARGS);
 
     error = instance.Get<Mac::Mac>().SetDomainName(aDomainName);
 

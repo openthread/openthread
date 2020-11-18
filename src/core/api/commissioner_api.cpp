@@ -37,6 +37,7 @@
 
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
+#include "common/string.hpp"
 
 using namespace ot;
 
@@ -120,9 +121,15 @@ otError otCommissionerRemoveJoinerWithDiscerner(otInstance *aInstance, const otJ
 
 otError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aProvisioningUrl)
 {
+    otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<MeshCoP::Commissioner>().SetProvisioningUrl(aProvisioningUrl);
+    VerifyOrExit(ValidateUtf8(aProvisioningUrl), error = OT_ERROR_INVALID_ARGS);
+
+    error = instance.Get<MeshCoP::Commissioner>().SetProvisioningUrl(aProvisioningUrl);
+
+exit:
+    return error;
 }
 
 const char *otCommissionerGetProvisioningUrl(otInstance *aInstance)

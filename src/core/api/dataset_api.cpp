@@ -173,7 +173,14 @@ otError otDatasetGeneratePskc(const char *           aPassPhrase,
                               const otExtendedPanId *aExtPanId,
                               otPskc *               aPskc)
 {
-    return MeshCoP::GeneratePskc(aPassPhrase, *static_cast<const Mac::NetworkName *>(aNetworkName),
-                                 *static_cast<const Mac::ExtendedPanId *>(aExtPanId), *static_cast<Pskc *>(aPskc));
+    otError error;
+
+    VerifyOrExit(ValidateUtf8(aPassPhrase), error = OT_ERROR_INVALID_ARGS);
+
+    error = MeshCoP::GeneratePskc(aPassPhrase, *static_cast<const Mac::NetworkName *>(aNetworkName),
+                                  *static_cast<const Mac::ExtendedPanId *>(aExtPanId), *static_cast<Pskc *>(aPskc));
+
+exit:
+    return error;
 }
 #endif // OPENTHREAD_FTD

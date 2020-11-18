@@ -37,6 +37,7 @@
 
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
+#include "common/string.hpp"
 
 using namespace ot;
 
@@ -51,10 +52,18 @@ otError otJoinerStart(otInstance *     aInstance,
                       otJoinerCallback aCallback,
                       void *           aContext)
 {
+    otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<MeshCoP::Joiner>().Start(aPskd, aProvisioningUrl, aVendorName, aVendorModel, aVendorSwVersion,
-                                                 aVendorData, aCallback, aContext);
+    VerifyOrExit(ValidateUtf8(aProvisioningUrl), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(ValidateUtf8(aVendorName), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(ValidateUtf8(aVendorSwVersion), error = OT_ERROR_INVALID_ARGS);
+
+    error = instance.Get<MeshCoP::Joiner>().Start(aPskd, aProvisioningUrl, aVendorName, aVendorModel, aVendorSwVersion,
+                                                  aVendorData, aCallback, aContext);
+
+exit:
+    return error;
 }
 
 void otJoinerStop(otInstance *aInstance)
