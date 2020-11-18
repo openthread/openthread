@@ -79,7 +79,7 @@ bool ValidateUtf8(const char *aString)
     uint8_t byte;
     uint8_t continuationBytes = 0;
 
-    while ((byte = *reinterpret_cast<const uint8_t*>(aString++)) != 0)
+    while ((byte = *reinterpret_cast<const uint8_t *>(aString++)) != 0)
     {
         if ((byte & 0x80) == 0)
         {
@@ -112,7 +112,7 @@ bool ValidateUtf8(const char *aString)
 
         while (continuationBytes-- != 0)
         {
-            byte = *reinterpret_cast<const uint8_t*>(aString++);
+            byte = *reinterpret_cast<const uint8_t *>(aString++);
 
             // Verify the continuation byte pattern 10xx-xxxx
             VerifyOrExit((byte & 0xc0) == 0x80, ret = false);
