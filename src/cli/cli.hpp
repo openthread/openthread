@@ -258,7 +258,7 @@ private:
     };
 
     otError        ParsePingInterval(const char *aString, uint32_t &aInterval);
-    static otError ParseJoinerDiscerner(char *aString, otJoinerDiscerner &aJoinerDiscerner);
+    static otError ParseJoinerDiscerner(char *aString, otJoinerDiscerner &aDiscerner);
 
     otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessCcaThreshold(uint8_t aArgsLength, char *aArgs[]);

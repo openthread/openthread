@@ -1471,9 +1471,9 @@ public:
 private:
     Buffer *NewBuffer(Message::Priority aPriority);
     void    FreeBuffers(Buffer *aBuffer);
-    otError ReclaimBuffers(int aNumBuffers, Message::Priority aPriority);
+    otError ReclaimBuffers(Message::Priority aPriority);
 
-#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT == 0
+#if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT && !OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
     uint16_t                  mNumFreeBuffers;
     Pool<Buffer, kNumBuffers> mBufferPool;
 #endif

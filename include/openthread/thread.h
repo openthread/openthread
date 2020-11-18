@@ -831,7 +831,7 @@ typedef void (*otThreadDiscoveryRequestCallback)(const otThreadDiscoveryRequestI
  * @param[in]  aContext   A pointer to callback application-specific context.
  *
  */
-void otThreadSetDiscoveryRequestCallback(otInstance *                     aInstnace,
+void otThreadSetDiscoveryRequestCallback(otInstance *                     aInstance,
                                          otThreadDiscoveryRequestCallback aCallback,
                                          void *                           aContext);
 

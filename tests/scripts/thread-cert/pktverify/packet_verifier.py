@@ -52,13 +52,16 @@ class PacketVerifier(object):
     RLAMFMA = 'ff03::fc'  # realm-local ALL_MPL_FORWARDERS address
     LLABMA = 'ff32:40:fd00:7d03:7d03:7d03:0:3'  # Link-Local All BBRs multicast address
 
-    def __init__(self, test_info_path):
+    def __init__(self, test_info_path, wireshark_prefs=None):
         logging.basicConfig(level=logging.INFO,
                             format='File "%(pathname)s", line %(lineno)d, in %(funcName)s\n'
                             '%(asctime)s - %(levelname)s - %(message)s')
 
         ti = TestInfo(test_info_path)
-        pkts = PcapReader.read(ti.pcap_path)
+        if wireshark_prefs is not None:
+            pkts = PcapReader.read(ti.pcap_path, wireshark_prefs)
+        else:
+            pkts = PcapReader.read(ti.pcap_path)
         print('loaded %d packets from %s' % (len(pkts), ti.pcap_path))
         self.pkts = pkts
         self.test_info = ti
@@ -120,6 +123,7 @@ class PacketVerifier(object):
 
         for i, addrs in self.test_info.ipaddrs.items():
             name = self.test_info.get_node_name(i)
+            self._vars[name + '_IPADDRS'] = addrs
             for addr in addrs:
                 if addr.is_dua:
                     key = name + '_DUA'
@@ -161,29 +165,41 @@ class PacketVerifier(object):
             logging.info("add extra var: %s = %s", k, v)
             self._vars[k] = v
 
-    def verify_attached(self, name: str, pkts=None) -> VerifyResult:
+    def verify_attached(self, child: str, parent: str = None, child_type: str = 'FTD', pkts=None) -> VerifyResult:
         """
         Verify that the device attaches to the Thread network.
 
-        :param name: The device name.
+        :param child: The child device name.
+        :param parent: The parent device name.
+        :param child_type: The child device type (FTD, MTD).
         """
         result = VerifyResult()
-        assert self.is_thread_device(name), name
+        assert self.is_thread_device(child), child
+        assert child_type in ('FTD', 'MTD'), child_type
         pkts = pkts or self.pkts
-        extaddr = self.vars[name]
+        child_extaddr = self.vars[child]
 
-        src_pkts = pkts.filter_wpan_src64(extaddr)
+        src_pkts = pkts.filter_wpan_src64(child_extaddr)
+        if parent:
+            assert self.is_thread_device(parent), parent
+            src_pkts = pkts.filter_wpan_src64(child_extaddr).\
+                filter_wpan_dst64(self.vars[parent])
         src_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()  # Child Id Request
         result.record_last('child_id_request', pkts)
 
-        dst_pkts = pkts.filter_wpan_dst64(extaddr)
+        dst_pkts = pkts.filter_wpan_dst64(child_extaddr)
+        if parent:
+            dst_pkts = pkts.filter_wpan_src64(self.vars[parent]).\
+                filter_wpan_dst64(child_extaddr)
         dst_pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()  # Child Id Response
         result.record_last('child_id_response', pkts)
 
         with pkts.save_index():
-            src_pkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next()  # MLE Advertisement
-            result.record_last('mle_advertisement', pkts)
-            logging.info(f"verify attached: d={name}, result={result}")
+            if child_type == 'FTD':
+                src_pkts = pkts.filter_wpan_src64(child_extaddr)
+                src_pkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next()  # MLE Advertisement
+                result.record_last('mle_advertisement', pkts)
+            logging.info(f"verify attached: d={child}, result={result}")
 
         return result
 

@@ -140,16 +140,16 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 
 uint32_t otPlatAlarmMilliGetNow(void)
 {
+    struct timeval tv;
+
     if (g_testPlatAlarmGetNow)
     {
         return g_testPlatAlarmGetNow();
     }
-    else
-    {
-        struct timeval tv;
-        gettimeofday(&tv, nullptr);
-        return (uint32_t)((tv.tv_sec * 1000) + (tv.tv_usec / 1000) + 123456);
-    }
+
+    gettimeofday(&tv, nullptr);
+
+    return (uint32_t)((tv.tv_sec * 1000) + (tv.tv_usec / 1000) + 123456);
 }
 
 void otPlatAlarmMicroStop(otInstance *aInstance)
@@ -179,16 +179,16 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 
 uint32_t otPlatAlarmMicroGetNow(void)
 {
+    struct timeval tv;
+
     if (g_testPlatAlarmGetNow)
     {
         return g_testPlatAlarmGetNow();
     }
-    else
-    {
-        struct timeval tv;
-        gettimeofday(&tv, nullptr);
-        return (uint32_t)((tv.tv_sec * 1000000) + tv.tv_usec + 123456);
-    }
+
+    gettimeofday(&tv, nullptr);
+
+    return (uint32_t)((tv.tv_sec * 1000000) + tv.tv_usec + 123456);
 }
 
 //
@@ -215,11 +215,11 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
     }
 }
 
-void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddr)
+void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
     if (g_testPlatRadioSetShortAddress)
     {
-        g_testPlatRadioSetShortAddress(aInstance, aShortAddr);
+        g_testPlatRadioSetShortAddress(aInstance, aShortAddress);
     }
 }
 
@@ -233,10 +233,8 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
     {
         return g_testPlatRadioIsEnabled(aInstance);
     }
-    else
-    {
-        return true;
-    }
+
+    return true;
 }
 
 otError otPlatRadioEnable(otInstance *aInstance)
@@ -245,10 +243,8 @@ otError otPlatRadioEnable(otInstance *aInstance)
     {
         return g_testPlatRadioEnable(aInstance);
     }
-    else
-    {
-        return OT_ERROR_NONE;
-    }
+
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioDisable(otInstance *aInstance)
@@ -257,10 +253,8 @@ otError otPlatRadioDisable(otInstance *aInstance)
     {
         return g_testPlatRadioDisable(aInstance);
     }
-    else
-    {
-        return OT_ERROR_NONE;
-    }
+
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioSleep(otInstance *)
@@ -274,10 +268,8 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     {
         return g_testPlatRadioReceive(aInstance, aChannel);
     }
-    else
-    {
-        return OT_ERROR_NONE;
-    }
+
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
@@ -288,10 +280,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     {
         return g_testPlatRadioTransmit(aInstance);
     }
-    else
-    {
-        return OT_ERROR_NONE;
-    }
+
+    return OT_ERROR_NONE;
 }
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
@@ -300,10 +290,8 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
     {
         return g_testPlatRadioGetTransmitBuffer(aInstance);
     }
-    else
-    {
-        return nullptr;
-    }
+
+    return nullptr;
 }
 
 int8_t otPlatRadioGetRssi(otInstance *)

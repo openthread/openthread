@@ -533,3 +533,7 @@ LOCAL_SRC_FILES := src/posix/client.cpp
 
 include $(BUILD_EXECUTABLE)
 endif # ($(USE_OTBR_DAEMON), 1)
+
+ifneq ($(OPENTHREAD_PROJECT_ANDROID_MK),)
+include $(OPENTHREAD_PROJECT_ANDROID_MK)
+endif

@@ -416,7 +416,7 @@ private:
                               bool                aAddMeshHeader = false,
                               uint16_t            aMeshSource    = 0xffff,
                               uint16_t            aMeshDest      = 0xffff);
-    void     PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aDstAddr, bool aAckRequest);
+    void     PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest);
 
     void    SendMesh(Message &aMessage, Mac::TxFrame &aFrame);
     void    SendDestinationUnreachable(uint16_t aMeshSource, const Message &aMessage);

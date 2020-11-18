@@ -161,7 +161,7 @@ private:
     void SetFrom(Instance &           aInstance,
                  const PrefixTlv &    aPrefixTlv,
                  const HasRouteTlv &  aHasRouteTlv,
-                 const HasRouteEntry &aEntry);
+                 const HasRouteEntry &aHasRouteEntry);
 };
 
 /**

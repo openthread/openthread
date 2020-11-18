@@ -274,27 +274,27 @@ otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint16_t aChildIndex,
 
 otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
                                        uint16_t                   aChildIndex,
-                                       otChildIp6AddressIterator *aIterIndex,
+                                       otChildIp6AddressIterator *aIterator,
                                        otIp6Address *             aAddress)
 {
     otError      error    = OT_ERROR_NONE;
     Instance &   instance = *static_cast<Instance *>(aInstance);
     const Child *child;
 
-    OT_ASSERT(aIterIndex != nullptr && aAddress != nullptr);
+    OT_ASSERT(aIterator != nullptr && aAddress != nullptr);
 
     child = instance.Get<ChildTable>().GetChildAtIndex(aChildIndex);
     VerifyOrExit(child != nullptr, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(child->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_ARGS);
 
     {
-        Child::AddressIterator iter(*child, *aIterIndex);
+        Child::AddressIterator iter(*child, *aIterator);
 
         VerifyOrExit(!iter.IsDone(), error = OT_ERROR_NOT_FOUND);
         *aAddress = *iter.GetAddress();
 
         iter++;
-        *aIterIndex = iter.GetAsIndex();
+        *aIterator = iter.GetAsIndex();
     }
 
 exit:

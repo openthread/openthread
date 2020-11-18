@@ -84,14 +84,14 @@ exit:
     return error;
 }
 
-otError ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[], uint8_t aArgsLengthMax)
+otError ParseCmd(char *aCommandString, uint8_t &aArgsLength, char *aArgs[], uint8_t aArgsLengthMax)
 {
     otError error = OT_ERROR_NONE;
     char *  cmd;
 
     aArgsLength = 0;
 
-    for (cmd = aString; *cmd; cmd++)
+    for (cmd = aCommandString; *cmd; cmd++)
     {
         if ((*cmd == '\\') && IsEscapable(*(cmd + 1)))
         {
