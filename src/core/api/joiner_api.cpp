@@ -55,9 +55,9 @@ otError otJoinerStart(otInstance *     aInstance,
     otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(ValidateUtf8(aProvisioningUrl), error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(ValidateUtf8(aVendorName), error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(ValidateUtf8(aVendorSwVersion), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aProvisioningUrl == nullptr || ValidateUtf8(aProvisioningUrl), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aVendorName == nullptr || ValidateUtf8(aVendorName), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aVendorSwVersion == nullptr || ValidateUtf8(aVendorSwVersion), error = OT_ERROR_INVALID_ARGS);
 
     error = instance.Get<MeshCoP::Joiner>().Start(aPskd, aProvisioningUrl, aVendorName, aVendorModel, aVendorSwVersion,
                                                   aVendorData, aCallback, aContext);

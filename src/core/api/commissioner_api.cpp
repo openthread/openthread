@@ -124,7 +124,7 @@ otError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aPro
     otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(ValidateUtf8(aProvisioningUrl), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aProvisioningUrl == nullptr || ValidateUtf8(aProvisioningUrl), error = OT_ERROR_INVALID_ARGS);
 
     error = instance.Get<MeshCoP::Commissioner>().SetProvisioningUrl(aProvisioningUrl);
 
