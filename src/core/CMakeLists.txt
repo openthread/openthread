@@ -90,7 +90,6 @@ set(COMMON_SOURCES
     common/timer.cpp
     common/tlvs.cpp
     common/trickle_timer.cpp
-    common/utf8.cpp
     crypto/aes_ccm.cpp
     crypto/aes_ecb.cpp
     crypto/ecdsa.cpp

@@ -73,4 +73,54 @@ otError StringBase::Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, cons
     return error;
 }
 
+bool ValidateUtf8(const char *aString)
+{
+    bool    ret = true;
+    uint8_t byte;
+    uint8_t continuationBytes = 0;
+
+    while ((byte = *reinterpret_cast<const uint8_t*>(aString++)) != 0)
+    {
+        if ((byte & 0x80) == 0)
+        {
+            continue;
+        }
+
+        // This is a leading byte 1xxx-xxxx.
+
+        if ((byte & 0x40) == 0) // 10xx-xxxx
+        {
+            // We got a continuation byte pattern without seeing a leading byte earlier.
+            ExitNow(ret = false);
+        }
+        else if ((byte & 0x20) == 0) // 110x-xxxx
+        {
+            continuationBytes = 1;
+        }
+        else if ((byte & 0x10) == 0) // 1110-xxxx
+        {
+            continuationBytes = 2;
+        }
+        else if ((byte & 0x08) == 0) // 1111-0xxx
+        {
+            continuationBytes = 3;
+        }
+        else // 1111-1xxx  (invalid pattern).
+        {
+            ExitNow(ret = false);
+        }
+
+        while (continuationBytes-- != 0)
+        {
+            byte = *reinterpret_cast<const uint8_t*>(aString++);
+
+            // Verify the continuation byte pattern 10xx-xxxx
+            VerifyOrExit((byte & 0xc0) == 0x80, ret = false);
+        }
+    }
+
+exit:
+    return ret;
+}
+
 } // namespace ot

@@ -199,7 +199,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/common/timer.cpp                               \
     src/core/common/tlvs.cpp                                \
     src/core/common/trickle_timer.cpp                       \
-    src/core/common/utf8.cpp                                \
     src/core/crypto/aes_ccm.cpp                             \
     src/core/crypto/aes_ecb.cpp                             \
     src/core/crypto/hmac_sha256.cpp                         \

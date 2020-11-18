@@ -167,7 +167,6 @@ SOURCES_COMMON                                  = \
     common/timer.cpp                              \
     common/tlvs.cpp                               \
     common/trickle_timer.cpp                      \
-    common/utf8.cpp                               \
     crypto/aes_ccm.cpp                            \
     crypto/aes_ecb.cpp                            \
     crypto/ecdsa.cpp                              \
@@ -371,7 +370,6 @@ HEADERS_COMMON                                  = \
     common/tlvs.hpp                               \
     common/trickle_timer.hpp                      \
     common/type_traits.hpp                        \
-    common/utf8.hpp                               \
     config/announce_sender.h                      \
     config/backbone_router.h                      \
     config/border_router.h                        \

@@ -390,8 +390,6 @@ openthread_core_files = [
   "common/trickle_timer.cpp",
   "common/trickle_timer.hpp",
   "common/type_traits.hpp",
-  "common/utf8.cpp",
-  "common/utf8.hpp",
   "crypto/aes_ccm.cpp",
   "crypto/aes_ccm.hpp",
   "crypto/aes_ecb.cpp",
