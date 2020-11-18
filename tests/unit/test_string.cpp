@@ -148,7 +148,7 @@ void TestUtf8(void)
     VerifyOrQuit(!ValidateUtf8("\xbf"), "ValidateUtf8() illegal string fails");
     VerifyOrQuit(!ValidateUtf8("\xdf"), "ValidateUtf8() illegal string fails");
     VerifyOrQuit(!ValidateUtf8("\xef\x80"), "ValidateUtf8() illegal string fails");
-    VerifyOrQuit(!ValidateUtf8("\xf8\x80\x80"), "ValidateUtf8() illegal string fails");
+    VerifyOrQuit(!ValidateUtf8("\xf7\x80\x80"), "ValidateUtf8() illegal string fails");
     VerifyOrQuit(!ValidateUtf8("\xff"), "ValidateUtf8() illegal string fails");
 
     printf(" -- PASS\n");
