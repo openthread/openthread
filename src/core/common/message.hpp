@@ -1472,6 +1472,7 @@ public:
      * This method returns the total number of buffers.
      *
      * @returns The total number of buffers.
+     *
      */
     uint16_t GetTotalBufferCount(void) const;
 
