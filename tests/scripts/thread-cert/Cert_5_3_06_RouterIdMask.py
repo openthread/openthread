@@ -35,6 +35,7 @@ import mle
 import thread_cert
 from pktverify.consts import MLE_ADVERTISEMENT, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE
 from pktverify.packet_verifier import PacketVerifier
+from pktverify.utils import ridmask_to_rid
 
 DUT_LEADER = 1
 ROUTER1 = 2
@@ -104,6 +105,8 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
+        self.collect_rloc16s()
+
         # Wait DUT_LEADER to establish routing to ROUTER2 via ROUTER1's MLE
         # advertisement.
         self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
@@ -138,6 +141,10 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         ROUTER_1 = pv.vars['ROUTER_1']
         ROUTER_2 = pv.vars['ROUTER_2']
 
+        leader_rid = pv.vars['LEADER_RLOC16'] >> 10
+        router_1_rid = pv.vars['ROUTER_1_RLOC16'] >> 10
+        router_2_rid = pv.vars['ROUTER_2_RLOC16'] >> 10
+
         # Step 1: Ensure topology is formed correctly
         pv.verify_attached('ROUTER_1', 'LEADER')
         pv.verify_attached('ROUTER_2', 'ROUTER_1')
@@ -145,7 +152,11 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         pkts.filter_wpan_src64(LEADER).\
             filter_LLANMA().\
             filter_mle_cmd(MLE_ADVERTISEMENT).\
-            filter(lambda p: {1,2,1} == set(p.mle.tlv.route64.cost)).\
+            filter(lambda p:
+                   {1,2,1} == set(p.mle.tlv.route64.cost) and\
+                   {leader_rid, router_1_rid, router_2_rid} ==
+                   set(ridmask_to_rid(p.mle.tlv.route64.id_mask))
+                   ).\
             must_next()
 
         # Step 4: The DUT’s routing cost to Router_2 MUST count to infinity
@@ -159,7 +170,11 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         pkts.filter_wpan_src64(LEADER).\
             filter_LLANMA().\
             filter_mle_cmd(MLE_ADVERTISEMENT).\
-            filter(lambda p: {1,1} == set(p.mle.tlv.route64.cost)).\
+            filter(lambda p:
+                   {1,1} == set(p.mle.tlv.route64.cost) and\
+                   {leader_rid, router_1_rid} ==
+                   set(ridmask_to_rid(p.mle.tlv.route64.id_mask))
+                   ).\
             must_next()
 
         # Step 5: Re-attach Router_2 to Router_1.
@@ -185,7 +200,10 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
             filter_LLANMA().\
             filter_mle_cmd(MLE_ADVERTISEMENT).\
             filter(lambda p: {1,2,1} == set(p.mle.tlv.route64.cost) and\
-                   p.sniff_timestamp - _pkt.sniff_timestamp <= 3).\
+                   p.sniff_timestamp - _pkt.sniff_timestamp <= 3 and\
+                   {leader_rid, router_1_rid, router_2_rid} ==
+                   set(ridmask_to_rid(p.mle.tlv.route64.id_mask))
+                   ).\
             must_next()
 
         # Step 6: The DUT’s routing cost to Router_1 MUST go directly to
@@ -204,7 +222,11 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         pkts.filter_wpan_src64(LEADER).\
             filter_LLANMA().\
             filter_mle_cmd(MLE_ADVERTISEMENT).\
-            filter(lambda p: [1] == p.mle.tlv.route64.cost).\
+            filter(lambda p:
+                   [1] == p.mle.tlv.route64.cost and\
+                   [leader_rid] ==
+                   ridmask_to_rid(p.mle.tlv.route64.id_mask)
+                   ).\
             must_next()
 
 

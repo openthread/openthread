@@ -275,7 +275,7 @@ _LAYER_FIELDS = {
     'mle.tlv.route64.nbr_out': _list(_auto),
     'mle.tlv.route64.nbr_in': _list(_auto),
     'mle.tlv.route64.id_seq': _auto,
-    'mle.tlv.route64.id_mask': _auto,
+    'mle.tlv.route64.id_mask': _str,
     'mle.tlv.route64.cost': _list(_auto),
     'mle.tlv.response': _bytes,
     'mle.tlv.mle_frm_cntr': _auto,

@@ -135,3 +135,22 @@ def which_mergecap() -> str:
     :return: The path to `mergecap` executable.
     """
     return os.path.join(get_wireshark_dir(), 'mergecap')
+
+
+def ridmask_to_rid(ridmask: str) -> list:
+    """
+    Convert router ID mask to router IDs
+
+    :param ridmask: router ID mask
+    :return: router id list
+    """
+    assert isinstance(ridmask, str), ridmask
+    ridmask_int = int(ridmask.replace(':', ''), base=16)
+    rids = list()
+    count = 0
+    while ridmask_int:
+        count += 1
+        if ridmask_int & 1:
+            rids.append(64 - count)
+        ridmask_int = ridmask_int >> 1
+    return rids
