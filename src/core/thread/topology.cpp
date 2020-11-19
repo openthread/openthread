@@ -218,9 +218,9 @@ void Child::Info::SetFrom(const Child &aChild)
     mFullNetworkData    = aChild.IsFullNetworkData();
     mIsStateRestoring   = aChild.IsStateRestoring();
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    mIsCslSynced        = aChild.IsCslSynchronized();
+    mIsCslSynced = aChild.IsCslSynchronized();
 #else
-    mIsCslSynced        = false;
+    mIsCslSynced = false;
 #endif
 }
 
