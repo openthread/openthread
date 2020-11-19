@@ -32,9 +32,10 @@ import unittest
 
 import command
 import config
+import copy
 import ipv6
 import thread_cert
-from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, ADDR_QRY_URI, ADDR_NTF_URI, NL_ML_EID_TLV, NL_RLOC16_TLV, NL_TARGET_EID_TLV, COAP_CODE_POST
+from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, ADDR_QRY_URI, ADDR_NTF_URI, NL_ML_EID_TLV, NL_RLOC16_TLV, NL_TARGET_EID_TLV
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.bytes import Bytes
 from pktverify.addrs import Ipv6Addr
@@ -109,7 +110,7 @@ class Cert_5_3_10_AddressQuery(thread_cert.TestCase):
         },
     }
     # override wireshark preferences with case needed parameters
-    CASE_WIRESHARK_PREFS = WIRESHARK_OVERRIDE_PREFS
+    CASE_WIRESHARK_PREFS = copy.deepcopy(WIRESHARK_OVERRIDE_PREFS)
     CASE_WIRESHARK_PREFS['6lowpan.context1'] = PREFIX_1
     CASE_WIRESHARK_PREFS['6lowpan.context2'] = PREFIX_2
 
@@ -275,8 +276,7 @@ class Cert_5_3_10_AddressQuery(thread_cert.TestCase):
                                  NL_TARGET_EID_TLV
                              } <= set(p.coap.tlv.type) and\
                              p.thread_address.tlv.target_eid == GUA1['MED'] and\
-                             p.thread_address.tlv.rloc16 == ROUTER_2_RLOC16 and\
-                             p.coap.code == COAP_CODE_POST
+                             p.thread_address.tlv.rloc16 == ROUTER_2_RLOC16
                    ).\
             must_next()
         _pkt = pkts.filter_ping_request().\
