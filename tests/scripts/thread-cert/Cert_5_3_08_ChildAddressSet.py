@@ -31,10 +31,11 @@ import unittest
 
 import command
 import config
+import copy
 import ipv6
 import mle
 import thread_cert
-from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, MLE_ADVERTISEMENT, ADDR_QRY_URI, SOURCE_ADDRESS_TLV, ROUTE64_TLV, LEADER_DATA_TLV, REALM_LOCAL_ALL_ROUTERS_ADDRESS
+from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, MLE_ADVERTISEMENT, ADDR_QRY_URI, SOURCE_ADDRESS_TLV, ROUTE64_TLV, LEADER_DATA_TLV
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.bytes import Bytes
 
@@ -93,7 +94,7 @@ class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
         },
     }
     # override wireshark preferences with case needed parameters
-    CASE_WIRESHARK_PREFS = WIRESHARK_OVERRIDE_PREFS
+    CASE_WIRESHARK_PREFS = copy.deepcopy(WIRESHARK_OVERRIDE_PREFS)
     CASE_WIRESHARK_PREFS['6lowpan.context1'] = '2001::/64'
     CASE_WIRESHARK_PREFS['6lowpan.context2'] = '2002::/64'
     CASE_WIRESHARK_PREFS['6lowpan.context3'] = '2003::/64'
@@ -198,7 +199,7 @@ class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
                     filter_ping_request().\
                     must_next()
         pkts.filter_wpan_src64(LEADER).\
-            filter_ipv6_dst(REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+            filter_RLARMA().\
             filter_coap_request(ADDR_QRY_URI, port=MM).\
             must_not_next()
         pkts.filter_ipv6_src_dst(MED_2_MLEID, MED_1_MLEID).\
@@ -214,7 +215,7 @@ class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
                         filter_ping_request().\
                         must_next()
             pkts.filter_wpan_src64(LEADER).\
-                filter_ipv6_dst(REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+                filter_RLARMA().\
                 filter_coap_request(ADDR_QRY_URI, port=MM).\
                 must_not_next()
             pkts.filter_ipv6_src_dst(med_2_addr, med_1_addr).\
