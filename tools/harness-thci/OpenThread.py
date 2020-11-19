@@ -2840,6 +2840,178 @@ class OpenThreadTHCI(object):
         else:
             return False
 
+    # Low power THCI
+    @API
+    def setCSLtout(self, tout=30):
+        print('%s call setCSLtout' % self)
+        cmd = 'csl timeout %u' % tout
+        print(cmd)
+        return self.__executeCommand(cmd)[-1] == 'Done'
+
+    @API
+    def setCSLchannel(self, ch=11):
+        print('%s call setCSLchannel' % self)
+        cmd = 'csl channel %u' % ch
+        print(cmd)
+        return self.__executeCommand(cmd)[-1] == 'Done'
+
+    @API
+    def setCSLperiod(self, period=500):
+        """set Csl Period
+        Args:
+            period: csl period in ms
+
+        note: OT command 'csl period' accepts parameter in unit of 10 symbols,
+        period is converted from unit ms to ten symbols (160us per 10 symbols).
+
+        """
+        print('%s call setCSLperiod' % self)
+        cmd = 'csl period %u' % (period * 6.25)
+        print(cmd)
+        return self.__executeCommand(cmd)[-1] == 'Done'
+
+    def getForwardSeriesFlagsFromHexStr(self, flags):
+        hexFlags = int(flags, 16)
+        strFlags = ''
+        if hexFlags == 0:
+            strFlags = 'X'
+        else:
+            if hexFlags & 0x1 != 0:
+                strFlags += 'l'
+            if hexFlags & 0x2 != 0:
+                strFlags += 'd'
+            if hexFlags & 0x4 != 0:
+                strFlags += 'r'
+            if hexFlags & 0x8 != 0:
+                strFlags += 'a'
+
+        return strFlags
+
+    def mapMetricsHexToChar(self, metrics):
+        metricsFlagMap = {
+            0x40: 'p',
+            0x09: 'q',
+            0x0a: 'm',
+            0x0b: 'r',
+        }
+        if metrics in metricsFlagMap:
+            return metricsFlagMap[metrics]
+        else:
+            return '?'
+
+    def getMetricsFlagsFromHexStr(self, metrics):
+        if metrics.startswith('0x'):
+            metrics = metrics[2:]
+        hexMetricsArray = bytearray.fromhex(metrics)
+
+        strMetrics = ''
+        for metric in hexMetricsArray:
+            strMetrics += mapMetricsHexToChar(metric)
+
+        return strMetrics
+
+    @API
+    def LinkMetricsSingleReq(self, dst_addr, metrics):
+        print('%s call LinkMetricsSingleReq' % self)
+        cmd = 'linkmetrics query %s single %s' % (dst_addr, getMetricsFlagsFromHexStr(metrics))
+        print(cmd)
+        return self.__executeCommand(cmd)[-1] == 'Done'
+
+    @API
+    def LinkMetricsMgmtReq(self, dst_addr, type_, flags, metrics, series_id):
+        print('%s call LinkMetricsMgmtReq' % self)
+        cmd = 'linkmetrics mgmt %s ' % dst_addr
+        if type_ == 'FWD':
+            cmd += 'forward %d %s' % (series_id, getForwardSeriesFlagsFromHexStr(flags))
+            if flags != 0:
+                cmd += ' %s' % (getMetricsFlagsFromHexStr(metrics))
+        elif type_ == 'ENH':
+            cmd += 'enhanced-ack'
+            if flags != 0:
+                cmd += ' register'
+                metricsFlags = getMetricsFlagsFromHexStr(metrics)
+                if '?' in metricsFlags:
+                    cmd += ' %s r' % metricsFlags.replace('?', '')
+                else:
+                    cmd += ' %s' % metricsFlags
+            else:
+                cmd += ' clear'
+        print(cmd)
+        return self.__executeCommand(cmd)[-1] == 'Done'
+
+    @API
+    def LinkMetricsGetReport(self, dst_addr, series_id):
+        print('%s call LinkMetricsGetReport' % self)
+        cmd = 'linkmetrics query %s forward %d' % (dst_addr, series_id)
+        print(cmd)
+        return self.__executeCommand(cmd)[-1] == 'Done'
+
+    #TODO: Series Id is not in this API.
+    @API
+    def LinkMetricsSendProbe(self, dst_addr, ack=True, size=0):
+        print('%s call LinkMetricsSendProbe' % self)
+        cmd = 'linkmetrics probe %s %d' % (dst_addr, size)
+        print(cmd)
+        return self.__executeCommand(cmd)[-1] == 'Done'
+
+    @API
+    def setTxPower(self, level):
+        print('%s call setTxPower' % self)
+        cmd = 'txpower '
+        if level == 'HIGH':
+            cmd += '127'
+        elif level == 'MEDIUM':
+            cmd += '0'
+        elif level == 'LOW':
+            cmd += '-128'
+        else:
+            print('wrong Tx Power level')
+        print(cmd)
+        return self.__executeCommand(cmd)[-1] == 'Done'
+
+    @API
+    def sendUdp(self, destination, port, payload='hello'):
+        print('%s call sendUdp' % self)
+        assert payload is not None, 'payload should not be none'
+        cmd1 = 'udp open'
+        print(cmd1)
+        cmd2 = 'udp send %s %d %s' % (destination, port, payload)
+        print(cmd2)
+        return (self.__executeCommand(cmd1)[-1] == 'Done' and self.__executeCommand(cmd2)[-1] == 'Done')
+
+    @API
+    def send_udp(self, interface, destination, port, payload='12ABcd'):
+        ''' payload hexstring
+        '''
+        print('%s call send_udp' % self)
+        assert payload is not None, 'payload should not be none'
+        cmd1 = 'udp open'
+        print(cmd1)
+        cmd2 = 'udp send %s %s -x %s' % (destination, port, payload)
+        print(cmd2)
+        return (self.__executeCommand(cmd1)[-1] == 'Done' and self.__executeCommand(cmd2)[-1] == 'Done')
+
+    @API
+    def sendMACcmd(self, enh=False):
+        print('%s call sendMACcmd' % self)
+        cmd = 'mac send datarequest'
+        return self.__executeCommand(cmd)[-1] == 'Done'
+
+    @API
+    def sendMACdata(self, enh=False):
+        print('%s call sendMACdata' % self)
+        cmd = 'mac send emptydata'
+        return self.__executeCommand(cmd)[-1] == 'Done'
+
+    @API
+    def setCSLsuspension(self, suspend):
+        print('%s call setCSLsuspension' % self)
+        if suspend:
+            cmd = 'pollperiod 1000000'
+        else:
+            cmd = 'pollperiod 5000'
+        return self.__executeCommand(cmd)[-1] == 'Done'
+
     @staticmethod
     def __lstrip0x(s):
         """strip 0x at the beginning of a hex string if it exists
