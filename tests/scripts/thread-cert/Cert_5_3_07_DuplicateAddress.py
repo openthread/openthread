@@ -31,11 +31,11 @@ import unittest
 
 import command
 import config
+import copy
 import mle
 import thread_cert
-from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, ADDR_ERR_URI, ADDR_QRY_URI, ADDR_NTF_URI, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, REALM_LOCAL_ALL_ROUTERS_ADDRESS, NL_ML_EID_TLV, NL_TARGET_EID_TLV, NL_RLOC16_TLV, COAP_CODE_POST
+from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, ADDR_ERR_URI, ADDR_QRY_URI, ADDR_NTF_URI, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, REALM_LOCAL_ALL_ROUTERS_ADDRESS, NL_TARGET_EID_TLV, NL_RLOC16_TLV, NL_ML_EID_TLV
 from pktverify.packet_verifier import PacketVerifier
-from pktverify.addrs import Ipv6Addr
 
 DUT_LEADER = 1
 ROUTER1 = 2
@@ -114,7 +114,7 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
     }
 
     # override wireshark preferences with case needed parameters
-    CASE_WIRESHARK_PREFS = WIRESHARK_OVERRIDE_PREFS
+    CASE_WIRESHARK_PREFS = copy.deepcopy(WIRESHARK_OVERRIDE_PREFS)
     CASE_WIRESHARK_PREFS['6lowpan.context1'] = ON_MESH_PREFIX
 
     def test(self):
@@ -179,9 +179,9 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
             filter_ipv6_dst(IPV6_ADDR). \
             must_next()
         pkts.filter_wpan_src64(LEADER).\
-            filter_ipv6_dst(REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+            filter_RLARMA().\
             filter_coap_request(ADDR_QRY_URI, port=MM).\
-            filter(lambda p: p.thread_address.tlv.target_eid == Ipv6Addr(IPV6_ADDR)).\
+            filter(lambda p: p.thread_address.tlv.target_eid == IPV6_ADDR).\
             must_next()
 
         # Step 6: Router_1 & Router_2 respond with Address Notification message
@@ -197,8 +197,7 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
                                       NL_RLOC16_TLV,
                                       NL_TARGET_EID_TLV
                                       } <= set(p.coap.tlv.type) and\
-                           p.thread_address.tlv.target_eid == Ipv6Addr(IPV6_ADDR) and\
-                           p.coap.code == COAP_CODE_POST
+                           p.thread_address.tlv.target_eid == IPV6_ADDR
                            ).\
                    must_next()
 
@@ -218,8 +217,7 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
                               NL_ML_EID_TLV,
                               NL_TARGET_EID_TLV
                               } == set(p.coap.tlv.type) and\
-                   p.thread_address.tlv.target_eid == Ipv6Addr(IPV6_ADDR) and\
-                   p.coap.code == COAP_CODE_POST
+                   p.thread_address.tlv.target_eid == IPV6_ADDR
                    ).\
             must_next()
 
