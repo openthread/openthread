@@ -782,8 +782,10 @@ otError Interpreter::ProcessChild(uint8_t aArgsLength, char *aArgs[])
 
         if (isTable)
         {
-            OutputLine("| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N|Ver|CSL|QMsgCnt| Extended MAC     |");
-            OutputLine("+-----+--------+------------+------------+-------+------+-+-+-+---+---+-------+------------------+");
+            OutputLine(
+                "| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N|Ver|CSL|QMsgCnt| Extended MAC     |");
+            OutputLine(
+                "+-----+--------+------------+------------+-------+------+-+-+-+---+---+-------+------------------+");
         }
 
         maxChildren = otThreadGetMaxAllowedChildren(mInstance);
@@ -806,7 +808,7 @@ otError Interpreter::ProcessChild(uint8_t aArgsLength, char *aArgs[])
                 OutputFormat("|%1d", childInfo.mRxOnWhenIdle);
                 OutputFormat("|%1d", childInfo.mFullThreadDevice);
                 OutputFormat("|%1d", childInfo.mFullNetworkData);
-                OutputFormat("| %1d ", childInfo.mVersion);
+                OutputFormat("|%3d", childInfo.mVersion);
                 OutputFormat("| %1d ", childInfo.mIsCslSynced);
                 OutputFormat("| %5d ", childInfo.mQueuedMessageCnt);
                 OutputFormat("| ");
