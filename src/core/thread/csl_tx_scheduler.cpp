@@ -273,6 +273,7 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError,
     }
 
     mCallbacks.HandleSentFrameToChild(aFrame, mFrameContext, aError, aChild);
+    RescheduleCslTx();
 
 exit:
     return;

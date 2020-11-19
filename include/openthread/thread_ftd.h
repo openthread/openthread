@@ -67,10 +67,13 @@ typedef struct
     int8_t       mLastRssi;             ///< Last observed RSSI
     uint16_t     mFrameErrorRate;       ///< Frame error rate (0xffff->100%). Requires error tracking feature.
     uint16_t     mMessageErrorRate;     ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
+    uint16_t     mQueuedMessageCnt;     ///< Number of queued indirect messages for the child.
+    uint8_t      mVersion;              ///< MLE version
     bool         mRxOnWhenIdle : 1;     ///< rx-on-when-idle
     bool         mFullThreadDevice : 1; ///< Full Thread Device
     bool         mFullNetworkData : 1;  ///< Full Network Data
     bool         mIsStateRestoring : 1; ///< Is in restoring state
+    bool         mIsCslSynced : 1;      ///< Is child CSL synchronized
 } otChildInfo;
 
 #define OT_CHILD_IP6_ADDRESS_ITERATOR_INIT 0 ///< Initializer for otChildIP6AddressIterator
