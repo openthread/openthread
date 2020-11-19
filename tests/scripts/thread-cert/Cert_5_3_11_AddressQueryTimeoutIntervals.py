@@ -32,7 +32,7 @@ import unittest
 import command
 import config
 import thread_cert
-from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, ADDR_QRY_URI, ADDR_NTF_URI, NL_ML_EID_TLV, NL_RLOC16_TLV, NL_TARGET_EID_TLV, COAP_CODE_POST
+from pktverify.consts import ADDR_QRY_URI, ADDR_NTF_URI, NL_ML_EID_TLV, NL_RLOC16_TLV, NL_TARGET_EID_TLV
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.bytes import Bytes
 from pktverify.addrs import Ipv6Addr
