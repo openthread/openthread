@@ -479,7 +479,7 @@ otError Mac::SetNetworkName(const char *aNameString)
     otError  error;
     NameData data(aNameString, NetworkName::kMaxSize + 1);
 
-    VerifyOrExit(ValidateUtf8(aNameString), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(IsValidUtf8String(aNameString), error = OT_ERROR_INVALID_ARGS);
 
     error = SetNetworkName(data);
 
@@ -519,7 +519,7 @@ otError Mac::SetDomainName(const char *aNameString)
     otError  error;
     NameData data(aNameString, DomainName::kMaxSize + 1);
 
-    VerifyOrExit(ValidateUtf8(aNameString), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(IsValidUtf8String(aNameString), error = OT_ERROR_INVALID_ARGS);
 
     error = SetDomainName(data);
 

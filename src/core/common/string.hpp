@@ -267,7 +267,7 @@ private:
  * @retval FALSE  The sequence is not a valid UTF-8 string.
  *
  */
-bool ValidateUtf8(const char *aString);
+bool IsValidUtf8String(const char *aString);
 
 } // namespace ot
 

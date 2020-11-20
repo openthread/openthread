@@ -326,7 +326,7 @@ otError GeneratePskc(const char *              aPassPhrase,
     uint16_t   passphraseLen;
     uint8_t    networkNameLen;
 
-    VerifyOrExit(ValidateUtf8(aPassPhrase), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(IsValidUtf8String(aPassPhrase), error = OT_ERROR_INVALID_ARGS);
 
     passphraseLen  = static_cast<uint16_t>(StringLength(aPassPhrase, OT_COMMISSIONING_PASSPHRASE_MAX_SIZE + 1));
     networkNameLen = static_cast<uint8_t>(StringLength(aNetworkName.GetAsCString(), OT_NETWORK_NAME_MAX_SIZE + 1));

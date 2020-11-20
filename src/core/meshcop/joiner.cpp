@@ -140,9 +140,9 @@ otError Joiner::Start(const char *     aPskd,
 
     otLogInfoMeshCoP("Joiner starting");
 
-    VerifyOrExit(aProvisioningUrl == nullptr || ValidateUtf8(aProvisioningUrl), error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aVendorName == nullptr || ValidateUtf8(aVendorName), error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aVendorSwVersion == nullptr || ValidateUtf8(aVendorSwVersion), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aProvisioningUrl == nullptr || IsValidUtf8String(aProvisioningUrl), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aVendorName == nullptr || IsValidUtf8String(aVendorName), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aVendorSwVersion == nullptr || IsValidUtf8String(aVendorSwVersion), error = OT_ERROR_INVALID_ARGS);
 
     VerifyOrExit(mState == kStateIdle, error = OT_ERROR_BUSY);
     VerifyOrExit(Get<ThreadNetif>().IsUp() && Get<Mle::Mle>().GetRole() == Mle::kRoleDisabled,

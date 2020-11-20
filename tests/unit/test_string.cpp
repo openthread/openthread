@@ -141,15 +141,15 @@ void TestStringLength(void)
 
 void TestUtf8(void)
 {
-    printf("\nTest 5: ValidateUtf8() function\n");
+    printf("\nTest 5: IsValidUtf8String() function\n");
 
-    VerifyOrQuit(ValidateUtf8("An ASCII string"), "ValidateUtf8() ASCII string fails");
-    VerifyOrQuit(ValidateUtf8(u8"Строка UTF-8"), "ValidateUtf8() UTF-8 string fails");
-    VerifyOrQuit(!ValidateUtf8("\xbf"), "ValidateUtf8() illegal string fails");
-    VerifyOrQuit(!ValidateUtf8("\xdf"), "ValidateUtf8() illegal string fails");
-    VerifyOrQuit(!ValidateUtf8("\xef\x80"), "ValidateUtf8() illegal string fails");
-    VerifyOrQuit(!ValidateUtf8("\xf7\x80\x80"), "ValidateUtf8() illegal string fails");
-    VerifyOrQuit(!ValidateUtf8("\xff"), "ValidateUtf8() illegal string fails");
+    VerifyOrQuit(IsValidUtf8String("An ASCII string"), "IsValidUtf8String() ASCII string fails");
+    VerifyOrQuit(IsValidUtf8String(u8"Строка UTF-8"), "IsValidUtf8String() UTF-8 string fails");
+    VerifyOrQuit(!IsValidUtf8String("\xbf"), "IsValidUtf8String() illegal string fails");
+    VerifyOrQuit(!IsValidUtf8String("\xdf"), "IsValidUtf8String() illegal string fails");
+    VerifyOrQuit(!IsValidUtf8String("\xef\x80"), "IsValidUtf8String() illegal string fails");
+    VerifyOrQuit(!IsValidUtf8String("\xf7\x80\x80"), "IsValidUtf8String() illegal string fails");
+    VerifyOrQuit(!IsValidUtf8String("\xff"), "IsValidUtf8String() illegal string fails");
 
     printf(" -- PASS\n");
 }

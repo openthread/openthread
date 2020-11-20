@@ -486,7 +486,7 @@ otError Dataset::ProcessNetworkName(uint8_t aArgsLength, char *aArgs[])
         size_t length;
 
         VerifyOrExit((length = strlen(aArgs[0])) <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
-        VerifyOrExit(ValidateUtf8(aArgs[0]), error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(IsValidUtf8String(aArgs[0]), error = OT_ERROR_INVALID_ARGS);
 
         memset(&sDataset.mNetworkName, 0, sizeof(sDataset.mNetworkName));
         memcpy(sDataset.mNetworkName.m8, aArgs[0], length);

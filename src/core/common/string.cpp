@@ -73,7 +73,7 @@ otError StringBase::Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, cons
     return error;
 }
 
-bool ValidateUtf8(const char *aString)
+bool IsValidUtf8String(const char *aString)
 {
     bool    ret = true;
     uint8_t byte;
