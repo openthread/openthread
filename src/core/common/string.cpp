@@ -33,6 +33,8 @@
 
 #include "string.hpp"
 
+#include <string.h>
+
 namespace ot {
 
 uint16_t StringLength(const char *aString, uint16_t aMaxLength)
@@ -75,12 +77,21 @@ otError StringBase::Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, cons
 
 bool IsValidUtf8String(const char *aString)
 {
+    return IsValidUtf8String(aString, strlen(aString));
+}
+
+bool IsValidUtf8String(const char *aString, size_t aLength)
+{
     bool    ret = true;
     uint8_t byte;
     uint8_t continuationBytes = 0;
+    size_t  position          = 0;
 
-    while ((byte = *reinterpret_cast<const uint8_t *>(aString++)) != 0)
+    while (position < aLength)
     {
+        byte = *reinterpret_cast<const uint8_t *>(aString + position);
+        ++position;
+
         if ((byte & 0x80) == 0)
         {
             continue;
@@ -112,7 +123,10 @@ bool IsValidUtf8String(const char *aString)
 
         while (continuationBytes-- != 0)
         {
-            byte = *reinterpret_cast<const uint8_t *>(aString++);
+            VerifyOrExit(position < aLength, ret = false);
+
+            byte = *reinterpret_cast<const uint8_t *>(aString + position);
+            ++position;
 
             // Verify the continuation byte pattern 10xx-xxxx
             VerifyOrExit((byte & 0xc0) == 0x80, ret = false);

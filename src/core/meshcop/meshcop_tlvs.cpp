@@ -34,6 +34,7 @@
 #include "meshcop_tlvs.hpp"
 
 #include "common/debug.hpp"
+#include "common/string.hpp"
 #include "meshcop/meshcop.hpp"
 
 namespace ot {
@@ -127,6 +128,11 @@ void NetworkNameTlv::SetNetworkName(const Mac::NameData &aNameData)
 
     len = aNameData.CopyTo(mNetworkName, sizeof(mNetworkName));
     SetLength(len);
+}
+
+bool NetworkNameTlv::IsValid(void) const
+{
+    return IsValidUtf8String(mNetworkName, GetLength());
 }
 
 void SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
