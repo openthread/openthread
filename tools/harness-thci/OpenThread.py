@@ -2843,14 +2843,14 @@ class OpenThreadTHCI(object):
     # Low power THCI
     @API
     def setCSLtout(self, tout=30):
-        print('%s call setCSLtout' % self)
+        self.log('call setCSLtout')
         cmd = 'csl timeout %u' % tout
         print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @API
     def setCSLchannel(self, ch=11):
-        print('%s call setCSLchannel' % self)
+        self.log('call setCSLchannel')
         cmd = 'csl channel %u' % ch
         print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
@@ -2865,7 +2865,7 @@ class OpenThreadTHCI(object):
         period is converted from unit ms to ten symbols (160us per 10 symbols).
 
         """
-        print('%s call setCSLperiod' % self)
+        self.log('call setCSLperiod')
         cmd = 'csl period %u' % (period * 6.25)
         print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
@@ -2894,10 +2894,7 @@ class OpenThreadTHCI(object):
             0x0a: 'm',
             0x0b: 'r',
         }
-        if metrics in metricsFlagMap:
-            return metricsFlagMap[metrics]
-        else:
-            return '?'
+        return metricsFlagMap.get(metrics, '?')
 
     def getMetricsFlagsFromHexStr(self, metrics):
         if metrics.startswith('0x'):
@@ -2912,14 +2909,14 @@ class OpenThreadTHCI(object):
 
     @API
     def LinkMetricsSingleReq(self, dst_addr, metrics):
-        print('%s call LinkMetricsSingleReq' % self)
+        self.log('call LinkMetricsSingleReq')
         cmd = 'linkmetrics query %s single %s' % (dst_addr, getMetricsFlagsFromHexStr(metrics))
         print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @API
     def LinkMetricsMgmtReq(self, dst_addr, type_, flags, metrics, series_id):
-        print('%s call LinkMetricsMgmtReq' % self)
+        self.log('call LinkMetricsMgmtReq')
         cmd = 'linkmetrics mgmt %s ' % dst_addr
         if type_ == 'FWD':
             cmd += 'forward %d %s' % (series_id, getForwardSeriesFlagsFromHexStr(flags))
@@ -2941,7 +2938,7 @@ class OpenThreadTHCI(object):
 
     @API
     def LinkMetricsGetReport(self, dst_addr, series_id):
-        print('%s call LinkMetricsGetReport' % self)
+        self.log('call LinkMetricsGetReport')
         cmd = 'linkmetrics query %s forward %d' % (dst_addr, series_id)
         print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
@@ -2949,14 +2946,14 @@ class OpenThreadTHCI(object):
     #TODO: Series Id is not in this API.
     @API
     def LinkMetricsSendProbe(self, dst_addr, ack=True, size=0):
-        print('%s call LinkMetricsSendProbe' % self)
+        self.log('call LinkMetricsSendProbe')
         cmd = 'linkmetrics probe %s %d' % (dst_addr, size)
         print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @API
     def setTxPower(self, level):
-        print('%s call setTxPower' % self)
+        self.log('call setTxPower')
         cmd = 'txpower '
         if level == 'HIGH':
             cmd += '127'
@@ -2971,7 +2968,7 @@ class OpenThreadTHCI(object):
 
     @API
     def sendUdp(self, destination, port, payload='hello'):
-        print('%s call sendUdp' % self)
+        self.log('call sendUdp')
         assert payload is not None, 'payload should not be none'
         cmd1 = 'udp open'
         print(cmd1)
@@ -2983,7 +2980,7 @@ class OpenThreadTHCI(object):
     def send_udp(self, interface, destination, port, payload='12ABcd'):
         ''' payload hexstring
         '''
-        print('%s call send_udp' % self)
+        self.log('call send_udp')
         assert payload is not None, 'payload should not be none'
         cmd1 = 'udp open'
         print(cmd1)
@@ -2993,19 +2990,19 @@ class OpenThreadTHCI(object):
 
     @API
     def sendMACcmd(self, enh=False):
-        print('%s call sendMACcmd' % self)
+        self.log('call sendMACcmd')
         cmd = 'mac send datarequest'
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @API
     def sendMACdata(self, enh=False):
-        print('%s call sendMACdata' % self)
+        self.log('call sendMACdata')
         cmd = 'mac send emptydata'
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @API
     def setCSLsuspension(self, suspend):
-        print('%s call setCSLsuspension' % self)
+        self.log('call setCSLsuspension')
         if suspend:
             cmd = 'pollperiod 1000000'
         else:
