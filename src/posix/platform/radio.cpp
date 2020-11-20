@@ -139,7 +139,7 @@ void platformRadioInit(otUrl *aRadioUrl)
         SuccessOrDie(sRadioSpinel.SetFemLnaGain(static_cast<int8_t>(femLnaGain)));
     }
 
-    parameterValue = radioUrl.GetValue("ccathreshold");
+    parameterValue = radioUrl.GetValue("cca-threshold");
     if (parameterValue != nullptr)
     {
         long ccaThreshold = strtol(parameterValue, nullptr, 0);

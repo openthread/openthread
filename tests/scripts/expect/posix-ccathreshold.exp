@@ -27,7 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&ccathreshold=-100"
+spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=-100"
 expect_after {
     timeout { exit 1 }
 }
@@ -37,7 +37,7 @@ expect "Done"
 send "\x04"
 expect eof
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&ccathreshold=-128"
+spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=-128"
 expect_after {
     timeout { exit 1 }
 }
@@ -47,7 +47,7 @@ expect "Done"
 send "\x04"
 expect eof
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&ccathreshold=127"
+spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=127"
 expect_after {
     timeout { exit 1 }
 }
@@ -57,13 +57,13 @@ expect "Done"
 send "\x04"
 expect eof
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&ccathreshold=-129"
+spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=-129"
 expect_after {
     timeout { exit 1 }
 }
 expect eof
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&ccathreshold=128"
+spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=128"
 expect_after {
     timeout { exit 1 }
 }
