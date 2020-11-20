@@ -34,6 +34,7 @@
 #include "common/logging.hpp"
 #include "common/time.hpp"
 #include "mac/mac.hpp"
+#include "mac/data_poll_handler.hpp"
 
 namespace ot {
 
@@ -97,7 +98,7 @@ void CslTxScheduler::Clear(void)
 {
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
-        child.SetCslTxAttempts(0);
+        child.ResetIndirectTxAttempts();
         child.SetCslSynchronized(false);
         child.SetCslChannel(0);
         child.SetCslTimeout(0);
@@ -129,7 +130,7 @@ void CslTxScheduler::RescheduleCslTx(void)
         uint32_t cslTxDelay;
 
         if (!child.IsCslSynchronized() || child.GetIndirectMessageCount() == 0 ||
-            child.GetCslTxAttempts() >= kMaxCslTriggeredTxAttempts)
+            child.GetIndirectTxAttempts() >= DataPollHandler::kMaxPollTriggeredTxAttempts)
         {
             continue;
         }
@@ -177,7 +178,7 @@ otError CslTxScheduler::HandleFrameRequest(Mac::TxFrame &aFrame)
     mCslTxMessage = mCslTxChild->GetIndirectMessage();
     VerifyOrExit(mCslTxMessage != nullptr, error = OT_ERROR_ABORT);
 
-    if (mCslTxChild->GetIndirectTxAttempts() > 0 || mCslTxChild->GetCslTxAttempts() > 0)
+    if (mCslTxChild->GetIndirectTxAttempts() > 0)
     {
         // For a re-transmission of an indirect frame to a sleepy
         // child, we ensure to use the same frame counter, key id, and
@@ -230,24 +231,19 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError,
     switch (aError)
     {
     case OT_ERROR_NONE:
-        aChild.ResetCslTxAttempts();
         aChild.ResetIndirectTxAttempts();
         break;
-    case OT_ERROR_NO_ACK:
-        aChild.IncrementCslTxAttempts();
 
-        otLogInfoMac("CSL tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(), aChild.GetCslTxAttempts(),
-                     kMaxCslTriggeredTxAttempts);
+    case OT_ERROR_NO_ACK:
+        aChild.IncrementIndirectTxAttempts();
+
+        otLogInfoMac("CSL tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(), aChild.GetIndirectTxAttempts(),
+                     DataPollHandler::kMaxPollTriggeredTxAttempts);
 
         // Fall through
     case OT_ERROR_CHANNEL_ACCESS_FAILURE:
     case OT_ERROR_ABORT:
-
-        // Even if CSL tx attempts count reaches max, the message won't be
-        // dropped until indirect tx attempts count reaches max. So here it
-        // would set sequence number and schedule next CSL tx.
-
-        if (!aFrame.IsEmpty())
+        if (aChild.GetIndirectTxAttempts() < DataPollHandler::kMaxPollTriggeredTxAttempts && !aFrame.IsEmpty())
         {
             aChild.SetIndirectDataSequenceNumber(aFrame.GetSequence());
 
@@ -262,10 +258,14 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError,
                 IgnoreError(aFrame.GetKeyId(keyId));
                 aChild.SetIndirectKeyId(keyId);
             }
+
+            RescheduleCslTx();
+            ExitNow();
         }
 
-        RescheduleCslTx();
-        ExitNow();
+        aChild.ResetIndirectTxAttempts();
+
+        break;
 
     default:
         OT_ASSERT(false);
