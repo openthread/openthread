@@ -262,6 +262,7 @@ otError Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, Active
         aResult.mIsJoinable = beaconPayload->IsJoiningPermitted();
         aResult.mIsNative   = beaconPayload->IsNative();
         IgnoreError(static_cast<NetworkName &>(aResult.mNetworkName).Set(beaconPayload->GetNetworkName()));
+        VerifyOrExit(IsValidUtf8String(aResult.mNetworkName.m8), error = OT_ERROR_PARSE);
         aResult.mExtendedPanId = beaconPayload->GetExtendedPanId();
     }
 
