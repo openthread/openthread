@@ -35,8 +35,6 @@ set(COMMON_SOURCES
     changed_props_set.cpp
     ncp_base.cpp
     ncp_base_dispatcher.cpp
-    ncp_base_ftd.cpp
-    ncp_base_mtd.cpp
     ncp_base_radio.cpp
     ncp_spi.cpp
     ncp_uart.cpp
@@ -47,6 +45,12 @@ if(OT_NCP_VENDOR_HOOK_SOURCE)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=1")
     list(APPEND COMMON_SOURCES ${OT_NCP_VENDOR_HOOK_SOURCE_DIR}${OT_NCP_VENDOR_HOOK_SOURCE})
 endif()
+
+set(COMMON_NCP_SOURCES
+    ${COMMON_SOURCES}
+    ncp_base_ftd.cpp
+    ncp_base_mtd.cpp
+)
 
 if(OT_FTD)
     include(ftd.cmake)

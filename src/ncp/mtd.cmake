@@ -46,7 +46,7 @@ target_compile_options(openthread-ncp-mtd PRIVATE
 
 target_include_directories(openthread-ncp-mtd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
-target_sources(openthread-ncp-mtd PRIVATE ${COMMON_SOURCES})
+target_sources(openthread-ncp-mtd PRIVATE ${COMMON_NCP_SOURCES})
 target_include_directories(openthread-ncp-mtd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(openthread-ncp-mtd
