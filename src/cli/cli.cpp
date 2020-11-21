@@ -340,7 +340,7 @@ exit:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-otError Interpreter::ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char **aArgs)
+otError Interpreter::ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
@@ -2256,7 +2256,7 @@ exit:
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
-otError Interpreter::ProcessMlr(uint8_t aArgsLength, char **aArgs)
+otError Interpreter::ProcessMlr(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -4358,38 +4358,35 @@ otError Interpreter::ProcessDiag(uint8_t aArgsLength, char *aArgs[])
 
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength)
 {
-    char *         aArgs[kMaxArgs] = {nullptr};
-    char *         cmdName;
-    uint8_t        aArgsLength = 0;
+    char *         args[kMaxArgs] = {nullptr};
+    uint8_t        argsLength;
     const Command *command;
 
     VerifyOrExit(aBuf != nullptr && StringLength(aBuf, aBufLength + 1) <= aBufLength);
 
-    VerifyOrExit(Utils::CmdLineParser::ParseCmd(aBuf, aArgsLength, aArgs, kMaxArgs) == OT_ERROR_NONE,
+    VerifyOrExit(Utils::CmdLineParser::ParseCmd(aBuf, argsLength, args, kMaxArgs) == OT_ERROR_NONE,
                  OutputLine("Error: too many args (max %d)", kMaxArgs));
-    VerifyOrExit(aArgsLength >= 1, OutputLine("Error: no given command."));
-
-    cmdName = aArgs[0];
+    VerifyOrExit(argsLength >= 1, OutputLine("Error: no given command."));
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    VerifyOrExit((!otDiagIsEnabled(mInstance) || (strcmp(cmdName, "diag") == 0)),
+    VerifyOrExit((!otDiagIsEnabled(mInstance) || (strcmp(args[0], "diag") == 0)),
                  OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands."));
 #endif
 
-    command = Utils::LookupTable::Find(cmdName, sCommands);
+    command = Utils::LookupTable::Find(args[0], sCommands);
 
     if (command != nullptr)
     {
-        OutputResult((this->*command->mHandler)(aArgsLength - 1, &aArgs[1]));
+        OutputResult((this->*command->mHandler)(argsLength - 1, &args[1]));
         ExitNow();
     }
 
     // Check user defined commands if built-in command has not been found
     for (uint8_t i = 0; i < mUserCommandsLength; i++)
     {
-        if (strcmp(cmdName, mUserCommands[i].mName) == 0)
+        if (strcmp(args[0], mUserCommands[i].mName) == 0)
         {
-            mUserCommands[i].mCommand(mUserCommandsContext, aArgsLength - 1, &aArgs[1]);
+            mUserCommands[i].mCommand(mUserCommandsContext, argsLength - 1, &args[1]);
             ExitNow();
         }
     }

@@ -270,7 +270,7 @@ private:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     otError ProcessBackboneRouterLocal(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    otError ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char **aArgs);
+    otError ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char *aArgs[]);
     void    PrintMulticastListenersTable(void);
 #endif
 #endif
