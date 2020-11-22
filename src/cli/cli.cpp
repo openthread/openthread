@@ -4448,7 +4448,9 @@ void Interpreter::HandleDiagnosticGetResponse(otError              aError,
         aError, aMessage, static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void Interpreter::HandleDiagnosticGetResponse(otError aError, const otMessage *aMessage, const Ip6::MessageInfo *)
+void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
+                                              const otMessage *       aMessage,
+                                              const Ip6::MessageInfo *aMessageInfo)
 {
     uint8_t               buf[16];
     uint16_t              bytesToPrint;
@@ -4459,7 +4461,11 @@ void Interpreter::HandleDiagnosticGetResponse(otError aError, const otMessage *a
 
     SuccessOrExit(aError);
 
-    OutputFormat("DIAG_GET.rsp/ans: ");
+    OutputFormat("DIAG_GET.rsp/ans from ");
+
+    OutputIp6Address(aMessageInfo->mPeerAddr);
+
+    OutputFormat(": ");
 
     length = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
 

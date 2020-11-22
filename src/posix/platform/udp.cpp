@@ -425,8 +425,22 @@ otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMess
         uint8_t  payload[kMaxUdpSize];
         uint16_t len = otMessageGetLength(aMessage);
 
+        if (aMessageInfo->mMulticastLoop)
+        {
+            int value = 1;
+            VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(value)) == 0,
+                         error = OT_ERROR_FAILED);
+        }
+
         VerifyOrExit(len == otMessageRead(aMessage, 0, payload, len), error = OT_ERROR_INVALID_ARGS);
         SuccessOrExit(error = transmitPacket(fd, payload, len, *aMessageInfo));
+
+        if (aMessageInfo->mMulticastLoop)
+        {
+            int value = 0;
+            VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(value)) == 0,
+                         error = OT_ERROR_FAILED);
+        }
     }
 
 exit:

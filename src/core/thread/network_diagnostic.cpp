@@ -90,6 +90,7 @@ otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination,
     if (aDestination.IsMulticast())
     {
         SuccessOrExit(error = message->InitAsNonConfirmablePost(UriPath::kDiagnosticGetQuery));
+        messageInfo.SetMulticastLoop(true);
     }
     else
     {

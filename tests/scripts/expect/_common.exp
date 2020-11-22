@@ -144,4 +144,14 @@ proc get_extaddr {} {
     return $rval
 }
 
+proc get_rloc16 {} {
+    send "rloc16\n"
+    expect "rloc16"
+    expect -re {([0-9a-fA-F]{4})}
+    set rval $expect_out(1,string)
+    expect "Done"
+
+    return $rval
+}
+
 set timeout 10

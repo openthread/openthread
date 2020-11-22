@@ -223,6 +223,7 @@ typedef struct otMessageInfo
                                  ///< Otherwise, specifies the IPv6 Hop Limit.
     bool mIsHostInterface : 1;   ///< TRUE if packets sent/received via host interface, FALSE otherwise.
     bool mAllowZeroHopLimit : 1; ///< TRUE to allow IPv6 Hop Limit 0 in `mHopLimit`, FALSE otherwise.
+    bool mMulticastLoop : 1;     ///< TRUE to allow looping back mutlicast, FALSE otherwise.
 } otMessageInfo;
 
 /**
