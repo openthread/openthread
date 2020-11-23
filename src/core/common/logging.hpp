@@ -2218,6 +2218,35 @@ const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
 
 #endif // OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY
 
+#define _otLogResult(aRegion, aError, ...)                                                 \
+    do                                                                                     \
+    {                                                                                      \
+        otError _err = (aError);                                                           \
+                                                                                           \
+        if (_err == OT_ERROR_NONE)                                                         \
+        {                                                                                  \
+            otLogInfo##aRegion(OT_FIRST_ARG(__VA_ARGS__) ": %s" OT_REST_ARGS(__VA_ARGS__), \
+                               otThreadErrorToString(_err));                               \
+        }                                                                                  \
+        else                                                                               \
+        {                                                                                  \
+            otLogWarn##aRegion(OT_FIRST_ARG(__VA_ARGS__) ": %s" OT_REST_ARGS(__VA_ARGS__), \
+                               otThreadErrorToString(_err));                               \
+        }                                                                                  \
+    } while (false)
+
+/**
+ * @def otLogResultPlat
+ *
+ * This function generates a log for the Plat region according to the error result. If @p aError is `OT_ERROR_NONE`, the
+ * log level is info. Otherwise the log level is warn.
+ *
+ * @param[in]  aError    The error result.
+ * @param[in]  ...       Arguments for the format specification.
+ *
+ */
+#define otLogResultPlat(aError, ...) _otLogResult(Plat, aError, OT_FIRST_ARG(__VA_ARGS__) OT_REST_ARGS(__VA_ARGS__))
+
 #ifdef __cplusplus
 }
 #endif

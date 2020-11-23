@@ -534,6 +534,15 @@ public:
     const uint8_t *GetBytes(void) const { return mFields.m8; }
 
     /**
+     * This method sets the IPv6 address from a given byte array.
+     *
+     * @param[in] aBuffer    Pointer to an array containing the IPv6 address. `kSize` bytes from the buffer
+     *                       are copied to form the IPv6 address.
+     *
+     */
+    void SetBytes(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
+
+    /**
      * This method indicates whether or not the IPv6 address is the Unspecified Address.
      *
      * @retval TRUE   If the IPv6 address is the Unspecified Address.
@@ -884,6 +893,20 @@ public:
      *
      */
     InfoString ToString(void) const;
+
+    /**
+     * This method overloads operator `<` to compare two IPv6 addresses.
+     *
+     * @param[in] aOther  The other IPv6 address to compare with.
+     *
+     * @retval true   The IPv6 address is smaller than @p aOther.
+     * @retval false  The IPv6 address is larger than or equal to @p aOther.
+     *
+     */
+    bool operator<(const Ip6::Address &aOther) const
+    {
+        return memcmp(mFields.m8, aOther.mFields.m8, sizeof(Ip6::Address)) < 0;
+    }
 
 private:
     void SetPrefix(uint8_t aOffset, const uint8_t *aPrefix, uint8_t aPrefixLength);

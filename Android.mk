@@ -300,6 +300,7 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/hdlc_interface.cpp                   \
     src/posix/platform/logging.cpp                          \
     src/posix/platform/misc.cpp                             \
+    src/posix/platform/multicast_routing.cpp                \
     src/posix/platform/netif.cpp                            \
     src/posix/platform/radio.cpp                            \
     src/posix/platform/radio_url.cpp                        \
