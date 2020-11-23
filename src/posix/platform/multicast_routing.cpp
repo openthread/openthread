@@ -328,9 +328,9 @@ void MulticastRoutingManager::UnblockInboundMulticastForwardingCache(const Ip6::
 
         mfc.Set(kMifIndexBackbone, kMifIndexThread);
 
-        otLogResultPlat(error, "MulticastRoutingManager: %s: %s => %s, MIF=%s, ForwardMif=%s", __FUNCTION__,
-                        MifIndexToString(mfc.mIif), mfc.mSrcAddr.ToString().AsCString(),
-                        mfc.mGroupAddr.ToString().AsCString(), MifIndexToString(kMifIndexThread));
+        otLogResultPlat(error, "MulticastRoutingManager: %s: %s %s => %s %s", __FUNCTION__, MifIndexToString(mfc.mIif),
+                        mfc.mSrcAddr.ToString().AsCString(), mfc.mGroupAddr.ToString().AsCString(),
+                        MifIndexToString(kMifIndexThread));
     }
 }
 
