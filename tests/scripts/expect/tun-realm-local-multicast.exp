@@ -112,7 +112,7 @@ expect "Done"
 
 wait_for "state" "child"
 
-set mleid4 [get_mleid]
+set mleid4 [get_ipaddr "mleid"]
 
 switch_node 1
 

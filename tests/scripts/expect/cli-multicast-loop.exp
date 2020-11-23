@@ -54,8 +54,7 @@ expect "Done"
 
 set extaddr1 [get_extaddr]
 
-set rloc16(1) [get_rloc16]
-
+get_rloc16
 
 spawn_node 2 cli
 
@@ -72,8 +71,7 @@ wait_for "state" "router"
 expect "Done"
 sleep 3
 
-send "rloc16\n"
-expect "Done"
+get_rloc16
 
 spawn_node 3 cli
 
@@ -98,8 +96,7 @@ sleep 4
 
 set extaddr3 [get_extaddr]
 
-send "rloc16\n"
-expect "Done"
+get_rloc16
 
 spawn_node 4 cli
 
@@ -124,13 +121,14 @@ expect "Done"
 wait_for "state" "child"
 expect "Done"
 
-send "rloc16\n"
-expect "Done"
+get_rloc16
 
 switch_node 1
 
+set rloc(1) [get_ipaddr "rloc"]
+
 send "networkdiagnostic get ff03::2 5 16\n"
-expect "DIAG_GET.rsp/ans from fdde:ad00:beef:0:0:ff:fe00:$rloc16(1)"
+expect "DIAG_GET.rsp/ans from $rloc(1)"
 expect "Done"
 
 sleep 5

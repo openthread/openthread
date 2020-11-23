@@ -125,9 +125,9 @@ proc dispose_all {} {
     }
 }
 
-proc get_mleid {} {
-    send "ipaddr mleid\n"
-    expect "ipaddr mleid"
+proc get_ipaddr {type} {
+    send "ipaddr $type\n"
+    expect "ipaddr $type"
     expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
     set rval $expect_out(1,string)
     expect "Done"
