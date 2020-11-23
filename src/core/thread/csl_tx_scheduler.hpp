@@ -79,9 +79,8 @@ public:
     {
     public:
         uint8_t GetCslTxAttempts(void) const { return mCslTxAttempts; }
-        void    SetCslTxAttempts(uint8_t aCslTxAttempts) { mCslTxAttempts = aCslTxAttempts; }
         void    IncrementCslTxAttempts(void) { mCslTxAttempts++; }
-        void    ResetCslTxAttempts(void) { SetCslTxAttempts(0); }
+        void    ResetCslTxAttempts(void) { mCslTxAttempts = 0; }
 
         bool IsCslSynchronized(void) const { return mCslSynchronized && mCslPeriod > 0; }
         void SetCslSynchronized(bool aCslSynchronized) { mCslSynchronized = aCslSynchronized; }
