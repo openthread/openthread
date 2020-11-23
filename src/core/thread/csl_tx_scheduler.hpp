@@ -64,6 +64,11 @@ class CslTxScheduler : public InstanceLocator, private NonCopyable
     friend class IndirectSender;
 
 public:
+    enum
+    {
+        kMaxCslTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
+    };
+
     /**
      * This class defines all the child info required for scheduling CSL transmissions.
      *
@@ -73,6 +78,11 @@ public:
     class ChildInfo
     {
     public:
+        uint8_t GetCslTxAttempts(void) const { return mCslTxAttempts; }
+        void    SetCslTxAttempts(uint8_t aCslTxAttempts) { mCslTxAttempts = aCslTxAttempts; }
+        void    IncrementCslTxAttempts(void) { mCslTxAttempts++; }
+        void    ResetCslTxAttempts(void) { SetCslTxAttempts(0); }
+
         bool IsCslSynchronized(void) const { return mCslSynchronized && mCslPeriod > 0; }
         void SetCslSynchronized(bool aCslSynchronized) { mCslSynchronized = aCslSynchronized; }
 
@@ -95,13 +105,16 @@ public:
         void     SetLastRxTimestamp(uint64_t aLastRxTimestamp) { mLastRxTimstamp = aLastRxTimestamp; }
 
     private:
-        uint64_t  mLastRxTimstamp;      ///< Time when last frame containing CSL IE was received, in microseconds.
+        uint8_t   mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.
+        bool      mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
+        uint8_t   mCslChannel;          ///< The channel the device will listen on.
         uint32_t  mCslTimeout;          ///< The sync timeout, in seconds.
-        TimeMilli mCslLastHeard;        ///< Time when last frame containing CSL IE was heard.
         uint16_t  mCslPeriod;           ///< CSL sampled listening period in units of 10 symbols (160 microseconds).
         uint16_t  mCslPhase;            ///< The time when the next CSL sample will start.
-        uint8_t   mCslChannel;          ///< The channel the device will listen on.
-        bool      mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
+        TimeMilli mCslLastHeard;        ///< Time when last frame containing CSL IE was heard.
+        uint64_t  mLastRxTimstamp;      ///< Time when last frame containing CSL IE was received, in microseconds.
+
+        static_assert(kMaxCslTriggeredTxAttempts < (1 << 7), "mCslTxAttempts cannot fit max!");
     };
 
     /**
