@@ -1468,17 +1468,14 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Get(spinel_prop_key_t aK
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     do
-#endif
     {
-#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
         RecoverFromRcpFailure();
 #endif
         va_start(mPropertyArgs, aFormat);
         error = RequestWithPropertyFormatV(aFormat, SPINEL_CMD_PROP_VALUE_GET, aKey, nullptr, mPropertyArgs);
         va_end(mPropertyArgs);
-    }
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    while (mRcpFailed);
+    } while (mRcpFailed);
 #endif
 
     return error;
@@ -1498,18 +1495,15 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::GetWithParam(spinel_prop
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     do
-#endif
     {
-#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
         RecoverFromRcpFailure();
 #endif
         va_start(mPropertyArgs, aFormat);
         error = RequestWithPropertyFormat(aFormat, SPINEL_CMD_PROP_VALUE_GET, aKey, SPINEL_DATATYPE_DATA_S, aParam,
                                           aParamSize);
         va_end(mPropertyArgs);
-    }
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    while (mRcpFailed);
+    } while (mRcpFailed);
 #endif
 
     return error;
@@ -1524,18 +1518,15 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Set(spinel_prop_key_t aK
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     do
-#endif
     {
-#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
         RecoverFromRcpFailure();
 #endif
         va_start(mPropertyArgs, aFormat);
         error = RequestWithExpectedCommandV(SPINEL_CMD_PROP_VALUE_IS, SPINEL_CMD_PROP_VALUE_SET, aKey, aFormat,
                                             mPropertyArgs);
         va_end(mPropertyArgs);
-    }
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    while (mRcpFailed);
+    } while (mRcpFailed);
 #endif
 
     return error;
@@ -1550,18 +1541,15 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Insert(spinel_prop_key_t
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     do
-#endif
     {
-#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
         RecoverFromRcpFailure();
 #endif
         va_start(mPropertyArgs, aFormat);
         error = RequestWithExpectedCommandV(SPINEL_CMD_PROP_VALUE_INSERTED, SPINEL_CMD_PROP_VALUE_INSERT, aKey, aFormat,
                                             mPropertyArgs);
         va_end(mPropertyArgs);
-    }
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    while (mRcpFailed);
+    } while (mRcpFailed);
 #endif
 
     return error;
@@ -1576,18 +1564,15 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Remove(spinel_prop_key_t
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     do
-#endif
     {
-#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
         RecoverFromRcpFailure();
 #endif
         va_start(mPropertyArgs, aFormat);
         error = RequestWithExpectedCommandV(SPINEL_CMD_PROP_VALUE_REMOVED, SPINEL_CMD_PROP_VALUE_REMOVE, aKey, aFormat,
                                             mPropertyArgs);
         va_end(mPropertyArgs);
-    }
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    while (mRcpFailed);
+    } while (mRcpFailed);
 #endif
 
     return error;
