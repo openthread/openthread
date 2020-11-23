@@ -123,7 +123,7 @@ exit:
     return;
 }
 
-bool MulticastRoutingManager::HasMulticastListener(const Ip6::Address &aAddress)
+bool MulticastRoutingManager::HasMulticastListener(const Ip6::Address &aAddress) const
 {
     bool                                      found = false;
     otBackboneRouterMulticastListenerIterator iter  = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT;
@@ -216,14 +216,14 @@ exit:
 void MulticastRoutingManager::ProcessMulticastRouterMessages(void)
 {
     otError         error = OT_ERROR_NONE;
-    char            buf[128];
+    char            buf[sizeof(struct mrt6msg)];
     int             nr;
     struct mrt6msg *mrt6msg;
     Ip6::Address    src, dst;
 
     nr = read(mMulticastRouterSock, buf, sizeof(buf));
 
-    VerifyOrExit(nr > 0, error = OT_ERROR_FAILED);
+    VerifyOrExit(nr >= static_cast<int>(sizeof(struct mrt6msg)), error = OT_ERROR_FAILED);
 
     mrt6msg = reinterpret_cast<struct mrt6msg *>(buf);
 
@@ -431,7 +431,7 @@ const char *MulticastRoutingManager::MifIndexToString(MifIndex aMif)
     return string;
 }
 
-void MulticastRoutingManager::DumpMulticastForwardingCache(void)
+void MulticastRoutingManager::DumpMulticastForwardingCache(void) const
 {
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
     otLogDebgPlat("MulticastRoutingManager: ==================== MFC ENTRIES ====================");

@@ -36,8 +36,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <map>
-#include <set>
 #include <openthread/backbone_router_ftd.h>
 #include <openthread/openthread-system.h>
 
@@ -145,7 +143,7 @@ private:
     void    Disable(void);
     void    Add(const Ip6::Address &aAddress);
     void    Remove(const Ip6::Address &aAddress);
-    bool    HasMulticastListener(const Ip6::Address &aAddress);
+    bool    HasMulticastListener(const Ip6::Address &aAddress) const;
     bool    IsEnabled(void) const { return mMulticastRouterSock >= 0; }
     void    InitMulticastRouterSock(void);
     void    FinalizeMulticastRouterSock(void);
@@ -159,8 +157,9 @@ private:
     void    RemoveInboundMulticastForwardingCache(const Ip6::Address &aGroupAddr);
     void    ExpireMulticastForwardingCache(void);
     bool    UpdateMulticastRouteInfo(MulticastForwardingCache &aMfc) const;
+    void    RemoveMulticastForwardingCache(MulticastForwardingCache &aMfc) const;
     static const char *MifIndexToString(MifIndex aMif);
-    void               DumpMulticastForwardingCache(void);
+    void               DumpMulticastForwardingCache(void) const;
     static void        HandleBackboneMulticastListenerEvent(void *                                 aContext,
                                                             otBackboneRouterMulticastListenerEvent aEvent,
                                                             const otIp6Address *                   aAddress);
@@ -171,7 +170,6 @@ private:
     uint64_t                 mLastExpireTime;
     int                      mMulticastRouterSock;
     otInstance *             mInstance;
-    void                     RemoveMulticastForwardingCache(MulticastForwardingCache &aMfc) const;
 };
 
 } // namespace Posix
