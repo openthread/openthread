@@ -321,14 +321,15 @@ void IndirectSender::UpdateIndirectMessage(Child &aChild)
     aChild.SetIndirectFragmentOffset(0);
     aChild.SetIndirectTxSuccess(true);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    mCslTxScheduler.Update();
+#endif
+
     if (message != nullptr)
     {
         Mac::Address childAddress;
 
         mDataPollHandler.HandleNewFrame(aChild);
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        mCslTxScheduler.Update();
-#endif
 
         aChild.GetMacAddress(childAddress);
         Get<MeshForwarder>().LogMessage(MeshForwarder::kMessagePrepareIndirect, *message, &childAddress, OT_ERROR_NONE);

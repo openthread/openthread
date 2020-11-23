@@ -33,8 +33,8 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/time.hpp"
-#include "mac/mac.hpp"
 #include "mac/data_poll_handler.hpp"
+#include "mac/mac.hpp"
 
 namespace ot {
 
@@ -273,7 +273,6 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError,
     }
 
     mCallbacks.HandleSentFrameToChild(aFrame, mFrameContext, aError, aChild);
-    RescheduleCslTx();
 
 exit:
     return;
