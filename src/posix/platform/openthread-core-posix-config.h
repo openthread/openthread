@@ -87,6 +87,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
+ *
+ * Both the TUN interface and Router Manager need to
+ * monitor Thread state changes.
+ *
+ */
+#define OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS 2
+
+/**
  * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
  *
  * Define to 1 to enable NCP UART support.

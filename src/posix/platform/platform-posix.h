@@ -463,6 +463,39 @@ extern char gBackboneNetifName[IFNAMSIZ];
  */
 extern unsigned int gBackboneNetifIndex;
 
+#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+/**
+ * This function initializes the RA-based routing manager.
+ *
+ * @param  aInstance        The OpenThread instance structure.
+ * @param  aInfraNetifName  The name of an infrastructure interface.
+ *
+ */
+void platformRoutingManagerInit(otInstance *aInstance, const char *aInfraNetifName);
+
+/**
+ * This function deinitializes the RA-based routing manager.
+ *
+ */
+void platformRoutingManagerDeinit();
+
+/**
+ * This function updates the mainloop context.
+ *
+ * @param  aMainloop  The mainloop context to be updated.
+ *
+ */
+void platformRoutingManagerUpdate(otSysMainloopContext *aMainloop);
+
+/**
+ * This function process events in a mainloop.
+ *
+ * @param[in]  aMainloop  The mainloop context to be processed.
+ *
+ */
+void platformRoutingManagerProcess(const otSysMainloopContext *aMainloop);
+#endif // OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+
 #ifdef __cplusplus
 }
 #endif

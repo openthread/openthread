@@ -60,6 +60,7 @@ set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
 add_library(openthread-posix
+    address_utils.hpp
     alarm.cpp
     backbone.cpp
     entropy.cpp
@@ -89,6 +90,7 @@ target_link_libraries(openthread-posix
     PUBLIC
         openthread-platform
     PRIVATE
+        openthread-routing-manager
         openthread-url
         ot-config
         util

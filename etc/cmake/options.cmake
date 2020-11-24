@@ -141,6 +141,11 @@ if(OT_DNS_CLIENT)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1")
 endif()
 
+option(OT_DUCKHORN_BORDER_ROUTER "enable Duckhorn Border Router support")
+if(OT_DUCKHORN_BORDER_ROUTER)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE=1")
+endif()
+
 option(OT_ECDSA "enable ECDSA support")
 if(OT_ECDSA)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ECDSA_ENABLE=1")

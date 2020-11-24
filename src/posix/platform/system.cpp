@@ -104,6 +104,10 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     SuccessOrDie(otSetStateChangedCallback(instance, processStateChange, instance));
 #endif
 
+#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+    platformRoutingManagerInit(instance, aPlatformConfig->mBackboneInterfaceName);
+#endif
+
     return instance;
 }
 
@@ -117,6 +121,10 @@ void otSysDeinit(void)
     platformNetifDeinit();
 #endif
     IgnoreError(otPlatUartDisable());
+
+#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+    platformRoutingManagerDeinit();
+#endif
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
@@ -172,6 +180,10 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
                            &aMainloop->mTimeout);
 #else
     platformRadioUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
+#endif
+
+#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+    platformRoutingManagerUpdate(aMainloop);
 #endif
 
     if (otTaskletsArePending(aInstance))
@@ -241,6 +253,10 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneProcess(aMainloop->mReadFdSet);
+#endif
+
+#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+    platformRoutingManagerProcess(aMainloop);
 #endif
 }
 
