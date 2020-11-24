@@ -53,6 +53,7 @@ if PACKET_VERIFICATION:
 PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
 ENV_THREAD_VERSION = os.getenv('THREAD_VERSION', '1.1')
+OTBR_CERT = int(os.getenv('OTBR_CERT', '0'))
 
 DEFAULT_PARAMS = {
     'is_mtd': False,
@@ -119,6 +120,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         """Create simulator, nodes and apply configurations.
         """
         self._clean_up_tmp()
+        self._clean_up_pcaps()
 
         self.simulator = config.create_default_simulator(use_message_factory=self.USE_MESSAGE_FACTORY)
         self.nodes = {}
@@ -137,10 +139,10 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
             logging.info("Creating node %d: %r", i, params)
 
-            if params['is_otbr']:
-                nodeclass = OtbrNode
-            elif params['is_host']:
+            if params['is_host']:
                 nodeclass = HostNode
+            elif OTBR_CERT or params['is_otbr']:
+                nodeclass = OtbrNode
             else:
                 nodeclass = Node
 
@@ -293,6 +295,17 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         """
         os.system(f"rm -f tmp/{PORT_OFFSET}_*.flash tmp/{PORT_OFFSET}_*.data tmp/{PORT_OFFSET}_*.swap")
 
+    def _clean_up_pcaps(self):
+        for fn in [
+                self._get_thread_pcap_filename(),
+                self._get_backbone_pcap_filename(),
+                self._get_merged_pcap_filename()
+        ]:
+            try:
+                os.remove(fn)
+            except FileNotFoundError:
+                pass
+
     def _verify_packets(self, test_info_path: str):
         pv = PacketVerifier(test_info_path, self.CASE_WIRESHARK_PREFS)
         pv.add_common_vars()
@@ -434,6 +447,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         return params
 
     def _has_backbone_traffic(self):
+        if OTBR_CERT:
+            return True
         for param in self.TOPOLOGY.values():
             if param and (param.get('is_otbr') or param.get('is_host')):
                 return True
@@ -454,11 +469,6 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         # don't know why but I have to create the empty bbr.pcap first, otherwise tshark won't work
         # self.assure_run_ok("truncate --size 0 bbr.pcap && chmod 664 bbr.pcap", shell=True)
         pcap_file = self._get_backbone_pcap_filename()
-        try:
-            os.remove(pcap_file)
-        except FileNotFoundError:
-            pass
-
         dumpcap = pvutils.which_dumpcap()
         self._dumpcap_proc = subprocess.Popen([dumpcap, '-i', config.BACKBONE_DOCKER_NETWORK_NAME, '-w', pcap_file],
                                               stdout=sys.stdout,
@@ -486,6 +496,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         merged_pcap = self._get_merged_pcap_filename()
 
         mergecap = pvutils.which_mergecap()
+
         self.assure_run_ok(f'{mergecap} -w {merged_pcap} {thread_pcap} {backbone_pcap}', shell=True)
         return merged_pcap
 

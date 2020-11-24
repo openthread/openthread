@@ -416,6 +416,8 @@ class NodeImpl:
     is_host = False
     is_otbr = False
 
+    RESET_WAIT = 0.1
+
     def __init__(self, nodeid, name=None, simulator=None, **kwargs):
         self.nodeid = nodeid
         self.name = name or ('Node%d' % nodeid)
@@ -1665,7 +1667,7 @@ class NodeImpl:
 
     def reset(self):
         self.send_command('reset')
-        time.sleep(0.1)
+        time.sleep(self.RESET_WAIT)
 
     def set_router_selection_jitter(self, jitter):
         cmd = 'routerselectionjitter %d' % jitter
@@ -2422,6 +2424,8 @@ class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
     is_otbr = True
     is_bbr = True  # OTBR is also BBR
     node_type = 'otbr-docker'
+
+    RESET_WAIT = 3
 
     def __repr__(self):
         return f'Otbr<{self.nodeid}>'
