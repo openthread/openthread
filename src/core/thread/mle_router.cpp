@@ -561,9 +561,6 @@ void MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::MessageInf
     LeaderData    leaderData;
     uint16_t      sourceAddress;
     RequestedTlvs requestedTlvs;
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    TimeRequestTlv timeRequest;
-#endif
 
     Log(kMessageReceive, kTypeLinkRequest, aMessageInfo.GetPeerAddr());
 
@@ -647,14 +644,7 @@ void MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::MessageInf
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (neighbor != nullptr)
     {
-        if (Tlv::FindTlv(aMessage, timeRequest) == OT_ERROR_NONE)
-        {
-            neighbor->SetTimeSyncEnabled(true);
-        }
-        else
-        {
-            neighbor->SetTimeSyncEnabled(false);
-        }
+        neighbor->SetTimeSyncEnabled(Tlv::Find<TimeRequestTlv>(aMessage, nullptr, 0) == OT_ERROR_NONE);
     }
 #endif
 
@@ -1553,9 +1543,6 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
     Challenge       challenge;
     Router *        leader;
     Child *         child;
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    TimeRequestTlv timeRequest;
-#endif
 
     Log(kMessageReceive, kTypeParentRequest, aMessageInfo.GetPeerAddr());
 
@@ -1630,14 +1617,7 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
         child->ResetLinkFailures();
         child->SetState(Neighbor::kStateParentRequest);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-        if (Tlv::FindTlv(aMessage, timeRequest) == OT_ERROR_NONE)
-        {
-            child->SetTimeSyncEnabled(true);
-        }
-        else
-        {
-            child->SetTimeSyncEnabled(false);
-        }
+        child->SetTimeSyncEnabled(Tlv::Find<TimeRequestTlv>(aMessage, nullptr, 0) == OT_ERROR_NONE);
 #endif
     }
     else if (TimerMilli::GetNow() - child->GetLastHeard() < kParentRequestRouterTimeout - kParentRequestDuplicateMargin)
