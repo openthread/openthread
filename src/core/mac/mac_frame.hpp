@@ -734,6 +734,7 @@ public:
 
     /**
      * This method indicates whether the frame is a MAC Data Request command (data poll).
+     *
      * For 802.15.4-2015 and above frame, the frame should be already decrypted.
      *
      * @returns TRUE if frame is a MAC Data Request command, FALSE otherwise.
