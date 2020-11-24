@@ -91,6 +91,17 @@ bool otMacFrameIsAck(const otRadioFrame *aFrame);
 bool otMacFrameIsData(const otRadioFrame *aFrame);
 
 /**
+ * Check if @p aFrame is a Command frame.
+ *
+ * @param[in]   aFrame          A pointer to the frame.
+ *
+ * @retval  true    It is a Command frame.
+ * @retval  false   It is not a Command frame.
+ *
+ */
+bool otMacFrameIsCommand(const otRadioFrame *aFrame);
+
+/**
  * Check if @p aFrame is an Data Request Command.
  *
  * @param[in]   aFrame          A pointer to the frame. For 802.15.4-2015 and above frame,
