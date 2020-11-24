@@ -65,8 +65,8 @@ proc spawn_node {id {type ""}} {
 
     send_user "\n# ${id} ${type}\n"
 
-    switch ${type} {
-        rcp {
+    switch -regexp ${type} {
+        {rcp|rcp-cli} {
             spawn $::env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$::env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=$id"
             send "routerselectionjitter 1\n"
             expect "Done"
