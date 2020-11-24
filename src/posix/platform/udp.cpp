@@ -441,7 +441,7 @@ otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMess
         int value = 0;
 
         VerifyOrDie(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(value)) == 0,
-                    error = OT_ERROR_FAILED);
+                    OT_EXIT_ERROR_ERRNO);
     }
 
 exit:
