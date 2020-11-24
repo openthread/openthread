@@ -867,27 +867,43 @@ exit:
 
 otError Dataset::ProcessSet(uint8_t aArgsLength, char *aArgs[])
 {
-    otError                  error = OT_ERROR_NONE;
-    otOperationalDatasetTlvs dataset;
-    uint16_t                 tlvsLength;
+    otError                error = OT_ERROR_NONE;
+    MeshCoP::Dataset::Type datasetType;
 
     VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
 
-    tlvsLength = sizeof(dataset.mTlvs);
-    SuccessOrExit(error = ParseAsHexString(aArgs[1], tlvsLength, dataset.mTlvs));
-    dataset.mLength = static_cast<uint8_t>(tlvsLength);
-
     if (strcmp(aArgs[0], "active") == 0)
     {
-        SuccessOrExit(error = otDatasetSetActiveTlvs(mInterpreter.mInstance, &dataset));
+        datasetType = MeshCoP::Dataset::Type::kActive;
     }
     else if (strcmp(aArgs[0], "pending") == 0)
     {
-        SuccessOrExit(error = otDatasetSetPendingTlvs(mInterpreter.mInstance, &dataset));
+        datasetType = MeshCoP::Dataset::Type::kPending;
     }
     else
     {
         ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+    {
+        MeshCoP::Dataset       dataset(datasetType);
+        MeshCoP::Dataset::Info datasetInfo;
+        uint16_t               tlvsLength = MeshCoP::Dataset::kMaxSize;
+
+        SuccessOrExit(error = ParseAsHexString(aArgs[1], tlvsLength, dataset.GetBytes()));
+        dataset.SetSize(tlvsLength);
+        VerifyOrExit(dataset.IsValid(), error = OT_ERROR_INVALID_ARGS);
+        dataset.ConvertTo(datasetInfo);
+
+        switch (datasetType)
+        {
+        case MeshCoP::Dataset::Type::kActive:
+            SuccessOrExit(error = otDatasetSetActive(mInterpreter.mInstance, &datasetInfo));
+            break;
+        case MeshCoP::Dataset::Type::kPending:
+            SuccessOrExit(error = otDatasetSetPending(mInterpreter.mInstance, &datasetInfo));
+            break;
+        }
     }
 
 exit:
