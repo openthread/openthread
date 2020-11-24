@@ -519,5 +519,7 @@ jobs:
       run: |
         script/test upload_codecov
     - name: Remove Artifacts
-      run: |
-        GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} script/remove_coverage_artifacts.py
+      uses: geekyeggo/delete-artifact@1-glob-support
+      with:
+        name: cov-*
+        useGlob: true
