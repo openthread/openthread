@@ -145,6 +145,15 @@ exit:
     return error;
 }
 
+bool NetworkName::operator==(const NetworkName &aOther) const
+{
+    NameData data      = GetAsData();
+    NameData otherData = aOther.GetAsData();
+
+    return (data.GetLength() == otherData.GetLength()) &&
+           (memcmp(data.GetBuffer(), otherData.GetBuffer(), data.GetLength()) == 0);
+}
+
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 NameData DomainName::GetAsData(void) const
 {
