@@ -271,6 +271,15 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
 void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);
 
 /**
+ * This function performs notifies state changes to platform netif.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aFlags          Flags that denote the state change events.
+ *
+ */
+void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags);
+
+/**
  * This function initialize virtual time simulation.
  *
  * @params[in]  aNodeId     Node id of this simulated device.
@@ -407,7 +416,6 @@ extern char gNetifName[IFNAMSIZ];
  */
 extern unsigned int gNetifIndex;
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 /**
  * This function initializes platform Backbone network.
  *
@@ -416,6 +424,32 @@ extern unsigned int gNetifIndex;
  *
  */
 void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by the platform Backbone network.
+ *
+ * @param[inout]  aReadFdSet   A reference to the read file descriptors.
+ * @param[inout]  aMaxFd       A reference to the max file descriptor.
+ *
+ */
+void platformBackboneUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd);
+
+/**
+ * This function performs platform Backbone network processing.
+ *
+ * @param[in]   aReadFdSet  A reference to the read file descriptors.
+ *
+ */
+void platformBackboneProcess(const fd_set &aReadSet);
+
+/**
+ * This function performs notifies state changes to platform Backbone network.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aFlags          Flags that denote the state change events.
+ *
+ */
+void platformBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags);
 
 /**
  * The name of Backbone network interface.
@@ -428,7 +462,6 @@ extern char gBackboneNetifName[IFNAMSIZ];
  *
  */
 extern unsigned int gBackboneNetifIndex;
-#endif
 
 #ifdef __cplusplus
 }

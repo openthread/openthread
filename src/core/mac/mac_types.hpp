@@ -570,6 +570,17 @@ public:
      *
      */
     otError Set(const NameData &aNameData);
+
+    /**
+     * This method overloads operator `==` to evaluate whether or not two given `NetworkName` objects are equal.
+     *
+     * @param[in]  aOther  The other `NetworkName` to compare with.
+     *
+     * @retval TRUE   If the two are equal.
+     * @retval FALSE  If the two are not equal.
+     *
+     */
+    bool operator==(const NetworkName &aOther) const;
 };
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)

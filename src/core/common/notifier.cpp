@@ -145,8 +145,8 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
     Get<Utils::ChildSupervisor>().HandleNotifierEvents(events);
 #endif
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
-    Get<Utils::ChannelManager>().HandleNotifierEvents(events);
+#if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
+    Get<Utils::DatasetUpdater>().HandleNotifierEvents(events);
 #endif
 #endif // OPENTHREAD_FTD
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

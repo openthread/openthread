@@ -28,51 +28,43 @@
 
 /**
  * @file
- *   This file implements the platform Backbone interface management on Linux.
+ *   This file includes compile-time configurations for Dataset Updater.
+ *
  */
 
-#include "openthread-posix-config.h"
+#ifndef CONFIG_DATASET_UPDATER_H_
+#define CONFIG_DATASET_UPDATER_H_
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-
-#include "multicast_routing.hpp"
-#include "platform-posix.h"
-#include "common/code_utils.hpp"
-
-char                                      gBackboneNetifName[IFNAMSIZ] = "";
-unsigned int                              gBackboneNetifIndex          = 0;
-static ot::Posix::MulticastRoutingManager sMulticastRoutingManager;
-
-void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    VerifyOrDie(aInterfaceName != nullptr, OT_EXIT_INVALID_ARGUMENTS);
-
-    VerifyOrDie(strnlen(aInterfaceName, IFNAMSIZ) <= IFNAMSIZ - 1, OT_EXIT_INVALID_ARGUMENTS);
-    strcpy(gBackboneNetifName, aInterfaceName);
-
-    gBackboneNetifIndex = if_nametoindex(gBackboneNetifName);
-    VerifyOrDie(gBackboneNetifIndex > 0, OT_EXIT_FAILURE);
-
-    otLogInfoPlat("Backbone interface is configured to %s (%d)", gBackboneNetifName, gBackboneNetifIndex);
-
-    sMulticastRoutingManager.Init(aInstance);
-}
-
-void platformBackboneUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd)
-{
-    sMulticastRoutingManager.UpdateFdSet(aReadFdSet, aMaxFd);
-}
-
-void platformBackboneProcess(const fd_set &aReadSet)
-{
-    sMulticastRoutingManager.Process(aReadSet);
-}
-
-void platformBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags)
-{
-    sMulticastRoutingManager.HandleStateChange(aInstance, aFlags);
-}
-
+/**
+ * @def OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE
+ *
+ * Define as 1 to enable Dataset Updater support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE
+#define OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE 0
 #endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY
+ *
+ * Specifies the default delay (in ms) used by Dataset Updater when not included in Dataset already.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY
+#define OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY 1000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_RETRY_WAIT_INTERVAL
+ *
+ * Specifies the default retry wait interval (in ms) for Dataset Updater to wait (in addition to Dataset delay) after
+ * sending MGMT Set Pending Dataset command waiting for Active Dataset to be updated before retrying again before
+ * retrying the MGMT Set Pending Dataset command.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_RETRY_WAIT_INTERVAL
+#define OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_RETRY_WAIT_INTERVAL 1500
+#endif
+
+#endif // CONFIG_DATASET_UPDATER_H_

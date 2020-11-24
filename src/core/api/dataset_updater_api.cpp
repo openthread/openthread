@@ -28,51 +28,45 @@
 
 /**
  * @file
- *   This file implements the platform Backbone interface management on Linux.
+ *   This file implements the OpenThread Dataset Updater APIs.
  */
 
-#include "openthread-posix-config.h"
+#include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#include <openthread/dataset_updater.h>
 
-#include "multicast_routing.hpp"
-#include "platform-posix.h"
-#include "common/code_utils.hpp"
+#include "common/instance.hpp"
+#include "common/locator-getters.hpp"
+#include "utils/dataset_updater.hpp"
 
-char                                      gBackboneNetifName[IFNAMSIZ] = "";
-unsigned int                              gBackboneNetifIndex          = 0;
-static ot::Posix::MulticastRoutingManager sMulticastRoutingManager;
+using namespace ot;
 
-void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName)
+#if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
+
+otError otDatasetUpdaterRequestUpdate(otInstance *                aInstance,
+                                      const otOperationalDataset *aDataset,
+                                      otDatasetUpdaterCallback    aCallback,
+                                      void *                      aContext,
+                                      uint32_t                    aReryWaitInterval)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrDie(aInterfaceName != nullptr, OT_EXIT_INVALID_ARGUMENTS);
-
-    VerifyOrDie(strnlen(aInterfaceName, IFNAMSIZ) <= IFNAMSIZ - 1, OT_EXIT_INVALID_ARGUMENTS);
-    strcpy(gBackboneNetifName, aInterfaceName);
-
-    gBackboneNetifIndex = if_nametoindex(gBackboneNetifName);
-    VerifyOrDie(gBackboneNetifIndex > 0, OT_EXIT_FAILURE);
-
-    otLogInfoPlat("Backbone interface is configured to %s (%d)", gBackboneNetifName, gBackboneNetifIndex);
-
-    sMulticastRoutingManager.Init(aInstance);
+    return instance.Get<Utils::DatasetUpdater>().RequestUpdate(*static_cast<const MeshCoP::Dataset::Info *>(aDataset),
+                                                               aCallback, aContext, aReryWaitInterval);
 }
 
-void platformBackboneUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd)
+void otDatasetUpdaterCancelUpdate(otInstance *aInstance)
 {
-    sMulticastRoutingManager.UpdateFdSet(aReadFdSet, aMaxFd);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Utils::DatasetUpdater>().CancelUpdate();
 }
 
-void platformBackboneProcess(const fd_set &aReadSet)
+bool otDatasetUpdaterIsUpdateOngoing(otInstance *aInstance)
 {
-    sMulticastRoutingManager.Process(aReadSet);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Utils::DatasetUpdater>().IsUpdateOngoing();
 }
 
-void platformBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags)
-{
-    sMulticastRoutingManager.HandleStateChange(aInstance, aFlags);
-}
-
-#endif
+#endif // OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
