@@ -2482,6 +2482,14 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
 
         childDidChange = true;
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        if (child->IsRxOnWhenIdle())
+        {
+            // Clear CSL synchronization state
+            child->SetCslSynchronized(false);
+        }
+#endif
+
         // The `IndirectSender::HandleChildModeChange()` needs to happen
         // after "Child Update" message is fully parsed to ensure that
         // any registered IPv6 addresses included in the "Child Update"

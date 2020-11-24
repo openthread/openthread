@@ -97,7 +97,7 @@ void CslTxScheduler::Clear(void)
 {
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
-        child.SetCslTxAttempts(0);
+        child.ResetCslTxAttempts();
         child.SetCslSynchronized(false);
         child.SetCslChannel(0);
         child.SetCslTimeout(0);
@@ -128,8 +128,7 @@ void CslTxScheduler::RescheduleCslTx(void)
         uint32_t delay;
         uint32_t cslTxDelay;
 
-        if (!child.IsCslSynchronized() || child.GetIndirectMessageCount() == 0 ||
-            child.GetCslTxAttempts() >= kMaxCslTriggeredTxAttempts)
+        if (!child.IsCslSynchronized() || child.GetIndirectMessageCount() == 0)
         {
             continue;
         }
@@ -233,11 +232,19 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError,
         aChild.ResetCslTxAttempts();
         aChild.ResetIndirectTxAttempts();
         break;
+
     case OT_ERROR_NO_ACK:
         aChild.IncrementCslTxAttempts();
 
         otLogInfoMac("CSL tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(), aChild.GetCslTxAttempts(),
                      kMaxCslTriggeredTxAttempts);
+
+        if (aChild.GetCslTxAttempts() >= kMaxCslTriggeredTxAttempts)
+        {
+            // CSL transmission attempts reach max, consider child out of sync
+            aChild.SetCslSynchronized(false);
+            aChild.ResetCslTxAttempts();
+        }
 
         // Fall through
     case OT_ERROR_CHANNEL_ACCESS_FAILURE:
