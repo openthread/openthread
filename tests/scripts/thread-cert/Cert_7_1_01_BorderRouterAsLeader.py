@@ -34,7 +34,6 @@ import config
 import thread_cert
 from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV, ADDRESS16_TLV, NETWORK_DATA_TLV, ROUTE64_TLV, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV
 from pktverify.packet_verifier import PacketVerifier
-from pktverify.bytes import Bytes
 from pktverify.addrs import Ipv6Addr
 
 LEADER = 1
@@ -48,8 +47,10 @@ PREFIX_2002 = '2002::/64'
 
 # Test Purpose and Description:
 # -----------------------------
-# The purpose of this test case is to validate that the DUT MTD Child Address Set
-# can hold at least 4 IPv6 non-link-local addresses.
+# The purpose of this test case is to verify that the DUT, as a Border Router,
+# acts properly as a Leader device in a Thread network, correctly sets the
+# Network Data (stable/non-stable) and successfully propagates the Network Data
+# to the devices that attach to it.
 #
 # Test Topology:
 # -------------
@@ -150,7 +151,9 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
                               ADDRESS16_TLV,
                               NETWORK_DATA_TLV,
                               ROUTE64_TLV
-                             } < set(p.mle.tlv.type)).\
+                             } < set(p.mle.tlv.type) and\
+                   p.mle.tlv.mode.network_data == 1
+                   ).\
             must_next()
 
         # Step 4: The DUT MUST send a MLE Child ID Response to Router,
@@ -190,7 +193,8 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
                               ADDRESS16_TLV,
                               NETWORK_DATA_TLV,
                               ADDRESS_REGISTRATION_TLV
-                             } <= set(p.mle.tlv.type)
+                             } <= set(p.mle.tlv.type) and\
+                   p.mle.tlv.mode.network_data == 0
                    ).\
             must_next()
 
@@ -236,7 +240,8 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
                               ADDRESS16_TLV,
                               NETWORK_DATA_TLV,
                               ADDRESS_REGISTRATION_TLV
-                             } < set(p.mle.tlv.type)
+                             } < set(p.mle.tlv.type) and\
+                   p.mle.tlv.mode.network_data == 1
                    ).\
             must_next()
 
