@@ -139,7 +139,10 @@ def which_mergecap() -> str:
 
 def ridmask_to_rid(ridmask: str) -> list:
     """
-    Convert router ID mask to router IDs
+    Convert router ID mask string to router IDs
+
+    Notes: the router ID mask in wireshark is a
+           hexadecimal string separated by ':'
 
     :param ridmask: router ID mask
     :return: router id list
