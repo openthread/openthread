@@ -102,7 +102,7 @@ bool otMacFrameIsData(const otRadioFrame *aFrame);
 bool otMacFrameIsCommand(const otRadioFrame *aFrame);
 
 /**
- * Check if @p aFrame is an Data Request Command.
+ * Check if @p aFrame is a Data Request Command.
  *
  * @param[in]   aFrame          A pointer to the frame. For 802.15.4-2015 and above frame,
  *                              the frame should be already decrypted.
