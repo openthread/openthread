@@ -4462,9 +4462,7 @@ void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
     SuccessOrExit(aError);
 
     OutputFormat("DIAG_GET.rsp/ans from ");
-
     OutputIp6Address(aMessageInfo->mPeerAddr);
-
     OutputFormat(": ");
 
     length = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);

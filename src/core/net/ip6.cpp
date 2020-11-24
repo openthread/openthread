@@ -936,13 +936,15 @@ exit:
     return error;
 }
 
-void Ip6::HandlePayload(Message &          aMessage,
-                        MessageInfo &      aMessageInfo,
-                        uint8_t            aIpProto,
-                        Message::Ownership aMessageOwnership)
+otError Ip6::HandlePayload(Message &          aMessage,
+                           MessageInfo &      aMessageInfo,
+                           uint8_t            aIpProto,
+                           Message::Ownership aMessageOwnership)
 {
-    otError  error = OT_ERROR_NONE;
-    Message *message;
+    otError  error   = OT_ERROR_NONE;
+    Message *message = nullptr;
+
+    VerifyOrExit(aIpProto == kProtoUdp || aIpProto == kProtoIcmp6);
 
     switch (aMessageOwnership)
     {
@@ -952,11 +954,6 @@ void Ip6::HandlePayload(Message &          aMessage,
 
     case Message::kCopyToUse:
         VerifyOrExit((message = aMessage.Clone()) != nullptr, error = OT_ERROR_NO_BUFS);
-        break;
-
-    default:
-        message = nullptr;
-        OT_ASSERT(false);
         break;
     }
 
@@ -988,6 +985,8 @@ exit:
     {
         message->Free();
     }
+
+    return error;
 }
 
 otError Ip6::ProcessReceiveCallback(Message &          aMessage,
@@ -1244,7 +1243,8 @@ start:
             forward = false;
         }
 
-        HandlePayload(aMessage, messageInfo, nextHeader, (forward ? Message::kCopyToUse : Message::kTakeCustody));
+        error =
+            HandlePayload(aMessage, messageInfo, nextHeader, (forward ? Message::kCopyToUse : Message::kTakeCustody));
         shouldFreeMessage = forward;
     }
     else if (multicastPromiscuous)

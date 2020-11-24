@@ -415,32 +415,33 @@ exit:
 
 otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
-    int     fd;
+    otError  error = OT_ERROR_NONE;
+    int      fd;
+    uint16_t len;
+    uint8_t  payload[kMaxUdpSize];
 
     VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
     fd = FdFromHandle(aUdpSocket->mHandle);
 
+    len = otMessageGetLength(aMessage);
+    VerifyOrExit(len == otMessageRead(aMessage, 0, payload, len), error = OT_ERROR_INVALID_ARGS);
+
+    if (aMessageInfo->mMulticastLoop)
     {
-        uint8_t  payload[kMaxUdpSize];
-        uint16_t len = otMessageGetLength(aMessage);
+        int value = 1;
 
-        if (aMessageInfo->mMulticastLoop)
-        {
-            int value = 1;
-            VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(value)) == 0,
-                         error = OT_ERROR_FAILED);
-        }
+        VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(value)) == 0,
+                     error = OT_ERROR_FAILED);
+    }
 
-        VerifyOrExit(len == otMessageRead(aMessage, 0, payload, len), error = OT_ERROR_INVALID_ARGS);
-        SuccessOrExit(error = transmitPacket(fd, payload, len, *aMessageInfo));
+    error = transmitPacket(fd, payload, len, *aMessageInfo);
 
-        if (aMessageInfo->mMulticastLoop)
-        {
-            int value = 0;
-            VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(value)) == 0,
-                         error = OT_ERROR_FAILED);
-        }
+    if (aMessageInfo->mMulticastLoop)
+    {
+        int value = 0;
+
+        VerifyOrDie(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(value)) == 0,
+                    error = OT_ERROR_FAILED);
     }
 
 exit:

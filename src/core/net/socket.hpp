@@ -167,7 +167,6 @@ public:
      * @retval TRUE   If message may be looped back.
      * @retval FALSE  If message must not be looped back.
      *
-     *
      */
     bool GetMulticastLoop(void) const { return mMulticastLoop; }
 

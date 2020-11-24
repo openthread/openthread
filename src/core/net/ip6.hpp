@@ -357,7 +357,7 @@ private:
     otError InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     otError RemoveMplOption(Message &aMessage);
     otError HandleOptions(Message &aMessage, Header &aHeader, bool &aForward, bool &aReceive);
-    void    HandlePayload(Message &          aMessage,
+    otError HandlePayload(Message &          aMessage,
                           MessageInfo &      aMessageInfo,
                           uint8_t            aIpProto,
                           Message::Ownership aMessageOwnership);
