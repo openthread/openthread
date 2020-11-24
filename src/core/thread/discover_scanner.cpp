@@ -336,7 +336,10 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
 
         case MeshCoP::Tlv::kNetworkName:
             IgnoreError(aMessage.Read(offset, networkName));
-            IgnoreError(static_cast<Mac::NetworkName &>(result.mNetworkName).Set(networkName.GetNetworkName()));
+            if (networkName.IsValid())
+            {
+                IgnoreError(static_cast<Mac::NetworkName &>(result.mNetworkName).Set(networkName.GetNetworkName()));
+            }
             break;
 
         case MeshCoP::Tlv::kSteeringData:
