@@ -69,8 +69,8 @@ proc spawn_node {id {type ""} {radio_url ""}} {
 
     send_user "\n# ${id} ${type}\n"
 
-    switch ${type} {
-        rcp {
+    switch -regexp ${type} {
+        {rcp|rcp-cli} {
             spawn $::env(OT_POSIX_APPS)/ot-cli $radio_url
             send "factoryreset\n"
             wait_for "state" "disabled"

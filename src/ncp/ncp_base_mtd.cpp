@@ -364,7 +364,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_NETWORK_NAME>(voi
     const char *string = nullptr;
     otError     error  = OT_ERROR_NONE;
 
-    SuccessOrExit(mDecoder.ReadUtf8(string));
+    SuccessOrExit(error = mDecoder.ReadUtf8(string));
 
     error = otThreadSetNetworkName(mInstance, string);
 
@@ -644,8 +644,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ASSISTING_PORT
     {
         uint16_t port;
 
-        SuccessOrExit(mDecoder.ReadUint16(port));
-
+        IgnoreError(mDecoder.ReadUint16(port));
         SuccessOrExit(error = otIp6AddUnsecurePort(mInstance, port));
     }
 
@@ -972,42 +971,42 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsActiveTimestampPresent)
     {
-        SuccessOrExit(mEncoder.OpenStruct());
-        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP));
-        SuccessOrExit(mEncoder.WriteUint64(aDataset.mActiveTimestamp));
-        SuccessOrExit(mEncoder.CloseStruct());
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP));
+        SuccessOrExit(error = mEncoder.WriteUint64(aDataset.mActiveTimestamp));
+        SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
     if (aDataset.mComponents.mIsPendingTimestampPresent)
     {
-        SuccessOrExit(mEncoder.OpenStruct());
-        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_PENDING_TIMESTAMP));
-        SuccessOrExit(mEncoder.WriteUint64(aDataset.mPendingTimestamp));
-        SuccessOrExit(mEncoder.CloseStruct());
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_PENDING_TIMESTAMP));
+        SuccessOrExit(error = mEncoder.WriteUint64(aDataset.mPendingTimestamp));
+        SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
     if (aDataset.mComponents.mIsMasterKeyPresent)
     {
-        SuccessOrExit(mEncoder.OpenStruct());
-        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_NET_MASTER_KEY));
-        SuccessOrExit(mEncoder.WriteData(aDataset.mMasterKey.m8, OT_MASTER_KEY_SIZE));
-        SuccessOrExit(mEncoder.CloseStruct());
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_NET_MASTER_KEY));
+        SuccessOrExit(error = mEncoder.WriteData(aDataset.mMasterKey.m8, OT_MASTER_KEY_SIZE));
+        SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
     if (aDataset.mComponents.mIsNetworkNamePresent)
     {
-        SuccessOrExit(mEncoder.OpenStruct());
-        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_NET_NETWORK_NAME));
-        SuccessOrExit(mEncoder.WriteUtf8(aDataset.mNetworkName.m8));
-        SuccessOrExit(mEncoder.CloseStruct());
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_NET_NETWORK_NAME));
+        SuccessOrExit(error = mEncoder.WriteUtf8(aDataset.mNetworkName.m8));
+        SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
     if (aDataset.mComponents.mIsExtendedPanIdPresent)
     {
-        SuccessOrExit(mEncoder.OpenStruct());
-        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_NET_XPANID));
-        SuccessOrExit(mEncoder.WriteData(aDataset.mExtendedPanId.m8, OT_EXT_PAN_ID_SIZE));
-        SuccessOrExit(mEncoder.CloseStruct());
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_NET_XPANID));
+        SuccessOrExit(error = mEncoder.WriteData(aDataset.mExtendedPanId.m8, OT_EXT_PAN_ID_SIZE));
+        SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
     if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
@@ -1017,66 +1016,66 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
         memcpy(addr.mFields.m8, aDataset.mMeshLocalPrefix.m8, 8);
         memset(addr.mFields.m8 + 8, 0, 8); // Zero out the last 8 bytes.
 
-        SuccessOrExit(mEncoder.OpenStruct());
-        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_IPV6_ML_PREFIX));
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_IPV6_ML_PREFIX));
         SuccessOrExit(error = mEncoder.WriteIp6Address(addr));             // Mesh local prefix
         SuccessOrExit(error = mEncoder.WriteUint8(OT_IP6_PREFIX_BITSIZE)); // Prefix length (in bits)
-        SuccessOrExit(mEncoder.CloseStruct());
+        SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
     if (aDataset.mComponents.mIsDelayPresent)
     {
-        SuccessOrExit(mEncoder.OpenStruct());
-        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_DELAY_TIMER));
-        SuccessOrExit(mEncoder.WriteUint32(aDataset.mDelay));
-        SuccessOrExit(mEncoder.CloseStruct());
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_DELAY_TIMER));
+        SuccessOrExit(error = mEncoder.WriteUint32(aDataset.mDelay));
+        SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
     if (aDataset.mComponents.mIsPanIdPresent)
     {
-        SuccessOrExit(mEncoder.OpenStruct());
-        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_MAC_15_4_PANID));
-        SuccessOrExit(mEncoder.WriteUint16(aDataset.mPanId));
-        SuccessOrExit(mEncoder.CloseStruct());
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_MAC_15_4_PANID));
+        SuccessOrExit(error = mEncoder.WriteUint16(aDataset.mPanId));
+        SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
     {
-        SuccessOrExit(mEncoder.OpenStruct());
-        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_PHY_CHAN));
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_PHY_CHAN));
 
         // The channel is stored in Dataset as `uint16_t` (to accommodate
         // larger number of channels in sub-GHz band),  however the current
         // definition of `SPINEL_PROP_PHY_CHAN` property limits the channel
         // to a `uint8_t`.
 
-        SuccessOrExit(mEncoder.WriteUint8(static_cast<uint8_t>(aDataset.mChannel)));
-        SuccessOrExit(mEncoder.CloseStruct());
+        SuccessOrExit(error = mEncoder.WriteUint8(static_cast<uint8_t>(aDataset.mChannel)));
+        SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
     if (aDataset.mComponents.mIsPskcPresent)
     {
-        SuccessOrExit(mEncoder.OpenStruct());
-        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_NET_PSKC));
-        SuccessOrExit(mEncoder.WriteData(aDataset.mPskc.m8, sizeof(spinel_net_pskc_t)));
-        SuccessOrExit(mEncoder.CloseStruct());
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_NET_PSKC));
+        SuccessOrExit(error = mEncoder.WriteData(aDataset.mPskc.m8, sizeof(spinel_net_pskc_t)));
+        SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
     if (aDataset.mComponents.mIsSecurityPolicyPresent)
     {
-        SuccessOrExit(mEncoder.OpenStruct());
-        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_SECURITY_POLICY));
-        SuccessOrExit(mEncoder.WriteUint16(aDataset.mSecurityPolicy.mRotationTime));
-        SuccessOrExit(mEncoder.WriteUint8(aDataset.mSecurityPolicy.mFlags));
-        SuccessOrExit(mEncoder.CloseStruct());
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_SECURITY_POLICY));
+        SuccessOrExit(error = mEncoder.WriteUint16(aDataset.mSecurityPolicy.mRotationTime));
+        SuccessOrExit(error = mEncoder.WriteUint8(aDataset.mSecurityPolicy.mFlags));
+        SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
     if (aDataset.mComponents.mIsChannelMaskPresent)
     {
-        SuccessOrExit(mEncoder.OpenStruct());
-        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_PHY_CHAN_SUPPORTED));
-        SuccessOrExit(EncodeChannelMask(aDataset.mChannelMask));
-        SuccessOrExit(mEncoder.CloseStruct());
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_PHY_CHAN_SUPPORTED));
+        SuccessOrExit(error = EncodeChannelMask(aDataset.mChannelMask));
+        SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
 exit:
@@ -2407,27 +2406,27 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_IP_RX_FAILURE>(v
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MSG_BUFFER_COUNTERS>(void)
 {
-    otError      error = OT_ERROR_NONE;
+    otError      error;
     otBufferInfo bufferInfo;
 
     otMessageGetBufferInfo(mInstance, &bufferInfo);
 
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.mTotalBuffers));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.mFreeBuffers));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.m6loSendMessages));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.m6loSendBuffers));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.m6loReassemblyMessages));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.m6loReassemblyBuffers));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.mIp6Messages));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.mIp6Buffers));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.mMplMessages));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.mMplBuffers));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.mMleMessages));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.mMleBuffers));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.mArpMessages));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.mArpBuffers));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.mCoapMessages));
-    SuccessOrExit(mEncoder.WriteUint16(bufferInfo.mCoapBuffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mTotalBuffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mFreeBuffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.m6loSendMessages));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.m6loSendBuffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.m6loReassemblyMessages));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.m6loReassemblyBuffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mIp6Messages));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mIp6Buffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mMplMessages));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mMplBuffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mMleMessages));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mMleBuffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mArpMessages));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mArpBuffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mCoapMessages));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mCoapBuffers));
 
 exit:
     return error;
@@ -2854,7 +2853,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MODE>(void)
     otLinkModeConfig modeConfig;
     otError          error = OT_ERROR_NONE;
 
-    SuccessOrExit(mDecoder.ReadUint8(numericMode));
+    SuccessOrExit(error = mDecoder.ReadUint8(numericMode));
 
     modeConfig.mRxOnWhenIdle =
         ((numericMode & SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE) == SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE);
@@ -2911,8 +2910,8 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(
     otError           error       = OT_ERROR_NONE;
     otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
 
-    SuccessOrExit(mDecoder.ReadDataWithLen(framePtr, frameLen));
-    SuccessOrExit(mDecoder.ReadData(metaPtr, metaLen));
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));
+    SuccessOrExit(error = mDecoder.ReadData(metaPtr, metaLen));
 
     // We ignore metadata for now.
     // May later include TX power, allow retransmits, etc...
@@ -3023,10 +3022,10 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_FIXED_RSS>(voi
 
     if (mDecoder.GetRemainingLength() > sizeof(int8_t))
     {
-        SuccessOrExit(mDecoder.ReadEui64(extAddress));
+        SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
     }
 
-    SuccessOrExit(mDecoder.ReadInt8(rss));
+    SuccessOrExit(error = mDecoder.ReadInt8(rss));
 
     if (extAddress != nullptr)
     {

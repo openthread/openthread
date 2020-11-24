@@ -239,10 +239,18 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio, bool
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, mIeeeEui64.m8));
 
-    if (!IsRcp() && aRestoreDatasetFromNcp)
+    if (!IsRcp())
     {
-        DieNow((RestoreDatasetFromNcp() == OT_ERROR_NONE) ? OT_EXIT_SUCCESS : OT_EXIT_FAILURE);
+        uint8_t exitCode = OT_EXIT_RADIO_SPINEL_INCOMPATIBLE;
+
+        if (aRestoreDatasetFromNcp)
+        {
+            exitCode = (RestoreDatasetFromNcp() == OT_ERROR_NONE) ? OT_EXIT_SUCCESS : OT_EXIT_FAILURE;
+        }
+
+        DieNow(exitCode);
     }
+
     SuccessOrDie(CheckRadioCapabilities());
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
@@ -305,6 +313,11 @@ bool RadioSpinel<InterfaceType, ProcessContextType>::IsRcp(void)
             isRcp = true;
         }
 
+        if (capability == SPINEL_CAP_OPENTHREAD_LOG_METADATA)
+        {
+            mSupportsLogStream = true;
+        }
+
         capsData += unpacked;
         capsLength -= static_cast<spinel_size_t>(unpacked);
     }
@@ -327,11 +340,8 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(v
 #endif
         OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF;
 
-    otError        error = OT_ERROR_NONE;
-    unsigned int   radioCaps;
-    uint8_t        capsBuffer[kCapsBufferSize];
-    const uint8_t *capsData   = capsBuffer;
-    spinel_size_t  capsLength = sizeof(capsBuffer);
+    otError      error = OT_ERROR_NONE;
+    unsigned int radioCaps;
 
     SuccessOrExit(error = Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &radioCaps));
     mRadioCaps = static_cast<otRadioCaps>(radioCaps);
@@ -348,24 +358,6 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(v
                       (missingCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) ? "tx-timing " : "");
 
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
-    }
-
-    SuccessOrExit(error = Get(SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength));
-    while (capsLength > 0)
-    {
-        unsigned int   capability;
-        spinel_ssize_t unpacked =
-            spinel_datatype_unpack(capsData, capsLength, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
-
-        VerifyOrDie(unpacked > 0, OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
-
-        if (capability == SPINEL_CAP_OPENTHREAD_LOG_METADATA)
-        {
-            mSupportsLogStream = true;
-        }
-
-        capsData += unpacked;
-        capsLength -= static_cast<spinel_size_t>(unpacked);
     }
 
 exit:

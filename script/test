@@ -58,7 +58,7 @@ build_simulation()
     if [[ ${VIRTUAL_TIME} == 1 ]]; then
         options+=("-DOT_SIMULATION_VIRTUAL_TIME=ON")
 
-        if [[ ${OT_NODE_TYPE} == "rcp" ]]; then
+        if [[ ${OT_NODE_TYPE} == rcp* ]]; then
             options+=("-DOT_SIMULATION_VIRTUAL_TIME_UART=ON")
         fi
 
@@ -122,7 +122,7 @@ build_for_one_version()
 
     build_simulation "${version}"
 
-    if [[ ${OT_NODE_TYPE} == "rcp" ]]; then
+    if [[ ${OT_NODE_TYPE} == rcp* ]]; then
         build_posix "${version}"
     fi
 }
@@ -171,10 +171,10 @@ do_cert()
     export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
 
     case "${OT_NODE_TYPE}" in
-        rcp | cli)
+        rcp | rcp-cli | cli)
             export NODE_TYPE=sim
             ;;
-        ncp)
+        rcp-ncp | ncp)
             export NODE_TYPE=ncp-sim
             ;;
     esac
@@ -230,7 +230,7 @@ do_build_otbr_docker()
     local otdir
     local otbrdir
     local otbr_options="-DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF"
-    local otbr_commit=${OTBR_COMMIT:-8d0b6ccd857441208f56ed29050a9367d8d74a62} # [backbone-router] implement Backbone ND proxy #581
+    local otbr_commit=${OTBR_COMMIT:-5092e71b06b23f78f2288fcc5386bce3a8986bb1} # [backbone-router] remove MLR multicast routing using smcroute #604
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
@@ -264,7 +264,7 @@ do_expect()
 {
     local test_patterns
 
-    if [[ ${OT_NODE_TYPE} == rcp ]]; then
+    if [[ ${OT_NODE_TYPE} == rcp* ]]; then
         if [[ ${THREAD_VERSION} == "1.2" ]]; then
             test_patterns=(-name 'v1_2-*.exp')
         elif [[ ${OT_NATIVE_IP} == 1 ]]; then
@@ -312,7 +312,10 @@ print_usage()
     echo "USAGE: [ENVIRONMENTS] $0 COMMANDS
 
 ENVIRONMENTS:
-    OT_NODE_TYPE    'rcp' for POSIX/RCP, 'cli' for CLI simulation, 'ncp' for NCP simulation, The default is 'cli'.
+    OT_NODE_TYPE    'cli' for CLI simulation, 'ncp' for NCP simulation.
+                    'rcp' or 'rcp-cli' for CLI on POSIX platform.
+                    'rcp-ncp' for NCP on POSIX platform.
+                    The default is 'cli'.
     OT_NATIVE_IP    1 to enable platform UDP and netif on POSIX platform. The default is 0.
     VERBOSE         1 to build or test verbosely. The default is 0.
     VIRTUAL_TIME    1 for virtual time, otherwise real time. The default is 1.
@@ -448,7 +451,7 @@ envsetup()
 {
     export THREAD_VERSION
 
-    if [[ ${OT_NODE_TYPE} == 'rcp' ]]; then
+    if [[ ${OT_NODE_TYPE} == rcp* ]]; then
         export RADIO_DEVICE="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
         export OT_CLI_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-cli"
         export OT_NCP_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-ncp"

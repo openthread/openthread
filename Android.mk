@@ -156,6 +156,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/crypto_api.cpp                             \
     src/core/api/dataset_api.cpp                            \
     src/core/api/dataset_ftd_api.cpp                        \
+    src/core/api/dataset_updater_api.cpp                    \
     src/core/api/diags_api.cpp                              \
     src/core/api/dns_api.cpp                                \
     src/core/api/icmp6_api.cpp                              \
@@ -283,6 +284,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/channel_manager.cpp                      \
     src/core/utils/channel_monitor.cpp                      \
     src/core/utils/child_supervision.cpp                    \
+    src/core/utils/dataset_updater.cpp                      \
     src/core/utils/heap.cpp                                 \
     src/core/utils/jam_detector.cpp                         \
     src/core/utils/lookup_table.cpp                         \
@@ -300,6 +302,7 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/hdlc_interface.cpp                   \
     src/posix/platform/logging.cpp                          \
     src/posix/platform/misc.cpp                             \
+    src/posix/platform/multicast_routing.cpp                \
     src/posix/platform/netif.cpp                            \
     src/posix/platform/radio.cpp                            \
     src/posix/platform/radio_url.cpp                        \

@@ -49,6 +49,7 @@ openthread_headers                      = \
     openthread/crypto.h                   \
     openthread/dataset.h                  \
     openthread/dataset_ftd.h              \
+    openthread/dataset_updater.h          \
     openthread/diag.h                     \
     openthread/dns.h                      \
     openthread/entropy.h                  \

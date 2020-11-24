@@ -186,6 +186,17 @@ public:
     int OutputFormatV(const char *aFormat, va_list aArguments);
 
     /**
+     * This method delivers formatted output (to which it prepends a given number indentation space chars) to the
+     * client.
+     *
+     * @param[in]  aIndentSize   Number of indentation space chars to prepend to the string.
+     * @param[in]  aFormat       A pointer to the format string.
+     * @param[in]  ...           A variable list of arguments to format.
+     *
+     */
+    void OutputFormat(uint8_t aIndentSize, const char *aFormat, ...);
+
+    /**
      * This method delivers formatted output (to which it also appends newline `\r\n`) to the client.
      *
      * @param[in]  aFormat  A pointer to the format string.
@@ -193,6 +204,25 @@ public:
      *
      */
     void OutputLine(const char *aFormat, ...);
+
+    /**
+     * This method delivers formatted output (to which it prepends a given number indentation space chars and appends
+     * newline `\r\n`) to the client.
+     *
+     * @param[in]  aIndentSize   Number of indentation space chars to prepend to the string.
+     * @param[in]  aFormat       A pointer to the format string.
+     * @param[in]  ...           A variable list of arguments to format.
+     *
+     */
+    void OutputLine(uint8_t aIndentSize, const char *aFormat, ...);
+
+    /**
+     * This method writes a given number of space chars to the CLI console.
+     *
+     * @param[in] aCount  Number of space chars to output.
+     *
+     */
+    void OutputSpaces(uint8_t aCount);
 
     /**
      * This method writes an Extended MAC Address to the CLI console.
@@ -240,7 +270,7 @@ protected:
 private:
     enum
     {
-        kIndentationSize  = 4,
+        kIndentSize       = 4,
         kMaxArgs          = 32,
         kMaxAutoAddresses = 8,
 
@@ -270,7 +300,7 @@ private:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     otError ProcessBackboneRouterLocal(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    otError ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char **aArgs);
+    otError ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char *aArgs[]);
     void    PrintMulticastListenersTable(void);
 #endif
 #endif
@@ -494,14 +524,14 @@ private:
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
                                             void *               aContext);
-    void        OutputSpaces(uint16_t aCount);
-    void        OutputMode(const otLinkModeConfig &aMode, uint16_t aColumn);
-    void        OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity, uint16_t aColumn);
-    void        OutputRoute(const otNetworkDiagRoute &aRoute, uint16_t aColumn);
-    void        OutputRouteData(const otNetworkDiagRouteData &aRouteData, uint16_t aColumn);
-    void        OutputLeaderData(const otLeaderData &aLeaderData, uint16_t aColumn);
-    void        OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters, uint16_t aColumn);
-    void        OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry, uint16_t aColumn);
+
+    void OutputMode(uint8_t aIndentSize, const otLinkModeConfig &aMode);
+    void OutputConnectivity(uint8_t aIndentSize, const otNetworkDiagConnectivity &aConnectivity);
+    void OutputRoute(uint8_t aIndentSize, const otNetworkDiagRoute &aRoute);
+    void OutputRouteData(uint8_t aIndentSize, const otNetworkDiagRouteData &aRouteData);
+    void OutputLeaderData(uint8_t aIndentSize, const otLeaderData &aLeaderData);
+    void OutputNetworkDiagMacCounters(uint8_t aIndentSize, const otNetworkDiagMacCounters &aMacCounters);
+    void OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiagChildEntry &aChildEntry);
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

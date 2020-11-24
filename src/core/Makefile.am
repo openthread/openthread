@@ -120,6 +120,7 @@ SOURCES_COMMON                                  = \
     api/crypto_api.cpp                            \
     api/dataset_api.cpp                           \
     api/dataset_ftd_api.cpp                       \
+    api/dataset_updater_api.cpp                   \
     api/diags_api.cpp                             \
     api/dns_api.cpp                               \
     api/entropy_api.cpp                           \
@@ -255,6 +256,7 @@ SOURCES_COMMON                                  = \
     utils/channel_manager.cpp                     \
     utils/channel_monitor.cpp                     \
     utils/child_supervision.cpp                   \
+    utils/dataset_updater.cpp                     \
     utils/flash.cpp                               \
     utils/heap.cpp                                \
     utils/jam_detector.cpp                        \
@@ -378,6 +380,7 @@ HEADERS_COMMON                                  = \
     config/child_supervision.h                    \
     config/coap.h                                 \
     config/commissioner.h                         \
+    config/dataset_updater.h                      \
     config/dhcp6_client.h                         \
     config/dhcp6_server.h                         \
     config/diag.h                                 \
@@ -490,6 +493,7 @@ HEADERS_COMMON                                  = \
     utils/channel_manager.hpp                     \
     utils/channel_monitor.hpp                     \
     utils/child_supervision.hpp                   \
+    utils/dataset_updater.hpp                     \
     utils/flash.hpp                               \
     utils/heap.hpp                                \
     utils/jam_detector.hpp                        \
