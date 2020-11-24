@@ -57,7 +57,6 @@ CoapBase::CoapBase(Instance &aInstance, Sender aSender)
     , mDefaultHandlerContext(nullptr)
     , mSender(aSender)
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    , mBlockWiseResources()
     , mLastResponse(nullptr)
 #endif
 {
@@ -576,10 +575,10 @@ otError CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
                                           Message &          aRequest,
                                           Message &          aMessage)
 {
-    otError          error                       = OT_ERROR_NONE;
-    bool             isOptionSet                 = false;
-    uint8_t          optionBuf[sizeof(uint16_t)] = {0};
-    uint16_t         blockOption                 = 0;
+    otError          error       = OT_ERROR_NONE;
+    bool             isOptionSet = false;
+    uint64_t         optionBuf   = 0;
+    uint16_t         blockOption = 0;
     Option::Iterator iterator;
 
     blockOption = (aType == Message::kBlockType1) ? kOptionBlock1 : kOptionBlock2;
@@ -614,7 +613,7 @@ otError CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
         }
 
         // Copy option
-        SuccessOrExit(error = iterator.ReadOptionValue(optionBuf));
+        SuccessOrExit(error = iterator.ReadOptionValue(&optionBuf));
         SuccessOrExit(error = aRequest.AppendOption(optionNumber, iterator.GetOption()->GetLength(), &optionBuf));
     }
 
@@ -713,7 +712,7 @@ otError CoapBase::SendNextBlock2Request(Message &               aRequest,
                  error = OT_ERROR_NO_BUFS);
 
     // Read and then forward payload to receive hook function
-    bufLen = aMessage.Read(aMessage.GetOffset(), buf, aMessage.GetLength() - aMessage.GetOffset());
+    bufLen = aMessage.ReadBytes(aMessage.GetOffset(), buf, aMessage.GetLength() - aMessage.GetOffset());
     SuccessOrExit(
         error = aCoapMetadata.mBlockwiseReceiveHook(aCoapMetadata.mResponseContext, buf,
                                                     otCoapBlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()) *
@@ -768,7 +767,7 @@ otError CoapBase::ProcessBlock1Request(Message &                aMessage,
 
     // Read and then forward payload to receive hook function
     VerifyOrExit((aMessage.GetLength() - aMessage.GetOffset()) <= kMaxBlockLength, error = OT_ERROR_NO_BUFS);
-    bufLen = aMessage.Read(aMessage.GetOffset(), buf, aMessage.GetLength() - aMessage.GetOffset());
+    bufLen = aMessage.ReadBytes(aMessage.GetOffset(), buf, aMessage.GetLength() - aMessage.GetOffset());
     SuccessOrExit(error = aResource.HandleBlockReceive(buf,
                                                        otCoapBlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()) *
                                                            aMessage.GetBlockWiseBlockNumber(),
@@ -820,12 +819,12 @@ otError CoapBase::ProcessBlock2Request(Message &                aMessage,
                                        const Ip6::MessageInfo & aMessageInfo,
                                        const ResourceBlockWise &aResource)
 {
-    otError          error                       = OT_ERROR_NONE;
-    Message *        response                    = nullptr;
-    uint8_t          buf[kMaxBlockLength]        = {0};
-    uint16_t         bufLen                      = kMaxBlockLength;
-    bool             moreBlocks                  = false;
-    uint8_t          optionBuf[sizeof(uint16_t)] = {0};
+    otError          error                = OT_ERROR_NONE;
+    Message *        response             = nullptr;
+    uint8_t          buf[kMaxBlockLength] = {0};
+    uint16_t         bufLen               = kMaxBlockLength;
+    bool             moreBlocks           = false;
+    uint64_t         optionBuf            = 0;
     Option::Iterator iterator;
 
     SuccessOrExit(error = aMessage.ReadBlockOptionValues(kOptionBlock2));
@@ -910,8 +909,8 @@ otError CoapBase::ProcessBlock2Request(Message &                aMessage,
         }
         else if (optionNumber == kOptionBlock1)
         {
-            SuccessOrExit(error = iterator.ReadOptionValue(optionBuf));
-            SuccessOrExit(error = response->AppendOption(optionNumber, iterator.GetOption()->GetLength(), optionBuf));
+            SuccessOrExit(error = iterator.ReadOptionValue(&optionBuf));
+            SuccessOrExit(error = response->AppendOption(optionNumber, iterator.GetOption()->GetLength(), &optionBuf));
         }
 
         SuccessOrExit(error = iterator.Advance());
@@ -1126,7 +1125,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
                     Option::Iterator iterator;
 
                     SuccessOrExit(error = iterator.Init(aMessage));
-                    while (iterator.IsDone())
+                    while (!iterator.IsDone())
                     {
                         switch (iterator.GetOption()->GetNumber())
                         {

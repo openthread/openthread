@@ -577,6 +577,10 @@ otError Coap::ProcessRequest(uint8_t aArgsLength, char *aArgs[])
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         if (coapBlock)
         {
+            if (coapCode == OT_COAP_CODE_PUT || coapCode == OT_COAP_CODE_POST)
+            {
+                SuccessOrExit(error = otCoapMessageSetPayloadMarker(message));
+            }
             error = otCoapSendRequestBlockWiseWithParameters(mInterpreter.mInstance, message, &messageInfo,
                                                              &Coap::HandleResponse, this, GetRequestTxParameters(),
                                                              Coap::BlockwiseTransmitHook, Coap::BlockwiseReceiveHook);

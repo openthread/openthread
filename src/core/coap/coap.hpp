@@ -765,11 +765,11 @@ private:
     otError SendNextBlock1Request(Message &               aRequest,
                                   Message &               aMessage,
                                   const Ip6::MessageInfo &aMessageInfo,
-                                  const Metadata &        aMetadata);
+                                  const Metadata &        aCoapMetadata);
     otError SendNextBlock2Request(Message &               aRequest,
                                   Message &               aMessage,
                                   const Ip6::MessageInfo &aMessageInfo,
-                                  const Metadata &        aMetadata,
+                                  const Metadata &        aCoapMetadata,
                                   uint32_t                aTotalLength,
                                   bool                    aBeginBlock1Transfer);
 #endif
