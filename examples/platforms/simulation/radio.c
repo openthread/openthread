@@ -827,14 +827,11 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 
 void radioSendAck(void)
 {
-    if (
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-        // Determine if frame pending should be set
-        (otMacFrameIsData(&sReceiveFrame) || otMacFrameIsDataRequest(&sReceiveFrame))
-#else
-        otMacFrameIsDataRequest(&sReceiveFrame)
+    if (hasFramePending(&sReceiveFrame)
+#if OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2
+        && otMacFrameIsDataRequest(&sReceiveFrame)
 #endif
-        && hasFramePending(&sReceiveFrame))
+    )
     {
         sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
     }
