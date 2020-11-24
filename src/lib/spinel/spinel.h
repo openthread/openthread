@@ -292,7 +292,10 @@
  *
  * ---------------------------------------------------------------------------
  *
- *   Spinel definition guideline:
+ *   Spinel definition compatibility guideline:
+ *
+ *   The compatibility policy for NCP versus RCP and host side are handled
+ *   differently in spinel.
  *
  *   New NCP firmware should work with an older host driver, i.e., NCP
  *   implementation should remain backward compatible.
@@ -304,6 +307,24 @@
  *      a struct) as long as the NCP implementation treats the new fields as
  *      optional (i.e., a driver not aware of and therefore not using the
  *      new fields should continue to function as before).
+ *
+ * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ *
+ *   For RCP and host, the "RCP API Version" numbers are used to check the
+ *   compatibility between host implementation and RCP firmware. Generally,
+ *   a newer host side implementation would work with a range of previous
+ *   or older RCP firmware versions.
+ *
+ *   - SPINEL_RCP_API_VERSION specifies the current spinel RCP API version.
+ *     This number MUST be incremented anytime there is a change in any of RCP
+ *     specific spinel definitions.
+ *
+ *   - SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION specifies the minimum spinel
+ *     RCP API Version which is supported by the host-side implementation.
+ *
+ *   - On start, host implementation queries the RCP API version and accepts
+ *     any version number from SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION up to
+ *     and including SPINEL_RCP_API_VERSION.
  *
  * ---------------------------------------------------------------------------
  */
@@ -344,6 +365,31 @@
 
 #define SPINEL_PROTOCOL_VERSION_THREAD_MAJOR 4
 #define SPINEL_PROTOCOL_VERSION_THREAD_MINOR 3
+
+/**
+ * @def SPINEL_RCP_API_VERSION
+ *
+ * The RCP API version number.
+ *
+ * This number MUST increase by one each time any of the spinel definitions used by RCP change (independent of whether
+ * the change is backward-compatible or not).
+ *
+ * Please see section "Spinel definition compatibility guideline" for more details.
+ *
+ */
+#define SPINEL_RCP_API_VERSION 1
+
+/**
+ * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
+ *
+ * The minimum RCP API version supported by the host implementation.
+ *
+ * This number MUST increase when there is a non-compatible RCP spinel related change on host implementation.
+ *
+ * Please see section "Spinel definition compatibility guideline" for more details.
+ *
+ */
+#define SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION 1
 
 /**
  * @def SPINEL_FRAME_MAX_SIZE
@@ -1079,6 +1125,10 @@ enum
     SPINEL_CAP_NET_THREAD_1_1 = (SPINEL_CAP_NET__BEGIN + 1),
     SPINEL_CAP_NET__END       = 64,
 
+    SPINEL_CAP_RCP__BEGIN      = 64,
+    SPINEL_CAP_RCP_API_VERSION = (SPINEL_CAP_RCP__BEGIN + 0),
+    SPINEL_CAP_RCP__END        = 80,
+
     SPINEL_CAP_OPENTHREAD__BEGIN       = 512,
     SPINEL_CAP_MAC_ALLOWLIST           = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
     SPINEL_CAP_MAC_RAW                 = (SPINEL_CAP_OPENTHREAD__BEGIN + 1),
@@ -1137,10 +1187,11 @@ typedef uint32_t spinel_capability_t;
  *    MeshCop      | 0x080 - 0x08F, 0x1800 - 0x18FF | Thread Mesh Commissioning
  *    OpenThread   |                0x1900 - 0x19FF | OpenThread specific
  *    Server       | 0x0A0 - 0x0AF                  | ALOC Service Server
+ *    RCP          | 0x0B0 - 0x0FF                  | RCP specific
  *    Interface    | 0x100 - 0x1FF                  | Interface (e.g., UART)
  *    PIB          | 0x400 - 0x4FF                  | 802.15.4 PIB
  *    Counter      | 0x500 - 0x7FF                  | Counters (MAC, IP, etc).
- *    RCP          | 0x800 - 0x8FF                  | RCP specific property
+ *    RCP          | 0x800 - 0x8FF                  | RCP specific property (extended)
  *    Nest         |                0x3BC0 - 0x3BFF | Nest (legacy)
  *    Vendor       |                0x3C00 - 0x3FFF | Vendor specific
  *    Debug        |                0x4000 - 0x43FF | Debug related
@@ -3585,6 +3636,22 @@ enum
 
     SPINEL_PROP_SERVER__END = 0xB0,
 
+    SPINEL_PROP_RCP__BEGIN = 0xB0,
+
+    /// RCP API Version number
+    /** Format: `i` (read-only)
+     *
+     * Required capability: SPINEL_CAP_RADIO and SPINEL_CAP_RCP_API_VERSION.
+     *
+     * This property gives the RCP API Version number.
+     *
+     * Please see "Spinel definition compatibility guideline" section.
+     *
+     */
+    SPINEL_PROP_RCP_API_VERSION = SPINEL_PROP_RCP__BEGIN + 0,
+
+    SPINEL_PROP_RCP__END = 0xFF,
+
     SPINEL_PROP_INTERFACE__BEGIN = 0x100,
 
     /// UART Bitrate
@@ -3973,7 +4040,7 @@ enum
 
     SPINEL_PROP_CNTR__END = 0x800,
 
-    SPINEL_PROP_RCP__BEGIN = 0x800,
+    SPINEL_PROP_RCP_EXT__BEGIN = 0x800,
 
     /// MAC Key
     /** Format: `CCddd`.
@@ -3987,7 +4054,7 @@ enum
      * The Spinel property is used to set/get MAC key materials to and from RCP.
      *
      */
-    SPINEL_PROP_RCP_MAC_KEY = SPINEL_PROP_RCP__BEGIN + 0,
+    SPINEL_PROP_RCP_MAC_KEY = SPINEL_PROP_RCP_EXT__BEGIN + 0,
 
     /// MAC Frame Counter
     /** Format: `L`.
@@ -3997,7 +4064,7 @@ enum
      * The Spinel property is used to set MAC frame counter to RCP.
      *
      */
-    SPINEL_PROP_RCP_MAC_FRAME_COUNTER = SPINEL_PROP_RCP__BEGIN + 1,
+    SPINEL_PROP_RCP_MAC_FRAME_COUNTER = SPINEL_PROP_RCP_EXT__BEGIN + 1,
 
     /// Timestamps when Spinel frame is received and transmitted
     /** Format: `X`.
@@ -4007,9 +4074,9 @@ enum
      * The Spinel property is used to get timestamp from RCP to calculate host and RCP timer difference.
      *
      */
-    SPINEL_PROP_RCP_TIMESTAMP = SPINEL_PROP_RCP__BEGIN + 2,
+    SPINEL_PROP_RCP_TIMESTAMP = SPINEL_PROP_RCP_EXT__BEGIN + 2,
 
-    SPINEL_PROP_RCP__END = 0x900,
+    SPINEL_PROP_RCP_EXT__END = 0x900,
 
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
 

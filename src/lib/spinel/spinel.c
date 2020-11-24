@@ -2003,6 +2003,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "SERVER_LEADER_SERVICES";
         break;
 
+    case SPINEL_PROP_RCP_API_VERSION:
+        ret = "RCP_API_VERSION";
+        break;
+
     case SPINEL_PROP_UART_BITRATE:
         ret = "UART_BITRATE";
         break;
@@ -2613,6 +2617,10 @@ const char *spinel_capability_to_cstr(spinel_capability_t capability)
 
     case SPINEL_CAP_NET_THREAD_1_1:
         ret = "NET_THREAD_1_1";
+        break;
+
+    case SPINEL_CAP_RCP_API_VERSION:
+        ret = "RCP_API_VERSION";
         break;
 
     case SPINEL_CAP_MAC_ALLOWLIST:
