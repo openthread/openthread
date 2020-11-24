@@ -48,6 +48,13 @@
 namespace ot {
 namespace Ncp {
 
+#if OPENTHREAD_RADIO
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_API_VERSION>(void)
+{
+    return mEncoder.WriteUintPacked(SPINEL_RCP_API_VERSION);
+}
+#endif
+
 // ----------------------------------------------------------------------------
 // MARK: Raw Link-Layer Datapath Glue
 // ----------------------------------------------------------------------------
