@@ -43,6 +43,7 @@ set(COMMON_SOURCES
     api/crypto_api.cpp
     api/dataset_api.cpp
     api/dataset_ftd_api.cpp
+    api/dataset_updater_api.cpp
     api/diags_api.cpp
     api/dns_api.cpp
     api/entropy_api.cpp
@@ -178,6 +179,7 @@ set(COMMON_SOURCES
     utils/channel_manager.cpp
     utils/channel_monitor.cpp
     utils/child_supervision.cpp
+    utils/dataset_updater.cpp
     utils/flash.cpp
     utils/heap.cpp
     utils/jam_detector.cpp

@@ -40,7 +40,6 @@
 
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
-#include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 
@@ -56,9 +55,7 @@ namespace Utils {
  * @{
  */
 
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
-
-#if OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 /**
  * This class implements the Channel Manager.
@@ -66,8 +63,6 @@ namespace Utils {
  */
 class ChannelManager : public InstanceLocator, private NonCopyable
 {
-    friend class ot::Notifier;
-
 public:
     enum
     {
@@ -235,9 +230,6 @@ public:
 private:
     enum
     {
-        // Maximum increase of Pending/Active Dataset Timestamp per channel change request.
-        kMaxTimestampIncrease = 128,
-
         // Retry interval to resend Pending Dataset in case of tx failure (in ms).
         kPendingDatasetTxRetryInterval = 20000,
 
@@ -265,17 +257,18 @@ private:
         kCcaFailureRateThreshold = OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD,
     };
 
-    enum State
+    enum State : uint8_t
     {
         kStateIdle,
         kStateChangeRequested,
-        kStateSentMgmtPendingDataset,
+        kStateChangeInProgress,
     };
 
+    void        StartDatasetUpdate(void);
+    static void HandleDatasetUpdateDone(otError aError, void *aContext);
+    void        HandleDatasetUpdateDone(otError aError);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    void        HandleNotifierEvents(Events aEvents);
-    void        PreparePendingDataset(void);
     void        StartAutoSelectTimer(void);
 
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
@@ -285,7 +278,6 @@ private:
 
     Mac::ChannelMask mSupportedChannelMask;
     Mac::ChannelMask mFavoredChannelMask;
-    uint64_t         mActiveTimestamp;
     uint16_t         mDelay;
     uint8_t          mChannel;
     State            mState;
@@ -294,17 +286,8 @@ private:
     bool             mAutoSelectEnabled;
 };
 
-#else // OPENTHREAD_FTD
+#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
-class ChannelManager : private NonCopyable
-{
-public:
-    explicit ChannelManager(Instance &) {}
-};
-
-#endif // OPENTHREAD_FTD
-
-#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 /**
  * @}
  *

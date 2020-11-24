@@ -1,3 +1,4 @@
+#!/usr/bin/expect -f
 #
 #  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
@@ -26,34 +27,44 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-rcp)
+spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=-100"
+expect_after {
+    timeout { exit 1 }
+}
+send "ccathreshold\n"
+expect -- "-100"
+expect "Done"
+send "\x04"
+expect eof
 
-set_target_properties(
-    openthread-rcp
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
+spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=-128"
+expect_after {
+    timeout { exit 1 }
+}
+send "ccathreshold\n"
+expect -- "-128"
+expect "Done"
+send "\x04"
+expect eof
 
-target_compile_definitions(openthread-rcp PRIVATE
-    OPENTHREAD_RADIO=1
-    OPENTHREAD_CONFIG_NCP_UART_ENABLE=1
-)
+spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=127"
+expect_after {
+    timeout { exit 1 }
+}
+send "ccathreshold\n"
+expect "127"
+expect "Done"
+send "\x04"
+expect eof
 
-target_compile_options(openthread-rcp PRIVATE
-    ${OT_CFLAGS}
-)
+spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=-129"
+expect_after {
+    timeout { exit 1 }
+}
+expect eof
 
-target_include_directories(openthread-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
-
-target_sources(openthread-rcp PRIVATE ${COMMON_SOURCES})
-target_include_directories(openthread-rcp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-
-target_link_libraries(openthread-rcp
-    PUBLIC
-        openthread-radio
-    PRIVATE
-        openthread-hdlc
-        openthread-spinel-rcp
-        ot-config
-)
+spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=128"
+expect_after {
+    timeout { exit 1 }
+}
+expect eof

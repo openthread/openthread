@@ -42,6 +42,11 @@
 #include "net/ip6.hpp"
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE && !OPENTHREAD_CONFIG_DTLS_ENABLE
+#error "OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE is strongly discouraged when OPENTHREAD_CONFIG_DTLS_ENABLE is off."
+#endif
+
 namespace ot {
 
 MessagePool::MessagePool(Instance &aInstance)
@@ -167,6 +172,15 @@ uint16_t MessagePool::GetFreeBufferCount(void) const
 #endif
 
     return rval;
+}
+
+uint16_t MessagePool::GetTotalBufferCount(void) const
+{
+#if OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
+    return static_cast<uint16_t>(GetInstance().GetHeap().GetCapacity() / sizeof(Buffer));
+#else
+    return OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
+#endif
 }
 
 const Message::Settings Message::Settings::kDefault(Message::kWithLinkSecurity, Message::kPriorityNormal);

@@ -41,6 +41,7 @@ CHANNEL_MANAGER     ?= 0
 CHANNEL_MONITOR     ?= 0
 CHILD_SUPERVISION   ?= 0
 CLI_TRANSPORT       ?= UART
+DATASET_UPDATER     ?= 0
 DEBUG               ?= 0
 DHCP6_CLIENT        ?= 0
 DHCP6_SERVER        ?= 0
@@ -137,6 +138,10 @@ endif
 
 ifeq ($(CSL_DEBUG),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE=1
+endif
+
+ifeq ($(DATASET_UPDATER),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE=1
 endif
 
 ifeq ($(DEBUG),1)
