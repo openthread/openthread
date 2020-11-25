@@ -463,7 +463,7 @@ extern char gBackboneNetifName[IFNAMSIZ];
  */
 extern unsigned int gBackboneNetifIndex;
 
-#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 /**
  * This function initializes the RA-based routing manager.
  *
@@ -494,7 +494,16 @@ void platformRoutingManagerUpdate(otSysMainloopContext *aMainloop);
  *
  */
 void platformRoutingManagerProcess(const otSysMainloopContext *aMainloop);
-#endif // OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+
+/**
+ * This function performs notifies state changes to platform Routing Manager.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aFlags          Flags that denote the state change events.
+ *
+ */
+void platformRoutingManagerStateChange(otInstance *aInstance, otChangedFlags aFlags);
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #ifdef __cplusplus
 }

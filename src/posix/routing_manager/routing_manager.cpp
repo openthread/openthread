@@ -34,7 +34,7 @@
 
 #include "routing_manager.hpp"
 
-#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #include <stdlib.h>
 
@@ -84,8 +84,6 @@ void RoutingManager::Init(const char *aInfraNetifName)
     mRouterAdvertiser.Init();
     mInfraNetif.Init(aInfraNetifName);
 
-    SuccessOrDie(otSetStateChangedCallback(mInstance, HandleStateChanged, this));
-
     if (otPlatSettingsGet(mInstance, kKeyOmrPrefix, 0, reinterpret_cast<uint8_t *>(&mLocalOmrPrefix),
                           &omrPrefixLength) != OT_ERROR_NONE ||
         omrPrefixLength != sizeof(mLocalOmrPrefix) || !IsValidOmrPrefix(mLocalOmrPrefix))
@@ -108,7 +106,6 @@ void RoutingManager::Init(const char *aInfraNetifName)
 
 void RoutingManager::Deinit()
 {
-    otRemoveStateChangeCallback(mInstance, HandleStateChanged, this);
     mInfraNetif.Deinit();
     mRouterAdvertiser.Deinit();
 }
@@ -148,11 +145,6 @@ void RoutingManager::Stop()
     mRouterAdvertisementTimer.Stop();
     mRouterSolicitTimer.Stop();
     mDiscoveredOnLinkPrefixInvalidTimer.Stop();
-}
-
-void RoutingManager::HandleStateChanged(otChangedFlags aFlags, void *aRoutingManager)
-{
-    static_cast<RoutingManager *>(aRoutingManager)->HandleStateChanged(aFlags);
 }
 
 void RoutingManager::HandleStateChanged(otChangedFlags aFlags)
@@ -528,8 +520,8 @@ void RoutingManager::HandleRouterSolicit(unsigned int aIfIndex)
 {
     static char kIfName[IFNAMSIZ];
     char *      ifName = if_indextoname(aIfIndex, kIfName);
-    // We always re-evaluate our routing policy before sending
-    // Router Advertisement messages.
+
+    OT_UNUSED_VARIABLE(ifName);
 
     if (aIfIndex != mInfraNetif.GetIndex())
     {
@@ -537,6 +529,8 @@ void RoutingManager::HandleRouterSolicit(unsigned int aIfIndex)
         ExitNow();
     }
 
+    // We always re-evaluate our routing policy before sending
+    // Router Advertisement messages.
     EvaluateRoutingPolicy();
 
 exit:
@@ -558,7 +552,8 @@ void RoutingManager::HandleRouterAdvertisement(const RouterAdvertisement::Router
     const RouterAdvertisement::PrefixInfoOption *pio        = nullptr;
     bool                                         hasChanges = false;
 
-    // TODO(wgtdkp): check if there is PIO.
+    OT_UNUSED_VARIABLE(ifName);
+
     // TODO(wgtdkp): check Router Lifetime.
 
     if (aIfIndex != mInfraNetif.GetIndex())
@@ -636,4 +631,4 @@ uint32_t RoutingManager::GenerateRandomNumber(uint32_t aBegin, uint32_t aEnd)
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

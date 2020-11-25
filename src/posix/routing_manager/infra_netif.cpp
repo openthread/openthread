@@ -34,7 +34,7 @@
 
 #include "infra_netif.hpp"
 
-#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #include <errno.h>
 #include <memory.h>
@@ -276,4 +276,4 @@ void InfraNetif::UpdateUnicastAddress(const otIp6AddressInfo &aAddressInfo, bool
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

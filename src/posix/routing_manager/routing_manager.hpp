@@ -37,7 +37,7 @@
 
 #include "openthread-posix-config.h"
 
-#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
@@ -101,6 +101,14 @@ public:
      */
     void Process(const otSysMainloopContext *aMainloop);
 
+    /**
+     * This method handles Thread network events.
+     *
+     * @param[in]  aFlags  The OpenThread event flags.
+     *
+     */
+    void HandleStateChanged(otChangedFlags aFlags);
+
 private:
     static constexpr uint16_t kKeyOmrPrefix = 0xFF01; ///< The OMR prefix key in settings.
 
@@ -121,23 +129,6 @@ private:
      *
      */
     void Stop();
-
-    /**
-     * This method handles Thread network events.
-     *
-     * @param[in]  aFlags           The OpenThread event flags.
-     * @param[in]  aRoutingManager  The associated routing manager.
-     *
-     */
-    static void HandleStateChanged(otChangedFlags aFlags, void *aRoutingManager);
-
-    /**
-     * This method handles Thread network events.
-     *
-     * @param[in]  aFlags  The OpenThread event flags.
-     *
-     */
-    void HandleStateChanged(otChangedFlags aFlags);
 
     /**
      * This method generates a random OMR prefix.
@@ -299,6 +290,6 @@ private:
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #endif // POSIX_ROUTING_MANAGER_HPP

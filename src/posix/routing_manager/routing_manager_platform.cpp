@@ -34,7 +34,7 @@
 
 #include "platform-posix.h"
 
-#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #include <openthread/platform/alarm-milli.h>
 
@@ -96,4 +96,14 @@ void platformRoutingManagerProcess(const otSysMainloopContext *aMainloop)
     TimerScheduler::Get().Process(otPlatAlarmMilliGetNow());
 }
 
-#endif // OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+void platformRoutingManagerStateChange(otInstance *aInstance, otChangedFlags aFlags)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    if (sRouterManager != nullptr)
+    {
+        sRouterManager->HandleStateChanged(aFlags);
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

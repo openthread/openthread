@@ -34,7 +34,7 @@
 
 #include "timer.hpp"
 
-#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #include <openthread/platform/alarm-milli.h>
 
@@ -165,4 +165,4 @@ Milliseconds TimerScheduler::GetEarliestFireTime() const
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

@@ -46,7 +46,8 @@
 
 #include "common/code_utils.hpp"
 
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE || \
+    OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 static void processStateChange(otChangedFlags aFlags, void *aContext)
 {
     otInstance *instance = static_cast<otInstance *>(aContext);
@@ -60,6 +61,10 @@ static void processStateChange(otChangedFlags aFlags, void *aContext)
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneStateChange(instance, aFlags);
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    platformRoutingManagerStateChange(instance, aFlags);
 #endif
 }
 #endif
@@ -100,11 +105,12 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     platformUdpInit(aPlatformConfig->mInterfaceName);
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE || \
+    OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     SuccessOrDie(otSetStateChangedCallback(instance, processStateChange, instance));
 #endif
 
-#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     platformRoutingManagerInit(instance, aPlatformConfig->mBackboneInterfaceName);
 #endif
 
@@ -122,7 +128,7 @@ void otSysDeinit(void)
 #endif
     IgnoreError(otPlatUartDisable());
 
-#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     platformRoutingManagerDeinit();
 #endif
 }
@@ -182,7 +188,7 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
     platformRadioUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
 #endif
 
-#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     platformRoutingManagerUpdate(aMainloop);
 #endif
 
@@ -255,7 +261,7 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
     platformBackboneProcess(aMainloop->mReadFdSet);
 #endif
 
-#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     platformRoutingManagerProcess(aMainloop);
 #endif
 }

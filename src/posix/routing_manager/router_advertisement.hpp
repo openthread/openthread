@@ -39,7 +39,7 @@
 
 #include "openthread-posix-config.h"
 
-#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #include <memory.h>
 #include <stdint.h>
@@ -649,6 +649,6 @@ private:
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #endif // POSIX_ROUTER_ADVERTISEMENT_HPP_

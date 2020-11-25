@@ -36,7 +36,7 @@
 
 #include "router_advertisement.hpp"
 
-#if OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #include <errno.h>
 #include <netinet/icmp6.h>
@@ -432,6 +432,7 @@ void RouterAdvertiser::HandleRouterSolicit(unsigned int           aIfIndex,
                                            const struct in6_addr &aDstAddr)
 {
     OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aSrcAddr);
     OT_UNUSED_VARIABLE(aDstAddr);
 
     otLogInfoPlat("received Router Solicit message from %s", Ip6AddressString(aSrcAddr).AsCString());
@@ -450,6 +451,7 @@ void RouterAdvertiser::HandleRouterAdvertisement(unsigned int           aIfIndex
                                                  const struct in6_addr &aDstAddr)
 {
     OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aSrcAddr);
     OT_UNUSED_VARIABLE(aDstAddr);
     const RouterAdvMessage *routerAdv;
 
@@ -478,4 +480,4 @@ exit:
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_DUCKHORN_BORDER_ROUTER_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
