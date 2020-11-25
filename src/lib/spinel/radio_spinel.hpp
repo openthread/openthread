@@ -56,7 +56,7 @@ namespace Spinel {
  *    // @param[in] aCallbackContext  Callback context
  *    // @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
  *
- *    InterFaceType(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
+ *    InterfaceType(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
  *                  void *                                        aCallbackContext,
  *                  Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer);
  *
@@ -351,7 +351,7 @@ public:
      *
      */
     otError GetCoexMetrics(otRadioCoexMetrics &aCoexMetrics);
-#endif
+#endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 
     /**
      * This method returns a reference to the transmit buffer.
@@ -472,8 +472,7 @@ public:
      * @retval  OT_ERROR_NONE               Successfully transitioned to Transmit.
      * @retval  OT_ERROR_BUSY               Failed due to another transmission is on going.
      * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
-     *
-     * @retval OT_ERROR_INVALID_STATE The radio was not in the Receive state.
+     * @retval  OT_ERROR_INVALID_STATE      The radio was not in the Receive state.
      */
     otError Transmit(otRadioFrame &aFrame);
 
