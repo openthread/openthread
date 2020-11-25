@@ -49,7 +49,7 @@ ED = 2
 # -------------
 #  Leader
 #    |
-# ED, SED
+#     DUT
 #
 # DUT Types:
 # ----------
