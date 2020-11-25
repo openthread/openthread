@@ -402,6 +402,14 @@ do_untar()
     rm "${build_dir:?}/${target_name}.tar"
 }
 
+do_copy_so_lib()
+{
+    mkdir so-lib
+    cp /lib/x86_64-linux-gnu/libgcc_s.so.1 ./so-lib
+    cp /lib/x86_64-linux-gnu/libc.so.6 ./so-lib
+    cp /lib64/ld-linux-x86-64.so.2 ./so-lib
+}
+
 do_generate_coverage()
 {
     mkdir -p tmp/
@@ -553,6 +561,9 @@ main()
             untar)
                 shift
                 do_untar "$@"
+                ;;
+            copy_so_lib)
+                do_copy_so_lib
                 ;;
             generate_coverage)
                 shift

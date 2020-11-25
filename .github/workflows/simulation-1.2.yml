@@ -70,6 +70,10 @@ jobs:
         ./script/test build
     - name: Run
       run: |
+        ulimit -c unlimited
+        echo "$PWD/ot-core-dump/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
+        mkdir ot-core-dump
+        ./script/test copy_so_lib
         ./script/test unit
         ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
     - uses: actions/upload-artifact@v2
@@ -77,6 +81,14 @@ jobs:
       with:
         name: thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-pcaps
         path: "*.pcap"
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: core-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}
+        path: |
+          ./build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
+          ./ot-core-dump/*
+          ./so-lib/*
     - name: Keep-1-2-only
       run: |
         ./script/test tar simulation 1.1
@@ -136,6 +148,10 @@ jobs:
         ./script/test get_thread_wireshark
     - name: Run
       run: |
+        ulimit -c unlimited
+        echo "$PWD/ot-core-dump/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
+        mkdir ot-core-dump
+        ./script/test copy_so_lib
         for i in {1..10}
         do
           ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
@@ -147,6 +163,15 @@ jobs:
         path: |
           *.pcap
           *.json
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: core-packet-verification-low-power
+        path: |
+          ./build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
+          ./build/cmake/openthread-simulation-1.1/examples/apps/cli/ot-cli-*
+          ./ot-core-dump/*
+          ./so-lib/*
     - name: Keep-1-2-only
       run: |
         ./script/test tar simulation 1.2-bbr
