@@ -360,8 +360,8 @@ void SubMac::StartCsmaBackoff(void)
                 Time(mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime) + mTransmitFrame.mInfo.mTxInfo.mTxDelay -
                     kCcaSampleInterval)
             {
-                mTimer.StartAt(Time(mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime),
-                               mTransmitFrame.mInfo.mTxInfo.mTxDelay - kCcaSampleInterval);
+                mTimer.StartAt(Time(mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime) - kCcaSampleInterval,
+                               mTransmitFrame.mInfo.mTxInfo.mTxDelay);
             }
             else // Transmit without delay
             {
