@@ -150,8 +150,6 @@ class Cert_5_3_10_AddressQuery(thread_cert.TestCase):
         router1_addr = self.nodes[ROUTER1].get_addr(PREFIX_1)
         self.assertTrue(router1_addr is not None)
         self.assertTrue(self.nodes[MED1].ping(router1_addr))
-
-        # Wait for sniffer got Address Notification messages
         self.simulator.go(1)
 
         # 4 BR: BR sends an ICMPv6 Echo Request to MED1 using GUA PREFIX_1
@@ -163,9 +161,7 @@ class Cert_5_3_10_AddressQuery(thread_cert.TestCase):
 
         # 5 MED1: MED1 sends an ICMPv6 Echo Request to ROUTER1 using GUA PREFIX_1
         # address
-        addr = self.nodes[ROUTER1].get_addr(PREFIX_1)
-        self.assertTrue(addr is not None)
-        self.assertTrue(self.nodes[MED1].ping(addr))
+        self.assertTrue(self.nodes[MED1].ping(router1_addr))
         self.simulator.go(1)
 
         # 6 DUT_ROUTER2: Power off ROUTER1 and wait 580 seconds to allow the
