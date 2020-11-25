@@ -981,10 +981,7 @@ exit:
         otLogNoteIp6("Failed to handle payload: %s", otThreadErrorToString(error));
     }
 
-    if (message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessage(message);
 
     return error;
 }
@@ -1137,6 +1134,7 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
     bool        forward;
     bool        multicastPromiscuous;
     bool        shouldFreeMessage;
+    bool        shouldForwardToHost;
     uint8_t     nextHeader;
 
 start:
@@ -1202,7 +1200,7 @@ start:
         }
     }
 
-    aMessage.SetOffset(sizeof(header));
+    shouldForwardToHost = forward && !ShouldForwardToThread(messageInfo, aFromNcpHost);
 
     // process IPv6 Extension Headers
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
@@ -1237,8 +1235,7 @@ start:
 
         error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost, Message::kCopyToUse);
 
-        if ((error == OT_ERROR_NONE || error == OT_ERROR_NO_ROUTE) && forward &&
-            !ShouldForwardToThread(messageInfo, aFromNcpHost))
+        if ((error == OT_ERROR_NONE || error == OT_ERROR_NO_ROUTE) && shouldForwardToHost)
         {
             forward = false;
         }
@@ -1256,7 +1253,7 @@ start:
     {
         uint8_t hopLimit;
 
-        if (!ShouldForwardToThread(messageInfo, aFromNcpHost))
+        if (shouldForwardToHost)
         {
             // try passing to host
             error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost, Message::kTakeCustody);
