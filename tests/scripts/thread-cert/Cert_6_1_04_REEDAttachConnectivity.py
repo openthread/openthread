@@ -300,7 +300,6 @@ class Cert_6_1_4_REEDAttachConnectivity_Base(thread_cert.TestCase):
                    ).\
             must_next()
 
-
         # Step 8: REED_1 verifies connectivity by sending an ICMPv6 Echo Request
         #          to the DUT link local address
         #          DUT responds with ICMPv6 Echo Reply
