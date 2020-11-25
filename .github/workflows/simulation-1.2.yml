@@ -71,11 +71,13 @@ jobs:
     - name: Run
       run: |
         ulimit -c unlimited
-        echo "$PWD/ot-core-dump/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
-        mkdir ot-core-dump
-        ./script/test copy_so_lib
+        ./script/test prepare_coredump_upload
         ./script/test unit
         ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
+    - name: Copy Shared Libraries
+      if: ${{ failure() }}
+      run: |
+          ./script/test copy_so_lib
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
@@ -149,13 +151,15 @@ jobs:
     - name: Run
       run: |
         ulimit -c unlimited
-        echo "$PWD/ot-core-dump/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
-        mkdir ot-core-dump
-        ./script/test copy_so_lib
+        ./script/test prepare_coredump_upload
         for i in {1..10}
         do
           ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
         done
+    - name: Copy Shared Libraries
+      if: ${{ failure() }}
+      run: |
+          ./script/test copy_so_lib
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:

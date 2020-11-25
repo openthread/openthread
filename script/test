@@ -402,6 +402,12 @@ do_untar()
     rm "${build_dir:?}/${target_name}.tar"
 }
 
+do_prepare_coredump_upload()
+{
+    echo "$PWD/ot-core-dump/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
+    mkdir ot-core-dump
+}
+
 do_copy_so_lib()
 {
     mkdir so-lib
@@ -561,6 +567,9 @@ main()
             untar)
                 shift
                 do_untar "$@"
+                ;;
+            prepare_coredump_upload)
+                do_prepare_coredump_upload
                 ;;
             copy_so_lib)
                 do_copy_so_lib
