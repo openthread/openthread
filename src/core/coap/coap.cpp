@@ -223,6 +223,7 @@ otError CoapBase::SendMessage(Message &               aMessage,
         metadata.mRetransmissionTimeout    = aTxParameters.CalculateInitialRetransmissionTimeout();
         metadata.mAcknowledged             = false;
         metadata.mConfirmable              = aMessage.IsConfirmable();
+        metadata.mMulticastLoop            = aMessageInfo.GetMulticastLoop();
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         metadata.mHopLimit        = aMessageInfo.GetHopLimit();
         metadata.mIsHostInterface = aMessageInfo.IsHostInterface();
@@ -383,6 +384,7 @@ void CoapBase::HandleRetransmissionTimer(void)
                 messageInfo.SetHopLimit(metadata.mHopLimit);
                 messageInfo.SetIsHostInterface(metadata.mIsHostInterface);
 #endif
+                messageInfo.SetMulticastLoop(metadata.mMulticastLoop);
 
                 SendCopy(*message, messageInfo);
             }

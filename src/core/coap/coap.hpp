@@ -545,6 +545,7 @@ private:
 #endif
         bool mAcknowledged : 1; // Information that request was acknowledged.
         bool mConfirmable : 1;  // Information that message is confirmable.
+        bool mMulticastLoop : 1;
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         bool mIsHostInterface : 1; // TRUE if packets sent/received via host interface, FALSE otherwise.
 #endif
