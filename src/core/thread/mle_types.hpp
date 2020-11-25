@@ -106,6 +106,13 @@ enum
                           1000, ///< Minimum timeout(in seconds) for data poll
     kMinTimeout = (kMinTimeoutKeepAlive >= kMinTimeoutDataPoll ? kMinTimeoutKeepAlive
                                                                : kMinTimeoutDataPoll), ///< Minimum timeout(in seconds)
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    kLinkAcceptMaxRouters = 3, ///< Maximum Route TLV entries in a Link Accept message.
+#else
+    kLinkAcceptMaxRouters = 20, ///< Maximum Route TLV entries in a Link Accept message.
+#endif
+    kLinkAcceptSequenceRollback = 64, ///< Route Sequence value rollback in a Link Accept message.
 };
 
 enum

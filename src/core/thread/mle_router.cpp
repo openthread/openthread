@@ -4026,11 +4026,11 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor)
 
         routerCount = mRouterTable.GetActiveRouterCount();
 
-        if (routerCount > RouteTlv::kLinkAcceptMaxRouters)
+        if (routerCount > kLinkAcceptMaxRouters)
         {
             for (uint8_t routerId = 0; routerId <= kMaxRouterId; routerId++)
             {
-                if (routerCount <= RouteTlv::kLinkAcceptMaxRouters)
+                if (routerCount <= kLinkAcceptMaxRouters)
                 {
                     break;
                 }
@@ -4053,7 +4053,7 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor)
 
             // Ensure that the neighbor will process the current
             // Route64 TLV in a subsequent message exchange
-            routerIdSequence -= RouteTlv::kLinkAcceptSequenceRollback;
+            routerIdSequence -= kLinkAcceptSequenceRollback;
         }
     }
 
