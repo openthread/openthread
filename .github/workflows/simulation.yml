@@ -518,8 +518,13 @@ jobs:
     - name: Upload Coverage
       run: |
         script/test upload_codecov
-    - name: Remove Artifacts
-      uses: geekyeggo/delete-artifact@1-glob-support
+
+  delete-coverage-artifacts:
+    needs: upload-coverage
+    if: always()
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: geekyeggo/delete-artifact@1-glob-support
       with:
         name: cov-*
         useGlob: true
