@@ -219,6 +219,7 @@ class OtbrDocker:
 
     def _setup_sysctl(self):
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra=2')
+        self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra_rt_info_max_plen=64')
 
 
 class OtCli:
@@ -1155,6 +1156,17 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect('Done')
 
+    def __getOmrAddress(self):
+        prefixes = [prefix.split('::')[0] for prefix in self.get_prefixes()]
+        omr_addrs = []
+        for addr in self.get_addrs():
+            for prefix in prefixes:
+                if (addr.startswith(prefix)):
+                    omr_addrs.append(addr)
+                    break
+
+        return omr_addrs
+
     def __getLinkLocalAddress(self):
         for ip6Addr in self.get_addrs():
             if re.match(config.LINK_LOCAL_REGEX_PATTERN, ip6Addr, re.I):
@@ -1228,6 +1240,8 @@ class NodeImpl:
             return self.__getDua()
         elif address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
             return self._getBackboneGua()
+        elif address_type == config.ADDRESS_TYPE.OMR:
+            return self.__getOmrAddress()
         else:
             return None
 
@@ -1249,6 +1263,21 @@ class NodeImpl:
         cmd = 'prefix remove %s' % prefix
         self.send_command(cmd)
         self._expect('Done')
+
+    def get_prefixes(self):
+        netdata = self.netdata_show()
+        prefixes = []
+
+        for i in range(1, len(netdata)):
+            if netdata[i].startswith("Routes:"):
+                break
+            prefixes.append(netdata[1])
+
+        return prefixes
+
+    def netdata_show(self):
+        self.send_command('netdata show')
+        return self._expect_command_output('netdata show')
 
     def add_route(self, prefix, stable=False, prf='med'):
         cmd = 'route add %s ' % prefix

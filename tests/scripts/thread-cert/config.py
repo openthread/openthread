@@ -106,6 +106,7 @@ class ADDRESS_TYPE(Enum):
     ML_EID = 'ML_EID'
     DUA = 'DUA'
     BACKBONE_GUA = 'BACKBONE_GUA'
+    OMR = 'OMR'
 
 
 RSSI = {
