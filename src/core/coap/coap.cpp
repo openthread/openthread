@@ -217,13 +217,13 @@ otError CoapBase::SendMessage(Message &               aMessage,
         metadata.mSourceAddress            = aMessageInfo.GetSockAddr();
         metadata.mDestinationPort          = aMessageInfo.GetPeerPort();
         metadata.mDestinationAddress       = aMessageInfo.GetPeerAddr();
+        metadata.mMulticastLoop            = aMessageInfo.GetMulticastLoop();
         metadata.mResponseHandler          = aHandler;
         metadata.mResponseContext          = aContext;
         metadata.mRetransmissionsRemaining = aTxParameters.mMaxRetransmit;
         metadata.mRetransmissionTimeout    = aTxParameters.CalculateInitialRetransmissionTimeout();
         metadata.mAcknowledged             = false;
         metadata.mConfirmable              = aMessage.IsConfirmable();
-        metadata.mMulticastLoop            = aMessageInfo.GetMulticastLoop();
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         metadata.mHopLimit        = aMessageInfo.GetHopLimit();
         metadata.mIsHostInterface = aMessageInfo.IsHostInterface();

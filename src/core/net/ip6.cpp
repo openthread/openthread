@@ -1200,12 +1200,14 @@ start:
         }
     }
 
-    shouldForwardToHost = forward && !ShouldForwardToThread(messageInfo, aFromNcpHost);
+    aMessage.SetOffset(sizeof(header));
 
     // process IPv6 Extension Headers
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
     SuccessOrExit(error = HandleExtensionHeaders(aMessage, aNetif, messageInfo, header, nextHeader, forward,
                                                  aFromNcpHost, receive));
+
+    shouldForwardToHost = forward && !ShouldForwardToThread(messageInfo, aFromNcpHost);
 
     // process IPv6 Payload
     if (receive)
