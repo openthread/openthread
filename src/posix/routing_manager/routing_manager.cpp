@@ -312,8 +312,8 @@ void RoutingManager::UnpublishOmrPrefix(const otIp6Prefix &aPrefix)
 {
     if (IsValidOmrPrefix(aPrefix))
     {
-        otBorderRouterRemoveOnMeshPrefix(mInstance, &aPrefix);
-        otBorderRouterRegister(mInstance);
+        IgnoreError(otBorderRouterRemoveOnMeshPrefix(mInstance, &aPrefix));
+        IgnoreError(otBorderRouterRegister(mInstance));
     }
 }
 

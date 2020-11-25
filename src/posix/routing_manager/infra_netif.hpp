@@ -168,8 +168,10 @@ private:
     char         mName[IFNAMSIZ]; ///< The interface name.
     unsigned int mIndex;          ///< the interface index.
 
+#ifdef __linux__
     int      mNetlinkFd;       ///< The netlink fd.
     uint32_t mNetlinkSequence; ///< The netlink message sequence.
+#endif
 };
 
 } // namespace Posix

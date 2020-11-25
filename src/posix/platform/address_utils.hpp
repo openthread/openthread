@@ -33,6 +33,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -40,6 +41,7 @@
 
 #include <openthread/ip6.h>
 
+#include "common/logging.hpp"
 #include "lib/platform/exit_code.h"
 
 namespace ot {

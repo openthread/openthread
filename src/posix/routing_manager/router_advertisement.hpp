@@ -44,8 +44,8 @@
 #include <memory.h>
 #include <stdint.h>
 
-#include <netinet/icmp6.h>
 #include <netinet/in.h>
+#include <netinet/icmp6.h>
 #include <sys/socket.h>
 
 #include <openthread/icmp6.h>

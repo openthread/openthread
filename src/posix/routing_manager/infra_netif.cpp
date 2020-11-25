@@ -60,8 +60,10 @@ namespace Posix {
 
 InfraNetif::InfraNetif()
     : mIndex(0)
+#ifdef __linux__
     , mNetlinkFd(-1)
     , mNetlinkSequence(0)
+#endif
 {
     memset(mName, 0, sizeof(mName));
 }
@@ -80,6 +82,7 @@ void InfraNetif::Init(const char *aName)
     InitNetlink();
 }
 
+#ifdef __linux__
 void InfraNetif::InitNetlink()
 {
     otError            error     = OT_ERROR_FAILED;
@@ -124,21 +127,31 @@ exit:
         }
     }
 }
+#else
+void InfraNetif::InitNetlink()
+{
+    otLogCritPlat("unsupported platform!");
+    DieNow(OT_EXIT_FAILURE);
+}
+#endif // __linux__
 
 void InfraNetif::Deinit()
 {
     memset(mName, 0, sizeof(mName));
     mIndex = 0;
 
+#ifdef __linux__
     if (mNetlinkFd >= 0)
     {
         close(mNetlinkFd);
         mNetlinkFd = -1;
     }
+#endif
 }
 
 void InfraNetif::Update(otSysMainloopContext *aMainloop)
 {
+#ifdef __linux__
     VerifyOrExit(mNetlinkFd >= 0);
 
     FD_SET(mNetlinkFd, &aMainloop->mReadFdSet);
@@ -148,13 +161,16 @@ void InfraNetif::Update(otSysMainloopContext *aMainloop)
     {
         aMainloop->mMaxFd = mNetlinkFd;
     }
-
 exit:
+#else
+    OT_UNUSED_VARIABLE(aMainloop);
+#endif
     return;
 }
 
 void InfraNetif::Process(const otSysMainloopContext *aMainloop)
 {
+#ifdef __linux__
     VerifyOrExit(mNetlinkFd >= 0);
 
     if (FD_ISSET(mNetlinkFd, &aMainloop->mReadFdSet))
@@ -168,6 +184,9 @@ void InfraNetif::Process(const otSysMainloopContext *aMainloop)
     }
 
 exit:
+#else
+    OT_UNUSED_VARIABLE(aMainloop);
+#endif
     return;
 }
 
@@ -211,6 +230,7 @@ void InfraNetif::UpdateGatewayAddress(const otIp6Prefix &aOnLinkPrefix, bool aIs
     UpdateUnicastAddress(gatewayAddressInfo, aIsAdded);
 }
 
+#ifdef __linux__
 void InfraNetif::UpdateUnicastAddress(const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
 {
     struct rtattr *rta;
@@ -271,6 +291,16 @@ void InfraNetif::UpdateUnicastAddress(const otIp6AddressInfo &aAddressInfo, bool
                       Ip6PrefixString(aAddressInfo).AsCString(), GetName());
     }
 }
+#else
+void InfraNetif::UpdateUnicastAddress(const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
+{
+    OT_UNUSED_VARIABLE(aAddressInfo);
+    OT_UNUSED_VARIABLE(aIsAdded);
+
+    otLogCritPlat("unsupported platform!");
+    DieNow(OT_EXIT_FAILURE);
+}
+#endif // __linux__
 
 } // namespace Posix
 

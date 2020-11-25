@@ -1,5 +1,4 @@
 /*
-/*
  *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
@@ -29,24 +28,27 @@
 
 #include "address_utils.hpp"
 
+#include "net/ip6_address.hpp"
+
 namespace ot {
 namespace Posix {
 
+static const uint8_t     kAllOnes[]       = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
 struct in6_addr PrefixLengthToNetmask(uint8_t aPrefixLength)
 {
-    static const uint8_t     kAllOnes[]       = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                                       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     static constexpr uint8_t kMaxPrefixLength = (OT_IP6_ADDRESS_SIZE * CHAR_BIT);
     struct in6_addr          ret;
     ot::Ip6::Address         addr;
 
-    if (prefixLen > kMaxPrefixLength)
+    if (aPrefixLength > kMaxPrefixLength)
     {
-        prefixLen = kMaxPrefixLength;
+        aPrefixLength = kMaxPrefixLength;
     }
 
     addr.Clear();
-    addr.SetPrefix(kAllOnes, prefixLen);
+    addr.SetPrefix(kAllOnes, aPrefixLength);
     memcpy(&ret, addr.mFields.m8, sizeof(addr.mFields.m8));
 
     return ret;
@@ -55,7 +57,7 @@ struct in6_addr PrefixLengthToNetmask(uint8_t aPrefixLength)
 uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
 {
     return otIp6PrefixMatch(reinterpret_cast<const otIp6Address *>(netmask->sin6_addr.s6_addr),
-                            reinterpret_cast<const otIp6Address *>(allOnes));
+                            reinterpret_cast<const otIp6Address *>(kAllOnes));
 }
 
 } // namespace Posix
