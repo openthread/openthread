@@ -650,13 +650,16 @@ public:
     otError SetMacFrameCounter(uint32_t aMacFrameCounter);
 
     /**
-     * This method checks whether the spinel interface is radio-only
+     * This method checks whether the spinel interface is radio-only.
+     *
+     * @param[out] aSupportsRcpApiVersion   A reference to a boolean variable to update whether the list of spinel
+     *                                      capabilities include `SPINEL_CAP_RCP_API_VERSION`.
      *
      * @retval  TRUE    The radio chip is in radio-only mode.
      * @retval  FALSE   Otherwise.
      *
      */
-    bool IsRcp(void);
+    bool IsRcp(bool &aSupportsRcpApiVersion);
 
     /**
      * This method checks whether there is pending frame in the buffer.
@@ -726,6 +729,7 @@ private:
 
     otError CheckSpinelVersion(void);
     otError CheckRadioCapabilities(void);
+    otError CheckRcpApiVersion(bool aSupportsRcpApiVersion);
 
     /**
      * This method triggers a state transfer of the state machine.

@@ -222,6 +222,7 @@ template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio, bool aRestoreDatasetFromNcp)
 {
     otError error = OT_ERROR_NONE;
+    bool    supportsRcpApiVersion;
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mResetRadioOnStartup = aResetRadio;
@@ -239,7 +240,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio, bool
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, mIeeeEui64.m8));
 
-    if (!IsRcp())
+    if (!IsRcp(supportsRcpApiVersion))
     {
         uint8_t exitCode = OT_EXIT_RADIO_SPINEL_INCOMPATIBLE;
 
@@ -251,6 +252,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio, bool
         DieNow(exitCode);
     }
 
+    SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion));
     SuccessOrDie(CheckRadioCapabilities());
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
@@ -285,13 +287,15 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-bool RadioSpinel<InterfaceType, ProcessContextType>::IsRcp(void)
+bool RadioSpinel<InterfaceType, ProcessContextType>::IsRcp(bool &aSupportsRcpApiVersion)
 {
     uint8_t        capsBuffer[kCapsBufferSize];
     const uint8_t *capsData         = capsBuffer;
     spinel_size_t  capsLength       = sizeof(capsBuffer);
     bool           supportsRawRadio = false;
     bool           isRcp            = false;
+
+    aSupportsRcpApiVersion = false;
 
     SuccessOrDie(Get(SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength));
 
@@ -316,6 +320,11 @@ bool RadioSpinel<InterfaceType, ProcessContextType>::IsRcp(void)
         if (capability == SPINEL_CAP_OPENTHREAD_LOG_METADATA)
         {
             mSupportsLogStream = true;
+        }
+
+        if (capability == SPINEL_CAP_RCP_API_VERSION)
+        {
+            aSupportsRcpApiVersion = true;
         }
 
         capsData += unpacked;
@@ -357,6 +366,36 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(v
                       (missingCaps & OT_RADIO_CAPS_TRANSMIT_SEC) ? "tx-security " : "",
                       (missingCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) ? "tx-timing " : "");
 
+        DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+    }
+
+exit:
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRcpApiVersion(bool aSupportsRcpApiVersion)
+{
+    otError      error         = OT_ERROR_NONE;
+    unsigned int rcpApiVersion = 1;
+
+    // Use RCP API Version value 1, when the RCP capability
+    // list does not contain `SPINEL_CAP_RCP_API_VERSION`.
+
+    if (aSupportsRcpApiVersion)
+    {
+        SuccessOrExit(error = Get(SPINEL_PROP_RCP_API_VERSION, SPINEL_DATATYPE_UINT_PACKED_S, &rcpApiVersion));
+    }
+
+    otLogNotePlat("RCP API Version: %u", rcpApiVersion);
+
+    static_assert(SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION <= SPINEL_RCP_API_VERSION,
+                  "MIN_HOST_SUPPORTED_RCP_API_VERSION must be smaller than or equal to RCP_API_VERSION");
+
+    if ((rcpApiVersion < SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION) || (rcpApiVersion > SPINEL_RCP_API_VERSION))
+    {
+        otLogCritPlat("RCP API Version %u is not in the supported range [%u-%u]", rcpApiVersion,
+                      SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION, SPINEL_RCP_API_VERSION);
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
 
