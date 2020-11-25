@@ -46,7 +46,7 @@
 
 #include "common/code_utils.hpp"
 
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 static void processStateChange(otChangedFlags aFlags, void *aContext)
 {
     otInstance *instance = static_cast<otInstance *>(aContext);
@@ -100,7 +100,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     platformUdpInit(aPlatformConfig->mInterfaceName);
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     SuccessOrDie(otSetStateChangedCallback(instance, processStateChange, instance));
 #endif
 
