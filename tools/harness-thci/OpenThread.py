@@ -2992,22 +2992,23 @@ class OpenThreadTHCI(object):
     def sendMACcmd(self, enh=False):
         self.log('call sendMACcmd')
         cmd = 'mac send datarequest'
+        print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @API
     def sendMACdata(self, enh=False):
         self.log('call sendMACdata')
         cmd = 'mac send emptydata'
+        print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @API
     def setCSLsuspension(self, suspend):
         self.log('call setCSLsuspension')
         if suspend:
-            cmd = 'pollperiod 1000000'
+            self.__setPollPeriod(1000000)
         else:
-            cmd = 'pollperiod 5000'
-        return self.__executeCommand(cmd)[-1] == 'Done'
+            self.__setPollPeriod(self.__sedPollPeriod)
 
     @staticmethod
     def __lstrip0x(s):
