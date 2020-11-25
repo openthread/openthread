@@ -477,9 +477,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     if (aFrame->mInfo.mTxInfo.mTxDelay != 0)
     {
-        if (!nrf_802154_transmit_raw_at(&aFrame->mPsdu[-1], aFrame->mInfo.mTxInfo.mCsmaCaEnabled,
-                                        aFrame->mInfo.mTxInfo.mTxDelayBaseTime, aFrame->mInfo.mTxInfo.mTxDelay,
-                                        aFrame->mChannel))
+        if (!nrf_802154_transmit_raw_at(&aFrame->mPsdu[-1], true, aFrame->mInfo.mTxInfo.mTxDelayBaseTime,
+                                        aFrame->mInfo.mTxInfo.mTxDelay, aFrame->mChannel))
         {
             error = OT_ERROR_INVALID_STATE;
         }
