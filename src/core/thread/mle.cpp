@@ -1354,11 +1354,8 @@ exit:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 otError Mle::AppendTimeRequest(Message &aMessage)
 {
-    TimeRequestTlv tlv;
-
-    tlv.Init();
-
-    return tlv.AppendTo(aMessage);
+    // `TimeRequestTlv` has no value.
+    return Tlv::Append<TimeRequestTlv>(aMessage, nullptr, 0);
 }
 
 otError Mle::AppendTimeParameter(Message &aMessage)

@@ -105,7 +105,6 @@ public:
         void    SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
 
         uint8_t GetIndirectTxAttempts(void) const { return mIndirectTxAttempts; }
-        void    SetIndirectTxAttemptsToMax(void) { mIndirectTxAttempts = kMaxPollTriggeredTxAttempts; }
         void    ResetIndirectTxAttempts(void) { mIndirectTxAttempts = 0; }
         void    IncrementIndirectTxAttempts(void) { mIndirectTxAttempts++; }
 

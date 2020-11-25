@@ -38,6 +38,7 @@ OPENTHREAD_PROJECT_CFLAGS                                                 ?= \
 
 OPENTHREAD_PUBLIC_CFLAGS                                         := \
     -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
+    -DOPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1                          \
     -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1                  \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
     -DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1                      \
