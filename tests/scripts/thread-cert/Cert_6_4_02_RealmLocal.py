@@ -32,7 +32,6 @@ import copy
 
 import config
 import thread_cert
-from pktverify.consts import REALM_LOCAL_ALL_NODES_ADDRESS, REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -100,20 +99,33 @@ class Cert_6_4_2_RealmLocal_Base(thread_cert.TestCase):
         self.collect_rloc16s()
 
         dut_addr = self.nodes[MTD].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
-        self.assertTrue(self.nodes[LEADER].ping(dut_addr, size=256))
+        self.assertTrue(self.nodes[LEADER].\
+                        ping(dut_addr,
+                             size=FRAGMENTED_DATA_LEN))
         self.simulator.go(1)
-        self.assertTrue(self.nodes[LEADER].ping(dut_addr))
+        self.assertTrue(self.nodes[LEADER].\
+                        ping(dut_addr))
         self.simulator.go(1)
 
         if self.TOPOLOGY[MTD]['mode'] == 'rn':
-            self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2, size=256))
+            self.assertTrue(self.nodes[LEADER].\
+                            ping(config.REALM_LOCAL_ALL_NODES_ADDRESS,
+                                 num_responses=2,
+                                 size=FRAGMENTED_DATA_LEN))
             self.simulator.go(2)
-            self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2))
+            self.assertTrue(self.nodes[LEADER].\
+                            ping(config.REALM_LOCAL_ALL_NODES_ADDRESS,
+                                 num_responses=2))
             self.simulator.go(2)
 
-        self.assertTrue(self.nodes[LEADER].ping('ff33:0040:fd00:db8:0:0:0:1', num_responses=2, size=256))
+        self.assertTrue(self.nodes[LEADER].\
+                        ping(config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
+                             num_responses=2,
+                             size=FRAGMENTED_DATA_LEN))
         self.simulator.go(2)
-        self.assertTrue(self.nodes[LEADER].ping('ff33:0040:fd00:db8:0:0:0:1', num_responses=2))
+        self.assertTrue(self.nodes[LEADER].\
+                        ping(config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
+                             num_responses=2))
         self.simulator.go(2)
 
     def verify(self, pv):
@@ -146,7 +158,7 @@ class Cert_6_4_2_RealmLocal_Base(thread_cert.TestCase):
             filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
 
-        # Step 3: Leader sends a Unfragmented ICMPv6 Echo Request to
+        # Step 3: Leader sends an Unfragmented ICMPv6 Echo Request to
         #         DUT’s ML-EID
         #         The DUT MUST respond with an ICMPv6 Echo Reply
 
@@ -164,7 +176,7 @@ class Cert_6_4_2_RealmLocal_Base(thread_cert.TestCase):
 
             _pkt1 = pkts.filter_ping_request().\
                 filter_wpan_src64(LEADER).\
-                filter_ipv6_dst(REALM_LOCAL_ALL_NODES_ADDRESS).\
+                filter_RLANMA().\
                 filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
                 must_next()
             with pkts.save_index():
@@ -183,7 +195,7 @@ class Cert_6_4_2_RealmLocal_Base(thread_cert.TestCase):
 
             _pkt2 = pkts.filter_ping_request().\
                 filter_wpan_src64(LEADER).\
-                filter_ipv6_dst(REALM_LOCAL_ALL_NODES_ADDRESS).\
+                filter_RLANMA().\
                 filter(lambda p: p.icmpv6.echo.sequence_number !=
                        _pkt1.icmpv6.echo.sequence_number
                        ).\
@@ -202,7 +214,7 @@ class Cert_6_4_2_RealmLocal_Base(thread_cert.TestCase):
 
         _pkt = pkts.filter_ping_request().\
             filter_wpan_src64(LEADER).\
-            filter_ipv6_dst(REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS).\
+            filter_RLATNMA().\
             filter(lambda p: p.icmpv6.data.len == FRAGMENTED_DATA_LEN).\
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
@@ -217,7 +229,7 @@ class Cert_6_4_2_RealmLocal_Base(thread_cert.TestCase):
 
         _pkt = pkts.filter_ping_request().\
             filter_wpan_src64(LEADER).\
-            filter_ipv6_dst(REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS).\
+            filter_RLATNMA().\
             filter(lambda p: p.icmpv6.data.len != FRAGMENTED_DATA_LEN).\
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
