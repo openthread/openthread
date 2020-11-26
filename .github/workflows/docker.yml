@@ -33,7 +33,7 @@ on: [push, pull_request]
 jobs:
 
   cancel-previous-runs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - uses: rokroskar/workflow-run-cleanup-action@master
       env:
@@ -42,7 +42,7 @@ jobs:
 
   buildx:
     name: buildx-${{ matrix.docker_name }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         include:

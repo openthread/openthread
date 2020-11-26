@@ -33,7 +33,7 @@ on: [push, pull_request]
 jobs:
 
   cancel-previous-runs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - uses: rokroskar/workflow-run-cleanup-action@master
       env:
@@ -41,7 +41,7 @@ jobs:
       if: "github.ref != 'refs/heads/master'"
 
   distcheck:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       CC: clang
       CXX: clang++
@@ -63,7 +63,7 @@ jobs:
         make -f examples/Makefile-simulation distcheck
 
   cli-ftd-otns:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       CFLAGS: -m32
       CXXFLAGS: -m32
@@ -117,7 +117,7 @@ jobs:
         path: tmp/coverage.info
 
   packet-verification:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 1
@@ -157,7 +157,7 @@ jobs:
         path: tmp/coverage.info
 
   cli-ftd:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       CFLAGS: -m32
       CXXFLAGS: -m32
@@ -193,7 +193,7 @@ jobs:
         path: tmp/coverage.info
 
   cli-mtd:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         message_use_heap: [0, 1]
@@ -234,7 +234,7 @@ jobs:
         path: tmp/coverage.info
 
   cli-time-sync:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       CFLAGS: -m32
       CXXFLAGS: -m32
@@ -271,7 +271,7 @@ jobs:
         path: tmp/coverage.info
 
   expects:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
       CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
@@ -279,7 +279,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
+        OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat net-tools
     - name: Run
       run: |
         OT_OPTIONS=-DOT_TIME_SYNC=ON VIRTUAL_TIME=0 ./script/test build expect
@@ -317,7 +317,9 @@ jobs:
     - name: Run TUN Mode
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo netstat -na | grep 5353
         sudo apt-get install --no-install-recommends -y dnsmasq bind9-host ntp
+        sudo netstat -na | grep 5353
         sudo systemctl start dnsmasq ntp
         host ipv6.google.com 127.0.0.1
         echo 'listen-address=::1' | sudo tee /etc/dnsmasq.conf
@@ -348,7 +350,7 @@ jobs:
         path: tmp/coverage.info
 
   external-commissioner:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
@@ -385,7 +387,7 @@ jobs:
         path: tmp/coverage.info
 
   multiple-instance:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       COVERAGE: 1
       MULTIPLE_INSTANCE: 1
@@ -418,7 +420,7 @@ jobs:
         path: tmp/coverage.info
 
   ncp-gcc-m32:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       CFLAGS: -m32
       CXXFLAGS: -m32
@@ -457,7 +459,7 @@ jobs:
         path: tmp/coverage.info
 
   ncp-clang:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       COVERAGE: 1
       NODE_TYPE: ncp-sim
@@ -506,7 +508,7 @@ jobs:
     - multiple-instance
     - ncp-gcc-m32
     - ncp-clang
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap

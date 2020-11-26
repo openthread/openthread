@@ -33,7 +33,7 @@ on: [push, pull_request]
 jobs:
 
   cancel-previous-runs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - uses: rokroskar/workflow-run-cleanup-action@master
       env:
@@ -69,7 +69,7 @@ jobs:
 
   package:
     name: package-${{ matrix.compiler }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         include:
@@ -166,7 +166,7 @@ jobs:
 
   clang:
     name: clang-${{ matrix.clang_ver }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         clang_ver: ["6.0", "7", "8", "9"]
@@ -186,7 +186,7 @@ jobs:
 
   clang-m32:
     name: clang-m32-${{ matrix.clang_ver }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         clang_ver: ["6.0", "7", "8", "9"]
@@ -210,7 +210,7 @@ jobs:
           script/check-posix-build
 
   gn:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
@@ -257,7 +257,7 @@ jobs:
         script/check-simulation-build
 
   android:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Build
