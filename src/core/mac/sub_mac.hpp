@@ -509,11 +509,12 @@ private:
 
     enum
     {
-        kMinBE             = 3,  ///< macMinBE (IEEE 802.15.4-2006).
-        kMaxBE             = 5,  ///< macMaxBE (IEEE 802.15.4-2006).
-        kUnitBackoffPeriod = 20, ///< Number of symbols (IEEE 802.15.4-2006).
-        kMinBackoff        = 1,  ///< Minimum backoff (milliseconds).
-        kAckTimeout        = 16, ///< Timeout for waiting on an ACK (milliseconds).
+        kMinBE             = 3,   ///< macMinBE (IEEE 802.15.4-2006).
+        kMaxBE             = 5,   ///< macMaxBE (IEEE 802.15.4-2006).
+        kUnitBackoffPeriod = 20,  ///< Number of symbols (IEEE 802.15.4-2006).
+        kMinBackoff        = 1,   ///< Minimum backoff (milliseconds).
+        kAckTimeout        = 16,  ///< Timeout for waiting on an ACK (milliseconds).
+        kCcaSampleInterval = 128, ///< CCA sample interval, 128 usec.
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
         kEnergyScanRssiSampleInterval = 128, ///< RSSI sample interval during energy scan, 128 usec
