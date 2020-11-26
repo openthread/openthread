@@ -32,7 +32,7 @@ import copy
 
 import thread_cert
 import config
-from pktverify.consts import WPAN_DATA_REQUEST, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, SOURCE_ADDRESS_TLV, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, TLV_REQUEST_TLV, SCAN_MASK_TLV, CONNECTIVITY_TLV, LINK_MARGIN_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, NL_MAC_EXTENDED_ADDRESS_TLV, NL_RLOC16_TLV, NL_STATUS_TLV, NL_ROUTER_MASK_TLV, COAP_CODE_ACK
+from pktverify.consts import WPAN_DATA_REQUEST, WPAN_ACK, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, SOURCE_ADDRESS_TLV, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, TLV_REQUEST_TLV, SCAN_MASK_TLV, CONNECTIVITY_TLV, LINK_MARGIN_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, NL_MAC_EXTENDED_ADDRESS_TLV, NL_RLOC16_TLV, NL_STATUS_TLV, NL_ROUTER_MASK_TLV, COAP_CODE_ACK
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.null_field import nullField
 
@@ -43,7 +43,7 @@ MTD = 3
 # Test Purpose and Description:
 # -----------------------------
 # The purpose of this test case is to validate that the DUT is able to successfully
-# attach to a network
+# attach to a network as an End Device through a REED.
 #
 # Test Topology:
 # -------------
@@ -74,6 +74,7 @@ class Cert_6_1_2_REEDAttach_Base(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
+            'router_selection_jitter': 1,
             'allowlist': [LEADER, MTD]
         },
         MTD: {
@@ -202,7 +203,7 @@ class Cert_6_1_2_REEDAttach_Base(thread_cert.TestCase):
             must_next()
         index2 = pkts.index
 
-        # Step 3: REED sends no response to Parent Request
+        # Step 3: REED doesn't response to the first Parent Request
 
         pkts.range(index1, index2).\
             filter_wpan_src64(REED).\
@@ -210,7 +211,7 @@ class Cert_6_1_2_REEDAttach_Base(thread_cert.TestCase):
             filter_mle_cmd(MLE_PARENT_RESPONSE).\
             must_not_next()
 
-        # Step 5: REED Respond with MLE Parent Response
+        # Step 5: REED responds with MLE Parent Response for the second Parent Request
 
         pkts.filter_wpan_src64(REED).\
             filter_wpan_dst64(DUT).\
@@ -325,15 +326,7 @@ class Cert_6_1_2_REEDAttach_Base(thread_cert.TestCase):
                        ).\
                 must_next()
 
-            # Step 10: Leader Verifies connectivity by sending an ICMPv6 Echo Request
-            #          to the DUT link local address
-            #          The End Device MUST respond with ICMPv6 Echo Reply
-            _pkt = pkts.filter_ping_request().\
-                filter_ipv6_src_dst(REED_LLA, DUT_LLA).\
-                must_next()
-            pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
-                filter_ipv6_src_dst(DUT_LLA, REED_LLA).\
-                must_next()
+            # Step 10: Go to Step 12
 
         else:
             # Step 11: DUT sends periodic 802.15.4 Data Request messages as part
@@ -345,19 +338,21 @@ class Cert_6_1_2_REEDAttach_Base(thread_cert.TestCase):
                 filter_wpan_cmd(WPAN_DATA_REQUEST).\
                 must_next()
 
-            pkts.filter(lambda p: p.wpan.seq_no == _pkt2.wpan.seq_no and\
-                        p.wpan.frame_type == 2).\
+            pkts.filter(lambda p:
+                        p.wpan.seq_no == _pkt2.wpan.seq_no and\
+                        p.wpan.frame_type == WPAN_ACK
+                        ).\
                 must_next()
 
-            # Step 12: REED verifies connectivity by sending an ICMPv6 Echo Request
-            #          to the DUT link local address
-            #          DUT responds with ICMPv6 Echo Reply
+        # Step 12: REED verifies connectivity by sending an ICMPv6 Echo Request
+        #          to the DUT link local address
+        #          DUT responds with ICMPv6 Echo Reply
 
-            _pkt = pkts.filter_ping_request().\
-                filter_ipv6_src_dst(REED_LLA, DUT_LLA).\
-                must_next()
-            pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
-                filter_ipv6_src_dst(DUT_LLA, REED_LLA).\
+        _pkt = pkts.filter_ping_request().\
+            filter_ipv6_src_dst(REED_LLA, DUT_LLA).\
+            must_next()
+        pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+            filter_ipv6_src_dst(DUT_LLA, REED_LLA).\
                 must_next()
 
 
