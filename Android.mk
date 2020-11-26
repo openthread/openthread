@@ -98,7 +98,7 @@ endif
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := spi-hdlc-adapter
-LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := tools/spi-hdlc-adapter/spi-hdlc-adapter.c
 
 include $(BUILD_EXECUTABLE)
@@ -106,7 +106,7 @@ include $(BUILD_EXECUTABLE)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := ot-core
-LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_TAGS := optional
 
 LOCAL_C_INCLUDES                                         := \
     $(OPENTHREAD_PROJECT_INCLUDES)                          \
@@ -341,7 +341,7 @@ include $(BUILD_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := libopenthread-cli
-LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_TAGS := optional
 
 LOCAL_C_INCLUDES                                         := \
     $(OPENTHREAD_PROJECT_INCLUDES)                          \
@@ -385,7 +385,7 @@ include $(BUILD_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := ot-cli
-LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_TAGS := optional
 
 LOCAL_C_INCLUDES                                         := \
     $(OPENTHREAD_PROJECT_INCLUDES)                          \
@@ -425,7 +425,7 @@ include $(BUILD_EXECUTABLE)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := libopenthread-ncp
-LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_TAGS := optional
 
 LOCAL_C_INCLUDES                                         := \
     $(OPENTHREAD_PROJECT_INCLUDES)                          \
@@ -465,7 +465,7 @@ include $(BUILD_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := ot-ncp
-LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_TAGS := optional
 
 LOCAL_C_INCLUDES                                         := \
     $(OPENTHREAD_PROJECT_INCLUDES)                          \
@@ -507,7 +507,7 @@ ifeq ($(USE_OTBR_DAEMON), 1)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := ot-ctl
-LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_TAGS := optional
 
 LOCAL_CPPFLAGS                                                              := \
     -std=c++11                                                                 \
