@@ -947,6 +947,16 @@ otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const o
 void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime);
 
 /**
+ * Set the max transmit power for a specific channel.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aChannel     The radio channel.
+ * @param[in]  aMaxPower    The max power in dBm.
+ *
+ */
+otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower);
+
+/**
  * @}
  *
  */

@@ -704,6 +704,18 @@ public:
      */
     uint32_t GetBusSpeed(void) const;
 
+    /**
+     * This method sets the max transmit power.
+     *
+     * @param[in] aChannel    The radio channel.
+     * @param[in] aPower      The max transmit power in dBm.
+     *
+     * @retval  OT_ERROR_NONE           Succesfully set the max transmit power.
+     * @retval  OT_ERROR_INVALID_ARGS   Channel is not in valid range.
+     *
+     */
+    otError SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aPower);
+
 private:
     enum
     {

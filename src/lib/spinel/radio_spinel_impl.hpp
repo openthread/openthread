@@ -52,6 +52,7 @@
 #include "lib/spinel/spinel_decoder.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
+#include "radio/radio.hpp"
 
 #ifndef MS_PER_S
 #define MS_PER_S 1000
@@ -2136,6 +2137,7 @@ uint32_t RadioSpinel<InterfaceType, ProcessContextType>::GetBusSpeed(void) const
     return mSpinelInterface.GetBusSpeed();
 }
 
+<<<<<<< HEAD
 template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpUnexpectedReset(spinel_status_t aStatus)
 {
@@ -2292,6 +2294,17 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RestoreProperties(void)
     CalcRcpTimeOffset();
 }
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aMaxPower)
+{
+    otError error = OT_ERROR_NONE;
+    VerifyOrExit(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
+    error = Set(SPINEL_PROP_PHY_CHAN_MAX_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, aChannel, aMaxPower);
+
+exit:
+    return error;
+}
 
 } // namespace Spinel
 } // namespace ot
