@@ -21,7 +21,7 @@
 #define MBEDTLS_ERR_CCM_AUTH_FAILED    -0x000F /**< Authenticated decryption failed. */
 
 /* The Size of the CCM context.*/
-#define MBEDTLS_CCM_CONTEXT_SIZE_IN_WORDS (96)
+#define MBEDTLS_CCM_CONTEXT_SIZE_IN_WORDS (29)
 
 #ifdef __cplusplus
 extern "C" {

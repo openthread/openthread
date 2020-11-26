@@ -239,16 +239,6 @@ OT_TOOL_PACKED_BEGIN
 class RouteTlv : public Tlv, public TlvInfo<Tlv::kRoute>
 {
 public:
-    enum
-    {
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-        kLinkAcceptMaxRouters = 3,
-#else
-        kLinkAcceptMaxRouters = 20,
-#endif
-        kLinkAcceptSequenceRollback = 64,
-    };
-
     /**
      * This method initializes the TLV.
      *
