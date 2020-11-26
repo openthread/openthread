@@ -430,8 +430,7 @@ otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMess
     {
         int value = 1;
 
-        VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(value)) == 0,
-                     error = OT_ERROR_FAILED);
+        VerifyOrDie(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(value)) == 0, OT_EXIT_ERROR_ERRNO);
     }
 
     error = transmitPacket(fd, payload, len, *aMessageInfo);
