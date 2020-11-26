@@ -27,11 +27,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-# This script verifies realm-local multicast on POSIX platform.
+# This script verifies multicast loop back.
 
 #
 #
-# R1(Leader,POSIX) -- R2 -- R3 -- E4
+# R1 -- R2 -- R3 -- E4
 #
 
 source "tests/scripts/expect/_common.exp"
@@ -54,6 +54,8 @@ expect "Done"
 
 set extaddr1 [get_extaddr]
 
+get_rloc16
+
 spawn_node 2 cli
 
 send "panid 0xface\n"
@@ -66,7 +68,10 @@ send "thread start\n"
 expect "Done"
 
 wait_for "state" "router"
+expect "Done"
 sleep 3
+
+get_rloc16
 
 spawn_node 3 cli
 
@@ -86,9 +91,12 @@ send "thread start\n"
 expect "Done"
 
 wait_for "state" "router"
+expect "Done"
 sleep 4
 
 set extaddr3 [get_extaddr]
+
+get_rloc16
 
 spawn_node 4 cli
 
@@ -111,13 +119,18 @@ send "thread start\n"
 expect "Done"
 
 wait_for "state" "child"
+expect "Done"
 
-set mleid4 [get_ipaddr "mleid"]
+get_rloc16
 
 switch_node 1
 
-send "ping ${mleid4}\n"
+set rloc(1) [get_ipaddr "rloc"]
+
+send "networkdiagnostic get ff03::2 5 16\n"
+expect "DIAG_GET.rsp/ans from $rloc(1)"
 expect "Done"
-expect "16 bytes from $mleid4: icmp_seq=1"
+
+sleep 5
 
 dispose_all
