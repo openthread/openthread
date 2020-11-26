@@ -115,6 +115,16 @@ typedef Mac::Key Kek;
 class KeyManager : public InstanceLocator, private NonCopyable
 {
 public:
+    enum : uint16_t
+    {
+        kDefaultKeyRotationTime = 672, ///< Default Key Rotation Time (in unit of hours).
+    };
+
+    enum : uint8_t
+    {
+        kDefaultSecurityPolicyFlags = 0xff, ///< Default Security Policy Flags.
+    };
+
     /**
      * This constructor initializes the object.
      *
@@ -448,7 +458,6 @@ private:
     enum
     {
         kMinKeyRotationTime        = 1,
-        kDefaultKeyRotationTime    = 672,
         kDefaultKeySwitchGuardTime = 624,
         kOneHourIntervalInMsec     = 3600u * 1000u,
     };
