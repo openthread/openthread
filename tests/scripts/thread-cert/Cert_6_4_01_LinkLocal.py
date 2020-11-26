@@ -87,20 +87,21 @@ class Cert_6_4_1_LinkLocal_Base(thread_cert.TestCase):
         self.collect_ipaddrs()
 
         dut_addr = self.nodes[MTD].get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
-        self.assertTrue(self.nodes[LEADER].ping(dut_addr, size=256))
+        self.assertTrue(self.nodes[LEADER].ping(dut_addr, size=FRAGMENTED_DATA_LEN))
         self.simulator.go(1)
         self.assertTrue(self.nodes[LEADER].ping(dut_addr))
         self.simulator.go(1)
 
-        self.assertTrue(self.nodes[LEADER].ping('ff32:40:fd00:db8::1', size=256))
+        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
+                                                size=FRAGMENTED_DATA_LEN))
         self.simulator.go(1)
-        self.assertTrue(self.nodes[LEADER].ping('ff32:40:fd00:db8::1'))
+        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS))
         self.simulator.go(1)
 
         if self.TOPOLOGY[MTD]['mode'] == 'rn':
-            self.assertTrue(self.nodes[LEADER].ping('ff02::1', size=256))
+            self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_NODES_ADDRESS, size=FRAGMENTED_DATA_LEN))
             self.simulator.go(1)
-            self.assertTrue(self.nodes[LEADER].ping('ff02::1'))
+            self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_NODES_ADDRESS))
 
     def verify(self, pv):
         pkts = pv.pkts
