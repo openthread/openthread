@@ -566,6 +566,12 @@ public:
      */
     void Decode(const uint8_t *aData, uint16_t aLength);
 
+    /**
+     * This method resets internal states of the decoder.
+     *
+     */
+    void Reset(void);
+
 private:
     enum State
     {

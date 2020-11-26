@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/expect -f
 #
 #  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
@@ -27,29 +27,4 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set -euxo pipefail
-
-reset_source()
-{
-    rm -rf build output tmp
-}
-
-build()
-{
-    reset_source
-    make -f src/posix/Makefile-posix RCP_RESTORATION_MAX_COUNT=2
-
-    if [[ $OSTYPE != "darwin"* ]]; then
-        reset_source
-        make -f src/posix/Makefile-posix RCP_RESTORATION_MAX_COUNT=2 RCP_BUS=spi
-    fi
-}
-
-main()
-{
-    ./bootstrap
-
-    build
-}
-
-main "$@"
+source "tests/scripts/expect/posix-rcp-restoration.exp"

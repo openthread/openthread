@@ -449,6 +449,8 @@ do_upload_codecov()
 
 envsetup()
 {
+    export THREAD_VERSION
+
     if [[ ${OT_NODE_TYPE} == rcp* ]]; then
         export RADIO_DEVICE="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
         export OT_CLI_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-cli"

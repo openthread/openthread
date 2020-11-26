@@ -279,7 +279,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build lcov
+        OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
     - name: Run
       run: |
         OT_OPTIONS=-DOT_TIME_SYNC=ON VIRTUAL_TIME=0 ./script/test build expect

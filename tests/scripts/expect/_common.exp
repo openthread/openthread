@@ -40,7 +40,7 @@ proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
                 set result 1
             }
             -re $failure {
-                exit 1
+                error "Got failure in wait_for"
             }
             timeout {
                 # Do nothing
@@ -51,11 +51,11 @@ proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
         }
     }
     if {$result == 0} {
-        exit 1
+        error "Timed out in wait_for"
     }
 }
 
-proc spawn_node {id {type ""}} {
+proc spawn_node {id {type ""} {radio_url ""}} {
     global spawn_id
     global spawn_ids
 
@@ -63,26 +63,39 @@ proc spawn_node {id {type ""}} {
         set type $::env(OT_NODE_TYPE)
     }
 
+    if {${radio_url} == ""} {
+        set radio_url "spinel+hdlc+uart://$::env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=$id"
+    }
+
     send_user "\n# ${id} ${type}\n"
 
     switch -regexp ${type} {
         {rcp|rcp-cli} {
-            spawn $::env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$::env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=$id"
+            spawn $::env(OT_POSIX_APPS)/ot-cli $radio_url
+            send "factoryreset\n"
+            wait_for "state" "disabled"
+            expect "Done"
             send "routerselectionjitter 1\n"
             expect "Done"
         }
         cli {
             spawn $::env(OT_SIMULATION_APPS)/cli/ot-cli-ftd $id
+            send "factoryreset\n"
+            wait_for "state" "disabled"
+            expect "Done"
             send "routerselectionjitter 1\n"
             expect "Done"
         }
         mtd {
             spawn $::env(OT_SIMULATION_APPS)/cli/ot-cli-mtd $id
+            send "factoryreset\n"
+            wait_for "state" "disabled"
+            expect "Done"
         }
     }
 
     expect_after {
-        timeout { exit 1 }
+        timeout { error "Timed out" }
     }
 
     set spawn_ids($id) $spawn_id
@@ -123,6 +136,7 @@ proc dispose_all {} {
     for {set i 1} {$i <= $max_node} {incr i} {
         dispose_node $i
     }
+    array unset spawn_ids
 }
 
 proc get_ipaddr {type} {

@@ -135,6 +135,11 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
 {
 }
 
+void HdlcInterface::OnRcpReset(void)
+{
+    mHdlcDecoder.Reset();
+}
+
 otError HdlcInterface::Init(const RadioUrl &aRadioUrl)
 {
     otError     error = OT_ERROR_NONE;

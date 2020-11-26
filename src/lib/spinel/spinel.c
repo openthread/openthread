@@ -2251,6 +2251,14 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "DEBUG_TEST_WATCHDOG";
         break;
 
+    case SPINEL_PROP_RCP_MAC_FRAME_COUNTER:
+        ret = "RCP_MAC_FRAME_COUNTER";
+        break;
+
+    case SPINEL_PROP_RCP_MAC_KEY:
+        ret = "RCP_MAC_KEY";
+        break;
+
     default:
         break;
     }
