@@ -131,15 +131,25 @@ void platformRadioInit(otUrl *aRadioUrl)
         for (str = strtok(const_cast<char *>(maxPowerTable), ","); str != nullptr && channel <= ot::Radio::kChannelMax;
              str = strtok(nullptr, ","))
         {
-            power = static_cast<int8_t>(strtol(str, nullptr, 0));
+            bool enabled;
+
+            power   = static_cast<int8_t>(strtol(str, nullptr, 0));
+            enabled = (power != ot::Spinel::MaxPowerTable::kPowerNone);
+
             SuccessOrDie(sRadioSpinel.SetChannelMaxTransmitPower(channel, power));
+            SuccessOrDie(sRadioSpinel.SetChannelSupported(channel, enabled));
+            SuccessOrDie(sRadioSpinel.SetChannelPreferred(channel, enabled));
             ++channel;
         }
 
         // Use the last power if omitted.
         while (channel <= ot::Radio::kChannelMax)
         {
+            bool enabled = (power == ot::Spinel::MaxPowerTable::kPowerNone);
+
             SuccessOrDie(sRadioSpinel.SetChannelMaxTransmitPower(channel, power));
+            SuccessOrDie(sRadioSpinel.SetChannelSupported(channel, enabled));
+            SuccessOrDie(sRadioSpinel.SetChannelPreferred(channel, enabled));
             ++channel;
         }
 
@@ -536,4 +546,20 @@ otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aCh
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.SetChannelMaxTransmitPower(aChannel, aMaxPower);
+}
+
+otError otPlatRadioSetChannelSupported(otInstance *aInstance, uint8_t aChannel, bool aSupported)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return sRadioSpinel.SetChannelSupported(aChannel, aSupported);
+}
+
+otError otPlatRadioSetChannelPreferred(otInstance *aInstance, uint8_t aChannel, bool aPreferred)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aChannel);
+    OT_UNUSED_VARIABLE(aPreferred);
+
+    return sRadioSpinel.SetChannelPreferred(aChannel, aPreferred);
 }

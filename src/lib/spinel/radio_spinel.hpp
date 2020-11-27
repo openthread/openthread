@@ -36,6 +36,7 @@
 
 #include <openthread/platform/radio.h>
 
+#include "max_power_table.hpp"
 #include "openthread-spinel-config.h"
 #include "spinel.h"
 #include "spinel_interface.hpp"
@@ -716,6 +717,30 @@ public:
      */
     otError SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aPower);
 
+    /**
+     * This method sets whether a channel is supported
+     *
+     * @params[in]  aChannel    The radio channel number.
+     * @params[in]  aSupported  Whether a channel is supported.
+     *
+     * @retval  OT_ERROR_NONE           Succesfully set channel suppported.
+     * @retval  OT_ERROR_INVALID_ARGS   Channel is not in valid range.
+     *
+     */
+    otError SetChannelSupported(uint8_t aChannel, bool aSupported);
+
+    /**
+     * This method sets whether a channel is supported
+     *
+     * @params[in]  aChannel    The radio channel number.
+     * @params[in]  aSupported  Whether a channel is supported.
+     *
+     *
+     * @retval  OT_ERROR_NONE           Succesfully set channel preferred.
+     * @retval  OT_ERROR_INVALID_ARGS   Channel is not in valid range.
+     */
+    otError SetChannelPreferred(uint8_t aChannel, bool aSupported);
+
 private:
     enum
     {
@@ -980,6 +1005,8 @@ private:
     uint64_t mTxRadioEndUs;
     uint64_t mRadioTimeRecalcStart; ///< When to recalculate RCP time offset.
     int64_t  mRadioTimeOffset;      ///< Time difference with estimated RCP time minus host time.
+
+    MaxPowerTable mMaxPowerTable;
 };
 
 } // namespace Spinel

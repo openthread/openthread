@@ -2048,6 +2048,8 @@ uint32_t RadioSpinel<InterfaceType, ProcessContextType>::GetRadioChannelMask(boo
         maskLength -= static_cast<spinel_size_t>(unpacked);
     }
 
+    channelMask &= (aPreferred ? mMaxPowerTable.GetPreferredChannelMask() : mMaxPowerTable.GetSupportedChannelMask());
+
 exit:
     LogIfFail("Get radio channel mask failed", error);
     return channelMask;
@@ -2137,7 +2139,6 @@ uint32_t RadioSpinel<InterfaceType, ProcessContextType>::GetBusSpeed(void) const
     return mSpinelInterface.GetBusSpeed();
 }
 
-<<<<<<< HEAD
 template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpUnexpectedReset(spinel_status_t aStatus)
 {
@@ -2291,6 +2292,16 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RestoreProperties(void)
         SuccessOrDie(Set(SPINEL_PROP_PHY_FEM_LNA_GAIN, SPINEL_DATATYPE_INT8_S, mFemLnaGain));
     }
 
+    for (size_t channel = Radio::kChannelMin; channel <= Radio::kChannelMax; channel++)
+    {
+        int8_t power = mMaxPowerTable.GetTransmitPower(channel);
+
+        if (power != MaxPowerTable::kPowerNone)
+        {
+        SuccessOrDie(SetChannelMaxTransmitPower(channel, power);
+        }
+    }
+
     CalcRcpTimeOffset();
 }
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
@@ -2300,7 +2311,30 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SetChannelMaxTransmitPow
 {
     otError error = OT_ERROR_NONE;
     VerifyOrExit(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
+    mMaxPowerTable.SetTransmitPower(aChannel, aMaxPower);
     error = Set(SPINEL_PROP_PHY_CHAN_MAX_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, aChannel, aMaxPower);
+
+exit:
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetChannelSupported(uint8_t aChannel, bool aSupported)
+{
+    otError error = OT_ERROR_NONE;
+    VerifyOrExit(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
+    mMaxPowerTable.SetChannelSupported(aChannel, aSupported);
+
+exit:
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetChannelPreferred(uint8_t aChannel, bool aPreferred)
+{
+    otError error = OT_ERROR_NONE;
+    VerifyOrExit(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
+    mMaxPowerTable.SetChannelPreferred(aChannel, aPreferred);
 
 exit:
     return error;

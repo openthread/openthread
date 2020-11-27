@@ -957,6 +957,26 @@ void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTi
 otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower);
 
 /**
+ * Set whether a channel is supported.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aChannel     The radio channel.
+ * @param[in]  aSupported   Whether the channel is supported.
+ *
+ */
+otError otPlatRadioSetChannelSupported(otInstance *aInstance, uint8_t aChannel, bool aSupported);
+
+/**
+ * Set whether a channel is preferred.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aChannel     The radio channel.
+ * @param[in]  aEnabled     Whether the channel is preferred.
+ *
+ */
+otError otPlatRadioSetChannelPreferred(otInstance *aInstance, bool aPreferred);
+
+/**
  * @}
  *
  */
