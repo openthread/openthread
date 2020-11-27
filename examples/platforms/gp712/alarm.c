@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016-2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -40,10 +40,6 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
-void qorvoAlarmInit(void)
-{
-}
-
 uint32_t otPlatAlarmMilliGetNow(void)
 {
     return qorvoAlarmGetTimeMs();
@@ -59,7 +55,7 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
     OT_UNUSED_VARIABLE(t0);
 
     qorvoAlarmUnScheduleEventArg((qorvoAlarmCallback_t)qorvoAlarmFired, aInstance);
-    qorvoAlarmScheduleEventArg(dt * 1000, qorvoAlarmFired, aInstance);
+    qorvoAlarmScheduleEventArg(dt, qorvoAlarmFired, aInstance);
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance)

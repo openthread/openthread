@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016-2017, The OpenThread Authors.
+#  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -60,10 +60,6 @@ PLATFORM_SOURCES                          = \
     uart-posix.c                            \
     uart_qorvo.h                            \
     $(NULL)
-
-Dash                                      = -
-libopenthread_gp712_a_LIBADD              = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 libopenthread_gp712_a_SOURCES             = \
     $(PLATFORM_SOURCES)                     \

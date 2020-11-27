@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016-2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -87,6 +87,11 @@ void platformUartRestore(void)
     restore_stdin_termios();
     restore_stdout_termios();
     dup2(s_out_fd, STDOUT_FILENO);
+
+    qorvoPlatUnRegisterPollFunction(s_in_fd);
+    qorvoPlatUnRegisterPollFunction(s_out_fd);
+
+    otPlatUartDisable();
 }
 
 void platformUartInit(void)
@@ -95,8 +100,19 @@ void platformUartInit(void)
     s_out_fd = dup(STDOUT_FILENO);
     dup2(STDERR_FILENO, STDOUT_FILENO);
 
+    int res = fcntl(s_in_fd, F_SETFD, fcntl(s_in_fd, F_GETFD) | FD_CLOEXEC);
+    otEXPECT_ACTION(res != -1, perror("fcntl() FD_CLOEXEC failed"));
+
+    res = fcntl(s_out_fd, F_SETFD, fcntl(s_out_fd, F_GETFD) | FD_CLOEXEC);
+    otEXPECT_ACTION(res != -1, perror("fcntl() FD_CLOEXEC failed"));
+
     qorvoPlatRegisterPollFunction(s_in_fd, cbKeyPressed);
     qorvoPlatRegisterPollFunction(s_out_fd, cbKeyPressed);
+
+    return;
+
+exit:
+    exit(1);
 }
 
 otError otPlatUartEnable(void)
@@ -277,4 +293,17 @@ void platformUartProcess(void)
             }
         }
     }
+}
+
+/**
+ *  The weak stubs functions definition.
+ */
+OT_TOOL_WEAK void otPlatUartSendDone(void)
+{
+}
+
+OT_TOOL_WEAK void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    (void)aBuf;
+    (void)aBufLength;
 }

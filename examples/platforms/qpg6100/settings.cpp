@@ -1,0 +1,1 @@
+../qpg6095/settings.cpp

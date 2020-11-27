@@ -43,9 +43,7 @@ libopenthread_qpg6095_a_CPPFLAGS            = \
     -lpthread                                 \
     $(NULL)
 
-CLEANFILES = 
-
-libopenthread_qpg6095_a_SOURCES             = \
+PLATFORM_SOURCES                            = \
     alarm.c                                   \
     alarm_qorvo.h                             \
     diag.c                                    \
@@ -54,7 +52,7 @@ libopenthread_qpg6095_a_SOURCES             = \
     misc.c                                    \
     misc_qorvo.h                              \
     openthread-core-qpg6095-config.h          \
-    openthread-core-qpg6095-config-check.h \
+    openthread-core-qpg6095-config-check.h    \
     platform.c                                \
     platform_qorvo.h                          \
     radio.c                                   \
@@ -66,11 +64,15 @@ libopenthread_qpg6095_a_SOURCES             = \
     uart_qorvo.h                              \
     $(NULL)
 
+libopenthread_qpg6095_a_SOURCES             = \
+    $(PLATFORM_SOURCES)                       \
+    $(NULL)
+
 libopenthread_qpg6095_a_LIBADD              = \
     $(top_builddir)/examples/platforms/utils/libopenthread_platform_utils_a-settings_ram.o
 
 if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                               += $(wildcard *.gcda *.gcno)
+CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

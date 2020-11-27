@@ -42,6 +42,8 @@ DIST_SUBDIRS                            = \
     nrf528xx                              \
     simulation                            \
     qpg6095                               \
+    qpg6100                               \
+    qpg7015m                              \
     samr21                                \
     utils                                 \
     $(NULL)
@@ -92,11 +94,19 @@ if OPENTHREAD_PLATFORM_SIMULATION
 SUBDIRS                                += simulation
 endif
 
-if OPENTHREAD_PLATFORM_QPG6095
+if OPENTHREAD_EXAMPLES_QPG6095
 SUBDIRS                                += qpg6095
 endif
 
-if OPENTHREAD_PLATFORM_SAMR21
+if OPENTHREAD_EXAMPLES_QPG6100
+SUBDIRS                                += qpg6100
+endif
+
+if OPENTHREAD_EXAMPLES_QPG7015M
+SUBDIRS                                += qpg7015m
+endif
+
+if OPENTHREAD_EXAMPLES_SAMR21
 SUBDIRS                                += samr21
 endif
 
