@@ -279,6 +279,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat net-tools
     - name: Run
       run: |
