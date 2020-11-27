@@ -128,7 +128,7 @@ void otThreadSetPreferredLeaderPartitionId(otInstance *aInstance, uint32_t aPart
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().SetPreferredLeaderPartitionId(aPartitionId);
+    instance.Get<Mle::MleRouter>().SetPreferredLeaderPartitionId(aPartitionId);
 }
 
 uint16_t otThreadGetJoinerUdpPort(otInstance *aInstance)
