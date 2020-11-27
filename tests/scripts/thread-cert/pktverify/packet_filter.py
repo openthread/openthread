@@ -528,6 +528,10 @@ class PacketFilter(object):
     def filter_mle(self, **kwargs):
         return self.filter(attrgetter('mle'), **kwargs)
 
+    def filter_wpan_cmd(self, cmd, **kwargs):
+        assert isinstance(cmd, int), cmd
+        return self.filter(lambda p: p.wpan.cmd == cmd, **kwargs)
+
     def filter_mle_cmd(self, cmd, **kwargs):
         assert isinstance(cmd, int), cmd
         return self.filter(lambda p: p.mle.cmd == cmd, **kwargs)

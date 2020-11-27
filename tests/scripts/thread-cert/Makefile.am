@@ -80,8 +80,7 @@ EXTRA_DIST                                                         = \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
     Cert_6_1_01_RouterAttach.py                                      \
-    Cert_6_1_02_REEDAttach_MED.py                                    \
-    Cert_6_1_02_REEDAttach_SED.py                                    \
+    Cert_6_1_02_REEDAttach.py                                    \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
     Cert_6_1_05_REEDAttachConnectivity.py                            \
     Cert_6_1_07_RouterAttachLinkQuality.py                           \
@@ -258,8 +257,7 @@ check_SCRIPTS                                                      = \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
     Cert_6_1_01_RouterAttach.py                                      \
-    Cert_6_1_02_REEDAttach_MED.py                                    \
-    Cert_6_1_02_REEDAttach_SED.py                                    \
+    Cert_6_1_02_REEDAttach.py                                    \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
     Cert_6_1_05_REEDAttachConnectivity.py                            \
     Cert_6_1_07_RouterAttachLinkQuality.py                           \
