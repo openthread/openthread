@@ -156,6 +156,12 @@ public:
      */
     uint32_t GetBusSpeed(void) const { return mBaudRate; }
 
+    /**
+     * This method is called when RCP failure detected and resets internal states of the interface.
+     *
+     */
+    void OnRcpReset(void);
+
 private:
     /**
      * This method instructs `HdlcInterface` to read and decode data from radio over the socket.

@@ -501,6 +501,8 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t 
         SuccessOrExit(error = AddTunneledMplOption(aMessage, header, aMessageInfo));
     }
 
+    aMessage.SetMulticastLoop(aMessageInfo.GetMulticastLoop());
+
     if (aMessage.GetLength() > kMaxDatagramLength)
     {
         error = FragmentDatagram(aMessage, aIpProto);
@@ -531,7 +533,7 @@ void Ip6::HandleSendQueue(void)
     }
 }
 
-otError Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aForward)
+otError Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aForward, bool &aReceive)
 {
     otError        error = OT_ERROR_NONE;
     HopByHopHeader hbhHeader;
@@ -561,7 +563,7 @@ otError Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aForward)
         switch (optionHeader.GetType())
         {
         case OptionMpl::kType:
-            SuccessOrExit(error = mMpl.ProcessOption(aMessage, aHeader.GetSource(), aForward));
+            SuccessOrExit(error = mMpl.ProcessOption(aMessage, aHeader.GetSource(), aForward, aReceive));
             break;
 
         default:
@@ -890,7 +892,7 @@ otError Ip6::HandleExtensionHeaders(Message &    aMessage,
                                     uint8_t &    aNextHeader,
                                     bool         aForward,
                                     bool         aFromNcpHost,
-                                    bool         aReceive)
+                                    bool &       aReceive)
 {
     otError         error = OT_ERROR_NONE;
     ExtensionHeader extHeader;
@@ -902,7 +904,7 @@ otError Ip6::HandleExtensionHeaders(Message &    aMessage,
         switch (aNextHeader)
         {
         case kProtoHopOpts:
-            SuccessOrExit(error = HandleOptions(aMessage, aHeader, aForward));
+            SuccessOrExit(error = HandleOptions(aMessage, aHeader, aForward, aReceive));
             break;
 
         case kProtoFragment:
@@ -913,7 +915,7 @@ otError Ip6::HandleExtensionHeaders(Message &    aMessage,
             break;
 
         case kProtoDstOpts:
-            SuccessOrExit(error = HandleOptions(aMessage, aHeader, aForward));
+            SuccessOrExit(error = HandleOptions(aMessage, aHeader, aForward, aReceive));
             break;
 
         case kProtoIp6:
@@ -934,14 +936,31 @@ exit:
     return error;
 }
 
-otError Ip6::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto)
+otError Ip6::HandlePayload(Message &          aMessage,
+                           MessageInfo &      aMessageInfo,
+                           uint8_t            aIpProto,
+                           Message::Ownership aMessageOwnership)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error   = OT_ERROR_NONE;
+    Message *message = nullptr;
+
+    VerifyOrExit(aIpProto == kProtoUdp || aIpProto == kProtoIcmp6);
+
+    switch (aMessageOwnership)
+    {
+    case Message::kTakeCustody:
+        message = &aMessage;
+        break;
+
+    case Message::kCopyToUse:
+        VerifyOrExit((message = aMessage.Clone()) != nullptr, error = OT_ERROR_NO_BUFS);
+        break;
+    }
 
     switch (aIpProto)
     {
     case kProtoUdp:
-        error = mUdp.HandleMessage(aMessage, aMessageInfo);
+        error = mUdp.HandleMessage(*message, aMessageInfo);
         if (error == OT_ERROR_DROP)
         {
             otLogNoteIp6("Error UDP Checksum");
@@ -949,12 +968,20 @@ otError Ip6::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t
         break;
 
     case kProtoIcmp6:
-        error = mIcmp.HandleMessage(aMessage, aMessageInfo);
+        error = mIcmp.HandleMessage(*message, aMessageInfo);
         break;
 
     default:
         break;
     }
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogNoteIp6("Failed to handle payload: %s", otThreadErrorToString(error));
+    }
+
+    FreeMessage(message);
 
     return error;
 }
@@ -1107,6 +1134,7 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
     bool        forward;
     bool        multicastPromiscuous;
     bool        shouldFreeMessage;
+    bool        shouldForwardToHost;
     uint8_t     nextHeader;
 
 start:
@@ -1126,17 +1154,10 @@ start:
     // determine destination of packet
     if (header.GetDestination().IsMulticast())
     {
+        Netif *netif;
+
         if (aNetif != nullptr)
         {
-            if (aNetif->IsMulticastSubscribed(header.GetDestination()))
-            {
-                receive = true;
-            }
-            else if (aNetif->IsMulticastPromiscuousEnabled())
-            {
-                multicastPromiscuous = true;
-            }
-
 #if OPENTHREAD_FTD
             if (header.GetDestination().IsMulticastLargerThanRealmLocal() &&
                 Get<ChildTable>().HasSleepyChildWithAddress(header.GetDestination()))
@@ -1144,10 +1165,23 @@ start:
                 forward = true;
             }
 #endif
+
+            netif = aNetif;
         }
         else
         {
             forward = true;
+
+            netif = &Get<ThreadNetif>();
+        }
+
+        if ((aNetif != nullptr || aMessage.GetMulticastLoop()) && netif->IsMulticastSubscribed(header.GetDestination()))
+        {
+            receive = true;
+        }
+        else if (netif->IsMulticastPromiscuousEnabled())
+        {
+            multicastPromiscuous = true;
         }
     }
     else
@@ -1172,6 +1206,8 @@ start:
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
     SuccessOrExit(error = HandleExtensionHeaders(aMessage, aNetif, messageInfo, header, nextHeader, forward,
                                                  aFromNcpHost, receive));
+
+    shouldForwardToHost = forward && !ShouldForwardToThread(messageInfo, aFromNcpHost);
 
     // process IPv6 Payload
     if (receive)
@@ -1199,9 +1235,16 @@ start:
         }
 #endif
 
-        IgnoreError(ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost, Message::kCopyToUse));
+        error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost, Message::kCopyToUse);
 
-        SuccessOrExit(error = HandlePayload(aMessage, messageInfo, nextHeader));
+        if ((error == OT_ERROR_NONE || error == OT_ERROR_NO_ROUTE) && shouldForwardToHost)
+        {
+            forward = false;
+        }
+
+        error =
+            HandlePayload(aMessage, messageInfo, nextHeader, (forward ? Message::kCopyToUse : Message::kTakeCustody));
+        shouldFreeMessage = forward;
     }
     else if (multicastPromiscuous)
     {
@@ -1212,7 +1255,7 @@ start:
     {
         uint8_t hopLimit;
 
-        if (!ShouldForwardToThread(messageInfo, aFromNcpHost))
+        if (shouldForwardToHost)
         {
             // try passing to host
             error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost, Message::kTakeCustody);

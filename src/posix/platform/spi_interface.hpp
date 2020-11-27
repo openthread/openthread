@@ -146,6 +146,12 @@ public:
      */
     uint32_t GetBusSpeed(void) const { return ((mSpiDevFd >= 0) ? mSpiSpeedHz : 0); }
 
+    /**
+     * This method is called when RCP failure detected and resets internal states of the interface.
+     *
+     */
+    void OnRcpReset(void);
+
 private:
     int     SetupGpioHandle(int aFd, uint8_t aLine, uint32_t aHandleFlags, const char *aLabel);
     int     SetupGpioEvent(int aFd, uint8_t aLine, uint32_t aHandleFlags, uint32_t aEventFlags, const char *aLabel);
@@ -155,7 +161,7 @@ private:
     void InitResetPin(const char *aCharDev, uint8_t aLine);
     void InitIntPin(const char *aCharDev, uint8_t aLine);
     void InitSpiDev(const char *aPath, uint8_t aMode, uint32_t aSpeed);
-    void TrigerReset(void);
+    void TriggerReset(void);
 
     uint8_t *GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t &aSkipLength);
     otError  DoSpiTransfer(uint8_t *aSpiRxFrameBuffer, uint32_t aTransferLength);
@@ -208,6 +214,7 @@ private:
 
     uint8_t  mSpiMode;
     uint8_t  mSpiAlignAllowance;
+    uint32_t mSpiResetDelay;
     uint16_t mSpiCsDelayUs;
     uint16_t mSpiSmallPacketSize;
     uint32_t mSpiSpeedHz;

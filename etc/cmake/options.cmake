@@ -116,6 +116,11 @@ if(OT_CSL_DEBUG)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE=1")
 endif()
 
+option(OT_DATASET_UPDATER "enable dataset updater support")
+if(OT_DATASET_UPDATER)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE=1")
+endif()
+
 option(OT_DHCP6_CLIENT "enable DHCP6 client support")
 if(OT_DHCP6_CLIENT)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1")
@@ -290,6 +295,13 @@ endif()
 option(OT_OTNS "enable OTNS support")
 if(OT_OTNS)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_OTNS_ENABLE=1")
+endif()
+
+set(OT_RCP_RESTORATION_MAX_COUNT "0" CACHE STRING "set max RCP restoration count")
+if(OT_RCP_RESTORATION_MAX_COUNT MATCHES "^[0-9]+$")
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT=${OT_RCP_RESTORATION_MAX_COUNT}")
+else()
+    message(FATAL_ERROR "Invalid max RCP restoration count: ${OT_RCP_RESTORATION_MAX_COUNT}")
 endif()
 
 # Checks

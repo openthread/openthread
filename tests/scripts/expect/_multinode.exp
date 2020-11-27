@@ -29,19 +29,27 @@
 
 source "tests/scripts/expect/_common.exp"
 
-proc setup_two_nodes {{childmode {r}}} {
+proc setup_two_nodes {{childmode {r}} {should_spawn_node true}} {
     # Sets up a Thread network with 2 nodes, spawn_1 as the leader and spawn_2
     # as a child.
     set psk "J01NME"
 
-    spawn_node 2
+    if {$should_spawn_node} {
+        spawn_node 2
+    } else {
+        switch_node 2
+    }
     send "eui64\n"
     expect -re {([0-9a-f]{16})}
     set eui64 $expect_out(1,string)
     expect "Done"
 
     # Sets up a Thread network with node 1 as the leader.
-    spawn_node 1
+    if {$should_spawn_node} {
+        spawn_node 1
+    } else {
+        switch_node 1
+    }
     setup_leader
 
     send "commissioner start\n"

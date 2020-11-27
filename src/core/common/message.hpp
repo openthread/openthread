@@ -165,14 +165,15 @@ struct MessageMetadata
         uint8_t  mChannel; ///< Used for MLE Announce.
     } mPanIdChannel;       ///< Used for MLE Discover Request, Response, and Announce messages.
 
-    uint8_t mType : 3;         ///< Identifies the type of message.
-    uint8_t mSubType : 4;      ///< Identifies the message sub type.
-    bool    mDirectTx : 1;     ///< Used to indicate whether a direct transmission is required.
-    bool    mLinkSecurity : 1; ///< Indicates whether or not link security is enabled.
-    uint8_t mPriority : 2;     ///< Identifies the message priority level (higher value is higher priority).
-    bool    mInPriorityQ : 1;  ///< Indicates whether the message is queued in normal or priority queue.
-    bool    mTxSuccess : 1;    ///< Indicates whether the direct tx of the message was successful.
-    bool    mDoNotEvict : 1;   ///< Indicates whether or not this message may be evicted.
+    uint8_t mType : 3;          ///< Identifies the type of message.
+    uint8_t mSubType : 4;       ///< Identifies the message sub type.
+    bool    mDirectTx : 1;      ///< Used to indicate whether a direct transmission is required.
+    bool    mLinkSecurity : 1;  ///< Indicates whether or not link security is enabled.
+    uint8_t mPriority : 2;      ///< Identifies the message priority level (higher value is higher priority).
+    bool    mInPriorityQ : 1;   ///< Indicates whether the message is queued in normal or priority queue.
+    bool    mTxSuccess : 1;     ///< Indicates whether the direct tx of the message was successful.
+    bool    mDoNotEvict : 1;    ///< Indicates whether or not this message may be evicted.
+    bool    mMulticastLoop : 1; ///< Indicates whether or not this multicast message may be looped back.
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     bool    mTimeSync : 1;      ///< Indicates whether the message is also used for time sync purpose.
     uint8_t mTimeSyncSeq;       ///< The time sync sequence.
@@ -528,6 +529,23 @@ public:
      *
      */
     bool IsSubTypeMle(void) const;
+
+    /**
+     * This method checks whether this multicast message may be looped back.
+     *
+     * @retval TRUE   If message may be looped back.
+     * @retval FALSE  If message must not be looped back.
+     *
+     */
+    bool GetMulticastLoop(void) const { return GetMetadata().mMulticastLoop; }
+
+    /**
+     * This method sets whether multicast may be looped back.
+     *
+     * @param[in]  aMulticastLoop  Whether allow looping back multicast.
+     *
+     */
+    void SetMulticastLoop(bool aMulticastLoop) { GetMetadata().mMulticastLoop = aMulticastLoop; }
 
     /**
      * This method returns the message priority level.

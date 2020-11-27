@@ -551,6 +551,18 @@ public:
         }
 
         /**
+         * This method sets the Security Policy in the Dataset.
+         *
+         * @param[in] aSecurityPolicy  A Security Policy to set in Dataset.
+         *
+         */
+        void SetSecurityPolicy(const otSecurityPolicy &aSecurityPolicy)
+        {
+            mSecurityPolicy                      = aSecurityPolicy;
+            mComponents.mIsSecurityPolicyPresent = true;
+        }
+
+        /**
          * This method indicates whether or not the Channel Mask is present in the Dataset.
          *
          * @returns TRUE if Channel Mask is present, FALSE otherwise.
@@ -595,6 +607,20 @@ public:
          *
          */
         otError GenerateRandom(Instance &aInstance);
+
+        /**
+         * This method checks whether the Dataset is a subset of another one, i.e., all the components in the current
+         * Dataset are also present in the @p aOther and the component values fully match.
+         *
+         * The matching of components in the two Datasets excludes Active/Pending Timestamp and Delay components.
+         *
+         * @param[in] aOther   The other Dataset to check against.
+         *
+         * @retval TRUE   The current dataset is a subset of @p aOther.
+         * @retval FALSE  The current Dataset is not a subset of @p aOther.
+         *
+         */
+        bool IsSubsetOf(const Info &aOther) const;
     };
 
     /**

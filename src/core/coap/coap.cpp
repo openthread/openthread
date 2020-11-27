@@ -217,6 +217,7 @@ otError CoapBase::SendMessage(Message &               aMessage,
         metadata.mSourceAddress            = aMessageInfo.GetSockAddr();
         metadata.mDestinationPort          = aMessageInfo.GetPeerPort();
         metadata.mDestinationAddress       = aMessageInfo.GetPeerAddr();
+        metadata.mMulticastLoop            = aMessageInfo.GetMulticastLoop();
         metadata.mResponseHandler          = aHandler;
         metadata.mResponseContext          = aContext;
         metadata.mRetransmissionsRemaining = aTxParameters.mMaxRetransmit;
@@ -383,6 +384,7 @@ void CoapBase::HandleRetransmissionTimer(void)
                 messageInfo.SetHopLimit(metadata.mHopLimit);
                 messageInfo.SetIsHostInterface(metadata.mIsHostInterface);
 #endif
+                messageInfo.SetMulticastLoop(metadata.mMulticastLoop);
 
                 SendCopy(*message, messageInfo);
             }

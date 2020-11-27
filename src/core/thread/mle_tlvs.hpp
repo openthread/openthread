@@ -239,16 +239,6 @@ OT_TOOL_PACKED_BEGIN
 class RouteTlv : public Tlv, public TlvInfo<Tlv::kRoute>
 {
 public:
-    enum
-    {
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-        kLinkAcceptMaxRouters = 3,
-#else
-        kLinkAcceptMaxRouters = 20,
-#endif
-        kLinkAcceptSequenceRollback = 64,
-    };
-
     /**
      * This method initializes the TLV.
      *
@@ -1142,32 +1132,10 @@ private:
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**
- * This class implements Time Request TLV generation and parsing.
+ * This class defines Time Request TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class TimeRequestTlv : public Tlv, public TlvInfo<Tlv::kTimeRequest>
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kTimeRequest);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-} OT_TOOL_PACKED_END;
+typedef TlvInfo<Tlv::kTimeRequest> TimeRequestTlv;
 
 /**
  * This class implements Time Parameter TLV generation and parsing.

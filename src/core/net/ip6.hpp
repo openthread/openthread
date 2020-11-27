@@ -343,7 +343,7 @@ private:
                                    uint8_t &    aNextHeader,
                                    bool         aForward,
                                    bool         aFromNcpHost,
-                                   bool         aReceive);
+                                   bool &       aReceive);
     otError FragmentDatagram(Message &aMessage, uint8_t aIpProto);
     otError HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
@@ -356,8 +356,11 @@ private:
     otError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     otError InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     otError RemoveMplOption(Message &aMessage);
-    otError HandleOptions(Message &aMessage, Header &aHeader, bool &aForward);
-    otError HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
+    otError HandleOptions(Message &aMessage, Header &aHeader, bool &aForward, bool &aReceive);
+    otError HandlePayload(Message &          aMessage,
+                          MessageInfo &      aMessageInfo,
+                          uint8_t            aIpProto,
+                          Message::Ownership aMessageOwnership);
     bool    ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromNcpHost) const;
     bool    IsOnLink(const Address &aAddress) const;
 

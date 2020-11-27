@@ -77,7 +77,7 @@ void Mpl::InitOption(OptionMpl &aOption, const Address &aAddress)
     }
 }
 
-otError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound)
+otError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound, bool &aReceive)
 {
     otError   error;
     OptionMpl option;
@@ -104,6 +104,7 @@ otError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsO
     }
     else if (aIsOutbound)
     {
+        aReceive = false;
         // In case MPL Data Message is generated locally, ignore potential error of the MPL Seed Set
         // to allow subsequent retransmissions with the same sequence number.
         ExitNow(error = OT_ERROR_NONE);

@@ -162,6 +162,23 @@ public:
     void SetHopLimit(uint8_t aHopLimit) { mHopLimit = aHopLimit; }
 
     /**
+     * This method returns whether multicast may be looped back.
+     *
+     * @retval TRUE   If message may be looped back.
+     * @retval FALSE  If message must not be looped back.
+     *
+     */
+    bool GetMulticastLoop(void) const { return mMulticastLoop; }
+
+    /**
+     * This method sets whether multicast may be looped back.
+     *
+     * @param[in]  aMulticastLoop  Whether allow looping back multicast.
+     *
+     */
+    void SetMulticastLoop(bool aMulticastLoop) { mMulticastLoop = aMulticastLoop; }
+
+    /**
      * This method returns a pointer to the link-specific information object.
      *
      * @returns A pointer to the link-specific information object.

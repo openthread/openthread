@@ -91,6 +91,20 @@ SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
 {
 }
 
+void SpiInterface::OnRcpReset(void)
+{
+    mSpiValidFrameCount   = 0;
+    mSpiTxIsReady         = false;
+    mSpiTxRefusedCount    = 0;
+    mSpiTxPayloadSize     = 0;
+    mDidPrintRateLimitLog = false;
+    mSpiSlaveDataLen      = 0;
+    memset(mSpiTxFrameBuffer, 0, sizeof(mSpiTxFrameBuffer));
+
+    TriggerReset();
+    usleep(static_cast<useconds_t>(mSpiResetDelay) * kUsecPerMsec);
+}
+
 otError SpiInterface::Init(const RadioUrl &aRadioUrl)
 {
     const char *spiGpioIntDevice;
@@ -155,6 +169,7 @@ otError SpiInterface::Init(const RadioUrl &aRadioUrl)
 
     VerifyOrDie(spiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_FAILURE);
 
+    mSpiResetDelay      = spiResetDelay;
     mSpiCsDelayUs       = spiCsDelay;
     mSpiSmallPacketSize = spiSmallPacketSize;
     mSpiAlignAllowance  = spiAlignAllowance;
@@ -173,7 +188,7 @@ otError SpiInterface::Init(const RadioUrl &aRadioUrl)
     InitSpiDev(aRadioUrl.GetPath(), spiMode, spiSpeed);
 
     // Reset RCP chip.
-    TrigerReset();
+    TriggerReset();
 
     // Waiting for the RCP chip starts up.
     usleep(static_cast<useconds_t>(spiResetDelay) * kUsecPerMsec);
@@ -318,7 +333,7 @@ exit:
     }
 }
 
-void SpiInterface::TrigerReset(void)
+void SpiInterface::TriggerReset(void)
 {
     // Set Reset pin to low level.
     SetGpioValue(mResetGpioValueFd, 0);

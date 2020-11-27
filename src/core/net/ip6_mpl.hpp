@@ -216,12 +216,14 @@ public:
      * @param[in]  aMessage    A reference to the message.
      * @param[in]  aAddress    A reference to the IPv6 Source Address.
      * @param[in]  aIsOutbound TRUE if this message was locally generated, FALSE otherwise.
+     * @param[out] aReceive    Set to FALSE if the MPL message is a duplicate and must not
+     *                         go through the receiving process again, untouched otherwise.
      *
      * @retval OT_ERROR_NONE  Successfully processed the MPL option.
      * @retval OT_ERROR_DROP  The MPL message is a duplicate and should be dropped.
      *
      */
-    otError ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound);
+    otError ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound, bool &aReceive);
 
     /**
      * This method returns the MPL Seed Id value.

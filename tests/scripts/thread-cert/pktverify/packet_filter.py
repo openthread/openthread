@@ -507,8 +507,14 @@ class PacketFilter(object):
     def filter_LLATNMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS, **kwargs)
 
+    def filter_RLANMA(self, **kwargs):
+        return self.filter(lambda p: p.ipv6.dst == consts.REALM_LOCAL_ALL_NODES_ADDRESS, **kwargs)
+
     def filter_RLARMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS, **kwargs)
+
+    def filter_RLATNMA(self, **kwargs):
+        return self.filter(lambda p: p.ipv6.dst == consts.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS, **kwargs)
 
     def filter_LLANMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS, **kwargs)
@@ -524,6 +530,10 @@ class PacketFilter(object):
 
     def filter_mle(self, **kwargs):
         return self.filter(attrgetter('mle'), **kwargs)
+
+    def filter_wpan_cmd(self, cmd, **kwargs):
+        assert isinstance(cmd, int), cmd
+        return self.filter(lambda p: p.wpan.cmd == cmd, **kwargs)
 
     def filter_mle_cmd(self, cmd, **kwargs):
         assert isinstance(cmd, int), cmd

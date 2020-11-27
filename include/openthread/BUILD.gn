@@ -70,6 +70,7 @@ source_set("openthread") {
     "crypto.h",
     "dataset.h",
     "dataset_ftd.h",
+    "dataset_updater.h",
     "diag.h",
     "dns.h",
     "entropy.h",
