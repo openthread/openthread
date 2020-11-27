@@ -533,7 +533,7 @@ void Ip6::HandleSendQueue(void)
     }
 }
 
-otError Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aForward, bool &aReceive)
+otError Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool aForward, bool &aReceive)
 {
     otError        error = OT_ERROR_NONE;
     HopByHopHeader hbhHeader;

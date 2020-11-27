@@ -356,7 +356,7 @@ private:
     otError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     otError InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     otError RemoveMplOption(Message &aMessage);
-    otError HandleOptions(Message &aMessage, Header &aHeader, bool &aForward, bool &aReceive);
+    otError HandleOptions(Message &aMessage, Header &aHeader, bool aForward, bool &aReceive);
     otError HandlePayload(Message &          aMessage,
                           MessageInfo &      aMessageInfo,
                           uint8_t            aIpProto,
