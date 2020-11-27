@@ -1103,9 +1103,19 @@ Get the Thread Leader Partition ID.
 Done
 ```
 
-### leaderpartitionid \<partitionid\>
+### leaderpartitionid preferred
 
-Set the Thread Leader Partition ID.
+Get the preferred Thread Leader Partition ID.
+
+```bash
+> leaderpartitionid preferred
+4294967295
+Done
+```
+
+### leaderpartitionid preferred \<partitionid\>
+
+Set the preferred Thread Leader Partition ID.
 
 ```bash
 > leaderpartitionid 0xffffffff

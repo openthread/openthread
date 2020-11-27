@@ -67,7 +67,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mRouterUpgradeThreshold(kRouterUpgradeThreshold)
     , mRouterDowngradeThreshold(kRouterDowngradeThreshold)
     , mLeaderWeight(kLeaderWeight)
-    , mFixedLeaderPartitionId(0)
+    , mPreferredLeaderPartitionId(0)
     , mRouterEligible(true)
     , mAddressSolicitPending(false)
     , mAddressSolicitRejected(false)
@@ -191,7 +191,7 @@ otError MleRouter::BecomeLeader(void)
 
     mRouterTable.Clear();
 
-    partitionId = mFixedLeaderPartitionId ? mFixedLeaderPartitionId : Random::NonCrypto::GetUint32();
+    partitionId = mPreferredLeaderPartitionId ? mPreferredLeaderPartitionId : Random::NonCrypto::GetUint32();
 
     leaderId = IsRouterIdValid(mPreviousRouterId) ? mPreviousRouterId
                                                   : Random::NonCrypto::GetUint8InRange(0, kMaxRouterId + 1);

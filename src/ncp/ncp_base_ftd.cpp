@@ -355,7 +355,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PARTITION_ID>(voi
 
     SuccessOrExit(error = mDecoder.ReadUint32(partitionId));
 
-    otThreadSetLocalLeaderPartitionId(mInstance, partitionId);
+    otThreadSetPreferredLeaderPartitionId(mInstance, partitionId);
 
 exit:
     return error;

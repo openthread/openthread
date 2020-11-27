@@ -940,11 +940,11 @@ class NodeImpl:
         self._expect('Done')
 
     def get_partition_id(self):
-        self.send_command('leaderpartitionid')
+        self.send_command('leaderpartitionid preferred')
         return self._expect_result(r'\d+')
 
     def set_partition_id(self, partition_id):
-        cmd = 'leaderpartitionid %d' % partition_id
+        cmd = 'leaderpartitionid preferred %d' % partition_id
         self.send_command(cmd)
         self._expect('Done')
 

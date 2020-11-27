@@ -158,20 +158,28 @@ public:
     void SetLeaderWeight(uint8_t aWeight) { mLeaderWeight = aWeight; }
 
     /**
-     * This method returns the fixed Partition Id of Thread network partition for certification testing.
+     * This method returns the current Partition Id of Thread network partition.
      *
      * @returns The Partition Id for this Thread network partition.
      *
      */
-    uint32_t GetLeaderPartitionId(void) const { return mFixedLeaderPartitionId; }
+    uint32_t GetLeaderPartitionId(void) const { return mLeaderData.GetPartitionId();}
 
     /**
-     * This method sets the fixed Partition Id for Thread network partition for certification testing.
+     * This method returns the preferred Partition Id of Thread network partition for certification testing.
+     *
+     * @returns The Partition Id for this Thread network partition.
+     *
+     */
+    uint32_t GetPreferredLeaderPartitionId(void) const { return mPreferredLeaderPartitionId;}
+
+    /**
+     * This method sets the preferred Partition Id for Thread network partition for certification testing.
      *
      * @param[in]  aPartitionId  The Leader Partition Id.
      *
      */
-    void SetLeaderPartitionId(uint32_t aPartitionId) { mFixedLeaderPartitionId = aPartitionId; }
+    void SetPreferredLeaderPartitionId(uint32_t aPartitionId) { mPreferredLeaderPartitionId = aPartitionId; }
 
     /**
      * This method sets the preferred Router Id. Upon becoming a router/leader the node
@@ -671,7 +679,7 @@ private:
     uint8_t  mRouterUpgradeThreshold;
     uint8_t  mRouterDowngradeThreshold;
     uint8_t  mLeaderWeight;
-    uint32_t mFixedLeaderPartitionId; ///< only for certification testing
+    uint32_t mPreferredLeaderPartitionId; ///< only for certification testing
     bool     mRouterEligible : 1;
     bool     mAddressSolicitPending : 1;
     bool     mAddressSolicitRejected : 1;
