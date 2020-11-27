@@ -166,17 +166,17 @@ public:
     uint32_t GetLeaderPartitionId(void) const { return mLeaderData.GetPartitionId(); }
 
     /**
-     * This method returns the preferred Partition Id of Thread network partition for certification testing.
+     * This method returns the preferred Partition Id when operating in the Leader role for certification testing.
      *
-     * @returns The Partition Id for this Thread network partition.
+     * @returns The preferred Partition Id value.
      *
      */
     uint32_t GetPreferredLeaderPartitionId(void) const { return mPreferredLeaderPartitionId; }
 
     /**
-     * This method sets the preferred Partition Id for Thread network partition for certification testing.
+     * This method sets the preferred Partition Id when operating in the Leader role for certification testing.
      *
-     * @param[in]  aPartitionId  The Leader Partition Id.
+     * @param[in]  aPartitionId  The preferred Leader Partition Id.
      *
      */
     void SetPreferredLeaderPartitionId(uint32_t aPartitionId) { mPreferredLeaderPartitionId = aPartitionId; }

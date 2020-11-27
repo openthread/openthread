@@ -219,7 +219,7 @@ uint8_t otThreadGetLocalLeaderWeight(otInstance *aInstance);
 void otThreadSetLocalLeaderWeight(otInstance *aInstance, uint8_t aWeight);
 
 /**
- * Get the current Thread Leader Partition Id used when operating in the Leader role.
+ * Get the current Thread Leader Partition Id.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
