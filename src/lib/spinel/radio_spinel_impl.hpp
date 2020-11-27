@@ -2292,13 +2292,13 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RestoreProperties(void)
         SuccessOrDie(Set(SPINEL_PROP_PHY_FEM_LNA_GAIN, SPINEL_DATATYPE_INT8_S, mFemLnaGain));
     }
 
-    for (size_t channel = Radio::kChannelMin; channel <= Radio::kChannelMax; channel++)
+    for (uint8_t channel = Radio::kChannelMin; channel <= Radio::kChannelMax; channel++)
     {
         int8_t power = mMaxPowerTable.GetTransmitPower(channel);
 
         if (power != MaxPowerTable::kPowerNone)
         {
-        SuccessOrDie(SetChannelMaxTransmitPower(channel, power);
+            SuccessOrDie(SetChannelMaxTransmitPower(channel, power));
         }
     }
 

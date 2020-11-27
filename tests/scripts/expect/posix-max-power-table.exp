@@ -37,6 +37,11 @@ expect "Done"
 send "channel preferred\n"
 expect "0x3fff800"
 expect "Done"
+send "txpower 20\n"
+expect "Done"
+send "txpower\n"
+expect "11 dBm"
+expect "Done"
 send "\x04"
 expect eof
 # allows all channels by default
