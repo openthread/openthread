@@ -163,7 +163,7 @@ public:
      * @returns The Partition Id for this Thread network partition.
      *
      */
-    uint32_t GetLeaderPartitionId(void) const { return mLeaderData.GetPartitionId();}
+    uint32_t GetLeaderPartitionId(void) const { return mLeaderData.GetPartitionId(); }
 
     /**
      * This method returns the preferred Partition Id of Thread network partition for certification testing.
@@ -171,7 +171,7 @@ public:
      * @returns The Partition Id for this Thread network partition.
      *
      */
-    uint32_t GetPreferredLeaderPartitionId(void) const { return mPreferredLeaderPartitionId;}
+    uint32_t GetPreferredLeaderPartitionId(void) const { return mPreferredLeaderPartitionId; }
 
     /**
      * This method sets the preferred Partition Id for Thread network partition for certification testing.
