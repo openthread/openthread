@@ -40,7 +40,7 @@ libopenthread_qpg7015m_a_CPPFLAGS               = \
     -I$(top_srcdir)/examples/platforms            \
     -I$(top_srcdir)/examples/platforms/qpg7015m   \
     -lrt                                          \
-    -lpthread                                     \
+    -pthread                                      \
     $(NULL)
 
 PLATFORM_SOURCES                                = \

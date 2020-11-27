@@ -42,12 +42,13 @@ if OPENTHREAD_ENABLE_FTD
 LDADD_COMMON                                                          += \
     $(top_srcdir)/third_party/Qorvo/repo/qpg6100/libQorvoQPG6100_ftd.a        \
     $(NULL)
-endif # OPENTHREAD_ENABLE_FTD
+else # OPENTHREAD_ENABLE_FTD
 if OPENTHREAD_ENABLE_MTD
 LDADD_COMMON                                                          += \
     $(top_srcdir)/third_party/Qorvo/repo/qpg6100/libQorvoQPG6100_mtd.a        \
     $(NULL)
 endif # OPENTHREAD_ENABLE_MTD
+endif
 LDFLAGS_COMMON                                                        += \
     -T $(top_srcdir)/examples/platforms/qpg6100/qpg6100.ld               \
     $(NULL)
