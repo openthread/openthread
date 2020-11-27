@@ -317,7 +317,7 @@ jobs:
         path: tmp/coverage.info
     - name: Run TUN Mode
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo sudo apt-get update
         sudo netstat -nap | grep 5353
         sudo apt-get install --no-install-recommends -y dnsmasq bind9-host ntp
         sudo netstat -nap | grep 5353
