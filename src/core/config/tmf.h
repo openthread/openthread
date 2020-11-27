@@ -179,22 +179,27 @@
  * even if it doesn't enable DUA feature itself.
  *
  */
+#ifndef OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 #define OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE \
     ((OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2) && OPENTHREAD_FTD)
+#endif
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE && OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2
+#error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE"
+#endif
 
 /**
  *
  * This setting configures the Multicast Listener Registration parent proxing in Thread 1.2.
  *
- * This is compulsory for 1.2 FTD.
- *
  */
-#ifdef OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-#error \
-    "Don't define `OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE` manually. It's an alias of `((OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2) && OPENTHREAD_FTD)`."
-#else
+#ifndef OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 #define OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE \
     ((OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2) && OPENTHREAD_FTD)
+#endif
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2
+#error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE"
 #endif
 
 #endif // CONFIG_TMF_H_
