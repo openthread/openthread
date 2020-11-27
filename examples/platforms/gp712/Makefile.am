@@ -40,7 +40,7 @@ libopenthread_gp712_a_CPPFLAGS                  = \
     -I$(top_srcdir)/examples/platforms            \
     -I$(top_srcdir)/examples/platforms/gp712      \
     -lrt                                          \
-    -lpthread                                     \
+    -pthread                                      \
     $(NULL)
 
 PLATFORM_SOURCES                                = \

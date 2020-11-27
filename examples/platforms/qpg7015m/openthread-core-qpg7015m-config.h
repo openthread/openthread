@@ -53,4 +53,84 @@
  */
 #define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
 
+/**
+ * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE
+ *
+ * Define to 1 if you want to enable software ACK timeout logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE
+#define OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_RETRANSMIT_ENABLE
+ *
+ * Define to 1 if you want to enable software retransmission logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_SOFTWARE_RETRANSMIT_ENABLE
+#define OPENTHREAD_CONFIG_MAC_SOFTWARE_RETRANSMIT_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE
+ *
+ * Define to 1 if you want to enable software CSMA-CA backoff logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE
+#define OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
+ *
+ * Define to 1 if you want to enable software transmission security logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
+#define OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE
+ *
+ * Define to 1 to enable software transmission target time logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE
+#define OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_ENABLE
+ *
+ * Define as 1 to enable the diag feature.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_ENABLE
+#define OPENTHREAD_CONFIG_DIAG_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NCP_SPI_ENABLE
+ *
+ * Define as 1 to enable SPI NCP interface.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_SPI_ENABLE
+#define OPENTHREAD_CONFIG_NCP_SPI_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
+ *
+ * Define as 1 to enable UART NCP interface.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_UART_ENABLE
+#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
+#endif
+
 #endif // OPENTHREAD_CORE_QPG7015M_CONFIG_H_

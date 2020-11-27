@@ -49,7 +49,7 @@ static otInstance *localInstance = NULL;
 extern void flash_jump_gpJumpTables_GetRomVersion(void);
 #endif // QORVO_USE_ROM
 
-bool qorvoPlatGotoSleepCheck(void)
+uint8_t qorvoPlatGotoSleepCheck(void)
 {
     if (localInstance)
     {
