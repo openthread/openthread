@@ -41,6 +41,7 @@ readonly COLOR_NONE='\033[0m'
 
 readonly OT_NODE_TYPE="${OT_NODE_TYPE:-cli}"
 readonly OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
+readonly OT_M32="${OT_M32:-0}"
 readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
 readonly INTER_OP="${INTER_OP:-0}"
 readonly VERBOSE="${VERBOSE:-0}"
@@ -450,6 +451,13 @@ do_upload_codecov()
 envsetup()
 {
     export THREAD_VERSION
+
+    if [[ ${OT_M32} == 1 ]]; then
+        CFLAGS+="-m32"
+        CXXFLAGS+="-m32"
+        LDFLAGS+="-m32"
+        export CFLAGS CXXFLAGS LDFLAGS
+    fi
 
     if [[ ${OT_NODE_TYPE} == rcp* ]]; then
         export RADIO_DEVICE="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
