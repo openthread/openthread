@@ -302,6 +302,7 @@ check_SCRIPTS                                                      = \
 TESTS_ENVIRONMENT                                                  = \
     export                                                           \
     top_builddir='$(top_builddir)'                                   \
+    top_srcdir='$(top_srcdir)'                                       \
     VERBOSE=1;                                                       \
     $(NULL)
 

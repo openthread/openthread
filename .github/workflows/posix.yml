@@ -70,27 +70,12 @@ jobs:
       with:
         name: posix-cli-thread-cert
         path: build/posix/tests/scripts/thread-cert
-    - name: Keep Simulation Only
-      run: |
-        tar -cf build/posix.tar -C build/ posix/
-        rm -rf build/posix/
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-cli-1
-        path: tmp/coverage.info
-    - name: Keep POSIX Only
-      run: |
-        rm -rf build/simulation/
-        tar -xf build/posix.tar -C build/
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-posix-cli-2
+        name: cov-posix-cli
         path: tmp/coverage.info
 
   posix-ncp:
@@ -124,27 +109,12 @@ jobs:
       with:
         name: posix-ncp-thread-cert
         path: build/posix/tests/scripts/thread-cert
-    - name: Keep Simulation Only
-      run: |
-        tar -cf build/posix.tar -C build/ posix/
-        rm -rf build/posix/
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-ncp-1
-        path: tmp/coverage.info
-    - name: Keep POSIX Only
-      run: |
-        rm -rf build/simulation/
-        tar -xf build/posix.tar -C build/
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-posix-ncp-2
+        name: cov-posix-ncp
         path: tmp/coverage.info
 
   posix-ncp-rcp-migrate:
@@ -164,27 +134,12 @@ jobs:
     - name: Run
       run: |
         script/check-ncp-rcp-migrate check
-    - name: Keep Simulation Only
-      run: |
-        tar -cf build/posix.tar -C build/ posix/
-        rm -rf build/posix/
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-ncp-rcp-migrate-1
-        path: tmp/coverage.info
-    - name: Keep POSIX Only
-      run: |
-        rm -rf build/simulation/
-        tar -xf build/posix.tar -C build/
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-posix-ncp-rcp-migrate-2
+        name: cov-posix-ncp-rcp-migrate
         path: tmp/coverage.info
 
   posix-pty:
@@ -212,27 +167,12 @@ jobs:
     - name: Run
       run: |
         script/check-posix-pty check
-    - name: Keep Simulation Only
-      run: |
-        tar -cf build/posix.tar -C build/ posix/
-        rm -rf build/posix/
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-pty-1
-        path: tmp/coverage.info
-    - name: Keep POSIX Only
-      run: |
-        rm -rf build/simulation/
-        tar -xf build/posix.tar -C build/
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-posix-pty-2
+        name: cov-posix-pty
         path: tmp/coverage.info
 
   posix-pty-daemon:
@@ -261,27 +201,12 @@ jobs:
     - name: Run
       run: |
         script/check-posix-pty check
-    - name: Keep Simulation Only
-      run: |
-        tar -cf build/posix.tar -C build/ posix/
-        rm -rf build/posix/
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-pty-daemon-1
-        path: tmp/coverage.info
-    - name: Keep POSIX Only
-      run: |
-        rm -rf build/simulation/
-        tar -xf build/posix.tar -C build/
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-posix-pty-daemon-2
+        name: cov-posix-pty-daemon
         path: tmp/coverage.info
 
   upload-coverage:

@@ -83,46 +83,12 @@ jobs:
       with:
         name: thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-pcaps
         path: "*.pcap"
-    - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
-      with:
-        name: core-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}
-        path: |
-          ./build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
-          ./ot-core-dump/*
-          ./so-lib/*
-    - name: Keep-1-2-only
-      run: |
-        ./script/test tar simulation 1.1
-        ./script/test tar simulation 1.2-bbr
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-1
-        path: tmp/coverage.info
-    - name: Keep-1-2-bbr-only
-      run: |
-        ./script/test tar simulation 1.2
-        ./script/test untar simulation 1.2-bbr
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-2
-        path: tmp/coverage.info
-    - name: Keep-1-1-only
-      run: |
-        ./script/test tar simulation 1.2-bbr
-        ./script/test untar simulation 1.1
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-3
+        name: cov-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}
         path: tmp/coverage.info
 
   packet-verification-low-power:
@@ -176,26 +142,12 @@ jobs:
           ./build/cmake/openthread-simulation-1.1/examples/apps/cli/ot-cli-*
           ./ot-core-dump/*
           ./so-lib/*
-    - name: Keep-1-2-only
-      run: |
-        ./script/test tar simulation 1.2-bbr
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-packet-verification-low-power-1
-        path: tmp/coverage.info
-    - name: Keep-1-2-bbr-only
-      run: |
-        ./script/test tar simulation 1.2
-        ./script/test untar simulation 1.2-bbr
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-packet-verification-low-power-2
+        name: cov-packet-verification-low-power
         path: tmp/coverage.info
 
   packet-verification-1-1-on-1-2:
@@ -253,13 +205,6 @@ jobs:
     - name: Run RCP Mode
       run: |
         OT_OPTIONS=-DOT_READLINE=OFF OT_NODE_TYPE=rcp ./script/test build expect
-    - name: Keep-1-2-only
-      run: |
-        ./script/test tar posix 1.2-bbr
-        ./script/test tar simulation 1.2-bbr
-    - name: Keep POSIX Only
-      run: |
-        ./script/test tar simulation 1.2
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
