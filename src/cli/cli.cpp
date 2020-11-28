@@ -1883,6 +1883,8 @@ exit:
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessLeaderPartitionId(uint8_t aArgsLength, char *aArgs[])
 {
+    OT_UNUSED_VARIABLE(aArgs);
+
     otError error = OT_ERROR_INVALID_COMMAND;
 
     if (aArgsLength == 0)

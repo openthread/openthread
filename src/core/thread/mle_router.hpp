@@ -157,14 +157,6 @@ public:
      */
     void SetLeaderWeight(uint8_t aWeight) { mLeaderWeight = aWeight; }
 
-    /**
-     * This method returns the current Partition Id of Thread network partition.
-     *
-     * @returns The Partition Id for this Thread network partition.
-     *
-     */
-    uint32_t GetPartitionId(void) const { return mLeaderData.GetPartitionId(); }
-
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
     /**
