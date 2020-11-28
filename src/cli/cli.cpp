@@ -1906,9 +1906,10 @@ otError Interpreter::ProcessLeaderPartitionId(uint8_t aArgsLength, char *aArgs[]
             otThreadSetPreferredLeaderPartitionId(mInstance, partitionId);
         }
     }
-#endif
 
 exit:
+#endif
+
     return error;
 }
 
