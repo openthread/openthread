@@ -163,7 +163,9 @@ public:
      * @returns The Partition Id for this Thread network partition.
      *
      */
-    uint32_t GetLeaderPartitionId(void) const { return mLeaderData.GetPartitionId(); }
+    uint32_t GetPartitionId(void) const { return mLeaderData.GetPartitionId(); }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
     /**
      * This method returns the preferred Partition Id when operating in the Leader role for certification testing.
@@ -180,6 +182,7 @@ public:
      *
      */
     void SetPreferredLeaderPartitionId(uint32_t aPartitionId) { mPreferredLeaderPartitionId = aPartitionId; }
+#endif
 
     /**
      * This method sets the preferred Router Id. Upon becoming a router/leader the node
@@ -679,10 +682,12 @@ private:
     uint8_t  mRouterUpgradeThreshold;
     uint8_t  mRouterDowngradeThreshold;
     uint8_t  mLeaderWeight;
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint32_t mPreferredLeaderPartitionId; ///< only for certification testing
-    bool     mRouterEligible : 1;
-    bool     mAddressSolicitPending : 1;
-    bool     mAddressSolicitRejected : 1;
+#endif
+    bool mRouterEligible : 1;
+    bool mAddressSolicitPending : 1;
+    bool mAddressSolicitRejected : 1;
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;

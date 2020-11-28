@@ -1883,17 +1883,20 @@ exit:
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessLeaderPartitionId(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error = OT_ERROR_NONE;
+    otError error = OT_ERROR_INVALID_COMMAND;
 
     if (aArgsLength == 0)
     {
-        OutputLine("%u", otThreadGetLeaderPartitionId(mInstance));
+        OutputLine("%u", otThreadGetPartitionId(mInstance));
+        error = OT_ERROR_NONE;
     }
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     else if (strcmp(aArgs[0], "preferred") == 0)
     {
         if (aArgsLength == 1)
         {
             OutputLine("%u", otThreadGetPreferredLeaderPartitionId(mInstance));
+            error = OT_ERROR_NONE;
         }
         else if (aArgsLength == 2)
         {
@@ -1902,15 +1905,8 @@ otError Interpreter::ProcessLeaderPartitionId(uint8_t aArgsLength, char *aArgs[]
             SuccessOrExit(error = ParseAsUint32(aArgs[1], partitionId));
             otThreadSetPreferredLeaderPartitionId(mInstance, partitionId);
         }
-        else
-        {
-            error = OT_ERROR_INVALID_COMMAND;
-        }
     }
-    else
-    {
-        error = OT_ERROR_INVALID_COMMAND;
-    }
+#endif
 
 exit:
     return error;
