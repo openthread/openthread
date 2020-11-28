@@ -317,38 +317,38 @@ jobs:
     - name: Run TUN Mode
       run: |
         sudo apt-get update
-        sudo netstat -nap | grep 5353
-        sudo apt-get install --no-install-recommends -y dnsmasq bind9-host ntp
-        sudo netstat -nap | grep 5353
-        sudo systemctl start dnsmasq ntp
-        sudo netstat -nap | grep 5353
-        host ipv6.google.com 127.0.0.1
-        echo 'listen-address=::1' | sudo tee /etc/dnsmasq.conf
-        echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
-        sudo systemctl restart dnsmasq
-        host ipv6.google.com ::1
-        OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
-    - name: Keep POSIX Only
-      run: |
-        ./script/test tar simulation 1.1
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-expects-4
-        path: tmp/coverage.info
-    - name: Keep Simulation Only
-      run: |
-        ./script/test tar posix 1.1
-        ./script/test untar simulation 1.1
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-expects-5
-        path: tmp/coverage.info
+#        sudo netstat -nap | grep 5353
+#        sudo apt-get install --no-install-recommends -y dnsmasq bind9-host ntp
+#        sudo netstat -nap | grep 5353
+#        sudo systemctl start dnsmasq ntp
+#        sudo netstat -nap | grep 5353
+#        host ipv6.google.com 127.0.0.1
+#        echo 'listen-address=::1' | sudo tee /etc/dnsmasq.conf
+#        echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
+#        sudo systemctl restart dnsmasq
+#        host ipv6.google.com ::1
+#        OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
+#    - name: Keep POSIX Only
+#      run: |
+#        ./script/test tar simulation 1.1
+#    - name: Generate Coverage
+#      run: |
+#        ./script/test generate_coverage gcc
+#    - uses: actions/upload-artifact@v2
+#      with:
+#        name: cov-expects-4
+#        path: tmp/coverage.info
+#    - name: Keep Simulation Only
+#      run: |
+#        ./script/test tar posix 1.1
+#        ./script/test untar simulation 1.1
+#    - name: Generate Coverage
+#      run: |
+#        ./script/test generate_coverage gcc
+#    - uses: actions/upload-artifact@v2
+#      with:
+#        name: cov-expects-5
+#        path: tmp/coverage.info
 
   external-commissioner:
     runs-on: ubuntu-20.04
