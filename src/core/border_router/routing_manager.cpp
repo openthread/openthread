@@ -147,20 +147,23 @@ void RoutingManager::Start()
 
 void RoutingManager::Stop()
 {
+    Ip6::Prefix invalidOmrPrefix;
+    Ip6::Prefix invalidOnLinkPrefix;
+
     if (mAdvertisedOmrPrefix == mLocalOmrPrefix)
     {
         UnpublishOmrPrefix(mAdvertisedOmrPrefix);
     }
+
+    invalidOmrPrefix.Clear();
+    invalidOnLinkPrefix.Clear();
+
+    // Use invalid OMR & on-link prefixes to invalidate possiblely advertised prefixes.
+    SendRouterAdvertisement(invalidOmrPrefix, invalidOnLinkPrefix);
+
     mAdvertisedOmrPrefix.Clear();
+    mAdvertisedOnLinkPrefix.Clear();
 
-    if (mAdvertisedOnLinkPrefix == mLocalOnLinkPrefix)
-    {
-        // TODO(wgtdkp): Invalidate the on-link prefix by sending
-        // PIO with zero valid lifetime. Invalidate the OMR prefix
-        // by sending RIO with zero route lifetime.
-
-        mAdvertisedOnLinkPrefix.Clear();
-    }
     mDiscoveredOnLinkPrefix.Clear();
     mDiscoveredOnLinkPrefixInvalidTimer.Stop();
 
@@ -408,11 +411,12 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix &aNewOmrPrefix, c
     memcpy(buffer, &routerAdv, sizeof(routerAdv));
     bufferLength += sizeof(routerAdv);
 
-    // Invalidate the advertised prefix if we are advertising a new prefix.
+    // Invalidate the advertised on-link prefix if we are advertising a new prefix.
     if (IsValidOnLinkPrefix(mAdvertisedOnLinkPrefix) && aNewOnLinkPrefix != mAdvertisedOnLinkPrefix)
     {
         RouterAdv::PrefixInfoOption pio;
 
+        // Set zero valid lifetime to immediately invalidate the previous on-link prefix.
         pio.SetValidLifetime(0);
         pio.SetPreferredLifetime(0);
         pio.SetPrefix(mAdvertisedOnLinkPrefix);
@@ -449,6 +453,23 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix &aNewOmrPrefix, c
 
         otLogInfoBr("send on-link prefix %s in PIO (valid lifetime = %u)", aNewOnLinkPrefix.ToString().AsCString(),
                     kDefaultOnLinkPrefixLifetime);
+    }
+
+    // Invalidate the advertised OMR prefix if we are advertising a new prefix.
+    if (IsValidOmrPrefix(mAdvertisedOmrPrefix) && aNewOmrPrefix != mAdvertisedOmrPrefix)
+    {
+        RouterAdv::RouteInfoOption rio;
+
+        // Set zero route lifetime to immediately invalidate the previous OMR prefix.
+        rio.SetRouteLifetime(0);
+        rio.SetPrefix(mAdvertisedOmrPrefix);
+
+        OT_ASSERT(bufferLength + rio.GetLength() <= sizeof(buffer));
+        memcpy(buffer + bufferLength, &rio, rio.GetLength());
+        bufferLength += rio.GetLength();
+
+        otLogInfoBr("stop advertising OMR prefix %s on interface %s", mAdvertisedOmrPrefix.ToString().AsCString(),
+                    mInfraIfName);
     }
 
     if (IsValidOmrPrefix(aNewOmrPrefix))

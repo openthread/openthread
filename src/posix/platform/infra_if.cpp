@@ -325,12 +325,17 @@ void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet)
                  cmh->cmsg_len == CMSG_LEN(sizeof(int)))
         {
             hopLimit = *(int *)CMSG_DATA(cmh);
-            // TODO(wgtdkp):
             OT_UNUSED_VARIABLE(hopLimit);
         }
     }
 
     VerifyOrExit(ifIndex == sInfraIfIndex);
+
+    // We currently acepts only RA & RS messages for the Border Router and it requires that
+    // the hoplimit must be 255.
+    VerifyOrExit(hopLimit == 255);
+
+    // Drop multicast messages sent by ourselves.
     VerifyOrExit(!otIp6IsAddressEqual(&sInfraIfLinkLocalAddr, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr)));
     otPlatInfraIfRecvIcmp6(aInstance, ifIndex, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr), buffer,
                            bufferLength);
