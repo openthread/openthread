@@ -56,17 +56,17 @@ if(OT_BORDER_ROUTER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1")
 endif()
 
+option(OT_BORDER_ROUTING "enable (duckhorn) border routing support")
+if(OT_BORDER_ROUTING)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1")
+endif()
+
 if(NOT OT_EXTERNAL_MBEDTLS)
     set(OT_MBEDTLS mbedtls)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=1")
 else()
     set(OT_MBEDTLS ${OT_EXTERNAL_MBEDTLS})
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=0")
-endif()
-
-option(OT_BORDER_ROUTING "enable border routing support")
-if(OT_BORDER_ROUTING)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1")
 endif()
 
 option(OT_BUILTIN_MBEDTLS_MANAGEMENT "enable builtin mbedtls management" ON)

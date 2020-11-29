@@ -36,7 +36,7 @@
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#if __APPLE__
+#ifdef __APPLE__
 #define __APPLE_USE_RFC_3542
 #endif
 
@@ -167,21 +167,20 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
     OT_UNUSED_VARIABLE(aInstance);
 
     // Initializes the infra interface.
-    if (strlen(aIfName) >= sizeof(sInfraIfName))
-    {
-        otLogCritPlat("infra interface name '%s' is too long", aIfName);
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
-
     ifIndex = if_nametoindex(aIfName);
     if (ifIndex == 0)
     {
         otLogCritPlat("failed to get the index for infra interface %s: %s", aIfName, strerror(errno));
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
-
-    strncpy(sInfraIfName, aIfName, sizeof(sInfraIfName));
     sInfraIfIndex = ifIndex;
+
+    if (strlen(aIfName) >= sizeof(sInfraIfName))
+    {
+        otLogCritPlat("infra interface name '%s' is too long", aIfName);
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
+    strcpy(sInfraIfName, aIfName);
 
     // Initializes the ICMPv6 socket.
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
