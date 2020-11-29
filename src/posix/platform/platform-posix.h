@@ -39,6 +39,7 @@
 
 #include <errno.h>
 #include <net/if.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/select.h>
@@ -463,47 +464,54 @@ extern char gBackboneNetifName[IFNAMSIZ];
  */
 extern unsigned int gBackboneNetifIndex;
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 /**
- * This function initializes the RA-based routing manager.
+ * Thid function initializes the infrastructrue interface.
  *
- * @param  aInstance        The OpenThread instance structure.
- * @param  aInfraNetifName  The name of an infrastructure interface.
+ * @param[in]  aInstance  The OpenThread instance.
+ * @param[in]  aIfName    The name of the infrastructure interface.
  *
  */
-void platformRoutingManagerInit(otInstance *aInstance, const char *aInfraNetifName);
+void platformInfraIfInit(otInstance *aInstance, const char *aIfName);
 
 /**
- * This function deinitializes the RA-based routing manager.
+ * This function deinitializes the infrastructure interface.
  *
  */
-void platformRoutingManagerDeinit();
+void platformInfraIfDeinit();
 
 /**
- * This function updates the mainloop context.
+ * This function updates the read fd set.
  *
- * @param  aMainloop  The mainloop context to be updated.
+ * @param[out]  aReadFdSet  The fd set to be updated.
+ * @param[out]  aMaxFd      The maximum fd to be updated.
  *
  */
-void platformRoutingManagerUpdate(otSysMainloopContext *aMainloop);
+void platformInfraIfUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd);
 
 /**
- * This function process events in a mainloop.
+ * This function processes possible events on the infrastructrue interface.
  *
- * @param[in]  aMainloop  The mainloop context to be processed.
+ * @param[in]  aInstance   The OpenThread instance.
+ * @param[in]  aReadFdSet  The fd set which may contain read vents.
  *
  */
-void platformRoutingManagerProcess(const otSysMainloopContext *aMainloop);
+void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet);
 
 /**
- * This function performs notifies state changes to platform Routing Manager.
+ * This function returns the name of the intrastructure interface.
  *
- * @param[in]   aInstance       A pointer to the OpenThread instance.
- * @param[in]   aFlags          Flags that denote the state change events.
+ * @retval  The name of the infrasturcture interface.
  *
  */
-void platformRoutingManagerStateChange(otInstance *aInstance, otChangedFlags aFlags);
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+const char *platformInfraIfGetName();
+
+/**
+ * This function returns the index of the infrastructure interface.
+ *
+ * @retval  The index of the infrastructure interface. 0 indicates invalid index.
+ *
+ */
+uint32_t platformInfraIfGetIndex();
 
 #ifdef __cplusplus
 }

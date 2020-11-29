@@ -38,6 +38,7 @@
 #include <assert.h>
 
 #include <openthread-core-config.h>
+#include <openthread/border_router.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/otns.h>
@@ -46,8 +47,7 @@
 
 #include "common/code_utils.hpp"
 
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE || \
-    OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 static void processStateChange(otChangedFlags aFlags, void *aContext)
 {
     otInstance *instance = static_cast<otInstance *>(aContext);
@@ -61,10 +61,6 @@ static void processStateChange(otChangedFlags aFlags, void *aContext)
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneStateChange(instance, aFlags);
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    platformRoutingManagerStateChange(instance, aFlags);
 #endif
 }
 #endif
@@ -99,19 +95,23 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     platformBackboneInit(instance, aPlatformConfig->mBackboneInterfaceName);
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    // Reuse the backbone interface name.
+    platformInfraIfInit(instance, aPlatformConfig->mBackboneInterfaceName);
+#endif
+
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifInit(instance, aPlatformConfig->mInterfaceName);
 #elif OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpInit(aPlatformConfig->mInterfaceName);
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE || \
-    OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     SuccessOrDie(otSetStateChangedCallback(instance, processStateChange, instance));
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    platformRoutingManagerInit(instance, aPlatformConfig->mBackboneInterfaceName);
+    SuccessOrDie(otBorderRouterInit(instance, platformInfraIfGetIndex(), platformInfraIfGetName()));
 #endif
 
     return instance;
@@ -129,7 +129,7 @@ void otSysDeinit(void)
     IgnoreError(otPlatUartDisable());
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    platformRoutingManagerDeinit();
+    platformInfraIfDeinit();
 #endif
 }
 
@@ -181,15 +181,14 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneUpdateFdSet(aMainloop->mReadFdSet, aMainloop->mMaxFd);
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    platformInfraIfUpdateFdSet(aMainloop->mReadFdSet, aMainloop->mMaxFd);
+#endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
                            &aMainloop->mTimeout);
 #else
     platformRadioUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    platformRoutingManagerUpdate(aMainloop);
 #endif
 
     if (otTaskletsArePending(aInstance))
@@ -260,9 +259,8 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneProcess(aMainloop->mReadFdSet);
 #endif
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    platformRoutingManagerProcess(aMainloop);
+    platformInfraIfProcess(aInstance, aMainloop->mReadFdSet);
 #endif
 }
 

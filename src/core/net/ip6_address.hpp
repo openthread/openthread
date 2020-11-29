@@ -87,7 +87,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Prefix : public otIp6Prefix
+class Prefix : public otIp6Prefix, public Clearable<Prefix>
 {
 public:
     enum : uint8_t
@@ -206,6 +206,30 @@ public:
         return (mLength >= NetworkPrefix::kLength) &&
                (MatchLength(GetBytes(), aSubPrefix.m8, NetworkPrefix::kSize) >= NetworkPrefix::kLength);
     }
+
+    /**
+     * This method overloads operator `<` to evaluate whether this prefix is
+     * smaller than the other.
+     *
+     * @param[in]  aOther  The other prefix to compare with.
+     *
+     * @retval TRUE   If this prefix is smaller than the other.
+     * @retval FALSE  If this prefix is equal or greater than the other.
+     *
+     */
+    bool operator<(const Prefix &aOther) const;
+
+    /**
+     * This method overloads operator `>` to evaluate whether this prefix is
+     * greater than the other.
+     *
+     * @param[in]  aOther  The other prefix to compare with.
+     *
+     * @retval TRUE   If this prefix is greater than the other.
+     * @retval FALSE  If this prefix is equal or smaller than the other.
+     *
+     */
+    bool operator>(const Prefix &aOther) const { return aOther < *this; }
 
     /**
      * This method overloads operator `==` to evaluate whether or not two prefixes are equal.

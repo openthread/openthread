@@ -53,6 +53,20 @@ extern "C" {
  */
 
 /**
+ * This method initializes the Border Router on given infrastructure interface.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aInfraIfIndex  The infrastructure interface index.
+ * @param[in]  aInfraIfName   The infrastructure interface name.
+ *
+ * @retval  OT_ERROR_NONE          Successfully started the Border Router on given infrastructure.
+ * @retval  OT_ERROR_INVALID_ARGS  Failed to start the Border Router.
+ * @retval  OT_ERROR_ALREADY       The Border Router has already been initialized.
+ *
+ */
+otError otBorderRouterInit(otInstance *aInstance, uint32_t aInfraIfIndex, const char *aInfraIfName);
+
+/**
  * This method provides a full or stable copy of the local Thread Network Data.
  *
  * @param[in]     aInstance    A pointer to an OpenThread instance.
