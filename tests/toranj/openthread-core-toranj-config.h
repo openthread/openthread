@@ -40,6 +40,14 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+ *
+ * Define to 1 to enable Thread Test Harness reference device support.
+ *
+ */
+#define OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
  *
  * Define to 1 to enable Border Router support.
