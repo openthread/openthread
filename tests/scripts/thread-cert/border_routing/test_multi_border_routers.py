@@ -87,7 +87,7 @@ class MultiThreadNetworks(thread_cert.TestCase):
     }
 
     def test(self):
-        self.nodes[HOST].start(start_radvd = True, prefix = config.ONLINK_PREFIX, slaac = True)
+        self.nodes[HOST].start(start_radvd=True, prefix=config.ONLINK_PREFIX, slaac=True)
         self.simulator.go(5)
 
         self.nodes[BR1].start()
@@ -128,9 +128,11 @@ class MultiThreadNetworks(thread_cert.TestCase):
 
         # Both Router1 and BR2 can ping to/from the Host on infra link.
         self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
-        self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
+        self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
+                                              backbone=True))
         self.assertTrue(self.nodes[BR2].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
-        self.assertTrue(self.nodes[HOST].ping(self.nodes[BR2].get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
+        self.assertTrue(self.nodes[HOST].ping(self.nodes[BR2].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
+                                              backbone=True))
 
 
 if __name__ == '__main__':
