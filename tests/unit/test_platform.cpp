@@ -610,4 +610,19 @@ void otPlatOtnsStatus(const char *aStatus)
 }
 #endif // OPENTHREAD_CONFIG_OTNS_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
+                               const otIp6Address *aDestAddress,
+                               const uint8_t *     aBuffer,
+                               uint16_t            aBufferLength)
+{
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+    OT_UNUSED_VARIABLE(aDestAddress);
+    OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aBufferLength);
+
+    return OT_ERROR_FAILED;
+}
+#endif
+
 } // extern "C"
