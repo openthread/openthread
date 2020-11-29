@@ -2134,7 +2134,7 @@ interface eth0
 	AdvSendAdvert on;
 
 	MinRtrAdvInterval 3;
-	MaxRtrAdvInterval 5;
+	MaxRtrAdvInterval 30;
 	AdvDefaultPreference low;
 
 	prefix %s
