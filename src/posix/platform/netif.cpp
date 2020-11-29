@@ -143,8 +143,6 @@ extern int
 #include <openthread/message.h>
 #include <openthread/platform/misc.h>
 
-#include "address_utils.hpp"
-
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
 #include "net/ip6_address.hpp"
@@ -154,7 +152,39 @@ char         gNetifName[IFNAMSIZ];
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 
-using namespace ot::Posix;
+namespace {
+
+/**
+ * This utility class converts binary IPv6 address to text format.
+ *
+ */
+class Ip6AddressString
+{
+public:
+    /**
+     * The constructor of this converter.
+     *
+     * @param[in]   aAddress    A pointer to a buffer holding an IPv6 address.
+     *
+     */
+    Ip6AddressString(const void *aAddress)
+    {
+        VerifyOrDie(inet_ntop(AF_INET6, aAddress, mBuffer, sizeof(mBuffer)) != nullptr, OT_EXIT_ERROR_ERRNO);
+    }
+
+    /**
+     * This method returns the string as a null-terminated C string.
+     *
+     * @returns The null-terminated C string.
+     *
+     */
+    const char *AsCString(void) const { return mBuffer; }
+
+private:
+    char mBuffer[INET6_ADDRSTRLEN];
+};
+
+} // namespace
 
 #ifndef OPENTHREAD_POSIX_TUN_DEVICE
 
@@ -272,6 +302,32 @@ static bool UnicastAddressIsSubscribed(otInstance *aInstance, const otNetifAddre
 }
 #endif
 
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+static const uint8_t allOnes[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+static void InitNetaskWithPrefixLength(struct in6_addr *address, uint8_t prefixLen)
+{
+#define MAX_PREFIX_LENGTH (OT_IP6_ADDRESS_SIZE * CHAR_BIT)
+    if (prefixLen > MAX_PREFIX_LENGTH)
+    {
+        prefixLen = MAX_PREFIX_LENGTH;
+    }
+
+    ot::Ip6::Address addr;
+
+    addr.Clear();
+    addr.SetPrefix(allOnes, prefixLen);
+    memcpy(address, addr.mFields.m8, sizeof(addr.mFields.m8));
+}
+
+static uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
+{
+    return otIp6PrefixMatch(reinterpret_cast<const otIp6Address *>(netmask->sin6_addr.s6_addr),
+                            reinterpret_cast<const otIp6Address *>(allOnes));
+}
+#endif
+
 #if defined(__linux__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
@@ -359,9 +415,9 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddres
         ifr6.ifra_addr.sin6_family = AF_INET6;
         ifr6.ifra_addr.sin6_len    = sizeof(ifr6.ifra_addr);
         memcpy(&ifr6.ifra_addr.sin6_addr, aAddressInfo.mAddress, sizeof(struct in6_addr));
-        ifr6.ifra_prefixmask.sin6_family  = AF_INET6;
-        ifr6.ifra_prefixmask.sin6_len     = sizeof(ifr6.ifra_prefixmask);
-        ifr6.ifra_prefixmask.sin6_addr    = PrefixLengthToNetmask(aAddressInfo.mPrefixLength);
+        ifr6.ifra_prefixmask.sin6_family = AF_INET6;
+        ifr6.ifra_prefixmask.sin6_len    = sizeof(ifr6.ifra_prefixmask);
+        InitNetaskWithPrefixLength(&ifr6.ifra_prefixmask.sin6_addr, aAddressInfo.mPrefixLength);
         ifr6.ifra_lifetime.ia6t_vltime    = ND6_INFINITE_LIFETIME;
         ifr6.ifra_lifetime.ia6t_pltime    = ND6_INFINITE_LIFETIME;
 
@@ -894,9 +950,9 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                         memcpy(&ifr6.ifra_addr.sin6_addr, &addr6.sin6_addr, sizeof(struct in6_addr));
                         ifr6.ifra_prefixmask.sin6_family = AF_INET6;
                         ifr6.ifra_prefixmask.sin6_len    = sizeof(ifr6.ifra_prefixmask);
-                        ifr6.ifra_prefixmask.sin6_addr   = PrefixLengthToNetmask(netAddr.mPrefixLength);
-                        ifr6.ifra_lifetime.ia6t_vltime   = ND6_INFINITE_LIFETIME;
-                        ifr6.ifra_lifetime.ia6t_pltime   = ND6_INFINITE_LIFETIME;
+                        InitNetaskWithPrefixLength(&ifr6.ifra_prefixmask.sin6_addr, netAddr.mPrefixLength);
+                        ifr6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
+                        ifr6.ifra_lifetime.ia6t_pltime = ND6_INFINITE_LIFETIME;
 
 #if defined(__APPLE__)
                         ifr6.ifra_lifetime.ia6t_expire    = ND6_INFINITE_LIFETIME;
