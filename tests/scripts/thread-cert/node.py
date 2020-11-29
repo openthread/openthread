@@ -2151,7 +2151,6 @@ EOF
 
     def _service_radvd_stop(self):
         self.bash('service radvd stop')
-        self.bash('service radvd status')
 
 
 if __name__ == '__main__':
