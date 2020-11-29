@@ -68,7 +68,7 @@ otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
     struct iovec        iov;
     struct in6_pktinfo *packetInfo;
 
-    uint8_t __attribute__((aligned(8))) cmsgBuffer[CMSG_SPACE(sizeof(*packetInfo))];
+    uint8_t             cmsgBuffer[CMSG_SPACE(sizeof(*packetInfo))];
     struct msghdr       msgHeader;
     struct cmsghdr *    cmsgPointer;
     ssize_t             rval;
