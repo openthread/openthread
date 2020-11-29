@@ -32,26 +32,29 @@ import unittest
 import config
 import thread_cert
 
-# Test description: Here is the test case `5.11.1 DUA-TC-04: DUA re-registration`
+# Test description:
+#   This test verifies bi-directional connectivity accross multiple Thread networks.
 #
 # Topology:
-#    -----------(eth)----------------
-#           |           |    |
-#          BR1         BR2  HOST
-#           |           |
-#          ED1         ED2
+#    -------------(eth)----------------
+#           |               |
+#          BR1             BR2
+#           |               |
+#          ED1             ED2
+#
+#     Thread Net1       Thread Net2
 #
 
 BR1 = 1
 ROUTER1 = 2
 BR2 = 3
 ROUTER2 = 4
-HOST = 5
 
 CHANNEL1 = 18
 CHANNEL2 = 19
 
-class BorderRouting(thread_cert.TestCase):
+
+class MultiThreadNetworks(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
@@ -85,16 +88,9 @@ class BorderRouting(thread_cert.TestCase):
             'channel': CHANNEL2,
             'router_selection_jitter': 1,
         },
-        HOST: {
-            'name': 'Host',
-            'is_host': True
-        },
     }
 
     def test(self):
-        self.nodes[HOST].start()
-        # P1: Router_1 is configured with leader weight of 72 in case the test is executed on a CCM network
-
         self.nodes[BR1].start()
         self.simulator.go(5)
         self.assertEqual('leader', self.nodes[BR1].get_state())
@@ -110,9 +106,6 @@ class BorderRouting(thread_cert.TestCase):
         self.nodes[ROUTER2].start()
         self.simulator.go(5)
         self.assertEqual('router', self.nodes[ROUTER2].get_state())
-
-        self.simulator.go(10)  # must wait for DUA_DAD_REPEATS to complete
-        logging.info("Host addresses: %r", self.nodes[HOST].get_addrs())
 
         self.collect_ipaddrs()
 
@@ -131,6 +124,7 @@ class BorderRouting(thread_cert.TestCase):
 
         self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
         self.assertTrue(self.nodes[ROUTER2].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
+
 
 if __name__ == '__main__':
     unittest.main()

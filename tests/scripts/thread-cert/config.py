@@ -78,6 +78,11 @@ ALL_NETWORK_BBRS_ADDRESS = 'ff32:40:fd00:db8:0:0:0:3'
 ALL_DOMAIN_BBRS_ADDRESS = 'ff32:40:fd00:7d03:7d03:7d03:0:3'
 ALL_DOMAIN_BBRS_ADDRESS_ALTER = 'ff32:40:fd00:7d04:7d04:7d04:0:3'
 
+ONLINK_PREFIX = 'fd00:dead:face::/64'
+
+# Any address starts with 'fd' are considered on-link address.
+ONLINK_PREFIX_REGEX_PATTERN = '^fd'
+
 DEFAULT_MASTER_KEY = bytearray([
     0x00,
     0x11,
@@ -107,6 +112,7 @@ class ADDRESS_TYPE(Enum):
     DUA = 'DUA'
     BACKBONE_GUA = 'BACKBONE_GUA'
     OMR = 'OMR'
+    ONLINK_ULA = 'ONLINK_ULA'
 
 
 RSSI = {
