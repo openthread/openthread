@@ -2093,7 +2093,7 @@ class HostNode(LinuxHost, OtbrDocker):
         self.name = name or ('Host%d' % nodeid)
         super().__init__(nodeid, **kwargs)
 
-    def start(self, start_radvd=True, prefix=config.DOMAIN_PREFIX, slaac=True):
+    def start(self, start_radvd=True, prefix=config.DOMAIN_PREFIX, slaac=False):
         self._setup_sysctl()
         if start_radvd:
             self._service_radvd_start(prefix, slaac)
