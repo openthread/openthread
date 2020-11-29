@@ -341,6 +341,8 @@ HEADERS_COMMON                                  = \
     backbone_router/bbr_manager.hpp               \
     backbone_router/multicast_listeners_table.hpp \
     backbone_router/ndproxy_table.hpp             \
+    border_router/router_advertisement.hpp        \
+    border_router/routing_manager.hpp             \
     coap/coap.hpp                                 \
     coap/coap_message.hpp                         \
     coap/coap_secure.hpp                          \
