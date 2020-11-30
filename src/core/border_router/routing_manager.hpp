@@ -78,8 +78,9 @@ public:
      * @param[in]  aInfraIfIndex  An infrastructure network interface index.
      * @param[in]  aInfraIfName   An infrastructure network interface index.
      *
-     * @return  OT_ERROR_NONE          Successfully started the routing manager.
-     * @return  OT_ERROR_INVALID_ARGS  Failed to start the routing manager.
+     * @retval  OT_ERROR_NONE          Successfully started the routing manager.
+     * @retval  OT_ERROR_INVALID_ARGS  The index or name of the infra interface is not valid.
+     * @retval  OT_ERROR_ALREADY       The routing manager has already been initialized.
      *
      */
     otError Init(uint32_t aInfraIfIndex, const char *aInfraIfName);
@@ -145,8 +146,8 @@ private:
     /**
      * This method evaluates the OMR prefix for the Thread Network.
      *
-     * @returns  The new OMR prefix. An invalid OMR prefix means we should
-     *           no longer publish an OMR prefix in the Thread network.
+     * @returns  The new OMR prefix should be advertised. An invalid OMR prefix
+     *           means we should no longer publish an OMR prefix in the Thread network.
      *
      */
     Ip6::Prefix EvaluateOmrPrefix();
@@ -154,8 +155,8 @@ private:
     /**
      * This method evaluates the on-link prefix for the infra link.
      *
-     * @return  The new on-link prefix. An invalid on-link prefix means we
-     *          should no longer advertise an on-link prefix on the infra link.
+     * @returns  The new on-link prefix should be advertised. An invalid on-link prefix
+     *           means we should no longer advertise an on-link prefix on the infra link.
      *
      */
     Ip6::Prefix EvaluateOnLinkPrefix();
