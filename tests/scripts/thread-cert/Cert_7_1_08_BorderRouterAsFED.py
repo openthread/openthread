@@ -86,6 +86,7 @@ class Cert_7_1_8_BorderRouterAsFED(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
+            'router_selection_jitter': 1,
             'allowlist': [ROUTER]
         },
     }
@@ -117,7 +118,7 @@ class Cert_7_1_8_BorderRouterAsFED(thread_cert.TestCase):
         self.simulator.go(10)
 
         self.nodes[FED].stop()
-        self.simulator.go(10)
+        self.simulator.go(250)
 
     def verify(self, pv):
         pkts = pv.pkts
