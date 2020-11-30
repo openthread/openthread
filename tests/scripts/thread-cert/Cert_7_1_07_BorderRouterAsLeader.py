@@ -99,6 +99,7 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
             'is_mtd': True,
             'mode': 'rn',
             'panid': 0xface,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [LEADER]
         },
         SED: {
@@ -115,11 +116,6 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
     CASE_WIRESHARK_PREFS['6lowpan.context1'] = PREFIX_1
     CASE_WIRESHARK_PREFS['6lowpan.context2'] = PREFIX_2
 
-    def _setUpRouter_1(self):
-        self.nodes[ROUTER_1].add_allowlist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER_1].enable_allowlist()
-        self.nodes[ROUTER_1].set_router_selection_jitter(1)
-
     def test(self):
         self.nodes[LEADER].start()
         self.simulator.go(5)
@@ -135,12 +131,12 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
         self.assertEqual(self.nodes[MED].get_state(), 'child')
 
         self.nodes[SED].start()
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.assertEqual(self.nodes[SED].get_state(), 'child')
 
         self.collect_rlocs()
 
-        self.nodes[ROUTER_1].add_prefix(PREFIX_1, 'paros')
+        self.nodes[ROUTER_1].add_prefix(PREFIX_1, 'paosr')
         self.nodes[ROUTER_1].register_netdata()
         self.nodes[ROUTER_2].add_prefix(PREFIX_1, 'paro')
         self.nodes[ROUTER_2].register_netdata()
@@ -273,11 +269,9 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                               NWD_BORDER_ROUTER_TLV,
                               NWD_6LOWPAN_ID_TLV
                              } <= set(p.thread_nwd.tlv.type) and\
-                   p.thread_nwd.tlv.stable == [0, 1, 0, 1, 1] and\
+                   set(p.thread_nwd.tlv.stable) == {0, 1, 1, 1, 0} and\
                    p.mle.tlv.leader_data.data_version ==
                    (_dr_pkt.mle.tlv.leader_data.data_version + 1) % 256 and\
-                   p.mle.tlv.leader_data.stable_data_version ==
-                   (_dr_pkt.mle.tlv.leader_data.stable_data_version + 1) % 256 and\
                    [Ipv6Addr(PREFIX_1[:-3])] ==
                    p.thread_nwd.tlv.prefix
                    ).\
