@@ -296,7 +296,7 @@ jobs:
         path: tmp/coverage.info
 
   thread-border-routing:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 0
