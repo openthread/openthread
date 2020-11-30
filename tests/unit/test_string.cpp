@@ -139,12 +139,28 @@ void TestStringLength(void)
     printf(" -- PASS\n");
 }
 
+void TestUtf8(void)
+{
+    printf("\nTest 5: IsValidUtf8String() function\n");
+
+    VerifyOrQuit(IsValidUtf8String("An ASCII string"), "IsValidUtf8String() ASCII string fails");
+    VerifyOrQuit(IsValidUtf8String(u8"Строка UTF-8"), "IsValidUtf8String() UTF-8 string fails");
+    VerifyOrQuit(!IsValidUtf8String("\xbf"), "IsValidUtf8String() illegal string fails");
+    VerifyOrQuit(!IsValidUtf8String("\xdf"), "IsValidUtf8String() illegal string fails");
+    VerifyOrQuit(!IsValidUtf8String("\xef\x80"), "IsValidUtf8String() illegal string fails");
+    VerifyOrQuit(!IsValidUtf8String("\xf7\x80\x80"), "IsValidUtf8String() illegal string fails");
+    VerifyOrQuit(!IsValidUtf8String("\xff"), "IsValidUtf8String() illegal string fails");
+
+    printf(" -- PASS\n");
+}
+
 } // namespace ot
 
 int main(void)
 {
     ot::TestString();
     ot::TestStringLength();
+    ot::TestUtf8();
     printf("\nAll tests passed.\n");
     return 0;
 }

@@ -258,6 +258,29 @@ private:
  *
  */
 
+/**
+ * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
+ *
+ * @param[in]  aString  A null-terminated byte sequence.
+ *
+ * @retval TRUE   The sequence is a valid UTF-8 string.
+ * @retval FALSE  The sequence is not a valid UTF-8 string.
+ *
+ */
+bool IsValidUtf8String(const char *aString);
+
+/**
+ * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
+ *
+ * @param[in]  aString  A byte sequence.
+ * @param[in]  aLength  Length of the sequence.
+ *
+ * @retval TRUE   The sequence is a valid UTF-8 string.
+ * @retval FALSE  The sequence is not a valid UTF-8 string.
+ *
+ */
+bool IsValidUtf8String(const char *aString, size_t aLength);
+
 } // namespace ot
 
 #endif // STRING_HPP_

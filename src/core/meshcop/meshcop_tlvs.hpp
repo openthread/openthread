@@ -511,7 +511,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return true; }
+    bool IsValid(void) const;
 
     /**
      * This method gets the Network Name value.
