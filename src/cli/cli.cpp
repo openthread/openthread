@@ -1881,7 +1881,7 @@ exit:
 }
 
 #if OPENTHREAD_FTD
-otError Interpreter::ProcessLeaderPartitionId(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessPartitionId(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 

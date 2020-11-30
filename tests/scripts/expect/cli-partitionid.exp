@@ -31,14 +31,14 @@ source "tests/scripts/expect/_common.exp"
 
 spawn_node 1
 
-send "leaderpartitionid preferred 12345678\n"
+send "partitionid preferred 12345678\n"
 expect "Done"
-send "leaderpartitionid preferred\n"
+send "partitionid preferred\n"
 expect "12345678"
 expect "Done"
-send "leaderpartitionid invalid\n"
+send "partitionid invalid\n"
 expect "Error 35: InvalidCommand"
-send "leaderpartitionid\n"
+send "partitionid\n"
 expect "0"
 expect "Done"
 

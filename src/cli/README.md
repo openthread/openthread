@@ -57,7 +57,7 @@ Done
 - [joinerport](#joinerport-port)
 - [keysequence](#keysequence-counter)
 - [leaderdata](#leaderdata)
-- [leaderpartitionid](#leaderpartitionid)
+- [partitionid](#partitionid)
 - [leaderweight](#leaderweight)
 - [linkmetrics](#linkmetrics-mgmt-ipaddr-forward-seriesid-ldraxpqmr)
 - [linkquality](#linkquality-extaddr)
@@ -1093,36 +1093,36 @@ Set Thread Key Switch Guard Time (in hours) 0 means Thread Key Switch imediately
 Done
 ```
 
-### leaderpartitionid
+### partitionid
 
 Get the Thread Network Partition ID.
 
 ```bash
-> leaderpartitionid
+> partitionid
 4294967295
 Done
 ```
 
-### leaderpartitionid preferred
+### partitionid preferred
 
 Get the preferred Thread Leader Partition ID.
 
 `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
 
 ```bash
-> leaderpartitionid preferred
+> partitionid preferred
 4294967295
 Done
 ```
 
-### leaderpartitionid preferred \<partitionid\>
+### partitionid preferred \<partitionid\>
 
 Set the preferred Thread Leader Partition ID.
 
 `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
 
 ```bash
-> leaderpartitionid preferred 0xffffffff
+> partitionid preferred 0xffffffff
 Done
 ```
 

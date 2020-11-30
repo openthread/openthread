@@ -381,7 +381,7 @@ private:
     otError ProcessKeySequence(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessLeaderData(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
-    otError ProcessLeaderPartitionId(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessPartitionId(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessLeaderWeight(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessMasterKey(uint8_t aArgsLength, char *aArgs[]);
@@ -661,7 +661,6 @@ private:
         {"keysequence", &Interpreter::ProcessKeySequence},
         {"leaderdata", &Interpreter::ProcessLeaderData},
 #if OPENTHREAD_FTD
-        {"leaderpartitionid", &Interpreter::ProcessLeaderPartitionId},
         {"leaderweight", &Interpreter::ProcessLeaderWeight},
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
@@ -699,6 +698,7 @@ private:
         {"parent", &Interpreter::ProcessParent},
 #if OPENTHREAD_FTD
         {"parentpriority", &Interpreter::ProcessParentPriority},
+        {"partitionid", &Interpreter::ProcessPartitionId},
 #endif
         {"ping", &Interpreter::ProcessPing},
         {"pollperiod", &Interpreter::ProcessPollPeriod},
