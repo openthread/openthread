@@ -37,6 +37,7 @@
 
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
+#include "net/dns_client.hpp"
 
 using namespace ot;
 
@@ -45,6 +46,6 @@ otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsR
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Dns::Client>().Query(aQuery, aHandler, aContext);
+    return instance.Get<Dns::Client>().Query(*static_cast<const Dns::Client::QueryInfo *>(aQuery), aHandler, aContext);
 }
 #endif

@@ -36,8 +36,10 @@
 
 #include "openthread-core-config.h"
 
+#include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
+#include "net/ip6_address.hpp"
 
 namespace ot {
 
@@ -67,14 +69,14 @@ using ot::Encoding::BigEndian::HostSwap32;
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Header
+class Header : public Clearable<Header>
 {
 public:
     /**
      * Default constructor for DNS Header.
      *
      */
-    Header(void) { memset(this, 0, sizeof(*this)); }
+    Header(void) { Clear(); }
 
     /**
      * This method returns the Message ID.
@@ -106,6 +108,7 @@ public:
      * This method returns the type of the message.
      *
      * @returns The type of the message.
+     *
      */
     Type GetType(void) const { return static_cast<Type>((mFlags[0] & kQrFlagMask) >> kQrFlagOffset); }
 
@@ -138,6 +141,7 @@ public:
      * This method returns the type of the query.
      *
      * @returns The type of the query.
+     *
      */
     QueryType GetQueryType(void) const { return static_cast<QueryType>((mFlags[0] & kOpCodeMask) >> kOpCodeOffset); }
 
@@ -158,6 +162,7 @@ public:
      * authority for the domain name in question section.
      *
      * @returns True if Authoritative Answer flag (AA) is set in the header, false otherwise.
+     *
      */
     bool IsAuthoritativeAnswerFlagSet(void) const { return (mFlags[0] & kAaFlagMask) == kAaFlagMask; }
 
@@ -177,6 +182,7 @@ public:
      * This method specifies if message is truncated.
      *
      * @returns True if Truncation flag (TC) is set in the header, false otherwise.
+     *
      */
     bool IsTruncationFlagSet(void) const { return (mFlags[0] & kTcFlagMask) == kTcFlagMask; }
 
@@ -197,6 +203,7 @@ public:
      * the query recursively.
      *
      * @returns True if Recursion Desired flag (RD) is set in the header, false otherwise.
+     *
      */
     bool IsRecursionDesiredFlagSet(void) const { return (mFlags[0] & kRdFlagMask) == kRdFlagMask; }
 
@@ -254,6 +261,7 @@ public:
      * This method returns the response code.
      *
      * @returns The response code from the header.
+     *
      */
     Response GetResponseCode(void) const { return static_cast<Response>((mFlags[1] & kRCodeMask) >> kRCodeOffset); }
 
@@ -340,30 +348,29 @@ private:
      */
     enum
     {
-        kQrFlagOffset = 7,                     ///< QR Flag offset.
-        kQrFlagMask   = 0x01 << kQrFlagOffset, ///< QR Flag mask.
-        kOpCodeOffset = 3,                     ///< OpCode field offset.
-        kOpCodeMask   = 0x0f << kOpCodeOffset, ///< OpCode field mask.
-        kAaFlagOffset = 2,                     ///< AA Flag offset.
-        kAaFlagMask   = 0x01 << kAaFlagOffset, ///< AA Flag mask.
-        kTcFlagOffset = 1,                     ///< TC Flag offset.
-        kTcFlagMask   = 0x01 << kTcFlagOffset, ///< TC Flag mask.
-        kRdFlagOffset = 0,                     ///< RD Flag offset.
-        kRdFlagMask   = 0x01 << kRdFlagOffset, ///< RD Flag mask.
+        kQrFlagOffset = 7,                     // QR Flag offset.
+        kQrFlagMask   = 0x01 << kQrFlagOffset, // QR Flag mask.
+        kOpCodeOffset = 3,                     // OpCode field offset.
+        kOpCodeMask   = 0x0f << kOpCodeOffset, // OpCode field mask.
+        kAaFlagOffset = 2,                     // AA Flag offset.
+        kAaFlagMask   = 0x01 << kAaFlagOffset, // AA Flag mask.
+        kTcFlagOffset = 1,                     // TC Flag offset.
+        kTcFlagMask   = 0x01 << kTcFlagOffset, // TC Flag mask.
+        kRdFlagOffset = 0,                     // RD Flag offset.
+        kRdFlagMask   = 0x01 << kRdFlagOffset, // RD Flag mask.
 
-        kRaFlagOffset = 7,                     ///< RA Flag offset.
-        kRaFlagMask   = 0x01 << kRaFlagOffset, ///< RA Flag mask.
-        kRCodeOffset  = 0,                     ///< RCODE field offset.
-        kRCodeMask    = 0x0f << kRCodeOffset,  ///< RCODE field mask.
+        kRaFlagOffset = 7,                     // RA Flag offset.
+        kRaFlagMask   = 0x01 << kRaFlagOffset, // RA Flag mask.
+        kRCodeOffset  = 0,                     // RCODE field offset.
+        kRCodeMask    = 0x0f << kRCodeOffset,  // RCODE field mask.
     };
 
-    uint16_t
-             mMessageId; ///< A message identifier that is used by the requester to match up replies to outstanding queries.
-    uint8_t  mFlags[2]; ///< DNS header flags.
-    uint16_t mQdCount;  ///< A number specifying the number of entries in the question section.
-    uint16_t mAnCount;  ///< A number specifying the number of entries in the answer section.
-    uint16_t mNsCount;  ///< A number specifying the number of entries in the authority records section.
-    uint16_t mArCount;  ///< A number specifying the number of entries in the additional records section.
+    uint16_t mMessageId; // Message identifier for requester to match up replies to outstanding queries.
+    uint8_t  mFlags[2];  // DNS header flags.
+    uint16_t mQdCount;   // Number of entries in the question section.
+    uint16_t mAnCount;   // Number of entries in the answer section.
+    uint16_t mNsCount;   // Number of entries in the authority records section.
+    uint16_t mArCount;   // Number of entries in the additional records section.
 
 } OT_TOOL_PACKED_END;
 
@@ -379,6 +386,7 @@ public:
      * This method returns the type of the resource record.
      *
      * @returns The type of the resource record.
+     *
      */
     uint16_t GetType(void) const { return HostSwap16(mType); }
 
@@ -409,6 +417,7 @@ public:
      * This method returns the time to live field of the resource record.
      *
      * @returns The time to live field of the resource record.
+     *
      */
     uint32_t GetTtl(void) const { return HostSwap32(mTtl); }
 
@@ -436,10 +445,10 @@ public:
     void SetLength(uint16_t aLength) { mLength = HostSwap16(aLength); }
 
 private:
-    uint16_t mType;   ///< The type of the data in RDATA section.
-    uint16_t mClass;  ///< The class of the data in RDATA section.
-    uint32_t mTtl;    ///< Specifies the maximum time that the resource record may be cached.
-    uint16_t mLength; ///< The length of RDATA section in bytes.
+    uint16_t mType;   // The type of the data in RDATA section.
+    uint16_t mClass;  // The class of the data in RDATA section.
+    uint32_t mTtl;    // Specifies the maximum time that the resource record may be cached.
+    uint16_t mLength; // The length of RDATA section in bytes.
 
 } OT_TOOL_PACKED_END;
 
@@ -451,12 +460,18 @@ OT_TOOL_PACKED_BEGIN
 class ResourceRecordAaaa : public ResourceRecord
 {
 public:
-    enum
+    /**
+     * This static method indicated whether or not a given Resource Record is of AAAA type.
+     *
+     * @param[in] aRecord  A Resource Record.
+     *
+     * @returns TRUE if @p aRecord is of AAAA type, FALSE otherwise.
+     *
+     */
+    static bool IsAaaa(const ResourceRecord &aRecord)
     {
-        kType   = 0x1C, ///< AAAA Resource Record type.
-        kClass  = 0x01, ///< The value of the Internet class.
-        kLength = 16,   ///< Size of the AAAA Resource Record type.
-    };
+        return (aRecord.GetType() == kType) && (aRecord.GetClass() == kClass);
+    }
 
     /**
      * This method initializes the AAAA Resource Record.
@@ -468,7 +483,7 @@ public:
         ResourceRecord::SetClass(kClass);
         ResourceRecord::SetTtl(0);
         ResourceRecord::SetLength(kLength);
-        memset(&mAddress, 0, sizeof(mAddress));
+        mAddress.Clear();
     }
 
     /**
@@ -477,17 +492,25 @@ public:
      * @param[in]  aAddress The IPv6 address of the resource record.
      *
      */
-    void SetAddress(otIp6Address &aAddress) { mAddress = aAddress; }
+    void SetAddress(Ip6::Address &aAddress) { mAddress = aAddress; }
 
     /**
      * This method returns the reference to IPv6 address of the resource record.
      *
      * @returns The reference to IPv6 address of the resource record.
+     *
      */
-    otIp6Address &GetAddress(void) { return mAddress; }
+    Ip6::Address &GetAddress(void) { return mAddress; }
 
 private:
-    otIp6Address mAddress; ///< IPv6 Address of AAAA Resource Record.
+    enum
+    {
+        kType   = 0x1C, // AAAA Resource Record type.
+        kClass  = 0x01, // The value of the Internet class.
+        kLength = 16,   // Size of the AAAA Resource Record type.
+    };
+
+    Ip6::Address mAddress; // IPv6 Address of AAAA Resource Record.
 
 } OT_TOOL_PACKED_END;
 
@@ -513,6 +536,7 @@ public:
      * This method returns the type of the question.
      *
      * @returns The type of the question.
+     *
      */
     uint16_t GetType(void) const { return HostSwap16(mType); }
 
@@ -528,6 +552,7 @@ public:
      * This method returns the class of the question.
      *
      * @returns The class of the question.
+     *
      */
     uint16_t GetClass(void) const { return HostSwap16(mClass); }
 
@@ -540,8 +565,8 @@ public:
     void SetClass(uint16_t aClass) { mClass = HostSwap16(aClass); }
 
 private:
-    uint16_t mType;  ///< The type of the data in question section.
-    uint16_t mClass; ///< The class of the data in question section.
+    uint16_t mType;  // The type of the data in question section.
+    uint16_t mClass; // The class of the data in question section.
 
 } OT_TOOL_PACKED_END;
 
@@ -552,12 +577,6 @@ private:
 class QuestionAaaa : public Question
 {
 public:
-    enum
-    {
-        kType  = 0x1C, ///< AAAA Resource Record type.
-        kClass = 0x01, ///< The value of the Internet class.
-    };
-
     /**
      * Default constructor for AAAA Question.
      *
@@ -577,6 +596,13 @@ public:
      *
      */
     otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
+
+private:
+    enum
+    {
+        kType  = 0x1C, // AAAA Resource Record type.
+        kClass = 0x01, // The value of the Internet class.
+    };
 };
 
 /**

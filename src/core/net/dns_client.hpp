@@ -56,6 +56,55 @@ class Client : private NonCopyable
 {
 public:
     /**
+     * This type represents a DNS Query info/parameters.
+     *
+     */
+    class QueryInfo : public otDnsQuery
+    {
+    public:
+        /**
+         * This method indicates whether the `QueryInfo` object is valid or not.
+         *
+         * @returns TRUE if the `QueryInfo` is valid, FALSE otherwise.
+         *
+         */
+        bool IsValid(void) const { return (mHostname != nullptr) && (mMessageInfo != nullptr); }
+
+        /**
+         * This method gets the host name in a DNS query.
+         *
+         * @return The host name.
+         *
+         */
+        const char *GetHostname(void) const { return mHostname; }
+
+        /**
+         * This method gets the `MessageInfo` related to DNS Server.
+         *
+         * @returns The `MessageInfo` of DNS Server.
+         *
+         */
+        const Ip6::MessageInfo &GetMessageInfo(void) const
+        {
+            return *static_cast<const Ip6::MessageInfo *>(mMessageInfo);
+        }
+
+        /**
+         * This method indicates whether or not the name server can pursue the query recursively.
+         *
+         * @returns TRUE if no recursion is allowed, FALSE otherwise.
+         *
+         */
+        bool IsNoRecursion(void) const { return mNoRecursion; }
+    };
+
+    /**
+     * This type represents the function pointer type which is called when a DNS response is received.
+     *
+     */
+    typedef otDnsResponseHandler ResponseHandler;
+
+    /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -68,6 +117,7 @@ public:
      *
      * @retval OT_ERROR_NONE     Successfully started the DNS client.
      * @retval OT_ERROR_ALREADY  The socket is already open.
+     *
      */
     otError Start(void);
 
@@ -91,7 +141,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  Invalid arguments supplied.
      *
      */
-    otError Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, void *aContext);
+    otError Query(const QueryInfo &aQuery, ResponseHandler aHandler, void *aContext);
 
 private:
     /**
@@ -128,14 +178,14 @@ private:
         void    ReadFrom(const Message &aMessage);
         void    UpdateIn(Message &aMessage) const;
 
-        const char *         mHostname;
-        otDnsResponseHandler mResponseHandler;
-        void *               mResponseContext;
-        TimeMilli            mTransmissionTime;
-        Ip6::Address         mSourceAddress;
-        Ip6::Address         mDestinationAddress;
-        uint16_t             mDestinationPort;
-        uint8_t              mRetransmissionCount;
+        const char *    mHostname;
+        ResponseHandler mResponseHandler;
+        void *          mResponseContext;
+        TimeMilli       mTransmissionTime;
+        Ip6::Address    mSourceAddress;
+        Ip6::Address    mDestinationAddress;
+        uint16_t        mDestinationPort;
+        uint8_t         mRetransmissionCount;
     };
 
     Message *NewMessage(const Header &aHeader);
@@ -151,7 +201,7 @@ private:
     Message *FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata);
     void     FinalizeDnsTransaction(Message &            aQuery,
                                     const QueryMetadata &aQueryMetadata,
-                                    const otIp6Address * aAddress,
+                                    const Ip6::Address * aAddress,
                                     uint32_t             aTtl,
                                     otError              aResult);
 
