@@ -29,8 +29,10 @@
 
 import unittest
 
+import command
+import dtls
 import thread_cert
-from pktverify.consts import MLE_DISCOVERY_REQUEST, MLE_DISCOVERY_RESPONSE, HANDSHAKE_CLIENT_HELLO, HANDSHAKE_SERVER_HELLO, HANDSHAKE_SERVER_KEY_EXCHANGE, HANDSHAKE_SERVER_HELLO_DONE, HANDSHAKE_CLIENT_KEY_EXCHANGE, HANDSHAKE_HELLO_VERIFY_REQUEST, CONTENT_APPLICATION_DATA, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV, NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_REQUEST_TLV, NM_DISCOVERY_RESPONSE_TLV, THREAD_DISCOVERY_TLV, CONTENT_CHANGE_CIPHER_SPEC, CONTENT_HANDSHAKE, MLE_NO_SECURITY
+from pktverify.consts import MLE_DISCOVERY_REQUEST, MLE_DISCOVERY_RESPONSE, HANDSHAKE_CLIENT_HELLO, HANDSHAKE_SERVER_HELLO, HANDSHAKE_SERVER_KEY_EXCHANGE, HANDSHAKE_SERVER_HELLO_DONE, HANDSHAKE_CLIENT_KEY_EXCHANGE, HANDSHAKE_HELLO_VERIFY_REQUEST, CONTENT_APPLICATION_DATA, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV, NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_REQUEST_TLV, NM_DISCOVERY_RESPONSE_TLV, THREAD_DISCOVERY_TLV, CONTENT_CHANGE_CIPHER_SPEC, CONTENT_HANDSHAKE
 from pktverify.packet_verifier import PacketVerifier
 
 COMMISSIONER = 1
@@ -57,7 +59,6 @@ JOINER = 2
 
 
 class Cert_8_1_01_Commissioning(thread_cert.TestCase):
-    USE_MESSAGE_FACTORY = False
     SUPPORT_NCP = False
 
     TOPOLOGY = {
@@ -86,10 +87,21 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
         self.nodes[JOINER].interface_up()
         self.nodes[JOINER].joiner_start('PSKD01')
         self.simulator.go(10)
+        self.simulator.read_cert_messages_in_commissioning_log([COMMISSIONER, JOINER])
         self.assertEqual(
             self.nodes[JOINER].get_masterkey(),
             self.nodes[COMMISSIONER].get_masterkey(),
         )
+        joiner_messages = self.simulator.get_messages_sent_by(JOINER)
+        commissioner_messages = self.simulator.get_messages_sent_by(COMMISSIONER)
+
+        # 5.8,9,10,11
+        # - Joiner_1
+        command.check_joiner_commissioning_messages(joiner_messages.commissioning_messages)
+        # - Commissioner
+        command.check_commissioner_commissioning_messages(commissioner_messages.commissioning_messages)
+        # As commissioner is also joiner router
+        command.check_joiner_router_commissioning_messages(commissioner_messages.commissioning_messages)
         self.nodes[JOINER].thread_start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[JOINER].get_state(), 'router')
@@ -242,7 +254,7 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
         # 11. Joiner receives the encrypted JOIN_ENT.ntf message and sends an encrypted
         #     JOIN_ENT.ntf dummy response to Commissioner
 
-        # Can not decrypt from 7 to 11
+        # Check Step 8 ~ 11 in test()
 
 
 if __name__ == '__main__':
