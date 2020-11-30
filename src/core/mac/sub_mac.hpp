@@ -496,7 +496,6 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     static void HandleCslTimer(Timer &aTimer);
     void        HandleCslTimer(void);
-    uint16_t    GetCslPhase(void) const;
 #endif
 
     enum
