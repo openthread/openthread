@@ -534,7 +534,7 @@ bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix)
 
 bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)
 {
-    return IsValidOmrPrefix(aOnLinkPrefix);
+    return (aOnLinkPrefix.mLength == kOnLinkPrefixLength && aOnLinkPrefix.mPrefix.mFields.m8[0] == 0xfd);
 }
 
 void RoutingManager::HandleRouterAdvertisementTimer(Timer &aTimer)
