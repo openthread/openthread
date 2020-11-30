@@ -333,7 +333,7 @@ void TestRssAveraging(void)
             rss = GetRandomRss();
             IgnoreError(rssAverager.Add(rss));
             sum += rss;
-            mean = static_cast<double>(sum) / j;
+            mean = static_cast<double>(sum) / static_cast<double>(j);
             VerifyOrQuit(ABS(rssAverager.GetAverage() - mean) < 1, "Average does not match the arithmetic mean!");
             VerifyRawRssValue(rssAverager);
             printf("AddRss(%4d) sum=%-5d, mean=%-8.2f RssAverager=", rss, sum, mean);

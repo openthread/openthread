@@ -33,7 +33,7 @@ on: [push, pull_request]
 jobs:
 
   cancel-previous-runs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - uses: rokroskar/workflow-run-cleanup-action@master
       env:
@@ -42,7 +42,7 @@ jobs:
 
 
   posix-cli:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       COVERAGE: 1
       PYTHONUNBUFFERED: 1
@@ -94,7 +94,7 @@ jobs:
         path: tmp/coverage.info
 
   posix-ncp:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       COVERAGE: 1
       NODE_TYPE: ncp-sim
@@ -148,7 +148,7 @@ jobs:
         path: tmp/coverage.info
 
   posix-ncp-rcp-migrate:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       COVERAGE: 1
     steps:
@@ -188,7 +188,7 @@ jobs:
         path: tmp/coverage.info
 
   posix-pty:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       COVERAGE: 1
     steps:
@@ -196,7 +196,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y socat expect lcov
+        sudo apt-get --no-install-recommends install -y socat expect lcov net-tools
         cd /tmp
         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
         tar xvf bsd-licensed.tar.gz
@@ -236,7 +236,7 @@ jobs:
         path: tmp/coverage.info
 
   posix-pty-daemon:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       COVERAGE: 1
       DAEMON: 1
@@ -245,7 +245,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y socat expect lcov
+        sudo apt-get --no-install-recommends install -y socat expect lcov net-tools
         cd /tmp
         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
         tar xvf bsd-licensed.tar.gz
@@ -291,7 +291,7 @@ jobs:
     - posix-ncp-rcp-migrate
     - posix-pty
     - posix-pty-daemon
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
