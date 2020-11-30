@@ -488,7 +488,12 @@
 
 #ifdef OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT
 #error \
-    "OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT (in seconds) was replaced by OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT_MILLIS (in milliseconds)"
+    "OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT was removed. Use otCoapSendRequestWithParameters to configure CoAP transmission parameters."
+#endif
+
+#ifdef OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT_MILLIS
+#error \
+    "OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT_MILLIS was removed. Use otCoapSendRequestWithParameters to configure CoAP transmission parameters."
 #endif
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
