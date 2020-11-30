@@ -317,9 +317,7 @@ jobs:
         path: tmp/coverage.info
     - name: Run TUN Mode
       run: |
-        sudo netstat -na | grep 5353
         sudo apt-get install --no-install-recommends -y dnsmasq bind9-host ntp
-        sudo netstat -na | grep 5353
         sudo systemctl start dnsmasq ntp
         host ipv6.google.com 127.0.0.1
         echo 'listen-address=::1' | sudo tee /etc/dnsmasq.conf
