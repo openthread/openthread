@@ -67,11 +67,12 @@ otError Dataset::Info::GenerateRandom(Instance &aInstance)
 
     Clear();
 
-    mActiveTimestamp       = 1;
-    mChannel               = preferredChannels.ChooseRandomChannel();
-    mChannelMask           = supportedChannels.GetMask();
-    mSecurityPolicy.mFlags = aInstance.Get<KeyManager>().GetSecurityPolicyFlags();
-    mPanId                 = Mac::GenerateRandomPanId();
+    mActiveTimestamp              = 1;
+    mChannel                      = preferredChannels.ChooseRandomChannel();
+    mChannelMask                  = supportedChannels.GetMask();
+    mSecurityPolicy.mRotationTime = KeyManager::kDefaultKeyRotationTime;
+    mSecurityPolicy.mFlags        = KeyManager::kDefaultSecurityPolicyFlags;
+    mPanId                        = Mac::GenerateRandomPanId();
 
     SuccessOrExit(error = static_cast<MasterKey &>(mMasterKey).GenerateRandom());
     SuccessOrExit(error = static_cast<Pskc &>(mPskc).GenerateRandom());

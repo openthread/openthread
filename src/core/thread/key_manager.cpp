@@ -78,7 +78,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKeySwitchGuardEnabled(false)
     , mKeyRotationTimer(aInstance, KeyManager::HandleKeyRotationTimer, this)
     , mKekFrameCounter(0)
-    , mSecurityPolicyFlags(0xff)
+    , mSecurityPolicyFlags(kDefaultSecurityPolicyFlags)
     , mIsPskcSet(false)
 {
     mMasterKey = static_cast<const MasterKey &>(kDefaultMasterKey);
