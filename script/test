@@ -44,6 +44,7 @@ readonly OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
 readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
 readonly INTER_OP="${INTER_OP:-0}"
 readonly VERBOSE="${VERBOSE:-0}"
+readonly BORDER_ROUTING="${BORDER_ROUTING:-0}"
 
 build_simulation()
 {
@@ -229,9 +230,13 @@ do_build_otbr_docker()
     echo "Building OTBR Docker ..."
     local otdir
     local otbrdir
-    local otbr_options="-DOT_BORDER_ROUTING=ON -DOT_SLAAC=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF"
+    local otbr_options="-DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF"
     local otbr_commit=${OTBR_COMMIT:-5092e71b06b23f78f2288fcc5386bce3a8986bb1} # [backbone-router] remove MLR multicast routing using smcroute #604
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
+
+    if [[ ${BORDER_ROUTING} == "1" ]]; then
+        otbr_options = "${otbr_options} -DOT_BORDER_ROUTING=ON -DOT_SLAAC=ON"
+    fi
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
     otdir=$(pwd)
