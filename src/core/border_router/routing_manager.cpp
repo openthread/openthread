@@ -75,14 +75,11 @@ RoutingManager::RoutingManager(Instance &aInstance)
 otError RoutingManager::Init(uint32_t aInfraIfIndex, const char *aInfraIfName)
 {
     otError error = OT_ERROR_NONE;
-    size_t  infraIfNameLength;
 
     VerifyOrExit(!IsInitialized(), error = OT_ERROR_ALREADY);
+    VerifyOrExit(aInfraIfIndex > 0 && strlen(aInfraIfName) < kMaxInfraIfNameLength, error = OT_ERROR_INVALID_ARGS);
 
-    infraIfNameLength = strlen(aInfraIfName);
-    VerifyOrExit(infraIfNameLength < kMaxInfraIfNameLength, error = OT_ERROR_INVALID_ARGS);
-
-    strncpy(mInfraIfName, aInfraIfName, sizeof(mInfraIfName));
+    strcpy(mInfraIfName, aInfraIfName);
     mInfraIfIndex = aInfraIfIndex;
 
     LoadOrGenerateRandomOmrPrefix();
