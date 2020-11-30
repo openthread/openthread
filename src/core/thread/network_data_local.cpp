@@ -62,12 +62,12 @@ otError Local::AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
     // Add Prefix validation check:
     // Thread 1.1 Specification 5.13.2 says
     // "A valid prefix MUST NOT allow both DHCPv6 and SLAAC for address configuration"
-    VerifyOrExit(!aConfig->mDhcp || !aConfig->mSlaac, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(!aConfig.mDhcp || !aConfig.mSlaac, error = OT_ERROR_INVALID_ARGS);
 
     // RFC 4944 Section 6 says:
     // An IPv6 address prefix used for stateless autoconfiguration [RFC4862]
     // of an IEEE 802.15.4 interface MUST have a length of 64 bits.
-    VerifyOrExit(!aConfig->mSlaac || aConfig->mPrefix.mLength == OT_IP6_PREFIX_BITSIZE, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(!aConfig.mSlaac || aConfig.mPrefix.mLength == OT_IP6_PREFIX_BITSIZE, error = OT_ERROR_INVALID_ARGS);
 
     if (aConfig.mPreferred)
     {
