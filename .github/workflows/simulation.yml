@@ -183,7 +183,7 @@ jobs:
       if: ${{ failure() }}
       with:
         name: cli-ftd-thread-cert
-        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/simulation/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -224,7 +224,7 @@ jobs:
       if: ${{ failure() }}
       with:
         name: cli-mtd-thread-cert
-        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/simulation/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -261,7 +261,7 @@ jobs:
       if: ${{ failure() }}
       with:
         name: cli-time-sync-thread-cert
-        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/simulation/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -408,7 +408,7 @@ jobs:
       if: ${{ failure() }}
       with:
         name: multiple-instance-thread-cert
-        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/simulation/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -447,7 +447,7 @@ jobs:
       if: ${{ failure() }}
       with:
         name: ncp-gcc-m32-thread-cert
-        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/simulation/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -485,7 +485,7 @@ jobs:
       if: ${{ failure() }}
       with:
         name: cli-clang-thread-cert
-        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/simulation/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage llvm
