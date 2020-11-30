@@ -28,7 +28,6 @@
 #
 
 import unittest
-import copy
 
 import config
 import thread_cert
@@ -155,6 +154,7 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
                              } == set(p.thread_nwd.tlv.prefix)
                    ).\
             must_next()
+        _index = pkts.index
 
         # Step 5: The DUT MUST send a multicast MLE Data Response,
         #         including at least three Prefix TLVs (Prefix 1, Prefix2,
@@ -180,22 +180,21 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
         #              - Address Registration TLV
         #                  - Echoes back addresses configured in step 4
         #              - Mode TLV
-        with pkts.save_index():
-            _pkt = pkts.filter_wpan_src64(MED).\
-                filter_wpan_dst64(ROUTER).\
-                filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
-                must_next()
-            pkts.filter_wpan_src64(ROUTER).\
-                filter_wpan_dst64(MED).\
-                filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).\
-                filter(lambda p: {
-                                  SOURCE_ADDRESS_TLV,
-                                  MODE_TLV,
-                                  ADDRESS_REGISTRATION_TLV
-                                 } < set(p.mle.tlv.type) and\
-                       set(p.mle.tlv.addr_reg_iid) < set(_pkt.mle.tlv.addr_reg_iid)
-                       ).\
-                must_next()
+        _pkt = pkts.filter_wpan_src64(MED).\
+            filter_wpan_dst64(ROUTER).\
+            filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
+            must_next()
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_wpan_dst64(MED).\
+            filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).\
+            filter(lambda p: {
+                              SOURCE_ADDRESS_TLV,
+                              MODE_TLV,
+                              ADDRESS_REGISTRATION_TLV
+                             } < set(p.mle.tlv.type) and\
+                   set(p.mle.tlv.addr_reg_iid) < set(_pkt.mle.tlv.addr_reg_iid)
+                   ).\
+            must_next()
 
         # Step 8: The DUT MUST send a MLE Child Update Request or MLE Data
         #         Response to SED, including the following TLVs:
@@ -209,7 +208,7 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
         #                 Data version numbers should be the same as the ones
         #                 sent in the multicast data response in step 5.
         #             - Active Timestamp TLV
-        pkts.filter_wpan_src64(ROUTER).\
+        pkts.range(_index).filter_wpan_src64(ROUTER).\
             filter_wpan_dst64(SED).\
             filter_mle_cmd2(MLE_CHILD_UPDATE_REQUEST, MLE_DATA_RESPONSE).\
             filter(lambda p: {
