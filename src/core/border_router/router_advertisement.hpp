@@ -62,8 +62,8 @@ static constexpr uint32_t kInfiniteLifetime = 0xffffffff;
  * This class represents the variable length options in Neighbor
  * Discovery messages.
  *
- * See PrefixInfoOption
- * See RouteInfoOption
+ * @sa PrefixInfoOption
+ * @sa RouteInfoOption
  *
  */
 OT_TOOL_PACKED_BEGIN
