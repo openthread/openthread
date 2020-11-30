@@ -164,7 +164,7 @@ public:
      * This method sets the autonomous address-configuration (A) flag.
      *
      * @param[in]  aAutoAddrConfig  A boolean indicates whether this prefix can be used
-     *                          for SLAAC.
+     *                              for SLAAC.
      *
      */
     void SetAutoAddrConfig(bool aAutoAddrConfig);

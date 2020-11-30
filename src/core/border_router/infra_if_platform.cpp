@@ -41,9 +41,6 @@
 
 using namespace ot;
 
-//---------------------------------------------------------------------------------------------------------------------
-// otPlatInfraIf callbacks
-
 extern "C" void otPlatInfraIfRecvIcmp6(otInstance *        aInstance,
                                        uint32_t            aInfraIfIndex,
                                        const otIp6Address *aSrcAddress,
