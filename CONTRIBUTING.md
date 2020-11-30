@@ -129,6 +129,40 @@ This will trigger continuous-integration checks using GitHub Actions. You can vi
 
 Once you've validated that all continuous-integration checks have passed, go to the page for your fork on GitHub, select your development branch, and click the pull request button. If you need to make any adjustments to your pull request, just push the updates to GitHub. Your pull request will automatically track the changes on your development branch and update.
 
+#### Checks fail
+
+After you've submitted a pull request, all continuous-integration checks will be triggered again. If some of the checks fail, it could be either problems in the pull request or intermittent failure of some test cases. You may check the output and download the artifacts for more information of the failure. (After all jobs in one group are completed, an `Artifatcts` button would appear beside the `Re-run jobs` button.) Usually, the checks will pass after re-running it once or twice if the failure is intermittent. Otherwise, you may check the pull request and find possible causes for breaking the checks.
+
+We surely hope to eliminate intermittent failures as well. When you experience an intermittent failure, we'd appreciate if you report an issue (make sure it's not reported yet) and attach the artifacts. If the artifacts are too big, maybe upload them to a drive and then share the link instead. Or you can attach the link of the failed run. (But don't re-run it before someone accessed it).
+
+##### Analyze core dumps in failed checks
+
+In some checks, we did the action to upload core dumps for crashed programs (if there's any) as artifacts when the checks fail. Besides core dumps, the binaries and shared libraries are also uploaded so that we can analyze the dumps locally. To analyze the dumps, download the artifact `core-xxx` and unzip it. The package is like:
+
+```
+|-- build
+|   `-- cmake
+|       `-- openthread-simulation-1.2
+|           `-- examples
+|               `-- apps
+|                   `-- cli
+|                       |-- ot-cli-ftd
+|                       `-- ot-cli-mtd
+|-- ot-core-dump
+|   `-- corefile-ot-cli-ftd-11323-1606274703
+`-- so-lib
+    |-- ld-linux-x86-64.so.2
+    |-- libc.so.6
+    `-- libgcc_s.so.1
+```
+
+Then:
+
+1. `cd` to the path
+2. Run `gdb build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-ftd ./ot-core-dump/corefile-ot-cli-ftd-XXX`
+3. Set so lib(Very important, use the absolute path of `so-lib` above). In gdb, run `set solib-absolute-prefix /ABSOLUTE/PATH/TO/so-lib/`, then run `set solib-search-path /ABSOLUTE/PATH/TO/so-lib/`.
+4. In gdb, run `backtrace` or `bt`. Then we should see the stack of the crashed program. Find and fix the problem!
+
 ## Contributing Documentation
 
 Documentation undergoes the same review process as code and contributions may be mirrored on our [openthread.io](https://openthread.io) website. See the [Documentation Style Guide](/doc/STYLE_GUIDE.md) for more information on how to author and format documentation for contribution.
