@@ -279,6 +279,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
+        sudo apt-get update
         OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat net-tools
     - name: Run
       run: |
@@ -316,7 +317,6 @@ jobs:
         path: tmp/coverage.info
     - name: Run TUN Mode
       run: |
-        sudo apt-get update
         sudo netstat -na | grep 5353
         sudo apt-get install --no-install-recommends -y dnsmasq bind9-host ntp
         sudo netstat -na | grep 5353
