@@ -13,7 +13,8 @@ Hardware requirements:
    CC2652](https://openthread.io/vendors/texas-instruments#cc2652)) for Thread
    network connectivity in an RCP design
 
-Steps to enable
+Steps to enable:
+
 1. Download and install the OS.
 1. Prepare the Debian Environment for OTBR
 1. Build and install OTBR
@@ -73,7 +74,7 @@ $ sudo systemctl disable bonescript.service
 $ sudo systemctl disable cloud9.socket
 $ sudo systemctl disable cloud9.service
 $ sudo systemctl disable nodered.service
-$ sudo systemctl daemon-relaod
+$ sudo systemctl daemon-reload
 ```
 
 Disable advertising the Cloud9 IDE and NodeRED services with Avahi by deleting
@@ -87,7 +88,7 @@ The filesystem for the uSD BeagleBone image is limited to 4GB to fit on most
 uSD cards. Expand the partition to enable usage of the entire storage capacity.
 
 ```
-$ sudo /opt/scripts/tools/grow_partitions.sh
+$ sudo /opt/scripts/tools/grow_partition.sh
 ```
 
 You are encouraged to read that helper script to find out how the filesystem is
@@ -100,9 +101,14 @@ $ sudo shutdown -r now
 
 This will close your SSH session.
 
-Once logged back into the BeagleBone, install Network Manager with the command
-`sudo apt-get install network-manager`. Then disable `connman` and enable
-`network-manager`:
+Once logged back into the BeagleBone, install Network Manager:
+
+```
+$ sudo apt-get update
+$ sudo apt-get install network-manager
+```
+
+Then disable `connman` and enable `network-manager`:
 
 ```
 $ sudo systemctl disable connman
@@ -139,7 +145,7 @@ BBONE-GATEWAY-CAPE. Some of these may not be required.
 The WiLink 8 module does not like to have its MAC address changed at runtime.
 Network Manager will try to do this when scanning. Edit the
 `NetworkManager.conf` with the command `sudo vim
-/etc/Networkmanager/NetworkManager.conf` and add the lines below:
+/etc/NetworkManager/NetworkManager.conf` and add the lines below:
 
 ```
 [device]
