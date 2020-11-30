@@ -31,7 +31,6 @@
  *   This file implements the infrastructure interface for posix.
  */
 
-#include "openthread-posix-config.h"
 #include "platform-posix.h"
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -325,7 +324,6 @@ void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet)
                  cmh->cmsg_len == CMSG_LEN(sizeof(int)))
         {
             hopLimit = *(int *)CMSG_DATA(cmh);
-            OT_UNUSED_VARIABLE(hopLimit);
         }
     }
 
