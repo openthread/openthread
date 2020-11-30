@@ -75,6 +75,7 @@ PrefixInfoOption::PrefixInfoOption()
     , mReserved2(0)
 {
     OT_UNUSED_VARIABLE(mReserved2);
+
     memset(mPrefix, 0, sizeof(mPrefix));
 }
 
