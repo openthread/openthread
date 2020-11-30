@@ -51,7 +51,7 @@ HOST = 4
 CHANNEL1 = 18
 
 
-class MultiThreadNetworks(thread_cert.TestCase):
+class SingleBorderRouter(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
