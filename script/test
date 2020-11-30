@@ -44,7 +44,7 @@ readonly OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
 readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
 readonly INTER_OP="${INTER_OP:-0}"
 readonly VERBOSE="${VERBOSE:-0}"
-readonly BORDER_ROUTING="${BORDER_ROUTING:-0}"
+readonly BORDER_ROUTING="${BORDER_ROUTING:-1}"
 
 build_simulation()
 {

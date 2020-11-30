@@ -251,6 +251,9 @@ jobs:
       MULTIPLY: 1
       PYTHONUNBUFFERED: 1
       VERBOSE: 1
+      # The border routing and DUA feature can coexist, but
+      # current wireshark packet verification can't handle it.
+      BORDER_ROUTING: 0
     steps:
     - uses: actions/checkout@v2
     - name: Build OTBR Docker
@@ -304,7 +307,6 @@ jobs:
       MULTIPLY: 1
       PYTHONUNBUFFERED: 1
       VERBOSE: 1
-      BORDER_ROUTING: 1
     steps:
     - uses: actions/checkout@v2
     - name: Build OTBR Docker
