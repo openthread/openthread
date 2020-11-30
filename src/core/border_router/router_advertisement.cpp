@@ -116,6 +116,7 @@ RouteInfoOption::RouteInfoOption()
     , mRouteLifetime(0)
 {
     OT_UNUSED_VARIABLE(mReserved);
+
     memset(mPrefix, 0, sizeof(mPrefix));
 }
 
