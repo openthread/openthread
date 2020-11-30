@@ -174,6 +174,8 @@ class VirtualTime(BaseSimulator):
 
         if use_message_factory:
             self._message_factory = config.create_default_thread_message_factory()
+        else:
+            self._message_factory = None
 
     def __del__(self):
         if self.sock:
