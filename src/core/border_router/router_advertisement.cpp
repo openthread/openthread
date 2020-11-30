@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes implementations for IPv6 Router Advertisement.
+ *   This file includes implementations for ICMPv6 Router Advertisement.
  *
  */
 
