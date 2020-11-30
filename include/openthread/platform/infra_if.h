@@ -57,6 +57,8 @@ extern "C" {
  * @retval OT_ERROR_NONE    Successfully sent the ICMPv6 message.
  * @retval OT_ERROR_FAILED  Failed to send the ICMPv6 message.
  *
+ * @note  This API needs to be implemented when OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE is defined true.
+ *
  */
 otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
                                const otIp6Address *aDestAddress,
@@ -73,7 +75,8 @@ otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
  * @param[in]  aBuffer        The ICMPv6 message buffer.
  * @param[in]  aBufferLength  The length of the ICMPv6 message buffer.
  *
- * @note  ICMPv6 message sent from current infra interface should not to passed in.
+ * @note  ICMPv6 message sent from current infra interface should not be passed in.
+ * @note  This API is provided when OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE is defined true.
  *
  */
 extern void otPlatInfraIfRecvIcmp6(otInstance *        aInstance,

@@ -111,11 +111,12 @@ private:
     static constexpr uint8_t kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE; ///< The length of an OMR prefix. In bits.
     static constexpr uint8_t kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE; ///< The length of an On-link prefix. In bits.
 
-    static constexpr uint32_t kMinRtrAdvInterval        = 8;  // 30;     // In Seconds.
-    static constexpr uint32_t kMaxRtrAdvInterval        = 18; // 1800;   // In Seconds.
-    static constexpr uint32_t kMaxInitRtrAdvInterval    = 16; // In Seconds.
-    static constexpr uint32_t kMaxInitRtrAdvertisements = 3;
-    static constexpr uint32_t kRtrSolicitionInterval    = 4; // In Seconds.
+    static constexpr uint32_t kMinRtrAdvInterval = 30;   ///< Minimum Router Advertisement Interval. In Seconds.
+    static constexpr uint32_t kMaxRtrAdvInterval = 1800; ///< Maximum Router Advertisement Interval. In Seconds.
+    static constexpr uint32_t kMaxInitRtrAdvInterval =
+        16; ///< Maximum Initial Router Advertisement Interval. In Seconds.
+    static constexpr uint32_t kMaxInitRtrAdvertisements = 3; ///< Maximum Initial Router Advertisement number.
+    static constexpr uint32_t kRtrSolicitationInterval  = 4; ///< Router Solicitation Interval In Seconds.
 
     void Start();
     void Stop(void);

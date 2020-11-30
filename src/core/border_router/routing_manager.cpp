@@ -384,8 +384,8 @@ void RoutingManager::SendRouterSolicit()
 
     if (error == OT_ERROR_NONE)
     {
-        mRouterSolicitTimer.Start(kRtrSolicitionInterval * 1000);
-        otLogInfoBr("sent Router Solicitation, timer scheduled in %u seconds", kRtrSolicitionInterval);
+        mRouterSolicitTimer.Start(kRtrSolicitationInterval * 1000);
+        otLogInfoBr("sent Router Solicitation, timer scheduled in %u seconds", kRtrSolicitationInterval);
     }
     else
     {
