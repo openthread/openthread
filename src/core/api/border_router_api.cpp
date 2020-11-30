@@ -53,16 +53,17 @@ otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *a
 
 otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig)
 {
-    otError                                error    = OT_ERROR_NONE;
+    otError                                error;
     Instance &                             instance = *static_cast<Instance *>(aInstance);
     const NetworkData::OnMeshPrefixConfig *config   = static_cast<const NetworkData::OnMeshPrefixConfig *>(aConfig);
 
     OT_ASSERT(aConfig != nullptr);
 
-    error = instance.Get<NetworkData::Local>().AddOnMeshPrefix(*config);
+    SuccessOrExit(error = instance.Get<NetworkData::Local>().AddOnMeshPrefix(*config));
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    // Only try to configure Domain Prefix after the parameter is vaidated via above `AddOnMeshPrefix()`.
-    if (error == OT_ERROR_NONE && aConfig->mDp)
+    // Only try to configure Domain Prefix after the parameter is validated via above `AddOnMeshPrefix()`.
+    if (aConfig->mDp)
     {
         // Restore local server data
         IgnoreError(instance.Get<NetworkData::Local>().RemoveOnMeshPrefix(config->GetPrefix()));
