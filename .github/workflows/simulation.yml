@@ -271,7 +271,7 @@ jobs:
         path: tmp/coverage.info
 
   expects:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     env:
       CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
       CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
@@ -279,8 +279,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
-        OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat net-tools
+        OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
     - name: Run
       run: |
         OT_OPTIONS=-DOT_TIME_SYNC=ON VIRTUAL_TIME=0 ./script/test build expect
@@ -317,6 +316,7 @@ jobs:
         path: tmp/coverage.info
     - name: Run TUN Mode
       run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get install --no-install-recommends -y dnsmasq bind9-host ntp
         sudo systemctl start dnsmasq ntp
         host ipv6.google.com 127.0.0.1
