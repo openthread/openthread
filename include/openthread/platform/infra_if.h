@@ -29,7 +29,8 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for the infrastructure interface.
+ *   This file includes the platform abstraction for the infrastructure network interface.
+ *
  */
 
 #ifndef OPENTHREAD_PLATFORM_INFRA_IF_H_
