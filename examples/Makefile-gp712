@@ -28,7 +28,7 @@
 
 .NOTPARALLEL:
 
-TARGET        ?= arm-bcm2708hardfp-linux-gnueabi
+TARGET        ?= arm-linux-gnueabihf
 NAME           = GP712
 PREFIX_UC      = $(NAME)
 PREFIX_LC     := $(shell echo $(PREFIX_UC) | tr A-Z a-z)

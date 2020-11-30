@@ -28,44 +28,50 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                               = libopenthread-qpg6100.a
+# Do not enable -Wcast-align for this platform
+override CFLAGS    := $(filter-out -Wcast-align,$(CFLAGS))
+override CXXFLAGS  := $(filter-out -Wcast-align,$(CXXFLAGS))
 
-libopenthread_qpg6100_a_CPPFLAGS            = \
-    -I$(top_srcdir)/include                   \
-    -I$(top_srcdir)/examples/platforms        \
-    -I$(top_srcdir)/examples/platforms/utils  \
-    -I$(top_srcdir)/src/core                  \
-    -lrt                                      \
-    -lpthread                                 \
+lib_LIBRARIES                                   = libopenthread-qpg6100.a
+
+libopenthread_qpg6100_a_CPPFLAGS                = \
+    -I$(top_srcdir)/include                       \
+    -I$(top_srcdir)/src/core                      \
+    -I$(top_srcdir)/examples/platforms            \
+    -I$(top_srcdir)/examples/platforms/utils      \
+    -I$(top_srcdir)/examples/platforms/qpg6100    \
+    -lrt                                          \
+    -lpthread                                     \
     $(NULL)
 
-PLATFORM_SOURCES                            = \
-    alarm.c                                   \
-    alarm_qorvo.h                             \
-    diag.c                                    \
-    entropy.c                                 \
-    logging.c                                 \
-    misc.c                                    \
-    misc_qorvo.h                              \
-    openthread-core-qpg6100-config.h          \
-    openthread-core-qpg6100-config-check.h    \
-    platform.c                                \
-    platform_qorvo.h                          \
-    radio.c                                   \
-    radio_qorvo.h                             \
-    random_qorvo.h                            \
-    settings.cpp                              \
-    settings_qorvo.h                          \
-    uart.c                                    \
-    uart_qorvo.h                              \
+PLATFORM_SOURCES                                = \
+    alarm.c                                       \
+    alarm_qorvo.h                                 \
+    diag.c                                        \
+    entropy.c                                     \
+    logging.c                                     \
+    misc.c                                        \
+    misc_qorvo.h                                  \
+    openthread-core-qpg6100-config.h              \
+    openthread-core-qpg6100-config-check.h        \
+    platform.c                                    \
+    platform_qorvo.h                              \
+    radio.c                                       \
+    radio_qorvo.h                                 \
+    random_qorvo.h                                \
+    settings.cpp                                  \
+    settings_qorvo.h                              \
+    uart.c                                        \
+    uart_qorvo.h                                  \
     $(NULL)
 
-libopenthread_qpg6100_a_SOURCES             = \
-    $(PLATFORM_SOURCES)                       \
+libopenthread_qpg6100_a_SOURCES                 = \
+    $(PLATFORM_SOURCES)                           \
     $(NULL)
 
-libopenthread_qpg6100_a_LIBADD              = \
-    $(top_builddir)/examples/platforms/utils/libopenthread_platform_utils_a-settings_ram.o
+Dash = -
+libopenthread_qpg6100_a_LIBADD                  = \
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)
