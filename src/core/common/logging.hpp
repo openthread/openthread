@@ -267,7 +267,7 @@ void otLogDebg(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 /**
  * @def otLogCritMeshCoP
  *
- * This function generates a log with level critical for the MLE region.
+ * This function generates a log with level critical for the MeshCoP region.
  *
  * @param[in]  ...  Arguments for the format specification.
  *
@@ -277,7 +277,7 @@ void otLogDebg(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 /**
  * @def otLogWarnMeshCoP
  *
- * This function generates a log with level warning for the MLE region.
+ * This function generates a log with level warning for the MeshCoP region.
  *
  * @param[in]  ...  Arguments for the format specification.
  *
@@ -286,7 +286,7 @@ void otLogDebg(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 /**
  * @def otLogNoteMeshCoP
  *
- * This function generates a log with level note for the MLE region.
+ * This function generates a log with level note for the MeshCoP region.
  *
  * @param[in]  ...  Arguments for the format specification.
  *
@@ -295,7 +295,7 @@ void otLogDebg(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 /**
  * @def otLogInfoMeshCoP
  *
- * This function generates a log with level info for the MLE region.
+ * This function generates a log with level info for the MeshCoP region.
  *
  * @param[in]  ...  Arguments for the format specification.
  *
@@ -304,7 +304,7 @@ void otLogDebg(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 /**
  * @def otLogDebgMeshCoP
  *
- * This function generates a log with level debug for the MLE region.
+ * This function generates a log with level debug for the MeshCoP region.
  *
  * @param[in]  ...  Arguments for the format specification.
  *
