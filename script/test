@@ -235,7 +235,7 @@ do_build_otbr_docker()
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
     if [[ ${BORDER_ROUTING} == "1" ]]; then
-        otbr_options = "${otbr_options} -DOT_BORDER_ROUTING=ON -DOT_SLAAC=ON"
+        otbr_options="${otbr_options} -DOT_BORDER_ROUTING=ON -DOT_SLAAC=ON"
     fi
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
