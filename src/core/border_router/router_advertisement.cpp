@@ -122,6 +122,10 @@ RouteInfoOption::RouteInfoOption(void)
 
 void RouteInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
 {
+    // The total length (in bytes) of a Router Information Option
+    // is: (8 bytes fixed option header) + (0, 8, or 16 bytes prefix).
+    // Because the length of the option must be padded with 8 bytes,
+    // the length of the prefix (in bits) must be padded with 64 bits.
     SetLength(((aPrefix.mLength + 63) / 64) * 8 + 8);
 
     mPrefixLength = aPrefix.mLength;
