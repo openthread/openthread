@@ -158,9 +158,9 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
     int                 sock;
     struct icmp6_filter filter;
     ssize_t             rval;
-    static const int    kOne      = 1;
-    static const int    kTwo      = 2;
-    static const int    kHopLimit = 255;
+    const int           kOne      = 1;
+    const int           kTwo      = 2;
+    const int           kHopLimit = 255;
     uint32_t            ifIndex   = 0;
 
     OT_UNUSED_VARIABLE(aInstance);
