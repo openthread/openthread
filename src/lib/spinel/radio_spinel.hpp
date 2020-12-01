@@ -822,8 +822,8 @@ private:
     spinel_tid_t GetNextTid(void);
     void         FreeTid(spinel_tid_t tid) { mCmdTidsInUse &= ~(1 << tid); }
 
-    otError RequestV(bool aWait, uint32_t aCommand, spinel_prop_key_t aKey, const char *aFormat, va_list aArgs);
-    otError Request(bool aWait, uint32_t aCommand, spinel_prop_key_t aKey, const char *aFormat, ...);
+    otError RequestV(uint32_t aCommand, spinel_prop_key_t aKey, const char *aFormat, va_list aArgs);
+    otError Request(uint32_t aCommand, spinel_prop_key_t aKey, const char *aFormat, ...);
     otError RequestWithPropertyFormat(const char *      aPropertyFormat,
                                       uint32_t          aCommand,
                                       spinel_prop_key_t aKey,

@@ -1714,16 +1714,15 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::RequestV(bool              aWait,
-                                                                 uint32_t          command,
+otError RadioSpinel<InterfaceType, ProcessContextType>::RequestV(uint32_t          command,
                                                                  spinel_prop_key_t aKey,
                                                                  const char *      aFormat,
                                                                  va_list           aArgs)
 {
     otError      error = OT_ERROR_NONE;
-    spinel_tid_t tid   = (aWait ? GetNextTid() : 0);
+    spinel_tid_t tid   = GetNextTid();
 
-    VerifyOrExit(!aWait || tid > 0, error = OT_ERROR_BUSY);
+    VerifyOrExit(tid > 0, error = OT_ERROR_BUSY);
 
     error = SendCommand(command, aKey, tid, aFormat, aArgs);
     SuccessOrExit(error);
@@ -1735,7 +1734,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::RequestV(bool           
         VerifyOrExit(mTxRadioTid == 0, error = OT_ERROR_BUSY);
         mTxRadioTid = tid;
     }
-    else if (aWait)
+    else
     {
         mWaitingKey = aKey;
         mWaitingTid = tid;
@@ -1747,15 +1746,14 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::Request(bool              aWait,
-                                                                uint32_t          aCommand,
+otError RadioSpinel<InterfaceType, ProcessContextType>::Request(uint32_t          aCommand,
                                                                 spinel_prop_key_t aKey,
                                                                 const char *      aFormat,
                                                                 ...)
 {
     va_list args;
     va_start(args, aFormat);
-    otError status = RequestV(aWait, aCommand, aKey, aFormat, args);
+    otError status = RequestV(aCommand, aKey, aFormat, args);
     va_end(args);
     return status;
 }
@@ -1787,7 +1785,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::RequestWithPropertyForma
     otError error;
 
     mPropertyFormat = aPropertyFormat;
-    error           = RequestV(true, aCommand, aKey, aFormat, aArgs);
+    error           = RequestV(aCommand, aKey, aFormat, aArgs);
     mPropertyFormat = nullptr;
 
     return error;
@@ -1803,7 +1801,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::RequestWithExpectedComma
     otError error;
 
     mExpectedCommand = aExpectedCommand;
-    error            = RequestV(true, aCommand, aKey, aFormat, aArgs);
+    error            = RequestV(aCommand, aKey, aFormat, aArgs);
     mExpectedCommand = SPINEL_CMD_NOOP;
 
     return error;
@@ -1876,7 +1874,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
     // `otPlatRadioTxStarted()` is triggered immediately for now, which may be earlier than real started time.
     otPlatRadioTxStarted(mInstance, mTransmitFrame);
 
-    error = Request(true, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
+    error = Request(SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
                     SPINEL_DATATYPE_DATA_WLEN_S                               // Frame data
                         SPINEL_DATATYPE_UINT8_S                               // Channel
                             SPINEL_DATATYPE_UINT8_S                           // MaxCsmaBackoffs
