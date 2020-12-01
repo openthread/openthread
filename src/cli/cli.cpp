@@ -300,12 +300,14 @@ otError Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         if (strcmp(aArgs[0], "mgmt") == 0)
         {
-            uint8_t status;
-
-            VerifyOrExit(aArgsLength >= 2, error = OT_ERROR_INVALID_COMMAND);
-
-            if (strcmp(aArgs[1], "dua") == 0)
+            if (aArgsLength < 2)
             {
+                ExitNow(error = OT_ERROR_INVALID_COMMAND);
+            }
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
+            else if (strcmp(aArgs[1], "dua") == 0)
+            {
+                uint8_t                   status;
                 otIp6InterfaceIdentifier *mlIid = nullptr;
                 otIp6InterfaceIdentifier  iid;
 
@@ -322,11 +324,14 @@ otError Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
                 otBackboneRouterConfigNextDuaRegistrationResponse(mInstance, mlIid, status);
                 ExitNow();
             }
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
             else if (strcmp(aArgs[1], "mlr") == 0)
             {
                 error = ProcessBackboneRouterMgmtMlr(aArgsLength - 2, aArgs + 2);
                 ExitNow();
             }
+#endif
         }
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         SuccessOrExit(error = ProcessBackboneRouterLocal(aArgsLength, aArgs));
@@ -339,7 +344,7 @@ exit:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 otError Interpreter::ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
@@ -405,7 +410,7 @@ void Interpreter::PrintMulticastListenersTable(void)
     }
 }
 
-#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
 otError Interpreter::ProcessBackboneRouterLocal(uint8_t aArgsLength, char *aArgs[])
 {
@@ -1547,7 +1552,7 @@ otError Interpreter::ProcessFake(uint8_t aArgsLength, char *aArgs[])
         SuccessOrExit(error = ParseAsHexString(aArgs[3], mlIid.mFields.m8));
         otThreadSendAddressNotification(mInstance, &destination, &target, &mlIid);
     }
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     else if (strcmp(aArgs[0], "/b/ba") == 0)
     {
         otIp6Address             target;

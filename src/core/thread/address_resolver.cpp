@@ -545,7 +545,7 @@ exit:
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kAddressResolver);
     FreeMessageOnError(message, error);
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(aEid))
     {
         uint16_t selfRloc16 = Get<Mle::MleRouter>().GetRloc16();
@@ -796,7 +796,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
         }
     }
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(target))
     {
         uint16_t srcRloc16 = aMessageInfo.GetPeerAddr().GetIid().GetLocator();
