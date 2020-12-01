@@ -131,13 +131,13 @@ Once you've validated that all continuous-integration checks have passed, go to 
 
 #### Checks fail
 
-After you've submitted a pull request, all continuous-integration checks will be triggered again. If some of the checks fail, it could be either problems in the pull request or intermittent failure of some test cases. You may check the output and download the artifacts for more information of the failure. (After all jobs in one group are completed, an `Artifatcts` button would appear beside the `Re-run jobs` button.) Usually, the checks will pass after re-running it once or twice if the failure is intermittent. Otherwise, you may check the pull request and find possible causes for breaking the checks.
+Once you've submitted a pull request, all continuous-integration checks are triggered again. If some of these checks fail, it could be either problems with the pull request or an intermittent failure of some test cases. For more information on the failure, check the output and download artifacts. (After all jobs in one group are completed, an `Artifacts` button appears beside the `Re-run` jobs button.) If the failure is intermittent, the check will usually pass after rerunning once or twice.
 
-We surely hope to eliminate intermittent failures as well. When you experience an intermittent failure, we'd appreciate if you report an issue (make sure it's not reported yet) and attach the artifacts. If the artifacts are too big, maybe upload them to a drive and then share the link instead. Or you can attach the link of the failed run. (But don't re-run it before someone accessed it).
+We want to eliminate intermittent failures as well, so when you experience such a failure, please log an issue and attach any relevant artifacts. If the artifacts are too big, provide the link of the failed run (do not rerun checks again, or it will be overwritten). Alternatively, upload the artifacts to a file-sharing service like Google Drive and share a link to it.
 
 ##### Analyze core dumps in failed checks
 
-In some checks, we did the action to upload core dumps for crashed programs (if there's any) as artifacts when the checks fail. Besides core dumps, the binaries and shared libraries are also uploaded so that we can analyze the dumps locally. To analyze the dumps, download the artifact `core-xxx` and unzip it. The package is like:
+For some checks, core dumps for crashed programs are uploaded as artifacts in a failed check. Besides core dumps, binaries and shared libraries are also uploaded so that we can analyze the dumps locally. To analyze the dumps, download the artifact `core-xxx` and unzip it. The package is in the following format:
 
 ```
 |-- build
@@ -156,12 +156,12 @@ In some checks, we did the action to upload core dumps for crashed programs (if 
     `-- libgcc_s.so.1
 ```
 
-Then:
+Once unzipped:
 
-1. `cd` to the path
-2. Run `gdb build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-ftd ./ot-core-dump/corefile-ot-cli-ftd-XXX`
-3. Set so lib(Very important, use the absolute path of `so-lib` above). In gdb, run `set solib-absolute-prefix /ABSOLUTE/PATH/TO/so-lib/`, then run `set solib-search-path /ABSOLUTE/PATH/TO/so-lib/`.
-4. In gdb, run `backtrace` or `bt`. Then we should see the stack of the crashed program. Find and fix the problem!
+1. `cd` to the unzipped directory
+2. Run `gdb build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-ftd ./ot-core-dump/corefile-ot-cli-ftd-XXX`.
+3. Set the absolute path of `so-lib`. In gdb, run `set solib-absolute-prefix /ABSOLUTE/PATH/TO/so-lib/`, then run `set solib-search-path /ABSOLUTE/PATH/TO/so-lib/`.
+4. In gdb, run `backtrace` or `bt`. Then you should see the stack of the crashed program. Find and fix the problem!
 
 ## Contributing Documentation
 
