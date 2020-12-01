@@ -56,7 +56,10 @@ namespace ot {
 
 namespace RouterAdv {
 
-static constexpr uint32_t kInfiniteLifetime = 0xffffffff;
+enum : uint32_t
+{
+    kInfiniteLifetime = 0xffffffff,
+};
 
 /**
  * This class represents the variable length options in Neighbor
@@ -95,7 +98,7 @@ public:
      * @return  The option type.
      *
      */
-    Type GetType() const { return mType; }
+    Type GetType(void) const { return mType; }
 
     /**
      * This method sets the length of the option (in bytes).
@@ -114,7 +117,7 @@ public:
      * @return  The length of the option.
      *
      */
-    uint16_t GetLength() const { return mLength * 8; }
+    uint16_t GetLength(void) const { return mLength * 8; }
 
     /**
      * This helper method returns the starting address of the next valid option in the buffer.
@@ -150,7 +153,7 @@ public:
      * length, valid lifetime and preferred lifetime.
      *
      */
-    PrefixInfoOption();
+    PrefixInfoOption(void);
 
     /**
      * This method sets the on on-link (L) flag.
@@ -183,7 +186,7 @@ public:
      * @return  The valid lifetime in seconds.
      *
      */
-    uint32_t GetValidLifetime() const { return HostSwap32(mValidLifetime); }
+    uint32_t GetValidLifetime(void) const { return HostSwap32(mValidLifetime); }
 
     /**
      * This method sets the preferred lifetime of the prefix in seconds.
@@ -207,7 +210,7 @@ public:
      * @return  The prefix length in bits.
      *
      */
-    uint8_t GetPrefixLength() const { return mPrefixLength; }
+    uint8_t GetPrefixLength(void) const { return mPrefixLength; }
 
     /**
      * This method returns a pointer to the prefix.
@@ -215,11 +218,14 @@ public:
      * @return  The pointer to the prefix.
      *
      */
-    const uint8_t *GetPrefix() const { return mPrefix; }
+    const uint8_t *GetPrefix(void) const { return mPrefix; }
 
 private:
-    static constexpr uint8_t kOnLinkFlagMask     = 0x80;
-    static constexpr uint8_t kAutoConfigFlagMask = 0x40;
+    enum : uint8_t
+    {
+        kAutoConfigFlagMask = 0x40, ///< Bit mask of the Automatic Address Configure flag.
+        kOnLinkFlagMask     = 0x80, ///< Bit mask of the On-link flag.
+    };
 
     uint8_t  mPrefixLength;                ///< The prefix length in bits.
     uint8_t  mReserved1;                   ///< The reserved field.
@@ -244,7 +250,7 @@ public:
      * This constructor initializes this option with zero prefix length.
      *
      */
-    RouteInfoOption();
+    RouteInfoOption(void);
 
     /**
      * This method sets the lifetime of the route in seconds.
@@ -285,7 +291,7 @@ public:
      * zero router lifetime, reachable time and retransmission timer.
      *
      */
-    RouterAdvMessage();
+    RouterAdvMessage(void);
 
     /**
      * This method sets the Router Lifetime.
@@ -318,7 +324,7 @@ public:
      * This constructor initializes the Router Solicitation message.
      *
      */
-    RouterSolicitMessage();
+    RouterSolicitMessage(void);
 
 private:
     Ip6::Icmp::Header mHeader; ///< The common ICMPv6 header.
