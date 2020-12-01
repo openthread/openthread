@@ -183,7 +183,6 @@ uint16_t MessagePool::GetTotalBufferCount(void) const
 #endif
 }
 
-const Message::Settings Message::Settings::kDefault(Message::kWithLinkSecurity, Message::kPriorityNormal);
 
 Message::Settings::Settings(LinkSecurityMode aSecurityMode, Priority aPriority)
     : mLinkSecurityEnabled(aSecurityMode == kWithLinkSecurity)
@@ -195,6 +194,12 @@ Message::Settings::Settings(const otMessageSettings *aSettings)
     : mLinkSecurityEnabled((aSettings != nullptr) ? aSettings->mLinkSecurityEnabled : true)
     , mPriority((aSettings != nullptr) ? static_cast<Priority>(aSettings->mPriority) : kPriorityNormal)
 {
+}
+
+const Message::Settings& Message::Settings::GetDefault()
+{
+    static Message::Settings kDefault(Message::kWithLinkSecurity, Message::kPriorityNormal);
+    return kDefault;
 }
 
 otError Message::ResizeMessage(uint16_t aLength)

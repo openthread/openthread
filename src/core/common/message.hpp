@@ -417,11 +417,9 @@ public:
          * @returns A reference to the default settings (link security enable and `kPriorityNormal` priority).
          *
          */
-        static const Settings &GetDefault(void) { return kDefault; }
+        static const Settings &GetDefault(void);
 
     private:
-        static const Settings kDefault;
-
         bool     mLinkSecurityEnabled;
         Priority mPriority;
     };
