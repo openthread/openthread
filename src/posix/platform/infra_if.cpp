@@ -125,7 +125,7 @@ exit:
     return error;
 }
 
-static void InitLinkLocalAddress()
+static void InitLinkLocalAddress(void)
 {
     struct ifaddrs *ifAddrs;
 
@@ -246,7 +246,7 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
     InitLinkLocalAddress();
 }
 
-void platformInfraIfDeinit()
+void platformInfraIfDeinit(void)
 {
     if (sInfraIfIcmp6Socket != -1)
     {
@@ -348,12 +348,12 @@ exit:
     return;
 }
 
-const char *platformInfraIfGetName()
+const char *platformInfraIfGetName(void)
 {
     return sInfraIfName;
 }
 
-uint32_t platformInfraIfGetIndex()
+uint32_t platformInfraIfGetIndex(void)
 {
     return sInfraIfIndex;
 }

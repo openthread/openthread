@@ -89,7 +89,7 @@ exit:
     return error;
 }
 
-void RoutingManager::LoadOrGenerateRandomOmrPrefix()
+void RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
 {
     if (Get<Settings>().ReadOmrPrefix(mLocalOmrPrefix) != OT_ERROR_NONE || !IsValidOmrPrefix(mLocalOmrPrefix))
     {
@@ -111,7 +111,7 @@ exit:
     return;
 }
 
-void RoutingManager::LoadOrGenerateRandomOnLinkPrefix()
+void RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
 {
     if (Get<Settings>().ReadOnLinkPrefix(mLocalOnLinkPrefix) != OT_ERROR_NONE ||
         !IsValidOnLinkPrefix(mLocalOnLinkPrefix))
@@ -137,12 +137,12 @@ exit:
     return;
 }
 
-void RoutingManager::Start()
+void RoutingManager::Start(void)
 {
     SendRouterSolicit();
 }
 
-void RoutingManager::Stop()
+void RoutingManager::Stop(void)
 {
     Ip6::Prefix invalidOmrPrefix;
     Ip6::Prefix invalidOnLinkPrefix;
@@ -216,7 +216,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
     }
 }
 
-Ip6::Prefix RoutingManager::EvaluateOmrPrefix()
+Ip6::Prefix RoutingManager::EvaluateOmrPrefix(void)
 {
     Ip6::Prefix                     lowestOmrPrefix;
     Ip6::Prefix                     newOmrPrefix;
@@ -298,7 +298,7 @@ exit:
     return;
 }
 
-Ip6::Prefix RoutingManager::EvaluateOnLinkPrefix()
+Ip6::Prefix RoutingManager::EvaluateOnLinkPrefix(void)
 {
     Ip6::Prefix newOnLinkPrefix;
 
@@ -328,7 +328,7 @@ exit:
     return newOnLinkPrefix;
 }
 
-void RoutingManager::EvaluateRoutingPolicy()
+void RoutingManager::EvaluateRoutingPolicy(void)
 {
     Ip6::Prefix newOnLinkPrefix;
     Ip6::Prefix newOmrPrefix;
@@ -367,7 +367,7 @@ exit:
     return;
 }
 
-void RoutingManager::SendRouterSolicit()
+void RoutingManager::SendRouterSolicit(void)
 {
     otError                         error;
     Ip6::Address                    destAddress;
@@ -539,7 +539,7 @@ void RoutingManager::HandleRouterAdvertisementTimer(Timer &aTimer)
     aTimer.GetOwner<RoutingManager>().HandleRouterAdvertisementTimer();
 }
 
-void RoutingManager::HandleRouterAdvertisementTimer()
+void RoutingManager::HandleRouterAdvertisementTimer(void)
 {
     otLogInfoBr("Router Advertisement timer triggered");
 
@@ -551,7 +551,7 @@ void RoutingManager::HandleRouterSolicitTimer(Timer &aTimer)
     aTimer.GetOwner<RoutingManager>().HandleRouterSolicitTimer();
 }
 
-void RoutingManager::HandleRouterSolicitTimer()
+void RoutingManager::HandleRouterSolicitTimer(void)
 {
     otLogInfoBr("Router Solicit timeouted");
 
@@ -565,7 +565,7 @@ void RoutingManager::HandleDiscoveredOnLinkPrefixInvalidTimer(Timer &aTimer)
     aTimer.GetOwner<RoutingManager>().HandleDiscoveredOnLinkPrefixInvalidTimer();
 }
 
-void RoutingManager::HandleDiscoveredOnLinkPrefixInvalidTimer()
+void RoutingManager::HandleDiscoveredOnLinkPrefixInvalidTimer(void)
 {
     // The discovered on-link prefix becomes invalid, send Router Solicit to
     // discover new one.

@@ -477,7 +477,7 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName);
  * This function deinitializes the infrastructure interface.
  *
  */
-void platformInfraIfDeinit();
+void platformInfraIfDeinit(void);
 
 /**
  * This function updates the read fd set.
@@ -503,7 +503,7 @@ void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet);
  * @retval  The name of the infrasturcture interface.
  *
  */
-const char *platformInfraIfGetName();
+const char *platformInfraIfGetName(void);
 
 /**
  * This function returns the index of the infrastructure interface.
@@ -511,7 +511,7 @@ const char *platformInfraIfGetName();
  * @retval  The index of the infrastructure interface. 0 indicates invalid index.
  *
  */
-uint32_t platformInfraIfGetIndex();
+uint32_t platformInfraIfGetIndex(void);
 
 #ifdef __cplusplus
 }

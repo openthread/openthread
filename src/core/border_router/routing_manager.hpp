@@ -119,12 +119,12 @@ private:
     static constexpr uint32_t kMaxInitRtrAdvertisements = 3; ///< Maximum Initial Router Advertisement number.
     static constexpr uint32_t kRtrSolicitationInterval  = 4; ///< Router Solicitation Interval In Seconds.
 
-    void Start();
+    void Start(void);
     void Stop(void);
     void HandleNotifierEvents(Events aEvents);
-    bool IsInitialized() const { return mInfraIfIndex != 0; }
-    void LoadOrGenerateRandomOmrPrefix();
-    void LoadOrGenerateRandomOnLinkPrefix();
+    bool IsInitialized(void) const { return mInfraIfIndex != 0; }
+    void LoadOrGenerateRandomOmrPrefix(void);
+    void LoadOrGenerateRandomOnLinkPrefix(void);
 
     static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
@@ -141,7 +141,7 @@ private:
      * @see UnpublishOmrPrefix
      *
      */
-    void EvaluateRoutingPolicy();
+    void EvaluateRoutingPolicy(void);
 
     /**
      * This method evaluates the OMR prefix for the Thread Network.
@@ -150,7 +150,7 @@ private:
      *           means we should no longer publish an OMR prefix in the Thread network.
      *
      */
-    Ip6::Prefix EvaluateOmrPrefix();
+    Ip6::Prefix EvaluateOmrPrefix(void);
 
     /**
      * This method evaluates the on-link prefix for the infra link.
@@ -159,7 +159,7 @@ private:
      *           means we should no longer advertise an on-link prefix on the infra link.
      *
      */
-    Ip6::Prefix EvaluateOnLinkPrefix();
+    Ip6::Prefix EvaluateOnLinkPrefix(void);
 
     /**
      * This method publishes an OMR prefix in Thread network.
@@ -184,7 +184,7 @@ private:
      * @see HandleRouterAdvertisement
      *
      */
-    void SendRouterSolicit();
+    void SendRouterSolicit(void);
 
     /**
      * This method sends Router Advertisement messages to advertise
@@ -197,13 +197,13 @@ private:
     void SendRouterAdvertisement(const Ip6::Prefix &aNewOmrPrefix, const Ip6::Prefix &aNewOnLinkPrefix);
 
     static void HandleRouterAdvertisementTimer(Timer &aTimer);
-    void        HandleRouterAdvertisementTimer();
+    void        HandleRouterAdvertisementTimer(void);
 
     static void HandleRouterSolicitTimer(Timer &aTimer);
-    void        HandleRouterSolicitTimer();
+    void        HandleRouterSolicitTimer(void);
 
     static void HandleDiscoveredOnLinkPrefixInvalidTimer(Timer &aTimer);
-    void        HandleDiscoveredOnLinkPrefixInvalidTimer();
+    void        HandleDiscoveredOnLinkPrefixInvalidTimer(void);
 
     void HandleRouterSolicit(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     void HandleRouterAdvertisement(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);

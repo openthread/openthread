@@ -66,7 +66,7 @@ exit:
     return reinterpret_cast<const Option *>(nextOption);
 }
 
-PrefixInfoOption::PrefixInfoOption()
+PrefixInfoOption::PrefixInfoOption(void)
     : Option(Type::kPrefixInfo, 4)
     , mPrefixLength(0)
     , mReserved1(0)
@@ -109,7 +109,7 @@ void PrefixInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
     memcpy(mPrefix, &aPrefix.mPrefix, sizeof(aPrefix.mPrefix));
 }
 
-RouteInfoOption::RouteInfoOption()
+RouteInfoOption::RouteInfoOption(void)
     : Option(Type::kRouteInfo, 0)
     , mPrefixLength(0)
     , mReserved(0)
@@ -128,7 +128,7 @@ void RouteInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
     memcpy(mPrefix, &aPrefix.mPrefix, sizeof(aPrefix.mPrefix));
 }
 
-RouterAdvMessage::RouterAdvMessage()
+RouterAdvMessage::RouterAdvMessage(void)
     : mReachableTime(0)
     , mRetransTimer(0)
 {
@@ -139,7 +139,7 @@ RouterAdvMessage::RouterAdvMessage()
     mHeader.SetType(Ip6::Icmp::Header::kTypeRouterAdvert);
 }
 
-RouterSolicitMessage::RouterSolicitMessage()
+RouterSolicitMessage::RouterSolicitMessage(void)
 {
     mHeader.Clear();
     mHeader.SetType(Ip6::Icmp::Header::kTypeRouterSolicit);
