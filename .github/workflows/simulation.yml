@@ -89,7 +89,7 @@ jobs:
         ./bootstrap
     - name: Run OTNS Tests
       env:
-        OTNS_COMMIT: "2d57478d9e748d09cad65cf5374942e9d96719ed" # just for CI
+        OTNS_COMMIT: "2d57478d9e748d09cad65cf5374942e9d96719ed" # openthread/ot-ns#112
       run: |
         export OT_DIR=$PWD
         mkdir -p /tmp/otns
