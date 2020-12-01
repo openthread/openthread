@@ -969,23 +969,6 @@ void SubMac::SetCslTimeout(uint32_t aTimeout)
     mCslTimeout = aTimeout;
 }
 
-void SubMac::FillCsl(Frame &aFrame)
-{
-    uint8_t *cur = aFrame.GetHeaderIe(Frame::kHeaderIeCsl);
-
-    if (cur != nullptr)
-    {
-        CslIe *csl = reinterpret_cast<CslIe *>(cur + sizeof(HeaderIe));
-
-        csl->SetPeriod(mCslPeriod);
-        csl->SetPhase(GetCslPhase());
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        otLogDebgMac("%10u:FillCsl() seq=%u phase=%hu", static_cast<uint32_t>(otPlatTimeGet()), aFrame.GetSequence(),
-                     csl->GetPhase());
-#endif
-    }
-}
-
 void SubMac::HandleCslTimer(Timer &aTimer)
 {
     aTimer.GetOwner<SubMac>().HandleCslTimer();
@@ -1030,23 +1013,6 @@ void SubMac::HandleCslTimer(void)
         OT_ASSERT(false);
         break;
     }
-}
-
-uint16_t SubMac::GetCslPhase(void) const
-{
-    TimeMicro now = TimerMicro::GetNow();
-    uint32_t  delta;
-
-    if (mCslSampleTime < now)
-    {
-        delta = mCslSampleTime + mCslPeriod * kUsPerTenSymbols - now;
-    }
-    else
-    {
-        delta = mCslSampleTime - now;
-    }
-
-    return static_cast<uint16_t>(delta / kUsPerTenSymbols);
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 

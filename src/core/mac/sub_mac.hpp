@@ -438,14 +438,6 @@ public:
      *
      */
     void SetCslTimeout(uint32_t aTimeout);
-
-    /**
-     * This method fills the CSL parameter to the frame.
-     *
-     * @param[inout]    aFrame  A reference to the frame to fill CSL parameter.
-     *
-     */
-    void FillCsl(Frame &aFrame);
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
@@ -504,7 +496,6 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     static void HandleCslTimer(Timer &aTimer);
     void        HandleCslTimer(void);
-    uint16_t    GetCslPhase(void) const;
 #endif
 
     enum
