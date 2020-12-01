@@ -37,6 +37,9 @@ from pktverify.packet_verifier import PacketVerifier
 
 COMMISSIONER = 1
 JOINER = 2
+PSKD = 'PSKD01'
+URL_1 = 'www.openthread.org'
+URL_2 = 'www.wrongurl.org'
 
 # Test Purpose and Description:
 # -----------------------------
@@ -77,13 +80,13 @@ class Cert_8_1_06_Commissioning(thread_cert.TestCase):
         self.nodes[COMMISSIONER].thread_start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'leader')
-        self.nodes[COMMISSIONER].commissioner_set_provisioning_url('www.openthread.org')
+        self.nodes[COMMISSIONER].commissioner_set_provisioning_url(URL_1)
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(3)
-        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER].get_eui64(), 'PSKD01')
+        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER].get_eui64(), PSKD)
 
         self.nodes[JOINER].interface_up()
-        self.nodes[JOINER].joiner_start('PSKD01', 'www.wrongurl.com')
+        self.nodes[JOINER].joiner_start(PSKD, URL_2)
         self.simulator.go(10)
         self.simulator.read_cert_messages_in_commissioning_log([COMMISSIONER, JOINER])
         self.assertEqual(
@@ -95,7 +98,7 @@ class Cert_8_1_06_Commissioning(thread_cert.TestCase):
 
         # 3.7, 8, 9, 10
         # - Joiner
-        command.check_joiner_commissioning_messages(joiner_messages.commissioning_messages, 'www.wrongurl.com')
+        command.check_joiner_commissioning_messages(joiner_messages.commissioning_messages, URL_2)
         # - Commissioner
         command.check_commissioner_commissioning_messages(commissioner_messages.commissioning_messages,
                                                           MeshCopState.REJECT)
