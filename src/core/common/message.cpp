@@ -196,9 +196,9 @@ Message::Settings::Settings(const otMessageSettings *aSettings)
 {
 }
 
-const Message::Settings& Message::Settings::GetDefault()
+const Message::Settings& Message::Settings::GetDefault(void)
 {
-    static Message::Settings kDefault(Message::kWithLinkSecurity, Message::kPriorityNormal);
+    static const Message::Settings kDefault(Message::kWithLinkSecurity, Message::kPriorityNormal);
     return kDefault;
 }
 
