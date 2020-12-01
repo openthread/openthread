@@ -169,7 +169,7 @@ public:
 private:
     enum
     {
-        kNewRouterRegistrationDelay = 5, ///< Delay (in seconds) for waiting link establishment for a new Router.
+        kNewRouterRegistrationDelay = 3, ///< Delay (in seconds) for waiting link establishment for a new Router.
     };
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE

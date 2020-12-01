@@ -321,7 +321,7 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
         else if (mle.IsExpectedToBecomeRouter())
         {
             // Will check again in case the device decides to stay REED when jitter timeout expires.
-            UpdateRegistrationDelay(mle.GetRouterSelectionJitterTimeout() + 1);
+            UpdateRegistrationDelay(mle.GetRouterSelectionJitterTimeout() + kNewRouterRegistrationDelay + 1);
         }
 #endif
     }
