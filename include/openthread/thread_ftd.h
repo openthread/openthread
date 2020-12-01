@@ -219,23 +219,23 @@ uint8_t otThreadGetLocalLeaderWeight(otInstance *aInstance);
 void otThreadSetLocalLeaderWeight(otInstance *aInstance, uint8_t aWeight);
 
 /**
- * Get the Thread Leader Partition Id used when operating in the Leader role.
+ * Get the preferred Thread Leader Partition Id used when operating in the Leader role.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The Thread Leader Partition Id value.
  *
  */
-uint32_t otThreadGetLocalLeaderPartitionId(otInstance *aInstance);
+uint32_t otThreadGetPreferredLeaderPartitionId(otInstance *aInstance);
 
 /**
- * Set the Thread Leader Partition Id used when operating in the Leader role.
+ * Set the preferred Thread Leader Partition Id used when operating in the Leader role.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aPartitionId  The Thread Leader Partition Id value.
  *
  */
-void otThreadSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId);
+void otThreadSetPreferredLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId);
 
 /**
  * Get the Joiner UDP Port.

@@ -1930,7 +1930,7 @@ class OpenThreadTHCI(object):
         print('%s call setPartationId' % self)
         print(partationId)
 
-        cmd = 'leaderpartitionid %s' % (str(hex(partationId)).rstrip('L'))
+        cmd = 'partitionid preferred %s' % (str(hex(partationId)).rstrip('L'))
         print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
 

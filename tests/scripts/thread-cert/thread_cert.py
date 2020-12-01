@@ -161,7 +161,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             self.nodes[i].set_mode(params['mode'])
 
             if 'partition_id' in params:
-                self.nodes[i].set_partition_id(params['partition_id'])
+                self.nodes[i].set_preferred_partition_id(params['partition_id'])
             if 'channel' in params:
                 self.nodes[i].set_channel(params['channel'])
             if 'masterkey' in params:

@@ -157,21 +157,24 @@ public:
      */
     void SetLeaderWeight(uint8_t aWeight) { mLeaderWeight = aWeight; }
 
-    /**
-     * This method returns the fixed Partition Id of Thread network partition for certification testing.
-     *
-     * @returns The Partition Id for this Thread network partition.
-     *
-     */
-    uint32_t GetLeaderPartitionId(void) const { return mFixedLeaderPartitionId; }
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
     /**
-     * This method sets the fixed Partition Id for Thread network partition for certification testing.
+     * This method returns the preferred Partition Id when operating in the Leader role for certification testing.
      *
-     * @param[in]  aPartitionId  The Leader Partition Id.
+     * @returns The preferred Partition Id value.
      *
      */
-    void SetLeaderPartitionId(uint32_t aPartitionId) { mFixedLeaderPartitionId = aPartitionId; }
+    uint32_t GetPreferredLeaderPartitionId(void) const { return mPreferredLeaderPartitionId; }
+
+    /**
+     * This method sets the preferred Partition Id when operating in the Leader role for certification testing.
+     *
+     * @param[in]  aPartitionId  The preferred Leader Partition Id.
+     *
+     */
+    void SetPreferredLeaderPartitionId(uint32_t aPartitionId) { mPreferredLeaderPartitionId = aPartitionId; }
+#endif
 
     /**
      * This method sets the preferred Router Id. Upon becoming a router/leader the node
@@ -671,10 +674,12 @@ private:
     uint8_t  mRouterUpgradeThreshold;
     uint8_t  mRouterDowngradeThreshold;
     uint8_t  mLeaderWeight;
-    uint32_t mFixedLeaderPartitionId; ///< only for certification testing
-    bool     mRouterEligible : 1;
-    bool     mAddressSolicitPending : 1;
-    bool     mAddressSolicitRejected : 1;
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    uint32_t mPreferredLeaderPartitionId; ///< only for certification testing
+#endif
+    bool mRouterEligible : 1;
+    bool mAddressSolicitPending : 1;
+    bool mAddressSolicitRejected : 1;
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;

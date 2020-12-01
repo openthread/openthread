@@ -57,7 +57,6 @@ Done
 - [joinerport](#joinerport-port)
 - [keysequence](#keysequence-counter)
 - [leaderdata](#leaderdata)
-- [leaderpartitionid](#leaderpartitionid)
 - [leaderweight](#leaderweight)
 - [linkmetrics](#linkmetrics-mgmt-ipaddr-forward-seriesid-ldraxpqmr)
 - [linkquality](#linkquality-extaddr)
@@ -77,6 +76,7 @@ Done
 - [panid](#panid)
 - [parent](#parent)
 - [parentpriority](#parentpriority)
+- [partitionid](#partitionid)
 - [ping](#ping-ipaddr-sizecount-intervalhoplimit)
 - [pollperiod](#pollperiod-pollperiod)
 - [preferrouterid](#preferrouterid-routerid)
@@ -1093,25 +1093,6 @@ Set Thread Key Switch Guard Time (in hours) 0 means Thread Key Switch imediately
 Done
 ```
 
-### leaderpartitionid
-
-Get the Thread Leader Partition ID.
-
-```bash
-> leaderpartitionid
-4294967295
-Done
-```
-
-### leaderpartitionid \<partitionid\>
-
-Set the Thread Leader Partition ID.
-
-```bash
-> leaderpartitionid 0xffffffff
-Done
-```
-
 ### leaderdata
 
 Show the Thread Leader Data.
@@ -1515,6 +1496,39 @@ Set the assigned parent priority value: 1, 0, -1 or -2.
 
 ```bash
 > parentpriority 1
+Done
+```
+
+### partitionid
+
+Get the Thread Network Partition ID.
+
+```bash
+> partitionid
+4294967295
+Done
+```
+
+### partitionid preferred
+
+Get the preferred Thread Leader Partition ID.
+
+`OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
+
+```bash
+> partitionid preferred
+4294967295
+Done
+```
+
+### partitionid preferred \<partitionid\>
+
+Set the preferred Thread Leader Partition ID.
+
+`OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
+
+```bash
+> partitionid preferred 0xffffffff
 Done
 ```
 

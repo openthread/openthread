@@ -110,19 +110,21 @@ void otThreadSetLocalLeaderWeight(otInstance *aInstance, uint8_t aWeight)
     instance.Get<Mle::MleRouter>().SetLeaderWeight(aWeight);
 }
 
-uint32_t otThreadGetLocalLeaderPartitionId(otInstance *aInstance)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+uint32_t otThreadGetPreferredLeaderPartitionId(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().GetLeaderPartitionId();
+    return instance.Get<Mle::MleRouter>().GetPreferredLeaderPartitionId();
 }
 
-void otThreadSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId)
+void otThreadSetPreferredLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().SetLeaderPartitionId(aPartitionId);
+    instance.Get<Mle::MleRouter>().SetPreferredLeaderPartitionId(aPartitionId);
 }
+#endif
 
 uint16_t otThreadGetJoinerUdpPort(otInstance *aInstance)
 {

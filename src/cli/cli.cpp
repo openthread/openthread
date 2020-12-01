@@ -1881,23 +1881,37 @@ exit:
 }
 
 #if OPENTHREAD_FTD
-otError Interpreter::ProcessLeaderPartitionId(uint8_t aArgsLength, char *aArgs[])
+otError Interpreter::ProcessPartitionId(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error = OT_ERROR_NONE;
+    OT_UNUSED_VARIABLE(aArgs);
+
+    otError error = OT_ERROR_INVALID_COMMAND;
 
     if (aArgsLength == 0)
     {
-        OutputLine("%u", otThreadGetLocalLeaderPartitionId(mInstance));
+        OutputLine("%u", otThreadGetPartitionId(mInstance));
+        error = OT_ERROR_NONE;
     }
-    else
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    else if (strcmp(aArgs[0], "preferred") == 0)
     {
-        uint32_t partitionId;
+        if (aArgsLength == 1)
+        {
+            OutputLine("%u", otThreadGetPreferredLeaderPartitionId(mInstance));
+            error = OT_ERROR_NONE;
+        }
+        else if (aArgsLength == 2)
+        {
+            uint32_t partitionId;
 
-        SuccessOrExit(error = ParseAsUint32(aArgs[0], partitionId));
-        otThreadSetLocalLeaderPartitionId(mInstance, partitionId);
+            SuccessOrExit(error = ParseAsUint32(aArgs[1], partitionId));
+            otThreadSetPreferredLeaderPartitionId(mInstance, partitionId);
+        }
     }
 
 exit:
+#endif
+
     return error;
 }
 

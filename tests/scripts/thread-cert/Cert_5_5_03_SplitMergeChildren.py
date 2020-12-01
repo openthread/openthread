@@ -114,7 +114,7 @@ class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
 
         self.nodes[LEADER].reset()
         self._setUpLeader()
-        self.nodes[ROUTER2].set_partition_id(0xffffffff)
+        self.nodes[ROUTER2].set_preferred_partition_id(0xffffffff)
 
         self.simulator.go(140)
 
