@@ -36,7 +36,7 @@
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#include <memory.h>
+#include <string.h>
 
 namespace ot {
 
