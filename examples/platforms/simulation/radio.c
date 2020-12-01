@@ -371,7 +371,7 @@ void platformRadioInit(void)
 
     for (size_t i = 0; i <= kMaxChannel - kMinChannel; i++)
     {
-        sChannelMaxTransmitPower[i] = INT8_MAX;
+        sChannelMaxTransmitPower[i] = OT_RADIO_POWER_INVALID;
     }
 }
 

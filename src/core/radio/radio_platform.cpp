@@ -190,21 +190,3 @@ OT_TOOL_WEAK otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }
-
-OT_TOOL_WEAK otError otPlatRadioSetChannelSupported(otInstance *aInstance, uint8_t aChannel, bool aSupported)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aChannel);
-    OT_UNUSED_VARIABLE(aSupported);
-
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-
-OT_TOOL_WEAK otError otPlatRadioSetChannelPreferred(otInstance *aInstance, uint8_t aChannel, bool aPreferred)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aChannel);
-    OT_UNUSED_VARIABLE(aPreferred);
-
-    return OT_ERROR_NOT_IMPLEMENTED;
-}

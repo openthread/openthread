@@ -26,34 +26,23 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_LIB_SPINEL_MAX_POWER_TABLE_HPP_
-#define OT_LIB_SPINEL_MAX_POWER_TABLE_HPP_
+#ifndef OT_CORE_RADIO_MAX_POWER_TABLE_HPP_
+#define OT_CORE_RADIO_MAX_POWER_TABLE_HPP_
 
 #include "core/radio/radio.hpp"
+#include "openthread/platform/radio.h"
 
 namespace ot {
-namespace Spinel {
 
 class MaxPowerTable
 {
 public:
-    static const int8_t kPowerDefault = 30;   ///< Default power 1 watt (30 dBm).
-    static const int8_t kPowerNone    = 0x7f; ///< Power not specified
+    static const int8_t kPowerDefault = 30; ///< Default power 1 watt (30 dBm).
 
-    MaxPowerTable(void)
-    {
-        for (size_t i = 0; i <= Radio::kChannelMax - Radio::kChannelMin; i++)
-        {
-            mPowerTable[i]       = kPowerNone;
-            mChannelSupported[i] = true;
-            mChannelPreferred[i] = true;
-        }
-
-        memset(mPowerTable, kPowerNone, sizeof(mPowerTable));
-    }
+    MaxPowerTable(void) { memset(mPowerTable, kPowerDefault, sizeof(mPowerTable)); }
 
     /**
-     * This method gets the max supported transmit power of channel @p aChannel.
+     * This method gets the max allowed transmit power of channel @p aChannel.
      *
      * @params[in]  aChannel    The radio channel number.
      *
@@ -63,37 +52,13 @@ public:
     int8_t GetTransmitPower(uint8_t aChannel) const { return mPowerTable[aChannel - Radio::kChannelMin]; }
 
     /**
-     * This method sets the max supported transmit power of channel @p aChannel.
+     * This method sets the max allowed transmit power of channel @p aChannel.
      *
      * @params[in]  aChannel    The radio channel number.
      * @params[in]  aPower      The max supported transmit power in dBm.
      *
      */
     void SetTransmitPower(uint8_t aChannel, int8_t aPower) { mPowerTable[aChannel - Radio::kChannelMin] = aPower; }
-
-    /**
-     * This method sets whether a channel is supported
-     *
-     * @params[in]  aChannel    The radio channel number.
-     * @params[in]  aSupported  Whether a channel is supported.
-     *
-     */
-    void SetChannelSupported(uint8_t aChannel, bool aSupported)
-    {
-        mChannelSupported[aChannel - Radio::kChannelMin] = aSupported;
-    }
-
-    /**
-     * This method sets whether a channel is preferred
-     *
-     * @params[in]  aChannel    The radio channel number.
-     * @params[in]  aSupported  Whether a channel is supported.
-     *
-     */
-    void SetChannelPreferred(uint8_t aChannel, bool aPreferred)
-    {
-        mChannelPreferred[aChannel - Radio::kChannelMin] = aPreferred;
-    }
 
     /**
      * This method gets the supported channel masks.
@@ -105,26 +70,7 @@ public:
 
         for (uint8_t i = Radio::kChannelMin; i <= Radio::kChannelMax; ++i)
         {
-            if (mChannelSupported[i - Radio::kChannelMin])
-            {
-                channelMask |= (1 << i);
-            }
-        }
-
-        return channelMask;
-    }
-
-    /**
-     * This method gets the preferred channel masks.
-     *
-     */
-    uint32_t GetPreferredChannelMask(void) const
-    {
-        uint32_t channelMask = 0;
-
-        for (uint8_t i = Radio::kChannelMin; i <= Radio::kChannelMax; ++i)
-        {
-            if (mChannelPreferred[i - Radio::kChannelMin])
+            if (mPowerTable[i - Radio::kChannelMin] != OT_RADIO_POWER_INVALID)
             {
                 channelMask |= (1 << i);
             }
@@ -135,11 +81,8 @@ public:
 
 private:
     int8_t mPowerTable[Radio::kChannelMax - Radio::kChannelMin + 1];
-    bool   mChannelSupported[Radio::kChannelMax - Radio::kChannelMin + 1];
-    bool   mChannelPreferred[Radio::kChannelMax - Radio::kChannelMin + 1];
 };
 
-} // namespace Spinel
 } // namespace ot
 
-#endif // OT_LIB_SPINEL_MAX_POWER_TABLE_HPP_
+#endif // OT_CORE_RADIO_MAX_POWER_TABLE_HPP_
