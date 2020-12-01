@@ -120,21 +120,23 @@ private:
 
     enum : uint32_t
     {
-        kMinRtrAdvInterval       = 30,   ///< Minimum Router Advertisement Interval. In seconds.
-        kMaxRtrAdvInterval       = 1800, ///< Maximum Router Advertisement Interval. In seconds.
-        kMaxInitRtrAdvInterval   = 16,   ///< Maximum Initial Router Advertisement Interval. In seconds.
-        kMaxRaDelayTime          = 500,  ///< The maximum delay of sending RA after receiving RS. In milliseconds.
-        kRtrSolicitationInterval = 4,    ///< The interval between Router Solicitations. In seconds.
-        kMaxRtrSolicitationDelay = 1,    ///< The maximum delay for initial solicitation. In seconds.
+        kMaxRtrAdvInterval       = 600,                    ///< Maximum Router Advertisement Interval. In seconds.
+        kMinRtrAdvInterval       = kMaxRtrAdvInterval / 3, ///< Minimum Router Advertisement Interval. In seconds.
+        kMaxInitRtrAdvInterval   = 16,  ///< Maximum Initial Router Advertisement Interval. In seconds.
+        kMaxRaDelayTime          = 500, ///< The maximum delay of sending RA after receiving RS. In milliseconds.
+        kRtrSolicitationInterval = 4,   ///< The interval between Router Solicitations. In seconds.
+        kMaxRtrSolicitationDelay = 1,   ///< The maximum delay for initial solicitation. In seconds.
     };
+
+    static_assert(kMinRtrAdvInterval <= 3 * kMaxRtrAdvInterval / 4, "invalid RA intervals");
+    static_assert(kDefaultOmrPrefixLifetime >= kMaxRtrAdvInterval, "invalid default OMR prefix lifetime");
+    static_assert(kDefaultOnLinkPrefixLifetime >= kMaxRtrAdvInterval, "invalid default on-link prefix lifetime");
 
     enum : uint32_t
     {
         kMaxInitRtrAdvertisements = 3, ///< The maximum number of initial Router Advertisements.
         kMaxRtrSolicitations = 3, ///< The Maximum number of Router Solicitations before sending Router Advertisements.
     };
-
-    static_assert(kMinRtrAdvInterval <= kMaxRtrAdvInterval, "invalid RA intervals");
 
     void    Start(void);
     void    Stop(void);
