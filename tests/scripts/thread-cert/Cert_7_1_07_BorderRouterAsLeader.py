@@ -72,6 +72,7 @@ PREFIX_2 = '2001:0db8:0002::/64'
 
 class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
+    SUPPORT_NCP = False
 
     TOPOLOGY = {
         LEADER: {
