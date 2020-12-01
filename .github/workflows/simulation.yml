@@ -89,16 +89,13 @@ jobs:
         ./bootstrap
     - name: Run OTNS Tests
       env:
-        OTNS_COMMIT: "2d57478d9e748d09cad65cf5374942e9d96719ed" # openthread/ot-ns#112
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         export OT_DIR=$PWD
         mkdir -p /tmp/otns
         (
+          ./script/git-tool clone --depth 1 https://github.com/openthread/ot-ns.git /tmp/otns
           cd /tmp/otns
-          git init
-          git remote add origin https://github.com/openthread/ot-ns.git
-          git fetch origin "${OTNS_COMMIT:-master}" --depth 1
-          git reset --hard FETCH_HEAD
           ./script/test py-unittests py-examples
         )
     - uses: actions/upload-artifact@v2
@@ -352,10 +349,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         sudo rm /etc/apt/sources.list.d/*
         sudo apt-get install -y avahi-daemon avahi-utils lcov
-        git clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch master
+        script/git-tool clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch master
     - name: Build
       run: |
         cd /tmp/ot-commissioner
