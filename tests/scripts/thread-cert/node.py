@@ -570,7 +570,6 @@ class NodeImpl:
                 data = [int(hex, 16) for hex in res.group(0)[1:-1].split(b' ') if hex and hex != b'..']
                 payload += bytearray(data)
                 log = log[res.end() - 1:]
-
         assert len(payload) == payload_len
         return (direction, type, payload)
 
@@ -636,6 +635,11 @@ class NodeImpl:
 
     def commissioner_add_joiner(self, addr, psk):
         cmd = 'commissioner joiner add %s %s' % (addr, psk)
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def commissioner_set_provisioning_url(self, provisioning_url=''):
+        cmd = 'commissioner provisioningurl %s' % provisioning_url
         self.send_command(cmd)
         self._expect('Done')
 

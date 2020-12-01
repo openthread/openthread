@@ -85,9 +85,8 @@ class BaseSimulator(object):
                     type,
                     payload,
             ) in node.read_cert_messages_in_commissioning_log():
-                if direction == b'send':
-                    msg = self._payload_parse_factory.parse(type.decode("utf-8"), io.BytesIO(payload))
-                    self.commissioning_messages[nodeid].append(msg)
+                msg = self._payload_parse_factory.parse(type.decode("utf-8"), io.BytesIO(payload))
+                self.commissioning_messages[nodeid].append(msg)
 
 
 class RealTime(BaseSimulator):

@@ -388,15 +388,15 @@ def check_prefix(prefix):
 
 
 def check_child_update_request_from_child(
-    command_msg,
-    source_address=CheckType.OPTIONAL,
-    leader_data=CheckType.OPTIONAL,
-    challenge=CheckType.OPTIONAL,
-    time_out=CheckType.OPTIONAL,
-    address_registration=CheckType.OPTIONAL,
-    tlv_request_tlv=CheckType.OPTIONAL,
-    active_timestamp=CheckType.OPTIONAL,
-    CIDs=(),
+        command_msg,
+        source_address=CheckType.OPTIONAL,
+        leader_data=CheckType.OPTIONAL,
+        challenge=CheckType.OPTIONAL,
+        time_out=CheckType.OPTIONAL,
+        address_registration=CheckType.OPTIONAL,
+        tlv_request_tlv=CheckType.OPTIONAL,
+        active_timestamp=CheckType.OPTIONAL,
+        CIDs=(),
 ):
 
     command_msg.assertMleMessageContainsTlv(mle.Mode)
@@ -485,16 +485,16 @@ def check_child_update_request_from_parent(
 
 
 def check_child_update_response(
-    command_msg,
-    timeout=CheckType.OPTIONAL,
-    address_registration=CheckType.OPTIONAL,
-    address16=CheckType.OPTIONAL,
-    leader_data=CheckType.OPTIONAL,
-    network_data=CheckType.OPTIONAL,
-    response=CheckType.OPTIONAL,
-    link_layer_frame_counter=CheckType.OPTIONAL,
-    mle_frame_counter=CheckType.OPTIONAL,
-    CIDs=(),
+        command_msg,
+        timeout=CheckType.OPTIONAL,
+        address_registration=CheckType.OPTIONAL,
+        address16=CheckType.OPTIONAL,
+        leader_data=CheckType.OPTIONAL,
+        network_data=CheckType.OPTIONAL,
+        response=CheckType.OPTIONAL,
+        link_layer_frame_counter=CheckType.OPTIONAL,
+        mle_frame_counter=CheckType.OPTIONAL,
+        CIDs=(),
 ):
     """Verify a properly formatted Child Update Response from parent
     """
@@ -643,28 +643,39 @@ def get_joiner_udp_port_in_discovery_response(command_msg):
     return udp_port_tlv.udp_port
 
 
-def check_joiner_commissioning_messages(commissioning_messages):
+def check_joiner_commissioning_messages(commissioning_messages, url=''):
     """Verify COAP messages sent by joiner while commissioning process.
     """
     print(commissioning_messages)
-    assert len(commissioning_messages) >= 2
+    assert len(commissioning_messages) >= 4
     join_fin_req = commissioning_messages[0]
     assert join_fin_req.type == mesh_cop.MeshCopMessageType.JOIN_FIN_REQ
-    assert_contains_tlv(join_fin_req.tlvs, CheckType.NOT_CONTAIN, mesh_cop.ProvisioningUrl)
-    join_ent_rsp = commissioning_messages[1]
+    if url:
+        provisioning_url = assert_contains_tlv(join_fin_req.tlvs, CheckType.CONTAIN, mesh_cop.ProvisioningUrl)
+        assert url == provisioning_url.url
+    else:
+        assert_contains_tlv(join_fin_req.tlvs, CheckType.NOT_CONTAIN, mesh_cop.ProvisioningUrl)
+
+    join_ent_rsp = commissioning_messages[3]
     assert join_ent_rsp.type == mesh_cop.MeshCopMessageType.JOIN_ENT_RSP
 
 
-def check_commissioner_commissioning_messages(commissioning_messages):
+def check_commissioner_commissioning_messages(commissioning_messages, state=mesh_cop.MeshCopState.ACCEPT):
     """Verify COAP messages sent by commissioner while commissioning process.
     """
-    assert any(msg.type == mesh_cop.MeshCopMessageType.JOIN_FIN_RSP for msg in commissioning_messages)
+    assert len(commissioning_messages) >= 4
+    join_fin_rsq = commissioning_messages[1]
+    assert join_fin_rsq.type == mesh_cop.MeshCopMessageType.JOIN_FIN_RSP
+    rsq_state = assert_contains_tlv(join_fin_rsq.tlvs, CheckType.CONTAIN, mesh_cop.State)
+    assert rsq_state.state == state
 
 
 def check_joiner_router_commissioning_messages(commissioning_messages):
     """Verify COAP messages sent by joiner router while commissioning process.
     """
-    assert any(msg.type == mesh_cop.MeshCopMessageType.JOIN_ENT_NTF for msg in commissioning_messages)
+    assert len(commissioning_messages) >= 4
+    join_fin_ntf = commissioning_messages[2]
+    assert join_fin_ntf.type == mesh_cop.MeshCopMessageType.JOIN_ENT_NTF
     return None
 
 
