@@ -40,6 +40,7 @@
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #include <openthread/error.h>
+#include <openthread/platform/infra_if.h>
 
 #include "common/locator.hpp"
 
@@ -76,14 +77,12 @@ public:
      * This method initializes the routing manager on given infrastructure interface.
      *
      * @param[in]  aInfraIfIndex  An infrastructure network interface index.
-     * @param[in]  aInfraIfName   An infrastructure network interface index.
      *
      * @retval  OT_ERROR_NONE          Successfully started the routing manager.
-     * @retval  OT_ERROR_INVALID_ARGS  The index or name of the infra interface is not valid.
-     * @retval  OT_ERROR_ALREADY       The routing manager has already been initialized.
+     * @retval  OT_ERROR_INVALID_ARGS  The index of the infra interface is not valid.
      *
      */
-    otError Init(uint32_t aInfraIfIndex, const char *aInfraIfName);
+    otError Init(uint32_t aInfraIfIndex);
 
     /**
      * This method receives an ICMPv6 message on the infrastructure interface.
@@ -102,29 +101,41 @@ public:
                           uint16_t            aBufferLength);
 
 private:
-    static constexpr uint8_t kMaxInfraIfNameLength = 16;
+    enum : uint16_t
+    {
+        kMaxRouterAdvMessageLength = 256u, ///< The maximum RA message length we can handle.
+    };
 
-    static constexpr uint16_t kMaxRouterAdvMessageLength = 256;
+    enum : uint32_t
+    {
+        kDefaultOmrPrefixLifetime    = 1800u, ///< The default OMR prefix valid lifetime. In seconds.
+        kDefaultOnLinkPrefixLifetime = 1800u, ///< The default on-link prefix valid lifetime. In seconds.
+    };
 
-    static constexpr uint32_t kDefaultOmrPrefixLifetime    = 1800;
-    static constexpr uint32_t kDefaultOnLinkPrefixLifetime = 1800;
+    enum : uint8_t
+    {
+        kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE, ///< The length of an OMR prefix. In bits.
+        kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE, ///< The length of an On-link prefix. In bits.
+    };
 
-    static constexpr uint8_t kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE; ///< The length of an OMR prefix. In bits.
-    static constexpr uint8_t kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE; ///< The length of an On-link prefix. In bits.
+    enum : uint32_t
+    {
+        kMinRtrAdvInterval        = 30,   ///< Minimum Router Advertisement Interval. In Seconds.
+        kMaxRtrAdvInterval        = 1800, ///< Maximum Router Advertisement Interval. In Seconds.
+        kMaxInitRtrAdvInterval    = 16,   ///< Maximum Initial Router Advertisement Interval. In Seconds.
+        kMaxRaDelayTime           = 500,  ///< The maximum delay of sending RA after receiving RS. In milliseconds.
+        kMaxInitRtrAdvertisements = 3,    ///< Maximum Initial Router Advertisement number.
+        kRtrSolicitationInterval  = 4,    ///< Router Solicitation Interval In Seconds.
+    };
 
-    static constexpr uint32_t kMinRtrAdvInterval = 30;   ///< Minimum Router Advertisement Interval. In Seconds.
-    static constexpr uint32_t kMaxRtrAdvInterval = 1800; ///< Maximum Router Advertisement Interval. In Seconds.
-    static constexpr uint32_t kMaxInitRtrAdvInterval =
-        16; ///< Maximum Initial Router Advertisement Interval. In Seconds.
-    static constexpr uint32_t kMaxInitRtrAdvertisements = 3; ///< Maximum Initial Router Advertisement number.
-    static constexpr uint32_t kRtrSolicitationInterval  = 4; ///< Router Solicitation Interval In Seconds.
+    static_assert(kMinRtrAdvInterval <= kMaxRtrAdvInterval, "invalid RA intervals");
 
-    void Start(void);
-    void Stop(void);
-    void HandleNotifierEvents(Events aEvents);
-    bool IsInitialized(void) const { return mInfraIfIndex != 0; }
-    void LoadOrGenerateRandomOmrPrefix(void);
-    void LoadOrGenerateRandomOnLinkPrefix(void);
+    void    Start(void);
+    void    Stop(void);
+    void    HandleNotifierEvents(Events aEvents);
+    bool    IsInitialized(void) const { return mInfraIfIndex != 0; }
+    otError LoadOrGenerateRandomOmrPrefix(void);
+    otError LoadOrGenerateRandomOnLinkPrefix(void);
 
     static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
@@ -191,7 +202,9 @@ private:
      * on-link prefix and route for OMR prefix.
      *
      * @param[in]  aNewOmrPrefix  The new OMR prefix to be advertised.
+     *                            An invalid OMR prefix means we should stop advertising OMR prefix.
      * @param[in]  aOnLinkPrefix  The new on-link prefix to be advertised.
+     *                            An invalid on-link prefix means we should stop advertising on-link prefix.
      *
      */
     void SendRouterAdvertisement(const Ip6::Prefix &aNewOmrPrefix, const Ip6::Prefix &aNewOnLinkPrefix);
@@ -211,8 +224,9 @@ private:
 
     static TimeMilli GetPrefixExpireTime(uint32_t aValidLifetime);
 
+    const char *GetInfraIfName() const { return otPlatInfraIfGetName(mInfraIfIndex); }
+
     uint32_t mInfraIfIndex;
-    char     mInfraIfName[kMaxInfraIfNameLength + 1];
 
     /**
      * The OMR prefix loaded from local persistent storage.

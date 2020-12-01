@@ -111,7 +111,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    SuccessOrDie(otBorderRouterInit(instance, platformInfraIfGetIndex(), platformInfraIfGetName()));
+    SuccessOrDie(otBorderRoutingInit(instance, platformInfraIfGetIndex()));
 #endif
 
     return instance;

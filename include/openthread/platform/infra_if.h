@@ -47,7 +47,16 @@ extern "C" {
 #endif
 
 /**
+ * This method returns the readable name of the infrastructure interface.
  *
+ * @param[in]  aInfraIfIndex  The index of the infra interface.
+ *
+ * @returns  A pointer to the name of the infra interface. MUST not be NULL.
+ *
+ */
+const char *otPlatInfraIfGetName(uint32_t aInfraIfIndex);
+
+/**
  * This method sends an ICMPv6 message on given infrastructure interface.
  *
  * @param[in]  aInfraIfIndex  The index of the infrastructure interface.
@@ -67,7 +76,6 @@ otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
                                uint16_t            aBufferLength);
 
 /**
- *
  * The infra interface driver calls this method to notify OpenThread that an ICMPv6 message is received.
  *
  * @param[in]  aInstance      The OpenThread instance structure.

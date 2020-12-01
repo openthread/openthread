@@ -62,8 +62,6 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer, this)
     , mDiscoveredOnLinkPrefixInvalidTimer(aInstance, HandleDiscoveredOnLinkPrefixInvalidTimer, this)
 {
-    memset(mInfraIfName, 0, sizeof(mInfraIfName));
-
     mLocalOmrPrefix.Clear();
     mAdvertisedOmrPrefix.Clear();
 
@@ -72,25 +70,26 @@ RoutingManager::RoutingManager(Instance &aInstance)
     mDiscoveredOnLinkPrefix.Clear();
 }
 
-otError RoutingManager::Init(uint32_t aInfraIfIndex, const char *aInfraIfName)
+otError RoutingManager::Init(uint32_t aInfraIfIndex)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(!IsInitialized(), error = OT_ERROR_ALREADY);
-    VerifyOrExit(aInfraIfIndex > 0 && strlen(aInfraIfName) < kMaxInfraIfNameLength, error = OT_ERROR_INVALID_ARGS);
+    OT_ASSERT(!IsInitialized() && !Get<Mle::MleRouter>().IsAttached());
+    VerifyOrExit(aInfraIfIndex > 0, error = OT_ERROR_INVALID_ARGS);
 
-    strcpy(mInfraIfName, aInfraIfName);
+    SuccessOrExit(error = LoadOrGenerateRandomOmrPrefix());
+    SuccessOrExit(error = LoadOrGenerateRandomOnLinkPrefix());
+
     mInfraIfIndex = aInfraIfIndex;
-
-    LoadOrGenerateRandomOmrPrefix();
-    LoadOrGenerateRandomOnLinkPrefix();
 
 exit:
     return error;
 }
 
-void RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
+otError RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
 {
+    otError error = OT_ERROR_NONE;
+
     if (Get<Settings>().ReadOmrPrefix(mLocalOmrPrefix) != OT_ERROR_NONE || !IsValidOmrPrefix(mLocalOmrPrefix))
     {
         Ip6::NetworkPrefix randomOmrPrefix;
@@ -100,7 +99,7 @@ void RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
         if (randomOmrPrefix.GenerateRandomUla() != OT_ERROR_NONE)
         {
             otLogCritBr("failed to generate random OMR prefix");
-            ExitNow();
+            ExitNow(error = OT_ERROR_FAILED);
         }
 
         mLocalOmrPrefix.Set(randomOmrPrefix);
@@ -108,11 +107,13 @@ void RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
     }
 
 exit:
-    return;
+    return error;
 }
 
-void RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
+otError RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
 {
+    otError error = OT_ERROR_NONE;
+
     if (Get<Settings>().ReadOnLinkPrefix(mLocalOnLinkPrefix) != OT_ERROR_NONE ||
         !IsValidOnLinkPrefix(mLocalOnLinkPrefix))
     {
@@ -123,7 +124,7 @@ void RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
         if (randomOnLinkPrefix.GenerateRandomUla() != OT_ERROR_NONE)
         {
             otLogCritBr("failed to generate random on-link prefix");
-            ExitNow();
+            ExitNow(error = OT_ERROR_FAILED);
         }
 
         randomOnLinkPrefix.m8[6] = 0;
@@ -134,7 +135,7 @@ void RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
     }
 
 exit:
-    return;
+    return error;
 }
 
 void RoutingManager::Start(void)
@@ -198,6 +199,8 @@ exit:
 
 void RoutingManager::HandleNotifierEvents(Events aEvents)
 {
+    VerifyOrExit(IsInitialized());
+
     if (aEvents.Contains(kEventThreadRoleChanged))
     {
         if (Get<Mle::MleRouter>().IsAttached())
@@ -214,6 +217,9 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
     {
         EvaluateRoutingPolicy();
     }
+
+exit:
+    return;
 }
 
 Ip6::Prefix RoutingManager::EvaluateOmrPrefix(void)
@@ -311,7 +317,7 @@ Ip6::Prefix RoutingManager::EvaluateOnLinkPrefix(void)
     if (IsValidOnLinkPrefix(mDiscoveredOnLinkPrefix))
     {
         otLogInfoBr("EvaluateOnLinkPrefix: there is already on-link prefix %s on interface %s",
-                    mDiscoveredOnLinkPrefix.ToString().AsCString(), mInfraIfName);
+                    mDiscoveredOnLinkPrefix.ToString().AsCString(), GetInfraIfName());
         ExitNow();
     }
 
@@ -333,7 +339,8 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     Ip6::Prefix newOnLinkPrefix;
     Ip6::Prefix newOmrPrefix;
 
-    VerifyOrExit(IsInitialized() && Get<Mle::MleRouter>().IsAttached());
+    OT_ASSERT(IsInitialized());
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
 
     otLogInfoBr("evaluating routing policy");
 
@@ -373,7 +380,9 @@ void RoutingManager::SendRouterSolicit(void)
     Ip6::Address                    destAddress;
     RouterAdv::RouterSolicitMessage routerSolicit;
 
-    VerifyOrExit(IsInitialized() && Get<Mle::MleRouter>().IsAttached());
+    OT_ASSERT(IsInitialized());
+
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
 
     destAddress.SetToLinkLocalAllRoutersMulticast();
     error = otPlatInfraIfSendIcmp6(mInfraIfIndex, &destAddress, reinterpret_cast<const uint8_t *>(&routerSolicit),
@@ -423,7 +432,7 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix &aNewOmrPrefix, c
         bufferLength += pio.GetLength();
 
         otLogInfoBr("stop advertising on-link prefix %s on interface %s",
-                    mAdvertisedOnLinkPrefix.ToString().AsCString(), mInfraIfName);
+                    mAdvertisedOnLinkPrefix.ToString().AsCString(), GetInfraIfName());
     }
 
     if (IsValidOnLinkPrefix(aNewOnLinkPrefix))
@@ -445,7 +454,7 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix &aNewOmrPrefix, c
         if (!IsValidOnLinkPrefix(mAdvertisedOnLinkPrefix))
         {
             otLogInfoBr("start advertising new on-link prefix %s on interface %s",
-                        aNewOnLinkPrefix.ToString().AsCString(), mInfraIfName);
+                        aNewOnLinkPrefix.ToString().AsCString(), GetInfraIfName());
         }
 
         otLogInfoBr("send on-link prefix %s in PIO (valid lifetime = %u)", aNewOnLinkPrefix.ToString().AsCString(),
@@ -466,7 +475,7 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix &aNewOmrPrefix, c
         bufferLength += rio.GetLength();
 
         otLogInfoBr("stop advertising OMR prefix %s on interface %s", mAdvertisedOmrPrefix.ToString().AsCString(),
-                    mInfraIfName);
+                    GetInfraIfName());
     }
 
     if (IsValidOmrPrefix(aNewOmrPrefix))
@@ -497,11 +506,11 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix &aNewOmrPrefix, c
 
         if (error == OT_ERROR_NONE)
         {
-            otLogInfoBr("sent Router Advertisement on interface %s", mInfraIfName);
+            otLogInfoBr("sent Router Advertisement on interface %s", GetInfraIfName());
         }
         else
         {
-            otLogWarnBr("failed to send Router Advertisement on interface %s: %s", mInfraIfName,
+            otLogWarnBr("failed to send Router Advertisement on interface %s: %s", GetInfraIfName(),
                         otThreadErrorToString(error));
         }
     }
@@ -521,6 +530,10 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix &aNewOmrPrefix, c
 
         otLogInfoBr("Router Advertisement scheduled in %u Seconds", nextSendTime);
         mRouterAdvertisementTimer.Start(nextSendTime * 1000);
+    }
+    else
+    {
+        mRouterAdvertisementTimer.Stop();
     }
 }
 
@@ -582,8 +595,9 @@ void RoutingManager::HandleRouterSolicit(const Ip6::Address &aSrcAddress,
     OT_UNUSED_VARIABLE(aBufferLength);
 
     otLogInfoBr("received Router Solicitation from %s on interface %s", aSrcAddress.ToString().AsCString(),
-                mInfraIfName);
-    SendRouterAdvertisement(mAdvertisedOmrPrefix, mAdvertisedOnLinkPrefix);
+                GetInfraIfName());
+
+    mRouterAdvertisementTimer.Start(Random::NonCrypto::GetUint32InRange(0, kMaxRaDelayTime));
 }
 
 bool RoutingManager::HandlePrefixInfoOption(const RouterAdv::PrefixInfoOption &aPio)
@@ -647,6 +661,8 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
                                                const uint8_t *     aBuffer,
                                                uint16_t            aBufferLength)
 {
+    OT_UNUSED_VARIABLE(aSrcAddress);
+
     using RouterAdv::Option;
     using RouterAdv::PrefixInfoOption;
     using RouterAdv::RouterAdvMessage;
@@ -658,9 +674,8 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
 
     VerifyOrExit(aBufferLength >= sizeof(RouterAdvMessage));
 
-    OT_UNUSED_VARIABLE(aSrcAddress);
     otLogInfoBr("received Router Advertisement from %s on interface %s", aSrcAddress.ToString().AsCString(),
-                mInfraIfName);
+                GetInfraIfName());
 
     optionsBegin  = aBuffer + sizeof(RouterAdvMessage);
     optionsLength = aBufferLength - sizeof(RouterAdvMessage);

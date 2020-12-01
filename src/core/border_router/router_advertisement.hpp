@@ -223,8 +223,8 @@ public:
 private:
     enum : uint8_t
     {
-        kAutoConfigFlagMask = 0x40, ///< Bit mask of the Automatic Address Configure flag.
-        kOnLinkFlagMask     = 0x80, ///< Bit mask of the On-link flag.
+        kAutoConfigFlagMask = 0x40u, ///< Bit mask of the Automatic Address Configure flag.
+        kOnLinkFlagMask     = 0x80u, ///< Bit mask of the On-link flag.
     };
 
     uint8_t  mPrefixLength;                ///< The prefix length in bits.
@@ -234,6 +234,8 @@ private:
     uint32_t mReserved2;                   ///< The reserved field.
     uint8_t  mPrefix[OT_IP6_ADDRESS_SIZE]; ///< The prefix.
 } OT_TOOL_PACKED_END;
+
+static_assert(sizeof(PrefixInfoOption) == 32, "invalid PrefixInfoOption structure");
 
 /**
  * This class represents the Route Information Option.
@@ -275,6 +277,8 @@ private:
     uint8_t  mPrefix[OT_IP6_ADDRESS_SIZE]; ///< The prefix.
 } OT_TOOL_PACKED_END;
 
+static_assert(sizeof(RouteInfoOption) == 24, "invalid RouteInfoOption structure");
+
 /**
  * This class implements the Router Advertisement message.
  *
@@ -309,6 +313,8 @@ private:
     uint32_t          mRetransTimer;  ///< The retransmission timer. In milliseconds.
 } OT_TOOL_PACKED_END;
 
+static_assert(sizeof(RouterAdvMessage) == 16, "invalid RouterAdvMessage structure");
+
 /**
  * This class implements the Router Solicitation message.
  *
@@ -329,6 +335,8 @@ public:
 private:
     Ip6::Icmp::Header mHeader; ///< The common ICMPv6 header.
 } OT_TOOL_PACKED_END;
+
+static_assert(sizeof(RouterSolicitMessage) == 8, "invalid RouterSolicitMessage structure");
 
 } // namespace RouterAdv
 

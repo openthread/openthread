@@ -44,11 +44,11 @@
 using namespace ot;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-otError otBorderRouterInit(otInstance *aInstance, uint32_t aInfraIfIndex, const char *aInfraIfName)
+otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<RoutingManager>().Init(aInfraIfIndex, aInfraIfName);
+    return instance.Get<RoutingManager>().Init(aInfraIfIndex);
 }
 #endif
 
