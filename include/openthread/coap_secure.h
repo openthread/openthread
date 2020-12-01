@@ -230,7 +230,7 @@ bool otCoapSecureIsConnected(otInstance *aInstance);
 bool otCoapSecureIsConnectionActive(otInstance *aInstance);
 
 /**
- * This method sends a CoAP request over secure DTLS connection.
+ * This method sends a CoAP request block-wise over secure DTLS connection.
  *
  * This function is available when OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE configuration
  * is enabled.
@@ -340,7 +340,7 @@ void otCoapSecureSetClientConnectedCallback(otInstance *                    aIns
                                             void *                          aContext);
 
 /**
- * This function sends a CoAP response from the CoAP Secure server.
+ * This function sends a CoAP response block-wise from the CoAP Secure server.
  *
  * This function is available when OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE configuration
  * is enabled.

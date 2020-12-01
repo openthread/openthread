@@ -421,23 +421,27 @@ typedef struct otCoapResource
 } otCoapResource;
 
 /**
- * This structure represents a CoAP resource with blockwise transfer.
+ * This structure represents a CoAP resource with block-wise transfer.
  *
  */
 typedef struct otCoapBlockwiseResource
 {
-    const char *               mUriPath;       ///< The URI Path string
-    otCoapRequestHandler       mHandler;       ///< The callback for handling a received request
-    otCoapBlockwiseReceiveHook mReceiveHook;   /* The callback for handling incoming blockwise transfer.
-                                                  This callback is available when
-                                                  OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-                                                  configuration is enabled. */
-    otCoapBlockwiseTransmitHook mTransmitHook; /* The callback for handling outgoing blockwise transfer.
-                                                  This callback is available when
-                                                  OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-                                                  configuration is enabled. */
-    void *                          mContext;  ///< Application-specific context
-    struct otCoapBlockwiseResource *mNext;     ///< The next CoAP resource in the list
+    const char *         mUriPath; ///< The URI Path string
+    otCoapRequestHandler mHandler; ///< The callback for handling a received request
+
+    /** The callback for handling incoming block-wise transfer.
+     *  This callback is available when OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+     *  configuration is enabled.
+     */
+    otCoapBlockwiseReceiveHook mReceiveHook;
+
+    /** The callback for handling outgoing block-wise transfer.
+     *  This callback is available when OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+     *  configuration is enabled.
+     */
+    otCoapBlockwiseTransmitHook     mTransmitHook;
+    void *                          mContext; ///< Application-specific context
+    struct otCoapBlockwiseResource *mNext;    ///< The next CoAP resource in the list
 } otCoapBlockwiseResource;
 
 /**
