@@ -59,7 +59,9 @@ RoutingManager::RoutingManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mInfraIfIndex(0)
     , mRouterAdvertisementTimer(aInstance, HandleRouterAdvertisementTimer, this)
+    , mRouterAdvertisementCount(0)
     , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer, this)
+    , mRouterSolicitCount(0)
     , mDiscoveredOnLinkPrefixInvalidTimer(aInstance, HandleDiscoveredOnLinkPrefixInvalidTimer, this)
 {
     mLocalOmrPrefix.Clear();
@@ -72,7 +74,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
 
 otError RoutingManager::Init(uint32_t aInfraIfIndex)
 {
-    otError error = OT_ERROR_NONE;
+    otError error;
 
     OT_ASSERT(!IsInitialized() && !Get<Mle::MleRouter>().IsAttached());
     VerifyOrExit(aInfraIfIndex > 0, error = OT_ERROR_INVALID_ARGS);
@@ -140,7 +142,7 @@ exit:
 
 void RoutingManager::Start(void)
 {
-    SendRouterSolicit();
+    StartRouterSolicitation();
 }
 
 void RoutingManager::Stop(void)
@@ -166,7 +168,10 @@ void RoutingManager::Stop(void)
     mDiscoveredOnLinkPrefixInvalidTimer.Stop();
 
     mRouterAdvertisementTimer.Stop();
+    mRouterAdvertisementCount = 0;
+
     mRouterSolicitTimer.Stop();
+    mRouterSolicitCount = 0;
 }
 
 void RoutingManager::RecvIcmp6Message(uint32_t            aInfraIfIndex,
@@ -232,6 +237,8 @@ Ip6::Prefix RoutingManager::EvaluateOmrPrefix(void)
     lowestOmrPrefix.Clear();
     newOmrPrefix.Clear();
 
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
+
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == OT_ERROR_NONE)
     {
         if (!IsValidOmrPrefix(onMeshPrefixConfig.GetPrefix()) || !onMeshPrefixConfig.mDefaultRoute ||
@@ -257,6 +264,7 @@ Ip6::Prefix RoutingManager::EvaluateOmrPrefix(void)
         newOmrPrefix = mLocalOmrPrefix;
     }
 
+exit:
     return newOmrPrefix;
 }
 
@@ -340,7 +348,6 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     Ip6::Prefix newOmrPrefix;
 
     OT_ASSERT(IsInitialized());
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
 
     otLogInfoBr("evaluating routing policy");
 
@@ -370,36 +377,25 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     mAdvertisedOnLinkPrefix = newOnLinkPrefix;
     mAdvertisedOmrPrefix    = newOmrPrefix;
 
-exit:
     return;
 }
 
-void RoutingManager::SendRouterSolicit(void)
+void RoutingManager::StartRouterSolicitation()
 {
-    otError                         error;
+    mRouterSolicitCount = 0;
+    mRouterSolicitTimer.Start(Random::NonCrypto::GetUint32InRange(0, kMaxRtrSolicitationDelay * 1000));
+}
+
+otError RoutingManager::SendRouterSolicit(void)
+{
     Ip6::Address                    destAddress;
     RouterAdv::RouterSolicitMessage routerSolicit;
 
     OT_ASSERT(IsInitialized());
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
-
     destAddress.SetToLinkLocalAllRoutersMulticast();
-    error = otPlatInfraIfSendIcmp6(mInfraIfIndex, &destAddress, reinterpret_cast<const uint8_t *>(&routerSolicit),
-                                   sizeof(routerSolicit));
-
-    if (error == OT_ERROR_NONE)
-    {
-        mRouterSolicitTimer.Start(kRtrSolicitationInterval * 1000);
-        otLogInfoBr("sent Router Solicitation, timer scheduled in %u seconds", kRtrSolicitationInterval);
-    }
-    else
-    {
-        otLogCritBr("failed to send Router Solicitation: %s", otThreadErrorToString(error));
-    }
-
-exit:
-    return;
+    return otPlatInfraIfSendIcmp6(mInfraIfIndex, &destAddress, reinterpret_cast<const uint8_t *>(&routerSolicit),
+                                  sizeof(routerSolicit));
 }
 
 void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix &aNewOmrPrefix, const Ip6::Prefix &aNewOnLinkPrefix)
@@ -414,6 +410,7 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix &aNewOmrPrefix, c
     // to the Border Router when received RA.
     routerAdv.SetRouterLifetime(0);
 
+    OT_ASSERT(bufferLength + sizeof(routerAdv) <= sizeof(buffer));
     memcpy(buffer, &routerAdv, sizeof(routerAdv));
     bufferLength += sizeof(routerAdv);
 
@@ -568,9 +565,35 @@ void RoutingManager::HandleRouterSolicitTimer(void)
 {
     otLogInfoBr("Router Solicit timeouted");
 
-    // We may have received Router Advertisement messages after sending
-    // Router Solicit. Thus we need to re-evaluate our routing policy.
-    EvaluateRoutingPolicy();
+    if (mRouterSolicitCount < kMaxRtrSolicitations)
+    {
+        uint32_t nextSolicitationDelay;
+        otError  error;
+
+        error = SendRouterSolicit();
+        ++mRouterSolicitCount;
+
+        if (error == OT_ERROR_NONE)
+        {
+            otLogDebgBr("Successfully sent %uth Router Solicitation", mRouterSolicitCount);
+        }
+        else
+        {
+            otLogCritBr("failed to send %uth Router Solicitation: %s", mRouterSolicitCount,
+                        otThreadErrorToString(error));
+        }
+
+        nextSolicitationDelay =
+            (mRouterSolicitCount == kMaxRtrSolicitations) ? kMaxRtrSolicitationDelay : kRtrSolicitationInterval;
+
+        otLogDebgBr("Router Solicitation timer scheduled in %u seconds", nextSolicitationDelay);
+        mRouterSolicitTimer.Start(nextSolicitationDelay * 1000);
+    }
+    else
+    {
+        // Re-evaluate our routing policy and send Router Advertisement if necessary.
+        EvaluateRoutingPolicy();
+    }
 }
 
 void RoutingManager::HandleDiscoveredOnLinkPrefixInvalidTimer(Timer &aTimer)
@@ -580,10 +603,11 @@ void RoutingManager::HandleDiscoveredOnLinkPrefixInvalidTimer(Timer &aTimer)
 
 void RoutingManager::HandleDiscoveredOnLinkPrefixInvalidTimer(void)
 {
-    // The discovered on-link prefix becomes invalid, send Router Solicit to
-    // discover new one.
     mDiscoveredOnLinkPrefix.Clear();
-    SendRouterSolicit();
+
+    // The discovered on-link prefix becomes invalid, start Router Solicitation
+    // to discover new one.
+    StartRouterSolicitation();
 }
 
 void RoutingManager::HandleRouterSolicit(const Ip6::Address &aSrcAddress,
@@ -612,7 +636,7 @@ bool RoutingManager::HandlePrefixInfoOption(const RouterAdv::PrefixInfoOption &a
             otLogInfoBr("invalidate discovered on-link prefix: %s", mDiscoveredOnLinkPrefix.ToString().AsCString());
             mDiscoveredOnLinkPrefix.Clear();
             mDiscoveredOnLinkPrefixInvalidTimer.Stop();
-            SendRouterSolicit();
+            StartRouterSolicitation();
         }
         ExitNow();
     }

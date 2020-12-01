@@ -120,12 +120,18 @@ private:
 
     enum : uint32_t
     {
-        kMinRtrAdvInterval        = 30,   ///< Minimum Router Advertisement Interval. In Seconds.
-        kMaxRtrAdvInterval        = 1800, ///< Maximum Router Advertisement Interval. In Seconds.
-        kMaxInitRtrAdvInterval    = 16,   ///< Maximum Initial Router Advertisement Interval. In Seconds.
-        kMaxRaDelayTime           = 500,  ///< The maximum delay of sending RA after receiving RS. In milliseconds.
-        kMaxInitRtrAdvertisements = 3,    ///< Maximum Initial Router Advertisement number.
-        kRtrSolicitationInterval  = 4,    ///< Router Solicitation Interval In Seconds.
+        kMinRtrAdvInterval       = 30,   ///< Minimum Router Advertisement Interval. In seconds.
+        kMaxRtrAdvInterval       = 1800, ///< Maximum Router Advertisement Interval. In seconds.
+        kMaxInitRtrAdvInterval   = 16,   ///< Maximum Initial Router Advertisement Interval. In seconds.
+        kMaxRaDelayTime          = 500,  ///< The maximum delay of sending RA after receiving RS. In milliseconds.
+        kRtrSolicitationInterval = 4,    ///< The interval between Router Solicitations. In seconds.
+        kMaxRtrSolicitationDelay = 1,    ///< The maximum delay for initial solicitation. In seconds.
+    };
+
+    enum : uint32_t
+    {
+        kMaxInitRtrAdvertisements = 3, ///< The maximum number of initial Router Advertisements.
+        kMaxRtrSolicitations = 3, ///< The Maximum number of Router Solicitations before sending Router Advertisements.
     };
 
     static_assert(kMinRtrAdvInterval <= kMaxRtrAdvInterval, "invalid RA intervals");
@@ -189,13 +195,20 @@ private:
     void UnpublishOmrPrefix(const Ip6::Prefix &aOmrPrefix);
 
     /**
+     * This method starts sending Router Solicitations in random delay
+     * between 0 and kMaxRtrSolicitationDelay.
+     *
+     */
+    void StartRouterSolicitation();
+
+    /**
      * This method sends Router Solicitation messages to discovery on-link
      * prefix on infra links.
      *
      * @see HandleRouterAdvertisement
      *
      */
-    void SendRouterSolicit(void);
+    otError SendRouterSolicit(void);
 
     /**
      * This method sends Router Advertisement messages to advertise
@@ -263,6 +276,8 @@ private:
     uint32_t   mRouterAdvertisementCount;
 
     TimerMilli mRouterSolicitTimer;
+    uint8_t    mRouterSolicitCount;
+
     TimerMilli mDiscoveredOnLinkPrefixInvalidTimer;
 };
 
