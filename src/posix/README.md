@@ -89,7 +89,7 @@ python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-rcp.bin
 ### With Simulation
 
 ```sh
-sudo wpantund -s 'system:./output/posix/bin/ot-ncp spinel+hdlc+forkpty://output/x86_64-unknown-linux-gnu/bin/ot-rcp?forkpty-arg=1'
+sudo wpantund -s 'system:./output/posix/bin/ot-ncp spinel+hdlc+forkpty://output/simulation/bin/ot-rcp?forkpty-arg=1'
 ```
 
 ### With Real Device
@@ -109,7 +109,7 @@ OpenThread Posix Daemon mode uses a unix socket as input and output, so that Ope
 # build daemon mode core stack for POSIX
 make -f src/posix/Makefile-posix DAEMON=1
 # Daemon with simulation
-./output/posix/bin/ot-daemon 'spinel+hdlc+forkpty://output/x86_64-unknown-linux-gnu/bin/ot-rcp?forkpty-arg=1'
+./output/posix/bin/ot-daemon 'spinel+hdlc+forkpty://output/simulation/bin/ot-rcp?forkpty-arg=1'
 # Daemon with real device
 ./output/posix/bin/ot-daemon 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
 # Built-in controller
