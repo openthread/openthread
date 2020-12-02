@@ -100,6 +100,7 @@ CXXFLAGS                                                  += \
 LDFLAGS                                                   += \
     $(COMMONCFLAGS)                                          \
     $(target_LDFLAGS)                                        \
+    -nostartfiles                                            \
     -specs=nano.specs                                        \
     -specs=nosys.specs                                       \
     -Wl,--gc-sections                                        \
