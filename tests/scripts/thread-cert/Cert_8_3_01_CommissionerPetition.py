@@ -30,7 +30,7 @@
 import unittest
 
 import thread_cert
-from pktverify.consts import MLE_DATA_RESPONSE, LEAD_PET_URI, LEAD_KA_URI, MGMT_COMMISSIONER_SET_URI, NM_COMMISSIONER_ID_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_STATE_TLV, NM_STEERING_DATA_TLV, NM_BORDER_AGENT_LOCATOR_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, SOURCE_ADDRESS_TLV, NWD_COMMISSIONING_DATA_TLV
+from pktverify.consts import MLE_DATA_RESPONSE, LEAD_PET_URI, LEAD_KA_URI, MGMT_COMMISSIONER_SET_URI, NM_COMMISSIONER_ID_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_STATE_TLV, NM_STEERING_DATA_TLV, NM_BORDER_AGENT_LOCATOR_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, SOURCE_ADDRESS_TLV, NWD_COMMISSIONING_DATA_TLV, MESHCOP_ACCEPT, MESHCOP_REJECT
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -149,7 +149,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                               NM_STATE_TLV,
                               NM_COMMISSIONER_SESSION_ID_TLV
                               } <= set(p.coap.tlv.type) and\
-                   p.thread_meshcop.tlv.state == 1
+                   p.thread_meshcop.tlv.state == MESHCOP_ACCEPT
                    ).\
            must_next()
         _dr_pkt = pkts.filter_wpan_src64(LEADER).\
@@ -188,7 +188,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                               NM_STATE_TLV,
                               NM_COMMISSIONER_SESSION_ID_TLV
                               } == set(p.coap.tlv.type) and\
-                   p.thread_meshcop.tlv.state == 1
+                   p.thread_meshcop.tlv.state == MESHCOP_ACCEPT
                    ).\
            must_next()
 
@@ -202,7 +202,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
             filter(lambda p: {
                               NM_STATE_TLV
                               } <= set(p.coap.tlv.type) and\
-                   p.thread_meshcop.tlv.state == 1
+                   p.thread_meshcop.tlv.state == MESHCOP_ACCEPT
                    ).\
            must_next()
 
@@ -241,7 +241,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
             filter(lambda p: {
                               NM_STATE_TLV
                               } <= set(p.coap.tlv.type) and\
-                   p.thread_meshcop.tlv.state == 1
+                   p.thread_meshcop.tlv.state == MESHCOP_ACCEPT
                    ).\
            must_next()
 
@@ -282,7 +282,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                               NM_STATE_TLV,
                               NM_COMMISSIONER_SESSION_ID_TLV
                               } == set(p.coap.tlv.type) and\
-                   p.thread_meshcop.tlv.state == -1
+                   p.thread_meshcop.tlv.state == MESHCOP_REJECT
                    ).\
            must_next()
 
@@ -304,7 +304,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
             filter(lambda p: {
                               NM_STATE_TLV
                               } == set(p.coap.tlv.type) and\
-                   p.thread_meshcop.tlv.state == -1
+                   p.thread_meshcop.tlv.state == MESHCOP_REJECT
                    ).\
            must_next()
         pkts.filter_wpan_src64(LEADER).\
@@ -357,7 +357,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                               NM_STATE_TLV,
                               NM_COMMISSIONER_SESSION_ID_TLV
                               } <= set(p.coap.tlv.type) and\
-                   p.thread_meshcop.tlv.state == 1
+                   p.thread_meshcop.tlv.state == MESHCOP_ACCEPT
                    ).\
            must_next()
 
