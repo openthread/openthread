@@ -29,13 +29,10 @@
 
 import unittest
 
-import command
 import config
-import mle
 import thread_cert
 from pktverify.consts import MLE_ADVERTISEMENT, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE
 from pktverify.packet_verifier import PacketVerifier
-from pktverify.utils import ridmask_to_rid
 
 DUT_LEADER = 1
 ROUTER1 = 2
@@ -155,7 +152,7 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
             filter(lambda p:
                    {1,2,1} == set(p.mle.tlv.route64.cost) and\
                    {leader_rid, router_1_rid, router_2_rid} ==
-                   set(ridmask_to_rid(p.mle.tlv.route64.id_mask))
+                   p.mle.tlv.route64.id_mask
                    ).\
             must_next()
 
@@ -173,7 +170,7 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
             filter(lambda p:
                    {1,1} == set(p.mle.tlv.route64.cost) and\
                    {leader_rid, router_1_rid} ==
-                   set(ridmask_to_rid(p.mle.tlv.route64.id_mask))
+                   p.mle.tlv.route64.id_mask
                    ).\
             must_next()
 
@@ -202,7 +199,7 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
             filter(lambda p: {1,2,1} == set(p.mle.tlv.route64.cost) and\
                    p.sniff_timestamp - _pkt.sniff_timestamp <= 3 and\
                    {leader_rid, router_1_rid, router_2_rid} ==
-                   set(ridmask_to_rid(p.mle.tlv.route64.id_mask))
+                   p.mle.tlv.route64.id_mask
                    ).\
             must_next()
 
@@ -224,8 +221,8 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
             filter_mle_cmd(MLE_ADVERTISEMENT).\
             filter(lambda p:
                    [1] == p.mle.tlv.route64.cost and\
-                   [leader_rid] ==
-                   ridmask_to_rid(p.mle.tlv.route64.id_mask)
+                   {leader_rid} ==
+                   p.mle.tlv.route64.id_mask
                    ).\
             must_next()
 
