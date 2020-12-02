@@ -37,6 +37,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <openthread/error.h>
 #include <openthread/platform/radio.h>
 
 /**
@@ -171,6 +173,22 @@ otError qorvoRadioClearSrcMatchShortEntry(uint16_t aShortAddress, uint16_t panid
  *
  */
 otError qorvoRadioClearSrcMatchExtEntry(const uint8_t *aExtAddress, uint16_t panid);
+
+/**
+ * This function gets the transmit power for current channel
+ *
+ * @param[out]  aPower  The transmit power
+ *
+ */
+otError qorvoRadioGetTransmitPower(int8_t *aPower);
+
+/**
+ * This function sets the transmit power for current channel
+ *
+ * @param[in]  aPower  The transmit power
+ *
+ */
+otError qorvoRadioSetTransmitPower(int8_t aPower);
 
 /**
  * This callback is called when the energy scan is finished.

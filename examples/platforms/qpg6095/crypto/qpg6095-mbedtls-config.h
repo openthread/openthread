@@ -25,3 +25,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+#ifndef QGP6095_MBEDTLS_CONFIG_H
+#define QGP6095_MBEDTLS_CONFIG_H
+/* enable this to speed up crypto calculations by using a ram patch for bignum.c */
+#define MBEDTLS_BIGNUM_RAMPATCH 0
+
+/* enable this in case the QPG6095 runs too slow for the crypto calculations */
+#define MBEDTLS_SLOW_CPU 1
+#define MBEDTLS_COMPUTATION_UNTILL_SEQ_NR 6
+
+#include "mbedtls/check_config.h"
+
+#endif // QGP6095_MBEDTLS_CONFIG_H

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016-2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -150,16 +150,13 @@ otError otPlatRadioSleep(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otError error = OT_ERROR_INVALID_STATE;
-
     if (sState == OT_RADIO_STATE_RECEIVE)
     {
         qorvoRadioSetRxOnWhenIdle(false);
-        error  = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_SLEEP;
     }
 
-    return error;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
@@ -225,10 +222,6 @@ void cbQorvoRadioReceiveDone(otRadioFrame *aPacket, otError aError)
     {
         sLastReceivedPower = aPacket->mInfo.mRxInfo.mRssi;
     }
-
-    // TODO Set this flag only when the packet is really acknowledged with frame pending set.
-    // See https://github.com/openthread/openthread/pull/3785
-    aPacket->mInfo.mRxInfo.mAckedWithFramePending = true;
 
     otPlatRadioReceiveDone(pQorvoInstance, aPacket, aError);
 }
@@ -334,20 +327,24 @@ void cbQorvoRadioEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
-    // TODO: Create a proper implementation for this driver.
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aPower);
+    if ((sState == OT_RADIO_STATE_DISABLED) || (sScanstate != 0))
+    {
+        return OT_ERROR_INVALID_STATE;
+    }
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return qorvoRadioGetTransmitPower(aPower);
 }
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
-    // TODO: Create a proper implementation for this driver.
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aPower);
+    if ((sState == OT_RADIO_STATE_DISABLED) || (sScanstate != 0))
+    {
+        return OT_ERROR_INVALID_STATE;
+    }
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return qorvoRadioSetTransmitPower(aPower);
 }
 
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
@@ -371,4 +368,10 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 
     return GP712_RECEIVE_SENSITIVITY;
+}
+
+const char *otPlatRadioGetVersionString(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return "OPENTHREAD/Qorvo/0.0";
 }

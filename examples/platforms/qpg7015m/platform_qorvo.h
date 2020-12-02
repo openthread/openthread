@@ -1,0 +1,1 @@
+../gp712/platform_qorvo.h

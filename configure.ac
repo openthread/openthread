@@ -781,14 +781,14 @@ AC_MSG_CHECKING([whether to build examples])
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
         [Build example applications for one of: simulation, cc1352, cc2538, cc2650, cc2652, efr32mg1, efr32mg12, efr32mg13, efr32mg21,
-         gp712, jn5189, k32w061, kw41z, nrf52811, nrf52833, nrf52840, qpg6095, samr21 @<:@default=no@:>@.
+         gp712, jn5189, k32w061, kw41z, nrf52811, nrf52833, nrf52840, qpg6095, qpg6100, qpg7015m, samr21 @<:@default=no@:>@.
          Note that building example applications also builds the associated OpenThread platform libraries
          and any third_party libraries needed to support the examples.])],
     [
         case "${with_examples}" in
         no)
             ;;
-        simulation|cc1352|cc2538|cc2650|cc2652|efr32mg1|efr32mg12|efr32mg13|efr32mg21|gp712|jn5189|k32w061|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
+        simulation|cc1352|cc2538|cc2650|cc2652|efr32mg1|efr32mg12|efr32mg13|efr32mg21|gp712|jn5189|k32w061|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|qpg6100|qpg7015m|samr21)
             ;;
         *)
             AC_MSG_RESULT(ERROR)
@@ -817,6 +817,8 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52811],  [test "${with_examples}" = "nrf5
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52833],  [test "${with_examples}" = "nrf52833"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840],  [test "${with_examples}" = "nrf52840"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_QPG6095],   [test "${with_examples}" = "qpg6095"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_QPG6100],   [test "${with_examples}" = "qpg6100"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_QPG7015M],  [test "${with_examples}" = "qpg7015m"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21],    [test "${with_examples}" = "samr21"])
 
 AM_COND_IF([OPENTHREAD_EXAMPLES_SIMULATION], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_SIMULATION=1", CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_SIMULATION=0")
@@ -842,11 +844,11 @@ AC_MSG_CHECKING([whether to build platform libraries])
 AC_ARG_WITH(platform,
     [AS_HELP_STRING([--with-platform=TARGET],
         [Build OpenThread platform libraries for one of: cc1352, cc2538, cc2650, cc2652,
-         efr32mg1, efr32mg12, efr32mg13, efr32mg21, gp712, jn5189, kw41z, nrf52811, nrf52833, nrf52840, posix, qpg6095, samr21, simulation @<:@default=simulation@:>@.])],
+         efr32mg1, efr32mg12, efr32mg13, efr32mg21, gp712, jn5189, kw41z, nrf52811, nrf52833, nrf52840, posix, qpg6095, qpg6100, qpg7015m, samr21, simulation @<:@default=simulation@:>@.])],
     [
         # Make sure the given target is valid.
         case "${with_platform}" in
-        no|cc1352|cc2538|cc2650|cc2652|efr32mg1|efr32mg12|efr32mg13|efr32mg21|gp712|jn5189|kw41z|nrf52811|nrf52833|nrf52840|posix|qpg6095|samr21|simulation)
+        no|cc1352|cc2538|cc2650|cc2652|efr32mg1|efr32mg12|efr32mg13|efr32mg21|gp712|jn5189|kw41z|nrf52811|nrf52833|nrf52840|posix|qpg6095|qpg6100|qpg7015m|samr21|simulation)
             ;;
         *)
             AC_MSG_RESULT(ERROR)
@@ -893,6 +895,8 @@ AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF52833],  [test "${with_platform}" = "nrf5
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF52840],  [test "${with_platform}" = "nrf52840"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_POSIX],     [test "${with_platform}" = "posix"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_QPG6095],   [test "${with_platform}" = "qpg6095"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_QPG6100],   [test "${with_platform}" = "qpg6100"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_QPG7015M],  [test "${with_platform}" = "qpg7015m"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_SAMR21],    [test "${with_platform}" = "samr21"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_SIMULATION],[test "${with_platform}" = "simulation"])
 
@@ -1050,6 +1054,8 @@ examples/platforms/k32w/Makefile
 examples/platforms/kw41z/Makefile
 examples/platforms/nrf528xx/Makefile
 examples/platforms/qpg6095/Makefile
+examples/platforms/qpg6100/Makefile
+examples/platforms/qpg7015m/Makefile
 examples/platforms/samr21/Makefile
 examples/platforms/simulation/Makefile
 examples/platforms/utils/Makefile
