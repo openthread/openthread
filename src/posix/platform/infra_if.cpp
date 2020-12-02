@@ -134,7 +134,7 @@ exit:
 
 static void InitLinkLocalAddress(void)
 {
-    struct ifaddrs *ifAddrs;
+    struct ifaddrs *ifAddrs = nullptr;
 
     if (getifaddrs(&ifAddrs) < 0)
     {
@@ -158,6 +158,8 @@ static void InitLinkLocalAddress(void)
             break;
         }
     }
+
+    freeifaddrs(ifAddrs);
 }
 
 void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
