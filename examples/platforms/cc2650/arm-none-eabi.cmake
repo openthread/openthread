@@ -39,4 +39,4 @@ set(COMMON_C_FLAGS                 "-mthumb -fdata-sections -ffunction-sections 
 set(CMAKE_C_FLAGS_INIT             "${COMMON_C_FLAGS} -std=gnu99")
 set(CMAKE_CXX_FLAGS_INIT           "${COMMON_C_FLAGS} -fno-exceptions -fno-rtti")
 set(CMAKE_ASM_FLAGS_INIT           "${COMMON_C_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS_INIT    "${COMMON_C_FLAGS} -specs=nano.specs -specs=nosys.specs -nostartfiles")
+set(CMAKE_EXE_LINKER_FLAGS_INIT    "${COMMON_C_FLAGS} -specs=nano.specs -specs=nosys.specs")
