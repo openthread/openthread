@@ -175,6 +175,7 @@ class Cert_5_3_09_AddressQuery(thread_cert.TestCase):
         # 7 SED1: Power off SED1 and wait to allow DUT_ROUTER2 to timeout the
         # child
         self.nodes[SED1].stop()
+        self.simulator.go(3)
         self.simulator.go(config.DEFAULT_CHILD_TIMEOUT)
 
         # ROUTER1 sends two ICMPv6 Echo Requests to SED1 GUA PREFIX_1 address
