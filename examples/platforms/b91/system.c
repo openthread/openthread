@@ -31,7 +31,7 @@
  * @brief
  *   This file includes the platform-specific initializers.
  */
-#include "platform-eagle.h"
+#include "platform-b91.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include <openthread-core-config.h>
@@ -58,8 +58,8 @@ void otSysInit(int argc, char *argv[])
 
     core_interrupt_enable();
 
-    EagleRandomInit();
-    eagleRadioInit();
+    B91RandomInit();
+    b91RadioInit();
 }
 
 /**
@@ -100,7 +100,7 @@ void otSysProcessDrivers(otInstance *aInstance)
 {
     sInstance = aInstance;
 
-    eagleUartProcess();
-    eagleRadioProcess(aInstance);
-    EagleAlarmProcess(aInstance);
+    b91UartProcess();
+    b91RadioProcess(aInstance);
+    B91AlarmProcess(aInstance);
 }

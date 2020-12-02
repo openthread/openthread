@@ -32,12 +32,12 @@
  *
  */
 
-#include "platform-eagle.h"
+#include "platform-b91.h"
 #include <openthread/platform/entropy.h>
 #include <openthread/platform/radio.h>
 #include "utils/code_utils.h"
 
-void EagleRandomInit(void)
+void B91RandomInit(void)
 {
     trng_init();
 }

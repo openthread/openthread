@@ -28,9 +28,9 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                             = libopenthread-eagle.a
+lib_LIBRARIES                             = libopenthread-b91.a
 
-libopenthread_eagle_a_CPPFLAGS           = \
+libopenthread_b91_a_CPPFLAGS           = \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/examples/platforms      \
     -I$(top_srcdir)/src/core                \
@@ -47,7 +47,7 @@ PLATFORM_SOURCES                          = \
     uart_wrap.c                                  \
     $(NULL)
 
-libopenthread_eagle_a_SOURCES            = \
+libopenthread_b91_a_SOURCES            = \
     $(PLATFORM_SOURCES)                     \
     $(NULL)
 
@@ -56,7 +56,7 @@ PRETTY_FILES                             = \
     $(NULL)
 
 Dash                                      = -
-libopenthread_eagle_a_LIBADD             = \
+libopenthread_b91_a_LIBADD             = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

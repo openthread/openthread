@@ -28,11 +28,11 @@
 
 /**
  * @file
- *   This file includes eagle compile-time configuration constants for OpenThread.
+ *   This file includes b91 compile-time configuration constants for OpenThread.
  */
 
-#ifndef OPENTHREAD_CORE_EAGLE_CONFIG_H_
-#define OPENTHREAD_CORE_EAGLE_CONFIG_H_
+#ifndef OPENTHREAD_CORE_B91_CONFIG_H_
+#define OPENTHREAD_CORE_B91_CONFIG_H_
 
 /**
  * @def OPENTHREAD_CONFIG_PLATFORM_INFO
@@ -40,7 +40,7 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "EAGLE"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "B91"
 
 /* Define system clock */
 #define CLOCK_SYS_CLOCK_HZ 48000000 // define system clock

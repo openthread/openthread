@@ -26,34 +26,59 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-eagle.h"
-#include <openthread/platform/misc.h>
+/**
+ * @file
+ *   This file includes the platform-specific initializers.
+ *
+ */
 
-void otPlatReset(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
+#ifndef PLATFORM_B91_H_
+#define PLATFORM_B91_H_
 
-    Tl_printf("call : otPlatReset\n");
-    // Disable CPU interrupts
-    core_interrupt_disable();
-    // Write reset register
-    write_reg8(0x1401ef, 0x20);
-    // Finally, wait until the above write propagates
-    while (1)
-    {
-        // Do nothing, just wait for the reset (and never return from here)
-    }
-}
+#include <openthread-core-config.h>
+#include <stdint.h>
+#include <openthread/config.h>
+#include <openthread/instance.h>
 
-otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    // TODO: Write me!
-    return OT_PLAT_RESET_REASON_POWER_ON;
-}
+#include <driver_b91.h>
 
-void otPlatAssertFail(const char *aFilename, int aLineNumber)
-{
-    OT_UNUSED_VARIABLE(aFilename);
-    OT_UNUSED_VARIABLE(aLineNumber);
-}
+// Global OpenThread instance structure
+extern otInstance *sInstance;
+
+void cpu_wakeup_init(void);
+
+/**
+ * This function performs alarm driver processing.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
+ */
+void B91AlarmProcess(otInstance *aInstance);
+
+void irq_uart0_handler(void);
+
+void B91RxTxIntHandler();
+
+/**
+ * This function initializes the radio service used by OpenThread.
+ *
+ */
+void b91RadioInit(void);
+
+/**
+ * This function performs radio driver processing.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
+ */
+void b91RadioProcess(otInstance *aInstance);
+
+void B91RandomInit(void);
+
+/**
+ * This function performs UART driver processing.
+ *
+ */
+void b91UartProcess(void);
+
+#endif

@@ -43,7 +43,7 @@ DIST_SUBDIRS                            = \
     k32w                                  \
     kw41z                                 \
     nrf528xx                              \
-    eagle                                 \
+    b91                                 \
     simulation                            \
     qpg6095                               \
     samr21                                \
@@ -104,8 +104,8 @@ if OPENTHREAD_PLATFORM_NRF528XX
 SUBDIRS                                += nrf528xx
 endif
 
-if OPENTHREAD_PLATFORM_EAGLE
-SUBDIRS                                += eagle
+if OPENTHREAD_PLATFORM_B91
+SUBDIRS                                += b91
 endif
 
 if OPENTHREAD_PLATFORM_SIMULATION

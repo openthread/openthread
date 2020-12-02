@@ -38,7 +38,7 @@
 #include <openthread/instance.h>
 #include <openthread/platform/alarm-milli.h>
 
-#include "platform-eagle.h"
+#include "platform-b91.h"
 #include "utils/code_utils.h"
 
 #define FLASH_BASE_ADDRESS 0x60000

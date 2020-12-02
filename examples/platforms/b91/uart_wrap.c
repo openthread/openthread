@@ -43,7 +43,7 @@
 #include <openthread/platform/logging.h>
 #include <openthread/platform/uart.h>
 
-#include "platform-eagle.h"
+#include "platform-b91.h"
 #include "utils/code_utils.h"
 
 enum
@@ -194,7 +194,7 @@ void processTransmit(void)
     otPlatUartSendDone();
 }
 
-void eagleUartProcess(void)
+void b91UartProcess(void)
 {
     processReceive();
     processTransmit();

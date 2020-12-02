@@ -57,8 +57,8 @@
 
 
 /**
- * this register to configure I2C master clock speed,eagle i2c has default clock speed.
- * for eagle i2c,its default clock resource is 24M, its default speed is 200K.
+ * this register to configure I2C master clock speed,b91 i2c has default clock speed.
+ * for b91 i2c,its default clock resource is 24M, its default speed is 200K.
  * user can configure this register to get other speed: i2c clock = i2c_system_clock/(4*DivClock)
  * DivClock=0x80140280[7:0].max_value=0xff.
  */
@@ -106,7 +106,7 @@ enum{
  * BIT[4] tx_done.An interrupt is generated when one frame of data is sent.
  * BIT[5] rx_done.An interrupt is generated when one frame of data is received.
  * BIT[6] If the bit is set to 1, when the master reads, the hardware will automatically return ack / nak, no software processing is required.
- *        It is a new feature of eagle.Previously, software processed it through FLD_I2C_LS_ACK. Setting this bit to 0 will ack, and setting it to 1 will NAK.
+ *        It is a new feature of b91.Previously, software processed it through FLD_I2C_LS_ACK. Setting this bit to 0 will ack, and setting it to 1 will NAK.
  * BIT[7] means,before master ack, delay sda data bus.
  */
 #define reg_i2c_sct0			    REG_ADDR8(REG_I2C_BASE+0x03)

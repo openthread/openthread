@@ -26,7 +26,73 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_CORE_EAGLE_CONFIG_CHECK_H_
-#define OPENTHREAD_CORE_EAGLE_CONFIG_CHECK_H_
+/**
+ * @file
+ *   This file implements the OpenThread platform abstraction for the alarm.
+ *
+ */
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/config.h>
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/diag.h>
+
+#include "platform-b91.h"
+
+static volatile uint32_t sTime      = 0;
+static uint32_t          sAlarmTime = 0;
+static uint32_t          last_tick  = 0;
+
+static inline uint32_t GetCurrentMs(uint32_t t_ms, uint32_t tick)
+{
+    return t_ms + tick / 16000;
+}
+
+void B91AlarmProcess(otInstance *aInstance)
+{
+    uint32_t t = sys_get_stimer_tick();
+    if (t < last_tick)
+    {
+        sTime += (0xffffffff / 16000);
+    }
+
+    last_tick = t;
+
+    if ((sAlarmTime != 0) && ((GetCurrentMs(sTime, t)) >= sAlarmTime))
+    {
+        sAlarmTime = 0;
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+
+        if (otPlatDiagModeGet())
+        {
+            otPlatDiagAlarmFired(aInstance);
+        }
+        else
 #endif
+        {
+            otPlatAlarmMilliFired(aInstance);
+        }
+    }
+}
+
+uint32_t otPlatAlarmMilliGetNow(void)
+{
+    uint32_t t = sys_get_stimer_tick();
+    return GetCurrentMs(sTime, t);
+}
+
+void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sAlarmTime = aT0 + aDt;
+}
+
+void otPlatAlarmMilliStop(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sAlarmTime = 0;
+}

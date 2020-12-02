@@ -42,7 +42,7 @@
 #include "utils/mac_frame.h"
 #include "utils/soft_source_match_table.h"
 
-#include "platform-eagle.h"
+#include "platform-b91.h"
 
 enum
 {
@@ -611,7 +611,7 @@ uint8_t rf_rssi_to_lqi(int8_t aRss)
     return linkQuality;
 }
 
-void eagleRadioInit(void)
+void b91RadioInit(void)
 {
     int i;
     otRadioFrame *p;
@@ -641,7 +641,7 @@ void eagleRadioInit(void)
 	rf_set_irq_mask(FLD_RF_IRQ_RX|FLD_RF_IRQ_TX);
 }
 
-void EagleRxTxIntHandler()
+void B91RxTxIntHandler()
 {
     if (rf_get_irq_status(FLD_RF_IRQ_RX))
     {
@@ -741,7 +741,7 @@ void EagleRxTxIntHandler()
     //plic_interrupt_complete(IRQ15_ZB_RT);
 }
 
-void eagleRadioProcess(otInstance *aInstance)
+void b91RadioProcess(otInstance *aInstance)
 {
     otRadioFrame *ptr;
     otRadioFrame *rx_frame_ptr;

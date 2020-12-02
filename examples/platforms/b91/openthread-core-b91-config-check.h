@@ -26,59 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes the platform-specific initializers.
- *
- */
-
-#ifndef PLATFORM_EAGLE_H_
-#define PLATFORM_EAGLE_H_
-
-#include <openthread-core-config.h>
-#include <stdint.h>
-#include <openthread/config.h>
-#include <openthread/instance.h>
-
-#include <driver_b91.h>
-
-// Global OpenThread instance structure
-extern otInstance *sInstance;
-
-void cpu_wakeup_init(void);
-
-/**
- * This function performs alarm driver processing.
- *
- * @param[in]  aInstance  The OpenThread instance structure.
- *
- */
-void EagleAlarmProcess(otInstance *aInstance);
-
-void irq_uart0_handler(void);
-
-void EagleRxTxIntHandler();
-
-/**
- * This function initializes the radio service used by OpenThread.
- *
- */
-void eagleRadioInit(void);
-
-/**
- * This function performs radio driver processing.
- *
- * @param[in]  aInstance  The OpenThread instance structure.
- *
- */
-void eagleRadioProcess(otInstance *aInstance);
-
-void EagleRandomInit(void);
-
-/**
- * This function performs UART driver processing.
- *
- */
-void eagleUartProcess(void);
+#ifndef OPENTHREAD_CORE_B91_CONFIG_CHECK_H_
+#define OPENTHREAD_CORE_B91_CONFIG_CHECK_H_
 
 #endif

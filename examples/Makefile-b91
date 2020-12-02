@@ -46,15 +46,15 @@ configure_OPTIONS               = \
     --enable-ftd                  \
     --enable-mtd                  \
     --enable-linker-map           \
-    --with-examples=eagle         \
+    --with-examples=b91         \
     $(NULL)
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-EAGLE_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-eagle-config.h\"'
-EAGLE_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-eagle-config-check.h\"'
-EAGLE_CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/eagle/
+B91_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-b91-config.h\"'
+B91_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-b91-config-check.h\"'
+B91_CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/b91/
 
 
 COMMONCFLAGS                   := \
@@ -62,8 +62,8 @@ COMMONCFLAGS                   := \
     -ffunction-sections           \
     -O2                           \
     -g0                            \
-    $(EAGLE_CONFIG_FILE_CPPFLAGS) \
-    -I$(PWD)/third_party/telink/eagle/drivers/  \
+    $(B91_CONFIG_FILE_CPPFLAGS) \
+    -I$(PWD)/third_party/telink/b91/drivers/  \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
@@ -109,7 +109,7 @@ ResultPath                      = output
 TopResultDir                    = $(ResultPath)
 AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
-TargetTuple                     = eagle
+TargetTuple                     = b91
 
 ARCHS                           = rv32imafdc
 

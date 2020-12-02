@@ -26,73 +26,34 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file implements the OpenThread platform abstraction for the alarm.
- *
- */
+#include "platform-b91.h"
+#include <openthread/platform/misc.h>
 
-#include <stdbool.h>
-#include <stdint.h>
-
-#include <openthread/config.h>
-#include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/diag.h>
-
-#include "platform-eagle.h"
-
-static volatile uint32_t sTime      = 0;
-static uint32_t          sAlarmTime = 0;
-static uint32_t          last_tick  = 0;
-
-static inline uint32_t GetCurrentMs(uint32_t t_ms, uint32_t tick)
-{
-    return t_ms + tick / 16000;
-}
-
-void EagleAlarmProcess(otInstance *aInstance)
-{
-    uint32_t t = sys_get_stimer_tick();
-    if (t < last_tick)
-    {
-        sTime += (0xffffffff / 16000);
-    }
-
-    last_tick = t;
-
-    if ((sAlarmTime != 0) && ((GetCurrentMs(sTime, t)) >= sAlarmTime))
-    {
-        sAlarmTime = 0;
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-
-        if (otPlatDiagModeGet())
-        {
-            otPlatDiagAlarmFired(aInstance);
-        }
-        else
-#endif
-        {
-            otPlatAlarmMilliFired(aInstance);
-        }
-    }
-}
-
-uint32_t otPlatAlarmMilliGetNow(void)
-{
-    uint32_t t = sys_get_stimer_tick();
-    return GetCurrentMs(sTime, t);
-}
-
-void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+void otPlatReset(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    sAlarmTime = aT0 + aDt;
+    Tl_printf("call : otPlatReset\n");
+    // Disable CPU interrupts
+    core_interrupt_disable();
+    // Write reset register
+    write_reg8(0x1401ef, 0x20);
+    // Finally, wait until the above write propagates
+    while (1)
+    {
+        // Do nothing, just wait for the reset (and never return from here)
+    }
 }
 
-void otPlatAlarmMilliStop(otInstance *aInstance)
+otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+    // TODO: Write me!
+    return OT_PLAT_RESET_REASON_POWER_ON;
+}
 
-    sAlarmTime = 0;
+void otPlatAssertFail(const char *aFilename, int aLineNumber)
+{
+    OT_UNUSED_VARIABLE(aFilename);
+    OT_UNUSED_VARIABLE(aLineNumber);
 }
