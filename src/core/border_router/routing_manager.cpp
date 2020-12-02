@@ -158,7 +158,7 @@ void RoutingManager::Stop(void)
     invalidOmrPrefix.Clear();
     invalidOnLinkPrefix.Clear();
 
-    // Use invalid OMR & on-link prefixes to invalidate possiblely advertised prefixes.
+    // Use invalid OMR & on-link prefixes to invalidate possible advertised prefixes.
     SendRouterAdvertisement(invalidOmrPrefix, invalidOnLinkPrefix);
 
     mAdvertisedOmrPrefix.Clear();
@@ -181,7 +181,10 @@ void RoutingManager::RecvIcmp6Message(uint32_t            aInfraIfIndex,
 {
     const Ip6::Icmp::Header *icmp6Header;
 
-    VerifyOrExit(IsInitialized() && aInfraIfIndex == mInfraIfIndex);
+    // The Border Routing function is enabled only when we are attached.
+    VerifyOrExit(IsInitialized() && Get<Mle::MleRouter>().IsAttached());
+
+    VerifyOrExit(aInfraIfIndex == mInfraIfIndex);
     VerifyOrExit(aBuffer != nullptr && aBufferLength >= sizeof(*icmp6Header));
 
     icmp6Header = reinterpret_cast<const Ip6::Icmp::Header *>(aBuffer);
