@@ -74,7 +74,7 @@ exit:
 Udp::Socket::Socket(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
-    mHandle = nullptr;
+    Clear();
 }
 
 Message *Udp::Socket::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
