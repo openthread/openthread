@@ -175,7 +175,6 @@ public:
      */
     void SetCallback(otBackboneRouterMulticastListenerCallback aCallback, void *aContext);
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
      * This method gets the next Multicast Listener.
      *
@@ -188,7 +187,6 @@ public:
      */
     otError GetNext(otBackboneRouterMulticastListenerIterator &aIterator,
                     otBackboneRouterMulticastListenerInfo &    aListenerInfo);
-#endif
 
 private:
     enum
