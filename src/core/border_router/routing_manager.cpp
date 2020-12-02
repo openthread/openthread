@@ -622,16 +622,20 @@ void RoutingManager::HandleRouterSolicit(const Ip6::Address &aSrcAddress,
     mRouterAdvertisementTimer.Start(Random::NonCrypto::GetUint32InRange(0, kMaxRaDelayTime));
 }
 
-TimeMilli RoutingManager::GetPrefixExpireTime(uint32_t aValidLifetime)
+uint32_t RoutingManager::GetPrefixExpireDelay(uint32_t aValidLifetime)
 {
-    if (aValidLifetime * 1000ULL + TimerMilli::GetNow().GetValue() < TimeMilli::kMaxDuration)
+    uint32_t delay;
+
+    if (aValidLifetime * static_cast<uint64_t>(1000) > Timer::kMaxDelay)
     {
-        return Time(aValidLifetime * 1000 + TimerMilli::GetNow().GetValue());
+        delay = Timer::kMaxDelay;
     }
     else
     {
-        return Time(Time::kMaxDuration);
+        delay = aValidLifetime * 1000;
     }
+
+    return delay;
 }
 
 void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
@@ -668,11 +672,8 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
             prefix.Set(pio.GetPrefix(), pio.GetPrefixLength());
             if (IsValidOnLinkPrefix(prefix))
             {
-                TimeMilli expireTime;
-
-                // We tracks the latest on-link prefix.
-                expireTime = GetPrefixExpireTime(pio.GetValidLifetime());
-                mDiscoveredOnLinkPrefixInvalidTimer.FireAt(expireTime);
+                // We keep tracking the latest on-link prefix.
+                mDiscoveredOnLinkPrefixInvalidTimer.Start(GetPrefixExpireDelay(pio.GetValidLifetime()));
                 mDiscoveredOnLinkPrefix = prefix;
 
                 otLogInfoBr("set discovered on-link prefix to %s, valid lifetime: %u seconds",
