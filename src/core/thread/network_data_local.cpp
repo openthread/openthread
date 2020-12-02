@@ -56,7 +56,7 @@ Local::Local(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 otError Local::AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
 {
-    otError error;
+    otError  error;
     uint16_t flags = 0;
 
     // Add Prefix validation check:
@@ -111,8 +111,8 @@ otError Local::AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
     }
 #endif
 
-    error = AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeBorderRouter, aConfig.mPreference, flags,
-                      aConfig.mStable);
+    error =
+        AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeBorderRouter, aConfig.mPreference, flags, aConfig.mStable);
 
 exit:
     return error;
