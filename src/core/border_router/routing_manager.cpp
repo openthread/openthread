@@ -529,7 +529,7 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix &aNewOmrPrefix, c
             nextSendTime = kMaxInitRtrAdvInterval;
         }
 
-        otLogInfoBr("Router Advertisement scheduled in %u Seconds", nextSendTime);
+        otLogInfoBr("Router Advertisement scheduled in %u seconds", nextSendTime);
         mRouterAdvertisementTimer.Start(nextSendTime * 1000);
     }
     else
