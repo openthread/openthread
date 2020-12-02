@@ -191,6 +191,31 @@ def _eth_addr(v: Union[LayerFieldsContainer, LayerField]) -> EthAddr:
     return EthAddr(v.get_default_value())
 
 
+def _routerid_set(v: Union[LayerFieldsContainer, LayerField]) -> set:
+    """parse the layer field as a set of router ids
+
+       Notes: the router ID mask in wireshark is a
+              hexadecimal string separated by ':'
+    """
+    assert not isinstance(v, LayerFieldsContainer) or len(v.fields) == 1
+
+    try:
+        ridmask = str(v.get_default_value())
+        assert isinstance(ridmask, str), ridmask
+        ridmask_int = int(ridmask.replace(':', ''), base=16)
+        rid_set = set()
+        count = 0
+        while ridmask_int:
+            count += 1
+            if ridmask_int & 1:
+                rid_set.add(64 - count)
+            ridmask_int = ridmask_int >> 1
+    except ValueError:
+        pass
+
+    return rid_set
+
+
 class _first(object):
     """parse the first layer field"""
 
@@ -275,7 +300,7 @@ _LAYER_FIELDS = {
     'mle.tlv.route64.nbr_out': _list(_auto),
     'mle.tlv.route64.nbr_in': _list(_auto),
     'mle.tlv.route64.id_seq': _auto,
-    'mle.tlv.route64.id_mask': _auto,
+    'mle.tlv.route64.id_mask': _routerid_set,
     'mle.tlv.route64.cost': _list(_auto),
     'mle.tlv.response': _bytes,
     'mle.tlv.mle_frm_cntr': _auto,

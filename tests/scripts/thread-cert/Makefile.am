@@ -56,7 +56,6 @@ EXTRA_DIST                                                         = \
     Cert_5_3_04_AddressMapCache.py                                   \
     Cert_5_3_05_RoutingLinkQuality.py                                \
     Cert_5_3_06_RouterIdMask.py                                      \
-    Cert_5_3_06b_RouterIdMask.py                                     \
     Cert_5_3_07_DuplicateAddress.py                                  \
     Cert_5_3_08_ChildAddressSet.py                                   \
     Cert_5_3_09_AddressQuery.py                                      \
@@ -232,7 +231,6 @@ check_SCRIPTS                                                      = \
     Cert_5_3_04_AddressMapCache.py                                   \
     Cert_5_3_05_RoutingLinkQuality.py                                \
     Cert_5_3_06_RouterIdMask.py                                      \
-    Cert_5_3_06b_RouterIdMask.py                                     \
     Cert_5_3_07_DuplicateAddress.py                                  \
     Cert_5_3_08_ChildAddressSet.py                                   \
     Cert_5_3_09_AddressQuery.py                                      \
