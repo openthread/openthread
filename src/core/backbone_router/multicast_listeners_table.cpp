@@ -287,8 +287,6 @@ void MulticastListenersTable::SetCallback(otBackboneRouterMulticastListenerCallb
     }
 }
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-
 otError MulticastListenersTable::GetNext(otBackboneRouterMulticastListenerIterator &aIterator,
                                          otBackboneRouterMulticastListenerInfo &    aListenerInfo)
 {
@@ -308,8 +306,6 @@ otError MulticastListenersTable::GetNext(otBackboneRouterMulticastListenerIterat
 exit:
     return error;
 }
-
-#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 } // namespace BackboneRouter
 
