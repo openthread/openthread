@@ -661,6 +661,10 @@ bool RoutingManager::HandlePrefixInfoOption(const RouterAdv::PrefixInfoOption &a
             mDiscoveredOnLinkPrefixInvalidTimer.FireAt(expireTime);
         }
 
+        // We stop Router Solicitation if we found a valid on-link prefix.
+        // Otherwise, we wait till the Router Solicitation process timeouted.
+        // So the maximum delay before the Border Router starts advertising
+        // its own on-link prefix is 9 (4 + 4 + 1) seconds.
         mRouterSolicitTimer.Stop();
         needReevaluate = true;
     }
