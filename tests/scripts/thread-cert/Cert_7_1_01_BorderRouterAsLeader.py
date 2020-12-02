@@ -28,19 +28,13 @@
 #
 
 import unittest
+import copy
 
 import config
 import thread_cert
-from command import (
-    check_child_id_response,
-    check_child_update_response,
-    check_child_update_request_from_child,
-    check_data_response,
-)
-from command import CheckType
-from command import NetworkDataCheck, PrefixesCheck, SinglePrefixCheck
-
-import mle
+from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV, ADDRESS16_TLV, NETWORK_DATA_TLV, ROUTE64_TLV, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV
+from pktverify.packet_verifier import PacketVerifier
+from pktverify.addrs import Ipv6Addr
 
 LEADER = 1
 ROUTER = 2
@@ -48,22 +42,46 @@ SED1 = 3
 MED1 = 4
 
 MTDS = [SED1, MED1]
+PREFIX_2001 = '2001::/64'
+PREFIX_2002 = '2002::/64'
+
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of this test case is to verify that the DUT, as a Border Router,
+# acts properly as a Leader device in a Thread network, correctly sets the
+# Network Data (stable/non-stable) and successfully propagates the Network Data
+# to the devices that attach to it.
+#
+# Test Topology:
+# -------------
+#             SED
+#              |
+#  ROUTER - Leader(DUT) - MED
+#
+# DUT Types:
+# ----------
+#  Leader
 
 
 class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
     TOPOLOGY = {
         LEADER: {
+            'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [ROUTER, SED1, MED1]
         },
         ROUTER: {
+            'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         SED1: {
+            'name': 'SED',
             'is_mtd': True,
             'mode': '-',
             'panid': 0xface,
@@ -71,25 +89,26 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
             'allowlist': [LEADER]
         },
         MED1: {
+            'name': 'MED',
             'is_mtd': True,
             'mode': 'rn',
             'panid': 0xface,
             'allowlist': [LEADER]
         },
     }
+    # override wireshark preferences with case needed parameters
+    CASE_WIRESHARK_PREFS = copy.deepcopy(WIRESHARK_OVERRIDE_PREFS)
+    CASE_WIRESHARK_PREFS['6lowpan.context1'] = PREFIX_2001
+    CASE_WIRESHARK_PREFS['6lowpan.context2'] = PREFIX_2002
 
     def test(self):
         self.nodes[LEADER].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
-        self.nodes[LEADER].add_prefix('2001:2:0:1::/64', 'paros')
-        self.nodes[LEADER].add_prefix('2001:2:0:2::/64', 'paro')
+        self.nodes[LEADER].add_prefix(PREFIX_2001, 'paros')
+        self.nodes[LEADER].add_prefix(PREFIX_2002, 'paro')
         self.nodes[LEADER].register_netdata()
-
-        # Set lowpan context of sniffer
-        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
-        self.simulator.set_lowpan_context(2, '2001:2:0:2::/64')
 
         self.nodes[ROUTER].start()
         self.simulator.go(5)
@@ -103,80 +122,179 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[MED1].get_state(), 'child')
 
-        addrs = self.nodes[SED1].get_addrs()
-        self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
-        self.assertFalse(any('2001:2:0:2' in addr[0:10] for addr in addrs))
-        for addr in addrs:
-            if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
-                self.assertTrue(self.nodes[LEADER].ping(addr))
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
 
-        addrs = self.nodes[MED1].get_addrs()
-        self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
-        self.assertTrue(any('2001:2:0:2' in addr[0:10] for addr in addrs))
-        for addr in addrs:
-            if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
-                self.assertTrue(self.nodes[LEADER].ping(addr))
+        LEADER = pv.vars['LEADER']
+        ROUTER = pv.vars['ROUTER']
+        MED = pv.vars['MED']
+        SED = pv.vars['SED']
 
-        leader_messages = self.simulator.get_messages_sent_by(LEADER)
-        med1_messages = self.simulator.get_messages_sent_by(MED1)
-        sed1_messages = self.simulator.get_messages_sent_by(SED1)
+        # Step 1: The DUT forms the network properly sends MLE Advertisements
+        pkts.filter_wpan_src64(LEADER).\
+            filter_mle_advertisement('Leader').\
+            must_next()
 
-        # Step 1 - DUT sends MLE Advertisements
-        msg = leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        # Step 3: Router attaches to the Leader (DUT) and requests complete
+        #         network data
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_wpan_dst64(LEADER).\
+            filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
+            filter(lambda p: {
+                              RESPONSE_TLV,
+                              LINK_LAYER_FRAME_COUNTER_TLV,
+                              MODE_TLV,
+                              TIMEOUT_TLV,
+                              VERSION_TLV,
+                              TLV_REQUEST_TLV,
+                              ADDRESS16_TLV,
+                              NETWORK_DATA_TLV,
+                              ROUTE64_TLV
+                             } < set(p.mle.tlv.type) and\
+                   p.mle.tlv.mode.network_data == 1
+                   ).\
+            must_next()
 
-        # Step 2 - DUT creates network data
-        msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        check_data_response(
-            msg,
-            network_data_check=NetworkDataCheck(prefixes_check=PrefixesCheck(prefix_check_list=[
-                SinglePrefixCheck(prefix=b'2001000200000001'),
-                SinglePrefixCheck(prefix=b'2001000200000002'),
-            ])),
-        )
+        # Step 4: The DUT MUST send a MLE Child ID Response to Router,
+        #         including the following TLVs:
+        #             - Network Data TLV
+        #               At least two Prefix TLVs (Prefix 1 and Prefix 2),
+        #               each including:
+        #                   - 6LoWPAN ID sub-TLV
+        #                   - Border Router sub-TLV
+        pkts.filter_wpan_src64(LEADER).\
+            filter_wpan_dst64(ROUTER).\
+            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
+            filter(lambda p: {
+                              Ipv6Addr(PREFIX_2001[:-3]),
+                              Ipv6Addr(PREFIX_2002[:-3])
+                             } == set(p.thread_nwd.tlv.prefix) and\
+                   p.thread_nwd.tlv.border_router.flag.p == [1, 1] and\
+                   p.thread_nwd.tlv.border_router.flag.s == [1, 1] and\
+                   p.thread_nwd.tlv.border_router.flag.r == [1, 1] and\
+                   p.thread_nwd.tlv.border_router.flag.o == [1, 1] and\
+                   p.thread_nwd.tlv.stable == [0, 1, 1, 1, 0, 0, 0]
+                   ).\
+            must_next()
 
-        # Step 4 - DUT sends a MLE Child ID Response to Router1
-        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        check_child_id_response(
-            msg,
-            network_data_check=NetworkDataCheck(prefixes_check=PrefixesCheck(prefix_cnt=2)),
-        )
+        # Step 5: SED attaches to the Leader (DUT) and requests only stable
+        #         network data
+        pkts.filter_wpan_src64(SED).\
+            filter_wpan_dst64(LEADER).\
+            filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
+            filter(lambda p: {
+                              RESPONSE_TLV,
+                              LINK_LAYER_FRAME_COUNTER_TLV,
+                              MODE_TLV,
+                              TIMEOUT_TLV,
+                              VERSION_TLV,
+                              TLV_REQUEST_TLV,
+                              ADDRESS16_TLV,
+                              NETWORK_DATA_TLV,
+                              ADDRESS_REGISTRATION_TLV
+                             } <= set(p.mle.tlv.type) and\
+                   p.mle.tlv.mode.network_data == 0
+                   ).\
+            must_next()
 
-        # Step 6 - DUT sends a MLE Child ID Response to SED1
-        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        check_child_id_response(
-            msg,
-            network_data_check=NetworkDataCheck(prefixes_check=PrefixesCheck(
-                prefix_check_list=[SinglePrefixCheck(border_router_16=0xfffe)])),
-        )
+        # Step 6: The DUT MUST send a MLE Child ID Response to SED,
+        #         including the following TLVs:
+        #             - Network Data TLV
+        #               At least one Prefix TLVs (Prefix 1),including:
+        #                   - 6LoWPAN ID sub-TLV
+        #                   - Border Router sub-TLV
+        #                       - P_border_router_16 <0xFFFE>
+        #               Prefix 2 TLV MUST NOT be included
+        pkts.filter_wpan_src64(LEADER).\
+            filter_wpan_dst64(SED).\
+            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
+            filter(lambda p: {
+                              MODE_TLV,
+                              TIMEOUT_TLV,
+                              CHALLENGE_TLV
+                             } == set(p.thread_nwd.tlv.type) and\
+                   [Ipv6Addr(PREFIX_2001[:-3])] == p.thread_nwd.tlv.prefix and\
+                   p.thread_nwd.tlv.border_router.flag.p == [1] and\
+                   p.thread_nwd.tlv.border_router.flag.s == [1] and\
+                   p.thread_nwd.tlv.border_router.flag.r == [1] and\
+                   p.thread_nwd.tlv.border_router.flag.o == [1] and\
+                   p.thread_nwd.tlv.stable == [1, 1, 1]
+                   ).\
+            must_next()
 
-        # For Step 10
-        msg_chd_upd_res_to_sed = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
+        lstart = pkts.index
 
-        # Step 8 - DUT sends a MLE Child ID Response to MED1
-        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        check_child_id_response(
-            msg,
-            network_data_check=NetworkDataCheck(prefixes_check=PrefixesCheck(prefix_cnt=2)),
-        )
+        # Step 7: MED attaches to the Leader (DUT) and requests complete
+        #         network data
+        pkts.filter_wpan_src64(MED).\
+            filter_wpan_dst64(LEADER).\
+            filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
+            filter(lambda p: {
+                              RESPONSE_TLV,
+                              LINK_LAYER_FRAME_COUNTER_TLV,
+                              MODE_TLV,
+                              TIMEOUT_TLV,
+                              VERSION_TLV,
+                              TLV_REQUEST_TLV,
+                              ADDRESS16_TLV,
+                              NETWORK_DATA_TLV,
+                              ADDRESS_REGISTRATION_TLV
+                             } < set(p.mle.tlv.type) and\
+                   p.mle.tlv.mode.network_data == 1
+                   ).\
+            must_next()
 
-        # Step 10 - DUT sends Child Update Response
-        msg_chd_upd_res_to_med = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
-        msg = med1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        check_child_update_request_from_child(msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1, 2])
+        # Step 8: The DUT MUST send a MLE Child ID Response to MED,
+        #         including the following TLVs:
+        #             - Network Data TLV
+        #               At least two Prefix TLVs (Prefix 1 and Prefix 2),
+        #               each including:
+        #                   - 6LoWPAN ID sub-TLV
+        #                   - Border Router sub-TLV
+        pkts.filter_wpan_src64(LEADER).\
+            filter_wpan_dst64(MED).\
+            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
+            filter(lambda p: {
+                              Ipv6Addr(PREFIX_2001[:-3]),
+                              Ipv6Addr(PREFIX_2002[:-3])
+                             } == set(p.thread_nwd.tlv.prefix) and\
+                   p.thread_nwd.tlv.border_router.flag.p == [1, 1] and\
+                   p.thread_nwd.tlv.border_router.flag.s == [1, 1] and\
+                   p.thread_nwd.tlv.border_router.flag.r == [1, 1] and\
+                   p.thread_nwd.tlv.border_router.flag.o == [1, 1] and\
+                   p.thread_nwd.tlv.stable == [0, 1, 1, 1, 0, 0, 0]
+                   ).\
+            must_next()
 
-        check_child_update_response(
-            msg_chd_upd_res_to_med,
-            address_registration=CheckType.CONTAIN,
-            CIDs=[1, 2],
-        )
+        # Step 9: After attaching, each Child automatically sends its global address
+        #         configured to the Leader, in the Address Registration TLV from the
+        #         Child Update request command
 
-        msg = sed1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        check_child_update_request_from_child(msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1])
-        check_child_update_response(
-            msg_chd_upd_res_to_sed,
-            address_registration=CheckType.CONTAIN,
-            CIDs=[1],
-        )
+        # Step 10: The DUT MUST send a MLE Child Update Response, each, to MED & SED
+        #          The following TLVs MUST be present in the Child Update Response:
+        #              - Source Address TLV
+        #              - Address Registration TLV
+        #                  - Echoes back addresses configured in step 9
+        #              - Mode TLV
+        for child in (SED, MED):
+            _pkt = pkts.range(lstart).\
+                filter_wpan_src64(child).\
+                filter_wpan_dst64(LEADER).\
+                filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
+                must_next()
+            pkts.range(lstart).\
+                filter_wpan_src64(LEADER).\
+                filter_wpan_dst64(child).\
+                filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).\
+                filter(lambda p: {
+                                  SOURCE_ADDRESS_TLV,
+                                  MODE_TLV,
+                                  ADDRESS_REGISTRATION_TLV
+                                 } < set(p.mle.tlv.type) and\
+                       set(p.mle.tlv.addr_reg_iid) < set(_pkt.mle.tlv.addr_reg_iid)
+                       ).\
+                must_next()
 
 
 if __name__ == '__main__':
