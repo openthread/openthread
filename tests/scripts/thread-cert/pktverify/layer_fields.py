@@ -615,6 +615,11 @@ _LAYER_FIELDS = {
     'thread_nwd.tlv.6co.flag.cid': _auto,
     'thread_nwd.tlv.6co.flag.c': _auto,
     'thread_nwd.tlv.6co.context_length': _auto,
+
+    # Thread Diagnostic
+    'thread_diagnostic.tlv.type': _list(_auto),
+    'thread_diagnostic.tlv.len8': _list(_auto),
+    'thread_diagnostic.tlv.general': _list(_str)
 }
 
 _layer_containers = set()
@@ -712,7 +717,7 @@ def _get_candidate_layers(packet, layer_name):
     if layer_name == 'thread_meshcop':
         candidate_layer_names = ['thread_meshcop', 'mle', 'coap', 'thread_bl', 'thread_nm']
     elif layer_name == 'thread_nwd':
-        candidate_layer_names = ['mle', 'thread_address']
+        candidate_layer_names = ['mle', 'thread_address', 'thread_diagnostic']
     elif layer_name == 'wpan':
         candidate_layer_names = ['wpan', 'mle']
     elif layer_name == 'ip':
