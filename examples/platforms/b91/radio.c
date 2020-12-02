@@ -63,15 +63,13 @@ typedef enum
     PHY_CCA_BUSY    = 0x00,
 } phy_ccaSts_t;
 
-
 unsigned char tx_buffer[256] __attribute__((aligned(4)));
 
-
-unsigned int   r_ptr     = 0;
-unsigned int   w_ptr     = 0;
+unsigned int r_ptr = 0;
+unsigned int w_ptr = 0;
 
 unsigned char current_channel;
-#define	LOGICCHANNEL_TO_PHYSICAL(p)					(((p)-10)*5)
+#define LOGICCHANNEL_TO_PHYSICAL(p) (((p)-10) * 5)
 
 static otExtAddress   sExtAddress;
 static otShortAddress sShortAddress;
@@ -89,14 +87,14 @@ static otRadioState sState           = OT_RADIO_STATE_DISABLED;
 static bool         sSrcMatchEnabled = false;
 volatile int        tx_busy          = 0;
 
-#define RX_FRAME_SLOT_NUM 6 
+#define RX_FRAME_SLOT_NUM 6
 #define MEM_ALIGNMENT 4
-#define MEM_ALIGN_SIZE(size) (((size) + MEM_ALIGNMENT - 1) & ~(MEM_ALIGNMENT-1))
+#define MEM_ALIGN_SIZE(size) (((size) + MEM_ALIGNMENT - 1) & ~(MEM_ALIGNMENT - 1))
 unsigned char rx_buffer[160] __attribute__((aligned(4)));
 unsigned char rx_frame_slots[RX_FRAME_SLOT_NUM][MEM_ALIGN_SIZE(sizeof(otRadioFrame)) + 160] __attribute__((aligned(4)));
-typedef int semaphore;
-semaphore empty = RX_FRAME_SLOT_NUM;
-semaphore full = 0;
+typedef int   semaphore;
+semaphore     empty = RX_FRAME_SLOT_NUM;
+semaphore     full  = 0;
 unsigned char rx_frame[MEM_ALIGN_SIZE(sizeof(otRadioFrame)) + 160] __attribute__((aligned(4)));
 
 /**
@@ -237,7 +235,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    rf_set_power_level (RF_POWER_P9p11dBm);
+    rf_set_power_level(RF_POWER_P9p11dBm);
 
     sTxPower = aPower;
 
@@ -356,7 +354,6 @@ otError otPlatRadioSleep(otInstance *aInstance)
     return error;
 }
 
-
 void rf_set_channel(uint8_t channel)
 {
     current_channel = channel;
@@ -444,8 +441,6 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
     sSrcMatchEnabled = aEnable;
 }
 
-
-
 static uint32_t m_in_critical_region = 0;
 
 static inline void util_disable_rf_irq(void)
@@ -462,7 +457,6 @@ static inline void util_enable_rf_irq(void)
         rf_set_irq_mask(FLD_RF_IRQ_RX);
     }
 }
-
 
 static void setupTransmit(otRadioFrame *aFrame)
 {
@@ -574,8 +568,6 @@ exit:
     return rval;
 }
 
-
-
 uint8_t rf_rssi_to_lqi(int8_t aRss)
 {
     int8_t  aNoiseFloor = -99;
@@ -613,7 +605,7 @@ uint8_t rf_rssi_to_lqi(int8_t aRss)
 
 void b91RadioInit(void)
 {
-    int i;
+    int           i;
     otRadioFrame *p;
 
     sTransmitFrame.mLength = 0;
@@ -621,24 +613,24 @@ void b91RadioInit(void)
 
     for (i = 0; i < RX_FRAME_SLOT_NUM; i++)
     {
-        p = (otRadioFrame *)rx_frame_slots[i];
+        p          = (otRadioFrame *)rx_frame_slots[i];
         p->mLength = 0;
-        p->mPsdu = &(rx_frame_slots[i][MEM_ALIGN_SIZE(sizeof(otRadioFrame))]);
+        p->mPsdu   = &(rx_frame_slots[i][MEM_ALIGN_SIZE(sizeof(otRadioFrame))]);
     }
-    p = (otRadioFrame *)rx_frame;
+    p          = (otRadioFrame *)rx_frame;
     p->mLength = 0;
-    p->mPsdu = &(rx_frame[MEM_ALIGN_SIZE(sizeof(otRadioFrame))]);
+    p->mPsdu   = &(rx_frame[MEM_ALIGN_SIZE(sizeof(otRadioFrame))]);
 
     sAckFrame.mLength = 0;
     sAckFrame.mPsdu   = sAckPsdu;
 
     rf_mode_init();
     rf_set_zigbee_250K_mode();
-    rf_set_power_level (RF_POWER_P9p11dBm);
-    rf_set_tx_dma(2,256);
-    rf_set_rx_dma(rx_buffer,3,256);
+    rf_set_power_level(RF_POWER_P9p11dBm);
+    rf_set_tx_dma(2, 256);
+    rf_set_rx_dma(rx_buffer, 3, 256);
     plic_interrupt_enable(IRQ15_ZB_RT);
-	rf_set_irq_mask(FLD_RF_IRQ_RX|FLD_RF_IRQ_TX);
+    rf_set_irq_mask(FLD_RF_IRQ_RX | FLD_RF_IRQ_TX);
 }
 
 void B91RxTxIntHandler()
@@ -650,36 +642,35 @@ void B91RxTxIntHandler()
 
         if (rf_zigbee_packet_crc_ok(rx_buffer) /*&& rf_zigbee_packet_length_ok(rx_buffer)*/)
         {
-            uint8_t     length;
+            uint8_t       length;
             otRadioFrame *rx_frame_ptr;
-            int i;
-            
-            //radioProcessFrame();
+            int           i;
+
+            // radioProcessFrame();
             otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
             length = rx_buffer[4];
             otEXPECT(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH);
-            
-            if(empty > 0)
+
+            if (empty > 0)
             {
-                
             }
             else
             {
                 goto exit;
             }
-            
-            rx_frame_ptr = (otRadioFrame *)rx_frame_slots[w_ptr];
+
+            rx_frame_ptr           = (otRadioFrame *)rx_frame_slots[w_ptr];
             rx_frame_ptr->mLength  = length;
             rx_frame_ptr->mChannel = current_channel;
-            for (i = 0; i < length - 2; i++)    
-            {        
-                rx_frame_ptr->mPsdu[i] = rx_buffer[5+i];    
+            for (i = 0; i < length - 2; i++)
+            {
+                rx_frame_ptr->mPsdu[i] = rx_buffer[5 + i];
             }
             if (length == IEEE802154_ACK_LENGTH)
             {
-                empty --;
+                empty--;
                 w_ptr = (w_ptr + 1) % RX_FRAME_SLOT_NUM;
-                full ++;
+                full++;
             }
             else
             {
@@ -713,17 +704,17 @@ void B91RxTxIntHandler()
                     setupTransmit(&sAckFrame);
                     rf_set_txmode();
                     rf_tx_pkt(tx_buffer);
-                    //rf_start_stx(tx_buffer,0);
+                    // rf_start_stx(tx_buffer,0);
                 }
 
                 // push the frame
-                empty --;
+                empty--;
                 w_ptr = (w_ptr + 1) % RX_FRAME_SLOT_NUM;
-                full ++;
+                full++;
             }
         }
 
-        exit:
+    exit:
         dma_chn_en(DMA1);
     }
     else if (rf_get_irq_status(FLD_RF_IRQ_TX))
@@ -738,33 +729,33 @@ void B91RxTxIntHandler()
         rf_set_rxmode();
     }
 
-    //plic_interrupt_complete(IRQ15_ZB_RT);
+    // plic_interrupt_complete(IRQ15_ZB_RT);
 }
 
 void b91RadioProcess(otInstance *aInstance)
 {
     otRadioFrame *ptr;
     otRadioFrame *rx_frame_ptr;
-    int i;
+    int           i;
 
     ptr = (otRadioFrame *)rx_frame;
     util_disable_rf_irq();
-    if(full > 0)
+    if (full > 0)
     {
-        full --;
-        rx_frame_ptr = (otRadioFrame *)rx_frame_slots[r_ptr];
+        full--;
+        rx_frame_ptr  = (otRadioFrame *)rx_frame_slots[r_ptr];
         ptr->mChannel = rx_frame_ptr->mChannel;
-        ptr->mLength = rx_frame_ptr->mLength;
-        for (i = 0; i < ptr->mLength - 2; i++)    
-        {        
-            ptr->mPsdu[i] = rx_frame_ptr->mPsdu[i];    
+        ptr->mLength  = rx_frame_ptr->mLength;
+        for (i = 0; i < ptr->mLength - 2; i++)
+        {
+            ptr->mPsdu[i] = rx_frame_ptr->mPsdu[i];
         }
 
-        ptr->mInfo.mRxInfo.mRssi = rx_frame_ptr->mInfo.mRxInfo.mRssi;
-        ptr->mInfo.mRxInfo.mLqi = rx_frame_ptr->mInfo.mRxInfo.mLqi;
+        ptr->mInfo.mRxInfo.mRssi                  = rx_frame_ptr->mInfo.mRxInfo.mRssi;
+        ptr->mInfo.mRxInfo.mLqi                   = rx_frame_ptr->mInfo.mRxInfo.mLqi;
         ptr->mInfo.mRxInfo.mAckedWithFramePending = rx_frame_ptr->mInfo.mRxInfo.mAckedWithFramePending;
-        r_ptr = (r_ptr + 1) % RX_FRAME_SLOT_NUM;
-        empty ++;
+        r_ptr                                     = (r_ptr + 1) % RX_FRAME_SLOT_NUM;
+        empty++;
         util_enable_rf_irq();
     }
     else
@@ -772,7 +763,6 @@ void b91RadioProcess(otInstance *aInstance)
         util_enable_rf_irq();
         ptr = NULL;
     }
-    
 
     if ((sState == OT_RADIO_STATE_RECEIVE) || (sState == OT_RADIO_STATE_TRANSMIT))
     {
@@ -799,4 +789,3 @@ void b91RadioProcess(otInstance *aInstance)
         }
     }
 }
-
