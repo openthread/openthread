@@ -81,6 +81,7 @@ EXTRA_DIST                                                         = \
     Cert_6_1_01_RouterAttach.py                                      \
     Cert_6_1_02_REEDAttach.py                                    \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
+    Cert_6_1_04_REEDAttachConnectivity.py                          \
     Cert_6_1_05_REEDAttachConnectivity.py                            \
     Cert_6_1_07_RouterAttachLinkQuality.py                           \
     Cert_6_1_06_REEDAttachLinkQuality.py                          \
@@ -256,6 +257,7 @@ check_SCRIPTS                                                      = \
     Cert_6_1_01_RouterAttach.py                                      \
     Cert_6_1_02_REEDAttach.py                                    \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
+    Cert_6_1_04_REEDAttachConnectivity.py                            \
     Cert_6_1_05_REEDAttachConnectivity.py                            \
     Cert_6_1_07_RouterAttachLinkQuality.py                           \
     Cert_6_1_06_REEDAttachLinkQuality.py                          \
