@@ -328,14 +328,7 @@ Ip6::Prefix RoutingManager::EvaluateOnLinkPrefix(void)
         ExitNow();
     }
 
-    if (IsValidOnLinkPrefix(mAdvertisedOnLinkPrefix))
-    {
-        newOnLinkPrefix = mAdvertisedOnLinkPrefix;
-    }
-    else
-    {
-        newOnLinkPrefix = mLocalOnLinkPrefix;
-    }
+    newOnLinkPrefix = mLocalOnLinkPrefix;
 
 exit:
     return newOnLinkPrefix;
