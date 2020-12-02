@@ -114,7 +114,6 @@ COMMONCFLAGS                       := \
     -Os                               \
     -g                                \
     -I$(HAL_CONF_DIR)                 \
-    -D__START=main                    \
     -D$(MCU)                          \
     $(EFR32_CONFIG_FILE_CPPFLAGS)     \
     $(NULL)
@@ -156,7 +155,6 @@ CXXFLAGS                       += \
 LDFLAGS                        += \
     $(COMMONCFLAGS)               \
     $(target_LDFLAGS)             \
-    -nostartfiles                 \
     -specs=nano.specs             \
     -specs=nosys.specs            \
     -Wl,--gc-sections             \
