@@ -59,6 +59,8 @@ static otIp6Address sInfraIfLinkLocalAddr;
 
 const char *otPlatInfraIfGetName(uint32_t aInfraIfIndex)
 {
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+
     return sInfraIfName;
 }
 

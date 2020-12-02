@@ -268,13 +268,13 @@ exit:
     return newOmrPrefix;
 }
 
-void RoutingManager::PublishOmrPrefix(const Ip6::Prefix &aOmrPrefix)
+otError RoutingManager::PublishOmrPrefix(const Ip6::Prefix &aOmrPrefix)
 {
-    otError                         error;
+    otError                         error = OT_ERROR_NONE;
     NetworkData::OnMeshPrefixConfig omrPrefixConfig;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
-    VerifyOrExit(IsValidOmrPrefix(aOmrPrefix));
+    OT_ASSERT(Get<Mle::MleRouter>().IsAttached());
+    OT_ASSERT(IsValidOmrPrefix(aOmrPrefix));
 
     omrPrefixConfig.Clear();
     omrPrefixConfig.mPrefix       = aOmrPrefix;
@@ -296,8 +296,7 @@ void RoutingManager::PublishOmrPrefix(const Ip6::Prefix &aOmrPrefix)
         otLogInfoBr("published OMR prefix %s in Thread network", aOmrPrefix.ToString().AsCString());
     }
 
-exit:
-    return;
+    return error;
 }
 
 void RoutingManager::UnpublishOmrPrefix(const Ip6::Prefix &aOmrPrefix)
@@ -358,17 +357,22 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     {
         if (!IsValidOmrPrefix(mAdvertisedOmrPrefix))
         {
-            otLogInfoBr("publish new OMR prefix in Thread network");
-            PublishOmrPrefix(newOmrPrefix);
+            if (PublishOmrPrefix(newOmrPrefix) != OT_ERROR_NONE)
+            {
+                newOmrPrefix.Clear();
+            }
         }
     }
     else
     {
         if (IsValidOmrPrefix(mAdvertisedOmrPrefix))
         {
-            otLogInfoBr("there is already OMR prefix in the Thread network, stop publishing");
-            UnpublishOmrPrefix(mAdvertisedOmrPrefix);
-            mAdvertisedOmrPrefix.Clear();
+            if (mAdvertisedOmrPrefix == mLocalOmrPrefix)
+            {
+                otLogInfoBr("there is already OMR prefix %s in the Thread network, unpublish my prefix %s",
+                            newOmrPrefix.ToString().AsCString(), mAdvertisedOmrPrefix.ToString().AsCString());
+                UnpublishOmrPrefix(mAdvertisedOmrPrefix);
+            }
         }
     }
 

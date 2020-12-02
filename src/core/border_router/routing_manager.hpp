@@ -106,12 +106,6 @@ private:
         kMaxRouterAdvMessageLength = 256u, ///< The maximum RA message length we can handle.
     };
 
-    enum : uint32_t
-    {
-        kDefaultOmrPrefixLifetime    = 1800u, ///< The default OMR prefix valid lifetime. In seconds.
-        kDefaultOnLinkPrefixLifetime = 1800u, ///< The default on-link prefix valid lifetime. In seconds.
-    };
-
     enum : uint8_t
     {
         kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE, ///< The length of an OMR prefix. In bits.
@@ -120,6 +114,8 @@ private:
 
     enum : uint32_t
     {
+        kDefaultOmrPrefixLifetime    = 1800u, ///< The default OMR prefix valid lifetime. In seconds.
+        kDefaultOnLinkPrefixLifetime = 1800u, ///< The default on-link prefix valid lifetime. In seconds.
         kMaxRtrAdvInterval       = 600,                    ///< Maximum Router Advertisement Interval. In seconds.
         kMinRtrAdvInterval       = kMaxRtrAdvInterval / 3, ///< Minimum Router Advertisement Interval. In seconds.
         kMaxInitRtrAdvInterval   = 16,  ///< Maximum Initial Router Advertisement Interval. In seconds.
@@ -186,7 +182,7 @@ private:
      * @param[in]  aOmrPrefix  An OMR prefix.
      *
      */
-    void PublishOmrPrefix(const Ip6::Prefix &aOmrPrefix);
+    otError PublishOmrPrefix(const Ip6::Prefix &aOmrPrefix);
 
     /**
      * This method unpublishes an OMR prefix if we have done that.
