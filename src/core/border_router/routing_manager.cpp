@@ -242,7 +242,7 @@ Ip6::Prefix RoutingManager::EvaluateOmrPrefix(void)
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == OT_ERROR_NONE)
     {
         if (!IsValidOmrPrefix(onMeshPrefixConfig.GetPrefix()) || !onMeshPrefixConfig.mDefaultRoute ||
-            !onMeshPrefixConfig.mSlaac)
+            !onMeshPrefixConfig.mSlaac || onMeshPrefixConfig.mDp)
         {
             continue;
         }
@@ -302,7 +302,7 @@ otError RoutingManager::PublishOmrPrefix(const Ip6::Prefix &aOmrPrefix)
 void RoutingManager::UnpublishOmrPrefix(const Ip6::Prefix &aOmrPrefix)
 {
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
-    VerifyOrExit(IsValidOmrPrefix(aOmrPrefix));
+    OT_ASSERT(IsValidOmrPrefix(aOmrPrefix));
 
     IgnoreError(Get<NetworkData::Local>().RemoveOnMeshPrefix(aOmrPrefix));
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
@@ -317,7 +317,7 @@ Ip6::Prefix RoutingManager::EvaluateOnLinkPrefix(void)
 
     newOnLinkPrefix.Clear();
 
-    // We don't evalute on-link prefix if we are doing
+    // We don't evaluate on-link prefix if we are doing
     // Router Discovery or we have already discovered some
     // on-link prefixes.
     VerifyOrExit(!mRouterSolicitTimer.IsRunning());
