@@ -70,13 +70,27 @@ jobs:
         ./script/test build
     - name: Run
       run: |
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
         ./script/test unit
         ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
+    - name: Copy Shared Libraries
+      if: ${{ failure() }}
+      run: |
+          ./script/test copy_so_lib
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
         name: thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-pcaps
         path: "*.pcap"
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: core-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}
+        path: |
+          ./build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
+          ./ot-core-dump/*
+          ./so-lib/*
     - name: Keep-1-2-only
       run: |
         ./script/test tar simulation 1.1
@@ -136,10 +150,16 @@ jobs:
         ./script/test get_thread_wireshark
     - name: Run
       run: |
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
         for i in {1..10}
         do
           ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
         done
+    - name: Copy Shared Libraries
+      if: ${{ failure() }}
+      run: |
+          ./script/test copy_so_lib
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
@@ -147,6 +167,15 @@ jobs:
         path: |
           *.pcap
           *.json
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: core-packet-verification-low-power
+        path: |
+          ./build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
+          ./build/cmake/openthread-simulation-1.1/examples/apps/cli/ot-cli-*
+          ./ot-core-dump/*
+          ./so-lib/*
     - name: Keep-1-2-only
       run: |
         ./script/test tar simulation 1.2-bbr
