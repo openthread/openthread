@@ -235,7 +235,6 @@ private:
 
     void HandleRouterSolicit(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     void HandleRouterAdvertisement(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
-    bool HandlePrefixInfoOption(const RouterAdv::PrefixInfoOption &aPio);
 
     static TimeMilli GetPrefixExpireTime(uint32_t aValidLifetime);
 

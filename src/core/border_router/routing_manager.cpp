@@ -603,6 +603,7 @@ void RoutingManager::HandleDiscoveredOnLinkPrefixInvalidTimer(Timer &aTimer)
 
 void RoutingManager::HandleDiscoveredOnLinkPrefixInvalidTimer(void)
 {
+    otLogInfoBr("invalidate discovered on-link prefix: %s", mDiscoveredOnLinkPrefix.ToString().AsCString());
     mDiscoveredOnLinkPrefix.Clear();
 
     // The discovered on-link prefix becomes invalid, start Router Solicitation
@@ -622,55 +623,6 @@ void RoutingManager::HandleRouterSolicit(const Ip6::Address &aSrcAddress,
                 GetInfraIfName());
 
     mRouterAdvertisementTimer.Start(Random::NonCrypto::GetUint32InRange(0, kMaxRaDelayTime));
-}
-
-bool RoutingManager::HandlePrefixInfoOption(const RouterAdv::PrefixInfoOption &aPio)
-{
-    bool      needReevaluate = false;
-    TimeMilli expireTime;
-
-    if (aPio.GetValidLifetime() == 0)
-    {
-        if (mDiscoveredOnLinkPrefix.IsEqual(aPio.GetPrefix(), aPio.GetPrefixLength()))
-        {
-            otLogInfoBr("invalidate discovered on-link prefix: %s", mDiscoveredOnLinkPrefix.ToString().AsCString());
-            mDiscoveredOnLinkPrefix.Clear();
-            mDiscoveredOnLinkPrefixInvalidTimer.Stop();
-            StartRouterSolicitation();
-        }
-        ExitNow();
-    }
-
-    expireTime = GetPrefixExpireTime(aPio.GetValidLifetime());
-
-    if (!IsValidOnLinkPrefix(mDiscoveredOnLinkPrefix) ||
-        (mDiscoveredOnLinkPrefixInvalidTimer.IsRunning() &&
-         expireTime > mDiscoveredOnLinkPrefixInvalidTimer.GetFireTime()))
-    {
-        mDiscoveredOnLinkPrefix.Set(aPio.GetPrefix(), aPio.GetPrefixLength());
-
-        otLogInfoBr("set discovered on-link prefix to %s, valid lifetime: %u seconds",
-                    mDiscoveredOnLinkPrefix.ToString().AsCString(), aPio.GetValidLifetime());
-
-        if (aPio.GetValidLifetime() == RouterAdv::kInfiniteLifetime)
-        {
-            mDiscoveredOnLinkPrefixInvalidTimer.Stop();
-        }
-        else
-        {
-            mDiscoveredOnLinkPrefixInvalidTimer.FireAt(expireTime);
-        }
-
-        // We stop Router Solicitation if we found a valid on-link prefix.
-        // Otherwise, we wait till the Router Solicitation process timeouted.
-        // So the maximum delay before the Border Router starts advertising
-        // its own on-link prefix is 9 (4 + 4 + 1) seconds.
-        mRouterSolicitTimer.Stop();
-        needReevaluate = true;
-    }
-
-exit:
-    return needReevaluate;
 }
 
 TimeMilli RoutingManager::GetPrefixExpireTime(uint32_t aValidLifetime)
@@ -719,7 +671,22 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
             prefix.Set(pio.GetPrefix(), pio.GetPrefixLength());
             if (IsValidOnLinkPrefix(prefix))
             {
-                needReevaluate |= HandlePrefixInfoOption(pio);
+                TimeMilli expireTime;
+
+                // We tracks the latest on-link prefix.
+                expireTime = GetPrefixExpireTime(pio.GetValidLifetime());
+                mDiscoveredOnLinkPrefixInvalidTimer.FireAt(expireTime);
+                mDiscoveredOnLinkPrefix = prefix;
+
+                otLogInfoBr("set discovered on-link prefix to %s, valid lifetime: %u seconds",
+                            mDiscoveredOnLinkPrefix.ToString().AsCString(), pio.GetValidLifetime());
+
+                // Stop Router Solicitation if we found a valid on-link prefix.
+                // Otherwise, we wait till the Router Solicitation process timeouted.
+                // So the maximum delay before the Border Router starts advertising
+                // its own on-link prefix is 9 (4 + 4 + 1) seconds.
+                mRouterSolicitTimer.Stop();
+                needReevaluate = true;
             }
             else
             {

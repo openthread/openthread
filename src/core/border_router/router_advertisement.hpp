@@ -56,11 +56,6 @@ namespace ot {
 
 namespace RouterAdv {
 
-enum : uint32_t
-{
-    kInfiniteLifetime = 0xffffffff,
-};
-
 /**
  * This class represents the variable length options in Neighbor
  * Discovery messages.
