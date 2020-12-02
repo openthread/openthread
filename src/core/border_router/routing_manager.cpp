@@ -223,7 +223,10 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
     if (aEvents.Contains(kEventThreadNetdataChanged))
     {
-        EvaluateRoutingPolicy();
+        if (Get<Mle::MleRouter>().IsAttached())
+        {
+            EvaluateRoutingPolicy();
+        }
     }
 
 exit:
@@ -343,6 +346,7 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     Ip6::Prefix newOmrPrefix;
 
     OT_ASSERT(IsInitialized());
+    OT_ASSERT(Get<Mle::MleRouter>().IsAttached());
 
     otLogInfoBr("evaluating routing policy");
 
