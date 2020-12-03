@@ -69,6 +69,7 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
             'panid': 0xface
         },
         JOINER: {
+            'name': 'JOINER',
             'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
             'mode': 'rdn',
             'router_selection_jitter': 1
@@ -111,6 +112,8 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
         pv.summary.show()
 
         COMMISSIONER = pv.vars['COMMISSIONER']
+        COMMISSIONER_DR_VERSION = pv.vars['COMMISSIONER_DR_VERSION']
+        JOINER_DR_VERSION = pv.vars['JOINER_DR_VERSION']
 
         # Step 3: Joiner sends MLE Discovery Request
         #         MLE Discovery Request message MUST have these values:
@@ -124,7 +127,7 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
             filter(lambda p:
                    [THREAD_DISCOVERY_TLV] == p.mle.tlv.type and\
                    [NM_DISCOVERY_REQUEST_TLV] == p.thread_meshcop.tlv.type and\
-                   p.thread_meshcop.tlv.discovery_req_ver == 2
+                   p.thread_meshcop.tlv.discovery_req_ver == JOINER_DR_VERSION
             ).\
         must_next()
 
@@ -154,7 +157,7 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
                               NM_JOINER_UDP_PORT_TLV,
                               NM_DISCOVERY_RESPONSE_TLV
                             } == set(p.thread_meshcop.tlv.type) and\
-                   p.thread_meshcop.tlv.discovery_rsp_ver == 2
+                   p.thread_meshcop.tlv.discovery_rsp_ver == COMMISSIONER_DR_VERSION
                   ).\
             must_next()
 

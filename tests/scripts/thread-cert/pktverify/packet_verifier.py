@@ -165,6 +165,12 @@ class PacketVerifier(object):
             logging.info("add extra var: %s = %s", k, v)
             self._vars[k] = v
 
+        for i, topo in self.test_info.topology.items():
+            name = self.test_info.get_node_name(i)
+            self._vars[name + '_DR_VERSION'] = 2
+            if topo['version'] == '1.2':
+                self._vars[name + '_DR_VERSION'] = 3
+
     def verify_attached(self, child: str, parent: str = None, child_type: str = 'FTD', pkts=None) -> VerifyResult:
         """
         Verify that the device attaches to the Thread network.
