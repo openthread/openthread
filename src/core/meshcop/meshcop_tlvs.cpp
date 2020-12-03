@@ -78,6 +78,10 @@ bool Tlv::IsValid(const Tlv &aTlv)
         rval = static_cast<const SecurityPolicyTlv &>(aTlv).IsValid();
         break;
 
+    case Tlv::kChannelMask:
+        rval = static_cast<const ChannelMaskTlv &>(aTlv).IsValid();
+        break;
+
     default:
         break;
     }
@@ -175,6 +179,26 @@ void ChannelTlv::SetChannel(uint16_t aChannel)
 
     SetChannelPage(channelPage);
     mChannel = HostSwap16(aChannel);
+}
+
+bool ChannelMaskBaseTlv::IsValid(void) const
+{
+    const ChannelMaskEntryBase *entry = GetFirstEntry();
+    const uint8_t *             end   = reinterpret_cast<const uint8_t *>(GetNext());
+    bool                        ret   = false;
+
+    VerifyOrExit(entry != nullptr);
+
+    while (reinterpret_cast<const uint8_t *>(entry) < end)
+    {
+        entry = entry->GetNext();
+        VerifyOrExit(reinterpret_cast<const uint8_t *>(entry) <= end);
+    }
+
+    ret = true;
+
+exit:
+    return ret;
 }
 
 const ChannelMaskEntryBase *ChannelMaskBaseTlv::GetFirstEntry(void) const
