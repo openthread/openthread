@@ -131,6 +131,8 @@ extern uint32_t _edata;
 extern uint32_t _bss;
 extern uint32_t _ebss;
 extern uint32_t _estack;
+extern uint32_t _init_array;
+extern uint32_t _einit_array;
 
 //*****************************************************************************
 //
@@ -202,6 +204,7 @@ void (* const g_pfnVectors[])(void) =
     BatMonIntHandler                        // 53 Combined event from battery monitor
 };
 
+typedef void (*init_fn_t)(void);
 
 //*****************************************************************************
 //
@@ -218,6 +221,7 @@ ResetISR(void)
 {
     uint32_t *pSrc;
     uint32_t *pDest;
+    init_fn_t *fp;
 
     //
     // Final trim of device
@@ -255,6 +259,12 @@ ResetISR(void)
           "    ldr     r1, [r0]\n"
           "    orr     r1, r1, #(0xF << 20)\n"
           "    str     r1, [r0]\n");
+
+    // C++ runtime initialization (BSS, Data, relocation, etc.)
+    for (fp = (init_fn_t *)&_init_array; fp < (init_fn_t *)&_einit_array; fp++)
+    {
+        (*fp)();
+    }
 
     //
     // Call the application's entry point.
