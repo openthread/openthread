@@ -597,11 +597,13 @@ private:
     void RemoveSocket(SocketHandle &aSocket);
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     bool ShouldUsePlatformUdp(uint16_t aPort) const;
+    bool ShouldUsePlatformUdp(const SocketHandle &aSocket) const;
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     void                SetBackboneSocket(SocketHandle &aSocket);
-    const SocketHandle *GetBackboneSockets(void);
+    const SocketHandle *GetBackboneSockets(void) const;
+    bool                IsBackboneSocket(const SocketHandle &aSocket) const;
 #endif
 
     uint16_t                 mEphemeralPort;
