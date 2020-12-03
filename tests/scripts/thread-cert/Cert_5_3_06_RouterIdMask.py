@@ -197,7 +197,6 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
             filter_LLANMA().\
             filter_mle_cmd(MLE_ADVERTISEMENT).\
             filter(lambda p: {1,2,1} == set(p.mle.tlv.route64.cost) and\
-                   p.sniff_timestamp - _pkt.sniff_timestamp <= 3 and\
                    {leader_rid, router_1_rid, router_2_rid} ==
                    p.mle.tlv.route64.id_mask
                    ).\
