@@ -35,6 +35,7 @@ import thread_cert
 from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MLE_DATA_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ACTIVE_TIMESTAMP_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV, ADDRESS16_TLV, NETWORK_DATA_TLV, ROUTE64_TLV, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.addrs import Ipv6Addr
+from pktverify.null_field import nullField
 
 LEADER = 1
 ROUTER = 2
@@ -182,7 +183,8 @@ class Cert_7_1_3_BorderRouterAsLeader(thread_cert.TestCase):
                                   MODE_TLV,
                                   ADDRESS_REGISTRATION_TLV
                                  } < set(p.mle.tlv.type) and\
-                       set(p.mle.tlv.addr_reg_iid) < set(_pkt.mle.tlv.addr_reg_iid)
+                       p.mle.tlv.addr_reg_iid is not nullField and\
+                       set(_pkt.mle.tlv.addr_reg_iid) > set(p.mle.tlv.addr_reg_iid)
                        ).\
                 must_next()
 
@@ -232,7 +234,8 @@ class Cert_7_1_3_BorderRouterAsLeader(thread_cert.TestCase):
                               MODE_TLV,
                               ADDRESS_REGISTRATION_TLV
                              } < set(p.mle.tlv.type) and\
-                   set(p.mle.tlv.addr_reg_iid) < set(_pkt.mle.tlv.addr_reg_iid)
+                   p.mle.tlv.addr_reg_iid is not nullField and\
+                   set(_pkt.mle.tlv.addr_reg_iid) > set(p.mle.tlv.addr_reg_iid)
                    ).\
             must_next()
 
