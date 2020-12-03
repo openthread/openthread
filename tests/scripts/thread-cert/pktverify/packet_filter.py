@@ -472,6 +472,9 @@ class PacketFilter(object):
         assert isinstance(addr, (str, ExtAddr)), addr
         return self.filter(lambda p: p.wpan.dst64 == addr, **kwargs)
 
+    def filter_dst16(self, rloc16: int, **kwargs):
+        return self.filter(lambda p: p.lowpan.mesh.dest16 == rloc16 or p.wpan.dst16 == rloc16, **kwargs)
+
     def filter_ping_request(self, identifier=None, **kwargs):
         return self.filter(
             lambda p: p.icmpv6.is_ping_request and (identifier is None or p.icmpv6.echo.identifier == identifier),

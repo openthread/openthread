@@ -231,7 +231,7 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
             filter_wpan_src64(ROUTER_3).\
-            filter_wpan_dst16(ROUTER_2_RLOC16).\
+            filter_dst16(ROUTER_2_RLOC16).\
             must_next()
         pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
             filter_wpan_src64(ROUTER_2).\
