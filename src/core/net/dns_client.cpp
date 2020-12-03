@@ -105,7 +105,7 @@ otError Client::Query(const QueryInfo &aQuery, ResponseHandler aHandler, void *a
 
     VerifyOrExit((message = NewMessage(header)) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = AppendCompressedHostname(*message, aQuery.GetHostname()));
+    SuccessOrExit(error = Name::AppendName(aQuery.GetHostname(), *message));
     SuccessOrExit(error = question.AppendTo(*message));
 
     queryMetadata.mHostname            = aQuery.GetHostname();
@@ -199,46 +199,6 @@ exit:
     }
 }
 
-otError Client::AppendCompressedHostname(Message &aMessage, const char *aHostname)
-{
-    otError error         = OT_ERROR_NONE;
-    uint8_t index         = 0;
-    uint8_t labelPosition = 0;
-    uint8_t labelSize     = 0;
-
-    while (true)
-    {
-        // Look for string separator.
-        if (aHostname[index] == kLabelSeparator || aHostname[index] == kLabelTerminator)
-        {
-            VerifyOrExit(labelSize > 0, error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = aMessage.Append(labelSize));
-            SuccessOrExit(error = aMessage.AppendBytes(&aHostname[labelPosition], labelSize));
-
-            labelPosition += labelSize + 1;
-            labelSize = 0;
-
-            if (aHostname[index] == kLabelTerminator)
-            {
-                break;
-            }
-        }
-        else
-        {
-            labelSize++;
-        }
-
-        index++;
-    }
-
-    // Add termination character at the end.
-    labelSize = kLabelTerminator;
-    SuccessOrExit(error = aMessage.Append(labelSize));
-
-exit:
-    return error;
-}
-
 otError Client::CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset)
 {
     otError  error = OT_ERROR_NONE;
@@ -263,46 +223,6 @@ otError Client::CompareQuestions(Message &aMessageResponse, Message &aMessageQue
         offset += read;
         length -= read;
     }
-
-exit:
-    return error;
-}
-
-otError Client::SkipHostname(Message &aMessage, uint16_t &aOffset)
-{
-    otError  error = OT_ERROR_NONE;
-    uint8_t  buf[kBufSize];
-    uint16_t index;
-    uint16_t read   = 0;
-    uint16_t offset = aOffset;
-    uint16_t length = aMessage.GetLength() - aOffset;
-
-    while (length > 0)
-    {
-        VerifyOrExit((read = aMessage.ReadBytes(offset, buf, sizeof(buf))) > 0, error = OT_ERROR_PARSE);
-
-        index = 0;
-
-        while (index < read)
-        {
-            if (buf[index] == kLabelTerminator)
-            {
-                ExitNow(aOffset = offset + 1);
-            }
-
-            if ((buf[index] & kCompressionOffsetMask) == kCompressionOffsetMask)
-            {
-                ExitNow(aOffset = offset + 2);
-            }
-
-            index++;
-            offset++;
-        }
-
-        length -= read;
-    }
-
-    ExitNow(error = OT_ERROR_PARSE);
 
 exit:
     return error;
@@ -438,18 +358,18 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     {
         uint32_t newOffset;
 
-        SuccessOrExit(error = SkipHostname(aMessage, offset));
+        SuccessOrExit(error = Name::ParseName(aMessage, offset));
 
         SuccessOrExit(error = aMessage.Read(offset, record));
 
-        if (ResourceRecordAaaa::IsAaaa(record))
+        if (record.Matches(ResourceRecord::kTypeAaaa))
         {
             // Return the first found IPv6 address.
             FinalizeDnsTransaction(*message, queryMetadata, &record.GetAddress(), record.GetTtl(), OT_ERROR_NONE);
             ExitNow(error = OT_ERROR_NONE);
         }
 
-        newOffset = offset + sizeof(ResourceRecord) + record.GetLength();
+        newOffset = offset + record.GetSize();
         VerifyOrExit(newOffset <= aMessage.GetLength(), error = OT_ERROR_PARSE);
         offset = static_cast<uint16_t>(newOffset);
     }

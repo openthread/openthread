@@ -466,6 +466,7 @@ openthread_core_files = [
   "net/dhcp6_server.hpp",
   "net/dns_client.cpp",
   "net/dns_client.hpp",
+  "net/dns_headers.cpp",
   "net/dns_headers.hpp",
   "net/icmp6.cpp",
   "net/icmp6.hpp",

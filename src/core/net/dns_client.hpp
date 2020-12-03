@@ -154,19 +154,6 @@ private:
         kMaxRetransmit   = OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT,
     };
 
-    /**
-     * Special DNS symbols.
-     */
-    enum
-    {
-        kLabelTerminator       = 0,
-        kLabelSeparator        = '.',
-        kCompressionOffsetMask = 0xc0
-    };
-
-    /**
-     * Operating on message buffers.
-     */
     enum
     {
         kBufSize = 16
@@ -194,9 +181,7 @@ private:
     otError  SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void     SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otError AppendCompressedHostname(Message &aMessage, const char *aHostname);
     otError CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset);
-    otError SkipHostname(Message &aMessage, uint16_t &aOffset);
 
     Message *FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata);
     void     FinalizeDnsTransaction(Message &            aQuery,

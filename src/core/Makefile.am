@@ -206,6 +206,7 @@ SOURCES_COMMON                                  = \
     net/dhcp6_client.cpp                          \
     net/dhcp6_server.cpp                          \
     net/dns_client.cpp                            \
+    net/dns_headers.cpp                           \
     net/icmp6.cpp                                 \
     net/ip6.cpp                                   \
     net/ip6_address.cpp                           \
