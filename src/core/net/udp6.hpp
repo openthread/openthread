@@ -595,7 +595,9 @@ private:
 
     void AddSocket(SocketHandle &aSocket);
     void RemoveSocket(SocketHandle &aSocket);
-    bool IsMlePort(uint16_t aPort) const;
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    bool ShouldUsePlatformUdp(uint16_t aPort) const;
+#endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     void                SetBackboneSocket(SocketHandle &aSocket);

@@ -242,7 +242,7 @@ otError Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
         } while (error != OT_ERROR_NONE);
     }
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    else if (!IsMlePort(aSocket.mSockName.mPort))
+    else if (ShouldUsePlatformUdp(aSocket.mSockName.mPort))
     {
         error = otPlatUdpBind(&aSocket);
     }
@@ -293,7 +293,7 @@ otError Udp::Connect(SocketHandle &aSocket, const SockAddr &aSockAddr)
     }
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    if (!IsMlePort(aSocket.mSockName.mPort))
+    if (ShouldUsePlatformUdp(aSocket.mSockName.mPort))
     {
         error = otPlatUdpConnect(&aSocket);
     }
@@ -356,8 +356,7 @@ otError Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo 
     messageInfoLocal.SetSockPort(aSocket.GetSockName().mPort);
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    if (!IsMlePort(aSocket.mSockName.mPort) &&
-        !(aSocket.mSockName.mPort == Tmf::kUdpPort && aMessage.GetSubType() == Message::kSubTypeJoinerEntrust))
+    if (ShouldUsePlatformUdp(aSocket.mSockName.mPort))
     {
         // Replace anycast address with a valid unicast address since response messages typically copy the peer address
         if (Get<Mle::Mle>().IsAnycastLocator(messageInfoLocal.GetSockAddr()))
@@ -483,7 +482,7 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    VerifyOrExit(IsMlePort(aMessageInfo.mSockPort));
+    VerifyOrExit(!ShouldUsePlatformUdp(aMessageInfo.mSockPort));
 #endif
 
     for (Receiver *receiver = mReceivers.GetHead(); receiver; receiver = receiver->GetNext())
@@ -533,16 +532,16 @@ exit:
     return;
 }
 
-bool Udp::IsMlePort(uint16_t aPort) const
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+bool Udp::ShouldUsePlatformUdp(uint16_t aPort) const
 {
-    bool isMlePort = (aPort == Mle::kUdpPort);
-
+    return (aPort != Mle::kUdpPort && aPort != Tmf::kUdpPort
 #if OPENTHREAD_FTD
-    isMlePort = isMlePort || (aPort == Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort());
+            && aPort != Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort()
 #endif
-
-    return isMlePort;
+    );
 }
+#endif
 
 } // namespace Ip6
 } // namespace ot
