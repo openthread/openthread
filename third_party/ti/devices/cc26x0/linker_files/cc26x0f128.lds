@@ -90,6 +90,14 @@ SECTIONS
         *(.ARM.extab* .gnu.linkonce.armextab.*)
     } > FLASH
 
+    .init_array :
+    {
+        _init_array = .;
+        KEEP(*(SORT(.init_array.*)))
+        KEEP(*(.init_array*))
+        _einit_array = .;
+    } > FLASH
+
     .data :
     {
         _data = .;
