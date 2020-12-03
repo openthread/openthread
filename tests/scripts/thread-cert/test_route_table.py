@@ -41,23 +41,25 @@ ROUTER2 = 3
 
 
 class TestRouteTable(thread_cert.TestCase):
+    SUPPORT_NCP = False
+
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
         ROUTER1: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ROUTER2]
+            'allowlist': [LEADER, ROUTER2]
         },
         ROUTER2: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
     }
 
@@ -67,9 +69,11 @@ class TestRouteTable(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        self.nodes[ROUTER2].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
+
+        self.nodes[ROUTER2].start()
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.simulator.go(100)

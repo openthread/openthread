@@ -46,13 +46,40 @@
 
 #include "common/code_utils.hpp"
 
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+static void processStateChange(otChangedFlags aFlags, void *aContext)
+{
+    otInstance *instance = static_cast<otInstance *>(aContext);
+
+    OT_UNUSED_VARIABLE(instance);
+    OT_UNUSED_VARIABLE(aFlags);
+
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    platformNetifStateChange(instance, aFlags);
+#endif
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    platformBackboneStateChange(instance, aFlags);
+#endif
+}
+#endif
+
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 {
     otInstance *        instance = nullptr;
     ot::Posix::RadioUrl radioUrl(aPlatformConfig->mRadioUrl);
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    virtualTimeInit(static_cast<uint16_t>(atoi(radioUrl.GetValue("forkpty-arg"))));
+    // The last argument must be the node id
+    {
+        const char *nodeId = nullptr;
+
+        for (const char *arg = nullptr; (arg = radioUrl.GetValue("forkpty-arg", arg)) != nullptr; nodeId = arg)
+        {
+        }
+
+        virtualTimeInit(static_cast<uint16_t>(atoi(nodeId)));
+    }
 #endif
 
     VerifyOrDie(radioUrl.GetPath() != nullptr, OT_EXIT_INVALID_ARGUMENTS);
@@ -63,10 +90,18 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     instance = otInstanceInitSingle();
     assert(instance != nullptr);
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    platformBackboneInit(instance, aPlatformConfig->mBackboneInterfaceName);
+#endif
+
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifInit(instance, aPlatformConfig->mInterfaceName);
 #elif OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpInit(aPlatformConfig->mInterfaceName);
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    SuccessOrDie(otSetStateChangedCallback(instance, processStateChange, instance));
 #endif
 
     return instance;
@@ -128,6 +163,9 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet,
                              &aMainloop->mMaxFd);
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    platformBackboneUpdateFdSet(aMainloop->mReadFdSet, aMainloop->mMaxFd);
 #endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
@@ -200,6 +238,9 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #endif
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpProcess(aInstance, &aMainloop->mReadFdSet);
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    platformBackboneProcess(aMainloop->mReadFdSet);
 #endif
 }
 

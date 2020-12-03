@@ -98,7 +98,7 @@ markdown()
     esac
 }
 
-size_nrf52840()
+size_nrf52840_version()
 {
     local flags=(
         "BORDER_AGENT=1"
@@ -109,6 +109,7 @@ size_nrf52840()
         "COAP=1"
         "COAPS=1"
         "COMMISSIONER=1"
+        "DATASET_UPDATER=1"
         "DHCP6_CLIENT=1"
         "DHCP6_SERVER=1"
         "DIAGNOSTIC=1"
@@ -120,6 +121,7 @@ size_nrf52840()
         "JOINER=1"
         "LINK_RAW=1"
         "MAC_FILTER=1"
+        "MESSAGE_USE_HEAP=1"
         "MTD_NETDIAG=1"
         "SERVICE=1"
         "SLAAC=1"
@@ -127,6 +129,19 @@ size_nrf52840()
         "TIME_SYNC=1"
         "UDP_FORWARD=1"
     )
+
+    local thread_version=$1
+
+    if [[ ${thread_version} == "1.2" ]]; then
+        flags+=(
+            "THREAD_VERSION=1.2"
+            "BACKBONE_ROUTER=1"
+            "DUA=1"
+            "MLR=1"
+            "CSL_RECEIVER=1"
+            "LINK_METRICS=1"
+        )
+    fi
 
     rm -rf "${OT_TMP_DIR}"
 
@@ -149,6 +164,39 @@ size_nrf52840()
         && ./bootstrap \
         && make -f examples/Makefile-nrf52840 "${flags[@]}")
 
+    # rename the generated files to be ready for size-report
+    # shellcheck disable=SC2011
+    (
+        cd "${OT_TMP_DIR}"/a/output/nrf52840/bin
+        ls | xargs -I{} mv {} {}_"${thread_version}"
+        cd "${OT_TMP_DIR}"/b/output/nrf52840/bin
+        ls | xargs -I{} mv {} {}_"${thread_version}"
+
+        cd "${OT_TMP_DIR}"/a/output/nrf52840/lib/
+        ls ./*.a | xargs -I{} mv {} {}_"${thread_version}"
+        cd "${OT_TMP_DIR}"/b/output/nrf52840/lib/
+        ls ./*.a | xargs -I{} mv {} {}_"${thread_version}"
+    )
+
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-cli-ftd_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-cli-ftd_"${thread_version}"
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-cli-mtd_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-cli-mtd_"${thread_version}"
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-ncp-ftd_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-ncp-ftd_"${thread_version}"
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-ncp-mtd_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-ncp-mtd_"${thread_version}"
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-rcp_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-rcp_"${thread_version}"
+
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-cli-ftd.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-cli-ftd.a_"${thread_version}"
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-cli-mtd.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-cli-mtd.a_"${thread_version}"
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ftd.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ftd.a_"${thread_version}"
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-mtd.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-mtd.a_"${thread_version}"
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ncp-ftd.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ncp-ftd.a_"${thread_version}"
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ncp-mtd.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ncp-mtd.a_"${thread_version}"
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-rcp.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-rcp.a_"${thread_version}"
+    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-radio.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-radio.a_"${thread_version}"
+}
+
+size_nrf52840()
+{
+
     local reporter
 
     # not on GitHub Actions or not a pull request event
@@ -163,20 +211,8 @@ size_nrf52840()
 
     "${reporter}" init OpenThread
 
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-cli-ftd "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-cli-ftd
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-cli-mtd "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-cli-mtd
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-ncp-ftd "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-ncp-ftd
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-ncp-mtd "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-ncp-mtd
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-rcp "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-rcp
-
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-cli-ftd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-cli-ftd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-cli-mtd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-cli-mtd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ftd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ftd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-mtd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-mtd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ncp-ftd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ncp-ftd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ncp-mtd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ncp-mtd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-rcp.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-rcp.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-radio.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-radio.a
+    size_nrf52840_version 1.1
+    size_nrf52840_version 1.2
 
     "${reporter}" post
 }

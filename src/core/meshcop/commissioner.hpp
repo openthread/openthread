@@ -41,6 +41,7 @@
 #include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/announce_begin_client.hpp"
@@ -56,9 +57,20 @@ namespace ot {
 
 namespace MeshCoP {
 
-class Commissioner : public InstanceLocator
+class Commissioner : public InstanceLocator, private NonCopyable
 {
 public:
+    /**
+     * This enumeration type represents the Commissioner State.
+     *
+     */
+    enum State : uint8_t
+    {
+        kStateDisabled = OT_COMMISSIONER_STATE_DISABLED, ///< Disabled.
+        kStatePetition = OT_COMMISSIONER_STATE_PETITION, ///< Petitioning to become a Commissioner.
+        kStateActive   = OT_COMMISSIONER_STATE_ACTIVE,   ///< Active Commissioner.
+    };
+
     /**
      * This constructor initializes the Commissioner object.
      *
@@ -236,7 +248,7 @@ public:
      * @returns TRUE if the Commissioner role is active, FALSE otherwise.
      *
      */
-    bool IsActive(void) const { return mState == OT_COMMISSIONER_STATE_ACTIVE; }
+    bool IsActive(void) const { return mState == kStateActive; }
 
     /**
      * This method indicates whether or not the Commissioner role is disabled.
@@ -244,19 +256,15 @@ public:
      * @returns TRUE if the Commissioner role is disabled, FALSE otherwise.
      *
      */
-    bool IsDisabled(void) const { return mState == OT_COMMISSIONER_STATE_DISABLED; }
+    bool IsDisabled(void) const { return mState == kStateDisabled; }
 
     /**
-     * This function returns the Commissioner State.
+     * This method gets the Commissioner State.
      *
-     * @param[in]  aInstance  A pointer to an OpenThread instance.
-     *
-     * @retval OT_COMMISSIONER_STATE_DISABLED  Commissioner disabled.
-     * @retval OT_COMMISSIONER_STATE_PETITION  Becoming the commissioner.
-     * @retval OT_COMMISSIONER_STATE_ACTIVE    Commissioner enabled.
+     * @returns The Commissioner State.
      *
      */
-    otCommissionerState GetState(void) const { return mState; }
+    State GetState(void) const { return mState; }
 
     /**
      * This method sends MGMT_COMMISSIONER_GET.
@@ -327,6 +335,15 @@ private:
         kRemoveJoinerDelay    = 20, ///< Delay to remove successfully joined joiner
     };
 
+    enum JoinerEvent : uint8_t
+    {
+        kJoinerEventStart     = OT_COMMISSIONER_JOINER_START,
+        kJoinerEventConnected = OT_COMMISSIONER_JOINER_CONNECTED,
+        kJoinerEventFinalize  = OT_COMMISSIONER_JOINER_FINALIZE,
+        kJoinerEventEnd       = OT_COMMISSIONER_JOINER_END,
+        kJoinerEventRemoved   = OT_COMMISSIONER_JOINER_REMOVED,
+    };
+
     struct Joiner
     {
         enum Type : uint8_t
@@ -348,13 +365,13 @@ private:
         JoinerPskd mPskd;
         Type       mType;
 
-        void CopyToJoinerInfo(otJoinerInfo &aInfo) const;
+        void CopyToJoinerInfo(otJoinerInfo &aJoiner) const;
     };
 
     Joiner *GetUnusedJoinerEntry(void);
     Joiner *FindJoinerEntry(const Mac::ExtAddress *aEui64);
     Joiner *FindJoinerEntry(const JoinerDiscerner &aDiscerner);
-    Joiner *FindBestMatchingJoinerEntry(const Mac::ExtAddress &aRxJoinerId);
+    Joiner *FindBestMatchingJoinerEntry(const Mac::ExtAddress &aReceivedJoinerId);
     void    RemoveJoinerEntry(Joiner &aJoiner);
 
     otError AddJoiner(const Mac::ExtAddress *aEui64,
@@ -423,11 +440,11 @@ private:
     void    SendKeepAlive(void);
     void    SendKeepAlive(uint16_t aSessionId);
 
-    void SetState(otCommissionerState aState);
-    void SignalJoinerEvent(otCommissionerJoinerEvent aEvent, const Joiner *aJoiner) const;
+    void SetState(State aState);
+    void SignalJoinerEvent(JoinerEvent aEvent, const Joiner *aJoiner) const;
     void LogJoinerEntry(const char *aAction, const Joiner &aJoiner) const;
 
-    static const char *StateToString(otCommissionerState aState);
+    static const char *StateToString(State aState);
 
     Joiner mJoiners[OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES];
 
@@ -452,7 +469,7 @@ private:
 
     char mProvisioningUrl[OT_PROVISIONING_URL_MAX_SIZE + 1]; // + 1 is for null char at end of string.
 
-    otCommissionerState mState;
+    State mState;
 
     otCommissionerStateCallback  mStateCallback;
     otCommissionerJoinerCallback mJoinerCallback;

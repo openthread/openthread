@@ -58,6 +58,8 @@ extern "C" {
 
 #define OT_DEFAULT_COAP_PORT 5683 ///< Default CoAP port, as specified in RFC 7252
 
+#define OT_COAP_DEFAULT_TOKEN_LENGTH 2 ///< Default token length.
+
 #define OT_COAP_MAX_TOKEN_LENGTH 8 ///< Max token length as specified (RFC 7252).
 
 #define OT_COAP_MAX_RETRANSMIT 20 ///< Max retransmit supported by OpenThread.
@@ -65,15 +67,15 @@ extern "C" {
 #define OT_COAP_MIN_ACK_TIMEOUT 1000 ///< Minimal ACK timeout in milliseconds supported by OpenThread.
 
 /**
- * CoAP Type values.
+ * CoAP Type values (2 bit unsigned integer).
  *
  */
 typedef enum otCoapType
 {
-    OT_COAP_TYPE_CONFIRMABLE     = 0x00, ///< Confirmable
-    OT_COAP_TYPE_NON_CONFIRMABLE = 0x10, ///< Non-confirmable
-    OT_COAP_TYPE_ACKNOWLEDGMENT  = 0x20, ///< Acknowledgment
-    OT_COAP_TYPE_RESET           = 0x30, ///< Reset
+    OT_COAP_TYPE_CONFIRMABLE     = 0, ///< Confirmable
+    OT_COAP_TYPE_NON_CONFIRMABLE = 1, ///< Non-confirmable
+    OT_COAP_TYPE_ACKNOWLEDGMENT  = 2, ///< Acknowledgment
+    OT_COAP_TYPE_RESET           = 3, ///< Reset
 } otCoapType;
 
 /**
@@ -745,7 +747,7 @@ const otCoapOption *otCoapOptionIteratorGetNextOption(otCoapOptionIterator *aIte
  *
  * @see otCoapMessageAppendUintOption
  */
-otError otCoapOptionIteratorGetOptionUintValue(otCoapOptionIterator *aIterator, uint64_t *const aValue);
+otError otCoapOptionIteratorGetOptionUintValue(otCoapOptionIterator *aIterator, uint64_t *aValue);
 
 /**
  * This function fills current option value into @p aValue.
@@ -824,6 +826,7 @@ static inline otError otCoapSendRequest(otInstance *          aInstance,
                                         otCoapResponseHandler aHandler,
                                         void *                aContext)
 {
+    // NOLINTNEXTLINE(modernize-use-nullptr)
     return otCoapSendRequestWithParameters(aInstance, aMessage, aMessageInfo, aHandler, aContext, NULL);
 }
 
@@ -833,7 +836,8 @@ static inline otError otCoapSendRequest(otInstance *          aInstance,
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aPort      The local UDP port to bind to.
  *
- * @retval OT_ERROR_NONE  Successfully started the CoAP server.
+ * @retval OT_ERROR_NONE    Successfully started the CoAP server.
+ * @retval OT_ERROR_FAILED  Failed to start the CoAP server.
  *
  */
 otError otCoapStart(otInstance *aInstance, uint16_t aPort);
@@ -906,6 +910,7 @@ otError otCoapSendResponseWithParameters(otInstance *              aInstance,
  */
 static inline otError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
+    // NOLINTNEXTLINE(modernize-use-nullptr)
     return otCoapSendResponseWithParameters(aInstance, aMessage, aMessageInfo, NULL);
 }
 

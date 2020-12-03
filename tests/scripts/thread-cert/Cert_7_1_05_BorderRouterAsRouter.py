@@ -43,28 +43,28 @@ MTDS = [ED2, SED2]
 class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         ROUTER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED2, SED2]
+            'allowlist': [LEADER, ED2, SED2]
         },
         ED2: {
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         SED2: {
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
     }
 

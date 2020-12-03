@@ -50,7 +50,6 @@ DiscoverScanner::DiscoverScanner(Instance &aInstance)
     , mHandlerContext(nullptr)
     , mTimer(aInstance, DiscoverScanner::HandleTimer, this)
     , mFilterIndexes()
-    , mScanChannels()
     , mState(kStateIdle)
     , mScanChannel(0)
     , mAdvDataLength(0)
@@ -107,7 +106,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     VerifyOrExit((message = Get<Mle>().NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
     message->SetSubType(Message::kSubTypeMleDiscoverRequest);
     message->SetPanId(aPanId);
-    SuccessOrExit(error = Get<Mle>().AppendHeader(*message, Header::kCommandDiscoveryRequest));
+    SuccessOrExit(error = Get<Mle>().AppendHeader(*message, Mle::kCommandDiscoveryRequest));
 
     // Prepare sub-TLV MeshCoP Discovery Request.
     discoveryRequest.Init();
@@ -127,7 +126,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     tlv.SetLength(
         static_cast<uint8_t>(discoveryRequest.GetSize() + ((mAdvDataLength != 0) ? joinerAdvertisement.GetSize() : 0)));
 
-    SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+    SuccessOrExit(error = message->Append(tlv));
     SuccessOrExit(error = discoveryRequest.AppendTo(*message));
 
     if (mAdvDataLength != 0)
@@ -154,15 +153,10 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     mScanChannel = Mac::ChannelMask::kChannelIteratorFirst;
     mState       = (mScanChannels.GetNextChannel(mScanChannel) == OT_ERROR_NONE) ? kStateScanning : kStateScanDone;
 
-    otLogInfoMle("Send Discovery Request (%s)", destination.ToString().AsCString());
+    Mle::Log(Mle::kMessageSend, Mle::kTypeDiscoveryRequest, destination);
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -269,7 +263,7 @@ void DiscoverScanner::HandleTimer(Timer &aTimer)
 
 void DiscoverScanner::HandleTimer(void)
 {
-    VerifyOrExit(mState == kStateScanning, OT_NOOP);
+    VerifyOrExit(mState == kStateScanning);
 
     // Move to next scan channel and resume message transmissions on
     // `MeshForwarder` so that the queued MLE Discovery Request message
@@ -302,13 +296,13 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
     uint16_t                      end;
     bool                          didCheckSteeringData = false;
 
-    otLogInfoMle("Receive Discovery Response (%s)", aMessageInfo.GetPeerAddr().ToString().AsCString());
+    Mle::Log(Mle::kMessageReceive, Mle::kTypeDiscoveryResponse, aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(mState == kStateScanning, error = OT_ERROR_DROP);
 
     // Find MLE Discovery TLV
     VerifyOrExit(Tlv::FindTlvOffset(aMessage, Tlv::kDiscovery, offset) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
-    aMessage.Read(offset, sizeof(tlv), &tlv);
+    IgnoreError(aMessage.Read(offset, tlv));
 
     offset += sizeof(tlv);
     end = offset + tlv.GetLength();
@@ -324,24 +318,28 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
     // Process MeshCoP TLVs
     while (offset < end)
     {
-        aMessage.Read(offset, sizeof(meshcopTlv), &meshcopTlv);
+        IgnoreError(aMessage.Read(offset, meshcopTlv));
 
         switch (meshcopTlv.GetType())
         {
         case MeshCoP::Tlv::kDiscoveryResponse:
-            aMessage.Read(offset, sizeof(discoveryResponse), &discoveryResponse);
+            IgnoreError(aMessage.Read(offset, discoveryResponse));
             VerifyOrExit(discoveryResponse.IsValid(), error = OT_ERROR_PARSE);
             result.mVersion  = discoveryResponse.GetVersion();
             result.mIsNative = discoveryResponse.IsNativeCommissioner();
             break;
 
         case MeshCoP::Tlv::kExtendedPanId:
-            SuccessOrExit(error = Tlv::ReadTlv(aMessage, offset, &result.mExtendedPanId, sizeof(Mac::ExtendedPanId)));
+            SuccessOrExit(error = Tlv::Read<MeshCoP::ExtendedPanIdTlv>(
+                              aMessage, offset, static_cast<Mac::ExtendedPanId &>(result.mExtendedPanId)));
             break;
 
         case MeshCoP::Tlv::kNetworkName:
-            aMessage.Read(offset, sizeof(networkName), &networkName);
-            IgnoreError(static_cast<Mac::NetworkName &>(result.mNetworkName).Set(networkName.GetNetworkName()));
+            IgnoreError(aMessage.Read(offset, networkName));
+            if (networkName.IsValid())
+            {
+                IgnoreError(static_cast<Mac::NetworkName &>(result.mNetworkName).Set(networkName.GetNetworkName()));
+            }
             break;
 
         case MeshCoP::Tlv::kSteeringData:
@@ -361,7 +359,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
 
                 if (mEnableFiltering)
                 {
-                    VerifyOrExit(steeringData.Contains(mFilterIndexes), OT_NOOP);
+                    VerifyOrExit(steeringData.Contains(mFilterIndexes));
                 }
 
                 didCheckSteeringData = true;
@@ -369,7 +367,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
             break;
 
         case MeshCoP::Tlv::kJoinerUdpPort:
-            SuccessOrExit(error = Tlv::ReadUint16Tlv(aMessage, offset, result.mJoinerUdpPort));
+            SuccessOrExit(error = Tlv::Read<MeshCoP::JoinerUdpPortTlv>(aMessage, offset, result.mJoinerUdpPort));
             break;
 
         default:
@@ -379,7 +377,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
         offset += sizeof(meshcopTlv) + meshcopTlv.GetLength();
     }
 
-    VerifyOrExit(!mEnableFiltering || didCheckSteeringData, OT_NOOP);
+    VerifyOrExit(!mEnableFiltering || didCheckSteeringData);
 
     if (mHandler)
     {
@@ -387,11 +385,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMle("Failed to process Discovery Response: %s", otThreadErrorToString(error));
-    }
+    Mle::LogProcessError(Mle::kTypeDiscoveryResponse, error);
 }
 
 } // namespace Mle

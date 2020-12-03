@@ -88,8 +88,8 @@ typedef uint8_t otMacFilterIterator; ///< Used to iterate through mac filter ent
 typedef enum otMacFilterAddressMode
 {
     OT_MAC_FILTER_ADDRESS_MODE_DISABLED,  ///< Address filter is disabled.
-    OT_MAC_FILTER_ADDRESS_MODE_WHITELIST, ///< Whitelist address filter mode is enabled.
-    OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST, ///< Blacklist address filter mode is enabled.
+    OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST, ///< Allowlist address filter mode is enabled.
+    OT_MAC_FILTER_ADDRESS_MODE_DENYLIST,  ///< Denylist address filter mode is enabled.
 } otMacFilterAddressMode;
 
 /**
@@ -309,7 +309,7 @@ typedef struct otMacCounters
     uint32_t mRxOther;
 
     /**
-     * The total number of frames dropped by MAC Filter module, for example received from blacklisted node.
+     * The total number of frames dropped by MAC Filter module, for example received from denylisted node.
      *
      */
     uint32_t mRxAddressFiltered;
@@ -1019,7 +1019,8 @@ uint8_t otLinkCslGetChannel(otInstance *aInstance);
  * This function sets the CSL channel.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
- * @param[in]  aChannel       The CSL sample channel.
+ * @param[in]  aChannel       The CSL sample channel. Channel value should be `0` (Set CSL Channel unspecified) or
+ *                            within the range [1, 10] (if 915-MHz supported) and [11, 26] (if 2.4 GHz supported).
  *
  * @retval OT_ERROR_NONE           Successfully set the CSL parameters.
  * @retval OT_ERROR_INVALID_ARGS   Invalid @p aChannel.
@@ -1107,6 +1108,21 @@ otError otLinkSetEnabled(otInstance *aInstance, bool aEnable);
  *
  */
 bool otLinkIsEnabled(otInstance *aInstance);
+
+/**
+ * This function instructs the device to send an empty IEEE 802.15.4 data frame.
+ *
+ * This function is only supported on an Rx-Off-When-Idle device to send an empty data frame to its parent.
+ * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval OT_ERROR_NONE           Successfully enqueued an empty message.
+ * @retval OT_ERROR_INVALID_STATE  Device is not in Rx-Off-When-Idle mode.
+ * @retval OT_ERROR_NO_BUFS        Insufficient message buffers available.
+ *
+ */
+otError otLinkSendEmptyData(otInstance *aInstance);
 
 /**
  * @}

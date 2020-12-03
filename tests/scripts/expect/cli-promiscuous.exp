@@ -31,7 +31,7 @@ source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "promiscuous\n"
 expect "Disabled"
@@ -46,43 +46,39 @@ expect "Done"
 send "promiscuous a\n"
 expect "Error 7: InvalidArgs"
 
-dispose
+dispose_all
 
 
-setup_nodes
+setup_two_nodes
 
-set spawn_id $spawn_1
+switch_node 1
 send "channel\n"
 expect "channel"
 expect -re {(\d+)}
 set channel $expect_out(1,string)
 expect "Done"
 
-set spawn_id [spawn_node 3]
-set spawn_3 $spawn_id
+spawn_node 3
 send "channel $channel\n"
 expect "Done"
 send "promiscuous enable\n"
 expect "Done"
 
-set spawn_id $spawn_2
+switch_node 2
 send "ipaddr\n"
 expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
 set addr $expect_out(1,string)
 expect "Done"
 
-set spawn_id $spawn_1
+switch_node 1
 send "ping $addr\n"
 expect "16 bytes from $addr: icmp_seq=1"
 
-set spawn_id $spawn_3
+switch_node 3
 expect -re {============================================\[len = +\d+]============================}
 expect -re {\|( ([0-9A-Z]{2}|\.\.)){16}\|( .){16}\|}
 expect -- "-----------------------------------------------------------------------------------"
 send "promiscuous disable\n"
 expect "Done"
 
-set spawn_id $spawn_3
-dispose
-
-dispose_nodes
+dispose_all

@@ -38,6 +38,7 @@
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/udp6.hpp"
@@ -61,7 +62,7 @@ public:
     SteeringDataTlv          mSteeringData;
 } OT_TOOL_PACKED_END;
 
-class Leader : public InstanceLocator
+class Leader : public InstanceLocator, private NonCopyable
 {
 public:
     /**

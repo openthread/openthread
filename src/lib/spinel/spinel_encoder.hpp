@@ -62,7 +62,6 @@ public:
         : mNcpBuffer(aNcpBuffer)
         , mNumOpenStructs(0)
         , mSavedNumOpenStructs(0)
-        , mSavedPosition()
     {
     }
 

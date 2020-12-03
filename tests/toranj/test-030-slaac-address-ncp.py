@@ -130,13 +130,13 @@ wpan.Node.init_all_nodes()
 
 r1.form('slaac-ncp')
 
-r1.whitelist_node(r2)
-r2.whitelist_node(r1)
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
 
 r2.join_node(r1, node_type=wpan.JOIN_TYPE_ROUTER)
 
-c2.whitelist_node(r2)
-r2.whitelist_node(c2)
+c2.allowlist_node(r2)
+r2.allowlist_node(c2)
 
 c2.join_node(r2, node_type=wpan.JOIN_TYPE_END_DEVICE)
 

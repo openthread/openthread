@@ -38,6 +38,8 @@
 
 #include <openthread/udp.h>
 
+#include "utils/lookup_table.hpp"
+
 namespace ot {
 namespace Cli {
 
@@ -71,7 +73,7 @@ private:
     struct Command
     {
         const char *mName;
-        otError (UdpExample::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
+        otError (UdpExample::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
     };
 
     enum PayloadType
@@ -88,13 +90,24 @@ private:
     otError ProcessOpen(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessSend(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessLinkSecurity(uint8_t aArgsLength, char *aArgs[]);
-    otError WriteCharToBuffer(otMessage *aMessage, uint16_t aSize);
+    otError WriteCharToBuffer(otMessage *aMessage, uint16_t aMessageSize);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-    static const Command sCommands[];
-    Interpreter &        mInterpreter;
+    static constexpr Command sCommands[] = {
+        {"bind", &UdpExample::ProcessBind},
+        {"close", &UdpExample::ProcessClose},
+        {"connect", &UdpExample::ProcessConnect},
+        {"help", &UdpExample::ProcessHelp},
+        {"linksecurity", &UdpExample::ProcessLinkSecurity},
+        {"open", &UdpExample::ProcessOpen},
+        {"send", &UdpExample::ProcessSend},
+    };
+
+    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+
+    Interpreter &mInterpreter;
 
     bool        mLinkSecurityEnabled;
     otUdpSocket mSocket;

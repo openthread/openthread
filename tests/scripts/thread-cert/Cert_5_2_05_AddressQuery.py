@@ -32,125 +32,181 @@ import unittest
 import command
 import config
 import thread_cert
+from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, MLE_LINK_REQUEST, ADDR_SOL_URI, ADDR_NTF_URI, SOURCE_ADDRESS_TLV, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, TLV_REQUEST_TLV, SCAN_MASK_TLV, CONNECTIVITY_TLV, LINK_MARGIN_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, NL_MAC_EXTENDED_ADDRESS_TLV, NL_RLOC16_TLV, NL_STATUS_TLV, NL_TARGET_EID_TLV, NL_ML_EID_TLV, COAP_CODE_ACK
+from pktverify.packet_verifier import PacketVerifier
+from pktverify.null_field import nullField
+from pktverify.bytes import Bytes
 
 LEADER = 1
 ROUTER1 = 2
 BR = 3
-ED1 = 17
+MED = 17
 DUT_REED = 18
 ROUTER_SELECTION_JITTER = 1
 
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of this test case is to validate that the DUT is able to generate
+# Address Notification messages in response to Address Query messages.
+#
+#  - Build a topology that has a total of 16 active routers, including the Leader,
+#    with no communication constraints and
+#        - MED only allows Leader
+#        - DUT only allows Router1
+#        - DUT allows BR later as required in step 5.
+#  - The Leader is configured as a DHCPv6 server for prefix 2001::
+#  - The Border Router is configured as a SLAAC server for prefix 2002::
+#
+# Test Topology:
+# -------------
+#               MED
+#                |
+#  Router_15 - Leader
+#      ...    /     \
+#         Router_2  Router_1
+#           [BR]       |
+#                   REED(DUT)
+#
+# DUT Types:
+# ----------
+#  REED
+
 
 class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'name': 'LEADER',
+            'mode': 'rdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1, BR, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, ED1]
+            'allowlist': [ROUTER1, BR, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, MED]
         },
         ROUTER1: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_1',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, DUT_REED]
+            'allowlist': [LEADER, DUT_REED]
         },
         BR: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_2',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         4: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_3',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         5: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_4',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         6: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_5',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         7: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_6',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         8: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_7',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         9: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_8',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         10: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_9',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         11: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_10',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         12: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_11',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         13: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_12',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         14: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_13',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         15: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_14',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         16: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_15',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
-        ED1: {
+        MED: {
+            'name': 'MED',
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         DUT_REED: {
-            'mode': 'rsdn',
+            'name': 'REED',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
     }
+
+    # override wireshark preferences with case needed parameters
+    CASE_WIRESHARK_PREFS = WIRESHARK_OVERRIDE_PREFS
+    CASE_WIRESHARK_PREFS['6lowpan.context1'] = '2001::/64'
+    CASE_WIRESHARK_PREFS['6lowpan.context2'] = '2002::/64'
 
     def test(self):
         # 1. LEADER: DHCPv6 Server for prefix 2001::/64.
@@ -159,7 +215,6 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
         self.nodes[LEADER].add_prefix('2001::/64', 'pdros')
         self.nodes[LEADER].register_netdata()
-        self.simulator.set_lowpan_context(1, '2001::/64')
 
         # 2. BR: SLAAC Server for prefix 2002::/64.
         self.nodes[BR].start()
@@ -167,7 +222,6 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
         self.assertEqual(self.nodes[BR].get_state(), 'router')
         self.nodes[BR].add_prefix('2002::/64', 'paros')
         self.nodes[BR].register_netdata()
-        self.simulator.set_lowpan_context(2, '2002::/64')
 
         # 3. Bring up remaining devices except DUT_REED.
         for i in range(2, 17):
@@ -177,36 +231,29 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
             self.simulator.go(5)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
-        self.nodes[ED1].start()
+        self.nodes[MED].start()
         self.simulator.go(5)
-        self.assertEqual(self.nodes[ED1].get_state(), 'child')
+        self.assertEqual(self.nodes[MED].get_state(), 'child')
 
         # 4. Bring up DUT_REED.
         self.nodes[DUT_REED].start()
         self.simulator.go(5)
         self.simulator.go(ROUTER_SELECTION_JITTER)
 
-        reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
-
-        # Verify DUT_REED doesn't try to become router.
-        msg = reed_messages.does_not_contain_coap_message()
-        assert msg is True, "Error: The REED sent an Address Solicit Request"
-
         # 5. Enable a link between the DUT and BR to create a one-way link.
-        self.nodes[DUT_REED].add_whitelist(self.nodes[BR].get_addr64())
-        self.nodes[BR].add_whitelist(self.nodes[DUT_REED].get_addr64())
+        self.nodes[DUT_REED].add_allowlist(self.nodes[BR].get_addr64())
+        self.nodes[BR].add_allowlist(self.nodes[DUT_REED].get_addr64())
+
+        self.collect_ipaddrs()
+        self.collect_rlocs()
 
         # 6. Verify DUT_REED would send Address Notification when ping to its
         # ML-EID.
         mleid = self.nodes[DUT_REED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
-        self.assertTrue(self.nodes[ED1].ping(mleid))
+        self.assertTrue(self.nodes[MED].ping(mleid))
 
         # Wait for sniffer collecting packets
         self.simulator.go(1)
-
-        reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
-        msg = reed_messages.next_coap_message('0.02', '/a/an')
-        command.check_address_notification(msg, self.nodes[DUT_REED], self.nodes[LEADER])
 
         # 7 & 8. Verify DUT_REED would send Address Notification when ping to
         # its 2001::EID and 2002::EID.
@@ -219,17 +266,138 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
                 flag2002 += 1
             else:
                 raise "Error: Address is unexpected."
-            self.assertTrue(self.nodes[ED1].ping(global_address))
+            self.assertTrue(self.nodes[MED].ping(global_address))
 
             # Wait for sniffer collecting packets
             self.simulator.go(1)
 
-            reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
-            msg = reed_messages.next_coap_message('0.02', '/a/an')
-            command.check_address_notification(msg, self.nodes[DUT_REED], self.nodes[LEADER])
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
 
-        assert flag2001 == 1, "Error: Expecting address 2001::EID not appear."
-        assert flag2002 == 1, "Error: Expecting address 2002::EID not appear."
+        LEADER_RLOC = pv.vars['LEADER_RLOC']
+        LEADER_MLEID = pv.vars['LEADER_MLEID']
+        ROUTER_1 = pv.vars['ROUTER_1']
+        REED = pv.vars['REED']
+        REED_MLEID = pv.vars['REED_MLEID']
+        REED_RLOC = pv.vars['REED_RLOC']
+        MED = pv.vars['MED']
+        MED_MLEID = pv.vars['MED_MLEID']
+        MM = pv.vars['MM_PORT']
+        REED2001 = ''
+        REED2002 = ''
+        MED2001 = ''
+        MED2002 = ''
+
+        for addr in pv.vars['REED_IPADDRS']:
+            if addr.startswith(Bytes('2001')):
+                REED2001 = addr
+            if addr.startswith(Bytes('2002')):
+                REED2002 = addr
+
+        for addr in pv.vars['MED_IPADDRS']:
+            if addr.startswith(Bytes('2001')):
+                MED2001 = addr
+            if addr.startswith(Bytes('2002')):
+                MED2002 = addr
+
+        # Step 3: Verify topology is formed correctly except REED.
+
+        for i in range(1, 16):
+            with pkts.save_index():
+                pv.verify_attached('ROUTER_%d' % i)
+
+        # Step 4: REED attaches to Router_1 and MUST NOT attempt to become
+        #         an active router by sending an Address Solicit Request
+
+        pv.verify_attached('REED', 'ROUTER_1')
+        pkts.filter_wpan_src64(REED).\
+            filter_coap_request(ADDR_SOL_URI).\
+            must_not_next()
+
+        # Step 6: MED sends an ICMPv6 Echo Request from MED to REED using ML-EID.
+        #         The DUT MUST send a properly formatted Address Notification message:
+        #         CoAP Request URI-PATH
+        #             CON POST coap://[<Address Query Source>]:MM/a/an
+        #         CoAP Payload
+        #             - Target EID TLV
+        #             - RLOC16 TLV
+        #             - ML-EID TLV
+        #         The IPv6 Source address MUST be the RLOC of the originator
+        #         The IPv6 Destination address MUST be the RLOC of the destination
+        #         The DUT MUST send an ICMPv6 Echo Reply
+
+        _pkt = pkts.filter_ipv6_src_dst(MED_MLEID, REED_MLEID).\
+                    filter_ping_request().\
+                    must_next()
+        pkts.filter_ipv6_src_dst(REED_RLOC, LEADER_RLOC).\
+            filter_coap_request(ADDR_NTF_URI, port=MM).\
+            filter(lambda p: {
+                              NL_TARGET_EID_TLV,
+                              NL_RLOC16_TLV,
+                              NL_ML_EID_TLV
+                             } == set(p.thread_address.tlv.type)
+                   ).\
+            must_next()
+        pkts.filter_ipv6_src_dst(REED_MLEID, MED_MLEID).\
+            filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+            must_next()
+
+        # Step 7: MED sends an ICMPv6 Echo Request from MED to REED using 2001::EID.
+        #         The DUT MUST send a properly formatted Address Notification message:
+        #         CoAP Request URI-PATH
+        #             CON POST coap://[<Address Query Source>]:MM/a/an
+        #         CoAP Payload
+        #             - Target EID TLV
+        #             - RLOC16 TLV
+        #             - ML-EID TLV
+        #         The IPv6 Source address MUST be the RLOC of the originator
+        #         The IPv6 Destination address MUST be the RLOC of the destination
+        #         The DUT MUST send an ICMPv6 Echo Reply
+
+        _pkt = pkts.filter_ipv6_src_dst(MED2001, REED2001).\
+                    filter_ping_request().\
+                    must_next()
+        pkts.filter_ipv6_src_dst(REED_RLOC, LEADER_RLOC).\
+            filter_coap_request(ADDR_NTF_URI, port=MM).\
+            filter(lambda p: {
+                              NL_TARGET_EID_TLV,
+                              NL_RLOC16_TLV,
+                              NL_ML_EID_TLV
+                             } == set(p.thread_address.tlv.type)
+                   ).\
+            must_next()
+        pkts.filter_ipv6_src_dst(REED2001, MED2001).\
+            filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+            must_next()
+
+        # Step 8: MED sends an ICMPv6 Echo Request from MED to REED using 2002::EID.
+        #         The DUT MUST send a properly formatted Address Notification message:
+        #         CoAP Request URI-PATH
+        #             CON POST coap://[<Address Query Source>]:MM/a/an
+        #         CoAP Payload
+        #             - Target EID TLV
+        #             - RLOC16 TLV
+        #             - ML-EID TLV
+        #         The IPv6 Source address MUST be the RLOC of the originator
+        #         The IPv6 Destination address MUST be the RLOC of the destination
+        #         The DUT MUST send an ICMPv6 Echo Reply
+
+        _pkt = pkts.filter_ipv6_src_dst(MED2002, REED2002).\
+                    filter_ping_request().\
+                    must_next()
+        pkts.filter_ipv6_src_dst(REED_RLOC, LEADER_RLOC).\
+            filter_coap_request(ADDR_NTF_URI, port=MM).\
+            filter(lambda p: {
+                              NL_TARGET_EID_TLV,
+                              NL_RLOC16_TLV,
+                              NL_ML_EID_TLV
+                             } == set(p.thread_address.tlv.type)
+                   ).\
+            must_next()
+        pkts.filter_ipv6_src_dst(REED2002, MED2002).\
+            filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+            must_next()
 
 
 if __name__ == '__main__':

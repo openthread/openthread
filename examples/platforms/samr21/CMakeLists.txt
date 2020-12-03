@@ -74,15 +74,11 @@ endif()
 target_link_libraries(openthread-samr21
     PUBLIC
         samr21-driver
+        -Wl,--gc-sections
+        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
     PRIVATE
         ${OT_MBEDTLS}
         ot-config
-)
-
-target_link_options(openthread-samr21
-    PUBLIC
-        -Wl,--gc-sections
-        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 
 target_compile_definitions(openthread-samr21

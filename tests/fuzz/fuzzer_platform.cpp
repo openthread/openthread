@@ -258,10 +258,10 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
     OT_UNUSED_VARIABLE(aExtAddr);
 }
 
-void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddr)
+void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aShortAddr);
+    OT_UNUSED_VARIABLE(aShortAddress);
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnabled)

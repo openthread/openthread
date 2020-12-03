@@ -33,7 +33,7 @@ on: [push, pull_request]
 jobs:
 
   cancel-previous-runs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - uses: rokroskar/workflow-run-cleanup-action@master
       env:
@@ -41,15 +41,13 @@ jobs:
       if: "github.ref != 'refs/heads/master'"
 
   pretty:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
-        sudo apt-get autoremove
-        sudo apt-get --no-install-recommends install -y clang-tools clang-format-6.0 shellcheck
+        sudo apt-get --no-install-recommends install -y clang-format-9 clang-tidy-9 shellcheck
         python3 -m pip install yapf==0.29.0
         sudo snap install shfmt
     - name: Check
@@ -67,11 +65,11 @@ jobs:
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
     - name: Build
       run: |
-        NODE_MODE=rcp ./script/test build
+        OT_NODE_TYPE=rcp ./script/test build
 
   package:
     name: package-${{ matrix.compiler }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         include:
@@ -95,15 +93,13 @@ jobs:
         script/test package
 
   scan-build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
-        sudo apt-get autoremove
-        sudo apt-get --no-install-recommends install -y clang-tools
+        sudo apt-get --no-install-recommends install -y clang-tools-9
     - name: Run
       run: |
         script/check-scan-build
@@ -138,7 +134,9 @@ jobs:
         sudo apt-get --no-install-recommends install -y lib32z1 ninja-build
         wget ${{ matrix.gcc_download_url }} -O gcc-arm.tar.bz2
         tar xjf gcc-arm.tar.bz2
-
+        # use the minimal required cmake version
+        sudo pip3 install --system -U cmake==3.10.3
+        cmake --version | grep 3.10.3
         # required for jn5189 and k32w061
         pip install pycryptodome
     - name: Build
@@ -151,7 +149,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        gcc_ver: [5, 6, 7, 8, 9]
+        gcc_ver: [5, 6, 7, 8, 9, 10]
     env:
       CC: gcc-${{ matrix.gcc_ver }}
       CXX: g++-${{ matrix.gcc_ver }}
@@ -168,7 +166,7 @@ jobs:
 
   clang:
     name: clang-${{ matrix.clang_ver }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         clang_ver: ["6.0", "7", "8", "9"]
@@ -188,7 +186,7 @@ jobs:
 
   clang-m32:
     name: clang-m32-${{ matrix.clang_ver }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         clang_ver: ["6.0", "7", "8", "9"]
@@ -212,7 +210,7 @@ jobs:
           script/check-posix-build
 
   gn:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
@@ -259,7 +257,7 @@ jobs:
         script/check-simulation-build
 
   android:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Build

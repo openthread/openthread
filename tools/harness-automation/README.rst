@@ -2,7 +2,7 @@
 Harness Automation Tool
 =======================
 
-This is a tool to automate testing openthread with GRL Thread-Test-Harness1.1-Alpha v1.0-Release_40.0.
+This is a tool to automate testing openthread with GRL Test Harness Release 2.0.1 for Thread V1.1.
 
 -----------
 Get Started
@@ -16,7 +16,7 @@ Syntax
 
 ::
 
- ./start.sh [-h] [--pattern PATTERN] [--delete-blacklist] [--skip SKIP]
+ ./start.sh [-h] [--pattern PATTERN] [--delete-denylist] [--skip SKIP]
                  [--dry-run] [--result-file RESULT_FILE]
                  [--list-file LIST_FILE] [--continue-from CONTINUE_FROM]
                  [--auto-reboot] [--manual-reset] [--list-devices]

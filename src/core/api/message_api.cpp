@@ -98,19 +98,19 @@ int8_t otMessageGetRss(const otMessage *aMessage)
 otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
 {
     Message &message = *static_cast<Message *>(aMessage);
-    return message.Append(aBuf, aLength);
+    return message.AppendBytes(aBuf, aLength);
 }
 
 uint16_t otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength)
 {
     const Message &message = *static_cast<const Message *>(aMessage);
-    return message.Read(aOffset, aLength, aBuf);
+    return message.ReadBytes(aOffset, aBuf, aLength);
 }
 
 int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength)
 {
     Message &message = *static_cast<Message *>(aMessage);
-    message.Write(aOffset, aLength, aBuf);
+    message.WriteBytes(aOffset, aBuf, aLength);
 
     return aLength;
 }
@@ -174,7 +174,7 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     uint16_t  messages, buffers;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    aBufferInfo->mTotalBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
+    aBufferInfo->mTotalBuffers = instance.Get<MessagePool>().GetTotalBufferCount();
 
     aBufferInfo->mFreeBuffers = instance.Get<MessagePool>().GetFreeBufferCount();
 
@@ -201,8 +201,8 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 
     instance.Get<Mle::MleRouter>().GetMessageQueue().GetInfo(aBufferInfo->mMleMessages, aBufferInfo->mMleBuffers);
 
-    instance.Get<Coap::Coap>().GetRequestMessages().GetInfo(aBufferInfo->mCoapMessages, aBufferInfo->mCoapBuffers);
-    instance.Get<Coap::Coap>().GetCachedResponses().GetInfo(messages, buffers);
+    instance.Get<Tmf::TmfAgent>().GetRequestMessages().GetInfo(aBufferInfo->mCoapMessages, aBufferInfo->mCoapBuffers);
+    instance.Get<Tmf::TmfAgent>().GetCachedResponses().GetInfo(messages, buffers);
     aBufferInfo->mCoapMessages += messages;
     aBufferInfo->mCoapBuffers += buffers;
 

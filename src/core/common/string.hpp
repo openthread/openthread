@@ -213,6 +213,19 @@ public:
     }
 
     /**
+     * This method appends `printf()` style formatted data to the `String` object.
+     *
+     * @param[in] aFormat    A pointer to the format string.
+     * @param[in] aArgs      Arguments for the format specification (as `va_list`).
+     *
+     * @retval OT_ERROR_NONE           Updated the string successfully.
+     * @retval OT_ERROR_NO_BUFS        String could not fit in the storage.
+     * @retval OT_ERROR_INVALID_ARGS   Arguments do not match the format string.
+     *
+     */
+    otError AppendVarArgs(const char *aFormat, va_list aArgs) { return Write(mBuffer, kSize, mLength, aFormat, aArgs); }
+
+    /**
      * This method appends an array of bytes in hex representation (using "%02x" style) to the `String` object.
      *
      * @param[in] aBytes    A pointer to buffer containing the bytes to append.
@@ -244,6 +257,29 @@ private:
  * @}
  *
  */
+
+/**
+ * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
+ *
+ * @param[in]  aString  A null-terminated byte sequence.
+ *
+ * @retval TRUE   The sequence is a valid UTF-8 string.
+ * @retval FALSE  The sequence is not a valid UTF-8 string.
+ *
+ */
+bool IsValidUtf8String(const char *aString);
+
+/**
+ * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
+ *
+ * @param[in]  aString  A byte sequence.
+ * @param[in]  aLength  Length of the sequence.
+ *
+ * @retval TRUE   The sequence is a valid UTF-8 string.
+ * @retval FALSE  The sequence is not a valid UTF-8 string.
+ *
+ */
+bool IsValidUtf8String(const char *aString, size_t aLength);
 
 } // namespace ot
 

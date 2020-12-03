@@ -209,6 +209,13 @@ Decoder::Decoder(FrameWritePointer &aFrameWritePointer, FrameHandler aFrameHandl
 {
 }
 
+void Decoder::Reset(void)
+{
+    mState         = kStateNoSync;
+    mFcs           = 0;
+    mDecodedLength = 0;
+}
+
 void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
 {
     while (aLength--)

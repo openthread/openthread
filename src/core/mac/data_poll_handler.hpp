@@ -38,6 +38,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
@@ -60,7 +61,7 @@ class Child;
  * This class implements the data poll (mac data request command) handler.
  *
  */
-class DataPollHandler : public InstanceLocator
+class DataPollHandler : public InstanceLocator, private NonCopyable
 {
     friend class Mac::Mac;
 
@@ -104,7 +105,6 @@ public:
         void    SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
 
         uint8_t GetIndirectTxAttempts(void) const { return mIndirectTxAttempts; }
-        void    SetIndirectTxAttemptsToMax(void) { mIndirectTxAttempts = kMaxPollTriggeredTxAttempts; }
         void    ResetIndirectTxAttempts(void) { mIndirectTxAttempts = 0; }
         void    IncrementIndirectTxAttempts(void) { mIndirectTxAttempts++; }
 

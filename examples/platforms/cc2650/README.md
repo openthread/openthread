@@ -96,7 +96,7 @@ keysequence
 leaderweight
 masterkey
 mode
-netdataregister
+netdata register
 networkidtimeout
 networkname
 panid
@@ -110,7 +110,6 @@ scan
 start
 state
 stop
-whitelist
 ```
 
 ### NCP example

@@ -38,6 +38,7 @@
 
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
 #include "mac/channel_mask.hpp"
@@ -144,7 +145,7 @@ public:
  * This class implements mesh forwarding within Thread.
  *
  */
-class MeshForwarder : public InstanceLocator
+class MeshForwarder : public InstanceLocator, private NonCopyable
 {
     friend class Mac::Mac;
     friend class Instance;
@@ -185,6 +186,18 @@ public:
      *
      */
     otError SendMessage(Message &aMessage);
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * This method sends an empty data frame to the parent.
+     *
+     * @retval OT_ERROR_NONE           Successfully enqueued an empty message.
+     * @retval OT_ERROR_INVALID_STATE  Device is not in Rx-Off-When-Idle mode or it has no parent.
+     * @retval OT_ERROR_NO_BUFS        Insufficient message buffers available.
+     *
+     */
+    otError SendEmptyMessage(void);
+#endif
 
     /**
      * This method is called by the address resolver when an EID-to-RLOC mapping has been resolved.
@@ -403,6 +416,7 @@ private:
                               bool                aAddMeshHeader = false,
                               uint16_t            aMeshSource    = 0xffff,
                               uint16_t            aMeshDest      = 0xffff);
+    void     PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest);
 
     void    SendMesh(Message &aMessage, Mac::TxFrame &aFrame);
     void    SendDestinationUnreachable(uint16_t aMeshSource, const Message &aMessage);

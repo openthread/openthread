@@ -59,9 +59,9 @@
 #include "mac/link_raw.hpp"
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
-#include "coap/coap.hpp"
 #include "common/code_utils.hpp"
 #include "crypto/mbedtls.hpp"
+#include "thread/tmf.hpp"
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 #include "utils/heap.hpp"
 #endif
@@ -72,11 +72,14 @@
 #include "thread/announce_sender.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/thread_netif.hpp"
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 #include "utils/channel_manager.hpp"
 #endif
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #include "utils/channel_monitor.hpp"
+#endif
+#if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
+#include "utils/dataset_updater.hpp"
 #endif
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -84,6 +87,10 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #include "backbone_router/bbr_local.hpp"
+#endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#include "thread/link_metrics.hpp"
 #endif
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -368,8 +375,12 @@ private:
     Utils::ChannelMonitor mChannelMonitor;
 #endif
 
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
     Utils::ChannelManager mChannelManager;
+#endif
+
+#if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
+    Utils::DatasetUpdater mDatasetUpdater;
 #endif
 
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
@@ -608,9 +619,9 @@ template <> inline Ip6::Mpl &Instance::Get(void)
     return mIp6.mMpl;
 }
 
-template <> inline Coap::Coap &Instance::Get(void)
+template <> inline Tmf::TmfAgent &Instance::Get(void)
 {
-    return mThreadNetif.mCoap;
+    return mThreadNetif.mTmfAgent;
 }
 
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
@@ -717,10 +728,17 @@ template <> inline Utils::ChannelMonitor &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 template <> inline Utils::ChannelManager &Instance::Get(void)
 {
     return mChannelManager;
+}
+#endif
+
+#if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
+template <> inline Utils::DatasetUpdater &Instance::Get(void)
+{
+    return mDatasetUpdater;
 }
 #endif
 
@@ -763,6 +781,16 @@ template <> inline BackboneRouter::MulticastListenersTable &Instance::Get(void)
 {
     return mThreadNetif.mBackboneRouterManager.GetMulticastListenersTable();
 }
+
+template <> inline BackboneRouter::NdProxyTable &Instance::Get(void)
+{
+    return mThreadNetif.mBackboneRouterManager.GetNdProxyTable();
+}
+
+template <> inline BackboneRouter::BackboneTmfAgent &Instance::Get(void)
+{
+    return mThreadNetif.mBackboneRouterManager.GetBackboneTmfAgent();
+}
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
@@ -776,6 +804,13 @@ template <> inline MlrManager &Instance::Get(void)
 template <> inline DuaManager &Instance::Get(void)
 {
     return mThreadNetif.mDuaManager;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+template <> inline LinkMetrics &Instance::Get(void)
+{
+    return mThreadNetif.mLinkMetrics;
 }
 #endif
 

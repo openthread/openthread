@@ -31,6 +31,9 @@ import unittest
 
 import config
 import thread_cert
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, ADDRESS_REGISTRATION_TLV, NWD_SERVICE_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_HAS_ROUTER_TLV, LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS
+from pktverify.packet_verifier import PacketVerifier
+from pktverify.addrs import Ipv6Addr
 
 LEADER = 1
 ROUTER1 = 2
@@ -44,34 +47,39 @@ MTDS = [ED, SED]
 class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'name': 'LEADER',
+            'mode': 'rdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1, ROUTER2]
+            'allowlist': [ROUTER1, ROUTER2]
         },
         ROUTER1: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_1',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED, SED]
+            'allowlist': [LEADER, ED, SED]
         },
         ROUTER2: {
-            'mode': 'rsdn',
+            'name': 'ROUTER_2',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ED: {
+            'name': 'MED',
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
         SED: {
+            'name': 'SED',
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
     }
 
@@ -96,8 +104,10 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED].get_state(), 'child')
 
-        self.nodes[LEADER].add_prefix('2001:2:0:1::/64', 'paros', 'med')
-        self.nodes[LEADER].add_route('2001:2:0:2::/64', 'med')
+        self.collect_rloc16s()
+        self.collect_ipaddrs()
+        self.nodes[LEADER].add_prefix('2001:2:0:1::/64', 'aros', 'med')
+        self.nodes[LEADER].add_route('2001:2:0:2::/64', stable=True, prf='med')
         self.nodes[LEADER].register_netdata()
 
         # Set lowpan context of sniffer
@@ -105,10 +115,10 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
 
         self.simulator.go(10)
 
-        self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros', 'low')
-        self.nodes[ROUTER2].add_route('2001:2:0:2::/64', 'high')
+        self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'aos', 'med')
+        self.nodes[ROUTER2].add_route('2001:2:0:2::/64', stable=True, prf='high')
         self.nodes[ROUTER2].register_netdata()
-        self.simulator.go(10)
+        self.simulator.go(15)
 
         self.assertFalse(self.nodes[SED].ping('2001:2:0:2::1'))
 
@@ -117,16 +127,104 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
         self.nodes[ROUTER2].remove_prefix('2001:2:0:1::/64')
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros', 'high')
         self.nodes[ROUTER2].register_netdata()
-        self.simulator.go(10)
+        self.simulator.go(15)
 
         self.assertFalse(self.nodes[SED].ping('2007::1'))
 
         self.nodes[ROUTER2].remove_prefix('2001:2:0:1::/64')
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros', 'med')
         self.nodes[ROUTER2].register_netdata()
-        self.simulator.go(10)
+        self.simulator.go(15)
 
         self.assertFalse(self.nodes[SED].ping('2007::1'))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        ROUTER_1 = pv.vars['ROUTER_1']
+        MED = pv.vars['MED']
+        SED = pv.vars['SED']
+        _rpkts = pkts.filter_wpan_src64(ROUTER_1)
+
+        # Step 1: Ensure the topology is formed correctly
+        _rpkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).filter_wpan_dst64(SED).must_next()
+
+        # Step 4: The DUT MUST send a multicast MLE Data Response with
+        # the new network information
+        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst(LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).must_next(
+        ).must_verify(lambda p: {Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')} == set(
+            p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.border_router.flag.p == [0] and p.thread_nwd.tlv.
+                      border_router.flag.s == [1] and p.thread_nwd.tlv.border_router.flag.r == [1] and p.thread_nwd.tlv
+                      .border_router.flag.o == [1] and p.thread_nwd.tlv.stable == [0, 1, 1, 1, 1, 1])
+
+        # Step 5: The DUT MUST send a unicast MLE Child Update
+        # Request to SED_1
+        _rpkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).filter_wpan_dst64(SED).must_next(
+        ).must_verify(lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} == set(
+            p.mle.tlv.type
+        ) and {NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV, NWD_HAS_ROUTER_TLV} == set(
+            p.thread_nwd.tlv.type) and {Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')} == set(
+                p.thread_nwd.tlv.prefix) and {0xFFFE, 0xFFFE} == set(p.thread_nwd.tlv.border_router_16))
+
+        # Step 6: The DUT MUST forward the SED_1 ICMPv6 Echo Request to Router_2
+        # due to higher preference
+        router1_rloc16 = pv.vars['ROUTER_1_RLOC16']
+        leader_rloc16 = pv.vars['LEADER_RLOC16']
+        _rpkts.filter_ping_request().filter_ipv6_dst('2001:2:0:2::1').must_next().must_verify(
+            lambda p: p.wpan.dst16 == leader_rloc16 and p.wpan.src16 == router1_rloc16)
+
+        # Step 7: The DUT MUST forward the MED_1 ICMPv6 Echo Request to the
+        # Leader due to default route
+        _rpkts.filter_ping_request().filter_ipv6_dst('2007::1').must_next().must_verify(
+            lambda p: p.wpan.dst16 == leader_rloc16 and p.wpan.src16 == router1_rloc16)
+
+        # Step 9: The DUT MUST send a multicast MLE Data Response with
+        # the new network information
+        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst(LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).must_next(
+        ).must_verify(lambda p: {
+            NWD_SERVICE_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV,
+            NWD_HAS_ROUTER_TLV
+        } == set(p.thread_nwd.tlv.type) and {
+            Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')
+        } == set(p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.border_router.flag.p == [0, 1] and p.thread_nwd.tlv.
+                      border_router.flag.s == [1, 1] and p.thread_nwd.tlv.border_router.flag.r == [1, 1] and p.
+                      thread_nwd.tlv.border_router.flag.o == [1, 1] and p.thread_nwd.tlv.stable == [0, 1, 1, 1, 1, 1])
+
+        # Step 10: The DUT MUST send a unicast MLE Child Update Request to SED_1
+        _rpkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).filter_wpan_dst64(SED).must_next(
+        ).must_verify(lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} == set(
+            p.mle.tlv.type
+        ) and {NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV, NWD_HAS_ROUTER_TLV} == set(
+            p.thread_nwd.tlv.type) and {Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')} == set(
+                p.thread_nwd.tlv.prefix) and {0xFFFE, 0xFFFE} == set(p.thread_nwd.tlv.border_router_16))
+
+        # Step 11: The DUT MUST forward the SED_1 ICMPv6 Echo Request to Router_2
+        # due to higher preference
+        _rpkts.filter_ping_request().filter_ipv6_dst('2007::1').must_next().must_verify(
+            lambda p: p.wpan.dst16 == leader_rloc16 and p.wpan.src16 == router1_rloc16)
+
+        # Step 13: The DUT MUST send a multicast MLE Data Response with
+        # the new network information
+        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst(
+            LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).must_next().must_verify(lambda p: {
+                NWD_SERVICE_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV,
+                NWD_HAS_ROUTER_TLV
+            } == set(p.thread_nwd.tlv.type) and {Ipv6Addr('2001:2:0:1::'),
+                                                 Ipv6Addr('2001:2:0:2::')} == set(p.thread_nwd.tlv.prefix))
+
+        # Step 14: The DUT MUST send a unicast MLE Child Update Request to SED_1
+        _rpkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).filter_wpan_dst64(SED).must_next(
+        ).must_verify(lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} == set(
+            p.mle.tlv.type
+        ) and {NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV, NWD_HAS_ROUTER_TLV} == set(
+            p.thread_nwd.tlv.type) and {Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')} == set(
+                p.thread_nwd.tlv.prefix) and {0xFFFE, 0xFFFE} == set(p.thread_nwd.tlv.border_router_16))
+
+        # Step 15: The DUT MUST forward the SED_1 ICMPv6 Echo Request to Router_2
+        # due to higher preference
+        _rpkts.filter_ping_request().filter_ipv6_dst('2007::1').must_next().must_verify(
+            lambda p: p.wpan.dst16 == leader_rloc16 and p.wpan.src16 == router1_rloc16)
 
 
 if __name__ == '__main__':

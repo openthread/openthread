@@ -40,6 +40,7 @@
 #include <openthread/platform/time.h>
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/tasklet.hpp"
 #include "common/time.hpp"
 #include "common/timer.hpp"
@@ -122,7 +123,7 @@ typedef otEnergyScanResult EnergyScanResult;
  * This class implements the IEEE 802.15.4 MAC.
  *
  */
-class Mac : public InstanceLocator
+class Mac : public InstanceLocator, private NonCopyable
 {
     friend class ot::Instance;
 
@@ -692,6 +693,14 @@ public:
      *
      */
     void SetCslChannel(uint8_t aChannel);
+
+    /**
+     * This method indicates if CSL channel has been explicitly specified by the upper layer.
+     *
+     * @returns If CSL channel has been specified.
+     *
+     */
+    bool IsCslChannelSpecified(void) const { return mSubMac.IsCslChannelSpecified(); }
 
     /**
      * This method gets the CSL period.

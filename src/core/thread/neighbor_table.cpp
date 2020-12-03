@@ -63,19 +63,19 @@ Neighbor *NeighborTable::FindParent(const Neighbor::AddressMatcher &aMatcher)
     return neighbor;
 }
 
-Neighbor *NeighborTable::FindParent(Mac::ShortAddress aShortAddress)
+Neighbor *NeighborTable::FindParent(Mac::ShortAddress aShortAddress, Neighbor::StateFilter aFilter)
 {
-    return FindParent(Neighbor::AddressMatcher(aShortAddress, Neighbor::kInStateValidOrRestoring));
+    return FindParent(Neighbor::AddressMatcher(aShortAddress, aFilter));
 }
 
-Neighbor *NeighborTable::FindParent(const Mac::ExtAddress &aExtAddress)
+Neighbor *NeighborTable::FindParent(const Mac::ExtAddress &aExtAddress, Neighbor::StateFilter aFilter)
 {
-    return FindParent(Neighbor::AddressMatcher(aExtAddress, Neighbor::kInStateValidOrRestoring));
+    return FindParent(Neighbor::AddressMatcher(aExtAddress, aFilter));
 }
 
-Neighbor *NeighborTable::FindParent(const Mac::Address &aMacAddress)
+Neighbor *NeighborTable::FindParent(const Mac::Address &aMacAddress, Neighbor::StateFilter aFilter)
 {
-    return FindParent(Neighbor::AddressMatcher(aMacAddress, Neighbor::kInStateValidOrRestoring));
+    return FindParent(Neighbor::AddressMatcher(aMacAddress, aFilter));
 }
 
 Neighbor *NeighborTable::FindNeighbor(const Neighbor::AddressMatcher &aMatcher)
@@ -97,25 +97,25 @@ Neighbor *NeighborTable::FindNeighbor(const Neighbor::AddressMatcher &aMatcher)
     return neighbor;
 }
 
-Neighbor *NeighborTable::FindNeighbor(Mac::ShortAddress aShortAddress)
+Neighbor *NeighborTable::FindNeighbor(Mac::ShortAddress aShortAddress, Neighbor::StateFilter aFilter)
 {
     Neighbor *neighbor = nullptr;
 
-    VerifyOrExit((aShortAddress != Mac::kShortAddrBroadcast) && (aShortAddress != Mac::kShortAddrInvalid), OT_NOOP);
-    neighbor = FindNeighbor(Neighbor::AddressMatcher(aShortAddress, Neighbor::kInStateValidOrRestoring));
+    VerifyOrExit((aShortAddress != Mac::kShortAddrBroadcast) && (aShortAddress != Mac::kShortAddrInvalid));
+    neighbor = FindNeighbor(Neighbor::AddressMatcher(aShortAddress, aFilter));
 
 exit:
     return neighbor;
 }
 
-Neighbor *NeighborTable::FindNeighbor(const Mac::ExtAddress &aExtAddress)
+Neighbor *NeighborTable::FindNeighbor(const Mac::ExtAddress &aExtAddress, Neighbor::StateFilter aFilter)
 {
-    return FindNeighbor(Neighbor::AddressMatcher(aExtAddress, Neighbor::kInStateValidOrRestoring));
+    return FindNeighbor(Neighbor::AddressMatcher(aExtAddress, aFilter));
 }
 
-Neighbor *NeighborTable::FindNeighbor(const Mac::Address &aMacAddress)
+Neighbor *NeighborTable::FindNeighbor(const Mac::Address &aMacAddress, Neighbor::StateFilter aFilter)
 {
-    return FindNeighbor(Neighbor::AddressMatcher(aMacAddress, Neighbor::kInStateValidOrRestoring));
+    return FindNeighbor(Neighbor::AddressMatcher(aMacAddress, aFilter));
 }
 
 #if OPENTHREAD_FTD
@@ -134,7 +134,7 @@ Neighbor *NeighborTable::FindChildOrRouter(const Neighbor::AddressMatcher &aMatc
     return neighbor;
 }
 
-Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address)
+Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address, Neighbor::StateFilter aFilter)
 {
     Neighbor *   neighbor = nullptr;
     Mac::Address macAddresss;
@@ -151,11 +151,11 @@ Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address)
 
     if (!macAddresss.IsNone())
     {
-        neighbor = FindChildOrRouter(Neighbor::AddressMatcher(macAddresss, Neighbor::kInStateValidOrRestoring));
+        neighbor = FindChildOrRouter(Neighbor::AddressMatcher(macAddresss, aFilter));
         ExitNow();
     }
 
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
+    for (Child &child : Get<ChildTable>().Iterate(aFilter))
     {
         if (child.HasIp6Address(aIp6Address))
         {
@@ -171,7 +171,7 @@ Neighbor *NeighborTable::FindRxOnlyNeighborRouter(const Mac::Address &aMacAddres
 {
     Neighbor *neighbor = nullptr;
 
-    VerifyOrExit(Get<Mle::Mle>().IsChild(), OT_NOOP);
+    VerifyOrExit(Get<Mle::Mle>().IsChild());
     neighbor = Get<RouterTable>().GetNeighbor(aMacAddress);
 
 exit:
@@ -240,10 +240,10 @@ otError NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Ne
 {
     otError error = OT_ERROR_NOT_FOUND;
 
-    VerifyOrExit(aIterator == OT_NEIGHBOR_INFO_ITERATOR_INIT, OT_NOOP);
+    VerifyOrExit(aIterator == OT_NEIGHBOR_INFO_ITERATOR_INIT);
 
     aIterator++;
-    VerifyOrExit(Get<Mle::Mle>().GetParent().IsStateValid(), OT_NOOP);
+    VerifyOrExit(Get<Mle::Mle>().GetParent().IsStateValid());
 
     aNeighInfo.SetFrom(Get<Mle::Mle>().GetParent());
     aNeighInfo.mIsChild = false;

@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
@@ -176,8 +177,8 @@ Message *Client::NewMessage(const Header &aHeader)
 {
     Message *message = nullptr;
 
-    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != nullptr, OT_NOOP);
-    IgnoreError(message->Prepend(&aHeader, sizeof(aHeader)));
+    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != nullptr);
+    IgnoreError(message->Prepend(aHeader));
     message->SetOffset(0);
 
 exit:
@@ -199,13 +200,7 @@ Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetad
     mRetransmissionTimer.FireAtIfEarlier(aQueryMetadata.mTransmissionTime);
 
 exit:
-
-    if (error != OT_ERROR_NONE && messageCopy != nullptr)
-    {
-        messageCopy->Free();
-        messageCopy = nullptr;
-    }
-
+    FreeAndNullMessageOnError(messageCopy, error);
     return messageCopy;
 }
 
@@ -241,15 +236,10 @@ void Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageI
     SuccessOrExit(error = SendMessage(*messageCopy, aMessageInfo));
 
 exit:
-
     if (error != OT_ERROR_NONE)
     {
+        FreeMessage(messageCopy);
         otLogWarnIp6("Failed to send SNTP request: %s", otThreadErrorToString(error));
-
-        if (messageCopy != nullptr)
-        {
-            messageCopy->Free();
-        }
     }
 }
 
@@ -358,10 +348,9 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     Message *     message  = nullptr;
     uint64_t      unixTime = 0;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) == sizeof(responseHeader),
-                 OT_NOOP);
+    SuccessOrExit(aMessage.Read(aMessage.GetOffset(), responseHeader));
 
-    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != nullptr, OT_NOOP);
+    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != nullptr);
 
     // Check if response came from the server.
     VerifyOrExit(responseHeader.GetMode() == Header::kModeServer, error = OT_ERROR_FAILED);

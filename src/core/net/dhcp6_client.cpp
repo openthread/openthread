@@ -165,7 +165,7 @@ void Client::UpdateAddresses(void)
 
 void Client::Start(void)
 {
-    VerifyOrExit(!mSocket.IsBound(), OT_NOOP);
+    VerifyOrExit(!mSocket.IsBound());
 
     IgnoreError(mSocket.Open(&Client::HandleUdpReceive, this));
     IgnoreError(mSocket.Bind(kDhcpClientPort));
@@ -186,8 +186,7 @@ bool Client::ProcessNextIdentityAssociation(void)
     bool rval = false;
 
     // not interrupt in-progress solicit
-    VerifyOrExit(mIdentityAssociationCurrent == nullptr || mIdentityAssociationCurrent->mStatus != kIaStatusSoliciting,
-                 OT_NOOP);
+    VerifyOrExit(mIdentityAssociationCurrent == nullptr || mIdentityAssociationCurrent->mStatus != kIaStatusSoliciting);
 
     mTrickleTimer.Stop();
 
@@ -286,15 +285,10 @@ void Client::Solicit(uint16_t aRloc16)
     otLogInfoIp6("solicit");
 
 exit:
-
-    if (message != nullptr)
+    if (error != OT_ERROR_NONE)
     {
+        FreeMessage(message);
         otLogWarnIp6("Failed to send DHCPv6 Solicit: %s", otThreadErrorToString(error));
-
-        if (error != OT_ERROR_NONE)
-        {
-            message->Free();
-        }
     }
 }
 
@@ -305,7 +299,7 @@ otError Client::AppendHeader(Message &aMessage)
     header.Clear();
     header.SetType(kTypeSolicit);
     header.SetTransactionId(mTransactionId);
-    return aMessage.Append(&header, sizeof(header));
+    return aMessage.Append(header);
 }
 
 otError Client::AppendElapsedTime(Message &aMessage)
@@ -314,7 +308,7 @@ otError Client::AppendElapsedTime(Message &aMessage)
 
     option.Init();
     option.SetElapsedTime(static_cast<uint16_t>(Time::MsecToSec(TimerMilli::GetNow() - mStartTime)));
-    return aMessage.Append(&option, sizeof(option));
+    return aMessage.Append(option);
 }
 
 otError Client::AppendClientIdentifier(Message &aMessage)
@@ -329,7 +323,7 @@ otError Client::AppendClientIdentifier(Message &aMessage)
     option.SetDuidHardwareType(kHardwareTypeEui64);
     option.SetDuidLinkLayerAddress(eui64);
 
-    return aMessage.Append(&option, sizeof(option));
+    return aMessage.Append(option);
 }
 
 otError Client::AppendIaNa(Message &aMessage, uint16_t aRloc16)
@@ -362,7 +356,7 @@ otError Client::AppendIaNa(Message &aMessage, uint16_t aRloc16)
     option.SetIaid(0);
     option.SetT1(0);
     option.SetT2(0);
-    SuccessOrExit(error = aMessage.Append(&option, sizeof(IaNa)));
+    SuccessOrExit(error = aMessage.Append(option));
 
 exit:
     return error;
@@ -385,7 +379,7 @@ otError Client::AppendIaAddress(Message &aMessage, uint16_t aRloc16)
             option.SetAddress(idAssociation.mNetifAddress.GetAddress());
             option.SetPreferredLifetime(0);
             option.SetValidLifetime(0);
-            SuccessOrExit(error = aMessage.Append(&option, sizeof(option)));
+            SuccessOrExit(error = aMessage.Append(option));
         }
     }
 
@@ -398,7 +392,7 @@ otError Client::AppendRapidCommit(Message &aMessage)
     RapidCommit option;
 
     option.Init();
-    return aMessage.Append(&option, sizeof(option));
+    return aMessage.Append(option);
 }
 
 void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -413,7 +407,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
     Header header;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(header), &header) == sizeof(header), OT_NOOP);
+    SuccessOrExit(aMessage.Read(aMessage.GetOffset(), header));
     aMessage.MoveOffset(sizeof(header));
 
     if ((header.GetType() == kTypeReply) && (header.GetTransactionId() == mTransactionId))
@@ -437,18 +431,18 @@ void Client::ProcessReply(Message &aMessage)
     }
 
     // Server Identifier
-    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionServerIdentifier)) > 0, OT_NOOP);
+    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionServerIdentifier)) > 0);
     SuccessOrExit(ProcessServerIdentifier(aMessage, optionOffset));
 
     // Client Identifier
-    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionClientIdentifier)) > 0, OT_NOOP);
+    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionClientIdentifier)) > 0);
     SuccessOrExit(ProcessClientIdentifier(aMessage, optionOffset));
 
     // Rapid Commit
-    VerifyOrExit(FindOption(aMessage, offset, length, kOptionRapidCommit) > 0, OT_NOOP);
+    VerifyOrExit(FindOption(aMessage, offset, length, kOptionRapidCommit) > 0);
 
     // IA_NA
-    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionIaNa)) > 0, OT_NOOP);
+    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionIaNa)) > 0);
     SuccessOrExit(ProcessIaNa(aMessage, optionOffset));
 
     HandleTrickleTimer();
@@ -459,21 +453,22 @@ exit:
 
 uint16_t Client::FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Dhcp6::Code aCode)
 {
-    uint16_t end  = aOffset + aLength;
-    uint16_t rval = 0;
+    uint32_t offset = aOffset;
+    uint16_t end    = aOffset + aLength;
+    uint16_t rval   = 0;
 
-    while (aOffset <= end)
+    while (offset <= end)
     {
         Option option;
 
-        VerifyOrExit(aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option), OT_NOOP);
+        SuccessOrExit(aMessage.Read(static_cast<uint16_t>(offset), option));
 
         if (option.GetCode() == aCode)
         {
-            ExitNow(rval = aOffset);
+            ExitNow(rval = static_cast<uint16_t>(offset));
         }
 
-        aOffset += sizeof(option) + option.GetLength();
+        offset += sizeof(option) + option.GetLength();
     }
 
 exit:
@@ -485,7 +480,7 @@ otError Client::ProcessServerIdentifier(Message &aMessage, uint16_t aOffset)
     otError          error = OT_ERROR_NONE;
     ServerIdentifier option;
 
-    VerifyOrExit((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)), OT_NOOP);
+    SuccessOrExit(aMessage.Read(aOffset, option));
     VerifyOrExit(((option.GetDuidType() == kDuidLinkLayerAddressPlusTime) &&
                   (option.GetDuidHardwareType() == kHardwareTypeEthernet)) ||
                      ((option.GetLength() == (sizeof(option) - sizeof(Option))) &&
@@ -504,11 +499,10 @@ otError Client::ProcessClientIdentifier(Message &aMessage, uint16_t aOffset)
 
     Get<Radio>().GetIeeeEui64(eui64);
 
+    SuccessOrExit(error = aMessage.Read(aOffset, option));
     VerifyOrExit(
-        (((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)) &&
-          (option.GetLength() == (sizeof(option) - sizeof(Option))) &&
-          (option.GetDuidType() == kDuidLinkLayerAddress) && (option.GetDuidHardwareType() == kHardwareTypeEui64)) &&
-         (option.GetDuidLinkLayerAddress() == eui64)),
+        (option.GetLength() == (sizeof(option) - sizeof(Option))) && (option.GetDuidType() == kDuidLinkLayerAddress) &&
+            (option.GetDuidHardwareType() == kHardwareTypeEui64) && (option.GetDuidLinkLayerAddress() == eui64),
         error = OT_ERROR_PARSE);
 exit:
     return error;
@@ -521,7 +515,7 @@ otError Client::ProcessIaNa(Message &aMessage, uint16_t aOffset)
     uint16_t optionOffset;
     uint16_t length;
 
-    VerifyOrExit(aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = aMessage.Read(aOffset, option));
 
     aOffset += sizeof(option);
     length = option.GetLength() - (sizeof(option) - sizeof(Option));
@@ -555,9 +549,8 @@ otError Client::ProcessStatusCode(Message &aMessage, uint16_t aOffset)
     otError    error = OT_ERROR_NONE;
     StatusCode option;
 
-    VerifyOrExit(((aMessage.Read(aOffset, sizeof(option), &option) >= sizeof(option)) &&
-                  (option.GetLength() >= (sizeof(option) - sizeof(Option))) &&
-                  (option.GetStatusCode() == kStatusSuccess)),
+    SuccessOrExit(error = aMessage.Read(aOffset, option));
+    VerifyOrExit((option.GetLength() >= sizeof(option) - sizeof(Option)) && (option.GetStatusCode() == kStatusSuccess),
                  error = OT_ERROR_PARSE);
 
 exit:
@@ -566,12 +559,11 @@ exit:
 
 otError Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
 {
-    otError   error = OT_ERROR_NONE;
+    otError   error;
     IaAddress option;
 
-    VerifyOrExit(((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)) &&
-                  (option.GetLength() == (sizeof(option) - sizeof(Option)))),
-                 error = OT_ERROR_PARSE);
+    SuccessOrExit(error = aMessage.Read(aOffset, option));
+    VerifyOrExit(option.GetLength() == sizeof(option) - sizeof(Option), error = OT_ERROR_PARSE);
 
     for (IdentityAssociation &idAssociation : mIdentityAssociations)
     {
@@ -591,9 +583,11 @@ otError Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             idAssociation.mNetifAddress.mValid         = option.GetValidLifetime() != 0;
             idAssociation.mStatus                      = kIaStatusSolicitReplied;
             Get<ThreadNetif>().AddUnicastAddress(idAssociation.mNetifAddress);
-            break;
+            ExitNow(error = OT_ERROR_NONE);
         }
     }
+
+    error = OT_ERROR_NOT_FOUND;
 
 exit:
     return error;

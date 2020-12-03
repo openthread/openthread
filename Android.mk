@@ -38,6 +38,7 @@ OPENTHREAD_PROJECT_CFLAGS                                                 ?= \
 
 OPENTHREAD_PUBLIC_CFLAGS                                         := \
     -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
+    -DOPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1                          \
     -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1                  \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
     -DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1                      \
@@ -156,6 +157,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/crypto_api.cpp                             \
     src/core/api/dataset_api.cpp                            \
     src/core/api/dataset_ftd_api.cpp                        \
+    src/core/api/dataset_updater_api.cpp                    \
     src/core/api/diags_api.cpp                              \
     src/core/api/dns_api.cpp                                \
     src/core/api/icmp6_api.cpp                              \
@@ -164,6 +166,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/jam_detection_api.cpp                      \
     src/core/api/joiner_api.cpp                             \
     src/core/api/link_api.cpp                               \
+    src/core/api/link_metrics_api.cpp                       \
     src/core/api/link_raw_api.cpp                           \
     src/core/api/logging_api.cpp                            \
     src/core/api/message_api.cpp                            \
@@ -176,10 +179,12 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/thread_api.cpp                             \
     src/core/api/thread_ftd_api.cpp                         \
     src/core/api/udp_api.cpp                                \
+    src/core/backbone_router/backbone_tmf.cpp               \
     src/core/backbone_router/bbr_leader.cpp                 \
     src/core/backbone_router/bbr_local.cpp                  \
     src/core/backbone_router/bbr_manager.cpp                \
     src/core/backbone_router/multicast_listeners_table.cpp  \
+    src/core/backbone_router/ndproxy_table.cpp              \
     src/core/coap/coap.cpp                                  \
     src/core/coap/coap_message.cpp                          \
     src/core/coap/coap_secure.cpp                           \
@@ -228,6 +233,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/meshcop/meshcop_tlvs.cpp                       \
     src/core/meshcop/panid_query_client.cpp                 \
     src/core/meshcop/timestamp.cpp                          \
+    src/core/net/checksum.cpp                               \
     src/core/net/dhcp6_client.cpp                           \
     src/core/net/dhcp6_server.cpp                           \
     src/core/net/dns_client.cpp                             \
@@ -252,6 +258,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/energy_scan_server.cpp                  \
     src/core/thread/indirect_sender.cpp                     \
     src/core/thread/key_manager.cpp                         \
+    src/core/thread/link_metrics.cpp                        \
     src/core/thread/link_quality.cpp                        \
     src/core/thread/lowpan.cpp                              \
     src/core/thread/mesh_forwarder.cpp                      \
@@ -272,12 +279,16 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/router_table.cpp                        \
     src/core/thread/src_match_controller.cpp                \
     src/core/thread/thread_netif.cpp                        \
+    src/core/thread/tmf.cpp                                 \
     src/core/thread/topology.cpp                            \
+    src/core/thread/uri_paths.cpp                           \
     src/core/utils/channel_manager.cpp                      \
     src/core/utils/channel_monitor.cpp                      \
     src/core/utils/child_supervision.cpp                    \
+    src/core/utils/dataset_updater.cpp                      \
     src/core/utils/heap.cpp                                 \
     src/core/utils/jam_detector.cpp                         \
+    src/core/utils/lookup_table.cpp                         \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
     src/lib/hdlc/hdlc.cpp                                   \
@@ -287,10 +298,12 @@ LOCAL_SRC_FILES                                          := \
     src/lib/spinel/spinel_encoder.cpp                       \
     src/lib/url/url.cpp                                     \
     src/posix/platform/alarm.cpp                            \
+    src/posix/platform/backbone.cpp                         \
     src/posix/platform/entropy.cpp                          \
     src/posix/platform/hdlc_interface.cpp                   \
     src/posix/platform/logging.cpp                          \
     src/posix/platform/misc.cpp                             \
+    src/posix/platform/multicast_routing.cpp                \
     src/posix/platform/netif.cpp                            \
     src/posix/platform/radio.cpp                            \
     src/posix/platform/radio_url.cpp                        \
@@ -366,6 +379,7 @@ LOCAL_SRC_FILES                            := \
     src/cli/cli_console.cpp                   \
     src/cli/cli_dataset.cpp                   \
     src/cli/cli_joiner.cpp                    \
+    src/cli/cli_network_data.cpp              \
     src/cli/cli_uart.cpp                      \
     src/cli/cli_udp.cpp                       \
     $(NULL)
@@ -523,3 +537,7 @@ LOCAL_SRC_FILES := src/posix/client.cpp
 
 include $(BUILD_EXECUTABLE)
 endif # ($(USE_OTBR_DAEMON), 1)
+
+ifneq ($(OPENTHREAD_PROJECT_ANDROID_MK),)
+include $(OPENTHREAD_PROJECT_ANDROID_MK)
+endif

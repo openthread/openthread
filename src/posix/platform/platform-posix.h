@@ -38,6 +38,7 @@
 #include "openthread-posix-config.h"
 
 #include <errno.h>
+#include <net/if.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/select.h>
@@ -270,6 +271,15 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
 void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);
 
 /**
+ * This function performs notifies state changes to platform netif.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aFlags          Flags that denote the state change events.
+ *
+ */
+void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags);
+
+/**
  * This function initialize virtual time simulation.
  *
  * @params[in]  aNodeId     Node id of this simulated device.
@@ -393,6 +403,65 @@ enum SocketBlockOption
  *
  */
 int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption aBlockOption);
+
+/**
+ * The name of Thread network interface.
+ *
+ */
+extern char gNetifName[IFNAMSIZ];
+
+/**
+ * The index of Thread network interface.
+ *
+ */
+extern unsigned int gNetifIndex;
+
+/**
+ * This function initializes platform Backbone network.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aInterfaceName  A pointer to Thread network interface name.
+ *
+ */
+void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by the platform Backbone network.
+ *
+ * @param[inout]  aReadFdSet   A reference to the read file descriptors.
+ * @param[inout]  aMaxFd       A reference to the max file descriptor.
+ *
+ */
+void platformBackboneUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd);
+
+/**
+ * This function performs platform Backbone network processing.
+ *
+ * @param[in]   aReadFdSet  A reference to the read file descriptors.
+ *
+ */
+void platformBackboneProcess(const fd_set &aReadSet);
+
+/**
+ * This function performs notifies state changes to platform Backbone network.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aFlags          Flags that denote the state change events.
+ *
+ */
+void platformBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags);
+
+/**
+ * The name of Backbone network interface.
+ *
+ */
+extern char gBackboneNetifName[IFNAMSIZ];
+
+/**
+ * The index of Backbone network interface.
+ *
+ */
+extern unsigned int gBackboneNetifIndex;
 
 #ifdef __cplusplus
 }

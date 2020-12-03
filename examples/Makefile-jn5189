@@ -81,19 +81,19 @@ CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-jn5189
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/k32w/jn5189/
 SIGN_IMAGE_PATH = $(AbsTopSourceDir)/third_party/nxp/JN5189DK6/tools/imagetool/
 
-COMMONCFLAGS                          := \
-    -fdata-sections                      \
-    -ffunction-sections                  \
-    -Os                                  \
-    -g                                   \
-    -DCPU_JN518X                         \
-    -DCPU_JN518X_REV=2                   \
-    -DJENNIC_CHIP_FAMILY_JN518x          \
-    -DJENNIC_CHIP_FAMILY_NAME=_JN518x    \
-    -DSDK_DEBUGCONSOLE=0                 \
-    -D$(CONFIG_FILE)                     \
-    -DUSE_RTOS=0                         \
-    -I$(CONFIG_FILE_PATH)                \
+COMMONCFLAGS                                                                       :=\
+    -fdata-sections                                                                  \
+    -ffunction-sections                                                              \
+    -Os                                                                              \
+    -g                                                                               \
+    -DCPU_JN518X                                                                     \
+    -DCPU_JN518X_REV=2                                                               \
+    -DJENNIC_CHIP_FAMILY_JN518x                                                      \
+    -DJENNIC_CHIP_FAMILY_NAME=_JN518x                                                \
+    -DSDK_DEBUGCONSOLE=0                                                             \
+    -D$(CONFIG_FILE)                                                                 \
+    -imacros "$(AbsTopSourceDir)/examples/platforms/k32w/jn5189/jn5189-sdk-config.h" \
+    -I$(CONFIG_FILE_PATH)                                                            \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk

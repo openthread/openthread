@@ -36,9 +36,10 @@
 
 #include <stdint.h>
 
+#include "compiler_abstraction.h"
 #include "nrf_802154_fal.h"
 
-int8_t nrf_802154_fal_tx_power_get(const uint8_t channel, const int8_t power)
+__WEAK int8_t nrf_802154_fal_tx_power_get(const uint8_t channel, const int8_t power)
 {
     (void)channel;
 

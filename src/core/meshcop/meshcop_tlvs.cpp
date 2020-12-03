@@ -34,6 +34,7 @@
 #include "meshcop_tlvs.hpp"
 
 #include "common/debug.hpp"
+#include "common/string.hpp"
 #include "meshcop/meshcop.hpp"
 
 namespace ot {
@@ -129,6 +130,11 @@ void NetworkNameTlv::SetNetworkName(const Mac::NameData &aNameData)
     SetLength(len);
 }
 
+bool NetworkNameTlv::IsValid(void) const
+{
+    return IsValidUtf8String(mNetworkName, GetLength());
+}
+
 void SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
 {
     aSteeringData.Init(GetSteeringDataLength());
@@ -139,10 +145,10 @@ bool ChannelTlv::IsValid(void) const
 {
     bool ret = false;
 
-    VerifyOrExit(GetLength() == sizeof(*this) - sizeof(Tlv), OT_NOOP);
-    VerifyOrExit(mChannelPage <= OT_RADIO_CHANNEL_PAGE_MAX, OT_NOOP);
-    VerifyOrExit((1U << mChannelPage) & Radio::kSupportedChannelPages, OT_NOOP);
-    VerifyOrExit(Radio::kChannelMin <= GetChannel() && GetChannel() <= Radio::kChannelMax, OT_NOOP);
+    VerifyOrExit(GetLength() == sizeof(*this) - sizeof(Tlv));
+    VerifyOrExit(mChannelPage <= OT_RADIO_CHANNEL_PAGE_MAX);
+    VerifyOrExit((1U << mChannelPage) & Radio::kSupportedChannelPages);
+    VerifyOrExit(Radio::kChannelMin <= GetChannel() && GetChannel() <= Radio::kChannelMax);
     ret = true;
 
 exit:
@@ -175,7 +181,7 @@ const ChannelMaskEntryBase *ChannelMaskBaseTlv::GetFirstEntry(void) const
 {
     const ChannelMaskEntryBase *entry = nullptr;
 
-    VerifyOrExit(GetLength() >= sizeof(ChannelMaskEntryBase), OT_NOOP);
+    VerifyOrExit(GetLength() >= sizeof(ChannelMaskEntryBase));
 
     entry = reinterpret_cast<const ChannelMaskEntryBase *>(GetValue());
     VerifyOrExit(GetLength() >= entry->GetEntrySize(), entry = nullptr);
@@ -233,7 +239,7 @@ uint32_t ChannelMaskTlv::GetChannelMask(void) const
 
     for (; cur < end; cur = static_cast<const ChannelMaskEntry *>(cur->GetNext()))
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NOOP);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
 
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
         if (cur->GetChannelPage() == OT_RADIO_CHANNEL_PAGE_2)
@@ -267,21 +273,21 @@ uint32_t ChannelMaskTlv::GetChannelMask(const Message &aMessage)
     {
         ChannelMaskEntry entry;
 
-        aMessage.Read(offset, sizeof(ChannelMaskEntryBase), &entry);
-        VerifyOrExit(offset + entry.GetEntrySize() <= end, OT_NOOP);
+        IgnoreError(aMessage.Read(offset, entry));
+        VerifyOrExit(offset + entry.GetEntrySize() <= end);
 
         switch (entry.GetChannelPage())
         {
 #if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
         case OT_RADIO_CHANNEL_PAGE_0:
-            aMessage.Read(offset, sizeof(entry), &entry);
+            IgnoreError(aMessage.Read(offset, entry));
             mask |= entry.GetMask() & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK;
             break;
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
         case OT_RADIO_CHANNEL_PAGE_2:
-            aMessage.Read(offset, sizeof(entry), &entry);
+            IgnoreError(aMessage.Read(offset, entry));
             mask |= entry.GetMask() & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK;
             break;
 #endif

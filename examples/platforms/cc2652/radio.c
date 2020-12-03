@@ -1465,7 +1465,8 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_RETRIES;
+    return (otRadioCaps)(OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_RETRIES |
+                         OT_RADIO_CAPS_CSMA_BACKOFF);
 }
 
 /**
@@ -1929,10 +1930,15 @@ static void cc2652RadioProcessReceiveQueue(otInstance *aInstance)
 
             if ((receiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK)
             {
-                if (receiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET])
+                if (sState == cc2652_stateTransmit && sTxCmdChainDone &&
+                    receiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET])
                 {
+                    /* we found the ACK packet */
                     sState = cc2652_stateReceive;
                     cc2652RadioProcessTransmitDone(aInstance, &sTransmitFrame, &receiveFrame, receiveError);
+
+                    sTransmitError  = OT_ERROR_NONE;
+                    sTxCmdChainDone = false;
                 }
             }
             else

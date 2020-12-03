@@ -30,6 +30,8 @@
 import unittest
 
 import thread_cert
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_REQUEST, MLE_CHILD_ID_RESPONSE, MLE_CHILD_ID_REQUEST, MGMT_ACTIVE_SET_URI, MGMT_ACTIVE_GET_URI, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, ADDRESS_REGISTRATION_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 CHANNEL_INIT = 19
 PANID_INIT = 0xface
@@ -47,51 +49,55 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
 
     TOPOLOGY = {
         COMMISSIONER: {
+            'name': 'COMMISSIONER',
             'active_dataset': {
                 'timestamp': 15,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         LEADER: {
+            'name': 'LEADER',
             'active_dataset': {
                 'timestamp': 15,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'partition_id': 0xffffffff,
             'router_selection_jitter': 1,
-            'whitelist': [COMMISSIONER, ROUTER1]
+            'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
+            'name': 'ROUTER_1',
             'active_dataset': {
                 'timestamp': 15,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ROUTER2]
+            'allowlist': [LEADER, ROUTER2]
         },
         ROUTER2: {
+            'name': 'ROUTER_2',
             'active_dataset': {
                 'timestamp': 15,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
     }
 
     def _setUpRouter2(self):
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
+        self.nodes[ROUTER2].add_allowlist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[ROUTER2].enable_allowlist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
     def test(self):
@@ -131,7 +137,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
             mesh_local='fd00:0db7::',
             panid=PANID_FINAL,
         )
-        self.simulator.go(100)
+        self.simulator.go(101)
 
         self.nodes[ROUTER2].start()
         self.simulator.go(5)
@@ -148,6 +154,46 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
             if ipaddr[0:4] != 'fe80':
                 break
         self.assertTrue(self.nodes[LEADER].ping(ipaddr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        COMMISSIONER = pv.vars['COMMISSIONER']
+        ROUTER_1 = pv.vars['ROUTER_1']
+        ROUTER_2 = pv.vars['ROUTER_2']
+        _router2_pkts = pkts.filter_wpan_src64(ROUTER_2)
+
+        # Step 1: Ensure the topology is formed correctly
+        # Verify Commissioner, Leader and Router_1 are sending MLE advertisements
+        pkts.copy().filter_wpan_src64(LEADER).filter_mle_cmd(MLE_ADVERTISEMENT).must_next()
+        pkts.filter_wpan_dst64(COMMISSIONER).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+        pkts.copy().filter_wpan_src64(COMMISSIONER).filter_mle_cmd(MLE_ADVERTISEMENT).must_next()
+        pkts.filter_wpan_dst64(ROUTER_1).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+        pkts.copy().filter_wpan_src64(ROUTER_1).filter_mle_cmd(MLE_ADVERTISEMENT).must_next()
+
+        # Step 5: Router_2 begins attach process by sending a multicast MLE Parent Request
+        # The first MLE Parent Request sent MUST NOT be sent to all routers and REEDS
+        _router2_pkts.range(pkts.index).filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+                p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 0)
+
+        # Step 7: Router_2  MUST send a MLE Child ID Request to Router_1
+        _router2_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(lambda p: {
+            RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV
+        } < set(p.mle.tlv.type) and ADDRESS_REGISTRATION_TLV not in p.mle.tlv.type)
+
+        # Step 14: Router_2 begins attach process by sending a multicast MLE Parent Request
+        # The first MLE Parent Request sent MUST NOT be sent to all routers and REEDS
+        _router2_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+                p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 0)
+
+        # Step 16: Router_2 MUST send a MLE Child ID Request to Router_1
+        _router2_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(lambda p: {
+            RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV
+        } < set(p.mle.tlv.type) and ADDRESS_REGISTRATION_TLV not in p.mle.tlv.type)
 
 
 if __name__ == '__main__':

@@ -201,7 +201,7 @@ otCommissionerState otCommissionerGetState(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<MeshCoP::Commissioner>().GetState();
+    return static_cast<otCommissionerState>(instance.Get<MeshCoP::Commissioner>().GetState());
 }
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

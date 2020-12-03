@@ -43,6 +43,7 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/platform/misc.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,10 +71,11 @@ enum
  */
 typedef struct otPlatformConfig
 {
-    const char *mInterfaceName;  ///< Thread network interface name.
-    const char *mRadioUrl;       ///< Radio url.
-    int         mRealTimeSignal; ///< The real-time signal for microsecond timer.
-    uint32_t    mSpeedUpFactor;  ///< Speed up factor.
+    const char *mBackboneInterfaceName; ///< Backbone network interface name.
+    const char *mInterfaceName;         ///< Thread network interface name.
+    const char *mRadioUrl;              ///< Radio url.
+    int         mRealTimeSignal;        ///< The real-time signal for microsecond timer.
+    uint32_t    mSpeedUpFactor;         ///< Speed up factor.
 } otPlatformConfig;
 
 /**
@@ -149,6 +151,8 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
  *
  */
 const char *otSysGetRadioUrlHelpString(void);
+
+extern otPlatResetReason gPlatResetReason;
 
 #ifdef __cplusplus
 } // end of extern "C"

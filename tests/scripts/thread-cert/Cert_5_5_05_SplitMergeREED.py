@@ -45,108 +45,108 @@ class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
-            'whitelist': [ROUTER2, ROUTER3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ROUTER15]
+            'allowlist': [ROUTER2, ROUTER3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ROUTER15]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [ROUTER3]
+            'allowlist': [ROUTER3]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, REED1]
+            'allowlist': [LEADER, REED1]
         },
         ROUTER3: {
             'name': 'ROUTER_3',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ROUTER1]
+            'allowlist': [LEADER, ROUTER1]
         },
         5: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         6: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         7: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         8: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         9: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         10: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         11: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         12: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         13: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         14: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         15: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ROUTER15: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         REED1: {
             'name': 'REED',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
-            'whitelist': [ROUTER2]
+            'allowlist': [ROUTER2]
         },
     }
 
@@ -168,8 +168,8 @@ class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[REED1].get_state(), 'child')
 
-        self.nodes[ROUTER1].add_whitelist(self.nodes[REED1].get_addr64())
-        self.nodes[REED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[ROUTER1].add_allowlist(self.nodes[REED1].get_addr64())
+        self.nodes[REED1].add_allowlist(self.nodes[ROUTER1].get_addr64())
 
         self.nodes[ROUTER3].stop()
         self.simulator.go(140)

@@ -43,6 +43,7 @@
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/random.hpp"
 #include "common/timer.hpp"
 #include "crypto/hmac_sha256.hpp"
@@ -111,9 +112,19 @@ typedef Mac::Key Kek;
  * This class defines Thread Key Manager.
  *
  */
-class KeyManager : public InstanceLocator
+class KeyManager : public InstanceLocator, private NonCopyable
 {
 public:
+    enum : uint16_t
+    {
+        kDefaultKeyRotationTime = 672, ///< Default Key Rotation Time (in unit of hours).
+    };
+
+    enum : uint8_t
+    {
+        kDefaultSecurityPolicyFlags = 0xff, ///< Default Security Policy Flags.
+    };
+
     /**
      * This constructor initializes the object.
      *
@@ -447,7 +458,6 @@ private:
     enum
     {
         kMinKeyRotationTime        = 1,
-        kDefaultKeyRotationTime    = 672,
         kDefaultKeySwitchGuardTime = 624,
         kOneHourIntervalInMsec     = 3600u * 1000u,
     };

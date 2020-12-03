@@ -43,6 +43,7 @@
 #include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -55,7 +56,7 @@ typedef otBackboneRouterConfig BackboneRouterConfig;
  * This class implements the basic Primary Backbone Router service operations.
  *
  */
-class Leader : public InstanceLocator
+class Leader : public InstanceLocator, private NonCopyable
 {
 public:
     // Primary Backbone Router Service state or state change.

@@ -56,6 +56,7 @@
 #define OT_POSIX_APP_TYPE_NCP 1
 #define OT_POSIX_APP_TYPE_CLI 2
 
+#include <openthread/cli.h>
 #include <openthread/diag.h>
 #include <openthread/logging.h>
 #include <openthread/tasklet.h>
@@ -66,12 +67,8 @@
 #elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 #include <openthread/cli.h>
 
-#include "cli/cli_config.h"
-#if (HAVE_LIBEDIT || HAVE_LIBREADLINE) && !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE && \
-    (OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_CONSOLE)
-#define OPENTHREAD_USE_CONSOLE 1
 #include "console_cli.h"
-#endif
+#include "cli/cli_config.h"
 #else
 #error "Unknown posix app type!"
 #endif
@@ -79,6 +76,7 @@
 #include <common/logging.hpp>
 #include <lib/platform/exit_code.h>
 #include <openthread/openthread-system.h>
+#include <openthread/platform/misc.h>
 
 #ifndef OPENTHREAD_ENABLE_COVERAGE
 #define OPENTHREAD_ENABLE_COVERAGE 0
@@ -103,12 +101,13 @@ void __gcov_flush();
  */
 enum
 {
-    OT_POSIX_OPT_DEBUG_LEVEL    = 'd',
-    OT_POSIX_OPT_DRY_RUN        = 'n',
-    OT_POSIX_OPT_HELP           = 'h',
-    OT_POSIX_OPT_INTERFACE_NAME = 'I',
-    OT_POSIX_OPT_TIME_SPEED     = 's',
-    OT_POSIX_OPT_VERBOSE        = 'v',
+    OT_POSIX_OPT_BACKBONE_INTERFACE_NAME = 'B',
+    OT_POSIX_OPT_DEBUG_LEVEL             = 'd',
+    OT_POSIX_OPT_DRY_RUN                 = 'n',
+    OT_POSIX_OPT_HELP                    = 'h',
+    OT_POSIX_OPT_INTERFACE_NAME          = 'I',
+    OT_POSIX_OPT_TIME_SPEED              = 's',
+    OT_POSIX_OPT_VERBOSE                 = 'v',
 
     OT_POSIX_OPT_SHORT_MAX = 128,
 
@@ -116,15 +115,17 @@ enum
     OT_POSIX_OPT_REAL_TIME_SIGNAL,
 };
 
-static const struct option kOptions[] = {{"debug-level", required_argument, NULL, OT_POSIX_OPT_DEBUG_LEVEL},
-                                         {"dry-run", no_argument, NULL, OT_POSIX_OPT_DRY_RUN},
-                                         {"help", no_argument, NULL, OT_POSIX_OPT_HELP},
-                                         {"interface-name", required_argument, NULL, OT_POSIX_OPT_INTERFACE_NAME},
-                                         {"radio-version", no_argument, NULL, OT_POSIX_OPT_RADIO_VERSION},
-                                         {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
-                                         {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
-                                         {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
-                                         {0, 0, 0, 0}};
+static const struct option kOptions[] = {
+    {"backbone-interface-name", required_argument, NULL, OT_POSIX_OPT_BACKBONE_INTERFACE_NAME},
+    {"debug-level", required_argument, NULL, OT_POSIX_OPT_DEBUG_LEVEL},
+    {"dry-run", no_argument, NULL, OT_POSIX_OPT_DRY_RUN},
+    {"help", no_argument, NULL, OT_POSIX_OPT_HELP},
+    {"interface-name", required_argument, NULL, OT_POSIX_OPT_INTERFACE_NAME},
+    {"radio-version", no_argument, NULL, OT_POSIX_OPT_RADIO_VERSION},
+    {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
+    {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
+    {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
+    {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
 {
@@ -132,6 +133,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "Syntax:\n"
             "    %s [Options] RadioURL\n"
             "Options:\n"
+            "    -B  --backbone-interface-name Backbone network interface name.\n"
             "    -d  --debug-level             Debug level of logging.\n"
             "    -h  --help                    Display this usage information.\n"
             "    -I  --interface-name name     Thread network interface name.\n"
@@ -165,7 +167,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     while (true)
     {
         int index  = 0;
-        int option = getopt_long(aArgCount, aArgVector, "d:hI:ns:v", kOptions, &index);
+        int option = getopt_long(aArgCount, aArgVector, "B:d:hI:ns:v", kOptions, &index);
 
         if (option == -1)
         {
@@ -182,6 +184,9 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             break;
         case OT_POSIX_OPT_INTERFACE_NAME:
             aConfig->mPlatformConfig.mInterfaceName = optarg;
+            break;
+        case OT_POSIX_OPT_BACKBONE_INTERFACE_NAME:
+            aConfig->mPlatformConfig.mBackboneInterfaceName = optarg;
             break;
         case OT_POSIX_OPT_DRY_RUN:
             aConfig->mIsDryRun = true;
@@ -233,22 +238,30 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mPlatformConfig.mRadioUrl = aArgVector[optind];
 }
 
-static otInstance *InitInstance(int aArgCount, char *aArgVector[])
+#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
+static void PrintRadioUrl(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
-    PosixConfig config;
+    (void)aArgsLength;
+    (void)aArgs;
+
+    otPlatformConfig *config = (otPlatformConfig *)aContext;
+    otCliOutputFormat("%s\r\nDone\r\n", config->mRadioUrl);
+}
+#endif // OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
+
+static otInstance *InitInstance(PosixConfig *aConfig)
+{
     otInstance *instance = NULL;
 
-    ParseArg(aArgCount, aArgVector, &config);
-
-    openlog(aArgVector[0], LOG_PID | (config.mIsVerbose ? LOG_PERROR : 0), LOG_DAEMON);
-    setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
     syslog(LOG_INFO, "Running %s", otGetVersionString());
     syslog(LOG_INFO, "Thread version: %hu", otThreadGetVersion());
-    IgnoreError(otLoggingSetLevel(config.mLogLevel));
+    IgnoreError(otLoggingSetLevel(aConfig->mLogLevel));
 
-    instance = otSysInit(&config.mPlatformConfig);
+    instance = otSysInit(&aConfig->mPlatformConfig);
 
-    if (config.mPrintRadioVersion)
+    atexit(otSysDeinit);
+
+    if (aConfig->mPrintRadioVersion)
     {
         printf("%s\n", otPlatRadioGetVersionString(instance));
     }
@@ -257,7 +270,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
         syslog(LOG_INFO, "RCP version: %s", otPlatRadioGetVersionString(instance));
     }
 
-    if (config.mIsDryRun)
+    if (aConfig->mIsDryRun)
     {
         exit(OT_EXIT_SUCCESS);
     }
@@ -272,6 +285,8 @@ void otTaskletsSignalPending(otInstance *aInstance)
 
 void otPlatReset(otInstance *aInstance)
 {
+    gPlatResetReason = OT_PLAT_RESET_REASON_SOFTWARE;
+
     otInstanceFinalize(aInstance);
     otSysDeinit();
 
@@ -282,6 +297,11 @@ void otPlatReset(otInstance *aInstance)
 int main(int argc, char *argv[])
 {
     otInstance *instance;
+    int         rval = 0;
+    PosixConfig config;
+#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
+    otCliCommand radioUrlCommand = {"radiourl", PrintRadioUrl};
+#endif
 
 #ifdef __linux__
     // Ensure we terminate this process if the
@@ -298,7 +318,10 @@ int main(int argc, char *argv[])
         execvp(argv[0], argv);
     }
 
-    instance = InitInstance(argc, argv);
+    ParseArg(argc, argv, &config);
+    openlog(argv[0], LOG_PID | (config.mIsVerbose ? LOG_PERROR : 0), LOG_DAEMON);
+    setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
+    instance = InitInstance(&config);
 
 #if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
     otNcpInit(instance);
@@ -308,6 +331,7 @@ int main(int argc, char *argv[])
 #else
     otCliUartInit(instance);
 #endif
+    otCliSetUserCommands(&radioUrlCommand, 1, &config.mPlatformConfig);
 #endif
 
     while (true)
@@ -340,15 +364,16 @@ int main(int argc, char *argv[])
         else if (errno != EINTR)
         {
             perror("select");
-            exit(OT_EXIT_FAILURE);
+            ExitNow(rval = OT_EXIT_FAILURE);
         }
     }
 
 #ifdef OPENTHREAD_USE_CONSOLE
     otxConsoleDeinit();
 #endif
-    otInstanceFinalize(instance);
-    otSysDeinit();
 
-    return 0;
+exit:
+    otInstanceFinalize(instance);
+
+    return rval;
 }

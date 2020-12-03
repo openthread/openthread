@@ -48,6 +48,13 @@
 namespace ot {
 namespace Ncp {
 
+#if OPENTHREAD_RADIO
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_API_VERSION>(void)
+{
+    return mEncoder.WriteUintPacked(SPINEL_RCP_API_VERSION);
+}
+#endif
+
 // ----------------------------------------------------------------------------
 // MARK: Raw Link-Layer Datapath Glue
 // ----------------------------------------------------------------------------
@@ -346,7 +353,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_ENABLED>(void)
 
     SuccessOrExit(error = mDecoder.ReadBool(value));
 
-    if (value == false)
+    if (!value)
     {
         error = otLinkRawSetReceiveDone(mInstance, nullptr);
     }
@@ -398,6 +405,8 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = true;
     aFrame.mInfo.mTxInfo.mIsARetx             = false;
     aFrame.mInfo.mTxInfo.mIsSecurityProcessed = false;
+    aFrame.mInfo.mTxInfo.mTxDelay             = 0;
+    aFrame.mInfo.mTxInfo.mTxDelayBaseTime     = 0;
 
     // All the next parameters are optional. Note that even if the
     // decoder fails to parse any of optional parameters we still want to
@@ -409,6 +418,8 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(mDecoder.ReadBool(csmaEnable));
     SuccessOrExit(mDecoder.ReadBool(isARetx));
     SuccessOrExit(mDecoder.ReadBool(isSecurityProcessed));
+    SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelay));
+    SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelayBaseTime));
     aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = csmaEnable;
     aFrame.mInfo.mTxInfo.mIsARetx             = isARetx;
     aFrame.mInfo.mTxInfo.mIsSecurityProcessed = isSecurityProcessed;

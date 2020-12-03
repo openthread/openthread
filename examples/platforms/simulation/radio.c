@@ -111,6 +111,7 @@ static bool           sPromiscuous = false;
 static bool           sTxWait      = false;
 static int8_t         sTxPower     = 0;
 static int8_t         sCcaEdThresh = -74;
+static int8_t         sLnaGain     = 0;
 
 static bool sSrcMatchEnabled = false;
 
@@ -120,7 +121,7 @@ static uint8_t sAckIeDataLength = 0;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static const uint8_t sCslIeHeader[OT_IE_HEADER_IE_SIZE] = {0x04, 0x0d};
+static const uint8_t sCslIeHeader[OT_IE_HEADER_SIZE] = {CSL_IE_HEADER_BYTES_LO, CSL_IE_HEADER_BYTES_HI};
 static uint32_t      sCslSampleTime;
 static uint32_t      sCslPeriod;
 #endif
@@ -240,13 +241,13 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
     ReverseExtAddress(&sExtAddress, aExtAddress);
 }
 
-void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aAddress)
+void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     assert(aInstance != NULL);
 
-    sShortAddress = aAddress;
+    sShortAddress = aShortAddress;
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
@@ -308,7 +309,7 @@ static void initFds(void)
     }
 
     sockaddr.sin_family      = AF_INET;
-    sockaddr.sin_port        = htons((uint16_t)(9000 + sPortOffset + WELLKNOWN_NODE_ID));
+    sockaddr.sin_port        = htons((uint16_t)(9000 + sPortOffset));
     sockaddr.sin_addr.s_addr = inet_addr(OT_RADIO_GROUP);
 
     otEXPECT_ACTION(bind(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) != -1, perror("bind(sRxFd)"));
@@ -343,7 +344,7 @@ void platformRadioInit(void)
             exit(EXIT_FAILURE);
         }
 
-        sPortOffset *= WELLKNOWN_NODE_ID;
+        sPortOffset *= (MAX_NETWORK_SIZE + 1);
     }
 
     initFds();
@@ -437,13 +438,13 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     return error;
 }
 
-otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aRadio)
+otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aRadio);
+    OT_UNUSED_VARIABLE(aFrame);
 
     assert(aInstance != NULL);
-    assert(aRadio != NULL);
+    assert(aFrame != NULL);
 
     otError error = OT_ERROR_INVALID_STATE;
 
@@ -803,7 +804,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, OT_RADIO_GROUP, &sockaddr.sin_addr);
 
-    sockaddr.sin_port = htons((uint16_t)(9000 + sPortOffset + WELLKNOWN_NODE_ID));
+    sockaddr.sin_port = htons((uint16_t)(9000 + sPortOffset));
     rval =
         sendto(sTxFd, (const char *)aMessage, 1 + aFrame->mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 
@@ -829,7 +830,8 @@ void radioSendAck(void)
     if (
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         // Determine if frame pending should be set
-        (otMacFrameIsData(&sReceiveFrame) || otMacFrameIsDataRequest(&sReceiveFrame))
+        ((otMacFrameIsVersion2015(&sReceiveFrame) && otMacFrameIsCommand(&sReceiveFrame)) ||
+         otMacFrameIsData(&sReceiveFrame) || otMacFrameIsDataRequest(&sReceiveFrame))
 #else
         otMacFrameIsDataRequest(&sReceiveFrame)
 #endif
@@ -983,6 +985,28 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
     return OT_ERROR_NONE;
 }
 
+otError otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    assert(aInstance != NULL && aGain != NULL);
+
+    *aGain = sLnaGain;
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    assert(aInstance != NULL);
+
+    sLnaGain = aGain;
+
+    return OT_ERROR_NONE;
+}
+
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -1073,8 +1097,8 @@ static otError updateIeData(otInstance *aInstance)
 
     if (sCslPeriod > 0)
     {
-        memcpy(sAckIeData, sCslIeHeader, OT_IE_HEADER_IE_SIZE);
-        offset += OT_IE_HEADER_IE_SIZE + OT_CSL_IE_SIZE; // reserve space for CSL IE
+        memcpy(sAckIeData, sCslIeHeader, OT_IE_HEADER_SIZE);
+        offset += OT_IE_HEADER_SIZE + OT_CSL_IE_SIZE; // reserve space for CSL IE
     }
 
     sAckIeDataLength = offset;

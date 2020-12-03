@@ -38,8 +38,8 @@ REED = 2
 
 SRV_0_ID = 0
 SRV_0_ENT_NUMBER = '123'
-SRV_0_SERVICE_DATA = 'foo'
-SRV_0_SERVER_DATA = 'bar'
+SRV_0_SERVICE_DATA = '123'
+SRV_0_SERVER_DATA = 'abc'
 
 # Topology:
 # LEADER -- REED
@@ -51,11 +51,11 @@ class TestREEDAddressSolicitRejected(thread_cert.TestCase):
 
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface
         },
         REED: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1
         },

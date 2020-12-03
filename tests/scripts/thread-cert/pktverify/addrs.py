@@ -81,7 +81,7 @@ class Ipv6Addr(Bytes):
 
         super().__init__(addr)
         if len(self) != 16:
-            raise ValueError((addr, self))
+            raise ValueError(addr)
         self._addr = ipaddress.IPv6Address(self)
 
     def __repr__(self):
@@ -118,7 +118,7 @@ class Ipv6Addr(Bytes):
         return self.startswith(consts.DOMAIN_PREFIX)
 
     @property
-    def is_backbone(self) -> bool:
+    def is_backbone_gua(self) -> bool:
         """
         Returns if the Ip6 address is Backbone address.
         """

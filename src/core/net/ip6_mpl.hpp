@@ -38,6 +38,7 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_headers.hpp"
 
@@ -105,7 +106,7 @@ public:
      * @returns The MPL Seed Id Length value.
      *
      */
-    SeedIdLength GetSeedIdLength(void) { return static_cast<SeedIdLength>(mControl & kSeedIdLengthMask); }
+    SeedIdLength GetSeedIdLength(void) const { return static_cast<SeedIdLength>(mControl & kSeedIdLengthMask); }
 
     /**
      * This method sets the MPL Seed Id Length value.
@@ -186,7 +187,7 @@ private:
  * This class implements MPL message processing.
  *
  */
-class Mpl : public InstanceLocator
+class Mpl : public InstanceLocator, private NonCopyable
 {
 public:
     /**
@@ -215,12 +216,14 @@ public:
      * @param[in]  aMessage    A reference to the message.
      * @param[in]  aAddress    A reference to the IPv6 Source Address.
      * @param[in]  aIsOutbound TRUE if this message was locally generated, FALSE otherwise.
+     * @param[out] aReceive    Set to FALSE if the MPL message is a duplicate and must not
+     *                         go through the receiving process again, untouched otherwise.
      *
      * @retval OT_ERROR_NONE  Successfully processed the MPL option.
      * @retval OT_ERROR_DROP  The MPL message is a duplicate and should be dropped.
      *
      */
-    otError ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound);
+    otError ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound, bool &aReceive);
 
     /**
      * This method returns the MPL Seed Id value.
@@ -304,7 +307,7 @@ private:
 #if OPENTHREAD_FTD
     struct Metadata
     {
-        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
         void    ReadFrom(const Message &aMessage);
         void    RemoveFrom(Message &aMessage) const;
         void    UpdateIn(Message &aMessage) const;

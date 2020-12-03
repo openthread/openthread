@@ -75,6 +75,7 @@ readonly OT_POSIX_SIM_COMMON_OPTIONS=(
     "-DOT_CHANNEL_MANAGER=ON"
     "-DOT_CHANNEL_MONITOR=ON"
     "-DOT_CHILD_SUPERVISION=ON"
+    "-DOT_DATASET_UPDATER=ON"
     "-DOT_DHCP6_CLIENT=ON"
     "-DOT_DHCP6_SERVER=ON"
     "-DOT_DIAGNOSTIC=ON"
@@ -92,6 +93,7 @@ readonly OT_POSIX_SIM_COMMON_OPTIONS=(
     "-DOT_COVERAGE=ON"
     "-DOT_LOG_LEVEL_DYNAMIC=ON"
     "-DOT_COMPILE_WARNING_AS_ERROR=ON"
+    "-DOT_RCP_RESTORATION_MAX_COUNT=2"
 )
 
 die()
@@ -109,7 +111,7 @@ build()
     mkdir -p "${builddir}"
     cd "${builddir}"
 
-    cmake -GNinja "$@" "${OT_SRCDIR}"
+    cmake -GNinja -DOT_COMPILE_WARNING_AS_ERROR=ON "$@" "${OT_SRCDIR}"
 
     if [[ -n ${OT_CMAKE_NINJA_TARGET[*]} ]]; then
         ninja "${OT_CMAKE_NINJA_TARGET[@]}"
@@ -152,10 +154,10 @@ main()
             ;;
         cc2650)
             OT_CMAKE_NINJA_TARGET=("ot-cli-mtd" "ot-ncp-mtd")
-            options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
+            options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=MinSizeRel")
             ;;
-        cc1352 | cc2652 | samr21 | qpg6095)
-            options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
+        cc1352 | cc2538 | cc2652 | kw41z | qpg6095 | samr21)
+            options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=MinSizeRel")
             ;;
         *)
             options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake")

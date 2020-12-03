@@ -120,6 +120,18 @@ void otBackboneRouterSetMulticastListenerCallback(otInstance *                  
     instance.Get<BackboneRouter::MulticastListenersTable>().SetCallback(aCallback, aContext);
 }
 
+otError otBackboneRouterMulticastListenerGetNext(otInstance *                           aInstance,
+                                                 otChildIp6AddressIterator *            aIterator,
+                                                 otBackboneRouterMulticastListenerInfo *aListenerInfo)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    OT_ASSERT(aIterator != nullptr);
+    OT_ASSERT(aListenerInfo != nullptr);
+
+    return instance.Get<BackboneRouter::MulticastListenersTable>().GetNext(*aIterator, *aListenerInfo);
+}
+
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance *                    aInstance,
                                                        const otIp6InterfaceIdentifier *aMlIid,
@@ -129,6 +141,16 @@ void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance *             
 
     instance.Get<BackboneRouter::Manager>().ConfigNextDuaRegistrationResponse(
         static_cast<const Ip6::InterfaceIdentifier *>(aMlIid), aStatus);
+}
+
+void otBackboneRouterConfigNextMulticastListenerRegistrationResponse(otInstance *aInstance, uint8_t aStatus)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    OT_ASSERT(aStatus <= ThreadStatusTlv::kMlrStatusMax);
+
+    instance.Get<BackboneRouter::Manager>().ConfigNextMulticastListenerRegistrationResponse(
+        static_cast<ThreadStatusTlv::MlrStatus>(aStatus));
 }
 
 void otBackboneRouterMulticastListenerClear(otInstance *aInstance)
@@ -158,18 +180,34 @@ otError otBackboneRouterMulticastListenerAdd(otInstance *aInstance, const otIp6A
     return instance.Get<BackboneRouter::MulticastListenersTable>().Add(static_cast<const Ip6::Address &>(*aAddress),
                                                                        TimerMilli::GetNow() + aTimeout);
 }
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
-otError otBackboneRouterMulticastListenerGetNext(otInstance *                           aInstance,
-                                                 otChildIp6AddressIterator *            aIterator,
-                                                 otBackboneRouterMulticastListenerInfo *aListenerInfo)
+void otBackboneRouterSetNdProxyCallback(otInstance *                    aInstance,
+                                        otBackboneRouterNdProxyCallback aCallback,
+                                        void *                          aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aIterator != nullptr);
-    OT_ASSERT(aListenerInfo != nullptr);
-
-    return instance.Get<BackboneRouter::MulticastListenersTable>().GetNext(*aIterator, *aListenerInfo);
+    instance.Get<BackboneRouter::NdProxyTable>().SetCallback(aCallback, aContext);
 }
-#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
+otError otBackboneRouterGetNdProxyInfo(otInstance *                 aInstance,
+                                       const otIp6Address *         aDua,
+                                       otBackboneRouterNdProxyInfo *aNdProxyInfo)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<BackboneRouter::NdProxyTable>().GetInfo(reinterpret_cast<const Ip6::Address &>(*aDua),
+                                                                *aNdProxyInfo);
+}
+
+void otBackboneRouterSetDomainPrefixCallback(otInstance *                         aInstance,
+                                             otBackboneRouterDomainPrefixCallback aCallback,
+                                             void *                               aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<BackboneRouter::Local>().SetDomainPrefixCallback(aCallback, aContext);
+}
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

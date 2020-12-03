@@ -40,14 +40,14 @@
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
 
-static otPlatResetReason   sPlatResetReason   = OT_PLAT_RESET_REASON_POWER_ON;
+otPlatResetReason          gPlatResetReason   = OT_PLAT_RESET_REASON_POWER_ON;
 static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return sPlatResetReason;
+    return gPlatResetReason;
 }
 
 void otPlatWakeHost(void)
@@ -74,6 +74,14 @@ otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState
     }
 
     return error;
+}
+
+void otPlatAssertFail(const char *aFilename, int aLineNumber)
+{
+    otLogCritPlat("assert failed at %s:%d", aFilename, aLineNumber);
+    // For debug build, use assert to genreate a core dump
+    assert(false);
+    exit(1);
 }
 
 otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)

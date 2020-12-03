@@ -26,18 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(COMMON_SOURCES
-    test_platform.cpp
-    test_util.cpp
-)
-
-set(COMMON_LIBS
-    openthread-ftd
-    ot-config
-    ${OT_MBEDTLS}
-    util
-)
-
 set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/src
@@ -50,8 +38,36 @@ set(COMMON_COMPILE_OPTIONS
     -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1
 )
 
+add_library(test-platform
+    test_platform.cpp
+    test_util.cpp
+)
+
+target_include_directories(test-platform
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-platform
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-platform
+    PRIVATE
+        ot-config
+        ${OT_MBEDTLS}
+)
+
+set(COMMON_LIBS
+    test-platform
+    openthread-ftd
+    test-platform
+    ${OT_MBEDTLS}
+    ot-config
+)
+
 add_executable(test-aes
-    ${COMMON_SOURCES}
     test_aes.cpp
 )
 
@@ -73,9 +89,30 @@ target_link_libraries(test-aes
 add_test(NAME test-aes COMMAND test-aes)
 
 add_executable(test-child
-    ${COMMON_SOURCES}
     test_child.cpp
 )
+
+add_executable(test-checksum
+    test_checksum.cpp
+)
+
+target_include_directories(test-checksum
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-checksum
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-checksum
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-checksum COMMAND test-checksum)
+
 
 target_include_directories(test-child
     PRIVATE
@@ -95,7 +132,6 @@ target_link_libraries(test-child
 add_test(NAME test-child COMMAND test-child)
 
 add_executable(test-child-table
-    ${COMMON_SOURCES}
     test_child_table.cpp
 )
 
@@ -116,8 +152,28 @@ target_link_libraries(test-child-table
 
 add_test(NAME test-child-table COMMAND test-child-table)
 
+add_executable(test-cmd-line-parser
+    test_cmd_line_parser.cpp
+)
+
+target_include_directories(test-cmd-line-parser
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-cmd-line-parser
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-cmd-line-parser
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-cmd-line-parser COMMAND test-cmd-line-parser)
+
 add_executable(test-flash
-    ${COMMON_SOURCES}
     test_flash.cpp
 )
 
@@ -139,7 +195,6 @@ target_link_libraries(test-flash
 add_test(NAME test-flash COMMAND test-flash)
 
 add_executable(test-heap
-    ${COMMON_SOURCES}
     test_heap.cpp
 )
 
@@ -161,7 +216,6 @@ target_link_libraries(test-heap
 add_test(NAME test-heap COMMAND test-heap)
 
 add_executable(test-hmac-sha256
-    ${COMMON_SOURCES}
     test_hmac_sha256.cpp
 )
 
@@ -183,7 +237,6 @@ target_link_libraries(test-hmac-sha256
 add_test(NAME test-hmac-sha256 COMMAND test-hmac-sha256)
 
 add_executable(test-ip6-address
-    ${COMMON_SOURCES}
     test_ip6_address.cpp
 )
 
@@ -205,7 +258,6 @@ target_link_libraries(test-ip6-address
 add_test(NAME test-ip6-address COMMAND test-ip6-address)
 
 add_executable(test-link-quality
-    ${COMMON_SOURCES}
     test_link_quality.cpp
 )
 
@@ -227,7 +279,6 @@ target_link_libraries(test-link-quality
 add_test(NAME test-link-quality COMMAND test-link-quality)
 
 add_executable(test-linked-list
-    ${COMMON_SOURCES}
     test_linked_list.cpp
 )
 
@@ -248,8 +299,28 @@ target_link_libraries(test-linked-list
 
 add_test(NAME test-linked-list COMMAND test-linked-list)
 
+add_executable(test-lookup-table
+    test_lookup_table.cpp
+)
+
+target_include_directories(test-lookup-table
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-lookup-table
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-lookup-table
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-lookup-table COMMAND test-lookup-table)
+
 add_executable(test-lowpan
-    ${COMMON_SOURCES}
     test_lowpan.cpp
 )
 
@@ -271,7 +342,6 @@ target_link_libraries(test-lowpan
 add_test(NAME test-lowpan COMMAND test-lowpan)
 
 add_executable(test-mac-frame
-    ${COMMON_SOURCES}
     test_mac_frame.cpp
 )
 
@@ -292,8 +362,28 @@ target_link_libraries(test-mac-frame
 
 add_test(NAME test-mac-frame COMMAND test-mac-frame)
 
+add_executable(test-macros
+    test_macros.cpp
+)
+
+target_include_directories(test-macros
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-macros
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-macros
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-macros COMMAND test-macros)
+
 add_executable(test-message
-    ${COMMON_SOURCES}
     test_message.cpp
 )
 
@@ -315,7 +405,6 @@ target_link_libraries(test-message
 add_test(NAME test-message COMMAND test-message)
 
 add_executable(test-message-queue
-    ${COMMON_SOURCES}
     test_message_queue.cpp
 )
 
@@ -337,30 +426,50 @@ target_link_libraries(test-message-queue
 add_test(NAME test-message-queue COMMAND test-message-queue)
 
 add_executable(test-multicast-listeners-table
-        ${COMMON_SOURCES}
-        test_multicast_listeners_table.cpp
-        )
+    test_multicast_listeners_table.cpp
+)
 
 target_include_directories(test-multicast-listeners-table
-        PRIVATE
+    PRIVATE
         ${COMMON_INCLUDES}
-        )
+)
 
 target_compile_options(test-multicast-listeners-table
-        PRIVATE
+    PRIVATE
         ${COMMON_COMPILE_OPTIONS}
-        )
+)
 
 target_link_libraries(test-multicast-listeners-table
-        PRIVATE
+    PRIVATE
         ${COMMON_LIBS}
-        )
+)
 
 add_test(NAME test-multicast-listeners-table COMMAND test-multicast-listeners-table)
 
+add_executable(test-ndproxy-table
+    test_ndproxy_table.cpp
+)
+
+target_include_directories(test-ndproxy-table
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-ndproxy-table
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+
+target_link_libraries(test-ndproxy-table
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-ndproxy-table COMMAND test-ndproxy-table)
+
 
 add_executable(test-netif
-    ${COMMON_SOURCES}
     test_netif.cpp
 )
 
@@ -382,7 +491,6 @@ target_link_libraries(test-netif
 add_test(NAME test-netif COMMAND test-netif)
 
 add_executable(test-network-data
-    ${COMMON_SOURCES}
     test_network_data.cpp
 )
 
@@ -404,7 +512,6 @@ target_link_libraries(test-network-data
 add_test(NAME test-network-data COMMAND test-network-data)
 
 add_executable(test-pool
-    ${COMMON_SOURCES}
     test_pool.cpp
 )
 
@@ -426,7 +533,6 @@ target_link_libraries(test-pool
 add_test(NAME test-pool COMMAND test-pool)
 
 add_executable(test-priority-queue
-    ${COMMON_SOURCES}
     test_priority_queue.cpp
 )
 
@@ -448,7 +554,6 @@ target_link_libraries(test-priority-queue
 add_test(NAME test-priority-queue COMMAND test-priority-queue)
 
 add_executable(test-pskc
-    ${COMMON_SOURCES}
     test_pskc.cpp
 )
 
@@ -470,7 +575,6 @@ target_link_libraries(test-pskc
 add_test(NAME test-pskc COMMAND test-pskc)
 
 add_executable(test-steering-data
-    ${COMMON_SOURCES}
     test_steering_data.cpp
 )
 
@@ -492,7 +596,6 @@ target_link_libraries(test-steering-data
 add_test(NAME test-steering-data COMMAND test-steering-data)
 
 add_executable(test-string
-    ${COMMON_SOURCES}
     test_string.cpp
 )
 
@@ -514,7 +617,6 @@ target_link_libraries(test-string
 add_test(NAME test-string COMMAND test-string)
 
 add_executable(test-timer
-    ${COMMON_SOURCES}
     test_timer.cpp
 )
 
@@ -536,7 +638,34 @@ target_link_libraries(test-timer
 add_test(NAME test-timer COMMAND test-timer)
 
 set_target_properties(
-    test-aes test-child test-child-table test-flash test-heap test-hmac-sha256 test-ip6-address test-link-quality test-linked-list test-lowpan test-mac-frame test-message test-message-queue test-multicast-listeners-table test-netif test-network-data test-pool test-priority-queue test-pskc test-steering-data test-string test-timer
+    test-platform
+    test-aes
+    test-checksum
+    test-child
+    test-child-table
+    test-cmd-line-parser
+    test-flash
+    test-heap
+    test-hmac-sha256
+    test-ip6-address
+    test-link-quality
+    test-linked-list
+    test-lookup-table
+    test-lowpan
+    test-mac-frame
+    test-macros
+    test-message
+    test-message-queue
+    test-multicast-listeners-table
+    test-ndproxy-table
+    test-netif
+    test-network-data
+    test-pool
+    test-priority-queue
+    test-pskc
+    test-steering-data
+    test-string
+    test-timer
     PROPERTIES
         C_STANDARD 99
         CXX_STANDARD 11

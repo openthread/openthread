@@ -43,7 +43,6 @@ class PcapCodec(object):
     def __init__(self, filename):
         self._pcap_file = open('%s.pcap' % filename, 'wb')
         self._pcap_file.write(self.encode_header())
-        self._epoch = time.time()
 
     def encode_header(self):
         """ Returns a pcap file header. """
@@ -68,7 +67,7 @@ class PcapCodec(object):
 
     def _get_timestamp(self):
         """ Returns the internal timestamp. """
-        timestamp = time.time() - self._epoch
+        timestamp = time.time()
         timestamp_sec = int(timestamp)
         timestamp_usec = int((timestamp - timestamp_sec) * 1000000)
         return timestamp_sec, timestamp_usec

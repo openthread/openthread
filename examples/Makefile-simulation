@@ -44,6 +44,7 @@ COMMISSIONER                   ?= 1
 CHANNEL_MANAGER                ?= 1
 CHANNEL_MONITOR                ?= 1
 CHILD_SUPERVISION              ?= 1
+DATASET_UPDATER                ?= 1
 DHCP6_CLIENT                   ?= 1
 DHCP6_SERVER                   ?= 1
 DIAGNOSTIC                     ?= 1
@@ -103,6 +104,10 @@ ifeq ($(VIRTUAL_TIME_UART),1)
 COMMONCFLAGS                   += -DOPENTHREAD_SIMULATION_VIRTUAL_TIME_UART=1
 endif
 
+ifneq ($(MAX_NETWORK_SIZE),)
+COMMONCFLAGS                   += -DOPENTHREAD_SIMULATION_MAX_NETWORK_SIZE=$(MAX_NETWORK_SIZE)
+endif
+
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
@@ -147,7 +152,7 @@ ResultPath                      = output
 TopResultDir                    = $(ResultPath)
 AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
-TargetTuple                     = $(shell ${AbsTopSourceDir}/third_party/nlbuild-autotools/repo/third_party/autoconf/config.guess | sed -e 's/[[:digit:].]*$$//g')
+TargetTuple                     = simulation
 
 ifndef BuildJobs
 BuildJobs := $(shell getconf _NPROCESSORS_ONLN)

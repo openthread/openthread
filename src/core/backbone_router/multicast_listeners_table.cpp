@@ -42,7 +42,7 @@
 #include "common/random.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 
@@ -287,8 +287,6 @@ void MulticastListenersTable::SetCallback(otBackboneRouterMulticastListenerCallb
     }
 }
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-
 otError MulticastListenersTable::GetNext(otBackboneRouterMulticastListenerIterator &aIterator,
                                          otBackboneRouterMulticastListenerInfo &    aListenerInfo)
 {
@@ -308,8 +306,6 @@ otError MulticastListenersTable::GetNext(otBackboneRouterMulticastListenerIterat
 exit:
     return error;
 }
-
-#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 } // namespace BackboneRouter
 

@@ -72,33 +72,33 @@ class TestParentSelection(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER_1_2: {
             'version': '1.2',
-            'whitelist': [REED_1_2, ROUTER_1_2, REED_1_1, ROUTER_1_1, MED_1_1],
+            'allowlist': [REED_1_2, ROUTER_1_2, REED_1_1, ROUTER_1_1, MED_1_1],
         },
         ROUTER_1_1: {
             'version': '1.1',
-            'whitelist': [LEADER_1_2, REED_1_2, MED_1_2, MED_1_1],
+            'allowlist': [LEADER_1_2, REED_1_2, MED_1_2, MED_1_1],
         },
         REED_1_2: {
             'version': '1.2',
-            'whitelist': [ROUTER_1_2, ROUTER_1_1, LEADER_1_2],
+            'allowlist': [ROUTER_1_2, ROUTER_1_1, LEADER_1_2],
         },
         ROUTER_1_2: {
             'version': '1.2',
-            'whitelist': [REED_1_2, MED_1_2, REED_1_1, LEADER_1_2],
+            'allowlist': [REED_1_2, MED_1_2, REED_1_1, LEADER_1_2],
         },
         REED_1_1: {
             'version': '1.1',
-            'whitelist': [ROUTER_1_2, LEADER_1_2]
+            'allowlist': [ROUTER_1_2, LEADER_1_2]
         },
         MED_1_1: {
-            'mode': 'rs',
+            'mode': 'r',
             'version': '1.1',
-            'whitelist': [LEADER_1_2, ROUTER_1_1],
+            'allowlist': [LEADER_1_2, ROUTER_1_1],
         },
         MED_1_2: {
-            'mode': 'rs',
+            'mode': 'r',
             'version': '1.2',
-            'whitelist': [ROUTER_1_1, ROUTER_1_2],
+            'allowlist': [ROUTER_1_1, ROUTER_1_2],
         },
     }
     """All nodes are created with default configurations"""

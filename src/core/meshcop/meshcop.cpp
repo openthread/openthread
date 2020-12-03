@@ -36,6 +36,8 @@
 #include "common/crc16.hpp"
 #include "common/debug.hpp"
 #include "common/locator-getters.hpp"
+#include "common/logging.hpp"
+#include "common/string.hpp"
 #include "crypto/pbkdf2_cmac.h"
 #include "crypto/sha256.hpp"
 #include "mac/mac_types.hpp"
@@ -79,19 +81,19 @@ exit:
     return isEqual;
 }
 
-bool JoinerPskd::IsPskdValid(const char *aPskString)
+bool JoinerPskd::IsPskdValid(const char *aPskdString)
 {
     bool     valid      = false;
-    uint16_t pskdLength = StringLength(aPskString, kMaxLength + 1);
+    uint16_t pskdLength = StringLength(aPskdString, kMaxLength + 1);
 
-    VerifyOrExit(pskdLength >= kMinLength && pskdLength <= kMaxLength, OT_NOOP);
+    VerifyOrExit(pskdLength >= kMinLength && pskdLength <= kMaxLength);
 
     for (uint16_t i = 0; i < pskdLength; i++)
     {
-        char c = aPskString[i];
+        char c = aPskdString[i];
 
-        VerifyOrExit(isdigit(c) || isupper(c), OT_NOOP);
-        VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z', OT_NOOP);
+        VerifyOrExit(isdigit(c) || isupper(c));
+        VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z');
     }
 
     valid = true;
@@ -324,6 +326,8 @@ otError GeneratePskc(const char *              aPassPhrase,
     uint16_t   passphraseLen;
     uint8_t    networkNameLen;
 
+    VerifyOrExit(IsValidUtf8String(aPassPhrase), error = OT_ERROR_INVALID_ARGS);
+
     passphraseLen  = static_cast<uint16_t>(StringLength(aPassPhrase, OT_COMMISSIONING_PASSPHRASE_MAX_SIZE + 1));
     networkNameLen = static_cast<uint8_t>(StringLength(aNetworkName.GetAsCString(), OT_NETWORK_NAME_MAX_SIZE + 1));
 
@@ -349,6 +353,16 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_FTD
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MESHCOP == 1)
+void LogError(const char *aActionText, otError aError)
+{
+    if (aError != OT_ERROR_NONE)
+    {
+        otLogWarnMeshCoP("Failed to %s: %s", aActionText, otThreadErrorToString(aError));
+    }
+}
+#endif
 
 } // namespace MeshCoP
 } // namespace ot

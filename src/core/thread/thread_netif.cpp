@@ -43,13 +43,13 @@
 #include "net/udp6.hpp"
 #include "thread/mle.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 
 ThreadNetif::ThreadNetif(Instance &aInstance)
     : Netif(aInstance)
-    , mCoap(aInstance)
+    , mTmfAgent(aInstance)
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     , mDhcp6Client(aInstance)
 #endif
@@ -126,13 +126,15 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     , mTimeSync(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    , mLinkMetrics(aInstance)
+#endif
 {
-    Get<Coap::Coap>().SetInterceptor(&ThreadNetif::TmfFilter, this);
 }
 
 void ThreadNetif::Up(void)
 {
-    VerifyOrExit(!mIsUp, OT_NOOP);
+    VerifyOrExit(!mIsUp);
 
     // Enable the MAC just in case it was disabled while the Interface was down.
     Get<Mac::Mac>().SetEnabled(true);
@@ -145,7 +147,7 @@ void ThreadNetif::Up(void)
 
     SubscribeAllNodesMulticast();
     IgnoreError(Get<Mle::MleRouter>().Enable());
-    IgnoreError(Get<Coap::Coap>().Start(kCoapUdpPort));
+    IgnoreError(Get<Tmf::TmfAgent>().Start());
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     IgnoreError(Get<Dns::Client>().Start());
 #endif
@@ -160,7 +162,7 @@ exit:
 
 void ThreadNetif::Down(void)
 {
-    VerifyOrExit(mIsUp, OT_NOOP);
+    VerifyOrExit(mIsUp);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     IgnoreError(Get<Dns::Client>().Stop());
@@ -171,7 +173,7 @@ void ThreadNetif::Down(void)
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
     Get<Coap::CoapSecure>().Stop();
 #endif
-    IgnoreError(Get<Coap::Coap>().Stop());
+    IgnoreError(Get<Tmf::TmfAgent>().Stop());
     IgnoreError(Get<Mle::MleRouter>().Disable());
     RemoveAllExternalUnicastAddresses();
     UnsubscribeAllExternalMulticastAddresses();
@@ -205,35 +207,9 @@ exit:
     return error;
 }
 
-otError ThreadNetif::TmfFilter(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
-{
-    OT_UNUSED_VARIABLE(aMessage);
-
-    return static_cast<ThreadNetif *>(aContext)->IsTmfMessage(aMessageInfo) ? OT_ERROR_NONE : OT_ERROR_NOT_TMF;
-}
-
 bool ThreadNetif::IsOnMesh(const Ip6::Address &aAddress) const
 {
     return Get<NetworkData::Leader>().IsOnMesh(aAddress);
-}
-
-bool ThreadNetif::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo)
-{
-    bool rval = true;
-
-    // A TMF message must comply with following rules:
-    // 1. The destination is a Mesh Local Address or a Link-Local Multicast Address or a Realm-Local Multicast Address,
-    //    and the source is a Mesh Local Address. Or
-    // 2. Both the destination and the source are Link-Local Addresses.
-    VerifyOrExit(
-        ((Get<Mle::MleRouter>().IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
-          aMessageInfo.GetSockAddr().IsLinkLocalMulticast() || aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
-         Get<Mle::MleRouter>().IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
-            ((aMessageInfo.GetSockAddr().IsLinkLocal() || aMessageInfo.GetSockAddr().IsLinkLocalMulticast()) &&
-             aMessageInfo.GetPeerAddr().IsLinkLocal()),
-        rval = false);
-exit:
-    return rval;
 }
 
 } // namespace ot

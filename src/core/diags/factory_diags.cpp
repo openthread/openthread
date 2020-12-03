@@ -288,6 +288,8 @@ otError Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[], char *aOutput, s
 
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(!Get<ThreadNetif>().IsUp(), error = OT_ERROR_INVALID_STATE);
+
     otPlatDiagChannelSet(mChannel);
     otPlatDiagTxPowerSet(mTxPower);
 
@@ -488,7 +490,7 @@ void Diags::TransmitDone(otError aError)
         }
     }
 
-    VerifyOrExit(!mRepeatActive, OT_NOOP);
+    VerifyOrExit(!mRepeatActive);
     TransmitPacket();
 
 exit:
@@ -535,7 +537,7 @@ exit:
     switch (error)
     {
     case OT_ERROR_NONE:
-
+        aOutput[0] = '\0'; // In case there is no output.
         IgnoreError(ProcessCmd(argCount, &aArgsector[0], aOutput, aOutputMaxLen));
         break;
 

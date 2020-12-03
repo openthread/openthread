@@ -171,17 +171,6 @@ public:
                            uint16_t       aMessageOffset);
 
     /**
-     * This method sends a Server Data Notification message to the Leader indicating an invalid RLOC16.
-     *
-     * @param[in]  aRloc16  The invalid RLOC16 to notify.
-     *
-     * @retval OT_ERROR_NONE     Successfully enqueued the notification message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers to generate the notification message.
-     *
-     */
-    otError SendServerDataNotification(uint16_t aRloc16);
-
-    /**
      * This method returns a pointer to the Commissioning Data.
      *
      * @returns A pointer to the Commissioning Data or nullptr if no Commissioning Data exists.

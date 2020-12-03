@@ -33,6 +33,7 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/time.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
@@ -57,7 +58,7 @@ class Child;
  * This class implements CSL tx scheduling functionality.
  *
  */
-class CslTxScheduler : public InstanceLocator
+class CslTxScheduler : public InstanceLocator, private NonCopyable
 {
     friend class Mac::Mac;
     friend class IndirectSender;
@@ -65,8 +66,7 @@ class CslTxScheduler : public InstanceLocator
 public:
     enum
     {
-        kMaxCslTriggeredTxAttempts     = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
-        kCslFrameRequestAheadThreshold = 2000 / kUsPerTenSymbols,
+        kMaxCslTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
     };
 
     /**
@@ -79,9 +79,8 @@ public:
     {
     public:
         uint8_t GetCslTxAttempts(void) const { return mCslTxAttempts; }
-        void    SetCslTxAttempts(uint8_t aCslTxAttempts) { mCslTxAttempts = aCslTxAttempts; }
         void    IncrementCslTxAttempts(void) { mCslTxAttempts++; }
-        void    ResetCslTxAttempts(void) { SetCslTxAttempts(0); }
+        void    ResetCslTxAttempts(void) { mCslTxAttempts = 0; }
 
         bool IsCslSynchronized(void) const { return mCslSynchronized && mCslPeriod > 0; }
         void SetCslSynchronized(bool aCslSynchronized) { mCslSynchronized = aCslSynchronized; }
@@ -101,6 +100,9 @@ public:
         TimeMilli GetCslLastHeard(void) const { return mCslLastHeard; }
         void      SetCslLastHeard(TimeMilli aCslLastHeard) { mCslLastHeard = aCslLastHeard; }
 
+        uint64_t GetLastRxTimestamp(void) const { return mLastRxTimstamp; }
+        void     SetLastRxTimestamp(uint64_t aLastRxTimestamp) { mLastRxTimstamp = aLastRxTimestamp; }
+
     private:
         uint8_t   mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.
         bool      mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
@@ -109,6 +111,7 @@ public:
         uint16_t  mCslPeriod;           ///< CSL sampled listening period in units of 10 symbols (160 microseconds).
         uint16_t  mCslPhase;            ///< The time when the next CSL sample will start.
         TimeMilli mCslLastHeard;        ///< Time when last frame containing CSL IE was heard.
+        uint64_t  mLastRxTimstamp;      ///< Time when last frame containing CSL IE was received, in microseconds.
 
         static_assert(kMaxCslTriggeredTxAttempts < (1 << 7), "mCslTxAttempts cannot fit max!");
     };
@@ -187,9 +190,10 @@ public:
     void Clear(void);
 
 private:
+    void InitFrameRequestAhead(void);
     void RescheduleCslTx(void);
 
-    uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint64_t aRadioNow);
+    uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint64_t aRadioNow, uint32_t &aDelayFromLastRx) const;
 
     // Callbacks from `Mac`
     otError HandleFrameRequest(Mac::TxFrame &aFrame);
@@ -197,6 +201,7 @@ private:
 
     void HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, Child &aChild);
 
+    uint32_t                mCslFrameRequestAheadUs;
     Child *                 mCslTxChild;
     Message *               mCslTxMessage;
     Callbacks::FrameContext mFrameContext;

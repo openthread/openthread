@@ -57,7 +57,7 @@ Slaac::Slaac(Instance &aInstance)
 
 void Slaac::Enable(void)
 {
-    VerifyOrExit(!mEnabled, OT_NOOP);
+    VerifyOrExit(!mEnabled);
 
     otLogInfoUtil("SLAAC:: Enabling");
     mEnabled = true;
@@ -69,7 +69,7 @@ exit:
 
 void Slaac::Disable(void)
 {
-    VerifyOrExit(mEnabled, OT_NOOP);
+    VerifyOrExit(mEnabled);
 
     otLogInfoUtil("SLAAC:: Disabling");
     mEnabled = false;
@@ -81,12 +81,12 @@ exit:
 
 void Slaac::SetFilter(otIp6SlaacPrefixFilter aFilter)
 {
-    VerifyOrExit(aFilter != mFilter, OT_NOOP);
+    VerifyOrExit(aFilter != mFilter);
 
     mFilter = aFilter;
     otLogInfoUtil("SLAAC: Filter %s", (mFilter != nullptr) ? "updated" : "disabled");
 
-    VerifyOrExit(mEnabled, OT_NOOP);
+    VerifyOrExit(mEnabled);
     Update(kModeAdd | kModeRemove);
 
 exit:
@@ -102,7 +102,7 @@ void Slaac::HandleNotifierEvents(Events aEvents)
 {
     UpdateMode mode = kModeNone;
 
-    VerifyOrExit(mEnabled, OT_NOOP);
+    VerifyOrExit(mEnabled);
 
     if (aEvents.Contains(kEventThreadNetdataChanged))
     {
@@ -327,7 +327,7 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
     otError error;
 
     error = Get<Settings>().ReadSlaacIidSecretKey(aKey);
-    VerifyOrExit(error != OT_ERROR_NONE, OT_NOOP);
+    VerifyOrExit(error != OT_ERROR_NONE);
 
     // If there is no previously saved secret key, generate
     // a random one and save it.

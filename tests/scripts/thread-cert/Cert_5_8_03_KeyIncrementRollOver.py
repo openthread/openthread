@@ -43,17 +43,17 @@ class Cert_5_8_3_KeyIncrementRollOver(thread_cert.TestCase):
             'name': 'LEADER',
             'key_sequence_counter': 127,
             'key_switch_guardtime': 0,
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
             'key_switch_guardtime': 0,
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 

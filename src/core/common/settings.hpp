@@ -1004,7 +1004,7 @@ private:
     class ChildInfoIteratorBuilder : public InstanceLocator
     {
     public:
-        ChildInfoIteratorBuilder(Instance &aInstance)
+        explicit ChildInfoIteratorBuilder(Instance &aInstance)
             : InstanceLocator(aInstance)
         {
         }

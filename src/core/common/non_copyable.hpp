@@ -42,12 +42,12 @@ namespace ot {
  */
 class NonCopyable
 {
-protected:
-    NonCopyable(void) {}
+public:
+    NonCopyable(const NonCopyable &) = delete;
+    NonCopyable &operator=(const NonCopyable &) = delete;
 
-private:
-    NonCopyable(const NonCopyable &);
-    NonCopyable &operator=(const NonCopyable &);
+protected:
+    NonCopyable(void) = default;
 };
 
 } // namespace ot

@@ -39,6 +39,7 @@
 #include <openthread/thread_ftd.h>
 
 #include "common/clearable.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
@@ -47,11 +48,16 @@
 #include "net/ip6.hpp"
 #include "thread/csl_tx_scheduler.hpp"
 #include "thread/indirect_sender.hpp"
+#include "thread/link_metrics.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 
 namespace ot {
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+class LinkMetricsSeriesInfo; ///< Forward declaration for including each other with `link_metrics.hpp`
+#endif
 
 /**
  * This class represents a Thread neighbor.
@@ -338,14 +344,6 @@ public:
     bool IsFullThreadDevice(void) const { return GetDeviceMode().IsFullThreadDevice(); }
 
     /**
-     * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
-     *
-     * @returns TRUE if using secure IEEE 802.15.4 Data Request messages, FALSE otherwise.
-     *
-     */
-    bool IsSecureDataRequest(void) const { return GetDeviceMode().IsSecureDataRequest(); }
-
-    /**
      * This method indicates whether or not the device requests Full Network Data.
      *
      * @returns TRUE if requests Full Network Data, FALSE otherwise.
@@ -422,6 +420,31 @@ public:
      *
      */
     void SetLinkFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mLinkFrameCounter = aFrameCounter; }
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    /**
+     * This method gets the link ACK frame counter value.
+     *
+     * @returns The link ACK frame counter value.
+     *
+     */
+    uint32_t GetLinkAckFrameCounter(void) const { return mValidPending.mValid.mLinkAckFrameCounter; }
+#endif
+
+    /**
+     * This method sets the link ACK frame counter value.
+     *
+     * @param[in]  aAckFrameCounter  The link ACK frame counter value.
+     *
+     */
+    void SetLinkAckFrameCounter(uint32_t aAckFrameCounter)
+    {
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        mValidPending.mValid.mLinkAckFrameCounter = aAckFrameCounter;
+#else
+        OT_UNUSED_VARIABLE(aAckFrameCounter);
+#endif
+    }
 
     /**
      * This method gets the MLE frame counter value.
@@ -572,6 +595,56 @@ public:
     void SetTimeSyncEnabled(bool aEnabled) { mTimeSyncEnabled = aEnabled; }
 #endif
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    /**
+     * This method aggregates the Link Metrics data into all the series that is running for this neighbor.
+     *
+     * If a series wants to account frames of @p aFrameType, it would add count by 1 and aggregrate @p aLqi and
+     * @p aRss into its averagers.
+     *
+     * @param[in] aSeriesId     Series ID for Link Probe. Should be `0` if this method is not called by Link Probe.
+     * @param[in] aFrameType    Type of the frame that carries Link Metrics data.
+     * @param[in] aLqi          The LQI value.
+     * @param[in] aRss          The Rss value.
+     *
+     */
+    void AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8_t aLqi, int8_t aRss);
+
+    /**
+     * This method adds a new LinkMetricsSeriesInfo to the neighbor's list.
+     *
+     * @param[in]    A reference to the new LinkMetricsSeriesInfo.
+     *
+     */
+    void AddForwardTrackingSeriesInfo(LinkMetricsSeriesInfo &aLinkMetricsSeriesInfo);
+
+    /**
+     * This method finds a specific LinkMetricsSeriesInfo by Series ID.
+     *
+     * @param[in] aSeriesId    A reference to the Series ID.
+     *
+     * @returns The pointer to the LinkMetricsSeriesInfo. `nullptr` if not found.
+     *
+     */
+    LinkMetricsSeriesInfo *GetForwardTrackingSeriesInfo(const uint8_t &aSeriesId);
+
+    /**
+     * This method removes a specific LinkMetricsSeriesInfo by Series ID.
+     *
+     * @param[in] aSeriesId    A reference to the Series ID to remove.
+     *
+     * @returns The pointer to the LinkMetricsSeriesInfo. `nullptr` if not found.
+     *
+     */
+    LinkMetricsSeriesInfo *RemoveForwardTrackingSeriesInfo(const uint8_t &aSeriesId);
+
+    /**
+     * This method removes all the Series and return the data structures to the Pool
+     *
+     */
+    void RemoveAllForwardTrackingSeriesInfo(void);
+
+#endif
 protected:
     /**
      * This method initializes the `Neighbor` object.
@@ -590,6 +663,9 @@ private:
         {
             uint32_t mLinkFrameCounter; ///< The Link Frame Counter
             uint32_t mMleFrameCounter;  ///< The MLE Frame Counter
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+            uint32_t mLinkAckFrameCounter; ///< The Link Ack Frame Counter
+#endif
         } mValid;
         struct
         {
@@ -609,6 +685,10 @@ private:
 #endif
     uint8_t         mVersion;  ///< The MLE version
     LinkQualityInfo mLinkInfo; ///< Link quality info (contains average RSS, link margin and link quality)
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    LinkedList<LinkMetricsSeriesInfo> mLinkMetricsSeriesInfoList; ///< A list of Link Metrics Forward Tracking Series
+                                                                  ///< that is being tracked for this neighbor.
+#endif
 };
 
 /**
@@ -670,7 +750,7 @@ public:
          * @param[in] aFilter   An IPv6 address type filter restricting iterator to certain type of addresses.
          *
          */
-        AddressIterator(const Child &aChild, Ip6::Address::TypeFilter aFilter = Ip6::Address::kTypeAny)
+        explicit AddressIterator(const Child &aChild, Ip6::Address::TypeFilter aFilter = Ip6::Address::kTypeAny)
             : AddressIterator(aChild, 0, aFilter)
         {
         }

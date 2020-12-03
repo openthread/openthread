@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_types.hpp"
 #include "net/dhcp6.hpp"
@@ -57,7 +58,7 @@ namespace Dhcp6 {
  *
  */
 
-class Server : public InstanceLocator
+class Server : public InstanceLocator, private NonCopyable
 {
 public:
     /**

@@ -39,16 +39,16 @@ readonly COLOR_PASS='\033[0;32m'
 readonly COLOR_FAIL='\033[0;31m'
 readonly COLOR_NONE='\033[0m'
 
-readonly NODE_MODE="${NODE_MODE:-standalone}"
-readonly NODE_TYPE="${NODE_TYPE:-sim}"
+readonly OT_NODE_TYPE="${OT_NODE_TYPE:-cli}"
 readonly OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
 readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
+readonly INTER_OP="${INTER_OP:-0}"
 readonly VERBOSE="${VERBOSE:-0}"
 
 build_simulation()
 {
     local version="$1"
-    local options=("-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON" "-DOT_REFERENCE_DEVICE=ON")
+    local options=("-DOT_MESSAGE_USE_HEAP=ON" "-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON" "-DOT_REFERENCE_DEVICE=ON")
 
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_DUA=ON")
@@ -58,7 +58,7 @@ build_simulation()
     if [[ ${VIRTUAL_TIME} == 1 ]]; then
         options+=("-DOT_SIMULATION_VIRTUAL_TIME=ON")
 
-        if [[ ${NODE_MODE} == "rcp" ]]; then
+        if [[ ${OT_NODE_TYPE} == rcp* ]]; then
             options+=("-DOT_SIMULATION_VIRTUAL_TIME_UART=ON")
         fi
 
@@ -66,19 +66,20 @@ build_simulation()
 
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_CSL_RECEIVER=ON")
+        options+=("-DOT_LINK_METRICS=ON")
     fi
 
     if [[ ${ot_extra_options[*]+x} ]]; then
         options+=("${ot_extra_options[@]}")
     fi
 
-    OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
+    OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
 
     if [[ ${version} == "1.2" ]]; then
 
         options+=("-DOT_BACKBONE_ROUTER=ON")
 
-        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-simulation-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
+        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
 
     fi
 }
@@ -86,7 +87,7 @@ build_simulation()
 build_posix()
 {
     local version="$1"
-    local options=("-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON")
+    local options=("-DOT_MESSAGE_USE_HEAP=ON" "-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON")
 
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_DUA=ON")
@@ -105,31 +106,33 @@ build_posix()
         options+=("${ot_extra_options[@]}")
     fi
 
-    OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-posix-${version}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
+    OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-posix-${version}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
 
     if [[ ${version} == "1.2" ]]; then
 
         options+=("-DOT_BACKBONE_ROUTER=ON")
 
-        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-posix-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
+        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-posix-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
+    fi
+}
+
+build_for_one_version()
+{
+    local version="$1"
+
+    build_simulation "${version}"
+
+    if [[ ${OT_NODE_TYPE} == rcp* ]]; then
+        build_posix "${version}"
     fi
 }
 
 do_build()
 {
-    build_simulation "${THREAD_VERSION}"
+    build_for_one_version "${THREAD_VERSION}"
 
-    if [[ ${NODE_MODE} == "rcp" ]]; then
-        build_posix "${THREAD_VERSION}"
-    fi
-
-    # Extra 1.1 build for 1.2 tests
-    if [[ ${THREAD_VERSION} == "1.2" ]]; then
-        build_simulation 1.1
-
-        if [[ ${NODE_MODE} == "rcp" ]]; then
-            build_posix 1.1
-        fi
+    if [[ ${THREAD_VERSION} == "1.2" && ${INTER_OP} == "1" ]]; then
+        build_for_one_version 1.1
     fi
 }
 
@@ -141,7 +144,7 @@ do_clean()
 do_unit_version()
 {
     local version=$1
-    local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${version}"
+    local builddir="${OT_BUILDDIR}/openthread-simulation-${version}"
 
     if [[ ! -d ${builddir} ]]; then
         echo "Cannot find build directory: ${builddir}"
@@ -160,17 +163,27 @@ do_unit()
 
     if [[ ${THREAD_VERSION} == "1.2" ]]; then
         do_unit_version "1.2-bbr"
-        do_unit_version "1.1"
     fi
 }
 
 do_cert()
 {
-    export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
+    export top_builddir="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}"
+
+    case "${OT_NODE_TYPE}" in
+        rcp | rcp-cli | cli)
+            export NODE_TYPE=sim
+            ;;
+        rcp-ncp | ncp)
+            export NODE_TYPE=ncp-sim
+            ;;
+    esac
 
     if [[ ${THREAD_VERSION} == "1.2" ]]; then
-        export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
-        export top_builddir_1_2_bbr="${OT_BUILDDIR}/cmake/openthread-simulation-1.2-bbr"
+        export top_builddir_1_2_bbr="${OT_BUILDDIR}/openthread-simulation-1.2-bbr"
+        if [[ ${INTER_OP} == "1" ]]; then
+            export top_builddir_1_1="${OT_BUILDDIR}/openthread-simulation-1.1"
+        fi
     fi
 
     [[ ! -d tmp ]] || rm -rvf tmp
@@ -179,66 +192,87 @@ do_cert()
 
 do_cert_suite()
 {
-    export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
+    export top_builddir="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}"
 
     if [[ ${THREAD_VERSION} == "1.2" ]]; then
-        export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
-        export top_builddir_1_2_bbr="${OT_BUILDDIR}/cmake/openthread-simulation-1.2-bbr"
-    fi
-
-    local pass_count=0
-    local fail_count=0
-
-    [[ ! -f fail.log ]] || rm fail.log
-
-    for test_case in "$@"; do
-        rm -rf tmp || sudo rm -rf tmp
-        if "${test_case}" &>test.log; then
-            echo -e "${COLOR_PASS}PASS${COLOR_NONE} ${test_case}"
-            pass_count=$((pass_count + 1))
-        else
-            echo -e "${COLOR_FAIL}FAIL${COLOR_NONE} ${test_case}"
-            fail_count=$((fail_count + 1))
-            {
-                echo "=============================="
-                echo "!!! FAIL:${test_case}"
-                echo "=============================="
-                cat test.log
-            } >>fail.log
+        export top_builddir_1_2_bbr="${OT_BUILDDIR}/openthread-simulation-1.2-bbr"
+        if [[ ${INTER_OP} == "1" ]]; then
+            export top_builddir_1_1="${OT_BUILDDIR}/openthread-simulation-1.1"
         fi
-    done
-
-    echo "=================================="
-    echo "         Test Summary"
-    echo "=================================="
-    echo "# TOTAL: $((pass_count + fail_count))"
-    echo "# PASS: ${pass_count}"
-    echo "# FAIL: ${fail_count}"
-
-    if [[ ${fail_count} -gt 0 ]]; then
-        tr -dc '[:print:]\r\n\t' <fail.log
-        exit 1
-    else
-        exit 0
     fi
+
+    export PYTHONPATH=tests/scripts/thread-cert
+    export VIRTUAL_TIME
+
+    python3 tests/scripts/thread-cert/run_cert_suite.py --multiply "${MULTIPLY:-1}" "$@"
+    exit 0
+}
+
+do_get_thread_wireshark()
+{
+    echo "Downloading thread-wireshark from https://github.com/openthread/wireshark/releases ..."
+    local download_url=https://github.com/openthread/wireshark/releases/download/ot-pktverify-20200727/thread-wireshark.tar.gz
+    local save_file=/tmp/thread-wireshark.tar.gz
+
+    rm -rf /tmp/thread-wireshark || true
+    rm -rf "${save_file}" || true
+    curl -L "${download_url}" -o "${save_file}"
+    tar -C /tmp -xvzf "${save_file}"
+
+    LD_LIBRARY_PATH=/tmp/thread-wireshark /tmp/thread-wireshark/tshark -v
+    LD_LIBRARY_PATH=/tmp/thread-wireshark /tmp/thread-wireshark/dumpcap -v
+    rm -rf "${save_file}"
+}
+
+do_build_otbr_docker()
+{
+    echo "Building OTBR Docker ..."
+    local otdir
+    local otbrdir
+    local otbr_options="-DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF"
+    local otbr_commit=${OTBR_COMMIT:-5092e71b06b23f78f2288fcc5386bce3a8986bb1} # [backbone-router] remove MLR multicast routing using smcroute #604
+    local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
+
+    otbrdir=$(mktemp -d -t otbr_XXXXXX)
+    otdir=$(pwd)
+
+    (
+        cd "${otbrdir}"
+        git init
+        git fetch https://github.com/openthread/ot-br-posix.git "${otbr_commit}" --depth 1
+        git reset --hard FETCH_HEAD
+        rm -rf third_party/openthread/repo
+        cp -r "${otdir}" third_party/openthread/repo
+        rm -rf .git
+        docker build -t "${otbr_docker_image}" -f etc/docker/Dockerfile . \
+            --build-arg BACKBONE_ROUTER=1 \
+            --build-arg REFERENCE_DEVICE=1 \
+            --build-arg OT_BACKBONE_CI=1 \
+            --build-arg NAT64=0 \
+            --build-arg OTBR_OPTIONS="${otbr_options}"
+    )
+
+    rm -rf "${otbrdir}"
+}
+
+do_pktverify()
+{
+    python3 ./tests/scripts/thread-cert/pktverify/verify.py "$1"
 }
 
 do_expect()
 {
-    local ot_command
-    local rcp_command=
     local test_patterns
 
-    if [[ ${NODE_MODE} == rcp ]]; then
-        ot_command="${OT_CLI_PATH}"
-        rcp_command="${RADIO_DEVICE}"
-        if [[ ${OT_NATIVE_IP} == 1 ]]; then
+    if [[ ${OT_NODE_TYPE} == rcp* ]]; then
+        if [[ ${THREAD_VERSION} == "1.2" ]]; then
+            test_patterns=(-name 'v1_2-*.exp')
+        elif [[ ${OT_NATIVE_IP} == 1 ]]; then
             test_patterns=(-name 'tun-*.exp')
         else
             test_patterns=(-name 'posix-*.exp' -o -name 'cli-*.exp')
         fi
     else
-        ot_command="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/cli/ot-cli-ftd"
         test_patterns=(-name 'cli-*.exp' -o -name 'simulation-*.exp')
     fi
 
@@ -248,9 +282,9 @@ do_expect()
         mkdir tmp
         {
             if [[ ${OT_NATIVE_IP} == 1 ]]; then
-                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" sudo -E expect -df "${script}" 2>"${log_file}"
+                sudo -E expect -df "${script}" 2>"${log_file}"
             else
-                OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" expect -df "${script}" 2>"${log_file}"
+                expect -df "${script}" 2>"${log_file}"
             fi
         } || {
             local exit_code=$?
@@ -278,11 +312,15 @@ print_usage()
     echo "USAGE: [ENVIRONMENTS] $0 COMMANDS
 
 ENVIRONMENTS:
-    NODE_TYPE       'sim' for CLI, 'ncp-sim' for NCP. The default is 'sim'.
-    NODE_MODE       'rcp' for RCP mode, otherwise for standalone mode. The default is standalone mode.
+    OT_NODE_TYPE    'cli' for CLI simulation, 'ncp' for NCP simulation.
+                    'rcp' or 'rcp-cli' for CLI on POSIX platform.
+                    'rcp-ncp' for NCP on POSIX platform.
+                    The default is 'cli'.
+    OT_NATIVE_IP    1 to enable platform UDP and netif on POSIX platform. The default is 0.
     VERBOSE         1 to build or test verbosely. The default is 0.
     VIRTUAL_TIME    1 for virtual time, otherwise real time. The default is 1.
     THREAD_VERSION  1.1 for Thread 1.1 stack, 1.2 for Thread 1.2 stack. The default is 1.1.
+    INTER_OP        1 to build 1.1 together. Only works when THREAD_VERSION is 1.2. The default is 0.
 
 COMMANDS:
     clean           Clean built files to prepare for new build.
@@ -299,20 +337,21 @@ EXAMPLES:
     $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
 
     # Test NCP with default settings
-    NODE_TYPE=ncp-sim $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
-    NODE_TYPE=ncp-sim $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
+    $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
+    $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
 
     # Test CLI with radio only
-    NODE_MODE=rcp $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
-    NODE_MODE=rcp $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
+    $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
+    $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
 
     # Test CLI with real time
     VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
     VIRTUAL_TIME=0 $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
 
-    # Test Thread 1.2 with real time
-    THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_router_5_1_1.py
-    THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert_suite tests/scripts/thread-cert/v1_2_*
+    # Test Thread 1.2 with real time, use 'INTER_OP=1' when the case needs both versions.
+    THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_test_enhanced_keep_alive.py
+    THREAD_VERSION=1.2 INTER_OP=1 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_router_5_1_1.py
+    THREAD_VERSION=1.2 INTER_OP=1 VIRTUAL_TIME=0 $0 clean build cert_suite tests/scripts/thread-cert/v1_2_*
 
     # Run a single expect test
     $0 clean build expect tests/scripts/expect/cli-log-level.exp
@@ -333,15 +372,15 @@ do_package()
         options+=("${ot_extra_options[@]}")
     fi
 
-    builddir="${OT_BUILDDIR}/cmake/openthread-sim"
+    builddir="${OT_BUILDDIR}/openthread-sim"
     OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
     ls "${builddir}"/openthread-simulation-*.deb
 
-    builddir="${OT_BUILDDIR}/cmake/openthread-host"
+    builddir="${OT_BUILDDIR}/openthread-host"
     OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
     ls "${builddir}"/openthread-standalone-*.deb
 
-    builddir="${OT_BUILDDIR}/cmake/openthread-daemon"
+    builddir="${OT_BUILDDIR}/openthread-daemon"
     OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build posix -DOT_DAEMON=ON -DOT_PLATFORM_NETIF=ON -DOT_PLATFORM_UDP=ON "${options[@]}"
     ls "${builddir}"/openthread-daemon-*.deb
 }
@@ -349,7 +388,7 @@ do_package()
 do_tar()
 {
     local target_name="openthread-$1-$2"
-    local build_dir="${OT_BUILDDIR}/cmake"
+    local build_dir="${OT_BUILDDIR}"
     tar -cf "${target_name}.tar" -C "${build_dir}" "${target_name}"
     mv "${target_name}.tar" "${build_dir}/"
     rm -rf "${build_dir:?}/${target_name}"
@@ -358,26 +397,90 @@ do_tar()
 do_untar()
 {
     local target_name="openthread-$1-$2"
-    local build_dir="${OT_BUILDDIR}/cmake"
+    local build_dir="${OT_BUILDDIR}"
     tar -xf "${build_dir}/${target_name}.tar" -C "${build_dir}"
     rm "${build_dir:?}/${target_name}.tar"
 }
 
+do_prepare_coredump_upload()
+{
+    echo "$PWD/ot-core-dump/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
+    mkdir ot-core-dump
+}
+
+do_copy_so_lib()
+{
+    mkdir so-lib
+    cp /lib/x86_64-linux-gnu/libgcc_s.so.1 ./so-lib
+    cp /lib/x86_64-linux-gnu/libc.so.6 ./so-lib
+    cp /lib64/ld-linux-x86-64.so.2 ./so-lib
+}
+
+do_generate_coverage()
+{
+    mkdir -p tmp/
+    sudo chmod 777 tmp/
+    rm -f tmp/coverage.lcov
+    if [[ $1 == "llvm" ]]; then
+        local llvm_gcov
+        llvm_gcov="$(mktemp -d)/llvm-gcov"
+        echo '#!/bin/bash' >>"$llvm_gcov"
+        echo 'exec llvm-cov gcov "$@"' >>"$llvm_gcov"
+        chmod +x "$llvm_gcov"
+        lcov --gcov-tool "$llvm_gcov" --directory . --capture --output-file tmp/coverage.info
+    else
+        lcov --directory . --capture --output-file tmp/coverage.info
+    fi
+    lcov --list tmp/coverage.info
+}
+
+do_upload_codecov()
+{
+    ls -R coverage/
+
+    readarray -d '' files < <(find coverage/ -type f -name 'coverage*.info' -print0)
+
+    local args=()
+    for i in "${files[@]}"; do
+        args+=('-a')
+        args+=("$i")
+    done
+    lcov "${args[@]}" -o final.info
+
+    local retry_count=5
+    local fail_count=0
+    until ((fail_count > retry_count)); do
+        bash <(curl -s https://codecov.io/bash) -f final.info -Z && break
+        ((++fail_count))
+        echo >&2 "Upload failed, retrying (${fail_count}/${retry_count})"
+        sleep 1m
+    done
+
+    if ((fail_count > retry_count)); then
+        exit 1
+    fi
+}
+
 envsetup()
 {
-    if [[ ${NODE_MODE} == 'rcp' ]]; then
-        export RADIO_DEVICE="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
-        export OT_CLI_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-cli"
-        export OT_NCP_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-ncp"
+    export THREAD_VERSION
+
+    if [[ ${OT_NODE_TYPE} == rcp* ]]; then
+        export RADIO_DEVICE="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
+        export OT_CLI_PATH="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/src/posix/ot-cli"
+        export OT_NCP_PATH="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/src/posix/ot-ncp"
 
         if [[ ${THREAD_VERSION} == "1.2" ]]; then
-            export RADIO_DEVICE_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1/examples/apps/ncp/ot-rcp"
-            export OT_CLI_PATH_1_1="${OT_BUILDDIR}/cmake/openthread-posix-1.1/src/posix/ot-cli"
-            export OT_NCP_PATH_1_1="${OT_BUILDDIR}/cmake/openthread-posix-1.1/src/posix/ot-ncp"
-            export OT_CLI_PATH_1_2_BBR="${OT_BUILDDIR}/cmake/openthread-posix-1.2-bbr/src/posix/ot-cli"
-            export OT_NCP_PATH_1_2_BBR="${OT_BUILDDIR}/cmake/openthread-posix-1.2-bbr/src/posix/ot-ncp"
+            export RADIO_DEVICE_1_1="${OT_BUILDDIR}/openthread-simulation-1.1/examples/apps/ncp/ot-rcp"
+            export OT_CLI_PATH_1_1="${OT_BUILDDIR}/openthread-posix-1.1/src/posix/ot-cli"
+            export OT_NCP_PATH_1_1="${OT_BUILDDIR}/openthread-posix-1.1/src/posix/ot-ncp"
+            export OT_CLI_PATH_1_2_BBR="${OT_BUILDDIR}/openthread-posix-1.2-bbr/src/posix/ot-cli"
+            export OT_NCP_PATH_1_2_BBR="${OT_BUILDDIR}/openthread-posix-1.2-bbr/src/posix/ot-ncp"
         fi
     fi
+
+    export OT_SIMULATION_APPS="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}/examples/apps"
+    export OT_POSIX_APPS="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/src/posix"
 
     if [[ ! ${VIRTUAL_TIME+x} ]]; then
         # All expect tests only works in real time mode.
@@ -391,7 +494,7 @@ envsetup()
     fi
 
     readonly VIRTUAL_TIME
-    export NODE_TYPE VIRTUAL_TIME
+    export OT_NODE_TYPE VIRTUAL_TIME
 
     # CMake always works in verbose mode if VERBOSE exists in environments.
     if [[ ${VERBOSE} == 1 ]]; then
@@ -411,12 +514,10 @@ main()
 {
     envsetup "$@"
 
-    if [[ -z $1 ]]; then
+    if [[ -z ${1:-} ]]; then
         print_usage 1
     fi
 
-    [[ ${NODE_MODE} == "rcp" ]] && echo "Using rcp mode" || echo "Using standalone mode"
-    [[ ${NODE_TYPE} == "ncp-sim" ]] && echo "Using NCP node" || echo "Using CLI node"
     [[ ${VIRTUAL_TIME} == 1 ]] && echo "Using virtual time" || echo "Using real time"
     [[ ${THREAD_VERSION} == "1.2" ]] && echo "Using Thread 1.2 stack" || echo "Using Thread 1.1 stack"
 
@@ -435,6 +536,16 @@ main()
             cert_suite)
                 shift
                 do_cert_suite "$@"
+                ;;
+            get_thread_wireshark)
+                do_get_thread_wireshark
+                ;;
+            build_otbr_docker)
+                do_build_otbr_docker
+                ;;
+            pktverify)
+                shift
+                do_pktverify "$1"
                 ;;
             unit)
                 do_unit
@@ -456,6 +567,23 @@ main()
             untar)
                 shift
                 do_untar "$@"
+                ;;
+            prepare_coredump_upload)
+                do_prepare_coredump_upload
+                ;;
+            copy_so_lib)
+                do_copy_so_lib
+                ;;
+            generate_coverage)
+                shift
+                do_generate_coverage "$1"
+                ;;
+            upload_codecov)
+                do_upload_codecov
+                ;;
+            *)
+                echo
+                echo -e "${COLOR_FAIL}Warning:${COLOR_NONE} Ignoring: '$1'"
                 ;;
         esac
         shift

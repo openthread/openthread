@@ -84,10 +84,8 @@ NcpUart::NcpUart(Instance *aInstance)
     : NcpBase(aInstance)
     , mFrameEncoder(mUartBuffer)
     , mFrameDecoder(mRxBuffer, &NcpUart::HandleFrame, this)
-    , mUartBuffer()
     , mState(kStartingFrame)
     , mByte(0)
-    , mRxBuffer()
     , mUartSendImmediate(false)
     , mUartSendTask(*aInstance, EncodeAndSendToUart, this)
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
@@ -149,7 +147,7 @@ void NcpUart::EncodeAndSendToUart(void)
                 otPlatWakeHost();
             }
 
-            VerifyOrExit(!super_t::ShouldDeferHostSend(), OT_NOOP);
+            VerifyOrExit(!super_t::ShouldDeferHostSend());
             SuccessOrExit(mFrameEncoder.BeginFrame());
 
             IgnoreError(txFrameBuffer.OutFrameBegin());

@@ -123,12 +123,12 @@ WPAN_OT_MSG_BUFFER_COUNTERS_AS_STRING = "OpenThread:MsgBufferCounters:AsString"
 WPAN_OT_DEBUG_TEST_ASSERT = "OpenThread:Debug:TestAssert"
 WPAN_OT_DEBUG_TEST_WATCHDOG = "OpenThread:Debug:TestWatchdog"
 
-WPAN_MAC_WHITELIST_ENABLED = "MAC:Whitelist:Enabled"
-WPAN_MAC_WHITELIST_ENTRIES = "MAC:Whitelist:Entries"
-WPAN_MAC_WHITELIST_ENTRIES_ASVALMAP = "MAC:Whitelist:Entries:AsValMap"
-WPAN_MAC_BLACKLIST_ENABLED = "MAC:Blacklist:Enabled"
-WPAN_MAC_BLACKLIST_ENTRIES = "MAC:Blacklist:Entries"
-WPAN_MAC_BLACKLIST_ENTRIES_ASVALMAP = "MAC:Blacklist:Entries:AsValMap"
+WPAN_MAC_ALLOWLIST_ENABLED = "MAC:Allowlist:Enabled"
+WPAN_MAC_ALLOWLIST_ENTRIES = "MAC:Allowlist:Entries"
+WPAN_MAC_ALLOWLIST_ENTRIES_ASVALMAP = "MAC:Allowlist:Entries:AsValMap"
+WPAN_MAC_DENYLIST_ENABLED = "MAC:Denylist:Enabled"
+WPAN_MAC_DENYLIST_ENTRIES = "MAC:Denylist:Entries"
+WPAN_MAC_DENYLIST_ENTRIES_ASVALMAP = "MAC:Denylist:Entries:AsValMap"
 
 WPAN_MAC_FILTER_FIXED_RSSI = "MAC:Filter:FixedRssi"
 WPAN_MAC_FILTER_ENTRIES = "MAC:Filter:Entries"
@@ -259,7 +259,6 @@ ADDRESS_CACHE_ENTRY_STATE_RETRY_QUERY = "retry-query"
 
 THREAD_MODE_FLAG_FULL_NETWORK_DATA = (1 << 0)
 THREAD_MODE_FLAG_FULL_THREAD_DEV = (1 << 1)
-THREAD_MODE_FLAG_SECURE_DATA_REQUEST = (1 << 2)
 THREAD_MODE_FLAG_RX_ON_WHEN_IDLE = (1 << 3)
 
 _OT_BUILDDIR = os.getenv('top_builddir', '../..')
@@ -560,15 +559,15 @@ class Node(object):
                          xpanid=node.get(WPAN_XPANID),
                          key=node.get(WPAN_KEY)[1:-1] if should_set_key else None)
 
-    def whitelist_node(self, node):
-        """Adds a given node (of type `Node`) to the whitelist of `self` and enables whitelisting on `self`"""
+    def allowlist_node(self, node):
+        """Adds a given node (of type `Node`) to the allowlist of `self` and enables allowlisting on `self`"""
 
-        self.add(WPAN_MAC_WHITELIST_ENTRIES, node.get(WPAN_EXT_ADDRESS)[1:-1])
-        self.set(WPAN_MAC_WHITELIST_ENABLED, '1')
+        self.add(WPAN_MAC_ALLOWLIST_ENTRIES, node.get(WPAN_EXT_ADDRESS)[1:-1])
+        self.set(WPAN_MAC_ALLOWLIST_ENABLED, '1')
 
-    def un_whitelist_node(self, node):
-        """Removes a given node (of node `Node) from the whitelist"""
-        self.remove(WPAN_MAC_WHITELIST_ENTRIES, node.get(WPAN_EXT_ADDRESS)[1:-1])
+    def un_allowlist_node(self, node):
+        """Removes a given node (of node `Node) from the allowlist"""
+        self.remove(WPAN_MAC_ALLOWLIST_ENTRIES, node.get(WPAN_EXT_ADDRESS)[1:-1])
 
     def is_in_scan_result(self, scan_result):
         """Checks if node is in the scan results

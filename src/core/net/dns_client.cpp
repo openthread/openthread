@@ -68,40 +68,35 @@ exit:
 
 otError Client::Stop(void)
 {
-    Message *     message = mPendingQueries.GetHead();
-    Message *     messageToRemove;
+    Message *     message;
     QueryMetadata queryMetadata;
 
     // Remove all pending queries.
-    while (message != nullptr)
+    while ((message = mPendingQueries.GetHead()) != nullptr)
     {
-        messageToRemove = message;
-        message         = message->GetNext();
-
-        queryMetadata.ReadFrom(*messageToRemove);
-        FinalizeDnsTransaction(*messageToRemove, queryMetadata, nullptr, 0, OT_ERROR_ABORT);
+        queryMetadata.ReadFrom(*message);
+        FinalizeDnsTransaction(*message, queryMetadata, nullptr, 0, OT_ERROR_ABORT);
     }
 
     return mSocket.Close();
 }
 
-otError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, void *aContext)
+otError Client::Query(const QueryInfo &aQuery, ResponseHandler aHandler, void *aContext)
 {
-    otError                 error;
-    QueryMetadata           queryMetadata;
-    Message *               message     = nullptr;
-    Message *               messageCopy = nullptr;
-    Header                  header;
-    QuestionAaaa            question;
-    const Ip6::MessageInfo *messageInfo;
+    otError       error;
+    QueryMetadata queryMetadata;
+    Message *     message     = nullptr;
+    Message *     messageCopy = nullptr;
+    Header        header;
+    QuestionAaaa  question;
 
-    VerifyOrExit(aQuery->mHostname != nullptr && aQuery->mMessageInfo != nullptr, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aQuery.IsValid(), error = OT_ERROR_INVALID_ARGS);
 
     header.SetMessageId(mMessageId++);
     header.SetType(Header::kTypeQuery);
     header.SetQueryType(Header::kQueryTypeStandard);
 
-    if (!aQuery->mNoRecursion)
+    if (!aQuery.IsNoRecursion())
     {
         header.SetRecursionDesiredFlag();
     }
@@ -110,31 +105,26 @@ otError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, v
 
     VerifyOrExit((message = NewMessage(header)) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = AppendCompressedHostname(*message, aQuery->mHostname));
+    SuccessOrExit(error = AppendCompressedHostname(*message, aQuery.GetHostname()));
     SuccessOrExit(error = question.AppendTo(*message));
 
-    messageInfo = static_cast<const Ip6::MessageInfo *>(aQuery->mMessageInfo);
-
-    queryMetadata.mHostname            = aQuery->mHostname;
+    queryMetadata.mHostname            = aQuery.GetHostname();
     queryMetadata.mResponseHandler     = aHandler;
     queryMetadata.mResponseContext     = aContext;
     queryMetadata.mTransmissionTime    = TimerMilli::GetNow() + kResponseTimeout;
-    queryMetadata.mSourceAddress       = messageInfo->GetSockAddr();
-    queryMetadata.mDestinationAddress  = messageInfo->GetPeerAddr();
-    queryMetadata.mDestinationPort     = messageInfo->GetPeerPort();
+    queryMetadata.mSourceAddress       = aQuery.GetMessageInfo().GetSockAddr();
+    queryMetadata.mDestinationAddress  = aQuery.GetMessageInfo().GetPeerAddr();
+    queryMetadata.mDestinationPort     = aQuery.GetMessageInfo().GetPeerPort();
     queryMetadata.mRetransmissionCount = 0;
 
     VerifyOrExit((messageCopy = CopyAndEnqueueMessage(*message, queryMetadata)) != nullptr, error = OT_ERROR_NO_BUFS);
-    SuccessOrExit(error = SendMessage(*message, *messageInfo));
+    SuccessOrExit(error = SendMessage(*message, aQuery.GetMessageInfo()));
 
 exit:
 
     if (error != OT_ERROR_NONE)
     {
-        if (message)
-        {
-            message->Free();
-        }
+        FreeMessage(message);
 
         if (messageCopy)
         {
@@ -147,10 +137,10 @@ exit:
 
 Message *Client::NewMessage(const Header &aHeader)
 {
-    Message *message = nullptr;
+    Message *message = mSocket.NewMessage(sizeof(aHeader));
 
-    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != nullptr, OT_NOOP);
-    IgnoreError(message->Prepend(&aHeader, sizeof(aHeader)));
+    VerifyOrExit(message != nullptr);
+    IgnoreError(message->Prepend(aHeader));
     message->SetOffset(0);
 
 exit:
@@ -160,25 +150,17 @@ exit:
 Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata)
 {
     otError  error       = OT_ERROR_NONE;
-    Message *messageCopy = nullptr;
+    Message *messageCopy = aMessage.Clone();
 
-    // Create a message copy for further retransmissions.
-    VerifyOrExit((messageCopy = aMessage.Clone()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(messageCopy != nullptr, error = OT_ERROR_NO_BUFS);
 
-    // Append the copy with retransmission data and add it to the queue.
     SuccessOrExit(error = aQueryMetadata.AppendTo(*messageCopy));
     mPendingQueries.Enqueue(*messageCopy);
 
     mRetransmissionTimer.FireAtIfEarlier(aQueryMetadata.mTransmissionTime);
 
 exit:
-
-    if (error != OT_ERROR_NONE && messageCopy != nullptr)
-    {
-        messageCopy->Free();
-        messageCopy = nullptr;
-    }
-
+    FreeAndNullMessageOnError(messageCopy, error);
     return messageCopy;
 }
 
@@ -186,13 +168,11 @@ void Client::DequeueMessage(Message &aMessage)
 {
     mPendingQueries.Dequeue(aMessage);
 
-    if (mRetransmissionTimer.IsRunning() && (mPendingQueries.GetHead() == nullptr))
+    if (mPendingQueries.GetHead() == nullptr)
     {
-        // No more requests pending, stop the timer.
         mRetransmissionTimer.Stop();
     }
 
-    // Free the message memory.
     aMessage.Free();
 }
 
@@ -204,25 +184,18 @@ otError Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageI
 void Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError  error;
-    Message *messageCopy = nullptr;
+    Message *messageCopy = aMessage.Clone(aMessage.GetLength() - sizeof(QueryMetadata));
 
-    // Create a message copy for lower layers.
-    VerifyOrExit((messageCopy = aMessage.Clone(aMessage.GetLength() - sizeof(QueryMetadata))) != nullptr,
-                 error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(messageCopy != nullptr, error = OT_ERROR_NO_BUFS);
 
-    // Send the copy.
-    SuccessOrExit(error = SendMessage(*messageCopy, aMessageInfo));
+    error = SendMessage(*messageCopy, aMessageInfo);
 
 exit:
 
     if (error != OT_ERROR_NONE)
     {
+        FreeMessage(messageCopy);
         otLogWarnIp6("Failed to send DNS request: %s", otThreadErrorToString(error));
-
-        if (messageCopy != nullptr)
-        {
-            messageCopy->Free();
-        }
     }
 }
 
@@ -239,8 +212,8 @@ otError Client::AppendCompressedHostname(Message &aMessage, const char *aHostnam
         if (aHostname[index] == kLabelSeparator || aHostname[index] == kLabelTerminator)
         {
             VerifyOrExit(labelSize > 0, error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = aMessage.Append(&labelSize, 1));
-            SuccessOrExit(error = aMessage.Append(&aHostname[labelPosition], labelSize));
+            SuccessOrExit(error = aMessage.Append(labelSize));
+            SuccessOrExit(error = aMessage.AppendBytes(&aHostname[labelPosition], labelSize));
 
             labelPosition += labelSize + 1;
             labelSize = 0;
@@ -260,7 +233,7 @@ otError Client::AppendCompressedHostname(Message &aMessage, const char *aHostnam
 
     // Add termination character at the end.
     labelSize = kLabelTerminator;
-    SuccessOrExit(error = aMessage.Append(&labelSize, 1));
+    SuccessOrExit(error = aMessage.Append(labelSize));
 
 exit:
     return error;
@@ -279,10 +252,10 @@ otError Client::CompareQuestions(Message &aMessageResponse, Message &aMessageQue
 
     while (length > 0)
     {
-        VerifyOrExit(
-            (read = aMessageQuery.Read(offset, length < sizeof(bufQuery) ? length : sizeof(bufQuery), bufQuery)) > 0,
-            error = OT_ERROR_PARSE);
-        VerifyOrExit(aMessageResponse.Read(aOffset, read, bufResponse) == read, error = OT_ERROR_PARSE);
+        VerifyOrExit((read = aMessageQuery.ReadBytes(offset, bufQuery,
+                                                     length < sizeof(bufQuery) ? length : sizeof(bufQuery))) > 0,
+                     error = OT_ERROR_PARSE);
+        SuccessOrExit(error = aMessageResponse.Read(aOffset, bufResponse, read));
 
         VerifyOrExit(memcmp(bufResponse, bufQuery, read) == 0, error = OT_ERROR_NOT_FOUND);
 
@@ -306,7 +279,7 @@ otError Client::SkipHostname(Message &aMessage, uint16_t &aOffset)
 
     while (length > 0)
     {
-        VerifyOrExit((read = aMessage.Read(offset, sizeof(buf), buf)) > 0, error = OT_ERROR_PARSE);
+        VerifyOrExit((read = aMessage.ReadBytes(offset, buf, sizeof(buf))) > 0, error = OT_ERROR_PARSE);
 
         index = 0;
 
@@ -338,32 +311,29 @@ exit:
 Message *Client::FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata)
 {
     uint16_t messageId;
-    Message *message = mPendingQueries.GetHead();
+    Message *message;
 
-    while (message != nullptr)
+    for (message = mPendingQueries.GetHead(); message != nullptr; message = message->GetNext())
     {
         // Partially read DNS header to obtain message ID only.
-        uint16_t count = message->Read(message->GetOffset(), sizeof(messageId), &messageId);
-
-        OT_UNUSED_VARIABLE(count);
-        OT_ASSERT(count == sizeof(messageId));
+        if (message->Read(message->GetOffset(), messageId) != OT_ERROR_NONE)
+        {
+            OT_ASSERT(false);
+        }
 
         if (HostSwap16(messageId) == aResponseHeader.GetMessageId())
         {
             aQueryMetadata.ReadFrom(*message);
-            ExitNow();
+            break;
         }
-
-        message = message->GetNext();
     }
 
-exit:
     return message;
 }
 
 void Client::FinalizeDnsTransaction(Message &            aQuery,
                                     const QueryMetadata &aQueryMetadata,
-                                    const otIp6Address * aAddress,
+                                    const Ip6::Address * aAddress,
                                     uint32_t             aTtl,
                                     otError              aResult)
 {
@@ -400,7 +370,6 @@ void Client::HandleRetransmissionTimer(void)
         {
             if (queryMetadata.mRetransmissionCount >= kMaxRetransmit)
             {
-                // No expected response.
                 FinalizeDnsTransaction(*message, queryMetadata, nullptr, 0, OT_ERROR_RESPONSE_TIMEOUT);
 
                 continue;
@@ -443,23 +412,21 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     // which it sent the corresponding query to.
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otError            error = OT_ERROR_NONE;
+    otError            error = OT_ERROR_NOT_FOUND;
     Header             responseHeader;
     QueryMetadata      queryMetadata;
     ResourceRecordAaaa record;
     Message *          message = nullptr;
     uint16_t           offset;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) == sizeof(responseHeader),
-                 OT_NOOP);
+    SuccessOrExit(aMessage.Read(aMessage.GetOffset(), responseHeader));
     VerifyOrExit(responseHeader.GetType() == Header::kTypeResponse && responseHeader.GetQuestionCount() == 1 &&
-                     !responseHeader.IsTruncationFlagSet(),
-                 OT_NOOP);
+                 !responseHeader.IsTruncationFlagSet());
 
     aMessage.MoveOffset(sizeof(responseHeader));
     offset = aMessage.GetOffset();
 
-    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != nullptr, OT_NOOP);
+    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != nullptr);
 
     VerifyOrExit(responseHeader.GetResponseCode() == Header::kResponseSuccess, error = OT_ERROR_FAILED);
 
@@ -469,28 +436,23 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     // Parse and check the answer section.
     for (uint32_t index = 0; index < responseHeader.GetAnswerCount(); index++)
     {
+        uint32_t newOffset;
+
         SuccessOrExit(error = SkipHostname(aMessage, offset));
 
-        if (offset + sizeof(ResourceRecord) > aMessage.GetLength())
+        SuccessOrExit(error = aMessage.Read(offset, record));
+
+        if (ResourceRecordAaaa::IsAaaa(record))
         {
-            ExitNow(error = OT_ERROR_PARSE);
+            // Return the first found IPv6 address.
+            FinalizeDnsTransaction(*message, queryMetadata, &record.GetAddress(), record.GetTtl(), OT_ERROR_NONE);
+            ExitNow(error = OT_ERROR_NONE);
         }
 
-        if (aMessage.Read(offset, sizeof(record), &record) != sizeof(record) ||
-            record.GetType() != ResourceRecordAaaa::kType || record.GetClass() != ResourceRecordAaaa::kClass)
-        {
-            offset += sizeof(ResourceRecord) + record.GetLength();
-
-            continue;
-        }
-
-        // Return the first found IPv6 address.
-        FinalizeDnsTransaction(*message, queryMetadata, &record.GetAddress(), record.GetTtl(), OT_ERROR_NONE);
-
-        ExitNow();
+        newOffset = offset + sizeof(ResourceRecord) + record.GetLength();
+        VerifyOrExit(newOffset <= aMessage.GetLength(), error = OT_ERROR_PARSE);
+        offset = static_cast<uint16_t>(newOffset);
     }
-
-    ExitNow(error = OT_ERROR_NOT_FOUND);
 
 exit:
 
@@ -505,12 +467,12 @@ void Client::QueryMetadata::ReadFrom(const Message &aMessage)
     uint16_t length = aMessage.GetLength();
 
     OT_ASSERT(length >= sizeof(*this));
-    aMessage.Read(length - sizeof(*this), sizeof(*this), this);
+    IgnoreError(aMessage.Read(length - sizeof(*this), *this));
 }
 
 void Client::QueryMetadata::UpdateIn(Message &aMessage) const
 {
-    aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    aMessage.Write(aMessage.GetLength() - sizeof(*this), *this);
 }
 
 } // namespace Dns

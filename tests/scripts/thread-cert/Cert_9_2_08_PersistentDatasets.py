@@ -58,9 +58,9 @@ class Cert_9_2_8_PersistentDatasets(thread_cert.TestCase):
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         LEADER: {
             'active_dataset': {
@@ -68,8 +68,8 @@ class Cert_9_2_8_PersistentDatasets(thread_cert.TestCase):
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
-            'whitelist': [COMMISSIONER, ROUTER, ED, SED]
+            'mode': 'rdn',
+            'allowlist': [COMMISSIONER, ROUTER, ED, SED]
         },
         ROUTER: {
             'active_dataset': {
@@ -77,41 +77,41 @@ class Cert_9_2_8_PersistentDatasets(thread_cert.TestCase):
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         ED: {
             'channel': CHANNEL_INIT,
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': PANID_INIT,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         SED: {
             'channel': CHANNEL_INIT,
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': PANID_INIT,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
     }
 
     def _setUpRouter(self):
-        self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER].enable_whitelist()
+        self.nodes[ROUTER].add_allowlist(self.nodes[LEADER].get_addr64())
+        self.nodes[ROUTER].enable_allowlist()
         self.nodes[ROUTER].set_router_selection_jitter(1)
 
     def _setUpEd(self):
-        self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED].enable_whitelist()
+        self.nodes[ED].add_allowlist(self.nodes[LEADER].get_addr64())
+        self.nodes[ED].enable_allowlist()
         self.nodes[ED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def _setUpSed(self):
-        self.nodes[SED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[SED].enable_whitelist()
+        self.nodes[SED].add_allowlist(self.nodes[LEADER].get_addr64())
+        self.nodes[SED].enable_allowlist()
         self.nodes[SED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def test(self):

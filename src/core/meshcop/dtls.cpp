@@ -191,8 +191,7 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
     default:
         // Once DTLS session is started, communicate only with a peer.
         VerifyOrExit((mMessageInfo.GetPeerAddr() == aMessageInfo.GetPeerAddr()) &&
-                         (mMessageInfo.GetPeerPort() == aMessageInfo.GetPeerPort()),
-                     OT_NOOP);
+                     (mMessageInfo.GetPeerPort() == aMessageInfo.GetPeerPort()));
         break;
     }
 
@@ -261,7 +260,7 @@ otError Dtls::Setup(bool aClient)
 
     rval = mbedtls_ssl_config_defaults(&mConf, aClient ? MBEDTLS_SSL_IS_CLIENT : MBEDTLS_SSL_IS_SERVER,
                                        MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_PRESET_DEFAULT);
-    VerifyOrExit(rval == 0, OT_NOOP);
+    VerifyOrExit(rval == 0);
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     if (mVerifyPeerCertificate && mCipherSuites[0] == MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8)
@@ -297,14 +296,14 @@ otError Dtls::Setup(bool aClient)
     if (!aClient)
     {
         rval = mbedtls_ssl_cookie_setup(&mCookieCtx, mbedtls_ctr_drbg_random, Random::Crypto::MbedTlsContextGet());
-        VerifyOrExit(rval == 0, OT_NOOP);
+        VerifyOrExit(rval == 0);
 
         mbedtls_ssl_conf_dtls_cookies(&mConf, mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check, &mCookieCtx);
     }
 #endif
 
     rval = mbedtls_ssl_setup(&mSsl, &mConf);
-    VerifyOrExit(rval == 0, OT_NOOP);
+    VerifyOrExit(rval == 0);
 
     mbedtls_ssl_set_bio(&mSsl, this, &Dtls::HandleMbedtlsTransmit, HandleMbedtlsReceive, nullptr);
     mbedtls_ssl_set_timer_cb(&mSsl, this, &Dtls::HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
@@ -319,7 +318,7 @@ otError Dtls::Setup(bool aClient)
         rval = SetApplicationCoapSecureKeys();
     }
 #endif
-    VerifyOrExit(rval == 0, OT_NOOP);
+    VerifyOrExit(rval == 0);
 
     mReceiveMessage = nullptr;
     mMessageSubType = Message::kSubTypeNone;
@@ -363,7 +362,7 @@ int Dtls::SetApplicationCoapSecureKeys(void)
         {
             rval = mbedtls_x509_crt_parse(&mCaChain, static_cast<const unsigned char *>(mCaChainSrc),
                                           static_cast<size_t>(mCaChainLength));
-            VerifyOrExit(rval == 0, OT_NOOP);
+            VerifyOrExit(rval == 0);
             mbedtls_ssl_conf_ca_chain(&mConf, &mCaChain, nullptr);
         }
 
@@ -371,12 +370,12 @@ int Dtls::SetApplicationCoapSecureKeys(void)
         {
             rval = mbedtls_x509_crt_parse(&mOwnCert, static_cast<const unsigned char *>(mOwnCertSrc),
                                           static_cast<size_t>(mOwnCertLength));
-            VerifyOrExit(rval == 0, OT_NOOP);
+            VerifyOrExit(rval == 0);
             rval = mbedtls_pk_parse_key(&mPrivateKey, static_cast<const unsigned char *>(mPrivateKeySrc),
                                         static_cast<size_t>(mPrivateKeyLength), nullptr, 0);
-            VerifyOrExit(rval == 0, OT_NOOP);
+            VerifyOrExit(rval == 0);
             rval = mbedtls_ssl_conf_own_cert(&mConf, &mOwnCert, &mPrivateKey);
-            VerifyOrExit(rval == 0, OT_NOOP);
+            VerifyOrExit(rval == 0);
         }
 #endif
         break;
@@ -385,7 +384,7 @@ int Dtls::SetApplicationCoapSecureKeys(void)
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
         rval = mbedtls_ssl_conf_psk(&mConf, static_cast<const unsigned char *>(mPreSharedKey), mPreSharedKeyLength,
                                     static_cast<const unsigned char *>(mPreSharedKeyIdentity), mPreSharedKeyIdLength);
-        VerifyOrExit(rval == 0, OT_NOOP);
+        VerifyOrExit(rval == 0);
 #endif
         break;
 
@@ -417,7 +416,7 @@ void Dtls::Close(void)
 
 void Dtls::Disconnect(void)
 {
-    VerifyOrExit(mState == kStateConnecting || mState == kStateConnected, OT_NOOP);
+    VerifyOrExit(mState == kStateConnecting || mState == kStateConnected);
 
     mbedtls_ssl_close_notify(&mSsl);
     mState = kStateCloseNotify;
@@ -539,7 +538,7 @@ otError Dtls::Send(Message &aMessage, uint16_t aLength)
         mMessageSubType = aMessage.GetSubType();
     }
 
-    aMessage.Read(0, aLength, buffer);
+    aMessage.ReadBytes(0, buffer, aLength);
 
     SuccessOrExit(error = Crypto::MbedTls::MapError(mbedtls_ssl_write(&mSsl, buffer, aLength)));
 
@@ -631,7 +630,7 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
         aLength = static_cast<size_t>(rval);
     }
 
-    rval = mReceiveMessage->Read(mReceiveMessage->GetOffset(), static_cast<uint16_t>(aLength), aBuf);
+    rval = mReceiveMessage->ReadBytes(mReceiveMessage->GetOffset(), aBuf, static_cast<uint16_t>(aLength));
     mReceiveMessage->MoveOffset(rval);
 
 exit:
@@ -914,7 +913,7 @@ otError Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::Sub
     message->SetSubType(aMessageSubType);
     message->SetLinkSecurityEnabled(mLayerTwoSecurity);
 
-    SuccessOrExit(error = message->Append(aBuf, aLength));
+    SuccessOrExit(error = message->AppendBytes(aBuf, aLength));
 
     // Set message sub type in case Joiner Finalize Response is appended to the message.
     if (aMessageSubType != Message::kSubTypeNone)
@@ -932,12 +931,7 @@ otError Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::Sub
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 

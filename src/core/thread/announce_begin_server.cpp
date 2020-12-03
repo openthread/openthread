@@ -43,15 +43,15 @@
 #include "common/logging.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 
 AnnounceBeginServer::AnnounceBeginServer(Instance &aInstance)
     : AnnounceSenderBase(aInstance, AnnounceBeginServer::HandleTimer)
-    , mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this)
+    , mAnnounceBegin(UriPath::kAnnounceBegin, &AnnounceBeginServer::HandleRequest, this)
 {
-    Get<Coap::Coap>().AddResource(mAnnounceBegin);
+    Get<Tmf::TmfAgent>().AddResource(mAnnounceBegin);
 }
 
 void AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod)
@@ -72,17 +72,17 @@ void AnnounceBeginServer::HandleRequest(Coap::Message &aMessage, const Ip6::Mess
     uint16_t         period;
     Ip6::MessageInfo responseInfo(aMessageInfo);
 
-    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
-    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0, OT_NOOP);
+    VerifyOrExit(aMessage.IsPostRequest());
+    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
-    SuccessOrExit(Tlv::FindUint8Tlv(aMessage, MeshCoP::Tlv::kCount, count));
-    SuccessOrExit(Tlv::FindUint16Tlv(aMessage, MeshCoP::Tlv::kPeriod, period));
+    SuccessOrExit(Tlv::Find<MeshCoP::CountTlv>(aMessage, count));
+    SuccessOrExit(Tlv::Find<MeshCoP::PeriodTlv>(aMessage, period));
 
     SendAnnounce(mask, count, period);
 
     if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
-        SuccessOrExit(Get<Coap::Coap>().SendEmptyAck(aMessage, responseInfo));
+        SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, responseInfo));
         otLogInfoMeshCoP("sent announce begin response");
     }
 

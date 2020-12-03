@@ -120,6 +120,7 @@ SOURCES_COMMON                                  = \
     api/crypto_api.cpp                            \
     api/dataset_api.cpp                           \
     api/dataset_ftd_api.cpp                       \
+    api/dataset_updater_api.cpp                   \
     api/diags_api.cpp                             \
     api/dns_api.cpp                               \
     api/entropy_api.cpp                           \
@@ -130,6 +131,7 @@ SOURCES_COMMON                                  = \
     api/jam_detection_api.cpp                     \
     api/joiner_api.cpp                            \
     api/link_api.cpp                              \
+    api/link_metrics_api.cpp                      \
     api/link_raw_api.cpp                          \
     api/logging_api.cpp                           \
     api/message_api.cpp                           \
@@ -144,10 +146,12 @@ SOURCES_COMMON                                  = \
     api/thread_api.cpp                            \
     api/thread_ftd_api.cpp                        \
     api/udp_api.cpp                               \
+    backbone_router/backbone_tmf.cpp              \
     backbone_router/bbr_leader.cpp                \
     backbone_router/bbr_local.cpp                 \
     backbone_router/bbr_manager.cpp               \
     backbone_router/multicast_listeners_table.cpp \
+    backbone_router/ndproxy_table.cpp             \
     coap/coap.cpp                                 \
     coap/coap_message.cpp                         \
     coap/coap_secure.cpp                          \
@@ -198,6 +202,7 @@ SOURCES_COMMON                                  = \
     meshcop/meshcop_tlvs.cpp                      \
     meshcop/panid_query_client.cpp                \
     meshcop/timestamp.cpp                         \
+    net/checksum.cpp                              \
     net/dhcp6_client.cpp                          \
     net/dhcp6_server.cpp                          \
     net/dns_client.cpp                            \
@@ -223,6 +228,7 @@ SOURCES_COMMON                                  = \
     thread/energy_scan_server.cpp                 \
     thread/indirect_sender.cpp                    \
     thread/key_manager.cpp                        \
+    thread/link_metrics.cpp                       \
     thread/link_quality.cpp                       \
     thread/lowpan.cpp                             \
     thread/mesh_forwarder.cpp                     \
@@ -244,13 +250,17 @@ SOURCES_COMMON                                  = \
     thread/src_match_controller.cpp               \
     thread/thread_netif.cpp                       \
     thread/time_sync_service.cpp                  \
+    thread/tmf.cpp                                \
     thread/topology.cpp                           \
+    thread/uri_paths.cpp                          \
     utils/channel_manager.cpp                     \
     utils/channel_monitor.cpp                     \
     utils/child_supervision.cpp                   \
+    utils/dataset_updater.cpp                     \
     utils/flash.cpp                               \
     utils/heap.cpp                                \
     utils/jam_detector.cpp                        \
+    utils/lookup_table.cpp                        \
     utils/otns.cpp                                \
     utils/parse_cmdline.cpp                       \
     utils/slaac_address.cpp                       \
@@ -286,6 +296,7 @@ libopenthread_radio_a_SOURCES              = \
     radio/radio_callbacks.cpp                \
     radio/radio_platform.cpp                 \
     thread/link_quality.cpp                  \
+    utils/lookup_table.cpp                   \
     utils/parse_cmdline.cpp                  \
     $(NULL)
 
@@ -321,13 +332,16 @@ endif # OPENTHREAD_ENABLE_VENDOR_EXTENSION
 
 HEADERS_COMMON                                  = \
     openthread-core-config.h                      \
+    backbone_router/backbone_tmf.hpp              \
     backbone_router/bbr_leader.hpp                \
     backbone_router/bbr_local.hpp                 \
     backbone_router/bbr_manager.hpp               \
     backbone_router/multicast_listeners_table.hpp \
+    backbone_router/ndproxy_table.hpp             \
     coap/coap.hpp                                 \
     coap/coap_message.hpp                         \
     coap/coap_secure.hpp                          \
+    common/arg_macros.hpp                         \
     common/bit_vector.hpp                         \
     common/clearable.hpp                          \
     common/code_utils.hpp                         \
@@ -345,6 +359,7 @@ HEADERS_COMMON                                  = \
     common/new.hpp                                \
     common/non_copyable.hpp                       \
     common/notifier.hpp                           \
+    common/numeric_limits.hpp                     \
     common/pool.hpp                               \
     common/random.hpp                             \
     common/random_manager.hpp                     \
@@ -356,6 +371,7 @@ HEADERS_COMMON                                  = \
     common/timer.hpp                              \
     common/tlvs.hpp                               \
     common/trickle_timer.hpp                      \
+    common/type_traits.hpp                        \
     config/announce_sender.h                      \
     config/backbone_router.h                      \
     config/border_router.h                        \
@@ -364,6 +380,7 @@ HEADERS_COMMON                                  = \
     config/child_supervision.h                    \
     config/coap.h                                 \
     config/commissioner.h                         \
+    config/dataset_updater.h                      \
     config/dhcp6_client.h                         \
     config/dhcp6_server.h                         \
     config/diag.h                                 \
@@ -414,6 +431,7 @@ HEADERS_COMMON                                  = \
     meshcop/meshcop_tlvs.hpp                      \
     meshcop/panid_query_client.hpp                \
     meshcop/timestamp.hpp                         \
+    net/checksum.hpp                              \
     net/dhcp6.hpp                                 \
     net/dhcp6_client.hpp                          \
     net/dhcp6_server.hpp                          \
@@ -443,6 +461,8 @@ HEADERS_COMMON                                  = \
     thread/indirect_sender.hpp                    \
     thread/indirect_sender_frame_context.hpp      \
     thread/key_manager.hpp                        \
+    thread/link_metrics.hpp                       \
+    thread/link_metrics_tlvs.hpp                  \
     thread/link_quality.hpp                       \
     thread/lowpan.hpp                             \
     thread/mesh_forwarder.hpp                     \
@@ -466,15 +486,18 @@ HEADERS_COMMON                                  = \
     thread/src_match_controller.hpp               \
     thread/thread_netif.hpp                       \
     thread/thread_tlvs.hpp                        \
-    thread/thread_uri_paths.hpp                   \
     thread/time_sync_service.hpp                  \
+    thread/tmf.hpp                                \
     thread/topology.hpp                           \
+    thread/uri_paths.hpp                          \
     utils/channel_manager.hpp                     \
     utils/channel_monitor.hpp                     \
     utils/child_supervision.hpp                   \
+    utils/dataset_updater.hpp                     \
     utils/flash.hpp                               \
     utils/heap.hpp                                \
     utils/jam_detector.hpp                        \
+    utils/lookup_table.hpp                        \
     utils/otns.hpp                                \
     utils/parse_cmdline.hpp                       \
     utils/slaac_address.hpp                       \

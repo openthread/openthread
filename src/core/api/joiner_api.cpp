@@ -68,7 +68,7 @@ otJoinerState otJoinerGetState(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<MeshCoP::Joiner>().GetState();
+    return static_cast<otJoinerState>(instance.Get<MeshCoP::Joiner>().GetState());
 }
 
 const otExtAddress *otJoinerGetId(otInstance *aInstance)

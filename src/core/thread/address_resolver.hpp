@@ -39,6 +39,7 @@
 #include "coap/coap.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
@@ -61,7 +62,7 @@ namespace ot {
  * This class implements the EID-to-RLOC mapping and caching.
  *
  */
-class AddressResolver : public InstanceLocator
+class AddressResolver : public InstanceLocator, private NonCopyable
 {
     friend class TimeTicker;
 
@@ -153,18 +154,21 @@ public:
     void AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
 
     /**
-     * This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not known.
+     * This method returns the RLOC16 for a given EID, initiates an Address Query if allowed and the mapping is not
+     * known.
      *
-     * @param[in]   aEid     A reference to the EID.
-     * @param[out]  aRloc16  The RLOC16 corresponding to @p aEid.
+     * @param[in]   aEid                A reference to the EID.
+     * @param[out]  aRloc16             The RLOC16 corresponding to @p aEid.
+     * @param[in]   aAllowAddressQuery  Allow to initiate Address Query if the mapping is not known.
      *
      * @retval OT_ERROR_NONE           Successfully provided the RLOC16.
-     * @retval OT_ERROR_ADDRESS_QUERY  Initiated an Address Query.
+     * @retval OT_ERROR_ADDRESS_QUERY  Initiated an Address Query if allowed.
      * @retval OT_ERROR_DROP           Earlier Address Query for the EID timed out. In retry timeout interval.
      * @retval OT_ERROR_NO_BUFS        Insufficient buffer space available to send Address Query.
+     * @retval OT_ERROR_NOT_FOUND      The mapping was not found and Address Query was not allowed.
      *
      */
-    otError Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16);
+    otError Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16, bool aAllowAddressQuery = true);
 
     /**
      * This method restarts any ongoing address queries.
@@ -173,6 +177,33 @@ public:
      *
      */
     void RestartAddressQueries(void);
+
+    /**
+     * This method sends an Address Notification (ADDR_NTF.ans) message.
+     *
+     * @param[in]  aTarget                  The target address of the ADDR_NTF.ans message.
+     * @param[in]  aMeshLocalIid            The ML-IID of the ADDR_NTF.ans message.
+     * @param[in]  aLastTransactionTimeTlv  A pointer to the Last Transaction Time if the ADDR_NTF.ans message contains
+     *                                      a Last Transaction Time TLV.
+     * @param[in]  aDestination             The destination to send the ADDR_NTF.ans message.
+     *
+     */
+    void SendAddressQueryResponse(const Ip6::Address &            aTarget,
+                                  const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                  const uint32_t *                aLastTransactionTimeTlv,
+                                  const Ip6::Address &            aDestination);
+
+    /**
+     * This method sends an Address Error Notification (ADDR_ERR.ntf) message.
+     *
+     * @param aTarget        The target address of the ADDR_ERR.ntf message.
+     * @param aMeshLocalIid  The ML-IID of the ADDR_ERR.ntf message.
+     * @param aDestination   The destination to send the ADDR_ERR.ntf message.
+     *
+     */
+    void SendAddressError(const Ip6::Address &            aTarget,
+                          const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                          const Ip6::Address *            aDestination);
 
 private:
     enum
@@ -282,13 +313,6 @@ private:
     void        RemoveCacheEntry(CacheEntry &aEntry, CacheEntryList &aList, CacheEntry *aPrevEntry, Reason aReason);
 
     otError SendAddressQuery(const Ip6::Address &aEid);
-    void    SendAddressError(const Ip6::Address &            aTarget,
-                             const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                             const Ip6::Address *            aDestination);
-    void    SendAddressQueryResponse(const Ip6::Address &            aTarget,
-                                     const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                                     const uint32_t *                aLastTransactionTimeTlv,
-                                     const Ip6::Address &            aDestination);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 

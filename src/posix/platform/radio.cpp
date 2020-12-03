@@ -99,6 +99,7 @@ void platformRadioInit(otUrl *aRadioUrl)
     ot::Posix::RadioUrl &radioUrl       = *static_cast<ot::Posix::RadioUrl *>(aRadioUrl);
     bool                 resetRadio     = (radioUrl.GetValue("no-reset") == nullptr);
     bool                 restoreDataset = (radioUrl.GetValue("ncp-dataset") != nullptr);
+    const char *         parameterValue;
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
     uint8_t     channel       = ot::Radio::kChannelMin;
     int8_t      power         = ot::Posix::MaxPowerTable::kPowerDefault;
@@ -128,6 +129,24 @@ void platformRadioInit(otUrl *aRadioUrl)
 
     SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(radioUrl));
     sRadioSpinel.Init(resetRadio, restoreDataset);
+
+    parameterValue = radioUrl.GetValue("fem-lnagain");
+    if (parameterValue != nullptr)
+    {
+        long femLnaGain = strtol(parameterValue, nullptr, 0);
+
+        VerifyOrDie(INT8_MIN <= femLnaGain && femLnaGain <= INT8_MAX, OT_EXIT_INVALID_ARGUMENTS);
+        SuccessOrDie(sRadioSpinel.SetFemLnaGain(static_cast<int8_t>(femLnaGain)));
+    }
+
+    parameterValue = radioUrl.GetValue("cca-threshold");
+    if (parameterValue != nullptr)
+    {
+        long ccaThreshold = strtol(parameterValue, nullptr, 0);
+
+        VerifyOrDie(INT8_MIN <= ccaThreshold && ccaThreshold <= INT8_MAX, OT_EXIT_INVALID_ARGUMENTS);
+        SuccessOrDie(sRadioSpinel.SetCcaEnergyDetectThreshold(static_cast<int8_t>(ccaThreshold)));
+    }
 }
 
 void platformRadioDeinit(void)
@@ -356,6 +375,19 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
     return sRadioSpinel.SetCcaEnergyDetectThreshold(aThreshold);
 }
 
+otError otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    assert(aGain != nullptr);
+    return sRadioSpinel.GetFemLnaGain(*aGain);
+}
+
+otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.SetFemLnaGain(aGain);
+}
+
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -403,7 +435,7 @@ otError otPlatDiagProcess(otInstance *aInstance,
     char *cur                                              = cmd;
     char *end                                              = cmd + sizeof(cmd);
 
-    for (uint8_t index = 0; index < aArgsLength; index++)
+    for (uint8_t index = 0; (index < aArgsLength) && (cur < end); index++)
     {
         cur += snprintf(cur, static_cast<size_t>(end - cur), "%s ", aArgs[index]);
     }
@@ -507,4 +539,10 @@ uint64_t otPlatRadioGetNow(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.GetNow();
+}
+
+uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetBusSpeed();
 }

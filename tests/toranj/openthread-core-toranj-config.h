@@ -40,6 +40,14 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+ *
+ * Define to 1 to enable Thread Test Harness reference device support.
+ *
+ */
+#define OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
  *
  * Define to 1 to enable Border Router support.
@@ -62,6 +70,14 @@
  *
  */
 #define OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES 4
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+ *
+ * Define to 1 to enable Border Agent support.
+ *
+ */
+#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_DIAG_ENABLE
@@ -110,6 +126,14 @@
  *
  */
 #define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS 256
+
+/**
+ * @def OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
+ *
+ * Whether use heap allocator for message buffers.
+ *
+ */
+#define OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE 0
 
 /**
  * @def OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
@@ -462,4 +486,12 @@
  *
  */
 #define OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE
+ *
+ * Define to 1 to enable software transmission target time logic.
+ *
+ */
+#define OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE 1
 #endif // OPENTHREAD_RADIO

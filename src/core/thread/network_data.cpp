@@ -42,7 +42,7 @@
 #include "mac/mac_types.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 namespace NetworkData {
@@ -697,7 +697,7 @@ const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix,
     {
         prefixTlv = FindTlv<PrefixTlv>(start, end);
 
-        VerifyOrExit(prefixTlv != nullptr, OT_NOOP);
+        VerifyOrExit(prefixTlv != nullptr);
 
         if (prefixTlv->IsEqual(aPrefix, aPrefixLength))
         {
@@ -734,7 +734,7 @@ const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
     {
         serviceTlv = FindTlv<ServiceTlv>(start, end);
 
-        VerifyOrExit(serviceTlv != nullptr, OT_NOOP);
+        VerifyOrExit(serviceTlv != nullptr);
 
         if ((serviceTlv->GetEnterpriseNumber() == aEnterpriseNumber) &&
             (serviceTlv->GetServiceDataLength() == aServiceDataLength) &&
@@ -806,9 +806,9 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::Response
     Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_SERVER_DATA));
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kServerData));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     if (mType == kTypeLocal)
@@ -816,29 +816,24 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::Response
         ThreadTlv tlv;
         tlv.SetType(ThreadTlv::kThreadNetworkData);
         tlv.SetLength(mLength);
-        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(mTlvs, mLength));
+        SuccessOrExit(error = message->Append(tlv));
+        SuccessOrExit(error = message->AppendBytes(mTlvs, mLength));
     }
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
-        SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, ThreadTlv::kRloc16, aRloc16));
+        SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, aRloc16));
     }
 
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo, aHandler, aContext));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, aHandler, aContext));
 
     otLogInfoNetData("Sent server data notification");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != nullptr)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 

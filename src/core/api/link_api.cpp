@@ -493,7 +493,7 @@ otError otLinkCslSetChannel(otInstance *aInstance, uint8_t aChannel)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit((Radio::kChannelMin <= aChannel) && (aChannel <= Radio::kChannelMax), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(Radio::IsCslChannelValid(aChannel), error = OT_ERROR_INVALID_ARGS);
 
     instance.Get<Mac::Mac>().SetCslChannel(aChannel);
 
@@ -536,3 +536,12 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError otLinkSendEmptyData(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<MeshForwarder>().SendEmptyMessage();
+}
+#endif

@@ -78,7 +78,7 @@ uint8_t ChannelMask::ChooseRandomChannel(void) const
     uint8_t channel = kChannelIteratorFirst;
     uint8_t randomIndex;
 
-    VerifyOrExit(!IsEmpty(), OT_NOOP);
+    VerifyOrExit(!IsEmpty());
 
     randomIndex = Random::NonCrypto::GetUint8InRange(0, GetNumberOfChannels());
 

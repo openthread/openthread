@@ -42,8 +42,6 @@ namespace ot {
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mEventsToSignal()
-    , mSignaledEvents()
     , mTask(aInstance, Notifier::EmitEvents, this)
 {
     for (ExternalCallback &callback : mExternalCallbacks)
@@ -58,7 +56,7 @@ otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aCont
     otError           error          = OT_ERROR_NONE;
     ExternalCallback *unusedCallback = nullptr;
 
-    VerifyOrExit(aCallback != nullptr, OT_NOOP);
+    VerifyOrExit(aCallback != nullptr);
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {
@@ -86,7 +84,7 @@ exit:
 
 void Notifier::RemoveCallback(otStateChangedCallback aCallback, void *aContext)
 {
-    VerifyOrExit(aCallback != nullptr, OT_NOOP);
+    VerifyOrExit(aCallback != nullptr);
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {
@@ -125,7 +123,7 @@ void Notifier::EmitEvents(void)
 {
     Events events;
 
-    VerifyOrExit(!mEventsToSignal.IsEmpty(), OT_NOOP);
+    VerifyOrExit(!mEventsToSignal.IsEmpty());
 
     // Note that the callbacks may signal new events, so we create a
     // copy of `mEventsToSignal` and then clear it.
@@ -147,8 +145,8 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
     Get<Utils::ChildSupervisor>().HandleNotifierEvents(events);
 #endif
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
-    Get<Utils::ChannelManager>().HandleNotifierEvents(events);
+#if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
+    Get<Utils::DatasetUpdater>().HandleNotifierEvents(events);
 #endif
 #endif // OPENTHREAD_FTD
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -207,7 +205,7 @@ void Notifier::LogEvents(Events aEvents) const
 
     for (uint8_t bit = 0; bit < sizeof(Events::Flags) * CHAR_BIT; bit++)
     {
-        VerifyOrExit(flags != 0, OT_NOOP);
+        VerifyOrExit(flags != 0);
 
         if (flags & (1 << bit))
         {
@@ -239,120 +237,46 @@ const char *Notifier::EventToString(Event aEvent) const
     // To ensure no clipping of flag names in the logs, the returned
     // strings from this method should have shorter length than
     // `kMaxFlagNameLength` value.
+    static const char *const kEventStrings[] = {
+        "Ip6+",              // kEventIp6AddressAdded                  (1 << 0)
+        "Ip6-",              // kEventIp6AddressRemoved                (1 << 1)
+        "Role",              // kEventThreadRoleChanged                (1 << 2)
+        "LLAddr",            // kEventThreadLinkLocalAddrChanged       (1 << 3)
+        "MLAddr",            // kEventThreadMeshLocalAddrChanged       (1 << 4)
+        "Rloc+",             // kEventThreadRlocAdded                  (1 << 5)
+        "Rloc-",             // kEventThreadRlocRemoved                (1 << 6)
+        "PartitionId",       // kEventThreadPartitionIdChanged         (1 << 7)
+        "KeySeqCntr",        // kEventThreadKeySeqCounterChanged       (1 << 8)
+        "NetData",           // kEventThreadNetdataChanged             (1 << 9)
+        "Child+",            // kEventThreadChildAdded                 (1 << 10)
+        "Child-",            // kEventThreadChildRemoved               (1 << 11)
+        "Ip6Mult+",          // kEventIp6MulticastSubscribed           (1 << 12)
+        "Ip6Mult-",          // kEventIp6MulticastUnsubscribed         (1 << 13)
+        "Channel",           // kEventThreadChannelChanged             (1 << 14)
+        "PanId",             // kEventThreadPanIdChanged               (1 << 15)
+        "NetName",           // kEventThreadNetworkNameChanged         (1 << 16)
+        "ExtPanId",          // kEventThreadExtPanIdChanged            (1 << 17)
+        "MstrKey",           // kEventMasterKeyChanged                 (1 << 18)
+        "PSKc",              // kEventPskcChanged                      (1 << 19)
+        "SecPolicy",         // kEventSecurityPolicyChanged            (1 << 20)
+        "CMNewChan",         // kEventChannelManagerNewChannelChanged  (1 << 21)
+        "ChanMask",          // kEventSupportedChannelMaskChanged      (1 << 22)
+        "CommissionerState", // kEventCommissionerStateChanged         (1 << 23)
+        "NetifState",        // kEventThreadNetifStateChanged          (1 << 24)
+        "BbrState",          // kEventThreadBackboneRouterStateChanged (1 << 25)
+        "BbrLocal",          // kEventThreadBackboneRouterLocalChanged (1 << 26)
+        "JoinerState",       // kEventJoinerStateChanged               (1 << 27)
+        "ActDset",           // kEventActiveDatasetChanged             (1 << 28)
+        "PndDset",           // kEventPendingDatasetChanged            (1 << 29)
+    };
 
-    switch (aEvent)
+    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(kEventStrings); index++)
     {
-    case kEventIp6AddressAdded:
-        retval = "Ip6+";
-        break;
-
-    case kEventIp6AddressRemoved:
-        retval = "Ip6-";
-        break;
-
-    case kEventThreadRoleChanged:
-        retval = "Role";
-        break;
-
-    case kEventThreadLinkLocalAddrChanged:
-        retval = "LLAddr";
-        break;
-
-    case kEventThreadMeshLocalAddrChanged:
-        retval = "MLAddr";
-        break;
-
-    case kEventThreadRlocAdded:
-        retval = "Rloc+";
-        break;
-
-    case kEventThreadRlocRemoved:
-        retval = "Rloc-";
-        break;
-
-    case kEventThreadPartitionIdChanged:
-        retval = "PartitionId";
-        break;
-
-    case kEventThreadKeySeqCounterChanged:
-        retval = "KeySeqCntr";
-        break;
-
-    case kEventThreadNetdataChanged:
-        retval = "NetData";
-        break;
-
-    case kEventThreadChildAdded:
-        retval = "Child+";
-        break;
-
-    case kEventThreadChildRemoved:
-        retval = "Child-";
-        break;
-
-    case kEventIp6MulticastSubscribed:
-        retval = "Ip6Mult+";
-        break;
-
-    case kEventIp6MulticastUnsubscribed:
-        retval = "Ip6Mult-";
-        break;
-
-    case kEventThreadChannelChanged:
-        retval = "Channel";
-        break;
-
-    case kEventThreadPanIdChanged:
-        retval = "PanId";
-        break;
-
-    case kEventThreadNetworkNameChanged:
-        retval = "NetName";
-        break;
-
-    case kEventThreadExtPanIdChanged:
-        retval = "ExtPanId";
-        break;
-
-    case kEventMasterKeyChanged:
-        retval = "MstrKey";
-        break;
-
-    case kEventPskcChanged:
-        retval = "PSKc";
-        break;
-
-    case kEventSecurityPolicyChanged:
-        retval = "SecPolicy";
-        break;
-
-    case kEventChannelManagerNewChannelChanged:
-        retval = "CMNewChan";
-        break;
-
-    case kEventSupportedChannelMaskChanged:
-        retval = "ChanMask";
-        break;
-
-    case kEventCommissionerStateChanged:
-        retval = "CommissionerState";
-        break;
-
-    case kEventThreadNetifStateChanged:
-        retval = "NetifState";
-        break;
-
-    case kEventThreadBackboneRouterStateChanged:
-        retval = "BbrState";
-        break;
-
-    case kEventThreadBackboneRouterLocalChanged:
-        retval = "BbrLocal";
-        break;
-
-    case kEventJoinerStateChanged:
-        retval = "JoinerState";
-        break;
+        if (static_cast<uint32_t>(aEvent) == (1U << index))
+        {
+            retval = kEventStrings[index];
+            break;
+        }
     }
 
     return retval;

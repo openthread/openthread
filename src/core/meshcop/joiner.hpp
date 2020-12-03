@@ -44,18 +44,34 @@
 #include "common/locator.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/dtls.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
+#include "thread/discover_scanner.hpp"
 
 namespace ot {
 
 namespace MeshCoP {
 
-class Joiner : public InstanceLocator
+class Joiner : public InstanceLocator, private NonCopyable
 {
 public:
+    /**
+     * This enumeration type defines the Joiner State.
+     *
+     */
+    enum State : uint8_t
+    {
+        kStateIdle      = OT_JOINER_STATE_IDLE,
+        kStateDiscover  = OT_JOINER_STATE_DISCOVER,
+        kStateConnect   = OT_JOINER_STATE_CONNECT,
+        kStateConnected = OT_JOINER_STATE_CONNECTED,
+        kStateEntrust   = OT_JOINER_STATE_ENTRUST,
+        kStateJoined    = OT_JOINER_STATE_JOINED,
+    };
+
     /**
      * This constructor initializes the Joiner object.
      *
@@ -97,12 +113,12 @@ public:
     void Stop(void);
 
     /**
-     * This function returns the Joiner State.
+     * This method gets the Joiner State.
      *
-     * @returns The Joiner state (see `otJoinerState`).
+     * @returns The Joiner state (see `State`).
      *
      */
-    otJoinerState GetState(void) const { return mState; }
+    State GetState(void) const { return mState; }
 
     /**
      * This method retrieves the Joiner ID.
@@ -166,8 +182,8 @@ private:
         uint8_t         mPriority;
     };
 
-    static void HandleDiscoverResult(otActiveScanResult *aResult, void *aContext);
-    void        HandleDiscoverResult(otActiveScanResult *aResult);
+    static void HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult, void *aContext);
+    void        HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult);
 
     static void HandleSecureCoapClientConnect(bool aConnected, void *aContext);
     void        HandleSecureCoapClientConnect(bool aConnected);
@@ -184,11 +200,11 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    static const char *JoinerStateToString(otJoinerState aState);
+    static const char *StateToString(State aState);
 
-    void    SetState(otJoinerState aState);
+    void    SetState(State aState);
     void    SetIdFromIeeeEui64(void);
-    void    SaveDiscoveredJoinerRouter(const otActiveScanResult &aResult);
+    void    SaveDiscoveredJoinerRouter(const Mle::DiscoverScanner::ScanResult &aResult);
     void    TryNextJoinerRouter(otError aPrevError);
     otError Connect(JoinerRouter &aRouter);
     void    Finish(otError aError);
@@ -210,7 +226,7 @@ private:
     Mac::ExtAddress mId;
     JoinerDiscerner mDiscerner;
 
-    otJoinerState mState;
+    State mState;
 
     otJoinerCallback mCallback;
     void *           mContext;

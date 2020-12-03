@@ -60,7 +60,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
     {
         Ip6::Header ip6Header;
 
-        aMessage.Read(0, sizeof(ip6Header), &ip6Header);
+        IgnoreError(aMessage.Read(0, ip6Header));
 
         if (ip6Header.GetDestination().IsMulticast())
         {
@@ -150,7 +150,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
             continue;
         }
 
-        cur->Read(Ip6::Header::kDestinationFieldOffset, sizeof(ip6Dst), &ip6Dst);
+        IgnoreError(cur->Read(Ip6::Header::kDestinationFieldOffset, ip6Dst));
 
         if (ip6Dst == aEid)
         {
@@ -265,7 +265,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
             {
                 Ip6::Header ip6header;
 
-                IgnoreReturnValue(message->Read(0, sizeof(ip6header), &ip6header));
+                IgnoreError(message->Read(0, ip6header));
 
                 if (&aChild == static_cast<Child *>(Get<NeighborTable>().FindNeighbor(ip6header.GetDestination())))
                 {
@@ -318,7 +318,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
             continue;
         }
 
-        message->Read(0, sizeof(ip6Header), &ip6Header);
+        IgnoreError(message->Read(0, ip6Header));
 
         if (!(ip6Header.GetDestination().IsMulticast()))
         {
@@ -370,7 +370,7 @@ void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
 
     // write payload
     OT_ASSERT(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
-    aMessage.Read(0, aMessage.GetLength(), aFrame.GetPayload());
+    aMessage.ReadBytes(0, aFrame.GetPayload(), aMessage.GetLength());
     aFrame.SetPayloadLength(aMessage.GetLength());
 
     mMessageNextOffset = aMessage.GetLength();
@@ -533,15 +533,14 @@ void MeshForwarder::SendIcmpErrorIfDstUnreach(const Message &     aMessage,
     Ip6::Header ip6header;
     Child *     child;
 
-    VerifyOrExit(aMacSource.IsShort() && aMacDest.IsShort(), OT_NOOP);
+    VerifyOrExit(aMacSource.IsShort() && aMacDest.IsShort());
 
     child = Get<ChildTable>().FindChild(aMacSource.GetShort(), Child::kInStateAnyExceptInvalid);
-    VerifyOrExit((child == nullptr) || child->IsFullThreadDevice(), OT_NOOP);
+    VerifyOrExit((child == nullptr) || child->IsFullThreadDevice());
 
-    aMessage.Read(0, sizeof(ip6header), &ip6header);
+    IgnoreError(aMessage.Read(0, ip6header));
     VerifyOrExit(!ip6header.GetDestination().IsMulticast() &&
-                     Get<NetworkData::Leader>().IsOnMesh(ip6header.GetDestination()),
-                 OT_NOOP);
+                 Get<NetworkData::Leader>().IsOnMesh(ip6header.GetDestination()));
 
     error = Get<Mle::MleRouter>().CheckReachability(aMacDest.GetShort(), ip6header);
 
@@ -581,7 +580,7 @@ otError MeshForwarder::CheckReachability(const uint8_t *     aFrame,
     error = FrameToMessage(aFrame, aFrameLength, datagramSize, aMeshSource, aMeshDest, message);
     SuccessOrExit(error);
 
-    message->Read(0, sizeof(ip6Header), &ip6Header);
+    IgnoreError(message->Read(0, ip6Header));
     error = Get<Mle::MleRouter>().CheckReachability(aMeshDest.GetShort(), ip6Header);
 
 exit:
@@ -595,10 +594,7 @@ exit:
         SendDestinationUnreachable(aMeshSource.GetShort(), *message);
     }
 
-    if (message != nullptr)
-    {
-        message->Free();
-    }
+    FreeMessage(message);
 
     return error;
 }
@@ -672,7 +668,7 @@ void MeshForwarder::HandleMesh(uint8_t *             aFrame,
 
         SuccessOrExit(error = message->SetLength(meshHeader.GetHeaderLength() + aFrameLength));
         offset += meshHeader.WriteTo(*message, offset);
-        message->Write(offset, aFrameLength, aFrame);
+        message->WriteBytes(offset, aFrame, aFrameLength);
         message->SetLinkInfo(aLinkInfo);
 
         LogMessage(kMessageReceive, *message, &aMacSource, OT_ERROR_NONE);
@@ -686,11 +682,7 @@ exit:
     {
         otLogInfoMac("Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s", otThreadErrorToString(error),
                      aFrameLength, aMacSource.ToString().AsCString(), aLinkInfo.IsLinkSecurityEnabled() ? "yes" : "no");
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
+        FreeMessage(message);
     }
 }
 
@@ -702,7 +694,7 @@ void MeshForwarder::UpdateRoutes(const uint8_t *     aFrame,
     Ip6::Header ip6Header;
     Neighbor *  neighbor;
 
-    VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort(), OT_NOOP);
+    VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort());
     SuccessOrExit(GetIp6Header(aFrame, aFrameLength, aMeshSource, aMeshDest, ip6Header));
 
     if (!ip6Header.GetSource().GetIid().IsLocator() &&
@@ -728,7 +720,7 @@ void MeshForwarder::UpdateRoutes(const uint8_t *     aFrame,
     }
 
     neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetSource());
-    VerifyOrExit(neighbor != nullptr && !neighbor->IsFullThreadDevice(), OT_NOOP);
+    VerifyOrExit(neighbor != nullptr && !neighbor->IsFullThreadDevice());
 
     if (!Mle::Mle::RouterIdMatch(aMeshSource.GetShort(), Get<Mac::Mac>().GetShortAddress()))
     {
@@ -770,7 +762,7 @@ void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHead
 
     if (entry == nullptr)
     {
-        VerifyOrExit(aFragmentHeader.GetDatagramOffset() == 0, OT_NOOP);
+        VerifyOrExit(aFragmentHeader.GetDatagramOffset() == 0);
 
         mFragmentPriorityList.AllocateEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag(), aPriority);
         Get<TimeTicker>().RegisterReceiver(TimeTicker::kMeshForwarder);
@@ -913,7 +905,7 @@ otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, ui
                 // Path cost
                 curCost = Get<Mle::MleRouter>().GetCost(server16);
 
-                if (!Get<Mle::MleRouter>().IsActiveRouter(server16))
+                if (!Mle::MleRouter::IsActiveRouter(server16))
                 {
                     // Assume best link between remote child server and its parent.
                     curCost += 1;
@@ -926,7 +918,7 @@ otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, ui
                 {
                     uint8_t cost;
 
-                    if (!Get<Mle::MleRouter>().IsActiveRouter(server16))
+                    if (!Mle::MleRouter::IsActiveRouter(server16))
                     {
                         // Cost calculated only from Link Quality In as the parent only maintains
                         // one-direction link info.
@@ -1029,7 +1021,7 @@ otError MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
         otLogMac(aLogLevel, "    Frag tag:%04x, offset:%d, size:%d", fragmentHeader.GetDatagramTag(),
                  fragmentHeader.GetDatagramOffset(), fragmentHeader.GetDatagramSize());
 
-        VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, OT_NOOP);
+        VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0);
     }
 
     error = OT_ERROR_NONE;
@@ -1064,11 +1056,11 @@ otError MeshForwarder::DecompressIp6UdpTcpHeader(const Message &     aMessage,
 
     // Read and decompress the IPv6 header
 
-    frameLength = aMessage.Read(aOffset, sizeof(frameBuffer), frameBuffer);
+    frameLength = aMessage.ReadBytes(aOffset, frameBuffer, sizeof(frameBuffer));
 
     headerLength = Get<Lowpan::Lowpan>().DecompressBaseHeader(aIp6Header, nextHeaderCompressed, aMeshSource, aMeshDest,
                                                               frameBuffer, frameLength);
-    VerifyOrExit(headerLength >= 0, OT_NOOP);
+    VerifyOrExit(headerLength >= 0);
 
     aOffset += headerLength;
 
@@ -1079,14 +1071,13 @@ otError MeshForwarder::DecompressIp6UdpTcpHeader(const Message &     aMessage,
     case Ip6::kProtoUdp:
         if (nextHeaderCompressed)
         {
-            frameLength  = aMessage.Read(aOffset, sizeof(Ip6::Udp::Header), frameBuffer);
+            frameLength  = aMessage.ReadBytes(aOffset, frameBuffer, sizeof(Ip6::Udp::Header));
             headerLength = Get<Lowpan::Lowpan>().DecompressUdpHeader(header.udp, frameBuffer, frameLength);
-            VerifyOrExit(headerLength >= 0, OT_NOOP);
+            VerifyOrExit(headerLength >= 0);
         }
         else
         {
-            VerifyOrExit(sizeof(Ip6::Udp::Header) == aMessage.Read(aOffset, sizeof(Ip6::Udp::Header), &header.udp),
-                         OT_NOOP);
+            SuccessOrExit(aMessage.Read(aOffset, header.udp));
         }
 
         aChecksum   = header.udp.GetChecksum();
@@ -1095,8 +1086,7 @@ otError MeshForwarder::DecompressIp6UdpTcpHeader(const Message &     aMessage,
         break;
 
     case Ip6::kProtoTcp:
-        VerifyOrExit(sizeof(Ip6::Tcp::Header) == aMessage.Read(aOffset, sizeof(Ip6::Tcp::Header), &header.tcp),
-                     OT_NOOP);
+        SuccessOrExit(aMessage.Read(aOffset, header.tcp));
         aChecksum   = header.tcp.GetChecksum();
         aSourcePort = header.tcp.GetSourcePort();
         aDestPort   = header.tcp.GetDestinationPort();
@@ -1153,7 +1143,7 @@ void MeshForwarder::LogMeshMessage(MessageAction       aAction,
     // logged when the same Mesh Header message was received
     // and info about it was logged.
 
-    VerifyOrExit(aAction != kMessageTransmit, OT_NOOP);
+    VerifyOrExit(aAction != kMessageTransmit);
 
     LogMeshIpHeader(aMessage, offset, meshSource, meshDest, aLogLevel);
 

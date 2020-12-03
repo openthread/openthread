@@ -63,8 +63,8 @@ otError NcpBase::EncodeChildInfo(const otChildInfo &aChildInfo)
     otError error = OT_ERROR_NONE;
     uint8_t modeFlags;
 
-    modeFlags = LinkFlagsToFlagByte(aChildInfo.mRxOnWhenIdle, aChildInfo.mSecureDataRequest,
-                                    aChildInfo.mFullThreadDevice, aChildInfo.mFullNetworkData);
+    modeFlags =
+        LinkFlagsToFlagByte(aChildInfo.mRxOnWhenIdle, aChildInfo.mFullThreadDevice, aChildInfo.mFullNetworkData);
 
     SuccessOrExit(error = mEncoder.WriteEui64(aChildInfo.mExtAddress));
     SuccessOrExit(error = mEncoder.WriteUint16(aChildInfo.mRloc16));
@@ -86,7 +86,7 @@ exit:
 
 void NcpBase::HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *aContext)
 {
-    VerifyOrExit(aInfo && aContext, OT_NOOP);
+    VerifyOrExit(aInfo && aContext);
 
     static_cast<NcpBase *>(aContext)->HandleParentResponseInfo(*aInfo);
 
@@ -96,7 +96,7 @@ exit:
 
 void NcpBase::HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo)
 {
-    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_PARENT_RESPONSE_INFO), OT_NOOP);
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_PARENT_RESPONSE_INFO));
 
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_PARENT_RESPONSE_INFO));
@@ -134,7 +134,7 @@ void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNe
         // Fall through
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
         property = SPINEL_PROP_THREAD_CHILD_TABLE;
-        VerifyOrExit(!aEntry.mInfo.mChild.mIsStateRestoring, OT_NOOP);
+        VerifyOrExit(!aEntry.mInfo.mChild.mIsStateRestoring);
         break;
 
     case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
@@ -148,7 +148,7 @@ void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNe
         ExitNow();
     }
 
-    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(property), OT_NOOP);
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(property));
 
     SuccessOrExit(error = mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, command, property));
 
@@ -348,6 +348,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PARTITION_ID>(void)
 {
     uint32_t partitionId = 0;
@@ -355,11 +356,12 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PARTITION_ID>(voi
 
     SuccessOrExit(error = mDecoder.ReadUint32(partitionId));
 
-    otThreadSetLocalLeaderPartitionId(mInstance, partitionId);
+    otThreadSetPreferredLeaderPartitionId(mInstance, partitionId);
 
 exit:
     return error;
 }
+#endif
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CHILD_COUNT_MAX>(void)
 {

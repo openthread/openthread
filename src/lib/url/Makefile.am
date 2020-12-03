@@ -33,6 +33,7 @@ noinst_LIBRARIES = libopenthread-url.a
 libopenthread_url_a_CPPFLAGS                = \
     -I$(top_srcdir)/include                   \
     -I$(top_srcdir)/src                       \
+    -I$(top_srcdir)/src/core                  \
     $(NULL)
 
 libopenthread_url_a_SOURCES                 = \
@@ -45,6 +46,7 @@ check_PROGRAMS = test-url
 test_url_CPPFLAGS                                             = \
     -I$(top_srcdir)/include                                     \
     -I$(top_srcdir)/src                                         \
+    -I$(top_srcdir)/src/core                                    \
     -DSELF_TEST                                                 \
     $(NULL)
 

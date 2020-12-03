@@ -164,11 +164,11 @@ Method `join_node()` can be used by a node to join another node:
     node1.join_node(node2, node_type=JOIN_TYPE_ROUTER)
 ```
 
-Method `whitelist_node()` can be used to add a given node to the whitelist of the device and enables white-listing:
+Method `allowlist_node()` can be used to add a given node to the allowlist of the device and enables allowlisting:
 
 ```python
-    # `node2` is added to the whitelist of `node1` and white-listing is enabled on `node1`
-    node1.whitelist_node(node2)
+    # `node2` is added to the allowlist of `node1` and allowlisting is enabled on `node1`
+    node1.allowlist_node(node2)
 ```
 
 #### Example (simple 3-node topology)
@@ -186,14 +186,14 @@ Script below shows how to create a 3-node network topology with `node1` and `nod
 >>> node1.form("test-PAN")
 'Forming WPAN "test-PAN" as node type "router"\nSuccessfully formed!'
 
->>> node1.whitelist_node(node2)
->>> node2.whitelist_node(node1)
+>>> node1.allowlist_node(node2)
+>>> node2.allowlist_node(node1)
 
 >>> node2.join_node(node1, wpan.JOIN_TYPE_ROUTER)
 'Joining "test-PAN" C474513CB487778D as node type "router"\nSuccessfully Joined!'
 
->>> node3.whitelist_node(node2)
->>> node2.whitelist_node(node3)
+>>> node3.allowlist_node(node2)
+>>> node2.allowlist_node(node3)
 
 >>> node3.join_node(node2, wpan.JOIN_TYPE_END_DEVICE)
 'Joining "test-PAN" C474513CB487778D as node type "end-device"\nSuccessfully Joined!'

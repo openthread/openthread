@@ -35,7 +35,7 @@
 #ifndef CONFIG_CLI_H_
 #define CONFIG_CLI_H_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 /**
  * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
@@ -54,7 +54,11 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#define OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE 640
+#else
 #define OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE 512
+#endif
 #endif
 
 /**

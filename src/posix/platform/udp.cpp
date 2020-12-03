@@ -55,8 +55,6 @@
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
-static uint32_t sPlatNetifIndex = 0;
-
 static const size_t kMaxUdpSize = 1280;
 
 static void *FdToHandle(int aFd)
@@ -74,9 +72,9 @@ static bool IsLinkLocal(const struct in6_addr &aAddress)
     return aAddress.s6_addr[0] == 0xfe && aAddress.s6_addr[1] == 0x80;
 }
 
-static bool IsMulticast(const struct in6_addr &aAddress)
+static bool IsMulticast(const otIp6Address &aAddress)
 {
-    return aAddress.s6_addr[0] == 0xff;
+    return aAddress.mFields.m8[0] == 0xff;
 }
 
 static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMessageInfo &aMessageInfo)
@@ -99,7 +97,7 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
     if (IsLinkLocal(peerAddr.sin6_addr) && !aMessageInfo.mIsHostInterface)
     {
         // sin6_scope_id only works for link local destinations
-        peerAddr.sin6_scope_id = sPlatNetifIndex;
+        peerAddr.sin6_scope_id = gNetifIndex;
     }
 
     memset(control, 0, sizeof(control));
@@ -118,7 +116,7 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
     cmsg = CMSG_FIRSTHDR(&msg);
 
     {
-        int hopLimit = (aMessageInfo.mHopLimit ? aMessageInfo.mHopLimit : -1);
+        int hopLimit = (aMessageInfo.mHopLimit ? aMessageInfo.mHopLimit : OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT);
 
         cmsg->cmsg_level = IPPROTO_IPV6;
         cmsg->cmsg_type  = IPV6_HOPLIMIT;
@@ -130,7 +128,7 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
         controlLength += CMSG_SPACE(sizeof(int));
     }
 
-    if (!IsMulticast(reinterpret_cast<const struct in6_addr &>(aMessageInfo.mSockAddr)) &&
+    if (!IsMulticast(aMessageInfo.mSockAddr) &&
         memcmp(&aMessageInfo.mSockAddr, &in6addr_any, sizeof(aMessageInfo.mSockAddr)))
     {
         struct in6_pktinfo pktinfo;
@@ -139,7 +137,7 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
         cmsg->cmsg_type  = IPV6_PKTINFO;
         cmsg->cmsg_len   = CMSG_LEN(sizeof(pktinfo));
 
-        pktinfo.ipi6_ifindex = aMessageInfo.mIsHostInterface ? 0 : sPlatNetifIndex;
+        pktinfo.ipi6_ifindex = aMessageInfo.mIsHostInterface ? 0 : gNetifIndex;
 
         memcpy(&pktinfo.ipi6_addr, &aMessageInfo.mSockAddr, sizeof(pktinfo.ipi6_addr));
         memcpy(CMSG_DATA(cmsg), &pktinfo, sizeof(pktinfo));
@@ -208,7 +206,7 @@ static otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMe
 
                 memcpy(&pktinfo, CMSG_DATA(cmsg), sizeof(pktinfo));
 
-                aMessageInfo.mIsHostInterface = (pktinfo.ipi6_ifindex != sPlatNetifIndex);
+                aMessageInfo.mIsHostInterface = (pktinfo.ipi6_ifindex != gNetifIndex);
                 memcpy(&aMessageInfo.mSockAddr, &pktinfo.ipi6_addr, sizeof(aMessageInfo.mSockAddr));
             }
         }
@@ -242,7 +240,10 @@ otError otPlatUdpClose(otUdpSocket *aUdpSocket)
     otError error = OT_ERROR_NONE;
     int     fd;
 
-    VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
+    // Only call `close()` on platform UDP sockets.
+    // Platform UDP sockets always have valid `mHandle` upon creation.
+    VerifyOrExit(aUdpSocket->mHandle != nullptr);
+
     fd = FdFromHandle(aUdpSocket->mHandle);
     VerifyOrExit(0 == close(fd), error = OT_ERROR_FAILED);
 
@@ -257,10 +258,8 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
     otError error = OT_ERROR_NONE;
     int     fd;
 
-    assert(sPlatNetifIndex != 0);
+    assert(gNetifIndex != 0);
     assert(aUdpSocket->mHandle != nullptr);
-    VerifyOrExit(sPlatNetifIndex != 0, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aUdpSocket->mSockName.mPort != 0, error = OT_ERROR_INVALID_ARGS);
     fd = FdFromHandle(aUdpSocket->mHandle);
 
@@ -280,15 +279,69 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
         VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on)), error = OT_ERROR_FAILED);
     }
 
-    VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &sPlatNetifIndex, sizeof(sPlatNetifIndex)),
-                 error = OT_ERROR_FAILED);
-
 exit:
     if (error == OT_ERROR_FAILED)
     {
-        perror("otPlatUdpBind");
+        otLogCritPlat("Failed to bind UDP socket: %s", strerror(errno));
     }
 
+    return error;
+}
+
+otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifIdentifier)
+{
+    otError error = OT_ERROR_NONE;
+    int     fd    = FdFromHandle(aUdpSocket->mHandle);
+    int     one   = 1;
+    int     zero  = 0;
+
+    switch (aNetifIdentifier)
+    {
+    case OT_NETIF_UNSPECIFIED:
+    {
+#if __linux__
+        VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, nullptr, 0) == 0, error = OT_ERROR_FAILED);
+#else  // __NetBSD__ || __FreeBSD__ || __APPLE__
+        unsigned int netifIndex = 0;
+        VerifyOrExit(setsockopt(fd, IPPROTO_IP, IP_BOUND_IF, &netifIndex, sizeof(netifIndex)) == 0,
+                     error = OT_ERROR_FAILED);
+#endif // __linux__
+        break;
+    }
+    case OT_NETIF_THREAD:
+    {
+#if __linux__
+        VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &gNetifName, strlen(gNetifName)) == 0,
+                     error = OT_ERROR_FAILED);
+#else  // __NetBSD__ || __FreeBSD__ || __APPLE__
+        VerifyOrExit(setsockopt(fd, IPPROTO_IP, IP_BOUND_IF, &gNetifIndex, sizeof(gNetifIndex)) == 0,
+                     error = OT_ERROR_FAILED);
+#endif // __linux__
+        break;
+    }
+    case OT_NETIF_BACKBONE:
+    {
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if __linux__
+        VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, gBackboneNetifName, strlen(gBackboneNetifName)) == 0,
+                     error = OT_ERROR_FAILED);
+#else  // __NetBSD__ || __FreeBSD__ || __APPLE__
+        VerifyOrExit(setsockopt(fd, IPPROTO_IP, IP_BOUND_IF, &gBackboneNetifIndex, sizeof(gBackboneNetifIndex)) == 0,
+                     error = OT_ERROR_FAILED);
+#endif // __linux__
+#else
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
+        VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, (char *)&one, sizeof(one)) == 0,
+                     error = OT_ERROR_FAILED);
+
+        break;
+    }
+    }
+
+    VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &zero, sizeof(zero)) == 0, error = OT_ERROR_FAILED);
+
+exit:
     return error;
 }
 
@@ -316,11 +369,27 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
 #ifdef __APPLE__
         sin6.sin6_family = AF_UNSPEC;
 #else
+        char      netifName[IFNAMSIZ];
+        socklen_t len = sizeof(netifName);
+
+        if (getsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, &len) != 0)
+        {
+            otLogWarnPlat("Failed to read socket bound device: %s", strerror(errno));
+            len = 0;
+        }
+
         // There is a bug in linux that connecting to AF_UNSPEC does not disconnect.
         // We create new socket to disconnect.
         SuccessOrExit(error = otPlatUdpClose(aUdpSocket));
         SuccessOrExit(error = otPlatUdpSocket(aUdpSocket));
         SuccessOrExit(error = otPlatUdpBind(aUdpSocket));
+
+        if (len > 0 && netifName[0] != '\0')
+        {
+            fd = FdFromHandle(aUdpSocket->mHandle);
+            VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, len) == 0, error = OT_ERROR_FAILED);
+        }
+
         ExitNow();
 #endif
     }
@@ -346,18 +415,31 @@ exit:
 
 otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
-    int     fd;
+    otError  error = OT_ERROR_NONE;
+    int      fd;
+    uint16_t len;
+    uint8_t  payload[kMaxUdpSize];
 
     VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
     fd = FdFromHandle(aUdpSocket->mHandle);
 
-    {
-        uint8_t  payload[kMaxUdpSize];
-        uint16_t len = otMessageGetLength(aMessage);
+    len = otMessageGetLength(aMessage);
+    VerifyOrExit(len == otMessageRead(aMessage, 0, payload, len), error = OT_ERROR_INVALID_ARGS);
 
-        VerifyOrExit(len == otMessageRead(aMessage, 0, payload, len), error = OT_ERROR_INVALID_ARGS);
-        SuccessOrExit(error = transmitPacket(fd, payload, len, *aMessageInfo));
+    if (aMessageInfo->mMulticastLoop)
+    {
+        int value = 1;
+
+        VerifyOrDie(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(value)) == 0, OT_EXIT_ERROR_ERRNO);
+    }
+
+    error = transmitPacket(fd, payload, len, *aMessageInfo);
+
+    if (aMessageInfo->mMulticastLoop)
+    {
+        int value = 0;
+
+        VerifyOrDie(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(value)) == 0, OT_EXIT_ERROR_ERRNO);
     }
 
 exit:
@@ -369,9 +451,89 @@ exit:
     return error;
 }
 
+otError otPlatUdpJoinMulticastGroup(otUdpSocket *       aUdpSocket,
+                                    otNetifIdentifier   aNetifIdentifier,
+                                    const otIp6Address *aAddress)
+{
+    otError          error = OT_ERROR_NONE;
+    struct ipv6_mreq mreq;
+    int              fd;
+
+    VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
+    fd = FdFromHandle(aUdpSocket->mHandle);
+
+    memcpy(&mreq.ipv6mr_multiaddr, aAddress->mFields.m8, sizeof(mreq.ipv6mr_multiaddr));
+
+    switch (aNetifIdentifier)
+    {
+    case OT_NETIF_UNSPECIFIED:
+        break;
+    case OT_NETIF_THREAD:
+        mreq.ipv6mr_interface = gNetifIndex;
+        break;
+    case OT_NETIF_BACKBONE:
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+        mreq.ipv6mr_interface = gBackboneNetifIndex;
+#else
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
+        break;
+    }
+
+    VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq, sizeof(mreq)) == 0 || errno == EADDRINUSE,
+                 error = OT_ERROR_FAILED);
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogCritPlat("IPV6_JOIN_GROUP failed: %s", strerror(errno));
+    }
+    return error;
+}
+
+otError otPlatUdpLeaveMulticastGroup(otUdpSocket *       aUdpSocket,
+                                     otNetifIdentifier   aNetifIdentifier,
+                                     const otIp6Address *aAddress)
+{
+    otError          error = OT_ERROR_NONE;
+    struct ipv6_mreq mreq;
+    int              fd;
+
+    VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
+    fd = FdFromHandle(aUdpSocket->mHandle);
+
+    memcpy(&mreq.ipv6mr_multiaddr, aAddress->mFields.m8, sizeof(mreq.ipv6mr_multiaddr));
+
+    switch (aNetifIdentifier)
+    {
+    case OT_NETIF_UNSPECIFIED:
+        break;
+    case OT_NETIF_THREAD:
+        mreq.ipv6mr_interface = gNetifIndex;
+        break;
+    case OT_NETIF_BACKBONE:
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+        mreq.ipv6mr_interface = gBackboneNetifIndex;
+#else
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
+        break;
+    }
+
+    VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_LEAVE_GROUP, &mreq, sizeof(mreq)) == 0 || errno == EADDRINUSE,
+                 error = OT_ERROR_FAILED);
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogCritPlat("IPV6_LEAVE_GROUP failed: %s", strerror(errno));
+    }
+    return error;
+}
+
 void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd)
 {
-    VerifyOrExit(sPlatNetifIndex != 0, OT_NOOP);
+    VerifyOrExit(gNetifIndex != 0);
 
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != nullptr; socket = socket->mNext)
     {
@@ -402,19 +564,21 @@ void platformUdpInit(const char *aIfName)
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
 
-    sPlatNetifIndex = if_nametoindex(aIfName);
-
-    if (sPlatNetifIndex == 0)
+    if (aIfName != gNetifName)
     {
-        perror("if_nametoindex");
+        VerifyOrDie(strlen(aIfName) < sizeof(gNetifName) - 1, OT_EXIT_INVALID_ARGUMENTS);
+        assert(gNetifIndex == 0);
+        strcpy(gNetifName, aIfName);
+        gNetifIndex = if_nametoindex(gNetifName);
+        VerifyOrDie(gNetifIndex != 0, OT_EXIT_ERROR_ERRNO);
     }
+
+    assert(gNetifIndex != 0);
 }
 
 void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 {
     otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
-
-    VerifyOrExit(sPlatNetifIndex != 0, OT_NOOP);
 
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != nullptr; socket = socket->mNext)
     {
@@ -455,7 +619,6 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
         }
     }
 
-exit:
     return;
 }
 

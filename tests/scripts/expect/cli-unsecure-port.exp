@@ -29,7 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "unsecureport remove all\n"
 expect "Done"
@@ -63,4 +63,4 @@ expect "Done"
 send "unsecureport invalid_command\n"
 expect "Error 35: InvalidCommand"
 
-dispose
+dispose_all

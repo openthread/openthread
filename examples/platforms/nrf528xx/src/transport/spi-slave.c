@@ -78,7 +78,8 @@ static void spisEventHandler(nrfx_spis_evt_t const *aEvent, void *aContext)
         nrf_gpio_pin_set(SPIS_PIN_HOST_IRQ);
 
         // Execute application callback.
-        if (sCompleteCallback(sContext, sOutputBuf, sOutputBufLen, sInputBuf, sInputBufLen, aEvent->rx_amount))
+        if (sCompleteCallback(sContext, aEvent->tx_buffer, aEvent->tx_buffer_size, aEvent->rx_buffer,
+                              aEvent->rx_buffer_size, aEvent->rx_amount))
         {
             // Further processing is required.
             sFurtherProcessingFlag = true;
@@ -147,6 +148,10 @@ otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aComplete
 
     error = nrfx_spis_init(&sSpiSlaveInstance, &config, spisEventHandler, NULL);
     assert(error == NRFX_SUCCESS);
+    if (error != NRFX_SUCCESS)
+    {
+        result = OT_ERROR_FAILED;
+    }
 
     // Set up Host IRQ pin.
     nrf_gpio_pin_set(SPIS_PIN_HOST_IRQ);
@@ -179,7 +184,7 @@ otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
     assert(sCompleteCallback != NULL);
 
     otEXPECT_ACTION(((semaphore_status != NRF_SPIS_SEMSTAT_SPIS) && (semaphore_status != NRF_SPIS_SEMSTAT_CPUPENDING)),
-                    error = OT_ERROR_BUSY);
+                    result = OT_ERROR_BUSY);
 
     if (aOutputBuf != NULL)
     {
@@ -196,7 +201,14 @@ otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
     sRequestTransactionFlag = aRequestTransactionFlag;
 
     error = nrfx_spis_buffers_set(&sSpiSlaveInstance, sOutputBuf, sOutputBufLen, sInputBuf, sInputBufLen);
-    assert(error == NRFX_SUCCESS);
+    if (error == NRFX_ERROR_INVALID_STATE)
+    {
+        result = OT_ERROR_BUSY;
+    }
+    else
+    {
+        assert(error == NRFX_SUCCESS);
+    }
 
 exit:
     return result;

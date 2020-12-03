@@ -40,6 +40,7 @@
 
 #include <openthread/backbone_router_ftd.h>
 
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/time.hpp"
 #include "net/ip6_address.hpp"
@@ -174,7 +175,6 @@ public:
      */
     void SetCallback(otBackboneRouterMulticastListenerCallback aCallback, void *aContext);
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
      * This method gets the next Multicast Listener.
      *
@@ -187,7 +187,6 @@ public:
      */
     otError GetNext(otBackboneRouterMulticastListenerIterator &aIterator,
                     otBackboneRouterMulticastListenerInfo &    aListenerInfo);
-#endif
 
 private:
     enum
@@ -202,7 +201,7 @@ private:
     class IteratorBuilder : InstanceLocator
     {
     public:
-        IteratorBuilder(Instance &aInstance)
+        explicit IteratorBuilder(Instance &aInstance)
             : InstanceLocator(aInstance)
         {
         }

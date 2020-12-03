@@ -179,7 +179,7 @@ void WriteTestFrame1(Spinel::Buffer &aNcpBuffer, Spinel::Buffer::Priority aPrior
     message = sMessagePool->New(Message::kTypeIp6, 0);
     VerifyOrQuit(message != nullptr, "Null Message");
     SuccessOrQuit(message->SetLength(sizeof(sMottoText)), "Could not set the length of message.");
-    message->Write(0, sizeof(sMottoText), sMottoText);
+    message->Write(0, sMottoText);
 
     oldContext = sContext;
     aNcpBuffer.InFrameBegin(aPriority);
@@ -223,12 +223,12 @@ void WriteTestFrame2(Spinel::Buffer &aNcpBuffer, Spinel::Buffer::Priority aPrior
     message1 = sMessagePool->New(Message::kTypeIp6, 0);
     VerifyOrQuit(message1 != nullptr, "Null Message");
     SuccessOrQuit(message1->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
-    message1->Write(0, sizeof(sMysteryText), sMysteryText);
+    message1->Write(0, sMysteryText);
 
     message2 = sMessagePool->New(Message::kTypeIp6, 0);
     VerifyOrQuit(message2 != nullptr, "Null Message");
     SuccessOrQuit(message2->SetLength(sizeof(sHelloText)), "Could not set the length of message.");
-    message2->Write(0, sizeof(sHelloText), sHelloText);
+    message2->Write(0, sHelloText);
 
     aNcpBuffer.InFrameBegin(aPriority);
     SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(message1), "InFrameFeedMessage() failed.");
@@ -529,7 +529,7 @@ void TestBuffer(void)
         message = sMessagePool->New(Message::kTypeIp6, 0);
         VerifyOrQuit(message != nullptr, "Null Message");
         SuccessOrQuit(message->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
-        message->Write(0, sizeof(sMysteryText), sMysteryText);
+        message->Write(0, sMysteryText);
 
         SuccessOrQuit(ncpBuffer.InFrameFeedMessage(message), "InFrameFeedMessage() failed.");
 
@@ -734,7 +734,7 @@ void TestBuffer(void)
     message = sMessagePool->New(Message::kTypeIp6, 0);
     VerifyOrQuit(message != nullptr, "Null Message");
     SuccessOrQuit(message->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
-    message->Write(0, sizeof(sMysteryText), sMysteryText);
+    message->Write(0, sMysteryText);
     VerifyOrQuit(ncpBuffer.InFrameFeedMessage(message) == OT_ERROR_INVALID_STATE, "Incorrect error status");
     message->Free();
     VerifyOrQuit(ncpBuffer.InFrameEnd() == OT_ERROR_INVALID_STATE, "Incorrect error status");

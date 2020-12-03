@@ -50,8 +50,6 @@ using ot::Encoding::BigEndian::HostSwap32;
 
 enum
 {
-    kCoapUdpPort = 61631,
-
     // Thread 1.2.0 5.19.13 limits the number of IPv6 addresses should be [1, 15].
     kIPv6AddressesNumMin = 1,
     kIPv6AddressesNumMax = 15,
@@ -71,17 +69,20 @@ public:
      */
     enum Type
     {
-        kTarget              = 0,  ///< Target EID TLV
-        kExtMacAddress       = 1,  ///< Extended MAC Address TLV
-        kRloc16              = 2,  ///< RLOC16 TLV
-        kMeshLocalEid        = 3,  ///< ML-EID TLV
-        kStatus              = 4,  ///< Status TLV
-        kLastTransactionTime = 6,  ///< Time Since Last Transaction TLV
-        kRouterMask          = 7,  ///< Router Mask TLV
-        kNDOption            = 8,  ///< ND Option TLV
-        kNDData              = 9,  ///< ND Data TLV
-        kThreadNetworkData   = 10, ///< Thread Network Data TLV
-        kIPv6Addresses       = 14, ///< IPv6 Addresses TLV
+        kTarget                = 0,  ///< Target EID TLV
+        kExtMacAddress         = 1,  ///< Extended MAC Address TLV
+        kRloc16                = 2,  ///< RLOC16 TLV
+        kMeshLocalEid          = 3,  ///< ML-EID TLV
+        kStatus                = 4,  ///< Status TLV
+        kLastTransactionTime   = 6,  ///< Time Since Last Transaction TLV
+        kRouterMask            = 7,  ///< Router Mask TLV
+        kNDOption              = 8,  ///< ND Option TLV
+        kNDData                = 9,  ///< ND Data TLV
+        kThreadNetworkData     = 10, ///< Thread Network Data TLV
+        kTimeout               = 11, ///< Timeout TLV
+        kNetworkName           = 12, ///< Network Name TLV
+        kIPv6Addresses         = 14, ///< IPv6 Addresses TLV
+        kCommissionerSessionId = 15, ///< Commissioner Session ID TLV
     };
 
     /**
@@ -103,17 +104,65 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class defines Status TLV constants.
+ * This class defines Target TLV constants and types.
  *
  */
-class ThreadStatusTlv
+typedef SimpleTlvInfo<ThreadTlv::kTarget, Ip6::Address> ThreadTargetTlv;
+
+/**
+ * This class defines Extended MAC Address TLV constants and types.
+ *
+ */
+typedef SimpleTlvInfo<ThreadTlv::kExtMacAddress, Mac::ExtAddress> ThreadExtMacAddressTlv;
+
+/**
+ * This class defines RLOC16 TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<ThreadTlv::kRloc16, uint16_t> ThreadRloc16Tlv;
+
+/**
+ * This class defines ML-EID TLV constants and types.
+ *
+ */
+typedef SimpleTlvInfo<ThreadTlv::kMeshLocalEid, Ip6::InterfaceIdentifier> ThreadMeshLocalEidTlv;
+
+/**
+ * This class defines Time Since Last Transaction TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<ThreadTlv::kLastTransactionTime, uint32_t> ThreadLastTransactionTimeTlv;
+
+/**
+ * This class defines Timeout TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<ThreadTlv::kTimeout, uint32_t> ThreadTimeoutTlv;
+
+/**
+ * This class defines Network Name TLV constants and types.
+ *
+ */
+typedef TlvInfo<ThreadTlv::kNetworkName> ThreadNetworkNameTlv;
+
+/**
+ * This class defines Commissioner Session ID TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<ThreadTlv::kCommissionerSessionId, uint16_t> ThreadCommissionerSessionIdTlv;
+
+/**
+ * This class defines Status TLV constants and types.
+ *
+ */
+class ThreadStatusTlv : public UintTlvInfo<ThreadTlv::kStatus, uint8_t>
 {
 public:
     /**
      * Status values.
      *
      */
-    enum Status
+    enum Status : uint8_t
     {
         kSuccess               = 0, ///< Success.
         kNoAddressAvailable    = 1, ///< No address available.
@@ -134,6 +183,7 @@ public:
         kMlrNoResources    = 4, ///< BBR resource shortage.
         kMlrBbrNotPrimary  = 5, ///< BBR is not Primary at this moment.
         kMlrGeneralFailure = 6, ///< Reason(s) for failure are not further specified.
+        kMlrStatusMax      = 6, ///< Max MLR status.
     };
 
     /**
@@ -156,7 +206,7 @@ public:
  * This class implements Router Mask TLV generation and parsing.
  *
  */
-class ThreadRouterMaskTlv : public ThreadTlv
+class ThreadRouterMaskTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kRouterMask>
 {
 public:
     /**
@@ -221,7 +271,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ThreadNetworkDataTlv : public ThreadTlv
+class ThreadNetworkDataTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kThreadNetworkData>
 {
 public:
     /**
@@ -266,7 +316,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class IPv6AddressesTlv : public ThreadTlv
+class IPv6AddressesTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kIPv6Addresses>
 {
 public:
     /**

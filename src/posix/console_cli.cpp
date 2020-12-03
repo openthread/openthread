@@ -28,7 +28,9 @@
 
 #include "console_cli.h"
 
-#include "openthread/config.h"
+#if OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_CONSOLE
+
+#include <openthread/config.h>
 
 #include <assert.h>
 #include <stdio.h>
@@ -129,3 +131,5 @@ void otxConsoleProcess(const otSysMainloopContext *aMainloop)
 }
 
 #endif // HAVE_LIBEDIT || HAVE_LIBREADLINE
+
+#endif // OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_CONSOLE

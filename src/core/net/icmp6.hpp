@@ -42,6 +42,7 @@
 #include "common/encoding.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "net/ip6_headers.hpp"
 
 namespace ot {
@@ -63,7 +64,7 @@ using ot::Encoding::BigEndian::HostSwap16;
  * This class implements ICMPv6.
  *
  */
-class Icmp : public InstanceLocator
+class Icmp : public InstanceLocator, private NonCopyable
 {
 public:
     /*
@@ -296,15 +297,6 @@ public:
      *
      */
     otError HandleMessage(Message &aMessage, MessageInfo &aMessageInfo);
-
-    /**
-     * This method updates the ICMPv6 checksum.
-     *
-     * @param[in]  aMessage   A reference to the ICMPv6 message.
-     * @param[in]  aChecksum  The pseudo-header checksum value.
-     *
-     */
-    void UpdateChecksum(Message &aMessage, uint16_t aChecksum);
 
     /**
      * This method indicates whether or not ICMPv6 Echo processing is enabled.

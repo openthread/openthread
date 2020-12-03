@@ -30,9 +30,9 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_nodes
+setup_two_nodes
 
-set spawn_id $spawn_1
+switch_node 1
 send "dataset active\n"
 expect -re {Active Timestamp: \d+}
 expect -re {Channel: (\d+)}
@@ -140,7 +140,7 @@ expect "Done"
 
 sleep 30
 
-set spawn_id $spawn_2
+switch_node 2
 wait_for "dataset active" "Active Timestamp: 100"
 expect "Done"
 send "dataset active\n"
@@ -182,40 +182,69 @@ expect "Done"
 send "dataset init pending\n"
 expect "Error 23: NotFound"
 
-set spawn_id $spawn_1
+switch_node 1
 send "ipaddr mleid\n"
 expect "ipaddr mleid"
 expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
 set addr $expect_out(1,string)
 expect "Done"
 
-set spawn_id $spawn_2
+switch_node 2
 send "dataset mgmtgetcommand active \
 activetimestamp pendingtimestamp masterkey networkname extpanid \
 localprefix delaytimer panid channel \
-binary 000102030405060708090a0b0e0f0c333435 \
+-x 000102030405060708090a0b0e0f0c333435 \
 address $addr\n"
 expect "Done"
 send "dataset mgmtgetcommand pending \
 activetimestamp pendingtimestamp masterkey networkname extpanid \
 localprefix delaytimer panid channel \
-binary 000102030405060708090a0b0e0f0c333435 \
+-x 000102030405060708090a0b0e0f0c333435 \
 address $addr\n"
 expect "Done"
 
-set spawn_id $spawn_1
-send "dataset active binary\n"
-expect "dataset active binary"
-expect -re {([0-9a-f]+)}
-set binary $expect_out(1,string)
+switch_node 1
+send "dataset init active\n"
 expect "Done"
+send "dataset networkname Thread\\ 网络\n"
+expect "Done"
+send "dataset commit active\n"
+expect "Done"
+send "dataset active -x\n"
+expect "54687265616420e7bd91e7bb9c" ;# UTF-8 of "Thread 网络"
+expect "Done"
+send "dataset active -x\n"
+expect "dataset active -x"
+expect -re {([0-9a-f]+)[\r\n]+Done}
+set binary $expect_out(1,string)
 send "dataset set pending $binary\n"
 expect "Done"
-send "dataset pending binary\n"
+send "dataset pending -x\n"
 expect $binary
+expect "Done"
+send "dataset pending\n"
+expect "Network Name: Thread 网络"
 expect "Done"
 send "dataset set active $binary\n"
 expect "Done"
+send "dataset mgmtsetcommand active activetimestamp 200 -x 030d54687265616420e7bd91e7bb9c\n"
+expect "Done"
+send "dataset active\n"
+expect "Network Name: Thread 网络"
+expect "Done"
+send "dataset mgmtsetcommand active activetimestamp 210 -x 0301ff\n"
+expect "Done"
+send "dataset active\n"
+expect "Active Timestamp: 200"
+expect "Network Name: Thread 网络"
+expect "Done"
+send "dataset set active 03023432\n"
+expect "Done"
+send "dataset active\n"
+expect "Network Name: 42"
+expect "Done"
+send "dataset set active 0301bf\n"
+expect "Error 7: InvalidArgs"
 send "dataset help\n"
 expect "Done"
 send "dataset\n"
@@ -243,4 +272,4 @@ expect "Error 7: InvalidArgs"
 send "dataset set something_invalid 00\n"
 expect "Error 7: InvalidArgs"
 
-dispose_nodes
+dispose_all

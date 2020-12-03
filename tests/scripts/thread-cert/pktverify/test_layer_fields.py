@@ -30,7 +30,6 @@
 #
 
 import logging
-import sys
 import unittest
 
 from pktverify import layer_fields
@@ -49,7 +48,9 @@ class TestLayerFields(unittest.TestCase):
         logging.basicConfig(level=logging.DEBUG)
         pkts = PcapReader.read("test.pcap")
 
-        for p in pkts:
+        for i, p in enumerate(pkts):
+
+            logging.info("check packet #%d", i + 1)
 
             for layer_name in VALID_LAYER_NAMES:
                 if layer_name == 'lowpan':  # we already checked 6lowpan
@@ -68,11 +69,12 @@ class TestLayerFields(unittest.TestCase):
                     except Exception:
                         layer.show()
                         raise
-
-                    self._check_missing_fields(p, layer_name, getattr(p._packet, layer_name))
                 else:
                     if layer_name in REAL_LAYER_NAMES:
                         self.assertFalse(layer)
+
+            for layer in p._packet.layers:
+                self._check_missing_fields(p, layer.layer_name, layer)
 
     def _test_coap(self, p):
         coap = p.coap
@@ -306,7 +308,7 @@ class TestLayerFields(unittest.TestCase):
             if f.startswith('_ws') or f.startswith('data'):
                 continue
 
-            logging.info('_check_missing_fields: %s = %r' % (f, _layer._all_fields[f]))
+            logging.info('_check_missing_fields in layer %s: %s = %r' % (layer_name, f, _layer._all_fields[f]))
             if f in {
                     '', 'icmpv6.checksum.status', 'ip.ttl.lncb', 'wpan.aux_sec.key_source.bytes', 'wpan.src64.origin'
             }:
@@ -349,6 +351,5 @@ class TestLayerFields(unittest.TestCase):
                     raise NotImplementedError(parser)
             except Exception:
                 logging.info('checking [%s] %s=%r, %r, %r (%d)' %
-                             (layer_name, f, v, v.get_default_value(), v.raw_value, len(v.fields)),
-                             file=sys.stderr)
+                             (layer_name, f, v, v.get_default_value(), v.raw_value, len(v.fields)))
                 raise

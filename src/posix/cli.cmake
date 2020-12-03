@@ -26,10 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-target_compile_definitions(ot-config INTERFACE
-    OPENTHREAD_CONFIG_UART_CLI_RAW=1
-)
-
 add_executable(ot-cli
     main.c
     $<$<BOOL:${READLINE}>:console_cli.cpp>
@@ -66,7 +62,7 @@ target_link_libraries(ot-cli
     openthread-cli-ftd
     openthread-hdlc
     openthread-spinel-rcp
-    mbedcrypto
+    ${OT_MBEDTLS}
     ${READLINE_LINK_LIBRARIES}
 )
 

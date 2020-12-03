@@ -50,7 +50,7 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
             'version': '1.2'
         },
         SED_1: {
-            'mode': 's',
+            'mode': '-',
             'version': '1.2',
         },
     }
@@ -133,14 +133,14 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         self.assertTrue(self.nodes[SED_1].ping(leader_aloc, timeout=USER_POLL_PERIOD * 2))
 
         # 6 - Timeout Child
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[SED_1].enable_whitelist()
+        self.nodes[LEADER].enable_allowlist()
+        self.nodes[SED_1].enable_allowlist()
         self.nodes[SED_1].set_pollperiod(CHILD_TIMEOUT * 1000 * 2)
         self.simulator.go(CHILD_TIMEOUT + 1)
         self.assertEqual(self.nodes[SED_1].get_state(), 'child')
         self.nodes[SED_1].set_pollperiod(USER_POLL_PERIOD * 1000)
-        self.nodes[LEADER].disable_whitelist()
-        self.nodes[SED_1].disable_whitelist()
+        self.nodes[LEADER].disable_allowlist()
+        self.nodes[SED_1].disable_allowlist()
         self.assertFalse(self.nodes[SED_1].ping(leader_aloc, timeout=USER_POLL_PERIOD * 2))
         self.flush_all()
 
@@ -159,20 +159,20 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         self.flush_all()
 
         # 8 - Verify enhanced keep-alive works
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[SED_1].enable_whitelist()
+        self.nodes[LEADER].enable_allowlist()
+        self.nodes[SED_1].enable_allowlist()
         self.nodes[SED_1].set_pollperiod(CHILD_TIMEOUT * 1000 * 2)
         self.simulator.go(CHILD_TIMEOUT // 2)
         self.assertEqual(self.nodes[SED_1].get_state(), 'child')
-        self.nodes[LEADER].disable_whitelist()
-        self.nodes[SED_1].disable_whitelist()
+        self.nodes[LEADER].disable_allowlist()
+        self.nodes[SED_1].disable_allowlist()
         non_exist_addr = leader_aloc.replace('fc00', 'fc12')
         self.assertFalse(self.nodes[SED_1].ping(non_exist_addr))
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[SED_1].enable_whitelist()
+        self.nodes[LEADER].enable_allowlist()
+        self.nodes[SED_1].enable_allowlist()
         self.simulator.go(CHILD_TIMEOUT // 2)
-        self.nodes[LEADER].disable_whitelist()
-        self.nodes[SED_1].disable_whitelist()
+        self.nodes[LEADER].disable_allowlist()
+        self.nodes[SED_1].disable_allowlist()
         self.nodes[SED_1].set_pollperiod(USER_POLL_PERIOD * 1000)
         self.assertTrue(self.nodes[SED_1].ping(leader_aloc, timeout=USER_POLL_PERIOD * 2))
 

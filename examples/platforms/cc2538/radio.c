@@ -178,6 +178,8 @@ static bool         sIsReceiverEnabled = false;
 static uint8_t sDroppedFrameLength = 0;
 #endif
 
+static int8_t cc2538RadioGetRssiOffset(void);
+
 void enableReceiver(void)
 {
     if (!sIsReceiverEnabled)
@@ -622,14 +624,30 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return 0;
+    int8_t rssi = OT_RADIO_RSSI_INVALID;
+
+    if ((HWREG(RFCORE_XREG_RSSISTAT) & RFCORE_XREG_RSSISTAT_RSSI_VALID) != 0)
+    {
+        rssi = HWREG(RFCORE_XREG_RSSI) & 0xff;
+
+        if (rssi > cc2538RadioGetRssiOffset() - 128)
+        {
+            rssi -= cc2538RadioGetRssiOffset();
+        }
+        else
+        {
+            rssi = -128;
+        }
+    }
+
+    return rssi;
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return OT_RADIO_CAPS_NONE;
+    return OT_RADIO_CAPS_ENERGY_SCAN;
 }
 
 static bool cc2538RadioGetPromiscuous(void)
@@ -1017,6 +1035,23 @@ int8_t findSrcMatchAvailEntry(bool aShort)
     return entry;
 }
 
+void cc2538EnergyScanTimerHandler(void)
+{
+    int8_t rssi = otPlatRadioGetRssi(sInstance);
+
+    disableReceiver();
+
+    HWREG(RFCORE_XREG_FRMCTRL0) &= ~RFCORE_XREG_FRMCTRL0_ENERGY_SCAN;
+    HWREG(RFCORE_XREG_FREQCTRL) = 11 + (sChannel - 11) * 5;
+
+    if (sIsReceiverEnabled)
+    {
+        enableReceiver();
+    }
+
+    otPlatRadioEnergyScanDone(sInstance, rssi);
+}
+
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -1155,10 +1190,31 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aScanChannel);
-    OT_UNUSED_VARIABLE(aScanDuration);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otLogInfoPlat("ScanChannel=%d", aScanChannel);
+
+    if (aScanChannel != sChannel)
+    {
+        if (sIsReceiverEnabled)
+        {
+            disableReceiver();
+        }
+
+        HWREG(RFCORE_XREG_FREQCTRL) = 11 + (aScanChannel - 11) * 5;
+
+        enableReceiver();
+    }
+    else if (!sIsReceiverEnabled)
+    {
+        enableReceiver();
+    }
+
+    // Collect peak signal strength
+    HWREG(RFCORE_XREG_FRMCTRL0) |= RFCORE_XREG_FRMCTRL0_ENERGY_SCAN;
+
+    cc2538SetTimer(OT_CC2538_TIMER_ENERGY_SCAN, aScanDuration);
+
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)

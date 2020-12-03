@@ -557,7 +557,7 @@ public:
      * @retval TRUE if the Source Address is present, FALSE otherwise.
      *
      */
-    bool IsSrcPanIdPresent(void) const { return IsSrcPanIdPresent(GetFrameControlField()); };
+    bool IsSrcPanIdPresent(void) const { return IsSrcPanIdPresent(GetFrameControlField()); }
 
     /**
      * This method gets the Source PAN Identifier.
@@ -733,7 +733,9 @@ public:
     otError SetCommandId(uint8_t aCommandId);
 
     /**
-     * This method indicates whether the frame is a MAC Data Request command (data poll)
+     * This method indicates whether the frame is a MAC Data Request command (data poll).
+     *
+     * For 802.15.4-2015 and above frame, the frame should be already decrypted.
      *
      * @returns TRUE if frame is a MAC Data Request command, FALSE otherwise.
      *
@@ -1310,9 +1312,22 @@ public:
      */
     otError GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    void SetTxPhase(uint16_t aPhase) { mInfo.mTxInfo.mPhase = aPhase; }
-    void SetTxPeriod(uint16_t aPeriod) { mInfo.mTxInfo.mPeriod = aPeriod; }
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    /**
+     * Set TX delay field for the frame.
+     *
+     * @param[in]    aTxDelay    The delay time for the TX frame.
+     *
+     */
+    void SetTxDelay(uint32_t aTxDelay) { mInfo.mTxInfo.mTxDelay = aTxDelay; }
+
+    /**
+     * Set TX delay base time field for the frame.
+     *
+     * @param[in]    aTxDelayBaseTime    The delay base time for the TX frame.
+     *
+     */
+    void SetTxDelayBaseTime(uint32_t aTxDelayBaseTime) { mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime; }
 #endif
 };
 

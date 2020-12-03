@@ -38,6 +38,7 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
 #include "mac/mac.hpp"
@@ -64,7 +65,7 @@ namespace Dhcp6 {
  * This class implements DHCPv6 Client.
  *
  */
-class Client : public InstanceLocator
+class Client : public InstanceLocator, private NonCopyable
 {
 public:
     /**
@@ -109,7 +110,8 @@ private:
     void Start(void);
     void Stop(void);
 
-    static bool MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aAddress, const Ip6::Prefix &aIp6Prefix);
+    static bool MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aNetifAddress,
+                                            const Ip6::Prefix &             aIp6Prefix);
 
     void Solicit(uint16_t aRloc16);
 

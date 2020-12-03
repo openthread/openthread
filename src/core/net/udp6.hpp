@@ -37,9 +37,12 @@
 #include "openthread-core-config.h"
 
 #include <openthread/udp.h>
+#include <openthread/platform/udp.h>
 
+#include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "net/ip6_headers.hpp"
 
 namespace ot {
@@ -61,14 +64,14 @@ class Udp;
  * This class implements core UDP message handling.
  *
  */
-class Udp : public InstanceLocator
+class Udp : public InstanceLocator, private NonCopyable
 {
 public:
     /**
      * This class implements a UDP/IPv6 socket.
      *
      */
-    class SocketHandle : public otUdpSocket, public LinkedListEntry<SocketHandle>
+    class SocketHandle : public otUdpSocket, public LinkedListEntry<SocketHandle>, public Clearable<SocketHandle>
     {
         friend class Udp;
         friend class LinkedList<SocketHandle>;
@@ -167,21 +170,33 @@ public:
         /**
          * This method binds the UDP socket.
          *
-         * @param[in]  aSockAddr  A reference to the socket address.
+         * @param[in]  aSockAddr    A reference to the socket address.
          *
-         * @retval OT_ERROR_NONE    Successfully bound the socket.
-         * @retval OT_ERROR_FAILED  Failed to bind UDP Socket.
+         * @retval OT_ERROR_NONE            Successfully bound the socket.
+         * @retval OT_ERROR_INVALID_ARGS    Unable to bind to Thread network interface with the given address.
+         * @retval OT_ERROR_FAILED          Failed to bind UDP Socket.
          *
          */
         otError Bind(const SockAddr &aSockAddr);
 
         /**
+         * This method binds the UDP socket to a specified network interface.
+         *
+         * @param[in]  aNetifIdentifier     The network interface identifier.
+         *
+         * @retval OT_ERROR_NONE    Successfully bound to the network interface.
+         * @retval OT_ERROR_FAILED  Failed to bind to the network interface.
+         *
+         */
+        otError BindToNetif(otNetifIdentifier aNetifIdentifier);
+
+        /**
          * This method binds the UDP socket.
          *
-         * @param[in] aPort  A port number.
+         * @param[in]  aPort        A port number.
          *
-         * @retval OT_ERROR_NONE    Successfully bound the socket.
-         * @retval OT_ERROR_FAILED  Failed to bind UDP Socket.
+         * @retval OT_ERROR_NONE            Successfully bound the socket.
+         * @retval OT_ERROR_FAILED          Failed to bind UDP Socket.
          *
          */
         otError Bind(uint16_t aPort);
@@ -247,6 +262,32 @@ public:
          *
          */
         otError SendTo(Message &aMessage, const MessageInfo &aMessageInfo);
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+        /**
+         * This method configures the UDP socket to join a mutlicast group on a Host network interface.
+         *
+         * @param[in]  aNetifIdentifier     The network interface identifier.
+         * @param[in]  aAddress             The multicast group address.
+         *
+         * @retval  OT_ERROR_NONE   Successfully joined the multicast group.
+         * @retval  OT_ERROR_FAILED Failed to join the multicast group.
+         *
+         */
+        otError JoinNetifMulticastGroup(otNetifIdentifier aNetifIdentifier, const Address &aAddress);
+
+        /**
+         * This method configures the UDP socket to leave a multicast group on a Host network interface.
+         *
+         * @param[in]  aNetifIdentifier     The network interface identifier.
+         * @param[in]  aAddress             The multicast group address.
+         *
+         * @retval  OT_ERROR_NONE   Successfully left the multicast group.
+         * @retval  OT_ERROR_FAILED Failed to leave the multicast group.
+         *
+         */
+        otError LeaveNetifMulticastGroup(otNetifIdentifier aNetifIdentifier, const Address &aAddress);
+#endif
     };
 
     /**
@@ -413,14 +454,24 @@ public:
     /**
      * This method binds a UDP socket.
      *
-     * @param[in]  aSocket    A reference to the socket.
-     * @param[in]  aSockAddr  A reference to the socket address.
+     * @param[in]  aSocket          A reference to the socket.
+     * @param[in]  aSockAddr        A reference to the socket address.
      *
-     * @retval OT_ERROR_NONE    Successfully bound the socket.
-     * @retval OT_ERROR_FAILED  Failed to bind UDP Socket.
+     * @retval OT_ERROR_NONE            Successfully bound the socket.
+     * @retval OT_ERROR_INVALID_ARGS    Unable to bind to Thread network interface with the given address.
+     * @retval OT_ERROR_FAILED          Failed to bind UDP Socket.
      *
      */
     otError Bind(SocketHandle &aSocket, const SockAddr &aSockAddr);
+
+    /**
+     * This method binds a UDP socket to the Network interface.
+     *
+     * @param[in]  aSocket           A reference to the socket.
+     * @param[in]  aNetifIdentifier  The network interface identifier.
+     *
+     */
+    void BindToNetif(SocketHandle &aSocket, otNetifIdentifier aNetifIdentifier);
 
     /**
      * This method connects a UDP socket.
@@ -513,15 +564,6 @@ public:
     void HandlePayload(Message &aMessage, MessageInfo &aMessageInfo);
 
     /**
-     * This method updates the UDP checksum.
-     *
-     * @param[in]  aMessage   A reference to the UDP message.
-     * @param[in]  aChecksum  The pseudo-header checksum value.
-     *
-     */
-    void UpdateChecksum(Message &aMessage, uint16_t aChecksum);
-
-    /**
      * This method returns the head of UDP Sockets list.
      *
      * @returns A pointer to the head of UDP Socket linked list.
@@ -555,9 +597,17 @@ private:
     void RemoveSocket(SocketHandle &aSocket);
     bool IsMlePort(uint16_t aPort) const;
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    void                SetBackboneSocket(SocketHandle &aSocket);
+    const SocketHandle *GetBackboneSockets(void);
+#endif
+
     uint16_t                 mEphemeralPort;
     LinkedList<Receiver>     mReceivers;
     LinkedList<SocketHandle> mSockets;
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    SocketHandle *mPrevBackboneSockets;
+#endif
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     void *         mUdpForwarderContext;
     otUdpForwarder mUdpForwarder;

@@ -195,7 +195,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    Radio(Instance &aInstance)
+    explicit Radio(Instance &aInstance)
         : InstanceLocator(aInstance)
         , mCallbacks(aInstance)
     {
@@ -593,6 +593,18 @@ public:
      *
      */
     uint32_t GetPreferredChannelMask(void) { return otPlatRadioGetPreferredChannelMask(GetInstance()); }
+
+    /**
+     * This method checks if a given channel is valid as a CSL channel.
+     *
+     * @retval true   The channel is valid.
+     * @retval false  The channel is invalid.
+     *
+     */
+    static bool IsCslChannelValid(uint8_t aCslChannel)
+    {
+        return (aCslChannel == 0) || ((kChannelMin <= aCslChannel) && (aCslChannel <= kChannelMax));
+    }
 
 private:
     otInstance *GetInstance(void) { return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()); }

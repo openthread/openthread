@@ -26,44 +26,12 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-cli-ftd)
-add_library(openthread-cli-mtd)
-
 set(OT_CLI_TRANSPORT "UART" CACHE STRING "set the CLI transport")
 set(OT_CLI_TRANSPORT_VALUES
     "UART"
     "CONSOLE"
 )
 set_property(CACHE OT_CLI_TRANSPORT PROPERTY STRINGS ${OT_CLI_TRANSPORT_VALUES})
-
-set_target_properties(
-    openthread-cli-ftd openthread-cli-mtd
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
-target_compile_definitions(openthread-cli-ftd
-    PRIVATE
-        OPENTHREAD_FTD=1
-    PUBLIC
-        "OPENTHREAD_CONFIG_CLI_TRANSPORT=OT_CLI_TRANSPORT_${OT_CLI_TRANSPORT}"
-)
-
-target_compile_definitions(openthread-cli-mtd
-    PRIVATE
-        OPENTHREAD_MTD=1
-    PUBLIC
-        "OPENTHREAD_CONFIG_CLI_TRANSPORT=OT_CLI_TRANSPORT_${OT_CLI_TRANSPORT}"
-)
-
-target_compile_options(openthread-cli-ftd PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_compile_options(openthread-cli-mtd PRIVATE
-    ${OT_CFLAGS}
-)
 
 set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src
@@ -78,28 +46,15 @@ set(COMMON_SOURCES
     cli_console.cpp
     cli_dataset.cpp
     cli_joiner.cpp
+    cli_network_data.cpp
     cli_uart.cpp
     cli_udp.cpp
 )
 
-target_include_directories(openthread-cli-ftd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
-target_include_directories(openthread-cli-mtd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
+if(OT_FTD)
+    include(ftd.cmake)
+endif()
 
-target_sources(openthread-cli-ftd PRIVATE ${COMMON_SOURCES})
-target_sources(openthread-cli-mtd PRIVATE ${COMMON_SOURCES})
-
-target_link_libraries(openthread-cli-ftd
-    PUBLIC
-        openthread-ftd
-    PRIVATE
-        ${OT_MBEDTLS}
-        ot-config
-)
-
-target_link_libraries(openthread-cli-mtd
-    PUBLIC
-        openthread-mtd
-    PRIVATE
-        ${OT_MBEDTLS}
-        ot-config
-)
+if(OT_MTD)
+    include(mtd.cmake)
+endif()

@@ -29,6 +29,7 @@
 
 import unittest
 
+import mle
 import thread_cert
 
 LEADER = 1
@@ -46,7 +47,7 @@ class SSED_CslTransmission(thread_cert.TestCase):
         },
         SSED_1: {
             'version': '1.2',
-            'mode': 's',
+            'mode': '-',
         },
     }
     """All nodes are created with default configurations"""
@@ -55,7 +56,6 @@ class SSED_CslTransmission(thread_cert.TestCase):
 
         self.nodes[SSED_1].set_csl_period(CSL_PERIOD)
         self.nodes[SSED_1].set_csl_timeout(CSL_TIMEOUT)
-        self.nodes[SSED_1].set_csl_channel(CSL_CHANNEL)
 
         self.nodes[SSED_1].get_csl_info()
 
@@ -70,6 +70,27 @@ class SSED_CslTransmission(thread_cert.TestCase):
         print('SSED rloc:%s' % self.nodes[SSED_1].get_rloc())
         self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.simulator.go(5)
+
+        ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
+        msg = ssed_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        msg.assertMleMessageDoesNotContainTlv(mle.CslChannel)
+
+        self.nodes[SSED_1].set_csl_channel(CSL_CHANNEL)
+        self.simulator.go(1)
+        ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
+        msg = ssed_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        msg.assertMleMessageContainsTlv(mle.CslChannel)
+        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
+        self.simulator.go(5)
+
+        self.nodes[SSED_1].set_csl_channel(0)
+        self.simulator.go(1)
+        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
+        self.simulator.go(5)
+
+        ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
+        msg = ssed_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        msg.assertMleMessageDoesNotContainTlv(mle.CslChannel)
 
         self.nodes[SSED_1].set_csl_period(0)
         self.assertFalse(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))

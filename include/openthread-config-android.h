@@ -64,6 +64,3 @@
 
 /* OpenThread examples */
 #define OPENTHREAD_EXAMPLES none
-
-/* The settings storage path on android. */
-#define OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "/data/thread"

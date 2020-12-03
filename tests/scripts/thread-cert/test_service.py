@@ -39,13 +39,13 @@ ROUTER2 = 3
 
 SRV_0_ID = 0
 SRV_0_ENT_NUMBER = '123'
-SRV_0_SERVICE_DATA = 'foo'
-SRV_0_SERVER_DATA = 'bar'
+SRV_0_SERVICE_DATA = '123'
+SRV_0_SERVER_DATA = 'abc'
 
 SRV_1_ID = 1
 SRV_1_ENT_NUMBER = '234'
-SRV_1_SERVICE_DATA = 'baz'
-SRV_1_SERVER_DATA = 'qux'
+SRV_1_SERVICE_DATA = '456'
+SRV_1_SERVER_DATA = 'def'
 
 
 class Test_Service(thread_cert.TestCase):
@@ -54,26 +54,26 @@ class Test_Service(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'channel': 12,
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'network_name': 'OpenThread',
             'panid': 0xface,
-            'whitelist': [ROUTER1, ROUTER2]
+            'allowlist': [ROUTER1, ROUTER2]
         },
         ROUTER1: {
             'channel': 12,
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'network_name': 'OpenThread',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ROUTER2]
+            'allowlist': [LEADER, ROUTER2]
         },
         ROUTER2: {
             'channel': 12,
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'network_name': 'OpenThread',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ROUTER1]
+            'allowlist': [LEADER, ROUTER1]
         },
     }
 

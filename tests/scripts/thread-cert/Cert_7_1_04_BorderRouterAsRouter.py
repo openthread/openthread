@@ -31,6 +31,9 @@ import unittest
 
 import config
 import thread_cert
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_CHILD_ID_REQUEST, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_RESPONSE, MLE_CHILD_UPDATE_REQUEST, SVR_DATA_URI, SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, ROUTE64_TLV
+from pktverify.packet_verifier import PacketVerifier
+from pktverify.addrs import Ipv6Addr
 
 LEADER = 1
 ROUTER = 2
@@ -43,28 +46,32 @@ MTDS = [SED2, ED2]
 class Cert_7_1_4_BorderRouterAsRouter(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'name': 'LEADER',
+            'mode': 'rdn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         ROUTER: {
-            'mode': 'rsdn',
+            'name': 'ROUTER',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED2, SED2]
+            'allowlist': [LEADER, ED2, SED2]
         },
         ED2: {
+            'name': 'MED',
             'is_mtd': True,
-            'mode': 'rsn',
+            'mode': 'rn',
             'panid': 0xface,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
         SED2: {
+            'name': 'SED',
             'is_mtd': True,
-            'mode': 's',
+            'mode': '-',
             'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
-            'whitelist': [ROUTER]
+            'allowlist': [ROUTER]
         },
     }
 
@@ -85,6 +92,7 @@ class Cert_7_1_4_BorderRouterAsRouter(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED2].get_state(), 'child')
 
+        self.collect_rloc16s()
         self.nodes[ROUTER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[ROUTER].add_prefix('2001:2:0:2::/64', 'paro')
         self.nodes[ROUTER].register_netdata()
@@ -107,6 +115,56 @@ class Cert_7_1_4_BorderRouterAsRouter(thread_cert.TestCase):
         for addr in addrs:
             if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        ROUTER = pv.vars['ROUTER']
+        MED = pv.vars['MED']
+        SED = pv.vars['SED']
+        _rpkts = pkts.filter_wpan_src64(ROUTER)
+
+        # Step 3: The DUT MUST send properly formatted MLE Advertisements
+        # The DUT MUST send a CoAP Server Data Notification message
+        # with the server’s information (Prefix, Border Router) to the Leader
+        _rpkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()
+        _rpkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+        _pkt = _rpkts.filter_coap_request(SVR_DATA_URI).must_next()
+        _pkt.must_verify(lambda p: p.wpan.dst16 == pv.vars['LEADER_RLOC16'] and {
+            Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')
+        } == set(p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.border_router.flag.p == [1, 1] and p.thread_nwd.tlv.
+                         border_router.flag.s == [1, 1] and p.thread_nwd.tlv.border_router.flag.r == [1, 1] and p.
+                         thread_nwd.tlv.border_router.flag.o == [1, 1] and p.thread_nwd.tlv.stable == [1, 1, 0, 0])
+        _rpkts_med = _rpkts.copy()
+        _rpkts_sed = _rpkts.copy()
+
+        # Step 4: Automatically transmits a 2.04 Changed CoAP response to the DUT
+        # Step 5: The DUT MUST send a multicast MLE Data Response
+        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} == set(
+                p.mle.tlv.type) and {Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')} == set(
+                    p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.border_router.flag.p == [1, 1] and p.thread_nwd.tlv.
+            border_router.flag.s == [1, 1] and p.thread_nwd.tlv.border_router.flag.r == [1, 1] and p.thread_nwd.tlv.
+            border_router.flag.o == [1, 1] and p.thread_nwd.tlv.stable == [0, 1, 1, 1, 0, 0, 0])
+
+        # Step 6: The DUT MUST send a Child Update Response to MED_1
+        _rpkts_med.filter_wpan_dst64(MED).filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type))
+
+        # Step 7: The DUT MUST send an MLE Child Update Request to SED_1
+        _rpkts_sed.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
+            lambda p: {Ipv6Addr('2001:2:0:1::')} == set(p.thread_nwd.tlv.prefix
+                                                       ) and p.thread_nwd.tlv.border_router_16 == [0xFFFE])
+
+        # Step 8: SED_1 send its configured global address to the DUT
+        # Step 9: The DUT MUST send a Child Update Response to SED_1
+        _sed_pkt = pkts.range(
+            _rpkts_sed.index).filter_wpan_src64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next()
+        _rpkts_sed.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type) and set(
+                p.mle.tlv.addr_reg_iid) < set(_sed_pkt.mle.tlv.addr_reg_iid))
 
 
 if __name__ == '__main__':

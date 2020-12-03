@@ -1,6 +1,10 @@
 coverage:
   status:
-    project: off
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        only_pulls: true
     patch: off
 
 ignore:
@@ -9,4 +13,4 @@ ignore:
 
 comment:
   layout: "diff, flags, files"
-  after_n_builds: 16
+  after_n_builds: 4

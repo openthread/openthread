@@ -43,39 +43,39 @@ class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER1: {
             'name': 'LEADER_1',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [ROUTER1, ROUTER2, ROUTER3]
+            'allowlist': [ROUTER1, ROUTER2, ROUTER3]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER1]
+            'allowlist': [LEADER1]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER1]
+            'allowlist': [LEADER1]
         },
         ROUTER3: {
             'name': 'ROUTER_3',
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER1]
+            'allowlist': [LEADER1]
         },
     }
 
     def _setUpLeader1(self):
-        self.nodes[LEADER1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[LEADER1].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[LEADER1].enable_whitelist()
+        self.nodes[LEADER1].add_allowlist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[LEADER1].add_allowlist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[LEADER1].add_allowlist(self.nodes[ROUTER3].get_addr64())
+        self.nodes[LEADER1].enable_allowlist()
         self.nodes[LEADER1].set_router_selection_jitter(1)
 
     def test(self):

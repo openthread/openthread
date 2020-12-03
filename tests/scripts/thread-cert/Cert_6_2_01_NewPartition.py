@@ -28,32 +28,60 @@
 #
 
 import unittest
+import copy
 
+import config
 import thread_cert
+from pktverify.consts import MLE_PARENT_REQUEST
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER1 = 2
-ED = 3
+MTD = 3
+
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of this test case is to show that the DUT upholds connectivity, or
+# reattaches with its parent, when the Leader is removed and the Router creates a
+# new partition
+#
+# Test Topology:
+# -------------
+#  Leader
+#    |
+#  Router
+#    |
+#   DUT
+#
+# DUT Types:
+# ----------
+#  ED
+#  SED
 
 
-class Cert_6_2_1_NewPartition(thread_cert.TestCase):
+class Cert_6_2_1_NewPartition_Base(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
     TOPOLOGY = {
         LEADER: {
-            'mode': 'rsdn',
+            'name': 'LEADER',
+            'mode': 'rdn',
             'panid': 0xface,
-            'whitelist': [ROUTER1]
+            'allowlist': [ROUTER1]
         },
         ROUTER1: {
-            'mode': 'rsdn',
+            'name': 'ROUTER',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER, ED]
+            'allowlist': [LEADER, MTD]
         },
-        ED: {
+        MTD: {
+            'name': 'DUT',
             'is_mtd': True,
-            'mode': 'rsn',
             'panid': 0xface,
-            'whitelist': [ROUTER1]
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'allowlist': [ROUTER1]
         },
     }
 
@@ -66,19 +94,70 @@ class Cert_6_2_1_NewPartition(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
-        self.nodes[ED].start()
+        self.nodes[MTD].start()
         self.simulator.go(5)
-        self.assertEqual(self.nodes[ED].get_state(), 'child')
+        self.assertEqual(self.nodes[MTD].get_state(), 'child')
 
         self.nodes[LEADER].stop()
         self.simulator.go(140)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'leader')
-        self.assertEqual(self.nodes[ED].get_state(), 'child')
+        self.assertEqual(self.nodes[MTD].get_state(), 'child')
 
-        addrs = self.nodes[ED].get_addrs()
-        for addr in addrs:
-            self.assertTrue(self.nodes[ROUTER1].ping(addr))
+        self.collect_ipaddrs()
 
+        dut_addr = self.nodes[MTD].get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
+        self.assertTrue(self.nodes[ROUTER1].ping(dut_addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        ROUTER = pv.vars['ROUTER']
+        ROUTER_LLA = pv.vars['ROUTER_LLA']
+        DUT = pv.vars['DUT']
+        DUT_LLA = pv.vars['DUT_LLA']
+
+        # Step 1: Ensure topology is formed correctly
+        pkts.filter_wpan_src64(LEADER).\
+            filter_mle_advertisement('Leader').\
+            must_next()
+
+        pv.verify_attached('ROUTER', 'LEADER')
+        pv.verify_attached('DUT', 'ROUTER', 'MTD')
+
+        # Step 3: Router automatically creates new partition and begins transmitting
+        #         MLE Advertisements
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_LLARMA().\
+            filter_mle_cmd(MLE_PARENT_REQUEST).\
+            must_next()
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_mle_advertisement('Router').\
+            must_next()
+
+        # Step 5: Router verifies connectivity by sending an ICMPv6 Echo Request
+        #         to the DUT link local address
+        #         DUT responds with ICMPv6 Echo Reply
+        _pkt = pkts.filter_ping_request().\
+            filter_ipv6_src_dst(ROUTER_LLA, DUT_LLA).\
+            must_next()
+        pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+            filter_ipv6_src_dst(DUT_LLA, ROUTER_LLA).\
+            must_next()
+
+
+class Cert_6_2_1_NewPartition_ED(Cert_6_2_1_NewPartition_Base):
+    TOPOLOGY = copy.deepcopy(Cert_6_2_1_NewPartition_Base.TOPOLOGY)
+    TOPOLOGY[MTD]['mode'] = 'rn'
+
+
+class Cert_6_2_1_NewPartition_SED(Cert_6_2_1_NewPartition_Base):
+    TOPOLOGY = copy.deepcopy(Cert_6_2_1_NewPartition_Base.TOPOLOGY)
+    TOPOLOGY[MTD]['mode'] = '-'
+
+
+del (Cert_6_2_1_NewPartition_Base)
 
 if __name__ == '__main__':
     unittest.main()

@@ -47,21 +47,21 @@
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uri_paths.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 namespace MeshCoP {
 
 Leader::Leader(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mPetition(OT_URI_PATH_LEADER_PETITION, Leader::HandlePetition, this)
-    , mKeepAlive(OT_URI_PATH_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this)
+    , mPetition(UriPath::kLeaderPetition, Leader::HandlePetition, this)
+    , mKeepAlive(UriPath::kLeaderKeepAlive, Leader::HandleKeepAlive, this)
     , mTimer(aInstance, HandleTimer, this)
     , mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal)
     , mSessionId(Random::NonCrypto::GetUint16())
 {
-    Get<Coap::Coap>().AddResource(mPetition);
-    Get<Coap::Coap>().AddResource(mKeepAlive);
+    Get<Tmf::TmfAgent>().AddResource(mPetition);
+    Get<Tmf::TmfAgent>().AddResource(mKeepAlive);
 }
 
 void Leader::HandlePetition(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -80,15 +80,14 @@ void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
 
     otLogInfoMeshCoP("received petition");
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()), OT_NOOP);
-    SuccessOrExit(Tlv::FindTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
+    VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
+    SuccessOrExit(Tlv::FindTlv(aMessage, commissionerId));
 
     if (mTimer.IsRunning())
     {
         VerifyOrExit((commissionerId.GetCommissionerIdLength() == mCommissionerId.GetCommissionerIdLength()) &&
-                         (!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
-                                   commissionerId.GetCommissionerIdLength())),
-                     OT_NOOP);
+                     (!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
+                               commissionerId.GetCommissionerIdLength())));
 
         ResignCommissioner();
     }
@@ -127,12 +126,12 @@ void Leader::SendPetitionResponse(const Coap::Message &   aRequest,
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, Tlv::kState, static_cast<uint8_t>(aState)));
+    SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
     if (mTimer.IsRunning())
     {
@@ -141,24 +140,16 @@ void Leader::SendPetitionResponse(const Coap::Message &   aRequest,
 
     if (aState == StateTlv::kAccept)
     {
-        SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kCommissionerSessionId, mSessionId));
+        SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, mSessionId));
     }
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent petition response");
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogInfoMeshCoP("Failed to send petition response: %s", otThreadErrorToString(error));
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
-    }
+    FreeMessageOnError(message, error);
+    LogError("send petition response", error);
 }
 
 void Leader::HandleKeepAlive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -176,9 +167,9 @@ void Leader::HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aM
 
     otLogInfoMeshCoP("received keep alive");
 
-    SuccessOrExit(Tlv::FindUint8Tlv(aMessage, Tlv::kState, state));
+    SuccessOrExit(Tlv::Find<StateTlv>(aMessage, state));
 
-    SuccessOrExit(Tlv::FindUint16Tlv(aMessage, Tlv::kCommissionerSessionId, sessionId));
+    SuccessOrExit(Tlv::Find<CommissionerSessionIdTlv>(aMessage, sessionId));
 
     borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(
         Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
@@ -219,28 +210,20 @@ void Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, Tlv::kState, static_cast<uint8_t>(aState)));
+    SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent keep alive response");
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMeshCoP("Failed to send keep alive response: %s", otThreadErrorToString(error));
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
-    }
+    FreeMessageOnError(message, error);
+    LogError("send keep alive response", error);
 }
 
 void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
@@ -249,28 +232,20 @@ void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     Ip6::MessageInfo messageInfo;
     Coap::Message *  message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_DATASET_CHANGED));
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDatasetChanged));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset changed");
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMeshCoP("Failed to send dataset changed: %s", otThreadErrorToString(error));
-
-        if (message != nullptr)
-        {
-            message->Free();
-        }
-    }
+    FreeMessageOnError(message, error);
+    LogError("send dataset changed", error);
 }
 
 otError Leader::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)
@@ -296,7 +271,7 @@ void Leader::HandleTimer(Timer &aTimer)
 
 void Leader::HandleTimer(void)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().IsLeader(), OT_NOOP);
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
     ResignCommissioner();
 

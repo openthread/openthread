@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "net/netif.hpp"
 #include "thread/network_data.hpp"
@@ -57,7 +58,7 @@ namespace Utils {
  * This class implements the SLAAC utility for Thread protocol.
  *
  */
-class Slaac : public InstanceLocator
+class Slaac : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
 

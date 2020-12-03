@@ -71,24 +71,24 @@ wpan.Node.init_all_nodes()
 
 r1.form("route-table")
 
-r1.whitelist_node(r2)
-r2.whitelist_node(r1)
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
 r2.join_node(r1, wpan.JOIN_TYPE_ROUTER)
 
-r2.whitelist_node(r3)
-r3.whitelist_node(r2)
+r2.allowlist_node(r3)
+r3.allowlist_node(r2)
 r3.join_node(r2, wpan.JOIN_TYPE_ROUTER)
 
-r3.whitelist_node(r1)
-r1.whitelist_node(r3)
+r3.allowlist_node(r1)
+r1.allowlist_node(r3)
 
-r3.whitelist_node(r4)
-r4.whitelist_node(r3)
+r3.allowlist_node(r4)
+r4.allowlist_node(r3)
 r4.join_node(r3, wpan.JOIN_TYPE_ROUTER)
 
 # c4 is attached to r4 so that it quickly gets promoted to a router role.
-c4.whitelist_node(r4)
-r4.whitelist_node(c4)
+c4.allowlist_node(r4)
+r4.allowlist_node(c4)
 c4.join_node(r4, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 c4.set(wpan.WPAN_POLL_INTERVAL, '2000')
 

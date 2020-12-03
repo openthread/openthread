@@ -178,7 +178,7 @@ def discover(
     pattern=['*.py'],
     skip='efp',
     dry_run=False,
-    blacklist=None,
+    denylist=None,
     name_greps=None,
     manual_reset=False,
     delete_history=False,
@@ -202,11 +202,11 @@ def discover(
     if delete_history:
         os.system('del history.json')
 
-    if blacklist:
+    if denylist:
         try:
-            excludes = [line.strip('\n') for line in open(blacklist, 'r').readlines() if not line.startswith('#')]
+            excludes = [line.strip('\n') for line in open(denylist, 'r').readlines() if not line.startswith('#')]
         except BaseException:
-            logger.exception('Failed to open test case black list file')
+            logger.exception('Failed to open test case denylist file')
             raise
     else:
         excludes = []
@@ -257,7 +257,7 @@ def discover(
                     logger.info('case[%s] skipped by name greps', case_name)
                     continue
 
-                # whitelist
+                # allowlist
                 if len(names) and case_name not in names:
                     logger.info('case[%s] skipped', case_name)
                     continue
@@ -278,9 +278,9 @@ def discover(
                     else:
                         continue_from = None
 
-                # black list
+                # denylist
                 if case_name in excludes:
-                    logger.warning('case[%s] skipped for blacklist', case_name)
+                    logger.warning('case[%s] skipped for denylist', case_name)
                     continue
 
                 # max devices
@@ -342,9 +342,9 @@ def main():
                         nargs='*',
                         default=None,
                         help='test case name, omit to test all')
-    parser.add_argument('--blacklist',
+    parser.add_argument('--denylist',
                         '-b',
-                        metavar='BLACKLIST_FILE',
+                        metavar='DENYLIST_FILE',
                         type=str,
                         help='file to list test cases to skip',
                         default=None)

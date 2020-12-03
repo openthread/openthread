@@ -36,10 +36,7 @@ DIST_SUBDIRS                            = \
     cc2538                                \
     cc2650                                \
     cc2652                                \
-    efr32mg1    			              \
-    efr32mg12                             \
-    efr32mg13                             \
-    efr32mg21                             \
+    efr32                                 \
     gp712                                 \
     k32w                                  \
     kw41z                                 \
@@ -76,20 +73,8 @@ if OPENTHREAD_PLATFORM_CC2652
 SUBDIRS                                += cc2652
 endif
 
-if OPENTHREAD_PLATFORM_EFR32MG1
-SUBDIRS                                += efr32mg1
-endif
-
-if OPENTHREAD_PLATFORM_EFR32MG12
-SUBDIRS                                += efr32mg12
-endif
-
-if OPENTHREAD_PLATFORM_EFR32MG13
-SUBDIRS                                += efr32mg13
-endif
-
-if OPENTHREAD_PLATFORM_EFR32MG21
-SUBDIRS                                += efr32mg21
+if OPENTHREAD_PLATFORM_EFR32
+SUBDIRS                                += efr32
 endif
 
 if OPENTHREAD_PLATFORM_GP712

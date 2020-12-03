@@ -56,7 +56,6 @@ EXTRA_DIST                                                         = \
     Cert_5_3_04_AddressMapCache.py                                   \
     Cert_5_3_05_RoutingLinkQuality.py                                \
     Cert_5_3_06_RouterIdMask.py                                      \
-    Cert_5_3_06b_RouterIdMask.py                                     \
     Cert_5_3_07_DuplicateAddress.py                                  \
     Cert_5_3_08_ChildAddressSet.py                                   \
     Cert_5_3_09_AddressQuery.py                                      \
@@ -76,26 +75,26 @@ EXTRA_DIST                                                         = \
     Cert_5_6_06_NetworkDataExpiration.py                             \
     Cert_5_6_07_NetworkDataRequestREED.py                            \
     Cert_5_6_09_NetworkDataForwarding.py                             \
-    Cert_5_7_01_CoapDiagCommands_A.py                                \
+    Cert_5_7_01_CoapDiagCommands.py                                \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
     Cert_6_1_01_RouterAttach.py                                      \
-    Cert_6_1_02_REEDAttach_MED.py                                    \
-    Cert_6_1_02_REEDAttach_SED.py                                    \
+    Cert_6_1_02_REEDAttach.py                                    \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
-    Cert_6_1_04_REEDAttachConnectivity.py                            \
-    Cert_6_1_05_RouterAttachLinkQuality.py                           \
-    Cert_6_1_06_REEDAttachLinkQuality_ED.py                          \
-    Cert_6_1_06_REEDAttachLinkQuality_SED.py                         \
-    Cert_6_1_07_EDSynchronization.py                                 \
+    Cert_6_1_04_REEDAttachConnectivity.py                          \
+    Cert_6_1_05_REEDAttachConnectivity.py                            \
+    Cert_6_1_07_RouterAttachLinkQuality.py                           \
+    Cert_6_1_06_REEDAttachLinkQuality.py                          \
+    Cert_6_1_09_EDSynchronization.py                                 \
     Cert_6_2_01_NewPartition.py                                      \
     Cert_6_2_02_NewPartition.py                                      \
     Cert_6_3_01_OrphanReattach.py                                    \
     Cert_6_3_02_NetworkDataUpdate.py                                 \
     Cert_6_4_01_LinkLocal.py                                         \
     Cert_6_4_02_RealmLocal.py                                        \
-    Cert_6_5_01_ChildResetSynchronize.py                             \
+    Cert_6_5_01_ChildResetReattach.py                                \
     Cert_6_5_02_ChildResetReattach.py                                \
+    Cert_6_5_03_ChildResetSynchronize.py                             \
     Cert_6_6_01_KeyIncrement.py                                      \
     Cert_6_6_02_KeyIncrementRollOver.py                              \
     Cert_7_1_01_BorderRouterAsLeader.py                              \
@@ -158,6 +157,7 @@ EXTRA_DIST                                                         = \
     test_network_layer.py                                            \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
+    test_route_table.py                                              \
     test_router_reattach.py                                          \
     test_service.py                                                  \
     thread_cert.py                                                   \
@@ -182,6 +182,7 @@ EXTRA_DIST                                                         = \
     pktverify/test_info.py                                           \
     pktverify/utils.py                                               \
     pktverify/verify_result.py                                       \
+    wpan.py                                                          \
     $(NULL)
 
 check_PROGRAMS                                                     = \
@@ -204,6 +205,7 @@ check_SCRIPTS                                                      = \
     test_network_layer.py                                            \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
+    test_route_table.py                                              \
     test_router_reattach.py                                          \
     test_service.py                                                  \
     Cert_5_1_01_RouterAttach.py                                      \
@@ -230,7 +232,6 @@ check_SCRIPTS                                                      = \
     Cert_5_3_04_AddressMapCache.py                                   \
     Cert_5_3_05_RoutingLinkQuality.py                                \
     Cert_5_3_06_RouterIdMask.py                                      \
-    Cert_5_3_06b_RouterIdMask.py                                     \
     Cert_5_3_07_DuplicateAddress.py                                  \
     Cert_5_3_08_ChildAddressSet.py                                   \
     Cert_5_3_09_AddressQuery.py                                      \
@@ -250,26 +251,26 @@ check_SCRIPTS                                                      = \
     Cert_5_6_06_NetworkDataExpiration.py                             \
     Cert_5_6_07_NetworkDataRequestREED.py                            \
     Cert_5_6_09_NetworkDataForwarding.py                             \
-    Cert_5_7_01_CoapDiagCommands_A.py                                \
+    Cert_5_7_01_CoapDiagCommands.py                                \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
     Cert_6_1_01_RouterAttach.py                                      \
-    Cert_6_1_02_REEDAttach_MED.py                                    \
-    Cert_6_1_02_REEDAttach_SED.py                                    \
+    Cert_6_1_02_REEDAttach.py                                    \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
     Cert_6_1_04_REEDAttachConnectivity.py                            \
-    Cert_6_1_05_RouterAttachLinkQuality.py                           \
-    Cert_6_1_06_REEDAttachLinkQuality_ED.py                          \
-    Cert_6_1_06_REEDAttachLinkQuality_SED.py                         \
-    Cert_6_1_07_EDSynchronization.py                                 \
+    Cert_6_1_05_REEDAttachConnectivity.py                            \
+    Cert_6_1_07_RouterAttachLinkQuality.py                           \
+    Cert_6_1_06_REEDAttachLinkQuality.py                          \
+    Cert_6_1_09_EDSynchronization.py                                 \
     Cert_6_2_01_NewPartition.py                                      \
     Cert_6_2_02_NewPartition.py                                      \
     Cert_6_3_01_OrphanReattach.py                                    \
     Cert_6_3_02_NetworkDataUpdate.py                                 \
     Cert_6_4_01_LinkLocal.py                                         \
     Cert_6_4_02_RealmLocal.py                                        \
-    Cert_6_5_01_ChildResetSynchronize.py                             \
+    Cert_6_5_01_ChildResetReattach.py                                \
     Cert_6_5_02_ChildResetReattach.py                                \
+    Cert_6_5_03_ChildResetSynchronize.py                             \
     Cert_6_6_01_KeyIncrement.py                                      \
     Cert_6_6_02_KeyIncrementRollOver.py                              \
     Cert_5_2_03_LeaderReject2Hops.py                                 \

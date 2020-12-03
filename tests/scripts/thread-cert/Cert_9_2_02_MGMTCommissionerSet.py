@@ -44,16 +44,16 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
 
     TOPOLOGY = {
         COMMISSIONER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [LEADER]
+            'allowlist': [LEADER]
         },
         LEADER: {
-            'mode': 'rsdn',
+            'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
-            'whitelist': [COMMISSIONER]
+            'allowlist': [COMMISSIONER]
         },
     }
 

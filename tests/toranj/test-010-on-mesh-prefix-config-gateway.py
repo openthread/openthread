@@ -112,11 +112,11 @@ wpan.Node.init_all_nodes()
 # -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 
-r1.whitelist_node(r2)
-r2.whitelist_node(r1)
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
 
-r1.whitelist_node(sc1)
-r2.whitelist_node(sc2)
+r1.allowlist_node(sc1)
+r2.allowlist_node(sc2)
 
 r1.form('config-gtway')
 r2.join_node(r1, node_type=wpan.JOIN_TYPE_ROUTER)
@@ -249,7 +249,7 @@ wpan.verify_within(check_prefix4_removed_from_r1, WAIT_TIME)
 
 r1.add_prefix(
     prefix4,
-    48,
+    64,
     priority="-1",
     stable=True,
     on_mesh=False,
@@ -262,7 +262,7 @@ r1.add_prefix(
 verify_prefix(
     [r1],
     prefix4,
-    48,
+    64,
     priority="low",
     stable=True,
     on_mesh=False,

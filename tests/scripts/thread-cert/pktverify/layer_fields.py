@@ -26,7 +26,9 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+import datetime
 import sys
+import time
 from typing import Any, Union
 
 from pyshark.packet.fields import LayerFieldsContainer, LayerField
@@ -64,10 +66,15 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
     if ':' in dv and '::' not in dv and dv.replace(':', '') == rv:  # '88:00', '8800'
         return int(rv, 16)
 
-    if dv.endswith(' CST'):
-        # e.x. 'Jan  1, 1970 08:00:00.000000000 CST', '0000000000000000'
-        # todo: check if the time is valid
-        return int(rv)
+    # timestamp: 'Jan  1, 1970 08:00:00.000000000 CST', '0000000000000000'
+    # convert to seconds from 1970, ignore the nanosecond for now since
+    # there are integer seconds applied in the test cases
+    try:
+        time_str = datetime.datetime.strptime(dv, "%b  %d, %Y %H:%M:%S.%f000 %Z")
+        time_in_sec = time.mktime(time_str.utctimetuple())
+        return int(time_in_sec)
+    except (ValueError, TypeError):
+        pass
 
     try:
         int(rv, 16)
@@ -184,6 +191,31 @@ def _eth_addr(v: Union[LayerFieldsContainer, LayerField]) -> EthAddr:
     return EthAddr(v.get_default_value())
 
 
+def _routerid_set(v: Union[LayerFieldsContainer, LayerField]) -> set:
+    """parse the layer field as a set of router ids
+
+       Notes: the router ID mask in wireshark is a
+              hexadecimal string separated by ':'
+    """
+    assert not isinstance(v, LayerFieldsContainer) or len(v.fields) == 1
+
+    try:
+        ridmask = str(v.get_default_value())
+        assert isinstance(ridmask, str), ridmask
+        ridmask_int = int(ridmask.replace(':', ''), base=16)
+        rid_set = set()
+        count = 0
+        while ridmask_int:
+            count += 1
+            if ridmask_int & 1:
+                rid_set.add(64 - count)
+            ridmask_int = ridmask_int >> 1
+    except ValueError:
+        pass
+
+    return rid_set
+
+
 class _first(object):
     """parse the first layer field"""
 
@@ -207,6 +239,7 @@ class _list(object):
 _LAYER_FIELDS = {
     # WPAN
     'wpan.fcf': _raw_hex_rev,
+    'wpan.cmd': _auto,
     'wpan.security': _auto,
     'wpan.frame_type': _auto,
     'wpan.pending': _auto,
@@ -240,6 +273,8 @@ _LAYER_FIELDS = {
     'wpan.aux_sec.hdr': _str,
     'wpan.mic': _auto,
     'wpan.channel': _auto,
+    'wpan.header_ie.id': _list(_auto),
+    'wpan.header_ie.csl.period': _auto,
 
     # MLE
     'mle.cmd': _auto,
@@ -256,6 +291,7 @@ _LAYER_FIELDS = {
     'mle.tlv.version': _auto,
     'mle.tlv.source_addr': _auto,
     'mle.tlv.active_tstamp': _auto,
+    'mle.tlv.pending_tstamp': _auto,
     'mle.tlv.leader_data.partition_id': _auto,
     'mle.tlv.leader_data.weighting': _auto,
     'mle.tlv.leader_data.data_version': _auto,
@@ -264,7 +300,7 @@ _LAYER_FIELDS = {
     'mle.tlv.route64.nbr_out': _list(_auto),
     'mle.tlv.route64.nbr_in': _list(_auto),
     'mle.tlv.route64.id_seq': _auto,
-    'mle.tlv.route64.id_mask': _auto,
+    'mle.tlv.route64.id_mask': _routerid_set,
     'mle.tlv.route64.cost': _list(_auto),
     'mle.tlv.response': _bytes,
     'mle.tlv.mle_frm_cntr': _auto,
@@ -281,6 +317,15 @@ _LAYER_FIELDS = {
     'mle.tlv.conn.active_rtrs': _auto,
     'mle.tlv.timeout': _auto,
     'mle.tlv.addr16': _auto,
+    'mle.tlv.channel': _auto,
+    'mle.tlv.addr_reg_iid': _list(_auto),
+    'mle.tlv.link_forward_series': _list(_auto),
+    'mle.tlv.link_sub_tlv': _auto,
+    'mle.tlv.link_status_sub_tlv': _auto,
+    'mle.tlv.query_id': _auto,
+    'mle.tlv.metric_type_id_flags.type': _list(_hex),
+    'mle.tlv.metric_type_id_flags.metric': _list(_hex),
+    'mle.tlv.metric_type_id_flags.l': _list(_hex),
 
     # IP
     'ip.version': _auto,
@@ -446,6 +491,7 @@ _LAYER_FIELDS = {
     'icmpv6.nd.ra.flag.h': _auto,
     'icmpv6.echo.sequence_number': _auto,
     'icmpv6.echo.identifier': _auto,
+    'icmpv6.data.len': _auto,
 
     # COAP
     'coap.code': _auto,
@@ -478,9 +524,23 @@ _LAYER_FIELDS = {
     'coap.tlv.router_mask_assigned': _auto,
     'coap.tlv.router_mask_id_seq': _auto,
 
+    # dtls
+    'dtls.handshake.type': _list(_auto),
+    'dtls.handshake.cookie': _auto,
+    'dtls.record.content_type': _list(_auto),
+    'dtls.alert_message.desc': _auto,
+
     # thread_address
+    'thread_address.tlv.len': _list(_auto),
     'thread_address.tlv.type': _list(_auto),
     'thread_address.tlv.status': _auto,
+    'thread_address.tlv.target_eid': _ipv6_addr,
+    'thread_address.tlv.ext_mac_addr': _ext_addr,
+    'thread_address.tlv.router_mask_id_seq': _auto,
+    'thread_address.tlv.router_mask_assigned': _bytes,
+    'thread_address.tlv.rloc16': _hex,
+    'thread_address.tlv.target_eid': _ipv6_addr,
+    'thread_address.tlv.ml_eid': _ext_addr,
 
     # thread bl
     'thread_bl.tlv.type': _list(_auto),
@@ -488,22 +548,27 @@ _LAYER_FIELDS = {
     'thread_bl.tlv.target_eid': _ipv6_addr,
     'thread_bl.tlv.ml_eid': _ext_addr,
     'thread_bl.tlv.last_transaction_time': _auto,
+    'thread_bl.tlv.timeout': _auto,
     # THEAD NM
     'thread_nm.tlv.type': _list(_auto),
     'thread_nm.tlv.ml_eid': _ext_addr,
     'thread_nm.tlv.target_eid': _ipv6_addr,
+    'thread_nm.tlv.status': _auto,
+    'thread_nm.tlv.timeout': _auto,
     # thread_meshcop is not a real layer
     'thread_meshcop.len_size_mismatch': _str,
     'thread_meshcop.tlv.type': _list(_auto),
     'thread_meshcop.tlv.len8': _list(_auto),
     'thread_meshcop.tlv.net_name': _str,  # from thread_bl
+    'thread_meshcop.tlv.commissioner_id': _str,
     'thread_meshcop.tlv.commissioner_sess_id': _auto,  # from mle
     "thread_meshcop.tlv.channel_page": _auto,  # from ble
     "thread_meshcop.tlv.channel": _auto,  # from ble
     "thread_meshcop.tlv.chan_mask": _str,  # from ble
     'thread_meshcop.tlv.chan_mask_page': _auto,
     'thread_meshcop.tlv.chan_mask_len': _auto,
-    'thread_meshcop.tlv.chan_mask_mask': _auto,
+    'thread_meshcop.tlv.chan_mask_mask': _bytes,
+    'thread_meshcop.tlv.energy_list': _list(_auto),
     'thread_meshcop.tlv.pan_id': _auto,
     'thread_meshcop.tlv.xpan_id': _bytes,
     'thread_meshcop.tlv.ml_prefix': _bytes,
@@ -515,7 +580,12 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.sec_policy_r': _auto,
     'thread_meshcop.tlv.sec_policy_c': _auto,
     'thread_meshcop.tlv.sec_policy_b': _auto,
+    'thread_meshcop.tlv.state': _auto,
+    'thread_meshcop.tlv.steering_data': _list(_auto),
     'thread_meshcop.tlv.unknown': _bytes,
+    'thread_meshcop.tlv.ba_locator': _auto,
+    'thread_meshcop.tlv.active_tstamp': _auto,
+    'thread_meshcop.tlv.ipv6_addr': _list(_ipv6_addr),
 
     # THREAD NWD
     'thread_nwd.tlv.type': _list(_auto),
@@ -527,24 +597,29 @@ _LAYER_FIELDS = {
     'thread_nwd.tlv.service.s_data.seqno': _auto,
     'thread_nwd.tlv.service.s_data.rrdelay': _auto,
     'thread_nwd.tlv.service.s_data.mlrtimeout': _auto,
-    'thread_nwd.tlv.server.16': _auto,
-    'thread_nwd.tlv.border_router.16': _auto,
+    'thread_nwd.tlv.server_16': _auto,
+    'thread_nwd.tlv.border_router_16': _list(_auto),
     'thread_nwd.tlv.sub_tlvs': _list(_str),
-    'thread_nwd.tlv.prefix.length': _auto,
-    'thread_nwd.tlv.prefix.domain_id': _auto,
+    # TODO: support thread_nwd.tlv.prefix.length and thread_nwd.tlv.prefix.domain_id
+    'thread_nwd.tlv.prefix': _list(_ipv6_addr),
     'thread_nwd.tlv.border_router.pref': _auto,
-    'thread_nwd.tlv.border_router.flag.s': _auto,
-    'thread_nwd.tlv.border_router.flag.r': _auto,
-    'thread_nwd.tlv.border_router.flag.p': _auto,
-    'thread_nwd.tlv.border_router.flag.o': _auto,
-    'thread_nwd.tlv.border_router.flag.n': _auto,
-    'thread_nwd.tlv.border_router.flag.dp': _auto,
-    'thread_nwd.tlv.border_router.flag.d': _auto,
-    'thread_nwd.tlv.border_router.flag.c': _auto,
+    'thread_nwd.tlv.border_router.flag.s': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.r': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.p': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.o': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.n': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.dp': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.d': _list(_auto),
+    'thread_nwd.tlv.border_router.flag.c': _list(_auto),
     'thread_nwd.tlv.6co.flag.reserved': _auto,
     'thread_nwd.tlv.6co.flag.cid': _auto,
     'thread_nwd.tlv.6co.flag.c': _auto,
     'thread_nwd.tlv.6co.context_length': _auto,
+
+    # Thread Diagnostic
+    'thread_diagnostic.tlv.type': _list(_auto),
+    'thread_diagnostic.tlv.len8': _list(_auto),
+    'thread_diagnostic.tlv.general': _list(_str)
 }
 
 _layer_containers = set()
@@ -640,9 +715,9 @@ def check_layer_field_exists(packet, field_uri):
 
 def _get_candidate_layers(packet, layer_name):
     if layer_name == 'thread_meshcop':
-        candidate_layer_names = ['mle', 'coap', 'thread_bl']
+        candidate_layer_names = ['thread_meshcop', 'mle', 'coap', 'thread_bl', 'thread_nm']
     elif layer_name == 'thread_nwd':
-        candidate_layer_names = ['mle', 'thread_address']
+        candidate_layer_names = ['mle', 'thread_address', 'thread_diagnostic']
     elif layer_name == 'wpan':
         candidate_layer_names = ['wpan', 'mle']
     elif layer_name == 'ip':

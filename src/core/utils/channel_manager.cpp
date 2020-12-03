@@ -40,6 +40,7 @@
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "radio/radio.hpp"
+#include "utils/dataset_updater.hpp"
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
@@ -50,7 +51,6 @@ ChannelManager::ChannelManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSupportedChannelMask(0)
     , mFavoredChannelMask(0)
-    , mActiveTimestamp(0)
     , mDelay(kMinimumDelay)
     , mChannel(0)
     , mState(kStateIdle)
@@ -70,9 +70,14 @@ void ChannelManager::RequestChannelChange(uint8_t aChannel)
         ExitNow();
     }
 
-    mState           = kStateChangeRequested;
-    mChannel         = aChannel;
-    mActiveTimestamp = 0;
+    if (mState == kStateChangeInProgress)
+    {
+        VerifyOrExit(mChannel != aChannel);
+        Get<DatasetUpdater>().CancelUpdate();
+    }
+
+    mState   = kStateChangeRequested;
+    mChannel = aChannel;
 
     mTimer.Start(1 + Random::NonCrypto::GetUint32InRange(0, kRequestStartJitterInterval));
 
@@ -93,135 +98,57 @@ exit:
     return error;
 }
 
-void ChannelManager::PreparePendingDataset(void)
+void ChannelManager::StartDatasetUpdate(void)
 {
-    uint64_t             pendingTimestamp       = 0;
-    uint64_t             pendingActiveTimestamp = 0;
-    uint32_t             delayInMs              = Time::SecToMsec(static_cast<uint32_t>(mDelay));
-    otOperationalDataset dataset;
-    otError              error;
+    MeshCoP::Dataset::Info dataset;
 
-    VerifyOrExit(mState == kStateChangeRequested, OT_NOOP);
+    dataset.Clear();
+    dataset.SetChannel(mChannel);
+    dataset.SetDelay(Time::SecToMsec(mDelay));
 
-    VerifyOrExit(mChannel != Get<Mac::Mac>().GetPanChannel(), OT_NOOP);
-
-    if (Get<MeshCoP::PendingDataset>().Read(dataset) == OT_ERROR_NONE)
+    switch (Get<DatasetUpdater>().RequestUpdate(dataset, HandleDatasetUpdateDone, this, kChangeCheckWaitInterval))
     {
-        if (dataset.mComponents.mIsPendingTimestampPresent)
-        {
-            pendingTimestamp = dataset.mPendingTimestamp;
-        }
+    case OT_ERROR_NONE:
+        mState = kStateChangeInProgress;
+        // Wait for the `HandleDatasetUpdateDone()` callback.
+        break;
 
-        // We check whether the Pending Dataset is changing the
-        // channel to same one as the current request (i.e., channel
-        // should match and delay should be less than the requested
-        // delay).
-
-        if (dataset.mComponents.mIsChannelPresent && (mChannel == dataset.mChannel) &&
-            dataset.mComponents.mIsDelayPresent && (dataset.mDelay <= delayInMs) &&
-            dataset.mComponents.mIsActiveTimestampPresent)
-        {
-            // We save the active timestamp to later check and ensure it
-            // is ahead of current ActiveDataset timestamp.
-
-            pendingActiveTimestamp = dataset.mActiveTimestamp;
-        }
-    }
-
-    pendingTimestamp += 1 + Random::NonCrypto::GetUint32InRange(0, kMaxTimestampIncrease);
-
-    error = Get<MeshCoP::ActiveDataset>().Read(dataset);
-
-    if (error != OT_ERROR_NONE)
-    {
-        // If there is no valid Active Dataset but we are not disabled, set
-        // the timer to try again after the retry interval. This handles the
-        // situation where a channel change request comes right after the
-        // network is formed but before the active dataset is created.
-
-        if (!Get<Mle::Mle>().IsDisabled())
-        {
-            mTimer.Start(kPendingDatasetTxRetryInterval);
-        }
-        else
-        {
-            otLogInfoUtil("ChannelManager: Request to change to channel %d failed. Device is disabled", mChannel);
-
-            mState = kStateIdle;
-            StartAutoSelectTimer();
-        }
-
-        ExitNow();
-    }
-
-    // `pendingActiveTimestamp` will be non-zero if the Pending
-    // Dataset is valid and is performing the same channel change.
-    // We check to ensure its timestamp is indeed ahead of current
-    // Active Dataset's timestamp, and if so, we skip updating
-    // the Pending Dataset.
-
-    if (pendingActiveTimestamp != 0)
-    {
-        if (dataset.mActiveTimestamp < pendingActiveTimestamp)
-        {
-            otLogInfoUtil("ChannelManager: Pending Dataset is valid for change channel to %d", mChannel);
-            mState = kStateSentMgmtPendingDataset;
-            mTimer.Start(delayInMs + kChangeCheckWaitInterval);
-            ExitNow();
-        }
-    }
-
-    // A non-zero `mActiveTimestamp` indicates that this is not the first
-    // attempt to update the Dataset for the ongoing requested channel
-    // change. In that case, if the Timestamp in current Active Dataset is
-    // more recent compared to `mActiveTimestamp`, the channel change
-    // process is canceled. This helps address situations where two
-    // different devices may be performing channel change around the same
-    // time.
-
-    if (mActiveTimestamp != 0)
-    {
-        if (dataset.mActiveTimestamp >= mActiveTimestamp)
-        {
-            otLogInfoUtil("ChannelManager: Canceling channel change to %d since current ActiveDataset is more recent",
-                          mChannel);
-
-            ExitNow();
-        }
-    }
-    else
-    {
-        mActiveTimestamp = dataset.mActiveTimestamp + 1 + Random::NonCrypto::GetUint32InRange(0, kMaxTimestampIncrease);
-    }
-
-    dataset.mActiveTimestamp                       = mActiveTimestamp;
-    dataset.mComponents.mIsActiveTimestampPresent  = true;
-    dataset.mChannel                               = mChannel;
-    dataset.mComponents.mIsChannelPresent          = true;
-    dataset.mPendingTimestamp                      = pendingTimestamp;
-    dataset.mComponents.mIsPendingTimestampPresent = true;
-    dataset.mDelay                                 = delayInMs;
-    dataset.mComponents.mIsDelayPresent            = true;
-
-    error = Get<MeshCoP::PendingDataset>().SendSetRequest(dataset, nullptr, 0);
-
-    if (error == OT_ERROR_NONE)
-    {
-        otLogInfoUtil("ChannelManager: Sent PendingDatasetSet to change channel to %d", mChannel);
-
-        mState = kStateSentMgmtPendingDataset;
-        mTimer.Start(delayInMs + kChangeCheckWaitInterval);
-    }
-    else
-    {
-        otLogInfoUtil("ChannelManager: %s error in dataset update (channel change %d), retry in %d sec",
-                      otThreadErrorToString(error), mChannel, Time::MsecToSec(kPendingDatasetTxRetryInterval));
-
+    case OT_ERROR_BUSY:
+    case OT_ERROR_NO_BUFS:
         mTimer.Start(kPendingDatasetTxRetryInterval);
+        break;
+
+    case OT_ERROR_INVALID_STATE:
+        otLogInfoUtil("ChannelManager: Request to change to channel %d failed. Device is disabled", mChannel);
+
+        // Fall through
+
+    default:
+        mState = kStateIdle;
+        StartAutoSelectTimer();
+        break;
+    }
+}
+
+void ChannelManager::HandleDatasetUpdateDone(otError aError, void *aContext)
+{
+    static_cast<ChannelManager *>(aContext)->HandleDatasetUpdateDone(aError);
+}
+
+void ChannelManager::HandleDatasetUpdateDone(otError aError)
+{
+    if (aError == OT_ERROR_NONE)
+    {
+        otLogInfoUtil("ChannelManager: Channel changed to %d", mChannel);
+    }
+    else
+    {
+        otLogInfoUtil("ChannelManager: Canceling channel change to %d%s", mChannel,
+                      (aError == OT_ERROR_ALREADY) ? " since current ActiveDataset is more recent" : "");
     }
 
-exit:
-    return;
+    mState = kStateIdle;
+    StartAutoSelectTimer();
 }
 
 void ChannelManager::HandleTimer(Timer &aTimer)
@@ -239,30 +166,13 @@ void ChannelManager::HandleTimer(void)
         StartAutoSelectTimer();
         break;
 
-    case kStateSentMgmtPendingDataset:
-        otLogInfoUtil("ChannelManager: Timed out waiting for change to %d, trying again.", mChannel);
-        mState = kStateChangeRequested;
-
-        // fall through
-
     case kStateChangeRequested:
-        PreparePendingDataset();
+        StartDatasetUpdate();
+        break;
+
+    case kStateChangeInProgress:
         break;
     }
-}
-
-void ChannelManager::HandleNotifierEvents(Events aEvents)
-{
-    VerifyOrExit(aEvents.Contains(kEventThreadChannelChanged), OT_NOOP);
-    VerifyOrExit(mChannel == Get<Mac::Mac>().GetPanChannel(), OT_NOOP);
-
-    mState = kStateIdle;
-    StartAutoSelectTimer();
-
-    otLogInfoUtil("ChannelManager: Channel successfully changed to %d", mChannel);
-
-exit:
-    return;
 }
 
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
@@ -341,7 +251,7 @@ otError ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
 
     VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(aSkipQualityCheck || ShouldAttemptChannelChange(), OT_NOOP);
+    VerifyOrExit(aSkipQualityCheck || ShouldAttemptChannelChange());
 
     SuccessOrExit(error = FindBetterChannel(newChannel, newOccupancy));
 
@@ -383,7 +293,7 @@ exit:
 
 void ChannelManager::StartAutoSelectTimer(void)
 {
-    VerifyOrExit(mState == kStateIdle, OT_NOOP);
+    VerifyOrExit(mState == kStateIdle);
 
     if (mAutoSelectEnabled)
     {

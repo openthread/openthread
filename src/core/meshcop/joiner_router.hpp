@@ -40,6 +40,7 @@
 #include "coap/coap_message.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
@@ -51,7 +52,7 @@ namespace ot {
 
 namespace MeshCoP {
 
-class JoinerRouter : public InstanceLocator
+class JoinerRouter : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
 
@@ -88,7 +89,7 @@ private:
 
     struct JoinerEntrustMetadata
     {
-        otError AppendTo(Message &aMessage) { return aMessage.Append(this, sizeof(*this)); }
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
         void    ReadFrom(const Message &aMessage);
 
         Ip6::MessageInfo mMessageInfo; // Message info of the message to send.

@@ -146,11 +146,6 @@ class Resource : public otCoapResource, public LinkedListEntry<Resource>
     friend class CoapBase;
 
 public:
-    enum
-    {
-        kMaxReceivedUriPath = 32, ///< Maximum supported URI path on received messages.
-    };
-
     /**
      * This constructor initializes the resource.
      *
@@ -247,7 +242,7 @@ private:
 
     struct ResponseMetadata
     {
-        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
         void    ReadFrom(const Message &aMessage);
 
         TimeMilli        mDequeueTime;
@@ -437,13 +432,14 @@ public:
      *
      * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
      * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     * @param[in]  aCode           The CoAP code of the dummy CoAP response.
      *
      * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
      * @retval OT_ERROR_INVALID_ARGS  The @p aRequest header is not of confirmable type.
      *
      */
-    otError SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
+    otError SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo, Code aCode = kCodeChanged);
 
     /**
      * This method sends a header-only CoAP message to indicate no resource matched for the request.
@@ -532,7 +528,7 @@ protected:
 private:
     struct Metadata
     {
-        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
         void    ReadFrom(const Message &aMessage);
         void    UpdateIn(Message &aMessage) const;
 
@@ -544,8 +540,15 @@ private:
         TimeMilli       mNextTimerShot;            // Time when the timer should shoot for this message.
         uint32_t        mRetransmissionTimeout;    // Delay that is applied to next retransmission.
         uint8_t         mRetransmissionsRemaining; // Number of retransmissions remaining.
-        bool            mAcknowledged : 1;         // Information that request was acknowledged.
-        bool            mConfirmable : 1;          // Information that message is confirmable.
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+        uint8_t mHopLimit; // The hop limit.
+#endif
+        bool mAcknowledged : 1;  // Information that request was acknowledged.
+        bool mConfirmable : 1;   // Information that message is confirmable.
+        bool mMulticastLoop : 1; // Information that multicast loop is enabled.
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+        bool mIsHostInterface : 1; // TRUE if packets sent/received via host interface, FALSE otherwise.
+#endif
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         bool mObserve : 1; // Information that this request involves Observations.
 #endif
@@ -568,7 +571,7 @@ private:
     void ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void    SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError SendEmptyMessage(Message::Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
+    otError SendEmptyMessage(Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
 
     otError Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -606,13 +609,14 @@ public:
     /**
      * This method starts the CoAP service.
      *
-     * @param[in]  aPort  The local UDP port to bind to.
+     * @param[in]  aPort             The local UDP port to bind to.
+     * @param[in]  aNetifIdentifier  The network interface identifier to bind.
      *
      * @retval OT_ERROR_NONE    Successfully started the CoAP service.
-     * @retval OT_ERROR_ALREADY Already started.
+     * @retval OT_ERROR_FAILED  Failed to start CoAP agent.
      *
      */
-    otError Start(uint16_t aPort);
+    otError Start(uint16_t aPort, otNetifIdentifier aNetifIdentifier = OT_NETIF_UNSPECIFIED);
 
     /**
      * This method stops the CoAP service.
@@ -623,12 +627,13 @@ public:
      */
     otError Stop(void);
 
+protected:
+    Ip6::Udp::Socket mSocket;
+
 private:
     static otError Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void    HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     otError        Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    Ip6::Udp::Socket mSocket;
 };
 
 } // namespace Coap

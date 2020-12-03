@@ -60,6 +60,7 @@
 #include "config/child_supervision.h"
 #include "config/coap.h"
 #include "config/commissioner.h"
+#include "config/dataset_updater.h"
 #include "config/dhcp6_client.h"
 #include "config/dhcp6_server.h"
 #include "config/diag.h"

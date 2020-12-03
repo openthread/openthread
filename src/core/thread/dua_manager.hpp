@@ -42,6 +42,7 @@
 #include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
 #include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/tasklet.hpp"
 #include "common/time.hpp"
@@ -71,7 +72,7 @@ namespace ot {
  * This class implements managing DUA.
  *
  */
-class DuaManager : public InstanceLocator
+class DuaManager : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
     friend class ot::TimeTicker;
@@ -153,6 +154,12 @@ public:
      *
      */
     void Restore(void);
+
+    /**
+     * This method notifies duplicated Domain Unicast Address.
+     *
+     */
+    void NotifyDuplicateDomainUnicastAddress(void);
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
@@ -162,7 +169,7 @@ public:
 private:
     enum
     {
-        kNewRouterRegistrationDelay = 5, ///< Delay (in seconds) for waiting link establishment for a new Router.
+        kNewRouterRegistrationDelay = 3, ///< Delay (in seconds) for waiting link establishment for a new Router.
     };
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
@@ -212,8 +219,8 @@ private:
 
     Tasklet        mRegistrationTask;
     Coap::Resource mDuaNotification;
-
-    bool mIsDuaPending : 1;
+    Ip6::Address   mRegisteringDua;
+    bool           mIsDuaPending : 1;
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     enum DuaState

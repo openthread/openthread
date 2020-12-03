@@ -49,6 +49,7 @@ openthread_headers                      = \
     openthread/crypto.h                   \
     openthread/dataset.h                  \
     openthread/dataset_ftd.h              \
+    openthread/dataset_updater.h          \
     openthread/diag.h                     \
     openthread/dns.h                      \
     openthread/entropy.h                  \
@@ -60,6 +61,7 @@ openthread_headers                      = \
     openthread/jam_detection.h            \
     openthread/joiner.h                   \
     openthread/link.h                     \
+    openthread/link_metrics.h             \
     openthread/link_raw.h                 \
     openthread/logging.h                  \
     openthread/message.h                  \
@@ -83,7 +85,6 @@ dist_openthread_HEADERS = $(openthread_headers)
 ot_platform_headers                     = \
     openthread/platform/alarm-micro.h     \
     openthread/platform/alarm-milli.h     \
-    openthread/platform/ble.h             \
     openthread/platform/diag.h            \
     openthread/platform/flash.h           \
     openthread/platform/entropy.h         \

@@ -29,11 +29,11 @@
 
 source "tests/scripts/expect/_common.exp"
 
-set spawn_id [spawn_node 1]
+spawn_node 1
 
 send "rcp version\n"
 expect "Done"
 send "rcp something_invalid\n"
 expect "Error 7: InvalidArgs"
 
-dispose
+dispose_all
