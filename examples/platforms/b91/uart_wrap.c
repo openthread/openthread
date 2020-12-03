@@ -52,8 +52,8 @@ enum
     kReceiveBufferSize = 128,
 };
 
-static const unsigned char *sTransmitBuffer = NULL;
-static unsigned short       sTransmitLength = 0;
+static const uint8_t *sTransmitBuffer = NULL;
+static uint16_t       sTransmitLength = 0;
 
 typedef struct RecvBuffer
 {
@@ -73,13 +73,6 @@ static void init_recv_buffer()
     sReceive.mTail = 0;
 }
 
-/**
- * Enable the UART.
- *
- * @retval OT_ERROR_NONE    Successfully enabled the UART.
- * @retval OT_ERROR_FAILED  Failed to enabled the UART.
- *
- */
 otError otPlatUartEnable(void)
 {
     unsigned short div;
@@ -102,28 +95,11 @@ otError otPlatUartEnable(void)
     return OT_ERROR_NONE;
 }
 
-/**
- * Disable the UART.
- *
- * @retval OT_ERROR_NONE    Successfully disabled the UART.
- * @retval OT_ERROR_FAILED  Failed to disable the UART.
- *
- */
 otError otPlatUartDisable(void)
 {
     return OT_ERROR_NONE;
 }
 
-/**
- * Send bytes over the UART.
- *
- * @param[in] aBuf        A pointer to the data buffer.
- * @param[in] aBufLength  Number of bytes to transmit.
- *
- * @retval OT_ERROR_NONE    Successfully started transmission.
- * @retval OT_ERROR_FAILED  Failed to start the transmission.
- *
- */
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     otError error = OT_ERROR_NONE;
@@ -161,17 +137,7 @@ void processReceive(void)
     }
 }
 
-/**
- * Flush the outgoing transmit buffer and wait for the data to be sent.
- * This is called when the CLI UART interface has a full buffer but still
- * wishes to send more data.
- *
- * @retval OT_ERROR_NONE                Flush succeeded, we can proceed to write more
- *                                      data to the buffer.
- *
- * @retval OT_ERROR_NOT_IMPLEMENTED     Driver does not support synchronous flush.
- * @retval OT_ERROR_INVALID_STATE       Driver has no data to flush.
- */
+
 otError otPlatUartFlush(void)
 {
     otEXPECT(sTransmitBuffer != NULL);
@@ -215,6 +181,4 @@ void irq_uart0_handler(void)
             sReceive.mTail                   = (sReceive.mTail + 1) % kReceiveBufferSize;
         }
     }
-
-    // plic_interrupt_complete(IRQ19_UART0);
 }

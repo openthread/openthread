@@ -30,33 +30,33 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                             = libopenthread-b91.a
 
-libopenthread_b91_a_CPPFLAGS           = \
+libopenthread_b91_a_CPPFLAGS           =    \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/examples/platforms      \
     -I$(top_srcdir)/src/core                \
     $(NULL)
 
-PLATFORM_SOURCES                          = \
+PLATFORM_SOURCES                       =    \
     alarm.c                                 \
     entropy.c                               \
-    flash_wrap.c                                 \
+    flash_wrap.c                            \
     misc.c                                  \
     radio.c                                 \
     system.c                                \
     logging.c                               \
-    uart_wrap.c                                  \
+    uart_wrap.c                             \
     $(NULL)
 
-libopenthread_b91_a_SOURCES            = \
+libopenthread_b91_a_SOURCES            =    \
     $(PLATFORM_SOURCES)                     \
     $(NULL)
 
-PRETTY_FILES                             = \
-    $(PLATFORM_SOURCES)                    \
+PRETTY_FILES                           =    \
+    $(PLATFORM_SOURCES)                     \
     $(NULL)
 
-Dash                                      = -
-libopenthread_b91_a_LIBADD             = \
+Dash                                   = -
+libopenthread_b91_a_LIBADD             =    \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

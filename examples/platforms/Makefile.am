@@ -31,11 +31,12 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
+    b91                                   \
     cc1352                                \
     cc2538                                \
     cc2650                                \
     cc2652                                \
-    efr32mg1    			  \
+    efr32mg1    			              \
     efr32mg12                             \
     efr32mg13                             \
     efr32mg21                             \
@@ -43,7 +44,6 @@ DIST_SUBDIRS                            = \
     k32w                                  \
     kw41z                                 \
     nrf528xx                              \
-    b91                                 \
     simulation                            \
     qpg6095                               \
     samr21                                \
@@ -55,6 +55,10 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     utils                                 \
     $(NULL)
+
+if OPENTHREAD_PLATFORM_B91
+SUBDIRS                                += b91
+endif
 
 if OPENTHREAD_PLATFORM_CC1352
 SUBDIRS                                += cc1352
@@ -102,10 +106,6 @@ endif
 
 if OPENTHREAD_PLATFORM_NRF528XX
 SUBDIRS                                += nrf528xx
-endif
-
-if OPENTHREAD_PLATFORM_B91
-SUBDIRS                                += b91
 endif
 
 if OPENTHREAD_PLATFORM_SIMULATION

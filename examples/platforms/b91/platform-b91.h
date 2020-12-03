@@ -45,18 +45,24 @@
 // Global OpenThread instance structure
 extern otInstance *sInstance;
 
-void cpu_wakeup_init(void);
-
 /**
  * This function performs alarm driver processing.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void B91AlarmProcess(otInstance *aInstance);
+void b91AlarmProcess(otInstance *aInstance);
 
+/**
+ * This function handles the UART0 interrupt of B91.
+ *
+ */
 void irq_uart0_handler(void);
 
+/**
+ * This function handles the RX and TX RF interrupt of B91.
+ *
+ */
 void B91RxTxIntHandler();
 
 /**
@@ -73,7 +79,11 @@ void b91RadioInit(void);
  */
 void b91RadioProcess(otInstance *aInstance);
 
-void B91RandomInit(void);
+/**
+ * This function performs initialization of the Random number module.
+ *
+ */
+void b91RandomInit(void);
 
 /**
  * This function performs UART driver processing.

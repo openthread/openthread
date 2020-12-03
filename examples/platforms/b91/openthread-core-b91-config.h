@@ -42,24 +42,6 @@
  */
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "B91"
 
-/* Define system clock */
-#define CLOCK_SYS_CLOCK_HZ 48000000 // define system clock
-
-/* List tick per second/millisecond/microsecond */
-enum
-{
-    CLOCK_SYS_CLOCK_1S  = CLOCK_SYS_CLOCK_HZ,             ///< system tick per 1 second
-    CLOCK_SYS_CLOCK_1MS = (CLOCK_SYS_CLOCK_1S / 1000),    ///< system tick per 1 millisecond
-    CLOCK_SYS_CLOCK_1US = (CLOCK_SYS_CLOCK_1S / 1000000), ///< system tick per 1 microsecond
-};
-
-#define PLL_192M PLL_CLK_192M
-#define PLL_DIV_TO_CCLK PAD_PLL_DIV
-#define CCLK_24M PLL_DIV8_TO_CCLK
-#define HCLK_24M CCLK_DIV1_TO_HCLK
-#define PCLK_24M HCLK_DIV1_TO_PCLK
-#define MSPI_CLK_24M CCLK_TO_MSPI_CLK
-
 #define SETTINGS_CONFIG_IEEE_EUI64_ADDRESS 0x76000
 
 #define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1

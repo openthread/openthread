@@ -63,13 +63,15 @@ typedef enum
     PHY_CCA_BUSY    = 0x00,
 } phy_ccaSts_t;
 
-unsigned char tx_buffer[256] __attribute__((aligned(4)));
+static uint8_t sTxBuffer[256] __attribute__((aligned(4)));
 
-unsigned int r_ptr = 0;
-unsigned int w_ptr = 0;
+static uint32_t sReadPointer = 0;
+static uint32_t sWritePointer = 0;
+static uint32_t sInCriticalRegion = 0;
 
-unsigned char current_channel;
+static uint8_t sCurrentChannel;
 #define LOGICCHANNEL_TO_PHYSICAL(p) (((p)-10) * 5)
+#define B91_RECEIVE_SENSITIVITY (-99)
 
 static otExtAddress   sExtAddress;
 static otShortAddress sShortAddress;
@@ -85,59 +87,40 @@ static uint8_t      sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static uint8_t      sAckPsdu[8];
 static otRadioState sState           = OT_RADIO_STATE_DISABLED;
 static bool         sSrcMatchEnabled = false;
-volatile int        tx_busy          = 0;
+static volatile bool sTxBusy = false;
 
 #define RX_FRAME_SLOT_NUM 6
 #define MEM_ALIGNMENT 4
 #define MEM_ALIGN_SIZE(size) (((size) + MEM_ALIGNMENT - 1) & ~(MEM_ALIGNMENT - 1))
-unsigned char rx_buffer[160] __attribute__((aligned(4)));
-unsigned char rx_frame_slots[RX_FRAME_SLOT_NUM][MEM_ALIGN_SIZE(sizeof(otRadioFrame)) + 160] __attribute__((aligned(4)));
+#define RX_BUFFER_SIZE 160
+unsigned char rx_buffer[RX_BUFFER_SIZE] __attribute__((aligned(4)));
+unsigned char rx_frame_slots[RX_FRAME_SLOT_NUM][MEM_ALIGN_SIZE(sizeof(otRadioFrame)) + RX_BUFFER_SIZE] __attribute__((aligned(4)));
 typedef int   semaphore;
 semaphore     empty = RX_FRAME_SLOT_NUM;
 semaphore     full  = 0;
-unsigned char rx_frame[MEM_ALIGN_SIZE(sizeof(otRadioFrame)) + 160] __attribute__((aligned(4)));
+unsigned char rx_frame[MEM_ALIGN_SIZE(sizeof(otRadioFrame)) + RX_BUFFER_SIZE] __attribute__((aligned(4)));
 
-/**
- * Get the radio capabilities.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- *
- * @returns The radio capability bit vector (see `OT_RADIO_CAP_*` definitions).
- *
- */
+
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return OT_RADIO_CAPS_NONE;
 }
 
-/**
- * Get the radio receive sensitivity value.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- *
- * @returns The radio receive sensitivity value in dBm.
- *
- */
+
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return -99;
+    return B91_RECEIVE_SENSITIVITY;
 }
 
-/**
- * Get the factory-assigned IEEE EUI-64 for this interface.
- *
- * @param[in]  aInstance   The OpenThread instance structure.
- * @param[out] aIeeeEui64  A pointer to the factory-assigned IEEE EUI-64.
- *
- */
+
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     uint8_t *    eui64;
-    unsigned int i;
+    uint32_t i;
 
     eui64 = (uint8_t *)(SETTINGS_CONFIG_IEEE_EUI64_ADDRESS);
 
@@ -147,13 +130,7 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     }
 }
 
-/**
- * Set the PAN ID for address filtering.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- * @param[in] aPanId     The IEEE 802.15.4 PAN ID.
- *
- */
+
 void otPlatRadioSetPanId(otInstance *aInstance, otPanId aPanId)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -170,44 +147,21 @@ static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrig
     }
 }
 
-/**
- * Set the Extended Address for address filtering.
- *
- * @param[in] aInstance    The OpenThread instance structure.
- * @param[in] aExtAddress  A pointer to the IEEE 802.15.4 Extended Address stored in little-endian byte order.
- *
- *
- */
+
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
     ReverseExtAddress(&sExtAddress, aExtAddress);
 }
 
-/**
- * Set the Short Address for address filtering.
- *
- * @param[in] aInstance      The OpenThread instance structure.
- * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
- *
- */
+
 void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
     sShortAddress = aShortAddress;
 }
 
-/**
- * Get the radio's transmit power in dBm.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- * @param[out] aPower    The transmit power in dBm.
- *
- * @retval OT_ERROR_NONE             Successfully retrieved the transmit power.
- * @retval OT_ERROR_INVALID_ARGS     @p aPower was NULL.
- * @retval OT_ERROR_NOT_IMPLEMENTED  Transmit power configuration via dBm is not implemented.
- *
- */
+
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -221,16 +175,7 @@ exit:
     return error;
 }
 
-/**
- * Set the radio's transmit power in dBm.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- * @param[in] aPower     The transmit power in dBm.
- *
- * @retval OT_ERROR_NONE             Successfully set the transmit power.
- * @retval OT_ERROR_NOT_IMPLEMENTED  Transmit power configuration via dBm is not implemented.
- *
- */
+
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -242,17 +187,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
     return OT_ERROR_NONE;
 }
 
-/**
- * Get the radio's CCA ED threshold in dBm.
- *
- * @param[in] aInstance    The OpenThread instance structure.
- * @param[out] aThreshold  The CCA ED threshold in dBm.
- *
- * @retval OT_ERROR_NONE             Successfully retrieved the CCA ED threshold.
- * @retval OT_ERROR_INVALID_ARGS     @p aThreshold was NULL.
- * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
- *
- */
+
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -261,17 +196,7 @@ otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aT
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-/**
- * Set the radio's CCA ED threshold in dBm.
- *
- * @param[in] aInstance   The OpenThread instance structure.
- * @param[in] aThreshold  The CCA ED threshold in dBm.
- *
- * @retval OT_ERROR_NONE             Successfully set the transmit power.
- * @retval OT_ERROR_INVALID_ARGS     Given threshold is out of range.
- * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
- *
- */
+
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -280,28 +205,14 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-/**
- * Get the status of promiscuous mode.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- *
- * @retval TRUE   Promiscuous mode is enabled.
- * @retval FALSE  Promiscuous mode is disabled.
- *
- */
+
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return false;
 }
 
-/**
- * Enable or disable promiscuous mode.
- *
- * @param[in]  aInstance The OpenThread instance structure.
- * @param[in]  aEnable   TRUE to enable or FALSE to disable promiscuous mode.
- *
- */
+
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -356,7 +267,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
 void rf_set_channel(uint8_t channel)
 {
-    current_channel = channel;
+    sCurrentChannel = channel;
     rf_set_chn(LOGICCHANNEL_TO_PHYSICAL(channel));
 }
 
@@ -379,16 +290,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     return error;
 }
 
-/**
- * Get the radio transmit frame buffer.
- *
- * OpenThread forms the IEEE 802.15.4 frame in this buffer then calls `otPlatRadioTransmit()` to request transmission.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- *
- * @returns A pointer to the transmit frame buffer.
- *
- */
+
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -396,35 +298,15 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
     return &sTransmitFrame;
 }
 
-/**
- * Get the most recent RSSI measurement.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- *
- * @returns The RSSI in dBm when it is valid.  127 when RSSI is invalid.
- *
- */
+
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    signed char rssi_cur = -110;
-    rssi_cur             = rf_get_rssi();
-    return rssi_cur;
+    
+    return rf_get_rssi();
 }
 
-/**
- * Begin the energy scan sequence on the radio.
- *
- * This function is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
- *
- * @param[in] aInstance      The OpenThread instance structure.
- * @param[in] aScanChannel   The channel to perform the energy scan on.
- * @param[in] aScanDuration  The duration, in milliseconds, for the channel to be scanned.
- *
- * @retval OT_ERROR_NONE             Successfully started scanning the channel.
- * @retval OT_ERROR_NOT_IMPLEMENTED  The radio doesn't support energy scanning.
- *
- */
+
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -441,18 +323,16 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
     sSrcMatchEnabled = aEnable;
 }
 
-static uint32_t m_in_critical_region = 0;
-
 static inline void util_disable_rf_irq(void)
 {
     rf_clr_irq_mask(FLD_RF_IRQ_RX);
-    m_in_critical_region++;
+    sInCriticalRegion++;
 }
 
 static inline void util_enable_rf_irq(void)
 {
-    m_in_critical_region--;
-    if (m_in_critical_region == 0)
+    sInCriticalRegion--;
+    if (sInCriticalRegion == 0)
     {
         rf_set_irq_mask(FLD_RF_IRQ_RX);
     }
@@ -465,16 +345,16 @@ static void setupTransmit(otRadioFrame *aFrame)
     unsigned int  rf_tx_dma_len;
 
     rf_data_len   = aFrame->mLength - 1;
-    tx_buffer[4]  = aFrame->mLength;
+    sTxBuffer[4]  = aFrame->mLength;
     rf_tx_dma_len = rf_tx_packet_dma_len(rf_data_len);
-    tx_buffer[3]  = (rf_tx_dma_len >> 24) & 0xff;
-    tx_buffer[2]  = (rf_tx_dma_len >> 16) & 0xff;
-    tx_buffer[1]  = (rf_tx_dma_len >> 8) & 0xff;
-    tx_buffer[0]  = rf_tx_dma_len & 0xff;
+    sTxBuffer[3]  = (rf_tx_dma_len >> 24) & 0xff;
+    sTxBuffer[2]  = (rf_tx_dma_len >> 16) & 0xff;
+    sTxBuffer[1]  = (rf_tx_dma_len >> 8) & 0xff;
+    sTxBuffer[0]  = rf_tx_dma_len & 0xff;
 
     for (i = 0; i < aFrame->mLength - 2; i++)
     {
-        tx_buffer[5 + i] = aFrame->mPsdu[i];
+        sTxBuffer[5 + i] = aFrame->mPsdu[i];
     }
 
     rf_set_channel(aFrame->mChannel);
@@ -497,8 +377,7 @@ phy_ccaSts_t rf_performCCA(void)
 
     if (rssi_peak > -60)
     {
-        // return PHY_CCA_BUSY;
-        return PHY_CCA_IDLE;
+        return PHY_CCA_BUSY;
     }
     else
     {
@@ -528,9 +407,9 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         otEXPECT_ACTION((cca_result == PHY_CCA_IDLE), sTransmitError = OT_ERROR_CHANNEL_ACCESS_FAILURE);
 
         // begin transmit
-        tx_busy = 1;
+        sTxBusy = true;
         rf_set_txmode();
-        rf_tx_pkt(tx_buffer);
+        rf_tx_pkt(sTxBuffer);
         otPlatRadioTxStarted(aInstance, aFrame);
     }
 
@@ -640,28 +519,20 @@ void B91RxTxIntHandler()
         dma_chn_dis(DMA1);
         rf_clr_irq_status(FLD_RF_IRQ_RX);
 
-        if (rf_zigbee_packet_crc_ok(rx_buffer) /*&& rf_zigbee_packet_length_ok(rx_buffer)*/)
+        if (rf_zigbee_packet_crc_ok(rx_buffer))
         {
             uint8_t       length;
             otRadioFrame *rx_frame_ptr;
             int           i;
-
-            // radioProcessFrame();
+            
             otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
             length = rx_buffer[4];
             otEXPECT(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH);
+            otEXPECT(empty > 0);
 
-            if (empty > 0)
-            {
-            }
-            else
-            {
-                goto exit;
-            }
-
-            rx_frame_ptr           = (otRadioFrame *)rx_frame_slots[w_ptr];
+            rx_frame_ptr           = (otRadioFrame *)rx_frame_slots[sWritePointer];
             rx_frame_ptr->mLength  = length;
-            rx_frame_ptr->mChannel = current_channel;
+            rx_frame_ptr->mChannel = sCurrentChannel;
             for (i = 0; i < length - 2; i++)
             {
                 rx_frame_ptr->mPsdu[i] = rx_buffer[5 + i];
@@ -669,16 +540,12 @@ void B91RxTxIntHandler()
             if (length == IEEE802154_ACK_LENGTH)
             {
                 empty--;
-                w_ptr = (w_ptr + 1) % RX_FRAME_SLOT_NUM;
+                sWritePointer = (sWritePointer + 1) % RX_FRAME_SLOT_NUM;
                 full++;
             }
             else
             {
-                if (!otMacFrameDoesAddrMatch(rx_frame_ptr, sPanid, sShortAddress, &sExtAddress))
-                {
-                    // drop the frame
-                    goto exit;
-                }
+                otEXPECT(otMacFrameDoesAddrMatch(rx_frame_ptr, sPanid, sShortAddress, &sExtAddress));
                 rx_frame_ptr->mInfo.mRxInfo.mRssi = ((signed char)(rx_buffer[rx_buffer[4] + 11])) - 110;
                 rx_frame_ptr->mInfo.mRxInfo.mLqi  = rf_rssi_to_lqi(rx_frame_ptr->mInfo.mRxInfo.mRssi);
                 rx_frame_ptr->mInfo.mRxInfo.mAckedWithFramePending = false;
@@ -703,13 +570,12 @@ void B91RxTxIntHandler()
                     // Transmit
                     setupTransmit(&sAckFrame);
                     rf_set_txmode();
-                    rf_tx_pkt(tx_buffer);
-                    // rf_start_stx(tx_buffer,0);
+                    rf_tx_pkt(sTxBuffer);
                 }
 
                 // push the frame
                 empty--;
-                w_ptr = (w_ptr + 1) % RX_FRAME_SLOT_NUM;
+                sWritePointer = (sWritePointer + 1) % RX_FRAME_SLOT_NUM;
                 full++;
             }
         }
@@ -721,15 +587,13 @@ void B91RxTxIntHandler()
     {
         rf_clr_irq_status(FLD_RF_IRQ_TX);
 
-        if ((tx_busy == 1) && (sState == OT_RADIO_STATE_TRANSMIT))
+        if ((sTxBusy == true) && (sState == OT_RADIO_STATE_TRANSMIT))
         {
-            tx_busy = 0;
+            sTxBusy = false;
         }
         // set to rx mode
         rf_set_rxmode();
     }
-
-    // plic_interrupt_complete(IRQ15_ZB_RT);
 }
 
 void b91RadioProcess(otInstance *aInstance)
@@ -743,7 +607,7 @@ void b91RadioProcess(otInstance *aInstance)
     if (full > 0)
     {
         full--;
-        rx_frame_ptr  = (otRadioFrame *)rx_frame_slots[r_ptr];
+        rx_frame_ptr  = (otRadioFrame *)rx_frame_slots[sReadPointer];
         ptr->mChannel = rx_frame_ptr->mChannel;
         ptr->mLength  = rx_frame_ptr->mLength;
         for (i = 0; i < ptr->mLength - 2; i++)
@@ -754,7 +618,7 @@ void b91RadioProcess(otInstance *aInstance)
         ptr->mInfo.mRxInfo.mRssi                  = rx_frame_ptr->mInfo.mRxInfo.mRssi;
         ptr->mInfo.mRxInfo.mLqi                   = rx_frame_ptr->mInfo.mRxInfo.mLqi;
         ptr->mInfo.mRxInfo.mAckedWithFramePending = rx_frame_ptr->mInfo.mRxInfo.mAckedWithFramePending;
-        r_ptr                                     = (r_ptr + 1) % RX_FRAME_SLOT_NUM;
+        sReadPointer                                     = (sReadPointer + 1) % RX_FRAME_SLOT_NUM;
         empty++;
         util_enable_rf_irq();
     }
@@ -775,7 +639,7 @@ void b91RadioProcess(otInstance *aInstance)
     if (sState == OT_RADIO_STATE_TRANSMIT)
     {
         if (sTransmitError != OT_ERROR_NONE ||
-            (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) && (tx_busy == 0)))
+            (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) && (sTxBusy == false)))
         {
             sState = OT_RADIO_STATE_RECEIVE;
             otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitError);

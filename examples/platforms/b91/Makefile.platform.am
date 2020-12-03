@@ -31,10 +31,10 @@
 #
 
 LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/b91/libopenthread-b91.a     \
-    $(top_srcdir)/third_party/telink/b91/lib/libb91-drivers.a \
+    $(top_builddir)/examples/platforms/b91/libopenthread-b91.a           \
+    $(top_srcdir)/third_party/telink/b91/lib/libb91-drivers.a            \
     $(NULL)
 
 LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/examples/platforms/b91/b91-xip.ld                 \
+    -T $(top_srcdir)/examples/platforms/b91/b91-xip.ld                   \
     $(NULL)

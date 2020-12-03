@@ -37,19 +37,24 @@
 #include <openthread/platform/radio.h>
 #include "utils/code_utils.h"
 
-void B91RandomInit(void)
+void b91RandomInit(void)
 {
     trng_init();
 }
 
 otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    unsigned short i;
-    unsigned short temp;
-    unsigned int   rn;
+    uint16_t i;
+    uint16_t temp;
+    uint32_t rn;
+
+    if((aOutput == NULL)||(aOutputLength == 0))
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
 
     temp = aOutputLength / 4;
-    for (i = 0; i < (temp); i++)
+    for (i = 0; i < temp; i++)
     {
         rn                         = trng_rand();
         *((unsigned int *)aOutput) = rn;

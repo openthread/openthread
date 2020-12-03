@@ -43,22 +43,22 @@
 
 static volatile uint32_t sTime      = 0;
 static uint32_t          sAlarmTime = 0;
-static uint32_t          last_tick  = 0;
+static uint32_t          sLastTick  = 0;
 
-static inline uint32_t GetCurrentMs(uint32_t t_ms, uint32_t tick)
+static inline uint32_t GetCurrentMs(uint32_t aMs, uint32_t aTick)
 {
-    return t_ms + tick / 16000;
+    return aMs + aTick / 16000;
 }
 
-void B91AlarmProcess(otInstance *aInstance)
+void b91AlarmProcess(otInstance *aInstance)
 {
     uint32_t t = sys_get_stimer_tick();
-    if (t < last_tick)
+    if (t < sLastTick)
     {
         sTime += (0xffffffff / 16000);
     }
 
-    last_tick = t;
+    sLastTick = t;
 
     if ((sAlarmTime != 0) && ((GetCurrentMs(sTime, t)) >= sAlarmTime))
     {

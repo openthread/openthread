@@ -780,15 +780,15 @@ AC_MSG_CHECKING([whether to build examples])
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Build example applications for one of: simulation, cc1352, cc2538, cc2650, cc2652, efr32mg1, efr32mg12, efr32mg13, efr32mg21,
-         gp712, jn5189, k32w061, kw41z, nrf52811, nrf52833, nrf52840,b91, qpg6095, samr21 @<:@default=no@:>@.
+        [Build example applications for one of: simulation, b91, cc1352, cc2538, cc2650, cc2652, efr32mg1, efr32mg12, efr32mg13, efr32mg21,
+         gp712, jn5189, k32w061, kw41z, nrf52811, nrf52833, nrf52840, qpg6095, samr21 @<:@default=no@:>@.
          Note that building example applications also builds the associated OpenThread platform libraries
          and any third_party libraries needed to support the examples.])],
     [
         case "${with_examples}" in
         no)
             ;;
-        simulation|cc1352|cc2538|cc2650|cc2652|efr32mg1|efr32mg12|efr32mg13|efr32mg21|gp712|jn5189|k32w061|kw41z|nrf52811|nrf52833|nrf52840|b91|qpg6095|samr21)
+        simulation|b91|cc1352|cc2538|cc2650|cc2652|efr32mg1|efr32mg12|efr32mg13|efr32mg21|gp712|jn5189|k32w061|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
             ;;
         *)
             AC_MSG_RESULT(ERROR)
@@ -801,6 +801,7 @@ AC_ARG_WITH(examples,
 AM_CONDITIONAL([OPENTHREAD_ENABLE_EXAMPLES], [test ${with_examples} != "no"])
 
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SIMULATION],[test "${with_examples}" = "simulation"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_B91],       [test "${with_examples}" = "b91"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC1352],    [test "${with_examples}" = "cc1352"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538],    [test "${with_examples}" = "cc2538"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650],    [test "${with_examples}" = "cc2650"])
@@ -816,7 +817,6 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_KW41Z],     [test "${with_examples}" = "kw41
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52811],  [test "${with_examples}" = "nrf52811"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52833],  [test "${with_examples}" = "nrf52833"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840],  [test "${with_examples}" = "nrf52840"])
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_B91],  [test "${with_examples}" = "b91"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_QPG6095],   [test "${with_examples}" = "qpg6095"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21],    [test "${with_examples}" = "samr21"])
 
@@ -841,12 +841,12 @@ AC_MSG_CHECKING([whether to build platform libraries])
 
 AC_ARG_WITH(platform,
     [AS_HELP_STRING([--with-platform=TARGET],
-        [Build OpenThread platform libraries for one of: cc1352, cc2538, cc2650, cc2652,
-         efr32mg1, efr32mg12, efr32mg13, efr32mg21, gp712, jn5189, kw41z, nrf52811, nrf52833, nrf52840,b91, posix, qpg6095, samr21, simulation @<:@default=simulation@:>@.])],
+        [Build OpenThread platform libraries for one of: b91, cc1352, cc2538, cc2650, cc2652,
+         efr32mg1, efr32mg12, efr32mg13, efr32mg21, gp712, jn5189, kw41z, nrf52811, nrf52833, nrf52840, posix, qpg6095, samr21, simulation @<:@default=simulation@:>@.])],
     [
         # Make sure the given target is valid.
         case "${with_platform}" in
-        no|cc1352|cc2538|cc2650|cc2652|efr32mg1|efr32mg12|efr32mg13|efr32mg21|gp712|jn5189|kw41z|nrf52811|nrf52833|nrf52840|b91|posix|qpg6095|samr21|simulation)
+        no|b91|cc1352|cc2538|cc2650|cc2652|efr32mg1|efr32mg12|efr32mg13|efr32mg21|gp712|jn5189|kw41z|nrf52811|nrf52833|nrf52840|posix|qpg6095|samr21|simulation)
             ;;
         *)
             AC_MSG_RESULT(ERROR)
@@ -877,6 +877,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_PLATFORM], [test ${with_platform} != "no"])
 
 OPENTHREAD_ENABLE_PLATFORM=${with_platform}
 
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_B91],       [test "${with_platform}" = "b91"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC1352],    [test "${with_platform}" = "cc1352"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2538],    [test "${with_platform}" = "cc2538"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2650],    [test "${with_platform}" = "cc2650"])
@@ -891,7 +892,6 @@ AM_CONDITIONAL([OPENTHREAD_PLATFORM_KW41Z],     [test "${with_platform}" = "kw41
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF52811],  [test "${with_platform}" = "nrf52811"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF52833],  [test "${with_platform}" = "nrf52833"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF52840],  [test "${with_platform}" = "nrf52840"])
-AM_CONDITIONAL([OPENTHREAD_PLATFORM_B91],  [test "${with_platform}" = "b91"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_POSIX],     [test "${with_platform}" = "posix"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_QPG6095],   [test "${with_platform}" = "qpg6095"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_SAMR21],    [test "${with_platform}" = "samr21"])
@@ -1037,6 +1037,7 @@ examples/apps/Makefile
 examples/apps/cli/Makefile
 examples/apps/ncp/Makefile
 examples/platforms/Makefile
+examples/platforms/b91/Makefile
 examples/platforms/cc1352/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
@@ -1058,7 +1059,6 @@ examples/platforms/gp712/Makefile
 examples/platforms/k32w/Makefile
 examples/platforms/kw41z/Makefile
 examples/platforms/nrf528xx/Makefile
-examples/platforms/b91/Makefile
 examples/platforms/qpg6095/Makefile
 examples/platforms/samr21/Makefile
 examples/platforms/simulation/Makefile

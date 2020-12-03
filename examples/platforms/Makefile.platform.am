@@ -41,6 +41,10 @@ LDFLAGS_COMMON      = $(NULL)
 SOURCES_COMMON      = $(NULL)
 LIBTOOLFLAGS_COMMON = --preserve-dup-deps
 
+if OPENTHREAD_EXAMPLES_B91
+include $(top_srcdir)/examples/platforms/b91/Makefile.platform.am
+endif
+
 if OPENTHREAD_EXAMPLES_CC1352
 include $(top_srcdir)/examples/platforms/cc1352/Makefile.platform.am
 endif
@@ -109,9 +113,6 @@ if OPENTHREAD_EXAMPLES_SAMR21
 include $(top_srcdir)/examples/platforms/samr21/Makefile.platform.am
 endif # OPENTHREAD_EXAMPLES_SAMR21
 
-if OPENTHREAD_EXAMPLES_B91
-include $(top_srcdir)/examples/platforms/b91/Makefile.platform.am
-endif
 if OPENTHREAD_EXAMPLES_SIMULATION
 include $(top_srcdir)/examples/platforms/simulation/Makefile.platform.am
 endif
