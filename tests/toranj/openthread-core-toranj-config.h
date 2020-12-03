@@ -35,10 +35,6 @@
 #error "This header file should only be included through the platform-specific one"
 #endif
 
-#ifndef OPENTHREAD_RADIO
-#define OPENTHREAD_RADIO 0
-#endif
-
 /**
  * @def OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
  *
@@ -454,7 +450,7 @@
  */
 #define OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE 1
 
-#if OPENTHREAD_RADIO
+#if defined(OPENTHREAD_RADIO) && OPENTHREAD_RADIO
 /**
  * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE
  *

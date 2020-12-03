@@ -639,6 +639,7 @@ source_set("libopenthread_core_config") {
     "config/coap.h",
     "config/commissioner.h",
     "config/dataset_updater.h",
+    "config/device_type_check.h",
     "config/dhcp6_client.h",
     "config/dhcp6_server.h",
     "config/diag.h",

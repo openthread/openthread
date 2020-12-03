@@ -35,6 +35,7 @@
 #ifndef CONFIG_MAC_H_
 #define CONFIG_MAC_H_
 
+#include "config/device_type_check.h"
 #include "config/time_sync.h"
 
 /**
@@ -331,8 +332,12 @@
  * This is compulsory for 1.2 FTD.
  *
  */
+#if _OPENTHREAD_DEVICE_TYPE_DEFINED
 #define OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE \
     (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2) && (OPENTHREAD_FTD || OPENTHREAD_RADIO)
+#else
+#undef OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE

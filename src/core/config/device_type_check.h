@@ -26,37 +26,53 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_
-#define OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_
-
 /**
- * This header file defines the OpenThread core configuration for toranj with simulation platform.
- *
+ * @file
+ *   This file includes OpenThread device type definition for utilization.
  */
 
-// Include the common configuration for all platforms.
-#include "openthread-core-toranj-config.h"
+#ifndef CONFIG_DEVICE_TYPE_UTIL_H_
+#define CONFIG_DEVICE_TYPE_UTIL_H_
 
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_INFO
- *
- * The platform-specific string to insert into the OpenThread version string.
- *
- */
-#if defined(OPENTHREAD_RADIO) && OPENTHREAD_RADIO
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-RCP-toranj"
+#if defined(OPENTHREAD_FTD) || defined(OPENTRHEAD_MTD) || defined(OPENTHREAD_RADIO)
+#define _OPENTHREAD_DEVICE_TYPE_DEFINED 1
 #else
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-toranj"
+#define _OPENTHREAD_DEVICE_TYPE_DEFINED 0
 #endif
 
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
- *
- * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
- *
- * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
- *
- */
-#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
+#if defined(OPENTHREAD_FTD) && OPENTHREAD_FTD
+#define _OPENTHREAD_FTD_ 1
+#else
+#define _OPENTHREAD_FTD_ 0
+#endif
 
-#endif /* OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_ */
+#if defined(OPENTHREAD_MTD) && OPENTHREAD_MTD
+#define _OPENTHREAD_MTD_ 1
+#else
+#define _OPENTHREAD_MTD_ 0
+#endif
+
+#if defined(OPENTHREAD_RADIO) && OPENTHREAD_RADIO
+#define _OPENTHREAD_RADIO_ 1
+#else
+#define _OPENTHREAD_RADIO_ 0
+#endif
+
+#if _OPENTHREAD_DEVICE_TYPE_DEFINED
+#if _OPENTHREAD_FTD_ + _OPENTHREAD_MTD_ + _OPENTHREAD_RADIO_ != 1
+#error "Invalid definition for device type"
+#else
+#if _OPENTHREAD_FTD_
+#define OPENTHREAD_MTD 0
+#define OPENTHREAD_RADIO 0
+#elif _OPENTHREAD_MTD_
+#define OPENTHREAD_FTD 0
+#define OPENTHREAD_RADIO 0
+#elif _OPENTHREAD_RADIO_
+#define OPENTHREAD_FTD 0
+#define OPENTHREAD_MTD 0
+#endif
+#endif // _OPENTHREAD_FTD_ + _OPENTHREAD_MTD_ + _OPENTHREAD_RADIO_ != 1
+#endif // _OPENTHREAD_DEVICE_TYPE_DEFINED
+
+#endif // CONFIG_DEVICE_TYPE_UTIL_H_

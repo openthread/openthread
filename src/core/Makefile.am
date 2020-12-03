@@ -381,6 +381,7 @@ HEADERS_COMMON                                  = \
     config/coap.h                                 \
     config/commissioner.h                         \
     config/dataset_updater.h                      \
+    config/device_type_check.h                    \
     config/dhcp6_client.h                         \
     config/dhcp6_server.h                         \
     config/diag.h                                 \
