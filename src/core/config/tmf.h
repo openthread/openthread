@@ -35,8 +35,6 @@
 #ifndef CONFIG_TMF_H_
 #define CONFIG_TMF_H_
 
-#include "config/device_type_check.h"
-
 /**
  * @def OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
  *
