@@ -26,27 +26,27 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_POSIX_PLATFORM_MAX_POWER_TABLE_HPP_
-#define OT_POSIX_PLATFORM_MAX_POWER_TABLE_HPP_
+#ifndef OT_CORE_RADIO_MAX_POWER_TABLE_HPP_
+#define OT_CORE_RADIO_MAX_POWER_TABLE_HPP_
 
 #include "core/radio/radio.hpp"
+#include "openthread/platform/radio.h"
 
 namespace ot {
-namespace Posix {
 
 class MaxPowerTable
 {
 public:
     static const int8_t kPowerDefault = 30; ///< Default power 1 watt (30 dBm).
 
-    MaxPowerTable(void) { memset(mPowerTable, kPowerForbidden, sizeof(mPowerTable)); }
+    MaxPowerTable(void) { memset(mPowerTable, kPowerDefault, sizeof(mPowerTable)); }
 
     /**
      * This method gets the max allowed transmit power of channel @p aChannel.
      *
      * @params[in]  aChannel    The radio channel number.
      *
-     * @returns The max allowed transmit power in dBm.
+     * @returns The max supported transmit power in dBm.
      *
      */
     int8_t GetTransmitPower(uint8_t aChannel) const { return mPowerTable[aChannel - Radio::kChannelMin]; }
@@ -55,24 +55,22 @@ public:
      * This method sets the max allowed transmit power of channel @p aChannel.
      *
      * @params[in]  aChannel    The radio channel number.
-     * @params[in]  aPower      The max allowed transmit power in dBm.
+     * @params[in]  aPower      The max supported transmit power in dBm.
      *
      */
     void SetTransmitPower(uint8_t aChannel, int8_t aPower) { mPowerTable[aChannel - Radio::kChannelMin] = aPower; }
 
     /**
-     * This method gets the allowed channel masks.
-     *
-     * All channels of max power value of 0x7f is considered forbidden.
+     * This method gets the supported channel masks.
      *
      */
-    uint32_t GetAllowedChannelMask(void) const
+    uint32_t GetSupportedChannelMask(void) const
     {
         uint32_t channelMask = 0;
 
         for (uint8_t i = Radio::kChannelMin; i <= Radio::kChannelMax; ++i)
         {
-            if (mPowerTable[i - Radio::kChannelMin] != kPowerForbidden)
+            if (mPowerTable[i - Radio::kChannelMin] != OT_RADIO_POWER_INVALID)
             {
                 channelMask |= (1 << i);
             }
@@ -82,12 +80,9 @@ public:
     }
 
 private:
-    static const int8_t kPowerForbidden = 0x7f;
-
     int8_t mPowerTable[Radio::kChannelMax - Radio::kChannelMin + 1];
 };
 
-} // namespace Posix
 } // namespace ot
 
-#endif // OT_POSIX_PLATFORM_MAX_POWER_TABLE_HPP_
+#endif // OT_CORE_RADIO_MAX_POWER_TABLE_HPP_

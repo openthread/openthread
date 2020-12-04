@@ -2238,6 +2238,20 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_MAX_POWER>(void)
+{
+    uint8_t channel;
+    int8_t  maxPower;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(channel));
+    SuccessOrExit(error = mDecoder.ReadInt8(maxPower));
+    error = otPlatRadioSetChannelMaxTransmitPower(mInstance, channel, maxPower);
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TEST_ASSERT>(void)
 {
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION

@@ -39,6 +39,7 @@
 #include "openthread-spinel-config.h"
 #include "spinel.h"
 #include "spinel_interface.hpp"
+#include "core/radio/max_power_table.hpp"
 #include "ncp/ncp_config.h"
 
 namespace ot {
@@ -704,6 +705,18 @@ public:
      */
     uint32_t GetBusSpeed(void) const;
 
+    /**
+     * This method sets the max transmit power.
+     *
+     * @param[in] aChannel    The radio channel.
+     * @param[in] aPower      The max transmit power in dBm.
+     *
+     * @retval  OT_ERROR_NONE           Succesfully set the max transmit power.
+     * @retval  OT_ERROR_INVALID_ARGS   Channel is not in valid range.
+     *
+     */
+    otError SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aPower);
+
 private:
     enum
     {
@@ -968,6 +981,8 @@ private:
     uint64_t mTxRadioEndUs;
     uint64_t mRadioTimeRecalcStart; ///< When to recalculate RCP time offset.
     int64_t  mRadioTimeOffset;      ///< Time difference with estimated RCP time minus host time.
+
+    MaxPowerTable mMaxPowerTable;
 };
 
 } // namespace Spinel

@@ -377,7 +377,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_RCP_API_VERSION 1
+#define SPINEL_RCP_API_VERSION 2
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -1568,7 +1568,15 @@ enum
     SPINEL_PROP_PHY_PCAP_ENABLED   = SPINEL_PROP_PHY__BEGIN + 8,  ///< [b]
     SPINEL_PROP_PHY_CHAN_PREFERRED = SPINEL_PROP_PHY__BEGIN + 9,  ///< [A(C)]
     SPINEL_PROP_PHY_FEM_LNA_GAIN   = SPINEL_PROP_PHY__BEGIN + 10, ///< dBm [c]
-    SPINEL_PROP_PHY__END           = 0x30,
+
+    /// Signal the max power for a channel
+    /** Format: `Cc`
+     *
+     * First byte is the channel then the max transmit power, write-only.
+     */
+    SPINEL_PROP_PHY_CHAN_MAX_POWER = SPINEL_PROP_PHY__BEGIN + 11,
+
+    SPINEL_PROP_PHY__END = 0x30,
 
     SPINEL_PROP_PHY_EXT__BEGIN = 0x1200,
 

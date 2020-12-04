@@ -39,6 +39,7 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
+#include "common/code_utils.hpp"
 #include "utils/code_utils.h"
 #include "utils/mac_frame.h"
 #include "utils/soft_source_match_table.h"
@@ -112,6 +113,14 @@ static bool           sTxWait      = false;
 static int8_t         sTxPower     = 0;
 static int8_t         sCcaEdThresh = -74;
 static int8_t         sLnaGain     = 0;
+
+enum
+{
+    kMinChannel = 11,
+    kMaxChannel = 26,
+};
+static int8_t  sChannelMaxTransmitPower[kMaxChannel - kMinChannel + 1];
+static uint8_t sCurrentChannel = kMinChannel;
 
 static bool sSrcMatchEnabled = false;
 
@@ -359,6 +368,11 @@ void platformRadioInit(void)
 #else
     sTransmitFrame.mInfo.mTxInfo.mIeInfo = NULL;
 #endif
+
+    for (size_t i = 0; i <= kMaxChannel - kMinChannel; i++)
+    {
+        sChannelMaxTransmitPower[i] = OT_RADIO_POWER_INVALID;
+    }
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -433,6 +447,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         sState                 = OT_RADIO_STATE_RECEIVE;
         sTxWait                = false;
         sReceiveFrame.mChannel = aChannel;
+        sCurrentChannel        = aChannel;
     }
 
     return error;
@@ -450,8 +465,9 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     if (sState == OT_RADIO_STATE_RECEIVE)
     {
-        error  = OT_ERROR_NONE;
-        sState = OT_RADIO_STATE_TRANSMIT;
+        error           = OT_ERROR_NONE;
+        sState          = OT_RADIO_STATE_TRANSMIT;
+        sCurrentChannel = aFrame->mChannel;
     }
 
     return error;
@@ -945,9 +961,11 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
+    int8_t maxPower = sChannelMaxTransmitPower[sCurrentChannel - kMinChannel];
+
     assert(aInstance != NULL);
 
-    *aPower = sTxPower;
+    *aPower = sTxPower < maxPower ? sTxPower : maxPower;
 
     return OT_ERROR_NONE;
 }
@@ -1154,4 +1172,17 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
     OT_UNUSED_VARIABLE(aInstance);
 
     sMacFrameCounter = aMacFrameCounter;
+}
+
+otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aChannel >= kMinChannel && aChannel <= kMaxChannel, error = OT_ERROR_INVALID_ARGS);
+    sChannelMaxTransmitPower[aChannel - kMinChannel] = aMaxPower;
+
+exit:
+    return error;
 }
