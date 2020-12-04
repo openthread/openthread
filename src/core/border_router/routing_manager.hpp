@@ -235,7 +235,6 @@ private:
     void HandleRouterSolicit(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     void HandleRouterAdvertisement(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
 
-    bool        IsLocalOmrPrefixAdvertised() const;
     static bool ContainsPrefix(const Ip6::Prefix &aPrefix, const Ip6::Prefix *aPrefixList, uint8_t aPrefixNum);
 
     static uint32_t GetPrefixExpireDelay(uint32_t aValidLifetime);
