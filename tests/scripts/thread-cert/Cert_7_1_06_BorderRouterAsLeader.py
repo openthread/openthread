@@ -142,7 +142,7 @@ class Cert_7_1_6_BorderRouterAsLeader(thread_cert.TestCase):
         self.nodes[ROUTER_1].register_netdata()
         self.nodes[ROUTER_2].add_prefix(PREFIX_2001, 'paro')
         self.nodes[ROUTER_2].register_netdata()
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.collect_ipaddrs()
 
         self.nodes[ROUTER_1].reset()
@@ -189,6 +189,7 @@ class Cert_7_1_6_BorderRouterAsLeader(thread_cert.TestCase):
         pv.verify_attached('ROUTER_2', 'LEADER')
         pv.verify_attached('MED', 'LEADER', 'MTD')
         pv.verify_attached('SED', 'LEADER', 'MTD')
+        _pkt = pkts.last()
 
         # Step 2,3: Router_1 and Router_2  MUST send a CoAP Server Data
         #           Notification frame to the Leader including the server’s
@@ -228,6 +229,22 @@ class Cert_7_1_6_BorderRouterAsLeader(thread_cert.TestCase):
         #                  - At least one Prefix TLV (Prefix 1)
         #                      - Two Border Router sub-TLVs
         #                      - 6LoWPAN ID sub-TLV
+        _dr_pkt = pkts.filter_wpan_src64(LEADER).\
+            filter_LLANMA().\
+            filter_mle_cmd(MLE_DATA_RESPONSE).\
+            filter(lambda p: {
+                              NETWORK_DATA_TLV,
+                              SOURCE_ADDRESS_TLV,
+                              LEADER_DATA_TLV
+                             } <= set(p.mle.tlv.type) and\
+                   p.thread_nwd.tlv.border_router.flag.p == [1] and\
+                   p.thread_nwd.tlv.border_router.flag.s == [1] and\
+                   p.thread_nwd.tlv.border_router.flag.r == [1] and\
+                   p.thread_nwd.tlv.border_router.flag.o == [1] and\
+                   [Ipv6Addr(PREFIX_2001[:-3])] ==
+                   p.thread_nwd.tlv.prefix
+                   ).\
+            must_next()
         _dr_pkt1 = pkts.filter_wpan_src64(LEADER).\
             filter_LLANMA().\
             filter_mle_cmd(MLE_DATA_RESPONSE).\
@@ -245,6 +262,12 @@ class Cert_7_1_6_BorderRouterAsLeader(thread_cert.TestCase):
                    p.thread_nwd.tlv.border_router.flag.s == [1, 1] and\
                    p.thread_nwd.tlv.border_router.flag.r == [1, 1] and\
                    p.thread_nwd.tlv.border_router.flag.o == [1, 1] and\
+                   p.mle.tlv.leader_data.data_version ==
+                   (_dr_pkt.mle.tlv.leader_data.data_version + 1) % 256 and\
+                   (p.mle.tlv.leader_data.stable_data_version ==
+                    (_dr_pkt.mle.tlv.leader_data.stable_data_version + 1) % 256 or\
+                   p.mle.tlv.leader_data.stable_data_version ==
+                    (_pkt.mle.tlv.leader_data.stable_data_version + 1) % 256) and\
                    [Ipv6Addr(PREFIX_2001[:-3])] ==
                    p.thread_nwd.tlv.prefix
                    ).\
