@@ -291,9 +291,6 @@ typedef struct otBackboneRouterMulticastListenerInfo
 /**
  * This function gets the next Multicast Listener info (using an iterator).
  *
- * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
- *       Only used for test and certification.
- *
  * @param[in]     aInstance    A pointer to an OpenThread instance.
  * @param[inout]  aIterator    A pointer to the iterator. On success the iterator will be updated to point to next
  *                             Multicast Listener. To get the first entry the iterator should be set to

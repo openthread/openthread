@@ -34,19 +34,41 @@ import command
 import config
 import mle
 import thread_cert
+from pktverify.consts import MLE_PARENT_REQUEST, MLE_LINK_REQUEST, MLE_LINK_ACCEPT, MLE_LINK_ACCEPT_AND_REQUEST, SOURCE_ADDRESS_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, TLV_REQUEST_TLV, VERSION_TLV
+from pktverify.packet_verifier import PacketVerifier
+from pktverify.null_field import nullField
 
 DUT_LEADER = 1
 DUT_ROUTER1 = 2
 
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of this test case is to show that when the Leader is rebooted for a time period shorter than the leader timeout, it does not trigger network partitioning and remains the leader when it reattaches to the network.
+#
+# Test Topology:
+# -------------
+#   Leader
+#     |
+#   Router
+#
+# DUT Types:
+# ----------
+#  Leader
+#  Router
+
 
 class Cert_5_5_1_LeaderReboot(thread_cert.TestCase):
+    #USE_MESSAGE_FACTORY = False
+
     TOPOLOGY = {
         DUT_LEADER: {
+            'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
             'allowlist': [DUT_ROUTER1]
         },
         DUT_ROUTER1: {
+            'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
             'router_selection_jitter': 1,
@@ -59,7 +81,6 @@ class Cert_5_5_1_LeaderReboot(thread_cert.TestCase):
         self.nodes[DUT_LEADER].enable_allowlist()
 
     def test(self):
-        # 1 ALL: Build and verify the topology
         self.nodes[DUT_LEADER].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[DUT_LEADER].get_state(), 'leader')
@@ -68,90 +89,130 @@ class Cert_5_5_1_LeaderReboot(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[DUT_ROUTER1].get_state(), 'router')
 
-        # 2 DUT_LEADER, DUT_ROUTER1: Verify both DUT_LEADER and DUT_ROUTER1
-        # send MLE Advertisement message
-        leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
-        msg = leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
-        command.check_mle_advertisement(msg)
-
-        router1_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
-        msg = router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
-        command.check_mle_advertisement(msg)
-
-        # Send a harness helper ping to the DUT
-        router1_rloc = self.nodes[DUT_ROUTER1].get_ip6_address(config.ADDRESS_TYPE.RLOC)
-        self.assertTrue(self.nodes[DUT_LEADER].ping(router1_rloc))
-
         leader_rloc = self.nodes[DUT_LEADER].get_ip6_address(config.ADDRESS_TYPE.RLOC)
-        self.assertTrue(self.nodes[DUT_ROUTER1].ping(leader_rloc))
 
-        # 3 DUT_LEADER: Reset DUT_LEADER
         leader_rloc16 = self.nodes[DUT_LEADER].get_addr16()
         self.nodes[DUT_LEADER].reset()
+        self.assertFalse(self.nodes[DUT_ROUTER1].ping(leader_rloc))
         self._setUpLeader()
 
-        # Clean sniffer's buffer
-        self.simulator.get_messages_sent_by(DUT_LEADER)
-        self.simulator.get_messages_sent_by(DUT_ROUTER1)
-
-        # DUT_LEADER sleep time is less than leader timeout value
         self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
-
-        # Verify DUT_LEADER didn't send MLE Advertisement messages
-        leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
-        msg = leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT, False)
-        self.assertTrue(msg is None)
 
         self.nodes[DUT_LEADER].start()
 
-        # Verify the DUT_LEADER is still a leader
         self.simulator.go(5)
         self.assertEqual(self.nodes[DUT_LEADER].get_state(), 'leader')
         self.assertEqual(self.nodes[DUT_LEADER].get_addr16(), leader_rloc16)
 
-        # 4 DUT_LEADER: Verify DUT_LEADER sent a multicast Link Request message
-        leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
-        leader_messages_temp = copy.deepcopy(leader_messages)
-
-        msg = leader_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
-        command.check_link_request(
-            msg,
-            tlv_request_address16=command.CheckType.CONTAIN,
-            tlv_request_route64=command.CheckType.CONTAIN,
-        )
-
-        # 5 DUT_ROUTER1: Verify DUT_ROUTER1 replied with Link Accept message
-        router1_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
-        router1_messages_temp = copy.deepcopy(router1_messages)
-        msg = router1_messages.next_mle_message(mle.CommandType.LINK_ACCEPT)
-        if msg is not None:
-            command.check_link_accept(
-                msg,
-                self.nodes[DUT_LEADER],
-                address16=command.CheckType.CONTAIN,
-                leader_data=command.CheckType.CONTAIN,
-                route64=command.CheckType.CONTAIN,
-            )
-        else:
-            msg = router1_messages_temp.next_mle_message(mle.CommandType.LINK_ACCEPT_AND_REQUEST)
-            self.assertTrue(msg is not None)
-            command.check_link_accept(
-                msg,
-                self.nodes[DUT_LEADER],
-                address16=command.CheckType.CONTAIN,
-                leader_data=command.CheckType.CONTAIN,
-                route64=command.CheckType.CONTAIN,
-                challenge=command.CheckType.CONTAIN,
-            )
-
-        # 6 DUT_LEADER: Verify DUT_LEADER didn't send a Parent Request message
-        msg = leader_messages_temp.next_mle_message(mle.CommandType.PARENT_REQUEST, False)
-        self.assertTrue(msg is None)
-
-        # 7 ALL: Verify connectivity by sending an ICMPv6 Echo Request from
-        # DUT_LEADER to DUT_ROUTER1 link local address
         router1_link_local_address = self.nodes[DUT_ROUTER1].get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
         self.assertTrue(self.nodes[DUT_LEADER].ping(router1_link_local_address))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        ROUTER = pv.vars['ROUTER']
+
+        # Step 1: Verify topology is formed correctly.
+        pv.verify_attached('ROUTER', 'LEADER')
+
+        # Step 2: The DUT MUST send properly formatted MLE Advertisements with
+        #         an IP Hop Limit of 255 to the Link-Local All Nodes multicast
+        #         address (FF02::1).
+        #          The following TLVs MUST be present in the MLE Advertisements:
+        #              - Leader Data TLV
+        #              - Route64 TLV
+        #              - Source Address TLV
+        with pkts.save_index():
+            pkts.filter_wpan_src64(LEADER).\
+                filter_mle_advertisement('Leader').\
+                must_next()
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_mle_advertisement('Router').\
+            must_next()
+
+        pkts.filter_ping_request().\
+            filter_wpan_src64(ROUTER).\
+            must_next()
+        lstart = pkts.index
+
+        # Step 4: The Leader MUST send a multicast Link Request
+        #         The following TLVs MUST be present in the Link Request:
+        #             - Challenge TLV
+        #             - Version TLV
+        #             - TLV Request TLV: Address16 TLV, Route64 TLV
+        pkts.filter_wpan_src64(LEADER).\
+            filter_LLARMA().\
+            filter_mle_cmd(MLE_LINK_REQUEST).\
+            filter(lambda p: {
+                              CHALLENGE_TLV,
+                              VERSION_TLV,
+                              TLV_REQUEST_TLV,
+                              ADDRESS16_TLV,
+                              ROUTE64_TLV
+                              } <= set(p.mle.tlv.type) and\
+                   p.mle.tlv.addr16 is nullField and\
+                   p.mle.tlv.route64.id_mask is nullField
+                   ).\
+            must_next()
+        lend = pkts.index
+
+        # Step 3: Reset Leader. The Leader MUST stop sending MLE advertisements.
+        #         The Leader reboot time MUST be less than Leader Timeout value
+        pkts.range(lstart, lend).\
+            filter_wpan_src64(LEADER).\
+            filter_mle_advertisement('Leader').\
+            must_not_next()
+
+        # Step 5: Router MUST reply with a Link Accept
+        #         The following TLVs MUST be present in the Link Accept:
+        #             - Leader Data TLV
+        #             - Link-layer Frame Counter TLV
+        #             - Response TLV
+        #             - Source Address TLV
+        #             - Address16 TLV
+        #             - Route64 TLV
+        #             - Version TLV
+        #             - Challenge TLV (situational)
+        #             - MLE Frame Counter TLV (optional)
+        #         The Challenge TLV MUST be included
+        #         if the response is an Accept and Request message.
+        _pkt = pkts.filter_wpan_src64(ROUTER).\
+                filter_wpan_dst64(LEADER).\
+                filter_mle_cmd2(MLE_LINK_ACCEPT, MLE_LINK_ACCEPT_AND_REQUEST).\
+                filter(lambda p: {
+                                  LEADER_DATA_TLV,
+                                  LINK_LAYER_FRAME_COUNTER_TLV,
+                                  RESPONSE_TLV,
+                                  SOURCE_ADDRESS_TLV,
+                                  ADDRESS16_TLV,
+                                  ROUTE64_TLV,
+                                  VERSION_TLV
+                                   } <= set(p.mle.tlv.type) and\
+                       p.mle.tlv.addr16 is not nullField and\
+                       p.mle.tlv.route64.id_mask is not nullField
+                       ).\
+                       must_next()
+        if _pkt.mle.cmd == MLE_LINK_ACCEPT_AND_REQUEST:
+            _pkt.must_verify(lambda p: {CHALLENGE_TLV} <= set(p.mle.tlv.type))
+
+        # Step 7: Router_1 MUST respond with an ICMPv6 Echo Reply
+        _pkt = pkts.filter_ping_request().\
+            filter_wpan_src64(LEADER).\
+            filter_wpan_dst64(ROUTER).\
+            must_next()
+        lend2 = pkts.index
+        pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+            filter_wpan_src64(ROUTER).\
+            filter_wpan_dst64(LEADER).\
+            must_next()
+
+        # Step 6: The Leader MUST NOT send a Parent Request after it is re-enabled.
+        pkts.range(lend, lend2).\
+            filter_wpan_src64(LEADER).\
+            filter_mle_cmd(MLE_PARENT_REQUEST).\
+            must_not_next()
 
 
 if __name__ == '__main__':

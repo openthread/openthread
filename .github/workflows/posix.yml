@@ -64,12 +64,12 @@ jobs:
         make -f src/posix/Makefile-posix
     - name: Run
       run: |
-        VERBOSE=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli) -v" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check
+        VERBOSE=1 OT_CLI_PATH="$PWD/output/posix/bin/ot-cli -v" RADIO_DEVICE="$PWD/output/simulation/bin/ot-rcp" make -f src/posix/Makefile-posix check
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
         name: posix-cli-thread-cert
-        path: build/posix/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/posix/tests/scripts/thread-cert
     - name: Keep Simulation Only
       run: |
         tar -cf build/posix.tar -C build/ posix/
@@ -83,7 +83,7 @@ jobs:
         path: tmp/coverage.info
     - name: Keep POSIX Only
       run: |
-        rm -rf build/x86_64-unknown-linux-gnu/
+        rm -rf build/simulation/
         tar -xf build/posix.tar -C build/
     - name: Generate Coverage
       run: |
@@ -118,12 +118,12 @@ jobs:
         make -f src/posix/Makefile-posix
     - name: Run
       run: |
-        VERBOSE=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check
+        VERBOSE=1 OT_NCP_PATH="$PWD/output/posix/bin/ot-ncp" RADIO_DEVICE="$PWD/output/simulation/bin/ot-rcp" make -f src/posix/Makefile-posix check
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
         name: posix-ncp-thread-cert
-        path: build/posix/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/posix/tests/scripts/thread-cert
     - name: Keep Simulation Only
       run: |
         tar -cf build/posix.tar -C build/ posix/
@@ -137,7 +137,7 @@ jobs:
         path: tmp/coverage.info
     - name: Keep POSIX Only
       run: |
-        rm -rf build/x86_64-unknown-linux-gnu/
+        rm -rf build/simulation/
         tar -xf build/posix.tar -C build/
     - name: Generate Coverage
       run: |
@@ -177,7 +177,7 @@ jobs:
         path: tmp/coverage.info
     - name: Keep POSIX Only
       run: |
-        rm -rf build/x86_64-unknown-linux-gnu/
+        rm -rf build/simulation/
         tar -xf build/posix.tar -C build/
     - name: Generate Coverage
       run: |
@@ -225,7 +225,7 @@ jobs:
         path: tmp/coverage.info
     - name: Keep POSIX Only
       run: |
-        rm -rf build/x86_64-unknown-linux-gnu/
+        rm -rf build/simulation/
         tar -xf build/posix.tar -C build/
     - name: Generate Coverage
       run: |
@@ -274,7 +274,7 @@ jobs:
         path: tmp/coverage.info
     - name: Keep POSIX Only
       run: |
-        rm -rf build/x86_64-unknown-linux-gnu/
+        rm -rf build/simulation/
         tar -xf build/posix.tar -C build/
     - name: Generate Coverage
       run: |
@@ -303,3 +303,13 @@ jobs:
     - name: Upload Coverage
       run: |
         script/test upload_codecov
+
+  delete-coverage-artifacts:
+    needs: upload-coverage
+    if: always()
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: geekyeggo/delete-artifact@1-glob-support
+      with:
+        name: cov-*
+        useGlob: true

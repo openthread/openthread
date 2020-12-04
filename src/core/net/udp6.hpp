@@ -39,6 +39,7 @@
 #include <openthread/udp.h>
 #include <openthread/platform/udp.h>
 
+#include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -70,7 +71,7 @@ public:
      * This class implements a UDP/IPv6 socket.
      *
      */
-    class SocketHandle : public otUdpSocket, public LinkedListEntry<SocketHandle>
+    class SocketHandle : public otUdpSocket, public LinkedListEntry<SocketHandle>, public Clearable<SocketHandle>
     {
         friend class Udp;
         friend class LinkedList<SocketHandle>;

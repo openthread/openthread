@@ -165,7 +165,6 @@ libsilabs_mbedtls_a_SOURCES                                                   = 
 # =============================================================================
 
 COMMONCPPFLAGS                                                                = \
-    -D__STARTUP_CLEAR_BSS                                                       \
     -I$(srcdir)                                                                 \
     -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/src/core                                                    \

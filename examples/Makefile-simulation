@@ -152,7 +152,7 @@ ResultPath                      = output
 TopResultDir                    = $(ResultPath)
 AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
-TargetTuple                     = $(shell ${AbsTopSourceDir}/third_party/nlbuild-autotools/repo/third_party/autoconf/config.guess | sed -e 's/[[:digit:].]*$$//g')
+TargetTuple                     = simulation
 
 ifndef BuildJobs
 BuildJobs := $(shell getconf _NPROCESSORS_ONLN)

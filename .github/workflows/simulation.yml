@@ -89,16 +89,13 @@ jobs:
         ./bootstrap
     - name: Run OTNS Tests
       env:
-        OTNS_COMMIT: "632503d7ccbadcbdc49c6245eafc2425c80bbf04" # Sep 29, 2020
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         export OT_DIR=$PWD
         mkdir -p /tmp/otns
         (
+          ./script/git-tool clone --depth 1 https://github.com/openthread/ot-ns.git /tmp/otns
           cd /tmp/otns
-          git init
-          git remote add origin https://github.com/openthread/ot-ns.git
-          git fetch origin "${OTNS_COMMIT:-master}" --depth 1
-          git reset --hard FETCH_HEAD
           ./script/test py-unittests py-examples
         )
     - uses: actions/upload-artifact@v2
@@ -183,7 +180,7 @@ jobs:
       if: ${{ failure() }}
       with:
         name: cli-ftd-thread-cert
-        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/simulation/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -224,7 +221,7 @@ jobs:
       if: ${{ failure() }}
       with:
         name: cli-mtd-thread-cert
-        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/simulation/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -261,7 +258,7 @@ jobs:
       if: ${{ failure() }}
       with:
         name: cli-time-sync-thread-cert
-        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/simulation/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -352,10 +349,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         sudo rm /etc/apt/sources.list.d/*
         sudo apt-get install -y avahi-daemon avahi-utils lcov
-        git clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch master
+        script/git-tool clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch master
     - name: Build
       run: |
         cd /tmp/ot-commissioner
@@ -408,7 +407,7 @@ jobs:
       if: ${{ failure() }}
       with:
         name: multiple-instance-thread-cert
-        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/simulation/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -447,7 +446,7 @@ jobs:
       if: ${{ failure() }}
       with:
         name: ncp-gcc-m32-thread-cert
-        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/simulation/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -485,7 +484,7 @@ jobs:
       if: ${{ failure() }}
       with:
         name: cli-clang-thread-cert
-        path: build/x86_64-unknown-linux-gnu/tests/scripts/thread-cert
+        path: build/simulation/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage llvm
@@ -518,3 +517,13 @@ jobs:
     - name: Upload Coverage
       run: |
         script/test upload_codecov
+
+  delete-coverage-artifacts:
+    needs: upload-coverage
+    if: always()
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: geekyeggo/delete-artifact@1-glob-support
+      with:
+        name: cov-*
+        useGlob: true

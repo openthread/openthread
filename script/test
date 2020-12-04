@@ -74,13 +74,13 @@ build_simulation()
         options+=("${ot_extra_options[@]}")
     fi
 
-    OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
+    OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
 
     if [[ ${version} == "1.2" ]]; then
 
         options+=("-DOT_BACKBONE_ROUTER=ON")
 
-        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-simulation-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
+        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
 
     fi
 }
@@ -107,13 +107,13 @@ build_posix()
         options+=("${ot_extra_options[@]}")
     fi
 
-    OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-posix-${version}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
+    OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-posix-${version}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
 
     if [[ ${version} == "1.2" ]]; then
 
         options+=("-DOT_BACKBONE_ROUTER=ON")
 
-        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/cmake/openthread-posix-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
+        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-posix-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
     fi
 }
 
@@ -145,7 +145,7 @@ do_clean()
 do_unit_version()
 {
     local version=$1
-    local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${version}"
+    local builddir="${OT_BUILDDIR}/openthread-simulation-${version}"
 
     if [[ ! -d ${builddir} ]]; then
         echo "Cannot find build directory: ${builddir}"
@@ -169,7 +169,7 @@ do_unit()
 
 do_cert()
 {
-    export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
+    export top_builddir="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}"
 
     case "${OT_NODE_TYPE}" in
         rcp | rcp-cli | cli)
@@ -181,9 +181,9 @@ do_cert()
     esac
 
     if [[ ${THREAD_VERSION} == "1.2" ]]; then
-        export top_builddir_1_2_bbr="${OT_BUILDDIR}/cmake/openthread-simulation-1.2-bbr"
+        export top_builddir_1_2_bbr="${OT_BUILDDIR}/openthread-simulation-1.2-bbr"
         if [[ ${INTER_OP} == "1" ]]; then
-            export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
+            export top_builddir_1_1="${OT_BUILDDIR}/openthread-simulation-1.1"
         fi
     fi
 
@@ -193,12 +193,12 @@ do_cert()
 
 do_cert_suite()
 {
-    export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
+    export top_builddir="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}"
 
     if [[ ${THREAD_VERSION} == "1.2" ]]; then
-        export top_builddir_1_2_bbr="${OT_BUILDDIR}/cmake/openthread-simulation-1.2-bbr"
+        export top_builddir_1_2_bbr="${OT_BUILDDIR}/openthread-simulation-1.2-bbr"
         if [[ ${INTER_OP} == "1" ]]; then
-            export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
+            export top_builddir_1_1="${OT_BUILDDIR}/openthread-simulation-1.1"
         fi
     fi
 
@@ -231,7 +231,6 @@ do_build_otbr_docker()
     local otdir
     local otbrdir
     local otbr_options="-DOT_SLAAC=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF"
-    local otbr_commit=${OTBR_COMMIT:-5092e71b06b23f78f2288fcc5386bce3a8986bb1} # [backbone-router] remove MLR multicast routing using smcroute #604
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
     if [[ ${BORDER_ROUTING} == "1" ]]; then
@@ -242,10 +241,8 @@ do_build_otbr_docker()
     otdir=$(pwd)
 
     (
+        ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 "${otbrdir}"
         cd "${otbrdir}"
-        git init
-        git fetch https://github.com/openthread/ot-br-posix.git "${otbr_commit}" --depth 1
-        git reset --hard FETCH_HEAD
         rm -rf third_party/openthread/repo
         cp -r "${otdir}" third_party/openthread/repo
         rm -rf .git
@@ -377,15 +374,15 @@ do_package()
         options+=("${ot_extra_options[@]}")
     fi
 
-    builddir="${OT_BUILDDIR}/cmake/openthread-sim"
+    builddir="${OT_BUILDDIR}/openthread-sim"
     OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
     ls "${builddir}"/openthread-simulation-*.deb
 
-    builddir="${OT_BUILDDIR}/cmake/openthread-host"
+    builddir="${OT_BUILDDIR}/openthread-host"
     OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
     ls "${builddir}"/openthread-standalone-*.deb
 
-    builddir="${OT_BUILDDIR}/cmake/openthread-daemon"
+    builddir="${OT_BUILDDIR}/openthread-daemon"
     OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build posix -DOT_DAEMON=ON -DOT_PLATFORM_NETIF=ON -DOT_PLATFORM_UDP=ON "${options[@]}"
     ls "${builddir}"/openthread-daemon-*.deb
 }
@@ -393,7 +390,7 @@ do_package()
 do_tar()
 {
     local target_name="openthread-$1-$2"
-    local build_dir="${OT_BUILDDIR}/cmake"
+    local build_dir="${OT_BUILDDIR}"
     tar -cf "${target_name}.tar" -C "${build_dir}" "${target_name}"
     mv "${target_name}.tar" "${build_dir}/"
     rm -rf "${build_dir:?}/${target_name}"
@@ -402,9 +399,23 @@ do_tar()
 do_untar()
 {
     local target_name="openthread-$1-$2"
-    local build_dir="${OT_BUILDDIR}/cmake"
+    local build_dir="${OT_BUILDDIR}"
     tar -xf "${build_dir}/${target_name}.tar" -C "${build_dir}"
     rm "${build_dir:?}/${target_name}.tar"
+}
+
+do_prepare_coredump_upload()
+{
+    echo "$PWD/ot-core-dump/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
+    mkdir ot-core-dump
+}
+
+do_copy_so_lib()
+{
+    mkdir so-lib
+    cp /lib/x86_64-linux-gnu/libgcc_s.so.1 ./so-lib
+    cp /lib/x86_64-linux-gnu/libc.so.6 ./so-lib
+    cp /lib64/ld-linux-x86-64.so.2 ./so-lib
 }
 
 do_generate_coverage()
@@ -457,21 +468,21 @@ envsetup()
     export THREAD_VERSION
 
     if [[ ${OT_NODE_TYPE} == rcp* ]]; then
-        export RADIO_DEVICE="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
-        export OT_CLI_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-cli"
-        export OT_NCP_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-ncp"
+        export RADIO_DEVICE="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
+        export OT_CLI_PATH="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/src/posix/ot-cli"
+        export OT_NCP_PATH="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/src/posix/ot-ncp"
 
         if [[ ${THREAD_VERSION} == "1.2" ]]; then
-            export RADIO_DEVICE_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1/examples/apps/ncp/ot-rcp"
-            export OT_CLI_PATH_1_1="${OT_BUILDDIR}/cmake/openthread-posix-1.1/src/posix/ot-cli"
-            export OT_NCP_PATH_1_1="${OT_BUILDDIR}/cmake/openthread-posix-1.1/src/posix/ot-ncp"
-            export OT_CLI_PATH_1_2_BBR="${OT_BUILDDIR}/cmake/openthread-posix-1.2-bbr/src/posix/ot-cli"
-            export OT_NCP_PATH_1_2_BBR="${OT_BUILDDIR}/cmake/openthread-posix-1.2-bbr/src/posix/ot-ncp"
+            export RADIO_DEVICE_1_1="${OT_BUILDDIR}/openthread-simulation-1.1/examples/apps/ncp/ot-rcp"
+            export OT_CLI_PATH_1_1="${OT_BUILDDIR}/openthread-posix-1.1/src/posix/ot-cli"
+            export OT_NCP_PATH_1_1="${OT_BUILDDIR}/openthread-posix-1.1/src/posix/ot-ncp"
+            export OT_CLI_PATH_1_2_BBR="${OT_BUILDDIR}/openthread-posix-1.2-bbr/src/posix/ot-cli"
+            export OT_NCP_PATH_1_2_BBR="${OT_BUILDDIR}/openthread-posix-1.2-bbr/src/posix/ot-ncp"
         fi
     fi
 
-    export OT_SIMULATION_APPS="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps"
-    export OT_POSIX_APPS="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix"
+    export OT_SIMULATION_APPS="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}/examples/apps"
+    export OT_POSIX_APPS="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/src/posix"
 
     if [[ ! ${VIRTUAL_TIME+x} ]]; then
         # All expect tests only works in real time mode.
@@ -558,6 +569,12 @@ main()
             untar)
                 shift
                 do_untar "$@"
+                ;;
+            prepare_coredump_upload)
+                do_prepare_coredump_upload
+                ;;
+            copy_so_lib)
+                do_copy_so_lib
                 ;;
             generate_coverage)
                 shift

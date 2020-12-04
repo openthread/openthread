@@ -126,6 +126,8 @@ extern uint32_t _edata;
 extern uint32_t _bss;
 extern uint32_t _ebss;
 extern uint32_t _estack;
+extern uint32_t _init_array;
+extern uint32_t _einit_array;
 
 //*****************************************************************************
 //
@@ -193,6 +195,7 @@ void (* const g_pfnVectors[])(void) =
     TRNGIntHandler                          // 49 TRNG event
 };
 
+typedef void (*init_fn_t)(void);
 
 //*****************************************************************************
 //
@@ -209,6 +212,7 @@ ResetISR(void)
 {
     uint32_t *pSrc;
     uint32_t *pDest;
+    init_fn_t *fp;
 
     //
     // Final trim of device
@@ -236,6 +240,12 @@ ResetISR(void)
           "        it      lt\n"
           "        strlt   r2, [r0], #4\n"
           "        blt     zero_loop");
+
+    // C++ runtime initialization (BSS, Data, relocation, etc.)
+    for (fp = (init_fn_t *)&_init_array; fp < (init_fn_t *)&_einit_array; fp++)
+    {
+        (*fp)();
+    }
 
     //
     // Call the application's entry point.

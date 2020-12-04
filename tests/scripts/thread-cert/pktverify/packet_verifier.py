@@ -171,11 +171,11 @@ class PacketVerifier(object):
 
         :param child: The child device name.
         :param parent: The parent device name.
-        :param child_type: The child device type (FTD, MTD).
+        :param child_type: The child device type (FTD, FTD-ED, MTD).
         """
         result = VerifyResult()
         assert self.is_thread_device(child), child
-        assert child_type in ('FTD', 'MTD'), child_type
+        assert child_type in ('FTD', 'FTD-ED', 'MTD'), child_type
         pkts = pkts or self.pkts
         child_extaddr = self.vars[child]
 

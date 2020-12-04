@@ -56,7 +56,18 @@ Local::Local(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 otError Local::AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
 {
+    otError  error;
     uint16_t flags = 0;
+
+    // Add Prefix validation check:
+    // Thread 1.1 Specification 5.13.2 says
+    // "A valid prefix MUST NOT allow both DHCPv6 and SLAAC for address configuration"
+    VerifyOrExit(!aConfig.mDhcp || !aConfig.mSlaac, error = OT_ERROR_INVALID_ARGS);
+
+    // RFC 4944 Section 6 says:
+    // An IPv6 address prefix used for stateless autoconfiguration [RFC4862]
+    // of an IEEE 802.15.4 interface MUST have a length of 64 bits.
+    VerifyOrExit(!aConfig.mSlaac || aConfig.mPrefix.mLength == OT_IP6_PREFIX_BITSIZE, error = OT_ERROR_INVALID_ARGS);
 
     if (aConfig.mPreferred)
     {
@@ -100,8 +111,11 @@ otError Local::AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
     }
 #endif
 
-    return AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeBorderRouter, aConfig.mPreference, flags,
-                     aConfig.mStable);
+    error =
+        AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeBorderRouter, aConfig.mPreference, flags, aConfig.mStable);
+
+exit:
+    return error;
 }
 
 otError Local::RemoveOnMeshPrefix(const Ip6::Prefix &aPrefix)
