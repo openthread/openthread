@@ -272,6 +272,7 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes)
             {
                 aNewOmrPrefixes[newOmrPrefixesNum++] = mLocalOmrPrefix;
             }
+            // TODO: Retry later, if failed to publish the OMR prefix.
         }
     }
     else if (newOmrPrefixesNum > 1 || (aNewOmrPrefixes[0] != mLocalOmrPrefix))
