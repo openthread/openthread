@@ -41,7 +41,7 @@ import thread_cert
 #           |                 |
 #          BR1 (Leader)      HOST
 #           |
-#          ED1
+#        ROUTER1
 #
 
 BR1 = 1
@@ -50,6 +50,8 @@ HOST = 4
 
 CHANNEL1 = 18
 
+ON_MESH_PREFIX1 = "fd11:22:33:44::/64"
+ON_MESH_PREFIX2 = "fdaa:bb:cc:dd::/64"
 
 class SingleBorderRouter(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
@@ -87,6 +89,8 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.nodes[ROUTER1].start()
         self.simulator.go(5)
         self.assertEqual('router', self.nodes[ROUTER1].get_state())
+        self.add_prefix(ON_MESH_PREFIX1)
+        self.add_prefix(ON_MESH_PREFIX2)
 
         self.simulator.go(10)
         logging.info("Host addresses: %r", self.nodes[HOST].get_addrs())
@@ -98,16 +102,18 @@ class SingleBorderRouter(thread_cert.TestCase):
         logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
         logging.info("HOST    addrs: %r", self.nodes[HOST].get_addrs())
 
-        self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 1)
+        self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 2)
+        self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 2)
 
-        self.assertTrue(len(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
+        self.assertTrue(len(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 2)
+        self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 2)
         self.assertTrue(len(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)) == 1)
 
         # Router1 can ping to/from the Host on infra link.
         self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
+                                              backbone=True))
+        self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[1],
                                               backbone=True))
 
 
