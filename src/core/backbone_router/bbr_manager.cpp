@@ -51,23 +51,39 @@ namespace BackboneRouter {
 
 Manager::Manager(Instance &aInstance)
     : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     , mMulticastListenerRegistration(UriPath::kMlr, Manager::HandleMulticastListenerRegistration, this)
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     , mDuaRegistration(UriPath::kDuaRegistrationRequest, Manager::HandleDuaRegistration, this)
     , mBackboneQuery(UriPath::kBackboneQuery, Manager::HandleBackboneQuery, this)
     , mBackboneAnswer(UriPath::kBackboneAnswer, Manager::HandleBackboneAnswer, this)
     , mNdProxyTable(aInstance)
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     , mMulticastListenersTable(aInstance)
+#endif
     , mTimer(aInstance, Manager::HandleTimer, this)
     , mBackboneTmfAgent(aInstance)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     , mDuaResponseStatus(ThreadStatusTlv::kDuaSuccess)
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     , mMlrResponseStatus(ThreadStatusTlv::kMlrSuccess)
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     , mDuaResponseIsSpecified(false)
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     , mMlrResponseIsSpecified(false)
 #endif
+#endif
 {
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     mBackboneTmfAgent.AddResource(mBackboneQuery);
     mBackboneTmfAgent.AddResource(mBackboneAnswer);
+#endif
 }
 
 void Manager::HandleNotifierEvents(Events aEvents)
@@ -78,10 +94,14 @@ void Manager::HandleNotifierEvents(Events aEvents)
     {
         if (Get<BackboneRouter::Local>().GetState() == OT_BACKBONE_ROUTER_STATE_DISABLED)
         {
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
             Get<Tmf::TmfAgent>().RemoveResource(mMulticastListenerRegistration);
-            Get<Tmf::TmfAgent>().RemoveResource(mDuaRegistration);
-            mTimer.Stop();
             mMulticastListenersTable.Clear();
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
+            Get<Tmf::TmfAgent>().RemoveResource(mDuaRegistration);
+#endif
+            mTimer.Stop();
 
             error = mBackboneTmfAgent.Stop();
 
@@ -96,8 +116,12 @@ void Manager::HandleNotifierEvents(Events aEvents)
         }
         else
         {
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
             Get<Tmf::TmfAgent>().AddResource(mMulticastListenerRegistration);
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
             Get<Tmf::TmfAgent>().AddResource(mDuaRegistration);
+#endif
             if (!mTimer.IsRunning())
             {
                 mTimer.Start(kTimerInterval);
@@ -119,12 +143,18 @@ void Manager::HandleNotifierEvents(Events aEvents)
 
 void Manager::HandleTimer(void)
 {
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     mMulticastListenersTable.Expire();
+#endif
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     mNdProxyTable.HandleTimer();
+#endif
 
     mTimer.Start(kTimerInterval);
 }
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError                    error     = OT_ERROR_NONE;
@@ -338,7 +368,9 @@ exit:
     FreeMessageOnError(message, error);
     otLogInfoBbr("Sent BMLR.ntf: %s", otThreadErrorToString(error));
 }
+#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError                    error     = OT_ERROR_NONE;
@@ -438,8 +470,10 @@ exit:
     otLogInfoBbr("Sent DUA.rsp for DUA %s, status %d %s", aTarget.ToString().AsCString(), aStatus,
                  otThreadErrorToString(error));
 }
+#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 void Manager::ConfigNextDuaRegistrationResponse(const Ip6::InterfaceIdentifier *aMlIid, uint8_t aStatus)
 {
     mDuaResponseIsSpecified = true;
@@ -455,14 +489,18 @@ void Manager::ConfigNextDuaRegistrationResponse(const Ip6::InterfaceIdentifier *
 
     mDuaResponseStatus = aStatus;
 }
+#endif
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 void Manager::ConfigNextMulticastListenerRegistrationResponse(ThreadStatusTlv::MlrStatus aStatus)
 {
     mMlrResponseIsSpecified = true;
     mMlrResponseStatus      = aStatus;
 }
 #endif
+#endif
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 NdProxyTable &Manager::GetNdProxyTable(void)
 {
     return mNdProxyTable;
@@ -758,6 +796,7 @@ exit:
     otLogInfoBbr("HandleProactiveBackboneNotification: %s, target=%s, mliid=%s, LTT=%lds", otThreadErrorToString(error),
                  aDua.ToString().AsCString(), aMeshLocalIid.ToString().AsCString(), aTimeSinceLastTransaction);
 }
+#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 
 } // namespace BackboneRouter
 
