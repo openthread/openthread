@@ -108,7 +108,7 @@ private:
 
     enum : uint8_t
     {
-        kMaxOmrPrefixNumber = 4u,                    ///< The maximum number of the OMR prefixes to advertise.
+        kMaxOmrPrefixNum    = 8u,                    ///< The maximum number of the OMR prefixes to advertise.
         kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE, ///< The length of an OMR prefix. In bits.
         kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE, ///< The length of an On-link prefix. In bits.
     };
@@ -255,7 +255,7 @@ private:
      * The advertised OMR prefixes.
      *
      */
-    Ip6::Prefix mAdvertisedOmrPrefixes[kMaxOmrPrefixNumber];
+    Ip6::Prefix mAdvertisedOmrPrefixes[kMaxOmrPrefixNum];
     uint8_t     mAdvertisedOmrPrefixNum;
 
     /**

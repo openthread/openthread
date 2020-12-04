@@ -256,7 +256,7 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes)
             // we don't need to remove it later when we want to unpublish it.
             isLocalOmrPrefixPublished = true;
         }
-        else if (newOmrPrefixNum < kMaxOmrPrefixNumber)
+        else if (newOmrPrefixNum < kMaxOmrPrefixNum)
         {
             aNewOmrPrefixes[newOmrPrefixNum++] = onMeshPrefixConfig.GetPrefix();
         }
@@ -386,7 +386,7 @@ exit:
 void RoutingManager::EvaluateRoutingPolicy(void)
 {
     const Ip6::Prefix *newOnLinkPrefix = nullptr;
-    Ip6::Prefix        newOmrPrefixes[kMaxOmrPrefixNumber];
+    Ip6::Prefix        newOmrPrefixes[kMaxOmrPrefixNum];
     uint8_t            newOmrPrefixNum = 0;
     bool               startTimer;
 
