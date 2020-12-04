@@ -388,22 +388,52 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     const Ip6::Prefix *newOnLinkPrefix = nullptr;
     Ip6::Prefix        newOmrPrefixes[kMaxOmrPrefixNumber];
     uint8_t            newOmrPrefixNum = 0;
+    bool               startTimer;
 
     OT_ASSERT(IsInitialized());
     OT_ASSERT(Get<Mle::MleRouter>().IsAttached());
 
     otLogInfoBr("evaluating routing policy");
 
-    // Evaluate on-link & OMR prefixes.
+    // 0. Evaluate on-link & OMR prefixes.
     newOnLinkPrefix = EvaluateOnLinkPrefix();
     newOmrPrefixNum = EvaluateOmrPrefix(newOmrPrefixes);
 
-    // Send Router Advertisement message if necessary.
-    SendRouterAdvertisement(newOmrPrefixes, newOmrPrefixNum, newOnLinkPrefix);
+    // 1. Send Router Advertisement message if necessary.
+    startTimer = SendRouterAdvertisement(newOmrPrefixes, newOmrPrefixNum, newOnLinkPrefix);
+    if (newOmrPrefixNum == 0)
+    {
+        // This is the very exceptional case and happens only when we failed to publish
+        // our local OMR prefix to the Thread network. We schedule the Router Advertisement
+        // timer to re-evaluate our routing policy in the future.
+        otLogWarnBr("No OMR prefix advertised! Start Router Advertisement timer for future evaluation");
+        startTimer = true;
+    }
 
-    // Update advertised on-link & OMR prefixes information.
+    // 2. Schedule Router Advertisement timer with random interval.
+    if (startTimer)
+    {
+        uint32_t nextSendTime;
+
+        ++mRouterAdvertisementCount;
+
+        nextSendTime = Random::NonCrypto::GetUint32InRange(kMinRtrAdvInterval, kMaxRtrAdvInterval);
+
+        if (mRouterAdvertisementCount <= kMaxInitRtrAdvertisements && nextSendTime > kMaxInitRtrAdvInterval)
+        {
+            nextSendTime = kMaxInitRtrAdvInterval;
+        }
+
+        otLogInfoBr("Router Advertisement scheduled in %u seconds", nextSendTime);
+        mRouterAdvertisementTimer.Start(nextSendTime * 1000);
+    }
+    else
+    {
+        mRouterAdvertisementTimer.Stop();
+    }
+
+    // 3. Update advertised on-link & OMR prefixes information.
     mAdvertisedOnLinkPrefix = newOnLinkPrefix;
-
     static_assert(sizeof(mAdvertisedOmrPrefixes) == sizeof(newOmrPrefixes), "invalid new OMR prefix array size");
     memcpy(mAdvertisedOmrPrefixes, newOmrPrefixes, sizeof(mAdvertisedOmrPrefixes));
     mAdvertisedOmrPrefixNum = newOmrPrefixNum;
@@ -427,7 +457,7 @@ otError RoutingManager::SendRouterSolicit(void)
                                   sizeof(routerSolicit));
 }
 
-void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
+bool RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
                                              uint8_t            aNewOmrPrefixNum,
                                              const Ip6::Prefix *aNewOnLinkPrefix)
 {
@@ -474,7 +504,7 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
     {
         RouterAdv::PrefixInfoOption pio;
 
-        // Set zero valid lifetime to immediately invalidate the previous on-link prefix.
+        // Set zero valid lifetime to immediately invalidate the advertised on-link prefix.
         pio.SetValidLifetime(0);
         pio.SetPreferredLifetime(0);
         pio.SetPrefix(*mAdvertisedOnLinkPrefix);
@@ -496,7 +526,7 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
         {
             RouterAdv::RouteInfoOption rio;
 
-            // Set zero route lifetime to immediately invalidate the previous OMR prefix.
+            // Set zero route lifetime to immediately invalidate the advertised OMR prefix.
             rio.SetRouteLifetime(0);
             rio.SetPrefix(advertisedOmrPrefix);
 
@@ -547,26 +577,7 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
         }
     }
 
-    if (startTimer)
-    {
-        uint32_t nextSendTime;
-
-        ++mRouterAdvertisementCount;
-
-        nextSendTime = Random::NonCrypto::GetUint32InRange(kMinRtrAdvInterval, kMaxRtrAdvInterval);
-
-        if (mRouterAdvertisementCount <= kMaxInitRtrAdvertisements && nextSendTime > kMaxInitRtrAdvInterval)
-        {
-            nextSendTime = kMaxInitRtrAdvInterval;
-        }
-
-        otLogInfoBr("Router Advertisement scheduled in %u seconds", nextSendTime);
-        mRouterAdvertisementTimer.Start(nextSendTime * 1000);
-    }
-    else
-    {
-        mRouterAdvertisementTimer.Stop();
-    }
+    return startTimer;
 }
 
 bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix)
@@ -588,7 +599,7 @@ void RoutingManager::HandleRouterAdvertisementTimer(void)
 {
     otLogInfoBr("Router Advertisement timer triggered");
 
-    SendRouterAdvertisement(mAdvertisedOmrPrefixes, mAdvertisedOmrPrefixNum, mAdvertisedOnLinkPrefix);
+    EvaluateRoutingPolicy();
 }
 
 void RoutingManager::HandleRouterSolicitTimer(Timer &aTimer)
