@@ -435,7 +435,7 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     // 3. Update advertised on-link & OMR prefixes information.
     mAdvertisedOnLinkPrefix = newOnLinkPrefix;
     static_assert(sizeof(mAdvertisedOmrPrefixes) == sizeof(newOmrPrefixes), "invalid new OMR prefix array size");
-    memcpy(mAdvertisedOmrPrefixes, newOmrPrefixes, sizeof(mAdvertisedOmrPrefixes));
+    memcpy(mAdvertisedOmrPrefixes, newOmrPrefixes, sizeof(newOmrPrefixes[0]) * newOmrPrefixNum);
     mAdvertisedOmrPrefixNum = newOmrPrefixNum;
 }
 
