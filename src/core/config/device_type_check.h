@@ -28,11 +28,11 @@
 
 /**
  * @file
- *   This file includes OpenThread device type definition for utilization.
+ *   This file includes OpenThread device type checking utilities.
  */
 
-#ifndef CONFIG_DEVICE_TYPE_UTIL_H_
-#define CONFIG_DEVICE_TYPE_UTIL_H_
+#ifndef CONFIG_DEVICE_TYPE_CHECK_H_
+#define CONFIG_DEVICE_TYPE_CHECK_H_
 
 #if defined(OPENTHREAD_FTD) || defined(OPENTRHEAD_MTD) || defined(OPENTHREAD_RADIO)
 #define _OPENTHREAD_DEVICE_TYPE_DEFINED 1
@@ -75,4 +75,4 @@
 #endif // _OPENTHREAD_FTD_ + _OPENTHREAD_MTD_ + _OPENTHREAD_RADIO_ != 1
 #endif // _OPENTHREAD_DEVICE_TYPE_DEFINED
 
-#endif // CONFIG_DEVICE_TYPE_UTIL_H_
+#endif // CONFIG_DEVICE_TYPE_CHECK_H_

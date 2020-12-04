@@ -42,6 +42,8 @@
 
 #define OPENTHREAD_CORE_CONFIG_H_IN
 
+#include "config/device_type_check.h"
+
 #ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #endif
@@ -61,7 +63,6 @@
 #include "config/coap.h"
 #include "config/commissioner.h"
 #include "config/dataset_updater.h"
-#include "config/device_type_check.h"
 #include "config/dhcp6_client.h"
 #include "config/dhcp6_server.h"
 #include "config/diag.h"

@@ -35,7 +35,6 @@
 #ifndef CONFIG_MAC_H_
 #define CONFIG_MAC_H_
 
-#include "config/device_type_check.h"
 #include "config/time_sync.h"
 
 /**
