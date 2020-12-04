@@ -53,6 +53,7 @@ CHANNEL1 = 18
 ON_MESH_PREFIX1 = "fd11:22:33:44::/64"
 ON_MESH_PREFIX2 = "fdaa:bb:cc:dd::/64"
 
+
 class SingleBorderRouter(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
