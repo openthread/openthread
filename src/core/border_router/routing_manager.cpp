@@ -235,8 +235,8 @@ exit:
 
 uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes)
 {
-    uint8_t                         newOmrPrefixesNum = 0;
-    NetworkData::Iterator           iterator          = NetworkData::kIteratorInit;
+    uint8_t                         newOmrPrefixNum = 0;
+    NetworkData::Iterator           iterator        = NetworkData::kIteratorInit;
     NetworkData::OnMeshPrefixConfig onMeshPrefixConfig;
     bool                            isLocalOmrPrefixPublished = false;
 
@@ -256,9 +256,9 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes)
             // we don't need to remove it later when we want to unpublish it.
             isLocalOmrPrefixPublished = true;
         }
-        else if (newOmrPrefixesNum < kMaxOmrPrefixNumber)
+        else if (newOmrPrefixNum < kMaxOmrPrefixNumber)
         {
-            aNewOmrPrefixes[newOmrPrefixesNum++] = onMeshPrefixConfig.GetPrefix();
+            aNewOmrPrefixes[newOmrPrefixNum++] = onMeshPrefixConfig.GetPrefix();
         }
         else
         {
@@ -268,21 +268,21 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes)
     }
 
     // Decide if we need to add or remove my local OMR prefix.
-    if (newOmrPrefixesNum == 0)
+    if (newOmrPrefixNum == 0)
     {
         if (isLocalOmrPrefixPublished)
         {
-            aNewOmrPrefixes[newOmrPrefixesNum++] = mLocalOmrPrefix;
+            aNewOmrPrefixes[newOmrPrefixNum++] = mLocalOmrPrefix;
         }
         else
         {
             otLogInfoBr("EvaluateOmrPrefix: no valid OMR prefixes found in Thread network");
             if (PublishLocalOmrPrefix() == OT_ERROR_NONE)
             {
-                aNewOmrPrefixes[newOmrPrefixesNum++] = mLocalOmrPrefix;
+                aNewOmrPrefixes[newOmrPrefixNum++] = mLocalOmrPrefix;
             }
 
-            // The `newOmrPrefixesNum` is zero when we failed to publish the local OMR prefix.
+            // The `newOmrPrefixNum` is zero when we failed to publish the local OMR prefix.
         }
     }
     else
@@ -300,7 +300,7 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes)
     }
 
 exit:
-    return newOmrPrefixesNum;
+    return newOmrPrefixNum;
 }
 
 otError RoutingManager::PublishLocalOmrPrefix()
