@@ -49,7 +49,7 @@ extern "C" void otPlatInfraIfRecvIcmp6(otInstance *        aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.Get<RoutingManager>().RecvIcmp6Message(aInfraIfIndex, static_cast<const Ip6::Address &>(*aSrcAddress),
-                                                    aBuffer, aBufferLength);
+    instance.Get<BorderRouter::RoutingManager>().RecvIcmp6Message(
+        aInfraIfIndex, static_cast<const Ip6::Address &>(*aSrcAddress), aBuffer, aBufferLength);
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

@@ -51,6 +51,8 @@
 
 namespace ot {
 
+namespace BorderRouter {
+
 /**
  * This class implements bi-directional routing between Thread and
  * Infrastructure networks.
@@ -287,6 +289,8 @@ private:
 
     TimerMilli mDiscoveredOnLinkPrefixInvalidTimer;
 };
+
+} // namespace BorderRouter
 
 } // namespace ot
 

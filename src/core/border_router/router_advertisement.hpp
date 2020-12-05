@@ -54,6 +54,8 @@ using ot::Encoding::BigEndian::HostSwap32;
 
 namespace ot {
 
+namespace BorderRouter {
+
 namespace RouterAdv {
 
 /**
@@ -334,6 +336,8 @@ private:
 static_assert(sizeof(RouterSolicitMessage) == 8, "invalid RouterSolicitMessage structure");
 
 } // namespace RouterAdv
+
+} // namespace BorderRouter
 
 } // namespace ot
 

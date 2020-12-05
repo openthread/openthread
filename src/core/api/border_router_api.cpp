@@ -48,7 +48,7 @@ otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<RoutingManager>().Init(aInfraIfIndex);
+    return instance.Get<BorderRouter::RoutingManager>().Init(aInfraIfIndex);
 }
 #endif
 

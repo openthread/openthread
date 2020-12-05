@@ -181,7 +181,7 @@ void Notifier::EmitEvents(void)
     Get<Extension::ExtensionBase>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    Get<RoutingManager>().HandleNotifierEvents(events);
+    Get<BorderRouter::RoutingManager>().HandleNotifierEvents(events);
 #endif
 
     for (ExternalCallback &callback : mExternalCallbacks)

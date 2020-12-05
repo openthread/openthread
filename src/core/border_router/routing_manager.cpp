@@ -55,6 +55,8 @@
 
 namespace ot {
 
+namespace BorderRouter {
+
 RoutingManager::RoutingManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mInfraIfIndex(0)
@@ -751,6 +753,8 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
 exit:
     return;
 }
+
+} // namespace BorderRouter
 
 } // namespace ot
 

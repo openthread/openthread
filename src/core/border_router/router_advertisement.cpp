@@ -40,6 +40,8 @@
 
 namespace ot {
 
+namespace BorderRouter {
+
 namespace RouterAdv {
 
 const Option *Option::GetNextOption(const Option *aCurOption, const uint8_t *aBuffer, uint16_t aBufferLength)
@@ -150,6 +152,8 @@ RouterSolicitMessage::RouterSolicitMessage(void)
 }
 
 } // namespace RouterAdv
+
+} // namespace BorderRouter
 
 } // namespace ot
 

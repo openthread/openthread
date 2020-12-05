@@ -396,7 +396,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    RoutingManager mRoutingManager;
+    BorderRouter::RoutingManager mRoutingManager;
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -832,7 +832,7 @@ template <> inline Utils::Otns &Instance::Get(void)
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-template <> inline RoutingManager &Instance::Get(void)
+template <> inline BorderRouter::RoutingManager &Instance::Get(void)
 {
     return mRoutingManager;
 }
