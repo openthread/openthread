@@ -49,7 +49,7 @@ jobs:
       THREAD_VERSION: 1.2
       INTER_OP: 1
       COVERAGE: 1
-      MULTIPLY: 20
+      MULTIPLY: 50
       PYTHONUNBUFFERED: 1
       VERBOSE: 1
     steps:
