@@ -233,7 +233,7 @@ exit:
     return;
 }
 
-uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes)
+uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t aMaxOmrPrefixNum)
 {
     uint8_t                         newOmrPrefixNum = 0;
     NetworkData::Iterator           iterator        = NetworkData::kIteratorInit;
@@ -256,7 +256,7 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes)
             // we don't need to remove it later when we want to unpublish it.
             isLocalOmrPrefixPublished = true;
         }
-        else if (newOmrPrefixNum < kMaxOmrPrefixNum)
+        else if (newOmrPrefixNum < aMaxOmrPrefixNum)
         {
             aNewOmrPrefixes[newOmrPrefixNum++] = onMeshPrefixConfig.GetPrefix();
         }
@@ -397,7 +397,7 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 
     // 0. Evaluate on-link & OMR prefixes.
     newOnLinkPrefix = EvaluateOnLinkPrefix();
-    newOmrPrefixNum = EvaluateOmrPrefix(newOmrPrefixes);
+    newOmrPrefixNum = EvaluateOmrPrefix(newOmrPrefixes, kMaxOmrPrefixNum);
 
     // 1. Send Router Advertisement message if necessary.
     startTimer = SendRouterAdvertisement(newOmrPrefixes, newOmrPrefixNum, newOnLinkPrefix);

@@ -162,13 +162,14 @@ private:
     /**
      * This method evaluates the OMR prefix for the Thread Network.
      *
-     * @param[out]  aNewOmrPrefixes  An array of the new OMR prefixes should be advertised.
-     *                               MUST not be NULL.
+     * @param[out]  aNewOmrPrefixes   An array of the new OMR prefixes should be advertised.
+     *                                MUST not be NULL.
+     * @param[in]   aMaxOmrPrefixNum  The maximum number of OMR prefixes that @p aNewOmrPrefixes can hold.
      *
-     * @returns  The number of the new OMR prefixes.
+     * @returns  The number of the new OMR prefixes that should be advertised after this evaluation.
      *
      */
-    uint8_t EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes);
+    uint8_t EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t aMaxOmrPrefixNum);
 
     /**
      * This method evaluates the on-link prefix for the infra link.
