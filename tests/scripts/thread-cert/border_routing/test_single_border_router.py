@@ -92,6 +92,7 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.assertEqual('router', self.nodes[ROUTER1].get_state())
         self.nodes[ROUTER1].add_prefix(ON_MESH_PREFIX1)
         self.nodes[ROUTER1].add_prefix(ON_MESH_PREFIX2)
+        self.nodes[ROUTER1].register_netdata()
 
         self.simulator.go(10)
         logging.info("Host addresses: %r", self.nodes[HOST].get_addrs())
