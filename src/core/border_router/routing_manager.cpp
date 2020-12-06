@@ -723,19 +723,29 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
             prefix.Set(pio.GetPrefix(), pio.GetPrefixLength());
             if (IsValidOnLinkPrefix(prefix))
             {
-                // We keep tracking the latest on-link prefix.
-                mDiscoveredOnLinkPrefixInvalidTimer.Start(GetPrefixExpireDelay(pio.GetValidLifetime()));
-                mDiscoveredOnLinkPrefix = prefix;
+                if (pio.GetValidLifetime() == 0 && mDiscoveredOnLinkPrefix == prefix)
+                {
+                    otLogInfoBr("invalidate discovered on-link prefix %s", prefix.ToString().AsCString());
+                    mDiscoveredOnLinkPrefixInvalidTimer.Stop();
+                    mDiscoveredOnLinkPrefix.Clear();
+                    needReevaluate = true;
+                }
+                else
+                {
+                    otLogInfoBr("set discovered on-link prefix to %s, valid lifetime: %u seconds",
+                                prefix.ToString().AsCString(), pio.GetValidLifetime());
 
-                otLogInfoBr("set discovered on-link prefix to %s, valid lifetime: %u seconds",
-                            mDiscoveredOnLinkPrefix.ToString().AsCString(), pio.GetValidLifetime());
+                    // We keep tracking the latest on-link prefix.
+                    mDiscoveredOnLinkPrefixInvalidTimer.Start(GetPrefixExpireDelay(pio.GetValidLifetime()));
+                    mDiscoveredOnLinkPrefix = prefix;
 
-                // Stop Router Solicitation if we found a valid on-link prefix.
-                // Otherwise, we wait till the Router Solicitation process timeouted.
-                // So the maximum delay before the Border Router starts advertising
-                // its own on-link prefix is 9 (4 + 4 + 1) seconds.
-                mRouterSolicitTimer.Stop();
-                needReevaluate = true;
+                    // Stop Router Solicitation if we found a valid on-link prefix.
+                    // Otherwise, we wait till the Router Solicitation process timeouted.
+                    // So the maximum delay before the Border Router starts advertising
+                    // its own on-link prefix is 9 (4 + 4 + 1) seconds.
+                    mRouterSolicitTimer.Stop();
+                    needReevaluate = true;
+                }
             }
             else
             {
