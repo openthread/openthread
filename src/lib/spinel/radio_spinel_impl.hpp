@@ -52,6 +52,7 @@
 #include "lib/spinel/spinel_decoder.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
+#include "radio/radio.hpp"
 
 #ifndef MS_PER_S
 #define MS_PER_S 1000
@@ -2047,6 +2048,8 @@ uint32_t RadioSpinel<InterfaceType, ProcessContextType>::GetRadioChannelMask(boo
         maskLength -= static_cast<spinel_size_t>(unpacked);
     }
 
+    channelMask &= mMaxPowerTable.GetSupportedChannelMask();
+
 exit:
     LogIfFail("Get radio channel mask failed", error);
     return channelMask;
@@ -2289,9 +2292,37 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RestoreProperties(void)
         SuccessOrDie(Set(SPINEL_PROP_PHY_FEM_LNA_GAIN, SPINEL_DATATYPE_INT8_S, mFemLnaGain));
     }
 
+    for (uint8_t channel = Radio::kChannelMin; channel <= Radio::kChannelMax; channel++)
+    {
+        int8_t power = mMaxPowerTable.GetTransmitPower(channel);
+
+        if (power != OT_RADIO_POWER_INVALID)
+        {
+            // Some old RCPs doesn't support max transmit power
+            otError error = SetChannelMaxTransmitPower(channel, power);
+
+            if (error != OT_ERROR_NONE && error != OT_ERROR_NOT_FOUND)
+            {
+                DieNow(OT_EXIT_FAILURE);
+            }
+        }
+    }
+
     CalcRcpTimeOffset();
 }
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aMaxPower)
+{
+    otError error = OT_ERROR_NONE;
+    VerifyOrExit(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
+    mMaxPowerTable.SetTransmitPower(aChannel, aMaxPower);
+    error = Set(SPINEL_PROP_PHY_CHAN_MAX_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, aChannel, aMaxPower);
+
+exit:
+    return error;
+}
 
 } // namespace Spinel
 } // namespace ot

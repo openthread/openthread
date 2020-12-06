@@ -181,3 +181,12 @@ OT_TOOL_WEAK otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGai
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }
+
+OT_TOOL_WEAK otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aChannel);
+    OT_UNUSED_VARIABLE(aMaxPower);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}

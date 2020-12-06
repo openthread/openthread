@@ -70,6 +70,7 @@ public:
      */
     explicit Manager(Instance &aInstance);
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     /**
      * This method returns the NdProxy Table.
      *
@@ -77,6 +78,7 @@ public:
      *
      */
     NdProxyTable &GetNdProxyTable(void);
+#endif
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
@@ -92,6 +94,7 @@ public:
      */
     void ConfigNextDuaRegistrationResponse(const Ip6::InterfaceIdentifier *aMlIid, uint8_t aStatus);
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     /**
      * This method configures response status for next Multicast Listener Registration.
      *
@@ -102,9 +105,10 @@ public:
      *
      */
     void ConfigNextMulticastListenerRegistrationResponse(ThreadStatusTlv::MlrStatus aStatus);
-
+#endif
 #endif
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     /**
      * This method gets the Multicast Listeners Table.
      *
@@ -112,6 +116,7 @@ public:
      *
      */
     MulticastListenersTable &GetMulticastListenersTable(void) { return mMulticastListenersTable; }
+#endif
 
     /**
      * This method returns if messages destined to a given Domain Unicast Address should be forwarded to the Backbone
@@ -168,6 +173,7 @@ private:
         kTimerInterval = 1000,
     };
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     static void HandleMulticastListenerRegistration(void *               aContext,
                                                     otMessage *          aMessage,
                                                     const otMessageInfo *aMessageInfo)
@@ -176,6 +182,7 @@ private:
             *static_cast<const Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
     }
     void HandleMulticastListenerRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
     void SendMulticastListenerRegistrationResponse(const Coap::Message &      aMessage,
                                                    const Ip6::MessageInfo &   aMessageInfo,
                                                    ThreadStatusTlv::MlrStatus aStatus,
@@ -184,7 +191,9 @@ private:
     void SendBackboneMulticastListenerRegistration(const Ip6::Address *aAddresses,
                                                    uint8_t             aAddressNum,
                                                    uint32_t            aTimeout);
+#endif
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     static void HandleDuaRegistration(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
         static_cast<Manager *>(aContext)->HandleDuaRegistration(*static_cast<const Coap::Message *>(aMessage),
@@ -217,29 +226,43 @@ private:
                                             const Ip6::MessageInfo &   aMessageInfo,
                                             const Ip6::Address &       aTarget,
                                             ThreadStatusTlv::DuaStatus aStatus);
-
+#endif
     void HandleNotifierEvents(Events aEvents);
 
     static void HandleTimer(Timer &aTimer) { aTimer.GetOwner<Manager>().HandleTimer(); }
     void        HandleTimer(void);
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     Coap::Resource mMulticastListenerRegistration;
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     Coap::Resource mDuaRegistration;
     Coap::Resource mBackboneQuery;
     Coap::Resource mBackboneAnswer;
     NdProxyTable   mNdProxyTable;
+#endif
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     MulticastListenersTable mMulticastListenersTable;
-    TimerMilli              mTimer;
+#endif
+    TimerMilli mTimer;
 
     BackboneTmfAgent mBackboneTmfAgent;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    Ip6::InterfaceIdentifier   mDuaResponseTargetMlIid;
-    uint8_t                    mDuaResponseStatus;
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
+    Ip6::InterfaceIdentifier mDuaResponseTargetMlIid;
+    uint8_t                  mDuaResponseStatus;
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     ThreadStatusTlv::MlrStatus mMlrResponseStatus;
-    bool                       mDuaResponseIsSpecified : 1;
-    bool                       mMlrResponseIsSpecified : 1;
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
+    bool mDuaResponseIsSpecified : 1;
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+    bool mMlrResponseIsSpecified : 1;
+#endif
 #endif
 };
 

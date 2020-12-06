@@ -408,7 +408,7 @@ void otThreadSendAddressNotification(otInstance *              aInstance,
                                                              static_cast<Ip6::Address &>(*aDestination));
 }
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 otError otThreadSendProactiveBackboneNotification(otInstance *              aInstance,
                                                   otIp6Address *            aTarget,
                                                   otIp6InterfaceIdentifier *aMlIid,

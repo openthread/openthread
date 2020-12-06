@@ -72,9 +72,10 @@ enum
     OT_RADIO_BIT_RATE          = 250000, ///< 2.4 GHz IEEE 802.15.4 (bits per second)
     OT_RADIO_BITS_PER_OCTET    = 8,      ///< Number of bits per octet
 
-    OT_RADIO_SYMBOL_TIME  = ((OT_RADIO_BITS_PER_OCTET / OT_RADIO_SYMBOLS_PER_OCTET) * 1000000) / OT_RADIO_BIT_RATE,
-    OT_RADIO_LQI_NONE     = 0,   ///< LQI measurement not supported
-    OT_RADIO_RSSI_INVALID = 127, ///< Invalid or unknown RSSI value
+    OT_RADIO_SYMBOL_TIME   = ((OT_RADIO_BITS_PER_OCTET / OT_RADIO_SYMBOLS_PER_OCTET) * 1000000) / OT_RADIO_BIT_RATE,
+    OT_RADIO_LQI_NONE      = 0,   ///< LQI measurement not supported
+    OT_RADIO_RSSI_INVALID  = 127, ///< Invalid or unknown RSSI value
+    OT_RADIO_POWER_INVALID = 127, ///< Invalid or unknown power value
 };
 
 /**
@@ -945,6 +946,21 @@ otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const o
  *
  */
 void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime);
+
+/**
+ * Set the max transmit power for a specific channel.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aChannel     The radio channel.
+ * @param[in]  aMaxPower    The max power in dBm, passing OT_RADIO_RSSI_INVALID will disable this channel.
+ *
+ * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented
+ * @retval  OT_ERROR_INVALID_ARGS     The specified channel is not valid.
+ * @retval  OT_ERROR_FAILED           Other platform specific errors.
+ * @retval  OT_ERROR_NONE             Successfully set max transmit poewr.
+ *
+ */
+otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower);
 
 /**
  * @}

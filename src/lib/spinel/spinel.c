@@ -1399,6 +1399,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PHY_CHAN_PREFERRED";
         break;
 
+    case SPINEL_PROP_PHY_CHAN_MAX_POWER:
+        ret = "PHY_CHAN_MAX_POWER";
+        break;
+
     case SPINEL_PROP_JAM_DETECT_ENABLE:
         ret = "JAM_DETECT_ENABLE";
         break;
