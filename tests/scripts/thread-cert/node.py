@@ -1271,7 +1271,7 @@ class NodeImpl:
         for i in range(1, len(netdata)):
             if netdata[i].startswith("Routes:"):
                 break
-            prefixes.append(netdata[1])
+            prefixes.append(netdata[i])
 
         return prefixes
 
