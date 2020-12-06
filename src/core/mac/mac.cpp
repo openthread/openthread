@@ -854,10 +854,12 @@ void Mac::PerformNextOperation(void)
         break;
 
     case kOperationActiveScan:
+        mTimer.Stop();
         PerformActiveScan();
         break;
 
     case kOperationEnergyScan:
+        mTimer.Stop();
         PerformEnergyScan();
         break;
 
@@ -871,6 +873,7 @@ void Mac::PerformNextOperation(void)
 #endif
     case kOperationTransmitPoll:
     case kOperationTransmitOutOfBandFrame:
+        mTimer.Stop();
         BeginTransmit();
         break;
 
