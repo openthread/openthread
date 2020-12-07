@@ -32,7 +32,7 @@ import copy
 
 import config
 import thread_cert
-from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MLE_DATA_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, SVR_DATA_URI, ACTIVE_TIMESTAMP_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV, ADDRESS16_TLV, NETWORK_DATA_TLV, ROUTE64_TLV, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV
+from pktverify.consts import WIRESHARK_OVERRIDE_PREFS, MLE_DATA_RESPONSE, SVR_DATA_URI, NWD_6LOWPAN_ID_TLV, NL_RLOC16_TLV
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.addrs import Ipv6Addr
 from pktverify.null_field import nullField
@@ -148,7 +148,7 @@ class Cert_7_1_8_BorderRouterAsFED(thread_cert.TestCase):
                               Ipv6Addr(PREFIX_2001[:-3]),
                               Ipv6Addr(PREFIX_2002[:-3])
                              } == set(p.thread_nwd.tlv.prefix) and\
-                   p.thread_nwd.tlv.border_router_16 is not nullField
+                   p.thread_nwd.tlv.border_router_16 == [FED_RLOC16, FED_RLOC16]
                    ).\
             must_next()
 
@@ -168,6 +168,9 @@ class Cert_7_1_8_BorderRouterAsFED(thread_cert.TestCase):
                                   Ipv6Addr(PREFIX_2001[:-3]),
                                   Ipv6Addr(PREFIX_2002[:-3])
                                  } == set(p.thread_nwd.tlv.prefix) and\
+                                {
+                                 NWD_6LOWPAN_ID_TLV
+                                 } <= set(p.thread_nwd.tlv.type) and\
                        p.thread_nwd.tlv.border_router.flag.p == [1, 1] and\
                        p.thread_nwd.tlv.border_router.flag.s == [1, 1] and\
                        p.thread_nwd.tlv.border_router.flag.r == [1, 1] and\
@@ -185,6 +188,9 @@ class Cert_7_1_8_BorderRouterAsFED(thread_cert.TestCase):
                               Ipv6Addr(PREFIX_2001[:-3]),
                               Ipv6Addr(PREFIX_2002[:-3])
                              } == set(p.thread_nwd.tlv.prefix) and\
+                             {
+                             NWD_6LOWPAN_ID_TLV
+                             } <= set(p.thread_nwd.tlv.type) and\
                    p.thread_nwd.tlv.border_router.flag.p == [1, 1] and\
                    p.thread_nwd.tlv.border_router.flag.s == [1, 1] and\
                    p.thread_nwd.tlv.border_router.flag.r == [1, 1] and\
@@ -202,7 +208,10 @@ class Cert_7_1_8_BorderRouterAsFED(thread_cert.TestCase):
         #                 RLOC16 TLV
         pkts.filter_wpan_src64(ROUTER).\
             filter_coap_request(SVR_DATA_URI).\
-            filter(lambda p: p.thread_address.tlv.rloc16 == FED_RLOC16).\
+            filter(lambda p:
+                   p.thread_address.tlv.type == [NL_RLOC16_TLV] and\
+                   p.thread_address.tlv.rloc16 == FED_RLOC16
+                  ).\
             must_next()
 
 
