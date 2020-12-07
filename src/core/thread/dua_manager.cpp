@@ -326,10 +326,12 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
 #endif
     }
 
+#if OPENTHREAD_CONFIG_DUA_ENABLE
     if (aEvents.ContainsAny(kEventIp6AddressAdded))
     {
-        mRegistrationTask.Post();
+        UpdateRegistrationDelay(1);
     }
+#endif
 }
 
 void DuaManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State               aState,
