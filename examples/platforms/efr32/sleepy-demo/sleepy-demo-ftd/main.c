@@ -163,7 +163,8 @@ void setNetworkConfiguration(otInstance *aInstance)
     aDataset.mComponents.mIsExtendedPanIdPresent = true;
 
     /* Set master key to 1234C0DE1AB51234C0DE1AB51234C0DE */
-    uint8_t key[OT_MASTER_KEY_SIZE] = {0x12, 0x34, 0xC0, 0xDE, 0x1A, 0xB5, 0x12, 0x34, 0xC0, 0xDE, 0x1A, 0xB5};
+    uint8_t key[OT_MASTER_KEY_SIZE] = {0x12, 0x34, 0xC0, 0xDE, 0x1A, 0xB5, 0x12, 0x34,
+                                       0xC0, 0xDE, 0x1A, 0xB5, 0x12, 0x34, 0xC0, 0xDE};
     memcpy(aDataset.mMasterKey.m8, key, sizeof(aDataset.mMasterKey));
     aDataset.mComponents.mIsMasterKeyPresent = true;
 
