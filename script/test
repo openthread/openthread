@@ -32,8 +32,8 @@
 
 set -euo pipefail
 
-readonly OT_BUILDDIR="$(pwd)/build"
-readonly OT_SRCDIR="$(pwd)"
+readonly OT_BUILDDIR="${PWD}/build"
+readonly OT_SRCDIR="${PWD}"
 
 readonly COLOR_PASS='\033[0;32m'
 readonly COLOR_FAIL='\033[0;31m'
@@ -138,6 +138,7 @@ do_build()
 
 do_clean()
 {
+    ./script/gcda-tool clean
     rm -rfv "${OT_BUILDDIR}" || sudo rm -rfv "${OT_BUILDDIR}"
 }
 
@@ -169,6 +170,7 @@ do_unit()
 do_cert()
 {
     export top_builddir="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}"
+    export top_srcdir="${OT_SRCDIR}"
 
     case "${OT_NODE_TYPE}" in
         rcp | rcp-cli | cli)
@@ -382,23 +384,6 @@ do_package()
     ls "${builddir}"/openthread-daemon-*.deb
 }
 
-do_tar()
-{
-    local target_name="openthread-$1-$2"
-    local build_dir="${OT_BUILDDIR}"
-    tar -cf "${target_name}.tar" -C "${build_dir}" "${target_name}"
-    mv "${target_name}.tar" "${build_dir}/"
-    rm -rf "${build_dir:?}/${target_name}"
-}
-
-do_untar()
-{
-    local target_name="openthread-$1-$2"
-    local build_dir="${OT_BUILDDIR}"
-    tar -xf "${build_dir}/${target_name}.tar" -C "${build_dir}"
-    rm "${build_dir:?}/${target_name}.tar"
-}
-
 do_prepare_coredump_upload()
 {
     echo "$PWD/ot-core-dump/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
@@ -426,9 +411,13 @@ do_generate_coverage()
         chmod +x "$llvm_gcov"
         lcov --gcov-tool "$llvm_gcov" --directory . --capture --output-file tmp/coverage.info
     else
+        ./script/gcda-tool collect
+        ./script/gcda-tool install
+
         lcov --directory . --capture --output-file tmp/coverage.info
     fi
     lcov --list tmp/coverage.info
+    lcov --extract tmp/coverage.info "$PWD/src/core/common/message.cpp" | c++filt
 }
 
 do_upload_codecov()
@@ -556,14 +545,6 @@ main()
             expect)
                 shift
                 do_expect "$@"
-                ;;
-            tar)
-                shift
-                do_tar "$@"
-                ;;
-            untar)
-                shift
-                do_untar "$@"
                 ;;
             prepare_coredump_upload)
                 do_prepare_coredump_upload

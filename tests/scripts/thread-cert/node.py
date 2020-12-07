@@ -229,6 +229,11 @@ class OtCli:
         self.env_version = os.getenv('THREAD_VERSION', '1.1')
         self.is_bbr = is_bbr
         self._initialized = False
+        if os.getenv('COVERAGE', 0) and os.getenv('CC', 'gcc') == 'gcc':
+            self._cmd_prefix = '/usr/bin/env GCOV_PREFIX=%s/ot-run/%s/ot-gcda.%d ' % (os.getenv(
+                'top_srcdir', '.'), sys.argv[0], nodeid)
+        else:
+            self._cmd_prefix = ''
 
         if version is not None:
             self.version = version
@@ -298,7 +303,7 @@ class OtCli:
 
         print("%s" % cmd)
 
-        self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=10)
+        self.pexpect = pexpect.popen_spawn.PopenSpawn(self._cmd_prefix + cmd, timeout=10)
 
         # Add delay to ensure that the process is ready to receive commands.
         timeout = 0.4
@@ -379,7 +384,7 @@ class OtCli:
         cmd += ' %d' % nodeid
         print("%s" % cmd)
 
-        self.pexpect = pexpect.spawn(cmd, timeout=10)
+        self.pexpect = pexpect.spawn(self._cmd_prefix + cmd, timeout=10)
 
         # Add delay to ensure that the process is ready to receive commands.
         time.sleep(0.2)

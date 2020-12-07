@@ -290,26 +290,12 @@ jobs:
     - name: Run RCP Mode
       run: |
         OT_OPTIONS=-DOT_READLINE=OFF VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
-    - name: Keep POSIX Only
-      run: |
-        ./script/test tar simulation 1.1
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
         name: cov-expects-2
-        path: tmp/coverage.info
-    - name: Keep Simulation Only
-      run: |
-        ./script/test tar posix 1.1
-        ./script/test untar simulation 1.1
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-expects-3
         path: tmp/coverage.info
     - name: Run TUN Mode
       run: |
@@ -322,26 +308,12 @@ jobs:
         sudo systemctl restart dnsmasq
         host ipv6.google.com ::1
         OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
-    - name: Keep POSIX Only
-      run: |
-        ./script/test tar simulation 1.1
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-expects-4
-        path: tmp/coverage.info
-    - name: Keep Simulation Only
-      run: |
-        ./script/test tar posix 1.1
-        ./script/test untar simulation 1.1
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-expects-5
+        name: cov-expects-3
         path: tmp/coverage.info
 
   external-commissioner:
