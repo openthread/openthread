@@ -162,7 +162,7 @@ public:
     void NotifyDuplicateDomainUnicastAddress(void);
 #endif
 
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void UpdateChildDomainUnicastAddress(const Child &aChild, Mle::ChildDuaState aState);
 #endif
 
@@ -181,7 +181,7 @@ private:
     void UpdateRegistrationDelay(uint8_t aDelay);
 #endif
 
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void SendAddressNotification(Ip6::Address &aAddress, ThreadStatusTlv::DuaStatus aStatus, const Child &aChild);
 #endif
 
@@ -251,7 +251,7 @@ private:
         uint32_t mValue; ///< Non-zero indicates timer should start.
     } mDelay;
 
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     // TODO: (DUA) may re-evaluate the alternative option of distributing the flags into the child table:
     //       - Child class itself have some padding - may save some RAM
     //       - Avoid cross reference between a bit-vector and the child entry

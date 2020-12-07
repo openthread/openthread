@@ -93,7 +93,7 @@ public:
     void HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State               aState,
                                            const BackboneRouter::BackboneRouterConfig &aConfig);
 
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
      * This method updates the Multicast Subscription Table according to the Child information.
      *
@@ -108,7 +108,7 @@ public:
                                     uint16_t            aOldMlrRegisteredAddressNum);
 #endif
 
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     /**
      * This method registers Multicast Listeners to Primary Backbone Router.
      *
@@ -176,7 +176,7 @@ private:
     bool IsAddressMlrRegisteredByNetif(const Ip6::Address &aAddress) const;
 #endif
 
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     bool IsAddressMlrRegisteredByAnyChild(const Ip6::Address &aAddress) const
     {
         return IsAddressMlrRegisteredByAnyChildExcept(aAddress, nullptr);
