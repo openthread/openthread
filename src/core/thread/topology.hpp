@@ -698,7 +698,7 @@ private:
 class Child : public Neighbor,
               public IndirectSender::ChildInfo,
               public DataPollHandler::ChildInfo
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     ,
               public CslTxScheduler::ChildInfo
 #endif
@@ -981,7 +981,7 @@ public:
      */
     bool HasIp6Address(const Ip6::Address &aAddress) const;
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     /**
      * This method retrieves the Domain Unicast Address registered by the child.
      *
@@ -1094,7 +1094,7 @@ public:
 
 #endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
      * This method returns MLR state of an Ip6 multicast address.
      *
@@ -1146,7 +1146,7 @@ public:
      *
      */
     bool HasAnyMlrToRegisterAddress(void) const { return mMlrToRegisterMask.HasAny(); }
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 private:
 #if OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD < 2
@@ -1181,7 +1181,7 @@ private:
     Ip6::Address             mIp6Address[kNumIp6Addresses]; ///< Registered IPv6 addresses
     uint32_t                 mTimeout;                      ///< Child timeout
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     ChildIp6AddressMask mMlrToRegisterMask;
     ChildIp6AddressMask mMlrRegisteredMask;
 #endif

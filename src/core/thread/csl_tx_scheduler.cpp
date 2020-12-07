@@ -28,7 +28,7 @@
 
 #include "csl_tx_scheduler.hpp"
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
@@ -287,4 +287,4 @@ exit:
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE

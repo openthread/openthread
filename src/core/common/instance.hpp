@@ -542,7 +542,7 @@ template <> inline DataPollHandler &Instance::Get(void)
     return mThreadNetif.mMeshForwarder.mIndirectSender.mDataPollHandler;
 }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 template <> inline CslTxScheduler &Instance::Get(void)
 {
     return mThreadNetif.mMeshForwarder.mIndirectSender.mCslTxScheduler;
@@ -798,14 +798,14 @@ template <> inline BackboneRouter::BackboneTmfAgent &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 template <> inline MlrManager &Instance::Get(void)
 {
     return mThreadNetif.mMlrManager;
 }
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
 template <> inline DuaManager &Instance::Get(void)
 {
     return mThreadNetif.mDuaManager;

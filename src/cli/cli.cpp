@@ -2278,7 +2278,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 otError Interpreter::ProcessMlr(uint8_t aArgsLength, char *aArgs[])
 {
@@ -2363,7 +2363,7 @@ void Interpreter::HandleMlrRegResult(otError             aError,
     OutputResult(aError);
 }
 
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#endif // (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 otError Interpreter::ProcessMode(uint8_t aArgsLength, char *aArgs[])
 {

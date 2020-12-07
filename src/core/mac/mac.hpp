@@ -219,7 +219,7 @@ public:
      */
     void RequestIndirectFrameTransmission(void);
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     /**
      * This method requests `Mac` to start a CSL tx operation after a delay of @p aDelay time.
      *
@@ -790,7 +790,7 @@ private:
         kOperationTransmitDataDirect,
 #if OPENTHREAD_FTD
         kOperationTransmitDataIndirect,
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kOperationTransmitDataCsl,
 #endif
 #endif
@@ -859,7 +859,7 @@ private:
     uint8_t GetTimeIeOffset(const Frame &aFrame);
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
 #endif
     static const char *OperationToString(Operation aOperation);
@@ -878,7 +878,7 @@ private:
 #if OPENTHREAD_FTD
     bool mPendingTransmitDataIndirect : 1;
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     bool mPendingTransmitDataCsl : 1;
 #endif
     bool mPendingTransmitPoll : 1;
@@ -914,7 +914,7 @@ private:
 #if OPENTHREAD_FTD
     uint8_t mMaxFrameRetriesIndirect;
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     TimeMilli mCslTxFireTime;
 #endif
 

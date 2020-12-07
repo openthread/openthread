@@ -217,7 +217,7 @@ void Child::Info::SetFrom(const Child &aChild)
     mFullThreadDevice   = aChild.IsFullThreadDevice();
     mFullNetworkData    = aChild.IsFullNetworkData();
     mIsStateRestoring   = aChild.IsStateRestoring();
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mIsCslSynced = aChild.IsCslSynchronized();
 #else
     mIsCslSynced = false;
@@ -269,7 +269,7 @@ void Child::ClearIp6Addresses(void)
 {
     mMeshLocalIid.Clear();
     memset(mIp6Address, 0, sizeof(mIp6Address));
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     mMlrToRegisterMask.Clear();
     mMlrRegisteredMask.Clear();
 #endif
@@ -386,7 +386,7 @@ exit:
     return retval;
 }
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 const Ip6::Address *Child::GetDomainUnicastAddress(void) const
 {
     const Ip6::Address *addr = nullptr;
@@ -411,7 +411,7 @@ void Child::GenerateChallenge(void)
     IgnoreError(Random::Crypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge)));
 }
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 bool Child::HasMlrRegisteredAddress(const Ip6::Address &aAddress) const
 {
     bool has = false;
@@ -454,7 +454,7 @@ void Child::SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState)
     mMlrToRegisterMask.Set(addressIndex, aState == kMlrStateToRegister);
     mMlrRegisteredMask.Set(addressIndex, aState == kMlrStateRegistered);
 }
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 void Router::Info::SetFrom(const Router &aRouter)
 {

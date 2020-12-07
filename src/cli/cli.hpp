@@ -393,7 +393,7 @@ private:
 
     otError ParseLinkMetricsFlags(otLinkMetrics &aLinkMetrics, char *aFlags);
 #endif
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     otError ProcessMlr(uint8_t aArgsLength, char *aArgs[]);
 
     otError ProcessMlrReg(uint8_t aArgsLength, char *aArgs[]);
@@ -672,7 +672,7 @@ private:
         {"macfilter", &Interpreter::ProcessMacFilter},
 #endif
         {"masterkey", &Interpreter::ProcessMasterKey},
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
         {"mlr", &Interpreter::ProcessMlr},
 #endif
         {"mode", &Interpreter::ProcessMode},

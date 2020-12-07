@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 
 #include "backbone_router/bbr_leader.hpp"
 #include "coap/coap_message.hpp"
@@ -93,7 +93,7 @@ public:
     void HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State               aState,
                                            const BackboneRouter::BackboneRouterConfig &aConfig);
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
      * This method updates the Multicast Subscription Table according to the Child information.
      *
@@ -108,11 +108,11 @@ public:
                                     uint16_t            aOldMlrRegisteredAddressNum);
 #endif
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     /**
      * This method registers Multicast Listeners to Primary Backbone Router.
      *
-     * Note: only available when both `OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE` and
+     * Note: only available when both `(OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)` and
      * `OPENTHREAD_CONFIG_COMMISSIONER_ENABLE` are enabled)
      *
      * @param aAddresses   A pointer to Ip6 multicast addresses to register.
@@ -176,7 +176,7 @@ private:
     bool IsAddressMlrRegisteredByNetif(const Ip6::Address &aAddress) const;
 #endif
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     bool IsAddressMlrRegisteredByAnyChild(const Ip6::Address &aAddress) const
     {
         return IsAddressMlrRegisteredByAnyChildExcept(aAddress, nullptr);
@@ -210,7 +210,7 @@ private:
                                const Ip6::Address *aFailedAddresses,
                                uint8_t             aFailedAddressNum);
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     otIp6RegisterMulticastListenersCallback mRegisterMulticastListenersCallback;
     void *                                  mRegisterMulticastListenersContext;
 #endif
@@ -219,12 +219,12 @@ private:
     uint16_t mSendDelay;
 
     bool mMlrPending : 1;
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     bool mRegisterMulticastListenersPending : 1;
 #endif
 };
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#endif // OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 #endif // MLR_MANAGER_HPP_
