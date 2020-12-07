@@ -32,7 +32,7 @@ import unittest
 import command
 import dtls
 import thread_cert
-from pktverify.consts import MLE_DISCOVERY_REQUEST, MLE_DISCOVERY_RESPONSE, HANDSHAKE_CLIENT_HELLO, HANDSHAKE_SERVER_HELLO, HANDSHAKE_SERVER_KEY_EXCHANGE, HANDSHAKE_SERVER_HELLO_DONE, HANDSHAKE_CLIENT_KEY_EXCHANGE, HANDSHAKE_HELLO_VERIFY_REQUEST, CONTENT_APPLICATION_DATA, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV, NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_REQUEST_TLV, NM_DISCOVERY_RESPONSE_TLV, THREAD_DISCOVERY_TLV, CONTENT_CHANGE_CIPHER_SPEC, CONTENT_HANDSHAKE
+from pktverify.consts import MLE_DISCOVERY_REQUEST, MLE_DISCOVERY_RESPONSE, HANDSHAKE_CLIENT_HELLO, HANDSHAKE_SERVER_HELLO, HANDSHAKE_SERVER_KEY_EXCHANGE, HANDSHAKE_SERVER_HELLO_DONE, HANDSHAKE_CLIENT_KEY_EXCHANGE, HANDSHAKE_HELLO_VERIFY_REQUEST, CONTENT_APPLICATION_DATA, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV, NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_REQUEST_TLV, NM_DISCOVERY_RESPONSE_TLV, THREAD_DISCOVERY_TLV, CONTENT_CHANGE_CIPHER_SPEC, CONTENT_HANDSHAKE, CONTENT_ALERT
 from pktverify.packet_verifier import PacketVerifier
 
 COMMISSIONER = 1
@@ -97,7 +97,7 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
         commissioner_messages = self.simulator.get_messages_sent_by(COMMISSIONER)
 
         # 5.8,9,10,11
-        # - Joiner_1
+        # - Joiner
         command.check_joiner_commissioning_messages(joiner_messages.commissioning_messages)
         # - Commissioner
         command.check_commissioner_commissioning_messages(commissioner_messages.commissioning_messages)
@@ -112,8 +112,8 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
         pv.summary.show()
 
         COMMISSIONER = pv.vars['COMMISSIONER']
-        COMMISSIONER_DR_VERSION = pv.vars['COMMISSIONER_DR_VERSION']
-        JOINER_DR_VERSION = pv.vars['JOINER_DR_VERSION']
+        COMMISSIONER_VERSION = pv.vars['COMMISSIONER_VERSION']
+        JOINER_VERSION = pv.vars['JOINER_VERSION']
 
         # Step 3: Joiner sends MLE Discovery Request
         #         MLE Discovery Request message MUST have these values:
@@ -121,13 +121,14 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
         #             - Thread Discovery TLV
         #               Sub-TLVs:
         #                   - Discovery Request TLV
-        #                       - Protocol Version: 2
+        #                       - Protocol Version: 2 or 3
+        #                       (depends on the Thread stack version in testing)
         pkts.filter_mle_cmd(MLE_DISCOVERY_REQUEST).\
             filter_LLARMA().\
             filter(lambda p:
                    [THREAD_DISCOVERY_TLV] == p.mle.tlv.type and\
                    [NM_DISCOVERY_REQUEST_TLV] == p.thread_meshcop.tlv.type and\
-                   p.thread_meshcop.tlv.discovery_req_ver == JOINER_DR_VERSION
+                   p.thread_meshcop.tlv.discovery_req_ver == JOINER_VERSION
             ).\
         must_next()
 
@@ -141,7 +142,8 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
         #             - Thread Discovery TLV
         #               Sub-TLVs:
         #                   - Discovery Request TLV
-        #                       - Protocol Version: 2
+        #                       - Protocol Version: 2 or 3
+        #                       (depends on the Thread stack version in testing)
         #                   - Extended PAN ID TLV
         #                   - Joiner UDP Port TLV
         #                   - Network Name TLV
@@ -153,11 +155,10 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
                               NM_EXTENDED_PAN_ID_TLV,
                               NM_NETWORK_NAME_TLV,
                               NM_STEERING_DATA_TLV,
-                              NM_COMMISSIONER_UDP_PORT_TLV,
                               NM_JOINER_UDP_PORT_TLV,
                               NM_DISCOVERY_RESPONSE_TLV
-                            } == set(p.thread_meshcop.tlv.type) and\
-                   p.thread_meshcop.tlv.discovery_rsp_ver == COMMISSIONER_DR_VERSION
+                            } <= set(p.thread_meshcop.tlv.type) and\
+                   p.thread_meshcop.tlv.discovery_rsp_ver == COMMISSIONER_VERSION
                   ).\
             must_next()
 
@@ -167,7 +168,7 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
         #    is used as destination port for UDP datagrams from Joiner to
         #    the Commissioner.
 
-        # 2. Joiner_1 sends an initial DTLS-ClientHello handshake record to the
+        # 2. Joiner sends an initial DTLS-ClientHello handshake record to the
         #    Commissioner
         pkts.filter_wpan_dst64(COMMISSIONER).\
             filter(lambda p:
@@ -198,7 +199,7 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
 
         # 5. Commissioner must correctly receive the subsequent DTLSClientHello
         #    handshake record and then send, in order, DTLSServerHello,
-        #    DTLS-ServerKeyExchange and DTLSServerHelloDone handshake records to Joiner_1
+        #    DTLS-ServerKeyExchange and DTLSServerHelloDone handshake records to Joiner
         pkts.filter_wpan_src64(COMMISSIONER).\
             filter(lambda p:
                       p.dtls.handshake.type == [HANDSHAKE_SERVER_HELLO,
@@ -258,6 +259,14 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
         #     JOIN_ENT.ntf dummy response to Commissioner
 
         # Check Step 8 ~ 11 in test()
+
+        # 12. Joiner sends an encrypted DTLS-Alert record with a code of 0 (close_notify)
+        #     to Commissioner
+        pkts.filter_wpan_dst64(COMMISSIONER).\
+            filter(lambda p:
+                   [CONTENT_ALERT] == p.dtls.record.content_type
+                  ).\
+               must_next()
 
 
 if __name__ == '__main__':
