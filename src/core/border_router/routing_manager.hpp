@@ -221,10 +221,8 @@ private:
      * @param[in]  aOnLinkPrefix     A pointer to the new on-link prefix to be advertised.
      *                               NULL means we should stop advertising on-link prefix.
      *
-     * @returns  A boolean indicate whether the Router Advertisement timer should be started.
-     *
      */
-    bool SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
+    void SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
                                  uint8_t            aNewOmrPrefixNum,
                                  const Ip6::Prefix *aNewOnLinkPrefix);
 
