@@ -69,7 +69,6 @@ class TestMlr(thread_cert.TestCase):
             'router_selection_jitter': 1,
             'bbr_registration_jitter': BBR_REGISTRATION_JITTER,
             'channel': CH1,
-            'prefer_router_id': PBBR1,  # Use prefer_router_id to avoid Router ID conflicts in the two channels.
         },
         ROUTER1: {
             'name': 'ROUTER1',
@@ -77,7 +76,6 @@ class TestMlr(thread_cert.TestCase):
             'version': '1.2',
             'router_selection_jitter': 1,
             'channel': CH1,
-            'prefer_router_id': ROUTER1,  # Use prefer_router_id to avoid Router ID conflicts in the two channels.
         },
         PBBR2: {
             'name': 'PBBR2',
@@ -87,7 +85,6 @@ class TestMlr(thread_cert.TestCase):
             'router_selection_jitter': 1,
             'bbr_registration_jitter': BBR_REGISTRATION_JITTER,
             'channel': CH2,
-            'prefer_router_id': PBBR2,  # Use prefer_router_id to avoid Router ID conflicts in the two channels.
         },
         ROUTER2: {
             'name': 'ROUTER2',
@@ -95,7 +92,6 @@ class TestMlr(thread_cert.TestCase):
             'version': '1.2',
             'router_selection_jitter': 1,
             'channel': CH2,
-            'prefer_router_id': ROUTER2,  # Use prefer_router_id to avoid Router ID conflicts in the two channels.
         },
         HOST: {
             'name': 'Host',
