@@ -88,7 +88,7 @@ jobs:
       with:
         name: core-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}
         path: |
-          ./build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
+          ./build/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
           ./ot-core-dump/*
           ./so-lib/*
     - name: Keep-1-2-only
@@ -172,8 +172,8 @@ jobs:
       with:
         name: core-packet-verification-low-power
         path: |
-          ./build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
-          ./build/cmake/openthread-simulation-1.1/examples/apps/cli/ot-cli-*
+          ./build/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
+          ./build/openthread-simulation-1.1/examples/apps/cli/ot-cli-*
           ./ot-core-dump/*
           ./so-lib/*
     - name: Keep-1-2-only
