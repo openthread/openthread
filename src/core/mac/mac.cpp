@@ -845,6 +845,8 @@ void Mac::PerformNextOperation(void)
     if (mOperation != kOperationIdle)
     {
         otLogDebgMac("Starting operation \"%s\"", OperationToString(mOperation));
+        mTimer.Stop(); // Stop the timer before any non-idle operation, have the operation itself be responsible to
+                       // start the timer (if it wants to).
     }
 
     switch (mOperation)
@@ -876,6 +878,7 @@ void Mac::PerformNextOperation(void)
 
     case kOperationWaitingForData:
         IgnoreError(mSubMac.Receive(mRadioChannel));
+        mTimer.Start(kDataPollTimeout);
         break;
     }
 
@@ -1416,7 +1419,6 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
 
             if (IsEnabled() && framePending)
             {
-                mTimer.Start(kDataPollTimeout);
                 StartOperation(kOperationWaitingForData);
             }
 
