@@ -414,8 +414,6 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     {
         uint32_t nextSendTime;
 
-        ++mRouterAdvertisementCount;
-
         nextSendTime = Random::NonCrypto::GetUint32InRange(kMinRtrAdvInterval, kMaxRtrAdvInterval);
 
         if (mRouterAdvertisementCount <= kMaxInitRtrAdvertisements && nextSendTime > kMaxInitRtrAdvInterval)
@@ -552,6 +550,8 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
     {
         otError      error;
         Ip6::Address destAddress;
+
+        ++mRouterAdvertisementCount;
 
         destAddress.SetToLinkLocalAllNodesMulticast();
         error = otPlatInfraIfSendIcmp6(mInfraIfIndex, &destAddress, buffer, bufferLength);
