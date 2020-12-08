@@ -360,10 +360,16 @@ add_library(nordicsemi-mbedtls INTERFACE)
 
 target_link_libraries(nordicsemi-mbedtls
     INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedcrypto_cc310_backend.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedcrypto_shared.a
         ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedtls_tls_vanilla.a
         ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedtls_x509_vanilla.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedcrypto_cc3xx.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.4.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedcrypto_oberon.a
         ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedtls_base_vanilla.a
-        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.2.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedcrypto_cc3xx.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedtls_base_vanilla.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedcrypto_shared.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.4.a
 )
 
