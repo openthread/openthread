@@ -168,9 +168,7 @@ class Cert_7_1_8_BorderRouterAsFED(thread_cert.TestCase):
                                   Ipv6Addr(PREFIX_2001[:-3]),
                                   Ipv6Addr(PREFIX_2002[:-3])
                                  } == set(p.thread_nwd.tlv.prefix) and\
-                                {
-                                 NWD_6LOWPAN_ID_TLV
-                                 } <= set(p.thread_nwd.tlv.type) and\
+                       NWD_6LOWPAN_ID_TLV in p.thread_nwd.tlv.type and\
                        p.thread_nwd.tlv.border_router.flag.p == [1, 1] and\
                        p.thread_nwd.tlv.border_router.flag.s == [1, 1] and\
                        p.thread_nwd.tlv.border_router.flag.r == [1, 1] and\
@@ -188,9 +186,7 @@ class Cert_7_1_8_BorderRouterAsFED(thread_cert.TestCase):
                               Ipv6Addr(PREFIX_2001[:-3]),
                               Ipv6Addr(PREFIX_2002[:-3])
                              } == set(p.thread_nwd.tlv.prefix) and\
-                             {
-                             NWD_6LOWPAN_ID_TLV
-                             } <= set(p.thread_nwd.tlv.type) and\
+                   NWD_6LOWPAN_ID_TLV in p.thread_nwd.tlv.type and\
                    p.thread_nwd.tlv.border_router.flag.p == [1, 1] and\
                    p.thread_nwd.tlv.border_router.flag.s == [1, 1] and\
                    p.thread_nwd.tlv.border_router.flag.r == [1, 1] and\
