@@ -167,9 +167,8 @@ class PacketVerifier(object):
 
         for i, topo in self.test_info.topology.items():
             name = self.test_info.get_node_name(i)
-            self._vars[name + '_VERSION'] = 2
-            if topo['version'] == '1.2':
-                self._vars[name + '_VERSION'] = 3
+            if topo['version']:
+                self._vars[name + '_VERSION'] = {'1.1': 2, '1.2': 3}[topo['version']]
 
     def verify_attached(self, child: str, parent: str = None, child_type: str = 'FTD', pkts=None) -> VerifyResult:
         """
