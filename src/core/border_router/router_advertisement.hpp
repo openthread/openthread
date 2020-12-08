@@ -120,7 +120,7 @@ public:
      * This helper method returns the starting address of the next valid option in the buffer.
      *
      * @param[in]  aCurOption     The current option. Use NULL to get the first option.
-     * @param[in]  aBuffer        The buffer within which the options are holded.
+     * @param[in]  aBuffer        The buffer within which the options are held.
      * @param[in]  aBufferLength  The length of the buffer.
      *
      * @returns  The address of the next option if there are a valid one. Otherwise, NULL.
