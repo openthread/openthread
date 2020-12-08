@@ -53,6 +53,9 @@ extern "C" {
  *
  * @returns  A pointer to the name of the infra interface. MUST not be NULL.
  *
+ * @note  This is an optional platform API, a default version that returns the
+          index is provided.
+ *
  */
 const char *otPlatInfraIfGetName(uint32_t aInfraIfIndex);
 

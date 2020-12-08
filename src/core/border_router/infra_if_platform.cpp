@@ -41,6 +41,15 @@
 
 using namespace ot;
 
+extern "C" OT_TOOL_WEAK const char *otPlatInfraIfGetName(uint32_t aInfraIfIndex)
+{
+    static char sDefaultInfraIfName[11];
+
+    sprintf(sDefaultInfraIfName, "%10u", aInfraIfIndex);
+
+    return sDefaultInfraIfName;
+}
+
 extern "C" void otPlatInfraIfRecvIcmp6(otInstance *        aInstance,
                                        uint32_t            aInfraIfIndex,
                                        const otIp6Address *aSrcAddress,
