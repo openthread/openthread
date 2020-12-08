@@ -374,8 +374,8 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
     VerifyOrExit(!mRouterSolicitTimer.IsRunning());
     if (IsValidOnLinkPrefix(mDiscoveredOnLinkPrefix))
     {
-        otLogInfoBr("EvaluateOnLinkPrefix: there is already on-link prefix %s on interface %s",
-                    mDiscoveredOnLinkPrefix.ToString().AsCString(), GetInfraIfName());
+        otLogInfoBr("EvaluateOnLinkPrefix: there is already on-link prefix %s on interface %u",
+                    mDiscoveredOnLinkPrefix.ToString().AsCString(), mInfraIfIndex);
         ExitNow();
     }
 
@@ -483,8 +483,8 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
 
         if (mAdvertisedOnLinkPrefix != nullptr)
         {
-            otLogInfoBr("start advertising new on-link prefix %s on interface %s",
-                        aNewOnLinkPrefix->ToString().AsCString(), GetInfraIfName());
+            otLogInfoBr("start advertising new on-link prefix %s on interface %u",
+                        aNewOnLinkPrefix->ToString().AsCString(), mInfraIfIndex);
         }
 
         otLogInfoBr("send on-link prefix %s in PIO (valid lifetime = %u seconds)",
@@ -503,8 +503,8 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
         memcpy(buffer + bufferLength, &pio, pio.GetLength());
         bufferLength += pio.GetLength();
 
-        otLogInfoBr("stop advertising on-link prefix %s on interface %s",
-                    mAdvertisedOnLinkPrefix->ToString().AsCString(), GetInfraIfName());
+        otLogInfoBr("stop advertising on-link prefix %s on interface %u",
+                    mAdvertisedOnLinkPrefix->ToString().AsCString(), mInfraIfIndex);
     }
 
     // Invalidate the advertised OMR prefixes if they are no longer in the new OMR prefix array.
@@ -524,8 +524,8 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
             memcpy(buffer + bufferLength, &rio, rio.GetLength());
             bufferLength += rio.GetLength();
 
-            otLogInfoBr("stop advertising OMR prefix %s on interface %s", advertisedOmrPrefix.ToString().AsCString(),
-                        GetInfraIfName());
+            otLogInfoBr("stop advertising OMR prefix %s on interface %u", advertisedOmrPrefix.ToString().AsCString(),
+                        mInfraIfIndex);
         }
     }
 
@@ -558,11 +558,11 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
 
         if (error == OT_ERROR_NONE)
         {
-            otLogInfoBr("sent Router Advertisement on interface %s", GetInfraIfName());
+            otLogInfoBr("sent Router Advertisement on interface %u", mInfraIfIndex);
         }
         else
         {
-            otLogWarnBr("failed to send Router Advertisement on interface %s: %s", GetInfraIfName(),
+            otLogWarnBr("failed to send Router Advertisement on interface %u: %s", mInfraIfIndex,
                         otThreadErrorToString(error));
         }
     }
@@ -653,8 +653,8 @@ void RoutingManager::HandleRouterSolicit(const Ip6::Address &aSrcAddress,
     OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aBufferLength);
 
-    otLogInfoBr("received Router Solicitation from %s on interface %s", aSrcAddress.ToString().AsCString(),
-                GetInfraIfName());
+    otLogInfoBr("received Router Solicitation from %s on interface %u", aSrcAddress.ToString().AsCString(),
+                mInfraIfIndex);
 
     mRouterAdvertisementTimer.Start(Random::NonCrypto::GetUint32InRange(0, kMaxRaDelayTime));
 }
@@ -692,53 +692,57 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
 
     VerifyOrExit(aBufferLength >= sizeof(RouterAdvMessage));
 
-    otLogInfoBr("received Router Advertisement from %s on interface %s", aSrcAddress.ToString().AsCString(),
-                GetInfraIfName());
+    otLogInfoBr("received Router Advertisement from %s on interface %u", aSrcAddress.ToString().AsCString(),
+                mInfraIfIndex);
 
     optionsBegin  = aBuffer + sizeof(RouterAdvMessage);
     optionsLength = aBufferLength - sizeof(RouterAdvMessage);
 
-    option = Option::GetNextOption(nullptr, optionsBegin, optionsLength);
-    while (option != nullptr)
+    option = nullptr;
+    while ((option = Option::GetNextOption(option, optionsBegin, optionsLength)) != nullptr)
     {
-        if (option->GetType() == Option::Type::kPrefixInfo)
+        const PrefixInfoOption *pio;
+        Ip6::Prefix             prefix;
+
+        if (option->GetType() != Option::Type::kPrefixInfo)
         {
-            auto &      pio = *static_cast<const PrefixInfoOption *>(option);
-            Ip6::Prefix prefix;
+            continue;
+        }
 
-            prefix.Set(pio.GetPrefix(), pio.GetPrefixLength());
-            if (IsValidOnLinkPrefix(prefix))
+        pio = static_cast<const PrefixInfoOption *>(option);
+        pio->GetPrefix(prefix);
+        if (!IsValidOnLinkPrefix(prefix))
+        {
+            otLogInfoBr("ignore invalid prefix in PIO: %s", prefix.ToString().AsCString());
+            continue;
+        }
+
+        if (pio->GetValidLifetime() == 0)
+        {
+            if (mDiscoveredOnLinkPrefix == prefix)
             {
-                if (pio.GetValidLifetime() == 0 && mDiscoveredOnLinkPrefix == prefix)
-                {
-                    otLogInfoBr("invalidate discovered on-link prefix %s", prefix.ToString().AsCString());
-                    mDiscoveredOnLinkPrefixInvalidTimer.Stop();
-                    mDiscoveredOnLinkPrefix.Clear();
-                    needReevaluate = true;
-                }
-                else
-                {
-                    otLogInfoBr("set discovered on-link prefix to %s, valid lifetime: %u seconds",
-                                prefix.ToString().AsCString(), pio.GetValidLifetime());
-
-                    // We keep tracking the latest on-link prefix.
-                    mDiscoveredOnLinkPrefixInvalidTimer.Start(GetPrefixExpireDelay(pio.GetValidLifetime()));
-                    mDiscoveredOnLinkPrefix = prefix;
-
-                    // Stop Router Solicitation if we found a valid on-link prefix.
-                    // Otherwise, we wait till the Router Solicitation process timeouted.
-                    // So the maximum delay before the Border Router starts advertising
-                    // its own on-link prefix is 9 (4 + 4 + 1) seconds.
-                    mRouterSolicitTimer.Stop();
-                    needReevaluate = true;
-                }
-            }
-            else
-            {
-                otLogInfoBr("ignore invalid prefix in PIO: %s", prefix.ToString().AsCString());
+                otLogInfoBr("invalidate discovered on-link prefix %s", prefix.ToString().AsCString());
+                mDiscoveredOnLinkPrefixInvalidTimer.Stop();
+                mDiscoveredOnLinkPrefix.Clear();
+                needReevaluate = true;
             }
         }
-        option = Option::GetNextOption(option, optionsBegin, optionsLength);
+        else
+        {
+            otLogInfoBr("set discovered on-link prefix to %s, valid lifetime: %u seconds",
+                        prefix.ToString().AsCString(), pio->GetValidLifetime());
+
+            // We keep tracking the latest on-link prefix.
+            mDiscoveredOnLinkPrefixInvalidTimer.Start(GetPrefixExpireDelay(pio->GetValidLifetime()));
+            mDiscoveredOnLinkPrefix = prefix;
+
+            // Stop Router Solicitation if we found a valid on-link prefix.
+            // Otherwise, we wait till the Router Solicitation process timeouted.
+            // So the maximum delay before the Border Router starts advertising
+            // its own on-link prefix is 9 (4 + 4 + 1) seconds.
+            mRouterSolicitTimer.Stop();
+            needReevaluate = true;
+        }
     }
 
     if (needReevaluate)

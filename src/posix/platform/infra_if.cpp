@@ -57,13 +57,6 @@ static uint32_t     sInfraIfIndex          = 0;
 static int          sInfraIfIcmp6Socket    = -1;
 static otIp6Address sInfraIfLinkLocalAddr;
 
-const char *otPlatInfraIfGetName(uint32_t aInfraIfIndex)
-{
-    OT_UNUSED_VARIABLE(aInfraIfIndex);
-
-    return sInfraIfName;
-}
-
 otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
                                const otIp6Address *aDestAddress,
                                const uint8_t *     aBuffer,

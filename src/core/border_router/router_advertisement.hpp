@@ -202,20 +202,12 @@ public:
     void SetPrefix(const Ip6::Prefix &aPrefix);
 
     /**
-     * This method returns the prefix length in unit bits.
+     * THis method returns the prefix in this option.
      *
-     * @return  The prefix length in bits.
-     *
-     */
-    uint8_t GetPrefixLength(void) const { return mPrefixLength; }
-
-    /**
-     * This method returns a pointer to the prefix.
-     *
-     * @return  The pointer to the prefix.
+     * @param[out]  aPrefix  The prefix to output to.
      *
      */
-    const uint8_t *GetPrefix(void) const { return mPrefix; }
+    void GetPrefix(Ip6::Prefix &aPrefix) const;
 
 private:
     enum : uint8_t
@@ -224,12 +216,12 @@ private:
         kOnLinkFlagMask     = 0x80u, // Bit mask of the On-link flag.
     };
 
-    uint8_t  mPrefixLength;                // The prefix length in bits.
-    uint8_t  mReserved1;                   // The reserved field.
-    uint32_t mValidLifetime;               // The valid lifetime of the prefix.
-    uint32_t mPreferredLifetime;           // The preferred lifetime of the prefix.s
-    uint32_t mReserved2;                   // The reserved field.
-    uint8_t  mPrefix[OT_IP6_ADDRESS_SIZE]; // The prefix.
+    uint8_t      mPrefixLength;      // The prefix length in bits.
+    uint8_t      mReserved1;         // The reserved field.
+    uint32_t     mValidLifetime;     // The valid lifetime of the prefix.
+    uint32_t     mPreferredLifetime; // The preferred lifetime of the prefix.s
+    uint32_t     mReserved2;         // The reserved field.
+    Ip6::Address mPrefix;            // The prefix.
 } OT_TOOL_PACKED_END;
 
 static_assert(sizeof(PrefixInfoOption) == 32, "invalid PrefixInfoOption structure");
@@ -268,10 +260,10 @@ public:
     void SetPrefix(const Ip6::Prefix &aPrefix);
 
 private:
-    uint8_t  mPrefixLength;                // The prefix length in bits.
-    uint8_t  mReserved;                    // The reserved field.
-    uint32_t mRouteLifetime;               // The lifetime in seconds.
-    uint8_t  mPrefix[OT_IP6_ADDRESS_SIZE]; // The prefix.
+    uint8_t      mPrefixLength;  // The prefix length in bits.
+    uint8_t      mReserved;      // The reserved field.
+    uint32_t     mRouteLifetime; // The lifetime in seconds.
+    Ip6::Address mPrefix;        // The prefix.
 } OT_TOOL_PACKED_END;
 
 static_assert(sizeof(RouteInfoOption) == 24, "invalid RouteInfoOption structure");

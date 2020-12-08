@@ -47,19 +47,6 @@ extern "C" {
 #endif
 
 /**
- * This method returns the readable name of the infrastructure interface.
- *
- * @param[in]  aInfraIfIndex  The index of the infra interface.
- *
- * @returns  A pointer to the name of the infra interface. MUST not be NULL.
- *
- * @note  This is an optional platform API, a default version that returns the
-          index is provided.
- *
- */
-const char *otPlatInfraIfGetName(uint32_t aInfraIfIndex);
-
-/**
  * This method sends an ICMPv6 message on given infrastructure interface.
  *
  * @param[in]  aInfraIfIndex  The index of the infrastructure interface.

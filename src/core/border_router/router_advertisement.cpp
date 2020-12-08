@@ -78,7 +78,7 @@ PrefixInfoOption::PrefixInfoOption(void)
 {
     OT_UNUSED_VARIABLE(mReserved2);
 
-    memset(mPrefix, 0, sizeof(mPrefix));
+    mPrefix.Clear();
 }
 
 void PrefixInfoOption::SetOnLink(bool aOnLink)
@@ -108,7 +108,12 @@ void PrefixInfoOption::SetAutoAddrConfig(bool aAutoAddrConfig)
 void PrefixInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
 {
     mPrefixLength = aPrefix.mLength;
-    memcpy(mPrefix, &aPrefix.mPrefix, sizeof(aPrefix.mPrefix));
+    mPrefix       = static_cast<const Ip6::Address &>(aPrefix.mPrefix);
+}
+
+void PrefixInfoOption::GetPrefix(Ip6::Prefix &aPrefix) const
+{
+    aPrefix.Set(mPrefix.GetBytes(), mPrefixLength);
 }
 
 RouteInfoOption::RouteInfoOption(void)
@@ -119,7 +124,7 @@ RouteInfoOption::RouteInfoOption(void)
 {
     OT_UNUSED_VARIABLE(mReserved);
 
-    memset(mPrefix, 0, sizeof(mPrefix));
+    mPrefix.Clear();
 }
 
 void RouteInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
@@ -131,7 +136,7 @@ void RouteInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
     SetLength(((aPrefix.mLength + 63) / 64) * 8 + 8);
 
     mPrefixLength = aPrefix.mLength;
-    memcpy(mPrefix, &aPrefix.mPrefix, sizeof(aPrefix.mPrefix));
+    mPrefix       = static_cast<const Ip6::Address &>(aPrefix.mPrefix);
 }
 
 RouterAdvMessage::RouterAdvMessage(void)

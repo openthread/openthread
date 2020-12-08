@@ -42,9 +42,8 @@
 #include <openthread/error.h>
 #include <openthread/platform/infra_if.h>
 
-#include "common/locator.hpp"
-
 #include "border_router/router_advertisement.hpp"
+#include "common/locator.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
@@ -117,9 +116,9 @@ private:
 
     enum : uint32_t
     {
-        kDefaultOmrPrefixLifetime    = 1800u, // The default OMR prefix valid lifetime. In seconds.
-        kDefaultOnLinkPrefixLifetime = 1800u, // The default on-link prefix valid lifetime. In seconds.
-        kMaxRtrAdvInterval           = 600,   // Maximum Router Advertisement Interval. In seconds.
+        kDefaultOmrPrefixLifetime    = 1800u,                  // The default OMR prefix valid lifetime. In seconds.
+        kDefaultOnLinkPrefixLifetime = 1800u,                  // The default on-link prefix valid lifetime. In seconds.
+        kMaxRtrAdvInterval           = 600,                    // Maximum Router Advertisement Interval. In seconds.
         kMinRtrAdvInterval           = kMaxRtrAdvInterval / 3, // Minimum Router Advertisement Interval. In seconds.
         kMaxInitRtrAdvInterval       = 16,  // Maximum Initial Router Advertisement Interval. In seconds.
         kMaxRaDelayTime              = 500, // The maximum delay of sending RA after receiving RS. In milliseconds.
@@ -241,8 +240,6 @@ private:
     static bool ContainsPrefix(const Ip6::Prefix &aPrefix, const Ip6::Prefix *aPrefixList, uint8_t aPrefixNum);
 
     static uint32_t GetPrefixExpireDelay(uint32_t aValidLifetime);
-
-    const char *GetInfraIfName() const { return otPlatInfraIfGetName(mInfraIfIndex); }
 
     uint32_t mInfraIfIndex;
 
