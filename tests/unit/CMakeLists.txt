@@ -173,6 +173,27 @@ target_link_libraries(test-cmd-line-parser
 
 add_test(NAME test-cmd-line-parser COMMAND test-cmd-line-parser)
 
+add_executable(test-dns
+    test_dns.cpp
+)
+
+target_include_directories(test-dns
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-dns
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-dns
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-dns COMMAND test-dns)
+
 add_executable(test-flash
     test_flash.cpp
 )
@@ -644,6 +665,7 @@ set_target_properties(
     test-child
     test-child-table
     test-cmd-line-parser
+    test-dns
     test-flash
     test-heap
     test-hmac-sha256
