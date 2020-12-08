@@ -102,6 +102,7 @@ EXTRA_DIST                                                         = \
     Cert_7_1_03_BorderRouterAsLeader.py                              \
     Cert_7_1_04_BorderRouterAsRouter.py                              \
     Cert_7_1_05_BorderRouterAsRouter.py                              \
+    Cert_7_1_06_BorderRouterAsLeader.py                              \
     Cert_8_1_01_Commissioning.py                                     \
     Cert_8_1_02_Commissioning.py                                     \
     Cert_8_2_01_JoinerRouter.py                                      \
@@ -279,6 +280,7 @@ check_SCRIPTS                                                      = \
     Cert_7_1_03_BorderRouterAsLeader.py                              \
     Cert_7_1_04_BorderRouterAsRouter.py                              \
     Cert_7_1_05_BorderRouterAsRouter.py                              \
+    Cert_7_1_06_BorderRouterAsLeader.py                              \
     Cert_8_1_01_Commissioning.py                                     \
     Cert_8_1_02_Commissioning.py                                     \
     Cert_8_2_01_JoinerRouter.py                                      \
