@@ -39,6 +39,7 @@ from pktverify.null_field import nullField
 LEADER = 1
 ROUTER = 2
 MTD = 3
+POLL_PERIOD = 3
 
 # Test Purpose and Description:
 # -----------------------------
@@ -99,7 +100,7 @@ class Cert_6_5_2_ChildResetReattach_Base(thread_cert.TestCase):
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[MTD].start()
-        self.simulator.go(10)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[MTD].get_state(), 'child')
 
         self.nodes[LEADER].clear_allowlist()
@@ -108,6 +109,8 @@ class Cert_6_5_2_ChildResetReattach_Base(thread_cert.TestCase):
 
         self.nodes[MTD].reset()
         self._setUpMTD()
+        if self.TOPOLOGY[MTD]['mode'] == '-':
+            self.nodes[MTD].set_pollperiod(POLL_PERIOD * 1000)
         self.simulator.go(5)
         self.nodes[LEADER].add_allowlist(self.nodes[MTD].get_addr64())
         self.simulator.go(5)
@@ -136,24 +139,35 @@ class Cert_6_5_2_ChildResetReattach_Base(thread_cert.TestCase):
         pv.verify_attached('ROUTER', 'LEADER')
         pv.verify_attached('DUT', 'ROUTER', 'MTD')
 
-        if self.TOPOLOGY[MTD]['mode'] == 'rn':
-            # Step 4: DUT sends an MLE Child Update Request.
-            #         The following TLVs MUST be included in the Child Update
-            #         Request:
-            #             - Mode TLV
-            #             - Address Registration TLV (optional)
-            #         If the DUT is a SED, it MUST resume polling after sending
-            #         MLE Child Update.
-            pkts.filter_wpan_src64(DUT).\
-                filter_wpan_dst64(ROUTER).\
-                filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
-                filter(lambda p: {
-                                  SOURCE_ADDRESS_TLV,
-                                  MODE_TLV,
-                                  LEADER_DATA_TLV
-                                 } < set(p.mle.tlv.type)
-                       ).\
-                must_next()
+        # Step 4: DUT sends an MLE Child Update Request.
+        #         The following TLVs MUST be included in the Child Update
+        #         Request:
+        #             - Mode TLV
+        #             - Address Registration TLV (optional)
+        #         If the DUT is a SED, it MUST resume polling after sending
+        #         MLE Child Update.
+        _pkt = pkts.filter_wpan_src64(DUT).\
+            filter_wpan_dst64(ROUTER).\
+            filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
+            filter(lambda p: {
+                              MODE_TLV
+                             } < set(p.mle.tlv.type)
+                   ).\
+            must_next()
+        with pkts.save_index():
+            if self.TOPOLOGY[MTD]['mode'] == '-':
+                # filter another 3 MLE_CHILD_UPDATE_REQUEST with the upper one
+                # (total 4) sent out continuously in one poll
+                for i in (1, 4):
+                    pkts.filter_wpan_src64(DUT).\
+                        filter_wpan_dst64(ROUTER).\
+                        filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
+                        must_next
+                pkts.filter_wpan_src64(DUT).\
+                    filter_wpan_dst64(ROUTER).\
+                    filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
+                    filter(lambda p: p.sniff_time - _pkt.sniff_time <= POLL_PERIOD).\
+                    must_next
         lstart = pkts.index
 
         # Step 6: The DUT MUST attach to the Leader
