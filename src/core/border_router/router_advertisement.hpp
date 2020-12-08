@@ -129,9 +129,9 @@ public:
     static const Option *GetNextOption(const Option *aCurOption, const uint8_t *aBuffer, uint16_t aBufferLength);
 
 private:
-    Type    mType;   ///< Type of the option.
-    uint8_t mLength; ///< Length of the option in unit of 8 octets,
-                     ///< including the `type` and `length` fields.
+    Type    mType;   // Type of the option.
+    uint8_t mLength; // Length of the option in unit of 8 octets,
+                     // including the `type` and `length` fields.
 } OT_TOOL_PACKED_END;
 
 /**
@@ -220,16 +220,16 @@ public:
 private:
     enum : uint8_t
     {
-        kAutoConfigFlagMask = 0x40u, ///< Bit mask of the Automatic Address Configure flag.
-        kOnLinkFlagMask     = 0x80u, ///< Bit mask of the On-link flag.
+        kAutoConfigFlagMask = 0x40u, // Bit mask of the Automatic Address Configure flag.
+        kOnLinkFlagMask     = 0x80u, // Bit mask of the On-link flag.
     };
 
-    uint8_t  mPrefixLength;                ///< The prefix length in bits.
-    uint8_t  mReserved1;                   ///< The reserved field.
-    uint32_t mValidLifetime;               ///< The valid lifetime of the prefix.
-    uint32_t mPreferredLifetime;           ///< The preferred lifetime of the prefix.s
-    uint32_t mReserved2;                   ///< The reserved field.
-    uint8_t  mPrefix[OT_IP6_ADDRESS_SIZE]; ///< The prefix.
+    uint8_t  mPrefixLength;                // The prefix length in bits.
+    uint8_t  mReserved1;                   // The reserved field.
+    uint32_t mValidLifetime;               // The valid lifetime of the prefix.
+    uint32_t mPreferredLifetime;           // The preferred lifetime of the prefix.s
+    uint32_t mReserved2;                   // The reserved field.
+    uint8_t  mPrefix[OT_IP6_ADDRESS_SIZE]; // The prefix.
 } OT_TOOL_PACKED_END;
 
 static_assert(sizeof(PrefixInfoOption) == 32, "invalid PrefixInfoOption structure");
@@ -268,10 +268,10 @@ public:
     void SetPrefix(const Ip6::Prefix &aPrefix);
 
 private:
-    uint8_t  mPrefixLength;                ///< The prefix length in bits.
-    uint8_t  mReserved;                    ///< The reserved field.
-    uint32_t mRouteLifetime;               ///< The lifetime in seconds.
-    uint8_t  mPrefix[OT_IP6_ADDRESS_SIZE]; ///< The prefix.
+    uint8_t  mPrefixLength;                // The prefix length in bits.
+    uint8_t  mReserved;                    // The reserved field.
+    uint32_t mRouteLifetime;               // The lifetime in seconds.
+    uint8_t  mPrefix[OT_IP6_ADDRESS_SIZE]; // The prefix.
 } OT_TOOL_PACKED_END;
 
 static_assert(sizeof(RouteInfoOption) == 24, "invalid RouteInfoOption structure");
@@ -305,9 +305,9 @@ public:
     void SetRouterLifetime(uint16_t aRouterLifetime) { mHeader.mData.m16[1] = HostSwap16(aRouterLifetime); }
 
 private:
-    Ip6::Icmp::Header mHeader;        ///< The common ICMPv6 header.
-    uint32_t          mReachableTime; ///< The reachable time. In milliseconds.
-    uint32_t          mRetransTimer;  ///< The retransmission timer. In milliseconds.
+    Ip6::Icmp::Header mHeader;        // The common ICMPv6 header.
+    uint32_t          mReachableTime; // The reachable time. In milliseconds.
+    uint32_t          mRetransTimer;  // The retransmission timer. In milliseconds.
 } OT_TOOL_PACKED_END;
 
 static_assert(sizeof(RouterAdvMessage) == 16, "invalid RouterAdvMessage structure");
@@ -330,7 +330,7 @@ public:
     RouterSolicitMessage(void);
 
 private:
-    Ip6::Icmp::Header mHeader; ///< The common ICMPv6 header.
+    Ip6::Icmp::Header mHeader; // The common ICMPv6 header.
 } OT_TOOL_PACKED_END;
 
 static_assert(sizeof(RouterSolicitMessage) == 8, "invalid RouterSolicitMessage structure");

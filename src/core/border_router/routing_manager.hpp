@@ -105,26 +105,26 @@ public:
 private:
     enum : uint16_t
     {
-        kMaxRouterAdvMessageLength = 256u, ///< The maximum RA message length we can handle.
+        kMaxRouterAdvMessageLength = 256u, // The maximum RA message length we can handle.
     };
 
     enum : uint8_t
     {
-        kMaxOmrPrefixNum    = 8u,                    ///< The maximum number of the OMR prefixes to advertise.
-        kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE, ///< The length of an OMR prefix. In bits.
-        kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE, ///< The length of an On-link prefix. In bits.
+        kMaxOmrPrefixNum    = 8u,                    // The maximum number of the OMR prefixes to advertise.
+        kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE, // The length of an OMR prefix. In bits.
+        kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE, // The length of an On-link prefix. In bits.
     };
 
     enum : uint32_t
     {
-        kDefaultOmrPrefixLifetime    = 1800u, ///< The default OMR prefix valid lifetime. In seconds.
-        kDefaultOnLinkPrefixLifetime = 1800u, ///< The default on-link prefix valid lifetime. In seconds.
-        kMaxRtrAdvInterval           = 600,   ///< Maximum Router Advertisement Interval. In seconds.
-        kMinRtrAdvInterval           = kMaxRtrAdvInterval / 3, ///< Minimum Router Advertisement Interval. In seconds.
-        kMaxInitRtrAdvInterval       = 16,  ///< Maximum Initial Router Advertisement Interval. In seconds.
-        kMaxRaDelayTime              = 500, ///< The maximum delay of sending RA after receiving RS. In milliseconds.
-        kRtrSolicitationInterval     = 4,   ///< The interval between Router Solicitations. In seconds.
-        kMaxRtrSolicitationDelay     = 1,   ///< The maximum delay for initial solicitation. In seconds.
+        kDefaultOmrPrefixLifetime    = 1800u, // The default OMR prefix valid lifetime. In seconds.
+        kDefaultOnLinkPrefixLifetime = 1800u, // The default on-link prefix valid lifetime. In seconds.
+        kMaxRtrAdvInterval           = 600,   // Maximum Router Advertisement Interval. In seconds.
+        kMinRtrAdvInterval           = kMaxRtrAdvInterval / 3, // Minimum Router Advertisement Interval. In seconds.
+        kMaxInitRtrAdvInterval       = 16,  // Maximum Initial Router Advertisement Interval. In seconds.
+        kMaxRaDelayTime              = 500, // The maximum delay of sending RA after receiving RS. In milliseconds.
+        kRtrSolicitationInterval     = 4,   // The interval between Router Solicitations. In seconds.
+        kMaxRtrSolicitationDelay     = 1,   // The maximum delay for initial solicitation. In seconds.
     };
 
     static_assert(kMinRtrAdvInterval <= 3 * kMaxRtrAdvInterval / 4, "invalid RA intervals");
@@ -133,8 +133,8 @@ private:
 
     enum : uint32_t
     {
-        kMaxInitRtrAdvertisements = 3, ///< The maximum number of initial Router Advertisements.
-        kMaxRtrSolicitations = 3, ///< The Maximum number of Router Solicitations before sending Router Advertisements.
+        kMaxInitRtrAdvertisements = 3, // The maximum number of initial Router Advertisements.
+        kMaxRtrSolicitations = 3, // The Maximum number of Router Solicitations before sending Router Advertisements.
     };
 
     void    Start(void);
