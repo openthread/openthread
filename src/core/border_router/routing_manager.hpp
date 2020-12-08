@@ -165,7 +165,7 @@ private:
      * This method evaluates the OMR prefix for the Thread Network.
      *
      * @param[out]  aNewOmrPrefixes   An array of the new OMR prefixes should be advertised.
-     *                                MUST not be NULL.
+     *                                MUST not be nullptr.
      * @param[in]   aMaxOmrPrefixNum  The maximum number of OMR prefixes that @p aNewOmrPrefixes can hold.
      *
      * @returns  The number of the new OMR prefixes that should be advertised after this evaluation.
@@ -177,7 +177,7 @@ private:
      * This method evaluates the on-link prefix for the infra link.
      *
      * @returns  A pointer to the new on-link prefix should be advertised.
-     *           NULL if we should no longer advertise an on-link prefix.
+     *           nullptr if we should no longer advertise an on-link prefix.
      *
      */
     const Ip6::Prefix *EvaluateOnLinkPrefix(void);
@@ -219,7 +219,7 @@ private:
      * @param[in]  aNewOmrPrefixNum  The number of the new OMR prefixes to be advertised.
      *                               Zero means we should stop advertising OMR prefixes.
      * @param[in]  aOnLinkPrefix     A pointer to the new on-link prefix to be advertised.
-     *                               NULL means we should stop advertising on-link prefix.
+     *                               nullptr means we should stop advertising on-link prefix.
      *
      */
     void SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
@@ -268,7 +268,7 @@ private:
     /**
      * The advertised on-link prefix.
      *
-     * Could only be NULL or a pointer to mLocalOnLinkPrefix.
+     * Could only be nullptr or a pointer to mLocalOnLinkPrefix.
      *
      */
     const Ip6::Prefix *mAdvertisedOnLinkPrefix;

@@ -158,7 +158,7 @@ void RoutingManager::Stop(void)
     invalidOmrPrefix.Clear();
     invalidOnLinkPrefix.Clear();
 
-    // Use NULL OMR & on-link prefixes to invalidate possible advertised prefixes.
+    // Use empty OMR & on-link prefixes to invalidate possible advertised prefixes.
     SendRouterAdvertisement(nullptr, 0, nullptr);
 
     memset(mAdvertisedOmrPrefixes, 0, sizeof(mAdvertisedOmrPrefixes));
