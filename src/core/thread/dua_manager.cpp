@@ -329,7 +329,7 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     if (aEvents.ContainsAny(kEventIp6AddressAdded))
     {
-        UpdateRegistrationDelay(1);
+        UpdateRegistrationDelay(kNewDuaRegistrationDelay);
     }
 #endif
 }
