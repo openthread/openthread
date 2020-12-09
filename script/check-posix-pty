@@ -129,6 +129,12 @@ send "ipaddr\r\n"
 expect "Done"
 send "coex\r\n"
 expect "Done"
+send "coap start\r\n"
+expect "Done"
+send "coap resource TestResource\r\n"
+expect "Done"
+send "coap set TestContent\r\n"
+expect "Done"
 wait
 EOF
 
@@ -142,7 +148,7 @@ EOF
         fi
     done
 
-    netstat -an | grep -q 61631 || die 'TMF port is not available!'
+    netstat -an | grep -q 5683 || die 'Application CoAP port is not available!'
 
     extaddr=$(grep -aoE '[0-9a-z]{16}' $OT_OUTPUT)
     echo "Extended address is: ${extaddr}"
@@ -157,15 +163,15 @@ EOF
     fi
 
     LEADER_ALOC=fdde:ad00:beef::ff:fe00:fc00
-    # Retrievie extended address through network diagnostic get
-    coap_response=$(echo -n '120100' | xxd -r -p | coap-client -m POST coap://[${LEADER_ALOC}]:61631/d/dg -f- | xxd -p | grep 0008)
+    # Retrievie test resource through application CoAP
+    coap_response=$(coap-client -B 5 -m GET coap://[${LEADER_ALOC}]:5683/TestResource)
     echo "CoAP response is: ${coap_response}"
 
-    # Verify CoAP response contains the extended address
-    if [[ ${coap_response} == *${extaddr}* ]]; then
+    # Verify CoAP response contains the test content
+    if [[ ${coap_response} == *TestContent* ]]; then
         echo 'Success'
     else
-        die 'Failed to get extended address'
+        die 'Failed to access application CoAP'
     fi
 }
 
