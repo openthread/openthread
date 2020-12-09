@@ -1897,7 +1897,6 @@ otError Interpreter::ProcessPartitionId(uint8_t aArgsLength, char *aArgs[])
         OutputLine("%u", otThreadGetPartitionId(mInstance));
         error = OT_ERROR_NONE;
     }
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     else if (strcmp(aArgs[0], "preferred") == 0)
     {
         if (aArgsLength == 1)
@@ -1915,7 +1914,6 @@ otError Interpreter::ProcessPartitionId(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-#endif
 
     return error;
 }

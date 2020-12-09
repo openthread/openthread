@@ -348,7 +348,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PARTITION_ID>(void)
 {
     uint32_t partitionId = 0;
@@ -361,7 +360,6 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PARTITION_ID>(voi
 exit:
     return error;
 }
-#endif
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CHILD_COUNT_MAX>(void)
 {
