@@ -346,12 +346,12 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     // which it sent the corresponding query to.
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otError            error = OT_ERROR_NOT_FOUND;
-    Header             responseHeader;
-    QueryMetadata      queryMetadata;
-    ResourceRecordAaaa record;
-    Message *          message = nullptr;
-    uint16_t           offset;
+    otError       error = OT_ERROR_NOT_FOUND;
+    Header        responseHeader;
+    QueryMetadata queryMetadata;
+    AaaaRecord    record;
+    Message *     message = nullptr;
+    uint16_t      offset;
 
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), responseHeader));
     VerifyOrExit(responseHeader.GetType() == Header::kTypeResponse && responseHeader.GetQuestionCount() == 1 &&
