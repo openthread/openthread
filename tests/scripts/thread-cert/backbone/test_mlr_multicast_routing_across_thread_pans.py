@@ -145,6 +145,7 @@ class TestMlr(thread_cert.TestCase):
         self.simulator.go(WAIT_REDUNDANCE)
 
         self.collect_ipaddrs()
+        self.collect_rloc16s()
 
         # ping MA1 from Host could get replied from R1 and R2
         self.assertTrue(self.nodes[HOST].ping(MA1, backbone=True, ttl=5))
@@ -171,6 +172,8 @@ class TestMlr(thread_cert.TestCase):
 
         ROUTER1_DUA = pv.vars['ROUTER1_DUA']
         ROUTER2_DUA = pv.vars['ROUTER2_DUA']
+
+        ROUTER1_RLOC16 = pv.vars['ROUTER1_RLOC16']
 
         #
         # Verify Host ping MA1 to R1 and R2
@@ -205,8 +208,8 @@ class TestMlr(thread_cert.TestCase):
         #
 
         # ROUTER1 should send the multicast ping request
-        ping_ma2 = pkts.filter_wpan_src64(ROUTER1).filter_AMPLFMA().filter_ping_request().filter(
-            lambda p: p.ipv6.hlim == 64).must_next()
+        ping_ma2 = pkts.filter_wpan_src64(ROUTER1).filter_AMPLFMA(
+            mpl_seed_id=ROUTER1_RLOC16).filter_ping_request().must_next()
 
         # PBBR1 should forward the multicast ping request to the Backbone link
         pkts.filter_eth_src(PBBR1_ETH).filter_ipv6_src_dst(

@@ -359,11 +359,11 @@ class PacketFilter(object):
         if role != 'REED':
             tlv_set.add(consts.ROUTE64_TLV)
 
-        return self.filter_LLANMA().\
-            filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
+        return self.filter_LLANMA(). \
+            filter_mle_cmd(consts.MLE_ADVERTISEMENT). \
             filter(lambda p: tlv_set ==
-                   set(p.mle.tlv.type) and\
-                   p.ipv6.hlim == 255, **kwargs
+                             set(p.mle.tlv.type) and \
+                             p.ipv6.hlim == 255, **kwargs
                    )
 
     def filter_coap(self, **kwargs):
@@ -528,8 +528,11 @@ class PacketFilter(object):
     def filter_LLARMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS, **kwargs)
 
-    def filter_AMPLFMA(self, **kwargs):
-        return self.filter(lambda p: p.ipv6.dst == consts.ALL_MPL_FORWARDERS_MA, **kwargs)
+    def filter_AMPLFMA(self, mpl_seed_id: int = None, **kwargs):
+        f = self.filter(lambda p: p.ipv6.dst == consts.ALL_MPL_FORWARDERS_MA, **kwargs)
+        if mpl_seed_id is not None:
+            f = f.filter(lambda p: p.ipv6.opt.mpl.seed_id == mpl_seed_id)
+        return f
 
     def filter_mle(self, **kwargs):
         return self.filter(attrgetter('mle'), **kwargs)
