@@ -33,6 +33,7 @@ from typing import Optional, Callable, Tuple
 
 from pktverify import consts, errors
 from pktverify.addrs import EthAddr, ExtAddr, Ipv6Addr
+from pktverify.bytes import Bytes
 from pktverify.packet import Packet
 from pktverify.utils import make_filter_func
 
@@ -531,6 +532,7 @@ class PacketFilter(object):
     def filter_AMPLFMA(self, mpl_seed_id: int = None, **kwargs):
         f = self.filter(lambda p: p.ipv6.dst == consts.ALL_MPL_FORWARDERS_MA, **kwargs)
         if mpl_seed_id is not None:
+            mpl_seed_id = Bytes([mpl_seed_id >> 8, mpl_seed_id & 0xFF])
             f = f.filter(lambda p: p.ipv6.opt.mpl.seed_id == mpl_seed_id)
         return f
 
