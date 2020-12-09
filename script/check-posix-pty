@@ -163,11 +163,11 @@ EOF
     fi
 
     LEADER_ALOC=fdde:ad00:beef::ff:fe00:fc00
-    # Retrievie extended address through network diagnostic get
+    # Retrievie test resource through application CoAP
     coap_response=$(coap-client -B 5 -m GET coap://[${LEADER_ALOC}]:5683/TestResource)
     echo "CoAP response is: ${coap_response}"
 
-    # Verify CoAP response contains the extended address
+    # Verify CoAP response contains the test content
     if [[ ${coap_response} == *TestContent* ]]; then
         echo 'Success'
     else
