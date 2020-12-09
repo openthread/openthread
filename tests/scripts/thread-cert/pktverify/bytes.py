@@ -27,13 +27,13 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 import sys
-from typing import Union
+from typing import Union, Any
 
 
 class Bytes(bytearray):
     """Bytes represents a byte array which is able to handle strings of flexible formats"""
 
-    def __init__(self, s: Union[str, bytearray, 'Bytes']):
+    def __init__(self, s: Union[str, bytearray, 'Bytes', Any]):
         if isinstance(s, str):
             try:
                 s = Bytes._parse_compact(s)

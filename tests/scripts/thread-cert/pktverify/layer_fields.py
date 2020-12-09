@@ -385,6 +385,7 @@ _LAYER_FIELDS = {
     'ipv6.opt.router_alert': _auto,
     'ipv6.opt.padn': _str,
     'ipv6.opt.length': _list(_auto),
+    'ipv6.opt.mpl.seed_id': _bytes,
     'ipv6.opt.mpl.sequence': _auto,
     'ipv6.opt.mpl.flag.v': _auto,
     'ipv6.opt.mpl.flag.s': _auto,

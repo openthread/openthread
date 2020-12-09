@@ -1993,6 +1993,10 @@ class LinuxHost():
 
         assert False, output
 
+    def add_ipmaddr_ether(self, ip: str):
+        cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/mcast6.py {self.ETH_DEV} {ip} &'
+        self.bash(cmd)
+
     def ping_ether(self, ipaddr, num_responses=1, size=None, timeout=5, ttl=None) -> int:
         cmd = f'ping -6 {ipaddr} -I eth0 -c {num_responses} -W {timeout}'
         if size is not None:
@@ -2025,6 +2029,13 @@ class LinuxHost():
             return self.ping_ether(*args, **kwargs)
         else:
             return super().ping(*args, **kwargs)
+
+    def add_ipmaddr(self, *args, **kwargs):
+        backbone = kwargs.pop('backbone', False)
+        if backbone:
+            return self.add_ipmaddr_ether(*args, **kwargs)
+        else:
+            return super().add_ipmaddr(*args, **kwargs)
 
     def ip_neighbors_flush(self):
         # clear neigh cache on linux
