@@ -39,7 +39,7 @@ from pktverify.null_field import nullField
 LEADER = 1
 ROUTER = 2
 MTD = 3
-POLL_PERIOD = 3
+POLL_PERIOD = 3  # seconds
 
 # Test Purpose and Description:
 # -----------------------------
@@ -90,6 +90,8 @@ class Cert_6_5_2_ChildResetReattach_Base(thread_cert.TestCase):
     def _setUpMTD(self):
         self.nodes[MTD].add_allowlist(self.nodes[LEADER].get_addr64())
         self.nodes[MTD].enable_allowlist()
+        if self.TOPOLOGY[MTD]['mode'] == '-':
+            self.nodes[MTD].set_pollperiod(POLL_PERIOD * 1000)
 
     def test(self):
         self.nodes[LEADER].start()
@@ -110,8 +112,6 @@ class Cert_6_5_2_ChildResetReattach_Base(thread_cert.TestCase):
 
         self.nodes[MTD].reset()
         self._setUpMTD()
-        if self.TOPOLOGY[MTD]['mode'] == '-':
-            self.nodes[MTD].set_pollperiod(POLL_PERIOD * 1000)
         self.simulator.go(5)
         self.nodes[LEADER].add_allowlist(self.nodes[MTD].get_addr64())
         self.simulator.go(5)
@@ -163,12 +163,12 @@ class Cert_6_5_2_ChildResetReattach_Base(thread_cert.TestCase):
                     pkts.filter_wpan_src64(DUT).\
                         filter_wpan_dst64(ROUTER).\
                         filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
-                        must_next
+                        must_next()
                 pkts.filter_wpan_src64(DUT).\
                     filter_wpan_dst64(ROUTER).\
                     filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
-                    filter(lambda p: p.sniff_time - _pkt.sniff_time <= POLL_PERIOD).\
-                    must_next
+                    filter(lambda p: p.sniff_timestamp - _pkt.sniff_timestamp <= POLL_PERIOD).\
+                    must_next()
         lstart = pkts.index
 
         # Step 6: The DUT MUST attach to the Leader
