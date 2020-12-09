@@ -278,6 +278,7 @@ _LAYER_FIELDS = {
 
     # MLE
     'mle.cmd': _auto,
+    'mle.sec_suite': _hex,
     'mle.tlv.type': _list(_dec),
     'mle.tlv.len': _list(_dec),
     'mle.tlv.mode.receiver_on_idle': _auto,
@@ -568,6 +569,8 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.chan_mask_page': _auto,
     'thread_meshcop.tlv.chan_mask_len': _auto,
     'thread_meshcop.tlv.chan_mask_mask': _bytes,
+    'thread_meshcop.tlv.discovery_req_ver': _auto,
+    'thread_meshcop.tlv.discovery_rsp_ver': _auto,
     'thread_meshcop.tlv.energy_list': _list(_auto),
     'thread_meshcop.tlv.pan_id': _auto,
     'thread_meshcop.tlv.xpan_id': _bytes,
@@ -583,6 +586,7 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.state': _auto,
     'thread_meshcop.tlv.steering_data': _list(_auto),
     'thread_meshcop.tlv.unknown': _bytes,
+    'thread_meshcop.tlv.udp_port': _list(_auto),
     'thread_meshcop.tlv.ba_locator': _auto,
     'thread_meshcop.tlv.active_tstamp': _auto,
     'thread_meshcop.tlv.ipv6_addr': _list(_ipv6_addr),
