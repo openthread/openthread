@@ -560,17 +560,11 @@ bool Udp::ShouldUsePlatformUdp(uint16_t aPort) const
 
 bool Udp::ShouldUsePlatformUdp(const Udp::SocketHandle &aSocket) const
 {
-    uint16_t port       = aSocket.mSockName.mPort;
-    bool     usePlatUdp = false;
-
-    VerifyOrExit(!ShouldUsePlatformUdp(port), usePlatUdp = true);
-
+    return (ShouldUsePlatformUdp(aSocket.mSockName.mPort)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    usePlatUdp = IsBackboneSocket(aSocket);
+            || IsBackboneSocket(aSocket)
 #endif
-
-exit:
-    return usePlatUdp;
+    );
 }
 #endif
 
