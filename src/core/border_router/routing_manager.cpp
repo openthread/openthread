@@ -246,6 +246,8 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == OT_ERROR_NONE)
     {
+        uint8_t newPrefixIndex;
+
         if (!IsValidOmrPrefix(onMeshPrefixConfig.GetPrefix()) || !onMeshPrefixConfig.mDefaultRoute ||
             !onMeshPrefixConfig.mSlaac || onMeshPrefixConfig.mDp)
         {
@@ -257,8 +259,22 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
             // We didn't immediately add local OMR prefix here so that
             // we don't need to remove it later when we want to unpublish it.
             isLocalOmrPrefixPublished = true;
+            continue;
         }
-        else if (newOmrPrefixNum < aMaxOmrPrefixNum)
+
+        newPrefixIndex = 0;
+        while (newPrefixIndex < newOmrPrefixNum && onMeshPrefixConfig.GetPrefix() != aNewOmrPrefixes[newPrefixIndex])
+        {
+            ++newPrefixIndex;
+        }
+
+        if (newPrefixIndex != newOmrPrefixNum)
+        {
+            // Ignore duplicate prefixes.
+            continue;
+        }
+
+        if (newOmrPrefixNum < aMaxOmrPrefixNum)
         {
             aNewOmrPrefixes[newOmrPrefixNum++] = onMeshPrefixConfig.GetPrefix();
         }
