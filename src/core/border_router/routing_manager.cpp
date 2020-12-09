@@ -240,7 +240,8 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
     uint8_t                         newOmrPrefixNum = 0;
     NetworkData::Iterator           iterator        = NetworkData::kIteratorInit;
     NetworkData::OnMeshPrefixConfig onMeshPrefixConfig;
-    bool                            isLocalOmrPrefixPublished = false;
+    Ip6::Prefix *                   smallestOmrPrefix       = nullptr;
+    Ip6::Prefix *                   publishedLocalOmrPrefix = nullptr;
 
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
 
@@ -251,14 +252,6 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
         if (!IsValidOmrPrefix(onMeshPrefixConfig.GetPrefix()) || !onMeshPrefixConfig.mDefaultRoute ||
             !onMeshPrefixConfig.mSlaac || onMeshPrefixConfig.mDp)
         {
-            continue;
-        }
-
-        if (onMeshPrefixConfig.GetPrefix() == mLocalOmrPrefix)
-        {
-            // We didn't immediately add local OMR prefix here so that
-            // we don't need to remove it later when we want to unpublish it.
-            isLocalOmrPrefixPublished = true;
             continue;
         }
 
@@ -274,46 +267,46 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
             continue;
         }
 
-        if (newOmrPrefixNum < aMaxOmrPrefixNum)
-        {
-            aNewOmrPrefixes[newOmrPrefixNum++] = onMeshPrefixConfig.GetPrefix();
-        }
-        else
+        if (newOmrPrefixNum >= aMaxOmrPrefixNum)
         {
             otLogWarnBr("EvaluateOmrPrefix: too many OMR prefixes, ignoring prefix %s",
                         onMeshPrefixConfig.GetPrefix().ToString().AsCString());
+            continue;
         }
+
+        aNewOmrPrefixes[newOmrPrefixNum] = onMeshPrefixConfig.GetPrefix();
+        if (smallestOmrPrefix == nullptr || onMeshPrefixConfig.GetPrefix() < *smallestOmrPrefix)
+        {
+            smallestOmrPrefix = &aNewOmrPrefixes[newOmrPrefixNum];
+        }
+        if (aNewOmrPrefixes[newOmrPrefixNum] == mLocalOmrPrefix)
+        {
+            publishedLocalOmrPrefix = &aNewOmrPrefixes[newOmrPrefixNum];
+        }
+        ++newOmrPrefixNum;
     }
 
     // Decide if we need to add or remove my local OMR prefix.
     if (newOmrPrefixNum == 0)
     {
-        if (isLocalOmrPrefixPublished)
+        otLogInfoBr("EvaluateOmrPrefix: no valid OMR prefixes found in Thread network");
+        if (PublishLocalOmrPrefix() == OT_ERROR_NONE)
         {
             aNewOmrPrefixes[newOmrPrefixNum++] = mLocalOmrPrefix;
         }
-        else
-        {
-            otLogInfoBr("EvaluateOmrPrefix: no valid OMR prefixes found in Thread network");
-            if (PublishLocalOmrPrefix() == OT_ERROR_NONE)
-            {
-                aNewOmrPrefixes[newOmrPrefixNum++] = mLocalOmrPrefix;
-            }
 
-            // The `newOmrPrefixNum` is zero when we failed to publish the local OMR prefix.
-        }
+        // The `newOmrPrefixNum` is zero when we failed to publish the local OMR prefix.
     }
     else
     {
-        if (isLocalOmrPrefixPublished)
+        if (publishedLocalOmrPrefix != nullptr && smallestOmrPrefix != publishedLocalOmrPrefix)
         {
-            otLogInfoBr("EvaluateOmrPrefix: there is already OMR prefix(es) in the Thread network",
-                        mLocalOmrPrefix.ToString().AsCString());
-
-            // There is a corner case that two Duckhorn BR may unpublish their
-            // OMR prefix at the same time. But should be rare. If this happens,
-            // OMR prefix evaluation will be triggered again.
+            otLogInfoBr("EvaluateOmrPrefix: there is already a smaller OMR prefix %s in the Thread network",
+                        smallestOmrPrefix->ToString().AsCString());
             UnpublishLocalOmrPrefix();
+
+            // Remove the local OMR prefix from the list.
+            *publishedLocalOmrPrefix = aNewOmrPrefixes[--newOmrPrefixNum];
         }
     }
 

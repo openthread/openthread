@@ -50,8 +50,10 @@ HOST = 4
 
 CHANNEL1 = 18
 
-ON_MESH_PREFIX1 = "fd11:22:33:44::/64"
-ON_MESH_PREFIX2 = "fdaa:bb:cc:dd::/64"
+# The two prefixes are set small enough that a random-generated OMR prefix is
+# very likely greater than them. So that the duckhorn BR will remove the random-generated one.
+ON_MESH_PREFIX1 = "fd00:00:00:01::/64"
+ON_MESH_PREFIX2 = "fd00:00:00:02::/64"
 
 
 class SingleBorderRouter(thread_cert.TestCase):
