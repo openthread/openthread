@@ -32,7 +32,7 @@ import unittest
 import command
 from mesh_cop import MeshCopState
 import thread_cert
-from pktverify.consts import MLE_DISCOVERY_REQUEST, MLE_DISCOVERY_RESPONSE, HANDSHAKE_CLIENT_HELLO, HANDSHAKE_SERVER_HELLO, HANDSHAKE_SERVER_KEY_EXCHANGE, HANDSHAKE_SERVER_HELLO_DONE, HANDSHAKE_CLIENT_KEY_EXCHANGE, HANDSHAKE_HELLO_VERIFY_REQUEST, CONTENT_APPLICATION_DATA, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV, NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_REQUEST_TLV, NM_DISCOVERY_RESPONSE_TLV, THREAD_DISCOVERY_TLV, CONTENT_CHANGE_CIPHER_SPEC, CONTENT_HANDSHAKE
+from pktverify.consts import MLE_DISCOVERY_REQUEST, MLE_DISCOVERY_RESPONSE, HANDSHAKE_CLIENT_HELLO, HANDSHAKE_SERVER_HELLO, HANDSHAKE_SERVER_KEY_EXCHANGE, HANDSHAKE_SERVER_HELLO_DONE, HANDSHAKE_CLIENT_KEY_EXCHANGE, HANDSHAKE_HELLO_VERIFY_REQUEST, CONTENT_APPLICATION_DATA, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV, NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_REQUEST_TLV, NM_DISCOVERY_RESPONSE_TLV, THREAD_DISCOVERY_TLV, CONTENT_CHANGE_CIPHER_SPEC, CONTENT_HANDSHAKE, CONTENT_ALERT
 from pktverify.packet_verifier import PacketVerifier
 
 COMMISSIONER = 1
@@ -113,6 +113,7 @@ class Cert_8_1_06_Commissioning(thread_cert.TestCase):
         pv.summary.show()
 
         COMMISSIONER = pv.vars['COMMISSIONER']
+        COMMISSIONER_VERSION = pv.vars['COMMISSIONER_VERSION']
 
         _rs_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_mle_cmd(MLE_DISCOVERY_RESPONSE).\
@@ -124,7 +125,8 @@ class Cert_8_1_06_Commissioning(thread_cert.TestCase):
                               NM_JOINER_UDP_PORT_TLV,
                               NM_DISCOVERY_RESPONSE_TLV
                             } == set(p.thread_meshcop.tlv.type) and\
-                   p.thread_meshcop.tlv.discovery_rsp_ver == 2
+                   p.thread_meshcop.tlv.discovery_rsp_ver ==
+                   COMMISSIONER_VERSION
                   ).\
             must_next()
 
@@ -225,6 +227,14 @@ class Cert_8_1_06_Commissioning(thread_cert.TestCase):
         #     JOIN_ENT.ntf with Reject state to Commissioner
 
         # Verify Step 7 - 10 in test()
+
+        # 11. Joiner sends an encrypted DTLS-Alert record with a code of 0 (close_notify)
+        #     to Commissioner
+        pkts.filter_wpan_dst64(COMMISSIONER).\
+            filter(lambda p:
+                   [CONTENT_ALERT] == p.dtls.record.content_type
+                  ).\
+               must_next()
 
 
 if __name__ == '__main__':
