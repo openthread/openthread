@@ -268,7 +268,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                    ).\
             must_next()
 
-        # Step 8: Commissioner sends a sends a resign request via commissioner keep-alive request
+        # Step 8: Commissioner sends a resign request via commissioner keep-alive request
         #         (LEAD_KA.req) to Leader:
         #         CoAP Request URI
         #             CON POST coap://<L>:MM/c/la
@@ -307,7 +307,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                    p.thread_meshcop.tlv.state == MESHCOP_REJECT
                    ).\
            must_next()
-        pkts.filter_wpan_src64(LEADER).\
+        _dr_pkt3 = pkts.filter_wpan_src64(LEADER).\
             filter_LLANMA().\
             filter_mle_cmd(MLE_DATA_RESPONSE).\
             filter(lambda p: {
@@ -357,7 +357,9 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                               NM_STATE_TLV,
                               NM_COMMISSIONER_SESSION_ID_TLV
                               } <= set(p.coap.tlv.type) and\
-                   p.thread_meshcop.tlv.state == MESHCOP_ACCEPT
+                   p.thread_meshcop.tlv.state == MESHCOP_ACCEPT and\
+                   (p.thread_meshcop.tlv.commissioner_sess_id -
+                   _dr_pkt3.thread_meshcop.tlv.commissioner_sess_id) % 256 <= 127
                    ).\
            must_next()
 
