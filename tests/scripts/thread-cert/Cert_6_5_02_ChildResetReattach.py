@@ -165,7 +165,10 @@ class Cert_6_5_2_ChildResetReattach_Base(thread_cert.TestCase):
             pkts.filter_wpan_src64(DUT).\
                 filter_wpan_dst16(ROUTER_RLOC16).\
                 filter_wpan_cmd(WPAN_DATA_REQUEST).\
-                filter(lambda p: p.sniff_timestamp - _pkt.sniff_timestamp <= POLL_PERIOD).\
+                filter(lambda p:
+                       p.sniff_timestamp - _pkt.sniff_timestamp <=
+                       POLL_PERIOD + 0.1
+                      ).\
                 must_next()
         lstart = pkts.index
 
