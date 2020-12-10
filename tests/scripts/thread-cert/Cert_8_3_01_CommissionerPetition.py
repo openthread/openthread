@@ -360,8 +360,8 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                               NM_COMMISSIONER_SESSION_ID_TLV
                               } <= set(p.coap.tlv.type) and\
                    p.thread_meshcop.tlv.state == MESHCOP_ACCEPT and\
-                   (p.thread_meshcop.tlv.commissioner_sess_id -
-                   _dr_pkt3.thread_meshcop.tlv.commissioner_sess_id) % 256 <= 127
+                   p.thread_meshcop.tlv.commissioner_sess_id ==
+                   _dr_pkt3.thread_meshcop.tlv.commissioner_sess_id + 1
                    ).\
            must_next()
 
