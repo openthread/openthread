@@ -279,7 +279,21 @@ jobs:
         OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
     - name: Run
       run: |
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
         OT_OPTIONS=-DOT_TIME_SYNC=ON VIRTUAL_TIME=0 ./script/test build expect
+    - name: Copy Shared Libraries
+      if: ${{ failure() }}
+      run: |
+          ./script/test copy_so_lib
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: core-expect-cli
+        path: |
+          ./build/openthread-simulation-1.1/examples/apps/cli/ot-cli-ftd
+          ./ot-core-dump/*
+          ./so-lib/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -289,7 +303,22 @@ jobs:
         path: tmp/coverage.info
     - name: Run RCP Mode
       run: |
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
         OT_OPTIONS=-DOT_READLINE=OFF VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
+    - name: Copy Shared Libraries
+      if: ${{ failure() }}
+      run: |
+          ./script/test copy_so_lib
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: core-expect-rcp
+        path: |
+          ./build/openthread-simulation-1.1/examples/apps/ncp/ot-rcp
+          ./build/openthread-posix-1.1/src/posix/ot-cli
+          ./ot-core-dump/*
+          ./so-lib/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -307,7 +336,22 @@ jobs:
         echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
         sudo systemctl restart dnsmasq
         host ipv6.google.com ::1
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
         OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
+    - name: Copy Shared Libraries
+      if: ${{ failure() }}
+      run: |
+          ./script/test copy_so_lib
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: core-expect-tun
+        path: |
+          ./build/openthread-simulation-1.1/examples/apps/ncp/ot-rcp
+          ./build/openthread-posix-1.1/src/posix/ot-cli
+          ./ot-core-dump/*
+          ./so-lib/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
