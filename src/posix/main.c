@@ -299,6 +299,7 @@ int main(int argc, char *argv[])
     otInstance *instance;
     int         rval = 0;
     PosixConfig config;
+    assert(false);
 #if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
     otCliCommand radioUrlCommand = {"radiourl", PrintRadioUrl};
 #endif

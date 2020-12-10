@@ -71,6 +71,7 @@ void otTaskletsSignalPending(otInstance *aInstance)
 int main(int argc, char *argv[])
 {
     otInstance *instance;
+    assert(false);
 
 #if OPENTHREAD_EXAMPLES_SIMULATION
     if (setjmp(gResetJump))
