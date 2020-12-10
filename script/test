@@ -387,12 +387,12 @@ do_package()
 do_prepare_coredump_upload()
 {
     echo "$PWD/ot-core-dump/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
-    mkdir ot-core-dump
+    mkdir -p ot-core-dump
 }
 
 do_copy_so_lib()
 {
-    mkdir so-lib
+    mkdir -p so-lib
     cp /lib/x86_64-linux-gnu/libgcc_s.so.1 ./so-lib
     cp /lib/x86_64-linux-gnu/libc.so.6 ./so-lib
     cp /lib64/ld-linux-x86-64.so.2 ./so-lib
