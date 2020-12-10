@@ -32,7 +32,7 @@ import copy
 
 import thread_cert
 import config
-from pktverify.consts import MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, SOURCE_ADDRESS_TLV, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, TLV_REQUEST_TLV, SCAN_MASK_TLV, CONNECTIVITY_TLV, LINK_MARGIN_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, NL_MAC_EXTENDED_ADDRESS_TLV, NL_RLOC16_TLV, NL_STATUS_TLV, NL_ROUTER_MASK_TLV, COAP_CODE_ACK
+from pktverify.consts import WPAN_DATA_REQUEST, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, SOURCE_ADDRESS_TLV, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, TLV_REQUEST_TLV, SCAN_MASK_TLV, CONNECTIVITY_TLV, LINK_MARGIN_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, NL_MAC_EXTENDED_ADDRESS_TLV, NL_RLOC16_TLV, NL_STATUS_TLV, NL_ROUTER_MASK_TLV, COAP_CODE_ACK
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.null_field import nullField
 
@@ -105,6 +105,7 @@ class Cert_6_5_2_ChildResetReattach_Base(thread_cert.TestCase):
         self.nodes[MTD].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[MTD].get_state(), 'child')
+        self.collect_rloc16s()
 
         self.nodes[LEADER].clear_allowlist()
         self.nodes[MTD].clear_allowlist()
@@ -132,6 +133,7 @@ class Cert_6_5_2_ChildResetReattach_Base(thread_cert.TestCase):
         LEADER = pv.vars['LEADER']
         LEADER_LLA = pv.vars['LEADER_LLA']
         ROUTER = pv.vars['ROUTER']
+        ROUTER_RLOC16 = pv.vars['ROUTER_RLOC16']
         DUT = pv.vars['DUT']
         DUT_LLA = pv.vars['DUT_LLA']
 
@@ -147,7 +149,7 @@ class Cert_6_5_2_ChildResetReattach_Base(thread_cert.TestCase):
         #             - Address Registration TLV (optional)
         #         If the DUT is a SED, it MUST resume polling after sending
         #         MLE Child Update.
-        _pkt = pkts.filter_wpan_src64(DUT).\
+        pkts.filter_wpan_src64(DUT).\
             filter_wpan_dst64(ROUTER).\
             filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
             filter(lambda p: {
@@ -155,20 +157,16 @@ class Cert_6_5_2_ChildResetReattach_Base(thread_cert.TestCase):
                              } < set(p.mle.tlv.type)
                    ).\
             must_next()
-        with pkts.save_index():
-            if self.TOPOLOGY[MTD]['mode'] == '-':
-                # filter another 3 MLE_CHILD_UPDATE_REQUEST with the upper one
-                # (total 4) sent out continuously in one poll
-                for i in (1, 4):
-                    pkts.filter_wpan_src64(DUT).\
-                        filter_wpan_dst64(ROUTER).\
-                        filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
-                        must_next()
-                pkts.filter_wpan_src64(DUT).\
-                    filter_wpan_dst64(ROUTER).\
-                    filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
-                    filter(lambda p: p.sniff_timestamp - _pkt.sniff_timestamp <= POLL_PERIOD).\
-                    must_next()
+        if self.TOPOLOGY[MTD]['mode'] == '-':
+            _pkt = pkts.filter_wpan_src64(DUT).\
+                filter_wpan_dst16(ROUTER_RLOC16).\
+                filter_wpan_cmd(WPAN_DATA_REQUEST).\
+                must_next()
+            pkts.filter_wpan_src64(DUT).\
+                filter_wpan_dst16(ROUTER_RLOC16).\
+                filter_wpan_cmd(WPAN_DATA_REQUEST).\
+                filter(lambda p: p.sniff_timestamp - _pkt.sniff_timestamp <= POLL_PERIOD).\
+                must_next()
         lstart = pkts.index
 
         # Step 6: The DUT MUST attach to the Leader
