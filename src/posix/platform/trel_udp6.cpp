@@ -77,13 +77,16 @@ static int          sSocket          = -1;
 static uint16_t     sUdpPort         = 0;
 static otIp6Address sInterfaceAddress;
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG) && OPENTHREAD_CONFIG_LOG_PLATFORM
+#if OPENTHREAD_CONFIG_LOG_PLATFORM
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_CRIT)
 static const char *Ip6AddrToString(const void *aAddress)
 {
     static char string[INET6_ADDRSTRLEN];
     return inet_ntop(AF_INET6, aAddress, string, sizeof(string));
 }
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_CRIT)
 
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG)
 static const char *BufferToString(const uint8_t *aBuffer, uint16_t aLength)
 {
     const uint16_t kMaxWrite = 16;
@@ -119,7 +122,8 @@ exit:
     *end = '\0';
     return string;
 }
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG) && OPENTHREAD_CONFIG_LOG_PLATFORM
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG)
+#endif // OPENTHREAD_CONFIG_LOG_PLATFORM
 
 static void AddUnicastAddress(const otIp6Address *aUnicastAddress)
 {
@@ -132,7 +136,7 @@ static void AddUnicastAddress(const otIp6Address *aUnicastAddress)
         int             ifr6_ifindex;
     } ifr6;
 
-    otLogDebgPlat("[trel-plat] AddUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
+    otLogDebgPlat("[trel] AddUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
 
     mgmtFd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
     VerifyOrDie(mgmtFd >= 0, OT_EXIT_ERROR_ERRNO);
@@ -143,7 +147,12 @@ static void AddUnicastAddress(const otIp6Address *aUnicastAddress)
 
     ret = ioctl(mgmtFd, SIOCSIFADDR, &ifr6);
 
-    VerifyOrDie((ret == 0) || (errno == EALREADY) || (errno == EEXIST), OT_EXIT_ERROR_ERRNO);
+    if (!(ret == 0 || errno == EALREADY || errno == EEXIST))
+    {
+        otLogCritPlat("[trel] Failed to add unicast address %s on TREL netif \"%s\"", Ip6AddrToString(aUnicastAddress),
+                      sInterfaceName);
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
 
     close(mgmtFd);
 }
@@ -159,7 +168,7 @@ static void RemoveUnicastAddress(const otIp6Address *aUnicastAddress)
         int             ifr6_ifindex;
     } ifr6;
 
-    otLogDebgPlat("[trel-plat] RemoveUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
+    otLogDebgPlat("[trel] RemoveUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
 
     mgmtFd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
     VerifyOrDie(mgmtFd >= 0, OT_EXIT_ERROR_ERRNO);
@@ -182,7 +191,7 @@ static void PrepareSocket(void)
     uint64_t            startTime;
     bool                isSocketBound = false;
 
-    otLogDebgPlat("[trel-plat] PrepareSocket()");
+    otLogDebgPlat("[trel] PrepareSocket()");
 
     sSocket = socket(AF_INET6, SOCK_DGRAM, 0);
     VerifyOrDie(sSocket >= 0, OT_EXIT_ERROR_ERRNO);
@@ -226,18 +235,29 @@ static void PrepareSocket(void)
 
     while (otPlatTimeGet() - startTime < TREL_SOCKET_BIND_MAX_WAIT_TIME_MSEC * USEC_PER_MSEC)
     {
-        if (bind(sSocket, (struct sockaddr *)&sockAddr, sizeof(sockAddr)) == -1)
-        {
-            VerifyOrDie(errno == EADDRNOTAVAIL, OT_EXIT_ERROR_ERRNO);
-        }
-        else
+        if (bind(sSocket, (struct sockaddr *)&sockAddr, sizeof(sockAddr)) != -1)
         {
             isSocketBound = true;
             break;
         }
+
+        if (errno == EADDRNOTAVAIL)
+        {
+            continue;
+        }
+
+        otLogCritPlat("[trel] Failed to bind socket to %s (port %d) on TREL netif \"%s\"",
+                      Ip6AddrToString(&sInterfaceAddress), sUdpPort, sInterfaceName);
+        DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
-    VerifyOrDie(isSocketBound, OT_EXIT_ERROR_ERRNO);
+    if (!isSocketBound)
+    {
+        otLogCritPlat("[trel] Timed out waiting for address %s to become available for binding on TREL "
+                      "netif \"%s\" - timeout %lu (ms)",
+                      Ip6AddrToString(&sInterfaceAddress), sInterfaceName, TREL_SOCKET_BIND_MAX_WAIT_TIME_MSEC);
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
 }
 
 static otError SendPacket(const uint8_t *aBuffer, uint16_t aLength, const otIp6Address *aDestAddress)
@@ -257,7 +277,7 @@ static otError SendPacket(const uint8_t *aBuffer, uint16_t aLength, const otIp6A
 
     if (ret != aLength)
     {
-        otLogDebgPlat("[trel-plat] SendPacket() -- sendto() failed errno %d", errno);
+        otLogDebgPlat("[trel] SendPacket() -- sendto() failed errno %d", errno);
 
         switch (errno)
         {
@@ -273,8 +293,8 @@ static otError SendPacket(const uint8_t *aBuffer, uint16_t aLength, const otIp6A
     }
 
 exit:
-    otLogDebgPlat("[trel-plat] SendPacket(%s) err:%s pkt:%s", Ip6AddrToString(aDestAddress),
-                  otThreadErrorToString(error), BufferToString(aBuffer, aLength));
+    otLogDebgPlat("[trel] SendPacket(%s) err:%s pkt:%s", Ip6AddrToString(aDestAddress), otThreadErrorToString(error),
+                  BufferToString(aBuffer, aLength));
 
     return error;
 }
@@ -298,7 +318,7 @@ static void ReceivePacket(int aSocket, otInstance *aInstance)
         sRxPacketLength = sizeof(sRxPacketLength);
     }
 
-    otLogDebgPlat("[trel-plat] ReceivePacket() - received from %s port:%d, id:%d, pkt:%s",
+    otLogDebgPlat("[trel] ReceivePacket() - received from %s port:%d, id:%d, pkt:%s",
                   Ip6AddrToString(&sockAddr.sin6_addr), ntohs(sockAddr.sin6_port), sockAddr.sin6_scope_id,
                   BufferToString(sRxPacketBuffer, sRxPacketLength));
 
@@ -329,7 +349,7 @@ static void SendQueuedPackets(void)
 
         if (SendPacket(packet->mBuffer, packet->mLength, &packet->mDestAddress) == OT_ERROR_INVALID_STATE)
         {
-            otLogDebgPlat("[trel-plat] SendQueuedPackets() - SendPacket() would block");
+            otLogDebgPlat("[trel] SendQueuedPackets() - SendPacket() would block");
             break;
         }
 
@@ -382,8 +402,7 @@ static otError EnqueuePacket(const uint8_t *aBuffer, uint16_t aLength, const otI
         sTxPacketQueueTail        = packet;
     }
 
-    otLogDebgPlat("[trel-plat] EnqueuePacket(%s) - %s", Ip6AddrToString(aDestAddress),
-                  BufferToString(aBuffer, aLength));
+    otLogDebgPlat("[trel] EnqueuePacket(%s) - %s", Ip6AddrToString(aDestAddress), BufferToString(aBuffer, aLength));
 
 exit:
     return error;
@@ -397,12 +416,17 @@ void otPlatTrelUdp6Init(otInstance *aInstance, const otIp6Address *aUnicastAddre
     int                 val;
     struct sockaddr_in6 sockAddr;
 
-    otLogDebgPlat("[trel-plat] otPlatTrelUdp6Init(%s, port:%d)", Ip6AddrToString(aUnicastAddress), aUdpPort);
+    otLogDebgPlat("[trel] otPlatTrelUdp6Init(%s, port:%d)", Ip6AddrToString(aUnicastAddress), aUdpPort);
 
     sUdpPort          = aUdpPort;
     sInterfaceAddress = *aUnicastAddress;
     sInterfaceIndex   = (int)if_nametoindex(sInterfaceName);
-    VerifyOrDie(sInterfaceIndex > 0, OT_EXIT_ERROR_ERRNO);
+
+    if (sInterfaceIndex <= 0)
+    {
+        otLogCritPlat("[trel] Failed to find index of TREL netif \"%s\"", sInterfaceName);
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
 
     AddUnicastAddress(aUnicastAddress);
 
@@ -420,7 +444,12 @@ void otPlatTrelUdp6Init(otInstance *aInstance, const otIp6Address *aUnicastAddre
     sockAddr.sin6_port     = htons(sUdpPort);
     sockAddr.sin6_addr     = in6addr_any;
     sockAddr.sin6_scope_id = (uint32_t)sInterfaceIndex;
-    VerifyOrDie(bind(sMulticastSocket, (struct sockaddr *)&sockAddr, sizeof(sockAddr)) != -1, OT_EXIT_ERROR_ERRNO);
+
+    if (bind(sMulticastSocket, (struct sockaddr *)&sockAddr, sizeof(sockAddr)) == -1)
+    {
+        otLogCritPlat("[trel] Failed to bind multicast socket to any address on TREL netif \"%s\"", sInterfaceName);
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
 
     PrepareSocket();
 
@@ -431,7 +460,7 @@ void otPlatTrelUdp6UpdateAddress(otInstance *aInstance, const otIp6Address *aUni
 {
     assert(sSocket >= 0);
 
-    otLogDebgPlat("[trel-plat] otPlatTrelUdp6UpdateAddress(%s)", Ip6AddrToString(aUnicastAddress));
+    otLogDebgPlat("[trel] otPlatTrelUdp6UpdateAddress(%s)", Ip6AddrToString(aUnicastAddress));
 
     VerifyOrExit(memcmp(aUnicastAddress, &sInterfaceAddress, sizeof(otIp6Address)) != 0);
 
@@ -459,7 +488,7 @@ void otPlatTrelUdp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6A
     mr.ipv6mr_interface = (unsigned int)sInterfaceIndex;
     VerifyOrDie(setsockopt(sMulticastSocket, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mr, sizeof(mr)) == 0, OT_EXIT_ERROR_ERRNO);
 
-    otLogDebgPlat("[trel-plat] otPlatTrelUdp6SubscribeMulticastAddress(%s)", Ip6AddrToString(aMulticastAddress));
+    otLogDebgPlat("[trel] otPlatTrelUdp6SubscribeMulticastAddress(%s)", Ip6AddrToString(aMulticastAddress));
 }
 
 otError otPlatTrelUdp6SendTo(otInstance *        aInstance,
@@ -473,7 +502,7 @@ otError otPlatTrelUdp6SendTo(otInstance *        aInstance,
 
     assert(aLength <= TREL_MAX_PACKET_SIZE);
 
-    otLogDebgPlat("[trel-plat] otPlatTrelUdp6SendTo(%s) %s", Ip6AddrToString(aDestAddress),
+    otLogDebgPlat("[trel] otPlatTrelUdp6SendTo(%s) %s", Ip6AddrToString(aDestAddress),
                   BufferToString(aBuffer, aLength));
 
     // We try to send the packet immediately. If it fails (e.g.,
@@ -513,7 +542,7 @@ void platformTrelInit(const char *aInterfaceName)
     }
 
     sInterfaceName[sizeof(sInterfaceName) - 1] = 0;
-    otLogDebgPlat("[trel-plat] platformTrelInit(InterfaceName:\"%s\")", sInterfaceName);
+    otLogDebgPlat("[trel] platformTrelInit(InterfaceName:\"%s\")", sInterfaceName);
 
     InitPacketQueue();
 }
@@ -530,7 +559,7 @@ void platformTrelDeinit(void)
         close(sMulticastSocket);
     }
 
-    otLogDebgPlat("[trel-plat] platformTrelDeinit()");
+    otLogDebgPlat("[trel] platformTrelDeinit()");
 }
 
 void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)
