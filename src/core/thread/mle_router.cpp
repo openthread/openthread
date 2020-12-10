@@ -191,11 +191,7 @@ otError MleRouter::BecomeLeader(void)
 
     mRouterTable.Clear();
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     partitionId = mPreferredLeaderPartitionId ? mPreferredLeaderPartitionId : Random::NonCrypto::GetUint32();
-#else
-    partitionId = Random::NonCrypto::GetUint32();
-#endif
 
     leaderId = IsRouterIdValid(mPreviousRouterId) ? mPreviousRouterId
                                                   : Random::NonCrypto::GetUint8InRange(0, kMaxRouterId + 1);
