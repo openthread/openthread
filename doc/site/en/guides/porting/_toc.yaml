@@ -1,0 +1,20 @@
+toc:
+- title: Overview
+  path: /guides/porting/
+  step_group: porting_guide
+- title: Set up the Build Environment
+  path: /guides/porting/set-up-the-build-environment
+  step_group: porting_guide
+- title: Implement Platform Abstraction Layer APIs
+  path: /guides/porting/implement-platform-abstraction-layer-apis
+  step_group: porting_guide
+- title: Implement Advanced Features
+  path: /guides/porting/implement-advanced-features
+  step_group: porting_guide
+- title: Validate the Port
+  path: /guides/porting/validate-the-port
+  step_group: porting_guide
+- title: Certification and README
+  path: /guides/porting/certification-and-readme
+  step_group: porting_guide
+
