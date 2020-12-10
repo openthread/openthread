@@ -194,6 +194,28 @@ target_link_libraries(test-dns
 
 add_test(NAME test-dns COMMAND test-dns)
 
+add_executable(test-ecdsa
+    test_ecdsa.cpp
+)
+
+target_include_directories(test-ecdsa
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(test-ecdsa
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-ecdsa
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-ecdsa COMMAND test-ecdsa)
+
+
 add_executable(test-flash
     test_flash.cpp
 )
@@ -693,6 +715,7 @@ set_target_properties(
     test-child-table
     test-cmd-line-parser
     test-dns
+    test-ecdsa
     test-flash
     test-heap
     test-hkdf-sha256

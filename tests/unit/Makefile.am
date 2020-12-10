@@ -112,6 +112,7 @@ check_PROGRAMS                                                     += \
     test-child-table                                                  \
     test-cmd-line-parser                                              \
     test-dns                                                          \
+    test-ecdsa                                                        \
     test-flash                                                        \
     test-heap                                                         \
     test-hkdf-sha256                                                  \
@@ -192,6 +193,9 @@ test_cmd_line_parser_SOURCES = $(COMMON_SOURCES) test_cmd_line_parser.cpp
 
 test_dns_LDADD               = $(COMMON_LDADD)
 test_dns_SOURCES             = $(COMMON_SOURCES) test_dns.cpp
+
+test_ecdsa_LDADD             = $(COMMON_LDADD)
+test_ecdsa_SOURCES           = $(COMMON_SOURCES) test_ecdsa.cpp
 
 test_flash_LDADD             = $(COMMON_LDADD)
 test_flash_SOURCES           = $(COMMON_SOURCES) test_flash.cpp

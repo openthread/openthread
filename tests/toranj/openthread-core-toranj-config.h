@@ -112,6 +112,14 @@
 #define OPENTHREAD_CONFIG_LEGACY_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_ECDSA_ENABLE
+ *
+ * Define to 1 to enable ECDSA support.
+ *
+ */
+#define OPENTHREAD_CONFIG_ECDSA_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
  *
  * Define to 1 to enable the Jam Detection service.

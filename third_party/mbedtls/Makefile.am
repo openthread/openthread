@@ -66,6 +66,7 @@ libmbedcrypto_a_SOURCES                       = \
     repo/library/ecp_curves.c                   \
     repo/library/entropy.c                      \
     repo/library/entropy_poll.c                 \
+    repo/library/hmac_drbg.c                    \
     repo/library/md.c                           \
     repo/library/md_wrap.c                      \
     repo/library/memory_buffer_alloc.c          \
