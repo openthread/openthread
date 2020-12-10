@@ -134,7 +134,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
         #             2.04 Changed
         #         CoAP Payload
         #             State TLV (value = Accept)
-        #             Commissioner ID TLV (optional)
+        #             Commissioner ID TLV
         #             Commissioner Session ID TLV
         #
         #         Leader sends a MLE Data Response to the network with the
@@ -147,6 +147,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
             filter_coap_ack(LEAD_PET_URI).\
             filter(lambda p: {
                               NM_STATE_TLV,
+                              NM_COMMISSIONER_ID_TLV,
                               NM_COMMISSIONER_SESSION_ID_TLV
                               } <= set(p.coap.tlv.type) and\
                    p.thread_meshcop.tlv.state == MESHCOP_ACCEPT
@@ -348,13 +349,14 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
         #              2.04 Changed
         #          CoAP Payload
         #              State TLV (value = Accept)
-        #              Commissioner ID TLV (optional)
+        #              Commissioner ID TLV
         #              Commissioner Session ID TLV (contains higher Session ID number
         #              than in Step 9)
         pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
             filter_coap_ack(LEAD_PET_URI).\
             filter(lambda p: {
                               NM_STATE_TLV,
+                              NM_COMMISSIONER_ID_TLV,
                               NM_COMMISSIONER_SESSION_ID_TLV
                               } <= set(p.coap.tlv.type) and\
                    p.thread_meshcop.tlv.state == MESHCOP_ACCEPT and\
