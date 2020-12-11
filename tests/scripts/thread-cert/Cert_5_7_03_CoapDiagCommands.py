@@ -120,6 +120,7 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
         self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
 
         self.collect_rlocs()
+        self.collect_rloc16s()
 
         tlv_types = [
             TlvType.EXT_ADDRESS, TlvType.ADDRESS16, TlvType.MODE, TlvType.CONNECTIVITY, TlvType.ROUTE64,
@@ -143,7 +144,10 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
         LEADER = pv.vars['LEADER']
         LEADER_RLOC = pv.vars['LEADER_RLOC']
         DUT = pv.vars['DUT']
+        DUT_RLOC16 = pv.vars['DUT_RLOC16']
         SED = pv.vars['SED']
+
+        dut_addr16 = "%04x" % DUT_RLOC16
 
         # Step 1: Ensure topology is formed correctly
         if self.TOPOLOGY[ROUTER1]['name'] == 'DUT':
@@ -158,7 +162,6 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
             pv.verify_attached('SED', 'ROUTER', 'MTD')
             pv.verify_attached('MED', 'ROUTER', 'MTD')
             pv.verify_attached('DUT', 'ROUTER', 'FTD-ED')
-        _pkt = pkts.last()
 
         # Step 2: Leader sends DIAG_GET.qry to the Realm-Local All-Thread-Nodes
         #         multicast address containing the requested diagnostic TLVs:
@@ -207,7 +210,7 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
                 filter_coap_request(DIAG_GET_ANS_URI).\
                 filter(lambda p:
                        dut_payload_tlvs == set(p.thread_diagnostic.tlv.type) and\
-                       {str(p.wpan.src64), colon_hex(hex(p.wpan.src16)[2:], 2), '0f'}
+                       {str(p.wpan.src64), colon_hex(dut_addr16, 2), '0f'}
                        < set(p.thread_diagnostic.tlv.general)
                       ).\
                 must_next()
@@ -239,7 +242,7 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
                 filter_coap_request(DIAG_GET_ANS_URI).\
                 filter(lambda p:
                        dut_payload_tlvs == set(p.thread_diagnostic.tlv.type) and\
-                       {str(p.wpan.src64), colon_hex(hex(p.wpan.src16)[2:], 2), '0f'}
+                       {str(p.wpan.src64), colon_hex(dut_addr16, 2), '0f'}
                        < set(p.thread_diagnostic.tlv.general)
                       ).\
                 must_next()
