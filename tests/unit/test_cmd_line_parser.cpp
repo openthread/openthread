@@ -288,7 +288,7 @@ void TestParsingHexStrings(void)
     SuccessOrQuit(ParseAsHexString(kHexString + 1, len, buffer), "ParseAsHexString failed");
     VerifyOrQuit(len == sizeof(kParsedArray), "ParseAsHexString() parsed incorrectly");
     VerifyOrQuit(memcmp(buffer + 1, kParsedArray + 1, len - 1) == 0, "ParseAsHexString() parsed incorrectly");
-    VerifyOrQuit(buffer[0] = 0xe, "ParseAsHexString() parsed incorrectly");
+    VerifyOrQuit(buffer[0] == 0xe, "ParseAsHexString() parsed incorrectly");
 
     SuccessOrQuit(ParseAsHexString(kHexString + 2, len, buffer), "ParseAsHexString failed");
     VerifyOrQuit(len == sizeof(kParsedArray) - 1, "ParseAsHexString() parsed incorrectly");
