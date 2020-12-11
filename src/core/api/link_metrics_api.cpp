@@ -74,6 +74,26 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                   
         static_cast<const Ip6::Address &>(*aDestination), aSeriesId, aSeriesFlags, aLinkMetricsFlags);
 }
 
+otError otLinkMetricsConfigEnhAckProbing(otInstance *                               aInstance,
+                                         const otIp6Address *                       aDestination,
+                                         const otLinkMetricsEnhAckFlags             aEnhAckFlags,
+                                         const otLinkMetrics *                      aLinkMetricsFlags,
+                                         otLinkMetricsMgmtResponseCallback          aCallback,
+                                         void *                                     aCallbackContext,
+                                         otLinkMetricsEnhAckProbingIeReportCallback aEnhAckCallback,
+                                         void *                                     aEnhAckCallbackContext)
+{
+    OT_ASSERT(aDestination != nullptr);
+
+    static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SetLinkMetricsMgmtResponseCallback(aCallback,
+                                                                                              aCallbackContext);
+    static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SetLinkMetricsEnhAckProbingCallback(aEnhAckCallback,
+                                                                                               aEnhAckCallbackContext);
+
+    return static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SendMgmtRequestEnhAckProbing(
+        static_cast<const Ip6::Address &>(*aDestination), aEnhAckFlags, aLinkMetricsFlags);
+}
+
 otError otLinkMetricsSendLinkProbe(otInstance *        aInstance,
                                    const otIp6Address *aDestination,
                                    uint8_t             aSeriesId,

@@ -2454,7 +2454,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-otError Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, otLinkMetricsStatus aStatus)
+otError Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::LinkMetricsStatus aStatus)
 {
     otError  error = OT_ERROR_NONE;
     Message *message;
@@ -2498,7 +2498,7 @@ otError Mle::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, 
 exit:
     return error;
 }
-#endif
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 {
@@ -3823,8 +3823,8 @@ void Mle::HandleLinkMetricsManagementRequest(const Message &         aMessage,
                                              const Ip6::MessageInfo &aMessageInfo,
                                              Neighbor *              aNeighbor)
 {
-    otError             error = OT_ERROR_NONE;
-    otLinkMetricsStatus status;
+    otError                        error = OT_ERROR_NONE;
+    LinkMetrics::LinkMetricsStatus status;
 
     Log(kMessageReceive, kTypeLinkMetricsManagementRequest, aMessageInfo.GetPeerAddr());
 
@@ -3867,7 +3867,7 @@ void Mle::HandleLinkProbe(const Message &aMessage, const Ip6::MessageInfo &aMess
 exit:
     LogProcessError(kTypeLinkProbe, error);
 }
-#endif
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 void Mle::ProcessAnnounce(void)
 {

@@ -1409,6 +1409,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
         neighbor->AggregateLinkMetrics(/* aSeriesId */ 0, aAckFrame->GetType(), aAckFrame->GetLqi(),
                                        aAckFrame->GetRssi());
+        ProcessEnhAckProbing(*aAckFrame, *neighbor);
 #endif
 #if OPENTHREAD_FTD
         if (aAckFrame->GetVersion() == Frame::kFcfFrameVersion2015)
@@ -2577,6 +2578,31 @@ exit:
 }
 #endif // !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+void Mac::ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor)
+{
+    enum
+    {
+        kEnhAckProbingIeMaxLen = 2,
+    };
+
+    const HeaderIe *enhAckProbingIe =
+        reinterpret_cast<const HeaderIe *>(aFrame.GetThreadIe(ThreadIe::kEnhAckProbingIe));
+    const uint8_t *data =
+        reinterpret_cast<const uint8_t *>(enhAckProbingIe) + sizeof(HeaderIe) + sizeof(VendorIeHeader);
+    uint8_t dataLen = 0;
+
+    VerifyOrExit(enhAckProbingIe != nullptr);
+
+    dataLen = enhAckProbingIe->GetLength() - sizeof(VendorIeHeader);
+    VerifyOrExit(dataLen <= kEnhAckProbingIeMaxLen);
+
+    Get<LinkMetrics>().ProcessEnhAckIeData(data, dataLen, aNeighbor);
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 otError Mac::AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame) const
 {
@@ -2665,6 +2691,13 @@ void Mac::UpdateFrameControlField(const Neighbor *aNeighbor, bool aIsTimeSync, u
             static_cast<const Child *>(aNeighbor)->IsCslSynchronized())
     {
         aFcf |= Frame::kFcfFrameVersion2015;
+    }
+    else
+#endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+        if (aNeighbor != nullptr && aNeighbor->IsEnhAckProbingActive())
+    {
+        aFcf |= Frame::kFcfFrameVersion2015; ///< Set version to 2015 to fetch Link Metrics data in Enh-ACK.
     }
     else
 #endif

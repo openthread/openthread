@@ -559,6 +559,14 @@ public:
     bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_1; }
 
     /**
+     * This method indicates whether or not it is a valid Thread 1.2 neighbor.
+     *
+     * @returns TRUE if it is a valid Thread 1.2 neighbor, FALSE otherwise.
+     *
+     */
+    bool IsThreadVersion1p2(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_2; }
+
+    /**
      * This method indicates whether Enhanced Keep-Alive is supported or not.
      *
      * @returns TRUE if Enhanced Keep-Alive is supported, FALSE otherwise.
@@ -703,12 +711,43 @@ public:
     LinkMetricsSeriesInfo *RemoveForwardTrackingSeriesInfo(const uint8_t &aSeriesId);
 
     /**
-     * This method removes all the Series and return the data structures to the Pool
+     * This method removes all the Series and return the data structures to the Pool.
      *
      */
     void RemoveAllForwardTrackingSeriesInfo(void);
 
-#endif
+    /**
+     * This method gets the Enh-ACK Probing metrics (this `Neighbor` object is the Probing Subject).
+     *
+     * @returns Enh-ACK Probing metrics configured.
+     *
+     */
+    const otLinkMetrics &GetEnhAckProbingMetrics(void) const { return mEnhAckProbingMetrics; }
+
+    /**
+     * This method sets the Enh-ACK Probing metrics (this `Neighbor` object is the Probing Subject).
+     *
+     * @param[in]  aEnhAckProbingMetrics  The metrics value to set.
+     *
+     */
+    void SetEnhAckProbingMetrics(const otLinkMetrics &aEnhAckProbingMetrics)
+    {
+        mEnhAckProbingMetrics = aEnhAckProbingMetrics;
+    }
+
+    /**
+     * This method indicates if Enh-ACK Probing is configured and active for this `Neighbor` object.
+     *
+     * @retval TRUE   Enh-ACK Probing is configured and active for this `Neighbor`.
+     * @retval FALSE  Otherwise.
+     *
+     */
+    bool IsEnhAckProbingActive(void) const
+    {
+        return (mEnhAckProbingMetrics.mLqi != 0) || (mEnhAckProbingMetrics.mLinkMargin != 0) ||
+               (mEnhAckProbingMetrics.mRssi != 0);
+    }
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
     /**
      * This method converts a given `State` to a human-readable string.
@@ -766,7 +805,12 @@ private:
     LinkQualityInfo mLinkInfo; ///< Link quality info (contains average RSS, link margin and link quality)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     LinkedList<LinkMetricsSeriesInfo> mLinkMetricsSeriesInfoList; ///< A list of Link Metrics Forward Tracking Series
-                                                                  ///< that is being tracked for this neighbor.
+                                                                  ///< that is being tracked for this neighbor. Note
+                                                                  ///< that this device is the Subject and this
+                                                                  ///< this neighbor is the Initiator.
+    otLinkMetrics mEnhAckProbingMetrics; ///< Metrics configured for Enh-ACK Based Probing at the Probing Subject
+                                         ///< (this neighbor). Note that this device is the Initiator and this neighbor
+                                         ///< is the Subject.
 #endif
 };
 

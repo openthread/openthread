@@ -275,6 +275,7 @@ _LAYER_FIELDS = {
     'wpan.channel': _auto,
     'wpan.header_ie.id': _list(_auto),
     'wpan.header_ie.csl.period': _auto,
+    'wpan.payload_ie.vendor.oui': _auto,
 
     # MLE
     'mle.cmd': _auto,
@@ -320,13 +321,16 @@ _LAYER_FIELDS = {
     'mle.tlv.addr16': _auto,
     'mle.tlv.channel': _auto,
     'mle.tlv.addr_reg_iid': _list(_auto),
+    'mle.tlv.link_enh_ack_flags': _auto,
     'mle.tlv.link_forward_series': _list(_auto),
+    'mle.tlv.link_requested_type_id_flags': _list(_hex),
     'mle.tlv.link_sub_tlv': _auto,
     'mle.tlv.link_status_sub_tlv': _auto,
     'mle.tlv.query_id': _auto,
     'mle.tlv.metric_type_id_flags.type': _list(_hex),
     'mle.tlv.metric_type_id_flags.metric': _list(_hex),
     'mle.tlv.metric_type_id_flags.l': _list(_hex),
+    'mle.tlv.link_requested_type_id_flags': _bytes,
 
     # IP
     'ip.version': _auto,

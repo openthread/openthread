@@ -564,6 +564,36 @@ public:
      */
     uint32_t GetPreferredChannelMask(void);
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    /**
+     * This method enables/disables or updates Enhanced-ACK Based Probing in radio for a specific Initiator.
+     *
+     * After Enhanced-ACK Based Probing is configured by a specific Probing Initiator, the Enhanced-ACK sent to that
+     * node should include Vendor-Specific IE containing Link Metrics data. This method informs the radio to
+     * starts/stops to collect Link Metrics data and include Vendor-Specific IE that containing the data
+     * in Enhanced-ACK sent to that Probing Initiator.
+     *
+     * @param[in]  aInstance    The OpenThread instance structure.
+     * @param[in]  aDataLength  Length of Link Metrics data in the Vendor-Specific IE. Per spec 4.11.3.4.4.6,
+     *                          @p aDataLength should only be 1 or 2. The probing would be disabled if `aDataLength` is
+     *                          `0`.
+     * @param[in]  aShortAddr   The short address of the the probing Initiator.
+     * @param[in]  aExtAddr     The extended source address of the probing Initiator.
+     *
+     * @retval OT_ERROR_NONE           Successfully enable/disable or update Enhanced-ACK Based Probing for a specific
+     *                                 Initiator.
+     * @retval OT_ERROR_INVALID_ARGS   @p aDataLength or @p aExtAddr is not valid.
+     * @retval OT_ERROR_NOT_SUPPORTED  Radio driver doesn't support Enhanced-ACK Probing.
+     *
+     */
+    otError ConfigureEnhAckProbing(otLinkMetrics            aLinkMetrics,
+                                   const Mac::ShortAddress &aShortAddress,
+                                   const Mac::ExtAddress &  aExtAddress)
+    {
+        return otPlatRadioConfigureEnhAckProbing(GetInstancePtr(), aLinkMetrics, aShortAddress, &aExtAddress);
+    }
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+
     /**
      * This method checks if a given channel is valid as a CSL channel.
      *

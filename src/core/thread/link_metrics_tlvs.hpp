@@ -71,6 +71,18 @@ enum Type : uint8_t
 };
 
 /**
+ * Valid values for Link Metrics Type Id Flags.
+ *
+ */
+enum
+{
+    kTypeIdFlagPdu        = 0x40,
+    kTypeIdFlagLqi        = 0x09,
+    kTypeIdFlagLinkMargin = 0x0a,
+    kTypeIdFlagRssi       = 0x0b,
+};
+
+/**
  * This class defines Link Metrics Query ID TLV constants and types.
  *
  */
@@ -83,6 +95,11 @@ typedef UintTlvInfo<kLinkMetricsQueryId, uint8_t> LinkMetricsQueryIdTlv;
 OT_TOOL_PACKED_BEGIN class LinkMetricsTypeIdFlags
 {
 public:
+    enum : uint8_t
+    {
+        kTypeEnumReserved = 2,
+    };
+
     /**
      * Default constructor.
      *
@@ -356,6 +373,33 @@ public:
     SeriesFlags(const SeriesFlags &aSeriesFlags) { mSeriesFlags = aSeriesFlags.mSeriesFlags; }
 
     /**
+     * This method sets the values of this object from a `otLinkMetricsSeriesFlags` object.
+     *
+     * @param[in]  aSeriesFlags  The `otLinkMetricsSeriesFlags` object.
+     *
+     */
+    void SetFromOtSeriesFlags(const otLinkMetricsSeriesFlags aSeriesFlags)
+    {
+        Clear();
+        if (aSeriesFlags.mLinkProbe)
+        {
+            SetLinkProbeFlag();
+        }
+        if (aSeriesFlags.mMacData)
+        {
+            SetMacDataFlag();
+        }
+        if (aSeriesFlags.mMacDataRequest)
+        {
+            SetMacDataRequestFlag();
+        }
+        if (aSeriesFlags.mMacAck)
+        {
+            SetMacAckFlag();
+        }
+    }
+
+    /**
      * This method clears the Link Probe flag.
      *
      */
@@ -467,6 +511,111 @@ private:
     };
 
     uint8_t mSeriesFlags;
+} OT_TOOL_PACKED_END;
+
+enum LinkMetricsEnhAckFlags : uint8_t
+{
+    kEnhAckClear    = OT_LINK_METRICS_ENH_ACK_CLEAR,    ///< Clear.
+    kEnhAckRegister = OT_LINK_METRICS_ENH_ACK_REGISTER, ///< Register.
+};
+
+static uint8_t TypeIdFlagsFromLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
+                                               const otLinkMetrics &   aLinkMetricsFlags)
+{
+    uint8_t count = 0;
+
+    if (aLinkMetricsFlags.mPduCount)
+    {
+        aTypeIdFlags[count++].SetRawValue(kTypeIdFlagPdu);
+    }
+
+    if (aLinkMetricsFlags.mLqi)
+    {
+        aTypeIdFlags[count++].SetRawValue(kTypeIdFlagLqi);
+    }
+
+    if (aLinkMetricsFlags.mLinkMargin)
+    {
+        aTypeIdFlags[count++].SetRawValue(kTypeIdFlagLinkMargin);
+    }
+
+    if (aLinkMetricsFlags.mRssi)
+    {
+        aTypeIdFlags[count++].SetRawValue(kTypeIdFlagRssi);
+    }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (aLinkMetricsFlags.mReserved)
+    {
+        for (uint8_t i = 0; i < count; i++)
+        {
+            aTypeIdFlags[i].SetTypeEnum(LinkMetricsTypeIdFlags::kTypeEnumReserved);
+        }
+    }
+#endif
+
+    return count;
+}
+
+OT_TOOL_PACKED_BEGIN
+class EnhAckLinkMetricsConfigurationSubTlv : public Tlv
+{
+public:
+    /**
+     * Default constructor
+     *
+     */
+    EnhAckLinkMetricsConfigurationSubTlv(void) { Init(); }
+
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kEnhancedACKConfiguration);
+        SetLength(sizeof(LinkMetricsEnhAckFlags));
+    }
+
+    /**
+     * This method sets Enhanced ACK Flags.
+     *
+     * @param[in] aEnhAckFlags  The value of Enhanced ACK Flags.
+     *
+     */
+    void SetEnhAckFlags(otLinkMetricsEnhAckFlags aEnhAckFlags)
+    {
+        memcpy(mSubTlvs + kEnhAckFlagsOffset, &aEnhAckFlags, sizeof(aEnhAckFlags));
+    }
+
+    /**
+     * This method sets Type Id Flags.
+     *
+     * @param[in] aLinkMetricsFlags  A pointer to a `otLinkMetrics` representing the Type Id Flags.
+     *
+     */
+    void SetTypeIdFlags(const otLinkMetrics *aLinkMetricsFlags)
+    {
+        uint8_t typeIdFlagsCount;
+
+        OT_ASSERT(aLinkMetricsFlags != nullptr);
+        typeIdFlagsCount = TypeIdFlagsFromLinkMetricsFlags(
+            reinterpret_cast<LinkMetricsTypeIdFlags *>(mSubTlvs + kTypeIdFlagsOffset), *aLinkMetricsFlags);
+        OT_ASSERT(typeIdFlagsCount <= kMaxTypeIdFlagsEnhAck);
+
+        SetLength(sizeof(LinkMetricsEnhAckFlags) + sizeof(LinkMetricsTypeIdFlags) * typeIdFlagsCount);
+    }
+
+private:
+    enum
+    {
+        kMaxTypeIdFlagsEnhAck = 3,
+
+        kEnhAckFlagsOffset = 0,
+        kTypeIdFlagsOffset = sizeof(LinkMetricsTypeIdFlags),
+    };
+
+    uint8_t mSubTlvs[sizeof(LinkMetricsEnhAckFlags) + sizeof(LinkMetricsTypeIdFlags) * kMaxTypeIdFlagsEnhAck];
 } OT_TOOL_PACKED_END;
 
 } // namespace ot
