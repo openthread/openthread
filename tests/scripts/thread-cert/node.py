@@ -624,6 +624,11 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect('Done')
 
+    def commissioner_stop(self):
+        cmd = 'commissioner stop'
+        self.send_command(cmd)
+        self._expect('Done')
+
     def commissioner_state(self):
         states = [r'disabled', r'petitioning', r'active']
         self.send_command('commissioner state')

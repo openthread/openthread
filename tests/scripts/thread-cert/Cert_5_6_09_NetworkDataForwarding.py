@@ -31,7 +31,7 @@ import unittest
 
 import config
 import thread_cert
-from pktverify.consts import MLE_ADVERTISEMENT, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, ADDRESS_REGISTRATION_TLV, NWD_SERVICE_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_HAS_ROUTER_TLV, LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_DATA_RESPONSE, MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, ADDRESS_REGISTRATION_TLV, NWD_COMMISSIONING_DATA_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_HAS_ROUTER_TLV, LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.addrs import Ipv6Addr
 
@@ -181,15 +181,16 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
 
         # Step 9: The DUT MUST send a multicast MLE Data Response with
         # the new network information
-        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst(LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).must_next(
-        ).must_verify(lambda p: {
-            NWD_SERVICE_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV,
-            NWD_HAS_ROUTER_TLV
-        } == set(p.thread_nwd.tlv.type) and {
-            Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')
-        } == set(p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.border_router.flag.p == [0, 1] and p.thread_nwd.tlv.
-                      border_router.flag.s == [1, 1] and p.thread_nwd.tlv.border_router.flag.r == [1, 1] and p.
-                      thread_nwd.tlv.border_router.flag.o == [1, 1] and p.thread_nwd.tlv.stable == [0, 1, 1, 1, 1, 1])
+        _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst(
+            LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).must_next().must_verify(
+                lambda p: {
+                    NWD_COMMISSIONING_DATA_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV,
+                    NWD_PREFIX_TLV, NWD_HAS_ROUTER_TLV
+                } == set(p.thread_nwd.tlv.type) and {
+                    Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')
+                } == set(p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.border_router.flag.p == [0, 1] and p.thread_nwd.
+                tlv.border_router.flag.s == [1, 1] and p.thread_nwd.tlv.border_router.flag.r == [1, 1] and p.thread_nwd
+                .tlv.border_router.flag.o == [1, 1] and p.thread_nwd.tlv.stable == [0, 1, 1, 1, 1, 1])
 
         # Step 10: The DUT MUST send a unicast MLE Child Update Request to SED_1
         _rpkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).filter_wpan_dst64(SED).must_next(
@@ -207,11 +208,12 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
         # Step 13: The DUT MUST send a multicast MLE Data Response with
         # the new network information
         _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).filter_ipv6_dst(
-            LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).must_next().must_verify(lambda p: {
-                NWD_SERVICE_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV,
-                NWD_HAS_ROUTER_TLV
-            } == set(p.thread_nwd.tlv.type) and {Ipv6Addr('2001:2:0:1::'),
-                                                 Ipv6Addr('2001:2:0:2::')} == set(p.thread_nwd.tlv.prefix))
+            LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).must_next().must_verify(
+                lambda p: {
+                    NWD_COMMISSIONING_DATA_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV,
+                    NWD_PREFIX_TLV, NWD_HAS_ROUTER_TLV
+                } == set(p.thread_nwd.tlv.type) and {Ipv6Addr('2001:2:0:1::'),
+                                                     Ipv6Addr('2001:2:0:2::')} == set(p.thread_nwd.tlv.prefix))
 
         # Step 14: The DUT MUST send a unicast MLE Child Update Request to SED_1
         _rpkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).filter_wpan_dst64(SED).must_next(
