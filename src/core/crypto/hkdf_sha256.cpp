@@ -51,10 +51,10 @@ void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, const uint8
 
 void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength)
 {
-    HmacSha256 hmac;
-    uint8_t    hash[kHashSize];
-    uint8_t    iter = 0;
-    uint16_t   copyLength;
+    HmacSha256       hmac;
+    HmacSha256::Hash hash;
+    uint8_t          iter = 0;
+    uint16_t         copyLength;
 
     // The aOutputKey is calculated as follows [RFC5889]:
     //
@@ -71,11 +71,11 @@ void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOu
 
     while (aOutputKeyLength > 0)
     {
-        hmac.Start(mPrk, sizeof(mPrk));
+        hmac.Start(mPrk.GetBytes(), sizeof(mPrk));
 
         if (iter != 0)
         {
-            hmac.Update(hash, sizeof(hash));
+            hmac.Update(hash.GetBytes(), sizeof(hash));
         }
 
         hmac.Update(aInfo, aInfoLength);
@@ -86,7 +86,7 @@ void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOu
 
         copyLength = (aOutputKeyLength > sizeof(hash)) ? sizeof(hash) : aOutputKeyLength;
 
-        memcpy(aOutputKey, hash, copyLength);
+        memcpy(aOutputKey, hash.GetBytes(), copyLength);
         aOutputKey += copyLength;
         aOutputKeyLength -= copyLength;
     }

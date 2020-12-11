@@ -517,8 +517,8 @@ private:
 
     union HashKeys
     {
-        uint8_t mHash[Crypto::HmacSha256::kHashSize];
-        Keys    mKeys;
+        Crypto::HmacSha256::Hash mHash;
+        Keys                     mKeys;
     };
 
     void ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys);

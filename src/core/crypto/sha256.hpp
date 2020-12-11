@@ -40,6 +40,11 @@
 
 #include <mbedtls/sha256.h>
 
+#include <openthread/crypto.h>
+
+#include "common/clearable.hpp"
+#include "common/equatable.hpp"
+
 namespace ot {
 namespace Crypto {
 
@@ -57,6 +62,27 @@ namespace Crypto {
 class Sha256
 {
 public:
+    /**
+     * This type represents a SHA-256 hash.
+     *
+     */
+    class Hash : public otCryptoSha256Hash, public Clearable<Hash>, public Equatable<Hash>
+    {
+    public:
+        enum : uint8_t
+        {
+            kSize = OT_CRYPTO_SHA256_HASH_SIZE, ///< SHA-256 hash size (bytes)
+        };
+
+        /**
+         * This method returns a pointer to a byte array containing the hash value.
+         *
+         * @returns A pointer to a byte array containing the hash.
+         *
+         */
+        const uint8_t *GetBytes(void) { return m8; }
+    };
+
     enum
     {
         kHashSize = 32, ///< SHA-256 hash size (bytes)
@@ -92,10 +118,10 @@ public:
     /**
      * This method finalizes the hash computation.
      *
-     * @param[out]  aHash  A pointer to the output buffer.
+     * @param[out]  aHash  A reference to a `Hash` to output the calculated hash.
      *
      */
-    void Finish(uint8_t aHash[kHashSize]);
+    void Finish(Hash &aHash);
 
 private:
     mbedtls_sha256_context mContext;

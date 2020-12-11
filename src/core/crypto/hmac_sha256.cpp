@@ -59,9 +59,9 @@ void HmacSha256::Update(const uint8_t *aBuf, uint16_t aBufLength)
     mbedtls_md_hmac_update(&mContext, aBuf, aBufLength);
 }
 
-void HmacSha256::Finish(uint8_t aHash[kHashSize])
+void HmacSha256::Finish(Hash &aHash)
 {
-    mbedtls_md_hmac_finish(&mContext, aHash);
+    mbedtls_md_hmac_finish(&mContext, aHash.m8);
 }
 
 } // namespace Crypto

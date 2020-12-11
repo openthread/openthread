@@ -727,14 +727,14 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
 {
     OT_UNUSED_VARIABLE(aMasterSecret);
 
-    uint8_t        kek[Crypto::Sha256::kHashSize];
-    Crypto::Sha256 sha256;
+    Crypto::Sha256::Hash kek;
+    Crypto::Sha256       sha256;
 
     sha256.Start();
     sha256.Update(aKeyBlock, 2 * static_cast<uint16_t>(aMacLength + aKeyLength + aIvLength));
     sha256.Finish(kek);
 
-    Get<KeyManager>().SetKek(kek);
+    Get<KeyManager>().SetKek(kek.GetBytes());
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
