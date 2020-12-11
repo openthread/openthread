@@ -498,14 +498,6 @@ void platformInfraIfUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd);
 void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet);
 
 /**
- * This function returns the name of the intrastructure interface.
- *
- * @retval  The name of the infrasturcture interface.
- *
- */
-const char *platformInfraIfGetName(void);
-
-/**
  * This function returns the index of the infrastructure interface.
  *
  * @retval  The index of the infrastructure interface. 0 indicates invalid index.

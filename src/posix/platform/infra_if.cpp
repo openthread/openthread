@@ -350,11 +350,6 @@ exit:
     return;
 }
 
-const char *platformInfraIfGetName(void)
-{
-    return sInfraIfName;
-}
-
 uint32_t platformInfraIfGetIndex(void)
 {
     return sInfraIfIndex;
