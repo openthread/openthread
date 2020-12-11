@@ -112,6 +112,8 @@ DIAG_RST_URI = '/d/dr'
 MGMT_COMMISSIONER_SET_URI = '/c/cs'
 LEAD_PET_URI = '/c/lp'
 LEAD_KA_URI = '/c/la'
+DIAG_GET_QRY_URI = '/d/dq'
+DIAG_GET_ANS_URI = '/d/da'
 
 # ADDR SOL Status
 ADDR_SOL_SUCCESS = 0
