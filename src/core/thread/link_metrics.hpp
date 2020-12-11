@@ -363,11 +363,6 @@ private:
     {
         kMaxTypeIdFlags = 4,
 
-        kTypeIdFlagPdu        = 0x40,
-        kTypeIdFlagLqi        = 0x09,
-        kTypeIdFlagLinkMargin = 0x0a,
-        kTypeIdFlagRssi       = 0x0b,
-
         kMaxSeriesSupported =
             OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED, ///< Max number of LinkMetricsSeriesInfo that could
                                                                      ///< be allocated by the pool.
@@ -377,12 +372,6 @@ private:
         kSeriesIdAllSeries = 255, ///< This series ID represents all series.
 
         kLinkProbeMaxLen = 64, ///< Max length of data payload in Link Probe TLV.
-    };
-
-    enum LinkMetricsEnhAckFlags : uint8_t
-    {
-        kEnhAckClear    = OT_LINK_METRICS_ENH_ACK_CLEAR,    ///< Clear.
-        kEnhAckRegister = OT_LINK_METRICS_ENH_ACK_REGISTER, ///< Register.
     };
 
     otLinkMetricsReportCallback                mLinkMetricsReportCallback;
@@ -409,9 +398,6 @@ private:
                                              Neighbor &             aNeighbor);
 
     Neighbor *GetNeighborFromLinkLocalAddr(const Ip6::Address &aDestination);
-
-    static uint8_t TypeIdFlagsFromLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
-                                                   const otLinkMetrics &   aLinkMetricsFlags);
 
     static otError ReadTypeIdFlagsFromMessage(const Message &aMessage,
                                               uint8_t        aStartPos,

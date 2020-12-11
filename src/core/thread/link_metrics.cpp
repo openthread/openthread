@@ -188,14 +188,10 @@ otError LinkMetrics::SendMgmtRequestEnhAckProbing(const Ip6::Address &          
                                                   const otLinkMetricsEnhAckFlags aEnhAckFlags,
                                                   const otLinkMetrics *          aLinkMetricsFlags)
 {
-    otError                error             = OT_ERROR_NONE;
-    LinkMetricsEnhAckFlags enhAckFlags       = static_cast<LinkMetricsEnhAckFlags>(aEnhAckFlags);
-    uint8_t                typeIdFlagsOffset = sizeof(Tlv) + sizeof(enhAckFlags);
-    uint8_t                typeIdFlagsCount  = 0;
-    uint8_t      subTlvs[sizeof(Tlv) + sizeof(enhAckFlags) + sizeof(LinkMetricsTypeIdFlags) * kMaxTypeIdFlags];
-    Tlv *        enhancedAckLinkMetricsConfigurationSubTlv = reinterpret_cast<Tlv *>(subTlvs);
-    Mac::Address macAddress;
-    Neighbor *   neighbor = GetNeighborFromLinkLocalAddr(aDestination);
+    otError                              error = OT_ERROR_NONE;
+    EnhAckLinkMetricsConfigurationSubTlv enhAckLinkMetricsConfigurationSubTlv;
+    Mac::Address                         macAddress;
+    Neighbor *                           neighbor = GetNeighborFromLinkLocalAddr(aDestination);
 
     VerifyOrExit(neighbor != nullptr, error = OT_ERROR_UNKNOWN_NEIGHBOR);
     VerifyOrExit(neighbor->IsThreadVersion1p2(), error = OT_ERROR_NOT_CAPABLE);
@@ -205,20 +201,16 @@ otError LinkMetrics::SendMgmtRequestEnhAckProbing(const Ip6::Address &          
         VerifyOrExit(aLinkMetricsFlags == nullptr, error = OT_ERROR_INVALID_ARGS);
     }
 
-    // Directly transform `aLinkMetricsFlags` into LinkMetricsTypeIdFlags and put them into `subTlvs`
+    enhAckLinkMetricsConfigurationSubTlv.SetEnhAckFlags(aEnhAckFlags);
+
     if (aLinkMetricsFlags != nullptr)
     {
-        typeIdFlagsCount = TypeIdFlagsFromLinkMetricsFlags(
-            reinterpret_cast<LinkMetricsTypeIdFlags *>(subTlvs + typeIdFlagsOffset), *aLinkMetricsFlags);
+        enhAckLinkMetricsConfigurationSubTlv.SetTypeIdFlags(aLinkMetricsFlags);
     }
 
-    enhancedAckLinkMetricsConfigurationSubTlv->SetType(kEnhancedACKConfiguration);
-    enhancedAckLinkMetricsConfigurationSubTlv->SetLength(sizeof(enhAckFlags) +
-                                                         sizeof(LinkMetricsTypeIdFlags) * typeIdFlagsCount);
-    memcpy(subTlvs + sizeof(Tlv), &enhAckFlags, sizeof(enhAckFlags));
-
     error = Get<Mle::MleRouter>().SendLinkMetricsManagementRequest(
-        aDestination, subTlvs, enhancedAckLinkMetricsConfigurationSubTlv->GetSize());
+        aDestination, reinterpret_cast<const uint8_t *>(&enhAckLinkMetricsConfigurationSubTlv),
+        enhAckLinkMetricsConfigurationSubTlv.GetSize());
 
     if (aLinkMetricsFlags != nullptr)
     {
@@ -769,44 +761,6 @@ Neighbor *LinkMetrics::GetNeighborFromLinkLocalAddr(const Ip6::Address &aDestina
 
 exit:
     return neighbor;
-}
-
-uint8_t LinkMetrics::TypeIdFlagsFromLinkMetricsFlags(LinkMetricsTypeIdFlags *aTypeIdFlags,
-                                                     const otLinkMetrics &   aLinkMetricsFlags)
-{
-    uint8_t count = 0;
-
-    if (aLinkMetricsFlags.mPduCount)
-    {
-        aTypeIdFlags[count++].SetRawValue(kTypeIdFlagPdu);
-    }
-
-    if (aLinkMetricsFlags.mLqi)
-    {
-        aTypeIdFlags[count++].SetRawValue(kTypeIdFlagLqi);
-    }
-
-    if (aLinkMetricsFlags.mLinkMargin)
-    {
-        aTypeIdFlags[count++].SetRawValue(kTypeIdFlagLinkMargin);
-    }
-
-    if (aLinkMetricsFlags.mRssi)
-    {
-        aTypeIdFlags[count++].SetRawValue(kTypeIdFlagRssi);
-    }
-
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    if (aLinkMetricsFlags.mReserved)
-    {
-        for (uint8_t i = 0; i < count; i++)
-        {
-            aTypeIdFlags[i].SetTypeEnum(LinkMetricsTypeIdFlags::kTypeEnumReserved);
-        }
-    }
-#endif
-
-    return count;
 }
 
 otError LinkMetrics::ReadTypeIdFlagsFromMessage(const Message &aMessage,
