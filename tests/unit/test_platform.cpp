@@ -28,6 +28,7 @@
 
 #include "test_platform.h"
 
+#include <stdio.h>
 #include <sys/time.h>
 
 bool                 g_testPlatAlarmSet     = false;
@@ -380,10 +381,29 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 
     VerifyOrExit(aOutput, error = OT_ERROR_INVALID_ARGS);
 
+#if __SANITIZE_ADDRESS__ == 0
+    {
+        FILE * file = nullptr;
+        size_t readLength;
+
+        file = fopen("/dev/urandom", "rb");
+        VerifyOrExit(file != nullptr, error = OT_ERROR_FAILED);
+
+        readLength = fread(aOutput, 1, aOutputLength, file);
+
+        if (readLength != aOutputLength)
+        {
+            error = OT_ERROR_FAILED;
+        }
+
+        fclose(file);
+    }
+#else
     for (uint16_t length = 0; length < aOutputLength; length++)
     {
         aOutput[length] = (uint8_t)rand();
     }
+#endif
 
 exit:
     return error;
