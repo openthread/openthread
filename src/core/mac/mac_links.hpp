@@ -377,9 +377,9 @@ public:
         mSubMac.SetExtAddress(aExtAddress);
 #else
         mExtAddress = aExtAddress;
+#endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
         mTrel.HandleExtAddressChange();
-#endif
 #endif
     }
 
