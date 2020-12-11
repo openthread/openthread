@@ -45,7 +45,6 @@ LEADER = 1
 ROUTER15 = 16
 REED = 17
 
-
 # Test Purpose and Description:
 # -----------------------------
 # This test case exercises the Diagnostic Get Query and Answer commands
@@ -263,7 +262,7 @@ class Cert_5_7_02_CoapDiagCommands(thread_cert.TestCase):
         # Step 1: Ensure topology is formed correctly
         for i in range(1, 16):
             with pkts.save_index():
-                pv.verify_attached('ROUTER_%d' %i, 'LEADER')
+                pv.verify_attached('ROUTER_%d' % i, 'LEADER')
         pv.verify_attached('DUT', 'ROUTER_15')
 
         # Step 2: Leader to send DIAG_GET.req to DUT’s RLOC.
