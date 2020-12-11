@@ -30,7 +30,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # ==============================================================================
 # General variables
 # ==============================================================================
-SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0
+SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.1
 
 EFR32_PLATFORM = $(subst /,,$(exec_prefix))
 # NOTE: This is a work-around that sets EFR32_PLATFORM to the correct platform name.
