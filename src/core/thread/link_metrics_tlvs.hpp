@@ -366,7 +366,7 @@ public:
      * @param[in]  aSeriesFlags  The `otLinkMetricsSeriesFlags` object.
      *
      */
-    void SetFromPublicSeriesFlags(const otLinkMetricsSeriesFlags aSeriesFlags)
+    void SetFromOtSeriesFlags(const otLinkMetricsSeriesFlags aSeriesFlags)
     {
         Clear();
         if (aSeriesFlags.mLinkProbe)

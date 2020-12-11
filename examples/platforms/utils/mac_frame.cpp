@@ -221,9 +221,9 @@ uint8_t otMacFrameGenerateCslIeTemplate(uint8_t *aDest)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 uint8_t otMacFrameGenerateEnhAckProbingIe(uint8_t *aDest, const uint8_t *aIeData, uint8_t aIeDataLength)
 {
-    assert(aDest != nullptr);
-
     uint8_t len = sizeof(Mac::VendorIeHeader) + aIeDataLength;
+
+    assert(aDest != nullptr);
 
     reinterpret_cast<Mac::HeaderIe *>(aDest)->SetId(Mac::Frame::kHeaderIeVendor);
     reinterpret_cast<Mac::HeaderIe *>(aDest)->SetLength(len);

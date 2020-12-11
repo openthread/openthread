@@ -139,7 +139,7 @@ typedef void (*otLinkMetricsMgmtResponseCallback)(const otIp6Address *aSource, u
  * @param[in] aContext          A pointer to application-specific context.
  *
  */
-typedef void (*otLinkMetricsEnhAckProbingIeReportCallback)(const otShortAddress       aShortAddress,
+typedef void (*otLinkMetricsEnhAckProbingIeReportCallback)(otShortAddress             aShortAddress,
                                                            const otExtAddress *       aExtAddress,
                                                            const otLinkMetricsValues *aMetricsValues,
                                                            void *                     aContext);
@@ -206,9 +206,9 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                   
  *                               `1` to register. Other values are reserved.
  * @param[in] aLinkMetricsFlags  A pointer to flags specifying what metrics to query. Should be `NULL` when
  *                               `aEnhAckFlags` is `0`.
- * @param[in]  aCallback         A pointer to a function that is called when an Enhanced Ack with Link Metrics is
+ * @param[in] aCallback          A pointer to a function that is called when an Enhanced Ack with Link Metrics is
  *                               received.
- * @param[in]  aCallbackContext  A pointer to application-specific context.
+ * @param[in] aCallbackContext   A pointer to application-specific context.
  *
  * @retval OT_ERROR_NONE              Successfully sent a Link Metrics Management Request message.
  * @retval OT_ERROR_NO_BUFS           Insufficient buffers to generate the MLE Link Metrics Management Request message.

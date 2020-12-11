@@ -39,7 +39,7 @@
 
 using namespace ot;
 
-static int8_t sNoiseFloor; ///< The noise floor that would be used in Link Metrics. It should be set to the platform's
+static int8_t sNoiseFloor; ///< The noise floor used by Link Metrics. It should be set to the platform's
                            ///< noise floor (measured noise floor, receiver sensitivity or a constant).
 
 class LinkMetricsDataInfo : public LinkedListEntry<LinkMetricsDataInfo>, public Clearable<LinkMetricsDataInfo>
@@ -63,7 +63,7 @@ public:
      *                              object.
      *
      */
-    void Set(const otLinkMetrics aLinkMetrics, const otShortAddress aShortAddress, const otExtAddress &aExtAddress)
+    void Set(otLinkMetrics aLinkMetrics, otShortAddress aShortAddress, const otExtAddress &aExtAddress)
     {
         mLinkMetrics  = aLinkMetrics;
         mShortAddress = aShortAddress;
@@ -77,10 +77,10 @@ public:
      *
      * @param[in]   aLqi     LQI value of the acknowledeged frame.
      * @param[in]   aRssi    RSSI value of the acknowledged frame.
-     * @param[out]  aData    A pointer to the output buffer. @p aData MUST NOT be `nullptr`. The buffer should have 2
-     *                       bytes at least (Per spec 4.11.3.4.4.6). Otherwise the behavior would be undefined.
+     * @param[out]  aData    A pointer to the output buffer. @p aData MUST NOT be `nullptr`. The buffer must have
+     *                       at least 2 bytes (per spec 4.11.3.4.4.6). Otherwise the behavior would be undefined.
      *
-     * @returns  The number of bytes written. If the writing fails, `0` would be returned.
+     * @returns  The number of bytes written. `0` on failure.
      *
      */
     uint8_t GetEnhAckData(uint8_t aLqi, int8_t aRssi, uint8_t *aData) const
@@ -122,13 +122,6 @@ public:
     otLinkMetrics GetLinkMetrics(void) const { return mLinkMetrics; }
 
 private:
-    LinkMetricsDataInfo *mNext;
-
-    otLinkMetrics mLinkMetrics;
-
-    otShortAddress mShortAddress;
-    otExtAddress   mExtAddress;
-
     uint8_t GetLinkMargin(int8_t aRssi) const { return LinkQualityInfo::ConvertRssToLinkMargin(sNoiseFloor, aRssi); }
 
     bool Matches(const otShortAddress &aShortAddress) const { return mShortAddress == aShortAddress; };
@@ -137,6 +130,13 @@ private:
     {
         return memcmp(&mExtAddress, &aExtAddress, sizeof(otExtAddress)) == 0;
     };
+
+    LinkMetricsDataInfo *mNext;
+
+    otLinkMetrics mLinkMetrics;
+
+    otShortAddress mShortAddress;
+    otExtAddress   mExtAddress;
 };
 
 enum
@@ -160,19 +160,19 @@ static LinkMetricsDataInfoList &GetLinkMetricsDataInfoActiveList(void)
     return sDataInfoActiveList;
 }
 
-static inline bool IsLinkMetricsClear(const otLinkMetrics aLinkMetrics)
+static inline bool IsLinkMetricsClear(otLinkMetrics aLinkMetrics)
 {
     return !aLinkMetrics.mPduCount && !aLinkMetrics.mLqi && !aLinkMetrics.mLinkMargin && !aLinkMetrics.mRssi;
 }
 
-void otLinkMetricsInit(const int8_t aNoiseFloor)
+void otLinkMetricsInit(int8_t aNoiseFloor)
 {
     sNoiseFloor = aNoiseFloor;
 }
 
-otError otLinkMetricsConfigureEnhAckProbing(const otShortAddress aShortAddress,
-                                            const otExtAddress * aExtAddress,
-                                            otLinkMetrics        aLinkMetrics)
+otError otLinkMetricsConfigureEnhAckProbing(otShortAddress      aShortAddress,
+                                            const otExtAddress *aExtAddress,
+                                            otLinkMetrics       aLinkMetrics)
 {
     otError              error    = OT_ERROR_NONE;
     LinkMetricsDataInfo *dataInfo = nullptr;
@@ -208,6 +208,7 @@ exit:
 LinkMetricsDataInfo *GetLinkMetricsInfoByMacAddress(const otMacAddress *aMacAddress)
 {
     LinkMetricsDataInfo *dataInfo = nullptr;
+
     VerifyOrExit(aMacAddress != nullptr);
 
     if (aMacAddress->mType == OT_MAC_ADDRESS_TYPE_SHORT)

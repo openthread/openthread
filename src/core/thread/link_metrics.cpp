@@ -173,7 +173,7 @@ otError LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &  
 
     memcpy(subTlvs + sizeof(Tlv), &aSeriesId, sizeof(aSeriesId));
 
-    seriesFlags->SetFromPublicSeriesFlags(aSeriesFlags);
+    seriesFlags->SetFromOtSeriesFlags(aSeriesFlags);
 
     error = Get<Mle::MleRouter>().SendLinkMetricsManagementRequest(aDestination, subTlvs,
                                                                    forwardProbingRegistrationSubTlv->GetSize());

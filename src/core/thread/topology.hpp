@@ -719,6 +719,8 @@ public:
     /**
      * This method gets the Enh-ACK Probing metrics (this `Neighbor` object is the Probing Subject).
      *
+     * @returns Enh-ACK Probing metrics configured.
+     *
      */
     const otLinkMetrics &GetEnhAckProbingMetrics(void) const { return mEnhAckProbingMetrics; }
 

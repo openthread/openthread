@@ -2008,7 +2008,7 @@ void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, ui
     OutputLine("Status: %s", LinkMetricsStatusToStr(aStatus));
 }
 
-void Interpreter::HandleLinkMetricsEnhAckProbingIe(const otShortAddress       aShortAddress,
+void Interpreter::HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
                                                    const otExtAddress *       aExtAddress,
                                                    const otLinkMetricsValues *aMetricsValues,
                                                    void *                     aContext)
@@ -2016,7 +2016,7 @@ void Interpreter::HandleLinkMetricsEnhAckProbingIe(const otShortAddress       aS
     static_cast<Interpreter *>(aContext)->HandleLinkMetricsEnhAckProbingIe(aShortAddress, aExtAddress, aMetricsValues);
 }
 
-void Interpreter::HandleLinkMetricsEnhAckProbingIe(const otShortAddress       aShortAddress,
+void Interpreter::HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
                                                    const otExtAddress *       aExtAddress,
                                                    const otLinkMetricsValues *aMetricsValues)
 {

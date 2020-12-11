@@ -215,7 +215,7 @@ public:
      *
      * @retval OT_ERROR_NONE              Successfully sent a Link Metrics Management Request message.
      * @retval OT_ERROR_NO_BUFS           Insufficient buffers to generate the MLE Link Metrics Management Request
-     * message.
+     *                                    message.
      * @retval OT_ERROR_INVALID_ARGS      @p aSeriesId is not within the valid range.
      * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
      *
@@ -230,13 +230,13 @@ public:
      *
      * @param[in] aDestination       A reference to the IPv6 address of the destination.
      * @param[in] aEnhAckFlags       Enh-ACK Flags to indicate whether to register or clear the probing. `0` to clear
-     * and `1` to register. Other values are reserved.
+     *                               and `1` to register. Other values are reserved.
      * @param[in] aLinkMetricsFlags  A pointer to flags specifying what metrics to query. Should be `NULL` when
      *                               `aEnhAckFlags` is `0`.
      *
      * @retval OT_ERROR_NONE              Successfully sent a Link Metrics Management Request message.
      * @retval OT_ERROR_NO_BUFS           Insufficient buffers to generate the MLE Link Metrics Management Request
-     * message.
+     *                                    message.
      * @retval OT_ERROR_INVALID_ARGS      @p aEnhAckFlags is not a valid value or @p aLinkMetricsFlags isn't correct.
      * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
      *

@@ -590,7 +590,7 @@ public:
                                    const Mac::ShortAddress &aShortAddress,
                                    const Mac::ExtAddress &  aExtAddress)
     {
-        return otPlatRadioConfigureEnhAckProbing(GetInstance(), aLinkMetrics, aShortAddress, &aExtAddress);
+        return otPlatRadioConfigureEnhAckProbing(GetInstancePtr(), aLinkMetrics, aShortAddress, &aExtAddress);
     }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 

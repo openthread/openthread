@@ -40,10 +40,10 @@ libopenthread_platform_utils_a_CPPFLAGS                 = \
 libopenthread_platform_utils_a_SOURCES  = \
     code_utils.h                          \
     debug_uart.c                          \
-    logging_rtt.c                         \
-    logging_rtt.h                         \
     link_metrics.cpp                      \
     link_metrics.h                        \
+    logging_rtt.c                         \
+    logging_rtt.h                         \
     mac_frame.cpp                         \
     mac_frame.h                           \
     otns_utils.cpp                        \
