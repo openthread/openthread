@@ -45,7 +45,7 @@
 #include "net/ip6.hpp"
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
-#include "net/tcp.hpp"
+#include "net/tcp6.hpp"
 #include "net/udp6.hpp"
 #include "radio/radio.hpp"
 #include "thread/mle.hpp"

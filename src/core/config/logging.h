@@ -330,6 +330,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_TCP
+ *
+ * Define to enable TCP logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_TCP
+#define OPENTHREAD_CONFIG_LOG_TCP 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
  *
  * Define to prepend the log level to all log messages.

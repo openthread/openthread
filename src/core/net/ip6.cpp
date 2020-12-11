@@ -69,6 +69,9 @@ Ip6::Ip6(Instance &aInstance)
     , mReceiveIp6DatagramCallbackContext(nullptr)
     , mSendQueueTask(aInstance, Ip6::HandleSendQueue)
     , mIcmp(aInstance)
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+    , mTcp(aInstance)
+#endif
     , mUdp(aInstance)
     , mMpl(aInstance)
 {
@@ -76,8 +79,7 @@ Ip6::Ip6(Instance &aInstance)
 
 Message *Ip6::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
 {
-    return Get<MessagePool>().New(Message::kTypeIp6,
-                                  sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
+    return Get<MessagePool>().New(Message::kTypeIp6, kMessageReserveHeaderLength + aReserved, aSettings);
 }
 
 Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const Message::Settings &aSettings)
@@ -229,7 +231,8 @@ Error Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo 
     tunnelHeader.SetDestination(messageInfo.GetPeerAddr());
     tunnelHeader.SetNextHeader(kProtoIp6);
 
-    VerifyOrExit((source = SelectSourceAddress(messageInfo)) != nullptr, error = kErrorInvalidSourceAddress);
+    VerifyOrExit((source = SelectSourceAddress(messageInfo.GetPeerAddr())) != nullptr,
+                 error = kErrorInvalidSourceAddress);
 
     tunnelHeader.SetSource(source->GetAddress());
 
@@ -464,7 +467,7 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 
     if (aMessageInfo.GetSockAddr().IsUnspecified() || aMessageInfo.GetSockAddr().IsMulticast())
     {
-        const NetifUnicastAddress *source = SelectSourceAddress(aMessageInfo);
+        const NetifUnicastAddress *source = SelectSourceAddress(aMessageInfo.GetPeerAddr());
 
         VerifyOrExit(source != nullptr, error = kErrorInvalidSourceAddress);
         header.SetSource(source->GetAddress());
@@ -948,7 +951,7 @@ Error Ip6::HandlePayload(Message &          aMessage,
     Error    error   = kErrorNone;
     Message *message = nullptr;
 
-    VerifyOrExit(aIpProto == kProtoUdp || aIpProto == kProtoIcmp6);
+    VerifyOrExit(aIpProto == kProtoUdp || aIpProto == kProtoIcmp6 || aIpProto == kProtoTcp);
 
     switch (aMessageOwnership)
     {
@@ -974,6 +977,15 @@ Error Ip6::HandlePayload(Message &          aMessage,
     case kProtoIcmp6:
         error = mIcmp.HandleMessage(*message, aMessageInfo);
         break;
+
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+    case kProtoTcp:
+        mTcp.HandleMessage(*message, aMessageInfo);
+        // TCP always takes the custody of the message
+        message = nullptr;
+        break;
+
+#endif
 
     default:
         break;
@@ -1127,6 +1139,8 @@ start:
     shouldFreeMessage    = true;
 
     SuccessOrExit(error = header.Init(aMessage));
+
+    VerifyOrExit(!header.GetSource().IsUnspecified() && !header.GetSource().IsMulticast(), error = kErrorDrop);
 
     messageInfo.Clear();
     messageInfo.SetPeerAddr(header.GetSource());
@@ -1362,11 +1376,10 @@ exit:
     return rval;
 }
 
-const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
+const NetifUnicastAddress *Ip6::SelectSourceAddress(const Address &aDestination)
 {
-    Address *                  destination                 = &aMessageInfo.GetPeerAddr();
-    uint8_t                    destinationScope            = destination->GetScope();
-    const bool                 destinationIsRoutingLocator = Get<Mle::Mle>().IsRoutingLocator(*destination);
+    uint8_t                    destinationScope            = aDestination.GetScope();
+    const bool                 destinationIsRoutingLocator = Get<Mle::Mle>().IsRoutingLocator(aDestination);
     const NetifUnicastAddress *rvalAddr                    = nullptr;
     uint8_t                    rvalPrefixMatched           = 0;
 
@@ -1382,7 +1395,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             continue;
         }
 
-        candidatePrefixMatched = destination->PrefixMatch(*candidateAddr);
+        candidatePrefixMatched = aDestination.PrefixMatch(*candidateAddr);
 
         if (candidatePrefixMatched >= addr->mPrefixLength)
         {
@@ -1400,7 +1413,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             rvalAddr          = addr;
             rvalPrefixMatched = candidatePrefixMatched;
         }
-        else if (*candidateAddr == *destination)
+        else if (*candidateAddr == aDestination)
         {
             // Rule 1: Prefer same address
             rvalAddr = addr;

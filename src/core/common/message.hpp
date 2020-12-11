@@ -180,15 +180,16 @@ struct MessageMetadata
         uint8_t  mChannel; ///< Used for MLE Announce.
     } mPanIdChannel;       ///< Used for MLE Discover Request, Response, and Announce messages.
 
-    uint8_t mType : 3;          ///< Identifies the type of message.
-    uint8_t mSubType : 4;       ///< Identifies the message sub type.
-    bool    mDirectTx : 1;      ///< Used to indicate whether a direct transmission is required.
-    bool    mLinkSecurity : 1;  ///< Indicates whether or not link security is enabled.
-    uint8_t mPriority : 2;      ///< Identifies the message priority level (higher value is higher priority).
-    bool    mInPriorityQ : 1;   ///< Indicates whether the message is queued in normal or priority queue.
-    bool    mTxSuccess : 1;     ///< Indicates whether the direct tx of the message was successful.
-    bool    mDoNotEvict : 1;    ///< Indicates whether or not this message may be evicted.
-    bool    mMulticastLoop : 1; ///< Indicates whether or not this multicast message may be looped back.
+    uint8_t mType : 3;           ///< Identifies the type of message.
+    uint8_t mSubType : 4;        ///< Identifies the message sub type.
+    bool    mDirectTx : 1;       ///< Used to indicate whether a direct transmission is required.
+    bool    mLinkSecurity : 1;   ///< Indicates whether or not link security is enabled.
+    uint8_t mPriority : 2;       ///< Identifies the message priority level (higher value is higher priority).
+    bool    mInPriorityQ : 1;    ///< Indicates whether the message is queued in normal or priority queue.
+    bool    mTxSuccess : 1;      ///< Indicates whether the direct tx of the message was successful.
+    bool    mDoNotEvict : 1;     ///< Indicates whether or not this message may be evicted.
+    bool    mMulticastLoop : 1;  ///< Indicates whether or not this multicast message may be looped back.
+    bool    mIsManagedByTcp : 1; ///< Indicates whether or not this message is managed by the TCP stack.
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     bool    mTimeSync : 1;      ///< Indicates whether the message is also used for time sync purpose.
     int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
@@ -484,6 +485,14 @@ public:
     Error SetLength(uint16_t aLength);
 
     /**
+     * This method returns the number of reserved header bytes.
+     *
+     * @returns The number of reserved header bytes.
+     *
+     */
+    uint16_t GetReserved(void) const { return GetMetadata().mReserved; }
+
+    /**
      * This method returns the number of buffers in the message.
      *
      */
@@ -572,6 +581,23 @@ public:
     void SetMulticastLoop(bool aMulticastLoop) { GetMetadata().mMulticastLoop = aMulticastLoop; }
 
     /**
+     * This method checks whether this message is managed by the TCP stack.
+     *
+     * @retval TRUE   If message is managed by the TCP stack.
+     * @retval FALSE  If message is not managed by the TCP stack.
+     *
+     */
+    bool GetIsManagedByTcp(void) const { return GetMetadata().mIsManagedByTcp; }
+
+    /**
+     * This method sets whether this message is managed by the TCP stack.
+     *
+     * @param[in]  aIsManagedByTcp  Whether this message is managed by the TCP stack.
+     *
+     */
+    void SetIsManagedByTcp(bool aIsManagedByTcp) { GetMetadata().mIsManagedByTcp = aIsManagedByTcp; }
+
+    /**
      * This method returns the message priority level.
      *
      * @returns The priority level associated with this message.
@@ -601,6 +627,18 @@ public:
      *
      */
     static const char *PriorityToString(Priority aPriority);
+
+    /**
+     * This method resets the message metadata given type and priority level.
+     *
+     * @param[in]  aType      The new message type.
+     * @param[in]  aPriority  The new message priority level.
+     *
+     * @retval OT_ERROR_NONE           Successfully resets the message with new type and priority level.
+     * @retval OT_ERROR_INVALID_ARGS   Priority level is not invalid.
+     *
+     */
+    otError ResetMetadata(Message::Type aType, Message::Priority aPriority);
 
     /**
      * This method prepends bytes to the front of the message.
@@ -1262,6 +1300,14 @@ public:
 
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
+    /**
+     * This method returns `true` if the message is enqueued in any queue (`MessageQueue` or `PriorityQueue`).
+     *
+     * @returns `true` if the message is in any queue, `false` otherwise.
+     *
+     */
+    bool IsInAQueue(void) const { return (GetMetadata().mQueue.mMessage != nullptr); }
+
 private:
     /**
      * This method returns a pointer to the message pool to which this message belongs
@@ -1278,14 +1324,6 @@ private:
      *
      */
     void SetMessagePool(MessagePool *aMessagePool) { GetMetadata().mMessagePool = aMessagePool; }
-
-    /**
-     * This method returns `true` if the message is enqueued in any queue (`MessageQueue` or `PriorityQueue`).
-     *
-     * @returns `true` if the message is in any queue, `false` otherwise.
-     *
-     */
-    bool IsInAQueue(void) const { return (GetMetadata().mQueue.mMessage != nullptr); }
 
     /**
      * This method sets the message queue information for the message.
@@ -1327,14 +1365,6 @@ private:
      *
      */
     Message *&Prev(void) { return GetMetadata().mPrev; }
-
-    /**
-     * This method returns the number of reserved header bytes.
-     *
-     * @returns The number of reserved header bytes.
-     *
-     */
-    uint16_t GetReserved(void) const { return GetMetadata().mReserved; }
 
     /**
      * This method sets the number of reserved header bytes.

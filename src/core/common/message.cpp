@@ -106,7 +106,16 @@ void MessagePool::Free(Message *aMessage)
 {
     OT_ASSERT(aMessage->Next() == nullptr && aMessage->Prev() == nullptr);
 
-    FreeBuffers(static_cast<Buffer *>(aMessage));
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+    if (aMessage->GetIsManagedByTcp())
+    {
+        Get<Ip6::Tcp>().TakeCustody(*aMessage);
+    }
+    else
+#endif
+    {
+        FreeBuffers(static_cast<Buffer *>(aMessage));
+    }
 }
 
 Buffer *MessagePool::NewBuffer(Message::Priority aPriority)
@@ -280,6 +289,30 @@ Error Message::SetLength(uint16_t aLength)
 
 exit:
     return error;
+}
+
+otError Message::ResetMetadata(Message::Type aType, Message::Priority aPriority)
+{
+    MessageMetadata &metadata = GetMetadata();
+    uint16_t         reserved = metadata.mReserved;
+    uint16_t         offset   = metadata.mOffset;
+    uint16_t         length   = metadata.mLength;
+    MessagePool *    pool     = metadata.mMessagePool;
+
+    OT_ASSERT(metadata.mPrev == nullptr);
+    OT_ASSERT(metadata.mNext == nullptr);
+    OT_ASSERT(!IsInAQueue());
+
+    memset(&metadata, 0, sizeof(metadata));
+
+    metadata.mReserved    = reserved;
+    metadata.mOffset      = offset;
+    metadata.mLength      = length;
+    metadata.mMessagePool = pool;
+
+    SetType(aType);
+    SetLinkSecurityEnabled(true);
+    return SetPriority(aPriority);
 }
 
 uint8_t Message::GetBufferCount(void) const

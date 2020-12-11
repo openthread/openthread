@@ -177,6 +177,7 @@ EXTRA_DIST                                                         = \
     test_srp_lease.py                                                \
     test_srp_name_conflicts.py                                       \
     test_srp_register_single_service.py                              \
+    test_tcp.py                                                      \
     thread_cert.py                                                   \
     tlvs_parsing.py                                                  \
     thread_cert.py                                                   \
@@ -232,6 +233,7 @@ check_SCRIPTS                                                      = \
     test_srp_lease.py                                                \
     test_srp_name_conflicts.py                                       \
     test_srp_register_single_service.py                              \
+    test_tcp.py                                                      \
     Cert_5_1_01_RouterAttach.py                                      \
     Cert_5_1_02_ChildAddressTimeout.py                               \
     Cert_5_1_03_RouterAddressReallocation.py                         \

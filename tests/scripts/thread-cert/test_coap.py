@@ -108,7 +108,7 @@ def any_uri_path():
 class TestCoapMessageOptionHeader(unittest.TestCase):
 
     def test_should_return_passed_on_value_when_read_extended_value_is_called_with_value_different_than_13_and_14(
-        self):
+            self):
         # GIVEN
         value = any_4bits_value_different_than_13_and_14()
 
@@ -119,7 +119,7 @@ class TestCoapMessageOptionHeader(unittest.TestCase):
         self.assertEqual(value, actual_value)
 
     def test_should_return_value_stored_in_first_byte_plus_13_when_read_extended_value_is_called_with_value_equal_13(
-        self):
+            self):
         # GIVEN
         value = 13
         extended_value = any_value()
@@ -133,7 +133,7 @@ class TestCoapMessageOptionHeader(unittest.TestCase):
         self.assertEqual(extended_value + 13, actual_value)
 
     def test_should_return_value_stored_in_first_byte_plus_269_when_read_extended_value_is_called_with_value_equal_14(
-        self):
+            self):
         # GIVEN
         value = 14
         extended_value = any_value()
