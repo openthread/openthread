@@ -361,7 +361,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                               } <= set(p.coap.tlv.type) and\
                    p.thread_meshcop.tlv.state == MESHCOP_ACCEPT and\
                    p.thread_meshcop.tlv.commissioner_sess_id ==
-                   _dr_pkt3.thread_meshcop.tlv.commissioner_sess_id + 1
+                   (_dr_pkt3.thread_meshcop.tlv.commissioner_sess_id + 1) % 65536
                    ).\
            must_next()
 
