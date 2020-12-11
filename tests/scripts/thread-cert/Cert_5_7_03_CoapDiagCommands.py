@@ -162,6 +162,7 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
             pv.verify_attached('SED', 'ROUTER', 'MTD')
             pv.verify_attached('MED', 'ROUTER', 'MTD')
             pv.verify_attached('DUT', 'ROUTER', 'FTD-ED')
+        _pkt = pkts.last()
 
         # Step 2: Leader sends DIAG_GET.qry to the Realm-Local All-Thread-Nodes
         #         multicast address containing the requested diagnostic TLVs:
