@@ -183,16 +183,26 @@ void ChannelTlv::SetChannel(uint16_t aChannel)
 
 bool ChannelMaskBaseTlv::IsValid(void) const
 {
-    const ChannelMaskEntryBase *entry = GetFirstEntry();
-    const uint8_t *             end   = reinterpret_cast<const uint8_t *>(GetNext());
-    bool                        ret   = false;
+    const ChannelMaskEntryBase *cur = GetFirstEntry();
+    const ChannelMaskEntryBase *end = reinterpret_cast<const ChannelMaskEntryBase *>(GetNext());
+    bool                        ret = false;
 
-    VerifyOrExit(entry != nullptr);
+    VerifyOrExit(cur != nullptr);
 
-    while (reinterpret_cast<const uint8_t *>(entry) + sizeof(ChannelMaskEntryBase) <= end)
+    while (cur < end)
     {
-        entry = entry->GetNext();
-        VerifyOrExit(reinterpret_cast<const uint8_t *>(entry) <= end);
+        uint8_t channelPage;
+
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+
+        channelPage = cur->GetChannelPage();
+
+        if ((channelPage == OT_RADIO_CHANNEL_PAGE_0) || (channelPage == OT_RADIO_CHANNEL_PAGE_2))
+        {
+            VerifyOrExit(static_cast<const ChannelMaskEntry *>(cur)->IsValid());
+        }
+
+        cur = cur->GetNext();
     }
 
     ret = true;
@@ -257,27 +267,35 @@ void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
 
 uint32_t ChannelMaskTlv::GetChannelMask(void) const
 {
-    uint32_t                mask = 0;
-    const ChannelMaskEntry *cur  = static_cast<const ChannelMaskEntry *>(GetFirstEntry());
-    const ChannelMaskEntry *end  = reinterpret_cast<const ChannelMaskEntry *>(GetValue() + GetLength());
+    const ChannelMaskEntryBase *cur  = GetFirstEntry();
+    const ChannelMaskEntryBase *end  = reinterpret_cast<const ChannelMaskEntryBase *>(GetNext());
+    uint32_t                    mask = 0;
 
-    for (; cur < end; cur = static_cast<const ChannelMaskEntry *>(cur->GetNext()))
+    VerifyOrExit(cur != nullptr);
+
+    while (cur < end)
     {
+        uint8_t channelPage;
+
         VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
 
+        channelPage = cur->GetChannelPage();
+
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
-        if (cur->GetChannelPage() == OT_RADIO_CHANNEL_PAGE_2)
+        if (channelPage == OT_RADIO_CHANNEL_PAGE_2)
         {
-            mask |= cur->GetMask() & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK;
+            mask |= static_cast<const ChannelMasEntry *>(cur)->GetMask() & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK;
         }
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
-        if (cur->GetChannelPage() == OT_RADIO_CHANNEL_PAGE_0)
+        if (channelPage == OT_RADIO_CHANNEL_PAGE_0)
         {
-            mask |= cur->GetMask() & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK;
+            mask |= static_cast<const ChannelMaskEntry *>(cur)->GetMask() & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK;
         }
 #endif
+
+        cur = cur->GetNext();
     }
 
 exit:
