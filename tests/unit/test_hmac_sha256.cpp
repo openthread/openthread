@@ -38,17 +38,17 @@ void TestHmacSha256(void)
 {
     static const struct
     {
-        const char *key;
-        const char *data;
-        uint8_t     hash[ot::Crypto::HmacSha256::kHashSize];
+        const char *       key;
+        const char *       data;
+        otCryptoSha256Hash hash;
     } tests[] = {
         {
             "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b",
             "Hi There",
-            {
+            {{
                 0xb0, 0x34, 0x4c, 0x61, 0xd8, 0xdb, 0x38, 0x53, 0x5c, 0xa8, 0xaf, 0xce, 0xaf, 0x0b, 0xf1, 0x2b,
                 0x88, 0x1d, 0xc2, 0x00, 0xc9, 0x83, 0x3d, 0xa7, 0x26, 0xe9, 0x37, 0x6c, 0x2e, 0x32, 0xcf, 0xf7,
-            },
+            }},
         },
         {
             nullptr,
@@ -61,8 +61,8 @@ void TestHmacSha256(void)
 
     // Make sure hmac is destructed before freeing instance.
     {
-        ot::Crypto::HmacSha256 hmac;
-        uint8_t                hash[ot::Crypto::HmacSha256::kHashSize];
+        ot::Crypto::HmacSha256       hmac;
+        ot::Crypto::HmacSha256::Hash hash;
 
         VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
 
@@ -72,7 +72,8 @@ void TestHmacSha256(void)
             hmac.Update(reinterpret_cast<const uint8_t *>(tests[i].data), static_cast<uint16_t>(strlen(tests[i].data)));
             hmac.Finish(hash);
 
-            VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0, "HMAC-SHA-256 failed");
+            VerifyOrQuit(hash == static_cast<const ot::Crypto::HmacSha256::Hash &>(tests[i].hash),
+                         "HMAC-SHA-256 failed");
         }
     }
 

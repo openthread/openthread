@@ -37,7 +37,7 @@
 
 #include "openthread-core-config.h"
 
-#include "hmac_sha256.hpp"
+#include "crypto/hmac_sha256.hpp"
 
 namespace ot {
 namespace Crypto {
@@ -84,12 +84,7 @@ public:
     void Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength);
 
 private:
-    enum
-    {
-        kHashSize = HmacSha256::kHashSize,
-    };
-
-    uint8_t mPrk[kHashSize]; // Pseudo-Random Key (derived from Extract step).
+    HmacSha256::Hash mPrk; // Pseudo-Random Key (derived from Extract step).
 };
 
 /**

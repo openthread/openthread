@@ -272,12 +272,12 @@ otError Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress,
      *
      */
 
-    otError        error      = OT_ERROR_FAILED;
-    const uint8_t  netIface[] = {'w', 'p', 'a', 'n'};
-    uint8_t        dadCounter = aDadCounter ? *aDadCounter : 0;
-    IidSecretKey   secretKey;
-    Crypto::Sha256 sha256;
-    uint8_t        hash[Crypto::Sha256::kHashSize];
+    otError              error      = OT_ERROR_FAILED;
+    const uint8_t        netIface[] = {'w', 'p', 'a', 'n'};
+    uint8_t              dadCounter = aDadCounter ? *aDadCounter : 0;
+    IidSecretKey         secretKey;
+    Crypto::Sha256       sha256;
+    Crypto::Sha256::Hash hash;
 
     static_assert(sizeof(hash) >= Ip6::InterfaceIdentifier::kSize,
                   "SHA-256 hash size is too small to use as IPv6 address IID");
@@ -299,7 +299,7 @@ otError Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress,
         sha256.Update(secretKey.m8, sizeof(IidSecretKey));
         sha256.Finish(hash);
 
-        aAddress.GetAddress().GetIid().SetBytes(&hash[0]);
+        aAddress.GetAddress().GetIid().SetBytes(hash.GetBytes());
 
         // If the IID is reserved, try again with a new dadCounter
         if (aAddress.GetAddress().GetIid().IsReserved())
