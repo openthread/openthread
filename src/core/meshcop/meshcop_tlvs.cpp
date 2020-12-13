@@ -284,7 +284,7 @@ uint32_t ChannelMaskTlv::GetChannelMask(void) const
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
         if (channelPage == OT_RADIO_CHANNEL_PAGE_2)
         {
-            mask |= static_cast<const ChannelMasEntry *>(cur)->GetMask() & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK;
+            mask |= static_cast<const ChannelMaskEntry *>(cur)->GetMask() & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK;
         }
 #endif
 
