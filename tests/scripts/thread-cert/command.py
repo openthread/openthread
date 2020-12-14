@@ -663,6 +663,7 @@ def check_joiner_commissioning_messages(commissioning_messages, url=''):
 def check_commissioner_commissioning_messages(commissioning_messages, state=mesh_cop.MeshCopState.ACCEPT):
     """Verify COAP messages sent by commissioner while commissioning process.
     """
+    assert len(commissioning_messages) >= 2
     join_fin_rsq = commissioning_messages[1]
     assert join_fin_rsq.type == mesh_cop.MeshCopMessageType.JOIN_FIN_RSP
     rsq_state = assert_contains_tlv(join_fin_rsq.tlvs, CheckType.CONTAIN, mesh_cop.State)
