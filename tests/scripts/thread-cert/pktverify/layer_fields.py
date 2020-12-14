@@ -589,7 +589,7 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.sec_policy_c': _auto,
     'thread_meshcop.tlv.sec_policy_b': _auto,
     'thread_meshcop.tlv.state': _auto,
-    'thread_meshcop.tlv.steering_data': _list(_auto),
+    'thread_meshcop.tlv.steering_data': _bytes,
     'thread_meshcop.tlv.unknown': _bytes,
     'thread_meshcop.tlv.udp_port': _list(_auto),
     'thread_meshcop.tlv.ba_locator': _auto,
