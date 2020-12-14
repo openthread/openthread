@@ -32,7 +32,7 @@ import unittest
 import command
 import mesh_cop
 import thread_cert
-from pktverify.consts import MLE_DATA_RESPONSE, LEAD_PET_URI, LEAD_KA_URI, MGMT_COMMISSIONER_SET_URI, NM_CHANNEL_TLV, NM_COMMISSIONER_ID_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_STATE_TLV, NM_STEERING_DATA_TLV, NM_BORDER_AGENT_LOCATOR_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, SOURCE_ADDRESS_TLV, NWD_COMMISSIONING_DATA_TLV, MESHCOP_ACCEPT, MESHCOP_REJECT
+from pktverify.consts import MLE_DATA_RESPONSE, LEAD_PET_URI, LEAD_KA_URI, MGMT_COMMISSIONER_SET_URI, NM_CHANNEL_TLV, NM_COMMISSIONER_ID_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_STATE_TLV, NM_STEERING_DATA_TLV, NM_BORDER_AGENT_LOCATOR_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, SOURCE_ADDRESS_TLV, NWD_COMMISSIONING_DATA_TLV, MESHCOP_ACCEPT, MESHCOP_REJECT, LEADER_ALOC
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.bytes import Bytes
 
@@ -86,7 +86,6 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.simulator.get_messages_sent_by(LEADER)
 
-        self.collect_leader_aloc(LEADER)
         self.collect_rlocs()
         self.collect_rloc16s()
 
@@ -138,7 +137,6 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         pv.summary.show()
 
         LEADER = pv.vars['LEADER']
-        LEADER_ALOC = pv.vars['LEADER_ALOC']
         LEADER_RLOC = pv.vars['LEADER_RLOC']
         LEADER_RLOC16 = pv.vars['LEADER_RLOC16']
         COMMISSIONER = pv.vars['COMMISSIONER']
@@ -146,7 +144,6 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
 
         # Step 1: Ensure topology is formed correctly
         pv.verify_attached('COMMISSIONER', 'LEADER')
-        _pkt = pkts.last()
 
         # Step 2: Commissioner sends a Set Commissioner Dataset Request (MGMT_COMMISSIONER_SET.req)
         #         to Leader Anycast or Routing Locator:
@@ -155,7 +152,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         #         CoAP Payload
         #             (missing Commissioner Session ID TLV)
         #             Steering Data TLV (0xFF)
-        _pkt = pkts.filter_wpan_src64(COMMISSIONER).\
+        pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p:
@@ -163,7 +160,6 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
                    p.thread_meshcop.tlv.steering_data == Bytes('ff')
                    ).\
            must_next()
-        print(_pkt.thread_meshcop.tlv.steering_data)
 
         # Step 3: Leader sends a Set Commissioner Dataset Response (MGMT_COMMISSIONER_SET.rsp) to
         #         Commissioner:
