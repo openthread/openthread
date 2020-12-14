@@ -57,22 +57,30 @@ void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName)
 
     otLogInfoPlat("Backbone interface is configured to %s (%d)", gBackboneNetifName, gBackboneNetifIndex);
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     sMulticastRoutingManager.Init(aInstance);
+#endif
 }
 
 void platformBackboneUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd)
 {
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     sMulticastRoutingManager.UpdateFdSet(aReadFdSet, aMaxFd);
+#endif
 }
 
 void platformBackboneProcess(const fd_set &aReadSet)
 {
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     sMulticastRoutingManager.Process(aReadSet);
+#endif
 }
 
 void platformBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags)
 {
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     sMulticastRoutingManager.HandleStateChange(aInstance, aFlags);
+#endif
 }
 
 #endif
