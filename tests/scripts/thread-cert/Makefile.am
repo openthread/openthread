@@ -76,6 +76,7 @@ EXTRA_DIST                                                         = \
     Cert_5_6_07_NetworkDataRequestREED.py                            \
     Cert_5_6_09_NetworkDataForwarding.py                             \
     Cert_5_7_01_CoapDiagCommands.py                                  \
+    Cert_5_7_03_CoapDiagCommands.py                                  \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
     Cert_6_1_01_RouterAttach.py                                      \
@@ -108,7 +109,9 @@ EXTRA_DIST                                                         = \
     Cert_8_1_02_Commissioning.py                                     \
     Cert_8_2_01_JoinerRouter.py                                      \
     Cert_8_2_02_JoinerRouter.py                                      \
+    Cert_9_2_01_MGMTCommissionerGet.py                               \
     Cert_9_2_02_MGMTCommissionerSet.py                               \
+    Cert_9_2_03_ActiveDatasetGet.py                                  \
     Cert_9_2_04_ActiveDataset.py                                     \
     Cert_9_2_07_DelayTimer.py                                        \
     Cert_9_2_08_PersistentDatasets.py                                \
@@ -255,6 +258,7 @@ check_SCRIPTS                                                      = \
     Cert_5_6_07_NetworkDataRequestREED.py                            \
     Cert_5_6_09_NetworkDataForwarding.py                             \
     Cert_5_7_01_CoapDiagCommands.py                                  \
+    Cert_5_7_03_CoapDiagCommands.py                                  \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
     Cert_6_1_01_RouterAttach.py                                      \
@@ -288,7 +292,9 @@ check_SCRIPTS                                                      = \
     Cert_8_1_02_Commissioning.py                                     \
     Cert_8_2_01_JoinerRouter.py                                      \
     Cert_8_2_02_JoinerRouter.py                                      \
+    Cert_9_2_01_MGMTCommissionerGet.py                               \
     Cert_9_2_02_MGMTCommissionerSet.py                               \
+    Cert_9_2_03_ActiveDatasetGet.py                                  \
     Cert_9_2_04_ActiveDataset.py                                     \
     Cert_9_2_07_DelayTimer.py                                        \
     Cert_9_2_08_PersistentDatasets.py                                \

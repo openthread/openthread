@@ -32,6 +32,7 @@ import unittest
 import thread_cert
 from pktverify.consts import MLE_CHILD_ID_RESPONSE, MGMT_ACTIVE_SET_URI, MGMT_ACTIVE_GET_URI
 from pktverify.packet_verifier import PacketVerifier
+from pktverify.bytes import Bytes
 
 COMMISSIONER = 1
 LEADER = 2
@@ -299,7 +300,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             LEADER_RLOC, LEADER_ALOC).filter_coap_request(MGMT_ACTIVE_SET_URI).filter(
                 lambda p: p.thread_meshcop.tlv.active_tstamp == 107 and p.thread_meshcop.tlv.xpan_id ==
                 '000db70000000000' and p.thread_meshcop.tlv.net_name == 'UL' and p.thread_meshcop.tlv.steering_data ==
-                [0x113320440000] and p.thread_meshcop.tlv.chan_mask_mask == '001fffe0').must_next()
+                Bytes('113320440000') and p.thread_meshcop.tlv.chan_mask_mask == '001fffe0').must_next()
 
         # Step 19: Leader MUST send MGMT_ACTIVE_SET.rsp to the Commissioner
         pkts.filter_wpan_src64(LEADER).filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_ack(MGMT_ACTIVE_SET_URI).filter(
