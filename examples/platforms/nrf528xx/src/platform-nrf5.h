@@ -197,4 +197,6 @@ otError nrf5SdErrorToOtError(uint32_t aSdError);
 void nrf5SdSocFlashProcess(uint32_t aEvtId);
 #endif // SOFTDEVICE_PRESENT
 
+int8_t nrf5GetChannelMaxTransmitPower(uint8_t aChannel);
+
 #endif // PLATFORM_NRF5_H_
