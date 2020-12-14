@@ -80,6 +80,7 @@ static bool IsMulticast(const otIp6Address &aAddress)
 static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMessageInfo &aMessageInfo)
 {
 #ifdef __APPLE__
+    // use fixed value for CMSG_SPACE is not a constant expression on macOS
     constexpr size_t kBufferSize = 128;
 #else
     constexpr size_t kBufferSize = CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int));
