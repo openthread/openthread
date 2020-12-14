@@ -719,6 +719,12 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
         }
 
         pio = static_cast<const PrefixInfoOption *>(option);
+
+        if (!pio->IsValid())
+        {
+            continue;
+        }
+
         pio->GetPrefix(prefix);
         if (!IsValidOnLinkPrefix(prefix))
         {

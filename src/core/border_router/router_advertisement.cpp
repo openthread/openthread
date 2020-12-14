@@ -63,13 +63,14 @@ const Option *Option::GetNextOption(const Option *aCurOption, const uint8_t *aBu
     VerifyOrExit(nextOption + sizeof(Option) <= bufferEnd, nextOption = nullptr);
     VerifyOrExit(nextOption + reinterpret_cast<const Option *>(nextOption)->GetLength() <= bufferEnd,
                  nextOption = nullptr);
+    VerifyOrExit(reinterpret_cast<const Option *>(nextOption)->GetLength() > 0, nextOption = nullptr);
 
 exit:
     return reinterpret_cast<const Option *>(nextOption);
 }
 
 PrefixInfoOption::PrefixInfoOption(void)
-    : Option(Type::kPrefixInfo, 4)
+    : Option(Type::kPrefixInfo, sizeof(*this) / 8)
     , mPrefixLength(0)
     , mReserved1(0)
     , mValidLifetime(0)
