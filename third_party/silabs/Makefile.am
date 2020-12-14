@@ -207,6 +207,7 @@ SILABS_COMMON_SOURCES                                                           
     gecko_sdk_suite/v3.1/platform/radio/rail_lib/hal/hal_common.c                         \
     gecko_sdk_suite/v3.1/platform/radio/rail_lib/plugin/pa-conversions/pa_conversions_efr32.c \
     gecko_sdk_suite/v3.1/platform/service/mpu/src/sl_mpu.c                                \
+    gecko_sdk_suite/v3.1/platform/service/device_init/src/sl_device_init_nvic.c           \
     gecko_sdk_suite/v3.1/platform/service/sleeptimer/src/sl_sleeptimer.c                  \
     gecko_sdk_suite/v3.1/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c         \
     $(NULL)
