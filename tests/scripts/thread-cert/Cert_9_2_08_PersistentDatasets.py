@@ -32,7 +32,7 @@ import copy
 
 import config
 import thread_cert
-from pktverify.consts import MLE_PARENT_REQUEST, MLE_DATA_RESPONSE, MLE_DATA_REQUEST, MGMT_PENDING_SET_URI, ACTIVE_OPERATION_DATASET_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, TLV_REQUEST_TLV, NETWORK_DATA_TLV, NM_BORDER_AGENT_LOCATOR_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_DELAY_TIMER_TLV, PENDING_OPERATION_DATASET_TLV, NWD_COMMISSIONING_DATA_TLV
+from pktverify.consts import MLE_PARENT_REQUEST, MLE_DATA_RESPONSE, MLE_DATA_REQUEST, MLE_CHILD_UPDATE_REQUEST, MGMT_PENDING_SET_URI, ACTIVE_OPERATION_DATASET_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, TLV_REQUEST_TLV, NETWORK_DATA_TLV, NM_BORDER_AGENT_LOCATOR_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_DELAY_TIMER_TLV, PENDING_OPERATION_DATASET_TLV, NWD_COMMISSIONING_DATA_TLV, LEADER_ALOC
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.null_field import nullField
 
@@ -127,7 +127,6 @@ class Cert_9_2_8_PersistentDatasets_Base(thread_cert.TestCase):
             self.assertEqual(self.nodes[DUT].get_state(), 'child')
 
         self.collect_rlocs()
-        self.collect_leader_aloc(LEADER)
 
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(3)
@@ -149,10 +148,7 @@ class Cert_9_2_8_PersistentDatasets_Base(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_panid(), COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[COMMISSIONER].get_panid(), COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[LEADER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
-        self.assertEqual(
-            self.nodes[COMMISSIONER].get_channel(),
-            COMMISSIONER_PENDING_CHANNEL,
-        )
+        self.assertEqual(self.nodes[COMMISSIONER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
 
         # restart the DUT to attach to COMMISSIONER_PENDING_CHANNEL
         self.nodes[DUT].reset()
@@ -175,7 +171,6 @@ class Cert_9_2_8_PersistentDatasets_Base(thread_cert.TestCase):
         pv.summary.show()
 
         LEADER = pv.vars['LEADER']
-        LEADER_ALOC = pv.vars['LEADER_ALOC']
         LEADER_RLOC = pv.vars['LEADER_RLOC']
         COMMISSIONER = pv.vars['COMMISSIONER']
         COMMISSIONER_MLEID = pv.vars['COMMISSIONER_MLEID']
@@ -259,8 +254,31 @@ class Cert_9_2_8_PersistentDatasets_Base(thread_cert.TestCase):
                        NM_BORDER_AGENT_LOCATOR_TLV in p.thread_meshcop.tlv.type
                        ).\
                 must_next()
+        else:
+            # Step 5: Leader MUST send a MLE Child Update Request or MLE Data
+            #         Response to SED, including the following TLVs:
+            #             - Leader Data TLV:
+            #                 Data Version field incremented
+            #                 Stable Version field incremented
+            #             - Network Data TLV:
+            #             - Active Timestamp TLV: 70s
+            #             - Pending Timestamp TLV: 20s
+            pkts.filter_wpan_src64(LEADER).\
+                filter_wpan_dst64(DUT_EXTADDR).\
+                filter_mle_cmd2(MLE_CHILD_UPDATE_REQUEST, MLE_DATA_RESPONSE).\
+                filter(lambda p: p.mle.tlv.active_tstamp ==
+                       LEADER_ACTIVE_TIMESTAMP and\
+                       p.mle.tlv.pending_tstamp ==
+                       COMMISSIONER_PENDING_TIMESTAMP and\
+                       p.mle.tlv.leader_data.data_version !=
+                       (_pkt.mle.tlv.leader_data.data_version + 1) % 256 and\
+                       p.mle.tlv.leader_data.stable_data_version !=
+                       (_pkt.mle.tlv.leader_data.stable_data_version + 1) % 256 and\
+                       NETWORK_DATA_TLV in p.mle.tlv.type
+                       ).\
+                must_next()
 
-        # Step 5: The DUT MUST send a MLE Data Request to the Leader and include its current
+        # Step 6: The DUT MUST send a MLE Data Request to the Leader and include its current
         #         Active Timestamp
         pkts.filter_mle_cmd(MLE_DATA_REQUEST).\
             filter_wpan_src64(DUT_EXTADDR).\
