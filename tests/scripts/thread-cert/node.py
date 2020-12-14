@@ -1824,6 +1824,13 @@ class NodeImpl:
 
         self._expect('coaps response', timeout=timeout)
 
+    def commissioner_mgmtget(self, tlvs_binary=None):
+        cmd = 'commissioner mgmtget'
+        if tlvs_binary is not None:
+            cmd += ' -x %s' % tlvs_binary
+        self.send_command(cmd)
+        self._expect('Done')
+
     def commissioner_mgmtset(self, tlvs_binary):
         cmd = 'commissioner mgmtset -x %s' % tlvs_binary
         self.send_command(cmd)
