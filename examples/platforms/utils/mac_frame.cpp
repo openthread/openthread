@@ -205,3 +205,47 @@ void otMacFrameSetFrameCounter(otRadioFrame *aFrame, uint32_t aFrameCounter)
 {
     static_cast<Mac::Frame *>(aFrame)->SetFrameCounter(aFrameCounter);
 }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+uint8_t otMacFrameGenerateCslIeTemplate(uint8_t *aDest)
+{
+    assert(aDest != nullptr);
+
+    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetId(Mac::Frame::kHeaderIeCsl);
+    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetLength(sizeof(Mac::CslIe));
+
+    return sizeof(Mac::HeaderIe) + sizeof(Mac::CslIe);
+}
+#endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+uint8_t otMacFrameGenerateEnhAckProbingIe(uint8_t *aDest, const uint8_t *aIeData, uint8_t aIeDataLength)
+{
+    uint8_t len = sizeof(Mac::VendorIeHeader) + aIeDataLength;
+
+    assert(aDest != nullptr);
+
+    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetId(Mac::Frame::kHeaderIeVendor);
+    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetLength(len);
+
+    aDest += sizeof(Mac::HeaderIe);
+
+    reinterpret_cast<Mac::VendorIeHeader *>(aDest)->SetVendorOui(Mac::ThreadIe::kVendorOuiThreadCompanyId);
+    reinterpret_cast<Mac::VendorIeHeader *>(aDest)->SetSubType(Mac::ThreadIe::kEnhAckProbingIe);
+
+    if (aIeData != nullptr)
+    {
+        aDest += sizeof(Mac::VendorIeHeader);
+        memcpy(aDest, aIeData, aIeDataLength);
+    }
+
+    return sizeof(Mac::HeaderIe) + len;
+}
+
+void otMacFrameSetEnhAckProbingIe(otRadioFrame *aFrame, const uint8_t *aData, uint8_t aDataLen)
+{
+    assert(aFrame != nullptr && aData != nullptr);
+
+    reinterpret_cast<Mac::Frame *>(aFrame)->SetEnhAckProbingIe(aData, aDataLen);
+}
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE

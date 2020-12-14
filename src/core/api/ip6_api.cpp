@@ -258,7 +258,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 otError otIp6RegisterMulticastListeners(otInstance *                            aInstance,
                                         const otIp6Address *                    aAddresses,
                                         uint8_t                                 aAddressNum,

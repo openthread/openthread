@@ -339,7 +339,7 @@ public:
     otError Send(void);
 
     /**
-     * This method gets the number of transmit retries of last transmit packet.
+     * This method gets the number of transmit retries of last transmitted frame.
      *
      * @returns Number of transmit retries.
      *
@@ -522,7 +522,7 @@ private:
         kStateCsmaBackoff, ///< CSMA backoff before transmission.
         kStateTransmit,    ///< Radio is transmitting.
         kStateEnergyScan,  ///< Energy scan.
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kStateCslTransmit, ///< CSL transmission.
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -532,8 +532,8 @@ private:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     enum : uint32_t{
-        kCslSampleWindow =
-            OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols, ///< The SSED sample window in units of 10 symbols.
+        kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW *
+                           kUsPerTenSymbols, ///< The SSED sample window in units of microseconds.
         kCslReceiveTimeAhead =
             OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD, ///< CSL receivers would wake up `kCslReceiveTimeAhead` earlier
                                                       ///< than expected sample window. The time is in unit of 10

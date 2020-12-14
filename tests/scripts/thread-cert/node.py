@@ -230,6 +230,11 @@ class OtCli:
         self.env_version = os.getenv('THREAD_VERSION', '1.1')
         self.is_bbr = is_bbr
         self._initialized = False
+        if os.getenv('COVERAGE', 0) and os.getenv('CC', 'gcc') == 'gcc':
+            self._cmd_prefix = '/usr/bin/env GCOV_PREFIX=%s/ot-run/%s/ot-gcda.%d ' % (os.getenv(
+                'top_srcdir', '.'), sys.argv[0], nodeid)
+        else:
+            self._cmd_prefix = ''
 
         if version is not None:
             self.version = version
@@ -299,7 +304,7 @@ class OtCli:
 
         print("%s" % cmd)
 
-        self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=10)
+        self.pexpect = pexpect.popen_spawn.PopenSpawn(self._cmd_prefix + cmd, timeout=10)
 
         # Add delay to ensure that the process is ready to receive commands.
         timeout = 0.4
@@ -380,7 +385,7 @@ class OtCli:
         cmd += ' %d' % nodeid
         print("%s" % cmd)
 
-        self.pexpect = pexpect.spawn(cmd, timeout=10)
+        self.pexpect = pexpect.spawn(self._cmd_prefix + cmd, timeout=10)
 
         # Add delay to ensure that the process is ready to receive commands.
         time.sleep(0.2)
@@ -617,6 +622,11 @@ class NodeImpl:
 
     def commissioner_start(self):
         cmd = 'commissioner start'
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def commissioner_stop(self):
+        cmd = 'commissioner stop'
         self.send_command(cmd)
         self._expect('Done')
 
@@ -1960,6 +1970,19 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect('Done')
 
+    def link_metrics_mgmt_req_enhanced_ack_based_probing(self,
+                                                         dst_addr: str,
+                                                         enable: bool,
+                                                         metrics_flags: str,
+                                                         ext_flags=''):
+        cmd = "linkmetrics mgmt %s enhanced-ack" % (dst_addr)
+        if enable:
+            cmd = cmd + (" register %s %s" % (metrics_flags, ext_flags))
+        else:
+            cmd = cmd + " clear"
+        self.send_command(cmd)
+        self._expect('Done')
+
     def link_metrics_mgmt_req_forward_tracking_series(self, dst_addr: str, series_id: int, series_flags: str,
                                                       metrics_flags: str):
         cmd = "linkmetrics mgmt %s forward %d %s %s" % (dst_addr, series_id, series_flags, metrics_flags)
@@ -2017,6 +2040,10 @@ class LinuxHost():
 
         assert False, output
 
+    def add_ipmaddr_ether(self, ip: str):
+        cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/mcast6.py {self.ETH_DEV} {ip} &'
+        self.bash(cmd)
+
     def ping_ether(self, ipaddr, num_responses=1, size=None, timeout=5, ttl=None) -> int:
         cmd = f'ping -6 {ipaddr} -I eth0 -c {num_responses} -W {timeout}'
         if size is not None:
@@ -2059,6 +2086,13 @@ class LinuxHost():
             return self.ping_ether(*args, **kwargs)
         else:
             return super().ping(*args, **kwargs)
+
+    def add_ipmaddr(self, *args, **kwargs):
+        backbone = kwargs.pop('backbone', False)
+        if backbone:
+            return self.add_ipmaddr_ether(*args, **kwargs)
+        else:
+            return super().add_ipmaddr(*args, **kwargs)
 
     def ip_neighbors_flush(self):
         # clear neigh cache on linux

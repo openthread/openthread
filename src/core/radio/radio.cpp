@@ -33,9 +33,11 @@
 
 namespace ot {
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+
 void Radio::SetExtendedAddress(const Mac::ExtAddress &aExtAddress)
 {
-    otPlatRadioSetExtendedAddress(GetInstance(), &aExtAddress);
+    otPlatRadioSetExtendedAddress(GetInstancePtr(), &aExtAddress);
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitExtendedAddress(aExtAddress);
@@ -44,7 +46,7 @@ void Radio::SetExtendedAddress(const Mac::ExtAddress &aExtAddress)
 
 void Radio::SetShortAddress(Mac::ShortAddress aShortAddress)
 {
-    otPlatRadioSetShortAddress(GetInstance(), aShortAddress);
+    otPlatRadioSetShortAddress(GetInstancePtr(), aShortAddress);
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitShortAddress(aShortAddress);
@@ -57,7 +59,8 @@ otError Radio::Transmit(Mac::TxFrame &aFrame)
     Get<Utils::Otns>().EmitTransmit(aFrame);
 #endif
 
-    return otPlatRadioTransmit(GetInstance(), &aFrame);
+    return otPlatRadioTransmit(GetInstancePtr(), &aFrame);
 }
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 } // namespace ot

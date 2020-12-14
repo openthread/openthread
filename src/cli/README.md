@@ -58,7 +58,7 @@ Done
 - [keysequence](#keysequence-counter)
 - [leaderdata](#leaderdata)
 - [leaderweight](#leaderweight)
-- [linkmetrics](#linkmetrics-mgmt-ipaddr-forward-seriesid-ldraxpqmr)
+- [linkmetrics](#linkmetrics-mgmt-ipaddr-enhanced-ack-clear)
 - [linkquality](#linkquality-extaddr)
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
@@ -1124,6 +1124,42 @@ Set the Thread Leader Weight.
 ```bash
 > leaderweight 128
 Done
+```
+
+### linkmetrics mgmt \<ipaddr\> enhanced-ack clear
+
+Send a Link Metrics Management Request to clear an Enhanced-ACK Based Probing.
+
+- ipaddr: Peer address (SHOULD be link local address of the neighboring device).
+
+```bash
+> linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack clear
+Done
+> Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+Status: Success
+```
+
+### linkmetrics mgmt \<ipaddr\> enhanced-ack register [qmr][r]
+
+Send a Link Metrics Management Request to register an Enhanced-ACK Based Probing.
+
+- ipaddr: Peer address.
+- qmr: This specifies what metrics to query. At most two options are allowed to select (per spec 4.11.3.4.4.6).
+  - q: Layer 2 LQI.
+  - m: Link Margin.
+  - r: RSSI.
+- r: This is optional and only used for reference devices. When this option is specified, Type/Average Enum of each Type Id Flags would be set to `reserved`. This is used to verify the Probing Subject correctly handles invalid Type Id Flags. This is only available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+
+```bash
+> linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack register qm
+Done
+> Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+Status: Success
+
+> linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack register qm r
+Done
+> Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+Status: Cannot support new series
 ```
 
 ### linkmetrics mgmt \<ipaddr\> forward \<seriesid\> [ldraX][pqmr]

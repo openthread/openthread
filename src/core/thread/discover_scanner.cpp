@@ -177,9 +177,9 @@ exit:
     return error;
 }
 
-otError DiscoverScanner::PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame)
+Mac::TxFrame *DiscoverScanner::PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame)
 {
-    otError error = OT_ERROR_NONE;
+    Mac::TxFrame *frame = &aFrame;
 
     switch (mState)
     {
@@ -188,16 +188,16 @@ otError DiscoverScanner::PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame)
         // If scan is finished (no more channels to scan), abort the
         // Discovery Request frame tx. The handler callback is invoked &
         // state is cleared from `HandleDiscoveryRequestFrameTxDone()`.
-        error = OT_ERROR_ABORT;
+        frame = nullptr;
         break;
 
     case kStateScanning:
-        aFrame.SetChannel(mScanChannel);
+        frame->SetChannel(mScanChannel);
         IgnoreError(Get<Mac::Mac>().SetTemporaryChannel(mScanChannel));
         break;
     }
 
-    return error;
+    return frame;
 }
 
 void DiscoverScanner::HandleDiscoveryRequestFrameTxDone(Message &aMessage)

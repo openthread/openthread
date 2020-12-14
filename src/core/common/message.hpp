@@ -176,8 +176,14 @@ struct MessageMetadata
     bool    mMulticastLoop : 1; ///< Indicates whether or not this multicast message may be looped back.
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     bool    mTimeSync : 1;      ///< Indicates whether the message is also used for time sync purpose.
-    uint8_t mTimeSyncSeq;       ///< The time sync sequence.
     int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
+    uint8_t mTimeSyncSeq;       ///< The time sync sequence.
+#endif
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    uint8_t mRadioType : 2;      ///< The radio link type the message was received on, or should be sent on.
+    bool    mIsRadioTypeSet : 1; ///< Indicates whether the radio type is set.
+
+    static_assert(Mac::kNumRadioTypes <= (1 << 2), "mRadioType bitfield cannot store all radio type values");
 #endif
 };
 
@@ -1115,6 +1121,48 @@ public:
      */
     uint8_t GetTimeSyncSeq(void) const { return GetMetadata().mTimeSyncSeq; }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    /**
+     * This method indicates whether the radio type is set.
+     *
+     * @retval TRUE   If the radio type is set.
+     * @retval FALSE  If the radio type is not set.
+     *
+     */
+    bool IsRadioTypeSet(void) const { return GetMetadata().mIsRadioTypeSet; }
+
+    /**
+     * This method gets the radio link type the message was received on, or should be sent on.
+     *
+     * This method should be used only when `IsRadioTypeSet()` returns `true`.
+     *
+     * @returns The radio link type of the message.
+     *
+     */
+    Mac::RadioType GetRadioType(void) const { return static_cast<Mac::RadioType>(GetMetadata().mRadioType); }
+
+    /**
+     * This method sets the radio link type the message was received on, or should be sent on.
+     *
+     * @param[in] aRadioType   A radio link type of the message.
+     *
+     */
+    void SetRadioType(Mac::RadioType aRadioType)
+    {
+        GetMetadata().mIsRadioTypeSet = true;
+        GetMetadata().mRadioType      = aRadioType;
+    }
+
+    /**
+     * This method clears any previously set radio type on the message.
+     *
+     * After calling this method, `IsRadioTypeSet()` returns false until radio type is set (`SetRadioType()`).
+     *
+     */
+    void ClearRadioType(void) { GetMetadata().mIsRadioTypeSet = false; }
+
+#endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
 private:
     /**

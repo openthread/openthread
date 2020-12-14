@@ -635,6 +635,316 @@ private:
 };
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+
+/**
+ * This enumeration defines the radio link types.
+ *
+ */
+enum RadioType
+{
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    kRadioTypeIeee802154, ///< IEEE 802.15.4 (2.4GHz) link type.
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    kRadioTypeTrel, ///< Thread Radio Encapsulation link type.
+#endif
+};
+
+enum
+{
+    /**
+     * This constant specifies the number of supported radio link types.
+     *
+     */
+    kNumRadioTypes = (((OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE) ? 1 : 0) +
+                      ((OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE) ? 1 : 0)),
+};
+
+/**
+ * This class represents a set of radio links.
+ *
+ */
+class RadioTypes
+{
+public:
+    enum
+    {
+        kInfoStringSize = 32, ///< Max chars for the info string (`ToString()`).
+    };
+
+    /**
+     * This type defines the fixed-length `String` object returned from `ToString()`.
+     *
+     */
+    typedef String<kInfoStringSize> InfoString;
+
+    /**
+     * This static class variable defines an array containing all supported radio link types.
+     *
+     */
+    static const RadioType kAllRadioTypes[kNumRadioTypes];
+
+    /**
+     * This constructor initializes a `RadioTypes` object as empty set
+     *
+     */
+    RadioTypes(void)
+        : mBitMask(0)
+    {
+    }
+
+    /**
+     * This constructor initializes a `RadioTypes` object with a given bit-mask.
+     *
+     * @param[in] aMask   A bit-mask representing the radio types (the first bit corresponds to radio type 0, and so on)
+     *
+     */
+    RadioTypes(uint8_t aMask)
+        : mBitMask(aMask)
+    {
+    }
+
+    /**
+     * This method clears the set.
+     *
+     */
+    void Clear(void) { mBitMask = 0; }
+
+    /**
+     * This method indicates whether the set is empty or not
+     *
+     * @returns TRUE if the set is empty, FALSE otherwise.
+     *
+     */
+    bool IsEmpty(void) const { return (mBitMask == 0); }
+
+    /**
+     *  This method indicates whether the set contains only a single radio type.
+     *
+     * @returns TRUE if the set contains a single radio type, FALSE otherwise.
+     *
+     */
+    bool ContainsSingleRadio(void) const { return !IsEmpty() && ((mBitMask & (mBitMask - 1)) == 0); }
+
+    /**
+     * This method indicates whether or not the set contains a given radio type.
+     *
+     * @param[in] aType  A radio link type.
+     *
+     * @returns TRUE if the set contains @p aType, FALSE otherwise.
+     *
+     */
+    bool Contains(RadioType aType) const { return ((mBitMask & BitFlag(aType)) != 0); }
+
+    /**
+     * This method adds a radio type to the set.
+     *
+     * @param[in] aType  A radio link type.
+     *
+     */
+    void Add(RadioType aType) { mBitMask |= BitFlag(aType); }
+
+    /**
+     * This method adds another radio types set to the current one.
+     *
+     * @param[in] aTypes   A radio link type set to add.
+     *
+     */
+    void Add(RadioTypes aTypes) { mBitMask |= aTypes.mBitMask; }
+
+    /**
+     * This method adds all radio types supported by device to the set.
+     *
+     */
+    void AddAll(void);
+
+    /**
+     * This method removes a given radio type from the set.
+     *
+     * @param[in] aType  A radio link type.
+     *
+     */
+    void Remove(RadioType aType) { mBitMask &= ~BitFlag(aType); }
+
+    /**
+     * This method gets the radio type set as a bitmask.
+     *
+     * The first bit in the mask corresponds to first radio type (radio type with value zero), and so on.
+     *
+     * @returns A bitmask representing the set of radio types.
+     *
+     */
+    uint8_t GetAsBitMask(void) const { return mBitMask; }
+
+    /**
+     * This method overloads operator `-` to return a new set which is the set difference between current set and
+     * a given set.
+     *
+     * @param[in] aOther  Another radio type set.
+     *
+     * @returns A new set which is set difference between current one and @p aOther.
+     *
+     */
+    RadioTypes operator-(const RadioTypes &aOther) const { return RadioTypes(mBitMask & ~aOther.mBitMask); }
+
+    /**
+     * This method converts the radio set to human-readable string.
+     *
+     * @return A string representation of the set of radio types.
+     *
+     */
+    InfoString ToString(void) const;
+
+private:
+    static uint8_t BitFlag(RadioType aType) { return static_cast<uint8_t>(1U << static_cast<uint8_t>(aType)); }
+
+    uint8_t mBitMask;
+};
+
+/**
+ * This function converts a link type to a string
+ *
+ * @param[in] aRadioType  A link type value.
+ *
+ * @returns A string representation of the link type.
+ *
+ */
+const char *RadioTypeToString(RadioType aRadioType);
+
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+
+/**
+ * This class represents Link Frame Counters for all supported radio links.
+ *
+ */
+class LinkFrameCounters
+{
+public:
+    /**
+     * This method resets all counters (set them all to zero).
+     *
+     */
+    void Reset(void) { SetAll(0); }
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+
+    /**
+     * This method gets the link Frame Counter for a given radio link.
+     *
+     * @param[in] aRadioType  A radio link type.
+     *
+     * @returns The Link Frame Counter for radio link @p aRadioType.
+     *
+     */
+    uint32_t Get(RadioType aRadioType) const;
+
+    /**
+     * This method sets the Link Frame Counter for a given radio link.
+     *
+     * @param[in] aRadioType  A radio link type.
+     * @param[in] aCounter    The new counter value.
+     *
+     */
+    void Set(RadioType aRadioType, uint32_t aCounter);
+
+#else
+
+    /**
+     * This method gets the Link Frame Counter value.
+     *
+     * @return The Link Frame Counter value.
+     *
+     */
+    uint32_t Get(void) const
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    {
+        return m154Counter;
+    }
+#elif OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    {
+        return mTrelCounter;
+    }
+#endif
+
+    /**
+     * This method sets the Link Frame Counter for a given radio link.
+     *
+     * @param[in] aCounter    The new counter value.
+     *
+     */
+    void Set(uint32_t aCounter)
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    {
+        m154Counter = aCounter;
+    }
+#elif OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    {
+        mTrelCounter = aCounter;
+    }
+#endif
+
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    /**
+     * This method gets the Link Frame Counter for 802.15.4 radio link.
+     *
+     * @returns The Link Frame Counter for 802.15.4 radio link.
+     *
+     */
+    uint32_t Get154(void) const { return m154Counter; }
+
+    /**
+     * This method sets the Link Frame Counter for 802.15.4 radio link.
+     *
+     * @param[in] aCounter   The new counter value.
+     *
+     */
+    void Set154(uint32_t aCounter) { m154Counter = aCounter; }
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    /**
+     * This method gets the Link Frame Counter for TREL radio link.
+     *
+     * @returns The Link Frame Counter for TREL radio link.
+     *
+     */
+    uint32_t GetTrel(void) const { return mTrelCounter; }
+
+    /**
+     * This method increments the Link Frame Counter for TREL radio link.
+     *
+     */
+    void IncrementTrel(void) { mTrelCounter++; }
+#endif
+
+    /**
+     * This method gets the maximum Link Frame Counter among all supported radio links.
+     *
+     * @return The maximum Link frame Counter among all supported radio links.
+     *
+     */
+    uint32_t GetMaximum(void) const;
+
+    /**
+     * This method sets the Link Frame Counter value for all radio links.
+     *
+     * @param[in]  aCounter  The Link Frame Counter value.
+     *
+     */
+    void SetAll(uint32_t aCounter);
+
+private:
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    uint32_t m154Counter;
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    uint32_t mTrelCounter;
+#endif
+};
+
 /**
  * @}
  *

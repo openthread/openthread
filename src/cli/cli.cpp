@@ -1950,38 +1950,43 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
     static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(aAddress, aMetricsValues, aStatus);
 }
 
-void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
-                                          const otLinkMetricsValues *aMetricsValues,
-                                          uint8_t                    aStatus)
+void Interpreter::PrintLinkMetricsValue(const otLinkMetricsValues *aMetricsValues)
 {
     const char kLinkMetricsTypeCount[]   = "(Count/Summation)";
     const char kLinkMetricsTypeAverage[] = "(Exponential Moving Average)";
 
+    if (aMetricsValues->mMetrics.mPduCount)
+    {
+        OutputLine(" - PDU Counter: %d %s", aMetricsValues->mPduCountValue, kLinkMetricsTypeCount);
+    }
+
+    if (aMetricsValues->mMetrics.mLqi)
+    {
+        OutputLine(" - LQI: %d %s", aMetricsValues->mLqiValue, kLinkMetricsTypeAverage);
+    }
+
+    if (aMetricsValues->mMetrics.mLinkMargin)
+    {
+        OutputLine(" - Margin: %d (dB) %s", aMetricsValues->mLinkMarginValue, kLinkMetricsTypeAverage);
+    }
+
+    if (aMetricsValues->mMetrics.mRssi)
+    {
+        OutputLine(" - RSSI: %d (dBm) %s", aMetricsValues->mRssiValue, kLinkMetricsTypeAverage);
+    }
+}
+
+void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
+                                          const otLinkMetricsValues *aMetricsValues,
+                                          uint8_t                    aStatus)
+{
     OutputFormat("Received Link Metrics Report from: ");
     OutputIp6Address(*aAddress);
     OutputLine("");
 
     if (aMetricsValues != nullptr)
     {
-        if (aMetricsValues->mMetrics.mPduCount)
-        {
-            OutputLine(" - PDU Counter: %d %s", aMetricsValues->mPduCountValue, kLinkMetricsTypeCount);
-        }
-
-        if (aMetricsValues->mMetrics.mLqi)
-        {
-            OutputLine(" - LQI: %d %s", aMetricsValues->mLqiValue, kLinkMetricsTypeAverage);
-        }
-
-        if (aMetricsValues->mMetrics.mLinkMargin)
-        {
-            OutputLine(" - Margin: %d (dB) %s", aMetricsValues->mLinkMarginValue, kLinkMetricsTypeAverage);
-        }
-
-        if (aMetricsValues->mMetrics.mRssi)
-        {
-            OutputLine(" - RSSI: %d (dBm) %s", aMetricsValues->mRssiValue, kLinkMetricsTypeAverage);
-        }
+        PrintLinkMetricsValue(aMetricsValues);
     }
     else
     {
@@ -2001,6 +2006,29 @@ void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, ui
     OutputLine("");
 
     OutputLine("Status: %s", LinkMetricsStatusToStr(aStatus));
+}
+
+void Interpreter::HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
+                                                   const otExtAddress *       aExtAddress,
+                                                   const otLinkMetricsValues *aMetricsValues,
+                                                   void *                     aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleLinkMetricsEnhAckProbingIe(aShortAddress, aExtAddress, aMetricsValues);
+}
+
+void Interpreter::HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
+                                                   const otExtAddress *       aExtAddress,
+                                                   const otLinkMetricsValues *aMetricsValues)
+{
+    OutputFormat("Received Link Metrics data in Enh Ack from neighbor, short address:0x%02x , extended address:",
+                 aShortAddress);
+    OutputExtAddress(*aExtAddress);
+    OutputLine("");
+
+    if (aMetricsValues != nullptr)
+    {
+        PrintLinkMetricsValue(aMetricsValues);
+    }
 }
 
 const char *Interpreter::LinkMetricsStatusToStr(uint8_t aStatus)
@@ -2193,6 +2221,40 @@ otError Interpreter::ProcessLinkMetricsMgmt(uint8_t aArgsLength, char *aArgs[])
                                                          clear ? nullptr : &linkMetrics,
                                                          &Interpreter::HandleLinkMetricsMgmtResponse, this);
     }
+    else if (strcmp(aArgs[1], "enhanced-ack") == 0)
+    {
+        otLinkMetricsEnhAckFlags enhAckFlags;
+        otLinkMetrics            linkMetrics;
+        otLinkMetrics *          pLinkMetrics = &linkMetrics;
+
+        VerifyOrExit(aArgsLength >= 3);
+
+        if (strcmp(aArgs[2], "clear") == 0)
+        {
+            enhAckFlags  = OT_LINK_METRICS_ENH_ACK_CLEAR;
+            pLinkMetrics = nullptr;
+        }
+        else if (strcmp(aArgs[2], "register") == 0)
+        {
+            enhAckFlags = OT_LINK_METRICS_ENH_ACK_REGISTER;
+            VerifyOrExit(aArgsLength >= 4);
+            SuccessOrExit(error = ParseLinkMetricsFlags(linkMetrics, aArgs[3]));
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+            if (aArgsLength > 4 && strcmp(aArgs[4], "r") == 0)
+            {
+                linkMetrics.mReserved = true;
+            }
+#endif
+        }
+        else
+        {
+            ExitNow();
+        }
+
+        error = otLinkMetricsConfigEnhAckProbing(mInstance, &address, enhAckFlags, pLinkMetrics,
+                                                 &Interpreter::HandleLinkMetricsMgmtResponse, this,
+                                                 &Interpreter::HandleLinkMetricsEnhAckProbingIe, this);
+    }
 
 exit:
     return error;
@@ -2278,7 +2340,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 otError Interpreter::ProcessMlr(uint8_t aArgsLength, char *aArgs[])
 {
@@ -2363,7 +2425,7 @@ void Interpreter::HandleMlrRegResult(otError             aError,
     OutputResult(aError);
 }
 
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#endif // (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 otError Interpreter::ProcessMode(uint8_t aArgsLength, char *aArgs[])
 {

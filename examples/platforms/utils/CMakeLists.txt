@@ -28,6 +28,7 @@
 
 add_library(openthread-platform-utils OBJECT
     debug_uart.c
+    link_metrics.cpp
     logging_rtt.c
     mac_frame.cpp
     otns_utils.cpp

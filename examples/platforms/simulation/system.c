@@ -116,6 +116,9 @@ void otSysInit(int aArgCount, char *aArgVector[])
 
     platformAlarmInit(speedUpFactor);
     platformRadioInit();
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    platformTrelInit(speedUpFactor);
+#endif
     platformRandomInit();
 }
 
@@ -127,6 +130,9 @@ bool otSysPseudoResetWasRequested(void)
 void otSysDeinit(void)
 {
     platformRadioDeinit();
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    platformTrelDeinit();
+#endif
 }
 
 void otSysProcessDrivers(otInstance *aInstance)
@@ -145,6 +151,9 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
     platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     platformAlarmUpdateTimeout(&timeout);
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    platformTrelUpdateFdSet(&read_fds, &write_fds, &timeout, &max_fd);
+#endif
 
     if (otTaskletsArePending(aInstance))
     {
@@ -166,6 +175,9 @@ void otSysProcessDrivers(otInstance *aInstance)
     }
 
     platformAlarmProcess(aInstance);
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    platformTrelProcess(aInstance, &read_fds, &write_fds);
+#endif
 
     if (gTerminate)
     {

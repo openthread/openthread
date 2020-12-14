@@ -3144,6 +3144,74 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SUPPORTED_RADIO_LINKS>(void)
+{
+    otError error;
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_RADIO_LINK_IEEE_802_15_4));
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_RADIO_LINK_TREL_UDP6));
+#endif
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+
+otError NcpBase::EncodeNeighborMultiRadioInfo(uint32_t aSpinelRadioLink, const otRadioLinkInfo &aInfo)
+{
+    otError error;
+
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    SuccessOrExit(error = mEncoder.WriteUintPacked(aSpinelRadioLink));
+    SuccessOrExit(error = mEncoder.WriteUint8(aInfo.mPreference));
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NEIGHBOR_TABLE_MULTI_RADIO_INFO>(void)
+{
+    otError                  error = OT_ERROR_NONE;
+    otNeighborInfoIterator   iter  = OT_NEIGHBOR_INFO_ITERATOR_INIT;
+    otNeighborInfo           neighInfo;
+    otMultiRadioNeighborInfo multiRadioInfo;
+
+    while (otThreadGetNextNeighborInfo(mInstance, &iter, &neighInfo) == OT_ERROR_NONE)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        SuccessOrExit(error = mEncoder.WriteEui64(neighInfo.mExtAddress));
+        SuccessOrExit(error = mEncoder.WriteUint16(neighInfo.mRloc16));
+
+        if (otMultiRadioGetNeighborInfo(mInstance, &neighInfo.mExtAddress, &multiRadioInfo) == OT_ERROR_NONE)
+        {
+            if (multiRadioInfo.mSupportsIeee802154)
+            {
+                SuccessOrExit(error = EncodeNeighborMultiRadioInfo(SPINEL_RADIO_LINK_IEEE_802_15_4,
+                                                                   multiRadioInfo.mIeee802154Info));
+            }
+
+            if (multiRadioInfo.mSupportsTrelUdp6)
+            {
+                SuccessOrExit(
+                    error = EncodeNeighborMultiRadioInfo(SPINEL_RADIO_LINK_TREL_UDP6, multiRadioInfo.mTrelUdp6Info));
+            }
+        }
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE
 
 void NcpBase::RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)

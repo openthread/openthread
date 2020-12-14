@@ -56,11 +56,11 @@
 #include "backbone_router/bbr_manager.hpp"
 #endif
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 #include "thread/mlr_manager.hpp"
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
 #include "thread/dua_manager.hpp"
 #endif
 
@@ -92,6 +92,7 @@
 #include "thread/network_data_notifier.hpp"
 #include "thread/network_diagnostic.hpp"
 #include "thread/panid_query_server.hpp"
+#include "thread/radio_selector.hpp"
 #include "thread/time_sync_service.hpp"
 #include "utils/child_supervision.hpp"
 
@@ -208,6 +209,9 @@ private:
     MeshForwarder           mMeshForwarder;
     Mle::MleRouter          mMleRouter;
     Mle::DiscoverScanner    mDiscoverScanner;
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    RadioSelector mRadioSelector;
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     NetworkData::Local mNetworkDataLocal;
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -252,10 +256,10 @@ private:
     BackboneRouter::Local   mBackboneRouterLocal;
     BackboneRouter::Manager mBackboneRouterManager;
 #endif
-#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
     MlrManager mMlrManager;
 #endif
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     DuaManager mDuaManager;
 #endif
     Utils::ChildSupervisor     mChildSupervisor;

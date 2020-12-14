@@ -330,7 +330,7 @@ otError Mle::Restore(void)
 
     Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence());
     Get<KeyManager>().SetMleFrameCounter(networkInfo.GetMleFrameCounter());
-    Get<KeyManager>().SetMacFrameCounter(networkInfo.GetMacFrameCounter());
+    Get<KeyManager>().SetAllMacFrameCounters(networkInfo.GetMacFrameCounter());
     mDeviceMode.Set(networkInfo.GetDeviceMode());
 
     // force re-attach when version mismatch.
@@ -449,7 +449,7 @@ otError Mle::Store(void)
     networkInfo.SetKeySequence(Get<KeyManager>().GetCurrentKeySequence());
     networkInfo.SetMleFrameCounter(Get<KeyManager>().GetMleFrameCounter() +
                                    OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD);
-    networkInfo.SetMacFrameCounter(Get<KeyManager>().GetMacFrameCounter() +
+    networkInfo.SetMacFrameCounter(Get<KeyManager>().GetMaximumMacFrameCounter() +
                                    OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD);
     networkInfo.SetDeviceMode(mDeviceMode.Get());
 
@@ -1080,7 +1080,20 @@ otError Mle::ReadResponse(const Message &aMessage, Challenge &aResponse)
 
 otError Mle::AppendLinkFrameCounter(Message &aMessage)
 {
-    return Tlv::Append<LinkFrameCounterTlv>(aMessage, Get<KeyManager>().GetMacFrameCounter());
+    uint32_t counter;
+
+    // When including Link-layer Frame Counter TLV in an MLE message
+    // the value is set to the maximum MAC frame counter on all
+    // supported radio links. All radio links must also start using
+    // the same counter value as the value included in the TLV.
+
+    counter = Get<KeyManager>().GetMaximumMacFrameCounter();
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    Get<KeyManager>().SetAllMacFrameCounters(counter);
+#endif
+
+    return Tlv::Append<LinkFrameCounterTlv>(aMessage, counter);
 }
 
 otError Mle::AppendMleFrameCounter(Message &aMessage)
@@ -2441,7 +2454,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-otError Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, otLinkMetricsStatus aStatus)
+otError Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::LinkMetricsStatus aStatus)
 {
     otError  error = OT_ERROR_NONE;
     Message *message;
@@ -2485,7 +2498,7 @@ otError Mle::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, 
 exit:
     return error;
 }
-#endif
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 {
@@ -2688,18 +2701,48 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     {
         if (keySequence == neighbor->GetKeySequence())
         {
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+            // Only when counter is exactly one off, we allow it to be
+            // used for updating radio link info (by `RadioSelector`)
+            // before message is dropped as a duplicate. This handles
+            // the common case where a broadcast MLE message (such as
+            // Link Advertisement) is received over multiple radio
+            // links.
+
+            if ((frameCounter + 1) == neighbor->GetMleFrameCounter())
+            {
+                OT_ASSERT(aMessage.IsRadioTypeSet());
+                Get<RadioSelector>().UpdateOnReceive(*neighbor, aMessage.GetRadioType(), /* IsDuplicate */ true);
+
+                // We intentionally exit without setting the error to
+                // skip logging "Failed to process UDP" at the exit
+                // label. Note that in multi-radio mode, receiving
+                // duplicate MLE message (with one-off counter) would
+                // be common and ok for broadcast MLE messages (e.g.
+                // MLE Link Advertisements).
+                ExitNow();
+            }
+#endif
             VerifyOrExit(frameCounter >= neighbor->GetMleFrameCounter(), error = OT_ERROR_DUPLICATED);
         }
         else
         {
             VerifyOrExit(keySequence > neighbor->GetKeySequence(), error = OT_ERROR_DUPLICATED);
             neighbor->SetKeySequence(keySequence);
-            neighbor->SetLinkFrameCounter(0);
+            neighbor->GetLinkFrameCounters().Reset();
             neighbor->SetLinkAckFrameCounter(0);
         }
 
         neighbor->SetMleFrameCounter(frameCounter + 1);
     }
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (neighbor != nullptr)
+    {
+        OT_ASSERT(aMessage.IsRadioTypeSet());
+        Get<RadioSelector>().UpdateOnReceive(*neighbor, aMessage.GetRadioType(), /* IsDuplicate */ false);
+    }
+#endif
 
     switch (command)
     {
@@ -2800,6 +2843,27 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     default:
         ExitNow(error = OT_ERROR_DROP);
     }
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    // If we could not find a neighbor matching the MAC address of the
+    // received MLE messages, or if the neighbor is now invalid, we
+    // check again after the message is handled with a relaxed neighbor
+    // state filer. The processing of the received MLE message may
+    // create a new neighbor or change the neighbor table (e.g.,
+    // receiving a "Parent Request" from a new child, or processing a
+    // "Link Request" from a previous child which is being promoted to a
+    // router).
+
+    if ((neighbor == nullptr) || neighbor->IsStateInvalid())
+    {
+        neighbor = Get<NeighborTable>().FindNeighbor(extAddr, Neighbor::kInStateAnyExceptInvalid);
+
+        if (neighbor != nullptr)
+        {
+            Get<RadioSelector>().UpdateOnReceive(*neighbor, aMessage.GetRadioType(), /* aIsDuplicate */ false);
+        }
+    }
+#endif
 
 exit:
     LogProcessError(kTypeGenericUdp, error);
@@ -3326,7 +3390,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
 
     mParentCandidate.SetExtAddress(extAddress);
     mParentCandidate.SetRloc16(sourceAddress);
-    mParentCandidate.SetLinkFrameCounter(linkFrameCounter);
+    mParentCandidate.GetLinkFrameCounters().SetAll(linkFrameCounter);
     mParentCandidate.SetLinkAckFrameCounter(linkFrameCounter);
     mParentCandidate.SetMleFrameCounter(mleFrameCounter);
     mParentCandidate.SetVersion(static_cast<uint8_t>(version));
@@ -3559,6 +3623,13 @@ void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageIn
         ExitNow(error = OT_ERROR_PARSE);
     }
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (aNeighbor != nullptr)
+    {
+        aNeighbor->ClearLastRxFragmentTag();
+    }
+#endif
+
     SuccessOrExit(error = SendChildUpdateResponse(tlvs, numTlvs, challenge));
 
 exit:
@@ -3612,7 +3683,7 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
     case kRoleDetached:
         SuccessOrExit(error = ReadFrameCounters(aMessage, linkFrameCounter, mleFrameCounter));
 
-        mParent.SetLinkFrameCounter(linkFrameCounter);
+        mParent.GetLinkFrameCounters().SetAll(linkFrameCounter);
         mParent.SetLinkAckFrameCounter(linkFrameCounter);
         mParent.SetMleFrameCounter(mleFrameCounter);
 
@@ -3752,8 +3823,8 @@ void Mle::HandleLinkMetricsManagementRequest(const Message &         aMessage,
                                              const Ip6::MessageInfo &aMessageInfo,
                                              Neighbor *              aNeighbor)
 {
-    otError             error = OT_ERROR_NONE;
-    otLinkMetricsStatus status;
+    otError                        error = OT_ERROR_NONE;
+    LinkMetrics::LinkMetricsStatus status;
 
     Log(kMessageReceive, kTypeLinkMetricsManagementRequest, aMessageInfo.GetPeerAddr());
 
@@ -3796,7 +3867,7 @@ void Mle::HandleLinkProbe(const Message &aMessage, const Ip6::MessageInfo &aMess
 exit:
     LogProcessError(kTypeLinkProbe, error);
 }
-#endif
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 void Mle::ProcessAnnounce(void)
 {

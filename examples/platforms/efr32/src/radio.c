@@ -1126,7 +1126,7 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 
     // RAIL_GetTxPowerDbm() returns power in deci-dBm (0.1dBm)
     // Divide by 10 because aPower is supposed be in units dBm
-    *aPower = RAIL_GetTxPowerDbm(gRailHandle) / 10U;
+    *aPower = RAIL_GetTxPowerDbm(gRailHandle) / 10;
 
 exit:
     return error;
@@ -1140,7 +1140,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 
     // RAIL_SetTxPowerDbm() takes power in units of deci-dBm (0.1dBm)
     // Divide by 10 because aPower is supposed be in units dBm
-    status = RAIL_SetTxPowerDbm(gRailHandle, ((RAIL_TxPower_t)aPower) * 10U);
+    status = RAIL_SetTxPowerDbm(gRailHandle, ((RAIL_TxPower_t)aPower) * 10);
     assert(status == RAIL_STATUS_NO_ERROR);
 
     return OT_ERROR_NONE;

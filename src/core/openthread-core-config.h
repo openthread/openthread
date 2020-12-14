@@ -74,6 +74,7 @@
 #include "config/mle.h"
 #include "config/parent_search.h"
 #include "config/platform.h"
+#include "config/radio_link.h"
 #include "config/sntp_client.h"
 #include "config/time_sync.h"
 #include "config/tmf.h"

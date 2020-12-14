@@ -472,8 +472,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         nrf5FemEnable();
     }
 
-    nrf_802154_channel_set(aFrame->mChannel);
-
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     if (aFrame->mInfo.mTxInfo.mTxDelay != 0)
     {
@@ -486,6 +484,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     else
 #endif
     {
+        nrf_802154_channel_set(aFrame->mChannel);
+
         if (aFrame->mInfo.mTxInfo.mCsmaCaEnabled)
         {
             nrf_802154_transmit_csma_ca_raw(&aFrame->mPsdu[-1]);
@@ -1287,3 +1287,15 @@ void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTi
     sCslSampleTime = aCslSampleTime;
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
+                                          otLinkMetrics        aLinkMetrics,
+                                          const otShortAddress aShortAddress,
+                                          const otExtAddress * aExtAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+#endif

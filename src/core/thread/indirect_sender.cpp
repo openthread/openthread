@@ -65,7 +65,7 @@ IndirectSender::IndirectSender(Instance &aInstance)
     , mEnabled(false)
     , mSourceMatchController(aInstance)
     , mDataPollHandler(aInstance)
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     , mCslTxScheduler(aInstance)
 #endif
 {
@@ -82,7 +82,7 @@ void IndirectSender::Stop(void)
     }
 
     mDataPollHandler.Clear();
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mCslTxScheduler.Clear();
 #endif
 
@@ -163,7 +163,7 @@ void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
     mSourceMatchController.ResetMessageCount(aChild);
 
     mDataPollHandler.RequestFrameChange(DataPollHandler::kPurgeFrame, aChild);
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mCslTxScheduler.Update();
 #endif
 
@@ -208,7 +208,7 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
         mSourceMatchController.ResetMessageCount(aChild);
 
         mDataPollHandler.RequestFrameChange(DataPollHandler::kPurgeFrame, aChild);
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         mCslTxScheduler.Update();
 #endif
     }
@@ -263,7 +263,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
 
         aChild.SetWaitingForMessageUpdate(true);
         mDataPollHandler.RequestFrameChange(DataPollHandler::kPurgeFrame, aChild);
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         mCslTxScheduler.Update();
 #endif
 
@@ -295,7 +295,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
 
     aChild.SetWaitingForMessageUpdate(true);
     mDataPollHandler.RequestFrameChange(DataPollHandler::kReplaceFrame, aChild);
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mCslTxScheduler.Update();
 #endif
 
@@ -321,7 +321,7 @@ void IndirectSender::UpdateIndirectMessage(Child &aChild)
     aChild.SetIndirectFragmentOffset(0);
     aChild.SetIndirectTxSuccess(true);
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mCslTxScheduler.Update();
 #endif
 
@@ -463,7 +463,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
     {
         aChild.SetIndirectFragmentOffset(nextOffset);
         mDataPollHandler.HandleNewFrame(aChild);
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         mCslTxScheduler.Update();
 #endif
         ExitNow();

@@ -178,6 +178,7 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         #         The DUT MUST reset the MLE Advertisement trickle timer and
         #         send an Advertisement
         pv.verify_attached('ROUTER_2', 'ROUTER_1')
+        # check trickle timer between the successive advertisements
         with pkts.save_index():
             _pkt = pkts.filter_wpan_src64(LEADER).\
                 filter_LLANMA().\
@@ -188,6 +189,7 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
                 filter_mle_cmd(MLE_ADVERTISEMENT).\
                 filter(lambda p: p.sniff_timestamp - _pkt.sniff_timestamp <= 3).\
                 must_next()
+        # check router cost before and after the re-attach
         pkts.filter_wpan_src64(LEADER).\
             filter_LLANMA().\
             filter_mle_cmd(MLE_ADVERTISEMENT).\
@@ -197,7 +199,6 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
             filter_LLANMA().\
             filter_mle_cmd(MLE_ADVERTISEMENT).\
             filter(lambda p: {1,2,1} == set(p.mle.tlv.route64.cost) and\
-                   p.sniff_timestamp - _pkt.sniff_timestamp <= 3 and\
                    {leader_rid, router_1_rid, router_2_rid} ==
                    p.mle.tlv.route64.id_mask
                    ).\

@@ -33,7 +33,7 @@
 
 #include "mlr_manager.hpp"
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
@@ -48,14 +48,14 @@ namespace ot {
 
 MlrManager::MlrManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     , mRegisterMulticastListenersCallback(nullptr)
     , mRegisterMulticastListenersContext(nullptr)
 #endif
     , mReregistrationDelay(0)
     , mSendDelay(0)
     , mMlrPending(false)
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     , mRegisterMulticastListenersPending(false)
 #endif
 {
@@ -91,7 +91,7 @@ void MlrManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State
 #if OPENTHREAD_CONFIG_MLR_ENABLE
 void MlrManager::UpdateLocalSubscriptions(void)
 {
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     // Check multicast addresses are newly listened against Children
     for (Ip6::ExternalNetifMulticastAddress &addr :
          Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
@@ -127,7 +127,7 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_MLR_ENABLE
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 bool MlrManager::IsAddressMlrRegisteredByAnyChildExcept(const Ip6::Address &aAddress, const Child *aExceptChild) const
 {
@@ -188,7 +188,7 @@ exit:
     }
 }
 
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 void MlrManager::ScheduleSend(uint16_t aDelay)
 {
@@ -253,7 +253,7 @@ void MlrManager::SendMulticastListenerRegistration(void)
     }
 #endif
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     // Append Child multicast addresses
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
@@ -311,7 +311,7 @@ exit:
     CheckInvariants();
 }
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 otError MlrManager::RegisterMulticastListeners(const otIp6Address *                    aAddresses,
                                                uint8_t                                 aAddressNum,
                                                const uint32_t *                        aTimeout,
@@ -374,7 +374,7 @@ void MlrManager::HandleRegisterMulticastListenersResponse(otMessage *          a
     }
 }
 
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#endif // (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 otError MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address *  aAddresses,
                                                              uint8_t               aAddressNum,
@@ -404,7 +404,7 @@ otError MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address 
     SuccessOrExit(error = message->Append(addressesTlv));
     SuccessOrExit(error = message->AppendBytes(aAddresses, sizeof(Ip6::Address) * aAddressNum));
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     if (Get<MeshCoP::Commissioner>().IsActive())
     {
         SuccessOrExit(
@@ -539,7 +539,7 @@ void MlrManager::SetMulticastAddressMlrState(MlrState aFromState, MlrState aToSt
         }
     }
 #endif
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
         for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
@@ -573,7 +573,7 @@ void MlrManager::FinishMulticastListenerRegistration(bool                aSucces
         }
     }
 #endif
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
         for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
@@ -678,7 +678,7 @@ void MlrManager::LogMulticastAddresses(void)
     }
 #endif
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
         for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
@@ -696,7 +696,7 @@ void MlrManager::AppendToUniqueAddressList(Ip6::Address (&aAddresses)[kIPv6Addre
                                            uint8_t &           aAddressNum,
                                            const Ip6::Address &aAddress)
 {
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     for (uint8_t i = 0; i < aAddressNum; i++)
     {
         if (aAddresses[i] == aAddress)
@@ -708,7 +708,7 @@ void MlrManager::AppendToUniqueAddressList(Ip6::Address (&aAddresses)[kIPv6Addre
 
     aAddresses[aAddressNum++] = aAddress;
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 exit:
 #endif
     return;
@@ -779,7 +779,7 @@ void MlrManager::CheckInvariants(void) const
         registeringNum += (addr.GetMlrState() == kMlrStateRegistering);
     }
 #endif
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
         for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))

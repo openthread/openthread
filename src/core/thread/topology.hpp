@@ -46,12 +46,14 @@
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
+#include "radio/trel_link.hpp"
 #include "thread/csl_tx_scheduler.hpp"
 #include "thread/indirect_sender.hpp"
 #include "thread/link_metrics.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
+#include "thread/radio_selector.hpp"
 
 namespace ot {
 
@@ -64,6 +66,14 @@ class LinkMetricsSeriesInfo; ///< Forward declaration for including each other w
  *
  */
 class Neighbor : public InstanceLocatorInit
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    ,
+                 public RadioSelector::NeighborInfo
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    ,
+                 public Trel::NeighborInfo
+#endif
 {
 public:
     /**
@@ -406,20 +416,20 @@ public:
     void SetLastHeard(TimeMilli aLastHeard) { mLastHeard = aLastHeard; }
 
     /**
-     * This method gets the link frame counter value.
+     * This method gets the link frame counters.
      *
-     * @returns The link frame counter value.
+     * @returns A reference to `Mac::LinkFrameCounters` containing link frame counter for all supported radio links.
      *
      */
-    uint32_t GetLinkFrameCounter(void) const { return mValidPending.mValid.mLinkFrameCounter; }
+    Mac::LinkFrameCounters &GetLinkFrameCounters(void) { return mValidPending.mValid.mLinkFrameCounters; }
 
     /**
-     * This method sets the link frame counter value.
+     * This method gets the link frame counters.
      *
-     * @param[in]  aFrameCounter  The link frame counter value.
+     * @returns A reference to `Mac::LinkFrameCounters` containing link frame counter for all supported radio links.
      *
      */
-    void SetLinkFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mLinkFrameCounter = aFrameCounter; }
+    const Mac::LinkFrameCounters &GetLinkFrameCounters(void) const { return mValidPending.mValid.mLinkFrameCounters; }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**
@@ -486,6 +496,60 @@ public:
      */
     void SetRloc16(uint16_t aRloc16) { mRloc16 = aRloc16; }
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    /**
+     * This method clears the last received fragment tag.
+     *
+     * The last received fragment tag is used for detect duplicate frames (receievd over different radios) when
+     * multi-radio feature is enabled.
+     *
+     */
+    void ClearLastRxFragmentTag(void) { mLastRxFragmentTag = 0; }
+
+    /**
+     * This method gets the last received fragment tag.
+     *
+     * This method MUST be used only when the tag is set (and not cleared). Otherwise its behavior is undefined.
+     *
+     * @returns The last received fragment tag.
+     *
+     */
+    uint16_t GetLastRxFragmentTag(void) const { return mLastRxFragmentTag; }
+
+    /**
+     * This method set the last received fragment tag.
+     *
+     * @param[in] aTag   The new tag value.
+     *
+     */
+    void SetLastRxFragmentTag(uint16_t aTag) { mLastRxFragmentTag = (aTag == 0) ? 0xffff : aTag; }
+
+    /**
+     * This method indicates whether the last received fragment tag is set or not.
+     *
+     * @returns TRUE if the last received fragment tag is set, FALSE otherwise.
+     *
+     */
+    bool IsLastRxFragmentTagSet(void) const { return (mLastRxFragmentTag != 0); }
+
+    /**
+     * This method indicates whether the last received fragment tag is strictly after a given tag value.
+     *
+     * This method MUST be used only when the tag is set (and not cleared). Otherwise its behavior is undefined.
+     *
+     * The tag value compassion follows the Serial Number Arithmetic logic from RFC-1982. It is semantically equivalent
+     * to `LastRxFragementTag > aTag`.
+     *
+     * @param[in] aTag   A tag value to compare against.
+     *
+     * @returns TRUE if the current last rx fragment tag is strictly after @p aTag, FALSE if they are equal or it is
+     * before @p aTag.
+     *
+     */
+    bool IsLastRxFragmentTagAfter(uint16_t aTag) const { return ((aTag - mLastRxFragmentTag) & (1U << 15)) != 0; }
+
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+
     /**
      * This method indicates whether or not it is a valid Thread 1.1 neighbor.
      *
@@ -493,6 +557,14 @@ public:
      *
      */
     bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_1; }
+
+    /**
+     * This method indicates whether or not it is a valid Thread 1.2 neighbor.
+     *
+     * @returns TRUE if it is a valid Thread 1.2 neighbor, FALSE otherwise.
+     *
+     */
+    bool IsThreadVersion1p2(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_2; }
 
     /**
      * This method indicates whether Enhanced Keep-Alive is supported or not.
@@ -639,12 +711,54 @@ public:
     LinkMetricsSeriesInfo *RemoveForwardTrackingSeriesInfo(const uint8_t &aSeriesId);
 
     /**
-     * This method removes all the Series and return the data structures to the Pool
+     * This method removes all the Series and return the data structures to the Pool.
      *
      */
     void RemoveAllForwardTrackingSeriesInfo(void);
 
-#endif
+    /**
+     * This method gets the Enh-ACK Probing metrics (this `Neighbor` object is the Probing Subject).
+     *
+     * @returns Enh-ACK Probing metrics configured.
+     *
+     */
+    const otLinkMetrics &GetEnhAckProbingMetrics(void) const { return mEnhAckProbingMetrics; }
+
+    /**
+     * This method sets the Enh-ACK Probing metrics (this `Neighbor` object is the Probing Subject).
+     *
+     * @param[in]  aEnhAckProbingMetrics  The metrics value to set.
+     *
+     */
+    void SetEnhAckProbingMetrics(const otLinkMetrics &aEnhAckProbingMetrics)
+    {
+        mEnhAckProbingMetrics = aEnhAckProbingMetrics;
+    }
+
+    /**
+     * This method indicates if Enh-ACK Probing is configured and active for this `Neighbor` object.
+     *
+     * @retval TRUE   Enh-ACK Probing is configured and active for this `Neighbor`.
+     * @retval FALSE  Otherwise.
+     *
+     */
+    bool IsEnhAckProbingActive(void) const
+    {
+        return (mEnhAckProbingMetrics.mLqi != 0) || (mEnhAckProbingMetrics.mLinkMargin != 0) ||
+               (mEnhAckProbingMetrics.mRssi != 0);
+    }
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+
+    /**
+     * This method converts a given `State` to a human-readable string.
+     *
+     * @param[in] aState   A neighbor state.
+     *
+     * @returns A string representation of given state.
+     *
+     */
+    static const char *StateToString(State aState);
+
 protected:
     /**
      * This method initializes the `Neighbor` object.
@@ -661,8 +775,8 @@ private:
     {
         struct
         {
-            uint32_t mLinkFrameCounter; ///< The Link Frame Counter
-            uint32_t mMleFrameCounter;  ///< The MLE Frame Counter
+            Mac::LinkFrameCounters mLinkFrameCounters; ///< The Link Frame Counters
+            uint32_t               mMleFrameCounter;   ///< The MLE Frame Counter
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
             uint32_t mLinkAckFrameCounter; ///< The Link Ack Frame Counter
 #endif
@@ -672,6 +786,10 @@ private:
             uint8_t mChallenge[Mle::kMaxChallengeSize]; ///< The challenge value
         } mPending;
     } mValidPending;
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    uint16_t mLastRxFragmentTag; ///< Last received fragment tag
+#endif
 
     uint32_t mKeySequence; ///< Current key sequence
     uint16_t mRloc16;      ///< The RLOC16
@@ -687,7 +805,12 @@ private:
     LinkQualityInfo mLinkInfo; ///< Link quality info (contains average RSS, link margin and link quality)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     LinkedList<LinkMetricsSeriesInfo> mLinkMetricsSeriesInfoList; ///< A list of Link Metrics Forward Tracking Series
-                                                                  ///< that is being tracked for this neighbor.
+                                                                  ///< that is being tracked for this neighbor. Note
+                                                                  ///< that this device is the Subject and this
+                                                                  ///< this neighbor is the Initiator.
+    otLinkMetrics mEnhAckProbingMetrics; ///< Metrics configured for Enh-ACK Based Probing at the Probing Subject
+                                         ///< (this neighbor). Note that this device is the Initiator and this neighbor
+                                         ///< is the Subject.
 #endif
 };
 
@@ -698,7 +821,7 @@ private:
 class Child : public Neighbor,
               public IndirectSender::ChildInfo,
               public DataPollHandler::ChildInfo
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     ,
               public CslTxScheduler::ChildInfo
 #endif
@@ -981,7 +1104,7 @@ public:
      */
     bool HasIp6Address(const Ip6::Address &aAddress) const;
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     /**
      * This method retrieves the Domain Unicast Address registered by the child.
      *
@@ -1094,7 +1217,7 @@ public:
 
 #endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
      * This method returns MLR state of an Ip6 multicast address.
      *
@@ -1146,7 +1269,7 @@ public:
      *
      */
     bool HasAnyMlrToRegisterAddress(void) const { return mMlrToRegisterMask.HasAny(); }
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 private:
 #if OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD < 2
@@ -1181,7 +1304,7 @@ private:
     Ip6::Address             mIp6Address[kNumIp6Addresses]; ///< Registered IPv6 addresses
     uint32_t                 mTimeout;                      ///< Child timeout
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     ChildIp6AddressMask mMlrToRegisterMask;
     ChildIp6AddressMask mMlrRegisteredMask;
 #endif

@@ -454,6 +454,22 @@
  */
 #define OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE 1
 
+/**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+ *
+ * Define to 1 to enable DNS Client support.
+ *
+ */
+#define OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME
+ *
+ * Defines the default interface name used for TREL UDP6 platform.
+ *
+ */
+#define OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME "trel"
+
 #if OPENTHREAD_RADIO
 /**
  * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE

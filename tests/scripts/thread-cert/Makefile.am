@@ -75,16 +75,16 @@ EXTRA_DIST                                                         = \
     Cert_5_6_06_NetworkDataExpiration.py                             \
     Cert_5_6_07_NetworkDataRequestREED.py                            \
     Cert_5_6_09_NetworkDataForwarding.py                             \
-    Cert_5_7_01_CoapDiagCommands.py                                \
+    Cert_5_7_01_CoapDiagCommands.py                                  \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
     Cert_6_1_01_RouterAttach.py                                      \
-    Cert_6_1_02_REEDAttach.py                                    \
+    Cert_6_1_02_REEDAttach.py                                        \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
-    Cert_6_1_04_REEDAttachConnectivity.py                          \
+    Cert_6_1_04_REEDAttachConnectivity.py                            \
     Cert_6_1_05_REEDAttachConnectivity.py                            \
     Cert_6_1_07_RouterAttachLinkQuality.py                           \
-    Cert_6_1_06_REEDAttachLinkQuality.py                          \
+    Cert_6_1_06_REEDAttachLinkQuality.py                             \
     Cert_6_1_09_EDSynchronization.py                                 \
     Cert_6_2_01_NewPartition.py                                      \
     Cert_6_2_02_NewPartition.py                                      \
@@ -102,6 +102,8 @@ EXTRA_DIST                                                         = \
     Cert_7_1_03_BorderRouterAsLeader.py                              \
     Cert_7_1_04_BorderRouterAsRouter.py                              \
     Cert_7_1_05_BorderRouterAsRouter.py                              \
+    Cert_7_1_06_BorderRouterAsLeader.py                              \
+    Cert_7_1_08_BorderRouterAsFED.py                                 \
     Cert_8_1_01_Commissioning.py                                     \
     Cert_8_1_02_Commissioning.py                                     \
     Cert_8_2_01_JoinerRouter.py                                      \
@@ -251,16 +253,16 @@ check_SCRIPTS                                                      = \
     Cert_5_6_06_NetworkDataExpiration.py                             \
     Cert_5_6_07_NetworkDataRequestREED.py                            \
     Cert_5_6_09_NetworkDataForwarding.py                             \
-    Cert_5_7_01_CoapDiagCommands.py                                \
+    Cert_5_7_01_CoapDiagCommands.py                                  \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
     Cert_6_1_01_RouterAttach.py                                      \
-    Cert_6_1_02_REEDAttach.py                                    \
+    Cert_6_1_02_REEDAttach.py                                        \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
     Cert_6_1_04_REEDAttachConnectivity.py                            \
     Cert_6_1_05_REEDAttachConnectivity.py                            \
     Cert_6_1_07_RouterAttachLinkQuality.py                           \
-    Cert_6_1_06_REEDAttachLinkQuality.py                          \
+    Cert_6_1_06_REEDAttachLinkQuality.py                             \
     Cert_6_1_09_EDSynchronization.py                                 \
     Cert_6_2_01_NewPartition.py                                      \
     Cert_6_2_02_NewPartition.py                                      \
@@ -279,6 +281,8 @@ check_SCRIPTS                                                      = \
     Cert_7_1_03_BorderRouterAsLeader.py                              \
     Cert_7_1_04_BorderRouterAsRouter.py                              \
     Cert_7_1_05_BorderRouterAsRouter.py                              \
+    Cert_7_1_06_BorderRouterAsLeader.py                              \
+    Cert_7_1_08_BorderRouterAsFED.py                                 \
     Cert_8_1_01_Commissioning.py                                     \
     Cert_8_1_02_Commissioning.py                                     \
     Cert_8_2_01_JoinerRouter.py                                      \
@@ -302,6 +306,7 @@ check_SCRIPTS                                                      = \
 TESTS_ENVIRONMENT                                                  = \
     export                                                           \
     top_builddir='$(top_builddir)'                                   \
+    top_srcdir='$(top_srcdir)'                                       \
     VERBOSE=1;                                                       \
     $(NULL)
 

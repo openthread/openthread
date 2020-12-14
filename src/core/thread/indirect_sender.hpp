@@ -67,7 +67,7 @@ class IndirectSender : public InstanceLocator, public IndirectSenderBase, privat
 {
     friend class Instance;
     friend class DataPollHandler::Callbacks;
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     friend class CslTxScheduler::Callbacks;
 #endif
 
@@ -228,7 +228,7 @@ private:
     bool                  mEnabled;
     SourceMatchController mSourceMatchController;
     DataPollHandler       mDataPollHandler;
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     CslTxScheduler mCslTxScheduler;
 #endif
 };

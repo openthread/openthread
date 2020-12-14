@@ -393,7 +393,7 @@ private:
 
     otError ParseLinkMetricsFlags(otLinkMetrics &aLinkMetrics, char *aFlags);
 #endif
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     otError ProcessMlr(uint8_t aArgsLength, char *aArgs[]);
 
     otError ProcessMlrReg(uint8_t aArgsLength, char *aArgs[]);
@@ -558,6 +558,8 @@ private:
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    void PrintLinkMetricsValue(const otLinkMetricsValues *aMetricsValues);
+
     static void HandleLinkMetricsReport(const otIp6Address *       aAddress,
                                         const otLinkMetricsValues *aMetricsValues,
                                         uint8_t                    aStatus,
@@ -571,8 +573,17 @@ private:
 
     void HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, uint8_t aStatus);
 
+    static void HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
+                                                 const otExtAddress *       aExtAddress,
+                                                 const otLinkMetricsValues *aMetricsValues,
+                                                 void *                     aContext);
+
+    void HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
+                                          const otExtAddress *       aExtAddress,
+                                          const otLinkMetricsValues *aMetricsValues);
+
     const char *LinkMetricsStatusToStr(uint8_t aStatus);
-#endif
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
     static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);
 
@@ -672,7 +683,7 @@ private:
         {"macfilter", &Interpreter::ProcessMacFilter},
 #endif
         {"masterkey", &Interpreter::ProcessMasterKey},
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
         {"mlr", &Interpreter::ProcessMlr},
 #endif
         {"mode", &Interpreter::ProcessMode},

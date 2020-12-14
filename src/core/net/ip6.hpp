@@ -341,7 +341,7 @@ private:
                                    MessageInfo &aMessageInfo,
                                    Header &     aHeader,
                                    uint8_t &    aNextHeader,
-                                   bool         aForward,
+                                   bool         aIsOutbound,
                                    bool         aFromNcpHost,
                                    bool &       aReceive);
     otError FragmentDatagram(Message &aMessage, uint8_t aIpProto);
@@ -356,7 +356,7 @@ private:
     otError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     otError InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     otError RemoveMplOption(Message &aMessage);
-    otError HandleOptions(Message &aMessage, Header &aHeader, bool aForward, bool &aReceive);
+    otError HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, bool &aReceive);
     otError HandlePayload(Message &          aMessage,
                           MessageInfo &      aMessageInfo,
                           uint8_t            aIpProto,

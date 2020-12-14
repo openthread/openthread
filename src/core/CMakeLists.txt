@@ -58,6 +58,7 @@ set(COMMON_SOURCES
     api/link_raw_api.cpp
     api/logging_api.cpp
     api/message_api.cpp
+    api/multi_radio_api.cpp
     api/netdata_api.cpp
     api/netdiag_api.cpp
     api/network_time_api.cpp
@@ -97,6 +98,7 @@ set(COMMON_SOURCES
     crypto/aes_ccm.cpp
     crypto/aes_ecb.cpp
     crypto/ecdsa.cpp
+    crypto/hkdf_sha256.cpp
     crypto/hmac_sha256.cpp
     crypto/mbedtls.cpp
     crypto/pbkdf2_cmac.cpp
@@ -109,6 +111,7 @@ set(COMMON_SOURCES
     mac/mac.cpp
     mac/mac_filter.cpp
     mac/mac_frame.cpp
+    mac/mac_links.cpp
     mac/mac_types.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
@@ -132,6 +135,7 @@ set(COMMON_SOURCES
     net/dhcp6_client.cpp
     net/dhcp6_server.cpp
     net/dns_client.cpp
+    net/dns_headers.cpp
     net/icmp6.cpp
     net/ip6.cpp
     net/ip6_address.cpp
@@ -144,6 +148,9 @@ set(COMMON_SOURCES
     radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp
+    radio/trel_interface.cpp
+    radio/trel_link.cpp
+    radio/trel_packet.cpp
     thread/address_resolver.cpp
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
@@ -172,6 +179,7 @@ set(COMMON_SOURCES
     thread/network_data_notifier.cpp
     thread/network_diagnostic.cpp
     thread/panid_query_server.cpp
+    thread/radio_selector.cpp
     thread/router_table.cpp
     thread/src_match_controller.cpp
     thread/thread_netif.cpp

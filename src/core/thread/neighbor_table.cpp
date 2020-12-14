@@ -291,7 +291,7 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
 
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
         Get<Notifier>().Signal(kEventThreadChildRemoved);
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         Get<DuaManager>().UpdateChildDomainUnicastAddress(static_cast<const Child &>(aNeighbor),
                                                           Mle::ChildDuaState::kRemoved);
 #endif

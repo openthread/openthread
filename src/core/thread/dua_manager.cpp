@@ -33,7 +33,7 @@
 
 #include "dua_manager.hpp"
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
@@ -59,7 +59,7 @@ DuaManager::DuaManager(Instance &aInstance)
     , mDadCounter(0)
     , mLastRegistrationTime(0)
 #endif
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     , mChildIndexDuaRegistering(0)
     , mRegisterCurrentChildIndex(false)
 #endif
@@ -71,7 +71,7 @@ DuaManager::DuaManager(Instance &aInstance)
     mFixedDuaInterfaceIdentifier.Clear();
 #endif
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     mChildDuaMask.Clear();
     mChildDuaRegisteredMask.Clear();
 #endif
@@ -93,7 +93,7 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
         RemoveDomainUnicastAddress();
 #endif
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         if (mChildDuaMask.HasAny())
         {
             mChildDuaMask.Clear();
@@ -326,10 +326,12 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
 #endif
     }
 
+#if OPENTHREAD_CONFIG_DUA_ENABLE
     if (aEvents.ContainsAny(kEventIp6AddressAdded))
     {
-        mRegistrationTask.Post();
+        UpdateRegistrationDelay(kNewDuaRegistrationDelay);
     }
+#endif
 }
 
 void DuaManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State               aState,
@@ -379,7 +381,7 @@ void DuaManager::HandleTimeTick(void)
         }
 #endif
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         mChildDuaRegisteredMask.Clear();
 #endif
         attempt = true;
@@ -421,14 +423,14 @@ void DuaManager::PerformNextRegistration(void)
 
     // Only send DUA.req when necessary
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     VerifyOrExit(mle.IsRouterOrLeader() || !mle.IsExpectedToBecomeRouter(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit((mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0) ||
                      (mChildDuaMask.HasAny() && mChildDuaMask != mChildDuaRegisteredMask),
                  error = OT_ERROR_NOT_FOUND);
 #else
     VerifyOrExit(mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0, error = OT_ERROR_NOT_FOUND);
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 
     VerifyOrExit(mle.IsFullThreadDevice() || mle.GetParent().IsThreadVersion1p1(), error = OT_ERROR_INVALID_STATE);
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
@@ -451,7 +453,7 @@ void DuaManager::PerformNextRegistration(void)
     else
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
     {
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         uint32_t            lastTransactionTime;
         const Ip6::Address *duaPtr = nullptr;
         Child *             child  = nullptr;
@@ -481,7 +483,7 @@ void DuaManager::PerformNextRegistration(void)
 
         lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child->GetLastHeard());
         SuccessOrExit(error = Tlv::Append<ThreadLastTransactionTimeTlv>(*message, lastTransactionTime));
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     }
 
     if (!mle.IsFullThreadDevice() && mle.GetParent().IsThreadVersion1p1())
@@ -616,7 +618,7 @@ otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
     }
     else
 #endif
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     {
         Child *child = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
 
@@ -649,14 +651,14 @@ otError DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
             break;
         }
     }
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 
 exit:
     UpdateTimeTickerRegistration();
     return error;
 }
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 void DuaManager::SendAddressNotification(Ip6::Address &             aAddress,
                                          ThreadStatusTlv::DuaStatus aStatus,
                                          const Child &              aChild)
@@ -730,8 +732,8 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
 
     return;
 }
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#endif // OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)

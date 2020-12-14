@@ -28,7 +28,7 @@
 
 #include "csl_tx_scheduler.hpp"
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
@@ -119,7 +119,6 @@ void CslTxScheduler::Clear(void)
  */
 void CslTxScheduler::RescheduleCslTx(void)
 {
-    uint64_t radioNow     = otPlatRadioGetNow(&GetInstance());
     uint32_t minDelayTime = Time::kMaxDuration;
     Child *  bestChild    = nullptr;
 
@@ -133,7 +132,7 @@ void CslTxScheduler::RescheduleCslTx(void)
             continue;
         }
 
-        delay = GetNextCslTransmissionDelay(child, radioNow, cslTxDelay);
+        delay = GetNextCslTransmissionDelay(child, cslTxDelay);
 
         if (delay < minDelayTime)
         {
@@ -150,31 +149,39 @@ void CslTxScheduler::RescheduleCslTx(void)
     mCslTxChild = bestChild;
 }
 
-uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild,
-                                                     uint64_t     aRadioNow,
-                                                     uint32_t &   aDelayFromLastRx) const
+uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild, uint32_t &aDelayFromLastRx) const
 {
+    uint64_t radioNow      = otPlatRadioGetNow(&GetInstance());
     uint32_t periodInUs    = aChild.GetCslPeriod() * kUsPerTenSymbols;
     uint64_t firstTxWindow = aChild.GetLastRxTimestamp() + aChild.GetCslPhase() * kUsPerTenSymbols;
-    uint64_t nextTxWindow  = aRadioNow - (aRadioNow % periodInUs) + (firstTxWindow % periodInUs);
+    uint64_t nextTxWindow  = radioNow - (radioNow % periodInUs) + (firstTxWindow % periodInUs);
 
-    while (aRadioNow + mCslFrameRequestAheadUs >= nextTxWindow) nextTxWindow += periodInUs;
+    while (nextTxWindow < radioNow + mCslFrameRequestAheadUs) nextTxWindow += periodInUs;
 
     aDelayFromLastRx = static_cast<uint32_t>(nextTxWindow - aChild.GetLastRxTimestamp());
 
-    return static_cast<uint32_t>(nextTxWindow - aRadioNow - mCslFrameRequestAheadUs);
+    return static_cast<uint32_t>(nextTxWindow - radioNow - mCslFrameRequestAheadUs);
 }
 
-otError CslTxScheduler::HandleFrameRequest(Mac::TxFrame &aFrame)
+Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
 {
-    otError  error = OT_ERROR_NONE;
+    Mac::TxFrame *frame = nullptr;
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     uint32_t txDelay;
 
-    VerifyOrExit(mCslTxChild != nullptr, error = OT_ERROR_ABORT);
+    VerifyOrExit(mCslTxChild != nullptr);
 
-    SuccessOrExit(error = mCallbacks.PrepareFrameForChild(aFrame, mFrameContext, *mCslTxChild));
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    frame = &aTxFrames.GetTxFrame(kRadioTypeIeee802154);
+#else
+    frame = &aTxFrames.GetTxFrame();
+#endif
+
+    VerifyOrExit(mCallbacks.PrepareFrameForChild(*frame, mFrameContext, *mCslTxChild) == OT_ERROR_NONE,
+                 frame = nullptr);
     mCslTxMessage = mCslTxChild->GetIndirectMessage();
-    VerifyOrExit(mCslTxMessage != nullptr, error = OT_ERROR_ABORT);
+    VerifyOrExit(mCslTxMessage != nullptr, frame = nullptr);
 
     if (mCslTxChild->GetIndirectTxAttempts() > 0 || mCslTxChild->GetCslTxAttempts() > 0)
     {
@@ -182,31 +189,32 @@ otError CslTxScheduler::HandleFrameRequest(Mac::TxFrame &aFrame)
         // child, we ensure to use the same frame counter, key id, and
         // data sequence number as the previous attempt.
 
-        aFrame.SetIsARetransmission(true);
-        aFrame.SetSequence(mCslTxChild->GetIndirectDataSequenceNumber());
+        frame->SetIsARetransmission(true);
+        frame->SetSequence(mCslTxChild->GetIndirectDataSequenceNumber());
 
-        if (aFrame.GetSecurityEnabled())
+        if (frame->GetSecurityEnabled())
         {
-            aFrame.SetFrameCounter(mCslTxChild->GetIndirectFrameCounter());
-            aFrame.SetKeyId(mCslTxChild->GetIndirectKeyId());
+            frame->SetFrameCounter(mCslTxChild->GetIndirectFrameCounter());
+            frame->SetKeyId(mCslTxChild->GetIndirectKeyId());
         }
     }
     else
     {
-        aFrame.SetIsARetransmission(false);
+        frame->SetIsARetransmission(false);
     }
 
-    aFrame.SetChannel(mCslTxChild->GetCslChannel() == 0 ? Get<Mac::Mac>().GetPanChannel()
+    frame->SetChannel(mCslTxChild->GetCslChannel() == 0 ? Get<Mac::Mac>().GetPanChannel()
                                                         : mCslTxChild->GetCslChannel());
 
-    GetNextCslTransmissionDelay(*mCslTxChild, otPlatRadioGetNow(&GetInstance()), txDelay);
-    aFrame.SetTxDelay(txDelay);
-    aFrame.SetTxDelayBaseTime(
+    GetNextCslTransmissionDelay(*mCslTxChild, txDelay);
+    frame->SetTxDelay(txDelay);
+    frame->SetTxDelayBaseTime(
         static_cast<uint32_t>(mCslTxChild->GetLastRxTimestamp())); // Only LSB part of the time is required.
-    aFrame.SetCsmaCaEnabled(false);
+    frame->SetCsmaCaEnabled(false);
 
 exit:
-    return error;
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    return frame;
 }
 
 void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError)
@@ -287,4 +295,4 @@ exit:
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE

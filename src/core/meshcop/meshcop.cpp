@@ -287,14 +287,14 @@ bool SteeringData::DoesAllMatch(uint8_t aMatch) const
 
 void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
 {
-    Crypto::Sha256 sha256;
-    uint8_t        hash[Crypto::Sha256::kHashSize];
+    Crypto::Sha256       sha256;
+    Crypto::Sha256::Hash hash;
 
     sha256.Start();
     sha256.Update(aEui64.m8, sizeof(aEui64));
     sha256.Finish(hash);
 
-    memcpy(&aJoinerId, hash, sizeof(aJoinerId));
+    memcpy(&aJoinerId, hash.GetBytes(), sizeof(aJoinerId));
     aJoinerId.SetLocal(true);
 }
 

@@ -69,6 +69,17 @@ namespace ot {
 uint16_t StringLength(const char *aString, uint16_t aMaxLength);
 
 /**
+ * This function finds the first occurrence of a given character in a null-terminated string.
+ *
+ * @param[in] aString     A pointer to the string.
+ * @param[in] aChar       A char to search for in the string.
+ *
+ * @returns The pointer to first occurrence of the @p aChar in @p aString, or nullptr if cannot be found.
+ *
+ */
+const char *StringFind(const char *aString, char aChar);
+
+/**
  * This class defines the base class for `String`.
  *
  */

@@ -1241,7 +1241,7 @@ protected:
     otError AppendXtalAccuracy(Message &aMessage);
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#if (!OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * This method appends a CSL Channel TLV to a message.
      *
@@ -1263,7 +1263,7 @@ protected:
      *
      */
     otError AppendCslTimeout(Message &aMessage);
-#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#endif // (!OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
      * This method appends a Active Timestamp TLV to a message.
@@ -1746,7 +1746,7 @@ private:
     bool     PrepareAnnounceState(void);
     void     SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-    otError SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, otLinkMetricsStatus aStatus);
+    otError SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::LinkMetricsStatus aStatus);
 #endif
     uint32_t Reattach(void);
 

@@ -407,6 +407,7 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
 #endif
 
     VerifyOrExit(isPrimary, status = ThreadStatusTlv::kDuaNotPrimary);
+    VerifyOrExit(Get<BackboneRouter::Leader>().HasDomainPrefix(), status = ThreadStatusTlv::kDuaGeneralFailure);
     VerifyOrExit(Get<BackboneRouter::Leader>().IsDomainUnicast(target), status = ThreadStatusTlv::kDuaInvalid);
 
     hasLastTransactionTime = (Tlv::Find<ThreadLastTransactionTimeTlv>(aMessage, lastTransactionTime) == OT_ERROR_NONE);

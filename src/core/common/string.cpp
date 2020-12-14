@@ -49,6 +49,22 @@ uint16_t StringLength(const char *aString, uint16_t aMaxLength)
     return ret;
 }
 
+const char *StringFind(const char *aString, char aChar)
+{
+    const char *ret = nullptr;
+
+    for (; *aString != '\0'; aString++)
+    {
+        if (*aString == aChar)
+        {
+            ret = aString;
+            break;
+        }
+    }
+
+    return ret;
+}
+
 otError StringBase::Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, const char *aFormat, va_list aArgs)
 {
     otError error = OT_ERROR_NONE;
