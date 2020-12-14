@@ -1506,48 +1506,20 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect('Done')
 
-    def send_mgmt_active_get(
-        self,
-        active_timestamp=None,
-        channel=None,
-        channel_mask=None,
-        extended_panid=None,
-        panid=None,
-        master_key=None,
-        mesh_local=None,
-        network_name=None,
-        binary=None,
-    ):
-        cmd = 'dataset mgmtgetcommand active '
+    def send_mgmt_active_get(self, addr='', tlvs=[]):
+        cmd = 'dataset mgmtgetcommand active'
 
-        if active_timestamp is not None:
-            cmd += 'activetimestamp %d ' % active_timestamp
+        if addr != '':
+            cmd += ' address '
+            cmd += addr
 
-        if channel is not None:
-            cmd += 'channel %d ' % channel
-
-        if channel_mask is not None:
-            cmd += 'channelmask %d ' % channel_mask
-
-        if extended_panid is not None:
-            cmd += 'extpanid %s ' % extended_panid
-
-        if panid is not None:
-            cmd += 'panid %d ' % panid
-
-        if master_key is not None:
-            cmd += 'masterkey %s ' % master_key
-
-        if mesh_local is not None:
-            cmd += 'localprefix %s ' % mesh_local
-
-        if network_name is not None:
-            cmd += 'networkname %s ' % self._escape_escapable(network_name)
-
-        if binary is not None:
-            cmd += 'binary %s ' % binary
+        if len(tlvs) != 0:
+            tlv_str = ''.join('%02x' % tlv for tlv in tlvs)
+            cmd += ' -x '
+            cmd += tlv_str
 
         self.send_command(cmd)
+        self._expect('Done')
 
     def send_mgmt_pending_set(
         self,
