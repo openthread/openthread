@@ -29,6 +29,8 @@
 
 import unittest
 
+import command
+from mesh_cop import MeshCopState
 import thread_cert
 from pktverify.consts import MLE_CHILD_ID_RESPONSE, MLE_DISCOVERY_RESPONSE, HANDSHAKE_CLIENT_HELLO, HANDSHAKE_HELLO_VERIFY_REQUEST, HANDSHAKE_SERVER_HELLO, HANDSHAKE_SERVER_KEY_EXCHANGE, HANDSHAKE_SERVER_HELLO_DONE, HANDSHAKE_CLIENT_KEY_EXCHANGE, CONTENT_CHANGE_CIPHER_SPEC, CONTENT_HANDSHAKE, CONTENT_APPLICATION_DATA, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV, NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_RESPONSE_TLV, NM_JOINER_DTLS_ENCAPSULATION_TLV, NM_JOINER_UDP_PORT_TLV, NM_JOINER_IID_TLV, NM_JOINER_ROUTER_LOCATOR_TLV, NM_JOINER_ROUTER_KEK_TLV, RLY_RX_URI, RLY_TX_URI
 from pktverify.packet_verifier import PacketVerifier
@@ -121,10 +123,17 @@ class Cert_8_2_05_JoinerRouter(thread_cert.TestCase):
         self.nodes[JOINER].interface_up()
         self.nodes[JOINER].joiner_start(PSKD, URL_2)
         self.simulator.go(10)
+
+        self.simulator.read_cert_messages_in_commissioning_log([COMMISSIONER, JOINER_ROUTER])
+        commissioner_messages = self.simulator.get_messages_sent_by(COMMISSIONER)
+
         self.assertEqual(
             self.nodes[JOINER].get_masterkey(),
             self.nodes[COMMISSIONER].get_masterkey(),
         )
+        # check commissioner sends JOIN_FIN.rsp with reject
+        command.check_commissioner_commissioning_messages(commissioner_messages.commissioning_messages,
+                                                          MeshCopState.REJECT)
         self.collect_rloc16s()
         self.collect_ipaddrs()
 
