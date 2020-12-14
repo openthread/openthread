@@ -31,7 +31,7 @@ import unittest
 
 import mesh_cop
 import thread_cert
-from pktverify.consts import  MGMT_PENDING_GET_URI, MGMT_PENDING_SET_URI, NM_CHANNEL_TLV, NM_COMMISSIONER_ID_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_STEERING_DATA_TLV, NM_BORDER_AGENT_LOCATOR_TLV, NM_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PSKC_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_MASTER_KEY_TLV, NM_SECURITY_POLICY_TLV, NM_PENDING_TIMESTAMP_TLV, NM_DELAY_TIMER_TLV
+from pktverify.consts import MGMT_PENDING_GET_URI, MGMT_PENDING_SET_URI, NM_CHANNEL_TLV, NM_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PSKC_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_MASTER_KEY_TLV, NM_SECURITY_POLICY_TLV, NM_PENDING_TIMESTAMP_TLV, NM_DELAY_TIMER_TLV, LEADER_ALOC
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.null_field import nullField
 
@@ -85,7 +85,6 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.simulator.get_messages_sent_by(LEADER)
 
-        self.collect_leader_aloc(LEADER)
         self.collect_rlocs()
         self.collect_rloc16s()
 
@@ -108,9 +107,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         self.nodes[COMMISSIONER].send_mgmt_pending_get()
         self.simulator.go(2)
 
-        self.nodes[COMMISSIONER].send_mgmt_pending_get(
-            leader_rloc,
-            [mesh_cop.TlvType.PAN_ID])
+        self.nodes[COMMISSIONER].send_mgmt_pending_get(leader_rloc, [mesh_cop.TlvType.PAN_ID])
         self.simulator.go(92)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_get()
@@ -121,7 +118,6 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         pv.summary.show()
 
         LEADER = pv.vars['LEADER']
-        LEADER_ALOC = pv.vars['LEADER_ALOC']
         LEADER_RLOC = pv.vars['LEADER_RLOC']
         COMMISSIONER = pv.vars['COMMISSIONER']
         COMMISSIONER_RLOC = pv.vars['COMMISSIONER_RLOC']
