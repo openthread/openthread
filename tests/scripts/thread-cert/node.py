@@ -1521,6 +1521,21 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect('Done')
 
+    def send_mgmt_pending_get(self, addr='', tlvs=[]):
+        cmd = 'dataset mgmtgetcommand pending'
+
+        if addr != '':
+            cmd += ' address '
+            cmd += addr
+
+        if len(tlvs) != 0:
+            tlv_str = ''.join('%02x' % tlv for tlv in tlvs)
+            cmd += ' -x '
+            cmd += tlv_str
+
+        self.send_command(cmd)
+        self._expect('Done')
+
     def send_mgmt_pending_set(
         self,
         pending_timestamp=None,

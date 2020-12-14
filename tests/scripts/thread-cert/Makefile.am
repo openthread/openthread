@@ -126,6 +126,7 @@ EXTRA_DIST                                                         = \
     Cert_9_2_16_ActivePendingPartition.py                            \
     Cert_9_2_17_Orphan.py                                            \
     Cert_9_2_18_RollBackActiveTimestamp.py                           \
+    Cert_9_2_19_PendingDatasetGet.py                                 \
     coap.py                                                          \
     command.py                                                       \
     common.py                                                        \
@@ -309,6 +310,7 @@ check_SCRIPTS                                                      = \
     Cert_9_2_16_ActivePendingPartition.py                            \
     Cert_9_2_17_Orphan.py                                            \
     Cert_9_2_18_RollBackActiveTimestamp.py                           \
+    Cert_9_2_19_PendingDatasetGet.py                                 \
     $(NULL)
 
 TESTS_ENVIRONMENT                                                  = \
