@@ -135,3 +135,14 @@ def which_mergecap() -> str:
     :return: The path to `mergecap` executable.
     """
     return os.path.join(get_wireshark_dir(), 'mergecap')
+
+
+def colon_hex(hexstr, interval) -> str:
+    """ Convert hexstr to colon seperated string every interval
+
+    :param hexstr: The hex string to convert.
+    :param interval: The interval number.
+    :return: The colon seperated string.
+    """
+    assert len(hexstr) % interval == 0
+    return ':'.join(hexstr[i:i + interval] for i in range(0, len(hexstr), interval))

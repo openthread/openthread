@@ -76,6 +76,7 @@ EXTRA_DIST                                                         = \
     Cert_5_6_07_NetworkDataRequestREED.py                            \
     Cert_5_6_09_NetworkDataForwarding.py                             \
     Cert_5_7_01_CoapDiagCommands.py                                  \
+    Cert_5_7_03_CoapDiagCommands.py                                  \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
     Cert_6_1_01_RouterAttach.py                                      \
@@ -254,6 +255,7 @@ check_SCRIPTS                                                      = \
     Cert_5_6_07_NetworkDataRequestREED.py                            \
     Cert_5_6_09_NetworkDataForwarding.py                             \
     Cert_5_7_01_CoapDiagCommands.py                                  \
+    Cert_5_7_03_CoapDiagCommands.py                                  \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
     Cert_6_1_01_RouterAttach.py                                      \
