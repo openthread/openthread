@@ -594,6 +594,7 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.udp_port': _list(_auto),
     'thread_meshcop.tlv.ba_locator': _auto,
     'thread_meshcop.tlv.active_tstamp': _auto,
+    'thread_meshcop.tlv.delay_timer': _auto,
     'thread_meshcop.tlv.ipv6_addr': _list(_ipv6_addr),
 
     # THREAD NWD
