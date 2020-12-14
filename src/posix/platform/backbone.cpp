@@ -41,7 +41,9 @@
 
 char                                      gBackboneNetifName[IFNAMSIZ] = "";
 unsigned int                              gBackboneNetifIndex          = 0;
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 static ot::Posix::MulticastRoutingManager sMulticastRoutingManager;
+#endif
 
 void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName)
 {
